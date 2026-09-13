@@ -1,0 +1,68 @@
+{
+  "timestamp": "2026-09-13T12:39:49.525Z",
+  "runtime": "v24.11.1",
+  "platform": "win32",
+  "arch": "x64",
+  "cpuModel": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "logicalCPUCount": 12,
+  "memoryBytes": 17131188224,
+  "method": "Schema 2; five fresh worlds/count; first tick timed separately, 200 further ticks in 20-tick batches, then 800 untimed ticks to check gathering, physical haul outcomes and material conservation; independent 600-tick idle world. Stockpile capacity covers all wood; carrier limit 10. BFS, movement, work and haul included; no GPU, browser, renderer, persistence or DOM. p95 concerns batch mean ms/tick, not individual-tick tails. Functionality differs from the former schema-1 benchmark: timings are not a controlled A/B optimization comparison.",
+  "rows": [
+    {
+      "pawns": 3,
+      "map": "64x64",
+      "initialJobs": 3,
+      "dispatchMedianMs": 0.849,
+      "dispatchMaxMs": 1.799,
+      "busyTickMedianMs": 0.013,
+      "busyTickP95Ms": 0.076,
+      "idleTickMedianMs": 0.013,
+      "activeObservationPercent": 100,
+      "meanJobsCompletedAtTick201": 3,
+      "meanJobsCompletedAtTick1001": 3,
+      "meanWoodStoredAtTick1001": 36
+    },
+    {
+      "pawns": 30,
+      "map": "64x64",
+      "initialJobs": 30,
+      "dispatchMedianMs": 1.481,
+      "dispatchMaxMs": 1.909,
+      "busyTickMedianMs": 0.025,
+      "busyTickP95Ms": 0.405,
+      "idleTickMedianMs": 0.013,
+      "activeObservationPercent": 92.667,
+      "meanJobsCompletedAtTick201": 30,
+      "meanJobsCompletedAtTick1001": 30,
+      "meanWoodStoredAtTick1001": 336
+    },
+    {
+      "pawns": 100,
+      "map": "64x64",
+      "initialJobs": 100,
+      "dispatchMedianMs": 1.485,
+      "dispatchMaxMs": 2.352,
+      "busyTickMedianMs": 0.055,
+      "busyTickP95Ms": 0.956,
+      "idleTickMedianMs": 0.02,
+      "activeObservationPercent": 90.8,
+      "meanJobsCompletedAtTick201": 0,
+      "meanJobsCompletedAtTick1001": 100,
+      "meanWoodStoredAtTick1001": 1038
+    },
+    {
+      "pawns": 300,
+      "map": "64x64",
+      "initialJobs": 300,
+      "dispatchMedianMs": 2.041,
+      "dispatchMaxMs": 2.468,
+      "busyTickMedianMs": 0.914,
+      "busyTickP95Ms": 2.244,
+      "idleTickMedianMs": 0.04,
+      "activeObservationPercent": 83.767,
+      "meanJobsCompletedAtTick201": 0,
+      "meanJobsCompletedAtTick1001": 300,
+      "meanWoodStoredAtTick1001": 2783
+    }
+  ]
+}

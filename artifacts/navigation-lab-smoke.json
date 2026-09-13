@@ -1,0 +1,8 @@
+{
+  "date": "2026-09-13T10:18:12.275Z",
+  "adapter": "WebGPU · amd · rdna-1",
+  "generated": "Chemin trouvé et vérifié. 11 déplacements · coût 11. GPU bout en bout 18.80 ms · Dijkstra CPU 0.70 ms · buffers 0.08 Mio · 512 passes.",
+  "fence": "Chemin trouvé et vérifié. 93 déplacements · coût 93. GPU bout en bout 13.20 ms · Dijkstra CPU 20.50 ms · buffers 0.75 Mio · 512 passes.",
+  "invalidated": "Révision 3 · fixture de comparaison avec passages et terrain lent. Chemin à recalculer.",
+  "errors": []
+}

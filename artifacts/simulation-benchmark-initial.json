@@ -1,0 +1,64 @@
+{
+  "timestamp": "2026-09-13T09:50:22.288Z",
+  "runtime": "v24.11.1",
+  "platform": "win32",
+  "arch": "x64",
+  "cpuModel": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "logicalCPUCount": 12,
+  "memoryBytes": 17131188224,
+  "method": "Five fresh worlds/count; first tick timed separately (at most 8 BFS searches), 200 further ticks in 20-tick batches, then 800 untimed ticks to check outcomes; independent 600-tick idle world. BFS, movement and work included; no GPU, browser, renderer, persistence or DOM. p95 concerns batch mean ms/tick, not individual-tick tails.",
+  "rows": [
+    {
+      "pawns": 3,
+      "map": "64x64",
+      "initialJobs": 3,
+      "dispatchMedianMs": 0.613,
+      "dispatchMaxMs": 1.914,
+      "busyTickMedianMs": 0.013,
+      "busyTickP95Ms": 0.025,
+      "idleTickMedianMs": 0.013,
+      "activeObservationPercent": 100,
+      "meanJobsCompletedAtTick201": 3,
+      "meanJobsCompletedAtTick1001": 3
+    },
+    {
+      "pawns": 30,
+      "map": "64x64",
+      "initialJobs": 30,
+      "dispatchMedianMs": 2.521,
+      "dispatchMaxMs": 3.142,
+      "busyTickMedianMs": 0.021,
+      "busyTickP95Ms": 0.307,
+      "idleTickMedianMs": 0.019,
+      "activeObservationPercent": 92.667,
+      "meanJobsCompletedAtTick201": 30,
+      "meanJobsCompletedAtTick1001": 30
+    },
+    {
+      "pawns": 100,
+      "map": "64x64",
+      "initialJobs": 100,
+      "dispatchMedianMs": 2.262,
+      "dispatchMaxMs": 5.198,
+      "busyTickMedianMs": 0.057,
+      "busyTickP95Ms": 1.122,
+      "idleTickMedianMs": 0.021,
+      "activeObservationPercent": 90.8,
+      "meanJobsCompletedAtTick201": 0,
+      "meanJobsCompletedAtTick1001": 100
+    },
+    {
+      "pawns": 300,
+      "map": "64x64",
+      "initialJobs": 300,
+      "dispatchMedianMs": 3.922,
+      "dispatchMaxMs": 5.637,
+      "busyTickMedianMs": 0.888,
+      "busyTickP95Ms": 3.088,
+      "idleTickMedianMs": 0.034,
+      "activeObservationPercent": 83.767,
+      "meanJobsCompletedAtTick201": 0,
+      "meanJobsCompletedAtTick1001": 300
+    }
+  ]
+}

@@ -1,0 +1,133 @@
+{
+  "timestamp": "2026-09-13T12:44:44.892Z",
+  "backend": "WebGPU",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+  "map": {
+    "seed": 42,
+    "width": 64,
+    "height": 64
+  },
+  "cargo": [
+    {
+      "id": 747,
+      "kind": "wood",
+      "quantity": 7,
+      "owner": {
+        "type": "pawn",
+        "pawnId": 734
+      }
+    }
+  ],
+  "constructionPausedAt": 420,
+  "materials": {
+    "piles": 2,
+    "stockpiles": 2,
+    "stock": {
+      "wood": 11,
+      "food": 18
+    },
+    "bedFootprint": "1x2"
+  },
+  "diagnostics": [
+    "Lisière renderer diagnostics {\"backend\":\"WebGPU\",\"context\":\"GPUCanvasContext\",\"browser\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36\",\"adapter\":{\"vendor\":\"amd\",\"architecture\":\"rdna-1\",\"device\":\"\",\"description\":\"\"},\"maxVertexBuffers\":8}"
+  ],
+  "captures": [
+    {
+      "path": "artifacts/colony-idle.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "tick": 67
+    },
+    {
+      "path": "artifacts/colony-carrying.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "tick": 69
+    },
+    {
+      "path": "artifacts/colony-proportions.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "tick": 420
+    },
+    {
+      "path": "artifacts/colony-bed-preview-0.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "tick": 420
+    },
+    {
+      "path": "artifacts/colony-bed-preview-1.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "tick": 420
+    },
+    {
+      "path": "artifacts/colony-bed-preview-2.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "tick": 420
+    },
+    {
+      "path": "artifacts/colony-bed-preview-3.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "tick": 420
+    },
+    {
+      "path": "artifacts/colony-cutaway.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "tick": 420
+    },
+    {
+      "path": "artifacts/colony-foliage-hidden.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "tick": 420
+    },
+    {
+      "path": "artifacts/colony-work-panel.png",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "tick": 420
+    },
+    {
+      "path": "artifacts/colony-inspector.png",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "tick": 420
+    },
+    {
+      "path": "artifacts/colony-final.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "tick": 420
+    }
+  ],
+  "errors": []
+}

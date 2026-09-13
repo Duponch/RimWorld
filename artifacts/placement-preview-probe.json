@@ -1,0 +1,49 @@
+{
+  "errors": [],
+  "diagnostics": [
+    "Lisière renderer diagnostics {\"backend\":\"WebGPU\",\"context\":\"GPUCanvasContext\",\"browser\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36\",\"adapter\":{\"vendor\":\"amd\",\"architecture\":\"rdna-1\",\"device\":\"\",\"description\":\"\"},\"maxVertexBuffers\":8}"
+  ],
+  "captures": [
+    {
+      "path": "tmp/preview-probe/orientation-0.png",
+      "orientation": "0°",
+      "point": {
+        "x": 778.8257912149288,
+        "y": 473.17809037155814
+      },
+      "title": "",
+      "target": "CANVAS"
+    },
+    {
+      "path": "tmp/preview-probe/orientation-1.png",
+      "orientation": "90°",
+      "point": {
+        "x": 778.8257912149288,
+        "y": 473.17809037155814
+      },
+      "title": "",
+      "target": "CANVAS"
+    },
+    {
+      "path": "tmp/preview-probe/orientation-2.png",
+      "orientation": "180°",
+      "point": {
+        "x": 778.8257912149288,
+        "y": 473.17809037155814
+      },
+      "title": "",
+      "target": "CANVAS"
+    },
+    {
+      "path": "tmp/preview-probe/orientation-3.png",
+      "orientation": "270°",
+      "point": {
+        "x": 778.8257912149288,
+        "y": 473.17809037155814
+      },
+      "title": "",
+      "target": "CANVAS"
+    }
+  ],
+  "backend": "WebGPU"
+}

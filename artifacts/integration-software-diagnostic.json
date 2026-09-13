@@ -1,0 +1,34 @@
+{
+  "date": "2026-09-13",
+  "scope": "Diagnostic of the large-map integration scenario; not a performance benchmark",
+  "scenario": "32 to 64 to 32 to 128 to 32, exact generated state and prior-colony restoration",
+  "configuration": {
+    "browser": "Chromium launched by the standard Playwright integration configuration",
+    "args": ["--enable-unsafe-webgpu", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"],
+    "viewport": { "width": 1440, "height": 1000 },
+    "testTimeoutMs": 90000,
+    "result": "failed: global timeout; not counted as a passing run"
+  },
+  "traceProvenance": {
+    "original": "test-results/colony-nouvelle-colonie-ta-6a3a5-te-à-une-partie-avec-ordres/trace.zip",
+    "member": "1-trace.trace",
+    "fullTraceRetained": false,
+    "reason": "A following targeted Playwright invocation cleared test-results before the original archive was copied. The excerpts below were read from that archive before cleanup."
+  },
+  "observedTraceExcerpts": [
+    { "call": "call@335", "action": "Read serialized 128x128 world", "startTime": 115542.038, "endTime": 115588.766, "seed": 4294967295, "tick": 0 },
+    { "call": "call@337", "action": "Expect map-size text 128 x 128", "startTime": 115597.981, "endTime": 115613.122, "completed": true },
+    { "call": "call@339", "action": "Expect pause banner visible", "startTime": 115632.151, "endTime": 131784.084, "completed": true },
+    { "call": "call@349", "action": "Click restore-previous", "startTime": 132282.195, "endTime": 156296.905, "completed": true },
+    { "call": "call@352", "action": "First post-click serialized state still 128x128", "startTime": 156302.572, "endTime": 156347.387, "seed": 4294967295, "tick": 0 },
+    { "call": "call@354", "action": "Next serialized state restored 32x32", "startTime": 156546.230, "endTime": 156552.582, "seed": 42, "tick": 48 },
+    { "call": "call@356", "action": "Final expect map-size text 32 x 32", "startTime": 156571.140, "endTime": 156656.257, "completed": true }
+  ],
+  "conclusions": [
+    "The trace progressed through exact world-state comparison and the final UI assertion before the runner reported a global timeout.",
+    "JSON string transport reduced the large-world read to approximately 47 ms in the recorded excerpt; large recursive matcher arguments were removed from this scenario.",
+    "The software configuration still showed slow UI actions. The precise contribution of rendering, instrumentation and teardown was not isolated.",
+    "This does not establish a game-state bug, a hardware performance result or a resolved software-renderer performance issue.",
+    "A subsequent targeted run using Chromium normal adapter selection passed this same business scenario in 17.7 seconds; the first two integration scenarios retain the software fallback configuration."
+  ]
+}

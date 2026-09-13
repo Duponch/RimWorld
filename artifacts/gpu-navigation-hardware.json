@@ -1,0 +1,203 @@
+{
+  "timestamp": "2026-09-13T10:07:14.763Z",
+  "mode": "normal-chromium",
+  "host": {
+    "platform": "win32",
+    "release": "10.0.26200",
+    "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+    "logicalCpus": 12
+  },
+  "method": "isolated page, no renderer; 1 warmup + 3 measured runs; GPU wall time includes upload/allocation/encode/readback; CPU independent Dijkstra including validation; no GPU timestamp-query",
+  "adapter": {
+    "vendor": "amd",
+    "architecture": "rdna-1",
+    "device": "",
+    "description": "",
+    "isFallbackAdapter": false
+  },
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+  "validation": [
+    {
+      "name": "single-cell",
+      "requests": 1,
+      "passed": true
+    },
+    {
+      "name": "weighted-detour-edge-no-wrap",
+      "requests": 4,
+      "passed": true
+    },
+    {
+      "name": "disconnected-blocked-endpoint",
+      "requests": 4,
+      "passed": true
+    },
+    {
+      "name": "diagonal-gap-is-inaccessible",
+      "requests": 1,
+      "passed": true
+    },
+    {
+      "name": "vertical-65-workgroup-boundary",
+      "requests": 2,
+      "passed": true
+    },
+    {
+      "name": "horizontal-65-workgroup-boundary",
+      "requests": 2,
+      "passed": true
+    },
+    {
+      "name": "seeded-weighted-8x9-0",
+      "requests": 8,
+      "passed": true
+    },
+    {
+      "name": "seeded-weighted-8x9-1",
+      "requests": 8,
+      "passed": true
+    },
+    {
+      "name": "seeded-weighted-8x9-2",
+      "requests": 8,
+      "passed": true
+    },
+    {
+      "name": "seeded-weighted-8x9-3",
+      "requests": 8,
+      "passed": true
+    },
+    {
+      "name": "seeded-weighted-8x9-4",
+      "requests": 8,
+      "passed": true
+    },
+    {
+      "name": "seeded-weighted-8x9-5",
+      "requests": 8,
+      "passed": true
+    },
+    {
+      "name": "seeded-weighted-8x9-6",
+      "requests": 8,
+      "passed": true
+    },
+    {
+      "name": "seeded-weighted-8x9-7",
+      "requests": 8,
+      "passed": true
+    },
+    {
+      "name": "seeded-weighted-8x9-8",
+      "requests": 8,
+      "passed": true
+    },
+    {
+      "name": "seeded-weighted-8x9-9",
+      "requests": 8,
+      "passed": true
+    },
+    {
+      "name": "seeded-weighted-8x9-10",
+      "requests": 8,
+      "passed": true
+    },
+    {
+      "name": "seeded-weighted-8x9-11",
+      "requests": 8,
+      "passed": true
+    },
+    {
+      "name": "budget-capacity-concurrent-revision-invalidation",
+      "requests": 4,
+      "passed": true
+    }
+  ],
+  "measurements": [
+    {
+      "size": 32,
+      "batchSize": 1,
+      "iterations": 96,
+      "allocatedBytes": 13364,
+      "readbackBytes": 524,
+      "samples": [
+        {
+          "gpuEndToEndMs": 4.5999999940395355,
+          "cpuOracleMs": 0.30000001192092896
+        },
+        {
+          "gpuEndToEndMs": 3.5,
+          "cpuOracleMs": 0.5999999940395355
+        },
+        {
+          "gpuEndToEndMs": 4.899999991059303,
+          "cpuOracleMs": 0.30000001192092896
+        }
+      ]
+    },
+    {
+      "size": 32,
+      "batchSize": 8,
+      "iterations": 96,
+      "allocatedBytes": 78128,
+      "readbackBytes": 4192,
+      "samples": [
+        {
+          "gpuEndToEndMs": 4.0999999940395355,
+          "cpuOracleMs": 2.5
+        },
+        {
+          "gpuEndToEndMs": 3.9000000059604645,
+          "cpuOracleMs": 2.0999999940395355
+        },
+        {
+          "gpuEndToEndMs": 4.200000002980232,
+          "cpuOracleMs": 1.7999999970197678
+        }
+      ]
+    },
+    {
+      "size": 250,
+      "batchSize": 1,
+      "iterations": 750,
+      "allocatedBytes": 758052,
+      "readbackBytes": 4012,
+      "samples": [
+        {
+          "gpuEndToEndMs": 18.100000008940697,
+          "cpuOracleMs": 13.299999997019768
+        },
+        {
+          "gpuEndToEndMs": 19.400000005960464,
+          "cpuOracleMs": 13.599999994039536
+        },
+        {
+          "gpuEndToEndMs": 17.899999991059303,
+          "cpuOracleMs": 12.400000005960464
+        }
+      ]
+    },
+    {
+      "size": 250,
+      "batchSize": 8,
+      "iterations": 750,
+      "allocatedBytes": 4314304,
+      "readbackBytes": 32096,
+      "samples": [
+        {
+          "gpuEndToEndMs": 52.400000005960464,
+          "cpuOracleMs": 109.20000000298023
+        },
+        {
+          "gpuEndToEndMs": 52.6000000089407,
+          "cpuOracleMs": 100.8999999910593
+        },
+        {
+          "gpuEndToEndMs": 56.79999999701977,
+          "cpuOracleMs": 118.20000000298023
+        }
+      ]
+    }
+  ],
+  "errors": []
+}

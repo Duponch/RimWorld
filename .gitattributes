@@ -1,0 +1,5 @@
+* text=auto eol=lf
+*.pdf binary
+*.xlsx binary
+# Preserve the user-supplied reference documents byte for byte.
+docs/new_docs/* -text
