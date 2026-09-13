@@ -153,3 +153,11 @@ Le rendu des personnages quitte la scène principale : `PawnLayer.ts` conserve p
 La première couche BFS atteignant un but suffit pour départager les destinations de même distance, en conservant tous les parents de cette couche. Une carte partielle est réservée à ce contrat ; le travail général reste sur recherche complète. Les résultats sont confrontés à l'oracle complet et à des états finaux avant/après optimisation. Cette liberté technique ne change pas la navigation jouée en GPU : celle-ci reste CPU.
 
 Chaque nouvelle mécanique exige une recherche ciblée, une liste d'écarts et des mesures proportionnées. Les messages de commit résument changement, validation et position dans G0–G5. Les résultats réels sont conservés dans validation.md ; aucun chiffre matériel n'est inféré d'une capacité théorique.
+
+## ADR-017 — Ressources graphiques conservées pendant les actions
+
+Décision du 13 septembre 2026 : la disparition d'une ressource retire ses indices du lot existant ; elle ne reconstruit plus les sommets des voisins. Le mobilier, les piles, les réserves et les marqueurs de travaux utilisent des lots instanciés persistants et des matériaux partagés. La croissance de capacité est géométrique et distincte de la variation de quantité active. `ResourceLayer`, `StaticGeometry` et `BoxBatches` portent ces responsabilités ; la scène garde caméra et interactions. [Diagnostic, protocole et limites](render-lifecycle.md).
+
+Le champ de quantité n'entre pas dans une clé de pipeline reconstruite à chaque tick. Le progrès de collecte, qui ne modifie pas son marqueur, n'invalide plus ce marqueur. La reconstruction locale reste permise à l'ajout/déplacement d'une ressource et la remise à zéro complète au changement de carte. Le propriétaire final libère géométries et matériaux partagés ; les groupes enfants ne les détruisent pas isolément. Le rendu demeure sans autorité sur les règles ni les sauvegardes, qui restent en schéma 4.
+
+Le pilote de partie est du code de test, hors application : il lit un état observable, retourne des commandes puis laisse le moteur les exécuter. Le même plan de décisions peut piloter le noyau ou les contrôles du navigateur. Il ne crée aucune API de triche en production et ne change pas l'horloge pour écourter les journées.

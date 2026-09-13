@@ -1,13 +1,12 @@
-import * as THREE from 'three/webgpu';
+import type * as THREE from 'three/webgpu';
+import type { BoxBatches } from './BoxBatches';
 import type { World } from '../sim/types';
 import { footprintCells } from '../sim/definitions';
 import { WORLD_SCALE } from '../world/scale';
-import { clearGroup, instances, material } from './primitives';
 import type { Placement } from './primitives';
 
 /** Procedural furniture batches rebuilt only when structure content changes. */
-export function buildFurniture(world: World, group: THREE.Group, cutaway: boolean): void {
-    clearGroup(group);
+export function buildFurniture(world: World, group: THREE.Group, cutaway: boolean, batches: BoxBatches): void {
     const wallHeight = cutaway ? WORLD_SCALE.wallCutawayHeight : WORLD_SCALE.wallHeight;
     const walls: Placement[] = [], wallCaps: Placement[] = [], bedFrames: Placement[] = [], bedding: Placement[] = [], pillows: Placement[] = [], headboards: Placement[] = [], woodParts: Placement[] = [];
     for (const structure of world.structures) {
@@ -38,11 +37,11 @@ export function buildFurniture(world: World, group: THREE.Group, cutaway: boolea
         woodParts.push({ x: x + lx * Math.cos(ry) + lz * Math.sin(ry), z: z + lz * Math.cos(ry) - lx * Math.sin(ry), y: (height - 0.09) / 2, sx: 0.09, sy: height - 0.09, sz: 0.09, ry });
       }
     }
-    instances(group, new THREE.BoxGeometry(1, 1, 1), material(0xa38559), woodParts);
-    instances(group, new THREE.BoxGeometry(0.96, wallHeight - 0.09, 0.96), material(0xa6916e), walls);
-    instances(group, new THREE.BoxGeometry(1.01, 0.09, 1.01), material(0xc3af86), wallCaps);
-    instances(group, new THREE.BoxGeometry(1, 1, 1), material(0x795d41), bedFrames);
-    instances(group, new THREE.BoxGeometry(1, 1, 1), material(0xc7a977), bedding);
-    instances(group, new THREE.BoxGeometry(1, 1, 1), material(0xe5d8b7), pillows);
-    instances(group, new THREE.BoxGeometry(1, 1, 1), material(0x795d41), headboards);
-  }
+    batches.set(group, 'furniture', [
+      ...woodParts.map(p => ({ ...p, color: 0xa38559 })),
+      ...walls.map(p => ({ ...p, sx: 0.96, sy: wallHeight - 0.09, sz: 0.96, color: 0xa6916e })),
+      ...wallCaps.map(p => ({ ...p, sx: 1.01, sy: 0.09, sz: 1.01, color: 0xc3af86 })),
+      ...bedFrames.map(p => ({ ...p, color: 0x795d41 })), ...bedding.map(p => ({ ...p, color: 0xc7a977 })),
+      ...pillows.map(p => ({ ...p, color: 0xe5d8b7 })), ...headboards.map(p => ({ ...p, color: 0x795d41 })),
+    ]);
+}

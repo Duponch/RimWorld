@@ -1,0 +1,51 @@
+# Ce qui est jouable et ce qui manque
+
+État du 13 septembre 2026, après la correction des mises à jour graphiques et l'ajout du pilote de colonie. Cet inventaire décrit **le code livré**, contrairement aux critères cibles de la [matrice](systems-matrix.md). [ROADMAP](../ROADMAP.md) conserve seul le calendrier G0–G5. Il ne s'agit ni d'un pourcentage de complétude ni d'un catalogue exhaustif de tous les objets de RimWorld.
+
+## Boucle actuellement jouable
+
+Une partie génère une carte 250×250 avec rivière, massifs, végétation et trois colons. Le joueur désigne récolte ou abattage, règle collecte/construction/transport, prépare des réserves filtrées et place murs, lits, tables et tabourets. Les objets sont prélevés, portés, déposés et livrés aux chantiers. Les colons cherchent et portent leur portion avant ingestion, réservent leur place à table et rejoignent un couchage. Confort et un souvenir de repas sans table influencent l'humeur provisoire. Pause, vitesses, inspection, historique court et sauvegarde/rechargement sont utilisables.
+
+Le décor est procédural, les poses des personnages utilisent le GPU et les changements de quantité conservent désormais les lots graphiques. Le compteur FPS est permanent. Le [pilote de partie](../research/colony-progression.md) exerce cet ensemble ; il ne transforme pas les absences ci-dessous en systèmes implicitement simulés.
+
+## Inventaire par domaine
+
+| Domaine | Présent | Partiel ou absent |
+|---|---|---|
+| Démarrage et difficulté | Graine, tailles locales, nouvelle colonie et retour à la précédente. | Choix de scénario, difficulté, narrateur, sélection de site mondial et création/personnalisation des colons. Le départ actuel n'est pas le scénario Crashlanded complet. |
+| Génération locale | Terrain reproductible, rivière continue, massifs et végétation corrélée, accès du camp contrôlé. | Autres biomes, grottes, minerais différenciés, ruines et structures naturelles riches, paramètres climatiques de site, brouillard de guerre et exploration. |
+| Espace 3D | Case de 1 m, proportions centralisées, emprises tournées, caméra orientable, masquage du feuillage et coupe des murs. | Toits, portes, pièces et étages. La grille logique reste plane ; la hauteur du modèle ne crée pas un étage jouable. |
+| Navigation | Trajets CPU déterministes, replans, plafond de recherches, cession locale d'un colon inactif. | Résolution générale de congestion entre agents actifs, profils de danger/interdiction, coûts riches de terrain/mobilier, régions partagées avec pièces. Le calcul GPU est un laboratoire séparé. |
+| Commandes et sélection | Sélection individuelle/cellule, désignation rectangulaire, aperçu/refus et annulation. | Sélection multiple, ordres forcés contextuels, mobilisation, files d'ordres, copie de plans et commandes avancées d'Architecte. |
+| Travail | Collecte, construction, transport et priorités 0–4. | Autres métiers, incapacités, compétences/passions/expérience, zones autorisées, horaires et politiques individuelles. |
+| Collecte végétale | Fin d'abattage/récolte produisant de vraies piles, travail et portage séparés. | Espèces, maturité, pousse, souches, régénération et rendement dépendant des compétences. **La disparition des buissons récoltés est un écart à corriger**, pas la cible de référence. |
+| Agriculture | Aucun système agricole. | Zones de culture, choix de plante, semis, croissance selon lumière/fertilité/température, saison, récolte renouvelable, maladies des plantes et réserves de récolte. |
+| Matières et portage | Bois/nourriture, propriétaires uniques, fractionnement/fusion, réservations et cargaisons. | Masse, profils de capacité, inventaire personnel, équipements, autres matières, détérioration, objets interdits et nombreuses règles de coexistence des piles. |
+| Stockage | Cases avec filtres, priorités et capacité ; création/retrait par rectangle. | Zones nommées à politique commune, étagères, filtres détaillés et politiques de fraîcheur/qualité ; cette UI n'est pas encore le stockage complet. |
+| Construction | Bois réellement livré puis consommé ; murs, lits, tables/tabourets et rotations. | Minage, déconstruction, réparation, déplacement/réinstallation, lissage, sols, suppression automatique des objets gênants, variétés de matériaux et échecs/qualité de construction. Plans de murs et tables encore bloquants. |
+| Mobilier | Lit 1×2, table 1×2, tabouret et usage physique. | Couchages au sol désignés, chaises, lits doubles/hospitaliers, objets de loisirs, éclairage, confort des accessoires et qualité. |
+| Alimentation | Accès, réservation, portion portée, place de repas, ingestion différée et perte réelle d'une portion. | Types d'aliments/nutrition calibrée, sélection par préférences/régime, nourriture crue distincte, recettes, ingrédients, cuisson, boucherie, chasse, péremption et intoxication. |
+| Sommeil et besoins | Lit attribué/rejoint, sommeil effectif, repli au sol et confort. | Horaires, loisirs/variété/tolérance, beauté, extérieur et autres besoins conditionnels ; profils/traits de sommeil et réveils externes. Effondrement et certains seuils sont provisoires. |
+| Humeur | Agrégat faim/repos, effet de confort et souvenir « sans table ». | Dynamique complète d'humeur, pensées de situation, autres mémoires, attentes, crises mentales et effets du caractère. |
+| Personnages | Trois identités/noms et états de travail/besoins persistants. | Âge, histoire, traits, capacités dérivées, compétences, passions, apprentissage et incapacités. Les extensions de génétique/enfance ne sont pas présumées incluses. |
+| Pièces et habitat | Volumes de murs uniquement. | Reconnaissance des pièces, supports/toits, effondrements, chambres, fonctions de pièces, beauté, propreté, saleté et nettoyage. |
+| Climat et conservation | Eau et terrain sont représentés visuellement. | Météo, cycle lumineux effectif, saisons, température, neige, échanges thermiques, chauffage, refroidissement et conservation liée au milieu. |
+| Énergie et risques | Aucun réseau. | Câbles, générateurs, batteries, consommation, pannes, combustible, incendies, propagation et extinction. |
+| Santé et mortalité | Aucun système de santé. | Anatomie, blessures, douleur, saignement, infections/maladies, malnutrition, handicaps, soins, médecine, chirurgie/prothèses, secours, mort et cadavres. Une jauge à zéro ne simule pas ces conséquences. |
+| Combat et sécurité | Aucun combat. | Mobilisation, équipement, armes/armures, mêlée, tirs, projectiles, couverture, visibilité, ciblage, poursuite/fuite, menaces, pièges, tourelles et comportements adverses. |
+| Faune et élevage | Aucun animal. | Espèces, régimes/prédation, chasse, apprivoisement, dressage, enclos, reproduction, produits animaux, abattage et soins. |
+| Relations et statuts | Aucun réseau social. | Opinions dirigées, interactions, couples/familles, relations avec animaux, visiteurs, prisonniers, recrutement et statuts de contrôle. |
+| Production et recherche | Construction du petit mobilier actuel. | Ateliers, factures/recettes, produits intermédiaires, artisanat, vêtements/armes, qualité, œuvres d'art et arbre de recherche. |
+| Économie et factions | Compteurs matériels locaux. | Richesse de colonie, monnaie, commerce, caravanes marchandes, prix, diplomatie, réputation et relations entre factions. |
+| Narration et quêtes | Historique court d'actions et alertes de besoins. | Narrateur, incidents, rythme de menace, raids, événements sociaux, lettres/choix, quêtes, récompenses et progression narrative. |
+| Monde et voyages | Une carte locale. | Planète, sites, routes, caravanes, chargement de voyage, rencontres, transferts et persistance de plusieurs cartes. |
+| Objectifs de partie | Développement libre du petit camp. | Conditions de défaite complètes, objectifs longs, fins, poursuite après victoire et campagne du jeu de base. |
+| Interface et outils | Organisation générale de RimWorld, onglets actifs du périmètre, inspection et commandes clavier. | Gestion riche des personnes/politiques/animaux/recherche/monde, superpositions métier, recherches de contenu, accessibilité complète, réglages graphiques/audio et tutoriel complet. |
+| Présentation et contenu | Géométrie low poly en code, rig rigide GPU, objets portés, compteur FPS. | Assets de personnages définitifs, import/validation de rigs/clips, équipements animés, sons, musique, effets d'action et identité artistique finale. |
+| Continuité et extensions | Sauvegarde locale V4 et migrations V1–V3 ; tests de continuation. | Export/import, manifeste/version de contenu, journal complet de commandes, outils de contenu/modding et compatibilité étendue. Les DLC viennent après G5. |
+
+## Écarts qui influencent déjà la partie
+
+Les quantités de nourriture, leur valeur nutritionnelle, plusieurs coûts/durées et le rythme des besoins ne sont pas encore calibrés au jeu original. La collecte actuelle épuise des ressources finies ; elle ne remplace pas une économie agricole renouvelable. Les tables bloquent le passage, les plans de murs le bloquent immédiatement, et l'humeur n'a qu'une petite partie de ses causes. Les [décisions détaillées](decisions.md) et la [recherche récente](../research/colony-progression.md) conservent les raisons et les conditions de réexamen.
+
+La suite de G1 doit notamment corriger ensemble aliments distincts, unités, buissons persistants/croissance et horaires, puis construire agriculture et cuisine. Chaque ajout enrichira les objectifs et bilans du même pilote de colonie, au lieu d'accumuler des parcours sans conséquences métier.

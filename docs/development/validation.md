@@ -1,6 +1,39 @@
 # Validation du prototype
 
-## État courant : repas à table, confort et FPS — 13 septembre 2026
+## État courant : abattage fluide et partie de plusieurs jours — 13 septembre 2026
+
+[Cycle de vie graphique](render-lifecycle.md), [relecture de la collecte et du pilote](../research/colony-progression.md), [inventaire du gameplay](../gameplay/implementation-status.md). La simulation et le schéma 4 restent inchangés : cette tranche corrige les reconstructions graphiques répétées et ajoute une vérification de développement de colonie.
+
+**Deux nouveaux scénarios approfondis passent.** Le pilote fait cinq jours sur chacune des trois cartes naturelles 250² (graines 42, 93, 2048), soit 90 000 ticks : matériaux conservés, besoins non épuisés, trois lits/table/trois sièges construits dès la première journée, six murs au terme de la partie, au moins dix repas et 4 000 ticks de sommeil en lit par colon, restauration quotidienne exacte. Passage final : 31,07 s. Le contrôle de conservation/libération des buffers et faces graphiques passe séparément en 1,17 s. Les vingt scénarios antérieurs, dont les contrats de simulation inchangés, ont leur dernier passage global dans la section historique suivante ; ils ne sont pas redatés artificiellement.
+
+**Six parcours UI courts passent ensemble** dans le premier appel navigateur ; leurs durées cumulées sont de 113,331 s. **Le parcours de trois jours passe ensuite en 437,36 s**, après correction de son pilote. Le [rapport consolidé](../../artifacts/colony-validation.json) conserve les deux dates, les durées, les assertions métier et les pièces jointes. Le parcours long hérite du backend logiciel du projet : **WebGL 2/SwiftShader**, ce qui ne constitue pas une mesure de performance GPU. Les parcours courts de gameplay utilisent Chromium normal/WebGPU ; celui des frontières conserve le repli logiciel.
+
+Le pilote UI commence une partie normale, sans fixture injectée ni accélération cachée. Il effectue 43 décisions par menus/clics et utilise la vitesse 6× du jeu. À la fin des trois jours (tick 18 071), il reste **41 bois et 23 portions**, avec **3 lits, 1 table, 3 tabourets, 6 murs et aucun chantier en attente**. Les **21 repas** sont rapprochés de la perte de nourriture ; les trois colons ont été observés dormant dans un lit. Les trois sauvegardes quotidiennes rechargent exactement leur état. Aucun message d'erreur console/pipeline.
+
+La première version du pilote UI fermait Architecte après choix de l'outil : cela le désactivait conformément à l'interface et l'ordre n'était pas envoyé. Le test conserve désormais le panneau ouvert ; cet échec n'est pas un bug du moteur ni un passage réussi. Le premier plan de simulation essayait un siège hors clairière ; le plan a été corrigé sans ajouter d'objets au monde ni diminuer le nombre de sièges attendu. Les captures du repas assis et du camp de trois jours ont été **inspectées visuellement** : volumes, place assise, lits occupés et ressources visibles cohérents. `artifacts/dining-seated.png` et `artifacts/colony-three-days.png` sont régénérables et ignorés dans Git.
+
+### Comparaison matérielle avant/après
+
+Même PC que les audits précédents, WebGPU AMD/RDNA-1, Chromium normal sans fenêtre, 1 440×1 000. Les timings sont distincts du parcours fonctionnel en rendu logiciel. Aucun autre audit GPU n'a tourné simultanément.
+
+| Mesure | Avant | Après |
+|---|---:|---:|
+| Douze arbres sur 250², maximum d'intervalle de frame | 204,1 ms | **29,2 ms** |
+| Fenêtres suivant les retraits, p95 / maximum | 50,0 / 175,0 ms | **4,3 / 29,2 ms** |
+| Créations synchrones de pipelines pendant l'abattage | 75 | **4** |
+| Mise à jour de ressources, coût CPU maximal | 15,9 ms | **5,0 ms** |
+| Cent colons, scénario repas/sommeil 6×, maximum de frame | 333,4 ms | **20,8 ms** |
+| Même scénario, renderer CPU maximal | 101,5 ms | **8,8 ms** |
+
+Les [rapports d'abattage avant](../../artifacts/tree-render-before.json) et [après](../../artifacts/tree-render-after.json) conservent les données et horodatages (16:41:43 et 16:45:54 UTC). Douze arbres réellement abattus, mêmes 141 bois disponibles, aucune erreur ; les ticks de publication diffèrent car les mesures suivent le temps réel. Le p95 global de frame reste 4,3 ms : c'est le maximum et la fenêtre des retraits qui révèlent ici le problème.
+
+Le [nouveau contrôle à cent acteurs](../../artifacts/dining-render-retained.json), à 17:05:27 UTC, utilise le même scénario que le [rapport historique](../../artifacts/dining-render-benchmark.json). En activité, p95 de frame 4,3 ms, maximum 20,8 ms, aucune tâche longue relevée ; adoption des snapshots au maximum 3,1 ms et mise à jour DOM 4,8 ms. Les cent portions sont consommées à table et les cent lits occupés. En pause, p95 8,4 ms, maximum 12,5 ms ; 139 appels de dessin contre 173 auparavant, avec 221 645 triangles dans les deux cas.
+
+Ces résultats montrent la suppression des gros gels reproduits sur ces scénarios. Ils ne garantissent pas toutes les frames sous 16,7 ms ni une fluidité parfaite sur tout matériel, en congestion ou lors d'une nouvelle allocation massive. Les reconstructions locales à l'ajout de ressources et les hausses de capacité restent des points d'audit lors des prochains systèmes.
+
+**Compilation TypeScript/Vite finale réussie** : jeu 985,46 kB minifiés / 272,75 kB gzip, worker inchangé à 55,12 kB. Le warning de chunk supérieur à 500 kB reste visible. Le renderer principal passe de 774 à 667 lignes ; trois responsabilités supplémentaires sont extraites. Contrôle de 27 documents et 231 liens locaux réussi ; fins de fichiers vérifiées avant le commit. Le dernier nettoyage ne change que l'ordre de libération des propriétaires graphiques et retire deux références inutilisées ; le contrôle matériel à cent acteurs le suit.
+
+## Historique : repas à table, confort et FPS — 13 septembre 2026
 
 [Contrat livré](dining.md), [recherche et écarts de référence](../research/dining-reference.md). Tables et tabourets nécessitent livraison et construction ; le repas réserve une place, y transporte la portion puis l'ingère. Le confort dépend de l'usage réel du mobilier ; le premier souvenir concerne le repas sans table. Le schéma 4 conserve les nouvelles phases et migre les versions 1 à 3. L'humeur complète et les types d'aliments restent à développer. Les tables bloquent ici le passage : cette adaptation 3D est explicitement provisoire.
 

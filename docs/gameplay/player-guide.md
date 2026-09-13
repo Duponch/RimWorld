@@ -86,3 +86,7 @@ Avant de créer une nouvelle colonie, le jeu conserve aussi l'état courant dans
 Pas encore d'agriculture, cuisine, conservation des aliments, minage, déconstruction, emploi du temps, animaux, armes, combat, blessures, médecine, relations, traits, recherche, commerce, électricité, toit, température, incendie, météo dynamique, carte du monde ou storyteller. Les réserves à plusieurs cases partageant une politique, la sélection multiple et les ordres forcés contextuels restent à développer. Les modèles sont provisoires ; la congestion entre agents actifs et la calibration des besoins restent ouvertes. La faim ne cause pas encore de malnutrition ni de décès.
 
 La suite est suivie dans [le plan de développement](../ROADMAP.md). Les détails de la référence et les futures interactions sont dans [la matrice des systèmes](systems-matrix.md).
+
+## Portée du jeu et évolution
+
+L’[inventaire complet par domaine](implementation-status.md) distingue ce qui est jouable, partiel et absent. La récolte actuelle retire le buisson : sa repousse n’est pas encore simulée, contrairement à la référence. Nourriture et rythme des besoins restent provisoires. Un camp peut fonctionner plusieurs jours dans ce périmètre sans que l’agriculture, la cuisine, la météo ou les maladies soient implicitement présentes. Les disparitions d’arbres et variations de piles conservent désormais leurs objets graphiques pour éviter les reconstructions répétées.

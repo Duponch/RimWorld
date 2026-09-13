@@ -78,3 +78,7 @@ Implémenter une tranche avec ses effets réels, enrichir les scénarios existan
 ## Vérification ciblée du mobilier et des repas — 13 septembre 2026
 
 La [recherche repas/confort](dining-reference.md) corrige les généralisations sur le rayon de table, l’origine après prélèvement et l’orientation du siège. Le [contrat local](../development/dining.md) ajoute la réservation et la marche à la place avant ingestion, distingue confort et souvenir, et expose passabilité 3D et paramètres à confirmer. Chapitres 5/10/14, SYS-076..080, UI-016/026 et TEST-189 restent des références de domaine, pas une affirmation de couverture totale. Les fichiers utilisateur originaux restent inchangés.
+
+## Relecture collecte et partie longue — 13 septembre 2026
+
+[Partie représentative et écarts](colony-progression.md) reprend chap. 9/10/14/30/32, SYS-041..061/076..080 et UI-013/019..026. Le pilote confronte commandes et bilans sur plusieurs jours ; il ne certifie pas notre calibration économique. La disparition des buissons est désormais un écart prioritaire explicite. La présentation conserve ses buffers et n’a aucune autorité sur la matière.

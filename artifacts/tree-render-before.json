@@ -1,0 +1,167 @@
+{
+  "timestamp": "2026-09-13T16:41:43.220Z",
+  "variant": "before",
+  "map": 250,
+  "pawns": 3,
+  "trees": 12,
+  "protocol": "Normal Chromium WebGPU; generated seed 42; twelve nearest trees designated; actual worker at 6x; 60 warmup frames; no world serialization during timed frames.",
+  "errors": [],
+  "backend": "WebGPU",
+  "adapter": {
+    "vendor": "amd",
+    "architecture": "rdna-1"
+  },
+  "frames": {
+    "count": 1589,
+    "p95": 4.299999999999727,
+    "max": 204.09999999999945,
+    "mean": 5.115859030837017
+  },
+  "frameCpu": {
+    "count": 1590,
+    "p95": 2.6000000000931323,
+    "max": 57.300000000046566,
+    "mean": 2.117610062886785
+  },
+  "removalFrames": {
+    "count": 118,
+    "p95": 50,
+    "max": 175,
+    "mean": 9.818644067796628
+  },
+  "updates": {
+    "updatePiles": {
+      "count": 37,
+      "p95": 0.6999999999534339,
+      "max": 0.8999999999068677,
+      "mean": 0.10540540540288831
+    },
+    "setWorld": {
+      "count": 37,
+      "p95": 13.599999999860302,
+      "max": 16.899999999906868,
+      "mean": 1.9081081080791615
+    },
+    "buildJobs": {
+      "count": 33,
+      "p95": 0.5,
+      "max": 0.8999999999068677,
+      "mean": 0.3424242424044871
+    },
+    "updateResources": {
+      "count": 6,
+      "p95": 15.899999999906868,
+      "max": 15.899999999906868,
+      "mean": 8.93333333331005
+    }
+  },
+  "pipelines": {
+    "count": 75,
+    "p95": 0.10000000009313226,
+    "max": 0.19999999995343387,
+    "mean": 0.030666666670391956
+  },
+  "events": [
+    {
+      "tick": 116,
+      "removed": 3
+    },
+    {
+      "tick": 215,
+      "removed": 3
+    },
+    {
+      "tick": 326,
+      "removed": 2
+    },
+    {
+      "tick": 356,
+      "removed": 1
+    },
+    {
+      "tick": 439,
+      "removed": 2
+    },
+    {
+      "tick": 455,
+      "removed": 1
+    }
+  ],
+  "slowFrames": [
+    {
+      "interval": 4.199999999999818,
+      "cpu": 51.299999999813735,
+      "nearRemoval": true
+    },
+    {
+      "interval": 66.69999999999982,
+      "cpu": 2.1000000000931323,
+      "nearRemoval": true
+    },
+    {
+      "interval": 183.19999999999982,
+      "cpu": 4.600000000093132,
+      "nearRemoval": false
+    },
+    {
+      "interval": 4.200000000000728,
+      "cpu": 57.300000000046566,
+      "nearRemoval": true
+    },
+    {
+      "interval": 70.79999999999927,
+      "cpu": 2.699999999953434,
+      "nearRemoval": true
+    },
+    {
+      "interval": 204.09999999999945,
+      "cpu": 4.599999999860302,
+      "nearRemoval": false
+    },
+    {
+      "interval": 4.100000000000364,
+      "cpu": 36.5,
+      "nearRemoval": true
+    },
+    {
+      "interval": 41.69999999999982,
+      "cpu": 2.0999999998603016,
+      "nearRemoval": true
+    },
+    {
+      "interval": 133.3000000000011,
+      "cpu": 2.5,
+      "nearRemoval": true
+    },
+    {
+      "interval": 79.09999999999854,
+      "cpu": 2.199999999953434,
+      "nearRemoval": true
+    },
+    {
+      "interval": 4.200000000000728,
+      "cpu": 43.300000000046566,
+      "nearRemoval": true
+    },
+    {
+      "interval": 50,
+      "cpu": 2.699999999953434,
+      "nearRemoval": true
+    },
+    {
+      "interval": 175,
+      "cpu": 2.5,
+      "nearRemoval": true
+    },
+    {
+      "interval": 37.5,
+      "cpu": 2.4000000001396984,
+      "nearRemoval": true
+    }
+  ],
+  "outcome": {
+    "tick": 485,
+    "wood": 141,
+    "remainingChop": 0
+  }
+}

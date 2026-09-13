@@ -1,0 +1,104 @@
+{
+  "timestamp": "2026-09-13T16:45:54.743Z",
+  "variant": "after",
+  "map": 250,
+  "pawns": 3,
+  "trees": 12,
+  "protocol": "Normal Chromium WebGPU; generated seed 42; twelve nearest trees designated; actual worker at 6x; 60 warmup frames; no world serialization during timed frames.",
+  "errors": [],
+  "backend": "WebGPU",
+  "adapter": {
+    "vendor": "amd",
+    "architecture": "rdna-1"
+  },
+  "frames": {
+    "count": 1919,
+    "p95": 4.299999999999272,
+    "max": 29.199999999999818,
+    "mean": 4.212298071912467
+  },
+  "frameCpu": {
+    "count": 1920,
+    "p95": 2.6000000000931323,
+    "max": 15.600000000093132,
+    "mean": 1.998333333328022
+  },
+  "removalFrames": {
+    "count": 448,
+    "p95": 4.299999999999272,
+    "max": 29.199999999999818,
+    "mean": 4.361383928571426
+  },
+  "updates": {
+    "updatePiles": {
+      "count": 37,
+      "p95": 0.20000000018626451,
+      "max": 0.4000000001396984,
+      "mean": 0.05405405407293221
+    },
+    "setWorld": {
+      "count": 37,
+      "p95": 5.2000000001862645,
+      "max": 5.300000000046566,
+      "mean": 0.9621621621898502
+    },
+    "buildJobs": {
+      "count": 9,
+      "p95": 0.19999999995343387,
+      "max": 0.19999999995343387,
+      "mean": 0.08888888886819284
+    },
+    "updateResources": {
+      "count": 8,
+      "p95": 5,
+      "max": 5,
+      "mean": 3.9125000000058208
+    }
+  },
+  "pipelines": {
+    "count": 4,
+    "p95": 0.10000000009313226,
+    "max": 0.10000000009313226,
+    "mean": 0.04999999998835847
+  },
+  "events": [
+    {
+      "tick": 112,
+      "removed": 3
+    },
+    {
+      "tick": 208,
+      "removed": 1
+    },
+    {
+      "tick": 220,
+      "removed": 2
+    },
+    {
+      "tick": 319,
+      "removed": 2
+    },
+    {
+      "tick": 343,
+      "removed": 1
+    },
+    {
+      "tick": 433,
+      "removed": 1
+    },
+    {
+      "tick": 448,
+      "removed": 1
+    },
+    {
+      "tick": 463,
+      "removed": 1
+    }
+  ],
+  "slowFrames": [],
+  "outcome": {
+    "tick": 481,
+    "wood": 141,
+    "remainingChop": 0
+  }
+}

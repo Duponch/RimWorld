@@ -2,7 +2,10 @@ import * as THREE from 'three/webgpu';
 import { buildFurniture } from './FurnitureLayer';
 import { PawnLayer } from './PawnLayer';
 import { FrameMetrics } from './FrameMetrics';
-import { clearGroup, material, instances } from './primitives';
+import { BoxBatches } from './BoxBatches';
+import { ResourceLayer } from './ResourceLayer';
+import { mergedInstances, noise } from './StaticGeometry';
+import { clearGroup, material } from './primitives';
 import type { Placement } from './primitives';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import type { World, Terrain, MaterialKind, Orientation, AreaAction, Cell } from '../sim/types';
@@ -18,59 +21,6 @@ type VisualChunk = { signature: string; group: THREE.Group };
 const TERRAIN_COLORS: Record<Terrain, number> = { grass: 0x81946c, soil: 0xa39b75, rock: 0x899182, water: 0x78a7a4 };
 const scratchObject = new THREE.Object3D();
 const scratchColor = new THREE.Color();
-
-function noise(x: number, z: number, salt = 0): number {
-  let value = Math.imul(x + 1, 374761393) ^ Math.imul(z + 1, 668265263) ^ Math.imul(salt + 1, 1274126177);
-  value = Math.imul(value ^ (value >>> 13), 1274126177);
-  return ((value ^ (value >>> 16)) >>> 0) / 4294967296;
-}
-
-/** Static chunk meshes batch different procedural shapes together. Their exact
- * per-cell silhouettes and colors stay intact; only submissions are combined.
- * Dynamic pawns and cargo remain GPU-instanced and are never baked here.
- */
-function mergedInstances(group: THREE.Group, parts: { geometry: THREE.BufferGeometry; items: Placement[] }[], mat: THREE.Material, shadows = true): THREE.Mesh | undefined {
-  const vertexCount = parts.reduce((sum, part) => sum + part.geometry.getAttribute('position').count * part.items.length, 0);
-  const indexCount = parts.reduce((sum, part) => sum + (part.geometry.index?.count ?? part.geometry.getAttribute('position').count) * part.items.length, 0);
-  if (!vertexCount) { for (const part of parts) part.geometry.dispose(); if (!mat.userData.rendererOwned) mat.dispose(); return; }
-  const positions = new Float32Array(vertexCount * 3), normals = new Float32Array(vertexCount * 3), colors = new Float32Array(vertexCount * 3);
-  const indices = vertexCount > 65535 ? new Uint32Array(indexCount) : new Uint16Array(indexCount);
-  let vertex = 0, index = 0;
-  for (const { geometry, items } of parts) {
-    const pos = geometry.getAttribute('position'), normal = geometry.getAttribute('normal');
-    for (const item of items) {
-      const sx = item.sx ?? 1, sy = item.sy ?? 1, sz = item.sz ?? 1;
-      const cosine = Math.cos(item.ry ?? 0), sine = Math.sin(item.ry ?? 0);
-      scratchColor.setHex(item.color ?? 0xffffff);
-      for (let i = 0; i < pos.count; i++) {
-        const x = pos.getX(i) * sx, z = pos.getZ(i) * sz;
-        const nx = normal.getX(i) / sx, ny = normal.getY(i) / sy, nz = normal.getZ(i) / sz;
-        const length = Math.hypot(nx, ny, nz), offset = (vertex + i) * 3;
-        positions[offset] = item.x + x * cosine + z * sine;
-        positions[offset + 1] = item.y + pos.getY(i) * sy;
-        positions[offset + 2] = item.z + z * cosine - x * sine;
-        normals[offset] = (nx * cosine + nz * sine) / length;
-        normals[offset + 1] = ny / length;
-        normals[offset + 2] = (nz * cosine - nx * sine) / length;
-        colors[offset] = scratchColor.r; colors[offset + 1] = scratchColor.g; colors[offset + 2] = scratchColor.b;
-      }
-      for (let i = 0; i < (geometry.index?.count ?? pos.count); i++) indices[index++] = vertex + (geometry.index?.getX(i) ?? i);
-      vertex += pos.count;
-    }
-    geometry.dispose();
-  }
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  geometry.setAttribute('normal', new THREE.BufferAttribute(normals, 3));
-  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-  geometry.setIndex(new THREE.BufferAttribute(indices, 1));
-  geometry.computeBoundingSphere();
-  const mesh = new THREE.Mesh(geometry, mat);
-  mesh.castShadow = shadows; mesh.receiveShadow = true;
-  mesh.matrixAutoUpdate = false;
-  group.add(mesh);
-  return mesh;
-}
 
 export class ColonyRenderer {
   readonly stats = { fps: 0, frameMs: 0, frameP95: 0, drawCalls: 0, triangles: 0 };
@@ -102,9 +52,10 @@ export class ColonyRenderer {
   private readonly resizeObserver: ResizeObserver;
   private readonly keys = new Set<string>();
   private readonly pileChunks = new Map<string, VisualChunk>();
-  private readonly resourceChunks = new Map<string, VisualChunk>();
   private readonly staticMaterial = material(0xffffff, { vertexColors: true });
   private readonly waterMaterial = material(0xffffff, { vertexColors: true, roughness: 0.45, metalness: 0.08 });
+  private readonly boxes = new BoxBatches();
+  private readonly resources = new ResourceLayer(this.resourceGroup, this.staticMaterial);
   private readonly sun: THREE.DirectionalLight;
   private world: World | null = null;
   private terrainKey = '';
@@ -116,7 +67,6 @@ export class ColonyRenderer {
   private hoverCell: { x: number; z: number } | null = null;
   private selectedPawn: number | null = null;
   private wallCutaway = false;
-  private foliageVisible = true;
   private lastFrame = 0;
   private snapshotAt = 0;
   private timeFrom = 0;
@@ -233,6 +183,7 @@ export class ColonyRenderer {
     const resetPoses = resetPresentation || newMap || world.tick < (previousWorld?.tick ?? 0);
     this.world = world;
     if (newMap) {
+      this.boxes.clear();
       this.terrainKey = nextTerrainKey;
       this.buildTerrain(world);
       const centerX = (world.width - 1) / 2, centerZ = (world.height - 1) / 2;
@@ -261,7 +212,7 @@ export class ColonyRenderer {
     if (structureKey !== this.structureKey || newMap) { this.structureKey = structureKey; this.buildStructures(world); }
     // Quantize presentation of progression to avoid rebuilding static meshes for
     // every work tick. Saved simulation progress remains exact and authoritative.
-    const jobKey = world.jobs.map((j) => `${j.id}:${j.kind}:${j.x}:${j.z}:${j.orientation}:${j.footprint}:${j.status}:${j.escrow.wood}:${Math.floor(j.progress / JOB_DURATION[j.kind] * 20)}`).join('|');
+    const jobKey = world.jobs.map((j) => `${j.id}:${j.kind}:${j.x}:${j.z}:${j.orientation}:${j.footprint}:${j.status}:${j.escrow.wood}:${j.kind === 'chop' || j.kind === 'harvest' ? 0 : Math.floor(j.progress / JOB_DURATION[j.kind] * 20)}`).join('|');
     if (jobKey !== this.jobKey || newMap) { this.jobKey = jobKey; this.buildJobs(world); }
     const storageKey = world.stockpiles.map((s) => `${s.id}:${s.x}:${s.z}:${s.priority}:${s.filters.wood}:${s.filters.food}`).join('|');
     if (storageKey !== this.storageKey || newMap) { this.storageKey = storageKey; this.buildStorage(world); }
@@ -315,8 +266,7 @@ export class ColonyRenderer {
 
   /** Hide canopies for inspection while retaining trunks and all game rules. */
   setFoliageVisible(visible: boolean): void {
-    this.foliageVisible = visible;
-    this.resourceGroup.traverse(object => { if (object.name === 'tree-canopy') object.visible = visible; });
+    this.resources.setFoliageVisible(visible);
   }
 
   focusPawn(id: number): void {
@@ -394,64 +344,11 @@ export class ColonyRenderer {
     }
   }
 
-  private updateResources(world: World, newMap: boolean): void {
-    if (newMap) { clearGroup(this.resourceGroup); this.resourceChunks.clear(); }
-    const chunks = new Map<string, World['resources']>();
-    for (const resource of world.resources) {
-      const key = `${Math.floor(resource.x / WORLD_SCALE.chunkSize)}:${Math.floor(resource.z / WORLD_SCALE.chunkSize)}`;
-      const chunk = chunks.get(key);
-      if (chunk) chunk.push(resource); else chunks.set(key, [resource]);
-    }
-    for (const [key, previous] of this.resourceChunks) if (!chunks.has(key)) {
-      clearGroup(previous.group); this.resourceGroup.remove(previous.group); this.resourceChunks.delete(key);
-    }
-    for (const [key, chunk] of chunks) {
-      const signature = chunk.map(resource => `${resource.id}:${resource.kind}:${resource.x}:${resource.z}`).join('|');
-      const previous = this.resourceChunks.get(key);
-      if (previous?.signature === signature) continue;
-      const group = previous?.group ?? new THREE.Group();
-      if (previous) clearGroup(group); else this.resourceGroup.add(group);
-      group.name = `Resources ${key}`;
-      const trunks: Placement[] = [], crowns: Placement[] = [], upperCrowns: Placement[] = [];
-      const rocks: Placement[] = [], bushes: Placement[] = [], berries: Placement[] = [];
-      for (const resource of chunk) {
-        const { x, z } = resource;
-        const n = noise(x, z, 77), turn = n * Math.PI * 2;
-        if (resource.kind === 'tree') {
-          const height = WORLD_SCALE.treeMinHeight + n * (WORLD_SCALE.treeMaxHeight - WORLD_SCALE.treeMinHeight);
-          const radius = 0.8 + n * 0.32;
-          trunks.push({ x, y: height * 0.25, z, sx: 1.1, sy: height * 0.5, sz: 1.1, ry: turn });
-          crowns.push({ x, y: height * 0.57, z, sx: radius, sy: height * 0.35, sz: radius, ry: turn, color: n > 0.65 ? 0x657d56 : 0x526e50 });
-          upperCrowns.push({ x, y: height * 0.83, z, sx: radius * 0.72, sy: height * 0.34, sz: radius * 0.72, ry: turn + 0.3, color: n > 0.65 ? 0x81925b : 0x688557 });
-        } else if (resource.kind === 'rock') {
-          rocks.push({ x: x - 0.1, y: 0.3, z, sx: 0.46 + n * 0.14, sy: 0.35 + n * 0.15, sz: 0.43, ry: turn, color: 0x92998d });
-          rocks.push({ x: x + 0.3, y: 0.15, z: z + 0.2, sx: 0.25, sy: 0.24, sz: 0.25, ry: -turn, color: 0xa8ad9c });
-        } else {
-          bushes.push({ x, y: 0.3, z, sx: 0.44, sy: 0.39, sz: 0.4, ry: turn, color: 0x697b55 });
-          for (let i = 0; i < 5; i++) {
-            const angle = i * 2.4 + turn;
-            berries.push({ x: x + Math.sin(angle) * 0.25, y: 0.42 + (i % 2) * 0.09, z: z + Math.cos(angle) * 0.25 });
-          }
-        }
-      }
-      for (const trunk of trunks) trunk.color = 0x70573e;
-      for (const berry of berries) berry.color = 0xb96f63;
-      mergedInstances(group, [
-        { geometry: new THREE.CylinderGeometry(0.1, 0.16, 1, 5), items: trunks },
-        { geometry: new THREE.DodecahedronGeometry(1, 0), items: rocks },
-        { geometry: new THREE.IcosahedronGeometry(1, 0), items: bushes },
-        { geometry: new THREE.IcosahedronGeometry(0.055, 0), items: berries },
-      ], this.staticMaterial);
-      const canopy = mergedInstances(group, [{ geometry: new THREE.ConeGeometry(1, 1, 6), items: [...crowns, ...upperCrowns] }], this.staticMaterial);
-      if (canopy) { canopy.name = 'tree-canopy'; canopy.visible = this.foliageVisible; }
-      this.resourceChunks.set(key, { signature, group });
-    }
-  }
+  private updateResources(world: World, newMap: boolean): void { this.resources.update(world, newMap); }
 
-  private buildStructures(world: World): void { buildFurniture(world, this.structureGroup, this.wallCutaway); }
+  private buildStructures(world: World): void { buildFurniture(world, this.structureGroup, this.wallCutaway, this.boxes); }
 
   private buildJobs(world: World): void {
-    clearGroup(this.jobGroup);
     const wallHeight = this.wallCutaway ? WORLD_SCALE.wallCutawayHeight : WORLD_SCALE.wallHeight;
     const orders: Placement[] = [], blueprints: Placement[] = [], frames: Placement[] = [], progress: Placement[] = [];
     for (const job of world.jobs) {
@@ -473,14 +370,12 @@ export class ColonyRenderer {
       const fraction = Math.floor(job.progress / JOB_DURATION[job.kind] * 20) / 20;
       if (fraction > 0) progress.push({ x, z, y: height * fraction / 2, sx: width - 0.06, sy: height * fraction, sz: length - 0.06, ry });
     }
-    instances(this.jobGroup, new THREE.BoxGeometry(0.9, 0.025, 0.9), new THREE.MeshBasicNodeMaterial({ color: 0xffffff, transparent: true, opacity: 0.48, depthWrite: false }), orders, false);
-    instances(this.jobGroup, new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicNodeMaterial({ color: 0xa7dbc9, wireframe: true, transparent: true, opacity: 0.65, depthWrite: false }), blueprints, false);
-    instances(this.jobGroup, new THREE.BoxGeometry(1, 1, 1), material(0x9f7e52), frames);
-    instances(this.jobGroup, new THREE.BoxGeometry(1, 1, 1), material(0xa6916e), progress);
+    this.boxes.set(this.jobGroup, 'job-orders', orders.map(p => ({ ...p, sx: 0.9, sy: 0.025, sz: 0.9 })), 'overlay', false);
+    this.boxes.set(this.jobGroup, 'job-plans', blueprints.map(p => ({ ...p, color: 0xa7dbc9 })), 'wire', false);
+    this.boxes.set(this.jobGroup, 'job-solids', [...frames.map(p => ({ ...p, color: 0x9f7e52 })), ...progress.map(p => ({ ...p, color: 0xa6916e }))]);
   }
 
   private buildStorage(world: World): void {
-    clearGroup(this.storageGroup);
     const cells: Placement[] = [], borders: Placement[] = [];
     for (const storage of world.stockpiles) {
       const color = !storage.filters.wood && !storage.filters.food ? 0x9b8980
@@ -490,8 +385,8 @@ export class ColonyRenderer {
       for (const dx of [-1, 1]) borders.push({ x: storage.x + dx * 0.465, z: storage.z, y: 0.028, sx: 0.025, sz: 0.95, color: shade });
       for (const dz of [-1, 1]) borders.push({ x: storage.x, z: storage.z + dz * 0.465, y: 0.028, sx: 0.95, sz: 0.025, color: shade });
     }
-    instances(this.storageGroup, new THREE.BoxGeometry(0.94, 0.014, 0.94), new THREE.MeshBasicNodeMaterial({ color: 0xffffff, transparent: true, opacity: 0.28, depthWrite: false }), cells, false);
-    instances(this.storageGroup, new THREE.BoxGeometry(1, 0.015, 1), new THREE.MeshBasicNodeMaterial({ color: 0xffffff, transparent: true, opacity: 0.76, depthWrite: false }), borders, false);
+    this.boxes.set(this.storageGroup, 'storage-cells', cells.map(p => ({ ...p, sx: 0.94, sy: 0.014, sz: 0.94 })), 'storage', false);
+    this.boxes.set(this.storageGroup, 'storage-borders', borders.map(p => ({ ...p, sy: 0.015 })), 'border', false);
   }
 
   private updatePiles(world: World, newMap: boolean): void {
@@ -519,14 +414,14 @@ export class ColonyRenderer {
       if (chunk) chunk.push(bundle); else chunks.set(key, [bundle]);
     }
     for (const [key, chunk] of this.pileChunks) if (!chunks.has(key)) {
-      clearGroup(chunk.group); this.pileGroup.remove(chunk.group); this.pileChunks.delete(key);
+      this.boxes.set(chunk.group, `pile:${key}`, []); chunk.signature = '';
     }
     for (const [key, bundles] of chunks) {
       const signature = bundles.map(bundle => `${bundle.x}:${bundle.z}:${bundle.kind}:${bundle.quantity}:${bundle.supplied}`).join('|');
       const previous = this.pileChunks.get(key);
       if (previous?.signature === signature) continue;
       const group = previous?.group ?? new THREE.Group();
-      if (previous) clearGroup(group); else this.pileGroup.add(group);
+      if (!previous) this.pileGroup.add(group);
       group.name = `Material piles ${key}`;
       const logs: Placement[] = [], ends: Placement[] = [], crates: Placement[] = [], food: Placement[] = [];
       for (const bundle of bundles) {
@@ -544,10 +439,7 @@ export class ColonyRenderer {
           for (const dx of [-0.12, 0.12]) for (const dz of [-0.11, 0.11]) food.push({ x: x + dx, z: z + dz, y: height + 0.025, sx: 0.18, sy: 0.1, sz: 0.16 });
         }
       }
-      instances(group, new THREE.BoxGeometry(1, 1, 1), material(0xffffff), logs);
-      instances(group, new THREE.BoxGeometry(1, 1, 1), material(0xc9ad77), ends, false);
-      instances(group, new THREE.BoxGeometry(1, 1, 1), material(0x987e51), crates);
-      instances(group, new THREE.BoxGeometry(1, 1, 1), material(0xba745a), food);
+      this.boxes.set(group, `pile:${key}`, [...logs, ...ends.map(p => ({ ...p, color: 0xc9ad77 })), ...crates.map(p => ({ ...p, color: 0x987e51 })), ...food.map(p => ({ ...p, color: 0xba745a }))]);
       this.pileChunks.set(key, { signature, group });
     }
   }
@@ -760,9 +652,10 @@ export class ColonyRenderer {
     window.removeEventListener('keyup', this.onKeyUp);
     window.removeEventListener('blur', this.onBlur);
     document.removeEventListener('visibilitychange', this.onVisibility);
+    this.boxes.dispose();
+    this.resources.clear();
     for (const group of [this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup, this.pawns.group]) clearGroup(group);
     this.pileChunks.clear();
-    this.resourceChunks.clear();
     this.staticMaterial.dispose();
     this.waterMaterial.dispose();
     this.hover.geometry.dispose(); (this.hover.material as THREE.Material).dispose();

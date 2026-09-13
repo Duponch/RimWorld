@@ -1,0 +1,643 @@
+{
+  "shortRunStarted": "2026-09-13T16:52:26.434Z",
+  "journeyRunStarted": "2026-09-13T16:57:04.784Z",
+  "tests": [
+    {
+      "title": "besoins physiques : repas en main, sommeil dans deux lits orientés, attribution et sauvegarde UI",
+      "status": "passed",
+      "durationMs": 9464,
+      "attachments": {
+        "needs-gameplay": {
+          "backend": "WebGPU",
+          "adapter": {
+            "vendor": "amd",
+            "architecture": "rdna-1",
+            "device": "",
+            "description": ""
+          },
+          "phases": [
+            "pickup",
+            "ingest",
+            "sleep",
+            "bed-reassignment"
+          ],
+          "foodConsumed": 1,
+          "resumedExactly": true,
+          "errors": []
+        }
+      }
+    },
+    {
+      "title": "colonie matérielle : réserve filtrée, transport visible, trois couchages et reprise exacte en livraison",
+      "status": "passed",
+      "durationMs": 13227,
+      "attachments": {}
+    },
+    {
+      "title": "frontières : commandes répétées, sauvegarde invalide atomique, aide et organisation compacte",
+      "status": "passed",
+      "durationMs": 42089,
+      "attachments": {}
+    },
+    {
+      "title": "rectangles 250² : aperçu, interruptions, rotation, politiques préservées et récolte réelle",
+      "status": "passed",
+      "durationMs": 22093,
+      "attachments": {
+        "area-gameplay": {
+          "timestamp": "2026-09-13T16:54:13.753Z",
+          "backend": "WebGPU",
+          "size": 250,
+          "seed": 42,
+          "interruptedGestures": [
+            "Escape",
+            "right-button",
+            "release-over-UI",
+            "injected-window-blur",
+            "tool-change"
+          ],
+          "storageCells": 10,
+          "harvestedTrees": 1,
+          "conservedWood": 24,
+          "screenshot": "artifacts/area-preview-250.png",
+          "diagnostics": [
+            "Lisière renderer diagnostics {\"backend\":\"WebGPU\",\"context\":\"GPUCanvasContext\",\"browser\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36\",\"adapter\":{\"vendor\":\"amd\",\"architecture\":\"rdna-1\",\"device\":\"\",\"description\":\"\"},\"maxVertexBuffers\":8}"
+          ],
+          "errors": []
+        }
+      }
+    },
+    {
+      "title": "nouvelle colonie : défaut 250, tailles 128/200/250 et retour exact à une ancienne petite partie",
+      "status": "passed",
+      "durationMs": 11821,
+      "attachments": {
+        "transition-renderer": {
+          "backend": "WebGPU",
+          "defaultSize": 250,
+          "sizes": [
+            32,
+            128,
+            200,
+            250
+          ],
+          "restoredExactly": true
+        }
+      }
+    },
+    {
+      "title": "table et tabouret : construction UI, portion transportée, repas assis, confort, reprise et compteur FPS permanent",
+      "status": "passed",
+      "durationMs": 14637,
+      "attachments": {
+        "dining-gameplay": {
+          "backend": "WebGPU",
+          "woodConsumed": 53,
+          "foodConsumed": 1,
+          "resumedPhases": [
+            "travel",
+            "ingest"
+          ],
+          "fpsVisiblePausedAndMenuAndCompact": true,
+          "errors": []
+        }
+      }
+    },
+    {
+      "title": "partie de trois jours : un joueur équipe son camp et entretient ses stocks par la vraie interface",
+      "status": "passed",
+      "durationMs": 437360,
+      "attachments": {
+        "colony-journey": {
+          "backend": "WebGL 2",
+          "days": [
+            {
+              "tick": 6100,
+              "structures": {
+                "bed": 3,
+                "table": 1,
+                "stool": 3,
+                "wall": 6
+              },
+              "stock": {
+                "wood": 41,
+                "food": 13
+              },
+              "pending": 0,
+              "minimumFood": 33.49999999999653,
+              "minimumRest": 35.20000000000147
+            },
+            {
+              "tick": 12127,
+              "structures": {
+                "bed": 3,
+                "table": 1,
+                "stool": 3,
+                "wall": 6
+              },
+              "stock": {
+                "wood": 41,
+                "food": 20
+              },
+              "pending": 0,
+              "minimumFood": 38.09499999999311,
+              "minimumRest": 71.76000000001565
+            },
+            {
+              "tick": 18071,
+              "structures": {
+                "bed": 3,
+                "table": 1,
+                "stool": 3,
+                "wall": 6
+              },
+              "stock": {
+                "wood": 41,
+                "food": 23
+              },
+              "pending": 0,
+              "minimumFood": 53.93499999998973,
+              "minimumRest": 30.296000000009453
+            }
+          ],
+          "meals": 21,
+          "sleepers": 3,
+          "woodConserved": true,
+          "foodReconciled": true,
+          "decisions": [
+            {
+              "tick": 30,
+              "reason": "Répartir collecte, construction et transport entre les trois colons.",
+              "command": {
+                "type": "priority",
+                "pawnId": 12409,
+                "work": "gather",
+                "value": 1
+              }
+            },
+            {
+              "tick": 30,
+              "reason": "Répartir collecte, construction et transport entre les trois colons.",
+              "command": {
+                "type": "priority",
+                "pawnId": 12409,
+                "work": "build",
+                "value": 3
+              }
+            },
+            {
+              "tick": 30,
+              "reason": "Répartir collecte, construction et transport entre les trois colons.",
+              "command": {
+                "type": "priority",
+                "pawnId": 12409,
+                "work": "haul",
+                "value": 2
+              }
+            },
+            {
+              "tick": 30,
+              "reason": "Répartir collecte, construction et transport entre les trois colons.",
+              "command": {
+                "type": "priority",
+                "pawnId": 12410,
+                "work": "gather",
+                "value": 3
+              }
+            },
+            {
+              "tick": 30,
+              "reason": "Répartir collecte, construction et transport entre les trois colons.",
+              "command": {
+                "type": "priority",
+                "pawnId": 12410,
+                "work": "build",
+                "value": 1
+              }
+            },
+            {
+              "tick": 30,
+              "reason": "Répartir collecte, construction et transport entre les trois colons.",
+              "command": {
+                "type": "priority",
+                "pawnId": 12410,
+                "work": "haul",
+                "value": 2
+              }
+            },
+            {
+              "tick": 30,
+              "reason": "Répartir collecte, construction et transport entre les trois colons.",
+              "command": {
+                "type": "priority",
+                "pawnId": 12411,
+                "work": "build",
+                "value": 3
+              }
+            },
+            {
+              "tick": 30,
+              "reason": "Répartir collecte, construction et transport entre les trois colons.",
+              "command": {
+                "type": "priority",
+                "pawnId": 12411,
+                "work": "haul",
+                "value": 1
+              }
+            },
+            {
+              "tick": 30,
+              "reason": "Aménager progressivement le camp sans fermer son passage central.",
+              "command": {
+                "type": "designate",
+                "kind": "bed",
+                "x": 125,
+                "z": 127,
+                "orientation": 0
+              }
+            },
+            {
+              "tick": 30,
+              "reason": "Aménager progressivement le camp sans fermer son passage central.",
+              "command": {
+                "type": "designate",
+                "kind": "bed",
+                "x": 128,
+                "z": 127,
+                "orientation": 0
+              }
+            },
+            {
+              "tick": 30,
+              "reason": "Séparer le bois et les aliments près du camp.",
+              "command": {
+                "type": "stockpile",
+                "x": 123,
+                "z": 125,
+                "enabled": true,
+                "filters": {
+                  "wood": true,
+                  "food": false
+                },
+                "priority": 2,
+                "capacity": 75
+              }
+            },
+            {
+              "tick": 30,
+              "reason": "Séparer le bois et les aliments près du camp.",
+              "command": {
+                "type": "stockpile",
+                "x": 123,
+                "z": 126,
+                "enabled": true,
+                "filters": {
+                  "wood": true,
+                  "food": false
+                },
+                "priority": 2,
+                "capacity": 75
+              }
+            },
+            {
+              "tick": 30,
+              "reason": "Séparer le bois et les aliments près du camp.",
+              "command": {
+                "type": "stockpile",
+                "x": 127,
+                "z": 126,
+                "enabled": true,
+                "filters": {
+                  "wood": false,
+                  "food": true
+                },
+                "priority": 2,
+                "capacity": 75
+              }
+            },
+            {
+              "tick": 30,
+              "reason": "Prévoir le bois des chantiers et une petite marge.",
+              "command": {
+                "type": "designate",
+                "kind": "chop",
+                "x": 123,
+                "z": 123
+              }
+            },
+            {
+              "tick": 30,
+              "reason": "Prévoir le bois des chantiers et une petite marge.",
+              "command": {
+                "type": "designate",
+                "kind": "chop",
+                "x": 122,
+                "z": 127
+              }
+            },
+            {
+              "tick": 30,
+              "reason": "Prévoir le bois des chantiers et une petite marge.",
+              "command": {
+                "type": "designate",
+                "kind": "chop",
+                "x": 124,
+                "z": 120
+              }
+            },
+            {
+              "tick": 1113,
+              "reason": "Aménager progressivement le camp sans fermer son passage central.",
+              "command": {
+                "type": "designate",
+                "kind": "bed",
+                "x": 122,
+                "z": 127,
+                "orientation": 0
+              }
+            },
+            {
+              "tick": 1113,
+              "reason": "Prévoir le bois des chantiers et une petite marge.",
+              "command": {
+                "type": "designate",
+                "kind": "chop",
+                "x": 129,
+                "z": 123
+              }
+            },
+            {
+              "tick": 2172,
+              "reason": "Aménager progressivement le camp sans fermer son passage central.",
+              "command": {
+                "type": "designate",
+                "kind": "table",
+                "x": 125,
+                "z": 123,
+                "orientation": 1
+              }
+            },
+            {
+              "tick": 2172,
+              "reason": "Aménager progressivement le camp sans fermer son passage central.",
+              "command": {
+                "type": "designate",
+                "kind": "stool",
+                "x": 125,
+                "z": 122
+              }
+            },
+            {
+              "tick": 2172,
+              "reason": "Aménager progressivement le camp sans fermer son passage central.",
+              "command": {
+                "type": "designate",
+                "kind": "stool",
+                "x": 126,
+                "z": 122
+              }
+            },
+            {
+              "tick": 2172,
+              "reason": "Aménager progressivement le camp sans fermer son passage central.",
+              "command": {
+                "type": "designate",
+                "kind": "stool",
+                "x": 125,
+                "z": 124
+              }
+            },
+            {
+              "tick": 2172,
+              "reason": "Prévoir le bois des chantiers et une petite marge.",
+              "command": {
+                "type": "designate",
+                "kind": "chop",
+                "x": 130,
+                "z": 126
+              }
+            },
+            {
+              "tick": 2172,
+              "reason": "Prévoir le bois des chantiers et une petite marge.",
+              "command": {
+                "type": "designate",
+                "kind": "chop",
+                "x": 124,
+                "z": 130
+              }
+            },
+            {
+              "tick": 2172,
+              "reason": "Prévoir le bois des chantiers et une petite marge.",
+              "command": {
+                "type": "designate",
+                "kind": "chop",
+                "x": 125,
+                "z": 118
+              }
+            },
+            {
+              "tick": 2172,
+              "reason": "Prévoir le bois des chantiers et une petite marge.",
+              "command": {
+                "type": "designate",
+                "kind": "chop",
+                "x": 119,
+                "z": 124
+              }
+            },
+            {
+              "tick": 2172,
+              "reason": "Prévoir le bois des chantiers et une petite marge.",
+              "command": {
+                "type": "designate",
+                "kind": "chop",
+                "x": 131,
+                "z": 124
+              }
+            },
+            {
+              "tick": 2172,
+              "reason": "Prévoir le bois des chantiers et une petite marge.",
+              "command": {
+                "type": "designate",
+                "kind": "chop",
+                "x": 120,
+                "z": 127
+              }
+            },
+            {
+              "tick": 2172,
+              "reason": "Prévoir le bois des chantiers et une petite marge.",
+              "command": {
+                "type": "designate",
+                "kind": "chop",
+                "x": 126,
+                "z": 118
+              }
+            },
+            {
+              "tick": 2172,
+              "reason": "Prévoir le bois des chantiers et une petite marge.",
+              "command": {
+                "type": "designate",
+                "kind": "chop",
+                "x": 121,
+                "z": 129
+              }
+            },
+            {
+              "tick": 3159,
+              "reason": "Aménager progressivement le camp sans fermer son passage central.",
+              "command": {
+                "type": "designate",
+                "kind": "wall",
+                "x": 122,
+                "z": 122
+              }
+            },
+            {
+              "tick": 3159,
+              "reason": "Aménager progressivement le camp sans fermer son passage central.",
+              "command": {
+                "type": "designate",
+                "kind": "wall",
+                "x": 122,
+                "z": 123
+              }
+            },
+            {
+              "tick": 3159,
+              "reason": "Aménager progressivement le camp sans fermer son passage central.",
+              "command": {
+                "type": "designate",
+                "kind": "wall",
+                "x": 122,
+                "z": 124
+              }
+            },
+            {
+              "tick": 3159,
+              "reason": "Aménager progressivement le camp sans fermer son passage central.",
+              "command": {
+                "type": "designate",
+                "kind": "wall",
+                "x": 128,
+                "z": 122
+              }
+            },
+            {
+              "tick": 3159,
+              "reason": "Aménager progressivement le camp sans fermer son passage central.",
+              "command": {
+                "type": "designate",
+                "kind": "wall",
+                "x": 128,
+                "z": 123
+              }
+            },
+            {
+              "tick": 3159,
+              "reason": "Aménager progressivement le camp sans fermer son passage central.",
+              "command": {
+                "type": "designate",
+                "kind": "wall",
+                "x": 128,
+                "z": 124
+              }
+            },
+            {
+              "tick": 3159,
+              "reason": "Prévoir le bois des chantiers et une petite marge.",
+              "command": {
+                "type": "designate",
+                "kind": "chop",
+                "x": 120,
+                "z": 121
+              }
+            },
+            {
+              "tick": 3159,
+              "reason": "Prévoir le bois des chantiers et une petite marge.",
+              "command": {
+                "type": "designate",
+                "kind": "chop",
+                "x": 133,
+                "z": 126
+              }
+            },
+            {
+              "tick": 3159,
+              "reason": "Prévoir le bois des chantiers et une petite marge.",
+              "command": {
+                "type": "designate",
+                "kind": "chop",
+                "x": 118,
+                "z": 127
+              }
+            },
+            {
+              "tick": 4137,
+              "reason": "Prévoir le bois des chantiers et une petite marge.",
+              "command": {
+                "type": "designate",
+                "kind": "chop",
+                "x": 122,
+                "z": 131
+              }
+            },
+            {
+              "tick": 4137,
+              "reason": "Prévoir le bois des chantiers et une petite marge.",
+              "command": {
+                "type": "designate",
+                "kind": "chop",
+                "x": 128,
+                "z": 131
+              }
+            },
+            {
+              "tick": 6100,
+              "reason": "Renouveler la réserve alimentaire avant la pénurie.",
+              "command": {
+                "type": "designate",
+                "kind": "harvest",
+                "x": 127,
+                "z": 123
+              }
+            },
+            {
+              "tick": 16154,
+              "reason": "Renouveler la réserve alimentaire avant la pénurie.",
+              "command": {
+                "type": "designate",
+                "kind": "harvest",
+                "x": 129,
+                "z": 127
+              }
+            }
+          ],
+          "errors": []
+        }
+      }
+    }
+  ],
+  "simulation": {
+    "seeds": [
+      42,
+      93,
+      2048
+    ],
+    "size": 250,
+    "daysPerSeed": 5,
+    "totalTicks": 90000,
+    "durationSeconds": 31.07,
+    "result": "passed"
+  },
+  "renderRetention": {
+    "result": "passed",
+    "durationSeconds": 1.17
+  },
+  "earlierAttempts": "The first UI pilot closed Architecte and disabled its chosen tool; that attempt failed and is excluded. The first simulation plan placed a stool outside the clearing; its layout was corrected without changing the terrain or expected seats."
+}

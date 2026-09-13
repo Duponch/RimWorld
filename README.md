@@ -30,7 +30,7 @@ Abattage, récolte, annulation et création/retrait de réserves acceptent un re
 - Molette : zoom ; glisser bouton droit : tourner ; bouton central : déplacer la caméra.
 - Menu → Sauvegarder ou Ctrl+S : sauvegarde locale ; Menu → Recharger : dernière sauvegarde de ce navigateur.
 
-Voir [le guide joueur](docs/gameplay/player-guide.md) pour les règles actuellement implémentées et leurs limites.
+Voir [le guide joueur](docs/gameplay/player-guide.md) et l’[inventaire par domaine](docs/gameplay/implementation-status.md) pour les règles actuellement implémentées et tout ce qui reste absent.
 
 Dans Architecte → Zones, une réserve se règle par cellule : filtres bois/nourriture, capacité et priorité. Pour le **stockage**, 4 est la priorité la plus forte. Inspecter la réserve permet de modifier ses règles sans supprimer les objets. Les zones nommées à plusieurs cases et les ordres contextuels restent à développer.
 
@@ -74,3 +74,5 @@ Le code de simulation ne dépend ni de Three.js ni du DOM. Le rendu consomme ses
 Compléments : [observation de la vidéo et organisation visuelle](docs/research/visual-reference.md), [échelles, grille et navigation](docs/research/spatial-design.md), [génération du monde](docs/development/world-generation.md).
 
 La [recherche repas et confort](docs/research/dining-reference.md) documente les contradictions trouvées et les adaptations 3D. Le [contrat des repas à table](docs/development/dining.md) décrit les modules et migrations. Les audits reproductibles sont associés à leurs matériels et scénarios dans [validation](docs/development/validation.md).
+
+Le [pilote de colonie](docs/research/colony-progression.md) fait évoluer un camp sur cinq jours dans le noyau et trois jours via la vraie interface. Le parcours navigateur long dure environ sept à huit minutes : le lancer aux changements de boucles de jeu, de commandes ou de persistance. Un [audit ciblé des mises à jour graphiques](docs/development/render-lifecycle.md) mesure notamment la disparition des arbres.

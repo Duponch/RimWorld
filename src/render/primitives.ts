@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu';
-export type Placement = { x: number; y: number; z: number; sx?: number; sy?: number; sz?: number; ry?: number; color?: number };
+export type Placement = { x: number; y: number; z: number; sx?: number; sy?: number; sz?: number; ry?: number; color?: number; key?: number };
 const scratchObject = new THREE.Object3D();
 const scratchColor = new THREE.Color();
 
@@ -38,6 +38,6 @@ export function clearGroup(group: THREE.Group): void {
     if (object instanceof THREE.InstancedMesh) object.dispose();
   });
   group.clear();
-  for (const geometry of geometries) geometry.dispose();
+  for (const geometry of geometries) if (!geometry.userData.rendererOwned) geometry.dispose();
   for (const mat of materials) if (!mat.userData.rendererOwned) mat.dispose();
 }

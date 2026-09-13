@@ -1,0 +1,78 @@
+import { expect, test, type Page } from '@playwright/test';
+import type { Decision } from '../scenarios/colony-player';
+import { playerDecisions, colonySummary, woodAccount, foodAccount } from '../scenarios/colony-player';
+import { validateWorld } from '../../src/sim/index';
+import { world, observeErrors, panel, tool, cell, expectWorld } from './helpers';
+
+async function perform(page: Page, decision: Decision, rotation: { value: number }): Promise<void> {
+  const c=decision.command;
+  if(c.type==='priority') {
+    await panel(page,'work');await page.locator(`select[data-owner="${c.pawnId}"][data-work="${c.work}"]`).selectOption(String(c.value));
+  } else if(c.type==='stockpile') {
+    await tool(page,'stockpile');
+    await page.locator('#stockpile-wood').setChecked(c.filters!.wood);await page.locator('#stockpile-food').setChecked(c.filters!.food);
+    await cell(page,c.x,c.z);
+  } else if(c.type==='designate') {
+    await tool(page,c.kind);
+    if(c.kind==='bed'||c.kind==='table') {
+      while(rotation.value!==(c.orientation??0)){await page.keyboard.press('e');rotation.value=(rotation.value+1)%4;}
+    }
+    await cell(page,c.x,c.z);
+  } else throw new Error(`Player UI action not supported: ${c.type}`);
+  await page.waitForFunction(c=>{
+    const w=window.__lisiere.world;
+    if(c.type==='priority')return w.pawns.find(p=>p.id===c.pawnId)?.priorities[c.work]===c.value;
+    if(c.type==='stockpile')return w.stockpiles.some(s=>s.x===c.x&&s.z===c.z);
+    return c.type==='designate' && w.jobs.some(j=>j.x===c.x&&j.z===c.z&&j.kind===c.kind);
+  },c,{polling:100,timeout:5000});
+}
+
+test('partie de trois jours : un joueur équipe son camp et entretient ses stocks par la vraie interface', async ({playwright},testInfo)=>{
+  test.setTimeout(480000);
+  // Inherit the project's fallback launch flags. Short gameplay journeys and
+  // standalone performance scripts separately exercise hardware WebGPU.
+  const browser=await playwright.chromium.launch({channel:'chromium'});
+  const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}});
+  const errors=observeErrors(page), decisions:{tick:number;reason:string;command:unknown}[]=[], days:ReturnType<typeof colonySummary>[]=[];
+  const meals=new Set<string>(), sleepers=new Set<number>();let finalReport:unknown;
+  try {
+    // No injected fixture, inventory, clocks or simulation speed outside the UI.
+    await page.goto('/?e2e&seed=42');await expect(page.locator('#loading')).toHaveCount(0);
+    await page.locator('[data-speed="0"]').click();await expect(page.locator('#pause-banner')).toBeVisible();
+    const initial=await world(page);expect(initial.width).toBe(250);expect(initial.stock).toEqual({wood:12,food:18});
+    const initialWood=woodAccount(initial), initialFood=foodAccount(initial);const rotation={value:0};
+    for(let hour=0;hour<=72;hour+=4) {
+      if(hour) {
+        await page.locator('[data-speed="6"]').click();
+        await page.waitForFunction(tick=>window.__lisiere.world.tick>=tick,initial.tick+hour*250,{polling:1000,timeout:30000});
+        await page.locator('[data-speed="0"]').click();await expect(page.locator('#pause-banner')).toBeVisible();
+      }
+      const current=await world(page), summary=colonySummary(current), context=JSON.stringify(summary);
+      expect(validateWorld(current),context).toEqual([]);expect(woodAccount(current),context).toBe(initialWood);
+      expect(current.pawns.every(p=>p.hunger>0&&p.rest>0),context).toBe(true);
+      for(const e of current.events)if(e.type==='need'&&e.message.includes('a mangé une portion'))meals.add(`${e.tick}:${e.message}`);
+      for(const p of current.pawns)if(p.state==='sleeping'&&p.need?.kind==='sleep'&&p.need.bedId!==null)sleepers.add(p.id);
+      if(hour && hour%24===0) {
+        days.push(summary);
+        await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,current);
+      }
+      if(hour===72) {
+        expect(summary.structures,context).toEqual({bed:3,table:1,stool:3,wall:6});expect(current.jobs,context).toEqual([]);
+        expect(current.stock.food,context).toBeGreaterThan(0);expect(sleepers.size,context).toBe(3);
+        expect(meals.size,context).toBeGreaterThanOrEqual(18);expect(foodAccount(current)+meals.size,context).toBe(initialFood);
+        finalReport={backend:await page.evaluate(()=>window.__lisiere.backend),days,meals:meals.size,sleepers:sleepers.size,woodConserved:true,foodReconciled:true,decisions,errors};
+        break;
+      }
+      for(const decision of playerDecisions(current)) {
+        await test.step(`${decision.reason} ${JSON.stringify(decision.command)}`,()=>perform(page,decision,rotation));
+        decisions.push({tick:current.tick,...decision});
+      }
+    }
+    await page.keyboard.press('Escape');await page.screenshot({path:'artifacts/colony-three-days.png'});
+    expect(errors).toEqual([]);
+    await testInfo.attach('colony-journey',{contentType:'application/json',body:JSON.stringify(finalReport)});
+  } finally {
+    if(!finalReport)await testInfo.attach('colony-journey-incomplete',{contentType:'application/json',body:JSON.stringify({days,decisions,meals:[...meals],errors})});
+    await browser.close();
+  }
+});

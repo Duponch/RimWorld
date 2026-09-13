@@ -4,6 +4,8 @@ Cette matrice traduit les références de RimWorld en exigences de gameplay pour
 
 Révision : **13 septembre 2026**. Périmètre par défaut : jeu de base avant les systèmes comparables aux extensions. Les règles chiffrées du prototype sont nos paramètres provisoires ; elles ne doivent pas être présentées comme des valeurs certifiées de RimWorld.
 
+L’[inventaire d’implémentation](implementation-status.md) donne l’état livré et les absences par domaine. Les critères ci-dessous restent des cibles.
+
 ## Décisions de périmètre
 
 1. Solo, carte locale unique et terrain logique plan pour la première boucle ; rendu 3D, caméra mobile et géométrie procédurale.

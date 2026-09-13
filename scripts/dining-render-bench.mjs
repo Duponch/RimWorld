@@ -2,6 +2,8 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 process.env.PLAYWRIGHT_BROWSERS_PATH ??= resolve('.playwright');
 const { chromium } = await import('@playwright/test');
+const variant = process.argv[2] ?? 'current';
+if (!/^[a-z0-9-]+$/.test(variant)) throw new Error('Use a simple report label (a-z, 0-9, hyphen).');
 const fixture = await readFile('tmp/dining-render-fixture.json', 'utf8');
 const report = { timestamp: new Date().toISOString(), viewport: { width: 1440, height: 1000 }, map: 250, pawns: 100,
   protocol: 'Normal headless Chromium, default local camera, generated landscape outside cleared camps. 100 portions, tables, stools and owned beds. 60 warmup frames, then 8 seconds minimum and 240 frames per phase. Renderer CPU includes submissions, not GPU execution; RAF includes scheduling. No world serialization inside timed frames. Scene is deliberately uncongested.', phases: [], errors: [] };
@@ -73,5 +75,5 @@ try {
   report.outcome = await page.evaluate(() => { const w=window.__lisiere.world; return { tick:w.tick,food:w.stock.food, sleep:w.pawns.filter(p=>p.state==='sleeping').length, withoutTable:w.pawns.filter(p=>p.memories.length).length }; });
   if(report.errors.length || report.outcome.food!==0 || report.outcome.sleep!==100 || report.outcome.withoutTable!==0) throw new Error(JSON.stringify(report));
 } finally { await browser.close(); }
-await writeFile('artifacts/dining-render-benchmark.json',JSON.stringify(report,null,2)+'\n');
+await writeFile(`artifacts/dining-render-${variant}.json`,JSON.stringify(report,null,2)+'\n');
 console.log(JSON.stringify(report,null,2));
