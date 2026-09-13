@@ -1,3 +1,4 @@
+import { dropRetainingIdentity } from './ground-placement.ts';
 import type { World } from './types.ts';
 import { MAX_STACK } from './definitions.ts';
 import { addGroundMaterial, addMaterial, refreshStock } from './materials.ts';
@@ -46,7 +47,31 @@ export function initializeDining(world: World): void {
   }
 }
 export function initializeFood(world: World): void {
-  world.schemaVersion = 5; world.foodRules = 'legacy';
+  (world as unknown as {schemaVersion:number}).schemaVersion = 5; world.foodRules = 'legacy';
   for (const pile of world.piles) pile.item = legacyItem(pile.kind);
   for (const pawn of world.pawns) if (pawn.need?.kind === 'eat') pawn.need.quantity = 1;
+}
+
+/** V5 permitted several stacks per floor cell. Relocate overflow, retaining every ID/unit.
+ * Reject an unplaceable migration rather than modifying terrain or losing materials. */
+export function initializeSpatial(world: World): void {
+  const occupied=new Set<string>();
+  for(const pile of world.piles) if(pile.owner.type==='ground') {
+    const key=`${pile.owner.x}:${pile.owner.z}`;
+    if(occupied.has(key)) {
+      const origin={...pile.owner};
+      if(!dropRetainingIdentity(world,pile,origin)) throw new Error('Cannot migrate overlapping floor stacks: no nearby free cell.');
+    }
+    if(pile.owner.type==='ground') occupied.add(`${pile.owner.x}:${pile.owner.z}`);
+  }
+  // Capacity/type rules changed: cancel outstanding haul intentions with physical drops.
+  for(const pawn of world.pawns) {
+    pawn.motion=null;pawn.moveCooldown=0;
+    if(pawn.haul) {
+      const carry=world.piles.find(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
+      if(carry&&!dropRetainingIdentity(world,carry,pawn)) throw new Error('Cannot migrate carried material.');
+      pawn.haul=null;pawn.path=[];pawn.state='idle';pawn.planCooldown=0;
+    }
+  }
+  world.schemaVersion=6;refreshStock(world);
 }

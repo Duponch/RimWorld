@@ -59,3 +59,7 @@ Le jeu conserve son BFS CPU déterministe et ses réservations. Le [laboratoire 
 L'activation exige encore invalidation à une frontière de tick, validation des réservations, traitement déterministe des réponses tardives, tests de cibles mobiles et comparaison avec un A* CPU optimisé pendant le rendu. Une accélération d'un lot ne suffit pas à choisir l'architecture autoritaire.
 
 Avant le combat, observer des séquences continues : croisements dans une porte, contournement d'angle, poursuite, fuite et tir avec couverture. Les extraits disponibles ne les établissent pas. Lisser un trajet visuellement ne doit jamais autoriser une traversée d'obstacle ou masquer une attente logique.
+
+## Mise à jour spatiale V6
+
+Le [contrat sol, mouvement et rendu distant](../development/spatial-motion-storage.md) remplace les descriptions antérieures de piles multiples au sol et du BFS cardinal. La migration V5→V6 est explicite ; le comportement des buissons reste un chantier ouvert.

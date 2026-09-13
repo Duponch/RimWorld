@@ -1,3 +1,7 @@
+import { buildTerrain } from './TerrainLayer';
+import { MotionTimeline } from './MotionTimeline';
+import type { PawnTrack } from '../bridge/motion-tracks';
+import { OverviewLayer } from './OverviewLayer';
 import { ITEM_DEFINITIONS, type ItemId } from '../sim/items';
 import * as THREE from 'three/webgpu';
 import { buildFurniture } from './FurnitureLayer';
@@ -5,11 +9,10 @@ import { PawnLayer } from './PawnLayer';
 import { FrameMetrics } from './FrameMetrics';
 import { BoxBatches } from './BoxBatches';
 import { ResourceLayer } from './ResourceLayer';
-import { mergedInstances, noise } from './StaticGeometry';
 import { clearGroup, material } from './primitives';
 import type { Placement } from './primitives';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import type { World, Terrain, MaterialKind, Orientation, AreaAction, Cell } from '../sim/types';
+import type { World, MaterialKind, Orientation, AreaAction, Cell } from '../sim/types';
 import { TICKS_PER_SECOND } from '../sim/types';
 import { JOB_DURATION, footprintCells } from '../sim/definitions';
 import { canDesignate } from '../sim/engine';
@@ -19,13 +22,15 @@ import { WORLD_SCALE } from '../world/scale';
 
 type VisualChunk = { signature: string; group: THREE.Group };
 
-const TERRAIN_COLORS: Record<Terrain, number> = { grass: 0x81946c, soil: 0xa39b75, rock: 0x899182, water: 0x78a7a4 };
 const scratchObject = new THREE.Object3D();
 const scratchColor = new THREE.Color();
 
 export class ColonyRenderer {
   readonly stats = { fps: 0, frameMs: 0, frameP95: 0, drawCalls: 0, triangles: 0 };
   private readonly frames = new FrameMetrics();
+  private readonly overview = new OverviewLayer();
+  private readonly timeline = new MotionTimeline();
+  private hasTracks = false;
   private readonly pawns = new PawnLayer();
   readonly backend: string;
   private readonly renderer: THREE.WebGPURenderer;
@@ -127,7 +132,7 @@ export class ColonyRenderer {
     this.sun.shadow.camera.near = 0.1;
     this.sun.shadow.camera.far = 140;
     this.scene.add(this.sun, this.sun.target);
-    this.scene.add(this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup, this.pawns.group);
+    this.scene.add(this.overview.group, this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup, this.pawns.group);
     this.camera.position.set(41, 34, 44);
     this.controls = new OrbitControls(this.camera, renderer.domElement);
     this.controls.target.set(15.5, 0, 15.5);
@@ -167,7 +172,7 @@ export class ColonyRenderer {
     this.resize();
   }
 
-  setWorld(world: World, resetPresentation = false): void {
+  setWorld(world: World, resetPresentation = false, speed = 1, tracks?: PawnTrack[]): void {
     if (this.disposed) return;
     if (resetPresentation) this.cancelDesignation();
     this.areaIndex = undefined; this.areaSignature = '';
@@ -183,10 +188,12 @@ export class ColonyRenderer {
     // if terrain content and simulation tick match a previous session.
     const resetPoses = resetPresentation || newMap || world.tick < (previousWorld?.tick ?? 0);
     this.world = world;
+    if(tracks) {this.timeline.adopt(world.tick,speed,tracks,now,resetPoses || !this.hasTracks);this.hasTracks=true;}
     if (newMap) {
       this.boxes.clear();
       this.terrainKey = nextTerrainKey;
-      this.buildTerrain(world);
+      buildTerrain(world,this.terrainGroup,this.staticMaterial,this.waterMaterial);
+      this.overview.rebuildTerrain(this.terrainGroup);
       const centerX = (world.width - 1) / 2, centerZ = (world.height - 1) / 2;
       const extent = Math.min(WORLD_SCALE.cameraSpan, Math.max(world.width, world.height));
       this.controls.target.set(centerX, 0, centerZ);
@@ -268,6 +275,7 @@ export class ColonyRenderer {
   /** Hide canopies for inspection while retaining trunks and all game rules. */
   setFoliageVisible(visible: boolean): void {
     this.resources.setFoliageVisible(visible);
+    this.overview.setFoliageVisible(visible);
   }
 
   focusPawn(id: number): void {
@@ -303,49 +311,7 @@ export class ColonyRenderer {
     return { x: (projected.x + 1) * this.host.clientWidth / 2, y: (1 - projected.y) * this.host.clientHeight / 2 };
   }
 
-  private buildTerrain(world: World): void {
-    clearGroup(this.terrainGroup);
-    const slab = new THREE.Mesh(new THREE.BoxGeometry(world.width + 0.15, 0.8, world.height + 0.15), material(0x827858));
-    slab.position.set((world.width - 1) / 2, -0.56, (world.height - 1) / 2);
-    slab.receiveShadow = true;
-    this.terrainGroup.add(slab);
-    // Small spatial chunks keep each instance batch independently cullable.
-    const chunkSize = WORLD_SCALE.chunkSize;
-    for (let cz = 0; cz < world.height; cz += chunkSize) for (let cx = 0; cx < world.width; cx += chunkSize) {
-      const tileGroups: Record<Terrain, Placement[]> = { grass: [], soil: [], water: [], rock: [] };
-      const grass: Placement[] = [], massifs: Placement[] = [], banks: Placement[] = [];
-      for (let z = cz; z < Math.min(cz + chunkSize, world.height); z++) for (let x = cx; x < Math.min(cx + chunkSize, world.width); x++) {
-        const terrain = world.tiles[z * world.width + x].terrain;
-        const n = noise(x, z, world.seed);
-        scratchColor.setHex(TERRAIN_COLORS[terrain]).multiplyScalar(0.94 + n * 0.12);
-        const color = scratchColor.getHex(), level = terrain === 'water' ? WORLD_SCALE.waterSurface : 0;
-        tileGroups[terrain].push({ x, z, y: level, color });
-        // Top quads replace six-sided ground cubes; exposed bank and perimeter
-        // faces retain the original water drop and the slab join without holes.
-        for (const [dx, dz, rotation] of [[1, 0, Math.PI / 2], [-1, 0, -Math.PI / 2], [0, 1, 0], [0, -1, Math.PI]] as const) {
-          const nx = x + dx, nz = z + dz;
-          const neighbor = nx < 0 || nz < 0 || nx >= world.width || nz >= world.height ? -0.16
-            : world.tiles[nz * world.width + nx].terrain === 'water' ? WORLD_SCALE.waterSurface : 0;
-          if (neighbor < level) banks.push({ x: x + dx * 0.5, z: z + dz * 0.5, y: (level + neighbor) / 2, sy: level - neighbor, ry: rotation, color });
-        }
-        if (terrain === 'rock') {
-          // Every impassable rock cell has a solid footprint, unlike loose stone.
-          const height = 1.7 + noise(Math.floor(x / 4), Math.floor(z / 4), world.seed) * 2.1 + n * 0.25;
-          massifs.push({ x, z, y: height / 2, sy: height, color: scratchColor.getHex() });
-        }
-        if (terrain === 'grass' && n > 0.83) grass.push({ x: x - 0.26, y: 0.09, z: z + 0.22, sy: 0.7 + n, color: n > 0.96 ? 0xd4c58a : 0x96a575, ry: n * 6.28 });
-      }
-      mergedInstances(this.terrainGroup, [
-        { geometry: new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), items: [...tileGroups.grass, ...tileGroups.soil, ...tileGroups.rock] },
-        { geometry: new THREE.PlaneGeometry(1, 1), items: banks },
-        { geometry: new THREE.ConeGeometry(0.08, 0.15, 3), items: grass },
-        { geometry: new THREE.BoxGeometry(1, 1, 1), items: massifs },
-      ], this.staticMaterial);
-      mergedInstances(this.terrainGroup, [{ geometry: new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), items: tileGroups.water }], this.waterMaterial, false);
-    }
-  }
-
-  private updateResources(world: World, newMap: boolean): void { this.resources.update(world, newMap); }
+  private updateResources(world: World, newMap: boolean): void { this.resources.update(world, newMap); this.overview.update(world,newMap); }
 
   private buildStructures(world: World): void { buildFurniture(world, this.structureGroup, this.wallCutaway, this.boxes); }
 
@@ -453,6 +419,7 @@ export class ColonyRenderer {
     this.lastFrame = now;
     this.pawns.blend.value = this.snapshotDuration > 0 ? Math.min(1, Math.max(0, (performance.now() - this.snapshotAt) / this.snapshotDuration)) : 1;
     this.pawns.time.value = THREE.MathUtils.lerp(this.timeFrom, this.timeTo, this.pawns.blend.value);
+    if(this.hasTracks && this.world) {this.timeline.advance(now);this.pawns.time.value=(this.timeline.tick/TICKS_PER_SECOND)%(2*Math.PI);this.pawns.updateTravel(this.world,this.timeline);}
     if (!this.areaDrag) { this.moveCamera(dt); this.controls.update(); }
     if (this.world) {
       const x = THREE.MathUtils.clamp(this.controls.target.x, 0, this.world.width - 1);
@@ -468,8 +435,11 @@ export class ColonyRenderer {
     if (this.selectedPawn !== null) {
       const visual = this.pawns.visuals.get(this.selectedPawn);
       this.selection.visible = !!visual;
-      if (visual) this.selection.position.set(THREE.MathUtils.lerp(visual.from.x, visual.to.x, this.pawns.blend.value), 0.08, THREE.MathUtils.lerp(visual.from.z, visual.to.z, this.pawns.blend.value));
+      if (visual) {const segment=this.hasTracks?this.timeline.segment(this.selectedPawn):undefined;const blend=segment?THREE.MathUtils.clamp((this.timeline.tick-segment.start)/(segment.end-segment.start),0,1):this.pawns.blend.value;this.selection.position.set(THREE.MathUtils.lerp(visual.from.x,visual.to.x,blend),0.08,THREE.MathUtils.lerp(visual.from.z,visual.to.z,blend));}
     }
+    const cellPixels=this.host.clientHeight*this.camera.zoom/(this.camera.top-this.camera.bottom);
+    const distant=this.overview.group.visible ? cellPixels<9 : cellPixels<7;
+    this.overview.group.visible=distant;this.terrainGroup.visible=!distant;this.resourceGroup.visible=!distant;
     this.renderer.info.reset();
     this.renderer.render(this.scene, this.camera);
     this.stats.drawCalls = this.renderer.info.render.drawCalls;
@@ -654,6 +624,7 @@ export class ColonyRenderer {
     window.removeEventListener('blur', this.onBlur);
     document.removeEventListener('visibilitychange', this.onVisibility);
     this.boxes.dispose();
+    this.overview.dispose();
     this.resources.clear();
     for (const group of [this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup, this.pawns.group]) clearGroup(group);
     this.pileChunks.clear();

@@ -1,0 +1,52 @@
+# Sol, trajets et présentation distante — schéma 6
+
+État du 13 septembre 2026. Références fonctionnelles : corpus utilisateur chapitres 2/5/10/21/29/32, SYS-005/020..022/051..061/113..117/172..177 ; scénarios matériels et navigation de F1/F2/F3. Ce document remplace les anciennes descriptions permettant plusieurs piles au sol ou présentant le BFS cardinal comme la navigation actuelle. Les originaux du corpus restent inchangés.
+
+## Recherche et décisions
+
+| Question | Sources relues | Décision locale et certitude |
+|---|---|---|
+| Plusieurs objets au sol ? | [Stockpile](https://rimworldwiki.com/wiki/Stockpile), [Shelf](https://rimworldwiki.com/wiki/Shelf), [GenPlace](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/Verse/GenPlace.cs) | **Adopter** une pile d'objets par cellule de sol, plusieurs unités compatibles dans cette pile. La limite de trois piles par cellule concerne les étagères modernes, encore absentes ici. Ne pas confondre objets, plantes, personnages et autres couches d'occupation. Confiance élevée sur cette distinction. |
+| Durée d'une diagonale ? | [Pawn.TicksPerMove](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/Verse/Pawn.cs), [Pawn_PathFollower](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/Verse.AI/Pawn_PathFollower.cs) | **Adopter** la distance plus longue : le code consulté multiplie la base diagonale par 1,41421, puis applique d'autres coûts. Lisière utilise √2 pour la durée physique exacte. Notre vitesse de base reste 1 case en 3 ticks ; ce nombre local n'est pas une calibration des statistiques complètes de RimWorld. |
+| Coins et obstacles ? | Chap. 21 ; [Wall](https://rimworldwiki.com/wiki/Wall) ; règles du follower | **Adapter** aux volumes 3D : les deux cellules latérales d'une diagonale doivent être libres, y compris de trafic temporaire. Ne pas annoncer la parité des portes, clôtures, meubles franchissables ou situations de combat encore absents. |
+| Choix d'algorithme et interpolation ? | Contrat du corpus ; [Three.js](https://threejs.org/docs/) ; mesures locales | **Adapter** librement : Dijkstra pondéré CPU, file de Dial, historique d'arêtes et interpolation GPU. Le laboratoire de navigation WebGPU demeure séparé. Le rendu distant emploie des instances et des géométries fusionnées. |
+
+Le miroir décompilé est épinglé au commit du 20 mai 2026 ; son assembly n'est pas certifié identique au dernier correctif PC 1.6.4850. Le wiki est communautaire. La formule de coût publiée sur certaines pages de navigation est contestée sur le wiki : les méthodes directement consultées priment sur une généralisation de cette formule. Cette recherche ne promet pas une conformité à 100 %.
+
+## Matière et commandes
+
+`ground-placement.ts` distingue capacité d'une cellule, réservation typée de réserve et placement à proximité. Le sol reçoit une seule pile : bois 75, baies 75, rations 10 unités au maximum. Deux transports de types incompatibles ne peuvent réserver la même cellule vide. La capacité de la réserve peut réduire cette limite, jamais la dépasser. Le départ de 18 rations occupe donc deux cases.
+
+Un surplus produit se répartit sur des cellules accessibles proches ; le dépôt parcourt déterministement jusqu'à douze pas cardinaux, sans traverser un mur. Les dépôts de récolte et d'interruption respectent aussi les réservations de transport déjà prises sur ces cases ; une livraison exclut sa propre réservation du calcul de capacité. Ce choix de voisinage est une adaptation explicite, pas une copie exacte du classement des emplacements de GenPlace. Un échec de placement conserve la ressource ou la cargaison. Les interruptions conservent l'identité de la pile déposée ; les livraisons déplacent une pile existante ou fusionnent des quantités compatibles.
+
+`work-release.ts` prépare les emplacements des seuls propriétaires libérés par une commande, sans modifier le monde. Les cases retenues sont ensuite utilisées telles quelles, évitant qu'un nouveau choix de dépôt invalide une annulation partielle. Sans place, la commande est refusée. Une interruption autonome sans place reste différée avec sa cargaison ; les comportements d'urgence en environnement entièrement saturé restent à enrichir, sans création de piles superposées ni destruction de matière.
+
+## Déplacement autoritaire
+
+`pathfinding.ts` calcule des routes sur huit voisins. Les coûts entiers 1000/1414 servent à la recherche ; cette approximation de √2 (environ 0,015 %) n'est pas utilisée pour la vitesse physique. Les choix de nourriture et de lit comparent le coût des routes, et non leur nombre de cellules. La priorité d'un travail et l'estimation de proximité logistique restent des critères distincts du coût de sa route.
+
+`movement.ts` enregistre une arête avec départ, arrivée, tick de début et tick de fin fractionnaire. La durée vaut trois ticks multipliés par sa longueur euclidienne. Le reliquat d'une diagonale est conservé lors de l'enchaînement ; chaque diagonale n'est pas arrondie à cinq ticks. La case d'arrivée logique est réservée dès le départ, l'origine reste occupée pendant la traversée. Les actions et nouvelles décisions de besoins attendent la fin de l'arête, alors que faim/repos/confort continuent d'évoluer. Aucun repas, travail ou bonus de lit n'est accordé au milieu du déplacement.
+
+Les changements de mobilier invalident la place de repas même pendant une arête, puis le colon replanifie après l'arrivée. Les routes sont revérifiées avant chaque arête. Un chantier ne peut matérialiser un obstacle sur l'origine, l'arrivée ou un coin latéral d'une arête active. Le contrôle des acteurs latéraux s'effectue au départ : l'entrée ultérieure d'un autre acteur dans une case latérale n'invalide pas rétroactivement la sauvegarde ; les extrémités restent réservées. La congestion générale entre acteurs actifs, les profils de terrain et les réservations de cases de service restent partiels. Le sidestep d'un acteur inactif est désormais un déplacement temporisé.
+
+`work-planner.ts` isole la planification. Le budget reste huit recherches et 32 768 couples logistiques par tick. `idle-logistics.ts` permet un rejet conservateur en temps linéaire lorsque le stockage ne peut pas être amélioré, avant d'explorer la carte. La file de Dial exploite les coûts entiers bornés ; modifier ces coûts exige de revoir la taille de ses seaux.
+
+## Du worker au GPU
+
+L'ancien lissage repartait de la position affichée à chaque snapshot de 200 ms. Le délai variable et les réponses aux commandes modifiaient ainsi la vitesse ; relier seulement deux positions pouvait aussi couper un virage.
+
+`MotionRecorder` capture chaque arête simulée et garde un historique couvrant 64 ticks, même si plusieurs ticks passent entre deux publications. Cette donnée de présentation ne pilote jamais la simulation et n'est pas enregistrée dans une sauvegarde. `MotionTimeline` lit le temps à vitesse fixe avec 250 ms de tampon. Un message dupliqué ne relance aucune interpolation. Un retard excédant la réserve produit une attente au dernier temps confirmé, sans extrapoler à travers un obstacle. Pause et changement de vitesse conservent une position continue ; un chargement remplace explicitement la chronologie.
+
+Le CPU choisit l'arête à afficher. Le GPU calcule la translation et les poses depuis les attributs début/fin et une horloge partagée. Seuls les horodatages RAF avancent cette horloge : l'arrivée d'un message ne doit pas l'avancer avec `performance.now()`, qui peut dépasser l'horodatage de l'image suivante. L'horloge de translation est recentrée périodiquement pour éviter la perte de précision float32 dans une vieille colonie ; la phase des animations est séparée. Corps et cargaison utilisent les mêmes attributs. La marche regarde la direction de son arête ; le travail regarde sa cible, les repas leur surface et le sommeil l'orientation du lit. Le transport conserve aussi `pickupCell` dans son intention V6 : le geste de ramassage regarde la source même si sa dernière unité a été prélevée et que la pile n'existe plus. L'anneau de sélection suit la même arête.
+
+## Vue distante
+
+Les lots de mobilier/piles/personnages étaient déjà instanciés ; terrain et végétation détaillés étaient fusionnés par chunks. Tout afficher rendait visibles beaucoup de chunks et leurs détails minuscules. `OverviewLayer` conserve une seconde représentation : terrain fusionné par matériau, arbres/buissons/pierres instanciés avec moins de polygones. Les hauteurs du terrain sont conservées et les troncs restent présents quand on masque le feuillage.
+
+Le passage se fait selon la taille projetée d'une cellule, avec hystérésis (entrée sous 7 px, retour au détail au-dessus de 9 px). Aucun maillage n'est reconstruit au changement de zoom. Le retrait d'une ressource masque son instance ; restauration et changements restent synchronisés avec la vue détaillée. Les ombres fines du paysage distant sont omises ; les règles de collision et d'accès ne changent pas. La mémoire des deux représentations constitue un coût assumé ; elle devra être reprofilée avant d'augmenter la carte ou le catalogue.
+
+## Sauvegardes et vérification
+
+V6 valide unicité des piles au sol, réservations compatibles et arêtes temporisées ; un délai de marche sans arête est refusé. V1–V4 suivent d'abord leurs migrations existantes. La migration V5→V6 conserve les identités, types et quantités, répartit les piles superposées à proximité et annule les anciennes intentions de transport devenues incompatibles en déposant physiquement leurs cargaisons. Les anciennes coordonnées des personnages et le terrain ne sont pas régénérés. Leur ancien délai de marche est remis à zéro, sans inventer une arête passée. Une migration sans place échoue avant adoption ; la partie courante reste intacte.
+
+Les vérifications indépendantes de `spatial-contracts.test.ts` couvrent l'oracle de relaxation, les temps géométriques, messages irréguliers/dupliqués, virages, pause/remplacement, limites de piles et refus atomiques. Les anciens scénarios matériels gardent leurs objectifs : leur fixture de 200 piles a désormais 200 cellules, et le coefficient des lits se mesure sur des intervalles réellement dormis. La partie de cinq jours et les parcours UI restent requis. Un parcours GPU mesure directement les attributs de translation et les orientations pendant quatre abattages. Les preuves et conditions mesurées sont dans [validation](validation.md).

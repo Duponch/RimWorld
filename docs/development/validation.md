@@ -1,6 +1,31 @@
 # Validation du prototype
 
-## État courant : catalogue alimentaire et propriété — 13 septembre 2026
+
+## V6 — sol, déplacements et vue éloignée (13 septembre 2026)
+
+[Contrat, sources et limites](spatial-motion-storage.md). Le build TypeScript/Vite passe (lot jeu 996,26 ko, gzip 276,10 ko ; worker 66,66 ko ; avertissement de taille >500 ko conservé). **27 scénarios noyau, 12 fichiers, passent**, dont cinq jours sur trois cartes 250² : [rapport](../../artifacts/spatial-core-validation.json). Le passage utilise `--maxWorkers=1` : des exécutions concurrentes avec le navigateur avaient dépassé les délais de génération et de soak, sans échec de leurs assertions métier. Les délais et critères n'ont pas été relevés. Les 40 000 couples du scénario logistique sont conservés avec 200 piles réparties sur 200 cases. Le test de lit compare désormais des intervalles réellement dormis ; les durées de trajet ont leur oracle indépendant.
+
+Les mesures graphiques utilisent Ryzen 5 3600, WebGPU AMD/RDNA-1, Chromium normal sans fenêtre, viewport 1440×1000, carte 250² graine 42 en pause. 90 images de chauffe, puis au moins huit secondes et 300 images ; aucune image longue filtrée dans cette fenêtre. Le premier affichage et ses éventuelles compilations de pipelines ne sont pas chronométrés par ce protocole. Le contrôle `stable-detailed` force les couches détaillées à tous les zooms sur le même moteur. Il permet d’isoler le coût du LOD. [Contrôle détaillé](../../artifacts/overview-stable-detailed.json), [rendu distant final](../../artifacts/overview-final-lod.json).
+
+| Vue entière | Détail permanent | Représentation distante |
+|---|---:|---:|
+| Appels de dessin | 861 | 13 |
+| Triangles soumis | 1 199 557 | 499 839 |
+| Intervalle d’image p95 | 8,4 ms | 4,3 ms |
+| Intervalle maximal | 12,7 ms | 8,5 ms |
+| Soumission CPU p95 | 8,9 ms | 3,1 ms |
+
+La vue locale garde 133 appels et 194 897 triangles dans les deux passages ; ses intervalles p95 sont 4,3 et 8,4 ms, maximum 8,4 et 20,8 ms. Cette variabilité empêche de prétendre à un gain universel dans la vue locale. Le temps CPU ne mesure pas l’exécution GPU ; l’intervalle RAF inclut l’ordonnancement. Aucun gain de navigation ni absence absolue de freeze n’est déduit de ce panorama en pause. Les captures de la carte entière et du camp au terme des trois jours ont été inspectées : relief, rivière, végétation, UI et compteur FPS visibles.
+
+**Huit parcours UI passent ensemble** dans le [passage complet](../../artifacts/spatial-ui-validation.json), démarré à 18:27:28 UTC, 484,21 secondes. La partie WebGPU de trois jours effectue 48 décisions réelles de joueur et termine au tick 18 063 avec **3 lits, 1 table, 3 tabourets, 6 murs, 41 bois, 44 aliments et aucun chantier en attente**. Les 18 repas sont réconciliés, les trois colons ont dormi dans un lit et les reprises quotidiennes sont exactes. Ce passage précède les derniers garde-fous de sauvegarde/visibilité et la correction d'horloge ; les scénarios affectés sont recontrôlés séparément, sans redater la partie longue.
+
+Un recontrôle a révélé une variation de vitesse intermittente : `performance.now()` d'un message pouvait dépasser l'horodatage de l'image suivante. Un cas déterministe échouait à 1,32 tick parcouru au lieu de 1,2. La chronologie avance maintenant uniquement sur l'horloge RAF. Le [contrôle GPU après correction](../../artifacts/spatial-movement-validation.json) passe : 196 mesures de translation, six directions et quatre cibles de travail ; erreur de vitesse maximale 0,000204 case/s à 6× et erreur d'orientation inférieure à 0,000001 radian. Le ramassage est aussi contrôlé après disparition de la pile source, sauvegarde/rechargement et lecture des deux attributs de pose GPU dans les quatre directions cardinales. Les [garde-fous ciblés](../../artifacts/spatial-final-guards.json) exercent aussi l'oracle de navigation, les coins bloqués, la reprise des arêtes et les bornes des instances restaurées. **Sept parcours courts repassent ensemble en 148,49 s**, sans relance automatique, après les corrections d’horloge et de visibilité : [rapport](../../artifacts/spatial-ui-guard-validation.json). La revue suivante a ajouté le respect des réservations lors des dépôts de récolte, l’exclusion de la propre réservation à la livraison et la position de ramassage conservée ; ces contrats sont recontrôlés dans le noyau final et les parcours UI concernés. Une attente reste possible si le worker épuise le tampon de présentation ; il n'y a pas d'extrapolation non validée.
+
+**Audit à 100 colons sur la version corrigée** : [rapport](../../artifacts/dining-render-spatial.json), 18:44:27 UTC, même PC/WebGPU/viewport, mélange de 800 baies et 50 rations, tables et lits individuels, camps sans congestion. Capture de huit secondes minimum dans une seule promesse navigateur, sans polling du pilote ni suppression d'intervalles longs. À 6× : intervalle p95 **8,4 ms**, maximum **25 ms** ; soumission CPU p95 6,9 ms, adoption snapshot p95 1,9 ms et UI p95 6,8 ms. Aucune tâche longue ni erreur GPU enregistrée. Au tick 512, tous les aliments sont consommés, cent colons dorment et aucun souvenir sans table n'est apparu. En pause : p95 8,4 ms et maximum 20,9 ms. Le protocole de chauffe a changé depuis V5 ; on n'en déduit pas un facteur de performance comparatif.
+
+**Dernière validation ciblée réussie** : 14 scénarios noyau dans quatre fichiers après les correctifs de réservation et d'orientation du prélèvement ; puis [trois parcours navigateur](../../artifacts/spatial-final-ui-validation.json), 46,88 s, sans échec ni nouvelle tentative. Ils couvrent repas/sommeil physiques, réserve/transport/construction/reprise en livraison et vitesse/orientation GPU. Le build final indiqué en tête suit les derniers changements de code. Les rapports précédents conservent leurs propres états et dates ; l'audit à cent acteurs précède ce dernier ajout de position de ramassage.
+
+## Historique : catalogue alimentaire et propriété — 13 septembre 2026
 
 Le [contrat alimentaire V5](food-items.md) livre baies/rations distinctes, limites de pile, quantités d'ingestion, nutrition adulte et profils historiques. Le [catalogue](../gameplay/content-catalogue.md) précise pourquoi les 95 familles du corpus ne constituent pas une liste exhaustive ; le [contrat équipement/portraits](character-presentation.md) reste prévu.
 

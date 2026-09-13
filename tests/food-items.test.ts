@@ -46,7 +46,7 @@ test('catalogue : limites par objet, logistique hétérogène, arrondis, faim et
   addGroundMaterial(switching, 'food', 16, {x:8,z:8}, 'berries');
   applyCommand(switching,{type:'stockpile',enabled:true,x:12,z:12,filters:{wood:false,food:true},capacity:75,priority:4});
   stepWorld(switching); expect(hauler.haul).toMatchObject({phase:'pickup',quantity:10});
-  hauler.hunger = 20; hauler.needCooldown = 0; stepWorld(switching);
+  hauler.hunger = 20; hauler.needCooldown = 0; stepWorld(switching, Math.ceil(hauler.moveCooldown)); stepWorld(switching);
   // The future haul is being cancelled: its own reservation must be available
   // to the replacement meal, while other actors' reservations remain binding.
   expect(hauler.need).toMatchObject({kind:'eat',quantity:16}); expect(hauler.haul).toBeNull();

@@ -26,7 +26,8 @@ test('table et tabouret : construction UI, portion transportée, repas assis, co
     await expect.poll(async () => (await world(page)).structures.length, { timeout: 20000 }).toBe(2);
     await page.getByRole('button', { name: 'Pause', exact: true }).click();
     const built = await world(page); expect(built.stock.wood).toBe(7);
-    Object.assign(built.pawns[0]!, { x: 13, z: 16, hunger: 20, comfort: 10, path: [] });
+    // Author a new test starting pose; no old travel edge belongs to this relocation.
+    Object.assign(built.pawns[0]!, { x: 13, z: 16, hunger: 20, comfort: 10, path: [], motion:null, moveCooldown:0 });
     addGroundMaterial(built, 'food', 1, { x: 14, z: 16 }); refreshStock(built);
     await page.evaluate(({ key, value }) => localStorage.setItem(key, value), { key: saveKey, value: serializeWorld(built) });
     await panel(page, 'menu'); await page.locator('#load').click();

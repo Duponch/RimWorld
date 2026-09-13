@@ -9,7 +9,7 @@ const scenario = JSON.parse(fixture);
 const report = { timestamp: new Date().toISOString(), viewport: { width: 1440, height: 1000 }, map: 250, pawns: 100,
   schema: scenario.schemaVersion, foodRules: scenario.foodRules,
   foodMix: scenario.piles.reduce((counts, pile) => { counts[pile.item ?? pile.kind] = (counts[pile.item ?? pile.kind] ?? 0) + pile.quantity; return counts; }, {}),
-  protocol: 'Normal headless Chromium, default local camera, generated landscape outside cleared camps. 100 portions, tables, stools and owned beds. 60 warmup frames, then 8 seconds minimum and 240 frames per phase. Renderer CPU includes submissions, not GPU execution; RAF includes scheduling. No world serialization inside timed frames. Scene is deliberately uncongested.', phases: [], errors: [] };
+  protocol: 'Normal headless Chromium, default local camera, generated landscape outside cleared camps. 100 portions, tables, stools and owned beds. 60 warmup frames, then 8 seconds minimum and 240 frames per phase in one browser promise; no driver polling or interval filtering. Renderer CPU includes submissions, not GPU execution; RAF includes scheduling. No world serialization inside timed frames. Scene is deliberately uncongested.', phases: [], errors: [] };
 const instrumentation = `
 window.__diningBench = { view:null, active:false, frames:[], previous:null, total:0, snapshots:[], dom:[], longTasks:[], slowFrames:[], phases:new Set() };
 const originalDomRender = renderState;
@@ -29,11 +29,15 @@ for (const method of ['frame','setWorld']) {
     const start=performance.now(), result=original.apply(this,args), elapsed=performance.now()-start;
     if(method==='frame') {
       b.total++;
+      if(b.warm>0 && --b.warm===0) Object.assign(b,{active:true,frames:[],snapshots:[],dom:[],longTasks:[],slowFrames:[],phases:new Set(),previous:null,started:performance.now()});
       if(b.active) {
         b.frames.push({ cpu:elapsed, interval:b.previous===null?null:args[0]-b.previous, calls:this.stats.drawCalls, triangles:this.stats.triangles });
         if(elapsed>32 || (b.previous!==null && args[0]-b.previous>32)) b.slowFrames.push({ tick:this.world?.tick, sinceStart:performance.now()-b.started, cpu:elapsed, interval:b.previous===null?null:args[0]-b.previous });
         b.previous=args[0];
-        if(performance.now()-b.started>=8000 && b.frames.length>=240) b.active=false;
+        if(performance.now()-b.started>=8000 && b.frames.length>=240) {
+          b.active=false;
+          b.complete({frames:b.frames,snapshots:b.snapshots,dom:b.dom,longTasks:b.longTasks,slowFrames:b.slowFrames,observed:[...b.phases],fpsText:document.querySelector('#fps-counter').textContent});
+        }
       }
     } else if(b.active) {
       b.snapshots.push(elapsed);
@@ -63,15 +67,10 @@ try {
   report.adapter = await page.evaluate(async () => { const a=await navigator.gpu.requestAdapter(); return { vendor:a.info.vendor, architecture:a.info.architecture, device:a.info.device, description:a.info.description }; });
   if(report.backend!=='WebGPU') throw new Error('WebGPU required for this audit');
   for(const name of ['paused','active-6x']) {
-    const until=await page.evaluate(() => window.__diningBench.total+60);
-    await page.waitForFunction(until => window.__diningBench.total>=until,until);
-    await page.evaluate(() => { Object.assign(window.__diningBench,{active:true,frames:[],snapshots:[],dom:[],longTasks:[],slowFrames:[],phases:new Set(),previous:null,started:performance.now()}); });
     if(name==='active-6x') await page.locator('[data-speed="6"]').click();
-    await page.waitForFunction(() => !window.__diningBench.active,undefined,{timeout:60000,polling:250});
-    const measured = await page.evaluate(() => {
-      const b=window.__diningBench;
-      return { frames:b.frames,snapshots:b.snapshots,dom:b.dom,longTasks:b.longTasks,slowFrames:b.slowFrames,observed:[...b.phases],fpsText:document.querySelector('#fps-counter').textContent };
-    });
+    const measured = await page.evaluate(() => new Promise(resolve => {
+      Object.assign(window.__diningBench,{warm:60,active:false,complete:resolve});
+    }));
     report.phases.push({ name, frameCpuMs:stats(measured.frames.map(f=>f.cpu)), frameIntervalsMs:stats(measured.frames.flatMap(f=>f.interval===null?[]:[f.interval])), snapshotCpuMs:stats(measured.snapshots), domCpuMs:stats(measured.dom), longTasks:measured.longTasks, slowFrames:measured.slowFrames, drawCalls:stats(measured.frames.map(f=>f.calls)), triangles:stats(measured.frames.map(f=>f.triangles)), observed:measured.observed,fpsText:measured.fpsText });
   }
   await page.locator('[data-speed="0"]').click();

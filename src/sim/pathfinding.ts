@@ -1,3 +1,5 @@
+import { PathFrontier } from './PathFrontier.ts';
+import { CARDINAL_COST, DIAGONAL_COST } from './movement.ts';
 import type { Cell, World } from './types.ts';
 import { footprintCells } from './definitions.ts';
 
@@ -22,7 +24,15 @@ export function blockedCells(world: World): Uint8Array {
   return blocked;
 }
 
-export interface Reachability { parents: Int32Array; start: number }
+export interface Reachability { parents: Int32Array; costs: Float64Array; start: number }
+export const routeCost = (world: World, path: Cell[], reach: Reachability): number => path.length ? reach.costs[cellIndex(world,path[path.length-1]!.x,path[path.length-1]!.z)]! : 0;
+/** Solid 3D corners require both side cells clear, including temporary traffic. */
+export function canStep(world:World,from:Cell,to:Cell,blocked:Uint8Array,occupied:Set<number>):boolean {
+  const dx=to.x-from.x,dz=to.z-from.z;
+  if(!inBounds(world,to.x,to.z)||Math.max(Math.abs(dx),Math.abs(dz))!==1) return false;
+  const free=(x:number,z:number)=>!blocked[cellIndex(world,x,z)]&&!occupied.has(cellIndex(world,x,z));
+  return free(to.x,to.z) && (!dx||!dz||(free(from.x+dx,from.z)&&free(from.x,from.z+dz)));
+}
 
 /** Occupy a destination cell (beds), unlike interaction from a neighbouring cell. */
 export function routeToCell(world: World, target: Cell, reachable: Reachability): Cell[] | null {
@@ -41,33 +51,27 @@ export function routeToCell(world: World, target: Cell, reachable: Reachability)
  * layer and may only be used for nearest-goal selection (or that single target).
  * No reached goal means a complete flood, so remaining candidates are knowable. */
 export function reachableCells(world: World, start: Cell, blocked: Uint8Array, occupied: Set<number>, goals?: ReadonlySet<number>): Reachability {
-  const size = world.width * world.height;
-  const parents = new Int32Array(size).fill(-2);
-  const queue = new Int32Array(size);
-  const startIndex = cellIndex(world, start.x, start.z);
-  parents[startIndex] = -1;
-  queue[0] = startIndex;
-  let head = 0;
-  let tail = 1;
-  let frontier = 1, reachedGoal = false;
-  while (head < tail) {
-    const index = queue[head++]!;
-    if (goals?.has(index)) reachedGoal = true;
-    const x = index % world.width;
-    // Keep exact N,E,S,W discovery order without allocating one array per visited cell.
-    let next = index - world.width;
-    if (next >= 0 && parents[next] === -2 && !blocked[next] && !occupied.has(next)) { parents[next] = index; queue[tail++] = next; }
-    next = index + 1;
-    if (x + 1 < world.width && parents[next] === -2 && !blocked[next] && !occupied.has(next)) { parents[next] = index; queue[tail++] = next; }
-    next = index + world.width;
-    if (next < size && parents[next] === -2 && !blocked[next] && !occupied.has(next)) { parents[next] = index; queue[tail++] = next; }
-    next = index - 1;
-    if (x > 0 && parents[next] === -2 && !blocked[next] && !occupied.has(next)) { parents[next] = index; queue[tail++] = next; }
-    // Finish the entire first goal layer: all equal-length routes keep the same
-    // N/E/S/W parents and remain eligible for the caller's stable ID tie-break.
-    if (head === frontier) { if (reachedGoal) break; frontier = tail; }
+  const size=world.width*world.height, parents=new Int32Array(size).fill(-2), costs=new Float64Array(size).fill(Infinity);
+  const startIndex=cellIndex(world,start.x,start.z), heap=new PathFrontier(costs), settled=new Uint8Array(size);
+  costs[startIndex]=0;parents[startIndex]=-1;heap.push(startIndex);
+  let goalCost=Infinity;
+  const directions=[[0,-1],[1,0],[0,1],[-1,0],[1,-1],[1,1],[-1,1],[-1,-1]] as const;
+  for(let index=heap.pop();index!==undefined;index=heap.pop()) {
+    if(costs[index]!>goalCost) break;
+    settled[index]=1;
+    if(goals?.has(index)) goalCost=costs[index]!;
+    const x=index%world.width,z=Math.floor(index/world.width);
+    for(const [dx,dz] of directions) {
+      const nx=x+dx,nz=z+dz,next=cellIndex(world,nx,nz);
+      if(nx<0||nz<0||nx>=world.width||nz>=world.height||blocked[next]||occupied.has(next)||settled[next])continue;
+      if(dx&&dz&&(blocked[index+dx]||blocked[index+dz*world.width]||occupied.has(index+dx)||occupied.has(index+dz*world.width)))continue;
+      const cost=costs[index]!+(dx&&dz?DIAGONAL_COST:CARDINAL_COST);
+      if(cost<costs[next]!) {costs[next]=cost;parents[next]=index;heap.push(next);}
+    }
   }
-  return { parents, start: startIndex };
+  // Discovered but unfinalized nodes must not masquerade as reachable nearest goals.
+  if(goalCost<Infinity) for(let i=0;i<size;i++) if(!settled[i]) {parents[i]=-2;costs[i]=Infinity;}
+  return { parents,costs,start:startIndex };
 }
 
 export function routeToJob(world: World, target: Cell & { kind?: string; orientation?: 0 | 1 | 2 | 3; footprint?: 'standard' | 'legacy-single' }, reachable: Reachability, allowTarget = false): Cell[] | null {
@@ -88,7 +92,7 @@ export function routeToJob(world: World, target: Cell & { kind?: string; orienta
       cursor = reachable.parents[cursor]!;
     }
     path.reverse();
-    if (best === null || path.length < best.length) best = path;
+    if (best === null || routeCost(world,path,reachable) < routeCost(world,best,reachable)) best = path;
   }
   return best;
 }

@@ -1,3 +1,4 @@
+import type { MotionTimeline } from './MotionTimeline';
 import * as THREE from 'three/webgpu';
 import { Fn, If, attribute, cos, float, mix, positionLocal, sin, uniform, vec3 } from 'three/tsl';
 import type { World } from '../sim/types';
@@ -105,25 +106,31 @@ function cargoGeometry(): THREE.InstancedBufferGeometry {
 export class PawnLayer {
   readonly group = new THREE.Group();
   readonly time = uniform(0);
+  readonly travelTime = uniform(0);
   readonly blend = uniform(1);
   readonly visuals = new Map<number, VisualPawn>();
   private pawnMesh: THREE.Mesh | null = null;
   private cargoMesh: THREE.Mesh | null = null;
+  private readonly targetPoses = new Map<number,THREE.Vector4>();
+  private readonly travelKeys = new Map<number,string>();
   private createPawnMesh(count: number): void {
     clearGroup(this.group);
     const geometry = pawnGeometry();
+    geometry.setAttribute('aTravel', new THREE.InstancedBufferAttribute(new Float32Array(count * 2), 2));
     geometry.setAttribute('aFrom', new THREE.InstancedBufferAttribute(new Float32Array(count * 4), 4));
     geometry.setAttribute('aTo', new THREE.InstancedBufferAttribute(new Float32Array(count * 4), 4));
     geometry.setAttribute('aMotion', new THREE.InstancedBufferAttribute(new Float32Array(count * 4), 4));
     geometry.setAttribute('aTint', new THREE.InstancedBufferAttribute(new Float32Array(count * 3), 3));
     geometry.setAttribute('aCargo', new THREE.InstancedBufferAttribute(new Float32Array(count * 2), 2));
-    for (const name of ['aFrom', 'aTo', 'aMotion', 'aTint', 'aCargo']) (geometry.getAttribute(name) as THREE.InstancedBufferAttribute).setUsage(THREE.DynamicDrawUsage);
+    for (const name of ['aFrom', 'aTo', 'aMotion', 'aTint', 'aCargo', 'aTravel']) (geometry.getAttribute(name) as THREE.InstancedBufferAttribute).setUsage(THREE.DynamicDrawUsage);
     const mat = material(0xffffff);
     mat.positionNode = Fn(() => {
       const bone = attribute('boneId', 'float');
       const pivot = attribute('bindPivot', 'vec3');
       const motion = attribute('aMotion', 'vec4');
-      const pose = mix(attribute('aFrom', 'vec4'), attribute('aTo', 'vec4'), this.blend);
+      const travel=attribute('aTravel','vec2');
+      const alpha=travel.y.sub(travel.x).greaterThan(0).select(this.travelTime.sub(travel.x).div(travel.y.sub(travel.x).max(0.0001)).clamp(0,1),this.blend);
+      const pose = mix(attribute('aFrom', 'vec4'), attribute('aTo', 'vec4'), alpha);
       const angle = float(0).toVar();
       const sign = float(1).toVar();
       If(bone.equal(3).or(bone.equal(4)).or(bone.equal(6)), () => { sign.assign(-1); });
@@ -167,11 +174,13 @@ export class PawnLayer {
     this.pawnMesh = mesh;
     this.group.add(mesh);
     const cargo = cargoGeometry();
-    for (const name of ['aFrom', 'aTo', 'aCargo', 'aMotion']) cargo.setAttribute(name, geometry.getAttribute(name));
+    for (const name of ['aFrom', 'aTo', 'aCargo', 'aMotion', 'aTravel']) cargo.setAttribute(name, geometry.getAttribute(name));
     const cargoMat = material(0xffffff);
     cargoMat.colorNode = attribute('color', 'vec3');
     cargoMat.positionNode = Fn(() => {
-      const pose = mix(attribute('aFrom', 'vec4'), attribute('aTo', 'vec4'), this.blend);
+      const travel=attribute('aTravel','vec2');
+      const alpha=travel.y.sub(travel.x).greaterThan(0).select(this.travelTime.sub(travel.x).div(travel.y.sub(travel.x).max(0.0001)).clamp(0,1),this.blend);
+      const pose = mix(attribute('aFrom', 'vec4'), attribute('aTo', 'vec4'), alpha);
       const load = attribute('aCargo', 'vec2');
       const scale = float(0).toVar();
       If(attribute('cargoKind', 'float').equal(load.x), () => { scale.assign(load.y.mul(0.25).add(0.75)); });
@@ -191,6 +200,7 @@ export class PawnLayer {
   }
 
   update(world: World, oldBlend: number, newMap: boolean): void {
+    this.travelKeys.clear();
     if (!this.pawnMesh || (this.pawnMesh.geometry.getAttribute('aFrom')?.count ?? 0) !== world.pawns.length) this.createPawnMesh(world.pawns.length);
     const geometry = this.pawnMesh!.geometry as THREE.InstancedBufferGeometry;
     const fromAttribute = geometry.getAttribute('aFrom') as THREE.InstancedBufferAttribute;
@@ -226,8 +236,11 @@ export class PawnLayer {
         const target = Math.atan2(surface.cell.x - pawn.x, surface.cell.z - pawn.z);
         yaw = from.w + Math.atan2(Math.sin(target - from.w), Math.cos(target - from.w));
       }
+      const work = pawn.state==='working' ? world.jobs.find(j=>j.id===pawn.jobId) ?? pawn.haul?.pickupCell : undefined;
+      if(work) {yaw=Math.atan2(work.x-pawn.x,work.z-pawn.z);from.w=yaw;}
       const to = new THREE.Vector4(px, py, pz, yaw);
       if (!previous) from.copy(to);
+      this.targetPoses.set(pawn.id,to.clone());
       this.visuals.set(pawn.id, { from, to });
       fromAttribute.setXYZW(index, from.x, from.y, from.z, from.w);
       toAttribute.setXYZW(index, to.x, to.y, to.z, to.w);
@@ -241,6 +254,37 @@ export class PawnLayer {
     for (const attr of [fromAttribute, toAttribute, motion, tint, cargo]) attr.needsUpdate = true;
     geometry.instanceCount = world.pawns.length;
     (this.cargoMesh!.geometry as THREE.InstancedBufferGeometry).instanceCount = world.pawns.length;
+  }
+
+  /** CPU chooses a confirmed edge; translation, orientation and rig evaluation stay on GPU. */
+  updateTravel(world:World,timeline:MotionTimeline):void {
+    if(!this.pawnMesh)return;
+    const geometry=this.pawnMesh.geometry;
+    const from=geometry.getAttribute('aFrom') as THREE.InstancedBufferAttribute,to=geometry.getAttribute('aTo') as THREE.InstancedBufferAttribute,times=geometry.getAttribute('aTravel') as THREE.InstancedBufferAttribute,motion=geometry.getAttribute('aMotion') as THREE.InstancedBufferAttribute;
+    const origin=Math.floor(timeline.tick/1024)*1024;
+    this.travelTime.value=(timeline.tick-origin)/10;
+    let dirty=false;
+    world.pawns.forEach((pawn,i)=>{
+      const segment=timeline.segment(pawn.id);
+      const active=!!segment && timeline.tick<segment.end;
+      const key=`${origin}:${segment?.start}:${active}:${!!segment&&timeline.tick>=segment.start}:${pawn.state}`;
+      if(this.travelKeys.get(pawn.id)===key)return;
+      this.travelKeys.set(pawn.id,key);dirty=true;
+      const visual=this.visuals.get(pawn.id)!;
+      if(segment && (active || pawn.state==='moving')) {
+        const yaw=Math.atan2(segment.to.x-segment.from.x,segment.to.z-segment.from.z);
+        visual.from.set(segment.from.x,0,segment.from.z,yaw);visual.to.set(segment.to.x,0,segment.to.z,yaw);
+        times.setXY(i,(segment.start-origin)/10,(segment.end-origin)/10);
+        motion.setX(i,active && timeline.tick>=segment.start?1:0);motion.setY(i,0);motion.setZ(i,0);
+      } else {
+        visual.to.copy(this.targetPoses.get(pawn.id)!);visual.from.copy(visual.to);times.setXY(i,0,0);
+        motion.setX(i,0);motion.setY(i,pawn.state==='working'?1:0);
+        const dining=pawn.need?.kind==='eat'?pawn.need.dining:null;
+        motion.setZ(i,pawn.state==='sleeping'?1:pawn.state==='eating'?dining&&dining.seatId!==null?3:2:0);
+      }
+      from.setXYZW(i,visual.from.x,visual.from.y,visual.from.z,visual.from.w);to.setXYZW(i,visual.to.x,visual.to.y,visual.to.z,visual.to.w);
+    });
+    if(dirty)for(const attribute of [from,to,times,motion])attribute.needsUpdate=true;
   }
 
 }

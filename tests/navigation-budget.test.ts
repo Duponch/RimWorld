@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import { createWorld } from '../src/sim/engine';
-import { blockedCells, foodInteractionGoals, reachableCells, routeToJob } from '../src/sim/pathfinding';
+import { routeCost, blockedCells, foodInteractionGoals, reachableCells, routeToJob } from '../src/sim/pathfinding';
 
 test('goal-bounded floods retain the full-flood nearest food and exact path across ties, walls and unreachable goals', () => {
   let random = 123456789, reduced = 0;
@@ -15,7 +15,7 @@ test('goal-bounded floods retain the full-flood nearest food and exact path acro
     const bounded = reachableCells(w, start, blocked, occupied, foodInteractionGoals(w, foods));
     const select = (reach: typeof full) => foods.flatMap(food => {
       const path = routeToJob(w, food, reach, true); return path ? [{ id: food.id, path }] : [];
-    }).sort((a, b) => a.path.length - b.path.length || a.id - b.id)[0] ?? null;
+    }).sort((a, b) => routeCost(w,a.path,reach) - routeCost(w,b.path,reach) || a.id - b.id)[0] ?? null;
     expect(select(bounded), `seed ${run}`).toEqual(select(full));
     if (bounded.parents.filter(parent => parent !== -2).length < full.parents.filter(parent => parent !== -2).length) reduced++;
   }

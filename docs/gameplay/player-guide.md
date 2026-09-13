@@ -90,3 +90,11 @@ La suite est suivie dans [le plan de développement](../ROADMAP.md). Les détail
 ## Portée du jeu et évolution
 
 L’[inventaire complet par domaine](implementation-status.md) distingue ce qui est jouable, partiel et absent. La récolte actuelle retire le buisson : sa repousse n’est pas encore simulée, contrairement à la référence. Nourriture et rythme des besoins restent provisoires. Un camp peut fonctionner plusieurs jours dans ce périmètre sans que l’agriculture, la cuisine, la météo ou les maladies soient implicitement présentes. Les disparitions d’arbres et variations de piles conservent désormais leurs objets graphiques pour éviter les reconstructions répétées.
+
+## Sol et déplacements (V6)
+
+Une case du sol accueille une seule pile : jusqu’à 75 bois, 75 baies ou 10 rations. Des types différents demandent des cases différentes. Prévoir plusieurs cellules de réserve pour les aliments ; les 18 rations initiales occupent deux cases. Les surplus se déposent à proximité, sans être perdus. Une annulation nécessitant un dépôt impossible est refusée. Les étagères ne sont pas encore disponibles.
+
+Les colons se déplacent dans huit directions. Une diagonale mesure √2 cases et prend proportionnellement plus de temps ; elle ne coupe pas les coins solides. Ils font face au trajet puis à leur travail. Le rendu utilise un petit tampon temporel pour conserver une marche régulière entre les messages du worker. Un retard exceptionnel peut encore arrêter brièvement l’affichage au dernier état connu.
+
+En vue très éloignée, les détails minuscules du décor sont remplacés par des silhouettes plus légères. Le terrain, les obstacles et les ordres restent les mêmes. Le compteur FPS continue de mesurer le rendu, y compris en pause.

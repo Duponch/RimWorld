@@ -1,3 +1,4 @@
+import { groundCapacity, planGroundPlacement } from './ground-placement.ts';
 import { ITEM_DEFINITIONS, legacyItem } from './items.ts';
 import type { ItemId } from './items.ts';
 import { MAX_STACK } from './definitions.ts';
@@ -32,6 +33,7 @@ const sameOwner = (a: MaterialOwner, b: MaterialOwner): boolean => a.type === b.
       : a.type === 'job' && b.type === 'job' && a.jobId === b.jobId);
 
 export function materialCanFit(world: World, kind: MaterialKind, quantity: number, owner: MaterialOwner, item: ItemId = legacyItem(kind)): boolean {
+  if (owner.type === 'ground' && quantity > groundCapacity(world, owner, item)) return false;
   const limit = ITEM_DEFINITIONS[item].stackLimit;
   let remaining = quantity;
   for (const pile of world.piles) if (pile.item === item && sameOwner(pile.owner, owner)) remaining -= limit - pile.quantity;
@@ -63,7 +65,19 @@ export function addMaterial(world: World, kind: MaterialKind, quantity: number, 
   refreshStock(world);
 }
 export function addGroundMaterial(world: World, kind: MaterialKind, quantity: number, cell: Cell, item: ItemId = legacyItem(kind)): void {
-  addMaterial(world, kind, quantity, { type: 'ground', x: cell.x, z: cell.z }, item);
+  if (!Number.isSafeInteger(quantity) || quantity < 0 || quantity > MAX_STACK * 32768) throw new Error('Invalid ground quantity.');
+  if (!Object.hasOwn(ITEM_DEFINITIONS,item) || ITEM_DEFINITIONS[item].kind!==kind) throw new Error('Invalid ground item.');
+  const plan = planGroundPlacement(world, quantity, cell, item);
+  if (!plan || world.piles.length + plan.length > 32768 || !Number.isSafeInteger(world.nextId + plan.length)) throw new Error('No room for ground material.');
+  for (const part of plan) addMaterial(world, kind, part.quantity, { type:'ground', ...part.cell }, item);
+}
+/** Move the existing stack, merging only when possible. No allocation or identity budget needed. */
+export function transferPile(world:World,pile:MaterialPile,owner:MaterialOwner):boolean {
+  const carrier=pile.owner.type==='pawn'?pile.owner.pawnId:undefined;
+  if(owner.type==='ground'&&groundCapacity(world,owner,pile.item,carrier)<pile.quantity)return false;
+  const target=world.piles.find(p=>p!==pile&&p.item===pile.item&&sameOwner(p.owner,owner)&&p.quantity+pile.quantity<=ITEM_DEFINITIONS[pile.item].stackLimit);
+  if(target){target.quantity+=pile.quantity;world.piles.splice(world.piles.indexOf(pile),1);}else pile.owner={...owner};
+  refreshStock(world);return true;
 }
 export function reservedSource(world: World, pileId: number, exceptPawn?: number): number {
   let quantity = 0;

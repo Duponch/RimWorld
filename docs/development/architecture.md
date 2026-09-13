@@ -167,3 +167,11 @@ Le pilote de partie est du code de test, hors application : il lit un état obse
 Le schéma V5 distingue `MaterialPile.item` de sa catégorie de filtre. Fractionnement, portage, dépôt et fusion conservent la définition et ses limites. `NeedTask.quantity` participe aux réservations partagées avec la logistique. La jauge 0–100 représente une nutrition adulte ; la valeur d’un aliment n’est pas une quantité de stock. [Contrat](food-items.md).
 
 Les règles alimentaires des anciennes parties sont nommées `legacy`, celles des nouvelles parties `adult` ; le profil est sérialisé. Une migration ne transforme pas une ancienne portion en ration moderne. Les helpers quittent le validateur pour `save-migrations.ts`. Les définitions d’objets sont communes à la simulation, aux piles et à l’inspection ; aucun nom traduit ne devient une clé. L’inventaire personnel et l’équipement utiliseront des propriétaires distincts, conformément au [contrat cible](character-presentation.md), sans les confondre avec la cargaison existante.
+
+## ADR-019 — Arêtes temporisées, sol unique et vue distante
+
+Adopté le 13 septembre 2026, schéma 6. [Contrat et recherche](spatial-motion-storage.md). `work-planner` sépare le choix des tâches de leur exécution ; `work-release` prépare les dépôts des annulations, `ground-placement` gère capacité et voisinage. La recherche CPU pondérée emploie une file de Dial. Les arêtes physiques gardent leur durée euclidienne et leur reliquat fractionnaire.
+
+Le worker conserve un historique de présentation distinct des sauvegardes. `MotionTimeline` avance à vitesse fixe et `PawnLayer` interpole les arêtes sur GPU, avec une horloge recentrée ; corps et cargaison partagent la pose. Les vitesses ne dépendent plus de la cadence des snapshots. L’orientation de travail vient de sa cible.
+
+`TerrainLayer` isole les géométries du sol. `OverviewLayer` garde les silhouettes instanciées et un terrain fusionné pour le dézoom. Hystérésis et buffers résidents évitent un chantier de reconstruction au zoom. Coût assumé : mémoire supplémentaire ; ombres distantes simplifiées. Les anciens algorithmes et mesures consignés dans les ADR précédents restent historiques.

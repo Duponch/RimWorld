@@ -1,0 +1,69 @@
+{
+  "detailedOnly": false,
+  "timestamp": "2026-09-13T18:26:36.240Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "protocol": "250² seed 42, 1440×1000, hardware Chromium, paused simulation, local and minimum zoom; 90 warmup frames then at least 8 seconds and 300 frames, captured in one browser promise. Detailed variant renders the original detailed layers at all zooms; same code and world otherwise. RAF includes scheduling; submission CPU is not GPU time.",
+  "phases": [
+    {
+      "name": "local",
+      "frameMs": {
+        "mean": 4.922570725707257,
+        "p95": 8.399999999999636,
+        "max": 20.80000000000109,
+        "count": 1626
+      },
+      "cpuMs": {
+        "mean": 4.080885064520271,
+        "p95": 7.3999999994412065,
+        "max": 14.599999999627471,
+        "count": 1627
+      },
+      "drawCalls": {
+        "mean": 133,
+        "p95": 133,
+        "max": 133,
+        "count": 1627
+      },
+      "triangles": {
+        "mean": 194897,
+        "p95": 194897,
+        "max": 194897,
+        "count": 1627
+      }
+    },
+    {
+      "name": "overview",
+      "frameMs": {
+        "mean": 4.175326030255607,
+        "p95": 4.299999999999272,
+        "max": 8.5,
+        "count": 1917
+      },
+      "cpuMs": {
+        "mean": 2.3338373305554754,
+        "p95": 3.099999999627471,
+        "max": 7,
+        "count": 1918
+      },
+      "drawCalls": {
+        "mean": 13,
+        "p95": 13,
+        "max": 13,
+        "count": 1918
+      },
+      "triangles": {
+        "mean": 499839,
+        "p95": 499839,
+        "max": 499839,
+        "count": 1918
+      }
+    }
+  ],
+  "errors": [],
+  "adapter": {
+    "vendor": "amd",
+    "architecture": "rdna-1",
+    "device": "",
+    "description": ""
+  }
+}

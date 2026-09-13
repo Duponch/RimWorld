@@ -51,3 +51,7 @@ Les clés navigateur `lisiere.save.v1` et `lisiere.previous.v1` sont conservées
 Le nombre de recherches de chemin est borné et les colons sont examinés dans un ordre tournant. La sélection examine au plus 32 768 paires logistiques par tick, avec indices locaux de quantités/capacités et une fenêtre tournante `logisticsCursor` sauvegardée. Elle ne matérialise pas le produit piles×destinations. Ce choix peut différer une cible meilleure hors fenêtre. Les benchmarks de collecte initiaux ne mesurent pas ce nouveau coût. Les index persistants et invalidations incrémentales restent à développer lorsque les mesures justifient leur complexité.
 
 Le journal d'événements affiché est borné ; ce n'est pas encore un journal complet et rejouable des commandes. La réservation d'une case de travail n'est pas une réservation temporelle de tous les passages. Les impasses de plusieurs agents actifs demandent encore une politique de congestion plus complète. Aucune annonce de parité globale ou de performance à centaines de colons ne découle de cette seule tranche.
+
+## Mise à jour spatiale V6
+
+Le [contrat sol, mouvement et rendu distant](spatial-motion-storage.md) remplace les descriptions antérieures de piles multiples au sol et du BFS cardinal. La migration V5→V6 est explicite ; le comportement des buissons reste un chantier ouvert.

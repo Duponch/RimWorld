@@ -1,4 +1,5 @@
 /// <reference lib="webworker" />
+import { MotionRecorder } from './motion-tracks';
 import { applyCommand, createWorld, deserializeWorld, serializeWorld, stepWorld } from '../sim/index';
 import type { World } from '../sim/types';
 import type { Request, Response } from './protocol';
@@ -14,8 +15,9 @@ let lastPublish = 0;
 let stepMs = 0;
 const send = (message: Response) => scope.postMessage(message);
 const snapshots = new SnapshotEncoder();
+const motion = new MotionRecorder();
 const publish = (checkpoint = false) => {
-  if (world) send(snapshots.encode(world, stepMs, speed, checkpoint));
+  if (world) {motion.capture(world);send({...snapshots.encode(world, stepMs, speed, checkpoint), motion:motion.snapshot()});}
   lastPublish = performance.now();
 };
 
@@ -25,6 +27,7 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
     if (request.type === 'init') {
       if (request.size !== 32 && !(MAP_SIZE_PRESETS as readonly number[]).includes(request.size)) throw new Error('Taille de carte invalide.');
       world = createWorld(request.seed, request.size, request.size);
+      motion.reset();
       accumulator = 0;
       previous = performance.now();
     } else if (request.type === 'speed') {
@@ -42,7 +45,7 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
         data = serializeWorld(world);
       } else if (request.type === 'load') {
         const restored = deserializeWorld(request.data);
-        world = restored;
+        world = restored; motion.reset();
         accumulator = 0;
         previous = performance.now();
       }
@@ -64,7 +67,7 @@ setInterval(() => {
   const ticks = Math.min(15, Math.floor(accumulator / 100));
   if (ticks > 0) {
     const started = performance.now();
-    stepWorld(world, ticks);
+    for(let i=0;i<ticks;i++) {stepWorld(world);motion.capture(world);}
     stepMs = (performance.now() - started) / ticks;
     accumulator -= ticks * 100;
   }

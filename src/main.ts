@@ -334,7 +334,7 @@ document.addEventListener('keydown', event => {
   else if (key === 's') { event.preventDefault(); setTool('stockpile'); }
 });
 client.onError = message => notify(message, true);
-client.onSnapshot = (world, cost, speed, replaced) => { snapshot = world; stepMs = cost; currentSpeed = speed; renderer?.setWorld(world, replaced); renderState(); };
+client.onSnapshot = (world, cost, speed, replaced, motion) => { snapshot = world; stepMs = cost; currentSpeed = speed; renderer?.setWorld(world, replaced, speed, motion); renderState(); };
 async function start() {
   try {
     const params = new URLSearchParams(location.search), seedText = params.get('seed'), requestedSize = Number(params.get('size'));

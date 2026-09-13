@@ -30,7 +30,7 @@ export function playerDecisions(world: World): Decision[] {
     if (plan.kind === 'wall' && world.structures.filter(s => s.kind === 'stool').length < 3) continue;
     if (canDesignate(world, plan).ok) out.push({ reason: 'Aménager progressivement le camp sans fermer son passage central.', command: plan });
   }
-  for (const [dx, dz, food] of [[-2, 0, false], [-2, 1, false], [2, 1, true]] as const) {
+  for (const [dx, dz, food] of [[-2, 0, false], [-2, 1, false], [2, 1, true], [2, 0, true], [2, -1, true]] as const) {
     const x = cx + dx, z = cz + dz;
     if (!world.stockpiles.some(s => s.x === x && s.z === z)) out.push({ reason: 'Séparer le bois et les aliments près du camp.', command: { type: 'stockpile', x, z, enabled: true, filters: { wood: !food, food }, priority: 2, capacity: 75 } });
   }

@@ -194,10 +194,14 @@ describe('deterministic colony simulation', () => {
     addGroundMaterial(deliveryCorridor, 'wood', 10, { x: 1, z: 4 }); zone(deliveryCorridor, 12, 4);
     until(deliveryCorridor, () => groundAt(deliveryCorridor, 12, 4) === 10, 'stationary blocker yields toward delivery destination', 500);
     // Only a late source is eligible. Exhausting one pair window must not starve it or break replay.
-    const windowed = fixture(2); windowed.piles = []; windowed.stockpiles = [];
-    for (let i = 0; i < 200; i++) windowed.piles.push({ id: windowed.nextId++, kind: i === 199 ? 'wood' : 'food', item: i === 199 ? 'wood' : 'legacy-portion', quantity: 1, owner: { type: 'ground', x: 1, z: 5 } });
+    // Same 40,000 candidate-pair workload, now with 200 legitimate floor cells.
+    // Independent spatial-contracts.test also rejects the old overlapping layout.
+    const windowed = createWorld(42,32,32); windowed.pawns=windowed.pawns.slice(0,2);
+    windowed.pawns.forEach(p=>{p.hunger=100;p.rest=100;});windowed.foodRules='legacy';
+    windowed.tiles=windowed.tiles.map(()=>({terrain:'grass'}));windowed.resources=[];windowed.piles=[];windowed.stockpiles=[];
+    for (let i = 0; i < 200; i++) windowed.piles.push({ id: windowed.nextId++, kind: i === 199 ? 'wood' : 'food', item: i === 199 ? 'wood' : 'legacy-portion', quantity: 1, owner: { type: 'ground', x:i%32, z:Math.floor(i/32) } });
     for (let index = 0; windowed.stockpiles.length < 200; index++) {
-      const x = index % 16, z = Math.floor(index / 16); if (x === 1 && z === 5) continue;
+      const x = index % 32, z = 8+Math.floor(index / 32);
       windowed.stockpiles.push({ id: windowed.nextId++, x, z, filters: { wood: true, food: false }, capacity: 75, priority: 4 });
     }
     refreshStock(windowed); stepWorld(windowed); expect(windowed.logisticsCursor).toBe(32768);
@@ -205,7 +209,7 @@ describe('deterministic colony simulation', () => {
     const cursorResume = deserializeWorld(serializeWorld(windowed));
     stepWorld(windowed, 100); stepWorld(cursorResume, 100);
     expect(hashWorld(windowed)).toBe(hashWorld(cursorResume)); audit(windowed, 1);
-    expect(windowed.piles.some(pile => pile.kind === 'wood' && pile.owner.type === 'ground' && (pile.owner.x !== 1 || pile.owner.z !== 5))).toBe(true);
+    expect(windowed.piles.some(pile => pile.kind === 'wood' && pile.owner.type === 'ground' && (pile.owner.x !== 7 || pile.owner.z !== 6))).toBe(true);
     const crowded = createWorld(7, 24, 24); crowded.tiles = crowded.tiles.map(() => ({ terrain: 'grass' })); crowded.resources = [];
     const template = crowded.pawns[0]!;
     crowded.pawns = Array.from({ length: 40 }, (_, index) => ({ ...template, id: crowded.nextId++, x: 1 + (index % 10) * 2,
@@ -234,7 +238,11 @@ describe('deterministic colony simulation', () => {
     expect(hashWorld(bed)).toBe(hashWorld(traveling));
     expect(bed.pawns[0]).toMatchObject({ x: 2, z: 3, state: 'sleeping' });
     stepWorld(ground, 100);
-    expect(bed.pawns[0]!.rest - ground.pawns[0]!.rest).toBeCloseTo(100 * (100 / 2625) - 101 * (80 / 2625) - 0.008, 8);
+    // Measure the recovery coefficient over equal actual sleeping intervals.
+    // Travel is timed separately above and in the independent spatial scenario.
+    const restingDifference=bed.pawns[0]!.rest-ground.pawns[0]!.rest;
+    stepWorld(bed,120);stepWorld(ground,120);
+    expect(bed.pawns[0]!.rest-ground.pawns[0]!.rest-restingDifference).toBeCloseTo(120*(100-80)/2625,8);
     const sleeping = deserializeWorld(serializeWorld(bed)); stepWorld(bed, 120); stepWorld(sleeping, 120); expect(hashWorld(bed)).toBe(hashWorld(sleeping));
 
     const shared = fixture(2); shared.pawns.forEach(pawn => { pawn.rest = 19; });
@@ -325,7 +333,7 @@ describe('deterministic colony simulation', () => {
 
   test('schema-1 migration preserves stock, escrow, beds and identity; corrupt schema-2 saves are rejected', () => {
     const migrated = deserializeWorld(legacySave());
-    expect(migrated.schemaVersion).toBe(5); expect(migrated.pawns[0]!.id).toBe(4); expect(migrated.structures[0]!.id).toBe(10);
+    expect(migrated.schemaVersion).toBe(6); expect(migrated.pawns[0]!.id).toBe(4); expect(migrated.structures[0]!.id).toBe(10);
     expect(migrated.structures[0]).toMatchObject({ x: 7, z: 7, footprint: 'legacy-single' });
     expect(migrated.pawns[0]!.priorities).toMatchObject({ gather: 2, build: 2 }); audit(migrated, 20); expect(foodMass(migrated)).toBe(18);
     expect(hashWorld(deserializeWorld(legacySave()))).toBe(hashWorld(migrated));
@@ -366,8 +374,11 @@ describe('deterministic colony simulation', () => {
     expect(serializeWorld(world)).toBe(serialized);
     // Captured by running HEAD 489b98a's engine, including an active delivery and ground sleeper.
     const material = deserializeWorld(JSON.stringify(materialFixture));
-    expect(material.schemaVersion).toBe(5); expect(material.piles.map(({item, ...pile}) => pile)).toEqual(materialFixture.piles); expect(material.jobs).toEqual(materialFixture.jobs);
-    expect(material.pawns.map(pawn => pawn.haul)).toEqual(materialFixture.pawns.map(pawn => pawn.haul));
+    expect(material.schemaVersion).toBe(6);
+    // V6 explicitly cancels obsolete hauling reservations and retains all units/IDs.
+    expect(material.piles.map(({id,kind,quantity})=>({id,kind,quantity}))).toEqual(materialFixture.piles.map(({id,kind,quantity})=>({id,kind,quantity})));
+    expect(material.jobs).toEqual(materialFixture.jobs);
+    expect(material.pawns.every(pawn=>pawn.haul===null)).toBe(true);
     expect(material.pawns.map(pawn => [pawn.id, pawn.x, pawn.z, pawn.hunger, pawn.rest])).toEqual(materialFixture.pawns.map(pawn => [pawn.id, pawn.x, pawn.z, pawn.hunger, pawn.rest]));
     expect(material.pawns[2]!.state).toBe('idle'); expect(material.pawns.every(pawn => pawn.need === null)).toBe(true);
     const materialCopy = deserializeWorld(serializeWorld(material)); checkedTicks(material, 350); stepWorld(materialCopy, 350); expect(hashWorld(material)).toBe(hashWorld(materialCopy));

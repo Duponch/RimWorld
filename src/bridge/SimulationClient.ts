@@ -11,14 +11,14 @@ export class SimulationClient {
   private readonly snapshots = new SnapshotDecoder();
   private resyncing = false;
   private readonly pending = new Map<number, { resolve: (value: string | undefined) => void; reject: (reason: Error) => void; timer: ReturnType<typeof setTimeout> }>();
-  onSnapshot: (world: World, stepMs: number, speed: number, replaced: boolean) => void = () => {};
+  onSnapshot: (world: World, stepMs: number, speed: number, replaced: boolean, motion?: import('./motion-tracks').PawnTrack[]) => void = () => {};
   onError: (message: string) => void = () => {};
 
   constructor() {
     this.worker.onmessage = ({ data }: MessageEvent<Response>) => {
       if (data.type === 'snapshot') {
         const result = this.snapshots.adopt(data);
-        if (result.status === 'applied') this.onSnapshot(result.world, data.stepMs, data.speed, result.replaced);
+        if (result.status === 'applied') this.onSnapshot(result.world, data.stepMs, data.speed, result.replaced, data.motion);
         else if (result.status === 'resync' && !this.resyncing) {
           this.resyncing = true;
           void this.request({ type: 'resync' }).catch(error => this.onError(String(error)))

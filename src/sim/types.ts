@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 5 as const;
+export const SCHEMA_VERSION = 6 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
@@ -27,6 +27,8 @@ export interface HaulTask {
   phase: 'pickup' | 'deliver';
   destination: HaulDestination;
   carryPileId: number | null;
+  /** Source position survives removal of the last units for pickup-facing. */
+  pickupCell?: Cell;
 }
 export interface DiningPlace { target: Cell; seatId: number | null; tableId: number | null }
 export interface Memory { kind: 'ate-without-table'; expiresAt: number }
@@ -62,6 +64,8 @@ export interface Pawn extends Cell {
   /** Serialized route and cadence make save/resume exactly reproducible. */
   path: Cell[];
   moveCooldown: number;
+  /** Active edge and exact fractional arrival, saved independently of presentation. */
+  motion?: import('./movement.ts').TravelSegment | null;
   planCooldown: number;
 }
 export interface WorldEvent { tick: number; type: 'job' | 'need' | 'command'; message: string }

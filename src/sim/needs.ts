@@ -1,3 +1,4 @@
+import { routeCost } from './pathfinding.ts';
 import { routeToCell, routeToJob, foodInteractionGoals } from './pathfinding.ts';
 import type { Reachability } from './pathfinding.ts';
 import { reservedSource } from './materials.ts';
@@ -21,7 +22,7 @@ const same = (a: Cell, b: Cell): boolean => a.x === b.x && a.z === b.z;
 export interface NeedContext {
   search(ignorePawns?: boolean, goals?: ReadonlySet<number>): Reachability | null;
   move(target: Cell, exact: boolean): void;
-  release(): void;
+  release(): boolean;
   event(message: string): void;
 }
 
@@ -29,16 +30,12 @@ export interface NeedContext {
  * All phases use the same movement/search budget and material owners as work.
  */
 export function processNeeds(world: World, pawn: Pawn, context: NeedContext): boolean {
-  pawn.hunger = Math.max(0, pawn.hunger - (world.foodRules === 'legacy' ? 0.015 : HUNGER_PER_TICK * adultHungerFactor(pawn.hunger)));
-  if (pawn.state !== 'sleeping') pawn.rest = Math.max(0, pawn.rest - REST_PER_TICK);
-  if (pawn.needCooldown > 0) pawn.needCooldown--;
   const canPlan = pawn.needCooldown === 0;
-  updateWellbeing(world, pawn);
   if (pawn.bedId !== null && !world.structures.some(bed => bed.id === pawn.bedId && bed.kind === 'bed')) pawn.bedId = null;
 
   // Collapse is an emergency interruption, including travel with a meal in hand.
   if (pawn.rest === 0 && pawn.need?.kind !== 'sleep') {
-    context.release();
+    if (!context.release()) return true;
     pawn.need = { kind: 'sleep', phase: 'sleep', bedId: null, target: { x: pawn.x, z: pawn.z } };
     pawn.state = 'sleeping';
     context.event(`${pawn.name} s’effondre de fatigue au sol.`);
@@ -59,12 +56,12 @@ export function processNeeds(world: World, pawn: Pawn, context: NeedContext): bo
       for (const pile of sources) {
         if (pile.owner.type !== 'ground') continue;
         const path = routeToJob(world, pile.owner, reach, true);
-        if (path && (!best || path.length < best.path.length || (path.length === best.path.length && pile.id < best.id))) best = { id: pile.id, path };
+        if (path && (!best || routeCost(world,path,reach) < routeCost(world,best.path,reach) || (routeCost(world,path,reach) === routeCost(world,best.path,reach) && pile.id < best.id))) best = { id: pile.id, path };
       }
       if (held || best) {
         const selected = held ?? sources.find(pile => pile.id === best!.id)!;
         const quantity = mealQuantity(pawn, selected, selected.quantity - reservedSource(world, selected.id, pawn.id));
-        context.release(); // Deposits cargo at the actor, preserving its identity.
+        if (!context.release()) return true; // Deposits cargo at the actor, preserving its identity.
         pawn.need = { kind: 'eat', phase: 'pickup', sourcePileId: held?.id ?? best!.id, carryPileId: null, quantity, progress: 0, dining: null };
         pawn.path = held ? [] : best!.path;
         pawn.state = 'moving'; pawn.planCooldown = 0;
@@ -88,9 +85,9 @@ export function processNeeds(world: World, pawn: Pawn, context: NeedContext): bo
       if (bed.kind !== 'bed' || reserved.has(bed.id) || (owners.has(bed.id) && owners.get(bed.id) !== pawn.id)) continue;
       const path = routeToCell(world, bed, reach);
       const owned = pawn.bedId === bed.id;
-      if (path && (!best || (owned && !best.owned) || (owned === best.owned && (path.length < best.path.length || (path.length === best.path.length && bed.id < best.id))))) best = { id: bed.id, path, target: { x: bed.x, z: bed.z }, owned };
+      if (path && (!best || (owned && !best.owned) || (owned === best.owned && (routeCost(world,path,reach) < routeCost(world,best.path,reach) || (routeCost(world,path,reach) === routeCost(world,best.path,reach) && bed.id < best.id))))) best = { id: bed.id, path, target: { x: bed.x, z: bed.z }, owned };
     }
-    context.release();
+    if (!context.release()) return true;
     if (best) {
       pawn.bedId = best.id;
       pawn.need = { kind: 'sleep', phase: 'travel', bedId: best.id, target: best.target };
@@ -112,7 +109,7 @@ export function processNeeds(world: World, pawn: Pawn, context: NeedContext): bo
   if (pawn.need?.kind === 'sleep') {
     const task = pawn.need;
     const bed = task.bedId === null ? null : world.structures.find(item => item.id === task.bedId && item.kind === 'bed');
-    if (task.bedId !== null && (!bed || pawn.bedId !== bed.id || !same(bed, task.target))) { context.release(); return true; }
+    if (task.bedId !== null && (!bed || pawn.bedId !== bed.id || !same(bed, task.target))) { if (!context.release()) return true; return true; }
     if (!same(pawn, task.target)) { context.move(task.target, true); return true; }
     if (task.phase === 'travel') context.event(`${pawn.name} s’allonge ${bed ? 'dans son lit' : 'au sol'}.`);
     task.phase = 'sleep'; pawn.path = []; pawn.state = 'sleeping';
@@ -122,8 +119,15 @@ export function processNeeds(world: World, pawn: Pawn, context: NeedContext): bo
   }
   if (pawn.hunger <= 20) {
     const job = world.jobs.find(candidate => candidate.id === pawn.jobId);
-    if ((job && job.kind !== 'harvest') || pawn.haul) context.release();
+    if ((job && job.kind !== 'harvest') || pawn.haul) if (!context.release()) return true;
     if (pawn.jobId === null) pawn.state = 'hungry';
   } else if (pawn.state === 'hungry') pawn.state = 'idle';
   return false;
+}
+
+export function updateNeeds(world: World, pawn: Pawn): void {
+  pawn.hunger = Math.max(0, pawn.hunger - (world.foodRules === 'legacy' ? 0.015 : HUNGER_PER_TICK * adultHungerFactor(pawn.hunger)));
+  if (pawn.state !== 'sleeping') pawn.rest = Math.max(0, pawn.rest - REST_PER_TICK);
+  if (pawn.needCooldown > 0) pawn.needCooldown--;
+  updateWellbeing(world, pawn);
 }

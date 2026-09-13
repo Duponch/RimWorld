@@ -35,3 +35,7 @@ Choix alimentaire encore par accès/distance et identifiant, **sans le classemen
 ## Validation
 
 Deux scénarios profonds couvrent réservations de plusieurs unités, compétition, ingestion, interruption, continuation, arrondis, facteurs de faim, types mélangés en transport/stockage, limites et corruptions V4/V5. Le pilote de cinq jours et celui de trois jours par l'interface raisonnent désormais en nutrition pour planifier les récoltes et comptabilisent les unités réellement consommées. Les anciennes fixtures ciblées conservent explicitement leur profil historique ; les cartes naturelles du pilote utilisent le nouveau profil adulte. Résultats et audit matériel dans [validation](validation.md).
+
+## Mise à jour spatiale V6
+
+Le [contrat sol, mouvement et rendu distant](spatial-motion-storage.md) remplace les descriptions antérieures de piles multiples au sol et du BFS cardinal. La migration V5→V6 est explicite ; le comportement des buissons reste un chantier ouvert.

@@ -1,6 +1,9 @@
+import { groundPile, storageCapacity } from './ground-placement.ts';
+import { validateTravel } from './travel-validation.ts';
+import { edgeLength, TRAVEL_TICKS } from './movement.ts';
 import { CARRY_CAPACITY, footprintCells, JOB_DURATION, JOB_WOOD_COST, MAX_STACK } from './definitions.ts';
 import { deliveredStock, groundQuantity, reservedDestination, reservedSource } from './materials.ts';
-import { migrateLegacy, initializeNeeds, initializeDining, initializeFood } from './save-migrations.ts';
+import { migrateLegacy, initializeNeeds, initializeDining, initializeFood, initializeSpatial } from './save-migrations.ts';
 import type { World } from './types.ts';
 import { validMapDimension } from './map-config.ts';
 import { INGEST_TICKS } from './eating.ts';
@@ -16,13 +19,13 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 
 /** Structural validation first, cross-reference validation second; accepts arbitrary JSON without throwing. */
 export function validateWorld(input: unknown): string[] {
-  return validateSchema(input, 5);
+  return validateSchema(input, 6);
 }
-function validateSchema(input: unknown, version: 2 | 3 | 4 | 5): string[] {
+function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(input)) return ['World must be an object.'];
-  if (version === 5 && !oneOf(input.foodRules, ['legacy', 'adult'])) errors.push('Invalid food rules profile.');
+  if (version >= 5 && !oneOf(input.foodRules, ['legacy', 'adult'])) errors.push('Invalid food rules profile.');
   if (version < 5 && input.foodRules !== undefined) errors.push('Legacy save contains version 5 fields.');
   if (input.schemaVersion !== version) errors.push('Unsupported schema version; migrate older saves through deserializeWorld.');
   if (!integer(input.seed, 0, 0xffffffff) || !integer(input.rng, 1, 0xffffffff)) errors.push('Invalid deterministic random state.');
@@ -48,15 +51,22 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5): string[] {
         if (typeof item.name !== 'string' || item.name.length === 0 || item.name.length > 80 || !bounded(item.hunger) || !bounded(item.rest) || !bounded(item.mood)
           || !oneOf(item.state, legacyV2 ? ['idle', 'moving', 'working', 'sleeping', 'hungry'] : ['idle', 'moving', 'working', 'sleeping', 'hungry', 'eating']) || !(item.jobId === null || integer(item.jobId, 1))
           || !record(item.priorities) || !integer(item.priorities.gather, 0, 4) || !integer(item.priorities.build, 0, 4) || !integer(item.priorities.haul, 0, 4)
-          || !integer(item.moveCooldown, 0, 3) || !integer(item.planCooldown, 0, 20)) errors.push('Invalid pawn state.');
+          || !(version < 6 ? integer(item.moveCooldown, 0, 3) : typeof item.moveCooldown === 'number' && Number.isFinite(item.moveCooldown) && item.moveCooldown >= 0 && item.moveCooldown <= 4.243) || !integer(item.planCooldown, 0, 20)) errors.push('Invalid pawn state.');
         if (!Array.isArray(item.path) || item.path.length > size) errors.push('Invalid pawn path.');
         else {
           let previous = item;
           for (const cell of item.path) {
             if (!record(cell) || !coord(cell)) { errors.push('Invalid pawn path cell.'); break; }
-            if (Math.abs((cell.x as number) - (previous.x as number)) + Math.abs((cell.z as number) - (previous.z as number)) !== 1) { errors.push('Non-contiguous pawn path.'); break; }
+            if ((version<6 ? Math.abs((cell.x as number)-(previous.x as number))+Math.abs((cell.z as number)-(previous.z as number)) : Math.max(Math.abs((cell.x as number)-(previous.x as number)),Math.abs((cell.z as number)-(previous.z as number)))) !== 1) { errors.push('Non-contiguous pawn path.'); break; }
             previous = cell;
           }
+        }
+        if(version<6 && item.motion!==undefined) errors.push('Legacy save contains spatial fields.');
+        if(version>=6 && item.motion==null && item.moveCooldown!==0) errors.push('Missing travel segment for movement delay.');
+        if(version>=6 && item.motion!=null) {
+          const m=item.motion;
+          if(!record(m)||!record(m.from)||!record(m.to)||!coord(m.from)||!coord(m.to)||typeof m.start!=='number'||typeof m.end!=='number'||!Number.isFinite(m.start)||!Number.isFinite(m.end)||m.start<0||m.start>(input.tick as number)||m.to.x!==item.x||m.to.z!==item.z||Math.max(Math.abs((m.to.x as number)-(m.from.x as number)),Math.abs((m.to.z as number)-(m.from.z as number)))!==1) errors.push('Invalid travel segment.');
+          else if(Math.abs(m.end-m.start-TRAVEL_TICKS*edgeLength(m.from as unknown as import('./types.ts').Cell,m.to as unknown as import('./types.ts').Cell) )>1e-7 || Math.abs((item.moveCooldown as number)-Math.max(0,m.end-(input.tick as number)))>1e-7) errors.push('Inconsistent travel duration.');
         }
         const haul = item.haul;
         if (!legacyV2) {
@@ -68,7 +78,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5): string[] {
               : true))) errors.push('Invalid need task.');
         } else if (item.need !== undefined || item.bedId !== undefined || item.needCooldown !== undefined) errors.push('Version 2 cannot contain version 3 task fields.');
         if (record(item.need) && item.need.kind === 'eat') {
-          if (version === 5 ? !integer(item.need.quantity, 1, MAX_STACK) : item.need.quantity !== undefined) errors.push('Invalid meal quantity.');
+          if (version >= 5 ? !integer(item.need.quantity, 1, MAX_STACK) : item.need.quantity !== undefined) errors.push('Invalid meal quantity.');
         }
         if (version >= 4) {
           if (!bounded(item.comfort) || !Array.isArray(item.memories) || item.memories.length > 1 || item.memories.some(memory => !record(memory) || memory.kind !== 'ate-without-table' || !integer(memory.expiresAt, (input.tick as number) + 1, (input.tick as number) + TICKS_PER_DAY))) errors.push('Invalid comfort or meal memory.');
@@ -78,6 +88,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5): string[] {
           }
         } else if (item.comfort !== undefined || item.memories !== undefined || (record(item.need) && item.need.dining !== undefined)) errors.push('Legacy save contains version 4 fields.');
         if (haul !== null) {
+          if (record(haul) && haul.pickupCell!==undefined && (version<6 || haul.phase!=='deliver' || !record(haul.pickupCell) || !coord(haul.pickupCell))) errors.push('Invalid pickup facing cell.');
           if (!record(haul) || !integer(haul.sourcePileId, 1) || !integer(haul.quantity, 1, CARRY_CAPACITY) || !oneOf(haul.phase, ['pickup', 'deliver'])
             || !(haul.carryPileId === null || integer(haul.carryPileId, 1)) || !record(haul.destination)
             || !(haul.destination.type === 'job' ? integer(haul.destination.jobId, 1) : haul.destination.type === 'stockpile' && integer(haul.destination.stockpileId, 1))) errors.push('Invalid haul task.');
@@ -91,7 +102,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5): string[] {
       } else if (key === 'piles') {
         if (!oneOf(item.kind, ['wood', 'food']) || !integer(item.quantity, 1, MAX_STACK) || !record(item.owner)) errors.push('Invalid material pile.');
         else {
-          if (version === 5) {
+          if (version >= 5) {
             if (typeof item.item !== 'string' || !Object.hasOwn(ITEM_DEFINITIONS, item.item)) errors.push('Unknown item definition.');
             else {
               const definition = ITEM_DEFINITIONS[item.item as keyof typeof ITEM_DEFINITIONS];
@@ -111,6 +122,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5): string[] {
   if (events.length > 80 || events.some(item => !record(item) || !integer(item.tick, 0, input.tick as number) || !oneOf(item.type, ['job', 'need', 'command']) || typeof item.message !== 'string' || item.message.length > 240)) errors.push('Invalid event log.');
   if (errors.length) return errors;
   const world = input as unknown as World;
+  if(version>=6)errors.push(...validateTravel(world));
   const cellKey = (item: { x: number; z: number }): number => item.z * world.width + item.x;
   const pawnById = new Map(world.pawns.map(item => [item.id, item])); const jobById = new Map(world.jobs.map(item => [item.id, item]));
   const pileById = new Map(world.piles.map(item => [item.id, item]));
@@ -162,7 +174,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5): string[] {
           if (owned[0]?.id !== need.carryPileId || !pile || pile.kind !== 'food' || pile.quantity !== (need.quantity ?? 1) || pile.owner.type !== 'pawn' || pile.owner.pawnId !== pawn.id) errors.push('Invalid ingestion ownership or state.');
           if (need.phase === 'ingest' ? pawn.state !== 'eating' || pawn.path.length > 0 : pawn.state !== 'moving' || need.progress !== 0) errors.push('Invalid meal phase or state.');
         }
-        if (version === 5 && pile && need.quantity > ITEM_DEFINITIONS[pile.item].maxIngest) errors.push('Meal exceeds item ingestion limit.');
+        if (version >= 5 && pile && need.quantity > ITEM_DEFINITIONS[pile.item].maxIngest) errors.push('Meal exceeds item ingestion limit.');
         if (version >= 4) {
           if (need.phase === 'pickup' || need.phase === 'choose-spot') {
             if (need.dining !== null || (need.phase === 'choose-spot' && pawn.path.length)) errors.push('Meal search has a premature dining reservation.');
@@ -200,7 +212,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5): string[] {
         if (!job || pile?.kind !== 'wood' || deliveredStock(world, job.id).wood + reservedDestination(world, haul.destination) > JOB_WOOD_COST[job.kind]) errors.push('Invalid construction delivery reservation.');
       } else {
         const zone = world.stockpiles.find(item => haul.destination.type === 'stockpile' && item.id === haul.destination.stockpileId);
-        if (!zone || !pile || !zone.filters[pile.kind] || groundQuantity(world, zone) + reservedDestination(world, haul.destination) > zone.capacity) errors.push('Invalid storage capacity reservation.');
+        if (!zone || !pile || !zone.filters[pile.kind] || (version>=6 ? storageCapacity(world,zone,pile.item,pawn.id)<haul.quantity : groundQuantity(world, zone) + reservedDestination(world, haul.destination) > zone.capacity)) errors.push('Invalid storage capacity reservation.');
         if (zone && pile?.owner.type === 'ground' && cellKey(zone) === cellKey(pile.owner)) errors.push('Haul source is its own destination.');
       }
     }
@@ -222,6 +234,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5): string[] {
   for (const pile of world.piles) {
     const owner = pile.owner;
     if (owner.type === 'ground') {
+      if (version>=6 && groundPile(world,owner)?.id!==pile.id) errors.push('Several item stacks occupy one floor cell.');
       if (isImpassable(owner) || structureCells.get(cellKey(owner))?.kind === 'wall' || jobCells.get(cellKey(owner))?.kind === 'wall') errors.push('Pile on impassable cell.');
       available[pile.kind] += pile.quantity;
     } else if (owner.type === 'pawn') { if (!pawnById.has(owner.pawnId)) errors.push('Pile references missing carrier.'); available[pile.kind] += pile.quantity; }
@@ -256,6 +269,10 @@ export function deserializeWorld(serialized: string): World {
     const errors = validateSchema(input, 4);
     if (errors.length) throw new Error(`Invalid version 4 save: ${errors.join(' ')}`);
     initializeFood(input as unknown as World);
+  }
+  if (record(input) && input.schemaVersion === 5) {
+    const errors=validateSchema(input,5);if(errors.length) throw new Error(`Invalid version 5 save: ${errors.join(' ')}`);
+    initializeSpatial(input as unknown as World);
   }
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`); return input as World;
 }

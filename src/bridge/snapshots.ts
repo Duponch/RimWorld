@@ -2,7 +2,7 @@ import type { Resource, Terrain, World } from '../sim/types.ts';
 
 type DynamicWorld = Omit<World, 'tiles' | 'resources'>;
 interface ResourceChanges { removed: number[]; upserted: Resource[]; order?: number[] }
-interface SnapshotHeader { type: 'snapshot'; epoch: number; revision: number; stepMs: number; speed: number }
+interface SnapshotHeader { motion?:import('./motion-tracks.ts').PawnTrack[]; type: 'snapshot'; epoch: number; revision: number; stepMs: number; speed: number }
 export type SnapshotMessage = SnapshotHeader & (
   | { kind: 'checkpoint'; world: World }
   | { kind: 'delta'; baseRevision: number; world: DynamicWorld; tiles?: Array<[number, Terrain]>; resources?: ResourceChanges }
