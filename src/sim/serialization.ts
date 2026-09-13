@@ -1,10 +1,11 @@
 import { CARRY_CAPACITY, footprintCells, JOB_DURATION, JOB_WOOD_COST, MAX_STACK } from './definitions.ts';
-import { addGroundMaterial, addMaterial, deliveredStock, groundQuantity, refreshStock, reservedDestination, reservedSource } from './materials.ts';
-import { validateLegacyWorld } from './legacy-validation.ts';
+import { deliveredStock, groundQuantity, reservedDestination, reservedSource } from './materials.ts';
+import { migrateLegacy, initializeNeeds, initializeDining, initializeFood } from './save-migrations.ts';
 import type { World } from './types.ts';
 import { validMapDimension } from './map-config.ts';
 import { INGEST_TICKS } from './eating.ts';
 import { validDiningPlace } from './dining.ts';
+import { ITEM_DEFINITIONS } from './items.ts';
 import { TICKS_PER_DAY } from './types.ts';
 
 const record = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -15,12 +16,14 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 
 /** Structural validation first, cross-reference validation second; accepts arbitrary JSON without throwing. */
 export function validateWorld(input: unknown): string[] {
-  return validateSchema(input, 4);
+  return validateSchema(input, 5);
 }
-function validateSchema(input: unknown, version: 2 | 3 | 4): string[] {
+function validateSchema(input: unknown, version: 2 | 3 | 4 | 5): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(input)) return ['World must be an object.'];
+  if (version === 5 && !oneOf(input.foodRules, ['legacy', 'adult'])) errors.push('Invalid food rules profile.');
+  if (version < 5 && input.foodRules !== undefined) errors.push('Legacy save contains version 5 fields.');
   if (input.schemaVersion !== version) errors.push('Unsupported schema version; migrate older saves through deserializeWorld.');
   if (!integer(input.seed, 0, 0xffffffff) || !integer(input.rng, 1, 0xffffffff)) errors.push('Invalid deterministic random state.');
   if (!integer(input.tick, 0) || !integer(input.nextId, 1)) errors.push('Invalid tick or nextId.');
@@ -64,7 +67,10 @@ function validateSchema(input: unknown, version: 2 | 3 | 4): string[] {
             : need.kind === 'sleep' ? !oneOf(need.phase, ['travel', 'sleep']) || !(need.bedId === null || integer(need.bedId, 1)) || !record(need.target) || !coord(need.target)
               : true))) errors.push('Invalid need task.');
         } else if (item.need !== undefined || item.bedId !== undefined || item.needCooldown !== undefined) errors.push('Version 2 cannot contain version 3 task fields.');
-        if (version === 4) {
+        if (record(item.need) && item.need.kind === 'eat') {
+          if (version === 5 ? !integer(item.need.quantity, 1, MAX_STACK) : item.need.quantity !== undefined) errors.push('Invalid meal quantity.');
+        }
+        if (version >= 4) {
           if (!bounded(item.comfort) || !Array.isArray(item.memories) || item.memories.length > 1 || item.memories.some(memory => !record(memory) || memory.kind !== 'ate-without-table' || !integer(memory.expiresAt, (input.tick as number) + 1, (input.tick as number) + TICKS_PER_DAY))) errors.push('Invalid comfort or meal memory.');
           if (record(item.need) && item.need.kind === 'eat') {
             const dining = item.need.dining;
@@ -85,6 +91,13 @@ function validateSchema(input: unknown, version: 2 | 3 | 4): string[] {
       } else if (key === 'piles') {
         if (!oneOf(item.kind, ['wood', 'food']) || !integer(item.quantity, 1, MAX_STACK) || !record(item.owner)) errors.push('Invalid material pile.');
         else {
+          if (version === 5) {
+            if (typeof item.item !== 'string' || !Object.hasOwn(ITEM_DEFINITIONS, item.item)) errors.push('Unknown item definition.');
+            else {
+              const definition = ITEM_DEFINITIONS[item.item as keyof typeof ITEM_DEFINITIONS];
+              if (definition.kind !== item.kind || (item.quantity as number) > definition.stackLimit) errors.push('Invalid item category or stack limit.');
+            }
+          } else if (item.item !== undefined) errors.push('Legacy save contains version 5 item.');
           const owner = item.owner;
           if (owner.type === 'ground' ? !coord(owner) || Object.keys(owner).some(key => !['type', 'x', 'z'].includes(key))
             : owner.type === 'pawn' ? !integer(owner.pawnId, 1) || Object.keys(owner).some(key => !['type', 'pawnId'].includes(key))
@@ -146,10 +159,11 @@ function validateSchema(input: unknown, version: 2 | 3 | 4): string[] {
         if (need.phase === 'pickup') {
           if (pawn.state !== 'moving' || need.progress !== 0 || need.carryPileId !== null || !pile || pile.kind !== 'food' || pile.owner.type !== 'ground' || reservedSource(world, pile.id) > pile.quantity) errors.push('Invalid meal reservation.');
         } else {
-          if (owned[0]?.id !== need.carryPileId || !pile || pile.kind !== 'food' || pile.quantity !== 1 || pile.owner.type !== 'pawn' || pile.owner.pawnId !== pawn.id) errors.push('Invalid ingestion ownership or state.');
+          if (owned[0]?.id !== need.carryPileId || !pile || pile.kind !== 'food' || pile.quantity !== (need.quantity ?? 1) || pile.owner.type !== 'pawn' || pile.owner.pawnId !== pawn.id) errors.push('Invalid ingestion ownership or state.');
           if (need.phase === 'ingest' ? pawn.state !== 'eating' || pawn.path.length > 0 : pawn.state !== 'moving' || need.progress !== 0) errors.push('Invalid meal phase or state.');
         }
-        if (version === 4) {
+        if (version === 5 && pile && need.quantity > ITEM_DEFINITIONS[pile.item].maxIngest) errors.push('Meal exceeds item ingestion limit.');
+        if (version >= 4) {
           if (need.phase === 'pickup' || need.phase === 'choose-spot') {
             if (need.dining !== null || (need.phase === 'choose-spot' && pawn.path.length)) errors.push('Meal search has a premature dining reservation.');
           } else {
@@ -217,32 +231,6 @@ function validateSchema(input: unknown, version: 2 | 3 | 4): string[] {
   return errors;
 }
 
-/** Legacy cells, IDs and completed beds remain untouched; only previously abstract materials gain owners. */
-function migrateLegacy(input: Record<string, unknown>): World {
-  const errors = validateLegacyWorld(input);
-  if (errors.length) throw new Error(`Invalid legacy save: ${errors.join(' ')}`);
-  const world = input as unknown as World;
-  const initial = { ...world.stock };
-  const plannedPiles = Math.ceil(initial.wood / MAX_STACK) + Math.ceil(initial.food / MAX_STACK) + world.jobs.filter(job => job.escrow.wood > 0).length;
-  if (plannedPiles > 32768 || !Number.isSafeInteger(world.nextId + plannedPiles)) throw new Error('Legacy material stock exceeds the supported migration capacity.');
-  world.schemaVersion = 4; world.piles = []; world.stockpiles = []; world.logisticsCursor = 0;
-  for (const pawn of world.pawns) { pawn.haul = null; pawn.priorities.haul = 3; }
-  initializeNeeds(world);
-  initializeDining(world);
-  for (const item of [...world.structures, ...world.jobs]) { item.orientation = 0; item.footprint = item.kind === 'bed' ? 'legacy-single' : 'standard'; }
-  const allocations = world.jobs.map(job => ({ id: job.id, wood: job.escrow.wood }));
-  // A deterministic walkable drop point nearest the old camp; no terrain is regenerated or repaired.
-  const origin = world.pawns[0] ?? { x: Math.floor(world.width / 2), z: Math.floor(world.height / 2) };
-  const blocked = new Set([...world.structures, ...world.jobs].filter(item => item.kind === 'wall').map(item => item.z * world.width + item.x));
-  const cells = world.tiles.map((tile, index) => ({ tile, x: index % world.width, z: Math.floor(index / world.width), index }))
-    .filter(cell => !['water', 'rock'].includes(cell.tile.terrain) && !blocked.has(cell.index));
-  cells.sort((a, b) => Math.abs(a.x - origin.x) + Math.abs(a.z - origin.z) - Math.abs(b.x - origin.x) - Math.abs(b.z - origin.z) || a.index - b.index);
-  const drop = cells[0];
-  if (!drop && (initial.wood || initial.food)) throw new Error('Legacy stock has no valid material drop location.');
-  if (drop) { addGroundMaterial(world, 'wood', initial.wood, drop); addGroundMaterial(world, 'food', initial.food, drop); }
-  for (const allocation of allocations) addMaterial(world, 'wood', allocation.wood, { type: 'job', jobId: allocation.id });
-  refreshStock(world); return world;
-}
 export function serializeWorld(world: World): string {
   const errors = validateWorld(world); if (errors.length) throw new Error(`Cannot save invalid world: ${errors.join(' ')}`);
   const serialized = JSON.stringify(world); if (serialized.length > 16_000_000) throw new Error('Save exceeds supported size.'); return serialized;
@@ -264,22 +252,12 @@ export function deserializeWorld(serialized: string): World {
     input.schemaVersion = 4;
     initializeDining(input as unknown as World);
   }
+  if (record(input) && input.schemaVersion === 4) {
+    const errors = validateSchema(input, 4);
+    if (errors.length) throw new Error(`Invalid version 4 save: ${errors.join(' ')}`);
+    initializeFood(input as unknown as World);
+  }
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`); return input as World;
-}
-function initializeNeeds(world: World): void {
-  for (const pawn of world.pawns) {
-    pawn.need = null; pawn.bedId = null; pawn.needCooldown = 0;
-    // Old ground sleep has no reserved destination. Reconsider it with current
-    // rules on the next tick; never move the pawn or change its need levels here.
-    if (pawn.state === 'sleeping') { pawn.state = 'idle'; pawn.path = []; pawn.planCooldown = 0; }
-  }
-}
-function initializeDining(world: World): void {
-  for (const pawn of world.pawns) {
-    // Old saves have no comfort history: neutral initial level, no invented memory.
-    pawn.comfort = 50; pawn.memories = [];
-    if (pawn.need?.kind === 'eat') pawn.need.dining = pawn.need.phase === 'ingest' ? { target: { x: pawn.x, z: pawn.z }, seatId: null, tableId: null } : null;
-  }
 }
 /** Deterministic diagnostic fingerprint, not a cryptographic digest. */
 export function hashWorld(world: World): string {

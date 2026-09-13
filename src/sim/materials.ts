@@ -1,3 +1,5 @@
+import { ITEM_DEFINITIONS, legacyItem } from './items.ts';
+import type { ItemId } from './items.ts';
 import { MAX_STACK } from './definitions.ts';
 import type { Cell, HaulDestination, MaterialKind, MaterialOwner, MaterialPile, Stock, World } from './types.ts';
 
@@ -29,43 +31,46 @@ const sameOwner = (a: MaterialOwner, b: MaterialOwner): boolean => a.type === b.
     : a.type === 'pawn' && b.type === 'pawn' ? a.pawnId === b.pawnId
       : a.type === 'job' && b.type === 'job' && a.jobId === b.jobId);
 
-export function materialCanFit(world: World, kind: MaterialKind, quantity: number, owner: MaterialOwner): boolean {
+export function materialCanFit(world: World, kind: MaterialKind, quantity: number, owner: MaterialOwner, item: ItemId = legacyItem(kind)): boolean {
+  const limit = ITEM_DEFINITIONS[item].stackLimit;
   let remaining = quantity;
-  for (const pile of world.piles) if (pile.kind === kind && sameOwner(pile.owner, owner)) remaining -= MAX_STACK - pile.quantity;
-  const needed = Math.ceil(Math.max(0, remaining) / MAX_STACK);
+  for (const pile of world.piles) if (pile.item === item && sameOwner(pile.owner, owner)) remaining -= limit - pile.quantity;
+  const needed = Math.ceil(Math.max(0, remaining) / limit);
   return world.piles.length + needed <= 32768 && Number.isSafeInteger(world.nextId + needed);
 }
 
-export function addMaterial(world: World, kind: MaterialKind, quantity: number, owner: MaterialOwner): void {
+export function addMaterial(world: World, kind: MaterialKind, quantity: number, owner: MaterialOwner, item: ItemId = legacyItem(kind)): void {
   if (!Number.isSafeInteger(quantity) || quantity < 0 || quantity > MAX_STACK * 32768) throw new Error('Material quantity exceeds supported range.');
-  if (kind !== 'wood' && kind !== 'food') throw new Error('Unknown material.');
+  if (!Object.hasOwn(ITEM_DEFINITIONS, item) || ITEM_DEFINITIONS[item].kind !== kind) throw new Error('Unknown or incompatible item.');
+  const limit = ITEM_DEFINITIONS[item].stackLimit;
   if (owner.type === 'ground' && (!Number.isInteger(owner.x) || !Number.isInteger(owner.z) || owner.x < 0 || owner.z < 0 || owner.x >= world.width || owner.z >= world.height)) throw new Error('Invalid material position.');
   if (owner.type === 'ground' && (['water', 'rock'].includes(world.tiles[owner.z * world.width + owner.x]!.terrain)
     || [...world.structures, ...world.jobs].some(item => item.kind === 'wall' && item.x === owner.x && item.z === owner.z))) throw new Error('Material destination is impassable.');
   if (owner.type === 'pawn' && !world.pawns.some(pawn => pawn.id === owner.pawnId)) throw new Error('Material carrier does not exist.');
   if (owner.type === 'job' && !world.jobs.some(job => job.id === owner.jobId)) throw new Error('Material construction does not exist.');
-  if (!materialCanFit(world, kind, quantity, owner)) throw new Error('Material pile limit exceeded.');
+  if (!materialCanFit(world, kind, quantity, owner, item)) throw new Error('Material pile limit exceeded.');
   for (const pile of world.piles) {
     if (!quantity) break;
-    if (pile.kind !== kind || !sameOwner(pile.owner, owner)) continue;
-    const moved = Math.min(MAX_STACK - pile.quantity, quantity);
+    if (pile.item !== item || !sameOwner(pile.owner, owner)) continue;
+    const moved = Math.min(limit - pile.quantity, quantity);
     pile.quantity += moved; quantity -= moved;
   }
   while (quantity > 0) {
-    const moved = Math.min(MAX_STACK, quantity);
-    world.piles.push({ id: world.nextId++, kind, quantity: moved, owner: { ...owner } });
+    const moved = Math.min(limit, quantity);
+    world.piles.push({ id: world.nextId++, kind, item, quantity: moved, owner: { ...owner } });
     quantity -= moved;
   }
   refreshStock(world);
 }
-export function addGroundMaterial(world: World, kind: MaterialKind, quantity: number, cell: Cell): void {
-  addMaterial(world, kind, quantity, { type: 'ground', x: cell.x, z: cell.z });
+export function addGroundMaterial(world: World, kind: MaterialKind, quantity: number, cell: Cell, item: ItemId = legacyItem(kind)): void {
+  addMaterial(world, kind, quantity, { type: 'ground', x: cell.x, z: cell.z }, item);
 }
-export function reservedSource(world: World, pileId: number): number {
+export function reservedSource(world: World, pileId: number, exceptPawn?: number): number {
   let quantity = 0;
   for (const pawn of world.pawns) {
+    if (pawn.id === exceptPawn) continue;
     if (pawn.haul?.phase === 'pickup' && pawn.haul.sourcePileId === pileId) quantity += pawn.haul.quantity;
-    if (pawn.need?.kind === 'eat' && pawn.need.phase === 'pickup' && pawn.need.sourcePileId === pileId) quantity++;
+    if (pawn.need?.kind === 'eat' && pawn.need.phase === 'pickup' && pawn.need.sourcePileId === pileId) quantity += pawn.need.quantity ?? 1;
   }
   return quantity;
 }

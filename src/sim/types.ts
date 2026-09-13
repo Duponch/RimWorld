@@ -1,4 +1,5 @@
-export const SCHEMA_VERSION = 4 as const;
+import type { ItemId } from './items.ts';
+export const SCHEMA_VERSION = 5 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
@@ -17,7 +18,7 @@ export interface Resource extends Cell { id: number; kind: ResourceKind; amount:
 export interface Structure extends Cell { id: number; kind: StructureKind; orientation: Orientation; footprint: Footprint }
 export interface Stock { wood: number; food: number }
 export type MaterialOwner = ({ type: 'ground' } & Cell) | { type: 'pawn'; pawnId: number } | { type: 'job'; jobId: number };
-export interface MaterialPile { id: number; kind: MaterialKind; quantity: number; owner: MaterialOwner }
+export interface MaterialPile { id: number; kind: MaterialKind; item: ItemId; quantity: number; owner: MaterialOwner }
 export interface StockpileCell extends Cell { id: number; filters: Record<MaterialKind, boolean>; priority: number; capacity: number }
 export type HaulDestination = { type: 'stockpile'; stockpileId: number } | { type: 'job'; jobId: number };
 export interface HaulTask {
@@ -30,7 +31,7 @@ export interface HaulTask {
 export interface DiningPlace { target: Cell; seatId: number | null; tableId: number | null }
 export interface Memory { kind: 'ate-without-table'; expiresAt: number }
 export type NeedTask =
-  | { kind: 'eat'; phase: 'pickup' | 'choose-spot' | 'travel' | 'ingest'; sourcePileId: number; carryPileId: number | null; progress: number; dining: DiningPlace | null }
+  | { kind: 'eat'; phase: 'pickup' | 'choose-spot' | 'travel' | 'ingest'; sourcePileId: number; carryPileId: number | null; quantity: number; progress: number; dining: DiningPlace | null }
   | { kind: 'sleep'; phase: 'travel' | 'sleep'; bedId: number | null; target: Cell };
 export interface Job extends Cell {
   id: number;
@@ -66,6 +67,8 @@ export interface Pawn extends Cell {
 export interface WorldEvent { tick: number; type: 'job' | 'need' | 'command'; message: string }
 export interface World {
   schemaVersion: typeof SCHEMA_VERSION;
+  /** V1–V4 continuations retain their former nutrition economy explicitly. */
+  foodRules: 'legacy' | 'adult';
   seed: number;
   rng: number;
   tick: number;

@@ -249,7 +249,7 @@ function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, occupied
     if (pile.owner.type === 'job' && pile.kind === 'wood') delivered.set(pile.owner.jobId, (delivered.get(pile.owner.jobId) ?? 0) + pile.quantity);
     if (pile.owner.type === 'ground') { const key = cellIndex(world, pile.owner.x, pile.owner.z); ground.set(key, (ground.get(key) ?? 0) + pile.quantity); }
   }
-  for (const worker of world.pawns) if (worker.need?.kind === 'eat' && worker.need.phase === 'pickup') sourceReserved.set(worker.need.sourcePileId, (sourceReserved.get(worker.need.sourcePileId) ?? 0) + 1);
+  for (const worker of world.pawns) if (worker.need?.kind === 'eat' && worker.need.phase === 'pickup') sourceReserved.set(worker.need.sourcePileId, (sourceReserved.get(worker.need.sourcePileId) ?? 0) + worker.need.quantity);
   for (const worker of world.pawns) if (worker.haul) {
     const task = worker.haul;
     if (task.phase === 'pickup') {
@@ -350,7 +350,7 @@ function processHaul(world: World, pawn: Pawn, getBlocked: NavigationGrid, occup
     source.quantity -= task.quantity;
     if (!source.quantity) world.piles.splice(world.piles.indexOf(source), 1);
     const carryId = world.nextId++;
-    world.piles.push({ id: carryId, kind: source.kind, quantity: task.quantity, owner: { type: 'pawn', pawnId: pawn.id } });
+    world.piles.push({ id: carryId, kind: source.kind, item: source.item, quantity: task.quantity, owner: { type: 'pawn', pawnId: pawn.id } });
     task.carryPileId = carryId; task.phase = 'deliver'; pawn.path = []; pawn.planCooldown = 0; pawn.state = 'working'; return;
   }
   const target = destinationCell(world, task.destination);
@@ -359,17 +359,18 @@ function processHaul(world: World, pawn: Pawn, getBlocked: NavigationGrid, occup
   const atTarget = task.destination.type === 'job' ? footprintCells(target as Job).some(cell => adjacent(pawn, cell)) && !footprintCells(target as Job).some(cell => sameCell(pawn, cell)) : nearby(pawn, target);
   if (!atTarget) { moveToward(world, pawn, target, task.destination.type === 'stockpile', getBlocked, occupied, budget); return; }
   world.piles.splice(world.piles.indexOf(carry), 1);
-  addMaterial(world, carry.kind, carry.quantity, task.destination.type === 'job' ? { type: 'job', jobId: task.destination.jobId } : { type: 'ground', x: target.x, z: target.z });
+  addMaterial(world, carry.kind, carry.quantity, task.destination.type === 'job' ? { type: 'job', jobId: task.destination.jobId } : { type: 'ground', x: target.x, z: target.z }, carry.item);
   pawn.haul = null; pawn.path = []; pawn.state = 'idle'; pawn.planCooldown = 0; wakePlanners(world);
 }
 function completeJob(world: World, pawn: Pawn, job: Job): void {
   if (job.kind === 'chop' || job.kind === 'harvest') {
     const resource = world.resources.find(item => sameCell(item, job));
     if (!resource) { releaseWork(world, pawn); return; }
-    if (!materialCanFit(world, job.kind === 'chop' ? 'wood' : 'food', resource.amount, { type: 'ground', x: job.x, z: job.z })) {
+    const item = job.kind === 'chop' ? 'wood' : world.foodRules === 'legacy' ? 'legacy-portion' : 'berries';
+    if (!materialCanFit(world, job.kind === 'chop' ? 'wood' : 'food', resource.amount, { type: 'ground', x: job.x, z: job.z }, item)) {
       job.progress = JOB_DURATION[job.kind] - 1; releaseWork(world, pawn); return;
     }
-    world.resources.splice(world.resources.indexOf(resource), 1); addGroundMaterial(world, job.kind === 'chop' ? 'wood' : 'food', resource.amount, job);
+    world.resources.splice(world.resources.indexOf(resource), 1); addGroundMaterial(world, job.kind === 'chop' ? 'wood' : 'food', resource.amount, job, item);
   } else {
     world.piles = world.piles.filter(pile => pile.owner.type !== 'job' || pile.owner.jobId !== job.id);
     world.structures.push({ id: world.nextId++, kind: job.kind, x: job.x, z: job.z, orientation: job.orientation, footprint: job.footprint });

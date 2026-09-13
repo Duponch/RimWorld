@@ -2,6 +2,8 @@
 
 Références : rapport utilisateur chapitres 2, 4, 5, 9 et 10 ; SYS-005/020..022/041..061 ; scénarios A et familles F1/F2/F3. La [liste des écarts](../gameplay/decisions.md) distingue les règles retenues des limites temporaires. Les résultats exécutés sont consignés dans [validation.md](validation.md).
 
+Extension V5 : [objets alimentaires](food-items.md), identité `item`, quantités réservées et limites de pile par définition. Les détails historiques V2/V3 ci-dessous restent datés de leurs tranches.
+
 ## État autoritaire et vues
 
 `World.piles` porte la matière disponible. Chaque pile possède ID, type, quantité entière positive et exactement un propriétaire : sol avec coordonnées, colon porteur, ou chantier identifié. Une référence sociale ou de réservation n'est pas un deuxième propriétaire.
@@ -10,7 +12,7 @@ Références : rapport utilisateur chapitres 2, 4, 5, 9 et 10 ; SYS-005/020..022
 
 Le petit catalogue immuable dans `definitions.ts` définit les types utiles, capacités, coûts, durées et empreintes. Les types sauvegardés sont des identifiants techniques, distincts des libellés. Les réglages 75 unités par pile et 10 par transport sont des choix du projet.
 
-Un bilan bois indépendant additionne arbres, piles de tous propriétaires et coûts incorporés aux constructions. Un bilan nourriture ajoute buissons, piles et portions effectivement consommées. Les vues `stock`/`escrow` ne doivent jamais s'ajouter une deuxième fois à ces bilans.
+Un bilan bois indépendant additionne arbres, piles de tous propriétaires et coûts incorporés aux constructions. Un bilan nourriture ajoute buissons, piles et unités effectivement consommées (un repas peut contenir plusieurs baies). Les vues `stock`/`escrow` ne doivent jamais s'ajouter une deuxième fois à ces bilans.
 
 ## Réservations et transitions
 

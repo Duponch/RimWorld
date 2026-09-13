@@ -29,17 +29,20 @@ async function perform(page: Page, decision: Decision, rotation: { value: number
 
 test('partie de trois jours : un joueur équipe son camp et entretient ses stocks par la vraie interface', async ({playwright},testInfo)=>{
   test.setTimeout(480000);
-  // Inherit the project's fallback launch flags. Short gameplay journeys and
-  // standalone performance scripts separately exercise hardware WebGPU.
-  const browser=await playwright.chromium.launch({channel:'chromium'});
+  // Hardware WebGPU; the dedicated boundary journey still covers software fallback.
+  const browser=await playwright.chromium.launch({channel:'chromium',args:[]});
   const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}});
   const errors=observeErrors(page), decisions:{tick:number;reason:string;command:unknown}[]=[], days:ReturnType<typeof colonySummary>[]=[];
-  const meals=new Set<string>(), sleepers=new Set<number>();let finalReport:unknown;
+  const meals=new Map<string,number>(), sleepers=new Set<number>();let finalReport:unknown;
   try {
     // No injected fixture, inventory, clocks or simulation speed outside the UI.
     await page.goto('/?e2e&seed=42');await expect(page.locator('#loading')).toHaveCount(0);
     await page.locator('[data-speed="0"]').click();await expect(page.locator('#pause-banner')).toBeVisible();
     const initial=await world(page);expect(initial.width).toBe(250);expect(initial.stock).toEqual({wood:12,food:18});
+    expect(initial.foodRules).toBe('adult');
+    expect(initial.piles.filter(p=>p.kind==='food').map(p=>[p.item,p.quantity])).toEqual([['survival-meal',10],['survival-meal',8]]);
+    await expect(page.locator('#food-items [data-item="survival-meal"] strong')).toHaveText('18');
+    await expect(page.locator('#food-items [data-item="legacy-portion"]')).toBeHidden();
     const initialWood=woodAccount(initial), initialFood=foodAccount(initial);const rotation={value:0};
     for(let hour=0;hour<=72;hour+=4) {
       if(hour) {
@@ -50,7 +53,7 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
       const current=await world(page), summary=colonySummary(current), context=JSON.stringify(summary);
       expect(validateWorld(current),context).toEqual([]);expect(woodAccount(current),context).toBe(initialWood);
       expect(current.pawns.every(p=>p.hunger>0&&p.rest>0),context).toBe(true);
-      for(const e of current.events)if(e.type==='need'&&e.message.includes('a mangé une portion'))meals.add(`${e.tick}:${e.message}`);
+      for(const e of current.events)if(e.type==='need'&&e.message.includes('a mangé une portion'))meals.set(`${e.tick}:${e.message}`,Number(e.message.match(/portion \((\d+) /)?.[1] ?? 0));
       for(const p of current.pawns)if(p.state==='sleeping'&&p.need?.kind==='sleep'&&p.need.bedId!==null)sleepers.add(p.id);
       if(hour && hour%24===0) {
         days.push(summary);
@@ -59,7 +62,8 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
       if(hour===72) {
         expect(summary.structures,context).toEqual({bed:3,table:1,stool:3,wall:6});expect(current.jobs,context).toEqual([]);
         expect(current.stock.food,context).toBeGreaterThan(0);expect(sleepers.size,context).toBe(3);
-        expect(meals.size,context).toBeGreaterThanOrEqual(18);expect(foodAccount(current)+meals.size,context).toBe(initialFood);
+        expect(meals.size,context).toBeGreaterThanOrEqual(18);expect(foodAccount(current)+[...meals.values()].reduce((a,b)=>a+b,0),context).toBe(initialFood);
+        expect(current.piles.filter(p=>p.kind==='food').every(p=>p.item==='berries'||p.item==='survival-meal')).toBe(true);
         finalReport={backend:await page.evaluate(()=>window.__lisiere.backend),days,meals:meals.size,sleepers:sleepers.size,woodConserved:true,foodReconciled:true,decisions,errors};
         break;
       }

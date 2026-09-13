@@ -1,3 +1,4 @@
+import { availableNutrition } from '../../src/sim/items.ts';
 import { canDesignate } from '../../src/sim/engine.ts';
 import { JOB_WOOD_COST } from '../../src/sim/definitions.ts';
 import type { Command, DesignateCommand, World } from '../../src/sim/types.ts';
@@ -35,7 +36,7 @@ export function playerDecisions(world: World): Decision[] {
   }
   const outstandingWood = [...world.jobs, ...out.flatMap(d => d.command.type === 'designate' ? [d.command] : [])].reduce((n,j) => n + JOB_WOOD_COST[j.kind], 0);
   const nearby = [...world.resources].filter(r => Math.abs(r.x-cx) + Math.abs(r.z-cz) <= 28).sort((a,b) => Math.abs(a.x-cx)+Math.abs(a.z-cz)-(Math.abs(b.x-cx)+Math.abs(b.z-cz)) || a.id-b.id);
-  for (const [kind, required] of [['tree', Math.max(40, outstandingWood + 20) - world.stock.wood], ['berries', 15 - world.stock.food]] as const) {
+  for (const [kind, required] of [['tree', Math.max(40, outstandingWood + 20) - world.stock.wood], ['berries', (world.pawns.length * 1.6 - availableNutrition(world)) * (world.foodRules === 'legacy' ? 100 / 35 : 20)]] as const) {
     const action = kind === 'tree' ? 'chop' : 'harvest';
     let planned = nearby.filter(r => r.kind === kind && world.jobs.some(j => j.x === r.x && j.z === r.z)).reduce((n,r) => n+r.amount,0);
     for (const resource of nearby) {

@@ -5,7 +5,10 @@ const { chromium } = await import('@playwright/test');
 const variant = process.argv[2] ?? 'current';
 if (!/^[a-z0-9-]+$/.test(variant)) throw new Error('Use a simple report label (a-z, 0-9, hyphen).');
 const fixture = await readFile('tmp/dining-render-fixture.json', 'utf8');
+const scenario = JSON.parse(fixture);
 const report = { timestamp: new Date().toISOString(), viewport: { width: 1440, height: 1000 }, map: 250, pawns: 100,
+  schema: scenario.schemaVersion, foodRules: scenario.foodRules,
+  foodMix: scenario.piles.reduce((counts, pile) => { counts[pile.item ?? pile.kind] = (counts[pile.item ?? pile.kind] ?? 0) + pile.quantity; return counts; }, {}),
   protocol: 'Normal headless Chromium, default local camera, generated landscape outside cleared camps. 100 portions, tables, stools and owned beds. 60 warmup frames, then 8 seconds minimum and 240 frames per phase. Renderer CPU includes submissions, not GPU execution; RAF includes scheduling. No world serialization inside timed frames. Scene is deliberately uncongested.', phases: [], errors: [] };
 const instrumentation = `
 window.__diningBench = { view:null, active:false, frames:[], previous:null, total:0, snapshots:[], dom:[], longTasks:[], slowFrames:[], phases:new Set() };

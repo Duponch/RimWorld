@@ -6,6 +6,8 @@ import legacyMeal from './fixtures/schema-3-ingestion.json';
 
 function fixture(count = 1, size = 64): World {
   const w = createWorld(87, size, size);
+  w.foodRules = 'legacy';
+  w.foodRules = 'legacy';
   w.tiles = w.tiles.map(() => ({ terrain: 'grass' })); w.resources = []; w.piles = []; w.stockpiles = [];
   w.pawns = w.pawns.slice(0, count);
   w.pawns.forEach((p, i) => { p.x = 2; p.z = 2 + i * 2; p.hunger = 20; p.rest = 100; p.comfort = 10; p.priorities = { gather: 0, build: 0, haul: 0 }; });
@@ -69,7 +71,7 @@ test('two diners reserve distinct seats, physically carry food, save every phase
   expect(interrupted.piles.some(pile => pile.owner.type === 'ground' && pile.owner.x === tired.x && pile.owner.z === tired.z)).toBe(true);
   const migrated = deserializeWorld(JSON.stringify(legacyMeal));
   expect(migrated.pawns[0]!.need).toMatchObject({ kind: 'eat', phase: 'ingest', progress: 17 });
-  expect(migrated.piles).toEqual(legacyMeal.piles); expect(migrated.pawns[0]!.memories).toEqual([]);
+  expect(migrated.piles.map(({item, ...pile}) => pile)).toEqual(legacyMeal.piles); expect(migrated.pawns[0]!.memories).toEqual([]);
   checked(migrated, 33); expect(migrated.stock.food).toBe(1);
   for (const mutate of [
     (data: any) => { data.pawns.find((p: any) => p.state === 'eating').need.dining.target.x++; },

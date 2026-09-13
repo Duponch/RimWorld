@@ -6,6 +6,7 @@ import materialFixture from './fixtures/schema-2-needs-haul.json';
 
 function fixture(pawnCount = 3): World {
   const world = createWorld(42, 16, 16);
+  world.foodRules = 'legacy';
   world.tiles = world.tiles.map(() => ({ terrain: 'grass' }));
   world.resources = []; world.piles = []; world.stockpiles = [];
   world.pawns = world.pawns.slice(0, pawnCount);
@@ -44,7 +45,7 @@ function audit(world: World, expectedWood: number): void {
   for (const pile of world.piles) if (pile.owner.type !== 'job') free[pile.kind] += pile.quantity;
   expect(world.stock, context).toEqual(free);
   const overcommitted = world.piles.filter(pile => {
-    const reserved = world.pawns.reduce((sum, pawn) => sum + (pawn.haul?.phase === 'pickup' && pawn.haul.sourcePileId === pile.id ? pawn.haul.quantity : 0) + (pawn.need?.kind === 'eat' && pawn.need.phase === 'pickup' && pawn.need.sourcePileId === pile.id ? 1 : 0), 0);
+    const reserved = world.pawns.reduce((sum, pawn) => sum + (pawn.haul?.phase === 'pickup' && pawn.haul.sourcePileId === pile.id ? pawn.haul.quantity : 0) + (pawn.need?.kind === 'eat' && pawn.need.phase === 'pickup' && pawn.need.sourcePileId === pile.id ? pawn.need.quantity : 0), 0);
     return reserved > pile.quantity;
   }).map(pile => pile.id);
   expect(overcommitted, `${context} overcommitted piles`).toEqual([]);
@@ -194,7 +195,7 @@ describe('deterministic colony simulation', () => {
     until(deliveryCorridor, () => groundAt(deliveryCorridor, 12, 4) === 10, 'stationary blocker yields toward delivery destination', 500);
     // Only a late source is eligible. Exhausting one pair window must not starve it or break replay.
     const windowed = fixture(2); windowed.piles = []; windowed.stockpiles = [];
-    for (let i = 0; i < 200; i++) windowed.piles.push({ id: windowed.nextId++, kind: i === 199 ? 'wood' : 'food', quantity: 1, owner: { type: 'ground', x: 1, z: 5 } });
+    for (let i = 0; i < 200; i++) windowed.piles.push({ id: windowed.nextId++, kind: i === 199 ? 'wood' : 'food', item: i === 199 ? 'wood' : 'legacy-portion', quantity: 1, owner: { type: 'ground', x: 1, z: 5 } });
     for (let index = 0; windowed.stockpiles.length < 200; index++) {
       const x = index % 16, z = Math.floor(index / 16); if (x === 1 && z === 5) continue;
       windowed.stockpiles.push({ id: windowed.nextId++, x, z, filters: { wood: true, food: false }, capacity: 75, priority: 4 });
@@ -324,7 +325,7 @@ describe('deterministic colony simulation', () => {
 
   test('schema-1 migration preserves stock, escrow, beds and identity; corrupt schema-2 saves are rejected', () => {
     const migrated = deserializeWorld(legacySave());
-    expect(migrated.schemaVersion).toBe(4); expect(migrated.pawns[0]!.id).toBe(4); expect(migrated.structures[0]!.id).toBe(10);
+    expect(migrated.schemaVersion).toBe(5); expect(migrated.pawns[0]!.id).toBe(4); expect(migrated.structures[0]!.id).toBe(10);
     expect(migrated.structures[0]).toMatchObject({ x: 7, z: 7, footprint: 'legacy-single' });
     expect(migrated.pawns[0]!.priorities).toMatchObject({ gather: 2, build: 2 }); audit(migrated, 20); expect(foodMass(migrated)).toBe(18);
     expect(hashWorld(deserializeWorld(legacySave()))).toBe(hashWorld(migrated));
@@ -365,7 +366,7 @@ describe('deterministic colony simulation', () => {
     expect(serializeWorld(world)).toBe(serialized);
     // Captured by running HEAD 489b98a's engine, including an active delivery and ground sleeper.
     const material = deserializeWorld(JSON.stringify(materialFixture));
-    expect(material.schemaVersion).toBe(4); expect(material.piles).toEqual(materialFixture.piles); expect(material.jobs).toEqual(materialFixture.jobs);
+    expect(material.schemaVersion).toBe(5); expect(material.piles.map(({item, ...pile}) => pile)).toEqual(materialFixture.piles); expect(material.jobs).toEqual(materialFixture.jobs);
     expect(material.pawns.map(pawn => pawn.haul)).toEqual(materialFixture.pawns.map(pawn => pawn.haul));
     expect(material.pawns.map(pawn => [pawn.id, pawn.x, pawn.z, pawn.hunger, pawn.rest])).toEqual(materialFixture.pawns.map(pawn => [pawn.id, pawn.x, pawn.z, pawn.hunger, pawn.rest]));
     expect(material.pawns[2]!.state).toBe('idle'); expect(material.pawns.every(pawn => pawn.need === null)).toBe(true);
@@ -375,7 +376,7 @@ describe('deterministic colony simulation', () => {
 
   test('five seeded two-day colonies conserve matter each tick through command churn and real outcomes', () => {
     for (const seed of [1, 7, 42, 271, 65535]) {
-      const world = createWorld(seed, 24, 24); const initialResources = world.resources.length;
+      const world = createWorld(seed, 24, 24); world.foodRules = 'legacy'; for (const pile of world.piles) if (pile.kind === 'food') pile.item = 'legacy-portion'; const initialResources = world.resources.length;
       const initialWood = woodMass(world); const initialFood = foodMass(world); let meals = 0;
       for (const item of world.resources) if (item.kind !== 'rock') command(world, { type: 'designate', kind: item.kind === 'tree' ? 'chop' : 'harvest', x: item.x, z: item.z });
       for (const [x, z] of [[10, 14], [11, 14], [12, 14], [13, 14]]) order(world, 'bed', x!, z!);

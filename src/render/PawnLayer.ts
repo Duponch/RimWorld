@@ -89,6 +89,8 @@ function cargoGeometry(): THREE.InstancedBufferGeometry {
   for (const x of [-0.1, 0.1]) for (const z of [-0.075, 0.075]) {
     part([0.15, 0.1, 0.12], [x, 0.09, z], 2, x * z > 0 ? 0xba7e65 : 0xb9705c);
   }
+  part([0.38, 0.16, 0.26], [0, 0, 0], 3, 0xc7b96b);
+  part([0.09, 0.17, 0.27], [0, 0, 0], 3, 0x86804e);
   const vertices = new THREE.InterleavedBuffer(new Float32Array(data), 10);
   const geometry = new THREE.InstancedBufferGeometry();
   geometry.setAttribute('position', new THREE.InterleavedBufferAttribute(vertices, 3, 0));
@@ -233,7 +235,7 @@ export class PawnLayer {
       scratchColor.setHex(PAWN_COLORS[index % PAWN_COLORS.length]);
       tint.setXYZ(index, scratchColor.r, scratchColor.g, scratchColor.b);
       const load = carried.get(pawn.id);
-      cargo.setXY(index, load ? load.kind === 'wood' ? 1 : 2 : 0, load ? Math.min(1, load.quantity / CARRY_CAPACITY) : 0);
+      cargo.setXY(index, load ? load.kind === 'wood' ? 1 : load.item === 'survival-meal' ? 3 : 2 : 0, load ? Math.min(1, load.quantity / CARRY_CAPACITY) : 0);
     });
     for (const id of this.visuals.keys()) if (!present.has(id)) this.visuals.delete(id);
     for (const attr of [fromAttribute, toAttribute, motion, tint, cargo]) attr.needsUpdate = true;

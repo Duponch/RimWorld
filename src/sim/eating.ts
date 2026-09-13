@@ -1,3 +1,4 @@
+import { nutritionOf, ITEM_DEFINITIONS } from './items.ts';
 import { adjacent } from './pathfinding.ts';
 import { reservedSource } from './materials.ts';
 import { adjacentTable, chooseDiningPlace, validDiningPlace } from './dining.ts';
@@ -16,17 +17,17 @@ export function processEating(world: World, pawn: Pawn, context: NeedContext): v
   if (task.phase === 'pickup') {
     if (pile.owner.type !== 'ground' || reservedSource(world, pile.id) > pile.quantity) { context.release(); return; }
     if ((pawn.x !== pile.owner.x || pawn.z !== pile.owner.z) && !adjacent(pawn, pile.owner)) { context.move(pile.owner, false); return; }
-    if (pile.quantity === 1) {
+    if (pile.quantity === task.quantity) {
       pile.owner = { type: 'pawn', pawnId: pawn.id }; task.carryPileId = pile.id;
     } else {
       if (world.piles.length >= 32768 || !Number.isSafeInteger(world.nextId + 1)) { context.release(); return; }
-      pile.quantity--; task.carryPileId = world.nextId++;
-      world.piles.push({ id: task.carryPileId, kind: 'food', quantity: 1, owner: { type: 'pawn', pawnId: pawn.id } });
+      pile.quantity -= task.quantity; task.carryPileId = world.nextId++;
+      world.piles.push({ id: task.carryPileId, kind: 'food', item: pile.item, quantity: task.quantity, owner: { type: 'pawn', pawnId: pawn.id } });
     }
     task.phase = 'choose-spot'; pawn.path = []; pawn.state = 'moving'; pawn.needCooldown = 0;
     return;
   }
-  if (pile.owner.type !== 'pawn' || pile.owner.pawnId !== pawn.id || pile.quantity !== 1) { context.release(); return; }
+  if (pile.owner.type !== 'pawn' || pile.owner.pawnId !== pawn.id || pile.quantity !== task.quantity) { context.release(); return; }
   if (task.dining && !validDiningPlace(world, task.dining)) {
     task.phase = 'choose-spot'; task.dining = null; task.progress = 0;
     pawn.path = []; pawn.state = 'moving'; pawn.needCooldown = 0;
@@ -47,10 +48,10 @@ export function processEating(world: World, pawn: Pawn, context: NeedContext): v
   pawn.state = 'eating';
   if (++task.progress >= INGEST_TICKS) {
     world.piles.splice(world.piles.indexOf(pile), 1);
-    pawn.hunger = Math.min(100, pawn.hunger + PORTION_NUTRITION);
+    pawn.hunger = Math.min(100, pawn.hunger + nutritionOf(pile));
     const atTable = adjacentTable(world, pawn) !== null;
     rememberMeal(world, pawn, atTable);
     pawn.need = null; pawn.state = 'idle'; pawn.planCooldown = 0; pawn.needCooldown = 0;
-    context.event(`${pawn.name} a mangé une portion ${atTable ? 'à table' : 'sans table'}.`);
+    context.event(`${pawn.name} a mangé une portion (${task.quantity} × ${ITEM_DEFINITIONS[pile.item].label}) ${atTable ? 'à table' : 'sans table'}.`);
   }
 }

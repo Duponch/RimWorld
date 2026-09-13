@@ -1,10 +1,10 @@
-# Repas et couchages physiques — origine V3, état courant V4
+# Repas et couchages physiques — origine V3, état courant V5
 
 Livraison du 13 septembre 2026. Référence : chapitre 14 du corpus utilisateur, SYS-026..027/039/044/076..080, UI-016/026, TEST-189 ; adoption des actions effectives, des réservations et de la continuation. La demande utilisateur interdit de remplacer ces interactions élémentaires par des raccourcis. Leur correction passe avant les zones nommées, sans déclarer G1 terminé.
 
 ## Règles et portée
 
-`src/sim/needs.ts` distingue les jauges et les tâches qui les satisfont. Une tâche de besoin est exclusive du travail et du transport. Le colon réserve une portion au sol, s'en approche par la navigation du jeu, la prend en main, choisit une place, y transporte sa portion puis l'ingère pendant une durée définie. La nutrition n'est accordée qu'à la fin. Une interruption avant ce point dépose l'objet intact, sans bonus partiel ; une reprise recommence l'action. Les réservations de nourriture et de transport partagent les mêmes quantités disponibles.
+`src/sim/needs.ts` distingue les jauges et les tâches qui les satisfont. Une tâche de besoin est exclusive du travail et du transport. Le colon réserve une quantité de nourriture au sol, s'en approche par la navigation du jeu, la prend en main, choisit une place, y transporte sa portion puis l'ingère pendant une durée définie. La nutrition n'est accordée qu'à la fin. Une interruption avant ce point dépose l'objet intact, sans bonus partiel ; une reprise recommence l'action. Les réservations de nourriture et de transport partagent les mêmes quantités disponibles.
 
 Un colon fatigué préfère son lit accessible, sinon choisit un lit inoccupé par un propriétaire. Attribution durable et réservation temporaire sont distinctes. La destination de sommeil est la case d'ancrage, jamais une simple case voisine. Un obstacle permanent exclut le couchage ; une occupation temporaire est gérée lors du déplacement. Réattribuer un lit libère l'ancien dormeur, qui peut quitter l'emprise avant de se coucher ailleurs. Sans lit admissible le repli est le sol ; à repos nul, le colon peut s'effondrer sur place. Les embouteillages entre agents actifs restent un problème général de navigation.
 
@@ -15,20 +15,20 @@ La référence permet de manger sans table et de dormir au sol. Les [tables](htt
 | Paramètre | Décision actuelle |
 |---|---|
 | Temps | 10 Hz, 6 000 ticks/jour inchangés. |
-| Faim et repos éveillé | 0,015 et 0,008 points/tick conservés depuis V2 ; aucune conversion des jauges chargées. Calibration nutritionnelle et profils encore ouverts. |
-| Aliments | Une portion générique, +35 points, 50 ticks d'ingestion. Le résultat d'une récolte n'est pas encore un type nutritionnel distinct de repas cuisiné. Paramètres provisoires, pas des valeurs RimWorld vérifiées. |
+| Faim et repos éveillé | Adulte : 160/6000 points de faim/tick, facteurs de catégorie 1/0,5/0,25/0 ; profil historique V1–V4 : 0,015. Repos éveillé : 0,008. [Unités et migration](food-items.md). |
+| Aliments | Baies +5 points/unité et rations +90 ; quantité réservée selon la faim, 50 ticks d'ingestion. Portion historique +35 pour compatibilité ; [définitions et limites](food-items.md). |
 | Décision | Cherche à manger à 30 ; cherche à dormir à 30 ; faim critique pendant sommeil à 12,5. Horaires, alimentation autorisée, inventaire de repas de secours, température et danger ne sont pas implémentés. |
 | Repos en lit | `100 / (6000 × 10,5 / 24)` points/tick : durée de récupération totale de 10,5 h de jeu convertie à notre journée. Lit sans qualité ni modificateurs. |
 | Repos au sol | 80 % du lit, coefficient local à vérifier avec le futur mobilier. Fin de sommeil à 100. |
 | Épuisement et faim simultanés | Effondrement déterministe à zéro. Au réveil pour faim critique, un minimum de 5 points de repos évite une boucle dormir/se relever avant toute ingestion. Adaptation provisoire explicite ; l'effondrement probabiliste et ses profils de référence restent à étudier avec santé/horaires. |
 
-Tables/tabourets, transport vers une place réservée, confort progressif et souvenir sans table sont désormais livrés : [contrat et recherche](dining.md). Cuisine, types d'aliments, pourrissement, horaires, malnutrition et maladies restent **absents**. Cette tranche livre les actions physiques actuelles ; elle ne clôt pas tout le domaine survie.
+Tables/tabourets, transport vers une place réservée, confort progressif et souvenir sans table sont désormais livrés : [contrat et recherche](dining.md). Cuisine, préférences alimentaires, pourrissement, horaires, malnutrition et maladies restent **absents**. Cette tranche livre les actions physiques actuelles ; elle ne clôt pas tout le domaine survie.
 
 ## Persistance et limites de ressources
 
 `Pawn.need`, `bedId` et `needCooldown` entrent dans le schéma 3. Les phases, propriétaire de portion, progression, destination, route et cadence sont sérialisés. La validation refuse tâches simultanées, ingestion sans portion, nourriture surréservée, propriétaire de lit dupliqué et dormeur hors de sa destination. Un trajet devenu bloqué reste valide à sauvegarder : sa réévaluation appartient au tick suivant.
 
-V2 est validé avant migration : terrain, tick, IDs, piles, quantités, trajets de travail, cargaisons et progression restent identiques. Les nouveaux champs sont initialisés ; un ancien dormeur sur place devient disponible et réévalue son couchage au prochain tick, sans changer de case ni de jauge au chargement. V1 conserve sa migration matérielle et initialise aussi ces champs. Les clés locales restent identiques. Le schéma courant est V4 : migration des repas, confort et souvenirs dans [dining.md](dining.md). La continuation est exacte au sein de V4, pas entre les règles de V2 et V3.
+V2 est validé avant migration : terrain, tick, IDs, piles, quantités, trajets de travail, cargaisons et progression restent identiques. Les nouveaux champs sont initialisés ; un ancien dormeur sur place devient disponible et réévalue son couchage au prochain tick, sans changer de case ni de jauge au chargement. V1 conserve sa migration matérielle et initialise aussi ces champs. Les clés locales restent identiques. La tranche V4 a introduit places, confort et souvenirs ([dining.md](dining.md)). Le schéma courant est V5 : types et quantités alimentaires, profils adulte/historique ([food-items.md](food-items.md)). La continuation est exacte au sein de ce schéma ; les migrations conservent les champs et règles explicitement décrits.
 
 Déposer un objet porté change son propriétaire en conservant son ID ; aucune nouvelle identité n'est nécessaire. Prendre une portion entière réutilise aussi son ID. Un fractionnement vérifie les plafonds de piles et d'identités avant toute mutation. La sélection des besoins partage le plafond de huit recherches par tick avec les travaux et réessaie toutes les vingt ticks si nécessaire ; un budget épuisé n'est jamais assimilé à un chemin inaccessible.
 

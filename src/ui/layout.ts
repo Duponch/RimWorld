@@ -39,7 +39,8 @@ export function gameLayout(): string {
     <aside class="resource-list panel" aria-label="Ressources disponibles" title="Objets au sol et portés. Les matériaux déjà livrés aux chantiers sont comptés séparément.">
       <div class="resource-heading">Ressources</div>
       <div class="resource"><span class="resource-symbol wood">▤</span><span>Bois</span><strong id="wood">—</strong></div>
-      <div class="resource"><span class="resource-symbol food">⁙</span><span>Nourriture</span><strong id="food">—</strong></div>
+      <div class="resource"><span class="resource-symbol food">⁙</span><span>Nutrition</span><strong id="food">—</strong></div>
+      <div id="food-items"></div>
       <div id="material-status" class="material-status"></div>
       <div class="resource-foot"><span id="population">3</span> colons · <span id="map-size">${DEFAULT_MAP_SIZE} × ${DEFAULT_MAP_SIZE}</span></div>
     </aside>

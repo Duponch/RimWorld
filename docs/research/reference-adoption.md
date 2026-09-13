@@ -82,3 +82,9 @@ La [recherche repas/confort](dining-reference.md) corrige les généralisations 
 ## Relecture collecte et partie longue — 13 septembre 2026
 
 [Partie représentative et écarts](colony-progression.md) reprend chap. 9/10/14/30/32, SYS-041..061/076..080 et UI-013/019..026. Le pilote confronte commandes et bilans sur plusieurs jours ; il ne certifie pas notre calibration économique. La disparition des buissons est désormais un écart prioritaire explicite. La présentation conserve ses buffers et n’a aucune autorité sur la matière.
+
+## Complément : catalogue, équipement et alimentation V5
+
+Les chapitres 1/4/11/31/34 n’apportent pas un catalogue individuel exhaustif ni un manifeste de version ; [couverture vérifiée](../gameplay/content-catalogue.md). Les chapitres 2/8/13/20/29, SYS-055, UI-014/015 et CAT-034..037 sont adoptés comme contrat d’inventaire/équipement ; la synchronisation des portraits est explicitée dans [character-presentation.md](../development/character-presentation.md), encore prévue.
+
+CAT-005/011/015, SYS-076..078 et TEST-076..078 orientent les [aliments V5](../development/food-items.md). Adoption des quantités et de la nutrition, adaptation du temps à 10 Hz et maintien explicite des anciens profils ; préférences complètes, agriculture et conservation différées. Les arrondis et facteurs contextuels ont été revérifiés ; le nombre de tests du corpus ne définit pas celui de notre suite.

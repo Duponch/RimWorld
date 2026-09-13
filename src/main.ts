@@ -1,4 +1,6 @@
 import './style.css';
+import { ITEM_DEFINITIONS, availableNutrition } from './sim/items';
+import { updateFoodStocks } from './ui/food-stocks';
 import { SimulationClient } from './bridge/SimulationClient';
 import { ColonyRenderer } from './render/ColonyRenderer';
 import type { JobKind, Pawn, World, WorkType, Orientation, AreaAction, Cell } from './sim/types';
@@ -159,7 +161,7 @@ function actionLabel(pawn: Pawn) {
     const destination = pawn.haul.destination.type === 'job' ? 'chantier' : 'réserve';
     const carried = snapshot?.piles.find(pile => pile.id === pawn.haul!.carryPileId);
     return pawn.haul.phase === 'pickup' ? `Prélèvement · ${pawn.haul.quantity} unités pour ${destination}`
-      : `Livraison · ${carried?.quantity ?? pawn.haul.quantity} ${carried?.kind === 'food' ? 'nourriture' : 'bois'} → ${destination}`;
+      : `Livraison · ${carried?.quantity ?? pawn.haul.quantity} ${carried ? ITEM_DEFINITIONS[carried.item].label : 'unités'} → ${destination}`;
   }
   const job = snapshot?.jobs.find(item => item.id === pawn.jobId);
   return job ? `${stateLabels[pawn.state]} · ${jobLabels[job.kind].toLocaleLowerCase('fr')}` : stateLabels[pawn.state];
@@ -189,7 +191,7 @@ function rebuildPawns(world: World) {
 function renderState() {
   if (!snapshot) return;
   const world = snapshot;
-  el('wood').textContent = String(world.stock.wood); el('food').textContent = String(world.stock.food);
+  el('wood').textContent = String(world.stock.wood); el('food').textContent = availableNutrition(world).toFixed(1); updateFoodStocks(el('food-items'), world);
   const carried = world.piles.filter(pile => pile.owner.type === 'pawn').reduce((sum, pile) => sum + pile.quantity, 0);
   const delivered = world.piles.filter(pile => pile.owner.type === 'job').reduce((sum, pile) => sum + pile.quantity, 0);
   el('material-status').textContent = `${carried} portées · ${delivered} au chantier`;
@@ -234,7 +236,7 @@ function renderState() {
       const piles = world.piles.filter(item => item.owner.type === 'ground' && item.owner.x === x && item.owner.z === z);
       el('cell-title').textContent = structure ? ({ wall: 'Mur en bois', bed: 'Lit', table: 'Table en bois', stool: 'Tabouret en bois' })[structure.kind] : resource ? resourceLabels[resource.kind] : terrainLabels[world.tiles[z * world.width + x].terrain];
       el('cell-description').textContent = `Case ${x}, ${z}${resource ? ` · ${resource.amount} unités à récolter` : ''}${structure ? ` · ${footprintCells(structure).length === 2 ? '1 × 2' : '1 × 1'} cases` : ''}`;
-      el('cell-materials').textContent = piles.length ? `Au sol : ${piles.map(pile => `${pile.quantity} ${pile.kind === 'wood' ? 'bois' : 'nourriture'}`).join(' · ')}` : '';
+      el('cell-materials').textContent = piles.length ? `Au sol : ${piles.map(pile => `${pile.quantity} ${ITEM_DEFINITIONS[pile.item].label}`).join(' · ')}` : '';
       el('cell-job').textContent = job ? `${jobLabels[job.kind]} · ${queryJobStatus(world, job).reason ?? 'En cours'}${JOB_WOOD_COST[job.kind] > 0 ? ` · ${deliveredStock(world, job.id).wood} bois livrés` : ''}` : 'Aucun ordre sur cette case.';
       el('cell-storage').hidden = !storage;
       el('cell-bed').hidden = structure?.kind !== 'bed';
@@ -252,7 +254,7 @@ function renderState() {
   }));
   if (!entries.length) el('journal-items').textContent = 'Trois survivants. Une nouvelle histoire.';
   const alerts: string[] = [];
-  if (world.stock.food < 10) alerts.push('Réserves de nourriture faibles');
+  if (availableNutrition(world) < world.pawns.length * 1.6) alerts.push('Réserves de nourriture faibles');
   const hungry = world.pawns.filter(pawn => pawn.hunger < 25).length;
   if (hungry) alerts.push(`${hungry} colon(s) affamé(s)`);
   if (pending) alerts.push(`${pending} ordre(s) en attente`);

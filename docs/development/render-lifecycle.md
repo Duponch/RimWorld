@@ -24,3 +24,7 @@ Les compteurs et signatures n'incluent plus le progrès de collecte lorsqu'il n'
 `node --experimental-strip-types scripts/tree-render-bench.mjs current` produit un rapport daté. Le [contrôle avant](../../artifacts/tree-render-before.json) et le [premier résultat après](../../artifacts/tree-render-after.json) conservent conditions, intervalles de frames, coûts CPU, événements et compteurs. Pas de GPU logiciel, ni de sérialisation du monde dans les frames chronométrées. Le budget visé est 16,7 ms pour 60 images/s ; les maxima restent publiés, même lorsque le p95 est bon.
 
 Les ajouts de ressources, changements de carte, premières variantes de pipeline et hausses de capacité restent des chemins distincts à mesurer lors de leur extension. Le parcours utilisateur de plusieurs jours n'est pas un benchmark : les inspections et clics du pilote ajoutent leur propre charge. Aucun résultat local ne garantit une fluidité parfaite sur tous les appareils et toutes les charges.
+
+## Recontrôle alimentaire V5
+
+L’ajout de baies et rations conserve les lots de piles par chunk ; leur signature comprend l’identité de l’objet. Les couleurs par instance et les formes de cargaison sont présentes dans les buffers dès la création, sans nouvelle variante de matériau à chaque changement de repas. [Audit matériel](validation.md) : cent colons, p95 de frame 4,3 ms, maximum 16,7 ms, aucune tâche longue observée ; état final et scénario différents du profil historique, sans comparaison de vitesse artificielle.

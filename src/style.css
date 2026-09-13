@@ -14,3 +14,5 @@
 
 #fps-counter{position:absolute;top:52px;right:14px;pointer-events:none;padding:4px 7px;border-radius:3px;background:#16201ee8;color:#e4ebd8;font:11px ui-monospace,monospace;font-variant-numeric:tabular-nums;z-index:12}
 @media(max-width:700px){#fps-counter{top:47px;right:7px;font-size:10px}}
+
+#food-items .resource{grid-template-columns:1fr auto;gap:6px;min-height:24px}#food-items .resource strong{font-size:12px}

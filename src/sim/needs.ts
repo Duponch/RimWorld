@@ -1,14 +1,15 @@
 import { routeToCell, routeToJob, foodInteractionGoals } from './pathfinding.ts';
 import type { Reachability } from './pathfinding.ts';
 import { reservedSource } from './materials.ts';
+import { mealQuantity, adultHungerFactor } from './items.ts';
+import { TICKS_PER_DAY } from './types.ts';
 import { processEating } from './eating.ts';
 import { updateWellbeing } from './wellbeing.ts';
 import { footprintCells } from './definitions.ts';
 import type { Cell, Pawn, World } from './types.ts';
 
-// Existing portion/day units are retained across V2 migration. This delivery
-// corrects actions and ownership; numerical food catalogue calibration is separate.
-export const HUNGER_PER_TICK = 0.015;
+// Baseline adult: 1.6 nutrition/day; 100 meter points = one nutrition.
+export const HUNGER_PER_TICK = 160 / TICKS_PER_DAY;
 export const REST_PER_TICK = 0.008;
 export { PORTION_NUTRITION } from './eating.ts';
 export { INGEST_TICKS } from './eating.ts';
@@ -28,7 +29,7 @@ export interface NeedContext {
  * All phases use the same movement/search budget and material owners as work.
  */
 export function processNeeds(world: World, pawn: Pawn, context: NeedContext): boolean {
-  pawn.hunger = Math.max(0, pawn.hunger - HUNGER_PER_TICK);
+  pawn.hunger = Math.max(0, pawn.hunger - (world.foodRules === 'legacy' ? 0.015 : HUNGER_PER_TICK * adultHungerFactor(pawn.hunger)));
   if (pawn.state !== 'sleeping') pawn.rest = Math.max(0, pawn.rest - REST_PER_TICK);
   if (pawn.needCooldown > 0) pawn.needCooldown--;
   const canPlan = pawn.needCooldown === 0;
@@ -47,8 +48,9 @@ export function processNeeds(world: World, pawn: Pawn, context: NeedContext): bo
   const wantsFood = pawn.hunger <= (pawn.need?.kind === 'sleep' ? 12.5 : 30);
   let reach: Reachability | null | undefined;
   if (pawn.need?.kind !== 'eat' && wantsFood && canPlan && pawn.rest > (pawn.need?.kind === 'sleep' ? 5 : 0)) {
-    const sources = world.piles.filter(pile => pile.kind === 'food' && pile.owner.type === 'ground' && pile.quantity > reservedSource(world, pile.id));
-    // A hungry hauler already holding food may retain one portion for ingestion.
+    // Its old haul will be released atomically if this replacement is selected.
+    const sources = world.piles.filter(pile => pile.kind === 'food' && pile.owner.type === 'ground' && pile.quantity > reservedSource(world, pile.id, pawn.id));
+    // A hungry hauler already holding food may reserve a meal quantity for ingestion.
     const held = world.piles.find(pile => pile.owner.type === 'pawn' && pile.owner.pawnId === pawn.id && pile.kind === 'food');
     if (sources.length || held) {
       reach = context.search(false, foodInteractionGoals(world, sources.flatMap(pile => pile.owner.type === 'ground' ? [pile.owner] : [])));
@@ -60,8 +62,10 @@ export function processNeeds(world: World, pawn: Pawn, context: NeedContext): bo
         if (path && (!best || path.length < best.path.length || (path.length === best.path.length && pile.id < best.id))) best = { id: pile.id, path };
       }
       if (held || best) {
+        const selected = held ?? sources.find(pile => pile.id === best!.id)!;
+        const quantity = mealQuantity(pawn, selected, selected.quantity - reservedSource(world, selected.id, pawn.id));
         context.release(); // Deposits cargo at the actor, preserving its identity.
-        pawn.need = { kind: 'eat', phase: 'pickup', sourcePileId: held?.id ?? best!.id, carryPileId: null, progress: 0, dining: null };
+        pawn.need = { kind: 'eat', phase: 'pickup', sourcePileId: held?.id ?? best!.id, carryPileId: null, quantity, progress: 0, dining: null };
         pawn.path = held ? [] : best!.path;
         pawn.state = 'moving'; pawn.planCooldown = 0;
       }

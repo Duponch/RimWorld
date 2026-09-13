@@ -1,6 +1,31 @@
 # Validation du prototype
 
-## État courant : abattage fluide et partie de plusieurs jours — 13 septembre 2026
+## État courant : catalogue alimentaire et propriété — 13 septembre 2026
+
+Le [contrat alimentaire V5](food-items.md) livre baies/rations distinctes, limites de pile, quantités d'ingestion, nutrition adulte et profils historiques. Le [catalogue](../gameplay/content-catalogue.md) précise pourquoi les 95 familles du corpus ne constituent pas une liste exhaustive ; le [contrat équipement/portraits](character-presentation.md) reste prévu.
+
+**Noyau : 24 scénarios / 11 fichiers passent**, dernier passage après correction de la réservation propre du transporteur : 35,60 s. Les deux scénarios alimentaires combinent types, limites, transport, compétition, interruption, faim et migration V4/V5. Un cas ajouté pendant la revue échouait avec six baies au lieu de seize, puis passe après exclusion de la réservation de transport du colon lors du remplacement atomique de sa tâche. Les réservations d'autrui restent contraignantes. Le pilote naturel exerce 90 000 ticks sur trois cartes et cinq jours, avec conservation par unités consommées et restauration quotidienne exacte.
+
+**Premier passage UI : sept parcours réussis**, sans échec ni relance automatique, 435,05 s au total. Le parcours de trois jours a utilisé WebGPU matériel en 331,31 s : 49 décisions, 18 repas, trois dormeurs en lits observés, trois lits/table/trois tabourets/six murs, 41 bois et 79 baies à la fin ; bilan des stocks réconcilié, aucune erreur navigateur. Ce passage précède la dernière correction de réservation propre ; les résultats de sa revalidation longue sont ajoutés ci-dessous. Le fallback reste couvert par le parcours de frontières, sans lui attribuer les performances du GPU matériel.
+
+**Build après correction : réussi**, TypeScript strict et Vite ; bundle jeu 986,28 kB (273,19 kB gzip), worker 57,40 kB. L'avertissement de bundle supérieur à 500 kB persiste ; il concerne le chargement, pas une preuve de lenteur de frame.
+
+**Revalidation après correction : partie UI de trois jours réussie en 330,28 s**, sans erreur ni nouvelle tentative, WebGPU matériel. Elle vérifie aussi les piles initiales de dix et huit rations, leur affichage et l’absence de portions historiques dans une nouvelle colonie. Bilan final : 18 repas, 47 décisions, trois colons ayant utilisé leurs lits, camp complet et conservation vérifiée. [Résultats structurés et décisions du pilote](../../artifacts/food-validation.json).
+
+### Audit graphique de la nouvelle tranche
+
+Rapport [dining-render-food-items.json](../../artifacts/dining-render-food-items.json), 13 septembre 2026 à 17:38:56 UTC. Ryzen 5 3600, GPU AMD/RDNA-1, Chromium headless normal, WebGPU, viewport 1440×1000, carte naturelle 250² avec emplacements individuels dégagés. Cent acteurs, cinquante portions de seize baies et cinquante rations, tables/tabourets et lits attribués ; 60 frames de chauffe puis huit secondes minimum par phase. Aucun autre parcours GPU lancé simultanément. La sérialisation du monde reste hors des frames mesurées.
+
+| Mesure, vitesse 6× | p95 | Maximum |
+|---|---:|---:|
+| Intervalle entre images, 1 855 intervalles | 4,3 ms | 16,7 ms |
+| CPU de la frame, 1 856 échantillons | 4,3 ms | 6,6 ms |
+| Adoption snapshot, 34 échantillons | 2,2 ms | 2,9 ms |
+| Mise à jour UI, 34 échantillons | 4,9 ms | 4,9 ms |
+
+Aucune tâche longue ni frame au-dessus de 32 ms enregistrée, aucune erreur GPU/navigateur. Au tick 492, les cent repas sont consommés, cent colons dorment dans leur lit et aucun souvenir sans table n'est apparu. En pause, p95 des intervalles 8,3 ms et maximum 12,5 ms. Ces chiffres ne garantissent pas une fluidité parfaite partout : scénario sans congestion et sans les futurs systèmes. Le nouveau mélange alimentaire diffère du contrôle V4 ; aucun facteur d'accélération n'est déduit de leurs états différents. Les anciens rapports de correction des freezes restent intacts.
+
+## Historique : abattage fluide et partie de plusieurs jours — 13 septembre 2026
 
 [Cycle de vie graphique](render-lifecycle.md), [relecture de la collecte et du pilote](../research/colony-progression.md), [inventaire du gameplay](../gameplay/implementation-status.md). La simulation et le schéma 4 restent inchangés : cette tranche corrige les reconstructions graphiques répétées et ajoute une vérification de développement de colonie.
 

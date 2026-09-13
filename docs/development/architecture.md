@@ -161,3 +161,9 @@ Décision du 13 septembre 2026 : la disparition d'une ressource retire ses indic
 Le champ de quantité n'entre pas dans une clé de pipeline reconstruite à chaque tick. Le progrès de collecte, qui ne modifie pas son marqueur, n'invalide plus ce marqueur. La reconstruction locale reste permise à l'ajout/déplacement d'une ressource et la remise à zéro complète au changement de carte. Le propriétaire final libère géométries et matériaux partagés ; les groupes enfants ne les détruisent pas isolément. Le rendu demeure sans autorité sur les règles ni les sauvegardes, qui restent en schéma 4.
 
 Le pilote de partie est du code de test, hors application : il lit un état observable, retourne des commandes puis laisse le moteur les exécuter. Le même plan de décisions peut piloter le noyau ou les contrôles du navigateur. Il ne crée aucune API de triche en production et ne change pas l'horloge pour écourter les journées.
+
+## ADR-018 — Identité alimentaire et profils sauvegardés
+
+Le schéma V5 distingue `MaterialPile.item` de sa catégorie de filtre. Fractionnement, portage, dépôt et fusion conservent la définition et ses limites. `NeedTask.quantity` participe aux réservations partagées avec la logistique. La jauge 0–100 représente une nutrition adulte ; la valeur d’un aliment n’est pas une quantité de stock. [Contrat](food-items.md).
+
+Les règles alimentaires des anciennes parties sont nommées `legacy`, celles des nouvelles parties `adult` ; le profil est sérialisé. Une migration ne transforme pas une ancienne portion en ration moderne. Les helpers quittent le validateur pour `save-migrations.ts`. Les définitions d’objets sont communes à la simulation, aux piles et à l’inspection ; aucun nom traduit ne devient une clé. L’inventaire personnel et l’équipement utiliseront des propriétaires distincts, conformément au [contrat cible](character-presentation.md), sans les confondre avec la cargaison existante.
