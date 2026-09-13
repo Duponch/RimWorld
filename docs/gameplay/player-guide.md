@@ -14,6 +14,14 @@ Le compteur FPS reste dans le coin supérieur droit, même en pause ; il indique
 
 Sur une fenêtre étroite, la barre des onglets se fait défiler horizontalement. Les panneaux occupent davantage de largeur, tout en conservant leur position dans l'interface.
 
+## Vue et lumière
+
+Le bouton **Vue : iso**, près de l'heure en bas à droite, passe en **perspective** ; recliquer revient en vue iso (projection orthographique). Le point observé et son échelle sont conservés. La molette zoome, le glissement avec le bouton droit tourne la caméra ; le bouton ⌂ recentre sur les colons. Un changement de vue annule un rectangle en cours de tracé. Le masquage du feuillage reste utile aux angles rasants.
+
+Le soleil, le ciel, les couleurs et les ombres évoluent avec l'heure affichée. La pause arrête ce cycle et un chargement restaure l'éclairage correspondant à la partie. Le départ actuel est à minuit. La nuit garde une lumière bleutée pour permettre l'inspection et la construction.
+
+Ce rendu utilise pour l'instant un ciel clair fixe. **Saisons et météo ne sont pas encore jouables** ; les plantes gardent leur climat provisoire. Les effets complets de l'obscurité sur le travail, le déplacement et l'humeur, ainsi que lampes et toits, restent à développer. Arbres, sols et roches sont encore des contenus génériques : leur diversité n'est pas considérée comme terminée.
+
 ## Donner des ordres
 
 Ouvrir Architecte, choisir Ordres pour abattre/récolter/annuler, Zones pour le stockage, Structure pour le mur ou Meubles pour les lits, tables et tabourets. Pour les ordres de terrain et les réserves, **cliquer ou maintenir le bouton gauche et tracer un rectangle**, dans n'importe quel sens. Les cases compatibles sont surlignées ; un compteur distingue les cases retenues et ignorées. Relâcher sur la carte applique l'ensemble. Échap ou clic droit annule le tracé ; changer d'outil ou quitter la fenêtre l'abandonne également. Relâcher au-dessus d'un panneau n'envoie aucun ordre.

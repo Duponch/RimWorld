@@ -1,0 +1,74 @@
+{
+  "timestamp": "2026-09-13T20:27:37.488Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "protocol": "First camera transitions after the real loading screen, 250² seed 42, 1440×1000, hardware Chromium, paused. 60 frames per transition, including the first RAF interval and submission CPU; no discarded slow frame. Camera zoom distances injected only for reproducibility. Sky uses the actual paused world tick.",
+  "phases": [
+    {
+      "name": "first-overview",
+      "frameMs": {
+        "mean": 5.901666666666673,
+        "p95": 8.5,
+        "max": 16.800000000000182,
+        "count": 60
+      },
+      "cpuMs": {
+        "mean": 5.159999999993791,
+        "p95": 7.800000000745058,
+        "max": 16.90000000037253,
+        "count": 60
+      }
+    },
+    {
+      "name": "first-perspective",
+      "frameMs": {
+        "mean": 4.653333333333331,
+        "p95": 8.300000000000182,
+        "max": 8.400000000000546,
+        "count": 60
+      },
+      "cpuMs": {
+        "mean": 4.0433333332650365,
+        "p95": 5.5,
+        "max": 6,
+        "count": 60
+      }
+    },
+    {
+      "name": "perspective-local",
+      "frameMs": {
+        "mean": 7.986666666666664,
+        "p95": 12.5,
+        "max": 16.399999999999636,
+        "count": 60
+      },
+      "cpuMs": {
+        "mean": 7.371666666679085,
+        "p95": 9.599999999627471,
+        "max": 13.099999999627471,
+        "count": 60
+      }
+    },
+    {
+      "name": "return-iso",
+      "frameMs": {
+        "mean": 7.571666666666655,
+        "p95": 12.399999999999636,
+        "max": 12.600000000000364,
+        "count": 60
+      },
+      "cpuMs": {
+        "mean": 7.091666666542491,
+        "p95": 8.900000000372529,
+        "max": 11,
+        "count": 60
+      }
+    }
+  ],
+  "errors": [],
+  "preparationMs": 1920.4000000003725,
+  "adapter": {
+    "vendor": "amd",
+    "architecture": "rdna-1"
+  },
+  "completed": true
+}

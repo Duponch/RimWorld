@@ -38,6 +38,10 @@ Notre convention de case de 1 m, humain de 1,75 m et mur de 2,80 m reste un choi
 
 Le noyau TypeScript dans un worker, les représentations GPU et les frontières de remplacement Rust/WASM restent pertinents. Les modules du rapport sont des responsabilités à respecter ; ils n'imposent ni un port C#, ni un framework ECS généraliste, ni une classe pour chaque ligne du classeur. Réexaminer ces choix sur un coût mesuré ou un besoin concret. Décision persistante : [ADR-011](../development/architecture.md#adr-011--adoption-critique-du-référentiel-utilisateur).
 
+## Relecture de l’environnement après V7
+
+Chapitres 3/6/7/12/29 et SYS-012/016..022/028/070..075/131/172..177 : [audit renouvelé](environment-review.md). **Adapter** le cycle visuel et la caméra 3D ; **adopter comme cible**, sans déclarer livrés, climat, diversité du biome et propriétés des sols/roches/plantes. UI-005 garde les distances logiques inchangées. La croissance à lumière simplifiée devra être révisée avant les semis. La source Odyssey associée à SYS-131 ne suffit pas à définir la météo Core.
+
 ## Un seul calendrier, avec traçabilité
 
 [ROADMAP](../ROADMAP.md) est le calendrier canonique ; la [matrice des domaines](../gameplay/systems-matrix.md) en reprend les jalons. Les IDs locaux **S00–S24** sont des domaines ; **S01–S47** dans le corpus sont des sources bibliographiques. Utiliser le préfixe SYS, TEST, UI, CONST, STAT ou GAP du classeur pour éviter toute confusion. Ses priorités P0/P1 ne sont pas nos jalons.

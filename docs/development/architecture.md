@@ -181,3 +181,11 @@ Le worker conserve un historique de présentation distinct des sauvegardes. `Mot
 V7 : [contrat](rocks-and-plants.md). RockSurface calcule les coins partagés ; RockLayer garde les buffers et deux listes d'indices selon le cadrage. Les modifications de terrain restent distinctes des nouvelles cartes. Aucune autorité de simulation n'est transférée au mesh.
 
 Plants calcule la croissance depuis un checkpoint sérialisé et l'intégrale des ticks favorables du preset fixe. Le rendu des fruits et le codec conservent leurs identités. Une future variation du climat doit clôturer cette intégrale avant de changer les facteurs. Cette décision économise les mutations par tick, sans représenter un climat déjà implémenté.
+
+## ADR-021 — Caméra et ciel séparés de la simulation
+
+[Contrat](daylight-camera.md), [recherche fraîche](../research/environment-review.md). `CameraRig` isole projection, échelle, contrôles et seuil de détail ; `daylight.ts` et `DayNightLayer` isolent l’échantillonnage du temps et les uniformes du ciel. `ColonyRenderer` coordonne ces couches au lieu de grossir son code de caméra. Une seule lumière directionnelle et un atlas d’ombres sont réutilisés. Le rendu n’ajoute aucun état au World ; schéma 7 inchangé.
+
+La présentation utilise le temps confirmé de MotionTimeline, pas la phase d’animation recentrée des personnages. Le ciel clair fixe et sa palette sont une adaptation 3D assumée. Lumière de gameplay, température et météo devront appartenir au moteur ; les valeurs visuelles ne seront jamais lues pour décider de la croissance, du déplacement ou d’un tir. Le futur contexte de site exigera une migration explicite.
+
+Les variantes de projection/LOD sont précompilées sous l'écran initial. La caméra d'ombres conserve sa résolution ; le benchmark a conduit à corriger le premier dézoom, sans appliquer une réduction de qualité non validée.

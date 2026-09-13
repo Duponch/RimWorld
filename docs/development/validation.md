@@ -1,5 +1,36 @@
 # Validation du prototype
 
+## Après V7 — ciel, projections et relecture de l'environnement (13 septembre 2026)
+
+[Contrat](daylight-camera.md), [recherche et audit rétroactif](../research/environment-review.md). La simulation et son schéma 7 sont inchangés. **Sept contrôles passent** dans quatre fichiers : projections, rayons du sol, horloge cyclique, ressources graphiques résidentes, mouvement, stockage et compteur FPS ([rapport final](../../artifacts/daylight-camera-contracts.json)). Le scénario de cycle parcourt deux jours et les projections combinent trois tailles/formats de carte, trois aspects, trois niveaux de zoom et bascules répétées.
+
+**Neuf parcours UI courts passent**, 193,87 s, aucune relance automatique ni échec ([rapport](../../artifacts/daylight-camera-ui.json)). Ils couvrent les besoins, logistique, rectangles, petites/grandes cartes, déplacement GPU, buissons et le nouveau parcours caméra/ciel. Après la préparation des shaders et le dernier garde de caméra, le parcours caméra/ciel repasse : 14,30 s ([rapport final](../../artifacts/daylight-camera-ui-final.json)). Il contrôle aussi l'annulation d'un rectangle lors d'une bascule, le retour exact à un ciel sauvegardé et une restauration à minuit. Le recontrôle final du fallback graphique est conservé [séparément](../../artifacts/daylight-camera-fallback.json).
+
+Build final TypeScript/Vite réussi : jeu 1 008,25 ko, gzip 280,01 ko ; worker inchangé 68,61 ko. Avertissement connu du lot >500 ko conservé. Le long parcours UI de trois jours et les simulations de colonie ne sont pas relancés pour ce changement de présentation ; leurs preuves V7 ci-dessous demeurent historiques, pas de nouveaux passages revendiqués.
+
+### Mesures de rendu et premier dézoom
+
+Ryzen 5 3600, AMD/RDNA-1, Chromium matériel WebGPU, 1440×1000, carte 250² graine 42, simulation en pause. Le [benchmark de ciel](../../artifacts/daylight-camera-benchmark.json) mesure chaque phase après 90 images de chauffe, pendant au moins 300 images et huit secondes ; CPU de soumission distinct du temps GPU. Le contrôle historique utilise les anciennes couleurs et direction de lumière sur exactement le même décor. Ces mesures de régime établi précèdent la précompilation finale, qui change le démarrage et non les couches dessinées.
+
+| Scène | Appels | Triangles | Frame moyenne / p95 / max (ms) |
+|---|---:|---:|---:|
+| Anciens réglages constants, proximité | 112 | 180 119 | 4,55 / 8,3 / 12,7 |
+| Midi avec ciel, proximité | 120 | 194 253 | 7,14 / 12,4 / 16,9 |
+| Même midi sans shader de ciel | 119 | 192 269 | 7,26 / 12,5 / 17,2 |
+| Nuit, proximité | 120 | 194 253 | 7,89 / 12,6 / 20,5 |
+| Anciens réglages, panorama | 13 | 425 957 | 4,45 / 8,2 / 16,5 |
+| Midi avec ciel, panorama iso | 14 | 427 941 | 4,24 / 4,4 / 8,7 |
+| Midi avec ciel, perspective proche | 128 | 203 103 | 8,98 / 12,9 / 20,8 |
+| Midi avec ciel, panorama perspective | 14 | 427 941 | 4,26 / 4,4 / 8,9 |
+
+Le fond ajoute un appel. La direction d'éclairage expose d'autres lots aux ombres : le surcoût proche demeure quand on retire seulement le ciel. Un échantillonnage CDP local montrait notamment du temps dans les soumissions `writeBuffer` ; cela ne mesure pas indépendamment le temps GPU et ne prouve pas la cause exacte dans le pilote. La différence de p95 des panoramas ne vaut pas promesse d'accélération : les captures sont sensibles à l'ordonnancement. Le budget de 16,7 ms est respecté au p95 dans ces scènes, pas à chaque image ; aucune garantie de fluidité universelle.
+
+Le premier panorama, avant précompilation, avait un intervalle à **512,5 ms** hors fenêtre chaude. `preparePresentation` prépare désormais les variantes sous le chargement. Le [contrôle final des premières transitions](../../artifacts/camera-transitions.json) conserve toutes les 60 images de chaque manipulation, y compris le premier intervalle : maxima **16,8 ms** au premier dézoom, **8,4 ms** à la première perspective, **16,4 ms** au retour rapproché, **12,6 ms** au retour iso. Préparation initiale : **1 920,4 ms**. Aucun avertissement de validation GPU dans les rapports retenus. Ce coût initial est assumé, pas supprimé du chargement.
+
+Captures locales inspectées : `artifacts/daylight-dawn.png` à 06:24, `daylight-noon.png` à midi et `daylight-night.png` à minuit, heures réellement chargées par le menu, soleil orienté dans le monde et nuit lisible ; screenshots ignorés par Git. La vue rasante conserve l'occlusion par le feuillage, signalée dans le guide.
+
+Essais non retenus : redimensionner à chaud la texture d'ombres 2048→1024 dans le banc d'essai a provoqué des erreurs Three/WebGPU de texture détruite encore référencée ; ses chiffres sont **invalides**, archivés seulement en `tmp`, et aucun changement de résolution dynamique n'est livré. La première tentative de captures n'avait pas créé de sauvegarde reconnue par l'UI : le pilote utilise maintenant Sauvegarder avant ses fixtures, sans forcer l'activation du bouton. Le test de caméra sans DOM nécessitait un garde de libération des contrôles non connectés ; le garde et ses recontrôles sont livrés.
+
 
 ## V7 — rochers continus et buissons persistants (13 septembre 2026)
 

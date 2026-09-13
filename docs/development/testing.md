@@ -30,6 +30,8 @@ Une comparaison au jeu de référence précise version, source, unité et contex
 
 ## Familles en place
 
+La présentation jour/nuit et les projections enrichissent F4/F5 : `daylight-camera.test.ts` regroupe les limites de cadrage/rayon et le cycle temporel, `integration/daylight-camera.spec.ts` utilise la vraie interface pour sélection, rectangle, changement de vue en cours de geste, pause/reprise et restauration du ciel. `scripts/daylight-camera-bench.mjs` sépare les anciens réglages fixes du soleil courant, du fond du ciel et du dézoom. Ce changement de présentation ne justifie pas de relancer la simulation longue de trois jours ; les parcours UI courts vérifient les interactions et le fallback graphique.
+
 `tests/simulation.test.ts` exerce le noyau sans DOM ni GPU : continuation déterministe, contraintes transactionnelles, règles de priorité, annulation, interruption par les besoins, navigation, corruption de sauvegardes et simulations longues. Les assertions portent sur les ressources, le nombre de travaux réellement achevés, les liens de réservation et la validité du monde. Le soak utilise plusieurs graines et vérifie les invariants pendant l'exécution ; l'égalité d'un hash seule ne suffit pas.
 
 La tranche des [besoins physiques](needs.md) enrichit les deux scénarios existants de repas/sommeil et la migration : accès fermé puis ouvert, portion disputée avec le transport, interruption d'ingestion, lit attribué et réellement occupé, réattribution, corruption des nouvelles références, fixture V2 historique et reprise exacte. Un parcours UI supplémentaire observe repas et lits orientés dans Chromium, puis sauvegarde/recharge la phase d'ingestion. Les captures doivent être inspectées ; la seule absence d'erreur console ne valide pas une pose.

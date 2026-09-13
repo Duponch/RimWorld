@@ -16,3 +16,4 @@
 @media(max-width:700px){#fps-counter{top:47px;right:7px;font-size:10px}}
 
 #food-items .resource{grid-template-columns:1fr auto;gap:6px;min-height:24px}#food-items .resource strong{font-size:12px}
+.camera-controls{margin:0 0 5px}.camera-controls button{font-size:10px;padding:4px 8px;min-height:25px}.time-panel:has(.camera-controls){min-height:186px}.alerts{bottom:calc(var(--tabs-height) + 219px)}

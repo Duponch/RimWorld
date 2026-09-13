@@ -1,0 +1,125 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "E:\\Code\\RimWorld\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "tests/integration/daylight-camera.spec.ts",
+      "--reporter=json"
+    ],
+    "configFile": "E:\\Code\\RimWorld\\playwright.config.ts",
+    "rootDir": "E:/Code/RimWorld/tests/integration",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "E:/Code/RimWorld/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "E:/Code/RimWorld/tests/integration",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": {
+      "command": "npm run dev",
+      "url": "http://127.0.0.1:5173",
+      "reuseExistingServer": true,
+      "timeout": 30000
+    }
+  },
+  "suites": [
+    {
+      "title": "daylight-camera.spec.ts",
+      "file": "daylight-camera.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "vue iso/perspective : sélection, rectangle, pause, reprise et ciel restauré depuis la sauvegarde",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 12993,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-13T20:24:45.656Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "daylight-camera",
+                      "contentType": "application/json",
+                      "body": "eyJpbml0aWFsIjp7Im1vZGUiOiJvcnRob2dyYXBoaWMiLCJzYW1wbGUiOnsieCI6MCwieSI6MC43MDcxMDY3ODExODY1NDc2LCJ6IjowLjcwNzEwNjc4MTE4NjU0NzYsImRheWxpZ2h0IjoxLCJ3YXJtdGgiOjAsInN1bmxpZ2h0IjoxLCJtb29ubGlnaHQiOjB9LCJzcGFuIjozMy45MiwidGFyZ2V0IjpbMTUuNSwwLDE1LjVdLCJ0aWNrIjozMDAwLCJmcmFtZSI6eyJmcHMiOjg4LjY5MTc5NjAwODg2OTIsImZyYW1lTXMiOjExLjI3NDk5OTk5OTk5OTk5NywiZnJhbWVQOTUiOjE2LjY5OTk5OTk5OTk5OTgxOCwiZHJhd0NhbGxzIjozNSwidHJpYW5nbGVzIjo3MzQ3fX0sInRvZ2dsZWQiOnsibW9kZSI6Im9ydGhvZ3JhcGhpYyIsInNhbXBsZSI6eyJ4IjowLCJ5IjowLjcwNzEwNjc4MTE4NjU0NzYsInoiOjAuNzA3MTA2NzgxMTg2NTQ3NiwiZGF5bGlnaHQiOjEsIndhcm10aCI6MCwic3VubGlnaHQiOjEsIm1vb25saWdodCI6MH0sInNwYW4iOjMzLjkxOTk5OTk5OTk5OTk5NSwidGFyZ2V0IjpbMTUuNSwwLDE1LjVdLCJ0aWNrIjozMDAwLCJmcmFtZSI6eyJmcHMiOjE3Mi43NTQ4NDYzNjY4NzMyLCJmcmFtZU1zIjo1Ljc4ODU0OTYxODMyMDYxMiwiZnJhbWVQOTUiOjguNDAwMDAwMDAwMDAwNTQ2LCJkcmF3Q2FsbHMiOjM1LCJ0cmlhbmdsZXMiOjczNDd9fSwic2F2ZWRTa3kiOnsieCI6LTAuMDQ1MDE0Mjc4ODYxMTk2NDksInkiOjAuNzA2MzkwMDE3ODcyMDY5OSwieiI6MC43MDYzOTAwMTc4NzIwNjk5LCJkYXlsaWdodCI6MSwid2FybXRoIjowLCJzdW5saWdodCI6MSwibW9vbmxpZ2h0IjowfSwibWlkbmlnaHQiOnsibW9kZSI6InBlcnNwZWN0aXZlIiwic2FtcGxlIjp7IngiOjEuMjI0NjQ2Nzk5MTQ3MzUzMmUtMTYsInkiOi0wLjcwNzEwNjc4MTE4NjU0NzYsInoiOi0wLjcwNzEwNjc4MTE4NjU0NzYsImRheWxpZ2h0IjowLCJ3YXJtdGgiOjAsInN1bmxpZ2h0IjowLCJtb29ubGlnaHQiOjAuMjJ9LCJzcGFuIjozMy45MTk5OTk5OTk5OTk5OTUsInRhcmdldCI6WzE1LjUsMCwxNS41XSwidGljayI6MCwiZnJhbWUiOnsiZnBzIjoxODAsImZyYW1lTXMiOjUuNTU1NTU1NTU1NTU1NTU1LCJmcmFtZVA5NSI6OC4zOTk5OTk5OTk5OTk2MzYsImRyYXdDYWxscyI6MzUsInRyaWFuZ2xlcyI6NzM0N319LCJlcnJvcnMiOltdfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3c2aba051d20c55a1a06-6e78f2120a517740c058",
+          "file": "daylight-camera.spec.ts",
+          "line": 5,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-13T20:24:44.556Z",
+    "duration": 14303.879,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

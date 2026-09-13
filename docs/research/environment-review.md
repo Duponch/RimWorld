@@ -1,0 +1,33 @@
+# Relecture de l'environnement et du contenu — 13 septembre 2026
+
+Référence : RimWorld PC 1.6, jeu de base. Consultation renouvelée pour cette livraison, et contrôle rétroactif du terrain et de la végétation V7. Le [corpus](reference-adoption.md) reste un guide : chapitres 3, 6, 7, 12 et 29 ; SYS-012, SYS-016..022, SYS-028, SYS-070..075, SYS-131, SYS-172..177 ; UI-005 ; CAT-059..065. Le [contrat de présentation](../development/daylight-camera.md) distingue ce qui est livré des règles encore absentes.
+
+## Sources confrontées
+
+| Source consultée | Observation retenue | Portée et confiance |
+|---|---|---|
+| [Site officiel](https://rimworldgame.com/) | Les régions diffèrent par climat, végétation, faune et ressources ; obscurité et milieu interviennent dans la vie des colons. | Source primaire, fiable sur ces systèmes ; aucune constante exacte déduite du texte commercial. |
+| [Ludeon, Winter is Coming](https://ludeon.com/blog/2014/12/alpha-8-winter-is-coming-released/) | Variations quotidiennes/saisonnières de température, neige et biomes sont des systèmes du jeu de base. | Source primaire historique de 2014, corroboration de périmètre uniquement, pas une calibration de 1.6. |
+| [Environment](https://rimworldwiki.com/wiki/Environment), [Biomes](https://rimworldwiki.com/wiki/Biome), [Plants](https://rimworldwiki.com/wiki/Plants) | Lumière naturelle selon heure, latitude/saison ; effets des toits, éclipses et météo ; terrain et plantes portent des propriétés distinctes. | Sources communautaires actuelles. Certaines sections signalent des lacunes et mêlent les extensions ; les tableaux ne valent pas définitions résolues. |
+| [GenCelestial](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/RimWorld/GenCelestial.cs), [SkyManager](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/Verse/SkyManager.cs) | Le calcul céleste consulte date/site, et applique des corrections de lumière ; couleurs du ciel, ombres et transitions météo sont séparées. | Miroir primaire de code communautaire fixé au commit du 20 mai 2026. Lecture directe des fichiers ; correspondance exacte avec l'exécutable commercial 1.6.4850 non certifiée. Code non repris. |
+| [BiomeDef](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/RimWorld/BiomeDef.cs), [GenStep_Plants](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/RimWorld/GenStep_Plants.cs) | Le biome définit des disponibilités/pondérations ; la génération sollicite le peuplement sauvage avec croissance initiale variable. | Même réserve de version ; les classes ne donnent pas à elles seules un catalogue complet des définitions actives. |
+| [Rock](https://rimworldwiki.com/wiki/Rock), [documentation de PrepareLanding](https://neitsa.github.io/games/rimworld/preparelanding/terrain_tab.html) | Cinq roches naturelles de base : granite, calcaire, marbre, grès, ardoise ; plusieurs peuvent coexister dans un site. | Wiki et auteur d'un outil de sélection de site concordent. Prélever les valeurs et règles de génération dans une installation identifiée avant le minage. |
+
+L'heure seule ne suffit donc pas à une reproduction complète du climat. Une course solaire astronomique avec lever à 6 h et coucher à 18 h n'est pas la formule exacte de RimWorld : son glow emploie des corrections et varie suivant le site. Les teintes d'un pixel, la luminosité de gameplay et la température sont trois grandeurs différentes.
+
+## Audit rétroactif : ce qui n'est pas terminé
+
+| Domaine du corpus | État réel et décision |
+|---|---|
+| CAT-063..065, espèces végétales | Un arbre générique, un buisson générique et de l'herbe décorative ne représentent pas les espèces du biome. **Adopter** espèces, cycles, rendements, habitat, feu et couvert avec leurs systèmes. G1 introduit les premières cultures ; G2 l'écologie et ses conditions. Ne pas promettre une souche qui repousse pour chaque arbre : régénération du peuplement et continuation de l'individu sont distinctes. |
+| CAT-059, sols | `grass/soil/rock/water` sont quatre catégories du prototype. **Différer**, sans déclarer acquis, terre riche, sable, boue, marais, graviers, roche brute/taillée et leurs fertilités, coûts de marche et supports de construction. La teinte aléatoire n'est pas une variété de sol. À ouvrir avec G1/G2. |
+| CAT-060, roches et minerais | Les facettes V7 sont une présentation. **Adopter** géologie distincte du sol et des objets : roche en place, minerai, chunk et bloc taillé ne sont pas interchangeables. Le sol brun sous les massifs actuels est provisoire ; le futur minage devra révéler le bon sol rocheux et conserver les toits correspondants. G2, puis recettes/matériaux. |
+| SYS-012/016..019, biomes | Le libellé « Forêt tempérée » décrit notre preset, pas un biome RimWorld entièrement reproduit. **Adopter** contexte de site sérialisé et génération conditionnée ; diversité locale G2, choix mondial G5. L'accès à un globe n'est pas un prérequis à plusieurs biomes locaux. |
+| SYS-131/028, météo et conditions | **Adopter**, en G2, états persistants/transitions et conséquences mesurables. Le renvoi du corpus à un article Odyssey ne prouve pas chaque règle Core. Pluie/neige/brouillard/orage et climat doivent être vérifiés avec leurs effets ; glace dynamique et inondations d'Odyssey restent après G5. |
+| SYS-071/075, croissance livrée | Intégrale du buisson en environnement fixe : repos végétal, fertilité et maturité présents ; lumière diurne simplifiée et 21 °C constants. **À réviser avant semis** : croissance selon vraie lumière naturelle et température. Clôturer les checkpoints et migrer explicitement si les règles changent, sans recalculer rétroactivement la croissance passée. |
+
+## Cadence de remise en question
+
+À chaque mécanique : relire son contrat et un domaine déjà livré dont elle dépend ; rechercher les interactions et les limites de version, puis corriger code ou statut. À la clôture d'une tranche G, revoir aussi le catalogue des familles et les sources demeurées incertaines. Aucun audit ne coche « arbres », « pierres » ou « environnement » en bloc après une amélioration de mesh.
+
+Prochains contrôles liés : semis → espèces, fertilité, lumière, travail et récolte ; minage → géologie, produit, sol découvert, toit et obstruction ; météo → luminosité, croissance, déplacements/travail, pièces et conservation. Le [catalogue](../gameplay/content-catalogue.md), la [matrice](../gameplay/systems-matrix.md) et l'[état jouable](../gameplay/implementation-status.md) conservent chacun leur rôle.

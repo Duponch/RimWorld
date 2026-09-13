@@ -12,7 +12,7 @@ import { BoxBatches } from './BoxBatches';
 import { ResourceLayer } from './ResourceLayer';
 import { clearGroup, material } from './primitives';
 import type { Placement } from './primitives';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import type { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import type { World, MaterialKind, Orientation, AreaAction, Cell } from '../sim/types';
 import { TICKS_PER_SECOND } from '../sim/types';
 import { JOB_DURATION, footprintCells } from '../sim/definitions';
@@ -20,6 +20,8 @@ import { canDesignate } from '../sim/engine';
 import { buildAreaIndex, isAreaAction, queryArea } from '../sim/designation';
 import type { AreaIndex } from '../sim/designation';
 import { WORLD_SCALE } from '../world/scale';
+import { CameraRig, type CameraMode } from './CameraRig';
+import { DayNightLayer } from './DayNightLayer';
 
 type VisualChunk = { signature: string; group: THREE.Group };
 
@@ -36,8 +38,9 @@ export class ColonyRenderer {
   readonly backend: string;
   private readonly renderer: THREE.WebGPURenderer;
   private readonly scene = new THREE.Scene();
-  private readonly camera = new THREE.OrthographicCamera(-20, 20, 20, -20, 0.1, 300);
-  private readonly controls: OrbitControls;
+  private readonly rig: CameraRig;
+  private get camera(): THREE.OrthographicCamera | THREE.PerspectiveCamera { return this.rig.camera; }
+  private get controls(): OrbitControls { return this.rig.controls; }
   private readonly terrainGroup = new THREE.Group();
   private readonly resourceGroup = new THREE.Group();
   private readonly structureGroup = new THREE.Group();
@@ -64,7 +67,7 @@ export class ColonyRenderer {
   private readonly boxes = new BoxBatches();
   private readonly resources = new ResourceLayer(this.resourceGroup, this.staticMaterial);
   private readonly rocks = new RockLayer(this.staticMaterial);
-  private readonly sun: THREE.DirectionalLight;
+  private readonly daylight: DayNightLayer;
   private world: World | null = null;
   private terrainKey = '';
   private structureKey = '';
@@ -81,6 +84,7 @@ export class ColonyRenderer {
   private timeTo = 0;
   private snapshotDuration = 120;
   private disposed = false;
+  private preparing = false;
   private pointerDown: { x: number; y: number; button: number; pointerId: number } | null = null;
 
   static async create(host: HTMLElement, onPick: (x: number, z: number) => void): Promise<ColonyRenderer> {
@@ -123,30 +127,9 @@ export class ColonyRenderer {
     renderer.domElement.style.cssText = 'display:block;width:100%;height:100%;touch-action:none;outline:none';
     renderer.domElement.tabIndex = 0;
     host.appendChild(renderer.domElement);
-    this.scene.background = new THREE.Color(0xd4d7c5);
-    this.scene.add(new THREE.HemisphereLight(0xfff3d9, 0x748474, 2.1));
-    this.sun = new THREE.DirectionalLight(0xffe1b2, 3.2);
-    this.sun.position.set(-12, 30, 18);
-    this.sun.castShadow = true;
-    this.sun.shadow.mapSize.set(2048, 2048);
-    this.sun.shadow.normalBias = 0.055;
-    this.sun.shadow.bias = -0.0002;
-    this.sun.shadow.camera.near = 0.1;
-    this.sun.shadow.camera.far = 140;
-    this.scene.add(this.sun, this.sun.target);
+    this.daylight = new DayNightLayer(this.scene);
     this.scene.add(this.overview.group, this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup, this.pawns.group);
-    this.camera.position.set(41, 34, 44);
-    this.controls = new OrbitControls(this.camera, renderer.domElement);
-    this.controls.target.set(15.5, 0, 15.5);
-    this.controls.enableDamping = true;
-    this.controls.dampingFactor = 0.09;
-    this.controls.screenSpacePanning = false;
-    this.controls.minPolarAngle = 0.2;
-    this.controls.maxPolarAngle = Math.PI / 2.6;
-    this.controls.minZoom = 0.25;
-    this.controls.maxZoom = 4.5;
-    this.controls.mouseButtons = { LEFT: null as unknown as THREE.MOUSE, MIDDLE: THREE.MOUSE.PAN, RIGHT: THREE.MOUSE.ROTATE };
-    this.controls.update();
+    this.rig = new CameraRig(renderer.domElement);
     const hoverMat = new THREE.MeshBasicNodeMaterial({ color: 0xf9ebae, transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide });
     this.hover = new THREE.Mesh(new THREE.PlaneGeometry(0.96, 0.96), hoverMat);
     this.hover.rotation.x = -Math.PI / 2;
@@ -201,25 +184,9 @@ export class ColonyRenderer {
     if(!this.rocks.group.parent)this.scene.add(this.rocks.group);
     if (newMap) {
       this.boxes.clear();
-      const centerX = (world.width - 1) / 2, centerZ = (world.height - 1) / 2;
       const extent = Math.min(WORLD_SCALE.cameraSpan, Math.max(world.width, world.height));
-      this.controls.target.set(centerX, 0, centerZ);
-      // A steep initial view keeps the camp readable beneath 5–7 m canopies.
-      // Orbit controls remain free: this is only the new-map framing.
-      const cameraOffset = new THREE.Vector3(0.85, 2, 0.9);
-      const mapDiagonal = Math.hypot(world.width, world.height);
-      cameraOffset.setLength(Math.max(extent * cameraOffset.length(), mapDiagonal + WORLD_SCALE.treeMaxHeight));
-      this.camera.position.copy(this.controls.target).add(cameraOffset);
-      this.camera.zoom = 1;
-      // Full-map overview is presentation only: the initial local framing and
-      // every model/cell dimension are independent of the world extent.
-      this.controls.minZoom = Math.min(0.25, 24 / Math.max(world.width, world.height));
-      this.camera.far = Math.max(300, cameraOffset.length() + mapDiagonal + WORLD_SCALE.treeMaxHeight * 2);
-      this.controls.update();
-      this.sun.position.set(centerX - 24, 45, centerZ + 25);
-      this.sun.target.position.set(centerX, 0, centerZ);
-      Object.assign(this.sun.shadow.camera, { left: -extent * 0.65, right: extent * 0.65, top: extent * 0.65, bottom: -extent * 0.65 });
-      this.sun.shadow.camera.updateProjectionMatrix();
+      this.rig.configureMap(world.width, world.height);
+      this.daylight.configureShadow(extent);
       this.resize();
     }
     if (previousWorld?.resources !== world.resources || newMap) this.updateResources(world, newMap);
@@ -286,6 +253,35 @@ export class ColonyRenderer {
     this.overview.setFoliageVisible(visible);
   }
 
+  get cameraMode(): CameraMode { return this.rig.mode; }
+
+  /** Warm both projections and resident LOD variants under the loading screen.
+   * Do not defer the first overview pipeline to the player's first wheel zoom. */
+  async preparePresentation(): Promise<void> {
+    this.preparing = true;
+    const culling = new Map<THREE.Object3D, boolean>();
+    const distant = this.overview.group.visible;
+    try {
+      this.overview.group.visible = this.terrainGroup.visible = this.resourceGroup.visible = true;
+      this.rocks.setDistant(false); this.rocks.mesh.visible = true;
+      this.scene.traverse(object => { culling.set(object, object.frustumCulled); object.frustumCulled = false; });
+      this.daylight.update(this.world?.tick ?? 0, this.controls.target);
+      await this.renderer.compileAsync(this.scene, this.rig.orthographic);
+      await this.renderer.compileAsync(this.scene, this.rig.perspective);
+    } finally {
+      for (const [object, value] of culling) object.frustumCulled = value;
+      this.overview.group.visible = distant; this.terrainGroup.visible = this.resourceGroup.visible = !distant;
+      this.rocks.setDistant(distant); this.preparing = false;
+      this.frames.reset(); this.lastFrame = 0;
+    }
+  }
+
+  toggleCameraMode(): CameraMode {
+    this.cancelDesignation();
+    this.rig.setMode(this.rig.mode === 'orthographic' ? 'perspective' : 'orthographic');
+    return this.rig.mode;
+  }
+
   focusPawn(id: number): void {
     const pawn = this.world?.pawns.find((item) => item.id === id);
     if (!pawn) return;
@@ -300,16 +296,7 @@ export class ColonyRenderer {
   resize(): void {
     if (this.disposed) return;
     const width = Math.max(1, this.host.clientWidth), height = Math.max(1, this.host.clientHeight);
-    const aspect = width / height;
-    // A larger world expands the land to explore, not the initial viewing distance.
-    const halfHeight = WORLD_SCALE.cameraSpan * 0.53;
-    this.camera.left = -halfHeight * aspect;
-    this.camera.right = halfHeight * aspect;
-    this.camera.top = halfHeight;
-    this.camera.bottom = -halfHeight;
-    if (this.world) this.controls.minZoom = Math.min(0.25,
-      halfHeight * 2 * Math.min(1, aspect) / (Math.hypot(this.world.width, this.world.height) + WORLD_SCALE.treeMaxHeight * 2 + 8));
-    this.camera.updateProjectionMatrix();
+    this.rig.resize(width, height);
     this.renderer.setSize(width, height, false);
   }
 
@@ -422,7 +409,7 @@ export class ColonyRenderer {
   private readonly onVisibility = (): void => { this.frames.reset(); this.lastFrame = 0; };
 
   private frame(now: number): void {
-    if (this.disposed) return;
+    if (this.disposed || this.preparing) return;
     const dt = this.lastFrame ? Math.min((now - this.lastFrame) / 1000, 0.05) : 0;
     this.lastFrame = now;
     this.pawns.blend.value = this.snapshotDuration > 0 ? Math.min(1, Math.max(0, (performance.now() - this.snapshotAt) / this.snapshotDuration)) : 1;
@@ -436,16 +423,16 @@ export class ColonyRenderer {
       this.camera.position.z += z - this.controls.target.z;
       this.controls.target.x = x; this.controls.target.z = z;
     }
-    // Keep one bounded shadow region around the camera instead of diluting the
-    // same shadow texture across an entire 128-cell map.
-    this.sun.target.position.set(this.controls.target.x, 0, this.controls.target.z);
-    this.sun.position.set(this.controls.target.x - 24, 45, this.controls.target.z + 25);
+    // Share the confirmed presentation clock with pawn motion. Loading a save
+    // restores the sky; pausing cannot continue an independent wall-clock sun.
+    const skyTick = this.hasTracks ? this.timeline.tick : THREE.MathUtils.lerp(this.timeFrom, this.timeTo, this.pawns.blend.value) * TICKS_PER_SECOND;
+    this.daylight.update(skyTick, this.controls.target);
     if (this.selectedPawn !== null) {
       const visual = this.pawns.visuals.get(this.selectedPawn);
       this.selection.visible = !!visual;
       if (visual) {const segment=this.hasTracks?this.timeline.segment(this.selectedPawn):undefined;const blend=segment?THREE.MathUtils.clamp((this.timeline.tick-segment.start)/(segment.end-segment.start),0,1):this.pawns.blend.value;this.selection.position.set(THREE.MathUtils.lerp(visual.from.x,visual.to.x,blend),0.08,THREE.MathUtils.lerp(visual.from.z,visual.to.z,blend));}
     }
-    const cellPixels=this.host.clientHeight*this.camera.zoom/(this.camera.top-this.camera.bottom);
+    const cellPixels=this.rig.pixelsPerCell(this.host.clientHeight);
     const distant=this.overview.group.visible ? cellPixels<9 : cellPixels<7;
     this.overview.group.visible=distant;this.terrainGroup.visible=!distant;this.resourceGroup.visible=!distant;
     this.rocks.setDistant(distant);
@@ -469,7 +456,7 @@ export class ColonyRenderer {
     if (!horizontal && !vertical) return;
     const forward = this.controls.target.clone().sub(this.camera.position).setY(0).normalize();
     const right = new THREE.Vector3(-forward.z, 0, forward.x);
-    const offset = right.multiplyScalar(horizontal).addScaledVector(forward, -vertical).normalize().multiplyScalar(dt * 12 / this.camera.zoom);
+    const offset = right.multiplyScalar(horizontal).addScaledVector(forward, -vertical).normalize().multiplyScalar(dt * 12 * this.rig.span / (WORLD_SCALE.cameraSpan * 1.06));
     this.camera.position.add(offset); this.controls.target.add(offset);
   }
 
@@ -619,7 +606,7 @@ export class ColonyRenderer {
     this.disposed = true;
     this.renderer.setAnimationLoop(null);
     this.resizeObserver.disconnect();
-    this.controls.dispose();
+    this.rig.dispose();
     const canvas = this.renderer.domElement;
     canvas.removeEventListener('pointerdown', this.onPointerDown, true);
     canvas.removeEventListener('pointerup', this.onPointerUp);
@@ -642,7 +629,7 @@ export class ColonyRenderer {
     this.waterMaterial.dispose();
     this.hover.geometry.dispose(); (this.hover.material as THREE.Material).dispose();
     this.selection.geometry.dispose(); (this.selection.material as THREE.Material).dispose();
-    this.sun.shadow.dispose();
+    this.daylight.dispose();
     void this.renderer.dispose();
     canvas.remove();
   }

@@ -317,6 +317,12 @@ el('show-diagnostics').onclick = () => { const hidden = !el('metrics').hidden; e
 el('wall-cutaway').onclick = () => { wallCutaway = !wallCutaway; renderer?.setWallCutaway(wallCutaway); el('wall-cutaway').textContent = wallCutaway ? 'Murs : coupés' : 'Murs : hauts'; el('wall-cutaway').setAttribute('aria-pressed', String(wallCutaway)); };
 el('foliage-toggle').onclick = () => { foliageVisible = !foliageVisible; renderer?.setFoliageVisible(foliageVisible); el('foliage-toggle').textContent = foliageVisible ? 'Feuillage' : 'Troncs'; el('foliage-toggle').setAttribute('aria-pressed', String(!foliageVisible)); };
 el('view-home').onclick = () => { const pawn = snapshot?.pawns[0]; if (pawn) renderer?.focusPawn(pawn.id); };
+el('camera-mode').onclick = () => {
+  const perspective = renderer?.toggleCameraMode() === 'perspective';
+  el('camera-mode').textContent = perspective ? 'Vue : perspective' : 'Vue : iso';
+  el('camera-mode').setAttribute('aria-pressed', String(perspective));
+  el('camera-mode').title = `Basculer en ${perspective ? 'vue isométrique' : 'perspective'} ; glisser avec le bouton droit pour tourner`;
+};
 el('rotate-building').onclick = () => rotatePlacement();
 syncStorageButtons(); setCategory(currentCategory); applyTool('select');
 document.addEventListener('keydown', event => {
@@ -348,6 +354,7 @@ async function start() {
       if (info) el('area-feedback').textContent = `${info.width} × ${info.height} · ${info.eligible} case(s) retenue(s) · ${info.skipped} ignorée(s) — Relâcher pour appliquer · Échap pour annuler`;
     };
     if (snapshot) renderer.setWorld(snapshot);
+    await renderer.preparePresentation();
     el('loading').remove();
     if (import.meta.env.DEV && params.has('e2e')) Object.defineProperty(window, '__lisiere', { value: {
       get world() { return structuredClone(snapshot); }, get backend() { return renderer?.backend; },
