@@ -107,7 +107,7 @@ test('colonie matérielle : réserve filtrée, transport visible, trois couchage
   await page.locator('#save').click();
   await expect(page.getByRole('status')).toContainText('sauvegardée');
   const saved = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!) as World, saveKey);
-  expect(saved.schemaVersion).toBe(8);
+  expect(saved.schemaVersion).toBe(9);
   expect(saved.pawns.some(pawn => pawn.haul?.phase === 'deliver')).toBe(true);
   expect(JSON.stringify(saved)).toBe(JSON.stringify(duringHaul));
 
@@ -229,7 +229,7 @@ test('frontières : commandes répétées, sauvegarde invalide atomique, aide et
   expect((await world(page)).structures.find(structure => structure.kind === 'bed')?.footprint).toBe('legacy-single');
   await panel(page, 'menu'); await page.locator('#save').click();
   await expect(page.getByRole('status')).toContainText('sauvegardée');
-  expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).schemaVersion, saveKey)).toBe(8);
+  expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).schemaVersion, saveKey)).toBe(9);
   expect(errors).toEqual([]);
 });
 

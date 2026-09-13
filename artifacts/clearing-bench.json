@@ -1,0 +1,53 @@
+{
+  "date": "2026-09-13T22:12:37.060Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "map": "250x250 seed 42",
+  "conditions": "1 warmup + 3 measured runs, 700 ticks; generation excluded; no concurrent tests/browser load",
+  "rows": [
+    {
+      "pawns": 3,
+      "obstructed": false,
+      "ticks": 2100,
+      "planted": 12,
+      "expected": 12,
+      "p50Ms": 0.0026000000000294676,
+      "p95Ms": 0.029899999999997817,
+      "p99Ms": 3.956299999999942,
+      "maxMs": 43.6789
+    },
+    {
+      "pawns": 3,
+      "obstructed": true,
+      "ticks": 2100,
+      "planted": 12,
+      "expected": 12,
+      "p50Ms": 0.002300000000104774,
+      "p95Ms": 0.06730000000015934,
+      "p99Ms": 5.3297000000000025,
+      "maxMs": 13.40890000000013
+    },
+    {
+      "pawns": 30,
+      "obstructed": false,
+      "ticks": 2100,
+      "planted": 120,
+      "expected": 120,
+      "p50Ms": 0.011099999999714782,
+      "p95Ms": 0.28799999999955617,
+      "p99Ms": 34.82180000000062,
+      "maxMs": 506.0486999999998
+    },
+    {
+      "pawns": 30,
+      "obstructed": true,
+      "ticks": 2100,
+      "planted": 120,
+      "expected": 120,
+      "p50Ms": 0.015200000001641456,
+      "p95Ms": 10.871500000001106,
+      "p99Ms": 73.79100000000108,
+      "maxMs": 334.6850000000013
+    }
+  ]
+}

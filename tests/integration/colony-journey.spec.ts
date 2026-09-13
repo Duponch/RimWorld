@@ -4,6 +4,19 @@ import { playerDecisions, colonySummary, woodAccount, foodAccount } from '../sce
 import { validateWorld } from '../../src/sim/index';
 import { world, observeErrors, panel, tool, cell, dragRectangle, expectWorld } from './helpers';
 
+// Full tracing recorded ~500 MB during a stalled run. Keep compact checkpoints
+// and an explicit final screenshot here; the short journeys retain full traces.
+test.use({trace:'off'});
+async function waitForTick(page:Page,tick:number):Promise<void> {
+  let timer:ReturnType<typeof setTimeout>|undefined;
+  try {
+    await Promise.race([
+      page.waitForFunction(t=>window.__lisiere.tick>=t,tick,{polling:1000,timeout:30000}),
+      new Promise<never>((_,reject)=>{timer=setTimeout(()=>reject(new Error(`Browser stopped responding while advancing to tick ${tick}; inspect hourly-world attachments.`)),35000);}),
+    ]);
+  } finally {clearTimeout(timer);}
+}
+
 async function perform(page: Page, decision: Decision, rotation: { value: number }): Promise<void> {
   const c=decision.command;
   if(c.type==='priority') {
@@ -54,10 +67,11 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
     for(let hour=0;hour<=72;hour+=4) {
       if(hour) {
         await page.locator('[data-speed="6"]').click();
-        await page.waitForFunction(tick=>window.__lisiere.world.tick>=tick,initial.tick+hour*250,{polling:1000,timeout:30000});
+        await waitForTick(page,initial.tick+hour*250);
         await page.locator('[data-speed="0"]').click();await expect(page.locator('#pause-banner')).toBeVisible();
       }
       const current=await world(page), summary=colonySummary(current), context=JSON.stringify(summary);
+      await testInfo.attach(`hourly-world-${hour}`,{contentType:'application/json',body:JSON.stringify(current)});
       expect(validateWorld(current),context).toEqual([]);expect(woodAccount(current),context).toBe(initialWood);
       expect(current.pawns.every(p=>p.hunger>0&&p.rest>0),context).toBe(true);
       for(const e of current.events)if(e.type==='need'&&e.message.includes('a mangé une portion'))meals.set(`${e.tick}:${e.message}`,Number(e.message.match(/portion \((\d+) /)?.[1] ?? 0));
@@ -85,6 +99,9 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
     await testInfo.attach('colony-journey',{contentType:'application/json',body:JSON.stringify(finalReport)});
   } finally {
     if(!finalReport)await testInfo.attach('colony-journey-incomplete',{contentType:'application/json',body:JSON.stringify({days,decisions,meals:[...meals],errors})});
-    await browser.close();
+    // A frozen renderer must not hold the test worker indefinitely in teardown.
+    let timer:ReturnType<typeof setTimeout>|undefined;
+    try {await Promise.race([browser.close(),new Promise<void>(resolve=>{timer=setTimeout(resolve,5000);})]);}
+    finally {clearTimeout(timer);}
   }
 });

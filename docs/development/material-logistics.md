@@ -1,5 +1,7 @@
 # Contrat de la boucle matérielle G0
 
+Depuis V9, le [dégagement des cultures](farming.md#dégagement-matériel-v9) ajoute une destination de dépôt local `aside`, sans réserve fictive. Source, quantité portée, capacité et type de pile restent réservés selon ce contrat. Le transport relève alors de Culture ; le dégagement des empreintes de construction reste absent.
+
 Références : rapport utilisateur chapitres 2, 4, 5, 9 et 10 ; SYS-005/020..022/041..061 ; scénarios A et familles F1/F2/F3. La [liste des écarts](../gameplay/decisions.md) distingue les règles retenues des limites temporaires. Les résultats exécutés sont consignés dans [validation.md](validation.md).
 
 Extension V5 : [objets alimentaires](food-items.md), identité `item`, quantités réservées et limites de pile par définition. Les détails historiques V2/V3 ci-dessous restent datés de leurs tranches.

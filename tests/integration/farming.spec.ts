@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { createWorld, serializeWorld, validateWorld } from '../../src/sim/index';
-import { refreshStock } from '../../src/sim/materials';
+import { addGroundMaterial, refreshStock } from '../../src/sim/materials';
 import { observeErrors, world, panel, tool, cell, dragRectangle, expectWorld, saveKey } from './helpers';
 
 test('culture par interface : champ, semis GPU, inspection, politiques, maturitÃ© et sauvegarde', async ({playwright}, testInfo) => {
@@ -11,7 +11,8 @@ test('culture par interface : champ, semis GPU, inspection, politiques, maturitÃ
   try {
     const initial=createWorld(42,32,32);
     initial.resources=[]; initial.tiles=initial.tiles.map(()=>({terrain:'grass'}));
-    initial.pawns.forEach(p=>{p.hunger=100;p.rest=100;});refreshStock(initial);
+    initial.pawns.forEach(p=>{p.hunger=100;p.rest=100;p.priorities.haul=0;});
+    addGroundMaterial(initial,'wood',25,{x:18,z:16});refreshStock(initial);
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
     await page.goto('/?size=32&seed=42&e2e');await expect(page.locator('#loading')).toHaveCount(0);
     await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();
@@ -22,6 +23,10 @@ test('culture par interface : champ, semis GPU, inspection, politiques, maturitÃ
     await page.keyboard.press('Escape');await page.locator('[data-speed="6"]').click();
     await expect.poll(async()=>(await world(page)).resources.filter(r=>r.kind==='rice').length,{timeout:15000}).toBe(6);
     await page.locator('[data-speed="0"]').click();await cell(page,18,16);
+    const cleared=await world(page);
+    expect(cleared.stock.wood).toBe(initial.stock.wood);
+    expect(cleared.stockpiles).toEqual([]);
+    expect(cleared.piles.some(p=>p.owner.type==='ground'&&p.owner.x===18&&p.owner.z===16)).toBe(false);
     await expect(page.locator('#cell-title')).toHaveText('Plant de riz');
     await expect(page.locator('#cell-description')).toContainText('Croissance');
     await page.locator('#growing-allowSow').uncheck();await page.locator('#growing-allowCut').uncheck();

@@ -196,3 +196,12 @@ Les variantes de projection/LOD sont précompilées sous l'écran initial. La ca
 V8 : [contrat](farming.md), [recherche](../research/farming-reference.md). La simulation possède les zones, leur curseur de découverte bornée et la lumière naturelle du preset sérialisé. Les travaux automatiques utilisent les réservations ordinaires ; une association explicite les distingue des ordres du joueur. Le module Farming porte ces règles, le moteur conserve l’orchestration. L’intégrale lumineuse périodique remplace la fenêtre binaire après migration conservatrice de la croissance acquise.
 
 Le riz a son propre lot GPU à emplacements réutilisables. Les couches forêt et vue distante l’ignorent. Les zones n’ont que des contours, sans matérialiser un mesh par case. Le rendu lit les mêmes checkpoints de croissance sans les modifier. Cette première espèce ne clôture pas l’agriculture : les dépendances absentes restent listées dans le contrat.
+
+
+## ADR-023 — Dégagement local et décision alimentaire
+
+V9 adopte [ces règles vérifiées](../research/food-clearing-reference.md). `haul-aside.ts` trouve un dépôt agricole dans le budget du planner ; `hauling.ts`, extrait du moteur, exécute les transferts physiques. La destination `aside` réserve une capacité/type sur une case, comme le stockage, sans créer une réserve fictive. Elle relève de Culture. La simulation reste l’autorité ; aucun nouveau travail par image ou objet GPU n’est ajouté.
+
+Le classement alimentaire est extrait dans `food-selection.ts`. L’objectif de recherche correspond au classement, pour que l’optimisation de proximité ne fasse pas disparaître les aliments préférés. La migration V8→V9 valide d’abord l’ancien état puis change la version ; aucune pile, trajectoire ou ingestion engagée n’est modifiée. Les décisions futures utilisent les nouvelles règles. La limitation connue du portage à dix unités reste explicite.
+
+L’audit de dégagement a identifié les parcours complets répétés du planner. Il essaie désormais le premier travail admissible selon le même classement si le transport ordinaire n’a pas de priorité supérieure. Une recherche ciblée réussie suffit ; si le travail est inaccessible, sa composante parcourue est réutilisée pour le repli. Un résultat partiel ne classe jamais les autres travaux. La recherche de dépôt parcourt localement la composante structurelle de la source accessible et partage le budget de paires existant. La congestion temporaire reste gérée lors du déplacement.

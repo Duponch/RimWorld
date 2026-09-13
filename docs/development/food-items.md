@@ -39,3 +39,10 @@ Deux scénarios profonds couvrent réservations de plusieurs unités, compétiti
 ## Mise à jour spatiale V6
 
 Le [contrat sol, mouvement et rendu distant](spatial-motion-storage.md) remplace les descriptions antérieures de piles multiples au sol et du BFS cardinal. La migration V5→V6 est explicite ; le comportement des buissons reste un chantier ouvert.
+
+
+## Mise à jour V9 : sélection des aliments
+
+Le défaut historique de disparition des buissons décrit plus haut a été corrigé en V7, puis le riz ajouté en V8. En V9, [la nouvelle vérification des sources](../research/food-clearing-reference.md) remplace le choix par seul trajet : le profil adulte neutre compare préférence et distance, après réservation et accessibilité. Baies 0, ration de survie −5, riz cru −82 ; on soustrait la distance Manhattan. Les durées de trajet restent euclidiennes. Les réservations/ingestions en cours continuent ; seules les futures décisions changent. Les profils `legacy` gardent leur économie antérieure.
+
+`food-selection.ts` classe les candidats et fournit l’objectif de recherche ; `needs.ts` garde les interruptions et l’arbitrage entre besoins ; `eating.ts` exécute le repas physique. La recherche s’arrête sur le meilleur candidat accessible, ou examine la composante entière si le candidat visé est inaccessible. Le transporteur affamé compare aussi sa cargaison : il peut la déposer sans perte pour prendre un meilleur aliment à proximité. Fraîcheur, intoxication, politiques alimentaires et cuisine restent absentes, sans bonus fictif dans le score.

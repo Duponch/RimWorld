@@ -11,6 +11,37 @@ function fixture() {
   refreshStock(w); return w;
 }
 
+test('food choice: neutral-adult taste, distance, inaccessible meals, legacy economy and held raw cargo', () => {
+  // Fresh berries outrank survival packs by five cells; rice raw-food thought
+  // is an optimality penalty, not an absolute prohibition against eating it.
+  for (const [berryX, expected] of [[6,'berries'],[9,'berries'],[10,'survival-meal'],[12,'survival-meal']] as const) {
+    const w=fixture();w.pawns=w.pawns.slice(0,1);const p=w.pawns[0]!;
+    addGroundMaterial(w,'food',20,{x:3,z:2},'rice');
+    addGroundMaterial(w,'food',1,{x:5,z:2},'survival-meal');
+    addGroundMaterial(w,'food',20,{x:berryX,z:2},'berries');
+    stepWorld(w);expect(p.need?.kind).toBe('eat');
+    const id=p.need?.kind==='eat'?(p.need.carryPileId??p.need.sourcePileId):0;
+    expect(w.piles.find(p=>p.id===id)?.item).toBe(expected);expect(validateWorld(w)).toEqual([]);
+  }
+  const blocked=fixture();blocked.pawns=blocked.pawns.slice(0,1);
+  addGroundMaterial(blocked,'food',20,{x:3,z:2},'rice');addGroundMaterial(blocked,'food',20,{x:10,z:2},'berries');
+  for(let z=0;z<blocked.height;z++)blocked.tiles[z*blocked.width+8]={terrain:'water'};
+  stepWorld(blocked);expect(blocked.pawns[0]!.need).toMatchObject({kind:'eat',quantity:16});
+  expect(blocked.piles.find(p=>p.owner.type==='pawn')?.item).toBe('rice');
+  expect(validateWorld(blocked)).toEqual([]);
+  const legacy=fixture();legacy.pawns=legacy.pawns.slice(0,1);legacy.foodRules='legacy';
+  addGroundMaterial(legacy,'food',20,{x:3,z:2},'rice');addGroundMaterial(legacy,'food',20,{x:5,z:2},'berries');
+  stepWorld(legacy);expect(legacy.piles.find(p=>p.owner.type==='pawn')?.item).toBe('rice');
+  const carrying=fixture();carrying.pawns=carrying.pawns.slice(0,1);const p=carrying.pawns[0]!;p.hunger=100;p.priorities.haul=1;
+  addGroundMaterial(carrying,'food',10,{x:3,z:2},'rice');
+  applyCommand(carrying,{type:'stockpile',enabled:true,x:12,z:12,filters:{wood:false,food:true}});
+  stepWorld(carrying);expect(p.haul?.phase).toBe('deliver');
+  addGroundMaterial(carrying,'food',20,{x:5,z:2},'berries');p.hunger=20;p.needCooldown=0;stepWorld(carrying);
+  expect(p.haul).toBeNull();const selected=p.need?.kind==='eat'?p.need.sourcePileId:0;
+  expect(carrying.piles.find(pile=>pile.id===selected)?.item).toBe('berries');
+  expect(carrying.piles.filter(p=>p.item==='rice').reduce((n,p)=>n+p.quantity,0)).toBe(10);expect(validateWorld(carrying)).toEqual([]);
+});
+
 test.each(['berries','rice'] as const)('aliments (%s) : réservations fractionnées, repas simultanés, interruption et continuation sans conversion ni duplication', item => {
   const w = fixture(); addGroundMaterial(w, 'food', 20, { x: 6, z: 3 }, item);
   let consumed = 0, nutrition = 0; const phases = new Map<string, string>();

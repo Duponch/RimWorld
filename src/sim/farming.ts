@@ -11,6 +11,7 @@ const index = (world: World, cell: { x: number; z: number }) => cell.z * world.w
 // Derived indices contain no continuation state. Producers replace the arrays;
 // save/resume reconstructs these indices and retains the serialized scan cursor.
 const resourcesCache = new WeakMap<World, { source: Resource[]; cells: Map<number, Resource> }>();
+export const resourceAt = (world: World, cell: number): Resource | undefined => resourceCells(world).get(cell);
 function resourceCells(world: World): Map<number, Resource> {
   let cached = resourcesCache.get(world);
   if (!cached || cached.source !== world.resources) {
@@ -33,12 +34,11 @@ export const growingZoneAt = (world: World, cell: number): GrowingZone | undefin
 export function jobDuration(world: World, job: Job): number {
   return (job.kind === 'harvest' || job.kind === 'cut') && resourceCells(world).get(index(world, job))?.kind === 'rice' ? 20 : JOB_DURATION[job.kind];
 }
-interface Context { resources: Map<number, Resource>; fixed: Set<number>; ground: Set<number> }
+interface Context { resources: Map<number, Resource>; fixed: Set<number> }
 function context(world: World): Context {
   return {
     resources: resourceCells(world),
     fixed: new Set([...world.structures, ...world.jobs.filter(j => ['wall', 'bed', 'table', 'stool'].includes(j.kind))].flatMap(s => footprintCells(s).map(c => index(world, c)))),
-    ground: new Set(world.piles.flatMap(p => p.owner.type === 'ground' ? [index(world, p.owner)] : [])),
   };
 }
 function intention(world: World, zone: GrowingZone, cell: number, ctx: Context): { kind: JobKind; cell: number } | null {
@@ -49,7 +49,8 @@ function intention(world: World, zone: GrowingZone, cell: number, ctx: Context):
   }
   if (!zone.allowSow) return null;
   if (plant) return zone.allowCut && plant.kind !== 'rock' ? { kind: plant.kind === 'tree' ? 'chop' : 'cut', cell } : null;
-  if (!['grass', 'soil'].includes(world.tiles[cell]!.terrain) || ctx.ground.has(cell)) return null;
+  // A sowing intention stays pending while its floor items are hauled aside.
+  if (!['grass', 'soil'].includes(world.tiles[cell]!.terrain)) return null;
   const x = cell % world.width, z = Math.floor(cell / world.width);
   for (const [dx, dz] of [[0, -1], [1, 0], [0, 1], [-1, 0]]) {
     const nx = x + dx!, nz = z + dz!;

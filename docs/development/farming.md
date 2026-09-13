@@ -31,6 +31,15 @@ Schéma **8** : zones, paramètres, curseur, environnement, métier Culture, riz
 
 ## Écarts restant ouverts
 
-Les piles bloquant un semis attendent le transport existant vers une réserve : l'ordre de déplacement local automatique « mettre de côté » de RimWorld manque encore. Il en va de même des fragments de roche décoratifs non collectables. Ce sont des limites connues, pas un champ déclaré terminé. Le coût de déplacement dans les plantes, leurs points de vie, leur mortalité, le blocage fin entre espèces et les aptitudes du cultivateur restent ouverts. Le système actuel ne simule ni maladies des plantes ni perte de rendement liée à une mauvaise compétence. D'autres cultures, sols et biomes sont prévus sans être implicitement présents.
+Depuis V9, les piles bloquant un semis sont déplacées physiquement hors des cultures par le cultivateur, même sans réserve et avec Transport désactivé. Les fragments de roche décoratifs restent non collectables. Ce sont des limites connues, pas un champ déclaré terminé. Le coût de déplacement dans les plantes, leurs points de vie, leur mortalité, le blocage fin entre espèces et les aptitudes du cultivateur restent ouverts. Le système actuel ne simule ni maladies des plantes ni perte de rendement liée à une mauvaise compétence. D'autres cultures, sols et biomes sont prévus sans être implicitement présents.
 
 Les scénarios approfondis prolongent `plant-cycle.test.ts`, le joueur ordinaire et son parcours UI : croissance indépendante de la cadence d'observation, interruption, réglages, reprise exacte, premier rendement physique, stockage, second semis et stabilité des buffers. Les preuves d'exécution sont dans [validation](validation.md).
+
+
+## Dégagement matériel (V9)
+
+[Recherche et décisions](../research/food-clearing-reference.md), SYS-051..061/070..072. L’intention de semis reste en attente devant une pile. Le planner lui substitue un transport local de priorité Culture ; aucun plant ne naît sur une pile restée au sol. La capacité de portage existante (10 unités, calibration provisoire) peut demander plusieurs trajets. Les réservations de source et de destination respectent les autres transporteurs et les repas. Un dépôt compatible fusionne la pile ; un autre type exige une autre case.
+
+La destination doit être accessible et hors de toutes les cultures, objets de décor et empreintes de travaux/constructions. Une réserve compatible peut la recevoir, sinon un sol libre suffit. Si aucun dépôt n’existe, le colon laisse les matériaux en place. La recherche locale partage le budget de paires du planner et sa grille déjà calculée ; les valeurs ne dépendent pas de l’horloge réelle.
+
+Une case réservée pour ce dépôt ne reçoit pas entre-temps un plan, une nouvelle culture ou une modification de stockage. Désactiver Culture interrompt le transport avec dépôt conservatif ; désactiver Transport ne l’interrompt pas. Retirer le champ ou modifier sa politique annule les semis suivants ; le déplacement déjà engagé termine son dépôt, qui n’a pas de référence fragile au champ supprimé. Une fatigue ou une faim prioritaire peut l’interrompre normalement.

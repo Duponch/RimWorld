@@ -98,7 +98,7 @@ export function routeToJob(world: World, target: Cell & { kind?: string; orienta
 }
 
 /** Same interaction cells as routeToJob(..., true) for single-cell food piles. */
-export function foodInteractionGoals(world: World, cells: Cell[]): Set<number> {
+export function interactionGoals(world: World, cells: Cell[]): Set<number> {
   const goals = new Set<number>();
   for (const cell of cells) {
     const index = cellIndex(world, cell.x, cell.z); goals.add(index);

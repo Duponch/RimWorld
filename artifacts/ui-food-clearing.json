@@ -1,0 +1,440 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "E:\\Code\\RimWorld\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "tests/integration/farming.spec.ts",
+      "tests/integration/colony-journey.spec.ts",
+      "tests/integration/colony.spec.ts",
+      "--grep",
+      "culture par interface|partie de trois jours|colonie matérielle|frontières",
+      "--reporter=json"
+    ],
+    "configFile": "E:\\Code\\RimWorld\\playwright.config.ts",
+    "rootDir": "E:/Code/RimWorld/tests/integration",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "E:/Code/RimWorld/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "E:/Code/RimWorld/tests/integration",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": {
+      "command": "npm run dev",
+      "url": "http://127.0.0.1:5173",
+      "reuseExistingServer": true,
+      "timeout": 30000
+    }
+  },
+  "suites": [
+    {
+      "title": "colony-journey.spec.ts",
+      "file": "colony-journey.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "partie de trois jours : un joueur équipe son camp et entretient ses stocks par la vraie interface",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 480000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "timedOut",
+                  "duration": 485021,
+                  "error": {
+                    "message": "\u001b[31mTest timeout of 480000ms exceeded.\u001b[39m",
+                    "stack": "\u001b[31mTest timeout of 480000ms exceeded.\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "message": "\u001b[31mTest timeout of 480000ms exceeded.\u001b[39m"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "Répartir collecte, construction et transport entre les trois colons. {\"type\":\"priority\",\"pawnId\":12409,\"work\":\"gather\",\"value\":1}",
+                      "duration": 467
+                    },
+                    {
+                      "title": "Répartir collecte, construction et transport entre les trois colons. {\"type\":\"priority\",\"pawnId\":12409,\"work\":\"build\",\"value\":3}",
+                      "duration": 253
+                    },
+                    {
+                      "title": "Répartir collecte, construction et transport entre les trois colons. {\"type\":\"priority\",\"pawnId\":12409,\"work\":\"haul\",\"value\":2}",
+                      "duration": 274
+                    },
+                    {
+                      "title": "Répartir collecte, construction et transport entre les trois colons. {\"type\":\"priority\",\"pawnId\":12410,\"work\":\"gather\",\"value\":3}",
+                      "duration": 236
+                    },
+                    {
+                      "title": "Répartir collecte, construction et transport entre les trois colons. {\"type\":\"priority\",\"pawnId\":12410,\"work\":\"build\",\"value\":1}",
+                      "duration": 243
+                    },
+                    {
+                      "title": "Répartir collecte, construction et transport entre les trois colons. {\"type\":\"priority\",\"pawnId\":12410,\"work\":\"haul\",\"value\":2}",
+                      "duration": 257
+                    },
+                    {
+                      "title": "Répartir collecte, construction et transport entre les trois colons. {\"type\":\"priority\",\"pawnId\":12410,\"work\":\"grow\",\"value\":3}",
+                      "duration": 237
+                    },
+                    {
+                      "title": "Répartir collecte, construction et transport entre les trois colons. {\"type\":\"priority\",\"pawnId\":12411,\"work\":\"build\",\"value\":3}",
+                      "duration": 249
+                    },
+                    {
+                      "title": "Répartir collecte, construction et transport entre les trois colons. {\"type\":\"priority\",\"pawnId\":12411,\"work\":\"haul\",\"value\":1}",
+                      "duration": 230
+                    },
+                    {
+                      "title": "Aménager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"bed\",\"x\":125,\"z\":127,\"orientation\":0}",
+                      "duration": 796
+                    },
+                    {
+                      "title": "Aménager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"bed\",\"x\":128,\"z\":127,\"orientation\":0}",
+                      "duration": 609
+                    },
+                    {
+                      "title": "Séparer le bois et les aliments près du camp. {\"type\":\"stockpile\",\"x\":123,\"z\":125,\"enabled\":true,\"filters\":{\"wood\":true,\"food\":false},\"priority\":2,\"capacity\":75}",
+                      "duration": 878
+                    },
+                    {
+                      "title": "Séparer le bois et les aliments près du camp. {\"type\":\"stockpile\",\"x\":123,\"z\":126,\"enabled\":true,\"filters\":{\"wood\":true,\"food\":false},\"priority\":2,\"capacity\":75}",
+                      "duration": 773
+                    },
+                    {
+                      "title": "Séparer le bois et les aliments près du camp. {\"type\":\"stockpile\",\"x\":127,\"z\":126,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":true},\"priority\":2,\"capacity\":75}",
+                      "duration": 916
+                    },
+                    {
+                      "title": "Séparer le bois et les aliments près du camp. {\"type\":\"stockpile\",\"x\":127,\"z\":125,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":true},\"priority\":2,\"capacity\":75}",
+                      "duration": 746
+                    },
+                    {
+                      "title": "Séparer le bois et les aliments près du camp. {\"type\":\"stockpile\",\"x\":127,\"z\":124,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":true},\"priority\":2,\"capacity\":75}",
+                      "duration": 700
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":123,\"z\":123}",
+                      "duration": 594
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":122,\"z\":127}",
+                      "duration": 573
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":124,\"z\":120}",
+                      "duration": 580
+                    },
+                    {
+                      "title": "Aménager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"bed\",\"x\":122,\"z\":127,\"orientation\":0}",
+                      "duration": 653
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":129,\"z\":123}",
+                      "duration": 643
+                    },
+                    {
+                      "title": "Aménager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"table\",\"x\":125,\"z\":123,\"orientation\":1}",
+                      "duration": 690
+                    },
+                    {
+                      "title": "Aménager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"stool\",\"x\":125,\"z\":122}",
+                      "duration": 696
+                    },
+                    {
+                      "title": "Aménager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"stool\",\"x\":126,\"z\":122}",
+                      "duration": 671
+                    },
+                    {
+                      "title": "Aménager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"stool\",\"x\":125,\"z\":124}",
+                      "duration": 650
+                    },
+                    {
+                      "title": "Semer un premier potager près du camp, tout en continuant à cueillir pendant sa croissance. {\"type\":\"area\",\"action\":\"growing\",\"from\":{\"x\":123,\"z\":130},\"to\":{\"x\":127,\"z\":132}}",
+                      "duration": 1202
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":130,\"z\":126}",
+                      "duration": 698
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":124,\"z\":130}",
+                      "duration": 712
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":125,\"z\":118}",
+                      "duration": 639
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":119,\"z\":124}",
+                      "duration": 636
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":131,\"z\":124}",
+                      "duration": 678
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":120,\"z\":127}",
+                      "duration": 703
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":126,\"z\":118}",
+                      "duration": 677
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":121,\"z\":129}",
+                      "duration": 724
+                    },
+                    {
+                      "title": "Aménager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"wall\",\"x\":122,\"z\":122}",
+                      "duration": 674
+                    },
+                    {
+                      "title": "Aménager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"wall\",\"x\":122,\"z\":123}",
+                      "duration": 690
+                    },
+                    {
+                      "title": "Aménager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"wall\",\"x\":122,\"z\":124}",
+                      "duration": 698
+                    },
+                    {
+                      "title": "Aménager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"wall\",\"x\":128,\"z\":122}",
+                      "duration": 738
+                    },
+                    {
+                      "title": "Aménager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"wall\",\"x\":128,\"z\":123}",
+                      "duration": 729
+                    },
+                    {
+                      "title": "Aménager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"wall\",\"x\":128,\"z\":124}",
+                      "duration": 743
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":120,\"z\":121}",
+                      "duration": 717
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":133,\"z\":126}",
+                      "duration": 982
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":118,\"z\":127}",
+                      "duration": 1119
+                    }
+                  ],
+                  "startTime": "2026-09-13T22:14:58.817Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "E:\\Code\\RimWorld\\test-results\\colony-journey-partie-de-t-625fe-ocks-par-la-vraie-interface\\error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "E:\\Code\\RimWorld\\test-results\\colony-journey-partie-de-t-625fe-ocks-par-la-vraie-interface\\trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "555f966565dc11b6db98-9085b14c50fcc33d1534",
+          "file": "colony-journey.spec.ts",
+          "line": 37,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "colony.spec.ts",
+      "file": "colony.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "colonie matérielle : réserve filtrée, transport visible, trois couchages et reprise exacte en livraison",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 22357,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-13T22:24:20.256Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "898ee7568779c6ec1d61-ce183c5316b7cc287a62",
+          "file": "colony.spec.ts",
+          "line": 65,
+          "column": 1
+        },
+        {
+          "title": "frontières : commandes répétées, sauvegarde invalide atomique, aide et organisation compacte",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 45687,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-13T22:24:42.661Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "898ee7568779c6ec1d61-8be099c4578f04cf9ca8",
+          "file": "colony.spec.ts",
+          "line": 160,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "farming.spec.ts",
+      "file": "farming.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "culture par interface : champ, semis GPU, inspection, politiques, maturité et sauvegarde",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 12159,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-13T22:25:29.148Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "farming-state",
+                      "contentType": "application/json",
+                      "body": "eyJ0aWNrIjoyNDEsImNyb3BzIjowLCJyaWNlIjozNiwiZXJyb3JzIjpbXX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "89f7eeb47ad10b11e29f-64945e41828e6e654fc6",
+          "file": "farming.spec.ts",
+          "line": 6,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-13T22:14:55.847Z",
+    "duration": 645815.922,
+    "expected": 3,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

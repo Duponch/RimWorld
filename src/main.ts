@@ -165,7 +165,7 @@ function rebuildInspector() {
 function actionLabel(pawn: Pawn) {
   if (pawn.need) return queryPawnStatus(snapshot!, pawn).reason;
   if (pawn.haul) {
-    const destination = pawn.haul.destination.type === 'job' ? 'chantier' : 'réserve';
+    const destination = pawn.haul.destination.type === 'job' ? 'chantier' : pawn.haul.destination.type === 'aside' ? 'bord du champ' : 'réserve';
     const carried = snapshot?.piles.find(pile => pile.id === pawn.haul!.carryPileId);
     return pawn.haul.phase === 'pickup' ? `Prélèvement · ${pawn.haul.quantity} unités pour ${destination}`
       : `Livraison · ${carried?.quantity ?? pawn.haul.quantity} ${carried ? ITEM_DEFINITIONS[carried.item].label : 'unités'} → ${destination}`;
@@ -363,7 +363,7 @@ async function start() {
     await renderer.preparePresentation();
     el('loading').remove();
     if (import.meta.env.DEV && params.has('e2e')) Object.defineProperty(window, '__lisiere', { value: {
-      get world() { return structuredClone(snapshot); }, get backend() { return renderer?.backend; },
+      get world() { return structuredClone(snapshot); }, get tick() { return snapshot?.tick ?? 0; }, get backend() { return renderer?.backend; },
       projectCell: (x: number, z: number) => renderer!.projectCell(x, z),
     } });
   } catch (error) {

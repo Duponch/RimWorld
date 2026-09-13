@@ -90,7 +90,8 @@ export function reservedSource(world: World, pileId: number, exceptPawn?: number
 }
 export function sameDestination(a: HaulDestination, b: HaulDestination): boolean {
   return a.type === b.type && (a.type === 'job' && b.type === 'job' ? a.jobId === b.jobId
-    : a.type === 'stockpile' && b.type === 'stockpile' && a.stockpileId === b.stockpileId);
+    : a.type === 'stockpile' && b.type === 'stockpile' ? a.stockpileId === b.stockpileId
+      : a.type === 'aside' && b.type === 'aside' && a.x === b.x && a.z === b.z);
 }
 export function reservedDestination(world: World, destination: HaulDestination, exceptPawn?: number): number {
   let quantity = 0;

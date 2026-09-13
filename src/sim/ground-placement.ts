@@ -24,7 +24,9 @@ function cellCapacity(world: World, cell: Cell, item: ItemId, limit: number, exc
   const pile = groundPile(world, cell);
   if (pile && pile.item!==item) return 0;
   let capacity = Math.min(limit,ITEM_DEFINITIONS[item].stackLimit)-(pile?.quantity??0);
-  for (const pawn of world.pawns) if (zone && pawn.id!==exceptPawn && pawn.haul?.destination.type==='stockpile' && pawn.haul.destination.stockpileId===zone.id) {
+  for (const pawn of world.pawns) if (pawn.id!==exceptPawn && pawn.haul && (
+    (zone && pawn.haul.destination.type==='stockpile' && pawn.haul.destination.stockpileId===zone.id)
+    || (pawn.haul.destination.type==='aside' && pawn.haul.destination.x===cell.x && pawn.haul.destination.z===cell.z))) {
     const task=pawn.haul, reserved=world.piles.find(p=>p.id===(task.phase==='pickup'?task.sourcePileId:task.carryPileId));
     if (!reserved || reserved.item!==item) return 0;
     capacity -= task.quantity;

@@ -1,6 +1,7 @@
 import { initializeFarming, validateFarming } from './farming-save.ts';
 import { jobDuration } from './farming.ts';
 import { workType } from './work-planner.ts';
+import { asideCapacity, haulingWork } from './haul-aside.ts';
 import { harvestable, isPlant, legacyPlantGrowth } from './plants.ts';
 import { groundPile, storageCapacity } from './ground-placement.ts';
 import { validateTravel } from './travel-validation.ts';
@@ -23,9 +24,9 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 
 /** Structural validation first, cross-reference validation second; accepts arbitrary JSON without throwing. */
 export function validateWorld(input: unknown): string[] {
-  return validateSchema(input, 8);
+  return validateSchema(input, 9);
 }
-function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8): string[] {
+function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(input)) return ['World must be an object.'];
@@ -96,7 +97,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8): str
           if (record(haul) && haul.pickupCell!==undefined && (version<6 || haul.phase!=='deliver' || !record(haul.pickupCell) || !coord(haul.pickupCell))) errors.push('Invalid pickup facing cell.');
           if (!record(haul) || !integer(haul.sourcePileId, 1) || !integer(haul.quantity, 1, CARRY_CAPACITY) || !oneOf(haul.phase, ['pickup', 'deliver'])
             || !(haul.carryPileId === null || integer(haul.carryPileId, 1)) || !record(haul.destination)
-            || !(haul.destination.type === 'job' ? integer(haul.destination.jobId, 1) : haul.destination.type === 'stockpile' && integer(haul.destination.stockpileId, 1))) errors.push('Invalid haul task.');
+            || !(haul.destination.type === 'job' ? integer(haul.destination.jobId, 1) : haul.destination.type === 'stockpile' ? integer(haul.destination.stockpileId, 1) : version >= 9 && haul.destination.type === 'aside' && coord(haul.destination))) errors.push('Invalid haul task.');
         }
       } else if (key === 'resources') {
         if (!oneOf(item.kind, ['tree', 'berries', 'rock', ...(version >= 8 ? ['rice'] : [])]) || !integer(item.amount, 1, 1000000)) errors.push('Invalid resource.');
@@ -210,7 +211,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8): str
     }
     if (pawn.haul) {
       const haul = pawn.haul;
-      if (pawn.priorities.haul === 0) errors.push('Pawn hauling with disabled work.');
+      if (pawn.priorities[haulingWork(haul.destination)] === 0) errors.push('Pawn hauling with disabled work.');
       if (haul.sourcePileId >= world.nextId) errors.push('Invalid source identity.');
       const pile = pileById.get(haul.phase === 'pickup' ? haul.sourcePileId : haul.carryPileId!);
       if (haul.phase === 'pickup') {
@@ -219,6 +220,9 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8): str
       if (haul.destination.type === 'job') {
         const job = jobById.get(haul.destination.jobId);
         if (!job || pile?.kind !== 'wood' || deliveredStock(world, job.id).wood + reservedDestination(world, haul.destination) > JOB_WOOD_COST[job.kind]) errors.push('Invalid construction delivery reservation.');
+      } else if (haul.destination.type === 'aside') {
+        if (!pile || asideCapacity(world, haul.destination, pile.item, pawn.id) < haul.quantity
+          || (pile.owner.type === 'ground' && cellKey(pile.owner) === cellKey(haul.destination))) errors.push('Invalid clearing destination reservation.');
       } else {
         const zone = world.stockpiles.find(item => haul.destination.type === 'stockpile' && item.id === haul.destination.stockpileId);
         if (!zone || !pile || !zone.filters[pile.kind] || (version>=6 ? storageCapacity(world,zone,pile.item,pawn.id)<haul.quantity : groundQuantity(world, zone) + reservedDestination(world, haul.destination) > zone.capacity)) errors.push('Invalid storage capacity reservation.');
@@ -290,6 +294,11 @@ export function deserializeWorld(serialized: string): World {
   if (record(input) && input.schemaVersion === 7) {
     const errors=validateSchema(input,7); if(errors.length) throw new Error(`Invalid version 7 save: ${errors.join(' ')}`);
     initializeFarming(input as unknown as World);
+  }
+  if (record(input) && input.schemaVersion === 8) {
+    const errors = validateSchema(input, 8); if (errors.length) throw new Error(`Invalid version 8 save: ${errors.join(' ')}`);
+    // Existing paths, reservations and meals continue; only future decisions change.
+    input.schemaVersion = 9;
   }
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`); return input as World;
 }

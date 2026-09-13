@@ -1,6 +1,8 @@
 import { expect, test } from 'vitest';
 import { createWorld } from '../src/sim/engine';
-import { routeCost, blockedCells, foodInteractionGoals, reachableCells, routeToJob } from '../src/sim/pathfinding';
+import { foodSearchGoals, selectFood } from '../src/sim/food-selection';
+import type { MaterialPile } from '../src/sim/types';
+import { routeCost, blockedCells, interactionGoals, reachableCells, routeToJob } from '../src/sim/pathfinding';
 
 test('goal-bounded floods retain the full-flood nearest food and exact path across ties, walls and unreachable goals', () => {
   let random = 123456789, reduced = 0;
@@ -12,11 +14,21 @@ test('goal-bounded floods retain the full-flood nearest food and exact path acro
     const foods = Array.from({ length: 12 }, (_, id) => ({ id, x: draw() % 16, z: (draw() >>> 9) % 16 }));
     const blocked = blockedCells(w), occupied = new Set<number>();
     const full = reachableCells(w, start, blocked, occupied);
-    const bounded = reachableCells(w, start, blocked, occupied, foodInteractionGoals(w, foods));
+    const bounded = reachableCells(w, start, blocked, occupied, interactionGoals(w, foods));
     const select = (reach: typeof full) => foods.flatMap(food => {
       const path = routeToJob(w, food, reach, true); return path ? [{ id: food.id, path }] : [];
     }).sort((a, b) => routeCost(w,a.path,reach) - routeCost(w,b.path,reach) || a.id - b.id)[0] ?? null;
     expect(select(bounded), `seed ${run}`).toEqual(select(full));
+    const sources:MaterialPile[]=foods.filter(f=>!blocked[f.z*16+f.x]).map(f=>({id:f.id+1,kind:'food',item:(['berries','survival-meal','rice'] as const)[f.id%3]!,quantity:10,owner:{type:'ground',x:f.x,z:f.z}}));
+    const pawn={...w.pawns[0]!,...start};
+    const preferredReach=reachableCells(w,start,blocked,occupied,foodSearchGoals(w,pawn,sources));
+    const oracle=sources.flatMap(p=>{
+      if(p.owner.type!=='ground')return [];
+      const path=routeToJob(w,p.owner,full,true);if(!path)return [];
+      const offset=p.item==='rice'?-82:p.item==='survival-meal'?-5:0;
+      return [{id:p.id,path,score:offset-Math.abs(start.x-p.owner.x)-Math.abs(start.z-p.owner.z)}];
+    }).sort((a,b)=>b.score-a.score||a.id-b.id)[0];
+    expect(selectFood(w,pawn,sources,preferredReach),`preferred seed ${run}`).toEqual(oracle);
     if (bounded.parents.filter(parent => parent !== -2).length < full.parents.filter(parent => parent !== -2).length) reduced++;
   }
   expect(reduced).toBeGreaterThan(70);

@@ -24,6 +24,52 @@ function finish(world:World,kind:'harvest'|'cut') {
   expect(world.jobs).toEqual([]);expect(validateWorld(world)).toEqual([]);
 }
 
+test('growers clear mixed stacks without storage: reservations, physical trips, interruption, blocked exits and V8 continuation', () => {
+  const world=createWorld(93,16,16);world.tiles=world.tiles.map(()=>({terrain:'grass'}));world.resources=[];world.piles=[];
+  world.pawns=world.pawns.slice(0,2);world.pawns.forEach((p,i)=>Object.assign(p,{x:3,z:4+i*2,hunger:100,rest:100,priorities:{grow:1,haul:0,gather:0,build:0}}));
+  addGroundMaterial(world,'wood',25,{x:5,z:5});addGroundMaterial(world,'food',12,{x:6,z:5},'rice');
+  expect(applyCommand(world,{type:'area',action:'growing',from:{x:5,z:4},to:{x:7,z:6}}).ok).toBe(true);
+  const phases=new Map<string,string>();let carried=false;
+  for(let tick=0;tick<1600;tick++) {
+    stepWorld(world);expect(validateWorld(world),`tick ${world.tick}`).toEqual([]);
+    expect(world.stock).toEqual({wood:25,food:12});
+    for(const p of world.pawns) if(p.haul?.destination.type==='aside') {
+      phases.set(p.haul.phase,phases.get(p.haul.phase)??serializeWorld(world));
+      expect(world.growingZones.some(z=>z.cells.includes(p.haul!.destination.type==='aside'?p.haul!.destination.z*16+p.haul!.destination.x:-1))).toBe(false);
+      if(p.haul.phase==='deliver') {carried=true;expect(world.piles.find(pile=>pile.id===p.haul!.carryPileId)?.owner).toEqual({type:'pawn',pawnId:p.id});}
+    }
+    if(world.resources.length===9 && world.pawns.every(p=>!p.haul))break;
+  }
+  expect(carried).toBe(true);expect([...phases.keys()].sort()).toEqual(['deliver','pickup']);
+  expect(world.resources.filter(r=>r.kind==='rice')).toHaveLength(9);
+  expect(world.piles.every(p=>p.owner.type==='ground'&&!world.growingZones[0]!.cells.includes(p.owner.z*16+p.owner.x))).toBe(true);
+  for(const saved of phases.values()) {
+    const a=deserializeWorld(saved),b=deserializeWorld(saved);stepWorld(a,150);stepWorld(b,150);expect(serializeWorld(a)).toBe(serializeWorld(b));
+  }
+  const interrupted=deserializeWorld(phases.get('deliver')!),p=interrupted.pawns.find(p=>p.haul?.phase==='deliver')!;
+  const destination=p.haul!.destination;expect(destination.type).toBe('aside');
+  if(destination.type!=='aside')throw new Error('missing clearing destination');
+  const before=serializeWorld(interrupted);
+  expect(applyCommand(interrupted,{type:'designate',kind:'wall',x:destination.x,z:destination.z}).ok).toBe(false);
+  expect(serializeWorld(interrupted)).toBe(before);
+  expect(applyCommand(interrupted,{type:'priority',pawnId:p.id,work:'haul',value:0}).ok).toBe(true);expect(p.haul).not.toBeNull();
+  expect(applyCommand(interrupted,{type:'priority',pawnId:p.id,work:'grow',value:0}).ok).toBe(true);expect(p.haul).toBeNull();
+  expect(interrupted.stock).toEqual({wood:25,food:12});expect(validateWorld(interrupted)).toEqual([]);
+  for(const mutate of [
+    (w:World)=>{w.pawns.find(p=>p.haul?.destination.type==='aside')!.haul!.destination={type:'aside',x:-1,z:0};},
+    (w:World)=>{w.pawns.find(p=>p.haul?.destination.type==='aside')!.haul!.destination={type:'aside',x:5,z:5};},
+    (w:World)=>{w.pawns.find(p=>p.haul?.destination.type==='aside')!.priorities.grow=0;},
+  ]) { const bad=JSON.parse(phases.get('deliver')!);mutate(bad);expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(); }
+  // No outside destination: never pick up an obstruction and strand the cargo.
+  const sealed=createWorld(42,8,8);sealed.resources=[];sealed.piles=[];sealed.tiles=sealed.tiles.map(()=>({terrain:'grass'}));
+  sealed.pawns=sealed.pawns.slice(0,1);Object.assign(sealed.pawns[0]!,{x:2,z:2,hunger:100,rest:100,priorities:{grow:1,haul:0,gather:0,build:0}});
+  addGroundMaterial(sealed,'wood',10,{x:3,z:2});applyCommand(sealed,{type:'area',action:'growing',from:{x:0,z:0},to:{x:7,z:7}});
+  stepWorld(sealed,100);expect(sealed.pawns[0]!.haul).toBeNull();expect(sealed.piles[0]!.owner).toEqual({type:'ground',x:3,z:2});expect(validateWorld(sealed)).toEqual([]);
+  const old=JSON.parse(serializeWorld(world));old.schemaVersion=8;
+  const migrated=deserializeWorld(JSON.stringify(old));expect(migrated.schemaVersion).toBe(9);
+  old.schemaVersion=9;expect(serializeWorld(migrated)).toBe(JSON.stringify(old));
+});
+
 test('renewable bush: conditions, strict threshold, physical yield, repeated harvest, cutting and exact saves',()=>{
   expect(plantGrowthRate(1,21,1)).toBe(1);
   expect(plantGrowthRate(1,21,.7)).toBe(.85);

@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 8 as const;
+export const SCHEMA_VERSION = 9 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
@@ -21,7 +21,7 @@ export type MaterialOwner = ({ type: 'ground' } & Cell) | { type: 'pawn'; pawnId
 export interface MaterialPile { id: number; kind: MaterialKind; item: ItemId; quantity: number; owner: MaterialOwner }
 export interface StockpileCell extends Cell { id: number; filters: Record<MaterialKind, boolean>; priority: number; capacity: number }
 export interface GrowingZone { id: number; cells: number[]; plant: 'rice'; allowSow: boolean; allowCut: boolean }
-export type HaulDestination = { type: 'stockpile'; stockpileId: number } | { type: 'job'; jobId: number };
+export type HaulDestination = { type: 'stockpile'; stockpileId: number } | { type: 'job'; jobId: number } | ({ type: 'aside' } & Cell);
 export interface HaulTask {
   sourcePileId: number;
   quantity: number;

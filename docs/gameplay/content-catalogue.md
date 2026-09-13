@@ -34,3 +34,6 @@ Le contenu restant comprend notamment métaux et pierres, composants, textiles e
 Chaque ajout doit avoir un identifiant stable, famille CAT, source/version et champs confirmés, règles réellement disponibles, variantes encore absentes, référence de test et représentation. Les noms traduits ne servent jamais d'identifiants de sauvegarde.
 
 L'inventaire des personnes, leurs vêtements et les portraits ont un [contrat distinct](../development/character-presentation.md), actuellement prévu et non livré.
+
+
+V9 enrichit les interactions des objets existants : bois et aliments peuvent être déplacés hors des cultures ; baies, riz et rations ont un classement alimentaire neutre vérifié. Aucun nouvel objet ni fragment de roche collectable n’est ajouté par cette tranche. Voir [sources et limites](../research/food-clearing-reference.md).

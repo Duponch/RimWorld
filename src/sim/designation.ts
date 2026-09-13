@@ -25,6 +25,7 @@ export function buildAreaIndex(world: World): AreaIndex {
   for (const structure of world.structures) for (const cell of footprintCells(structure)) flags[index(cell)]! |= FIXED;
   for (const job of world.jobs) for (const cell of footprintCells(job)) flags[index(cell)]! |= JOB;
   for (const storage of world.stockpiles) flags[index(storage)]! |= STORAGE;
+  for (const pawn of world.pawns) if (pawn.haul?.destination.type === 'aside') flags[index(pawn.haul.destination)]! |= BLOCKED;
   for (const zone of world.growingZones) for (const cell of zone.cells) flags[cell]! |= GROWING;
   return { flags };
 }

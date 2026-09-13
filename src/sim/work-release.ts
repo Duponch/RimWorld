@@ -1,5 +1,6 @@
 import type { Cell, Command, MaterialPile, Pawn, World } from './types.ts';
 import { workType } from './work-planner.ts';
+import { haulingWork } from './haul-aside.ts';
 import { footprintCells } from './definitions.ts';
 import { queryArea } from './designation.ts';
 import { dropRetainingIdentity } from './ground-placement.ts';
@@ -21,11 +22,11 @@ export function planCommandDrops(world:World,command:Command):DropPlan|null {
     const zone=world.stockpiles.find(z=>same(z,command));if(zone)zones.add(zone.id);
   } else if(command.type==='priority'&&command.value===0) {
     const pawn=world.pawns.find(p=>p.id===command.pawnId),job=world.jobs.find(j=>j.id===pawn?.jobId);
-    if(pawn&&((pawn.haul&&command.work==='haul')||(job&&workType(job)===command.work)))pawns.add(pawn.id);
+    if(pawn&&((pawn.haul&&command.work===haulingWork(pawn.haul.destination))||(job&&workType(job)===command.work)))pawns.add(pawn.id);
   } else if(command.type==='assign-bed') {
     for(const pawn of world.pawns)if(pawn.need?.kind==='sleep'&&(pawn.bedId===command.bedId||pawn.id===command.pawnId))pawns.add(pawn.id);
   }
-  for(const pawn of world.pawns)if((pawn.jobId!==null&&jobs.has(pawn.jobId))||(pawn.haul&&(pawn.haul.destination.type==='job'?jobs.has(pawn.haul.destination.jobId):zones.has(pawn.haul.destination.stockpileId))))pawns.add(pawn.id);
+  for(const pawn of world.pawns)if((pawn.jobId!==null&&jobs.has(pawn.jobId))||(pawn.haul&&(pawn.haul.destination.type==='job'?jobs.has(pawn.haul.destination.jobId):pawn.haul.destination.type==='stockpile'&&zones.has(pawn.haul.destination.stockpileId))))pawns.add(pawn.id);
   const result:DropPlan=new Map();
   if(!jobs.size&&!pawns.size)return result;
   const shadow={...world,piles:world.piles.map(p=>({...p,owner:{...p.owner}}))};

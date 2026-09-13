@@ -6,7 +6,7 @@ export function initializeFarming(world: World): void {
   for (const plant of world.resources) if (plant.kind === 'berries') {
     plant.growth = legacyPlantGrowth(world, plant); plant.growthTick = world.tick;
   }
-  world.schemaVersion = 8; world.environment = 'temperate-equinox-v1';
+  (world as unknown as { schemaVersion: number }).schemaVersion = 8; world.environment = 'temperate-equinox-v1';
   world.growingZones = []; world.growingCursor = 0;
   for (const pawn of world.pawns) pawn.priorities.grow = 2;
 }

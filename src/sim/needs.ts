@@ -1,10 +1,11 @@
 import { routeCost } from './pathfinding.ts';
-import { routeToCell, routeToJob, foodInteractionGoals } from './pathfinding.ts';
+import { routeToCell } from './pathfinding.ts';
 import type { Reachability } from './pathfinding.ts';
 import { reservedSource } from './materials.ts';
 import { mealQuantity, adultHungerFactor } from './items.ts';
 import { TICKS_PER_DAY } from './types.ts';
 import { processEating } from './eating.ts';
+import { foodScore, foodSearchGoals, selectFood } from './food-selection.ts';
 import { updateWellbeing } from './wellbeing.ts';
 import { footprintCells } from './definitions.ts';
 import type { Cell, Pawn, World } from './types.ts';
@@ -50,20 +51,16 @@ export function processNeeds(world: World, pawn: Pawn, context: NeedContext): bo
     // A hungry hauler already holding food may reserve a meal quantity for ingestion.
     const held = world.piles.find(pile => pile.owner.type === 'pawn' && pile.owner.pawnId === pawn.id && pile.kind === 'food');
     if (sources.length || held) {
-      reach = context.search(false, foodInteractionGoals(world, sources.flatMap(pile => pile.owner.type === 'ground' ? [pile.owner] : [])));
+      reach = context.search(false, foodSearchGoals(world, pawn, sources));
       if (!reach) return true; // Budget exhaustion must not be mistaken for inaccessibility.
-      let best: { id: number; path: Cell[] } | undefined;
-      for (const pile of sources) {
-        if (pile.owner.type !== 'ground') continue;
-        const path = routeToJob(world, pile.owner, reach, true);
-        if (path && (!best || routeCost(world,path,reach) < routeCost(world,best.path,reach) || (routeCost(world,path,reach) === routeCost(world,best.path,reach) && pile.id < best.id))) best = { id: pile.id, path };
-      }
+      const best = selectFood(world, pawn, sources, reach);
       if (held || best) {
-        const selected = held ?? sources.find(pile => pile.id === best!.id)!;
+        const useHeld = !!held && (!best || world.foodRules === 'legacy' || foodScore(held.item, 0) >= best.score);
+        const selected = useHeld ? held! : sources.find(pile => pile.id === best!.id)!;
         const quantity = mealQuantity(pawn, selected, selected.quantity - reservedSource(world, selected.id, pawn.id));
         if (!context.release()) return true; // Deposits cargo at the actor, preserving its identity.
-        pawn.need = { kind: 'eat', phase: 'pickup', sourcePileId: held?.id ?? best!.id, carryPileId: null, quantity, progress: 0, dining: null };
-        pawn.path = held ? [] : best!.path;
+        pawn.need = { kind: 'eat', phase: 'pickup', sourcePileId: selected.id, carryPileId: null, quantity, progress: 0, dining: null };
+        pawn.path = useHeld ? [] : best!.path;
         pawn.state = 'moving'; pawn.planCooldown = 0;
       }
     }

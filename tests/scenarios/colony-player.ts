@@ -51,7 +51,11 @@ export function playerDecisions(world: World): Decision[] {
 }
 
 export function colonySummary(world: World) {
-  return { tick: world.tick, crops: world.resources.filter(r=>r.kind==='rice').length, growingCells:world.growingZones.reduce((n,z)=>n+z.cells.length,0), structures: Object.fromEntries(['bed','table','stool','wall'].map(kind => [kind,world.structures.filter(s=>s.kind===kind).length])), stock: { ...world.stock }, pending: world.jobs.length, minimumFood: Math.min(...world.pawns.map(p=>p.hunger)), minimumRest: Math.min(...world.pawns.map(p=>p.rest)) };
+  const fields=new Set(world.growingZones.flatMap(z=>z.cells));
+  return { tick: world.tick, crops: world.resources.filter(r=>r.kind==='rice').length, growingCells:fields.size,
+    obstructedGrowingCells:world.piles.filter(p=>p.owner.type==='ground'&&fields.has(p.owner.z*world.width+p.owner.x)).length,
+    clearing:world.pawns.filter(p=>p.haul?.destination.type==='aside').length,
+    structures: Object.fromEntries(['bed','table','stool','wall'].map(kind => [kind,world.structures.filter(s=>s.kind===kind).length])), stock: { ...world.stock }, pending: world.jobs.length, minimumFood: Math.min(...world.pawns.map(p=>p.hunger)), minimumRest: Math.min(...world.pawns.map(p=>p.rest)) };
 }
 
 export function woodAccount(world: World): number {

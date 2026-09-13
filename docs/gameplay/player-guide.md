@@ -123,6 +123,9 @@ Dans **Architecte → Zones → Zone de culture**, tracez un champ. Activez **Cu
 
 Inspectez une cellule du champ pour autoriser les semis et la coupe des plantes indésirables. Désactiver les semis conserve la récolte du riz mûr. Retirer la zone conserve les plants déjà semés. Un ordre manuel Récolter fonctionne au-dessus de 65 % de croissance, avec un rendement réduit. Couper les plantes libère leur case.
 
-Prévoyez plusieurs cellules de réserve alimentaire : baies, repas et riz sont des objets différents qui ne partagent pas une même pile au sol. Le transport doit libérer les piles laissées dans le champ avant le prochain semis. Le déplacement automatique local des objets gênants reste à ajouter.
+Prévoyez plusieurs cellules de réserve alimentaire : baies, repas et riz sont des objets différents qui ne partagent pas une même pile au sol. Le cultivateur déplace les piles gênantes hors du champ avant de semer, même sans réserve et avec Transport désactivé. Si aucun sol de dépôt n’est disponible, il attend. Plusieurs trajets peuvent être nécessaires. Ces objets pourront ensuite être transportés vers vos réserves.
 
 Les colons peuvent manger le riz cru : 0,05 nutrition par unité, avec un souvenir −7 humeur pendant un jour. Cuisine, pourrissement et intoxications ne sont pas encore disponibles. Seul le riz est cultivable ; les arbres, sols et buissons génériques ne constituent toujours pas un catalogue complet des espèces et biomes.
+
+
+Les colons choisissent les aliments accessibles en tenant compte du goût et de la distance. Des baies fraîches proches peuvent être préférées à une ration de survie ; le riz cru est moins apprécié, mais reste consommé lorsque les alternatives sont trop loin ou inaccessibles. Les régimes personnalisés et la conservation ne sont pas encore disponibles.

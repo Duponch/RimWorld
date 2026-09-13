@@ -1,10 +1,11 @@
 import { mayImproveStorage } from './idle-logistics.ts';
 import { startTravel } from './movement.ts';
+import { asideCapacity, findAsideDestination } from './haul-aside.ts';
 import { storageCapacity } from './ground-placement.ts';
 import { legacyItem, type ItemId } from './items.ts';
 import { CARRY_CAPACITY, footprintCells, JOB_WOOD_COST } from './definitions.ts';
-import { deliveredStock, groundQuantity, reservedDestination } from './materials.ts';
-import { cellIndex, inBounds, reachableCells, routeToJob } from './pathfinding.ts';
+import { deliveredStock, groundQuantity, reservedDestination, reservedSource } from './materials.ts';
+import { cellIndex, inBounds, reachableCells, routeToJob, interactionGoals } from './pathfinding.ts';
 import type { Reachability } from './pathfinding.ts';
 import type { Cell, HaulDestination, Job, JobKind, MaterialKind, Pawn, WorkType, World } from './types.ts';
 export const PLAN_INTERVAL=20;
@@ -36,9 +37,11 @@ export function yieldIdleBlocker(world: World, requester: Pawn, target: Cell, bl
   return false;
 }
 export function destinationCell(world: World, destination: HaulDestination): (Cell & { kind?: JobKind }) | null {
+  if (destination.type === 'aside') return destination;
   return destination.type === 'job' ? world.jobs.find(job => job.id === destination.jobId) ?? null : world.stockpiles.find(zone => zone.id === destination.stockpileId) ?? null;
 }
 function destinationCapacity(world: World, destination: HaulDestination, kind: MaterialKind, exceptPawn?: number, item: ItemId = legacyItem(kind)): number {
+  if (destination.type === 'aside') return asideCapacity(world, destination, item, exceptPawn);
   if (destination.type === 'job') {
     const job = world.jobs.find(item => item.id === destination.jobId);
     return job && kind === 'wood' ? Math.max(0, JOB_WOOD_COST[job.kind] - deliveredStock(world, job.id).wood - reservedDestination(world, destination, exceptPawn)) : 0;
@@ -67,7 +70,36 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   if (!world.jobs.length && (!world.stockpiles.length || !world.piles.length || pawn.priorities.haul === 0)) { pawn.planCooldown = PLAN_INTERVAL; return; }
   if (!world.jobs.length && !mayImproveStorage(world)) {pawn.planCooldown=PLAN_INTERVAL;return;}
   const blocked = getBlocked();
-  const reachable = search(world, pawn, blocked, occupied, budget); if (!reachable) return;
+  // Rankings do not depend on flood order. Try the top ready job directly;
+  // a failed targeted search has explored the full component and is reusable.
+  // Logistics with a higher priority still uses the ordinary complete planner.
+  const ready = world.jobs.filter(job => job.reservedBy === null && pawn.priorities[workType(job)] > 0
+    && job.escrow.wood >= JOB_WOOD_COST[job.kind] && (pawn.hunger > 20 || job.kind === 'harvest'))
+    .map(job => ({ job, target: job, id: job.id, priority: pawn.priorities[workType(job)], rank: workType(job) === 'gather' ? 0 : 1, distance: Math.abs(job.x-pawn.x)+Math.abs(job.z-pawn.z) }))
+    .sort(compareCandidate);
+  let reachable: Reachability | null = null;
+  const first = ready[0];
+  if (first && (pawn.priorities.haul === 0 || first.priority <= pawn.priorities.haul)) {
+    const source = first.job.kind === 'sow' ? world.piles.find(p => p.owner.type === 'ground' && sameCell(p.owner, first.job)) : undefined;
+    if (!source || reservedSource(world, source.id) === 0) {
+      const goals=interactionGoals(world,footprintCells(first.job));
+      if (!source) for (const cell of footprintCells(first.job)) goals.delete(cellIndex(world,cell.x,cell.z));
+      reachable=search(world,pawn,blocked,occupied,budget,goals);
+      if (!reachable) return;
+      const path=routeToJob(world,first.job,reachable,!!source);
+      if (path) {
+        const quantity=source?Math.min(CARRY_CAPACITY,source.quantity):0;
+        const destination=source?findAsideDestination(world,first.job,source.item,quantity,blocked,budget):null;
+        if (!source || destination) {
+          if (source && destination) pawn.haul={sourcePileId:source.id,quantity,phase:'pickup',destination,carryPileId:null};
+          else {first.job.reservedBy=pawn.id;first.job.status='active';pawn.jobId=first.job.id;}
+          pawn.path=path;pawn.state=path.length?'moving':'working';pawn.planCooldown=PLAN_INTERVAL;return;
+        }
+        reachable=null; // Partial result cannot rank the remaining jobs.
+      }
+    }
+  }
+  reachable ??= search(world, pawn, blocked, occupied, budget); if (!reachable) return;
   pawn.planCooldown = PLAN_INTERVAL;
   const delivered = new Map<number, number>(); const ground = new Map<number, number>();
   const sourceReserved = new Map<number, number>(); const jobReserved = new Map<number, number>(); const zoneReserved = new Map<number, number>();
@@ -84,6 +116,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
       const source = pileById.get(task.sourcePileId);
       if (source?.owner.type === 'ground') { const key = cellIndex(world, source.owner.x, source.owner.z); outbound.set(key, (outbound.get(key) ?? 0) + task.quantity); }
     }
+    if (task.destination.type === 'aside') continue;
     const map = task.destination.type === 'job' ? jobReserved : zoneReserved;
     const id = task.destination.type === 'job' ? task.destination.jobId : task.destination.stockpileId;
     map.set(id, (map.get(id) ?? 0) + task.quantity);
@@ -94,6 +127,17 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
     const work = workType(job);
     if (job.reservedBy !== null || pawn.priorities[work] === 0 || (delivered.get(job.id) ?? 0) < JOB_WOOD_COST[job.kind] || (pawn.hunger <= 20 && job.kind !== 'harvest')) continue;
     const candidate: Candidate = { priority: pawn.priorities[work], rank: work === 'gather' ? 0 : 1, distance: Math.abs(job.x - pawn.x) + Math.abs(job.z - pawn.z), id: job.id, job, target: job };
+    if (job.kind === 'sow' && ground.has(cellIndex(world, job.x, job.z))) {
+      if (best && compareCandidate(candidate, best) >= 0) continue;
+      const source = world.piles.find(p => p.owner.type === 'ground' && sameCell(p.owner, job));
+      // Clear one stack at a time. Do not compete with another eater or hauler
+      // for an obstruction already being removed.
+      if (!source || sourceReserved.has(source.id) || !canReach(world, job, reachable, true)) continue;
+      const quantity = Math.min(CARRY_CAPACITY, source.quantity);
+      const destination = findAsideDestination(world, job, source.item, quantity, blocked, budget);
+      if (destination) best = { ...candidate, job: undefined, sourceId: source.id, quantity, destination };
+      continue;
+    }
     if (canReach(world, job, reachable, false)) { if (!best || compareCandidate(candidate, best) < 0) best = candidate; }
     else if (blockedTargets.length < 16) blockedTargets.push({ target: job, allow: false });
   }
