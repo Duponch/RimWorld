@@ -49,6 +49,15 @@ async function cell(page: Page, x: number, z: number) {
   if (!bounds) throw new Error('Canvas absent');
   await page.mouse.click(bounds.x + point.x, bounds.y + point.y);
 }
+async function dragRectangle(page: Page, from: { x: number; z: number }, to: { x: number; z: number }, release = true) {
+  const points = await page.evaluate(({ from, to }) => [window.__lisiere.projectCell(from.x, from.z), window.__lisiere.projectCell(to.x, to.z)], { from, to });
+  const bounds = await page.locator('#viewport canvas').boundingBox();
+  if (!bounds) throw new Error('Canvas absent');
+  expect(await page.evaluate(({ points, bounds }) => points.map(point => document.elementFromPoint(bounds.x + point.x, bounds.y + point.y)?.tagName), { points, bounds }), 'Les extrémités du tracé doivent être sur la carte visible, hors panneaux.').toEqual(['CANVAS', 'CANVAS']);
+  await page.mouse.move(bounds.x + points[0].x, bounds.y + points[0].y); await page.mouse.down();
+  await page.mouse.move(bounds.x + points[1].x, bounds.y + points[1].y, { steps: 6 });
+  if (release) await page.mouse.up();
+}
 
 async function startPaused(page: Page) {
   await page.goto('/?size=32&seed=42&e2e');
@@ -80,7 +89,7 @@ test('colonie matérielle : réserve filtrée, transport visible, trois couchage
   await tool(page, 'stockpile');
   await page.locator('#stockpile-food').uncheck();
   await page.locator('#stockpile-capacity').fill('10');
-  await cell(page, 14, 17); await cell(page, 14, 18);
+  await dragRectangle(page, { x: 14, z: 17 }, { x: 14, z: 18 });
   await expect.poll(async () => (await world(page)).stockpiles.length).toBe(2);
   expect((await world(page)).stockpiles.every(zone => zone.filters.wood && !zone.filters.food && zone.capacity === 10)).toBe(true);
   await tool(page, 'harvest'); await cell(page, 18, 14);
@@ -228,6 +237,89 @@ test('frontières : commandes répétées, sauvegarde invalide atomique, aide et
   await expect(page.getByRole('status')).toContainText('sauvegardée');
   expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).schemaVersion, saveKey)).toBe(2);
   expect(errors).toEqual([]);
+});
+
+test('rectangles 250² : aperçu, interruptions, rotation, politiques préservées et récolte réelle', async ({ playwright }) => {
+  test.setTimeout(150_000);
+  const browser = await playwright.chromium.launch({ channel: 'chromium', args: [] });
+  const context = await browser.newContext({ baseURL: 'http://127.0.0.1:5173', viewport: { width: 1440, height: 1000 } });
+  const page = await context.newPage();
+  try {
+    const errors = observeErrors(page);
+    const diagnostics: string[] = [];
+    page.on('console', message => { if (message.text().includes('Lisière renderer diagnostics')) diagnostics.push(message.text()); });
+    await page.goto('/?e2e&seed=42&size=250');
+    await page.waitForFunction(() => !!window.__lisiere);
+    await page.getByRole('button', { name: 'Pause', exact: true }).click();
+    await expect(page.locator('#pause-banner')).toBeVisible();
+    const initial = await serializedWorld(page);
+    const from = { x: 123, z: 124 }, to = { x: 126, z: 125 };
+    await tool(page, 'stockpile');
+    await page.locator('#stockpile-food').uncheck(); await page.locator('#stockpile-capacity').fill('10');
+    for (const interruption of ['escape', 'right', 'outside', 'blur', 'tool'] as const) {
+      await tool(page, 'stockpile'); await dragRectangle(page, from, to, false);
+      await expect(page.locator('#area-feedback')).toBeVisible();
+      await expect(page.locator('#area-feedback')).toContainText('4 × 2 · 8 case(s) retenue(s)');
+      expect(await serializedWorld(page)).toBe(initial);
+      if (interruption === 'escape') await page.keyboard.press('Escape');
+      else if (interruption === 'right') { await page.mouse.down({ button: 'right' }); await page.mouse.up({ button: 'right' }); }
+      else if (interruption === 'outside') await page.mouse.move(35, 35);
+      else if (interruption === 'blur') await page.evaluate(() => window.dispatchEvent(new Event('blur')));
+      else await page.keyboard.press('r');
+      await page.mouse.up(); await expect(page.locator('#area-feedback')).toBeHidden();
+      await expectWorld(page, JSON.parse(initial));
+    }
+    await tool(page, 'stockpile'); await dragRectangle(page, to, from, false);
+    await expect(page.locator('#area-feedback')).toBeVisible();
+    await expect(page.locator('#area-feedback')).toContainText('8 case(s) retenue(s)');
+    // Hold the real gesture through rendered frames to compile and inspect the instanced preview.
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    await page.screenshot({ path: 'artifacts/area-preview-250.png' });
+    await page.mouse.up();
+    await expect.poll(async () => (await world(page)).stockpiles.length).toBe(8);
+    await expect(page.locator('#notice')).toContainText('8 case(s) de réserve créée(s)');
+    const stored = (await world(page)).stockpiles;
+    expect(stored.every(cell => cell.filters.wood && !cell.filters.food && cell.capacity === 10)).toBe(true);
+    // Overlap is additive: changing drawing settings must not overwrite existing policies.
+    await page.locator('#stockpile-capacity').fill('20');
+    await dragRectangle(page, { x: 125, z: 124 }, { x: 127, z: 125 });
+    await expect.poll(async () => (await world(page)).stockpiles.length).toBe(10);
+    expect((await world(page)).stockpiles.slice(0, 8)).toEqual(stored);
+    expect((await world(page)).stockpiles.slice(8).every(cell => cell.capacity === 20)).toBe(true);
+    await expect(page.locator('#notice')).toContainText('2 case(s) de réserve créée(s) · 4 case(s) ignorée(s)');
+
+    await panel(page, 'menu'); await page.locator('#save').click();
+    await expect(page.locator('#notice')).toContainText('sauvegardée');
+    const saved = await world(page);
+    await tool(page, 'remove-stockpile'); await dragRectangle(page, from, { x: 127, z: 125 });
+    await expect.poll(async () => (await world(page)).stockpiles.length).toBe(0);
+    expect((await world(page)).piles).toEqual(saved.piles);
+    await panel(page, 'menu'); await page.locator('#load').click(); await expectWorld(page, saved);
+
+    await tool(page, 'chop');
+    // Right drag remains orbiting outside a designation gesture.
+    await page.mouse.move(1000, 350); await page.mouse.down({ button: 'right' });
+    await page.mouse.move(1090, 375, { steps: 8 }); await page.mouse.up({ button: 'right' });
+    await page.waitForTimeout(300);
+    const beforeGather = await world(page);
+    const gatherFrom = { x: 122, z: 122 }, gatherTo = { x: 125, z: 124 };
+    const targets = beforeGather.resources.filter(resource => resource.kind === 'tree' && resource.x >= 122 && resource.x <= 125 && resource.z >= 122 && resource.z <= 124);
+    expect(targets.length).toBeGreaterThan(0);
+    await dragRectangle(page, gatherTo, gatherFrom);
+    await expect.poll(async () => (await world(page)).jobs.length).toBe(targets.length);
+    expect((await world(page)).jobs.map(job => `${job.x}:${job.z}`).sort()).toEqual(targets.map(resource => `${resource.x}:${resource.z}`).sort());
+    const expectedWood = beforeGather.piles.filter(pile => pile.kind === 'wood').reduce((sum, pile) => sum + pile.quantity, 0) + targets.reduce((sum, resource) => sum + resource.amount, 0);
+    await page.getByRole('button', { name: 'Vitesse 6 fois', exact: true }).click();
+    await expect.poll(async () => (await world(page)).jobs.length, { timeout: 25000 }).toBe(0);
+    await page.getByRole('button', { name: 'Pause', exact: true }).click();
+    await expect(page.locator('#pause-banner')).toBeVisible();
+    const finished = await world(page);
+    expect(finished.piles.filter(pile => pile.kind === 'wood').reduce((sum, pile) => sum + pile.quantity, 0)).toBe(expectedWood);
+    expect(finished.resources.some(resource => targets.some(target => target.id === resource.id))).toBe(false);
+    expect(errors).toEqual([]);
+    const report = JSON.stringify({ timestamp: new Date().toISOString(), backend: await page.evaluate(() => window.__lisiere.backend), size: 250, seed: 42, interruptedGestures: ['Escape', 'right-button', 'release-over-UI', 'injected-window-blur', 'tool-change'], storageCells: 10, harvestedTrees: targets.length, conservedWood: expectedWood, screenshot: 'artifacts/area-preview-250.png', diagnostics, errors }, null, 2);
+    await test.info().attach('area-gameplay', { body: report, contentType: 'application/json' });
+  } finally { await browser.close(); }
 });
 
 test('nouvelle colonie : défaut 250, tailles 128/200/250 et retour exact à une ancienne petite partie', async ({ playwright }) => {

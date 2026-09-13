@@ -75,11 +75,15 @@ export interface World {
   logisticsCursor: number;
 }
 export type DesignateCommand = { type: 'designate'; kind: JobKind; orientation?: Orientation } & Cell;
+export type AreaAction = 'chop' | 'harvest' | 'cancel' | 'stockpile' | 'remove-stockpile';
+export interface StorageSettings { filters?: Record<MaterialKind, boolean>; priority?: number; capacity?: number }
+export interface AreaCommand extends StorageSettings { type: 'area'; action: AreaAction; from: Cell; to: Cell }
 export type Command =
   | DesignateCommand
+  | AreaCommand
   | ({ type: 'cancel' } & Cell)
   | ({ type: 'stockpile'; enabled: boolean; filters?: Record<MaterialKind, boolean>; priority?: number; capacity?: number } & Cell)
   | { type: 'priority'; pawnId: number; work: WorkType; value: number };
 export type RefusalCode = 'invalid-command' | 'out-of-bounds' | 'occupied' | 'incompatible-resource' | 'missing-target' | 'invalid-priority' | 'invalid-storage';
-export interface CommandResult { ok: boolean; reason?: string; code?: RefusalCode }
+export interface CommandResult { ok: boolean; reason?: string; code?: RefusalCode; affected?: number; skipped?: number }
 export interface JobDiagnostic { code: 'working' | 'ready' | 'delivering' | 'missing-materials' | 'waiting-worker'; reason: string; delivered: number; required: number }

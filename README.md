@@ -21,6 +21,8 @@ La carte par défaut mesure **250×250 cases**, soit 62 500 cellules, et utilise
 
 Trois colons commencent avec du bois et de la nourriture en piles au sol. Architecte regroupe collecte, réserves et constructions. Les transporteurs prélèvent, portent et déposent les matériaux ; les constructeurs attendent leur livraison. Travail règle collecte, construction et transport : **1 haute, 4 basse, 0 désactivée**. L'interface conserve l'organisation de RimWorld : ressources à gauche, colons en haut et onglets en bas.
 
+Abattage, récolte, annulation et création/retrait de réserves acceptent un rectangle au bouton gauche, avec aperçu des cases compatibles. Relâcher sur la carte applique ; Échap ou clic droit annule le tracé. Les réserves existantes conservent leurs réglages lors d'un chevauchement. Les zones nommées à politique commune restent à développer.
+
 - Espace : pause ; 1 / 2 / 3 : vitesse 1× / 3× / 6×.
 - C : abattre ; R : récolter ; B : mur ; L : lit ; X : annuler ; Échap : inspecter.
 - S : réserve ; Q / E avec l'outil Lit : tourner son empreinte 1×2.

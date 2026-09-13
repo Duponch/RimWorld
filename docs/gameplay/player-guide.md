@@ -16,7 +16,9 @@ Sur une fenêtre étroite, la barre des onglets se fait défiler horizontalement
 
 ## Donner des ordres
 
-Ouvrir Architecte, choisir Ordres pour abattre/récolter/annuler, Zones pour le stockage, Structure pour le mur ou Meubles pour le lit, puis cliquer sur une case. L'abattage cible un arbre ; la récolte cible un buisson de baies. Une construction demande une empreinte libre et franchissable. Le lit occupe deux cases : Q/E ou le bouton Tourner change son orientation avant placement. Le fantôme indique un placement refusé. Les matériaux peuvent manquer au moment de poser un plan ; leur livraison précède le travail de construction.
+Ouvrir Architecte, choisir Ordres pour abattre/récolter/annuler, Zones pour le stockage, Structure pour le mur ou Meubles pour le lit. Pour les ordres de terrain et les réserves, **cliquer ou maintenir le bouton gauche et tracer un rectangle**, dans n'importe quel sens. Les cases compatibles sont surlignées ; un compteur distingue les cases retenues et ignorées. Relâcher sur la carte applique l'ensemble. Échap ou clic droit annule le tracé ; changer d'outil ou quitter la fenêtre l'abandonne également. Relâcher au-dessus d'un panneau n'envoie aucun ordre.
+
+L'abattage cible les arbres ; la récolte cible les buissons de baies. Les ressources incompatibles, obstacles et ordres déjà présents sont ignorés, avec un bilan après application. Le rectangle crée du travail futur : les matériaux ne sont produits qu'après le travail des colons. Pour les murs et lits, cliquer sur une empreinte libre et franchissable. Le lit occupe deux cases : Q/E ou le bouton Tourner change son orientation avant placement. Le fantôme indique un placement refusé. Les matériaux peuvent manquer au moment de poser un plan ; leur livraison précède le travail de construction.
 
 | Action | Règle actuelle |
 |---|---|
@@ -38,11 +40,11 @@ Les chemins contournent eau, terrain rocheux, murs et autres colons ; un colon i
 
 ## Réserves et transport
 
-Dans Architecte → Zones → Réserve, choisir les filtres Bois/Nourriture, une priorité et une capacité, puis cliquer sur les cases de stockage. Chaque case garde ses propres réglages. Une capacité de 75 unités et une priorité normale de 2 sont proposées. Pour les **réserves**, 4 est la priorité la plus forte : les transporteurs déplacent les objets vers un stockage de meilleure priorité, sans va-et-vient entre réserves équivalentes.
+Dans Architecte → Zones → Réserve, choisir les filtres Bois/Nourriture, une priorité et une capacité, puis cliquer ou tracer un rectangle. Les nouvelles cases reçoivent ces réglages ; **les réserves existantes traversées par le rectangle gardent leurs réglages**. Une capacité de 75 unités et une priorité normale de 2 sont proposées. Pour les **réserves**, 4 est la priorité la plus forte : les transporteurs déplacent les objets vers un stockage de meilleure priorité, sans va-et-vient entre réserves équivalentes.
 
 Fermer Architecte et inspecter une case de réserve pour modifier ses filtres, sa priorité ou sa capacité. Appliquer un nouveau filtre invalide les livraisons incompatibles ; les objets déjà présents restent physiques et peuvent être déplacés vers une autre réserve valable. Retirer une réserve supprime sa règle de stockage, sans effacer les objets. Une réserve pleine n'accepte plus de nouvelle quantité.
 
-Les piles contiennent au plus 75 unités et le portage au plus 10 unités par trajet : ce sont des réglages du projet. Les réserves sont actuellement désignées case par case, sans zone rectangulaire à nom et réglages communs. Les livraisons aux chantiers peuvent prélever directement une pile au sol ; un passage préalable par une réserve n'est pas obligatoire.
+Les piles contiennent au plus 75 unités et le portage au plus 10 unités par trajet : ce sont des réglages du projet. Le rectangle crée plusieurs cases indépendantes ; **les zones nommées à réglages communs ne sont pas encore implémentées**. L'outil Retirer accepte lui aussi un rectangle et conserve tous les objets au sol ou déposés par les porteurs interrompus. Les livraisons aux chantiers peuvent prélever directement une pile au sol ; un passage préalable par une réserve n'est pas obligatoire.
 
 ## Nourriture, repos et humeur
 
@@ -70,7 +72,7 @@ La convention 3D est de 1 m par case, 1,75 m pour un humain et 2,80 m pour un mu
 | S | Désigner une réserve |
 | Q / E avec l'outil Lit | Tourner le lit |
 | Tab / F1 | Ouvrir ou fermer Architecte / Travail |
-| Échap | Fermer le panneau et revenir à l'inspection |
+| Échap | Annuler le rectangle en cours ; sinon fermer le panneau et revenir à l'inspection |
 | Ctrl+S | Sauvegarder |
 
 Menu → Sauvegarder conserve le monde, les travaux, les réservations, les trajets et les besoins. Elle occupe un emplacement local à ce navigateur. Recharger remplace la partie courante par la dernière sauvegarde ; une sauvegarde invalide est refusée. La vitesse et l'angle de caméra ne font pas partie de la sauvegarde. Il n'y a pas encore d'autosauvegarde ni d'export de fichier.

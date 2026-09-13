@@ -2,6 +2,12 @@
 
 Cette note conserve les inspections graphiques du prototype. Les mesures de performance et leurs compromis sont détaillés dans [le passage à 250²](map-scale.md#rendu-webgpu--protocole-et-preuves-retenues). Une inspection réussie ne constitue pas une validation sur tous les navigateurs. Les PNG sont des sorties locales régénérables ; un passage ultérieur du même script peut les remplacer.
 
+## Aperçu des rectangles : passage courant
+
+Le parcours dédié de `tests/integration/colony.spec.ts`, le **13 septembre 2026 à 14:09:36 UTC**, valide une carte 250²/graine 42 sur **WebGPU AMD/RDNA-1, Chromium 153**, sans erreur console/GPU. Le [rapport](../../artifacts/area-gameplay-validation.json) conserve conditions, interruptions et résultats métier. La capture `artifacts/area-preview-250.png` a été réellement inspectée : huit cases d'un rectangle 4×2 surlignées, compteur cohérent, personnages et terrain lisibles, organisation d'Architecte conservée. La capture attend deux frames pendant que le pointeur reste maintenu ; le tracé n'est pas une géométrie invisible créée puis supprimée entre deux frames.
+
+Les surfaces d'aperçu sont instanciées et leur capacité est réutilisée. Le geste fige la caméra, y compris son amortissement ; rotation au bouton droit hors geste et projection des ordres après rotation sont exercées. Les interruptions n'envoient pas de commande tardive. La portée reste celle du parcours décrit : elle ne mesure pas les FPS d'un aperçu de 62 500 cases ni le coût graphique de milliers de nouveaux ordres. Le benchmark de désignation mesure le noyau CPU séparément. Le rig et les kernels de navigation n'ont pas changé ; leurs rapports antérieurs ci-dessous restent historiques.
+
 ## Cartes de 250² : caméra, terrain et sélection
 
 Le [contrôle du rendu actuel](../../artifacts/map-render-current.json), commencé le **13 septembre 2026 à 13:29:16 UTC**, utilise Chromium 153 normal en mode headless, **WebGPU sur AMD/RDNA-1**, sur les cartes 64² et 250²/graine 42. Aucun adaptateur logiciel n'est imposé. Le backend et l'architecture sont lus sur le device configuré dans le canvas ; le modèle précis du GPU et son pilote ne sont pas communiqués. Aucune erreur console ou GPU n'est enregistrée pendant ces parcours. Il s'agit d'une seule machine et de trois colons, avec 12 411 ressources initiales sur 250².

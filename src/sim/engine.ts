@@ -3,7 +3,8 @@ import { adjacent, blockedCells, cellIndex, inBounds, reachableCells, routeToJob
 import type { Reachability } from './pathfinding.ts';
 import { CARRY_CAPACITY, footprintCells, JOB_DURATION, JOB_WOOD_COST, MAX_STACK } from './definitions.ts';
 import { addGroundMaterial, addMaterial, deliveredStock, groundQuantity, materialCanFit, refreshStock, reservedDestination, reservedSource } from './materials.ts';
-import type { Cell, Command, CommandResult, DesignateCommand, HaulDestination, Job, JobDiagnostic, JobKind, MaterialKind, Pawn, RefusalCode, WorkType, World } from './types.ts';
+import { queryArea, validStorageSettings } from './designation.ts';
+import type { AreaCommand, Cell, Command, CommandResult, DesignateCommand, HaulDestination, Job, JobDiagnostic, JobKind, MaterialKind, Pawn, RefusalCode, WorkType, World } from './types.ts';
 export { JOB_DURATION, JOB_WOOD_COST } from './definitions.ts';
 
 export const HUNGER_PER_TICK = 0.015;
@@ -39,6 +40,50 @@ function wakePlanners(world: World): void {
   for (const pawn of world.pawns) if (pawn.jobId === null && pawn.haul === null) pawn.planCooldown = 0;
 }
 
+/** One authoritative command, evaluated against the state at execution, without
+ * per-cell worker messages or repeated scans of every resource for every cell.
+ */
+function applyArea(world: World, command: AreaCommand): CommandResult {
+  const selection = queryArea(world, command);
+  if (!selection.ok) return selection;
+  if (!selection.cells.length) return refusal('missing-target', 'Aucune case compatible dans ce rectangle.');
+  const creates = command.action === 'chop' || command.action === 'harvest' || command.action === 'stockpile';
+  if (creates && !Number.isSafeInteger(world.nextId + selection.cells.length)) return refusal('invalid-command', 'Limite des identités atteinte.');
+  let affected = selection.cells.length;
+  if (command.action === 'chop' || command.action === 'harvest') {
+    for (const index of selection.cells) world.jobs.push({ id: world.nextId++, kind: command.action, x: index % world.width, z: Math.floor(index / world.width), orientation: 0, footprint: 'standard', status: 'pending', reservedBy: null, progress: 0, escrow: { wood: 0, food: 0 } });
+  } else if (command.action === 'stockpile') {
+    for (const index of selection.cells) world.stockpiles.push({ id: world.nextId++, x: index % world.width, z: Math.floor(index / world.width), filters: { ...(command.filters ?? { wood: true, food: true }) }, priority: command.priority ?? 2, capacity: command.capacity ?? MAX_STACK });
+  } else {
+    const cells = new Set(selection.cells);
+    if (command.action === 'remove-stockpile') {
+      const ids = new Set(world.stockpiles.filter(cell => cells.has(cellIndex(world, cell.x, cell.z))).map(cell => cell.id));
+      const carriers = new Set(world.pawns.filter(pawn => pawn.haul?.destination.type === 'stockpile' && ids.has(pawn.haul.destination.stockpileId)).map(pawn => pawn.id));
+      const returning = world.piles.filter(pile => pile.owner.type === 'pawn' && carriers.has(pile.owner.pawnId)).length;
+      if (!Number.isSafeInteger(world.nextId + returning)) return refusal('invalid-command', 'Identités insuffisantes pour déposer les cargaisons.');
+      world.stockpiles = world.stockpiles.filter(cell => !ids.has(cell.id));
+      for (const pawn of world.pawns) if (pawn.haul?.destination.type === 'stockpile' && ids.has(pawn.haul.destination.stockpileId)) releaseWork(world, pawn);
+    } else {
+      const jobs = world.jobs.filter(job => footprintCells(job).some(cell => cells.has(cellIndex(world, cell.x, cell.z))));
+      const ids = new Set(jobs.map(job => job.id)); affected = ids.size;
+      const carriers = new Set(world.pawns.filter(pawn => pawn.haul?.destination.type === 'job' && ids.has(pawn.haul.destination.jobId)).map(pawn => pawn.id));
+      const returning = world.piles.filter(pile => (pile.owner.type === 'job' && ids.has(pile.owner.jobId)) || (pile.owner.type === 'pawn' && carriers.has(pile.owner.pawnId))).length;
+      // Reserve an upper bound before releasing any owner. Deposits may merge,
+      // but exhausting IDs must never leave a partly removed construction/cargo.
+      if (!Number.isSafeInteger(world.nextId + returning)) return refusal('invalid-command', 'Identités insuffisantes pour conserver les matériaux annulés.');
+      for (const pawn of world.pawns) if ((pawn.jobId !== null && ids.has(pawn.jobId)) || (pawn.haul?.destination.type === 'job' && ids.has(pawn.haul.destination.jobId))) releaseWork(world, pawn);
+      world.jobs = world.jobs.filter(job => !ids.has(job.id));
+      const delivered = world.piles.filter(pile => pile.owner.type === 'job' && ids.has(pile.owner.jobId));
+      world.piles = world.piles.filter(pile => !(pile.owner.type === 'job' && ids.has(pile.owner.jobId)));
+      const byId = new Map(jobs.map(job => [job.id, job]));
+      for (const pile of delivered) if (pile.owner.type === 'job') addGroundMaterial(world, pile.kind, pile.quantity, byId.get(pile.owner.jobId)!);
+    }
+  }
+  wakePlanners(world); refreshStock(world);
+  event(world, 'command', `Rectangle : ${affected} ${command.action === 'cancel' ? 'ordre(s) annulé(s)' : command.action === 'remove-stockpile' ? 'case(s) de réserve retirée(s)' : command.action === 'stockpile' ? 'case(s) de réserve créée(s)' : 'ordre(s) de collecte créé(s)'}.`);
+  return { ok: true, affected, skipped: selection.skipped };
+}
+
 /** Pure shared rule used by preview and command execution. */
 export function canDesignate(world: World, command: DesignateCommand): CommandResult {
   if (!command || !['chop', 'harvest', 'wall', 'bed'].includes(command.kind)) return refusal('invalid-command', 'Type de travail inconnu.');
@@ -64,6 +109,7 @@ export function canDesignate(world: World, command: DesignateCommand): CommandRe
 }
 export function applyCommand(world: World, command: Command): CommandResult {
   if (!command || typeof command !== 'object') return refusal('invalid-command', 'Commande invalide.');
+  if (command.type === 'area') return applyArea(world, command);
   if (command.type === 'priority') {
     if (!['gather', 'build', 'haul'].includes(command.work) || !Number.isInteger(command.value) || command.value < 0 || command.value > 4) return refusal('invalid-priority', 'La priorité doit être comprise entre 0 et 4.');
     const pawn = world.pawns.find(candidate => candidate.id === command.pawnId);
@@ -76,9 +122,7 @@ export function applyCommand(world: World, command: Command): CommandResult {
   if (!['designate', 'cancel', 'stockpile'].includes(command.type)) return refusal('invalid-command', 'Commande inconnue.');
   if (!inBounds(world, command.x, command.z)) return refusal('out-of-bounds', 'Cellule hors de la carte.');
   if (command.type === 'stockpile') {
-    if (typeof command.enabled !== 'boolean' || (command.filters !== undefined && (!command.filters || typeof command.filters.wood !== 'boolean' || typeof command.filters.food !== 'boolean'))
-      || (command.priority !== undefined && (!Number.isInteger(command.priority) || command.priority < 1 || command.priority > 4))
-      || (command.capacity !== undefined && (!Number.isInteger(command.capacity) || command.capacity < 1 || command.capacity > MAX_STACK))) return refusal('invalid-storage', 'Filtres, priorité (1–4) ou capacité (1–75) invalides.');
+    if (typeof command.enabled !== 'boolean' || !validStorageSettings(command)) return refusal('invalid-storage', 'Filtres, priorité (1–4) ou capacité (1–75) invalides.');
     const existing = world.stockpiles.find(zone => sameCell(zone, command));
     if (!command.enabled) {
       if (!existing) return refusal('missing-target', 'Aucune cellule de stockage ici.');

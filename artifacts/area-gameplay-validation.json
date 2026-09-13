@@ -1,0 +1,21 @@
+{
+  "timestamp": "2026-09-13T14:09:36.801Z",
+  "backend": "WebGPU",
+  "size": 250,
+  "seed": 42,
+  "interruptedGestures": [
+    "Escape",
+    "right-button",
+    "release-over-UI",
+    "injected-window-blur",
+    "tool-change"
+  ],
+  "storageCells": 10,
+  "harvestedTrees": 1,
+  "conservedWood": 24,
+  "screenshot": "artifacts/area-preview-250.png",
+  "diagnostics": [
+    "Lisière renderer diagnostics {\"backend\":\"WebGPU\",\"context\":\"GPUCanvasContext\",\"browser\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36\",\"adapter\":{\"vendor\":\"amd\",\"architecture\":\"rdna-1\",\"device\":\"\",\"description\":\"\"},\"maxVertexBuffers\":8}"
+  ],
+  "errors": []
+}

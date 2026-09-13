@@ -1,10 +1,12 @@
 import * as THREE from 'three/webgpu';
 import { Fn, If, attribute, cos, float, mix, positionLocal, sin, uniform, vec3 } from 'three/tsl';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import type { World, Terrain, MaterialKind, Orientation } from '../sim/types';
+import type { World, Terrain, MaterialKind, Orientation, AreaAction, Cell } from '../sim/types';
 import { TICKS_PER_SECOND } from '../sim/types';
 import { CARRY_CAPACITY, JOB_DURATION, MAX_STACK, footprintCells } from '../sim/definitions';
 import { canDesignate } from '../sim/engine';
+import { buildAreaIndex, isAreaAction, queryArea } from '../sim/designation';
+import type { AreaIndex } from '../sim/designation';
 import { PAWN_MODEL_SCALE, WORLD_SCALE } from '../world/scale';
 
 type Placement = { x: number; y: number; z: number; sx?: number; sy?: number; sz?: number; ry?: number; color?: number };
@@ -215,6 +217,12 @@ export class ColonyRenderer {
   private readonly uBlend = uniform(1);
   private readonly hover: THREE.Mesh;
   private readonly selection: THREE.Mesh;
+  private areaMesh: THREE.InstancedMesh | null = null;
+  private areaIndex: AreaIndex | undefined;
+  private areaSignature = '';
+  private areaDrag: { pointerId: number; action: AreaAction; from: Cell } | null = null;
+  onArea: (action: AreaAction, from: Cell, to: Cell) => void = () => {};
+  onAreaPreview: (info: { width: number; height: number; eligible: number; skipped: number } | null) => void = () => {};
   private readonly raycaster = new THREE.Raycaster();
   private readonly ground = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
   private readonly pointer = new THREE.Vector2();
@@ -248,7 +256,7 @@ export class ColonyRenderer {
   private timeTo = 0;
   private snapshotDuration = 120;
   private disposed = false;
-  private pointerDown: { x: number; y: number; button: number } | null = null;
+  private pointerDown: { x: number; y: number; button: number; pointerId: number } | null = null;
 
   static async create(host: HTMLElement, onPick: (x: number, z: number) => void): Promise<ColonyRenderer> {
     const renderer = new THREE.WebGPURenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
@@ -325,10 +333,12 @@ export class ColonyRenderer {
     this.selection.position.y = 0.09;
     this.selection.visible = false;
     this.scene.add(this.hover, this.selection);
-    renderer.domElement.addEventListener('pointerdown', this.onPointerDown);
+    renderer.domElement.addEventListener('pointerdown', this.onPointerDown, true);
     renderer.domElement.addEventListener('pointerup', this.onPointerUp);
     renderer.domElement.addEventListener('pointermove', this.onPointerMove);
     renderer.domElement.addEventListener('pointerleave', this.onPointerLeave);
+    renderer.domElement.addEventListener('pointercancel', this.onPointerCancel);
+    renderer.domElement.addEventListener('lostpointercapture', this.onPointerCancel);
     renderer.domElement.addEventListener('contextmenu', this.onContextMenu);
     window.addEventListener('keydown', this.onKeyDown);
     window.addEventListener('keyup', this.onKeyUp);
@@ -340,6 +350,8 @@ export class ColonyRenderer {
 
   setWorld(world: World, resetPresentation = false): void {
     if (this.disposed) return;
+    if (resetPresentation) this.cancelDesignation();
+    this.areaIndex = undefined; this.areaSignature = '';
     const now = performance.now();
     const previousWorld = this.world;
     // Worker deltas keep immutable terrain/resources references stable. A changed
@@ -347,6 +359,7 @@ export class ColonyRenderer {
     const nextTerrainKey = previousWorld?.tiles === world.tiles ? this.terrainKey
       : `${world.seed}:${world.width}:${world.height}:${world.tiles.map((t) => t.terrain[0]).join('')}`;
     const newMap = this.terrainKey !== nextTerrainKey;
+    if (newMap) this.cancelDesignation();
     // The worker epoch distinguishes a checkpoint from an ordinary delta even
     // if terrain content and simulation tick match a previous session.
     const resetPoses = resetPresentation || newMap || world.tick < (previousWorld?.tick ?? 0);
@@ -396,6 +409,7 @@ export class ColonyRenderer {
   }
 
   setTool(tool: string): void {
+    if (tool !== this.tool) this.cancelDesignation();
     this.tool = tool;
     if (tool === 'bed') this.keys.delete('q');
     const color = tool === 'cancel' ? 0xe6876a : tool === 'select' ? 0xf9ebae : 0x9dd9ca;
@@ -407,6 +421,21 @@ export class ColonyRenderer {
   setPlacementRotation(orientation: Orientation): void {
     this.placementRotation = orientation;
     this.updateHover();
+  }
+
+  /** A gesture is an uncommitted intention. Losing focus, changing tools/maps or
+   * pressing Escape must never submit it later through a stray pointerup.
+   */
+  cancelDesignation(): boolean {
+    const drag = this.areaDrag;
+    this.areaDrag = null; this.pointerDown = null; this.areaSignature = ''; this.hoverCell = null;
+    this.controls.enabled = true;
+    if (drag && this.renderer.domElement.hasPointerCapture(drag.pointerId)) this.renderer.domElement.releasePointerCapture(drag.pointerId);
+    if (this.areaMesh) this.areaMesh.visible = false;
+    this.hover.visible = false;
+    (this.hover.material as THREE.MeshBasicNodeMaterial).opacity = 0.55;
+    this.onAreaPreview(null);
+    return drag !== null;
   }
 
   /** Presentation only: hidden wall volume remains blocked in the simulation. */
@@ -790,8 +819,7 @@ export class ColonyRenderer {
     this.lastFrame = now;
     this.uBlend.value = this.snapshotDuration > 0 ? Math.min(1, Math.max(0, (performance.now() - this.snapshotAt) / this.snapshotDuration)) : 1;
     this.uTime.value = THREE.MathUtils.lerp(this.timeFrom, this.timeTo, this.uBlend.value);
-    this.moveCamera(dt);
-    this.controls.update();
+    if (!this.areaDrag) { this.moveCamera(dt); this.controls.update(); }
     if (this.world) {
       const x = THREE.MathUtils.clamp(this.controls.target.x, 0, this.world.width - 1);
       const z = THREE.MathUtils.clamp(this.controls.target.z, 0, this.world.height - 1);
@@ -833,23 +861,44 @@ export class ColonyRenderer {
     this.camera.position.add(offset); this.controls.target.add(offset);
   }
 
-  private pick(event: PointerEvent): { x: number; z: number } | null {
+  private pick(event: PointerEvent, clampToMap = false): Cell | null {
     if (!this.world) return null;
     const rect = this.renderer.domElement.getBoundingClientRect();
     this.pointer.set((event.clientX - rect.left) / rect.width * 2 - 1, -(event.clientY - rect.top) / rect.height * 2 + 1);
     this.raycaster.setFromCamera(this.pointer, this.camera);
     if (!this.raycaster.ray.intersectPlane(this.ground, this.hit)) return null;
-    const x = Math.floor(this.hit.x + 0.5), z = Math.floor(this.hit.z + 0.5);
+    let x = Math.floor(this.hit.x + 0.5), z = Math.floor(this.hit.z + 0.5);
+    if (clampToMap) { x = THREE.MathUtils.clamp(x, 0, this.world.width - 1); z = THREE.MathUtils.clamp(z, 0, this.world.height - 1); }
     if (x < 0 || z < 0 || x >= this.world.width || z >= this.world.height) return null;
     return { x, z };
   }
   private onPointerDown = (event: PointerEvent): void => {
-    this.pointerDown = { x: event.clientX, y: event.clientY, button: event.button };
+    if (this.areaDrag) {
+      if (event.button === 2) this.cancelDesignation();
+      event.stopImmediatePropagation(); event.preventDefault(); return;
+    }
+    this.pointerDown = { x: event.clientX, y: event.clientY, button: event.button, pointerId: event.pointerId };
     this.renderer.domElement.focus({ preventScroll: true });
+    const from = this.pick(event);
+    if (event.button === 0 && event.isPrimary && from && isAreaAction(this.tool)) {
+      event.stopImmediatePropagation(); event.preventDefault();
+      this.areaDrag = { pointerId: event.pointerId, action: this.tool, from };
+      this.controls.enabled = false; this.keys.clear();
+      this.renderer.domElement.setPointerCapture(event.pointerId);
+      this.hoverCell = from; this.areaSignature = ''; this.updateHover();
+    }
   };
   private onPointerUp = (event: PointerEvent): void => {
+    const drag = this.areaDrag;
+    if (drag) {
+      if (event.pointerId !== drag.pointerId || event.button !== 0) return;
+      const to = this.pointerOnCanvas(event) ? this.pick(event, true) : null;
+      this.cancelDesignation();
+      if (to) this.onArea(drag.action, drag.from, to);
+      return;
+    }
     const down = this.pointerDown; this.pointerDown = null;
-    if (!down || down.button !== 0 || event.button !== 0 || Math.hypot(down.x - event.clientX, down.y - event.clientY) > 6) return;
+    if (!down || down.pointerId !== event.pointerId || down.button !== 0 || event.button !== 0 || Math.hypot(down.x - event.clientX, down.y - event.clientY) > 6) return;
     const cell = this.pick(event);
     if (!cell) return;
     if (this.tool === 'select') {
@@ -860,10 +909,63 @@ export class ColonyRenderer {
     this.onPick(cell.x, cell.z);
   };
   private onPointerMove = (event: PointerEvent): void => {
-    this.hoverCell = this.pick(event);
+    if (this.areaDrag && event.pointerId !== this.areaDrag.pointerId) return;
+    // A second mouse button changes `buttons` through pointermove, without a new pointerdown.
+    if (this.areaDrag && (event.buttons & 2)) { event.preventDefault(); this.cancelDesignation(); return; }
+    this.hoverCell = this.pointerOnCanvas(event) ? this.pick(event, !!this.areaDrag) : null;
     this.updateHover();
   };
+  private pointerOnCanvas(event: PointerEvent): boolean {
+    return document.elementFromPoint(event.clientX, event.clientY) === this.renderer.domElement;
+  }
+  private updateAreaPreview(): void {
+    const drag = this.areaDrag, world = this.world, cell = this.hoverCell;
+    if (!drag || !world) return;
+    if (!cell) {
+      this.hover.visible = false; if (this.areaMesh) this.areaMesh.visible = false;
+      this.areaSignature = ''; this.onAreaPreview(null); return;
+    }
+    const signature = `${drag.action}:${drag.from.x}:${drag.from.z}:${cell.x}:${cell.z}`;
+    if (signature === this.areaSignature) return;
+    this.areaSignature = signature;
+    this.areaIndex ??= buildAreaIndex(world);
+    const result = queryArea(world, { type: 'area', action: drag.action, from: drag.from, to: cell }, this.areaIndex);
+    if (!result.ok) return;
+    const { bounds, cells, skipped } = result;
+    const width = bounds.maxX - bounds.minX + 1, height = bounds.maxZ - bounds.minZ + 1;
+    const color = drag.action === 'cancel' || drag.action === 'remove-stockpile' ? 0xf49b7c : 0x9de7c9;
+    this.hover.visible = true; this.hover.scale.set(width, height, 1);
+    this.hover.position.set((bounds.minX + bounds.maxX) / 2, 0.045, (bounds.minZ + bounds.maxZ) / 2);
+    const hoverMat = this.hover.material as THREE.MeshBasicNodeMaterial;
+    hoverMat.opacity = 0.12; hoverMat.color.setHex(cells.length ? color : 0xe46f58);
+    if (cells.length && (!this.areaMesh || this.areaMesh.instanceMatrix.count < cells.length)) {
+      this.disposeAreaMesh();
+      const capacity = Math.min(world.width * world.height, 2 ** Math.ceil(Math.log2(Math.max(16, cells.length))));
+      const mat = new THREE.MeshBasicNodeMaterial({ color, transparent: true, opacity: 0.48, depthWrite: false, side: THREE.DoubleSide });
+      this.areaMesh = new THREE.InstancedMesh(new THREE.PlaneGeometry(0.86, 0.86).rotateX(-Math.PI / 2), mat, capacity);
+      this.areaMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      this.areaMesh.renderOrder = 6;
+      this.scene.add(this.areaMesh);
+    }
+    if (this.areaMesh) {
+      this.areaMesh.visible = cells.length > 0; this.areaMesh.count = cells.length;
+      (this.areaMesh.material as THREE.MeshBasicNodeMaterial).color.setHex(color);
+      scratchObject.rotation.set(0, 0, 0); scratchObject.scale.set(1, 1, 1);
+      for (let i = 0; i < cells.length; i++) {
+        scratchObject.position.set(cells[i]! % world.width, 0.065, Math.floor(cells[i]! / world.width));
+        scratchObject.updateMatrix(); this.areaMesh.setMatrixAt(i, scratchObject.matrix);
+      }
+      this.areaMesh.instanceMatrix.needsUpdate = true; this.areaMesh.computeBoundingSphere();
+    }
+    this.onAreaPreview({ width, height, eligible: cells.length, skipped });
+  }
+  private disposeAreaMesh(): void {
+    if (!this.areaMesh) return;
+    this.scene.remove(this.areaMesh); this.areaMesh.dispose(); this.areaMesh.geometry.dispose();
+    (this.areaMesh.material as THREE.Material).dispose(); this.areaMesh = null;
+  }
   private updateHover(): void {
+    if (this.areaDrag) { this.updateAreaPreview(); return; }
     const cell = this.hoverCell;
     this.hover.visible = !!cell;
     if (!cell || !this.world) return;
@@ -877,7 +979,14 @@ export class ColonyRenderer {
     (this.hover.material as THREE.MeshBasicNodeMaterial).color.setHex(color);
     this.renderer.domElement.title = validity?.reason ?? '';
   }
-  private onPointerLeave = (): void => { this.hoverCell = null; this.hover.visible = false; this.pointerDown = null; };
+  private onPointerLeave = (): void => {
+    this.hoverCell = null; this.hover.visible = false;
+    if (this.areaDrag) this.updateAreaPreview(); else this.pointerDown = null;
+  };
+  private onPointerCancel = (event: PointerEvent): void => {
+    if (this.areaDrag?.pointerId === event.pointerId) this.cancelDesignation();
+    else if (this.pointerDown?.pointerId === event.pointerId) this.pointerDown = null;
+  };
   private onContextMenu = (event: Event): void => { event.preventDefault(); };
   private onKeyDown = (event: KeyboardEvent): void => {
     if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey || document.querySelector('dialog[open]')) return;
@@ -890,19 +999,22 @@ export class ColonyRenderer {
     }
   };
   private onKeyUp = (event: KeyboardEvent): void => { this.keys.delete(event.key.toLowerCase()); };
-  private onBlur = (): void => { this.keys.clear(); };
+  private onBlur = (): void => { this.keys.clear(); this.cancelDesignation(); };
 
   dispose(): void {
     if (this.disposed) return;
+    this.cancelDesignation(); this.disposeAreaMesh();
     this.disposed = true;
     this.renderer.setAnimationLoop(null);
     this.resizeObserver.disconnect();
     this.controls.dispose();
     const canvas = this.renderer.domElement;
-    canvas.removeEventListener('pointerdown', this.onPointerDown);
+    canvas.removeEventListener('pointerdown', this.onPointerDown, true);
     canvas.removeEventListener('pointerup', this.onPointerUp);
     canvas.removeEventListener('pointermove', this.onPointerMove);
     canvas.removeEventListener('pointerleave', this.onPointerLeave);
+    canvas.removeEventListener('pointercancel', this.onPointerCancel);
+    canvas.removeEventListener('lostpointercapture', this.onPointerCancel);
     canvas.removeEventListener('contextmenu', this.onContextMenu);
     window.removeEventListener('keydown', this.onKeyDown);
     window.removeEventListener('keyup', this.onKeyUp);

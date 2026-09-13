@@ -37,6 +37,7 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
       if (request.type === 'command') {
         const result = applyCommand(world, request.command);
         if (!result.ok) throw new Error(result.reason ?? 'Ordre refusé.');
+        if (result.affected !== undefined) data = JSON.stringify({ affected: result.affected, skipped: result.skipped });
       } else if (request.type === 'save') {
         data = serializeWorld(world);
       } else if (request.type === 'load') {

@@ -1,0 +1,98 @@
+{
+  "timestamp": "2026-09-13T14:06:56.450Z",
+  "node": "v24.11.1",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "platform": "win32",
+  "osRelease": "10.0.26200",
+  "map": {
+    "size": 250,
+    "seed": 42,
+    "resources": 12411,
+    "pawns": 3
+  },
+  "conditions": "Node CPU only; query two warmups/10 samples, commands one warmup/five paired samples with alternating order. Fixtures/clones/validation outside timings. Single-cell controls receive exactly the eligible cells, so their timings exclude selection discovery. Complete resulting worlds compared outside timing except events (one summary versus individual logs). No IPC, browser, simulation ticks or GPU. Full-map batch has no single-cell timing control.",
+  "rows": [
+    {
+      "side": 8,
+      "selectedCells": 64,
+      "designatedTrees": 2,
+      "queryIncludingIndexMs": {
+        "median": 1.2621000000000038,
+        "min": 0.5939999999999941,
+        "max": 1.4399999999999977,
+        "samples": 10
+      },
+      "queryReusingIndexMs": {
+        "median": 0.011600000000015598,
+        "min": 0.008199999999987995,
+        "max": 0.021500000000003183,
+        "samples": 10
+      },
+      "applyBatchMs": {
+        "median": 2.4007000000001426,
+        "min": 2.063899999999876,
+        "max": 8.3048,
+        "samples": 5
+      },
+      "applySinglesMs": {
+        "median": 0.48539999999979955,
+        "min": 0.4192000000000462,
+        "max": 0.7876999999999725,
+        "samples": 5
+      }
+    },
+    {
+      "side": 32,
+      "selectedCells": 1024,
+      "designatedTrees": 156,
+      "queryIncludingIndexMs": {
+        "median": 1.7019999999999982,
+        "min": 1.0326000000000022,
+        "max": 2.0528999999999087,
+        "samples": 10
+      },
+      "queryReusingIndexMs": {
+        "median": 0.013399999999819556,
+        "min": 0.01089999999999236,
+        "max": 0.018100000000004002,
+        "samples": 10
+      },
+      "applyBatchMs": {
+        "median": 1.8458000000000538,
+        "min": 1.5315999999997985,
+        "max": 2.057600000000093,
+        "samples": 5
+      },
+      "applySinglesMs": {
+        "median": 10.39529999999968,
+        "min": 9.940599999999904,
+        "max": 14.336399999999912,
+        "samples": 5
+      }
+    },
+    {
+      "side": 250,
+      "selectedCells": 62500,
+      "designatedTrees": 8024,
+      "queryIncludingIndexMs": {
+        "median": 1.1511000000000422,
+        "min": 0.9891999999999825,
+        "max": 1.5626000000002023,
+        "samples": 10
+      },
+      "queryReusingIndexMs": {
+        "median": 0.33140000000003056,
+        "min": 0.26690000000007785,
+        "max": 0.710700000000088,
+        "samples": 10
+      },
+      "applyBatchMs": {
+        "median": 3.5405000000000655,
+        "min": 2.9719999999997526,
+        "max": 4.175500000000284,
+        "samples": 5
+      },
+      "applySinglesMs": null
+    }
+  ]
+}

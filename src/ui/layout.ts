@@ -8,13 +8,13 @@ export type Panel = 'architect' | 'work' | 'history' | 'menu' | null;
 export type ArchitectCategory = 'orders' | 'zones' | 'structure' | 'furniture';
 export const toolDefinitions: { id: Tool; icon: string; title: string; hint: string; key: string; category: ArchitectCategory }[] = [
   { id: 'select', icon: '↖', title: 'Inspecter', hint: 'Choisir une case ou un colon', key: 'Échap', category: 'orders' },
-  { id: 'chop', icon: '♧', title: 'Abattre', hint: 'Désigner un arbre à couper', key: 'C', category: 'orders' },
-  { id: 'harvest', icon: '⁙', title: 'Récolter', hint: 'Désigner un buisson de baies', key: 'R', category: 'orders' },
-  { id: 'cancel', icon: '×', title: 'Annuler', hint: 'Retirer un ordre en attente ou actif', key: 'X', category: 'orders' },
+  { id: 'chop', icon: '♧', title: 'Abattre', hint: 'Cliquer ou tracer un rectangle sur les arbres à couper. Échap annule le tracé.', key: 'C', category: 'orders' },
+  { id: 'harvest', icon: '⁙', title: 'Récolter', hint: 'Cliquer ou tracer un rectangle sur les buissons de baies à récolter.', key: 'R', category: 'orders' },
+  { id: 'cancel', icon: '×', title: 'Annuler', hint: 'Cliquer ou tracer un rectangle pour retirer les ordres. Les matériaux restent sur place.', key: 'X', category: 'orders' },
   { id: 'wall', icon: '▥', title: 'Mur', hint: '5 bois · une case libre · mur de 2,80 m', key: 'B', category: 'structure' },
   { id: 'bed', icon: '▰', title: 'Lit', hint: '8 bois livrés · empreinte 1 × 2 · Q / E pour tourner', key: 'L', category: 'furniture' },
-  { id: 'stockpile', icon: '▧', title: 'Réserve', hint: 'Cliquer sur les cases à réserver au stockage. Les colons y apportent les objets autorisés.', key: 'S', category: 'zones' },
-  { id: 'remove-stockpile', icon: '⊠', title: 'Retirer', hint: 'Retirer une case de réserve ; les objets restent au sol.', key: '', category: 'zones' },
+  { id: 'stockpile', icon: '▧', title: 'Réserve', hint: 'Tracer un rectangle de stockage. Les cases occupées et les réserves existantes sont ignorées.', key: 'S', category: 'zones' },
+  { id: 'remove-stockpile', icon: '⊠', title: 'Retirer', hint: 'Cliquer ou tracer un rectangle pour retirer des cases de réserve ; les objets restent au sol.', key: '', category: 'zones' },
 ];
 
 export function storageSettings(prefix: string): string {
@@ -45,6 +45,7 @@ export function gameLayout(): string {
     <aside id="alerts" class="alerts" aria-label="Alertes de la colonie"></aside>
     <div id="pause-banner" hidden>EN PAUSE</div>
     <div id="notice" role="status" aria-live="polite" hidden></div>
+    <div id="area-feedback" role="status" aria-live="polite" hidden></div>
 
     <section id="inspector" class="inspector panel" aria-label="Inspection" hidden></section>
     <section id="architect-panel" class="management-panel architect-panel panel" aria-label="Architecte" hidden>
@@ -91,7 +92,8 @@ export function gameLayout(): string {
     <dialog id="help" class="help-dialog"><form method="dialog"><button class="close" aria-label="Fermer l’aide">×</button></form><span class="section-label">CARNET DE SURVIE</span><h2>Votre première journée</h2>
       <p>Vous donnez les ordres. Les colons choisissent leurs tâches et se déplacent de façon autonome.</p>
       <ol><li><b>Architecte → Ordres</b> : récolter les baies et abattre les arbres ; les matériaux apparaissent au sol.</li><li><b>Architecte → Zones</b> : désigner des cases de réserve et choisir leurs filtres. Les transporteurs y regroupent les objets.</li><li><b>Architecte → Structure / Meubles</b> : poser des murs et des lits. Les matériaux doivent être livrés avant de construire. <b>Q / E</b> tourne le lit.</li><li><b>Travail</b> : régler collecte, construction et transport ; 1 est la plus forte priorité, 0 désactive.</li><li><b>Menu</b> : sauvegarder, recharger ou choisir la taille d'une nouvelle colonie.</li></ol>
-      <p><b>Espace</b> : pause · <b>1 / 2 / 3</b> : vitesse · <b>Tab</b> : Architecte · <b>F1</b> : Travail · <b>Échap</b> : fermer · <b>Ctrl+S</b> : sauvegarder.</p>
+      <p>Abattage, récolte, réserves et annulation : cliquer ou maintenir le bouton gauche pour tracer un rectangle. Les cases retenues sont surlignées. Relâcher applique ; Échap ou clic droit annule le tracé.</p>
+      <p><b>Espace</b> : pause · <b>1 / 2 / 3</b> : vitesse · <b>Tab</b> : Architecte · <b>F1</b> : Travail · <b>Échap</b> : annuler le tracé, puis fermer · <b>Ctrl+S</b> : sauvegarder.</p>
       <p>Molette : zoom · glisser le bouton droit : tourner · bouton central ou flèches : déplacer la caméra. La coupe des murs sert à voir les intérieurs ; leurs obstacles restent en place.</p>
       <p class="muted">Inspectez un chantier pour comprendre son attente, ou une réserve pour modifier ses filtres. Le repos et la prise des repas restent simplifiés. Les onglets grisés indiquent les domaines prévus, actuellement indisponibles.</p>
     </dialog>

@@ -1,6 +1,31 @@
 # Validation du prototype
 
-## État courant : cartes moyennes 250² — 13 septembre 2026
+## État courant : désignations rectangulaires — 13 septembre 2026
+
+La [tranche de désignation](area-designations.md) ajoute abattage, récolte, annulation et création/retrait de cases de réserve en rectangle. Les matériaux, les déplacements et le schéma 2 restent ceux de la boucle matérielle. Le geste est transitoire ; la validation et le bilan d'application viennent du worker.
+
+**`npm test` : 15/15 scénarios, cinq fichiers, 22,40 s.** Aux huit familles de simulation, trois de génération, deux de contrats GPU et une de codec s'ajoute une famille de désignation : oracle via commandes unitaires, quatre sens, frontières et mauvais paramètres, conservation/reprise pendant prélèvement ou portage, annulation unique d'un lit sur deux cellules et préservation d'un autre chantier. Le scénario exerce également la carte entière 250² et la capacité des identités. Le soak de 60 000 ticks avec invariants fait toujours partie du passage global.
+
+**Les quatre parcours navigateur passent ensemble**, environ 1,5 minute :
+
+| Parcours | Navigateur | Durée |
+|---|---|---:|
+| Boucle matérielle, réserves tracées en rectangle, transport, couchages et reprise en livraison | Chromium normal | 14,3 s |
+| Frontières, commandes, migration V1 et interface compacte | Chromium avec SwiftShader | 41,1 s |
+| Rectangles 250² : aperçu, interruptions, stockage, rotation et collecte réelle | Chromium normal, WebGPU AMD/RDNA-1 | 20,4 s |
+| Défaut 250², tailles 128²/200²/250² et ancienne colonie restaurée exactement | Chromium normal | 12,6 s |
+
+Le [rapport graphique et métier](../../artifacts/area-gameplay-validation.json), **14:09:36,801 UTC**, conserve cinq interruptions (Échap, second bouton droit, relâchement sur l'interface, événement blur injecté, changement d'outil), dix cellules de réserve, une collecte réelle et 24 unités de bois conservées. Une première réserve de huit cellules conserve ses réglages lors d'un rectangle chevauchant qui n'ajoute que deux cellules. Le retrait garde les piles, le rechargement retrouve le monde complet. L'aperçu a été capturé pendant un geste maintenu et réellement inspecté ; aucun message d'erreur console/GPU. Le rapport est également joint au test sous `area-gameplay` ; un reporter Playwright JSON permet de conserver cette pièce jointe lors d'un nouveau passage.
+
+Le premier essai visait une extrémité masquée par Architecte : son refus était conforme au contrat, mais une assertion textuelle lisait encore le contenu d'un indicateur caché. Le pilote vérifie désormais les extrémités sur le canvas et la visibilité réelle de l'aperçu. La gestion des boutons a aussi été corrigée : presser le droit pendant le gauche produit un changement de `buttons` dans `pointermove`, pas nécessairement un nouveau `pointerdown`. Ce cas fait partie du parcours régulier. La caméra suspend aussi son amortissement pendant le tracé.
+
+La relecture suivante a ajouté un précontrôle conservateur du nombre d'IDs nécessaires aux dépôts d'une annulation ou d'un retrait. Une sauvegarde valide peut avoir épuisé ce compteur ; la commande doit alors être refusée avant toute suppression de propriétaire. Les régressions vérifient un chantier approvisionné et une cargaison portée à cette limite. **Le scénario de désignation final repasse en 954 ms, et le parcours navigateur ciblé en 19,0 s**, après ce garde-fou. Les autres règles sont inchangées depuis les passages globaux ci-dessus. Le JSON du rapport reste celui du passage global à 14:09 ; la capture locale a été régénérée par le passage ciblé.
+
+**Build TypeScript/Vite final réussi** : jeu 978,69 ko minifiés / 270,13 ko gzip ; worker 43,03 ko ; simulation partagée 12,27 / 5,18 ko ; laboratoire GPU 18,29 / 7,29 ko. L'avertissement du bundle supérieur à 500 ko reste visible. L'archivage du rapport a été sorti du code du test pour conserver le typecheck navigateur sans ajouter de dépendance Node uniquement pour cet export ; cela ne change aucune assertion de jeu.
+
+Le [benchmark de commandes](../../artifacts/area-designation-benchmark.json) mesure le noyau Node, séparément du navigateur : 156 désignations dans un rectangle 32² sur carte 250² prennent 1,85 ms en médiane par commande groupée contre 10,40 ms via commandes unitaires. Les petits rectangles ne bénéficient pas tous d'un gain : deux cibles prennent 2,40 ms contre 0,49 ms, du fait de la préparation de l'index. Conditions, contrôle de l'égalité et limites dans [area-designations.md](area-designations.md). Aucun FPS ni coût d'exécution ultérieure de milliers de travaux n'en est déduit. Les anciens profils de carte ci-dessous ne sont pas redatés après cette livraison.
+
+## Historique : cartes moyennes 250² — 13 septembre 2026
 
 Le défaut jouable est 250×250, avec 200² et les dimensions compactes conservées. Les anciennes sauvegardes gardent leur terrain et leurs identités. Les [mesures appariées de simulation, communication et rendu](map-scale.md) distinguent l'ancien défaut 64², l'ancien moteur dont seules les bornes sont étendues, et le nouveau moteur. Elles documentent également les coûts supplémentaires de mémoire et de préparation ; aucune absence générale de régression n'est revendiquée.
 

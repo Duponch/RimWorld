@@ -1,7 +1,7 @@
 import './style.css';
 import { SimulationClient } from './bridge/SimulationClient';
 import { ColonyRenderer } from './render/ColonyRenderer';
-import type { JobKind, Pawn, World, WorkType, Orientation } from './sim/types';
+import type { JobKind, Pawn, World, WorkType, Orientation, AreaAction, Cell } from './sim/types';
 import { TICKS_PER_DAY } from './sim/types';
 import { DEFAULT_MAP_SIZE, MAP_SIZE_PRESETS } from './sim/map-config';
 import { footprintCells, deliveredStock, queryJobStatus, queryPawnStatus, MAX_STACK } from './sim/index';
@@ -95,6 +95,15 @@ function pickCell(x: number, z: number) {
   if (pawn) { selectPawn(pawn.id); return; }
   selectedPawn = undefined; selectedCell = { x, z };
   setPanel(null); rebuildInspector(); renderState();
+}
+function designateArea(action: AreaAction, from: Cell, to: Cell) {
+  if (!snapshot || replacingWorld) return;
+  void attempt(async () => {
+    const response = await client.command({ type: 'area', action, from, to, ...(action === 'stockpile' ? readStorageSettings('stockpile') : {}) });
+    const result = JSON.parse(response!) as { affected: number; skipped: number };
+    const label = action === 'cancel' ? 'ordre(s) annulé(s)' : action === 'remove-stockpile' ? 'case(s) de réserve retirée(s)' : action === 'stockpile' ? 'case(s) de réserve créée(s)' : 'ordre(s) de collecte créé(s)';
+    notify(`${result.affected} ${label}${result.skipped ? ` · ${result.skipped} case(s) ignorée(s)` : ''}.`);
+  });
 }
 function clearSelection() {
   selectedPawn = undefined; selectedCell = undefined;
@@ -283,8 +292,8 @@ for (const button of document.querySelectorAll<HTMLButtonElement>('[data-close-p
 for (const button of document.querySelectorAll<HTMLButtonElement>('[data-speed]')) button.onclick = () => { void attempt(() => changeSpeed(Number(button.dataset.speed))); };
 el('save').onclick = () => { void attempt(save); }; el('load').onclick = () => { void attempt(() => load()); };
 el('restore-previous').onclick = () => { void attempt(() => load(PREVIOUS_KEY)); };
-el('help-open').onclick = () => el<HTMLDialogElement>('help').showModal();
-el('new-colony').onclick = () => el<HTMLDialogElement>('new-world-dialog').showModal();
+el('help-open').onclick = () => { renderer?.cancelDesignation(); el<HTMLDialogElement>('help').showModal(); };
+el('new-colony').onclick = () => { renderer?.cancelDesignation(); el<HTMLDialogElement>('new-world-dialog').showModal(); };
 el('new-world-close').onclick = () => el<HTMLDialogElement>('new-world-dialog').close();
 el('new-world-form').onsubmit = event => { event.preventDefault(); void attempt(createWorld); };
 el('show-diagnostics').onclick = () => { const hidden = !el('metrics').hidden; el('metrics').hidden = hidden; el('show-diagnostics').textContent = hidden ? 'Afficher les diagnostics' : 'Masquer les diagnostics'; };
@@ -299,7 +308,7 @@ document.addEventListener('keydown', event => {
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') { event.preventDefault(); void attempt(save); return; }
   if (event.ctrlKey || event.metaKey || event.altKey) return;
   if (event.code === 'Space') { event.preventDefault(); void attempt(() => changeSpeed(currentSpeed === 0 ? lastSpeed : 0)); return; }
-  if (event.key === 'Escape') { setPanel(null); clearSelection(); return; }
+  if (event.key === 'Escape') { event.preventDefault(); if (renderer?.cancelDesignation()) return; setPanel(null); clearSelection(); return; }
   if (event.key === 'Tab' || event.key === 'F1') { event.preventDefault(); const panel = event.key === 'Tab' ? 'architect' : 'work'; setPanel(currentPanel === panel ? null : panel); return; }
   const speeds: Record<string, number> = { '1': 1, '2': 3, '3': 6 };
   if (event.key in speeds) { void attempt(() => changeSpeed(speeds[event.key])); return; }
@@ -316,6 +325,11 @@ async function start() {
     const seed = seedText && /^\d{1,10}$/.test(seedText) ? Number(seedText) >>> 0 : 42;
     await client.init(seed, [32, ...MAP_SIZE_PRESETS].includes(requestedSize) ? requestedSize : DEFAULT_MAP_SIZE);
     renderer = await ColonyRenderer.create(el('viewport'), pickCell);
+    renderer.onArea = designateArea;
+    renderer.onAreaPreview = info => {
+      el('area-feedback').hidden = !info;
+      if (info) el('area-feedback').textContent = `${info.width} × ${info.height} · ${info.eligible} case(s) retenue(s) · ${info.skipped} ignorée(s) — Relâcher pour appliquer · Échap pour annuler`;
+    };
     if (snapshot) renderer.setWorld(snapshot);
     el('loading').remove();
     if (import.meta.env.DEV && params.has('e2e')) Object.defineProperty(window, '__lisiere', { value: {
