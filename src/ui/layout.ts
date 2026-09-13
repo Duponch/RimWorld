@@ -13,6 +13,8 @@ export const toolDefinitions: { id: Tool; icon: string; title: string; hint: str
   { id: 'cancel', icon: '×', title: 'Annuler', hint: 'Cliquer ou tracer un rectangle pour retirer les ordres. Les matériaux restent sur place.', key: 'X', category: 'orders' },
   { id: 'wall', icon: '▥', title: 'Mur', hint: '5 bois · une case libre · mur de 2,80 m', key: 'B', category: 'structure' },
   { id: 'bed', icon: '▰', title: 'Lit', hint: '8 bois livrés · empreinte 1 × 2 · Q / E pour tourner', key: 'L', category: 'furniture' },
+  { id: 'table', icon: '▤', title: 'Table', hint: '28 bois livrés · 1 × 2 · placer des tabourets contre le bord · Q / E pour tourner', key: '', category: 'furniture' },
+  { id: 'stool', icon: '⊓', title: 'Tabouret', hint: '25 bois livrés · 1 × 1 · une place par colon, adjacente à une table', key: '', category: 'furniture' },
   { id: 'stockpile', icon: '▧', title: 'Réserve', hint: 'Tracer un rectangle de stockage. Les cases occupées et les réserves existantes sont ignorées.', key: 'S', category: 'zones' },
   { id: 'remove-stockpile', icon: '⊠', title: 'Retirer', hint: 'Cliquer ou tracer un rectangle pour retirer des cases de réserve ; les objets restent au sol.', key: '', category: 'zones' },
 ];
@@ -41,6 +43,7 @@ export function gameLayout(): string {
       <div id="material-status" class="material-status"></div>
       <div class="resource-foot"><span id="population">3</span> colons · <span id="map-size">${DEFAULT_MAP_SIZE} × ${DEFAULT_MAP_SIZE}</span></div>
     </aside>
+    <span id="fps-counter" aria-live="off" title="Cadence du rendu, indépendante de la vitesse de simulation">— FPS</span>
     <div class="corner-tools"><span class="game-title">LISIÈRE</span><button id="help-open" aria-label="Ouvrir l’aide" title="Aide">?</button></div>
     <aside id="alerts" class="alerts" aria-label="Alertes de la colonie"></aside>
     <div id="pause-banner" hidden>EN PAUSE</div>

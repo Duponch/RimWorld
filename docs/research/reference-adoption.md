@@ -74,3 +74,7 @@ Les huit étapes du chapitre 33 se répartissent ainsi : 1–2 et la logistique 
 Avant de modifier un domaine, lire son chapitre et les SYS/UI/TEST concernés, puis regarder la règle actuellement livrée dans le guide et le code. Noter dans le document du domaine : référence, comportement visé, décision adopter/adapter/différer/vérifier, justification, preuve disponible et condition de réexamen. Une entrée inconnue conserve son statut jusqu'à observation ou vérification de source.
 
 Implémenter une tranche avec ses effets réels, enrichir les scénarios existants selon le risque, puis actualiser guide joueur, architecture, ROADMAP et preuves. Ne pas marquer une fonctionnalité livrée depuis une description du corpus. Une divergence motivée reste une décision de conception possible ; les contrats de conservation, de reprise et d'explication doivent rendre ses conséquences visibles et vérifiables.
+
+## Vérification ciblée du mobilier et des repas — 13 septembre 2026
+
+La [recherche repas/confort](dining-reference.md) corrige les généralisations sur le rayon de table, l’origine après prélèvement et l’orientation du siège. Le [contrat local](../development/dining.md) ajoute la réservation et la marche à la place avant ingestion, distingue confort et souvenir, et expose passabilité 3D et paramètres à confirmer. Chapitres 5/10/14, SYS-076..080, UI-016/026 et TEST-189 restent des références de domaine, pas une affirmation de couverture totale. Les fichiers utilisateur originaux restent inchangés.

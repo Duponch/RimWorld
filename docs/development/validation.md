@@ -1,6 +1,38 @@
 # Validation du prototype
 
-## État courant : repas et couchages physiques — 13 septembre 2026
+## État courant : repas à table, confort et FPS — 13 septembre 2026
+
+[Contrat livré](dining.md), [recherche et écarts de référence](../research/dining-reference.md). Tables et tabourets nécessitent livraison et construction ; le repas réserve une place, y transporte la portion puis l'ingère. Le confort dépend de l'usage réel du mobilier ; le premier souvenir concerne le repas sans table. Le schéma 4 conserve les nouvelles phases et migre les versions 1 à 3. L'humeur complète et les types d'aliments restent à développer. Les tables bloquent ici le passage : cette adaptation 3D est explicitement provisoire.
+
+**Simulation : 20/20 scénarios dans huit fichiers, 26,86 s (`npm test`).** Le passage inclut le soak de 60 000 ticks sur cinq graines. Trois familles supplémentaires vérifient les repas concurrents, les interruptions et meubles invalidés, les quatre orientations, les limites de portée, la conservation, les reprises aux différentes phases, la migration d'une véritable ingestion V3, le confort et l'expiration du souvenir. Un oracle compare les résultats et chemins des recherches bornées et complètes sur 120 cartes. Un scénario vérifie la fenêtre FPS, les blocages visibles et le retour d'un onglet caché. Ces contrôles ne constituent pas une couverture exhaustive.
+
+**Intégration : 6/6 parcours passent ensemble en 130,00 s.** Le [rapport archivé](../../artifacts/dining-validation.json), démarrage à 15:53:01 UTC, conserve les durées et pièces jointes. Besoins physiques, boucle matérielle, frontières/migrations, rectangles 250², nouvelles cartes/restauration et repas à table sont vérifiés. Le dernier parcours construit le mobilier avec 53 bois, observe portage et ingestion assise, recharge les deux phases et contrôle le compteur FPS en pause, dans Menu et sur une fenêtre étroite. Chromium normal utilise WebGPU AMD/RDNA-1 ; seul le parcours des frontières emploie SwiftShader.
+
+Les premiers passages ont révélé un conflit d'accessibilité : le compteur en `output` ajoutait un rôle implicite `status`, ambigu avec les annonces de sauvegarde. Le compteur utilise maintenant un `span` avec `aria-live="off"`. Le retrait de réserve a également connu deux échecs intermittents dont la cause n'est pas établie : le contrôle vérifie désormais séparément l'aperçu maintenu puis le retrait par geste rapide après rechargement, avec diagnostics en cas d'échec. Les deux gestes passent dans le passage global final ; aucun correctif du moteur de rectangles n'est revendiqué. La première capture du repas assis a été inspectée ; le test régénère `artifacts/dining-seated.png` (ignoré dans Git). La capture rapprochée suivante n'a pas pu être relue à cause d'une erreur de l'outil d'image.
+
+**Build TypeScript/Vite final réussi** : jeu 983,35 kB minifiés / 272,06 kB gzip ; worker 55,12 kB ; simulation partagée 13,43 / 5,59 kB. L'avertissement du bundle supérieur à 500 kB demeure. Le renderer principal passe de 1 046 à 774 lignes : poses GPU, mobilier et primitives ont été extraits dans des modules dédiés. Le compteur publie à cadence limitée et reste indépendant des ticks de simulation.
+
+### Audit CPU apparié
+
+[Contrôle avant optimisation](../../artifacts/dining-benchmark-before.json) à 15:26:21 UTC et [résultat après optimisation](../../artifacts/dining-benchmark.json) à 15:28:13 UTC, Node 24.11.1 sur Ryzen 5 3600. Même scénario, un échauffement et trois mesures de 400 ticks, cartes 64²/250² avec 3/100 acteurs. Chaque acteur dispose d'une portion, d'une table, d'un tabouret et d'un lit : le scénario isole les décisions et trajets, sans congestion.
+
+Sur **250² et 100 acteurs**, le p95 de la phase repas/trajets passe de **23,70 à 6,90 ms par tick** (environ −71 %) ; maximum de 42,55 à 16,44 ms. Une fois les dormeurs installés, le p95 est de 0,196 ms. Les quatre empreintes finales sont identiques avant/après ; les cent repas assis et les cent couchages sont vérifiés. Le gain vient de recherches BFS arrêtées après la première couche contenant le but, avec départages conservés. Il s'agit de temps CPU, pas de FPS ; les recherches ordinaires de travail restent complètes et la navigation jouée n'utilise pas le laboratoire GPU.
+
+### Audit navigateur et limite observée
+
+[Rapport graphique détaillé](../../artifacts/dining-render-benchmark.json) à 16:03:20 UTC : Chromium normal sans fenêtre, WebGPU AMD/RDNA-1, 1 440×1 000, carte générée 250² sauf camps dégagés, 100 acteurs. Après 60 frames d'échauffement, chaque phase dure au moins huit secondes et 240 frames ; aucune sérialisation du monde n'est ajoutée dans les frames mesurées. Le script mesure séparément intervalles de rendu, temps CPU du renderer, adoption des snapshots et mise à jour DOM.
+
+| Mesure | Pause | Simulation 6× |
+|---|---:|---:|
+| Nombre de frames | 1 521 | 1 660 |
+| Intervalle de frame p95 / maximum | 8,4 / 25,0 ms | 8,3 / **333,4 ms** |
+| Renderer CPU p95 / maximum | 6,1 / 10,9 ms | 4,8 / 101,5 ms |
+| Adoption snapshot p95 / maximum | — | 3,9 / 4,3 ms |
+| Mise à jour DOM p95 / maximum | — | 5,9 / 5,9 ms |
+
+Les cent portions ont été mangées à table et les cent acteurs dorment au terme du scénario, sans erreur console/GPU. **Une saccade d'environ 333 ms reste observée**, avec une tâche longue de 108 ms et une frame CPU de 101,5 ms. La mise à jour DOM mesurée n'explique pas ce pic ; l'origine exacte côté rendu, pilote ou ordonnancement reste inconnue. Une trace ciblée est inscrite au prochain audit, avant d'augmenter la charge graphique. Le temps CPU inclut les soumissions mais ne chronomètre pas directement l'exécution GPU. Ces percentiles sur une scène sans congestion ne prouvent ni une fluidité constante ni un budget garanti sur d'autres appareils.
+
+## Historique : repas et couchages physiques — 13 septembre 2026
 
 [Contrat et paramètres](needs.md). Consommation à distance et bonus de lit voisin supprimés ; tâches de repas et de sommeil persistées en schéma 3, attribution de lits, interruptions conservant les objets. Deux scénarios de simulation existants enrichis, plutôt qu'une nouvelle multitude de tests. Les résultats antérieurs ci-dessous sont historiques, notamment leurs timings de navigation sous les anciennes règles.
 

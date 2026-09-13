@@ -14,10 +14,10 @@ export function blockedCells(world: World): Uint8Array {
     if (terrain === 'water' || terrain === 'rock') blocked[i] = 1;
   }
   for (const structure of world.structures) {
-    if (structure.kind === 'wall') blocked[cellIndex(world, structure.x, structure.z)] = 1;
+    if (structure.kind === 'wall' || structure.kind === 'table') for (const cell of footprintCells(structure)) blocked[cellIndex(world, cell.x, cell.z)] = 1;
   }
   for (const job of world.jobs) {
-    if (job.kind === 'wall') blocked[cellIndex(world, job.x, job.z)] = 1;
+    if (job.kind === 'wall' || job.kind === 'table') for (const cell of footprintCells(job)) blocked[cellIndex(world, cell.x, cell.z)] = 1;
   }
   return blocked;
 }
@@ -37,8 +37,10 @@ export function routeToCell(world: World, target: Cell, reachable: Reachability)
   return path.reverse();
 }
 
-/** One bounded flood per planning pawn, reused for every candidate job. No per-frame search. */
-export function reachableCells(world: World, start: Cell, blocked: Uint8Array, occupied: Set<number>): Reachability {
+/** Full flood by default. With goals, the map is partial beyond the first goal
+ * layer and may only be used for nearest-goal selection (or that single target).
+ * No reached goal means a complete flood, so remaining candidates are knowable. */
+export function reachableCells(world: World, start: Cell, blocked: Uint8Array, occupied: Set<number>, goals?: ReadonlySet<number>): Reachability {
   const size = world.width * world.height;
   const parents = new Int32Array(size).fill(-2);
   const queue = new Int32Array(size);
@@ -47,8 +49,10 @@ export function reachableCells(world: World, start: Cell, blocked: Uint8Array, o
   queue[0] = startIndex;
   let head = 0;
   let tail = 1;
+  let frontier = 1, reachedGoal = false;
   while (head < tail) {
     const index = queue[head++]!;
+    if (goals?.has(index)) reachedGoal = true;
     const x = index % world.width;
     // Keep exact N,E,S,W discovery order without allocating one array per visited cell.
     let next = index - world.width;
@@ -59,12 +63,15 @@ export function reachableCells(world: World, start: Cell, blocked: Uint8Array, o
     if (next < size && parents[next] === -2 && !blocked[next] && !occupied.has(next)) { parents[next] = index; queue[tail++] = next; }
     next = index - 1;
     if (x > 0 && parents[next] === -2 && !blocked[next] && !occupied.has(next)) { parents[next] = index; queue[tail++] = next; }
+    // Finish the entire first goal layer: all equal-length routes keep the same
+    // N/E/S/W parents and remain eligible for the caller's stable ID tie-break.
+    if (head === frontier) { if (reachedGoal) break; frontier = tail; }
   }
   return { parents, start: startIndex };
 }
 
 export function routeToJob(world: World, target: Cell & { kind?: string; orientation?: 0 | 1 | 2 | 3; footprint?: 'standard' | 'legacy-single' }, reachable: Reachability, allowTarget = false): Cell[] | null {
-  const cells = target.kind === 'bed' ? footprintCells({ ...target, kind: 'bed' }) : [target];
+  const cells = target.kind === 'bed' || target.kind === 'table' ? footprintCells({ ...target, kind: target.kind }) : [target];
   const candidates: Cell[] = cells.flatMap(cell => [
     { x: cell.x, z: cell.z - 1 }, { x: cell.x + 1, z: cell.z },
     { x: cell.x, z: cell.z + 1 }, { x: cell.x - 1, z: cell.z },
@@ -84,4 +91,17 @@ export function routeToJob(world: World, target: Cell & { kind?: string; orienta
     if (best === null || path.length < best.length) best = path;
   }
   return best;
+}
+
+/** Same interaction cells as routeToJob(..., true) for single-cell food piles. */
+export function foodInteractionGoals(world: World, cells: Cell[]): Set<number> {
+  const goals = new Set<number>();
+  for (const cell of cells) {
+    const index = cellIndex(world, cell.x, cell.z); goals.add(index);
+    if (cell.z > 0) goals.add(index - world.width);
+    if (cell.x + 1 < world.width) goals.add(index + 1);
+    if (cell.z + 1 < world.height) goals.add(index + world.width);
+    if (cell.x > 0) goals.add(index - 1);
+  }
+  return goals;
 }

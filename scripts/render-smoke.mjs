@@ -16,7 +16,7 @@ await page.route('**/src/main.ts*', async route => {
 const originalProbeSetWorld = ColonyRenderer.prototype.setWorld;
 ColonyRenderer.prototype.setWorld = function(world, replaced) {
   const result = originalProbeSetWorld.call(this, world, replaced);
-  window.__poseProbe = { replaced, tick: world.tick, poses: [...this.pawnVisuals].map(([id, pose]) => ({ id, from: pose.from.toArray(), to: pose.to.toArray() })) };
+  window.__poseProbe = { replaced, tick: world.tick, poses: [...this.pawns.visuals].map(([id, pose]) => ({ id, from: pose.from.toArray(), to: pose.to.toArray() })) };
   return result;
 };
 `;

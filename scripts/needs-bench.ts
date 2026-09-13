@@ -3,7 +3,7 @@
 import { writeFileSync } from 'node:fs';
 import { cpus } from 'node:os';
 import { performance } from 'node:perf_hooks';
-import { createWorld, stepWorld, validateWorld, addGroundMaterial, refreshStock } from '../src/sim/index.ts';
+import { createWorld, stepWorld, validateWorld, addGroundMaterial, refreshStock, SCHEMA_VERSION } from '../src/sim/index.ts';
 const percentile = (samples: number[], p: number) => [...samples].sort((a, b) => a - b)[Math.ceil(samples.length * p) - 1];
 function fixture(size: number, count: number) {
   const world = createWorld(42, size, size), template = world.pawns[0]!;
@@ -30,6 +30,6 @@ for (const size of [64, 250]) for (const count of [3, 100]) {
   }
   rows.push({ size, count, meals: count, occupiedBeds: count, phases: Object.fromEntries(Object.entries(phases).map(([name, samples]) => [name, { samples: samples.length, medianMs: percentile(samples, 0.5), p95Ms: percentile(samples, 0.95), maxMs: Math.max(...samples) }])) });
 }
-const result = { timestamp: new Date().toISOString(), node: process.version, cpu: cpus()[0]?.model, schema: 3, scenario: 'Open terrain, individual food portions and assigned beds; 400 ticks, 1 warmup and 3 measured runs. No renderer or worker messaging.', rows };
-writeFileSync('artifacts/needs-benchmark.json', JSON.stringify(result, null, 2) + '\n');
+const result = { timestamp: new Date().toISOString(), node: process.version, cpu: cpus()[0]?.model, schema: SCHEMA_VERSION, scenario: 'Open terrain, individual food portions and assigned beds; 400 ticks, 1 warmup and 3 measured runs. No renderer or worker messaging.', rows };
+writeFileSync('artifacts/needs-benchmark-current.json', JSON.stringify(result, null, 2) + '\n');
 console.log(JSON.stringify(result, null, 2));

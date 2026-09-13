@@ -300,7 +300,7 @@ describe('deterministic colony simulation', () => {
     // Exhausted ID allocator: whole-portion pickup and interrupted drop still work.
     const fullId = fixture(1); fullId.piles = []; refreshStock(fullId); addGroundMaterial(fullId, 'food', 1, fullId.pawns[0]!);
     fullId.nextId = Number.MAX_SAFE_INTEGER; fullId.pawns[0]!.hunger = 10; stepWorld(fullId);
-    expect(fullId.pawns[0]!.state).toBe('eating'); fullId.pawns[0]!.rest = 0; stepWorld(fullId);
+    expect(fullId.pawns[0]!.need).toMatchObject({ kind: 'eat', phase: 'choose-spot' }); stepWorld(fullId); expect(fullId.pawns[0]!.state).toBe('eating'); fullId.pawns[0]!.rest = 0; stepWorld(fullId);
     expect(fullId.stock.food).toBe(1); expect(validateWorld(fullId)).toEqual([]);
   });
 
@@ -324,7 +324,7 @@ describe('deterministic colony simulation', () => {
 
   test('schema-1 migration preserves stock, escrow, beds and identity; corrupt schema-2 saves are rejected', () => {
     const migrated = deserializeWorld(legacySave());
-    expect(migrated.schemaVersion).toBe(3); expect(migrated.pawns[0]!.id).toBe(4); expect(migrated.structures[0]!.id).toBe(10);
+    expect(migrated.schemaVersion).toBe(4); expect(migrated.pawns[0]!.id).toBe(4); expect(migrated.structures[0]!.id).toBe(10);
     expect(migrated.structures[0]).toMatchObject({ x: 7, z: 7, footprint: 'legacy-single' });
     expect(migrated.pawns[0]!.priorities).toMatchObject({ gather: 2, build: 2 }); audit(migrated, 20); expect(foodMass(migrated)).toBe(18);
     expect(hashWorld(deserializeWorld(legacySave()))).toBe(hashWorld(migrated));
@@ -343,7 +343,7 @@ describe('deterministic colony simulation', () => {
     const world = fixture(1); resource(world, 6, 6, 'tree'); order(world, 'bed', 10, 10);
     until(world, () => world.pawns[0]!.haul?.phase === 'pickup', 'save during reservation'); const serialized = serializeWorld(world);
     const corruptions: ((data: any) => void)[] = [
-      data => { data.schemaVersion = 4; }, data => { data.rng = 0; }, data => { data.tick = -1; }, data => { data.width = 251; },
+      data => { data.schemaVersion = 99; }, data => { data.rng = 0; }, data => { data.tick = -1; }, data => { data.width = 251; },
       data => { data.logisticsCursor = -1; },
       data => { data.stock.wood = -1; }, data => { data.pawns[0] = null; }, data => { data.pawns[0].hunger = null; },
       data => { data.pawns[0].priorities = null; }, data => { data.pawns[0].path = [{ x: 15, z: 15 }]; },
@@ -365,7 +365,7 @@ describe('deterministic colony simulation', () => {
     expect(serializeWorld(world)).toBe(serialized);
     // Captured by running HEAD 489b98a's engine, including an active delivery and ground sleeper.
     const material = deserializeWorld(JSON.stringify(materialFixture));
-    expect(material.schemaVersion).toBe(3); expect(material.piles).toEqual(materialFixture.piles); expect(material.jobs).toEqual(materialFixture.jobs);
+    expect(material.schemaVersion).toBe(4); expect(material.piles).toEqual(materialFixture.piles); expect(material.jobs).toEqual(materialFixture.jobs);
     expect(material.pawns.map(pawn => pawn.haul)).toEqual(materialFixture.pawns.map(pawn => pawn.haul));
     expect(material.pawns.map(pawn => [pawn.id, pawn.x, pawn.z, pawn.hunger, pawn.rest])).toEqual(materialFixture.pawns.map(pawn => [pawn.id, pawn.x, pawn.z, pawn.hunger, pawn.rest]));
     expect(material.pawns[2]!.state).toBe('idle'); expect(material.pawns.every(pawn => pawn.need === null)).toBe(true);

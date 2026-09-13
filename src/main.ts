@@ -4,11 +4,11 @@ import { ColonyRenderer } from './render/ColonyRenderer';
 import type { JobKind, Pawn, World, WorkType, Orientation, AreaAction, Cell } from './sim/types';
 import { TICKS_PER_DAY } from './sim/types';
 import { DEFAULT_MAP_SIZE, MAP_SIZE_PRESETS } from './sim/map-config';
-import { footprintCells, deliveredStock, queryJobStatus, queryPawnStatus, MAX_STACK } from './sim/index';
+import { footprintCells, deliveredStock, queryJobStatus, queryPawnStatus, MAX_STACK, JOB_WOOD_COST } from './sim/index';
 import { gameLayout, storageSettings, toolDefinitions } from './ui/layout';
 import type { ArchitectCategory, Panel, Tool } from './ui/layout';
 
-const jobLabels: Record<JobKind, string> = { chop: 'Abattage', harvest: 'Récolte', wall: 'Construction du mur', bed: 'Construction du lit' };
+const jobLabels: Record<JobKind, string> = { chop: 'Abattage', harvest: 'Récolte', wall: 'Construction du mur', bed: 'Construction du lit', table: 'Construction de la table', stool: 'Construction du tabouret' };
 const stateLabels: Record<Pawn['state'], string> = { idle: 'Disponible', moving: 'En chemin', working: 'Au travail', sleeping: 'Se repose', hungry: 'Cherche à manger', eating: 'Mange' };
 const terrainLabels = { grass: 'Prairie', soil: 'Terre fertile', water: 'Eau infranchissable', rock: 'Massif rocheux infranchissable' };
 const resourceLabels = { tree: 'Arbre', berries: 'Buisson de baies', rock: 'Pierre au sol' };
@@ -65,7 +65,7 @@ function applyTool(tool: Tool) {
     button.setAttribute('aria-pressed', String(active));
   }
   el('tool-instruction').textContent = toolDefinitions.find(item => item.id === tool)!.hint;
-  el('placement-controls').hidden = tool !== 'bed';
+  el('placement-controls').hidden = tool !== 'bed' && tool !== 'table';
   el('storage-options').hidden = tool !== 'stockpile';
 }
 function setTool(tool: Tool) {
@@ -126,7 +126,7 @@ function rebuildInspector() {
   const panel = el('inspector');
   panel.hidden = currentPanel !== null || (selectedPawn === undefined && !selectedCell);
   if (selectedPawn !== undefined) {
-    panel.innerHTML = `<div class="panel-heading"><h2 id="selected-name"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><p id="selected-action"></p><div class="needs">${(['hunger', 'rest', 'mood'] as const).map((need, index) => `<label>${['Nourriture', 'Repos', 'Humeur'][index]} <span id="selected-${need}"></span></label><meter id="${need}-meter" min="0" max="100" low="25" optimum="100"></meter>`).join('')}</div><button class="secondary-action" id="manage-work">Gérer le travail</button>`;
+    panel.innerHTML = `<div class="panel-heading"><h2 id="selected-name"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><p id="selected-action"></p><div class="needs">${(['hunger', 'rest', 'comfort', 'mood'] as const).map((need, index) => `<label>${['Nourriture', 'Repos', 'Confort', 'Humeur'][index]} <span id="selected-${need}"></span></label><meter id="${need}-meter" min="0" max="100" low="25" optimum="100"></meter>`).join('')}</div><p id="selected-memories" class="muted"></p><button class="secondary-action" id="manage-work">Gérer le travail</button>`;
     el('manage-work').onclick = () => setPanel('work');
   } else if (selectedCell) {
     panel.innerHTML = `<div class="panel-heading"><h2 id="cell-title"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><p id="cell-description"></p><p id="cell-materials"></p><p id="cell-job"></p><div id="cell-storage" hidden><p id="cell-storage-quantity"></p>${storageSettings('selected-stockpile')}<button id="update-stockpile" class="secondary-action">Appliquer les réglages</button><button id="delete-stockpile" class="secondary-action">Retirer cette réserve</button></div>`;
@@ -220,7 +220,8 @@ function renderState() {
     if (!pawn) clearSelection();
     else {
       el('selected-name').textContent = pawn.name; el('selected-action').textContent = pawn.need ? actionLabel(pawn) : `${actionLabel(pawn)} · ${queryPawnStatus(world, pawn).reason}`;
-      for (const need of ['hunger', 'rest', 'mood'] as const) { el(`selected-${need}`).textContent = `${Math.round(pawn[need])} %`; el<HTMLMeterElement>(`${need}-meter`).value = pawn[need]; }
+      el('selected-memories').textContent = pawn.memories.length ? `Mangé sans table : −3 humeur · encore ${Math.ceil((pawn.memories[0]!.expiresAt - world.tick) / (TICKS_PER_DAY / 24))} h` : '';
+      for (const need of ['hunger', 'rest', 'comfort', 'mood'] as const) { el(`selected-${need}`).textContent = `${Math.round(pawn[need])} %`; el<HTMLMeterElement>(`${need}-meter`).value = pawn[need]; }
     }
   } else if (selectedCell) {
     const { x, z } = selectedCell;
@@ -231,10 +232,10 @@ function renderState() {
       const job = world.jobs.find(item => footprintCells(item).some(cell => cell.x === x && cell.z === z));
       const storage = world.stockpiles.find(item => item.x === x && item.z === z);
       const piles = world.piles.filter(item => item.owner.type === 'ground' && item.owner.x === x && item.owner.z === z);
-      el('cell-title').textContent = structure ? structure.kind === 'wall' ? 'Mur en bois' : 'Lit' : resource ? resourceLabels[resource.kind] : terrainLabels[world.tiles[z * world.width + x].terrain];
-      el('cell-description').textContent = `Case ${x}, ${z}${resource ? ` · ${resource.amount} unités à récolter` : ''}${structure ? ` · ${structure.kind === 'bed' && structure.footprint !== 'legacy-single' ? '1 × 2' : '1 × 1'} cases` : ''}`;
+      el('cell-title').textContent = structure ? ({ wall: 'Mur en bois', bed: 'Lit', table: 'Table en bois', stool: 'Tabouret en bois' })[structure.kind] : resource ? resourceLabels[resource.kind] : terrainLabels[world.tiles[z * world.width + x].terrain];
+      el('cell-description').textContent = `Case ${x}, ${z}${resource ? ` · ${resource.amount} unités à récolter` : ''}${structure ? ` · ${footprintCells(structure).length === 2 ? '1 × 2' : '1 × 1'} cases` : ''}`;
       el('cell-materials').textContent = piles.length ? `Au sol : ${piles.map(pile => `${pile.quantity} ${pile.kind === 'wood' ? 'bois' : 'nourriture'}`).join(' · ')}` : '';
-      el('cell-job').textContent = job ? `${jobLabels[job.kind]} · ${queryJobStatus(world, job).reason ?? 'En cours'}${job.kind === 'bed' || job.kind === 'wall' ? ` · ${deliveredStock(world, job.id).wood} bois livrés` : ''}` : 'Aucun ordre sur cette case.';
+      el('cell-job').textContent = job ? `${jobLabels[job.kind]} · ${queryJobStatus(world, job).reason ?? 'En cours'}${JOB_WOOD_COST[job.kind] > 0 ? ` · ${deliveredStock(world, job.id).wood} bois livrés` : ''}` : 'Aucun ordre sur cette case.';
       el('cell-storage').hidden = !storage;
       el('cell-bed').hidden = structure?.kind !== 'bed';
       if (structure?.kind === 'bed' && document.activeElement !== el('bed-owner')) el<HTMLSelectElement>('bed-owner').value = String(world.pawns.find(pawn => pawn.bedId === structure.id)?.id ?? '');
@@ -256,7 +257,7 @@ function renderState() {
   if (hungry) alerts.push(`${hungry} colon(s) affamé(s)`);
   if (pending) alerts.push(`${pending} ordre(s) en attente`);
   if (!world.stockpiles.length) alerts.push('Aucune réserve de stockage');
-  if (world.jobs.some(job => job.kind === 'wall' || job.kind === 'bed') && world.pawns.every(pawn => pawn.priorities.haul === 0)) alerts.push('Transport désactivé : chantiers non approvisionnés');
+  if (world.jobs.some(job => JOB_WOOD_COST[job.kind] > 0) && world.pawns.every(pawn => pawn.priorities.haul === 0)) alerts.push('Transport désactivé : chantiers non approvisionnés');
   const idle = world.pawns.filter(pawn => pawn.state === 'idle').length;
   if (idle) alerts.push(`${idle} colon(s) disponible(s)`);
   el('alerts').replaceChildren(...alerts.map(text => { const item = document.createElement('p'); item.textContent = text; return item; }));
@@ -327,7 +328,7 @@ document.addEventListener('keydown', event => {
   if (event.key in speeds) { void attempt(() => changeSpeed(speeds[event.key])); return; }
   const shortcuts: Record<string, Tool> = { c: 'chop', r: 'harvest', b: 'wall', l: 'bed', x: 'cancel' };
   const key = event.key.toLowerCase(); if (key in shortcuts) setTool(shortcuts[key]);
-  else if (currentTool === 'bed' && (key === 'q' || key === 'e')) { event.preventDefault(); rotatePlacement(key === 'q' ? -1 : 1); }
+  else if ((currentTool === 'bed' || currentTool === 'table') && (key === 'q' || key === 'e')) { event.preventDefault(); rotatePlacement(key === 'q' ? -1 : 1); }
   else if (key === 's') { event.preventDefault(); setTool('stockpile'); }
 });
 client.onError = message => notify(message, true);
@@ -357,6 +358,10 @@ async function start() {
     el('loading').replaceChildren(heading, paragraph); console.error(error);
   }
 }
-const metricsInterval = setInterval(() => { if (renderer) el('metrics').textContent = `${renderer.backend} · ${Math.round(renderer.stats.fps)} img/s · simulation ${stepMs.toFixed(2)} ms/tick`; }, 1000);
+const metricsInterval = setInterval(() => {
+  if (!renderer) return;
+  el('fps-counter').textContent = renderer.stats.fps > 0 ? `${Math.round(renderer.stats.fps)} FPS` : '— FPS';
+  if (!el('metrics').hidden) el('metrics').textContent = `${renderer.backend} · ${renderer.stats.frameMs.toFixed(1)} ms/image · p95 ${renderer.stats.frameP95.toFixed(1)} ms · simulation ${stepMs.toFixed(2)} ms/tick`;
+}, 1000);
 window.addEventListener('pagehide', event => { if (event.persisted) return; clearInterval(metricsInterval); client.dispose(); renderer?.dispose(); });
 void start();

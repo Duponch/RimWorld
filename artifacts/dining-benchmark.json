@@ -1,0 +1,103 @@
+{
+  "timestamp": "2026-09-13T15:28:13.485Z",
+  "node": "v24.11.1",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "schema": 4,
+  "scenario": "400 ticks, 1 warmup + 3 measured runs. Open terrain, individual portions, tables/stools and owned beds. CPU only, no IPC/rendering; not a congestion test. Different outcomes from pre-dining benchmark; no speedup claim.",
+  "rows": [
+    {
+      "size": 64,
+      "count": 3,
+      "seated": 3,
+      "mealsConsumed": 3,
+      "occupiedBeds": 3,
+      "hash": "7f06cb73",
+      "phases": {
+        "mealsAndTravel": {
+          "samples": 600,
+          "medianMs": 0.0056000000000153705,
+          "p95Ms": 0.04359999999999786,
+          "maxMs": 1.0094000000000278
+        },
+        "sleeping": {
+          "samples": 600,
+          "medianMs": 0.004799999999988813,
+          "p95Ms": 0.012200000000007094,
+          "maxMs": 0.47570000000001755
+        }
+      }
+    },
+    {
+      "size": 64,
+      "count": 100,
+      "seated": 100,
+      "mealsConsumed": 100,
+      "occupiedBeds": 100,
+      "hash": "8efeeca1",
+      "phases": {
+        "mealsAndTravel": {
+          "samples": 600,
+          "medianMs": 0.12400000000002365,
+          "p95Ms": 3.9166999999999916,
+          "maxMs": 10.514300000000048
+        },
+        "sleeping": {
+          "samples": 600,
+          "medianMs": 0.08129999999994197,
+          "p95Ms": 0.16099999999994452,
+          "maxMs": 0.6240000000000236
+        }
+      }
+    },
+    {
+      "size": 250,
+      "count": 3,
+      "seated": 3,
+      "mealsConsumed": 3,
+      "occupiedBeds": 3,
+      "hash": "501ad086",
+      "phases": {
+        "mealsAndTravel": {
+          "samples": 600,
+          "medianMs": 0.0009999999999763531,
+          "p95Ms": 0.004400000000032378,
+          "maxMs": 1.3303000000000793
+        },
+        "sleeping": {
+          "samples": 600,
+          "medianMs": 0.0010000000002037268,
+          "p95Ms": 0.0029999999999290594,
+          "maxMs": 0.048199999999951615
+        }
+      }
+    },
+    {
+      "size": 250,
+      "count": 100,
+      "seated": 100,
+      "mealsConsumed": 100,
+      "occupiedBeds": 100,
+      "hash": "95f04539",
+      "phases": {
+        "mealsAndTravel": {
+          "samples": 600,
+          "medianMs": 0.1334999999999127,
+          "p95Ms": 6.901900000000296,
+          "maxMs": 16.44089999999983
+        },
+        "sleeping": {
+          "samples": 600,
+          "medianMs": 0.09029999999984284,
+          "p95Ms": 0.1959999999999127,
+          "maxMs": 0.6377999999999702
+        }
+      }
+    }
+  ],
+  "navigation": "Nearest-goal BFS layers for food, preferred dining seat and owned bed; full flood for general work.",
+  "comparison": {
+    "control": "artifacts/dining-benchmark-before.json",
+    "sameFinalStates": true,
+    "note": "All four scenario hashes match. Only these schema-4 runs have equivalent gameplay."
+  }
+}

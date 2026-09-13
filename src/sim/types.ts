@@ -1,11 +1,11 @@
-export const SCHEMA_VERSION = 3 as const;
+export const SCHEMA_VERSION = 4 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
 export type Terrain = 'grass' | 'soil' | 'water' | 'rock';
 export type ResourceKind = 'tree' | 'berries' | 'rock';
 export type MaterialKind = 'wood' | 'food';
-export type StructureKind = 'wall' | 'bed';
+export type StructureKind = 'wall' | 'bed' | 'table' | 'stool';
 export type JobKind = 'chop' | 'harvest' | StructureKind;
 export type WorkType = 'gather' | 'build' | 'haul';
 export type Orientation = 0 | 1 | 2 | 3;
@@ -27,8 +27,10 @@ export interface HaulTask {
   destination: HaulDestination;
   carryPileId: number | null;
 }
+export interface DiningPlace { target: Cell; seatId: number | null; tableId: number | null }
+export interface Memory { kind: 'ate-without-table'; expiresAt: number }
 export type NeedTask =
-  | { kind: 'eat'; phase: 'pickup' | 'ingest'; sourcePileId: number; carryPileId: number | null; progress: number }
+  | { kind: 'eat'; phase: 'pickup' | 'choose-spot' | 'travel' | 'ingest'; sourcePileId: number; carryPileId: number | null; progress: number; dining: DiningPlace | null }
   | { kind: 'sleep'; phase: 'travel' | 'sleep'; bedId: number | null; target: Cell };
 export interface Job extends Cell {
   id: number;
@@ -46,6 +48,8 @@ export interface Pawn extends Cell {
   hunger: number;
   rest: number;
   mood: number;
+  comfort: number;
+  memories: Memory[];
   jobId: number | null;
   haul: HaulTask | null;
   need: NeedTask | null;

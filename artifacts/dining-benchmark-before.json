@@ -1,0 +1,98 @@
+{
+  "timestamp": "2026-09-13T15:26:21.590Z",
+  "node": "v24.11.1",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "schema": 4,
+  "scenario": "400 ticks, 1 warmup + 3 measured runs. Open terrain, individual portions, tables/stools and owned beds. CPU only, no IPC/rendering; not a congestion test. Different outcomes from pre-dining benchmark; no speedup claim.",
+  "rows": [
+    {
+      "size": 64,
+      "count": 3,
+      "seated": 3,
+      "mealsConsumed": 3,
+      "occupiedBeds": 3,
+      "hash": "7f06cb73",
+      "phases": {
+        "mealsAndTravel": {
+          "samples": 600,
+          "medianMs": 0.004900000000020555,
+          "p95Ms": 0.038000000000010914,
+          "maxMs": 1.3925999999999874
+        },
+        "sleeping": {
+          "samples": 600,
+          "medianMs": 0.003999999999990678,
+          "p95Ms": 0.009799999999984266,
+          "maxMs": 1.015500000000003
+        }
+      }
+    },
+    {
+      "size": 64,
+      "count": 100,
+      "seated": 100,
+      "mealsConsumed": 100,
+      "occupiedBeds": 100,
+      "hash": "8efeeca1",
+      "phases": {
+        "mealsAndTravel": {
+          "samples": 600,
+          "medianMs": 0.10800000000006094,
+          "p95Ms": 4.259500000000003,
+          "maxMs": 12.062900000000013
+        },
+        "sleeping": {
+          "samples": 600,
+          "medianMs": 0.07779999999991105,
+          "p95Ms": 0.13220000000001164,
+          "maxMs": 0.4694999999999254
+        }
+      }
+    },
+    {
+      "size": 250,
+      "count": 3,
+      "seated": 3,
+      "mealsConsumed": 3,
+      "occupiedBeds": 3,
+      "hash": "501ad086",
+      "phases": {
+        "mealsAndTravel": {
+          "samples": 600,
+          "medianMs": 0.0009000000000014552,
+          "p95Ms": 0.005599999999958527,
+          "maxMs": 8.662399999999934
+        },
+        "sleeping": {
+          "samples": 600,
+          "medianMs": 0.0009000000000014552,
+          "p95Ms": 0.0015999999998257408,
+          "maxMs": 0.005799999999908323
+        }
+      }
+    },
+    {
+      "size": 250,
+      "count": 100,
+      "seated": 100,
+      "mealsConsumed": 100,
+      "occupiedBeds": 100,
+      "hash": "95f04539",
+      "phases": {
+        "mealsAndTravel": {
+          "samples": 600,
+          "medianMs": 0.13699999999971624,
+          "p95Ms": 23.70259999999962,
+          "maxMs": 42.55370000000039
+        },
+        "sleeping": {
+          "samples": 600,
+          "medianMs": 0.09209999999984575,
+          "p95Ms": 0.21369999999978972,
+          "maxMs": 0.7124999999996362
+        }
+      }
+    }
+  ],
+  "navigation": "Complete map flood for all needs before early-stop optimization."
+}

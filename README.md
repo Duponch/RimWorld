@@ -13,7 +13,7 @@ npm ci
 npm run dev
 ```
 
-Ouvrir [le jeu local](http://127.0.0.1:5173). Three.js sélectionne WebGPU lorsque disponible, sinon son backend WebGL 2. Le backend réellement actif apparaît dans Menu → Diagnostics. WebGPU nécessite HTTPS ou localhost.
+Ouvrir [le jeu local](http://127.0.0.1:5173). Three.js sélectionne WebGPU lorsque disponible, sinon son backend WebGL 2. Un compteur FPS reste visible dans le coin supérieur droit. Le backend réellement actif apparaît dans Menu → Diagnostics. WebGPU nécessite HTTPS ou localhost.
 
 La carte par défaut mesure **250×250 cases**, soit 62 500 cellules, et utilise la graine 42. Menu → Nouvelle colonie propose 200 ou 250 cases par côté, les cartes compactes 64/128 et le terrain d'essai 32. L'état précédent est conservé avant remplacement et peut être restauré depuis le menu. Les paramètres d'URL restent disponibles : `/?seed=123&size=250`. Charger une ancienne partie conserve ses dimensions.
 
@@ -36,9 +36,9 @@ Dans Architecte → Zones, une réserve se règle par cellule : filtres bois/nou
 
 La génération produit une rivière continue, des massifs et une végétation corrélée au terrain. Les proportions 3D sont centralisées : case de 1 m, humain de 1,75 m, mur de 2,80 m. Ce sont des conventions du projet. Les nouveaux lits occupent deux cases orientées ; les lits des anciennes sauvegardes gardent une emprise explicite 1×1 pour préserver leurs voisins.
 
-Les sauvegardes courantes utilisent le **schéma 3** : piles, propriétaires, cargaisons, stockages, orientations et progression sont conservés. Les phases de repas/sommeil et propriétaires de lits sont également persistés. Les sauvegardes V1 et V2 sont validées puis migrées ; leur terrain et leurs identités existantes sont préservés, leur stock global devient physique. Les clés locales du navigateur restent identiques pour retrouver ces parties. Voir [le contrat matériel et sa migration](docs/development/material-logistics.md).
+Les sauvegardes courantes utilisent le **schéma 4** : piles, propriétaires, cargaisons, stockages, orientations et progression sont conservés. Phases de repas/sommeil, places à table, propriétaires de lits, confort et souvenirs sont également persistés. Les sauvegardes V1, V2 et V3 sont validées puis migrées ; leur terrain et leurs identités existantes sont préservés, leur stock global devient physique. Les clés locales du navigateur restent identiques pour retrouver ces parties. Voir [le contrat matériel et sa migration](docs/development/material-logistics.md).
 
-Les colons rejoignent et prennent leur nourriture avant de manger ; ils rejoignent leur lit attribué et dorment sur son matelas. La consommation à distance et le bonus de lit voisin sont supprimés. Tables, cuisine, horaires et types nutritionnels distincts restent à développer : [contrat et portée](docs/development/needs.md).
+Les colons rejoignent et prennent leur nourriture avant de manger ; ils rejoignent leur lit attribué et dorment sur son matelas. La consommation à distance et le bonus de lit voisin sont supprimés. Tables et tabourets sont constructibles : portion transportée à une place réservée, pose assise GPU, confort progressif et souvenir de repas sans table. Cuisine, horaires et types nutritionnels distincts restent à développer : [contrat et portée](docs/development/needs.md).
 
 ## Laboratoire de navigation GPU
 
@@ -72,3 +72,5 @@ npm run bench
 Le code de simulation ne dépend ni de Three.js ni du DOM. Le rendu consomme ses snapshots et ne décide jamais des conséquences de gameplay. Les futures intégrations Rust/WASM et glTF passent par ces frontières.
 
 Compléments : [observation de la vidéo et organisation visuelle](docs/research/visual-reference.md), [échelles, grille et navigation](docs/research/spatial-design.md), [génération du monde](docs/development/world-generation.md).
+
+La [recherche repas et confort](docs/research/dining-reference.md) documente les contradictions trouvées et les adaptations 3D. Le [contrat des repas à table](docs/development/dining.md) décrit les modules et migrations. Les audits reproductibles sont associés à leurs matériels et scénarios dans [validation](docs/development/validation.md).

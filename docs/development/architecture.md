@@ -141,4 +141,15 @@ Contrats, mesures et limites : [area-designations.md](area-designations.md). Le 
 
 Le schéma 3 persiste les nouvelles intentions et phases. La validation V2 précède sa migration ; les anciennes positions et quantités restent intactes. Les tâches de besoin sont exclusives du travail, mais partagent les réservations de matière et le budget de recherche. Les dépôts conservent l'identité des objets. La représentation GPU lit les phases et l'orientation du lit, sans calcul d'os sur CPU.
 
-Les actions sont livrées sur le catalogue actuel ; les coefficients provisoires, tables/sièges, horaires et profils non livrés restent identifiés dans [needs.md](needs.md). Une future calibration ne doit pas se présenter comme une conversion silencieuse des anciennes sauvegardes. Le détail des seuils et du repli au sol constitue une décision révisable, pas une équivalence complète de RimWorld.
+Les actions sont livrées sur le catalogue actuel ; les coefficients provisoires, horaires et profils non livrés restent identifiés dans [needs.md](needs.md). Une future calibration ne doit pas se présenter comme une conversion silencieuse des anciennes sauvegardes. Le détail des seuils et du repli au sol constitue une décision révisable, pas une équivalence complète de RimWorld.
+
+
+## ADR-016 — Repas à table, modules de présentation et audits continus
+
+**Adopté.** [dining.md](dining.md) détaille les décisions de mobilier, repas, confort, mémoire et migration V4. `needs.ts` orchestre ; `eating.ts` transfère/consomme ; `dining.ts` choisit/réserve ; `wellbeing.ts` applique les effets. Les nouveaux modules répondent à des responsabilités présentes, sans ECS ou framework de jobs spéculatif.
+
+Le rendu des personnages quitte la scène principale : `PawnLayer.ts` conserve poses et attributs GPU, `FurnitureLayer.ts` les constructions procédurales, `primitives.ts` les lots/disposals, `FrameMetrics.ts` les durées bornées. Le compteur FPS est permanent et indépendant de l'état de la simulation. Ces frontières accueillent les futurs assets et meubles sans agrandir continuellement le même fichier.
+
+La première couche BFS atteignant un but suffit pour départager les destinations de même distance, en conservant tous les parents de cette couche. Une carte partielle est réservée à ce contrat ; le travail général reste sur recherche complète. Les résultats sont confrontés à l'oracle complet et à des états finaux avant/après optimisation. Cette liberté technique ne change pas la navigation jouée en GPU : celle-ci reste CPU.
+
+Chaque nouvelle mécanique exige une recherche ciblée, une liste d'écarts et des mesures proportionnées. Les messages de commit résument changement, validation et position dans G0–G5. Les résultats réels sont conservés dans validation.md ; aucun chiffre matériel n'est inféré d'une capacité théorique.

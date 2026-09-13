@@ -1,0 +1,115 @@
+{
+  "timestamp": "2026-09-13T15:53:01.111Z",
+  "durationMs": 130000.587,
+  "passed": 6,
+  "failed": 0,
+  "simulation": {
+    "scenarios": 20,
+    "files": 8,
+    "durationSeconds": 26.86,
+    "command": "npm test"
+  },
+  "tests": [
+    {
+      "title": "besoins physiques : repas en main, sommeil dans deux lits orientés, attribution et sauvegarde UI",
+      "status": "passed",
+      "durationMs": 11104,
+      "attachments": {
+        "needs-gameplay": {
+          "backend": "WebGPU",
+          "adapter": {
+            "vendor": "amd",
+            "architecture": "rdna-1",
+            "device": "",
+            "description": ""
+          },
+          "phases": [
+            "pickup",
+            "ingest",
+            "sleep",
+            "bed-reassignment"
+          ],
+          "foodConsumed": 1,
+          "resumedExactly": true,
+          "errors": []
+        }
+      }
+    },
+    {
+      "title": "colonie matérielle : réserve filtrée, transport visible, trois couchages et reprise exacte en livraison",
+      "status": "passed",
+      "durationMs": 13952,
+      "attachments": {}
+    },
+    {
+      "title": "frontières : commandes répétées, sauvegarde invalide atomique, aide et organisation compacte",
+      "status": "passed",
+      "durationMs": 46371,
+      "attachments": {}
+    },
+    {
+      "title": "rectangles 250² : aperçu, interruptions, rotation, politiques préservées et récolte réelle",
+      "status": "passed",
+      "durationMs": 25453,
+      "attachments": {
+        "area-gameplay": {
+          "timestamp": "2026-09-13T15:54:38.950Z",
+          "backend": "WebGPU",
+          "size": 250,
+          "seed": 42,
+          "interruptedGestures": [
+            "Escape",
+            "right-button",
+            "release-over-UI",
+            "injected-window-blur",
+            "tool-change"
+          ],
+          "storageCells": 10,
+          "harvestedTrees": 1,
+          "conservedWood": 24,
+          "screenshot": "artifacts/area-preview-250.png",
+          "diagnostics": [
+            "Lisière renderer diagnostics {\"backend\":\"WebGPU\",\"context\":\"GPUCanvasContext\",\"browser\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36\",\"adapter\":{\"vendor\":\"amd\",\"architecture\":\"rdna-1\",\"device\":\"\",\"description\":\"\"},\"maxVertexBuffers\":8}"
+          ],
+          "errors": []
+        }
+      }
+    },
+    {
+      "title": "nouvelle colonie : défaut 250, tailles 128/200/250 et retour exact à une ancienne petite partie",
+      "status": "passed",
+      "durationMs": 15316,
+      "attachments": {
+        "transition-renderer": {
+          "backend": "WebGPU",
+          "defaultSize": 250,
+          "sizes": [
+            32,
+            128,
+            200,
+            250
+          ],
+          "restoredExactly": true
+        }
+      }
+    },
+    {
+      "title": "table et tabouret : construction UI, portion transportée, repas assis, confort, reprise et compteur FPS permanent",
+      "status": "passed",
+      "durationMs": 15832,
+      "attachments": {
+        "dining-gameplay": {
+          "backend": "WebGPU",
+          "woodConsumed": 53,
+          "foodConsumed": 1,
+          "resumedPhases": [
+            "travel",
+            "ingest"
+          ],
+          "fpsVisiblePausedAndMenuAndCompact": true,
+          "errors": []
+        }
+      }
+    }
+  ]
+}

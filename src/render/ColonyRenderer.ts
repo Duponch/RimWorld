@@ -1,19 +1,20 @@
 import * as THREE from 'three/webgpu';
-import { Fn, If, attribute, cos, float, mix, positionLocal, sin, uniform, vec3 } from 'three/tsl';
+import { buildFurniture } from './FurnitureLayer';
+import { PawnLayer } from './PawnLayer';
+import { FrameMetrics } from './FrameMetrics';
+import { clearGroup, material, instances } from './primitives';
+import type { Placement } from './primitives';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import type { World, Terrain, MaterialKind, Orientation, AreaAction, Cell } from '../sim/types';
 import { TICKS_PER_SECOND } from '../sim/types';
-import { CARRY_CAPACITY, JOB_DURATION, MAX_STACK, footprintCells } from '../sim/definitions';
+import { JOB_DURATION, MAX_STACK, footprintCells } from '../sim/definitions';
 import { canDesignate } from '../sim/engine';
 import { buildAreaIndex, isAreaAction, queryArea } from '../sim/designation';
 import type { AreaIndex } from '../sim/designation';
-import { PAWN_MODEL_SCALE, WORLD_SCALE } from '../world/scale';
+import { WORLD_SCALE } from '../world/scale';
 
-type Placement = { x: number; y: number; z: number; sx?: number; sy?: number; sz?: number; ry?: number; color?: number };
-type VisualPawn = { from: THREE.Vector4; to: THREE.Vector4 };
 type VisualChunk = { signature: string; group: THREE.Group };
 
-const PAWN_COLORS = [0xeab969, 0x639eac, 0xc57c65, 0x809864, 0xaa8db2];
 const TERRAIN_COLORS: Record<Terrain, number> = { grass: 0x81946c, soil: 0xa39b75, rock: 0x899182, water: 0x78a7a4 };
 const scratchObject = new THREE.Object3D();
 const scratchColor = new THREE.Color();
@@ -22,100 +23,6 @@ function noise(x: number, z: number, salt = 0): number {
   let value = Math.imul(x + 1, 374761393) ^ Math.imul(z + 1, 668265263) ^ Math.imul(salt + 1, 1274126177);
   value = Math.imul(value ^ (value >>> 13), 1274126177);
   return ((value ^ (value >>> 16)) >>> 0) / 4294967296;
-}
-
-function material(color: number, extra: THREE.MeshStandardNodeMaterialParameters = {}): THREE.MeshStandardNodeMaterial {
-  return new THREE.MeshStandardNodeMaterial({ color, roughness: 0.93, metalness: 0, flatShading: true, ...extra });
-}
-
-function instances(group: THREE.Group, geometry: THREE.BufferGeometry, mat: THREE.Material, items: Placement[], shadows = true): THREE.InstancedMesh | undefined {
-  if (!items.length) { geometry.dispose(); mat.dispose(); return; }
-  const mesh = new THREE.InstancedMesh(geometry, mat, items.length);
-  for (let i = 0; i < items.length; i++) {
-    const item = items[i];
-    scratchObject.position.set(item.x, item.y, item.z);
-    scratchObject.rotation.set(0, item.ry ?? 0, 0);
-    scratchObject.scale.set(item.sx ?? 1, item.sy ?? 1, item.sz ?? 1);
-    scratchObject.updateMatrix();
-    mesh.setMatrixAt(i, scratchObject.matrix);
-    if (item.color !== undefined) mesh.setColorAt(i, scratchColor.setHex(item.color));
-  }
-  mesh.instanceMatrix.needsUpdate = true;
-  if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-  mesh.castShadow = shadows;
-  mesh.receiveShadow = true;
-  mesh.computeBoundingSphere();
-  group.add(mesh);
-  return mesh;
-}
-
-function clearGroup(group: THREE.Group): void {
-  const geometries = new Set<THREE.BufferGeometry>();
-  const materials = new Set<THREE.Material>();
-  group.traverse((object) => {
-    if (!(object instanceof THREE.Mesh)) return;
-    geometries.add(object.geometry);
-    for (const mat of Array.isArray(object.material) ? object.material : [object.material]) materials.add(mat);
-    if (object instanceof THREE.InstancedMesh) object.dispose();
-  });
-  group.clear();
-  for (const geometry of geometries) geometry.dispose();
-  for (const mat of materials) if (!mat.userData.rendererOwned) mat.dispose();
-}
-
-/** Six rigid bones, authored entirely in code. Each vertex has one bone influence.
- * The bind position/pivot and animation state are evaluated in the vertex shader.
- * There is no per-pawn AnimationMixer, bone Object3D tree or CPU bone update.
- * This deliberately small prototype rig is not yet the future glTF atlas importer.
- */
-function pawnGeometry(): THREE.InstancedBufferGeometry {
-  const positions: number[] = [], normals: number[] = [], colors: number[] = [];
-  const bones: number[] = [], pivots: number[] = [], dyes: number[] = [];
-  const addPart = (size: number[], center: number[], bone: number, pivot: number[], color: number, dye = 0) => {
-    const box = new THREE.BoxGeometry(size[0], size[1], size[2]).toNonIndexed();
-    const pos = box.getAttribute('position'), normal = box.getAttribute('normal');
-    const col = new THREE.Color(color);
-    for (let i = 0; i < pos.count; i++) {
-      positions.push(pos.getX(i) + center[0], pos.getY(i) + center[1], pos.getZ(i) + center[2]);
-      normals.push(normal.getX(i), normal.getY(i), normal.getZ(i));
-      colors.push(col.r, col.g, col.b);
-      bones.push(bone); pivots.push(...pivot); dyes.push(dye);
-    }
-    box.dispose();
-  };
-  addPart([0.35, 0.43, 0.22], [0, 0.82, 0], 0, [0, 0.61, 0], 0xffffff, 1);
-  addPart([0.3, 0.3, 0.28], [0, 1.19, 0.01], 1, [0, 1.04, 0], 0xe2b899);
-  addPart([0.32, 0.11, 0.3], [0, 1.35, -0.02], 1, [0, 1.04, 0], 0x554741);
-  addPart([0.27, 0.15, 0.08], [0, 1.23, -0.13], 1, [0, 1.04, 0], 0x554741);
-  for (const side of [-1, 1]) {
-    const arm = side < 0 ? 2 : 3, leg = side < 0 ? 4 : 5;
-    addPart([0.12, 0.28, 0.15], [side * 0.23, 0.85, 0], arm, [side * 0.23, 1.01, 0], 0xffffff, 1);
-    addPart([0.115, 0.12, 0.14], [side * 0.23, 0.65, 0], arm, [side * 0.23, 1.01, 0], 0xe2b899);
-    addPart([0.135, 0.43, 0.17], [side * 0.105, 0.38, 0], leg, [side * 0.105, 0.61, 0], 0x495052);
-    addPart([0.145, 0.12, 0.23], [side * 0.105, 0.11, 0.03], leg, [side * 0.105, 0.61, 0], 0x443e37);
-    addPart([0.035, 0.035, 0.014], [side * 0.07, 1.2, 0.157], 1, [0, 1.04, 0], 0x433e39);
-  }
-  const geometry = new THREE.InstancedBufferGeometry();
-  // WebGPU guarantees only eight vertex-buffer slots. Keeping authored attributes
-  // interleaved leaves room for the five independent per-instance attributes.
-  const vertexData = new Float32Array(bones.length * 14);
-  for (let i = 0; i < bones.length; i++) {
-    vertexData.set(positions.slice(i * 3, i * 3 + 3), i * 14);
-    vertexData.set(normals.slice(i * 3, i * 3 + 3), i * 14 + 3);
-    vertexData.set(colors.slice(i * 3, i * 3 + 3), i * 14 + 6);
-    vertexData[i * 14 + 9] = bones[i];
-    vertexData.set(pivots.slice(i * 3, i * 3 + 3), i * 14 + 10);
-    vertexData[i * 14 + 13] = dyes[i];
-  }
-  const vertices = new THREE.InterleavedBuffer(vertexData, 14);
-  geometry.setAttribute('position', new THREE.InterleavedBufferAttribute(vertices, 3, 0));
-  geometry.setAttribute('normal', new THREE.InterleavedBufferAttribute(vertices, 3, 3));
-  geometry.setAttribute('color', new THREE.InterleavedBufferAttribute(vertices, 3, 6));
-  geometry.setAttribute('boneId', new THREE.InterleavedBufferAttribute(vertices, 1, 9));
-  geometry.setAttribute('bindPivot', new THREE.InterleavedBufferAttribute(vertices, 3, 10));
-  geometry.setAttribute('dye', new THREE.InterleavedBufferAttribute(vertices, 1, 13));
-  geometry.instanceCount = 0;
-  return geometry;
 }
 
 /** Static chunk meshes batch different procedural shapes together. Their exact
@@ -165,42 +72,10 @@ function mergedInstances(group: THREE.Group, parts: { geometry: THREE.BufferGeom
   return mesh;
 }
 
-/** Cargo is a second instanced batch sharing the pawn pose attributes. Its
- * attachment and interpolation stay on the GPU, including during camera motion.
- * These bundles indicate kind/load; individual logs are not individual items.
- */
-function cargoGeometry(): THREE.InstancedBufferGeometry {
-  const data: number[] = [];
-  const part = (size: number[], center: number[], kind: number, color: number) => {
-    const box = new THREE.BoxGeometry(size[0], size[1], size[2]).toNonIndexed();
-    const positions = box.getAttribute('position'), normals = box.getAttribute('normal');
-    const tint = new THREE.Color(color);
-    for (let i = 0; i < positions.count; i++) data.push(
-      positions.getX(i) + center[0], positions.getY(i) + center[1], positions.getZ(i) + center[2],
-      normals.getX(i), normals.getY(i), normals.getZ(i), tint.r, tint.g, tint.b, kind,
-    );
-    box.dispose();
-  };
-  part([0.56, 0.105, 0.12], [0, -0.025, -0.08], 1, 0xa37b4d);
-  part([0.56, 0.105, 0.12], [0, -0.025, 0.08], 1, 0xb08c5d);
-  part([0.54, 0.105, 0.12], [0, 0.07, 0], 1, 0xc6a477);
-  part([0.07, 0.22, 0.3], [0.14, 0.015, 0], 1, 0x66584b);
-  part([0.44, 0.2, 0.32], [0, -0.035, 0], 2, 0x947653);
-  for (const x of [-0.1, 0.1]) for (const z of [-0.075, 0.075]) {
-    part([0.15, 0.1, 0.12], [x, 0.09, z], 2, x * z > 0 ? 0xba7e65 : 0xb9705c);
-  }
-  const vertices = new THREE.InterleavedBuffer(new Float32Array(data), 10);
-  const geometry = new THREE.InstancedBufferGeometry();
-  geometry.setAttribute('position', new THREE.InterleavedBufferAttribute(vertices, 3, 0));
-  geometry.setAttribute('normal', new THREE.InterleavedBufferAttribute(vertices, 3, 3));
-  geometry.setAttribute('color', new THREE.InterleavedBufferAttribute(vertices, 3, 6));
-  geometry.setAttribute('cargoKind', new THREE.InterleavedBufferAttribute(vertices, 1, 9));
-  geometry.instanceCount = 0;
-  return geometry;
-}
-
 export class ColonyRenderer {
-  readonly stats = { fps: 0, drawCalls: 0, triangles: 0 };
+  readonly stats = { fps: 0, frameMs: 0, frameP95: 0, drawCalls: 0, triangles: 0 };
+  private readonly frames = new FrameMetrics();
+  private readonly pawns = new PawnLayer();
   readonly backend: string;
   private readonly renderer: THREE.WebGPURenderer;
   private readonly scene = new THREE.Scene();
@@ -212,9 +87,6 @@ export class ColonyRenderer {
   private readonly jobGroup = new THREE.Group();
   private readonly pileGroup = new THREE.Group();
   private readonly storageGroup = new THREE.Group();
-  private readonly pawnGroup = new THREE.Group();
-  private readonly uTime = uniform(0);
-  private readonly uBlend = uniform(1);
   private readonly hover: THREE.Mesh;
   private readonly selection: THREE.Mesh;
   private areaMesh: THREE.InstancedMesh | null = null;
@@ -229,14 +101,11 @@ export class ColonyRenderer {
   private readonly hit = new THREE.Vector3();
   private readonly resizeObserver: ResizeObserver;
   private readonly keys = new Set<string>();
-  private readonly pawnVisuals = new Map<number, VisualPawn>();
   private readonly pileChunks = new Map<string, VisualChunk>();
   private readonly resourceChunks = new Map<string, VisualChunk>();
   private readonly staticMaterial = material(0xffffff, { vertexColors: true });
   private readonly waterMaterial = material(0xffffff, { vertexColors: true, roughness: 0.45, metalness: 0.08 });
   private readonly sun: THREE.DirectionalLight;
-  private pawnMesh: THREE.Mesh | null = null;
-  private cargoMesh: THREE.Mesh | null = null;
   private world: World | null = null;
   private terrainKey = '';
   private structureKey = '';
@@ -249,8 +118,6 @@ export class ColonyRenderer {
   private wallCutaway = false;
   private foliageVisible = true;
   private lastFrame = 0;
-  private lastStats = 0;
-  private frameCount = 0;
   private snapshotAt = 0;
   private timeFrom = 0;
   private timeTo = 0;
@@ -309,7 +176,7 @@ export class ColonyRenderer {
     this.sun.shadow.camera.near = 0.1;
     this.sun.shadow.camera.far = 140;
     this.scene.add(this.sun, this.sun.target);
-    this.scene.add(this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup, this.pawnGroup);
+    this.scene.add(this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup, this.pawns.group);
     this.camera.position.set(41, 34, 44);
     this.controls = new OrbitControls(this.camera, renderer.domElement);
     this.controls.target.set(15.5, 0, 15.5);
@@ -343,6 +210,7 @@ export class ColonyRenderer {
     window.addEventListener('keydown', this.onKeyDown);
     window.addEventListener('keyup', this.onKeyUp);
     window.addEventListener('blur', this.onBlur);
+    document.addEventListener('visibilitychange', this.onVisibility);
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(host);
     this.resize();
@@ -398,20 +266,20 @@ export class ColonyRenderer {
     const storageKey = world.stockpiles.map((s) => `${s.id}:${s.x}:${s.z}:${s.priority}:${s.filters.wood}:${s.filters.food}`).join('|');
     if (storageKey !== this.storageKey || newMap) { this.storageKey = storageKey; this.buildStorage(world); }
     this.updatePiles(world, newMap);
-    const oldBlend = this.uBlend.value;
+    const oldBlend = this.pawns.blend.value;
     this.snapshotDuration = previousWorld && world.tick >= previousWorld.tick ? Math.min(200, Math.max(70, now - this.snapshotAt)) : 0;
     this.snapshotAt = now;
-    this.timeFrom = resetPoses ? world.tick / TICKS_PER_SECOND : this.uTime.value;
+    this.timeFrom = resetPoses ? world.tick / TICKS_PER_SECOND : this.pawns.time.value;
     this.timeTo = world.tick / TICKS_PER_SECOND;
-    this.uBlend.value = resetPoses ? 1 : 0;
-    this.updatePawns(world, resetPoses ? 1 : oldBlend, resetPoses);
+    this.pawns.blend.value = resetPoses ? 1 : 0;
+    this.pawns.update(world, resetPoses ? 1 : oldBlend, resetPoses);
     this.updateHover();
   }
 
   setTool(tool: string): void {
     if (tool !== this.tool) this.cancelDesignation();
     this.tool = tool;
-    if (tool === 'bed') this.keys.delete('q');
+    if (tool === 'bed' || tool === 'table') this.keys.delete('q');
     const color = tool === 'cancel' ? 0xe6876a : tool === 'select' ? 0xf9ebae : 0x9dd9ca;
     (this.hover.material as THREE.MeshBasicNodeMaterial).color.setHex(color);
     this.renderer.domElement.style.cursor = tool === 'select' ? 'default' : 'crosshair';
@@ -580,31 +448,7 @@ export class ColonyRenderer {
     }
   }
 
-  private buildStructures(world: World): void {
-    clearGroup(this.structureGroup);
-    const wallHeight = this.wallCutaway ? WORLD_SCALE.wallCutawayHeight : WORLD_SCALE.wallHeight;
-    const walls: Placement[] = [], wallCaps: Placement[] = [], bedFrames: Placement[] = [], bedding: Placement[] = [], pillows: Placement[] = [], headboards: Placement[] = [];
-    for (const structure of world.structures) {
-      const { x, z } = structure;
-      if (structure.kind === 'wall') {
-        walls.push({ x, z, y: (wallHeight - 0.09) / 2 }); wallCaps.push({ x, z, y: wallHeight - 0.045 });
-      } else {
-        const cells = footprintCells(structure), last = cells[cells.length - 1]!;
-        const cx = (x + last.x) / 2, cz = (z + last.z) / 2, ry = structure.orientation * Math.PI / 2;
-        const length = structure.footprint === 'legacy-single' ? 0.93 : WORLD_SCALE.bedLength;
-        bedFrames.push({ x: cx, z: cz, y: WORLD_SCALE.bedFrameHeight / 2 + 0.04, sx: WORLD_SCALE.bedWidth, sy: WORLD_SCALE.bedFrameHeight, sz: length, ry });
-        bedding.push({ x: cx, z: cz, y: WORLD_SCALE.bedSurfaceHeight - 0.045, sx: WORLD_SCALE.bedWidth - 0.06, sy: 0.14, sz: length - 0.1, ry });
-        pillows.push({ x: cx - Math.sin(ry) * length * 0.33, z: cz - Math.cos(ry) * length * 0.33, y: WORLD_SCALE.bedSurfaceHeight + 0.07, sx: 0.6, sy: 0.12, sz: 0.27, ry });
-        headboards.push({ x: cx - Math.sin(ry) * (length / 2 - 0.05), z: cz - Math.cos(ry) * (length / 2 - 0.05), y: 0.35, sx: WORLD_SCALE.bedWidth, sy: 0.63, sz: 0.08, ry });
-      }
-    }
-    instances(this.structureGroup, new THREE.BoxGeometry(0.96, wallHeight - 0.09, 0.96), material(0xa6916e), walls);
-    instances(this.structureGroup, new THREE.BoxGeometry(1.01, 0.09, 1.01), material(0xc3af86), wallCaps);
-    instances(this.structureGroup, new THREE.BoxGeometry(1, 1, 1), material(0x795d41), bedFrames);
-    instances(this.structureGroup, new THREE.BoxGeometry(1, 1, 1), material(0xc7a977), bedding);
-    instances(this.structureGroup, new THREE.BoxGeometry(1, 1, 1), material(0xe5d8b7), pillows);
-    instances(this.structureGroup, new THREE.BoxGeometry(1, 1, 1), material(0x795d41), headboards);
-  }
+  private buildStructures(world: World): void { buildFurniture(world, this.structureGroup, this.wallCutaway); }
 
   private buildJobs(world: World): void {
     clearGroup(this.jobGroup);
@@ -613,11 +457,11 @@ export class ColonyRenderer {
     for (const job of world.jobs) {
       const cells = footprintCells(job), last = cells[cells.length - 1]!;
       for (const cell of cells) orders.push({ x: cell.x, y: 0.032, z: cell.z, color: job.status === 'active' ? 0xe7c17a : 0x99cfc3 });
-      if (job.kind !== 'wall' && job.kind !== 'bed') continue;
+      if (job.kind === 'chop' || job.kind === 'harvest') continue;
       const x = (job.x + last.x) / 2, z = (job.z + last.z) / 2, ry = job.orientation * Math.PI / 2;
-      const height = job.kind === 'wall' ? wallHeight : WORLD_SCALE.bedSurfaceHeight;
-      const width = job.kind === 'wall' ? 0.92 : WORLD_SCALE.bedWidth;
-      const length = job.kind === 'bed' && job.footprint !== 'legacy-single' ? WORLD_SCALE.bedLength : 0.92;
+      const height = job.kind === 'wall' ? wallHeight : job.kind === 'table' ? WORLD_SCALE.tableHeight : job.kind === 'stool' ? WORLD_SCALE.stoolHeight : WORLD_SCALE.bedSurfaceHeight;
+      const width = job.kind === 'wall' ? 0.92 : job.kind === 'table' ? WORLD_SCALE.tableWidth : job.kind === 'stool' ? WORLD_SCALE.stoolWidth : WORLD_SCALE.bedWidth;
+      const length = job.kind === 'table' ? WORLD_SCALE.tableLength : job.kind === 'stool' ? WORLD_SCALE.stoolWidth : job.kind === 'bed' && job.footprint !== 'legacy-single' ? WORLD_SCALE.bedLength : 0.92;
       blueprints.push({ x, z, y: height / 2, sx: width, sy: height, sz: length, ry });
       if (job.escrow.wood > 0) {
         // Four low corner posts distinguish a supplied frame from a bare plan.
@@ -708,130 +552,14 @@ export class ColonyRenderer {
     }
   }
 
-  private createPawnMesh(count: number): void {
-    clearGroup(this.pawnGroup);
-    const geometry = pawnGeometry();
-    geometry.setAttribute('aFrom', new THREE.InstancedBufferAttribute(new Float32Array(count * 4), 4));
-    geometry.setAttribute('aTo', new THREE.InstancedBufferAttribute(new Float32Array(count * 4), 4));
-    geometry.setAttribute('aMotion', new THREE.InstancedBufferAttribute(new Float32Array(count * 4), 4));
-    geometry.setAttribute('aTint', new THREE.InstancedBufferAttribute(new Float32Array(count * 3), 3));
-    geometry.setAttribute('aCargo', new THREE.InstancedBufferAttribute(new Float32Array(count * 2), 2));
-    for (const name of ['aFrom', 'aTo', 'aMotion', 'aTint', 'aCargo']) (geometry.getAttribute(name) as THREE.InstancedBufferAttribute).setUsage(THREE.DynamicDrawUsage);
-    const mat = material(0xffffff);
-    mat.positionNode = Fn(() => {
-      const bone = attribute('boneId', 'float');
-      const pivot = attribute('bindPivot', 'vec3');
-      const motion = attribute('aMotion', 'vec4');
-      const pose = mix(attribute('aFrom', 'vec4'), attribute('aTo', 'vec4'), this.uBlend);
-      const angle = float(0).toVar();
-      const sign = float(1).toVar();
-      If(bone.equal(3).or(bone.equal(4)), () => { sign.assign(-1); });
-      If(bone.greaterThan(1.5), () => {
-        angle.assign(sin(this.uTime.mul(9).add(motion.w)).mul(motion.x).mul(sign).mul(0.65));
-        If(bone.lessThan(3.5), () => {
-          angle.addAssign(sin(this.uTime.mul(12).add(motion.w)).mul(0.35).sub(0.8).mul(motion.y));
-          If(attribute('aCargo', 'vec2').x.greaterThan(0.5), () => {
-            angle.assign(float(-0.9).add(sin(this.uTime.mul(9).add(motion.w)).mul(motion.x).mul(0.06)));
-            If(motion.z.greaterThan(1.5), () => { angle.assign(float(-1.3).add(sin(this.uTime.mul(4).add(motion.w)).mul(0.22))); });
-          });
-        });
-      });
-      const local = positionLocal.sub(pivot);
-      const c = cos(angle), s = sin(angle);
-      const animated = vec3(local.x, local.y.mul(c).sub(local.z.mul(s)), local.y.mul(s).add(local.z.mul(c))).add(pivot).toVar();
-      If(motion.z.greaterThan(0.5).and(motion.z.lessThan(1.5)), () => {
-        const y = animated.y.toVar();
-        animated.y.assign(animated.z.add(0.19));
-        animated.z.assign(float(0.65).sub(y));
-      });
-      const cy = cos(pose.w), sy = sin(pose.w);
-      return vec3(animated.x.mul(cy).add(animated.z.mul(sy)), animated.y, animated.z.mul(cy).sub(animated.x.mul(sy))).mul(PAWN_MODEL_SCALE).add(pose.xyz);
-    })();
-    mat.colorNode = mix(attribute('color', 'vec3'), attribute('aTint', 'vec3'), attribute('dye', 'float'));
-    const mesh = new THREE.Mesh(geometry, mat);
-    // CPU bounds cannot follow the shader positions. Individual culling/LOD is a later measured optimization.
-    mesh.frustumCulled = false;
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
-    mesh.name = 'Colonists — procedural six-bone GPU rig';
-    this.pawnMesh = mesh;
-    this.pawnGroup.add(mesh);
-    const cargo = cargoGeometry();
-    for (const name of ['aFrom', 'aTo', 'aCargo', 'aMotion']) cargo.setAttribute(name, geometry.getAttribute(name));
-    const cargoMat = material(0xffffff);
-    cargoMat.colorNode = attribute('color', 'vec3');
-    cargoMat.positionNode = Fn(() => {
-      const pose = mix(attribute('aFrom', 'vec4'), attribute('aTo', 'vec4'), this.uBlend);
-      const load = attribute('aCargo', 'vec2');
-      const scale = float(0).toVar();
-      If(attribute('cargoKind', 'float').equal(load.x), () => { scale.assign(load.y.mul(0.25).add(0.75)); });
-      const height = float(WORLD_SCALE.carriedHeight).toVar();
-      If(attribute('aMotion', 'vec4').z.greaterThan(1.5), () => { height.assign(sin(this.uTime.mul(4).add(attribute('aMotion', 'vec4').w)).mul(0.08).add(1.32)); });
-      const local = positionLocal.mul(scale).add(vec3(0, height, WORLD_SCALE.carriedForward));
-      const cy = cos(pose.w), sy = sin(pose.w);
-      return vec3(local.x.mul(cy).add(local.z.mul(sy)), local.y, local.z.mul(cy).sub(local.x.mul(sy))).add(pose.xyz);
-    })();
-    this.cargoMesh = new THREE.Mesh(cargo, cargoMat);
-    this.cargoMesh.name = 'Carried materials — shared GPU pawn poses';
-    this.cargoMesh.frustumCulled = false;
-    this.cargoMesh.castShadow = true;
-    this.cargoMesh.receiveShadow = true;
-    this.pawnGroup.add(this.cargoMesh);
-  }
-
-  private updatePawns(world: World, oldBlend: number, newMap: boolean): void {
-    if (!this.pawnMesh || (this.pawnMesh.geometry.getAttribute('aFrom')?.count ?? 0) !== world.pawns.length) this.createPawnMesh(world.pawns.length);
-    const geometry = this.pawnMesh!.geometry as THREE.InstancedBufferGeometry;
-    const fromAttribute = geometry.getAttribute('aFrom') as THREE.InstancedBufferAttribute;
-    const toAttribute = geometry.getAttribute('aTo') as THREE.InstancedBufferAttribute;
-    const motion = geometry.getAttribute('aMotion') as THREE.InstancedBufferAttribute;
-    const tint = geometry.getAttribute('aTint') as THREE.InstancedBufferAttribute;
-    const cargo = geometry.getAttribute('aCargo') as THREE.InstancedBufferAttribute;
-    const carried = new Map<number, World['piles'][number]>();
-    for (const pile of world.piles) if (pile.owner.type === 'pawn') carried.set(pile.owner.pawnId, pile);
-    const present = new Set<number>();
-    world.pawns.forEach((pawn, index) => {
-      present.add(pawn.id);
-      const previous = newMap ? undefined : this.pawnVisuals.get(pawn.id);
-      const from = previous ? previous.from.clone().lerp(previous.to, oldBlend) : new THREE.Vector4(pawn.x, 0, pawn.z, Math.PI * 0.2);
-      let yaw = from.w;
-      const dx = pawn.x - from.x, dz = pawn.z - from.z;
-      if (dx * dx + dz * dz > 0.01) {
-        const target = Math.atan2(dx, dz);
-        yaw = from.w + Math.atan2(Math.sin(target - from.w), Math.cos(target - from.w));
-      }
-      const bedId = pawn.need?.kind === 'sleep' ? pawn.need.bedId : null;
-      const bed = pawn.state === 'sleeping' && bedId !== null ? world.structures.find(item => item.id === bedId) : undefined;
-      let px = pawn.x, pz = pawn.z, py = 0;
-      if (bed) {
-        const cells = footprintCells(bed), last = cells[cells.length - 1]!;
-        px = (bed.x + last.x) / 2; pz = (bed.z + last.z) / 2; py = WORLD_SCALE.bedSurfaceHeight;
-        const target = bed.orientation * Math.PI / 2;
-        yaw = from.w + Math.atan2(Math.sin(target - from.w), Math.cos(target - from.w));
-      }
-      const to = new THREE.Vector4(px, py, pz, yaw);
-      if (!previous) from.copy(to);
-      this.pawnVisuals.set(pawn.id, { from, to });
-      fromAttribute.setXYZW(index, from.x, from.y, from.z, from.w);
-      toAttribute.setXYZW(index, to.x, to.y, to.z, to.w);
-      motion.setXYZW(index, pawn.state === 'moving' ? 1 : 0, pawn.state === 'working' ? 1 : 0, pawn.state === 'sleeping' ? 1 : pawn.state === 'eating' ? 2 : 0, pawn.id * 1.7);
-      scratchColor.setHex(PAWN_COLORS[index % PAWN_COLORS.length]);
-      tint.setXYZ(index, scratchColor.r, scratchColor.g, scratchColor.b);
-      const load = carried.get(pawn.id);
-      cargo.setXY(index, load ? load.kind === 'wood' ? 1 : 2 : 0, load ? Math.min(1, load.quantity / CARRY_CAPACITY) : 0);
-    });
-    for (const id of this.pawnVisuals.keys()) if (!present.has(id)) this.pawnVisuals.delete(id);
-    for (const attr of [fromAttribute, toAttribute, motion, tint, cargo]) attr.needsUpdate = true;
-    geometry.instanceCount = world.pawns.length;
-    (this.cargoMesh!.geometry as THREE.InstancedBufferGeometry).instanceCount = world.pawns.length;
-  }
+  private readonly onVisibility = (): void => { this.frames.reset(); this.lastFrame = 0; };
 
   private frame(now: number): void {
     if (this.disposed) return;
     const dt = this.lastFrame ? Math.min((now - this.lastFrame) / 1000, 0.05) : 0;
     this.lastFrame = now;
-    this.uBlend.value = this.snapshotDuration > 0 ? Math.min(1, Math.max(0, (performance.now() - this.snapshotAt) / this.snapshotDuration)) : 1;
-    this.uTime.value = THREE.MathUtils.lerp(this.timeFrom, this.timeTo, this.uBlend.value);
+    this.pawns.blend.value = this.snapshotDuration > 0 ? Math.min(1, Math.max(0, (performance.now() - this.snapshotAt) / this.snapshotDuration)) : 1;
+    this.pawns.time.value = THREE.MathUtils.lerp(this.timeFrom, this.timeTo, this.pawns.blend.value);
     if (!this.areaDrag) { this.moveCamera(dt); this.controls.update(); }
     if (this.world) {
       const x = THREE.MathUtils.clamp(this.controls.target.x, 0, this.world.width - 1);
@@ -845,19 +573,18 @@ export class ColonyRenderer {
     this.sun.target.position.set(this.controls.target.x, 0, this.controls.target.z);
     this.sun.position.set(this.controls.target.x - 24, 45, this.controls.target.z + 25);
     if (this.selectedPawn !== null) {
-      const visual = this.pawnVisuals.get(this.selectedPawn);
+      const visual = this.pawns.visuals.get(this.selectedPawn);
       this.selection.visible = !!visual;
-      if (visual) this.selection.position.set(THREE.MathUtils.lerp(visual.from.x, visual.to.x, this.uBlend.value), 0.08, THREE.MathUtils.lerp(visual.from.z, visual.to.z, this.uBlend.value));
+      if (visual) this.selection.position.set(THREE.MathUtils.lerp(visual.from.x, visual.to.x, this.pawns.blend.value), 0.08, THREE.MathUtils.lerp(visual.from.z, visual.to.z, this.pawns.blend.value));
     }
     this.renderer.info.reset();
     this.renderer.render(this.scene, this.camera);
     this.stats.drawCalls = this.renderer.info.render.drawCalls;
     this.stats.triangles = this.renderer.info.render.triangles;
-    this.frameCount++;
-    if (now - this.lastStats >= 750) {
-      this.stats.fps = Math.round(this.frameCount * 1000 / Math.max(1, now - this.lastStats));
-      this.frameCount = 0; this.lastStats = now;
-    }
+    this.frames.record(now, document.hidden);
+    this.stats.fps = this.frames.fps;
+    this.stats.frameMs = this.frames.meanMs;
+    this.stats.frameP95 = this.frames.p95Ms;
   }
 
   private moveCamera(dt: number): void {
@@ -982,11 +709,11 @@ export class ColonyRenderer {
     const cell = this.hoverCell;
     this.hover.visible = !!cell;
     if (!cell || !this.world) return;
-    const cells = footprintCells({ ...cell, kind: this.tool === 'bed' ? 'bed' : 'wall', orientation: this.placementRotation });
+    const cells = footprintCells({ ...cell, kind: this.tool === 'bed' || this.tool === 'table' || this.tool === 'stool' ? this.tool : 'wall', orientation: this.placementRotation });
     const last = cells[cells.length - 1]!;
     this.hover.scale.set(Math.abs(cell.x - last.x) + 1, Math.abs(cell.z - last.z) + 1, 1);
     this.hover.position.set((cell.x + last.x) / 2, this.world.tiles[cell.z * this.world.width + cell.x]?.terrain === 'water' ? WORLD_SCALE.waterSurface + 0.04 : 0.055, (cell.z + last.z) / 2);
-    const validity = this.tool === 'wall' || this.tool === 'bed' || this.tool === 'chop' || this.tool === 'harvest'
+    const validity = this.tool === 'wall' || this.tool === 'bed' || this.tool === 'table' || this.tool === 'stool' || this.tool === 'chop' || this.tool === 'harvest'
       ? canDesignate(this.world, { type: 'designate', kind: this.tool, ...cell, orientation: this.placementRotation }) : undefined;
     const color = validity?.ok === false ? 0xe46f58 : this.tool === 'cancel' || this.tool === 'remove-stockpile' ? 0xe6876a : this.tool === 'select' ? 0xf9ebae : 0x9dd9ca;
     (this.hover.material as THREE.MeshBasicNodeMaterial).color.setHex(color);
@@ -1006,7 +733,7 @@ export class ColonyRenderer {
     if (event.target instanceof HTMLElement && (event.target.matches('input, textarea, select') || event.target.isContentEditable)) return;
     const key = event.key.toLowerCase();
     // Q/E rotate a bed in Architecte. Outside placement, Q retains AZERTY pan.
-    if (this.tool === 'bed' && (key === 'q' || key === 'e')) return;
+    if ((this.tool === 'bed' || this.tool === 'table') && (key === 'q' || key === 'e')) return;
     if (['arrowleft', 'arrowright', 'arrowup', 'arrowdown', 'q', 'a', 'd', 'z', 'w', 's'].includes(key)) {
       this.keys.add(key); if (key.startsWith('arrow')) event.preventDefault();
     }
@@ -1032,7 +759,8 @@ export class ColonyRenderer {
     window.removeEventListener('keydown', this.onKeyDown);
     window.removeEventListener('keyup', this.onKeyUp);
     window.removeEventListener('blur', this.onBlur);
-    for (const group of [this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup, this.pawnGroup]) clearGroup(group);
+    document.removeEventListener('visibilitychange', this.onVisibility);
+    for (const group of [this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup, this.pawns.group]) clearGroup(group);
     this.pileChunks.clear();
     this.resourceChunks.clear();
     this.staticMaterial.dispose();

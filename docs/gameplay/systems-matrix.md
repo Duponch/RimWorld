@@ -122,3 +122,7 @@ Une modification de couleur ou d'un matériau demande une vérification visuelle
 Pour chaque domaine modifié, mettre à jour ensemble la règle joueur, le statut de réalisation et sa validation. La note de livraison doit préciser comportement réel, limites restantes et mode d'essai. Les valeurs d'équilibrage doivent avoir un nom, une unité, une justification et une version ; les identifiants sauvegardés restent distincts des libellés traduits.
 
 Une anomalie doit conserver graine, version, commandes, état pertinent et différence attendue/observée. Une divergence volontaire avec RimWorld est une décision de design, pas une erreur, dès lors qu'elle est annoncée dans la documentation. Une propriété non encore vérifiée reste marquée comme hypothèse, même si son code paraît plausible.
+
+## Livraison repas/mobilier — 13 septembre 2026
+
+S06/S07 : table et tabouret construits après livraison, repas avec transport à une place réservée. S10/S14 sont partiellement anticipés : confort des meubles normaux et souvenir sans table, sans pièces ni humeur complète. S03 : compteur FPS permanent. La [recherche](../research/dining-reference.md), le [contrat](../development/dining.md) et les [preuves](../development/validation.md) précisent la portée ; G1 et G0 restent ouverts.

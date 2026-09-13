@@ -12,7 +12,7 @@ export { JOB_DURATION, JOB_WOOD_COST } from './definitions.ts';
 const PLAN_INTERVAL = 20;
 const MOVE_INTERVAL = 3;
 const PATH_SEARCHES_PER_TICK = 8;
-const JOB_LABEL: Readonly<Record<JobKind, string>> = { chop: 'abattage', harvest: 'récolte', wall: 'construction de mur', bed: 'construction de lit' };
+const JOB_LABEL: Readonly<Record<JobKind, string>> = { chop: 'abattage', harvest: 'récolte', wall: 'construction de mur', bed: 'construction de lit', table: 'construction de table', stool: 'construction de tabouret' };
 interface SearchBudget { remaining: number; pairs: number }
 type NavigationGrid = () => Uint8Array;
 const workType = (kind: JobKind): WorkType => kind === 'chop' || kind === 'harvest' ? 'gather' : 'build';
@@ -84,7 +84,7 @@ function applyArea(world: World, command: AreaCommand): CommandResult {
 
 /** Pure shared rule used by preview and command execution. */
 export function canDesignate(world: World, command: DesignateCommand): CommandResult {
-  if (!command || !['chop', 'harvest', 'wall', 'bed'].includes(command.kind)) return refusal('invalid-command', 'Type de travail inconnu.');
+  if (!command || !['chop', 'harvest', 'wall', 'bed', 'table', 'stool'].includes(command.kind)) return refusal('invalid-command', 'Type de travail inconnu.');
   if (command.orientation !== undefined && (!Number.isInteger(command.orientation) || command.orientation < 0 || command.orientation > 3)) return refusal('invalid-command', 'Orientation invalide.');
   const cells = footprintCells(command);
   if (cells.some(cell => !inBounds(world, cell.x, cell.z))) return refusal('out-of-bounds', 'Empreinte hors de la carte.');
@@ -178,7 +178,7 @@ export function queryJobStatus(world: World, job: Job): JobDiagnostic {
   return { code: enabled ? 'ready' : 'waiting-worker', reason: enabled ? 'Prêt ; attend un colon disponible et un accès.' : 'Travail désactivé pour tous les colons.', delivered, required };
 }
 export function queryPawnStatus(world: World, pawn: Pawn): { code: string; reason: string } {
-  if (pawn.need?.kind === 'eat') return { code: pawn.need.phase, reason: pawn.need.phase === 'pickup' ? 'Va chercher une portion réservée.' : `Mange la portion tenue en main (${Math.floor(pawn.need.progress / 50 * 100)} %).` };
+  if (pawn.need?.kind === 'eat') return { code: pawn.need.phase, reason: pawn.need.phase === 'pickup' ? 'Va chercher une portion réservée.' : pawn.need.phase === 'choose-spot' ? 'Cherche une place pour manger sa portion.' : pawn.need.phase === 'travel' ? 'Porte sa portion vers sa place réservée.' : `Mange la portion tenue en main (${Math.floor(pawn.need.progress / 50 * 100)} %).` };
   if (pawn.need?.kind === 'sleep') return { code: pawn.need.phase, reason: pawn.need.phase === 'travel' ? pawn.need.bedId === null ? 'Libère le lit et cherche une place au sol.' : 'Se rend à son lit réservé.' : pawn.need.bedId === null ? 'Dort au sol ; aucun lit utilisable ou épuisement.' : 'Dort dans son lit.' };
   if (pawn.haul) return { code: pawn.haul.phase, reason: pawn.haul.phase === 'pickup' ? `Va prélever ${pawn.haul.quantity} unités réservées.` : `Porte ${pawn.haul.quantity} unités vers ${pawn.haul.destination.type === 'job' ? 'un chantier' : 'le stockage'}.` };
   if (pawn.jobId !== null) return { code: 'working', reason: pawn.state === 'moving' ? 'Se rend à son travail.' : 'Travaille sur sa cible.' };
@@ -187,9 +187,9 @@ export function queryPawnStatus(world: World, pawn: Pawn): { code: string; reaso
   return { code: world.jobs.length ? 'waiting' : 'idle', reason: world.jobs.length ? 'Aucun travail actuellement admissible : priorités, matériaux ou accès à vérifier.' : 'Aucun travail admissible actuellement.' };
 }
 
-function search(world: World, pawn: Pawn, blocked: Uint8Array, occupied: Set<number>, budget: SearchBudget): Reachability | null {
+function search(world: World, pawn: Pawn, blocked: Uint8Array, occupied: Set<number>, budget: SearchBudget, goals?: ReadonlySet<number>): Reachability | null {
   if (budget.remaining === 0) return null;
-  budget.remaining--; return reachableCells(world, pawn, blocked, occupied);
+  budget.remaining--; return reachableCells(world, pawn, blocked, occupied, goals);
 }
 /** Deterministic sidestep; active and sleeping agents are never teleported or overlapped. */
 function yieldIdleBlocker(world: World, requester: Pawn, target: Cell, blocked: Uint8Array, occupied: Set<number>, reachable: Reachability, allowTarget = false): boolean {
@@ -391,7 +391,7 @@ export function stepWorld(world: World, ticks = 1): void {
       const pawn = world.pawns[((world.tick - 1) + offset) % world.pawns.length]!;
       if (pawn.moveCooldown > 0) pawn.moveCooldown--; if (pawn.planCooldown > 0) pawn.planCooldown--;
       if (processNeeds(world, pawn, {
-        search: (ignorePawns = false) => search(world, pawn, getBlocked(), ignorePawns ? new Set() : occupied, budget),
+        search: (ignorePawns = false, goals) => search(world, pawn, getBlocked(), ignorePawns ? new Set() : occupied, budget, goals),
         move: (target, exact) => moveToward(world, pawn, target, true, getBlocked, occupied, budget, exact),
         release: () => releaseWork(world, pawn),
         event: message => event(world, 'need', message),

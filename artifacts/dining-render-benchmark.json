@@ -1,0 +1,133 @@
+{
+  "timestamp": "2026-09-13T16:03:20.982Z",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "map": 250,
+  "pawns": 100,
+  "protocol": "Normal headless Chromium, default local camera, generated landscape outside cleared camps. 100 portions, tables, stools and owned beds. 60 warmup frames, then 8 seconds minimum and 240 frames per phase. Renderer CPU includes submissions, not GPU execution; RAF includes scheduling. No world serialization inside timed frames. Scene is deliberately uncongested.",
+  "phases": [
+    {
+      "name": "paused",
+      "frameCpuMs": {
+        "count": 1521,
+        "mean": 4.74746877068677,
+        "p95": 6.100000008940697,
+        "max": 10.900000005960464
+      },
+      "frameIntervalsMs": {
+        "count": 1520,
+        "mean": 5.263092105263158,
+        "p95": 8.399999999999636,
+        "max": 25
+      },
+      "snapshotCpuMs": null,
+      "domCpuMs": null,
+      "longTasks": [],
+      "slowFrames": [],
+      "drawCalls": {
+        "count": 1521,
+        "mean": 173,
+        "p95": 173,
+        "max": 173
+      },
+      "triangles": {
+        "count": 1521,
+        "mean": 221645,
+        "p95": 221645,
+        "max": 221645
+      },
+      "observed": [],
+      "fpsText": "202 FPS"
+    },
+    {
+      "name": "active-6x",
+      "frameCpuMs": {
+        "count": 1660,
+        "mean": 3.5830722893128195,
+        "p95": 4.799999997019768,
+        "max": 101.5
+      },
+      "frameIntervalsMs": {
+        "count": 1659,
+        "mean": 4.822182037371911,
+        "p95": 8.299999999999272,
+        "max": 333.39999999999964
+      },
+      "snapshotCpuMs": {
+        "count": 34,
+        "mean": 0.7588235297623802,
+        "p95": 3.9000000059604645,
+        "max": 4.299999997019768
+      },
+      "domCpuMs": {
+        "count": 34,
+        "mean": 4.488235295695417,
+        "p95": 5.899999991059303,
+        "max": 5.9000000059604645
+      },
+      "longTasks": [
+        {
+          "sinceStart": 316,
+          "duration": 108
+        }
+      ],
+      "slowFrames": [
+        {
+          "tick": 13,
+          "sinceStart": 417.70000000298023,
+          "cpu": 101.5,
+          "interval": 8.300000000001091
+        },
+        {
+          "tick": 13,
+          "sinceStart": 431,
+          "cpu": 5.299999997019768,
+          "interval": 116.79999999999927
+        },
+        {
+          "tick": 41,
+          "sinceStart": 773,
+          "cpu": 3.7999999970197678,
+          "interval": 333.39999999999964
+        }
+      ],
+      "drawCalls": {
+        "count": 1660,
+        "mean": 122.67349397590361,
+        "p95": 121,
+        "max": 173
+      },
+      "triangles": {
+        "count": 1660,
+        "mean": 211129.06024096385,
+        "p95": 210785,
+        "max": 221645
+      },
+      "observed": [
+        "eat:choose-spot",
+        "eat:ingest",
+        "eat:travel",
+        "eat:pickup",
+        "sleep:travel",
+        "sleep:sleep"
+      ],
+      "fpsText": "221 FPS"
+    }
+  ],
+  "errors": [],
+  "backend": "WebGPU",
+  "adapter": {
+    "vendor": "amd",
+    "architecture": "rdna-1",
+    "device": "",
+    "description": ""
+  },
+  "outcome": {
+    "tick": 487,
+    "food": 0,
+    "sleep": 100,
+    "withoutTable": 0
+  }
+}

@@ -1,6 +1,8 @@
-import { adjacent, routeToCell, routeToJob } from './pathfinding.ts';
+import { routeToCell, routeToJob, foodInteractionGoals } from './pathfinding.ts';
 import type { Reachability } from './pathfinding.ts';
 import { reservedSource } from './materials.ts';
+import { processEating } from './eating.ts';
+import { updateWellbeing } from './wellbeing.ts';
 import { footprintCells } from './definitions.ts';
 import type { Cell, Pawn, World } from './types.ts';
 
@@ -8,15 +10,15 @@ import type { Cell, Pawn, World } from './types.ts';
 // corrects actions and ownership; numerical food catalogue calibration is separate.
 export const HUNGER_PER_TICK = 0.015;
 export const REST_PER_TICK = 0.008;
-export const PORTION_NUTRITION = 35;
-export const INGEST_TICKS = 50;
+export { PORTION_NUTRITION } from './eating.ts';
+export { INGEST_TICKS } from './eating.ts';
 export const BED_REST_PER_TICK = 100 / (6000 * 10.5 / 24);
 export const GROUND_REST_PER_TICK = BED_REST_PER_TICK * 0.8;
 const NEED_INTERVAL = 20;
 const same = (a: Cell, b: Cell): boolean => a.x === b.x && a.z === b.z;
 
 export interface NeedContext {
-  search(ignorePawns?: boolean): Reachability | null;
+  search(ignorePawns?: boolean, goals?: ReadonlySet<number>): Reachability | null;
   move(target: Cell, exact: boolean): void;
   release(): void;
   event(message: string): void;
@@ -30,7 +32,7 @@ export function processNeeds(world: World, pawn: Pawn, context: NeedContext): bo
   if (pawn.state !== 'sleeping') pawn.rest = Math.max(0, pawn.rest - REST_PER_TICK);
   if (pawn.needCooldown > 0) pawn.needCooldown--;
   const canPlan = pawn.needCooldown === 0;
-  pawn.mood = Math.round(pawn.hunger * 0.6 + pawn.rest * 0.4);
+  updateWellbeing(world, pawn);
   if (pawn.bedId !== null && !world.structures.some(bed => bed.id === pawn.bedId && bed.kind === 'bed')) pawn.bedId = null;
 
   // Collapse is an emergency interruption, including travel with a meal in hand.
@@ -49,7 +51,7 @@ export function processNeeds(world: World, pawn: Pawn, context: NeedContext): bo
     // A hungry hauler already holding food may retain one portion for ingestion.
     const held = world.piles.find(pile => pile.owner.type === 'pawn' && pile.owner.pawnId === pawn.id && pile.kind === 'food');
     if (sources.length || held) {
-      reach = context.search();
+      reach = context.search(false, foodInteractionGoals(world, sources.flatMap(pile => pile.owner.type === 'ground' ? [pile.owner] : [])));
       if (!reach) return true; // Budget exhaustion must not be mistaken for inaccessibility.
       let best: { id: number; path: Cell[] } | undefined;
       for (const pile of sources) {
@@ -59,7 +61,7 @@ export function processNeeds(world: World, pawn: Pawn, context: NeedContext): bo
       }
       if (held || best) {
         context.release(); // Deposits cargo at the actor, preserving its identity.
-        pawn.need = { kind: 'eat', phase: 'pickup', sourcePileId: held?.id ?? best!.id, carryPileId: null, progress: 0 };
+        pawn.need = { kind: 'eat', phase: 'pickup', sourcePileId: held?.id ?? best!.id, carryPileId: null, progress: 0, dining: null };
         pawn.path = held ? [] : best!.path;
         pawn.state = 'moving'; pawn.planCooldown = 0;
       }
@@ -67,39 +69,13 @@ export function processNeeds(world: World, pawn: Pawn, context: NeedContext): bo
     pawn.needCooldown = NEED_INTERVAL;
   }
 
-  if (pawn.need?.kind === 'eat') {
-    const task = pawn.need;
-    const pile = world.piles.find(item => item.id === (task.phase === 'pickup' ? task.sourcePileId : task.carryPileId));
-    if (!pile || pile.kind !== 'food') { context.release(); return true; }
-    if (task.phase === 'pickup') {
-      if (pile.owner.type !== 'ground' || reservedSource(world, pile.id) > pile.quantity) { context.release(); return true; }
-      if (!same(pawn, pile.owner) && !adjacent(pawn, pile.owner)) { context.move(pile.owner, false); return true; }
-      // Transfer a whole pile without allocating. A split is checked before mutation.
-      if (pile.quantity === 1) {
-        pile.owner = { type: 'pawn', pawnId: pawn.id }; task.carryPileId = pile.id;
-      } else {
-        if (world.piles.length >= 32768 || !Number.isSafeInteger(world.nextId + 1)) { context.release(); return true; }
-        pile.quantity--;
-        task.carryPileId = world.nextId++;
-        world.piles.push({ id: task.carryPileId, kind: 'food', quantity: 1, owner: { type: 'pawn', pawnId: pawn.id } });
-      }
-      task.phase = 'ingest'; pawn.path = []; pawn.state = 'eating'; return true;
-    }
-    if (pile.owner.type !== 'pawn' || pile.owner.pawnId !== pawn.id || pile.quantity !== 1) { context.release(); return true; }
-    pawn.state = 'eating';
-    if (++task.progress >= INGEST_TICKS) {
-      world.piles.splice(world.piles.indexOf(pile), 1);
-      pawn.hunger = Math.min(100, pawn.hunger + PORTION_NUTRITION);
-      pawn.need = null; pawn.state = 'idle'; pawn.planCooldown = 0; pawn.needCooldown = 0;
-      context.event(`${pawn.name} a mangé une portion.`);
-    }
-    return true;
-  }
+  if (pawn.need?.kind === 'eat') { processEating(world, pawn, context); return true; }
 
   if (!pawn.need && pawn.rest <= 30 && canPlan) {
     // A transient occupant must not make an assigned, structurally reachable bed
     // disappear. Movement still respects real occupancy on every step.
-    reach = context.search(true);
+    const ownedBed = world.structures.find(item => item.id === pawn.bedId && item.kind === 'bed');
+    reach = context.search(true, ownedBed ? new Set([ownedBed.z * world.width + ownedBed.x]) : undefined);
     if (!reach) return true;
     const owners = new Map(world.pawns.filter(other => other.bedId !== null).map(other => [other.bedId, other.id]));
     const reserved = new Set(world.pawns.filter(other => other.id !== pawn.id && other.need?.kind === 'sleep').map(other => other.need?.kind === 'sleep' ? other.need.bedId : null));

@@ -10,15 +10,15 @@ Votre premier objectif libre est de récolter de la nourriture, couper quelques 
 
 ## Se repérer dans l'interface
 
-Les portraits des colons sont en haut ; cliquer dessus centre la caméra et ouvre leur inspection en bas à gauche. Les stocks sont à gauche, les alertes à droite, l'heure et les vitesses en bas à droite. Les onglets de gestion occupent le bas de l'écran : Architecte pour les désignations et constructions, Travail pour les priorités de tous les colons, Historique pour les événements et Menu pour les sauvegardes. Un seul panneau de gestion est ouvert à la fois. Les onglets grisés correspondent aux domaines encore indisponibles.
+Le compteur FPS reste dans le coin supérieur droit, même en pause ; il indique la cadence du rendu. Les portraits des colons sont en haut ; cliquer dessus centre la caméra et ouvre leur inspection en bas à gauche. Les stocks sont à gauche, les alertes à droite, l'heure et les vitesses en bas à droite. Les onglets de gestion occupent le bas de l'écran : Architecte pour les désignations et constructions, Travail pour les priorités de tous les colons, Historique pour les événements et Menu pour les sauvegardes. Un seul panneau de gestion est ouvert à la fois. Les onglets grisés correspondent aux domaines encore indisponibles.
 
 Sur une fenêtre étroite, la barre des onglets se fait défiler horizontalement. Les panneaux occupent davantage de largeur, tout en conservant leur position dans l'interface.
 
 ## Donner des ordres
 
-Ouvrir Architecte, choisir Ordres pour abattre/récolter/annuler, Zones pour le stockage, Structure pour le mur ou Meubles pour le lit. Pour les ordres de terrain et les réserves, **cliquer ou maintenir le bouton gauche et tracer un rectangle**, dans n'importe quel sens. Les cases compatibles sont surlignées ; un compteur distingue les cases retenues et ignorées. Relâcher sur la carte applique l'ensemble. Échap ou clic droit annule le tracé ; changer d'outil ou quitter la fenêtre l'abandonne également. Relâcher au-dessus d'un panneau n'envoie aucun ordre.
+Ouvrir Architecte, choisir Ordres pour abattre/récolter/annuler, Zones pour le stockage, Structure pour le mur ou Meubles pour les lits, tables et tabourets. Pour les ordres de terrain et les réserves, **cliquer ou maintenir le bouton gauche et tracer un rectangle**, dans n'importe quel sens. Les cases compatibles sont surlignées ; un compteur distingue les cases retenues et ignorées. Relâcher sur la carte applique l'ensemble. Échap ou clic droit annule le tracé ; changer d'outil ou quitter la fenêtre l'abandonne également. Relâcher au-dessus d'un panneau n'envoie aucun ordre.
 
-L'abattage cible les arbres ; la récolte cible les buissons de baies. Les ressources incompatibles, obstacles et ordres déjà présents sont ignorés, avec un bilan après application. Le rectangle crée du travail futur : les matériaux ne sont produits qu'après le travail des colons. Pour les murs et lits, cliquer sur une empreinte libre et franchissable. Le lit occupe deux cases : Q/E ou le bouton Tourner change son orientation avant placement. Le fantôme indique un placement refusé. Les matériaux peuvent manquer au moment de poser un plan ; leur livraison précède le travail de construction.
+L'abattage cible les arbres ; la récolte cible les buissons de baies. Les ressources incompatibles, obstacles et ordres déjà présents sont ignorés, avec un bilan après application. Le rectangle crée du travail futur : les matériaux ne sont produits qu'après le travail des colons. Pour les constructions, cliquer sur une empreinte libre et franchissable. Le lit et la table occupent deux cases : Q/E ou le bouton Tourner change leur orientation avant placement. Le fantôme indique un placement refusé. Les matériaux peuvent manquer au moment de poser un plan ; leur livraison précède le travail de construction.
 
 | Action | Règle actuelle |
 |---|---|
@@ -26,6 +26,8 @@ L'abattage cible les arbres ; la récolte cible les buissons de baies. Les resso
 | Récolter | Le buisson est retiré et laisse sa nourriture au sol. Pas de repousse dans cette tranche. |
 | Construire un mur | 5 bois, 70 ticks de travail ; bloque le passage dès le placement du plan. |
 | Construire un lit | 8 bois livrés, 120 ticks de travail ; empreinte orientée 1×2, attribution à un colon et repos dans le lit. |
+| Construire une table | 28 bois livrés, 53 ticks de travail ; empreinte orientée 1×2. Le plan et le meuble bloquent actuellement le passage. |
+| Construire un tabouret | 25 bois livrés, 32 ticks de travail ; une case, une place de repas à côté d’une table. |
 | Annuler | Retire l'ordre et libère ses engagements ; les matériaux restent localisés au sol. Ne détruit pas un bâtiment achevé. On peut cliquer sur chacune des cases de son empreinte. |
 
 Un arbre prend 100 ticks de travail, un buisson 60, hors déplacement et interruptions. La simulation avance à 10 ticks/seconde à vitesse normale. Ces valeurs sont nos paramètres de prototype, pas des valeurs prétendument identiques à RimWorld.
@@ -36,7 +38,7 @@ Ouvrir Travail pour régler collecte, construction et transport. **1 est la prio
 
 Un transporteur réserve une quantité de pile et de la place à destination, se déplace jusqu'à la source, prélève, porte et dépose. Sa cargaison est visible. Deux colons peuvent se partager une pile sans promettre les mêmes unités. Un constructeur commence seulement quand les matériaux nécessaires sont effectivement livrés. Une interruption conserve la progression et les matériaux déjà déposés ; une cargaison abandonnée devient une pile au sol.
 
-Les chemins contournent eau, terrain rocheux, murs et autres colons ; un colon inactif peut céder une case de passage lorsqu'un travail l'exige. Inspecter un chantier indique notamment ses livraisons et ce qu'il attend. Les embouteillages complexes de plusieurs colons actifs restent une limite du déplacement actuel.
+Les chemins contournent eau, terrain rocheux, murs, tables et autres colons ; un colon inactif peut céder une case de passage lorsqu'un travail l'exige. Inspecter un chantier indique notamment ses livraisons et ce qu'il attend. Les embouteillages complexes de plusieurs colons actifs restent une limite du déplacement actuel.
 
 ## Réserves et transport
 
@@ -48,11 +50,11 @@ Les piles contiennent au plus 75 unités et le portage au plus 10 unités par tr
 
 ## Nourriture, repos et humeur
 
-Une valeur de nourriture élevée signifie que le colon est rassasié. À 30 ou moins, il réserve une portion accessible, marche jusqu'à la nourriture puis la prend en main. Il mange pendant 50 ticks : la portion reste physique jusqu'à la fin, puis disparaît et ajoute 35 points. Un obstacle peut empêcher le repas ; réserver ou porter ne satisfait jamais la faim. Une interruption dépose la portion intacte là où se trouve le colon. À 20 ou moins sans repas accessible, il abandonne les travaux non vitaux et peut récolter les baies désignées. Le catalogue ne comporte encore qu'une nourriture générique ; cuisine, tables, sièges et pensées de repas ne sont pas disponibles.
+Une valeur de nourriture élevée signifie que le colon est rassasié. À 30 ou moins, il réserve une portion accessible, marche jusqu'à la nourriture puis la prend en main. Après prélèvement, il cherche une place disponible avec tabouret adjacent à une table, à 32 cases au plus de sa position actuelle. Il y transporte sa portion et s’assied. Sans siège accessible, il mange debout à proximité. Il mange pendant 50 ticks : la portion reste physique jusqu'à la fin, puis disparaît et ajoute 35 points. Un obstacle peut empêcher le repas ; réserver ou porter ne satisfait jamais la faim. Une interruption dépose la portion intacte là où se trouve le colon. À 20 ou moins sans repas accessible, il abandonne les travaux non vitaux et peut récolter les baies désignées. Le catalogue ne comporte encore qu'une nourriture générique ; cuisine, aliments distincts et politiques alimentaires ne sont pas disponibles. Un repas terminé sans plateau adjacent laisse un souvenir de −3 humeur pendant une journée ; il se renouvelle sans se cumuler. Manger ensuite à table ne supprime pas le souvenir déjà présent.
 
-À 30 de repos ou moins, le colon rejoint son lit accessible ou s'attribue un lit libre. La réservation est exclusive et le sommeil commence une fois arrivé ; le personnage est allongé sur le matelas dans son orientation réelle. Inspecter un lit permet de modifier son propriétaire. Sans couchage utilisable, il dort au sol ; l'épuisement peut aussi interrompre le trajet. Il se réveille une fois reposé à 100, ou pour une faim critique si une portion accessible existe. Il ne mange jamais en dormant et un lit voisin ne donne aucun bonus. L'humeur reste un indicateur dérivé, sans pensées ni crises mentales.
+À 30 de repos ou moins, le colon rejoint son lit accessible ou s'attribue un lit libre. La réservation est exclusive et le sommeil commence une fois arrivé ; le personnage est allongé sur le matelas dans son orientation réelle. Inspecter un lit permet de modifier son propriétaire. Sans couchage utilisable, il dort au sol ; l'épuisement peut aussi interrompre le trajet. Il se réveille une fois reposé à 100, ou pour une faim critique si une portion accessible existe. Il ne mange jamais en dormant et un lit voisin ne donne aucun bonus. Le confort augmente progressivement pendant l’utilisation du lit ou d’un tabouret, jusqu’au plafond du meuble, puis baisse en dehors de son utilisation. L’humeur combine encore les besoins avec ces premiers effets ; les autres pensées, relations et crises mentales restent absentes.
 
-Un jour correspond à 6 000 ticks, soit dix minutes à vitesse normale. L'heure affichée est fonctionnelle, mais l'éclairage reste fixe. Les personnages provisoires possèdent des animations de marche, travail, ingestion et sommeil calculées sur le GPU. Les seuils et le catalogue nutritionnel sont encore à calibrer ; les actions décrites ici sont effectivement jouées.
+Un jour correspond à 6 000 ticks, soit dix minutes à vitesse normale. L'heure affichée est fonctionnelle, mais l'éclairage reste fixe. Les personnages provisoires possèdent des animations de marche, travail, ingestion debout/assise et sommeil calculées sur le GPU. Les seuils et le catalogue nutritionnel sont encore à calibrer ; les actions décrites ici sont effectivement jouées.
 
 ## Commandes et sauvegarde
 
@@ -70,7 +72,7 @@ La convention 3D est de 1 m par case, 1,75 m pour un humain et 2,80 m pour un mu
 | 1 / 2 / 3 | Vitesses 1× / 3× / 6× |
 | C / R / B / L / X | Abattre / récolter / mur / lit / annuler |
 | S | Désigner une réserve |
-| Q / E avec l'outil Lit | Tourner le lit |
+| Q / E avec l'outil Lit ou Table | Tourner le meuble |
 | Tab / F1 | Ouvrir ou fermer Architecte / Travail |
 | Échap | Annuler le rectangle en cours ; sinon fermer le panneau et revenir à l'inspection |
 | Ctrl+S | Sauvegarder |
@@ -81,6 +83,6 @@ Avant de créer une nouvelle colonie, le jeu conserve aussi l'état courant dans
 
 ## Limites de cette version
 
-Pas encore d'agriculture, cuisine, tables et sièges, conservation des aliments, minage, déconstruction, emploi du temps, animaux, armes, combat, blessures, médecine, relations, traits, recherche, commerce, électricité, toit, température, incendie, météo dynamique, carte du monde ou storyteller. Les réserves à plusieurs cases partageant une politique, la sélection multiple et les ordres forcés contextuels restent à développer. Les modèles sont provisoires ; la congestion entre agents actifs et la calibration des besoins restent ouvertes. La faim ne cause pas encore de malnutrition ni de décès.
+Pas encore d'agriculture, cuisine, conservation des aliments, minage, déconstruction, emploi du temps, animaux, armes, combat, blessures, médecine, relations, traits, recherche, commerce, électricité, toit, température, incendie, météo dynamique, carte du monde ou storyteller. Les réserves à plusieurs cases partageant une politique, la sélection multiple et les ordres forcés contextuels restent à développer. Les modèles sont provisoires ; la congestion entre agents actifs et la calibration des besoins restent ouvertes. La faim ne cause pas encore de malnutrition ni de décès.
 
 La suite est suivie dans [le plan de développement](../ROADMAP.md). Les détails de la référence et les futures interactions sont dans [la matrice des systèmes](systems-matrix.md).
