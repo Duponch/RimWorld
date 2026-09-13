@@ -9,7 +9,7 @@ import { gameLayout, storageSettings, toolDefinitions } from './ui/layout';
 import type { ArchitectCategory, Panel, Tool } from './ui/layout';
 
 const jobLabels: Record<JobKind, string> = { chop: 'Abattage', harvest: 'Récolte', wall: 'Construction du mur', bed: 'Construction du lit' };
-const stateLabels: Record<Pawn['state'], string> = { idle: 'Disponible', moving: 'En chemin', working: 'Au travail', sleeping: 'Se repose', hungry: 'Cherche à manger' };
+const stateLabels: Record<Pawn['state'], string> = { idle: 'Disponible', moving: 'En chemin', working: 'Au travail', sleeping: 'Se repose', hungry: 'Cherche à manger', eating: 'Mange' };
 const terrainLabels = { grass: 'Prairie', soil: 'Terre fertile', water: 'Eau infranchissable', rock: 'Massif rocheux infranchissable' };
 const resourceLabels = { tree: 'Arbre', berries: 'Buisson de baies', rock: 'Pierre au sol' };
 const SAVE_KEY = 'lisiere.save.v1';
@@ -139,11 +139,22 @@ function rebuildInspector() {
     }
     el('update-stockpile').onclick = () => { if (selectedCell) { const cell = { ...selectedCell }; void attempt(async () => { await client.command({ type: 'stockpile', ...cell, enabled: true, ...readStorageSettings('selected-stockpile') }); notify('Réserve mise à jour.'); }); } };
     el('delete-stockpile').onclick = () => { if (selectedCell) { const cell = { ...selectedCell }; void attempt(async () => { await client.command({ type: 'stockpile', ...cell, enabled: false }); rebuildInspector(); renderState(); }); } };
+    const bedControls = document.createElement('label'); bedControls.id = 'cell-bed'; bedControls.hidden = true;
+    bedControls.append('Propriétaire du lit ');
+    const owner = document.createElement('select'); owner.id = 'bed-owner'; owner.setAttribute('aria-label', 'Propriétaire du lit');
+    owner.append(new Option('Non attribué', ''));
+    for (const pawn of snapshot?.pawns ?? []) owner.append(new Option(pawn.name, String(pawn.id)));
+    owner.onchange = () => {
+      const bed = snapshot?.structures.find(item => item.kind === 'bed' && footprintCells(item).some(cell => cell.x === selectedCell?.x && cell.z === selectedCell?.z));
+      if (bed) void attempt(async () => { await client.command({ type: 'assign-bed', bedId: bed.id, pawnId: owner.value ? Number(owner.value) : null }); });
+    };
+    bedControls.append(owner); panel.append(bedControls);
   } else panel.replaceChildren();
   const close = document.getElementById('inspect-close');
   if (close) close.onclick = clearSelection;
 }
 function actionLabel(pawn: Pawn) {
+  if (pawn.need) return queryPawnStatus(snapshot!, pawn).reason;
   if (pawn.haul) {
     const destination = pawn.haul.destination.type === 'job' ? 'chantier' : 'réserve';
     const carried = snapshot?.piles.find(pile => pile.id === pawn.haul!.carryPileId);
@@ -208,7 +219,7 @@ function renderState() {
     const pawn = world.pawns.find(item => item.id === selectedPawn);
     if (!pawn) clearSelection();
     else {
-      el('selected-name').textContent = pawn.name; el('selected-action').textContent = `${actionLabel(pawn)} · ${queryPawnStatus(world, pawn).reason}`;
+      el('selected-name').textContent = pawn.name; el('selected-action').textContent = pawn.need ? actionLabel(pawn) : `${actionLabel(pawn)} · ${queryPawnStatus(world, pawn).reason}`;
       for (const need of ['hunger', 'rest', 'mood'] as const) { el(`selected-${need}`).textContent = `${Math.round(pawn[need])} %`; el<HTMLMeterElement>(`${need}-meter`).value = pawn[need]; }
     }
   } else if (selectedCell) {
@@ -225,6 +236,8 @@ function renderState() {
       el('cell-materials').textContent = piles.length ? `Au sol : ${piles.map(pile => `${pile.quantity} ${pile.kind === 'wood' ? 'bois' : 'nourriture'}`).join(' · ')}` : '';
       el('cell-job').textContent = job ? `${jobLabels[job.kind]} · ${queryJobStatus(world, job).reason ?? 'En cours'}${job.kind === 'bed' || job.kind === 'wall' ? ` · ${deliveredStock(world, job.id).wood} bois livrés` : ''}` : 'Aucun ordre sur cette case.';
       el('cell-storage').hidden = !storage;
+      el('cell-bed').hidden = structure?.kind !== 'bed';
+      if (structure?.kind === 'bed' && document.activeElement !== el('bed-owner')) el<HTMLSelectElement>('bed-owner').value = String(world.pawns.find(pawn => pawn.bedId === structure.id)?.id ?? '');
       if (storage) el('cell-storage-quantity').textContent = `Réserve · ${piles.reduce((sum, pile) => sum + pile.quantity, 0)} / ${storage.capacity} unités`;
     }
   }

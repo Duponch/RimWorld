@@ -1,14 +1,14 @@
 import { generateWorld } from './generation.ts';
-import { adjacent, blockedCells, cellIndex, inBounds, reachableCells, routeToJob } from './pathfinding.ts';
+import { adjacent, blockedCells, cellIndex, inBounds, reachableCells, routeToJob, routeToCell } from './pathfinding.ts';
 import type { Reachability } from './pathfinding.ts';
 import { CARRY_CAPACITY, footprintCells, JOB_DURATION, JOB_WOOD_COST, MAX_STACK } from './definitions.ts';
 import { addGroundMaterial, addMaterial, deliveredStock, groundQuantity, materialCanFit, refreshStock, reservedDestination, reservedSource } from './materials.ts';
 import { queryArea, validStorageSettings } from './designation.ts';
+import { processNeeds } from './needs.ts';
+export { HUNGER_PER_TICK, REST_PER_TICK } from './needs.ts';
 import type { AreaCommand, Cell, Command, CommandResult, DesignateCommand, HaulDestination, Job, JobDiagnostic, JobKind, MaterialKind, Pawn, RefusalCode, WorkType, World } from './types.ts';
 export { JOB_DURATION, JOB_WOOD_COST } from './definitions.ts';
 
-export const HUNGER_PER_TICK = 0.015;
-export const REST_PER_TICK = 0.008;
 const PLAN_INTERVAL = 20;
 const MOVE_INTERVAL = 3;
 const PATH_SEARCHES_PER_TICK = 8;
@@ -30,11 +30,9 @@ function releaseWork(world: World, pawn: Pawn): void {
   const job = world.jobs.find(candidate => candidate.id === pawn.jobId);
   if (job?.reservedBy === pawn.id) { job.reservedBy = null; job.status = 'pending'; }
   const carry = world.piles.find(pile => pile.owner.type === 'pawn' && pile.owner.pawnId === pawn.id);
-  if (carry) {
-    world.piles.splice(world.piles.indexOf(carry), 1);
-    addGroundMaterial(world, carry.kind, carry.quantity, pawn);
-  }
-  pawn.jobId = null; pawn.haul = null; pawn.path = []; pawn.state = 'idle'; pawn.planCooldown = PLAN_INTERVAL;
+  // Changing owner retains identity and needs no spare pile/ID allocation.
+  if (carry) carry.owner = { type: 'ground', x: pawn.x, z: pawn.z };
+  pawn.jobId = null; pawn.haul = null; pawn.need = null; pawn.path = []; pawn.state = 'idle'; pawn.planCooldown = PLAN_INTERVAL; pawn.needCooldown = 20;
 }
 function wakePlanners(world: World): void {
   for (const pawn of world.pawns) if (pawn.jobId === null && pawn.haul === null) pawn.planCooldown = 0;
@@ -110,6 +108,17 @@ export function canDesignate(world: World, command: DesignateCommand): CommandRe
 export function applyCommand(world: World, command: Command): CommandResult {
   if (!command || typeof command !== 'object') return refusal('invalid-command', 'Commande invalide.');
   if (command.type === 'area') return applyArea(world, command);
+  if (command.type === 'assign-bed') {
+    const bed = world.structures.find(item => item.id === command.bedId && item.kind === 'bed');
+    const owner = world.pawns.find(item => item.id === command.pawnId);
+    if (!bed || (command.pawnId !== null && !owner)) return refusal('missing-target', 'Lit ou colon introuvable.');
+    for (const pawn of world.pawns) if (pawn.bedId === bed.id || pawn === owner) {
+      if (pawn.need?.kind === 'sleep') releaseWork(world, pawn);
+      pawn.bedId = null; pawn.needCooldown = 0;
+    }
+    if (owner) owner.bedId = bed.id;
+    return { ok: true };
+  }
   if (command.type === 'priority') {
     if (!['gather', 'build', 'haul'].includes(command.work) || !Number.isInteger(command.value) || command.value < 0 || command.value > 4) return refusal('invalid-priority', 'La priorité doit être comprise entre 0 et 4.');
     const pawn = world.pawns.find(candidate => candidate.id === command.pawnId);
@@ -169,6 +178,8 @@ export function queryJobStatus(world: World, job: Job): JobDiagnostic {
   return { code: enabled ? 'ready' : 'waiting-worker', reason: enabled ? 'Prêt ; attend un colon disponible et un accès.' : 'Travail désactivé pour tous les colons.', delivered, required };
 }
 export function queryPawnStatus(world: World, pawn: Pawn): { code: string; reason: string } {
+  if (pawn.need?.kind === 'eat') return { code: pawn.need.phase, reason: pawn.need.phase === 'pickup' ? 'Va chercher une portion réservée.' : `Mange la portion tenue en main (${Math.floor(pawn.need.progress / 50 * 100)} %).` };
+  if (pawn.need?.kind === 'sleep') return { code: pawn.need.phase, reason: pawn.need.phase === 'travel' ? pawn.need.bedId === null ? 'Libère le lit et cherche une place au sol.' : 'Se rend à son lit réservé.' : pawn.need.bedId === null ? 'Dort au sol ; aucun lit utilisable ou épuisement.' : 'Dort dans son lit.' };
   if (pawn.haul) return { code: pawn.haul.phase, reason: pawn.haul.phase === 'pickup' ? `Va prélever ${pawn.haul.quantity} unités réservées.` : `Porte ${pawn.haul.quantity} unités vers ${pawn.haul.destination.type === 'job' ? 'un chantier' : 'le stockage'}.` };
   if (pawn.jobId !== null) return { code: 'working', reason: pawn.state === 'moving' ? 'Se rend à son travail.' : 'Travaille sur sa cible.' };
   if (pawn.state === 'sleeping') return { code: 'sleeping', reason: 'Se repose.' };
@@ -189,7 +200,7 @@ function yieldIdleBlocker(world: World, requester: Pawn, target: Cell, blocked: 
     const cell = route[pathIndex]!;
     const blocker = world.pawns.find(pawn => pawn.id !== requester.id && sameCell(pawn, cell));
     if (!blocker) continue;
-    if (blocker.jobId !== null || blocker.haul !== null || blocker.state === 'sleeping' || blocker.moveCooldown > 0) return false;
+    if (blocker.jobId !== null || blocker.haul !== null || blocker.need !== null || blocker.state === 'sleeping' || blocker.moveCooldown > 0) return false;
     const choices = [{ x: blocker.x, z: blocker.z - 1 }, { x: blocker.x + 1, z: blocker.z }, { x: blocker.x, z: blocker.z + 1 }, { x: blocker.x - 1, z: blocker.z }]
       .filter(next => { const index = cellIndex(world, next.x, next.z); const position = routeIndices.get(index); return inBounds(world, next.x, next.z) && !blocked[index] && !occupied.has(index) && (position === undefined || position > pathIndex); });
     choices.sort((a, b) => Number(routeIndices.has(cellIndex(world, a.x, a.z))) - Number(routeIndices.has(cellIndex(world, b.x, b.z))));
@@ -238,6 +249,7 @@ function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, occupied
     if (pile.owner.type === 'job' && pile.kind === 'wood') delivered.set(pile.owner.jobId, (delivered.get(pile.owner.jobId) ?? 0) + pile.quantity);
     if (pile.owner.type === 'ground') { const key = cellIndex(world, pile.owner.x, pile.owner.z); ground.set(key, (ground.get(key) ?? 0) + pile.quantity); }
   }
+  for (const worker of world.pawns) if (worker.need?.kind === 'eat' && worker.need.phase === 'pickup') sourceReserved.set(worker.need.sourcePileId, (sourceReserved.get(worker.need.sourcePileId) ?? 0) + 1);
   for (const worker of world.pawns) if (worker.haul) {
     const task = worker.haul;
     if (task.phase === 'pickup') {
@@ -310,14 +322,14 @@ function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, occupied
   if (staticReachable) for (const candidate of blockedTargets) if (yieldIdleBlocker(world, pawn, candidate.target, blocked, occupied, staticReachable, candidate.allow)) return;
 }
 
-function moveToward(world: World, pawn: Pawn, target: Cell, allowTarget: boolean, getBlocked: NavigationGrid, occupied: Set<number>, budget: SearchBudget): void {
+function moveToward(world: World, pawn: Pawn, target: Cell, allowTarget: boolean, getBlocked: NavigationGrid, occupied: Set<number>, budget: SearchBudget, exact = false): void {
   pawn.state = 'moving'; if (pawn.moveCooldown > 0) return;
   const blocked = getBlocked();
   let next = pawn.path[0];
   if (!next || blocked[cellIndex(world, next.x, next.z)] || occupied.has(cellIndex(world, next.x, next.z))) {
     if (pawn.planCooldown > 0) return;
     const reachable = search(world, pawn, blocked, occupied, budget); if (!reachable) return;
-    const path = routeToJob(world, target, reachable, allowTarget); pawn.planCooldown = PLAN_INTERVAL;
+    const path = exact ? routeToCell(world, target, reachable) : routeToJob(world, target, reachable, allowTarget); pawn.planCooldown = PLAN_INTERVAL;
     if (path === null) {
       const staticReachable = search(world, pawn, blocked, new Set(), budget);
       if (staticReachable) yieldIdleBlocker(world, pawn, target, blocked, occupied, staticReachable, allowTarget);
@@ -365,26 +377,6 @@ function completeJob(world: World, pawn: Pawn, job: Job): void {
   world.jobs.splice(world.jobs.indexOf(job), 1); pawn.jobId = null; pawn.path = []; pawn.state = 'idle'; pawn.planCooldown = 0;
   event(world, 'job', `${pawn.name} a terminé le travail : ${JOB_LABEL[job.kind]}.`); wakePlanners(world);
 }
-function processNeeds(world: World, pawn: Pawn): boolean {
-  pawn.hunger = Math.max(0, pawn.hunger - HUNGER_PER_TICK);
-  // Temporary G0 rule: remote eating uses physical ground food only, never reserved or carried food.
-  const food = pawn.hunger <= 45 ? world.piles.find(pile => pile.kind === 'food' && pile.owner.type === 'ground' && pile.quantity > reservedSource(world, pile.id)) : undefined;
-  if (food) { food.quantity--; if (!food.quantity) world.piles.splice(world.piles.indexOf(food), 1); pawn.hunger = Math.min(100, pawn.hunger + 35); event(world, 'need', `${pawn.name} prend un repas.`); }
-  if (pawn.state !== 'sleeping') pawn.rest = Math.max(0, pawn.rest - REST_PER_TICK);
-  if (pawn.rest <= 20 && pawn.state !== 'sleeping') { releaseWork(world, pawn); pawn.state = 'sleeping'; event(world, 'need', `${pawn.name} se repose.`); }
-  if (pawn.state === 'sleeping') {
-    const nearBed = world.structures.some(structure => structure.kind === 'bed' && footprintCells(structure).some(cell => nearby(pawn, cell)));
-    pawn.rest = Math.min(100, pawn.rest + (nearBed ? 0.22 : 0.12)); pawn.mood = Math.round(pawn.hunger * 0.6 + pawn.rest * 0.4);
-    if (pawn.rest >= 85) { pawn.state = 'idle'; pawn.planCooldown = 0; } return true;
-  }
-  pawn.mood = Math.round(pawn.hunger * 0.6 + pawn.rest * 0.4);
-  if (pawn.hunger <= 20) {
-    const job = world.jobs.find(candidate => candidate.id === pawn.jobId);
-    if ((job && job.kind !== 'harvest') || pawn.haul) releaseWork(world, pawn);
-    if (pawn.jobId === null) pawn.state = 'hungry';
-  } else if (pawn.state === 'hungry') pawn.state = 'idle';
-  return false;
-}
 export function stepWorld(world: World, ticks = 1): void {
   if (!Number.isInteger(ticks) || ticks < 0 || ticks > 100000) throw new Error('Tick count must be an integer between 0 and 100000.');
   for (let step = 0; step < ticks; step++) {
@@ -398,7 +390,12 @@ export function stepWorld(world: World, ticks = 1): void {
     for (let offset = 0; offset < world.pawns.length; offset++) {
       const pawn = world.pawns[((world.tick - 1) + offset) % world.pawns.length]!;
       if (pawn.moveCooldown > 0) pawn.moveCooldown--; if (pawn.planCooldown > 0) pawn.planCooldown--;
-      if (processNeeds(world, pawn)) continue;
+      if (processNeeds(world, pawn, {
+        search: (ignorePawns = false) => search(world, pawn, getBlocked(), ignorePawns ? new Set() : occupied, budget),
+        move: (target, exact) => moveToward(world, pawn, target, true, getBlocked, occupied, budget, exact),
+        release: () => releaseWork(world, pawn),
+        event: message => event(world, 'need', message),
+      })) continue;
       if (pawn.jobId === null && pawn.haul === null && pawn.planCooldown === 0) planWork(world, pawn, getBlocked, occupied, budget);
       if (pawn.haul) { processHaul(world, pawn, getBlocked, occupied, budget); continue; }
       const job = world.jobs.find(candidate => candidate.id === pawn.jobId); if (!job) continue;

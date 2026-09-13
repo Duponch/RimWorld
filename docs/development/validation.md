@@ -1,6 +1,20 @@
 # Validation du prototype
 
-## État courant : désignations rectangulaires — 13 septembre 2026
+## État courant : repas et couchages physiques — 13 septembre 2026
+
+[Contrat et paramètres](needs.md). Consommation à distance et bonus de lit voisin supprimés ; tâches de repas et de sommeil persistées en schéma 3, attribution de lits, interruptions conservant les objets. Deux scénarios de simulation existants enrichis, plutôt qu'une nouvelle multitude de tests. Les résultats antérieurs ci-dessous sont historiques, notamment leurs timings de navigation sous les anciennes règles.
+
+**Simulation : 15/15 scénarios dans cinq fichiers, 23,68 s.** Le passage global comprend le soak des cinq graines, 60 000 ticks avec invariants, les nouvelles interactions repas/transport et couchage, les migrations V1/V2, les rectangles, la génération et le codec.
+
+**Build final réussi** : jeu 980,07 kB, gzip 270,57 kB ; worker 49,36 kB. L'avertissement de chunk supérieur à 500 kB reste présent. Le shader d'ingestion et les poses de lits utilisent les attributs instanciés existants, sans animation d'os par personnage sur CPU.
+
+**Mesure CPU dédiée** : [rapport complet](../../artifacts/needs-benchmark.json), Node 24.11.1, Ryzen 5 3600, 14:51:39 UTC. Sur 250² avec 100 colons, la phase mêlant décisions/trajets et arrivée au lit mesure 17,47 ms au p95 et 27,55 ms au maximum par tick ; après installation des dormeurs, 0,089 ms au p95. Les cent portions sont ingérées et les cent lits occupés. Le même scénario sur 64² mesure 2,02 ms au p95 et 12,79 ms au maximum pendant la première phase. La grande carte renchérit donc les recherches complètes : le plafond de recherches n'annule pas leur coût. Ce sont des ticks CPU, pas des frames ou un profil de colonie congestionnée ; les pointes peuvent peser sur le rattrapage à vitesse 6×. Les trois colons sur 250² culminent à 9,49 ms dans ce scénario. Les anciennes mesures du moteur à repas distants ne sont pas un contrôle à gameplay équivalent.
+
+**Intégration : 5/5 parcours passent ensemble en 113,24 s.** [Rapport archivé](../../artifacts/needs-validation.json), démarrage 14:52:56 UTC : besoins 10,5 s, boucle matérielle 14,1 s, frontières/migration 46,1 s, rectangles 250² 25,5 s, nouvelles cartes/restauration 15,0 s. Le scénario des besoins a utilisé **WebGPU, adaptateur AMD / RDNA-1**, sans erreur console/GPU. Le parcours des frontières conserve SwiftShader ; les autres lancent Chromium normal.
+
+Le contrôle navigateur des repas a été inspecté : portion en main et deux dormeurs allongés à la hauteur et dans l'orientation de leur matelas. La capture `artifacts/needs-eating-sleeping.png` est régénérable par le test et ignorée dans Git. Les premiers essais du nouveau scénario avaient deux erreurs de préparation UI (découverte de sauvegarde après injection et tentative de fermer un menu déjà fermé par le chargement) ; elles ont été corrigées dans le test. Elles ne sont pas comptées comme des validations.
+
+## Historique : désignations rectangulaires — 13 septembre 2026
 
 La [tranche de désignation](area-designations.md) ajoute abattage, récolte, annulation et création/retrait de cases de réserve en rectangle. Les matériaux, les déplacements et le schéma 2 restent ceux de la boucle matérielle. Le geste est transitoire ; la validation et le bilan d'application viennent du worker.
 

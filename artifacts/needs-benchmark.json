@@ -1,0 +1,89 @@
+{
+  "timestamp": "2026-09-13T14:51:39.602Z",
+  "node": "v24.11.1",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "schema": 3,
+  "scenario": "Open terrain, individual food portions and assigned beds; 400 ticks, 1 warmup and 3 measured runs. No renderer or worker messaging.",
+  "rows": [
+    {
+      "size": 64,
+      "count": 3,
+      "meals": 3,
+      "occupiedBeds": 3,
+      "phases": {
+        "decisionsAndTravel": {
+          "samples": 600,
+          "medianMs": 0.0036000000000058208,
+          "p95Ms": 0.012399999999985312,
+          "maxMs": 1.343199999999996
+        },
+        "sleeping": {
+          "samples": 600,
+          "medianMs": 0.0033999999999991815,
+          "p95Ms": 0.006699999999995043,
+          "maxMs": 0.04419999999998936
+        }
+      }
+    },
+    {
+      "size": 64,
+      "count": 100,
+      "meals": 100,
+      "occupiedBeds": 100,
+      "phases": {
+        "decisionsAndTravel": {
+          "samples": 600,
+          "medianMs": 0.03710000000000946,
+          "p95Ms": 2.017300000000091,
+          "maxMs": 12.787500000000023
+        },
+        "sleeping": {
+          "samples": 600,
+          "medianMs": 0.03269999999997708,
+          "p95Ms": 0.07849999999996271,
+          "maxMs": 0.3868999999999687
+        }
+      }
+    },
+    {
+      "size": 250,
+      "count": 3,
+      "meals": 3,
+      "occupiedBeds": 3,
+      "phases": {
+        "decisionsAndTravel": {
+          "samples": 600,
+          "medianMs": 0.0009999999999763531,
+          "p95Ms": 0.0039000000001578883,
+          "maxMs": 9.484899999999925
+        },
+        "sleeping": {
+          "samples": 600,
+          "medianMs": 0.0009000000000014552,
+          "p95Ms": 0.0028999999999541615,
+          "maxMs": 0.15030000000001564
+        }
+      }
+    },
+    {
+      "size": 250,
+      "count": 100,
+      "meals": 100,
+      "occupiedBeds": 100,
+      "phases": {
+        "decisionsAndTravel": {
+          "samples": 600,
+          "medianMs": 0.03760000000011132,
+          "p95Ms": 17.468199999999797,
+          "maxMs": 27.546099999999797
+        },
+        "sleeping": {
+          "samples": 600,
+          "medianMs": 0.03290000000015425,
+          "p95Ms": 0.08910000000014406,
+          "maxMs": 0.3303000000000793
+        }
+      }
+    }
+  ]
+}

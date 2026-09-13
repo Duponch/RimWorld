@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 2 as const;
+export const SCHEMA_VERSION = 3 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
@@ -10,7 +10,7 @@ export type JobKind = 'chop' | 'harvest' | StructureKind;
 export type WorkType = 'gather' | 'build' | 'haul';
 export type Orientation = 0 | 1 | 2 | 3;
 export type Footprint = 'standard' | 'legacy-single';
-export type PawnState = 'idle' | 'moving' | 'working' | 'sleeping' | 'hungry';
+export type PawnState = 'idle' | 'moving' | 'working' | 'sleeping' | 'hungry' | 'eating';
 export interface Cell { x: number; z: number }
 export interface Tile { terrain: Terrain }
 export interface Resource extends Cell { id: number; kind: ResourceKind; amount: number }
@@ -27,6 +27,9 @@ export interface HaulTask {
   destination: HaulDestination;
   carryPileId: number | null;
 }
+export type NeedTask =
+  | { kind: 'eat'; phase: 'pickup' | 'ingest'; sourcePileId: number; carryPileId: number | null; progress: number }
+  | { kind: 'sleep'; phase: 'travel' | 'sleep'; bedId: number | null; target: Cell };
 export interface Job extends Cell {
   id: number;
   kind: JobKind;
@@ -45,6 +48,10 @@ export interface Pawn extends Cell {
   mood: number;
   jobId: number | null;
   haul: HaulTask | null;
+  need: NeedTask | null;
+  /** Persistent ownership, distinct from an active sleep reservation. */
+  bedId: number | null;
+  needCooldown: number;
   state: PawnState;
   priorities: Record<WorkType, number>;
   /** Serialized route and cadence make save/resume exactly reproducible. */
@@ -81,6 +88,7 @@ export interface AreaCommand extends StorageSettings { type: 'area'; action: Are
 export type Command =
   | DesignateCommand
   | AreaCommand
+  | { type: 'assign-bed'; bedId: number; pawnId: number | null }
   | ({ type: 'cancel' } & Cell)
   | ({ type: 'stockpile'; enabled: boolean; filters?: Record<MaterialKind, boolean>; priority?: number; capacity?: number } & Cell)
   | { type: 'priority'; pawnId: number; work: WorkType; value: number };

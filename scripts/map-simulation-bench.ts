@@ -20,6 +20,7 @@ for (const name of ['generation.ts', 'serialization.ts']) {
 }
 const baseline: typeof current = await import(pathToFileURL(resolve(controlRoot, 'index.ts')).href);
 const baselineNavigation: typeof navigation = await import(pathToFileURL(resolve(controlRoot, 'pathfinding.ts')).href);
+if (baseline.createWorld(42).schemaVersion !== current.createWorld(42).schemaVersion) throw new Error('Historical A/B requires matching rule schemas. For V3 physical needs use scripts/needs-bench.ts; do not compare different gameplay outcomes as equivalent.');
 const samples = 3;
 const percentile = (values: number[], ratio: number): number => [...values].sort((a, b) => a - b)[Math.min(values.length - 1, Math.ceil(values.length * ratio) - 1)]!;
 const stats = (values: number[]) => ({ medianMs: percentile(values, 0.5), p95Ms: percentile(values, 0.95), maxMs: Math.max(...values), samples: values.length });

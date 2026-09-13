@@ -24,6 +24,19 @@ export function blockedCells(world: World): Uint8Array {
 
 export interface Reachability { parents: Int32Array; start: number }
 
+/** Occupy a destination cell (beds), unlike interaction from a neighbouring cell. */
+export function routeToCell(world: World, target: Cell, reachable: Reachability): Cell[] | null {
+  if (!inBounds(world, target.x, target.z)) return null;
+  let cursor = cellIndex(world, target.x, target.z);
+  if (reachable.parents[cursor] === -2) return null;
+  const path: Cell[] = [];
+  while (cursor !== reachable.start) {
+    path.push({ x: cursor % world.width, z: Math.floor(cursor / world.width) });
+    cursor = reachable.parents[cursor]!;
+  }
+  return path.reverse();
+}
+
 /** One bounded flood per planning pawn, reused for every candidate job. No per-frame search. */
 export function reachableCells(world: World, start: Cell, blocked: Uint8Array, occupied: Set<number>): Reachability {
   const size = world.width * world.height;

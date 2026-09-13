@@ -63,7 +63,10 @@ export function addGroundMaterial(world: World, kind: MaterialKind, quantity: nu
 }
 export function reservedSource(world: World, pileId: number): number {
   let quantity = 0;
-  for (const pawn of world.pawns) if (pawn.haul?.phase === 'pickup' && pawn.haul.sourcePileId === pileId) quantity += pawn.haul.quantity;
+  for (const pawn of world.pawns) {
+    if (pawn.haul?.phase === 'pickup' && pawn.haul.sourcePileId === pileId) quantity += pawn.haul.quantity;
+    if (pawn.need?.kind === 'eat' && pawn.need.phase === 'pickup' && pawn.need.sourcePileId === pileId) quantity++;
+  }
   return quantity;
 }
 export function sameDestination(a: HaulDestination, b: HaulDestination): boolean {

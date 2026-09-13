@@ -1,0 +1,59 @@
+{
+  "timestamp": "2026-09-13T14:52:56.017Z",
+  "durationMs": 113241.13,
+  "tests": [
+    {
+      "title": "besoins physiques : repas en main, sommeil dans deux lits orientés, attribution et sauvegarde UI",
+      "status": "passed",
+      "durationMs": 10465
+    },
+    {
+      "title": "colonie matérielle : réserve filtrée, transport visible, trois couchages et reprise exacte en livraison",
+      "status": "passed",
+      "durationMs": 14071
+    },
+    {
+      "title": "frontières : commandes répétées, sauvegarde invalide atomique, aide et organisation compacte",
+      "status": "passed",
+      "durationMs": 46103
+    },
+    {
+      "title": "rectangles 250² : aperçu, interruptions, rotation, politiques préservées et récolte réelle",
+      "status": "passed",
+      "durationMs": 25527
+    },
+    {
+      "title": "nouvelle colonie : défaut 250, tailles 128/200/250 et retour exact à une ancienne petite partie",
+      "status": "passed",
+      "durationMs": 14957
+    }
+  ],
+  "needs": [
+    {
+      "backend": "WebGPU",
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "device": "",
+        "description": ""
+      },
+      "phases": [
+        "pickup",
+        "ingest",
+        "sleep",
+        "bed-reassignment"
+      ],
+      "foodConsumed": 1,
+      "resumedExactly": true,
+      "errors": []
+    }
+  ],
+  "screenshot": "artifacts/needs-eating-sleeping.png",
+  "simulation": {
+    "passed": 15,
+    "files": 5,
+    "durationSeconds": 23.68,
+    "soakTicks": 60000
+  },
+  "build": "passed"
+}

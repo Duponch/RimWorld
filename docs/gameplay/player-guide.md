@@ -25,7 +25,7 @@ L'abattage cible les arbres ; la récolte cible les buissons de baies. Les resso
 | Abattre | Le colon travaille à côté de l'arbre ; toute sa quantité devient une ou plusieurs piles de bois au sol. |
 | Récolter | Le buisson est retiré et laisse sa nourriture au sol. Pas de repousse dans cette tranche. |
 | Construire un mur | 5 bois, 70 ticks de travail ; bloque le passage dès le placement du plan. |
-| Construire un lit | 8 bois livrés, 120 ticks de travail ; empreinte orientée 1×2 et repos accéléré à proximité. |
+| Construire un lit | 8 bois livrés, 120 ticks de travail ; empreinte orientée 1×2, attribution à un colon et repos dans le lit. |
 | Annuler | Retire l'ordre et libère ses engagements ; les matériaux restent localisés au sol. Ne détruit pas un bâtiment achevé. On peut cliquer sur chacune des cases de son empreinte. |
 
 Un arbre prend 100 ticks de travail, un buisson 60, hors déplacement et interruptions. La simulation avance à 10 ticks/seconde à vitesse normale. Ces valeurs sont nos paramètres de prototype, pas des valeurs prétendument identiques à RimWorld.
@@ -48,11 +48,11 @@ Les piles contiennent au plus 75 unités et le portage au plus 10 unités par tr
 
 ## Nourriture, repos et humeur
 
-Une valeur de nourriture élevée signifie que le colon est rassasié. Elle diminue avec les ticks. À 45 ou moins, une unité de nourriture disponible est consommée et ajoute 35 points. À 20 ou moins sans repas disponible, le colon abandonne les travaux non vitaux pour privilégier sa survie. La consommation prélève une vraie pile, mais le trajet et l'action de manger sont encore simplifiés : cette tranche ne livre pas la boucle complète des repas de RimWorld.
+Une valeur de nourriture élevée signifie que le colon est rassasié. À 30 ou moins, il réserve une portion accessible, marche jusqu'à la nourriture puis la prend en main. Il mange pendant 50 ticks : la portion reste physique jusqu'à la fin, puis disparaît et ajoute 35 points. Un obstacle peut empêcher le repas ; réserver ou porter ne satisfait jamais la faim. Une interruption dépose la portion intacte là où se trouve le colon. À 20 ou moins sans repas accessible, il abandonne les travaux non vitaux et peut récolter les baies désignées. Le catalogue ne comporte encore qu'une nourriture générique ; cuisine, tables, sièges et pensées de repas ne sont pas disponibles.
 
-Le repos diminue pendant l'éveil. À 20, le colon interrompt sa tâche et dort sur place jusqu'à 85. Le repos revient plus vite si un lit est sur sa case ou sur une case voisine orthogonale. Il ne recherche pas encore un lit libre et ne se déplace pas automatiquement jusqu'à lui. L'humeur est pour l'instant un indicateur dérivé de la nourriture et du repos ; elle ne déclenche aucune crise mentale.
+À 30 de repos ou moins, le colon rejoint son lit accessible ou s'attribue un lit libre. La réservation est exclusive et le sommeil commence une fois arrivé ; le personnage est allongé sur le matelas dans son orientation réelle. Inspecter un lit permet de modifier son propriétaire. Sans couchage utilisable, il dort au sol ; l'épuisement peut aussi interrompre le trajet. Il se réveille une fois reposé à 100, ou pour une faim critique si une portion accessible existe. Il ne mange jamais en dormant et un lit voisin ne donne aucun bonus. L'humeur reste un indicateur dérivé, sans pensées ni crises mentales.
 
-Un jour correspond à 6 000 ticks, soit dix minutes à vitesse normale. L'heure affichée est fonctionnelle, mais l'éclairage reste fixe. Les personnages provisoires possèdent une animation de marche, de travail et de sommeil calculée sur le GPU ; leur apparence sera remplacée par les futurs modèles animés.
+Un jour correspond à 6 000 ticks, soit dix minutes à vitesse normale. L'heure affichée est fonctionnelle, mais l'éclairage reste fixe. Les personnages provisoires possèdent des animations de marche, travail, ingestion et sommeil calculées sur le GPU. Les seuils et le catalogue nutritionnel sont encore à calibrer ; les actions décrites ici sont effectivement jouées.
 
 ## Commandes et sauvegarde
 
@@ -81,6 +81,6 @@ Avant de créer une nouvelle colonie, le jeu conserve aussi l'état courant dans
 
 ## Limites de cette version
 
-Pas encore d'agriculture, cuisine, minage, déconstruction, emploi du temps, animaux, armes, combat, blessures, médecine, relations, traits, recherche, commerce, électricité, toit, température, incendie, météo dynamique, carte du monde ou storyteller. Les réserves à plusieurs cases partageant une politique, la sélection multiple et les ordres forcés contextuels restent à développer. Les modèles sont provisoires ; les règles de repas, sommeil et congestion sont encore simplifiées.
+Pas encore d'agriculture, cuisine, tables et sièges, conservation des aliments, minage, déconstruction, emploi du temps, animaux, armes, combat, blessures, médecine, relations, traits, recherche, commerce, électricité, toit, température, incendie, météo dynamique, carte du monde ou storyteller. Les réserves à plusieurs cases partageant une politique, la sélection multiple et les ordres forcés contextuels restent à développer. Les modèles sont provisoires ; la congestion entre agents actifs et la calibration des besoins restent ouvertes. La faim ne cause pas encore de malnutrition ni de décès.
 
 La suite est suivie dans [le plan de développement](../ROADMAP.md). Les détails de la référence et les futures interactions sont dans [la matrice des systèmes](systems-matrix.md).

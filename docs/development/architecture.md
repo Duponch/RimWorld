@@ -133,3 +133,12 @@ La requête pure `queryArea` partage les règles de sélection entre aperçu et 
 Le schéma 2 reste inchangé : aucun champ persistant n'est ajouté. Une annulation vise l'identité du chantier une seule fois et conserve toute la matière ; le retrait d'une réserve supprime sa politique locale et invalide les livraisons correspondantes. Une création chevauchant une réserve existante ne modifie pas ses filtres. Les zones nommées et politiques partagées restent un chantier ultérieur qui exigera une décision de migration explicite.
 
 Contrats, mesures et limites : [area-designations.md](area-designations.md). Le benchmark compare les mondes complets aux commandes unitaires hors journal ; les scénarios de conservation et les parcours du vrai worker couvrent les conséquences métier. Une commande rapide ne prouve pas le budget de milliers de travaux exécutés ni celui du rendu de toutes leurs désignations.
+
+
+## ADR-015 — Besoins réalisés par des tâches physiques
+
+**Adopté.** La correction des interactions élémentaires précède les zones nommées. Les jauges ne consomment plus un stock à distance et la proximité d'un lit ne produit aucun repos supplémentaire. `needs.ts` orchestre réservation, trajet, acquisition et ingestion, ou attribution de couchage, trajet et sommeil. Le module reçoit les services de navigation bornée, interruption et événements du moteur ; il ne dépend ni du renderer ni du DOM.
+
+Le schéma 3 persiste les nouvelles intentions et phases. La validation V2 précède sa migration ; les anciennes positions et quantités restent intactes. Les tâches de besoin sont exclusives du travail, mais partagent les réservations de matière et le budget de recherche. Les dépôts conservent l'identité des objets. La représentation GPU lit les phases et l'orientation du lit, sans calcul d'os sur CPU.
+
+Les actions sont livrées sur le catalogue actuel ; les coefficients provisoires, tables/sièges, horaires et profils non livrés restent identifiés dans [needs.md](needs.md). Une future calibration ne doit pas se présenter comme une conversion silencieuse des anciennes sauvegardes. Le détail des seuils et du repli au sol constitue une décision révisable, pas une équivalence complète de RimWorld.

@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { addGroundMaterial, applyCommand, createWorld, deserializeWorld, hashWorld, refreshStock, serializeWorld, stepWorld, validateWorld } from '../src/sim/index.ts';
 import type { Command, ResourceKind, World } from '../src/sim/index.ts';
 import legacyFixture from './fixtures/schema-1-active-construction.json';
+import materialFixture from './fixtures/schema-2-needs-haul.json';
 
 function fixture(pawnCount = 3): World {
   const world = createWorld(42, 16, 16);
@@ -43,7 +44,7 @@ function audit(world: World, expectedWood: number): void {
   for (const pile of world.piles) if (pile.owner.type !== 'job') free[pile.kind] += pile.quantity;
   expect(world.stock, context).toEqual(free);
   const overcommitted = world.piles.filter(pile => {
-    const reserved = world.pawns.reduce((sum, pawn) => sum + (pawn.haul?.phase === 'pickup' && pawn.haul.sourcePileId === pile.id ? pawn.haul.quantity : 0), 0);
+    const reserved = world.pawns.reduce((sum, pawn) => sum + (pawn.haul?.phase === 'pickup' && pawn.haul.sourcePileId === pile.id ? pawn.haul.quantity : 0) + (pawn.need?.kind === 'eat' && pawn.need.phase === 'pickup' && pawn.need.sourcePileId === pile.id ? 1 : 0), 0);
     return reserved > pile.quantity;
   }).map(pile => pile.id);
   expect(overcommitted, `${context} overcommitted piles`).toEqual([]);
@@ -216,17 +217,45 @@ describe('deterministic colony simulation', () => {
     checkedTicks(crowded, 1000); expect(crowded.jobs).toHaveLength(0); expect(crowded.resources).toHaveLength(0);
   });
 
-  test('exhaustion preserves delivered material and progress; nearby beds accelerate recovery', () => {
+  test('sleep preserves delivered material; only an occupied bed improves recovery, with exclusive ownership and exact resumption', () => {
     const world = fixture(1); order(world, 'wall', 8, 8); until(world, () => world.jobs[0]!.progress >= 5, 'construction started');
     const progress = world.jobs[0]!.progress; const before = world.stock.wood; world.pawns[0]!.rest = 20; stepWorld(world);
     expect(world.pawns[0]!.state).toBe('sleeping'); expect(world.jobs[0]!.reservedBy).toBeNull();
     expect(world.jobs[0]!.progress).toBe(progress); expect(world.stock.wood).toBe(before);
     expect(world.piles.filter(pile => pile.owner.type === 'job').reduce((sum, pile) => sum + pile.quantity, 0)).toBe(5);
-    checkedTicks(world, 700); expect(world.structures).toHaveLength(1); expect(world.stock.wood).toBe(7);
+    checkedTicks(world, 3200); expect(world.structures).toHaveLength(1); expect(world.stock.wood).toBe(7);
     const ground = fixture(1); ground.pawns[0]!.rest = 19; const bed = deserializeWorld(serializeWorld(ground));
     bed.structures.push({ id: bed.nextId++, kind: 'bed', x: 2, z: 3, orientation: 0, footprint: 'standard' });
-    stepWorld(ground, 100); stepWorld(bed, 100);
-    expect(bed.pawns[0]!.rest - ground.pawns[0]!.rest).toBeCloseTo(10, 8); expect(validateWorld(bed)).toEqual([]);
+    stepWorld(ground); stepWorld(bed);
+    expect(bed.pawns[0]!.rest).toBeLessThan(19); // Adjacent is not sleeping in it.
+    expect(bed.pawns[0]).toMatchObject({ x: 2, z: 3, state: 'moving', need: { kind: 'sleep', phase: 'travel' } });
+    const traveling = deserializeWorld(serializeWorld(bed)); checkedTicks(bed, 100); stepWorld(traveling, 100);
+    expect(hashWorld(bed)).toBe(hashWorld(traveling));
+    expect(bed.pawns[0]).toMatchObject({ x: 2, z: 3, state: 'sleeping' });
+    stepWorld(ground, 100);
+    expect(bed.pawns[0]!.rest - ground.pawns[0]!.rest).toBeCloseTo(100 * (100 / 2625) - 101 * (80 / 2625) - 0.008, 8);
+    const sleeping = deserializeWorld(serializeWorld(bed)); stepWorld(bed, 120); stepWorld(sleeping, 120); expect(hashWorld(bed)).toBe(hashWorld(sleeping));
+
+    const shared = fixture(2); shared.pawns.forEach(pawn => { pawn.rest = 19; });
+    const bedId = shared.nextId++; shared.structures.push({ id: bedId, kind: 'bed', x: 11, z: 10, orientation: 1, footprint: 'standard' });
+    stepWorld(shared);
+    const owner = shared.pawns.find(pawn => pawn.bedId === bedId)!;
+    expect(shared.pawns.filter(pawn => pawn.need?.kind === 'sleep' && pawn.need.bedId === bedId)).toHaveLength(1);
+    expect(owner.rest).toBeLessThan(19); expect(owner.state).toBe('moving');
+    until(shared, () => owner.state === 'sleeping', 'reach actual bed'); expect(owner).toMatchObject({ x: 11, z: 10 });
+    const other = shared.pawns.find(pawn => pawn !== owner)!;
+    command(shared, { type: 'assign-bed', bedId, pawnId: other.id });
+    expect(owner.need).toBeNull(); expect(owner.bedId).toBeNull(); expect(other.bedId).toBe(bedId); audit(shared, woodMass(shared));
+    until(shared, () => other.state === 'sleeping' && other.need?.kind === 'sleep' && other.need.bedId === bedId, 'new owner reaches vacated bed');
+    expect(owner.x === other.x && owner.z === other.z).toBe(false);
+    const broken = JSON.parse(serializeWorld(shared)); broken.pawns[0].bedId = bedId; broken.pawns[1].bedId = bedId;
+    expect(() => deserializeWorld(JSON.stringify(broken))).toThrow(/ownership/);
+
+    const enclosed = fixture(1); enclosed.pawns[0]!.rest = 19;
+    enclosed.structures.push({ id: enclosed.nextId++, kind: 'bed', x: 10, z: 10, orientation: 0, footprint: 'standard' });
+    for (let z = 0; z < 16; z++) enclosed.tiles[z * 16 + 8] = { terrain: 'rock' };
+    stepWorld(enclosed); expect(enclosed.pawns[0]!.need).toMatchObject({ kind: 'sleep', phase: 'sleep', bedId: null });
+    expect(enclosed.pawns[0]).toMatchObject({ x: 2, z: 2 }); audit(enclosed, woodMass(enclosed));
   });
 
   test('hunger interrupts construction without undoing delivery and allows recovery through gathering', () => {
@@ -234,8 +263,45 @@ describe('deterministic colony simulation', () => {
     order(world, 'wall', 8, 8); until(world, () => world.jobs[0]!.progress >= 5, 'construction before hunger');
     world.pawns[0]!.hunger = 10; resource(world, 5, 2, 'berries', 6); order(world, 'harvest', 5, 2); stepWorld(world);
     expect(world.jobs.find(job => job.kind === 'wall')!.status).toBe('pending'); expect(world.stock.wood).toBe(7);
-    checkedTicks(world, 400); expect(world.resources).toHaveLength(0); expect(world.pawns[0]!.hunger).toBeGreaterThan(40);
+    checkedTicks(world, 400); expect(world.resources).toHaveLength(0); expect(world.pawns[0]!.hunger).toBeCloseTo(10 - 401 * 0.015 + 35, 8);
     expect(world.stock.food).toBeGreaterThan(0); expect(world.structures).toHaveLength(1);
+
+    // Contention, obstruction and interrupted ingestion must conserve the same one portion.
+    const meal = fixture(2); meal.piles = []; refreshStock(meal);
+    addGroundMaterial(meal, 'food', 1, { x: 12, z: 2 }); meal.pawns.forEach(pawn => { pawn.hunger = 10; });
+    for (let z = 0; z < 16; z++) meal.tiles[z * 16 + 8] = { terrain: 'rock' };
+    checkedTicks(meal, 50); expect(meal.stock.food).toBe(1); expect(meal.pawns.every(pawn => pawn.hunger < 10 && pawn.need === null)).toBe(true);
+    meal.tiles[2 * 16 + 8] = { terrain: 'grass' };
+    until(meal, () => meal.pawns.some(pawn => pawn.need?.kind === 'eat'), 'reachable food reservation');
+    expect(meal.pawns.filter(pawn => pawn.need?.kind === 'eat')).toHaveLength(1);
+    const reservation = deserializeWorld(serializeWorld(meal)); stepWorld(reservation, 180);
+    const repeat = deserializeWorld(serializeWorld(meal)); stepWorld(repeat, 180); expect(hashWorld(repeat)).toBe(hashWorld(reservation));
+    until(meal, () => meal.pawns.some(pawn => pawn.state === 'eating'), 'physical food pickup');
+    const eater = meal.pawns.find(pawn => pawn.state === 'eating')!;
+    expect(Math.abs(eater.x - 12) + Math.abs(eater.z - 2)).toBeLessThanOrEqual(1);
+    const pickupHunger = eater.hunger; checkedTicks(meal, 25);
+    expect(eater.hunger).toBeLessThan(pickupHunger); expect(meal.stock.food).toBe(1);
+    const saved = serializeWorld(meal); const resumed = deserializeWorld(saved); checkedTicks(meal, 25); stepWorld(resumed, 25);
+    expect(hashWorld(meal)).toBe(hashWorld(resumed)); expect(meal.stock.food).toBe(0);
+    expect(eater.hunger).toBeCloseTo(pickupHunger - 50 * 0.015 + 35, 8);
+    const interrupted = deserializeWorld(saved); const tired = interrupted.pawns.find(pawn => pawn.state === 'eating')!;
+    tired.rest = 0; stepWorld(interrupted); expect(tired.state).toBe('sleeping');
+    expect(interrupted.piles[0]!.owner).toEqual({ type: 'ground', x: tired.x, z: tired.z }); expect(interrupted.stock.food).toBe(1);
+    expect(tired.hunger).toBeLessThan(pickupHunger); expect(validateWorld(interrupted)).toEqual([]);
+    const bad = JSON.parse(saved); bad.pawns.find((pawn: any) => pawn.state === 'eating').need.carryPileId = 999999;
+    expect(() => deserializeWorld(JSON.stringify(bad))).toThrow(/ingestion/);
+    const logistics = fixture(2); logistics.piles = []; refreshStock(logistics);
+    logistics.pawns[1]!.priorities.haul = 0;
+    addGroundMaterial(logistics, 'food', 11, { x: 8, z: 8 }); zone(logistics, 13, 12, 75, false, true);
+    stepWorld(logistics); expect(logistics.pawns[0]!.haul).toMatchObject({ phase: 'pickup', quantity: 10 });
+    logistics.pawns[1]!.hunger = 10; stepWorld(logistics);
+    expect(logistics.pawns[1]!.need).toMatchObject({ kind: 'eat', phase: 'pickup' });
+    checkedTicks(logistics, 350); expect(logistics.stock.food).toBe(10); expect(groundAt(logistics, 13, 12)).toBe(10);
+    // Exhausted ID allocator: whole-portion pickup and interrupted drop still work.
+    const fullId = fixture(1); fullId.piles = []; refreshStock(fullId); addGroundMaterial(fullId, 'food', 1, fullId.pawns[0]!);
+    fullId.nextId = Number.MAX_SAFE_INTEGER; fullId.pawns[0]!.hunger = 10; stepWorld(fullId);
+    expect(fullId.pawns[0]!.state).toBe('eating'); fullId.pawns[0]!.rest = 0; stepWorld(fullId);
+    expect(fullId.stock.food).toBe(1); expect(validateWorld(fullId)).toEqual([]);
   });
 
   test('new walls reroute travel and rotated furniture keeps its full placement footprint', () => {
@@ -258,7 +324,7 @@ describe('deterministic colony simulation', () => {
 
   test('schema-1 migration preserves stock, escrow, beds and identity; corrupt schema-2 saves are rejected', () => {
     const migrated = deserializeWorld(legacySave());
-    expect(migrated.schemaVersion).toBe(2); expect(migrated.pawns[0]!.id).toBe(4); expect(migrated.structures[0]!.id).toBe(10);
+    expect(migrated.schemaVersion).toBe(3); expect(migrated.pawns[0]!.id).toBe(4); expect(migrated.structures[0]!.id).toBe(10);
     expect(migrated.structures[0]).toMatchObject({ x: 7, z: 7, footprint: 'legacy-single' });
     expect(migrated.pawns[0]!.priorities).toMatchObject({ gather: 2, build: 2 }); audit(migrated, 20); expect(foodMass(migrated)).toBe(18);
     expect(hashWorld(deserializeWorld(legacySave()))).toBe(hashWorld(migrated));
@@ -277,7 +343,7 @@ describe('deterministic colony simulation', () => {
     const world = fixture(1); resource(world, 6, 6, 'tree'); order(world, 'bed', 10, 10);
     until(world, () => world.pawns[0]!.haul?.phase === 'pickup', 'save during reservation'); const serialized = serializeWorld(world);
     const corruptions: ((data: any) => void)[] = [
-      data => { data.schemaVersion = 3; }, data => { data.rng = 0; }, data => { data.tick = -1; }, data => { data.width = 251; },
+      data => { data.schemaVersion = 4; }, data => { data.rng = 0; }, data => { data.tick = -1; }, data => { data.width = 251; },
       data => { data.logisticsCursor = -1; },
       data => { data.stock.wood = -1; }, data => { data.pawns[0] = null; }, data => { data.pawns[0].hunger = null; },
       data => { data.pawns[0].priorities = null; }, data => { data.pawns[0].path = [{ x: 15, z: 15 }]; },
@@ -297,6 +363,14 @@ describe('deterministic colony simulation', () => {
     }
     for (const text of ['', '{', 'null', '[]', '{}']) expect(() => deserializeWorld(text)).toThrow();
     expect(serializeWorld(world)).toBe(serialized);
+    // Captured by running HEAD 489b98a's engine, including an active delivery and ground sleeper.
+    const material = deserializeWorld(JSON.stringify(materialFixture));
+    expect(material.schemaVersion).toBe(3); expect(material.piles).toEqual(materialFixture.piles); expect(material.jobs).toEqual(materialFixture.jobs);
+    expect(material.pawns.map(pawn => pawn.haul)).toEqual(materialFixture.pawns.map(pawn => pawn.haul));
+    expect(material.pawns.map(pawn => [pawn.id, pawn.x, pawn.z, pawn.hunger, pawn.rest])).toEqual(materialFixture.pawns.map(pawn => [pawn.id, pawn.x, pawn.z, pawn.hunger, pawn.rest]));
+    expect(material.pawns[2]!.state).toBe('idle'); expect(material.pawns.every(pawn => pawn.need === null)).toBe(true);
+    const materialCopy = deserializeWorld(serializeWorld(material)); checkedTicks(material, 350); stepWorld(materialCopy, 350); expect(hashWorld(material)).toBe(hashWorld(materialCopy));
+    const corruptOld = structuredClone(materialFixture); corruptOld.piles[0]!.quantity = 0; expect(() => deserializeWorld(JSON.stringify(corruptOld))).toThrow();
   });
 
   test('five seeded two-day colonies conserve matter each tick through command churn and real outcomes', () => {
@@ -314,7 +388,7 @@ describe('deterministic colony simulation', () => {
           if (job) { command(world, { type: 'cancel', x: job.x, z: job.z }); applyCommand(world, { type: 'designate', kind: job.kind, x: job.x, z: job.z, orientation: job.orientation }); }
         }
         const hunger = world.pawns.map(pawn => pawn.hunger); stepWorld(world); audit(world, initialWood);
-        // Current G0 recovery consumes one food unit; observe recovery independently of the inventory total.
+        // Observe completed ingestions independently of physical inventory and reservations.
         meals += world.pawns.filter((pawn, index) => pawn.hunger > hunger[index]!).length;
         expect(foodMass(world) + meals, `food seed=${seed} tick=${world.tick}`).toBe(initialFood);
         if (tick === 450 || tick === 6550) {

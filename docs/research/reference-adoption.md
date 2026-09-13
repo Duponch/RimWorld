@@ -18,7 +18,7 @@ Les marques **R** (comportement relevé dans une source), **P** (proposition de 
 
 ## Décisions qui infléchissent le développement
 
-**Le prochain chantier reste la fermeture de G0.** Le corpus en précise la chaîne : définitions et unités → propriété et empreintes → étapes de travail → réservations de quantité et capacité → transferts → chantier → sauvegarde/reprise. Lors de cette adoption documentaire, le prototype conservait un stock global et des réservations simplifiées. La tranche de développement suivante a livré [la chaîne matérielle physique](../development/material-logistics.md) ; [ROADMAP](../ROADMAP.md) décrit l'état courant et les contrats G0 encore ouverts.
+**G0 reste à fermer ; les interactions élémentaires de survie passent désormais en priorité**, à la demande utilisateur. Le corpus précise la chaîne : définitions et unités → propriété et empreintes → étapes de travail → réservations → transferts → effets → sauvegarde/reprise. Après [la chaîne matérielle](../development/material-logistics.md), [les repas et couchages physiques](../development/needs.md) appliquent ces contrats aux besoins. [ROADMAP](../ROADMAP.md) conserve le calendrier canonique et les éléments encore absents.
 
 | Sujet et référence | Décision du projet | Application ou condition de réexamen |
 |---|---|---|

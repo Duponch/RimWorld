@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { createWorld } from '../../src/sim/engine';
-import { deserializeWorld } from '../../src/sim/serialization';
+import { deserializeWorld, serializeWorld } from '../../src/sim/serialization';
+import { addGroundMaterial, refreshStock } from '../../src/sim/materials';
 import legacySave from '../fixtures/schema-1-active-construction.json' with { type: 'json' };
 import type { World } from '../../src/sim/types';
 
@@ -68,6 +69,61 @@ async function startPaused(page: Page) {
   expect((await world(page)).width).toBe(32);
 }
 
+test('besoins physiques : repas en main, sommeil dans deux lits orientés, attribution et sauvegarde UI', async ({ playwright }, testInfo) => {
+  test.setTimeout(120_000);
+  const browser = await playwright.chromium.launch({ channel: 'chromium', args: [] });
+  const page = await browser.newPage({ baseURL: 'http://127.0.0.1:5173', viewport: { width: 1440, height: 1000 } });
+  const errors = observeErrors(page);
+  try {
+    await startPaused(page);
+    const fixture = createWorld(42, 32, 32);
+    fixture.tiles = fixture.tiles.map(() => ({ terrain: 'grass' })); fixture.resources = []; fixture.piles = []; fixture.stockpiles = [];
+    fixture.pawns.forEach((pawn, index) => { pawn.x = 12 + index * 2; pawn.z = 16; pawn.hunger = index === 0 ? 10 : 90; pawn.rest = index === 0 ? 90 : 19; });
+    const ids = [fixture.nextId++, fixture.nextId++];
+    fixture.structures = [{ id: ids[0], kind: 'bed', x: 17, z: 18, orientation: 1, footprint: 'standard' }, { id: ids[1], kind: 'bed', x: 19, z: 18, orientation: 2, footprint: 'standard' }];
+    addGroundMaterial(fixture, 'food', 1, { x: 16, z: 14 }); refreshStock(fixture);
+    await page.evaluate(({ key, value }) => localStorage.setItem(key, value), { key: saveKey, value: serializeWorld(fixture) });
+    await startPaused(page); // Reopen so the normal save-slot discovery sees this fixture.
+    await panel(page, 'menu'); await page.locator('#load').click(); await expectWorld(page, fixture);
+    await page.getByRole('button', { name: 'Vitesse normale', exact: true }).click();
+    await page.waitForFunction(() => {
+      const w = window.__lisiere.world;
+      if (w.pawns[0].state !== 'eating' || w.pawns.filter(pawn => pawn.state === 'sleeping').length !== 2) return false;
+      document.querySelector<HTMLButtonElement>('[data-speed="0"]')!.click(); return true;
+    });
+    await expect(page.locator('#pause-banner')).toBeVisible();
+    const eating = await world(page);
+    expect(eating.stock.food).toBe(1); expect(eating.pawns[0].hunger).toBeLessThan(10);
+    expect(eating.pawns[0].need).toMatchObject({ kind: 'eat', phase: 'ingest' });
+    for (const pawn of eating.pawns.slice(1)) {
+      const bed = eating.structures.find(bed => bed.id === pawn.bedId)!;
+      expect({ x: pawn.x, z: pawn.z }).toEqual({ x: bed.x, z: bed.z });
+    }
+    await panel(page, 'menu'); await page.locator('#save').click();
+    await expect.poll(() => page.evaluate(key => localStorage.getItem(key), saveKey)).toBe(JSON.stringify(eating));
+    await page.locator('#menu-panel [data-close-panel]').click();
+    await page.locator(`[data-pawn="${eating.pawns[0].id}"]`).click();
+    await expect(page.locator('#selected-action')).toContainText('Mange la portion tenue en main');
+    await page.screenshot({ path: 'artifacts/needs-eating-sleeping.png' });
+    await page.getByRole('button', { name: 'Vitesse 6 fois', exact: true }).click();
+    await expect.poll(async () => (await world(page)).stock.food).toBe(0);
+    await page.getByRole('button', { name: 'Pause', exact: true }).click();
+    expect((await world(page)).pawns[0].hunger).toBeGreaterThan(40);
+    await panel(page, 'menu'); await page.locator('#load').click(); await expectWorld(page, eating);
+    if (await page.locator('#inspect-close').isVisible()) await page.locator('#inspect-close').click();
+    await cell(page, 18, 18); // Foot of the bed: head cell selects the sleeping pawn.
+    await expect(page.getByLabel('Propriétaire du lit', { exact: true })).toBeVisible();
+    await page.getByLabel('Propriétaire du lit', { exact: true }).selectOption(String(eating.pawns[0].id));
+    await expect.poll(async () => (await world(page)).pawns[0].bedId).toBe(ids[0]);
+    expect(errors).toEqual([]);
+    const graphics = await page.evaluate(async () => {
+      const adapter = await navigator.gpu?.requestAdapter();
+      return { backend: window.__lisiere.backend, adapter: adapter ? { vendor: adapter.info.vendor, architecture: adapter.info.architecture, device: adapter.info.device, description: adapter.info.description } : null };
+    });
+    await testInfo.attach('needs-gameplay', { contentType: 'application/json', body: JSON.stringify({ ...graphics, phases: ['pickup', 'ingest', 'sleep', 'bed-reassignment'], foodConsumed: 1, resumedExactly: true, errors }) });
+  } finally { await browser.close(); }
+});
+
 test('colonie matérielle : réserve filtrée, transport visible, trois couchages et reprise exacte en livraison', async ({ playwright }) => {
   test.setTimeout(120_000);
   const browser = await playwright.chromium.launch({ channel: 'chromium', args: [] });
@@ -113,7 +169,7 @@ test('colonie matérielle : réserve filtrée, transport visible, trois couchage
   await page.locator('#save').click();
   await expect(page.getByRole('status')).toContainText('sauvegardée');
   const saved = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!) as World, saveKey);
-  expect(saved.schemaVersion).toBe(2);
+  expect(saved.schemaVersion).toBe(3);
   expect(saved.pawns.some(pawn => pawn.haul?.phase === 'deliver')).toBe(true);
   expect(JSON.stringify(saved)).toBe(JSON.stringify(duringHaul));
 
@@ -235,7 +291,7 @@ test('frontières : commandes répétées, sauvegarde invalide atomique, aide et
   expect((await world(page)).structures.find(structure => structure.kind === 'bed')?.footprint).toBe('legacy-single');
   await panel(page, 'menu'); await page.locator('#save').click();
   await expect(page.getByRole('status')).toContainText('sauvegardée');
-  expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).schemaVersion, saveKey)).toBe(2);
+  expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).schemaVersion, saveKey)).toBe(3);
   expect(errors).toEqual([]);
 });
 

@@ -732,16 +732,17 @@ export class ColonyRenderer {
           angle.addAssign(sin(this.uTime.mul(12).add(motion.w)).mul(0.35).sub(0.8).mul(motion.y));
           If(attribute('aCargo', 'vec2').x.greaterThan(0.5), () => {
             angle.assign(float(-0.9).add(sin(this.uTime.mul(9).add(motion.w)).mul(motion.x).mul(0.06)));
+            If(motion.z.greaterThan(1.5), () => { angle.assign(float(-1.3).add(sin(this.uTime.mul(4).add(motion.w)).mul(0.22))); });
           });
         });
       });
       const local = positionLocal.sub(pivot);
       const c = cos(angle), s = sin(angle);
       const animated = vec3(local.x, local.y.mul(c).sub(local.z.mul(s)), local.y.mul(s).add(local.z.mul(c))).add(pivot).toVar();
-      If(motion.z.greaterThan(0.5), () => {
+      If(motion.z.greaterThan(0.5).and(motion.z.lessThan(1.5)), () => {
         const y = animated.y.toVar();
-        animated.y.assign(animated.z.negate().add(0.43));
-        animated.z.assign(y.sub(0.65));
+        animated.y.assign(animated.z.add(0.19));
+        animated.z.assign(float(0.65).sub(y));
       });
       const cy = cos(pose.w), sy = sin(pose.w);
       return vec3(animated.x.mul(cy).add(animated.z.mul(sy)), animated.y, animated.z.mul(cy).sub(animated.x.mul(sy))).mul(PAWN_MODEL_SCALE).add(pose.xyz);
@@ -756,7 +757,7 @@ export class ColonyRenderer {
     this.pawnMesh = mesh;
     this.pawnGroup.add(mesh);
     const cargo = cargoGeometry();
-    for (const name of ['aFrom', 'aTo', 'aCargo']) cargo.setAttribute(name, geometry.getAttribute(name));
+    for (const name of ['aFrom', 'aTo', 'aCargo', 'aMotion']) cargo.setAttribute(name, geometry.getAttribute(name));
     const cargoMat = material(0xffffff);
     cargoMat.colorNode = attribute('color', 'vec3');
     cargoMat.positionNode = Fn(() => {
@@ -764,7 +765,9 @@ export class ColonyRenderer {
       const load = attribute('aCargo', 'vec2');
       const scale = float(0).toVar();
       If(attribute('cargoKind', 'float').equal(load.x), () => { scale.assign(load.y.mul(0.25).add(0.75)); });
-      const local = positionLocal.mul(scale).add(vec3(0, WORLD_SCALE.carriedHeight, WORLD_SCALE.carriedForward));
+      const height = float(WORLD_SCALE.carriedHeight).toVar();
+      If(attribute('aMotion', 'vec4').z.greaterThan(1.5), () => { height.assign(sin(this.uTime.mul(4).add(attribute('aMotion', 'vec4').w)).mul(0.08).add(1.32)); });
+      const local = positionLocal.mul(scale).add(vec3(0, height, WORLD_SCALE.carriedForward));
       const cy = cos(pose.w), sy = sin(pose.w);
       return vec3(local.x.mul(cy).add(local.z.mul(sy)), local.y, local.z.mul(cy).sub(local.x.mul(sy))).add(pose.xyz);
     })();
@@ -797,11 +800,21 @@ export class ColonyRenderer {
         const target = Math.atan2(dx, dz);
         yaw = from.w + Math.atan2(Math.sin(target - from.w), Math.cos(target - from.w));
       }
-      const to = new THREE.Vector4(pawn.x, 0, pawn.z, yaw);
+      const bedId = pawn.need?.kind === 'sleep' ? pawn.need.bedId : null;
+      const bed = pawn.state === 'sleeping' && bedId !== null ? world.structures.find(item => item.id === bedId) : undefined;
+      let px = pawn.x, pz = pawn.z, py = 0;
+      if (bed) {
+        const cells = footprintCells(bed), last = cells[cells.length - 1]!;
+        px = (bed.x + last.x) / 2; pz = (bed.z + last.z) / 2; py = WORLD_SCALE.bedSurfaceHeight;
+        const target = bed.orientation * Math.PI / 2;
+        yaw = from.w + Math.atan2(Math.sin(target - from.w), Math.cos(target - from.w));
+      }
+      const to = new THREE.Vector4(px, py, pz, yaw);
+      if (!previous) from.copy(to);
       this.pawnVisuals.set(pawn.id, { from, to });
       fromAttribute.setXYZW(index, from.x, from.y, from.z, from.w);
       toAttribute.setXYZW(index, to.x, to.y, to.z, to.w);
-      motion.setXYZW(index, pawn.state === 'moving' ? 1 : 0, pawn.state === 'working' ? 1 : 0, pawn.state === 'sleeping' ? 1 : 0, pawn.id * 1.7);
+      motion.setXYZW(index, pawn.state === 'moving' ? 1 : 0, pawn.state === 'working' ? 1 : 0, pawn.state === 'sleeping' ? 1 : pawn.state === 'eating' ? 2 : 0, pawn.id * 1.7);
       scratchColor.setHex(PAWN_COLORS[index % PAWN_COLORS.length]);
       tint.setXYZ(index, scratchColor.r, scratchColor.g, scratchColor.b);
       const load = carried.get(pawn.id);

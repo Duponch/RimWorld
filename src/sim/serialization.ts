@@ -3,6 +3,7 @@ import { addGroundMaterial, addMaterial, deliveredStock, groundQuantity, refresh
 import { validateLegacyWorld } from './legacy-validation.ts';
 import type { World } from './types.ts';
 import { validMapDimension } from './map-config.ts';
+import { INGEST_TICKS } from './needs.ts';
 
 const record = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
 const integer = (value: unknown, min: number, max = Number.MAX_SAFE_INTEGER): value is number => typeof value === 'number' && Number.isSafeInteger(value) && value >= min && value <= max;
@@ -12,9 +13,12 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 
 /** Structural validation first, cross-reference validation second; accepts arbitrary JSON without throwing. */
 export function validateWorld(input: unknown): string[] {
+  return validateSchema(input, false);
+}
+function validateSchema(input: unknown, legacyV2: boolean): string[] {
   const errors: string[] = [];
   if (!record(input)) return ['World must be an object.'];
-  if (input.schemaVersion !== 2) errors.push('Unsupported schema version; migrate version 1 through deserializeWorld.');
+  if (input.schemaVersion !== (legacyV2 ? 2 : 3)) errors.push('Unsupported schema version; migrate older saves through deserializeWorld.');
   if (!integer(input.seed, 0, 0xffffffff) || !integer(input.rng, 1, 0xffffffff)) errors.push('Invalid deterministic random state.');
   if (!integer(input.tick, 0) || !integer(input.nextId, 1)) errors.push('Invalid tick or nextId.');
   if (!integer(input.logisticsCursor, 0)) errors.push('Invalid logistics search cursor.');
@@ -36,7 +40,7 @@ export function validateWorld(input: unknown): string[] {
       if (integer(input.nextId, 1) && item.id >= input.nextId) errors.push('nextId must exceed all entity IDs.');
       if (key === 'pawns') {
         if (typeof item.name !== 'string' || item.name.length === 0 || item.name.length > 80 || !bounded(item.hunger) || !bounded(item.rest) || !bounded(item.mood)
-          || !oneOf(item.state, ['idle', 'moving', 'working', 'sleeping', 'hungry']) || !(item.jobId === null || integer(item.jobId, 1))
+          || !oneOf(item.state, legacyV2 ? ['idle', 'moving', 'working', 'sleeping', 'hungry'] : ['idle', 'moving', 'working', 'sleeping', 'hungry', 'eating']) || !(item.jobId === null || integer(item.jobId, 1))
           || !record(item.priorities) || !integer(item.priorities.gather, 0, 4) || !integer(item.priorities.build, 0, 4) || !integer(item.priorities.haul, 0, 4)
           || !integer(item.moveCooldown, 0, 3) || !integer(item.planCooldown, 0, 20)) errors.push('Invalid pawn state.');
         if (!Array.isArray(item.path) || item.path.length > size) errors.push('Invalid pawn path.');
@@ -49,6 +53,14 @@ export function validateWorld(input: unknown): string[] {
           }
         }
         const haul = item.haul;
+        if (!legacyV2) {
+          if (!(item.bedId === null || integer(item.bedId, 1)) || !integer(item.needCooldown, 0, 20)) errors.push('Invalid need cadence or bed ownership.');
+          const need = item.need;
+          if (need !== null && (!record(need) || (need.kind === 'eat'
+            ? !oneOf(need.phase, ['pickup', 'ingest']) || !integer(need.sourcePileId, 1) || !(need.carryPileId === null || integer(need.carryPileId, 1)) || !integer(need.progress, 0, INGEST_TICKS - 1)
+            : need.kind === 'sleep' ? !oneOf(need.phase, ['travel', 'sleep']) || !(need.bedId === null || integer(need.bedId, 1)) || !record(need.target) || !coord(need.target)
+              : true))) errors.push('Invalid need task.');
+        } else if (item.need !== undefined || item.bedId !== undefined || item.needCooldown !== undefined) errors.push('Version 2 cannot contain version 3 task fields.');
         if (haul !== null) {
           if (!record(haul) || !integer(haul.sourcePileId, 1) || !integer(haul.quantity, 1, CARRY_CAPACITY) || !oneOf(haul.phase, ['pickup', 'deliver'])
             || !(haul.carryPileId === null || integer(haul.carryPileId, 1)) || !record(haul.destination)
@@ -95,20 +107,43 @@ export function validateWorld(input: unknown): string[] {
   for (const resource of world.resources) if (structureCells.has(cellKey(resource))) errors.push('Resource overlaps a structure.');
   for (const zone of world.stockpiles) if (resourceCells.has(cellKey(zone)) || structureCells.has(cellKey(zone)) || jobCells.has(cellKey(zone))) errors.push('Storage overlaps fixed content.');
   const pawnCells = new Set<number>();
+  const bedOwners = new Set<number>();
+  const sleepingBeds = new Set<number>();
   for (const pawn of world.pawns) {
     const key = cellKey(pawn);
     if (pawnCells.has(key)) errors.push('Pawns overlap.'); pawnCells.add(key);
     if (structureCells.get(key)?.kind === 'wall' || jobCells.get(key)?.kind === 'wall') errors.push('Pawn occupies a wall target.');
-    if (pawn.jobId !== null && pawn.haul !== null) errors.push('Pawn has two simultaneous tasks.');
+    if (Number(pawn.jobId !== null) + Number(pawn.haul !== null) + Number(!legacyV2 && pawn.need !== null) > 1) errors.push('Pawn has two simultaneous tasks.');
     if (pawn.jobId !== null) {
       const job = jobById.get(pawn.jobId);
       if (!job || job.reservedBy !== pawn.id || job.status !== 'active') errors.push('Pawn/job reservation mismatch.');
       if (job && pawn.priorities[job.kind === 'chop' || job.kind === 'harvest' ? 'gather' : 'build'] === 0) errors.push('Pawn assigned to disabled work.');
     }
     const owned = world.piles.filter(pile => pile.owner.type === 'pawn' && pile.owner.pawnId === pawn.id);
-    if (owned.length > 1 || (owned.length === 1 && pawn.haul?.phase !== 'deliver')) errors.push('Carried ownership mismatch.');
+    if (owned.length > 1 || (owned.length === 1 && pawn.haul?.phase !== 'deliver' && (legacyV2 || pawn.need?.kind !== 'eat' || pawn.need.phase !== 'ingest'))) errors.push('Carried ownership mismatch.');
     if (pawn.jobId !== null || pawn.haul !== null) { if (!['moving', 'working'].includes(pawn.state)) errors.push('Assigned pawn has incompatible state.'); }
-    else if (pawn.path.length || ['moving', 'working'].includes(pawn.state)) errors.push('Unassigned pawn has path or work state.');
+    else if ((legacyV2 || pawn.need === null) && (pawn.path.length || ['moving', 'working'].includes(pawn.state))) errors.push('Unassigned pawn has path or work state.');
+    if (!legacyV2) {
+      if (pawn.bedId !== null) {
+        if (!world.structures.some(bed => bed.kind === 'bed' && bed.id === pawn.bedId) || bedOwners.has(pawn.bedId)) errors.push('Invalid or duplicate bed ownership.');
+        bedOwners.add(pawn.bedId);
+      }
+      const need = pawn.need;
+      if (need?.kind === 'eat') {
+        if (need.sourcePileId >= world.nextId) errors.push('Invalid food source identity.');
+        const pile = pileById.get(need.phase === 'pickup' ? need.sourcePileId : need.carryPileId!);
+        if (need.phase === 'pickup') {
+          if (pawn.state !== 'moving' || need.progress !== 0 || need.carryPileId !== null || !pile || pile.kind !== 'food' || pile.owner.type !== 'ground' || reservedSource(world, pile.id) > pile.quantity) errors.push('Invalid meal reservation.');
+        } else if (pawn.state !== 'eating' || pawn.path.length || owned[0]?.id !== need.carryPileId || !pile || pile.kind !== 'food' || pile.quantity !== 1 || pile.owner.type !== 'pawn' || pile.owner.pawnId !== pawn.id) errors.push('Invalid ingestion ownership or state.');
+      } else if (need?.kind === 'sleep') {
+        if (need.bedId !== null) {
+          const bed = world.structures.find(item => item.id === need.bedId && item.kind === 'bed');
+          if (!bed || pawn.bedId !== bed.id || cellKey(bed) !== cellKey(need.target) || sleepingBeds.has(need.bedId)) errors.push('Invalid sleep reservation.');
+          sleepingBeds.add(need.bedId);
+        }
+        if (need.phase === 'sleep' ? pawn.state !== 'sleeping' || pawn.path.length > 0 || cellKey(pawn) !== cellKey(need.target) : pawn.state !== 'moving') errors.push('Invalid sleep position or phase.');
+      } else if (['eating', 'sleeping'].includes(pawn.state)) errors.push('Need action without a task.');
+    }
     if (pawn.haul) {
       const haul = pawn.haul;
       if (pawn.priorities.haul === 0) errors.push('Pawn hauling with disabled work.');
@@ -161,8 +196,9 @@ function migrateLegacy(input: Record<string, unknown>): World {
   const initial = { ...world.stock };
   const plannedPiles = Math.ceil(initial.wood / MAX_STACK) + Math.ceil(initial.food / MAX_STACK) + world.jobs.filter(job => job.escrow.wood > 0).length;
   if (plannedPiles > 32768 || !Number.isSafeInteger(world.nextId + plannedPiles)) throw new Error('Legacy material stock exceeds the supported migration capacity.');
-  world.schemaVersion = 2; world.piles = []; world.stockpiles = []; world.logisticsCursor = 0;
+  world.schemaVersion = 3; world.piles = []; world.stockpiles = []; world.logisticsCursor = 0;
   for (const pawn of world.pawns) { pawn.haul = null; pawn.priorities.haul = 3; }
+  initializeNeeds(world);
   for (const item of [...world.structures, ...world.jobs]) { item.orientation = 0; item.footprint = item.kind === 'bed' ? 'legacy-single' : 'standard'; }
   const allocations = world.jobs.map(job => ({ id: job.id, wood: job.escrow.wood }));
   // A deterministic walkable drop point nearest the old camp; no terrain is regenerated or repaired.
@@ -185,7 +221,21 @@ export function deserializeWorld(serialized: string): World {
   if (typeof serialized !== 'string' || serialized.length > 16_000_000) throw new Error('Invalid or oversized save.');
   let input: unknown = JSON.parse(serialized);
   if (record(input) && input.schemaVersion === 1) input = migrateLegacy(input);
+  if (record(input) && input.schemaVersion === 2) {
+    const errors = validateSchema(input, true);
+    if (errors.length) throw new Error(`Invalid version 2 save: ${errors.join(' ')}`);
+    input.schemaVersion = 3;
+    initializeNeeds(input as unknown as World);
+  }
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`); return input as World;
+}
+function initializeNeeds(world: World): void {
+  for (const pawn of world.pawns) {
+    pawn.need = null; pawn.bedId = null; pawn.needCooldown = 0;
+    // Old ground sleep has no reserved destination. Reconsider it with current
+    // rules on the next tick; never move the pawn or change its need levels here.
+    if (pawn.state === 'sleeping') { pawn.state = 'idle'; pawn.path = []; pawn.planCooldown = 0; }
+  }
 }
 /** Deterministic diagnostic fingerprint, not a cryptographic digest. */
 export function hashWorld(world: World): string {

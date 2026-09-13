@@ -1,4 +1,4 @@
-# Noyau de simulation — schéma 2, tranche matérielle G0
+# Noyau de simulation — schéma 3, besoins et matériaux
 
 État du 13 septembre 2026 : collecte → piles au sol → prélèvement → portage → stockage ou chantier → construction. Cette tranche remplace le stock global autoritaire du schéma 1. Les besoins, le calendrier et une partie de la navigation restent simplifiés ; **G0 n'est pas déclaré entièrement achevé**. Les contrats détaillés sont dans [material-logistics.md](material-logistics.md), les adaptations fonctionnelles dans [les choix de gameplay](../gameplay/decisions.md).
 
@@ -10,7 +10,7 @@ Référence par défaut : corpus utilisateur, chapitres 2/4/5/9/10/21/30/32, SYS
 
 L'API de `src/sim/index.ts` expose `createWorld`, `stepWorld`, `applyCommand`, `serializeWorld`, `deserializeWorld`, `validateWorld` et `hashWorld`. `canDesignate` partage les règles de placement avec l'aperçu ; `queryJobStatus` et `queryPawnStatus` donnent les diagnostics disponibles. Les helpers de matière servent au noyau et aux fixtures, sans autoriser une interface à modifier directement son snapshot.
 
-Les dimensions du schéma 2 vont de 8 à **250 cellules par axe**, avec constantes centralisées dans `src/sim/map-config.ts`. `createWorld` conserve 32² comme défaut technique pour les fixtures et appels existants ; l'application demande 250² par défaut, propose 200² et conserve les essais 32²/64²/128². Les coordonnées x/z sont entières, les terrains rangés dans `tiles[z * width + x]`. Les IDs sont uniques entre colons, ressources, structures, travaux, piles et cellules de stockage ; `nextId` dépasse tous les IDs existants. L'extension de borne n'ajoute aucun champ : les cartes existantes ne sont ni agrandies ni régénérées.
+Les dimensions du schéma 3 vont de 8 à **250 cellules par axe**, avec constantes centralisées dans `src/sim/map-config.ts`. `createWorld` conserve 32² comme défaut technique pour les fixtures et appels existants ; l'application demande 250² par défaut, propose 200² et conserve les essais 32²/64²/128². Les coordonnées x/z sont entières, les terrains rangés dans `tiles[z * width + x]`. Les IDs sont uniques entre colons, ressources, structures, travaux, piles et cellules de stockage ; `nextId` dépasse tous les IDs existants. L'extension de borne n'ajoute aucun champ : les cartes existantes ne sont ni agrandies ni régénérées.
 
 `World` contient schéma, seed, RNG, tick, terrain, entités, piles, stockages, travaux, routes, cadences, phases de transport et `logisticsCursor`. Le journal d'événements est borné à 80 entrées. **Ce journal n'est pas un historique complet et rejouable des commandes.** Les versions explicites de contenu et de générateur ne figurent pas encore dans un manifeste de sauvegarde.
 
@@ -72,29 +72,21 @@ Eau, terrain rocheux, murs et plans de murs bloquent le passage. Les colons ne s
 
 La réservation d'un travail ne réserve pas encore une case de service ni un créneau temporel de passage. Les impasses entre plusieurs colons actifs ou endormis restent ouvertes. Le [laboratoire WebGPU](../research/gpu-navigation.md) ne pilote pas les colons ; son intégration devra préserver ordre d'adoption, révisions, réservations et continuation.
 
-## Besoins encore simplifiés
+## Actions de repas et de sommeil
 
-| Règle | Valeur actuelle |
-|---|---|
-| Faim | Perte de 0,015/tick, soit 90/jour ; 100 signifie rassasié. |
-| Repas | À faim ≤ 45, prélève une unité de nourriture au sol non réservée, ajoute 35 points. |
-| Faim critique | À faim ≤ 20 sans repas, interrompt transport et travaux autres que récolte de baies. |
-| Repos éveillé | Perte de 0,008/tick, soit 48/jour. |
-| Sommeil | Sur place, de repos ≤ 20 jusqu'à repos ≥ 85. |
-| Récupération | +0,12/tick au sol ; +0,22 sur ou à côté d'une cellule de lit. |
-| Humeur | Arrondi de `0,6 × faim + 0,4 × repos`. |
-
-Le repas consomme de la matière réelle mais **reste à distance**, sans trajet, ingestion ou vérification d'accès. Il ne consomme ni quantité réservée, ni cargaison, ni matériaux de chantier. Le colon peut manger pendant son sommeil. Il ne cherche pas de lit libre et ne se déplace pas jusqu'à un couchage. Ces adaptations attendent G1 ; pensées et crises relèvent de G3. La faim ne provoque encore ni blessure ni décès.
+Les besoins sont désormais réalisés par des tâches exclusives : réservation, trajet, prise en main puis ingestion ; attribution et trajet jusqu'au lit, sommeil seulement à destination. Le repli au sol exige un couchage absent/inaccessible ou un épuisement. Aucun bonus de proximité, aucune nutrition accordée à distance. Le [contrat des besoins](needs.md) précise phases, paramètres provisoires, migrations, limites de contenu et tests.
 
 ## Sauvegardes et migration
 
-Le schéma 2 conserve propriétaires, quantités, filtres, capacités, orientations, tâches, routes, cadences et curseur logistique. La validation contrôle types et bornes, IDs uniques, liens réciproques, quantités réservées, stock dérivé, emprises, chemins contigus et états de travail. Une route devenue bloquée peut rester sauvegardée : son recalcul appartient à la simulation. Le JSON est limité à 16 millions de caractères. Une entrée invalide n'est jamais renvoyée comme monde utilisable ni adoptée par le worker.
+Le schéma 3 conserve en plus les phases de besoin, la portion tenue, le propriétaire du lit et les cadences. Il conserve propriétaires, quantités, filtres, capacités, orientations, tâches, routes, cadences et curseur logistique. La validation contrôle types et bornes, IDs uniques, liens réciproques, quantités réservées, stock dérivé, emprises, chemins contigus et états de travail. Une route devenue bloquée peut rester sauvegardée : son recalcul appartient à la simulation. Le JSON est limité à 16 millions de caractères. Une entrée invalide n'est jamais renvoyée comme monde utilisable ni adoptée par le worker.
 
 La lecture du schéma 1 commence par sa validation propre, puis migre explicitement : stock global en piles à un emplacement déterministe praticable près du camp ; escrow ancien en piles de chantier ; Transport à 3, priorités précédentes conservées. Les IDs existants, tick, terrain et ressources restent présents. Tous les anciens lits et plans de lits gardent `legacy-single` 1×1, y compris en bordure ; ils ne sont jamais agrandis silencieusement.
 
-Une ancienne construction interrompue peut avoir une progression positive et un escrow nul : le schéma 1 remboursait ses matériaux. Cette migration conserve la progression, mais exige une nouvelle livraison avant de reprendre le travail. La continuation du schéma 2 est exacte ; la migration ne prétend pas reproduire le futur de l'ancien moteur à stock global. Les limites de quantité et de nombre de piles sont contrôlées avant allocation des stocks historiques.
+Une ancienne construction interrompue peut avoir une progression positive et un escrow nul : le schéma 1 remboursait ses matériaux. Cette migration conserve la progression, mais exige une nouvelle livraison avant de reprendre le travail. La continuation du schéma 3 est exacte ; la migration ne prétend pas reproduire le futur de l'ancien moteur à stock global. Les limites de quantité et de nombre de piles sont contrôlées avant allocation des stocks historiques.
 
 Les clés locales `lisiere.save.v1` et `lisiere.previous.v1` restent identiques pour retrouver les parties existantes ; le schéma se lit dans le JSON. Caméra, sélection et vitesse d'affichage ne font pas partie du monde sauvegardé. Export/import de fichiers, autosauvegardes tournantes et manifeste contenu/générateur restent à livrer.
+
+V2 est validé avant initialisation des nouveaux champs : les objets et travaux sont conservés ; un ancien dormeur réévalue son couchage au prochain tick. La fixture historique et la décision sont décrites dans [needs.md](needs.md).
 
 ## Preuves et suite
 

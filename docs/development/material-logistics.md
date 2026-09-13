@@ -38,11 +38,11 @@ Les piles et réserves utilisent des lots de rendu par chunk, actualisés selon 
 
 ## Persistance et compatibilité
 
-Le schéma 2 conserve piles, propriétaires, stockages, orientation, phases de transport, routes et cadences. La sérialisation vérifie formes, quantités, références croisées, emprises et capacités réservées avant de produire du JSON. Un chargement invalide ne remplace pas le monde courant du worker.
+Le schéma 3 conserve piles, propriétaires, stockages, orientation, phases de transport, routes et cadences, ainsi que les [besoins physiques](needs.md) ajoutés depuis V2. La sérialisation vérifie formes, quantités, références croisées, emprises et capacités réservées avant de produire du JSON. Un chargement invalide ne remplace pas le monde courant du worker.
 
 La migration du schéma 1 valide d'abord l'ancien état. Son stock global devient des piles déterministes près du camp ; les anciens matériaux en escrow sont affectés aux chantiers correspondants. Les priorités déjà choisies sont conservées et Transport reçoit une valeur de départ. Les anciens lits et plans de lits conservent leur emprise `legacy-single`. Terrain, seed, tick et identités existantes restent présents ; aucune régénération du paysage n'est permise. La continuation après migration suit les nouvelles règles, sans prétendre rejouer exactement l'ancienne simulation à stock global.
 
-Les clés navigateur `lisiere.save.v1` et `lisiere.previous.v1` sont conservées pour retrouver les données existantes ; le numéro de schéma se lit dans le JSON. La reprise exacte est exigée entre sauvegardes/restaurations du schéma 2. Les bornes d'entrée et de migration doivent être contrôlées avant toute allocation proportionnelle à une quantité historique.
+Les clés navigateur `lisiere.save.v1` et `lisiere.previous.v1` sont conservées pour retrouver les données existantes ; le numéro de schéma se lit dans le JSON. La reprise exacte est exigée entre sauvegardes/restaurations du schéma 3. V2 est validé avant l'initialisation des tâches de besoins ; sa matière et ses travaux restent inchangés. Les bornes d'entrée et de migration doivent être contrôlées avant toute allocation proportionnelle à une quantité historique.
 
 ## Limites techniques à suivre
 

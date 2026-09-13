@@ -63,6 +63,8 @@ Les attentes ont une cause explicable. Une interruption libère les intentions f
 
 ### G1 — Survie quotidienne
 
+Première partie livrée avant la clôture de G0 : [repas et couchages physiques](../development/needs.md), avec réservations, trajets et reprise sauvegardée. Le reste de cette section demeure la cible de G1.
+
 La colonie est autonome plusieurs jours grâce à la croissance agricole, aux récoltes renouvelables, aux recettes et aux aliments réellement accessibles, transportés puis ingérés. Les couchages sont réservés et rejoints ; les horaires orientent les activités sans satisfaire directement les besoins. Les premiers effets de traits et compétences sont mesurables.
 
 Le joueur peut provoquer une pénurie, comprendre sa cause et la corriger. Distance, ingrédients, seuil de production, interruption et expiration simple des aliments ont des conséquences vérifiables. Les unités temporelles et de nutrition sont décidées explicitement avant calibration ; les constantes du corpus ne sont pas injectées telles quelles dans les ticks du prototype. Refroidissement et effets des pièces attendent G2.

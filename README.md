@@ -32,15 +32,17 @@ Abattage, récolte, annulation et création/retrait de réserves acceptent un re
 
 Voir [le guide joueur](docs/gameplay/player-guide.md) pour les règles actuellement implémentées et leurs limites.
 
-Dans Architecte → Zones, une réserve se règle par cellule : filtres bois/nourriture, capacité et priorité. Pour le **stockage**, 4 est la priorité la plus forte. Inspecter la réserve permet de modifier ses règles sans supprimer les objets. Les zones nommées à plusieurs cases et les ordres contextuels restent à développer. Les repas à distance et le sommeil sur place sont encore simplifiés.
+Dans Architecte → Zones, une réserve se règle par cellule : filtres bois/nourriture, capacité et priorité. Pour le **stockage**, 4 est la priorité la plus forte. Inspecter la réserve permet de modifier ses règles sans supprimer les objets. Les zones nommées à plusieurs cases et les ordres contextuels restent à développer.
 
 La génération produit une rivière continue, des massifs et une végétation corrélée au terrain. Les proportions 3D sont centralisées : case de 1 m, humain de 1,75 m, mur de 2,80 m. Ce sont des conventions du projet. Les nouveaux lits occupent deux cases orientées ; les lits des anciennes sauvegardes gardent une emprise explicite 1×1 pour préserver leurs voisins.
 
-Les sauvegardes courantes utilisent le **schéma 2** : piles, propriétaires, cargaisons, stockages, orientations et progression sont conservés. Les sauvegardes V1 sont validées puis migrées ; leur terrain et leurs identités existantes sont préservés, leur stock global devient physique. Les clés locales du navigateur restent identiques pour retrouver ces parties. Voir [le contrat matériel et sa migration](docs/development/material-logistics.md).
+Les sauvegardes courantes utilisent le **schéma 3** : piles, propriétaires, cargaisons, stockages, orientations et progression sont conservés. Les phases de repas/sommeil et propriétaires de lits sont également persistés. Les sauvegardes V1 et V2 sont validées puis migrées ; leur terrain et leurs identités existantes sont préservés, leur stock global devient physique. Les clés locales du navigateur restent identiques pour retrouver ces parties. Voir [le contrat matériel et sa migration](docs/development/material-logistics.md).
+
+Les colons rejoignent et prennent leur nourriture avant de manger ; ils rejoignent leur lit attribué et dorment sur son matelas. La consommation à distance et le bonus de lit voisin sont supprimés. Tables, cuisine, horaires et types nutritionnels distincts restent à développer : [contrat et portée](docs/development/needs.md).
 
 ## Laboratoire de navigation GPU
 
-Ouvrir [le laboratoire local](http://127.0.0.1:5173/navigation.html) pour calculer et vérifier un chemin sur le paysage, ajouter des obstacles ou du terrain lent. Recherche, convergence et extraction sont exécutées sur GPU ; un oracle CPU indépendant vérifie le résultat. Cette expérience **ne pilote pas encore les colons**. La carte 250² est une fixture de comparaison, pas une taille de colonie actuellement disponible.
+Ouvrir [le laboratoire local](http://127.0.0.1:5173/navigation.html) pour calculer et vérifier un chemin sur le paysage, ajouter des obstacles ou du terrain lent. Recherche, convergence et extraction sont exécutées sur GPU ; un oracle CPU indépendant vérifie le résultat. Cette expérience **ne pilote pas encore les colons**. La carte 250² sert aussi de fixture de comparaison ; elle est désormais la taille de colonie par défaut.
 
 `node scripts/gpu-navigation-bench.mjs` exécute le protocole matériel avec le serveur local lancé. Les contrats, résultats et limites sont dans [la recherche GPU](docs/research/gpu-navigation.md).
 
