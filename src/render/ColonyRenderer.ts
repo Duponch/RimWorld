@@ -1,3 +1,5 @@
+import { CropLayer } from './CropLayer';
+import { GrowingZoneLayer } from './GrowingZoneLayer';
 import { buildTerrain } from './TerrainLayer';
 import { RockLayer } from './RockLayer';
 import { MotionTimeline } from './MotionTimeline';
@@ -66,6 +68,9 @@ export class ColonyRenderer {
   private readonly waterMaterial = material(0xffffff, { vertexColors: true, roughness: 0.45, metalness: 0.08 });
   private readonly boxes = new BoxBatches();
   private readonly resources = new ResourceLayer(this.resourceGroup, this.staticMaterial);
+  private naturalResources: World['resources'] = [];
+  private readonly crops = new CropLayer(this.staticMaterial);
+  private readonly growing = new GrowingZoneLayer(this.boxes);
   private readonly rocks = new RockLayer(this.staticMaterial);
   private readonly daylight: DayNightLayer;
   private world: World | null = null;
@@ -128,7 +133,7 @@ export class ColonyRenderer {
     renderer.domElement.tabIndex = 0;
     host.appendChild(renderer.domElement);
     this.daylight = new DayNightLayer(this.scene);
-    this.scene.add(this.overview.group, this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup, this.pawns.group);
+    this.scene.add(this.crops.group, this.growing.group, this.overview.group, this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup, this.pawns.group);
     this.rig = new CameraRig(renderer.domElement);
     const hoverMat = new THREE.MeshBasicNodeMaterial({ color: 0xf9ebae, transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide });
     this.hover = new THREE.Mesh(new THREE.PlaneGeometry(0.96, 0.96), hoverMat);
@@ -195,10 +200,12 @@ export class ColonyRenderer {
     if (structureKey !== this.structureKey || newMap) { this.structureKey = structureKey; this.buildStructures(world); }
     // Quantize presentation of progression to avoid rebuilding static meshes for
     // every work tick. Saved simulation progress remains exact and authoritative.
-    const jobKey = world.jobs.map((j) => `${j.id}:${j.kind}:${j.x}:${j.z}:${j.orientation}:${j.footprint}:${j.status}:${j.escrow.wood}:${j.kind === 'chop' || j.kind === 'harvest' || j.kind === 'cut' ? 0 : Math.floor(j.progress / JOB_DURATION[j.kind] * 20)}`).join('|');
+    const jobKey = world.jobs.map((j) => `${j.id}:${j.kind}:${j.x}:${j.z}:${j.orientation}:${j.footprint}:${j.status}:${j.escrow.wood}:${j.kind === 'chop' || j.kind === 'harvest' || j.kind === 'cut' || j.kind === 'sow' ? 0 : Math.floor(j.progress / JOB_DURATION[j.kind] * 20)}`).join('|');
     if (jobKey !== this.jobKey || newMap) { this.jobKey = jobKey; this.buildJobs(world); }
     const storageKey = world.stockpiles.map((s) => `${s.id}:${s.x}:${s.z}:${s.priority}:${s.filters.wood}:${s.filters.food}`).join('|');
     if (storageKey !== this.storageKey || newMap) { this.storageKey = storageKey; this.buildStorage(world); }
+    if (newMap || previousWorld?.resources !== world.resources || Math.floor((previousWorld?.tick ?? -1) / 25) !== Math.floor(world.tick / 25)) this.crops.update(world, newMap);
+    this.growing.update(world, newMap);
     this.updatePiles(world, newMap);
     const oldBlend = this.pawns.blend.value;
     this.snapshotDuration = previousWorld && world.tick >= previousWorld.tick ? Math.min(200, Math.max(70, now - this.snapshotAt)) : 0;
@@ -261,6 +268,7 @@ export class ColonyRenderer {
     this.preparing = true;
     const culling = new Map<THREE.Object3D, boolean>();
     const distant = this.overview.group.visible;
+    const restoreCrops = this.crops.prepareForCompile();
     try {
       this.overview.group.visible = this.terrainGroup.visible = this.resourceGroup.visible = true;
       this.rocks.setDistant(false); this.rocks.mesh.visible = true;
@@ -269,6 +277,7 @@ export class ColonyRenderer {
       await this.renderer.compileAsync(this.scene, this.rig.orthographic);
       await this.renderer.compileAsync(this.scene, this.rig.perspective);
     } finally {
+      restoreCrops();
       for (const [object, value] of culling) object.frustumCulled = value;
       this.overview.group.visible = distant; this.terrainGroup.visible = this.resourceGroup.visible = !distant;
       this.rocks.setDistant(distant); this.preparing = false;
@@ -306,7 +315,16 @@ export class ColonyRenderer {
     return { x: (projected.x + 1) * this.host.clientWidth / 2, y: (1 - projected.y) * this.host.clientHeight / 2 };
   }
 
-  private updateResources(world: World, newMap: boolean): void { this.resources.update(world, newMap); this.overview.update(world,newMap); }
+  private updateResources(world: World, newMap: boolean): void {
+    const natural = world.resources.filter(r => r.kind !== 'rice');
+    if (!newMap && natural.length === this.naturalResources.length && natural.every((r, i) => {
+      const old = this.naturalResources[i]!;
+      return r === old || (r.id === old.id && r.kind === old.kind && r.x === old.x && r.z === old.z && r.amount === old.amount && r.growth === old.growth && r.growthTick === old.growthTick);
+    })) return;
+    this.naturalResources = natural;
+    const view = {...world, resources: natural};
+    this.resources.update(view, newMap); this.overview.update(view,newMap);
+  }
 
   private buildStructures(world: World): void { buildFurniture(world, this.structureGroup, this.wallCutaway, this.boxes); }
 
@@ -316,7 +334,7 @@ export class ColonyRenderer {
     for (const job of world.jobs) {
       const cells = footprintCells(job), last = cells[cells.length - 1]!;
       for (const cell of cells) orders.push({ x: cell.x, y: 0.032, z: cell.z, color: job.status === 'active' ? 0xe7c17a : 0x99cfc3 });
-      if (job.kind === 'chop' || job.kind === 'harvest' || job.kind === 'cut') continue;
+      if (job.kind === 'chop' || job.kind === 'harvest' || job.kind === 'cut' || job.kind === 'sow') continue;
       const x = (job.x + last.x) / 2, z = (job.z + last.z) / 2, ry = job.orientation * Math.PI / 2;
       const height = job.kind === 'wall' ? wallHeight : job.kind === 'table' ? WORLD_SCALE.tableHeight : job.kind === 'stool' ? WORLD_SCALE.stoolHeight : WORLD_SCALE.bedSurfaceHeight;
       const width = job.kind === 'wall' ? 0.92 : job.kind === 'table' ? WORLD_SCALE.tableWidth : job.kind === 'stool' ? WORLD_SCALE.stoolWidth : WORLD_SCALE.bedWidth;
@@ -622,6 +640,7 @@ export class ColonyRenderer {
     this.boxes.dispose();
     this.overview.dispose();
     this.rocks.dispose();
+    this.crops.dispose();
     this.resources.clear();
     for (const group of [this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup, this.pawns.group]) clearGroup(group);
     this.pileChunks.clear();

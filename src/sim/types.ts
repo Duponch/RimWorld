@@ -1,14 +1,14 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 7 as const;
+export const SCHEMA_VERSION = 8 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
 export type Terrain = 'grass' | 'soil' | 'water' | 'rock';
-export type ResourceKind = 'tree' | 'berries' | 'rock';
+export type ResourceKind = 'tree' | 'berries' | 'rock' | 'rice';
 export type MaterialKind = 'wood' | 'food';
 export type StructureKind = 'wall' | 'bed' | 'table' | 'stool';
-export type JobKind = 'chop' | 'harvest' | 'cut' | StructureKind;
-export type WorkType = 'gather' | 'build' | 'haul';
+export type JobKind = 'chop' | 'harvest' | 'cut' | 'sow' | StructureKind;
+export type WorkType = 'gather' | 'build' | 'haul' | 'grow';
 export type Orientation = 0 | 1 | 2 | 3;
 export type Footprint = 'standard' | 'legacy-single';
 export type PawnState = 'idle' | 'moving' | 'working' | 'sleeping' | 'hungry' | 'eating';
@@ -20,6 +20,7 @@ export interface Stock { wood: number; food: number }
 export type MaterialOwner = ({ type: 'ground' } & Cell) | { type: 'pawn'; pawnId: number } | { type: 'job'; jobId: number };
 export interface MaterialPile { id: number; kind: MaterialKind; item: ItemId; quantity: number; owner: MaterialOwner }
 export interface StockpileCell extends Cell { id: number; filters: Record<MaterialKind, boolean>; priority: number; capacity: number }
+export interface GrowingZone { id: number; cells: number[]; plant: 'rice'; allowSow: boolean; allowCut: boolean }
 export type HaulDestination = { type: 'stockpile'; stockpileId: number } | { type: 'job'; jobId: number };
 export interface HaulTask {
   sourcePileId: number;
@@ -31,11 +32,13 @@ export interface HaulTask {
   pickupCell?: Cell;
 }
 export interface DiningPlace { target: Cell; seatId: number | null; tableId: number | null }
-export interface Memory { kind: 'ate-without-table'; expiresAt: number }
+export interface Memory { kind: 'ate-without-table' | 'ate-raw-food'; expiresAt: number }
 export type NeedTask =
   | { kind: 'eat'; phase: 'pickup' | 'choose-spot' | 'travel' | 'ingest'; sourcePileId: number; carryPileId: number | null; quantity: number; progress: number; dining: DiningPlace | null }
   | { kind: 'sleep'; phase: 'travel' | 'sleep'; bedId: number | null; target: Cell };
 export interface Job extends Cell {
+  /** Generated intention, rechecked against this zone while pending/active. */
+  growingZoneId?: number;
   id: number;
   kind: JobKind;
   orientation: Orientation;
@@ -86,6 +89,9 @@ export interface World {
   jobs: Job[];
   piles: MaterialPile[];
   stockpiles: StockpileCell[];
+  growingZones: GrowingZone[];
+  growingCursor: number;
+  environment: 'temperate-equinox-v1';
   stock: Stock;
   events: WorldEvent[];
   nextId: number;
@@ -93,12 +99,13 @@ export interface World {
   logisticsCursor: number;
 }
 export type DesignateCommand = { type: 'designate'; kind: JobKind; orientation?: Orientation } & Cell;
-export type AreaAction = 'chop' | 'harvest' | 'cut' | 'cancel' | 'stockpile' | 'remove-stockpile';
+export type AreaAction = 'chop' | 'harvest' | 'cut' | 'cancel' | 'stockpile' | 'remove-stockpile' | 'growing' | 'remove-growing';
 export interface StorageSettings { filters?: Record<MaterialKind, boolean>; priority?: number; capacity?: number }
 export interface AreaCommand extends StorageSettings { type: 'area'; action: AreaAction; from: Cell; to: Cell }
 export type Command =
   | DesignateCommand
   | AreaCommand
+  | { type: 'growing-policy'; zoneId: number; allowSow: boolean; allowCut: boolean }
   | { type: 'assign-bed'; bedId: number; pawnId: number | null }
   | ({ type: 'cancel' } & Cell)
   | ({ type: 'stockpile'; enabled: boolean; filters?: Record<MaterialKind, boolean>; priority?: number; capacity?: number } & Cell)

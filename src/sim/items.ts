@@ -6,6 +6,7 @@ import type { MaterialKind, MaterialPile, Pawn, World } from './types.ts';
 export const ITEM_DEFINITIONS = Object.freeze({
   wood: Object.freeze({ label: 'Bois', kind: 'wood', stackLimit: 75, nutrition: 0, maxIngest: 0, color: 0x896841 }),
   berries: Object.freeze({ label: 'Baies', kind: 'food', stackLimit: 75, nutrition: 5, maxIngest: 75, color: 0xb96f63 }),
+  rice: Object.freeze({ label: 'Riz', kind: 'food', stackLimit: 75, nutrition: 5, maxIngest: 75, color: 0xd9c695 }),
   'survival-meal': Object.freeze({ label: 'Repas de survie', kind: 'food', stackLimit: 10, nutrition: 90, maxIngest: 1, color: 0xc7b96b }),
   'legacy-portion': Object.freeze({ label: 'Portion historique', kind: 'food', stackLimit: 75, nutrition: 35, maxIngest: 1, color: 0xba745a }),
 } as const);

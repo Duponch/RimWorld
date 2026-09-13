@@ -29,3 +29,10 @@ Une nouvelle liberté fonctionnelle doit préciser sa référence, son comportem
 ## V7 — Croissance sauvage et interprétation rocheuse
 
 Voir [règles et adaptations](../development/rocks-and-plants.md) et [recherche](../research/plant-growth.md). Les buissons ne disparaissent plus après récolte. Seuil strict 65 %, remise à 30 %, rendement partiel et coupe avec rendement éventuel sont adoptés. Preset 21 °C, photopériode rectangulaire et mapping des terrains sont locaux ; durées de travail et statistiques restent provisoires. La taille du feuillage représente une plante persistante, les fruits son état récoltable. Les massifs gardent les cases d'obstacle malgré leurs faces irrégulières. Aucune mécanique de minage n'est annoncée.
+
+
+## V8 — Première culture, divergences assumées
+
+Voir le [contrat de culture](../development/farming.md) et la [recherche fraîche](../research/farming-reference.md). Adoption du semis sans graines, des politiques indépendantes, de la croissance selon lumière/fertilité, de la récolte mûre automatique et des piles physiques. Adaptation : marqueur de semis sans entité provisoire, horloge ÷10, petit plant procédural instancié, site fixe 45° N/équinoxe/21 °C. Une interruption annule le semis partiel, comme la destruction du plant provisoire dans la référence.
+
+Écarts connus non clôturés : transport local des objets bloquant le semis, choix alimentaire élaboré, coûts de traversée des plantes, compétences/rendements, santé et maladies végétales, autres cultures, cuisine et intoxications. Le riz cru applique le souvenir −7 ; cela ne constitue pas un système de santé complet. Les familles naturelles restent partielles.

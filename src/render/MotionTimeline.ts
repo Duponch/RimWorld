@@ -1,7 +1,9 @@
 import type { PawnTrack } from '../bridge/motion-tracks';
 import type { TravelSegment } from '../sim/movement';
 
-/** Fixed-rate playout with a 250 ms buffer. Arrival jitter never restarts an edge.
+export const MOTION_BUFFER_MS = 400;
+
+/** Fixed-rate playout with a 400 ms buffer (two publication intervals). Arrival jitter never restarts an edge.
  * Stops at confirmed time on starvation; never predicts through an obstacle. */
 export class MotionTimeline {
   readonly tracks=new Map<number,TravelSegment[]>();
@@ -12,12 +14,12 @@ export class MotionTimeline {
   private previous=0;
   private ready=0;
   adopt(tick:number,speed:number,tracks:PawnTrack[],now:number,reset=false):void {
-    if(reset){this.tick=tick;this.latest=tick;this.previous=now;this.ready=now+250;this.tracks.clear();this.speed=speed;this.rate=speed*10;}
+    if(reset){this.tick=tick;this.latest=tick;this.previous=now;this.ready=now+MOTION_BUFFER_MS;this.tracks.clear();this.speed=speed;this.rate=speed*10;}
     // Message delivery uses performance.now(), which can be later than the
     // timestamp of the next RAF callback. Only RAF advances the playhead.
     if(speed!==this.speed) {
       // Pause drains only confirmed movement; resume buffers without jumping the actor.
-      if(speed>0){this.rate=speed*10;this.ready=now+250;}
+      if(speed>0){this.rate=speed*10;this.ready=now+MOTION_BUFFER_MS;}
       this.speed=speed;
     }
     this.latest=Math.max(this.latest,tick);

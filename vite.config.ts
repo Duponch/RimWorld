@@ -6,6 +6,8 @@ export default defineConfig({
   resolve: { alias: [{ find: /^three$/, replacement: 'three/webgpu' }] },
   test: {
     include: ['tests/**/*.test.ts'],
+    // The deep colony scenarios are CPU-bound; avoid oversubscribing local cores.
+    maxWorkers: 2,
     testTimeout: 30_000,
   },
 });

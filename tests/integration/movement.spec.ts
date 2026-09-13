@@ -21,15 +21,16 @@ test('GPU travel preserves speed, corners and work-facing through real worker sn
     await page.waitForFunction(()=>window.__lisiere.world.jobs.length===0,undefined,{timeout:45000,polling:100});
     await page.locator('[data-speed="0"]').click();
     const result=await page.evaluate(()=>{const b=(window as any).__travel;b.active=false;return {frames:b.frames,working:b.working};});
-    let samples=0,maxSpeedError=0,maxFacingError=0;const turns=new Set<number>();
+    let samples=0,maxSpeedError=0,maxFacingError=0;const turns=new Set<number>();let worstSample:unknown;
     for(let i=1;i<result.frames.length;i++) {
       const a=result.frames[i-1],b=result.frames[i],dt=(b.now-a.now)/1000;
       if(a.start!==b.start||!a.walking||!b.walking||dt<=0||dt>0.05||b.clock>=b.end||a.clock<=a.start)continue;
       samples++;turns.add(Math.round(b.yaw*100));
-      maxSpeedError=Math.max(maxSpeedError,Math.abs(Math.hypot(b.x-a.x,b.z-a.z)/dt-20));
+      const speedError=Math.abs(Math.hypot(b.x-a.x,b.z-a.z)/dt-20);
+      if(speedError>maxSpeedError){maxSpeedError=speedError;worstSample={a,b,dt};}
       maxFacingError=Math.max(maxFacingError,Math.abs(Math.atan2(Math.sin(b.yaw-Math.atan2(b.dx,b.dz)),Math.cos(b.yaw-Math.atan2(b.dx,b.dz)))));
     }
-    const summary={samples,turns:turns.size,maxSpeedError,maxFacingError,workTargets:new Set(result.working.map((w:any)=>w.id)).size,maxWorkFacingError:Math.max(...result.working.map((w:any)=>w.error)),errors};
+    const summary={worstSample,samples,turns:turns.size,maxSpeedError,maxFacingError,workTargets:new Set(result.working.map((w:any)=>w.id)).size,maxWorkFacingError:Math.max(...result.working.map((w:any)=>w.error)),errors};
     await testInfo.attach('movement-contract',{body:JSON.stringify(summary,null,2),contentType:'application/json'});
     expect(summary.samples).toBeGreaterThan(100);expect(summary.turns).toBeGreaterThan(2);
     expect(summary.maxSpeedError).toBeLessThan(.01);expect(summary.maxFacingError).toBeLessThan(.00001);

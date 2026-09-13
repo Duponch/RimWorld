@@ -1,8 +1,11 @@
-import { harvestable } from './plants.ts';
+import { initializeFarming, validateFarming } from './farming-save.ts';
+import { jobDuration } from './farming.ts';
+import { workType } from './work-planner.ts';
+import { harvestable, isPlant, legacyPlantGrowth } from './plants.ts';
 import { groundPile, storageCapacity } from './ground-placement.ts';
 import { validateTravel } from './travel-validation.ts';
 import { edgeLength, TRAVEL_TICKS } from './movement.ts';
-import { CARRY_CAPACITY, footprintCells, JOB_DURATION, JOB_WOOD_COST, MAX_STACK } from './definitions.ts';
+import { CARRY_CAPACITY, footprintCells, JOB_WOOD_COST, MAX_STACK } from './definitions.ts';
 import { deliveredStock, groundQuantity, reservedDestination, reservedSource } from './materials.ts';
 import { migrateLegacy, initializeNeeds, initializeDining, initializeFood, initializeSpatial, initializePlants } from './save-migrations.ts';
 import type { World } from './types.ts';
@@ -20,9 +23,9 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 
 /** Structural validation first, cross-reference validation second; accepts arbitrary JSON without throwing. */
 export function validateWorld(input: unknown): string[] {
-  return validateSchema(input, 7);
+  return validateSchema(input, 8);
 }
-function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7): string[] {
+function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(input)) return ['World must be an object.'];
@@ -51,7 +54,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7): string[
       if (key === 'pawns') {
         if (typeof item.name !== 'string' || item.name.length === 0 || item.name.length > 80 || !bounded(item.hunger) || !bounded(item.rest) || !bounded(item.mood)
           || !oneOf(item.state, legacyV2 ? ['idle', 'moving', 'working', 'sleeping', 'hungry'] : ['idle', 'moving', 'working', 'sleeping', 'hungry', 'eating']) || !(item.jobId === null || integer(item.jobId, 1))
-          || !record(item.priorities) || !integer(item.priorities.gather, 0, 4) || !integer(item.priorities.build, 0, 4) || !integer(item.priorities.haul, 0, 4)
+          || !record(item.priorities) || !integer(item.priorities.gather, 0, 4) || !integer(item.priorities.build, 0, 4) || !integer(item.priorities.haul, 0, 4) || (version >= 8 && !integer(item.priorities.grow, 0, 4))
           || !(version < 6 ? integer(item.moveCooldown, 0, 3) : typeof item.moveCooldown === 'number' && Number.isFinite(item.moveCooldown) && item.moveCooldown >= 0 && item.moveCooldown <= 4.243) || !integer(item.planCooldown, 0, 20)) errors.push('Invalid pawn state.');
         if (!Array.isArray(item.path) || item.path.length > size) errors.push('Invalid pawn path.');
         else {
@@ -82,7 +85,8 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7): string[
           if (version >= 5 ? !integer(item.need.quantity, 1, MAX_STACK) : item.need.quantity !== undefined) errors.push('Invalid meal quantity.');
         }
         if (version >= 4) {
-          if (!bounded(item.comfort) || !Array.isArray(item.memories) || item.memories.length > 1 || item.memories.some(memory => !record(memory) || memory.kind !== 'ate-without-table' || !integer(memory.expiresAt, (input.tick as number) + 1, (input.tick as number) + TICKS_PER_DAY))) errors.push('Invalid comfort or meal memory.');
+          if (!bounded(item.comfort) || !Array.isArray(item.memories) || item.memories.length > (version >= 8 ? 2 : 1) || item.memories.some(memory => !record(memory) || !oneOf(memory.kind, version >= 8 ? ['ate-without-table', 'ate-raw-food'] : ['ate-without-table']) || !integer(memory.expiresAt, (input.tick as number) + 1, (input.tick as number) + TICKS_PER_DAY))) errors.push('Invalid comfort or meal memory.');
+          else if (new Set(item.memories.map(memory => (memory as {kind:string}).kind)).size !== item.memories.length) errors.push('Duplicate meal memory.');
           if (record(item.need) && item.need.kind === 'eat') {
             const dining = item.need.dining;
             if (dining !== null && (!record(dining) || !record(dining.target) || !coord(dining.target) || !(dining.seatId === null || integer(dining.seatId, 1)) || !(dining.tableId === null || integer(dining.tableId, 1)))) errors.push('Invalid dining place.');
@@ -95,12 +99,12 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7): string[
             || !(haul.destination.type === 'job' ? integer(haul.destination.jobId, 1) : haul.destination.type === 'stockpile' && integer(haul.destination.stockpileId, 1))) errors.push('Invalid haul task.');
         }
       } else if (key === 'resources') {
-        if (!oneOf(item.kind, ['tree', 'berries', 'rock']) || !integer(item.amount, 1, 1000000)) errors.push('Invalid resource.');
+        if (!oneOf(item.kind, ['tree', 'berries', 'rock', ...(version >= 8 ? ['rice'] : [])]) || !integer(item.amount, 1, 1000000)) errors.push('Invalid resource.');
         if (item.growth !== undefined || item.growthTick !== undefined) {
-          if (version < 7 || item.kind !== 'berries' || typeof item.growth !== 'number' || !Number.isFinite(item.growth) || item.growth < 0 || item.growth > 1 || !integer(item.growthTick, 0, input.tick as number)) errors.push('Invalid plant growth checkpoint.');
+          if (version < 7 || !(item.kind === 'berries' || (version >= 8 && item.kind === 'rice')) || typeof item.growth !== 'number' || !Number.isFinite(item.growth) || item.growth < 0 || item.growth > 1 || !integer(item.growthTick, 0, input.tick as number)) errors.push('Invalid plant growth checkpoint.');
         }
       } else if (key === 'structures' || key === 'jobs') {
-        if (!oneOf(item.kind, key === 'structures' ? (version < 4 ? ['wall', 'bed'] : ['wall', 'bed', 'table', 'stool']) : (version < 4 ? ['chop', 'harvest', 'wall', 'bed'] : ['chop', 'harvest', ...(version >= 7 ? ['cut'] : []), 'wall', 'bed', 'table', 'stool'])) || !integer(item.orientation, 0, 3)
+        if (!oneOf(item.kind, key === 'structures' ? (version < 4 ? ['wall', 'bed'] : ['wall', 'bed', 'table', 'stool']) : (version < 4 ? ['chop', 'harvest', 'wall', 'bed'] : ['chop', 'harvest', ...(version >= 7 ? ['cut'] : []), ...(version >= 8 ? ['sow'] : []), 'wall', 'bed', 'table', 'stool'])) || !integer(item.orientation, 0, 3)
           || !oneOf(item.footprint, ['standard', 'legacy-single']) || (item.footprint === 'legacy-single' && item.kind !== 'bed')) errors.push('Invalid structure definition or footprint.');
         if (key === 'jobs' && (!oneOf(item.status, ['pending', 'active']) || !(item.reservedBy === null || integer(item.reservedBy, 1)) || !stock(item.escrow) || !integer(item.progress, 0, 119))) errors.push('Invalid job.');
       } else if (key === 'piles') {
@@ -124,6 +128,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7): string[
   }
   const events = input.events as unknown[];
   if (events.length > 80 || events.some(item => !record(item) || !integer(item.tick, 0, input.tick as number) || !oneOf(item.type, ['job', 'need', 'command']) || typeof item.message !== 'string' || item.message.length > 240)) errors.push('Invalid event log.');
+  if (version >= 8 && !errors.length) errors.push(...validateFarming(input, size, ids));
   if (errors.length) return errors;
   const world = input as unknown as World;
   if(version>=6)errors.push(...validateTravel(world));
@@ -157,7 +162,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7): string[
     if (pawn.jobId !== null) {
       const job = jobById.get(pawn.jobId);
       if (!job || job.reservedBy !== pawn.id || job.status !== 'active') errors.push('Pawn/job reservation mismatch.');
-      if (job && pawn.priorities[job.kind === 'chop' || job.kind === 'harvest' || job.kind === 'cut' ? 'gather' : 'build'] === 0) errors.push('Pawn assigned to disabled work.');
+      if (job && pawn.priorities[workType(job)] === 0) errors.push('Pawn assigned to disabled work.');
     }
     const owned = world.piles.filter(pile => pile.owner.type === 'pawn' && pile.owner.pawnId === pawn.id);
     if (owned.length > 1 || (owned.length === 1 && pawn.haul?.phase !== 'deliver' && (legacyV2 || pawn.need?.kind !== 'eat' || pawn.need.phase === 'pickup'))) errors.push('Carried ownership mismatch.');
@@ -222,7 +227,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7): string[
     }
   }
   for (const job of world.jobs) {
-    if (job.progress >= JOB_DURATION[job.kind]) errors.push('Completed job left in queue.');
+    if (job.progress >= jobDuration(world, job)) errors.push('Completed job left in queue.');
     if ((job.status === 'active') !== (job.reservedBy !== null)) errors.push('Job reservation/status mismatch.');
     if (job.reservedBy !== null && pawnById.get(job.reservedBy)?.jobId !== job.id) errors.push('Job references missing or mismatched pawn.');
     const delivered = deliveredStock(world, job.id);
@@ -231,7 +236,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7): string[
     // keep that progress, but may only acquire a builder after physical delivery again.
     if (job.reservedBy !== null && delivered.wood !== JOB_WOOD_COST[job.kind]) errors.push('Construction work started before delivery.');
     const resource = resourceCells.get(cellKey(job));
-    if (job.kind === 'chop' || job.kind === 'harvest' || job.kind === 'cut') { if (resource?.kind !== (job.kind === 'chop' ? 'tree' : 'berries')) errors.push('Gather job has no matching resource.'); else if (version >= 7 && job.kind === 'harvest' && !harvestable(world,resource)) errors.push('Harvest job targets an immature plant.'); }
+    if (job.kind === 'chop' || job.kind === 'harvest' || job.kind === 'cut') { if (!resource || !(job.kind === 'chop' ? resource.kind === 'tree' : isPlant(resource))) errors.push('Gather job has no matching resource.'); else if (version >= 7 && job.kind === 'harvest' && !(version === 7 ? legacyPlantGrowth(world,resource) > .65 : harvestable(world,resource))) errors.push('Harvest job targets an immature plant.'); }
     else for (const cell of footprintCells(job)) if (resourceCells.has(cellKey(cell)) || structureCells.has(cellKey(cell))) errors.push('Construction overlaps existing content.');
   }
   const available = { wood: 0, food: 0 };
@@ -281,6 +286,10 @@ export function deserializeWorld(serialized: string): World {
   if (record(input) && input.schemaVersion === 6) {
     const errors=validateSchema(input,6); if(errors.length) throw new Error(`Invalid version 6 save: ${errors.join(' ')}`);
     initializePlants(input as unknown as World);
+  }
+  if (record(input) && input.schemaVersion === 7) {
+    const errors=validateSchema(input,7); if(errors.length) throw new Error(`Invalid version 7 save: ${errors.join(' ')}`);
+    initializeFarming(input as unknown as World);
   }
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`); return input as World;
 }

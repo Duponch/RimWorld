@@ -79,7 +79,7 @@ test('colonie matérielle : réserve filtrée, transport visible, trois couchage
   await page.getByLabel('Priorité collecte Ada', { exact: true }).selectOption('1');
   await page.getByLabel('Priorité construction Ada', { exact: true }).selectOption('3');
   await page.getByLabel('Priorité transport Ada', { exact: true }).selectOption('2');
-  await expect.poll(async () => (await world(page)).pawns[0].priorities).toEqual({ gather: 1, build: 3, haul: 2 });
+  await expect.poll(async () => (await world(page)).pawns[0].priorities).toEqual({ gather: 1, build: 3, haul: 2, grow: 2 });
   await tool(page, 'stockpile');
   await page.locator('#stockpile-food').uncheck();
   await page.locator('#stockpile-capacity').fill('10');
@@ -107,7 +107,7 @@ test('colonie matérielle : réserve filtrée, transport visible, trois couchage
   await page.locator('#save').click();
   await expect(page.getByRole('status')).toContainText('sauvegardée');
   const saved = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!) as World, saveKey);
-  expect(saved.schemaVersion).toBe(7);
+  expect(saved.schemaVersion).toBe(8);
   expect(saved.pawns.some(pawn => pawn.haul?.phase === 'deliver')).toBe(true);
   expect(JSON.stringify(saved)).toBe(JSON.stringify(duringHaul));
 
@@ -229,7 +229,7 @@ test('frontières : commandes répétées, sauvegarde invalide atomique, aide et
   expect((await world(page)).structures.find(structure => structure.kind === 'bed')?.footprint).toBe('legacy-single');
   await panel(page, 'menu'); await page.locator('#save').click();
   await expect(page.getByRole('status')).toContainText('sauvegardée');
-  expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).schemaVersion, saveKey)).toBe(7);
+  expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).schemaVersion, saveKey)).toBe(8);
   expect(errors).toEqual([]);
 });
 

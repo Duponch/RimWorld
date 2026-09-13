@@ -14,14 +14,15 @@ export function updateWellbeing(world: World, pawn: Pawn): void {
     : Math.max(ceiling, pawn.comfort + perHour * 24 / TICKS_PER_DAY);
   if (pawn.memories.some(memory => memory.expiresAt <= world.tick)) pawn.memories = pawn.memories.filter(memory => memory.expiresAt > world.tick);
   // Transitional mood aggregate, explicitly not the full RimWorld mood simulation.
-  pawn.mood = Math.max(0, Math.min(100, Math.round(pawn.hunger * 0.6 + pawn.rest * 0.4 + comfortMood(pawn.comfort) - (pawn.memories.length ? 3 : 0))));
+  pawn.mood = Math.max(0, Math.min(100, Math.round(pawn.hunger * 0.6 + pawn.rest * 0.4 + comfortMood(pawn.comfort) - pawn.memories.reduce((sum, memory) => sum + (memory.kind === 'ate-raw-food' ? 7 : 3), 0))));
 }
 
 export function comfortMood(comfort: number): number {
   return comfort < 10 ? -3 : comfort < 60 ? 0 : comfort < 70 ? 4 : comfort < 80 ? 6 : comfort < 90 ? 8 : 10;
 }
 
-export function rememberMeal(world: World, pawn: Pawn, atTable: boolean): void {
-  if (atTable) return; // A good meal does not erase an earlier bad memory.
-  pawn.memories = [{ kind: 'ate-without-table', expiresAt: world.tick + TICKS_PER_DAY }];
+export function rememberMeal(world: World, pawn: Pawn, atTable: boolean, raw = false): void {
+  // A good meal does not erase earlier memories; repeated meals refresh one entry.
+  const kinds = [...(!atTable ? ['ate-without-table' as const] : []), ...(raw ? ['ate-raw-food' as const] : [])];
+  pawn.memories = [...pawn.memories.filter(memory => !kinds.includes(memory.kind)), ...kinds.map(kind => ({kind, expiresAt: world.tick + TICKS_PER_DAY}))];
 }

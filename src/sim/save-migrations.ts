@@ -79,5 +79,5 @@ export function initializeSpatial(world: World): void {
 /** V6 surviving bushes are mature. Preserve IDs, yield and ongoing orders. */
 export function initializePlants(world: World): void {
   for (const plant of world.resources) if (plant.kind === 'berries') { plant.growth = 1; plant.growthTick = world.tick; }
-  world.schemaVersion = 7;
+  (world as unknown as {schemaVersion:number}).schemaVersion = 7;
 }

@@ -7,6 +7,9 @@ import { ResourceLayer } from '../src/render/ResourceLayer';
 import { queryArea } from '../src/sim/designation';
 import { SnapshotEncoder, SnapshotDecoder } from '../src/bridge/snapshots';
 import type { World } from '../src/sim/types';
+import { legacyPlantGrowth } from '../src/sim/plants';
+import { naturalLight } from '../src/sim/environment';
+import { CropLayer } from '../src/render/CropLayer';
 
 function fixture() {
   const world=createWorld(42,8,8);world.tiles=world.tiles.map(()=>({terrain:'grass'}));
@@ -38,18 +41,22 @@ test('renewable bush: conditions, strict threshold, physical yield, repeated har
   // Independent count of the actual growing ticks, over several complete days.
   plant.growth=.3;plant.growthTick=0;let active=0;
   for(let tick=1;tick<=14000;tick++) {
-    world.tick=tick;if(tick%6000>=1500&&tick%6000<=4800)active++;
+    world.tick=tick;if(tick%6000>=1500&&tick%6000<=4800) {
+      const zenith = Math.acos(Math.cos((tick%6000/6000-.5)*2*Math.PI)/Math.sqrt(2));
+      const glow = Math.max(0,Math.min(1,Math.cos(Math.max(0,zenith-23.25*Math.PI/180))/.7));
+      active += Math.max(0,(glow-.51)/.49);
+    }
     if(tick%137===0)expect(plantGrowth(world,plant)).toBeCloseTo(.3+active/36000,12);
   }
   const beforeNight=plantGrowth(world,plant);world.tick=14500;
   expect(plantGrowth(world,plant)).toBeGreaterThan(beforeNight);
-  world.tick=48000;expect(plantGrowth(world,plant)).toBe(1);
+  world.tick=66000;expect(plantGrowth(world,plant)).toBe(1);
   finish(world,'harvest');expect(world.resources[0]).toMatchObject({id,growth:.3,growthTick:world.tick});
   expect(world.stock.food).toBe(10);expect(world.piles[0]!.owner.type).toBe('ground');
   expect(harvestable(world,plant)).toBe(false);
   const saved=serializeWorld(world),copy=deserializeWorld(saved);stepWorld(world,100);stepWorld(copy,100);
   expect(serializeWorld(copy)).toBe(serializeWorld(world));
-  world.tick+=48000;expect(plantGrowth(world,plant)).toBe(1);
+  world.tick+=66000;expect(plantGrowth(world,plant)).toBe(1);
   finish(world,'harvest');expect(world.stock.food).toBe(20);expect(world.resources[0]!.id).toBe(id);
   finish(world,'cut');expect(world.resources).toEqual([]);expect(world.stock.food).toBe(20);
   const mature=fixture();finish(mature,'cut');expect(mature.resources).toEqual([]);expect(mature.stock.food).toBe(10);
@@ -61,6 +68,88 @@ test('renewable bush: conditions, strict threshold, physical yield, repeated har
   const rolled=harvestRoll(early,early.resources[0]!);expect([7,8]).toContain(rolled.quantity);
   const earlyCopy=deserializeWorld(serializeWorld(early));finish(early,'harvest');finish(earlyCopy,'harvest');
   expect(early.stock.food).toBe(rolled.quantity);expect(serializeWorld(earlyCopy)).toBe(serializeWorld(early));
+});
+
+test('rice field: eight real days, clearing, sowing, physical mature yield, hauling and a second sowing', () => {
+  const world = fixture();
+  world.resources.push({id:world.nextId++,kind:'tree',x:5,z:4,amount:7});
+  addGroundMaterial(world,'food',18,{x:1,z:1},'survival-meal'); refreshStock(world);
+  for (const z of [5,6,7]) expect(applyCommand(world,{type:'stockpile',x:6,z,enabled:true,filters:{wood:false,food:true}}).ok).toBe(true);
+  expect(applyCommand(world,{type:'area',action:'growing',from:{x:3,z:2},to:{x:5,z:3}})).toMatchObject({ok:true,affected:6});
+  const planted = new Set<number>(); let yielded=0, firstYield=Infinity, replanted=false, storedRice=false;
+  for(let tick=0;tick<48000;tick++) {
+    stepWorld(world);
+    for(const event of world.events) if(event.tick===world.tick) {
+      const match=event.message.match(/a récolté (\d+) riz/);
+      if(match) { yielded+=Number(match[1]); firstYield=Math.min(firstYield,world.tick); }
+    }
+    for(const plant of world.resources) if(plant.kind==='rice') {
+      if(yielded && !planted.has(plant.id)) replanted=true;
+      planted.add(plant.id);
+    }
+    storedRice ||= world.piles.some(p=>p.item==='rice'&&p.owner.type==='ground'&&p.owner.x===6&&p.owner.z>=5);
+    if(tick%500===0) expect(validateWorld(world),`tick ${world.tick}`).toEqual([]);
+    if(tick===1000) {
+      const resumed=deserializeWorld(serializeWorld(world));
+      const original=deserializeWorld(serializeWorld(world));
+      stepWorld(resumed,200); stepWorld(original,200);
+      expect(serializeWorld(resumed)).toBe(serializeWorld(original));
+    }
+  }
+  expect(firstYield).toBeGreaterThan(39000); expect(firstYield).toBeLessThan(46000);
+  expect(yielded).toBe(36); expect(replanted).toBe(true);
+  expect(world.resources.some(r=>r.kind==='tree'||r.kind==='berries')).toBe(false);
+  expect(world.stock.wood).toBe(7); expect(world.resources.filter(r=>r.kind==='rice')).toHaveLength(6);
+  expect(storedRice).toBe(true);
+  expect(world.pawns[0]!.hunger).toBeGreaterThan(0);
+});
+
+test('growing policies, interrupted sowing, migration and resident crop slots preserve their contracts', () => {
+  const world=fixture(); world.resources=[];
+  expect(applyCommand(world,{type:'area',action:'growing',from:{x:3,z:2},to:{x:3,z:2}}).ok).toBe(true);
+  const zone=world.growingZones[0]!;
+  stepWorld(world,15); expect(world.jobs[0]).toMatchObject({kind:'sow',status:'active'});
+  expect(world.jobs[0]!.progress).toBeGreaterThan(0); expect(world.resources).toEqual([]);
+  const checkpoint=serializeWorld(world), resumed=deserializeWorld(checkpoint);
+  stepWorld(world,30); stepWorld(resumed,30); expect(serializeWorld(resumed)).toBe(serializeWorld(world));
+  const interrupted=deserializeWorld(checkpoint);
+  expect(applyCommand(interrupted,{type:'priority',pawnId:interrupted.pawns[0]!.id,work:'grow',value:0}).ok).toBe(true);
+  expect(interrupted.jobs[0]!.progress).toBe(0); stepWorld(interrupted,100); expect(interrupted.resources).toEqual([]);
+  expect(applyCommand(interrupted,{type:'growing-policy',zoneId:zone.id,allowSow:false,allowCut:false}).ok).toBe(true);
+  expect(interrupted.jobs).toEqual([]);
+  const crop=world.resources[0]!; crop.growth=1; crop.growthTick=world.tick;
+  expect(applyCommand(world,{type:'growing-policy',zoneId:zone.id,allowSow:false,allowCut:false}).ok).toBe(true);
+  stepWorld(world,100); expect(world.resources).toEqual([]); expect(world.stock.food).toBe(6);
+  expect(world.jobs).toEqual([]); expect(validateWorld(world)).toEqual([]);
+  const invalid=JSON.parse(serializeWorld(world));invalid.growingZones[0].cells.push(invalid.growingZones[0].cells[0]);
+  expect(()=>deserializeWorld(JSON.stringify(invalid))).toThrow(/growing cell/);
+  expect(applyCommand(world,{type:'area',action:'remove-growing',from:{x:3,z:2},to:{x:3,z:2}}).ok).toBe(true);
+  expect(world.growingZones).toEqual([]);
+  // More inaccessible cells than the queue limit cannot starve another field.
+  const split=createWorld(42,32,32);split.tiles=split.tiles.map(()=>({terrain:'grass'}));split.resources=[];split.pawns=split.pawns.slice(0,1);
+  Object.assign(split.pawns[0]!,{x:20,z:20,hunger:100,rest:100});
+  for(let z=0;z<32;z++)split.tiles[z*32+12]={terrain:'water'};
+  expect(applyCommand(split,{type:'area',action:'growing',from:{x:0,z:0},to:{x:9,z:12}}).ok).toBe(true);
+  expect(applyCommand(split,{type:'area',action:'growing',from:{x:22,z:20},to:{x:23,z:21}}).ok).toBe(true);
+  stepWorld(split,500);
+  expect(split.resources.filter(r=>r.kind==='rice')).toHaveLength(4);expect(split.jobs.length).toBeLessThanOrEqual(128);expect(validateWorld(split)).toEqual([]);
+
+  const old=fixture();old.tick=14000;Object.assign(old.resources[0]!,{growth:.3,growthTick:0});
+  const acquired=legacyPlantGrowth(old,old.resources[0]!);
+  const oldSave=JSON.parse(JSON.stringify(old));oldSave.schemaVersion=7;delete oldSave.growingZones;delete oldSave.growingCursor;delete oldSave.environment;
+  for(const pawn of oldSave.pawns)delete pawn.priorities.grow;
+  const migrated=deserializeWorld(JSON.stringify(oldSave));
+  expect(plantGrowth(migrated,migrated.resources[0]!)).toBe(acquired);expect(migrated.growingZones).toEqual([]);
+  expect(naturalLight(0)).toBe(0);expect(naturalLight(3000)).toBe(1);expect(naturalLight(1500)).toBeCloseTo(naturalLight(4500),12);
+
+  const material=new THREE.MeshStandardNodeMaterial({vertexColors:true}),layer=new CropLayer(material);
+  layer.update(world,true);const mesh=layer.group.children[0] as THREE.InstancedMesh,geometry=mesh.geometry,buffer=mesh.instanceMatrix;
+  world.resources=[crop];layer.update(world,false);expect(mesh.count).toBe(1);
+  world.resources=[];layer.update(world,false);expect(mesh.count).toBe(0);
+  const restore=layer.prepareForCompile();expect(mesh.count).toBe(1);restore();expect(mesh.count).toBe(0);
+  world.resources=[{...crop,id:world.nextId++}];layer.update(world,false);
+  expect(layer.group.children[0]).toBe(mesh);expect(mesh.geometry).toBe(geometry);expect(mesh.instanceMatrix).toBe(buffer);expect(mesh.count).toBe(1);
+  layer.dispose();material.dispose();
 });
 
 test('full floor, migration, snapshot immutability and resident fruit disappear/reappear without geometry rebuild',()=>{
@@ -85,7 +174,7 @@ test('full floor, migration, snapshot immutability and resident fruit disappear/
   const mesh=(group.children[0] as THREE.Group).children[0] as THREE.Mesh,geometry=mesh.geometry,position=geometry.getAttribute('position'),index=geometry.index,count=geometry.drawRange.count;
   Object.assign(ripe.resources[0]!,{growth:.3,growthTick:0});layer.update(ripe,false);
   expect(mesh.geometry).toBe(geometry);expect(geometry.drawRange.count).toBeLessThan(count);
-  ripe.tick=48000;layer.updateGrowth(ripe);expect(geometry.drawRange.count).toBe(count);
+  ripe.tick=66000;layer.updateGrowth(ripe);expect(geometry.drawRange.count).toBe(count);
   expect(geometry.index).toBe(index);expect(geometry.getAttribute('position')).toBe(position);
   ripe.resources=[];layer.update(ripe,false);expect(geometry.drawRange.count).toBe(0);
   layer.clear();material.dispose();

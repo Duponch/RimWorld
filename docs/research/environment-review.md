@@ -1,5 +1,6 @@
 # Relecture de l'environnement et du contenu — 13 septembre 2026
 
+Mise à jour V8 : le preset de croissance binaire décrit historiquement ci-dessous est remplacé par la [lumière naturelle et la première culture de riz](../development/farming.md), avec migration des checkpoints. Météo et saisons restent absentes.
 Référence : RimWorld PC 1.6, jeu de base. Consultation renouvelée pour cette livraison, et contrôle rétroactif du terrain et de la végétation V7. Le [corpus](reference-adoption.md) reste un guide : chapitres 3, 6, 7, 12 et 29 ; SYS-012, SYS-016..022, SYS-028, SYS-070..075, SYS-131, SYS-172..177 ; UI-005 ; CAT-059..065. Le [contrat de présentation](../development/daylight-camera.md) distingue ce qui est livré des règles encore absentes.
 
 ## Sources confrontées

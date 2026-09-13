@@ -1,0 +1,75 @@
+import * as THREE from 'three/webgpu';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { plantGrowth } from '../sim/plants';
+import type { World } from '../sim/types';
+
+/** Dedicated resident instancing: sowing never rebuilds forest/rock geometry. */
+export class CropLayer {
+  readonly group = new THREE.Group();
+  private mesh: THREE.InstancedMesh;
+  private readonly geometry: THREE.BufferGeometry;
+  private readonly slots = new Map<number, number>();
+  private readonly free: number[] = [];
+  private used = 0;
+  private readonly transform = new THREE.Object3D();
+  private readonly color = new THREE.Color();
+  private readonly green = new THREE.Color(0x80a24a);
+  private readonly ripe = new THREE.Color(0xcfb665);
+  constructor(private readonly material: THREE.Material) {
+    const shoots = [-.22, 0, .22].map((x, i) => new THREE.ConeGeometry(.11, .8, 3).translate(x, .4, (i % 2) * .22 - .1));
+    this.geometry = mergeGeometries(shoots)!;
+    this.geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(this.geometry.getAttribute('position').count * 3).fill(1), 3));
+    shoots.forEach(g => g.dispose());
+    this.mesh = this.createMesh(128); this.group.add(this.mesh);
+  }
+  private createMesh(capacity: number): THREE.InstancedMesh {
+    const mesh = new THREE.InstancedMesh(this.geometry, this.material, capacity);
+    // A runtime-sized storage array keeps the same shader when capacity grows.
+    // Three's small uniform-matrix path otherwise specializes it to each size.
+    mesh.instanceMatrix = new THREE.StorageInstancedBufferAttribute(capacity, 16);
+    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage); mesh.count = 0;
+    // Allocate colors before pipeline warmup, including maps with no crops yet.
+    mesh.setColorAt(0, this.green); mesh.receiveShadow = true;
+    return mesh;
+  }
+  prepareForCompile(): () => void {
+    const count = this.mesh.count; this.mesh.count = Math.max(1, count);
+    return () => { this.mesh.count = count; };
+  }
+  update(world: World, reset: boolean): void {
+    if (reset) { this.slots.clear(); this.free.length = 0; this.used = 0; this.mesh.count = 0; }
+    const crops = world.resources.filter(r => r.kind === 'rice'), alive = new Set(crops.map(r => r.id));
+    for (const [id, slot] of this.slots) if (!alive.has(id)) {
+      this.transform.scale.setScalar(0); this.transform.updateMatrix(); this.mesh.setMatrixAt(slot, this.transform.matrix);
+      this.slots.delete(id); this.free.push(slot);
+    }
+    // One plant per map cell is a proven upper bound. Reserve it during map
+    // loading, so ordinary sowing never creates a mesh, binding or pipeline.
+    const required = Math.max(crops.length, reset ? world.width * world.height : 0);
+    if (required > this.mesh.instanceMatrix.count) {
+      const old = this.mesh, mesh = this.createMesh(2 ** Math.ceil(Math.log2(required)));
+      mesh.instanceMatrix.array.set(old.instanceMatrix.array); mesh.instanceColor!.array.set(old.instanceColor!.array);
+      this.group.remove(old); old.dispose(); this.mesh = mesh; this.group.add(mesh);
+    }
+    let visibleCount = 0;
+    for (const crop of crops) {
+      let slot = this.slots.get(crop.id);
+      if (slot === undefined) { slot = this.free.pop() ?? this.used++; this.slots.set(crop.id, slot); }
+      visibleCount = Math.max(visibleCount, slot + 1);
+      const growth = plantGrowth(world, crop), scale = .14 + .86 * Math.sqrt(growth);
+      this.transform.position.set(crop.x, .025, crop.z);
+      this.transform.rotation.y = (crop.id % 7) * .9;
+      this.transform.scale.set(scale, scale, scale); this.transform.updateMatrix();
+      this.mesh.setMatrixAt(slot, this.transform.matrix);
+      this.color.copy(this.green).lerp(this.ripe, Math.max(0, (growth - .65) / .35)); this.mesh.setColorAt(slot, this.color);
+    }
+    this.mesh.count = visibleCount;
+    if (visibleCount) {
+      this.mesh.instanceMatrix.clearUpdateRanges(); this.mesh.instanceMatrix.addUpdateRange(0, visibleCount * 16);
+      this.mesh.instanceColor!.clearUpdateRanges(); this.mesh.instanceColor!.addUpdateRange(0, visibleCount * 3);
+      this.mesh.instanceMatrix.needsUpdate = true; this.mesh.instanceColor!.needsUpdate = true;
+    }
+    this.mesh.computeBoundingSphere();
+  }
+  dispose(): void { this.mesh.dispose(); this.geometry.dispose(); }
+}

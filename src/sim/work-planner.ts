@@ -10,7 +10,7 @@ import type { Cell, HaulDestination, Job, JobKind, MaterialKind, Pawn, WorkType,
 export const PLAN_INTERVAL=20;
 export interface SearchBudget { remaining:number; pairs:number }
 export type NavigationGrid=()=>Uint8Array;
-export const workType=(kind:JobKind):WorkType=>kind==='chop'||kind==='harvest' || kind === 'cut'?'gather':'build';
+export const workType=(job:Pick<Job,'kind'|'growingZoneId'>):WorkType=>job.growingZoneId !== undefined || job.kind === 'sow' ? 'grow' : ['chop','harvest','cut'].includes(job.kind) ? 'gather' : 'build';
 const sameCell=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
 
 export function search(world: World, pawn: Pawn, blocked: Uint8Array, occupied: Set<number>, budget: SearchBudget, goals?: ReadonlySet<number>): Reachability | null {
@@ -91,7 +91,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   let best: Candidate | null = null;
   const blockedTargets: { target: Cell; allow: boolean }[] = [];
   for (const job of world.jobs) {
-    const work = workType(job.kind);
+    const work = workType(job);
     if (job.reservedBy !== null || pawn.priorities[work] === 0 || (delivered.get(job.id) ?? 0) < JOB_WOOD_COST[job.kind] || (pawn.hunger <= 20 && job.kind !== 'harvest')) continue;
     const candidate: Candidate = { priority: pawn.priorities[work], rank: work === 'gather' ? 0 : 1, distance: Math.abs(job.x - pawn.x) + Math.abs(job.z - pawn.z), id: job.id, job, target: job };
     if (canReach(world, job, reachable, false)) { if (!best || compareCandidate(candidate, best) < 0) best = candidate; }

@@ -92,13 +92,13 @@ Avant de créer une nouvelle colonie, le jeu conserve aussi l'état courant dans
 
 ## Limites de cette version
 
-Pas encore d'agriculture, cuisine, conservation des aliments, minage, déconstruction, emploi du temps, animaux, armes, combat, blessures, médecine, relations, traits, recherche, commerce, électricité, toit, température, incendie, météo dynamique, carte du monde ou storyteller. Les réserves à plusieurs cases partageant une politique, la sélection multiple et les ordres forcés contextuels restent à développer. Les modèles sont provisoires ; la congestion entre agents actifs et la calibration des besoins restent ouvertes. La faim ne cause pas encore de malnutrition ni de décès.
+Pas encore d'autres cultures, cuisine, conservation des aliments, minage, déconstruction, emploi du temps, animaux, armes, combat, blessures, médecine, relations, traits, recherche, commerce, électricité, toit, température, incendie, météo dynamique, carte du monde ou storyteller. Les réserves à plusieurs cases partageant une politique, la sélection multiple et les ordres forcés contextuels restent à développer. Les modèles sont provisoires ; la congestion entre agents actifs et la calibration des besoins restent ouvertes. La faim ne cause pas encore de malnutrition ni de décès.
 
 La suite est suivie dans [le plan de développement](../ROADMAP.md). Les détails de la référence et les futures interactions sont dans [la matrice des systèmes](systems-matrix.md).
 
 ## Portée du jeu et évolution
 
-L’[inventaire complet par domaine](implementation-status.md) distingue ce qui est jouable, partiel et absent. La récolte conserve maintenant le buisson et remet sa croissance à 30 %, sous les conditions tempérées fixes décrites ci-dessous. Nourriture et rythme des besoins restent provisoires. Un camp peut fonctionner plusieurs jours dans ce périmètre sans que l’agriculture, la cuisine, la météo ou les maladies soient implicitement présentes. Les disparitions d’arbres et variations de piles conservent désormais leurs objets graphiques pour éviter les reconstructions répétées.
+L’[inventaire complet par domaine](implementation-status.md) distingue ce qui est jouable, partiel et absent. La récolte conserve maintenant le buisson et remet sa croissance à 30 %, sous les conditions tempérées fixes décrites ci-dessous. Nourriture et rythme des besoins restent provisoires. Un camp peut fonctionner plusieurs jours dans ce périmètre sans que les autres cultures, la cuisine, la météo ou les maladies soient implicitement présentes. Les disparitions d’arbres et variations de piles conservent désormais leurs objets graphiques pour éviter les reconstructions répétées.
 
 ## Sol et déplacements (V6)
 
@@ -115,3 +115,14 @@ Une récolte mûre donne dix baies dans les nouvelles colonies. Le buisson reste
 Architecte → Ordres → **Couper les buissons** libère leur case en supprimant la plante. La coupe récupère les baies déjà récoltables ; un buisson immature ne donne rien. Les piles produites restent au sol et peuvent demander un transport avant construction. La récolte et la coupe exigent toujours un colon au contact et du travail.
 
 Les massifs ont maintenant des sommets et parois irréguliers qui se raccordent entre cases. Ils gardent leurs obstacles au sol. **Le minage n'est pas encore jouable** ; leurs retraits locaux sont actuellement un test technique préparant cette mécanique.
+
+
+## Cultiver du riz (V8)
+
+Dans **Architecte → Zones → Zone de culture**, tracez un champ. Activez **Culture** dans le tableau Travail. Les colons dégagent les plantes qui gênent, sèment sans consommer de graines, puis récoltent automatiquement le riz mûr. Il pousse plus lentement sur terre nue que sur prairie, s’arrête la nuit et donne six unités par plant mûr. Comptez environ sept jours par cycle sur prairie dans le climat fixe actuel, davantage sur terre : prévoyez des repas ou de la cueillette pendant l’attente.
+
+Inspectez une cellule du champ pour autoriser les semis et la coupe des plantes indésirables. Désactiver les semis conserve la récolte du riz mûr. Retirer la zone conserve les plants déjà semés. Un ordre manuel Récolter fonctionne au-dessus de 65 % de croissance, avec un rendement réduit. Couper les plantes libère leur case.
+
+Prévoyez plusieurs cellules de réserve alimentaire : baies, repas et riz sont des objets différents qui ne partagent pas une même pile au sol. Le transport doit libérer les piles laissées dans le champ avant le prochain semis. Le déplacement automatique local des objets gênants reste à ajouter.
+
+Les colons peuvent manger le riz cru : 0,05 nutrition par unité, avec un souvenir −7 humeur pendant un jour. Cuisine, pourrissement et intoxications ne sont pas encore disponibles. Seul le riz est cultivable ; les arbres, sols et buissons génériques ne constituent toujours pas un catalogue complet des espèces et biomes.

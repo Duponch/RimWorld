@@ -126,3 +126,10 @@ Exécuter les validations longues sans benchmark ni navigateur de test concurren
 ## Ajout V7
 
 Les scénarios `plant-cycle.test.ts` et `rock-surface.test.ts` réunissent respectivement cycle vivant/conditions/rendement/continuation et topologie locale/buffers/restauration. Le pilote ordinaire conserve son programme de camp ; sa comptabilité sépare désormais récoltes produites et nourriture consommée, au lieu de supposer les buissons détruits. Le parcours `plants.spec.ts` ajoute l'UI récolte/sauvegarde/coupe. Les mesures rocheuses et limites sont consignées dans [validation](validation.md). Ne pas interpréter la manipulation de terrain du benchmark comme un test de minage jouable.
+
+
+## Cadence de livraison et tranche cultures V8
+
+Regrouper les changements cohérents de simulation, sauvegarde, interface et rendu avant le lot de validation. Compiler à l’intégration, exécuter les scénarios de contrat puis les parcours navigateur ensemble ; après échec, rejouer uniquement les scénarios concernés. Ne relancer les longs parcours déjà verts qu’en présence d’un changement de règles, de commandes, de transport ou de persistance qui les concerne. Les benchmarks s’exécutent sans autre test CPU/GPU en concurrence. Vitest limite le parallélisme à deux workers : les scénarios de plusieurs jours saturent autrement le processeur local.
+
+V8 enrichit le même joueur ordinaire : potager proche du camp, besoins et chantiers conservés, cinq jours sur trois graines dont la graine 42 prolongée à huit jours. Son parcours navigateur reste trois jours réels à vitesse UI, suffisant pour voir semis et croissance ; le cycle mûr complet et le second semis sont vérifiés en simulation. `plant-cycle.test.ts` ajoute interruption/politiques/migration et huit jours d’un champ ; `farming.spec.ts` vérifie l’interface et un checkpoint mûr explicitement préparé. Ce checkpoint n’est pas utilisé dans le test de joueur humain.

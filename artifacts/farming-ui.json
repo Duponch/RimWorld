@@ -1,0 +1,819 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "E:\\Code\\RimWorld\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "--reporter=json"
+    ],
+    "configFile": "E:\\Code\\RimWorld\\playwright.config.ts",
+    "rootDir": "E:/Code/RimWorld/tests/integration",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "E:/Code/RimWorld/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "E:/Code/RimWorld/tests/integration",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": {
+      "command": "npm run dev",
+      "url": "http://127.0.0.1:5173",
+      "reuseExistingServer": true,
+      "timeout": 30000
+    }
+  },
+  "suites": [
+    {
+      "title": "colony-journey.spec.ts",
+      "file": "colony-journey.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "partie de trois jours : un joueur équipe son camp et entretient ses stocks par la vraie interface",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 480000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 55366,
+                  "error": {
+                    "message": "Error: Les extrémités du tracé doivent être sur la carte visible, hors panneaux.\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 1\u001b[39m\n\n\u001b[2m  Array [\u001b[22m\n\u001b[2m    \"CANVAS\",\u001b[22m\n\u001b[32m-   \"CANVAS\",\u001b[39m\n\u001b[31m+   \"SECTION\",\u001b[39m\n\u001b[2m  ]\u001b[22m",
+                    "stack": "Error: Les extrémités du tracé doivent être sur la carte visible, hors panneaux.\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 1\u001b[39m\n\n\u001b[2m  Array [\u001b[22m\n\u001b[2m    \"CANVAS\",\u001b[22m\n\u001b[32m-   \"CANVAS\",\u001b[39m\n\u001b[31m+   \"SECTION\",\u001b[39m\n\u001b[2m  ]\u001b[22m\n    at dragRectangle (E:\\Code\\RimWorld\\tests\\integration\\helpers.ts:53:249)\n    at perform (E:\\Code\\RimWorld\\tests\\integration\\colony-journey.spec.ts:16:32)\n    at E:\\Code\\RimWorld\\tests\\integration\\colony-journey.spec.ts:75:9",
+                    "location": {
+                      "file": "E:\\Code\\RimWorld\\tests\\integration\\helpers.ts",
+                      "column": 249,
+                      "line": 53
+                    },
+                    "snippet": "\u001b[90m   at \u001b[39mhelpers.ts:53\n\n  51 |   const bounds = await page.locator('#viewport canvas').boundingBox();\n  52 |   if (!bounds) throw new Error('Canvas absent');\n> 53 |   expect(await page.evaluate(({ points, bounds }) => points.map(point => document.elementFromPoint(bounds.x + point.x, bounds.y + point.y)?.tagName), { points, bounds }), 'Les extrémités du tracé doivent être sur la carte visible, hors panneaux.').toEqual(['CANVAS', 'CANVAS']);\n     |                                                                                                                                                                                                                                                         ^\n  54 |   await page.mouse.move(bounds.x + points[0].x, bounds.y + points[0].y); await page.mouse.down();\n  55 |   await page.mouse.move(bounds.x + points[1].x, bounds.y + points[1].y, { steps: 6 });\n  56 |   if (release) await page.mouse.up();"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "E:\\Code\\RimWorld\\tests\\integration\\helpers.ts",
+                        "column": 249,
+                        "line": 53
+                      },
+                      "message": "Error: Les extrémités du tracé doivent être sur la carte visible, hors panneaux.\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 1\u001b[39m\n\n\u001b[2m  Array [\u001b[22m\n\u001b[2m    \"CANVAS\",\u001b[22m\n\u001b[32m-   \"CANVAS\",\u001b[39m\n\u001b[31m+   \"SECTION\",\u001b[39m\n\u001b[2m  ]\u001b[22m\n\n   at helpers.ts:53\n\n  51 |   const bounds = await page.locator('#viewport canvas').boundingBox();\n  52 |   if (!bounds) throw new Error('Canvas absent');\n> 53 |   expect(await page.evaluate(({ points, bounds }) => points.map(point => document.elementFromPoint(bounds.x + point.x, bounds.y + point.y)?.tagName), { points, bounds }), 'Les extrémités du tracé doivent être sur la carte visible, hors panneaux.').toEqual(['CANVAS', 'CANVAS']);\n     |                                                                                                                                                                                                                                                         ^\n  54 |   await page.mouse.move(bounds.x + points[0].x, bounds.y + points[0].y); await page.mouse.down();\n  55 |   await page.mouse.move(bounds.x + points[1].x, bounds.y + points[1].y, { steps: 6 });\n  56 |   if (release) await page.mouse.up();\n    at dragRectangle (E:\\Code\\RimWorld\\tests\\integration\\helpers.ts:53:249)\n    at perform (E:\\Code\\RimWorld\\tests\\integration\\colony-journey.spec.ts:16:32)\n    at E:\\Code\\RimWorld\\tests\\integration\\colony-journey.spec.ts:75:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "Répartir collecte, construction et transport entre les trois colons. {\"type\":\"priority\",\"pawnId\":12409,\"work\":\"gather\",\"value\":1}",
+                      "duration": 354
+                    },
+                    {
+                      "title": "Répartir collecte, construction et transport entre les trois colons. {\"type\":\"priority\",\"pawnId\":12409,\"work\":\"build\",\"value\":3}",
+                      "duration": 217
+                    },
+                    {
+                      "title": "Répartir collecte, construction et transport entre les trois colons. {\"type\":\"priority\",\"pawnId\":12409,\"work\":\"haul\",\"value\":2}",
+                      "duration": 218
+                    },
+                    {
+                      "title": "Répartir collecte, construction et transport entre les trois colons. {\"type\":\"priority\",\"pawnId\":12410,\"work\":\"gather\",\"value\":3}",
+                      "duration": 208
+                    },
+                    {
+                      "title": "Répartir collecte, construction et transport entre les trois colons. {\"type\":\"priority\",\"pawnId\":12410,\"work\":\"build\",\"value\":1}",
+                      "duration": 259
+                    },
+                    {
+                      "title": "Répartir collecte, construction et transport entre les trois colons. {\"type\":\"priority\",\"pawnId\":12410,\"work\":\"haul\",\"value\":2}",
+                      "duration": 274
+                    },
+                    {
+                      "title": "Répartir collecte, construction et transport entre les trois colons. {\"type\":\"priority\",\"pawnId\":12410,\"work\":\"grow\",\"value\":3}",
+                      "duration": 187
+                    },
+                    {
+                      "title": "Répartir collecte, construction et transport entre les trois colons. {\"type\":\"priority\",\"pawnId\":12411,\"work\":\"build\",\"value\":3}",
+                      "duration": 203
+                    },
+                    {
+                      "title": "Répartir collecte, construction et transport entre les trois colons. {\"type\":\"priority\",\"pawnId\":12411,\"work\":\"haul\",\"value\":1}",
+                      "duration": 203
+                    },
+                    {
+                      "title": "Aménager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"bed\",\"x\":125,\"z\":127,\"orientation\":0}",
+                      "duration": 815
+                    },
+                    {
+                      "title": "Aménager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"bed\",\"x\":128,\"z\":127,\"orientation\":0}",
+                      "duration": 529
+                    },
+                    {
+                      "title": "Séparer le bois et les aliments près du camp. {\"type\":\"stockpile\",\"x\":123,\"z\":125,\"enabled\":true,\"filters\":{\"wood\":true,\"food\":false},\"priority\":2,\"capacity\":75}",
+                      "duration": 791
+                    },
+                    {
+                      "title": "Séparer le bois et les aliments près du camp. {\"type\":\"stockpile\",\"x\":123,\"z\":126,\"enabled\":true,\"filters\":{\"wood\":true,\"food\":false},\"priority\":2,\"capacity\":75}",
+                      "duration": 603
+                    },
+                    {
+                      "title": "Séparer le bois et les aliments près du camp. {\"type\":\"stockpile\",\"x\":127,\"z\":126,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":true},\"priority\":2,\"capacity\":75}",
+                      "duration": 951
+                    },
+                    {
+                      "title": "Séparer le bois et les aliments près du camp. {\"type\":\"stockpile\",\"x\":127,\"z\":125,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":true},\"priority\":2,\"capacity\":75}",
+                      "duration": 690
+                    },
+                    {
+                      "title": "Séparer le bois et les aliments près du camp. {\"type\":\"stockpile\",\"x\":127,\"z\":124,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":true},\"priority\":2,\"capacity\":75}",
+                      "duration": 632
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":123,\"z\":123}",
+                      "duration": 529
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":122,\"z\":127}",
+                      "duration": 507
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":124,\"z\":120}",
+                      "duration": 463
+                    },
+                    {
+                      "title": "Aménager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"bed\",\"x\":122,\"z\":127,\"orientation\":0}",
+                      "duration": 552
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":129,\"z\":123}",
+                      "duration": 542
+                    },
+                    {
+                      "title": "Aménager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"table\",\"x\":125,\"z\":123,\"orientation\":1}",
+                      "duration": 611
+                    },
+                    {
+                      "title": "Aménager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"stool\",\"x\":125,\"z\":122}",
+                      "duration": 532
+                    },
+                    {
+                      "title": "Aménager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"stool\",\"x\":126,\"z\":122}",
+                      "duration": 507
+                    },
+                    {
+                      "title": "Aménager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"stool\",\"x\":125,\"z\":124}",
+                      "duration": 658
+                    },
+                    {
+                      "title": "Semer un premier potager près du camp, tout en continuant à cueillir pendant sa croissance. {\"type\":\"area\",\"action\":\"growing\",\"from\":{\"x\":123,\"z\":130},\"to\":{\"x\":127,\"z\":132}}",
+                      "duration": 558,
+                      "error": {
+                        "message": "Error: Les extrémités du tracé doivent être sur la carte visible, hors panneaux.\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 1\u001b[39m\n\n\u001b[2m  Array [\u001b[22m\n\u001b[2m    \"CANVAS\",\u001b[22m\n\u001b[32m-   \"CANVAS\",\u001b[39m\n\u001b[31m+   \"SECTION\",\u001b[39m\n\u001b[2m  ]\u001b[22m",
+                        "stack": "Error: Les extrémités du tracé doivent être sur la carte visible, hors panneaux.\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 1\u001b[39m\n\n\u001b[2m  Array [\u001b[22m\n\u001b[2m    \"CANVAS\",\u001b[22m\n\u001b[32m-   \"CANVAS\",\u001b[39m\n\u001b[31m+   \"SECTION\",\u001b[39m\n\u001b[2m  ]\u001b[22m\n    at dragRectangle (E:\\Code\\RimWorld\\tests\\integration\\helpers.ts:53:249)\n    at perform (E:\\Code\\RimWorld\\tests\\integration\\colony-journey.spec.ts:16:32)\n    at E:\\Code\\RimWorld\\tests\\integration\\colony-journey.spec.ts:75:9",
+                        "location": {
+                          "file": "E:\\Code\\RimWorld\\tests\\integration\\helpers.ts",
+                          "column": 249,
+                          "line": 53
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39mhelpers.ts:53\n\n  51 |   const bounds = await page.locator('#viewport canvas').boundingBox();\n  52 |   if (!bounds) throw new Error('Canvas absent');\n> 53 |   expect(await page.evaluate(({ points, bounds }) => points.map(point => document.elementFromPoint(bounds.x + point.x, bounds.y + point.y)?.tagName), { points, bounds }), 'Les extrémités du tracé doivent être sur la carte visible, hors panneaux.').toEqual(['CANVAS', 'CANVAS']);\n     |                                                                                                                                                                                                                                                         ^\n  54 |   await page.mouse.move(bounds.x + points[0].x, bounds.y + points[0].y); await page.mouse.down();\n  55 |   await page.mouse.move(bounds.x + points[1].x, bounds.y + points[1].y, { steps: 6 });\n  56 |   if (release) await page.mouse.up();"
+                      }
+                    }
+                  ],
+                  "startTime": "2026-09-13T21:07:00.147Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "colony-journey-incomplete",
+                      "contentType": "application/json",
+                      "body": "eyJkYXlzIjpbXSwiZGVjaXNpb25zIjpbeyJ0aWNrIjozNywicmVhc29uIjoiUsOpcGFydGlyIGNvbGxlY3RlLCBjb25zdHJ1Y3Rpb24gZXQgdHJhbnNwb3J0IGVudHJlIGxlcyB0cm9pcyBjb2xvbnMuIiwiY29tbWFuZCI6eyJ0eXBlIjoicHJpb3JpdHkiLCJwYXduSWQiOjEyNDA5LCJ3b3JrIjoiZ2F0aGVyIiwidmFsdWUiOjF9fSx7InRpY2siOjM3LCJyZWFzb24iOiJSw6lwYXJ0aXIgY29sbGVjdGUsIGNvbnN0cnVjdGlvbiBldCB0cmFuc3BvcnQgZW50cmUgbGVzIHRyb2lzIGNvbG9ucy4iLCJjb21tYW5kIjp7InR5cGUiOiJwcmlvcml0eSIsInBhd25JZCI6MTI0MDksIndvcmsiOiJidWlsZCIsInZhbHVlIjozfX0seyJ0aWNrIjozNywicmVhc29uIjoiUsOpcGFydGlyIGNvbGxlY3RlLCBjb25zdHJ1Y3Rpb24gZXQgdHJhbnNwb3J0IGVudHJlIGxlcyB0cm9pcyBjb2xvbnMuIiwiY29tbWFuZCI6eyJ0eXBlIjoicHJpb3JpdHkiLCJwYXduSWQiOjEyNDA5LCJ3b3JrIjoiaGF1bCIsInZhbHVlIjoyfX0seyJ0aWNrIjozNywicmVhc29uIjoiUsOpcGFydGlyIGNvbGxlY3RlLCBjb25zdHJ1Y3Rpb24gZXQgdHJhbnNwb3J0IGVudHJlIGxlcyB0cm9pcyBjb2xvbnMuIiwiY29tbWFuZCI6eyJ0eXBlIjoicHJpb3JpdHkiLCJwYXduSWQiOjEyNDEwLCJ3b3JrIjoiZ2F0aGVyIiwidmFsdWUiOjN9fSx7InRpY2siOjM3LCJyZWFzb24iOiJSw6lwYXJ0aXIgY29sbGVjdGUsIGNvbnN0cnVjdGlvbiBldCB0cmFuc3BvcnQgZW50cmUgbGVzIHRyb2lzIGNvbG9ucy4iLCJjb21tYW5kIjp7InR5cGUiOiJwcmlvcml0eSIsInBhd25JZCI6MTI0MTAsIndvcmsiOiJidWlsZCIsInZhbHVlIjoxfX0seyJ0aWNrIjozNywicmVhc29uIjoiUsOpcGFydGlyIGNvbGxlY3RlLCBjb25zdHJ1Y3Rpb24gZXQgdHJhbnNwb3J0IGVudHJlIGxlcyB0cm9pcyBjb2xvbnMuIiwiY29tbWFuZCI6eyJ0eXBlIjoicHJpb3JpdHkiLCJwYXduSWQiOjEyNDEwLCJ3b3JrIjoiaGF1bCIsInZhbHVlIjoyfX0seyJ0aWNrIjozNywicmVhc29uIjoiUsOpcGFydGlyIGNvbGxlY3RlLCBjb25zdHJ1Y3Rpb24gZXQgdHJhbnNwb3J0IGVudHJlIGxlcyB0cm9pcyBjb2xvbnMuIiwiY29tbWFuZCI6eyJ0eXBlIjoicHJpb3JpdHkiLCJwYXduSWQiOjEyNDEwLCJ3b3JrIjoiZ3JvdyIsInZhbHVlIjozfX0seyJ0aWNrIjozNywicmVhc29uIjoiUsOpcGFydGlyIGNvbGxlY3RlLCBjb25zdHJ1Y3Rpb24gZXQgdHJhbnNwb3J0IGVudHJlIGxlcyB0cm9pcyBjb2xvbnMuIiwiY29tbWFuZCI6eyJ0eXBlIjoicHJpb3JpdHkiLCJwYXduSWQiOjEyNDExLCJ3b3JrIjoiYnVpbGQiLCJ2YWx1ZSI6M319LHsidGljayI6MzcsInJlYXNvbiI6IlLDqXBhcnRpciBjb2xsZWN0ZSwgY29uc3RydWN0aW9uIGV0IHRyYW5zcG9ydCBlbnRyZSBsZXMgdHJvaXMgY29sb25zLiIsImNvbW1hbmQiOnsidHlwZSI6InByaW9yaXR5IiwicGF3bklkIjoxMjQxMSwid29yayI6ImhhdWwiLCJ2YWx1ZSI6MX19LHsidGljayI6MzcsInJlYXNvbiI6IkFtw6luYWdlciBwcm9ncmVzc2l2ZW1lbnQgbGUgY2FtcCBzYW5zIGZlcm1lciBzb24gcGFzc2FnZSBjZW50cmFsLiIsImNvbW1hbmQiOnsidHlwZSI6ImRlc2lnbmF0ZSIsImtpbmQiOiJiZWQiLCJ4IjoxMjUsInoiOjEyNywib3JpZW50YXRpb24iOjB9fSx7InRpY2siOjM3LCJyZWFzb24iOiJBbcOpbmFnZXIgcHJvZ3Jlc3NpdmVtZW50IGxlIGNhbXAgc2FucyBmZXJtZXIgc29uIHBhc3NhZ2UgY2VudHJhbC4iLCJjb21tYW5kIjp7InR5cGUiOiJkZXNpZ25hdGUiLCJraW5kIjoiYmVkIiwieCI6MTI4LCJ6IjoxMjcsIm9yaWVudGF0aW9uIjowfX0seyJ0aWNrIjozNywicmVhc29uIjoiU8OpcGFyZXIgbGUgYm9pcyBldCBsZXMgYWxpbWVudHMgcHLDqHMgZHUgY2FtcC4iLCJjb21tYW5kIjp7InR5cGUiOiJzdG9ja3BpbGUiLCJ4IjoxMjMsInoiOjEyNSwiZW5hYmxlZCI6dHJ1ZSwiZmlsdGVycyI6eyJ3b29kIjp0cnVlLCJmb29kIjpmYWxzZX0sInByaW9yaXR5IjoyLCJjYXBhY2l0eSI6NzV9fSx7InRpY2siOjM3LCJyZWFzb24iOiJTw6lwYXJlciBsZSBib2lzIGV0IGxlcyBhbGltZW50cyBwcsOocyBkdSBjYW1wLiIsImNvbW1hbmQiOnsidHlwZSI6InN0b2NrcGlsZSIsIngiOjEyMywieiI6MTI2LCJlbmFibGVkIjp0cnVlLCJmaWx0ZXJzIjp7Indvb2QiOnRydWUsImZvb2QiOmZhbHNlfSwicHJpb3JpdHkiOjIsImNhcGFjaXR5Ijo3NX19LHsidGljayI6MzcsInJlYXNvbiI6IlPDqXBhcmVyIGxlIGJvaXMgZXQgbGVzIGFsaW1lbnRzIHByw6hzIGR1IGNhbXAuIiwiY29tbWFuZCI6eyJ0eXBlIjoic3RvY2twaWxlIiwieCI6MTI3LCJ6IjoxMjYsImVuYWJsZWQiOnRydWUsImZpbHRlcnMiOnsid29vZCI6ZmFsc2UsImZvb2QiOnRydWV9LCJwcmlvcml0eSI6MiwiY2FwYWNpdHkiOjc1fX0seyJ0aWNrIjozNywicmVhc29uIjoiU8OpcGFyZXIgbGUgYm9pcyBldCBsZXMgYWxpbWVudHMgcHLDqHMgZHUgY2FtcC4iLCJjb21tYW5kIjp7InR5cGUiOiJzdG9ja3BpbGUiLCJ4IjoxMjcsInoiOjEyNSwiZW5hYmxlZCI6dHJ1ZSwiZmlsdGVycyI6eyJ3b29kIjpmYWxzZSwiZm9vZCI6dHJ1ZX0sInByaW9yaXR5IjoyLCJjYXBhY2l0eSI6NzV9fSx7InRpY2siOjM3LCJyZWFzb24iOiJTw6lwYXJlciBsZSBib2lzIGV0IGxlcyBhbGltZW50cyBwcsOocyBkdSBjYW1wLiIsImNvbW1hbmQiOnsidHlwZSI6InN0b2NrcGlsZSIsIngiOjEyNywieiI6MTI0LCJlbmFibGVkIjp0cnVlLCJmaWx0ZXJzIjp7Indvb2QiOmZhbHNlLCJmb29kIjp0cnVlfSwicHJpb3JpdHkiOjIsImNhcGFjaXR5Ijo3NX19LHsidGljayI6MzcsInJlYXNvbiI6IlByw6l2b2lyIGxlIGJvaXMgZGVzIGNoYW50aWVycyBldCB1bmUgcGV0aXRlIG1hcmdlLiIsImNvbW1hbmQiOnsidHlwZSI6ImRlc2lnbmF0ZSIsImtpbmQiOiJjaG9wIiwieCI6MTIzLCJ6IjoxMjN9fSx7InRpY2siOjM3LCJyZWFzb24iOiJQcsOpdm9pciBsZSBib2lzIGRlcyBjaGFudGllcnMgZXQgdW5lIHBldGl0ZSBtYXJnZS4iLCJjb21tYW5kIjp7InR5cGUiOiJkZXNpZ25hdGUiLCJraW5kIjoiY2hvcCIsIngiOjEyMiwieiI6MTI3fX0seyJ0aWNrIjozNywicmVhc29uIjoiUHLDqXZvaXIgbGUgYm9pcyBkZXMgY2hhbnRpZXJzIGV0IHVuZSBwZXRpdGUgbWFyZ2UuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6ImNob3AiLCJ4IjoxMjQsInoiOjEyMH19LHsidGljayI6MTA2MCwicmVhc29uIjoiQW3DqW5hZ2VyIHByb2dyZXNzaXZlbWVudCBsZSBjYW1wIHNhbnMgZmVybWVyIHNvbiBwYXNzYWdlIGNlbnRyYWwuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6ImJlZCIsIngiOjEyMiwieiI6MTI3LCJvcmllbnRhdGlvbiI6MH19LHsidGljayI6MTA2MCwicmVhc29uIjoiUHLDqXZvaXIgbGUgYm9pcyBkZXMgY2hhbnRpZXJzIGV0IHVuZSBwZXRpdGUgbWFyZ2UuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6ImNob3AiLCJ4IjoxMjksInoiOjEyM319LHsidGljayI6MjA4OSwicmVhc29uIjoiQW3DqW5hZ2VyIHByb2dyZXNzaXZlbWVudCBsZSBjYW1wIHNhbnMgZmVybWVyIHNvbiBwYXNzYWdlIGNlbnRyYWwuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6InRhYmxlIiwieCI6MTI1LCJ6IjoxMjMsIm9yaWVudGF0aW9uIjoxfX0seyJ0aWNrIjoyMDg5LCJyZWFzb24iOiJBbcOpbmFnZXIgcHJvZ3Jlc3NpdmVtZW50IGxlIGNhbXAgc2FucyBmZXJtZXIgc29uIHBhc3NhZ2UgY2VudHJhbC4iLCJjb21tYW5kIjp7InR5cGUiOiJkZXNpZ25hdGUiLCJraW5kIjoic3Rvb2wiLCJ4IjoxMjUsInoiOjEyMn19LHsidGljayI6MjA4OSwicmVhc29uIjoiQW3DqW5hZ2VyIHByb2dyZXNzaXZlbWVudCBsZSBjYW1wIHNhbnMgZmVybWVyIHNvbiBwYXNzYWdlIGNlbnRyYWwuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6InN0b29sIiwieCI6MTI2LCJ6IjoxMjJ9fSx7InRpY2siOjIwODksInJlYXNvbiI6IkFtw6luYWdlciBwcm9ncmVzc2l2ZW1lbnQgbGUgY2FtcCBzYW5zIGZlcm1lciBzb24gcGFzc2FnZSBjZW50cmFsLiIsImNvbW1hbmQiOnsidHlwZSI6ImRlc2lnbmF0ZSIsImtpbmQiOiJzdG9vbCIsIngiOjEyNSwieiI6MTI0fX1dLCJtZWFscyI6W1siMTkzODpNaW5hIGEgbWFuZ8OpIHVuZSBwb3J0aW9uICgxIMOXIFJlcGFzIGRlIHN1cnZpZSkgc2FucyB0YWJsZS4iLDFdXSwiZXJyb3JzIjpbXX0="
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "E:\\Code\\RimWorld\\test-results\\colony-journey-partie-de-t-625fe-ocks-par-la-vraie-interface\\error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "E:\\Code\\RimWorld\\test-results\\colony-journey-partie-de-t-625fe-ocks-par-la-vraie-interface\\trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "E:\\Code\\RimWorld\\tests\\integration\\helpers.ts",
+                    "column": 249,
+                    "line": 53
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "555f966565dc11b6db98-9085b14c50fcc33d1534",
+          "file": "colony-journey.spec.ts",
+          "line": 33,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "colony.spec.ts",
+      "file": "colony.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "besoins physiques : repas en main, sommeil dans deux lits orientés, attribution et sauvegarde UI",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 11111,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-13T21:07:56.454Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "needs-gameplay",
+                      "contentType": "application/json",
+                      "body": "eyJiYWNrZW5kIjoiV2ViR1BVIiwiYWRhcHRlciI6eyJ2ZW5kb3IiOiJhbWQiLCJhcmNoaXRlY3R1cmUiOiJyZG5hLTEiLCJkZXZpY2UiOiIiLCJkZXNjcmlwdGlvbiI6IiJ9LCJwaGFzZXMiOlsicGlja3VwIiwiaW5nZXN0Iiwic2xlZXAiLCJiZWQtcmVhc3NpZ25tZW50Il0sImZvb2RDb25zdW1lZCI6MSwicmVzdW1lZEV4YWN0bHkiOnRydWUsImVycm9ycyI6W119"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "898ee7568779c6ec1d61-4fa5414dd3039a826bd6",
+          "file": "colony.spec.ts",
+          "line": 10,
+          "column": 1
+        },
+        {
+          "title": "colonie matérielle : réserve filtrée, transport visible, trois couchages et reprise exacte en livraison",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 18735,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 0\u001b[39m\n\u001b[31m+ Received  + 1\u001b[39m\n\n\u001b[2m  Object {\u001b[22m\n\u001b[2m    \"build\": 3,\u001b[22m\n\u001b[2m    \"gather\": 1,\u001b[22m\n\u001b[31m+   \"grow\": 2,\u001b[39m\n\u001b[2m    \"haul\": 2,\u001b[22m\n\u001b[2m  }\u001b[22m\n\nCall Log:\n- Timeout 15000ms exceeded while waiting on the predicate",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 0\u001b[39m\n\u001b[31m+ Received  + 1\u001b[39m\n\n\u001b[2m  Object {\u001b[22m\n\u001b[2m    \"build\": 3,\u001b[22m\n\u001b[2m    \"gather\": 1,\u001b[22m\n\u001b[31m+   \"grow\": 2,\u001b[39m\n\u001b[2m    \"haul\": 2,\u001b[22m\n\u001b[2m  }\u001b[22m\n\nCall Log:\n- Timeout 15000ms exceeded while waiting on the predicate\n    at E:\\Code\\RimWorld\\tests\\integration\\colony.spec.ts:82:74",
+                    "location": {
+                      "file": "E:\\Code\\RimWorld\\tests\\integration\\colony.spec.ts",
+                      "column": 74,
+                      "line": 82
+                    },
+                    "snippet": "  80 |   await page.getByLabel('Priorité construction Ada', { exact: true }).selectOption('3');\n  81 |   await page.getByLabel('Priorité transport Ada', { exact: true }).selectOption('2');\n> 82 |   await expect.poll(async () => (await world(page)).pawns[0].priorities).toEqual({ gather: 1, build: 3, haul: 2 });\n     |                                                                          ^\n  83 |   await tool(page, 'stockpile');\n  84 |   await page.locator('#stockpile-food').uncheck();\n  85 |   await page.locator('#stockpile-capacity').fill('10');"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "E:\\Code\\RimWorld\\tests\\integration\\colony.spec.ts",
+                        "column": 74,
+                        "line": 82
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 0\u001b[39m\n\u001b[31m+ Received  + 1\u001b[39m\n\n\u001b[2m  Object {\u001b[22m\n\u001b[2m    \"build\": 3,\u001b[22m\n\u001b[2m    \"gather\": 1,\u001b[22m\n\u001b[31m+   \"grow\": 2,\u001b[39m\n\u001b[2m    \"haul\": 2,\u001b[22m\n\u001b[2m  }\u001b[22m\n\nCall Log:\n- Timeout 15000ms exceeded while waiting on the predicate\n\n  80 |   await page.getByLabel('Priorité construction Ada', { exact: true }).selectOption('3');\n  81 |   await page.getByLabel('Priorité transport Ada', { exact: true }).selectOption('2');\n> 82 |   await expect.poll(async () => (await world(page)).pawns[0].priorities).toEqual({ gather: 1, build: 3, haul: 2 });\n     |                                                                          ^\n  83 |   await tool(page, 'stockpile');\n  84 |   await page.locator('#stockpile-food').uncheck();\n  85 |   await page.locator('#stockpile-capacity').fill('10');\n    at E:\\Code\\RimWorld\\tests\\integration\\colony.spec.ts:82:74"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-13T21:08:07.602Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "E:\\Code\\RimWorld\\test-results\\colony-colonie-matérielle--8cb26-reprise-exacte-en-livraison\\error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "E:\\Code\\RimWorld\\test-results\\colony-colonie-matérielle--8cb26-reprise-exacte-en-livraison\\trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "E:\\Code\\RimWorld\\tests\\integration\\colony.spec.ts",
+                    "column": 74,
+                    "line": 82
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "898ee7568779c6ec1d61-ce183c5316b7cc287a62",
+          "file": "colony.spec.ts",
+          "line": 65,
+          "column": 1
+        },
+        {
+          "title": "frontières : commandes répétées, sauvegarde invalide atomique, aide et organisation compacte",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 39226,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m7\u001b[39m\nReceived: \u001b[31m8\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m7\u001b[39m\nReceived: \u001b[31m8\u001b[39m\n    at E:\\Code\\RimWorld\\tests\\integration\\colony.spec.ts:232:101",
+                    "location": {
+                      "file": "E:\\Code\\RimWorld\\tests\\integration\\colony.spec.ts",
+                      "column": 101,
+                      "line": 232
+                    },
+                    "snippet": "  230 |   await panel(page, 'menu'); await page.locator('#save').click();\n  231 |   await expect(page.getByRole('status')).toContainText('sauvegardée');\n> 232 |   expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).schemaVersion, saveKey)).toBe(7);\n      |                                                                                                     ^\n  233 |   expect(errors).toEqual([]);\n  234 | });\n  235 |"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "E:\\Code\\RimWorld\\tests\\integration\\colony.spec.ts",
+                        "column": 101,
+                        "line": 232
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m7\u001b[39m\nReceived: \u001b[31m8\u001b[39m\n\n  230 |   await panel(page, 'menu'); await page.locator('#save').click();\n  231 |   await expect(page.getByRole('status')).toContainText('sauvegardée');\n> 232 |   expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).schemaVersion, saveKey)).toBe(7);\n      |                                                                                                     ^\n  233 |   expect(errors).toEqual([]);\n  234 | });\n  235 |\n    at E:\\Code\\RimWorld\\tests\\integration\\colony.spec.ts:232:101"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-13T21:08:27.212Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "E:\\Code\\RimWorld\\test-results\\colony-frontières-commande-64cff-de-et-organisation-compacte\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "E:\\Code\\RimWorld\\test-results\\colony-frontières-commande-64cff-de-et-organisation-compacte\\error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "E:\\Code\\RimWorld\\test-results\\colony-frontières-commande-64cff-de-et-organisation-compacte\\trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "E:\\Code\\RimWorld\\tests\\integration\\colony.spec.ts",
+                    "column": 101,
+                    "line": 232
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "898ee7568779c6ec1d61-8be099c4578f04cf9ca8",
+          "file": "colony.spec.ts",
+          "line": 160,
+          "column": 1
+        },
+        {
+          "title": "rectangles 250² : aperçu, interruptions, rotation, politiques préservées et récolte réelle",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 150000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 24842,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-13T21:09:10.507Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "area-gameplay",
+                      "contentType": "application/json",
+                      "body": "ewogICJ0aW1lc3RhbXAiOiAiMjAyNi0wOS0xM1QyMTowOTozNC45OTRaIiwKICAiYmFja2VuZCI6ICJXZWJHUFUiLAogICJzaXplIjogMjUwLAogICJzZWVkIjogNDIsCiAgImludGVycnVwdGVkR2VzdHVyZXMiOiBbCiAgICAiRXNjYXBlIiwKICAgICJyaWdodC1idXR0b24iLAogICAgInJlbGVhc2Utb3Zlci1VSSIsCiAgICAiaW5qZWN0ZWQtd2luZG93LWJsdXIiLAogICAgInRvb2wtY2hhbmdlIgogIF0sCiAgInN0b3JhZ2VDZWxscyI6IDEwLAogICJoYXJ2ZXN0ZWRUcmVlcyI6IDEsCiAgImNvbnNlcnZlZFdvb2QiOiAyNCwKICAic2NyZWVuc2hvdCI6ICJhcnRpZmFjdHMvYXJlYS1wcmV2aWV3LTI1MC5wbmciLAogICJkaWFnbm9zdGljcyI6IFsKICAgICJMaXNpw6hyZSByZW5kZXJlciBkaWFnbm9zdGljcyB7XCJiYWNrZW5kXCI6XCJXZWJHUFVcIixcImNvbnRleHRcIjpcIkdQVUNhbnZhc0NvbnRleHRcIixcImJyb3dzZXJcIjpcIk1vemlsbGEvNS4wIChXaW5kb3dzIE5UIDEwLjA7IFdpbjY0OyB4NjQpIEFwcGxlV2ViS2l0LzUzNy4zNiAoS0hUTUwsIGxpa2UgR2Vja28pIEhlYWRsZXNzQ2hyb21lLzE1My4wLjAuMCBTYWZhcmkvNTM3LjM2XCIsXCJhZGFwdGVyXCI6e1widmVuZG9yXCI6XCJhbWRcIixcImFyY2hpdGVjdHVyZVwiOlwicmRuYS0xXCIsXCJkZXZpY2VcIjpcIlwiLFwiZGVzY3JpcHRpb25cIjpcIlwifSxcIm1heFZlcnRleEJ1ZmZlcnNcIjo4fSIKICBdLAogICJlcnJvcnMiOiBbXQp9"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "898ee7568779c6ec1d61-ecf00db482a496a97a41",
+          "file": "colony.spec.ts",
+          "line": 236,
+          "column": 1
+        },
+        {
+          "title": "nouvelle colonie : défaut 250, tailles 128/200/250 et retour exact à une ancienne petite partie",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 14718,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-13T21:09:35.395Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "transition-renderer",
+                      "contentType": "application/json",
+                      "body": "eyJiYWNrZW5kIjoiV2ViR1BVIiwiZGVmYXVsdFNpemUiOjI1MCwic2l6ZXMiOlszMiwxMjgsMjAwLDI1MF0sInJlc3RvcmVkRXhhY3RseSI6dHJ1ZX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "898ee7568779c6ec1d61-6b493165b82abccd9b43",
+          "file": "colony.spec.ts",
+          "line": 325,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "daylight-camera.spec.ts",
+      "file": "daylight-camera.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "vue iso/perspective : sélection, rectangle, pause, reprise et ciel restauré depuis la sauvegarde",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 9773,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-13T21:09:50.154Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "daylight-camera",
+                      "contentType": "application/json",
+                      "body": "eyJpbml0aWFsIjp7Im1vZGUiOiJvcnRob2dyYXBoaWMiLCJzYW1wbGUiOnsieCI6MCwieSI6MC43MDcxMDY3ODExODY1NDc2LCJ6IjowLjcwNzEwNjc4MTE4NjU0NzYsImRheWxpZ2h0IjoxLCJ3YXJtdGgiOjAsInN1bmxpZ2h0IjoxLCJtb29ubGlnaHQiOjB9LCJzcGFuIjozMy45MiwidGFyZ2V0IjpbMTUuNSwwLDE1LjVdLCJ0aWNrIjozMDAwLCJmcmFtZSI6eyJmcHMiOjAsImZyYW1lTXMiOjAsImZyYW1lUDk1IjowLCJkcmF3Q2FsbHMiOjM1LCJ0cmlhbmdsZXMiOjczNDd9fSwidG9nZ2xlZCI6eyJtb2RlIjoib3J0aG9ncmFwaGljIiwic2FtcGxlIjp7IngiOjAsInkiOjAuNzA3MTA2NzgxMTg2NTQ3NiwieiI6MC43MDcxMDY3ODExODY1NDc2LCJkYXlsaWdodCI6MSwid2FybXRoIjowLCJzdW5saWdodCI6MSwibW9vbmxpZ2h0IjowfSwic3BhbiI6MzMuOTE5OTk5OTk5OTk5OTk1LCJ0YXJnZXQiOlsxNS41LDAsMTUuNV0sInRpY2siOjMwMDAsImZyYW1lIjp7ImZwcyI6MTIxLjMxNzE1NzcxMjMwNTAzLCJmcmFtZU1zIjo4LjI0Mjg1NzE0Mjg1NzE0MiwiZnJhbWVQOTUiOjE2LjY5OTk5OTk5OTk5OTgxOCwiZHJhd0NhbGxzIjozNSwidHJpYW5nbGVzIjo3MzQ3fX0sInNhdmVkU2t5Ijp7IngiOi0wLjA0NjA2MDM5MDA0MDg1MjAxNiwieSI6MC43MDYzNTYyOTgzNjEyNzQ5LCJ6IjowLjcwNjM1NjI5ODM2MTI3NDksImRheWxpZ2h0IjoxLCJ3YXJtdGgiOjAsInN1bmxpZ2h0IjoxLCJtb29ubGlnaHQiOjB9LCJtaWRuaWdodCI6eyJtb2RlIjoicGVyc3BlY3RpdmUiLCJzYW1wbGUiOnsieCI6MS4yMjQ2NDY3OTkxNDczNTMyZS0xNiwieSI6LTAuNzA3MTA2NzgxMTg2NTQ3NiwieiI6LTAuNzA3MTA2NzgxMTg2NTQ3NiwiZGF5bGlnaHQiOjAsIndhcm10aCI6MCwic3VubGlnaHQiOjAsIm1vb25saWdodCI6MC4yMn0sInNwYW4iOjMzLjkxOTk5OTk5OTk5OTk5NSwidGFyZ2V0IjpbMTUuNSwwLDE1LjVdLCJ0aWNrIjowLCJmcmFtZSI6eyJmcHMiOjIzOS45OTk5OTk5OTk5OTk5NywiZnJhbWVNcyI6NC4xNjY2NjY2NjY2NjY2NjcsImZyYW1lUDk1Ijo0LjIwMDAwMDAwMDAwMDcyOCwiZHJhd0NhbGxzIjozNSwidHJpYW5nbGVzIjo3MzQ3fX0sImVycm9ycyI6W119"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3c2aba051d20c55a1a06-6e78f2120a517740c058",
+          "file": "daylight-camera.spec.ts",
+          "line": 5,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "dining.spec.ts",
+      "file": "dining.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "table et tabouret : construction UI, portion transportée, repas assis, confort, reprise et compteur FPS permanent",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 16438,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-13T21:09:59.947Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "dining-gameplay",
+                      "contentType": "application/json",
+                      "body": "eyJiYWNrZW5kIjoiV2ViR1BVIiwid29vZENvbnN1bWVkIjo1MywiZm9vZENvbnN1bWVkIjoxLCJyZXN1bWVkUGhhc2VzIjpbInRyYXZlbCIsImluZ2VzdCJdLCJmcHNWaXNpYmxlUGF1c2VkQW5kTWVudUFuZENvbXBhY3QiOnRydWUsImVycm9ycyI6W119"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "74867a663588e33c090f-4472047be5ad7dc9c82a",
+          "file": "dining.spec.ts",
+          "line": 5,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "farming.spec.ts",
+      "file": "farming.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "culture par interface : champ, semis GPU, inspection, politiques, maturité et sauvegarde",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 9000,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-13T21:10:16.420Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "farming-state",
+                      "contentType": "application/json",
+                      "body": "eyJ0aWNrIjoxODEsImNyb3BzIjowLCJyaWNlIjozNiwiZXJyb3JzIjpbXX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "89f7eeb47ad10b11e29f-64945e41828e6e654fc6",
+          "file": "farming.spec.ts",
+          "line": 6,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "movement.spec.ts",
+      "file": "movement.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "GPU travel preserves speed, corners and work-facing through real worker snapshots",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 13073,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m0.01\u001b[39m\nReceived:   \u001b[31m0.4762649532497427\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m0.01\u001b[39m\nReceived:   \u001b[31m0.4762649532497427\u001b[39m\n    at E:\\Code\\RimWorld\\tests\\integration\\movement.spec.ts:35:35",
+                    "location": {
+                      "file": "E:\\Code\\RimWorld\\tests\\integration\\movement.spec.ts",
+                      "column": 35,
+                      "line": 35
+                    },
+                    "snippet": "  33 |     await testInfo.attach('movement-contract',{body:JSON.stringify(summary,null,2),contentType:'application/json'});\n  34 |     expect(summary.samples).toBeGreaterThan(100);expect(summary.turns).toBeGreaterThan(2);\n> 35 |     expect(summary.maxSpeedError).toBeLessThan(.01);expect(summary.maxFacingError).toBeLessThan(.00001);\n     |                                   ^\n  36 |     expect(summary.workTargets).toBe(4);expect(summary.maxWorkFacingError).toBeLessThan(.00001);expect(errors).toEqual([]);\n  37 |     await page.screenshot({path:'artifacts/movement-work-facing.png'});\n  38 |   } finally {await browser.close();}"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "E:\\Code\\RimWorld\\tests\\integration\\movement.spec.ts",
+                        "column": 35,
+                        "line": 35
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m0.01\u001b[39m\nReceived:   \u001b[31m0.4762649532497427\u001b[39m\n\n  33 |     await testInfo.attach('movement-contract',{body:JSON.stringify(summary,null,2),contentType:'application/json'});\n  34 |     expect(summary.samples).toBeGreaterThan(100);expect(summary.turns).toBeGreaterThan(2);\n> 35 |     expect(summary.maxSpeedError).toBeLessThan(.01);expect(summary.maxFacingError).toBeLessThan(.00001);\n     |                                   ^\n  36 |     expect(summary.workTargets).toBe(4);expect(summary.maxWorkFacingError).toBeLessThan(.00001);expect(errors).toEqual([]);\n  37 |     await page.screenshot({path:'artifacts/movement-work-facing.png'});\n  38 |   } finally {await browser.close();}\n    at E:\\Code\\RimWorld\\tests\\integration\\movement.spec.ts:35:35"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-13T21:10:25.464Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "movement-contract",
+                      "contentType": "application/json",
+                      "body": "ewogICJzYW1wbGVzIjogMjQzLAogICJ0dXJucyI6IDYsCiAgIm1heFNwZWVkRXJyb3IiOiAwLjQ3NjI2NDk1MzI0OTc0MjcsCiAgIm1heEZhY2luZ0Vycm9yIjogNC4zNzExMzkwMDYzMDk0Nzc1ZS04LAogICJ3b3JrVGFyZ2V0cyI6IDQsCiAgIm1heFdvcmtGYWNpbmdFcnJvciI6IDQuMzcxMTM5MDA2MzA5NDc3ZS04LAogICJlcnJvcnMiOiBbXQp9"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "E:\\Code\\RimWorld\\test-results\\movement-GPU-travel-preser-8fc51-rough-real-worker-snapshots\\error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "E:\\Code\\RimWorld\\test-results\\movement-GPU-travel-preser-8fc51-rough-real-worker-snapshots\\trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "E:\\Code\\RimWorld\\tests\\integration\\movement.spec.ts",
+                    "column": 35,
+                    "line": 35
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "4f4644ce1bc9a9704a33-220526b048956d75fc97",
+          "file": "movement.spec.ts",
+          "line": 5,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "plants.spec.ts",
+      "file": "plants.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "buisson persistant : inspection, récolte, sauvegarde et coupe par la vraie interface",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 11148,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-13T21:10:39.679Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "persistent-bush",
+                      "contentType": "application/json",
+                      "body": "eyJpZCI6MTc1LCJwaWNrZWQiOnsiaWQiOjE3NSwia2luZCI6ImJlcnJpZXMiLCJ4IjoxOCwieiI6MTQsImFtb3VudCI6MTAsImdyb3d0aCI6MC4zLCJncm93dGhUaWNrIjo2OH0sImZvb2QiOjEwLCJzYXZlUmVzdW1lZEV4YWN0bHkiOnRydWUsImN1dFJlbW92ZWRCdXNoIjp0cnVlLCJlcnJvcnMiOltdfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "160b88f7392d4f368788-f144172436734a76d33c",
+          "file": "plants.spec.ts",
+          "line": 5,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-13T21:06:58.235Z",
+    "duration": 232712.116,
+    "expected": 7,
+    "skipped": 0,
+    "unexpected": 4,
+    "flaky": 0
+  }
+}

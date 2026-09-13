@@ -1,5 +1,6 @@
 # Cycle visuel et projections de caméra
 
+Mise à jour V8 : le preset de croissance binaire décrit historiquement ci-dessous est remplacé par la [lumière naturelle et la première culture de riz](../development/farming.md), avec migration des checkpoints. Météo et saisons restent absentes.
 Livraison du 13 septembre 2026, schéma de sauvegarde **7 inchangé**. [Recherche et audit rétroactif](../research/environment-review.md). Corpus chap. 3/7/29, SYS-012/131/172..177 et UI-005 : adapter la présentation 3D, différer la simulation climatique complète. Cette tranche transversale ne clôture ni G0 ni G2.
 
 ## Contrat livré

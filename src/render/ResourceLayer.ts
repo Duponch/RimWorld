@@ -42,6 +42,7 @@ export class ResourceLayer {
     this.growing = world.resources.filter(plant => plant.kind === 'berries' && !harvestable(world, plant));
     const chunks = new Map<string, World['resources']>();
     for (const resource of world.resources) {
+      if (resource.kind === 'rice') continue;
       const key = `${Math.floor(resource.x / WORLD_SCALE.chunkSize)}:${Math.floor(resource.z / WORLD_SCALE.chunkSize)}`;
       const chunk = chunks.get(key);
       if (chunk) chunk.push(resource); else chunks.set(key, [resource]);

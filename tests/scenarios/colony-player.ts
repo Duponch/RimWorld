@@ -13,9 +13,9 @@ export interface Decision { reason: string; command: Command }
 export function playerDecisions(world: World): Decision[] {
   const cx = Math.floor(world.width / 2), cz = Math.floor(world.height / 2);
   const out: Decision[] = [];
-  const priorities = [{ gather: 1, build: 3, haul: 2 }, { gather: 3, build: 1, haul: 2 }, { gather: 2, build: 3, haul: 1 }] as const;
+  const priorities = [{ gather: 1, build: 3, haul: 2, grow: 2 }, { gather: 3, build: 1, haul: 2, grow: 3 }, { gather: 2, build: 3, haul: 1, grow: 2 }] as const;
   world.pawns.forEach((pawn, i) => {
-    for (const work of ['gather', 'build', 'haul'] as const) if (pawn.priorities[work] !== priorities[i % 3]![work]) {
+    for (const work of ['gather', 'build', 'haul', 'grow'] as const) if (pawn.priorities[work] !== priorities[i % 3]![work]) {
       out.push({ reason: 'Répartir collecte, construction et transport entre les trois colons.', command: { type: 'priority', pawnId: pawn.id, work, value: priorities[i % 3]![work] } });
     }
   });
@@ -35,6 +35,7 @@ export function playerDecisions(world: World): Decision[] {
     const x = cx + dx, z = cz + dz;
     if (!world.stockpiles.some(s => s.x === x && s.z === z)) out.push({ reason: 'Séparer le bois et les aliments près du camp.', command: { type: 'stockpile', x, z, enabled: true, filters: { wood: !food, food }, priority: 2, capacity: 75 } });
   }
+  if (!world.growingZones.length && world.structures.filter(s => s.kind === 'bed').length === 3) out.push({reason:'Semer un premier potager près du camp, tout en continuant à cueillir pendant sa croissance.',command:{type:'area',action:'growing',from:{x:cx-2,z:cz+5},to:{x:cx+2,z:cz+7}}});
   const outstandingWood = [...world.jobs, ...out.flatMap(d => d.command.type === 'designate' ? [d.command] : [])].reduce((n,j) => n + JOB_WOOD_COST[j.kind], 0);
   const nearby = [...world.resources].filter(r => Math.abs(r.x-cx) + Math.abs(r.z-cz) <= 28).sort((a,b) => Math.abs(a.x-cx)+Math.abs(a.z-cz)-(Math.abs(b.x-cx)+Math.abs(b.z-cz)) || a.id-b.id);
   for (const [kind, required] of [['tree', Math.max(40, outstandingWood + 20) - world.stock.wood], ['berries', (world.pawns.length * 1.6 - availableNutrition(world)) * (world.foodRules === 'legacy' ? 100 / 35 : 20)]] as const) {
@@ -50,7 +51,7 @@ export function playerDecisions(world: World): Decision[] {
 }
 
 export function colonySummary(world: World) {
-  return { tick: world.tick, structures: Object.fromEntries(['bed','table','stool','wall'].map(kind => [kind,world.structures.filter(s=>s.kind===kind).length])), stock: { ...world.stock }, pending: world.jobs.length, minimumFood: Math.min(...world.pawns.map(p=>p.hunger)), minimumRest: Math.min(...world.pawns.map(p=>p.rest)) };
+  return { tick: world.tick, crops: world.resources.filter(r=>r.kind==='rice').length, growingCells:world.growingZones.reduce((n,z)=>n+z.cells.length,0), structures: Object.fromEntries(['bed','table','stool','wall'].map(kind => [kind,world.structures.filter(s=>s.kind===kind).length])), stock: { ...world.stock }, pending: world.jobs.length, minimumFood: Math.min(...world.pawns.map(p=>p.hunger)), minimumRest: Math.min(...world.pawns.map(p=>p.rest)) };
 }
 
 export function woodAccount(world: World): number {

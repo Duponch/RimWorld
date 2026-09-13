@@ -7,12 +7,12 @@ import legacyMeal from './fixtures/schema-4-meal.json';
 function fixture() {
   const w = createWorld(42, 16, 16); w.resources = []; w.piles = []; w.stockpiles = [];
   w.tiles = w.tiles.map(() => ({ terrain: 'grass' })); w.pawns = w.pawns.slice(0, 2);
-  w.pawns.forEach((p, i) => { p.x = 2; p.z = 2 + i * 2; p.hunger = 20; p.rest = 100; p.priorities = { gather: 0, build: 0, haul: 0 }; });
+  w.pawns.forEach((p, i) => { p.x = 2; p.z = 2 + i * 2; p.hunger = 20; p.rest = 100; p.priorities = { gather: 0, build: 0, haul: 0, grow: 0 }; });
   refreshStock(w); return w;
 }
 
-test('aliments : réservations fractionnées, repas simultanés, interruption et continuation sans conversion ni duplication', () => {
-  const w = fixture(); addGroundMaterial(w, 'food', 20, { x: 6, z: 3 }, 'berries');
+test.each(['berries','rice'] as const)('aliments (%s) : réservations fractionnées, repas simultanés, interruption et continuation sans conversion ni duplication', item => {
+  const w = fixture(); addGroundMaterial(w, 'food', 20, { x: 6, z: 3 }, item);
   let consumed = 0, nutrition = 0; const phases = new Map<string, string>();
   for (let tick = 0; tick < 400; tick++) {
     const finishing = w.pawns.flatMap(p => p.need?.kind === 'eat' && p.need.phase === 'ingest' && p.need.progress === 49 ? [{ id: p.id, quantity: p.need.quantity, hunger: p.hunger }] : []);
@@ -25,18 +25,20 @@ test('aliments : réservations fractionnées, repas simultanés, interruption et
       expect(w.pawns.find(p => p.id === meal.id)!.hunger).toBeCloseTo(Math.min(100, meal.hunger - 160 / 6000 * adultHungerFactor(meal.hunger) + meal.quantity * 5), 9);
     }
     expect(w.piles.reduce((n,p) => n+p.quantity, 0) + consumed).toBe(20);
-    expect(w.piles.every(p => p.item === 'berries')).toBe(true);
+    expect(w.piles.every(p => p.item === item)).toBe(true);
   }
   expect(consumed).toBe(20); expect(nutrition).toBe(100); expect(phases.has('pickup')).toBe(true); expect(phases.has('ingest')).toBe(true);
   for (const save of phases.values()) {
     const a = deserializeWorld(save), b = deserializeWorld(save);
     stepWorld(a, 400); stepWorld(b, 400); expect(serializeWorld(a)).toBe(serializeWorld(b));
   }
+  expect(w.pawns.every(p=>p.memories.some(m=>m.kind==='ate-raw-food'))).toBe(item==='rice');
+  if(item==='rice') { const invalid=structuredClone(w);invalid.pawns[0]!.memories=[invalid.pawns[0]!.memories[0]!,invalid.pawns[0]!.memories[0]!];expect(validateWorld(invalid)).toContain('Duplicate meal memory.'); }
   const interrupted = deserializeWorld(phases.get('ingest')!);
   const p = interrupted.pawns.find(p => p.state === 'eating')!;
   const before = interrupted.stock.food, held = interrupted.piles.find(pile => pile.owner.type === 'pawn' && pile.owner.pawnId === p.id)!;
   p.rest = 0; stepWorld(interrupted);
-  expect(interrupted.stock.food).toBe(before); expect(held.owner).toEqual({ type: 'ground', x:p.x,z:p.z }); expect(held.item).toBe('berries');
+  expect(interrupted.stock.food).toBe(before); expect(held.owner).toEqual({ type: 'ground', x:p.x,z:p.z }); expect(held.item).toBe(item);
   expect(validateWorld(interrupted)).toEqual([]);
 });
 

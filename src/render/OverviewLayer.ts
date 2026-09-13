@@ -47,10 +47,11 @@ export class OverviewLayer {
       }
     }
     // Unknown additions need resized resident batches. Ordinary deletion changes one matrix.
-    if(!reset && world.resources.some(r=>!this.slots.has(r.id)||this.slots.get(r.id)!.kind!==r.kind)) {this.update(world,true);return;}
+    if(!reset && world.resources.some(r=>r.kind!=='rice' && (!this.slots.has(r.id)||this.slots.get(r.id)!.kind!==r.kind))) {this.update(world,true);return;}
     let boundsChanged=reset; const dirty=new Set<ResourceKind>();
     const counts={tree:0,berries:0,rock:0},alive=new Set<number>();
     for(const r of world.resources) {
+      if(r.kind==='rice')continue;
       alive.add(r.id);const signature=`${r.kind}:${r.x}:${r.z}`,previous=this.slots.get(r.id);
       const slot=reset?counts[r.kind]++:previous!.slot;
       if(!reset&&previous?.signature===signature)continue;

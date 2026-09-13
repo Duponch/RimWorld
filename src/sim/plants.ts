@@ -1,4 +1,11 @@
 import { TICKS_PER_DAY, type Resource, type World } from './types.ts';
+import { growingLightIntegral, OUTDOOR_TEMPERATURE } from './environment.ts';
+
+export const PLANT_DEFINITIONS = Object.freeze({
+  berries: { label: 'Buisson de baies', growDays: 6, minFertility: .5, sensitivity: .5, afterHarvest: .3, yield: 10 },
+  rice: { label: 'Riz', growDays: 3, minFertility: .7, sensitivity: 1, afterHarvest: 0, yield: 6 },
+});
+export const isPlant = (plant: Resource): plant is Resource & { kind: keyof typeof PLANT_DEFINITIONS } => plant.kind === 'berries' || plant.kind === 'rice';
 
 export const BERRY_GROW_DAYS = 6;
 export const HARVEST_MIN_GROWTH = .65;
@@ -28,14 +35,24 @@ function favorableTicks(tick: number): number {
   const start = TICKS_PER_DAY * .25, end = TICKS_PER_DAY * .8;
   return day * (end - start + 1) + Math.max(0, Math.min(remainder, end) - start + 1);
 }
-export function plantGrowth(world: World, plant: Resource): number {
+export function legacyPlantGrowth(world: World, plant: Resource): number {
   if (plant.kind !== 'berries') return 1;
   const base = plant.growth ?? 1;
   if (base >= 1) return 1;
   const elapsed = favorableTicks(world.tick) - favorableTicks(plant.growthTick ?? world.tick);
   return clamp(base + elapsed * plantGrowthRate(1, 21, plantFertility(world, plant)) / (BERRY_GROW_DAYS * TICKS_PER_DAY));
 }
-export const harvestable = (world: World, plant: Resource): boolean => plant.kind === 'berries' && plantGrowth(world, plant) > HARVEST_MIN_GROWTH;
+export function plantGrowth(world: World, plant: Resource): number {
+  if (!isPlant(plant)) return 1;
+  const base = plant.growth ?? 1;
+  if (base >= 1) return 1;
+  const def = PLANT_DEFINITIONS[plant.kind], fertility = plantFertility(world, plant);
+  if (fertility < def.minFertility) return base;
+  const lightTime = growingLightIntegral(world.tick) - growingLightIntegral(plant.growthTick ?? world.tick);
+  const factor = plantGrowthRate(1, OUTDOOR_TEMPERATURE, 1) * (1 - def.sensitivity + fertility * def.sensitivity);
+  return clamp(base + lightTime * factor / (def.growDays * TICKS_PER_DAY));
+}
+export const harvestable = (world: World, plant: Resource): boolean => isPlant(plant) && plantGrowth(world, plant) > HARVEST_MIN_GROWTH;
 export function berryYield(world: World, plant: Resource): number {
   const growth = plantGrowth(world, plant);
   return growth > HARVEST_MIN_GROWTH ? plant.amount * (.5 + .5 * (growth - HARVEST_MIN_GROWTH) / (1 - HARVEST_MIN_GROWTH)) : 0;

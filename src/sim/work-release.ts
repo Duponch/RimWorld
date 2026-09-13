@@ -1,4 +1,5 @@
 import type { Cell, Command, MaterialPile, Pawn, World } from './types.ts';
+import { workType } from './work-planner.ts';
 import { footprintCells } from './definitions.ts';
 import { queryArea } from './designation.ts';
 import { dropRetainingIdentity } from './ground-placement.ts';
@@ -20,7 +21,7 @@ export function planCommandDrops(world:World,command:Command):DropPlan|null {
     const zone=world.stockpiles.find(z=>same(z,command));if(zone)zones.add(zone.id);
   } else if(command.type==='priority'&&command.value===0) {
     const pawn=world.pawns.find(p=>p.id===command.pawnId),job=world.jobs.find(j=>j.id===pawn?.jobId);
-    if(pawn&&((pawn.haul&&command.work==='haul')||(job&&(job.kind==='chop'||job.kind==='harvest' || job.kind === 'cut'?'gather':'build')===command.work)))pawns.add(pawn.id);
+    if(pawn&&((pawn.haul&&command.work==='haul')||(job&&workType(job)===command.work)))pawns.add(pawn.id);
   } else if(command.type==='assign-bed') {
     for(const pawn of world.pawns)if(pawn.need?.kind==='sleep'&&(pawn.bedId===command.bedId||pawn.id===command.pawnId))pawns.add(pawn.id);
   }
@@ -51,7 +52,7 @@ export function releaseWork(world:World,pawn:Pawn,plan?:DropPlan):boolean {
   const held=world.piles.find(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
   if(held&&!commitDrop(world,held,pawn,plan))return false;
   const job=world.jobs.find(j=>j.id===pawn.jobId);
-  if(job?.reservedBy===pawn.id){job.reservedBy=null;job.status='pending';}
+  if(job?.reservedBy===pawn.id){job.reservedBy=null;job.status='pending';if(job.kind==='sow')job.progress=0;}
   pawn.jobId=null;pawn.haul=null;pawn.need=null;pawn.path=[];pawn.state='idle';pawn.planCooldown=20;pawn.needCooldown=20;
   return true;
 }

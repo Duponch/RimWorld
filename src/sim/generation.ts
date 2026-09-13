@@ -139,9 +139,9 @@ export function generateWorld(seed: number, width: number, height: number): Worl
   if (![width, height].every(validMapDimension)) {
     throw new Error(`World dimensions must be integers between ${MIN_MAP_SIZE} and ${MAX_MAP_SIZE}.`);
   }
-  const world: World = { schemaVersion: 7, foodRules: 'adult', seed: seed >>> 0, rng: (seed >>> 0) || 0x9e3779b9,
+  const world: World = { schemaVersion: 8, foodRules: 'adult', seed: seed >>> 0, rng: (seed >>> 0) || 0x9e3779b9,
     tick: 0, width, height, tiles: [], pawns: [], resources: [], structures: [], jobs: [],
-    piles: [], stockpiles: [], stock: { wood: 0, food: 0 }, events: [], nextId: 1, logisticsCursor: 0 };
+    piles: [], stockpiles: [], growingZones: [], growingCursor: 0, environment: 'temperate-equinox-v1', stock: { wood: 0, food: 0 }, events: [], nextId: 1, logisticsCursor: 0 };
   const cx = Math.floor(width / 2); const cz = Math.floor(height / 2);
   const terrain: Terrain[] = new Array(width * height);
   const moisture = new Float64Array(terrain.length); const forest = new Float64Array(terrain.length);
@@ -194,7 +194,7 @@ export function generateWorld(seed: number, width: number, height: number): Worl
   }
   for (const [offset, name] of ['Ada', 'Noé', 'Mina'].entries()) {
     world.pawns.push({ id: world.nextId++, name, x: cx + offset - 1, z: cz, hunger: 90 - offset * 5,
-      rest: 90 - offset * 3, mood: 80, comfort: 50, memories: [], jobId: null, haul: null, need: null, bedId: null, needCooldown: 0, state: 'idle', priorities: { gather: 2, build: 2, haul: 3 },
+      rest: 90 - offset * 3, mood: 80, comfort: 50, memories: [], jobId: null, haul: null, need: null, bedId: null, needCooldown: 0, state: 'idle', priorities: { gather: 2, build: 2, haul: 3, grow: 2 },
       path: [], moveCooldown: 0, planCooldown: 0 });
   }
   // Preserved tutorial targets, with a guaranteed adjacent walkable work cell.

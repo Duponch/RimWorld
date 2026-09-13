@@ -64,27 +64,31 @@ test('buffered motion is linear across jitter, duplicate messages, turns, pause 
   const timeline=new MotionTimeline();timeline.adopt(0,1,[{id:1,segments}],0,true);
   const arrivals=new Map([[180,2],[390,4],[580,6],[600,6],[700,6]]);
   let previous={x:0,z:0},distance=0;
-  for(let ms=10;ms<=850;ms+=10) {
+  for(let ms=10;ms<=1000;ms+=10) {
     if(arrivals.has(ms))timeline.adopt(arrivals.get(ms)!,1,[{id:1,segments}],ms);
     timeline.advance(ms);const segment=timeline.segment(1)!;
     const t=Math.min(1,Math.max(0,(timeline.tick-segment.start)/(segment.end-segment.start)));
     const position={x:segment.from.x+(segment.to.x-segment.from.x)*t,z:segment.from.z+(segment.to.z-segment.from.z)*t};
     const delta=Math.hypot(position.x-previous.x,position.z-previous.z);
-    if(ms>250)expect(delta,`frame ${ms}`).toBeCloseTo(1/30,8);else expect(delta).toBe(0);
+    if(ms>400)expect(delta,`frame ${ms}`).toBeCloseTo(1/30,8);else expect(delta).toBe(0);
     // A turn must pass through (1,0), never cut diagonally from (0,0) to (1,1).
     expect(position.z===0||position.x===1).toBe(true);distance+=delta;previous=position;
   }
   expect(distance).toBeCloseTo(2,8);
-  timeline.adopt(6,0,[],850);expect(timeline.advance(2000)).toBe(6);
+  timeline.adopt(6,0,[],1000);expect(timeline.advance(2000)).toBe(6);
   timeline.adopt(100,1,[],2100,true);expect(timeline.advance(2200)).toBe(100);expect(timeline.segment(1)).toBeUndefined();
   // A worker message can run before RAF while performance.now() is already
   // later than that frame's timestamp. Only rendered timestamps pace playback.
+  // Five-Hz publications with 80–130 ms delivery jitter at speed 6 stay linear.
+  const jitter=new MotionTimeline();jitter.adopt(0,6,[],0,true);
+  const delayed=new Map([[280,12],[530,24],[680,36],[900,48],[1130,60]]);
+  for(let ms=10;ms<=1200;ms+=10){if(delayed.has(ms))jitter.adopt(delayed.get(ms)!,6,[],ms);expect(jitter.advance(ms)).toBeCloseTo(Math.max(0,ms-400)*.06,9);}
   const interleaved=new MotionTimeline();interleaved.adopt(0,6,[],0,true);
-  interleaved.adopt(100,6,[],270);interleaved.advance(280);
+  interleaved.adopt(100,6,[],420);interleaved.advance(430);
   const first=interleaved.tick;
-  interleaved.adopt(101,6,[],302);interleaved.advance(300);
+  interleaved.adopt(101,6,[],452);interleaved.advance(450);
   expect(interleaved.tick-first).toBeCloseTo(1.2,9);
-  interleaved.advance(320);expect(interleaved.tick-first).toBeCloseTo(2.4,9);
+  interleaved.advance(470);expect(interleaved.tick-first).toBeCloseTo(2.4,9);
 });
 
 test('floor stacks enforce identity, reserved destination type, migration and atomic refusal when no drop fits',()=>{

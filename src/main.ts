@@ -1,4 +1,7 @@
-import { plantGrowth, harvestable, berryYield, plantResting } from './sim/plants';
+import { growingControls } from './ui/growing-controls';
+import { growingZoneAt } from './sim/farming';
+import { naturalLight } from './sim/environment';
+import { isPlant, plantGrowth, harvestable, berryYield, plantResting } from './sim/plants';
 import './style.css';
 import { ITEM_DEFINITIONS, availableNutrition } from './sim/items';
 import { updateFoodStocks } from './ui/food-stocks';
@@ -11,10 +14,10 @@ import { footprintCells, deliveredStock, queryJobStatus, queryPawnStatus, MAX_ST
 import { gameLayout, storageSettings, toolDefinitions } from './ui/layout';
 import type { ArchitectCategory, Panel, Tool } from './ui/layout';
 
-const jobLabels: Record<JobKind, string> = { chop: 'Abattage', harvest: 'Récolte', cut: 'Coupe de buisson', wall: 'Construction du mur', bed: 'Construction du lit', table: 'Construction de la table', stool: 'Construction du tabouret' };
+const jobLabels: Record<JobKind, string> = { chop: 'Abattage', harvest: 'Récolte', cut: 'Coupe de plante', sow: 'Semis de riz', wall: 'Construction du mur', bed: 'Construction du lit', table: 'Construction de la table', stool: 'Construction du tabouret' };
 const stateLabels: Record<Pawn['state'], string> = { idle: 'Disponible', moving: 'En chemin', working: 'Au travail', sleeping: 'Se repose', hungry: 'Cherche à manger', eating: 'Mange' };
 const terrainLabels = { grass: 'Prairie', soil: 'Terre fertile', water: 'Eau infranchissable', rock: 'Massif rocheux infranchissable' };
-const resourceLabels = { tree: 'Arbre', berries: 'Buisson de baies', rock: 'Pierre au sol' };
+const resourceLabels = { tree: 'Arbre', berries: 'Buisson de baies', rock: 'Pierre au sol', rice: 'Plant de riz' };
 const SAVE_KEY = 'lisiere.save.v1';
 const PREVIOUS_KEY = 'lisiere.previous.v1';
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = gameLayout();
@@ -88,6 +91,7 @@ function pickCell(x: number, z: number) {
   if (currentTool !== 'select') {
     const tool = currentTool;
     void attempt(() => {
+      if (tool === 'growing' || tool === 'remove-growing') return client.command({type:'area',action:tool,from:{x,z},to:{x,z}});
       if (tool === 'stockpile') return client.command({ type: 'stockpile', x, z, enabled: true, ...readStorageSettings('stockpile') });
       if (tool === 'remove-stockpile') return client.command({ type: 'stockpile', x, z, enabled: false });
       return client.command(tool === 'cancel' ? { type: 'cancel', x, z } : { type: 'designate', kind: tool, orientation: placementOrientation, x, z });
@@ -104,7 +108,7 @@ function designateArea(action: AreaAction, from: Cell, to: Cell) {
   void attempt(async () => {
     const response = await client.command({ type: 'area', action, from, to, ...(action === 'stockpile' ? readStorageSettings('stockpile') : {}) });
     const result = JSON.parse(response!) as { affected: number; skipped: number };
-    const label = action === 'cancel' ? 'ordre(s) annulé(s)' : action === 'remove-stockpile' ? 'case(s) de réserve retirée(s)' : action === 'stockpile' ? 'case(s) de réserve créée(s)' : 'ordre(s) de collecte créé(s)';
+    const label = action === 'growing' ? 'case(s) de culture créée(s)' : action === 'remove-growing' ? 'case(s) de culture retirée(s)' : action === 'cancel' ? 'ordre(s) annulé(s)' : action === 'remove-stockpile' ? 'case(s) de réserve retirée(s)' : action === 'stockpile' ? 'case(s) de réserve créée(s)' : 'ordre(s) de collecte créé(s)';
     notify(`${result.affected} ${label}${result.skipped ? ` · ${result.skipped} case(s) ignorée(s)` : ''}.`);
   });
 }
@@ -152,6 +156,8 @@ function rebuildInspector() {
       if (bed) void attempt(async () => { await client.command({ type: 'assign-bed', bedId: bed.id, pawnId: owner.value ? Number(owner.value) : null }); });
     };
     bedControls.append(owner); panel.append(bedControls);
+    const zone = snapshot && growingZoneAt(snapshot, selectedCell.z * snapshot.width + selectedCell.x);
+    if (zone) panel.append(growingControls(zone, command => void attempt(async () => { await client.command(command); rebuildInspector(); renderState(); })));
   } else panel.replaceChildren();
   const close = document.getElementById('inspect-close');
   if (close) close.onclick = clearSelection;
@@ -178,10 +184,10 @@ function rebuildPawns(world: World) {
   el('work-rows').replaceChildren(...world.pawns.map(pawn => {
     const row = document.createElement('tr'); row.dataset.worker = String(pawn.id);
     const name = document.createElement('th'); name.scope = 'row'; name.textContent = pawn.name; row.append(name);
-    for (const work of ['gather', 'build', 'haul'] as WorkType[]) {
+    for (const work of ['gather', 'build', 'haul', 'grow'] as WorkType[]) {
       const cell = document.createElement('td'), select = document.createElement('select');
       select.dataset.work = work; select.dataset.owner = String(pawn.id);
-      select.setAttribute('aria-label', `Priorité ${{ gather: 'collecte', build: 'construction', haul: 'transport' }[work]} ${pawn.name}`);
+      select.setAttribute('aria-label', `Priorité ${{ gather: 'collecte', build: 'construction', haul: 'transport', grow: 'culture' }[work]} ${pawn.name}`);
       for (let value = 0; value <= 4; value++) { const option = document.createElement('option'); option.value = String(value); option.textContent = String(value); select.append(option); }
       select.onchange = () => { void attempt(async () => { try { await client.command({ type: 'priority', pawnId: pawn.id, work, value: Number(select.value) }); } finally { renderState(); } }); };
       cell.append(select); row.append(cell);
@@ -223,7 +229,7 @@ function renderState() {
     if (!pawn) clearSelection();
     else {
       el('selected-name').textContent = pawn.name; el('selected-action').textContent = pawn.need ? actionLabel(pawn) : `${actionLabel(pawn)} · ${queryPawnStatus(world, pawn).reason}`;
-      el('selected-memories').textContent = pawn.memories.length ? `Mangé sans table : −3 humeur · encore ${Math.ceil((pawn.memories[0]!.expiresAt - world.tick) / (TICKS_PER_DAY / 24))} h` : '';
+      el('selected-memories').textContent = pawn.memories.map(memory => `${memory.kind === 'ate-raw-food' ? 'Mangé cru : −7' : 'Mangé sans table : −3'} humeur · encore ${Math.ceil((memory.expiresAt - world.tick) / (TICKS_PER_DAY / 24))} h`).join(' · ');
       for (const need of ['hunger', 'rest', 'comfort', 'mood'] as const) { el(`selected-${need}`).textContent = `${Math.round(pawn[need])} %`; el<HTMLMeterElement>(`${need}-meter`).value = pawn[need]; }
     }
   } else if (selectedCell) {
@@ -236,7 +242,7 @@ function renderState() {
       const storage = world.stockpiles.find(item => item.x === x && item.z === z);
       const piles = world.piles.filter(item => item.owner.type === 'ground' && item.owner.x === x && item.owner.z === z);
       el('cell-title').textContent = structure ? ({ wall: 'Mur en bois', bed: 'Lit', table: 'Table en bois', stool: 'Tabouret en bois' })[structure.kind] : resource ? resourceLabels[resource.kind] : terrainLabels[world.tiles[z * world.width + x].terrain];
-      el('cell-description').textContent = `Case ${x}, ${z}${resource ? resource.kind === 'berries' ? ` · Croissance ${Math.floor(plantGrowth(world, resource) * 100)} % · ${harvestable(world, resource) ? `Récolte : environ ${Math.round(berryYield(world, resource))} baies` : 'Pas encore récoltable'} · ${plantResting(world.tick) ? 'Repos nocturne' : 'Croissance diurne'}` : ` · ${resource.amount} unités à récolter` : ''}${structure ? ` · ${footprintCells(structure).length === 2 ? '1 × 2' : '1 × 1'} cases` : ''}`;
+      el('cell-description').textContent = `Case ${x}, ${z}${resource ? isPlant(resource) ? ` · Croissance ${Math.floor(plantGrowth(world, resource) * 100)} % · ${harvestable(world, resource) ? `Récolte : environ ${Math.round(berryYield(world, resource))} ${resource.kind === 'rice' ? 'riz' : 'baies'}` : 'Pas encore récoltable'} · ${plantResting(world.tick) ? 'Repos nocturne' : naturalLight(world.tick) < .51 ? 'Lumière insuffisante' : 'Croissance diurne'}` : ` · ${resource.amount} unités à récolter` : ''}${structure ? ` · ${footprintCells(structure).length === 2 ? '1 × 2' : '1 × 1'} cases` : ''}`;
       el('cell-materials').textContent = piles.length ? `Au sol : ${piles.map(pile => `${pile.quantity} ${ITEM_DEFINITIONS[pile.item].label}`).join(' · ')}` : '';
       el('cell-job').textContent = job ? `${jobLabels[job.kind]} · ${queryJobStatus(world, job).reason ?? 'En cours'}${JOB_WOOD_COST[job.kind] > 0 ? ` · ${deliveredStock(world, job.id).wood} bois livrés` : ''}` : 'Aucun ordre sur cette case.';
       el('cell-storage').hidden = !storage;

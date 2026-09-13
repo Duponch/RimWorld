@@ -189,3 +189,10 @@ Plants calcule la croissance depuis un checkpoint sérialisé et l'intégrale de
 La présentation utilise le temps confirmé de MotionTimeline, pas la phase d’animation recentrée des personnages. Le ciel clair fixe et sa palette sont une adaptation 3D assumée. Lumière de gameplay, température et météo devront appartenir au moteur ; les valeurs visuelles ne seront jamais lues pour décider de la croissance, du déplacement ou d’un tir. Le futur contexte de site exigera une migration explicite.
 
 Les variantes de projection/LOD sont précompilées sous l'écran initial. La caméra d'ombres conserve sa résolution ; le benchmark a conduit à corriger le premier dézoom, sans appliquer une réduction de qualité non validée.
+
+
+## ADR-022 — Culture, intégrale lumineuse et lots séparés
+
+V8 : [contrat](farming.md), [recherche](../research/farming-reference.md). La simulation possède les zones, leur curseur de découverte bornée et la lumière naturelle du preset sérialisé. Les travaux automatiques utilisent les réservations ordinaires ; une association explicite les distingue des ordres du joueur. Le module Farming porte ces règles, le moteur conserve l’orchestration. L’intégrale lumineuse périodique remplace la fenêtre binaire après migration conservatrice de la croissance acquise.
+
+Le riz a son propre lot GPU à emplacements réutilisables. Les couches forêt et vue distante l’ignorent. Les zones n’ont que des contours, sans matérialiser un mesh par case. Le rendu lit les mêmes checkpoints de croissance sans les modifier. Cette première espèce ne clôture pas l’agriculture : les dépendances absentes restent listées dans le contrat.

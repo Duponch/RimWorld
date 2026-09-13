@@ -1,10 +1,10 @@
-import { harvestable } from './plants.ts';
+import { isPlant, harvestable } from './plants.ts';
 import { MAX_STACK, footprintCells } from './definitions.ts';
 import { inBounds } from './pathfinding.ts';
 import type { AreaAction, AreaCommand, Cell, CommandResult, StorageSettings, World } from './types.ts';
 
-const TREE = 1, BERRIES = 2, FIXED = 4, JOB = 8, STORAGE = 16, BLOCKED = 32, RIPE = 64;
-export const isAreaAction = (value: unknown): value is AreaAction => ['chop', 'harvest', 'cut', 'cancel', 'stockpile', 'remove-stockpile'].includes(value as string);
+const TREE = 1, BERRIES = 2, FIXED = 4, JOB = 8, STORAGE = 16, BLOCKED = 32, RIPE = 64, GROWING = 128;
+export const isAreaAction = (value: unknown): value is AreaAction => ['chop', 'harvest', 'cut', 'cancel', 'stockpile', 'remove-stockpile', 'growing', 'remove-growing'].includes(value as string);
 export interface AreaBounds { minX: number; maxX: number; minZ: number; maxZ: number }
 export interface AreaIndex { flags: Uint8Array }
 export type AreaQuery = { ok: false; reason: string; code: CommandResult['code'] }
@@ -21,10 +21,11 @@ export function buildAreaIndex(world: World): AreaIndex {
   const flags = new Uint8Array(world.width * world.height);
   const index = (cell: Cell) => cell.z * world.width + cell.x;
   for (let i = 0; i < flags.length; i++) if (world.tiles[i]!.terrain === 'water' || world.tiles[i]!.terrain === 'rock') flags[i] = BLOCKED;
-  for (const resource of world.resources) flags[index(resource)]! |= FIXED | (resource.kind === 'tree' ? TREE : resource.kind === 'berries' ? BERRIES | (harvestable(world, resource) ? RIPE : 0) : 0);
+  for (const resource of world.resources) flags[index(resource)]! |= FIXED | (resource.kind === 'tree' ? TREE : isPlant(resource) ? BERRIES | (harvestable(world, resource) ? RIPE : 0) : 0);
   for (const structure of world.structures) for (const cell of footprintCells(structure)) flags[index(cell)]! |= FIXED;
   for (const job of world.jobs) for (const cell of footprintCells(job)) flags[index(cell)]! |= JOB;
   for (const storage of world.stockpiles) flags[index(storage)]! |= STORAGE;
+  for (const zone of world.growingZones) for (const cell of zone.cells) flags[cell]! |= GROWING;
   return { flags };
 }
 
@@ -47,8 +48,10 @@ export function queryArea(world: World, command: AreaCommand, index?: AreaIndex)
       : command.action === 'cut' ? (value & BERRIES) && !(value & JOB)
       : command.action === 'harvest' ? (value & RIPE) && !(value & JOB)
         : command.action === 'cancel' ? value & JOB
+          : command.action === 'remove-growing' ? value & GROWING
+          : command.action === 'growing' ? !(value & (BLOCKED | STORAGE | GROWING))
           : command.action === 'remove-stockpile' ? value & STORAGE
-            : !(value & (BLOCKED | FIXED | JOB | STORAGE));
+            : !(value & (BLOCKED | FIXED | JOB | STORAGE | GROWING));
     if (eligible) cells.push(i);
   }
   return { ok: true, bounds, cells, selected, skipped: selected - cells.length };

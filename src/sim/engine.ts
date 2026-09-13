@@ -1,4 +1,5 @@
-import { harvestable, harvestRoll, AFTER_HARVEST_GROWTH } from './plants.ts';
+import { scheduleGrowing, cancelGrowingJobs, growingJobValid, finishSowing, jobDuration, growingZoneAt } from './farming.ts';
+import { isPlant, harvestable, harvestRoll, AFTER_HARVEST_GROWTH } from './plants.ts';
 import { PLAN_INTERVAL, search, yieldIdleBlocker, destinationCell, destinationValid, planWork, workType, type SearchBudget, type NavigationGrid } from './work-planner.ts';
 import { planCommandDrops, commitDrop, releaseWork, type DropPlan } from './work-release.ts';
 import { blocksBuildingDuringTravel } from './travel-validation.ts';
@@ -7,7 +8,7 @@ import { startTravel } from './movement.ts';
 import { planGroundPlacement } from './ground-placement.ts';
 import { generateWorld } from './generation.ts';
 import { adjacent, canStep, blockedCells, cellIndex, inBounds, routeToJob, routeToCell } from './pathfinding.ts';
-import { CARRY_CAPACITY, footprintCells, JOB_DURATION, JOB_WOOD_COST, MAX_STACK } from './definitions.ts';
+import { CARRY_CAPACITY, footprintCells, JOB_WOOD_COST, MAX_STACK } from './definitions.ts';
 import { addGroundMaterial, transferPile, deliveredStock, refreshStock, reservedDestination } from './materials.ts';
 import { queryArea, validStorageSettings } from './designation.ts';
 import { processNeeds, updateNeeds } from './needs.ts';
@@ -16,7 +17,7 @@ import type { AreaCommand, Cell, Command, CommandResult, DesignateCommand, Job, 
 export { JOB_DURATION, JOB_WOOD_COST } from './definitions.ts';
 
 const PATH_SEARCHES_PER_TICK = 8;
-const JOB_LABEL: Readonly<Record<JobKind, string>> = { chop: 'abattage', harvest: 'récolte', cut: 'coupe de buisson', wall: 'construction de mur', bed: 'construction de lit', table: 'construction de table', stool: 'construction de tabouret' };
+const JOB_LABEL: Readonly<Record<JobKind, string>> = { chop: 'abattage', harvest: 'récolte', cut: 'coupe de plante', sow: 'semis de riz', wall: 'construction de mur', bed: 'construction de lit', table: 'construction de table', stool: 'construction de tabouret' };
 const sameCell = (a: Cell, b: Cell): boolean => a.x === b.x && a.z === b.z;
 const nearby = (a: Cell, b: Cell): boolean => sameCell(a, b) || adjacent(a, b);
 const refusal = (code: RefusalCode, reason: string): CommandResult => ({ ok: false, code, reason });
@@ -37,11 +38,19 @@ function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandR
   const selection = queryArea(world, command);
   if (!selection.ok) return selection;
   if (!selection.cells.length) return refusal('missing-target', 'Aucune case compatible dans ce rectangle.');
-  const creates = command.action === 'chop' || command.action === 'harvest' || command.action === 'cut' || command.action === 'stockpile';
+  const creates = command.action === 'chop' || command.action === 'harvest' || command.action === 'cut' || command.action === 'stockpile' || command.action === 'growing';
   if (creates && !Number.isSafeInteger(world.nextId + selection.cells.length)) return refusal('invalid-command', 'Limite des identités atteinte.');
   let affected = selection.cells.length;
   if (command.action === 'chop' || command.action === 'harvest' || command.action === 'cut') {
     for (const index of selection.cells) world.jobs.push({ id: world.nextId++, kind: command.action, x: index % world.width, z: Math.floor(index / world.width), orientation: 0, footprint: 'standard', status: 'pending', reservedBy: null, progress: 0, escrow: { wood: 0, food: 0 } });
+  } else if (command.action === 'growing') {
+    world.growingZones = [...world.growingZones, { id: world.nextId++, cells: selection.cells, plant: 'rice', allowSow: true, allowCut: true }];
+  } else if (command.action === 'remove-growing') {
+    const selected = new Set(selection.cells);
+    const changed = new Set(world.growingZones.filter(zone => zone.cells.some(c => selected.has(c))).map(z => z.id));
+    cancelGrowingJobs(world, changed);
+    world.growingZones = world.growingZones.map(zone => ({...zone, cells: zone.cells.filter(c => !selected.has(c))})).filter(z => z.cells.length);
+    world.growingCursor = 0;
   } else if (command.action === 'stockpile') {
     for (const index of selection.cells) world.stockpiles.push({ id: world.nextId++, x: index % world.width, z: Math.floor(index / world.width), filters: { ...(command.filters ?? { wood: true, food: true }) }, priority: command.priority ?? 2, capacity: command.capacity ?? MAX_STACK });
   } else {
@@ -82,7 +91,7 @@ export function canDesignate(world: World, command: DesignateCommand): CommandRe
   if (world.jobs.some(job => footprintCells(job).some(cell => cells.some(target => sameCell(cell, target))))) return refusal('occupied', 'Un ordre existe déjà dans cette empreinte.');
   const resource = world.resources.find(candidate => sameCell(candidate, command));
   if (command.kind === 'chop' || command.kind === 'harvest' || command.kind === 'cut') {
-    return resource?.kind === (command.kind === 'chop' ? 'tree' : 'berries') && (command.kind !== 'harvest' || harvestable(world, resource)) ? { ok: true } : refusal('incompatible-resource', 'Ressource incompatible.');
+    return resource && (command.kind === 'chop' ? resource.kind === 'tree' : isPlant(resource)) && (command.kind !== 'harvest' || harvestable(world, resource)) ? { ok: true } : refusal('incompatible-resource', 'Ressource incompatible.');
   }
   for (const cell of cells) {
     if (['water', 'rock'].includes(world.tiles[cellIndex(world, cell.x, cell.z)]!.terrain)
@@ -101,6 +110,13 @@ export function applyCommand(world: World, command: Command): CommandResult {
   const drops=planCommandDrops(world,command);
   if(!drops)return refusal('occupied','Pas de place à proximité pour les matériaux libérés.');
   if (command.type === 'area') return applyArea(world, command,drops);
+  if (command.type === 'growing-policy') {
+    const zone = world.growingZones.find(z => z.id === command.zoneId);
+    if (!zone || typeof command.allowSow !== 'boolean' || typeof command.allowCut !== 'boolean') return refusal('invalid-command', 'Zone ou réglages de culture invalides.');
+    cancelGrowingJobs(world, new Set([zone.id]));
+    world.growingZones = world.growingZones.map(z => z === zone ? {...z, allowSow: command.allowSow, allowCut: command.allowCut} : z);
+    wakePlanners(world); return {ok:true};
+  }
   if (command.type === 'assign-bed') {
     const bed = world.structures.find(item => item.id === command.bedId && item.kind === 'bed');
     const owner = world.pawns.find(item => item.id === command.pawnId);
@@ -113,12 +129,12 @@ export function applyCommand(world: World, command: Command): CommandResult {
     return { ok: true };
   }
   if (command.type === 'priority') {
-    if (!['gather', 'build', 'haul'].includes(command.work) || !Number.isInteger(command.value) || command.value < 0 || command.value > 4) return refusal('invalid-priority', 'La priorité doit être comprise entre 0 et 4.');
+    if (!['gather', 'build', 'haul', 'grow'].includes(command.work) || !Number.isInteger(command.value) || command.value < 0 || command.value > 4) return refusal('invalid-priority', 'La priorité doit être comprise entre 0 et 4.');
     const pawn = world.pawns.find(candidate => candidate.id === command.pawnId);
     if (!pawn) return refusal('missing-target', 'Colon introuvable.');
     pawn.priorities[command.work] = command.value;
     const job = world.jobs.find(candidate => candidate.id === pawn.jobId);
-    if (command.value === 0 && ((job && workType(job.kind) === command.work) || (pawn.haul && command.work === 'haul'))) releaseWork(world, pawn,drops);
+    if (command.value === 0 && ((job && workType(job) === command.work) || (pawn.haul && command.work === 'haul'))) releaseWork(world, pawn,drops);
     pawn.planCooldown = 0; refreshStock(world); return { ok: true };
   }
   if (!['designate', 'cancel', 'stockpile'].includes(command.type)) return refusal('invalid-command', 'Commande inconnue.');
@@ -130,7 +146,7 @@ export function applyCommand(world: World, command: Command): CommandResult {
       if (!existing) return refusal('missing-target', 'Aucune cellule de stockage ici.');
       world.stockpiles.splice(world.stockpiles.indexOf(existing), 1);
     } else {
-      if (['water', 'rock'].includes(world.tiles[cellIndex(world, command.x, command.z)]!.terrain)
+      if (growingZoneAt(world, cellIndex(world, command.x, command.z)) || ['water', 'rock'].includes(world.tiles[cellIndex(world, command.x, command.z)]!.terrain)
         || world.resources.some(item => sameCell(item, command))
         || [...world.structures, ...world.jobs].some(item => footprintCells(item).some(cell => sameCell(cell, command)))) return refusal('occupied', 'Stockage impossible sur cette cellule occupée ou infranchissable.');
       if (existing) {
@@ -167,7 +183,7 @@ export function queryJobStatus(world: World, job: Job): JobDiagnostic {
     const shipping = reservedDestination(world, { type: 'job', jobId: job.id });
     return { code: shipping ? 'delivering' : 'missing-materials', reason: shipping ? `Livraison en cours : ${delivered}/${required} bois reçus.` : `Attend ${required - delivered} bois livrés ; vérifier le transport et l’accès.`, delivered, required };
   }
-  const enabled = world.pawns.some(pawn => pawn.priorities[workType(job.kind)] > 0);
+  const enabled = world.pawns.some(pawn => pawn.priorities[workType(job)] > 0);
   return { code: enabled ? 'ready' : 'waiting-worker', reason: enabled ? 'Prêt ; attend un colon disponible et un accès.' : 'Travail désactivé pour tous les colons.', delivered, required };
 }
 export function queryPawnStatus(world: World, pawn: Pawn): { code: string; reason: string } {
@@ -227,18 +243,20 @@ function completeJob(world: World, pawn: Pawn, job: Job): void {
     if (job.kind === 'harvest' && !harvestable(world, resource)) { releaseWork(world, pawn); return; }
     const roll = job.kind !== 'chop' ? harvestRoll(world, resource) : {quantity: resource.amount, rng: world.rng};
     if (roll.quantity > 0) {
-      const item = job.kind === 'chop' ? 'wood' : world.foodRules === 'legacy' ? 'legacy-portion' : 'berries';
+      const item = job.kind === 'chop' ? 'wood' : resource.kind === 'rice' ? 'rice' : world.foodRules === 'legacy' ? 'legacy-portion' : 'berries';
       const placements=planGroundPlacement(world,roll.quantity,job,item);
       if (!placements || world.piles.length + placements.length > 32768 || !Number.isSafeInteger(world.nextId + placements.length)) {
-        job.progress = JOB_DURATION[job.kind] - 1; releaseWork(world, pawn); return;
+        job.progress = jobDuration(world, job) - 1; releaseWork(world, pawn); return;
       }
       addGroundMaterial(world,job.kind==='chop'?'wood':'food',roll.quantity,job,item);
     }
     world.rng = roll.rng;
-    if (job.kind === 'harvest') {
+    if (job.kind === 'harvest' && resource.kind === 'berries') {
       resource.growth = AFTER_HARVEST_GROWTH; resource.growthTick = world.tick;
-    } else world.resources.splice(world.resources.indexOf(resource),1);
-    if (job.kind !== 'chop' && roll.quantity > 0) event(world, 'job', `${pawn.name} a récolté ${roll.quantity} baies.`);
+    } else world.resources = world.resources.filter(r => r.id !== resource.id);
+    if (job.kind !== 'chop' && roll.quantity > 0) event(world, 'job', `${pawn.name} a récolté ${roll.quantity} ${resource.kind === 'rice' ? 'riz' : 'baies'}.`);
+  } else if (job.kind === 'sow') {
+    finishSowing(world, job);
   } else {
     world.piles = world.piles.filter(pile => pile.owner.type !== 'job' || pile.owner.jobId !== job.id);
     world.structures.push({ id: world.nextId++, kind: job.kind, x: job.x, z: job.z, orientation: job.orientation, footprint: job.footprint });
@@ -250,6 +268,7 @@ export function stepWorld(world: World, ticks = 1): void {
   if (!Number.isInteger(ticks) || ticks < 0 || ticks > 100000) throw new Error('Tick count must be an integer between 0 and 100000.');
   for (let step = 0; step < ticks; step++) {
     world.tick++;
+    scheduleGrowing(world);
     // Build only if this tick actually plans or moves. No cross-tick cache can hide
     // a command, edited terrain, restored save, or a wall that changed between calls.
     let blocked: Uint8Array | undefined;
@@ -271,10 +290,11 @@ export function stepWorld(world: World, ticks = 1): void {
       if (pawn.jobId === null && pawn.haul === null && pawn.planCooldown === 0) planWork(world, pawn, getBlocked, occupied, budget);
       if (pawn.haul) { processHaul(world, pawn, getBlocked, occupied, budget); continue; }
       const job = world.jobs.find(candidate => candidate.id === pawn.jobId); if (!job) continue;
+      if (job.growingZoneId !== undefined && !growingJobValid(world, job)) { releaseWork(world, pawn); world.jobs = world.jobs.filter(j => j.id !== job.id); continue; }
       const cells = footprintCells(job);
       if (cells.some(cell => adjacent(pawn, cell)) && !cells.some(cell => sameCell(pawn, cell))) {
         pawn.path = []; pawn.state = 'working'; job.progress++;
-        if (job.progress >= JOB_DURATION[job.kind]) completeJob(world, pawn, job);
+        if (job.progress >= jobDuration(world, job)) completeJob(world, pawn, job);
       } else moveToward(world, pawn, job, false, getBlocked, occupied, budget);
     }
     refreshStock(world);
