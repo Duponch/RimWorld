@@ -92,3 +92,7 @@ CAT-005/011/015, SYS-076..078 et TEST-076..078 orientent les [aliments V5](../de
 ## Mise à jour spatiale V6
 
 Le [contrat sol, mouvement et rendu distant](../development/spatial-motion-storage.md) remplace les descriptions antérieures de piles multiples au sol et du BFS cardinal. La migration V5→V6 est explicite ; le comportement des buissons reste un chantier ouvert.
+
+## Suivi V7 : plantes et présentation rocheuse
+
+Chapitre 12 / SYS-071, SYS-072, SYS-075 : croissance, maturité, récolte distincte de coupe et fertilité adoptées pour le buisson sauvage ; climat et autres espèces différés. [Recherche critique](plant-growth.md) et [contrat](../development/rocks-and-plants.md). SYS-072 ne signifie pas que toute coupe donne zéro ressource : la vérification du travail commun confirme le rendement possible avant destruction. Chapitres 5/29 : empreinte logique inchangée, rochers facettés et surfaces partagées adaptés à la 3D ; tests existants de rétention enrichis.

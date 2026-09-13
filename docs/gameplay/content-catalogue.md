@@ -15,10 +15,10 @@ Une future acquisition devra conserver version exacte, modules et ordre de charg
 | Registre / identifiant local | Usage livré | Limites |
 |---|---|---|
 | Objet `wood` | Bois récolté, piles, portage et construction ; CAT-005. | Espèces, masse, combustible, dégâts et autres propriétés non implémentés. |
-| Objet `berries` | Baies récoltées, 0,05 nutrition/unité, piles de 75, ingestion de plusieurs unités ; CAT-011. | Pourrissement, intoxication et maturité du buisson absents. |
+| Objet `berries` | Baies récoltées, 0,05 nutrition/unité, piles de 75, ingestion de plusieurs unités ; CAT-011. | Pourrissement et intoxication absents ; maturité et renouvellement du buisson livrés en V7. |
 | Objet `survival-meal` | Repas de survie du départ, 0,9 nutrition/unité, piles de dix ; CAT-015. | Recette, ingrédients, recherche et détérioration absents. Le scénario local donne 18 repas ; ce n'est pas Crashlanded. |
 | Objet `legacy-portion` | Compatibilité des sauvegardes V1–V4 : 0,35 nutrition/unité, piles de 75. | Ce n'est aucun objet de RimWorld ; absent des nouvelles parties. |
-| Ressources `tree`, `berries`, `rock` | Arbre générique, buisson générique, pierre au sol. | Pas un catalogue d'espèces ou de roches. Arbre abattable et buisson récoltable ; minage absent. |
+| Ressources `tree`, `berries`, `rock` | Arbre générique, buisson générique, pierre au sol. | Pas un catalogue d'espèces ou de roches. Arbre abattable ; buisson persistant, récoltable selon maturité et supprimable par coupe ; minage absent. |
 | Structures `wall`, `bed`, `table`, `stool` | Mur, lit, table 1×2, tabouret, construits en bois. | Aucun ensemble complet de mobilier, matériaux, qualité ou dégâts. |
 | Terrains `grass`, `soil`, `water`, `rock` | Prairie, sol, eau et massif procéduraux. | Quatre classes locales ; ne correspondent pas à quatre définitions exhaustives du jeu original. |
 

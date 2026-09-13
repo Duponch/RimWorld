@@ -24,7 +24,7 @@ test('objets graphiques résidents : retrait/restauration, frontière de chunk, 
     meshes.forEach((mesh,i)=>{
       expect(mesh.geometry.getAttribute('position')).toBe(buffers[i]);
       const data=mesh.userData.resourceRanges as {ranges:{id:number;start:number;count:number}[]};
-      const expected=data.ranges.filter(r=>alive.includes(r.id)).flatMap(r=>indices[i]!.slice(r.start,r.start+r.count));
+      const expected=data.ranges.filter(r=>alive.includes(Math.abs(r.id))).flatMap(r=>indices[i]!.slice(r.start,r.start+r.count));
       const count=Number.isFinite(mesh.geometry.drawRange.count)?mesh.geometry.drawRange.count:mesh.geometry.index!.count;
       expect(Array.from(mesh.geometry.index!.array).slice(0,count)).toEqual(expected);
     });

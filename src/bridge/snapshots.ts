@@ -9,7 +9,7 @@ export type SnapshotMessage = SnapshotHeader & (
 );
 
 const equalResource = (a: Resource, b: Resource): boolean => a.id === b.id && a.kind === b.kind
-  && a.x === b.x && a.z === b.z && a.amount === b.amount;
+  && a.x === b.x && a.z === b.z && a.amount === b.amount && a.growth === b.growth && a.growthTick === b.growthTick;
 
 /** Transport cache only: never mutates the simulation or contributes to a saved game. */
 export class SnapshotEncoder {

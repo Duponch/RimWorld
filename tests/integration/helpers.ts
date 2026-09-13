@@ -33,7 +33,7 @@ export async function panel(page: Page, name: 'architect' | 'work' | 'menu') {
   await expect(page.locator(`#${name}-panel`)).toBeVisible();
 }
 
-export async function tool(page: Page, name: 'chop' | 'harvest' | 'cancel' | 'wall' | 'bed' | 'table' | 'stool' | 'stockpile' | 'remove-stockpile') {
+export async function tool(page: Page, name: 'select' | 'chop' | 'harvest' | 'cut' | 'cancel' | 'wall' | 'bed' | 'table' | 'stool' | 'stockpile' | 'remove-stockpile') {
   await panel(page, 'architect');
   const category = name === 'wall' ? 'structure' : name === 'bed' || name === 'table' || name === 'stool' ? 'furniture' : name === 'stockpile' || name === 'remove-stockpile' ? 'zones' : 'orders';
   await page.locator(`[data-category="${category}"]`).click();

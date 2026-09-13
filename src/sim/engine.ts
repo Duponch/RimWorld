@@ -1,3 +1,4 @@
+import { harvestable, harvestRoll, AFTER_HARVEST_GROWTH } from './plants.ts';
 import { PLAN_INTERVAL, search, yieldIdleBlocker, destinationCell, destinationValid, planWork, workType, type SearchBudget, type NavigationGrid } from './work-planner.ts';
 import { planCommandDrops, commitDrop, releaseWork, type DropPlan } from './work-release.ts';
 import { blocksBuildingDuringTravel } from './travel-validation.ts';
@@ -15,7 +16,7 @@ import type { AreaCommand, Cell, Command, CommandResult, DesignateCommand, Job, 
 export { JOB_DURATION, JOB_WOOD_COST } from './definitions.ts';
 
 const PATH_SEARCHES_PER_TICK = 8;
-const JOB_LABEL: Readonly<Record<JobKind, string>> = { chop: 'abattage', harvest: 'récolte', wall: 'construction de mur', bed: 'construction de lit', table: 'construction de table', stool: 'construction de tabouret' };
+const JOB_LABEL: Readonly<Record<JobKind, string>> = { chop: 'abattage', harvest: 'récolte', cut: 'coupe de buisson', wall: 'construction de mur', bed: 'construction de lit', table: 'construction de table', stool: 'construction de tabouret' };
 const sameCell = (a: Cell, b: Cell): boolean => a.x === b.x && a.z === b.z;
 const nearby = (a: Cell, b: Cell): boolean => sameCell(a, b) || adjacent(a, b);
 const refusal = (code: RefusalCode, reason: string): CommandResult => ({ ok: false, code, reason });
@@ -36,10 +37,10 @@ function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandR
   const selection = queryArea(world, command);
   if (!selection.ok) return selection;
   if (!selection.cells.length) return refusal('missing-target', 'Aucune case compatible dans ce rectangle.');
-  const creates = command.action === 'chop' || command.action === 'harvest' || command.action === 'stockpile';
+  const creates = command.action === 'chop' || command.action === 'harvest' || command.action === 'cut' || command.action === 'stockpile';
   if (creates && !Number.isSafeInteger(world.nextId + selection.cells.length)) return refusal('invalid-command', 'Limite des identités atteinte.');
   let affected = selection.cells.length;
-  if (command.action === 'chop' || command.action === 'harvest') {
+  if (command.action === 'chop' || command.action === 'harvest' || command.action === 'cut') {
     for (const index of selection.cells) world.jobs.push({ id: world.nextId++, kind: command.action, x: index % world.width, z: Math.floor(index / world.width), orientation: 0, footprint: 'standard', status: 'pending', reservedBy: null, progress: 0, escrow: { wood: 0, food: 0 } });
   } else if (command.action === 'stockpile') {
     for (const index of selection.cells) world.stockpiles.push({ id: world.nextId++, x: index % world.width, z: Math.floor(index / world.width), filters: { ...(command.filters ?? { wood: true, food: true }) }, priority: command.priority ?? 2, capacity: command.capacity ?? MAX_STACK });
@@ -74,14 +75,14 @@ function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandR
 
 /** Pure shared rule used by preview and command execution. */
 export function canDesignate(world: World, command: DesignateCommand): CommandResult {
-  if (!command || !['chop', 'harvest', 'wall', 'bed', 'table', 'stool'].includes(command.kind)) return refusal('invalid-command', 'Type de travail inconnu.');
+  if (!command || !['chop', 'harvest', 'cut', 'wall', 'bed', 'table', 'stool'].includes(command.kind)) return refusal('invalid-command', 'Type de travail inconnu.');
   if (command.orientation !== undefined && (!Number.isInteger(command.orientation) || command.orientation < 0 || command.orientation > 3)) return refusal('invalid-command', 'Orientation invalide.');
   const cells = footprintCells(command);
   if (cells.some(cell => !inBounds(world, cell.x, cell.z))) return refusal('out-of-bounds', 'Empreinte hors de la carte.');
   if (world.jobs.some(job => footprintCells(job).some(cell => cells.some(target => sameCell(cell, target))))) return refusal('occupied', 'Un ordre existe déjà dans cette empreinte.');
   const resource = world.resources.find(candidate => sameCell(candidate, command));
-  if (command.kind === 'chop' || command.kind === 'harvest') {
-    return resource?.kind === (command.kind === 'chop' ? 'tree' : 'berries') ? { ok: true } : refusal('incompatible-resource', 'Ressource incompatible.');
+  if (command.kind === 'chop' || command.kind === 'harvest' || command.kind === 'cut') {
+    return resource?.kind === (command.kind === 'chop' ? 'tree' : 'berries') && (command.kind !== 'harvest' || harvestable(world, resource)) ? { ok: true } : refusal('incompatible-resource', 'Ressource incompatible.');
   }
   for (const cell of cells) {
     if (['water', 'rock'].includes(world.tiles[cellIndex(world, cell.x, cell.z)]!.terrain)
@@ -220,16 +221,24 @@ function processHaul(world: World, pawn: Pawn, getBlocked: NavigationGrid, occup
   pawn.haul = null; pawn.path = []; pawn.state = 'idle'; pawn.planCooldown = 0; wakePlanners(world);
 }
 function completeJob(world: World, pawn: Pawn, job: Job): void {
-  if (job.kind === 'chop' || job.kind === 'harvest') {
+  if (job.kind === 'chop' || job.kind === 'harvest' || job.kind === 'cut') {
     const resource = world.resources.find(item => sameCell(item, job));
     if (!resource) { releaseWork(world, pawn); return; }
-    const item = job.kind === 'chop' ? 'wood' : world.foodRules === 'legacy' ? 'legacy-portion' : 'berries';
-    const placements=planGroundPlacement(world,resource.amount,job,item);
-    if (!placements || world.piles.length + placements.length > 32768 || !Number.isSafeInteger(world.nextId + placements.length)) {
-      job.progress = JOB_DURATION[job.kind] - 1; releaseWork(world, pawn); return;
+    if (job.kind === 'harvest' && !harvestable(world, resource)) { releaseWork(world, pawn); return; }
+    const roll = job.kind !== 'chop' ? harvestRoll(world, resource) : {quantity: resource.amount, rng: world.rng};
+    if (roll.quantity > 0) {
+      const item = job.kind === 'chop' ? 'wood' : world.foodRules === 'legacy' ? 'legacy-portion' : 'berries';
+      const placements=planGroundPlacement(world,roll.quantity,job,item);
+      if (!placements || world.piles.length + placements.length > 32768 || !Number.isSafeInteger(world.nextId + placements.length)) {
+        job.progress = JOB_DURATION[job.kind] - 1; releaseWork(world, pawn); return;
+      }
+      addGroundMaterial(world,job.kind==='chop'?'wood':'food',roll.quantity,job,item);
     }
-    addGroundMaterial(world,job.kind==='chop'?'wood':'food',resource.amount,job,item);
-    world.resources.splice(world.resources.indexOf(resource),1);
+    world.rng = roll.rng;
+    if (job.kind === 'harvest') {
+      resource.growth = AFTER_HARVEST_GROWTH; resource.growthTick = world.tick;
+    } else world.resources.splice(world.resources.indexOf(resource),1);
+    if (job.kind !== 'chop' && roll.quantity > 0) event(world, 'job', `${pawn.name} a récolté ${roll.quantity} baies.`);
   } else {
     world.piles = world.piles.filter(pile => pile.owner.type !== 'job' || pile.owner.jobId !== job.id);
     world.structures.push({ id: world.nextId++, kind: job.kind, x: job.x, z: job.z, orientation: job.orientation, footprint: job.footprint });

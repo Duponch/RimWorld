@@ -48,13 +48,13 @@ export class OverviewLayer {
     }
     // Unknown additions need resized resident batches. Ordinary deletion changes one matrix.
     if(!reset && world.resources.some(r=>!this.slots.has(r.id)||this.slots.get(r.id)!.kind!==r.kind)) {this.update(world,true);return;}
-    let boundsChanged=reset;
+    let boundsChanged=reset; const dirty=new Set<ResourceKind>();
     const counts={tree:0,berries:0,rock:0},alive=new Set<number>();
     for(const r of world.resources) {
       alive.add(r.id);const signature=`${r.kind}:${r.x}:${r.z}`,previous=this.slots.get(r.id);
       const slot=reset?counts[r.kind]++:previous!.slot;
       if(!reset&&previous?.signature===signature)continue;
-      boundsChanged=true;
+      boundsChanged=true;dirty.add(r.kind);
       const mesh=this.batches.get(r.kind)!,n=noise(r.x,r.z,77);
       const height=r.kind==='tree'?WORLD_SCALE.treeMinHeight+n*(WORLD_SCALE.treeMaxHeight-WORLD_SCALE.treeMinHeight):r.kind==='rock'?0.7:0.75;
       const width=r.kind==='tree'?0.8+n*0.32:0.45;
@@ -63,8 +63,8 @@ export class OverviewLayer {
       this.slots.set(r.id,{kind:r.kind,slot,signature});
     }
     this.transform.scale.set(0,0,0);this.transform.updateMatrix();
-    for(const [id,slot] of this.slots) if(!alive.has(id)&&slot.signature!=='removed') {this.batches.get(slot.kind)!.setMatrixAt(slot.slot,this.transform.matrix);slot.signature='removed';}
-    for(const mesh of this.batches.values()) {mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;if(boundsChanged)mesh.computeBoundingSphere();}
+    for(const [id,slot] of this.slots) if(!alive.has(id)&&slot.signature!=='removed') {this.batches.get(slot.kind)!.setMatrixAt(slot.slot,this.transform.matrix);slot.signature='removed';dirty.add(slot.kind);}
+    for(const kind of dirty) {const mesh=this.batches.get(kind)!;mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;if(boundsChanged)mesh.computeBoundingSphere();}
     this.setFoliageVisible(this.foliage);
   }
   dispose():void {clearGroup(this.terrain);clearGroup(this.vegetation);this.surface.dispose();}

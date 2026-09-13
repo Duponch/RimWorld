@@ -1,6 +1,38 @@
 # Validation du prototype
 
 
+## V7 — rochers continus et buissons persistants (13 septembre 2026)
+
+[Contrat et adaptations](rocks-and-plants.md), [recherche fraîche](../research/plant-growth.md). **30 scénarios noyau passent** sur 14 fichiers, 95,75 s, sans concurrence avec le navigateur : [rapport](../../artifacts/rocks-plants-core-validation.json). Le pilote conserve cinq jours sur trois cartes 250², soit 90 000 ticks. Les nouvelles familles testent raccords de rochers, retraits/restauration, intégrale indépendante de croissance, deux récoltes du même ID, arrondi aléatoire (y compris zéro), manque de place, coupe mûre/immature, migration et rétention des fruits. [Extension du rectangle](../../artifacts/plant-area-validation.json) : récolte et coupe confrontées aux commandes unitaires, avec plante immature ; passage ciblé final réussi.
+
+**Huit parcours UI courts passent**, 163,22 s, zéro échec et zéro relance automatique : [rapport final](../../artifacts/rocks-plants-ui-guards.json). Le parcours de trois jours a aussi passé ses assertions métier dans le passage initial (5,7 min, WebGPU, construction du camp, alimentation, sommeil et bilan réconcilié), avant les derniers gardes de présentation et d'arrondi nul. Il n'a pas été relancé pour ces gardes qui ne modifient pas ses récoltes mûres. Les captures initiales restent locales ; aucun nouveau nombre exact de repas/décisions n'est inventé en l'absence de rapport JSON archivé pour ce passage long.
+
+Échecs intermédiaires expliqués : des attentes comptaient la disparition du buisson et ses anciennes 14 baies de tutoriel ; elles vérifient maintenant son identité persistante et dix baies. La rétention des indices inclut désormais séparément les fruits. Un nouveau pilote UI attendait un bouton de menu déjà refermé après chargement : il choisit maintenant explicitement Inspecter. Ces corrections ont leurs recontrôles ci-dessus. Le build final TypeScript/Vite passe : jeu 1 002,82 ko (gzip 278,33), worker 68,61 ko ; avertissement connu du lot >500 ko conservé.
+
+### Comparaison de rendu
+
+Ryzen 5 3600, AMD/RDNA-1, WebGPU Chromium matériel, carte 250² graine 42, 1440×1000, pause, mêmes cadrages. 90 images de chauffe puis au moins huit secondes et 300 images, une seule promesse navigateur, aucun intervalle long supprimé. Les mesures RAF incluent l'ordonnancement ; la soumission CPU n'est pas le temps GPU. Le démarrage et la compilation initiale restent hors fenêtre.
+
+| Mesure | Avant : cubes | Après final : surfaces facettées |
+|---|---:|---:|
+| Proximité : appels de dessin | 133 | 112 |
+| Proximité : triangles soumis | 194 897 | 180 119 |
+| Proximité : frame moyenne / p95 / max (ms) | 4,47 / 8,3 / 8,6 | 4,66 / 8,4 / 12,5 |
+| Proximité : soumission CPU p95 (ms) | 6,0 | 5,7 |
+| Panorama : appels de dessin | 13 | 13 |
+| Panorama : triangles soumis | 499 839 | 425 957 |
+| Panorama : frame moyenne / p95 / max (ms) | 4,56 / 8,3 / 25,0 | 4,47 / 8,3 / 12,5 |
+
+[Avant](../../artifacts/overview-rocks-before.json), [premier découpage corrigé](../../artifacts/overview-rocks-culled.json), [final](../../artifacts/overview-rocks-final.json). Le premier essai avec un seul lot rocheux global dégradait la proximité (p95 12,6 ms, contre 8,3) : il dessinait les massifs hors champ. Les vues proches utilisent désormais des chunks partageant leurs attributs avec le panorama. Un passage corrigé avait mesuré 4,3 ms au p95 panoramique ; le passage final donne 8,3. Cette variabilité interdit de promettre un facteur stable de gain en FPS. La réduction des triangles/appels est reproductible ; aucun budget nul ou plafond universel n'est revendiqué.
+
+### Modifications locales et croissance
+
+[Douze retraits de rochers](../../artifacts/rock-edit-benchmark.json) : 5–9 cellules retouchées par retrait, mêmes objets géométrie/position/index et même caméra. Coût CPU de `setWorld` 3,1–9,4 ms ; intervalles d'image p95 12,3 ms, maximum 24,9 ms. C'est une injection de terrain dans la présentation, **pas du minage jouable**. Les tableaux d'attributs/indices des rochers représentent 13 262 688 octets, indices des deux vues inclus et attributs partagés comptés une fois ; ni mémoire globale du renderer ni copies internes du pilote GPU ne sont comprises. Les scans de grille et la compaction des indices restent des coûts réels.
+
+[Suivi de croissance](../../artifacts/plant-growth-benchmark.json) : Chromium 153.0.8010.12, WebGPU, même CPU/carte/viewport, 12 411 ressources dont 3 366 buissons. Vingt lots de chauffe puis cent lots de cent vérifications. Avec tous les buissons encore non récoltables : moyenne 0,316 ms, p95 des moyennes de lots 0,483 ms, maximum 0,916 ms par appel. Sans buisson en repousse, coût proche de la résolution du chronomètre. Le monitor ne parcourt pas les arbres ; la simulation ne met pas à jour toutes les plantes chaque tick. Ce microbenchmark CPU exclut le passage simultané à maturité, les téléversements et les images GPU ; il ne doit pas être annoncé comme un percentile de frame.
+
+Les coefficients de croissance et la coupe ont été confrontés aux sources du domaine ; climat variable, compétences et durée de travail exacte restent ouverts. Minage, cultures semées et cuisine restent absents. Les bilans historiques ci-dessous décrivent les versions précédentes.
+
 ## V6 — sol, déplacements et vue éloignée (13 septembre 2026)
 
 [Contrat, sources et limites](spatial-motion-storage.md). Le build TypeScript/Vite passe (lot jeu 996,26 ko, gzip 276,10 ko ; worker 66,66 ko ; avertissement de taille >500 ko conservé). **27 scénarios noyau, 12 fichiers, passent**, dont cinq jours sur trois cartes 250² : [rapport](../../artifacts/spatial-core-validation.json). Le passage utilise `--maxWorkers=1` : des exécutions concurrentes avec le navigateur avaient dépassé les délais de génération et de soak, sans échec de leurs assertions métier. Les délais et critères n'ont pas été relevés. Les 40 000 couples du scénario logistique sont conservés avec 200 piles réparties sur 200 cases. Le test de lit compare désormais des intervalles réellement dormis ; les durées de trajet ont leur oracle indépendant.

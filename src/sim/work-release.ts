@@ -20,7 +20,7 @@ export function planCommandDrops(world:World,command:Command):DropPlan|null {
     const zone=world.stockpiles.find(z=>same(z,command));if(zone)zones.add(zone.id);
   } else if(command.type==='priority'&&command.value===0) {
     const pawn=world.pawns.find(p=>p.id===command.pawnId),job=world.jobs.find(j=>j.id===pawn?.jobId);
-    if(pawn&&((pawn.haul&&command.work==='haul')||(job&&(job.kind==='chop'||job.kind==='harvest'?'gather':'build')===command.work)))pawns.add(pawn.id);
+    if(pawn&&((pawn.haul&&command.work==='haul')||(job&&(job.kind==='chop'||job.kind==='harvest' || job.kind === 'cut'?'gather':'build')===command.work)))pawns.add(pawn.id);
   } else if(command.type==='assign-bed') {
     for(const pawn of world.pawns)if(pawn.need?.kind==='sleep'&&(pawn.bedId===command.bedId||pawn.id===command.pawnId))pawns.add(pawn.id);
   }

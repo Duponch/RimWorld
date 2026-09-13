@@ -120,9 +120,9 @@ describe('seeded temperate valley generation', () => {
       expect(hashWorld(world), context).toBe(hashWorld(resumed));
       expect(validateWorld(world), context).toEqual([]);
       expect(world.jobs, context).toHaveLength(0);
-      expect(world.resources.some(item => tutorialIds.includes(item.id)), context).toBe(false);
+      expect(world.resources.filter(item => tutorialIds.includes(item.id)), context).toMatchObject([{kind:'berries',growth:.3}]);
       expect(world.structures, context).toHaveLength(2);
-      expect(world.stock, context).toEqual({ wood: 23, food: 32 });
+      expect(world.stock, context).toEqual({ wood: 23, food: 28 });
       const storedWood = world.piles.filter(pile => pile.kind === 'wood' && pile.owner.type === 'ground'
         && pile.owner.x === cx + 2 && pile.owner.z === cz + 1).reduce((sum, pile) => sum + pile.quantity, 0);
       expect(storedWood, context).toBe(23);

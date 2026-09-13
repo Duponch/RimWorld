@@ -1,9 +1,10 @@
+import { harvestable } from './plants.ts';
 import { MAX_STACK, footprintCells } from './definitions.ts';
 import { inBounds } from './pathfinding.ts';
 import type { AreaAction, AreaCommand, Cell, CommandResult, StorageSettings, World } from './types.ts';
 
-const TREE = 1, BERRIES = 2, FIXED = 4, JOB = 8, STORAGE = 16, BLOCKED = 32;
-export const isAreaAction = (value: unknown): value is AreaAction => ['chop', 'harvest', 'cancel', 'stockpile', 'remove-stockpile'].includes(value as string);
+const TREE = 1, BERRIES = 2, FIXED = 4, JOB = 8, STORAGE = 16, BLOCKED = 32, RIPE = 64;
+export const isAreaAction = (value: unknown): value is AreaAction => ['chop', 'harvest', 'cut', 'cancel', 'stockpile', 'remove-stockpile'].includes(value as string);
 export interface AreaBounds { minX: number; maxX: number; minZ: number; maxZ: number }
 export interface AreaIndex { flags: Uint8Array }
 export type AreaQuery = { ok: false; reason: string; code: CommandResult['code'] }
@@ -20,7 +21,7 @@ export function buildAreaIndex(world: World): AreaIndex {
   const flags = new Uint8Array(world.width * world.height);
   const index = (cell: Cell) => cell.z * world.width + cell.x;
   for (let i = 0; i < flags.length; i++) if (world.tiles[i]!.terrain === 'water' || world.tiles[i]!.terrain === 'rock') flags[i] = BLOCKED;
-  for (const resource of world.resources) flags[index(resource)]! |= FIXED | (resource.kind === 'tree' ? TREE : resource.kind === 'berries' ? BERRIES : 0);
+  for (const resource of world.resources) flags[index(resource)]! |= FIXED | (resource.kind === 'tree' ? TREE : resource.kind === 'berries' ? BERRIES | (harvestable(world, resource) ? RIPE : 0) : 0);
   for (const structure of world.structures) for (const cell of footprintCells(structure)) flags[index(cell)]! |= FIXED;
   for (const job of world.jobs) for (const cell of footprintCells(job)) flags[index(cell)]! |= JOB;
   for (const storage of world.stockpiles) flags[index(storage)]! |= STORAGE;
@@ -43,7 +44,8 @@ export function queryArea(world: World, command: AreaCommand, index?: AreaIndex)
   for (let z = bounds.minZ; z <= bounds.maxZ; z++) for (let x = bounds.minX; x <= bounds.maxX; x++) {
     const i = z * world.width + x, value = flags[i]!;
     const eligible = command.action === 'chop' ? (value & TREE) && !(value & JOB)
-      : command.action === 'harvest' ? (value & BERRIES) && !(value & JOB)
+      : command.action === 'cut' ? (value & BERRIES) && !(value & JOB)
+      : command.action === 'harvest' ? (value & RIPE) && !(value & JOB)
         : command.action === 'cancel' ? value & JOB
           : command.action === 'remove-stockpile' ? value & STORAGE
             : !(value & (BLOCKED | FIXED | JOB | STORAGE));

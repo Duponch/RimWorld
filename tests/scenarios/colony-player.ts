@@ -1,3 +1,4 @@
+import { plantGrowth } from '../../src/sim/plants.ts';
 import { availableNutrition } from '../../src/sim/items.ts';
 import { canDesignate } from '../../src/sim/engine.ts';
 import { JOB_WOOD_COST } from '../../src/sim/definitions.ts';
@@ -40,7 +41,7 @@ export function playerDecisions(world: World): Decision[] {
     const action = kind === 'tree' ? 'chop' : 'harvest';
     let planned = nearby.filter(r => r.kind === kind && world.jobs.some(j => j.x === r.x && j.z === r.z)).reduce((n,r) => n+r.amount,0);
     for (const resource of nearby) {
-      if (resource.kind !== kind || planned >= required) continue;
+      if (resource.kind !== kind || (kind === 'berries' && plantGrowth(world,resource) < 1) || planned >= required) continue;
       const command: DesignateCommand = { type: 'designate', kind: action, x: resource.x, z: resource.z };
       if (canDesignate(world, command).ok) { out.push({ reason: kind === 'tree' ? 'Prévoir le bois des chantiers et une petite marge.' : 'Renouveler la réserve alimentaire avant la pénurie.', command }); planned += resource.amount; }
     }
@@ -56,5 +57,5 @@ export function woodAccount(world: World): number {
   return world.piles.filter(p=>p.kind==='wood').reduce((n,p)=>n+p.quantity,0) + world.resources.filter(r=>r.kind==='tree').reduce((n,r)=>n+r.amount,0) + world.structures.reduce((n,s)=>n+JOB_WOOD_COST[s.kind],0);
 }
 export function foodAccount(world: World): number {
-  return world.piles.filter(p=>p.kind==='food').reduce((n,p)=>n+p.quantity,0) + world.resources.filter(r=>r.kind==='berries').reduce((n,r)=>n+r.amount,0);
+  return world.piles.filter(p=>p.kind==='food').reduce((n,p)=>n+p.quantity,0);
 }

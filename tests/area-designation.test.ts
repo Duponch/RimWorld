@@ -25,6 +25,7 @@ function until(world: World, condition: () => boolean): void {
 test('rectangles : sélection exacte, frontières, reprise, concurrence et conservation des annulations', () => {
   const world = fixture();
   for (const [x, z, kind] of [[5, 5, 'tree'], [6, 5, 'tree'], [9, 7, 'tree'], [7, 5, 'berries'], [8, 5, 'rock']] as const) world.resources.push({ id: world.nextId++, x, z, kind, amount: 12 });
+  world.resources.push({id:world.nextId++,kind:'berries',x:9,z:5,amount:10,growth:.3,growthTick:0});
   world.tiles[6 * 16 + 6]!.terrain = 'water'; world.tiles[6 * 16 + 7]!.terrain = 'rock';
   world.structures.push({ id: world.nextId++, x: 8, z: 6, kind: 'bed', orientation: 0, footprint: 'standard' });
   expect(applyCommand(world, { type: 'designate', kind: 'bed', x: 10, z: 6 }).ok).toBe(true);
@@ -33,7 +34,7 @@ test('rectangles : sélection exacte, frontières, reprise, concurrence et conse
 
   // The existing single-cell command is an independent oracle for admissibility.
   // Existing storage is deliberately skipped by the additive rectangle tool.
-  for (const action of ['chop', 'harvest', 'cancel', 'stockpile', 'remove-stockpile'] as const) {
+  for (const action of ['chop', 'harvest', 'cut', 'cancel', 'stockpile', 'remove-stockpile'] as const) {
     const expected: number[] = [];
     for (let z = 4; z <= 8; z++) for (let x = 4; x <= 10; x++) {
       if (action === 'stockpile' && world.stockpiles.some(cell => cell.x === x && cell.z === z)) continue;

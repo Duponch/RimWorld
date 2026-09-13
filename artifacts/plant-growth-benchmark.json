@@ -1,0 +1,32 @@
+{
+  "timestamp": "2026-09-13T19:46:10.710Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "errors": [],
+  "protocol": "Hardware browser, natural 250x250 seed42, pause. CPU only: 20 warmup + 100 batches of 100 growth-monitor calls, unchanging tick; no GPU submission or maturation transition cost included.",
+  "browser": "153.0.8010.12",
+  "backend": "WebGPU",
+  "samples": [
+    {
+      "growingPlants": 0,
+      "resources": 12411,
+      "monitorCpuMs": {
+        "mean": 0.00010000000000000002,
+        "p95": 0.0009999999962747098,
+        "max": 0.0030000000074505806
+      }
+    },
+    {
+      "growingPlants": 3366,
+      "resources": 12411,
+      "monitorCpuMs": {
+        "mean": 0.31622999999988827,
+        "p95": 0.4830000000074506,
+        "max": 0.9159999999962747
+      }
+    }
+  ]
+}

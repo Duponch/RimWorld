@@ -139,7 +139,7 @@ export function generateWorld(seed: number, width: number, height: number): Worl
   if (![width, height].every(validMapDimension)) {
     throw new Error(`World dimensions must be integers between ${MIN_MAP_SIZE} and ${MAX_MAP_SIZE}.`);
   }
-  const world: World = { schemaVersion: 6, foodRules: 'adult', seed: seed >>> 0, rng: (seed >>> 0) || 0x9e3779b9,
+  const world: World = { schemaVersion: 7, foodRules: 'adult', seed: seed >>> 0, rng: (seed >>> 0) || 0x9e3779b9,
     tick: 0, width, height, tiles: [], pawns: [], resources: [], structures: [], jobs: [],
     piles: [], stockpiles: [], stock: { wood: 0, food: 0 }, events: [], nextId: 1, logisticsCursor: 0 };
   const cx = Math.floor(width / 2); const cz = Math.floor(height / 2);
@@ -189,7 +189,7 @@ export function generateWorld(seed: number, width: number, height: number): Worl
       const roll = sample(world.seed, x, z, 60);
       const kind: ResourceKind | null = roll < rockChance ? 'rock' : roll < rockChance + treeChance ? 'tree'
         : roll < rockChance + treeChance + berryChance ? 'berries' : null;
-      if (kind) world.resources.push({ id: world.nextId++, x, z, kind, amount: 7 + Math.floor(sample(world.seed, x, z, 61) * 7) });
+      if (kind) world.resources.push({ id: world.nextId++, x, z, kind, amount: kind === 'berries' ? 10 : 7 + Math.floor(sample(world.seed, x, z, 61) * 7) });
     }
   }
   for (const [offset, name] of ['Ada', 'Noé', 'Mina'].entries()) {
@@ -199,7 +199,7 @@ export function generateWorld(seed: number, width: number, height: number): Worl
   }
   // Preserved tutorial targets, with a guaranteed adjacent walkable work cell.
   for (const [x, z, kind] of [[cx - 2, cz - 2, 'tree'], [cx + 2, cz - 2, 'berries'], [cx - 3, cz + 2, 'tree']] as const) {
-    world.resources.push({ id: world.nextId++, x, z, kind, amount: kind === 'tree' ? 12 : 14 });
+    world.resources.push({ id: world.nextId++, x, z, kind, amount: kind === 'tree' ? 12 : 10 });
   }
   addGroundMaterial(world, 'wood', 12, { x: cx - 1, z: cz + 1 });
   addGroundMaterial(world, 'food', 18, { x: cx + 1, z: cz + 1 }, 'survival-meal');

@@ -103,3 +103,7 @@ La suite G0 concerne notamment zones à plusieurs cellules et politiques commune
 Le [contrat repas à table](dining.md) complète les besoins : places, phases et effets persistés, migration V3, limites des recherches partielles et réservations exclusives.
 
 V6 ajoute une arête de déplacement temporisée et l’unicité des piles au sol. La migration V5→V6 réévalue les anciens dépôts et intentions de transport ; détails dans [spatial-motion-storage.md](spatial-motion-storage.md).
+
+## Évolution V7
+
+Les [buissons persistants](rocks-and-plants.md) ajoutent le checkpoint de croissance des ressources, la commande `cut` et un rendement de récolte dépendant de la maturité. Migration V6 explicite, mêmes identités et rendements hérités. La croissance est calculée sans muter toutes les plantes à chaque tick. Les sections historiques ci-dessus décrivent les étapes précédentes ; types.ts et le contrat V7 décrivent le schéma courant.

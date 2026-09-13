@@ -10,7 +10,7 @@ import type { Cell, HaulDestination, Job, JobKind, MaterialKind, Pawn, WorkType,
 export const PLAN_INTERVAL=20;
 export interface SearchBudget { remaining:number; pairs:number }
 export type NavigationGrid=()=>Uint8Array;
-export const workType=(kind:JobKind):WorkType=>kind==='chop'||kind==='harvest'?'gather':'build';
+export const workType=(kind:JobKind):WorkType=>kind==='chop'||kind==='harvest' || kind === 'cut'?'gather':'build';
 const sameCell=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
 
 export function search(world: World, pawn: Pawn, blocked: Uint8Array, occupied: Set<number>, budget: SearchBudget, goals?: ReadonlySet<number>): Reachability | null {

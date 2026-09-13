@@ -23,7 +23,8 @@ L'abattage cible les arbres ; la récolte cible les buissons de baies. Les resso
 | Action | Règle actuelle |
 |---|---|
 | Abattre | Le colon travaille à côté de l'arbre ; toute sa quantité devient une ou plusieurs piles de bois au sol. |
-| Récolter | Le buisson est retiré et laisse sa nourriture au sol. Pas de repousse dans cette tranche. |
+| Récolter | Le buisson reste à 30 % de croissance et dépose ses baies ; récoltable au-dessus de 65 %. |
+| Couper les buissons | Le buisson est retiré ; sa récolte éventuelle reste au sol. |
 | Construire un mur | 5 bois, 70 ticks de travail ; bloque le passage dès le placement du plan. |
 | Construire un lit | 8 bois livrés, 120 ticks de travail ; empreinte orientée 1×2, attribution à un colon et repos dans le lit. |
 | Construire une table | 28 bois livrés, 53 ticks de travail ; empreinte orientée 1×2. Le plan et le meuble bloquent actuellement le passage. |
@@ -89,7 +90,7 @@ La suite est suivie dans [le plan de développement](../ROADMAP.md). Les détail
 
 ## Portée du jeu et évolution
 
-L’[inventaire complet par domaine](implementation-status.md) distingue ce qui est jouable, partiel et absent. La récolte actuelle retire le buisson : sa repousse n’est pas encore simulée, contrairement à la référence. Nourriture et rythme des besoins restent provisoires. Un camp peut fonctionner plusieurs jours dans ce périmètre sans que l’agriculture, la cuisine, la météo ou les maladies soient implicitement présentes. Les disparitions d’arbres et variations de piles conservent désormais leurs objets graphiques pour éviter les reconstructions répétées.
+L’[inventaire complet par domaine](implementation-status.md) distingue ce qui est jouable, partiel et absent. La récolte conserve maintenant le buisson et remet sa croissance à 30 %, sous les conditions tempérées fixes décrites ci-dessous. Nourriture et rythme des besoins restent provisoires. Un camp peut fonctionner plusieurs jours dans ce périmètre sans que l’agriculture, la cuisine, la météo ou les maladies soient implicitement présentes. Les disparitions d’arbres et variations de piles conservent désormais leurs objets graphiques pour éviter les reconstructions répétées.
 
 ## Sol et déplacements (V6)
 
@@ -98,3 +99,11 @@ Une case du sol accueille une seule pile : jusqu’à 75 bois, 75 baies ou 10 ra
 Les colons se déplacent dans huit directions. Une diagonale mesure √2 cases et prend proportionnellement plus de temps ; elle ne coupe pas les coins solides. Ils font face au trajet puis à leur travail. Le rendu utilise un petit tampon temporel pour conserver une marche régulière entre les messages du worker. Un retard exceptionnel peut encore arrêter brièvement l’affichage au dernier état connu.
 
 En vue très éloignée, les détails minuscules du décor sont remplacés par des silhouettes plus légères. Le terrain, les obstacles et les ordres restent les mêmes. Le compteur FPS continue de mesurer le rendu, y compris en pause.
+
+## Buissons renouvelables et rochers (V7)
+
+Une récolte mûre donne dix baies dans les nouvelles colonies. Le buisson reste en place à 30 % de croissance ; il redevient récoltable au-dessus de 65 %, avec un rendement réduit tant qu'il n'est pas mûr. Inspectez sa case pour voir croissance, rendement et repos nocturne. Sa croissance avance pendant le jour, plus lentement sur terre nue que sur prairie. Le climat actuel reste fixé à un extérieur tempéré ; saisons et météo ne sont pas encore simulées.
+
+Architecte → Ordres → **Couper les buissons** libère leur case en supprimant la plante. La coupe récupère les baies déjà récoltables ; un buisson immature ne donne rien. Les piles produites restent au sol et peuvent demander un transport avant construction. La récolte et la coupe exigent toujours un colon au contact et du travail.
+
+Les massifs ont maintenant des sommets et parois irréguliers qui se raccordent entre cases. Ils gardent leurs obstacles au sol. **Le minage n'est pas encore jouable** ; leurs retraits locaux sont actuellement un test technique préparant cette mécanique.

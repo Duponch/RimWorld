@@ -1,3 +1,4 @@
+import { plantGrowth, harvestable, berryYield, plantResting } from './sim/plants';
 import './style.css';
 import { ITEM_DEFINITIONS, availableNutrition } from './sim/items';
 import { updateFoodStocks } from './ui/food-stocks';
@@ -10,7 +11,7 @@ import { footprintCells, deliveredStock, queryJobStatus, queryPawnStatus, MAX_ST
 import { gameLayout, storageSettings, toolDefinitions } from './ui/layout';
 import type { ArchitectCategory, Panel, Tool } from './ui/layout';
 
-const jobLabels: Record<JobKind, string> = { chop: 'Abattage', harvest: 'Récolte', wall: 'Construction du mur', bed: 'Construction du lit', table: 'Construction de la table', stool: 'Construction du tabouret' };
+const jobLabels: Record<JobKind, string> = { chop: 'Abattage', harvest: 'Récolte', cut: 'Coupe de buisson', wall: 'Construction du mur', bed: 'Construction du lit', table: 'Construction de la table', stool: 'Construction du tabouret' };
 const stateLabels: Record<Pawn['state'], string> = { idle: 'Disponible', moving: 'En chemin', working: 'Au travail', sleeping: 'Se repose', hungry: 'Cherche à manger', eating: 'Mange' };
 const terrainLabels = { grass: 'Prairie', soil: 'Terre fertile', water: 'Eau infranchissable', rock: 'Massif rocheux infranchissable' };
 const resourceLabels = { tree: 'Arbre', berries: 'Buisson de baies', rock: 'Pierre au sol' };
@@ -235,7 +236,7 @@ function renderState() {
       const storage = world.stockpiles.find(item => item.x === x && item.z === z);
       const piles = world.piles.filter(item => item.owner.type === 'ground' && item.owner.x === x && item.owner.z === z);
       el('cell-title').textContent = structure ? ({ wall: 'Mur en bois', bed: 'Lit', table: 'Table en bois', stool: 'Tabouret en bois' })[structure.kind] : resource ? resourceLabels[resource.kind] : terrainLabels[world.tiles[z * world.width + x].terrain];
-      el('cell-description').textContent = `Case ${x}, ${z}${resource ? ` · ${resource.amount} unités à récolter` : ''}${structure ? ` · ${footprintCells(structure).length === 2 ? '1 × 2' : '1 × 1'} cases` : ''}`;
+      el('cell-description').textContent = `Case ${x}, ${z}${resource ? resource.kind === 'berries' ? ` · Croissance ${Math.floor(plantGrowth(world, resource) * 100)} % · ${harvestable(world, resource) ? `Récolte : environ ${Math.round(berryYield(world, resource))} baies` : 'Pas encore récoltable'} · ${plantResting(world.tick) ? 'Repos nocturne' : 'Croissance diurne'}` : ` · ${resource.amount} unités à récolter` : ''}${structure ? ` · ${footprintCells(structure).length === 2 ? '1 × 2' : '1 × 1'} cases` : ''}`;
       el('cell-materials').textContent = piles.length ? `Au sol : ${piles.map(pile => `${pile.quantity} ${ITEM_DEFINITIONS[pile.item].label}`).join(' · ')}` : '';
       el('cell-job').textContent = job ? `${jobLabels[job.kind]} · ${queryJobStatus(world, job).reason ?? 'En cours'}${JOB_WOOD_COST[job.kind] > 0 ? ` · ${deliveredStock(world, job.id).wood} bois livrés` : ''}` : 'Aucun ordre sur cette case.';
       el('cell-storage').hidden = !storage;

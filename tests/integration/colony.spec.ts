@@ -107,7 +107,7 @@ test('colonie matérielle : réserve filtrée, transport visible, trois couchage
   await page.locator('#save').click();
   await expect(page.getByRole('status')).toContainText('sauvegardée');
   const saved = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!) as World, saveKey);
-  expect(saved.schemaVersion).toBe(6);
+  expect(saved.schemaVersion).toBe(7);
   expect(saved.pawns.some(pawn => pawn.haul?.phase === 'deliver')).toBe(true);
   expect(JSON.stringify(saved)).toBe(JSON.stringify(duringHaul));
 
@@ -117,7 +117,7 @@ test('colonie matérielle : réserve filtrée, transport visible, trois couchage
   await expect(page.locator('#pause-banner')).toBeVisible();
   const finished = await world(page);
   expect(finished.structures.filter(structure => structure.kind === 'bed')).toHaveLength(1);
-  expect(finished.stock).toEqual({ wood: 16, food: 32 });
+  expect(finished.stock).toEqual({ wood: 16, food: 28 });
   expect(finished.pawns.every(pawn => pawn.hunger < 91 && pawn.hunger > 60)).toBe(true);
   expect(finished.resources.some(resource => resource.x === 14 && resource.z === 14)).toBe(false);
   await expect(page.locator('#alerts [data-alert="beds"]')).toBeVisible();
@@ -229,7 +229,7 @@ test('frontières : commandes répétées, sauvegarde invalide atomique, aide et
   expect((await world(page)).structures.find(structure => structure.kind === 'bed')?.footprint).toBe('legacy-single');
   await panel(page, 'menu'); await page.locator('#save').click();
   await expect(page.getByRole('status')).toContainText('sauvegardée');
-  expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).schemaVersion, saveKey)).toBe(6);
+  expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).schemaVersion, saveKey)).toBe(7);
   expect(errors).toEqual([]);
 });
 

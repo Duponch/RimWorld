@@ -1,0 +1,39 @@
+# Rochers continus et buissons persistants — V7
+
+Décision du 13 septembre 2026. [Plan canonique](../ROADMAP.md) : consolidation G0 et première croissance renouvelable G1 ; le minage reste G2. Les images fournies par l'utilisateur servent de cible artistique, sans reprendre les affirmations de l'autre IA comme des règles techniques.
+
+## Massifs rocheux
+
+Les cellules `terrain: rock` restent les obstacles de simulation. `RockSurface` fabrique un relief facetté avec des coins communs aux cellules voisines, un sommet irrégulier, un épaulement incliné et une base qui conserve l'empreinte au sol. Les variations à l'échelle de plusieurs cellules remplacent la lecture en briques. Aucun mesh ne devient propriétaire d'un groupe de ressources. La grille n'est ni redimensionnée ni modifiée ; les petits cailloux `Resource.kind: rock` restent un autre objet, toujours non exploitable.
+
+Les sommets sont déterministes par graine et coordonnées ; leur position dépend uniquement des quatre cellules autour du coin. Les faces intérieures ne sont pas émises. Une suppression demande au maximum neuf cellules à recalculer. Chaque cellule garde son emplacement de buffer, même supprimée : retour d'un checkpoint ou restauration ne crée pas une nouvelle géométrie. Au maximum 12 sommets et 18 triangles par cellule, beaucoup moins de triangles à l'intérieur d'un massif. Les surfaces sont calculées lors d'un changement de terrain, pas chaque image.
+
+`RockLayer` partage les attributs position/normale/couleur entre les chunks de proximité et le lot panoramique. Seuls leurs indices diffèrent. La proximité conserve le rejet des zones hors champ et leurs ombres ; le panorama utilise un seul lot avec le socle de carte. Le sol sous les rochers utilise déjà la couleur de terre : `rock → soil` ne reconstruit donc pas le sol. Une modification du terrain n'est plus considérée comme une nouvelle carte et ne recentre plus la caméra. Les touffes du maillage de sol ne projettent plus leurs minuscules ombres ; elles reçoivent toujours celles des objets.
+
+Le coût n'est **pas intégralement O(9)** : la comparaison d'un nouveau tableau de terrain parcourt ses cellules ; les indices actifs globaux sont compactés dans leur buffer existant, puis ceux des chunks affectés. Les vertices modifiés seuls sont téléversés. Une nouvelle carte ou des ajouts inconnus dépassant la capacité peuvent allouer. Le minage devra réutiliser cette frontière sans appeler une reconstruction de carte. Sa logique, ses rendements, gravats, minerais, outils, sons, dégâts et effondrements ne sont pas livrés.
+
+Corpus : chapitres 5 et 29, empreinte logique indépendante du rendu, interprétation 3D et niveaux de détail **adaptés**. La [documentation Three.js BufferGeometry](https://threejs.org/docs/pages/BufferGeometry.html) fournit le contrat des attributs, indices et plages de dessin ; aucune nouvelle dépendance ni version moteur ajoutée. Les [mesures](validation.md) et tests de retrait décrivent les limites observées, sans promettre zéro coût ni une fluidité parfaite sur tout matériel.
+
+## Buissons et règles réellement disponibles
+
+Les nouvelles plantes donnent dix baies à pleine maturité. Récolter conserve leur ID et leur case, avec une croissance remise à 30 %. La récolte n'est possible qu'au-dessus de 65 % ; entre ce seuil et 100 %, le rendement évolue de la moitié au plein rendement. L'arrondi aléatoire utilise l'état déterministe sauvegardé, préparé sans le consommer tant qu'il n'existe pas de dépôt physique valide. Une récolte bloquée par le sol ne détruit ni plante, ni nourriture, ni tirage aléatoire.
+
+Architecte → Ordres → **Couper les buissons** retire la plante. Une plante encore immature ne donne rien ; si elle est récoltable, la coupe récupère son rendement courant avant destruction. La case peut ensuite être libérée des piles produites. Le déblaiement automatique des empreintes reste absent. Récolter/couper se font après trajet et travail adjacent, avec orientation vers la cible. Les rectangles et commandes unitaires appliquent le même seuil.
+
+La croissance utilise six journées théoriques de temps favorable. Le preset actuel est **extérieur tempéré fixe à 21 °C**, lumière optimale pendant la fenêtre diurne, repos avant 25 % et après 80 % de la journée. Cela représente environ 10,91 jours entiers de zéro à maturité sur prairie, pas six jours calendaires. Prairie = fertilité 1 ; terre nue locale = 0,7, sensibilité 0,5. Cette correspondance de nos deux terrains est une décision locale, pas un catalogue complet des sols de RimWorld.
+
+Les facteurs de température et lumière existent comme fonctions testées : température nulle hors 0–58 °C, optimale 6–42 °C, interpolation aux extrémités ; lumière minimale 0,51 et optimale 1. **Aucun système météo, latitude, saison, toit, lumière artificielle ou température variable ne les alimente encore.** Le photopériodisme rectangulaire est une approximation déclarée. Mort des plantes, santé, maladies, compétences, échecs de récolte, repousse des arbres, semis, hydroponie et cultures restent absents. Le travail conserve temporairement les 60 ticks locaux de récolte, également utilisés pour couper ; ce n'est pas la conversion des 250 ticks de référence ni sa vitesse modulée par croissance/compétence.
+
+## Architecture et continuation
+
+`plants.ts` calcule la croissance à partir d'un état de départ et du nombre exact de ticks favorables écoulés. Aucun balayage par tick de toutes les plantes, aucune mutation périodique du tableau et aucun flux permanent de leurs croissances sur le worker. Avant une future variation environnementale, il faudra enregistrer la croissance atteinte et recommencer l'intégrale avec les nouvelles conditions ; changer rétroactivement le facteur de toute une période serait incorrect.
+
+V7 ajoute `Resource.growth` et `growthTick`. Ensemble absents = plante initialement mature ; sinon les deux champs sont requis, bornés et réservés aux baies. V6 migre ses buissons survivants comme matures au tick chargé, conserve leurs ID, positions, rendements historiques et travaux. Les profils alimentaires `legacy` restent explicites ; aucun ancien stock ne devient une nouvelle ration. V1–V5 passent par les migrations précédentes. Les sauvegardes invalides sont rejetées avant adoption.
+
+Le codec compare les checkpoints de croissance. L'inspection calcule le taux exact au tick observé. Les fruits utilisent une plage d'indices distincte du feuillage : leur retrait et retour conservent les buffers. Une vérification graphique, limitée aux buissons encore non récoltables, toutes les 25 unités de tick au plus peut retarder leur apparition visuelle de 2,5 secondes simulées ; l'admissibilité et l'inspection ne subissent pas ce retard. Le buisson lui-même garde sa taille : nous représentons la remise en fructification, pas un arbuste détruit puis recréé. Les ressources distantes ne téléversent leurs matrices que si leurs transformations changent.
+
+## Preuves et suites
+
+`rock-surface.test.ts` contrôle raccords, indices, orientation des triangles, excavation au croisement des chunks, restauration, bords de carte et buffers résidents. `plant-cycle.test.ts` couvre conditions, comptage indépendant des ticks favorables, seuil strict, deux récoltes du même ID, coupe mûre/immature, manque de place, RNG, migrations invalides, continuation exacte, codec et indices des fruits. Le parcours navigateur vérifie inspection/récolte/sauvegarde/coupe par l'UI.
+
+Le pilote de cinq jours choisit les plantes mûres et réconcilie nourriture physique + ingestion avec stock initial + récoltes effectivement terminées. Le parcours UI de trois jours observe les quantités du journal. L'ancien scénario fini de deux jours compte explicitement la première récolte non ramassée ; ce bilan limité n'est pas l'oracle d'une économie renouvelable. Les scénarios doivent encore évoluer avec semis, cuisine, pourrissement et météo.

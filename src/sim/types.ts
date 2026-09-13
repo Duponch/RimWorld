@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 6 as const;
+export const SCHEMA_VERSION = 7 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
@@ -7,14 +7,14 @@ export type Terrain = 'grass' | 'soil' | 'water' | 'rock';
 export type ResourceKind = 'tree' | 'berries' | 'rock';
 export type MaterialKind = 'wood' | 'food';
 export type StructureKind = 'wall' | 'bed' | 'table' | 'stool';
-export type JobKind = 'chop' | 'harvest' | StructureKind;
+export type JobKind = 'chop' | 'harvest' | 'cut' | StructureKind;
 export type WorkType = 'gather' | 'build' | 'haul';
 export type Orientation = 0 | 1 | 2 | 3;
 export type Footprint = 'standard' | 'legacy-single';
 export type PawnState = 'idle' | 'moving' | 'working' | 'sleeping' | 'hungry' | 'eating';
 export interface Cell { x: number; z: number }
 export interface Tile { terrain: Terrain }
-export interface Resource extends Cell { id: number; kind: ResourceKind; amount: number }
+export interface Resource extends Cell { id: number; kind: ResourceKind; amount: number; growth?: number; growthTick?: number }
 export interface Structure extends Cell { id: number; kind: StructureKind; orientation: Orientation; footprint: Footprint }
 export interface Stock { wood: number; food: number }
 export type MaterialOwner = ({ type: 'ground' } & Cell) | { type: 'pawn'; pawnId: number } | { type: 'job'; jobId: number };
@@ -93,7 +93,7 @@ export interface World {
   logisticsCursor: number;
 }
 export type DesignateCommand = { type: 'designate'; kind: JobKind; orientation?: Orientation } & Cell;
-export type AreaAction = 'chop' | 'harvest' | 'cancel' | 'stockpile' | 'remove-stockpile';
+export type AreaAction = 'chop' | 'harvest' | 'cut' | 'cancel' | 'stockpile' | 'remove-stockpile';
 export interface StorageSettings { filters?: Record<MaterialKind, boolean>; priority?: number; capacity?: number }
 export interface AreaCommand extends StorageSettings { type: 'area'; action: AreaAction; from: Cell; to: Cell }
 export type Command =

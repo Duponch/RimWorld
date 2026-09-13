@@ -6,7 +6,7 @@ test('joueur ordinaire : cinq jours, trois cartes naturelles, camp construit, st
   for (const seed of [42, 93, 2048]) {
     let world = createWorld(seed, 250, 250);
     const initialWood = woodAccount(world), initialFood = foodAccount(world);
-    let consumed = 0;
+    let consumed = 0, produced = 0;
     const meals = new Map(world.pawns.map(p=>[p.id,0])), sleep = new Map(world.pawns.map(p=>[p.id,0]));
     const report: ReturnType<typeof colonySummary>[] = [];
     for (let t = 0; t < 30000; t++) {
@@ -14,13 +14,15 @@ test('joueur ordinaire : cinq jours, trois cartes naturelles, camp construit, st
         expect(applyCommand(world, decision.command), JSON.stringify({seed,t,decision})).toMatchObject({ok:true});
       }
       const ingesting = world.pawns.filter(p=>p.need?.kind==='eat' && p.need.phase==='ingest' && p.need.progress===49).map(p=>({id:p.id,quantity:p.need?.kind==='eat'?p.need.quantity:0}));
+      const finishingHarvests = world.jobs.filter(j=>j.kind==='harvest' && j.progress===59 && j.reservedBy!==null).map(j=>({id:j.id, amount:world.resources.find(r=>r.x===j.x&&r.z===j.z)!.amount}));
       stepWorld(world);
+      for(const j of finishingHarvests) if(!world.jobs.some(active=>active.id===j.id)) produced += j.amount;
       for (const {id,quantity} of ingesting) { meals.set(id, meals.get(id)!+1); consumed += quantity; }
       for (const pawn of world.pawns) if (pawn.state==='sleeping' && pawn.need?.kind==='sleep' && pawn.need.bedId!==null) sleep.set(pawn.id,sleep.get(pawn.id)!+1);
       if (t % 50 === 0) {
         const context=JSON.stringify({seed,...colonySummary(world)});
         expect(validateWorld(world),context).toEqual([]);expect(woodAccount(world),context).toBe(initialWood);
-        expect(foodAccount(world)+consumed,context).toBe(initialFood);
+        expect(foodAccount(world)+consumed,context).toBe(initialFood+produced);
         expect(world.pawns.every(p=>p.hunger>0 && p.rest>0),context).toBe(true);
       }
       if (world.tick % 6000 === 0) {

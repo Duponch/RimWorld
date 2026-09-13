@@ -175,3 +175,9 @@ Adopté le 13 septembre 2026, schéma 6. [Contrat et recherche](spatial-motion-s
 Le worker conserve un historique de présentation distinct des sauvegardes. `MotionTimeline` avance à vitesse fixe et `PawnLayer` interpole les arêtes sur GPU, avec une horloge recentrée ; corps et cargaison partagent la pose. Les vitesses ne dépendent plus de la cadence des snapshots. L’orientation de travail vient de sa cible.
 
 `TerrainLayer` isole les géométries du sol. `OverviewLayer` garde les silhouettes instanciées et un terrain fusionné pour le dézoom. Hystérésis et buffers résidents évitent un chantier de reconstruction au zoom. Coût assumé : mémoire supplémentaire ; ombres distantes simplifiées. Les anciens algorithmes et mesures consignés dans les ADR précédents restent historiques.
+
+## ADR-020 — Surfaces rocheuses et croissance par intégrale
+
+V7 : [contrat](rocks-and-plants.md). RockSurface calcule les coins partagés ; RockLayer garde les buffers et deux listes d'indices selon le cadrage. Les modifications de terrain restent distinctes des nouvelles cartes. Aucune autorité de simulation n'est transférée au mesh.
+
+Plants calcule la croissance depuis un checkpoint sérialisé et l'intégrale des ticks favorables du preset fixe. Le rendu des fruits et le codec conservent leurs identités. Une future variation du climat doit clôturer cette intégrale avant de changer les facteurs. Cette décision économise les mutations par tick, sans représenter un climat déjà implémenté.

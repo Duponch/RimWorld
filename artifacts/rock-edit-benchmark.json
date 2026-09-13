@@ -1,0 +1,99 @@
+{
+  "timestamp": "2026-09-13T19:45:07.944Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "errors": [],
+  "protocol": "Hardware WebGPU, 250x250 seed 42, paused, focused outcrop. Twelve diagnostic rock-to-soil edits at 300 ms spacing after 90 warmup frames, one browser promise. These are presentation tests, not playable mining.",
+  "adapter": {
+    "vendor": "amd",
+    "architecture": "rdna-1",
+    "description": ""
+  },
+  "edits": {
+    "records": [
+      {
+        "cell": 40903,
+        "cpuMs": 9.400000000372529,
+        "updatedCells": 6,
+        "indexCount": 82140
+      },
+      {
+        "cell": 41153,
+        "cpuMs": 5.699999999254942,
+        "updatedCells": 6,
+        "indexCount": 82134
+      },
+      {
+        "cell": 40902,
+        "cpuMs": 5,
+        "updatedCells": 9,
+        "indexCount": 82152
+      },
+      {
+        "cell": 40653,
+        "cpuMs": 7.799999998882413,
+        "updatedCells": 5,
+        "indexCount": 82122
+      },
+      {
+        "cell": 41152,
+        "cpuMs": 6.099999999627471,
+        "updatedCells": 9,
+        "indexCount": 82116
+      },
+      {
+        "cell": 40652,
+        "cpuMs": 4.599999999627471,
+        "updatedCells": 8,
+        "indexCount": 82110
+      },
+      {
+        "cell": 41403,
+        "cpuMs": 4.599999999627471,
+        "updatedCells": 6,
+        "indexCount": 82104
+      },
+      {
+        "cell": 40901,
+        "cpuMs": 4.099999999627471,
+        "updatedCells": 9,
+        "indexCount": 82122
+      },
+      {
+        "cell": 41402,
+        "cpuMs": 4.200000001117587,
+        "updatedCells": 9,
+        "indexCount": 82116
+      },
+      {
+        "cell": 41151,
+        "cpuMs": 4.099999999627471,
+        "updatedCells": 9,
+        "indexCount": 82110
+      },
+      {
+        "cell": 40651,
+        "cpuMs": 4.100000001490116,
+        "updatedCells": 9,
+        "indexCount": 82104
+      },
+      {
+        "cell": 40402,
+        "cpuMs": 3.099999999627471,
+        "updatedCells": 6,
+        "indexCount": 82074
+      }
+    ],
+    "stableBuffers": true,
+    "stableCamera": true,
+    "bufferBytes": 13262688
+  },
+  "frameMs": {
+    "count": 554,
+    "p95": 12.300000000000182,
+    "max": 24.899999999999636
+  }
+}

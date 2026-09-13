@@ -1,4 +1,5 @@
 import { buildTerrain } from './TerrainLayer';
+import { RockLayer } from './RockLayer';
 import { MotionTimeline } from './MotionTimeline';
 import type { PawnTrack } from '../bridge/motion-tracks';
 import { OverviewLayer } from './OverviewLayer';
@@ -62,6 +63,7 @@ export class ColonyRenderer {
   private readonly waterMaterial = material(0xffffff, { vertexColors: true, roughness: 0.45, metalness: 0.08 });
   private readonly boxes = new BoxBatches();
   private readonly resources = new ResourceLayer(this.resourceGroup, this.staticMaterial);
+  private readonly rocks = new RockLayer(this.staticMaterial);
   private readonly sun: THREE.DirectionalLight;
   private world: World | null = null;
   private terrainKey = '';
@@ -181,19 +183,24 @@ export class ColonyRenderer {
     // Worker deltas keep immutable terrain/resources references stable. A changed
     // collection is inspected once; ordinary pawn snapshots do not scan the map.
     const nextTerrainKey = previousWorld?.tiles === world.tiles ? this.terrainKey
-      : `${world.seed}:${world.width}:${world.height}:${world.tiles.map((t) => t.terrain[0]).join('')}`;
-    const newMap = this.terrainKey !== nextTerrainKey;
+      : `${world.seed}:${world.width}:${world.height}:${world.tiles.map(t=>t.terrain==='rock'?'s':t.terrain[0]).join('')}`;
+    const newMap = !previousWorld||previousWorld.seed!==world.seed||previousWorld.width!==world.width||previousWorld.height!==world.height;
+    const groundChanged = newMap || this.terrainKey !== nextTerrainKey;
     if (newMap) this.cancelDesignation();
     // The worker epoch distinguishes a checkpoint from an ordinary delta even
     // if terrain content and simulation tick match a previous session.
     const resetPoses = resetPresentation || newMap || world.tick < (previousWorld?.tick ?? 0);
     this.world = world;
     if(tracks) {this.timeline.adopt(world.tick,speed,tracks,now,resetPoses || !this.hasTracks);this.hasTracks=true;}
-    if (newMap) {
-      this.boxes.clear();
+    if(groundChanged) {
       this.terrainKey = nextTerrainKey;
       buildTerrain(world,this.terrainGroup,this.staticMaterial,this.waterMaterial);
       this.overview.rebuildTerrain(this.terrainGroup);
+    }
+    this.rocks.update(world,newMap);
+    if(!this.rocks.group.parent)this.scene.add(this.rocks.group);
+    if (newMap) {
+      this.boxes.clear();
       const centerX = (world.width - 1) / 2, centerZ = (world.height - 1) / 2;
       const extent = Math.min(WORLD_SCALE.cameraSpan, Math.max(world.width, world.height));
       this.controls.target.set(centerX, 0, centerZ);
@@ -216,11 +223,12 @@ export class ColonyRenderer {
       this.resize();
     }
     if (previousWorld?.resources !== world.resources || newMap) this.updateResources(world, newMap);
+    else if (Math.floor(previousWorld.tick / 25) !== Math.floor(world.tick / 25)) this.resources.updateGrowth(world);
     const structureKey = world.structures.map((s) => `${s.id}:${s.kind}:${s.x}:${s.z}:${s.orientation}:${s.footprint}`).join('|');
     if (structureKey !== this.structureKey || newMap) { this.structureKey = structureKey; this.buildStructures(world); }
     // Quantize presentation of progression to avoid rebuilding static meshes for
     // every work tick. Saved simulation progress remains exact and authoritative.
-    const jobKey = world.jobs.map((j) => `${j.id}:${j.kind}:${j.x}:${j.z}:${j.orientation}:${j.footprint}:${j.status}:${j.escrow.wood}:${j.kind === 'chop' || j.kind === 'harvest' ? 0 : Math.floor(j.progress / JOB_DURATION[j.kind] * 20)}`).join('|');
+    const jobKey = world.jobs.map((j) => `${j.id}:${j.kind}:${j.x}:${j.z}:${j.orientation}:${j.footprint}:${j.status}:${j.escrow.wood}:${j.kind === 'chop' || j.kind === 'harvest' || j.kind === 'cut' ? 0 : Math.floor(j.progress / JOB_DURATION[j.kind] * 20)}`).join('|');
     if (jobKey !== this.jobKey || newMap) { this.jobKey = jobKey; this.buildJobs(world); }
     const storageKey = world.stockpiles.map((s) => `${s.id}:${s.x}:${s.z}:${s.priority}:${s.filters.wood}:${s.filters.food}`).join('|');
     if (storageKey !== this.storageKey || newMap) { this.storageKey = storageKey; this.buildStorage(world); }
@@ -321,7 +329,7 @@ export class ColonyRenderer {
     for (const job of world.jobs) {
       const cells = footprintCells(job), last = cells[cells.length - 1]!;
       for (const cell of cells) orders.push({ x: cell.x, y: 0.032, z: cell.z, color: job.status === 'active' ? 0xe7c17a : 0x99cfc3 });
-      if (job.kind === 'chop' || job.kind === 'harvest') continue;
+      if (job.kind === 'chop' || job.kind === 'harvest' || job.kind === 'cut') continue;
       const x = (job.x + last.x) / 2, z = (job.z + last.z) / 2, ry = job.orientation * Math.PI / 2;
       const height = job.kind === 'wall' ? wallHeight : job.kind === 'table' ? WORLD_SCALE.tableHeight : job.kind === 'stool' ? WORLD_SCALE.stoolHeight : WORLD_SCALE.bedSurfaceHeight;
       const width = job.kind === 'wall' ? 0.92 : job.kind === 'table' ? WORLD_SCALE.tableWidth : job.kind === 'stool' ? WORLD_SCALE.stoolWidth : WORLD_SCALE.bedWidth;
@@ -440,6 +448,7 @@ export class ColonyRenderer {
     const cellPixels=this.host.clientHeight*this.camera.zoom/(this.camera.top-this.camera.bottom);
     const distant=this.overview.group.visible ? cellPixels<9 : cellPixels<7;
     this.overview.group.visible=distant;this.terrainGroup.visible=!distant;this.resourceGroup.visible=!distant;
+    this.rocks.setDistant(distant);
     this.renderer.info.reset();
     this.renderer.render(this.scene, this.camera);
     this.stats.drawCalls = this.renderer.info.render.drawCalls;
@@ -576,7 +585,7 @@ export class ColonyRenderer {
     const last = cells[cells.length - 1]!;
     this.hover.scale.set(Math.abs(cell.x - last.x) + 1, Math.abs(cell.z - last.z) + 1, 1);
     this.hover.position.set((cell.x + last.x) / 2, this.world.tiles[cell.z * this.world.width + cell.x]?.terrain === 'water' ? WORLD_SCALE.waterSurface + 0.04 : 0.055, (cell.z + last.z) / 2);
-    const validity = this.tool === 'wall' || this.tool === 'bed' || this.tool === 'table' || this.tool === 'stool' || this.tool === 'chop' || this.tool === 'harvest'
+    const validity = this.tool === 'wall' || this.tool === 'bed' || this.tool === 'table' || this.tool === 'stool' || this.tool === 'chop' || this.tool === 'harvest' || this.tool === 'cut'
       ? canDesignate(this.world, { type: 'designate', kind: this.tool, ...cell, orientation: this.placementRotation }) : undefined;
     const color = validity?.ok === false ? 0xe46f58 : this.tool === 'cancel' || this.tool === 'remove-stockpile' ? 0xe6876a : this.tool === 'select' ? 0xf9ebae : 0x9dd9ca;
     (this.hover.material as THREE.MeshBasicNodeMaterial).color.setHex(color);
@@ -625,6 +634,7 @@ export class ColonyRenderer {
     document.removeEventListener('visibilitychange', this.onVisibility);
     this.boxes.dispose();
     this.overview.dispose();
+    this.rocks.dispose();
     this.resources.clear();
     for (const group of [this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup, this.pawns.group]) clearGroup(group);
     this.pileChunks.clear();
