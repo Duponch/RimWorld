@@ -4,7 +4,7 @@ Depuis V9, le [dégagement des cultures](farming.md#dégagement-matériel-v9) aj
 
 Références : rapport utilisateur chapitres 2, 4, 5, 9 et 10 ; SYS-005/020..022/041..061 ; scénarios A et familles F1/F2/F3. La [liste des écarts](../gameplay/decisions.md) distingue les règles retenues des limites temporaires. Les résultats exécutés sont consignés dans [validation.md](validation.md).
 
-Extension V5 : [objets alimentaires](food-items.md), identité `item`, quantités réservées et limites de pile par définition. Les détails historiques V2/V3 ci-dessous restent datés de leurs tranches.
+Extension V5 : [objets alimentaires](food-items.md), identité `item`, quantités réservées et limites de pile par définition. Les migrations V2/V3 décrites ci-dessous restent datées ; le contrat de continuation courant est V9.
 
 ## État autoritaire et vues
 
@@ -12,9 +12,9 @@ Extension V5 : [objets alimentaires](food-items.md), identité `item`, quantité
 
 `World.stock` est une vue reconstruite des piles au sol et portées ; les matériaux livrés aux chantiers en sont exclus. `job.escrow` devient lui aussi une vue des piles livrées à ce chantier. Ces champs gardent une lecture simple pour les snapshots et la migration, mais leur cohérence est validée. Il est interdit de les incrémenter pour créer de la matière.
 
-Le petit catalogue immuable dans `definitions.ts` définit les types utiles, capacités, coûts, durées et empreintes. Les types sauvegardés sont des identifiants techniques, distincts des libellés. Les réglages 75 unités par pile et 10 par transport sont des choix du projet.
+Le petit catalogue immuable dans `definitions.ts` et `items.ts` définit les types utiles, capacités, coûts, durées et empreintes. Les types sauvegardés sont des identifiants techniques, distincts des libellés. La limite dépend de l’objet : 75 pour bois/baies/riz, 10 pour les rations. Le portage de travail reste provisoirement limité à dix unités, indépendamment de l’ingestion.
 
-Un bilan bois indépendant additionne arbres, piles de tous propriétaires et coûts incorporés aux constructions. Un bilan nourriture ajoute buissons, piles et unités effectivement consommées (un repas peut contenir plusieurs baies). Les vues `stock`/`escrow` ne doivent jamais s'ajouter une deuxième fois à ces bilans.
+Un bilan bois indépendant additionne arbres, piles de tous propriétaires et coûts incorporés aux constructions. Depuis les plantes renouvelables, le bilan alimentaire suit stocks initiaux, récoltes effectives et unités consommées ; il ne confond pas croissance végétale et stock déjà récolté. Les vues `stock`/`escrow` ne doivent jamais s'ajouter une deuxième fois aux bilans.
 
 ## Réservations et transitions
 
@@ -26,7 +26,7 @@ Un colon a au plus un travail de production/construction ou une tâche de transp
 4. Une construction attend son coût entièrement livré. Un seul constructeur réserve le travail ; la progression déjà accomplie survit à l'interruption.
 5. L'achèvement incorpore les matériaux dans le bâtiment et retire le travail. Annuler retire le plan, libère ses engagements et laisse les matériaux au sol.
 
-Désactiver Transport, changer une politique ou perdre une destination libère les engagements futurs. Une cargaison interrompue est déposée à la position réelle du porteur ; elle n'est pas téléportée à la source. Les matériaux déjà livrés ne sont pas repris lorsque seul le constructeur s'interrompt. Les prochaines tâches pourront utiliser les piles restées au sol.
+Désactiver la famille responsable (Transport ordinaire, Culture pour le dégagement), changer une politique incompatible ou perdre une destination libère les engagements futurs. Une cargaison interrompue est déposée à la position réelle du porteur ; elle n'est pas téléportée à la source. Les matériaux déjà livrés ne sont pas repris lorsque seul le constructeur s'interrompt. Les prochaines tâches pourront utiliser les piles restées au sol.
 
 Une réserve est actuellement une cellule avec filtre, priorité et capacité totale. Le stockage de meilleure priorité attire les objets ; les réserves de même priorité ne provoquent pas de transport circulaire. Une capacité réduite sous le contenu actuel autorise l'évacuation de l'excédent vers une réserve admissible de priorité égale ou inférieure. Faute de destination, l'excédent reste au sol. Les objets déjà présents ne disparaissent pas lorsque leurs filtres changent. La capacité ne représente pas un second conteneur possédant des copies des piles.
 
@@ -42,11 +42,11 @@ Les piles et réserves utilisent des lots de rendu par chunk, actualisés selon 
 
 ## Persistance et compatibilité
 
-Le schéma 3 conserve piles, propriétaires, stockages, orientation, phases de transport, routes et cadences, ainsi que les [besoins physiques](needs.md) ajoutés depuis V2. La sérialisation vérifie formes, quantités, références croisées, emprises et capacités réservées avant de produire du JSON. Un chargement invalide ne remplace pas le monde courant du worker.
+Le schéma courant 9 conserve piles, propriétaires, stockages, orientation, phases de transport, routes et cadences, ainsi que les [besoins physiques](needs.md) ajoutés depuis V2. La sérialisation vérifie formes, quantités, références croisées, emprises et capacités réservées avant de produire du JSON. Un chargement invalide ne remplace pas le monde courant du worker.
 
 La migration du schéma 1 valide d'abord l'ancien état. Son stock global devient des piles déterministes près du camp ; les anciens matériaux en escrow sont affectés aux chantiers correspondants. Les priorités déjà choisies sont conservées et Transport reçoit une valeur de départ. Les anciens lits et plans de lits conservent leur emprise `legacy-single`. Terrain, seed, tick et identités existantes restent présents ; aucune régénération du paysage n'est permise. La continuation après migration suit les nouvelles règles, sans prétendre rejouer exactement l'ancienne simulation à stock global.
 
-Les clés navigateur `lisiere.save.v1` et `lisiere.previous.v1` sont conservées pour retrouver les données existantes ; le numéro de schéma se lit dans le JSON. La reprise exacte est exigée entre sauvegardes/restaurations du schéma 3. V2 est validé avant l'initialisation des tâches de besoins ; sa matière et ses travaux restent inchangés. Les bornes d'entrée et de migration doivent être contrôlées avant toute allocation proportionnelle à une quantité historique.
+Les clés navigateur `lisiere.save.v1` et `lisiere.previous.v1` sont conservées pour retrouver les données existantes ; le numéro de schéma se lit dans le JSON. La reprise exacte est exigée entre sauvegardes/restaurations du schéma courant. V2 est validé avant l'initialisation des tâches de besoins ; sa matière et ses travaux restent inchangés. Les bornes d'entrée et de migration doivent être contrôlées avant toute allocation proportionnelle à une quantité historique.
 
 ## Limites techniques à suivre
 
@@ -56,4 +56,4 @@ Le journal d'événements affiché est borné ; ce n'est pas encore un journal c
 
 ## Mise à jour spatiale V6
 
-Le [contrat sol, mouvement et rendu distant](spatial-motion-storage.md) remplace les descriptions antérieures de piles multiples au sol et du BFS cardinal. La migration V5→V6 est explicite ; le comportement des buissons reste un chantier ouvert.
+Le [contrat sol, mouvement et rendu distant](spatial-motion-storage.md) remplace les descriptions antérieures de piles multiples au sol et du BFS cardinal. La migration V5→V6 est explicite ; la croissance et la récolte répétée des buissons sont livrées depuis V7 ([contrat actuel](rocks-and-plants.md)).

@@ -1,6 +1,6 @@
 # RimWorld : référence de gameplay et transposition en 3D
 
-**Place de cette première recherche.** Depuis le 13 septembre 2026, le rapport HTML/PDF et le classeur fournis dans `docs/new_docs` constituent la référence fonctionnelle principale. Lire [la note d'adoption critique](reference-adoption.md) pour leurs apports, limites et correspondances avec le plan. Le présent rapport reste un complément de synthèse et de sources ; le calendrier canonique est [ROADMAP](../ROADMAP.md).
+**Place de cette première recherche.** Depuis le 13 septembre 2026, le rapport HTML/PDF et le classeur fournis dans `docs/reference/originals` constituent la référence fonctionnelle principale. Lire [la note d'adoption critique](reference-adoption.md) pour leurs apports, limites et correspondances avec le plan. Le présent rapport reste un complément de synthèse et de sources ; le calendrier canonique est [ROADMAP](../ROADMAP.md).
 
 ## Périmètre et niveau de certitude
 

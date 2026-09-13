@@ -1,14 +1,16 @@
 # Adoption du référentiel utilisateur
 
-Lecture et décisions : **13 septembre 2026**. Les fichiers de `docs/new_docs` deviennent notre référence fonctionnelle principale pour développer Lisière, en complément des [recherches précédentes](rimworld-reference.md) et de l'[observation du jeu](visual-reference.md). Ils orientent nos contrats et nos critères de réalisation. Les décisions utilisateur, les observations vérifiées et les mesures du projet continuent de guider leur adaptation.
+Lecture et décisions : **13 septembre 2026**. Les fichiers de `docs/reference/originals` deviennent notre référence fonctionnelle principale pour développer Lisière, en complément des [recherches précédentes](rimworld-reference.md) et de l'[observation du jeu](visual-reference.md). Ils orientent nos contrats et nos critères de réalisation. Les décisions utilisateur, les observations vérifiées et les mesures du projet continuent de guider leur adaptation.
+
+Cette note conserve les décisions aux dates indiquées. Les états de prototype décrits dans ses sections historiques ne remplacent pas l’[inventaire actuel](../gameplay/implementation-status.md). Les originaux ont été reclassés le 14 septembre dans `docs/reference/originals`, sans modification ; leur [manifeste](../reference/originals/manifest.json) permet de le vérifier.
 
 ## Ce qui a été reçu et examiné
 
 | Document | Contenu vérifié | Usage |
 |---|---|---|
-| [Documentation HTML](../new_docs/Documentation_developpement.html) | 36 chapitres, huit figures embarquées, 47 sources. | Lecture par domaine et navigation dans les explications. |
-| [Documentation PDF](../new_docs/Documentation_developpement.pdf) | 49 pages ; même rapport que le HTML. Texte comparé et pages structurantes inspectées visuellement. | Lecture paginée et schémas. Ce n'est pas une recherche indépendante du HTML. |
-| [Référentiel Excel](../new_docs/Referentiel_developpement.xlsx) | Neuf feuilles : synthèse, 181 contrats SYS, 95 familles CAT, 227 champs STAT, 52 constantes CONST, 36 commandes UI, 196 propositions TEST, 29 écarts GAP et 47 sources. | Retrouver les contrats, interactions, critères et inconnues du chantier courant. |
+| [Documentation HTML](../reference/originals/Documentation_developpement.html) | 36 chapitres, huit figures embarquées, 47 sources. | Lecture par domaine et navigation dans les explications. |
+| [Documentation PDF](../reference/originals/Documentation_developpement.pdf) | 49 pages ; même rapport que le HTML. Texte comparé et pages structurantes inspectées visuellement. | Lecture paginée et schémas. Ce n'est pas une recherche indépendante du HTML. |
+| [Référentiel Excel](../reference/originals/Referentiel_developpement.xlsx) | Neuf feuilles : synthèse, 181 contrats SYS, 95 familles CAT, 227 champs STAT, 52 constantes CONST, 36 commandes UI, 196 propositions TEST, 29 écarts GAP et 47 sources. | Retrouver les contrats, interactions, critères et inconnues du chantier courant. |
 
 Les 227 champs de statistiques ne contiennent pas de valeurs de profils (`Statistiques!G2:G228`). Les contrats sont marqués non évalués et les tests non exécutés. Ces inventaires décrivent le dossier ; ils ne mesurent ni l'exhaustivité de RimWorld, ni l'avancement du prototype. Les originaux sont conservés sans modification.
 

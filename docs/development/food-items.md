@@ -1,18 +1,13 @@
-# Objets alimentaires et unités de nutrition — schéma 5
+# Aliments et nutrition — contrat courant V9
 
-Livraison du 13 septembre 2026. Corpus : chapitres 4, 10, 11 et 14 ; CAT-005/011/015, SYS-076..078, TEST-076..078 et CONST-001..007. Adoption des définitions distinctes, des unités et de l'ingestion physique. Le [catalogue de couverture](../gameplay/content-catalogue.md) distingue contenu livré et référence encore à acquérir.
+Corpus : chapitres 4/10/11/14, CAT-005/011/015, SYS-076..078, TEST-076..078, CONST-001..007. [Recherche nutritionnelle](../research/food-items-reference.md) et [nouvelle vérification du choix alimentaire](../research/food-clearing-reference.md). Les nombres sont adaptés à notre horloge ; ils ne certifient pas tous les profils de RimWorld.
 
-## Recherche renouvelée et décision
-
-Consultation le 13 septembre 2026, référence PC 1.6. Les pages communautaires [baies](https://rimworldwiki.com/wiki/Berries) et [repas de survie](https://rimworldwiki.com/wiki/Packaged_survival_meal) indiquent respectivement 0,05/0,9 nutrition, piles 75/10, et un repas au maximum par ingestion pour la ration. Valeurs adoptées ; confirmation sur les définitions résolues d'une installation identifiée encore ouverte. La ration peut se détériorer malgré son absence de pourrissement ; ces deux mécanismes ne sont pas encore implémentés.
-
-Le miroir [FoodUtility](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/RimWorld/FoodUtility.cs), méthodes `WillIngestStackCountOf` et `StackCountForNutrition`, calcule la quantité selon la nutrition manquante avec arrondi au plus proche puis limite de l'aliment. **Correction d'une hypothèse initiale : ne pas utiliser systématiquement un plafond.** Les moitiés utilisent l'arrondi pair du moteur consulté. Nous bornons ensuite aux unités effectivement disponibles et réservables dans la pile ; rassembler plusieurs piles pour un même repas reste ouvert.
-
-[Need_Food](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/RimWorld/Need_Food.cs) donne une baisse adulte de base équivalente à 1,6 nutrition/jour et des seuils de catégories proportionnels au seuil de recherche. [HungerLevelUtility](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/RimWorld/HungerLevelUtility.cs), vérifié aussi par lecture HTTP directe après indisponibilité du cache Web, donne les facteurs 1 / 0,5 / 0,25 / 0 selon la catégorie. Le HEAD public a été recontrôlé le 13 septembre : `2d508035082e7cb0c8e29e230d26bda6e546928f`, daté du 20 mai 2026. Ce sont des observations du miroir, pas une certification du binaire commercial ni de tous les profils humains.
-
-[IngestibleProperties](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/RimWorld/IngestibleProperties.cs) définit par défaut 500 ticks et un rayon de siège 32 ; [Toils_Ingest](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/RimWorld/Toils_Ingest.cs) prend la quantité et accorde les effets à la fin. Conservation des 50 ticks locaux d'ingestion ; le profil d'EatingSpeed et les overrides XML restent à valider. Le code du jeu n'est pas recopié.
-
-La recherche végétale récente reconfirme que la [fiche du buisson](https://rimworldwiki.com/wiki/Berry_bush) est signalée à vérifier et que la plante survit normalement à la récolte. Sa correction reste le chantier suivant : persistance, maturité et croissance intégrée avec conditions. Cette livraison distingue les baies récoltées, mais conserve explicitement le défaut de disparition et les rendements provisoires.
+| Objet | Nutrition/unité | Pile maximale | Ingestion maximale |
+|---|---:|---:|---:|
+| Baies | 0,05 | 75 | 75 |
+| Riz cru | 0,05 | 75 | 75 |
+| Repas de survie | 0,9 | 10 | 1 |
+| Portion historique | 0,35 | 75 | 1 |
 
 ## Contrat livré
 
@@ -24,25 +19,20 @@ Le besoin adulte utilise une capacité actuelle d'une nutrition, affichée par u
 
 Les nouvelles parties commencent avec 18 repas de survie, répartis en piles de dix et huit. Le départ reste local et ne prétend pas reproduire l'ensemble Crashlanded. Les récoltes produisent `berries`. L'UI affiche nutrition totale puis quantités de chaque aliment ; l'inspection et le journal identifient les aliments. Les rations et baies ont des couleurs de piles distinctes, et la ration portée a un paquet GPU distinct. Les lots et matériaux restent conservés.
 
+## Choix alimentaire
+
+Le profil adulte neutre classe les aliments frais avec un score de préférence moins la distance de Manhattan : baies 0, ration −5, riz cru −82. Ce score choisit une cible accessible ; le trajet garde sa durée euclidienne. En cas d’égalité, l’ID départage de façon déterministe, adaptation locale explicitée dans la recherche. Un aliment préféré inaccessible ne masque pas les autres. Le porteur compare aussi son aliment tenu ; interrompre dépose sa cargaison de façon conservatrice.
+
+Le profil historique conserve le choix par coût de trajet. Les récoltes de baies ne détruisent plus le buisson depuis V7 ; le riz, introduit en V8, est semé, récolté et ressemé. Voir [plantes](rocks-and-plants.md) et [culture](farming.md).
+
 ## Migration et frontières
 
 Les schémas V1–V4 sont validés avant migration. `foodRules: legacy` conserve 0,015 point/tick, les anciennes récoltes et portions à 35 points, sans transformer leurs stocks en rations plus riches. Les anciennes ingestions gardent progression et quantité un ; IDs, positions, cargaisons, chantiers et jauges ne changent pas. Ces objets apparaissent comme « Portion historique ». Les nouvelles parties utilisent `foodRules: adult`. Les deux profils sont explicites, sérialisés et testés ; aucune conversion silencieuse à la reprise. Tout nouveau producteur alimentaire passe son `ItemId` explicitement : le défaut `legacy-portion` des helpers est réservé à la compatibilité et aux anciennes fixtures.
 
-Le schéma courant est V5. Les helpers de migration sont extraits dans `save-migrations.ts`, le validateur reste dans `serialization.ts`. Une définition inconnue, catégorie incohérente, pile au-delà de sa limite, quantité d'ingestion excessive ou mélange de champs V5 dans un ancien schéma est refusé. Une charge invalide ne remplace pas la partie courante.
+Le schéma courant est 9 ; les étapes antérieures sont validées avant migration. Identité d’objet inconnue, catégorie incohérente, capacité dépassée, quantité d’ingestion invalide ou engagements contradictoires provoquent un refus. Le worker n’adopte jamais une sauvegarde invalide.
 
-Choix alimentaire encore par accès/distance et identifiant, **sans le classement complet des préférences du jeu original**, politiques/régimes, repas personnel de secours ou cumul de plusieurs piles. Recettes, ingrédients, péremption, intoxications et effets médicaux sont absents. Ces limites sont des travaux ouverts, pas une parité déclarée.
+Cuisine, conservation, intoxications, régimes, traits, compétences, repas personnel de secours et collecte de plusieurs piles pour un seul repas restent absents. Le classement présent couvre seulement les aliments et le profil ci-dessus.
 
 ## Validation
 
-Deux scénarios profonds couvrent réservations de plusieurs unités, compétition, ingestion, interruption, continuation, arrondis, facteurs de faim, types mélangés en transport/stockage, limites et corruptions V4/V5. Le pilote de cinq jours et celui de trois jours par l'interface raisonnent désormais en nutrition pour planifier les récoltes et comptabilisent les unités réellement consommées. Les anciennes fixtures ciblées conservent explicitement leur profil historique ; les cartes naturelles du pilote utilisent le nouveau profil adulte. Résultats et audit matériel dans [validation](validation.md).
-
-## Mise à jour spatiale V6
-
-Le [contrat sol, mouvement et rendu distant](spatial-motion-storage.md) remplace les descriptions antérieures de piles multiples au sol et du BFS cardinal. La migration V5→V6 est explicite ; le comportement des buissons reste un chantier ouvert.
-
-
-## Mise à jour V9 : sélection des aliments
-
-Le défaut historique de disparition des buissons décrit plus haut a été corrigé en V7, puis le riz ajouté en V8. En V9, [la nouvelle vérification des sources](../research/food-clearing-reference.md) remplace le choix par seul trajet : le profil adulte neutre compare préférence et distance, après réservation et accessibilité. Baies 0, ration de survie −5, riz cru −82 ; on soustrait la distance Manhattan. Les durées de trajet restent euclidiennes. Les réservations/ingestions en cours continuent ; seules les futures décisions changent. Les profils `legacy` gardent leur économie antérieure.
-
-`food-selection.ts` classe les candidats et fournit l’objectif de recherche ; `needs.ts` garde les interruptions et l’arbitrage entre besoins ; `eating.ts` exécute le repas physique. La recherche s’arrête sur le meilleur candidat accessible, ou examine la composante entière si le candidat visé est inaccessible. Le transporteur affamé compare aussi sa cargaison : il peut la déposer sans perte pour prendre un meilleur aliment à proximité. Fraîcheur, intoxication, politiques alimentaires et cuisine restent absentes, sans bonus fictif dans le score.
+Les scénarios alimentaires vérifient arrondi pair, faim, réservations concurrentes, ingestion, interruption, identité, préférence/distance/inaccessibilité et continuation. L’oracle de sélection couvre 120 cartes avec obstacles. Le pilote multi-jours rapproche ressources, récoltes et quantités réellement consommées. Les [preuves courantes](validation.md) distinguent simulations, parcours UI et limites.

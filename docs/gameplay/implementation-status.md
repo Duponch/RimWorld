@@ -1,6 +1,6 @@
 # Ce qui est jouable et ce qui manque
 
-État du 13 septembre 2026, après le cycle visuel jour/nuit et les deux projections de caméra (sauvegardes V9, dégagement agricole et choix alimentaire). Cet inventaire décrit **le code livré**, contrairement aux critères cibles de la [matrice](systems-matrix.md). [ROADMAP](../ROADMAP.md) conserve seul le calendrier G0–G5. Le [catalogue de contenu](content-catalogue.md) suit séparément les objets et les limites de l'inventaire source ; aucun pourcentage de complétude n'est annoncé.
+État du 14 septembre 2026, schéma V9 : dégagement agricole et choix alimentaire neutre. Cet inventaire décrit **le code livré**, contrairement aux critères cibles de la [matrice](systems-matrix.md). [ROADMAP](../ROADMAP.md) conserve seul le calendrier G0–G5. Le [catalogue de contenu](content-catalogue.md) suit séparément les objets et les limites de l'inventaire source ; aucun pourcentage de complétude n'est annoncé.
 
 ## Boucle actuellement jouable
 
@@ -22,7 +22,7 @@ Le décor est procédural, les poses des personnages utilisent le GPU et les cha
 | Travail | Collecte, construction, transport, culture et priorités 0–4. | Autres métiers, incapacités, compétences/passions/expérience, zones autorisées, horaires et politiques individuelles. |
 | Collecte végétale | Piles physiques ; buissons persistants, maturité, croissance diurne/fertilité, rendement partiel et coupe distincte. | Autres espèces, croissance des arbres et régénération du peuplement sauvage, santé, rendement et vitesse dépendant des compétences ; climat fixe. Ne pas présumer une souche persistante pour chaque arbre abattu. |
 | Agriculture | Zones de riz, semis sans graines, défrichage autorisé, croissance lumineuse/fertilité, récolte mûre automatique, récolte manuelle précoce et second semis ; politiques persistées ; piles gênantes portées hors des champs. | Autres cultures et choix d’espèce, fragments minés transportables, compétences, dégâts et mortalité ; température/saisons/météo fixes, maladies absentes. |
-| Matières et portage | Bois, baies et rations distincts ; propriétaires uniques, fractionnement/fusion, réservations et cargaisons. | Masse, profils de capacité, inventaire personnel, équipements, autres matières, détérioration, objets interdits et nombreuses règles de coexistence des piles. |
+| Matières et portage | Bois, baies, riz et rations distincts ; propriétaires uniques, fractionnement/fusion, réservations et cargaisons. | Masse, profils de capacité, inventaire personnel, équipements, autres matières, détérioration, objets interdits et nombreuses règles de coexistence des piles. |
 | Stockage | Une pile par case au sol, filtres, réservations compatibles, capacités selon l’objet ; dépôts proches et création/retrait par rectangle. | Zones nommées à politique commune, étagères, filtres détaillés et politiques de fraîcheur/qualité ; cette UI n'est pas encore le stockage complet. |
 | Construction | Bois réellement livré puis consommé ; murs, lits, tables/tabourets et rotations. | Minage, déconstruction, réparation, déplacement/réinstallation, lissage, sols, suppression automatique des objets gênants, variétés de matériaux et échecs/qualité de construction. Plans de murs et tables encore bloquants. |
 | Mobilier | Lit 1×2, table 1×2, tabouret et usage physique. | Couchages au sol désignés, chaises, lits doubles/hospitaliers, objets de loisirs, éclairage, confort des accessoires et qualité. |
@@ -51,11 +51,6 @@ Le décor est procédural, les poses des personnages utilisent le GPU et les cha
 
 Baies/rations, quantités et rythme adulte de faim sont calibrés selon les sources consultées ; choix alimentaire, rendement végétal, plusieurs coûts/durées et repos restent partiels. Les anciens profils alimentaires sont préservés explicitement. Les arbres coupés restent finis ; les buissons sont persistants et renouvelables en environnement tempéré fixe. Cela ne remplace pas une économie agricole complète. Les tables bloquent le passage, les plans de murs le bloquent immédiatement, et l'humeur n'a qu'une petite partie de ses causes. Les [décisions détaillées](decisions.md) et la [recherche récente](../research/colony-progression.md) conservent les raisons et les conditions de réexamen.
 
-La suite de G1 doit notamment poursuivre avec semis/cultures, préférences et horaires, puis cuisine. Les buissons sauvages disposent déjà de croissance, maturité, récolte répétée et coupe ; météo, saisons et statistiques du colon restent absentes. Chaque ajout enrichira les objectifs et bilans du même pilote de colonie, au lieu d'accumuler des parcours sans conséquences métier.
+La suite de G1 poursuit cuisine, conservation, horaires et politiques ; semis et choix alimentaire neutre sont déjà livrés. Les buissons sauvages disposent déjà de croissance, maturité, récolte répétée et coupe ; météo, saisons et statistiques du colon restent absentes. Chaque ajout enrichira les objectifs et bilans du même pilote de colonie, au lieu d'accumuler des parcours sans conséquences métier.
 
-### Complément livré V7
-
-[Buissons et rochers](../development/rocks-and-plants.md) : récolte répétée du même buisson, croissance diurne/fertilité du terrain, maturité et rendement, coupe avec rendement éventuel, inspection et sauvegarde. Massifs continus facettés avec mise à jour locale. Pas de minage, agriculture semée, cuisine ni climat variable dans cette tranche.
-
-
-V8 : [premier champ de riz](../development/farming.md), travail Culture, semis/coupe autorisés, récolte mûre, second semis, lumière naturelle intégrée et migration conservatrice de la croissance. La chaîne alimentaire reste partielle tant que cuisine, stockage local obstruant, préférences et santé sont absents.
+Les versions et leurs preuves sont conservées dans [validation](../development/validation.md) ; ce document conserve uniquement l’état fonctionnel courant.
