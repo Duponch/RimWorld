@@ -13,6 +13,7 @@ const MOVE_INTERVAL = 3;
 const PATH_SEARCHES_PER_TICK = 8;
 const JOB_LABEL: Readonly<Record<JobKind, string>> = { chop: 'abattage', harvest: 'récolte', wall: 'construction de mur', bed: 'construction de lit' };
 interface SearchBudget { remaining: number; pairs: number }
+type NavigationGrid = () => Uint8Array;
 const workType = (kind: JobKind): WorkType => kind === 'chop' || kind === 'harvest' ? 'gather' : 'build';
 const sameCell = (a: Cell, b: Cell): boolean => a.x === b.x && a.z === b.z;
 const nearby = (a: Cell, b: Cell): boolean => sameCell(a, b) || adjacent(a, b);
@@ -179,10 +180,11 @@ function canReach(world: World, target: Cell & { kind?: JobKind }, reachable: Re
   }
   return false;
 }
-function planWork(world: World, pawn: Pawn, blocked: Uint8Array, occupied: Set<number>, budget: SearchBudget): void {
+function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, occupied: Set<number>, budget: SearchBudget): void {
   // Never enumerate logistics after another colonist exhausted the shared search budget.
   if (budget.remaining === 0 || budget.pairs === 0) return;
   if (!world.jobs.length && (!world.stockpiles.length || !world.piles.length || pawn.priorities.haul === 0)) { pawn.planCooldown = PLAN_INTERVAL; return; }
+  const blocked = getBlocked();
   const reachable = search(world, pawn, blocked, occupied, budget); if (!reachable) return;
   pawn.planCooldown = PLAN_INTERVAL;
   const delivered = new Map<number, number>(); const ground = new Map<number, number>();
@@ -264,8 +266,9 @@ function planWork(world: World, pawn: Pawn, blocked: Uint8Array, occupied: Set<n
   if (staticReachable) for (const candidate of blockedTargets) if (yieldIdleBlocker(world, pawn, candidate.target, blocked, occupied, staticReachable, candidate.allow)) return;
 }
 
-function moveToward(world: World, pawn: Pawn, target: Cell, allowTarget: boolean, blocked: Uint8Array, occupied: Set<number>, budget: SearchBudget): void {
+function moveToward(world: World, pawn: Pawn, target: Cell, allowTarget: boolean, getBlocked: NavigationGrid, occupied: Set<number>, budget: SearchBudget): void {
   pawn.state = 'moving'; if (pawn.moveCooldown > 0) return;
+  const blocked = getBlocked();
   let next = pawn.path[0];
   if (!next || blocked[cellIndex(world, next.x, next.z)] || occupied.has(cellIndex(world, next.x, next.z))) {
     if (pawn.planCooldown > 0) return;
@@ -280,13 +283,13 @@ function moveToward(world: World, pawn: Pawn, target: Cell, allowTarget: boolean
   }
   if (next) { occupied.delete(cellIndex(world, pawn.x, pawn.z)); pawn.x = next.x; pawn.z = next.z; occupied.add(cellIndex(world, pawn.x, pawn.z)); pawn.path.shift(); pawn.moveCooldown = MOVE_INTERVAL; }
 }
-function processHaul(world: World, pawn: Pawn, blocked: Uint8Array, occupied: Set<number>, budget: SearchBudget): void {
+function processHaul(world: World, pawn: Pawn, getBlocked: NavigationGrid, occupied: Set<number>, budget: SearchBudget): void {
   const task = pawn.haul!;
   if (!destinationValid(world, pawn)) { releaseWork(world, pawn); return; }
   if (task.phase === 'pickup') {
     const source = world.piles.find(item => item.id === task.sourcePileId);
     if (!source || source.owner.type !== 'ground' || source.quantity < task.quantity) { releaseWork(world, pawn); return; }
-    if (!nearby(pawn, source.owner)) { moveToward(world, pawn, source.owner, true, blocked, occupied, budget); return; }
+    if (!nearby(pawn, source.owner)) { moveToward(world, pawn, source.owner, true, getBlocked, occupied, budget); return; }
     if (source.quantity > task.quantity && world.piles.length >= 32768) { releaseWork(world, pawn); return; }
     source.quantity -= task.quantity;
     if (!source.quantity) world.piles.splice(world.piles.indexOf(source), 1);
@@ -298,7 +301,7 @@ function processHaul(world: World, pawn: Pawn, blocked: Uint8Array, occupied: Se
   const carry = world.piles.find(item => item.id === task.carryPileId);
   if (!target || !carry) { releaseWork(world, pawn); return; }
   const atTarget = task.destination.type === 'job' ? footprintCells(target as Job).some(cell => adjacent(pawn, cell)) && !footprintCells(target as Job).some(cell => sameCell(pawn, cell)) : nearby(pawn, target);
-  if (!atTarget) { moveToward(world, pawn, target, task.destination.type === 'stockpile', blocked, occupied, budget); return; }
+  if (!atTarget) { moveToward(world, pawn, target, task.destination.type === 'stockpile', getBlocked, occupied, budget); return; }
   world.piles.splice(world.piles.indexOf(carry), 1);
   addMaterial(world, carry.kind, carry.quantity, task.destination.type === 'job' ? { type: 'job', jobId: task.destination.jobId } : { type: 'ground', x: target.x, z: target.z });
   pawn.haul = null; pawn.path = []; pawn.state = 'idle'; pawn.planCooldown = 0; wakePlanners(world);
@@ -342,20 +345,24 @@ export function stepWorld(world: World, ticks = 1): void {
   if (!Number.isInteger(ticks) || ticks < 0 || ticks > 100000) throw new Error('Tick count must be an integer between 0 and 100000.');
   for (let step = 0; step < ticks; step++) {
     world.tick++;
-    const blocked = blockedCells(world); const occupied = new Set(world.pawns.map(pawn => cellIndex(world, pawn.x, pawn.z)));
+    // Build only if this tick actually plans or moves. No cross-tick cache can hide
+    // a command, edited terrain, restored save, or a wall that changed between calls.
+    let blocked: Uint8Array | undefined;
+    const getBlocked: NavigationGrid = () => blocked ??= blockedCells(world);
+    const occupied = new Set(world.pawns.map(pawn => cellIndex(world, pawn.x, pawn.z)));
     const budget: SearchBudget = { remaining: PATH_SEARCHES_PER_TICK, pairs: 32768 };
     for (let offset = 0; offset < world.pawns.length; offset++) {
       const pawn = world.pawns[((world.tick - 1) + offset) % world.pawns.length]!;
       if (pawn.moveCooldown > 0) pawn.moveCooldown--; if (pawn.planCooldown > 0) pawn.planCooldown--;
       if (processNeeds(world, pawn)) continue;
-      if (pawn.jobId === null && pawn.haul === null && pawn.planCooldown === 0) planWork(world, pawn, blocked, occupied, budget);
-      if (pawn.haul) { processHaul(world, pawn, blocked, occupied, budget); continue; }
+      if (pawn.jobId === null && pawn.haul === null && pawn.planCooldown === 0) planWork(world, pawn, getBlocked, occupied, budget);
+      if (pawn.haul) { processHaul(world, pawn, getBlocked, occupied, budget); continue; }
       const job = world.jobs.find(candidate => candidate.id === pawn.jobId); if (!job) continue;
       const cells = footprintCells(job);
       if (cells.some(cell => adjacent(pawn, cell)) && !cells.some(cell => sameCell(pawn, cell))) {
         pawn.path = []; pawn.state = 'working'; job.progress++;
         if (job.progress >= JOB_DURATION[job.kind]) completeJob(world, pawn, job);
-      } else moveToward(world, pawn, job, false, blocked, occupied, budget);
+      } else moveToward(world, pawn, job, false, getBlocked, occupied, budget);
     }
     refreshStock(world);
   }

@@ -58,7 +58,7 @@ function clearGroup(group: THREE.Group): void {
   });
   group.clear();
   for (const geometry of geometries) geometry.dispose();
-  for (const mat of materials) mat.dispose();
+  for (const mat of materials) if (!mat.userData.rendererOwned) mat.dispose();
 }
 
 /** Six rigid bones, authored entirely in code. Each vertex has one bone influence.
@@ -114,6 +114,53 @@ function pawnGeometry(): THREE.InstancedBufferGeometry {
   geometry.setAttribute('dye', new THREE.InterleavedBufferAttribute(vertices, 1, 13));
   geometry.instanceCount = 0;
   return geometry;
+}
+
+/** Static chunk meshes batch different procedural shapes together. Their exact
+ * per-cell silhouettes and colors stay intact; only submissions are combined.
+ * Dynamic pawns and cargo remain GPU-instanced and are never baked here.
+ */
+function mergedInstances(group: THREE.Group, parts: { geometry: THREE.BufferGeometry; items: Placement[] }[], mat: THREE.Material, shadows = true): THREE.Mesh | undefined {
+  const vertexCount = parts.reduce((sum, part) => sum + part.geometry.getAttribute('position').count * part.items.length, 0);
+  const indexCount = parts.reduce((sum, part) => sum + (part.geometry.index?.count ?? part.geometry.getAttribute('position').count) * part.items.length, 0);
+  if (!vertexCount) { for (const part of parts) part.geometry.dispose(); if (!mat.userData.rendererOwned) mat.dispose(); return; }
+  const positions = new Float32Array(vertexCount * 3), normals = new Float32Array(vertexCount * 3), colors = new Float32Array(vertexCount * 3);
+  const indices = vertexCount > 65535 ? new Uint32Array(indexCount) : new Uint16Array(indexCount);
+  let vertex = 0, index = 0;
+  for (const { geometry, items } of parts) {
+    const pos = geometry.getAttribute('position'), normal = geometry.getAttribute('normal');
+    for (const item of items) {
+      const sx = item.sx ?? 1, sy = item.sy ?? 1, sz = item.sz ?? 1;
+      const cosine = Math.cos(item.ry ?? 0), sine = Math.sin(item.ry ?? 0);
+      scratchColor.setHex(item.color ?? 0xffffff);
+      for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i) * sx, z = pos.getZ(i) * sz;
+        const nx = normal.getX(i) / sx, ny = normal.getY(i) / sy, nz = normal.getZ(i) / sz;
+        const length = Math.hypot(nx, ny, nz), offset = (vertex + i) * 3;
+        positions[offset] = item.x + x * cosine + z * sine;
+        positions[offset + 1] = item.y + pos.getY(i) * sy;
+        positions[offset + 2] = item.z + z * cosine - x * sine;
+        normals[offset] = (nx * cosine + nz * sine) / length;
+        normals[offset + 1] = ny / length;
+        normals[offset + 2] = (nz * cosine - nx * sine) / length;
+        colors[offset] = scratchColor.r; colors[offset + 1] = scratchColor.g; colors[offset + 2] = scratchColor.b;
+      }
+      for (let i = 0; i < (geometry.index?.count ?? pos.count); i++) indices[index++] = vertex + (geometry.index?.getX(i) ?? i);
+      vertex += pos.count;
+    }
+    geometry.dispose();
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geometry.setAttribute('normal', new THREE.BufferAttribute(normals, 3));
+  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  geometry.setIndex(new THREE.BufferAttribute(indices, 1));
+  geometry.computeBoundingSphere();
+  const mesh = new THREE.Mesh(geometry, mat);
+  mesh.castShadow = shadows; mesh.receiveShadow = true;
+  mesh.matrixAutoUpdate = false;
+  group.add(mesh);
+  return mesh;
 }
 
 /** Cargo is a second instanced batch sharing the pawn pose attributes. Its
@@ -176,12 +223,14 @@ export class ColonyRenderer {
   private readonly keys = new Set<string>();
   private readonly pawnVisuals = new Map<number, VisualPawn>();
   private readonly pileChunks = new Map<string, VisualChunk>();
+  private readonly resourceChunks = new Map<string, VisualChunk>();
+  private readonly staticMaterial = material(0xffffff, { vertexColors: true });
+  private readonly waterMaterial = material(0xffffff, { vertexColors: true, roughness: 0.45, metalness: 0.08 });
   private readonly sun: THREE.DirectionalLight;
   private pawnMesh: THREE.Mesh | null = null;
   private cargoMesh: THREE.Mesh | null = null;
   private world: World | null = null;
   private terrainKey = '';
-  private resourceKey = '';
   private structureKey = '';
   private jobKey = '';
   private storageKey = '';
@@ -211,6 +260,10 @@ export class ColonyRenderer {
 
   private constructor(private readonly host: HTMLElement, private readonly onPick: (x: number, z: number) => void, renderer: THREE.WebGPURenderer) {
     this.renderer = renderer;
+    // Renderer-owned shared material survives deletion of an individual chunk.
+    // Reusing its node graph also avoids compiling a pipeline per tree batch.
+    this.staticMaterial.userData.rendererOwned = true;
+    this.waterMaterial.userData.rendererOwned = true;
     this.backend = renderer.getContext() instanceof WebGL2RenderingContext ? 'WebGL 2' : 'WebGPU';
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.8));
     renderer.shadowMap.enabled = true;
@@ -285,12 +338,18 @@ export class ColonyRenderer {
     this.resize();
   }
 
-  setWorld(world: World): void {
+  setWorld(world: World, resetPresentation = false): void {
     if (this.disposed) return;
     const now = performance.now();
     const previousWorld = this.world;
-    const nextTerrainKey = `${world.seed}:${world.width}:${world.height}:${world.tiles.map((t) => t.terrain[0]).join('')}`;
+    // Worker deltas keep immutable terrain/resources references stable. A changed
+    // collection is inspected once; ordinary pawn snapshots do not scan the map.
+    const nextTerrainKey = previousWorld?.tiles === world.tiles ? this.terrainKey
+      : `${world.seed}:${world.width}:${world.height}:${world.tiles.map((t) => t.terrain[0]).join('')}`;
     const newMap = this.terrainKey !== nextTerrainKey;
+    // The worker epoch distinguishes a checkpoint from an ordinary delta even
+    // if terrain content and simulation tick match a previous session.
+    const resetPoses = resetPresentation || newMap || world.tick < (previousWorld?.tick ?? 0);
     this.world = world;
     if (newMap) {
       this.terrainKey = nextTerrainKey;
@@ -300,8 +359,15 @@ export class ColonyRenderer {
       this.controls.target.set(centerX, 0, centerZ);
       // A steep initial view keeps the camp readable beneath 5–7 m canopies.
       // Orbit controls remain free: this is only the new-map framing.
-      this.camera.position.set(centerX + extent * 0.85, extent * 2, centerZ + extent * 0.9);
+      const cameraOffset = new THREE.Vector3(0.85, 2, 0.9);
+      const mapDiagonal = Math.hypot(world.width, world.height);
+      cameraOffset.setLength(Math.max(extent * cameraOffset.length(), mapDiagonal + WORLD_SCALE.treeMaxHeight));
+      this.camera.position.copy(this.controls.target).add(cameraOffset);
       this.camera.zoom = 1;
+      // Full-map overview is presentation only: the initial local framing and
+      // every model/cell dimension are independent of the world extent.
+      this.controls.minZoom = Math.min(0.25, 24 / Math.max(world.width, world.height));
+      this.camera.far = Math.max(300, cameraOffset.length() + mapDiagonal + WORLD_SCALE.treeMaxHeight * 2);
       this.controls.update();
       this.sun.position.set(centerX - 24, 45, centerZ + 25);
       this.sun.target.position.set(centerX, 0, centerZ);
@@ -309,8 +375,7 @@ export class ColonyRenderer {
       this.sun.shadow.camera.updateProjectionMatrix();
       this.resize();
     }
-    const resourceKey = world.resources.map((r) => `${r.id}:${r.kind}:${r.x}:${r.z}`).join('|');
-    if (resourceKey !== this.resourceKey || newMap) { this.resourceKey = resourceKey; this.buildResources(world); }
+    if (previousWorld?.resources !== world.resources || newMap) this.updateResources(world, newMap);
     const structureKey = world.structures.map((s) => `${s.id}:${s.kind}:${s.x}:${s.z}:${s.orientation}:${s.footprint}`).join('|');
     if (structureKey !== this.structureKey || newMap) { this.structureKey = structureKey; this.buildStructures(world); }
     // Quantize presentation of progression to avoid rebuilding static meshes for
@@ -323,10 +388,10 @@ export class ColonyRenderer {
     const oldBlend = this.uBlend.value;
     this.snapshotDuration = previousWorld && world.tick >= previousWorld.tick ? Math.min(200, Math.max(70, now - this.snapshotAt)) : 0;
     this.snapshotAt = now;
-    this.timeFrom = newMap || world.tick < (previousWorld?.tick ?? 0) ? world.tick / TICKS_PER_SECOND : this.uTime.value;
+    this.timeFrom = resetPoses ? world.tick / TICKS_PER_SECOND : this.uTime.value;
     this.timeTo = world.tick / TICKS_PER_SECOND;
-    this.uBlend.value = newMap ? 1 : 0;
-    this.updatePawns(world, newMap ? 1 : oldBlend, newMap);
+    this.uBlend.value = resetPoses ? 1 : 0;
+    this.updatePawns(world, resetPoses ? 1 : oldBlend, resetPoses);
     this.updateHover();
   }
 
@@ -354,7 +419,7 @@ export class ColonyRenderer {
   /** Hide canopies for inspection while retaining trunks and all game rules. */
   setFoliageVisible(visible: boolean): void {
     this.foliageVisible = visible;
-    for (const object of this.resourceGroup.children) if (object.name === 'tree-canopy') object.visible = visible;
+    this.resourceGroup.traverse(object => { if (object.name === 'tree-canopy') object.visible = visible; });
   }
 
   focusPawn(id: number): void {
@@ -378,6 +443,8 @@ export class ColonyRenderer {
     this.camera.right = halfHeight * aspect;
     this.camera.top = halfHeight;
     this.camera.bottom = -halfHeight;
+    if (this.world) this.controls.minZoom = Math.min(0.25,
+      halfHeight * 2 * Math.min(1, aspect) / (Math.hypot(this.world.width, this.world.height) + WORLD_SCALE.treeMaxHeight * 2 + 8));
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height, false);
   }
@@ -398,12 +465,21 @@ export class ColonyRenderer {
     const chunkSize = WORLD_SCALE.chunkSize;
     for (let cz = 0; cz < world.height; cz += chunkSize) for (let cx = 0; cx < world.width; cx += chunkSize) {
       const tileGroups: Record<Terrain, Placement[]> = { grass: [], soil: [], water: [], rock: [] };
-      const grass: Placement[] = [], massifs: Placement[] = [];
+      const grass: Placement[] = [], massifs: Placement[] = [], banks: Placement[] = [];
       for (let z = cz; z < Math.min(cz + chunkSize, world.height); z++) for (let x = cx; x < Math.min(cx + chunkSize, world.width); x++) {
         const terrain = world.tiles[z * world.width + x].terrain;
         const n = noise(x, z, world.seed);
         scratchColor.setHex(TERRAIN_COLORS[terrain]).multiplyScalar(0.94 + n * 0.12);
-        tileGroups[terrain].push({ x, z, y: terrain === 'water' ? WORLD_SCALE.waterSurface - 0.08 : -0.08, color: scratchColor.getHex() });
+        const color = scratchColor.getHex(), level = terrain === 'water' ? WORLD_SCALE.waterSurface : 0;
+        tileGroups[terrain].push({ x, z, y: level, color });
+        // Top quads replace six-sided ground cubes; exposed bank and perimeter
+        // faces retain the original water drop and the slab join without holes.
+        for (const [dx, dz, rotation] of [[1, 0, Math.PI / 2], [-1, 0, -Math.PI / 2], [0, 1, 0], [0, -1, Math.PI]] as const) {
+          const nx = x + dx, nz = z + dz;
+          const neighbor = nx < 0 || nz < 0 || nx >= world.width || nz >= world.height ? -0.16
+            : world.tiles[nz * world.width + nx].terrain === 'water' ? WORLD_SCALE.waterSurface : 0;
+          if (neighbor < level) banks.push({ x: x + dx * 0.5, z: z + dz * 0.5, y: (level + neighbor) / 2, sy: level - neighbor, ry: rotation, color });
+        }
         if (terrain === 'rock') {
           // Every impassable rock cell has a solid footprint, unlike loose stone.
           const height = 1.7 + noise(Math.floor(x / 4), Math.floor(z / 4), world.seed) * 2.1 + n * 0.25;
@@ -411,24 +487,34 @@ export class ColonyRenderer {
         }
         if (terrain === 'grass' && n > 0.83) grass.push({ x: x - 0.26, y: 0.09, z: z + 0.22, sy: 0.7 + n, color: n > 0.96 ? 0xd4c58a : 0x96a575, ry: n * 6.28 });
       }
-      for (const terrain of ['grass', 'soil', 'water', 'rock'] as Terrain[]) {
-        const mat = material(0xffffff, terrain === 'water' ? { roughness: 0.45, metalness: 0.08 } : {});
-        instances(this.terrainGroup, new THREE.BoxGeometry(1, 0.16, 1), mat, tileGroups[terrain], false);
-      }
-      instances(this.terrainGroup, new THREE.ConeGeometry(0.08, 0.15, 3), material(0xffffff), grass, false);
-      instances(this.terrainGroup, new THREE.BoxGeometry(1, 1, 1), material(0xffffff), massifs);
+      mergedInstances(this.terrainGroup, [
+        { geometry: new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), items: [...tileGroups.grass, ...tileGroups.soil, ...tileGroups.rock] },
+        { geometry: new THREE.PlaneGeometry(1, 1), items: banks },
+        { geometry: new THREE.ConeGeometry(0.08, 0.15, 3), items: grass },
+        { geometry: new THREE.BoxGeometry(1, 1, 1), items: massifs },
+      ], this.staticMaterial);
+      mergedInstances(this.terrainGroup, [{ geometry: new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), items: tileGroups.water }], this.waterMaterial, false);
     }
   }
 
-  private buildResources(world: World): void {
-    clearGroup(this.resourceGroup);
+  private updateResources(world: World, newMap: boolean): void {
+    if (newMap) { clearGroup(this.resourceGroup); this.resourceChunks.clear(); }
     const chunks = new Map<string, World['resources']>();
     for (const resource of world.resources) {
       const key = `${Math.floor(resource.x / WORLD_SCALE.chunkSize)}:${Math.floor(resource.z / WORLD_SCALE.chunkSize)}`;
       const chunk = chunks.get(key);
       if (chunk) chunk.push(resource); else chunks.set(key, [resource]);
     }
-    for (const chunk of chunks.values()) {
+    for (const [key, previous] of this.resourceChunks) if (!chunks.has(key)) {
+      clearGroup(previous.group); this.resourceGroup.remove(previous.group); this.resourceChunks.delete(key);
+    }
+    for (const [key, chunk] of chunks) {
+      const signature = chunk.map(resource => `${resource.id}:${resource.kind}:${resource.x}:${resource.z}`).join('|');
+      const previous = this.resourceChunks.get(key);
+      if (previous?.signature === signature) continue;
+      const group = previous?.group ?? new THREE.Group();
+      if (previous) clearGroup(group); else this.resourceGroup.add(group);
+      group.name = `Resources ${key}`;
       const trunks: Placement[] = [], crowns: Placement[] = [], upperCrowns: Placement[] = [];
       const rocks: Placement[] = [], bushes: Placement[] = [], berries: Placement[] = [];
       for (const resource of chunk) {
@@ -451,14 +537,17 @@ export class ColonyRenderer {
           }
         }
       }
-      instances(this.resourceGroup, new THREE.CylinderGeometry(0.1, 0.16, 1, 5), material(0x70573e), trunks);
-      for (const crownItems of [crowns, upperCrowns]) {
-        const canopy = instances(this.resourceGroup, new THREE.ConeGeometry(1, 1, 6), material(0xffffff), crownItems);
-        if (canopy) { canopy.name = 'tree-canopy'; canopy.visible = this.foliageVisible; }
-      }
-      instances(this.resourceGroup, new THREE.DodecahedronGeometry(1, 0), material(0xffffff), rocks);
-      instances(this.resourceGroup, new THREE.IcosahedronGeometry(1, 0), material(0xffffff), bushes);
-      instances(this.resourceGroup, new THREE.IcosahedronGeometry(0.055, 0), material(0xb96f63), berries, false);
+      for (const trunk of trunks) trunk.color = 0x70573e;
+      for (const berry of berries) berry.color = 0xb96f63;
+      mergedInstances(group, [
+        { geometry: new THREE.CylinderGeometry(0.1, 0.16, 1, 5), items: trunks },
+        { geometry: new THREE.DodecahedronGeometry(1, 0), items: rocks },
+        { geometry: new THREE.IcosahedronGeometry(1, 0), items: bushes },
+        { geometry: new THREE.IcosahedronGeometry(0.055, 0), items: berries },
+      ], this.staticMaterial);
+      const canopy = mergedInstances(group, [{ geometry: new THREE.ConeGeometry(1, 1, 6), items: [...crowns, ...upperCrowns] }], this.staticMaterial);
+      if (canopy) { canopy.name = 'tree-canopy'; canopy.visible = this.foliageVisible; }
+      this.resourceChunks.set(key, { signature, group });
     }
   }
 
@@ -703,6 +792,13 @@ export class ColonyRenderer {
     this.uTime.value = THREE.MathUtils.lerp(this.timeFrom, this.timeTo, this.uBlend.value);
     this.moveCamera(dt);
     this.controls.update();
+    if (this.world) {
+      const x = THREE.MathUtils.clamp(this.controls.target.x, 0, this.world.width - 1);
+      const z = THREE.MathUtils.clamp(this.controls.target.z, 0, this.world.height - 1);
+      this.camera.position.x += x - this.controls.target.x;
+      this.camera.position.z += z - this.controls.target.z;
+      this.controls.target.x = x; this.controls.target.z = z;
+    }
     // Keep one bounded shadow region around the camera instead of diluting the
     // same shadow texture across an entire 128-cell map.
     this.sun.target.position.set(this.controls.target.x, 0, this.controls.target.z);
@@ -813,6 +909,9 @@ export class ColonyRenderer {
     window.removeEventListener('blur', this.onBlur);
     for (const group of [this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup, this.pawnGroup]) clearGroup(group);
     this.pileChunks.clear();
+    this.resourceChunks.clear();
+    this.staticMaterial.dispose();
+    this.waterMaterial.dispose();
     this.hover.geometry.dispose(); (this.hover.material as THREE.Material).dispose();
     this.selection.geometry.dispose(); (this.selection.material as THREE.Material).dispose();
     this.sun.shadow.dispose();

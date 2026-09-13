@@ -37,15 +37,15 @@ export function reachableCells(world: World, start: Cell, blocked: Uint8Array, o
   while (head < tail) {
     const index = queue[head++]!;
     const x = index % world.width;
-    const z = Math.floor(index / world.width);
-    // Stable N,E,S,W order is part of replay determinism.
-    const neighbors = [z > 0 ? index - world.width : -1, x + 1 < world.width ? index + 1 : -1,
-      z + 1 < world.height ? index + world.width : -1, x > 0 ? index - 1 : -1];
-    for (const next of neighbors) {
-      if (next < 0 || parents[next] !== -2 || blocked[next] || occupied.has(next)) continue;
-      parents[next] = index;
-      queue[tail++] = next;
-    }
+    // Keep exact N,E,S,W discovery order without allocating one array per visited cell.
+    let next = index - world.width;
+    if (next >= 0 && parents[next] === -2 && !blocked[next] && !occupied.has(next)) { parents[next] = index; queue[tail++] = next; }
+    next = index + 1;
+    if (x + 1 < world.width && parents[next] === -2 && !blocked[next] && !occupied.has(next)) { parents[next] = index; queue[tail++] = next; }
+    next = index + world.width;
+    if (next < size && parents[next] === -2 && !blocked[next] && !occupied.has(next)) { parents[next] = index; queue[tail++] = next; }
+    next = index - 1;
+    if (x > 0 && parents[next] === -2 && !blocked[next] && !occupied.has(next)) { parents[next] = index; queue[tail++] = next; }
   }
   return { parents, start: startIndex };
 }

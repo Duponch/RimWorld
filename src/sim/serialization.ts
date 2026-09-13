@@ -2,6 +2,7 @@ import { CARRY_CAPACITY, footprintCells, JOB_DURATION, JOB_WOOD_COST, MAX_STACK 
 import { addGroundMaterial, addMaterial, deliveredStock, groundQuantity, refreshStock, reservedDestination, reservedSource } from './materials.ts';
 import { validateLegacyWorld } from './legacy-validation.ts';
 import type { World } from './types.ts';
+import { validMapDimension } from './map-config.ts';
 
 const record = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
 const integer = (value: unknown, min: number, max = Number.MAX_SAFE_INTEGER): value is number => typeof value === 'number' && Number.isSafeInteger(value) && value >= min && value <= max;
@@ -17,7 +18,7 @@ export function validateWorld(input: unknown): string[] {
   if (!integer(input.seed, 0, 0xffffffff) || !integer(input.rng, 1, 0xffffffff)) errors.push('Invalid deterministic random state.');
   if (!integer(input.tick, 0) || !integer(input.nextId, 1)) errors.push('Invalid tick or nextId.');
   if (!integer(input.logisticsCursor, 0)) errors.push('Invalid logistics search cursor.');
-  if (!integer(input.width, 8, 128) || !integer(input.height, 8, 128)) return [...errors, 'Invalid dimensions.'];
+  if (!validMapDimension(input.width) || !validMapDimension(input.height)) return [...errors, 'Invalid dimensions.'];
   const size = input.width * input.height;
   const arrays = ['tiles', 'pawns', 'resources', 'structures', 'jobs', 'piles', 'stockpiles', 'events'] as const;
   if (arrays.some(key => !Array.isArray(input[key]))) return [...errors, 'Missing world arrays.'];

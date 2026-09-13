@@ -3,6 +3,7 @@ import { SimulationClient } from './bridge/SimulationClient';
 import { ColonyRenderer } from './render/ColonyRenderer';
 import type { JobKind, Pawn, World, WorkType, Orientation } from './sim/types';
 import { TICKS_PER_DAY } from './sim/types';
+import { DEFAULT_MAP_SIZE, MAP_SIZE_PRESETS } from './sim/map-config';
 import { footprintCells, deliveredStock, queryJobStatus, queryPawnStatus, MAX_STACK } from './sim/index';
 import { gameLayout, storageSettings, toolDefinitions } from './ui/layout';
 import type { ArchitectCategory, Panel, Tool } from './ui/layout';
@@ -260,7 +261,7 @@ async function createWorld() {
   if (replacingWorld) return;
   el('new-world-error').hidden = true;
   const seed = Number(el<HTMLInputElement>('world-seed').value), size = Number(el<HTMLSelectElement>('world-size').value);
-  if (!Number.isInteger(seed) || seed < 0 || seed > 4294967295 || ![32, 64, 128].includes(size)) throw new Error('Graine ou taille de carte invalide.');
+  if (!Number.isInteger(seed) || seed < 0 || seed > 4294967295 || ![32, ...MAP_SIZE_PRESETS].includes(size)) throw new Error('Graine ou taille de carte invalide.');
   replacingWorld = true;
   const submit = el('new-world-form').querySelector<HTMLButtonElement>('[type="submit"]')!; submit.disabled = true;
   try {
@@ -308,12 +309,12 @@ document.addEventListener('keydown', event => {
   else if (key === 's') { event.preventDefault(); setTool('stockpile'); }
 });
 client.onError = message => notify(message, true);
-client.onSnapshot = (world, cost, speed) => { snapshot = world; stepMs = cost; currentSpeed = speed; renderer?.setWorld(world); renderState(); };
+client.onSnapshot = (world, cost, speed, replaced) => { snapshot = world; stepMs = cost; currentSpeed = speed; renderer?.setWorld(world, replaced); renderState(); };
 async function start() {
   try {
     const params = new URLSearchParams(location.search), seedText = params.get('seed'), requestedSize = Number(params.get('size'));
     const seed = seedText && /^\d{1,10}$/.test(seedText) ? Number(seedText) >>> 0 : 42;
-    await client.init(seed, [32, 64, 128].includes(requestedSize) ? requestedSize : 64);
+    await client.init(seed, [32, ...MAP_SIZE_PRESETS].includes(requestedSize) ? requestedSize : DEFAULT_MAP_SIZE);
     renderer = await ColonyRenderer.create(el('viewport'), pickCell);
     if (snapshot) renderer.setWorld(snapshot);
     el('loading').remove();

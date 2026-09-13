@@ -1,0 +1,631 @@
+{
+  "measuredAt": "2026-09-13T13:16:02.304Z",
+  "environment": {
+    "node": "v24.11.1",
+    "os": "win32 10.0.26200",
+    "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+    "logicalCpus": 12
+  },
+  "baseline": "5a27d9e; control copy only relaxes map generation and schema-2 validation bounds to250",
+  "method": "Sequential CPU-only Node comparison; variant order alternates, two map warmups/one simulation warmup, three measured repetitions. Tick metrics are20-tick batch averages, not single-tick latency. No GPU/FPS claim. Each paired continuation and generated world must match exactly. Active fixtures gather nearby resources; congestion may leave jobs unfinished.",
+  "rows": [
+    {
+      "size": 64,
+      "phase": "map-operations",
+      "serializedBytes": 119428,
+      "resourceCount": 736,
+      "control": {
+        "generation": {
+          "medianMs": 6.43100000000004,
+          "p95Ms": 7.022799999999961,
+          "maxMs": 7.022799999999961,
+          "samples": 3
+        },
+        "serialize": {
+          "medianMs": 1.8040999999999485,
+          "p95Ms": 3.010400000000004,
+          "maxMs": 3.010400000000004,
+          "samples": 3
+        },
+        "deserialize": {
+          "medianMs": 1.984199999999987,
+          "p95Ms": 3.95169999999996,
+          "maxMs": 3.95169999999996,
+          "samples": 3
+        },
+        "flood": {
+          "medianMs": 0.20264999999999986,
+          "p95Ms": 0.23382499999999595,
+          "maxMs": 0.23382499999999595,
+          "samples": 3
+        }
+      },
+      "current": {
+        "generation": {
+          "medianMs": 8.62760000000003,
+          "p95Ms": 8.905200000000036,
+          "maxMs": 8.905200000000036,
+          "samples": 3
+        },
+        "serialize": {
+          "medianMs": 2.620800000000031,
+          "p95Ms": 7.310600000000022,
+          "maxMs": 7.310600000000022,
+          "samples": 3
+        },
+        "deserialize": {
+          "medianMs": 2.7509000000000015,
+          "p95Ms": 5.194700000000012,
+          "maxMs": 5.194700000000012,
+          "samples": 3
+        },
+        "flood": {
+          "medianMs": 0.08987999999999943,
+          "p95Ms": 0.14465000000000144,
+          "maxMs": 0.14465000000000144,
+          "samples": 3
+        }
+      }
+    },
+    {
+      "size": 64,
+      "population": 3,
+      "phase": "idle",
+      "ticksPerSample": 1000,
+      "jobsInitially": 0,
+      "jobsRemaining": 0,
+      "exactContinuation": true,
+      "control": {
+        "tickBatchMean": {
+          "medianMs": 0.06296999999999571,
+          "p95Ms": 0.07914000000000102,
+          "maxMs": 0.12916000000000166,
+          "samples": 150
+        },
+        "total": {
+          "medianMs": 62.32779999999957,
+          "p95Ms": 66.90869999999995,
+          "maxMs": 66.90869999999995,
+          "samples": 3
+        }
+      },
+      "current": {
+        "tickBatchMean": {
+          "medianMs": 0.0007900000000006458,
+          "p95Ms": 0.0024499999999989088,
+          "maxMs": 0.0449450000000013,
+          "samples": 150
+        },
+        "total": {
+          "medianMs": 1.0592000000007147,
+          "p95Ms": 1.845299999999952,
+          "maxMs": 1.845299999999952,
+          "samples": 3
+        }
+      }
+    },
+    {
+      "size": 64,
+      "population": 3,
+      "phase": "active-gather",
+      "ticksPerSample": 400,
+      "jobsInitially": 8,
+      "jobsRemaining": 0,
+      "exactContinuation": true,
+      "control": {
+        "tickBatchMean": {
+          "medianMs": 0.06613999999999579,
+          "p95Ms": 0.09695500000000265,
+          "maxMs": 0.14563000000000556,
+          "samples": 60
+        },
+        "total": {
+          "medianMs": 26.55320000000006,
+          "p95Ms": 29.705599999999322,
+          "maxMs": 29.705599999999322,
+          "samples": 3
+        }
+      },
+      "current": {
+        "tickBatchMean": {
+          "medianMs": 0.0016950000000065303,
+          "p95Ms": 0.025139999999998962,
+          "maxMs": 0.06434500000000298,
+          "samples": 60
+        },
+        "total": {
+          "medianMs": 3.1131000000002587,
+          "p95Ms": 4.624400000000378,
+          "maxMs": 4.624400000000378,
+          "samples": 3
+        }
+      }
+    },
+    {
+      "size": 64,
+      "population": 100,
+      "phase": "idle",
+      "ticksPerSample": 1000,
+      "jobsInitially": 0,
+      "jobsRemaining": 0,
+      "exactContinuation": true,
+      "control": {
+        "tickBatchMean": {
+          "medianMs": 0.055615000000000234,
+          "p95Ms": 0.07224499999999807,
+          "maxMs": 0.12308500000000322,
+          "samples": 150
+        },
+        "total": {
+          "medianMs": 57.85789999999952,
+          "p95Ms": 60.27869999999916,
+          "maxMs": 60.27869999999916,
+          "samples": 3
+        }
+      },
+      "current": {
+        "tickBatchMean": {
+          "medianMs": 0.009155000000009749,
+          "p95Ms": 0.01745500000000675,
+          "maxMs": 0.06522999999999683,
+          "samples": 150
+        },
+        "total": {
+          "medianMs": 10.178600000000188,
+          "p95Ms": 12.16390000000024,
+          "maxMs": 12.16390000000024,
+          "samples": 3
+        }
+      }
+    },
+    {
+      "size": 64,
+      "population": 100,
+      "phase": "active-gather",
+      "ticksPerSample": 400,
+      "jobsInitially": 100,
+      "jobsRemaining": 0,
+      "exactContinuation": true,
+      "control": {
+        "tickBatchMean": {
+          "medianMs": 0.8227949999999964,
+          "p95Ms": 1.156230000000005,
+          "maxMs": 1.3719949999999925,
+          "samples": 60
+        },
+        "total": {
+          "medianMs": 303.80929999999944,
+          "p95Ms": 337.0171000000014,
+          "maxMs": 337.0171000000014,
+          "samples": 3
+        }
+      },
+      "current": {
+        "tickBatchMean": {
+          "medianMs": 0.6719299999999976,
+          "p95Ms": 0.9924150000000054,
+          "maxMs": 1.216125000000011,
+          "samples": 60
+        },
+        "total": {
+          "medianMs": 253.95839999999998,
+          "p95Ms": 254.99950000000035,
+          "maxMs": 254.99950000000035,
+          "samples": 3
+        }
+      }
+    },
+    {
+      "size": 128,
+      "phase": "map-operations",
+      "serializedBytes": 501463,
+      "resourceCount": 3375,
+      "control": {
+        "generation": {
+          "medianMs": 13.043700000000172,
+          "p95Ms": 13.221600000000763,
+          "maxMs": 13.221600000000763,
+          "samples": 3
+        },
+        "serialize": {
+          "medianMs": 3.9247999999997774,
+          "p95Ms": 4.658300000000054,
+          "maxMs": 4.658300000000054,
+          "samples": 3
+        },
+        "deserialize": {
+          "medianMs": 5.992799999999988,
+          "p95Ms": 6.307099999999991,
+          "maxMs": 6.307099999999991,
+          "samples": 3
+        },
+        "flood": {
+          "medianMs": 0.3868149999999787,
+          "p95Ms": 0.39870999999998274,
+          "maxMs": 0.39870999999998274,
+          "samples": 3
+        }
+      },
+      "current": {
+        "generation": {
+          "medianMs": 10.358699999999772,
+          "p95Ms": 11.692900000000009,
+          "maxMs": 11.692900000000009,
+          "samples": 3
+        },
+        "serialize": {
+          "medianMs": 3.914600000000064,
+          "p95Ms": 4.01050000000032,
+          "maxMs": 4.01050000000032,
+          "samples": 3
+        },
+        "deserialize": {
+          "medianMs": 6.185099999999693,
+          "p95Ms": 8.328799999999319,
+          "maxMs": 8.328799999999319,
+          "samples": 3
+        },
+        "flood": {
+          "medianMs": 0.21637000000000625,
+          "p95Ms": 0.22892000000001644,
+          "maxMs": 0.22892000000001644,
+          "samples": 3
+        }
+      }
+    },
+    {
+      "size": 128,
+      "population": 3,
+      "phase": "idle",
+      "ticksPerSample": 1000,
+      "jobsInitially": 0,
+      "jobsRemaining": 0,
+      "exactContinuation": true,
+      "control": {
+        "tickBatchMean": {
+          "medianMs": 0.18949999999999817,
+          "p95Ms": 0.22304500000000188,
+          "maxMs": 0.2861899999999878,
+          "samples": 150
+        },
+        "total": {
+          "medianMs": 193.93809999999667,
+          "p95Ms": 195.41819999999552,
+          "maxMs": 195.41819999999552,
+          "samples": 3
+        }
+      },
+      "current": {
+        "tickBatchMean": {
+          "medianMs": 0.0003600000000005821,
+          "p95Ms": 0.0005450000000109867,
+          "maxMs": 0.0011550000000170257,
+          "samples": 150
+        },
+        "total": {
+          "medianMs": 0.38770000000113214,
+          "p95Ms": 0.46459999999569845,
+          "maxMs": 0.46459999999569845,
+          "samples": 3
+        }
+      }
+    },
+    {
+      "size": 128,
+      "population": 3,
+      "phase": "active-gather",
+      "ticksPerSample": 400,
+      "jobsInitially": 8,
+      "jobsRemaining": 0,
+      "exactContinuation": true,
+      "control": {
+        "tickBatchMean": {
+          "medianMs": 0.211200000000008,
+          "p95Ms": 0.29894999999996796,
+          "maxMs": 0.4051649999999881,
+          "samples": 60
+        },
+        "total": {
+          "medianMs": 86.52139999999872,
+          "p95Ms": 97.42639999999847,
+          "maxMs": 97.42639999999847,
+          "samples": 3
+        }
+      },
+      "current": {
+        "tickBatchMean": {
+          "medianMs": 0.0015100000000074943,
+          "p95Ms": 0.08407499999998436,
+          "maxMs": 0.11394000000000233,
+          "samples": 60
+        },
+        "total": {
+          "medianMs": 10.25369999999748,
+          "p95Ms": 12.304599999998572,
+          "maxMs": 12.304599999998572,
+          "samples": 3
+        }
+      }
+    },
+    {
+      "size": 128,
+      "population": 100,
+      "phase": "idle",
+      "ticksPerSample": 1000,
+      "jobsInitially": 0,
+      "jobsRemaining": 0,
+      "exactContinuation": true,
+      "control": {
+        "tickBatchMean": {
+          "medianMs": 0.22386499999997794,
+          "p95Ms": 0.2961999999999989,
+          "maxMs": 0.4496749999999793,
+          "samples": 150
+        },
+        "total": {
+          "medianMs": 234.48489999999674,
+          "p95Ms": 249.92869999999857,
+          "maxMs": 249.92869999999857,
+          "samples": 3
+        }
+      },
+      "current": {
+        "tickBatchMean": {
+          "medianMs": 0.009465000000000145,
+          "p95Ms": 0.014750000000003639,
+          "maxMs": 0.020224999999982174,
+          "samples": 150
+        },
+        "total": {
+          "medianMs": 10.007800000001225,
+          "p95Ms": 11.426900000004935,
+          "maxMs": 11.426900000004935,
+          "samples": 3
+        }
+      }
+    },
+    {
+      "size": 128,
+      "population": 100,
+      "phase": "active-gather",
+      "ticksPerSample": 400,
+      "jobsInitially": 100,
+      "jobsRemaining": 0,
+      "exactContinuation": true,
+      "control": {
+        "tickBatchMean": {
+          "medianMs": 3.5392299999999524,
+          "p95Ms": 4.604719999999998,
+          "maxMs": 4.8314750000000455,
+          "samples": 60
+        },
+        "total": {
+          "medianMs": 1121.277799999998,
+          "p95Ms": 1134.8205000000034,
+          "maxMs": 1134.8205000000034,
+          "samples": 3
+        }
+      },
+      "current": {
+        "tickBatchMean": {
+          "medianMs": 2.6753349999999956,
+          "p95Ms": 3.632655000000068,
+          "maxMs": 4.2569650000000365,
+          "samples": 60
+        },
+        "total": {
+          "medianMs": 890.2259999999987,
+          "p95Ms": 909.0493999999981,
+          "maxMs": 909.0493999999981,
+          "samples": 3
+        }
+      }
+    },
+    {
+      "size": 250,
+      "phase": "map-operations",
+      "serializedBytes": 1894438,
+      "resourceCount": 12411,
+      "control": {
+        "generation": {
+          "medianMs": 34.64880000000085,
+          "p95Ms": 35.46310000000085,
+          "maxMs": 35.46310000000085,
+          "samples": 3
+        },
+        "serialize": {
+          "medianMs": 14.49619999999959,
+          "p95Ms": 16.003199999999197,
+          "maxMs": 16.003199999999197,
+          "samples": 3
+        },
+        "deserialize": {
+          "medianMs": 18.34189999999944,
+          "p95Ms": 18.452900000000227,
+          "maxMs": 18.452900000000227,
+          "samples": 3
+        },
+        "flood": {
+          "medianMs": 1.3373050000000148,
+          "p95Ms": 1.4537350000000515,
+          "maxMs": 1.4537350000000515,
+          "samples": 3
+        }
+      },
+      "current": {
+        "generation": {
+          "medianMs": 36.83020000000033,
+          "p95Ms": 43.27019999999902,
+          "maxMs": 43.27019999999902,
+          "samples": 3
+        },
+        "serialize": {
+          "medianMs": 12.35109999999986,
+          "p95Ms": 13.328299999999217,
+          "maxMs": 13.328299999999217,
+          "samples": 3
+        },
+        "deserialize": {
+          "medianMs": 20.060599999998885,
+          "p95Ms": 20.887500000000728,
+          "maxMs": 20.887500000000728,
+          "samples": 3
+        },
+        "flood": {
+          "medianMs": 0.6944400000000315,
+          "p95Ms": 0.7580349999999271,
+          "maxMs": 0.7580349999999271,
+          "samples": 3
+        }
+      }
+    },
+    {
+      "size": 250,
+      "population": 3,
+      "phase": "idle",
+      "ticksPerSample": 1000,
+      "jobsInitially": 0,
+      "jobsRemaining": 0,
+      "exactContinuation": true,
+      "control": {
+        "tickBatchMean": {
+          "medianMs": 0.9370499999999083,
+          "p95Ms": 1.7637700000001133,
+          "maxMs": 2.567055000000073,
+          "samples": 150
+        },
+        "total": {
+          "medianMs": 984.5191000000123,
+          "p95Ms": 1246.9858999999997,
+          "maxMs": 1246.9858999999997,
+          "samples": 3
+        }
+      },
+      "current": {
+        "tickBatchMean": {
+          "medianMs": 0.0003650000000561704,
+          "p95Ms": 0.0005499999999301509,
+          "maxMs": 0.0011150000000270666,
+          "samples": 150
+        },
+        "total": {
+          "medianMs": 0.38519999998243293,
+          "p95Ms": 0.467400000008638,
+          "maxMs": 0.467400000008638,
+          "samples": 3
+        }
+      }
+    },
+    {
+      "size": 250,
+      "population": 3,
+      "phase": "active-gather",
+      "ticksPerSample": 400,
+      "jobsInitially": 8,
+      "jobsRemaining": 0,
+      "exactContinuation": true,
+      "control": {
+        "tickBatchMean": {
+          "medianMs": 1.0088549999998577,
+          "p95Ms": 1.2563050000000657,
+          "maxMs": 1.3694949999999153,
+          "samples": 60
+        },
+        "total": {
+          "medianMs": 399.6351999999897,
+          "p95Ms": 460.1803999999902,
+          "maxMs": 460.1803999999902,
+          "samples": 3
+        }
+      },
+      "current": {
+        "tickBatchMean": {
+          "medianMs": 0.011559999999917636,
+          "p95Ms": 0.48955000000005383,
+          "maxMs": 0.7034550000000308,
+          "samples": 60
+        },
+        "total": {
+          "medianMs": 56.88119999999253,
+          "p95Ms": 62.5877999999866,
+          "maxMs": 62.5877999999866,
+          "samples": 3
+        }
+      }
+    },
+    {
+      "size": 250,
+      "population": 100,
+      "phase": "idle",
+      "ticksPerSample": 1000,
+      "jobsInitially": 0,
+      "jobsRemaining": 0,
+      "exactContinuation": true,
+      "control": {
+        "tickBatchMean": {
+          "medianMs": 0.858429999999862,
+          "p95Ms": 1.1594750000000205,
+          "maxMs": 2.0904149999998483,
+          "samples": 150
+        },
+        "total": {
+          "medianMs": 882.5420000000086,
+          "p95Ms": 992.6216999999888,
+          "maxMs": 992.6216999999888,
+          "samples": 3
+        }
+      },
+      "current": {
+        "tickBatchMean": {
+          "medianMs": 0.007194999999956053,
+          "p95Ms": 0.01157999999995809,
+          "maxMs": 0.35073499999998603,
+          "samples": 150
+        },
+        "total": {
+          "medianMs": 7.1388999999908265,
+          "p95Ms": 16.688200000004144,
+          "maxMs": 16.688200000004144,
+          "samples": 3
+        }
+      }
+    },
+    {
+      "size": 250,
+      "population": 100,
+      "phase": "active-gather",
+      "ticksPerSample": 400,
+      "jobsInitially": 100,
+      "jobsRemaining": 0,
+      "exactContinuation": true,
+      "control": {
+        "tickBatchMean": {
+          "medianMs": 6.255319999999847,
+          "p95Ms": 15.365805000000183,
+          "maxMs": 16.30120999999999,
+          "samples": 60
+        },
+        "total": {
+          "medianMs": 3073.662000000004,
+          "p95Ms": 3077.0112999999837,
+          "maxMs": 3077.0112999999837,
+          "samples": 3
+        }
+      },
+      "current": {
+        "tickBatchMean": {
+          "medianMs": 5.034569999999803,
+          "p95Ms": 12.632314999999654,
+          "maxMs": 12.933480000000054,
+          "samples": 60
+        },
+        "total": {
+          "medianMs": 2303.887999999999,
+          "p95Ms": 2346.2616000000053,
+          "maxMs": 2346.2616000000053,
+          "samples": 3
+        }
+      }
+    }
+  ]
+}

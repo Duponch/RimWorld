@@ -1,0 +1,332 @@
+{
+  "timestamp": "2026-09-13T13:23:08.964Z",
+  "label": "current",
+  "base": "http://127.0.0.1:5173",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "seed": 42,
+  "durationMs": 6000,
+  "minimumFrames": 240,
+  "warmupFrames": 60,
+  "baselinePatch": null,
+  "protocol": "Normal headless Chromium, one canvas; local paused, local active6x with one chop, overview paused, overview circle inside map. CPU frame includes render submission, not GPU execution; RAF intervals include scheduling.60 warmup frames per view; at least240 timed frames and6s. Cold view transition measured separately. Main.ts diagnostic injection only; no world getter polled during timing.",
+  "results": [
+    {
+      "size": 64,
+      "readyMs": 980.9,
+      "initial": {
+        "backend": "WebGPU",
+        "width": 64,
+        "height": 64,
+        "resources": 736,
+        "pawns": 3,
+        "terrainBuildMs": [
+          32.19999998807907
+        ],
+        "resourcesBuildMs": [
+          36.30000001192093
+        ],
+        "camera": {
+          "zoom": 1,
+          "far": 300
+        }
+      },
+      "diagnostics": [
+        "Lisière renderer diagnostics {\"backend\":\"WebGPU\",\"context\":\"GPUCanvasContext\",\"browser\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36\",\"adapter\":{\"vendor\":\"amd\",\"architecture\":\"rdna-1\",\"device\":\"\",\"description\":\"\"},\"maxVertexBuffers\":8}"
+      ],
+      "phases": [
+        {
+          "name": "local-paused",
+          "warmupMs": 257.4,
+          "actualDurationMs": 6002.1,
+          "renderCpuMs": {
+            "count": 1335,
+            "p50": 1.3,
+            "p95": 1.7,
+            "p99": 2.1,
+            "max": 3.3,
+            "mean": 1.3
+          },
+          "frameIntervalsMs": {
+            "count": 1334,
+            "p50": 4.2,
+            "p95": 4.3,
+            "p99": 4.3,
+            "max": 445.9,
+            "mean": 4.498
+          },
+          "framesOver33ms": 1,
+          "framesOver50ms": 1,
+          "drawCalls": {
+            "count": 1335,
+            "p50": 103,
+            "p95": 103,
+            "p99": 103,
+            "max": 103,
+            "mean": 103
+          },
+          "triangles": {
+            "count": 1335,
+            "p50": 122859,
+            "p95": 122859,
+            "p99": 122859,
+            "max": 122859,
+            "mean": 122859
+          },
+          "snapshotCpuMs": null,
+          "resourceUpdatesMs": [],
+          "camera": {
+            "x": 31.5,
+            "z": 31.5,
+            "zoom": 1,
+            "far": 300
+          },
+          "memory": {
+            "attributes": 120,
+            "attributesSize": 3768600,
+            "geometries": 56,
+            "indexAttributes": 53,
+            "indexAttributesSize": 734544,
+            "indirectStorageAttributes": 0,
+            "indirectStorageAttributesSize": 0,
+            "programs": 29,
+            "programsSize": 189637,
+            "readbackBuffers": 0,
+            "readbackBuffersSize": 0,
+            "renderTargets": 2,
+            "storageAttributes": 0,
+            "storageAttributesSize": 0,
+            "textures": 5,
+            "texturesSize": 50835456,
+            "uniformBuffers": 121,
+            "uniformBuffersSize": 14144,
+            "total": 55542381
+          }
+        },
+        {
+          "name": "local-active-chop",
+          "warmupMs": 512.1,
+          "actualDurationMs": 6000.3,
+          "renderCpuMs": {
+            "count": 1295,
+            "p50": 1.4,
+            "p95": 1.9,
+            "p99": 2.2,
+            "max": 22.1,
+            "mean": 1.417
+          },
+          "frameIntervalsMs": {
+            "count": 1294,
+            "p50": 4.2,
+            "p95": 4.3,
+            "p99": 4.3,
+            "max": 429.1,
+            "mean": 4.637
+          },
+          "framesOver33ms": 2,
+          "framesOver50ms": 2,
+          "drawCalls": {
+            "count": 1295,
+            "p50": 106,
+            "p95": 106,
+            "p99": 106,
+            "max": 106,
+            "mean": 105.708
+          },
+          "triangles": {
+            "count": 1295,
+            "p50": 122843,
+            "p95": 122871,
+            "p99": 122871,
+            "max": 122871,
+            "mean": 122847.086
+          },
+          "snapshotCpuMs": {
+            "count": 26,
+            "p50": 0.1,
+            "p95": 0.8,
+            "p99": 8.7,
+            "max": 8.7,
+            "mean": 0.512
+          },
+          "resourceUpdatesMs": [
+            8
+          ],
+          "camera": {
+            "x": 31.5,
+            "z": 31.5,
+            "zoom": 1,
+            "far": 300
+          },
+          "memory": {
+            "attributes": 127,
+            "attributesSize": 3767760,
+            "geometries": 59,
+            "indexAttributes": 56,
+            "indexAttributesSize": 734328,
+            "indirectStorageAttributes": 0,
+            "indirectStorageAttributesSize": 0,
+            "programs": 35,
+            "programsSize": 207144,
+            "readbackBuffers": 0,
+            "readbackBuffersSize": 0,
+            "renderTargets": 2,
+            "storageAttributes": 0,
+            "storageAttributesSize": 0,
+            "textures": 5,
+            "texturesSize": 50835456,
+            "uniformBuffers": 136,
+            "uniformBuffersSize": 16288,
+            "total": 55560976
+          }
+        },
+        {
+          "name": "overview-paused",
+          "warmupMs": 269.7,
+          "actualDurationMs": 6003.4,
+          "renderCpuMs": {
+            "count": 1330,
+            "p50": 1.5,
+            "p95": 2,
+            "p99": 2.3,
+            "max": 3.4,
+            "mean": 1.502
+          },
+          "frameIntervalsMs": {
+            "count": 1329,
+            "p50": 4.2,
+            "p95": 4.3,
+            "p99": 4.3,
+            "max": 462.6,
+            "mean": 4.515
+          },
+          "framesOver33ms": 1,
+          "framesOver50ms": 1,
+          "drawCalls": {
+            "count": 1330,
+            "p50": 113,
+            "p95": 113,
+            "p99": 113,
+            "max": 113,
+            "mean": 113
+          },
+          "triangles": {
+            "count": 1330,
+            "p50": 129393,
+            "p95": 129393,
+            "p99": 129393,
+            "max": 129393,
+            "mean": 129393
+          },
+          "snapshotCpuMs": null,
+          "resourceUpdatesMs": [
+            8
+          ],
+          "camera": {
+            "x": 31.5,
+            "z": 31.5,
+            "zoom": 0.375,
+            "far": 300
+          },
+          "memory": {
+            "attributes": 141,
+            "attributesSize": 4175616,
+            "geometries": 66,
+            "indexAttributes": 63,
+            "indexAttributesSize": 812928,
+            "indirectStorageAttributes": 0,
+            "indirectStorageAttributesSize": 0,
+            "programs": 35,
+            "programsSize": 207144,
+            "readbackBuffers": 0,
+            "readbackBuffersSize": 0,
+            "renderTargets": 2,
+            "storageAttributes": 0,
+            "storageAttributesSize": 0,
+            "textures": 5,
+            "texturesSize": 50835456,
+            "uniformBuffers": 143,
+            "uniformBuffersSize": 17072,
+            "total": 56048216
+          }
+        },
+        {
+          "name": "overview-travel",
+          "warmupMs": 257.7,
+          "actualDurationMs": 6003.5,
+          "renderCpuMs": {
+            "count": 1325,
+            "p50": 1.4,
+            "p95": 1.8,
+            "p99": 2.1,
+            "max": 2.5,
+            "mean": 1.411
+          },
+          "frameIntervalsMs": {
+            "count": 1324,
+            "p50": 4.2,
+            "p95": 4.3,
+            "p99": 4.3,
+            "max": 487.6,
+            "mean": 4.532
+          },
+          "framesOver33ms": 1,
+          "framesOver50ms": 1,
+          "drawCalls": {
+            "count": 1325,
+            "p50": 105,
+            "p95": 107,
+            "p99": 108,
+            "max": 108,
+            "mean": 103.439
+          },
+          "triangles": {
+            "count": 1325,
+            "p50": 118027,
+            "p95": 122675,
+            "p99": 123237,
+            "max": 123455,
+            "mean": 117441.438
+          },
+          "snapshotCpuMs": null,
+          "resourceUpdatesMs": [
+            8
+          ],
+          "camera": {
+            "x": 39.021480722393804,
+            "z": 52.59946273587691,
+            "zoom": 0.375,
+            "far": 300
+          },
+          "memory": {
+            "attributes": 141,
+            "attributesSize": 4175616,
+            "geometries": 66,
+            "indexAttributes": 63,
+            "indexAttributesSize": 812928,
+            "indirectStorageAttributes": 0,
+            "indirectStorageAttributesSize": 0,
+            "programs": 35,
+            "programsSize": 207144,
+            "readbackBuffers": 0,
+            "readbackBuffersSize": 0,
+            "renderTargets": 2,
+            "storageAttributes": 0,
+            "storageAttributesSize": 0,
+            "textures": 5,
+            "texturesSize": 50835456,
+            "uniformBuffers": 149,
+            "uniformBuffersSize": 17552,
+            "total": 56048696
+          }
+        }
+      ],
+      "spatialChecks": null,
+      "errors": []
+    }
+  ],
+  "eligibleForComparison": false,
+  "exclusionReason": "Discarded: the driver returned its diagnostic object through CDP when timing started, serializing the renderer scene and injecting an artificial map-sized long task. Use map-render-baseline.json and map-render-current.json instead."
+}

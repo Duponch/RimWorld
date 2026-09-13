@@ -6,7 +6,7 @@
 
 RimWorld organise la colonie sur une grille de cellules : bâtiments, cultures, stockage et désignations doivent pouvoir se lire ensemble. Les images observées montrent des murs reliés aux massifs rocheux, des ouvertures reliant les pièces et des lits rectangulaires. Elles ne donnent pas une conversion officielle en mètres. Le journal vidéo distingue les images réellement examinées des comportements encore inconnus.
 
-Le wiki communautaire liste notamment **250 × 250 cellules** parmi les cartes « Medium », soit 62 500 cellules ; 200², 225², 275² et des tailles supérieures existent aussi. Nous utilisons 250² comme repère de comparaison, sans en déduire une dimension physique officielle, une fréquence d'utilisation ni un objectif immédiatement jouable. La taille de la carte locale se distingue de la couverture du globe. [RimWorld Wiki, World generation](https://rimworldwiki.com/wiki/World_generation#Advanced_settings).
+Le wiki communautaire liste **200²/225²** comme petites cartes, **250²/275²** comme moyennes et **300²/325²** comme grandes. Les 250 × 250 cellules représentent 62 500 cellules ; ce repère devient notre taille jouable par défaut. La liste a été reconsultée le 13 septembre 2026 ; elle n'est pas une capture d'un exemplaire de RimWorld exécuté localement. Ni conversion officielle en mètres, ni taille la plus jouée n'en sont déduites. La carte locale se distingue de la couverture du globe. [RimWorld Wiki, World generation](https://rimworldwiki.com/wiki/World_generation#Advanced_settings).
 
 La mise à jour gratuite 1.6 annonce une réécriture du pathfinding en traitement multithread et par lots utilisant Unity Burst, une meilleure précision à longue distance, des rivières et formations rocheuses améliorées, ainsi qu'un départ constructible dans la plus grande zone ouverte connexe. Ces changements font partie du socle de référence, même sans adopter les extensions. [Changelog public officiel 1.6](https://docs.google.com/document/d/e/2PACX-1vRCjqVtPQDFGu4POiKTUd_8o3U2Asdhx99SOvcgU66ABdYtk3Cgndd53yJ6BC4tZX530pp_m6lf4Z9P/pub).
 
@@ -31,9 +31,18 @@ Le sol navigable reste plan. La hauteur des massifs, le niveau visuel de l'eau e
 
 ## Taille de carte et résolution
 
-L'application démarre sur **64²** et propose **32², 64² ou 128²** ; l'API `createWorld` conserve 32² par défaut pour les fixtures existantes. Ces tailles représentent respectivement 1 024, 4 096 et 16 384 cellules. Le repère RimWorld de 250² en compte 62 500 et reste une cible de mesure dans le laboratoire, pas une promesse de partie complète.
+L'application démarre désormais sur **250²**, avec 200² comme petite carte, 64²/128² comme cartes compactes et 32² comme terrain d'essai. L'API `createWorld` conserve 32² par défaut pour les fixtures existantes ; les dimensions autorisées du schéma 2 vont de 8 à 250 par axe. La taille est centralisée dans `src/sim/map-config.ts`.
 
-La caméra conserve un cadrage local indépendant de l'étendue du territoire : agrandir la carte doit allonger les déplacements, pas rapetisser les personnages. Avant d'augmenter encore la surface jouable, mesurer collecte, livraison, réaction aux menaces, sauvegarde et rendu avec les mêmes populations et ressources accessibles.
+| Carte | Cellules | Surface par rapport à l'ancien défaut 64² |
+|---|---:|---:|
+| Ancien défaut 64² | 4 096 | 1× |
+| Compacte 128² | 16 384 | 4× |
+| Petite 200² | 40 000 | 9,77× |
+| Moyenne 250² | 62 500 | 15,26× |
+
+Passer de 64 à 250 augmente chaque côté de 3,90625 fois, et la surface de 15,258789 fois. La supposition visuelle d'une carte « six fois plus grande » ne distingue pas côté, surface et cadrage. Le chapitre 5 du corpus présente explicitement 32²/64² comme fixtures de test ; leur ancien emploi comme défaut jouable était une simplification du prototype, désormais corrigée.
+
+La caméra conserve un cadrage local indépendant de l'étendue du territoire : agrandir la carte allonge les déplacements et augmente les possibilités d'implantation, sans rapetisser les personnages. La résolution de grille, les modèles et la densité de génération ne sont pas réduits pour compenser. Mesures et conditions de comparaison : [passage aux grandes cartes](../development/map-scale.md). Combat et réaction aux menaces restent à valider lorsqu'ils existeront.
 
 Une grille de 0,5 m multiplie par quatre le nombre de cellules à surface égale, et double les distances exprimées en pas. Elle pourrait faciliter certains passages mais alourdit navigation, occupation et réservations. **Nous conservons un mètre par cellule** ; interpolation et silhouettes peuvent être fines sans changer cette résolution métier. Les chunks de rendu 16 × 16 servent la visibilité, sans devenir des frontières de gameplay.
 

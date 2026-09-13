@@ -1,0 +1,162 @@
+{
+  "capturedAt": "2026-09-13T13:08:57.288Z",
+  "node": "v24.11.1",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "platform": "win32",
+  "architecture": "x64",
+  "conditions": "Node structuredClone microbenchmark, single process; seed42, 3 pawns, generated terrain/resources. 20 warm-up and 60 paired samples per size with alternating order. Full snapshot clone compared with delta encode + clone + adopt of exactly the same world. JSON byte counts describe serialization size, not browser postMessage bandwidth. No DOM, GPU, IPC scheduling or frame-time measurement. Removal is a single illustrative sample, not a distribution.",
+  "rows": [
+    {
+      "size": 64,
+      "tiles": 4096,
+      "resourcesBeforeHarvest": 736,
+      "jsonBytes": {
+        "full": 119472,
+        "unchangedDelta": 1073,
+        "removeOneDelta": 1117
+      },
+      "timingsMs": {
+        "fullStructuredClone": {
+          "median": 3.107900000000029,
+          "p95": 3.55559999999997,
+          "max": 3.9377999999999815
+        },
+        "deltaEncodeCloneAdopt": {
+          "median": 0.07299999999997908,
+          "p95": 0.09829999999999472,
+          "max": 0.1605000000000132
+        },
+        "encode": {
+          "median": 0.037399999999990996,
+          "p95": 0.050199999999961165,
+          "max": 0.057999999999992724
+        },
+        "clone": {
+          "median": 0.030399999999985994,
+          "p95": 0.04719999999997526,
+          "max": 0.11119999999999663
+        },
+        "adopt": {
+          "median": 0.004399999999975535,
+          "p95": 0.006899999999973261,
+          "max": 0.009200000000021191
+        },
+        "removeOneEncodeCloneAdopt": 0.7255999999999858
+      }
+    },
+    {
+      "size": 128,
+      "tiles": 16384,
+      "resourcesBeforeHarvest": 3375,
+      "jsonBytes": {
+        "full": 501507,
+        "unchangedDelta": 1081,
+        "removeOneDelta": 1126
+      },
+      "timingsMs": {
+        "fullStructuredClone": {
+          "median": 12.647299999999973,
+          "p95": 15.336599999999862,
+          "max": 17.065399999999954
+        },
+        "deltaEncodeCloneAdopt": {
+          "median": 0.22080000000005384,
+          "p95": 0.37190000000009604,
+          "max": 0.5860000000000127
+        },
+        "encode": {
+          "median": 0.16819999999984248,
+          "p95": 0.28940000000000055,
+          "max": 0.4918999999999869
+        },
+        "clone": {
+          "median": 0.04469999999992069,
+          "p95": 0.07690000000002328,
+          "max": 0.11149999999997817
+        },
+        "adopt": {
+          "median": 0.0061000000000603904,
+          "p95": 0.008500000000026375,
+          "max": 0.011500000000069122
+        },
+        "removeOneEncodeCloneAdopt": 1.6136000000001332
+      }
+    },
+    {
+      "size": 200,
+      "tiles": 40000,
+      "resourcesBeforeHarvest": 8219,
+      "jsonBytes": {
+        "full": 1225451,
+        "unchangedDelta": 1089,
+        "removeOneDelta": 1134
+      },
+      "timingsMs": {
+        "fullStructuredClone": {
+          "median": 32.071899999999914,
+          "p95": 38.56800000000021,
+          "max": 54.2525999999998
+        },
+        "deltaEncodeCloneAdopt": {
+          "median": 0.48030000000017026,
+          "p95": 0.8407000000001972,
+          "max": 0.930699999999888
+        },
+        "encode": {
+          "median": 0.42810000000008586,
+          "p95": 0.7401999999997315,
+          "max": 0.8410000000003492
+        },
+        "clone": {
+          "median": 0.05060000000003129,
+          "p95": 0.08040000000028158,
+          "max": 0.10969999999997526
+        },
+        "adopt": {
+          "median": 0.006899999999859574,
+          "p95": 0.010199999999713327,
+          "max": 0.026200000000244472
+        },
+        "removeOneEncodeCloneAdopt": 3.473500000000058
+      }
+    },
+    {
+      "size": 250,
+      "tiles": 62500,
+      "resourcesBeforeHarvest": 12411,
+      "jsonBytes": {
+        "full": 1894476,
+        "unchangedDelta": 1097,
+        "removeOneDelta": 1142
+      },
+      "timingsMs": {
+        "fullStructuredClone": {
+          "median": 48.66640000000007,
+          "p95": 58.01080000000002,
+          "max": 61.613900000000285
+        },
+        "deltaEncodeCloneAdopt": {
+          "median": 0.713900000000649,
+          "p95": 1.0148999999992157,
+          "max": 1.1355000000003201
+        },
+        "encode": {
+          "median": 0.6557000000011612,
+          "p95": 0.9378999999998996,
+          "max": 1.0651000000007116
+        },
+        "clone": {
+          "median": 0.04879999999957363,
+          "p95": 0.06880000000001019,
+          "max": 0.08619999999973516
+        },
+        "adopt": {
+          "median": 0.0072999999993044185,
+          "p95": 0.009299999999711872,
+          "max": 0.00980000000072323
+        },
+        "removeOneEncodeCloneAdopt": 3.5913000000000466
+      }
+    }
+  ]
+}

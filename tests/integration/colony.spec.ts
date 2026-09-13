@@ -10,7 +10,7 @@ declare global {
   }
 }
 
-// Transport one JSON string: tracing every tile as a remote object can dominate the 128² case.
+// Transport one JSON string: tracing every tile as a remote object can dominate large maps.
 const serializedWorld = (page: Page): Promise<string> => page.evaluate(() => JSON.stringify(window.__lisiere.world));
 const world = async (page: Page): Promise<World> => JSON.parse(await serializedWorld(page)) as World;
 async function expectWorld(page: Page, expected: World) {
@@ -230,22 +230,25 @@ test('frontières : commandes répétées, sauvegarde invalide atomique, aide et
   expect(errors).toEqual([]);
 });
 
-test('nouvelle colonie : tailles 64 et 128, graine exacte et retour sans perte à une partie avec ordres', async ({ playwright }) => {
-  // The two other scenarios keep the configured software fallback. Large-map transitions
-  // exercise the browser's normal adapter selection, independently of that fallback probe.
-  test.setTimeout(150_000);
+test('nouvelle colonie : défaut 250, tailles 128/200/250 et retour exact à une ancienne petite partie', async ({ playwright }) => {
+  // Large-map transitions exercise normal adapter selection. The boundary scenario
+  // separately covers the configured software fallback.
+  test.setTimeout(180_000);
   const browser = await playwright.chromium.launch({ channel: 'chromium', args: [] });
   const context = await browser.newContext({ baseURL: 'http://127.0.0.1:5173', viewport: { width: 1440, height: 1000 } });
   const page = await context.newPage();
   try {
     const errors = observeErrors(page);
+    await page.goto('/?e2e');
+    await page.waitForFunction(() => !!window.__lisiere);
+    await expect(page.locator('#map-size')).toHaveText('250 × 250');
     await startPaused(page);
     await panel(page, 'work');
     await page.getByLabel('Priorité construction Ada', { exact: true }).selectOption('0');
     await tool(page, 'chop'); await cell(page, 14, 14);
     await expect.poll(async () => (await world(page)).jobs.length).toBe(1);
     const previous = await world(page);
-    for (const [size, seed] of [[64, 271], [128, 0xffffffff]]) {
+    for (const [size, seed] of [[128, 271], [200, 7], [250, 0xffffffff]]) {
       await panel(page, 'menu');
       await page.locator('#new-colony').click();
       await expect(page.locator('#new-world-dialog')).toBeVisible();
@@ -256,6 +259,13 @@ test('nouvelle colonie : tailles 64 et 128, graine exacte et retour sans perte �
       await expectWorld(page, createWorld(seed, size, size));
       await expect(page.locator('#map-size')).toHaveText(`${size} × ${size}`);
       await expect(page.locator('#pause-banner')).toBeVisible();
+      if (size === 250) {
+        // A full-size save must survive storage and reloading, not only generation.
+        await panel(page, 'menu'); await page.locator('#save').click();
+        await expect(page.getByRole('status')).toContainText('sauvegardée');
+        await page.locator('#load').click();
+        await expectWorld(page, createWorld(seed, size, size));
+      }
       await panel(page, 'menu');
       await expect(page.locator('#restore-previous')).toBeEnabled();
       await page.locator('#restore-previous').click();
@@ -263,7 +273,7 @@ test('nouvelle colonie : tailles 64 et 128, graine exacte et retour sans perte �
       await expect(page.locator('#map-size')).toHaveText('32 × 32');
     }
     await test.info().attach('transition-renderer', {
-      body: JSON.stringify({ backend: await page.evaluate(() => window.__lisiere.backend), sizes: [32, 64, 128], restoredExactly: true }),
+      body: JSON.stringify({ backend: await page.evaluate(() => window.__lisiere.backend), defaultSize: 250, sizes: [32, 128, 200, 250], restoredExactly: true }),
       contentType: 'application/json',
     });
     expect(errors).toEqual([]);

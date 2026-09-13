@@ -15,7 +15,7 @@ npm run dev
 
 Ouvrir [le jeu local](http://127.0.0.1:5173). Three.js sélectionne WebGPU lorsque disponible, sinon son backend WebGL 2. Le backend réellement actif apparaît dans Menu → Diagnostics. WebGPU nécessite HTTPS ou localhost.
 
-La carte par défaut mesure 64×64 cases et utilise la graine 42. Menu → Nouvelle colonie propose 32, 64 ou 128 cases par côté et une graine. L'état précédent est conservé avant remplacement et peut être restauré depuis le menu. Les paramètres d'URL restent disponibles : `/?seed=123&size=64`.
+La carte par défaut mesure **250×250 cases**, soit 62 500 cellules, et utilise la graine 42. Menu → Nouvelle colonie propose 200 ou 250 cases par côté, les cartes compactes 64/128 et le terrain d'essai 32. L'état précédent est conservé avant remplacement et peut être restauré depuis le menu. Les paramètres d'URL restent disponibles : `/?seed=123&size=250`. Charger une ancienne partie conserve ses dimensions.
 
 ## Jouer
 

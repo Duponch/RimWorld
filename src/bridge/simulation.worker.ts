@@ -2,6 +2,8 @@
 import { applyCommand, createWorld, deserializeWorld, serializeWorld, stepWorld } from '../sim/index';
 import type { World } from '../sim/types';
 import type { Request, Response } from './protocol';
+import { MAP_SIZE_PRESETS } from '../sim/map-config';
+import { SnapshotEncoder } from './snapshots';
 
 const scope = self as unknown as DedicatedWorkerGlobalScope;
 let world: World | undefined;
@@ -11,8 +13,9 @@ let previous = performance.now();
 let lastPublish = 0;
 let stepMs = 0;
 const send = (message: Response) => scope.postMessage(message);
-const publish = () => {
-  if (world) send({ type: 'snapshot', world, stepMs, speed });
+const snapshots = new SnapshotEncoder();
+const publish = (checkpoint = false) => {
+  if (world) send(snapshots.encode(world, stepMs, speed, checkpoint));
   lastPublish = performance.now();
 };
 
@@ -20,7 +23,7 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
   try {
     let data: string | undefined;
     if (request.type === 'init') {
-      if (![32, 64, 128].includes(request.size)) throw new Error('Taille de carte invalide.');
+      if (request.size !== 32 && !(MAP_SIZE_PRESETS as readonly number[]).includes(request.size)) throw new Error('Taille de carte invalide.');
       world = createWorld(request.seed, request.size, request.size);
       accumulator = 0;
       previous = performance.now();
@@ -43,7 +46,7 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
         previous = performance.now();
       }
     }
-    publish();
+    publish(request.type === 'resync');
     send({ type: 'reply', id: request.id, ok: true, data });
   } catch (error) {
     send({ type: 'reply', id: request.id, ok: false, reason: error instanceof Error ? error.message : String(error) });

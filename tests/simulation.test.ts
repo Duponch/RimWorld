@@ -277,7 +277,7 @@ describe('deterministic colony simulation', () => {
     const world = fixture(1); resource(world, 6, 6, 'tree'); order(world, 'bed', 10, 10);
     until(world, () => world.pawns[0]!.haul?.phase === 'pickup', 'save during reservation'); const serialized = serializeWorld(world);
     const corruptions: ((data: any) => void)[] = [
-      data => { data.schemaVersion = 3; }, data => { data.rng = 0; }, data => { data.tick = -1; }, data => { data.width = 129; },
+      data => { data.schemaVersion = 3; }, data => { data.rng = 0; }, data => { data.tick = -1; }, data => { data.width = 251; },
       data => { data.logisticsCursor = -1; },
       data => { data.stock.wood = -1; }, data => { data.pawns[0] = null; }, data => { data.pawns[0].hunger = null; },
       data => { data.pawns[0].priorities = null; }, data => { data.pawns[0].path = [{ x: 15, z: 15 }]; },

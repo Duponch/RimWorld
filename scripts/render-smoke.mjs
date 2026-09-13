@@ -8,6 +8,20 @@ await mkdir('artifacts', { recursive: true });
 // Device identity and observed backend remain the evidence; this is not a benchmark.
 const browser = await chromium.launch({ headless: true, channel: 'chromium' });
 const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+// Observe pose adoption through the real UI/worker pipeline, without mutating the renderer.
+await page.route('**/src/main.ts*', async route => {
+  const response = await route.fetch();
+  const source = await response.text();
+  const probe = `
+const originalProbeSetWorld = ColonyRenderer.prototype.setWorld;
+ColonyRenderer.prototype.setWorld = function(world, replaced) {
+  const result = originalProbeSetWorld.call(this, world, replaced);
+  window.__poseProbe = { replaced, tick: world.tick, poses: [...this.pawnVisuals].map(([id, pose]) => ({ id, from: pose.from.toArray(), to: pose.to.toArray() })) };
+  return result;
+};
+`;
+  await route.fulfill({ response, body: probe + source });
+});
 const errors = [];
 const diagnostics = [];
 const captures = [];
@@ -43,8 +57,8 @@ async function capture(name) {
 const world = async () => JSON.parse(await page.evaluate(() => JSON.stringify(window.__lisiere.world)));
 
 try {
-  await page.goto('http://127.0.0.1:5173/?e2e&seed=42&size=64');
-  await page.waitForFunction(() => !!window.__lisiere, undefined, { timeout: 30_000 });
+  await page.goto('http://127.0.0.1:5173/?e2e&seed=42&size=250');
+  await page.waitForFunction(() => !!window.__lisiere && !!window.__poseProbe, undefined, { timeout: 30_000 });
   await page.getByRole('button', { name: 'Pause', exact: true }).click();
   await expect(page.locator('#pause-banner')).toBeVisible();
   observed = await page.evaluate(() => ({
@@ -133,6 +147,26 @@ try {
   await page.keyboard.press('Escape');
   await page.setViewportSize({ width: 1440, height: 1000 });
   await capture('colony-final');
+
+  // Same terrain/IDs with a higher tick must snap poses, not interpolate from the old save.
+  const restored = await world();
+  const actor = restored.pawns.find(pawn => pawn.jobId === null && pawn.haul === null);
+  if (!actor) throw new Error('No idle actor available for the save replacement fixture.');
+  const target = [{ x: center.x, z: center.z - 1 }, { x: center.x - 1, z: center.z - 1 }, { x: center.x + 1, z: center.z - 1 }]
+    .find(cell => !restored.pawns.some(pawn => pawn.x === cell.x && pawn.z === cell.z));
+  if (!target) throw new Error('No clear replacement fixture cell.');
+  Object.assign(actor, target, { path: [], state: 'idle' }); restored.tick += 100;
+  await panel('menu'); await page.locator('#save').click();
+  await expect(page.locator('#load')).toBeEnabled();
+  await page.evaluate(data => localStorage.setItem('lisiere.save.v1', data), JSON.stringify(restored));
+  await page.locator('#load').click();
+  await expect.poll(async () => JSON.stringify(await world()) === JSON.stringify(restored)).toBe(true);
+  const poses = await page.evaluate(() => window.__poseProbe);
+  const pose = poses.poses.find(item => item.id === actor.id);
+  expect(poses.replaced).toBe(true);
+  expect(pose.from.slice(0, 3)).toEqual([target.x, 0, target.z]);
+  expect(pose.to.slice(0, 3)).toEqual([target.x, 0, target.z]);
+  observed.replacement = { sameTerrainAndIds: true, higherTick: restored.tick, pawnId: actor.id, from: pose.from, to: pose.to, replaced: poses.replaced };
 } catch (error) {
   errors.push(error instanceof Error ? error.message : String(error));
 } finally {

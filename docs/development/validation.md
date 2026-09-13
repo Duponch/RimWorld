@@ -1,8 +1,32 @@
 # Validation du prototype
 
-## Tranche matérielle G0, schéma 2 — résultats finaux du 13 septembre 2026
+## État courant : cartes moyennes 250² — 13 septembre 2026
 
-Cette section décrit les preuves de la tranche courante, après gel du code. Les sections suivantes sont **historiques** : leurs nombres, backends et simplifications décrivent les versions alors testées. La boucle matérielle est livrée ; G0 conserve les limites détaillées dans [ROADMAP](../ROADMAP.md) et [les choix de gameplay](../gameplay/decisions.md).
+Le défaut jouable est 250×250, avec 200² et les dimensions compactes conservées. Les anciennes sauvegardes gardent leur terrain et leurs identités. Les [mesures appariées de simulation, communication et rendu](map-scale.md) distinguent l'ancien défaut 64², l'ancien moteur dont seules les bornes sont étendues, et le nouveau moteur. Elles documentent également les coûts supplémentaires de mémoire et de préparation ; aucune absence générale de régression n'est revendiquée.
+
+**Noyau : 14/14 scénarios passent en 19,14 s**, dans quatre fichiers : huit familles de simulation, trois de génération, deux de contrats GPU et une de transport des snapshots. Les familles existantes comprennent toujours 60 000 ticks avec conservation ; la génération couvre maintenant 60 paysages, 13 dimensions rectangulaires, 12 départs de camp et un trajet dépassant les anciennes tailles de carte. La comparaison CPU de contrôle vérifie séparément l'égalité complète des générations et continuations. Les tests Vitest de contrats GPU ne lancent pas les shaders.
+
+Après ce passage, la frontière de présentation a reçu un indicateur explicite de remplacement de carte. L'intégration a ensuite détecté un défaut d'ordre des clés JSON dans la reconstruction des deltas : les valeurs étaient égales, mais le snapshot n'avait plus exactement la représentation de la sauvegarde autoritaire. La reconstruction préserve désormais l'ordre du checkpoint et le scénario de codec exige aussi l'égalité JSON intégrale. **Ce scénario ciblé repasse sur le code final en 746 ms** ; la simulation, déjà vérifiée, n'a pas changé depuis le passage global.
+
+**Les trois parcours navigateur passent dans un même appel `npx playwright test`**, en environ 1,2 minute, après cette correction :
+
+| Parcours | Navigateur | Durée |
+|---|---|---:|
+| Portage physique, réserve filtrée, couchages, sauvegarde/reprise exacte pendant livraison | Chromium normal | 14,1 s |
+| Commandes répétées, chargement invalide atomique, vraie migration V1, interface compacte | Chromium avec SwiftShader | 41,6 s |
+| Défaut 250², créations 128²/200²/250², sauvegarde/rechargement 250², restauration intégrale de l'ancienne colonie 32² | Chromium normal | 12,5 s |
+
+Ces durées sont des contrôles fonctionnels, pas des benchmarks. Le test des grandes cartes compare les mondes complets, pas uniquement leur dimension ou leur hash. Les parcours inspectent les erreurs console et de pipeline.
+
+**Build final TypeScript/Vite réussi** : jeu 973,26 ko minifiés / 268,66 ko gzip ; worker 38,94 ko ; simulation partagée 10,58 / 4,58 ko ; laboratoire GPU 18,29 / 7,29 ko. L'avertissement du bundle principal supérieur à 500 ko demeure visible. Ni les dépendances ni les kernels de navigation GPU n'ont changé dans cette tranche.
+
+La préparation des rapports a révélé deux défauts d'instrumentation graphique : un parcours quittait entièrement la carte et un retour Playwright sérialisait le renderer. Les profils affectés sont explicitement exclus ; seules les comparaisons nettoyées sont retenues dans [map-scale.md](map-scale.md). Les limites de cette machine et les pointes encore observées font partie du résultat.
+
+**Contrôle graphique final 250² réussi à 13:41:17 UTC**, WebGPU sur AMD/RDNA-1, sans erreur console/GPU : portage physique, mur et lit 1×2 achevés, quatre orientations, occultation sans mutation de la simulation, interface compacte et reprise de poses au chargement. Le chargement garde terrain et IDs identiques mais augmente le tick et déplace un colon ; les poses initiale et finale sont immédiatement égales à sa position restaurée. Le [rapport courant](../../artifacts/render-probe.json) et [l'inspection visuelle](render-validation.md) précisent les captures réellement examinées. Les mesures de performance ont précédé le correctif d'ordre des clés du codec ; leurs timestamps restent inchangés.
+
+## Historique : tranche matérielle G0, schéma 2 — 13 septembre 2026
+
+Cette section décrit les preuves de la tranche matérielle avant le passage aux cartes 250². Les sections suivantes sont **historiques** : leurs nombres, backends et simplifications décrivent les versions alors testées. La boucle matérielle est livrée ; G0 conserve les limites détaillées dans [ROADMAP](../ROADMAP.md) et [les choix de gameplay](../gameplay/decisions.md).
 
 `npm test` réussit avec **13/13 scénarios en 10,46 s** : huit familles de simulation, trois de génération et deux de contrats GPU. Les huit familles incluent 60 000 ticks sur cinq graines avec bilan matière et invariants à chaque tick. Elles couvrent partage et fusion de piles, réservations de quantités et capacités, interruptions aux transitions de portage, livraison partielle, reprise exacte, empreintes et migrations V1 actives ou interrompues. Les régressions finales couvrent aussi une capacité abaissée avec report vers une réserve de priorité égale, un colon inactif bloquant seulement la destination, et une recherche de 40 000 couples reprise après la fenêtre de 32 768 via le curseur sauvegardé. Les tests de contrats GPU n'exécutent pas les kernels sur un appareil.
 
@@ -27,7 +51,7 @@ Les **trois parcours navigateur passent lors de passages ciblés successifs**, s
 
 Ces durées ne sont pas des benchmarks. L'ancien parcours matériel logiciel observait parfois une cargaison, puis la demande de pause arrivait après son dépôt. Le helper envoie désormais la pause dans la même observation navigateur que la détection du portage et attend la pause autoritaire. Le passage matériel utilise Chromium normal ; le test de frontières conserve le backend logiciel. Un résultat « trois parcours passés » n'affirme pas qu'ils ont été exécutés dans un unique appel global.
 
-Le [diagnostic graphique final](../../artifacts/render-probe.json), daté du **13 septembre 2026 à 12:44:44,892 UTC**, rapporte **WebGPU sur AMD/RDNA-1**, sans erreur. Il capture une cargaison de sept bois appartenant au colon 734, puis construction réelle d'un mur et d'un lit 1×2, en pause au tick 420. Le script attend deux images avant les captures ; le code du jeu est inchangé. Un [contrôle ciblé des aperçus aux quatre orientations](../../artifacts/placement-preview-probe.json) n'a révélé aucun défaut. Captures et portée dans [render-validation.md](render-validation.md). Cela valide le chemin graphique exercé, sans preuve de performance de centaines de personnages, de rigs glTF ou de rendu et navigation compute simultanés.
+Le [diagnostic graphique archivé](../../artifacts/render-probe-material.json), daté du **13 septembre 2026 à 12:44:44,892 UTC**, rapporte **WebGPU sur AMD/RDNA-1**, sans erreur. Il capture une cargaison de sept bois appartenant au colon 734, puis construction réelle d'un mur et d'un lit 1×2, en pause au tick 420. Le script attend deux images avant les captures ; le code du jeu est inchangé. Un [contrôle ciblé des aperçus aux quatre orientations](../../artifacts/placement-preview-probe.json) n'a révélé aucun défaut. Captures et portée dans [render-validation.md](render-validation.md). Cela valide le chemin graphique exercé, sans preuve de performance de centaines de personnages, de rigs glTF ou de rendu et navigation compute simultanés.
 
 ### Mesure finale du noyau matériel
 

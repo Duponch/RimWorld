@@ -1,4 +1,7 @@
 import type { JobKind } from '../sim/types';
+import { DEFAULT_MAP_SIZE, MAP_SIZE_PRESETS } from '../sim/map-config';
+
+const mapSizeLabels: Record<number, string> = { 32: 'terrain d’essai', 64: 'compacte', 128: 'compacte', 200: 'petite', 250: 'moyenne' };
 
 export type Tool = 'select' | JobKind | 'cancel' | 'stockpile' | 'remove-stockpile';
 export type Panel = 'architect' | 'work' | 'history' | 'menu' | null;
@@ -36,7 +39,7 @@ export function gameLayout(): string {
       <div class="resource"><span class="resource-symbol wood">▤</span><span>Bois</span><strong id="wood">—</strong></div>
       <div class="resource"><span class="resource-symbol food">⁙</span><span>Nourriture</span><strong id="food">—</strong></div>
       <div id="material-status" class="material-status"></div>
-      <div class="resource-foot"><span id="population">3</span> colons · <span id="map-size">64 × 64</span></div>
+      <div class="resource-foot"><span id="population">3</span> colons · <span id="map-size">${DEFAULT_MAP_SIZE} × ${DEFAULT_MAP_SIZE}</span></div>
     </aside>
     <div class="corner-tools"><span class="game-title">LISIÈRE</span><button id="help-open" aria-label="Ouvrir l’aide" title="Aide">?</button></div>
     <aside id="alerts" class="alerts" aria-label="Alertes de la colonie"></aside>
@@ -94,7 +97,7 @@ export function gameLayout(): string {
     </dialog>
     <dialog id="new-world-dialog" class="help-dialog"><form id="new-world-form"><button type="button" class="close" id="new-world-close" aria-label="Fermer la création">×</button><h2>Nouvelle colonie</h2>
       <label class="field">Graine<input id="world-seed" inputmode="numeric" type="number" min="0" max="4294967295" value="42" required></label>
-      <label class="field">Taille de la carte<select id="world-size"><option value="32">32 × 32 · terrain d'essai</option><option value="64" selected>64 × 64 · colonie</option><option value="128">128 × 128 · grande carte</option></select></label>
+      <label class="field">Taille de la carte<select id="world-size">${[32, ...MAP_SIZE_PRESETS].map(size => `<option value="${size}"${size === DEFAULT_MAP_SIZE ? ' selected' : ''}>${size} × ${size} · ${mapSizeLabels[size]} · ${(size * size).toLocaleString('fr-FR')} cases</option>`).join('')}</select></label>
       <p>La même graine et la même taille produisent le même terrain. La partie actuelle restera accessible avec « Colonie précédente ».</p>
       <p id="new-world-error" role="alert" hidden></p>
       <button type="submit" class="primary-action">Créer la colonie</button>

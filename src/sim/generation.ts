@@ -1,5 +1,6 @@
 import type { ResourceKind, Terrain, World } from './types.ts';
 import { addGroundMaterial } from './materials.ts';
+import { MAX_MAP_SIZE, MIN_MAP_SIZE, validMapDimension } from './map-config.ts';
 
 /** Coordinate-based randomness: adding a presentation sample cannot shift later terrain rolls. */
 function sample(seed: number, x: number, z: number, layer: number): number {
@@ -135,8 +136,8 @@ function connectStartingValley(terrain: Terrain[], width: number, height: number
  */
 export function generateWorld(seed: number, width: number, height: number): World {
   if (!Number.isInteger(seed) || !Number.isFinite(seed)) throw new Error('Seed must be a finite integer.');
-  if (![width, height].every(value => Number.isInteger(value) && value >= 8 && value <= 128)) {
-    throw new Error('World dimensions must be integers between 8 and 128.');
+  if (![width, height].every(validMapDimension)) {
+    throw new Error(`World dimensions must be integers between ${MIN_MAP_SIZE} and ${MAX_MAP_SIZE}.`);
   }
   const world: World = { schemaVersion: 2, seed: seed >>> 0, rng: (seed >>> 0) || 0x9e3779b9,
     tick: 0, width, height, tiles: [], pawns: [], resources: [], structures: [], jobs: [],

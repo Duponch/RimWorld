@@ -1,0 +1,1156 @@
+{
+  "timestamp": "2026-09-13T13:29:16.138Z",
+  "label": "current",
+  "base": "http://127.0.0.1:5173",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "seed": 42,
+  "durationMs": 6000,
+  "minimumFrames": 240,
+  "warmupFrames": 60,
+  "baselinePatch": null,
+  "protocol": "Normal headless Chromium, one canvas; local paused, local active6x with one chop, overview paused, overview circle inside map. CPU frame includes render submission, not GPU execution; RAF intervals include scheduling.60 warmup frames per view; at least240 timed frames and6s. Cold view transition measured separately. Main.ts diagnostic injection only; no world getter polled during timing.",
+  "results": [
+    {
+      "size": 64,
+      "readyMs": 1172.1,
+      "initial": {
+        "backend": "WebGPU",
+        "width": 64,
+        "height": 64,
+        "resources": 736,
+        "pawns": 3,
+        "terrainBuildMs": [
+          33.5
+        ],
+        "resourcesBuildMs": [
+          38.1000000089407
+        ],
+        "camera": {
+          "zoom": 1,
+          "far": 300
+        }
+      },
+      "diagnostics": [
+        "Lisière renderer diagnostics {\"backend\":\"WebGPU\",\"context\":\"GPUCanvasContext\",\"browser\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36\",\"adapter\":{\"vendor\":\"amd\",\"architecture\":\"rdna-1\",\"device\":\"\",\"description\":\"\"},\"maxVertexBuffers\":8}"
+      ],
+      "phases": [
+        {
+          "name": "local-paused",
+          "warmupMs": 1032.2,
+          "actualDurationMs": 6003.4,
+          "renderCpuMs": {
+            "count": 1441,
+            "p50": 1.4,
+            "p95": 1.8,
+            "p99": 2.1,
+            "max": 5,
+            "mean": 1.387
+          },
+          "frameIntervalsMs": {
+            "count": 1440,
+            "p50": 4.2,
+            "p95": 4.3,
+            "p99": 4.3,
+            "max": 4.5,
+            "mean": 4.167
+          },
+          "framesOver33ms": 0,
+          "framesOver50ms": 0,
+          "drawCalls": {
+            "count": 1441,
+            "p50": 103,
+            "p95": 103,
+            "p99": 103,
+            "max": 103,
+            "mean": 103
+          },
+          "triangles": {
+            "count": 1441,
+            "p50": 122859,
+            "p95": 122859,
+            "p99": 122859,
+            "max": 122859,
+            "mean": 122859
+          },
+          "snapshotCpuMs": null,
+          "resourceUpdatesMs": [],
+          "camera": {
+            "x": 31.5,
+            "z": 31.5,
+            "zoom": 1,
+            "far": 300
+          },
+          "memory": {
+            "attributes": 120,
+            "attributesSize": 3768600,
+            "geometries": 56,
+            "indexAttributes": 53,
+            "indexAttributesSize": 734544,
+            "indirectStorageAttributes": 0,
+            "indirectStorageAttributesSize": 0,
+            "programs": 29,
+            "programsSize": 189637,
+            "readbackBuffers": 0,
+            "readbackBuffersSize": 0,
+            "renderTargets": 2,
+            "storageAttributes": 0,
+            "storageAttributesSize": 0,
+            "textures": 5,
+            "texturesSize": 50835456,
+            "uniformBuffers": 121,
+            "uniformBuffersSize": 14144,
+            "total": 55542381
+          }
+        },
+        {
+          "name": "local-active-chop",
+          "warmupMs": 510.7,
+          "actualDurationMs": 6001.8,
+          "renderCpuMs": {
+            "count": 1386,
+            "p50": 1.5,
+            "p95": 2.1,
+            "p99": 2.3,
+            "max": 22.3,
+            "mean": 1.551
+          },
+          "frameIntervalsMs": {
+            "count": 1385,
+            "p50": 4.2,
+            "p95": 4.3,
+            "p99": 8.2,
+            "max": 58.3,
+            "mean": 4.332
+          },
+          "framesOver33ms": 1,
+          "framesOver50ms": 1,
+          "drawCalls": {
+            "count": 1386,
+            "p50": 106,
+            "p95": 106,
+            "p99": 106,
+            "max": 106,
+            "mean": 105.554
+          },
+          "triangles": {
+            "count": 1386,
+            "p50": 122843,
+            "p95": 122871,
+            "p99": 122871,
+            "max": 122871,
+            "mean": 122849.242
+          },
+          "snapshotCpuMs": {
+            "count": 27,
+            "p50": 0.1,
+            "p95": 0.7,
+            "p99": 9.6,
+            "max": 9.6,
+            "mean": 0.53
+          },
+          "resourceUpdatesMs": [
+            8.700000002980232
+          ],
+          "camera": {
+            "x": 31.5,
+            "z": 31.5,
+            "zoom": 1,
+            "far": 300
+          },
+          "memory": {
+            "attributes": 127,
+            "attributesSize": 3767760,
+            "geometries": 59,
+            "indexAttributes": 56,
+            "indexAttributesSize": 734328,
+            "indirectStorageAttributes": 0,
+            "indirectStorageAttributesSize": 0,
+            "programs": 35,
+            "programsSize": 207144,
+            "readbackBuffers": 0,
+            "readbackBuffersSize": 0,
+            "renderTargets": 2,
+            "storageAttributes": 0,
+            "storageAttributesSize": 0,
+            "textures": 5,
+            "texturesSize": 50835456,
+            "uniformBuffers": 136,
+            "uniformBuffersSize": 16288,
+            "total": 55560976
+          }
+        },
+        {
+          "name": "overview-paused",
+          "warmupMs": 267.1,
+          "actualDurationMs": 6003.6,
+          "renderCpuMs": {
+            "count": 1441,
+            "p50": 1.5,
+            "p95": 1.9,
+            "p99": 2.1,
+            "max": 2.3,
+            "mean": 1.543
+          },
+          "frameIntervalsMs": {
+            "count": 1440,
+            "p50": 4.2,
+            "p95": 4.3,
+            "p99": 4.3,
+            "max": 4.4,
+            "mean": 4.167
+          },
+          "framesOver33ms": 0,
+          "framesOver50ms": 0,
+          "drawCalls": {
+            "count": 1441,
+            "p50": 113,
+            "p95": 113,
+            "p99": 113,
+            "max": 113,
+            "mean": 113
+          },
+          "triangles": {
+            "count": 1441,
+            "p50": 129393,
+            "p95": 129393,
+            "p99": 129393,
+            "max": 129393,
+            "mean": 129393
+          },
+          "snapshotCpuMs": null,
+          "resourceUpdatesMs": [
+            8.700000002980232
+          ],
+          "camera": {
+            "x": 31.5,
+            "z": 31.5,
+            "zoom": 0.375,
+            "far": 300
+          },
+          "memory": {
+            "attributes": 141,
+            "attributesSize": 4175616,
+            "geometries": 66,
+            "indexAttributes": 63,
+            "indexAttributesSize": 812928,
+            "indirectStorageAttributes": 0,
+            "indirectStorageAttributesSize": 0,
+            "programs": 35,
+            "programsSize": 207144,
+            "readbackBuffers": 0,
+            "readbackBuffersSize": 0,
+            "renderTargets": 2,
+            "storageAttributes": 0,
+            "storageAttributesSize": 0,
+            "textures": 5,
+            "texturesSize": 50835456,
+            "uniformBuffers": 143,
+            "uniformBuffersSize": 17072,
+            "total": 56048216
+          }
+        },
+        {
+          "name": "overview-travel",
+          "warmupMs": 259,
+          "actualDurationMs": 6001.9,
+          "renderCpuMs": {
+            "count": 1441,
+            "p50": 1.7,
+            "p95": 2.2,
+            "p99": 2.5,
+            "max": 3.3,
+            "mean": 1.703
+          },
+          "frameIntervalsMs": {
+            "count": 1440,
+            "p50": 4.2,
+            "p95": 4.3,
+            "p99": 4.3,
+            "max": 4.5,
+            "mean": 4.167
+          },
+          "framesOver33ms": 0,
+          "framesOver50ms": 0,
+          "drawCalls": {
+            "count": 1441,
+            "p50": 104,
+            "p95": 107,
+            "p99": 108,
+            "max": 108,
+            "mean": 103.192
+          },
+          "triangles": {
+            "count": 1441,
+            "p50": 117669,
+            "p95": 122675,
+            "p99": 123237,
+            "max": 123455,
+            "mean": 116818.302
+          },
+          "snapshotCpuMs": null,
+          "resourceUpdatesMs": [
+            8.700000002980232
+          ],
+          "camera": {
+            "x": 38.151491543718926,
+            "z": 52.889662462129586,
+            "zoom": 0.375,
+            "far": 300
+          },
+          "memory": {
+            "attributes": 141,
+            "attributesSize": 4175616,
+            "geometries": 66,
+            "indexAttributes": 63,
+            "indexAttributesSize": 812928,
+            "indirectStorageAttributes": 0,
+            "indirectStorageAttributesSize": 0,
+            "programs": 35,
+            "programsSize": 207144,
+            "readbackBuffers": 0,
+            "readbackBuffersSize": 0,
+            "renderTargets": 2,
+            "storageAttributes": 0,
+            "storageAttributesSize": 0,
+            "textures": 5,
+            "texturesSize": 50835456,
+            "uniformBuffers": 149,
+            "uniformBuffersSize": 17552,
+            "total": 56048696
+          }
+        }
+      ],
+      "spatialChecks": null,
+      "errors": []
+    },
+    {
+      "size": 250,
+      "readyMs": 1754.8,
+      "initial": {
+        "backend": "WebGPU",
+        "width": 250,
+        "height": 250,
+        "resources": 12411,
+        "pawns": 3,
+        "terrainBuildMs": [
+          248.09999999403954
+        ],
+        "resourcesBuildMs": [
+          462.79999999701977
+        ],
+        "camera": {
+          "zoom": 1,
+          "far": 728.1067811865476
+        }
+      },
+      "diagnostics": [
+        "Lisière renderer diagnostics {\"backend\":\"WebGPU\",\"context\":\"GPUCanvasContext\",\"browser\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36\",\"adapter\":{\"vendor\":\"amd\",\"architecture\":\"rdna-1\",\"device\":\"\",\"description\":\"\"},\"maxVertexBuffers\":8}"
+      ],
+      "phases": [
+        {
+          "name": "local-paused",
+          "warmupMs": 524.1,
+          "actualDurationMs": 6001.4,
+          "renderCpuMs": {
+            "count": 1434,
+            "p50": 3.3,
+            "p95": 4.3,
+            "p99": 4.7,
+            "max": 5.5,
+            "mean": 3.303
+          },
+          "frameIntervalsMs": {
+            "count": 1433,
+            "p50": 4.2,
+            "p95": 4.3,
+            "p99": 4.3,
+            "max": 8.4,
+            "mean": 4.187
+          },
+          "framesOver33ms": 0,
+          "framesOver50ms": 0,
+          "drawCalls": {
+            "count": 1434,
+            "p50": 138,
+            "p95": 138,
+            "p99": 138,
+            "max": 138,
+            "mean": 138
+          },
+          "triangles": {
+            "count": 1434,
+            "p50": 194465,
+            "p95": 194465,
+            "p99": 194465,
+            "max": 194465,
+            "mean": 194465
+          },
+          "snapshotCpuMs": null,
+          "resourceUpdatesMs": [],
+          "camera": {
+            "x": 124.50000000000003,
+            "z": 124.50000000000003,
+            "zoom": 1,
+            "far": 728.1067811865476
+          },
+          "memory": {
+            "attributes": 149,
+            "attributesSize": 5869584,
+            "geometries": 71,
+            "indexAttributes": 68,
+            "indexAttributesSize": 1163544,
+            "indirectStorageAttributes": 0,
+            "indirectStorageAttributesSize": 0,
+            "programs": 27,
+            "programsSize": 167499,
+            "readbackBuffers": 0,
+            "readbackBuffersSize": 0,
+            "renderTargets": 2,
+            "storageAttributes": 0,
+            "storageAttributesSize": 0,
+            "textures": 5,
+            "texturesSize": 50835456,
+            "uniformBuffers": 155,
+            "uniformBuffersSize": 17072,
+            "total": 58053155
+          }
+        },
+        {
+          "name": "local-active-chop",
+          "warmupMs": 527.5,
+          "actualDurationMs": 6001.8,
+          "renderCpuMs": {
+            "count": 1329,
+            "p50": 3.3,
+            "p95": 4.5,
+            "p99": 5.5,
+            "max": 52.7,
+            "mean": 3.464
+          },
+          "frameIntervalsMs": {
+            "count": 1328,
+            "p50": 4.2,
+            "p95": 4.3,
+            "p99": 8.4,
+            "max": 141.5,
+            "mean": 4.515
+          },
+          "framesOver33ms": 2,
+          "framesOver50ms": 2,
+          "drawCalls": {
+            "count": 1329,
+            "p50": 138,
+            "p95": 139,
+            "p99": 139,
+            "max": 139,
+            "mean": 138.193
+          },
+          "triangles": {
+            "count": 1329,
+            "p50": 194449,
+            "p95": 194477,
+            "p99": 194477,
+            "max": 194477,
+            "mean": 194454.415
+          },
+          "snapshotCpuMs": {
+            "count": 26,
+            "p50": 0.1,
+            "p95": 0.8,
+            "p99": 18.8,
+            "max": 18.8,
+            "mean": 0.912
+          },
+          "resourceUpdatesMs": [
+            16.5
+          ],
+          "camera": {
+            "x": 124.50000000000003,
+            "z": 124.50000000000003,
+            "zoom": 1,
+            "far": 728.1067811865476
+          },
+          "memory": {
+            "attributes": 151,
+            "attributesSize": 5867592,
+            "geometries": 72,
+            "indexAttributes": 69,
+            "indexAttributesSize": 1163040,
+            "indirectStorageAttributes": 0,
+            "indirectStorageAttributesSize": 0,
+            "programs": 30,
+            "programsSize": 175841,
+            "readbackBuffers": 0,
+            "readbackBuffersSize": 0,
+            "renderTargets": 2,
+            "storageAttributes": 0,
+            "storageAttributesSize": 0,
+            "textures": 5,
+            "texturesSize": 50835456,
+            "uniformBuffers": 162,
+            "uniformBuffersSize": 18272,
+            "total": 58060201
+          }
+        },
+        {
+          "name": "overview-paused",
+          "warmupMs": 1034.8,
+          "actualDurationMs": 6000.8,
+          "renderCpuMs": {
+            "count": 707,
+            "p50": 8,
+            "p95": 9.8,
+            "p99": 10.5,
+            "max": 16.6,
+            "mean": 8.083
+          },
+          "frameIntervalsMs": {
+            "count": 706,
+            "p50": 8.3,
+            "p95": 12.5,
+            "p99": 12.6,
+            "max": 16.7,
+            "mean": 8.487
+          },
+          "framesOver33ms": 0,
+          "framesOver50ms": 0,
+          "drawCalls": {
+            "count": 707,
+            "p50": 866,
+            "p95": 866,
+            "p99": 866,
+            "max": 866,
+            "mean": 866
+          },
+          "triangles": {
+            "count": 707,
+            "p50": 1199109,
+            "p95": 1199109,
+            "p99": 1199109,
+            "max": 1199109,
+            "mean": 1199109
+          },
+          "snapshotCpuMs": null,
+          "resourceUpdatesMs": [
+            16.5
+          ],
+          "camera": {
+            "x": 124.50000000000003,
+            "z": 124.50000000000003,
+            "zoom": 0.096,
+            "far": 728.1067811865476
+          },
+          "memory": {
+            "attributes": 1606,
+            "attributesSize": 64939584,
+            "geometries": 799,
+            "indexAttributes": 796,
+            "indexAttributesSize": 13204560,
+            "indirectStorageAttributes": 0,
+            "indirectStorageAttributesSize": 0,
+            "programs": 32,
+            "programsSize": 197979,
+            "readbackBuffers": 0,
+            "readbackBuffersSize": 0,
+            "renderTargets": 2,
+            "storageAttributes": 0,
+            "storageAttributesSize": 0,
+            "textures": 5,
+            "texturesSize": 50835456,
+            "uniformBuffers": 891,
+            "uniformBuffersSize": 100128,
+            "total": 129277707
+          }
+        },
+        {
+          "name": "overview-travel",
+          "warmupMs": 804.7,
+          "actualDurationMs": 6000.6,
+          "renderCpuMs": {
+            "count": 657,
+            "p50": 8.6,
+            "p95": 10.4,
+            "p99": 11.3,
+            "max": 17.9,
+            "mean": 8.682
+          },
+          "frameIntervalsMs": {
+            "count": 656,
+            "p50": 8.4,
+            "p95": 12.5,
+            "p99": 12.6,
+            "max": 16.7,
+            "mean": 9.14
+          },
+          "framesOver33ms": 0,
+          "framesOver50ms": 0,
+          "drawCalls": {
+            "count": 657,
+            "p50": 851,
+            "p95": 864,
+            "p99": 865,
+            "max": 866,
+            "mean": 848.775
+          },
+          "triangles": {
+            "count": 657,
+            "p50": 1178115,
+            "p95": 1204429,
+            "p99": 1209591,
+            "max": 1216367,
+            "mean": 1176275.295
+          },
+          "snapshotCpuMs": null,
+          "resourceUpdatesMs": [
+            16.5
+          ],
+          "camera": {
+            "x": 202.28760133681948,
+            "z": 164.56668289569325,
+            "zoom": 0.096,
+            "far": 728.1067811865476
+          },
+          "memory": {
+            "attributes": 1606,
+            "attributesSize": 64939584,
+            "geometries": 799,
+            "indexAttributes": 796,
+            "indexAttributesSize": 13204560,
+            "indirectStorageAttributes": 0,
+            "indirectStorageAttributesSize": 0,
+            "programs": 32,
+            "programsSize": 197979,
+            "readbackBuffers": 0,
+            "readbackBuffersSize": 0,
+            "renderTargets": 2,
+            "storageAttributes": 0,
+            "storageAttributesSize": 0,
+            "textures": 5,
+            "texturesSize": 50835456,
+            "uniformBuffers": 1438,
+            "uniformBuffersSize": 143888,
+            "total": 129321467
+          }
+        }
+      ],
+      "spatialChecks": [
+        {
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "checks": [
+            {
+              "orientation": 0,
+              "zoom": 0.09032004729451514,
+              "corners": [
+                {
+                  "x": 0,
+                  "z": 0,
+                  "clip": {
+                    "x": -0.01859665912143744,
+                    "y": 0.7969567462579126,
+                    "z": 0.6223600399726044
+                  },
+                  "picked": {
+                    "x": 0,
+                    "z": 0
+                  },
+                  "visible": true
+                },
+                {
+                  "x": 249,
+                  "z": 0,
+                  "clip": {
+                    "x": 0.6508830692503225,
+                    "y": 0.02277019275022565,
+                    "z": 0.4987589966007834
+                  },
+                  "picked": {
+                    "x": 249,
+                    "z": 0
+                  },
+                  "visible": true
+                },
+                {
+                  "x": 0,
+                  "z": 249,
+                  "clip": {
+                    "x": -0.6508830692503227,
+                    "y": -0.02277019275022565,
+                    "z": 0.49148834699067645
+                  },
+                  "picked": {
+                    "x": 0,
+                    "z": 249
+                  },
+                  "visible": true
+                },
+                {
+                  "x": 249,
+                  "z": 249,
+                  "clip": {
+                    "x": 0.018596659121437233,
+                    "y": -0.7969567462579126,
+                    "z": 0.36788730361885547
+                  },
+                  "picked": {
+                    "x": 249,
+                    "z": 249
+                  },
+                  "visible": true
+                }
+              ]
+            },
+            {
+              "orientation": 1,
+              "zoom": 0.09032004729451514,
+              "corners": [
+                {
+                  "x": 0,
+                  "z": 0,
+                  "clip": {
+                    "x": 0.6508830692503227,
+                    "y": 0.022770192750225047,
+                    "z": 0.4987589966007834
+                  },
+                  "picked": {
+                    "x": 0,
+                    "z": 0
+                  },
+                  "visible": true
+                },
+                {
+                  "x": 249,
+                  "z": 0,
+                  "clip": {
+                    "x": 0.01859665912143734,
+                    "y": -0.796956746257913,
+                    "z": 0.3678873036188555
+                  },
+                  "picked": {
+                    "x": 249,
+                    "z": 0
+                  },
+                  "visible": true
+                },
+                {
+                  "x": 0,
+                  "z": 249,
+                  "clip": {
+                    "x": -0.018596659121437237,
+                    "y": 0.7969567462579124,
+                    "z": 0.6223600399726045
+                  },
+                  "picked": {
+                    "x": 0,
+                    "z": 249
+                  },
+                  "visible": true
+                },
+                {
+                  "x": 249,
+                  "z": 249,
+                  "clip": {
+                    "x": -0.6508830692503225,
+                    "y": -0.02277019275022581,
+                    "z": 0.4914883469906765
+                  },
+                  "picked": {
+                    "x": 249,
+                    "z": 249
+                  },
+                  "visible": true
+                }
+              ]
+            },
+            {
+              "orientation": 2,
+              "zoom": 0.09032004729451514,
+              "corners": [
+                {
+                  "x": 0,
+                  "z": 0,
+                  "clip": {
+                    "x": 0.01859665912143776,
+                    "y": -0.7969567462579125,
+                    "z": 0.36788730361885547
+                  },
+                  "picked": {
+                    "x": 0,
+                    "z": 0
+                  },
+                  "visible": true
+                },
+                {
+                  "x": 249,
+                  "z": 0,
+                  "clip": {
+                    "x": -0.6508830692503222,
+                    "y": -0.0227701927502252,
+                    "z": 0.49148834699067634
+                  },
+                  "picked": {
+                    "x": 249,
+                    "z": 0
+                  },
+                  "visible": true
+                },
+                {
+                  "x": 0,
+                  "z": 249,
+                  "clip": {
+                    "x": 0.6508830692503231,
+                    "y": 0.02277019275022611,
+                    "z": 0.4987589966007832
+                  },
+                  "picked": {
+                    "x": 0,
+                    "z": 249
+                  },
+                  "visible": true
+                },
+                {
+                  "x": 249,
+                  "z": 249,
+                  "clip": {
+                    "x": -0.01859665912143692,
+                    "y": 0.7969567462579134,
+                    "z": 0.6223600399726043
+                  },
+                  "picked": {
+                    "x": 249,
+                    "z": 249
+                  },
+                  "visible": true
+                }
+              ]
+            },
+            {
+              "orientation": 3,
+              "zoom": 0.09032004729451514,
+              "corners": [
+                {
+                  "x": 0,
+                  "z": 0,
+                  "clip": {
+                    "x": -0.6508830692503226,
+                    "y": -0.0227701927502261,
+                    "z": 0.49148834699067634
+                  },
+                  "picked": {
+                    "x": 0,
+                    "z": 0
+                  },
+                  "visible": true
+                },
+                {
+                  "x": 249,
+                  "z": 0,
+                  "clip": {
+                    "x": -0.01859665912143765,
+                    "y": 0.7969567462579121,
+                    "z": 0.6223600399726043
+                  },
+                  "picked": {
+                    "x": 249,
+                    "z": 0
+                  },
+                  "visible": true
+                },
+                {
+                  "x": 0,
+                  "z": 249,
+                  "clip": {
+                    "x": 0.018596659121437546,
+                    "y": -0.7969567462579128,
+                    "z": 0.36788730361885547
+                  },
+                  "picked": {
+                    "x": 0,
+                    "z": 249
+                  },
+                  "visible": true
+                },
+                {
+                  "x": 249,
+                  "z": 249,
+                  "clip": {
+                    "x": 0.6508830692503226,
+                    "y": 0.022770192750225494,
+                    "z": 0.4987589966007834
+                  },
+                  "picked": {
+                    "x": 249,
+                    "z": 249
+                  },
+                  "visible": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "viewport": {
+            "width": 600,
+            "height": 900
+          },
+          "checks": [
+            {
+              "orientation": 0,
+              "zoom": 0.060213364863010085,
+              "corners": [
+                {
+                  "x": 0,
+                  "z": 0,
+                  "clip": {
+                    "x": -0.9372716197204647,
+                    "y": -0.015180128500150684,
+                    "z": 0.49148834699067634
+                  },
+                  "picked": {
+                    "x": 0,
+                    "z": 0
+                  },
+                  "visible": true
+                },
+                {
+                  "x": 249,
+                  "z": 0,
+                  "clip": {
+                    "x": -0.02677918913487037,
+                    "y": 0.5313044975052752,
+                    "z": 0.6223600399726043
+                  },
+                  "picked": {
+                    "x": 249,
+                    "z": 0
+                  },
+                  "visible": true
+                },
+                {
+                  "x": 0,
+                  "z": 249,
+                  "clip": {
+                    "x": 0.02677918913487022,
+                    "y": -0.531304497505275,
+                    "z": 0.36788730361885547
+                  },
+                  "picked": {
+                    "x": 0,
+                    "z": 249
+                  },
+                  "visible": true
+                },
+                {
+                  "x": 249,
+                  "z": 249,
+                  "clip": {
+                    "x": 0.9372716197204647,
+                    "y": 0.015180128500150786,
+                    "z": 0.4987589966007835
+                  },
+                  "picked": {
+                    "x": 249,
+                    "z": 249
+                  },
+                  "visible": true
+                }
+              ]
+            },
+            {
+              "orientation": 1,
+              "zoom": 0.060213364863010085,
+              "corners": [
+                {
+                  "x": 0,
+                  "z": 0,
+                  "clip": {
+                    "x": -0.026779189134870554,
+                    "y": 0.5313044975052751,
+                    "z": 0.6223600399726044
+                  },
+                  "picked": {
+                    "x": 0,
+                    "z": 0
+                  },
+                  "visible": true
+                },
+                {
+                  "x": 249,
+                  "z": 0,
+                  "clip": {
+                    "x": 0.9372716197204642,
+                    "y": 0.015180128500150937,
+                    "z": 0.49875899660078354
+                  },
+                  "picked": {
+                    "x": 249,
+                    "z": 0
+                  },
+                  "visible": true
+                },
+                {
+                  "x": 0,
+                  "z": 249,
+                  "clip": {
+                    "x": -0.9372716197204644,
+                    "y": -0.015180128500150634,
+                    "z": 0.49148834699067634
+                  },
+                  "picked": {
+                    "x": 0,
+                    "z": 249
+                  },
+                  "visible": true
+                },
+                {
+                  "x": 249,
+                  "z": 249,
+                  "clip": {
+                    "x": 0.02677918913487034,
+                    "y": -0.531304497505275,
+                    "z": 0.3678873036188555
+                  },
+                  "picked": {
+                    "x": 249,
+                    "z": 249
+                  },
+                  "visible": true
+                }
+              ]
+            },
+            {
+              "orientation": 2,
+              "zoom": 0.060213364863010085,
+              "corners": [
+                {
+                  "x": 0,
+                  "z": 0,
+                  "clip": {
+                    "x": 0.9372716197204642,
+                    "y": 0.015180128500151092,
+                    "z": 0.49875899660078354
+                  },
+                  "picked": {
+                    "x": 0,
+                    "z": 0
+                  },
+                  "visible": true
+                },
+                {
+                  "x": 249,
+                  "z": 0,
+                  "clip": {
+                    "x": 0.026779189134870526,
+                    "y": -0.531304497505275,
+                    "z": 0.36788730361885547
+                  },
+                  "picked": {
+                    "x": 249,
+                    "z": 0
+                  },
+                  "visible": true
+                },
+                {
+                  "x": 0,
+                  "z": 249,
+                  "clip": {
+                    "x": -0.026779189134871283,
+                    "y": 0.5313044975052753,
+                    "z": 0.6223600399726043
+                  },
+                  "picked": {
+                    "x": 0,
+                    "z": 249
+                  },
+                  "visible": true
+                },
+                {
+                  "x": 249,
+                  "z": 249,
+                  "clip": {
+                    "x": -0.9372716197204648,
+                    "y": -0.015180128500150788,
+                    "z": 0.4914883469906762
+                  },
+                  "picked": {
+                    "x": 249,
+                    "z": 249
+                  },
+                  "visible": true
+                }
+              ]
+            },
+            {
+              "orientation": 3,
+              "zoom": 0.060213364863010085,
+              "corners": [
+                {
+                  "x": 0,
+                  "z": 0,
+                  "clip": {
+                    "x": 0.026779189134870637,
+                    "y": -0.5313044975052752,
+                    "z": 0.36788730361885547
+                  },
+                  "picked": {
+                    "x": 0,
+                    "z": 0
+                  },
+                  "visible": true
+                },
+                {
+                  "x": 249,
+                  "z": 0,
+                  "clip": {
+                    "x": -0.937271619720464,
+                    "y": -0.015180128500150837,
+                    "z": 0.49148834699067634
+                  },
+                  "picked": {
+                    "x": 249,
+                    "z": 0
+                  },
+                  "visible": true
+                },
+                {
+                  "x": 0,
+                  "z": 249,
+                  "clip": {
+                    "x": 0.9372716197204647,
+                    "y": 0.015180128500150433,
+                    "z": 0.4987589966007834
+                  },
+                  "picked": {
+                    "x": 0,
+                    "z": 249
+                  },
+                  "visible": true
+                },
+                {
+                  "x": 249,
+                  "z": 249,
+                  "clip": {
+                    "x": -0.026779189134870107,
+                    "y": 0.5313044975052749,
+                    "z": 0.6223600399726043
+                  },
+                  "picked": {
+                    "x": 249,
+                    "z": 249
+                  },
+                  "visible": true
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "errors": []
+    }
+  ]
+}

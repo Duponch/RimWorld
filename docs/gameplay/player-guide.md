@@ -2,7 +2,9 @@
 
 ## Commencer une colonie
 
-Trois survivants, Ada, Noé et Mina, arrivent sur une carte de 64×64 cases par défaut. Menu → Nouvelle colonie permet de choisir 32, 64 ou 128 cases par côté et une graine. À taille et version de générateur identiques, la même graine redonne le même départ. Vous commencez avec 12 unités de bois et 18 de nourriture déposées près des colons. Les nombres à gauche additionnent les objets au sol et portés ; les matériaux déjà livrés aux chantiers sont comptés séparément.
+Trois survivants, Ada, Noé et Mina, arrivent sur une carte de **250×250 cases par défaut**. Menu → Nouvelle colonie propose aussi 200×200, ou les cartes compactes 64×64 et 128×128, ainsi qu'une graine. Le nouveau défaut offre environ 15,26 fois la surface de l'ancien 64×64. Les cases et personnages gardent leurs dimensions : le territoire s'étend, les trajets lointains s'allongent et la caméra commence toujours près du camp. À taille et version de générateur identiques, la même graine redonne le même départ.
+
+Vous commencez avec 12 unités de bois et 18 de nourriture déposées près des colons. Les nombres à gauche additionnent les objets au sol et portés ; les matériaux déjà livrés aux chantiers sont comptés séparément. Vos anciennes petites parties restent à leur taille originale, y compris les cartes 32×32 ; charger une partie ne l'agrandit pas.
 
 Votre premier objectif libre est de récolter de la nourriture, couper quelques arbres et construire trois lits. Il n'y a encore ni scénario de victoire ni événement hostile. Une partie est un laboratoire de gameplay ; les règles ci-dessous décrivent ce qui existe réellement.
 
@@ -73,7 +75,7 @@ La convention 3D est de 1 m par case, 1,75 m pour un humain et 2,80 m pour un mu
 
 Menu → Sauvegarder conserve le monde, les travaux, les réservations, les trajets et les besoins. Elle occupe un emplacement local à ce navigateur. Recharger remplace la partie courante par la dernière sauvegarde ; une sauvegarde invalide est refusée. La vitesse et l'angle de caméra ne font pas partie de la sauvegarde. Il n'y a pas encore d'autosauvegarde ni d'export de fichier.
 
-Avant de créer une nouvelle colonie, le jeu conserve aussi l'état courant dans un emplacement « Colonie précédente », distinct de la sauvegarde manuelle. Cette copie contient la dernière colonie remplacée, pas tout l'historique des colonies. La création est refusée si cette copie ne peut pas être enregistrée. Les anciennes sauvegardes gardent leur terrain original ; leur stock global est converti en piles et leurs matériaux réservés sont localisés aux chantiers. Les nouvelles sauvegardes conservent également les cargaisons et les réserves.
+Avant de créer une nouvelle colonie, le jeu conserve aussi l'état courant dans un emplacement « Colonie précédente », distinct de la sauvegarde manuelle. Cette copie contient la dernière colonie remplacée, pas tout l'historique des colonies. La création est refusée si cette copie ne peut pas être enregistrée. Les anciennes sauvegardes gardent leurs dimensions, leur terrain et leurs ressources ; leur ancien stock global, lorsqu'il existe, est converti en piles et leurs matériaux réservés sont localisés aux chantiers. Les nouvelles sauvegardes conservent également les cargaisons et les réserves. Créer ou charger un grand territoire prépare toute sa carte ; la durée de cette opération dépend de l'appareil.
 
 ## Limites de cette version
 

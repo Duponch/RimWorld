@@ -5,6 +5,7 @@
 | Domaine / référence | Choix ou écart actuel | Motif et suite |
 |---|---|---|
 | Présentation, chap. 5/29 | Grille plane représentée en 3D low poly, caméra orientable ; case 1 m, humain 1,75 m, mur 2,80 m. | Interprétation des volumes pour la lisibilité. Pas d'étages jouables ni de physique de corps imposés par la 3D. |
+| Étendue, chap. 5 | Carte moyenne 250×250 par défaut, petite 200×200 ; 32/64/128 conservées comme essais et cartes compactes. | Correction de l'ancien défaut 64² : les petites dimensions proposées par le corpus étaient des fixtures. Les options 225/275/300/325 de RimWorld ne sont pas toutes proposées ; extension au-delà de 250 après mesures. Taille, résolution et cadrage sont distincts. |
 | Animation, chap. 29 | Poses des personnages et cargaisons interpolées sur GPU ; la simulation décide des transferts et de l'occupation. | Liberté technique sans changer les conséquences de jeu. Les placeholders seront remplacés par les assets définitifs. |
 | Navigation, chap. 21 | BFS CPU déterministe dans le jeu ; recherche entièrement GPU dans un laboratoire indépendant. | Les techniques de RimWorld ne sont pas une contrainte. Choisir le moteur final sur correction, coût total et fonctionnement avec le rendu. |
 | Temps/besoins, chap. 3/14 | 10 ticks/seconde, 6 000 ticks/jour ; besoins en pourcentage et durées propres au prototype. | Conversions et équilibrage explicites avant G1. Les constantes du dossier ne sont pas copiées sans leurs unités. |

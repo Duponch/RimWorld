@@ -1,33 +1,24 @@
 {
-  "timestamp": "2026-09-13T13:41:17.030Z",
+  "timestamp": "2026-09-13T12:44:44.892Z",
   "backend": "WebGPU",
   "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
   "map": {
     "seed": 42,
-    "width": 250,
-    "height": 250
+    "width": 64,
+    "height": 64
   },
   "cargo": [
     {
-      "id": 12422,
-      "kind": "wood",
-      "quantity": 5,
-      "owner": {
-        "type": "pawn",
-        "pawnId": 12409
-      }
-    },
-    {
-      "id": 12423,
+      "id": 747,
       "kind": "wood",
       "quantity": 7,
       "owner": {
         "type": "pawn",
-        "pawnId": 12410
+        "pawnId": 734
       }
     }
   ],
-  "constructionPausedAt": 348,
+  "constructionPausedAt": 420,
   "materials": {
     "piles": 2,
     "stockpiles": 2,
@@ -36,24 +27,6 @@
       "food": 18
     },
     "bedFootprint": "1x2"
-  },
-  "replacement": {
-    "sameTerrainAndIds": true,
-    "higherTick": 448,
-    "pawnId": 12409,
-    "from": [
-      125,
-      0,
-      124,
-      0.6283185307179586
-    ],
-    "to": [
-      125,
-      0,
-      124,
-      0.6283185307179586
-    ],
-    "replaced": true
   },
   "diagnostics": [
     "Lisière renderer diagnostics {\"backend\":\"WebGPU\",\"context\":\"GPUCanvasContext\",\"browser\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36\",\"adapter\":{\"vendor\":\"amd\",\"architecture\":\"rdna-1\",\"device\":\"\",\"description\":\"\"},\"maxVertexBuffers\":8}"
@@ -65,7 +38,7 @@
         "width": 1440,
         "height": 1000
       },
-      "tick": 20
+      "tick": 67
     },
     {
       "path": "artifacts/colony-carrying.png",
@@ -73,7 +46,7 @@
         "width": 1440,
         "height": 1000
       },
-      "tick": 23
+      "tick": 69
     },
     {
       "path": "artifacts/colony-proportions.png",
@@ -81,7 +54,7 @@
         "width": 1440,
         "height": 1000
       },
-      "tick": 348
+      "tick": 420
     },
     {
       "path": "artifacts/colony-bed-preview-0.png",
@@ -89,7 +62,7 @@
         "width": 1440,
         "height": 1000
       },
-      "tick": 348
+      "tick": 420
     },
     {
       "path": "artifacts/colony-bed-preview-1.png",
@@ -97,7 +70,7 @@
         "width": 1440,
         "height": 1000
       },
-      "tick": 348
+      "tick": 420
     },
     {
       "path": "artifacts/colony-bed-preview-2.png",
@@ -105,7 +78,7 @@
         "width": 1440,
         "height": 1000
       },
-      "tick": 348
+      "tick": 420
     },
     {
       "path": "artifacts/colony-bed-preview-3.png",
@@ -113,7 +86,7 @@
         "width": 1440,
         "height": 1000
       },
-      "tick": 348
+      "tick": 420
     },
     {
       "path": "artifacts/colony-cutaway.png",
@@ -121,7 +94,7 @@
         "width": 1440,
         "height": 1000
       },
-      "tick": 348
+      "tick": 420
     },
     {
       "path": "artifacts/colony-foliage-hidden.png",
@@ -129,7 +102,7 @@
         "width": 1440,
         "height": 1000
       },
-      "tick": 348
+      "tick": 420
     },
     {
       "path": "artifacts/colony-work-panel.png",
@@ -137,7 +110,7 @@
         "width": 1280,
         "height": 720
       },
-      "tick": 348
+      "tick": 420
     },
     {
       "path": "artifacts/colony-inspector.png",
@@ -145,7 +118,7 @@
         "width": 1280,
         "height": 720
       },
-      "tick": 348
+      "tick": 420
     },
     {
       "path": "artifacts/colony-final.png",
@@ -153,7 +126,7 @@
         "width": 1440,
         "height": 1000
       },
-      "tick": 348
+      "tick": 420
     }
   ],
   "errors": []

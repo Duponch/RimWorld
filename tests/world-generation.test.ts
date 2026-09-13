@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { applyCommand, createWorld, deserializeWorld, hashWorld, serializeWorld, stepWorld, validateWorld } from '../src/sim/index.ts';
+import { addGroundMaterial, applyCommand, createWorld, deserializeWorld, hashWorld, refreshStock, serializeWorld, stepWorld, validateWorld } from '../src/sim/index.ts';
 import { blockedCells, reachableCells, routeToJob } from '../src/sim/pathfinding.ts';
 import type { Terrain, World } from '../src/sim/types.ts';
 
@@ -27,7 +27,7 @@ function components(world: World, terrain: Terrain): number[][] {
 
 describe('seeded temperate valley generation', () => {
   test('same seed reproduces every entity; rectangular boundary fixtures and saved edited maps remain valid', () => {
-    for (const [width, height] of [[8, 8], [8, 128], [128, 8], [16, 12], [32, 64], [64, 32], [128, 128]]) {
+    for (const [width, height] of [[8, 8], [8, 128], [128, 8], [16, 12], [32, 64], [64, 32], [128, 128], [8, 250], [250, 8], [249, 250], [250, 249], [200, 200], [250, 250]]) {
       const fingerprints = new Set<string>();
       for (const seed of [0, 1, 7, 42, -1, 0xffffffff, 0x100000000]) {
         const world = createWorld(seed, width, height);
@@ -43,7 +43,7 @@ describe('seeded temperate valley generation', () => {
       }
       expect(fingerprints.size).toBe(5); // 0 wraps to 2^32; -1 wraps to uint32 max.
     }
-    for (const dimension of [7, 129, 8.5, Infinity, NaN]) {
+    for (const dimension of [7, 251, 8.5, Infinity, NaN]) {
       expect(() => createWorld(42, dimension, 32)).toThrow();
       expect(() => createWorld(42, 32, dimension)).toThrow();
     }
@@ -52,7 +52,7 @@ describe('seeded temperate valley generation', () => {
 
   test('many seeds produce continuous rivers, coherent patches, walkable starts and readable rock clusters', () => {
     let edgeRocks = 0; let decorativeRocks = 0; let grassTrees = 0; let soilTrees = 0; let grassArea = 0; let soilArea = 0;
-    for (const size of [32, 64, 128]) {
+    for (const size of [32, 64, 128, 200, 250]) {
       for (const seed of [0, 1, 7, 19, 42, 65, 75, 85, 114, 271, 65535, 0xffffffff]) {
         const world = createWorld(seed, size, size); const context = `seed=${seed} map=${size}`;
         expect(validateWorld(world), context).toEqual([]);
@@ -102,7 +102,7 @@ describe('seeded temperate valley generation', () => {
   });
 
   test('tutorial resources actually support a first camp on small and larger generated maps, including save during work', () => {
-    for (const size of [8, 24, 64]) for (const seed of [0, 7, 42]) {
+    for (const size of [8, 24, 64, 250]) for (const seed of [0, 7, 42]) {
       const world = createWorld(seed, size, size); const cx = size / 2; const cz = size / 2;
       const context = `seed=${seed} map=${size}`;
       const tutorialIds = world.resources.slice(-3).map(item => item.id);
@@ -127,5 +127,45 @@ describe('seeded temperate valley generation', () => {
         && pile.owner.x === cx + 2 && pile.owner.z === cz + 1).reduce((sum, pile) => sum + pile.quantity, 0);
       expect(storedWood, context).toBe(23);
     }
+    // A long route crosses the last partial 16-cell rendering chunk, but physics
+    // knows only valid grid cells. Topology changes between calls must be seen immediately.
+    const long = createWorld(42, 250, 250);
+    long.tiles = long.tiles.map(() => ({ terrain: 'rock' }));
+    for (let x = 0; x < 250; x++) long.tiles[125 * 250 + x] = { terrain: 'grass' };
+    for (let x = 100; x <= 102; x++) long.tiles[124 * 250 + x] = { terrain: 'grass' };
+    long.resources = [{ id: long.nextId++, x: 249, z: 125, kind: 'tree', amount: 12 }];
+    long.piles = []; refreshStock(long);
+    long.pawns = long.pawns.slice(0, 1);
+    const pawn = long.pawns[0]!; pawn.x = 0; pawn.z = 125; pawn.priorities = { gather: 1, build: 0, haul: 0 };
+    addGroundMaterial(long, 'food', 18, pawn);
+    expect(applyCommand(long, { type: 'designate', kind: 'chop', x: 249, z: 125 })).toEqual({ ok: true });
+    stepWorld(long);
+    expect(pawn.path.length).toBeGreaterThan(240);
+    const resumed = deserializeWorld(serializeWorld(long));
+    for (const world of [long, resumed]) expect(applyCommand(world, { type: 'designate', kind: 'wall', x: 101, z: 125 })).toEqual({ ok: true });
+    let usedDetour = false;
+    for (let tick = 0; tick < 350; tick++) {
+      stepWorld(long); usedDetour ||= pawn.z === 124;
+      expect(long.tiles[pawn.z * 250 + pawn.x]!.terrain).toBe('grass');
+      expect(pawn.x === 101 && pawn.z === 125).toBe(false);
+    }
+    stepWorld(resumed, 350);
+    expect(usedDetour).toBe(true);
+    expect(hashWorld(long)).toBe(hashWorld(resumed));
+    for (const world of [long, resumed]) {
+      expect(applyCommand(world, { type: 'cancel', x: 101, z: 125 })).toEqual({ ok: true });
+      expect(applyCommand(world, { type: 'cancel', x: 249, z: 125 })).toEqual({ ok: true });
+      expect(world.pawns[0]!.path).toEqual([]);
+      expect(applyCommand(world, { type: 'designate', kind: 'chop', x: 249, z: 125 })).toEqual({ ok: true });
+    }
+    stepWorld(long, 650);
+    for (let tick = 0; tick < 650; tick++) stepWorld(resumed);
+    expect(hashWorld(long)).toBe(hashWorld(resumed));
+    expect(validateWorld(long)).toEqual([]);
+    expect(long.resources).toEqual([]);
+    expect(long.jobs).toEqual([]);
+    expect(long.piles.find(pile => pile.kind === 'wood')?.owner).toEqual({ type: 'ground', x: 249, z: 125 });
+    expect(long.stock.wood).toBe(12);
+    expect(() => deserializeWorld(JSON.stringify({ ...long, width: 251 }))).toThrow('Invalid dimensions.');
   });
 });

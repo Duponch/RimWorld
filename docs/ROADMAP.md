@@ -23,13 +23,14 @@ Les trois documents de `docs/new_docs` sont la référence fonctionnelle princip
 | Navigation et planification | Première version livrée et bornée | BFS déterministe, invalidation et cession locale ; huit recherches et 32 768 couples logistiques examinés par tick, curseur sauvegardé. Congestion active et réservation des cases de travail encore ouvertes. |
 | Sauvegarde matérielle | Schéma 2 livré | Phases de transport, propriétaires, stockages, orientation et curseur persistés ; migration explicite V1, y compris progression interrompue sans escrow. Manifeste et journal complet restent ouverts. |
 | Besoins | Première version livrée | Nourriture, sommeil sur place, bonus de lit voisin, humeur dérivée. Pas d'effets sociaux ou médicaux. |
-| Présentation 3D | Livrée avec placeholders | Décor procédural, instancing, rig rigide six os GPU TSL, caméra et inspection. |
-| Échelles et terrain | Première fondation livrée | Conventions 1 m/case, humain 1,75 m, mur 2,80 m ; nouveaux lits orientés 1×2, lits V1 conservés 1×1. Rivière continue, massifs, végétation corrélée ; cartes 32/64/128, défaut 64. |
+| Présentation 3D | Livrée avec placeholders | Décor procédural fusionné par chunks et matériaux partagés, instancing dynamique, rig rigide six os GPU TSL. Caméra bornée au terrain, panorama adapté au viewport. |
+| Échelles et terrain | Cartes moyennes 250² livrées | Défaut 250², option 200², essais 32/64/128 conservés ; densité et proportions inchangées : 1 m/case, humain 1,75 m, mur 2,80 m, lit 1×2. Sauvegardes anciennes non agrandies. Comparaison dans map-scale.md. |
+| Transfert des snapshots | Incrémental livré | Checkpoint init/load ; deltas terrain/ressources, epoch et révisions, références immuables, resynchronisation. Les tableaux dynamiques et sauvegardes restent complets. |
 | Organisation de l'interface | Livrée sur le périmètre actuel | Disposition RimWorld, Architecte avec réserves et lits orientés, Travail collecte/construction/transport 0–4, inspection des matériaux et filtres. Les autres onglets restent désactivés jusqu'à leurs mécaniques. |
 | Observation du jeu | Première séance livrée | Séquences horodatées de la vidéo fournie ; interface, stocks, volumes et passages observés. Combat, fuite et congestion restent à observer en mouvement. |
 | Navigation entièrement GPU | Laboratoire livré, intégration ouverte | Recherche pondérée, convergence et extraction GPU, oracle indépendant, 110 requêtes sur GPU matériel. Gains variables selon taille/lot ; navigation du jeu encore CPU. |
 | Assets animés définitifs | Prévu | Import glTF, validation des rigs et clips, atlas d'os, sockets, équipements. Aucun asset Blender demandé pour ce démarrage. |
-| Validation | Tranche matérielle vérifiée | 13 scénarios (8 simulation, 3 génération, 2 contrats GPU), dont 60 000 ticks avec conservation à chaque tick ; trois parcours navigateur réussis par passages ciblés ; build et inspection WebGPU AMD/RDNA-1 sans erreur. Portée et mesures dans validation.md. |
+| Validation | Cartes 250² et tranche matérielle vérifiées | 14 scénarios (8 simulation, 3 génération, 2 contrats GPU, 1 codec), dont 60 000 ticks avec conservation ; codec final revérifié après correction ; trois parcours navigateur passent ensemble ; build final réussi, profils WebGPU AMD/RDNA-1. Portée et limites dans validation.md et map-scale.md. |
 | Fidélité au jeu de base complet | En développement | Cette première tranche couvre une petite partie du socle. Aucun combat, agriculture ou storyteller livré. |
 
 ## Prochaine étape : consolider G0 après la boucle matérielle
@@ -48,7 +49,7 @@ Le transport physique est désormais implémenté et ses scénarios de conservat
 
 Le scénario de livraison partielle attend réellement ses matériaux ; interrompre ne recrédite plus un stock abstrait. Les matériaux au sol peuvent toutefois empêcher de replacer immédiatement un plan annulé : le déplacement automatique de ces objets reste un écart connu. Les consommations à distance, sommeil sur place et blocage immédiat des plans de murs ne sont pas présentés comme la règle finale du jeu de référence.
 
-La consolidation doit réunir contrôles noyau, parcours UI/worker et inspection GPU de la présentation, puis mettre à jour les preuves. Les plafonds de recherches et de couples examinés ne prouvent pas à eux seuls le confort à centaines d'acteurs. Les dimensions du monde et les chunks de rendu restent séparés ; la fixture GPU 250² ne signifie pas qu'une colonie de cette taille est jouable.
+La consolidation réunit contrôles noyau, parcours UI/worker et inspection GPU de la présentation. Les plafonds de recherches et de couples examinés ne prouvent pas à eux seuls le confort à centaines d'acteurs. La colonie locale utilise désormais 250² avec une navigation CPU ; le laboratoire GPU de même dimension reste indépendant. Les [mesures de passage aux grandes cartes](development/map-scale.md) séparent charge CPU, communication et rendu, sans extrapoler à un jeu complet.
 
 **Acceptation G0 :** trois colons peuvent collecter, porter, stocker et construire un petit camp ; on peut expliquer leurs attentes ; une sauvegarde en cours de transport reprend exactement ; aucune double réservation ou duplication sur fixtures concurrentes et soak.
 
