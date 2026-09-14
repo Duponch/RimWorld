@@ -1,0 +1,130 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "E:\\Code\\RimWorld\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "tests/integration/player-orders.spec.ts",
+      "-g",
+      "dégager une plante",
+      "--reporter=list,json"
+    ],
+    "configFile": "E:\\Code\\RimWorld\\playwright.config.ts",
+    "rootDir": "E:/Code/RimWorld/tests/integration",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "E:/Code/RimWorld/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "E:/Code/RimWorld/tests/integration",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": {
+      "command": "npm run dev",
+      "url": "http://127.0.0.1:5173",
+      "reuseExistingServer": true,
+      "timeout": 30000
+    }
+  },
+  "suites": [
+    {
+      "title": "player-orders.spec.ts",
+      "file": "player-orders.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "dégager une plante puis ravitailler un feu sans automatisme, reprendre la file et déplacer les matériaux du chantier",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 12676,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-14T20:10:47.580Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "context-services",
+                      "contentType": "application/json",
+                      "body": "eyJ0aWNrIjoyMzAxLCJzdG9jayI6eyJ3b29kIjo3LCJmb29kIjowfSwiZnVlbCI6eyJ0aWNrcyI6MTE2OTksImJ1cm5lZCI6MzAxLCJhdXRvUmVmdWVsIjpmYWxzZX0sIm9yZGVycyI6eyJhY3RpdmUiOm51bGwsInF1ZXVlIjpbXX0sImVycm9ycyI6W119"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "7992d321779f14996e2c-905f57c7525afb0e8cfb",
+          "file": "player-orders.spec.ts",
+          "line": 58,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-14T20:10:46.369Z",
+    "duration": 14050.362000000001,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

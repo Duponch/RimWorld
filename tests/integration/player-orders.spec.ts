@@ -4,6 +4,29 @@ import { newCookingBill } from '../../src/sim/cooking-bills';
 import { perform } from './player-actions';
 import { world, panel, cell, saveKey, expectWorld, observeErrors } from './helpers';
 
+test('la priorité de chantier traverse coupe, dégagement, livraison et finition sans étendre le travail au voisin',async({playwright},testInfo)=>{
+  const browser=await playwright.chromium.launch({channel:'chromium',args:[]});
+  const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);
+  try {
+    const fixture=createWorld(42,32,32);fixture.tick=2000;fixture.tiles=fixture.tiles.map(()=>({terrain:'grass'}));fixture.resources=[];fixture.piles=[];fixture.jobs=[];fixture.structures=[];fixture.stockpiles=[];fixture.pawns=fixture.pawns.slice(0,1);
+    const pawn=fixture.pawns[0]!;Object.assign(pawn,{x:12,z:16,hunger:100,rest:100});pawn.schedule.fill('anything');pawn.priorities={haul:0,build:1,gather:0,grow:0,cook:0};
+    fixture.resources.push({id:fixture.nextId++,kind:'tree',amount:12,x:18,z:14});
+    for(const x of [18,22])expect(applyCommand(fixture,{type:'designate',kind:'bed',x,z:14}).ok).toBe(true);
+    await page.addInitScript(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:serializeWorld(fixture)});
+    await page.goto('/?size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,fixture);
+    const rotation={value:0};await perform(page,{reason:'Achever ce lit en priorité.',command:{type:'order-job',pawnId:pawn.id,jobId:fixture.jobs[0]!.id,queue:false}},rotation);
+    await expect(page.locator('#selected-orders')).toContainText('Priorité case 18, 14');await expect(page.locator('#clear-orders')).toBeEnabled();
+    await page.locator('#clear-orders').click();await expect.poll(async()=>(await world(page)).pawns[0]!.priorityWork).toBeUndefined();
+    await perform(page,{reason:'Reprendre le lit après annulation.',command:{type:'order-job',pawnId:pawn.id,jobId:fixture.jobs[0]!.id,queue:false}},rotation);
+    await perform(page,{reason:'Conserver seulement le travail déjà imposé.',command:{type:'priority',pawnId:pawn.id,work:'build',value:0}},rotation);
+    const accepted=await world(page);await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,accepted);
+    await page.locator('[data-speed="6"]').click();await expect.poll(async()=>{const w=await world(page);return w.structures.length===1&&!w.pawns[0]!.priorityWork;},{timeout:20000}).toBe(true);await page.locator('[data-speed="0"]').click();
+    const final=await world(page);expect(final.structures[0]).toMatchObject({kind:'bed',x:18,z:14});expect(final.jobs).toHaveLength(1);expect(final.jobs[0]).toMatchObject({x:22,escrow:{wood:0}});expect(final.stock.wood).toBe(4);expect(validateWorld(final)).toEqual([]);expect(errors).toEqual([]);
+    await page.locator(`[data-pawn="${pawn.id}"]`).click();await expect(page.locator('#clear-orders')).toBeDisabled();await expect(page.locator('#fps-counter')).toBeVisible();await page.screenshot({path:'artifacts/priority-work.png'});
+    await testInfo.attach('priority-work',{contentType:'application/json',body:JSON.stringify({tick:final.tick,stock:final.stock,structures:final.structures,orders:final.pawns[0]!.orders,priority:final.pawns[0]!.priorityWork??null,errors})});
+  } finally {await browser.close();}
+});
+
 test('dégager un semis puis cuisiner par les menus, réserver ingrédients et poste en file et reprendre la sauvegarde',async({playwright},testInfo)=>{
   test.setTimeout(60000);
   const browser=await playwright.chromium.launch({channel:'chromium',args:[]});
@@ -11,9 +34,9 @@ test('dégager un semis puis cuisiner par les menus, réserver ingrédients et p
   try {
     const fixture=createWorld(42,32,32);fixture.tick=2000;fixture.tiles=fixture.tiles.map(()=>({terrain:'grass'}));fixture.resources=[];fixture.piles=[];fixture.jobs=[];fixture.structures=[];fixture.stockpiles=[];fixture.pawns=fixture.pawns.slice(0,1);
     const pawn=fixture.pawns[0]!;Object.assign(pawn,{x:12,z:16,hunger:100,rest:100});pawn.schedule.fill('anything');pawn.priorities={haul:0,build:0,gather:0,grow:0,cook:0};
-    addGroundMaterial(fixture,'wood',10,{x:18,z:15},'wood');addGroundMaterial(fixture,'food',6,{x:13,z:15},'rice');addGroundMaterial(fixture,'food',4,{x:14,z:15},'berries');
+    addGroundMaterial(fixture,'wood',10,{x:18,z:15},'wood');addGroundMaterial(fixture,'food',16,{x:13,z:15},'rice');addGroundMaterial(fixture,'food',4,{x:14,z:15},'berries');
     expect(applyCommand(fixture,{type:'area',action:'growing',from:{x:18,z:15},to:{x:18,z:15}}).ok).toBe(true);stepWorld(fixture,10);const sow=fixture.jobs.find(j=>j.kind==='sow')!;expect(sow).toBeDefined();
-    const bill=newCookingBill(fixture.nextId++);bill.destination='drop';const station={id:fixture.nextId++,kind:'campfire' as const,x:16,z:12,orientation:0 as const,footprint:'standard' as const,bills:[bill],fuel:{ticks:6000,burned:0,autoRefuel:false}};fixture.structures.push(station);pawn.priorities.cook=1;pawn.priorities.grow=1;
+    const bill=newCookingBill(fixture.nextId++);bill.target=2;bill.destination='drop';const station={id:fixture.nextId++,kind:'campfire' as const,x:16,z:12,orientation:0 as const,footprint:'standard' as const,bills:[bill],fuel:{ticks:6000,burned:0,autoRefuel:false}};fixture.structures.push(station);pawn.priorities.cook=1;pawn.priorities.grow=1;
     await page.addInitScript(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:serializeWorld(fixture)});
     await page.goto('/?size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,fixture);
     const rotation={value:0};
@@ -22,8 +45,8 @@ test('dégager un semis puis cuisiner par les menus, réserver ingrédients et p
     for(const work of ['cook','grow'] as const)await perform(page,{reason:'Vérifier les ordres déjà acceptés.',command:{type:'priority',pawnId:pawn.id,work,value:0}},rotation);
     const queued=await world(page);expect(validateWorld(queued)).toEqual([]);expect(queued.pawns[0]!.orders.queue).toHaveLength(1);
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,queued);
-    await page.locator('[data-speed="6"]').click();await expect.poll(async()=>{const w=await world(page);return w.structures[0]!.bills![0]!.target===0&&w.pawns[0]!.orders.active===null&&!w.pawns[0]!.orders.queue.length;},{timeout:15000}).toBe(true);await page.locator('[data-speed="0"]').click();
-    const cooked=await world(page);expect(cooked.stock).toEqual({wood:10,food:1});expect(cooked.piles.some(p=>p.owner.type==='ground'&&p.owner.x===18&&p.owner.z===15)).toBe(false);expect(cooked.piles.find(p=>p.item==='simple-meal')?.owner.type).toBe('ground');
+    await page.locator('[data-speed="6"]').click();await expect.poll(async()=>{const w=await world(page);return w.structures[0]!.bills![0]!.target===0&&w.pawns[0]!.orders.active===null&&!w.pawns[0]!.orders.queue.length&&!w.pawns[0]!.priorityWork;},{timeout:15000}).toBe(true);await page.locator('[data-speed="0"]').click();
+    const cooked=await world(page);expect(cooked.stock).toEqual({wood:10,food:2});expect(cooked.events.filter(e=>e.message.includes('a cuisiné'))).toHaveLength(2);expect(cooked.piles.some(p=>p.owner.type==='ground'&&p.owner.x===18&&p.owner.z===15)).toBe(false);expect(cooked.piles.find(p=>p.item==='simple-meal')?.owner.type).toBe('ground');
     await perform(page,{reason:'Semer la cellule maintenant dégagée.',command:{type:'priority',pawnId:pawn.id,work:'grow',value:1}},rotation);
     await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).resources.some(r=>r.kind==='rice'&&r.x===18&&r.z===15)).toBe(true);await page.locator('[data-speed="0"]').click();
     const final=await world(page);expect(validateWorld(final)).toEqual([]);expect(errors).toEqual([]);expect(await page.locator('#fps-counter').isVisible()).toBe(true);await page.screenshot({path:'artifacts/cooking-orders.png'});
@@ -57,8 +80,8 @@ test('dégager une plante puis ravitailler un feu sans automatisme, reprendre la
     await perform(page,{reason:'Déplacer le bois qui gêne le mur.',command:{type:'order-haul',pawnId:pawn.id,target:{type:'clear',jobId:job.id},queue:false}},rotation);
     await perform(page,{reason:'Isoler le trajet accepté.',command:{type:'priority',pawnId:pawn.id,work:'build',value:0}},rotation);
     const clearing=await world(page);await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,clearing);
-    await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).pawns[0]!.orders.active,{timeout:10000}).toBe(null);await page.locator('[data-speed="0"]').click();
-    const final=await world(page);expect(final.stock.wood).toBe(12);expect(final.piles.filter(p=>p.owner.type==='ground'&&p.owner.x===18&&p.owner.z===14).reduce((n,p)=>n+p.quantity,0)).toBe(2);expect(final.jobs[0]!.escrow.wood).toBe(0);expect(validateWorld(final)).toEqual([]);expect(errors).toEqual([]);expect(await page.locator('#fps-counter').isVisible()).toBe(true);
+    await page.locator('[data-speed="6"]').click();await expect.poll(async()=>{const w=await world(page);return w.structures.some(s=>s.kind==='wall')&&!w.pawns[0]!.priorityWork;},{timeout:10000}).toBe(true);await page.locator('[data-speed="0"]').click();
+    const final=await world(page);expect(final.stock.wood).toBe(7);expect(final.piles.filter(p=>p.owner.type==='ground'&&p.owner.x===18&&p.owner.z===14).reduce((n,p)=>n+p.quantity,0)).toBe(0);expect(final.jobs).toEqual([]);expect(final.structures.find(s=>s.kind==='wall')).toMatchObject({x:18,z:14});expect(validateWorld(final)).toEqual([]);expect(errors).toEqual([]);expect(await page.locator('#fps-counter').isVisible()).toBe(true);
     await page.screenshot({path:'artifacts/context-services.png'});
     await testInfo.attach('context-services',{contentType:'application/json',body:JSON.stringify({tick:final.tick,stock:final.stock,fuel:final.structures[0]!.fuel,orders:final.pawns[0]!.orders,errors})});
   } finally {await browser.close();}

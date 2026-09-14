@@ -14,7 +14,7 @@ export interface Decision { reason: string; command: Command }
  * asks one well-rested worker to get the first two nearby lots of building wood. */
 export function playerFocusDecisions(world:World):Decision[] {
   if(world.tick>=250)return [];
-  const pawn=world.pawns.find(p=>p.priorities.gather>0&&p.hunger>50&&p.rest>50&&!p.need&&p.orders.active===null&&!p.orders.queue.length);
+  const pawn=world.pawns.find(p=>p.priorities.gather>0&&p.hunger>50&&p.rest>50&&!p.need&&p.orders.active===null&&!p.orders.queue.length&&!p.priorityWork);
   if(!pawn)return [];
   const orders:Decision[]=world.jobs.filter(j=>j.kind==='chop'&&j.reservedBy===null)
     .sort((a,b)=>Math.hypot(a.x-pawn.x,a.z-pawn.z)-Math.hypot(b.x-pawn.x,b.z-pawn.z)||a.id-b.id).slice(0,2)
@@ -79,7 +79,7 @@ export function playerDecisions(world: World): Decision[] {
     if(!bill)out.push({reason:'Installer une première recette de repas simple au feu de camp.',command:{type:'bill-add',structureId:fire.id}});
     else if(bill.mode!=='until'||bill.target!==world.pawns.length*2)out.push({reason:'Maintenir environ deux repas préparés par colon en réserve.',command:{type:'bill-update',structureId:fire.id,billId:bill.id,settings:{...bill,mode:'until',target:world.pawns.length*2}}});
     else if(!world.piles.some(p=>p.item==='simple-meal')) {
-      const cook=world.pawns.find(p=>p.priorities.cook>0&&p.hunger>35&&p.rest>35&&!p.cooking&&!p.haul&&!p.need&&p.jobId===null&&p.orders.active===null&&!p.orders.queue.length&&planCookingOrder(world,p,fire.id).order);
+      const cook=world.pawns.find(p=>p.priorities.cook>0&&p.hunger>35&&p.rest>35&&!p.cooking&&!p.haul&&!p.need&&p.jobId===null&&p.orders.active===null&&!p.orders.queue.length&&!p.priorityWork&&planCookingOrder(world,p,fire.id).order);
       if(cook)out.push({reason:'Prioriser un repas quand la réserve de repas préparés est vide.',command:{type:'order-cook',pawnId:cook.id,structureId:fire.id,queue:false}});
     }
   }
@@ -122,7 +122,7 @@ export function colonySummary(world: World) {
     furnitureTransit:world.pawns.filter(p=>p.motion&&p.motion.end>world.tick&&(p.motion.terrainDelay??0)>0).length,
     furnitureExits:world.pawns.filter(p=>p.transitExit).length,
     sharedPawnCells:[...occupied.values()].filter(count=>count>1).length,
-    playerOrders:world.pawns.map(p=>({active:p.orders.active,queued:p.orders.queue.length})),
+    playerOrders:world.pawns.map(p=>({active:p.orders.active,queued:p.orders.queue.length,priority:p.priorityWork??null})),
     obstructedGrowingCells:world.piles.filter(p=>p.owner.type==='ground'&&fields.has(p.owner.z*world.width+p.owner.x)).length,
     clearing:world.pawns.filter(p=>p.haul?.destination.type==='aside').length,
     construction: {blueprints:world.jobs.filter(j=>j.construction==='blueprint').length,frames:world.jobs.filter(j=>j.construction==='frame').length,clearingPlants:world.jobs.filter(j=>j.clearance).length,clearingPiles:world.pawns.filter(p=>p.haul?.destination.type==='aside'&&p.haul.destination.constructionId!==undefined).length},

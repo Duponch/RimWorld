@@ -1,64 +1,43 @@
-# Validation courante — V22, circulation du mobilier
+# Validation courante — V23, maintien du travail priorisé
 
-14 septembre 2026. G0 en consolidation, G1 partiel. [Contrat de transit/arrêt](furniture-travel.md), [recherche et incertitudes](../research/furniture-travel-reference.md). Les [preuves V21](../history/validation-v21-occupancy.md) sont historiques.
+14 septembre 2026. G0 en consolidation, G1 partiel. [Contrat](player-orders.md), [sources et limites](../research/player-orders-reference.md#relecture-v23--maintien-prioritaire-sur-une-cellule). Les [preuves V22](../history/validation-v22-furniture.md) sont historiques.
 
 ## Simulation et continuité
 
-[Lot final sur le code intégré](../../artifacts/furniture-final-core.json) : **62/62**, dix-neuf fichiers, aucun échec. Il rejoue le pilote cœur après optimisation, les besoins/horaires/conservation, les commandes, les oracles, chantiers et snapshots. [Migration approfondie](../../artifacts/furniture-migration-final.json) : deux scénarios passent aussi les anciennes places de repas/sommeil incompatibles et l’arête de lit engagée sans réécriture. La place de repas migrée reprend dans l’état de recherche avec portion conservée.
+[Lot intégré](../../artifacts/priority-core.json) : **66/66 dans 21 fichiers**, 47,1 secondes. Ordres directs et files, cuisine, transport, chantier, besoins, réservations, mouvement, sauvegardes et snapshots. Le pilote cœur joue huit jours sur la graine 42 et cinq jours sur 93/2048, cartes 250² : bilans bois/aliments, camp, cultures, ingestions, lits, loisirs et reprises quotidiennes vérifiés.
 
-Le [lot intégré](../../artifacts/furniture-integration-core.json) a passé **42/46** : oracle de navigation, accès progressif, repas, production, loisirs, ordres, worker, agriculture et pilote de colonie. Ses quatre échecs ont été corrigés dans le [lot de frontières final](../../artifacts/furniture-boundaries-final.json), **17/17** : trois attentes de version/quantité mal mises à jour et une fixture qui supposait encore pouvoir choisir un repas sur une case de lit. Le scénario de protection de service part désormais d'un checkpoint synthétique de portion portée vers une place libre. Les résultats métier et les invariants n'ont pas été assouplis.
+Trois scénarios nouveaux couvrent une chaîne de lit (coupe, dégagement en plusieurs voyages, approvisionnement, finition), un voisin intact, distinction constructeur/transporteur, cuisine répétée après ravitaillement puis retour à l’ingestion, annulation et effondrement avec cargaison, budgets partagés, accès perdu, délai et migration stricte V22. Les scénarios existants vérifient aussi que la dernière commande persistante en file remplace la cible ; une livraison par Construction peut désormais finir ce chantier malgré désaffectation ultérieure. Les attentes anciennes ont été corrigées à ce titre, sans retirer les bilans : annulation d’un cadre approvisionné testée sur une copie, cinq bois rendus physiquement.
 
-Le pilote cœur a joué huit jours sur la graine 42 et cinq sur 93/2048, cartes naturelles 250², avec camp, cultures, repas, loisirs, conservation et reprises quotidiennes. Les contrôles de simulation et d'horaires sont aussi passés dans le [lot des frontières](../../artifacts/furniture-boundaries-fixed.json), qui conservait alors deux échecs de fixtures, corrigés ensuite. Les lots se recouvrent : ne pas additionner leurs nombres comme autant de scénarios indépendants.
+Les premiers essais ciblés ont détecté des attentes qui supposaient l’arrêt après un sous-travail et des fixtures confondant ID du job et ID de l’ouvrage produit, ou déclenchant un effondrement avec repos plein. Corrections de tests et vérifications métier regroupées avant le lot intégré. Une conversion de texte Windows a été corrigée avant ce lot ; pas de modification voulue des libellés existants. Aucune couverture exhaustive ni parité avec un binaire commercial revendiquée.
 
-Deux nouveaux scénarios combinent oracle dirigé indépendant sur quatre rotations, délais non répétés entre définitions différentes, transit/arrêt, transport opposé, annulation sur table, matières et continuations. Les anciens tests spatiaux conservent les lits et le dormeur central ; les captures converties en V13 retirent explicitement les nouveaux suppléments avant de tester ses interdictions de chevauchement.
+Compilation réussie : 135 modules, worker 158,53 ko, bundle jeu 1 046,88 ko / 292,85 ko gzip. Avertissement de bundle >500 ko conservé, aucune dépendance ajoutée.
 
-Les rapports [initial](../../artifacts/furniture-core.json), [reprise inchangée après échec de script](../../artifacts/furniture-boundaries.json), [première correction](../../artifacts/furniture-boundaries-fixed.json) et [fixtures](../../artifacts/furniture-fixtures-fixed.json) conservent les échecs diagnostiqués. Ils ont notamment exposé une ancienne borne de durée et le besoin de persister une sortie physique sans tâche métier. Aucun résultat n'est présenté comme couverture exhaustive.
+## Interface et partie de trois jours
 
-Compilation intégrée réussie : 133 modules, worker 155,33 ko, bundle jeu 1 046,75 ko / 292,81 ko gzip. Avertissement >500 ko conservé, aucune nouvelle dépendance.
+[Lot natif](../../artifacts/priority-ui.json) : cinq parcours passent sur six en 6,9 minutes. La partie 250² sur trois jours passe en 5,9 minutes, sans erreur console/GPU et avec reprises quotidiennes. Au tick 18 092 : trois lits, une table, trois tabourets, six murs, feu, piquet, quinze cultures ; 21 repas cuisinés, 18 ingestions et trois utilisateurs de lits, les deux loisirs observés. 45 bois et 22 unités alimentaires dont six repas, bilans réconciliés. Dix-neuf checkpoints extraits vers `tmp` avec empreintes conservées dans le rapport.
 
-## Interface et rendu
+Le nouveau chantier UI vérifie annulation via le bouton, réacceptation, désactivation du métier, sauvegarde puis lit achevé à partir de son arbre avec quatre bois restants ; le plan voisin reste intact. La cuisine UI passe deux recettes successives après une file de dégagement agricole. Sélection dans les deux projections et livraison/rangement par transporteur seul passent également.
 
-Le [premier lot navigateur](../../artifacts/furniture-ui.json) passe les trois parcours natifs de mouvement : passage civil avec lits, quatre abattages avec vitesse/orientation, transport sur table avec pause et reprise. Les attributs début/fin/temps sont identiques entre corps, cargaison et anneau. Le contrôle mesure les attributs soumis et le temps de présentation, pas les sommets relus depuis le GPU.
+L’ancien parcours plante/combustible échoue sur son attente de douze bois après dégagement : le maintien a réellement construit le mur en utilisant les cinq bois prévus. L’attente est corrigée pour demander le mur achevé, zéro job, zéro pile sur sa cellule et sept bois restants, puis seul ce parcours est rejoué : **1/1 réussi en 14,1 secondes** ; [rapport ciblé](../../artifacts/priority-ui-corrected.json). Aucun changement moteur après le lot cœur et la partie longue.
 
-Le parcours 250² de ce premier lot a échoué **avant tout gameplay**, sur `GPUDevice.createBuffer(mappedAtCreation)` pour des allocations de 100 248 et 79 224 octets. Le message ne démontre pas une limite normale de taille ni une cause précise ; le défaut n'est pas déclaré corrigé. Le même parcours relancé seul a ensuite chargé normalement et joué trois jours. Incident conservé et à surveiller aux prochains audits de chargement ; aucune réduction de carte ou d'assertion pour contourner l'échec.
+Captures `artifacts/priority-work.png` et `artifacts/colony-three-days.png` inspectées : lit terminé/plan voisin, camp, structure UI et compteur FPS présents. Ce sont des observations visuelles, pas des mesures de fluidité. L’allocation WebGPU au chargement réussit dans ces parcours ; pas de reproduction de l’incident ponctuel V22.
 
-La [seconde exécution](../../artifacts/furniture-ui-continuation.json) passe **2/2**, sans erreur, en 6,1 minutes : trois jours sur 250² et contrôle de mobilier avec une fixture rendue plus lisible (eau infranchissable autour du couloir au lieu de hautes roches). Dix-neuf checkpoints conservés, reprise quotidienne ; au tick 18 062 : trois lits, une table, trois tabourets, six murs, feu, piquet, quinze cultures, aucun chantier restant. 21 repas préparés, 18 ingestions, trois utilisateurs de lits, deux familles de loisirs ; 45 bois et 22 unités alimentaires dont six repas. Bilans réconciliés. La progression est celle de notre pilote, pas une observation statistique de joueurs de RimWorld.
+## Petit audit de simulation
 
-La traversée chargée relève 2 678 échantillons de vitesse, 122 images de plateau et 346 de montée. Erreur maximale de vitesse calculée depuis les attributs <0,00001 unité/s ; cette valeur numérique ne mesure ni la latence ni les saccades de tout le jeu. L'ancienne mesure sur quatre abattages relève 251 échantillons et une erreur de vitesse <0,00021 unité/s, avec les quatre orientations de travail correctes. Captures `artifacts/furniture-crossing-paused.png` et `artifacts/colony-three-days.png` inspectées : plateau/cargaisons et camp visibles, structure UI et FPS présents. La capture du couloir est prise au début de l'entrée, pas un gros plan du colon déjà debout au centre du plateau.
+[Charge priorisée](../../artifacts/priority-cpu.json) : Ryzen 5 3600, Node 24.11.1, Windows, 250² graine 42 ; 300 ticks répétés deux fois, sans préchauffage. Chaque camp de cinq acteurs reçoit un ordre de cuisine et un ordre de livraison par constructeur à l’initialisation. Les autres acteurs continuent cuisine, stockage, culture et construction. Setup/validation/agrégation hors mesure, collecte des compteurs de recherche dans le tick. Aucun build ou test navigateur lourd concurrent.
 
-Le compteur de résumé `furnitureTransit` de la longue UI comptait encore la dernière arête persistée même terminée ; le pilote est corrigé pour ne compter que les arêtes actives. Les mondes, objectifs et bilans de ce rapport restent inchangés.
-
-## Performance CPU
-
-[Audit avant optimisation](../../artifacts/furniture-cpu.json) puis [audit final](../../artifacts/furniture-cpu-optimized.json) : Ryzen 5 3600, Node 24.11.1, carte 250² graine 42, 300 ticks répétés deux fois, sans préchauffage. Setup, validation et agrégation hors chronométrage ; simulation et collecte des recherches dans la fenêtre. Aucun navigateur de test ni compilation en concurrence.
-
-| Colons | Médiane finale | p95 final | p99 final | Maximum final |
+| Colons | Médiane | p95 | p99 | Maximum |
 |---|---:|---:|---:|---:|
-| 3 | 0,065 ms | 1,872 ms | 4,783 ms | 10,684 ms |
-| 30 | 1,678 ms | 7,240 ms | 16,050 ms | 25,281 ms |
-| 100 | 10,021 ms | 26,710 ms | 32,474 ms | 37,591 ms |
+| 3 | 0,090 ms | 1,997 ms | 4,058 ms | 8,114 ms |
+| 30 | 0,309 ms | 10,846 ms | 20,031 ms | 27,485 ms |
+| 100 | 10,881 ms | 40,443 ms | 47,685 ms | 61,523 ms |
 
-Le [profil échantillonné](../../artifacts/furniture-profile-summary.json), avec son [exécution instrumentée](../../artifacts/furniture-cpu-profiled.json), relève principalement planner et capacités de stockage ; les seules opérations du shader ne peuvent expliquer ce coût CPU de simulation. `planWork` rejette maintenant les couples source/destination de priorité insuffisante avant le calcul pur de capacité. Même ordre des couples, budgets, curseur et décision ; pas de changement de règle ni cache entre ticks.
+Dernière répétition à cent : 34 repas, 120 cultures et 20 murs, 1 274 recherches de candidats et 333 ciblées ; matières et état final validés. Ces résultats ne sont **pas un A/B** avec V22 automatique (14 repas/12 murs) : les ordres modifient l’activité et les trajets. Le p95 à cent dépasse le budget de 16,67 ms/tick pour ×6 ; scans de planification/stockage à reprendre lors des prochains audits. Ce relevé mesure la simulation CPU, pas les FPS ni le GPU.
 
-À cent colons, médiane 21,691 → 10,021 ms et p95 31,746 → 26,710 ms sur ces deux relevés. Les trois empreintes finales, bilans, activités et compteurs de recherches sont égaux avant/après. À cent : 14 repas, 120 cultures, 12 murs ; 1 146 recherches de candidats, 285 ciblées. Ce contrôle d'empreintes n'est pas une preuve mathématique de tous les états possibles. Les petites populations montrent de la variance ; aucune accélération universelle ou significativité statistique revendiquée.
-
-Le budget ×6 (16,67 ms/tick) reste dépassé au p95 à cent acteurs. V21 observait 13 repas et 11 murs avec d'autres routes/coûts ; ses chiffres ne sont pas un A/B à état identique. Les scans de planification/stockage restent un chantier ciblé pour les prochains audits. Le premier lancement CLI a aussi détecté une propriété de paramètre TypeScript incompatible avec le mode Node strip-only ; elle est remplacée par une déclaration/affectation explicites, sans changement de comportement.
-
-## Performance graphique
-
-[Audit natif final](../../artifacts/furniture-render.json) : Chromium WebGPU, adaptateur AMD RDNA-1 (modèle exact non exposé), 1440×1000, 250² et cent acteurs dans vingt camps synthétiques. Quarante meubles portant initialement des piles. Worker réel à ×6, 60 images de préchauffage puis au moins 300 images/cinq secondes par vue ; aucun autre test/benchmark lourd en parallèle.
-
-| Vue | Intervalles mesurés | RAF p95 / p99 / maximum | Soumission CPU p95 | Appels médians |
-|---|---:|---|---:|---:|
-| Locale | 659 | 8,50 / 20,90 / 29,10 ms | 8,30 ms | 143 |
-| Générale | 1 051 | 8,40 / 12,70 / 29,20 ms | 6,20 ms | 42 |
-
-Aucune erreur console/GPU, états validés et captures `occupancy-100-local.png`/`occupancy-100-overview.png` inspectées. Le monde avance successivement de 0 à 319 puis 378 à 665 ticks : les deux vues ne sont pas un A/B figé. Au relevé local, 24 acteurs sont actifs, dont quatre bâtisseurs ; à la fin de la vue générale, les vingt murs sont achevés et cent colons observent le ciel. Ce n'est pas cent constructeurs simultanés pendant toute la fenêtre ; l'audit CPU mixte complète cette observation.
-
-Les lots des personnages restent partagés ; aucun nouveau draw call n'est requis par la hauteur de transit. Le total peut varier avec le travail et le décor visible. RAF inclut l'ordonnancement, la soumission CPU n'est pas du temps GPU. Le p95 proche de 8,5 ms n'exclut pas les pointes de 29 ms constatées. Le chargement 250² réussit également dans cet audit, sans reproduire l'erreur initiale d'allocation ; cause toujours non établie.
-
-Contrôle documentaire final : 81 documents, liens locaux et fragments vérifiés, les trois originaux restent identiques octet pour octet.
+Aucune géométrie, attribut d’animation ou passe de rendu ajouté. L’interface native vérifie le compteur FPS, sans prétendre constituer un nouvel audit des percentiles graphiques. L’erreur ponctuelle d’allocation WebGPU 250² notée en V22 reste à surveiller ; sa cause n’est pas établie.
 
 ## Portée
 
-V22 livre la circulation des constructions présentes, leurs coûts et exclusions d'arrêt, une sortie physique après interruption et les hauteurs GPU. Aucun nouvel objet. Portage limité à dix unités, source unique par trajet, base de marche provisoire, autres coûts/profils, déplacement des personnes gênantes et variété du catalogue restent explicitement partiels. G0 en consolidation, G1 partiel, G2–G5 ouverts : [inventaire](../gameplay/implementation-status.md), [plan](../ROADMAP.md).
+V23 livre les suites sur une cellule pour construction/livraison, cuisine et recharge. Délai, famille, annulation et intention sauvegardée restent séparés des réservations de tâches. Autres fournisseurs, incapacité/santé, ordres manuels d’ingestion/sommeil, portage et logistique opportuniste restent ouverts. Aucun nouvel objet ajouté. Déconstruction/récupération puis réinstallation sont les prochains travaux ; minage/pierre et portes/toits/pièces suivent dans le [plan](../ROADMAP.md). [Inventaire complet des systèmes partiels ou absents](../gameplay/implementation-status.md).
+
+Contrôle documentaire final : 82 documents et 882 liens locaux/fragments ; les trois originaux restent identiques octet pour octet.

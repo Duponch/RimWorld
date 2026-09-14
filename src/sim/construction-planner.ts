@@ -13,10 +13,10 @@ export interface ConstructionCandidate {
 }
 /** One intent owns clearing and building. Hauling reserves the obstruction and
  * its destination quantitatively; a plant stays alive until real cutting ends. */
-export function constructionCandidates(world:World,pawn:Pawn,blocked:Uint8Array,reach:Reachability,budget:SearchBudget,obstacles:ReadonlyMap<number,ConstructionObstruction>):ConstructionCandidate[] {
+export function constructionCandidates(world:World,pawn:Pawn,blocked:Uint8Array,reach:Reachability,budget:SearchBudget,obstacles:ReadonlyMap<number,ConstructionObstruction>,jobs:readonly Job[]=world.jobs):ConstructionCandidate[] {
   const result:ConstructionCandidate[]=[];
   if(!Number.isFinite(constructionHaulPriority(pawn)))return result;
-  for(const job of world.jobs) {
+  for(const job of jobs) {
     if(!isConstruction(job)||job.reservedBy!==null)continue;
     const obstacle=obstacles.get(job.id)!;const {plant,pile}=obstacle;
     const base={id:job.id,rank:1,distance:Math.abs(job.x-pawn.x)+Math.abs(job.z-pawn.z)};

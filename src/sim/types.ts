@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 22 as const;
+export const SCHEMA_VERSION = 23 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
@@ -53,6 +53,7 @@ export interface Job extends Cell {
   escrow: Stock;
 }
 export interface Pawn extends Cell {
+  priorityWork?: import('./priority-work-state.ts').PriorityWork;
   /** A physical exit from furniture after interruption; retained across saves. */
   transitExit?: true;
   orders: import('./player-orders.ts').PlayerOrders;

@@ -50,7 +50,7 @@ test('forced refuel bypasses automation, reserves its station while queued, trav
   expect(actor.haul?.phase).toBe('deliver');const held=c.piles.find(p=>p.owner.type==='pawn')!,massBefore=woodMass(c);
   expect(applyCommand(c,{type:'clear-orders',pawnId:actor.id}).ok).toBe(true);expect(c.piles.find(p=>p.id===held.id)?.owner.type).toBe('ground');expect(woodMass(c)).toBe(massBefore);expect(validateWorld(c)).toEqual([]);
   const full=camp(),fullFire=fire(full);fullFire.fuel.ticks=CAMPFIRE_CAPACITY;addGroundMaterial(full,'wood',10,{x:8,z:8},'wood');rejected(full,{type:'order-haul',pawnId:full.pawns[0]!.id,target:{type:'fuel',structureId:fullFire.id},queue:false});
-  const legacy=JSON.parse(serializeWorld(camp()));legacy.schemaVersion=18;expect(deserializeWorld(JSON.stringify(legacy))).toEqual({...legacy,schemaVersion:22});
+  const legacy=JSON.parse(serializeWorld(camp()));legacy.schemaVersion=18;expect(deserializeWorld(JSON.stringify(legacy))).toEqual({...legacy,schemaVersion:23});
 });
 
 test('forced plant and pile clearing respects rotated footprints, queue cancellation, physical output, parent lifetime and construction assignment without ordinary hauling',()=>{
@@ -68,7 +68,7 @@ test('forced plant and pile clearing respects rotated footprints, queue cancella
   applyCommand(w,{type:'priority',pawnId:p.id,work:'build',value:1});
   const clear:Command={type:'order-haul',pawnId:p.id,target:{type:'clear',jobId:a!.id},queue:false};
   expect(applyCommand(w,clear).ok).toBe(true);expect(p.haul?.destination).toMatchObject({type:'aside',constructionId:a!.id,forConstruction:true});
-  applyCommand(w,{type:'priority',pawnId:p.id,work:'build',value:0});tick(w,90);expect(p.haul).toBeNull();expect(w.stock.wood).toBe(12);expect(w.piles.filter(p=>p.owner.type==='ground'&&p.owner.x===16&&p.owner.z===8).reduce((n,p)=>n+p.quantity,0)).toBe(2);
+  applyCommand(w,{type:'priority',pawnId:p.id,work:'build',value:0});for(let i=0;i<150&&p.orders.active!==null;i++)tick(w);expect(applyCommand(w,{type:'clear-orders',pawnId:p.id}).ok).toBe(true);expect(p.haul).toBeNull();expect(w.stock.wood).toBe(12);expect(w.piles.filter(p=>p.owner.type==='ground'&&p.owner.x===16&&p.owner.z===8).reduce((n,p)=>n+p.quantity,0)).toBe(2);
   applyCommand(w,{type:'priority',pawnId:p.id,work:'build',value:1});expect(applyCommand(w,{type:'order-job',pawnId:p.id,jobId:b!.id,queue:false}).ok).toBe(true);
   expect(applyCommand(w,{...clear,queue:true}).ok).toBe(true);expect(validateWorld(w)).toEqual([]);expect(deserializeWorld(serializeWorld(w))).toEqual(w);
   const raw=JSON.parse(serializeWorld(w));raw.schemaVersion=18;expect(()=>deserializeWorld(JSON.stringify(raw))).toThrow(/version 18/);

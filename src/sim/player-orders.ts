@@ -1,3 +1,4 @@
+import { rememberPriorityWork, expirePriorityWork } from './priority-work-state.ts';
 import { isCookingOrder } from './order-types.ts';
 import { advanceCookingOrder, planCookingOrder, queuedCookingReason, startCookingOrder } from './player-cooking.ts';
 import { JOB_WOOD_COST, footprintCells } from './definitions.ts';
@@ -93,7 +94,7 @@ export function clearQueuedOrders(world:World,pawn:Pawn):void {
   for(const job of world.jobs)if(ids.has(job.id)&&job.reservedBy===pawn.id){delete job.clearance;job.reservedBy=null;job.status='pending';}
   pawn.orders.queue=[];
 }
-function start(pawn:Pawn,job:Job,path:Cell[]):void {
+export function startJobOrder(pawn:Pawn,job:Job,path:Cell[]):void {
   job.reservedBy=pawn.id;job.status='active';pawn.jobId=job.id;
   pawn.orders.active=job.id;pawn.path=path;pawn.planCooldown=0;
   pawn.state=path.length||pawn.moveCooldown>0?'moving':'working';
@@ -105,7 +106,7 @@ export function applyOrderCommand(world:World,command:OrderCommand):CommandResul
     const drops=pawn.orders.active!==null?planCommandDrops(world,command):new Map();
     if(!drops)return fail('Pas de place pour déposer la cargaison.');
     if(pawn.orders.active!==null&&!releaseWork(world,pawn,drops))return fail('Impossible d’interrompre ce travail.');
-    clearQueuedOrders(world,pawn);return {ok:true};
+    clearQueuedOrders(world,pawn);delete pawn.priorityWork;return {ok:true};
   }
   if(command.type==='order-haul'||command.type==='order-cook') {
     if(typeof command.queue!=='boolean'||(command.type==='order-cook'?!Number.isSafeInteger(command.structureId):!command.target||!['pile','job','clear','clear-sow','fuel'].includes(command.target.type)
@@ -123,6 +124,7 @@ export function applyOrderCommand(world:World,command:OrderCommand):CommandResul
       if(!releaseWork(world,pawn,drops))return fail('Impossible d’interrompre ce travail.');
       clearQueuedOrders(world,pawn);if(isCookingOrder(proposal.order))startCookingOrder(pawn,proposal.order,proposal.path);else startHaulOrder(pawn,proposal.order,proposal.path);
     }
+    rememberPriorityWork(world,pawn,command,proposal.order);
     world.events.push({tick:world.tick,type:'command',message:`${pawn.name} : ${proposal.label}${command.queue?' (file)':''}.`});
     if(world.events.length>80)world.events.shift();return {ok:true};
   }
@@ -139,9 +141,10 @@ export function applyOrderCommand(world:World,command:OrderCommand):CommandResul
   } else {
     const drops=planCommandDrops(world,command);if(!drops)return fail('Pas de place pour déposer la cargaison.');
     if(!releaseWork(world,pawn,drops))return fail('Impossible d’interrompre ce travail.');
-    clearQueuedOrders(world,pawn);start(pawn,job,path);
+    clearQueuedOrders(world,pawn);startJobOrder(pawn,job,path);
     if(plant)job.clearance={resourceId:plant.id,progress:0};
   }
+  rememberPriorityWork(world,pawn,command);
   world.events.push({tick:world.tick,type:'command',message:`${pawn.name} : ${label}${command.queue?' (file)':''}.`});
   if(world.events.length>80)world.events.shift();
   return {ok:true};
@@ -151,6 +154,7 @@ export function applyOrderCommand(world:World,command:OrderCommand):CommandResul
 export function reconcileOrders(world:World):void {
   let jobs:Map<number,Job>|undefined;
   for(const pawn of world.pawns) {
+    expirePriorityWork(world,pawn);
     const orders=pawn.orders;if(orders.active===null&&!orders.queue.length)continue;
     if(orders.active==='haul'?!pawn.haul:orders.active==='cook'?!pawn.cooking:orders.active!==pawn.jobId)orders.active=null;
     if(!orders.queue.length)continue;
@@ -200,7 +204,7 @@ export function advanceOrders(world:World,pawn:Pawn,getBlocked:NavigationGrid,bu
     path=routeToJob(world,clearingPlant(world,job)??job,reach,false);if(path===null)reason='Accès perdu.';
   }
   pawn.orders.queue.shift();
-  if(!reason&&job&&path)start(pawn,job,path);
+  if(!reason&&job&&path)startJobOrder(pawn,job,path);
   else {
     if(job?.reservedBy===pawn.id){delete job.clearance;job.reservedBy=null;job.status='pending';}
     world.events.push({tick:world.tick,type:'command',message:`${pawn.name} : ordre abandonné. ${reason}`});

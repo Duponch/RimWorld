@@ -1,3 +1,4 @@
+import { advancePriorityWork } from './priority-work.ts';
 import { leaveTransitCell } from './transit-exit.ts';
 import { removeZonesForPlan } from './construction-zones.ts';
 import { occupancyOf, occupies } from './occupancy.ts';
@@ -257,6 +258,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       };
       if (leaveTransitCell(world,pawn,getBlocked,budget)) continue;
       if (advanceOrders(world,pawn,getBlocked,budget)) continue;
+      if (advancePriorityWork(world,pawn,getBlocked,budget)) continue;
       if (processNeeds(world, pawn, needsContext) || pawn.orders.active===null&&processRecreation(world, pawn, needsContext)) continue;
       if (pawn.jobId === null && pawn.haul === null && !pawn.cooking && pawn.planCooldown === 0) planWork(world, pawn, getBlocked, occupied, budget);
       if (pawn.haul) { processHaul(world, pawn, (target, allow) => moveToward(world, pawn, target, allow, getBlocked, budget), () => wakePlanners(world)); continue; }

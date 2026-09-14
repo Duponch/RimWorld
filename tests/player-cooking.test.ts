@@ -52,7 +52,7 @@ test('manual recipe respects suspension/radius, refuels first without hauling, r
   accept(w,{type:'bill-update',structureId:s.id,billId:s.bills[0]!.id,settings:{...s.bills[0]!,suspended:true}});expect(p.orders.queue).toEqual([]);expect(w.stock.food).toBe(10);
   accept(w,{type:'bill-update',structureId:s.id,billId:s.bills[0]!.id,settings:{...s.bills[0]!,suspended:false}});accept(w,command);until(w,()=>p.cooking?.ingredients.some(i=>i.stage==='held')??false);
   const held=w.piles.find(p=>p.owner.type==='pawn')!,age=rotAge(held,w.tick);accept(w,{type:'bill-remove',structureId:s.id,billId:s.bills[0]!.id});expect(w.piles.find(p=>p.id===held.id)?.owner.type).toBe('ground');expect(rotAge(w.piles.find(p=>p.id===held.id)!,w.tick)).toBe(age);expect(w.stock.food).toBe(10);expect(p.orders.active).toBeNull();
-  const legacy=JSON.parse(serializeWorld(camp()));legacy.schemaVersion=19;expect(deserializeWorld(JSON.stringify(legacy))).toEqual({...legacy,schemaVersion:22});
+  const legacy=JSON.parse(serializeWorld(camp()));legacy.schemaVersion=19;expect(deserializeWorld(JSON.stringify(legacy))).toEqual({...legacy,schemaVersion:23});
 });
 
 test('forced sowing clearance uses growing assignment, survives regenerated intents and cancels a carried stack conservatively when the zone changes',()=>{

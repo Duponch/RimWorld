@@ -50,7 +50,7 @@ export class OrderMenu {
         content.append(button);
       }
       if(!options.length)content.textContent='Aucun travail ni pile à transporter ici. Utilisez les ordres d’Architecte.';
-      const hint=document.createElement('p');hint.className='muted';hint.textContent='Maj : ajouter à la file. Un ordre de transport effectue un trajet.';content.append(hint);
+      const hint=document.createElement('p');hint.className='muted';hint.textContent='Maj : ajouter à la file. Construction et cuisine peuvent se poursuivre sur cette case.';content.append(hint);
       this.position(x,y);content.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus();
     } catch(error) {if(revision===this.revision){content.textContent=String(error instanceof Error?error.message:error);this.position(x,y);}}
   }

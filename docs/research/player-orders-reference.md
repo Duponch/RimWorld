@@ -28,7 +28,7 @@ Le miroir n'est pas une publication officielle ni une preuve du binaire actuelle
 
 - La 3D conserve clic droit glissé pour la caméra et clic droit immobile pour le menu. Un proxy projeté du corps permet de sélectionner à travers le feuillage ; pas de parcours de tous les triangles, ni d'autorité donnée au mesh. Les silhouettes couchées et la sélection d'accessoires demanderont leurs propres proxies.
 - La file locale est bornée à 32 travaux en attente par colon, avec refus explicite au-delà. C'est une borne du projet, pas une valeur attribuée à RimWorld.
-- Abattage, coupe, récolte, semis libres, finition, rangement et livraison disposent de fournisseurs. Cuisine, dégagement des piles sur semis, utilisation forcée d’un objet et maintien d’une priorité locale autour d’une cible restent à développer.
+- Abattage, coupe, récolte, semis libres, finition, rangement et livraison disposent de fournisseurs. Cuisine et dégagement des piles sur semis ont été ajoutés en V20 ; V23 complète le maintien sur une cellule. Utilisation manuelle des autres objets reste à développer. Le maintien n’est pas un rayon autour de la cible.
 - Pas de mobilisation ni d'ordre de déplacement civil inventé. Santé, crises et interruptions hostiles manquent encore ; seul l'effondrement de fatigue déjà simulé interrompt ici l'ordre en urgence.
 
 Le [contrat courant](../development/player-orders.md) et l'[inventaire](../gameplay/implementation-status.md) décrivent les règles réellement livrées.
@@ -51,3 +51,18 @@ Confiance élevée sur la distinction livraison/finition et les contraintes phys
 ## Relecture V19
 
 Les [sources fraîches du dégagement et du combustible](context-services-reference.md) complètent ce dossier. L’état courant du contrat remplace les limites historiques V17/V18 pour ces deux fournisseurs, sans fermer le reste des commandes.
+
+## Relecture V23 — maintien prioritaire sur une cellule
+
+14 septembre 2026. Corpus chapitres 8/9 relus, SYS/TEST-031..034 et 047..050 : adopter séparation intention/tâche/réservation, refus explicables et continuité ; adapter nos cellules et budgets. Cette recherche corrige notre formulation ancienne « autour d’une cible ».
+
+Sources relues/téléchargées à cette étape :
+
+- [Work, section Prioritizing a task](https://rimworldwiki.com/wiki/Work#Prioritizing_a_task) et [Orders](https://rimworldwiki.com/wiki/Orders) recoupent clic droit, métier affecté, Maj/file et inspection. Le wiki communautaire ne spécifie pas à lui seul les détails du maintien.
+- [PriorityWork](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/Verse/PriorityWork.cs) : cellule, fournisseur et date sauvegardés, délai de 30 000 ticks Core (une demi-journée), commande d’annulation. Adopter la proportion temporelle, soit 3 000 ticks locaux.
+- [JobGiver_Work](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/RimWorld/JobGiver_Work.cs) : la branche prioritaire cherche les fournisseurs liés du même métier sur **la cellule mémorisée**, puis efface l’intention faute de travail. Ni rayon de douze cases ni priorité globale. Les appels suivants utilisent les conditions ordinaires du fournisseur ; l’exception réparation et la relation lissage concernent du contenu encore absent. `WorkTypeIsDisabled` vérifie l’incapacité, distincte de la valeur d’affectation.
+- [Pawn_JobTracker](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/Verse.AI/Pawn_JobTracker.cs) : une commande acceptée n’active ce maintien que si son fournisseur déclare `prioritizeSustains`. Le setter s’applique aussi après ajout à la file. [WorkGiverDef](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/RimWorld/WorkGiverDef.cs) n’active pas ce drapeau par défaut.
+- [Définitions Core archivées, juillet 2018](https://github.com/RimWorld-zh/RimWorld-Core/blob/85954e64ea75334f51e33e27a4128809191e430e/Core/Defs/WorkGiverDefs/WorkGivers.xml) : drapeau présent pour cuisine, finition/livraison et recharge ; absent pour coupe, récolte, semis et rangement général. Les fournisseurs Construction et Transport de livraison sont distincts. Ce fichier ancien recoupe le mécanisme, sans prouver les définitions chargées par la version actuelle.
+- [Correctif officiel 1.6.4850](https://ludeon.com/blog/2026/06/update-1-6-4850-released/) : les correctifs de livraison et cache forcé rappellent les limites de la révision du miroir, datée du 20 mai 2026.
+
+Décision : **adopter** maintien limité, cible/famille, file préalable, annulation et sauvegarde ; **adapter** ancre de l’emprise et budget CPU ; **différer** fournisseurs absents, incapacités, interruptions médicales/hostiles et reprise de réservation d’autrui. Les pages de mods trouvées (notamment les bonus aux travaux proches) ont été écartées comme preuve du jeu de base. Confiance élevée sur le mécanisme lisible ; moyenne sur la table exacte des fournisseurs et les interactions du binaire récent. Aucun code commercial incorporé, aucun essai contre ce binaire ni garantie de parité globale.

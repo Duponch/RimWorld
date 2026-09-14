@@ -2,6 +2,8 @@
 
 État du 14 septembre 2026. Le jeu de base complet, y compris ses centaines d'objets et leurs variantes, reste la cible. Le bilan par [système](implementation-status.md) ne suffit pas à suivre ce contenu. Ce document distingue ce que contient notre référence et ce qui existe dans le jeu développé.
 
+V23 enrichit les comportements des chantiers et du feu existants ; **aucun nouvel objet**. La présence de ces familles ne clôt ni leurs variantes ni les centaines de définitions attendues.
+
 ## Le corpus ne contient pas un inventaire exhaustif à jour
 
 Les trois originaux de [corpus original](../research/reference-adoption.md) contiennent un rapport HTML/PDF identique et un classeur. La feuille **Contenu** décrit **95 familles CAT**, jeu de base et extensions confondus : des exemples, des champs attendus et une provenance. Elle ne compte pas 95 objets individuels. Sa colonne G indique que les définitions ne sont pas acquises. Les 227 entrées STAT décrivent des champs à relever, sans valeurs de profils.

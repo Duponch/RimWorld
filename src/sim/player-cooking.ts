@@ -12,7 +12,7 @@ import type { CookingOrder } from './order-types.ts';
 import type { Cell, HaulTask, Pawn, World } from './types.ts';
 
 export interface CookingProposal { label:string;reason?:string;order?:CookingOrder|HaulTask;path?:Cell[] }
-export function planCookingOrder(world:World,pawn:Pawn,stationId:number):CookingProposal {
+export function planCookingOrder(world:World,pawn:Pawn,stationId:number,access?:import('./pathfinding.ts').Reachability,budget={pairs:32768},forced=true):CookingProposal {
   const label='Cuisiner au feu',no=(reason:string):CookingProposal=>({label,reason});
   if(!pawn.priorities.cook)return no('Cuisine désactivée dans le tableau Travail.');
   const station=world.structures.find(s=>s.id===stationId&&s.kind==='campfire');
@@ -21,9 +21,9 @@ export function planCookingOrder(world:World,pawn:Pawn,stationId:number):Cooking
   if(fuelStationReserved(world,station.id))return no('Poste réservé pour une cuisine ou un ravitaillement.');
   const spot=cookingSpot(station);
   if(!cookingPlaceFree(world,spot)||reservedServiceCells(world).has(cellIndex(world,spot.x,spot.z)))return no('Place de cuisine obstruée ou réservée.');
-  const reach=candidateAccess(world,pawn,blockedCells(world),new Set());
+  const reach=access??candidateAccess(world,pawn,blockedCells(world),new Set());
   if(!routeToCell(world,spot,reach))return no('Aucun accès à la place de cuisine.');
-  const plan=planCooking(world,pawn,reach,{pairs:32768},{stationId,forced:true});
+  const plan=planCooking(world,pawn,reach,budget,{stationId,forced});
   if(!plan)return no(station.fuel?.ticks?'Aucune recette réalisable : ingrédients autorisés dans le rayon, accès ou dépôt insuffisants.':'Aucun bois disponible et accessible pour rallumer le feu.');
   return {label:plan.refuel?'Ravitailler avant de cuisiner':'Cuisiner un repas simple',order:plan.refuel??{cooking:plan.task!},path:plan.path};
 }

@@ -30,7 +30,7 @@ export function search(world: World, pawn: Pawn, blocked: Uint8Array, occupied: 
 }
 /** A decision-wide connectivity check replaces speculative paths to every
  * candidate. Precise routes share one resumable weighted search. */
-function searchCandidates(world:World,pawn:Pawn,blocked:Uint8Array,occupied:ReadonlySet<number>,budget:SearchBudget):Reachability|null {
+export function searchCandidates(world:World,pawn:Pawn,blocked:Uint8Array,occupied:ReadonlySet<number>,budget:SearchBudget):Reachability|null {
   if(!budget.remaining)return null;budget.remaining--;
   const result=candidateAccess(world,pawn,blocked,occupied);
   budget.stats?.searches.push({pawnId:pawn.id,mode:'all',get visited(){return result.visited;},unreachedGroups:0,get connectivityVisited(){return result.connectivityVisited;}});

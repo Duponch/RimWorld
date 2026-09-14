@@ -18,8 +18,8 @@ const same=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
 
 /** One read-only decision with one shared, resumable access search. No global
  * logistics cursor or per-frame query. A delivery is one trip, not a build chain. */
-export function planHaulOrder(world:World,pawn:Pawn,target:HaulOrderTarget):HaulProposal {
-  if(target.type==='fuel'||target.type==='clear'||target.type==='clear-sow')return planServiceHaul(world,pawn,target);
+export function planHaulOrder(world:World,pawn:Pawn,target:HaulOrderTarget,access?:import('./pathfinding.ts').Reachability,budget={pairs:32768}):HaulProposal {
+  if(target.type==='fuel'||target.type==='clear'||target.type==='clear-sow')return planServiceHaul(world,pawn,target,access,budget);
   const label=target.type==='pile'?'Transporter vers le stockage':'Livrer les matériaux';
   const no=(reason:string):HaulProposal=>({label,reason});
   if(target.type!=='pile'&&target.type!=='job')return no('Cible de transport invalide.');
@@ -30,11 +30,12 @@ export function planHaulOrder(world:World,pawn:Pawn,target:HaulOrderTarget):Haul
   if(target.type==='job'&&(!job||!isConstruction(job)))return no('Chantier introuvable.');
   if(job&&!constructionSiteFree(world,job,pawn.id))return no('Le chantier doit être dégagé avant la livraison.');
   if(job&&JOB_WOOD_COST[job.kind]-deliveredStock(world,job.id).wood-reservedDestination(world,{type:'job',jobId:job.id})<=0)return no('Les matériaux sont déjà livrés ou réservés.');
-  const reach=candidateAccess(world,pawn,blockedCells(world),new Set());
+  const reach=access??candidateAccess(world,pawn,blockedCells(world),new Set());
   if(job&&!canReach(world,job,reach,false))return no('Aucun accès praticable au chantier.');
   const sources=source?[source]:world.piles.filter(p=>p.owner.type==='ground'&&p.item==='wood');
   let best:{task:HaulTask;source:Cell;rank:number;distance:number;id:number}|undefined;
   for(const pile of sources) {
+    if(budget.pairs--<=0){budget.pairs=0;return no('Décision reportée : budget de recherche atteint.');}
     if(pile.owner.type!=='ground')continue;
     let available=pile.quantity-reservedSource(world,pile.id);if(available<=0)continue;
     if(!canReach(world,pile.owner,reach,true))continue;
@@ -47,6 +48,7 @@ export function planHaulOrder(world:World,pawn:Pawn,target:HaulOrderTarget):Haul
       :world.stockpiles.filter(z=>z.priority>currentPriority&&!same(z,pile.owner as Cell))
         .map(z=>({destination:{type:'stockpile' as const,stockpileId:z.id},cell:z,rank:-z.priority,capacity:storageCapacity(world,z,pile.item)}));
     for(const dest of destinations) {
+      if(budget.pairs--<=0){budget.pairs=0;return no('Décision reportée : budget de recherche atteint.');}
       const quantity=Math.min(CARRY_CAPACITY,available,dest.capacity);if(quantity<=0||!canReach(world,dest.cell,reach,!job))continue;
       const cost=distance(pawn,pile.owner)+distance(pile.owner,dest.cell),id=job?pile.id:dest.cell.id;
       if(!best||dest.rank<best.rank||dest.rank===best.rank&&(cost<best.distance||cost===best.distance&&id<best.id))

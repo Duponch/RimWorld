@@ -1,3 +1,4 @@
+import { validatePriorityWork } from './priority-work-state.ts';
 import { canStandAt } from './furniture-travel.ts';
 import { initializeFurnitureTravel } from './furniture-save.ts';
 import { initializeOccupancy } from './occupancy-save.ts';
@@ -41,7 +42,7 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validateWorld(input: unknown): string[] {
   return validateSchema(input, SCHEMA_VERSION);
 }
-function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22): string[] {
+function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(input)) return ['World must be an object.'];
@@ -155,6 +156,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
   const events = input.events as unknown[];
   if (events.length > 80 || events.some(item => !record(item) || !integer(item.tick, 0, input.tick as number) || !oneOf(item.type, ['job', 'need', 'command']) || typeof item.message !== 'string' || item.message.length > 240)) errors.push('Invalid event log.');
   if (version >= 8 && !errors.length) errors.push(...validateFarming(input, size, ids));
+  if(!errors.length)errors.push(...validatePriorityWork(input as unknown as World,version));
   if(!errors.length)errors.push(...validatePlayerOrders(input as unknown as World,version,true));
   if(!errors.length)errors.push(...validateCooking(input,version,ids));
   if(!errors.length)errors.push(...validatePreservation(input as unknown as World,version));
@@ -398,6 +400,10 @@ export function deserializeWorld(serialized: string): World {
   if(record(input)&&input.schemaVersion===21) {
     const errors=validateSchema(input,21);if(errors.length)throw new Error(`Invalid version 21 save: ${errors.join(' ')}`);
     initializeFurnitureTravel(input as unknown as World);
+  }
+  if(record(input)&&input.schemaVersion===22) {
+    const errors=validateSchema(input,22);if(errors.length)throw new Error(`Invalid version 22 save: ${errors.join(' ')}`);
+    input.schemaVersion=23; // No invented priority for orders accepted by an older version.
   }
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`); return input as World;
 }

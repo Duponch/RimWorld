@@ -1,4 +1,4 @@
-# Chantiers — contrat V22
+# Chantiers — contrat V23
 
 Référence : corpus chap. 10, SYS-056/TEST-056, SYS-005/020..022/051/053/054 et [recherche renouvelée](../research/construction-reference.md). Ce contrat remplace le blocage immédiat des plans de murs/tables et le refus systématique des plantes/piles. Les [écarts](../gameplay/decisions.md) ne sont pas des comportements implicites du jeu commercial.
 
@@ -62,7 +62,7 @@ V20 est d’abord validée selon ses interdictions de superposition de zones. Le
 
 Cinq scénarios approfondis couvrent transferts typés et fraîcheur, sauvegarde/annulation en cargaison, plante sur empreinte tournée, priorités, transporteur sans Construction, plans/cadres franchis, durée d'arête, coins protégés, repas réservé et migration stricte. L'oracle spatial indépendant comprend des cadres ; le pilote ordinaire doit terminer son camp et conserver ses bilans. L'UI courte exerce phases et reprise dans le vrai worker ; la partie longue suit trois jours par commandes réelles. Les [preuves courantes](validation.md) distinguent chaque passage et les audits.
 
-Pas de nouveaux objets : états enrichis du mobilier existant. V22 livre le [transit et l’arrêt du mobilier présent](furniture-travel.md). Déplacement des personnes gênantes, support du sol, compétences/qualité/échecs, minage, réparation, remplacement et déconstruction restent ouverts. Ne pas annoncer Construction terminée.
+Pas de nouveaux objets : états enrichis du mobilier existant. V22 livre le [transit et l’arrêt du mobilier présent](furniture-travel.md). Déplacement des personnes gênantes, support du sol, compétences/qualité/échecs, minage, réparation, remplacement et déconstruction restent ouverts. V23 permet de maintenir un ordre de Construction sur sa cellule pour enchaîner les sous-travaux admissibles ; [règles de priorité et limites](player-orders.md). Ne pas annoncer Construction terminée.
 
 ## Commandes contextuelles V19
 

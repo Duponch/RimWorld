@@ -36,7 +36,7 @@ export function processNeeds(world: World, pawn: Pawn, context: NeedContext): bo
   // Collapse is an emergency interruption, including travel with a meal in hand.
   if ((world.restRules === 'legacy' ? pawn.rest === 0 : pawn.collapsePending) && pawn.need?.kind !== 'sleep') {
     if (!context.release()) return true;
-    clearQueuedOrders(world,pawn);
+    clearQueuedOrders(world,pawn);delete pawn.priorityWork;
     pawn.need = { kind: 'sleep', phase: 'sleep', bedId: null, target: { x: pawn.x, z: pawn.z } };
     pawn.state = 'sleeping'; pawn.collapsePending = false; pawn.restZeroTicks = 0;
     context.event(`${pawn.name} s’effondre de fatigue au sol.`);

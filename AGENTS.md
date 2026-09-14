@@ -49,7 +49,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 22 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 23 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)
@@ -88,3 +88,7 @@
 ## Transit mobilier V22
 - Lire docs/development/furniture-travel.md avant de changer coûts, destinations ou poses. La non-répétition vaut entre objets qualifiants différents. Table/lit/feu traversables, arrêt ordinaire exclu ; le lit garde son service réservé. Ne pas confondre transit et destination.
 - Migration V21 stricte, arêtes engagées conservées ; `transitExit` persisté pour les sorties physiques. Corps/cargaison/sélection partagent la formule TSL et les attributs existants ; hauteur graphique sans effet autoritaire.
+
+## Priorité maintenue V23
+- Lire docs/development/player-orders.md : priorité sur une cellule/famille, sans rayon autour de la cible. Dure au plus une demi-journée depuis le dernier ordre persistant accepté ; la file passe avant les suites. Ne pas confondre affectation désactivée et incapacité. Expirer l’intention ne supprime pas le travail déjà commencé.
+- État facultatif Pawn.priorityWork ; V22 validée strictement avant migration sans intention inventée. Les décisions réutilisent les fournisseurs et budgets communs.

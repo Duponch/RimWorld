@@ -12,7 +12,7 @@ import type { Cell, HaulDestination, Pawn, World } from './types.ts';
 
 export type ServiceHaulTarget={type:'fuel';structureId:number}|{type:'clear';jobId:number}|{type:'clear-sow';jobId:number};
 /** Contextual sub-jobs reuse the ordinary physical transport executor. */
-export function planServiceHaul(world:World,pawn:Pawn,target:ServiceHaulTarget):HaulProposal {
+export function planServiceHaul(world:World,pawn:Pawn,target:ServiceHaulTarget,access?:import('./pathfinding.ts').Reachability,budget={pairs:32768}):HaulProposal {
   const label=target.type==='fuel'?'Ravitailler le feu':target.type==='clear-sow'?'Dégager avant de semer':'Dégager le chantier';
   const no=(reason:string):HaulProposal=>({label,reason});
   if(target.type==='fuel'?!pawn.priorities.haul:target.type==='clear-sow'?!pawn.priorities.grow:!Number.isFinite(constructionHaulPriority(pawn)))return no('Ce travail est désactivé dans le tableau Travail.');
@@ -28,18 +28,19 @@ export function planServiceHaul(world:World,pawn:Pawn,target:ServiceHaulTarget):
   if(fire&&fuelStationReserved(world,fire.id))return no('Feu réservé pour la cuisine ou un ravitaillement.');
   const capacity=fire?fuelCapacity(world,fire.id,undefined,true):CARRY_CAPACITY;
   if(!capacity)return no('Le feu ne peut pas encore recevoir une unité entière de bois.');
-  const blocked=blockedCells(world),reach=candidateAccess(world,pawn,blocked,new Set());
+  const blocked=blockedCells(world),reach=access??candidateAccess(world,pawn,blocked,new Set());
   if(fire&&!canReach(world,fire,reach,true))return no('Aucun accès praticable au feu.');
   const sources=obstacle?.pile?[obstacle.pile]:world.piles.filter(p=>p.item==='wood'&&p.owner.type==='ground');
   let best:{source:Cell;id:number;quantity:number;distance:number;destination:HaulDestination}|undefined;
   for(const pile of sources) {
+    if(budget.pairs--<=0){budget.pairs=0;return no('Décision reportée : budget de recherche atteint.');}
     if(pile.owner.type!=='ground')continue;
     const reserved=reservedSource(world,pile.id);
     // Clearing owns the obstructing pile, including trips smaller than a stack.
     if(job&&reserved>0)continue;
     const quantity=Math.min(CARRY_CAPACITY,capacity,pile.quantity-reserved);if(quantity<=0)continue;
     if(!canReach(world,pile.owner,reach,true))continue;
-    const aside=job?findAsideDestination(world,pile.owner,pile.item,quantity,blocked,{pairs:32768}):null;
+    const aside=job?findAsideDestination(world,pile.owner,pile.item,quantity,blocked,budget):null;
     if(job&&!aside)return no('Aucune cellule proche accessible pour déposer la pile.');
     const destination:HaulDestination=fire?{type:'fuel',structureId:fire.id,forced:true}:target.type==='clear-sow'?{...aside!,growingZoneId:job!.growingZoneId,sowCell:{x:job!.x,z:job!.z}}:{...aside!,constructionId:job!.id,forConstruction:asBuilder(pawn)};
     const distance=Math.abs(pawn.x-pile.owner.x)+Math.abs(pawn.z-pile.owner.z);

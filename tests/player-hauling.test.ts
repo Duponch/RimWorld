@@ -51,10 +51,10 @@ test('forced construction deliveries are physical subjobs, builders need no haul
   expect(applyCommand(w,{type:'order-haul',pawnId:p.id,target:{type:'job',jobId:b!.id},queue:true}).ok).toBe(true);
   expect(reservedSource(w,w.piles[0]!.id)).toBe(10);
   applyCommand(w,{type:'priority',pawnId:p.id,work:'build',value:0});tick(w,160);
-  expect(w.structures).toEqual([]);expect(w.jobs.map(j=>[j.construction,j.escrow.wood])).toEqual([['frame',5],['frame',5]]);expect(w.stock.wood).toBe(2);
+  expect(w.structures.map(s=>[s.x,s.z])).toEqual([[b!.x,b!.z]]);expect(w.jobs.map(j=>[j.construction,j.escrow.wood])).toEqual([['frame',5]]);expect(w.stock.wood).toBe(2);
+  const canceled=deserializeWorld(serializeWorld(w));expect(applyCommand(canceled,{type:'cancel',x:a!.x,z:a!.z}).ok).toBe(true);expect(canceled.stock.wood).toBe(7);expect(validateWorld(canceled)).toEqual([]);
   applyCommand(w,{type:'priority',pawnId:p.id,work:'build',value:1});expect(applyCommand(w,{type:'order-job',pawnId:p.id,jobId:a!.id,queue:false}).ok).toBe(true);
-  applyCommand(w,{type:'priority',pawnId:p.id,work:'build',value:0});tick(w,150);expect(w.structures.map(s=>s.kind)).toEqual(['wall']);
-  expect(applyCommand(w,{type:'cancel',x:b!.x,z:b!.z}).ok).toBe(true);expect(w.stock.wood).toBe(7);expect(validateWorld(w)).toEqual([]);
+  applyCommand(w,{type:'priority',pawnId:p.id,work:'build',value:0});tick(w,150);expect(w.structures.map(s=>s.kind)).toEqual(['wall','wall']);expect(w.stock.wood).toBe(2);expect(validateWorld(w)).toEqual([]);
 
   const c=camp(),actor=c.pawns[0]!;c.pawns=c.pawns.slice(0,1);const zone=storage(c,24,20,true);
   addGroundMaterial(c,'food',20,{x:8,z:8},'rice');const rice=c.piles[0]!;rice.rot={progress:150,atTick:0};
@@ -74,7 +74,7 @@ test('waiting hauling survives migration/replay, releases vanished sources, reje
     const invalid=structuredClone(raw);mutate(invalid);expect(()=>deserializeWorld(JSON.stringify(invalid))).toThrow();expect(w).toEqual(raw);
   }
   rice.rot={progress:ROT_DAYS.rice*TICKS_PER_DAY-1,atTick:w.tick};tick(w);expect(w.spoiled.rice).toBe(20);expect(p.orders).toEqual({active:null,queue:[]});expect(w.stock.food).toBe(0);
-  const old=JSON.parse(serializeWorld(camp()));old.schemaVersion=17;const migrated=deserializeWorld(JSON.stringify(old));expect(migrated).toEqual({...old,schemaVersion:22});
+  const old=JSON.parse(serializeWorld(camp()));old.schemaVersion=17;const migrated=deserializeWorld(JSON.stringify(old));expect(migrated).toEqual({...old,schemaVersion:23});
 
   const blocked=camp(),actor=blocked.pawns[0]!;blocked.pawns=blocked.pawns.slice(0,1);storage(blocked,20,30);addGroundMaterial(blocked,'wood',20,{x:8,z:8},'wood');const wood=blocked.piles[0]!;
   applyCommand(blocked,{type:'order-haul',pawnId:actor.id,target:{type:'pile',pileId:wood.id},queue:false});applyCommand(blocked,{type:'order-haul',pawnId:actor.id,target:{type:'pile',pileId:wood.id},queue:true});

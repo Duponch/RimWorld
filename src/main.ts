@@ -280,8 +280,8 @@ function renderState() {
     else {
       el('selected-name').textContent = pawn.name; el('selected-action').textContent = pawn.need ? actionLabel(pawn) : `${actionLabel(pawn)} · ${queryPawnStatus(world, pawn).reason}`;
       updateRecreationInspection(el('inspector'),pawn);
-      el('selected-orders').textContent=`${pawn.orders.active!==null?'Travail imposé · ':''}${pawn.orders.queue.length} ordre(s) en file`;
-      el<HTMLButtonElement>('clear-orders').disabled=pawn.orders.active===null&&!pawn.orders.queue.length;
+      el('selected-orders').textContent=`${pawn.orders.active!==null?'Travail imposé · ':''}${pawn.orders.queue.length} ordre(s) en file${pawn.priorityWork?` · Priorité case ${pawn.priorityWork.cell.x}, ${pawn.priorityWork.cell.z}`:''}`;
+      el<HTMLButtonElement>('clear-orders').disabled=pawn.orders.active===null&&!pawn.orders.queue.length&&!pawn.priorityWork;
       el('selected-memories').textContent = pawn.memories.map(memory => `${memory.kind === 'ate-raw-food' ? 'Mangé cru : −7' : 'Mangé sans table : −3'} humeur · encore ${Math.ceil((memory.expiresAt - world.tick) / (TICKS_PER_DAY / 24))} h`).join(' · ');
       for (const need of ['hunger', 'rest', 'comfort', 'mood'] as const) { el(`selected-${need}`).textContent = `${Math.round(pawn[need])} %`; el<HTMLMeterElement>(`${need}-meter`).value = pawn[need]; }
     }
