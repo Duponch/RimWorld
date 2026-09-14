@@ -5,6 +5,7 @@ import type { Structure, World } from './types.ts';
 export const WOOD_BURN_TICKS = 600;
 export const CAMPFIRE_CAPACITY = 20 * WOOD_BURN_TICKS;
 export const AUTO_REFUEL_THRESHOLD = .3;
+export const REFUEL_WORK_TICKS = 24;
 export interface FuelState { ticks: number; burned: number; autoRefuel: boolean }
 export function newCampfireFuel(): FuelState { return {ticks:CAMPFIRE_CAPACITY,burned:0,autoRefuel:true}; }
 export function campfire(world: World, id: number): Structure | undefined {

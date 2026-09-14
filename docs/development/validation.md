@@ -56,7 +56,19 @@ Aucune erreur console/GPU observée. Captures de 100 colons inspectées. Les int
 
 `npm run build` passe : vérification TypeScript, 82 modules Vite, worker 99,68 kB et jeu 1 018,88 kB (283,35 kB gzip). L’avertissement de bundle supérieur à 500 kB reste connu ; aucun changement de dépendance dans cette tranche.
 
-## Documentation
+## Consolidation V10 — navigation et inspection (14 septembre, après livraison cuisine)
+
+Le [profil CPU V10](../../artifacts/cooking-profile-v10.json), instrumenté V8, confirme le coût des voisins. La [grille d’occupation dense](../../artifacts/cooking-bench-dense-occupancy.json) conserve visites, tâches et résultats à 300 ticks. Dans une passe sans profileur, 100 colons passent d’une médiane de 28,36 à **22,38 ms/tick**, p95 de 39,53 à **29,59 ms**, maximum de 52,45 à **35,55 ms**. À 30 : médiane 1,14, p95 17,36, max 29,76 ms ; à 3 : médiane 0,017, p95 1,32, max 9,22 ms. Même machine/scénario que ci-dessus, passes séparées : ces valeurs ne sont pas un ratio universel garanti.
+
+L’[essai de file à masque](../../artifacts/cooking-bench-bucket-mask.json) n’apporte pas de gain supplémentaire net ; il est **écarté du code livré**. [Capture avant](../../artifacts/cooking-continuation-before.json) et [comparaison après](../../artifacts/cooking-continuation-dense.json) valident quinze sauvegardes complètes byte-identiques : trois populations, cinq checkpoints de 1 à 1 000 ticks. Les SHA-256 archivés ne remplacent pas la comparaison intégrale réellement exécutée.
+
+Le [lot cœur](../../artifacts/core-cooking-consolidation.json) passe **7/7** (production, navigation, contrats spatiaux), avec oracle de distances indépendant sur 120 cartes et diagnostics de recharge. Le [parcours UI ciblé](../../artifacts/ui-cooking-diagnostics.json) passe **1/1 en 11,1 s** : cuisson correctement décrite, motifs de facture, reprise, deux repas rangés, aucune erreur observée. Capture du poste inspectée. Le parcours de trois jours déjà vert n’est pas relancé pour ces libellés et cette optimisation dont la continuation est identique.
+
+Le [nouvel audit natif à 100 colons](../../artifacts/cooking-render-dense.json) garde un intervalle d’image p95 de 6,1 ms dans les deux vues ; soumission CPU p95 6,9 ms locale et 3,9 ms générale. Les fenêtres traversent les ticks 0→252 et 312→492, avec 144/42 draw calls médians. Aucune erreur ; progression encore limitée par la simulation à ×6. Même protocole et réserves que le premier audit, sans prétendre que les deux vues ont le même état.
+
+Build final : TypeScript et Vite passent, 84 modules, worker 99,66 kB, jeu 1 020,82 kB (284,03 kB gzip), avertissement de taille inchangé. [ADR-025](../decisions/simulation.md#adr-025--occupation-dense-par-recherche-et-diagnostics-de-cuisine) et [écart de circulation](spatial-motion-storage.md#relecture-de-la-circulation--14-septembre-2026) consignent les décisions.
+
+## Documentation courante
 
 Index unique, contrats courants, recherches, décisions et preuves historiques séparés. Le corpus original reste dans `reference/originals`, byte-identique. Contrats cuisine, alimentation, simulation, guide, catalogue et inventaire sont mis à jour ; les anciennes assertions « cuisine absente » sont corrigées dans les documents courants. Le vérificateur de liens et d’intégrité contrôle aussi les 25 domaines et cinq familles.
 

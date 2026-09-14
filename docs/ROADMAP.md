@@ -25,7 +25,7 @@ Contrats livrés : définitions immuables ciblées, propriété unique, pile au 
 - Zones nommées et politiques partagées ; filtres enrichis au rythme du contenu.
 - Sélection multiple et ordres contextuels forcés, avec motifs de refus.
 - Déplacement des objets obstruant une construction ; états de chantier plus fins et suppression du blocage immédiat des plans de murs.
-- Réservation des cases de service, passage et congestion entre agents actifs ; profiler index et invalidations.
+- Distinguer réservations exclusives des cases de service et passage temporaire entre personnes : l’interdiction de partage actuelle est plus stricte que RimWorld (relecture du 14 septembre). Résoudre la congestion entre agents actifs ; profiler index et invalidations.
 - Manifeste de contenu/générateur, journal complet des commandes datées, export/import et garanties d’évolution.
 
 **Acceptation G0 :** trois colons développent un camp par des commandes explicables ; matériaux conservés à chaque transition, engagements sans duplication, continuation exacte pendant les transports, contrôle de charge reproductible. Les premiers scénarios passent ; les manques ci-dessus empêchent de déclarer le jalon clos.

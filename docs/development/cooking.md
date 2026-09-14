@@ -20,6 +20,7 @@ Les factures sont ordonnées et disposent des trois modes de répétition, suspe
 - `fuel.ts` : réservoir et combustion ; le transport utilise le contrat commun de `hauling.ts`, avec progression de service sauvegardée.
 - `cooking-save.ts` : références, réservations, phases, quantités, capacité et exclusivité. Le validateur général conserve ses invariants de propriétaire, chemin et occupation.
 - `ui/bill-controls.ts` et `ui/fire-controls.ts` : véritables commandes du worker. L’inspecteur appartient au poste sélectionné ; la priorité Cuisine reste dans Travail.
+- `diagnostics.ts` et `cooking-diagnostics.ts` : requêtes sans mutation pour les phases du colon et les blocages connus de facture. L’interface distingue ingrédients manquants, combustible, métier désactivé et place obstruée ; une quantité présente ne certifie pas son accessibilité. Aucune exploration de carte n’est déclenchée par l’inspection.
 - `render/campfire-parts.ts` : parties procédurales dans les lots de mobilier et de couleur non éclairée existants. Seul le changement allumé/éteint modifie leur contenu ; le compteur de combustible ne recrée pas de géométrie chaque tick.
 
 **Migration V9→V10** : ajout `pawn.cooking = null` et priorité Cuisine 2, sans déplacer les personnes ou modifier les travaux existants. Aucun ancien feu n’existe à migrer. Les factures, tâches de cuisine, combustible et repas simples sont refusés si présentés comme données d’une ancienne version. Les migrations V1–V8 passent d’abord par leurs contrats historiques.

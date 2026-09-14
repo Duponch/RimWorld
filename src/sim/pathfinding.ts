@@ -56,10 +56,14 @@ export function routeToCell(world: World, target: Cell, reachable: Reachability)
 export function reachableCells(world: World, start: Cell, blocked: Uint8Array, occupied: Set<number>, goals?: ReadonlySet<number>, allGroups?:readonly ReadonlySet<number>[]): Reachability {
   const size=world.width*world.height, parents=new Int32Array(size).fill(-2), costs=new Float64Array(size).fill(Infinity);
   const startIndex=cellIndex(world,start.x,start.z), heap=new PathFrontier(costs), settled=new Uint8Array(size);
+  // Snapshot occupancy once per synchronous search. Dense reads avoid millions
+  // of Set lookups in the neighbour loop; the caller's static grid stays intact.
+  const unavailable=blocked.slice();
+  for(const index of occupied)unavailable[index]=1;
   costs[startIndex]=0;parents[startIndex]=-1;heap.push(startIndex);
   let goalCost=Infinity,remaining=0,visited=0;
   const membership=new Map<number,number[]>(),reached=new Set<number>();
-  const free=(index:number)=>index===startIndex||!blocked[index]&&!occupied.has(index);
+  const free=(index:number)=>index===startIndex||!unavailable[index];
   const hasEntry=(index:number)=>index===startIndex
     ||index>=world.width&&free(index-world.width)||index+world.width<size&&free(index+world.width)
     ||index%world.width>0&&free(index-1)||index%world.width+1<world.width&&free(index+1);
@@ -84,8 +88,8 @@ export function reachableCells(world: World, start: Cell, blocked: Uint8Array, o
     const x=index%world.width,z=Math.floor(index/world.width);
     for(const [dx,dz] of directions) {
       const nx=x+dx,nz=z+dz,next=cellIndex(world,nx,nz);
-      if(nx<0||nz<0||nx>=world.width||nz>=world.height||blocked[next]||occupied.has(next)||settled[next])continue;
-      if(dx&&dz&&(blocked[index+dx]||blocked[index+dz*world.width]||occupied.has(index+dx)||occupied.has(index+dz*world.width)))continue;
+      if(nx<0||nz<0||nx>=world.width||nz>=world.height||unavailable[next]||settled[next])continue;
+      if(dx&&dz&&(unavailable[index+dx]||unavailable[index+dz*world.width]))continue;
       const cost=costs[index]!+(dx&&dz?DIAGONAL_COST:CARDINAL_COST);
       if(cost<costs[next]!) {costs[next]=cost;parents[next]=index;heap.push(next);}
     }

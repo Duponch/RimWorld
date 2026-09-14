@@ -1,4 +1,5 @@
 import { countedMeals } from '../sim/cooking-bills';
+import { queryCookingBillStatus } from '../sim/cooking-diagnostics';
 import type { BillSettings } from '../sim/cooking-types';
 import type { Command, Structure, World } from '../sim/types';
 
@@ -9,6 +10,7 @@ export function billControls(station:Structure,send:(command:Command)=>void):HTM
   for(const bill of station.bills??[]) {
     const form=document.createElement('div');form.className='bill';form.dataset.bill=String(bill.id);
     const status=document.createElement('p');status.dataset.billStatus=String(bill.id);form.append(status);
+    const reason=document.createElement('p');reason.dataset.billReason=String(bill.id);reason.className='muted';form.append(reason);
     const fields=new Map<string,HTMLInputElement|HTMLSelectElement>();
     const input=(key:string,label:string,type:string,value:string|boolean)=>{
       const row=document.createElement('label'),field=document.createElement('input');field.type=type;field.dataset.field=key;
@@ -41,6 +43,7 @@ export function updateBillControls(root:ParentNode,station:Structure,world:World
   for(const bill of station.bills??[]) {
     const form=root.querySelector<HTMLElement>(`[data-bill="${bill.id}"]`);if(!form)continue;
     form.querySelector('[data-bill-status]')!.textContent=`Repas simple · ${bill.suspended?'suspendue':bill.mode==='times'?`${bill.target} restant(s)`:bill.mode==='until'?`${countedMeals(world)} / ${bill.target} stocké(s)/porté(s)`:'sans limite'}`;
+    form.querySelector('[data-bill-reason]')!.textContent=queryCookingBillStatus(world,station,bill).reason;
     if(!form.dataset.dirty)(form.querySelector('[data-field="target"]') as HTMLInputElement).value=String(bill.target);
   }
 }

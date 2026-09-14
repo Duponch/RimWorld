@@ -5,12 +5,15 @@ import { cookingFixture } from './fixtures/cooking.ts';
 import { serializeWorld, validateWorld } from '../src/sim/index.ts';
 process.env.PLAYWRIGHT_BROWSERS_PATH??=resolve('.playwright');
 const {chromium}=await import('@playwright/test');
+const output=process.argv[2]??'artifacts/cooking-render-bench.json';
+const populations=(process.argv[3]??'3,30,100').split(',').map(Number);
+if(populations.some(n=>!Number.isInteger(n)||n<1||n>100))throw new Error('Audit population must be 1..100');
 const report={date:new Date().toISOString(),cpu:cpus()[0].model,protocol:'Native Chromium WebGPU, 1440×1000, natural 250² with synthetic camps; real worker at UI speed 6; 60 warmup frames then >=300 frames and >=5 seconds per phase. Local/overview phases advance the simulation successively, so they are workload observations, not identical-state camera A/B. RAF includes scheduling; frame CPU is submission, not GPU execution. No parallel tests or CPU benchmarks.',phases:[],errors:[]};
 const stats=values=>{const s=[...values].sort((a,b)=>a-b),at=q=>s[Math.ceil(q*s.length)-1];return {n:s.length,p50:at(.5),p95:at(.95),p99:at(.99),max:s.at(-1)};};
 const browser=await chromium.launch({channel:'chromium',args:[]});
 const watchdog=setTimeout(()=>{console.error('Render audit exceeded 150 seconds');process.exit(2);},150000);
 try {
-  for(const count of [3,30,100]) {
+  for(const count of populations) {
     const page=await browser.newPage({viewport:{width:1440,height:1000}});
     page.on('pageerror',e=>report.errors.push(e.message));
     page.on('console',m=>{if(m.type()==='error'||/GPUValidationError|invalid pipeline/i.test(m.text()))report.errors.push(m.text());});
@@ -43,5 +46,5 @@ try {
   }
   if(report.errors.length)throw new Error(report.errors.join('\n'));
 } finally {
-  await browser.close();clearTimeout(watchdog);await writeFile('artifacts/cooking-render-bench.json',JSON.stringify(report,null,2)+'\n');
+  await browser.close();clearTimeout(watchdog);await writeFile(output,JSON.stringify(report,null,2)+'\n');
 }

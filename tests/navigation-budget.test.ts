@@ -4,6 +4,25 @@ import { foodSearchGoals, selectFood } from '../src/sim/food-selection';
 import type { MaterialPile } from '../src/sim/types';
 import { routeCost, blockedCells, interactionGoals, reachableCells, routeToJob, routeToCell } from '../src/sim/pathfinding';
 
+// Independent O(V²) oracle on small maps: no engine frontier, neighbour helper
+// or pruning logic. Different tie order is fine; optimal costs must agree.
+function oracleCosts(width:number,height:number,start:number,blocked:Uint8Array,traffic:Set<number>):number[] {
+  const costs=Array<number>(width*height).fill(Infinity),done=new Set<number>();costs[start]=0;
+  for(;;) {
+    let cell=-1;
+    for(let i=0;i<costs.length;i++)if(!done.has(i)&&costs[i]!<Infinity&&(cell===-1||costs[i]!<costs[cell]!))cell=i;
+    if(cell===-1)return costs;
+    done.add(cell);const x=cell%width,z=Math.floor(cell/width);
+    for(let dx=-1;dx<=1;dx++)for(let dz=-1;dz<=1;dz++) {
+      if(!dx&&!dz||x+dx<0||x+dx>=width||z+dz<0||z+dz>=height)continue;
+      const next=(z+dz)*width+x+dx;
+      if(blocked[next]||traffic.has(next))continue;
+      if(dx&&dz&&(blocked[cell+dx]||traffic.has(cell+dx)||blocked[cell+dz*width]||traffic.has(cell+dz*width)))continue;
+      costs[next]=Math.min(costs[next]!,costs[cell]!+(dx&&dz?1414:1000));
+    }
+  }
+}
+
 test('goal-bounded floods retain the full-flood nearest food and exact path across ties, walls and unreachable goals', () => {
   let random = 123456789, reduced = 0;
   const draw = () => { random = (Math.imul(random, 1664525) + 1013904223) >>> 0; return random; };
@@ -23,6 +42,7 @@ test('goal-bounded floods retain the full-flood nearest food and exact path acro
     const traffic=new Set(Array.from({length:40},()=>draw()%256).filter(i=>i!==34));
     // A free target can still be completely enclosed by transient occupants.
     const trafficFull=reachableCells(w,start,blocked,traffic),trafficGroups=reachableCells(w,start,blocked,traffic,undefined,groups);
+    expect(Array.from(trafficFull.costs),`independent distances seed ${run}`).toEqual(oracleCosts(16,16,34,blocked,traffic));
     for(const food of foods)expect(routeToJob(w,food,trafficGroups,true),`traffic groups seed ${run} target ${food.id}`).toEqual(routeToJob(w,food,trafficFull,true));
     const select = (reach: typeof full) => foods.flatMap(food => {
       const path = routeToJob(w, food, reach, true); return path ? [{ id: food.id, path }] : [];

@@ -125,6 +125,8 @@ Activez **Cuisine** dans Travail, puis inspectez le feu et ajoutez une facture �
 
 Le cuisinier rassemble dix unités admises, les porte au poste puis travaille avant de créer un repas à 0,9 nutrition. Gardez libre la case de service devant le feu et prévoyez des réserves pour les repas, distinctes des piles de riz/baies. Le mode « jusqu’à X » compte les repas stockés et portés ; ceux posés au sol hors réserve ne suffisent pas à maintenir ce seuil.
 
+L’inspection du colon indique collecte des ingrédients, progression de cuisson ou livraison du repas. Chaque facture explique ses blocages connus : Cuisine désactivée, combustible, ingrédients admis dans le rayon ou place de travail obstruée. Si assez d’ingrédients sont présents, vérifiez aussi les chemins et les cases libres autour du poste ; le compteur ne garantit pas leur accès.
+
 Un cuisinier peut ravitailler son feu vide même avec Transport désactivé. Interrompre une préparation conserve les ingrédients, mais son travail partiel recommence ; sauvegarder puis recharger conserve au contraire le travail actif. Autres recettes, compétences, intoxications et péremption restent à développer.
 
 ## Cultiver du riz (V8)

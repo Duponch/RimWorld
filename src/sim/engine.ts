@@ -1,3 +1,4 @@
+export { queryJobStatus, queryPawnStatus } from './diagnostics.ts';
 import { processCooking } from './cooking.ts';
 import { applyBillCommand } from './cooking-commands.ts';
 import { cookingCellReserved } from './cooking-bills.ts';
@@ -15,11 +16,11 @@ import { groundPile, planGroundPlacement } from './ground-placement.ts';
 import { generateWorld } from './generation.ts';
 import { adjacent, canStep, blockedCells, cellIndex, inBounds, routeToJob, routeToCell, interactionGoals } from './pathfinding.ts';
 import { CARRY_CAPACITY, footprintCells, JOB_WOOD_COST, MAX_STACK } from './definitions.ts';
-import { addGroundMaterial, deliveredStock, refreshStock, reservedDestination } from './materials.ts';
+import { addGroundMaterial, deliveredStock, refreshStock } from './materials.ts';
 import { queryArea, validStorageSettings } from './designation.ts';
 import { processNeeds, updateNeeds } from './needs.ts';
 export { HUNGER_PER_TICK, REST_PER_TICK } from './needs.ts';
-import type { AreaCommand, Cell, Command, CommandResult, DesignateCommand, Job, JobDiagnostic, JobKind, Pawn, RefusalCode, World } from './types.ts';
+import type { AreaCommand, Cell, Command, CommandResult, DesignateCommand, Job, JobKind, Pawn, RefusalCode, World } from './types.ts';
 export { JOB_DURATION, JOB_WOOD_COST } from './definitions.ts';
 
 const PATH_SEARCHES_PER_TICK = 8;
@@ -194,26 +195,6 @@ export function applyCommand(world: World, command: Command): CommandResult {
   if (!result.ok) return result;
   world.jobs.push({ id: world.nextId++, kind: command.kind, x: command.x, z: command.z, orientation: command.orientation ?? 0, footprint: 'standard', status: 'pending', reservedBy: null, progress: 0, escrow: { wood: 0, food: 0 } });
   wakePlanners(world); event(world, 'command', `Nouvel ordre : ${JOB_LABEL[command.kind]} (${command.x}, ${command.z}).`); return { ok: true };
-}
-
-export function queryJobStatus(world: World, job: Job): JobDiagnostic {
-  const delivered = deliveredStock(world, job.id).wood; const required = JOB_WOOD_COST[job.kind];
-  if (job.reservedBy !== null) return { code: 'working', reason: 'Travail attribué à un colon.', delivered, required };
-  if (required > delivered) {
-    const shipping = reservedDestination(world, { type: 'job', jobId: job.id });
-    return { code: shipping ? 'delivering' : 'missing-materials', reason: shipping ? `Livraison en cours : ${delivered}/${required} bois reçus.` : `Attend ${required - delivered} bois livrés ; vérifier le transport et l’accès.`, delivered, required };
-  }
-  const enabled = world.pawns.some(pawn => pawn.priorities[workType(job)] > 0);
-  return { code: enabled ? 'ready' : 'waiting-worker', reason: enabled ? 'Prêt ; attend un colon disponible et un accès.' : 'Travail désactivé pour tous les colons.', delivered, required };
-}
-export function queryPawnStatus(world: World, pawn: Pawn): { code: string; reason: string } {
-  if (pawn.need?.kind === 'eat') return { code: pawn.need.phase, reason: pawn.need.phase === 'pickup' ? 'Va chercher une portion réservée.' : pawn.need.phase === 'choose-spot' ? 'Cherche une place pour manger sa portion.' : pawn.need.phase === 'travel' ? 'Porte sa portion vers sa place réservée.' : `Mange la portion tenue en main (${Math.floor(pawn.need.progress / 50 * 100)} %).` };
-  if (pawn.need?.kind === 'sleep') return { code: pawn.need.phase, reason: pawn.need.phase === 'travel' ? pawn.need.bedId === null ? 'Libère le lit et cherche une place au sol.' : 'Se rend à son lit réservé.' : pawn.need.bedId === null ? 'Dort au sol ; aucun lit utilisable ou épuisement.' : 'Dort dans son lit.' };
-  if (pawn.haul) return { code: pawn.haul.phase, reason: pawn.haul.destination.type === 'aside' ? `Libère les cultures : ${pawn.haul.quantity} unités à déplacer hors des champs.` : pawn.haul.phase === 'pickup' ? `Va prélever ${pawn.haul.quantity} unités réservées.` : `Porte ${pawn.haul.quantity} unités vers ${pawn.haul.destination.type === 'job' ? 'un chantier' : 'le stockage'}.` };
-  if (pawn.jobId !== null) return { code: 'working', reason: pawn.state === 'moving' ? 'Se rend à son travail.' : 'Travaille sur sa cible.' };
-  if (pawn.state === 'sleeping') return { code: 'sleeping', reason: 'Se repose.' };
-  if (pawn.state === 'hungry') return { code: 'hungry', reason: 'Faim critique ; attend de la nourriture ou une récolte accessible.' };
-  return { code: world.jobs.length ? 'waiting' : 'idle', reason: world.jobs.length ? 'Aucun travail actuellement admissible : priorités, matériaux ou accès à vérifier.' : 'Aucun travail admissible actuellement.' };
 }
 
 function moveToward(world: World, pawn: Pawn, target: Cell, allowTarget: boolean, getBlocked: NavigationGrid, occupied: Set<number>, budget: SearchBudget, exact = false): void {

@@ -40,12 +40,18 @@ test('cuisine par interface : construction, facture, ingrédients portés, repri
     expect(chef.cooking?.phase).toBe('work');expect(chef).toMatchObject({x:15,z:13,state:'working'});
     expect(cooking.piles.filter(p=>p.kind==='food').reduce((n,p)=>n+p.quantity,0)).toBe(30);
     expect(validateWorld(cooking)).toEqual([]);
+    await expect(page.locator('[data-bill-reason]')).toContainText('Prépare un repas simple');
+    await page.locator(`[data-pawn="${chef.id}"]`).click();
+    await expect(page.locator('#selected-action')).toContainText('Prépare un repas simple');
+    await expect(page.locator('#selected-action')).not.toContainText('Aucun travail');
+    await cell(page,15,14);
     await page.screenshot({path:'artifacts/cooking-work.png'});
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,cooking);
     await page.keyboard.press('Escape');await page.locator('[data-speed="6"]').click();
     await expect.poll(async()=>{const w=await world(page);return w.piles.filter(p=>p.item==='simple-meal'&&p.owner.type==='ground').reduce((n,p)=>n+p.quantity,0);},{timeout:20000}).toBe(2);
     await page.locator('[data-speed="0"]').click();await cell(page,15,14);
     await expect(page.locator('[data-bill-status]')).toContainText('0 restant');
+    await expect(page.locator('[data-bill-reason]')).toContainText('Quantité demandée terminée');
     await expect(page.locator('#food-items [data-item="simple-meal"] strong')).toHaveText('2');
     const finished=await world(page);
     expect(finished.piles.filter(p=>p.item==='simple-meal').map(p=>p.owner)).toEqual([{type:'ground',x:17,z:13}]);

@@ -4,6 +4,8 @@ import { addGroundMaterial, refreshStock } from '../src/sim/materials';
 import { CAMPFIRE_CAPACITY } from '../src/sim/fuel';
 import { countedMeals } from '../src/sim/cooking-bills';
 import { foodScore } from '../src/sim/food-selection';
+import { queryPawnStatus } from '../src/sim/diagnostics';
+import { queryCookingBillStatus } from '../src/sim/cooking-diagnostics';
 import type { BillSettings } from '../src/sim/cooking-types';
 import { woodAccount } from './scenarios/colony-player';
 import type { World } from '../src/sim/types';
@@ -68,19 +70,26 @@ const meals=(w:World)=>w.piles.filter(p=>p.item==='simple-meal').reduce((n,p)=>n
 
 test('cuisine physique : mélange, interruption, sauvegarde du travail, deux repas et arrêt de facture',()=>{
   const {w,fire,bill,update,pawn}=kitchen();
+  expect(queryCookingBillStatus(w,fire,bill).code).toBe('waiting-worker');
   addGroundMaterial(w,'food',7,{x:12,z:8},'berries');addGroundMaterial(w,'food',33,{x:12,z:10},'rice');refreshStock(w);
   expect(applyCommand(w,{type:'stockpile',x:6,z:5,enabled:true,filters:{wood:false,food:true}}).ok).toBe(true);
   expect(update({mode:'times',target:2,radius:1}).ok).toBe(true);
   expect(applyCommand(w,{type:'priority',pawnId:pawn.id,work:'cook',value:1}).ok).toBe(true);
   stepWorld(w,40);expect(pawn.cooking).toBeNull();expect(raw(w)).toBe(40); // Ingredients outside the configured radius.
+  const beforeQuery=serializeWorld(w);
+  expect(queryCookingBillStatus(w,fire,bill)).toEqual({code:'missing-ingredients',reason:'Ingrédients insuffisants : 0/10 non réservés dans le rayon et les filtres.'});
+  expect(serializeWorld(w)).toBe(beforeQuery);
   expect(update({radius:999}).ok).toBe(true);
   until(w,()=>!!pawn.cooking?.ingredients.some(i=>i.stage==='held'));
+  expect(queryPawnStatus(w,pawn).code).toBe('gathering-ingredients');
   expect(raw(w)).toBe(40);expect(meals(w)).toBe(0); // Picking up is not consumption.
   const carry=serializeWorld(w),interrupted=deserializeWorld(carry);
   expect(applyCommand(interrupted,{type:'priority',pawnId:pawn.id,work:'cook',value:0}).ok).toBe(true);
   expect(interrupted.pawns[0]!.cooking).toBeNull();expect(raw(interrupted)).toBe(40);expect(validateWorld(interrupted)).toEqual([]);
   until(w,()=>pawn.cooking?.phase==='work'&&pawn.cooking.progress===17);
   expect(pawn).toMatchObject({x:8,z:7,state:'working'});
+  expect(queryPawnStatus(w,pawn).reason).toContain('28 %');
+  expect(queryCookingBillStatus(w,fire,bill).code).toBe('cooking');
   expect(pawn.cooking!.ingredients.every(i=>i.stage==='placed')).toBe(true);expect(raw(w)).toBe(40);
   const canceled=deserializeWorld(serializeWorld(w));
   expect(applyCommand(canceled,{type:'bill-remove',structureId:fire.id,billId:bill.id}).ok).toBe(true);
@@ -89,6 +98,7 @@ test('cuisine physique : mélange, interruption, sauvegarde du travail, deux rep
   expect(resumed).toEqual(control);expect(validateWorld(resumed)).toEqual([]);
   until(w,()=>bill.target===0&&!pawn.cooking);
   expect(raw(w)).toBe(20);expect(meals(w)).toBe(2);expect(countedMeals(w)).toBe(2);
+  expect(queryCookingBillStatus(w,fire,bill).code).toBe('target-met');
   expect(w.events.filter(e=>e.message.includes('a cuisiné')).map(e=>e.message)).toEqual([
     `${pawn.name} a cuisiné 1 repas simple (7 baies, 3 riz).`,`${pawn.name} a cuisiné 1 repas simple (0 baies, 10 riz).`,
   ]);
@@ -133,10 +143,15 @@ test('factures ordonnées et réservations : deux cuisiniers, une recette dispon
   // Empty fire with a valid recipe: a cook can perform the physical refuel job even with Haul disabled.
   fire.fuel!.burned+=fire.fuel!.ticks;fire.fuel!.ticks=0;w.tick=Math.max(w.tick,fire.fuel!.burned);
   expect(update({target:2}).ok).toBe(true);
+  const disabled=structuredClone(w),disabledFire=disabled.structures.find(s=>s.id===fire.id)!;
+  disabledFire.fuel!.autoRefuel=false;
+  expect(queryCookingBillStatus(disabled,disabledFire,disabledFire.bills![0]!).code).toBe('refuel-disabled');
   until(w,()=>w.pawns.some(p=>p.haul?.destination.type==='fuel'&&p.haul.destination.forCooking));
   const carrier=w.pawns.find(p=>p.haul?.destination.type==='fuel')!;
   expect(carrier.priorities.haul).toBe(0);
   until(w,()=>!!carrier.haul?.serviceProgress);
+  expect(queryPawnStatus(w,carrier).code).toBe('refueling');
+  expect(queryPawnStatus(w,carrier).reason).toContain('Recharge le feu');
   const restored=deserializeWorld(serializeWorld(w));const control=structuredClone(w);stepWorld(restored,100);stepWorld(control,100);expect(restored).toEqual(control);
   until(w,()=>meals(w)===2&&!w.pawns.some(p=>p.cooking),2500);
   expect(raw(w)).toBe(0);expect(fire.fuel!.ticks).toBeGreaterThan(0);expect(validateWorld(w)).toEqual([]);

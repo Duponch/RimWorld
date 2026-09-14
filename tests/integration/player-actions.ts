@@ -66,4 +66,3 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     return c.type==='designate' && w.jobs.some(j=>j.x===c.x&&j.z===c.z&&j.kind===c.kind);
   },c,{polling:100,timeout:5000});
 }
-

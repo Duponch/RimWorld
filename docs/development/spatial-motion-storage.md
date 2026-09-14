@@ -13,6 +13,12 @@
 
 Le miroir décompilé est épinglé au commit du 20 mai 2026 ; son assembly n'est pas certifié identique au dernier correctif PC 1.6.4850. Le wiki est communautaire. La formule de coût publiée sur certaines pages de navigation est contestée sur le wiki : les méthodes directement consultées priment sur une généralisation de cette formule. Cette recherche ne promet pas une conformité à 100 %.
 
+### Relecture de la circulation — 14 septembre 2026
+
+Le [guide Core du wiki](https://rimworldwiki.com/wiki/Basics) mentionne le passage de colons les uns à travers les autres. Vérification dans le miroir épinglé : [Pawn_PathFollower.WillCollideWithPawnAt](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/Verse.AI/Pawn_PathFollower.cs) consulte [PawnUtility.ShouldCollideWithPawns/PawnBlockedBy](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/RimWorld/PawnUtility.cs). En l’absence d’hostiles proches récemment, le prédicat de collision est généralement faux ; ailleurs interviennent tâche, hostilité, posture et taille. Les exceptions des extensions ne sont pas notre cible Core.
+
+**Écart confirmé, à corriger en G0 :** Lisière interdit actuellement toute occupation partagée entre personnes. C’est une restriction du premier modèle de circulation, pas une obligation liée à la 3D ni une parité RimWorld. Elle peut créer une congestion artificielle autour des postes. La future séparation entre réservation exclusive d’un lit/poste et passage temporaire doit préserver trajets, durées, sauvegardes et représentation des corps. La présente optimisation CPU conserve les règles existantes ; elle ne résout pas cet écart de gameplay. Certitude élevée sur l’existence de collisions conditionnelles, moyenne sur l’exhaustivité des conditions de la version commerciale actuelle.
+
 ## Matière et commandes
 
 `ground-placement.ts` distingue capacité d'une cellule, réservation typée de réserve et placement à proximité. Le sol reçoit une seule pile : bois 75, baies 75, rations 10 unités au maximum. Deux transports de types incompatibles ne peuvent réserver la même cellule vide. La capacité de la réserve peut réduire cette limite, jamais la dépasser. Le départ de 18 rations occupe donc deux cases.

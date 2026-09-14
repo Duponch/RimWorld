@@ -1,0 +1,106 @@
+{
+  "date": "2026-09-14T00:43:09.684Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "protocol": "Native Chromium WebGPU, 1440×1000, natural 250² with synthetic camps; real worker at UI speed 6; 60 warmup frames then >=300 frames and >=5 seconds per phase. Local/overview phases advance the simulation successively, so they are workload observations, not identical-state camera A/B. RAF includes scheduling; frame CPU is submission, not GPU execution. No parallel tests or CPU benchmarks.",
+  "phases": [
+    {
+      "pawns": 100,
+      "view": "local",
+      "backend": "WebGPU",
+      "frameMs": {
+        "n": 791,
+        "p50": 6,
+        "p95": 6.100000000000364,
+        "p99": 17.899999999999636,
+        "max": 18.100000000000364
+      },
+      "frameCpuMs": {
+        "n": 792,
+        "p50": 5.199999999254942,
+        "p95": 6.899999998509884,
+        "p99": 8.100000001490116,
+        "max": 9.400000002235174
+      },
+      "lastReportedWorkerMs": {
+        "n": 792,
+        "p50": 21.27500000037253,
+        "p95": 28.6,
+        "p99": 28.6,
+        "max": 28.6
+      },
+      "drawCalls": {
+        "n": 792,
+        "p50": 144,
+        "p95": 147,
+        "p99": 147,
+        "max": 147
+      },
+      "triangles": {
+        "n": 792,
+        "p50": 223755,
+        "p95": 229281,
+        "p99": 229281,
+        "max": 229281
+      },
+      "ticks": [
+        0,
+        252
+      ],
+      "cookedInRecentJournal": 7,
+      "active": 44
+    },
+    {
+      "pawns": 100,
+      "view": "overview",
+      "backend": "WebGPU",
+      "frameMs": {
+        "n": 829,
+        "p50": 6,
+        "p95": 6.099999999998545,
+        "p99": 6.099999999998545,
+        "max": 12.099999999998545
+      },
+      "frameCpuMs": {
+        "n": 830,
+        "p50": 3.100000001490116,
+        "p95": 3.899999998509884,
+        "p99": 4.399999998509884,
+        "max": 5.300000000745058
+      },
+      "lastReportedWorkerMs": {
+        "n": 830,
+        "p50": 19.99333333323399,
+        "p95": 35.95333333338301,
+        "p99": 35.95333333338301,
+        "max": 35.95333333338301
+      },
+      "drawCalls": {
+        "n": 830,
+        "p50": 42,
+        "p95": 46,
+        "p99": 46,
+        "max": 46
+      },
+      "triangles": {
+        "n": 830,
+        "p50": 518707,
+        "p95": 519067,
+        "p99": 519067,
+        "max": 519067
+      },
+      "ticks": [
+        312,
+        492
+      ],
+      "cookedInRecentJournal": 33,
+      "active": 6
+    }
+  ],
+  "errors": [],
+  "adapter": {
+    "vendor": "amd",
+    "architecture": "rdna-1",
+    "device": "",
+    "description": ""
+  }
+}

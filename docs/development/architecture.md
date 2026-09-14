@@ -129,3 +129,7 @@ Voir [la décision détaillée](../decisions/simulation.md#adr-023--dégagement-
 ## ADR-024 — Cuisine physique et recherches de travail par groupes
 
 Voir [la décision détaillée](../decisions/simulation.md#adr-024--cuisine-physique-et-recherches-de-travail-par-groupes).
+
+## ADR-025 — Occupation dense par recherche et diagnostics de cuisine
+
+Voir [la décision détaillée](../decisions/simulation.md#adr-025--occupation-dense-par-recherche-et-diagnostics-de-cuisine).
