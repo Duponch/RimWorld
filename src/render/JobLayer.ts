@@ -39,4 +39,3 @@ export function buildJobMarkers(world: World, group: THREE.Group, cutaway: boole
     batches.set(group, 'job-plans', blueprints.map(p => ({ ...p, color: 0xa7dbc9 })), 'wire', false);
     batches.set(group, 'job-solids', [...frames.map(p => ({ ...p, color: p.color??0x9f7e52 })), ...progress.map(p => ({ ...p, color: 0xa6916e }))]);
   }
-
