@@ -130,3 +130,7 @@ Chapitre 10, **SYS-059 / TEST-059** : **adopter** identité, retrait, transport,
 ## Adoption V26 — logistique des objets entiers
 
 Chapitre 10, **SYS/TEST-051..054 et SYS/TEST-059** : **adopter** rangement filtré, meilleure priorité, dégagement proche et réinstallation par Transport ; **adapter** recherche déterministe et contact 3D ; **différer** propriétés/filtres détaillés, étagères, interdictions et reste du catalogue. [Nouvelle recherche](furniture-logistics-reference.md) : le dégagement ne recherche pas d'abord la meilleure réserve distante ; restriction locale des filtres de dépôt explicitée. [Contrat](../development/furniture-logistics.md). Remplace les limites de fournisseurs/logistique V25 ci-dessus. Les scénarios de propriété/ordres et le pilote existant sont enrichis ; le paquet ne crée ni matériau ni inventaire personnel.
+
+## V27 — régions géologiques
+
+Chapitres 5–7/10/29 ; **SYS/TEST-016..019/061, CAT-059/060** : adopter les cinq types Core et la distinction des produits ; adapter le choix du site et les champs régionaux ; différer sols révélés, minage, minerais, toit et taille. [Relecture précise](geology-reference.md). Les identités seules ne satisfont ni SYS-061 ni son test de support de toit. Les métadonnées historiques absentes restent absentes.

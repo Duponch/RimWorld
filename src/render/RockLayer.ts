@@ -3,6 +3,8 @@ import type { World } from '../sim/types';
 import { noise } from './StaticGeometry';
 import { ROCK_INDICES, ROCK_VERTICES, writeRockCell } from './RockSurface';
 import { WORLD_SCALE } from '../world/scale';
+import { STONE_KINDS } from '../sim/geology';
+import { stoneColor } from './stone-palette';
 
 /** One resident surface shared by close/distant views, including the map slab.
  * Cell slots survive excavation/restoration. Only affected vertices are uploaded;
@@ -86,7 +88,8 @@ export class RockLayer {
     const changed:number[]=[];
     if(reset) {this.slots.clear();this.rockMask=new Uint8Array(world.tiles.length);this.width=world.width;this.height=world.height;this.seed=world.seed;}
     for(let i=0;i<world.tiles.length;i++) {
-      const rock=world.tiles[i]!.terrain==='rock'?1:0;
+      const tile=world.tiles[i]!;
+      const rock=tile.terrain==='rock'?(tile.stone?2+STONE_KINDS.indexOf(tile.stone):1):0;
       if(rock!==this.rockMask[i]) {changed.push(i);this.rockMask[i]=rock;}
       if(rock&&!this.slots.has(i))this.slots.set(i,{slot:this.slots.size,indices:[]});
     }
@@ -105,7 +108,7 @@ export class RockLayer {
       for(const i of dirty) {
         const record=this.slots.get(i)!,v=24+record.slot*ROCK_VERTICES,x=i%world.width,z=Math.floor(i/world.width);
         record.indices=writeRockCell(world,x,z,position.array as Float32Array,v);
-        c.setHex(0x899182).multiplyScalar(.96+noise(Math.floor(x/3),Math.floor(z/3),world.seed+211)*.08);
+        c.setHex(stoneColor(world.tiles[i]!.stone)).multiplyScalar(.96+noise(Math.floor(x/3),Math.floor(z/3),world.seed+211)*.08);
         for(let k=0;k<ROCK_VERTICES;k++){normal.setXYZ(v+k,0,1,0);color.setXYZ(v+k,c.r,c.g,c.b);}
         for(const attribute of [position,normal,color])attribute.addUpdateRange(v*3,ROCK_VERTICES*3);
       }

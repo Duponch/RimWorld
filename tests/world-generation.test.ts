@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { addGroundMaterial, applyCommand, createWorld, deserializeWorld, hashWorld, refreshStock, serializeWorld, stepWorld, validateWorld } from '../src/sim/index.ts';
 import { blockedCells, reachableCells, routeToJob } from '../src/sim/pathfinding.ts';
 import type { Terrain, World } from '../src/sim/types.ts';
+import { geologicalField, siteStones, STONE_KINDS } from '../src/sim/geology.ts';
 
 function neighbors(world: World, index: number): number[] {
   const x = index % world.width; const z = Math.floor(index / world.width);
@@ -26,6 +27,46 @@ function components(world: World, terrain: Terrain): number[][] {
 }
 
 describe('seeded temperate valley generation', () => {
+  test('regional Core geology is persistent, coherent, independent of work RNG and strictly migrated', () => {
+    const seen = new Set<string>(); let equal = 0, pairs = 0, mixedSites = 0;
+    for (const seed of [0, 1, 7, 19, 42, 65, 75, 85, 114, 271]) {
+      const w = createWorld(seed, 250, 250), before = serializeWorld(w), rng = w.rng;
+      const field = geologicalField(seed), choices = siteStones(seed), localTypes = new Set<string>();
+      expect([2, 3]).toContain(choices.length); expect(new Set(choices).size).toBe(choices.length);
+      for (let i = 0; i < w.tiles.length; i++) {
+        const tile = w.tiles[i]!;
+        if (tile.terrain !== 'rock') { expect(tile.stone).toBeUndefined(); continue; }
+        expect(tile.stone).toBe(field(i % w.width, Math.floor(i / w.width)));
+        expect(choices).toContain(tile.stone); seen.add(tile.stone!); localTypes.add(tile.stone!);
+        for (const j of neighbors(w, i)) if (j > i && w.tiles[j]!.terrain === 'rock') { pairs++; if (tile.stone === w.tiles[j]!.stone) equal++; }
+      }
+      if (localTypes.size > 1) mixedSites++;
+      for (const resource of w.resources) expect(resource.stone).toBe(resource.kind === 'rock' ? field(resource.x, resource.z) : undefined);
+      expect(w.rng).toBe(rng); expect(serializeWorld(w)).toBe(before);
+      expect(deserializeWorld(before)).toEqual(w);
+    }
+    expect(mixedSites).toBeGreaterThan(0); // Reject a constant type per map, even if seeds cover the catalogue.
+    expect(seen).toEqual(new Set(STONE_KINDS)); expect(equal / pairs).toBeGreaterThan(.9);
+
+    const modern = createWorld(42, 32, 32), raw = JSON.parse(serializeWorld(modern));
+    raw.schemaVersion = 26;
+    // V26 cannot smuggle a modern geological identity through migration.
+    expect(() => deserializeWorld(JSON.stringify(raw))).toThrow(/version 26/);
+    for (const tile of raw.tiles) delete tile.stone;
+    for (const resource of raw.resources) delete resource.stone;
+    const migrated = deserializeWorld(JSON.stringify(raw));
+    expect(migrated).toEqual({ ...raw, schemaVersion: 27 });
+    const control = deserializeWorld(JSON.stringify(raw)); stepWorld(migrated, 251); stepWorld(control, 251);
+    expect(serializeWorld(migrated)).toBe(serializeWorld(control));
+    for (const change of [(w: any) => w.tiles.find((t: any) => t.terrain === 'rock').stone = 'vacstone',
+      (w: any) => w.tiles.find((t: any) => t.terrain === 'grass').stone = 'granite',
+      (w: any) => w.resources.find((r: any) => r.kind === 'tree').stone = 'slate',
+      (w: any) => w.resources.find((r: any) => r.kind === 'rock').stone = null]) {
+      const invalid = structuredClone(modern); change(invalid);
+      expect(validateWorld(invalid).length).toBeGreaterThan(0);
+      expect(() => deserializeWorld(JSON.stringify(invalid))).toThrow();
+    }
+  });
   test('same seed reproduces every entity; rectangular boundary fixtures and saved edited maps remain valid', () => {
     for (const [width, height] of [[8, 8], [8, 128], [128, 8], [16, 12], [32, 64], [64, 32], [128, 128], [8, 250], [250, 8], [249, 250], [250, 249], [200, 200], [250, 250]]) {
       const fingerprints = new Set<string>();

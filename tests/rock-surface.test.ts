@@ -20,6 +20,11 @@ test('continuous faceted cells: shared seams, winding, local excavation/restorat
   layer.update(world,true);expect(JSON.stringify(world)).toBe(before);
   const geometry=layer.mesh.geometry,position=geometry.getAttribute('position'),index=geometry.index,original=Array.from(index!.array).slice(0,geometry.drawRange.count);
   const vertices=Array.from(position.array);
+  const colors=geometry.getAttribute('color'),oldColors=Array.from(colors.array);
+  world.tiles=world.tiles.map((tile,i)=>i===15*32+15?{terrain:'rock',stone:'marble'}:tile);layer.update(world);
+  expect(layer.stats.updatedCells).toBe(9);expect(Array.from(colors.array)).not.toEqual(oldColors);
+  expect(Array.from(position.array)).toEqual(vertices);expect(Array.from(index!.array).slice(0,geometry.drawRange.count)).toEqual(original);
+  expect(layer.mesh.geometry).toBe(geometry);expect(geometry.getAttribute('color')).toBe(colors);
   world.tiles=world.tiles.map((tile,i)=>i===15*32+15?{terrain:'soil'}:tile);layer.update(world);
   expect(layer.stats.updatedCells).toBe(9);expect(layer.mesh.geometry).toBe(geometry);expect(geometry.index).toBe(index);expect(geometry.getAttribute('position')).toBe(position);
   expect(layer.stats.indexCount).toBe(original.length+42); // remove top, expose four neighbours

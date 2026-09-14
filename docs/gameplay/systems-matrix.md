@@ -128,3 +128,5 @@ Une anomalie doit conserver graine, version, commandes, état pertinent et diff�
 ## Livraison repas/mobilier — 13 septembre 2026
 
 S06/S07 : table et tabouret construits après livraison, repas avec transport à une place réservée. S10/S14 sont partiellement anticipés : confort des meubles normaux et souvenir sans table, sans pièces ni humeur complète. S03 : compteur FPS permanent. La [recherche](../research/dining-reference.md), le [contrat](../development/dining.md) et les [preuves](../development/validation.md) précisent la portée ; G1 et G0 restent ouverts.
+
+V27 : [régions et identités géologiques](../development/geology.md) livrées dans la génération locale ; SYS-061 minage, CAT-059 sols et le reste de CAT-060 demeurent partiels. Le calendrier reste ROADMAP.

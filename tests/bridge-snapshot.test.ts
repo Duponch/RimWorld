@@ -18,8 +18,18 @@ test('snapshots preserve exact state and previous frames through harvest, patche
   const initialPacket = transfer(); const initial = apply(initialPacket, true);
   const initialValue = structuredClone(initial);
   expect(initialPacket.kind).toBe('checkpoint');
+  // Metadata-only changes must propagate, including in-place producer edits,
+  // while the previous frame keeps its original tile/resource identity.
+  const rockIndex = source.tiles.findIndex(t => t.terrain === 'rock');
+  source.tiles[rockIndex]!.stone = source.tiles[rockIndex]!.stone === 'marble' ? 'slate' : 'marble';
+  const looseRock = source.resources.find(r => r.kind === 'rock')!;
+  looseRock.stone = looseRock.stone === 'marble' ? 'slate' : 'marble';
+  const stonePacket = transfer(); apply(stonePacket);
+  expect(initial).toEqual(initialValue);
+  delete source.tiles[rockIndex]!.stone; delete looseRock.stone;
+  const afterStone = apply(transfer());
   expect(applyCommand(source, { type: 'designate', kind: 'chop', x: 14, z: 14 }).ok).toBe(true);
-  let last = initial; let gathered = false;
+  let last = afterStone; let gathered = false;
   for (let tick = 0; tick < 250; tick += 5) {
     const previousValue = structuredClone(last);
     stepWorld(source, 5);
@@ -55,6 +65,8 @@ test('snapshots preserve exact state and previous frames through harvest, patche
   expect(decoder.adopt(wrongSize).status).toBe('resync');
   const outsideTerrain = structuredClone(patch); outsideTerrain.tiles![0]![0] = source.tiles.length;
   expect(decoder.adopt(outsideTerrain).status).toBe('resync');
+  const wrongStone = structuredClone(patch); wrongStone.tiles![0]![2] = 'marble';
+  expect(decoder.adopt(wrongStone).status).toBe('resync'); // ordinary soil/grass cannot carry a rock identity
   const invalid = structuredClone(patch);
   invalid.resources!.order![0] = -1;
   expect(decoder.adopt(invalid).status).toBe('resync');

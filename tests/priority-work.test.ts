@@ -76,5 +76,5 @@ test('priority decisions share budgets, disappear on lost access or timeout with
     const invalid=structuredClone(raw);invalid.pawns[0].priorityWork=priority;expect(()=>deserializeWorld(JSON.stringify(invalid))).toThrow(/priority work/);
   }
   raw.schemaVersion=22;delete raw.deconstructed;delete raw.packed;expect(()=>deserializeWorld(JSON.stringify(raw))).toThrow(/version 22/);delete raw.pawns[0].priorityWork;
-  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated).toEqual({...raw,schemaVersion:26,packed:[],deconstructed:{count:0,lostWood:0,fuelTicks:0}});expect(migrated.pawns[0]!.priorityWork).toBeUndefined();
+  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated).toEqual({...raw,schemaVersion:27,packed:[],deconstructed:{count:0,lostWood:0,fuelTicks:0}});expect(migrated.pawns[0]!.priorityWork).toBeUndefined();
 });

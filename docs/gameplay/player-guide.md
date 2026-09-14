@@ -216,3 +216,7 @@ Inspectez un lit, une table, un tabouret ou un piquet et cliquez sur **Réinstal
 Mur et feu ne sont pas déplaçables de cette façon. Désinstaller séparément relève de Construction ; réinstaller peut être effectué par Construction ou Transport. Dans les réglages de réserve, cochez **Meubles emballés** pour les ranger automatiquement. Un paquet occupe une case entière. Le clic droit permet de prioriser son transport et Maj de le mettre en file. Les réserves de même priorité ne provoquent pas de déplacement ; une priorité supérieure attire le paquet. Les anciennes réserves gardent leurs filtres : activez cette nouvelle catégorie pour les meubles.
 
 Un constructeur ou cultivateur dégage à proximité un paquet qui gêne son chantier ou semis, même sans Transport ordinaire. Le rangement vers une réserve est ensuite une tâche séparée. Annuler le parent ou rendre la destination incompatible libère ce transport et dépose le paquet conservé, si une place est disponible. Table, tabouret et piquet peuvent garder un objet compatible sur leur cellule.
+
+## Reconnaître les roches
+
+Une nouvelle carte répartit les massifs et pierres voisines en régions de granite, calcaire, marbre, grès ou ardoise. Sélectionner leur case affiche le type. Un ancien massif peut afficher « type historique non défini » : le chargement préserve sa carte. Les rochers ne sont pas encore exploitables ; leur couleur ne donne ni blocs disponibles ni recette de construction.

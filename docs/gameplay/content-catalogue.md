@@ -1,6 +1,6 @@
 # Catalogue de contenu : couverture connue
 
-État du 14 septembre 2026. Le jeu de base complet, y compris ses centaines d'objets et leurs variantes, reste la cible. Le bilan par [système](implementation-status.md) ne suffit pas à suivre ce contenu. Ce document distingue ce que contient notre référence et ce qui existe dans le jeu développé.
+État du 15 septembre 2026. Le jeu de base complet, y compris ses centaines d'objets et leurs variantes, reste la cible. Le bilan par [système](implementation-status.md) ne suffit pas à suivre ce contenu. Ce document distingue ce que contient notre référence et ce qui existe dans le jeu développé.
 
 V24 permet de déconstruire les six bâtiments existants. V25 ajoute désinstallation et réinstallation de lit, table, tabouret et piquet sous forme entière ; **aucune nouvelle famille d’objet**. Le paquet conserve le bâtiment et son identité ; V26 ajoute rangement filtré, dégagement et réinstallation par Transport ; masse, qualité et dégâts restent absents. La présence de ces familles ne clôt ni leurs variantes ni les centaines de définitions attendues.
 
@@ -14,7 +14,7 @@ Une future acquisition devra conserver version exacte, modules et ordre de charg
 
 ## Relecture des familles naturelles
 
-L’[audit du 13 septembre](../research/environment-review.md) confirme que les familles **CAT-059..065** sont partielles : sols aux fertilités/supports/coûts distincts, cinq roches naturelles de base (granite, calcaire, marbre, grès, ardoise), minerais et produits séparés, arbres/plantes propres aux biomes. Leur représentation générique actuelle ne clôture aucune de ces familles. Les types exacts, propriétés et variantes ne sont pas encore acquis dans un manifeste résolu.
+L’[audit du 13 septembre](../research/environment-review.md) confirme que les familles **CAT-059..065** sont partielles : sols aux fertilités/supports/coûts distincts, cinq roches naturelles de base (granite, calcaire, marbre, grès, ardoise), minerais et produits séparés, arbres/plantes propres aux biomes. V27 livre les identités des cinq roches, leur distribution et leur apparence ; cela ne clôture aucune de ces familles. Les types exacts, propriétés et variantes ne sont pas encore acquis dans un manifeste résolu.
 
 ## Petit catalogue réellement disponible
 
@@ -62,3 +62,15 @@ V19 et V20 ne créent aucun objet. Bois et feu disposent du ravitaillement manue
 V21 précise les profils des six constructions existantes : table/tabouret/piquet conservent les piles, mur/lit/feu les dégagent ; zones et apports ont leurs propres permissions. Affichage des objets adapté aux surfaces 3D. Aucun objet ni type de stockage supplémentaire. [Tableau des profils](../development/construction.md).
 
 V22 ne crée aucun objet : elle renseigne transit, arrêt, coûts d’entrée et répétition pour les six constructions existantes. Table/lit/tabouret ont une hauteur de passage GPU. [Profils actuels](../development/furniture-travel.md) ; autres matériaux et centaines d’objets individuels restent à inventorier/intégrer.
+
+## Roches naturelles V27 — CAT-060
+
+| Identité | Nom | Livraison actuelle |
+|---|---|---|
+| granite | Granite | Massif et pierre décorative typés |
+| limestone | Calcaire | Massif et pierre décorative typés |
+| marble | Marbre | Massif et pierre décorative typés |
+| sandstone | Grès | Massif et pierre décorative typés |
+| slate | Ardoise | Massif et pierre décorative typés |
+
+Distribution régionale, persistance et apparence sont livrées ; ces cinq entrées ne comptent pas comme blocs utilisables ni fragments transportables. Les rochers historiques sans identité restent explicites. Minerais, stats, sols rocheux, taille et construction en pierre sont encore absents ; [contrat V27](../development/geology.md).

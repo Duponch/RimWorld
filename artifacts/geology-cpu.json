@@ -1,0 +1,133 @@
+{
+  "timestamp": "2026-09-14T23:15:19.905Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "platform": "win32",
+  "node": "v24.11.1",
+  "baselineCommit": "870ddec",
+  "protocol": "Paired generation, 2 warmups and 12 samples per implementation; exact normalized data on three seeds. Snapshot encoding only, 5 warmups/50 samples, no IPC or GPU. No actor-load claim.",
+  "cases": [
+    {
+      "size": 32,
+      "seed": 42,
+      "generationMs": {
+        "baseline": {
+          "count": 12,
+          "median": 1.2524999999999977,
+          "p95": 2.110500000000002,
+          "max": 2.110500000000002
+        },
+        "typed": {
+          "count": 12,
+          "median": 1.1254999999999882,
+          "p95": 2.4432000000000187,
+          "max": 2.4432000000000187
+        }
+      },
+      "idleSnapshotEncodeMs": {
+        "count": 50,
+        "median": 0.016000000000019554,
+        "p95": 0.1314000000000135,
+        "max": 0.15059999999999718
+      },
+      "idleDeltaBytes": 3576,
+      "initialBytes": 36615,
+      "baselineBytes": 32075,
+      "identities": [
+        {
+          "seed": 42,
+          "normalizedSha256": "efefc9f0a073823aeb3a48ee9ea905ff32e0a9f2ad84c159fe91f9232e944347"
+        },
+        {
+          "seed": 93,
+          "normalizedSha256": "5474fa999c72468d6fcd9c3b9d955ad527b72238eeb900849efea922221acf4b"
+        },
+        {
+          "seed": 2048,
+          "normalizedSha256": "e313cf82bc8198c0df7410069ebcb116fe9b9b3a5b1c750f58e3b166e3833a8b"
+        }
+      ]
+    },
+    {
+      "size": 128,
+      "seed": 42,
+      "generationMs": {
+        "baseline": {
+          "count": 12,
+          "median": 8.973599999999976,
+          "p95": 12.286600000000021,
+          "max": 12.286600000000021
+        },
+        "typed": {
+          "count": 12,
+          "median": 7.7420999999999935,
+          "p95": 12.906000000000006,
+          "max": 12.906000000000006
+        }
+      },
+      "idleSnapshotEncodeMs": {
+        "count": 50,
+        "median": 0.2658000000000129,
+        "p95": 0.31500000000005457,
+        "max": 0.4009000000000924
+      },
+      "idleDeltaBytes": 3585,
+      "initialBytes": 534659,
+      "baselineBytes": 504379,
+      "identities": [
+        {
+          "seed": 42,
+          "normalizedSha256": "a0b63a21f6a7b19debee02b6f496f25adba9a2480445e30a093fa39ffac28719"
+        },
+        {
+          "seed": 93,
+          "normalizedSha256": "ea0e1b7e3eccc255d478951e99005ca5f14809838f54319796200bce2f4f2033"
+        },
+        {
+          "seed": 2048,
+          "normalizedSha256": "2eb9d33274917e12ae2f7a385ad5a1d17b3d36c399eac6ff58cd21e9ba0c5b84"
+        }
+      ]
+    },
+    {
+      "size": 250,
+      "seed": 42,
+      "generationMs": {
+        "baseline": {
+          "count": 12,
+          "median": 23.900899999999865,
+          "p95": 164.35900000000004,
+          "max": 164.35900000000004
+        },
+        "typed": {
+          "count": 12,
+          "median": 30.52669999999989,
+          "p95": 48.72140000000002,
+          "max": 48.72140000000002
+        }
+      },
+      "idleSnapshotEncodeMs": {
+        "count": 50,
+        "median": 1.0860999999999876,
+        "p95": 1.5670999999999822,
+        "max": 1.817600000000084
+      },
+      "idleDeltaBytes": 3604,
+      "initialBytes": 2072976,
+      "baselineBytes": 1898376,
+      "identities": [
+        {
+          "seed": 42,
+          "normalizedSha256": "69e31732e3de169bf5e12c01a54d3b9e1c8b9ddef12a597185dc30fb2602dcf4"
+        },
+        {
+          "seed": 93,
+          "normalizedSha256": "8c76f74c2bb58fdb0373179f548500dd8661cf609fccd46edac66d5801e01fa4"
+        },
+        {
+          "seed": 2048,
+          "normalizedSha256": "aac49a120ba6a77e23d45abd2c1d51f6f83363f4c55166e0893162c9a5f7c9b4"
+        }
+      ]
+    }
+  ]
+}

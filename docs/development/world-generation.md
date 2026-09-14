@@ -45,3 +45,7 @@ Pour une régression, conserver au minimum graine, dimensions, terrain ou ressou
 ## Relecture environnementale après V7
 
 Les massifs facettés, la rivière et la végétation corrélée ne constituent pas un biome terminé. L’[audit récent](../research/environment-review.md) suit les espèces, sols, géologies et conditions encore absentes. Le ciel clair d’équinoxe est uniquement une présentation. Les prochaines étapes doivent sérialiser le contexte de site et distinguer roche en place, sol et produits du minage, sans regénérer les anciennes cartes au chargement.
+
+## Types de roche V27
+
+Le champ [géologique](geology.md) ajoute une identité persistante aux massifs et pierres décoratives sans modifier leurs positions, leurs quantités historiques, les plantes, la rivière, les IDs ou le PRNG de travail. Le choix des deux ou trois types est propre au preset de site local ; un futur contexte mondial devra le fournir explicitement. Les cartes existantes ne sont pas régénérées.

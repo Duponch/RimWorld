@@ -1,0 +1,124 @@
+{
+  "legacyColors": false,
+  "timestamp": "2026-09-14T23:16:43.064Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "errors": [],
+  "protocol": "Hardware WebGPU, 250x250 seed 42, paused, focused outcrop. Twelve diagnostic rock-to-soil edits at 300 ms spacing after 90 warmup frames, one browser promise. These are presentation tests, not playable mining.",
+  "adapter": {
+    "vendor": "amd",
+    "architecture": "rdna-1",
+    "description": ""
+  },
+  "edits": {
+    "records": [
+      {
+        "cell": 40903,
+        "cpuMs": 7.399999998509884,
+        "updatedCells": 6,
+        "indexCount": 82140,
+        "drawCalls": 165,
+        "triangles": 205139
+      },
+      {
+        "cell": 41153,
+        "cpuMs": 4,
+        "updatedCells": 6,
+        "indexCount": 82134,
+        "drawCalls": 165,
+        "triangles": 205151
+      },
+      {
+        "cell": 40902,
+        "cpuMs": 3.600000001490116,
+        "updatedCells": 9,
+        "indexCount": 82152,
+        "drawCalls": 165,
+        "triangles": 205147
+      },
+      {
+        "cell": 40653,
+        "cpuMs": 3.899999998509884,
+        "updatedCells": 5,
+        "indexCount": 82122,
+        "drawCalls": 165,
+        "triangles": 205159
+      },
+      {
+        "cell": 41152,
+        "cpuMs": 2.899999998509884,
+        "updatedCells": 9,
+        "indexCount": 82116,
+        "drawCalls": 165,
+        "triangles": 205139
+      },
+      {
+        "cell": 40652,
+        "cpuMs": 3.6999999955296516,
+        "updatedCells": 8,
+        "indexCount": 82110,
+        "drawCalls": 165,
+        "triangles": 205135
+      },
+      {
+        "cell": 41403,
+        "cpuMs": 2.7000000029802322,
+        "updatedCells": 6,
+        "indexCount": 82104,
+        "drawCalls": 165,
+        "triangles": 205131
+      },
+      {
+        "cell": 40901,
+        "cpuMs": 3.399999998509884,
+        "updatedCells": 9,
+        "indexCount": 82122,
+        "drawCalls": 165,
+        "triangles": 205127
+      },
+      {
+        "cell": 41402,
+        "cpuMs": 2.5999999940395355,
+        "updatedCells": 9,
+        "indexCount": 82116,
+        "drawCalls": 165,
+        "triangles": 205139
+      },
+      {
+        "cell": 41151,
+        "cpuMs": 2.7999999970197678,
+        "updatedCells": 9,
+        "indexCount": 82110,
+        "drawCalls": 165,
+        "triangles": 205135
+      },
+      {
+        "cell": 40651,
+        "cpuMs": 2.600000001490116,
+        "updatedCells": 9,
+        "indexCount": 82104,
+        "drawCalls": 165,
+        "triangles": 205131
+      },
+      {
+        "cell": 40402,
+        "cpuMs": 2.5,
+        "updatedCells": 6,
+        "indexCount": 82074,
+        "drawCalls": 165,
+        "triangles": 205127
+      }
+    ],
+    "stableBuffers": true,
+    "stableCamera": true,
+    "bufferBytes": 13262688
+  },
+  "frameMs": {
+    "count": 691,
+    "p95": 8.399999999999636,
+    "max": 20.899999999999636
+  }
+}

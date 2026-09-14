@@ -51,3 +51,7 @@ La préférence après clic droit vise l’ancre de l’emprise du bâtiment pr�
 ## Meubles emballés V26
 
 Le rangement suit des filtres et une priorité strictement meilleure ; le dégagement reste proche avant un éventuel rangement séparé. Le départage déterministe des cellules remplace celui des régions de référence. Les dépôts de dégagement conservent notre restriction aux réserves qui acceptent l'objet, plus conservatrice que le validateur hors stockage lu dans le miroir. Ce point sera réexaminé avec les règles générales de dépôts/interdictions. Les paquets sont des placeholders réduits sur les surfaces du mobilier pour rester lisibles en 3D ; leur propriété et leur unique case au sol ne changent pas. [Sources, certitude et autres absences](../research/furniture-logistics-reference.md).
+
+## Géologie locale V27
+
+Cinq identités Core, sélection de deux ou trois types par site et régions continues sont adoptées ; bruit local, échelle des régions et palette sont adaptés à notre scène 3D. Les anciennes cartes restent non typées. Les pierres décoratives ne sont pas des matériaux disponibles. Sols révélés, toits et produits restent à livrer avec le minage : [sources et limites](../research/geology-reference.md).

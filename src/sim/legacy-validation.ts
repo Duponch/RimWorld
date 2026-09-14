@@ -20,7 +20,7 @@ export function validateLegacyWorld(input: unknown): string[] {
   const arrays = ['tiles', 'pawns', 'resources', 'structures', 'jobs', 'events'] as const;
   if (arrays.some(key => !Array.isArray(input[key]))) return [...errors, 'Missing world arrays.'];
   const tiles = input.tiles as unknown[];
-  if (tiles.length !== size || tiles.some(tile => !record(tile) || !oneOf(tile.terrain, ['grass', 'soil', 'water', 'rock']))) {
+  if (tiles.length !== size || tiles.some(tile => !record(tile) || tile.stone !== undefined || !oneOf(tile.terrain, ['grass', 'soil', 'water', 'rock']))) {
     errors.push('Invalid terrain grid.');
   }
   if (!stock(input.stock)) errors.push('Invalid global stock.');
@@ -33,6 +33,7 @@ export function validateLegacyWorld(input: unknown): string[] {
     for (const item of items) {
       if (!record(item) || !coord(item) || !integer(item.id, 1)) { errors.push(`Invalid ${key} identity or cell.`); continue; }
       if (ids.has(item.id)) errors.push('Duplicate entity ID.');
+      if (item.stone !== undefined) errors.push('Legacy entity contains geological identity.');
       ids.add(item.id);
       if (integer(input.nextId, 1) && item.id >= input.nextId) errors.push('nextId must exceed all entity IDs.');
       if (key === 'pawns') {

@@ -1,3 +1,4 @@
+import { stoneColor } from './stone-palette';
 import * as THREE from 'three/webgpu';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { World, ResourceKind } from '../sim/types';
@@ -52,7 +53,7 @@ export class OverviewLayer {
     const counts={tree:0,berries:0,rock:0},alive=new Set<number>();
     for(const r of world.resources) {
       if(r.kind==='rice')continue;
-      alive.add(r.id);const signature=`${r.kind}:${r.x}:${r.z}`,previous=this.slots.get(r.id);
+      alive.add(r.id);const signature=`${r.kind}:${r.x}:${r.z}:${r.stone ?? ""}`,previous=this.slots.get(r.id);
       const slot=reset?counts[r.kind]++:previous!.slot;
       if(!reset&&previous?.signature===signature)continue;
       boundsChanged=true;dirty.add(r.kind);
@@ -60,7 +61,7 @@ export class OverviewLayer {
       const height=r.kind==='tree'?WORLD_SCALE.treeMinHeight+n*(WORLD_SCALE.treeMaxHeight-WORLD_SCALE.treeMinHeight):r.kind==='rock'?0.7:0.75;
       const width=r.kind==='tree'?0.8+n*0.32:0.45;
       this.transform.position.set(r.x,height/2,r.z);this.transform.rotation.set(0,n*Math.PI*2,0);this.transform.scale.set(width,height,width);this.transform.updateMatrix();
-      mesh.setMatrixAt(slot,this.transform.matrix);this.tint.setHex(r.kind==='tree'?0xffffff:r.kind==='rock'?0x92998d:0x697b55);mesh.setColorAt(slot,this.tint);
+      mesh.setMatrixAt(slot,this.transform.matrix);this.tint.setHex(r.kind==='tree'?0xffffff:r.kind==='rock'?(r.stone?stoneColor(r.stone):0x92998d):0x697b55);mesh.setColorAt(slot,this.tint);
       this.slots.set(r.id,{kind:r.kind,slot,signature});
     }
     this.transform.scale.set(0,0,0);this.transform.updateMatrix();

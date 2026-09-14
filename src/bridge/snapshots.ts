@@ -1,15 +1,16 @@
-import type { Resource, Terrain, World } from '../sim/types.ts';
+import { validStoneIdentity } from '../sim/geology.ts';
+import type { Resource, Terrain, Tile, World } from '../sim/types.ts';
 
 type DynamicWorld = Omit<World, 'tiles' | 'resources'>;
 interface ResourceChanges { removed: number[]; upserted: Resource[]; order?: number[] }
 interface SnapshotHeader { motion?:import('./motion-tracks.ts').PawnTrack[]; type: 'snapshot'; epoch: number; revision: number; stepMs: number; speed: number }
 export type SnapshotMessage = SnapshotHeader & (
   | { kind: 'checkpoint'; world: World }
-  | { kind: 'delta'; baseRevision: number; world: DynamicWorld; tiles?: Array<[number, Terrain]>; resources?: ResourceChanges }
+  | { kind: 'delta'; baseRevision: number; world: DynamicWorld; tiles?: Array<[number, Terrain, Tile['stone']?]>; resources?: ResourceChanges }
 );
 
 const equalResource = (a: Resource, b: Resource): boolean => a.id === b.id && a.kind === b.kind
-  && a.x === b.x && a.z === b.z && a.amount === b.amount && a.growth === b.growth && a.growthTick === b.growthTick;
+  && a.x === b.x && a.z === b.z && a.amount === b.amount && a.growth === b.growth && a.growthTick === b.growthTick && a.stone === b.stone;
 
 /** Transport cache only: never mutates the simulation or contributes to a saved game. */
 export class SnapshotEncoder {
@@ -19,6 +20,7 @@ export class SnapshotEncoder {
   private width = 0;
   private height = 0;
   private terrain: Terrain[] = [];
+  private stones: Tile['stone'][] = [];
   private resources = new Map<number, Resource>();
   private resourceOrder: number[] = [];
 
@@ -31,15 +33,20 @@ export class SnapshotEncoder {
     if (replacement || checkpoint) {
       this.source = world; this.width = world.width; this.height = world.height;
       this.terrain = world.tiles.map(tile => tile.terrain);
+      this.stones = world.tiles.map(tile => tile.stone);
       this.resources = new Map(world.resources.map(resource => [resource.id, { ...resource }]));
       this.resourceOrder = world.resources.map(resource => resource.id);
       return { ...header, kind: 'checkpoint', world };
     }
 
-    const tiles: Array<[number, Terrain]> = [];
+    const tiles: Array<[number, Terrain, Tile['stone']?]> = [];
     for (let index = 0; index < world.tiles.length; index++) {
       const terrain = world.tiles[index]!.terrain;
-      if (this.terrain[index] !== terrain) { tiles.push([index, terrain]); this.terrain[index] = terrain; }
+      const stone = world.tiles[index]!.stone;
+      if (this.terrain[index] !== terrain || this.stones[index] !== stone) {
+        tiles.push(stone === undefined ? [index, terrain] : [index, terrain, stone]);
+        this.terrain[index] = terrain; this.stones[index] = stone;
+      }
     }
     const upserted: Resource[] = [];
     let orderChanged = world.resources.length !== this.resourceOrder.length;
@@ -95,13 +102,13 @@ export class SnapshotDecoder {
       let tiles = previous.tiles;
       if (message.tiles?.length) {
         const touched = new Set<number>();
-        for (const [index, terrain] of message.tiles) {
+        for (const [index, terrain, stone] of message.tiles) {
           if (!Number.isInteger(index) || index < 0 || index >= tiles.length || touched.has(index)
-            || !['grass', 'soil', 'water', 'rock'].includes(terrain)) return resync('Delta de terrain invalide.');
+            || !['grass', 'soil', 'water', 'rock'].includes(terrain) || !validStoneIdentity(stone, terrain, message.world.schemaVersion)) return resync('Delta de terrain invalide.');
           touched.add(index);
         }
         tiles = tiles.slice();
-        for (const [index, terrain] of message.tiles) tiles[index] = { terrain };
+        for (const [index, terrain, stone] of message.tiles) tiles[index] = stone === undefined ? { terrain } : { terrain, stone };
       }
       let resources = previous.resources;
       if (message.resources) {
@@ -113,6 +120,7 @@ export class SnapshotDecoder {
           touched.add(id);
         }
         for (const resource of upserted) {
+          if (!validStoneIdentity(resource.stone, resource.kind, message.world.schemaVersion)) return resync('Identité géologique invalide.');
           if (touched.has(resource.id)) return resync('Ressource modifiée plusieurs fois.');
           touched.add(resource.id); byId.set(resource.id, resource);
         }
