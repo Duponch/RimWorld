@@ -1,0 +1,286 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "E:\\Code\\RimWorld\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "tests/integration/movement.spec.ts",
+      "tests/integration/colony-journey.spec.ts",
+      "--reporter=list,json"
+    ],
+    "configFile": "E:\\Code\\RimWorld\\playwright.config.ts",
+    "rootDir": "E:/Code/RimWorld/tests/integration",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "E:/Code/RimWorld/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "E:/Code/RimWorld/tests/integration",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": {
+      "command": "npm run dev",
+      "url": "http://127.0.0.1:5173",
+      "reuseExistingServer": true,
+      "timeout": 30000
+    }
+  },
+  "suites": [
+    {
+      "title": "colony-journey.spec.ts",
+      "file": "colony-journey.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "partie de trois jours : un joueur équipe son camp et entretient ses stocks par la vraie interface",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 480000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 16925,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveCount\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('#loading')\nExpected: \u001b[32m0\u001b[39m\nReceived: \u001b[31m1\u001b[39m\nTimeout:  15000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveCount\" locator('#loading') with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for locator('#loading')\u001b[22m\n\u001b[2m    25 × locator resolved to 1 element\u001b[22m\n\u001b[2m       - unexpected value \"1\"\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveCount\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('#loading')\nExpected: \u001b[32m0\u001b[39m\nReceived: \u001b[31m1\u001b[39m\nTimeout:  15000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveCount\" locator('#loading') with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for locator('#loading')\u001b[22m\n\u001b[2m    25 × locator resolved to 1 element\u001b[22m\n\u001b[2m       - unexpected value \"1\"\u001b[22m\n\n    at E:\\Code\\RimWorld\\tests\\integration\\colony-journey.spec.ts:30:77",
+                    "location": {
+                      "file": "E:\\Code\\RimWorld\\tests\\integration\\colony-journey.spec.ts",
+                      "column": 77,
+                      "line": 30
+                    },
+                    "snippet": "  28 |   try {\n  29 |     // No injected fixture, inventory, clocks or simulation speed outside the UI.\n> 30 |     await page.goto('/?e2e&seed=42');await expect(page.locator('#loading')).toHaveCount(0);\n     |                                                                             ^\n  31 |     await page.locator('[data-speed=\"0\"]').click();await expect(page.locator('#pause-banner')).toBeVisible();\n  32 |     const initial=await world(page);expect(initial.width).toBe(250);expect(initial.stock).toEqual({wood:12,food:18});\n  33 |     expect(initial.foodRules).toBe('adult');"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "E:\\Code\\RimWorld\\tests\\integration\\colony-journey.spec.ts",
+                        "column": 77,
+                        "line": 30
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveCount\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('#loading')\nExpected: \u001b[32m0\u001b[39m\nReceived: \u001b[31m1\u001b[39m\nTimeout:  15000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveCount\" locator('#loading') with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for locator('#loading')\u001b[22m\n\u001b[2m    25 × locator resolved to 1 element\u001b[22m\n\u001b[2m       - unexpected value \"1\"\u001b[22m\n\n\n  28 |   try {\n  29 |     // No injected fixture, inventory, clocks or simulation speed outside the UI.\n> 30 |     await page.goto('/?e2e&seed=42');await expect(page.locator('#loading')).toHaveCount(0);\n     |                                                                             ^\n  31 |     await page.locator('[data-speed=\"0\"]').click();await expect(page.locator('#pause-banner')).toBeVisible();\n  32 |     const initial=await world(page);expect(initial.width).toBe(250);expect(initial.stock).toEqual({wood:12,food:18});\n  33 |     expect(initial.foodRules).toBe('adult');\n    at E:\\Code\\RimWorld\\tests\\integration\\colony-journey.spec.ts:30:77"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-14T19:25:02.121Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "colony-journey-incomplete",
+                      "contentType": "application/json",
+                      "body": "eyJkYXlzIjpbXSwiZGVjaXNpb25zIjpbXSwibWVhbHMiOltdLCJlcnJvcnMiOlsiUmFuZ2VFcnJvcjogRmFpbGVkIHRvIGV4ZWN1dGUgJ2NyZWF0ZUJ1ZmZlcicgb24gJ0dQVURldmljZSc6IGNyZWF0ZUJ1ZmZlciBmYWlsZWQsIHNpemUgKDEwMDI0OCkgaXMgdG9vIGxhcmdlIGZvciB0aGUgaW1wbGVtZW50YXRpb24gd2hlbiBtYXBwZWRBdENyZWF0aW9uID09IHRydWVcbiAgICBhdCBXZWJHUFVBdHRyaWJ1dGVVdGlscy5jcmVhdGVBdHRyaWJ1dGUgKGh0dHA6Ly8xMjcuMC4wLjE6NTE3My9ub2RlX21vZHVsZXMvLnZpdGUvZGVwcy90aHJlZS53ZWJncHUtQnFPN21lS1AuanM/dj03ZTdhNGViMjo5OTE1NDoyMClcbiAgICBhdCBXZWJHUFVCYWNrZW5kLmNyZWF0ZUF0dHJpYnV0ZSAoaHR0cDovLzEyNy4wLjAuMTo1MTczL25vZGVfbW9kdWxlcy8udml0ZS9kZXBzL3RocmVlLndlYmdwdS1CcU83bWVLUC5qcz92PTdlN2E0ZWIyOjEwMjQ5MDoyMylcbiAgICBhdCBBdHRyaWJ1dGVzLnVwZGF0ZSAoaHR0cDovLzEyNy4wLjAuMTo1MTczL25vZGVfbW9kdWxlcy8udml0ZS9kZXBzL3RocmVlLndlYmdwdS1CcU83bWVLUC5qcz92PTdlN2E0ZWIyOjYzMzc5OjE4KVxuICAgIGF0IEdlb21ldHJpZXMudXBkYXRlQXR0cmlidXRlIChodHRwOi8vMTI3LjAuMC4xOjUxNzMvbm9kZV9tb2R1bGVzLy52aXRlL2RlcHMvdGhyZWUud2ViZ3B1LUJxTzdtZUtQLmpzP3Y9N2U3YTRlYjI6NjM1ODQ6MjEpXG4gICAgYXQgR2VvbWV0cmllcy51cGRhdGVBdHRyaWJ1dGVzIChodHRwOi8vMTI3LjAuMC4xOjUxNzMvbm9kZV9tb2R1bGVzLy52aXRlL2RlcHMvdGhyZWUud2ViZ3B1LUJxTzdtZUtQLmpzP3Y9N2U3YTRlYjI6NjM1Njg6MTMpXG4gICAgYXQgR2VvbWV0cmllcy51cGRhdGVGb3JSZW5kZXIgKGh0dHA6Ly8xMjcuMC4wLjE6NTE3My9ub2RlX21vZHVsZXMvLnZpdGUvZGVwcy90aHJlZS53ZWJncHUtQnFPN21lS1AuanM/dj03ZTdhNGViMjo2MzUzMzo4KVxuICAgIGF0IFdlYkdQVVJlbmRlcmVyLmNvbXBpbGVBc3luYyAoaHR0cDovLzEyNy4wLjAuMTo1MTczL25vZGVfbW9kdWxlcy8udml0ZS9kZXBzL3RocmVlLndlYmdwdS1CcU83bWVLUC5qcz92PTdlN2E0ZWIyOjg1MjMyOjIxKVxuICAgIGF0IGFzeW5jIENvbG9ueVJlbmRlcmVyLnByZXBhcmVQcmVzZW50YXRpb24gKGh0dHA6Ly8xMjcuMC4wLjE6NTE3My9zcmMvcmVuZGVyL0NvbG9ueVJlbmRlcmVyLnRzP3Q9MTc4OTQxMzY0ODg4NDozMzg6NClcbiAgICBhdCBhc3luYyBzdGFydCAoaHR0cDovLzEyNy4wLjAuMTo1MTczL3NyYy9tYWluLnRzP3Q9MTc4OTQxMzcxNTA5OTo3OTk6MykiLCJGYWlsZWQgdG8gZXhlY3V0ZSAnY3JlYXRlQnVmZmVyJyBvbiAnR1BVRGV2aWNlJzogY3JlYXRlQnVmZmVyIGZhaWxlZCwgc2l6ZSAoNzkyMjQpIGlzIHRvbyBsYXJnZSBmb3IgdGhlIGltcGxlbWVudGF0aW9uIHdoZW4gbWFwcGVkQXRDcmVhdGlvbiA9PSB0cnVlIl19"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "E:\\Code\\RimWorld\\test-results\\colony-journey-partie-de-t-625fe-ocks-par-la-vraie-interface\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "E:\\Code\\RimWorld\\tests\\integration\\colony-journey.spec.ts",
+                    "column": 77,
+                    "line": 30
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "555f966565dc11b6db98-9085b14c50fcc33d1534",
+          "file": "colony-journey.spec.ts",
+          "line": 21,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "movement.spec.ts",
+      "file": "movement.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "civil crossing in the real worker: shared cell, save/reload, three exclusive beds",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 8277,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-14T19:25:19.727Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "civil-crossing",
+                      "contentType": "application/json",
+                      "body": "eyJzaGFyZWRUaWNrIjoyMDE0LCJmaW5hbFRpY2siOjIwNTIsInBvc2l0aW9ucyI6W3siaWQiOjQ5LCJ4IjoxNCwieiI6OCwiYmVkSWQiOjYwfSx7ImlkIjo1MCwieCI6MSwieiI6OCwiYmVkSWQiOjU4fSx7ImlkIjo1MSwieCI6OCwieiI6OCwiYmVkSWQiOjU5fV0sImVycm9ycyI6W119"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4f4644ce1bc9a9704a33-c41b4c3514e6bc0b77b3",
+          "file": "movement.spec.ts",
+          "line": 7,
+          "column": 1
+        },
+        {
+          "title": "GPU travel preserves speed, corners and work-facing through real worker snapshots",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 12625,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-14T19:25:28.035Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "movement-contract",
+                      "contentType": "application/json",
+                      "body": "ewogICJ3b3JzdFNhbXBsZSI6IHsKICAgICJhIjogewogICAgICAibm93IjogOTg4My42LAogICAgICAiY2xvY2siOiAzNS42Mjc0MDAwMDAwMjc0ODUsCiAgICAgICJzdGFydCI6IDM1LjU5OTk5ODQ3NDEyMTA5NCwKICAgICAgImVuZCI6IDM1LjkwMDAwMTUyNTg3ODkwNiwKICAgICAgIngiOiAxNC45MDg2NjI1MDk0NDUwMywKICAgICAgInoiOiAxNSwKICAgICAgInlhdyI6IC0xLjU3MDc5NjM3MDUwNjI4NjYsCiAgICAgICJkeCI6IC0xLAogICAgICAiZHoiOiAwLAogICAgICAid2Fsa2luZyI6IDEKICAgIH0sCiAgICAiYiI6IHsKICAgICAgIm5vdyI6IDk4ODcuOCwKICAgICAgImNsb2NrIjogMzUuNjUyNjAwMDAwMDI3NDc2LAogICAgICAic3RhcnQiOiAzNS41OTk5OTg0NzQxMjEwOTQsCiAgICAgICJlbmQiOiAzNS45MDAwMDE1MjU4Nzg5MDYsCiAgICAgICJ4IjogMTQuODI0NjYzMzYzOTI4NTU0LAogICAgICAieiI6IDE1LAogICAgICAieWF3IjogLTEuNTcwNzk2MzcwNTA2Mjg2NiwKICAgICAgImR4IjogLTEsCiAgICAgICJkeiI6IDAsCiAgICAgICJ3YWxraW5nIjogMQogICAgfSwKICAgICJkdCI6IDAuMDA0MTk5OTk5OTk5OTk4OTA5CiAgfSwKICAic2FtcGxlcyI6IDI1MSwKICAidHVybnMiOiA2LAogICJtYXhTcGVlZEVycm9yIjogMC4wMDAyMDM0NDg0NTI5NzE1OTk2NCwKICAibWF4RmFjaW5nRXJyb3IiOiA0LjM3MTEzOTAwNjMwOTQ3NzVlLTgsCiAgIndvcmtUYXJnZXRzIjogNCwKICAibWF4V29ya0ZhY2luZ0Vycm9yIjogNC4zNzExMzkwMDYzMDk0NzdlLTgsCiAgImVycm9ycyI6IFtdCn0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4f4644ce1bc9a9704a33-220526b048956d75fc97",
+          "file": "movement.spec.ts",
+          "line": 39,
+          "column": 1
+        },
+        {
+          "title": "loaded furniture crossing shares GPU heights, preserves speed within each edge and resumes through the real worker",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 13480,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-14T19:25:40.671Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "furniture-gpu-contract",
+                      "contentType": "application/json",
+                      "body": "eyJzYW1wbGVzIjoyNzM4LCJtYXhTcGVlZEVycm9yIjoxLjA1OTE1Mjc2NTQ5MjM5OTNlLTEyLCJzaGFyZWQiOnRydWUsImxvYWRlZFBsYXRlYXVGcmFtZXMiOjEwOCwibG9hZGVkQ2xpbWJGcmFtZXMiOjI5NiwiY3Jvc3NpbmdUaWNrIjo0MywiZmluYWxUaWNrIjo2OCwiZXJyb3JzIjpbXX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4f4644ce1bc9a9704a33-2095f3aa7b20aff9b2c5",
+          "file": "movement.spec.ts",
+          "line": 77,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-14T19:25:00.504Z",
+    "duration": 53767.957,
+    "expected": 3,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

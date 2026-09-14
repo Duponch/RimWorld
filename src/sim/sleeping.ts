@@ -1,3 +1,4 @@
+import { canStandAt } from './furniture-travel.ts';
 import { routeCost, routeToCell, type Reachability } from './pathfinding.ts';
 import { footprintCells } from './definitions.ts';
 import { BED_REST_PER_TICK, GROUND_REST_PER_TICK } from './rest.ts';
@@ -35,9 +36,9 @@ export function processSleeping(world: World, pawn: Pawn, context: NeedContext, 
     } else {
       let target: Cell = { x: pawn.x, z: pawn.z }, path: Cell[] = [];
       const bedCells = new Set(world.structures.filter(item => item.kind === 'bed').flatMap(item => footprintCells(item).map(cell => cell.z * world.width + cell.x)));
-      if (bedCells.has(pawn.z * world.width + pawn.x)) {
+      if (bedCells.has(pawn.z * world.width + pawn.x)||world.schemaVersion>=22&&!canStandAt(world,pawn)) {
         const candidates = [ { x: pawn.x, z: pawn.z - 1 }, { x: pawn.x + 1, z: pawn.z }, { x: pawn.x, z: pawn.z + 1 }, { x: pawn.x - 1, z: pawn.z } ];
-        const free = candidates.find(cell => !bedCells.has(cell.z * world.width + cell.x) && !world.pawns.some(other => same(other, cell)) && routeToCell(world, cell, reach!) !== null);
+        const free = candidates.find(cell => !bedCells.has(cell.z * world.width + cell.x) && canStandAt(world,cell) && !world.pawns.some(other => same(other, cell)) && routeToCell(world, cell, reach!) !== null);
         if (!free) { pawn.needCooldown = NEED_INTERVAL; return true; }
         target = free; path = routeToCell(world, target, reach)!;
       }

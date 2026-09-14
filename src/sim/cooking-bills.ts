@@ -1,3 +1,4 @@
+import { canStandAt } from './furniture-travel.ts';
 import { footprintCells } from './definitions.ts';
 import { isCookingOrder } from './order-types.ts';
 import type { CookingBill, BillSettings } from './cooking-types.ts';
@@ -34,7 +35,7 @@ export function cookingCellReserved(world:World,cell:Cell):boolean {
     ||p.cooking.ingredients.some(i=>i.stage!=='placed'&&i.cell.x===cell.x&&i.cell.z===cell.z)));
 }
 export function cookingPlaceFree(world:World,cell:Cell):boolean {
-  return cell.x>=0&&cell.z>=0&&cell.x<world.width&&cell.z<world.height
+  return (world.schemaVersion<22||canStandAt(world,cell))&&cell.x>=0&&cell.z>=0&&cell.x<world.width&&cell.z<world.height
     &&!['water','rock'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain)
     &&!world.resources.some(r=>r.x===cell.x&&r.z===cell.z)
     &&![...world.jobs,...world.structures].some(s=>(s.kind==='wall'||s.kind==='table')&&footprintCells(s).some(c=>c.x===cell.x&&c.z===cell.z));

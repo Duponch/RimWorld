@@ -1,3 +1,4 @@
+import { canStandAt } from './furniture-travel.ts';
 import { footprintCells } from './definitions.ts';
 import { inBounds } from './pathfinding.ts';
 import type { Cell, Structure, World } from './types.ts';
@@ -17,7 +18,7 @@ export function recreationSpace(world: World, resourceTargets?: readonly Cell[])
   for(const job of world.jobs)index.objects.add(job.z*world.width+job.x);
   for(const s of [...world.structures,...world.jobs]) {
     if(s.kind==='wall'&&!('construction' in s))index.walls.add(s.z*world.width+s.x);
-    if(s.kind==='wall'||s.kind==='table')for(const c of footprintCells(s))index.solids.add(c.z*world.width+c.x);
+    if(s.kind==='wall'||s.kind==='table'||world.schemaVersion>=22&&(!('status' in s)&&(s.kind==='bed'||s.kind==='campfire')||'construction' in s&&s.construction==='frame'))for(const c of footprintCells(s))index.solids.add(c.z*world.width+c.x);
   }
   if(resourceTargets) {
     // At most 24 sky sites: retain only their obstacles, not a copy of the forest.
@@ -50,7 +51,7 @@ export function clearThrow(world: World, pin: Cell, cell: Cell, space?: Recreati
   return true;
 }
 export function standableRecreationCell(world: World, cell: Cell, space?: RecreationSpace): boolean {
-  return inBounds(world,cell.x,cell.z) && !['rock','water'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain)
+  return (world.schemaVersion<22||space||canStandAt(world,cell))&&inBounds(world,cell.x,cell.z) && !['rock','water'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain)
     && !(space ? space.solids.has(cell.z*world.width+cell.x) : [...world.structures,...world.jobs].some(s => ['wall','table'].includes(s.kind) && footprintCells(s).some(c=>c.x===cell.x&&c.z===cell.z)));
 }
 export function recreationSiteValid(world: World, task: RecreationTask, space?: RecreationSpace): boolean {

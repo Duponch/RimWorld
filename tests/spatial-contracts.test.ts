@@ -73,7 +73,7 @@ test('civil crossing preserves beds, opposing cargo, every edge and exact contin
     stepWorld(w);expect(validateWorld(w),`crossing tick ${w.tick}`).toEqual([]);
     expect(w.pawns[2]).toMatchObject({x:8,z:8,state:'sleeping'});
     for(const p of w.pawns.slice(0,2))if(p.motion) {
-      expect(p.motion.end-p.motion.start).toBeCloseTo(3,8);
+      expect(p.motion.end-p.motion.start).toBeCloseTo(3+(p.motion.terrainDelay??0),8);
       const end=endings.get(p.id);
       if(end!==undefined&&end!==p.motion.end)expect(p.motion.start).toBeCloseTo(end,8);
       endings.set(p.id,p.motion.end);
@@ -84,7 +84,7 @@ test('civil crossing preserves beds, opposing cargo, every edge and exact contin
   expect(w.pawns.map(p=>[p.x,p.z,p.state])).toEqual([[14,8,'sleeping'],[1,8,'sleeping'],[8,8,'sleeping']]);
   expect(new Set(w.pawns.map(p=>p.bedId)).size).toBe(3);
   const resumed=deserializeWorld(shared!);stepWorld(resumed,w.tick-resumed.tick);expect(resumed).toEqual(w);
-  const overlapV13=JSON.parse(shared!);overlapV13.schemaVersion=13;for(const pawn of overlapV13.pawns)delete pawn.orders;
+  const overlapV13=JSON.parse(shared!);overlapV13.schemaVersion=13;for(const pawn of overlapV13.pawns){delete pawn.orders;delete pawn.transitExit;if(pawn.motion?.terrainDelay){pawn.motion.end-=pawn.motion.terrainDelay;delete pawn.motion.terrainDelay;pawn.moveCooldown=Math.max(0,pawn.motion.end-overlapV13.tick);}}
   expect(()=>deserializeWorld(JSON.stringify(overlapV13))).toThrow(/overlap/i);
   const duplicate=JSON.parse(serializeWorld(w));duplicate.pawns[0].bedId=duplicate.pawns[1].bedId;
   expect(()=>deserializeWorld(JSON.stringify(duplicate))).toThrow(/bed|sleep/i);
@@ -106,7 +106,7 @@ test('civil crossing preserves beds, opposing cargo, every edge and exact contin
   }
   expect(quantity('wood',14)).toBe(10);expect(quantity('rice',1)).toBe(10);expect(carriedCrossing).toBeDefined();
   const cargoResume=deserializeWorld(carriedCrossing!);stepWorld(cargoResume,haul.tick-cargoResume.tick);expect(cargoResume).toEqual(haul);
-  const legacyEdge=JSON.parse(carriedCrossing!);legacyEdge.schemaVersion=13;for(const pawn of legacyEdge.pawns)delete pawn.orders;
+  const legacyEdge=JSON.parse(carriedCrossing!);legacyEdge.schemaVersion=13;for(const pawn of legacyEdge.pawns){delete pawn.orders;delete pawn.transitExit;if(pawn.motion?.terrainDelay){pawn.motion.end-=pawn.motion.terrainDelay;delete pawn.motion.terrainDelay;pawn.moveCooldown=Math.max(0,pawn.motion.end-legacyEdge.tick);}}
   expect(()=>deserializeWorld(JSON.stringify(legacyEdge))).toThrow(/overlap/i);
 });
 

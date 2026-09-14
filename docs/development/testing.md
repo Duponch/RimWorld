@@ -134,3 +134,7 @@ F4 exerce les commandes dans le navigateur quand elles existent ; F5 mesure leur
 Workflow : terminer ensemble code, fixtures et pilote, compiler à l'intégration et grouper les contrôles des contrats touchés. Réutiliser les preuves des sous-systèmes inchangés ; ne rejouer un long parcours réussi que si une correction touche son déroulement. Les documents peuvent être entretenus pendant les tests, les sources/configurations de leur exécution restent stables. Un audit CPU suffit lorsque seule la simulation matérielle change ; le nombre d'appels GPU n'est pas réannoncé comme une nouvelle mesure.
 
 L’option `occupancy` de `scripts/cooking-render-bench.mjs` ajoute vingt tables et vingt tabourets portant des piles dans la fixture à cent acteurs. C’est un stress de surfaces synthétique ; ses routes diffèrent du témoin cuisine. Le nombre de travailleurs et les loisirs en fin de phase restent relevés pour ne pas présenter une population inactive comme une foule de bâtisseurs.
+
+## Mobilier V22
+
+`furniture-travel.test.ts` confronte les coûts dirigés à un oracle indépendant sur quatre rotations, puis combine portages opposés, sortie après interruption et migration stricte. `integration/movement.spec.ts` observe aussi le partage des attributs réellement soumis à WebGPU, les hauteurs de traversée et la reprise avec cargaison. Ce n’est pas une lecture GPU des sommets. Les résumés du pilote comptent déplacements avec supplément et intentions de sortie sans exiger qu’un nombre arbitraire survienne naturellement.

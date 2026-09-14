@@ -11,7 +11,7 @@ import { storageCapacity } from './ground-placement.ts';
 import { legacyItem, type ItemId } from './items.ts';
 import { CARRY_CAPACITY, footprintCells, JOB_WOOD_COST } from './definitions.ts';
 import { deliveredStock, groundQuantity, reservedDestination, reservedSource } from './materials.ts';
-import { cellIndex, inBounds, hasReachableCell, reachableCells, routeToJob, interactionGoals } from './pathfinding.ts';
+import { cellIndex, inBounds, canStopAt, hasReachableCell, reachableCells, routeToJob, interactionGoals } from './pathfinding.ts';
 import type { Reachability } from './pathfinding.ts';
 import type { Cell, HaulDestination, Job, JobKind, MaterialKind, Pawn, WorkType, World } from './types.ts';
 export const PLAN_INTERVAL=20;
@@ -63,9 +63,9 @@ interface Candidate { clearance?:{resourceId:number;progress:number}; cooking?: 
 function compareCandidate(a: Candidate, b: Candidate): number { return a.priority - b.priority || a.rank - b.rank || a.distance - b.distance || a.id - b.id; }
 export function canReach(world: World, target: Cell & { kind?: JobKind }, reachable: Reachability, allowTarget: boolean): boolean {
   const cells = target.kind ? footprintCells(target as Job) : [target];
-  if (allowTarget && hasReachableCell(reachable,cellIndex(world, target.x, target.z))) return true;
+  if (allowTarget && canStopAt(world,target,reachable) && hasReachableCell(reachable,cellIndex(world, target.x, target.z))) return true;
   for (const cell of cells) for (const next of [{ x: cell.x, z: cell.z - 1 }, { x: cell.x + 1, z: cell.z }, { x: cell.x, z: cell.z + 1 }, { x: cell.x - 1, z: cell.z }]) {
-    if (inBounds(world, next.x, next.z) && !cells.some(own => sameCell(own, next)) && hasReachableCell(reachable,cellIndex(world, next.x, next.z))) return true;
+    if (canStopAt(world,next,reachable) && !cells.some(own => sameCell(own, next)) && hasReachableCell(reachable,cellIndex(world, next.x, next.z))) return true;
   }
   return false;
 }
@@ -180,13 +180,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
       if (pile.owner.type !== 'ground') continue;
       const destination = destinations[index % destinations.length]!;
       let capacity=destination[pile.kind];
-      if(destination.destination.type==='stockpile') {
-        const key=`${destination.destination.stockpileId}:${pile.item}`;
-        let cached=storageCapacities.get(key);
-        if(cached===undefined){cached=storageCapacity(world,zonesByCell.get(cellIndex(world,destination.target.x,destination.target.z))!,pile.item);storageCapacities.set(key,cached);}
-        capacity=cached;
-      }
-      if (capacity <= 0 || sameCell(pile.owner, destination.target)) continue;
+      if (sameCell(pile.owner, destination.target)) continue;
       const sourceZone = zonesByCell.get(cellIndex(world, pile.owner.x, pile.owner.z));
       const excess = sourceZone ? Math.max(0, (ground.get(cellIndex(world, pile.owner.x, pile.owner.z)) ?? 0) - sourceZone.capacity) : 0;
       const currentPriority = sourceZone?.filters[pile.kind] && !excess ? sourceZone.priority : 0;
@@ -194,6 +188,14 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
       let available = pile.quantity - (sourceReserved.get(pile.id) ?? 0);
       if (sourceZone?.filters[pile.kind] && excess > 0 && destination.destination.type === 'stockpile') available = Math.min(available, Math.max(0, excess - (outbound.get(cellIndex(world, pile.owner.x, pile.owner.z)) ?? 0)));
       if (available <= 0) continue;
+      // Same-priority storage pairs cannot win; avoid their pure capacity scan.
+      if(destination.destination.type==='stockpile') {
+        const key=`${destination.destination.stockpileId}:${pile.item}`;
+        let cached=storageCapacities.get(key);
+        if(cached===undefined){cached=storageCapacity(world,zonesByCell.get(cellIndex(world,destination.target.x,destination.target.z))!,pile.item);storageCapacities.set(key,cached);}
+        capacity=cached;
+      }
+      if (capacity <= 0) continue;
       let sourceAccess = sourceReachable.get(pile.id);
       if (sourceAccess === undefined) { sourceAccess = canReach(world, pile.owner, reachable, true); sourceReachable.set(pile.id, sourceAccess); }
       if (!sourceAccess || !destination.reachable) continue;

@@ -1,4 +1,4 @@
-# Chantiers — contrat V21
+# Chantiers — contrat V22
 
 Référence : corpus chap. 10, SYS-056/TEST-056, SYS-005/020..022/051/053/054 et [recherche renouvelée](../research/construction-reference.md). Ce contrat remplace le blocage immédiat des plans de murs/tables et le refus systématique des plantes/piles. Les [écarts](../gameplay/decisions.md) ne sont pas des comportements implicites du jeu commercial.
 
@@ -44,7 +44,7 @@ Annuler le parent libère aussi les cargaisons de dégagement qui le référence
 
 Plan et cadre restent traversables. L'entrée dans un cadre ajoute **1,4 tick** à `3 × longueur euclidienne`. La recherche utilise 1000/1414 et +467 ; l'arrondi de recherche ne règle pas la vitesse physique. `terrainDelay` est capturé dans l'arête engagée et sauvegardé : supprimer le cadre pendant sa traversée ne change pas rétroactivement la durée.
 
-`frameCosts` capture une carte clairsemée pour une recherche. La file de Dial dimensionne ses seaux sur le coût maximal de cette capture ; aucun coût de cadre ne s'ajoute à la connectivité cardinale. Le laboratoire GPU reste indépendant. Le rendu conserve l'interpolation GPU et ses buffers ; la clé visuelle inclut la phase. L'inspection affiche Plan/Cadre et la raison d'attente.
+`navigationCosts` capture les coûts des cadres et du mobilier pour une recherche ; voir [profils V22](furniture-travel.md). La file de Dial dimensionne ses seaux sur le coût maximal de cette capture ; aucun coût de cadre ne s'ajoute à la connectivité cardinale. Le laboratoire GPU reste indépendant. Le rendu conserve l'interpolation GPU et ses buffers ; la clé visuelle inclut la phase. L'inspection affiche Plan/Cadre et la raison d'attente.
 
 `construction-rules`, `construction-planner`, `construction-costs`, `construction-save` séparent règles, propositions, mouvement et persistance. L'index d'obstacles est commun à une décision synchrone, respecte l'ordre des ressources et disparaît avant mutation. La livraison et l'exécution font une vérification directe actuelle ; aucun cache global ne masque une plante retirée ou une pile déposée.
 
@@ -62,7 +62,7 @@ V20 est d’abord validée selon ses interdictions de superposition de zones. Le
 
 Cinq scénarios approfondis couvrent transferts typés et fraîcheur, sauvegarde/annulation en cargaison, plante sur empreinte tournée, priorités, transporteur sans Construction, plans/cadres franchis, durée d'arête, coins protégés, repas réservé et migration stricte. L'oracle spatial indépendant comprend des cadres ; le pilote ordinaire doit terminer son camp et conserver ses bilans. L'UI courte exerce phases et reprise dans le vrai worker ; la partie longue suit trois jours par commandes réelles. Les [preuves courantes](validation.md) distinguent chaque passage et les audits.
 
-Pas de nouveaux objets : états enrichis du mobilier existant. Franchissement/coûts du mobilier, déplacement des personnes gênantes, support du sol, compétences/qualité/échecs, minage, réparation, remplacement et déconstruction restent ouverts. Ne pas annoncer Construction terminée.
+Pas de nouveaux objets : états enrichis du mobilier existant. V22 livre le [transit et l’arrêt du mobilier présent](furniture-travel.md). Déplacement des personnes gênantes, support du sol, compétences/qualité/échecs, minage, réparation, remplacement et déconstruction restent ouverts. Ne pas annoncer Construction terminée.
 
 ## Commandes contextuelles V19
 

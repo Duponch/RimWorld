@@ -1,3 +1,5 @@
+import { canStandAt } from './furniture-travel.ts';
+import { initializeFurnitureTravel } from './furniture-save.ts';
 import { initializeOccupancy } from './occupancy-save.ts';
 import { groundOccupancyAllows, occupancyOf } from './occupancy.ts';
 import { validSowingClearance } from './sowing-clearance.ts';
@@ -39,7 +41,7 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validateWorld(input: unknown): string[] {
   return validateSchema(input, SCHEMA_VERSION);
 }
-function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21): string[] {
+function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(input)) return ['World must be an object.'];
@@ -69,7 +71,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
         if (typeof item.name !== 'string' || item.name.length === 0 || item.name.length > 80 || !bounded(item.hunger) || !bounded(item.rest) || !bounded(item.mood)
           || !oneOf(item.state, legacyV2 ? ['idle', 'moving', 'working', 'sleeping', 'hungry'] : ['idle', 'moving', 'working', 'sleeping', 'hungry', 'eating', ...(version>=15?['recreating']:[])]) || !(item.jobId === null || integer(item.jobId, 1))
           || !record(item.priorities) || !integer(item.priorities.gather, 0, 4) || !integer(item.priorities.build, 0, 4) || !integer(item.priorities.haul, 0, 4) || (version >= 8 && !integer(item.priorities.grow, 0, 4))
-          || !(version < 6 ? integer(item.moveCooldown, 0, 3) : typeof item.moveCooldown === 'number' && Number.isFinite(item.moveCooldown) && item.moveCooldown >= 0 && item.moveCooldown <= (version>=16?5.643:4.243)) || !integer(item.planCooldown, 0, 20)) errors.push('Invalid pawn state.');
+          || !(version < 6 ? integer(item.moveCooldown, 0, 3) : typeof item.moveCooldown === 'number' && Number.isFinite(item.moveCooldown) && item.moveCooldown >= 0 && item.moveCooldown <= (version>=22?8.443:version>=16?5.643:4.243)) || !integer(item.planCooldown, 0, 20)) errors.push('Invalid pawn state.');
         if (!Array.isArray(item.path) || item.path.length > size) errors.push('Invalid pawn path.');
         else {
           let previous = item;
@@ -80,11 +82,12 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
           }
         }
         if(version<6 && item.motion!==undefined) errors.push('Legacy save contains spatial fields.');
+        if(item.transitExit!==undefined&&(version<22||item.transitExit!==true)) errors.push('Invalid furniture exit intent.');
         if(version>=6 && item.motion==null && item.moveCooldown!==0) errors.push('Missing travel segment for movement delay.');
         if(version>=6 && item.motion!=null) {
           const m=item.motion;
           if(!record(m)||!record(m.from)||!record(m.to)||!coord(m.from)||!coord(m.to)||typeof m.start!=='number'||typeof m.end!=='number'||!Number.isFinite(m.start)||!Number.isFinite(m.end)||m.start<0||m.start>(input.tick as number)||m.to.x!==item.x||m.to.z!==item.z||Math.max(Math.abs((m.to.x as number)-(m.from.x as number)),Math.abs((m.to.z as number)-(m.from.z as number)))!==1) errors.push('Invalid travel segment.');
-          else if((m.terrainDelay!==undefined&&(version<16||m.terrainDelay!==1.4))||Math.abs(m.end-m.start-(m.terrainDelay as number??0)-TRAVEL_TICKS*edgeLength(m.from as unknown as import('./types.ts').Cell,m.to as unknown as import('./types.ts').Cell) )>1e-7 || Math.abs((item.moveCooldown as number)-Math.max(0,m.end-(input.tick as number)))>1e-7) errors.push('Inconsistent travel duration.');
+          else if((m.terrainDelay!==undefined&&(version<16||(version<22?m.terrainDelay!==1.4:![1.4,3,4.2].includes(m.terrainDelay as number))))||Math.abs(m.end-m.start-(m.terrainDelay as number??0)-TRAVEL_TICKS*edgeLength(m.from as unknown as import('./types.ts').Cell,m.to as unknown as import('./types.ts').Cell) )>1e-7 || Math.abs((item.moveCooldown as number)-Math.max(0,m.end-(input.tick as number)))>1e-7) errors.push('Inconsistent travel duration.');
         }
         const haul = item.haul;
         if(record(haul)&&record(haul.destination)&&('growingZoneId' in haul.destination||'sowCell' in haul.destination)&&(version<20||!validSowingDestination(haul.destination,input as unknown as World)))errors.push('Invalid sowing clearance shape.');
@@ -189,12 +192,13 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
   const serviceCells = new Set<number>();
   for (const pawn of world.pawns) {
     const key = cellKey(pawn);
+    if(version>=22&&pawn.transitExit&&!pawn.motion)errors.push('Furniture exit lacks a physical edge.');
     if(version>=14) {
       const service=serviceCell(pawn);
       if(service) {const target=cellKey(service);if(serviceCells.has(target))errors.push('Conflicting service reservation.');serviceCells.add(target);}
     }
     if (version < 14 && pawnCells.has(key)) errors.push('Pawns overlap.'); pawnCells.add(key);
-    if (['wall', 'table'].includes(structureCells.get(key)?.kind ?? '') || version<16&&['wall', 'table'].includes(jobCells.get(key)?.kind ?? '')) errors.push('Pawn occupies a wall target.');
+    if ((version<22?['wall', 'table']:['wall']).includes(structureCells.get(key)?.kind ?? '') || version<16&&['wall', 'table'].includes(jobCells.get(key)?.kind ?? '')) errors.push('Pawn occupies a wall target.');
     if (Number(version>=10&&!!pawn.cooking) + Number(pawn.jobId !== null) + Number(pawn.haul !== null) + Number(!legacyV2 && pawn.need !== null) > 1) errors.push('Pawn has two simultaneous tasks.');
     if (pawn.jobId !== null) {
       const job = jobById.get(pawn.jobId);
@@ -204,7 +208,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
     const owned = world.piles.filter(pile => pile.owner.type === 'pawn' && pile.owner.pawnId === pawn.id);
     if (owned.length > 1 || (owned.length === 1 && !(version >= 10 && pawn.cooking) && pawn.haul?.phase !== 'deliver' && (legacyV2 || pawn.need?.kind !== 'eat' || pawn.need.phase === 'pickup'))) errors.push('Carried ownership mismatch.');
     if (pawn.jobId !== null || pawn.haul !== null || version >= 10 && pawn.cooking) { if (!['moving', 'working'].includes(pawn.state)) errors.push('Assigned pawn has incompatible state.'); }
-    else if (!(version>=15&&pawn.recreation.task) && (legacyV2 || pawn.need === null) && (pawn.path.length || ['moving', 'working'].includes(pawn.state))) errors.push('Unassigned pawn has path or work state.');
+    else if (!(version>=15&&pawn.recreation.task) && (legacyV2 || pawn.need === null) && (pawn.path.length || ['moving', 'working'].includes(pawn.state)) && !(version>=22&&pawn.transitExit&&pawn.state!=='working')) errors.push('Unassigned pawn has path or work state.');
     if (!legacyV2) {
       if (pawn.bedId !== null) {
         if (!world.structures.some(bed => bed.kind === 'bed' && bed.id === pawn.bedId) || bedOwners.has(pawn.bedId)) errors.push('Invalid or duplicate bed ownership.');
@@ -223,7 +227,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
         if (version >= 5 && pile && need.quantity > ITEM_DEFINITIONS[pile.item].maxIngest) errors.push('Meal exceeds item ingestion limit.');
         if (version >= 4) {
           if (need.phase === 'pickup' || need.phase === 'choose-spot') {
-            if (need.dining !== null || (need.phase === 'choose-spot' && pawn.path.length)) errors.push('Meal search has a premature dining reservation.');
+            if (need.dining !== null || (need.phase === 'choose-spot' && pawn.path.length && !(version>=22&&pawn.transitExit))) errors.push('Meal search has a premature dining reservation.');
           } else {
             const place = need.dining;
             if (!place || !validDiningPlace(world, place)) errors.push('Invalid dining furniture reference.');
@@ -242,6 +246,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
           if (!bed || pawn.bedId !== bed.id || cellKey(bed) !== cellKey(need.target) || sleepingBeds.has(need.bedId)) errors.push('Invalid sleep reservation.');
           sleepingBeds.add(need.bedId);
         }
+        if(version>=22&&need.bedId===null&&!canStandAt(world,need.target)) errors.push('Ground sleep requires a standable cell.');
         if (need.phase === 'sleep' ? pawn.state !== 'sleeping' || pawn.path.length > 0 || cellKey(pawn) !== cellKey(need.target) : pawn.state !== 'moving') errors.push('Invalid sleep position or phase.');
       } else if (['eating', 'sleeping'].includes(pawn.state)) errors.push('Need action without a task.');
     }
@@ -389,6 +394,10 @@ export function deserializeWorld(serialized: string): World {
   if(record(input)&&input.schemaVersion===20) {
     const errors=validateSchema(input,20);if(errors.length)throw new Error(`Invalid version 20 save: ${errors.join(' ')}`);
     initializeOccupancy(input as unknown as World);
+  }
+  if(record(input)&&input.schemaVersion===21) {
+    const errors=validateSchema(input,21);if(errors.length)throw new Error(`Invalid version 21 save: ${errors.join(' ')}`);
+    initializeFurnitureTravel(input as unknown as World);
   }
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`); return input as World;
 }

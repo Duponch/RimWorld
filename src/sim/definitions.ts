@@ -14,7 +14,7 @@ export const STRUCTURE_DEFINITIONS = Object.freeze({
   horseshoes: Object.freeze({ id: 'horseshoes', width: 1, depth: 1, blocksMovement: false }),
   campfire: Object.freeze({ id: 'campfire', width: 1, depth: 1, blocksMovement: false }),
   wall: Object.freeze({ id: 'wall', width: 1, depth: 1, blocksMovement: true }),
-  table: Object.freeze({ id: 'table', width: 1, depth: 2, blocksMovement: true }),
+  table: Object.freeze({ id: 'table', width: 1, depth: 2, blocksMovement: false }),
   stool: Object.freeze({ id: 'stool', width: 1, depth: 1, blocksMovement: false }),
   bed: Object.freeze({ id: 'bed', width: 1, depth: 2, blocksMovement: false }),
 });

@@ -1,0 +1,127 @@
+{
+  "date": "2026-09-14",
+  "command": "node --cpu-prof --cpu-prof-dir=tmp --cpu-prof-name=furniture.cpuprofile --experimental-strip-types scripts/cooking-bench.ts --pawns=100 --ticks=300 --repeats=1 --output=artifacts/furniture-cpu-profiled.json",
+  "scope": "Sampled entire CLI including setup and validation; profiler overhead, not a performance comparison. Raw profile retained in ignored tmp. Rows are sampling self-time, not inclusive costs.",
+  "top": [
+    {
+      "selfSampleMs": 1948.345,
+      "function": "planWork",
+      "file": "src/sim/work-planner.ts",
+      "line": 72
+    },
+    {
+      "selfSampleMs": 748.797,
+      "function": "cellCapacity",
+      "file": "src/sim/ground-placement.ts",
+      "line": 25
+    },
+    {
+      "selfSampleMs": 368.395,
+      "function": "constructionObstructions",
+      "file": "src/sim/construction-rules.ts",
+      "line": 18
+    },
+    {
+      "selfSampleMs": 343.788,
+      "function": "cellCapacity",
+      "file": "src/sim/ground-placement.ts",
+      "line": 25
+    },
+    {
+      "selfSampleMs": 309.916,
+      "function": "storageCapacity",
+      "file": "src/sim/ground-placement.ts",
+      "line": 56
+    },
+    {
+      "selfSampleMs": 278.753,
+      "function": "",
+      "file": "src/sim/construction-rules.ts",
+      "line": 34
+    },
+    {
+      "selfSampleMs": 269.337,
+      "function": "stepWorld",
+      "file": "src/sim/engine.ts",
+      "line": 233
+    },
+    {
+      "selfSampleMs": 231.126,
+      "function": "hasReachableCell",
+      "file": "src/sim/pathfinding.ts",
+      "line": 30
+    },
+    {
+      "selfSampleMs": 168.761,
+      "function": "(garbage collector)",
+      "file": "",
+      "line": 0
+    },
+    {
+      "selfSampleMs": 116.715,
+      "function": "candidateAccess",
+      "file": "src/sim/candidate-access.ts",
+      "line": 9
+    },
+    {
+      "selfSampleMs": 109.927,
+      "function": "constructionObstruction",
+      "file": "src/sim/construction-rules.ts",
+      "line": 32
+    },
+    {
+      "selfSampleMs": 108.743,
+      "function": "resourceCells",
+      "file": "src/sim/farming.ts",
+      "line": 15
+    },
+    {
+      "selfSampleMs": 81.731,
+      "function": "WeightedSearch",
+      "file": "src/sim/weighted-search.ts",
+      "line": 20
+    },
+    {
+      "selfSampleMs": 76.155,
+      "function": "storageOccupancyAllows",
+      "file": "src/sim/occupancy.ts",
+      "line": 24
+    },
+    {
+      "selfSampleMs": 69.933,
+      "function": "advance",
+      "file": "src/sim/weighted-search.ts",
+      "line": 28
+    },
+    {
+      "selfSampleMs": 66.388,
+      "function": "billWanted",
+      "file": "src/sim/cooking-bills.ts",
+      "line": 25
+    },
+    {
+      "selfSampleMs": 61.48,
+      "function": "groundOccupancyAllows",
+      "file": "src/sim/occupancy.ts",
+      "line": 18
+    },
+    {
+      "selfSampleMs": 53.479,
+      "function": "PathFrontier",
+      "file": "src/sim/PathFrontier.ts",
+      "line": 11
+    },
+    {
+      "selfSampleMs": 51.612,
+      "function": "occupancyOf",
+      "file": "src/sim/occupancy.ts",
+      "line": 14
+    },
+    {
+      "selfSampleMs": 47.233,
+      "function": "WeightedSearch",
+      "file": "src/sim/weighted-search.ts",
+      "line": 20
+    }
+  ]
+}

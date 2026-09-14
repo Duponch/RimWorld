@@ -49,7 +49,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 21 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 22 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)
@@ -77,10 +77,14 @@
 ## Construction (V16)
 - Lire docs/development/construction.md : plan traversable, cadre après première livraison, finition après dégagement physique. Construction peut livrer même sans Transport ; Transport seul ne finit pas. Annuler libère les cargaisons de dégagement liées au parent.
 - Protéger personnes, arêtes/coins et services avant livraison/achèvement. Le délai de cadre capturé appartient à l'arête sauvegardée. Valider V15 avec ses anciennes exclusions avant migration ; aucun cache d'obstacles de chantier ne survit à une décision synchrone.
-- V21 : profils de coexistence dans src/sim/occupancy.ts ; table/tabouret/piquet gardent les piles compatibles, mur/lit/feu les dégagent. Les plans retirent les cellules de zone incompatibles après préplanification des cargaisons ; un feu peut recouvrir une zone sans accepter le rangement. Circulation/coûts des meubles restent ouverts. Lire docs/research/occupancy-reference.md.
+- V21 : profils de coexistence dans src/sim/occupancy.ts ; table/tabouret/piquet gardent les piles compatibles, mur/lit/feu les dégagent. Les plans retirent les cellules de zone incompatibles après préplanification des cargaisons ; un feu peut recouvrir une zone sans accepter le rangement. V22 livre transit/coûts/arrêt des meubles présents ; autres profils restent ouverts. Lire docs/research/occupancy-reference.md.
 
 ## Ordres et sélection (V17)
 - Lire docs/development/player-orders.md avant de modifier priorité forcée, file ou sélection. La file réserve les travaux dès acceptation ; métier 0 interdit de nouveaux ordres mais conserve les ordres forcés déjà acceptés. Annulation explicite, effondrement et disparition de cible libèrent les engagements.
 - Un ordre vise un travail exécutable, pas une chaîne de construction implicite. V18 ajoute transport et approvisionnement forcés, avec quantités réservées dès acceptation ; V19 ajoute dégagement des chantiers et combustible forcés ; V20 ajoute cuisine et dégagement des piles sur semis ; un ordre de cuisine sur feu vide ravitaille sans promettre la recette suivante. Le menu interroge le worker hors des frames ; la commande revalide tout.
 - Sélection multiple en présentation seulement ; anneaux instanciés partageant les trajectoires GPU. V16 validée avant migration vers des files vides ; V17 validée avant autorisation des entrées quantitatives V18, sans modifier les ordres numériques existants. V18 validée avant les destinations quantitatives V19 ; combustible forcé ignore l’automatisme mais conserve réservation exclusive du poste et phases physiques.
 - V19 validée strictement avant V20 : les recettes en file réservent ingrédients, staging et poste. Un dégagement forcé de semis conserve zone/cellule, jamais un ID agricole renouvelable ; modification de zone/politique libère la cargaison. Lire docs/research/cooking-orders-reference.md.
+
+## Transit mobilier V22
+- Lire docs/development/furniture-travel.md avant de changer coûts, destinations ou poses. La non-répétition vaut entre objets qualifiants différents. Table/lit/feu traversables, arrêt ordinaire exclu ; le lit garde son service réservé. Ne pas confondre transit et destination.
+- Migration V21 stricte, arêtes engagées conservées ; `transitExit` persisté pour les sorties physiques. Corps/cargaison/sélection partagent la formule TSL et les attributs existants ; hauteur graphique sans effet autoritaire.

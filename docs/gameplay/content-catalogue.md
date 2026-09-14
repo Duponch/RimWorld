@@ -47,7 +47,7 @@ V13 ajoute des [régimes partagés](../development/food-policies.md), aucun obje
 
 ## États de chantier V16
 
-Aucun nouvel objet : mur, lit, table, tabouret, feu et piquet disposent de phases plan/cadre avant leur état construit. Plantes, bois et aliments existants participent au dégagement physique. L’état de chantier n’est pas une nouvelle famille CAT. Compatibilité meuble/objet, plans sur réserve, matériaux alternatifs, qualité et chaîne pierre restent absents ou partiels ; voir [construction](../development/construction.md).
+Aucun nouvel objet : mur, lit, table, tabouret, feu et piquet disposent de phases plan/cadre avant leur état construit. Plantes, bois et aliments existants participent au dégagement physique. L’état de chantier n’est pas une nouvelle famille CAT. Compatibilité meuble/objet et plans sur réserve livrés en V21 ; matériaux alternatifs, qualité et chaîne pierre restent absents ou partiels ; voir [construction](../development/construction.md).
 
 ## Portée des tranches V17–V18
 
@@ -58,3 +58,5 @@ Aucun nouvel objet individuel. La sélection multiple, les ordres directs et les
 V19 et V20 ne créent aucun objet. Bois et feu disposent du ravitaillement manuel ; les plantes et piles présentes sur un chantier peuvent être dégagées au clic droit. V20 rend aussi le repas simple commandable au poste avec ses ingrédients réels, et les piles des champs dégageables manuellement. Cela ne complète ni la diversité végétale ni les roches, recettes ou autres combustibles. [Règles et limites](../development/player-orders.md).
 
 V21 précise les profils des six constructions existantes : table/tabouret/piquet conservent les piles, mur/lit/feu les dégagent ; zones et apports ont leurs propres permissions. Affichage des objets adapté aux surfaces 3D. Aucun objet ni type de stockage supplémentaire. [Tableau des profils](../development/construction.md).
+
+V22 ne crée aucun objet : elle renseigne transit, arrêt, coûts d’entrée et répétition pour les six constructions existantes. Table/lit/tabouret ont une hauteur de passage GPU. [Profils actuels](../development/furniture-travel.md) ; autres matériaux et centaines d’objets individuels restent à inventorier/intégrer.

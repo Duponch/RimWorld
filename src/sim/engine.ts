@@ -1,3 +1,4 @@
+import { leaveTransitCell } from './transit-exit.ts';
 import { removeZonesForPlan } from './construction-zones.ts';
 import { occupancyOf, occupies } from './occupancy.ts';
 import { constructionHaulId, constructionSiteFree, constructionWorkTarget, isConstruction } from './construction-rules.ts';
@@ -254,6 +255,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
         release: () => releaseWork(world, pawn),
         event: (message: string) => event(world, 'need', message),
       };
+      if (leaveTransitCell(world,pawn,getBlocked,budget)) continue;
       if (advanceOrders(world,pawn,getBlocked,budget)) continue;
       if (processNeeds(world, pawn, needsContext) || pawn.orders.active===null&&processRecreation(world, pawn, needsContext)) continue;
       if (pawn.jobId === null && pawn.haul === null && !pawn.cooking && pawn.planCooldown === 0) planWork(world, pawn, getBlocked, occupied, budget);

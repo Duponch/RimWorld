@@ -84,9 +84,11 @@ test('plans and frames remain traversable with calibrated edge delay, completion
   // A meal place already reserved by an approaching colonist remains valid
   // after a blueprint is placed there; delivery waits until ingestion ends.
   const dining=camp(2),eater=dining.pawns[1]!;eater.hunger=20;eater.priorities.build=0;
-  dining.structures.push({id:dining.nextId++,kind:'bed',x:9,z:10,orientation:0,footprint:'standard'});
   addGroundMaterial(dining,'food',1,{x:9,z:10},'survival-meal');addGroundMaterial(dining,'wood',5,{x:7,z:10},'wood');
-  until(dining,()=>eater.need?.kind==='eat'&&eater.need.phase==='travel');
+  // Synthetic checkpoint after pickup, with a free floor meal destination.
+  const portion=dining.piles.find(p=>p.item==='survival-meal')!;portion.owner={type:'pawn',pawnId:eater.id};
+  eater.need={kind:'eat',phase:'travel',sourcePileId:portion.id,carryPileId:portion.id,quantity:1,progress:0,dining:{target:{x:10,z:9},seatId:null,tableId:null}};
+  eater.state='moving';eater.path=[{x:9,z:9},{x:10,z:9}];expect(validateWorld(dining)).toEqual([]);
   if(eater.need?.kind!=='eat'||!eater.need.dining)throw new Error('Missing dining place');
   const target=eater.need.dining.target;
   expect(applyCommand(dining,{type:'designate',kind:'wall',...target}).ok).toBe(true);
@@ -145,7 +147,7 @@ test('replacing storage with a blueprint releases active and queued deliveries a
   const legacy=camp();legacy.structures.push({id:legacy.nextId++,kind:'bed',x:12,z:10,orientation:1,footprint:'standard'});
   addGroundMaterial(legacy,'food',10,{x:7,z:10},'rice');const id=legacy.piles[0]!.id;
   legacy.piles[0]!.owner={type:'ground',x:13,z:10};const raw=JSON.parse(JSON.stringify(legacy));raw.schemaVersion=20;
-  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated.schemaVersion).toBe(21);expect(migrated.stock.food).toBe(10);expect(migrated.piles[0]!.id).toBe(id);expect(migrated.piles[0]!.rot).toEqual(legacy.piles[0]!.rot);
+  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated.schemaVersion).toBe(22);expect(migrated.stock.food).toBe(10);expect(migrated.piles[0]!.id).toBe(id);expect(migrated.piles[0]!.rot).toEqual(legacy.piles[0]!.rot);
   expect(migrated.piles[0]!.owner).not.toMatchObject({x:13,z:10});expect(migrated.pawns).toEqual(legacy.pawns);expect(validateWorld(migrated)).toEqual([]);
   const full=structuredClone(raw);const used=new Set(full.piles.filter((p:any)=>p.owner.type==='ground').map((p:any)=>p.owner.z*full.width+p.owner.x));
   for(let i=0;i<full.width*full.height;i++)if(!used.has(i))full.piles.push({id:full.nextId++,kind:'wood',item:'wood',quantity:75,owner:{type:'ground',x:i%full.width,z:Math.floor(i/full.width)}});

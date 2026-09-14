@@ -116,3 +116,5 @@ Chapitre 14, SYS-080/TEST-080, STAT-060/061, CAT-050 et UI-026 : [vérification 
 ## V16 : plans, cadres et dégagement
 
 Chapitre 10, **SYS-056/TEST-056**, avec SYS-005/020..022/051/053/054 : **adopter** intention, livraison, finition et dégagement physique ; **adapter** navigation et protection des volumes en 3D ; **différer** coexistences riches, minage, réparation, remplacement et réinstallation (SYS-057..061). [Relecture de plusieurs sources](construction-reference.md) : le blocage immédiat des plans était un écart, corrigé. Les 14 ticks Core d’entrée dans un cadre sont convertis à l’horloge locale sans certifier toutes les vitesses. [Contrat et migration](../development/construction.md).
+
+V22 — chapitres 5/21, SYS-020..022 et SYS-113..117 : [nouvelle recherche mobilier](furniture-travel-reference.md). Adopter distinction transit/arrêt, suppléments et non-répétition ; adapter volumes GPU et recherche déterministe ; différer autres profils et coûts environnementaux. Les TEST associés enrichissent l’oracle spatial, les portages, services et reprises existants. Les anciennes valeurs XML 2018 ne prévalent pas sur les fiches actuelles sans vérification.

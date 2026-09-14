@@ -1,5 +1,5 @@
 import { WeightedSearch } from './weighted-search.ts';
-import { frameCosts } from './construction-costs.ts';
+import { canStandAt, navigationCosts } from './furniture-travel.ts';
 import { jobBlocksTransit } from './construction-rules.ts';
 import type { DistanceField, Reachability } from './navigation-types.ts';
 export type { DistanceField, Reachability } from './navigation-types.ts';
@@ -19,7 +19,7 @@ export function blockedCells(world: World): Uint8Array {
     if (terrain === 'water' || terrain === 'rock') blocked[i] = 1;
   }
   for (const structure of world.structures) {
-    if (structure.kind === 'wall' || structure.kind === 'table') for (const cell of footprintCells(structure)) blocked[cellIndex(world, cell.x, cell.z)] = 1;
+    if (structure.kind === 'wall' || world.schemaVersion<22&&structure.kind === 'table') for (const cell of footprintCells(structure)) blocked[cellIndex(world, cell.x, cell.z)] = 1;
   }
   for (const job of world.jobs) {
     if (jobBlocksTransit(world,job)) for (const cell of footprintCells(job)) blocked[cellIndex(world, cell.x, cell.z)] = 1;
@@ -63,7 +63,8 @@ export function routeToCell(world: World, target: Cell, reachable: Reachability)
  * exhausts the component. This supports ranking all work targets exactly. */
 export function reachableCells(world: World, start: Cell, blocked: Uint8Array, occupied: ReadonlySet<number>, goals?: ReadonlySet<number>, allGroups?:readonly ReadonlySet<number>[]): DistanceField {
   const unavailable=blocked.slice();for(const index of occupied)unavailable[index]=1;
-  return new WeightedSearch(world.width,world.height,cellIndex(world,start.x,start.z),unavailable,frameCosts(world)).finish(goals,allGroups);
+  const {costs,repeaters,stops}=navigationCosts(world);
+  const result=new WeightedSearch(world.width,world.height,cellIndex(world,start.x,start.z),unavailable,costs,repeaters).finish(goals,allGroups);result.stops=stops;return result;
 }
 
 export function routeToJob(world: World, target: Cell & { kind?: string; orientation?: 0 | 1 | 2 | 3; footprint?: 'standard' | 'legacy-single' }, reachable: Reachability, allowTarget = false): Cell[] | null {
@@ -71,8 +72,8 @@ export function routeToJob(world: World, target: Cell & { kind?: string; orienta
   const candidates: Cell[] = cells.flatMap(cell => [
     { x: cell.x, z: cell.z - 1 }, { x: cell.x + 1, z: cell.z },
     { x: cell.x, z: cell.z + 1 }, { x: cell.x - 1, z: cell.z },
-  ]).filter(cell => allowTarget || !cells.some(occupied => occupied.x === cell.x && occupied.z === cell.z));
-  if (allowTarget) candidates.unshift({ x: target.x, z: target.z });
+  ]).filter(cell => (allowTarget || !cells.some(occupied => occupied.x === cell.x && occupied.z === cell.z))&&canStopAt(world,cell,reachable));
+  if (allowTarget&&canStopAt(world,target,reachable)) candidates.unshift({ x: target.x, z: target.z });
   const goals=new Set(candidates.filter(c=>inBounds(world,c.x,c.z)).map(c=>cellIndex(world,c.x,c.z)).filter(i=>hasReachableCell(reachable,i)));
   if(!goals.size)return null;
   if(goals.has(reachable.start))return [];
@@ -93,6 +94,10 @@ export function routeToJob(world: World, target: Cell & { kind?: string; orienta
   return best;
 }
 
+export function canStopAt(world:World,cell:Cell,reach?:Reachability):boolean {
+  return inBounds(world,cell.x,cell.z)&&(reach?.stops?!reach.stops.has(cellIndex(world,cell.x,cell.z)):canStandAt(world,cell));
+}
+
 /** Same interaction cells as routeToJob(..., true) for single-cell food piles. */
 export function interactionGoals(world: World, cells: Cell[]): Set<number> {
   const goals = new Set<number>();
@@ -103,5 +108,6 @@ export function interactionGoals(world: World, cells: Cell[]): Set<number> {
     if (cell.z + 1 < world.height) goals.add(index + world.width);
     if (cell.x > 0) goals.add(index - 1);
   }
+  for(const i of goals)if(!canStandAt(world,{x:i%world.width,z:Math.floor(i/world.width)}))goals.delete(i);
   return goals;
 }

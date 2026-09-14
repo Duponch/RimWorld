@@ -30,7 +30,7 @@ Pour les tâches automatiques, désactiver la famille responsable (Transport ord
 
 Une réserve est actuellement une cellule avec filtre, priorité et capacité totale. Le stockage de meilleure priorité attire les objets ; les réserves de même priorité ne provoquent pas de transport circulaire. Une capacité réduite sous le contenu actuel autorise l'évacuation de l'excédent vers une réserve admissible de priorité égale ou inférieure. Faute de destination, l'excédent reste au sol. Les objets déjà présents ne disparaissent pas lorsque leurs filtres changent. La capacité ne représente pas un second conteneur possédant des copies des piles.
 
-Les [désignations rectangulaires](area-designations.md) créent ou retirent désormais plusieurs cases en une commande. Elles ne fusionnent pas les réserves en une entité commune. La création ignore les réserves déjà présentes ; le retrait invalide ensemble les livraisons qui les ciblaient. L'annulation rectangulaire d'un chantier sélectionne son identité une seule fois, même si plusieurs cellules de son empreinte sont touchées, puis laisse ses matériaux au sol. Cette étape historique avait conservé le schéma 2 ; le schéma courant est V21.
+Les [désignations rectangulaires](area-designations.md) créent ou retirent désormais plusieurs cases en une commande. Elles ne fusionnent pas les réserves en une entité commune. La création ignore les réserves déjà présentes ; le retrait invalide ensemble les livraisons qui les ciblaient. L'annulation rectangulaire d'un chantier sélectionne son identité une seule fois, même si plusieurs cellules de son empreinte sont touchées, puis laisse ses matériaux au sol. Cette étape historique avait conservé le schéma 2 ; le schéma courant est V22.
 
 ## Empreintes, accès et interface
 

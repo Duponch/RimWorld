@@ -1,3 +1,5 @@
+import { furnitureSurfaces } from './furniture-motion';
+import { pawnPresentationPose } from './pawn-presentation';
 import { constructionWorkTarget } from '../sim/construction-rules';
 import { pawnSelectionMesh } from './PawnSelectionLayer';
 import type { MotionTimeline } from './MotionTimeline';
@@ -123,6 +125,7 @@ export class PawnLayer {
   private pawnMesh: THREE.Mesh | null = null;
   private cargoMesh: THREE.Mesh | null = null;
   private readonly targetPoses = new Map<number,THREE.Vector4>();
+  private travelSurfaces:ReadonlyMap<number,number>=new Map();
   private readonly travelKeys = new Map<number,string>();
   private createPawnMesh(count: number): void {
     clearGroup(this.group);
@@ -139,9 +142,7 @@ export class PawnLayer {
       const bone = attribute('boneId', 'float');
       const pivot = attribute('bindPivot', 'vec3');
       const motion = attribute('aMotion', 'vec4');
-      const travel=attribute('aTravel','vec2');
-      const alpha=travel.y.sub(travel.x).greaterThan(0).select(this.travelTime.sub(travel.x).div(travel.y.sub(travel.x).max(0.0001)).clamp(0,1),this.blend);
-      const pose = mix(attribute('aFrom', 'vec4'), attribute('aTo', 'vec4'), alpha);
+      const pose = pawnPresentationPose(this);
       const angle = float(0).toVar();
       const sign = float(1).toVar();
       If(bone.equal(3).or(bone.equal(4)).or(bone.equal(6)), () => { sign.assign(-1); });
@@ -190,9 +191,7 @@ export class PawnLayer {
     const cargoMat = material(0xffffff);
     cargoMat.colorNode = attribute('color', 'vec3');
     cargoMat.positionNode = Fn(() => {
-      const travel=attribute('aTravel','vec2');
-      const alpha=travel.y.sub(travel.x).greaterThan(0).select(this.travelTime.sub(travel.x).div(travel.y.sub(travel.x).max(0.0001)).clamp(0,1),this.blend);
-      const pose = mix(attribute('aFrom', 'vec4'), attribute('aTo', 'vec4'), alpha);
+      const pose = pawnPresentationPose(this);
       const load = attribute('aCargo', 'vec2');
       const scale = float(0).toVar();
       If(attribute('cargoKind', 'float').equal(load.x), () => { scale.assign(load.y.mul(0.25).add(0.75)); });
@@ -213,7 +212,7 @@ export class PawnLayer {
   }
 
   update(world: World, oldBlend: number, newMap: boolean): void {
-    this.travelKeys.clear();
+    this.travelKeys.clear();this.travelSurfaces=furnitureSurfaces(world);
     if (!this.pawnMesh || (this.pawnMesh.geometry.getAttribute('aFrom')?.count ?? 0) !== world.pawns.length) this.createPawnMesh(world.pawns.length);
     const geometry = this.pawnMesh!.geometry as THREE.InstancedBufferGeometry;
     const fromAttribute = geometry.getAttribute('aFrom') as THREE.InstancedBufferAttribute;
@@ -236,7 +235,7 @@ export class PawnLayer {
       }
       const bedId = pawn.need?.kind === 'sleep' ? pawn.need.bedId : null;
       const bed = pawn.state === 'sleeping' && bedId !== null ? world.structures.find(item => item.id === bedId) : undefined;
-      let px = pawn.x, pz = pawn.z, py = 0;
+      let px = pawn.x, pz = pawn.z, py = pawn.state==='eating'||pawn.state==='sleeping'?0:this.travelSurfaces.get(pawn.z*world.width+pawn.x)??0;
       if (bed) {
         const cells = footprintCells(bed), last = cells[cells.length - 1]!;
         px = (bed.x + last.x) / 2; pz = (bed.z + last.z) / 2; py = WORLD_SCALE.bedSurfaceHeight;
@@ -291,7 +290,7 @@ export class PawnLayer {
       const visual=this.visuals.get(pawn.id)!;
       if(segment && (active || pawn.state==='moving')) {
         const yaw=Math.atan2(segment.to.x-segment.from.x,segment.to.z-segment.from.z);
-        visual.from.set(segment.from.x,0,segment.from.z,yaw);visual.to.set(segment.to.x,0,segment.to.z,yaw);
+        visual.from.set(segment.from.x,this.travelSurfaces.get(segment.from.z*world.width+segment.from.x)??0,segment.from.z,yaw);visual.to.set(segment.to.x,this.travelSurfaces.get(segment.to.z*world.width+segment.to.x)??0,segment.to.z,yaw);
         times.setXY(i,(segment.start-origin)/10,(segment.end-origin)/10);
         motion.setX(i,active && timeline.tick>=segment.start?1:0);motion.setY(i,0);motion.setZ(i,0);
       } else {
