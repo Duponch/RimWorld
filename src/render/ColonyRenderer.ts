@@ -24,6 +24,7 @@ import type { AreaIndex } from '../sim/designation';
 import { WORLD_SCALE } from '../world/scale';
 import { CameraRig, type CameraMode } from './CameraRig';
 import { DayNightLayer } from './DayNightLayer';
+import { RecreationHints } from './RecreationHints';
 
 type VisualChunk = { signature: string; group: THREE.Group };
 
@@ -67,6 +68,7 @@ export class ColonyRenderer {
   private readonly staticMaterial = material(0xffffff, { vertexColors: true });
   private readonly waterMaterial = material(0xffffff, { vertexColors: true, roughness: 0.45, metalness: 0.08 });
   private readonly boxes = new BoxBatches();
+  private readonly recreationHints = new RecreationHints(this.boxes);
   private readonly resources = new ResourceLayer(this.resourceGroup, this.staticMaterial);
   private naturalResources: World['resources'] = [];
   private readonly crops = new CropLayer(this.staticMaterial);
@@ -145,7 +147,7 @@ export class ColonyRenderer {
     this.selection.rotation.x = -Math.PI / 2;
     this.selection.position.y = 0.09;
     this.selection.visible = false;
-    this.scene.add(this.hover, this.selection);
+    this.scene.add(this.hover, this.selection, this.recreationHints.group);
     renderer.domElement.addEventListener('pointerdown', this.onPointerDown, true);
     renderer.domElement.addEventListener('pointerup', this.onPointerUp);
     renderer.domElement.addEventListener('pointermove', this.onPointerMove);
@@ -336,9 +338,9 @@ export class ColonyRenderer {
       for (const cell of cells) orders.push({ x: cell.x, y: 0.032, z: cell.z, color: job.status === 'active' ? 0xe7c17a : 0x99cfc3 });
       if (job.kind === 'chop' || job.kind === 'harvest' || job.kind === 'cut' || job.kind === 'sow') continue;
       const x = (job.x + last.x) / 2, z = (job.z + last.z) / 2, ry = job.orientation * Math.PI / 2;
-      const height = job.kind === 'wall' ? wallHeight : job.kind === 'table' ? WORLD_SCALE.tableHeight : job.kind === 'stool' ? WORLD_SCALE.stoolHeight : WORLD_SCALE.bedSurfaceHeight;
-      const width = job.kind === 'wall' ? 0.92 : job.kind === 'table' ? WORLD_SCALE.tableWidth : job.kind === 'stool' ? WORLD_SCALE.stoolWidth : WORLD_SCALE.bedWidth;
-      const length = job.kind === 'table' ? WORLD_SCALE.tableLength : job.kind === 'stool' ? WORLD_SCALE.stoolWidth : job.kind === 'bed' && job.footprint !== 'legacy-single' ? WORLD_SCALE.bedLength : 0.92;
+      const height = job.kind === 'horseshoes' ? WORLD_SCALE.horseshoeHeight : job.kind === 'wall' ? wallHeight : job.kind === 'table' ? WORLD_SCALE.tableHeight : job.kind === 'stool' ? WORLD_SCALE.stoolHeight : WORLD_SCALE.bedSurfaceHeight;
+      const width = job.kind === 'horseshoes' ? 0.12 : job.kind === 'wall' ? 0.92 : job.kind === 'table' ? WORLD_SCALE.tableWidth : job.kind === 'stool' ? WORLD_SCALE.stoolWidth : WORLD_SCALE.bedWidth;
+      const length = job.kind === 'horseshoes' ? 0.12 : job.kind === 'table' ? WORLD_SCALE.tableLength : job.kind === 'stool' ? WORLD_SCALE.stoolWidth : job.kind === 'bed' && job.footprint !== 'legacy-single' ? WORLD_SCALE.bedLength : 0.92;
       blueprints.push({ x, z, y: height / 2, sx: width, sy: height, sz: length, ry });
       if (job.escrow.wood > 0) {
         // Four low corner posts distinguish a supplied frame from a bare plan.
@@ -584,19 +586,21 @@ export class ColonyRenderer {
   private updateHover(): void {
     if (this.areaDrag) { this.updateAreaPreview(); return; }
     const cell = this.hoverCell;
+    this.recreationHints.update(this.world, cell && (this.tool==='horseshoes'||this.tool==='select'&&this.world?.structures.some(s=>s.kind==='horseshoes'&&s.x===cell.x&&s.z===cell.z)) ? cell : undefined);
     this.hover.visible = !!cell;
     if (!cell || !this.world) return;
     const cells = footprintCells({ ...cell, kind: this.tool === 'bed' || this.tool === 'table' || this.tool === 'stool' ? this.tool : 'wall', orientation: this.placementRotation });
     const last = cells[cells.length - 1]!;
     this.hover.scale.set(Math.abs(cell.x - last.x) + 1, Math.abs(cell.z - last.z) + 1, 1);
     this.hover.position.set((cell.x + last.x) / 2, this.world.tiles[cell.z * this.world.width + cell.x]?.terrain === 'water' ? WORLD_SCALE.waterSurface + 0.04 : 0.055, (cell.z + last.z) / 2);
-    const validity = this.tool === 'wall' || this.tool === 'bed' || this.tool === 'table' || this.tool === 'stool' || this.tool === 'campfire' || this.tool === 'chop' || this.tool === 'harvest' || this.tool === 'cut'
+    const validity = this.tool === 'wall' || this.tool === 'bed' || this.tool === 'table' || this.tool === 'stool' || this.tool === 'campfire' || this.tool === 'horseshoes' || this.tool === 'chop' || this.tool === 'harvest' || this.tool === 'cut'
       ? canDesignate(this.world, { type: 'designate', kind: this.tool, ...cell, orientation: this.placementRotation }) : undefined;
     const color = validity?.ok === false ? 0xe46f58 : this.tool === 'cancel' || this.tool === 'remove-stockpile' ? 0xe6876a : this.tool === 'select' ? 0xf9ebae : 0x9dd9ca;
     (this.hover.material as THREE.MeshBasicNodeMaterial).color.setHex(color);
     this.renderer.domElement.title = validity?.reason ?? '';
   }
   private onPointerLeave = (): void => {
+    this.recreationHints.group.visible=false;
     this.hoverCell = null; this.hover.visible = false;
     if (this.areaDrag) this.updateAreaPreview(); else this.pointerDown = null;
   };

@@ -1,17 +1,17 @@
 import { hourOfDay, type ScheduleAssignment, type ScheduleCommand } from '../sim/schedule';
 import type { World } from '../sim/types';
 
-const labels: Record<ScheduleAssignment, string> = {anything: 'Libre', work: 'Travail', sleep: 'Sommeil'};
-const symbols: Record<ScheduleAssignment, string> = {anything: '·', work: 'T', sleep: 'Z'};
+const labels: Record<ScheduleAssignment, string> = {anything: 'Libre', work: 'Travail', sleep: 'Sommeil', recreation: 'Loisirs'};
+const symbols: Record<ScheduleAssignment, string> = {anything: '·', work: 'T', sleep: 'Z', recreation: 'L'};
 
 export function scheduleLayout(): string {
   return `<section id="schedule-panel" class="management-panel schedule-panel panel" aria-label="Horaires" hidden>
     <div class="panel-heading"><h2>Horaires</h2><button data-close-panel aria-label="Fermer Horaires">×</button></div>
     <div class="schedule-brushes" aria-label="Activité à peindre">${Object.entries(labels).map(([id, label]) => `<button data-schedule-brush="${id}" aria-pressed="${id === 'anything'}">${label}</button>`).join('')}
-    <button disabled title="Le besoin et les activités de récréation restent à développer.">Loisirs · à venir</button></div>
+    </div>
     <p>Choisir une activité puis cliquer ou glisser sur les heures. Libre : le colon gère ses besoins et son travail. Le sommeil exige un couchage accessible ; le travail permet toujours de manger.</p>
     <div class="schedule-table-wrap"><table class="schedule-table"><thead><tr><th scope="col">Colon</th>${Array.from({length: 24}, (_, h) => `<th scope="col" data-clock-hour="${h}">${h}</th>`).join('')}<th scope="col">Copie</th></tr></thead><tbody id="schedule-rows"></tbody></table></div>
-    <p class="muted" id="schedule-profile"></p><p class="muted">La plage indique une priorité, pas un ordre instantané. Tab parcourt les cases, Entrée ou Espace peint ; Échap annule le tracé. Les loisirs ne sont pas encore simulés.</p>
+    <p class="muted" id="schedule-profile"></p><p class="muted">La plage indique une priorité, pas un ordre instantané. Tab parcourt les cases, Entrée ou Espace peint ; Échap annule le tracé. Loisirs favorise les activités accessibles sous 95 % de satisfaction ; Libre sous 35 %. Répéter la même famille crée de la lassitude.</p>
   </section>`;
 }
 

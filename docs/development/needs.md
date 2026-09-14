@@ -16,7 +16,7 @@ Le temps reste à 10 Hz et 6 000 ticks/jour. La faim adulte baisse de 160/6 000 
 
 Le [contrat Horaires V12](schedules.md) définit désormais le départ au lit, les réveils, la baisse de repos adulte par catégorie, l'épuisement différé et la migration historique. Il remplace les anciens coefficients de fatigue et le verrou de cinq points pour les nouvelles parties. Le lit normal récupère 100 points en 10,5 h ; le sol à 80 %. L'intégration et la cadence des interruptions restent adaptées à notre moteur.
 
-Tables, confort et souvenirs : [repas à table](dining.md). Cuisine : [feu et factures](cooking.md). Fraîcheur et pourriture : [conservation](food-preservation.md). Les régimes partagés sont livrés ; loisirs, préférences contextuelles complètes, malnutrition et maladies restent absents ; cette chaîne ne clôt pas tout le domaine survie.
+Tables, confort et souvenirs : [repas à table](dining.md). Cuisine : [feu et factures](cooking.md). Fraîcheur et pourriture : [conservation](food-preservation.md). Les régimes partagés et [deux familles de loisirs](recreation.md) sont livrés ; les autres activités, les préférences contextuelles complètes, la malnutrition et les maladies restent absentes ; cette chaîne ne clôt pas tout le domaine survie.
 
 ## Persistance et limites de ressources
 

@@ -1,3 +1,4 @@
+import { recreationMood } from './recreation-rules.ts';
 import { TICKS_PER_DAY } from './types.ts';
 import type { Pawn, World } from './types.ts';
 
@@ -14,7 +15,7 @@ export function updateWellbeing(world: World, pawn: Pawn): void {
     : Math.max(ceiling, pawn.comfort + perHour * 24 / TICKS_PER_DAY);
   if (pawn.memories.some(memory => memory.expiresAt <= world.tick)) pawn.memories = pawn.memories.filter(memory => memory.expiresAt > world.tick);
   // Transitional mood aggregate, explicitly not the full RimWorld mood simulation.
-  pawn.mood = Math.max(0, Math.min(100, Math.round(pawn.hunger * 0.6 + pawn.rest * 0.4 + comfortMood(pawn.comfort) - pawn.memories.reduce((sum, memory) => sum + (memory.kind === 'ate-raw-food' ? 7 : 3), 0))));
+  pawn.mood = Math.max(0, Math.min(100, Math.round(pawn.hunger * 0.6 + pawn.rest * 0.4 + comfortMood(pawn.comfort) + recreationMood(pawn.recreation.level) - pawn.memories.reduce((sum, memory) => sum + (memory.kind === 'ate-raw-food' ? 7 : 3), 0))));
 }
 
 export function comfortMood(comfort: number): number {

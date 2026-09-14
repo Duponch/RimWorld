@@ -10,6 +10,7 @@ import { queryCookingBillStatus } from '../src/sim/cooking-diagnostics';
 import type { BillSettings } from '../src/sim/cooking-types';
 import { woodAccount } from './scenarios/colony-player';
 import type { World } from '../src/sim/types';
+import { initialRecreation } from '../src/sim/recreation-rules';
 
 function camp():World {
   const w=createWorld(42,16,16);w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.resources=[];w.piles=[];
@@ -29,7 +30,7 @@ test('feu construit, deux jours de combustion, ravitaillement concurrent et inte
   const migrated=deserializeWorld(JSON.stringify(v9));
   expect(migrated.pawns.every(p=>p.cooking===null&&p.priorities.cook===2)).toBe(true);
   migrated.pawns.forEach(p=>p.priorities.cook=0);
-  const historicalExpected=structuredClone(w);historicalExpected.restRules='legacy';historicalExpected.pawns.forEach(p=>p.schedule.fill('anything'));expect(migrated).toEqual(historicalExpected);
+  const historicalExpected=structuredClone(w);historicalExpected.restRules='legacy';historicalExpected.pawns.forEach(p=>{p.schedule.fill('anything');p.recreation=initialRecreation();});expect(migrated).toEqual(historicalExpected);
   expect(applyCommand(w,{type:'designate',kind:'campfire',x:8,z:8}).ok).toBe(true);
   until(w,()=>w.structures.some(s=>s.kind==='campfire'));
   const fire=w.structures.find(s=>s.kind==='campfire')!;

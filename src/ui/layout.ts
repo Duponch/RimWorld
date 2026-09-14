@@ -7,7 +7,7 @@ const mapSizeLabels: Record<number, string> = { 32: 'terrain d’essai', 64: 'co
 
 export type Tool = 'select' | Exclude<JobKind, 'sow'> | 'cancel' | 'stockpile' | 'remove-stockpile' | 'growing' | 'remove-growing';
 export type Panel = 'architect' | 'work' | 'schedule' | 'assign' | 'history' | 'menu' | null;
-export type ArchitectCategory = 'orders' | 'zones' | 'structure' | 'furniture' | 'temperature';
+export type ArchitectCategory = 'orders' | 'zones' | 'structure' | 'furniture' | 'temperature' | 'recreation';
 export const toolDefinitions: { id: Tool; icon: string; title: string; hint: string; key: string; category: ArchitectCategory }[] = [
   { id: 'select', icon: '↖', title: 'Inspecter', hint: 'Choisir une case ou un colon', key: 'Échap', category: 'orders' },
   { id: 'chop', icon: '♧', title: 'Abattre', hint: 'Cliquer ou tracer un rectangle sur les arbres à couper. Échap annule le tracé.', key: 'C', category: 'orders' },
@@ -17,6 +17,7 @@ export const toolDefinitions: { id: Tool; icon: string; title: string; hint: str
   { id: 'wall', icon: '▥', title: 'Mur', hint: '5 bois · une case libre · mur de 2,80 m', key: 'B', category: 'structure' },
   { id: 'bed', icon: '▰', title: 'Lit', hint: '8 bois livrés · empreinte 1 × 2 · Q / E pour tourner', key: 'L', category: 'furniture' },
   { id: 'table', icon: '▤', title: 'Table', hint: '28 bois livrés · 1 × 2 · placer des tabourets contre le bord · Q / E pour tourner', key: '', category: 'furniture' },
+  { id: 'horseshoes', icon: '∩', title: 'Fers à cheval', hint: '10 bois livrés · 3 joueurs maximum · places de lancer à 5 cases avec vue dégagée', key: '', category: 'recreation' },
   { id: 'campfire', icon: '♨', title: 'Feu de camp', hint: '20 bois livrés · combustible initial inclus · brûle 10 bois par jour', key: '', category: 'temperature' },
   { id: 'stool', icon: '⊓', title: 'Tabouret', hint: '25 bois livrés · 1 × 1 · une place par colon, adjacente à une table', key: '', category: 'furniture' },
   { id: 'growing', icon: '♧', title: 'Zone de culture', hint: 'Tracer un champ de riz. Semis sans graines et récolte à maturité, via le travail Culture.', key: '', category: 'zones' },
@@ -63,7 +64,7 @@ export function gameLayout(): string {
       <div class="architect-body"><nav class="architect-categories" aria-label="Catégories de construction">
         <button data-category="orders" class="active">Ordres</button><button data-category="zones">Zones</button>
         <button data-category="temperature">Température</button><button data-category="structure">Structure</button><button disabled>Sols</button><button data-category="furniture">Meubles</button>
-        <button disabled>Production</button><button disabled>Énergie</button><button disabled>Sécurité</button><button disabled>Température</button>
+        <button data-category="recreation">Loisirs</button><button disabled>Production</button><button disabled>Énergie</button><button disabled>Sécurité</button><button disabled>Température</button>
       </nav><div class="architect-content">
         <div class="tools">${toolDefinitions.map(tool => `<button data-tool="${tool.id}" data-tool-category="${tool.category}" title="${tool.hint}" aria-label="${tool.title}" aria-pressed="false" class="tool"><span class="tool-icon">${tool.icon}</span><span>${tool.title}</span><kbd>${tool.key}</kbd></button>`).join('')}</div>
         <p id="tool-instruction">Choisissez un ordre, puis cliquez sur la carte.</p>
@@ -108,7 +109,7 @@ export function gameLayout(): string {
       <p>Abattage, récolte, réserves et annulation : cliquer ou maintenir le bouton gauche pour tracer un rectangle. Les cases retenues sont surlignées. Relâcher applique ; Échap ou clic droit annule le tracé.</p>
       <p><b>Espace</b> : pause · <b>1 / 2 / 3</b> : vitesse · <b>Tab</b> : Architecte · <b>F1</b> : Travail · <b>F2</b> : Horaires · <b>Échap</b> : annuler le tracé, puis fermer · <b>Ctrl+S</b> : sauvegarder.</p>
       <p>Molette : zoom · glisser le bouton droit : tourner · bouton central ou flèches : déplacer la caméra. La coupe des murs sert à voir les intérieurs ; leurs obstacles restent en place.</p>
-      <p class="muted">Inspectez un chantier pour comprendre son attente, ou une réserve pour modifier ses filtres. Horaires permet de régler les plages de travail et de sommeil. Les loisirs, la santé et les pièces restent à développer. Les onglets grisés indiquent les domaines actuellement indisponibles.</p>
+      <p class="muted">Inspectez un chantier pour comprendre son attente, ou une réserve pour modifier ses filtres. Horaires permet de régler les plages de travail et de sommeil. Un piquet de fers à cheval offre une autre famille de loisirs que l’observation du ciel. La santé et les pièces restent à développer. Les onglets grisés indiquent les domaines actuellement indisponibles.</p>
     </dialog>
     <dialog id="new-world-dialog" class="help-dialog"><form id="new-world-form"><button type="button" class="close" id="new-world-close" aria-label="Fermer la création">×</button><h2>Nouvelle colonie</h2>
       <label class="field">Graine<input id="world-seed" inputmode="numeric" type="number" min="0" max="4294967295" value="42" required></label>

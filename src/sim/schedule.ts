@@ -1,6 +1,6 @@
 import { TICKS_PER_DAY, type CommandResult, type Pawn, type World } from './types.ts';
 
-export const SCHEDULE_ASSIGNMENTS = ['anything', 'work', 'sleep'] as const;
+export const SCHEDULE_ASSIGNMENTS = ['anything', 'work', 'sleep', 'recreation'] as const;
 export type ScheduleAssignment = typeof SCHEDULE_ASSIGNMENTS[number];
 export type ScheduleCommand =
   | { type: 'schedule-paint'; pawnId: number; hours: number[]; assignment: ScheduleAssignment }

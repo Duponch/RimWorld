@@ -1,3 +1,4 @@
+import { initialRecreation } from '../../src/sim/recreation-rules.ts';
 import { applyCommand, createWorld } from '../../src/sim/engine.ts';
 import { refreshStock } from '../../src/sim/materials.ts';
 import type { World } from '../../src/sim/types.ts';
@@ -14,7 +15,7 @@ export function civilCrossingFixture(): World {
   }
   w.pawns.forEach((p,i)=>{
     Object.assign(p,{x:[2,13,8][i]!,z:8,hunger:100,rest:10,priorities:{gather:0,build:0,haul:0,grow:0,cook:0}});
-    p.schedule.fill('anything');
+    p.schedule.fill('anything');p.recreation=initialRecreation();
     if(!applyCommand(w,{type:'assign-bed',bedId:w.structures[[2,0,1][i]!]!.id,pawnId:p.id}).ok)throw new Error('Invalid bed assignment fixture');
   });
   refreshStock(w);return w;

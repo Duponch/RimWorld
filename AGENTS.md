@@ -49,7 +49,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 14 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 15 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)
@@ -65,7 +65,11 @@
 - La température actuelle est constante : un futur climat variable exige de revoir l’intégration des âges. Les effets du froid, de l’exposition et de l’intoxication ne sont pas livrés par ce contrat.
 
 ## Horaires (V12)
-- Lire docs/development/schedules.md avant de modifier repos et priorités horaires. Conserver plages, profil de fatigue et état d’épuisement ; une intention ne donne jamais un bonus de besoin. Les loisirs ne sont pas implémentés.
+- Lire docs/development/schedules.md avant de modifier repos et priorités horaires. Conserver plages, profil de fatigue et état d’épuisement ; une intention ne donne jamais un bonus de besoin. V15 ajoute les plages Loisirs et deux activités physiques ; lire docs/development/recreation.md. Les attentes liées à la richesse restent absentes.
 
 ## Régimes alimentaires (V13)
 - Lire docs/development/food-policies.md avant de modifier les autorisations ou le choix alimentaire. Régimes partagés filtrés avant préférence/accès ; aucune exception implicite de famine. Les repas engagés continuent, transport et ingrédients restent indépendants. Ne pas confondre cargaison de tâche et inventaire personnel.
+
+## Loisirs (V15)
+- Lire docs/development/recreation.md avant de modifier satisfaction, lassitude, places de service et horaires. Le drapeau de lassitude persiste entre 30 et 50 ; aucun gain pendant le trajet. Les piquets partagent une famille et admettent trois joueurs sur des places distinctes.
+- V14 migre à 55 de satisfaction sans inventer de passé ni interrompre les tâches. Le profil de camp à attentes extrêmement basses est provisoire ; ne pas le présenter comme un calcul de richesse. Les fixtures de foule doivent cloner profondément les états des personnes.

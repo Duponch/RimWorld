@@ -42,7 +42,7 @@ test('régimes partagés : commandes atomiques, copie indépendante, limites et 
     const bad=JSON.parse(full);mutate(bad);expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();
   }
   const old=withoutFoodPolicies(JSON.parse(full));old.schemaVersion=12;
-  const restored=deserializeWorld(JSON.stringify(old));expect(restored.schemaVersion).toBe(14);expect(restored.pawns.every(p=>p.foodPolicyId===1)).toBe(true);
+  const restored=deserializeWorld(JSON.stringify(old));expect(restored.schemaVersion).toBe(15);expect(restored.pawns.every(p=>p.foodPolicyId===1)).toBe(true);
   const stripped=withoutFoodPolicies(JSON.parse(serializeWorld(restored)));stripped.schemaVersion=12;expect(stripped).toEqual(old);
   const control=deserializeWorld(full);checked(restored,100);checked(control,100);
   expect(withoutFoodPolicies(JSON.parse(serializeWorld(restored)))).toEqual(withoutFoodPolicies(JSON.parse(serializeWorld(control))));

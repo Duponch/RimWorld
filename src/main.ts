@@ -19,8 +19,9 @@ import { footprintCells, deliveredStock, queryJobStatus, queryPawnStatus, MAX_ST
 import { gameLayout, storageSettings, toolDefinitions } from './ui/layout';
 import type { ArchitectCategory, Panel, Tool } from './ui/layout';
 
-const jobLabels: Record<JobKind, string> = { chop: 'Abattage', harvest: 'Récolte', cut: 'Coupe de plante', sow: 'Semis de riz', wall: 'Construction du mur', bed: 'Construction du lit', table: 'Construction de la table', stool: 'Construction du tabouret', campfire: 'Construction du feu de camp' };
-const stateLabels: Record<Pawn['state'], string> = { idle: 'Disponible', moving: 'En chemin', working: 'Au travail', sleeping: 'Se repose', hungry: 'Cherche à manger', eating: 'Mange' };
+import { recreationInspection, updateRecreationInspection } from './ui/recreation-inspection';
+const jobLabels: Record<JobKind, string> = { chop: 'Abattage', harvest: 'Récolte', cut: 'Coupe de plante', sow: 'Semis de riz', wall: 'Construction du mur', bed: 'Construction du lit', table: 'Construction de la table', stool: 'Construction du tabouret', horseshoes: 'Construction du piquet de fers à cheval', campfire: 'Construction du feu de camp' };
+const stateLabels: Record<Pawn['state'], string> = { idle: 'Disponible', moving: 'En chemin', working: 'Au travail', sleeping: 'Se repose', hungry: 'Cherche à manger', eating: 'Mange', recreating: 'Se divertit' };
 const terrainLabels = { grass: 'Prairie', soil: 'Terre fertile', water: 'Eau infranchissable', rock: 'Massif rocheux infranchissable' };
 const resourceLabels = { tree: 'Arbre', berries: 'Buisson de baies', rock: 'Pierre au sol', rice: 'Plant de riz' };
 const SAVE_KEY = 'lisiere.save.v1';
@@ -148,7 +149,7 @@ function rebuildInspector() {
   const panel = el('inspector');
   panel.hidden = currentPanel !== null || (selectedPawn === undefined && !selectedCell);
   if (selectedPawn !== undefined) {
-    panel.innerHTML = `<div class="panel-heading"><h2 id="selected-name"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><p id="selected-action"></p><div class="needs">${(['hunger', 'rest', 'comfort', 'mood'] as const).map((need, index) => `<label>${['Nourriture', 'Repos', 'Confort', 'Humeur'][index]} <span id="selected-${need}"></span></label><meter id="${need}-meter" min="0" max="100" low="25" optimum="100"></meter>`).join('')}</div><p id="selected-memories" class="muted"></p><button class="secondary-action" id="manage-work">Gérer le travail</button>`;
+    panel.innerHTML = `<div class="panel-heading"><h2 id="selected-name"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><p id="selected-action"></p><div class="needs">${(['hunger', 'rest', 'comfort', 'mood'] as const).map((need, index) => `<label>${['Nourriture', 'Repos', 'Confort', 'Humeur'][index]} <span id="selected-${need}"></span></label><meter id="${need}-meter" min="0" max="100" low="25" optimum="100"></meter>`).join('')}</div>${recreationInspection()}<p id="selected-memories" class="muted"></p><button class="secondary-action" id="manage-work">Gérer le travail</button>`;
     el('manage-work').onclick = () => setPanel('work');
   } else if (selectedCell) {
     panel.innerHTML = `<div class="panel-heading"><h2 id="cell-title"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><p id="cell-description"></p><p id="cell-materials"></p><p id="cell-job"></p><div id="cell-storage" hidden><p id="cell-storage-quantity"></p>${storageSettings('selected-stockpile')}<button id="update-stockpile" class="secondary-action">Appliquer les réglages</button><button id="delete-stockpile" class="secondary-action">Retirer cette réserve</button></div>`;
@@ -252,6 +253,7 @@ function renderState() {
     if (!pawn) clearSelection();
     else {
       el('selected-name').textContent = pawn.name; el('selected-action').textContent = pawn.need ? actionLabel(pawn) : `${actionLabel(pawn)} · ${queryPawnStatus(world, pawn).reason}`;
+      updateRecreationInspection(el('inspector'),pawn);
       el('selected-memories').textContent = pawn.memories.map(memory => `${memory.kind === 'ate-raw-food' ? 'Mangé cru : −7' : 'Mangé sans table : −3'} humeur · encore ${Math.ceil((memory.expiresAt - world.tick) / (TICKS_PER_DAY / 24))} h`).join(' · ');
       for (const need of ['hunger', 'rest', 'comfort', 'mood'] as const) { el(`selected-${need}`).textContent = `${Math.round(pawn[need])} %`; el<HTMLMeterElement>(`${need}-meter`).value = pawn[need]; }
     }
@@ -264,10 +266,11 @@ function renderState() {
       const job = world.jobs.find(item => footprintCells(item).some(cell => cell.x === x && cell.z === z));
       const storage = world.stockpiles.find(item => item.x === x && item.z === z);
       const piles = world.piles.filter(item => item.owner.type === 'ground' && item.owner.x === x && item.owner.z === z);
-      el('cell-title').textContent = structure ? ({ wall: 'Mur en bois', bed: 'Lit', table: 'Table en bois', stool: 'Tabouret en bois', campfire: 'Feu de camp' })[structure.kind] : resource ? resourceLabels[resource.kind] : terrainLabels[world.tiles[z * world.width + x].terrain];
+      el('cell-title').textContent = structure ? ({ wall: 'Mur en bois', bed: 'Lit', table: 'Table en bois', stool: 'Tabouret en bois', horseshoes: 'Piquet de fers à cheval', campfire: 'Feu de camp' })[structure.kind] : resource ? resourceLabels[resource.kind] : terrainLabels[world.tiles[z * world.width + x].terrain];
       el('cell-description').textContent = `Case ${x}, ${z}${resource ? isPlant(resource) ? ` · Croissance ${Math.floor(plantGrowth(world, resource) * 100)} % · ${harvestable(world, resource) ? `Récolte : environ ${Math.round(berryYield(world, resource))} ${resource.kind === 'rice' ? 'riz' : 'baies'}` : 'Pas encore récoltable'} · ${plantResting(world.tick) ? 'Repos nocturne' : naturalLight(world.tick) < .51 ? 'Lumière insuffisante' : 'Croissance diurne'}` : ` · ${resource.amount} unités à récolter` : ''}${structure ? ` · ${footprintCells(structure).length === 2 ? '1 × 2' : '1 × 1'} cases` : ''}`;
       el('cell-materials').textContent = piles.length ? `Au sol : ${piles.map(pile => `${pile.quantity} ${ITEM_DEFINITIONS[pile.item].label}${pile.kind==='food'?` · ${foodFreshnessLabel(pile,world.tick)}`:''}`).join(' · ')}` : '';
       el('cell-job').textContent = job ? `${jobLabels[job.kind]} · ${queryJobStatus(world, job).reason ?? 'En cours'}${JOB_WOOD_COST[job.kind] > 0 ? ` · ${deliveredStock(world, job.id).wood} bois livrés` : ''}` : 'Aucun ordre sur cette case.';
+      if(structure?.kind==='horseshoes')el('cell-description').textContent += ` · Dextérité · ${world.pawns.filter(p=>p.recreation.task?.buildingId===structure.id).length}/3 joueurs · places à 5 cases, ligne de vue dégagée.`;
       if(structure?.kind==='campfire'){updateFireControls(el('inspector'),structure);updateBillControls(el('inspector'),structure,world);}
       el('cell-storage').hidden = !storage;
       el('cell-bed').hidden = structure?.kind !== 'bed';

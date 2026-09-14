@@ -33,6 +33,7 @@ La référence est RimWorld de base, transposé en 3D. Une description de RimWor
 | Repas, repos et confort | [Besoins](development/needs.md), [repas à table](development/dining.md), [aliments](development/food-items.md) | [Mobilier/repas](research/dining-reference.md), [choix alimentaire](research/food-clearing-reference.md) |
 | Régimes alimentaires | [Autorisations partagées et migration](development/food-policies.md) | [Vérification des politiques](research/food-policies-reference.md) |
 | Horaires et sommeil | [Plages, fatigue et migration](development/schedules.md) | [Vérification des horaires](research/schedules-reference.md) |
+| Loisirs | [Activités, lassitude et migration](development/recreation.md) | [Vérification Core](research/recreation-reference.md) |
 | Conservation des aliments | [Âge, transferts et expiration](development/food-preservation.md) | [Fraîcheur et référence Core](research/food-preservation-reference.md) |
 | Cuisine et combustible | [Factures, ingrédients, feu](development/cooking.md) | [Recettes et ravitaillement](research/cooking-reference.md) |
 | Plantes et cultures | [Agriculture](development/farming.md), [rochers et plantes](development/rocks-and-plants.md) | [Agriculture](research/farming-reference.md), [croissance sauvage](research/plant-growth.md) |

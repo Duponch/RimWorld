@@ -58,6 +58,6 @@ export function releaseWork(world:World,pawn:Pawn,plan?:DropPlan):boolean {
   if(held&&!commitDrop(world,held,pawn,plan))return false;
   const job=world.jobs.find(j=>j.id===pawn.jobId);
   if(job?.reservedBy===pawn.id){job.reservedBy=null;job.status='pending';if(job.kind==='sow')job.progress=0;}
-  pawn.jobId=null;pawn.haul=null;pawn.cooking=null;pawn.need=null;pawn.path=[];pawn.state='idle';pawn.planCooldown=20;pawn.needCooldown=20;
+  pawn.recreation.task=null;pawn.jobId=null;pawn.haul=null;pawn.cooking=null;pawn.need=null;pawn.path=[];pawn.state='idle';pawn.planCooldown=20;pawn.needCooldown=20;
   return true;
 }

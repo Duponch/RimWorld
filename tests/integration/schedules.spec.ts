@@ -14,7 +14,7 @@ test('Horaires : peindre, annuler, clavier, copier, reprendre et réveiller phys
     await page.goto('/?size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
     await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,fixture);
     await page.keyboard.press('F2');await expect(page.locator('#schedule-panel')).toBeVisible();
-    await expect(page.locator('[data-schedule-hour]')).toHaveCount(72);await expect(page.getByRole('button',{name:'Loisirs · à venir'})).toBeDisabled();
+    await expect(page.locator('[data-schedule-hour]')).toHaveCount(72);await expect(page.locator('[data-schedule-brush="recreation"]')).toBeEnabled();
     const [ada,noe]=fixture.pawns;
     const slot=(id:number,h:number)=>page.locator(`[data-schedule-pawn="${id}"][data-schedule-hour="${h}"]`);
     await page.locator('[data-schedule-brush="work"]').click();

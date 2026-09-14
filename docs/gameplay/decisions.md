@@ -39,3 +39,7 @@ Les anciennes décisions d’implémentation V7/V8/V9 restent dans les [ADR de s
 ## Régimes partagés et catalogue limité
 
 V13 adopte les autorisations avant sélection et maintient les repas engagés. Les quatre préréglages portent des noms locaux explicites ; ils couvrent les aliments du prototype, sans prétendre recopier la totalité des listes Core. Défaut des nouveaux arrivants et provenance restent ouverts. [Contrat](../development/food-policies.md) et [réserves de fidélité](../research/food-policies-reference.md).
+
+## Loisirs V15
+
+Deux activités livrent accès, satisfaction et lassitude sans fermer le catalogue. Profil de camp à attentes extrêmement basses jusqu’au système de richesse ; sélection locale de lieu pour le ciel, sans régions/conditions de pièce/météo. Intégration au tick local, migration à 55 sans passé inventé. [Sources et décisions détaillées](../research/recreation-reference.md), [contrat](../development/recreation.md). L’humeur demeure un agrégat provisoire.

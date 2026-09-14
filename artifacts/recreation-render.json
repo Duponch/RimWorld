@@ -1,0 +1,315 @@
+{
+  "workload": "recreation",
+  "date": "2026-09-14T14:45:34.374Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "protocol": "Native Chromium WebGPU, 1440×1000, natural 250² with synthetic camps; real worker at UI speed 6; 60 warmup frames then >=300 frames and >=5 seconds per phase. Local/overview phases advance the simulation successively, so they are workload observations, not identical-state camera A/B. RAF includes scheduling; frame CPU is submission, not GPU execution. No parallel tests or CPU benchmarks.",
+  "phases": [
+    {
+      "pawns": 3,
+      "view": "local",
+      "backend": "WebGPU",
+      "frameMs": {
+        "n": 1003,
+        "p50": 4.199999999999818,
+        "p95": 8.399999999999636,
+        "p99": 8.400000000000546,
+        "max": 8.5
+      },
+      "frameCpuMs": {
+        "n": 1004,
+        "p50": 4.5,
+        "p95": 5.600000001490116,
+        "p99": 6.599999997764826,
+        "max": 7.5
+      },
+      "lastReportedWorkerMs": {
+        "n": 1004,
+        "p50": 0.29999999950329465,
+        "p95": 0.36666666716337204,
+        "p99": 0.375,
+        "max": 0.375
+      },
+      "drawCalls": {
+        "n": 1004,
+        "p50": 157,
+        "p95": 166,
+        "p99": 167,
+        "max": 167
+      },
+      "triangles": {
+        "n": 1004,
+        "p50": 223761,
+        "p95": 234483,
+        "p99": 235171,
+        "max": 235171
+      },
+      "ticks": [
+        2012,
+        2313
+      ],
+      "cookedInRecentJournal": 0,
+      "active": 3,
+      "recreation": {
+        "skygaze": 2,
+        "horseshoes": 1
+      }
+    },
+    {
+      "pawns": 3,
+      "view": "overview",
+      "backend": "WebGPU",
+      "frameMs": {
+        "n": 1195,
+        "p50": 4.199999999998909,
+        "p95": 4.299999999999272,
+        "p99": 4.300000000001091,
+        "max": 8.399999999999636
+      },
+      "frameCpuMs": {
+        "n": 1196,
+        "p50": 2.699999999254942,
+        "p95": 3.899999998509884,
+        "p99": 4.600000001490116,
+        "max": 5.899999998509884
+      },
+      "lastReportedWorkerMs": {
+        "n": 1196,
+        "p50": 0.15000000037252903,
+        "p95": 0.30000000074505806,
+        "p99": 0.3333333333333333,
+        "max": 0.3333333333333333
+      },
+      "drawCalls": {
+        "n": 1196,
+        "p50": 22,
+        "p95": 22,
+        "p99": 22,
+        "max": 22
+      },
+      "triangles": {
+        "n": 1196,
+        "p50": 429121,
+        "p95": 429121,
+        "p99": 429121,
+        "max": 429121
+      },
+      "ticks": [
+        2354,
+        2658
+      ],
+      "cookedInRecentJournal": 0,
+      "active": 3,
+      "recreation": {
+        "skygaze": 1,
+        "horseshoes": 2
+      }
+    },
+    {
+      "pawns": 30,
+      "view": "local",
+      "backend": "WebGPU",
+      "frameMs": {
+        "n": 918,
+        "p50": 4.199999999999818,
+        "p95": 8.399999999999636,
+        "p99": 8.5,
+        "max": 12.599999999999454
+      },
+      "frameCpuMs": {
+        "n": 919,
+        "p50": 4.899999998509884,
+        "p95": 6.300000000745058,
+        "p99": 7.099999997764826,
+        "max": 8.199999999254942
+      },
+      "lastReportedWorkerMs": {
+        "n": 919,
+        "p50": 1.3999999997516472,
+        "p95": 1.6666666666666667,
+        "p99": 1.699999999254942,
+        "max": 1.699999999254942
+      },
+      "drawCalls": {
+        "n": 919,
+        "p50": 163,
+        "p95": 173,
+        "p99": 174,
+        "max": 174
+      },
+      "triangles": {
+        "n": 919,
+        "p50": 209721,
+        "p95": 221267,
+        "p99": 221955,
+        "max": 221955
+      },
+      "ticks": [
+        2013,
+        2322
+      ],
+      "cookedInRecentJournal": 0,
+      "active": 30,
+      "recreation": {
+        "skygaze": 12,
+        "horseshoes": 18
+      }
+    },
+    {
+      "pawns": 30,
+      "view": "overview",
+      "backend": "WebGPU",
+      "frameMs": {
+        "n": 1183,
+        "p50": 4.199999999998909,
+        "p95": 4.299999999999272,
+        "p99": 8.299999999999272,
+        "max": 8.5
+      },
+      "frameCpuMs": {
+        "n": 1184,
+        "p50": 2.900000002235174,
+        "p95": 4.200000002980232,
+        "p99": 5,
+        "max": 7.300000000745058
+      },
+      "lastReportedWorkerMs": {
+        "n": 1184,
+        "p50": 1.733333334326744,
+        "p95": 2.2000000004967055,
+        "p99": 3.200000001117587,
+        "max": 3.200000001117587
+      },
+      "drawCalls": {
+        "n": 1184,
+        "p50": 29,
+        "p95": 29,
+        "p99": 29,
+        "max": 29
+      },
+      "triangles": {
+        "n": 1184,
+        "p50": 453847,
+        "p95": 453847,
+        "p99": 453847,
+        "max": 453847
+      },
+      "ticks": [
+        2352,
+        2656
+      ],
+      "cookedInRecentJournal": 0,
+      "active": 30,
+      "recreation": {
+        "skygaze": 16,
+        "horseshoes": 14
+      }
+    },
+    {
+      "pawns": 100,
+      "view": "local",
+      "backend": "WebGPU",
+      "frameMs": {
+        "n": 825,
+        "p50": 4.200000000000728,
+        "p95": 8.400000000001455,
+        "p99": 16.5,
+        "max": 20.800000000000182
+      },
+      "frameCpuMs": {
+        "n": 826,
+        "p50": 5.399999998509884,
+        "p95": 6.800000000745058,
+        "p99": 8,
+        "max": 10.199999999254942
+      },
+      "lastReportedWorkerMs": {
+        "n": 826,
+        "p50": 4.666666666666667,
+        "p95": 5.100000000248353,
+        "p99": 12.066666666418314,
+        "max": 12.066666666418314
+      },
+      "drawCalls": {
+        "n": 826,
+        "p50": 172,
+        "p95": 183,
+        "p99": 184,
+        "max": 184
+      },
+      "triangles": {
+        "n": 826,
+        "p50": 246125,
+        "p95": 259185,
+        "p99": 259967,
+        "max": 259967
+      },
+      "ticks": [
+        2013,
+        2314
+      ],
+      "cookedInRecentJournal": 0,
+      "active": 100,
+      "recreation": {
+        "skygaze": 40,
+        "horseshoes": 60
+      }
+    },
+    {
+      "pawns": 100,
+      "view": "overview",
+      "backend": "WebGPU",
+      "frameMs": {
+        "n": 1113,
+        "p50": 4.199999999998909,
+        "p95": 8.299999999999272,
+        "p99": 12.5,
+        "max": 20.900000000001455
+      },
+      "frameCpuMs": {
+        "n": 1114,
+        "p50": 3.599999997764826,
+        "p95": 5.100000001490116,
+        "p99": 6.100000001490116,
+        "max": 7.899999998509884
+      },
+      "lastReportedWorkerMs": {
+        "n": 1114,
+        "p50": 4.533333332588275,
+        "p95": 5.900000000993411,
+        "p99": 5.966666666169961,
+        "max": 5.966666666169961
+      },
+      "drawCalls": {
+        "n": 1114,
+        "p50": 41,
+        "p95": 42,
+        "p99": 42,
+        "max": 42
+      },
+      "triangles": {
+        "n": 1114,
+        "p50": 518731,
+        "p95": 519115,
+        "p99": 519115,
+        "max": 519115
+      },
+      "ticks": [
+        2359,
+        2659
+      ],
+      "cookedInRecentJournal": 0,
+      "active": 100,
+      "recreation": {
+        "skygaze": 44,
+        "horseshoes": 56
+      }
+    }
+  ],
+  "errors": [],
+  "adapter": {
+    "vendor": "amd",
+    "architecture": "rdna-1",
+    "device": "",
+    "description": ""
+  }
+}

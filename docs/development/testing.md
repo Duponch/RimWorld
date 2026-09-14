@@ -105,3 +105,11 @@ F4 exerce les commandes dans le navigateur quand elles existent ; F5 mesure leur
 ## Documentation
 
 `python scripts/check-docs.py` contrôle liens locaux, fragments, les 25 domaines/cinq familles de la matrice et les SHA-256 des trois originaux. Il ne vérifie pas la vérité du gameplay. Relire le contrat et le code lorsqu’une ancienne formulation contredit une fonctionnalité livrée ; garder le passé dans Git/ADR/history, pas dans une seconde description actuelle.
+
+## Loisirs V15
+
+`recreation.test.ts` couvre trois scénarios : taux/seuils/hystérésis, construction livrée et trois places concurrentes avec trajets/rejeu/obstacles, puis observation physique et migration. Les fixtures historiques omettent les champs plus récents ; les clones de personnes sont profonds pour ne pas partager leur lassitude. Le pilote normal construit le piquet et peint les loisirs du soir ; ses bilans alimentaires et matériels restent exigés. L’UI courte valide aussi les poses et les contrôles ; la partie longue vérifie les deux activités et les sauvegardes quotidiennes.
+
+`scripts/recreation-bench.ts` : 3/30/100 colons, faim/repos actifs, besoin de loisirs initial faible, piquets partagés et camp de travail ; deux passes de 600 ticks, setup et contrôles exclus. Les compteurs d’activité prouvent la charge réellement exercée. Ce stress synthétique complète le pilote humain, sans se faire passer pour une partie ordinaire.
+
+`scripts/cooking-render-bench.mjs artifacts/recreation-render.json 3,30,100 recreation` reprend le même protocole matériel avec les activités de loisirs et conserve leurs effectifs réels. Les modes cuisine et loisirs restent distincts ; aucun travail n’est observé dans la fenêtre de besoin de loisirs bas.

@@ -1,0 +1,59 @@
+{
+  "date": "2026-09-14T14:40:58.460Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "conditions": "250² seed 42; synthetic low joy, shared pins, camp work and physical needs. Two runs of 600 ticks from tick 2000, no warmup; setup/validation/activity counting excluded; activity totals span both runs, final state describes the last. No concurrent heavy tests.",
+  "rows": [
+    {
+      "population": 3,
+      "ticks": 1200,
+      "p50Ms": 0.20280000000002474,
+      "p95Ms": 0.3005000000000564,
+      "p99Ms": 0.7601999999999975,
+      "maxMs": 9.810000000000002,
+      "activePawnTicks": {
+        "skygaze": 1924,
+        "horseshoes": 1452,
+        "travel": 104,
+        "work": 0
+      },
+      "hash": "37fe9d74",
+      "minimumRecreation": 79.72653919742055,
+      "bored": 0
+    },
+    {
+      "population": 30,
+      "ticks": 1200,
+      "p50Ms": 0.29510000000004766,
+      "p95Ms": 1.413000000000011,
+      "p99Ms": 7.592000000000098,
+      "maxMs": 34.67139999999995,
+      "activePawnTicks": {
+        "skygaze": 14704,
+        "horseshoes": 18826,
+        "travel": 1186,
+        "work": 0
+      },
+      "hash": "037cdd5e",
+      "minimumRecreation": 68.65762312568317,
+      "bored": 0
+    },
+    {
+      "population": 100,
+      "ticks": 1200,
+      "p50Ms": 1.2244000000000597,
+      "p95Ms": 4.700200000000223,
+      "p99Ms": 54.0943000000002,
+      "maxMs": 114.04189999999994,
+      "activePawnTicks": {
+        "skygaze": 44566,
+        "horseshoes": 63466,
+        "travel": 6810,
+        "work": 0
+      },
+      "hash": "0dfc5a7b",
+      "minimumRecreation": 59.8582427529697,
+      "bored": 0
+    }
+  ]
+}

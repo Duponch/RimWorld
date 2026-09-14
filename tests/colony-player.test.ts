@@ -7,6 +7,7 @@ test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp const
     let world = createWorld(seed, 250, 250);
     const initialWood = woodAccount(world), initialFood = foodAccount(world);
     let consumed = 0, produced = 0, cooked = 0, rationAssignments = 0;
+    const recreationKinds=new Set<string>(), recreationPawns=new Set<number>();
     const meals = new Map(world.pawns.map(p=>[p.id,0])), sleep = new Map(world.pawns.map(p=>[p.id,0]));
     const report: ReturnType<typeof colonySummary>[] = [];
     for (let t = 0; t < (seed === 42 ? 48000 : 30000); t++) {
@@ -21,6 +22,7 @@ test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp const
       for (const event of world.events) if (event.tick === world.tick) { const match = event.message.match(/a récolté (\d+) (?:baies|riz)/); if (match) produced += Number(match[1]);if(event.message.includes('a cuisiné 1 repas simple'))cooked++; }
       for (const {id,quantity} of ingesting) if(world.events.some(e=>e.tick===world.tick&&e.message.startsWith(`${world.pawns.find(p=>p.id===id)!.name} a mangé`))) { meals.set(id, meals.get(id)!+1); consumed += quantity; }
       for (const pawn of world.pawns) if (pawn.state==='sleeping' && pawn.need?.kind==='sleep' && pawn.need.bedId!==null) sleep.set(pawn.id,sleep.get(pawn.id)!+1);
+      for(const pawn of world.pawns)if(pawn.state==='recreating'&&pawn.recreation.task){recreationKinds.add(pawn.recreation.task.activity);recreationPawns.add(pawn.id);}
       if (t % 50 === 0) {
         const context=JSON.stringify({seed,...colonySummary(world)});
         expect(validateWorld(world),context).toEqual([]);expect(woodAccount(world),context).toBe(initialWood);
@@ -38,7 +40,8 @@ test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp const
     }
     const context=JSON.stringify({seed,report,meals:[...meals],sleep:[...sleep]});
     expect(report[0]!.structures,context).toMatchObject({bed:3,table:1,stool:3});
-    expect(report[4]!.structures,context).toEqual({bed:3,table:1,stool:3,wall:6,campfire:1});
+    expect(report[4]!.structures,context).toEqual({bed:3,table:1,stool:3,wall:6,campfire:1,horseshoes:1});
+    expect([...recreationKinds].sort(),context).toEqual(['horseshoes','skygaze']);expect(recreationPawns.size,context).toBe(3);
     expect(cooked,context).toBeGreaterThanOrEqual(12);
     expect(rationAssignments,context).toBeGreaterThanOrEqual(3);
     expect(world.jobs.filter(j=>j.growingZoneId===undefined),context).toEqual([]);

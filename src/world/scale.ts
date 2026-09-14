@@ -10,6 +10,7 @@ export const WORLD_SCALE = Object.freeze({
   tableHeight: 0.76,
   tableWidth: 0.94,
   tableLength: 1.94,
+  horseshoeHeight: 0.6,
   stoolHeight: 0.45,
   stoolWidth: 0.42,
   bedWidth: 0.84,

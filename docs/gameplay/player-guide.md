@@ -93,7 +93,7 @@ Les colons se déplacent dans huit directions. Une diagonale mesure √2 cases e
 
 Ouvrez **Horaires (F2)** : choisissez Libre, Travail ou Sommeil, puis cliquez ou glissez sur les heures d’une ligne. Copier/Coller reproduit une journée sur un autre colon. Un tracé ne traverse pas minuit ; peignez les deux extrémités séparément. Tab parcourt les boutons, Entrée/Espace peint une case et Échap annule le tracé.
 
-Les nouvelles parties prévoient huit heures de sommeil, de 22 h à 6 h. Libre laisse le colon gérer ses besoins et continuer à dormir jusqu’à récupération complète. Travail autorise toujours les repas. Une personne épuisée peut finir par s’effondrer malgré son horaire. Le besoin de loisirs et ses activités ne sont pas disponibles. Les anciennes sauvegardes gardent leurs anciennes règles de fatigue et des plages libres, indiquées dans le panneau.
+Les nouvelles parties prévoient huit heures de sommeil, de 22 h à 6 h. Libre laisse le colon gérer ses besoins et continuer à dormir jusqu’à récupération complète. Travail autorise toujours les repas. Une personne épuisée peut finir par s’effondrer malgré son horaire. La plage Loisirs donne priorité aux activités accessibles ; deux familles sont disponibles, décrites plus bas. Les anciennes sauvegardes gardent leurs anciennes règles de fatigue et des plages libres, indiquées dans le panneau.
 
 ## Stocker et transporter
 
@@ -167,8 +167,16 @@ Avant de créer une nouvelle colonie, le jeu conserve aussi l'état courant dans
 
 ## Limites et suite
 
-Pas encore d'autres cultures, autres postes/recettes de cuisine, chaîne du froid, minage, déconstruction, loisirs, animaux, armes, combat, blessures, médecine, relations, traits, recherche, commerce, électricité, toit, température, incendie, météo dynamique, carte du monde ou storyteller. Les réserves à plusieurs cases partageant une politique, la sélection multiple et les ordres forcés contextuels restent à développer. Les modèles sont provisoires ; la congestion entre agents actifs et la calibration des besoins restent ouvertes. La faim ne cause pas encore de malnutrition ni de décès.
+Pas encore d'autres cultures, autres postes/recettes de cuisine, chaîne du froid, minage, déconstruction, autres familles de loisirs, animaux, armes, combat, blessures, médecine, relations, traits, recherche, commerce, électricité, toit, température, incendie, météo dynamique, carte du monde ou storyteller. Les réserves à plusieurs cases partageant une politique, la sélection multiple et les ordres forcés contextuels restent à développer. Les modèles sont provisoires ; la congestion entre agents actifs et la calibration des besoins restent ouvertes. La faim ne cause pas encore de malnutrition ni de décès.
 
 La suite est suivie dans [le plan de développement](../ROADMAP.md). Les détails de la référence et les futures interactions sont dans [la matrice des systèmes](systems-matrix.md).
 
 Les équipements, vêtements et portraits associés restent prévus. Les modèles sont provisoires ; les sols, roches, plantes et biomes génériques ne constituent pas un catalogue complet. Consultez l’[inventaire des systèmes](implementation-status.md), le [catalogue](content-catalogue.md) et les [écarts assumés](decisions.md).
+
+## Prendre le temps de se divertir
+
+Dans **Architecte → Loisirs**, placer un piquet de fers à cheval : dix bois doivent être livrés et l’ouvrage construit. Les douze cases indiquées autour sont à cinq cellules du piquet. Jaune signifie place géométriquement libre avec vue dégagée ; un colon doit encore pouvoir la rejoindre. Trois colons peuvent jouer, chacun à sa place réservée. Un mur coupe le lancer, une table entre le joueur et le piquet ne coupe pas sa vue.
+
+Sans installation, les colons peuvent rejoindre un emplacement du voisinage et s’allonger pour observer le ciel. Ce loisir appartient à la détente solitaire, les fers à cheval à la dextérité. Multiplier les piquets ne crée pas une nouvelle famille. La météo et les pièces ne modifient pas encore ces activités.
+
+Dans **Horaires**, la plage Loisirs cherche une activité sous 95 % de satisfaction ; Libre sous 35 %. Le colon finit son travail engagé et satisfait ses besoins prioritaires. Il ne gagne rien en chemin. Pendant les premières deux heures de jeu, les loisirs ne démarrent pas. L’inspection montre satisfaction, effet d’humeur et lassitude de chaque famille : au-dessus de 50 %, le colon cesse de choisir cette famille jusqu’à ce qu’elle retombe sous 30 %. Sommeil et variété l’aident à conserver une journée équilibrée ; dormir ne fait toutefois pas baisser la lassitude. Les attentes restent celles d’un petit camp, sans calcul de richesse.

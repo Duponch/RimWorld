@@ -1,3 +1,4 @@
+import { initialRecreation } from './recreation-rules.ts';
 import { defaultSchedule } from './schedule.ts';
 import { initialFoodPolicies } from './food-policy.ts';
 import { emptySpoilage } from './food-preservation.ts';
@@ -142,7 +143,7 @@ export function generateWorld(seed: number, width: number, height: number): Worl
   if (![width, height].every(validMapDimension)) {
     throw new Error(`World dimensions must be integers between ${MIN_MAP_SIZE} and ${MAX_MAP_SIZE}.`);
   }
-  const world: World = { schemaVersion: 14, foodPolicies: initialFoodPolicies(), nextFoodPolicyId: 5, restRules: 'adult', spoiled: emptySpoilage(), foodRules: 'adult', seed: seed >>> 0, rng: (seed >>> 0) || 0x9e3779b9,
+  const world: World = { schemaVersion: 15, foodPolicies: initialFoodPolicies(), nextFoodPolicyId: 5, restRules: 'adult', spoiled: emptySpoilage(), foodRules: 'adult', seed: seed >>> 0, rng: (seed >>> 0) || 0x9e3779b9,
     tick: 0, width, height, tiles: [], pawns: [], resources: [], structures: [], jobs: [],
     piles: [], stockpiles: [], growingZones: [], growingCursor: 0, environment: 'temperate-equinox-v1', stock: { wood: 0, food: 0 }, events: [], nextId: 1, logisticsCursor: 0 };
   const cx = Math.floor(width / 2); const cz = Math.floor(height / 2);
@@ -196,7 +197,7 @@ export function generateWorld(seed: number, width: number, height: number): Worl
     }
   }
   for (const [offset, name] of ['Ada', 'Noé', 'Mina'].entries()) {
-    world.pawns.push({ foodPolicyId: 1, schedule: defaultSchedule(), restZeroTicks: 0, collapsePending: false, id: world.nextId++, name, x: cx + offset - 1, z: cz, hunger: 90 - offset * 5,
+    world.pawns.push({ recreation: initialRecreation(50 + sample(world.seed, offset, 0, 101)*10), foodPolicyId: 1, schedule: defaultSchedule(), restZeroTicks: 0, collapsePending: false, id: world.nextId++, name, x: cx + offset - 1, z: cz, hunger: 90 - offset * 5,
       rest: 90 - offset * 3, mood: 80, comfort: 50, memories: [], jobId: null, haul: null, cooking: null, need: null, bedId: null, needCooldown: 0, state: 'idle', priorities: { gather: 2, build: 2, haul: 3, grow: 2, cook: 2 },
       path: [], moveCooldown: 0, planCooldown: 0 });
   }

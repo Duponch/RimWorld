@@ -30,6 +30,7 @@ export function playerDecisions(world: World): Decision[] {
   const plans: DesignateCommand[] = [
     ...[[-3, 2], [0, 2], [3, 2]].map(([x, z]) => ({ type: 'designate' as const, kind: 'bed' as const, x: cx + x!, z: cz + z!, orientation: 0 as const })),
     { type: 'designate', kind: 'table', x: cx, z: cz - 2, orientation: 1 },
+    { type:'designate',kind:'horseshoes',x:cx+2,z:cz-3 },
     { type:'designate',kind:'campfire',x:cx-1,z:cz-1,orientation:0 },
     ...[[0, -3], [1, -3], [0, -1]].map(([x, z]) => ({ type: 'designate' as const, kind: 'stool' as const, x: cx + x!, z: cz + z! })),
     ...[-3, 3].flatMap(x => [-3, -2, -1].map(z => ({ type: 'designate' as const, kind: 'wall' as const, x: cx + x, z: cz + z }))),
@@ -50,6 +51,7 @@ export function playerDecisions(world: World): Decision[] {
     else if(bill.mode!=='until'||bill.target!==world.pawns.length*2)out.push({reason:'Maintenir environ deux repas préparés par colon en réserve.',command:{type:'bill-update',structureId:fire.id,billId:bill.id,settings:{...bill,mode:'until',target:world.pawns.length*2}}});
   }
   if (!world.growingZones.length && world.structures.filter(s => s.kind === 'bed').length === 3) out.push({reason:'Semer un premier potager près du camp, tout en continuant à cueillir pendant sa croissance.',command:{type:'area',action:'growing',from:{x:cx-2,z:cz+5},to:{x:cx+2,z:cz+7}}});
+  for(const pawn of world.pawns)if(pawn.schedule[19]!=='recreation'||pawn.schedule[20]!=='recreation')out.push({reason:'Réserver une plage de loisirs du soir, sans remplacer le repos nocturne.',command:{type:'schedule-paint',pawnId:pawn.id,hours:[19,20],assignment:'recreation'}});
   const outstandingWood = [...world.jobs, ...out.flatMap(d => d.command.type === 'designate' ? [d.command] : [])].reduce((n,j) => n + JOB_WOOD_COST[j.kind], 0);
   const nearby = [...world.resources].filter(r => Math.abs(r.x-cx) + Math.abs(r.z-cz) <= 28).sort((a,b) => Math.abs(a.x-cx)+Math.abs(a.z-cz)-(Math.abs(b.x-cx)+Math.abs(b.z-cz)) || a.id-b.id);
   const prepared=world.piles.filter(p=>p.item==='simple-meal').reduce((n,p)=>n+p.quantity,0);
@@ -80,10 +82,11 @@ export function colonySummary(world: World) {
   const occupied=new Map<number,number>();
   for(const p of world.pawns){const cell=p.z*world.width+p.x;occupied.set(cell,(occupied.get(cell)??0)+1);}
   return { tick: world.tick, foodPolicies: world.pawns.map(p=>p.foodPolicyId), restRules: world.restRules, scheduledSleepHours: world.pawns.map(p=>p.schedule.filter(s=>s==='sleep').length), spoiled: { ...world.spoiled }, crops: world.resources.filter(r=>r.kind==='rice').length, growingCells:fields.size,
+    recreation:world.pawns.map(p=>({level:p.recreation.level,tolerance:{...p.recreation.tolerance},bored:{...p.recreation.bored}})),
     sharedPawnCells:[...occupied.values()].filter(count=>count>1).length,
     obstructedGrowingCells:world.piles.filter(p=>p.owner.type==='ground'&&fields.has(p.owner.z*world.width+p.owner.x)).length,
     clearing:world.pawns.filter(p=>p.haul?.destination.type==='aside').length,
-    structures: Object.fromEntries(['bed','table','stool','wall','campfire'].map(kind => [kind,world.structures.filter(s=>s.kind===kind).length])), preparedMeals:world.piles.filter(p=>p.item==='simple-meal').reduce((n,p)=>n+p.quantity,0), stock: { ...world.stock }, pending: world.jobs.length, minimumFood: Math.min(...world.pawns.map(p=>p.hunger)), minimumRest: Math.min(...world.pawns.map(p=>p.rest)) };
+    structures: Object.fromEntries(['bed','table','stool','wall','campfire','horseshoes'].map(kind => [kind,world.structures.filter(s=>s.kind===kind).length])), preparedMeals:world.piles.filter(p=>p.item==='simple-meal').reduce((n,p)=>n+p.quantity,0), stock: { ...world.stock }, pending: world.jobs.length, minimumFood: Math.min(...world.pawns.map(p=>p.hunger)), minimumRest: Math.min(...world.pawns.map(p=>p.rest)) };
 }
 
 export function woodAccount(world: World): number {

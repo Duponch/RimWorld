@@ -144,19 +144,20 @@ export class PawnLayer {
           });
         });
       });
-      If(motion.z.greaterThan(2.5).and(bone.greaterThan(3.5)), () => {
+      If(motion.z.greaterThan(2.5).and(motion.z.lessThan(3.5)).and(bone.greaterThan(3.5)), () => {
         angle.assign(bone.lessThan(5.5).select(float(-Math.PI / 2), float(0)));
       });
+      If(motion.z.equal(4).and(bone.equal(3)), () => { angle.assign(sin(this.time.mul(2).add(motion.w)).mul(1.1).sub(.35)); });
       const local = positionLocal.sub(pivot);
       const c = cos(angle), s = sin(angle);
       const animated = vec3(local.x, local.y.mul(c).sub(local.z.mul(s)), local.y.mul(s).add(local.z.mul(c))).add(pivot).toVar();
-      If(motion.z.greaterThan(2.5), () => {
+      If(motion.z.greaterThan(2.5).and(motion.z.lessThan(3.5)), () => {
         // Thigh rotates around the hip; the lower leg keeps its vertical pose
         // at the translated knee. Two extra rigid bones, no CPU skeleton update.
         If(bone.greaterThan(5.5), () => { animated.y.addAssign(0.21); animated.z.addAssign(0.21); });
         animated.y.addAssign(WORLD_SCALE.stoolHeight / PAWN_MODEL_SCALE - 0.605);
       });
-      If(motion.z.greaterThan(0.5).and(motion.z.lessThan(1.5)), () => {
+      If(motion.z.equal(1).or(motion.z.equal(5)), () => {
         const y = animated.y.toVar();
         animated.y.assign(animated.z.add(0.19));
         animated.z.assign(float(0.65).sub(y));
@@ -238,13 +239,15 @@ export class PawnLayer {
       }
       const work = pawn.state==='working' ? world.jobs.find(j=>j.id===pawn.jobId) ?? (pawn.cooking ? pawn.cooking.actionCell : pawn.haul?.serviceProgress ? world.structures.find(s=>pawn.haul?.destination.type==='fuel'&&s.id===pawn.haul.destination.structureId) : pawn.haul?.pickupCell) : undefined;
       if(work) {yaw=Math.atan2(work.x-pawn.x,work.z-pawn.z);from.w=yaw;}
+      const game=pawn.state==='recreating'&&pawn.recreation.task?.activity==='horseshoes'?world.structures.find(s=>s.id===pawn.recreation.task!.buildingId):undefined;
+      if(game){yaw=Math.atan2(game.x-pawn.x,game.z-pawn.z);from.w=yaw;}
       const to = new THREE.Vector4(px, py, pz, yaw);
       if (!previous) from.copy(to);
       this.targetPoses.set(pawn.id,to.clone());
       this.visuals.set(pawn.id, { from, to });
       fromAttribute.setXYZW(index, from.x, from.y, from.z, from.w);
       toAttribute.setXYZW(index, to.x, to.y, to.z, to.w);
-      motion.setXYZW(index, pawn.state === 'moving' ? 1 : 0, pawn.state === 'working' ? 1 : 0, pawn.state === 'sleeping' ? 1 : pawn.state === 'eating' ? dining?.seatId !== null && dining ? 3 : 2 : 0, pawn.id * 1.7);
+      motion.setXYZW(index, pawn.state === 'moving' ? 1 : 0, pawn.state === 'working' ? 1 : 0, pawn.state === 'recreating' ? pawn.recreation.task?.activity==='horseshoes'?4:5 : pawn.state === 'sleeping' ? 1 : pawn.state === 'eating' ? dining?.seatId !== null && dining ? 3 : 2 : 0, pawn.id * 1.7);
       scratchColor.setHex(PAWN_COLORS[index % PAWN_COLORS.length]);
       tint.setXYZ(index, scratchColor.r, scratchColor.g, scratchColor.b);
       const load = carried.get(pawn.id);
@@ -280,7 +283,7 @@ export class PawnLayer {
         visual.to.copy(this.targetPoses.get(pawn.id)!);visual.from.copy(visual.to);times.setXY(i,0,0);
         motion.setX(i,0);motion.setY(i,pawn.state==='working'?1:0);
         const dining=pawn.need?.kind==='eat'?pawn.need.dining:null;
-        motion.setZ(i,pawn.state==='sleeping'?1:pawn.state==='eating'?dining&&dining.seatId!==null?3:2:0);
+        motion.setZ(i,pawn.state==='recreating'?pawn.recreation.task?.activity==='horseshoes'?4:5:pawn.state==='sleeping'?1:pawn.state==='eating'?dining&&dining.seatId!==null?3:2:0);
       }
       from.setXYZW(i,visual.from.x,visual.from.y,visual.from.z,visual.from.w);to.setXYZW(i,visual.to.x,visual.to.y,visual.to.z,visual.to.w);
     });

@@ -153,3 +153,7 @@ Voir [la décision détaillée](../decisions/simulation.md#adr-029--accessibilit
 ## ADR-030 — Passage civil et réservations de service
 
 Voir [la décision détaillée](../decisions/simulation.md#adr-030--passage-civil-et-réservations-de-service).
+
+## ADR-031 — Loisirs physiques et lassitude persistante
+
+Voir [la décision détaillée](../decisions/simulation.md#adr-031--loisirs-physiques-et-lassitude-persistante).

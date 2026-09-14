@@ -119,3 +119,9 @@ Une première version parcourait immédiatement toute la composante : gain sous 
 `service-reservations.ts` distingue le droit d'utiliser un lit, une place de repas ou un poste de la présence dans la cellule. Les sélectionneurs et le validateur partagent cette définition. L'effondrement au sol ne prend pas possession d'un service ; le cuisinier déjà engagé garde son poste et ses ingrédients. Les quantités transportées et destinations de piles restent réservées comme auparavant.
 
 Le changement d'états autorisés nécessite V14 même sans nouveau champ. V13 est validé avec ses exclusions avant migration ; seule la version change au chargement. Les prochains ticks appliquent les nouvelles règles, sans prétendre conserver la progression V13. Le rendu reçoit plusieurs trajectoires individuelles pouvant se croiser ; les superpositions visuelles restent explicites. Les profils hostiles et réservations d'ordres forcés attendent leurs fonctionnalités, pas des champs anticipés sans usage.
+
+## ADR-031 — Loisirs physiques et lassitude persistante
+
+V15 sépare le besoin, les lieux, l’activité et la validation dans quatre modules de domaine. Une activité partage la navigation et les réservations existantes, sans bonus pendant le trajet. Le drapeau de lassitude est sauvegardé, car deux valeurs identiques entre 30 et 50 peuvent avoir des histoires différentes. Trois places distinctes utilisent un même piquet ; le passage civil ne donne aucun droit d’usage.
+
+La migration initialise seulement le nouveau besoin à 55, sans tirage ni tâche rétroactive. Les attentes riches, autres familles et conditions de météo/pièce sont explicitement différées ; les sources et adaptations sont dans [recreation](../development/recreation.md). Géométrie incluse au lot de mobilier, poses par shader, aucune nouvelle simulation graphique.

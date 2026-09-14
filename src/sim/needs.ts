@@ -6,6 +6,7 @@ import { processEating } from './eating.ts';
 import { pileFoodScore, foodSearchGoals, selectFood } from './food-selection.ts';
 import { updateWellbeing } from './wellbeing.ts';
 import { processSleeping } from './sleeping.ts';
+import { updateRecreation } from './recreation-rules.ts';
 import { updateRest } from './rest.ts';
 import { allowedFood, type FoodItemId } from './food-policy.ts';
 import type { Cell, Pawn, World } from './types.ts';
@@ -82,6 +83,7 @@ export function processNeeds(world: World, pawn: Pawn, context: NeedContext): bo
 export function updateNeeds(world: World, pawn: Pawn): void {
   pawn.hunger = Math.max(0, pawn.hunger - (world.foodRules === 'legacy' ? 0.015 : HUNGER_PER_TICK * adultHungerFactor(pawn.hunger)));
   updateRest(world, pawn);
+  updateRecreation(pawn);
   if (pawn.needCooldown > 0) pawn.needCooldown--;
   updateWellbeing(world, pawn);
 }

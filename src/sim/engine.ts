@@ -1,3 +1,4 @@
+import { processRecreation } from './recreation.ts';
 import { applyScheduleCommand } from './schedule.ts';
 import { applyFoodPolicyCommand } from './food-policy.ts';
 import { expireFood } from './food-expiration.ts';
@@ -27,7 +28,7 @@ import type { AreaCommand, Cell, Command, CommandResult, DesignateCommand, Job, 
 export { JOB_DURATION, JOB_WOOD_COST } from './definitions.ts';
 
 const PATH_SEARCHES_PER_TICK = 8;
-const JOB_LABEL: Readonly<Record<JobKind, string>> = { chop: 'abattage', harvest: 'récolte', cut: 'coupe de plante', sow: 'semis de riz', campfire: 'construction de feu de camp', wall: 'construction de mur', bed: 'construction de lit', table: 'construction de table', stool: 'construction de tabouret' };
+const JOB_LABEL: Readonly<Record<JobKind, string>> = { chop: 'abattage', harvest: 'récolte', cut: 'coupe de plante', sow: 'semis de riz', horseshoes: 'construction de piquet de fers à cheval', campfire: 'construction de feu de camp', wall: 'construction de mur', bed: 'construction de lit', table: 'construction de table', stool: 'construction de tabouret' };
 const sameCell = (a: Cell, b: Cell): boolean => a.x === b.x && a.z === b.z;
 const refusal = (code: RefusalCode, reason: string): CommandResult => ({ ok: false, code, reason });
 function event(world: World, type: 'job' | 'need' | 'command', message: string): void {
@@ -94,7 +95,7 @@ function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandR
 
 /** Pure shared rule used by preview and command execution. */
 export function canDesignate(world: World, command: DesignateCommand): CommandResult {
-  if (!command || !['chop', 'harvest', 'cut', 'wall', 'bed', 'table', 'stool', 'campfire'].includes(command.kind)) return refusal('invalid-command', 'Type de travail inconnu.');
+  if (!command || !['chop', 'harvest', 'cut', 'wall', 'bed', 'table', 'stool', 'campfire', 'horseshoes'].includes(command.kind)) return refusal('invalid-command', 'Type de travail inconnu.');
   if (command.orientation !== undefined && (!Number.isInteger(command.orientation) || command.orientation < 0 || command.orientation > 3)) return refusal('invalid-command', 'Orientation invalide.');
   const cells = footprintCells(command);
   if (cells.some(cell => !inBounds(world, cell.x, cell.z))) return refusal('out-of-bounds', 'Empreinte hors de la carte.');
@@ -248,13 +249,14 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       pawn.moveCooldown = Math.max(0, (pawn.motion?.end ?? world.tick) - world.tick); if (pawn.planCooldown > 0) pawn.planCooldown--;
       updateNeeds(world, pawn);
       if(pawn.need?.kind==='eat' && pawn.need.dining && !validDiningPlace(world,pawn.need.dining)) {pawn.need.phase='choose-spot';pawn.need.dining=null;pawn.need.progress=0;pawn.path=[];pawn.state='moving';}
-      if (pawn.moveCooldown > 0) { pawn.state = pawn.jobId !== null || pawn.haul || pawn.need || pawn.cooking ? 'moving' : 'idle'; continue; }
-      if (processNeeds(world, pawn, {
-        search: goals => search(world, pawn, getBlocked(), occupied, budget, goals),
-        move: (target, exact) => moveToward(world, pawn, target, true, getBlocked, budget, exact),
+      if (pawn.moveCooldown > 0) { pawn.state = pawn.jobId !== null || pawn.haul || pawn.need || pawn.cooking || pawn.recreation.task ? 'moving' : 'idle'; continue; }
+      const needsContext = {
+        search: (goals?: ReadonlySet<number>) => search(world, pawn, getBlocked(), occupied, budget, goals),
+        move: (target: Cell, exact: boolean) => moveToward(world, pawn, target, true, getBlocked, budget, exact),
         release: () => releaseWork(world, pawn),
-        event: message => event(world, 'need', message),
-      })) continue;
+        event: (message: string) => event(world, 'need', message),
+      };
+      if (processNeeds(world, pawn, needsContext) || processRecreation(world, pawn, needsContext)) continue;
       if (pawn.jobId === null && pawn.haul === null && !pawn.cooking && pawn.planCooldown === 0) planWork(world, pawn, getBlocked, occupied, budget);
       if (pawn.haul) { processHaul(world, pawn, (target, allow) => moveToward(world, pawn, target, allow, getBlocked, budget), () => wakePlanners(world)); continue; }
       if(pawn.cooking) {processCooking(world,pawn,{
@@ -262,7 +264,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
         move:(target,exact)=>moveToward(world,pawn,target,true,getBlocked,budget,exact),
         release:()=>releaseWork(world,pawn),event:message=>event(world,'job',message),
       });continue;}
-      const job = world.jobs.find(candidate => candidate.id === pawn.jobId); if (!job) continue;
+      const job = world.jobs.find(candidate => candidate.id === pawn.jobId); if (!job) { processRecreation(world,pawn,needsContext,true); continue; }
       if (job.growingZoneId !== undefined && !growingJobValid(world, job)) { releaseWork(world, pawn); world.jobs = world.jobs.filter(j => j.id !== job.id); continue; }
       if (job.kind === 'sow' && groundPile(world, job)) { releaseWork(world, pawn); continue; }
       const cells = footprintCells(job);

@@ -214,7 +214,7 @@ describe('deterministic colony simulation', () => {
     expect(windowed.piles.some(pile => pile.kind === 'wood' && pile.owner.type === 'ground' && (pile.owner.x !== 7 || pile.owner.z !== 6))).toBe(true);
     const crowded = createWorld(7, 24, 24); crowded.tiles = crowded.tiles.map(() => ({ terrain: 'grass' })); crowded.resources = [];
     const template = crowded.pawns[0]!;
-    crowded.pawns = Array.from({ length: 40 }, (_, index) => ({ ...template, id: crowded.nextId++, x: 1 + (index % 10) * 2,
+    crowded.pawns = Array.from({ length: 40 }, (_, index) => ({ ...structuredClone(template), id: crowded.nextId++, x: 1 + (index % 10) * 2,
       z: 1 + Math.floor(index / 10) * 2, path: [], priorities: { gather: 2, build: 0, haul: 0, grow: 0 , cook: 0 } }));
     for (let index = 0; index < 40; index++) {
       const x = 1 + (index % 10) * 2; const z = 13 + Math.floor(index / 10) * 2;
@@ -335,7 +335,7 @@ describe('deterministic colony simulation', () => {
 
   test('schema-1 migration preserves stock, escrow, beds and identity; corrupt schema-2 saves are rejected', () => {
     const migrated = deserializeWorld(legacySave());
-    expect(migrated.schemaVersion).toBe(14); expect(migrated.pawns[0]!.id).toBe(4); expect(migrated.structures[0]!.id).toBe(10);
+    expect(migrated.schemaVersion).toBe(15); expect(migrated.pawns[0]!.id).toBe(4); expect(migrated.structures[0]!.id).toBe(10);
     expect(migrated.structures[0]).toMatchObject({ x: 7, z: 7, footprint: 'legacy-single' });
     expect(migrated.pawns[0]!.priorities).toMatchObject({ gather: 2, build: 2 }); audit(migrated, 20); expect(foodMass(migrated)).toBe(18);
     expect(hashWorld(deserializeWorld(legacySave()))).toBe(hashWorld(migrated));
@@ -376,7 +376,7 @@ describe('deterministic colony simulation', () => {
     expect(serializeWorld(world)).toBe(serialized);
     // Captured by running HEAD 489b98a's engine, including an active delivery and ground sleeper.
     const material = deserializeWorld(JSON.stringify(materialFixture));
-    expect(material.schemaVersion).toBe(14);
+    expect(material.schemaVersion).toBe(15);
     // V6 explicitly cancels obsolete hauling reservations and retains all units/IDs.
     expect(material.piles.map(({id,kind,quantity})=>({id,kind,quantity}))).toEqual(materialFixture.piles.map(({id,kind,quantity})=>({id,kind,quantity})));
     expect(material.jobs).toEqual(materialFixture.jobs);
