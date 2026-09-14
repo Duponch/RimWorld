@@ -166,7 +166,7 @@ describe('deterministic colony simulation', () => {
     order(world, 'harvest', 5, 5); order(world, 'chop', 10, 4); order(world, 'bed', 12, 12, 1);
     const before = hashWorld(world);
     const invalid = [
-      { type: 'designate', kind: 'wall', x: 2, z: 2 }, { type: 'designate', kind: 'wall', x: 4, z: 5 },
+      { type: 'designate', kind: 'wall', x: 4, z: 5 },
       { type: 'designate', kind: 'wall', x: 10, z: 4 }, { type: 'designate', kind: 'chop', x: 10, z: 4 },
       { type: 'designate', kind: 'wall', x: 13, z: 12 }, { type: 'designate', kind: 'bed', x: 15, z: 15, orientation: 1 },
       { type: 'designate', kind: 'bed', x: 14, z: 14, orientation: 4 }, { type: 'designate', kind: 'harvest', x: 1, z: 1 },
@@ -315,15 +315,15 @@ describe('deterministic colony simulation', () => {
     expect(fullId.stock.food).toBe(1); expect(validateWorld(fullId)).toEqual([]);
   });
 
-  test('new walls reroute travel and rotated furniture keeps its full placement footprint', () => {
+  test('plans allow transit until completion and rotated furniture keeps its full placement footprint', () => {
     const world = fixture(1); resource(world, 12, 2, 'tree'); order(world, 'chop', 12, 2); stepWorld(world);
     const next = world.pawns[0]!.path[0]!; order(world, 'wall', next.x, next.z);
-    let detoured = false; const initialWood = woodMass(world);
+    let crossedPlan = false; const initialWood = woodMass(world);
     for (let index = 0; index < 600; index++) {
-      stepWorld(world); if (world.pawns[0]!.z !== 2) detoured = true; audit(world, initialWood);
-      expect(world.pawns.some(pawn => pawn.x === next.x && pawn.z === next.z)).toBe(false);
+      stepWorld(world); if(world.jobs.some(j=>j.x===next.x&&j.z===next.z)&&world.pawns[0]!.x===next.x&&world.pawns[0]!.z===next.z)crossedPlan=true; audit(world, initialWood);
+      if(world.structures.some(s=>s.x===next.x&&s.z===next.z))expect(world.pawns.some(pawn => pawn.x === next.x && pawn.z === next.z)).toBe(false);
     }
-    expect(detoured).toBe(true); expect(world.resources).toHaveLength(0); expect(world.structures).toHaveLength(1); expect(world.jobs).toHaveLength(0);
+    expect(crossedPlan).toBe(true); expect(world.resources).toHaveLength(0); expect(world.structures).toHaveLength(1); expect(world.jobs).toHaveLength(0);
     const bed = fixture(1); bed.pawns[0]!.x = 8; bed.pawns[0]!.z = 3;
     resource(bed, 8, 13, 'tree'); order(bed, 'chop', 8, 13); stepWorld(bed); order(bed, 'bed', 7, 8, 1);
     expect(applyCommand(bed, { type: 'designate', kind: 'wall', x: 8, z: 8 }).ok).toBe(false);
@@ -335,7 +335,7 @@ describe('deterministic colony simulation', () => {
 
   test('schema-1 migration preserves stock, escrow, beds and identity; corrupt schema-2 saves are rejected', () => {
     const migrated = deserializeWorld(legacySave());
-    expect(migrated.schemaVersion).toBe(15); expect(migrated.pawns[0]!.id).toBe(4); expect(migrated.structures[0]!.id).toBe(10);
+    expect(migrated.schemaVersion).toBe(16); expect(migrated.pawns[0]!.id).toBe(4); expect(migrated.structures[0]!.id).toBe(10);
     expect(migrated.structures[0]).toMatchObject({ x: 7, z: 7, footprint: 'legacy-single' });
     expect(migrated.pawns[0]!.priorities).toMatchObject({ gather: 2, build: 2 }); audit(migrated, 20); expect(foodMass(migrated)).toBe(18);
     expect(hashWorld(deserializeWorld(legacySave()))).toBe(hashWorld(migrated));
@@ -376,10 +376,10 @@ describe('deterministic colony simulation', () => {
     expect(serializeWorld(world)).toBe(serialized);
     // Captured by running HEAD 489b98a's engine, including an active delivery and ground sleeper.
     const material = deserializeWorld(JSON.stringify(materialFixture));
-    expect(material.schemaVersion).toBe(15);
+    expect(material.schemaVersion).toBe(16);
     // V6 explicitly cancels obsolete hauling reservations and retains all units/IDs.
     expect(material.piles.map(({id,kind,quantity})=>({id,kind,quantity}))).toEqual(materialFixture.piles.map(({id,kind,quantity})=>({id,kind,quantity})));
-    expect(material.jobs).toEqual(materialFixture.jobs);
+    expect(material.jobs.map(({construction,...job})=>job)).toEqual(materialFixture.jobs);expect(material.jobs[0]!.construction).toBe('blueprint');
     expect(material.pawns.every(pawn=>pawn.haul===null)).toBe(true);
     expect(material.pawns.map(pawn => [pawn.id, pawn.x, pawn.z, pawn.hunger, pawn.rest])).toEqual(materialFixture.pawns.map(pawn => [pawn.id, pawn.x, pawn.z, pawn.hunger, pawn.rest]));
     expect(material.pawns[2]!.state).toBe('idle'); expect(material.pawns.every(pawn => pawn.need === null)).toBe(true);

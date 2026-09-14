@@ -1,3 +1,4 @@
+import { constructionHaulId } from './construction-rules.ts';
 import type { Cell, Command, MaterialPile, Pawn, World } from './types.ts';
 import { workType } from './work-planner.ts';
 import { haulingWork } from './haul-aside.ts';
@@ -30,7 +31,7 @@ export function planCommandDrops(world:World,command:Command):DropPlan|null {
   } else if(command.type==='assign-bed') {
     for(const pawn of world.pawns)if(pawn.need?.kind==='sleep'&&(pawn.bedId===command.bedId||pawn.id===command.pawnId))pawns.add(pawn.id);
   }
-  for(const pawn of world.pawns)if((pawn.jobId!==null&&jobs.has(pawn.jobId))||(pawn.haul&&(pawn.haul.destination.type==='job'?jobs.has(pawn.haul.destination.jobId):pawn.haul.destination.type==='stockpile'&&zones.has(pawn.haul.destination.stockpileId))))pawns.add(pawn.id);
+  for(const pawn of world.pawns)if((pawn.jobId!==null&&jobs.has(pawn.jobId))||(pawn.haul&&(jobs.has(constructionHaulId(pawn.haul.destination)??-1)||pawn.haul.destination.type==='stockpile'&&zones.has(pawn.haul.destination.stockpileId))))pawns.add(pawn.id);
   const result:DropPlan=new Map();
   if(!jobs.size&&!pawns.size)return result;
   const shadow={...world,piles:world.piles.map(p=>({...p,owner:{...p.owner}}))};
@@ -57,7 +58,7 @@ export function releaseWork(world:World,pawn:Pawn,plan?:DropPlan):boolean {
   const held=world.piles.find(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
   if(held&&!commitDrop(world,held,pawn,plan))return false;
   const job=world.jobs.find(j=>j.id===pawn.jobId);
-  if(job?.reservedBy===pawn.id){job.reservedBy=null;job.status='pending';if(job.kind==='sow')job.progress=0;}
+  if(job?.reservedBy===pawn.id){delete job.clearance;job.reservedBy=null;job.status='pending';if(job.kind==='sow')job.progress=0;}
   pawn.recreation.task=null;pawn.jobId=null;pawn.haul=null;pawn.cooking=null;pawn.need=null;pawn.path=[];pawn.state='idle';pawn.planCooldown=20;pawn.needCooldown=20;
   return true;
 }

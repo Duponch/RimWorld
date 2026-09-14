@@ -2,7 +2,7 @@ import { plantGrowth } from '../../src/sim/plants.ts';
 import { availableNutrition } from '../../src/sim/items.ts';
 import { spoiledUnits } from '../../src/sim/food-preservation.ts';
 import { canDesignate } from '../../src/sim/engine.ts';
-import { JOB_WOOD_COST } from '../../src/sim/definitions.ts';
+import { JOB_WOOD_COST, footprintCells } from '../../src/sim/definitions.ts';
 import type { Command, DesignateCommand, World } from '../../src/sim/types.ts';
 
 export interface Decision { reason: string; command: Command }
@@ -53,6 +53,9 @@ export function playerDecisions(world: World): Decision[] {
   if (!world.growingZones.length && world.structures.filter(s => s.kind === 'bed').length === 3) out.push({reason:'Semer un premier potager près du camp, tout en continuant à cueillir pendant sa croissance.',command:{type:'area',action:'growing',from:{x:cx-2,z:cz+5},to:{x:cx+2,z:cz+7}}});
   for(const pawn of world.pawns)if(pawn.schedule[19]!=='recreation'||pawn.schedule[20]!=='recreation')out.push({reason:'Réserver une plage de loisirs du soir, sans remplacer le repos nocturne.',command:{type:'schedule-paint',pawnId:pawn.id,hours:[19,20],assignment:'recreation'}});
   const outstandingWood = [...world.jobs, ...out.flatMap(d => d.command.type === 'designate' ? [d.command] : [])].reduce((n,j) => n + JOB_WOOD_COST[j.kind], 0);
+  // New plans can overlap trees: their builder will clear the footprint. Do not
+  // queue a second gathering order there in the same batch of player commands.
+  const newlyPlanned=new Set(out.flatMap(d=>d.command.type==='designate'?footprintCells(d.command).map(c=>c.z*world.width+c.x):[]));
   const nearby = [...world.resources].filter(r => Math.abs(r.x-cx) + Math.abs(r.z-cz) <= 28).sort((a,b) => Math.abs(a.x-cx)+Math.abs(a.z-cz)-(Math.abs(b.x-cx)+Math.abs(b.z-cz)) || a.id-b.id);
   const prepared=world.piles.filter(p=>p.item==='simple-meal').reduce((n,p)=>n+p.quantity,0);
   const ingredients=world.piles.filter(p=>p.item==='rice'||p.item==='berries').reduce((n,p)=>n+p.quantity,0);
@@ -69,7 +72,7 @@ export function playerDecisions(world: World): Decision[] {
     const action = kind === 'tree' ? 'chop' : 'harvest';
     let planned = nearby.filter(r => r.kind === kind && world.jobs.some(j => j.x === r.x && j.z === r.z)).reduce((n,r) => n+r.amount,0);
     for (const resource of nearby) {
-      if (resource.kind !== kind || (kind === 'berries' && plantGrowth(world,resource) < 1) || planned >= required) continue;
+      if (resource.kind !== kind || newlyPlanned.has(resource.z*world.width+resource.x) || (kind === 'berries' && plantGrowth(world,resource) < 1) || planned >= required) continue;
       const command: DesignateCommand = { type: 'designate', kind: action, x: resource.x, z: resource.z };
       if (canDesignate(world, command).ok) { out.push({ reason: kind === 'tree' ? 'Prévoir le bois des chantiers et une petite marge.' : 'Renouveler la réserve alimentaire avant la pénurie.', command }); planned += resource.amount; }
     }
@@ -86,6 +89,7 @@ export function colonySummary(world: World) {
     sharedPawnCells:[...occupied.values()].filter(count=>count>1).length,
     obstructedGrowingCells:world.piles.filter(p=>p.owner.type==='ground'&&fields.has(p.owner.z*world.width+p.owner.x)).length,
     clearing:world.pawns.filter(p=>p.haul?.destination.type==='aside').length,
+    construction: {blueprints:world.jobs.filter(j=>j.construction==='blueprint').length,frames:world.jobs.filter(j=>j.construction==='frame').length,clearingPlants:world.jobs.filter(j=>j.clearance).length,clearingPiles:world.pawns.filter(p=>p.haul?.destination.type==='aside'&&p.haul.destination.constructionId!==undefined).length},
     structures: Object.fromEntries(['bed','table','stool','wall','campfire','horseshoes'].map(kind => [kind,world.structures.filter(s=>s.kind===kind).length])), preparedMeals:world.piles.filter(p=>p.item==='simple-meal').reduce((n,p)=>n+p.quantity,0), stock: { ...world.stock }, pending: world.jobs.length, minimumFood: Math.min(...world.pawns.map(p=>p.hunger)), minimumRest: Math.min(...world.pawns.map(p=>p.rest)) };
 }
 

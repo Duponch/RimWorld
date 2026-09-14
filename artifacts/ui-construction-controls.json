@@ -1,0 +1,352 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "E:\\Code\\RimWorld\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "tests/integration/construction.spec.ts",
+      "tests/integration/movement.spec.ts",
+      "tests/integration/production.spec.ts",
+      "tests/integration/recreation.spec.ts",
+      "--reporter=json"
+    ],
+    "configFile": "E:\\Code\\RimWorld\\playwright.config.ts",
+    "rootDir": "E:/Code/RimWorld/tests/integration",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "E:/Code/RimWorld/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "E:/Code/RimWorld/tests/integration",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": {
+      "command": "npm run dev",
+      "url": "http://127.0.0.1:5173",
+      "reuseExistingServer": true,
+      "timeout": 30000
+    }
+  },
+  "suites": [
+    {
+      "title": "construction.spec.ts",
+      "file": "construction.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "chantier par interface : plan sur une pile, dégagement porté, cadre, sauvegarde et achèvement",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7801,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-14T15:15:50.529Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "construction",
+                      "contentType": "application/json",
+                      "body": "eyJjYXJyaWVkVGljayI6MjAxMiwiZnJhbWVUaWNrIjoyMDUyLCJmaW5pc2hlZFRpY2siOjIxNjgsIm1hdGVyaWFsQ29uc2VydmVkIjp0cnVlLCJlcnJvcnMiOltdfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "958bc23c3a948be7677b-1ef7d16c164ab6e68380",
+          "file": "construction.spec.ts",
+          "line": 5,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "movement.spec.ts",
+      "file": "movement.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "civil crossing in the real worker: shared cell, save/reload, three exclusive beds",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7374,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-14T15:15:58.386Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "civil-crossing",
+                      "contentType": "application/json",
+                      "body": "eyJzaGFyZWRUaWNrIjoyMDE1LCJmaW5hbFRpY2siOjIwNDMsInBvc2l0aW9ucyI6W3siaWQiOjQ5LCJ4IjoxNCwieiI6OCwiYmVkSWQiOjYwfSx7ImlkIjo1MCwieCI6MSwieiI6OCwiYmVkSWQiOjU4fSx7ImlkIjo1MSwieCI6OCwieiI6OCwiYmVkSWQiOjU5fV0sImVycm9ycyI6W119"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4f4644ce1bc9a9704a33-c41b4c3514e6bc0b77b3",
+          "file": "movement.spec.ts",
+          "line": 6,
+          "column": 1
+        },
+        {
+          "title": "GPU travel preserves speed, corners and work-facing through real worker snapshots",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 11908,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-14T15:16:05.769Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "movement-contract",
+                      "contentType": "application/json",
+                      "body": "ewogICJ3b3JzdFNhbXBsZSI6IHsKICAgICJhIjogewogICAgICAibm93IjogOTE5MS40LAogICAgICAiY2xvY2siOiAzNS42ODA4MDAwMDAwMTM5MiwKICAgICAgInN0YXJ0IjogMzUuNTk5OTk4NDc0MTIxMDk0LAogICAgICAiZW5kIjogMzUuOTAwMDAxNTI1ODc4OTA2LAogICAgICAieCI6IDE0LjczMDY2NDMyMDE4MTQ3MiwKICAgICAgInoiOiAxNSwKICAgICAgInlhdyI6IC0xLjU3MDc5NjM3MDUwNjI4NjYsCiAgICAgICJkeCI6IC0xLAogICAgICAiZHoiOiAwLAogICAgICAid2Fsa2luZyI6IDEKICAgIH0sCiAgICAiYiI6IHsKICAgICAgIm5vdyI6IDkxOTUuNSwKICAgICAgImNsb2NrIjogMzUuNzA1NDAwMDAwMDEzOTIsCiAgICAgICJzdGFydCI6IDM1LjU5OTk5ODQ3NDEyMTA5NCwKICAgICAgImVuZCI6IDM1LjkwMDAwMTUyNTg3ODkwNiwKICAgICAgIngiOiAxNC42NDg2NjUxNTQzMjAxMjQsCiAgICAgICJ6IjogMTUsCiAgICAgICJ5YXciOiAtMS41NzA3OTYzNzA1MDYyODY2LAogICAgICAiZHgiOiAtMSwKICAgICAgImR6IjogMCwKICAgICAgIndhbGtpbmciOiAxCiAgICB9LAogICAgImR0IjogMC4wMDQxMDAwMDAwMDAwMDAzNjQKICB9LAogICJzYW1wbGVzIjogMjUxLAogICJ0dXJucyI6IDYsCiAgIm1heFNwZWVkRXJyb3IiOiAwLjAwMDIwMzQ0ODQ1MzYwNzUzNTM4LAogICJtYXhGYWNpbmdFcnJvciI6IDQuMzcxMTM5MDA2MzA5NDc3NWUtOCwKICAid29ya1RhcmdldHMiOiA0LAogICJtYXhXb3JrRmFjaW5nRXJyb3IiOiA0LjM3MTEzOTAwNjMwOTQ3N2UtOCwKICAiZXJyb3JzIjogW10KfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4f4644ce1bc9a9704a33-220526b048956d75fc97",
+          "file": "movement.spec.ts",
+          "line": 37,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "production.spec.ts",
+      "file": "production.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "cuisine par interface : construction, facture, ingrédients portés, reprise et repas rangés",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 11583,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-14T15:16:17.704Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "cooking-state",
+                      "contentType": "application/json",
+                      "body": "eyJiYWNrZW5kIjoiV2ViR1BVIiwidGljayI6MzMxLCJ3b3JrQ2hlY2twb2ludCI6MTUzLCJyYXciOjEwLCJtZWFscyI6MiwiZXJyb3JzIjpbXX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ed69554c53210704c98c-f69ca065d02780515016",
+          "file": "production.spec.ts",
+          "line": 10,
+          "column": 1
+        },
+        {
+          "title": "conservation dans le worker : migration V10, inspection de fraîcheur, expiration et sauvegarde refusée sans remplacement",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7201,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-14T15:16:29.295Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "preservation-state",
+                      "contentType": "application/json",
+                      "body": "eyJ0aWNrIjoxNzUsInNwb2lsZWQiOnsiYmVycmllcyI6MTAsInJpY2UiOjAsInNpbXBsZS1tZWFsIjowfSwibWlncmF0aW9uIjoxMCwic2NoZW1hIjoxNiwiZXJyb3JzIjpbXX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ed69554c53210704c98c-82690d88ed86407f3418",
+          "file": "production.spec.ts",
+          "line": 79,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "recreation.spec.ts",
+      "file": "recreation.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "loisirs par interface : migration, piquet construit, horaire, activité physique, inspection et reprise",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5806,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-14T15:16:36.530Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "recreation",
+                      "contentType": "application/json",
+                      "body": "eyJ0aWNrIjoyMDc4LCJwaW4iOlt7ImlkIjoxNzgsImtpbmQiOiJob3JzZXNob2VzIiwieCI6MTYsInoiOjE0LCJvcmllbnRhdGlvbiI6MCwiZm9vdHByaW50Ijoic3RhbmRhcmQifV0sInBsYXllcnMiOlt7ImlkIjoxNjYsInN0YXRlIjoicmVjcmVhdGluZyIsInJlY3JlYXRpb24iOnsibGV2ZWwiOjU2LjgxMDMzOTY2MjM1NjAyLCJ0b2xlcmFuY2UiOnsic29saXRhcnkiOjEuNTMxNzIwNzgwNTMxMzM5MywiZGV4dGVyaXR5IjowfSwiYm9yZWQiOnsic29saXRhcnkiOmZhbHNlLCJkZXh0ZXJpdHkiOmZhbHNlfSwidGFzayI6eyJhY3Rpdml0eSI6InNreWdhemUiLCJidWlsZGluZ0lkIjpudWxsLCJ0YXJnZXQiOnsieCI6MTYsInoiOjEzfSwicGhhc2UiOiJhY3RpdmUiLCJlbGFwc2VkIjoxN319fSx7ImlkIjoxNjcsInN0YXRlIjoicmVjcmVhdGluZyIsInJlY3JlYXRpb24iOnsibGV2ZWwiOjU2LjM1NDE3MjExMTQwNzM3LCJ0b2xlcmFuY2UiOnsic29saXRhcnkiOjAsImRleHRlcml0eSI6MS4yNjM3MTE4NzI0MTQ3MTI1fSwiYm9yZWQiOnsic29saXRhcnkiOmZhbHNlLCJkZXh0ZXJpdHkiOmZhbHNlfSwidGFzayI6eyJhY3Rpdml0eSI6ImhvcnNlc2hvZXMiLCJidWlsZGluZ0lkIjoxNzgsInRhcmdldCI6eyJ4IjoxNiwieiI6MTl9LCJwaGFzZSI6ImFjdGl2ZSIsImVsYXBzZWQiOjE0fX19LHsiaWQiOjE2OCwic3RhdGUiOiJyZWNyZWF0aW5nIiwicmVjcmVhdGlvbiI6eyJsZXZlbCI6NTYuODEwMzM5NjYyMzU2MDIsInRvbGVyYW5jZSI6eyJzb2xpdGFyeSI6MS41MzE3MjA3ODA1MzEzMzkzLCJkZXh0ZXJpdHkiOjB9LCJib3JlZCI6eyJzb2xpdGFyeSI6ZmFsc2UsImRleHRlcml0eSI6ZmFsc2V9LCJ0YXNrIjp7ImFjdGl2aXR5Ijoic2t5Z2F6ZSIsImJ1aWxkaW5nSWQiOm51bGwsInRhcmdldCI6eyJ4IjoxNiwieiI6MTd9LCJwaGFzZSI6ImFjdGl2ZSIsImVsYXBzZWQiOjE3fX19XSwiZXJyb3JzIjpbXX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e711bda77a79a532fba6-d10f5ce0544f280f6a1e",
+          "file": "recreation.spec.ts",
+          "line": 5,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-14T15:15:49.100Z",
+    "duration": 53453.407,
+    "expected": 6,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

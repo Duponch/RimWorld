@@ -1,3 +1,5 @@
+import { constructionCandidates } from './construction-planner.ts';
+import { asBuilder, constructionHaulPriority, constructionObstructions, constructionSiteFree, isConstruction } from './construction-rules.ts';
 import { hasCookingWork, planCooking, type CookingPlan } from './cooking-planner.ts';
 import { candidateAccess } from './candidate-access.ts';
 import { fuelCapacity, wantsFuel } from './fuel.ts';
@@ -50,11 +52,13 @@ function destinationCapacity(world: World, destination: HaulDestination, kind: M
 export function destinationValid(world: World, pawn: Pawn): boolean {
   const task = pawn.haul; if (!task) return false;
   const pile = world.piles.find(item => item.id === (task.phase === 'pickup' ? task.sourcePileId : task.carryPileId));
+  const destination=task.destination;
+  if(destination.type==='aside'&&destination.constructionId!==undefined&&!world.jobs.some(j=>j.id===destination.constructionId))return false;
   return !!pile && destinationCapacity(world, task.destination, pile.kind, pawn.id, pile.item) >= task.quantity;
 }
-interface Candidate { cooking?: CookingPlan; priority: number; rank: number; distance: number; id: number; job?: Job; sourceId?: number; quantity?: number; destination?: HaulDestination; target: Cell }
+interface Candidate { clearance?:{resourceId:number;progress:number}; cooking?: CookingPlan; priority: number; rank: number; distance: number; id: number; job?: Job; sourceId?: number; quantity?: number; destination?: HaulDestination; target: Cell }
 function compareCandidate(a: Candidate, b: Candidate): number { return a.priority - b.priority || a.rank - b.rank || a.distance - b.distance || a.id - b.id; }
-function canReach(world: World, target: Cell & { kind?: JobKind }, reachable: Reachability, allowTarget: boolean): boolean {
+export function canReach(world: World, target: Cell & { kind?: JobKind }, reachable: Reachability, allowTarget: boolean): boolean {
   const cells = target.kind ? footprintCells(target as Job) : [target];
   if (allowTarget && hasReachableCell(reachable,cellIndex(world, target.x, target.z))) return true;
   for (const cell of cells) for (const next of [{ x: cell.x, z: cell.z - 1 }, { x: cell.x + 1, z: cell.z }, { x: cell.x, z: cell.z + 1 }, { x: cell.x - 1, z: cell.z }]) {
@@ -73,13 +77,14 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   // Rankings do not depend on flood order. Try the top ready job directly;
   // a failed targeted search has explored the full component and is reusable.
   // Logistics with a higher priority still uses the ordinary complete planner.
-  const ready = world.jobs.filter(job => job.reservedBy === null && pawn.priorities[workType(job)] > 0
+  const ready = world.jobs.filter(job => !isConstruction(job) && job.reservedBy === null && pawn.priorities[workType(job)] > 0
     && job.escrow.wood >= JOB_WOOD_COST[job.kind] && (pawn.hunger > 20 || job.kind === 'harvest'))
     .map(job => ({ job, target: job, id: job.id, priority: pawn.priorities[workType(job)], rank: workType(job) === 'gather' ? 0 : 1, distance: Math.abs(job.x-pawn.x)+Math.abs(job.z-pawn.z) }))
     .sort(compareCandidate);
   let reachable: Reachability | null = null;
   const first = ready[0];
-  if (first && (!cooking || pawn.priorities.cook>first.priority) && (pawn.priorities.haul === 0 || first.priority <= pawn.priorities.haul)) {
+  if (first && (!cooking || pawn.priorities.cook>first.priority) && (pawn.priorities.haul === 0 || first.priority <= pawn.priorities.haul)
+    && (first.priority<constructionHaulPriority(pawn)||!world.jobs.some(isConstruction))) {
     const source = first.job.kind === 'sow' ? world.piles.find(p => p.owner.type === 'ground' && sameCell(p.owner, first.job)) : undefined;
     if (!source || reservedSource(world, source.id) === 0) {
       const goals=interactionGoals(world,footprintCells(first.job));
@@ -124,6 +129,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   }
   let best: Candidate | null = null;
   for (const job of world.jobs) {
+    if(isConstruction(job))continue;
     const work = workType(job);
     if (job.reservedBy !== null || pawn.priorities[work] === 0 || (delivered.get(job.id) ?? 0) < JOB_WOOD_COST[job.kind] || (pawn.hunger <= 20 && job.kind !== 'harvest')) continue;
     const candidate: Candidate = { priority: pawn.priorities[work], rank: work === 'gather' ? 0 : 1, distance: Math.abs(job.x - pawn.x) + Math.abs(job.z - pawn.z), id: job.id, job, target: job };
@@ -140,22 +146,24 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
     }
     if (canReach(world, job, reachable, false)) { if (!best || compareCandidate(candidate, best) < 0) best = candidate; }
   }
+  const constructionObstacles=constructionObstructions(world);
+  for(const candidate of constructionCandidates(world,pawn,blocked,reachable,budget,constructionObstacles))if(!best||compareCandidate(candidate,best)<0)best=candidate;
   if(cooking && (!best || pawn.priorities.cook<=best.priority)) {
     const proposal=planCooking(world,pawn,reachable,budget);
     if(proposal)best={cooking:proposal,priority:pawn.priorities.cook,rank:-1,distance:Math.abs(pawn.x-proposal.station.x)+Math.abs(pawn.z-proposal.station.z),id:proposal.station.id,target:proposal.target};
   }
-  if (pawn.priorities.haul > 0 && pawn.hunger > 20 && (!best || best.priority >= pawn.priorities.haul)) {
+  if (Number.isFinite(constructionHaulPriority(pawn)) && pawn.hunger > 20 && (!best || best.priority >= constructionHaulPriority(pawn))) {
     const zonesByCell = new Map(world.stockpiles.map(zone => [cellIndex(world, zone.x, zone.z), zone]));
     const sources = world.piles.filter(pile => pile.owner.type === 'ground' && pile.quantity > (sourceReserved.get(pile.id) ?? 0));
-    const destinations: { destination: HaulDestination; target: Cell & { kind?: JobKind }; priority: number; wood: number; food: number; reachable: boolean }[] = [];
+    const destinations: { destination: HaulDestination; target: Cell & { kind?: JobKind }; priority: number; workPriority:number; wood: number; food: number; reachable: boolean }[] = [];
     for (const job of world.jobs) {
       const capacity = JOB_WOOD_COST[job.kind] - (delivered.get(job.id) ?? 0) - (jobReserved.get(job.id) ?? 0);
-      if (capacity > 0) destinations.push({ destination: { type: 'job', jobId: job.id }, target: job, priority: 5, wood: capacity, food: 0, reachable: canReach(world, job, reachable, false) });
+      if (capacity > 0 && constructionSiteFree(world,job,pawn.id,constructionObstacles.get(job.id))) destinations.push({ destination: { type: 'job', jobId: job.id, forConstruction:asBuilder(pawn) }, target: job, priority: 5, workPriority:constructionHaulPriority(pawn), wood: capacity, food: 0, reachable: canReach(world, job, reachable, false) });
     }
-    for (const fire of fires) destinations.push({destination:{type:'fuel',structureId:fire.id},target:fire,priority:5,wood:fuelCapacity(world,fire.id),food:0,reachable:canReach(world,fire,reachable,true)});
-    for (const zone of world.stockpiles) {
+    if(pawn.priorities.haul>0)for (const fire of fires) destinations.push({destination:{type:'fuel',structureId:fire.id},target:fire,priority:5,workPriority:pawn.priorities.haul,wood:fuelCapacity(world,fire.id),food:0,reachable:canReach(world,fire,reachable,true)});
+    if(pawn.priorities.haul>0)for (const zone of world.stockpiles) {
       const capacity = zone.capacity - (ground.get(cellIndex(world, zone.x, zone.z)) ?? 0) - (zoneReserved.get(zone.id) ?? 0);
-      if (capacity > 0 && (zone.filters.wood || zone.filters.food)) destinations.push({ destination: { type: 'stockpile', stockpileId: zone.id }, target: zone, priority: zone.priority, wood: zone.filters.wood ? capacity : 0, food: zone.filters.food ? capacity : 0, reachable: canReach(world, zone, reachable, true) });
+      if (capacity > 0 && (zone.filters.wood || zone.filters.food)) destinations.push({ destination: { type: 'stockpile', stockpileId: zone.id }, target: zone, priority: zone.priority, workPriority:pawn.priorities.haul, wood: zone.filters.wood ? capacity : 0, food: zone.filters.food ? capacity : 0, reachable: canReach(world, zone, reachable, true) });
     }
     const total = sources.length * destinations.length;
     const count = Math.min(total, budget.pairs);
@@ -187,7 +195,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
       let sourceAccess = sourceReachable.get(pile.id);
       if (sourceAccess === undefined) { sourceAccess = canReach(world, pile.owner, reachable, true); sourceReachable.set(pile.id, sourceAccess); }
       if (!sourceAccess || !destination.reachable) continue;
-      const candidate: Candidate = { priority: pawn.priorities.haul, rank: 2 + (5 - destination.priority) / 10, distance: Math.abs(pawn.x - pile.owner.x) + Math.abs(pawn.z - pile.owner.z) + Math.abs(destination.target.x - pile.owner.x) + Math.abs(destination.target.z - pile.owner.z), id: pile.id,
+      const candidate: Candidate = { priority: destination.workPriority, rank: 2 + (5 - destination.priority) / 10, distance: Math.abs(pawn.x - pile.owner.x) + Math.abs(pawn.z - pile.owner.z) + Math.abs(destination.target.x - pile.owner.x) + Math.abs(destination.target.z - pile.owner.z), id: pile.id,
         sourceId: pile.id, quantity: Math.min(CARRY_CAPACITY, available, capacity), destination: destination.destination, target: pile.owner };
       if (!best || compareCandidate(candidate, best) < 0) best = candidate;
     }
@@ -201,7 +209,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   if (best) {
     const path = routeToJob(world, best.target, reachable, !best.job)!;
     if (best.destination) pawn.haul = { sourcePileId: best.sourceId!, quantity: best.quantity!, phase: 'pickup', destination: best.destination, carryPileId: null };
-    else { best.job!.reservedBy = pawn.id; best.job!.status = 'active'; pawn.jobId = best.job!.id; }
+    else { if(best.clearance)best.job!.clearance=best.clearance;best.job!.reservedBy = pawn.id; best.job!.status = 'active'; pawn.jobId = best.job!.id; }
     pawn.path = path; pawn.state = path.length ? 'moving' : 'working'; return;
   }
 }

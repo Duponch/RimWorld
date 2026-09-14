@@ -63,16 +63,16 @@ Les massifs ont maintenant des sommets et parois irréguliers qui se raccordent 
 
 Ouvrir Architecte, choisir Ordres pour abattre/récolter/annuler, Zones pour le stockage, Structure pour le mur, Meubles pour les lits, tables et tabourets, ou Température pour le feu de camp. Pour les ordres de terrain et les réserves, **cliquer ou maintenir le bouton gauche et tracer un rectangle**, dans n'importe quel sens. Les cases compatibles sont surlignées ; un compteur distingue les cases retenues et ignorées. Relâcher sur la carte applique l'ensemble. Échap ou clic droit annule le tracé ; changer d'outil ou quitter la fenêtre l'abandonne également. Relâcher au-dessus d'un panneau n'envoie aucun ordre.
 
-L'abattage cible les arbres ; la récolte cible les buissons et cultures récoltables. Les ressources incompatibles, obstacles et ordres déjà présents sont ignorés, avec un bilan après application. Le rectangle crée du travail futur : les matériaux ne sont produits qu'après le travail des colons. Pour les constructions, cliquer sur une empreinte libre et franchissable. Le lit et la table occupent deux cases : Q/E ou le bouton Tourner change leur orientation avant placement. Le fantôme indique un placement refusé. Les matériaux peuvent manquer au moment de poser un plan ; leur livraison précède le travail de construction.
+L'abattage cible les arbres ; la récolte cible les buissons et cultures récoltables. Les ressources incompatibles, obstacles et ordres déjà présents sont ignorés, avec un bilan après application. Le rectangle crée du travail futur : les matériaux ne sont produits qu'après le travail des colons. Pour les constructions, cliquer sur un sol compatible : un plan peut recouvrir une plante ou une pile d’objets, que les colons dégageront. Roches, réserves et bâtiments existants restent refusés. Le lit et la table occupent deux cases : Q/E ou le bouton Tourner change leur orientation avant placement. Le fantôme indique un placement refusé. Les matériaux peuvent manquer au moment de poser un plan ; leur livraison précède le travail de construction.
 
 | Action | Règle actuelle |
 |---|---|
 | Abattre | Le colon travaille à côté de l'arbre ; toute sa quantité devient une ou plusieurs piles de bois au sol. |
 | Récolter | Le buisson reste à 30 % de croissance et dépose ses baies ; récoltable au-dessus de 65 %. |
 | Couper les buissons | Le buisson est retiré ; sa récolte éventuelle reste au sol. |
-| Construire un mur | 5 bois, 70 ticks de travail ; bloque le passage dès le placement du plan. |
+| Construire un mur | 5 bois, 70 ticks de travail ; seul le mur terminé bloque le passage. |
 | Construire un lit | 8 bois livrés, 120 ticks de travail ; empreinte orientée 1×2, attribution à un colon et repos dans le lit. |
-| Construire une table | 28 bois livrés, 53 ticks de travail ; empreinte orientée 1×2. Le plan et le meuble bloquent actuellement le passage. |
+| Construire une table | 28 bois livrés, 53 ticks de travail ; empreinte orientée 1×2. Plan et cadre se traversent ; la table achevée bloque actuellement le passage. |
 | Construire un tabouret | 25 bois livrés, 32 ticks de travail ; une case, une place de repas à côté d’une table. |
 | Construire un feu | 20 bois livrés, 20 ticks de travail ; une case et une place de service orientée devant. |
 | Annuler | Retire l'ordre et libère ses engagements ; les matériaux restent localisés au sol. Ne détruit pas un bâtiment achevé. On peut cliquer sur chacune des cases de son empreinte. |
@@ -81,9 +81,9 @@ Un arbre prend 100 ticks de travail, un buisson 60, hors déplacement et interru
 
 ## Répartir le travail
 
-Ouvrir Travail pour régler Collecte, Construction, Transport, Culture et Cuisine. **1 est la priorité la plus forte, 4 la plus faible, 0 désactive la famille.** Le transport approvisionne les chantiers et les réserves. Désactiver Construction n'empêche donc pas un colon dont Transport reste actif d'apporter du bois à un plan. Une modification entre priorités actives s'applique lors du prochain choix de travail ; désactiver une famille interrompt son activité.
+Ouvrir Travail pour régler Collecte, Construction, Transport, Culture et Cuisine. **1 est la priorité la plus forte, 4 la plus faible, 0 désactive la famille.** Transport approvisionne chantiers et réserves ; Construction peut aussi dégager les piles et apporter ses matériaux même si Transport vaut 0. Le constructeur coupe les plantes gênant son chantier même si Collecte vaut 0. Désactiver Construction n'empêche donc pas un colon dont Transport reste actif d'apporter du bois à un plan. Une modification entre priorités actives s'applique lors du prochain choix de travail ; désactiver une famille interrompt son activité.
 
-Un transporteur réserve une quantité de pile et de la place à destination, se déplace jusqu'à la source, prélève, porte et dépose. Sa cargaison est visible. Deux colons peuvent se partager une pile sans promettre les mêmes unités. Un constructeur commence seulement quand les matériaux nécessaires sont effectivement livrés. Une interruption conserve la progression et les matériaux déjà déposés ; une cargaison abandonnée devient une pile au sol.
+Un transporteur réserve une quantité de pile et de la place à destination, se déplace jusqu'à la source, prélève, porte et dépose. Sa cargaison est visible. Deux colons peuvent se partager une pile sans promettre les mêmes unités. La première livraison réelle transforme le plan en cadre. Un constructeur finit seulement quand tous les matériaux sont livrés et que rien ne gêne l’empreinte. Plans et cadres laissent passer, avec un ralentissement à l’entrée dans un cadre. Les piles gênantes sont portées ailleurs et les plantes réellement coupées ; un colon immobile ou une place de repas réservée fait attendre le chantier. Une interruption conserve la progression et les matériaux déjà déposés ; une cargaison abandonnée devient une pile au sol.
 
 Les chemins contournent eau, terrain rocheux, murs et tables. Les colons civils se traversent sans déplacer ceux qui restent sur place ; l'utilisation d'un lit ou d'un poste reste réservée. Inspecter un chantier indique notamment ses livraisons et ce qu'il attend. Les règles de blocage liées aux ennemis et au combat restent à développer.
 

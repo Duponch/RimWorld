@@ -6,11 +6,11 @@
 
 RimWorld de base d’abord, extensions après G5. Grille plane en 3D low poly, interactions physiques, organisation de l’interface de référence. Le [corpus utilisateur](research/reference-adoption.md) définit la cible par défaut ; chaque mécanique exige une vérification récente. Les adaptations sont [explicites](gameplay/decisions.md). Les algorithmes restent libres sous les contrats et budgets mesurés.
 
-**G0 est en consolidation, G1 partiel.** Le camp dispose de récolte, portage, stockage, constructions, repas et couchages physiques, tables et culture de riz. V10 a ajouté feu, combustible et factures ; V11 ajoute fraîcheur, pourriture et reprise des tâches affectées ; V12 ajoute horaires, fatigue adulte et réveils ; V13 ajoute les régimes alimentaires partagés, V14 corrige le passage entre colons civils en préservant les réservations. V15 ajoute observation du ciel, fers à cheval, satisfaction/lassitude et plages Loisirs. Schéma 15 et migrations V1–V14. Cartes par défaut 250², rendu GPU, déplacements temporisés, ciel jour/nuit et deux projections sont livrés avec les limites de leurs contrats.
+**G0 est en consolidation, G1 partiel.** Le camp dispose de récolte, portage, stockage, constructions, repas et couchages physiques, tables et culture de riz. V10 a ajouté feu, combustible et factures ; V11 ajoute fraîcheur, pourriture et reprise des tâches affectées ; V12 ajoute horaires, fatigue adulte et réveils ; V13 ajoute les régimes alimentaires partagés, V14 corrige le passage entre colons civils en préservant les réservations. V15 ajoute observation du ciel, fers à cheval, satisfaction/lassitude et plages Loisirs. V16 distingue plans/cadres, permet leur traversée et dégage physiquement les piles/plantes avant construction. Schéma 16 et migrations V1–V15. Cartes par défaut 250², rendu GPU, déplacements temporisés, ciel jour/nuit et deux projections sont livrés avec les limites de leurs contrats.
 
 ## Prochains lots
 
-1. **Corriger les chantiers G0** : déplacer les objets gênants, distinguer plan/cadre/ouvrage et supprimer les obstacles créés dès la pose d’un simple plan. Ce comportement élémentaire précède l’extension du catalogue.
+1. **Compléter les commandes de base G0** : sélection multiple et ordres contextuels forcés avec accès/réservations et refus explicites. Les plans/cadres et dégagements sont livrés en V16 ; coexistence meuble/objet, réserves sous plans et personnes immobiles gênantes restent à compléter avec les profils d’occupation.
 2. **Poursuivre la survie G1** : deux familles de loisirs livrées avec satisfaction, lassitude et activités physiques ; compléter activités sans bâtiment, lieux, social et contenu. Cuisine, conservation à climat fixe, horaires et régimes restent partiels. Les attentes riches exigent l’économie future ; vérifier chaque ajout avant implémentation.
 3. **Compléments de G1, puis habitat G2** : autres recettes, ateliers, statistiques utiles et catalogue progressivement enrichi ; minage, portes/toits/pièces, températures variables et chaîne du froid restent ouverts. Le feu ne chauffe pas encore les pièces.
 
@@ -24,7 +24,7 @@ Contrats livrés : définitions immuables ciblées, propriété unique, pile au 
 
 - Zones nommées et politiques partagées ; filtres enrichis au rythme du contenu.
 - Sélection multiple et ordres contextuels forcés, avec motifs de refus.
-- Déplacement des objets obstruant une construction ; états de chantier plus fins et suppression du blocage immédiat des plans de murs.
+- Construction V16 : plan/cadre/ouvrage, dégagement des piles/plantes et approvisionnement par bâtisseur livrés. Restent coexistence par définition, plans dans les réserves et déplacement des personnes gênantes ; voir [contrat](development/construction.md).
 - Étendre les profils de franchissement et cases de travail à mesure que les activités arrivent ; passage civil et distinction avec les réservations de lits/repas/postes livrés en V14. La présence d’un colon ne ferme plus un couloir. Collisions hostiles à développer avec G3 ; lisibilité 3D des superpositions encore partielle.
 - Manifeste de contenu/générateur, journal complet des commandes datées, export/import et garanties d’évolution.
 

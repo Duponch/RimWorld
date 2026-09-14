@@ -1,3 +1,4 @@
+import { constructionWorkTarget } from '../sim/construction-rules';
 import type { MotionTimeline } from './MotionTimeline';
 import * as THREE from 'three/webgpu';
 import { Fn, If, attribute, cos, float, mix, positionLocal, sin, uniform, vec3 } from 'three/tsl';
@@ -237,7 +238,8 @@ export class PawnLayer {
         const target = Math.atan2(surface.cell.x - pawn.x, surface.cell.z - pawn.z);
         yaw = from.w + Math.atan2(Math.sin(target - from.w), Math.cos(target - from.w));
       }
-      const work = pawn.state==='working' ? world.jobs.find(j=>j.id===pawn.jobId) ?? (pawn.cooking ? pawn.cooking.actionCell : pawn.haul?.serviceProgress ? world.structures.find(s=>pawn.haul?.destination.type==='fuel'&&s.id===pawn.haul.destination.structureId) : pawn.haul?.pickupCell) : undefined;
+      const job=pawn.state==='working'?world.jobs.find(j=>j.id===pawn.jobId):undefined;
+      const work = pawn.state==='working' ? (job?constructionWorkTarget(world,job):undefined) ?? (pawn.cooking ? pawn.cooking.actionCell : pawn.haul?.serviceProgress ? world.structures.find(s=>pawn.haul?.destination.type==='fuel'&&s.id===pawn.haul.destination.structureId) : pawn.haul?.pickupCell) : undefined;
       if(work) {yaw=Math.atan2(work.x-pawn.x,work.z-pawn.z);from.w=yaw;}
       const game=pawn.state==='recreating'&&pawn.recreation.task?.activity==='horseshoes'?world.structures.find(s=>s.id===pawn.recreation.task!.buildingId):undefined;
       if(game){yaw=Math.atan2(game.x-pawn.x,game.z-pawn.z);from.w=yaw;}

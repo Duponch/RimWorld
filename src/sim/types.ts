@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 15 as const;
+export const SCHEMA_VERSION = 16 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
@@ -21,7 +21,7 @@ export type MaterialOwner = ({ type: 'ground' } & Cell) | { type: 'pawn'; pawnId
 export interface MaterialPile { id: number; kind: MaterialKind; item: ItemId; quantity: number; owner: MaterialOwner; rot?: import('./food-preservation.ts').RotState }
 export interface StockpileCell extends Cell { id: number; filters: Record<MaterialKind, boolean>; priority: number; capacity: number }
 export interface GrowingZone { id: number; cells: number[]; plant: 'rice'; allowSow: boolean; allowCut: boolean }
-export type HaulDestination = { type: 'fuel'; structureId: number; forCooking?: boolean } | { type: 'stockpile'; stockpileId: number } | { type: 'job'; jobId: number } | ({ type: 'aside' } & Cell);
+export type HaulDestination = { type: 'fuel'; structureId: number; forCooking?: boolean } | { type: 'stockpile'; stockpileId: number } | { type: 'job'; jobId: number; forConstruction?: boolean } | ({ type: 'aside'; constructionId?: number; forConstruction?: boolean } & Cell);
 export interface HaulTask {
   serviceProgress?: number;
   sourcePileId: number;
@@ -38,6 +38,9 @@ export type NeedTask =
   | { kind: 'eat'; phase: 'pickup' | 'choose-spot' | 'travel' | 'ingest'; sourcePileId: number; carryPileId: number | null; quantity: number; progress: number; dining: DiningPlace | null }
   | { kind: 'sleep'; phase: 'travel' | 'sleep'; bedId: number | null; target: Cell };
 export interface Job extends Cell {
+  construction?: 'blueprint' | 'frame';
+  /** Plant clearing is work on the same construction intent, before delivery. */
+  clearance?: {resourceId:number; progress:number};
   /** Generated intention, rechecked against this zone while pending/active. */
   growingZoneId?: number;
   id: number;
@@ -130,4 +133,4 @@ export type Command =
   | { type: 'priority'; pawnId: number; work: WorkType; value: number };
 export type RefusalCode = 'invalid-command' | 'out-of-bounds' | 'occupied' | 'incompatible-resource' | 'missing-target' | 'invalid-priority' | 'invalid-storage';
 export interface CommandResult { ok: boolean; reason?: string; code?: RefusalCode; affected?: number; skipped?: number }
-export interface JobDiagnostic { code: 'working' | 'ready' | 'delivering' | 'missing-materials' | 'waiting-worker'; reason: string; delivered: number; required: number }
+export interface JobDiagnostic { code: 'clearing' | 'blocked' | 'working' | 'ready' | 'delivering' | 'missing-materials' | 'waiting-worker'; reason: string; delivered: number; required: number }

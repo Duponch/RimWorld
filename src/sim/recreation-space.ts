@@ -16,7 +16,7 @@ export function recreationSpace(world: World, resourceTargets?: readonly Cell[])
   }
   for(const job of world.jobs)index.objects.add(job.z*world.width+job.x);
   for(const s of [...world.structures,...world.jobs]) {
-    if(s.kind==='wall')index.walls.add(s.z*world.width+s.x);
+    if(s.kind==='wall'&&!('construction' in s))index.walls.add(s.z*world.width+s.x);
     if(s.kind==='wall'||s.kind==='table')for(const c of footprintCells(s))index.solids.add(c.z*world.width+c.x);
   }
   if(resourceTargets) {
@@ -41,7 +41,7 @@ export const isHorseshoeCell = (pin: Cell, cell: Cell): boolean => {
 /** Tiny straight throwing segment; furniture passability and sight differ.
  * Walls and natural rock hide the pin; a table across the ray does not. */
 export function clearThrow(world: World, pin: Cell, cell: Cell, space?: RecreationSpace): boolean {
-  const walls = space ? [] : [...world.structures, ...world.jobs].filter(s => s.kind === 'wall');
+  const walls = space ? [] : world.structures.filter(s => s.kind === 'wall');
   const steps = Math.max(Math.abs(cell.x-pin.x), Math.abs(cell.z-pin.z));
   for (let i=1; i<=steps; i++) {
     const x=Math.round(pin.x+(cell.x-pin.x)*i/steps), z=Math.round(pin.z+(cell.z-pin.z)*i/steps);

@@ -113,3 +113,9 @@ F4 exerce les commandes dans le navigateur quand elles existent ; F5 mesure leur
 `scripts/recreation-bench.ts` : 3/30/100 colons, faim/repos actifs, besoin de loisirs initial faible, piquets partagés et camp de travail ; deux passes de 600 ticks, setup et contrôles exclus. Les compteurs d’activité prouvent la charge réellement exercée. Ce stress synthétique complète le pilote humain, sans se faire passer pour une partie ordinaire.
 
 `scripts/cooking-render-bench.mjs artifacts/recreation-render.json 3,30,100 recreation` reprend le même protocole matériel avec les activités de loisirs et conserve leurs effectifs réels. Les modes cuisine et loisirs restent distincts ; aucun travail n’est observé dans la fenêtre de besoin de loisirs bas.
+
+## Chantiers V16
+
+`construction.test.ts` combine trois scénarios matériels/spatiaux : pile typée avec fraîcheur et trois portages, annulation/rejeu en cargaison, plantes dans empreinte tournée et priorités, transporteur sans Construction, arêtes de cadre, finition/diagonale/service et migration stricte. L’index de décision est comparé à la recherche directe. L’oracle spatial incorpore des coûts de cadres.
+
+`integration/construction.spec.ts` : fixture synthétique V15, construction sur pile par l’UI, portage observé, reprise en cargaison et cadre, bilan final. Le pilote normal évite de commander une seconde coupe sur une empreinte tout juste planifiée ; ses résumés recensent plans/cadres/dégagements. La partie de trois jours exige un dégagement naturel et garde bilans, activités et rechargements quotidiens. Suites ciblées groupées, puis audit CPU et rendu successifs ; pas de suite entière pour la documentation.

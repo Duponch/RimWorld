@@ -112,3 +112,7 @@ Chapitre 11/32, SYS-062..064, TEST-062..064, UI-025 et scène A : [recherche cui
 ## V15 : loisirs physiques
 
 Chapitre 14, SYS-080/TEST-080, STAT-060/061, CAT-050 et UI-026 : [vérification récente](recreation-reference.md), [contrat](../development/recreation.md). Adopter activité physique, accès, choix pondéré, satisfaction et lassitude avec hystérésis ; adapter cadence et recherche locale de place, conserver les attentes extrêmement basses comme profil provisoire. Différer familles restantes, richesse, pièces, météo et compétences. Les renvois STAT vers Need_Food ne prouvent pas les règles de Need_Joy ; la divergence 2/3 contre 0,65 est consignée. F1/F2/F3 enrichis, aucune suite créée automatiquement par ligne du corpus.
+
+## V16 : plans, cadres et dégagement
+
+Chapitre 10, **SYS-056/TEST-056**, avec SYS-005/020..022/051/053/054 : **adopter** intention, livraison, finition et dégagement physique ; **adapter** navigation et protection des volumes en 3D ; **différer** coexistences riches, minage, réparation, remplacement et réinstallation (SYS-057..061). [Relecture de plusieurs sources](construction-reference.md) : le blocage immédiat des plans était un écart, corrigé. Les 14 ticks Core d’entrée dans un cadre sont convertis à l’horloge locale sans certifier toutes les vitesses. [Contrat et migration](../development/construction.md).

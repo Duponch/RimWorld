@@ -125,3 +125,9 @@ Le changement d'états autorisés nécessite V14 même sans nouveau champ. V13 e
 V15 sépare le besoin, les lieux, l’activité et la validation dans quatre modules de domaine. Une activité partage la navigation et les réservations existantes, sans bonus pendant le trajet. Le drapeau de lassitude est sauvegardé, car deux valeurs identiques entre 30 et 50 peuvent avoir des histoires différentes. Trois places distinctes utilisent un même piquet ; le passage civil ne donne aucun droit d’usage.
 
 La migration initialise seulement le nouveau besoin à 55, sans tirage ni tâche rétroactive. Les attentes riches, autres familles et conditions de météo/pièce sont explicitement différées ; les sources et adaptations sont dans [recreation](../development/recreation.md). Géométrie incluse au lot de mobilier, poses par shader, aucune nouvelle simulation graphique.
+
+## ADR-032 — Plans, cadres et dégagement matériel
+
+14 septembre 2026, V16. L’intention reste un Job parent ; la première livraison crée son cadre, le coût complet autorise sa finition. Plantes coupées et piles portées utilisent les producteurs/transferts communs, sans matière fictive ni champ de récolte créé pour dégager. La phase et le sous-travail persistent ; l’index d’obstacles ne dure qu’une décision, avec revalidation directe à l’exécution.
+
+Le déplacement traverse plans/cadres ; le coût du cadre est capturé dans la recherche et l’arête. La finition protège les personnes, arêtes et services puis invalide la grille du tick. V15 est validé avec ses exclusions, puis reçoit les phases sans déplacement ni changement de RNG. Les coexistences par définition et plans sur réserves restent ouverts. [Recherche](../research/construction-reference.md), [contrat](../development/construction.md).

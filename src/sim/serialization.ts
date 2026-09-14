@@ -1,3 +1,5 @@
+import { initializeConstruction, validateConstruction } from './construction-save.ts';
+import { isConstruction } from './construction-rules.ts';
 import { initializeRecreation, validateRecreation } from './recreation-save.ts';
 import { validateCooking } from './cooking-save.ts';
 import { initializeSchedules, validateSchedules } from './schedule-save.ts';
@@ -31,9 +33,9 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 
 /** Structural validation first, cross-reference validation second; accepts arbitrary JSON without throwing. */
 export function validateWorld(input: unknown): string[] {
-  return validateSchema(input, 15);
+  return validateSchema(input, 16);
 }
-function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15): string[] {
+function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(input)) return ['World must be an object.'];
@@ -63,7 +65,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
         if (typeof item.name !== 'string' || item.name.length === 0 || item.name.length > 80 || !bounded(item.hunger) || !bounded(item.rest) || !bounded(item.mood)
           || !oneOf(item.state, legacyV2 ? ['idle', 'moving', 'working', 'sleeping', 'hungry'] : ['idle', 'moving', 'working', 'sleeping', 'hungry', 'eating', ...(version>=15?['recreating']:[])]) || !(item.jobId === null || integer(item.jobId, 1))
           || !record(item.priorities) || !integer(item.priorities.gather, 0, 4) || !integer(item.priorities.build, 0, 4) || !integer(item.priorities.haul, 0, 4) || (version >= 8 && !integer(item.priorities.grow, 0, 4))
-          || !(version < 6 ? integer(item.moveCooldown, 0, 3) : typeof item.moveCooldown === 'number' && Number.isFinite(item.moveCooldown) && item.moveCooldown >= 0 && item.moveCooldown <= 4.243) || !integer(item.planCooldown, 0, 20)) errors.push('Invalid pawn state.');
+          || !(version < 6 ? integer(item.moveCooldown, 0, 3) : typeof item.moveCooldown === 'number' && Number.isFinite(item.moveCooldown) && item.moveCooldown >= 0 && item.moveCooldown <= (version>=16?5.643:4.243)) || !integer(item.planCooldown, 0, 20)) errors.push('Invalid pawn state.');
         if (!Array.isArray(item.path) || item.path.length > size) errors.push('Invalid pawn path.');
         else {
           let previous = item;
@@ -78,7 +80,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
         if(version>=6 && item.motion!=null) {
           const m=item.motion;
           if(!record(m)||!record(m.from)||!record(m.to)||!coord(m.from)||!coord(m.to)||typeof m.start!=='number'||typeof m.end!=='number'||!Number.isFinite(m.start)||!Number.isFinite(m.end)||m.start<0||m.start>(input.tick as number)||m.to.x!==item.x||m.to.z!==item.z||Math.max(Math.abs((m.to.x as number)-(m.from.x as number)),Math.abs((m.to.z as number)-(m.from.z as number)))!==1) errors.push('Invalid travel segment.');
-          else if(Math.abs(m.end-m.start-TRAVEL_TICKS*edgeLength(m.from as unknown as import('./types.ts').Cell,m.to as unknown as import('./types.ts').Cell) )>1e-7 || Math.abs((item.moveCooldown as number)-Math.max(0,m.end-(input.tick as number)))>1e-7) errors.push('Inconsistent travel duration.');
+          else if((m.terrainDelay!==undefined&&(version<16||m.terrainDelay!==1.4))||Math.abs(m.end-m.start-(m.terrainDelay as number??0)-TRAVEL_TICKS*edgeLength(m.from as unknown as import('./types.ts').Cell,m.to as unknown as import('./types.ts').Cell) )>1e-7 || Math.abs((item.moveCooldown as number)-Math.max(0,m.end-(input.tick as number)))>1e-7) errors.push('Inconsistent travel duration.');
         }
         const haul = item.haul;
         if(record(haul)&&haul.serviceProgress!==undefined&&(version<10||!record(haul.destination)||haul.destination.type!=='fuel'||haul.phase!=='deliver'||!integer(haul.serviceProgress,1,23)))errors.push('Invalid refuel interaction progress.');
@@ -149,6 +151,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
   if(!errors.length)errors.push(...validateSchedules(input as unknown as World,version));
   if(!errors.length)errors.push(...validateFoodPolicies(input as unknown as World,version));
   if(!errors.length)errors.push(...validateRecreation(input as unknown as World,version));
+  if(!errors.length)errors.push(...validateConstruction(input as unknown as World,version));
   if (errors.length) return errors;
   const world = input as unknown as World;
   if(version>=6)errors.push(...validateTravel(world, version < 14));
@@ -182,7 +185,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
       if(service) {const target=cellKey(service);if(serviceCells.has(target))errors.push('Conflicting service reservation.');serviceCells.add(target);}
     }
     if (version < 14 && pawnCells.has(key)) errors.push('Pawns overlap.'); pawnCells.add(key);
-    if (['wall', 'table'].includes(structureCells.get(key)?.kind ?? '') || ['wall', 'table'].includes(jobCells.get(key)?.kind ?? '')) errors.push('Pawn occupies a wall target.');
+    if (['wall', 'table'].includes(structureCells.get(key)?.kind ?? '') || version<16&&['wall', 'table'].includes(jobCells.get(key)?.kind ?? '')) errors.push('Pawn occupies a wall target.');
     if (Number(version>=10&&!!pawn.cooking) + Number(pawn.jobId !== null) + Number(pawn.haul !== null) + Number(!legacyV2 && pawn.need !== null) > 1) errors.push('Pawn has two simultaneous tasks.');
     if (pawn.jobId !== null) {
       const job = jobById.get(pawn.jobId);
@@ -217,7 +220,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
             if (!place || !validDiningPlace(world, place)) errors.push('Invalid dining furniture reference.');
             else {
               const target = cellKey(place.target);
-              if (diningCells.has(target) || isImpassable(place.target) || ['wall', 'table'].includes(structureCells.get(target)?.kind ?? '') || ['wall', 'table'].includes(jobCells.get(target)?.kind ?? '')) errors.push('Invalid or duplicate dining destination.');
+              if (diningCells.has(target) || isImpassable(place.target) || ['wall', 'table'].includes(structureCells.get(target)?.kind ?? '') || (version<16||jobCells.get(target)?.construction==='frame')&&['wall', 'table'].includes(jobCells.get(target)?.kind ?? '')) errors.push('Invalid or duplicate dining destination.');
               diningCells.add(target);
               if (need.phase === 'ingest' && key !== target) errors.push('Eating away from reserved place.');
               if (place.seatId !== null && place.tableId === null) errors.push('Dining seat has no eating surface.');
@@ -264,17 +267,20 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
     if (job.escrow.wood !== delivered.wood || job.escrow.food !== delivered.food || delivered.food !== 0 || delivered.wood > JOB_WOOD_COST[job.kind]) errors.push('Invalid delivered material view.');
     // Version 1 could refund escrow on interruption while retaining progress. Such plans
     // keep that progress, but may only acquire a builder after physical delivery again.
-    if (job.reservedBy !== null && delivered.wood !== JOB_WOOD_COST[job.kind]) errors.push('Construction work started before delivery.');
+    if (job.reservedBy !== null && !job.clearance && delivered.wood !== JOB_WOOD_COST[job.kind]) errors.push('Construction work started before delivery.');
     const resource = resourceCells.get(cellKey(job));
     if (job.kind === 'chop' || job.kind === 'harvest' || job.kind === 'cut') { if (!resource || !(job.kind === 'chop' ? resource.kind === 'tree' : isPlant(resource))) errors.push('Gather job has no matching resource.'); else if (version >= 7 && job.kind === 'harvest' && !(version === 7 ? legacyPlantGrowth(world,resource) > .65 : harvestable(world,resource))) errors.push('Harvest job targets an immature plant.'); }
-    else for (const cell of footprintCells(job)) if (resourceCells.has(cellKey(cell)) || structureCells.has(cellKey(cell))) errors.push('Construction overlaps existing content.');
+    else for (const cell of footprintCells(job)) {
+      const obstacle=resourceCells.get(cellKey(cell));
+      if (obstacle&&(version<16||!isConstruction(job)||obstacle.kind==='rock') || structureCells.has(cellKey(cell))) errors.push('Construction overlaps existing content.');
+    }
   }
   const available = { wood: 0, food: 0 };
   for (const pile of world.piles) {
     const owner = pile.owner;
     if (owner.type === 'ground') {
       if (version>=6 && groundPile(world,owner)?.id!==pile.id) errors.push('Several item stacks occupy one floor cell.');
-      if (isImpassable(owner) || structureCells.get(cellKey(owner))?.kind === 'wall' || jobCells.get(cellKey(owner))?.kind === 'wall') errors.push('Pile on impassable cell.');
+      if (isImpassable(owner) || structureCells.get(cellKey(owner))?.kind === 'wall' || version<16&&jobCells.get(cellKey(owner))?.kind === 'wall') errors.push('Pile on impassable cell.');
       available[pile.kind] += pile.quantity;
     } else if (owner.type === 'pawn') { if (!pawnById.has(owner.pawnId)) errors.push('Pile references missing carrier.'); available[pile.kind] += pile.quantity; }
     else if (!jobById.has(owner.jobId)) errors.push('Pile references missing construction.');
@@ -350,6 +356,10 @@ export function deserializeWorld(serialized: string): World {
   if(record(input)&&input.schemaVersion===14) {
     const errors=validateSchema(input,14);if(errors.length)throw new Error(`Invalid version 14 save: ${errors.join(' ')}`);
     initializeRecreation(input as unknown as World);
+  }
+  if(record(input)&&input.schemaVersion===15) {
+    const errors=validateSchema(input,15);if(errors.length)throw new Error(`Invalid version 15 save: ${errors.join(' ')}`);
+    initializeConstruction(input as unknown as World);
   }
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`); return input as World;
 }

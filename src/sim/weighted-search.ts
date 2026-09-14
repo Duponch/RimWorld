@@ -15,11 +15,14 @@ export class WeightedSearch {
   private readonly height:number;
   private readonly unavailable:Uint8Array;
   private finished=false;
-  constructor(width:number, height:number, start:number, unavailable:Uint8Array) {
+  private readonly extraCosts:ReadonlyMap<number,number>|undefined;
+  constructor(width:number, height:number, start:number, unavailable:Uint8Array, extraCosts?:ReadonlyMap<number,number>) {
+    this.extraCosts=extraCosts;
     this.width=width;this.height=height;this.unavailable=unavailable;
     const size=width*height,parents=new Int32Array(size).fill(-2),costs=new Float64Array(size).fill(Infinity);
     this.settled=new Uint8Array(size);this.field={parents,costs,start,visited:0,unreachedGroups:0,settled:this.settled};
-    this.frontier=new PathFrontier(costs);costs[start]=0;parents[start]=-1;this.frontier.push(start);this.pending=this.frontier.pop();
+    let maximum=0;for(const extra of extraCosts?.values()??[])maximum=Math.max(maximum,extra);
+    this.frontier=new PathFrontier(costs,DIAGONAL_COST+maximum);costs[start]=0;parents[start]=-1;this.frontier.push(start);this.pending=this.frontier.pop();
   }
   advance(goals?:ReadonlySet<number>,allGroups?:readonly ReadonlySet<number>[]):DistanceField {
     if(this.finished)throw new Error('A finalized path field cannot be resumed.');
@@ -47,7 +50,7 @@ export class WeightedSearch {
         const nx=x+dx,nz=z+dz,next=nz*this.width+nx;
         if(nx<0||nz<0||nx>=this.width||nz>=this.height||blocked[next]||this.settled[next])continue;
         if(dx&&dz&&(blocked[index+dx]||blocked[index+dz*this.width]))continue;
-        const cost=costs[index]!+(dx&&dz?DIAGONAL_COST:CARDINAL_COST);
+        const cost=costs[index]!+(dx&&dz?DIAGONAL_COST:CARDINAL_COST)+(this.extraCosts?.get(next)??0);
         if(cost<costs[next]!) {costs[next]=cost;parents[next]=index;this.frontier.push(next);}
       }
       this.pending=this.frontier.pop();

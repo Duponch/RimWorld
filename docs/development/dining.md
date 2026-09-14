@@ -4,7 +4,7 @@ Livraison G1 anticipée, 13 septembre 2026. [Recherche, provenance et incertitud
 
 ## Contrat métier
 
-Le catalogue ajoute table en bois 1×2 et tabouret en bois 1×1. Leurs 28 et 25 bois doivent être livrés physiquement avant leurs 53 et 32 ticks de construction. Les emprises servent au placement, à l'accès de chantier, à l'inspection et à la navigation. Q/E tourne la table ; l'orientation d'un tabouret n'est pas un filtre de repas. Table et plan bloquent le déplacement : adaptation 3D explicite, à réexaminer avec les profils de franchissement.
+Le catalogue ajoute table en bois 1×2 et tabouret en bois 1×1. Leurs 28 et 25 bois doivent être livrés physiquement avant leurs 53 et 32 ticks de construction. Les emprises servent au placement, à l'accès de chantier, à l'inspection et à la navigation. Q/E tourne la table ; l'orientation d'un tabouret n'est pas un filtre de repas. La table achevée bloque le déplacement : adaptation 3D explicite, à réexaminer avec les profils de franchissement. Depuis [V16](construction.md), plans et cadres se traversent ; une place de repas déjà réservée empêche la livraison/finition d'un chantier qui la recouvre.
 
 `needs.ts` orchestre les urgences et le sommeil ; `eating.ts` gère la matière et les phases de repas ; `dining.ts` choisit la place ; `wellbeing.ts` gère confort et premier souvenir. Ces modules ne connaissent ni Three.js ni le DOM.
 

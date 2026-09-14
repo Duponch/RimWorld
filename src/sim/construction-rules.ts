@@ -1,0 +1,47 @@
+import { footprintCells, STRUCTURE_DEFINITIONS } from './definitions.ts';
+import type { Cell, HaulDestination, Job, MaterialPile, Pawn, Resource, World } from './types.ts';
+import { serviceCell } from './service-reservations.ts';
+
+export const isConstruction = (job: Pick<Job,'kind'>): boolean => job.kind in STRUCTURE_DEFINITIONS;
+export const containsCell = (job: Job, cell: Cell): boolean => footprintCells(job).some(c=>c.x===cell.x&&c.z===cell.z);
+/** Old saves are validated with the old solid-plan contract before migration. */
+export const jobBlocksTransit = (world: World, job: Job): boolean => world.schemaVersion<16&&(job.kind==='wall'||job.kind==='table');
+export const constructionWorkTarget = (world: World, job: Job): Cell => job.clearance ? world.resources.find(r=>r.id===job.clearance!.resourceId)??job : job;
+export const constructionHaulId = (destination: HaulDestination): number|undefined => destination.type==='job'?destination.jobId:destination.type==='aside'?destination.constructionId:undefined;
+export const constructionHaulPriority = (pawn: Pawn): number => Math.min(pawn.priorities.build||Infinity,pawn.priorities.haul||Infinity);
+export const asBuilder = (pawn: Pawn): boolean => pawn.priorities.build>0&&pawn.priorities.build<= (pawn.priorities.haul||Infinity);
+
+export interface ConstructionObstruction { plant?:Resource; pile?:MaterialPile }
+/** One synchronous planner decision. Keep array ordering for multi-cell sites,
+ * and discard this index before any transfer, cutting or construction occurs. */
+export function constructionObstructions(world:World):ReadonlyMap<number,ConstructionObstruction> {
+  const sites=new Map<number,number[]>(),result=new Map<number,ConstructionObstruction>();
+  for(const job of world.jobs)if(isConstruction(job)) {
+    result.set(job.id,{});
+    for(const c of footprintCells(job)) {
+      const cell=c.z*world.width+c.x,ids=sites.get(cell)??[];
+      ids.push(job.id);sites.set(cell,ids);
+    }
+  }
+  if(!sites.size)return result;
+  for(const resource of world.resources)for(const id of sites.get(resource.z*world.width+resource.x)??[])result.get(id)!.plant??=resource;
+  for(const pile of world.piles)if(pile.owner.type==='ground')for(const id of sites.get(pile.owner.z*world.width+pile.owner.x)??[])result.get(id)!.pile??=pile;
+  return result;
+}
+export function constructionObstruction(world: World, job: Job):ConstructionObstruction {
+  const cells=new Set(footprintCells(job).map(c=>c.z*world.width+c.x));
+  const plant=world.resources.find(r=>cells.has(r.z*world.width+r.x));
+  const pile=world.piles.find(p=>p.owner.type==='ground'&&cells.has(p.owner.z*world.width+p.owner.x));
+  return {plant,pile};
+}
+/** A frame is traversable. Completion must not materialize a building across
+ * a person, an active edge (including its diagonal corner), or a service. */
+export function constructionSiteFree(world: World, job: Job, workerId?: number, obstacle=constructionObstruction(world,job)): boolean {
+  if(obstacle.plant||obstacle.pile)return false;
+  const cells=footprintCells(job);
+  return !world.pawns.some(p=>p.id!==workerId&&cells.some(c=>{
+    const edge=p.motion;
+    const service=serviceCell(p);
+    return p.x===c.x&&p.z===c.z || service?.x===c.x&&service.z===c.z || !!edge&&edge.end>world.tick&&c.x>=Math.min(edge.from.x,edge.to.x)&&c.x<=Math.max(edge.from.x,edge.to.x)&&c.z>=Math.min(edge.from.z,edge.to.z)&&c.z<=Math.max(edge.from.z,edge.to.z);
+  }));
+}

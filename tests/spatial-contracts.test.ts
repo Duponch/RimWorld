@@ -12,6 +12,8 @@ test('eight-direction routes agree with an independent relaxation oracle and pre
   for(let run=0;run<12;run++) {
     const w=createWorld(run,16,16);w.jobs=[];w.structures=[];
     w.tiles=w.tiles.map(()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return {terrain:seed%5===0?'rock':'grass'};});w.tiles[17]={terrain:'grass'};
+    for(let i=18;i<256;i++)if(w.tiles[i]!.terrain==='grass'&&i%7===0)w.jobs.push({id:w.nextId++,kind:'wall',construction:'frame',x:i%16,z:Math.floor(i/16),orientation:0,footprint:'standard',status:'pending',reservedBy:null,progress:0,escrow:{wood:0,food:0}});
+    const frames=new Set(w.jobs.map(j=>j.z*16+j.x));
     const blocks=blockedCells(w),found=reachableCells(w,{x:1,z:1},blocks,new Set());
     const oracle=new Array<number>(256).fill(Infinity);oracle[17]=0;
     for(let pass=0;pass<256;pass++) {
@@ -20,7 +22,7 @@ test('eight-direction routes agree with an independent relaxation oracle and pre
         const dx=j%16-i%16,dz=Math.floor(j/16)-Math.floor(i/16);
         if(blocks[j]||Math.max(Math.abs(dx),Math.abs(dz))!==1)continue;
         if(dx&&dz&&(blocks[i+dx]||blocks[i+dz*16]))continue;
-        const cost=oracle[i]!+(dx&&dz?1414:1000);
+        const cost=oracle[i]!+(dx&&dz?1414:1000)+(frames.has(j)?467:0);
         if(cost<oracle[j]!){oracle[j]=cost;changed=true;}
       }
       if(!changed)break;
@@ -30,7 +32,7 @@ test('eight-direction routes agree with an independent relaxation oracle and pre
       const path=routeToCell(w,{x:i%16,z:Math.floor(i/16)},found);
       if(!Number.isFinite(oracle[i])) {expect(path).toBeNull();continue;}
       let before={x:1,z:1},cost=0;
-      for(const cell of path!) {cost+=cell.x!==before.x&&cell.z!==before.z?1414:1000;before=cell;}
+      for(const cell of path!) {cost+=(cell.x!==before.x&&cell.z!==before.z?1414:1000)+(frames.has(cell.z*16+cell.x)?467:0);before=cell;}
       expect(cost).toBe(oracle[i]);
     }
   }
@@ -51,7 +53,7 @@ test('eight-direction routes agree with an independent relaxation oracle and pre
   const bad=JSON.parse(checkpoint);delete bad.pawns[0].motion;
   expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(/travel/i);
   const crossing=deserializeWorld(checkpoint);
-  expect(canDesignate(crossing,{type:'designate',kind:'wall',x:2,z:1}).ok).toBe(false);
+  expect(canDesignate(crossing,{type:'designate',kind:'wall',x:2,z:1}).ok).toBe(true);
   const wallThroughEdge=JSON.parse(checkpoint);wallThroughEdge.tiles[1*16+2].terrain='rock';
   expect(()=>deserializeWorld(JSON.stringify(wallThroughEdge))).toThrow(/travel/i);
   const traffic=createWorld(6,16,16);traffic.tiles=traffic.tiles.map(()=>({terrain:'grass'}));traffic.resources=[];traffic.pawns=traffic.pawns.slice(0,2);

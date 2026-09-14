@@ -24,7 +24,7 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
   const browser=await playwright.chromium.launch({channel:'chromium',args:[]});
   const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}});
   const errors=observeErrors(page), decisions:{tick:number;reason:string;command:unknown}[]=[], days:ReturnType<typeof colonySummary>[]=[];
-  const harvests=new Map<string,number>(), meals=new Map<string,number>(), sleepers=new Set<number>(), cooked=new Set<string>();const recreationActivities=new Set<string>();let finalReport:unknown;
+  const harvests=new Map<string,number>(), meals=new Map<string,number>(), sleepers=new Set<number>(), cooked=new Set<string>();const recreationActivities=new Set<string>(),clearedSites=new Set<string>();let finalReport:unknown;
   try {
     // No injected fixture, inventory, clocks or simulation speed outside the UI.
     await page.goto('/?e2e&seed=42');await expect(page.locator('#loading')).toHaveCount(0);
@@ -48,6 +48,7 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
       for(const e of current.events)if(e.type==='need'&&e.message.includes('a mangé une portion'))meals.set(`${e.tick}:${e.message}`,Number(e.message.match(/portion \((\d+) /)?.[1] ?? 0));
       for(const e of current.events) {const match=e.message.match(/a récolté (\d+) (?:baies|riz)/);if(match)harvests.set(`${e.tick}:${e.message}`,Number(match[1]));}
       for(const e of current.events)if(e.message.includes('a cuisiné 1 repas simple'))cooked.add(`${e.tick}:${e.message}`);
+      for(const e of current.events)if(e.message.includes('a dégagé le chantier'))clearedSites.add(`${e.tick}:${e.message}`);
       for(const e of current.events)if(e.message.includes('commence à')){if(e.message.includes('fers à cheval'))recreationActivities.add('horseshoes');if(e.message.includes('observer le ciel'))recreationActivities.add('skygaze');}
       for(const p of current.pawns)if(p.state==='sleeping'&&p.need?.kind==='sleep'&&p.need.bedId!==null)sleepers.add(p.id);
       if(hour && hour%24===0) {
@@ -62,7 +63,8 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
         expect(cooked.size,context).toBeGreaterThanOrEqual(6);
         expect(decisions.filter(d=>{const c=d.command as {type:string;policyId?:number};return c.type==='food-policy-assign'&&c.policyId===3;}).length,context).toBeGreaterThanOrEqual(3);
         expect([...recreationActivities].sort(),context).toEqual(['horseshoes','skygaze']);
-        finalReport={recreationActivities:[...recreationActivities],cooked:cooked.size,backend:await page.evaluate(()=>window.__lisiere.backend),days,meals:meals.size,sleepers:sleepers.size,woodConserved:true,foodReconciled:true,decisions,errors};
+        expect(clearedSites.size,context).toBeGreaterThan(0);
+        finalReport={clearedSites:clearedSites.size,recreationActivities:[...recreationActivities],cooked:cooked.size,backend:await page.evaluate(()=>window.__lisiere.backend),days,meals:meals.size,sleepers:sleepers.size,woodConserved:true,foodReconciled:true,decisions,errors};
         break;
       }
       for(const decision of playerDecisions(current)) {

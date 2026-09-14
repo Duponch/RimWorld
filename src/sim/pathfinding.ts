@@ -1,4 +1,6 @@
 import { WeightedSearch } from './weighted-search.ts';
+import { frameCosts } from './construction-costs.ts';
+import { jobBlocksTransit } from './construction-rules.ts';
 import type { DistanceField, Reachability } from './navigation-types.ts';
 export type { DistanceField, Reachability } from './navigation-types.ts';
 import type { Cell, World } from './types.ts';
@@ -9,7 +11,7 @@ export const inBounds = (world: World, x: number, z: number): boolean =>
   Number.isInteger(x) && Number.isInteger(z) && x >= 0 && z >= 0 && x < world.width && z < world.height;
 export const adjacent = (a: Cell, b: Cell): boolean => Math.abs(a.x - b.x) + Math.abs(a.z - b.z) === 1;
 
-/** Walls under construction also exclude traffic, so completing one cannot entomb a pawn. */
+/** Only finished solids block V16 transit. Completion checks active actors/edges. */
 export function blockedCells(world: World): Uint8Array {
   const blocked = new Uint8Array(world.width * world.height);
   for (let i = 0; i < world.tiles.length; i++) {
@@ -20,7 +22,7 @@ export function blockedCells(world: World): Uint8Array {
     if (structure.kind === 'wall' || structure.kind === 'table') for (const cell of footprintCells(structure)) blocked[cellIndex(world, cell.x, cell.z)] = 1;
   }
   for (const job of world.jobs) {
-    if (job.kind === 'wall' || job.kind === 'table') for (const cell of footprintCells(job)) blocked[cellIndex(world, cell.x, cell.z)] = 1;
+    if (jobBlocksTransit(world,job)) for (const cell of footprintCells(job)) blocked[cellIndex(world, cell.x, cell.z)] = 1;
   }
   return blocked;
 }
@@ -61,7 +63,7 @@ export function routeToCell(world: World, target: Cell, reachable: Reachability)
  * exhausts the component. This supports ranking all work targets exactly. */
 export function reachableCells(world: World, start: Cell, blocked: Uint8Array, occupied: ReadonlySet<number>, goals?: ReadonlySet<number>, allGroups?:readonly ReadonlySet<number>[]): DistanceField {
   const unavailable=blocked.slice();for(const index of occupied)unavailable[index]=1;
-  return new WeightedSearch(world.width,world.height,cellIndex(world,start.x,start.z),unavailable).finish(goals,allGroups);
+  return new WeightedSearch(world.width,world.height,cellIndex(world,start.x,start.z),unavailable,frameCosts(world)).finish(goals,allGroups);
 }
 
 export function routeToJob(world: World, target: Cell & { kind?: string; orientation?: 0 | 1 | 2 | 3; footprint?: 'standard' | 'legacy-single' }, reachable: Reachability, allowTarget = false): Cell[] | null {

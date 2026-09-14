@@ -1,6 +1,7 @@
 import type { Cell, World } from './types.ts';
 import type { CandidateAccess } from './navigation-types.ts';
 import { WeightedSearch } from './weighted-search.ts';
+import { frameCosts } from './construction-costs.ts';
 
 /** With solid diagonal corners, a legal diagonal always has a cardinal detour.
  * Four-neighbour connectivity therefore answers existence exactly, without
@@ -8,6 +9,7 @@ import { WeightedSearch } from './weighted-search.ts';
 export function candidateAccess(world:World,start:Cell,blocked:Uint8Array,occupied:ReadonlySet<number>):CandidateAccess {
   const width=world.width,height=world.height,size=width*height,origin=start.z*width+start.x;
   const unavailable=blocked.slice();for(const index of occupied)unavailable[index]=1;
+  const costs=frameCosts(world);
   const connected=new Uint8Array(size),queue=new Int32Array(size);let head=0,tail=1;
   queue[0]=origin;connected[origin]=1;
   const visit=(i:number)=>{if(!unavailable[i]&&!connected[i]){connected[i]=1;queue[tail++]=i;}};
@@ -26,7 +28,7 @@ export function candidateAccess(world:World,start:Cell,blocked:Uint8Array,occupi
   return {
     kind:'candidate-access',start:origin,
     has,
-    resolve:goals=>{weighted??=new WeightedSearch(width,height,origin,unavailable);return weighted.advance(goals);},
+    resolve:goals=>{weighted??=new WeightedSearch(width,height,origin,unavailable,costs);return weighted.advance(goals);},
     costTo:index=>index===origin?0:weighted?.field.settled?.[index]?weighted.field.costs[index]!:Infinity,
     get visited(){return weighted?.field.visited??0;},
     get connectivityVisited(){return head;},unreachedGroups:0,

@@ -40,7 +40,7 @@ Notre intégration est continue à 10 Hz, au lieu des mises à jour périodiques
 
 Le plateau est à 0,76 m, l'assise à 0,45 m et l'humain à 1,75 m. Ce sont nos proportions 3D, pas des dimensions réelles attribuées à RimWorld. La table conserve une emprise 1×2, le tabouret 1×1. La pose assise utilise cuisses et jambes articulées sur GPU ; les pieds et le bassin suivent des volumes cohérents.
 
-**Écart de collision : la table et son plan bloquent actuellement le passage.** RimWorld classe la table comme traversable avec coût de chemin supplémentaire.[^2] Nous choisissons un contour physique lisible en 3D, faute d'animation de franchissement et de profil de déplacement pondéré intégré. Cette différence peut changer l'accès à une pièce étroite ; elle doit être réexaminée avec portes, circulation et franchissement. Elle n'est pas présentée comme une reproduction rigoureuse de la passabilité originale.
+**Écart de collision : la table achevée bloque actuellement le passage.** RimWorld classe la table comme traversable avec coût de chemin supplémentaire.[^2] Nous choisissons un contour physique lisible en 3D, faute d'animation de franchissement et de profil de mobilier complet. Cette différence peut changer l'accès à une pièce étroite ; elle doit être réexaminée avec portes, circulation et franchissement. V16 corrige le blocage du plan et distingue le cadre traversable avec coût : [nouvelle vérification](construction-reference.md). Le meuble achevé n'est pas présenté comme une reproduction rigoureuse de la passabilité originale.
 
 ## Vérification continue
 

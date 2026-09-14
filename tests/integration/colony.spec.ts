@@ -79,7 +79,7 @@ test('colonie matérielle : réserve filtrée, transport visible, trois couchage
   await page.getByLabel('Priorité collecte Ada', { exact: true }).selectOption('1');
   await page.getByLabel('Priorité construction Ada', { exact: true }).selectOption('3');
   await page.getByLabel('Priorité transport Ada', { exact: true }).selectOption('2');
-  await expect.poll(async () => (await world(page)).pawns[0].priorities).toEqual({ gather: 1, build: 3, haul: 2, grow: 2 });
+  await expect.poll(async () => (await world(page)).pawns[0].priorities).toEqual({ gather: 1, build: 3, haul: 2, grow: 2, cook: 2 });
   await tool(page, 'stockpile');
   await page.locator('#stockpile-food').uncheck();
   await page.locator('#stockpile-capacity').fill('10');
@@ -107,7 +107,7 @@ test('colonie matérielle : réserve filtrée, transport visible, trois couchage
   await page.locator('#save').click();
   await expect(page.getByRole('status')).toContainText('sauvegardée');
   const saved = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!) as World, saveKey);
-  expect(saved.schemaVersion).toBe(15);
+  expect(saved.schemaVersion).toBe(16);
   expect(saved.pawns.some(pawn => pawn.haul?.phase === 'deliver')).toBe(true);
   expect(JSON.stringify(saved)).toBe(JSON.stringify(duringHaul));
 
@@ -185,8 +185,13 @@ test('frontières : commandes répétées, sauvegarde invalide atomique, aide et
   await expect(page.getByRole('status')).toHaveClass(/error/);
   expect(await world(page)).toEqual(before);
   await tool(page, 'wall'); await cell(page, 16, 16);
+  await expect.poll(async()=>(await world(page)).jobs.length).toBe(1);
+  expect((await world(page)).pawns.map(p=>({id:p.id,x:p.x,z:p.z,motion:p.motion}))).toEqual(before.pawns.map(p=>({id:p.id,x:p.x,z:p.z,motion:p.motion})));
+  await cell(page, 16, 16); // Duplicate plan still refuses atomically.
   await expect(page.getByRole('status')).toHaveClass(/error/);
-  expect((await world(page)).jobs).toHaveLength(0);
+  expect((await world(page)).jobs).toHaveLength(1);
+  await tool(page,'cancel');await cell(page,16,16);
+  await expect.poll(async()=>(await world(page)).jobs.length).toBe(0);
   await tool(page, 'bed'); await page.locator('#rotate-building').click();
   await expect(page.locator('#placement-orientation')).toHaveText('90°');
   await cell(page, 16, 18);
@@ -229,7 +234,7 @@ test('frontières : commandes répétées, sauvegarde invalide atomique, aide et
   expect((await world(page)).structures.find(structure => structure.kind === 'bed')?.footprint).toBe('legacy-single');
   await panel(page, 'menu'); await page.locator('#save').click();
   await expect(page.getByRole('status')).toContainText('sauvegardée');
-  expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).schemaVersion, saveKey)).toBe(15);
+  expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).schemaVersion, saveKey)).toBe(16);
   expect(errors).toEqual([]);
 });
 

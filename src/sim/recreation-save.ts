@@ -5,7 +5,7 @@ import type { World } from './types.ts';
 const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const meter=(v:unknown):boolean=>typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=100;
 export function initializeRecreation(world: World): void {
-  world.schemaVersion=15;
+  Object.assign(world,{schemaVersion:15});
   // No invented past boredom, no RNG draws and no interruption at load time.
   for(const pawn of world.pawns)pawn.recreation=initialRecreation();
 }

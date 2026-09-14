@@ -269,7 +269,7 @@ function renderState() {
       el('cell-title').textContent = structure ? ({ wall: 'Mur en bois', bed: 'Lit', table: 'Table en bois', stool: 'Tabouret en bois', horseshoes: 'Piquet de fers à cheval', campfire: 'Feu de camp' })[structure.kind] : resource ? resourceLabels[resource.kind] : terrainLabels[world.tiles[z * world.width + x].terrain];
       el('cell-description').textContent = `Case ${x}, ${z}${resource ? isPlant(resource) ? ` · Croissance ${Math.floor(plantGrowth(world, resource) * 100)} % · ${harvestable(world, resource) ? `Récolte : environ ${Math.round(berryYield(world, resource))} ${resource.kind === 'rice' ? 'riz' : 'baies'}` : 'Pas encore récoltable'} · ${plantResting(world.tick) ? 'Repos nocturne' : naturalLight(world.tick) < .51 ? 'Lumière insuffisante' : 'Croissance diurne'}` : ` · ${resource.amount} unités à récolter` : ''}${structure ? ` · ${footprintCells(structure).length === 2 ? '1 × 2' : '1 × 1'} cases` : ''}`;
       el('cell-materials').textContent = piles.length ? `Au sol : ${piles.map(pile => `${pile.quantity} ${ITEM_DEFINITIONS[pile.item].label}${pile.kind==='food'?` · ${foodFreshnessLabel(pile,world.tick)}`:''}`).join(' · ')}` : '';
-      el('cell-job').textContent = job ? `${jobLabels[job.kind]} · ${queryJobStatus(world, job).reason ?? 'En cours'}${JOB_WOOD_COST[job.kind] > 0 ? ` · ${deliveredStock(world, job.id).wood} bois livrés` : ''}` : 'Aucun ordre sur cette case.';
+      el('cell-job').textContent = job ? `${job.construction==='blueprint'?'Plan · ':job.construction==='frame'?'Cadre · ':''}${jobLabels[job.kind]} · ${queryJobStatus(world, job).reason ?? 'En cours'}${JOB_WOOD_COST[job.kind] > 0 ? ` · ${deliveredStock(world, job.id).wood} bois livrés` : ''}` : 'Aucun ordre sur cette case.';
       if(structure?.kind==='horseshoes')el('cell-description').textContent += ` · Dextérité · ${world.pawns.filter(p=>p.recreation.task?.buildingId===structure.id).length}/3 joueurs · places à 5 cases, ligne de vue dégagée.`;
       if(structure?.kind==='campfire'){updateFireControls(el('inspector'),structure);updateBillControls(el('inspector'),structure,world);}
       el('cell-storage').hidden = !storage;
@@ -293,7 +293,7 @@ function renderState() {
   if (hungry) alerts.push(`${hungry} colon(s) affamé(s)`);
   if (pending) alerts.push(`${pending} ordre(s) en attente`);
   if (!world.stockpiles.length) alerts.push('Aucune réserve de stockage');
-  if (world.jobs.some(job => JOB_WOOD_COST[job.kind] > 0) && world.pawns.every(pawn => pawn.priorities.haul === 0)) alerts.push('Transport désactivé : chantiers non approvisionnés');
+  if (world.jobs.some(job => JOB_WOOD_COST[job.kind] > 0) && world.pawns.every(pawn => pawn.priorities.haul === 0&&pawn.priorities.build === 0)) alerts.push('Construction/transport désactivés : chantiers non approvisionnés');
   const idle = world.pawns.filter(pawn => pawn.state === 'idle').length;
   if (idle) alerts.push(`${idle} colon(s) disponible(s)`);
   el('alerts').replaceChildren(...alerts.map(text => { const item = document.createElement('p'); item.textContent = text; return item; }));

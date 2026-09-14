@@ -202,7 +202,7 @@ export class ColonyRenderer {
     if (structureKey !== this.structureKey || newMap) { this.structureKey = structureKey; this.buildStructures(world); }
     // Quantize presentation of progression to avoid rebuilding static meshes for
     // every work tick. Saved simulation progress remains exact and authoritative.
-    const jobKey = world.jobs.map((j) => `${j.id}:${j.kind}:${j.x}:${j.z}:${j.orientation}:${j.footprint}:${j.status}:${j.escrow.wood}:${j.kind === 'chop' || j.kind === 'harvest' || j.kind === 'cut' || j.kind === 'sow' ? 0 : Math.floor(j.progress / JOB_DURATION[j.kind] * 20)}`).join('|');
+    const jobKey = world.jobs.map((j) => `${j.id}:${j.kind}:${j.x}:${j.z}:${j.orientation}:${j.footprint}:${j.status}:${j.construction}:${j.escrow.wood}:${j.kind === 'chop' || j.kind === 'harvest' || j.kind === 'cut' || j.kind === 'sow' ? 0 : Math.floor(j.progress / JOB_DURATION[j.kind] * 20)}`).join('|');
     if (jobKey !== this.jobKey || newMap) { this.jobKey = jobKey; this.buildJobs(world); }
     const storageKey = world.stockpiles.map((s) => `${s.id}:${s.x}:${s.z}:${s.priority}:${s.filters.wood}:${s.filters.food}`).join('|');
     if (storageKey !== this.storageKey || newMap) { this.storageKey = storageKey; this.buildStorage(world); }
@@ -342,7 +342,7 @@ export class ColonyRenderer {
       const width = job.kind === 'horseshoes' ? 0.12 : job.kind === 'wall' ? 0.92 : job.kind === 'table' ? WORLD_SCALE.tableWidth : job.kind === 'stool' ? WORLD_SCALE.stoolWidth : WORLD_SCALE.bedWidth;
       const length = job.kind === 'horseshoes' ? 0.12 : job.kind === 'table' ? WORLD_SCALE.tableLength : job.kind === 'stool' ? WORLD_SCALE.stoolWidth : job.kind === 'bed' && job.footprint !== 'legacy-single' ? WORLD_SCALE.bedLength : 0.92;
       blueprints.push({ x, z, y: height / 2, sx: width, sy: height, sz: length, ry });
-      if (job.escrow.wood > 0) {
+      if (job.construction === 'frame') {
         // Four low corner posts distinguish a supplied frame from a bare plan.
         for (const dx of [-1, 1]) for (const dz of [-1, 1]) {
           const lx = dx * (width / 2 - 0.06), lz = dz * (length / 2 - 0.06);

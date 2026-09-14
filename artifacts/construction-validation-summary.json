@@ -1,0 +1,222 @@
+{
+  "scope": "Latest observed result per scenario in the affected core batch; sequential targeted reruns, not one full-suite run. Historical failures are retained.",
+  "count": 43,
+  "passed": 43,
+  "scenarios": {
+    "rectangles : sélection exacte, frontières, reprise, concurrence et conservation des annulations": {
+      "status": "passed",
+      "report": "core-construction-final.json",
+      "durationMs": 399.59860000000003
+    },
+    "snapshots preserve exact state and previous frames through harvest, patches, replacement and recovery": {
+      "status": "passed",
+      "report": "core-construction-final.json",
+      "durationMs": 340.71369999999996
+    },
+    "joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp construit, stocks entretenus et reprise exacte": {
+      "status": "passed",
+      "report": "core-construction-optimized.json",
+      "durationMs": 29767.8049
+    },
+    "a builder clears a typed pile physically, preserves freshness and cargo on cancellation, supplies a frame and completes it": {
+      "status": "passed",
+      "report": "core-construction-schema-final.json",
+      "durationMs": 48.625
+    },
+    "plant clearing respects a rotated footprint, saves mid-cut, and transport-only actors can supply but cannot finish a frame": {
+      "status": "passed",
+      "report": "core-construction-schema-final.json",
+      "durationMs": 67.35329999999999
+    },
+    "plans and frames remain traversable with calibrated edge delay, completion protects active corners, and V15 migration is strict": {
+      "status": "passed",
+      "report": "core-construction-schema-final.json",
+      "durationMs": 38.229799999999955
+    },
+    "two diners reserve distinct seats, physically carry food, save every phase and conserve meals through interruption": {
+      "status": "passed",
+      "report": "core-construction-final.json",
+      "durationMs": 245.00669999999997
+    },
+    "seat search uses the pickup position and food radius, cardinal adjacency and reachability, with standing fallback": {
+      "status": "passed",
+      "report": "core-construction-final.json",
+      "durationMs": 200.2038
+    },
+    "wood must be delivered before furniture construction; comfort approaches a ceiling and meal memory expires without stacking": {
+      "status": "passed",
+      "report": "core-construction-final.json",
+      "durationMs": 72.26319999999998
+    },
+    "régimes partagés : commandes atomiques, copie indépendante, limites et migration V12 sans réécrire les états": {
+      "status": "passed",
+      "report": "core-construction-final.json",
+      "durationMs": 54.08870000000002
+    },
+    "choix physique : exclure avant préférence et pourriture, accès de repli et faim sans exception silencieuse": {
+      "status": "passed",
+      "report": "core-construction-final.json",
+      "durationMs": 23.007600000000025
+    },
+    "repas engagé : changement pendant prélèvement, transport ou ingestion, réservations et reprise exacte": {
+      "status": "passed",
+      "report": "core-construction-final.json",
+      "durationMs": 65.97149999999999
+    },
+    "régime personnel indépendant du transport et des ingrédients ; une cargaison interdite reste de la matière": {
+      "status": "passed",
+      "report": "core-construction-final.json",
+      "durationMs": 21.529200000000003
+    },
+    "freshness follows split cargo and weighted merges; last-tick ingestion cannot eat spoiled units": {
+      "status": "passed",
+      "report": "core-construction-final.json",
+      "durationMs": 38.38699999999997
+    },
+    "recipe expiry releases remote, placed, held and output references; blocked drops preserve surviving cargo across save/load": {
+      "status": "passed",
+      "report": "core-construction-final.json",
+      "durationMs": 55.84809999999999
+    },
+    "four, fourteen and forty days; stable snapshots, expiry batches, migration and corrupt-age rejection": {
+      "status": "passed",
+      "report": "core-construction-final.json",
+      "durationMs": 177.2509
+    },
+    "goal-bounded floods retain the full-flood nearest food and exact path across ties, walls and unreachable goals": {
+      "status": "passed",
+      "report": "core-construction-final.json",
+      "durationMs": 780.1377
+    },
+    "growers clear mixed stacks without storage: reservations, physical trips, interruption, blocked exits and V8 continuation": {
+      "status": "passed",
+      "report": "core-construction-validation.json",
+      "durationMs": 83.32860000000005
+    },
+    "renewable bush: conditions, strict threshold, physical yield, repeated harvest, cutting and exact saves": {
+      "status": "passed",
+      "report": "core-construction-validation.json",
+      "durationMs": 25.489599999999996
+    },
+    "rice field: eight real days, clearing, sowing, physical mature yield, hauling and a second sowing": {
+      "status": "passed",
+      "report": "core-construction-validation.json",
+      "durationMs": 175.64639999999997
+    },
+    "growing policies, interrupted sowing, migration and resident crop slots preserve their contracts": {
+      "status": "passed",
+      "report": "core-construction-validation.json",
+      "durationMs": 40.57199999999989
+    },
+    "full floor, migration, snapshot immutability and resident fruit disappear/reappear without geometry rebuild": {
+      "status": "passed",
+      "report": "core-construction-validation.json",
+      "durationMs": 21.213999999999942
+    },
+    "feu construit, deux jours de combustion, ravitaillement concurrent et interruption conservent le bois": {
+      "status": "passed",
+      "report": "core-construction-final.json",
+      "durationMs": 213.54129999999998
+    },
+    "cuisine physique : mélange, interruption, sauvegarde du travail, deux repas et arrêt de facture": {
+      "status": "passed",
+      "report": "core-construction-final.json",
+      "durationMs": 73.84690000000006
+    },
+    "factures ordonnées et réservations : deux cuisiniers, une recette disponible, repli et ravitaillement sans transporteur": {
+      "status": "passed",
+      "report": "core-construction-final.json",
+      "durationMs": 71.33909999999992
+    },
+    "recreation rates, cap, boredom hysteresis, sleep freeze and schedule gates have explicit boundaries": {
+      "status": "passed",
+      "report": "core-construction-final.json",
+      "durationMs": 13.513199999999983
+    },
+    "physical horseshoes: delivered construction, three reserved players, transit, interruption, occlusion and exact saves": {
+      "status": "passed",
+      "report": "core-construction-final.json",
+      "durationMs": 68.45080000000002
+    },
+    "skygazing requires arrival; unavailable or boring activities give no joy; V14 migration preserves existing state": {
+      "status": "passed",
+      "report": "core-construction-final.json",
+      "durationMs": 17.817099999999982
+    },
+    "24 plages atomiques : frontières de sommeil, passage minuit/aube, lit physique et continuation exacte": {
+      "status": "passed",
+      "report": "core-construction-final.json",
+      "durationMs": 64.72019999999998
+    },
+    "horaires et actions : finir la tâche, manger malgré Travail, réveil critique accessible et aucun sommeil volontaire affamé": {
+      "status": "passed",
+      "report": "core-construction-final.json",
+      "durationMs": 42.92320000000001
+    },
+    "fatigue adulte, effondrement probabiliste et migration V11 préservent les états et le rejeu": {
+      "status": "passed",
+      "report": "core-construction-final.json",
+      "durationMs": 13.306300000000022
+    },
+    "deterministic colony simulation replay and saves at pickup, carrying, delivery and construction resume exactly": {
+      "status": "passed",
+      "report": "core-construction-final.json",
+      "durationMs": 214.83370000000002
+    },
+    "deterministic colony simulation shared piles, partial capacities and interruptions preserve matter at every transfer boundary": {
+      "status": "passed",
+      "report": "core-construction-final.json",
+      "durationMs": 203.16430000000003
+    },
+    "deterministic colony simulation eligibility, rotated footprints and congestion preserve reachable work and atomic commands": {
+      "status": "passed",
+      "report": "core-construction-final.json",
+      "durationMs": 769.4241999999999
+    },
+    "deterministic colony simulation sleep preserves delivered material; only an occupied bed improves recovery, with exclusive ownership and exact resumption": {
+      "status": "passed",
+      "report": "core-construction-final.json",
+      "durationMs": 218.164
+    },
+    "deterministic colony simulation hunger interrupts construction without undoing delivery and allows recovery through gathering": {
+      "status": "passed",
+      "report": "core-construction-final.json",
+      "durationMs": 108.30939999999964
+    },
+    "deterministic colony simulation plans allow transit until completion and rotated furniture keeps its full placement footprint": {
+      "status": "passed",
+      "report": "core-construction-final.json",
+      "durationMs": 141.13679999999977
+    },
+    "deterministic colony simulation schema-1 migration preserves stock, escrow, beds and identity; corrupt schema-2 saves are rejected": {
+      "status": "passed",
+      "report": "core-construction-final.json",
+      "durationMs": 161.39069999999992
+    },
+    "deterministic colony simulation five seeded two-day colonies conserve matter each tick through command churn and real outcomes": {
+      "status": "passed",
+      "report": "core-construction-final.json",
+      "durationMs": 13558.940499999999
+    },
+    "eight-direction routes agree with an independent relaxation oracle and preserve geometric travel time": {
+      "status": "passed",
+      "report": "core-construction-optimized.json",
+      "durationMs": 153.66060000000004
+    },
+    "civil crossing preserves beds, opposing cargo, every edge and exact continuation without pushing other actors": {
+      "status": "passed",
+      "report": "core-construction-optimized.json",
+      "durationMs": 36.53269999999998
+    },
+    "buffered motion is linear across jitter, duplicate messages, turns, pause and replacement": {
+      "status": "passed",
+      "report": "core-construction-optimized.json",
+      "durationMs": 3.2584000000000515
+    },
+    "floor stacks enforce identity, reserved destination type, migration and atomic refusal when no drop fits": {
+      "status": "passed",
+      "report": "core-construction-optimized.json",
+      "durationMs": 13.320099999999911
+    }
+  }
+}
