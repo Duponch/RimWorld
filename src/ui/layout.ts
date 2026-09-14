@@ -1,11 +1,12 @@
 import type { JobKind } from '../sim/types';
 import { scheduleLayout } from './schedule-controls';
+import { foodPolicyLayout } from './food-policy-controls';
 import { DEFAULT_MAP_SIZE, MAP_SIZE_PRESETS } from '../sim/map-config';
 
 const mapSizeLabels: Record<number, string> = { 32: 'terrain d’essai', 64: 'compacte', 128: 'compacte', 200: 'petite', 250: 'moyenne' };
 
 export type Tool = 'select' | Exclude<JobKind, 'sow'> | 'cancel' | 'stockpile' | 'remove-stockpile' | 'growing' | 'remove-growing';
-export type Panel = 'architect' | 'work' | 'schedule' | 'history' | 'menu' | null;
+export type Panel = 'architect' | 'work' | 'schedule' | 'assign' | 'history' | 'menu' | null;
 export type ArchitectCategory = 'orders' | 'zones' | 'structure' | 'furniture' | 'temperature';
 export const toolDefinitions: { id: Tool; icon: string; title: string; hint: string; key: string; category: ArchitectCategory }[] = [
   { id: 'select', icon: '↖', title: 'Inspecter', hint: 'Choisir une case ou un colon', key: 'Échap', category: 'orders' },
@@ -77,6 +78,7 @@ export function gameLayout(): string {
       <div class="work-table-wrap"><table><thead><tr><th>Colon</th><th>Collecte</th><th>Construction</th><th>Transport</th><th>Culture</th><th>Cuisine</th><th>Activité</th></tr></thead><tbody id="work-rows"></tbody></table></div>
     </section>
     ${scheduleLayout()}
+    ${foodPolicyLayout()}
     <section id="history-panel" class="management-panel history-panel panel" aria-label="Historique" hidden>
       <div class="panel-heading"><h2>Historique</h2><button data-close-panel aria-label="Fermer Historique">×</button></div>
       <div id="journal-items"></div>
@@ -98,7 +100,7 @@ export function gameLayout(): string {
       </div>
     </aside>
     <div id="metrics" class="diagnostics" hidden></div>
-    <nav class="main-tabs panel" aria-label="Gestion de la colonie">${tabs.map(([id, label]) => `<button data-panel="${id}" ${['architect', 'work', 'schedule', 'history', 'menu'].includes(id) ? 'aria-pressed="false"' : 'disabled title="Fonctionnalité à venir"'}>${label}</button>`).join('')}</nav>
+    <nav class="main-tabs panel" aria-label="Gestion de la colonie">${tabs.map(([id, label]) => `<button data-panel="${id}" ${['architect', 'work', 'schedule', 'assign', 'history', 'menu'].includes(id) ? 'aria-pressed="false"' : 'disabled title="Fonctionnalité à venir"'}>${label}</button>`).join('')}</nav>
     <div id="loading" class="loading"><h1>LISIÈRE</h1><p>Préparation de votre colonie…</p></div>
     <dialog id="help" class="help-dialog"><form method="dialog"><button class="close" aria-label="Fermer l’aide">×</button></form><span class="section-label">CARNET DE SURVIE</span><h2>Votre première journée</h2>
       <p>Vous donnez les ordres. Les colons choisissent leurs tâches et se déplacent de façon autonome.</p>

@@ -31,6 +31,7 @@ La matrice conserve [cinq familles F1–F5](../gameplay/systems-matrix.md#strat�
 
 | Scénarios du dépôt | Risques contrôlés |
 |---|---|
+| `food-policy.test.ts` | Régimes partagés, copies, refus atomiques, faim, choix avant score/accès, repas engagé, transport/cuisine indépendants et migration V12 ; cuisinier affamé gardant son produit pendant l’attente de budget de navigation, sauvegarde/reprise ; pilote cœur/UI gérant les rations par commandes. |
 | `schedules.test.ts` | Commandes atomiques, frontières horaires, lit réellement rejoint, famine/réveil, fin de travail, fatigue/effondrement et reprise ; le pilote décale la nuit de la cuisinière par commande. |
 | `food-preservation.test.ts` | Âges pondérés, transferts, ingestion/recette au seuil, sol saturé, 40 jours, migration et pertes groupées ; pilote et UI incluent ces données. |
 | `simulation.test.ts` | Priorités, transformations, annulations, besoins, propriété, corruption, reprise et soak multi-graines. Bilans et résultats métier, pas seulement hash. |

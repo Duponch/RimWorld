@@ -6,13 +6,14 @@ test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp const
   for (const seed of [42, 93, 2048]) {
     let world = createWorld(seed, 250, 250);
     const initialWood = woodAccount(world), initialFood = foodAccount(world);
-    let consumed = 0, produced = 0, cooked = 0;
+    let consumed = 0, produced = 0, cooked = 0, rationAssignments = 0;
     const meals = new Map(world.pawns.map(p=>[p.id,0])), sleep = new Map(world.pawns.map(p=>[p.id,0]));
     const report: ReturnType<typeof colonySummary>[] = [];
     for (let t = 0; t < (seed === 42 ? 48000 : 30000); t++) {
       // Seed 42 also exercises the browser player's four-hour observation cadence.
       if (t % (seed===42?1000:250) === 0) for (const decision of playerDecisions(world)) {
         expect(applyCommand(world, decision.command), JSON.stringify({seed,t,decision})).toMatchObject({ok:true});
+        if(decision.command.type==='food-policy-assign'&&decision.command.policyId===3)rationAssignments++;
       }
       const ingesting = world.pawns.filter(p=>p.need?.kind==='eat' && p.need.phase==='ingest' && p.need.progress===49).map(p=>({id:p.id,quantity:p.need?.kind==='eat'?p.need.quantity:0}));
 
@@ -39,6 +40,7 @@ test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp const
     expect(report[0]!.structures,context).toMatchObject({bed:3,table:1,stool:3});
     expect(report[4]!.structures,context).toEqual({bed:3,table:1,stool:3,wall:6,campfire:1});
     expect(cooked,context).toBeGreaterThanOrEqual(12);
+    expect(rationAssignments,context).toBeGreaterThanOrEqual(3);
     expect(world.jobs.filter(j=>j.growingZoneId===undefined),context).toEqual([]);
     expect(world.growingZones,context).toHaveLength(1); expect(world.resources.filter(r=>r.kind==='rice').length,context).toBeGreaterThan(5); expect(world.stock.food,context).toBeGreaterThan(0);
     expect([...meals.values()].every(n=>n>=10),context).toBe(true);

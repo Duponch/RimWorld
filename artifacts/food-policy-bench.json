@@ -1,0 +1,98 @@
+{
+  "date": "2026-09-14T11:24:54.105Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "conditions": "250x250 seed42; synthetic cooking/construction/hauling/growing camps; 32 policies; all hungry at tick101, last three shared policies modified to meals/raw/nothing; 450 ticks, no warmup; stepWorld only timed, setup/commands/validation/ledger excluded; command costs separate; no render; 90s deadline; not ordinary player progression or an A/B baseline",
+  "rows": [
+    {
+      "population": 3,
+      "ticks": 450,
+      "policies": 32,
+      "tickMs": {
+        "p50": 0.015299999999967895,
+        "p95": 1.0868999999999573,
+        "p99": 2.7176999999999794,
+        "max": 26.273699999999963
+      },
+      "commandMs": {
+        "p50": 0.004099999999993997,
+        "p95": 0.039800000000013824,
+        "p99": 0.12150000000002592,
+        "max": 0.12150000000002592
+      },
+      "hungryTransitionMs": 1.3670000000000186,
+      "meals": 2,
+      "acceptedNewMeals": 2,
+      "blockedPawnTicks": 350,
+      "cooked": 4,
+      "activePawnTicks": {
+        "cook": 353,
+        "haul": 139,
+        "build": 69,
+        "grow": 155
+      },
+      "foodConserved": true,
+      "woodConserved": true
+    },
+    {
+      "population": 30,
+      "ticks": 450,
+      "policies": 32,
+      "tickMs": {
+        "p50": 0.7761000000000422,
+        "p95": 15.278199999999742,
+        "p99": 42.09209999999996,
+        "max": 43.32439999999997
+      },
+      "commandMs": {
+        "p50": 0.0012000000000398359,
+        "p95": 0.006700000000023465,
+        "p99": 0.030300000000011096,
+        "max": 0.030300000000011096
+      },
+      "hungryTransitionMs": 5.781499999999937,
+      "meals": 15,
+      "acceptedNewMeals": 21,
+      "blockedPawnTicks": 2576,
+      "cooked": 13,
+      "activePawnTicks": {
+        "cook": 1575,
+        "haul": 2788,
+        "build": 457,
+        "grow": 2049
+      },
+      "foodConserved": true,
+      "woodConserved": true
+    },
+    {
+      "population": 100,
+      "ticks": 450,
+      "policies": 32,
+      "tickMs": {
+        "p50": 22.042900000000373,
+        "p95": 40.44930000000022,
+        "p99": 61.83840000000055,
+        "max": 67.03269999999975
+      },
+      "commandMs": {
+        "p50": 0.0013999999996485712,
+        "p95": 0.003400000000056025,
+        "p99": 0.013399999999819556,
+        "max": 0.018500000000130967
+      },
+      "hungryTransitionMs": 7.936899999999696,
+      "meals": 44,
+      "acceptedNewMeals": 56,
+      "blockedPawnTicks": 8298,
+      "cooked": 23,
+      "activePawnTicks": {
+        "cook": 4972,
+        "haul": 8799,
+        "build": 1984,
+        "grow": 6576
+      },
+      "foodConserved": true,
+      "woodConserved": true
+    }
+  ]
+}

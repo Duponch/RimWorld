@@ -7,6 +7,7 @@ import { pileFoodScore, foodSearchGoals, selectFood } from './food-selection.ts'
 import { updateWellbeing } from './wellbeing.ts';
 import { processSleeping } from './sleeping.ts';
 import { updateRest } from './rest.ts';
+import { allowedFood, type FoodItemId } from './food-policy.ts';
 import type { Cell, Pawn, World } from './types.ts';
 
 // Baseline adult: 1.6 nutrition/day; 100 meter points = one nutrition.
@@ -43,9 +44,10 @@ export function processNeeds(world: World, pawn: Pawn, context: NeedContext): bo
   let reach: Reachability | null | undefined;
   if (pawn.need?.kind !== 'eat' && wantsFood && canPlan && (world.restRules === 'adult' || pawn.rest > (pawn.need?.kind === 'sleep' ? 5 : 0))) {
     // Its old haul will be released atomically if this replacement is selected.
-    const sources = world.piles.filter(pile => pile.kind === 'food' && pile.owner.type === 'ground' && pile.quantity > reservedSource(world, pile.id, pawn.id));
+    const allowed = allowedFood(world, pawn);
+    const sources = world.piles.filter(pile => pile.kind === 'food' && allowed.includes(pile.item as FoodItemId) && pile.owner.type === 'ground' && pile.quantity > reservedSource(world, pile.id, pawn.id));
     // A hungry hauler already holding food may reserve a meal quantity for ingestion.
-    const held = world.piles.find(pile => pile.owner.type === 'pawn' && pile.owner.pawnId === pawn.id && pile.kind === 'food');
+    const held = world.piles.find(pile => pile.owner.type === 'pawn' && pile.owner.pawnId === pawn.id && pile.kind === 'food' && allowed.includes(pile.item as FoodItemId));
     if (sources.length || held) {
       reach = context.search(false, foodSearchGoals(world, pawn, sources));
       if (!reach) return true; // Budget exhaustion must not be mistaken for inaccessibility.
@@ -69,7 +71,10 @@ export function processNeeds(world: World, pawn: Pawn, context: NeedContext): bo
   if (pawn.hunger <= 20) {
     const job = world.jobs.find(candidate => candidate.id === pawn.jobId);
     if ((job && job.kind !== 'harvest') || pawn.haul) if (!context.release()) return true;
-    if (pawn.jobId === null) pawn.state = 'hungry';
+    // Cooking may still provide food for others even under a restrictive diet.
+    // Its processor can wait for a navigation budget while keeping its product;
+    // do not overwrite the active task's state during that wait.
+    if (pawn.jobId === null && pawn.haul === null && !pawn.cooking) pawn.state = 'hungry';
   } else if (pawn.state === 'hungry') pawn.state = 'idle';
   return false;
 }

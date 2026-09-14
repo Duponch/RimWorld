@@ -1,0 +1,186 @@
+{
+  "stats": {
+    "startTime": "2026-09-14T11:15:14.451Z",
+    "duration": 346486.44299999997,
+    "expected": 2,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "tick": 18050,
+  "schemaVersion": 13,
+  "colonists": [
+    {
+      "name": "Ada",
+      "hunger": 48.55999999999608,
+      "rest": 54.79976190476262,
+      "foodPolicyId": 3
+    },
+    {
+      "name": "NoÃ©",
+      "hunger": 46.98666666666292,
+      "rest": 53.80821428571501,
+      "foodPolicyId": 3
+    },
+    {
+      "name": "Mina",
+      "hunger": 39.306666666663766,
+      "rest": 63.097976190476885,
+      "foodPolicyId": 3
+    }
+  ],
+  "remainingMeals": 6,
+  "remainingRations": 15,
+  "policyDecisions": [
+    {
+      "tick": 6067,
+      "reason": "Conserver les rations de voyage tant que la cuisine assure les repas.",
+      "command": {
+        "type": "food-policy-assign",
+        "pawnId": 12409,
+        "policyId": 3
+      }
+    },
+    {
+      "tick": 6067,
+      "reason": "Conserver les rations de voyage tant que la cuisine assure les repas.",
+      "command": {
+        "type": "food-policy-assign",
+        "pawnId": 12410,
+        "policyId": 3
+      }
+    },
+    {
+      "tick": 6067,
+      "reason": "Conserver les rations de voyage tant que la cuisine assure les repas.",
+      "command": {
+        "type": "food-policy-assign",
+        "pawnId": 12411,
+        "policyId": 3
+      }
+    }
+  ],
+  "cooked": 21,
+  "backend": "WebGPU",
+  "days": [
+    {
+      "tick": 6067,
+      "foodPolicies": [
+        1,
+        1,
+        1
+      ],
+      "restRules": "adult",
+      "scheduledSleepHours": [
+        8,
+        8,
+        8
+      ],
+      "spoiled": {
+        "berries": 0,
+        "rice": 0,
+        "simple-meal": 0
+      },
+      "crops": 15,
+      "growingCells": 15,
+      "obstructedGrowingCells": 0,
+      "clearing": 0,
+      "structures": {
+        "bed": 3,
+        "table": 1,
+        "stool": 3,
+        "wall": 6,
+        "campfire": 1
+      },
+      "preparedMeals": 6,
+      "stock": {
+        "wood": 41,
+        "food": 21
+      },
+      "pending": 0,
+      "minimumFood": 61.173333333328024,
+      "minimumRest": 56.08964285714356
+    },
+    {
+      "tick": 12060,
+      "foodPolicies": [
+        3,
+        3,
+        3
+      ],
+      "restRules": "adult",
+      "scheduledSleepHours": [
+        8,
+        8,
+        8
+      ],
+      "spoiled": {
+        "berries": 0,
+        "rice": 0,
+        "simple-meal": 0
+      },
+      "crops": 15,
+      "growingCells": 15,
+      "obstructedGrowingCells": 0,
+      "clearing": 0,
+      "structures": {
+        "bed": 3,
+        "table": 1,
+        "stool": 3,
+        "wall": 6,
+        "campfire": 1
+      },
+      "preparedMeals": 6,
+      "stock": {
+        "wood": 44,
+        "food": 21
+      },
+      "pending": 0,
+      "minimumFood": 44.453333333329866,
+      "minimumRest": 50.61726190476267
+    },
+    {
+      "tick": 18050,
+      "foodPolicies": [
+        3,
+        3,
+        3
+      ],
+      "restRules": "adult",
+      "scheduledSleepHours": [
+        8,
+        8,
+        8
+      ],
+      "spoiled": {
+        "berries": 0,
+        "rice": 0,
+        "simple-meal": 0
+      },
+      "crops": 15,
+      "growingCells": 15,
+      "obstructedGrowingCells": 0,
+      "clearing": 0,
+      "structures": {
+        "bed": 3,
+        "table": 1,
+        "stool": 3,
+        "wall": 6,
+        "campfire": 1
+      },
+      "preparedMeals": 6,
+      "stock": {
+        "wood": 47,
+        "food": 21
+      },
+      "pending": 0,
+      "minimumFood": 39.306666666663766,
+      "minimumRest": 53.80821428571501
+    }
+  ],
+  "meals": 18,
+  "sleepers": 3,
+  "woodConserved": true,
+  "foodReconciled": true,
+  "errors": []
+}

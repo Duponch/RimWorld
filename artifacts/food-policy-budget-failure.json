@@ -1,0 +1,106 @@
+{
+  "scenario": "food-policy-bench, before active cooking state fix",
+  "tick": 351,
+  "population": 100,
+  "errors": [
+    "Assigned pawn has incompatible state.",
+    "Assigned pawn has incompatible state.",
+    "Assigned pawn has incompatible state.",
+    "Assigned pawn has incompatible state."
+  ],
+  "affected": [
+    {
+      "id": 12423,
+      "state": "hungry",
+      "hunger": 16.653333333333702,
+      "foodPolicyId": 32,
+      "cooking": {
+        "stationId": 12609,
+        "billId": 12610,
+        "spot": {
+          "x": 114,
+          "z": 102
+        },
+        "actionCell": {
+          "x": 114,
+          "z": 103
+        },
+        "phase": "output",
+        "ingredients": [],
+        "progress": 0,
+        "productId": 13169,
+        "storageId": null
+      }
+    },
+    {
+      "id": 12429,
+      "state": "hungry",
+      "hunger": 16.653333333333702,
+      "foodPolicyId": 32,
+      "cooking": {
+        "stationId": 12570,
+        "billId": 12571,
+        "spot": {
+          "x": 138,
+          "z": 90
+        },
+        "actionCell": {
+          "x": 138,
+          "z": 91
+        },
+        "phase": "output",
+        "ingredients": [],
+        "progress": 0,
+        "productId": 13206,
+        "storageId": null
+      }
+    },
+    {
+      "id": 12444,
+      "state": "hungry",
+      "hunger": 16.653333333333702,
+      "foodPolicyId": 32,
+      "cooking": {
+        "stationId": 12583,
+        "billId": 12584,
+        "spot": {
+          "x": 90,
+          "z": 102
+        },
+        "actionCell": {
+          "x": 90,
+          "z": 103
+        },
+        "phase": "output",
+        "ingredients": [],
+        "progress": 0,
+        "productId": 13211,
+        "storageId": null
+      }
+    },
+    {
+      "id": 12447,
+      "state": "hungry",
+      "hunger": 16.653333333333702,
+      "foodPolicyId": 32,
+      "cooking": {
+        "stationId": 12661,
+        "billId": 12662,
+        "spot": {
+          "x": 102,
+          "z": 114
+        },
+        "actionCell": {
+          "x": 102,
+          "z": 115
+        },
+        "phase": "output",
+        "ingredients": [],
+        "progress": 0,
+        "productId": 13202,
+        "storageId": null
+      }
+    }
+  ],
+  "checkpointSha256": "37d251786f8af26dd4275e50ca667d690deac3280a9b6c08ed49fe0af4893c6e"
+}

@@ -1,38 +1,51 @@
-# Validation courante — V12 horaires et repos
+# Validation courante — V13 régimes alimentaires
 
-14 septembre 2026. [Contrat](schedules.md), [sources vérifiées](../research/schedules-reference.md). G0 reste en consolidation et G1 partiel. Les comptes de lots qui se recouvrent ne s'additionnent pas.
+14 septembre 2026. [Contrat](food-policies.md), [sources et incertitudes](../research/food-policies-reference.md). G0 reste en consolidation et G1 partiel. Les lots qui se recouvrent ne s'additionnent pas en couverture indépendante.
 
-## Simulation et continuation
+## Scénarios et première intégration
 
-Le [premier groupe](../../artifacts/core-schedules-first.json) passe 32 scénarios sur 33 : besoins historiques, repas, cuisine, fraîcheur, cultures, espace et snapshots. L'unique échec concernait une égalité exacte de flottants dans la nouvelle attente de récupération (100,00000000000001 au lieu de 100). Une tolérance numérique précise a corrigé cette assertion, sans changement du moteur.
+Le [premier lot cœur](../../artifacts/core-food-policies-first.json) passe 30/31 scénarios : besoins, alimentation, conservation, cuisine, cultures, horaires, migrations et colonie. L'unique échec était une attente du nouveau test demandant plus de 90 points après une ration de 0,9 nutrition depuis zéro ; l'assertion vérifie désormais précisément 90 et la consommation d'une seule ration, sans changer la règle du jeu.
 
-Le [groupe suivant, 5/5](../../artifacts/core-schedules-colony.json), rejoue les trois scénarios d'horaires complets, l'oracle de navigation et le pilote de cinq à huit jours sur trois graines. Il vérifie refus atomiques, frontières 0/6/22 h, lit rejoint, sommeil continu en Libre, réveil Travail à 20, nourriture prioritaire, lit inaccessible, famine, calibration et épuisement probabiliste avec reprise exacte. Le pilote décale la nuit de la cuisinière par commandes et conserve les bilans alimentaires et matériels.
+Le [lot suivant 7/7](../../artifacts/core-food-policies-final.json) valide les quatre scénarios de régimes, le pilote de cinq à huit jours sur trois graines, les snapshots et l'oracle de navigation. Le pilote utilise les affectations pour préserver les rations lorsque six repas sont préparés ; il peut les réautoriser lorsque les aliments frais manquent.
 
-## Interface et vraie partie
+Les scénarios de domaine couvrent partage/copie indépendante, limites et refus atomiques, sauvegardes invalides, migration V12 conservant les états antérieurs, choix filtré avant goût/fraîcheur/accès, famine sans exception implicite, nourriture inaccessible avec repli, repas engagé lors d'un changement et cuisine/transport indépendants. Aucun test ne revendique tous les bugs possibles ni toutes les exceptions de RimWorld.
 
-Le [lot UI court 3/3](../../artifacts/ui-schedules-first.json) passe en 31,7 s sur Chromium WebGPU natif : cuisine, conservation et Horaires. Le dernier scénario utilise le vrai tableau pour peindre, annuler, naviguer au clavier, copier/coller et sauvegarder ; il observe le sommeil puis le réveil physique. V11 migre vers le profil historique, un horaire corrompu est refusé sans remplacer la partie. La capture du tableau a été inspectée ; les cellules, libellés et FPS restent visibles.
+Le [premier lot UI](../../artifacts/ui-food-policies-first.json) valide Horaires ; le test des régimes réalise les opérations alimentaires puis échoue parce que son pilote tentait de cliquer Recharger sans rouvrir Menu, fermé normalement après chargement. Le pilote a été corrigé, sans changement de produit pour cet échec.
 
-La [partie UI de trois jours](../../artifacts/ui-schedules-colony.json) passe en 348 s, sans injection de besoins ou de stock. Au tick **18 096** : trois lits, table, trois tabourets, six murs, feu, quinze plants ; **21 repas cuisinés, 18 ingestions, trois dormeurs**, six repas simples en réserve, bois 47 et aucun ordre restant. Les huit heures prévues sont conservées pour chacun, avec le décalage de Mina. Nourriture minimale 39,60 et repos minimal 55,34 à ce checkpoint final. [Bilan complet](../../artifacts/colony-schedules-three-days.json) : bilans exacts, aucune erreur console/GPU. Les 19 checkpoints volumineux ont été extraits vers tmp avec leurs empreintes dans le rapport.
+## Partie réelle et contrôle final
 
-Le dernier contrôle de typage de la reprise avait trouvé un import manquant dans la fixture de conservation. Il a été corrigé avant compilation et parcours UI. La compilation de production passe : worker 105,77 ko, paquet jeu 1 026,96 ko avant gzip. L'avertissement de bundle supérieur à 500 ko reste connu.
+Le [lot UI régimes et trois jours 2/2](../../artifacts/ui-food-policies-final.json) passe en **346,5 s**, Chromium WebGPU natif. Le parcours long génère sa carte 250², utilise les vrais contrôles et ne reçoit aucun stock/besoin injecté. Au tick **18 050** : trois lits, une table, trois tabourets, six murs, un feu et quinze plants ; **21 repas cuisinés, 18 ingestions, trois dormeurs**. Six repas simples et quinze rations restent disponibles, les trois colons utilisent Sans rations après trois commandes d'affectation. [Bilan détaillé](../../artifacts/colony-food-policies-three-days.json) : nourriture minimale 39,31 et repos minimal 53,81 au checkpoint final ; bois et nourriture réconciliés, aucune erreur console/GPU. Dix-neuf checkpoints volumineux sont extraits vers tmp avec empreintes conservées dans le rapport.
 
-## Audit court de charge
+L'éditeur a été inspecté visuellement : texte de nom affiché littéralement, aucune interprétation HTML, contrôles lisibles, avertissement de régime utilisé et compteur FPS visible. Le parcours court vérifie aussi copie, suppression, faim bloquée puis trois repas réellement pris après autorisation, sauvegarde/reprise et refus d'une référence de politique corrompue.
 
-[Rapport 3/30/100](../../artifacts/schedules-bench.json) : Ryzen 5 3600, Node 24.11.1, carte 250², camps synthétiques avec cuisine, transport, cultures, construction et lits attribués ; 450 ticks de 21 h 36 à 23 h 24, puis réveil via plage Travail. Une passe sans préchauffage, simulation seule chronométrée ; génération, validation et sérialisation exclues. Aucun test lourd concurrent.
+L'audit de charge suivant a révélé une anomalie supplémentaire, décrite ci-dessous. Après correction locale de l'état du cuisinier, [8/8 scénarios cœur](../../artifacts/core-food-policies-budget.json) rejouent régimes, cuisine et pilote multi-graines, avec attente de budget de navigation et reprise du produit. Le [lot UI final 3/3, 25,9 s](../../artifacts/ui-food-policies-budget.json) rejoue régimes, cuisine et conservation/migrations par le vrai worker. Le parcours UI long précédent n'a pas été relancé pour cette correction ciblée ; le pilote cœur l'a été. La compilation finale passe : 96 modules, worker 108,87 ko, jeu 1 032,66 ko / 287,98 ko gzip. Avertissement connu de bundle supérieur à 500 ko.
 
-| Colons | Médiane ms/tick | p95 | p99 | Maximum | Ont travaillé / dormi |
+## Charge et anomalie corrigée
+
+Conditions : Ryzen 5 3600, Node 24.11.1, simulation seule, carte 250² graine 42, camps synthétiques partagés à cinq colons par feu, cuisine/transport/construction/culture activés. Une passe sans préchauffage, aucun autre test lourd lancé simultanément ; setup, validation et bilans exclus du temps de tick. Ces chiffres ne sont ni des FPS ni une garantie à vitesse ×6.
+
+Le [scénario habituel de 300 ticks](../../artifacts/cooking-food-policy-bench.json), avant la correction locale de l'état affamé, garde ses résultats métier : 2/7/12 repas, 6/36/120 cultures et 1/5/16 murs pour 3/30/100 acteurs. À cent acteurs : médiane 27,45 ms, p95 37,49, p99 43,14, maximum 45,79. Les compteurs confirment encore de larges recherches, dont certains replis visitent environ 40 000 cellules. Ce scénario ne force pas une famine.
+
+Le scénario spécifique crée **32 régimes**, provoque une faim simultanée au tick 101, modifie trois politiques partagées (repas seulement, matières végétales/repas, rien), puis continue jusqu'à 450 ticks. Ce départ synthétique stressant n'est pas le pilote de joueur ordinaire.
+
+Avant correction, il détectait quatre cuisiniers au tick 351 avec un repas en cours de rangement, mais l'état « affamé » : [diagnostic conservé](../../artifacts/food-policy-budget-failure.json). Les besoins écrasaient leur état alors que le processeur de cuisine attendait un budget de recherche. La correction conserve l'état de toute tâche active ; elle n'assouplit pas les invariants ni les restrictions alimentaires. Le scénario existant sauvegarde et reprend cette attente sans perdre le produit.
+
+Le [rapport final 3/30/100](../../artifacts/food-policy-bench.json) passe avec bilans exacts, aucun nouvel aliment interdit accepté, et 4/13/23 repas cuisinés.
+
+| Colons | Médiane ms/tick | p95 | p99 | Maximum | p95 commande ms |
 |---:|---:|---:|---:|---:|---:|
-| 3 | 0,012 | 0,38 | 2,09 | 11,64 | 3 / 3 |
-| 30 | 0,179 | 5,30 | 14,30 | 28,72 | 30 / 30 |
-| 100 | 1,49 | 26,73 | 34,33 | 39,65 | 100 / 97 |
+| 3 | 0,015 | 1,09 | 2,72 | 26,27 | 0,040 |
+| 30 | 0,776 | 15,28 | 42,09 | 43,32 | 0,0067 |
+| 100 | 22,04 | 40,45 | 61,84 | 67,03 | 0,0034 |
 
-À 100 acteurs, le tick de passage à 22 h coûte 5,28 ms ; celui du réveil Travail 31,44 ms. Trois personnes restent occupées pendant la fenêtre de sommeil observée : ni instantanéité ni absence de congestion ne sont prétendues. La médiane baisse quand les acteurs dorment ; ce scénario n'est pas un A/B avec une colonie constamment active. Ces valeurs ne sont pas des FPS et ne garantissent pas la vitesse ×6 à cent colons.
+À cent personnes, 56 nouveaux repas sont engagés et 44 terminés dans la fenêtre ; le tick du changement groupé coûte 7,94 ms, la commande maximale 0,019 ms. La progression différente interdit d'interpréter la différence entre les deux scénarios comme un gain du système de régimes. Les coûts de navigation et de congestion restent la priorité mesurée de consolidation G0.
 
-## Documentation et preuves précédentes
+## Documents et preuves précédentes
 
-Guide, contrats, migration, adoption, inventaire, décisions et ROADMAP actualisés. Aucun objet supplémentaire n'est ajouté au catalogue par les horaires. Le vérificateur documentaire contrôle liens/fragments et les trois originaux intacts ; il ne certifie pas la fidélité au jeu de référence.
+Guide, inventaire, adoption du corpus, catalogue (aucun objet ajouté), contrats, ADR-028 et ROADMAP actualisés. Les mentions obsolètes de conservation/horaires absents sont corrigées dans le guide ; les numéros de schéma recopiés inutilement dans les contrats de carte/logistique renvoient au contrat courant. Les originaux du corpus restent intacts. Vérification de liens/fragments et intégrité par `scripts/check-docs.py` ; cet outil ne certifie pas les règles de RimWorld.
 
-- [V11 — conservation, colonie et audit d'expiration](../history/validation-v11-conservation.md)
+- [V12 — horaires et sommeil](../history/validation-v12-horaires.md)
+- [V11 — conservation](../history/validation-v11-conservation.md)
 - [V10 — cuisine et navigation](../history/validation-v10-cuisine.md)
 - [V9 — alimentation et reclassement](../history/validation-v9-alimentation.md)
 - [V8 — cultures](../history/validation-v8-cultures.md)

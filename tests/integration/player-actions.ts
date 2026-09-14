@@ -31,7 +31,9 @@ export async function editBill(page:Page,id:number,settings:BillSettings):Promis
 
 export async function perform(page: Page, decision: Decision, rotation: { value: number }): Promise<void> {
   const c=decision.command;
-  if(c.type==='schedule-paint') {
+  if(c.type==='food-policy-assign') {
+    await panel(page,'assign'); await page.locator(`[data-food-policy-pawn="${c.pawnId}"]`).selectOption(String(c.policyId));
+  } else if(c.type==='schedule-paint') {
     await panel(page,'schedule'); await page.locator(`[data-schedule-brush="${c.assignment}"]`).click();
     for(const hour of c.hours) await page.locator(`[data-schedule-pawn="${c.pawnId}"][data-schedule-hour="${hour}"]`).click();
   } else if(c.type==='priority') {
@@ -61,6 +63,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
   } else throw new Error(`Player UI action not supported: ${c.type}`);
   await page.waitForFunction(c=>{
     const w=window.__lisiere.world;
+    if(c.type==='food-policy-assign')return w.pawns.find(p=>p.id===c.pawnId)?.foodPolicyId===c.policyId;
     if(c.type==='schedule-paint')return c.hours.every(h=>w.pawns.find(p=>p.id===c.pawnId)?.schedule[h]===c.assignment);
     if(c.type==='priority')return w.pawns.find(p=>p.id===c.pawnId)?.priorities[c.work]===c.value;
     if(c.type==='bill-add')return !!w.structures.find(s=>s.id===c.structureId)?.bills?.length;

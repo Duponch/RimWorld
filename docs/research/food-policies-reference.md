@@ -1,0 +1,22 @@
+# Vérification des régimes alimentaires
+
+Recherche du 14 septembre 2026, Core d'abord. Corpus : chap. 8/9/14, SYS-077, TEST-077 ; le chapitre 14 place politique, accès et préférences dans la sélection alimentaire. **Adopter** les autorisations partagées ; **adapter** les préréglages au petit catalogue actuel ; **différer** les filtres de provenance et les exceptions liées aux systèmes absents. [Contrat V13](../development/food-policies.md).
+
+## Sources confrontées
+
+- [RimWorld Wiki — Assign, Food policies](https://rimworldwiki.com/wiki/Assign#Food_policies), consulté le 14/09/2026 : organisation dans Affectations, politiques par colon, préréglages et édition. La rubrique est marquée incomplète, mélange Core et extensions et signale certaines exceptions à vérifier. Elle ne suffit pas à établir tous les cas limites.
+- [RimWorld Access — Assign](https://rimworldaccess.com/colony/assign/), documentation du projet d'accessibilité : confirme indépendamment le tableau d'affectations, la gestion et l'édition de politiques nommées. Son clavier spécifique n'est pas une obligation pour notre interface.
+- Miroir de l'implémentation au commit fixe `2d508035082e7cb0c8e29e230d26bda6e546928f`, révision de mai 2026 : [FoodPolicy](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/RimWorld/FoodPolicy.cs), [base des politiques](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/RimWorld/FoodRestrictionDatabase.cs), [politique respectée par la personne](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/RimWorld/Pawn_FoodRestrictionTracker.cs), [sélection FoodUtility](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/RimWorld/FoodUtility.cs), [tâche d'ingestion](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/RimWorld/JobDriver_Ingest.cs), [éditeur](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/RimWorld/Dialog_ManageFoodPolicies.cs). Les classes ont été lues directement pour les frontières du comportement. Ce miroir n'est pas une distribution officielle certifiant la correspondance à la dernière version PC 1.6.4850. Aucun code ou asset du jeu n'est intégré.
+
+## Cas qui changent l'implémentation
+
+| Question | Observation et décision | Certitude / réserve |
+|---|---|---|
+| Un régime est-il une préférence ? | `WillEat` vérifie l'autorisation avant de retenir un aliment ; le score départage ensuite les candidats. **Adopter** pour sol et cargaison, avant calcul d'accès ciblé. | Forte pour les personnes ordinaires ; traits et statuts particuliers hors tranche. |
+| Faim critique : ignorer les restrictions ? | Le tracker consulté prévoit certaines exceptions de contrôle/état mental, aucune liée simplement au niveau de faim ; la recherche conserve `WillEat` même en situation désespérée. **Adopter** l'absence d'exception silencieuse. | Forte pour colon contrôlé sans crise ; vérifier lors de l'ajout des statuts. |
+| Modifier pendant un repas ? | Le JobDriver consulté réagit à la disparition, à l'ingestibilité et à l'accès ; aucune nouvelle vérification de régime dans les phases de ce travail. **Adopter** la continuité de l'engagement déjà accepté. | Inférence locale de ces classes, confiance moyenne : d'autres interruptions de l'arbre de décision peuvent exister. À confronter au jeu lors d'un contrôle direct ciblé. |
+| Supprimer un régime utilisé ? | La base refuse lorsqu'une personne vivante utilise encore la politique. **Adopter** le refus pour nos colons, sans réaffectation implicite. | Forte ; caravanes/prisonniers ne sont pas encore simulés. |
+| Tous les préréglages maintenant ? | Le catalogue Core dépasse largement le nôtre. **Adapter** les noms et listes à cinq types, sans afficher des aliments fictifs. | Divergence explicite, à revoir avec chaque nouvelle famille alimentaire. |
+| Définir le défaut des arrivants ? | Le gestionnaire de référence peut changer le premier régime servant de défaut. **Différer** ce réglage jusqu'aux arrivées/recrutements ; les trois personnes initiales et migrations reçoivent Sans restriction. | Manque fonctionnel connu. |
+
+Les filtres de stock, d'ingrédients de recette et d'ingestion sont des décisions différentes. Leur séparation est conservée ; un régime vide n'empêche pas de cuisiner pour autrui. Les tests vérifient la cohérence et la conservation locales, pas une conformité certaine à toutes les versions de RimWorld.

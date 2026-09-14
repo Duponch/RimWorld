@@ -54,6 +54,14 @@ export function playerDecisions(world: World): Decision[] {
   const nearby = [...world.resources].filter(r => Math.abs(r.x-cx) + Math.abs(r.z-cz) <= 28).sort((a,b) => Math.abs(a.x-cx)+Math.abs(a.z-cz)-(Math.abs(b.x-cx)+Math.abs(b.z-cz)) || a.id-b.id);
   const prepared=world.piles.filter(p=>p.item==='simple-meal').reduce((n,p)=>n+p.quantity,0);
   const ingredients=world.piles.filter(p=>p.item==='rice'||p.item==='berries').reduce((n,p)=>n+p.quantity,0);
+  // Preserve travel rations once cooking provides a buffer; lift the restriction
+  // if that buffer runs out. This is a player decision, never a hunger override.
+  const nutritionWithoutRations=world.piles.reduce((n,p)=>n+(p.item==='simple-meal' ? p.quantity*.9 : p.item==='berries'||p.item==='rice' ? p.quantity*.05 : 0),0);
+  const reserveRations=prepared>=world.pawns.length*2;
+  for(const pawn of world.pawns) {
+    const policyId=reserveRations?3:nutritionWithoutRations<world.pawns.length*.8?1:pawn.foodPolicyId;
+    if(pawn.foodPolicyId!==policyId)out.push({reason:policyId===3?'Conserver les rations de voyage tant que la cuisine assure les repas.':'Autoriser les rations de secours lorsque la réserve fraîche baisse.',command:{type:'food-policy-assign',pawnId:pawn.id,policyId}});
+  }
   const cookingDemand=world.structures.some(s=>s.kind==='campfire')?Math.max(0,(world.pawns.length*2-prepared)*10-ingredients):0;
   for (const [kind, required] of [['tree', Math.max(40, outstandingWood + 20) - world.stock.wood], ['berries', Math.max(cookingDemand,(world.pawns.length * 1.6 - availableNutrition(world)) * (world.foodRules === 'legacy' ? 100 / 35 : 20))]] as const) {
     const action = kind === 'tree' ? 'chop' : 'harvest';
@@ -69,7 +77,7 @@ export function playerDecisions(world: World): Decision[] {
 
 export function colonySummary(world: World) {
   const fields=new Set(world.growingZones.flatMap(z=>z.cells));
-  return { tick: world.tick, restRules: world.restRules, scheduledSleepHours: world.pawns.map(p=>p.schedule.filter(s=>s==='sleep').length), spoiled: { ...world.spoiled }, crops: world.resources.filter(r=>r.kind==='rice').length, growingCells:fields.size,
+  return { tick: world.tick, foodPolicies: world.pawns.map(p=>p.foodPolicyId), restRules: world.restRules, scheduledSleepHours: world.pawns.map(p=>p.schedule.filter(s=>s==='sleep').length), spoiled: { ...world.spoiled }, crops: world.resources.filter(r=>r.kind==='rice').length, growingCells:fields.size,
     obstructedGrowingCells:world.piles.filter(p=>p.owner.type==='ground'&&fields.has(p.owner.z*world.width+p.owner.x)).length,
     clearing:world.pawns.filter(p=>p.haul?.destination.type==='aside').length,
     structures: Object.fromEntries(['bed','table','stool','wall','campfire'].map(kind => [kind,world.structures.filter(s=>s.kind===kind).length])), preparedMeals:world.piles.filter(p=>p.item==='simple-meal').reduce((n,p)=>n+p.quantity,0), stock: { ...world.stock }, pending: world.jobs.length, minimumFood: Math.min(...world.pawns.map(p=>p.hunger)), minimumRest: Math.min(...world.pawns.map(p=>p.rest)) };

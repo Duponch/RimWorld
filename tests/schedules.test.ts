@@ -2,7 +2,7 @@ import { expect, test } from 'vitest';
 import { addGroundMaterial, applyCommand, createWorld, deserializeWorld, serializeWorld, stepWorld, validateWorld } from '../src/sim/index';
 import { defaultSchedule, hourOfDay, wantsSleep } from '../src/sim/schedule';
 import { BED_REST_PER_TICK, GROUND_REST_PER_TICK, collapseProbability, updateRest } from '../src/sim/rest';
-import { withoutSchedules } from './scenarios/legacy-save';
+import { withoutPostV11Fields } from './scenarios/legacy-save';
 import type { Command, World } from '../src/sim/types';
 
 function camp(): World {
@@ -82,8 +82,8 @@ test('fatigue adulte, effondrement probabiliste et migration V11 préservent les
   for(const mutate of [(v:any)=>v.pawns[0].schedule.push('work'),(v:any)=>v.pawns[0].schedule[1]='joy',(v:any)=>v.pawns[0].restZeroTicks=4501,(v:any)=>v.pawns[0].collapsePending=true,(v:any)=>v.restRules='other']) {
     const bad=JSON.parse(serializeWorld(w));mutate(bad);expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();
   }
-  const old=withoutSchedules(JSON.parse(checkpoint));old.schemaVersion=11;
+  const old=withoutPostV11Fields(JSON.parse(checkpoint));old.schemaVersion=11;
   const migrated=deserializeWorld(JSON.stringify(old));expect(migrated.restRules).toBe('legacy');expect(migrated.pawns[0]!.schedule).toEqual(Array(24).fill('anything'));
-  const stripped=withoutSchedules(JSON.parse(serializeWorld(migrated)));stripped.schemaVersion=11;expect(stripped).toEqual(old);
+  const stripped=withoutPostV11Fields(JSON.parse(serializeWorld(migrated)));stripped.schemaVersion=11;expect(stripped).toEqual(old);
   migrated.pawns[0]!.rest=80;const before=migrated.pawns[0]!.rest;checked(migrated);expect(migrated.pawns[0]!.rest).toBeCloseTo(before-.008,10);
 });

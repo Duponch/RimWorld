@@ -3,6 +3,7 @@ import { deliveredStock, reservedDestination } from './materials.ts';
 import { workType } from './work-planner.ts';
 import { COOK_TICKS, INGREDIENT_UNITS } from './cooking-bills.ts';
 import { REFUEL_WORK_TICKS } from './fuel.ts';
+import { allowedFood, type FoodItemId } from './food-policy.ts';
 import type { Job, JobDiagnostic, Pawn, World } from './types.ts';
 
 // Pure presentation queries. No navigation flood or world mutation.
@@ -34,6 +35,11 @@ export function queryPawnStatus(world: World, pawn: Pawn): { code: string; reaso
   if (pawn.haul) return { code: pawn.haul.phase, reason: pawn.haul.destination.type === 'aside' ? `Libère les cultures : ${pawn.haul.quantity} unités à déplacer hors des champs.` : pawn.haul.phase === 'pickup' ? `Va prélever ${pawn.haul.quantity} unités réservées.` : `Porte ${pawn.haul.quantity} unités vers ${pawn.haul.destination.type === 'job' ? 'un chantier' : 'le stockage'}.` };
   if (pawn.jobId !== null) return { code: 'working', reason: pawn.state === 'moving' ? 'Se rend à son travail.' : 'Travaille sur sa cible.' };
   if (pawn.state === 'sleeping') return { code: 'sleeping', reason: 'Se repose.' };
-  if (pawn.state === 'hungry') return { code: 'hungry', reason: 'Faim critique ; attend de la nourriture ou une récolte accessible.' };
+  if (pawn.state === 'hungry') {
+    const allowed = allowedFood(world, pawn);
+    const stock = world.piles.filter(p => p.kind === 'food' && (p.owner.type === 'ground' || p.owner.type === 'pawn' && p.owner.pawnId === pawn.id));
+    if (stock.length && !stock.some(p => allowed.includes(p.item as FoodItemId))) return {code: 'food-policy-blocked', reason: 'Le régime exclut tous les aliments au sol ou en main. Modifier le régime ou produire un aliment autorisé.'};
+    return { code: 'hungry', reason: 'Faim critique ; attend de la nourriture autorisée et accessible.' };
+  }
   return { code: world.jobs.length ? 'waiting' : 'idle', reason: world.jobs.length ? 'Aucun travail actuellement admissible : priorités, matériaux ou accès à vérifier.' : 'Aucun travail admissible actuellement.' };
 }

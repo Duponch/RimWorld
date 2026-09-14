@@ -39,3 +39,7 @@ L'inventaire des personnes, leurs vêtements et les portraits ont un [contrat di
 
 
 V9 enrichit les interactions des objets existants : bois et aliments peuvent être déplacés hors des cultures ; baies, riz et rations ont un classement alimentaire neutre vérifié. Aucun nouvel objet ni fragment de roche collectable n’est ajouté par cette tranche. Voir [sources et limites](../research/food-clearing-reference.md).
+
+## Couverture des régimes alimentaires
+
+V13 ajoute des [régimes partagés](../development/food-policies.md), aucun objet supplémentaire. Ils couvrent les cinq types alimentaires déjà définis, dont la portion historique de compatibilité. Les préréglages et filtres de provenance complets restent à compléter avec les familles alimentaires ; la présence d'un filtre ne signifie pas qu'un aliment possède une recette ou que l'inventaire personnel existe.

@@ -16,7 +16,7 @@ export function validateSchedules(world: World, version: number): string[] {
 }
 
 export function initializeSchedules(world: World): void {
-  world.schemaVersion = 12; world.restRules = 'legacy';
+  (world as unknown as {schemaVersion: number}).schemaVersion = 12; world.restRules = 'legacy';
   // Existing games retain their old fatigue economy and unplanned day. No task,
   // position, need, food, RNG or ownership is changed at load time.
   for (const pawn of world.pawns) { pawn.schedule = Array.from({length: 24}, () => 'anything'); pawn.restZeroTicks = 0; pawn.collapsePending = false; }

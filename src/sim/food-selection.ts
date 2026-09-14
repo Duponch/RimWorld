@@ -1,12 +1,13 @@
 import { interactionGoals, routeCost, routeToJob, type Reachability } from './pathfinding.ts';
 import { ITEM_DEFINITIONS, type ItemId } from './items.ts';
 import { ticksUntilRot } from './food-preservation.ts';
+import { allowedFood, type FoodItemId } from './food-policy.ts';
 import { TICKS_PER_DAY } from './types.ts';
 import type { Cell, MaterialPile, Pawn, World } from './types.ts';
 
 /** Neutral adult. Reference mood curve maps raw-food -7 to
  * -82 optimality; survival packs have a -5 definition offset. The +12 bonus
- * for imminent spoilage is applied to physical piles; traits/policies remain open. */
+ * for imminent spoilage is applied to physical piles; traits remain open. */
 const FOOD_OFFSETS: Readonly<Record<ItemId, number>> = {
   wood: -Infinity, 'simple-meal': 16, berries: 0, rice: -82, 'survival-meal': -5, 'legacy-portion': 0,
 };
@@ -17,6 +18,7 @@ export function pileFoodScore(world: World, pile: MaterialPile, distance: number
   return foodScore(pile.item, distance) + (ticksUntilRot(pile, world.tick) < TICKS_PER_DAY / 2 ? 12 : 0);
 }
 export function foodSearchGoals(world: World, pawn: Pawn, sources: readonly MaterialPile[]): Set<number> {
+  const allowed = allowedFood(world, pawn); sources = sources.filter(p => allowed.includes(p.item as FoodItemId));
   if (world.foodRules === 'legacy') return interactionGoals(world, sources.flatMap(p => p.owner.type === 'ground' ? [p.owner] : []));
   let best: MaterialPile | undefined, score = -Infinity;
   for (const pile of sources) {
@@ -29,9 +31,10 @@ export function foodSearchGoals(world: World, pawn: Pawn, sources: readonly Mate
   return interactionGoals(world, best?.owner.type === 'ground' ? [best.owner] : []);
 }
 export function selectFood(world: World, pawn: Pawn, sources: readonly MaterialPile[], reachable: Reachability): { id: number; path: Cell[]; score: number } | undefined {
+  const allowed = allowedFood(world, pawn);
   let best: { id: number; path: Cell[]; score: number } | undefined;
   for (const pile of sources) {
-    if (pile.owner.type !== 'ground' || !ITEM_DEFINITIONS[pile.item].nutrition) continue;
+    if (pile.owner.type !== 'ground' || !ITEM_DEFINITIONS[pile.item].nutrition || !allowed.includes(pile.item as FoodItemId)) continue;
     // Reference map search uses Manhattan distance for ranking, independently
     // of the Euclidean travel duration and actual reachability of the item.
     const distance = Math.abs(pawn.x - pile.owner.x) + Math.abs(pawn.z - pile.owner.z);

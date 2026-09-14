@@ -97,3 +97,9 @@ Décision du 14 septembre 2026. [Référence vérifiée](../research/food-preser
 ## ADR-027 — Horaires distincts des besoins physiques
 
 Date : 14 septembre 2026. Les commandes peignent une intention de 24 heures ; le processeur de besoins décide ensuite des tâches physiques. Fatigue, sélection/occupation du couchage et tableau UI sont des responsabilités séparées. Les boutons gardent leur identité entre snapshots. Le compteur d'épuisement et une interruption en attente sont sauvegardés avec le PRNG ; les tirages ne dépendent pas du rendu. V12 conserve explicitement le profil historique pour les anciennes parties, sans modifier leurs tâches au chargement. [Contrat](../development/schedules.md), [sources et limites](../research/schedules-reference.md).
+
+## ADR-028 — Régimes partagés et engagements alimentaires
+
+14 septembre 2026. Les autorisations d'ingestion appartiennent à une politique partagée, référencée par le colon ; aucun couplage avec stockage ou factures. Le filtre intervient avant le score et les buts de navigation, y compris pour la cargaison de tâche. Un repas engagé conserve son contrat physique ; changer la politique ne crée ni restitution ni annulation de réservations. Le prochain choix utilise les nouvelles autorisations. [Sources et incertitudes](../research/food-policies-reference.md).
+
+Les identifiants ont un compteur séparé des entités, afin que V12→V13 préserve leurs IDs, routes et RNG. Validation atomique et plafonds locaux limitent la taille des politiques dans les snapshots sans introduire de cache d'autorisation susceptible de devenir périmé. Le rendu ne modifie pas les modèles ni les buffers ; la table maintient ses sélecteurs entre snapshots. [Contrat et migration](../development/food-policies.md).
