@@ -6,6 +6,7 @@ import { naturalLight } from './sim/environment';
 import { isPlant, plantGrowth, harvestable, berryYield, plantResting } from './sim/plants';
 import './style.css';
 import { ITEM_DEFINITIONS, availableNutrition } from './sim/items';
+import { foodFreshnessLabel } from './ui/food-freshness';
 import { updateFoodStocks } from './ui/food-stocks';
 import { SimulationClient } from './bridge/SimulationClient';
 import { ColonyRenderer } from './render/ColonyRenderer';
@@ -251,7 +252,7 @@ function renderState() {
       const piles = world.piles.filter(item => item.owner.type === 'ground' && item.owner.x === x && item.owner.z === z);
       el('cell-title').textContent = structure ? ({ wall: 'Mur en bois', bed: 'Lit', table: 'Table en bois', stool: 'Tabouret en bois', campfire: 'Feu de camp' })[structure.kind] : resource ? resourceLabels[resource.kind] : terrainLabels[world.tiles[z * world.width + x].terrain];
       el('cell-description').textContent = `Case ${x}, ${z}${resource ? isPlant(resource) ? ` · Croissance ${Math.floor(plantGrowth(world, resource) * 100)} % · ${harvestable(world, resource) ? `Récolte : environ ${Math.round(berryYield(world, resource))} ${resource.kind === 'rice' ? 'riz' : 'baies'}` : 'Pas encore récoltable'} · ${plantResting(world.tick) ? 'Repos nocturne' : naturalLight(world.tick) < .51 ? 'Lumière insuffisante' : 'Croissance diurne'}` : ` · ${resource.amount} unités à récolter` : ''}${structure ? ` · ${footprintCells(structure).length === 2 ? '1 × 2' : '1 × 1'} cases` : ''}`;
-      el('cell-materials').textContent = piles.length ? `Au sol : ${piles.map(pile => `${pile.quantity} ${ITEM_DEFINITIONS[pile.item].label}`).join(' · ')}` : '';
+      el('cell-materials').textContent = piles.length ? `Au sol : ${piles.map(pile => `${pile.quantity} ${ITEM_DEFINITIONS[pile.item].label}${pile.kind==='food'?` · ${foodFreshnessLabel(pile,world.tick)}`:''}`).join(' · ')}` : '';
       el('cell-job').textContent = job ? `${jobLabels[job.kind]} · ${queryJobStatus(world, job).reason ?? 'En cours'}${JOB_WOOD_COST[job.kind] > 0 ? ` · ${deliveredStock(world, job.id).wood} bois livrés` : ''}` : 'Aucun ordre sur cette case.';
       if(structure?.kind==='campfire'){updateFireControls(el('inspector'),structure);updateBillControls(el('inspector'),structure,world);}
       el('cell-storage').hidden = !storage;

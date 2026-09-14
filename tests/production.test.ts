@@ -1,3 +1,4 @@
+import { withoutPreservation } from './scenarios/legacy-food';
 import { expect, test } from 'vitest';
 import { applyCommand, createWorld, deserializeWorld, serializeWorld, stepWorld, validateWorld } from '../src/sim/index';
 import { addGroundMaterial, refreshStock } from '../src/sim/materials';
@@ -23,7 +24,7 @@ function until(w:World,predicate:()=>boolean,max=1000):void {
 
 test('feu construit, deux jours de combustion, ravitaillement concurrent et interruption conservent le bois',()=>{
   const w=camp(),initial=woodAccount(w);
-  const v9=JSON.parse(serializeWorld(w));v9.schemaVersion=9;
+  const v9=JSON.parse(serializeWorld(w));v9.schemaVersion=9;withoutPreservation(v9);
   for(const pawn of v9.pawns){delete pawn.cooking;delete pawn.priorities.cook;}
   const migrated=deserializeWorld(JSON.stringify(v9));
   expect(migrated.pawns.every(p=>p.cooking===null&&p.priorities.cook===2)).toBe(true);

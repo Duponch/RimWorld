@@ -40,6 +40,15 @@ test('food choice: neutral-adult taste, distance, inaccessible meals, legacy eco
   expect(p.haul).toBeNull();const selected=p.need?.kind==='eat'?p.need.sourcePileId:0;
   expect(carrying.piles.find(pile=>pile.id===selected)?.item).toBe('berries');
   expect(carrying.piles.filter(p=>p.item==='rice').reduce((n,p)=>n+p.quantity,0)).toBe(10);expect(validateWorld(carrying)).toEqual([]);
+  // Spoilage preference changes an actual reachable target, with a strict
+  // half-day boundary; it does not grant distant food or alter travel length.
+  for(const [left,expectedX] of [[3001,3],[3000,10]] as const) {
+    const w=fixture();w.pawns=w.pawns.slice(0,1);
+    addGroundMaterial(w,'food',20,{x:3,z:2},'berries');addGroundMaterial(w,'food',20,{x:10,z:2},'berries');
+    const old=w.piles[1]!;old.rot={progress:14*6000-left,atTick:0};stepWorld(w);
+    const task=w.pawns[0]!.need!;expect(task.kind).toBe('eat');
+    expect(task.kind==='eat'?task.sourcePileId:null).toBe(expectedX===3?w.piles[0]!.id:old.id);expect(validateWorld(w)).toEqual([]);
+  }
 });
 
 test.each(['berries','rice'] as const)('aliments (%s) : réservations fractionnées, repas simultanés, interruption et continuation sans conversion ni duplication', item => {

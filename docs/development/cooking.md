@@ -1,6 +1,6 @@
 # Cuisine, factures et combustible
 
-Contrat V10 livré et validé dans les scénarios décrits ci-dessous. [Recherche de référence](../research/cooking-reference.md) : chap. 11/32, SYS-062..064, UI-025. Les effets absents du feu et des recettes restent dans l’[inventaire](../gameplay/implementation-status.md).
+Contrat introduit en V10, complété en V11 et validé dans les scénarios décrits ci-dessous. [Recherche de référence](../research/cooking-reference.md) : chap. 11/32, SYS-062..064, UI-025. Les effets absents du feu et des recettes restent dans l’[inventaire](../gameplay/implementation-status.md).
 
 ## Chaîne physique
 
@@ -22,6 +22,8 @@ Les factures sont ordonnées et disposent des trois modes de répétition, suspe
 - `ui/bill-controls.ts` et `ui/fire-controls.ts` : véritables commandes du worker. L’inspecteur appartient au poste sélectionné ; la priorité Cuisine reste dans Travail.
 - `diagnostics.ts` et `cooking-diagnostics.ts` : requêtes sans mutation pour les phases du colon et les blocages connus de facture. L’interface distingue ingrédients manquants, combustible, métier désactivé et place obstruée ; une quantité présente ne certifie pas son accessibilité. Aucune exploration de carte n’est déclenchée par l’inspection.
 - `render/campfire-parts.ts` : parties procédurales dans les lots de mobilier et de couleur non éclairée existants. Seul le changement allumé/éteint modifie leur contenu ; le compteur de combustible ne recrée pas de géométrie chaque tick.
+
+Depuis V11, les ingrédients et repas suivent le [contrat de conservation](food-preservation.md). Un ingrédient expiré interrompt sans produit ni décrément de facture ; le chef conserve sa cargaison survivante tant qu’un dépôt physique reste impossible. Le produit neuf démarre frais.
 
 **Migration V9→V10** : ajout `pawn.cooking = null` et priorité Cuisine 2, sans déplacer les personnes ou modifier les travaux existants. Aucun ancien feu n’existe à migrer. Les factures, tâches de cuisine, combustible et repas simples sont refusés si présentés comme données d’une ancienne version. Les migrations V1–V8 passent d’abord par leurs contrats historiques.
 

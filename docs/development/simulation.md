@@ -1,4 +1,4 @@
-# Noyau de simulation — contrat courant V10
+# Noyau de simulation — contrat courant V11
 
 Corpus : chapitres 2/4/5/9/10/21/30/32, SYS-005/020..022/041..061/113..117. G0 reste en consolidation. Ce document décrit les frontières ; les règles détaillées font autorité dans leurs contrats de domaine.
 
@@ -30,6 +30,6 @@ Huit recherches et 32 768 couples logistiques par tick ; curseur de parcours per
 
 ## Sauvegardes
 
-Schéma courant 10, migration explicite depuis V1–V9 après validation de chaque étape. Les anciens profils alimentaires et emprises de lits sont préservés ; une vieille carte n’est ni agrandie ni régénérée. V9→V10 conserve les tâches et routes en cours, ajoute Cuisine 2 et aucune tâche de cuisine rétroactive. Voir [le contrat de production](cooking.md).
+Schéma courant 11, migration explicite depuis V1–V10 après validation de chaque étape. Les anciens profils alimentaires et emprises de lits sont préservés ; une vieille carte n’est ni agrandie ni régénérée. V9→V10 conserve les tâches et routes en cours, ajoute Cuisine 2 et aucune tâche de cuisine rétroactive. V10→V11 initialise les âges inconnus au tick chargé ; les reprises V11 conservent âge, quantités et pertes. Voir [production](cooking.md) et [conservation](food-preservation.md).
 
 Le validateur refuse types/bornes invalides, IDs ou propriétaires incohérents, engagements excessifs, dérivés contradictoires et trajets non conformes. Une route devenue obstruée peut être sauvegardée : le moteur la réévalue. Une sauvegarde invalide ne remplace jamais la partie. JSON limité à 16 millions de caractères, clés navigateur historiques préservées. Les migrations de domaine sont décrites dans les contrats correspondants ; manifeste, journal complet et export/import restent ouverts.

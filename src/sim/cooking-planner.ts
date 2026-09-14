@@ -47,6 +47,10 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
       let missing=INGREDIENT_UNITS;
       const sources=world.piles.filter(p=>(p.item==='rice'||p.item==='berries')&&bill.filters[p.item]&&p.owner.type==='ground'&&distance(p.owner,station)<=bill.radius**2)
         .sort((a,b)=>distance(a.owner as Cell,station)-distance(b.owner as Cell,station)||a.id-b.id);
+      // No source means no pair was visited and no staging decision was made.
+      // Avoid six full resource/footprint scans per empty bill, especially after
+      // simultaneous spoilage. Keep earlier route/blocker diagnostics unchanged.
+      if(!sources.length)continue;
       const cells=[station,spot,{x:spot.x-1,z:spot.z},{x:spot.x+1,z:spot.z},{x:spot.x,z:spot.z-1},{x:spot.x,z:spot.z+1}]
         .filter((c,i,a)=>a.findIndex(t=>same(t,c))===i&&cookingPlaceFree(world,c));
       for(const pile of sources) {

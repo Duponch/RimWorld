@@ -1,5 +1,6 @@
 import { plantGrowth } from '../../src/sim/plants.ts';
 import { availableNutrition } from '../../src/sim/items.ts';
+import { spoiledUnits } from '../../src/sim/food-preservation.ts';
 import { canDesignate } from '../../src/sim/engine.ts';
 import { JOB_WOOD_COST } from '../../src/sim/definitions.ts';
 import type { Command, DesignateCommand, World } from '../../src/sim/types.ts';
@@ -61,7 +62,7 @@ export function playerDecisions(world: World): Decision[] {
 
 export function colonySummary(world: World) {
   const fields=new Set(world.growingZones.flatMap(z=>z.cells));
-  return { tick: world.tick, crops: world.resources.filter(r=>r.kind==='rice').length, growingCells:fields.size,
+  return { tick: world.tick, spoiled: { ...world.spoiled }, crops: world.resources.filter(r=>r.kind==='rice').length, growingCells:fields.size,
     obstructedGrowingCells:world.piles.filter(p=>p.owner.type==='ground'&&fields.has(p.owner.z*world.width+p.owner.x)).length,
     clearing:world.pawns.filter(p=>p.haul?.destination.type==='aside').length,
     structures: Object.fromEntries(['bed','table','stool','wall','campfire'].map(kind => [kind,world.structures.filter(s=>s.kind===kind).length])), preparedMeals:world.piles.filter(p=>p.item==='simple-meal').reduce((n,p)=>n+p.quantity,0), stock: { ...world.stock }, pending: world.jobs.length, minimumFood: Math.min(...world.pawns.map(p=>p.hunger)), minimumRest: Math.min(...world.pawns.map(p=>p.rest)) };
@@ -71,5 +72,7 @@ export function woodAccount(world: World): number {
   return world.piles.filter(p=>p.kind==='wood').reduce((n,p)=>n+p.quantity,0) + world.resources.filter(r=>r.kind==='tree').reduce((n,r)=>n+r.amount,0) + world.structures.reduce((n,s)=>n+(s.kind==='campfire' ? ((s.fuel?.ticks??0)+(s.fuel?.burned??0))/600 : JOB_WOOD_COST[s.kind]),0);
 }
 export function foodAccount(world: World): number {
-  return world.piles.filter(p=>p.kind==='food').reduce((n,p)=>n+p.quantity,0);
+  // Produced units remain accounted for even after spoilage; this is a ledger,
+  // not the edible stock used by the player's decisions.
+  return world.piles.filter(p=>p.kind==='food').reduce((n,p)=>n+p.quantity,0) + spoiledUnits(world);
 }

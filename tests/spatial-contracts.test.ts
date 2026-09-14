@@ -1,3 +1,4 @@
+import { withoutPreservation } from './scenarios/legacy-food';
 import { expect, test } from 'vitest';
 import { createWorld, addGroundMaterial, applyCommand, canDesignate, stepWorld, serializeWorld, deserializeWorld, validateWorld, refreshStock } from '../src/sim/index';
 import { blockedCells, canStep, reachableCells, routeToCell } from '../src/sim/pathfinding';
@@ -104,7 +105,7 @@ test('floor stacks enforce identity, reserved destination type, migration and at
   addGroundMaterial(w,'wood',75,zone);
   expect(w.piles.some(p=>p.owner.type==='ground'&&p.owner.x===zone.x&&p.owner.z===zone.z)).toBe(false);
   w.pawns[0]!.haul=null;
-  const old=JSON.parse(serializeWorld(w));old.schemaVersion=5;for(const p of old.pawns){delete p.cooking;delete p.priorities.cook;}old.piles[1].owner={...old.piles[0].owner};
+  const old=JSON.parse(serializeWorld(w));old.schemaVersion=5;withoutPreservation(old);for(const p of old.pawns){delete p.cooking;delete p.priorities.cook;}old.piles[1].owner={...old.piles[0].owner};
   const migrated=deserializeWorld(JSON.stringify(old));
   expect(migrated.piles.map(p=>[p.id,p.item,p.quantity])).toEqual(w.piles.map(p=>[p.id,p.item,p.quantity]));expect(validateWorld(migrated)).toEqual([]);
   const impossible=JSON.parse(JSON.stringify(old));impossible.schemaVersion=6;expect(()=>deserializeWorld(JSON.stringify(impossible))).toThrow(/floor cell/);

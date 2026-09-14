@@ -22,7 +22,7 @@ export function validateCooking(input:unknown,version:number,ids:Set<number>):st
     if(!int(p.priorities.cook,0,4))errors.push('Invalid cooking priority.');
     if(p.cooking===null)continue;
     const c=p.cooking;
-    if(!record(c)||!int(c.stationId,1)||!int(c.billId,1)||!cell(c.spot)||!cell(c.actionCell)||!['gather','work','output'].includes(c.phase as string)
+    if(!record(c)||!int(c.stationId,1)||!int(c.billId,1)||!cell(c.spot)||!cell(c.actionCell)||!['gather','work','output',...(version>=11?['interrupted']:[])].includes(c.phase as string)
       ||!int(c.progress,0,COOK_TICKS)||!(c.productId===null||int(c.productId,1,w.nextId-1))||!(c.storageId===null||int(c.storageId,1,w.nextId-1))
       ||!Array.isArray(c.ingredients)||c.ingredients.length>10) {errors.push('Invalid cooking task.');continue;}
     for(const i of c.ingredients)if(!record(i)||!int(i.pileId,1,w.nextId-1)||!int(i.quantity,1,10)||!['rice','berries'].includes(i.item as string)||!['source','held','placed'].includes(i.stage as string)||!cell(i.cell))errors.push('Invalid recipe ingredient reservation.');
@@ -41,7 +41,8 @@ export function validateCooking(input:unknown,version:number,ids:Set<number>):st
       if(c.ingredients.length||c.progress!==0||owned.length!==1||owned[0]?.id!==c.productId||owned[0]?.item!=='simple-meal'||owned[0]?.quantity!==1)errors.push('Invalid cooked product ownership.');
       if(c.storageId!==null){const storage=w.stockpiles.find(s=>s.id===c.storageId);if(!storage||storageCapacity(w,storage,'simple-meal',p.id)<1)errors.push('Invalid cooking output reservation.');}
     } else {
-      if(c.ingredients.reduce((n,i)=>n+i.quantity,0)!==10||c.productId!==null||c.storageId!==null||c.phase==='gather'&&c.progress!==0)errors.push('Invalid recipe quantity or phase.');
+      if(c.productId!==null||c.storageId!==null||(c.phase==='gather'||c.phase==='interrupted')&&c.progress!==0
+        ||(c.phase==='interrupted'?c.ingredients.length!==1||c.ingredients[0]?.stage!=='held':c.ingredients.reduce((n,i)=>n+i.quantity,0)!==10))errors.push('Invalid recipe quantity or phase.');
       const held=c.ingredients.filter(i=>i.stage==='held');
       if(held.length>1||owned.length!==held.length||held.length&&owned[0]?.id!==held[0]?.pileId)errors.push('Invalid ingredient cargo.');
       const incoming=new Map<number,{item:'rice'|'berries';quantity:number}>();
@@ -54,7 +55,7 @@ export function validateCooking(input:unknown,version:number,ids:Set<number>):st
           if(i.stage==='placed'&&pile.owner.type==='ground'&&(pile.owner.x!==i.cell.x||pile.owner.z!==i.cell.z))errors.push('Ingredient not placed at workstation.');
         }
         if(Math.abs(i.cell.x-spot.x)+Math.abs(i.cell.z-spot.z)>1)errors.push('Ingredient staging beyond work reach.');
-        if(i.stage!=='placed') {
+        if(i.stage!=='placed'&&c.phase!=='interrupted') {
           const key=i.cell.z*w.width+i.cell.x,prior=incoming.get(key);
           if(prior&&prior.item!==i.item)errors.push('Mixed ingredient staging reservation.');
           const quantity=(prior?.quantity??0)+i.quantity;incoming.set(key,{item:i.item,quantity});

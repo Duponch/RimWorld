@@ -24,7 +24,7 @@ export interface CookingTask {
   billId:number;
   spot:Cell;
   actionCell:Cell;
-  phase:'gather'|'work'|'output';
+  phase:'gather'|'work'|'output'|'interrupted';
   ingredients:CookingIngredient[];
   progress:number;
   productId:number|null;

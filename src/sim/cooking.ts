@@ -1,4 +1,5 @@
 import { COOK_TICKS } from './cooking-bills.ts';
+import { copyRot, freshRot } from './food-preservation.ts';
 import { groundPile, planGroundPlacement, storageCapacity } from './ground-placement.ts';
 import { transferPile, reservedSource } from './materials.ts';
 import { interactionGoals, routeToJob } from './pathfinding.ts';
@@ -11,11 +12,12 @@ function take(world:World,pawn:Pawn,pile:MaterialPile,quantity:number):MaterialP
   if(pile.quantity===quantity){pile.owner={type:'pawn',pawnId:pawn.id};return pile;}
   if(world.piles.length>=32768||!Number.isSafeInteger(world.nextId+1))return null;
   pile.quantity-=quantity;
-  const carried:MaterialPile={id:world.nextId++,item:pile.item,kind:pile.kind,quantity,owner:{type:'pawn',pawnId:pawn.id}};
+  const carried:MaterialPile={id:world.nextId++,item:pile.item,kind:pile.kind,quantity,owner:{type:'pawn',pawnId:pawn.id},...copyRot(pile)};
   world.piles.push(carried);return carried;
 }
 export function processCooking(world:World,pawn:Pawn,context:NeedContext):void {
   const task=pawn.cooking!;
+  if(task.phase==='interrupted'){context.release();return;}
   const station=world.structures.find(s=>s.id===task.stationId),bill=station?.bills?.find(b=>b.id===task.billId);
   if(!station||!bill||bill.suspended||pawn.priorities.cook===0||(task.phase!=='output'&&!station.fuel?.ticks)) {context.release();return;}
   if(task.phase==='output') {
@@ -72,7 +74,7 @@ export function processCooking(world:World,pawn:Pawn,context:NeedContext):void {
   // All preconditions succeeded. Consume once, create once, then store physically.
   for(const [id,quantity] of used)world.piles.find(p=>p.id===id)!.quantity-=quantity;
   world.piles=world.piles.filter(p=>p.quantity>0);
-  const id=world.nextId++;world.piles.push({id,item:'simple-meal',kind:'food',quantity:1,owner:{type:'pawn',pawnId:pawn.id}});
+  const id=world.nextId++;world.piles.push({id,item:'simple-meal',kind:'food',quantity:1,owner:{type:'pawn',pawnId:pawn.id},...freshRot('simple-meal',world.tick)});
   task.ingredients=[];task.productId=id;task.phase='output';task.progress=0;pawn.planCooldown=0;
   if(bill.mode==='times')bill.target=Math.max(0,bill.target-1);
   context.event(`${pawn.name} a cuisiné 1 repas simple (${10-rice} baies, ${rice} riz).`);

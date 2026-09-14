@@ -18,7 +18,7 @@ test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp const
 
       stepWorld(world);
       for (const event of world.events) if (event.tick === world.tick) { const match = event.message.match(/a récolté (\d+) (?:baies|riz)/); if (match) produced += Number(match[1]);if(event.message.includes('a cuisiné 1 repas simple'))cooked++; }
-      for (const {id,quantity} of ingesting) { meals.set(id, meals.get(id)!+1); consumed += quantity; }
+      for (const {id,quantity} of ingesting) if(world.events.some(e=>e.tick===world.tick&&e.message.startsWith(`${world.pawns.find(p=>p.id===id)!.name} a mangé`))) { meals.set(id, meals.get(id)!+1); consumed += quantity; }
       for (const pawn of world.pawns) if (pawn.state==='sleeping' && pawn.need?.kind==='sleep' && pawn.need.bedId!==null) sleep.set(pawn.id,sleep.get(pawn.id)!+1);
       if (t % 50 === 0) {
         const context=JSON.stringify({seed,...colonySummary(world)});

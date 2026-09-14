@@ -1,0 +1,98 @@
+{
+  "date": "2026-09-14T01:33:25.360Z",
+  "mode": "compare",
+  "expireAt": 150,
+  "protocol": "Complete serialized checkpoints on each of three synthetic cooking camps; compare checks byte equality against pre-change capture. No timing claim.",
+  "results": [
+    {
+      "pawns": 3,
+      "tick": 1,
+      "bytes": 1896463,
+      "sha256": "94a8b2c52096567044f8f07e2d767272a6d788f9ce54ad848208ddc99fa0e94c"
+    },
+    {
+      "pawns": 3,
+      "tick": 149,
+      "bytes": 1898293,
+      "sha256": "be71bae43704887832ca3ab363a99beb2a9bf89578ff1046cef72c69567128be"
+    },
+    {
+      "pawns": 3,
+      "tick": 150,
+      "bytes": 1897209,
+      "sha256": "8e86eb0ba1be9603455e40fc1159f32be4ec3cda4359d370d4be8d0d3fdce76d"
+    },
+    {
+      "pawns": 3,
+      "tick": 151,
+      "bytes": 1897206,
+      "sha256": "cb219c5b4099c4adbd795d30a801dde2a9a82fc2b45ce2ee3070359418a91981"
+    },
+    {
+      "pawns": 3,
+      "tick": 300,
+      "bytes": 1897141,
+      "sha256": "e9c896efcf98d817074b4213be589535bfb05bc473c9afd0eab00804c9cf3a70"
+    },
+    {
+      "pawns": 30,
+      "tick": 1,
+      "bytes": 1899285,
+      "sha256": "2ea443afb4e3e4be8c8d575ac5d71f97a2e3ac155744e17fe32ebcb0e9b1deee"
+    },
+    {
+      "pawns": 30,
+      "tick": 149,
+      "bytes": 1913840,
+      "sha256": "b8c6d4c61af56647444d6715fac4733e9df3b831dab07208f10e84076137e5f5"
+    },
+    {
+      "pawns": 30,
+      "tick": 150,
+      "bytes": 1906428,
+      "sha256": "1eb927c4f66c9c3c9b8606cfda290c69163a12e7e158e77783f51cc49a825f82"
+    },
+    {
+      "pawns": 30,
+      "tick": 151,
+      "bytes": 1906351,
+      "sha256": "41d0898e8e92354e27981bd293190ef38375357d2e033c32167f16d6d8e98b26"
+    },
+    {
+      "pawns": 30,
+      "tick": 300,
+      "bytes": 1903898,
+      "sha256": "567764c29ab7b4854d9c9ab669c4db70166ae97388e99a9248c4e79c1f79a68b"
+    },
+    {
+      "pawns": 100,
+      "tick": 1,
+      "bytes": 1928595,
+      "sha256": "2f7858690afc0d19d87746bc1455b8ac90cb6f402c1f407eaab5342e9bb283ce"
+    },
+    {
+      "pawns": 100,
+      "tick": 149,
+      "bytes": 1977000,
+      "sha256": "9a458681f900c767f8410d7d3f3148857d70a52ec9238d407b45d5968c858389"
+    },
+    {
+      "pawns": 100,
+      "tick": 150,
+      "bytes": 1953108,
+      "sha256": "00113972eb388b8a967ceb1479c7582133c8c792d7bdd8667690c6a55320bb72"
+    },
+    {
+      "pawns": 100,
+      "tick": 151,
+      "bytes": 1952528,
+      "sha256": "14a77d33a2ec55c9a42ae9d3094abbb44f4bdd7e1f3d24c99308eb8517318059"
+    },
+    {
+      "pawns": 100,
+      "tick": 300,
+      "bytes": 1942370,
+      "sha256": "d84922d163c41151d7f218ced3d18cb492fffc9ea5ee8064c731dceb3da2463e"
+    }
+  ]
+}

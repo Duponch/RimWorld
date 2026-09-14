@@ -1,4 +1,4 @@
-# Aliments et nutrition — contrat courant V10
+# Aliments et nutrition — contrat courant V11
 
 Corpus : chapitres 4/10/11/14, CAT-005/011/015, SYS-076..078, TEST-076..078, CONST-001..007. [Recherche nutritionnelle](../research/food-items-reference.md) et [nouvelle vérification du choix alimentaire](../research/food-clearing-reference.md). Les nombres sont adaptés à notre horloge ; ils ne certifient pas tous les profils de RimWorld.
 
@@ -24,15 +24,17 @@ Les nouvelles parties commencent avec 18 repas de survie, répartis en piles de 
 
 Le profil adulte neutre classe les aliments frais avec un score de préférence moins la distance de Manhattan : repas simple +16, baies 0, ration −5, riz cru −82. Ce score choisit une cible accessible ; le trajet garde sa durée euclidienne. En cas d’égalité, l’ID départage de façon déterministe, adaptation locale explicitée dans la recherche. Un aliment préféré inaccessible ne masque pas les autres. Le porteur compare aussi son aliment tenu ; interrompre dépose sa cargaison de façon conservatrice.
 
+La [conservation V11](food-preservation.md) ajoute un bonus de 12 au score adulte quand la durée restante est strictement inférieure à une demi-journée. L’âge est conservé dans les transferts.
+
 Le profil historique conserve le choix par coût de trajet. Les récoltes de baies ne détruisent plus le buisson depuis V7 ; le riz, introduit en V8, est semé, récolté et ressemé. Voir [plantes](rocks-and-plants.md) et [culture](farming.md).
 
 ## Migration et frontières
 
 Les schémas V1–V4 sont validés avant migration. `foodRules: legacy` conserve 0,015 point/tick, les anciennes récoltes et portions à 35 points, sans transformer leurs stocks en rations plus riches. Les anciennes ingestions gardent progression et quantité un ; IDs, positions, cargaisons, chantiers et jauges ne changent pas. Ces objets apparaissent comme « Portion historique ». Les nouvelles parties utilisent `foodRules: adult`. Les deux profils sont explicites, sérialisés et testés ; aucune conversion silencieuse à la reprise. Tout nouveau producteur alimentaire passe son `ItemId` explicitement : le défaut `legacy-portion` des helpers est réservé à la compatibilité et aux anciennes fixtures.
 
-Le schéma courant est 10 ; les étapes antérieures sont validées avant migration. Identité d’objet inconnue, catégorie incohérente, capacité dépassée, quantité d’ingestion invalide ou engagements contradictoires provoquent un refus. Le worker n’adopte jamais une sauvegarde invalide.
+Le schéma courant est 11 ; les étapes antérieures sont validées avant migration. Identité d’objet inconnue, catégorie incohérente, capacité dépassée, quantité d’ingestion invalide ou engagements contradictoires provoquent un refus. Le worker n’adopte jamais une sauvegarde invalide.
 
-La première [recette de cuisine](cooking.md) transforme dix baies/riz en un repas simple. Conservation, intoxications, régimes, traits, compétences, repas personnel de secours et collecte de plusieurs piles pour un seul repas restent absents. Le classement présent couvre seulement les aliments et le profil ci-dessus.
+La première [recette de cuisine](cooking.md) transforme dix baies/riz en un repas simple. Intoxications, régimes, traits, compétences, repas personnel de secours et collecte de plusieurs piles pour un seul repas restent absents. Le classement présent couvre seulement les aliments et le profil ci-dessus.
 
 ## Validation
 

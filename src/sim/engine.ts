@@ -1,3 +1,4 @@
+import { expireFood } from './food-expiration.ts';
 export { queryJobStatus, queryPawnStatus } from './diagnostics.ts';
 import { processCooking } from './cooking.ts';
 import { applyBillCommand } from './cooking-commands.ts';
@@ -249,6 +250,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
   if (!Number.isInteger(ticks) || ticks < 0 || ticks > 100000) throw new Error('Tick count must be an integer between 0 and 100000.');
   for (let step = 0; step < ticks; step++) {
     world.tick++;
+    expireFood(world);
     burnFuel(world);
     scheduleGrowing(world);
     // Build only if this tick actually plans or moves. No cross-tick cache can hide

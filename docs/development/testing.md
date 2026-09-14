@@ -31,6 +31,7 @@ La matrice conserve [cinq familles F1–F5](../gameplay/systems-matrix.md#strat�
 
 | Scénarios du dépôt | Risques contrôlés |
 |---|---|
+| `food-preservation.test.ts` | Âges pondérés, transferts, ingestion/recette au seuil, sol saturé, 40 jours, migration et pertes groupées ; pilote et UI incluent ces données. |
 | `simulation.test.ts` | Priorités, transformations, annulations, besoins, propriété, corruption, reprise et soak multi-graines. Bilans et résultats métier, pas seulement hash. |
 | `world-generation.test.ts` | Déterminisme 32 bits, dimensions jusqu’à 250² et rectangles extrêmes, rivières/massifs, accès du départ, distributions, débuts de camp et corridor long. |
 | `spatial-contracts.test.ts`, `navigation-budget.test.ts` | Pile unique, capacité typée et matière conservée ; durées diagonales, coins, trafic et chemins. L’oracle de distances O(V²) des petites cartes ne réutilise ni file ni voisins du moteur ; 120 cartes comparent aussi les recherches ciblées au parcours complet. |

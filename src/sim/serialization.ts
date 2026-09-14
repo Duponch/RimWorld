@@ -1,4 +1,5 @@
 import { validateCooking } from './cooking-save.ts';
+import { initializePreservation, validatePreservation } from './food-preservation-save.ts';
 import { fuelCapacity, CAMPFIRE_CAPACITY } from './fuel.ts';
 import { initializeFarming, validateFarming } from './farming-save.ts';
 import { jobDuration } from './farming.ts';
@@ -26,9 +27,9 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 
 /** Structural validation first, cross-reference validation second; accepts arbitrary JSON without throwing. */
 export function validateWorld(input: unknown): string[] {
-  return validateSchema(input, 10);
+  return validateSchema(input, 11);
 }
-function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10): string[] {
+function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(input)) return ['World must be an object.'];
@@ -140,6 +141,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
   if (events.length > 80 || events.some(item => !record(item) || !integer(item.tick, 0, input.tick as number) || !oneOf(item.type, ['job', 'need', 'command']) || typeof item.message !== 'string' || item.message.length > 240)) errors.push('Invalid event log.');
   if (version >= 8 && !errors.length) errors.push(...validateFarming(input, size, ids));
   if(!errors.length)errors.push(...validateCooking(input,version,ids));
+  if(!errors.length)errors.push(...validatePreservation(input as unknown as World,version));
   if (errors.length) return errors;
   const world = input as unknown as World;
   if(version>=6)errors.push(...validateTravel(world));
@@ -316,6 +318,10 @@ export function deserializeWorld(serialized: string): World {
     const errors=validateSchema(input,9);if(errors.length)throw new Error(`Invalid version 9 save: ${errors.join(' ')}`);
     for(const pawn of (input as unknown as World).pawns){pawn.cooking=null;pawn.priorities.cook=2;}
     input.schemaVersion=10; // No old campfires: preserve all existing objects and tasks.
+  }
+  if(record(input)&&input.schemaVersion===10) {
+    const errors=validateSchema(input,10);if(errors.length)throw new Error(`Invalid version 10 save: ${errors.join(' ')}`);
+    initializePreservation(input as unknown as World);
   }
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`); return input as World;
 }

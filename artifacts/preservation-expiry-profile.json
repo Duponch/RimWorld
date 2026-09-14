@@ -1,0 +1,275 @@
+{
+  "date": "2026-09-14T01:30:40.792Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "map": "250x250 seed 42",
+  "expireAt": 150,
+  "conditions": "1 runs Ã— 300 ticks; setup, validation and diagnostic aggregation excluded; search-counter collection inside stepWorld is timed; needs active, all workers cook/build/haul/grow; no warmup (includes first assignments); expiry injection is a separate stress fixture, not an equivalent gameplay baseline",
+  "rows": [
+    {
+      "pawns": 100,
+      "ticks": 300,
+      "p50Ms": 30.661700000000565,
+      "p95Ms": 47.82230000000027,
+      "p99Ms": 76.67869999999994,
+      "maxMs": 80.92579999999998,
+      "hash": "20b46f1c",
+      "cooked": 0,
+      "expiryTickMs": 47.82230000000027,
+      "spoiled": {
+        "berries": 700,
+        "rice": 1500,
+        "simple-meal": 0
+      },
+      "crops": 120,
+      "walls": 15,
+      "activePawnTicks": {
+        "cook": 606,
+        "haul": 4290,
+        "grow": 6372,
+        "build": 2640,
+        "refuel": 2583
+      },
+      "remainingRaw": 0,
+      "remainingMeals": 0,
+      "searchTotals": {
+        "all": 1447,
+        "nearest": 342,
+        "full": 35,
+        "visited": 13102504,
+        "unreachedGroups": 0
+      },
+      "worst": [
+        {
+          "tick": 1,
+          "ms": 80.92579999999998,
+          "searches": [
+            {
+              "pawnId": 12418,
+              "mode": "all",
+              "visited": 12879,
+              "unreachedGroups": 0
+            },
+            {
+              "pawnId": 12419,
+              "mode": "all",
+              "visited": 12493,
+              "unreachedGroups": 0
+            },
+            {
+              "pawnId": 12420,
+              "mode": "all",
+              "visited": 12133,
+              "unreachedGroups": 0
+            },
+            {
+              "pawnId": 12421,
+              "mode": "all",
+              "visited": 11807,
+              "unreachedGroups": 0
+            },
+            {
+              "pawnId": 12422,
+              "mode": "all",
+              "visited": 11335,
+              "unreachedGroups": 0
+            },
+            {
+              "pawnId": 12423,
+              "mode": "all",
+              "visited": 9305,
+              "unreachedGroups": 0
+            },
+            {
+              "pawnId": 12424,
+              "mode": "all",
+              "visited": 9143,
+              "unreachedGroups": 0
+            },
+            {
+              "pawnId": 12425,
+              "mode": "all",
+              "visited": 9031,
+              "unreachedGroups": 0
+            }
+          ]
+        },
+        {
+          "tick": 154,
+          "ms": 80.63990000000013,
+          "searches": [
+            {
+              "pawnId": 12471,
+              "mode": "all",
+              "visited": 11722,
+              "unreachedGroups": 0
+            },
+            {
+              "pawnId": 12473,
+              "mode": "all",
+              "visited": 9027,
+              "unreachedGroups": 0
+            },
+            {
+              "pawnId": 12474,
+              "mode": "all",
+              "visited": 5541,
+              "unreachedGroups": 0
+            },
+            {
+              "pawnId": 12476,
+              "mode": "all",
+              "visited": 9199,
+              "unreachedGroups": 0
+            },
+            {
+              "pawnId": 12477,
+              "mode": "all",
+              "visited": 8165,
+              "unreachedGroups": 0
+            },
+            {
+              "pawnId": 12479,
+              "mode": "all",
+              "visited": 3612,
+              "unreachedGroups": 0
+            },
+            {
+              "pawnId": 12480,
+              "mode": "all",
+              "visited": 7735,
+              "unreachedGroups": 0
+            },
+            {
+              "pawnId": 12481,
+              "mode": "all",
+              "visited": 5680,
+              "unreachedGroups": 0
+            }
+          ]
+        },
+        {
+          "tick": 155,
+          "ms": 78.82340000000022,
+          "searches": [
+            {
+              "pawnId": 12473,
+              "mode": "all",
+              "visited": 9032,
+              "unreachedGroups": 0
+            },
+            {
+              "pawnId": 12474,
+              "mode": "all",
+              "visited": 5546,
+              "unreachedGroups": 0
+            },
+            {
+              "pawnId": 12475,
+              "mode": "all",
+              "visited": 5218,
+              "unreachedGroups": 0
+            },
+            {
+              "pawnId": 12476,
+              "mode": "all",
+              "visited": 9202,
+              "unreachedGroups": 0
+            },
+            {
+              "pawnId": 12477,
+              "mode": "all",
+              "visited": 7990,
+              "unreachedGroups": 0
+            },
+            {
+              "pawnId": 12478,
+              "mode": "all",
+              "visited": 6841,
+              "unreachedGroups": 0
+            },
+            {
+              "pawnId": 12479,
+              "mode": "all",
+              "visited": 3735,
+              "unreachedGroups": 0
+            },
+            {
+              "pawnId": 12480,
+              "mode": "all",
+              "visited": 7561,
+              "unreachedGroups": 0
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "profileAnalysis": {
+    "profile": "V8 CPU sampling; instrumented, approximate, not benchmark timings",
+    "expireFoodInclusiveMs": 4.079000000000001,
+    "expireFoodSamples": 7,
+    "topSelf": [
+      {
+        "function": "reachableCells",
+        "url": "file:///E:/Code/RimWorld/src/sim/pathfinding.ts",
+        "sampledMs": 3314.387999999994
+      },
+      {
+        "function": "cookingPlaceFree",
+        "url": "file:///E:/Code/RimWorld/src/sim/cooking-bills.ts",
+        "sampledMs": 1446.0670000000018
+      },
+      {
+        "function": "planWork",
+        "url": "file:///E:/Code/RimWorld/src/sim/work-planner.ts",
+        "sampledMs": 924.0059999999997
+      },
+      {
+        "function": "",
+        "url": "file:///E:/Code/RimWorld/src/sim/cooking-planner.ts",
+        "sampledMs": 494.1009999999998
+      },
+      {
+        "function": "(garbage collector)",
+        "url": "",
+        "sampledMs": 249.02199999999982
+      },
+      {
+        "function": "search",
+        "url": "file:///E:/Code/RimWorld/src/sim/work-planner.ts",
+        "sampledMs": 205.32099999999997
+      },
+      {
+        "function": "cellCapacity",
+        "url": "file:///E:/Code/RimWorld/src/sim/ground-placement.ts",
+        "sampledMs": 189.52600000000018
+      },
+      {
+        "function": "stepWorld",
+        "url": "file:///E:/Code/RimWorld/src/sim/engine.ts",
+        "sampledMs": 188.24700000000004
+      },
+      {
+        "function": "countedMeals",
+        "url": "file:///E:/Code/RimWorld/src/sim/cooking-bills.ts",
+        "sampledMs": 171.01100000000002
+      },
+      {
+        "function": "PathFrontier",
+        "url": "file:///E:/Code/RimWorld/src/sim/PathFrontier.ts",
+        "sampledMs": 147.30799999999994
+      },
+      {
+        "function": "",
+        "url": "file:///E:/Code/RimWorld/src/sim/cooking-bills.ts",
+        "sampledMs": 113.40999999999998
+      },
+      {
+        "function": "blockedCells",
+        "url": "file:///E:/Code/RimWorld/src/sim/pathfinding.ts",
+        "sampledMs": 108.25699999999999
+      }
+    ]
+  }
+}

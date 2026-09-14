@@ -19,6 +19,7 @@ export function queryJobStatus(world: World, job: Job): JobDiagnostic {
 export function queryPawnStatus(world: World, pawn: Pawn): { code: string; reason: string } {
   if(pawn.cooking) {
     const task=pawn.cooking;
+    if(task.phase==='interrupted')return {code:'cooking-interrupted',reason:'Ingrédient perdu ; attend une case libre pour déposer la cargaison restante.'};
     if(task.phase==='work')return {code:'cooking',reason:`Prépare un repas simple (${Math.floor(task.progress/COOK_TICKS*100)} %).`};
     if(task.phase==='output')return {code:'cooking-output',reason:task.storageId===null?'Porte le repas préparé vers un dépôt au sol.':'Porte le repas préparé vers sa réserve.'};
     const placed=task.ingredients.filter(i=>i.stage==='placed').reduce((n,i)=>n+i.quantity,0);

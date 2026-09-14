@@ -1,3 +1,4 @@
+import { copyRot } from './food-preservation.ts';
 import { nutritionOf, ITEM_DEFINITIONS } from './items.ts';
 import { adjacent } from './pathfinding.ts';
 import { reservedSource } from './materials.ts';
@@ -22,7 +23,7 @@ export function processEating(world: World, pawn: Pawn, context: NeedContext): v
     } else {
       if (world.piles.length >= 32768 || !Number.isSafeInteger(world.nextId + 1)) { context.release(); return; }
       pile.quantity -= task.quantity; task.carryPileId = world.nextId++;
-      world.piles.push({ id: task.carryPileId, kind: 'food', item: pile.item, quantity: task.quantity, owner: { type: 'pawn', pawnId: pawn.id } });
+      world.piles.push({ id: task.carryPileId, kind: 'food', item: pile.item, quantity: task.quantity, owner: { type: 'pawn', pawnId: pawn.id }, ...copyRot(pile) });
     }
     task.phase = 'choose-spot'; pawn.path = []; pawn.state = 'moving'; pawn.needCooldown = 0;
     return;

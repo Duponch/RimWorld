@@ -30,6 +30,6 @@ Une nouvelle liberté fonctionnelle doit préciser sa référence, son comportem
 
 ## Cuisine et limites actuelles
 
-Le [contrat V10](../development/cooking.md) livre feu, combustible, factures et repas simple avec leurs interactions physiques. La [recherche](../research/cooking-reference.md) documente conversion du temps, recharge par unités entières, dépôt sur la grille, comptage immédiat et paramètres de facture encore partiels. Chaleur, lumière fonctionnelle, compétence, intoxication et conservation ne sont pas implicites.
+Le [contrat V10](../development/cooking.md) livre feu, combustible, factures et repas simple avec leurs interactions physiques. La [recherche](../research/cooking-reference.md) documente conversion du temps, recharge par unités entières, dépôt sur la grille, comptage immédiat et paramètres de facture encore partiels. Chaleur, lumière fonctionnelle, compétence et intoxication ne sont pas implicites. La [conservation V11](../development/food-preservation.md) ajoute les âges thermiques et la pourriture à température constante ; exposition et chaîne du froid restent ouvertes.
 
 Les anciennes décisions d’implémentation V7/V8/V9 restent dans les [ADR de simulation](../decisions/simulation.md) et de [présentation](../decisions/presentation.md). Leur inventaire de manques à la date de rédaction ne remplace pas l’[état courant](implementation-status.md).

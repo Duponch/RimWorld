@@ -1,4 +1,5 @@
 import { groundCapacity, planGroundPlacement } from './ground-placement.ts';
+import { freshRot, mergeRot, rotAge } from './food-preservation.ts';
 import { ITEM_DEFINITIONS, legacyItem } from './items.ts';
 import type { ItemId } from './items.ts';
 import { MAX_STACK } from './definitions.ts';
@@ -55,11 +56,12 @@ export function addMaterial(world: World, kind: MaterialKind, quantity: number, 
     if (!quantity) break;
     if (pile.item !== item || !sameOwner(pile.owner, owner)) continue;
     const moved = Math.min(limit - pile.quantity, quantity);
+    mergeRot(pile, moved, 0, world.tick);
     pile.quantity += moved; quantity -= moved;
   }
   while (quantity > 0) {
     const moved = Math.min(limit, quantity);
-    world.piles.push({ id: world.nextId++, kind, item, quantity: moved, owner: { ...owner } });
+    world.piles.push({ id: world.nextId++, kind, item, quantity: moved, owner: { ...owner }, ...freshRot(item, world.tick) });
     quantity -= moved;
   }
   refreshStock(world);
@@ -76,7 +78,7 @@ export function transferPile(world:World,pile:MaterialPile,owner:MaterialOwner):
   const carrier=pile.owner.type==='pawn'?pile.owner.pawnId:undefined;
   if(owner.type==='ground'&&groundCapacity(world,owner,pile.item,carrier)<pile.quantity)return false;
   const target=world.piles.find(p=>p!==pile&&p.item===pile.item&&sameOwner(p.owner,owner)&&p.quantity+pile.quantity<=ITEM_DEFINITIONS[pile.item].stackLimit);
-  if(target){target.quantity+=pile.quantity;world.piles.splice(world.piles.indexOf(pile),1);}else pile.owner={...owner};
+  if(target){mergeRot(target,pile.quantity,rotAge(pile,world.tick),world.tick);target.quantity+=pile.quantity;world.piles.splice(world.piles.indexOf(pile),1);}else pile.owner={...owner};
   refreshStock(world);return true;
 }
 export function reservedSource(world: World, pileId: number, exceptPawn?: number): number {

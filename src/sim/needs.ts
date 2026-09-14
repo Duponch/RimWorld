@@ -5,7 +5,7 @@ import { reservedSource } from './materials.ts';
 import { mealQuantity, adultHungerFactor } from './items.ts';
 import { TICKS_PER_DAY } from './types.ts';
 import { processEating } from './eating.ts';
-import { foodScore, foodSearchGoals, selectFood } from './food-selection.ts';
+import { pileFoodScore, foodSearchGoals, selectFood } from './food-selection.ts';
 import { updateWellbeing } from './wellbeing.ts';
 import { footprintCells } from './definitions.ts';
 import type { Cell, Pawn, World } from './types.ts';
@@ -55,7 +55,7 @@ export function processNeeds(world: World, pawn: Pawn, context: NeedContext): bo
       if (!reach) return true; // Budget exhaustion must not be mistaken for inaccessibility.
       const best = selectFood(world, pawn, sources, reach);
       if (held || best) {
-        const useHeld = !!held && (!best || world.foodRules === 'legacy' || foodScore(held.item, 0) >= best.score);
+        const useHeld = !!held && (!best || world.foodRules === 'legacy' || pileFoodScore(world, held, 0) >= best.score);
         const selected = useHeld ? held! : sources.find(pile => pile.id === best!.id)!;
         const quantity = mealQuantity(pawn, selected, selected.quantity - reservedSource(world, selected.id, pawn.id));
         if (!context.release()) return true; // Deposits cargo at the actor, preserving its identity.

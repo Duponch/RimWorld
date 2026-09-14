@@ -89,3 +89,7 @@ Date : 14 septembre 2026. Le profil V10 confirme que la boucle de voisins reste 
 Une file avec masque de seaux non vides a été mesurée puis écartée : son gain supplémentaire était trop faible/incertain pour retenir la complexité. La congestion fonctionnelle reste ouverte ; la [relecture des collisions](../development/spatial-motion-storage.md#relecture-de-la-circulation--14-septembre-2026) confirme que notre occupation exclusive est plus stricte que la référence.
 
 Les diagnostics quittent `engine.ts` pour des requêtes pures. Les libellés cuisine/recharge et motifs de facture décrivent uniquement des faits connus ; ni recherche de chemin sur le thread de rendu ni mutation de simulation. Aucun changement de schéma : ces textes et le masque temporaire ne sont pas persistants.
+
+## ADR-026 — Âge alimentaire ancré et interruption conservatrice
+
+Décision du 14 septembre 2026. [Référence vérifiée](../research/food-preservation-reference.md), [contrat V11](../development/food-preservation.md). Le climat constant permet de calculer l’âge depuis un ancrage, sans réécrire toutes les piles par tick. Les fusions utilisent les quantités réelles ; expiration avant action empêche consommation ou recette fantôme. Un chef dont la cargaison survivante ne peut être déposée conserve une tâche interrompue valide, sans référence à l’ingrédient disparu. V10 migre frais au tick chargé puisque son âge historique est inconnu. Les futures températures devront intégrer les périodes thermiques ; aucune file d’événements d’expiration n’est introduite sans coût mesuré.

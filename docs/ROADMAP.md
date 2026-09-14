@@ -6,13 +6,13 @@
 
 RimWorld de base d’abord, extensions après G5. Grille plane en 3D low poly, interactions physiques, organisation de l’interface de référence. Le [corpus utilisateur](research/reference-adoption.md) définit la cible par défaut ; chaque mécanique exige une vérification récente. Les adaptations sont [explicites](gameplay/decisions.md). Les algorithmes restent libres sous les contrats et budgets mesurés.
 
-**G0 est en consolidation, G1 partiel.** Le camp dispose de récolte, portage, stockage, constructions, repas et couchages physiques, tables et culture de riz. V10 ajoute feu de camp, combustible physique et factures de repas simples à la chaîne agricole et alimentaire. Schéma 10 et migrations V1–V9. Cartes par défaut 250², rendu GPU, déplacements temporisés, ciel jour/nuit et deux projections sont livrés avec les limites de leurs contrats.
+**G0 est en consolidation, G1 partiel.** Le camp dispose de récolte, portage, stockage, constructions, repas et couchages physiques, tables et culture de riz. V10 a ajouté feu, combustible et factures ; V11 ajoute fraîcheur, pourriture et reprise des tâches affectées. Schéma 11 et migrations V1–V10. Cartes par défaut 250², rendu GPU, déplacements temporisés, ciel jour/nuit et deux projections sont livrés avec les limites de leurs contrats.
 
 ## Prochains lots
 
-1. **Consolider la première cuisine G1 livrée** : suivi des diagnostics et de la charge, puis conservation des aliments. Autres recettes, postes, filtres avancés et compétences restent ouverts ; le feu ne chauffe pas encore les pièces.
+1. **Poursuivre la survie G1** : cuisine, diagnostics et conservation à climat fixe sont livrés ; prioriser horaires et politiques utiles aux besoins. Autres recettes, postes, filtres avancés et compétences restent ouverts ; le feu ne chauffe pas encore les pièces.
 2. **Consolidation G0 liée aux boucles** : cases de travail, congestion, diagnostics d’accès et coûts des replis de navigation. Le nouvel audit de cuisine identifie des recherches trop larges et des capacités recalculées. Les optimisations conservent les empreintes et résultats métier du scénario court ; les budgets à cent acteurs restent à consolider.
-3. **Survie G1** : conservation alimentaire, horaires, politiques et statistiques utiles. Faire interagir les systèmes présents avant de multiplier le catalogue.
+3. **Survie G1** : horaires, politiques et statistiques utiles ; température variable et chaîne du froid restent G2. Faire interagir les systèmes présents avant de multiplier le catalogue.
 
 La documentation est reclassée en contrats courants, recherches, sources originales, décisions et preuves historiques. Les prochains ajouts enrichissent les scénarios de colonie existants ; les lots de tests sont regroupés selon les contrats touchés.
 
@@ -34,7 +34,7 @@ Contrats livrés : définitions immuables ciblées, propriété unique, pile au 
 
 Agriculture et croissance, récolte renouvelable, cuisine avec recettes et files de fabrication, conservation des aliments, couchages réservés et trajets vers les lits, horaires et vrais besoins. Les relations de temps et de ressources doivent créer des arbitrages lisibles. Introduire traits et compétences seulement avec leurs effets mesurables.
 
-Le corpus précise cette tranche : croissance intégrée sur le temps favorable, factures avec critères d'ingrédients et de comptage, repas réellement accessibles/transportés/ingérés, besoins séparés des jobs qui les satisfont. Ajouter l'explication des statistiques sur les premières valeurs effectivement utilisées. L'expiration simple des aliments arrive ici ; les effets des pièces, du refroidissement et de l'électricité relèvent de G2.
+Le corpus précise cette tranche : croissance intégrée sur le temps favorable, factures avec critères d'ingrédients et de comptage, repas réellement accessibles/transportés/ingérés, besoins séparés des jobs qui les satisfont. Ajouter l'explication des statistiques sur les premières valeurs effectivement utilisées. L'expiration des trois aliments périssables est livrée ici ; les effets des pièces, du refroidissement et de l'électricité relèvent de G2.
 
 **Acceptation :** colonie autonome plusieurs jours avec alimentation produite et consommée ; effets vérifiables de compétence, distance, stock insuffisant et interruption. Le tutoriel doit expliquer les raisons d'un échec de survie.
 

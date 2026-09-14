@@ -1,3 +1,4 @@
+import { withoutPreservation } from './scenarios/legacy-food';
 import { expect, test } from 'vitest';
 import * as THREE from 'three/webgpu';
 import { createWorld, applyCommand, stepWorld, serializeWorld, deserializeWorld, validateWorld } from '../src/sim/index';
@@ -65,9 +66,9 @@ test('growers clear mixed stacks without storage: reservations, physical trips, 
   sealed.pawns=sealed.pawns.slice(0,1);Object.assign(sealed.pawns[0]!,{x:2,z:2,hunger:100,rest:100,priorities:{grow:1,haul:0,gather:0,build:0, cook: 0 }});
   addGroundMaterial(sealed,'wood',10,{x:3,z:2});applyCommand(sealed,{type:'area',action:'growing',from:{x:0,z:0},to:{x:7,z:7}});
   stepWorld(sealed,100);expect(sealed.pawns[0]!.haul).toBeNull();expect(sealed.piles[0]!.owner).toEqual({type:'ground',x:3,z:2});expect(validateWorld(sealed)).toEqual([]);
-  const old=JSON.parse(serializeWorld(world));old.schemaVersion=8;for(const p of old.pawns){delete p.cooking;delete p.priorities.cook;}
-  const migrated=deserializeWorld(JSON.stringify(old));expect(migrated.schemaVersion).toBe(10);
-  old.schemaVersion=10;for(const p of old.pawns){p.cooking=null;p.priorities.cook=2;}expect(serializeWorld(migrated)).toBe(JSON.stringify(old));
+  const old=JSON.parse(serializeWorld(world));old.schemaVersion=8;withoutPreservation(old);for(const p of old.pawns){delete p.cooking;delete p.priorities.cook;}
+  const migrated=deserializeWorld(JSON.stringify(old));expect(migrated.schemaVersion).toBe(11);
+  old.schemaVersion=10;for(const p of old.pawns){p.cooking=null;p.priorities.cook=2;}expect(migrated).toEqual(deserializeWorld(JSON.stringify(old)));
 });
 
 test('renewable bush: conditions, strict threshold, physical yield, repeated harvest, cutting and exact saves',()=>{
@@ -182,7 +183,7 @@ test('growing policies, interrupted sowing, migration and resident crop slots pr
 
   const old=fixture();old.tick=14000;Object.assign(old.resources[0]!,{growth:.3,growthTick:0});
   const acquired=legacyPlantGrowth(old,old.resources[0]!);
-  const oldSave=JSON.parse(JSON.stringify(old));oldSave.schemaVersion=7;delete oldSave.growingZones;delete oldSave.growingCursor;delete oldSave.environment;
+  const oldSave=JSON.parse(JSON.stringify(old));oldSave.schemaVersion=7;withoutPreservation(oldSave);delete oldSave.growingZones;delete oldSave.growingCursor;delete oldSave.environment;
   for(const pawn of oldSave.pawns){delete pawn.priorities.grow;delete pawn.priorities.cook;delete pawn.cooking;}
   const migrated=deserializeWorld(JSON.stringify(oldSave));
   expect(plantGrowth(migrated,migrated.resources[0]!)).toBe(acquired);expect(migrated.growingZones).toEqual([]);
@@ -204,7 +205,7 @@ test('full floor, migration, snapshot immutability and resident fruit disappear/
   const rng=full.rng,checkpoint={...full.resources[0]!};
   expect(applyCommand(full,{type:'designate',kind:'harvest',x:3,z:2}).ok).toBe(true);stepWorld(full,100);
   expect(full.jobs).toHaveLength(1);expect(full.resources[0]).toEqual(checkpoint);expect(full.rng).toBe(rng);expect(full.stock.food).toBe(0);
-  const old=fixture(),legacy=JSON.parse(serializeWorld(old));legacy.schemaVersion=6;for(const p of legacy.pawns){delete p.cooking;delete p.priorities.cook;}legacy.resources[0].amount=14;
+  const old=fixture(),legacy=JSON.parse(serializeWorld(old));legacy.schemaVersion=6;withoutPreservation(legacy);for(const p of legacy.pawns){delete p.cooking;delete p.priorities.cook;}legacy.resources[0].amount=14;
   const migrated=deserializeWorld(JSON.stringify(legacy));expect(migrated.resources[0]).toMatchObject({id:legacy.resources[0].id,amount:14,growth:1,growthTick:0});
   for(const patch of [{growth:NaN,growthTick:0},{growth:.3},{growth:.3,growthTick:1},{growth:1.1,growthTick:0}]) {
     const invalid=JSON.parse(serializeWorld(old));Object.assign(invalid.resources[0],patch);
