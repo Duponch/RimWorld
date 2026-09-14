@@ -22,7 +22,11 @@ export function planCommandDrops(world:World,command:Command):DropPlan|null {
     const zone=world.stockpiles.find(z=>same(z,command));if(zone)zones.add(zone.id);
   } else if(command.type==='priority'&&command.value===0) {
     const pawn=world.pawns.find(p=>p.id===command.pawnId),job=world.jobs.find(j=>j.id===pawn?.jobId);
-    if(pawn&&((pawn.haul&&command.work===haulingWork(pawn.haul.destination))||(job&&workType(job)===command.work)))pawns.add(pawn.id);
+    if(pawn&&((pawn.haul&&command.work===haulingWork(pawn.haul.destination))||(job&&workType(job)===command.work)||(pawn.cooking&&command.work==='cook')))pawns.add(pawn.id);
+  } else if(command.type==='bill-remove'||command.type==='bill-update') {
+    for(const pawn of world.pawns)if(pawn.cooking?.billId===command.billId&&pawn.cooking.stationId===command.structureId)pawns.add(pawn.id);
+  } else if(command.type==='refuel-policy' && !command.enabled) {
+    for(const pawn of world.pawns)if(pawn.haul?.destination.type==='fuel'&&pawn.haul.destination.structureId===command.structureId)pawns.add(pawn.id);
   } else if(command.type==='assign-bed') {
     for(const pawn of world.pawns)if(pawn.need?.kind==='sleep'&&(pawn.bedId===command.bedId||pawn.id===command.pawnId))pawns.add(pawn.id);
   }
@@ -54,6 +58,6 @@ export function releaseWork(world:World,pawn:Pawn,plan?:DropPlan):boolean {
   if(held&&!commitDrop(world,held,pawn,plan))return false;
   const job=world.jobs.find(j=>j.id===pawn.jobId);
   if(job?.reservedBy===pawn.id){job.reservedBy=null;job.status='pending';if(job.kind==='sow')job.progress=0;}
-  pawn.jobId=null;pawn.haul=null;pawn.need=null;pawn.path=[];pawn.state='idle';pawn.planCooldown=20;pawn.needCooldown=20;
+  pawn.jobId=null;pawn.haul=null;pawn.cooking=null;pawn.need=null;pawn.path=[];pawn.state='idle';pawn.planCooldown=20;pawn.needCooldown=20;
   return true;
 }

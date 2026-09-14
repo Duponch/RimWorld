@@ -1,0 +1,201 @@
+{
+  "date": "2026-09-13T23:56:40.807Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "map": "250x250 seed 42",
+  "conditions": "1 runs × 300 ticks; setup/validation/diagnostics excluded; needs active, all workers cook/build/haul/grow; no warmup (includes first assignments)",
+  "rows": [
+    {
+      "pawns": 30,
+      "ticks": 300,
+      "p50Ms": 1.1807999999999765,
+      "p95Ms": 26.4996000000001,
+      "p99Ms": 108.5652,
+      "maxMs": 133.6800999999998,
+      "hash": "ca1ce4f9",
+      "cooked": 7,
+      "crops": 36,
+      "walls": 5,
+      "activePawnTicks": {
+        "cook": 1202,
+        "haul": 2409,
+        "grow": 1989,
+        "build": 610,
+        "refuel": 582
+      },
+      "remainingRaw": 590,
+      "remainingMeals": 7,
+      "searchTotals": {
+        "all": 398,
+        "nearest": 154,
+        "full": 2,
+        "visited": 4089804,
+        "unreachedGroups": 670
+      },
+      "worst": [
+        {
+          "tick": 219,
+          "ms": 133.6800999999998,
+          "searches": [
+            {
+              "pawnId": 12426,
+              "mode": "all",
+              "visited": 40251,
+              "unreachedGroups": 2
+            },
+            {
+              "pawnId": 12432,
+              "mode": "all",
+              "visited": 40250,
+              "unreachedGroups": 2
+            },
+            {
+              "pawnId": 12433,
+              "mode": "all",
+              "visited": 40250,
+              "unreachedGroups": 2
+            },
+            {
+              "pawnId": 12435,
+              "mode": "all",
+              "visited": 40249,
+              "unreachedGroups": 2
+            },
+            {
+              "pawnId": 12436,
+              "mode": "all",
+              "visited": 40249,
+              "unreachedGroups": 2
+            },
+            {
+              "pawnId": 12439,
+              "mode": "all",
+              "visited": 40249,
+              "unreachedGroups": 2
+            },
+            {
+              "pawnId": 12440,
+              "mode": "all",
+              "visited": 40249,
+              "unreachedGroups": 2
+            },
+            {
+              "pawnId": 12441,
+              "mode": "all",
+              "visited": 40249,
+              "unreachedGroups": 2
+            }
+          ]
+        },
+        {
+          "tick": 262,
+          "ms": 131.63459999999986,
+          "searches": [
+            {
+              "pawnId": 12439,
+              "mode": "all",
+              "visited": 40260,
+              "unreachedGroups": 1
+            },
+            {
+              "pawnId": 12440,
+              "mode": "all",
+              "visited": 40260,
+              "unreachedGroups": 1
+            },
+            {
+              "pawnId": 12441,
+              "mode": "all",
+              "visited": 40260,
+              "unreachedGroups": 1
+            },
+            {
+              "pawnId": 12442,
+              "mode": "all",
+              "visited": 40260,
+              "unreachedGroups": 1
+            },
+            {
+              "pawnId": 12444,
+              "mode": "all",
+              "visited": 40260,
+              "unreachedGroups": 1
+            },
+            {
+              "pawnId": 12446,
+              "mode": "all",
+              "visited": 40259,
+              "unreachedGroups": 1
+            },
+            {
+              "pawnId": 12447,
+              "mode": "all",
+              "visited": 40259,
+              "unreachedGroups": 1
+            },
+            {
+              "pawnId": 12418,
+              "mode": "all",
+              "visited": 40259,
+              "unreachedGroups": 1
+            }
+          ]
+        },
+        {
+          "tick": 263,
+          "ms": 113.0030999999999,
+          "searches": [
+            {
+              "pawnId": 12419,
+              "mode": "all",
+              "visited": 1,
+              "unreachedGroups": 54
+            },
+            {
+              "pawnId": 12420,
+              "mode": "all",
+              "visited": 40260,
+              "unreachedGroups": 1
+            },
+            {
+              "pawnId": 12422,
+              "mode": "all",
+              "visited": 40260,
+              "unreachedGroups": 1
+            },
+            {
+              "pawnId": 12423,
+              "mode": "all",
+              "visited": 40260,
+              "unreachedGroups": 1
+            },
+            {
+              "pawnId": 12426,
+              "mode": "all",
+              "visited": 40259,
+              "unreachedGroups": 1
+            },
+            {
+              "pawnId": 12427,
+              "mode": "all",
+              "visited": 40259,
+              "unreachedGroups": 1
+            },
+            {
+              "pawnId": 12429,
+              "mode": "all",
+              "visited": 40259,
+              "unreachedGroups": 1
+            },
+            {
+              "pawnId": 12430,
+              "mode": "all",
+              "visited": 40259,
+              "unreachedGroups": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

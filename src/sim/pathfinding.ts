@@ -24,7 +24,7 @@ export function blockedCells(world: World): Uint8Array {
   return blocked;
 }
 
-export interface Reachability { parents: Int32Array; costs: Float64Array; start: number }
+export interface Reachability { parents: Int32Array; costs: Float64Array; start: number; visited:number; unreachedGroups:number }
 export const routeCost = (world: World, path: Cell[], reach: Reachability): number => path.length ? reach.costs[cellIndex(world,path[path.length-1]!.x,path[path.length-1]!.z)]! : 0;
 /** Solid 3D corners require both side cells clear, including temporary traffic. */
 export function canStep(world:World,from:Cell,to:Cell,blocked:Uint8Array,occupied:Set<number>):boolean {
@@ -49,17 +49,38 @@ export function routeToCell(world: World, target: Cell, reachable: Reachability)
 
 /** Full flood by default. With goals, the map is partial beyond the first goal
  * layer and may only be used for nearest-goal selection (or that single target).
- * No reached goal means a complete flood, so remaining candidates are knowable. */
-export function reachableCells(world: World, start: Cell, blocked: Uint8Array, occupied: Set<number>, goals?: ReadonlySet<number>): Reachability {
+ * No reached goal means a complete flood, so remaining candidates are knowable.
+ * With allGroups, finish the cheapest layer of the LAST reached group. Every
+ * group must have one reachable alternative; an unreachable nonempty group
+ * exhausts the component. This supports ranking all work targets exactly. */
+export function reachableCells(world: World, start: Cell, blocked: Uint8Array, occupied: Set<number>, goals?: ReadonlySet<number>, allGroups?:readonly ReadonlySet<number>[]): Reachability {
   const size=world.width*world.height, parents=new Int32Array(size).fill(-2), costs=new Float64Array(size).fill(Infinity);
   const startIndex=cellIndex(world,start.x,start.z), heap=new PathFrontier(costs), settled=new Uint8Array(size);
   costs[startIndex]=0;parents[startIndex]=-1;heap.push(startIndex);
-  let goalCost=Infinity;
+  let goalCost=Infinity,remaining=0,visited=0;
+  const membership=new Map<number,number[]>(),reached=new Set<number>();
+  const free=(index:number)=>index===startIndex||!blocked[index]&&!occupied.has(index);
+  const hasEntry=(index:number)=>index===startIndex
+    ||index>=world.width&&free(index-world.width)||index+world.width<size&&free(index+world.width)
+    ||index%world.width>0&&free(index-1)||index%world.width+1<world.width&&free(index+1);
+  if(allGroups)for(let group=0;group<allGroups.length;group++) {
+    let viable=false;
+    for(const index of allGroups[group]!)if(index>=0&&index<size&&free(index)&&hasEntry(index)) {
+      const members=membership.get(index);if(members)members.push(group);else membership.set(index,[group]);viable=true;
+    }
+    if(viable)remaining++; // No free endpoint is already known to be unreachable.
+  }
+  if(allGroups&&!remaining)goalCost=0;
   const directions=[[0,-1],[1,0],[0,1],[-1,0],[1,-1],[1,1],[-1,1],[-1,-1]] as const;
   for(let index=heap.pop();index!==undefined;index=heap.pop()) {
     if(costs[index]!>goalCost) break;
     settled[index]=1;
+    visited++;
     if(goals?.has(index)) goalCost=costs[index]!;
+    if(allGroups) {
+      for(const group of membership.get(index)??[])if(!reached.has(group)){reached.add(group);remaining--;}
+      if(!remaining)goalCost=costs[index]!;
+    }
     const x=index%world.width,z=Math.floor(index/world.width);
     for(const [dx,dz] of directions) {
       const nx=x+dx,nz=z+dz,next=cellIndex(world,nx,nz);
@@ -71,7 +92,7 @@ export function reachableCells(world: World, start: Cell, blocked: Uint8Array, o
   }
   // Discovered but unfinalized nodes must not masquerade as reachable nearest goals.
   if(goalCost<Infinity) for(let i=0;i<size;i++) if(!settled[i]) {parents[i]=-2;costs[i]=Infinity;}
-  return { parents,costs,start:startIndex };
+  return { parents,costs,start:startIndex,visited,unreachedGroups:remaining };
 }
 
 export function routeToJob(world: World, target: Cell & { kind?: string; orientation?: 0 | 1 | 2 | 3; footprint?: 'standard' | 'legacy-single' }, reachable: Reachability, allowTarget = false): Cell[] | null {

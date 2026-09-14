@@ -31,6 +31,10 @@ function cellCapacity(world: World, cell: Cell, item: ItemId, limit: number, exc
     if (!reserved || reserved.item!==item) return 0;
     capacity -= task.quantity;
   }
+  for(const pawn of world.pawns)if(pawn.id!==exceptPawn&&pawn.cooking) {
+    for(const i of pawn.cooking.ingredients)if(i.stage!=='placed'&&i.cell.x===cell.x&&i.cell.z===cell.z) {if(i.item!==item)return 0;capacity-=i.quantity;}
+    if(zone&&pawn.cooking.phase==='output'&&pawn.cooking.storageId===zone.id){if(item!=='simple-meal')return 0;capacity--;}
+  }
   return Math.max(0,capacity);
 }
 export function groundCapacity(world: World, cell: Cell, item: ItemId, exceptPawn?: number): number {

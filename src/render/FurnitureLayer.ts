@@ -1,6 +1,7 @@
 import type * as THREE from 'three/webgpu';
 import type { BoxBatches } from './BoxBatches';
 import type { World } from '../sim/types';
+import { campfireParts } from './campfire-parts';
 import { footprintCells } from '../sim/definitions';
 import { WORLD_SCALE } from '../world/scale';
 import type { Placement } from './primitives';
@@ -37,7 +38,10 @@ export function buildFurniture(world: World, group: THREE.Group, cutaway: boolea
         woodParts.push({ x: x + lx * Math.cos(ry) + lz * Math.sin(ry), z: z + lz * Math.cos(ry) - lx * Math.sin(ry), y: (height - 0.09) / 2, sx: 0.09, sy: height - 0.09, sz: 0.09, ry });
       }
     }
+    const fires=campfireParts(world);
+    batches.set(group,'campfire-flames',fires.flames,'border',false);
     batches.set(group, 'furniture', [
+      ...fires.base,
       ...woodParts.map(p => ({ ...p, color: 0xa38559 })),
       ...walls.map(p => ({ ...p, sx: 0.96, sy: wallHeight - 0.09, sz: 0.96, color: 0xa6916e })),
       ...wallCaps.map(p => ({ ...p, sx: 1.01, sy: 0.09, sz: 1.01, color: 0xc3af86 })),

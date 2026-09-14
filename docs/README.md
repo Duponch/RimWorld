@@ -31,6 +31,7 @@ La référence est RimWorld de base, transposé en 3D. Une description de RimWor
 |---|---|---|
 | Objets, transport, constructions | [Logistique](development/material-logistics.md), [sol et mouvement](development/spatial-motion-storage.md) | [Adoption chap. 9–10](research/reference-adoption.md) |
 | Repas, repos et confort | [Besoins](development/needs.md), [repas à table](development/dining.md), [aliments](development/food-items.md) | [Mobilier/repas](research/dining-reference.md), [choix alimentaire](research/food-clearing-reference.md) |
+| Cuisine et combustible | [Factures, ingrédients, feu](development/cooking.md) | [Recettes et ravitaillement](research/cooking-reference.md) |
 | Plantes et cultures | [Agriculture](development/farming.md), [rochers et plantes](development/rocks-and-plants.md) | [Agriculture](research/farming-reference.md), [croissance sauvage](research/plant-growth.md) |
 | Carte et environnement | [Génération](development/world-generation.md), [échelle](development/map-scale.md), [jour/nuit](development/daylight-camera.md) | [Espace 3D](research/spatial-design.md), [audit environnement](research/environment-review.md) |
 | Rendu et personnages | [Cycle des ressources GPU](development/render-lifecycle.md), [équipement/portraits prévus](development/character-presentation.md) | [Choix GPU](research/rendering-and-performance.md), [observation visuelle](research/visual-reference.md) |

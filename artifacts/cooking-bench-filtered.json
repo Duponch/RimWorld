@@ -1,0 +1,72 @@
+{
+  "date": "2026-09-13T23:54:46.047Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "map": "250x250 seed 42",
+  "conditions": "1 runs × 300 ticks; setup/validation/diagnostics excluded; needs active, all workers cook/build/haul/grow; no warmup (includes first assignments)",
+  "rows": [
+    {
+      "pawns": 3,
+      "ticks": 300,
+      "p50Ms": 0.016100000000022874,
+      "p95Ms": 1.308499999999981,
+      "p99Ms": 3.0774000000000115,
+      "maxMs": 9.456299999999999,
+      "hash": "68b4d149",
+      "cooked": 2,
+      "crops": 6,
+      "walls": 1,
+      "activePawnTicks": {
+        "cook": 256,
+        "haul": 166,
+        "grow": 135,
+        "build": 69,
+        "refuel": 41
+      },
+      "remainingRaw": 90,
+      "remainingMeals": 2
+    },
+    {
+      "pawns": 30,
+      "ticks": 300,
+      "p50Ms": 1.1360999999999422,
+      "p95Ms": 25.146400000000085,
+      "p99Ms": 109.95260000000007,
+      "maxMs": 134.35500000000002,
+      "hash": "ca1ce4f9",
+      "cooked": 7,
+      "crops": 36,
+      "walls": 5,
+      "activePawnTicks": {
+        "cook": 1202,
+        "haul": 2409,
+        "grow": 1989,
+        "build": 610,
+        "refuel": 582
+      },
+      "remainingRaw": 590,
+      "remainingMeals": 7
+    },
+    {
+      "pawns": 100,
+      "ticks": 300,
+      "p50Ms": 29.112699999999677,
+      "p95Ms": 102.1158000000014,
+      "p99Ms": 117.95749999999862,
+      "maxMs": 119.02380000000085,
+      "hash": "2cf27817",
+      "cooked": 12,
+      "crops": 120,
+      "walls": 16,
+      "activePawnTicks": {
+        "cook": 3371,
+        "haul": 8509,
+        "grow": 6288,
+        "build": 2530,
+        "refuel": 2584
+      },
+      "remainingRaw": 2080,
+      "remainingMeals": 12
+    }
+  ]
+}

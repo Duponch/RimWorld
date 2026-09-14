@@ -2,7 +2,7 @@ import { expect, test } from 'vitest';
 import { createWorld } from '../src/sim/engine';
 import { foodSearchGoals, selectFood } from '../src/sim/food-selection';
 import type { MaterialPile } from '../src/sim/types';
-import { routeCost, blockedCells, interactionGoals, reachableCells, routeToJob } from '../src/sim/pathfinding';
+import { routeCost, blockedCells, interactionGoals, reachableCells, routeToJob, routeToCell } from '../src/sim/pathfinding';
 
 test('goal-bounded floods retain the full-flood nearest food and exact path across ties, walls and unreachable goals', () => {
   let random = 123456789, reduced = 0;
@@ -15,6 +15,15 @@ test('goal-bounded floods retain the full-flood nearest food and exact path acro
     const blocked = blockedCells(w), occupied = new Set<number>();
     const full = reachableCells(w, start, blocked, occupied);
     const bounded = reachableCells(w, start, blocked, occupied, interactionGoals(w, foods));
+    const groups=foods.map(food=>interactionGoals(w,[food]));
+    const all=reachableCells(w,start,blocked,occupied,undefined,groups);
+    for(const food of foods)expect(routeToJob(w,food,all,true),`all groups seed ${run} target ${food.id}`).toEqual(routeToJob(w,food,full,true));
+    const exact=reachableCells(w,start,blocked,occupied,undefined,foods.map(f=>new Set([f.z*16+f.x])));
+    for(const food of foods)expect(routeToCell(w,food,exact),`exact groups seed ${run} target ${food.id}`).toEqual(routeToCell(w,food,full));
+    const traffic=new Set(Array.from({length:40},()=>draw()%256).filter(i=>i!==34));
+    // A free target can still be completely enclosed by transient occupants.
+    const trafficFull=reachableCells(w,start,blocked,traffic),trafficGroups=reachableCells(w,start,blocked,traffic,undefined,groups);
+    for(const food of foods)expect(routeToJob(w,food,trafficGroups,true),`traffic groups seed ${run} target ${food.id}`).toEqual(routeToJob(w,food,trafficFull,true));
     const select = (reach: typeof full) => foods.flatMap(food => {
       const path = routeToJob(w, food, reach, true); return path ? [{ id: food.id, path }] : [];
     }).sort((a, b) => routeCost(w,a.path,reach) - routeCost(w,b.path,reach) || a.id - b.id)[0] ?? null;

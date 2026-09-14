@@ -6,12 +6,12 @@
 
 RimWorld de base d’abord, extensions après G5. Grille plane en 3D low poly, interactions physiques, organisation de l’interface de référence. Le [corpus utilisateur](research/reference-adoption.md) définit la cible par défaut ; chaque mécanique exige une vérification récente. Les adaptations sont [explicites](gameplay/decisions.md). Les algorithmes restent libres sous les contrats et budgets mesurés.
 
-**G0 est en consolidation, G1 partiel.** Le camp dispose de récolte, portage, stockage, constructions, repas et couchages physiques, tables et culture de riz. V9 ajoute dégagement des piles avant semis, choix alimentaire neutre et recherches de trajet ciblées. Schéma 9 et migrations V1–V8. Cartes par défaut 250², rendu GPU, déplacements temporisés, ciel jour/nuit et deux projections sont livrés avec les limites de leurs contrats.
+**G0 est en consolidation, G1 partiel.** Le camp dispose de récolte, portage, stockage, constructions, repas et couchages physiques, tables et culture de riz. V10 ajoute feu de camp, combustible physique et factures de repas simples à la chaîne agricole et alimentaire. Schéma 10 et migrations V1–V9. Cartes par défaut 250², rendu GPU, déplacements temporisés, ciel jour/nuit et deux projections sont livrés avec les limites de leurs contrats.
 
 ## Prochains lots
 
-1. **Cuisine G1** : feu de camp, combustible livré, recettes/factures, ingrédients physiquement rassemblés, transformation et dépôt. Préserver interruption, réservations, bilans et sauvegarde. Les autres stations viendront avec leurs matériaux et systèmes.
-2. **Consolidation G0 liée aux boucles** : cases de travail, congestion, diagnostics d’accès et coûts des replis de navigation. L’audit à trente cultivateurs conserve des pointes CPU non expliquées ; profiler avant de choisir une optimisation.
+1. **Consolider la première cuisine G1 livrée** : suivi des diagnostics et de la charge, puis conservation des aliments. Autres recettes, postes, filtres avancés et compétences restent ouverts ; le feu ne chauffe pas encore les pièces.
+2. **Consolidation G0 liée aux boucles** : cases de travail, congestion, diagnostics d’accès et coûts des replis de navigation. Le nouvel audit de cuisine identifie des recherches trop larges et des capacités recalculées. Les optimisations conservent les empreintes et résultats métier du scénario court ; les budgets à cent acteurs restent à consolider.
 3. **Survie G1** : conservation alimentaire, horaires, politiques et statistiques utiles. Faire interagir les systèmes présents avant de multiplier le catalogue.
 
 La documentation est reclassée en contrats courants, recherches, sources originales, décisions et preuves historiques. Les prochains ajouts enrichissent les scénarios de colonie existants ; les lots de tests sont regroupés selon les contrats touchés.

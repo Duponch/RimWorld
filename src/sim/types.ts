@@ -1,28 +1,29 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 9 as const;
+export const SCHEMA_VERSION = 10 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
 export type Terrain = 'grass' | 'soil' | 'water' | 'rock';
 export type ResourceKind = 'tree' | 'berries' | 'rock' | 'rice';
 export type MaterialKind = 'wood' | 'food';
-export type StructureKind = 'wall' | 'bed' | 'table' | 'stool';
+export type StructureKind = 'wall' | 'bed' | 'table' | 'stool' | 'campfire';
 export type JobKind = 'chop' | 'harvest' | 'cut' | 'sow' | StructureKind;
-export type WorkType = 'gather' | 'build' | 'haul' | 'grow';
+export type WorkType = 'gather' | 'build' | 'haul' | 'grow' | 'cook';
 export type Orientation = 0 | 1 | 2 | 3;
 export type Footprint = 'standard' | 'legacy-single';
 export type PawnState = 'idle' | 'moving' | 'working' | 'sleeping' | 'hungry' | 'eating';
 export interface Cell { x: number; z: number }
 export interface Tile { terrain: Terrain }
 export interface Resource extends Cell { id: number; kind: ResourceKind; amount: number; growth?: number; growthTick?: number }
-export interface Structure extends Cell { id: number; kind: StructureKind; orientation: Orientation; footprint: Footprint }
+export interface Structure extends Cell { bills?: import('./cooking-types.ts').CookingBill[]; fuel?: import('./fuel.ts').FuelState; id: number; kind: StructureKind; orientation: Orientation; footprint: Footprint }
 export interface Stock { wood: number; food: number }
 export type MaterialOwner = ({ type: 'ground' } & Cell) | { type: 'pawn'; pawnId: number } | { type: 'job'; jobId: number };
 export interface MaterialPile { id: number; kind: MaterialKind; item: ItemId; quantity: number; owner: MaterialOwner }
 export interface StockpileCell extends Cell { id: number; filters: Record<MaterialKind, boolean>; priority: number; capacity: number }
 export interface GrowingZone { id: number; cells: number[]; plant: 'rice'; allowSow: boolean; allowCut: boolean }
-export type HaulDestination = { type: 'stockpile'; stockpileId: number } | { type: 'job'; jobId: number } | ({ type: 'aside' } & Cell);
+export type HaulDestination = { type: 'fuel'; structureId: number; forCooking?: boolean } | { type: 'stockpile'; stockpileId: number } | { type: 'job'; jobId: number } | ({ type: 'aside' } & Cell);
 export interface HaulTask {
+  serviceProgress?: number;
   sourcePileId: number;
   quantity: number;
   phase: 'pickup' | 'deliver';
@@ -58,6 +59,7 @@ export interface Pawn extends Cell {
   memories: Memory[];
   jobId: number | null;
   haul: HaulTask | null;
+  cooking: import('./cooking-types.ts').CookingTask | null;
   need: NeedTask | null;
   /** Persistent ownership, distinct from an active sleep reservation. */
   bedId: number | null;
@@ -103,8 +105,13 @@ export type AreaAction = 'chop' | 'harvest' | 'cut' | 'cancel' | 'stockpile' | '
 export interface StorageSettings { filters?: Record<MaterialKind, boolean>; priority?: number; capacity?: number }
 export interface AreaCommand extends StorageSettings { type: 'area'; action: AreaAction; from: Cell; to: Cell }
 export type Command =
+  | { type: 'bill-add'; structureId: number }
+  | { type: 'bill-update'; structureId: number; billId: number; settings: import('./cooking-types.ts').BillSettings }
+  | { type: 'bill-remove'; structureId: number; billId: number }
+  | { type: 'bill-move'; structureId: number; billId: number; direction: -1 | 1 }
   | DesignateCommand
   | AreaCommand
+  | { type: 'refuel-policy'; structureId: number; enabled: boolean }
   | { type: 'growing-policy'; zoneId: number; allowSow: boolean; allowCut: boolean }
   | { type: 'assign-bed'; bedId: number; pawnId: number | null }
   | ({ type: 'cancel' } & Cell)

@@ -1,3 +1,5 @@
+import { validateCooking } from './cooking-save.ts';
+import { fuelCapacity, CAMPFIRE_CAPACITY } from './fuel.ts';
 import { initializeFarming, validateFarming } from './farming-save.ts';
 import { jobDuration } from './farming.ts';
 import { workType } from './work-planner.ts';
@@ -24,9 +26,9 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 
 /** Structural validation first, cross-reference validation second; accepts arbitrary JSON without throwing. */
 export function validateWorld(input: unknown): string[] {
-  return validateSchema(input, 9);
+  return validateSchema(input, 10);
 }
-function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9): string[] {
+function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(input)) return ['World must be an object.'];
@@ -74,6 +76,8 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9):
           else if(Math.abs(m.end-m.start-TRAVEL_TICKS*edgeLength(m.from as unknown as import('./types.ts').Cell,m.to as unknown as import('./types.ts').Cell) )>1e-7 || Math.abs((item.moveCooldown as number)-Math.max(0,m.end-(input.tick as number)))>1e-7) errors.push('Inconsistent travel duration.');
         }
         const haul = item.haul;
+        if(record(haul)&&haul.serviceProgress!==undefined&&(version<10||!record(haul.destination)||haul.destination.type!=='fuel'||haul.phase!=='deliver'||!integer(haul.serviceProgress,1,23)))errors.push('Invalid refuel interaction progress.');
+        if(record(haul)&&record(haul.destination)&&haul.destination.forCooking!==undefined&&(haul.destination.type!=='fuel'||typeof haul.destination.forCooking!=='boolean'))errors.push('Invalid cooking refuel purpose.');
         if (!legacyV2) {
           if (!(item.bedId === null || integer(item.bedId, 1)) || !integer(item.needCooldown, 0, 20)) errors.push('Invalid need cadence or bed ownership.');
           const need = item.need;
@@ -97,7 +101,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9):
           if (record(haul) && haul.pickupCell!==undefined && (version<6 || haul.phase!=='deliver' || !record(haul.pickupCell) || !coord(haul.pickupCell))) errors.push('Invalid pickup facing cell.');
           if (!record(haul) || !integer(haul.sourcePileId, 1) || !integer(haul.quantity, 1, CARRY_CAPACITY) || !oneOf(haul.phase, ['pickup', 'deliver'])
             || !(haul.carryPileId === null || integer(haul.carryPileId, 1)) || !record(haul.destination)
-            || !(haul.destination.type === 'job' ? integer(haul.destination.jobId, 1) : haul.destination.type === 'stockpile' ? integer(haul.destination.stockpileId, 1) : version >= 9 && haul.destination.type === 'aside' && coord(haul.destination))) errors.push('Invalid haul task.');
+            || !(haul.destination.type === 'job' ? integer(haul.destination.jobId, 1) : haul.destination.type === 'fuel' && version>=10 ? integer(haul.destination.structureId,1) : haul.destination.type === 'stockpile' ? integer(haul.destination.stockpileId, 1) : version >= 9 && haul.destination.type === 'aside' && coord(haul.destination))) errors.push('Invalid haul task.');
         }
       } else if (key === 'resources') {
         if (!oneOf(item.kind, ['tree', 'berries', 'rock', ...(version >= 8 ? ['rice'] : [])]) || !integer(item.amount, 1, 1000000)) errors.push('Invalid resource.');
@@ -105,8 +109,12 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9):
           if (version < 7 || !(item.kind === 'berries' || (version >= 8 && item.kind === 'rice')) || typeof item.growth !== 'number' || !Number.isFinite(item.growth) || item.growth < 0 || item.growth > 1 || !integer(item.growthTick, 0, input.tick as number)) errors.push('Invalid plant growth checkpoint.');
         }
       } else if (key === 'structures' || key === 'jobs') {
-        if (!oneOf(item.kind, key === 'structures' ? (version < 4 ? ['wall', 'bed'] : ['wall', 'bed', 'table', 'stool']) : (version < 4 ? ['chop', 'harvest', 'wall', 'bed'] : ['chop', 'harvest', ...(version >= 7 ? ['cut'] : []), ...(version >= 8 ? ['sow'] : []), 'wall', 'bed', 'table', 'stool'])) || !integer(item.orientation, 0, 3)
+        if (!oneOf(item.kind, key === 'structures' ? (version < 4 ? ['wall', 'bed'] : ['wall', 'bed', 'table', 'stool', ...(version>=10?['campfire']:[])]) : (version < 4 ? ['chop', 'harvest', 'wall', 'bed'] : ['chop', 'harvest', ...(version >= 7 ? ['cut'] : []), ...(version >= 8 ? ['sow'] : []), 'wall', 'bed', 'table', 'stool', ...(version>=10?['campfire']:[])])) || !integer(item.orientation, 0, 3)
           || !oneOf(item.footprint, ['standard', 'legacy-single']) || (item.footprint === 'legacy-single' && item.kind !== 'bed')) errors.push('Invalid structure definition or footprint.');
+        if (key==='structures' && item.kind==='campfire') {
+          const f=item.fuel;
+          if(version<10||!record(f)||!integer(f.ticks,0,CAMPFIRE_CAPACITY)||!integer(f.burned,0,input.tick as number)||typeof f.autoRefuel!=='boolean')errors.push('Invalid campfire fuel.');
+        } else if(item.fuel!==undefined)errors.push('Unexpected fuel state.');
         if (key === 'jobs' && (!oneOf(item.status, ['pending', 'active']) || !(item.reservedBy === null || integer(item.reservedBy, 1)) || !stock(item.escrow) || !integer(item.progress, 0, 119))) errors.push('Invalid job.');
       } else if (key === 'piles') {
         if (!oneOf(item.kind, ['wood', 'food']) || !integer(item.quantity, 1, MAX_STACK) || !record(item.owner)) errors.push('Invalid material pile.');
@@ -114,6 +122,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9):
           if (version >= 5) {
             if (typeof item.item !== 'string' || !Object.hasOwn(ITEM_DEFINITIONS, item.item)) errors.push('Unknown item definition.');
             else {
+              if(version<10&&item.item==='simple-meal')errors.push('Legacy save contains cooked meal.');
               const definition = ITEM_DEFINITIONS[item.item as keyof typeof ITEM_DEFINITIONS];
               if (definition.kind !== item.kind || (item.quantity as number) > definition.stackLimit) errors.push('Invalid item category or stack limit.');
             }
@@ -130,6 +139,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9):
   const events = input.events as unknown[];
   if (events.length > 80 || events.some(item => !record(item) || !integer(item.tick, 0, input.tick as number) || !oneOf(item.type, ['job', 'need', 'command']) || typeof item.message !== 'string' || item.message.length > 240)) errors.push('Invalid event log.');
   if (version >= 8 && !errors.length) errors.push(...validateFarming(input, size, ids));
+  if(!errors.length)errors.push(...validateCooking(input,version,ids));
   if (errors.length) return errors;
   const world = input as unknown as World;
   if(version>=6)errors.push(...validateTravel(world));
@@ -159,15 +169,15 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9):
     const key = cellKey(pawn);
     if (pawnCells.has(key)) errors.push('Pawns overlap.'); pawnCells.add(key);
     if (['wall', 'table'].includes(structureCells.get(key)?.kind ?? '') || ['wall', 'table'].includes(jobCells.get(key)?.kind ?? '')) errors.push('Pawn occupies a wall target.');
-    if (Number(pawn.jobId !== null) + Number(pawn.haul !== null) + Number(!legacyV2 && pawn.need !== null) > 1) errors.push('Pawn has two simultaneous tasks.');
+    if (Number(version>=10&&!!pawn.cooking) + Number(pawn.jobId !== null) + Number(pawn.haul !== null) + Number(!legacyV2 && pawn.need !== null) > 1) errors.push('Pawn has two simultaneous tasks.');
     if (pawn.jobId !== null) {
       const job = jobById.get(pawn.jobId);
       if (!job || job.reservedBy !== pawn.id || job.status !== 'active') errors.push('Pawn/job reservation mismatch.');
       if (job && pawn.priorities[workType(job)] === 0) errors.push('Pawn assigned to disabled work.');
     }
     const owned = world.piles.filter(pile => pile.owner.type === 'pawn' && pile.owner.pawnId === pawn.id);
-    if (owned.length > 1 || (owned.length === 1 && pawn.haul?.phase !== 'deliver' && (legacyV2 || pawn.need?.kind !== 'eat' || pawn.need.phase === 'pickup'))) errors.push('Carried ownership mismatch.');
-    if (pawn.jobId !== null || pawn.haul !== null) { if (!['moving', 'working'].includes(pawn.state)) errors.push('Assigned pawn has incompatible state.'); }
+    if (owned.length > 1 || (owned.length === 1 && !(version >= 10 && pawn.cooking) && pawn.haul?.phase !== 'deliver' && (legacyV2 || pawn.need?.kind !== 'eat' || pawn.need.phase === 'pickup'))) errors.push('Carried ownership mismatch.');
+    if (pawn.jobId !== null || pawn.haul !== null || version >= 10 && pawn.cooking) { if (!['moving', 'working'].includes(pawn.state)) errors.push('Assigned pawn has incompatible state.'); }
     else if ((legacyV2 || pawn.need === null) && (pawn.path.length || ['moving', 'working'].includes(pawn.state))) errors.push('Unassigned pawn has path or work state.');
     if (!legacyV2) {
       if (pawn.bedId !== null) {
@@ -217,7 +227,9 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9):
       if (haul.phase === 'pickup') {
         if (haul.carryPileId !== null || !pile || pile.owner.type !== 'ground' || reservedSource(world, pile.id) > pile.quantity) errors.push('Invalid source quantity reservation.');
       } else if (!pile || pile.owner.type !== 'pawn' || pile.owner.pawnId !== pawn.id || pile.quantity !== haul.quantity || owned[0]?.id !== haul.carryPileId) errors.push('Invalid carried quantity.');
-      if (haul.destination.type === 'job') {
+      if (haul.destination.type === 'fuel') {
+        if(pile?.item!=='wood'||fuelCapacity(world,haul.destination.structureId,pawn.id)<haul.quantity)errors.push('Invalid fuel delivery reservation.');
+      } else if (haul.destination.type === 'job') {
         const job = jobById.get(haul.destination.jobId);
         if (!job || pile?.kind !== 'wood' || deliveredStock(world, job.id).wood + reservedDestination(world, haul.destination) > JOB_WOOD_COST[job.kind]) errors.push('Invalid construction delivery reservation.');
       } else if (haul.destination.type === 'aside') {
@@ -299,6 +311,11 @@ export function deserializeWorld(serialized: string): World {
     const errors = validateSchema(input, 8); if (errors.length) throw new Error(`Invalid version 8 save: ${errors.join(' ')}`);
     // Existing paths, reservations and meals continue; only future decisions change.
     input.schemaVersion = 9;
+  }
+  if(record(input)&&input.schemaVersion===9) {
+    const errors=validateSchema(input,9);if(errors.length)throw new Error(`Invalid version 9 save: ${errors.join(' ')}`);
+    for(const pawn of (input as unknown as World).pawns){pawn.cooking=null;pawn.priorities.cook=2;}
+    input.schemaVersion=10; // No old campfires: preserve all existing objects and tasks.
   }
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`); return input as World;
 }

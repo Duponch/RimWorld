@@ -102,3 +102,7 @@ Le [contrat sol, mouvement et rendu distant](../development/spatial-motion-stora
 ## Suivi V7 : plantes et présentation rocheuse
 
 Chapitre 12 / SYS-071, SYS-072, SYS-075 : croissance, maturité, récolte distincte de coupe et fertilité adoptées pour le buisson sauvage ; climat et autres espèces différés. [Recherche critique](plant-growth.md) et [contrat](../development/rocks-and-plants.md). SYS-072 ne signifie pas que toute coupe donne zéro ressource : la vérification du travail commun confirme le rendement possible avant destruction. Chapitres 5/29 : empreinte logique inchangée, rochers facettés et surfaces partagées adaptés à la 3D ; tests existants de rétention enrichis.
+
+## V10 : première production alimentaire
+
+Chapitre 11/32, SYS-062..064, TEST-062..064, UI-025 et scène A : [recherche cuisine/combustible](cooking-reference.md), [contrat](../development/cooking.md). Adopter rassemblement physique, transformation transactionnelle, modes/ordre des factures et reprise exacte ; adapter l’horloge, le réservoir entier et la place de service 3D. Différer les paramètres avancés de facture, autres recettes, ouvrages persistants, compétences, intoxication et conservation. SYS-065..067 ne sont pas clôturés. La distinction produit inachevé/travail actif corrige une lecture trop générale du corpus : chaque recette a son contrat d’interruption.

@@ -35,6 +35,7 @@ export function chooseDiningPlace(world: World, pawn: Pawn, context: NeedContext
     if (other.id === pawn.id) continue;
     reserved.add(key(other));
     if (other.need?.kind === 'eat' && other.need.dining) reserved.add(key(other.need.dining.target));
+    if(other.cooking)reserved.add(key(other.cooking.spot));
     if (other.need?.kind === 'sleep') reserved.add(key(other.need.target));
   }
   // Index surfaces once per decision, rather than rescanning all furniture per seat.

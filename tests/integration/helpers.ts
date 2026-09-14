@@ -33,9 +33,9 @@ export async function panel(page: Page, name: 'architect' | 'work' | 'menu') {
   await expect(page.locator(`#${name}-panel`)).toBeVisible();
 }
 
-export async function tool(page: Page, name: 'select' | 'chop' | 'harvest' | 'cut' | 'cancel' | 'wall' | 'bed' | 'table' | 'stool' | 'stockpile' | 'remove-stockpile' | 'growing' | 'remove-growing') {
+export async function tool(page: Page, name: 'select' | 'chop' | 'harvest' | 'cut' | 'cancel' | 'wall' | 'bed' | 'table' | 'stool' | 'campfire' | 'stockpile' | 'remove-stockpile' | 'growing' | 'remove-growing') {
   await panel(page, 'architect');
-  const category = name === 'wall' ? 'structure' : name === 'bed' || name === 'table' || name === 'stool' ? 'furniture' : name === 'stockpile' || name === 'remove-stockpile' || name === 'growing' || name === 'remove-growing' ? 'zones' : 'orders';
+  const category = name === 'campfire' ? 'temperature' : name === 'wall' ? 'structure' : name === 'bed' || name === 'table' || name === 'stool' ? 'furniture' : name === 'stockpile' || name === 'remove-stockpile' || name === 'growing' || name === 'remove-growing' ? 'zones' : 'orders';
   await page.locator(`[data-category="${category}"]`).click();
   await page.locator(`[data-tool="${name}"]`).click();
 }

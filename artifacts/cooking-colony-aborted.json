@@ -1,0 +1,7 @@
+{
+  "date": "2026-09-13T23:46:46Z",
+  "command": "vitest run tests/colony-player.test.ts tests/bridge-snapshot.test.ts tests/navigation-budget.test.ts",
+  "status": "manually_stopped",
+  "reason": "Colony scenario still running after approximately three minutes; investigate short CPU profile before retry. Bridge and navigation reported passed; colony has no result.",
+  "method": "Ctrl-C to this command session only"
+}

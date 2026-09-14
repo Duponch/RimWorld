@@ -1,4 +1,4 @@
-# Noyau de simulation — contrat courant V9
+# Noyau de simulation — contrat courant V10
 
 Corpus : chapitres 2/4/5/9/10/21/30/32, SYS-005/020..022/041..061/113..117. G0 reste en consolidation. Ce document décrit les frontières ; les règles détaillées font autorité dans leurs contrats de domaine.
 
@@ -10,11 +10,11 @@ Les ressources, piles, propriétaires, tâches, besoins, trajets, événements, 
 
 ## Commandes et travaux
 
-`types.ts` définit le protocole des désignations unitaires/rectangulaires, réserves, cultures et politiques, priorités et attribution de lit. `applyCommand` valide avant mutation et retourne un motif de refus. L’UI et l’aperçu utilisent les mêmes règles de placement.
+`types.ts` définit le protocole des désignations unitaires/rectangulaires, réserves, cultures et politiques, factures de cuisine, combustible, priorités et attribution de lit. `applyCommand` valide avant mutation et retourne un motif de refus. L’UI et l’aperçu utilisent les mêmes règles de placement.
 
-Les priorités Collecte/Construction/Transport/Culture vont de 1 haute à 4 basse, 0 désactivée. La désactivation interrompt la famille avec conservation des matières. Le dégagement agricole dépend de Culture, même sans Transport. Voir [logistique](material-logistics.md), [rectangles](area-designations.md) et [agriculture](farming.md).
+Les priorités Collecte/Construction/Transport/Culture/Cuisine vont de 1 haute à 4 basse, 0 désactivée. La désactivation interrompt la famille avec conservation des matières. Le dégagement agricole dépend de Culture, même sans Transport. Voir [logistique](material-logistics.md), [rectangles](area-designations.md) et [agriculture](farming.md).
 
-Un colon ne réalise qu’une tâche physique à la fois : travail, transport ou besoin. Les intentions générées sont revalidées avant exécution. Consommer un aliment ou des matériaux exige d’avoir effectué les phases matérielles ; aucune récompense n’est accordée à une simple réservation. Voir [besoins](needs.md), [repas](dining.md) et [aliments](food-items.md).
+Un colon ne réalise qu’une tâche physique à la fois : travail, transport, cuisine ou besoin. Les intentions générées sont revalidées avant exécution. Consommer un aliment ou des matériaux exige d’avoir effectué les phases matérielles ; aucune récompense n’est accordée à une simple réservation. Voir [besoins](needs.md), [repas](dining.md) et [aliments](food-items.md).
 
 ## Matière et bilans
 
@@ -26,10 +26,10 @@ Une pile porte son ItemId, sa quantité et un propriétaire unique : sol, colon 
 
 Dijkstra CPU pondéré sur huit voisins, coins solides exclus ; les durées d’arêtes sont euclidiennes. Les recherches de travail, repas et livraisons sont ciblées ; un repli peut explorer tout le composant accessible. La grille statique est préparée au premier besoin du tick. Occupation transitoire, trajet et invalidation restent distincts.
 
-Huit recherches et 32 768 couples logistiques par tick ; curseur de parcours persistant. Ces plafonds n’incluent pas tous les coûts et ne garantissent pas un tick constant. Les colons inactifs peuvent céder le passage ; les conflits entre agents actifs et la réservation des cases de service restent ouverts. Le [laboratoire GPU](../research/gpu-navigation.md) ne dirige pas les colons. [Mesures courantes](validation.md).
+Huit recherches et 32 768 couples logistiques par tick ; curseur de parcours persistant. Ces plafonds n’incluent pas tous les coûts et ne garantissent pas un tick constant. Les colons inactifs peuvent céder le passage ; les conflits entre agents actifs et la réservation générale des cases de service restent ouverts ; les postes de cuisine réservent déjà leur place. Le [laboratoire GPU](../research/gpu-navigation.md) ne dirige pas les colons. [Mesures courantes](validation.md).
 
 ## Sauvegardes
 
-Schéma courant 9, migration explicite depuis V1–V8 après validation de chaque étape. Les anciens profils alimentaires et emprises de lits sont préservés ; une vieille carte n’est ni agrandie ni régénérée. V8→V9 conserve les tâches et routes en cours ; les nouvelles décisions utilisent les règles V9.
+Schéma courant 10, migration explicite depuis V1–V9 après validation de chaque étape. Les anciens profils alimentaires et emprises de lits sont préservés ; une vieille carte n’est ni agrandie ni régénérée. V9→V10 conserve les tâches et routes en cours, ajoute Cuisine 2 et aucune tâche de cuisine rétroactive. Voir [le contrat de production](cooking.md).
 
 Le validateur refuse types/bornes invalides, IDs ou propriétaires incohérents, engagements excessifs, dérivés contradictoires et trajets non conformes. Une route devenue obstruée peut être sauvegardée : le moteur la réévalue. Une sauvegarde invalide ne remplace jamais la partie. JSON limité à 16 millions de caractères, clés navigateur historiques préservées. Les migrations de domaine sont décrites dans les contrats correspondants ; manifeste, journal complet et export/import restent ouverts.

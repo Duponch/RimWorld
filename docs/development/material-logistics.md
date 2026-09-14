@@ -4,7 +4,7 @@ Depuis V9, le [dégagement des cultures](farming.md#dégagement-matériel-v9) aj
 
 Références : rapport utilisateur chapitres 2, 4, 5, 9 et 10 ; SYS-005/020..022/041..061 ; scénarios A et familles F1/F2/F3. La [liste des écarts](../gameplay/decisions.md) distingue les règles retenues des limites temporaires. Les résultats exécutés sont consignés dans [validation.md](validation.md).
 
-Extension V5 : [objets alimentaires](food-items.md), identité `item`, quantités réservées et limites de pile par définition. Les migrations V2/V3 décrites ci-dessous restent datées ; le contrat de continuation courant est V9.
+Extension V5 : [objets alimentaires](food-items.md), identité `item`, quantités réservées et limites de pile par définition. Les migrations V2/V3 décrites ci-dessous restent datées ; le contrat de continuation courant est V10.
 
 ## État autoritaire et vues
 
@@ -42,7 +42,7 @@ Les piles et réserves utilisent des lots de rendu par chunk, actualisés selon 
 
 ## Persistance et compatibilité
 
-Le schéma courant 9 conserve piles, propriétaires, stockages, orientation, phases de transport, routes et cadences, ainsi que les [besoins physiques](needs.md) ajoutés depuis V2. La sérialisation vérifie formes, quantités, références croisées, emprises et capacités réservées avant de produire du JSON. Un chargement invalide ne remplace pas le monde courant du worker.
+Le schéma courant 10 conserve piles, propriétaires, stockages, orientation, phases de transport, routes et cadences, ainsi que les [besoins physiques](needs.md) ajoutés depuis V2. La sérialisation vérifie formes, quantités, références croisées, emprises et capacités réservées avant de produire du JSON. Un chargement invalide ne remplace pas le monde courant du worker.
 
 La migration du schéma 1 valide d'abord l'ancien état. Son stock global devient des piles déterministes près du camp ; les anciens matériaux en escrow sont affectés aux chantiers correspondants. Les priorités déjà choisies sont conservées et Transport reçoit une valeur de départ. Les anciens lits et plans de lits conservent leur emprise `legacy-single`. Terrain, seed, tick et identités existantes restent présents ; aucune régénération du paysage n'est permise. La continuation après migration suit les nouvelles règles, sans prétendre rejouer exactement l'ancienne simulation à stock global.
 

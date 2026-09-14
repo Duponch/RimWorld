@@ -1,6 +1,6 @@
 # Catalogue de contenu : couverture connue
 
-État du 13 septembre 2026. Le jeu de base complet, y compris ses centaines d'objets et leurs variantes, reste la cible. Le bilan par [système](implementation-status.md) ne suffit pas à suivre ce contenu. Ce document distingue ce que contient notre référence et ce qui existe dans le jeu développé.
+État du 14 septembre 2026. Le jeu de base complet, y compris ses centaines d'objets et leurs variantes, reste la cible. Le bilan par [système](implementation-status.md) ne suffit pas à suivre ce contenu. Ce document distingue ce que contient notre référence et ce qui existe dans le jeu développé.
 
 ## Le corpus ne contient pas un inventaire exhaustif à jour
 
@@ -18,9 +18,11 @@ L’[audit du 13 septembre](../research/environment-review.md) confirme que les 
 
 | Registre / identifiant local | Usage livré | Limites |
 |---|---|---|
-| Objet `wood` | Bois récolté, piles, portage et construction ; CAT-005. | Espèces, masse, combustible, dégâts et autres propriétés non implémentés. |
+| Objet `wood` | Bois récolté, piles, portage, construction et combustible du feu ; CAT-005. | Espèces, masse, autres combustibles, dégâts et autres propriétés non implémentés. |
 | Objet `berries` | Baies récoltées, 0,05 nutrition/unité, piles de 75, ingestion de plusieurs unités ; CAT-011. | Pourrissement et intoxication absents ; maturité et renouvellement du buisson livrés en V7. |
-| Objet et plante `rice` | Riz semé/récolté ; croissance, fertilité et lumière ; 6 unités mûres, pile de 75, nutrition 0,05, malus de repas cru. Première culture alimentaire, domaine SYS-070..072. | Cuisine, pourrissement, intoxication, santé du plant et compétences absents ; une seule culture sélectionnable. [Référence](../research/farming-reference.md). |
+| Objet et plante `rice` | Riz semé/récolté ; croissance, fertilité et lumière ; 6 unités mûres, pile de 75, nutrition 0,05, malus de repas cru. Première culture alimentaire, domaine SYS-070..072. | Autres recettes, pourrissement, intoxication, santé du plant et compétences absents ; une seule culture sélectionnable. [Référence](../research/farming-reference.md). |
+| Objet `simple-meal` | Repas simple cuisiné au feu : dix baies/riz, nutrition 0,9, pile dix, ingestion un ; première recette Core. [Source et contrat](../research/cooking-reference.md). | Autres ingrédients, conservation, compétence et intoxication absents. |
+| Structure `campfire` | 20 bois livrés, combustible initial, combustion/ravitaillement, factures de repas simple. | Chaleur, éclairage fonctionnel, pluie, sociabilité et dégâts absents ; autres postes différés. |
 | Objet `survival-meal` | Repas de survie du départ, 0,9 nutrition/unité, piles de dix ; CAT-015. | Recette, ingrédients, recherche et détérioration absents. Le scénario local donne 18 repas ; ce n'est pas Crashlanded. |
 | Objet `legacy-portion` | Compatibilité des sauvegardes V1–V4 : 0,35 nutrition/unité, piles de 75. | Ce n'est aucun objet de RimWorld ; absent des nouvelles parties. |
 | Ressources `tree`, `berries`, `rock` | Arbre générique, buisson générique, pierre au sol. | Pas un catalogue d'espèces ou de roches. Arbre abattable ; buisson persistant, récoltable selon maturité et supprimable par coupe ; minage absent. |

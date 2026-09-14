@@ -10,7 +10,7 @@ Le semis demande 17 ticks de notre horloge, puis crée un plant à croissance 0,
 
 Désactiver Semis laisse récolter le riz mûr, même avec Coupe désactivée. Sans semis, les autres plantes récoltables mûres peuvent être récoltées si Coupe est autorisée. Retirer une zone conserve les plantes ; seuls ses travaux automatiques sont annulés. Un ordre manuel reste distinct. Annuler un travail automatique sans modifier la zone permet sa redécouverte ultérieure.
 
-Le riz au sol rejoint les piles, réservations, transport et ingestion existants : pile de 75 maximum, nutrition 0,05 par unité, souvenir « mangé cru » −7 pendant un jour, cumulable avec le souvenir sans table. Cuisine et intoxications sont **absentes**. Les préférences alimentaires, compétences et traits restent également ouverts.
+Le riz au sol rejoint les piles, réservations, transport et ingestion existants : pile de 75 maximum, nutrition 0,05 par unité, souvenir « mangé cru » −7 pendant un jour, cumulable avec le souvenir sans table. La première [cuisine](cooking.md) transforme riz/baies en repas simples depuis V10. Intoxications, compétences et traits restent absents ; le [choix alimentaire neutre](food-items.md) est livré, ses modificateurs contextuels restent ouverts.
 
 ## Croissance et environnement
 

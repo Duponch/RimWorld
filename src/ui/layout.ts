@@ -5,7 +5,7 @@ const mapSizeLabels: Record<number, string> = { 32: 'terrain d’essai', 64: 'co
 
 export type Tool = 'select' | Exclude<JobKind, 'sow'> | 'cancel' | 'stockpile' | 'remove-stockpile' | 'growing' | 'remove-growing';
 export type Panel = 'architect' | 'work' | 'history' | 'menu' | null;
-export type ArchitectCategory = 'orders' | 'zones' | 'structure' | 'furniture';
+export type ArchitectCategory = 'orders' | 'zones' | 'structure' | 'furniture' | 'temperature';
 export const toolDefinitions: { id: Tool; icon: string; title: string; hint: string; key: string; category: ArchitectCategory }[] = [
   { id: 'select', icon: '↖', title: 'Inspecter', hint: 'Choisir une case ou un colon', key: 'Échap', category: 'orders' },
   { id: 'chop', icon: '♧', title: 'Abattre', hint: 'Cliquer ou tracer un rectangle sur les arbres à couper. Échap annule le tracé.', key: 'C', category: 'orders' },
@@ -15,6 +15,7 @@ export const toolDefinitions: { id: Tool; icon: string; title: string; hint: str
   { id: 'wall', icon: '▥', title: 'Mur', hint: '5 bois · une case libre · mur de 2,80 m', key: 'B', category: 'structure' },
   { id: 'bed', icon: '▰', title: 'Lit', hint: '8 bois livrés · empreinte 1 × 2 · Q / E pour tourner', key: 'L', category: 'furniture' },
   { id: 'table', icon: '▤', title: 'Table', hint: '28 bois livrés · 1 × 2 · placer des tabourets contre le bord · Q / E pour tourner', key: '', category: 'furniture' },
+  { id: 'campfire', icon: '♨', title: 'Feu de camp', hint: '20 bois livrés · combustible initial inclus · brûle 10 bois par jour', key: '', category: 'temperature' },
   { id: 'stool', icon: '⊓', title: 'Tabouret', hint: '25 bois livrés · 1 × 1 · une place par colon, adjacente à une table', key: '', category: 'furniture' },
   { id: 'growing', icon: '♧', title: 'Zone de culture', hint: 'Tracer un champ de riz. Semis sans graines et récolte à maturité, via le travail Culture.', key: '', category: 'zones' },
   { id: 'remove-growing', icon: '⊠', title: 'Retirer une culture', hint: 'Retirer la zone conserve les plantes déjà semées.', key: '', category: 'zones' },
@@ -59,7 +60,7 @@ export function gameLayout(): string {
       <div class="panel-heading"><h2>Architecte</h2><button data-close-panel aria-label="Fermer Architecte">×</button></div>
       <div class="architect-body"><nav class="architect-categories" aria-label="Catégories de construction">
         <button data-category="orders" class="active">Ordres</button><button data-category="zones">Zones</button>
-        <button data-category="structure">Structure</button><button disabled>Sols</button><button data-category="furniture">Meubles</button>
+        <button data-category="temperature">Température</button><button data-category="structure">Structure</button><button disabled>Sols</button><button data-category="furniture">Meubles</button>
         <button disabled>Production</button><button disabled>Énergie</button><button disabled>Sécurité</button><button disabled>Température</button>
       </nav><div class="architect-content">
         <div class="tools">${toolDefinitions.map(tool => `<button data-tool="${tool.id}" data-tool-category="${tool.category}" title="${tool.hint}" aria-label="${tool.title}" aria-pressed="false" class="tool"><span class="tool-icon">${tool.icon}</span><span>${tool.title}</span><kbd>${tool.key}</kbd></button>`).join('')}</div>
@@ -72,7 +73,7 @@ export function gameLayout(): string {
     <section id="work-panel" class="management-panel work-panel panel" aria-label="Travail" hidden>
       <div class="panel-heading"><h2>Travail</h2><button data-close-panel aria-label="Fermer Travail">×</button></div>
       <p>Priorités manuelles : <b>1</b> haute · <b>4</b> basse · <b>0</b> désactivée. Le transport livre aussi les chantiers.</p>
-      <div class="work-table-wrap"><table><thead><tr><th>Colon</th><th>Collecte</th><th>Construction</th><th>Transport</th><th>Culture</th><th>Activité</th></tr></thead><tbody id="work-rows"></tbody></table></div>
+      <div class="work-table-wrap"><table><thead><tr><th>Colon</th><th>Collecte</th><th>Construction</th><th>Transport</th><th>Culture</th><th>Cuisine</th><th>Activité</th></tr></thead><tbody id="work-rows"></tbody></table></div>
     </section>
     <section id="history-panel" class="management-panel history-panel panel" aria-label="Historique" hidden>
       <div class="panel-heading"><h2>Historique</h2><button data-close-panel aria-label="Fermer Historique">×</button></div>

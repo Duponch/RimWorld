@@ -83,6 +83,7 @@ export function reservedSource(world: World, pileId: number, exceptPawn?: number
   let quantity = 0;
   for (const pawn of world.pawns) {
     if (pawn.id === exceptPawn) continue;
+    for(const i of pawn.cooking?.ingredients??[])if(i.pileId===pileId&&i.stage!=='held')quantity+=i.quantity;
     if (pawn.haul?.phase === 'pickup' && pawn.haul.sourcePileId === pileId) quantity += pawn.haul.quantity;
     if (pawn.need?.kind === 'eat' && pawn.need.phase === 'pickup' && pawn.need.sourcePileId === pileId) quantity += pawn.need.quantity ?? 1;
   }
@@ -90,6 +91,7 @@ export function reservedSource(world: World, pileId: number, exceptPawn?: number
 }
 export function sameDestination(a: HaulDestination, b: HaulDestination): boolean {
   return a.type === b.type && (a.type === 'job' && b.type === 'job' ? a.jobId === b.jobId
+    : a.type === 'fuel' && b.type === 'fuel' ? a.structureId === b.structureId
     : a.type === 'stockpile' && b.type === 'stockpile' ? a.stockpileId === b.stockpileId
       : a.type === 'aside' && b.type === 'aside' && a.x === b.x && a.z === b.z);
 }

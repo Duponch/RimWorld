@@ -13,15 +13,16 @@ export interface Decision { reason: string; command: Command }
 export function playerDecisions(world: World): Decision[] {
   const cx = Math.floor(world.width / 2), cz = Math.floor(world.height / 2);
   const out: Decision[] = [];
-  const priorities = [{ gather: 1, build: 3, haul: 2, grow: 2 }, { gather: 3, build: 1, haul: 2, grow: 3 }, { gather: 2, build: 3, haul: 1, grow: 2 }] as const;
+  const priorities = [{ gather: 1, build: 3, haul: 2, grow: 2, cook:3 }, { gather: 3, build: 1, haul: 2, grow: 3, cook:3 }, { gather: 2, build: 3, haul: 2, grow: 2, cook:1 }] as const;
   world.pawns.forEach((pawn, i) => {
-    for (const work of ['gather', 'build', 'haul', 'grow'] as const) if (pawn.priorities[work] !== priorities[i % 3]![work]) {
-      out.push({ reason: 'Répartir collecte, construction et transport entre les trois colons.', command: { type: 'priority', pawnId: pawn.id, work, value: priorities[i % 3]![work] } });
+    for (const work of ['gather', 'build', 'haul', 'grow','cook'] as const) if (pawn.priorities[work] !== priorities[i % 3]![work]) {
+      out.push({ reason: 'Répartir collecte, construction, cuisine et transport entre les trois colons.', command: { type: 'priority', pawnId: pawn.id, work, value: priorities[i % 3]![work] } });
     }
   });
   const plans: DesignateCommand[] = [
     ...[[-3, 2], [0, 2], [3, 2]].map(([x, z]) => ({ type: 'designate' as const, kind: 'bed' as const, x: cx + x!, z: cz + z!, orientation: 0 as const })),
     { type: 'designate', kind: 'table', x: cx, z: cz - 2, orientation: 1 },
+    { type:'designate',kind:'campfire',x:cx-1,z:cz-1,orientation:0 },
     ...[[0, -3], [1, -3], [0, -1]].map(([x, z]) => ({ type: 'designate' as const, kind: 'stool' as const, x: cx + x!, z: cz + z! })),
     ...[-3, 3].flatMap(x => [-3, -2, -1].map(z => ({ type: 'designate' as const, kind: 'wall' as const, x: cx + x, z: cz + z }))),
   ];
@@ -31,14 +32,22 @@ export function playerDecisions(world: World): Decision[] {
     if (plan.kind === 'wall' && world.structures.filter(s => s.kind === 'stool').length < 3) continue;
     if (canDesignate(world, plan).ok) out.push({ reason: 'Aménager progressivement le camp sans fermer son passage central.', command: plan });
   }
-  for (const [dx, dz, food] of [[-2, 0, false], [-2, 1, false], [2, 1, true], [2, 0, true], [2, -1, true]] as const) {
+  for (const [dx, dz, food] of [[-2, 0, false], [-2, 1, false], [2, 1, true], [2, 0, true], [2, -1, true],[-1,1,true],[0,1,true],[1,1,true]] as const) {
     const x = cx + dx, z = cz + dz;
     if (!world.stockpiles.some(s => s.x === x && s.z === z)) out.push({ reason: 'Séparer le bois et les aliments près du camp.', command: { type: 'stockpile', x, z, enabled: true, filters: { wood: !food, food }, priority: 2, capacity: 75 } });
+  }
+  for(const fire of world.structures.filter(s=>s.kind==='campfire')) {
+    const bill=fire.bills?.[0];
+    if(!bill)out.push({reason:'Installer une première recette de repas simple au feu de camp.',command:{type:'bill-add',structureId:fire.id}});
+    else if(bill.mode!=='until'||bill.target!==world.pawns.length*2)out.push({reason:'Maintenir environ deux repas préparés par colon en réserve.',command:{type:'bill-update',structureId:fire.id,billId:bill.id,settings:{...bill,mode:'until',target:world.pawns.length*2}}});
   }
   if (!world.growingZones.length && world.structures.filter(s => s.kind === 'bed').length === 3) out.push({reason:'Semer un premier potager près du camp, tout en continuant à cueillir pendant sa croissance.',command:{type:'area',action:'growing',from:{x:cx-2,z:cz+5},to:{x:cx+2,z:cz+7}}});
   const outstandingWood = [...world.jobs, ...out.flatMap(d => d.command.type === 'designate' ? [d.command] : [])].reduce((n,j) => n + JOB_WOOD_COST[j.kind], 0);
   const nearby = [...world.resources].filter(r => Math.abs(r.x-cx) + Math.abs(r.z-cz) <= 28).sort((a,b) => Math.abs(a.x-cx)+Math.abs(a.z-cz)-(Math.abs(b.x-cx)+Math.abs(b.z-cz)) || a.id-b.id);
-  for (const [kind, required] of [['tree', Math.max(40, outstandingWood + 20) - world.stock.wood], ['berries', (world.pawns.length * 1.6 - availableNutrition(world)) * (world.foodRules === 'legacy' ? 100 / 35 : 20)]] as const) {
+  const prepared=world.piles.filter(p=>p.item==='simple-meal').reduce((n,p)=>n+p.quantity,0);
+  const ingredients=world.piles.filter(p=>p.item==='rice'||p.item==='berries').reduce((n,p)=>n+p.quantity,0);
+  const cookingDemand=world.structures.some(s=>s.kind==='campfire')?Math.max(0,(world.pawns.length*2-prepared)*10-ingredients):0;
+  for (const [kind, required] of [['tree', Math.max(40, outstandingWood + 20) - world.stock.wood], ['berries', Math.max(cookingDemand,(world.pawns.length * 1.6 - availableNutrition(world)) * (world.foodRules === 'legacy' ? 100 / 35 : 20))]] as const) {
     const action = kind === 'tree' ? 'chop' : 'harvest';
     let planned = nearby.filter(r => r.kind === kind && world.jobs.some(j => j.x === r.x && j.z === r.z)).reduce((n,r) => n+r.amount,0);
     for (const resource of nearby) {
@@ -55,11 +64,11 @@ export function colonySummary(world: World) {
   return { tick: world.tick, crops: world.resources.filter(r=>r.kind==='rice').length, growingCells:fields.size,
     obstructedGrowingCells:world.piles.filter(p=>p.owner.type==='ground'&&fields.has(p.owner.z*world.width+p.owner.x)).length,
     clearing:world.pawns.filter(p=>p.haul?.destination.type==='aside').length,
-    structures: Object.fromEntries(['bed','table','stool','wall'].map(kind => [kind,world.structures.filter(s=>s.kind===kind).length])), stock: { ...world.stock }, pending: world.jobs.length, minimumFood: Math.min(...world.pawns.map(p=>p.hunger)), minimumRest: Math.min(...world.pawns.map(p=>p.rest)) };
+    structures: Object.fromEntries(['bed','table','stool','wall','campfire'].map(kind => [kind,world.structures.filter(s=>s.kind===kind).length])), preparedMeals:world.piles.filter(p=>p.item==='simple-meal').reduce((n,p)=>n+p.quantity,0), stock: { ...world.stock }, pending: world.jobs.length, minimumFood: Math.min(...world.pawns.map(p=>p.hunger)), minimumRest: Math.min(...world.pawns.map(p=>p.rest)) };
 }
 
 export function woodAccount(world: World): number {
-  return world.piles.filter(p=>p.kind==='wood').reduce((n,p)=>n+p.quantity,0) + world.resources.filter(r=>r.kind==='tree').reduce((n,r)=>n+r.amount,0) + world.structures.reduce((n,s)=>n+JOB_WOOD_COST[s.kind],0);
+  return world.piles.filter(p=>p.kind==='wood').reduce((n,p)=>n+p.quantity,0) + world.resources.filter(r=>r.kind==='tree').reduce((n,r)=>n+r.amount,0) + world.structures.reduce((n,s)=>n+(s.kind==='campfire' ? ((s.fuel?.ticks??0)+(s.fuel?.burned??0))/600 : JOB_WOOD_COST[s.kind]),0);
 }
 export function foodAccount(world: World): number {
   return world.piles.filter(p=>p.kind==='food').reduce((n,p)=>n+p.quantity,0);

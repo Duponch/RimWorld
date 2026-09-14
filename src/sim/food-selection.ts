@@ -6,7 +6,7 @@ import type { Cell, MaterialPile, Pawn, World } from './types.ts';
  * -82 optimality; survival packs have a -5 definition offset. Other modifiers
  * belong here when freshness, traits and food policies become real systems. */
 const FOOD_OFFSETS: Readonly<Record<ItemId, number>> = {
-  wood: -Infinity, berries: 0, rice: -82, 'survival-meal': -5, 'legacy-portion': 0,
+  wood: -Infinity, 'simple-meal': 16, berries: 0, rice: -82, 'survival-meal': -5, 'legacy-portion': 0,
 };
 export function foodScore(item: ItemId, distance: number): number {
   return FOOD_OFFSETS[item] - distance;
