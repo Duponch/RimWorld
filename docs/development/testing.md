@@ -2,148 +2,98 @@
 
 ## Principes
 
-Maintenir un petit nombre de scénarios riches qui contrôlent des effets de jeu, des invariants et des frontières techniques. Un test qui vérifie simplement qu'un champ reçoit sa propre valeur n'apporte presque rien. Chaque bug réel important devient une régression dans la famille de scénarios correspondante, avec sa cause et une fixture reproductible.
+Maintenir peu de scénarios riches : effets de jeu, invariants, cas limites et diagnostics reproductibles. Un test qui relit simplement la valeur qu’il vient d’écrire apporte peu. Chaque bug important enrichit la famille correspondante ; ni une accumulation de petits tests ni une partie longue sans assertions ne garantissent l’absence d’anomalies.
 
-Aucune suite ne garantit de détecter toute anomalie imaginable. L'objectif est de rendre les risques connus observables, de couvrir les cas limites pertinents et de renforcer les scénarios à mesure que les mécaniques s'enrichissent.
+La cohérence de notre simulation et la fidélité à RimWorld sont deux validations distinctes. Une règle de référence précise source, version, unité et contexte. La continuation de notre monde doit être exacte pour une même version de règles ; notre PRNG n’a pas à produire la séquence de RimWorld. Un oracle doit avoir une implémentation indépendante du chemin qu’il contrôle.
 
-## Exploiter les scénarios du référentiel
-
-Le [corpus utilisateur](../research/reference-adoption.md) fournit 196 propositions TEST, toutes non exécutées. Les 181 premières reformulent les contrats SYS correspondants ; elles alimentent nos critères sans devenir une suite ou un fichier par ligne. La lecture documentaire n'ajoute aucun test passé aux résultats du prototype.
-
-Conserver les [cinq familles F1–F5](../gameplay/systems-matrix.md#stratégie-de-validation--peu-de-familles-scénarios-riches). Le chapitre 32, PDF pages 39–40, propose des scènes d'interaction à introduire avec leurs systèmes :
-
-| Scène du corpus | Adaptation et calendrier | Familles locales |
-|---|---|---|
-| A — Cuisine interrompue | G0 : deux agents, pile partagée, destinations filtrées, interruption, filtre modifié et reprise. G1 : ingrédients/recette ; G2 : panne électrique. Vérifier bilan matériel et propriétaire à chaque transition, pas seulement le total final. | F1 conservation, F2 continuation. |
-| B — Combat et cible mobile | G3 : mobilisation, porte, couvert, allié et cible déplacée ; séparer émission et impact, imposer les tirages des branches sensibles. | F3 topologie, F2 séquence temporelle. |
-| C — Maladie et transfert du patient | G3 : soins, médecine, interruption et progression temporelle ; ajouter le départ en caravane en G5. | F1 transitions, F2 durée et reprise. |
-| D — Caravane aller-retour | G5 : manifester les propriétaires avant/après chaque transfert, conserver individus, piles et consommation sans duplication. | F1 identité, F2 voyage et sauvegarde. |
-| E — Pièces, énergie et incendie | G2 : modifier portes/toits/réseaux, injecter le feu sans exiger le narrateur ; dégâts aux personnes en G3. | F3 topologie, F2 échanges et cadences. |
-
-F4 exerce les actions correspondantes dans le navigateur lorsqu'une commande ou un protocole change ; F5 mesure leur charge représentative. Ces scènes constituent des cibles futures, distinctes des suites déjà en place ci-dessous.
-
-La profondeur vient de trois approches complémentaires : branches exactes avec entrées imposées, interactions avec invariants vérifiés pendant l'exécution, distributions avec seuils et taille d'échantillon décidés avant observation. Appliquer les distributions aux systèmes probabilistes concernés, sans créer une sixième famille ni des assertions probabilistes instables pour toute action. TEST-182..194 peuvent fournir des cas numériques après adoption explicite du modèle ; TEST-195/196 requièrent leur contexte DLC/correctif.
-
-Pour G0, garder dans les fixtures les références SYS-041..061/TEST correspondantes et réunir quantité partielle, concurrence, destination pleine ou détruite, annulation après prélèvement/dépôt, changement de filtre et restauration aux transitions critiques. La quantité disponible, portée, livrée, consommée et détruite par une cause autorisée doit être explicable indépendamment de l'implémentation. Un bug découvert devient une régression ciblée ; le simple journal d'un long run ne remplace pas ces assertions.
-
-Une comparaison au jeu de référence précise version, source, unité et contexte. Un PRNG différent interdit de présumer une égalité bit à bit avec RimWorld ; la continuation de **notre** simulation doit en revanche rester exacte pour sa version de règles. Le comparateur d'un algorithme doit être indépendant, et les observations inconnues restent inconnues.
-
-## Familles en place
-
-La présentation jour/nuit et les projections enrichissent F4/F5 : `daylight-camera.test.ts` regroupe les limites de cadrage/rayon et le cycle temporel, `integration/daylight-camera.spec.ts` utilise la vraie interface pour sélection, rectangle, changement de vue en cours de geste, pause/reprise et restauration du ciel. `scripts/daylight-camera-bench.mjs` sépare les anciens réglages fixes du soleil courant, du fond du ciel et du dézoom. Ce changement de présentation ne justifie pas de relancer la simulation longue de trois jours ; les parcours UI courts vérifient les interactions et le fallback graphique.
-
-`tests/simulation.test.ts` exerce le noyau sans DOM ni GPU : continuation déterministe, contraintes transactionnelles, règles de priorité, annulation, interruption par les besoins, navigation, corruption de sauvegardes et simulations longues. Les assertions portent sur les ressources, le nombre de travaux réellement achevés, les liens de réservation et la validité du monde. Le soak utilise plusieurs graines et vérifie les invariants pendant l'exécution ; l'égalité d'un hash seule ne suffit pas.
-
-La tranche des [besoins physiques](needs.md) enrichit les deux scénarios existants de repas/sommeil et la migration : accès fermé puis ouvert, portion disputée avec le transport, interruption d'ingestion, lit attribué et réellement occupé, réattribution, corruption des nouvelles références, fixture V2 historique et reprise exacte. Un parcours UI supplémentaire observe repas et lits orientés dans Chromium, puis sauvegarde/recharge la phase d'ingestion. Les captures doivent être inspectées ; la seule absence d'erreur console ne valide pas une pose.
-
-`node --experimental-strip-types scripts/needs-bench.ts` mesure des ticks individuels sur 64² et 250², trois et cent colons, nourriture physique et lits attribués. Les résultats métier sont contrôlés hors chronométrage. L'ancien benchmark comparatif de carte exécuté sous V2 reste une preuve historique : son égalité d'états avec un moteur antérieur n'est plus attendue après le changement de règles V3.
-
-`tests/integration/colony.spec.ts` pilote le navigateur, ses vrais contrôles et le vrai worker. Il vérifie notamment qu'une sélection de case provoque l'ordre attendu, que pause et sauvegarde correspondent à l'état autoritaire et qu'un chargement invalide ne modifie pas le monde. La console est inspectée, car un canvas visible et un compteur FPS ne prouvent pas que le shader est valide.
-
-Le parcours des frontières conserve SwiftShader/WebGL 2, notamment pour les contrôles compacts et la migration V1 dans le worker. Les parcours de transport et de créations/restaurations lancent explicitement Chromium normal. Le second couvre le défaut 250², les créations 128²/200²/250² et le retour exact à une ancienne petite partie. Pour les assertions Playwright, les états complets sont récupérés comme JSON ; la comparaison exacte reste intégrale, sans faire sérialiser chaque sous-objet au protocole du pilote. Cela ne décrit pas le transport worker, désormais incrémental. Les limites du logiciel et les passages réellement exécutés sont conservés dans [validation.md](validation.md).
-
-Pour sauvegarder un portage transitoire, le navigateur observe une cargaison puis clique le vrai bouton Pause dans le même callback. Une observation suivie d'un aller-retour supplémentaire vers le pilote peut arriver après le dépôt, particulièrement avec le rendu logiciel. Le test attend ensuite l'acquittement autoritaire et exige encore une cargaison physique dans l'état sauvegardé ; il ne remplace pas cette assertion par un simple ordre en attente.
-
-`tests/world-generation.test.ts` regroupe trois familles : déterminisme/sauvegarde, topologie et accès du départ, distributions quantitatives sur plusieurs graines et tailles. Les cartes 200²/250² et les rectangles allant jusqu'à 8×250/250×8 exercent désormais l'extension de grille. Les scénarios de camp vérifient collecte, livraison et construction sur la grande carte ; un corridor long vérifie déplacement et reprise au-delà des distances des anciennes fixtures. Les seuils empêchent notamment massifs dispersés et carte presque vide. Ils ne prouvent pas une diversité infinie de paysages crédibles.
-
-`tests/bridge-snapshot.test.ts` ajoute un scénario approfondi de reconstruction, dans les familles F2/F4. Il compare le monde transmis au monde autoritaire pendant 250 ticks de récolte et conserve les anciens snapshots pour vérifier leur immutabilité. La même séquence exerce cellules modifiées, ajout/retrait/mutation/ordre de ressources, dimensions et patches invalides refusés atomiquement, doublons périmés, delta manquant puis checkpoint, chargement réutilisant les mêmes IDs avec un nouvel epoch et consommateur sans état initial. Ce codec pur complète les parcours du vrai worker ; il ne prouve pas à lui seul les interactions de la file de messages du navigateur.
-
-`tests/area-designation.test.ts` regroupe les contrats de rectangle dans une famille approfondie : admissibilité comparée aux commandes unitaires, sens de tracé, empreintes, obstacles, politiques préservées, refus atomiques, grande carte, limite d'IDs, annulation et retrait pendant les transports avec conservation/reprise. Le quatrième parcours navigateur exerce le geste réel sur 250² : aperçu visible, cinq interruptions, chevauchement de réserves, retrait/rechargement et collecte après rotation. Un texte caché n'est jamais une preuve d'aperçu visible ; les extrémités du tracé doivent atteindre le canvas, hors panneaux. Le cas blur du pilote est injecté et reste qualifié comme tel.
-
-`tests/gpu-navigation.test.ts` vérifie les contrats sans matériel. Le script `scripts/gpu-navigation-bench.mjs` valide réellement les kernels GPU contre un oracle indépendant : chemins et coûts, murs, labyrinthes, bords, petites dimensions, terrains pondérés, budget insuffisant, capacité de sortie, révision périmée et concurrence. Un backend absent est un échec explicite de cette validation, jamais un passage simulé. Le navigateur matériel reste nécessaire en complément des tests Vitest.
-
-La façade d'observation `window.__lisiere` existe seulement dans le serveur de développement avec `?e2e`. Elle expose une copie de l'état et la projection d'une case ; les tests passent par les commandes d'interface. Elle n'existe pas dans le build de production.
-
-Les tests graphiques logiciels valident la compilation et les interactions, pas le budget de performance matériel. Une inspection ciblée sur WebGPU doit compléter toute modification de rig, shader, layout de buffers, ombre ou version Three.js.
+Regrouper les changements cohérents avant de lancer leur lot de contrôles. Après un échec, corriger sa cause et rejouer les scénarios concernés. Ne pas desserrer un seuil uniquement pour obtenir un résultat vert. Un fichier de rapport ancien reste daté ; il n’est pas une preuve d’exécution sur le code présent.
 
 ## Choisir les contrôles
 
-| Modification | Validation pertinente |
+| Changement | Contrôles nécessaires selon son contrat |
 |---|---|
-| Documentation de recherche ou de plan, sans code modifié | Relire décisions, jalons, références et liens ; aucune relance des suites de simulation nécessaire. |
-| Texte, couleur, espacement d'interface | Inspection visuelle ciblée et typecheck si TypeScript touché. |
-| Commande, priorité, besoins, réservation | Scénarios simulation concernés ; élargir au soak si ordre système/invariants affectés. |
-| Navigation | Fixture accessible/inaccessible, obstacle ajouté, congestion, reprise et budget de planification. |
-| Générateur, échelle de carte | Familles de génération, distributions multi-graines et dimensions extrêmes, accès/camp/trajet long, sauvegarde ancienne ; inspecter plusieurs cartes et mesurer séparément création et jeu courant. |
-| Navigation GPU | Contrats et oracle, exécution WebGPU réelle, révisions et budgets ; mesurer les lots avec leurs tailles, matériel et coûts de lecture. |
-| Schéma, sérialisation, identifiants | Corruptions, round-trip en cours de travail, continuation égale, rejet atomique navigateur. |
-| Worker, vitesse, protocole UI | Reconstruction exacte et immutabilité du codec, révisions/refus atomiques/reprise ; intégration réelle : pause, rafale de commandes, réponses, changement de taille, chargement et reprise. |
-| Matériau, skinning, instancing | Typecheck/build, compilation graphique, console GPU et inspection à poses clés. |
-| Optimisation | Régressions du domaine + benchmark A/B identique, même résultat métier. |
-| Dépendances ou livraison de jalon | `npm run check`, puis contrôle WebGPU ciblé si rendu affecté. |
+| Texte, couleur, détail procédural sans logique | Inspection visuelle ciblée ; pas de partie de trois jours. |
+| Documentation | Liens, fragments, intégrité des sources et relecture du sens ; pas de suites gameplay. |
+| Recette, besoin, réservations, transport ou planner | Scénarios du domaine avec bilans/interruptions/continuation ; pilote cœur si ses boucles changent. |
+| Commande, persistance ou protocole worker | Refus atomiques, migrations et reconstruction ; parcours de la vraie UI/du worker. |
+| Plusieurs boucles livrées ensemble ou régression de partie longue | Pilote cœur multi-graines, puis parcours UI de trois jours. |
+| Navigation | Oracle, cibles inaccessibles, coins, trafic, obstacle ajouté et reprise ; audit à forte population si le coût change. |
+| Rendu, caméra, interpolation | Contrôles purs des contrats et parcours graphique natif ; inspecter les captures, pas seulement la console. |
+| Algorithme ou cycle de vie GPU | Oracle indépendant, exécution GPU réelle, révisions/bornes et audit avec rendu concurrent. Un backend absent ne vaut pas réussite. |
 
-Une suite déjà passée n'a pas à être relancée après chaque retouche cosmétique. En revanche, toute correction qui modifie sa surface d'exécution invalide la preuve précédente pour cette surface.
+Compiler à l’intégration du lot. Les suites longues, compilations et benchmarks lourds ne tournent pas en concurrence. Vitest borne le parallélisme à deux workers ; les parcours navigateur utilisent un worker. Une optimisation interne conservant exactement les états n’exige pas de rejouer une longue UI déjà verte si ses contrôles n’ont pas changé.
+
+Une commande sans progrès doit être diagnostiquée puis arrêtée. Les scripts d’audit disposent de bornes ; le pilote long suit ses ticks et checkpoints, avec surveillance des attentes. Une partie de trois jours qui avance normalement prend plusieurs minutes : distinguer durée attendue et blocage. Si un arrêt est nécessaire, conserver motif et dernier état avant correction/reprise.
+
+## Familles en place
+
+La matrice conserve [cinq familles F1–F5](../gameplay/systems-matrix.md#stratégie-de-validation--peu-de-familles-scénarios-riches) : conservation/identité, temps/continuation, espace/topologie, intégration réelle, charge. Un scénario peut traverser plusieurs familles ; les nombres de lots qui se recouvrent ne s’additionnent pas en une couverture indépendante.
+
+| Scénarios du dépôt | Risques contrôlés |
+|---|---|
+| `simulation.test.ts` | Priorités, transformations, annulations, besoins, propriété, corruption, reprise et soak multi-graines. Bilans et résultats métier, pas seulement hash. |
+| `world-generation.test.ts` | Déterminisme 32 bits, dimensions jusqu’à 250² et rectangles extrêmes, rivières/massifs, accès du départ, distributions, débuts de camp et corridor long. |
+| `spatial-contracts.test.ts`, `navigation-budget.test.ts` | Pile unique, capacité typée et matière conservée ; durées diagonales, coins, trafic et chemins. L’oracle de distances O(V²) des petites cartes ne réutilise ni file ni voisins du moteur ; 120 cartes comparent aussi les recherches ciblées au parcours complet. |
+| `dining.test.ts`, `food-items.test.ts` | Portion réellement prélevée/portée/ingérée, place et lit réservés, interruptions, distances/préférences, confort/souvenirs et migration des aliments historiques. |
+| `plant-cycle.test.ts`, `area-designation.test.ts` | Croissance, récolte, coupe, politique agricole, dégagement des piles, rectangles/empreintes, compatibilité, concurrence, interruption et refus atomiques. |
+| `production.test.ts` | Trois scénarios combinent feu construit, deux jours de combustible/recharge, recette mélangée, conservation, travail interrompu/repris, deux postes concurrents, factures ordonnées et chef ravitaillant sans Transport. Les mêmes scénarios vérifient les diagnostics de phases et de blocages. |
+| `bridge-snapshot.test.ts` | Reconstruction égale au monde autoritaire, snapshots antérieurs immuables, deltas invalides/périmés/manquants, ordre des clés, changement d’epoch et reprise sans état initial. Ce codec pur ne remplace pas le vrai worker. |
+| `render-retention.test.ts`, `rock-surface.test.ts` | Identité/capacité/libération des buffers, retraits et restauration de chunks, faces rocheuses exposées. Un retrait injecté ne vaut pas minage jouable. |
+| `daylight-camera.test.ts`, `frame-metrics.test.ts` | Cadrage/projections, temps du ciel, pauses/cadence, longues images et bornes des métriques. |
+| `gpu-navigation.test.ts` | Contrats du laboratoire : résultats, capacités et révisions. Le laboratoire ne dirige pas les colons. |
+| `integration/*.spec.ts` | Commandes et gestes réels, UI, worker, sauvegardes et présentation ; les fixtures synthétiques sont signalées. |
+
+Le parcours de frontières conserve le rendu logiciel/WebGL 2, notamment pour les contrôles compacts et la migration historique dans le worker. Les parcours matériels lancent Chromium normal et vérifient le backend obtenu. Un canvas visible et un compteur FPS ne suffisent pas : capturer les erreurs console/GPU et inspecter effectivement la pose ou l’aperçu testé.
+
+Les assertions d’état navigateur comparent un JSON complet sans sérialiser chaque sous-objet séparément par le protocole du pilote. Le suivi courant utilise les ticks ; récupérer un monde complet seulement aux étapes utiles. Pour une phase brève, observer puis cliquer le vrai bouton Pause dans le même callback, attendre son acquittement et vérifier que la phase attendue existe encore.
+
+Le pilote de gestes cadre les cellules par de vrais mouvements de molette et vérifie qu’elles atteignent le canvas, hors panneaux. Une géométrie cachée ne prouve pas la visibilité d’un aperçu ; capturer le rectangle pendant que le pointeur reste maintenu. L’injection de perte de focus dans son test reste explicitement qualifiée comme telle.
+
+## Pilote de colonie
+
+`tests/scenarios/colony-player.ts` est la politique commune du joueur : elle lit le monde et produit des commandes motivées, sans le modifier directement. Elle développe réserves, trois lits, table/tabourets, murs, riz et feu, maintient une facture et collecte les ingrédients nécessaires même si les rations initiales couvrent encore la faim. La [recherche de progression](../research/colony-progression.md) distingue ce pilote d’une mesure empirique des joueurs de RimWorld.
+
+- `colony-player.test.ts` joue cinq jours sur trois graines 250², dont la graine 42 prolongée à huit jours. Celle-ci décide toutes les quatre heures comme le navigateur, les autres toutes les heures. Contrôler matière, ingestions, sommeil par colon, camp, cultures, repas et reprise quotidienne.
+- `integration/colony-journey.spec.ts` joue trois jours via la vraie UI et le vrai worker WebGPU, avec décisions toutes les quatre heures et sauvegardes quotidiennes. Aucun saut de temps ni stock artificiel après démarrage. Ce parcours de plusieurs minutes n’est pas un benchmark graphique.
+- La chaîne agricole complète jusqu’à maturité et second semis est testée au cœur ; trois jours de navigateur ne suffisent pas à la prouver. Un checkpoint mûr synthétique utilisé ailleurs dans l’UI reste distinct de la progression du joueur.
+
+Le bilan du bois inclut matériaux présents, constructions et combustible restant/brûlé. Le bilan alimentaire distingue récoltes, unités présentes et mangées, et conversion de **dix ingrédients en un repas** : ajouter neuf unités retirées par repas fabriqué. La nutrition n’est pas conservée par cette transformation. À chaque nouvelle mécanique, enrichir ce même bilan et ses objectifs plutôt que multiplier les pilotes.
 
 ## Diagnostics et mesures
 
-Une anomalie de simulation doit conserver : graine, tick, commandes pertinentes, sauvegarde juste avant l'échec, invariant violé. Les parcours courts produisent captures et trace Playwright. Le parcours de trois jours conserve un état toutes les quatre heures de jeu et une capture finale, sans trace intégrale : un essai bloqué avait enregistré environ 500 Mo. Le polling lit seulement le tick, sans recopier la carte ; un garde-fou Node de 35 secondes borne une attente de tick même si le navigateur ne répond plus, et la fermeture est bornée à cinq secondes. Les assertions métier et les trois jours simulés restent identiques. Cette réduction des diagnostics ne prouve pas que la trace causait le blocage. Ne pas utiliser des seuils de durée stricts dans les tests métier : les machines et les charges diffèrent.
+Faire un audit aux changements de boucle, d’algorithme ou de cycle de vie graphique et toutes les deux ou trois tranches qui augmentent la charge. Reprendre le cas à cent acteurs lorsqu’il est affecté. Conserver machine, backend, versions, carte, scénario, durée, échauffement, percentiles, maxima et résultats métier. Aucune conversion d’une capacité de buffer ou d’un test logiciel en FPS promis.
 
-`npm run bench` mesure la simulation seule : affectation initiale, travaux actifs et phase inactive. Les percentiles de lots ne sont pas des percentiles de frames GPU. Les rapports doivent préciser versions, populations, taille de carte, scénario, durée et matériel disponible. Une pointe d'affectation est aussi importante qu'une moyenne faible.
+| Audit | Portée et limites |
+|---|---|
+| `scripts/cooking-bench.ts` | 3/30/100 acteurs actifs sur 250² : cuisine, combustible, champs, chantier et stockage. Ticks individuels, état final validé, matières et diagnostics de recherche. Setup hors mesure ; bornes explicites et surveillance à 90 secondes. |
+| `scripts/cooking-render-bench.mjs` | Worker réel et GPU natif, 60 images d’échauffement puis au moins 300 images/cinq secondes par vue. RAF, soumission CPU, appels, triangles et progression séparés. Locale/générale avancent successivement le monde : pas un comparatif caméra à état identique. |
+| `scripts/navigation-continuation-audit.ts` | `capture|compare <dossier-tmp> <rapport.json>` : avant/après optimisation, égalité byte pour byte de quinze sauvegardes complètes, 3/30/100 colons aux ticks 1/100/300/600/1000. Rapports SHA-256 compacts, mondes dans `tmp`. Pas de mesure de performance. |
+| `scripts/needs-bench.ts`, `scripts/dining-bench.ts` et variantes de rendu | Charges de repas/couchages. Préciser le profil alimentaire, les fixtures et leur schéma ; ne pas comparer comme identiques des règles différentes. |
+| `scripts/map-bridge-bench.ts` | Microbenchmark Node de clone/encodage/adoption : ni IPC navigateur, ni GPU, ni gameplay. Options tailles/graine/échantillons/échauffement/sortie bornées ; égalité hors chronométrage. |
+| `scripts/gpu-navigation-bench.mjs` | Kernels réels contre oracle : coûts/chemins, murs/labyrinthes/bords, pondération, sortie, révisions et concurrence. Mesurer aussi la lecture GPU et le rendu concurrent. |
 
-`node --experimental-strip-types scripts/map-bridge-bench.ts` compare sur les mêmes mondes le clone de l'ancien snapshot complet à l'encodage, au clone et à l'adoption du delta actuel. Par défaut : seed 42, trois colons, tailles 64/128/200/250, 20 échauffements puis 60 échantillons appariés par taille en alternant l'ordre. Les options `--sizes=64,250`, `--seed=42`, `--samples=60`, `--warmup=20` et `--output=artifacts/map-bridge-benchmark.json` permettent une répétition explicite ; les tailles doivent appartenir aux presets, le nombre d'échantillons est borné entre 10 et 500. Le rapport enregistre Node, CPU, dimensions, quantités et distribution des durées. Les assertions d'égalité sont hors de la partie chronométrée.
+Sur grande carte, séparer génération, sérialisation, communication/adoption, simulation et rendu. Le temps CPU de soumission n’est pas un temps GPU, et le p95 de moyennes de lots n’est pas le p95 des ticks. La métrique worker publiée à l’écran peut répéter une même moyenne sur plusieurs frames. La mémoire JSON ou comptée par Three n’est pas tout le heap ou le pilote.
 
-Ce microbenchmark ne joue pas les ticks : seul le tick publié change pendant les échantillons stables, puis une suppression de ressource illustre un patch. La suppression n'est chronométrée qu'une fois. Génération et préparation du premier checkpoint sont exclues ; ni `postMessage`, ni son ordonnanceur IPC, ni DOM, ni GPU ne sont mesurés. Les octets JSON quantifient une sérialisation illustrative, pas la bande passante réelle du clone structuré. Pour le rapport initial archivé et son protocole reproductible, le JSON complet est mesuré après la suppression illustrative, le delta stable avant celle-ci. Ces tailles sont donc des ordres de grandeur de payloads à états voisins ; les comparaisons de durée appariées utilisent bien le même état. Le [rapport du 13 septembre](../../artifacts/map-bridge-benchmark.json) est conservé depuis la mesure initiale, sans nouvelle exécution lors de la publication du script.
+Comparer à carte/population/cadrage/actions équivalents et sans autre build/test lourd en parallèle. Les audits anciens sur moteur à bornes étendues sont [archivés et qualifiés](../history/map-scale-v2.md) ; leurs chiffres ne remplacent pas les [preuves courantes](validation.md). Captures inspectées et erreurs sont consignées dans la validation, les rapports bruts dans `artifacts/`.
 
-Pour valider une grande carte, compléter ce microbenchmark par un profil navigateur sur le même appareil et le même cadrage local : chargement initial, jeu après échauffement, déplacements de caméra, collecte modifiant un chunk, sauvegarde et rechargement. Consigner séparément temps de génération, premier affichage, ticks worker, mise à jour du renderer, temps de frame, géométries/draw calls et backend réel. Comparer 64² et 250², puis l'ancien et le nouveau code sur des mondes équivalents ; ne pas attribuer au codec un gain issu d'un autre cadrage ou d'une densité réduite. Les opérations initiales restent complètes et la carte contient 15,26 fois plus de cases. Exécuter les profils CPU et GPU lourds séparément, garder les résultats métier et les erreurs console, et documenter toute régression restante dans [map-scale.md](map-scale.md).
+`scripts/compact-ui-report.py` extrait les grands checkpoints base64 vers `tmp/<rapport>-checkpoints` en gardant tick, taille et SHA-256 dans le JSON versionné. Il conserve erreurs et assertions, y compris pour les essais échoués. Ne pas supprimer une preuve d’échec diagnostiqué pour présenter artificiellement tous les passages comme réussis.
 
-À introduire avec les fonctions correspondantes : inventaire conservé à travers toutes les étapes de transport ; incendie/énergie/température couplés ; soins et incapacités ; tirs et obstacles ; incident reproductible ; import de clips et comparaison aux poses CPU de référence hors runtime ; compaction GPU aux limites de workgroup et de capacité.
+## Exploiter les scénarios du référentiel
 
+Le [corpus utilisateur](../research/reference-adoption.md) fournit 196 propositions TEST, pas des tests directement exécutables. TEST-001..181 reformulent les contrats SYS ; ils enrichissent nos familles sans créer une suite par ligne. Les quinze autres entrées peuvent être plus précises, synthétiques ou propres à une version/extension. Le statut d’une cellule du classeur ne vaut pas validation locale.
 
-## Recherche et audit pendant une tranche
+Le chapitre 32 (PDF pages 39–40) propose les interactions suivantes. Leur calendrier appartient uniquement à ROADMAP.
 
-Avant chaque mécanique, comparer corpus, sources récentes et détails observables ; consigner contradictions et décisions dans docs/research. Réutiliser F1–F5. La tranche repas ajoute trois scénarios combinant places disputées, portée, obstruction, ingestion interrompue, conservation, mobilier, confort et migration V3. Un oracle sur 120 cartes compare les recherches bornées au flood complet ; un scénario de cadence vérifie suspension, longues frames et bornes du compteur.
+| Scène | Adoption et familles |
+|---|---|
+| A — Cuisine interrompue | G0 : pile partagée, destination filtrée, annulation/reprise ; G1 : ingrédients/recette ; G2 : panne électrique. F1 conservation et F2 continuation à chaque transition. |
+| B — Combat et cible mobile | G3 : mobilisation, porte, couvert, allié/cible déplacés ; séparer émission et impact. F3 topologie, F2 séquence. |
+| C — Maladie et transfert du patient | G3 : soins, médecine, interruption/durée ; G5 : départ en caravane. F1 transferts, F2 durée/reprise. |
+| D — Caravane aller-retour | G5 : propriétaires avant/après chaque transfert, individus/piles/consommation. F1 identité, F2 voyage/sauvegarde. |
+| E — Pièces, énergie et incendie | G2 : portes/toits/réseaux et feu injecté sans exiger déjà le narrateur ; dégâts aux personnes en G3. F3 topologie, F2 échanges. |
 
-Lorsqu'une phase de décision ou de rendu change, mesurer une fixture représentative avec matériel, conditions, distributions et résultats métier. `scripts/dining-bench.ts` puis `scripts/dining-render-bench.mjs` exercent 100 repas suivis de 100 couchages et le rendu WebGPU sur 250². Ne pas faire tourner build/tests lourds en même temps que la mesure. Les fichiers JSON avant/après gardent les empreintes logiques ; un gain ne vaut que pour son scénario. Aucun audit complet n'est nécessaire pour changer une couleur.
+F4 exerce les commandes dans le navigateur quand elles existent ; F5 mesure leur charge représentative. La profondeur combine cas imposés, interactions avec invariants et distributions seulement pour les systèmes probabilistes concernés. Fixer tailles d’échantillon et seuils avant observation ; TEST-182..194 nécessitent l’adoption de leur modèle, TEST-195/196 leur contexte DLC/correctif.
 
-## Pilote de colonie et cadence des audits
+## Documentation
 
-`tests/scenarios/colony-player.ts` contient une politique unique de joueur : besoins du camp, bois des chantiers, nourriture disponible, réserves et répartition du travail. Il produit des commandes accompagnées d'une raison, sans écrire dans le monde. Le [rapport de recherche](../research/colony-progression.md) distingue cette partie représentative d'une mesure empirique des joueurs de RimWorld.
-
-- `tests/colony-player.test.ts` : cinq journées sur trois cartes générées 250² ; matière et état validés régulièrement, ingestion comptabilisée, sommeil par colon, jalons de construction et reprise exacte chaque jour. Il complète le soak existant par des décisions de développement, sans remplacer ses invariants.
-- `tests/integration/colony-journey.spec.ts` : trois jours réels via l'UI et le worker, backend WebGPU matériel depuis V5 (environ six minutes seul ; ancien résultat V4 sous WebGL 2/SwiftShader conservé dans validation.md), nouvelle partie normale, réévaluation toutes les quatre heures, sauvegarde/rechargement quotidiens. Aucun achat de temps par injection, aucun stock artificiel après démarrage. Les captures et données du bilan sont attachées au test. Ce parcours long ne sert pas de benchmark graphique.
-- `tests/render-retention.test.ts` : identité des buffers, faces visibles après retraits, restauration d'un chunk vide, croissance de capacité et libération. Le contrôle pur ne remplace pas les parcours sur GPU.
-
-Lancer le scénario de joueur rapide lorsqu'une boucle de travail, une règle de besoins, la construction, les réservations ou les sauvegardes changent. Lancer le parcours UI long quand plusieurs de ces boucles sont livrées ensemble, quand leurs contrôles changent, ou après une régression de partie longue. Pour un changement graphique local, sélectionner les parcours concernés ; ne pas attendre trois jours pour une couleur. Les sept parcours UI courts restent exécutables avec `npx playwright test --grep-invert "partie de trois jours"`.
-
-Faire un audit ciblé avant/après sur un gel reproductible ou un changement d'algorithme/cycle de vie graphique. Reprendre l'audit à cent acteurs après une modification qui les affecte ; ajouter un scénario de congestion seulement lorsqu'il est réellement représentatif du système livré. Prévoir un point de mesure toutes les deux ou trois tranches qui augmentent la charge, sans répéter tous les benchmarks à chaque correction. Archiver matériel, données et limites ; ne pas faire tourner deux audits GPU simultanément.
-
-À l'arrivée de nouvelles mécaniques, enrichir le pilote existant : culture et cuisine remplacent l'approvisionnement alimentaire fini ; portes/toits imposent un véritable abri ; santé exige soins et secours ; incidents ajoutent des décisions de sécurité. Réviser les bilans et les jalons attendus avec la règle livrée, en conservant les régressions utiles. Ne pas desserrer un seuil simplement pour faire passer un échec.
-
-## Extension alimentaire V5
-
-`food-items.test.ts` contient deux scénarios combinés de quantité, conservation, transport, faim et migration. Les fixtures ciblées de l’ancien modèle fixent explicitement `foodRules: legacy` ; le pilote naturel 250² utilise le modèle adulte. Le pilote ne peut plus compter « un repas = une unité » : ses bilans additionnent les unités effectivement ingérées. Le parcours de trois jours utilise désormais le WebGPU matériel ; le parcours de frontières couvre encore le fallback logiciel. Prévoir environ six à huit minutes pour l’ensemble navigateur, selon matériel.
-
-Audit de contenu graphique : `node --experimental-strip-types scripts/food-render-fixture.ts`, puis `node scripts/dining-render-bench.mjs food-items`. Le même protocole mesure 50 repas de baies et 50 rations, chacun avec siège et lit. Il enregistre le mélange alimentaire et le schéma ; les chiffres antérieurs restent historiques, sans prétendre à une égalité d’états entre profils.
-
-## Contrats spatiaux V6
-
-`spatial-contracts.test.ts` ajoute trois scénarios : oracle indépendant de relaxation et distance physique, chronologie sous messages irréguliers/dupliqués, propriété et réservations des piles au sol. Le test GPU `movement.spec.ts` lit les attributs réellement utilisés par le shader et vérifie vitesse et orientation vers quatre arbres. Les fixtures de réservation ne doivent plus contenir de piles superposées ; leur charge et leurs assertions métier restent préservées.
-
-`scripts/overview-bench.mjs stable-detailed` puis `... final-lod` comparent les couches détaillées à la représentation distante. Chaque mesure commence après 90 images de chauffe et enregistre au moins huit secondes et 300 images dans une seule promesse navigateur, sans filtrage des longues images. Les premiers essais avec plusieurs attentes du pilote produisaient un intervalle isolé de 8–9 secondes : ils sont conservés dans tmp comme diagnostics, pas employés dans la comparaison publiée. Le benchmark est distinct des tests fonctionnels et s’exécute sans autre charge de validation lourde.
-
-Exécuter les validations longues sans benchmark ni navigateur de test concurrent. Si la charge de la machine provoque un délai dépassé, relancer les scénarios concernés successivement (`npm test -- --maxWorkers=1`) sans augmenter les délais ni réduire leurs invariants. Le pilote de collecte vérifie aussi les cellules réservées : un dépôt de récolte ne doit pas invalider un transport déjà planifié.
-
-## Ajout V7
-
-Les scénarios `plant-cycle.test.ts` et `rock-surface.test.ts` réunissent respectivement cycle vivant/conditions/rendement/continuation et topologie locale/buffers/restauration. Le pilote ordinaire conserve son programme de camp ; sa comptabilité sépare désormais récoltes produites et nourriture consommée, au lieu de supposer les buissons détruits. Le parcours `plants.spec.ts` ajoute l'UI récolte/sauvegarde/coupe. Les mesures rocheuses et limites sont consignées dans [validation](validation.md). Ne pas interpréter la manipulation de terrain du benchmark comme un test de minage jouable.
-
-
-## Cadence de livraison et tranche cultures V8
-
-Regrouper les changements cohérents de simulation, sauvegarde, interface et rendu avant le lot de validation. Compiler à l’intégration, exécuter les scénarios de contrat puis les parcours navigateur ensemble ; après échec, rejouer uniquement les scénarios concernés. Ne relancer les longs parcours déjà verts qu’en présence d’un changement de règles, de commandes, de transport ou de persistance qui les concerne. Les benchmarks s’exécutent sans autre test CPU/GPU en concurrence. Vitest limite le parallélisme à deux workers : les scénarios de plusieurs jours saturent autrement le processeur local.
-
-V8 enrichit le même joueur ordinaire : potager proche du camp, besoins et chantiers conservés, cinq jours sur trois graines dont la graine 42 prolongée à huit jours. Son parcours navigateur reste trois jours réels à vitesse UI, suffisant pour voir semis et croissance ; le cycle mûr complet et le second semis sont vérifiés en simulation. `plant-cycle.test.ts` ajoute interruption/politiques/migration et huit jours d’un champ ; `farming.spec.ts` vérifie l’interface et un checkpoint mûr explicitement préparé. Ce checkpoint n’est pas utilisé dans le test de joueur humain.
-
-V9 conserve ce programme de joueur (aucune commande de dégagement manuel n’est nécessaire) et ajoute au diagnostic les cases agricoles obstruées et les cultivateurs qui les libèrent. Deux scénarios approfondis enrichissent les familles existantes : concurrence/portage/dépôt impossible/interruption/migration dans `plant-cycle.test.ts`, préférences/distances/inaccessibilité/cargaison dans `food-items.test.ts`. Le test navigateur agricole démarre avec du bois dans le futur champ et Transport désactivé. L’oracle de navigation compare aussi le classement alimentaire à une recherche complète sur 120 cartes avec obstacles. `scripts/clearing-bench.ts` mesure séparément le coût des ticks avec 3 et 30 cultivateurs sur 250² ; ne pas confondre ces timings CPU avec des FPS.
-
-## Cuisine et combustible V10
-
-`production.test.ts` regroupe trois scénarios profonds : construction et combustion de deux jours avec recharge/interruption ; recette mixte, matière réellement déposée, annulation et continuation ; deux postes concurrents, facture impossible sautée, comptage des produits, réglages et recharge par Cuisine avec Transport désactivé. Les passages source/porté/posé/produit sont validés, et les altérations de données sont refusées.
-
-La consolidation enrichit ces mêmes scénarios avec les motifs d’inspection, sans nouvelle suite par message. L’oracle de navigation ajoute un Dijkstra O(V²) indépendant sur les petites cartes, sans utiliser la file ou les voisins du moteur. `scripts/navigation-continuation-audit.ts capture|compare <dossier-tmp> <rapport.json>` capture avant une optimisation puis compare après quinze sauvegardes complètes, byte pour byte, à 1/100/300/600/1000 ticks pour 3/30/100 colons. Les JSON volumineux restent dans `tmp`, les rapports gardent les SHA-256. Ce contrôle complète les invariants et l’oracle ; il ne prouve pas tous les mondes possibles.
-
-Le pilote ordinaire construit un feu après les lits et règle une facture pour deux repas par colon. Le cœur joue cinq à huit jours sur trois cartes ; le navigateur reste à trois jours avec commandes d’interface et sauvegardes quotidiennes. Le bilan ajoute neuf unités retirées par repas fabriqué, car dix ingrédients deviennent un produit. Il continue de compter récoltes, prises alimentaires et bois brûlé ; un simple total final de nutrition serait un mauvais oracle de conservation.
-
-Le parcours court `integration/production.spec.ts` observe la préparation, recharge une sauvegarde en cours de travail, vérifie les produits rangés et édite/ordonne/supprime des factures. Captures de travail et résultat sont inspectées. Les recettes nouvelles enrichiront ces parcours, sans créer une suite par définition.
-
-`navigation-budget.test.ts` compare aussi les chemins de chaque groupe d’interaction à une exploration complète, sur 120 cartes et occupations temporaires. `scripts/cooking-bench.ts` mesure 3/30/100 travailleurs partageant postes et réserves, avec champs et chantiers, dans une clairière synthétique sur carte naturelle 250². Options bornées `--pawns=3,30,100 --ticks=300 --repeats=1 --output=artifacts/cooking-bench.json` ; garde-fou de 90 secondes vérifié entre les ticks. Les recherches et leurs cellules explorées sont des diagnostics non persistants, sans influence sur le jeu. L’exécution de 300 ticks ne remplace pas le pilote multi-jours.
+`python scripts/check-docs.py` contrôle liens locaux, fragments, les 25 domaines/cinq familles de la matrice et les SHA-256 des trois originaux. Il ne vérifie pas la vérité du gameplay. Relire le contrat et le code lorsqu’une ancienne formulation contredit une fonctionnalité livrée ; garder le passé dans Git/ADR/history, pas dans une seconde description actuelle.

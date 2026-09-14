@@ -1,6 +1,6 @@
 # Lisière
 
-Jeu de colonie en 3D low poly pour navigateur, avec RimWorld de base comme référence fonctionnelle. G0 est en consolidation et G1 partiellement jouable : récolte, transport, stockage, construction d’un camp, repas et sommeil physiques, culture de riz. Le [bilan fonctionnel](docs/gameplay/implementation-status.md) distingue les systèmes présents, partiels et absents.
+Jeu de colonie en 3D low poly pour navigateur, avec RimWorld de base comme référence fonctionnelle. G0 est en consolidation et G1 partiellement jouable : récolte, transport, stockage, construction d’un camp, repas et sommeil physiques, culture de riz, feu ravitaillé et cuisine sur factures. Le [bilan fonctionnel](docs/gameplay/implementation-status.md) distingue les systèmes présents, partiels et absents.
 
 ## Démarrer
 

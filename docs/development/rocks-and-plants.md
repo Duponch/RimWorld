@@ -1,6 +1,6 @@
 # Rochers continus et buissons persistants — V7
 
-Mise à jour V8 : le preset de croissance binaire décrit historiquement ci-dessous est remplacé par la [lumière naturelle et la première culture de riz](../development/farming.md), avec migration des checkpoints. Météo et saisons restent absentes.
+Mise à jour V8 : le preset de croissance binaire décrit historiquement ci-dessous est remplacé par la [lumière naturelle et la première culture de riz](farming.md), avec migration des checkpoints. Météo et saisons restent absentes.
 Décision du 13 septembre 2026. [Plan canonique](../ROADMAP.md) : consolidation G0 et première croissance renouvelable G1 ; le minage reste G2. Les images fournies par l'utilisateur servent de cible artistique, sans reprendre les affirmations de l'autre IA comme des règles techniques.
 
 ## Massifs rocheux

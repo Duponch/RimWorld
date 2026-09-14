@@ -3,7 +3,7 @@
   "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
   "node": "v24.11.1",
   "map": "250x250 seed 42",
-  "conditions": "1 runs \u00d7 300 ticks; setup/validation/diagnostics excluded; needs active, all workers cook/build/haul/grow; no warmup (includes first assignments)",
+  "conditions": "1 runs × 300 ticks; setup/validation/diagnostics excluded; needs active, all workers cook/build/haul/grow; no warmup (includes first assignments)",
   "rows": [
     {
       "pawns": 3,
@@ -450,5 +450,6 @@
       ]
     }
   ],
-  "decision": "Experimental nonempty-bucket mask rejected: improvement over dense occupancy alone was not clear enough in this workload. Source reverted before delivery."
+  "decision": "Experimental nonempty-bucket mask rejected: improvement over dense occupancy alone was not clear enough in this workload. Source reverted before delivery.",
+  "protocolClarification": "Setup, validation and diagnostic aggregation were outside timing; collection of optional search counters inside stepWorld was included. Original observations and conditions text retained."
 }

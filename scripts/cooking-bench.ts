@@ -29,5 +29,5 @@ for(const pawns of populations) {
   samples.sort((a,b)=>a-b);const p=(q:number)=>samples[Math.ceil(q*samples.length)-1];
   const row={pawns,ticks:samples.length,p50Ms:p(.5),p95Ms:p(.95),p99Ms:p(.99),maxMs:samples.at(-1),...result};rows.push(row);console.log(JSON.stringify(row));
 }
-const report={date:new Date().toISOString(),cpu:cpus()[0]?.model,node:process.version,map:'250x250 seed 42',conditions:`${repeats} runs × ${ticks} ticks; setup/validation/diagnostics excluded; needs active, all workers cook/build/haul/grow; no warmup (includes first assignments)`,rows};
+const report={date:new Date().toISOString(),cpu:cpus()[0]?.model,node:process.version,map:'250x250 seed 42',conditions:`${repeats} runs × ${ticks} ticks; setup, validation and diagnostic aggregation excluded; search-counter collection inside stepWorld is timed; needs active, all workers cook/build/haul/grow; no warmup (includes first assignments)`,rows};
 writeFileSync(args.get('output')??'artifacts/cooking-bench.json',JSON.stringify(report,null,2));

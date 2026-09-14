@@ -32,7 +32,7 @@ Index unique, contrats courants de simulation/alimentation remis à jour, ROADMA
 
 ## Historique des preuves
 
-- [v8-cultures](../history/validation-v8-cultures.md)
-- [v6-v7-presentation](../history/validation-v6-v7-presentation.md)
-- [v3-v5-besoins](../history/validation-v3-v5-besoins.md)
-- [g0-fondations](../history/validation-g0-fondations.md)
+- [v8-cultures](validation-v8-cultures.md)
+- [v6-v7-presentation](validation-v6-v7-presentation.md)
+- [v3-v5-besoins](validation-v3-v5-besoins.md)
+- [g0-fondations](validation-g0-fondations.md)

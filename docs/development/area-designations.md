@@ -20,7 +20,7 @@ Le moteur prépare la liste admissible avant toute mutation. Une requête invali
 
 Avant une annulation ou un retrait, le moteur réserve conservativement la capacité d'IDs nécessaire aux nouveaux dépôts de piles portées/livrées. Le calcul prend au plus un nouvel ID par pile à déposer ; une fusion réelle peut en demander moins. Une sauvegarde au plafond d'identités peut donc faire refuser l'opération avant tout retrait, au lieu de perdre des matériaux lors d'un dépôt impossible. Cette frontière est couverte dans le scénario de reprise.
 
-Aucun nouveau champ persistant n'est nécessaire : le rectangle est une intention transitoire, son résultat utilise les travaux et cellules du schéma 2. Le JSON de reprise reste exact ; aucune migration de terrain ou de réserve n'est effectuée. Le protocole retourne le bilan dans la réponse de la commande, après publication du snapshot autoritaire.
+Le rectangle est une intention transitoire : son résultat utilise les travaux et cellules persistants du schéma courant. Son introduction en V2 n’a exigé aucun nouveau champ sauvegardé ni migration de terrain/réserve. Le protocole retourne le bilan dans la réponse de la commande, après publication du snapshot autoritaire.
 
 ## Interaction 3D et aperçu
 

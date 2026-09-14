@@ -72,8 +72,12 @@ Build final : TypeScript et Vite passent, 84 modules, worker 99,66 kB, jeu 1 020
 
 Index unique, contrats courants, recherches, décisions et preuves historiques séparés. Le corpus original reste dans `reference/originals`, byte-identique. Contrats cuisine, alimentation, simulation, guide, catalogue et inventaire sont mis à jour ; les anciennes assertions « cuisine absente » sont corrigées dans les documents courants. Le vérificateur de liens et d’intégrité contrôle aussi les 25 domaines et cinq familles.
 
+Le guide suit maintenant une partie (démarrage, ordres, stockage, cueillette/culture, cuisine, besoins, sauvegarde), sans appendices par version. La stratégie de tests décrit choix des contrôles, scénarios et audits courants ; les anciens comptes de suites ne sont pas maintenus comme une promesse fixe. Les formulations devenues fausses sur l’éclairage fixe et le schéma courant V2 sont corrigées. Les anciennes mesures de grande carte et premières inspections graphiques sont archivées avec leurs conditions ; les liens ont été relocalisés, sans recopier leurs chiffres comme mesures actuelles.
+
 ## Historique des preuves
 
+- [Grande carte — extension V2 et comparaisons CPU/communication/GPU](../history/map-scale-v2.md)
+- [Premières inspections graphiques G0](../history/render-validation-g0.md)
 - [V9 — alimentation et reclassement](../history/validation-v9-alimentation.md)
 - [V8 — cultures](../history/validation-v8-cultures.md)
 - [V6–V7 — présentation](../history/validation-v6-v7-presentation.md)

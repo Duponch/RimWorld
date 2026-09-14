@@ -3,7 +3,7 @@
   "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
   "node": "v24.11.1",
   "map": "250x250 seed 42",
-  "conditions": "1 runs \u00d7 300 ticks; setup/validation/diagnostics excluded; needs active, all workers cook/build/haul/grow; no warmup (includes first assignments); V8 CPU profiler active; profile timings are diagnostic, not a controlled speed comparison",
+  "conditions": "1 runs × 300 ticks; setup/validation/diagnostics excluded; needs active, all workers cook/build/haul/grow; no warmup (includes first assignments); V8 CPU profiler active; profile timings are diagnostic, not a controlled speed comparison",
   "rows": [
     {
       "pawns": 100,
@@ -191,5 +191,6 @@
         }
       ]
     }
-  ]
+  ],
+  "protocolClarification": "Setup, validation and diagnostic aggregation were outside timing; collection of optional search counters inside stepWorld was included. Original observations and conditions text retained."
 }

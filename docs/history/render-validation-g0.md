@@ -1,6 +1,8 @@
 # Validation du rendu — 13 septembre 2026
 
-Cette note conserve les inspections graphiques du prototype. Les mesures de performance et leurs compromis sont détaillés dans [le passage à 250²](map-scale.md#rendu-webgpu--protocole-et-preuves-retenues). Une inspection réussie ne constitue pas une validation sur tous les navigateurs. Les PNG sont des sorties locales régénérables ; un passage ultérieur du même script peut les remplacer.
+**Archive historique G0/V2, 13 septembre 2026.** Les mots « actuel » et les versions dans ce rapport désignent le passage de cette date. Voir les [contrats courants](../development/world-generation.md) et la [validation récente](../development/validation.md) pour le jeu présent.
+
+Cette note conserve les inspections graphiques du prototype. Les mesures de performance et leurs compromis sont détaillés dans [le passage à 250²](map-scale-v2.md#rendu-webgpu--protocole-et-preuves-retenues). Une inspection réussie ne constitue pas une validation sur tous les navigateurs. Les PNG sont des sorties locales régénérables ; un passage ultérieur du même script peut les remplacer.
 
 ## Aperçu des rectangles : passage courant
 
@@ -18,7 +20,7 @@ Les captures panorama et portrait ont été réellement inspectées : carte enti
 
 Le terrain et les ressources statiques sont désormais fusionnés par chunks, avec matériaux graphiques partagés. Le sol conserve ses surfaces supérieures et les faces exposées des berges/pourtours ; les couronnes restent masquables. Les personnages et cargaisons conservent leurs animations et interpolations GPU. Le changement explicite d'epoch est raccordé à la réinitialisation des poses lors d'un chargement ; sa vérification graphique via le parcours de sauvegarde reste distincte du picking des coins.
 
-Les chiffres p50/p95/p99, soumissions, triangles et mémoire figurent dans [la mesure détaillée](map-scale.md#résultats-du-rendu). **Le temps CPU de rendu n'est pas un temps GPU.** Les valeurs de mémoire de Three sont estimatives, en **Mo décimaux**, et excluent le heap JavaScript et les allocations internes du pilote non comptabilisées. Les rapports `map-render-exploratory.json` et `map-render-*-instrumentation-audit.json` sont exclus : le premier pilote sérialisait accidentellement sa scène par CDP, et son exploration initiale quittait aussi la carte. Seuls `map-render-baseline.json` et `map-render-current.json` servent aux comparaisons retenues.
+Les chiffres p50/p95/p99, soumissions, triangles et mémoire figurent dans [la mesure détaillée](map-scale-v2.md#résultats-du-rendu). **Le temps CPU de rendu n'est pas un temps GPU.** Les valeurs de mémoire de Three sont estimatives, en **Mo décimaux**, et excluent le heap JavaScript et les allocations internes du pilote non comptabilisées. Les rapports `map-render-exploratory.json` et `map-render-*-instrumentation-audit.json` sont exclus : le premier pilote sérialisait accidentellement sa scène par CDP, et son exploration initiale quittait aussi la carte. Seuls `map-render-baseline.json` et `map-render-current.json` servent aux comparaisons retenues.
 
 **Parcours complet 250² réussi séparément**, le 13 septembre 2026 à **13:41:17 UTC** : [rapport courant](../../artifacts/render-probe.json), WebGPU AMD/RDNA-1, liste d'erreurs vide. Deux cargaisons de cinq et sept bois restent physiquement portées après la pause autoritaire au tick 23. Le mur et le lit orienté 1×2 sont achevés au tick 348 ; les quatre aperçus, la coupe, le feuillage, le tableau Travail et l'inspection sont exercés. Les captures de portage et de proportions ont été réellement inspectées : personnages plus bas que le mur, lit rectangulaire, arbres plus hauts, camp lisible et même organisation de l'interface.
 

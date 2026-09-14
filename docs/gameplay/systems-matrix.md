@@ -61,7 +61,7 @@ Ces critères résument le calendrier de [ROADMAP](../ROADMAP.md). Une ligne cib
 
 Trois colons peuvent collecter, porter, stocker et construire un petit camp. Définitions et instances sont distinctes ; chaque objet a un propriétaire unique ; piles, inventaires portés, stockage et matériaux livrés au chantier sont conservés. Les empreintes orientées et leurs accès sont cohérents, notamment pour le lit 1×2. Les réservations couvrent quantités, capacités et cellules de travail.
 
-Les attentes ont une cause explicable. Une interruption libère les intentions futures sans annuler les transformations passées. Une sauvegarde au milieu de chaque étape de transport reprend exactement ; annulation et concurrence ne créent aucune duplication ou réservation orpheline. La conversion des stocks du schéma 1 en piles est documentée et testée. Le prototype avec stock global ne satisfait pas encore ce jalon.
+Les attentes ont une cause explicable. Une interruption libère les intentions futures sans annuler les transformations passées. Une sauvegarde au milieu de chaque étape de transport reprend exactement ; annulation et concurrence ne créent aucune duplication ou réservation orpheline. La conversion des stocks du schéma 1 en piles est documentée et testée. L’ancien prototype à stock global ne satisfaisait pas ce contrat ; l’[inventaire courant](implementation-status.md) distingue les éléments maintenant livrés des critères du jalon encore ouverts.
 
 ### G1 — Survie quotidienne
 

@@ -2,7 +2,7 @@
 
 Recherche et interprétation : 13 septembre 2026. Les observations ci-dessous proviennent d'images réellement affichées dans le lecteur YouTube, dans un onglet séparé du prototype. Elles ne constituent ni un visionnage intégral, ni une mesure du moteur de RimWorld. La version et les mods éventuels de cette partie ne sont pas vérifiés.
 
-La mise en œuvre a ensuite été contrôlée dans le jeu sur WebGPU matériel : [preuve graphique](../development/render-validation.md). L'angle initial a été relevé pour lire les colons dans la forêt ; les panneaux de gestion reprennent les positions et catégories décrites ici sur leur périmètre livré.
+La mise en œuvre a ensuite été contrôlée dans le jeu sur WebGPU matériel : [preuve graphique](../history/render-validation-g0.md). L'angle initial a été relevé pour lire les colons dans la forêt ; les panneaux de gestion reprennent les positions et catégories décrites ici sur leur périmètre livré.
 
 ## Journal d'observation
 

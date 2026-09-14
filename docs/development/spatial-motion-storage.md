@@ -1,6 +1,6 @@
-# Sol, trajets et présentation distante — schéma 6
+# Sol, trajets et présentation distante
 
-État du 13 septembre 2026. Références fonctionnelles : corpus utilisateur chapitres 2/5/10/21/29/32, SYS-005/020..022/051..061/113..117/172..177 ; scénarios matériels et navigation de F1/F2/F3. Ce document remplace les anciennes descriptions permettant plusieurs piles au sol ou présentant le BFS cardinal comme la navigation actuelle. Les originaux du corpus restent inchangés.
+Contrat introduit en V6, relu sous V10 le 14 septembre 2026. Références fonctionnelles : corpus utilisateur chapitres 2/5/10/21/29/32, SYS-005/020..022/051..061/113..117/172..177 ; scénarios matériels et navigation de F1/F2/F3. Ce document remplace les anciennes descriptions permettant plusieurs piles au sol ou présentant le BFS cardinal comme la navigation actuelle. Les originaux du corpus restent inchangés.
 
 ## Recherche et décisions
 

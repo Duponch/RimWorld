@@ -443,5 +443,6 @@
         }
       ]
     }
-  ]
+  ],
+  "protocolClarification": "Setup, validation and diagnostic aggregation were outside timing; collection of optional search counters inside stepWorld was included. Original observations and conditions text retained."
 }
