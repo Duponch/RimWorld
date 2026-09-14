@@ -3,7 +3,7 @@ import { clearingDuration } from './gathering.ts';
 import type { World } from './types.ts';
 
 export function initializeConstruction(world:World):void {
-  world.schemaVersion=16;
+  Object.assign(world,{schemaVersion:16});
   for(const job of world.jobs)if(isConstruction(job))job.construction=job.escrow.wood>0||job.progress>0?'frame':'blueprint';
 }
 /** Called after the JSON structures and coordinates have been checked. */

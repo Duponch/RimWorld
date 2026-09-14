@@ -60,7 +60,7 @@ test('plans and frames remain traversable with calibrated edge delay, completion
   Object.assign(passer,{x:10,z:10,priorities:{build:0,haul:0,gather:0,grow:0,cook:0}});startTravel(w,passer,{x:11,z:11});
   expect(constructionSiteFree(w,job,builder.id)).toBe(false);stepWorld(w);expect(w.structures).toHaveLength(0);expect(validateWorld(w)).toEqual([]);
   until(w,()=>w.structures.length===1);expect(passer).toMatchObject({x:11,z:11});
-  const old=camp();applyCommand(old,{type:'designate',kind:'wall',x:12,z:10});const raw=JSON.parse(serializeWorld(old));raw.schemaVersion=15;raw.jobs.forEach((j:any)=>delete j.construction);
+  const old=camp();applyCommand(old,{type:'designate',kind:'wall',x:12,z:10});const raw=JSON.parse(serializeWorld(old));raw.schemaVersion=15;for(const pawn of raw.pawns)delete pawn.orders;raw.jobs.forEach((j:any)=>delete j.construction);
   const loaded=deserializeWorld(JSON.stringify(raw));expect(loaded.jobs[0]!.construction).toBe('blueprint');expect(loaded.rng).toBe(old.rng);expect(loaded.pawns).toEqual(old.pawns);
   raw.pawns[0].x=12;raw.pawns[0].z=10;expect(()=>deserializeWorld(JSON.stringify(raw))).toThrow(/version 15/);
   const invalid=JSON.parse(serializeWorld(loaded));invalid.jobs[0].construction='finished';expect(()=>deserializeWorld(JSON.stringify(invalid))).toThrow(/phase/);

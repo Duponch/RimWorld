@@ -1,4 +1,5 @@
 import { constructionWorkTarget } from '../sim/construction-rules';
+import { pawnSelectionMesh } from './PawnSelectionLayer';
 import type { MotionTimeline } from './MotionTimeline';
 import * as THREE from 'three/webgpu';
 import { Fn, If, attribute, cos, float, mix, positionLocal, sin, uniform, vec3 } from 'three/tsl';
@@ -105,6 +106,15 @@ function cargoGeometry(): THREE.InstancedBufferGeometry {
 
 /** Owns GPU actor/cargo batches; receives snapshots, never simulates gameplay. */
 export class PawnLayer {
+  private selected:ReadonlySet<number>=new Set();
+  private pawnIds:number[]=[];
+  private selectionMesh:THREE.Mesh|null=null;
+  setSelected(ids:ReadonlySet<number>):void {
+    this.selected=ids;
+    if(!this.selectionMesh)return;
+    const flags=this.selectionMesh.geometry.getAttribute('aSelected') as THREE.InstancedBufferAttribute;
+    this.pawnIds.forEach((id,i)=>flags.setX(i,ids.has(id)?1:0));flags.needsUpdate=true;
+  }
   readonly group = new THREE.Group();
   readonly time = uniform(0);
   readonly travelTime = uniform(0);
@@ -199,6 +209,7 @@ export class PawnLayer {
     this.cargoMesh.castShadow = true;
     this.cargoMesh.receiveShadow = true;
     this.group.add(this.cargoMesh);
+    this.selectionMesh=pawnSelectionMesh(geometry,this);this.group.add(this.selectionMesh);
   }
 
   update(world: World, oldBlend: number, newMap: boolean): void {
@@ -259,6 +270,8 @@ export class PawnLayer {
     for (const attr of [fromAttribute, toAttribute, motion, tint, cargo]) attr.needsUpdate = true;
     geometry.instanceCount = world.pawns.length;
     (this.cargoMesh!.geometry as THREE.InstancedBufferGeometry).instanceCount = world.pawns.length;
+    (this.selectionMesh!.geometry as THREE.InstancedBufferGeometry).instanceCount=world.pawns.length;
+    this.pawnIds=world.pawns.map(p=>p.id);this.setSelected(this.selected);
   }
 
   /** CPU chooses a confirmed edge; translation, orientation and rig evaluation stay on GPU. */

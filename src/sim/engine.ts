@@ -1,4 +1,5 @@
 import { constructionHaulId, constructionSiteFree, constructionWorkTarget, isConstruction } from './construction-rules.ts';
+import { advanceOrders, applyOrderCommand, reconcileOrders } from './player-orders.ts';
 import { gatherResource, clearingDuration } from './gathering.ts';
 import { processRecreation } from './recreation.ts';
 import { applyScheduleCommand } from './schedule.ts';
@@ -118,7 +119,13 @@ export function canDesignate(world: World, command: DesignateCommand): CommandRe
   return { ok: true };
 }
 export function applyCommand(world: World, command: Command): CommandResult {
+  const result=applyCommandInternal(world,command);
+  if(result.ok)reconcileOrders(world);
+  return result;
+}
+function applyCommandInternal(world: World, command: Command): CommandResult {
   if (!command || typeof command !== 'object') return refusal('invalid-command', 'Commande invalide.');
+  if(command.type==='order-job'||command.type==='clear-orders')return applyOrderCommand(world,command);
   if (command.type === 'schedule-paint' || command.type === 'schedule-replace') return applyScheduleCommand(world, command);
   if (command.type === 'food-policy-create' || command.type === 'food-policy-update' || command.type === 'food-policy-delete' || command.type === 'food-policy-assign') return applyFoodPolicyCommand(world, command);
   const drops=planCommandDrops(world,command);
@@ -157,7 +164,7 @@ export function applyCommand(world: World, command: Command): CommandResult {
     if (!pawn) return refusal('missing-target', 'Colon introuvable.');
     pawn.priorities[command.work] = command.value;
     const job = world.jobs.find(candidate => candidate.id === pawn.jobId);
-    if (command.value === 0 && ((job && workType(job) === command.work) || (pawn.haul && command.work === haulingWork(pawn.haul.destination)) || (pawn.cooking && command.work === 'cook'))) releaseWork(world, pawn,drops);
+    if (command.value === 0 && ((job && workType(job) === command.work && pawn.orders.active===null) || (pawn.haul && command.work === haulingWork(pawn.haul.destination)) || (pawn.cooking && command.work === 'cook'))) releaseWork(world, pawn,drops);
     pawn.planCooldown = 0; refreshStock(world); return { ok: true };
   }
   if (!['designate', 'cancel', 'stockpile'].includes(command.type)) return refusal('invalid-command', 'Commande inconnue.');
@@ -245,7 +252,8 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
         release: () => releaseWork(world, pawn),
         event: (message: string) => event(world, 'need', message),
       };
-      if (processNeeds(world, pawn, needsContext) || processRecreation(world, pawn, needsContext)) continue;
+      if (advanceOrders(world,pawn,getBlocked,budget)) continue;
+      if (processNeeds(world, pawn, needsContext) || pawn.orders.active===null&&processRecreation(world, pawn, needsContext)) continue;
       if (pawn.jobId === null && pawn.haul === null && !pawn.cooking && pawn.planCooldown === 0) planWork(world, pawn, getBlocked, occupied, budget);
       if (pawn.haul) { processHaul(world, pawn, (target, allow) => moveToward(world, pawn, target, allow, getBlocked, budget), () => wakePlanners(world)); continue; }
       if(pawn.cooking) {processCooking(world,pawn,{
@@ -276,6 +284,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
         if (job.progress >= jobDuration(world, job)) {completeJob(world, pawn, job);blocked=undefined;}
       } else moveToward(world, pawn, job, false, getBlocked, budget);
     }
+    reconcileOrders(world);
     refreshStock(world);
   }
 }

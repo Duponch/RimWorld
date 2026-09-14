@@ -4,7 +4,7 @@ Depuis V9, le [dégagement des cultures](farming.md#dégagement-matériel-v9) aj
 
 Références : rapport utilisateur chapitres 2, 4, 5, 9 et 10 ; SYS-005/020..022/041..061 ; scénarios A et familles F1/F2/F3. La [liste des écarts](../gameplay/decisions.md) distingue les règles retenues des limites temporaires. Les résultats exécutés sont consignés dans [validation.md](validation.md).
 
-Extension V5 : [objets alimentaires](food-items.md), identité `item`, quantités réservées et limites de pile par définition. Les migrations V2/V3 décrites ci-dessous restent datées ; le contrat de continuation courant est V16.
+Extension V5 : [objets alimentaires](food-items.md), identité `item`, quantités réservées et limites de pile par définition. Les migrations V2/V3 décrites ci-dessous restent datées ; le contrat de continuation courant est V17.
 
 ## État autoritaire et vues
 
@@ -26,11 +26,11 @@ Un colon a au plus un travail de production/construction ou une tâche de transp
 4. La première livraison crée un cadre traversable. Une construction attend son coût entièrement livré et le dégagement de son empreinte. Un seul constructeur réserve le travail ; la progression déjà accomplie survit à l'interruption.
 5. L'achèvement incorpore les matériaux dans le bâtiment et retire le travail. Annuler retire le plan, libère ses engagements et laisse les matériaux au sol.
 
-Désactiver la famille responsable (Transport ordinaire, Culture pour le dégagement agricole, Construction ou Transport selon la tâche de chantier), changer une politique incompatible ou perdre une destination libère les engagements futurs. Une cargaison interrompue est déposée à la position réelle du porteur ; elle n'est pas téléportée à la source. Les matériaux déjà livrés ne sont pas repris lorsque seul le constructeur s'interrompt. Les prochaines tâches pourront utiliser les piles restées au sol.
+Pour les tâches automatiques, désactiver la famille responsable (Transport ordinaire, Culture pour le dégagement agricole, Construction ou Transport selon la tâche de chantier), changer une politique incompatible ou perdre une destination libère les engagements futurs. Une cargaison interrompue est déposée à la position réelle du porteur ; elle n'est pas téléportée à la source. Les matériaux déjà livrés ne sont pas repris lorsque seul le constructeur s'interrompt. Les prochaines tâches pourront utiliser les piles restées au sol. Les [ordres directs V17](player-orders.md) déjà acceptés survivent à une priorité passée à 0 et ont une annulation explicite.
 
 Une réserve est actuellement une cellule avec filtre, priorité et capacité totale. Le stockage de meilleure priorité attire les objets ; les réserves de même priorité ne provoquent pas de transport circulaire. Une capacité réduite sous le contenu actuel autorise l'évacuation de l'excédent vers une réserve admissible de priorité égale ou inférieure. Faute de destination, l'excédent reste au sol. Les objets déjà présents ne disparaissent pas lorsque leurs filtres changent. La capacité ne représente pas un second conteneur possédant des copies des piles.
 
-Les [désignations rectangulaires](area-designations.md) créent ou retirent désormais plusieurs cases en une commande. Elles ne fusionnent pas les réserves en une entité commune. La création ignore les réserves déjà présentes ; le retrait invalide ensemble les livraisons qui les ciblaient. L'annulation rectangulaire d'un chantier sélectionne son identité une seule fois, même si plusieurs cellules de son empreinte sont touchées, puis laisse ses matériaux au sol. Cette étape historique avait conservé le schéma 2 ; le schéma courant est V16.
+Les [désignations rectangulaires](area-designations.md) créent ou retirent désormais plusieurs cases en une commande. Elles ne fusionnent pas les réserves en une entité commune. La création ignore les réserves déjà présentes ; le retrait invalide ensemble les livraisons qui les ciblaient. L'annulation rectangulaire d'un chantier sélectionne son identité une seule fois, même si plusieurs cellules de son empreinte sont touchées, puis laisse ses matériaux au sol. Cette étape historique avait conservé le schéma 2 ; le schéma courant est V17.
 
 ## Empreintes, accès et interface
 

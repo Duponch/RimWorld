@@ -1,6 +1,6 @@
 # Génération des cartes — vallée tempérée
 
-Contrat courant relu le 14 septembre 2026, schéma V16. `src/sim/generation.ts` construit le monde initial ; `createWorld` reste le point d'entrée public. Le preset de vallée remplace le tirage indépendant de terrain par cellule, qui produisait des trous d'eau et des obstacles dispersés sans organisation spatiale.
+Contrat courant relu le 14 septembre 2026, schéma V17. `src/sim/generation.ts` construit le monde initial ; `createWorld` reste le point d'entrée public. Le preset de vallée remplace le tirage indépendant de terrain par cellule, qui produisait des trous d'eau et des obstacles dispersés sans organisation spatiale.
 
 ## Contrat et sauvegarde
 

@@ -1,4 +1,5 @@
 import type { Reachability } from './pathfinding.ts';
+import { clearQueuedOrders } from './player-orders.ts';
 import { reservedSource } from './materials.ts';
 import { mealQuantity, adultHungerFactor } from './items.ts';
 import { TICKS_PER_DAY } from './types.ts';
@@ -35,10 +36,15 @@ export function processNeeds(world: World, pawn: Pawn, context: NeedContext): bo
   // Collapse is an emergency interruption, including travel with a meal in hand.
   if ((world.restRules === 'legacy' ? pawn.rest === 0 : pawn.collapsePending) && pawn.need?.kind !== 'sleep') {
     if (!context.release()) return true;
+    clearQueuedOrders(world,pawn);
     pawn.need = { kind: 'sleep', phase: 'sleep', bedId: null, target: { x: pawn.x, z: pawn.z } };
     pawn.state = 'sleeping'; pawn.collapsePending = false; pawn.restZeroTicks = 0;
     context.event(`${pawn.name} s’effondre de fatigue au sol.`);
   }
+
+  // A direct player job postpones ordinary needs and schedules; depletion and
+  // emergency collapse still run. Queuing behind a need does not interrupt it.
+  if(pawn.orders.active!==null)return false;
 
   // Sleep only ends for hunger if a physically reachable portion can be reserved.
   const wantsFood = pawn.hunger <= (pawn.need?.kind === 'sleep' ? 12.5 : 30);

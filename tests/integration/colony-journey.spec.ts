@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { perform } from './player-actions';
-import { playerDecisions, colonySummary, woodAccount, foodAccount } from '../scenarios/colony-player';
+import { playerDecisions, playerFocusDecisions, colonySummary, woodAccount, foodAccount } from '../scenarios/colony-player';
 import { validateWorld } from '../../src/sim/index';
 import { world, observeErrors, panel, expectWorld } from './helpers';
 
@@ -70,6 +70,9 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
       for(const decision of playerDecisions(current)) {
         await test.step(`${decision.reason} ${JSON.stringify(decision.command)}`,()=>perform(page,decision,rotation));
         decisions.push({tick:current.tick,...decision});
+      }
+      if(hour===0)for(const decision of playerFocusDecisions(await world(page))) {
+        await perform(page,decision,rotation);decisions.push({tick:current.tick,...decision});
       }
     }
     await page.keyboard.press('Escape');await page.screenshot({path:'artifacts/colony-three-days.png'});

@@ -26,6 +26,16 @@ Le compteur FPS reste dans le coin supérieur droit, même en pause ; il indique
 
 Sur une fenêtre étroite, la barre des onglets se fait défiler horizontalement. Les panneaux occupent davantage de largeur, tout en conservant leur position dans l'interface.
 
+## Sélection et ordres directs
+
+Cliquez sur un colon pour le sélectionner ; **Maj-clic** ajoute ou retire un membre. Glissez un rectangle avec le bouton gauche pour sélectionner les colons qu'il encadre à l'écran ; Maj conserve la sélection précédente. Un double-clic sur un colon sélectionne les colons visibles. Les portraits permettent toujours de choisir précisément un colon ; l'inspection de groupe liste leurs activités.
+
+Avec **un seul colon sélectionné**, cliquez droit sur un travail désigné pour le prioriser. **Maj** l'ajoute à la file après l'activité actuelle, même si le colon mange ou dort. Le travail est réservé dès l'acceptation. Un ordre direct remplace l'activité en cours ; les besoins continuent de diminuer, mais les pauses ordinaires attendent la fin de la file. L'effondrement reste une urgence. Le bouton **Annuler les ordres directs** les retire sans supprimer les désignations.
+
+Le métier doit être activé pour accepter un nouvel ordre. Passer ensuite sa priorité à 0 conserve les ordres directs déjà acceptés : annulez-les explicitement si vous voulez les arrêter. La file accepte au plus 32 travaux en attente et annonce tout refus. Redonner sans Maj un travail déjà en file le démarre immédiatement et remplace les autres ordres. Si un accès disparaît, le colon abandonne l'entrée impossible et le journal l'explique.
+
+Le menu prend actuellement en charge abattage, coupe, récolte, semis sans pile gênante et finition d'un chantier déjà approvisionné et dégagé. **Transport, approvisionnement, dégagement et cuisine forcés restent à venir** ; leurs comportements automatiques restent jouables. Le clic droit ne donne pas encore d'ordre de déplacement ou de combat.
+
 ## Vue, lumière et contrôles
 
 Le bouton **Vue : iso**, près de l'heure en bas à droite, passe en **perspective** ; recliquer revient en vue iso (projection orthographique). Le point observé et son échelle sont conservés. La molette zoome, le glissement avec le bouton droit tourne la caméra ; le bouton ⌂ recentre sur les colons. Un changement de vue annule un rectangle en cours de tracé. Le masquage du feuillage reste utile aux angles rasants.
@@ -167,7 +177,7 @@ Avant de créer une nouvelle colonie, le jeu conserve aussi l'état courant dans
 
 ## Limites et suite
 
-Pas encore d'autres cultures, autres postes/recettes de cuisine, chaîne du froid, minage, déconstruction, autres familles de loisirs, animaux, armes, combat, blessures, médecine, relations, traits, recherche, commerce, électricité, toit, température, incendie, météo dynamique, carte du monde ou storyteller. Les réserves à plusieurs cases partageant une politique, la sélection multiple et les ordres forcés contextuels restent à développer. Les modèles sont provisoires ; la congestion entre agents actifs et la calibration des besoins restent ouvertes. La faim ne cause pas encore de malnutrition ni de décès.
+Pas encore d'autres cultures, autres postes/recettes de cuisine, chaîne du froid, minage, déconstruction, autres familles de loisirs, animaux, armes, combat, blessures, médecine, relations, traits, recherche, commerce, électricité, toit, température, incendie, météo dynamique, carte du monde ou storyteller. Les réserves à plusieurs cases partageant une politique, les autres familles sélectionnables et les fournisseurs forcés de transport/approvisionnement/cuisine restent à développer. Les modèles sont provisoires ; la congestion entre agents actifs et la calibration des besoins restent ouvertes. La faim ne cause pas encore de malnutrition ni de décès.
 
 La suite est suivie dans [le plan de développement](../ROADMAP.md). Les détails de la référence et les futures interactions sont dans [la matrice des systèmes](systems-matrix.md).
 

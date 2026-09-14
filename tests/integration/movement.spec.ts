@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { createWorld, serializeWorld, refreshStock, applyCommand, validateWorld } from '../../src/sim/index';
+import { createWorld, serializeWorld, deserializeWorld, refreshStock, applyCommand, validateWorld } from '../../src/sim/index';
 import { observeErrors, panel, saveKey, world, expectWorld } from './helpers';
 import { civilCrossingFixture } from '../scenarios/civil-traffic';
 
@@ -7,10 +7,11 @@ test('civil crossing in the real worker: shared cell, save/reload, three exclusi
   const browser=await playwright.chromium.launch({channel:'chromium',args:[]});
   const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);
   try {
-    const fixture=civilCrossingFixture(),old=JSON.parse(serializeWorld(fixture));old.schemaVersion=13;
+    const fixture=civilCrossingFixture(),old=JSON.parse(serializeWorld(fixture));old.schemaVersion=13;for(const pawn of old.pawns){delete pawn.orders;delete pawn.recreation;}
+    const migrated=deserializeWorld(JSON.stringify(old));expect(migrated).toEqual(fixture);
     await page.addInitScript(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:JSON.stringify(old)});
     await page.goto('/?size=16&e2e');await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();
-    await expectWorld(page,fixture);expect(await page.evaluate(()=>window.__lisiere.backend)).toBe('WebGPU');
+    await expectWorld(page,migrated);expect(await page.evaluate(()=>window.__lisiere.backend)).toBe('WebGPU');
     await page.keyboard.press('Escape');await page.locator('[data-speed="1"]').click();
     await page.waitForFunction(()=>{
       const w=window.__lisiere.world;

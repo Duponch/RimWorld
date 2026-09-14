@@ -1,4 +1,7 @@
 import { fireControls, updateFireControls } from './ui/fire-controls';
+import { PawnSelection } from './ui/pawn-selection';
+import { OrderMenu } from './ui/order-menu';
+import type { SelectionGesture } from './render/PawnSelectionInput';
 import { createScheduleControls } from './ui/schedule-controls';
 import { createFoodPolicyControls } from './ui/food-policy-controls';
 import { billControls, updateBillControls } from './ui/bill-controls';
@@ -41,6 +44,8 @@ let wallCutaway = false, foliageVisible = true, replacingWorld = false;
 let renderer: ColonyRenderer | undefined;
 let noticeTimer: ReturnType<typeof setTimeout> | undefined;
 let pawnSignature = '';
+const selection=new PawnSelection();
+const orderMenu=new OrderMenu(client,notify);
 
 function notify(message: string, error = false) {
   el('notice').textContent = message;
@@ -65,6 +70,7 @@ function setCategory(category: ArchitectCategory) {
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-tool-category]')) button.hidden = button.dataset.toolCategory !== category;
 }
 function setPanel(panel: Panel) {
+  orderMenu.close();
   currentPanel = panel;
   scheduleUI.cancel();
   for (const name of ['architect', 'work', 'schedule', 'assign', 'history', 'menu'] as const) el(`${name}-panel`).hidden = panel !== name;
@@ -75,7 +81,7 @@ function setPanel(panel: Panel) {
     button.classList.toggle('active', active);
     button.setAttribute('aria-pressed', String(active));
   }
-  el('inspector').hidden = panel !== null || (selectedPawn === undefined && !selectedCell);
+  el('inspector').hidden = panel !== null || (!selection.ids.size && !selectedCell);
   if (panel !== 'architect') applyTool('select');
 }
 function applyTool(tool: Tool) {
@@ -97,9 +103,15 @@ function setTool(tool: Tool) {
   applyTool(tool);
 }
 function selectPawn(id: number) {
-  selectedPawn = id; selectedCell = undefined;
+  selectPawns({ids:[id],additive:false,toggle:false},true);
+}
+function selectPawns(gesture:SelectionGesture,focus=false) {
+  if(!snapshot||replacingWorld)return;
+  selection.apply(gesture,new Set(snapshot.pawns.map(p=>p.id)));
+  selectedPawn=selection.single;selectedCell=undefined;
+  renderer?.setSelectedPawns(selection.ids);
   setPanel(null);
-  renderer?.focusPawn(id);
+  if(focus&&selectedPawn!==undefined)renderer?.focusPawn(selectedPawn);
   rebuildInspector(); renderState();
 }
 function pickCell(x: number, z: number) {
@@ -114,8 +126,7 @@ function pickCell(x: number, z: number) {
     });
     return;
   }
-  const pawn = snapshot.pawns.find(item => item.x === x && item.z === z);
-  if (pawn) { selectPawn(pawn.id); return; }
+  selection.clear();renderer?.setSelectedPawns(selection.ids);
   selectedPawn = undefined; selectedCell = { x, z };
   setPanel(null); rebuildInspector(); renderState();
 }
@@ -129,8 +140,9 @@ function designateArea(action: AreaAction, from: Cell, to: Cell) {
   });
 }
 function clearSelection() {
+  selection.clear();renderer?.setSelectedPawns(selection.ids);orderMenu.close();
   selectedPawn = undefined; selectedCell = undefined;
-  rebuildInspector();
+  rebuildInspector();renderState();
 }
 function readStorageSettings(prefix: string) {
   const capacity = Number(el<HTMLInputElement>(`${prefix}-capacity`).value);
@@ -147,10 +159,18 @@ function rotatePlacement(direction = 1) {
 }
 function rebuildInspector() {
   const panel = el('inspector');
-  panel.hidden = currentPanel !== null || (selectedPawn === undefined && !selectedCell);
-  if (selectedPawn !== undefined) {
+  panel.hidden = currentPanel !== null || (!selection.ids.size && !selectedCell);
+  if(selection.ids.size>1) {
+    panel.innerHTML='<div class="panel-heading"><h2 id="group-title"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><div id="group-members"></div><p class="muted">Sélectionnez un colon pour lui donner un ordre de travail.</p>';
+    for(const id of selection.ids) {
+      const button=document.createElement('button');button.dataset.groupPawn=String(id);button.onclick=()=>selectPawn(id);el('group-members').append(button);
+    }
+  } else if (selectedPawn !== undefined) {
     panel.innerHTML = `<div class="panel-heading"><h2 id="selected-name"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><p id="selected-action"></p><div class="needs">${(['hunger', 'rest', 'comfort', 'mood'] as const).map((need, index) => `<label>${['Nourriture', 'Repos', 'Confort', 'Humeur'][index]} <span id="selected-${need}"></span></label><meter id="${need}-meter" min="0" max="100" low="25" optimum="100"></meter>`).join('')}</div>${recreationInspection()}<p id="selected-memories" class="muted"></p><button class="secondary-action" id="manage-work">Gérer le travail</button>`;
     el('manage-work').onclick = () => setPanel('work');
+    const orders=document.createElement('p');orders.id='selected-orders';panel.append(orders);
+    const cancel=document.createElement('button');cancel.id='clear-orders';cancel.textContent='Annuler les ordres directs';
+    cancel.onclick=()=>{if(selectedPawn!==undefined)void attempt(()=>client.command({type:'clear-orders',pawnId:selectedPawn!}));};panel.append(cancel);
   } else if (selectedCell) {
     panel.innerHTML = `<div class="panel-heading"><h2 id="cell-title"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><p id="cell-description"></p><p id="cell-materials"></p><p id="cell-job"></p><div id="cell-storage" hidden><p id="cell-storage-quantity"></p>${storageSettings('selected-stockpile')}<button id="update-stockpile" class="secondary-action">Appliquer les réglages</button><button id="delete-stockpile" class="secondary-action">Retirer cette réserve</button></div>`;
     const storage = snapshot?.stockpiles.find(item => item.x === selectedCell!.x && item.z === selectedCell!.z);
@@ -200,7 +220,7 @@ function rebuildPawns(world: World) {
     const button = document.createElement('button');
     button.className = 'colonist'; button.dataset.pawn = String(pawn.id);
     button.innerHTML = `<span class="portrait portrait-${index % 3}"><span class="portrait-head"></span><span class="portrait-body"></span><span class="pawn-symbol"></span></span><strong></strong><span class="pawn-mood"><i></i></span>`;
-    button.onclick = () => selectPawn(pawn.id);
+    button.onclick = event => selectPawns({ids:[pawn.id],additive:event.shiftKey,toggle:event.shiftKey},!event.shiftKey);
     return button;
   }));
   el('work-rows').replaceChildren(...world.pawns.map(pawn => {
@@ -239,8 +259,8 @@ function renderState() {
   if (signature !== pawnSignature) { pawnSignature = signature; rebuildPawns(world); }
   for (const pawn of world.pawns) {
     const button = document.querySelector<HTMLButtonElement>(`[data-pawn="${pawn.id}"]`)!;
-    button.classList.toggle('selected', selectedPawn === pawn.id);
-    button.setAttribute('aria-pressed', String(selectedPawn === pawn.id));
+    button.classList.toggle('selected', selection.ids.has(pawn.id));
+    button.setAttribute('aria-pressed', String(selection.ids.has(pawn.id)));
     button.querySelector('strong')!.textContent = pawn.name; button.title = `${pawn.name} · ${actionLabel(pawn)}`;
     button.querySelector('.pawn-symbol')!.textContent = pawn.state === 'sleeping' ? 'Z' : pawn.state === 'hungry' ? '!' : '';
     (button.querySelector('i') as HTMLElement).style.width = `${pawn.mood}%`;
@@ -248,12 +268,20 @@ function renderState() {
     row.querySelector('.work-activity')!.textContent = actionLabel(pawn);
     for (const select of row.querySelectorAll<HTMLSelectElement>('select')) select.value = String(pawn.priorities[select.dataset.work as WorkType]);
   }
-  if (selectedPawn !== undefined) {
+  if(selection.ids.size>1) {
+    el('group-title').textContent=`${selection.ids.size} colons sélectionnés`;
+    for(const button of el('group-members').querySelectorAll<HTMLButtonElement>('button')) {
+      const pawn=world.pawns.find(p=>p.id===Number(button.dataset.groupPawn));
+      button.textContent=pawn?`${pawn.name} · ${actionLabel(pawn)}`:'Colon absent';
+    }
+  } else if (selectedPawn !== undefined) {
     const pawn = world.pawns.find(item => item.id === selectedPawn);
     if (!pawn) clearSelection();
     else {
       el('selected-name').textContent = pawn.name; el('selected-action').textContent = pawn.need ? actionLabel(pawn) : `${actionLabel(pawn)} · ${queryPawnStatus(world, pawn).reason}`;
       updateRecreationInspection(el('inspector'),pawn);
+      el('selected-orders').textContent=`${pawn.orders.active!==null?'Travail imposé · ':''}${pawn.orders.queue.length} ordre(s) en file`;
+      el<HTMLButtonElement>('clear-orders').disabled=pawn.orders.active===null&&!pawn.orders.queue.length;
       el('selected-memories').textContent = pawn.memories.map(memory => `${memory.kind === 'ate-raw-food' ? 'Mangé cru : −7' : 'Mangé sans table : −3'} humeur · encore ${Math.ceil((memory.expiresAt - world.tick) / (TICKS_PER_DAY / 24))} h`).join(' · ');
       for (const need of ['hunger', 'rest', 'comfort', 'mood'] as const) { el(`selected-${need}`).textContent = `${Math.round(pawn[need])} %`; el<HTMLMeterElement>(`${need}-meter`).value = pawn[need]; }
     }
@@ -359,12 +387,13 @@ el('camera-mode').onclick = () => {
 el('rotate-building').onclick = () => rotatePlacement();
 syncStorageButtons(); setCategory(currentCategory); applyTool('select');
 document.addEventListener('keydown', event => {
+  if(event.defaultPrevented)return;
   if (document.querySelector('dialog[open]')) return;
   if (event.target instanceof HTMLElement && (event.target.matches('input, select, textarea') || event.target.isContentEditable)) return;
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') { event.preventDefault(); void attempt(save); return; }
   if (event.ctrlKey || event.metaKey || event.altKey) return;
   if (event.code === 'Space') { event.preventDefault(); void attempt(() => changeSpeed(currentSpeed === 0 ? lastSpeed : 0)); return; }
-  if (event.key === 'Escape') { event.preventDefault(); if (renderer?.cancelDesignation()) return; setPanel(null); clearSelection(); return; }
+  if (event.key === 'Escape') { event.preventDefault(); if (orderMenu.close() || renderer?.cancelDesignation()) return; setPanel(null); clearSelection(); return; }
   if (event.key === 'Tab' || event.key === 'F1' || event.key === 'F2' || event.key === 'F3') { event.preventDefault(); const panel = event.key === 'Tab' ? 'architect' : event.key === 'F1' ? 'work' : event.key === 'F2' ? 'schedule' : 'assign'; setPanel(currentPanel === panel ? null : panel); return; }
   const speeds: Record<string, number> = { '1': 1, '2': 3, '3': 6 };
   if (event.key in speeds) { void attempt(() => changeSpeed(speeds[event.key])); return; }
@@ -374,13 +403,23 @@ document.addEventListener('keydown', event => {
   else if (key === 's') { event.preventDefault(); setTool('stockpile'); }
 });
 client.onError = message => notify(message, true);
-client.onSnapshot = (world, cost, speed, replaced, motion) => { snapshot = world; stepMs = cost; currentSpeed = speed; renderer?.setWorld(world, replaced, speed, motion); renderState(); };
+client.onSnapshot = (world, cost, speed, replaced, motion) => {
+  snapshot=world;stepMs=cost;currentSpeed=speed;
+  const changed=replaced||[...selection.ids].some(id=>!world.pawns.some(p=>p.id===id));
+  if(changed){selection.clear();selectedPawn=undefined;selectedCell=undefined;orderMenu.close();rebuildInspector();}
+  renderer?.setWorld(world,replaced,speed,motion);
+  if(changed)renderer?.setSelectedPawns(selection.ids);
+  renderState();
+};
 async function start() {
   try {
     const params = new URLSearchParams(location.search), seedText = params.get('seed'), requestedSize = Number(params.get('size'));
     const seed = seedText && /^\d{1,10}$/.test(seedText) ? Number(seedText) >>> 0 : 42;
     await client.init(seed, [32, ...MAP_SIZE_PRESETS].includes(requestedSize) ? requestedSize : DEFAULT_MAP_SIZE);
     renderer = await ColonyRenderer.create(el('viewport'), pickCell);
+    renderer.onSelection=gesture=>selectPawns(gesture);
+    renderer.onInteractionCancel=()=>orderMenu.close();
+    renderer.onContext=(cell,x,y,queue)=>{if(snapshot&&!replacingWorld)void orderMenu.open(snapshot,selection.ids,cell,x,y,queue);};
     renderer.onArea = designateArea;
     renderer.onAreaPreview = info => {
       el('area-feedback').hidden = !info;

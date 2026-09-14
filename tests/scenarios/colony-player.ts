@@ -7,6 +7,17 @@ import type { Command, DesignateCommand, World } from '../../src/sim/types.ts';
 
 export interface Decision { reason: string; command: Command }
 
+/** First observation, after designations are acknowledged: an ordinary player
+ * asks one well-rested worker to get the first two nearby lots of building wood. */
+export function playerFocusDecisions(world:World):Decision[] {
+  if(world.tick>=250)return [];
+  const pawn=world.pawns.find(p=>p.priorities.gather>0&&p.hunger>50&&p.rest>50&&!p.need&&p.orders.active===null&&!p.orders.queue.length);
+  if(!pawn)return [];
+  return world.jobs.filter(j=>j.kind==='chop'&&j.reservedBy===null)
+    .sort((a,b)=>Math.hypot(a.x-pawn.x,a.z-pawn.z)-Math.hypot(b.x-pawn.x,b.z-pawn.z)||a.id-b.id).slice(0,2)
+    .map((job,index)=>({reason:'Prioriser les premiers lots de bois pour installer le camp.',command:{type:'order-job',pawnId:pawn.id,jobId:job.id,queue:index>0}}));
+}
+
 /** Deliberately ordinary, bounded player policy, not a perfect-play optimizer.
  * Reads visible colony state, never writes it or injects inventory/needs.
  * Both the fast simulation and the real UI journey execute these intentions.
@@ -87,6 +98,7 @@ export function colonySummary(world: World) {
   return { tick: world.tick, foodPolicies: world.pawns.map(p=>p.foodPolicyId), restRules: world.restRules, scheduledSleepHours: world.pawns.map(p=>p.schedule.filter(s=>s==='sleep').length), spoiled: { ...world.spoiled }, crops: world.resources.filter(r=>r.kind==='rice').length, growingCells:fields.size,
     recreation:world.pawns.map(p=>({level:p.recreation.level,tolerance:{...p.recreation.tolerance},bored:{...p.recreation.bored}})),
     sharedPawnCells:[...occupied.values()].filter(count=>count>1).length,
+    playerOrders:world.pawns.map(p=>({active:p.orders.active,queued:p.orders.queue.length})),
     obstructedGrowingCells:world.piles.filter(p=>p.owner.type==='ground'&&fields.has(p.owner.z*world.width+p.owner.x)).length,
     clearing:world.pawns.filter(p=>p.haul?.destination.type==='aside').length,
     construction: {blueprints:world.jobs.filter(j=>j.construction==='blueprint').length,frames:world.jobs.filter(j=>j.construction==='frame').length,clearingPlants:world.jobs.filter(j=>j.clearance).length,clearingPiles:world.pawns.filter(p=>p.haul?.destination.type==='aside'&&p.haul.destination.constructionId!==undefined).length},

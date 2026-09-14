@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import { createWorld, applyCommand, stepWorld, validateWorld, serializeWorld, deserializeWorld } from '../src/sim/index';
-import { playerDecisions, colonySummary, woodAccount, foodAccount } from './scenarios/colony-player';
+import { playerDecisions, playerFocusDecisions, colonySummary, woodAccount, foodAccount } from './scenarios/colony-player';
 
 test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp construit, stocks entretenus et reprise exacte', () => {
   for (const seed of [42, 93, 2048]) {
@@ -16,6 +16,7 @@ test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp const
         expect(applyCommand(world, decision.command), JSON.stringify({seed,t,decision})).toMatchObject({ok:true});
         if(decision.command.type==='food-policy-assign'&&decision.command.policyId===3)rationAssignments++;
       }
+      if(t===0)for(const decision of playerFocusDecisions(world))expect(applyCommand(world,decision.command)).toMatchObject({ok:true});
       const ingesting = world.pawns.filter(p=>p.need?.kind==='eat' && p.need.phase==='ingest' && p.need.progress===49).map(p=>({id:p.id,quantity:p.need?.kind==='eat'?p.need.quantity:0}));
 
       stepWorld(world);

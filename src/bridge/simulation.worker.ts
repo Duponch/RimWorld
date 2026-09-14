@@ -1,5 +1,6 @@
 /// <reference lib="webworker" />
 import { MotionRecorder } from './motion-tracks';
+import { queryOrderOptions } from '../sim/player-orders';
 import { applyCommand, createWorld, deserializeWorld, serializeWorld, stepWorld } from '../sim/index';
 import type { World } from '../sim/types';
 import type { Request, Response } from './protocol';
@@ -37,7 +38,9 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
       previous = performance.now();
     } else {
       if (!world) throw new Error('La simulation ne répond pas encore.');
-      if (request.type === 'command') {
+      if(request.type==='order-options') {
+        data=JSON.stringify(queryOrderOptions(world,request.pawnId,request,request.queue));
+      } else if (request.type === 'command') {
         const result = applyCommand(world, request.command);
         if (!result.ok) throw new Error(result.reason ?? 'Ordre refusé.');
         if (result.affected !== undefined) data = JSON.stringify({ affected: result.affected, skipped: result.skipped });
@@ -50,7 +53,7 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
         previous = performance.now();
       }
     }
-    publish(request.type === 'resync');
+    if(request.type!=='order-options')publish(request.type === 'resync');
     send({ type: 'reply', id: request.id, ok: true, data });
   } catch (error) {
     send({ type: 'reply', id: request.id, ok: false, reason: error instanceof Error ? error.message : String(error) });

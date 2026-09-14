@@ -1,4 +1,5 @@
 import { initializeConstruction, validateConstruction } from './construction-save.ts';
+import { initializePlayerOrders, validatePlayerOrders } from './player-orders-save.ts';
 import { isConstruction } from './construction-rules.ts';
 import { initializeRecreation, validateRecreation } from './recreation-save.ts';
 import { validateCooking } from './cooking-save.ts';
@@ -33,9 +34,9 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 
 /** Structural validation first, cross-reference validation second; accepts arbitrary JSON without throwing. */
 export function validateWorld(input: unknown): string[] {
-  return validateSchema(input, 16);
+  return validateSchema(input, 17);
 }
-function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16): string[] {
+function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(input)) return ['World must be an object.'];
@@ -152,6 +153,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
   if(!errors.length)errors.push(...validateFoodPolicies(input as unknown as World,version));
   if(!errors.length)errors.push(...validateRecreation(input as unknown as World,version));
   if(!errors.length)errors.push(...validateConstruction(input as unknown as World,version));
+  if(!errors.length)errors.push(...validatePlayerOrders(input as unknown as World,version));
   if (errors.length) return errors;
   const world = input as unknown as World;
   if(version>=6)errors.push(...validateTravel(world, version < 14));
@@ -190,7 +192,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
     if (pawn.jobId !== null) {
       const job = jobById.get(pawn.jobId);
       if (!job || job.reservedBy !== pawn.id || job.status !== 'active') errors.push('Pawn/job reservation mismatch.');
-      if (job && pawn.priorities[workType(job)] === 0) errors.push('Pawn assigned to disabled work.');
+      if (job && pawn.priorities[workType(job)] === 0 && !(version>=17&&pawn.orders.active===job.id)) errors.push('Pawn assigned to disabled work.');
     }
     const owned = world.piles.filter(pile => pile.owner.type === 'pawn' && pile.owner.pawnId === pawn.id);
     if (owned.length > 1 || (owned.length === 1 && !(version >= 10 && pawn.cooking) && pawn.haul?.phase !== 'deliver' && (legacyV2 || pawn.need?.kind !== 'eat' || pawn.need.phase === 'pickup'))) errors.push('Carried ownership mismatch.');
@@ -262,7 +264,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
   for (const job of world.jobs) {
     if (job.progress >= jobDuration(world, job)) errors.push('Completed job left in queue.');
     if ((job.status === 'active') !== (job.reservedBy !== null)) errors.push('Job reservation/status mismatch.');
-    if (job.reservedBy !== null && pawnById.get(job.reservedBy)?.jobId !== job.id) errors.push('Job references missing or mismatched pawn.');
+    if (job.reservedBy !== null && pawnById.get(job.reservedBy)?.jobId !== job.id && !(version>=17&&pawnById.get(job.reservedBy)?.orders.queue.includes(job.id))) errors.push('Job references missing or mismatched pawn.');
     const delivered = deliveredStock(world, job.id);
     if (job.escrow.wood !== delivered.wood || job.escrow.food !== delivered.food || delivered.food !== 0 || delivered.wood > JOB_WOOD_COST[job.kind]) errors.push('Invalid delivered material view.');
     // Version 1 could refund escrow on interruption while retaining progress. Such plans
@@ -360,6 +362,10 @@ export function deserializeWorld(serialized: string): World {
   if(record(input)&&input.schemaVersion===15) {
     const errors=validateSchema(input,15);if(errors.length)throw new Error(`Invalid version 15 save: ${errors.join(' ')}`);
     initializeConstruction(input as unknown as World);
+  }
+  if(record(input)&&input.schemaVersion===16) {
+    const errors=validateSchema(input,16);if(errors.length)throw new Error(`Invalid version 16 save: ${errors.join(' ')}`);
+    initializePlayerOrders(input as unknown as World);
   }
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`); return input as World;
 }

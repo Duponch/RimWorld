@@ -1,4 +1,5 @@
 import { CropLayer } from './CropLayer';
+import { PawnSelectionInput, type ScreenPawn, type SelectionGesture } from './PawnSelectionInput';
 import { GrowingZoneLayer } from './GrowingZoneLayer';
 import { buildTerrain } from './TerrainLayer';
 import { RockLayer } from './RockLayer';
@@ -51,7 +52,10 @@ export class ColonyRenderer {
   private readonly pileGroup = new THREE.Group();
   private readonly storageGroup = new THREE.Group();
   private readonly hover: THREE.Mesh;
-  private readonly selection: THREE.Mesh;
+  private readonly selectionInput: PawnSelectionInput;
+  onSelection: (gesture:SelectionGesture)=>void=()=>{};
+  onContext: (cell:Cell,x:number,y:number,queue:boolean)=>void=()=>{};
+  onInteractionCancel: ()=>void=()=>{};
   private areaMesh: THREE.InstancedMesh | null = null;
   private areaIndex: AreaIndex | undefined;
   private areaSignature = '';
@@ -83,7 +87,6 @@ export class ColonyRenderer {
   private tool = 'select';
   private placementRotation: Orientation = 0;
   private hoverCell: { x: number; z: number } | null = null;
-  private selectedPawn: number | null = null;
   private wallCutaway = false;
   private lastFrame = 0;
   private snapshotAt = 0;
@@ -143,11 +146,13 @@ export class ColonyRenderer {
     this.hover.position.y = 0.08;
     this.hover.visible = false;
     this.hover.renderOrder = 5;
-    this.selection = new THREE.Mesh(new THREE.RingGeometry(0.38, 0.45, 32), new THREE.MeshBasicNodeMaterial({ color: 0xffe5a0, depthWrite: false, side: THREE.DoubleSide }));
-    this.selection.rotation.x = -Math.PI / 2;
-    this.selection.position.y = 0.09;
-    this.selection.visible = false;
-    this.scene.add(this.hover, this.selection, this.recreationHints.group);
+    this.scene.add(this.hover, this.recreationHints.group);
+    this.selectionInput=new PawnSelectionInput(renderer.domElement,{
+      enabled:()=>this.tool==='select'&&!document.querySelector('dialog[open]'),
+      pawns:()=>this.screenPawns(),select:gesture=>this.onSelection(gesture),
+      inspect:event=>{const cell=this.pick(event);if(cell)this.onPick(cell.x,cell.z);else this.onSelection({ids:[],additive:false,toggle:false});},
+      lock:locked=>{this.controls.enabled=!locked;this.keys.clear();},
+    });
     renderer.domElement.addEventListener('pointerdown', this.onPointerDown, true);
     renderer.domElement.addEventListener('pointerup', this.onPointerUp);
     renderer.domElement.addEventListener('pointermove', this.onPointerMove);
@@ -238,6 +243,7 @@ export class ColonyRenderer {
    * pressing Escape must never submit it later through a stray pointerup.
    */
   cancelDesignation(): boolean {
+    const selecting=this.selectionInput.cancel();this.onInteractionCancel();
     const drag = this.areaDrag;
     this.areaDrag = null; this.pointerDown = null; this.areaSignature = ''; this.hoverCell = null;
     this.controls.enabled = true;
@@ -246,7 +252,7 @@ export class ColonyRenderer {
     this.hover.visible = false;
     (this.hover.material as THREE.MeshBasicNodeMaterial).opacity = 0.55;
     this.onAreaPreview(null);
-    return drag !== null;
+    return drag !== null || selecting;
   }
 
   /** Presentation only: hidden wall volume remains blocked in the simulation. */
@@ -296,12 +302,29 @@ export class ColonyRenderer {
   focusPawn(id: number): void {
     const pawn = this.world?.pawns.find((item) => item.id === id);
     if (!pawn) return;
-    this.selectedPawn = id;
-    this.selection.visible = true;
     const offset = this.camera.position.clone().sub(this.controls.target);
     this.controls.target.set(pawn.x, 0, pawn.z);
     this.camera.position.copy(this.controls.target).add(offset);
     this.controls.update();
+  }
+
+  setSelectedPawns(ids:ReadonlySet<number>):void {this.pawns.setSelected(ids);}
+
+  /** Project lightweight actor proxies only for pointer gestures, using the
+   * same confirmed edge as the GPU. Canopies don't prevent selecting a colon. */
+  screenPawns():ScreenPawn[] {
+    const rect=this.renderer.domElement.getBoundingClientRect(),result:ScreenPawn[]=[];
+    for(const [id,visual] of this.pawns.visuals) {
+      const segment=this.hasTracks?this.timeline.segment(id):undefined;
+      const alpha=segment?THREE.MathUtils.clamp((this.timeline.tick-segment.start)/(segment.end-segment.start),0,1):this.pawns.blend.value;
+      const position=new THREE.Vector3().lerpVectors(visual.from,visual.to,alpha);
+      const center=position.clone().add(new THREE.Vector3(0,.75,0)).project(this.camera);
+      if(center.z < -1||center.z>1||Math.abs(center.x)>1||Math.abs(center.y)>1)continue;
+      const head=position.clone().add(new THREE.Vector3(0,1.75,0)).project(this.camera);
+      result.push({id,x:rect.left+(center.x+1)*rect.width/2,y:rect.top+(1-center.y)*rect.height/2,
+        radius:Math.max(5,Math.min(38,Math.abs(head.y-center.y)*rect.height/2)),depth:center.z});
+    }
+    return result;
   }
 
   resize(): void {
@@ -435,7 +458,7 @@ export class ColonyRenderer {
     this.pawns.blend.value = this.snapshotDuration > 0 ? Math.min(1, Math.max(0, (performance.now() - this.snapshotAt) / this.snapshotDuration)) : 1;
     this.pawns.time.value = THREE.MathUtils.lerp(this.timeFrom, this.timeTo, this.pawns.blend.value);
     if(this.hasTracks && this.world) {this.timeline.advance(now);this.pawns.time.value=(this.timeline.tick/TICKS_PER_SECOND)%(2*Math.PI);this.pawns.updateTravel(this.world,this.timeline);}
-    if (!this.areaDrag) { this.moveCamera(dt); this.controls.update(); }
+    if (!this.areaDrag && !this.selectionInput.active) { this.moveCamera(dt); this.controls.update(); }
     if (this.world) {
       const x = THREE.MathUtils.clamp(this.controls.target.x, 0, this.world.width - 1);
       const z = THREE.MathUtils.clamp(this.controls.target.z, 0, this.world.height - 1);
@@ -447,11 +470,6 @@ export class ColonyRenderer {
     // restores the sky; pausing cannot continue an independent wall-clock sun.
     const skyTick = this.hasTracks ? this.timeline.tick : THREE.MathUtils.lerp(this.timeFrom, this.timeTo, this.pawns.blend.value) * TICKS_PER_SECOND;
     this.daylight.update(skyTick, this.controls.target);
-    if (this.selectedPawn !== null) {
-      const visual = this.pawns.visuals.get(this.selectedPawn);
-      this.selection.visible = !!visual;
-      if (visual) {const segment=this.hasTracks?this.timeline.segment(this.selectedPawn):undefined;const blend=segment?THREE.MathUtils.clamp((this.timeline.tick-segment.start)/(segment.end-segment.start),0,1):this.pawns.blend.value;this.selection.position.set(THREE.MathUtils.lerp(visual.from.x,visual.to.x,blend),0.08,THREE.MathUtils.lerp(visual.from.z,visual.to.z,blend));}
-    }
     const cellPixels=this.rig.pixelsPerCell(this.host.clientHeight);
     const distant=this.overview.group.visible ? cellPixels<9 : cellPixels<7;
     this.overview.group.visible=distant;this.terrainGroup.visible=!distant;this.resourceGroup.visible=!distant;
@@ -492,6 +510,9 @@ export class ColonyRenderer {
     return { x, z };
   }
   private onPointerDown = (event: PointerEvent): void => {
+    this.onInteractionCancel();
+    this.renderer.domElement.focus({preventScroll:true});
+    if(this.selectionInput.down(event))return;
     if (this.areaDrag) {
       if (event.button === 2) this.cancelDesignation();
       event.stopImmediatePropagation(); event.preventDefault(); return;
@@ -508,6 +529,7 @@ export class ColonyRenderer {
     }
   };
   private onPointerUp = (event: PointerEvent): void => {
+    if(this.selectionInput.up(event))return;
     const drag = this.areaDrag;
     if (drag) {
       if (event.pointerId !== drag.pointerId || event.button !== 0) return;
@@ -517,17 +539,16 @@ export class ColonyRenderer {
       return;
     }
     const down = this.pointerDown; this.pointerDown = null;
+    if(down&&down.button===2&&event.button===2&&down.pointerId===event.pointerId&&this.tool==='select'&&Math.hypot(down.x-event.clientX,down.y-event.clientY)<=6) {
+      const cell=this.pick(event);if(cell)this.onContext(cell,event.clientX,event.clientY,event.shiftKey);return;
+    }
     if (!down || down.pointerId !== event.pointerId || down.button !== 0 || event.button !== 0 || Math.hypot(down.x - event.clientX, down.y - event.clientY) > 6) return;
     const cell = this.pick(event);
     if (!cell) return;
-    if (this.tool === 'select') {
-      const pawn = this.world?.pawns.find((p) => p.x === cell.x && p.z === cell.z);
-      this.selectedPawn = pawn?.id ?? null;
-      this.selection.visible = !!pawn;
-    }
     this.onPick(cell.x, cell.z);
   };
   private onPointerMove = (event: PointerEvent): void => {
+    if(this.selectionInput.move(event))return;
     if (this.areaDrag && event.pointerId !== this.areaDrag.pointerId) return;
     // A second mouse button changes `buttons` through pointermove, without a new pointerdown.
     if (this.areaDrag && (event.buttons & 2)) { event.preventDefault(); this.cancelDesignation(); return; }
@@ -605,6 +626,7 @@ export class ColonyRenderer {
     if (this.areaDrag) this.updateAreaPreview(); else this.pointerDown = null;
   };
   private onPointerCancel = (event: PointerEvent): void => {
+    if(this.selectionInput.active){this.selectionInput.cancel();return;}
     if (this.areaDrag?.pointerId === event.pointerId) this.cancelDesignation();
     else if (this.pointerDown?.pointerId === event.pointerId) this.pointerDown = null;
   };
@@ -623,6 +645,7 @@ export class ColonyRenderer {
   private onBlur = (): void => { this.keys.clear(); this.cancelDesignation(); };
 
   dispose(): void {
+    this.selectionInput.dispose();
     if (this.disposed) return;
     this.cancelDesignation(); this.disposeAreaMesh();
     this.disposed = true;
@@ -651,7 +674,6 @@ export class ColonyRenderer {
     this.staticMaterial.dispose();
     this.waterMaterial.dispose();
     this.hover.geometry.dispose(); (this.hover.material as THREE.Material).dispose();
-    this.selection.geometry.dispose(); (this.selection.material as THREE.Material).dispose();
     this.daylight.dispose();
     void this.renderer.dispose();
     canvas.remove();

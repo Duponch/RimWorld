@@ -65,7 +65,7 @@ test('eight-direction routes agree with an independent relaxation oracle and pre
 
 test('civil crossing preserves beds, opposing cargo, every edge and exact continuation without pushing other actors',()=>{
   const w=civilCrossingFixture();expect(validateWorld(w)).toEqual([]);
-  const old=JSON.parse(serializeWorld(w));old.schemaVersion=13;
+  const old=JSON.parse(serializeWorld(w));old.schemaVersion=13;for(const pawn of old.pawns)delete pawn.orders;
   expect(deserializeWorld(JSON.stringify(old))).toEqual(w); // No rewritten positions, tasks or IDs.
   const start=w.tick;let shared:string|undefined;
   const endings=new Map<number,number>();
@@ -84,7 +84,7 @@ test('civil crossing preserves beds, opposing cargo, every edge and exact contin
   expect(w.pawns.map(p=>[p.x,p.z,p.state])).toEqual([[14,8,'sleeping'],[1,8,'sleeping'],[8,8,'sleeping']]);
   expect(new Set(w.pawns.map(p=>p.bedId)).size).toBe(3);
   const resumed=deserializeWorld(shared!);stepWorld(resumed,w.tick-resumed.tick);expect(resumed).toEqual(w);
-  const overlapV13=JSON.parse(shared!);overlapV13.schemaVersion=13;
+  const overlapV13=JSON.parse(shared!);overlapV13.schemaVersion=13;for(const pawn of overlapV13.pawns)delete pawn.orders;
   expect(()=>deserializeWorld(JSON.stringify(overlapV13))).toThrow(/overlap/i);
   const duplicate=JSON.parse(serializeWorld(w));duplicate.pawns[0].bedId=duplicate.pawns[1].bedId;
   expect(()=>deserializeWorld(JSON.stringify(duplicate))).toThrow(/bed|sleep/i);
@@ -106,7 +106,7 @@ test('civil crossing preserves beds, opposing cargo, every edge and exact contin
   }
   expect(quantity('wood',14)).toBe(10);expect(quantity('rice',1)).toBe(10);expect(carriedCrossing).toBeDefined();
   const cargoResume=deserializeWorld(carriedCrossing!);stepWorld(cargoResume,haul.tick-cargoResume.tick);expect(cargoResume).toEqual(haul);
-  const legacyEdge=JSON.parse(carriedCrossing!);legacyEdge.schemaVersion=13;
+  const legacyEdge=JSON.parse(carriedCrossing!);legacyEdge.schemaVersion=13;for(const pawn of legacyEdge.pawns)delete pawn.orders;
   expect(()=>deserializeWorld(JSON.stringify(legacyEdge))).toThrow(/overlap/i);
 });
 

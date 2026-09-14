@@ -1,6 +1,6 @@
 # Sol, trajets et présentation distante
 
-Contrat introduit en V6, relu sous le schéma V16 le 14 septembre 2026. Références fonctionnelles : corpus utilisateur chapitres 2/5/10/21/29/32, SYS-005/020..022/051..061/113..117/172..177 ; scénarios matériels et navigation de F1/F2/F3. Ce document remplace les anciennes descriptions permettant plusieurs piles au sol ou présentant le BFS cardinal comme le calcul des routes actuelles. Les originaux du corpus restent inchangés.
+Contrat introduit en V6, relu sous le schéma V17 le 14 septembre 2026. Références fonctionnelles : corpus utilisateur chapitres 2/5/10/21/29/32, SYS-005/020..022/051..061/113..117/172..177 ; scénarios matériels et navigation de F1/F2/F3. Ce document remplace les anciennes descriptions permettant plusieurs piles au sol ou présentant le BFS cardinal comme le calcul des routes actuelles. Les originaux du corpus restent inchangés.
 
 ## Recherche et décisions
 
@@ -80,3 +80,5 @@ V8 : le parcours navigateur a exposé une avance épuisée entre deux publicatio
 ## Chantiers V16
 
 [Contrat](construction.md) : plans et cadres traversables, première livraison distincte, coûts de cadre capturés par recherche et arête. La construction achevée invalide la grille du tick pour les acteurs suivants. Une arête, ses coins et une place de service engagés ne peuvent être recouverts par un bâtiment. V15 est validé avec ses plans solides avant ajout des phases ; aucune corruption historique n’est régularisée silencieusement. L’oracle spatial compare aussi les routes pondérées avec cadres.
+
+V17 remplace l’anneau isolé par un lot instancié partageant les trajectoires GPU du corps ; la projection des proxies pour sélection ne modifie ni cellules ni navigation. Les [ordres directs](player-orders.md) préservent l’arête engagée avant le nouveau trajet.

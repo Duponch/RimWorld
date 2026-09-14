@@ -8,7 +8,7 @@ Abattage, récolte, annulation, création et retrait de cases de réserve accept
 
 Annuler un rectangle de chantiers retire chacun une seule fois, y compris un lit dont les deux cellules sont touchées. Les engagements futurs sont libérés ; matériaux portés et déjà livrés restent physiques, aux positions de dépôt prévues par la boucle matérielle. Un bâtiment achevé n'est pas détruit. La création d'un rectangle ne produit ni bois ni nourriture avant le travail des colons.
 
-Murs et lits restent en placement individuel. Les réserves restent des cellules indépendantes, sans nom ni politique commune ; sélection multiple des colons et ordres forcés restent ouverts. Ces limites sont inscrites dans [les décisions](../gameplay/decisions.md).
+Murs et lits restent en placement individuel. Les réserves restent des cellules indépendantes, sans nom ni politique commune ; la [sélection multiple et les premiers ordres forcés](player-orders.md) sont livrés séparément en V17. Ces limites sont inscrites dans [les décisions](../gameplay/decisions.md).
 
 ## Commande et coût
 

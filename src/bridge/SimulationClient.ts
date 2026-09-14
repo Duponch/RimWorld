@@ -54,6 +54,9 @@ export class SimulationClient {
 
   init(seed: number, size = DEFAULT_MAP_SIZE) { return this.request({ type: 'init', seed, size }); }
   command(command: Command) { return this.request({ type: 'command', command }); }
+  async orderOptions(pawnId:number,x:number,z:number,queue=false):Promise<import('../sim/player-orders').OrderOption[]> {
+    return JSON.parse((await this.request({type:'order-options',pawnId,x,z,queue}))!);
+  }
   setSpeed(speed: number) { return this.request({ type: 'speed', speed }); }
   save() { return this.request({ type: 'save' }); }
   load(data: string) { return this.request({ type: 'load', data }); }

@@ -31,7 +31,18 @@ export async function editBill(page:Page,id:number,settings:BillSettings):Promis
 
 export async function perform(page: Page, decision: Decision, rotation: { value: number }): Promise<void> {
   const c=decision.command;
-  if(c.type==='food-policy-assign') {
+  if(c.type==='order-job') {
+    await page.keyboard.press('Escape');await page.locator(`[data-pawn="${c.pawnId}"]`).click();
+    const job=(await world(page)).jobs.find(j=>j.id===c.jobId);if(!job)throw new Error('Travail direct absent.');
+    await revealCells(page,[job]);
+    const point=await page.evaluate(({x,z})=>window.__lisiere.projectCell(x,z),job);
+    const bounds=(await page.locator('#viewport canvas').boundingBox())!;
+    if(c.queue)await page.keyboard.down('Shift');
+    await page.mouse.click(bounds.x+point.x,bounds.y+point.y,{button:'right'});
+    await page.locator(`[data-order-job="${c.jobId}"]`).click();
+    if(c.queue)await page.keyboard.up('Shift');
+    await expect.poll(async()=>{const pawn=(await world(page)).pawns.find(p=>p.id===c.pawnId)!;return pawn.orders.active===c.jobId||pawn.orders.queue.includes(c.jobId);}).toBe(true);
+  } else if(c.type==='food-policy-assign') {
     await panel(page,'assign'); await page.locator(`[data-food-policy-pawn="${c.pawnId}"]`).selectOption(String(c.policyId));
   } else if(c.type==='schedule-paint') {
     await panel(page,'schedule'); await page.locator(`[data-schedule-brush="${c.assignment}"]`).click();
@@ -63,6 +74,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
   } else throw new Error(`Player UI action not supported: ${c.type}`);
   await page.waitForFunction(c=>{
     const w=window.__lisiere.world;
+    if(c.type==='order-job'){const pawn=w.pawns.find(p=>p.id===c.pawnId);return pawn?.orders.active===c.jobId||pawn?.orders.queue.includes(c.jobId);}
     if(c.type==='food-policy-assign')return w.pawns.find(p=>p.id===c.pawnId)?.foodPolicyId===c.policyId;
     if(c.type==='schedule-paint')return c.hours.every(h=>w.pawns.find(p=>p.id===c.pawnId)?.schedule[h]===c.assignment);
     if(c.type==='priority')return w.pawns.find(p=>p.id===c.pawnId)?.priorities[c.work]===c.value;

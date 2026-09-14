@@ -1,4 +1,4 @@
-# Repas et couchages physiques — origine V3, état courant V13
+# Repas et couchages physiques — origine V3, état courant V17
 
 Livraison du 13 septembre 2026. Référence : chapitre 14 du corpus utilisateur, SYS-026..027/039/044/076..080, UI-016/026, TEST-189 ; adoption des actions effectives, des réservations et de la continuation. La demande utilisateur interdit de remplacer ces interactions élémentaires par des raccourcis. Leur correction passe avant les zones nommées, sans déclarer G1 terminé.
 
@@ -9,6 +9,8 @@ Livraison du 13 septembre 2026. Référence : chapitre 14 du corpus utilisateur,
 Un colon fatigué préfère son lit accessible, sinon choisit un lit inoccupé par un propriétaire. Attribution durable et réservation temporaire sont distinctes. La destination de sommeil est la case d'ancrage, jamais une simple case voisine. Un obstacle permanent exclut le couchage ; une occupation temporaire est gérée lors du déplacement. Réattribuer un lit libère l'ancien dormeur, qui peut quitter l'emprise avant de se coucher ailleurs. Sans lit admissible le repli est le sol ; à repos nul, le colon peut s'effondrer sur place. Les embouteillages entre agents actifs restent un problème général de navigation.
 
 La référence permet de manger sans table et de dormir au sol. Les [tables](https://rimworldwiki.com/wiki/Table_(1x2)) offrent un lieu de repas avec siège et des conséquences d'humeur ; elles peuvent être ignorées lorsqu'elles sont trop éloignées. Le [repos](https://rimworldwiki.com/wiki/Rest) distingue fatigue et effondrement. Le [menu des horaires](https://rimworldwiki.com/wiki/Menus) sépare décisions de tâches, sommeil et réveil pour faim critique. Ces pages ont été consultées le 13 septembre ; elles ne certifient pas tous les coefficients de notre moteur.
+
+Les [ordres directs V17](player-orders.md) retardent les besoins ordinaires pendant leur exécution, sans figer les jauges. L’effondrement reste une interruption ; Maj derrière un repas attend sa fin physique.
 
 ## Paramètres et domaines associés
 

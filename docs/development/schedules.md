@@ -4,7 +4,7 @@ Les [sources et décisions](../research/schedules-reference.md) distinguent règ
 
 ## Règles présentes
 
-Chaque colon dispose de 24 plages : Libre, Travail, Sommeil ou Loisirs. À la création, sommeil de 22 h à 6 h, libre autrement. Libre cherche le sommeil sous 30 de repos ; Sommeil sous 75 ; Travail ne déclenche aucun sommeil volontaire. Un adulte à zéro de nourriture ne s'endort pas volontairement. Un travail déjà engagé se termine avant le départ volontaire au lit. Un repas accessible reste prioritaire dans les quatre modes. Loisirs garde le seuil de repos de Libre ; le sommeil peut donc le remplacer en cas de fatigue.
+Chaque colon dispose de 24 plages : Libre, Travail, Sommeil ou Loisirs. À la création, sommeil de 22 h à 6 h, libre autrement. Libre cherche le sommeil sous 30 de repos ; Sommeil sous 75 ; Travail ne déclenche aucun sommeil volontaire. Un adulte à zéro de nourriture ne s'endort pas volontairement. Un travail déjà engagé se termine avant le départ volontaire au lit. Hors ordre direct déjà accepté, un repas accessible reste prioritaire dans les quatre modes. Les [ordres directs V17](player-orders.md) reportent les pauses ordinaires mais pas l’effondrement. Loisirs garde le seuil de repos de Libre ; le sommeil peut donc le remplacer en cas de fatigue.
 
 Un dormeur continue en Libre jusqu'à 100. Travail le réveille dès qu'il a au moins 20 de repos. Une faim critique peut le faire sortir du lit uniquement si une portion est accessible et réservable ; le profil adulte supprime l'ancien verrou arbitraire de cinq points de repos. Le trajet utilise toujours la même navigation et les mêmes réservations de lit. Aucune commande horaire ne téléporte, ne consomme et ne donne du repos.
 

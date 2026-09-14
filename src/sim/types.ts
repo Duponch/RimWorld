@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 16 as const;
+export const SCHEMA_VERSION = 17 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
@@ -53,6 +53,7 @@ export interface Job extends Cell {
   escrow: Stock;
 }
 export interface Pawn extends Cell {
+  orders: import('./player-orders.ts').PlayerOrders;
   recreation: import('./recreation-rules.ts').RecreationNeed;
   foodPolicyId: number;
   schedule: import('./schedule.ts').ScheduleAssignment[];
@@ -117,6 +118,7 @@ export type AreaAction = 'chop' | 'harvest' | 'cut' | 'cancel' | 'stockpile' | '
 export interface StorageSettings { filters?: Record<MaterialKind, boolean>; priority?: number; capacity?: number }
 export interface AreaCommand extends StorageSettings { type: 'area'; action: AreaAction; from: Cell; to: Cell }
 export type Command =
+  | import('./player-orders.ts').OrderCommand
   | import('./food-policy.ts').FoodPolicyCommand
   | import('./schedule.ts').ScheduleCommand
   | { type: 'bill-add'; structureId: number }
