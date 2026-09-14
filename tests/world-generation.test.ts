@@ -143,14 +143,14 @@ describe('seeded temperate valley generation', () => {
     expect(pawn.path.length).toBeGreaterThan(240);
     const resumed = deserializeWorld(serializeWorld(long));
     for (const world of [long, resumed]) expect(applyCommand(world, { type: 'designate', kind: 'wall', x: 101, z: 125 })).toEqual({ ok: true });
-    let usedDetour = false;
+    let usedDetour = false, crossedPlan = false;
     for (let tick = 0; tick < 350; tick++) {
-      stepWorld(long); usedDetour ||= pawn.z === 124;
+      stepWorld(long); usedDetour ||= pawn.z === 124; crossedPlan ||= pawn.x===101&&pawn.z===125;
       expect(long.tiles[pawn.z * 250 + pawn.x]!.terrain).toBe('grass');
-      expect(pawn.x === 101 && pawn.z === 125).toBe(false);
+      // A blueprint is traversable since V16; only a completed wall blocks.
     }
     stepWorld(resumed, 350);
-    expect(usedDetour).toBe(true);
+    expect(usedDetour).toBe(false);expect(crossedPlan).toBe(true);
     expect(hashWorld(long)).toBe(hashWorld(resumed));
     for (const world of [long, resumed]) {
       expect(applyCommand(world, { type: 'cancel', x: 101, z: 125 })).toEqual({ ok: true });

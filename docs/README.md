@@ -49,3 +49,5 @@ Lire ROADMAP et l’inventaire, puis le contrat du domaine et les chapitres/iden
 Après un changement, mettre à jour **le contrat concerné**, puis les entrées affectées du guide, de l’inventaire, du catalogue et du plan. Les preuves détaillées vont dans validation, les mesures brutes dans `artifacts/`. Ne pas recopier tout le contrat dans chaque document. Quand une règle change, remplacer sa description courante ; conserver les anciennes décisions dans ADR/Git et les anciens résultats dans history.
 
 `python scripts/check-docs.py` vérifie liens locaux, fragments, identifiants de la matrice et intégrité des originaux. Il ne vérifie pas la vérité des règles. Une retouche documentaire ne nécessite pas de rejouer la colonie entière.
+
+Déconstruction des bâtiments actuels : [règles et limites](research/deconstruction-reference.md), [contrat V24](development/deconstruction.md).

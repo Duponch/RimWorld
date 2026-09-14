@@ -62,6 +62,12 @@ export function playerDecisions(world: World): Decision[] {
     ...[[0, -3], [1, -3], [0, -1]].map(([x, z]) => ({ type: 'designate' as const, kind: 'stool' as const, x: cx + x!, z: cz + z! })),
     ...[-3, 3].flatMap(x => [-3, -2, -1].map(z => ({ type: 'designate' as const, kind: 'wall' as const, x: cx + x, z: cz + z }))),
   ];
+  if(world.deconstructed.count===0) {
+    const temporary={type:'designate' as const,kind:'wall' as const,x:cx+4,z:cz-1};
+    if(world.structures.some(s=>s.x===temporary.x&&s.z===temporary.z)&&world.tick>=6000) {
+      if(canDesignate(world,{...temporary,kind:'deconstruct'}).ok)out.push({reason:'Ouvrir le passage du camp après la première journée.',command:{...temporary,kind:'deconstruct'}});
+    } else plans.push(temporary);
+  }
   for (const plan of plans) {
     // Beds first, dining next, then an open windbreak. No claim of a roofed room.
     if (plan.kind !== 'bed' && world.structures.filter(s => s.kind === 'bed').length < 3) continue;
@@ -130,7 +136,7 @@ export function colonySummary(world: World) {
 }
 
 export function woodAccount(world: World): number {
-  return world.piles.filter(p=>p.kind==='wood').reduce((n,p)=>n+p.quantity,0) + world.resources.filter(r=>r.kind==='tree').reduce((n,r)=>n+r.amount,0) + world.structures.reduce((n,s)=>n+(s.kind==='campfire' ? ((s.fuel?.ticks??0)+(s.fuel?.burned??0))/600 : JOB_WOOD_COST[s.kind]),0);
+  return world.deconstructed.lostWood + world.deconstructed.fuelTicks/600 + world.piles.filter(p=>p.kind==='wood').reduce((n,p)=>n+p.quantity,0) + world.resources.filter(r=>r.kind==='tree').reduce((n,r)=>n+r.amount,0) + world.structures.reduce((n,s)=>n+(s.kind==='campfire' ? ((s.fuel?.ticks??0)+(s.fuel?.burned??0))/600 : JOB_WOOD_COST[s.kind]),0);
 }
 export function foodAccount(world: World): number {
   // Produced units remain accounted for even after spoilage; this is a ledger,

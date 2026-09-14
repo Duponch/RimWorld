@@ -1,3 +1,4 @@
+import { deconstructionAvailable } from './deconstruction-rules.ts';
 import { validSowingClearance } from './sowing-clearance.ts';
 import { constructionCandidates } from './construction-planner.ts';
 import { haulReservations } from './haul-reservations.ts';
@@ -81,8 +82,8 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   // a failed targeted search has explored the full component and is reusable.
   // Logistics with a higher priority still uses the ordinary complete planner.
   const ready = world.jobs.filter(job => !isConstruction(job) && job.reservedBy === null && pawn.priorities[workType(job)] > 0
-    && job.escrow.wood >= JOB_WOOD_COST[job.kind] && (pawn.hunger > 20 || job.kind === 'harvest'))
-    .map(job => ({ job, target: job, id: job.id, priority: pawn.priorities[workType(job)], rank: workType(job) === 'gather' ? 0 : 1, distance: Math.abs(job.x-pawn.x)+Math.abs(job.z-pawn.z) }))
+    && job.escrow.wood >= JOB_WOOD_COST[job.kind] && (pawn.hunger > 20 || job.kind === 'harvest') && (job.kind!=='deconstruct'||deconstructionAvailable(world,job,pawn.id)))
+    .map(job => ({ job, target: job, id: job.id, priority: pawn.priorities[workType(job)], rank: job.kind==='deconstruct' ? 3 : workType(job) === 'gather' ? 0 : 1, distance: Math.abs(job.x-pawn.x)+Math.abs(job.z-pawn.z) }))
     .sort(compareCandidate);
   let reachable: Reachability | null = null;
   const first = ready[0];
@@ -134,7 +135,8 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
     if(isConstruction(job))continue;
     const work = workType(job);
     if (job.reservedBy !== null || pawn.priorities[work] === 0 || (delivered.get(job.id) ?? 0) < JOB_WOOD_COST[job.kind] || (pawn.hunger <= 20 && job.kind !== 'harvest')) continue;
-    const candidate: Candidate = { priority: pawn.priorities[work], rank: work === 'gather' ? 0 : 1, distance: Math.abs(job.x - pawn.x) + Math.abs(job.z - pawn.z), id: job.id, job, target: job };
+    if(job.kind==='deconstruct'&&!deconstructionAvailable(world,job,pawn.id))continue;
+    const candidate: Candidate = { priority: pawn.priorities[work], rank: job.kind==='deconstruct' ? 3 : work === 'gather' ? 0 : 1, distance: Math.abs(job.x - pawn.x) + Math.abs(job.z - pawn.z), id: job.id, job, target: job };
     if (job.kind === 'sow' && ground.has(cellIndex(world, job.x, job.z))) {
       if (best && compareCandidate(candidate, best) >= 0) continue;
       const source = world.piles.find(p => p.owner.type === 'ground' && sameCell(p.owner, job));

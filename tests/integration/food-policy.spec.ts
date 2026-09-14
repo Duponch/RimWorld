@@ -39,7 +39,7 @@ test('Affectations : régime partagé, copie, refus de suppression, faim, migrat
     await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).pawns.every(p=>p.hunger>90),{timeout:15000}).toBe(true);await page.locator('[data-speed="0"]').click();
     const fed=await world(page);expect(fed.stock.food).toBe(5);expect(validateWorld(fed)).toEqual([]);
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,fed);
-    const old=withoutFoodPolicies(JSON.parse(serializeWorld(fed)));old.schemaVersion=12;
+    const old=withoutFoodPolicies(JSON.parse(serializeWorld(fed)));old.schemaVersion=12;delete old.deconstructed;
     await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:JSON.stringify(old)});await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,deserializeWorld(JSON.stringify(old)));
     const current=await world(page),bad=structuredClone(current);bad.pawns[0]!.foodPolicyId=999;
     await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:JSON.stringify(bad)});await panel(page,'menu');await page.locator('#load').click();await expect(page.locator('#notice')).toHaveClass(/error/);await expectWorld(page,current);

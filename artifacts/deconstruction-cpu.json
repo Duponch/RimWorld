@@ -1,0 +1,87 @@
+{
+  "date": "2026-09-14T20:47:11.589Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "map": 250,
+  "protocol": "Synthetic 3/30/100 builders, one removal and one tree per pawn. 3 repetitions × 500 ticks; separate 100-tick warmup. Commands and validation outside measurements. Empty terrain isolates active simulation, not full-map rendering.",
+  "phases": [
+    {
+      "pawns": 3,
+      "tickMs": {
+        "samples": 1500,
+        "p50": 0.00760000000002492,
+        "p95": 0.10380000000009204,
+        "p99": 2.050899999999956,
+        "max": 14.0702
+      },
+      "ticksWithRemovalMs": {
+        "samples": 9,
+        "p50": 0.16790000000003147,
+        "p95": 0.2577000000001135,
+        "p99": 0.2577000000001135,
+        "max": 0.2577000000001135
+      },
+      "outcome": {
+        "removed": 3,
+        "treesRemaining": 0,
+        "ledger": {
+          "count": 3,
+          "lostWood": 19,
+          "fuelTicks": 0
+        }
+      }
+    },
+    {
+      "pawns": 30,
+      "tickMs": {
+        "samples": 1500,
+        "p50": 0.025900000000092405,
+        "p95": 3.057199999999966,
+        "p99": 7.482400000000098,
+        "max": 35.5
+      },
+      "ticksWithRemovalMs": {
+        "samples": 60,
+        "p50": 2.1410000000000764,
+        "p95": 5.245499999999993,
+        "p99": 10.949399999999969,
+        "max": 10.949399999999969
+      },
+      "outcome": {
+        "removed": 30,
+        "treesRemaining": 0,
+        "ledger": {
+          "count": 30,
+          "lostWood": 200,
+          "fuelTicks": 72000
+        }
+      }
+    },
+    {
+      "pawns": 100,
+      "tickMs": {
+        "samples": 1500,
+        "p50": 0.12089999999989232,
+        "p95": 5.9536999999995714,
+        "p99": 15.618799999999737,
+        "max": 26.947400000000016
+      },
+      "ticksWithRemovalMs": {
+        "samples": 165,
+        "p50": 3.3269000000000233,
+        "p95": 11.393500000000131,
+        "p99": 17.69459999999981,
+        "max": 18.76760000000013
+      },
+      "outcome": {
+        "removed": 100,
+        "treesRemaining": 0,
+        "ledger": {
+          "count": 100,
+          "lostWood": 663,
+          "fuelTicks": 240000
+        }
+      }
+    }
+  ]
+}

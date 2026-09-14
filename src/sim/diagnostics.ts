@@ -1,3 +1,4 @@
+import { deconstructionAvailable } from './deconstruction-rules.ts';
 import { constructionObstruction, constructionSiteFree, isConstruction } from './construction-rules.ts';
 import { JOB_WOOD_COST } from './definitions.ts';
 import { deliveredStock, reservedDestination } from './materials.ts';
@@ -12,6 +13,7 @@ export function queryJobStatus(world: World, job: Job): JobDiagnostic {
   const delivered = deliveredStock(world, job.id).wood; const required = JOB_WOOD_COST[job.kind];
   const queued=job.reservedBy===null?undefined:world.pawns.find(p=>p.id===job.reservedBy&&p.orders.queue.includes(job.id));
   if(queued)return {code:'working',reason:`Réservé dans la file de ${queued.name}.`,delivered,required};
+  if(job.kind==='deconstruct'&&!deconstructionAvailable(world,job,job.reservedBy??undefined))return {code:'blocked',reason:'Attend la fin de l’utilisation du bâtiment.',delivered,required};
   if(isConstruction(job)){
     const {plant,pile}=constructionObstruction(world,job);
     if(plant||pile)return {code:'clearing',reason:plant?'Attend la coupe de la plante qui gêne le chantier.':`Attend le déplacement de ${pile!.quantity} unités hors de l’emprise.`,delivered,required};

@@ -87,7 +87,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     if(c.type==='priority')return w.pawns.find(p=>p.id===c.pawnId)?.priorities[c.work]===c.value;
     if(c.type==='bill-add')return !!w.structures.find(s=>s.id===c.structureId)?.bills?.length;
     if(c.type==='bill-update') {const b=w.structures.find(s=>s.id===c.structureId)?.bills?.find(b=>b.id===c.billId);return !!b&&b.mode===c.settings.mode&&b.target===c.settings.target&&b.suspended===c.settings.suspended;}
-    if(c.type==='area')return w.growingZones.length>0;
+    if(c.type==='area')return c.action==='deconstruct'?w.jobs.some(j=>j.kind==='deconstruct'):w.growingZones.length>0;
     if(c.type==='stockpile')return w.stockpiles.some(s=>s.x===c.x&&s.z===c.z);
     return c.type==='designate' && w.jobs.some(j=>j.x===c.x&&j.z===c.z&&j.kind===c.kind);
   },c,{polling:100,timeout:5000});

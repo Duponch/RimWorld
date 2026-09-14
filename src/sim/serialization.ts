@@ -1,3 +1,4 @@
+import { validateDeconstruction } from './deconstruction-save.ts';
 import { validatePriorityWork } from './priority-work-state.ts';
 import { canStandAt } from './furniture-travel.ts';
 import { initializeFurnitureTravel } from './furniture-save.ts';
@@ -42,7 +43,7 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validateWorld(input: unknown): string[] {
   return validateSchema(input, SCHEMA_VERSION);
 }
-function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23): string[] {
+function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(input)) return ['World must be an object.'];
@@ -126,8 +127,8 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
           if (version < 7 || !(item.kind === 'berries' || (version >= 8 && item.kind === 'rice')) || typeof item.growth !== 'number' || !Number.isFinite(item.growth) || item.growth < 0 || item.growth > 1 || !integer(item.growthTick, 0, input.tick as number)) errors.push('Invalid plant growth checkpoint.');
         }
       } else if (key === 'structures' || key === 'jobs') {
-        if (!oneOf(item.kind, key === 'structures' ? (version < 4 ? ['wall', 'bed'] : ['wall', 'bed', 'table', 'stool', ...(version>=10?['campfire']:[]), ...(version>=15?['horseshoes']:[])]) : (version < 4 ? ['chop', 'harvest', 'wall', 'bed'] : ['chop', 'harvest', ...(version >= 7 ? ['cut'] : []), ...(version >= 8 ? ['sow'] : []), 'wall', 'bed', 'table', 'stool', ...(version>=10?['campfire']:[]), ...(version>=15?['horseshoes']:[])])) || !integer(item.orientation, 0, 3)
-          || !oneOf(item.footprint, ['standard', 'legacy-single']) || (item.footprint === 'legacy-single' && item.kind !== 'bed')) errors.push('Invalid structure definition or footprint.');
+        if (!oneOf(item.kind, key === 'structures' ? (version < 4 ? ['wall', 'bed'] : ['wall', 'bed', 'table', 'stool', ...(version>=10?['campfire']:[]), ...(version>=15?['horseshoes']:[])]) : (version < 4 ? ['chop', 'harvest', 'wall', 'bed'] : [...(version>=24?['deconstruct']:[]), 'chop', 'harvest', ...(version >= 7 ? ['cut'] : []), ...(version >= 8 ? ['sow'] : []), 'wall', 'bed', 'table', 'stool', ...(version>=10?['campfire']:[]), ...(version>=15?['horseshoes']:[])])) || !integer(item.orientation, 0, 3)
+          || !oneOf(item.footprint, ['standard', 'legacy-single']) || (item.footprint === 'legacy-single' && item.kind !== 'bed' && !(version>=24&&item.kind==='deconstruct'))) errors.push('Invalid structure definition or footprint.');
         if (key==='structures' && item.kind==='campfire') {
           const f=item.fuel;
           if(version<10||!record(f)||!integer(f.ticks,0,CAMPFIRE_CAPACITY)||!integer(f.burned,0,input.tick as number)||typeof f.autoRefuel!=='boolean')errors.push('Invalid campfire fuel.');
@@ -156,6 +157,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
   const events = input.events as unknown[];
   if (events.length > 80 || events.some(item => !record(item) || !integer(item.tick, 0, input.tick as number) || !oneOf(item.type, ['job', 'need', 'command']) || typeof item.message !== 'string' || item.message.length > 240)) errors.push('Invalid event log.');
   if (version >= 8 && !errors.length) errors.push(...validateFarming(input, size, ids));
+  if(!errors.length)errors.push(...validateDeconstruction(input as unknown as World,version,true));
   if(!errors.length)errors.push(...validatePriorityWork(input as unknown as World,version));
   if(!errors.length)errors.push(...validatePlayerOrders(input as unknown as World,version,true));
   if(!errors.length)errors.push(...validateCooking(input,version,ids));
@@ -167,6 +169,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
   if(!errors.length)errors.push(...validatePlayerOrders(input as unknown as World,version));
   if (errors.length) return errors;
   const world = input as unknown as World;
+  errors.push(...validateDeconstruction(world,version));
   if(version>=6)errors.push(...validateTravel(world, version < 14));
   const cellKey = (item: { x: number; z: number }): number => item.z * world.width + item.x;
   const pawnById = new Map(world.pawns.map(item => [item.id, item])); const jobById = new Map(world.jobs.map(item => [item.id, item]));
@@ -185,7 +188,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
   for (const item of [...world.resources, ...world.pawns, ...world.stockpiles]) if (isImpassable(item)) errors.push('Entity placed on impassable terrain.');
   for (const [key] of [...structureCells, ...jobCells]) if (['water', 'rock'].includes(world.tiles[key]!.terrain)) errors.push('Footprint on impassable terrain.');
   for (const resource of world.resources) if (structureCells.has(cellKey(resource))) errors.push('Resource overlaps a structure.');
-  for (const zone of world.stockpiles) if (resourceCells.has(cellKey(zone)) || (version<21?structureCells.has(cellKey(zone))||jobCells.has(cellKey(zone)) : occupancyOf(structureCells.get(cellKey(zone))?.kind??'cut')?.zones===false || jobCells.has(cellKey(zone))&&occupancyOf(jobCells.get(cellKey(zone))!.kind)?.zones!==true)) errors.push('Storage overlaps fixed content.');
+  for (const zone of world.stockpiles) if (resourceCells.has(cellKey(zone)) || (version<21?structureCells.has(cellKey(zone))||jobCells.has(cellKey(zone)) : occupancyOf(structureCells.get(cellKey(zone))?.kind??'cut')?.zones===false || jobCells.has(cellKey(zone))&&jobCells.get(cellKey(zone))!.kind!=='deconstruct'&&occupancyOf(jobCells.get(cellKey(zone))!.kind)?.zones!==true)) errors.push('Storage overlaps fixed content.');
   if(version>=21)for(const zone of world.growingZones)if(zone.cells.some(c=>occupancyOf(structureCells.get(c)?.kind??'cut')?.zones===false||occupancyOf(jobCells.get(c)?.kind??'cut')?.zones===false))errors.push('Growing zone overlaps incompatible construction.');
   const pawnCells = new Set<number>();
   const bedOwners = new Set<number>();
@@ -286,7 +289,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
     if (job.reservedBy !== null && !job.clearance && delivered.wood !== JOB_WOOD_COST[job.kind]) errors.push('Construction work started before delivery.');
     const resource = resourceCells.get(cellKey(job));
     if (job.kind === 'chop' || job.kind === 'harvest' || job.kind === 'cut') { if (!resource || !(job.kind === 'chop' ? resource.kind === 'tree' : isPlant(resource))) errors.push('Gather job has no matching resource.'); else if (version >= 7 && job.kind === 'harvest' && !(version === 7 ? legacyPlantGrowth(world,resource) > .65 : harvestable(world,resource))) errors.push('Harvest job targets an immature plant.'); }
-    else for (const cell of footprintCells(job)) {
+    else if(job.kind!=='deconstruct')for (const cell of footprintCells(job)) {
       const obstacle=resourceCells.get(cellKey(cell));
       if (obstacle&&(version<16||!isConstruction(job)||obstacle.kind==='rock') || structureCells.has(cellKey(cell))) errors.push('Construction overlaps existing content.');
     }
@@ -404,6 +407,10 @@ export function deserializeWorld(serialized: string): World {
   if(record(input)&&input.schemaVersion===22) {
     const errors=validateSchema(input,22);if(errors.length)throw new Error(`Invalid version 22 save: ${errors.join(' ')}`);
     input.schemaVersion=23; // No invented priority for orders accepted by an older version.
+  }
+  if(record(input)&&input.schemaVersion===23) {
+    const errors=validateSchema(input,23);if(errors.length)throw new Error(`Invalid version 23 save: ${errors.join(' ')}`);
+    input.schemaVersion=24;input.deconstructed={count:0,lostWood:0,fuelTicks:0};
   }
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`); return input as World;
 }

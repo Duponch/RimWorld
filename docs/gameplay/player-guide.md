@@ -91,6 +91,14 @@ L'abattage cible les arbres ; la récolte cible les buissons et cultures récolt
 
 Un arbre prend 100 ticks de travail, un buisson 60, hors déplacement et interruptions. La simulation avance à 10 ticks/seconde à vitesse normale. Ces valeurs sont nos paramètres de prototype, pas des valeurs prétendument identiques à RimWorld.
 
+## Déconstruire un ouvrage
+
+Dans **Architecte → Ordres → Déconstruire**, cliquez ou tracez un rectangle sur les bâtiments. L’inspection propose également Déconstruire et Annuler cet ordre. Un meuble de deux cases reste un seul objet. Le bâtiment subsiste jusqu’à la fin du travail ; un colon rejoint une case adjacente et l’enlève par le travail Construction, après les chantiers ordinaires. Le clic droit permet de le prioriser ou de le mettre en file avec Maj.
+
+Environ la moitié du bois revient **au sol** : un mur de 5 bois rend 2 ou 3 bois. Le feu de camp ne rend rien, y compris son combustible. Un meuble utilisé peut attendre la libération de sa réservation. Un lit retiré perd son propriétaire. Un retrait sans place pour ses matériaux attend ; il ne les efface pas.
+
+Annuler conserve le bâtiment. Interrompre remet le travail de retrait à zéro ; sauvegarder/recharger conserve l’action exactement. Déconstruire détruit le meuble : **le déplacer entier par réinstallation n’est pas encore disponible**.
+
 ## Répartir le travail
 
 Ouvrir Travail pour régler Collecte, Construction, Transport, Culture et Cuisine. **1 est la priorité la plus forte, 4 la plus faible, 0 désactive la famille.** Transport approvisionne chantiers et réserves ; Construction peut aussi dégager les piles et apporter ses matériaux même si Transport vaut 0. Le constructeur coupe les plantes gênant son chantier même si Collecte vaut 0. Désactiver Construction n'empêche donc pas un colon dont Transport reste actif d'apporter du bois à un plan. Une modification entre priorités actives s'applique lors du prochain choix de travail ; désactiver une famille interrompt son activité.
@@ -179,7 +187,7 @@ Avant de créer une nouvelle colonie, le jeu conserve aussi l'état courant dans
 
 ## Limites et suite
 
-Pas encore d'autres cultures, autres postes/recettes de cuisine, chaîne du froid, minage, déconstruction, autres familles de loisirs, animaux, armes, combat, blessures, médecine, relations, traits, recherche, commerce, électricité, toit, température, incendie, météo dynamique, carte du monde ou storyteller. Les coûts de sols et autres profils de déplacement, les réserves à plusieurs cases partageant une politique, les autres familles sélectionnables, les fournisseurs supplémentaires de travail lié sur une case et les tournées logistiques restent à développer. Les modèles sont provisoires ; la congestion entre agents actifs et la calibration des besoins restent ouvertes. La faim ne cause pas encore de malnutrition ni de décès.
+Pas encore d'autres cultures, autres postes/recettes de cuisine, chaîne du froid, minage, réinstallation, autres familles de loisirs, animaux, armes, combat, blessures, médecine, relations, traits, recherche, commerce, électricité, toit, température, incendie, météo dynamique, carte du monde ou storyteller. Les coûts de sols et autres profils de déplacement, les réserves à plusieurs cases partageant une politique, les autres familles sélectionnables, les fournisseurs supplémentaires de travail lié sur une case et les tournées logistiques restent à développer. Les modèles sont provisoires ; la congestion entre agents actifs et la calibration des besoins restent ouvertes. La faim ne cause pas encore de malnutrition ni de décès.
 
 La suite est suivie dans [le plan de développement](../ROADMAP.md). Les détails de la référence et les futures interactions sont dans [la matrice des systèmes](systems-matrix.md).
 

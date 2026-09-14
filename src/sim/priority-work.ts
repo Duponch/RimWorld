@@ -1,3 +1,4 @@
+import { deconstructionAvailable } from './deconstruction-rules.ts';
 import { constructionCandidates } from './construction-planner.ts';
 import { constructionObstruction, containsCell, isConstruction } from './construction-rules.ts';
 import { footprintCells } from './definitions.ts';
@@ -18,7 +19,7 @@ export function advancePriorityWork(world:World,pawn:Pawn,getBlocked:NavigationG
   const intent=pawn.priorityWork;
   if(!intent||pawn.jobId!==null||pawn.haul||pawn.cooking||pawn.need||pawn.recreation.task||pawn.orders.queue.length)return false;
   if(pawn.collapsePending||world.restRules==='legacy'&&pawn.rest===0)return false;
-  const job=world.jobs.find(j=>isConstruction(j)&&containsCell(j,intent.cell));
+  const job=world.jobs.find(j=>(isConstruction(j)||intent.work==='build'&&j.kind==='deconstruct')&&containsCell(j,intent.cell));
   const station=world.structures.find(s=>s.kind==='campfire'&&footprintCells(s).some(c=>c.x===intent.cell.x&&c.z===intent.cell.z));
   if(intent.work==='cook'?!station:!job&&!(intent.work==='haul'&&station&&wantsFuel(world,station))) {
     delete pawn.priorityWork;return false;
@@ -34,6 +35,10 @@ export function advancePriorityWork(world:World,pawn:Pawn,getBlocked:NavigationG
       if(isCookingOrder(p.order))startCookingOrder(pawn,p.order,p.path);
       else {if(p.order.destination.type==='fuel')p.order.destination.forced=true;startHaulOrder(pawn,p.order,p.path);}
       return false;
+    }
+  } else if(job?.kind==='deconstruct') {
+    if(deconstructionAvailable(world,job,pawn.id)&&job.reservedBy===null) {
+      const path=routeToJob(world,job,reach,false);if(path){startJobOrder(pawn,job,path);return false;}
     }
   } else if(job) {
     // Only the clicked footprint participates; no spatial-neighbour boost.

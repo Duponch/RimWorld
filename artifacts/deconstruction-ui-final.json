@@ -1,0 +1,334 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "E:\\Code\\RimWorld\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "tests/integration/deconstruction.spec.ts",
+      "tests/integration/player-orders.spec.ts",
+      "--reporter=json"
+    ],
+    "configFile": "E:\\Code\\RimWorld\\playwright.config.ts",
+    "rootDir": "E:/Code/RimWorld/tests/integration",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "E:/Code/RimWorld/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "E:/Code/RimWorld/tests/integration",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": {
+      "command": "npm run dev",
+      "url": "http://127.0.0.1:5173",
+      "reuseExistingServer": true,
+      "timeout": 30000
+    }
+  },
+  "suites": [
+    {
+      "title": "deconstruction.spec.ts",
+      "file": "deconstruction.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "le joueur désigne un rectangle, annule un meuble, priorise la déconstruction et retrouve son remboursement après sauvegarde",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 13120,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-14T20:58:07.485Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "deconstruction-result",
+                      "contentType": "application/json",
+                      "body": "eyJiYWNrZW5kIjoiV2ViR1BVIiwidGljayI6MjE4Nywic3RvY2siOnsid29vZCI6MTcsImZvb2QiOjB9LCJsZWRnZXIiOnsiY291bnQiOjMsImxvc3RXb29kIjoxNiwiZnVlbFRpY2tzIjoxMjAwMH0sImVycm9ycyI6W119"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "190dde8e3ddffa5eb3d8-4b760e6124316a7f14d1",
+          "file": "deconstruction.spec.ts",
+          "line": 8,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "player-orders.spec.ts",
+      "file": "player-orders.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "la priorité de chantier traverse coupe, dégagement, livraison et finition sans étendre le travail au voisin",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 12609,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-14T20:58:20.685Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "priority-work",
+                      "contentType": "application/json",
+                      "body": "eyJ0aWNrIjoyMzAyLCJzdG9jayI6eyJ3b29kIjo0LCJmb29kIjowfSwic3RydWN0dXJlcyI6W3siaWQiOjE4Miwia2luZCI6ImJlZCIsIngiOjE4LCJ6IjoxNCwib3JpZW50YXRpb24iOjAsImZvb3RwcmludCI6InN0YW5kYXJkIn1dLCJvcmRlcnMiOnsiYWN0aXZlIjpudWxsLCJxdWV1ZSI6W119LCJwcmlvcml0eSI6bnVsbCwiZXJyb3JzIjpbXX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "7992d321779f14996e2c-66b1975be58956e9fbb4",
+          "file": "player-orders.spec.ts",
+          "line": 7,
+          "column": 1
+        },
+        {
+          "title": "dégager un semis puis cuisiner par les menus, réserver ingrédients et poste en file et reprendre la sauvegarde",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 12728,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-14T20:58:33.307Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "cooking-orders",
+                      "contentType": "application/json",
+                      "body": "eyJ0aWNrIjoyMzE0LCJzdG9jayI6eyJ3b29kIjoxMCwiZm9vZCI6Mn0sImJpbGwiOnsiaWQiOjE4MCwicmVjaXBlIjoic2ltcGxlLW1lYWwiLCJtb2RlIjoidGltZXMiLCJ0YXJnZXQiOjAsInN1c3BlbmRlZCI6ZmFsc2UsImZpbHRlcnMiOnsicmljZSI6dHJ1ZSwiYmVycmllcyI6dHJ1ZX0sInJhZGl1cyI6OTk5LCJkZXN0aW5hdGlvbiI6ImRyb3AifSwib3JkZXJzIjp7ImFjdGl2ZSI6bnVsbCwicXVldWUiOltdfSwiZXJyb3JzIjpbXX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "7992d321779f14996e2c-2d48d98b2062c5b85b64",
+          "file": "player-orders.spec.ts",
+          "line": 30,
+          "column": 1
+        },
+        {
+          "title": "dégager une plante puis ravitailler un feu sans automatisme, reprendre la file et déplacer les matériaux du chantier",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 13328,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-14T20:58:46.049Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "context-services",
+                      "contentType": "application/json",
+                      "body": "eyJ0aWNrIjoyMjk5LCJzdG9jayI6eyJ3b29kIjo3LCJmb29kIjowfSwiZnVlbCI6eyJ0aWNrcyI6MTE3MDEsImJ1cm5lZCI6Mjk5LCJhdXRvUmVmdWVsIjpmYWxzZX0sIm9yZGVycyI6eyJhY3RpdmUiOm51bGwsInF1ZXVlIjpbXX0sImVycm9ycyI6W119"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "7992d321779f14996e2c-905f57c7525afb0e8cfb",
+          "file": "player-orders.spec.ts",
+          "line": 58,
+          "column": 1
+        },
+        {
+          "title": "sélection de groupe, deux projections, menu et file de travail par la vraie interface, reprise exacte",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 15202,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-14T20:58:59.393Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "orders",
+                      "contentType": "application/json",
+                      "body": "eyJiYWNrZW5kIjoiV2ViR1BVIiwidGljayI6MjM2OCwid29vZCI6MzYsImVycm9ycyI6W119"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "7992d321779f14996e2c-a6c600b501aead955efa",
+          "file": "player-orders.spec.ts",
+          "line": 90,
+          "column": 1
+        },
+        {
+          "title": "livrer un chantier puis ranger une pile via les menus, file réservée, reprise exacte et finition séparée",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 10217,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-14T20:59:14.608Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "forced-logistics",
+                      "contentType": "application/json",
+                      "body": "eyJ0aWNrIjoyMTc3LCJzdG9jayI6eyJ3b29kIjowLCJmb29kIjoxMH0sInN0cnVjdHVyZXMiOlt7ImlkIjoxODEsImtpbmQiOiJ3YWxsIiwieCI6MTgsInoiOjE0LCJvcmllbnRhdGlvbiI6MCwiZm9vdHByaW50Ijoic3RhbmRhcmQifV0sIm9yZGVycyI6eyJhY3RpdmUiOm51bGwsInF1ZXVlIjpbXX0sImVycm9ycyI6W119"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "7992d321779f14996e2c-932a582d824cbc60bfa2",
+          "file": "player-orders.spec.ts",
+          "line": 143,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-14T20:58:06.082Z",
+    "duration": 79261.291,
+    "expected": 6,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

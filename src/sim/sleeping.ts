@@ -1,3 +1,4 @@
+import { deconstructionReserved } from './deconstruction-rules.ts';
 import { canStandAt } from './furniture-travel.ts';
 import { routeCost, routeToCell, type Reachability } from './pathfinding.ts';
 import { footprintCells } from './definitions.ts';
@@ -23,7 +24,7 @@ export function processSleeping(world: World, pawn: Pawn, context: NeedContext, 
     const services = reservedServiceCells(world,pawn.id);
     let best: { id: number; path: Cell[]; target: Cell; owned: boolean } | undefined;
     for (const bed of world.structures) {
-      if (bed.kind !== 'bed' || reserved.has(bed.id) || services.has(bed.z*world.width+bed.x) || (owners.has(bed.id) && owners.get(bed.id) !== pawn.id)) continue;
+      if (bed.kind !== 'bed' || deconstructionReserved(world,bed.id,pawn.id) || reserved.has(bed.id) || services.has(bed.z*world.width+bed.x) || (owners.has(bed.id) && owners.get(bed.id) !== pawn.id)) continue;
       const path = routeToCell(world, bed, reach);
       const owned = pawn.bedId === bed.id;
       if (path && (!best || (owned && !best.owned) || (owned === best.owned && (routeCost(world,path,reach) < routeCost(world,best.path,reach) || (routeCost(world,path,reach) === routeCost(world,best.path,reach) && bed.id < best.id))))) best = { id: bed.id, path, target: { x: bed.x, z: bed.z }, owned };

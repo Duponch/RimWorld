@@ -1,3 +1,5 @@
+import { buildJobMarkers } from './JobLayer';
+import { jobDuration } from '../sim/farming';
 import { travelHeight } from './furniture-motion';
 import { pileSurfaces } from './pile-surfaces';
 import { CropLayer } from './CropLayer';
@@ -20,7 +22,7 @@ import type { Placement } from './primitives';
 import type { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import type { World, MaterialKind, Orientation, AreaAction, Cell } from '../sim/types';
 import { TICKS_PER_SECOND } from '../sim/types';
-import { JOB_DURATION, footprintCells } from '../sim/definitions';
+import { footprintCells } from '../sim/definitions';
 import { canDesignate } from '../sim/engine';
 import { buildAreaIndex, isAreaAction, queryArea } from '../sim/designation';
 import type { AreaIndex } from '../sim/designation';
@@ -209,7 +211,7 @@ export class ColonyRenderer {
     if (structureKey !== this.structureKey || newMap) { this.structureKey = structureKey; this.buildStructures(world); }
     // Quantize presentation of progression to avoid rebuilding static meshes for
     // every work tick. Saved simulation progress remains exact and authoritative.
-    const jobKey = world.jobs.map((j) => `${j.id}:${j.kind}:${j.x}:${j.z}:${j.orientation}:${j.footprint}:${j.status}:${j.construction}:${j.escrow.wood}:${j.kind === 'chop' || j.kind === 'harvest' || j.kind === 'cut' || j.kind === 'sow' ? 0 : Math.floor(j.progress / JOB_DURATION[j.kind] * 20)}`).join('|');
+    const jobKey = world.jobs.map((j) => `${j.id}:${j.kind}:${j.x}:${j.z}:${j.orientation}:${j.footprint}:${j.status}:${j.construction}:${j.escrow.wood}:${j.kind === 'chop' || j.kind === 'harvest' || j.kind === 'cut' || j.kind === 'sow' || j.kind === 'deconstruct' ? 0 : Math.floor(j.progress / jobDuration(world,j) * 20)}`).join('|');
     if (jobKey !== this.jobKey || newMap) { this.jobKey = jobKey; this.buildJobs(world); }
     const storageKey = world.stockpiles.map((s) => `${s.id}:${s.x}:${s.z}:${s.priority}:${s.filters.wood}:${s.filters.food}`).join('|');
     if (storageKey !== this.storageKey || newMap) { this.storageKey = storageKey; this.buildStorage(world); }
@@ -355,32 +357,7 @@ export class ColonyRenderer {
 
   private buildStructures(world: World): void { buildFurniture(world, this.structureGroup, this.wallCutaway, this.boxes); }
 
-  private buildJobs(world: World): void {
-    const wallHeight = this.wallCutaway ? WORLD_SCALE.wallCutawayHeight : WORLD_SCALE.wallHeight;
-    const orders: Placement[] = [], blueprints: Placement[] = [], frames: Placement[] = [], progress: Placement[] = [];
-    for (const job of world.jobs) {
-      const cells = footprintCells(job), last = cells[cells.length - 1]!;
-      for (const cell of cells) orders.push({ x: cell.x, y: 0.032, z: cell.z, color: job.status === 'active' ? 0xe7c17a : 0x99cfc3 });
-      if (job.kind === 'chop' || job.kind === 'harvest' || job.kind === 'cut' || job.kind === 'sow') continue;
-      const x = (job.x + last.x) / 2, z = (job.z + last.z) / 2, ry = job.orientation * Math.PI / 2;
-      const height = job.kind === 'horseshoes' ? WORLD_SCALE.horseshoeHeight : job.kind === 'wall' ? wallHeight : job.kind === 'table' ? WORLD_SCALE.tableHeight : job.kind === 'stool' ? WORLD_SCALE.stoolHeight : WORLD_SCALE.bedSurfaceHeight;
-      const width = job.kind === 'horseshoes' ? 0.12 : job.kind === 'wall' ? 0.92 : job.kind === 'table' ? WORLD_SCALE.tableWidth : job.kind === 'stool' ? WORLD_SCALE.stoolWidth : WORLD_SCALE.bedWidth;
-      const length = job.kind === 'horseshoes' ? 0.12 : job.kind === 'table' ? WORLD_SCALE.tableLength : job.kind === 'stool' ? WORLD_SCALE.stoolWidth : job.kind === 'bed' && job.footprint !== 'legacy-single' ? WORLD_SCALE.bedLength : 0.92;
-      blueprints.push({ x, z, y: height / 2, sx: width, sy: height, sz: length, ry });
-      if (job.construction === 'frame') {
-        // Four low corner posts distinguish a supplied frame from a bare plan.
-        for (const dx of [-1, 1]) for (const dz of [-1, 1]) {
-          const lx = dx * (width / 2 - 0.06), lz = dz * (length / 2 - 0.06);
-          frames.push({ x: x + lx * Math.cos(ry) + lz * Math.sin(ry), z: z + lz * Math.cos(ry) - lx * Math.sin(ry), y: 0.2, sx: 0.09, sy: 0.4, sz: 0.09 });
-        }
-      }
-      const fraction = Math.floor(job.progress / JOB_DURATION[job.kind] * 20) / 20;
-      if (fraction > 0) progress.push({ x, z, y: height * fraction / 2, sx: width - 0.06, sy: height * fraction, sz: length - 0.06, ry });
-    }
-    this.boxes.set(this.jobGroup, 'job-orders', orders.map(p => ({ ...p, sx: 0.9, sy: 0.025, sz: 0.9 })), 'overlay', false);
-    this.boxes.set(this.jobGroup, 'job-plans', blueprints.map(p => ({ ...p, color: 0xa7dbc9 })), 'wire', false);
-    this.boxes.set(this.jobGroup, 'job-solids', [...frames.map(p => ({ ...p, color: 0x9f7e52 })), ...progress.map(p => ({ ...p, color: 0xa6916e }))]);
-  }
+  private buildJobs(world: World): void { buildJobMarkers(world,this.jobGroup,this.wallCutaway,this.boxes); }
 
   private buildStorage(world: World): void {
     const cells: Placement[] = [], borders: Placement[] = [];
@@ -400,6 +377,13 @@ export class ColonyRenderer {
     if (newMap) {
       clearGroup(this.pileGroup);
       this.pileChunks.clear();
+      // Reserve one empty batch per spatial chunk while the map is loading.
+      // First material drops then reuse compiled objects and resident buffers.
+      for(let z=0;z<world.height;z+=WORLD_SCALE.chunkSize)for(let x=0;x<world.width;x+=WORLD_SCALE.chunkSize) {
+        const key=`${x/WORLD_SCALE.chunkSize}:${z/WORLD_SCALE.chunkSize}`,group=new THREE.Group();
+        group.name=`Material piles ${key}`;this.pileGroup.add(group);
+        this.boxes.set(group,`pile:${key}`,[]);this.pileChunks.set(key,{signature:'',group});
+      }
     }
     const surfaces=pileSurfaces(world);
     const jobById = new Map(world.jobs.map(job => [job.id, job]));
@@ -421,7 +405,7 @@ export class ColonyRenderer {
       const chunk = chunks.get(key);
       if (chunk) chunk.push(bundle); else chunks.set(key, [bundle]);
     }
-    for (const [key, chunk] of this.pileChunks) if (!chunks.has(key)) {
+    for (const [key, chunk] of this.pileChunks) if (!chunks.has(key)&&chunk.signature!=='') {
       this.boxes.set(chunk.group, `pile:${key}`, []); chunk.signature = '';
     }
     for (const [key, bundles] of chunks) {

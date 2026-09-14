@@ -1,3 +1,4 @@
+import { deconstructionDuration } from './deconstruction-rules.ts';
 import { footprintCells, JOB_DURATION } from './definitions.ts';
 import { isPlant, plantGrowth, PLANT_DEFINITIONS } from './plants.ts';
 import { releaseWork, type DropPlan } from './work-release.ts';
@@ -32,6 +33,7 @@ function zoneCells(world: World) {
 }
 export const growingZoneAt = (world: World, cell: number): GrowingZone | undefined => zoneCells(world).byCell.get(cell);
 export function jobDuration(world: World, job: Job): number {
+  if(job.kind==='deconstruct')return deconstructionDuration(job);
   return (job.kind === 'harvest' || job.kind === 'cut') && resourceCells(world).get(index(world, job))?.kind === 'rice' ? 20 : JOB_DURATION[job.kind];
 }
 interface Context { resources: Map<number, Resource>; fixed: Set<number> }

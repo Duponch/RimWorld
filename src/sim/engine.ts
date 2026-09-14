@@ -1,3 +1,5 @@
+import { deconstructionAt, deconstructionAvailable, designateDeconstruction } from './deconstruction-rules.ts';
+import { finishDeconstruction } from './deconstruction.ts';
 import { advancePriorityWork } from './priority-work.ts';
 import { leaveTransitCell } from './transit-exit.ts';
 import { removeZonesForPlan } from './construction-zones.ts';
@@ -34,7 +36,7 @@ import type { AreaCommand, Cell, Command, CommandResult, DesignateCommand, Job, 
 export { JOB_DURATION, JOB_WOOD_COST } from './definitions.ts';
 
 const PATH_SEARCHES_PER_TICK = 8;
-const JOB_LABEL: Readonly<Record<JobKind, string>> = { chop: 'abattage', harvest: 'récolte', cut: 'coupe de plante', sow: 'semis de riz', horseshoes: 'construction de piquet de fers à cheval', campfire: 'construction de feu de camp', wall: 'construction de mur', bed: 'construction de lit', table: 'construction de table', stool: 'construction de tabouret' };
+const JOB_LABEL: Readonly<Record<JobKind, string>> = { deconstruct: 'déconstruction', chop: 'abattage', harvest: 'récolte', cut: 'coupe de plante', sow: 'semis de riz', horseshoes: 'construction de piquet de fers à cheval', campfire: 'construction de feu de camp', wall: 'construction de mur', bed: 'construction de lit', table: 'construction de table', stool: 'construction de tabouret' };
 const sameCell = (a: Cell, b: Cell): boolean => a.x === b.x && a.z === b.z;
 const refusal = (code: RefusalCode, reason: string): CommandResult => ({ ok: false, code, reason });
 function event(world: World, type: 'job' | 'need' | 'command', message: string): void {
@@ -54,10 +56,15 @@ function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandR
   const selection = queryArea(world, command);
   if (!selection.ok) return selection;
   if (!selection.cells.length) return refusal('missing-target', 'Aucune case compatible dans ce rectangle.');
-  const creates = command.action === 'chop' || command.action === 'harvest' || command.action === 'cut' || command.action === 'stockpile' || command.action === 'growing';
+  const creates = command.action === 'deconstruct' || command.action === 'chop' || command.action === 'harvest' || command.action === 'cut' || command.action === 'stockpile' || command.action === 'growing';
   if (creates && !Number.isSafeInteger(world.nextId + selection.cells.length)) return refusal('invalid-command', 'Limite des identités atteinte.');
   let affected = selection.cells.length;
-  if (command.action === 'chop' || command.action === 'harvest' || command.action === 'cut') {
+  if (command.action === 'deconstruct') {
+    const selected = new Set(selection.cells);
+    const targets = world.structures.filter(s => footprintCells(s).some(c => selected.has(cellIndex(world,c.x,c.z))));
+    for (const target of targets) designateDeconstruction(world,target);
+    affected = targets.length;
+  } else if (command.action === 'chop' || command.action === 'harvest' || command.action === 'cut') {
     for (const index of selection.cells) world.jobs.push({ id: world.nextId++, kind: command.action, x: index % world.width, z: Math.floor(index / world.width), orientation: 0, footprint: 'standard', status: 'pending', reservedBy: null, progress: 0, escrow: { wood: 0, food: 0 } });
   } else if (command.action === 'growing') {
     world.growingZones = [...world.growingZones, { id: world.nextId++, cells: selection.cells, plant: 'rice', allowSow: true, allowCut: true }];
@@ -95,17 +102,20 @@ function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandR
     }
   }
   wakePlanners(world); refreshStock(world);
-  event(world, 'command', `Rectangle : ${affected} ${command.action === 'cancel' ? 'ordre(s) annulé(s)' : command.action === 'remove-stockpile' ? 'case(s) de réserve retirée(s)' : command.action === 'stockpile' ? 'case(s) de réserve créée(s)' : 'ordre(s) de collecte créé(s)'}.`);
+  event(world, 'command', `Rectangle : ${affected} ${command.action === 'cancel' ? 'ordre(s) annulé(s)' : command.action === 'remove-stockpile' ? 'case(s) de réserve retirée(s)' : command.action === 'stockpile' ? 'case(s) de réserve créée(s)' : command.action==='deconstruct' ? 'ordre(s) de déconstruction créé(s)' : 'ordre(s) de collecte créé(s)'}.`);
   return { ok: true, affected, skipped: selection.skipped };
 }
 
 /** Pure shared rule used by preview and command execution. */
 export function canDesignate(world: World, command: DesignateCommand): CommandResult {
-  if (!command || !['chop', 'harvest', 'cut', 'wall', 'bed', 'table', 'stool', 'campfire', 'horseshoes'].includes(command.kind)) return refusal('invalid-command', 'Type de travail inconnu.');
+  if (!command || !['deconstruct', 'chop', 'harvest', 'cut', 'wall', 'bed', 'table', 'stool', 'campfire', 'horseshoes'].includes(command.kind)) return refusal('invalid-command', 'Type de travail inconnu.');
   if (command.orientation !== undefined && (!Number.isInteger(command.orientation) || command.orientation < 0 || command.orientation > 3)) return refusal('invalid-command', 'Orientation invalide.');
-  const cells = footprintCells(command);
+  const target = command.kind==='deconstruct'?deconstructionAt(world,command):undefined;
+  if(command.kind==='deconstruct'&&!target)return refusal('missing-target','Aucun bâtiment à déconstruire ici.');
+  const cells = footprintCells(target??command);
   if (cells.some(cell => !inBounds(world, cell.x, cell.z))) return refusal('out-of-bounds', 'Empreinte hors de la carte.');
   if (world.jobs.some(job => footprintCells(job).some(cell => cells.some(target => sameCell(cell, target))))) return refusal('occupied', 'Un ordre existe déjà dans cette empreinte.');
+  if(command.kind==='deconstruct')return {ok:true};
   const resource = world.resources.find(candidate => sameCell(candidate, command));
   if (command.kind === 'chop' || command.kind === 'harvest' || command.kind === 'cut') {
     return resource && (command.kind === 'chop' ? resource.kind === 'tree' : isPlant(resource)) && (command.kind !== 'harvest' || harvestable(world, resource)) ? { ok: true } : refusal('incompatible-resource', 'Ressource incompatible.');
@@ -183,7 +193,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
     } else {
       if (growingZoneAt(world, cellIndex(world, command.x, command.z)) || ['water', 'rock'].includes(world.tiles[cellIndex(world, command.x, command.z)]!.terrain)
         || world.resources.some(item => sameCell(item, command))
-        || [...world.structures, ...world.jobs].some(item => occupancyOf(item.kind)?.zones!==true&&occupies(item,command))) return refusal('occupied', 'Stockage impossible sur cette cellule occupée ou infranchissable.');
+        || [...world.structures, ...world.jobs].some(item => item.kind!=='deconstruct'&&occupancyOf(item.kind)?.zones!==true&&occupies(item,command))) return refusal('occupied', 'Stockage impossible sur cette cellule occupée ou infranchissable.');
       if (existing) {
         existing.filters = command.filters ? { ...command.filters } : existing.filters;
         existing.priority = command.priority ?? existing.priority;
@@ -208,6 +218,11 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   }
   const result = canDesignate(world, command);
   if (!result.ok) return result;
+  if(command.kind==='deconstruct') {
+    if(!Number.isSafeInteger(world.nextId+1))return refusal('invalid-command','Limite des identités atteinte.');
+    designateDeconstruction(world,deconstructionAt(world,command)!);
+    wakePlanners(world);event(world,'command','Bâtiment désigné pour déconstruction.');return {ok:true};
+  }
   removeZonesForPlan(world,command,drops);
   world.jobs.push({ id: world.nextId++, kind: command.kind, ...(isConstruction(command)?{construction:'blueprint' as const}:{}), x: command.x, z: command.z, orientation: command.orientation ?? 0, footprint: 'standard', status: 'pending', reservedBy: null, progress: 0, escrow: { wood: 0, food: 0 } });
   refreshStock(world); wakePlanners(world); event(world, 'command', `Nouvel ordre : ${JOB_LABEL[command.kind]} (${command.x}, ${command.z}).`); return { ok: true };
@@ -221,6 +236,8 @@ function completeJob(world: World, pawn: Pawn, job: Job): void {
     const quantity=gatherResource(world,resource,job.kind);
     if(quantity===null){job.progress=jobDuration(world,job)-1;releaseWork(world,pawn);return;}
     if(job.kind!=='chop'&&quantity>0)event(world,'job',`${pawn.name} a récolté ${quantity} ${resource.kind==='rice'?'riz':'baies'}.`);
+  } else if (job.kind === 'deconstruct') {
+    if(!finishDeconstruction(world,pawn,job)){releaseWork(world,pawn);return;}
   } else if (job.kind === 'sow') {
     finishSowing(world, job);
   } else {
@@ -228,7 +245,7 @@ function completeJob(world: World, pawn: Pawn, job: Job): void {
     world.piles = world.piles.filter(pile => pile.owner.type !== 'job' || pile.owner.jobId !== job.id);
     world.structures.push({ ...(job.kind==='campfire'?{fuel:newCampfireFuel(),bills:[]}:{}), id: world.nextId++, kind: job.kind, x: job.x, z: job.z, orientation: job.orientation, footprint: job.footprint });
   }
-  world.jobs.splice(world.jobs.indexOf(job), 1); pawn.jobId = null; pawn.path = []; pawn.state = 'idle'; pawn.planCooldown = 0;
+  const jobIndex=world.jobs.indexOf(job);if(jobIndex>=0)world.jobs.splice(jobIndex,1); pawn.jobId = null; pawn.path = []; pawn.state = 'idle'; pawn.planCooldown = 0;
   event(world, 'job', `${pawn.name} a terminé le travail : ${JOB_LABEL[job.kind]}.`); wakePlanners(world);
 }
 export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-planner.ts').SearchStats): void {
@@ -283,6 +300,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
         } else moveToward(world,pawn,constructionWorkTarget(world,job),false,getBlocked,budget);
         continue;
       }
+      if(job.kind==='deconstruct'&&!deconstructionAvailable(world,job,pawn.id)){releaseWork(world,pawn);continue;}
       if(isConstruction(job)&&!constructionSiteFree(world,job,pawn.id)){releaseWork(world,pawn);continue;}
       const cells = footprintCells(job);
       if (cells.some(cell => adjacent(pawn, cell)) && !cells.some(cell => sameCell(pawn, cell))) {

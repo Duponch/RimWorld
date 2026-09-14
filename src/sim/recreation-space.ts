@@ -1,3 +1,4 @@
+import { deconstructionReserved } from './deconstruction-rules.ts';
 import { canStandAt } from './furniture-travel.ts';
 import { footprintCells } from './definitions.ts';
 import { inBounds } from './pathfinding.ts';
@@ -68,5 +69,5 @@ export function availablePins(world: World, pawnId: number): Structure[] {
   for(const p of world.pawns)if(p.id!==pawnId&&p.recreation?.task?.buildingId!=null) {
     const id=p.recreation.task.buildingId;users.set(id,(users.get(id)??0)+1);
   }
-  return world.structures.filter(s=>s.kind==='horseshoes'&&(users.get(s.id)??0)<3);
+  return world.structures.filter(s=>s.kind==='horseshoes'&&!deconstructionReserved(world,s.id,pawnId)&&(users.get(s.id)??0)<3);
 }

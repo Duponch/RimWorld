@@ -23,7 +23,7 @@ import { gameLayout, storageSettings, toolDefinitions } from './ui/layout';
 import type { ArchitectCategory, Panel, Tool } from './ui/layout';
 
 import { recreationInspection, updateRecreationInspection } from './ui/recreation-inspection';
-const jobLabels: Record<JobKind, string> = { chop: 'Abattage', harvest: 'Récolte', cut: 'Coupe de plante', sow: 'Semis de riz', wall: 'Construction du mur', bed: 'Construction du lit', table: 'Construction de la table', stool: 'Construction du tabouret', horseshoes: 'Construction du piquet de fers à cheval', campfire: 'Construction du feu de camp' };
+const jobLabels: Record<JobKind, string> = { deconstruct: 'Déconstruction', chop: 'Abattage', harvest: 'Récolte', cut: 'Coupe de plante', sow: 'Semis de riz', wall: 'Construction du mur', bed: 'Construction du lit', table: 'Construction de la table', stool: 'Construction du tabouret', horseshoes: 'Construction du piquet de fers à cheval', campfire: 'Construction du feu de camp' };
 const stateLabels: Record<Pawn['state'], string> = { idle: 'Disponible', moving: 'En chemin', working: 'Au travail', sleeping: 'Se repose', hungry: 'Cherche à manger', eating: 'Mange', recreating: 'Se divertit' };
 const terrainLabels = { grass: 'Prairie', soil: 'Terre fertile', water: 'Eau infranchissable', rock: 'Massif rocheux infranchissable' };
 const resourceLabels = { tree: 'Arbre', berries: 'Buisson de baies', rock: 'Pierre au sol', rice: 'Plant de riz' };
@@ -172,7 +172,7 @@ function rebuildInspector() {
     const cancel=document.createElement('button');cancel.id='clear-orders';cancel.textContent='Annuler les ordres directs';
     cancel.onclick=()=>{if(selectedPawn!==undefined)void attempt(()=>client.command({type:'clear-orders',pawnId:selectedPawn!}));};panel.append(cancel);
   } else if (selectedCell) {
-    panel.innerHTML = `<div class="panel-heading"><h2 id="cell-title"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><p id="cell-description"></p><p id="cell-materials"></p><p id="cell-job"></p><div id="cell-storage" hidden><p id="cell-storage-quantity"></p>${storageSettings('selected-stockpile')}<button id="update-stockpile" class="secondary-action">Appliquer les réglages</button><button id="delete-stockpile" class="secondary-action">Retirer cette réserve</button></div>`;
+    panel.innerHTML = `<div class="panel-heading"><h2 id="cell-title"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><p id="cell-description"></p><p id="cell-materials"></p><p id="cell-job"></p><button id="cell-deconstruct" class="secondary-action" hidden>Déconstruire</button><button id="cell-cancel" class="secondary-action" hidden>Annuler cet ordre</button><div id="cell-storage" hidden><p id="cell-storage-quantity"></p>${storageSettings('selected-stockpile')}<button id="update-stockpile" class="secondary-action">Appliquer les réglages</button><button id="delete-stockpile" class="secondary-action">Retirer cette réserve</button></div>`;
     const storage = snapshot?.stockpiles.find(item => item.x === selectedCell!.x && item.z === selectedCell!.z);
     if (storage) {
       el<HTMLInputElement>('selected-stockpile-wood').checked = storage.filters.wood;
@@ -182,6 +182,8 @@ function rebuildInspector() {
     }
     el('update-stockpile').onclick = () => { if (selectedCell) { const cell = { ...selectedCell }; void attempt(async () => { await client.command({ type: 'stockpile', ...cell, enabled: true, ...readStorageSettings('selected-stockpile') }); notify('Réserve mise à jour.'); }); } };
     el('delete-stockpile').onclick = () => { if (selectedCell) { const cell = { ...selectedCell }; void attempt(async () => { await client.command({ type: 'stockpile', ...cell, enabled: false }); rebuildInspector(); renderState(); }); } };
+    el('cell-deconstruct').onclick=()=>{if(selectedCell)void attempt(()=>client.command({type:'designate',kind:'deconstruct',...selectedCell!}));};
+    el('cell-cancel').onclick=()=>{if(selectedCell)void attempt(()=>client.command({type:'cancel',...selectedCell!}));};
     const bedControls = document.createElement('label'); bedControls.id = 'cell-bed'; bedControls.hidden = true;
     bedControls.append('Propriétaire du lit ');
     const owner = document.createElement('select'); owner.id = 'bed-owner'; owner.setAttribute('aria-label', 'Propriétaire du lit');
@@ -300,6 +302,8 @@ function renderState() {
       el('cell-job').textContent = job ? `${job.construction==='blueprint'?'Plan · ':job.construction==='frame'?'Cadre · ':''}${jobLabels[job.kind]} · ${queryJobStatus(world, job).reason ?? 'En cours'}${JOB_WOOD_COST[job.kind] > 0 ? ` · ${deliveredStock(world, job.id).wood} bois livrés` : ''}` : 'Aucun ordre sur cette case.';
       if(structure?.kind==='horseshoes')el('cell-description').textContent += ` · Dextérité · ${world.pawns.filter(p=>p.recreation.task?.buildingId===structure.id).length}/3 joueurs · places à 5 cases, ligne de vue dégagée.`;
       if(structure?.kind==='campfire'){updateFireControls(el('inspector'),structure);updateBillControls(el('inspector'),structure,world);}
+      el('cell-deconstruct').hidden=!structure||!!job;
+      el('cell-cancel').hidden=!job;
       el('cell-storage').hidden = !storage;
       el('cell-bed').hidden = structure?.kind !== 'bed';
       if (structure?.kind === 'bed' && document.activeElement !== el('bed-owner')) el<HTMLSelectElement>('bed-owner').value = String(world.pawns.find(pawn => pawn.bedId === structure.id)?.id ?? '');
@@ -329,6 +333,8 @@ function renderState() {
   if (beds < world.pawns.length) { const item = document.createElement('p'); item.dataset.alert = 'beds'; item.textContent = `${world.pawns.length - beds} couchage(s) manquant(s)`; el('alerts').append(item); }
 }
 function syncStorageButtons() {
+  document.querySelector<HTMLElement>('.game-shell')!.inert=replacingWorld;
+  for(const button of document.querySelectorAll<HTMLButtonElement>('[data-speed]'))button.disabled=replacingWorld;
   for (const [id, key] of [['load', SAVE_KEY], ['restore-previous', PREVIOUS_KEY]]) {
     try { el<HTMLButtonElement>(id).disabled = replacingWorld || !localStorage.getItem(key); } catch { el<HTMLButtonElement>(id).disabled = true; }
   }
@@ -340,8 +346,8 @@ async function save() {
 async function load(key = SAVE_KEY) {
   if (replacingWorld) return;
   const data = localStorage.getItem(key); if (!data) throw new Error('Aucune sauvegarde locale.');
-  replacingWorld = true; syncStorageButtons();
-  try { await client.load(data); clearSelection(); setPanel(null); notify(key === PREVIOUS_KEY ? 'Colonie précédente restaurée.' : 'Dernière sauvegarde rechargée.'); }
+  replacingWorld = true; syncStorageButtons(); notify('Chargement et préparation de la colonie…');
+  try { await client.load(data); await renderer?.preparePresentation(); clearSelection(); setPanel(null); notify(key === PREVIOUS_KEY ? 'Colonie précédente restaurée.' : 'Dernière sauvegarde rechargée.'); }
   finally { replacingWorld = false; syncStorageButtons(); }
 }
 async function createWorld() {
@@ -349,12 +355,13 @@ async function createWorld() {
   el('new-world-error').hidden = true;
   const seed = Number(el<HTMLInputElement>('world-seed').value), size = Number(el<HTMLSelectElement>('world-size').value);
   if (!Number.isInteger(seed) || seed < 0 || seed > 4294967295 || ![32, ...MAP_SIZE_PRESETS].includes(size)) throw new Error('Graine ou taille de carte invalide.');
-  replacingWorld = true;
+  replacingWorld = true; syncStorageButtons();
   const submit = el('new-world-form').querySelector<HTMLButtonElement>('[type="submit"]')!; submit.disabled = true;
   try {
     const previous = await client.save(); if (!previous) throw new Error('Impossible de préserver la colonie actuelle.');
     localStorage.setItem(PREVIOUS_KEY, previous);
     await client.init(seed, size);
+    await renderer?.preparePresentation();
     clearSelection(); setPanel(null); el<HTMLDialogElement>('new-world-dialog').close(); notify(`Nouvelle colonie · ${size} × ${size} · graine ${seed}`);
   } catch (error) {
     el('new-world-error').textContent = error instanceof Error ? error.message : String(error);

@@ -2,7 +2,7 @@
 
 État du 14 septembre 2026. Le jeu de base complet, y compris ses centaines d'objets et leurs variantes, reste la cible. Le bilan par [système](implementation-status.md) ne suffit pas à suivre ce contenu. Ce document distingue ce que contient notre référence et ce qui existe dans le jeu développé.
 
-V23 enrichit les comportements des chantiers et du feu existants ; **aucun nouvel objet**. La présence de ces familles ne clôt ni leurs variantes ni les centaines de définitions attendues.
+V24 permet de déconstruire les six bâtiments existants, avec restitution physique et exceptions ; la réinstallation reste absente ; **aucun nouvel objet**. La présence de ces familles ne clôt ni leurs variantes ni les centaines de définitions attendues.
 
 ## Le corpus ne contient pas un inventaire exhaustif à jour
 

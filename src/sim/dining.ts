@@ -1,3 +1,4 @@
+import { deconstructionReserved } from './deconstruction-rules.ts';
 import { canStandAt } from './furniture-travel.ts';
 import { reservedServiceCells } from './service-reservations.ts';
 import { footprintCells, MATERIAL_DEFINITIONS } from './definitions.ts';
@@ -44,7 +45,7 @@ export function chooseDiningPlace(world: World, pawn: Pawn, context: NeedContext
   for (const item of world.jobs) if (item.kind === 'wall' || item.kind === 'table') for (const cell of footprintCells(item)) fixed.add(key(cell));
   const candidates: DiningPlace[] = [];
   for (const seat of world.structures) {
-    if (seat.kind !== 'stool' || world.schemaVersion>=22&&!canStandAt(world,seat) || reserved.has(key(seat)) || distance(pawn, seat) > MATERIAL_DEFINITIONS.food.chairSearchRadius ** 2) continue;
+    if (seat.kind !== 'stool' || deconstructionReserved(world,seat.id,pawn.id) || world.schemaVersion>=22&&!canStandAt(world,seat) || reserved.has(key(seat)) || distance(pawn, seat) > MATERIAL_DEFINITIONS.food.chairSearchRadius ** 2) continue;
     const surface = neighbors(seat).find(cell => inBounds(world, cell.x, cell.z) && surfaces.has(key(cell)));
     if (surface) candidates.push({ target: { x: seat.x, z: seat.z }, seatId: seat.id, tableId: surfaces.get(key(surface))! });
   }

@@ -1,0 +1,166 @@
+{
+  "timestamp": "2026-09-14T20:49:42.690Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "variant": "prewarmed",
+  "map": 250,
+  "pawns": 100,
+  "buildings": 100,
+  "protocol": "Normal Chromium WebGPU; synthetic 100 builders, 100 buildings designated and 100 trees; actual worker at 6x; 60 warmup frames; no world serialization during timed frames.",
+  "errors": [],
+  "backend": "WebGPU",
+  "adapter": {
+    "vendor": "amd",
+    "architecture": "rdna-1"
+  },
+  "frames": {
+    "count": 210,
+    "p50": 8.399999999999636,
+    "p99": 79.19999999999982,
+    "p95": 25,
+    "max": 228.90000000000055,
+    "mean": 11.607619047619044
+  },
+  "frameCpu": {
+    "count": 211,
+    "p50": 8.200000002980232,
+    "p99": 22,
+    "p95": 11.299999997019768,
+    "max": 64.80000000447035,
+    "mean": 8.848341232121555
+  },
+  "drawCalls": {
+    "count": 211,
+    "p50": 167,
+    "p99": 176,
+    "p95": 175,
+    "max": 176,
+    "mean": 167.36966824644549
+  },
+  "triangles": {
+    "count": 211,
+    "p50": 107857,
+    "p99": 118897,
+    "p95": 118897,
+    "max": 118897,
+    "mean": 110380.14691943128
+  },
+  "removalFrames": {
+    "count": 112,
+    "p50": 8.300000000000182,
+    "p99": 79.29999999999927,
+    "p95": 33.30000000000018,
+    "max": 228.90000000000055,
+    "mean": 12.94553571428572
+  },
+  "updates": {
+    "updatePiles": {
+      "count": 11,
+      "p50": 0.5,
+      "p99": 1.1000000014901161,
+      "p95": 1.1000000014901161,
+      "max": 1.1000000014901161,
+      "mean": 0.4818181822245771
+    },
+    "setWorld": {
+      "count": 11,
+      "p50": 1.5,
+      "p99": 3.5,
+      "p95": 3.5,
+      "max": 3.5,
+      "mean": 1.5999999994581395
+    },
+    "buildStructures": {
+      "count": 6,
+      "p50": 0.20000000298023224,
+      "p99": 1.1000000014901161,
+      "p95": 1.1000000014901161,
+      "max": 1.1000000014901161,
+      "mean": 0.3833333340783914
+    },
+    "buildJobs": {
+      "count": 8,
+      "p50": 0.30000000447034836,
+      "p99": 1.1999999955296516,
+      "p95": 1.1999999955296516,
+      "max": 1.1999999955296516,
+      "mean": 0.4249999998137355
+    }
+  },
+  "pipelines": {
+    "count": 16,
+    "p50": 0,
+    "p99": 0.10000000149011612,
+    "p95": 0.10000000149011612,
+    "max": 0.10000000149011612,
+    "mean": 0.024999999441206455
+  },
+  "events": [
+    {
+      "tick": 2015,
+      "removed": 6
+    },
+    {
+      "tick": 2033,
+      "removed": 37
+    },
+    {
+      "tick": 2047,
+      "removed": 27
+    },
+    {
+      "tick": 2062,
+      "removed": 10
+    },
+    {
+      "tick": 2077,
+      "removed": 11
+    },
+    {
+      "tick": 2092,
+      "removed": 9
+    }
+  ],
+  "slowFrames": [
+    {
+      "interval": 8.300000000000182,
+      "cpu": 64.80000000447035,
+      "nearRemoval": true
+    },
+    {
+      "interval": 79.29999999999927,
+      "cpu": 9.399999998509884,
+      "nearRemoval": true
+    },
+    {
+      "interval": 228.90000000000055,
+      "cpu": 36.69999999552965,
+      "nearRemoval": true
+    },
+    {
+      "interval": 37.69999999999982,
+      "cpu": 9.699999995529652,
+      "nearRemoval": true
+    },
+    {
+      "interval": 79.19999999999982,
+      "cpu": 9.299999997019768,
+      "nearRemoval": true
+    },
+    {
+      "interval": 33.30000000000018,
+      "cpu": 8.200000002980232,
+      "nearRemoval": true
+    },
+    {
+      "interval": 37.5,
+      "cpu": 8.199999995529652,
+      "nearRemoval": true
+    }
+  ],
+  "outcome": {
+    "tick": 2137,
+    "wood": 1245,
+    "remainingRemoval": 0,
+    "removed": 100
+  }
+}

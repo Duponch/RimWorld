@@ -13,6 +13,7 @@ export const toolDefinitions: { id: Tool; icon: string; title: string; hint: str
   { id: 'chop', icon: '♧', title: 'Abattre', hint: 'Cliquer ou tracer un rectangle sur les arbres à couper. Échap annule le tracé.', key: 'C', category: 'orders' },
   { id: 'harvest', icon: '⁙', title: 'Récolter', hint: 'Cliquer ou tracer un rectangle sur les plantes récoltables.', key: 'R', category: 'orders' },
   { id: 'cut', icon: '✂', title: 'Couper les plantes', hint: 'Libérer la case du buisson ; récupérer ses baies si elles sont récoltables.', key: '', category: 'orders' },
+  { id: 'deconstruct', icon: '⚒', title: 'Déconstruire', hint: 'Retirer un bâtiment par un travail de Construction. Environ la moitié du bois récupérée ; aucun remboursement pour le feu de camp.', key: '', category: 'orders' },
   { id: 'cancel', icon: '×', title: 'Annuler', hint: 'Cliquer ou tracer un rectangle pour retirer les ordres. Les matériaux restent sur place.', key: 'X', category: 'orders' },
   { id: 'wall', icon: '▥', title: 'Mur', hint: '5 bois · une case libre · mur de 2,80 m', key: 'B', category: 'structure' },
   { id: 'bed', icon: '▰', title: 'Lit', hint: '8 bois livrés · empreinte 1 × 2 · Q / E pour tourner', key: 'L', category: 'furniture' },

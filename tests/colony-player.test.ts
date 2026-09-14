@@ -45,6 +45,7 @@ test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp const
     expect([...recreationKinds].sort(),context).toEqual(['horseshoes','skygaze']);expect(recreationPawns.size,context).toBe(3);
     expect(cooked,context).toBeGreaterThanOrEqual(12);
     expect(rationAssignments,context).toBeGreaterThanOrEqual(3);
+    expect(world.deconstructed.count,context).toBe(1);
     expect(world.jobs.filter(j=>j.growingZoneId===undefined),context).toEqual([]);
     expect(world.growingZones,context).toHaveLength(1); expect(world.resources.filter(r=>r.kind==='rice').length,context).toBeGreaterThan(5); expect(world.stock.food,context).toBeGreaterThan(0);
     expect([...meals.values()].every(n=>n>=10),context).toBe(true);

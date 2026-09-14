@@ -37,3 +37,5 @@ Le validateur refuse types/bornes invalides, IDs ou propriétaires incohérents,
 V22 ajoute les [profils de mobilier et leur migration](furniture-travel.md). L’intention `transitExit` fait partie de la continuation ; les cartes de coûts/arrêt et hauteurs graphiques sont dérivées. Un déplacement capturé n’est pas recalculé au chargement.
 
 V23 sauvegarde une intention facultative `Pawn.priorityWork` (cellule, famille, tick d’acceptation), distincte des tâches/réservations. V22 est validée avant migration sans intention rétrospective. Le délai expire sans interrompre un travail déjà commencé ; [contrat](player-orders.md).
+
+V24 ajoute les intentions de déconstruction ciblant une identité construite et `world.deconstructed`, bilan des pertes/historiques de combustible. V23 est validée avant ajout du bilan nul ; progression active, PRNG et dépôts restent autoritaires. Voir [déconstruction](deconstruction.md).
