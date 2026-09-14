@@ -1,3 +1,4 @@
+import { installCommand } from '../../src/sim/furniture-commands.ts';
 import { queryOrderOptions } from '../../src/sim/player-orders.ts';
 import { planCookingOrder } from '../../src/sim/player-cooking.ts';
 import { plantGrowth } from '../../src/sim/plants.ts';
@@ -68,7 +69,10 @@ export function playerDecisions(world: World): Decision[] {
       if(canDesignate(world,{...temporary,kind:'deconstruct'}).ok)out.push({reason:'Ouvrir le passage du camp après la première journée.',command:{...temporary,kind:'deconstruct'}});
     } else plans.push(temporary);
   }
+  const pin=world.structures.find(s=>s.kind==='horseshoes'&&s.x===cx+2&&s.z===cz-3);
+  if(pin&&world.tick>=6000){const c={type:'install' as const,structureId:pin.id,x:cx+4,z:cz-3,orientation:0 as const};if(installCommand(world,c,true).ok)out.push({reason:'Déplacer le jeu à côté du camp sans reconstruire le piquet.',command:c});}
   for (const plan of plans) {
+    if(plan.kind==='horseshoes'&&(world.structures.some(s=>s.kind==='horseshoes')||world.packed.some(p=>p.building.kind==='horseshoes')))continue;
     // Beds first, dining next, then an open windbreak. No claim of a roofed room.
     if (plan.kind !== 'bed' && world.structures.filter(s => s.kind === 'bed').length < 3) continue;
     if (plan.kind === 'wall' && world.structures.filter(s => s.kind === 'stool').length < 3) continue;
@@ -136,7 +140,7 @@ export function colonySummary(world: World) {
 }
 
 export function woodAccount(world: World): number {
-  return world.deconstructed.lostWood + world.deconstructed.fuelTicks/600 + world.piles.filter(p=>p.kind==='wood').reduce((n,p)=>n+p.quantity,0) + world.resources.filter(r=>r.kind==='tree').reduce((n,r)=>n+r.amount,0) + world.structures.reduce((n,s)=>n+(s.kind==='campfire' ? ((s.fuel?.ticks??0)+(s.fuel?.burned??0))/600 : JOB_WOOD_COST[s.kind]),0);
+  return (world.packed??[]).reduce((n,p)=>n+JOB_WOOD_COST[p.building.kind],0) + world.deconstructed.lostWood + world.deconstructed.fuelTicks/600 + world.piles.filter(p=>p.kind==='wood').reduce((n,p)=>n+p.quantity,0) + world.resources.filter(r=>r.kind==='tree').reduce((n,r)=>n+r.amount,0) + world.structures.reduce((n,s)=>n+(s.kind==='campfire' ? ((s.fuel?.ticks??0)+(s.fuel?.burned??0))/600 : JOB_WOOD_COST[s.kind]),0);
 }
 export function foodAccount(world: World): number {
   // Produced units remain accounted for even after spoilage; this is a ledger,

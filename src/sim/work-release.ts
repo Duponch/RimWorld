@@ -1,3 +1,5 @@
+import { furnitureIntentAt, furnitureSourceCells } from './furniture-rules.ts';
+import { furnitureDropCell, releaseFurniture } from './furniture-transfer.ts';
 import { zonesUnderPlan } from './construction-zones.ts';
 import { constructionHaulId } from './construction-rules.ts';
 import type { Cell, Command, MaterialPile, Pawn, World } from './types.ts';
@@ -19,11 +21,11 @@ export function planCommandDrops(world:World,command:Command):DropPlan|null {
     const affected=zonesUnderPlan(world,command);for(const id of affected.deliveries)zones.add(id);
     for(const pawn of world.pawns)if(pawn.haul?.destination.type==='aside'&&affected.growing.has(pawn.haul.destination.growingZoneId??-1))pawns.add(pawn.id);
   } else if(command.type==='cancel') {
-    const job=world.jobs.find(j=>footprintCells(j).some(c=>same(c,command)));if(job)jobs.add(job.id);
+    const job=world.jobs.find(j=>footprintCells(j).some(c=>same(c,command)))??furnitureIntentAt(world,command);if(job)jobs.add(job.id);
   } else if(command.type==='area'&&(command.action==='cancel'||command.action==='remove-stockpile')) {
     const selection=queryArea(world,command);if(!selection.ok)return new Map();
     const cells=new Set(selection.cells);
-    if(command.action==='cancel')for(const job of world.jobs){if(footprintCells(job).some(c=>cells.has(c.z*world.width+c.x)))jobs.add(job.id);}
+    if(command.action==='cancel')for(const job of world.jobs){if([...footprintCells(job),...furnitureSourceCells(world,job)].some(c=>cells.has(c.z*world.width+c.x)))jobs.add(job.id);}
     else for(const zone of world.stockpiles)if(cells.has(zone.z*world.width+zone.x))zones.add(zone.id);
   } else if(command.type==='growing-policy'||command.type==='area'&&command.action==='remove-growing') {
     const cells=command.type==='area'?queryArea(world,command):null;
@@ -44,7 +46,7 @@ export function planCommandDrops(world:World,command:Command):DropPlan|null {
   for(const pawn of world.pawns)if((pawn.jobId!==null&&jobs.has(pawn.jobId))||(pawn.haul&&(jobs.has(constructionHaulId(pawn.haul.destination)??-1)||pawn.haul.destination.type==='stockpile'&&zones.has(pawn.haul.destination.stockpileId))))pawns.add(pawn.id);
   const result:DropPlan=new Map();
   if(!jobs.size&&!pawns.size)return result;
-  const shadow={...world,piles:world.piles.map(p=>({...p,owner:{...p.owner}}))};
+  const shadow={...world,packed:world.packed?.map(p=>({...p,owner:{...p.owner}})),piles:world.piles.map(p=>({...p,owner:{...p.owner}}))};
   const add=(pile:MaterialPile,origin:Cell)=>{
     if(!dropRetainingIdentity(shadow,pile,origin)||pile.owner.type!=='ground')return false;
     result.set(pile.id,{x:pile.owner.x,z:pile.owner.z});return true;
@@ -52,6 +54,8 @@ export function planCommandDrops(world:World,command:Command):DropPlan|null {
   for(const pawn of world.pawns)if(pawns.has(pawn.id)) {
     const pile=shadow.piles.find(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
     if(pile&&!add(pile,pawn))return null;
+    const pack=shadow.packed?.find(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
+    if(pack){const cell=furnitureDropCell(shadow,pawn);if(!cell)return null;pack.owner={type:'ground',...cell};result.set(pack.building.id,cell);}
   }
   for(const pile of shadow.piles)if(pile.owner.type==='job'&&jobs.has(pile.owner.jobId)) {
     const job=world.jobs.find(j=>pile.owner.type==='job'&&j.id===pile.owner.jobId)!;
@@ -65,10 +69,11 @@ export function commitDrop(world:World,pile:MaterialPile,origin:Cell,plan?:DropP
   return dropRetainingIdentity(world,pile,origin);
 }
 export function releaseWork(world:World,pawn:Pawn,plan?:DropPlan):boolean {
+  if(!releaseFurniture(world,pawn,plan))return false;
   const held=world.piles.find(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
   if(held&&!commitDrop(world,held,pawn,plan))return false;
   const job=world.jobs.find(j=>j.id===pawn.jobId);
-  if(job?.reservedBy===pawn.id){delete job.clearance;job.reservedBy=null;job.status='pending';if(job.kind==='sow'||job.kind==='deconstruct')job.progress=0;}
+  if(job?.reservedBy===pawn.id){delete job.clearance;job.reservedBy=null;job.status='pending';if(job.furniture||job.kind==='sow'||job.kind==='deconstruct')job.progress=0;}
   delete pawn.transitExit;
   pawn.orders.active=null;
   pawn.recreation.task=null;pawn.jobId=null;pawn.haul=null;pawn.cooking=null;pawn.need=null;pawn.path=[];pawn.state='idle';pawn.planCooldown=20;pawn.needCooldown=20;

@@ -25,7 +25,9 @@ export function buildAreaIndex(world: World): AreaIndex {
   for (let i = 0; i < flags.length; i++) if (world.tiles[i]!.terrain === 'water' || world.tiles[i]!.terrain === 'rock') flags[i] = BLOCKED;
   for (const resource of world.resources) flags[index(resource)]! |= ZONE_BLOCKED | FIXED | (resource.kind === 'tree' ? TREE : isPlant(resource) ? BERRIES | (harvestable(world, resource) ? RIPE : 0) : 0);
   for (const structure of world.structures) for (const cell of footprintCells(structure)) flags[index(cell)]! |= DECONSTRUCTIBLE | FIXED | (occupancyOf(structure.kind)?.zones?0:ZONE_BLOCKED | GROW_BLOCKED);
-  for (const job of world.jobs) for (const cell of footprintCells(job)) flags[index(cell)]! |= JOB | (job.kind==='deconstruct'||occupancyOf(job.kind)?.zones?0:ZONE_BLOCKED) | (occupancyOf(job.kind)?.zones===false?GROW_BLOCKED:0);
+  for(const job of world.jobs)if(job.furniture){const source=world.structures.find(s=>s.id===job.furniture!.structureId);if(source)for(const c of footprintCells(source))flags[index(c)]!|=JOB;}
+  for (const job of world.jobs) for (const cell of footprintCells(job)) flags[index(cell)]! |= JOB | (job.kind==='deconstruct'||job.kind==='uninstall'||occupancyOf(job.furniture?.kind??job.kind)?.zones?0:ZONE_BLOCKED) | (occupancyOf(job.furniture?.kind??job.kind)?.zones===false?GROW_BLOCKED:0);
+  for(const pack of world.packed??[])if(pack.owner.type==='ground'&&world.jobs.some(j=>j.furniture?.structureId===pack.building.id))flags[index(pack.owner)]!|=JOB;
   for (const storage of world.stockpiles) flags[index(storage)]! |= STORAGE;
   for (const pawn of world.pawns) {
     if(pawn.haul?.destination.type==='aside')flags[index(pawn.haul.destination)]!|=BLOCKED;

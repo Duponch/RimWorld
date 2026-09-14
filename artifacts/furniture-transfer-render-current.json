@@ -1,0 +1,136 @@
+{
+  "timestamp": "2026-09-14T21:45:37.184Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "variant": "current",
+  "map": 250,
+  "pawns": 100,
+  "buildings": 100,
+  "protocol": "Normal Chromium WebGPU; synthetic 100 builders relocating 100 whole furniture objects; actual worker at 6x; 60 warmup frames; no world serialization during timed frames.",
+  "errors": [],
+  "backend": "WebGPU",
+  "adapter": {
+    "vendor": "amd",
+    "architecture": "rdna-1"
+  },
+  "frames": {
+    "count": 181,
+    "p50": 8.300000000001091,
+    "p99": 58.30000000000109,
+    "p95": 20.799999999999272,
+    "max": 100.09999999999854,
+    "mean": 9.208287292817683
+  },
+  "frameCpu": {
+    "count": 182,
+    "p50": 6.700000002980232,
+    "p99": 10.399999998509884,
+    "p95": 9.100000001490116,
+    "max": 10.799999997019768,
+    "mean": 6.865934065860379
+  },
+  "drawCalls": {
+    "count": 182,
+    "p50": 157,
+    "p99": 164,
+    "p95": 164,
+    "max": 164,
+    "mean": 158.35164835164835
+  },
+  "triangles": {
+    "count": 182,
+    "p50": 104021,
+    "p99": 108413,
+    "p95": 108413,
+    "max": 108413,
+    "mean": 104586.84615384616
+  },
+  "removalFrames": {
+    "count": 51,
+    "p50": 8.300000000001091,
+    "p99": 54.100000000000364,
+    "p95": 20.899999999999636,
+    "max": 54.100000000000364,
+    "mean": 10.209803921568641
+  },
+  "updates": {
+    "updatePiles": {
+      "count": 8,
+      "p50": 0.10000000149011612,
+      "p99": 0.20000000298023224,
+      "p95": 0.20000000298023224,
+      "max": 0.20000000298023224,
+      "mean": 0.12499999906867743
+    },
+    "setWorld": {
+      "count": 8,
+      "p50": 0.6000000014901161,
+      "p99": 2.600000001490116,
+      "p95": 2.600000001490116,
+      "max": 2.600000001490116,
+      "mean": 1.025000000372529
+    },
+    "buildStructures": {
+      "count": 3,
+      "p50": 0.6999999955296516,
+      "p99": 0.8999999985098839,
+      "p95": 0.8999999985098839,
+      "max": 0.8999999985098839,
+      "mean": 0.5333333313465118
+    },
+    "buildJobs": {
+      "count": 3,
+      "p50": 0.30000000447034836,
+      "p99": 0.5,
+      "p95": 0.5,
+      "max": 0.5,
+      "mean": 0.3000000019868215
+    }
+  },
+  "pipelines": {
+    "count": 1,
+    "p50": 0,
+    "p99": 0,
+    "p95": 0,
+    "max": 0,
+    "mean": 0
+  },
+  "events": [
+    {
+      "tick": 2013,
+      "removed": 16
+    },
+    {
+      "tick": 2028,
+      "removed": 84
+    }
+  ],
+  "slowFrames": [
+    {
+      "interval": 58.30000000000109,
+      "cpu": 8.700000002980232,
+      "nearRemoval": true
+    },
+    {
+      "interval": 45.80000000000109,
+      "cpu": 6.5,
+      "nearRemoval": true
+    },
+    {
+      "interval": 54.100000000000364,
+      "cpu": 6.700000002980232,
+      "nearRemoval": true
+    },
+    {
+      "interval": 100.09999999999854,
+      "cpu": 10.399999998509884,
+      "nearRemoval": false
+    }
+  ],
+  "outcome": {
+    "tick": 2092,
+    "wood": 0,
+    "pending": 0,
+    "packed": 0,
+    "installed": 100
+  }
+}

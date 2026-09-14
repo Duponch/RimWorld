@@ -1,3 +1,5 @@
+import { furnitureControls, updateFurnitureControls } from './ui/furniture-controls';
+import { furnitureObject, furnitureIntentAt, packedAt } from './sim/furniture-rules';
 import { fireControls, updateFireControls } from './ui/fire-controls';
 import { PawnSelection } from './ui/pawn-selection';
 import { OrderMenu } from './ui/order-menu';
@@ -23,7 +25,7 @@ import { gameLayout, storageSettings, toolDefinitions } from './ui/layout';
 import type { ArchitectCategory, Panel, Tool } from './ui/layout';
 
 import { recreationInspection, updateRecreationInspection } from './ui/recreation-inspection';
-const jobLabels: Record<JobKind, string> = { deconstruct: 'Déconstruction', chop: 'Abattage', harvest: 'Récolte', cut: 'Coupe de plante', sow: 'Semis de riz', wall: 'Construction du mur', bed: 'Construction du lit', table: 'Construction de la table', stool: 'Construction du tabouret', horseshoes: 'Construction du piquet de fers à cheval', campfire: 'Construction du feu de camp' };
+const jobLabels: Record<JobKind, string> = { uninstall:'Désinstallation',install:'Réinstallation', deconstruct: 'Déconstruction', chop: 'Abattage', harvest: 'Récolte', cut: 'Coupe de plante', sow: 'Semis de riz', wall: 'Construction du mur', bed: 'Construction du lit', table: 'Construction de la table', stool: 'Construction du tabouret', horseshoes: 'Construction du piquet de fers à cheval', campfire: 'Construction du feu de camp' };
 const stateLabels: Record<Pawn['state'], string> = { idle: 'Disponible', moving: 'En chemin', working: 'Au travail', sleeping: 'Se repose', hungry: 'Cherche à manger', eating: 'Mange', recreating: 'Se divertit' };
 const terrainLabels = { grass: 'Prairie', soil: 'Terre fertile', water: 'Eau infranchissable', rock: 'Massif rocheux infranchissable' };
 const resourceLabels = { tree: 'Arbre', berries: 'Buisson de baies', rock: 'Pierre au sol', rice: 'Plant de riz' };
@@ -35,6 +37,7 @@ const client = new SimulationClient();
 let snapshot: World | undefined;
 let selectedPawn: number | undefined;
 let selectedCell: { x: number; z: number } | undefined;
+let installationId:number|undefined;
 let currentTool: Tool = 'select';
 let currentPanel: Panel = null;
 let currentCategory: ArchitectCategory = 'orders';
@@ -85,6 +88,7 @@ function setPanel(panel: Panel) {
   if (panel !== 'architect') applyTool('select');
 }
 function applyTool(tool: Tool) {
+  if(tool!=='install'){installationId=undefined;renderer?.setFurniturePlacement(undefined);}
   currentTool = tool;
   renderer?.setTool(tool);
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-tool]')) {
@@ -92,8 +96,8 @@ function applyTool(tool: Tool) {
     button.classList.toggle('active', active);
     button.setAttribute('aria-pressed', String(active));
   }
-  el('tool-instruction').textContent = toolDefinitions.find(item => item.id === tool)!.hint;
-  el('placement-controls').hidden = tool !== 'bed' && tool !== 'table' && tool !== 'campfire';
+  el('tool-instruction').textContent = toolDefinitions.find(item => item.id === tool)?.hint??'Choisissez le nouvel emplacement du meuble. Q/E : rotation. Échap : annuler.';
+  el('placement-controls').hidden = tool !== 'install' && tool !== 'bed' && tool !== 'table' && tool !== 'campfire';
   el('storage-options').hidden = tool !== 'stockpile';
 }
 function setTool(tool: Tool) {
@@ -119,6 +123,7 @@ function pickCell(x: number, z: number) {
   if (currentTool !== 'select') {
     const tool = currentTool;
     void attempt(() => {
+      if(tool==='install'){if(installationId===undefined)throw new Error('Sélectionnez un meuble à installer.');return client.command({type:'install',structureId:installationId,x,z,orientation:placementOrientation}).then(()=>{applyTool('select');setPanel(null);});}
       if (tool === 'growing' || tool === 'remove-growing') return client.command({type:'area',action:tool,from:{x,z},to:{x,z}});
       if (tool === 'stockpile') return client.command({ type: 'stockpile', x, z, enabled: true, ...readStorageSettings('stockpile') });
       if (tool === 'remove-stockpile') return client.command({ type: 'stockpile', x, z, enabled: false });
@@ -184,6 +189,7 @@ function rebuildInspector() {
     el('delete-stockpile').onclick = () => { if (selectedCell) { const cell = { ...selectedCell }; void attempt(async () => { await client.command({ type: 'stockpile', ...cell, enabled: false }); rebuildInspector(); renderState(); }); } };
     el('cell-deconstruct').onclick=()=>{if(selectedCell)void attempt(()=>client.command({type:'designate',kind:'deconstruct',...selectedCell!}));};
     el('cell-cancel').onclick=()=>{if(selectedCell)void attempt(()=>client.command({type:'cancel',...selectedCell!}));};
+    furnitureControls(panel,()=>snapshot,()=>selectedCell,c=>void attempt(()=>client.command(c)),id=>{const object=furnitureObject(snapshot!,id);if(!object)return;setPanel('architect');applyTool('install');installationId=id;placementOrientation=object.orientation;renderer?.setPlacementRotation(placementOrientation);renderer?.setFurniturePlacement(object);});
     const bedControls = document.createElement('label'); bedControls.id = 'cell-bed'; bedControls.hidden = true;
     bedControls.append('Propriétaire du lit ');
     const owner = document.createElement('select'); owner.id = 'bed-owner'; owner.setAttribute('aria-label', 'Propriétaire du lit');
@@ -293,10 +299,12 @@ function renderState() {
     else {
       const resource = world.resources.find(item => item.x === x && item.z === z);
       const structure = world.structures.find(item => footprintCells(item).some(cell => cell.x === x && cell.z === z));
-      const job = world.jobs.find(item => footprintCells(item).some(cell => cell.x === x && cell.z === z));
+      const job = world.jobs.find(item => footprintCells(item).some(cell => cell.x === x && cell.z === z))??furnitureIntentAt(world,selectedCell);
       const storage = world.stockpiles.find(item => item.x === x && item.z === z);
       const piles = world.piles.filter(item => item.owner.type === 'ground' && item.owner.x === x && item.owner.z === z);
-      el('cell-title').textContent = structure ? ({ wall: 'Mur en bois', bed: 'Lit', table: 'Table en bois', stool: 'Tabouret en bois', horseshoes: 'Piquet de fers à cheval', campfire: 'Feu de camp' })[structure.kind] : resource ? resourceLabels[resource.kind] : terrainLabels[world.tiles[z * world.width + x].terrain];
+      updateFurnitureControls(el('inspector'),world,selectedCell);
+      const packed=packedAt(world,selectedCell);
+      el('cell-title').textContent = packed?'Meuble emballé · '+({bed:'lit',table:'table',stool:'tabouret',horseshoes:'piquet',wall:'mur',campfire:'feu'})[packed.building.kind]:structure ? ({ wall: 'Mur en bois', bed: 'Lit', table: 'Table en bois', stool: 'Tabouret en bois', horseshoes: 'Piquet de fers à cheval', campfire: 'Feu de camp' })[structure.kind] : resource ? resourceLabels[resource.kind] : terrainLabels[world.tiles[z * world.width + x].terrain];
       el('cell-description').textContent = `Case ${x}, ${z}${resource ? isPlant(resource) ? ` · Croissance ${Math.floor(plantGrowth(world, resource) * 100)} % · ${harvestable(world, resource) ? `Récolte : environ ${Math.round(berryYield(world, resource))} ${resource.kind === 'rice' ? 'riz' : 'baies'}` : 'Pas encore récoltable'} · ${plantResting(world.tick) ? 'Repos nocturne' : naturalLight(world.tick) < .51 ? 'Lumière insuffisante' : 'Croissance diurne'}` : ` · ${resource.amount} unités à récolter` : ''}${structure ? ` · ${footprintCells(structure).length === 2 ? '1 × 2' : '1 × 1'} cases` : ''}`;
       el('cell-materials').textContent = piles.length ? `Au sol : ${piles.map(pile => `${pile.quantity} ${ITEM_DEFINITIONS[pile.item].label}${pile.kind==='food'?` · ${foodFreshnessLabel(pile,world.tick)}`:''}`).join(' · ')}` : '';
       el('cell-job').textContent = job ? `${job.construction==='blueprint'?'Plan · ':job.construction==='frame'?'Cadre · ':''}${jobLabels[job.kind]} · ${queryJobStatus(world, job).reason ?? 'En cours'}${JOB_WOOD_COST[job.kind] > 0 ? ` · ${deliveredStock(world, job.id).wood} bois livrés` : ''}` : 'Aucun ordre sur cette case.';
@@ -406,7 +414,7 @@ document.addEventListener('keydown', event => {
   if (event.key in speeds) { void attempt(() => changeSpeed(speeds[event.key])); return; }
   const shortcuts: Record<string, Tool> = { c: 'chop', r: 'harvest', b: 'wall', l: 'bed', x: 'cancel' };
   const key = event.key.toLowerCase(); if (key in shortcuts) setTool(shortcuts[key]);
-  else if ((currentTool === 'bed' || currentTool === 'table' || currentTool === 'campfire') && (key === 'q' || key === 'e')) { event.preventDefault(); rotatePlacement(key === 'q' ? -1 : 1); }
+  else if ((currentTool === 'install' || currentTool === 'bed' || currentTool === 'table' || currentTool === 'campfire') && (key === 'q' || key === 'e')) { event.preventDefault(); rotatePlacement(key === 'q' ? -1 : 1); }
   else if (key === 's') { event.preventDefault(); setTool('stockpile'); }
 });
 client.onError = message => notify(message, true);

@@ -23,6 +23,6 @@ export function groundOccupancyAllows(world:World,cell:Cell):boolean {
 }
 export function storageOccupancyAllows(world:World,cell:Cell):boolean {
   for(const s of world.structures)if(!OCCUPANCY[s.kind].store&&occupies(s,cell))return false;
-  for(const j of world.jobs)if(occupancyOf(j.kind)?.store===false&&occupies(j,cell))return false;
+  for(const j of world.jobs)if(occupancyOf(j.furniture?.kind??j.kind)?.store===false&&occupies(j,cell))return false;
   return true;
 }

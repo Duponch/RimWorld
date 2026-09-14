@@ -1,3 +1,4 @@
+import { furnitureReady, furnitureWorkTarget } from './furniture-rules.ts';
 import { CARRY_CAPACITY, JOB_WOOD_COST } from './definitions.ts';
 import { constructionSiteFree, constructionHaulPriority, asBuilder, isConstruction, type ConstructionObstruction } from './construction-rules.ts';
 import { reservedSource } from './materials.ts';
@@ -27,6 +28,8 @@ export function constructionCandidates(world:World,pawn:Pawn,blocked:Uint8Array,
       if(reservedSource(world,pile.id)>0||!canReach(world,pile.owner,reach,true))continue;
       const quantity=Math.min(CARRY_CAPACITY,pile.quantity),destination=findAsideDestination(world,pile.owner,pile.item,quantity,blocked,budget);
       if(destination)result.push({...base,priority:constructionHaulPriority(pawn),target:pile.owner,sourceId:pile.id,quantity,destination:{...destination,constructionId:job.id,forConstruction:asBuilder(pawn)}});
+    } else if(job.kind==='install'&&pawn.priorities.build>0&&furnitureReady(world,job,pawn)&&canReach(world,job,reach,false)&&canReach(world,furnitureWorkTarget(world,job),reach,false)) {
+      result.push({...base,priority:pawn.priorities.build,target:furnitureWorkTarget(world,job),job});
     } else if(job.construction==='frame'&&pawn.priorities.build>0&&job.escrow.wood===JOB_WOOD_COST[job.kind]&&constructionSiteFree(world,job,pawn.id,obstacle)&&canReach(world,job,reach,false)) {
       result.push({...base,priority:pawn.priorities.build,target:job,job});
     }

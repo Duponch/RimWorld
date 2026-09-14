@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 24 as const;
+export const SCHEMA_VERSION = 25 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
@@ -7,7 +7,7 @@ export type Terrain = 'grass' | 'soil' | 'water' | 'rock';
 export type ResourceKind = 'tree' | 'berries' | 'rock' | 'rice';
 export type MaterialKind = 'wood' | 'food';
 export type StructureKind = 'wall' | 'bed' | 'table' | 'stool' | 'campfire' | 'horseshoes';
-export type JobKind = 'chop' | 'harvest' | 'cut' | 'sow' | 'deconstruct' | StructureKind;
+export type JobKind = 'chop' | 'harvest' | 'cut' | 'sow' | 'deconstruct' | 'uninstall' | 'install' | StructureKind;
 export type WorkType = 'gather' | 'build' | 'haul' | 'grow' | 'cook';
 export type Orientation = 0 | 1 | 2 | 3;
 export type Footprint = 'standard' | 'legacy-single';
@@ -38,6 +38,7 @@ export type NeedTask =
   | { kind: 'eat'; phase: 'pickup' | 'choose-spot' | 'travel' | 'ingest'; sourcePileId: number; carryPileId: number | null; quantity: number; progress: number; dining: DiningPlace | null }
   | { kind: 'sleep'; phase: 'travel' | 'sleep'; bedId: number | null; target: Cell };
 export interface Job extends Cell {
+  furniture?: import('./furniture-rules.ts').FurnitureTarget;
   deconstruction?: import('./deconstruction-rules.ts').DeconstructionTarget;
   construction?: 'blueprint' | 'frame';
   /** Plant clearing is work on the same construction intent, before delivery. */
@@ -88,6 +89,7 @@ export interface Pawn extends Cell {
 }
 export interface WorldEvent { tick: number; type: 'job' | 'need' | 'command'; message: string }
 export interface World {
+  packed: import('./furniture-rules.ts').PackedFurniture[];
   deconstructed: import('./deconstruction-rules.ts').DeconstructionLedger;
   foodPolicies: import('./food-policy.ts').FoodPolicy[];
   nextFoodPolicyId: number;
@@ -123,6 +125,7 @@ export type AreaAction = 'deconstruct' | 'chop' | 'harvest' | 'cut' | 'cancel' |
 export interface StorageSettings { filters?: Record<MaterialKind, boolean>; priority?: number; capacity?: number }
 export interface AreaCommand extends StorageSettings { type: 'area'; action: AreaAction; from: Cell; to: Cell }
 export type Command =
+  | ({type:'install';structureId:number;orientation:Orientation} & Cell)
   | import('./player-orders.ts').OrderCommand
   | import('./food-policy.ts').FoodPolicyCommand
   | import('./schedule.ts').ScheduleCommand

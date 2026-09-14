@@ -41,9 +41,9 @@ test('régimes partagés : commandes atomiques, copie indépendante, limites et 
   for(const mutate of [(v:any)=>v.pawns[0].foodPolicyId=999,(v:any)=>v.foodPolicies[1].id=v.foodPolicies[0].id,(v:any)=>v.foodPolicies[0].allowed=['wood'],(v:any)=>v.nextFoodPolicyId=1,(v:any)=>v.foodPolicies=[],(v:any)=>v.foodPolicies[0].name='<script>'+ 'x'.repeat(60)]) {
     const bad=JSON.parse(full);mutate(bad);expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();
   }
-  const old=withoutFoodPolicies(JSON.parse(full));old.schemaVersion=12;delete old.deconstructed;
-  const restored=deserializeWorld(JSON.stringify(old));expect(restored.schemaVersion).toBe(24);expect(restored.pawns.every(p=>p.foodPolicyId===1)).toBe(true);
-  const stripped=withoutFoodPolicies(JSON.parse(serializeWorld(restored)));stripped.schemaVersion=12;delete stripped.deconstructed;expect(stripped).toEqual(old);
+  const old=withoutFoodPolicies(JSON.parse(full));old.schemaVersion=12;delete old.deconstructed;delete old.packed;
+  const restored=deserializeWorld(JSON.stringify(old));expect(restored.schemaVersion).toBe(25);expect(restored.pawns.every(p=>p.foodPolicyId===1)).toBe(true);
+  const stripped=withoutFoodPolicies(JSON.parse(serializeWorld(restored)));stripped.schemaVersion=12;delete stripped.deconstructed;delete stripped.packed;expect(stripped).toEqual(old);
   const control=deserializeWorld(full);checked(restored,100);checked(control,100);
   expect(withoutFoodPolicies(JSON.parse(serializeWorld(restored)))).toEqual(withoutFoodPolicies(JSON.parse(serializeWorld(control))));
 });

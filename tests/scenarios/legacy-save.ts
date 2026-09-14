@@ -1,7 +1,7 @@
 /** Historical fixtures omit fields that their claimed schema never stored. */
-export function withoutFoodPolicies<T extends {deconstructed?: unknown; jobs?: Array<{construction?:unknown;clearance?:unknown}>; foodPolicies?: unknown; nextFoodPolicyId?: unknown; pawns: Array<{foodPolicyId?: unknown; recreation?: unknown; orders?:unknown}>}>(data: T): T {
+export function withoutFoodPolicies<T extends {packed?:unknown;deconstructed?: unknown; jobs?: Array<{construction?:unknown;clearance?:unknown}>; foodPolicies?: unknown; nextFoodPolicyId?: unknown; pawns: Array<{foodPolicyId?: unknown; recreation?: unknown; orders?:unknown}>}>(data: T): T {
   for(const job of data.jobs??[]){delete job.construction;delete job.clearance;}
-  delete data.deconstructed;
+  delete data.deconstructed;delete data.packed;
   delete data.foodPolicies; delete data.nextFoodPolicyId;
   for (const pawn of data.pawns) { delete pawn.foodPolicyId; delete pawn.recreation; delete pawn.orders; }
   return data;

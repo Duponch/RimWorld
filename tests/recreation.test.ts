@@ -77,7 +77,7 @@ test('skygazing requires arrival; unavailable or boring activities give no joy; 
   const invalid=JSON.parse(serializeWorld(w));invalid.pawns[0].recreation.tolerance.solitary=Infinity;expect(()=>deserializeWorld(JSON.stringify(invalid))).toThrow(/recreation/i);
   p.recreation.task=null;p.path=[];p.state='idle';p.schedule.fill('anything');p.recreation.level=10;p.recreation.bored={solitary:true,dexterity:true};p.recreation.tolerance={solitary:80,dexterity:80};
   const level=p.recreation.level;stepWorld(w,100);expect(p.recreation.task).toBeNull();expect(p.recreation.level).toBeLessThan(level);
-  const old=fixture();old.pawns.forEach(p=>p.schedule.fill('anything'));const raw=JSON.parse(serializeWorld(old));raw.schemaVersion=14;delete raw.deconstructed;for(const pawn of raw.pawns)delete pawn.orders;raw.pawns.forEach((p:any)=>delete p.recreation);
+  const old=fixture();old.pawns.forEach(p=>p.schedule.fill('anything'));const raw=JSON.parse(serializeWorld(old));raw.schemaVersion=14;delete raw.deconstructed;delete raw.packed;for(const pawn of raw.pawns)delete pawn.orders;raw.pawns.forEach((p:any)=>delete p.recreation);
   const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated).toEqual({...old,pawns:old.pawns.map(p=>({...p,recreation:initialRecreation()}))});
   const corruptOld=structuredClone(raw);corruptOld.pawns[0].path=[{x:31,z:31}];expect(()=>deserializeWorld(JSON.stringify(corruptOld))).toThrow(/version 14|path/i);
 });

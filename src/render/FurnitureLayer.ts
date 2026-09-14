@@ -43,6 +43,7 @@ export function buildFurniture(world: World, group: THREE.Group, cutaway: boolea
     batches.set(group,'campfire-flames',fires.flames,'border',false);
     batches.set(group, 'furniture', [
       ...fires.base, ...recreationParts(world),
+      ...(world.packed??[]).flatMap(p=>p.owner.type==='ground'?[{x:p.owner.x,z:p.owner.z,y:.24,sx:.64,sy:.48,sz:.64,color:0xb6996c},{x:p.owner.x,z:p.owner.z,y:.49,sx:.13,sy:.03,sz:.67,color:0x6f634e}]:[]),
       ...woodParts.map(p => ({ ...p, color: 0xa38559 })),
       ...walls.map(p => ({ ...p, sx: 0.96, sy: wallHeight - 0.09, sz: 0.96, color: 0xa6916e })),
       ...wallCaps.map(p => ({ ...p, sx: 1.01, sy: 0.09, sz: 1.01, color: 0xc3af86 })),

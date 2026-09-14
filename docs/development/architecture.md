@@ -26,7 +26,7 @@ Les messages sont traités en séquence dans un worker unique. Chaque commande r
 
 Simulation pure et déterministe dans `src/sim`, messages ordonnés dans `src/bridge`, présentation sans mutation du World dans `src/render`. Les imports vers DOM/Three restent hors du noyau. Le laboratoire GPU reste isolé.
 
-Le schéma courant est 24. Le fournisseur ciblé `player-hauling.ts` prépare les livraisons ; `haul-reservations.ts` expose ensemble les tâches actives et en attente au planner. Les contrôles fréquents de capacité et de source parcourent ces mêmes engagements directement, sans tableau temporaire ni générateur. Les ordres restent dans le worker et le rendu ne change pas. Les contrats de propriété, besoins et mouvement font autorité sur les anciennes descriptions des ADR. Voir [simulation](simulation.md), [logistique](material-logistics.md), [alimentation](food-items.md), [agriculture](farming.md), [cuisine](cooking.md), [conservation](food-preservation.md), [horaires](schedules.md), [régimes](food-policies.md), [loisirs](recreation.md), [chantiers](construction.md), [ordres directs](player-orders.md) et [mouvement](spatial-motion-storage.md).
+Le schéma courant est 25. Le fournisseur ciblé `player-hauling.ts` prépare les livraisons ; `haul-reservations.ts` expose ensemble les tâches actives et en attente au planner. Les contrôles fréquents de capacité et de source parcourent ces mêmes engagements directement, sans tableau temporaire ni générateur. Les ordres restent dans le worker et le rendu ne change pas. Les contrats de propriété, besoins et mouvement font autorité sur les anciennes descriptions des ADR. Voir [simulation](simulation.md), [logistique](material-logistics.md), [alimentation](food-items.md), [agriculture](farming.md), [cuisine](cooking.md), [conservation](food-preservation.md), [horaires](schedules.md), [régimes](food-policies.md), [loisirs](recreation.md), [chantiers](construction.md), [ordres directs](player-orders.md) et [mouvement](spatial-motion-storage.md).
 
 Extraire une responsabilité cohérente avant de rallonger un module. Ne pas introduire ECS, Rust ou compute sans besoin et mesure. Les audits séparent simulation, transport des snapshots, rendu CPU et GPU.
 
@@ -185,3 +185,7 @@ Les [profils V22](furniture-travel.md) sont isolés de l’orchestrateur : `furn
 ## Retrait transactionnel V24
 
 `deconstruction-rules.ts` porte cibles/durées/réservations, `deconstruction.ts` prépare le remboursement avant de supprimer l’ouvrage et `deconstruction-save.ts` contrôle les nouveaux états. Le bilan de pertes est persisté et transmis par les snapshots dynamiques. `JobLayer.ts` extrait les marqueurs du rendu principal et réutilise les lots instanciés. Voir [contrat et limites](deconstruction.md).
+
+## Mobilier conservé V25
+
+Les [transferts de meubles](furniture-transfer.md) séparent règles, commandes, progression et validation. `World.packed` garde l'objet construit et son propriétaire sol/colon ; le rendu présente ces données sans les modifier. Les représentations de paquet utilisent les lots existants de mobilier et cargaisons GPU. La migration V24 est additive après validation stricte ; aucun inventaire personnel ni registre ECS générique n'est introduit.

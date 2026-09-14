@@ -23,6 +23,7 @@ export function groundPile(world: World, cell: Cell): MaterialPile | undefined {
   return world.piles.find(p=>p.owner.type==='ground' && p.owner.x===cell.x && p.owner.z===cell.z);
 }
 function cellCapacity(world: World, cell: Cell, item: ItemId, limit: number, exceptPawn?: number, zone=world.stockpiles.find(z=>z.x===cell.x&&z.z===cell.z)): number {
+  if(world.packed?.some(p=>p.owner.type==='ground'&&p.owner.x===cell.x&&p.owner.z===cell.z))return 0;
   const pile = groundPile(world, cell);
   if (pile && pile.item!==item) return 0;
   let capacity = Math.min(limit,ITEM_DEFINITIONS[item].stackLimit)-(pile?.quantity??0);

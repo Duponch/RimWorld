@@ -97,7 +97,7 @@ Dans **Architecte → Ordres → Déconstruire**, cliquez ou tracez un rectangle
 
 Environ la moitié du bois revient **au sol** : un mur de 5 bois rend 2 ou 3 bois. Le feu de camp ne rend rien, y compris son combustible. Un meuble utilisé peut attendre la libération de sa réservation. Un lit retiré perd son propriétaire. Un retrait sans place pour ses matériaux attend ; il ne les efface pas.
 
-Annuler conserve le bâtiment. Interrompre remet le travail de retrait à zéro ; sauvegarder/recharger conserve l’action exactement. Déconstruire détruit le meuble : **le déplacer entier par réinstallation n’est pas encore disponible**.
+Annuler conserve le bâtiment. Interrompre remet le travail de retrait à zéro ; sauvegarder/recharger conserve l’action exactement. Déconstruire détruit le meuble. Pour le conserver entier, utilisez Désinstaller ou Réinstaller sur un meuble admissible.
 
 ## Répartir le travail
 
@@ -187,7 +187,7 @@ Avant de créer une nouvelle colonie, le jeu conserve aussi l'état courant dans
 
 ## Limites et suite
 
-Pas encore d'autres cultures, autres postes/recettes de cuisine, chaîne du froid, minage, réinstallation, autres familles de loisirs, animaux, armes, combat, blessures, médecine, relations, traits, recherche, commerce, électricité, toit, température, incendie, météo dynamique, carte du monde ou storyteller. Les coûts de sols et autres profils de déplacement, les réserves à plusieurs cases partageant une politique, les autres familles sélectionnables, les fournisseurs supplémentaires de travail lié sur une case et les tournées logistiques restent à développer. Les modèles sont provisoires ; la congestion entre agents actifs et la calibration des besoins restent ouvertes. La faim ne cause pas encore de malnutrition ni de décès.
+Pas encore d'autres cultures, autres postes/recettes de cuisine, chaîne du froid, minage, autres familles de loisirs, animaux, armes, combat, blessures, médecine, relations, traits, recherche, commerce, électricité, toit, température, incendie, météo dynamique, carte du monde ou storyteller. Les coûts de sols et autres profils de déplacement, les réserves à plusieurs cases partageant une politique, les autres familles sélectionnables, les fournisseurs supplémentaires de travail lié sur une case et les tournées logistiques restent à développer. Les modèles sont provisoires ; la congestion entre agents actifs et la calibration des besoins restent ouvertes. La faim ne cause pas encore de malnutrition ni de décès.
 
 La suite est suivie dans [le plan de développement](../ROADMAP.md). Les détails de la référence et les futures interactions sont dans [la matrice des systèmes](systems-matrix.md).
 
@@ -206,3 +206,11 @@ Dans **Horaires**, la plage Loisirs cherche une activité sous 95 % de satisfact
 Vous pouvez poser un plan dans une réserve. Mur, lit et table retirent les cellules couvertes de la zone, mais laissent les objets présents. Les transporteurs concernés déposent leur cargaison ; si aucun dépôt conservatif n’est possible, le plan est refusé. Annuler le plan ne rétablit pas la réserve.
 
 La table conserve une pile déjà présente, affichée sur son plateau, mais n’accepte pas de zone de stockage. Tabouret et piquet peuvent garder une réserve utilisable. Le feu peut recouvrir son tracé, mais aucun objet ne sera rangé sur sa cellule ; le combustible utilise l’ordre de ravitaillement. Murs, lits et feux attendent le déplacement des piles gênantes. La table se traverse mais ne sert pas de poste de travail ou de repos. Après interruption pendant une traversée, le colon finit son arête puis rejoint une case admissible ; il ne se téléporte pas.
+
+## Déplacer un meuble entier
+
+Inspectez un lit, une table, un tabouret ou un piquet et cliquez sur **Réinstaller**. Choisissez sa nouvelle case ; **Q/E** tourne son empreinte. Un bâtisseur dégage si nécessaire l’emplacement, rejoint le meuble, le retire, le porte puis le pose. Il ne consomme pas de nouveau bois. Le propriétaire du lit reste le même, mais le couchage est indisponible pendant le déplacement. Un meuble occupé attend la fin de son usage.
+
+**Désinstaller**, dans l’inspection ou Architecte → Ordres, dépose un paquet au sol. Sélectionnez ce paquet puis **Installer** pour le remettre en service. Annulez un déplacement sur son plan ou sur son meuble source encore présent : si le meuble est déjà porté, il est déposé entier ; faute de place, l’annulation est refusée. Sauvegarde et rechargement conservent le portage.
+
+Mur et feu ne sont pas déplaçables de cette façon. Pour ce lot, utilisez Construction : Transport seul, rangement automatique des paquets en réserve et dégagement automatique d’un paquet gênant ne sont pas encore disponibles. Réinstallez ailleurs un paquet qui bloque un chantier.

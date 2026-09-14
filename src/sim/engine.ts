@@ -1,3 +1,6 @@
+import { advanceFurniture } from './furniture-transfer.ts';
+import { minifiable, furnitureIntentAt } from './furniture-rules.ts';
+import { designateUninstall, installCommand } from './furniture-commands.ts';
 import { deconstructionAt, deconstructionAvailable, designateDeconstruction } from './deconstruction-rules.ts';
 import { finishDeconstruction } from './deconstruction.ts';
 import { advancePriorityWork } from './priority-work.ts';
@@ -36,7 +39,7 @@ import type { AreaCommand, Cell, Command, CommandResult, DesignateCommand, Job, 
 export { JOB_DURATION, JOB_WOOD_COST } from './definitions.ts';
 
 const PATH_SEARCHES_PER_TICK = 8;
-const JOB_LABEL: Readonly<Record<JobKind, string>> = { deconstruct: 'déconstruction', chop: 'abattage', harvest: 'récolte', cut: 'coupe de plante', sow: 'semis de riz', horseshoes: 'construction de piquet de fers à cheval', campfire: 'construction de feu de camp', wall: 'construction de mur', bed: 'construction de lit', table: 'construction de table', stool: 'construction de tabouret' };
+const JOB_LABEL: Readonly<Record<JobKind, string>> = { uninstall:'désinstallation', install:'réinstallation', deconstruct: 'déconstruction', chop: 'abattage', harvest: 'récolte', cut: 'coupe de plante', sow: 'semis de riz', horseshoes: 'construction de piquet de fers à cheval', campfire: 'construction de feu de camp', wall: 'construction de mur', bed: 'construction de lit', table: 'construction de table', stool: 'construction de tabouret' };
 const sameCell = (a: Cell, b: Cell): boolean => a.x === b.x && a.z === b.z;
 const refusal = (code: RefusalCode, reason: string): CommandResult => ({ ok: false, code, reason });
 function event(world: World, type: 'job' | 'need' | 'command', message: string): void {
@@ -108,14 +111,17 @@ function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandR
 
 /** Pure shared rule used by preview and command execution. */
 export function canDesignate(world: World, command: DesignateCommand): CommandResult {
-  if (!command || !['deconstruct', 'chop', 'harvest', 'cut', 'wall', 'bed', 'table', 'stool', 'campfire', 'horseshoes'].includes(command.kind)) return refusal('invalid-command', 'Type de travail inconnu.');
+  if (!command || !['uninstall', 'deconstruct', 'chop', 'harvest', 'cut', 'wall', 'bed', 'table', 'stool', 'campfire', 'horseshoes'].includes(command.kind)) return refusal('invalid-command', 'Type de travail inconnu.');
   if (command.orientation !== undefined && (!Number.isInteger(command.orientation) || command.orientation < 0 || command.orientation > 3)) return refusal('invalid-command', 'Orientation invalide.');
-  const target = command.kind==='deconstruct'?deconstructionAt(world,command):undefined;
-  if(command.kind==='deconstruct'&&!target)return refusal('missing-target','Aucun bâtiment à déconstruire ici.');
+  const target = (command.kind==='deconstruct'||command.kind==='uninstall')?deconstructionAt(world,command):undefined;
+  if((command.kind==='deconstruct'||command.kind==='uninstall')&&!target)return refusal('missing-target','Aucun bâtiment à déconstruire ici.');
+  if(target&&world.jobs.some(j=>j.furniture?.structureId===target.id))return refusal('occupied','Ce meuble a déjà un ordre de déplacement.');
+  if(command.kind==='uninstall'&&!minifiable(target!.kind))return refusal('incompatible-resource','Ce bâtiment ne peut pas être désinstallé.');
   const cells = footprintCells(target??command);
   if (cells.some(cell => !inBounds(world, cell.x, cell.z))) return refusal('out-of-bounds', 'Empreinte hors de la carte.');
   if (world.jobs.some(job => footprintCells(job).some(cell => cells.some(target => sameCell(cell, target))))) return refusal('occupied', 'Un ordre existe déjà dans cette empreinte.');
-  if(command.kind==='deconstruct')return {ok:true};
+  if(command.kind==='deconstruct'||command.kind==='uninstall')return {ok:true};
+  if(cells.some(c=>world.packed?.some(p=>p.owner.type==='ground'&&p.owner.x===c.x&&p.owner.z===c.z)))return refusal('occupied','Déplacez le meuble emballé qui gêne cet emplacement.');
   const resource = world.resources.find(candidate => sameCell(candidate, command));
   if (command.kind === 'chop' || command.kind === 'harvest' || command.kind === 'cut') {
     return resource && (command.kind === 'chop' ? resource.kind === 'tree' : isPlant(resource)) && (command.kind !== 'harvest' || harvestable(world, resource)) ? { ok: true } : refusal('incompatible-resource', 'Ressource incompatible.');
@@ -141,6 +147,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   if(command.type==='order-job'||command.type==='order-cook'||command.type==='order-haul'||command.type==='clear-orders')return applyOrderCommand(world,command);
   if (command.type === 'schedule-paint' || command.type === 'schedule-replace') return applyScheduleCommand(world, command);
   if (command.type === 'food-policy-create' || command.type === 'food-policy-update' || command.type === 'food-policy-delete' || command.type === 'food-policy-assign') return applyFoodPolicyCommand(world, command);
+  if(command.type==='install')return installCommand(world,command);
   const drops=planCommandDrops(world,command);
   if(!drops)return refusal('occupied','Pas de place à proximité pour les matériaux libérés.');
   if(command.type==='bill-add'||command.type==='bill-update'||command.type==='bill-remove'||command.type==='bill-move') {
@@ -193,7 +200,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
     } else {
       if (growingZoneAt(world, cellIndex(world, command.x, command.z)) || ['water', 'rock'].includes(world.tiles[cellIndex(world, command.x, command.z)]!.terrain)
         || world.resources.some(item => sameCell(item, command))
-        || [...world.structures, ...world.jobs].some(item => item.kind!=='deconstruct'&&occupancyOf(item.kind)?.zones!==true&&occupies(item,command))) return refusal('occupied', 'Stockage impossible sur cette cellule occupée ou infranchissable.');
+        || [...world.structures, ...world.jobs].some(item => !['deconstruct','uninstall'].includes(item.kind)&&occupancyOf('furniture' in item?item.furniture?.kind??item.kind:item.kind)?.zones!==true&&occupies(item,command))) return refusal('occupied', 'Stockage impossible sur cette cellule occupée ou infranchissable.');
       if (existing) {
         existing.filters = command.filters ? { ...command.filters } : existing.filters;
         existing.priority = command.priority ?? existing.priority;
@@ -207,7 +214,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
     wakePlanners(world); refreshStock(world); return { ok: true };
   }
   if (command.type === 'cancel') {
-    const existing = world.jobs.find(job => footprintCells(job).some(cell => sameCell(cell, command)));
+    const existing = world.jobs.find(job => footprintCells(job).some(cell => sameCell(cell, command)))??furnitureIntentAt(world,command);
     if (!existing) return refusal('missing-target', 'Aucun ordre à annuler ici.');
     for (const pawn of world.pawns) if (pawn.jobId === existing.id || (pawn.haul && constructionHaulId(pawn.haul.destination) === existing.id)) releaseWork(world, pawn,drops);
     world.jobs.splice(world.jobs.indexOf(existing), 1);
@@ -218,6 +225,10 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   }
   const result = canDesignate(world, command);
   if (!result.ok) return result;
+  if(command.kind==='uninstall') {
+    if(!Number.isSafeInteger(world.nextId+1))return refusal('invalid-command','Limite des identités atteinte.');
+    designateUninstall(world,deconstructionAt(world,command)!);wakePlanners(world);return {ok:true};
+  }
   if(command.kind==='deconstruct') {
     if(!Number.isSafeInteger(world.nextId+1))return refusal('invalid-command','Limite des identités atteinte.');
     designateDeconstruction(world,deconstructionAt(world,command)!);
@@ -238,6 +249,8 @@ function completeJob(world: World, pawn: Pawn, job: Job): void {
     if(job.kind!=='chop'&&quantity>0)event(world,'job',`${pawn.name} a récolté ${quantity} ${resource.kind==='rice'?'riz':'baies'}.`);
   } else if (job.kind === 'deconstruct') {
     if(!finishDeconstruction(world,pawn,job)){releaseWork(world,pawn);return;}
+  } else if (job.kind==='install'||job.kind==='uninstall') {
+    return; // Furniture transfers are processed by their physical state machine.
   } else if (job.kind === 'sow') {
     finishSowing(world, job);
   } else {
@@ -300,6 +313,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
         } else moveToward(world,pawn,constructionWorkTarget(world,job),false,getBlocked,budget);
         continue;
       }
+      if(job.furniture){if(advanceFurniture(world,pawn,job,target=>moveToward(world,pawn,target,false,getBlocked,budget),()=>releaseWork(world,pawn))){blocked=undefined;wakePlanners(world);}continue;}
       if(job.kind==='deconstruct'&&!deconstructionAvailable(world,job,pawn.id)){releaseWork(world,pawn);continue;}
       if(isConstruction(job)&&!constructionSiteFree(world,job,pawn.id)){releaseWork(world,pawn);continue;}
       const cells = footprintCells(job);

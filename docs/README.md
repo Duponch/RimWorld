@@ -51,3 +51,5 @@ Après un changement, mettre à jour **le contrat concerné**, puis les entrées
 `python scripts/check-docs.py` vérifie liens locaux, fragments, identifiants de la matrice et intégrité des originaux. Il ne vérifie pas la vérité des règles. Une retouche documentaire ne nécessite pas de rejouer la colonie entière.
 
 Déconstruction des bâtiments actuels : [règles et limites](research/deconstruction-reference.md), [contrat V24](development/deconstruction.md).
+
+Déplacement des meubles entiers : [contrat V25](development/furniture-transfer.md), [vérification des branches de référence](research/furniture-transfer-reference.md).

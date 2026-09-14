@@ -1,3 +1,4 @@
+import { furnitureReady, furnitureWorkTarget } from './furniture-rules.ts';
 import { deconstructionAvailable } from './deconstruction-rules.ts';
 import { rememberPriorityWork, expirePriorityWork } from './priority-work-state.ts';
 import { isCookingOrder } from './order-types.ts';
@@ -18,7 +19,7 @@ export interface PlayerOrders { active: number | 'haul' | 'cook' | null; queue: 
 export type OrderCommand = { type:'order-cook';pawnId:number;structureId:number;queue:boolean } | { type: 'order-job'; pawnId: number; jobId: number; queue: boolean } | { type:'order-haul';pawnId:number;target:HaulOrderTarget;queue:boolean } | { type: 'clear-orders'; pawnId: number };
 export interface OrderOption { jobId: number; cookStationId?:number; haulTarget?:HaulOrderTarget; label: string; enabled: boolean; reason?: string }
 export const MAX_QUEUED_ORDERS = 32;
-const labels: Record<Job['kind'], string> = { deconstruct:'Déconstruire', chop:'Abattre',harvest:'Récolter',cut:'Couper',sow:'Semer du riz',wall:'Construire le mur',bed:'Construire le lit',table:'Construire la table',stool:'Construire le tabouret',campfire:'Construire le feu',horseshoes:'Construire le piquet' };
+const labels: Record<Job['kind'], string> = { uninstall:'Désinstaller',install:'Réinstaller', deconstruct:'Déconstruire', chop:'Abattre',harvest:'Récolter',cut:'Couper',sow:'Semer du riz',wall:'Construire le mur',bed:'Construire le lit',table:'Construire la table',stool:'Construire le tabouret',campfire:'Construire le feu',horseshoes:'Construire le piquet' };
 const fail = (reason: string): CommandResult => ({ok:false,code:'invalid-command',reason});
 const busy = (pawn: Pawn) => pawn.jobId !== null || !!(pawn.haul || pawn.cooking || pawn.need || pawn.recreation.task);
 const clearingPlant=(world:World,job:Job)=>!isConstruction(job)?undefined:job.clearance?world.resources.find(r=>r.id===job.clearance!.resourceId):constructionObstruction(world,job).plant;
@@ -41,16 +42,17 @@ export function orderReadiness(world: World, pawn: Pawn, job: Job, accepted=fals
     if (job.escrow.wood !== JOB_WOOD_COST[job.kind]) return 'Approvisionnement nécessaire ; choisissez Livrer les matériaux.';
     if (!constructionSiteFree(world,job,pawn.id)) return 'Chantier gêné ; dégagez les piles ou attendez le passage des colons.';
   }
+  if(job.furniture&&!furnitureReady(world,job,pawn))return 'Meuble utilisé ou emplacement encombré.';
   if (job.kind === 'deconstruct' && !deconstructionAvailable(world,job,pawn.id)) return 'Bâtiment utilisé ou réservé par un autre colon.';
   if (job.kind === 'sow' && groundPile(world,job)) return 'Le sol doit être dégagé ; choisissez Dégager avant de semer.';
 }
 function goals(world: World, job: Job) {
-  const plant=clearingPlant(world,job),cells=plant?[plant]:footprintCells(job), result=interactionGoals(world,cells);
+  const plant=clearingPlant(world,job),cells=plant?[plant]:footprintCells(furnitureWorkTarget(world,job) as Job), result=interactionGoals(world,cells);
   for(const cell of cells)result.delete(cellIndex(world,cell.x,cell.z));
   return result;
 }
 function route(world:World,pawn:Pawn,job:Job):Cell[]|null {
-  return routeToJob(world,clearingPlant(world,job)??job,reachableCells(world,pawn,blockedCells(world),new Set(),goals(world,job)),false);
+  return routeToJob(world,clearingPlant(world,job)??furnitureWorkTarget(world,job),reachableCells(world,pawn,blockedCells(world),new Set(),goals(world,job)),false);
 }
 function preflight(world:World,pawn:Pawn,job:Job,queue=false):string|undefined {
   if(pawn.collapsePending || world.restRules==='legacy'&&pawn.rest===0) return 'Ce colon doit récupérer de son épuisement.';
@@ -203,7 +205,7 @@ export function advanceOrders(world:World,pawn:Pawn,getBlocked:NavigationGrid,bu
   if(!reason&&job) {
     const reach=search(world,pawn,getBlocked(),new Set(),budget,goals(world,job));
     if(!reach)return true;
-    path=routeToJob(world,clearingPlant(world,job)??job,reach,false);if(path===null)reason='Accès perdu.';
+    path=routeToJob(world,clearingPlant(world,job)??furnitureWorkTarget(world,job),reach,false);if(path===null)reason='Accès perdu.';
   }
   pawn.orders.queue.shift();
   if(!reason&&job&&path)startJobOrder(pawn,job,path);

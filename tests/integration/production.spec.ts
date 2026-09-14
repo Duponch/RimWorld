@@ -85,11 +85,11 @@ test('conservation dans le worker : migration V10, inspection de fraîcheur, exp
     const initial=createWorld(42,32,32);initial.tiles=initial.tiles.map(()=>({terrain:'grass'}));initial.resources=[];initial.piles=[];
     initial.pawns.forEach((p,i)=>{p.x=11+i;p.z=12;p.hunger=100;p.rest=100;p.priorities={gather:0,build:0,haul:0,grow:0,cook:0};});
     addGroundMaterial(initial,'food',10,{x:17,z:16},'berries');refreshStock(initial);
-    const old=withoutPostV10Fields(JSON.parse(serializeWorld(initial)));old.schemaVersion=10;delete old.deconstructed;
+    const old=withoutPostV10Fields(JSON.parse(serializeWorld(initial)));old.schemaVersion=10;delete old.deconstructed;delete old.packed;
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:JSON.stringify(old)});
     await page.goto('/?size=32&seed=42&e2e');await expect(page.locator('#loading')).toHaveCount(0);
     await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();
-    await expect.poll(async()=>(await world(page)).schemaVersion).toBe(24);
+    await expect.poll(async()=>(await world(page)).schemaVersion).toBe(25);
     expect(await world(page)).toEqual(deserializeWorld(JSON.stringify(old)));await page.keyboard.press('Escape');await cell(page,17,16);
     await expect(page.locator('#cell-materials')).toContainText('pourrit dans 14.0 j');
     const aged=structuredClone(initial);aged.piles[0]!.rot={progress:ROT_DAYS.berries*TICKS_PER_DAY-120,atTick:0};

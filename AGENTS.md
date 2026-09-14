@@ -49,7 +49,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 24 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 25 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)
@@ -95,4 +95,9 @@
 
 ## Déconstruction V24
 - Lire docs/development/deconstruction.md avant de toucher aux retraits, restitutions ou réservations de bâtiments. Déconstruction est un Job ciblant un Structure.id ; désignation seule ne bloque pas les usages, réservation oui. Progression réinitialisée après interruption, conservée après sauvegarde.
-- Une restitution n’avance le PRNG et ne supprime le bâtiment qu’après prévalidation des dépôts. Le bilan world.deconstructed conserve pertes et historique combustible retiré. V23 est strictement validée avant migration. Réinstallation, minage, autres matériaux et compétences restent distincts et absents.
+- Une restitution n’avance le PRNG et ne supprime le bâtiment qu’après prévalidation des dépôts. Le bilan world.deconstructed conserve pertes et historique combustible retiré. V23 est strictement validée avant migration. Réinstallation des quatre meubles admissibles livrée en V25 ; minage, autres matériaux et compétences restent distincts et absents.
+
+## Meubles entiers V25
+- Lire docs/development/furniture-transfer.md avant de modifier installation, paquet, portage ou annulation. Le bâtiment garde son identité et le propriétaire de son lit entre structures et packed ; une seule représentation autoritaire et un seul propriétaire.
+- Le plan de réinstallation réutilise les règles de chantier, avec exclusion du meuble source. Un paquet occupe une cellule exclusive. Interruption et annulation prévalident le dépôt ; un refus conserve le portage. V24 est strictement validée avant ajout de packed vide.
+- Transport seul, rangement et dégagement automatiques des paquets restent à compléter. La valeur WorkTotal 150 du plan de référence n'est pas une durée de pose : voir la recherche fraîche et la chaîne HaulToContainer.

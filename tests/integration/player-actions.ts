@@ -59,7 +59,13 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     await tool(page,c.action);
     await revealCells(page,[c.from,c.to]);
     await dragRectangle(page,c.from,c.to);
-  } else if(c.type==='designate' && c.kind !== 'sow') {
+  } else if(c.type==='install') {
+    const w=await world(page),object=w.structures.find(s=>s.id===c.structureId),pack=w.packed.find(p=>p.building.id===c.structureId);
+    const source=object??(pack?.owner.type==='ground'?pack.owner:undefined);if(!source)throw new Error('Furniture source not on map');
+    await page.keyboard.press('Escape');await revealCells(page,[source]);await cell(page,source.x,source.z);await page.locator('#cell-install').click();rotation.value=(object??pack!.building).orientation;
+    while(rotation.value!==c.orientation){await page.keyboard.press('e');rotation.value=(rotation.value+1)%4;}
+    await revealCells(page,[c]);await cell(page,c.x,c.z);
+  } else if(c.type==='designate' && c.kind !== 'sow' && c.kind !== 'install') {
     await tool(page,c.kind);
     if(c.kind==='bed'||c.kind==='table'||c.kind==='campfire') {
       while(rotation.value!==(c.orientation??0)){await page.keyboard.press('e');rotation.value=(rotation.value+1)%4;}
@@ -75,6 +81,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
   } else throw new Error(`Player UI action not supported: ${c.type}`);
   await page.waitForFunction(c=>{
     const w=window.__lisiere.world;
+    if(c.type==='install')return w.jobs.some(j=>j.kind==='install'&&j.furniture?.structureId===c.structureId&&j.x===c.x&&j.z===c.z);
     if(c.type==='order-job'){const pawn=w.pawns.find(p=>p.id===c.pawnId);return pawn?.orders.active===c.jobId||pawn?.orders.queue.includes(c.jobId);}
     if(c.type==='order-cook') {const pawn=w.pawns.find(p=>p.id===c.pawnId);return pawn?.orders.active==='cook'&&pawn.cooking?.stationId===c.structureId||pawn?.orders.active==='haul'&&pawn.haul?.destination.type==='fuel'&&pawn.haul.destination.structureId===c.structureId||pawn?.orders.queue.some(o=>typeof o!=='number'&&('cooking' in o?o.cooking.stationId===c.structureId:o.destination.type==='fuel'&&o.destination.structureId===c.structureId));}
     if(c.type==='order-haul') {

@@ -15,3 +15,5 @@ tmp/
 !.env.example
 *.log
 *.local
+
+artifacts/furniture-transfer-load.json

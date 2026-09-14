@@ -144,3 +144,7 @@ V23 : `priority-work.test.ts` ajoute trois scénarios profonds aux familles d’
 ## Retrait des bâtiments V24
 
 Les quatre scénarios de `tests/deconstruction.test.ts` couvrent récupération, interruption, réservations, migration et refus atomiques. Le pilote commun ouvre un passage après le premier jour ; `woodAccount` inclut pertes et combustible retiré. Le parcours UI dédié exerce le rectangle et les boutons d’inspection. Les lots élargis ne doivent pas réintroduire l’ancienne attente d’un plan de mur bloquant : seuls les ouvrages finis font obstacle. Les audits de déconstruction séparent ticks CPU et frames WebGPU natives ; exécuter ces mesures sans autre suite lourde simultanée.
+
+## Meubles conservés V25
+
+`tests/furniture-transfer.test.ts` regroupe quatre scénarios : retrait/prise/dépôt/pose, rotation et lit occupé, saturation et refus atomiques, migrations strictes et replay/snapshots. Le bilan du pilote inclut les objets emballés ; la colonie réinstalle son piquet après le premier jour. Le parcours UI dédié recharge un lit en plein portage et utilise les boutons sur meuble et paquet. Le banc `scripts/furniture-transfer-bench.ts` mesure 3/30/100 bâtisseurs, avec ticks actifs séparés. Exécuter la mesure hors des suites navigateur et des compilations.

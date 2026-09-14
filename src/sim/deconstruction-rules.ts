@@ -7,7 +7,7 @@ export interface DeconstructionLedger { count: number; lostWood: number; fuelTic
 export const deconstructionAt = (world: World, cell: Cell) => world.structures.find(s => footprintContains(s, cell));
 export const deconstructionTarget = (world: World, job: Job) => world.structures.find(s => s.id === job.deconstruction?.structureId);
 export function deconstructionReserved(world: World, id: number, exceptPawn?: number): boolean {
-  return world.jobs.some(j => j.deconstruction?.structureId === id && j.reservedBy !== null && j.reservedBy !== exceptPawn);
+  return world.jobs.some(j => (j.deconstruction?.structureId??j.furniture?.structureId) === id && j.reservedBy !== null && j.reservedBy !== exceptPawn);
 }
 /** Reserve the object, not its owner's bed assignment or a table's eating surface.
  * A queued order may follow the same pawn's service; other users must finish first. */

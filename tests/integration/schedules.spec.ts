@@ -36,7 +36,7 @@ test('Horaires : peindre, annuler, clavier, copier, reprendre et réveiller phys
     await panel(page,'schedule');await page.locator('[data-schedule-brush="work"]').click();await slot(ada!.id,0).click();await page.locator('[data-speed="6"]').click();
     await expect.poll(async()=>(await world(page)).pawns[0]!.state).not.toBe('sleeping');await page.locator('[data-speed="0"]').click();
     const awake=await world(page);expect([awake.pawns[0]!.x,awake.pawns[0]!.z]).toEqual([13,13]);expect(validateWorld(awake)).toEqual([]);
-    const old=withoutPostV11Fields(JSON.parse(serializeWorld(awake)));old.schemaVersion=11;delete old.deconstructed;
+    const old=withoutPostV11Fields(JSON.parse(serializeWorld(awake)));old.schemaVersion=11;delete old.deconstructed;delete old.packed;
     await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:JSON.stringify(old)});
     await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,deserializeWorld(JSON.stringify(old)));
     await panel(page,'schedule');await expect(page.locator('#schedule-profile')).toContainText('Sauvegarde historique');

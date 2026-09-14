@@ -25,7 +25,7 @@ function until(w:World,predicate:()=>boolean,max=1000):void {
 
 test('feu construit, deux jours de combustion, ravitaillement concurrent et interruption conservent le bois',()=>{
   const w=camp(),initial=woodAccount(w);
-  const v9=JSON.parse(serializeWorld(w));v9.schemaVersion=9;delete v9.deconstructed;withoutPostV10Fields(v9);
+  const v9=JSON.parse(serializeWorld(w));v9.schemaVersion=9;delete v9.deconstructed;delete v9.packed;withoutPostV10Fields(v9);
   for(const pawn of v9.pawns){delete pawn.cooking;delete pawn.priorities.cook;}
   const migrated=deserializeWorld(JSON.stringify(v9));
   expect(migrated.pawns.every(p=>p.cooking===null&&p.priorities.cook===2)).toBe(true);
@@ -50,7 +50,7 @@ test('feu construit, deux jours de combustion, ravitaillement concurrent et inte
   until(w,()=>fire.fuel!.ticks>5000);expect(woodAccount(w)).toBe(initial);
   const bad=JSON.parse(serializeWorld(w));bad.structures[0].fuel.ticks=CAMPFIRE_CAPACITY+1;
   expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();
-  const historical=JSON.parse(serializeWorld(w));historical.schemaVersion=9;delete historical.deconstructed;
+  const historical=JSON.parse(serializeWorld(w));historical.schemaVersion=9;delete historical.deconstructed;delete historical.packed;
   expect(()=>deserializeWorld(JSON.stringify(historical))).toThrow();
   const before=serializeWorld(w);
   expect(applyCommand(w,{type:'refuel-policy',structureId:-1,enabled:false}).ok).toBe(false);

@@ -1,0 +1,96 @@
+{
+  "date": "2026-09-14T21:45:18.495Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "map": 250,
+  "protocol": "Synthetic 3/30/100 builders, one relocation per pawn, four furniture types. Three repetitions of 500 ticks; separate 100-tick warmup. Setup, commands and validation outside timing. Active ticks also reported separately; no browser/GPU measurement.",
+  "phases": [
+    {
+      "pawns": 3,
+      "tickMs": {
+        "samples": 1500,
+        "p50": 0.005599999999958527,
+        "p95": 0.04629999999997381,
+        "p99": 0.37379999999996016,
+        "max": 5.1317000000000235
+      },
+      "activeTickMs": {
+        "samples": 90,
+        "p50": 0.05000000000006821,
+        "p95": 1.4084000000000287,
+        "p99": 4.630899999999997,
+        "max": 4.630899999999997
+      },
+      "ownershipTransitionTickMs": {
+        "samples": 6,
+        "p50": 0.03380000000004202,
+        "p95": 0.1833000000000311,
+        "p99": 0.1833000000000311,
+        "max": 0.1833000000000311
+      },
+      "outcome": {
+        "installed": 3,
+        "carriedPeak": 3,
+        "woodConserved": true
+      }
+    },
+    {
+      "pawns": 30,
+      "tickMs": {
+        "samples": 1500,
+        "p50": 0.03899999999998727,
+        "p95": 0.8975000000000364,
+        "p99": 6.764699999999948,
+        "max": 20.8356
+      },
+      "activeTickMs": {
+        "samples": 150,
+        "p50": 0.8975000000000364,
+        "p95": 10.297799999999938,
+        "p99": 20.686999999999898,
+        "max": 20.8356
+      },
+      "ownershipTransitionTickMs": {
+        "samples": 36,
+        "p50": 1.6842999999998938,
+        "p95": 4.572599999999966,
+        "p99": 10.297799999999938,
+        "max": 10.297799999999938
+      },
+      "outcome": {
+        "installed": 30,
+        "carriedPeak": 18,
+        "woodConserved": true
+      }
+    },
+    {
+      "pawns": 100,
+      "tickMs": {
+        "samples": 1500,
+        "p50": 0.262000000000171,
+        "p95": 4.852700000000368,
+        "p99": 11.382599999999911,
+        "max": 21.50109999999995
+      },
+      "activeTickMs": {
+        "samples": 126,
+        "p50": 6.203700000000026,
+        "p95": 15.458000000000084,
+        "p99": 21.048099999999977,
+        "max": 21.50109999999995
+      },
+      "ownershipTransitionTickMs": {
+        "samples": 78,
+        "p50": 2.6204999999999927,
+        "p95": 15.064499999999953,
+        "p99": 21.048099999999977,
+        "max": 21.048099999999977
+      },
+      "outcome": {
+        "installed": 100,
+        "carriedPeak": 100,
+        "woodConserved": true
+      }
+    }
+  ]
+}

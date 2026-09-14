@@ -31,7 +31,7 @@ export interface NeedContext {
  */
 export function processNeeds(world: World, pawn: Pawn, context: NeedContext): boolean {
   const canPlan = pawn.needCooldown === 0;
-  if (pawn.bedId !== null && !world.structures.some(bed => bed.id === pawn.bedId && bed.kind === 'bed')) pawn.bedId = null;
+  if (pawn.bedId !== null && !world.structures.some(bed => bed.id === pawn.bedId && bed.kind === 'bed')&&!world.packed?.some(pack=>pack.building.id===pawn.bedId&&pack.building.kind==='bed')) pawn.bedId = null;
 
   // Collapse is an emergency interruption, including travel with a meal in hand.
   if ((world.restRules === 'legacy' ? pawn.rest === 0 : pawn.collapsePending) && pawn.need?.kind !== 'sleep') {

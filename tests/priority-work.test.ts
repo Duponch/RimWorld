@@ -75,6 +75,6 @@ test('priority decisions share budgets, disappear on lost access or timeout with
   const raw=JSON.parse(accepted);for(const priority of [null,[],{cell:{x:1,z:1},work:'gather',startedAt:2000},{cell:{x:-1,z:1},work:'cook',startedAt:2000},{cell:{x:1,z:1},work:'cook',startedAt:2001},{cell:{x:1,z:1},work:'cook',startedAt:2000,radius:12}]) {
     const invalid=structuredClone(raw);invalid.pawns[0].priorityWork=priority;expect(()=>deserializeWorld(JSON.stringify(invalid))).toThrow(/priority work/);
   }
-  raw.schemaVersion=22;delete raw.deconstructed;expect(()=>deserializeWorld(JSON.stringify(raw))).toThrow(/version 22/);delete raw.pawns[0].priorityWork;
-  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated).toEqual({...raw,schemaVersion:24,deconstructed:{count:0,lostWood:0,fuelTicks:0}});expect(migrated.pawns[0]!.priorityWork).toBeUndefined();
+  raw.schemaVersion=22;delete raw.deconstructed;delete raw.packed;expect(()=>deserializeWorld(JSON.stringify(raw))).toThrow(/version 22/);delete raw.pawns[0].priorityWork;
+  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated).toEqual({...raw,schemaVersion:25,packed:[],deconstructed:{count:0,lostWood:0,fuelTicks:0}});expect(migrated.pawns[0]!.priorityWork).toBeUndefined();
 });

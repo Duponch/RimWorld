@@ -3,7 +3,7 @@ import { canStandAt, navigationCosts } from './furniture-travel.ts';
 import { jobBlocksTransit } from './construction-rules.ts';
 import type { DistanceField, Reachability } from './navigation-types.ts';
 export type { DistanceField, Reachability } from './navigation-types.ts';
-import type { Cell, World } from './types.ts';
+import type { Cell, Job, World } from './types.ts';
 import { footprintCells } from './definitions.ts';
 
 export const cellIndex = (world: World, x: number, z: number): number => z * world.width + x;
@@ -68,7 +68,7 @@ export function reachableCells(world: World, start: Cell, blocked: Uint8Array, o
 }
 
 export function routeToJob(world: World, target: Cell & { kind?: string; orientation?: 0 | 1 | 2 | 3; footprint?: 'standard' | 'legacy-single' }, reachable: Reachability, allowTarget = false): Cell[] | null {
-  const cells = target.kind === 'bed' || target.kind === 'table' ? footprintCells({ ...target, kind: target.kind }) : [target];
+  const cells = target.kind ? footprintCells(target as Job) : [target];
   const candidates: Cell[] = cells.flatMap(cell => [
     { x: cell.x, z: cell.z - 1 }, { x: cell.x + 1, z: cell.z },
     { x: cell.x, z: cell.z + 1 }, { x: cell.x - 1, z: cell.z },
