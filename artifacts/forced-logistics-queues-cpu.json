@@ -1,0 +1,59 @@
+{
+  "date": "2026-09-14T17:19:19.803Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "conditions": "Synthetic clear 250x250 camp, 2 forced trips per actor, all actors active at start, 300 ticks, no warmup; query/commands separately timed, setup and validation excluded, no rendering; automatic hauling disabled after acceptance; one run per population, no guarantee of worst case.",
+  "rows": [
+    {
+      "pawns": 3,
+      "ticks": 300,
+      "activeTicks": 7,
+      "activeP95Ms": 4.636099999999999,
+      "p50Ms": 0.011199999999973898,
+      "p95Ms": 0.054500000000018645,
+      "p99Ms": 1.5246999999999957,
+      "maxMs": 4.636099999999999,
+      "queryP95Ms": 1.5296999999999912,
+      "commandP95Ms": 0.8511000000000308,
+      "maxQueued": 3,
+      "activePawnTicks": 15,
+      "stored": 60,
+      "wood": 90,
+      "hash": "86ae83cc"
+    },
+    {
+      "pawns": 30,
+      "ticks": 300,
+      "activeTicks": 10,
+      "activeP95Ms": 17.3433,
+      "p50Ms": 0.021099999999989905,
+      "p95Ms": 0.09789999999998145,
+      "p99Ms": 5.352200000000039,
+      "maxMs": 17.3433,
+      "queryP95Ms": 1.1011000000000308,
+      "commandP95Ms": 0.8123999999999683,
+      "maxQueued": 30,
+      "activePawnTicks": 192,
+      "stored": 600,
+      "wood": 900,
+      "hash": "1dc5eefa"
+    },
+    {
+      "pawns": 100,
+      "ticks": 300,
+      "activeTicks": 27,
+      "activeP95Ms": 17.420100000000048,
+      "p50Ms": 0.04079999999999018,
+      "p95Ms": 6.425999999999931,
+      "p99Ms": 13.942299999999932,
+      "maxMs": 19.491599999999835,
+      "queryP95Ms": 1.3285000000000764,
+      "commandP95Ms": 2.2123000000000275,
+      "maxQueued": 100,
+      "activePawnTicks": 1460,
+      "stored": 2000,
+      "wood": 3000,
+      "hash": "568a0e41"
+    }
+  ]
+}

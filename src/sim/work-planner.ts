@@ -1,4 +1,5 @@
 import { constructionCandidates } from './construction-planner.ts';
+import { haulReservations } from './haul-reservations.ts';
 import { asBuilder, constructionHaulPriority, constructionObstructions, constructionSiteFree, isConstruction } from './construction-rules.ts';
 import { hasCookingWork, planCooking, type CookingPlan } from './cooking-planner.ts';
 import { candidateAccess } from './candidate-access.ts';
@@ -39,7 +40,7 @@ export function destinationCell(world: World, destination: HaulDestination): (Ce
   if (destination.type === 'fuel') return world.structures.find(s=>s.id===destination.structureId) ?? null;
   return destination.type === 'job' ? world.jobs.find(job => job.id === destination.jobId) ?? null : world.stockpiles.find(zone => zone.id === destination.stockpileId) ?? null;
 }
-function destinationCapacity(world: World, destination: HaulDestination, kind: MaterialKind, exceptPawn?: number, item: ItemId = legacyItem(kind)): number {
+export function destinationCapacity(world: World, destination: HaulDestination, kind: MaterialKind, exceptPawn?: number, item: ItemId = legacyItem(kind)): number {
   if (destination.type === 'fuel') return kind==='wood' ? fuelCapacity(world,destination.structureId,exceptPawn) : 0;
   if (destination.type === 'aside') return asideCapacity(world, destination, item, exceptPawn);
   if (destination.type === 'job') {
@@ -115,8 +116,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   }
   for (const worker of world.pawns) if (worker.need?.kind === 'eat' && worker.need.phase === 'pickup') sourceReserved.set(worker.need.sourcePileId, (sourceReserved.get(worker.need.sourcePileId) ?? 0) + worker.need.quantity);
   for(const worker of world.pawns)for(const i of worker.cooking?.ingredients??[])if(i.stage!=='held')sourceReserved.set(i.pileId,(sourceReserved.get(i.pileId)??0)+i.quantity);
-  for (const worker of world.pawns) if (worker.haul) {
-    const task = worker.haul;
+  for (const task of haulReservations(world)) {
     if (task.phase === 'pickup') {
       sourceReserved.set(task.sourcePileId, (sourceReserved.get(task.sourcePileId) ?? 0) + task.quantity);
       const source = pileById.get(task.sourcePileId);

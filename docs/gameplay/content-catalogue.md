@@ -49,6 +49,6 @@ V13 ajoute des [régimes partagés](../development/food-policies.md), aucun obje
 
 Aucun nouvel objet : mur, lit, table, tabouret, feu et piquet disposent de phases plan/cadre avant leur état construit. Plantes, bois et aliments existants participent au dégagement physique. L’état de chantier n’est pas une nouvelle famille CAT. Compatibilité meuble/objet, plans sur réserve, matériaux alternatifs, qualité et chaîne pierre restent absents ou partiels ; voir [construction](../development/construction.md).
 
-## Portée de la tranche V17
+## Portée des tranches V17–V18
 
-Aucun nouvel objet individuel. La sélection multiple et les ordres directs concernent les colons et travaux du catalogue existant ; ils ne livrent ni équipement, ni autre espèce ou matériau. [Ordres et limites des fournisseurs](../development/player-orders.md).
+Aucun nouvel objet individuel. La sélection multiple, les ordres directs et les livraisons forcées concernent les colons, piles et travaux du catalogue existant ; ils ne livrent ni équipement, ni autre espèce ou matériau. [Ordres et limites des fournisseurs](../development/player-orders.md).

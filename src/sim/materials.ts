@@ -3,6 +3,7 @@ import { freshRot, mergeRot, rotAge } from './food-preservation.ts';
 import { ITEM_DEFINITIONS, legacyItem } from './items.ts';
 import type { ItemId } from './items.ts';
 import { MAX_STACK } from './definitions.ts';
+import { haulReservations } from './haul-reservations.ts';
 import type { Cell, HaulDestination, MaterialKind, MaterialOwner, MaterialPile, Stock, World } from './types.ts';
 
 export function pileCell(world: World, pile: MaterialPile): Cell | null {
@@ -84,10 +85,13 @@ export function transferPile(world:World,pile:MaterialPile,owner:MaterialOwner):
 export function reservedSource(world: World, pileId: number, exceptPawn?: number): number {
   let quantity = 0;
   for (const pawn of world.pawns) {
-    if (pawn.id === exceptPawn) continue;
-    for(const i of pawn.cooking?.ingredients??[])if(i.pileId===pileId&&i.stage!=='held')quantity+=i.quantity;
-    if (pawn.haul?.phase === 'pickup' && pawn.haul.sourcePileId === pileId) quantity += pawn.haul.quantity;
-    if (pawn.need?.kind === 'eat' && pawn.need.phase === 'pickup' && pawn.need.sourcePileId === pileId) quantity += pawn.need.quantity ?? 1;
+    if (pawn.id !== exceptPawn) {
+      for(const i of pawn.cooking?.ingredients??[])if(i.pileId===pileId&&i.stage!=='held')quantity+=i.quantity;
+      if(pawn.haul?.phase==='pickup'&&pawn.haul.sourcePileId===pileId)quantity+=pawn.haul.quantity;
+      if (pawn.need?.kind === 'eat' && pawn.need.phase === 'pickup' && pawn.need.sourcePileId === pileId) quantity += pawn.need.quantity ?? 1;
+    }
+    const queue=pawn.orders?.queue;
+    if(queue?.length)for(const task of queue)if(typeof task!=='number'&&task.sourcePileId===pileId)quantity+=task.quantity;
   }
   return quantity;
 }
@@ -99,7 +103,7 @@ export function sameDestination(a: HaulDestination, b: HaulDestination): boolean
 }
 export function reservedDestination(world: World, destination: HaulDestination, exceptPawn?: number): number {
   let quantity = 0;
-  for (const pawn of world.pawns) if (pawn.id !== exceptPawn && pawn.haul && sameDestination(pawn.haul.destination, destination)) quantity += pawn.haul.quantity;
+  for(const task of haulReservations(world,exceptPawn))if(sameDestination(task.destination,destination))quantity+=task.quantity;
   return quantity;
 }
 export function groundQuantity(world: World, cell: Cell): number {

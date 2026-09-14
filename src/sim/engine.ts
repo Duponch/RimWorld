@@ -125,7 +125,7 @@ export function applyCommand(world: World, command: Command): CommandResult {
 }
 function applyCommandInternal(world: World, command: Command): CommandResult {
   if (!command || typeof command !== 'object') return refusal('invalid-command', 'Commande invalide.');
-  if(command.type==='order-job'||command.type==='clear-orders')return applyOrderCommand(world,command);
+  if(command.type==='order-job'||command.type==='order-haul'||command.type==='clear-orders')return applyOrderCommand(world,command);
   if (command.type === 'schedule-paint' || command.type === 'schedule-replace') return applyScheduleCommand(world, command);
   if (command.type === 'food-policy-create' || command.type === 'food-policy-update' || command.type === 'food-policy-delete' || command.type === 'food-policy-assign') return applyFoodPolicyCommand(world, command);
   const drops=planCommandDrops(world,command);
@@ -164,7 +164,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
     if (!pawn) return refusal('missing-target', 'Colon introuvable.');
     pawn.priorities[command.work] = command.value;
     const job = world.jobs.find(candidate => candidate.id === pawn.jobId);
-    if (command.value === 0 && ((job && workType(job) === command.work && pawn.orders.active===null) || (pawn.haul && command.work === haulingWork(pawn.haul.destination)) || (pawn.cooking && command.work === 'cook'))) releaseWork(world, pawn,drops);
+    if (command.value === 0 && ((job && workType(job) === command.work && pawn.orders.active===null) || (pawn.haul && pawn.orders.active!=='haul' && command.work === haulingWork(pawn.haul.destination)) || (pawn.cooking && command.work === 'cook'))) releaseWork(world, pawn,drops);
     pawn.planCooldown = 0; refreshStock(world); return { ok: true };
   }
   if (!['designate', 'cancel', 'stockpile'].includes(command.type)) return refusal('invalid-command', 'Commande inconnue.');

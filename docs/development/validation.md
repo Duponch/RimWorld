@@ -1,60 +1,41 @@
-# Validation courante — V17, sélection et ordres directs
+# Validation courante — V18, ordres de transport et livraison
 
-14 septembre 2026. G0 en consolidation, G1 partiel. Sélection de groupe et ordres individuels sur travaux exécutables, avec file réservée, interruptions et migration V16→V17. [Recherche et limites](../research/player-orders-reference.md), [contrat](player-orders.md). Les [preuves V16](../history/validation-v16-construction.md) sont historiques.
+14 septembre 2026. G0 en consolidation, G1 partiel. [Contrat](player-orders.md), [recherche et écarts](../research/player-orders-reference.md). Les [preuves V17](../history/validation-v17-orders.md) sont historiques.
 
-## Gameplay et continuité
+## Simulation et continuité
 
-Le [lot ciblé](../../artifacts/player-orders-core.json) passe 35 scénarios : ordres, simulation, spatial, désignations, besoins/horaires, loisirs, construction, aliments, régimes et snapshots. Le pilote CPU de plusieurs jours passe également sur 42/93/2048 (huit jours sur 42, cinq sur les deux autres), avec deux premiers lots de bois demandés par ordres directs. Bilans physiques, repas, couchages, culture/cuisine et rechargements quotidiens restent ses critères ; aucun stock ni saut de temps n'est injecté pendant sa progression.
+[Lot ciblé](../../artifacts/forced-logistics-core-v2.json) : **30/30**, ordres directs, transports forcés, construction, production, conservation alimentaire, spatial, simulation et snapshots. Le pilote CPU sur trois graines passe : huit jours sur 42, cinq jours sur 93 et 2048, avec les nouveaux ordres de livraison de lit et rangement des rations. Les constructions, ressources, ingestion/repos et reprises quotidiennes restent ses résultats métier. Durée du scénario multi-graines : 37,3 s ; scénario de simulation général : 21,5 s, exécutés sous la borne de deux workers.
 
-[Dernier rejeu ciblé](../../artifacts/player-orders-validated-core.json) : 13/13 après les derniers cas de file, y compris simulation et snapshots. Quatre scénarios approfondissent la nouvelle file : priorité sur une cible éloignée, métier 0 avant/après acceptation, exclusivité entre colons, alimentation différée puis reprise, file après ingestion réelle, déplacement diagonal interrompu avec aliment porté, conservation d'âge/quantité, accès devenu impossible, annulation, effondrement et V16 invalide refusée. La finition forcée exige un chantier déjà approvisionné ; le test de préparation synthétique ne remplace pas la chaîne de livraison réelle du scénario Construction.
+Les trois scénarios nouveaux vérifient : fractions actives/en attente sur une même pile avec deux colons, priorité des réserves et leur capacité, métiers désactivés après acceptation, source réellement prélevée, reprise en cours de portage, livraison sans finition, constructeur sans Transport, annulation du chantier et du stockage, âge/identité de la cargaison déposée, expiration d'une source réservée, formes/quantités corrompues et V17 stricte. Ils enrichissent F1/F2/F3 ; ils ne certifient pas tous les cas limites possibles.
 
-Le [lot UI initial](../../artifacts/player-orders-ui.json) passe trois parcours natifs : chantier et portage, cadrage d'une ressource par le pilote, puis sélection/ordres. Le parcours de sélection couvre Maj-clic, double-clic, rectangle, Échap, iso/perspective, groupe non admis comme donneur d'un travail unique, métier désactivé, deux ordres, sauvegarde/reprise et 36 bois récoltés.
+Le premier lot a détecté un oubli de raccordement : le validateur courant appelait encore explicitement V17. Il lit désormais `SCHEMA_VERSION`. [Échec conservé](../../artifacts/forced-logistics-core.json), puis lot complet réussi ci-dessus. Le premier lancement avait aussi été bloqué par `spawn EPERM` dans le bac à sable ; l'exécution autorisée permet les sous-processus de Vite.
 
-[Parcours long et mouvements repris](../../artifacts/player-orders-journey-final.json) : 3/3. Sur 250², deux ordres directs au départ puis trois jours par la vraie UI : au tick 18 058, trois lits, table, trois tabourets, six murs, feu et piquet ; 15 plants de riz, 21 repas cuisinés, 18 ingestions observées, trois dormeurs en lit et deux familles de loisirs. Un chantier dégagé naturellement. Stock final 45 bois/22 aliments dont six repas préparés ; aucun travail ni ordre direct en attente, faim/repos minimum 41,95/53,94. Bilans matière réconciliés et trois rechargements quotidiens exacts. Les 19 checkpoints sont extraits vers tmp, avec SHA-256 conservés au rapport.
+Compilation : 119 modules, worker 134,88 ko, jeu 1 045,34 ko / 292,28 ko gzip. Avertissement de taille du bundle >500 ko toujours présent.
 
-[Dernier contrôle UI](../../artifacts/player-orders-final-ui.json) : 2/2, sélection/ordres natifs et frontières (commandes répétées, sauvegarde invalide atomique, aide, organisation compacte). Le long parcours précède les deux ultimes corrections de file : ajouter pendant l'intervalle entre deux travaux conserve les anciennes entrées ; redonner sans Maj un travail déjà en file le fait passer immédiatement. Ces branches sont contrôlées au cœur et le menu/worker est rejoué ; elles ne changent pas le déroulement ordinaire du pilote.
+## Interface et charge
 
-Compilation finale : 117 modules, worker 127,71 ko, jeu 1 045,15 ko / 292,21 ko gzip ; avertissement connu du bundle >500 ko. Tests, audits et compilation exécutés par lots successifs, sans édition des sources/tests/config pendant un parcours navigateur.
+[Lot navigateur](../../artifacts/forced-logistics-ui.json) : **3/3**, WebGPU natif Chromium, viewport 1440×1000, sans autre contrôle lourd simultané. Durée totale 6,0 minutes, dont 5,7 pour trois jours. Sélection et file V17 sont rejouées ; le nouveau parcours effectue livraison → rangement du riz → sauvegarde/reprise → finition séparée. Capture `artifacts/forced-logistics.png` inspectée : quantité réservée et file lisibles, FPS visibles, organisation UI conservée.
 
-## Audit CPU à charge active
+La colonie naturelle 250² atteint le tick 18 093 : 3 lits, table, 3 tabourets, 6 murs, feu et piquet ; 15 cultures, 22 repas cuisinés, 18 ingestions observées, 3 dormeurs en lit et les deux loisirs. Stock final 43 bois / 22 aliments dont 6 repas préparés. Bilans bois/aliments réconciliés, aucun travail/ordre restant, reprise exacte aux trois journées. Les commandes incluent deux coupes, la livraison du premier lit puis le rangement des rations. 19 checkpoints extraits vers tmp avec hashes de provenance ; aucune erreur console/GPU.
 
-[Rapport](../../artifacts/player-orders-cpu.json), Ryzen 5 3600, Node 24.11.1, graine 42 sur 250². Deux passes de 300 ticks par population ; besoins et tâches cuisine/transport/culture/construction/combustible actifs. Setup et validation hors mesure, diagnostics inclus, pas de chauffe ni de test concurrent. Les ordres ne sont pas forcés dans cette fixture : elle mesure le coût ajouté au fonctionnement automatique.
+[Dernier lot cœur](../../artifacts/forced-logistics-validated-core.json) : **18/18** après optimisation des parcours de réservation. Il comprend aussi source mise hors d'accès après acceptation et pile incompatible face à une destination encore vide mais réservée. Les états finaux, activités, productions et nombres de recherches du benchmark sont identiques avant/après optimisation. L'UI longue réussie précède cette optimisation interne et la reformulation d'un refus de semis ; elle n'a pas été relancée, car les transitions/commandes restent identiques. Le dernier scénario typé avait initialement modifié la réserve après attribution, ce qui annulait normalement la livraison active : la fixture définit maintenant ses filtres avant les ordres. [Échec conservé](../../artifacts/forced-logistics-final-core.json).
 
-| Colons | Médiane ms/tick | p95 | p99 | Maximum | Repas / cultures / murs |
-|---:|---:|---:|---:|---:|---|
-| 3 | 0,093 | 1,369 | 4,430 | 11,051 | 3 / 6 / 1 |
-| 30 | 1,465 | 8,230 | 13,899 | 21,790 | 6 / 36 / 6 |
-| 100 | 17,177 | 25,939 | 29,977 | 42,725 | 13 / 120 / 11 |
+### Audit CPU
 
-Bilans, effectifs d'activité et compteurs de recherche identiques au relevé final V16 ; les empreintes JSON changent avec le schéma et les files vides. Cela ne prouve pas l'égalité de tous les états intermédiaires. À 100 colons, p95 précédent 25,58 ms contre 25,94 ici : **pas d'amélioration revendiquée**, ni de régression majeure démontrée par ce seul échantillon. Le budget 16,67 ms/tick à ×6 reste dépassé. Les chemins et vérifications de chantier restent les postes à profiler.
+Ryzen 5 3600, Node 24.11.1, carte 250², deux passes de 300 ticks ; besoins, cuisine, transport, culture, construction et combustible actifs. Setup/validation hors mesure, diagnostics inclus, sans chauffe ni autre test lourd simultané. [Mesure finale](../../artifacts/forced-logistics-final-cpu.json).
 
-## Audit graphique de la sélection
+| Colons | Médiane ms/tick | p95 | p99 | Maximum |
+|---:|---:|---:|---:|---:|
+| 3 | 0,115 | 1,595 | 4,349 | 12,305 |
+| 30 | 2,258 | 10,741 | 18,403 | 27,449 |
+| 100 | 17,865 | 23,948 | 30,404 | 35,635 |
 
-[Rapport](../../artifacts/player-orders-render.json), AMD RDNA1, Chromium WebGPU natif, 1440×1000. Même monde de 100 colons après 75 ticks réels, puis pause et caméra conservée dans chaque série 0/1/100/0. Échauffement 60 images, puis au moins 300 images/trois secondes. Les sélections passent par le callback UI instrumenté ; ce n'est pas une mesure du délai physique de la souris. Aucune autre charge de test lourde.
+L'[ajout initial](../../artifacts/forced-logistics-cpu.json) avait mesuré 31,36 ms au p95 à 100. Une [variante avec tableau temporaire](../../artifacts/forced-logistics-array-cpu.json) n'a pas démontré de gain au p95. Le profil CPU local a identifié les contrôles de capacité parmi les coûts importants ; les vérifications fréquentes de source/capacité parcourent maintenant directement les réservations sans liste ni générateur temporaire, et s'arrêtent à capacité nulle.
 
-| Vue | Sélection | Image p95 ms | p99 | Maximum | CPU soumission p95 | Appels |
-|---|---:|---:|---:|---:|---:|---:|
-| Locale | 0, première passe | 12,60 | 16,50 | 20,80 | 11,70 | 138 |
-| Locale | 1 | 12,50 | 12,60 | 12,70 | 9,20 | 138 |
-| Locale | 100 | 12,50 | 12,70 | 12,80 | 10,30 | 138 |
-| Locale | 0, retour | 12,50 | 12,60 | 16,80 | 9,60 | 138 |
-| Générale | 0, première passe | 8,40 | 8,40 | 12,60 | 6,40 | 42 |
-| Générale | 1 | 8,40 | 8,40 | 8,50 | 6,40 | 42 |
-| Générale | 100 | 4,30 | 8,30 | 8,40 | 5,20 | 42 |
-| Générale | 0, retour | 8,30 | 8,40 | 8,50 | 5,60 | 42 |
+Une [exécution fraîche de main V17](../../artifacts/forced-logistics-baseline-cpu.json), extraite en lecture seule dans tmp, mesure 29,28 ms au p95 à 100, contre 25,94 historiquement : les conditions locales fluctuent. Les mesures finales sont encourageantes, mais ne démontrent pas un gain universel. Les activités et résultats restent identiques : 13 repas, 120 cultures, 11 murs ; 1 178 recherches de candidats et 287 ciblées. Le budget ×6 de 16,67 ms/tick reste dépassé. Le [passage avec profilage](../../artifacts/forced-logistics-profile.json) est diagnostique, pas une comparaison de cadence sans instrumentation.
 
-Appels et triangles constants pour une même vue (219 765 locale, 522 453 générale). Un lot résident d'anneaux remplace la sélection isolée ; il ajoute un appel au socle même sans sélection et ne croît pas en appels avec le groupe. Le p95 plus bas de la passe générale à 100 ne signifie pas que sélectionner accélère le jeu : RAF inclut ordonnancement et cadence d'affichage ; huit petites fenêtres ne sont pas une distribution exhaustive.
+[Audit des files forcées](../../artifacts/forced-logistics-queues-cpu.json) : camp synthétique dégagé 250², deux transports par colon, sources/dépôts proches, 300 ticks et populations 3/30/100. Les quantités réservées puis déposées sont vérifiées, tout comme l'absence de tâche restante ; le rangement automatique est désactivé après acceptation. Le rapport sépare les ticks avec des tâches des ticks devenus inactifs et les requêtes/commandes ponctuelles. Ce cas mesure les files/réservations, pas des trajets longs en terrain naturel. Aucune nouvelle mesure GPU n'est revendiquée pour cette étape sans changement de rendu.
 
-Coût ponctuel mesuré du callback de sélection : 4,0 à 9,0 ms, dont 7,2/5,7 ms pour 100 colons local/général. Trente requêtes de menu passent par le vrai worker et une cible accessible : médiane 4,7 ms, p95 9,2 ms, maximum 9,5 ms ; le monde est identique avant/après. Ce cas n'est pas une preuve du pire chemin impossible.
+## Portée
 
-Aucune erreur console/GPU. Captures inspectées pour anneau individuel et groupe de cent colons, inspection en bas à gauche, portraits défilants en haut, carte générale et FPS visibles. La fixture nomme tous ses clones Ada ; ce n'est pas la génération de noms d'une nouvelle colonie.
-
-## Limites
-
-Le fournisseur force un travail exécutable, pas tout un chantier. Transport, approvisionnement, dégagement, combustible et cuisine forcés, autres familles sélectionnables, maintien local de priorité, mobilisation et commandes manuelles de besoins restent absents. La file est bornée à 32 entrées ; capacités, santé et crises ne sont pas simulées. Voir l'[inventaire complet](../gameplay/implementation-status.md) pour les autres systèmes et le catalogue manquants.
-
-## Échecs diagnostiqués
-
-Les [premiers parcours](../../artifacts/player-orders-journey.json) conservent deux échecs : la vérification finale du pilote ignorait `order-job`, et la fixture V13 de circulation contenait un champ Loisirs plus récent. La fixture historique est désormais validée avant utilisation et comparée sémantiquement au monde cible ; la comparaison JSON utilise le résultat migré pour ne pas confondre l'ordre des clés avec un changement d'état.
-
-L'[extension de scénario](../../artifacts/player-orders-edge-core.json) tentait d'injecter du bois au sol sur un plan de mur avec un helper qui refuse cette destination ; la préparation synthétique du cadre passe par une case libre puis une propriété de chantier. Le [contrôle suivant](../../artifacts/player-orders-final-core.json) bornait l'attente aux 100 ticks de coupe sans compter l'approche ; il permet désormais le trajet et exige explicitement la disparition du premier travail. Ces échecs de fixtures/attentes ne sont pas présentés comme des anomalies corrigées du gameplay.
+Transport vers réserve et livraison de chantier forcés sont ajoutés à la file persistante ; les sources et capacités sont protégées dès acceptation. Dégagement, combustible et cuisine forcés restent absents. Portage de 10 unités et trajets unitaires hérités restent incomplets face à RimWorld ; ramassage opportuniste, tournée et réemploi direct de cargaison compatible en main ne sont pas livrés. Voir l'[inventaire fonctionnel](../gameplay/implementation-status.md).

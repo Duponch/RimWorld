@@ -6,18 +6,20 @@ import { harvestable } from './plants.ts';
 import { blockedCells, cellIndex, interactionGoals, reachableCells, routeToJob } from './pathfinding.ts';
 import { search, workType, type NavigationGrid, type SearchBudget } from './work-planner.ts';
 import { planCommandDrops, releaseWork } from './work-release.ts';
-import type { Cell, CommandResult, Job, Pawn, World } from './types.ts';
+import { haulOrderCell, planHaulOrder, queuedHaulReason, startHaulOrder, type HaulOrderTarget } from './player-hauling.ts';
+import { canReach, destinationCell } from './work-planner.ts';
+import type { Cell, CommandResult, HaulTask, Job, Pawn, World } from './types.ts';
 
-export interface PlayerOrders { active: number | null; queue: number[] }
-export type OrderCommand = { type: 'order-job'; pawnId: number; jobId: number; queue: boolean } | { type: 'clear-orders'; pawnId: number };
-export interface OrderOption { jobId: number; label: string; enabled: boolean; reason?: string }
+export interface PlayerOrders { active: number | 'haul' | null; queue: (number | HaulTask)[] }
+export type OrderCommand = { type: 'order-job'; pawnId: number; jobId: number; queue: boolean } | { type:'order-haul';pawnId:number;target:HaulOrderTarget;queue:boolean } | { type: 'clear-orders'; pawnId: number };
+export interface OrderOption { jobId: number; haulTarget?:HaulOrderTarget; label: string; enabled: boolean; reason?: string }
 export const MAX_QUEUED_ORDERS = 32;
 const labels: Record<Job['kind'], string> = { chop:'Abattre',harvest:'Récolter',cut:'Couper',sow:'Semer du riz',wall:'Construire le mur',bed:'Construire le lit',table:'Construire la table',stool:'Construire le tabouret',campfire:'Construire le feu',horseshoes:'Construire le piquet' };
 const fail = (reason: string): CommandResult => ({ok:false,code:'invalid-command',reason});
 const busy = (pawn: Pawn) => pawn.jobId !== null || !!(pawn.haul || pawn.cooking || pawn.need || pawn.recreation.task);
 
 /** This provider orders one executable job, never an entire construction chain.
- * Delivery, clearance and cooking providers will have their own quantity contracts. */
+ * Quantity-based delivery is handled separately by player-hauling. */
 export function orderReadiness(world: World, pawn: Pawn, job: Job, accepted=false): string | undefined {
   if (!accepted&&!pawn.priorities[workType(job)]) return 'Ce travail est désactivé dans le tableau Travail.';
   if (job.reservedBy !== null && job.reservedBy !== pawn.id) return 'Travail réservé par un autre colon.';
@@ -27,10 +29,10 @@ export function orderReadiness(world: World, pawn: Pawn, job: Job, accepted=fals
     if (!plant || !harvestable(world,plant)) return 'La plante ne peut pas être récoltée.';
   }
   if (isConstruction(job)) {
-    if (job.escrow.wood !== JOB_WOOD_COST[job.kind]) return 'Approvisionnement forcé pas encore disponible ; les livraisons automatiques restent actives.';
+    if (job.escrow.wood !== JOB_WOOD_COST[job.kind]) return 'Approvisionnement nécessaire ; choisissez Livrer les matériaux.';
     if (job.clearance || !constructionSiteFree(world,job,pawn.id)) return 'Chantier gêné ; le dégagement forcé n’est pas encore disponible.';
   }
-  if (job.kind === 'sow' && groundPile(world,job)) return 'Le sol doit être dégagé ; transport forcé pas encore disponible.';
+  if (job.kind === 'sow' && groundPile(world,job)) return 'Le sol doit être dégagé ; choisissez un transport vers une réserve ou attendez le dégagement automatique.';
 }
 function goals(world: World, job: Job) {
   const cells=footprintCells(job), result=interactionGoals(world,cells);
@@ -48,9 +50,23 @@ function preflight(world:World,pawn:Pawn,job:Job,queue=false):string|undefined {
 /** Called only for a menu query in the worker, not on render frames/snapshots. */
 export function queryOrderOptions(world:World,pawnId:number,cell:Cell,queue=false):OrderOption[] {
   const pawn=world.pawns.find(p=>p.id===pawnId);if(!pawn)return [];
-  const job=world.jobs.find(j=>footprintCells(j).some(c=>c.x===cell.x&&c.z===cell.z));if(!job)return [];
-  const reason=preflight(world,pawn,job,queue) ?? (route(world,pawn,job)===null?'Aucun accès praticable à ce travail.':undefined);
-  return [{jobId:job.id,label:labels[job.kind],enabled:!reason,...(reason?{reason}:{})}];
+  const job=world.jobs.find(j=>footprintCells(j).some(c=>c.x===cell.x&&c.z===cell.z)),pile=groundPile(world,cell),options:OrderOption[]=[];
+  if(job) {
+    const reason=preflight(world,pawn,job,queue) ?? (route(world,pawn,job)===null?'Aucun accès praticable à ce travail.':undefined);
+    options.push({jobId:job.id,label:labels[job.kind],enabled:!reason,...(reason?{reason}:{})});
+  }
+  const target:HaulOrderTarget|undefined=job&&isConstruction(job)&&job.escrow.wood<JOB_WOOD_COST[job.kind]?{type:'job',jobId:job.id}:pile?{type:'pile',pileId:pile.id}:undefined;
+  if(target) {
+    const view=orderView(world,pawn,queue),proposal=planHaulOrder(view,view.pawns.find(p=>p.id===pawn.id)!,target);
+    const reason=exhausted(world,pawn)??proposal.reason;
+    options.push({jobId:job?.id??0,haulTarget:target,label:proposal.label,enabled:!reason,...(reason?{reason}:{})});
+  }
+  return options;
+}
+const exhausted=(world:World,pawn:Pawn)=>pawn.collapsePending||world.restRules==='legacy'&&pawn.rest===0?'Ce colon doit récupérer de son épuisement.':undefined;
+function orderView(world:World,pawn:Pawn,queue:boolean):World {
+  if(queue)return world;
+  return {...world,pawns:world.pawns.map(p=>p!==pawn?p:{...p,haul:null,need:null,cooking:null,orders:{active:null,queue:[]}})};
 }
 export function clearQueuedOrders(world:World,pawn:Pawn):void {
   const ids=new Set(pawn.orders.queue);
@@ -70,6 +86,24 @@ export function applyOrderCommand(world:World,command:OrderCommand):CommandResul
     if(!drops)return fail('Pas de place pour déposer la cargaison.');
     if(pawn.orders.active!==null&&!releaseWork(world,pawn,drops))return fail('Impossible d’interrompre ce travail.');
     clearQueuedOrders(world,pawn);return {ok:true};
+  }
+  if(command.type==='order-haul') {
+    if(typeof command.queue!=='boolean'||!command.target||!['pile','job'].includes(command.target.type)
+      ||!Number.isSafeInteger(command.target.type==='pile'?command.target.pileId:command.target.jobId))return fail('Ordre de transport invalide.');
+    const reason=exhausted(world,pawn);if(reason)return fail(reason);
+    if(command.queue&&pawn.orders.queue.length>=MAX_QUEUED_ORDERS)return fail(`File limitée à ${MAX_QUEUED_ORDERS} travaux.`);
+    let view=orderView(world,pawn,command.queue);
+    const drops=command.queue?new Map():planCommandDrops(view,command);if(!drops)return fail('Pas de place pour déposer la cargaison.');
+    if(drops.size)view={...view,piles:view.piles.map(p=>drops.has(p.id)?{...p,owner:{type:'ground',...drops.get(p.id)!}}:p)};
+    const proposal=planHaulOrder(view,view.pawns.find(p=>p.id===pawn.id)!,command.target);
+    if(!proposal.task||!proposal.path)return fail(proposal.reason??'Transport impossible.');
+    if(command.queue&&(busy(pawn)||pawn.orders.queue.length))pawn.orders.queue.push(proposal.task);
+    else {
+      if(!releaseWork(world,pawn,drops))return fail('Impossible d’interrompre ce travail.');
+      clearQueuedOrders(world,pawn);startHaulOrder(pawn,proposal.task,proposal.path);
+    }
+    world.events.push({tick:world.tick,type:'command',message:`${pawn.name} : ${proposal.label}${command.queue?' (file)':''}.`});
+    if(world.events.length>80)world.events.shift();return {ok:true};
   }
   if(typeof command.queue!=='boolean'||!Number.isSafeInteger(command.jobId))return fail('Ordre invalide.');
   const job=world.jobs.find(j=>j.id===command.jobId);if(!job)return fail('Ce travail n’existe plus.');
@@ -94,10 +128,15 @@ export function reconcileOrders(world:World):void {
   let jobs:Map<number,Job>|undefined;
   for(const pawn of world.pawns) {
     const orders=pawn.orders;if(orders.active===null&&!orders.queue.length)continue;
-    if(orders.active!==pawn.jobId)orders.active=null;
+    if(orders.active==='haul'?!pawn.haul:orders.active!==pawn.jobId)orders.active=null;
     if(!orders.queue.length)continue;
     jobs??=new Map(world.jobs.map(j=>[j.id,j]));
     orders.queue=orders.queue.filter(id=>{
+      if(typeof id!=='number') {
+        const reason=queuedHaulReason(world,id);
+        if(reason){world.events.push({tick:world.tick,type:'command',message:`${pawn.name} : livraison abandonnée. ${reason}`});if(world.events.length>80)world.events.shift();}
+        return !reason;
+      }
       const job=jobs!.get(id);
       if(job&&job.reservedBy===pawn.id)return true;
       if(job?.reservedBy===pawn.id){job.reservedBy=null;job.status='pending';}
@@ -108,6 +147,25 @@ export function reconcileOrders(world:World):void {
 /** Returns true if a queued decision has to wait for the shared search budget. */
 export function advanceOrders(world:World,pawn:Pawn,getBlocked:NavigationGrid,budget:SearchBudget):boolean {
   if(busy(pawn)||!pawn.orders.queue.length)return false;
+  const order=pawn.orders.queue[0]!;
+  if(typeof order!=='number') {
+    let reason=queuedHaulReason(world,order);const source=haulOrderCell(world,order),target=destinationCell(world,order.destination);
+    let path:Cell[]|null=null;
+    if(!reason&&source&&target) {
+      const targetGoals=interactionGoals(world,'kind' in target?footprintCells(target as Job):[target]);
+      if(order.destination.type==='job')for(const cell of footprintCells(target as Job))targetGoals.delete(cellIndex(world,cell.x,cell.z));
+      const reach=search(world,pawn,getBlocked(),new Set(),budget,undefined,[interactionGoals(world,[source]),targetGoals]);if(!reach)return true;
+      path=routeToJob(world,source,reach,true);
+      if(!path||!canReach(world,target,reach,order.destination.type!=='job'))reason='Accès perdu.';
+    }
+    pawn.orders.queue.shift();
+    if(!reason&&path)startHaulOrder(pawn,order,path);
+    else {
+      world.events.push({tick:world.tick,type:'command',message:`${pawn.name} : livraison abandonnée. ${reason??'Cible disparue.'}`});
+      if(world.events.length>80)world.events.shift();return true;
+    }
+    return false;
+  }
   const id=pawn.orders.queue[0]!,job=world.jobs.find(j=>j.id===id);
   let reason=job?orderReadiness(world,pawn,job,true):'Travail annulé.';
   let path:Cell[]|null=null;

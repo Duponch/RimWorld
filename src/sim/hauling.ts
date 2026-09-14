@@ -39,5 +39,6 @@ export function processHaul(world: World, pawn: Pawn, move: (target: Cell, allow
     world.piles.splice(world.piles.indexOf(carry),1);
   } else if(!transferPile(world,carry,task.destination.type === 'job' ? { type:'job',jobId:task.destination.jobId } : {type:'ground',x:target.x,z:target.z})) {releaseWork(world,pawn);return;}
   if(task.destination.type==='job')(target as Job).construction='frame';
-  pawn.haul = null; pawn.path = []; pawn.state = 'idle'; pawn.planCooldown = 0; wake();
+  pawn.haul = null; if(pawn.orders.active==='haul')pawn.orders.active=null;
+  pawn.path = []; pawn.state = 'idle'; pawn.planCooldown = 0; wake();
 }

@@ -12,7 +12,7 @@ Chapitres 8 et 9 du rapport utilisateur, relus via les extractions de `docs/refe
 | Contexte dépendant du colon et de la cible | Adopter un menu de travail individuel. Une sélection de groupe ne distribue pas artificiellement un travail unique. |
 | Éligibilité distincte du rang | Adopter : vérifier accès, réservation, désignation et métier avant acceptation ; ne pas transformer une priorité 0 en aptitude. |
 | Interruption et file | Adopter pour un travail exécutable : réservation immédiate, Maj ajoute après l'activité actuelle, revalidation au démarrage. Conserver matière et déplacement engagé. |
-| Transport, cuisine et chaînes de construction | Différer leurs fournisseurs contextuels quantitatifs. Un ordre de finition exige déjà ses matériaux et une emprise libre ; aucun « terminer toute la construction » implicite. |
+| Transport, cuisine et chaînes de construction | V18 adopte rangement et livraison forcés ; dégagement, combustible et cuisine restent différés. Un ordre de finition exige déjà ses matériaux et une emprise libre ; aucun « terminer toute la construction » implicite. |
 
 ## Sources recoupées
 
@@ -28,7 +28,22 @@ Le miroir n'est pas une publication officielle ni une preuve du binaire actuelle
 
 - La 3D conserve clic droit glissé pour la caméra et clic droit immobile pour le menu. Un proxy projeté du corps permet de sélectionner à travers le feuillage ; pas de parcours de tous les triangles, ni d'autorité donnée au mesh. Les silhouettes couchées et la sélection d'accessoires demanderont leurs propres proxies.
 - La file locale est bornée à 32 travaux en attente par colon, avec refus explicite au-delà. C'est une borne du projet, pas une valeur attribuée à RimWorld.
-- Seuls abattage, coupe, récolte, semis libres et finition d'un chantier approvisionné disposent du fournisseur actuel. Approvisionnement, dégagement, transport, combustible, cuisine, utilisation forcée d'un objet et maintien d'une priorité locale autour d'une cible restent à développer.
+- Abattage, coupe, récolte, semis libres, finition, rangement et livraison disposent de fournisseurs. Dégagement, combustible, cuisine, utilisation forcée d’un objet et maintien d’une priorité locale autour d’une cible restent à développer.
 - Pas de mobilisation ni d'ordre de déplacement civil inventé. Santé, crises et interruptions hostiles manquent encore ; seul l'effondrement de fatigue déjà simulé interrompt ici l'ordre en urgence.
 
 Le [contrat courant](../development/player-orders.md) et l'[inventaire](../gameplay/implementation-status.md) décrivent les règles réellement livrées.
+
+## Relecture V18 — transport et construction, 14 septembre 2026
+
+Chapitres 9/10 et lignes SYS/TEST-047..054 et 056 relus : réservation par quantité, conservation lors des transferts, capacité compatible, interruption et chantier. Décision **adopter** ces contrats ; les statuts du corpus ne sont pas des validations locales. SYS-055 (inventaire), 057..061 (réparation, démontage, réinstallation, remplacement, minage) restent différés.
+
+Recherches fraîches : Hauling/Orders du wiki, puis lecture des fournisseurs du miroir à révision épinglée et recoupement avec l'annonce officielle. Les discussions de joueurs et pages de mods trouvées par recherche ne servent pas de règle de code. Les fichiers du miroir ont été téléchargés à nouveau pour cette étape ; ils ne sont pas incorporés au jeu.
+
+- [HaulAIUtility, révision 2d50803](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/Verse.AI/HaulAIUtility.cs) : accès/réservation/manipulation, recherche de meilleur stockage, compte adapté à la capacité, prise opportuniste d'objets compatibles. Adopter accès, source et stockage ; notre portage fixe et nos trajets unitaires restent incomplets.
+- [StoreUtility, même révision](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/RimWorld/StoreUtility.cs) : pour les réserves acceptant l'objet et appartenant au joueur, le drapeau forcé conserve la priorité courante. Il ne rend donc pas valable un transfert circulaire entre deux réserves équivalentes. La différence liée aux bâtiments de faction étrangère attend ce système.
+- [ConstructDeliverResources](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/RimWorld/WorkGiver_ConstructDeliverResources.cs) : sélection de matière accessible, prise en compte d'objets déjà portés, files de sources et de chantiers proches. Livrer et finir restent des sous-travaux distincts. Notre fournisseur livre une quantité depuis une pile à un chantier, sans promettre la chaîne entière. Le réemploi direct en main et les tournées restent absents.
+- [Correctif officiel 1.6.4850](https://ludeon.com/blog/2026/06/update-1-6-4850-released/) : les corrections de livraisons et de cache forcé restent pertinentes pour tester les annulations et invalidations ; elles ne fournissent pas un nouvel algorithme à copier.
+
+**Écarts assumés :** pas de vol/annulation d'une réservation d'un autre colon par l'ordre forcé ; quantités et capacités physiques restent garanties par nos réservations. Le miroir présente des exceptions `forced` aux réservations et aux matières en route, mais ne suffit pas à certifier leur interaction dans le correctif actuel. Avant d'ajouter une reprise de tâche d'autrui, il faudra vérifier ce comportement et conserver les mêmes bilans. Le portage de 10 unités, le rangement mono-pile et l'absence de tournée sont hérités du moteur et restent à compléter, sans être présentés comme fidèles à RimWorld.
+
+Confiance élevée sur la distinction livraison/finition et les contraintes physiques ; moyenne sur les détails de choix, interruption forcée entre colons et optimisations opportunistes. Aucun test contre un binaire commercial ni parité numérique globale n'est revendiqué.

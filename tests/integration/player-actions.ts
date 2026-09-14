@@ -31,17 +31,18 @@ export async function editBill(page:Page,id:number,settings:BillSettings):Promis
 
 export async function perform(page: Page, decision: Decision, rotation: { value: number }): Promise<void> {
   const c=decision.command;
-  if(c.type==='order-job') {
+  if(c.type==='order-job'||c.type==='order-haul') {
     await page.keyboard.press('Escape');await page.locator(`[data-pawn="${c.pawnId}"]`).click();
-    const job=(await world(page)).jobs.find(j=>j.id===c.jobId);if(!job)throw new Error('Travail direct absent.');
+    const current=await world(page);
+    const job=c.type==='order-job'?current.jobs.find(j=>j.id===c.jobId):c.target.type==='job'?current.jobs.find(j=>c.target.type==='job'&&j.id===c.target.jobId):current.piles.find(p=>c.target.type==='pile'&&p.id===c.target.pileId)?.owner;
+    if(!job||!('x' in job))throw new Error('Cible directe absente.');
     await revealCells(page,[job]);
     const point=await page.evaluate(({x,z})=>window.__lisiere.projectCell(x,z),job);
     const bounds=(await page.locator('#viewport canvas').boundingBox())!;
     if(c.queue)await page.keyboard.down('Shift');
     await page.mouse.click(bounds.x+point.x,bounds.y+point.y,{button:'right'});
-    await page.locator(`[data-order-job="${c.jobId}"]`).click();
+    await page.locator(c.type==='order-job'?`[data-order-job="${c.jobId}"]:not([data-order-haul])`:`[data-order-haul="${c.target.type}"]`).click();
     if(c.queue)await page.keyboard.up('Shift');
-    await expect.poll(async()=>{const pawn=(await world(page)).pawns.find(p=>p.id===c.pawnId)!;return pawn.orders.active===c.jobId||pawn.orders.queue.includes(c.jobId);}).toBe(true);
   } else if(c.type==='food-policy-assign') {
     await panel(page,'assign'); await page.locator(`[data-food-policy-pawn="${c.pawnId}"]`).selectOption(String(c.policyId));
   } else if(c.type==='schedule-paint') {
@@ -75,6 +76,11 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
   await page.waitForFunction(c=>{
     const w=window.__lisiere.world;
     if(c.type==='order-job'){const pawn=w.pawns.find(p=>p.id===c.pawnId);return pawn?.orders.active===c.jobId||pawn?.orders.queue.includes(c.jobId);}
+    if(c.type==='order-haul') {
+      const pawn=w.pawns.find(p=>p.id===c.pawnId);if(!pawn)return false;
+      const matches=(t:typeof pawn.haul)=>!!t&&(c.target.type==='pile'?t.sourcePileId===c.target.pileId:t.destination.type==='job'&&t.destination.jobId===c.target.jobId);
+      return pawn.orders.active==='haul'&&matches(pawn.haul)||pawn.orders.queue.some(o=>typeof o!=='number'&&matches(o));
+    }
     if(c.type==='food-policy-assign')return w.pawns.find(p=>p.id===c.pawnId)?.foodPolicyId===c.policyId;
     if(c.type==='schedule-paint')return c.hours.every(h=>w.pawns.find(p=>p.id===c.pawnId)?.schedule[h]===c.assignment);
     if(c.type==='priority')return w.pawns.find(p=>p.id===c.pawnId)?.priorities[c.work]===c.value;

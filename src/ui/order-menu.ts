@@ -35,16 +35,19 @@ export class OrderMenu {
       content.replaceChildren();
       for(const option of options) {
         const button=document.createElement('button');button.setAttribute('role','menuitem');button.dataset.orderJob=String(option.jobId);
+        if(option.haulTarget)button.dataset.orderHaul=option.haulTarget.type;
         button.textContent=option.enabled?`${queue?'Mettre en file :':'Prioriser :'} ${option.label}`:`${option.label} — ${option.reason}`;
         button.disabled=!option.enabled;
         button.onclick=event=>{
-          this.close();void this.client.command({type:'order-job',pawnId:pawn.id,jobId:option.jobId,queue:queue||event.shiftKey})
+          this.close();void this.client.command(option.haulTarget
+            ? {type:'order-haul',pawnId:pawn.id,target:option.haulTarget,queue:queue||event.shiftKey}
+            : {type:'order-job',pawnId:pawn.id,jobId:option.jobId,queue:queue||event.shiftKey})
             .then(()=>this.report('Ordre accepté.')).catch(error=>this.report(String(error instanceof Error?error.message:error),true));
         };
         content.append(button);
       }
-      if(!options.length)content.textContent='Aucun travail désigné ici. Utilisez les ordres d’Architecte.';
-      const hint=document.createElement('p');hint.className='muted';hint.textContent='Maj : ajouter à la file. Transport et cuisine forcés à venir.';content.append(hint);
+      if(!options.length)content.textContent='Aucun travail ni pile à transporter ici. Utilisez les ordres d’Architecte.';
+      const hint=document.createElement('p');hint.className='muted';hint.textContent='Maj : ajouter à la file. Une livraison correspond à un trajet ; cuisine et dégagement forcés à venir.';content.append(hint);
       this.position(x,y);content.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus();
     } catch(error) {if(revision===this.revision){content.textContent=String(error instanceof Error?error.message:error);this.position(x,y);}}
   }

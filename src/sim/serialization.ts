@@ -24,7 +24,7 @@ import { validMapDimension } from './map-config.ts';
 import { INGEST_TICKS } from './eating.ts';
 import { validDiningPlace } from './dining.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
-import { TICKS_PER_DAY } from './types.ts';
+import { SCHEMA_VERSION, TICKS_PER_DAY } from './types.ts';
 
 const record = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
 const integer = (value: unknown, min: number, max = Number.MAX_SAFE_INTEGER): value is number => typeof value === 'number' && Number.isSafeInteger(value) && value >= min && value <= max;
@@ -34,9 +34,9 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 
 /** Structural validation first, cross-reference validation second; accepts arbitrary JSON without throwing. */
 export function validateWorld(input: unknown): string[] {
-  return validateSchema(input, 17);
+  return validateSchema(input, SCHEMA_VERSION);
 }
-function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17): string[] {
+function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(input)) return ['World must be an object.'];
@@ -147,6 +147,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
   const events = input.events as unknown[];
   if (events.length > 80 || events.some(item => !record(item) || !integer(item.tick, 0, input.tick as number) || !oneOf(item.type, ['job', 'need', 'command']) || typeof item.message !== 'string' || item.message.length > 240)) errors.push('Invalid event log.');
   if (version >= 8 && !errors.length) errors.push(...validateFarming(input, size, ids));
+  if(!errors.length)errors.push(...validatePlayerOrders(input as unknown as World,version,true));
   if(!errors.length)errors.push(...validateCooking(input,version,ids));
   if(!errors.length)errors.push(...validatePreservation(input as unknown as World,version));
   if(!errors.length)errors.push(...validateSchedules(input as unknown as World,version));
@@ -240,7 +241,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
     }
     if (pawn.haul) {
       const haul = pawn.haul;
-      if (pawn.priorities[haulingWork(haul.destination)] === 0) errors.push('Pawn hauling with disabled work.');
+      if (pawn.priorities[haulingWork(haul.destination)] === 0 && !(version>=18&&pawn.orders.active==='haul')) errors.push('Pawn hauling with disabled work.');
       if (haul.sourcePileId >= world.nextId) errors.push('Invalid source identity.');
       const pile = pileById.get(haul.phase === 'pickup' ? haul.sourcePileId : haul.carryPileId!);
       if (haul.phase === 'pickup') {
@@ -366,6 +367,10 @@ export function deserializeWorld(serialized: string): World {
   if(record(input)&&input.schemaVersion===16) {
     const errors=validateSchema(input,16);if(errors.length)throw new Error(`Invalid version 16 save: ${errors.join(' ')}`);
     initializePlayerOrders(input as unknown as World);
+  }
+  if(record(input)&&input.schemaVersion===17) {
+    const errors=validateSchema(input,17);if(errors.length)throw new Error(`Invalid version 17 save: ${errors.join(' ')}`);
+    input.schemaVersion=18; // Existing numeric work orders and active tasks continue unchanged.
   }
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`); return input as World;
 }

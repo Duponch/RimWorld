@@ -2,6 +2,7 @@ import { plantGrowth } from '../../src/sim/plants.ts';
 import { availableNutrition } from '../../src/sim/items.ts';
 import { spoiledUnits } from '../../src/sim/food-preservation.ts';
 import { canDesignate } from '../../src/sim/engine.ts';
+import { planHaulOrder } from '../../src/sim/player-hauling.ts';
 import { JOB_WOOD_COST, footprintCells } from '../../src/sim/definitions.ts';
 import type { Command, DesignateCommand, World } from '../../src/sim/types.ts';
 
@@ -13,9 +14,17 @@ export function playerFocusDecisions(world:World):Decision[] {
   if(world.tick>=250)return [];
   const pawn=world.pawns.find(p=>p.priorities.gather>0&&p.hunger>50&&p.rest>50&&!p.need&&p.orders.active===null&&!p.orders.queue.length);
   if(!pawn)return [];
-  return world.jobs.filter(j=>j.kind==='chop'&&j.reservedBy===null)
+  const orders:Decision[]=world.jobs.filter(j=>j.kind==='chop'&&j.reservedBy===null)
     .sort((a,b)=>Math.hypot(a.x-pawn.x,a.z-pawn.z)-Math.hypot(b.x-pawn.x,b.z-pawn.z)||a.id-b.id).slice(0,2)
     .map((job,index)=>({reason:'Prioriser les premiers lots de bois pour installer le camp.',command:{type:'order-job',pawnId:pawn.id,jobId:job.id,queue:index>0}}));
+  const carrier=world.pawns.find(p=>p!==pawn&&p.priorities.haul>0&&p.hunger>50&&p.rest>50);
+  if(carrier) {
+    const job=world.jobs.find(j=>j.kind==='bed'&&planHaulOrder(world,carrier,{type:'job',jobId:j.id}).task);
+    if(job)orders.push({reason:'Livrer en priorité le premier couchage.',command:{type:'order-haul',pawnId:carrier.id,target:{type:'job',jobId:job.id},queue:false}});
+    const pile=world.piles.find(p=>p.kind==='food'&&p.owner.type==='ground'&&planHaulOrder(world,carrier,{type:'pile',pileId:p.id}).task);
+    if(pile)orders.push({reason:'Ranger les rations après la livraison.',command:{type:'order-haul',pawnId:carrier.id,target:{type:'pile',pileId:pile.id},queue:!!job}});
+  }
+  return orders;
 }
 
 /** Deliberately ordinary, bounded player policy, not a perfect-play optimizer.

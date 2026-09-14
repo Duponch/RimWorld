@@ -4,7 +4,7 @@ Depuis V9, le [dégagement des cultures](farming.md#dégagement-matériel-v9) aj
 
 Références : rapport utilisateur chapitres 2, 4, 5, 9 et 10 ; SYS-005/020..022/041..061 ; scénarios A et familles F1/F2/F3. La [liste des écarts](../gameplay/decisions.md) distingue les règles retenues des limites temporaires. Les résultats exécutés sont consignés dans [validation.md](validation.md).
 
-Extension V5 : [objets alimentaires](food-items.md), identité `item`, quantités réservées et limites de pile par définition. Les migrations V2/V3 décrites ci-dessous restent datées ; le contrat de continuation courant est V17.
+Extension V5 : [objets alimentaires](food-items.md), identité `item`, quantités réservées et limites de pile par définition. Les migrations V2/V3 décrites ci-dessous restent datées ; le contrat de continuation courant est V18.
 
 ## État autoritaire et vues
 
@@ -18,7 +18,7 @@ Un bilan bois indépendant additionne arbres, piles de tous propriétaires et co
 
 ## Réservations et transitions
 
-Un colon a au plus un travail de production/construction ou une tâche de transport. La tâche de transport persistée contient pile source, quantité, destination, phase `pickup`/`deliver` et identifiant de cargaison après prise. Les réservations de source et de capacité sont dérivées de ces tâches ; elles sont vérifiées ensemble avant adoption.
+Un colon a au plus un travail de production/construction ou une tâche de transport. La tâche de transport persistée contient pile source, quantité, destination, phase `pickup`/`deliver` et identifiant de cargaison après prise. Les réservations de source et de capacité sont dérivées de ces tâches et, depuis V18, des transports forcés en attente ; elles sont vérifiées ensemble avant adoption. La tâche actuelle exclut sa propre réservation lors du contrôle, mais les autres entrées du même colon restent comptées.
 
 1. Le planificateur choisit une source et une destination admissibles, puis réserve quantité et capacité.
 2. À portée de prélèvement, la quantité quitte la pile au sol et devient une cargaison appartenant au colon. Une source vide est retirée.
@@ -30,7 +30,7 @@ Pour les tâches automatiques, désactiver la famille responsable (Transport ord
 
 Une réserve est actuellement une cellule avec filtre, priorité et capacité totale. Le stockage de meilleure priorité attire les objets ; les réserves de même priorité ne provoquent pas de transport circulaire. Une capacité réduite sous le contenu actuel autorise l'évacuation de l'excédent vers une réserve admissible de priorité égale ou inférieure. Faute de destination, l'excédent reste au sol. Les objets déjà présents ne disparaissent pas lorsque leurs filtres changent. La capacité ne représente pas un second conteneur possédant des copies des piles.
 
-Les [désignations rectangulaires](area-designations.md) créent ou retirent désormais plusieurs cases en une commande. Elles ne fusionnent pas les réserves en une entité commune. La création ignore les réserves déjà présentes ; le retrait invalide ensemble les livraisons qui les ciblaient. L'annulation rectangulaire d'un chantier sélectionne son identité une seule fois, même si plusieurs cellules de son empreinte sont touchées, puis laisse ses matériaux au sol. Cette étape historique avait conservé le schéma 2 ; le schéma courant est V17.
+Les [désignations rectangulaires](area-designations.md) créent ou retirent désormais plusieurs cases en une commande. Elles ne fusionnent pas les réserves en une entité commune. La création ignore les réserves déjà présentes ; le retrait invalide ensemble les livraisons qui les ciblaient. L'annulation rectangulaire d'un chantier sélectionne son identité une seule fois, même si plusieurs cellules de son empreinte sont touchées, puis laisse ses matériaux au sol. Cette étape historique avait conservé le schéma 2 ; le schéma courant est V18.
 
 ## Empreintes, accès et interface
 

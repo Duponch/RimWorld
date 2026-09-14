@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { createWorld, applyCommand, serializeWorld, refreshStock, validateWorld } from '../../src/sim/index';
+import { createWorld, applyCommand, addGroundMaterial, serializeWorld, refreshStock, validateWorld } from '../../src/sim/index';
+import { perform } from './player-actions';
 import { world, panel, cell, saveKey, expectWorld, observeErrors } from './helpers';
 
 test('sélection de groupe, deux projections, menu et file de travail par la vraie interface, reprise exacte',async({playwright},testInfo)=>{
@@ -52,5 +53,33 @@ test('sélection de groupe, deux projections, menu et file de travail par la vra
     const final=await world(page);expect(final.stock.wood).toBe(36);expect(validateWorld(final)).toEqual([]);expect(final.pawns[0]!.orders).toEqual({active:null,queue:[]});
     expect(await page.locator('#fps-counter').isVisible()).toBe(true);expect(errors).toEqual([]);
     await testInfo.attach('orders',{contentType:'application/json',body:JSON.stringify({backend:await page.evaluate(()=>window.__lisiere.backend),tick:final.tick,wood:final.stock.wood,errors})});
+  } finally {await browser.close();}
+});
+
+test('livrer un chantier puis ranger une pile via les menus, file réservée, reprise exacte et finition séparée',async({playwright},testInfo)=>{
+  test.setTimeout(60000);
+  const browser=await playwright.chromium.launch({channel:'chromium',args:[]});
+  const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);
+  try {
+    const fixture=createWorld(42,32,32);fixture.tick=2000;fixture.tiles=fixture.tiles.map(()=>({terrain:'grass'}));fixture.resources=[];fixture.piles=[];fixture.jobs=[];fixture.structures=[];fixture.stockpiles=[];fixture.pawns=fixture.pawns.slice(0,1);
+    const pawn=fixture.pawns[0]!;Object.assign(pawn,{x:12,z:16,hunger:100,rest:100});pawn.schedule.fill('anything');pawn.priorities={haul:1,build:0,gather:0,grow:0,cook:0};
+    expect(applyCommand(fixture,{type:'designate',kind:'wall',x:18,z:14}).ok).toBe(true);
+    expect(applyCommand(fixture,{type:'stockpile',x:16,z:18,enabled:true,filters:{wood:false,food:true},priority:2,capacity:20}).ok).toBe(true);
+    addGroundMaterial(fixture,'wood',5,{x:13,z:16},'wood');addGroundMaterial(fixture,'food',10,{x:14,z:16},'rice');const rice=fixture.piles.find(p=>p.item==='rice')!;
+    await page.addInitScript(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:serializeWorld(fixture)});
+    await page.goto('/?size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,fixture);
+    const rotation={value:0};
+    await perform(page,{reason:'Approvisionner le mur.',command:{type:'order-haul',pawnId:pawn.id,target:{type:'job',jobId:fixture.jobs[0]!.id},queue:false}},rotation);
+    await perform(page,{reason:'Ranger ensuite le riz.',command:{type:'order-haul',pawnId:pawn.id,target:{type:'pile',pileId:rice.id},queue:true}},rotation);
+    await expect(page.locator('#selected-orders')).toContainText('1 ordre(s) en file');const ordered=await world(page);expect(validateWorld(ordered)).toEqual([]);
+    await page.screenshot({path:'artifacts/forced-logistics.png'});
+    await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,ordered);
+    await page.locator('[data-speed="6"]').click();await expect.poll(async()=>{const w=await world(page);return !w.pawns[0]!.haul&&!w.pawns[0]!.orders.queue.length&&w.jobs[0]?.escrow.wood===5;},{timeout:15000}).toBe(true);await page.locator('[data-speed="0"]').click();
+    const delivered=await world(page);expect(delivered.structures).toEqual([]);expect(delivered.jobs[0]?.construction).toBe('frame');expect(delivered.piles.find(p=>p.item==='rice')?.owner).toEqual({type:'ground',x:16,z:18});expect(delivered.stock).toEqual({wood:0,food:10});
+    await perform(page,{reason:'Activer Construction.',command:{type:'priority',pawnId:pawn.id,work:'build',value:1}},rotation);
+    await perform(page,{reason:'Finir le cadre approvisionné.',command:{type:'order-job',pawnId:pawn.id,jobId:fixture.jobs[0]!.id,queue:false}},rotation);
+    await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).structures.length).toBe(1);await page.locator('[data-speed="0"]').click();
+    const final=await world(page);expect(final.structures[0]?.kind).toBe('wall');expect(validateWorld(final)).toEqual([]);expect(errors).toEqual([]);expect(await page.locator('#fps-counter').isVisible()).toBe(true);
+    await testInfo.attach('forced-logistics',{contentType:'application/json',body:JSON.stringify({tick:final.tick,stock:final.stock,structures:final.structures,orders:final.pawns[0]!.orders,errors})});
   } finally {await browser.close();}
 });

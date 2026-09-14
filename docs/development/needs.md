@@ -1,4 +1,4 @@
-# Repas et couchages physiques — origine V3, état courant V17
+# Repas et couchages physiques — origine V3, état courant V18
 
 Livraison du 13 septembre 2026. Référence : chapitre 14 du corpus utilisateur, SYS-026..027/039/044/076..080, UI-016/026, TEST-189 ; adoption des actions effectives, des réservations et de la continuation. La demande utilisateur interdit de remplacer ces interactions élémentaires par des raccourcis. Leur correction passe avant les zones nommées, sans déclarer G1 terminé.
 
