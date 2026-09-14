@@ -89,7 +89,7 @@ test('conservation dans le worker : migration V10, inspection de fraîcheur, exp
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:JSON.stringify(old)});
     await page.goto('/?size=32&seed=42&e2e');await expect(page.locator('#loading')).toHaveCount(0);
     await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();
-    await expect.poll(async()=>(await world(page)).schemaVersion).toBe(13);
+    await expect.poll(async()=>(await world(page)).schemaVersion).toBe(14);
     expect(await world(page)).toEqual(deserializeWorld(JSON.stringify(old)));await page.keyboard.press('Escape');await cell(page,17,16);
     await expect(page.locator('#cell-materials')).toContainText('pourrit dans 14.0 j');
     const aged=structuredClone(initial);aged.piles[0]!.rot={progress:ROT_DAYS.berries*TICKS_PER_DAY-120,atTick:0};

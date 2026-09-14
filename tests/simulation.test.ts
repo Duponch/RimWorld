@@ -184,8 +184,8 @@ describe('deterministic colony simulation', () => {
     corridor.pawns[0]!.x = 1; corridor.pawns[0]!.z = 4; corridor.pawns[1]!.x = 3; corridor.pawns[1]!.z = 4;
     corridor.pawns[1]!.priorities = { gather: 0, build: 0, haul: 0, grow: 0 , cook: 0 };
     resource(corridor, 10, 4, 'tree'); order(corridor, 'chop', 10, 4); checkedTicks(corridor, 500);
-    expect(corridor.jobs).toHaveLength(0); expect(corridor.resources).toHaveLength(0); expect(corridor.pawns[1]!.x).toBeGreaterThan(3);
-    // The source is already accessible: only the destination route needs an idle blocker to yield.
+    expect(corridor.jobs).toHaveLength(0); expect(corridor.resources).toHaveLength(0); expect(corridor.pawns[1]!.x).toBe(3);
+    // Transit through an idle colonist must not displace that colonist.
     const deliveryCorridor = fixture(2); deliveryCorridor.piles = []; refreshStock(deliveryCorridor);
     deliveryCorridor.tiles = deliveryCorridor.tiles.map(() => ({ terrain: 'rock' }));
     for (let x = 1; x <= 12; x++) deliveryCorridor.tiles[4 * deliveryCorridor.width + x] = { terrain: 'grass' };
@@ -194,7 +194,7 @@ describe('deterministic colony simulation', () => {
     deliveryCorridor.pawns[1]!.x = 4; deliveryCorridor.pawns[1]!.z = 4;
     deliveryCorridor.pawns[1]!.priorities = { gather: 0, build: 0, haul: 0, grow: 0 , cook: 0 };
     addGroundMaterial(deliveryCorridor, 'wood', 10, { x: 1, z: 4 }); zone(deliveryCorridor, 12, 4);
-    until(deliveryCorridor, () => groundAt(deliveryCorridor, 12, 4) === 10, 'stationary blocker yields toward delivery destination', 500);
+    until(deliveryCorridor, () => groundAt(deliveryCorridor, 12, 4) === 10, 'delivery passes a stationary colonist', 500);
     // Only a late source is eligible. Exhausting one pair window must not starve it or break replay.
     // Same 40,000 candidate-pair workload, now with 200 legitimate floor cells.
     // Independent spatial-contracts.test also rejects the old overlapping layout.
@@ -335,7 +335,7 @@ describe('deterministic colony simulation', () => {
 
   test('schema-1 migration preserves stock, escrow, beds and identity; corrupt schema-2 saves are rejected', () => {
     const migrated = deserializeWorld(legacySave());
-    expect(migrated.schemaVersion).toBe(13); expect(migrated.pawns[0]!.id).toBe(4); expect(migrated.structures[0]!.id).toBe(10);
+    expect(migrated.schemaVersion).toBe(14); expect(migrated.pawns[0]!.id).toBe(4); expect(migrated.structures[0]!.id).toBe(10);
     expect(migrated.structures[0]).toMatchObject({ x: 7, z: 7, footprint: 'legacy-single' });
     expect(migrated.pawns[0]!.priorities).toMatchObject({ gather: 2, build: 2 }); audit(migrated, 20); expect(foodMass(migrated)).toBe(18);
     expect(hashWorld(deserializeWorld(legacySave()))).toBe(hashWorld(migrated));
@@ -376,7 +376,7 @@ describe('deterministic colony simulation', () => {
     expect(serializeWorld(world)).toBe(serialized);
     // Captured by running HEAD 489b98a's engine, including an active delivery and ground sleeper.
     const material = deserializeWorld(JSON.stringify(materialFixture));
-    expect(material.schemaVersion).toBe(13);
+    expect(material.schemaVersion).toBe(14);
     // V6 explicitly cancels obsolete hauling reservations and retains all units/IDs.
     expect(material.piles.map(({id,kind,quantity})=>({id,kind,quantity}))).toEqual(materialFixture.piles.map(({id,kind,quantity})=>({id,kind,quantity})));
     expect(material.jobs).toEqual(materialFixture.jobs);

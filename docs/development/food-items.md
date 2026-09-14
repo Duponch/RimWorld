@@ -32,7 +32,7 @@ Le profil historique conserve le choix par coût de trajet. Les récoltes de bai
 
 Les schémas V1–V4 sont validés avant migration. `foodRules: legacy` conserve 0,015 point/tick, les anciennes récoltes et portions à 35 points, sans transformer leurs stocks en rations plus riches. Les anciennes ingestions gardent progression et quantité un ; IDs, positions, cargaisons, chantiers et jauges ne changent pas. Ces objets apparaissent comme « Portion historique ». Les nouvelles parties utilisent `foodRules: adult`. Les deux profils sont explicites, sérialisés et testés ; aucune conversion silencieuse à la reprise. Tout nouveau producteur alimentaire passe son `ItemId` explicitement : le défaut `legacy-portion` des helpers est réservé à la compatibilité et aux anciennes fixtures.
 
-Le schéma courant est 13 ; les étapes antérieures sont validées avant migration. Identité d’objet inconnue, catégorie incohérente, capacité dépassée, quantité d’ingestion invalide ou engagements contradictoires provoquent un refus. Le worker n’adopte jamais une sauvegarde invalide.
+Le [schéma courant](simulation.md#sauvegardes) valide les étapes antérieures avant migration. Identité d’objet inconnue, catégorie incohérente, capacité dépassée, quantité d’ingestion invalide ou engagements contradictoires provoquent un refus. Le worker n’adopte jamais une sauvegarde invalide.
 
 La première [recette de cuisine](cooking.md) transforme dix baies/riz en un repas simple. Les [régimes V13](food-policies.md) filtrent les nouvelles portions avant classement. Intoxications, filtres de provenance, traits, compétences, repas personnel de secours et collecte de plusieurs piles pour un seul repas restent absents. Le classement présent couvre seulement les aliments et le profil ci-dessus.
 

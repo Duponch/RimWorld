@@ -1,59 +1,54 @@
-# Validation courante — accès et coût de navigation
+# Validation courante — V14, passage civil
 
-14 septembre 2026. Consolidation G0 après les régimes V13 ; **schéma 13 inchangé**, G1 partiel. [Contrat, recherche récente et écart de circulation](spatial-motion-storage.md). Ce lot allège les calculs de planification ; il ne livre pas encore le passage temporaire entre colons. Aucun contenu ou contrôle joueur ajouté.
+14 septembre 2026. Consolidation G0, G1 encore partiel. Les colons civils peuvent se croiser sans pousser un voisin ou considérer son corps comme un mur. Les réservations d'utilisation des lits, places de repas et postes de cuisine restent exclusives. [Recherche récente, versions et certitude](../research/civil-traffic-reference.md), [contrat spatial et migration](spatial-motion-storage.md). Aucun objet ajouté ; aucune collision hostile livrée.
 
-## Identité des résultats et scénarios
+## Contrats et scénarios
 
-Le [relevé avant](../../artifacts/navigation-access-record.json) provient du moteur `3ee5d8f`. La [comparaison finale](../../artifacts/navigation-access-compare.json) vérifie exactement les octets des trente sauvegardes complètes, pas seulement leurs empreintes : 3/30/100 personnes, ticks 1/100/150/300/450, cuisine ordinaire et faim/régimes. Le second scénario injecte une faim simultanée au tick 101 et affecte trois politiques existantes ; il ne représente pas un joueur ordinaire. Les mondes sont conservés dans `tmp/navigation-access-baseline`, les SHA-256 et tailles dans les rapports. Les trajets, besoins, stocks, réservations, travaux et état aléatoire sont identiques à ces checkpoints ; aucune preuve générale de tous les scénarios possibles n'est revendiquée.
+Le [lot cœur final, 36/36](../../artifacts/core-civil-traffic-final.json), regroupe espace/navigation, simulation, repas, cuisine, régimes, horaires, conservation, cultures, snapshots et pilote de colonie. Le scénario spatial enrichi exerce un couloir d'une case : deux colons échangent leurs lits en traversant un dormeur, puis deux transporteurs se croisent avec des cargaisons opposées. Il vérifie chaque tick, les quantités, les arêtes à durée géométrique, l'absence de déplacement forcé, les destinations et la continuation exacte depuis une sauvegarde prise pendant le croisement. Une variante de cuisine vérifie qu'un effondrement au sol n'acquiert pas le poste du cuisinier ; une réservation dupliquée est rejetée. Les oracles spatiaux, coins solides, replans lors d'un mur nouveau et bilans de matière restent exercés.
 
-Le [lot final cœur, 27/27](../../artifacts/core-navigation-access-final.json), regroupe navigation, espace, cuisine, régimes, fraîcheur, horaires, snapshots, simulation et pilote. Le même scénario de navigation a été enrichi sur 120 cartes : oracle de distances O(V²) indépendant, destinations enfermées, occupations temporaires, coins, ordre inverse des demandes et reprise de la file, emprises tournées, buffers de l'appelant modifiés après capture. Il vérifie aussi qu'aucune cellule n'est finalisée deux fois et que l'accès seul ne déclenche pas de recherche pondérée. Le pilote développe le camp pendant cinq à huit jours sur trois graines, avec bilans et sauvegardes quotidiennes.
+La migration valide d'abord les positions/arêtes exclusives de V13, puis change la version sans réécrire positions, trajets actifs, tâches, profils, stocks ou état aléatoire. Une sauvegarde V13 déjà corrompue par un chevauchement reste refusée. La poursuite V14 adopte le passage civil : une égalité future avec la simulation V13 n'est ni attendue ni revendiquée. Le rejeu V14 après chargement est exact aux checkpoints testés.
 
-Le [lot UI, 3/3 en 28,1 s](../../artifacts/ui-navigation-access.json) utilise Chromium WebGPU natif et le vrai worker : feu construit, facture, collecte des ingrédients, cuisine et produit rangé ; régimes partagés, faim et autorisation ; conservation, migration et sauvegarde corrompue refusée. Aucun échec console/GPU signalé. L'UI de trois jours déjà validée sous V13 n'a pas été rejouée : pas de changement de commande ou de persistance, égalité complète avant/après, pilote cœur et vraie UI ciblée rejoués.
+Le [lot navigateur, 6/6 en 382,5 s](../../artifacts/ui-civil-traffic-final.json), utilise Chromium WebGPU natif et le vrai worker : croisement/sauvegarde/rechargement, vitesse et orientation GPU, cuisine, régimes, conservation et parcours de trois jours. Le test de couloir observe une cellule partagée au tick 2013, recharge ce monde, puis atteint les trois lits exclusifs au tick 2040 sans erreur console/GPU. Il utilise une fixture synthétique, contrairement au parcours ordinaire suivant.
 
-Compilation finale réussie : 97 modules, worker 110,30 ko, jeu 1 032,66 ko / 287,98 ko gzip. L'avertissement connu de bundle supérieur à 500 ko reste présent. Les suites, compilations et audits ont été exécutés successivement. Le premier lancement direct Node avait refusé une propriété de paramètre de constructeur non prise en charge en mode strip-only ; remplacée par des champs explicites avant les preuves finales, sans changer les règles de jeu.
+Le [joueur UI de trois jours](../../artifacts/colony-civil-traffic-three-days.json) part d'une nouvelle carte 250² graine 42 et agit par les commandes de l'interface : 3 lits, 1 table, 3 tabourets, 6 murs, 1 feu et 15 cultures. Résultat : **21 repas cuisinés, 18 prises alimentaires, 3 dormeurs observés dans leur lit**, stocks finaux de 47 bois et 21 unités alimentaires, dont 6 repas simples. Le bois est conservé et le bilan alimentaire réconcilié avec récoltes, recettes et ingestions. Les sauvegardes quotidiennes rechargent exactement ; aucun chantier ordinaire en attente à la fin. Les 19 checkpoints ont été déplacés dans tmp, leurs tailles/SHA-256/ticks restent dans le rapport. Les relevés quotidiens ne capturent aucune cellule partagée : ce n'est pas une preuve de croisement, celui-ci est assuré par le scénario dédié. Le pilote cœur développe aussi le camp pendant cinq à huit jours sur trois graines.
 
-## Comparaison CPU à charge identique
+Compilation réussie : 99 modules, worker 109,24 ko, jeu 1 032,92 ko / 288,11 ko gzip. Avertissement connu de bundle supérieur à 500 ko. Tests, compilation et audits lourds exécutés successivement ; aucune modification de source pendant la suite navigateur. Ce lot n'est pas une exécution de toutes les suites du dépôt ni une garantie exhaustive de fidélité au jeu commercial.
 
-Ryzen 5 3600, Node 24.11.1 ; carte 250² graine 42, camps synthétiques avec feu partagé par cinq colons, cuisine/transport/construction/culture, besoins actifs. Deux répétitions de 300 ticks, aucun préchauffage, setup/validation/bilans hors mesure, collecte des compteurs dans le tick. Les percentiles agrègent 600 ticks par population ; les résultats métier et compteurs décrivent la dernière répétition. Aucun autre test lourd concomitant. Il s'agit de simulation seule, pas de FPS.
+## Simulation sous charge
 
-L'[ancien moteur](../../artifacts/navigation-access-before.json), extrait de `3ee5d8f` dans tmp, et le [moteur final](../../artifacts/navigation-access-after.json) sont mesurés dans la même session.
+[Mesures CPU](../../artifacts/civil-traffic-bench.json) : Ryzen 5 3600, Node 24.11.1, carte 250² graine 42, camps synthétiques et besoins actifs ; cuisine, transport, construction, culture et combustible. Deux passes de 300 ticks, sans préchauffage. Setup, validation et agrégation hors mesure ; collecte des compteurs dans le tick. Percentiles sur 600 ticks, bilans ci-dessous pour la dernière passe de 300 ticks.
 
-| Colons | Médiane avant → après ms | p95 avant → après ms | p99 avant → après ms | Maximum avant → après ms |
-|---:|---:|---:|---:|---:|
-| 3 | 0,0219 → 0,0201 | 1,341 → 1,191 | 3,931 → 3,392 | 10,343 → 7,253 |
-| 30 | 1,220 → 1,478 | 17,672 → 9,725 | 27,232 → 16,576 | 32,096 → 19,978 |
-| 100 | 24,239 → 15,785 | 33,931 → 21,589 | 37,384 → 27,641 | 40,753 → 33,108 |
+| Colons | Médiane ms | p95 ms | p99 ms | Maximum ms | Repas / murs / cultures |
+|---:|---:|---:|---:|---:|---|
+| 3 | 0.017 | 1.204 | 3.777 | 7.765 | 3 / 1 / 6 |
+| 30 | 1.058 | 5.808 | 13.029 | 15.141 | 8 / 6 / 36 |
+| 100 | 14.629 | 20.726 | 26.345 | 31.377 | 16 / 17 / 120 |
 
-À cent personnes, le p95 diminue de **36,4 %** et la médiane de **34,9 %**. À trente, les queues diminuent mais la médiane augmente : l'accès additionnel n'est pas gratuit et tous les ticks ne gagnent pas. Deux passes ne constituent pas une étude statistique du matériel ; petits écarts et maxima restent sensibles à l'environnement/JIT/GC.
+Le [relevé V13 précédent](../../artifacts/navigation-access-after.json) donnait un p95 de 21,59 ms à cent colons ; le présent 20,73 ms ne constitue pas un gain isolé de l'algorithme. Les règles de passage et l'avancement ont changé : 16 repas et 17 murs contre 12 et 16 précédemment. Les invariants de matière et l'état final sont valides. Le p95 reste supérieur à 16,67 ms, budget d'un tick à 60 ticks/seconde en vitesse ×6. Les grandes recherches d'accès restent un coût ouvert ; aucune garantie de simulation accélérée constante à cent personnes. Deux passes et leurs maxima restent sensibles au JIT/GC et à la machine.
 
-Les états finaux et bilans sont identiques : respectivement **2/7/12 repas**, **6/36/120 cultures**, **1/5/16 murs**, **90/590/2 080 ingrédients restants** pour 3/30/100 colons. Les cellules pondérées finalisées passent de 3 801/2 393 286/8 749 647 à 1 037/183 810/731 934. L'accès développe séparément 1 598/4 967 260/25 176 402 cellules : son coût existe, il ne faut pas annoncer une réduction de 92 % du temps depuis le seul compteur pondéré.
+## Rendu matériel
 
-Le [premier essai](../../artifacts/navigation-access-eager-component.json) construisait toute la composante dès le départ : p95 à cent 22,64 ms, mais parcours de plus de 40 000 cellules même pour une tâche proche. L'accès final est progressif ; à trois colons, ses expansions passent de 1 410 343 à 1 598 par passe. Les cibles libres mais déconnectées imposent encore des parcours complets. Les recherches ciblées d'un besoin inaccessible et la congestion entre agents actifs restent coûteuses ; le p95 à cent personnes demeure supérieur au budget de 16,67 ms permettant 60 ticks/seconde à ×6. Aucune promesse de fluidité parfaite ou de temps réel à cette charge.
+[Audit WebGPU](../../artifacts/civil-traffic-render.json) : AMD RDNA1, Ryzen 5 3600, Chromium natif, 1440×1000, mêmes camps synthétiques, worker à ×6. Chaque phase suit 60 images d'échauffement, puis au moins 300 images et cinq secondes. Les vues sont successives et les tâches se terminent : ce sont des observations de charge, pas un comparatif caméra à état identique.
 
-## Rendu réel
+| Colons | Vue | Image p95 ms | p99 ms | Maximum ms | Soumission CPU p95 ms | Appels médians | Ticks |
+|---:|---|---:|---:|---:|---:|---:|---|
+| 3 | Locale | 8.40 | 8.40 | 16.60 | 6.30 | 130 | 12 → 311 |
+| 3 | Carte entière | 4.30 | 4.30 | 8.40 | 3.90 | 22 | 366 → 662 |
+| 30 | Locale | 8.40 | 12.50 | 16.70 | 7.30 | 136 | 13 → 317 |
+| 30 | Carte entière | 4.30 | 8.30 | 20.80 | 4.10 | 28 | 361 → 662 |
+| 100 | Locale | 8.60 | 20.70 | 29.20 | 8.10 | 143 | 0 → 308 |
+| 100 | Carte entière | 4.30 | 8.40 | 16.60 | 4.30 | 42 | 374 → 668 |
 
-L'[audit matériel](../../artifacts/navigation-access-render.json) utilise Chromium natif WebGPU, AMD RDNA1 et Ryzen 5 3600, viewport 1440×1000, carte naturelle 250², camps synthétiques et vitesse ×6. Chaque vue suit 60 images d'échauffement, puis au moins 300 images et cinq secondes. Les mêmes colons cuisinent, transportent, cultivent et construisent ; la charge décroît lorsque les tâches se terminent.
+Aucune erreur console/GPU, états de fin valides. À cent colons, 22 tâches actives à la fin de la phase locale, zéro à la fin de la vue générale : ne pas attribuer sa meilleure mesure au seul zoom. Les intervalles RAF comprennent l'ordonnancement, la soumission CPU ne mesure pas l'exécution GPU ; les temps worker publiés peuvent être répétés sur plusieurs images. Le compteur FPS ne certifie pas une vitesse de simulation constante. Le p99 local à cent atteint 20,7 ms et le maximum 29,2 ms : des images longues subsistent.
 
-| Colons | Vue | Image p95 ms | Soumission CPU p95 ms | Appels médians | Ticks observés |
-|---:|---|---:|---:|---:|---|
-| 3 | Locale | 8,40 | 5,70 | 130 | 14 → 306 |
-| 3 | Carte entière | 4,30 | 3,30 | 22 | 350 → 653 |
-| 30 | Locale | 8,40 | 6,70 | 136 | 12 → 312 |
-| 30 | Carte entière | 4,30 | 3,60 | 28 | 354 → 657 |
-| 100 | Locale | 12,50 | 8,90 | 144 | 0 → 282 |
-| 100 | Carte entière | 4,30 | 4,70 | 42 | 340 → 665 |
+Captures du croisement, du camp de trois jours et des deux vues à cent inspectées : FPS, objets portés et décor visibles. **Limite 3D assumée : des corps peuvent s'interpénétrer, voire rester superposés lorsque des activités civiles partagent une case.** Aucun évitement visuel ni décalage physique inventé ; sélection individuelle possible par portraits. À cent personnes, les portraits dépassent la largeur visible, gestion de grands groupes encore partielle. Aucun nouveau mesh, calcul par image ou coût GPU de séparation ajouté par cette étape.
 
-Aucune erreur console/GPU ; les états à la fin des phases passent le validateur. À cent colons en vue locale, p99 image 20,8 ms et maximum 29,2 ms : quelques longues images restent présentes. Captures à cent personnes locale/générale inspectées : camp, objets portés, géométrie distante et FPS visibles. Les portraits se prolongent au-delà de la zone visible à cette population synthétique ; la gestion riche des grands groupes reste ouverte. La phase générale arrive après les travaux initiaux, avec zéro tâche active à sa fin pour cent personnes : ne pas attribuer tout son meilleur temps à la caméra ou annoncer un avant/après graphique, puisqu'aucun rendu précédent à état identique n'a été mesuré dans ce lot. Les intervalles RAF comprennent l'ordonnancement ; le CPU ne mesure pas l'exécution GPU ; les moyennes worker publiées peuvent être répétées sur plusieurs images. Le compteur FPS ne certifie pas une progression ×6 sans retard.
+## Documentation et suite
 
-## Documentation et précédentes livraisons
+Guide joueur, inventaire, contrat spatial, besoins, architecture, migration, ADR-030, adoption du corpus et ROADMAP actualisés. Contrôle documentaire réussi : 62 documents, 632 liens locaux, 25 domaines et cinq familles ; les trois originaux sont byte-identiques. Aucun contenu du catalogue ajouté. Prochaine tranche proposée : loisirs physiques, variété et tolérance en G1 ; G2–G5 restent ouverts selon la ROADMAP, et les collisions de combat attendent G3.
 
-Contrat spatial, adoption du corpus, guide, inventaire, ROADMAP, tests, architecture et ADR-029 actualisés. Vérification documentaire : 60 documents, 611 liens locaux, 25 domaines et cinq familles ; les trois originaux sont byte-identiques. Aucun objet ajouté au catalogue. Les preuves historiques restent datées :
-
-- [V13 — régimes, partie UI de trois jours et audits](../history/validation-v13-regimes.md)
-- [V12 — horaires et sommeil](../history/validation-v12-horaires.md)
+- [Étape précédente — navigation et accès](../history/validation-navigation-access.md)
+- [V13 — régimes](../history/validation-v13-regimes.md)
+- [V12 — horaires](../history/validation-v12-horaires.md)
 - [V11 — conservation](../history/validation-v11-conservation.md)
-- [V10 — cuisine et navigation](../history/validation-v10-cuisine.md)
-- [V9 — alimentation et reclassement](../history/validation-v9-alimentation.md)
-- [V8 — cultures](../history/validation-v8-cultures.md)
-- [V6–V7 — présentation](../history/validation-v6-v7-presentation.md)
-- [V3–V5 — besoins](../history/validation-v3-v5-besoins.md)
+- [Inventaire complet du gameplay livré, partiel et absent](../gameplay/implementation-status.md)

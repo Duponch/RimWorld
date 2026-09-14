@@ -26,7 +26,7 @@ Les messages sont traités en séquence dans un worker unique. Chaque commande r
 
 Simulation pure et déterministe dans `src/sim`, messages ordonnés dans `src/bridge`, présentation sans mutation du World dans `src/render`. Les imports vers DOM/Three restent hors du noyau. Le laboratoire GPU reste isolé.
 
-Le schéma courant est 13. Les contrats de propriété, besoins et mouvement font autorité sur les anciennes descriptions des ADR. Voir [simulation](simulation.md), [logistique](material-logistics.md), [alimentation](food-items.md), [agriculture](farming.md), [cuisine](cooking.md), [conservation](food-preservation.md), [horaires](schedules.md), [régimes](food-policies.md) et [mouvement](spatial-motion-storage.md).
+Le schéma courant est 14. Les contrats de propriété, besoins et mouvement font autorité sur les anciennes descriptions des ADR. Voir [simulation](simulation.md), [logistique](material-logistics.md), [alimentation](food-items.md), [agriculture](farming.md), [cuisine](cooking.md), [conservation](food-preservation.md), [horaires](schedules.md), [régimes](food-policies.md) et [mouvement](spatial-motion-storage.md).
 
 Extraire une responsabilité cohérente avant de rallonger un module. Ne pas introduire ECS, Rust ou compute sans besoin et mesure. Les audits séparent simulation, transport des snapshots, rendu CPU et GPU.
 
@@ -149,3 +149,7 @@ Voir [la décision détaillée](../decisions/simulation.md#adr-028--régimes-par
 ## ADR-029 — Accessibilité progressive et routes à la demande
 
 Voir [la décision détaillée](../decisions/simulation.md#adr-029--accessibilité-progressive-et-routes-à-la-demande).
+
+## ADR-030 — Passage civil et réservations de service
+
+Voir [la décision détaillée](../decisions/simulation.md#adr-030--passage-civil-et-réservations-de-service).

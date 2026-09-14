@@ -1,3 +1,4 @@
+import { reservedServiceCells } from './service-reservations.ts';
 import { billWanted, cookingPlaceFree, cookingSpot, INGREDIENT_UNITS } from './cooking-bills.ts';
 import { groundCapacity } from './ground-placement.ts';
 import { reservedSource } from './materials.ts';
@@ -19,15 +20,15 @@ export function availableCookingStations(world:World,pawn:Pawn):Structure[] {
 }
 /** Select without mutation. The ordinary planner compares this proposal with
  * construction/growing/hauling before committing its reservations. */
-export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:{pairs:number},blockedTargets:{target:Cell;allow:boolean;exact?:boolean}[]):CookingPlan|null {
+export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:{pairs:number}):CookingPlan|null {
   const stations=availableCookingStations(world,pawn)
     .sort((a,b)=>distance(pawn,a)-distance(pawn,b)||a.id-b.id);
   for(const station of stations) {
     if(world.pawns.some(p=>p.id!==pawn.id&&(p.cooking?.stationId===station.id||p.haul?.destination.type==='fuel'&&p.haul.destination.structureId===station.id)))continue;
     const spot=cookingSpot(station);
-    if(!cookingPlaceFree(world,spot)||world.pawns.some(p=>p.id!==pawn.id&&(p.cooking&&same(p.cooking.spot,spot)||p.need?.kind==='sleep'&&same(p.need.target,spot)||p.need?.kind==='eat'&&p.need.dining&&same(p.need.dining.target,spot))))continue;
+    if(!cookingPlaceFree(world,spot)||reservedServiceCells(world,pawn.id).has(spot.z*world.width+spot.x))continue;
     const toSpot=routeToCell(world,spot,reachable);
-    if(!toSpot){if(blockedTargets.length<16)blockedTargets.push({target:spot,allow:true,exact:true});continue;}
+    if(!toSpot)continue;
     for(const bill of station.bills!) {
       if(!billWanted(world,bill))continue;
       // The reference bill worker refuels an empty usable station before cooking.
@@ -38,7 +39,7 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
         for(const pile of wood) {
           if(budget.pairs--<=0){budget.pairs=0;return null;}
           const path=routeToJob(world,pile.owner as Cell,reachable,true);
-          if(!path){if(blockedTargets.length<16)blockedTargets.push({target:pile.owner as Cell,allow:true});continue;}
+          if(!path)continue;
           return {station,target:pile.owner as Cell,path,refuel:{sourcePileId:pile.id,quantity:Math.min(10,capacity,pile.quantity-reservedSource(world,pile.id)),phase:'pickup',carryPileId:null,destination:{type:'fuel',structureId:station.id,forCooking:true}}};
         }
         break;
@@ -57,7 +58,7 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
         if(budget.pairs--<=0){budget.pairs=0;return null;}
         const quantity=Math.min(missing,pile.quantity-reservedSource(world,pile.id));
         if(quantity<=0)continue;
-        if(!routeToJob(world,pile.owner as Cell,reachable,true)){if(blockedTargets.length<16)blockedTargets.push({target:pile.owner as Cell,allow:true});continue;}
+        if(!routeToJob(world,pile.owner as Cell,reachable,true))continue;
         const already=cells.find(c=>same(c,pile.owner as Cell));
         const cell=already??cells.find(c=>{
           const reserved=planned.get(`${c.x}:${c.z}`);

@@ -5,6 +5,7 @@ import { blockedCells, canStep, reachableCells, routeToCell } from '../src/sim/p
 import { startTravel } from '../src/sim/movement';
 import { MotionTimeline } from '../src/render/MotionTimeline';
 import { storageCapacity } from '../src/sim/ground-placement';
+import { civilCrossingFixture } from './scenarios/civil-traffic';
 
 test('eight-direction routes agree with an independent relaxation oracle and preserve geometric travel time',()=>{
   let seed=12345;
@@ -58,6 +59,53 @@ test('eight-direction routes agree with an independent relaxation oracle and pre
   startTravel(traffic,traffic.pawns[0]!,{x:5,z:5});
   expect(canStep(traffic,traffic.pawns[1]!,{x:5,z:4},blockedCells(traffic),new Set([4*16+4,5*16+5]))).toBe(true);
   startTravel(traffic,traffic.pawns[1]!,{x:5,z:4});expect(validateWorld(traffic)).toEqual([]);
+});
+
+test('civil crossing preserves beds, opposing cargo, every edge and exact continuation without pushing other actors',()=>{
+  const w=civilCrossingFixture();expect(validateWorld(w)).toEqual([]);
+  const old=JSON.parse(serializeWorld(w));old.schemaVersion=13;
+  expect(deserializeWorld(JSON.stringify(old))).toEqual(w); // No rewritten positions, tasks or IDs.
+  const start=w.tick;let shared:string|undefined;
+  const endings=new Map<number,number>();
+  for(let i=0;i<55;i++) {
+    stepWorld(w);expect(validateWorld(w),`crossing tick ${w.tick}`).toEqual([]);
+    expect(w.pawns[2]).toMatchObject({x:8,z:8,state:'sleeping'});
+    for(const p of w.pawns.slice(0,2))if(p.motion) {
+      expect(p.motion.end-p.motion.start).toBeCloseTo(3,8);
+      const end=endings.get(p.id);
+      if(end!==undefined&&end!==p.motion.end)expect(p.motion.start).toBeCloseTo(end,8);
+      endings.set(p.id,p.motion.end);
+    }
+    if(!shared&&new Set(w.pawns.map(p=>p.z*w.width+p.x)).size<w.pawns.length)shared=serializeWorld(w);
+  }
+  expect(w.tick-start).toBe(55);expect(shared).toBeDefined();
+  expect(w.pawns.map(p=>[p.x,p.z,p.state])).toEqual([[14,8,'sleeping'],[1,8,'sleeping'],[8,8,'sleeping']]);
+  expect(new Set(w.pawns.map(p=>p.bedId)).size).toBe(3);
+  const resumed=deserializeWorld(shared!);stepWorld(resumed,w.tick-resumed.tick);expect(resumed).toEqual(w);
+  const overlapV13=JSON.parse(shared!);overlapV13.schemaVersion=13;
+  expect(()=>deserializeWorld(JSON.stringify(overlapV13))).toThrow(/overlap/i);
+  const duplicate=JSON.parse(serializeWorld(w));duplicate.pawns[0].bedId=duplicate.pawns[1].bedId;
+  expect(()=>deserializeWorld(JSON.stringify(duplicate))).toThrow(/bed|sleep/i);
+
+  const haul=civilCrossingFixture();haul.structures=haul.structures.filter(s=>s.x===8);
+  haul.pawns.slice(0,2).forEach(p=>{p.bedId=null;p.rest=100;p.priorities.haul=1;});
+  addGroundMaterial(haul,'wood',10,{x:2,z:8},'wood');addGroundMaterial(haul,'food',10,{x:13,z:8},'rice');
+  expect(applyCommand(haul,{type:'stockpile',enabled:true,x:14,z:8,filters:{wood:true,food:false}}).ok).toBe(true);
+  expect(applyCommand(haul,{type:'stockpile',enabled:true,x:1,z:8,filters:{wood:false,food:true}}).ok).toBe(true);
+  const quantity=(item:string,x:number)=>haul.piles.filter(p=>p.item===item&&p.owner.type==='ground'&&p.owner.x===x).reduce((n,p)=>n+p.quantity,0);
+  let carriedCrossing:string|undefined;
+  for(let i=0;i<150&&(quantity('wood',14)!==10||quantity('rice',1)!==10);i++) {
+    stepWorld(haul);expect(validateWorld(haul),`haul tick ${haul.tick}`).toEqual([]);
+    expect(haul.piles.reduce((n,p)=>n+p.quantity,0)).toBe(20);
+    const [a,b]=haul.pawns;
+    if(!carriedCrossing&&a!.haul?.phase==='deliver'&&b!.haul?.phase==='deliver'&&a!.motion&&b!.motion&&a!.motion.end>haul.tick&&b!.motion.end>haul.tick
+      &&a!.motion.from.x===b!.x&&b!.motion.from.x===a!.x)carriedCrossing=serializeWorld(haul);
+    expect(haul.pawns[2]).toMatchObject({x:8,z:8,state:'sleeping'});
+  }
+  expect(quantity('wood',14)).toBe(10);expect(quantity('rice',1)).toBe(10);expect(carriedCrossing).toBeDefined();
+  const cargoResume=deserializeWorld(carriedCrossing!);stepWorld(cargoResume,haul.tick-cargoResume.tick);expect(cargoResume).toEqual(haul);
+  const legacyEdge=JSON.parse(carriedCrossing!);legacyEdge.schemaVersion=13;
+  expect(()=>deserializeWorld(JSON.stringify(legacyEdge))).toThrow(/overlap/i);
 });
 
 test('buffered motion is linear across jitter, duplicate messages, turns, pause and replacement',()=>{

@@ -6,13 +6,13 @@
 
 RimWorld de base d’abord, extensions après G5. Grille plane en 3D low poly, interactions physiques, organisation de l’interface de référence. Le [corpus utilisateur](research/reference-adoption.md) définit la cible par défaut ; chaque mécanique exige une vérification récente. Les adaptations sont [explicites](gameplay/decisions.md). Les algorithmes restent libres sous les contrats et budgets mesurés.
 
-**G0 est en consolidation, G1 partiel.** Le camp dispose de récolte, portage, stockage, constructions, repas et couchages physiques, tables et culture de riz. V10 a ajouté feu, combustible et factures ; V11 ajoute fraîcheur, pourriture et reprise des tâches affectées ; V12 ajoute horaires, fatigue adulte et réveils ; V13 ajoute les régimes alimentaires partagés. Schéma 13 et migrations V1–V12. Cartes par défaut 250², rendu GPU, déplacements temporisés, ciel jour/nuit et deux projections sont livrés avec les limites de leurs contrats.
+**G0 est en consolidation, G1 partiel.** Le camp dispose de récolte, portage, stockage, constructions, repas et couchages physiques, tables et culture de riz. V10 a ajouté feu, combustible et factures ; V11 ajoute fraîcheur, pourriture et reprise des tâches affectées ; V12 ajoute horaires, fatigue adulte et réveils ; V13 ajoute les régimes alimentaires partagés, V14 corrige le passage entre colons civils en préservant les réservations. Schéma 14 et migrations V1–V13. Cartes par défaut 250², rendu GPU, déplacements temporisés, ciel jour/nuit et deux projections sont livrés avec les limites de leurs contrats.
 
 ## Prochains lots
 
-1. **Consolidation G0 liée aux boucles** : corriger le passage temporaire entre personnes, en le distinguant des réservations exclusives de lits et postes. Le coût des trajets spéculatifs a été réduit : accès progressif, puis Dijkstra précis à la demande ; 30 états complets avant/après identiques. Dans le même scénario de cuisine à cent personnes, le p95 passe de 33,93 à 21,59 ms/tick (deux passes de 300 ticks). Les cibles déconnectées et la congestion coûtent encore cher ; cette mesure n'est pas une garantie à vitesse ×6. Voir les [conditions et limites](development/validation.md). L’état incohérent d’un chef affamé attendant la navigation est corrigé en V13.
-2. **Poursuivre la survie G1** : cuisine, conservation à climat fixe, horaires et régimes alimentaires sont livrés ; poursuivre les besoins et loisirs utiles à la vie du camp. Autres recettes, postes, filtres avancés et compétences restent ouverts ; le feu ne chauffe pas encore les pièces.
-3. **Compléments de G1, puis habitat G2** : statistiques utiles et catalogue progressivement enrichi ; température variable et chaîne du froid restent G2. Faire interagir les systèmes présents avant de multiplier le contenu.
+1. **Poursuivre la survie G1** : loisirs et leurs activités physiques, variété/tolérance puis effets de satisfaction ; vérifier les règles Core avant ce chantier. Cuisine, conservation à climat fixe, horaires et régimes sont livrés, sans clôturer leurs contenus et cas avancés.
+2. **Consolidation G0 au fil des boucles** : passage civil livré, accès progressif et recherches précises séparés ; poursuivre les cases de travail, objets gênant les constructions et plans immédiatement bloquants. Les collisions hostiles attendent G3. Mesurer les vrais coûts aux changements de règles plutôt que comparer seulement des FPS.
+3. **Compléments de G1, puis habitat G2** : autres recettes, ateliers, statistiques utiles et catalogue progressivement enrichi ; minage, portes/toits/pièces, températures variables et chaîne du froid restent ouverts. Le feu ne chauffe pas encore les pièces.
 
 La documentation est reclassée en contrats courants, recherches, sources originales, décisions et preuves historiques. Les prochains ajouts enrichissent les scénarios de colonie existants ; les lots de tests sont regroupés selon les contrats touchés.
 
@@ -25,7 +25,7 @@ Contrats livrés : définitions immuables ciblées, propriété unique, pile au 
 - Zones nommées et politiques partagées ; filtres enrichis au rythme du contenu.
 - Sélection multiple et ordres contextuels forcés, avec motifs de refus.
 - Déplacement des objets obstruant une construction ; états de chantier plus fins et suppression du blocage immédiat des plans de murs.
-- Distinguer réservations exclusives des cases de service et passage temporaire entre personnes : l’interdiction de partage actuelle est plus stricte que RimWorld (relecture du 14 septembre). Résoudre la congestion entre agents actifs ; profiler index et invalidations.
+- Étendre les profils de franchissement et cases de travail à mesure que les activités arrivent ; passage civil et distinction avec les réservations de lits/repas/postes livrés en V14. La présence d’un colon ne ferme plus un couloir. Collisions hostiles à développer avec G3 ; lisibilité 3D des superpositions encore partielle.
 - Manifeste de contenu/générateur, journal complet des commandes datées, export/import et garanties d’évolution.
 
 **Acceptation G0 :** trois colons développent un camp par des commandes explicables ; matériaux conservés à chaque transition, engagements sans duplication, continuation exacte pendant les transports, contrôle de charge reproductible. Les premiers scénarios passent ; les manques ci-dessus empêchent de déclarer le jalon clos.

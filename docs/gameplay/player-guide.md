@@ -18,7 +18,7 @@ Pour les premiers jours :
 
 Il n’y a encore ni victoire ni événement hostile. Les règles suivantes décrivent le jeu présent ; les paramètres provisoires et systèmes manquants restent explicités.
 
-Gardez de la place autour des feux et des accès : le passage entre colons reste trop restrictif et peut provoquer des attentes. Le calcul des tâches a été allégé pour les camps chargés, mais cette amélioration ne supprime pas encore ces conflits de circulation.
+Les colons peuvent se croiser dans un passage étroit et passer par la case d’un colon occupé ou endormi. Le lit, la place de repas ou le poste reste réservé à son utilisateur : traverser la case ne permet pas de l’utiliser. Les corps peuvent encore se superposer visuellement en 3D ; les portraits permettent de sélectionner chacun.
 
 ## Se repérer dans l’interface
 
@@ -85,7 +85,7 @@ Ouvrir Travail pour régler Collecte, Construction, Transport, Culture et Cuisin
 
 Un transporteur réserve une quantité de pile et de la place à destination, se déplace jusqu'à la source, prélève, porte et dépose. Sa cargaison est visible. Deux colons peuvent se partager une pile sans promettre les mêmes unités. Un constructeur commence seulement quand les matériaux nécessaires sont effectivement livrés. Une interruption conserve la progression et les matériaux déjà déposés ; une cargaison abandonnée devient une pile au sol.
 
-Les chemins contournent eau, terrain rocheux, murs, tables et autres colons ; un colon inactif peut céder une case de passage lorsqu'un travail l'exige. Inspecter un chantier indique notamment ses livraisons et ce qu'il attend. L’occupation des personnes est plus stricte que les collisions conditionnelles de RimWorld ; les embouteillages entre colons actifs restent une limite connue.
+Les chemins contournent eau, terrain rocheux, murs et tables. Les colons civils se traversent sans déplacer ceux qui restent sur place ; l'utilisation d'un lit ou d'un poste reste réservée. Inspecter un chantier indique notamment ses livraisons et ce qu'il attend. Les règles de blocage liées aux ennemis et au combat restent à développer.
 
 Les colons se déplacent dans huit directions. Une diagonale mesure √2 cases et prend proportionnellement plus de temps ; elle ne coupe pas les coins solides. Ils font face au trajet puis à leur travail. Le rendu utilise un petit tampon temporel pour conserver une marche régulière entre les messages du worker. Un retard exceptionnel peut encore arrêter brièvement l’affichage au dernier état connu.
 

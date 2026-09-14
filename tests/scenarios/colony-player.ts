@@ -77,7 +77,10 @@ export function playerDecisions(world: World): Decision[] {
 
 export function colonySummary(world: World) {
   const fields=new Set(world.growingZones.flatMap(z=>z.cells));
+  const occupied=new Map<number,number>();
+  for(const p of world.pawns){const cell=p.z*world.width+p.x;occupied.set(cell,(occupied.get(cell)??0)+1);}
   return { tick: world.tick, foodPolicies: world.pawns.map(p=>p.foodPolicyId), restRules: world.restRules, scheduledSleepHours: world.pawns.map(p=>p.schedule.filter(s=>s==='sleep').length), spoiled: { ...world.spoiled }, crops: world.resources.filter(r=>r.kind==='rice').length, growingCells:fields.size,
+    sharedPawnCells:[...occupied.values()].filter(count=>count>1).length,
     obstructedGrowingCells:world.piles.filter(p=>p.owner.type==='ground'&&fields.has(p.owner.z*world.width+p.owner.x)).length,
     clearing:world.pawns.filter(p=>p.haul?.destination.type==='aside').length,
     structures: Object.fromEntries(['bed','table','stool','wall','campfire'].map(kind => [kind,world.structures.filter(s=>s.kind===kind).length])), preparedMeals:world.piles.filter(p=>p.item==='simple-meal').reduce((n,p)=>n+p.quantity,0), stock: { ...world.stock }, pending: world.jobs.length, minimumFood: Math.min(...world.pawns.map(p=>p.hunger)), minimumRest: Math.min(...world.pawns.map(p=>p.rest)) };

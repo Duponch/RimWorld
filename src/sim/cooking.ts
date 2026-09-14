@@ -34,7 +34,7 @@ export function processCooking(world:World,pawn:Pawn,context:NeedContext):void {
     const targets=world.stockpiles.filter(s=>storageCapacity(world,s,product.item,pawn.id)>=product.quantity)
       .sort((a,b)=>b.priority-a.priority||(pawn.x-a.x)**2+(pawn.z-a.z)**2-((pawn.x-b.x)**2+(pawn.z-b.z)**2)||a.id-b.id);
     if(!targets.length){dropProduct(world,pawn,product);return;}
-    const reach=context.search(false,interactionGoals(world,targets.filter(t=>t.priority===targets[0]!.priority)));
+    const reach=context.search(interactionGoals(world,targets.filter(t=>t.priority===targets[0]!.priority)));
     if(!reach)return;
     for(const zone of targets) {
       const path=routeToJob(world,zone,reach,true);if(!path)continue;

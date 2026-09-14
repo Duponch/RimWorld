@@ -1,3 +1,4 @@
+import { reservedServiceCells } from './service-reservations.ts';
 import { billWanted, cookingPlaceFree, cookingSpot, INGREDIENT_UNITS } from './cooking-bills.ts';
 import { reservedSource } from './materials.ts';
 import { queryPawnStatus } from './diagnostics.ts';
@@ -26,6 +27,6 @@ export function queryCookingBillStatus(world:World,station:Structure,bill:Cookin
   for(const pile of world.piles)if((pile.item==='rice'||pile.item==='berries')&&bill.filters[pile.item]&&pile.owner.type==='ground'
     &&(pile.owner.x-station.x)**2+(pile.owner.z-station.z)**2<=bill.radius**2)available+=Math.max(0,pile.quantity-reservedSource(world,pile.id));
   if(available<INGREDIENT_UNITS)return {code:'missing-ingredients',reason:`Ingrédients insuffisants : ${available}/${INGREDIENT_UNITS} non réservés dans le rayon et les filtres.`};
-  if(world.pawns.some(p=>p.x===spot.x&&p.z===spot.z))return {code:'workplace-occupied',reason:'Un colon occupe actuellement la place devant le feu.'};
+  if(reservedServiceCells(world).has(spot.z*world.width+spot.x))return {code:'workplace-occupied',reason:'La place devant le feu est réservée par une autre activité.'};
   return {code:'waiting',reason:'Attend un cuisinier disponible ; accès, priorités et place de dépôt à vérifier.'};
 }

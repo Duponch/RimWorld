@@ -48,6 +48,8 @@ La matrice conserve [cinq familles F1–F5](../gameplay/systems-matrix.md#strat�
 
 Le parcours de frontières conserve le rendu logiciel/WebGL 2, notamment pour les contrôles compacts et la migration historique dans le worker. Les parcours matériels lancent Chromium normal et vérifient le backend obtenu. Un canvas visible et un compteur FPS ne suffisent pas : capturer les erreurs console/GPU et inspecter effectivement la pose ou l’aperçu testé.
 
+V14 enrichit la famille spatiale avec un couloir d'une case : deux traversées opposées, dormeur central immobile, lits exclusifs, deux cargaisons qui se croisent, refus des superpositions V13 et reprise V14 au milieu des arêtes. La cuisine vérifie aussi qu'un effondrement au sol ne vole pas le poste. `integration/movement.spec.ts` conserve son contrôle de vitesse/orientation GPU et ajoute migration V13, pause sur une cellule partagée, sauvegarde/rechargement et arrivée dans trois lits via le vrai worker. La fixture commune `scenarios/civil-traffic.ts` est synthétique ; elle ne remplace pas le pilote ordinaire.
+
 Les assertions d’état navigateur comparent un JSON complet sans sérialiser chaque sous-objet séparément par le protocole du pilote. Le suivi courant utilise les ticks ; récupérer un monde complet seulement aux étapes utiles. Pour une phase brève, observer puis cliquer le vrai bouton Pause dans le même callback, attendre son acquittement et vérifier que la phase attendue existe encore.
 
 Le pilote de gestes cadre les cellules par de vrais mouvements de molette et vérifie qu’elles atteignent le canvas, hors panneaux. Une géométrie cachée ne prouve pas la visibilité d’un aperçu ; capturer le rectangle pendant que le pointeur reste maintenu. L’injection de perte de focus dans son test reste explicitement qualifiée comme telle.
@@ -59,6 +61,8 @@ Le pilote de gestes cadre les cellules par de vrais mouvements de molette et vé
 - `colony-player.test.ts` joue cinq jours sur trois graines 250², dont la graine 42 prolongée à huit jours. Celle-ci décide toutes les quatre heures comme le navigateur, les autres toutes les heures. Contrôler matière, ingestions, sommeil par colon, camp, cultures, repas et reprise quotidienne.
 - `integration/colony-journey.spec.ts` joue trois jours via la vraie UI et le vrai worker WebGPU, avec décisions toutes les quatre heures et sauvegardes quotidiennes. Aucun saut de temps ni stock artificiel après démarrage. Ce parcours de plusieurs minutes n’est pas un benchmark graphique.
 - La chaîne agricole complète jusqu’à maturité et second semis est testée au cœur ; trois jours de navigateur ne suffisent pas à la prouver. Un checkpoint mûr synthétique utilisé ailleurs dans l’UI reste distinct de la progression du joueur.
+
+Le résumé du pilote relève aussi les cellules partagées par plusieurs colons. Il n'impose pas qu'un nombre arbitraire de croisements survienne dans une partie naturelle ; le corridor dédié vérifie cette propriété de façon contrôlée. Conservation et progression restent ses critères métier.
 
 Le bilan du bois inclut matériaux présents, constructions et combustible restant/brûlé. Le bilan alimentaire distingue récoltes, unités présentes et mangées, et conversion de **dix ingrédients en un repas** : ajouter neuf unités retirées par repas fabriqué. La nutrition n’est pas conservée par cette transformation. À chaque nouvelle mécanique, enrichir ce même bilan et ses objectifs plutôt que multiplier les pilotes.
 

@@ -1,0 +1,18 @@
+import type { Cell, Pawn, World } from './types.ts';
+
+/** Exclusive use of a workstation, dining place or bed. This is not physical
+ * occupancy: a passer-by can cross any of these cells without claiming its use.
+ * Sleeping/collapsing on the floor does not acquire furniture or a work spot. */
+export function serviceCell(pawn: Pawn): Cell | null {
+  if (pawn.cooking) return pawn.cooking.spot;
+  if (pawn.need?.kind === 'eat') return pawn.need.dining?.target ?? null;
+  if (pawn.need?.kind === 'sleep' && pawn.need.bedId !== null) return pawn.need.target;
+  return null;
+}
+export function reservedServiceCells(world: World, exceptPawn?: number): Set<number> {
+  const reserved = new Set<number>();
+  for (const pawn of world.pawns) if (pawn.id !== exceptPawn) {
+    const cell = serviceCell(pawn); if (cell) reserved.add(cell.z*world.width+cell.x);
+  }
+  return reserved;
+}

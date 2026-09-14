@@ -93,6 +93,16 @@ test('cuisine physique : mélange, interruption, sauvegarde du travail, deux rep
   expect(queryPawnStatus(w,pawn).reason).toContain('28 %');
   expect(queryCookingBillStatus(w,fire,bill).code).toBe('cooking');
   expect(pawn.cooking!.ingredients.every(i=>i.stage==='placed')).toBe(true);expect(raw(w)).toBe(40);
+  // A passer collapsing on the floor does not acquire the chef's workstation.
+  // The chef keeps its exclusive bill/spot and real ingredients across save/load.
+  const collapse=deserializeWorld(serializeWorld(w)),visitor=collapse.pawns[1]!;
+  Object.assign(visitor,{x:8,z:7,rest:0,restZeroTicks:101,collapsePending:true,motion:undefined,moveCooldown:0});
+  expect(validateWorld(collapse)).toEqual([]);stepWorld(collapse);
+  expect(visitor).toMatchObject({state:'sleeping',need:{kind:'sleep',bedId:null}});
+  expect(collapse.pawns[0]!.cooking?.progress).toBe(18);expect(validateWorld(collapse)).toEqual([]);
+  const collapseResume=deserializeWorld(serializeWorld(collapse));stepWorld(collapse,45);stepWorld(collapseResume,45);expect(collapseResume).toEqual(collapse);
+  const stolen=structuredClone(w);stolen.pawns[1]!.cooking=structuredClone(pawn.cooking);stolen.pawns[1]!.priorities.cook=1;
+  expect(()=>deserializeWorld(JSON.stringify(stolen))).toThrow(/duplicate|reservation|ownership/i);
   const canceled=deserializeWorld(serializeWorld(w));
   expect(applyCommand(canceled,{type:'bill-remove',structureId:fire.id,billId:bill.id}).ok).toBe(true);
   expect(canceled.pawns[0]!.cooking).toBeNull();expect(raw(canceled)).toBe(40);expect(meals(canceled)).toBe(0);expect(validateWorld(canceled)).toEqual([]);

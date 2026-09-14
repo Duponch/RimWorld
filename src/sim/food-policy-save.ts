@@ -16,7 +16,7 @@ export function validateFoodPolicies(world: World, version: number): string[] {
   return errors;
 }
 export function initializeFoodPolicies(world: World): void {
-  world.schemaVersion = 13; world.foodPolicies = initialFoodPolicies(); world.nextFoodPolicyId = 5;
+  (world as unknown as {schemaVersion:number}).schemaVersion = 13; world.foodPolicies = initialFoodPolicies(); world.nextFoodPolicyId = 5;
   for (const pawn of world.pawns) pawn.foodPolicyId = 1;
   // Preserve all existing jobs, piles, routes, need/food profiles and entity IDs.
 }

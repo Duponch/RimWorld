@@ -10,7 +10,7 @@ Un dormeur continue en Libre jusqu'à 100. Travail le réveille dès qu'il a au 
 
 Le repos adulte baisse de 95/6 000 points par tick éveillé, pondérés par catégorie. À très faible repos, le compteur d'épuisement et un tirage déterministe permettent un effondrement différé. Une interruption sans place pour déposer sa cargaison reste en attente et conserve l'objet. La récupération exige réellement la position du lit ou celle du repli au sol. Qualité, santé et traits ne modifient pas encore ces taux.
 
-Les interruptions alimentaires conservent la cadence locale des besoins et peuvent préempter le travail ; reproduire les conditions d'expiration de chaque job Core reste ouvert. L'occupation exclusive des colons et la recherche de lit conservent leurs limites de congestion documentées.
+Les interruptions alimentaires conservent la cadence locale des besoins et peuvent préempter le travail ; reproduire les conditions d'expiration de chaque job Core reste ouvert. V14 permet le passage entre colons civils ; rejoindre un lit nécessite toujours son attribution et sa réservation, jamais un simple passage dans sa cellule.
 
 ## Frontières et persistance
 

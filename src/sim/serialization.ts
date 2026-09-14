@@ -10,6 +10,7 @@ import { asideCapacity, haulingWork } from './haul-aside.ts';
 import { harvestable, isPlant, legacyPlantGrowth } from './plants.ts';
 import { groundPile, storageCapacity } from './ground-placement.ts';
 import { validateTravel } from './travel-validation.ts';
+import { serviceCell } from './service-reservations.ts';
 import { edgeLength, TRAVEL_TICKS } from './movement.ts';
 import { CARRY_CAPACITY, footprintCells, JOB_WOOD_COST, MAX_STACK } from './definitions.ts';
 import { deliveredStock, groundQuantity, reservedDestination, reservedSource } from './materials.ts';
@@ -29,9 +30,9 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 
 /** Structural validation first, cross-reference validation second; accepts arbitrary JSON without throwing. */
 export function validateWorld(input: unknown): string[] {
-  return validateSchema(input, 13);
+  return validateSchema(input, 14);
 }
-function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13): string[] {
+function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(input)) return ['World must be an object.'];
@@ -148,7 +149,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
   if(!errors.length)errors.push(...validateFoodPolicies(input as unknown as World,version));
   if (errors.length) return errors;
   const world = input as unknown as World;
-  if(version>=6)errors.push(...validateTravel(world));
+  if(version>=6)errors.push(...validateTravel(world, version < 14));
   const cellKey = (item: { x: number; z: number }): number => item.z * world.width + item.x;
   const pawnById = new Map(world.pawns.map(item => [item.id, item])); const jobById = new Map(world.jobs.map(item => [item.id, item]));
   const pileById = new Map(world.piles.map(item => [item.id, item]));
@@ -171,9 +172,14 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
   const bedOwners = new Set<number>();
   const sleepingBeds = new Set<number>();
   const diningCells = new Set<number>();
+  const serviceCells = new Set<number>();
   for (const pawn of world.pawns) {
     const key = cellKey(pawn);
-    if (pawnCells.has(key)) errors.push('Pawns overlap.'); pawnCells.add(key);
+    if(version>=14) {
+      const service=serviceCell(pawn);
+      if(service) {const target=cellKey(service);if(serviceCells.has(target))errors.push('Conflicting service reservation.');serviceCells.add(target);}
+    }
+    if (version < 14 && pawnCells.has(key)) errors.push('Pawns overlap.'); pawnCells.add(key);
     if (['wall', 'table'].includes(structureCells.get(key)?.kind ?? '') || ['wall', 'table'].includes(jobCells.get(key)?.kind ?? '')) errors.push('Pawn occupies a wall target.');
     if (Number(version>=10&&!!pawn.cooking) + Number(pawn.jobId !== null) + Number(pawn.haul !== null) + Number(!legacyV2 && pawn.need !== null) > 1) errors.push('Pawn has two simultaneous tasks.');
     if (pawn.jobId !== null) {
@@ -334,6 +340,10 @@ export function deserializeWorld(serialized: string): World {
   if(record(input)&&input.schemaVersion===12) {
     const errors=validateSchema(input,12);if(errors.length)throw new Error(`Invalid version 12 save: ${errors.join(' ')}`);
     initializeFoodPolicies(input as unknown as World);
+  }
+  if(record(input)&&input.schemaVersion===13) {
+    const errors=validateSchema(input,13);if(errors.length)throw new Error(`Invalid version 13 save: ${errors.join(' ')}`);
+    input.schemaVersion=14; // Positions, active edges, jobs and reservations are preserved.
   }
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`); return input as World;
 }

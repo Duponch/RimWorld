@@ -38,7 +38,7 @@ La référence est RimWorld de base, transposé en 3D. Une description de RimWor
 | Plantes et cultures | [Agriculture](development/farming.md), [rochers et plantes](development/rocks-and-plants.md) | [Agriculture](research/farming-reference.md), [croissance sauvage](research/plant-growth.md) |
 | Carte et environnement | [Génération](development/world-generation.md), [dimensions](development/world-generation.md#contrat-et-sauvegarde), [jour/nuit](development/daylight-camera.md) | [Espace 3D](research/spatial-design.md), [audit environnement](research/environment-review.md) |
 | Rendu et personnages | [Cycle des ressources GPU](development/render-lifecycle.md), [équipement/portraits prévus](development/character-presentation.md) | [Choix GPU](research/rendering-and-performance.md), [observation visuelle](research/visual-reference.md) |
-| Navigation expérimentale | [Mouvement livré](development/spatial-motion-storage.md) | [Laboratoire GPU séparé](research/gpu-navigation.md) |
+| Navigation et circulation | [Mouvement et réservations livrés](development/spatial-motion-storage.md) | [Passage civil](research/civil-traffic-reference.md), [laboratoire GPU séparé](research/gpu-navigation.md) |
 
 ## Reprendre le développement
 

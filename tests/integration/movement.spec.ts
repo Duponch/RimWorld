@@ -1,6 +1,38 @@
 import { expect, test } from '@playwright/test';
-import { createWorld, serializeWorld, refreshStock, applyCommand } from '../../src/sim/index';
-import { observeErrors, panel, saveKey } from './helpers';
+import { createWorld, serializeWorld, refreshStock, applyCommand, validateWorld } from '../../src/sim/index';
+import { observeErrors, panel, saveKey, world, expectWorld } from './helpers';
+import { civilCrossingFixture } from '../scenarios/civil-traffic';
+
+test('civil crossing in the real worker: shared cell, save/reload, three exclusive beds',async({playwright},testInfo)=>{
+  const browser=await playwright.chromium.launch({channel:'chromium',args:[]});
+  const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);
+  try {
+    const fixture=civilCrossingFixture(),old=JSON.parse(serializeWorld(fixture));old.schemaVersion=13;
+    await page.addInitScript(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:JSON.stringify(old)});
+    await page.goto('/?size=16&e2e');await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();
+    await expectWorld(page,fixture);expect(await page.evaluate(()=>window.__lisiere.backend)).toBe('WebGPU');
+    await page.keyboard.press('Escape');await page.locator('[data-speed="1"]').click();
+    await page.waitForFunction(()=>{
+      const w=window.__lisiere.world;
+      if(new Set(w.pawns.map(p=>p.z*w.width+p.x)).size===w.pawns.length)return false;
+      document.querySelector<HTMLButtonElement>('[data-speed="0"]')!.click();return true;
+    },undefined,{timeout:12000,polling:'raf'});
+    await expect(page.locator('#pause-banner')).toBeVisible();
+    const crossing=await world(page);expect(validateWorld(crossing)).toEqual([]);
+    expect(new Set(crossing.pawns.map(p=>p.z*crossing.width+p.x)).size).toBeLessThan(3);
+    expect(crossing.pawns[2]).toMatchObject({x:8,z:8,state:'sleeping'});
+    await panel(page,'menu');await page.locator('#save').click();
+    await expect.poll(async()=>page.evaluate(key=>JSON.parse(localStorage.getItem(key)!).tick,saveKey)).toBe(crossing.tick);
+    await page.locator('#load').click();await expectWorld(page,crossing);
+    await page.keyboard.press('Escape');await page.screenshot({path:'artifacts/civil-crossing-paused.png'});
+    await page.locator('[data-speed="6"]').click();
+    await page.waitForFunction(()=>window.__lisiere.world.pawns.every(p=>p.state==='sleeping'),undefined,{timeout:10000});
+    await page.locator('[data-speed="0"]').click();const final=await world(page);
+    expect(final.pawns.map(p=>[p.x,p.z])).toEqual([[14,8],[1,8],[8,8]]);expect(validateWorld(final)).toEqual([]);
+    expect(new Set(final.pawns.map(p=>p.bedId)).size).toBe(3);expect(errors).toEqual([]);
+    await testInfo.attach('civil-crossing',{contentType:'application/json',body:JSON.stringify({sharedTick:crossing.tick,finalTick:final.tick,positions:final.pawns.map(p=>({id:p.id,x:p.x,z:p.z,bedId:p.bedId})),errors})});
+  } finally {await browser.close();}
+});
 
 test('GPU travel preserves speed, corners and work-facing through real worker snapshots',async({playwright},testInfo)=>{
   test.setTimeout(90000);

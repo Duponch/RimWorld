@@ -2,13 +2,12 @@ import { hasCookingWork, planCooking, type CookingPlan } from './cooking-planner
 import { candidateAccess } from './candidate-access.ts';
 import { fuelCapacity, wantsFuel } from './fuel.ts';
 import { mayImproveStorage } from './idle-logistics.ts';
-import { startTravel } from './movement.ts';
 import { asideCapacity, findAsideDestination } from './haul-aside.ts';
 import { storageCapacity } from './ground-placement.ts';
 import { legacyItem, type ItemId } from './items.ts';
 import { CARRY_CAPACITY, footprintCells, JOB_WOOD_COST } from './definitions.ts';
 import { deliveredStock, groundQuantity, reservedDestination, reservedSource } from './materials.ts';
-import { cellIndex, inBounds, hasReachableCell, reachableCells, routeToJob, routeToCell, interactionGoals } from './pathfinding.ts';
+import { cellIndex, inBounds, hasReachableCell, reachableCells, routeToJob, interactionGoals } from './pathfinding.ts';
 import type { Reachability } from './pathfinding.ts';
 import type { Cell, HaulDestination, Job, JobKind, MaterialKind, Pawn, WorkType, World } from './types.ts';
 export const PLAN_INTERVAL=20;
@@ -18,7 +17,7 @@ export type NavigationGrid=()=>Uint8Array;
 export const workType=(job:Pick<Job,'kind'|'growingZoneId'>):WorkType=>job.growingZoneId !== undefined || job.kind === 'sow' ? 'grow' : ['chop','harvest','cut'].includes(job.kind) ? 'gather' : 'build';
 const sameCell=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
 
-export function search(world: World, pawn: Pawn, blocked: Uint8Array, occupied: Set<number>, budget: SearchBudget, goals?: ReadonlySet<number>, allGroups?:readonly ReadonlySet<number>[]): Reachability | null {
+export function search(world: World, pawn: Pawn, blocked: Uint8Array, occupied: ReadonlySet<number>, budget: SearchBudget, goals?: ReadonlySet<number>, allGroups?:readonly ReadonlySet<number>[]): Reachability | null {
   if (budget.remaining === 0) return null;
   budget.remaining--;
   const result=reachableCells(world,pawn,blocked,occupied,goals,allGroups);
@@ -27,29 +26,11 @@ export function search(world: World, pawn: Pawn, blocked: Uint8Array, occupied: 
 }
 /** A decision-wide connectivity check replaces speculative paths to every
  * candidate. Precise routes share one resumable weighted search. */
-function searchCandidates(world:World,pawn:Pawn,blocked:Uint8Array,occupied:Set<number>,budget:SearchBudget):Reachability|null {
+function searchCandidates(world:World,pawn:Pawn,blocked:Uint8Array,occupied:ReadonlySet<number>,budget:SearchBudget):Reachability|null {
   if(!budget.remaining)return null;budget.remaining--;
   const result=candidateAccess(world,pawn,blocked,occupied);
   budget.stats?.searches.push({pawnId:pawn.id,mode:'all',get visited(){return result.visited;},unreachedGroups:0,get connectivityVisited(){return result.connectivityVisited;}});
   return result;
-}
-/** Deterministic sidestep; active and sleeping agents are never teleported or overlapped. */
-export function yieldIdleBlocker(world: World, requester: Pawn, target: Cell, blocked: Uint8Array, occupied: Set<number>, reachable: Reachability, allowTarget = false, exact = false): boolean {
-  const route = exact ? routeToCell(world,target,reachable) : routeToJob(world, target, reachable, allowTarget);
-  if (route === null) return false;
-  const routeIndices = new Map(route.map((cell, index) => [cellIndex(world, cell.x, cell.z), index]));
-  for (let pathIndex = 0; pathIndex < route.length; pathIndex++) {
-    const cell = route[pathIndex]!;
-    const blocker = world.pawns.find(pawn => pawn.id !== requester.id && sameCell(pawn, cell));
-    if (!blocker) continue;
-    if (blocker.jobId !== null || blocker.haul !== null || blocker.cooking || blocker.need !== null || blocker.state === 'sleeping' || blocker.moveCooldown > 0) return false;
-    const choices = [{ x: blocker.x, z: blocker.z - 1 }, { x: blocker.x + 1, z: blocker.z }, { x: blocker.x, z: blocker.z + 1 }, { x: blocker.x - 1, z: blocker.z }]
-      .filter(next => { const index = cellIndex(world, next.x, next.z); const position = routeIndices.get(index); return inBounds(world, next.x, next.z) && !blocked[index] && !occupied.has(index) && (position === undefined || position > pathIndex); });
-    choices.sort((a, b) => Number(routeIndices.has(cellIndex(world, a.x, a.z))) - Number(routeIndices.has(cellIndex(world, b.x, b.z))));
-    const next = choices[0]; if (!next) return false;
-    startTravel(world, blocker, next); occupied.add(cellIndex(world, blocker.x, blocker.z)); return true;
-  }
-  return false;
 }
 export function destinationCell(world: World, destination: HaulDestination): (Cell & { kind?: JobKind }) | null {
   if (destination.type === 'aside') return destination;
@@ -81,7 +62,7 @@ function canReach(world: World, target: Cell & { kind?: JobKind }, reachable: Re
   }
   return false;
 }
-export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, occupied: Set<number>, budget: SearchBudget): void {
+export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, occupied: ReadonlySet<number>, budget: SearchBudget): void {
   // Never enumerate logistics after another colonist exhausted the shared search budget.
   if (budget.remaining === 0 || budget.pairs === 0) return;
   const cooking=hasCookingWork(world,pawn);
@@ -142,7 +123,6 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
     map.set(id, (map.get(id) ?? 0) + task.quantity);
   }
   let best: Candidate | null = null;
-  const blockedTargets: { target: Cell; allow: boolean; exact?: boolean }[] = [];
   for (const job of world.jobs) {
     const work = workType(job);
     if (job.reservedBy !== null || pawn.priorities[work] === 0 || (delivered.get(job.id) ?? 0) < JOB_WOOD_COST[job.kind] || (pawn.hunger <= 20 && job.kind !== 'harvest')) continue;
@@ -159,10 +139,9 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
       continue;
     }
     if (canReach(world, job, reachable, false)) { if (!best || compareCandidate(candidate, best) < 0) best = candidate; }
-    else if (blockedTargets.length < 16) blockedTargets.push({ target: job, allow: false });
   }
   if(cooking && (!best || pawn.priorities.cook<=best.priority)) {
-    const proposal=planCooking(world,pawn,reachable,budget,blockedTargets);
+    const proposal=planCooking(world,pawn,reachable,budget);
     if(proposal)best={cooking:proposal,priority:pawn.priorities.cook,rank:-1,distance:Math.abs(pawn.x-proposal.station.x)+Math.abs(pawn.z-proposal.station.z),id:proposal.station.id,target:proposal.target};
   }
   if (pawn.priorities.haul > 0 && pawn.hunger > 20 && (!best || best.priority >= pawn.priorities.haul)) {
@@ -207,10 +186,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
       if (available <= 0) continue;
       let sourceAccess = sourceReachable.get(pile.id);
       if (sourceAccess === undefined) { sourceAccess = canReach(world, pile.owner, reachable, true); sourceReachable.set(pile.id, sourceAccess); }
-      if (!sourceAccess || !destination.reachable) {
-        if (blockedTargets.length < 16) { if (!sourceAccess) blockedTargets.push({ target: pile.owner, allow: true }); else blockedTargets.push({ target: destination.target, allow: destination.destination.type === 'stockpile' }); }
-        continue;
-      }
+      if (!sourceAccess || !destination.reachable) continue;
       const candidate: Candidate = { priority: pawn.priorities.haul, rank: 2 + (5 - destination.priority) / 10, distance: Math.abs(pawn.x - pile.owner.x) + Math.abs(pawn.z - pile.owner.z) + Math.abs(destination.target.x - pile.owner.x) + Math.abs(destination.target.z - pile.owner.z), id: pile.id,
         sourceId: pile.id, quantity: Math.min(CARRY_CAPACITY, available, capacity), destination: destination.destination, target: pile.owner };
       if (!best || compareCandidate(candidate, best) < 0) best = candidate;
@@ -228,6 +204,4 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
     else { best.job!.reservedBy = pawn.id; best.job!.status = 'active'; pawn.jobId = best.job!.id; }
     pawn.path = path; pawn.state = path.length ? 'moving' : 'working'; return;
   }
-  const staticReachable = blockedTargets.length ? searchCandidates(world, pawn, blocked, new Set(), budget) : null;
-  if (staticReachable) for (const candidate of blockedTargets) if (yieldIdleBlocker(world, pawn, candidate.target, blocked, occupied, staticReachable, candidate.allow, candidate.exact)) return;
 }

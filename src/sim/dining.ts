@@ -1,3 +1,4 @@
+import { reservedServiceCells } from './service-reservations.ts';
 import { footprintCells, MATERIAL_DEFINITIONS } from './definitions.ts';
 import { adjacent, inBounds, routeToCell } from './pathfinding.ts';
 import type { NeedContext } from './needs.ts';
@@ -30,14 +31,7 @@ export function validDiningPlace(world: World, place: DiningPlace): boolean {
  */
 export function chooseDiningPlace(world: World, pawn: Pawn, context: NeedContext): { place: DiningPlace; path: Cell[] } | null {
   const key = (cell: Cell): number => cell.z * world.width + cell.x;
-  const reserved = new Set<number>();
-  for (const other of world.pawns) {
-    if (other.id === pawn.id) continue;
-    reserved.add(key(other));
-    if (other.need?.kind === 'eat' && other.need.dining) reserved.add(key(other.need.dining.target));
-    if(other.cooking)reserved.add(key(other.cooking.spot));
-    if (other.need?.kind === 'sleep') reserved.add(key(other.need.target));
-  }
+  const reserved = reservedServiceCells(world,pawn.id);
   // Index surfaces once per decision, rather than rescanning all furniture per seat.
   const surfaces = new Map<number, number>();
   const fixed = new Set<number>();
@@ -55,7 +49,7 @@ export function chooseDiningPlace(world: World, pawn: Pawn, context: NeedContext
   candidates.sort((a, b) => distance(pawn, a.target) - distance(pawn, b.target) || a.seatId! - b.seatId!);
   let reach: ReturnType<NeedContext['search']> | undefined;
   for (const place of candidates) {
-    reach ??= context.search(false, new Set([key(candidates[0]!.target)]));
+    reach ??= context.search( new Set([key(candidates[0]!.target)]));
     if (!reach) return null; // Search budget is not proof that seats are unreachable.
     const path = routeToCell(world, place.target, reach);
     if (path) return { place, path };

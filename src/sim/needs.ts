@@ -18,7 +18,7 @@ export { INGEST_TICKS } from './eating.ts';
 const NEED_INTERVAL = 20;
 
 export interface NeedContext {
-  search(ignorePawns?: boolean, goals?: ReadonlySet<number>): Reachability | null;
+  search(goals?: ReadonlySet<number>): Reachability | null;
   move(target: Cell, exact: boolean): void;
   release(): boolean;
   event(message: string): void;
@@ -49,7 +49,7 @@ export function processNeeds(world: World, pawn: Pawn, context: NeedContext): bo
     // A hungry hauler already holding food may reserve a meal quantity for ingestion.
     const held = world.piles.find(pile => pile.owner.type === 'pawn' && pile.owner.pawnId === pawn.id && pile.kind === 'food' && allowed.includes(pile.item as FoodItemId));
     if (sources.length || held) {
-      reach = context.search(false, foodSearchGoals(world, pawn, sources));
+      reach = context.search( foodSearchGoals(world, pawn, sources));
       if (!reach) return true; // Budget exhaustion must not be mistaken for inaccessibility.
       const best = selectFood(world, pawn, sources, reach);
       if (held || best) {

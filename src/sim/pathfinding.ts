@@ -34,7 +34,7 @@ export const routeCost = (world: World, path: Cell[], reach: Reachability): numb
 };
 const resolveField=(reach:Reachability,goals:ReadonlySet<number>):DistanceField=>'kind' in reach?reach.resolve(goals):reach;
 /** Solid 3D corners require both side cells clear, including temporary traffic. */
-export function canStep(world:World,from:Cell,to:Cell,blocked:Uint8Array,occupied:Set<number>):boolean {
+export function canStep(world:World,from:Cell,to:Cell,blocked:Uint8Array,occupied:ReadonlySet<number>):boolean {
   const dx=to.x-from.x,dz=to.z-from.z;
   if(!inBounds(world,to.x,to.z)||Math.max(Math.abs(dx),Math.abs(dz))!==1) return false;
   const free=(x:number,z:number)=>!blocked[cellIndex(world,x,z)]&&!occupied.has(cellIndex(world,x,z));
@@ -59,7 +59,7 @@ export function routeToCell(world: World, target: Cell, reachable: Reachability)
  * With allGroups, finish the cheapest layer of the LAST reached group. Every
  * group must have one reachable alternative; an unreachable nonempty group
  * exhausts the component. This supports ranking all work targets exactly. */
-export function reachableCells(world: World, start: Cell, blocked: Uint8Array, occupied: Set<number>, goals?: ReadonlySet<number>, allGroups?:readonly ReadonlySet<number>[]): DistanceField {
+export function reachableCells(world: World, start: Cell, blocked: Uint8Array, occupied: ReadonlySet<number>, goals?: ReadonlySet<number>, allGroups?:readonly ReadonlySet<number>[]): DistanceField {
   const unavailable=blocked.slice();for(const index of occupied)unavailable[index]=1;
   return new WeightedSearch(world.width,world.height,cellIndex(world,start.x,start.z),unavailable).finish(goals,allGroups);
 }

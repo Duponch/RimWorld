@@ -9,15 +9,15 @@ import { burnFuel, campfire, newCampfireFuel } from './fuel.ts';
 import { processHaul } from './hauling.ts';
 import { scheduleGrowing, cancelGrowingJobs, growingJobValid, finishSowing, jobDuration, growingZoneAt } from './farming.ts';
 import { isPlant, harvestable, harvestRoll, AFTER_HARVEST_GROWTH } from './plants.ts';
-import { PLAN_INTERVAL, search, yieldIdleBlocker, destinationValid, planWork, workType, type SearchBudget, type NavigationGrid } from './work-planner.ts';
+import { search, destinationValid, planWork, workType, type SearchBudget, type NavigationGrid } from './work-planner.ts';
 import { planCommandDrops, commitDrop, releaseWork, type DropPlan } from './work-release.ts';
 import { blocksBuildingDuringTravel } from './travel-validation.ts';
 import { validDiningPlace } from './dining.ts';
-import { startTravel } from './movement.ts';
+import { CIVIL_TRANSIT_BLOCKERS, moveToward } from './travel.ts';
 import { haulingWork } from './haul-aside.ts';
 import { groundPile, planGroundPlacement } from './ground-placement.ts';
 import { generateWorld } from './generation.ts';
-import { adjacent, canStep, blockedCells, cellIndex, inBounds, routeToJob, routeToCell, interactionGoals } from './pathfinding.ts';
+import { adjacent, blockedCells, cellIndex, inBounds } from './pathfinding.ts';
 import { CARRY_CAPACITY, footprintCells, JOB_WOOD_COST, MAX_STACK } from './definitions.ts';
 import { addGroundMaterial, deliveredStock, refreshStock } from './materials.ts';
 import { queryArea, validStorageSettings } from './designation.ts';
@@ -202,26 +202,6 @@ export function applyCommand(world: World, command: Command): CommandResult {
   wakePlanners(world); event(world, 'command', `Nouvel ordre : ${JOB_LABEL[command.kind]} (${command.x}, ${command.z}).`); return { ok: true };
 }
 
-function moveToward(world: World, pawn: Pawn, target: Cell, allowTarget: boolean, getBlocked: NavigationGrid, occupied: Set<number>, budget: SearchBudget, exact = false): void {
-  pawn.state = 'moving'; if (pawn.moveCooldown > 0) return;
-  const blocked = getBlocked();
-  let next = pawn.path[0];
-  if (!next || !canStep(world,pawn,next,blocked,occupied)) {
-    if (pawn.planCooldown > 0) return;
-    const cells = 'kind' in target ? footprintCells(target as Job) : [target];
-    const goals = exact ? new Set([cellIndex(world, target.x, target.z)]) : interactionGoals(world, cells);
-    if (!exact && !allowTarget) for (const cell of cells) goals.delete(cellIndex(world, cell.x, cell.z));
-    const reachable = search(world, pawn, blocked, occupied, budget, goals); if (!reachable) return;
-    const path = exact ? routeToCell(world, target, reachable) : routeToJob(world, target, reachable, allowTarget); pawn.planCooldown = PLAN_INTERVAL;
-    if (path === null) {
-      const staticReachable = search(world, pawn, blocked, new Set(), budget, goals);
-      if (staticReachable) yieldIdleBlocker(world, pawn, target, blocked, occupied, staticReachable, allowTarget, exact);
-      releaseWork(world, pawn); return;
-    }
-    pawn.path = path; next = path[0];
-  }
-  if (next) { startTravel(world, pawn, next); occupied.add(cellIndex(world, pawn.x, pawn.z)); pawn.path.shift(); }
-}
 function completeJob(world: World, pawn: Pawn, job: Job): void {
   if (job.kind === 'chop' || job.kind === 'harvest' || job.kind === 'cut') {
     const resource = world.resources.find(item => sameCell(item, job));
@@ -261,7 +241,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     // a command, edited terrain, restored save, or a wall that changed between calls.
     let blocked: Uint8Array | undefined;
     const getBlocked: NavigationGrid = () => blocked ??= blockedCells(world);
-    const occupied = new Set(world.pawns.flatMap(pawn => [cellIndex(world,pawn.x,pawn.z), ...(pawn.motion && pawn.motion.end > world.tick ? [cellIndex(world,pawn.motion.from.x,pawn.motion.from.z)] : [])]));
+    const occupied = CIVIL_TRANSIT_BLOCKERS;
     const budget: SearchBudget = { remaining: PATH_SEARCHES_PER_TICK, pairs: 32768,stats:diagnostics };
     for (let offset = 0; offset < world.pawns.length; offset++) {
       const pawn = world.pawns[((world.tick - 1) + offset) % world.pawns.length]!;
@@ -270,16 +250,16 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if(pawn.need?.kind==='eat' && pawn.need.dining && !validDiningPlace(world,pawn.need.dining)) {pawn.need.phase='choose-spot';pawn.need.dining=null;pawn.need.progress=0;pawn.path=[];pawn.state='moving';}
       if (pawn.moveCooldown > 0) { pawn.state = pawn.jobId !== null || pawn.haul || pawn.need || pawn.cooking ? 'moving' : 'idle'; continue; }
       if (processNeeds(world, pawn, {
-        search: (ignorePawns = false, goals) => search(world, pawn, getBlocked(), ignorePawns ? new Set() : occupied, budget, goals),
-        move: (target, exact) => moveToward(world, pawn, target, true, getBlocked, occupied, budget, exact),
+        search: goals => search(world, pawn, getBlocked(), occupied, budget, goals),
+        move: (target, exact) => moveToward(world, pawn, target, true, getBlocked, budget, exact),
         release: () => releaseWork(world, pawn),
         event: message => event(world, 'need', message),
       })) continue;
       if (pawn.jobId === null && pawn.haul === null && !pawn.cooking && pawn.planCooldown === 0) planWork(world, pawn, getBlocked, occupied, budget);
-      if (pawn.haul) { processHaul(world, pawn, (target, allow) => moveToward(world, pawn, target, allow, getBlocked, occupied, budget), () => wakePlanners(world)); continue; }
+      if (pawn.haul) { processHaul(world, pawn, (target, allow) => moveToward(world, pawn, target, allow, getBlocked, budget), () => wakePlanners(world)); continue; }
       if(pawn.cooking) {processCooking(world,pawn,{
-        search:(ignorePawns=false,goals)=>search(world,pawn,getBlocked(),ignorePawns?new Set():occupied,budget,goals),
-        move:(target,exact)=>moveToward(world,pawn,target,true,getBlocked,occupied,budget,exact),
+        search:goals=>search(world,pawn,getBlocked(),occupied,budget,goals),
+        move:(target,exact)=>moveToward(world,pawn,target,true,getBlocked,budget,exact),
         release:()=>releaseWork(world,pawn),event:message=>event(world,'job',message),
       });continue;}
       const job = world.jobs.find(candidate => candidate.id === pawn.jobId); if (!job) continue;
@@ -289,7 +269,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if (cells.some(cell => adjacent(pawn, cell)) && !cells.some(cell => sameCell(pawn, cell))) {
         pawn.path = []; pawn.state = 'working'; job.progress++;
         if (job.progress >= jobDuration(world, job)) completeJob(world, pawn, job);
-      } else moveToward(world, pawn, job, false, getBlocked, occupied, budget);
+      } else moveToward(world, pawn, job, false, getBlocked, budget);
     }
     refreshStock(world);
   }
