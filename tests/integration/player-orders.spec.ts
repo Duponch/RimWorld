@@ -3,6 +3,38 @@ import { createWorld, applyCommand, addGroundMaterial, serializeWorld, refreshSt
 import { perform } from './player-actions';
 import { world, panel, cell, saveKey, expectWorld, observeErrors } from './helpers';
 
+test('dégager une plante puis ravitailler un feu sans automatisme, reprendre la file et déplacer les matériaux du chantier',async({playwright},testInfo)=>{
+  test.setTimeout(60000);
+  const browser=await playwright.chromium.launch({channel:'chromium',args:[]});
+  const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);
+  try {
+    const fixture=createWorld(42,32,32);fixture.tick=2000;fixture.tiles=fixture.tiles.map(()=>({terrain:'grass'}));fixture.resources=[];fixture.piles=[];fixture.jobs=[];fixture.structures=[];fixture.stockpiles=[];fixture.pawns=fixture.pawns.slice(0,1);
+    const pawn=fixture.pawns[0]!;Object.assign(pawn,{x:12,z:16,hunger:100,rest:100});pawn.schedule.fill('anything');pawn.priorities={haul:1,build:1,gather:0,grow:0,cook:0};
+    fixture.resources.push({id:fixture.nextId++,kind:'tree',amount:12,x:18,z:14});
+    expect(applyCommand(fixture,{type:'designate',kind:'wall',x:18,z:14}).ok).toBe(true);const job=fixture.jobs[0]!;
+    const fire={id:fixture.nextId++,kind:'campfire' as const,x:16,z:12,orientation:0 as const,footprint:'standard' as const,bills:[],fuel:{ticks:9000,burned:0,autoRefuel:false}};fixture.structures.push(fire);
+    addGroundMaterial(fixture,'wood',5,{x:13,z:16},'wood');
+    await page.addInitScript(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:serializeWorld(fixture)});
+    await page.goto('/?size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,fixture);
+    const rotation={value:0};
+    await perform(page,{reason:'Couper la plante sur le futur mur.',command:{type:'order-job',pawnId:pawn.id,jobId:job.id,queue:false}},rotation);
+    await perform(page,{reason:'Ravitailler ensuite le feu, automatisme désactivé.',command:{type:'order-haul',pawnId:pawn.id,target:{type:'fuel',structureId:fire.id},queue:true}},rotation);
+    for(const work of ['build','haul'] as const)await perform(page,{reason:'Isoler la file déjà acceptée.',command:{type:'priority',pawnId:pawn.id,work,value:0}},rotation);
+    const queued=await world(page);expect(validateWorld(queued)).toEqual([]);expect(queued.pawns[0]!.orders.queue).toHaveLength(1);
+    await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,queued);
+    await page.locator('[data-speed="6"]').click();await expect.poll(async()=>{const w=await world(page);return !w.resources.length&&w.pawns[0]!.orders.active===null&&!w.pawns[0]!.orders.queue.length;},{timeout:15000}).toBe(true);await page.locator('[data-speed="0"]').click();
+    const fueled=await world(page);expect(fueled.stock.wood).toBe(12);expect(fueled.structures[0]!.fuel!.ticks+fueled.structures[0]!.fuel!.burned).toBe(12000);expect(fueled.structures[0]!.fuel!.autoRefuel).toBe(false);expect(fueled.jobs[0]!.construction).toBe('blueprint');
+    await perform(page,{reason:'Autoriser le dégagement de construction.',command:{type:'priority',pawnId:pawn.id,work:'build',value:1}},rotation);
+    await perform(page,{reason:'Déplacer le bois qui gêne le mur.',command:{type:'order-haul',pawnId:pawn.id,target:{type:'clear',jobId:job.id},queue:false}},rotation);
+    await perform(page,{reason:'Isoler le trajet accepté.',command:{type:'priority',pawnId:pawn.id,work:'build',value:0}},rotation);
+    const clearing=await world(page);await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,clearing);
+    await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).pawns[0]!.orders.active,{timeout:10000}).toBe(null);await page.locator('[data-speed="0"]').click();
+    const final=await world(page);expect(final.stock.wood).toBe(12);expect(final.piles.filter(p=>p.owner.type==='ground'&&p.owner.x===18&&p.owner.z===14).reduce((n,p)=>n+p.quantity,0)).toBe(2);expect(final.jobs[0]!.escrow.wood).toBe(0);expect(validateWorld(final)).toEqual([]);expect(errors).toEqual([]);expect(await page.locator('#fps-counter').isVisible()).toBe(true);
+    await page.screenshot({path:'artifacts/context-services.png'});
+    await testInfo.attach('context-services',{contentType:'application/json',body:JSON.stringify({tick:final.tick,stock:final.stock,fuel:final.structures[0]!.fuel,orders:final.pawns[0]!.orders,errors})});
+  } finally {await browser.close();}
+});
+
 test('sélection de groupe, deux projections, menu et file de travail par la vraie interface, reprise exacte',async({playwright},testInfo)=>{
   test.setTimeout(90000);
   const browser=await playwright.chromium.launch({channel:'chromium',args:[]});

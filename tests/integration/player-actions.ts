@@ -34,7 +34,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
   if(c.type==='order-job'||c.type==='order-haul') {
     await page.keyboard.press('Escape');await page.locator(`[data-pawn="${c.pawnId}"]`).click();
     const current=await world(page);
-    const job=c.type==='order-job'?current.jobs.find(j=>j.id===c.jobId):c.target.type==='job'?current.jobs.find(j=>c.target.type==='job'&&j.id===c.target.jobId):current.piles.find(p=>c.target.type==='pile'&&p.id===c.target.pileId)?.owner;
+    const job=c.type==='order-job'?current.jobs.find(j=>j.id===c.jobId):c.target.type==='fuel'?current.structures.find(s=>c.target.type==='fuel'&&s.id===c.target.structureId):c.target.type==='pile'?current.piles.find(p=>c.target.type==='pile'&&p.id===c.target.pileId)?.owner:current.jobs.find(j=>(c.target.type==='job'||c.target.type==='clear')&&j.id===c.target.jobId);
     if(!job||!('x' in job))throw new Error('Cible directe absente.');
     await revealCells(page,[job]);
     const point=await page.evaluate(({x,z})=>window.__lisiere.projectCell(x,z),job);
@@ -78,7 +78,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     if(c.type==='order-job'){const pawn=w.pawns.find(p=>p.id===c.pawnId);return pawn?.orders.active===c.jobId||pawn?.orders.queue.includes(c.jobId);}
     if(c.type==='order-haul') {
       const pawn=w.pawns.find(p=>p.id===c.pawnId);if(!pawn)return false;
-      const matches=(t:typeof pawn.haul)=>!!t&&(c.target.type==='pile'?t.sourcePileId===c.target.pileId:t.destination.type==='job'&&t.destination.jobId===c.target.jobId);
+      const matches=(t:typeof pawn.haul)=>!!t&&(c.target.type==='pile'?t.sourcePileId===c.target.pileId:c.target.type==='fuel'?t.destination.type==='fuel'&&t.destination.structureId===c.target.structureId:c.target.type==='clear'?t.destination.type==='aside'&&t.destination.constructionId===c.target.jobId:t.destination.type==='job'&&t.destination.jobId===c.target.jobId);
       return pawn.orders.active==='haul'&&matches(pawn.haul)||pawn.orders.queue.some(o=>typeof o!=='number'&&matches(o));
     }
     if(c.type==='food-policy-assign')return w.pawns.find(p=>p.id===c.pawnId)?.foodPolicyId===c.policyId;

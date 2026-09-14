@@ -1,0 +1,63 @@
+{
+  "date": "2026-09-14T17:47:45.228Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "refuel": true,
+  "conditions": "Synthetic clear 250x250 camp, storage then forced refuel with automation off per actor, all actors active at start, 300 ticks, no warmup; query/commands separately timed, setup and validation excluded, no rendering; automatic hauling disabled after acceptance; one run per population, no guarantee of worst case.",
+  "rows": [
+    {
+      "pawns": 3,
+      "ticks": 300,
+      "activeTicks": 35,
+      "activeP95Ms": 2.105400000000003,
+      "p50Ms": 0.00909999999998945,
+      "p95Ms": 0.03100000000000591,
+      "p99Ms": 1.297300000000007,
+      "maxMs": 3.5785000000000196,
+      "queryP95Ms": 1.2392999999999859,
+      "commandP95Ms": 0.6984999999999957,
+      "maxQueued": 3,
+      "activePawnTicks": 99,
+      "stored": 30,
+      "wood": 60,
+      "fuelIncludingBurned": 36000,
+      "hash": "8f41c0ad"
+    },
+    {
+      "pawns": 30,
+      "ticks": 300,
+      "activeTicks": 41,
+      "activeP95Ms": 7.3023000000000025,
+      "p50Ms": 0.02090000000004011,
+      "p95Ms": 0.17439999999999145,
+      "p99Ms": 5.731499999999983,
+      "maxMs": 14.681399999999996,
+      "queryP95Ms": 0.5782999999999561,
+      "commandP95Ms": 1.116800000000012,
+      "maxQueued": 30,
+      "activePawnTicks": 1060,
+      "stored": 300,
+      "wood": 600,
+      "fuelIncludingBurned": 360000,
+      "hash": "a97b68db"
+    },
+    {
+      "pawns": 100,
+      "ticks": 300,
+      "activeTicks": 70,
+      "activeP95Ms": 12.60310000000004,
+      "p50Ms": 0.0421000000001186,
+      "p95Ms": 6.947700000000054,
+      "p99Ms": 12.60310000000004,
+      "maxMs": 17.099500000000035,
+      "queryP95Ms": 1.1263000000000147,
+      "commandP95Ms": 1.6005999999999858,
+      "maxQueued": 100,
+      "activePawnTicks": 4686,
+      "stored": 1000,
+      "wood": 2000,
+      "fuelIncludingBurned": 1200000,
+      "hash": "c9889dbd"
+    }
+  ]
+}

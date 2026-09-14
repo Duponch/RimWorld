@@ -29,7 +29,7 @@ export function planCommandDrops(world:World,command:Command):DropPlan|null {
   } else if(command.type==='bill-remove'||command.type==='bill-update') {
     for(const pawn of world.pawns)if(pawn.cooking?.billId===command.billId&&pawn.cooking.stationId===command.structureId)pawns.add(pawn.id);
   } else if(command.type==='refuel-policy' && !command.enabled) {
-    for(const pawn of world.pawns)if(pawn.haul?.destination.type==='fuel'&&pawn.haul.destination.structureId===command.structureId)pawns.add(pawn.id);
+    for(const pawn of world.pawns)if(pawn.haul?.destination.type==='fuel'&&!pawn.haul.destination.forced&&pawn.haul.destination.structureId===command.structureId)pawns.add(pawn.id);
   } else if(command.type==='assign-bed') {
     for(const pawn of world.pawns)if(pawn.need?.kind==='sleep'&&(pawn.bedId===command.bedId||pawn.id===command.pawnId))pawns.add(pawn.id);
   }

@@ -52,3 +52,7 @@ Aucun nouvel objet : mur, lit, table, tabouret, feu et piquet disposent de phase
 ## Portée des tranches V17–V18
 
 Aucun nouvel objet individuel. La sélection multiple, les ordres directs et les livraisons forcées concernent les colons, piles et travaux du catalogue existant ; ils ne livrent ni équipement, ni autre espèce ou matériau. [Ordres et limites des fournisseurs](../development/player-orders.md).
+
+## Commandes contextuelles V19
+
+V19 ne crée aucun objet. Bois et feu disposent du ravitaillement manuel ; les plantes et piles présentes sur un chantier peuvent être dégagées au clic droit. Cela ne complète ni la diversité végétale ni les roches, recettes ou autres combustibles. [Règles et limites](../development/player-orders.md).

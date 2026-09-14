@@ -137,7 +137,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   if (command.type === 'refuel-policy') {
     const fire=campfire(world,command.structureId);
     if (!fire || typeof command.enabled!=='boolean') return refusal('invalid-command','Feu ou réglage de ravitaillement invalide.');
-    if(!command.enabled)for(const pawn of world.pawns)if(pawn.haul?.destination.type==='fuel'&&pawn.haul.destination.structureId===fire.id)releaseWork(world,pawn,drops);
+    if(!command.enabled)for(const pawn of world.pawns)if(pawn.haul?.destination.type==='fuel'&&!pawn.haul.destination.forced&&pawn.haul.destination.structureId===fire.id)releaseWork(world,pawn,drops);
     fire.fuel!.autoRefuel=command.enabled;wakePlanners(world);refreshStock(world);return {ok:true};
   }
   if (command.type === 'growing-policy') {

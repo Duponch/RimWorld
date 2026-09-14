@@ -49,7 +49,8 @@ export function addMaterial(world: World, kind: MaterialKind, quantity: number, 
   const limit = ITEM_DEFINITIONS[item].stackLimit;
   if (owner.type === 'ground' && (!Number.isInteger(owner.x) || !Number.isInteger(owner.z) || owner.x < 0 || owner.z < 0 || owner.x >= world.width || owner.z >= world.height)) throw new Error('Invalid material position.');
   if (owner.type === 'ground' && (['water', 'rock'].includes(world.tiles[owner.z * world.width + owner.x]!.terrain)
-    || [...world.structures, ...world.jobs].some(item => item.kind === 'wall' && item.x === owner.x && item.z === owner.z))) throw new Error('Material destination is impassable.');
+    || world.structures.some(item => item.kind === 'wall' && item.x === owner.x && item.z === owner.z)
+    || world.schemaVersion<16&&world.jobs.some(item => item.kind === 'wall' && item.x === owner.x && item.z === owner.z))) throw new Error('Material destination is impassable.');
   if (owner.type === 'pawn' && !world.pawns.some(pawn => pawn.id === owner.pawnId)) throw new Error('Material carrier does not exist.');
   if (owner.type === 'job' && !world.jobs.some(job => job.id === owner.jobId)) throw new Error('Material construction does not exist.');
   if (!materialCanFit(world, kind, quantity, owner, item)) throw new Error('Material pile limit exceeded.');

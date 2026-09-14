@@ -2,7 +2,7 @@ import { reservedServiceCells } from './service-reservations.ts';
 import { billWanted, cookingPlaceFree, cookingSpot, INGREDIENT_UNITS } from './cooking-bills.ts';
 import { groundCapacity } from './ground-placement.ts';
 import { reservedSource } from './materials.ts';
-import { fuelCapacity } from './fuel.ts';
+import { fuelCapacity, fuelStationReserved } from './fuel.ts';
 import { routeToCell, routeToJob, type Reachability } from './pathfinding.ts';
 import type { CookingTask, CookingIngredient, RawIngredient } from './cooking-types.ts';
 import type { Cell, HaulTask, Pawn, Structure, World } from './types.ts';
@@ -16,7 +16,7 @@ export function hasCookingWork(world:World,pawn:Pawn):boolean {
 export function availableCookingStations(world:World,pawn:Pawn):Structure[] {
   if(pawn.priorities.cook===0)return [];
   return world.structures.filter(s=>s.kind==='campfire'&&s.bills?.some(b=>billWanted(world,b))
-    &&!world.pawns.some(p=>p.id!==pawn.id&&(p.cooking?.stationId===s.id||p.haul?.destination.type==='fuel'&&p.haul.destination.structureId===s.id)));
+    &&!fuelStationReserved(world,s.id,pawn.id));
 }
 /** Select without mutation. The ordinary planner compares this proposal with
  * construction/growing/hauling before committing its reservations. */
@@ -24,7 +24,7 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
   const stations=availableCookingStations(world,pawn)
     .sort((a,b)=>distance(pawn,a)-distance(pawn,b)||a.id-b.id);
   for(const station of stations) {
-    if(world.pawns.some(p=>p.id!==pawn.id&&(p.cooking?.stationId===station.id||p.haul?.destination.type==='fuel'&&p.haul.destination.structureId===station.id)))continue;
+    if(fuelStationReserved(world,station.id,pawn.id))continue;
     const spot=cookingSpot(station);
     if(!cookingPlaceFree(world,spot)||reservedServiceCells(world,pawn.id).has(spot.z*world.width+spot.x))continue;
     const toSpot=routeToCell(world,spot,reachable);

@@ -12,7 +12,7 @@ Chapitres 8 et 9 du rapport utilisateur, relus via les extractions de `docs/refe
 | Contexte dépendant du colon et de la cible | Adopter un menu de travail individuel. Une sélection de groupe ne distribue pas artificiellement un travail unique. |
 | Éligibilité distincte du rang | Adopter : vérifier accès, réservation, désignation et métier avant acceptation ; ne pas transformer une priorité 0 en aptitude. |
 | Interruption et file | Adopter pour un travail exécutable : réservation immédiate, Maj ajoute après l'activité actuelle, revalidation au démarrage. Conserver matière et déplacement engagé. |
-| Transport, cuisine et chaînes de construction | V18 adopte rangement et livraison forcés ; dégagement, combustible et cuisine restent différés. Un ordre de finition exige déjà ses matériaux et une emprise libre ; aucun « terminer toute la construction » implicite. |
+| Transport, cuisine et chaînes de construction | V18 adopte rangement et livraison forcés ; V19 ajoute dégagement de chantier et combustible ; cuisine et piles sur semis restent différées. Un ordre de finition exige déjà ses matériaux et une emprise libre ; aucun « terminer toute la construction » implicite. |
 
 ## Sources recoupées
 
@@ -28,7 +28,7 @@ Le miroir n'est pas une publication officielle ni une preuve du binaire actuelle
 
 - La 3D conserve clic droit glissé pour la caméra et clic droit immobile pour le menu. Un proxy projeté du corps permet de sélectionner à travers le feuillage ; pas de parcours de tous les triangles, ni d'autorité donnée au mesh. Les silhouettes couchées et la sélection d'accessoires demanderont leurs propres proxies.
 - La file locale est bornée à 32 travaux en attente par colon, avec refus explicite au-delà. C'est une borne du projet, pas une valeur attribuée à RimWorld.
-- Abattage, coupe, récolte, semis libres, finition, rangement et livraison disposent de fournisseurs. Dégagement, combustible, cuisine, utilisation forcée d’un objet et maintien d’une priorité locale autour d’une cible restent à développer.
+- Abattage, coupe, récolte, semis libres, finition, rangement et livraison disposent de fournisseurs. Cuisine, dégagement des piles sur semis, utilisation forcée d’un objet et maintien d’une priorité locale autour d’une cible restent à développer.
 - Pas de mobilisation ni d'ordre de déplacement civil inventé. Santé, crises et interruptions hostiles manquent encore ; seul l'effondrement de fatigue déjà simulé interrompt ici l'ordre en urgence.
 
 Le [contrat courant](../development/player-orders.md) et l'[inventaire](../gameplay/implementation-status.md) décrivent les règles réellement livrées.
@@ -47,3 +47,7 @@ Recherches fraîches : Hauling/Orders du wiki, puis lecture des fournisseurs du 
 **Écarts assumés :** pas de vol/annulation d'une réservation d'un autre colon par l'ordre forcé ; quantités et capacités physiques restent garanties par nos réservations. Le miroir présente des exceptions `forced` aux réservations et aux matières en route, mais ne suffit pas à certifier leur interaction dans le correctif actuel. Avant d'ajouter une reprise de tâche d'autrui, il faudra vérifier ce comportement et conserver les mêmes bilans. Le portage de 10 unités, le rangement mono-pile et l'absence de tournée sont hérités du moteur et restent à compléter, sans être présentés comme fidèles à RimWorld.
 
 Confiance élevée sur la distinction livraison/finition et les contraintes physiques ; moyenne sur les détails de choix, interruption forcée entre colons et optimisations opportunistes. Aucun test contre un binaire commercial ni parité numérique globale n'est revendiqué.
+
+## Relecture V19
+
+Les [sources fraîches du dégagement et du combustible](context-services-reference.md) complètent ce dossier. L’état courant du contrat remplace les limites historiques V17/V18 pour ces deux fournisseurs, sans fermer le reste des commandes.

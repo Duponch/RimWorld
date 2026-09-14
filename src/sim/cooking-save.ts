@@ -1,3 +1,4 @@
+import { fuelStationReserved } from './fuel.ts';
 import { COOK_TICKS, cookingSpot, validBillSettings } from './cooking-bills.ts';
 import { groundCapacity, storageCapacity } from './ground-placement.ts';
 import { reservedSource } from './materials.ts';
@@ -35,6 +36,7 @@ export function validateCooking(input:unknown,version:number,ids:Set<number>):st
     const spot=cookingSpot(station),key=c.spot.z*w.width+c.spot.x;
     if(spot.x!==c.spot.x||spot.z!==c.spot.z||stations.has(station.id)||spots.has(key))errors.push('Invalid or duplicate cooking work spot.');
     stations.add(station.id);spots.add(key);
+    if(version>=19&&fuelStationReserved(w,station.id,p.id))errors.push('Conflicting queued workstation reservation.');
     if(w.pawns.some(o=>o.id!==p.id&&(o.haul?.destination.type==='fuel'&&o.haul.destination.structureId===station.id||o.need?.kind==='eat'&&o.need.dining?.target.x===spot.x&&o.need.dining?.target.z===spot.z||o.need?.kind==='sleep'&&(version<14||o.need.bedId!==null)&&o.need.target.x===spot.x&&o.need.target.z===spot.z)))errors.push('Conflicting workstation reservation.');
     const owned=w.piles.filter(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id);
     if(c.phase==='output') {

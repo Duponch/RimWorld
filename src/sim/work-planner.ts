@@ -41,7 +41,7 @@ export function destinationCell(world: World, destination: HaulDestination): (Ce
   return destination.type === 'job' ? world.jobs.find(job => job.id === destination.jobId) ?? null : world.stockpiles.find(zone => zone.id === destination.stockpileId) ?? null;
 }
 export function destinationCapacity(world: World, destination: HaulDestination, kind: MaterialKind, exceptPawn?: number, item: ItemId = legacyItem(kind)): number {
-  if (destination.type === 'fuel') return kind==='wood' ? fuelCapacity(world,destination.structureId,exceptPawn) : 0;
+  if (destination.type === 'fuel') return kind==='wood' ? fuelCapacity(world,destination.structureId,exceptPawn,destination.forced) : 0;
   if (destination.type === 'aside') return asideCapacity(world, destination, item, exceptPawn);
   if (destination.type === 'job') {
     const job = world.jobs.find(item => item.id === destination.jobId);

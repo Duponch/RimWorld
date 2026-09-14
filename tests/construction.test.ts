@@ -32,6 +32,11 @@ test('a builder clears a typed pile physically, preserves freshness and cargo on
 });
 
 test('plant clearing respects a rotated footprint, saves mid-cut, and transport-only actors can supply but cannot finish a frame',()=>{
+  // A wall blueprint is not a finished wall: cutting on it must be allowed to
+  // create the wood that the builder then clears and physically delivers.
+  const wall=camp();wall.resources.push({id:wall.nextId++,kind:'tree',x:12,z:10,amount:12});
+  expect(applyCommand(wall,{type:'designate',kind:'wall',x:12,z:10}).ok).toBe(true);
+  until(wall,()=>wall.structures.length===1);expect(wall.structures[0]!.kind).toBe('wall');expect(wall.stock.wood).toBe(7);expect(wall.resources).toEqual([]);expect(validateWorld(wall)).toEqual([]);
   const w=camp();w.resources.push({id:w.nextId++,kind:'tree',x:12,z:10,amount:12},{id:w.nextId++,kind:'berries',x:13,z:10,amount:10,growth:.2,growthTick:0});
   w.resources.push({id:w.nextId++,kind:'tree',x:8,z:9,amount:5});w.pawns[0]!.priorities.gather=4;
   expect(applyCommand(w,{type:'designate',kind:'bed',orientation:1,x:12,z:10}).ok).toBe(true);

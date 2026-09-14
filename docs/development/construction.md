@@ -40,3 +40,7 @@ Positions, routes, quantités, identités, besoins, graines et PRNG ne changent 
 Trois scénarios approfondis couvrent transferts typés et fraîcheur, sauvegarde/annulation en cargaison, plante sur empreinte tournée, priorités, transporteur sans Construction, plans/cadres franchis, durée d'arête, coins protégés, repas réservé et migration stricte. L'oracle spatial indépendant comprend des cadres ; le pilote ordinaire doit terminer son camp et conserver ses bilans. L'UI courte exerce phases et reprise dans le vrai worker ; la partie longue suit trois jours par commandes réelles. Les [preuves courantes](validation.md) distinguent chaque passage et les audits.
 
 Pas de nouveaux objets : états enrichis du mobilier existant. Coexistence avec objets sur table, plans dans réserves, déplacement des personnes gênantes, support du sol, compétences/qualité/échecs, minage, réparation, remplacement et déconstruction restent ouverts. Ne pas annoncer Construction terminée.
+
+## Commandes contextuelles V19
+
+V19 corrige aussi la création des produits sur un plan de mur : le contrôle de dépôt ne le confond plus avec un mur construit. V19 ajoute le clic droit pour la coupe de plante gênante et le transport de dégagement, avec file réservée et annulation liée au parent. Chaque ordre vise un sous-travail ; les règles physiques ci-dessus restent communes aux travaux automatiques. Voir [commandes directes](player-orders.md) et [vérification V19](../research/context-services-reference.md).

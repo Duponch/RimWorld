@@ -42,3 +42,7 @@ Les stocks, compétences, fraicheur, chaleur, pluie, lumière fonctionnelle et a
 Trois scénarios profonds dans `tests/production.test.ts` combinent construction/combustion/recharge, recette mélangée et sauvegarde/interruption, deux postes disputant une seule recette, factures ordonnées, comptage et recharge sans Transport. Le pilote commun de colonie construit un feu et maintient des repas ; ses parcours cœur/UI contrôlent les transformations dans leurs bilans. L’intégration courte exerce la vraie interface, le worker, les contrôles et le rendu GPU.
 
 Le benchmark `scripts/cooking-bench.ts` utilise 3/30/100 colons actifs sur une carte naturelle de 250² avec camps synthétiques. Il distingue charge de production et preuve de progression humaine. Les parcours cœur sur trois graines, les trois jours via la véritable UI et les audits CPU/WebGPU passent ; mesures, résultats et limites de navigation sont consignés dans [validation](validation.md).
+
+## Commandes contextuelles V19
+
+V19 ajoute le ravitaillement manuel par le menu du feu, même au-dessus du seuil ou automatisme désactivé. Le drapeau persistant distingue cet ordre de la recharge automatique ; désactiver l’automatisme ne l’annule pas. Une recharge en file réserve aussi le poste et bloque la cuisine concurrente. Le fournisseur de cuisine manuelle reste absent. [Contrat](player-orders.md), [relecture et limites](../research/context-services-reference.md).

@@ -1,3 +1,4 @@
+import { queryOrderOptions } from '../../src/sim/player-orders.ts';
 import { plantGrowth } from '../../src/sim/plants.ts';
 import { availableNutrition } from '../../src/sim/items.ts';
 import { spoiledUnits } from '../../src/sim/food-preservation.ts';
@@ -19,10 +20,15 @@ export function playerFocusDecisions(world:World):Decision[] {
     .map((job,index)=>({reason:'Prioriser les premiers lots de bois pour installer le camp.',command:{type:'order-job',pawnId:pawn.id,jobId:job.id,queue:index>0}}));
   const carrier=world.pawns.find(p=>p!==pawn&&p.priorities.haul>0&&p.hunger>50&&p.rest>50);
   if(carrier) {
-    const job=world.jobs.find(j=>j.kind==='bed'&&planHaulOrder(world,carrier,{type:'job',jobId:j.id}).task);
+    const blockedBed=world.jobs.find(j=>j.kind==='bed'&&queryOrderOptions(world,carrier.id,j).some(o=>o.enabled&&(o.label.startsWith('Couper la plante')||o.haulTarget?.type==='clear')));
+    if(blockedBed) {
+      const option=queryOrderOptions(world,carrier.id,blockedBed).find(o=>o.enabled&&(o.label.startsWith('Couper la plante')||o.haulTarget?.type==='clear'))!;
+      orders.push({reason:'Dégager le couchage prioritaire.',command:option.haulTarget?{type:'order-haul',pawnId:carrier.id,target:option.haulTarget,queue:false}:{type:'order-job',pawnId:carrier.id,jobId:blockedBed.id,queue:false}});
+    }
+    const job=!blockedBed?world.jobs.find(j=>j.kind==='bed'&&planHaulOrder(world,carrier,{type:'job',jobId:j.id}).task):undefined;
     if(job)orders.push({reason:'Livrer en priorité le premier couchage.',command:{type:'order-haul',pawnId:carrier.id,target:{type:'job',jobId:job.id},queue:false}});
     const pile=world.piles.find(p=>p.kind==='food'&&p.owner.type==='ground'&&planHaulOrder(world,carrier,{type:'pile',pileId:p.id}).task);
-    if(pile)orders.push({reason:'Ranger les rations après la livraison.',command:{type:'order-haul',pawnId:carrier.id,target:{type:'pile',pileId:pile.id},queue:!!job}});
+    if(pile)orders.push({reason:'Ranger les rations après la livraison.',command:{type:'order-haul',pawnId:carrier.id,target:{type:'pile',pileId:pile.id},queue:!!job||!!blockedBed}});
   }
   return orders;
 }
