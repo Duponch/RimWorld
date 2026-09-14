@@ -44,6 +44,7 @@ La matrice conserve [cinq familles F1–F5](../gameplay/systems-matrix.md#strat�
 | `render-retention.test.ts`, `rock-surface.test.ts` | Identité/capacité/libération des buffers, retraits et restauration de chunks, faces rocheuses exposées. Un retrait injecté ne vaut pas minage jouable. |
 | `daylight-camera.test.ts`, `frame-metrics.test.ts` | Cadrage/projections, temps du ciel, pauses/cadence, longues images et bornes des métriques. |
 | `gpu-navigation.test.ts` | Contrats du laboratoire : résultats, capacités et révisions. Le laboratoire ne dirige pas les colons. |
+| `construction.test.ts` | V21 enrichit cinq scénarios : profils des six meubles, objets conservés/dégagés, réservations libérées, zones retirées sans perte, dessin agricole dans les deux sens et migration stricte. |
 | `integration/*.spec.ts` | Commandes et gestes réels, UI, worker, sauvegardes et présentation ; les fixtures synthétiques sont signalées. |
 
 Le parcours de frontières conserve le rendu logiciel/WebGL 2, notamment pour les contrôles compacts et la migration historique dans le worker. Les parcours matériels lancent Chromium normal et vérifient le backend obtenu. Un canvas visible et un compteur FPS ne suffisent pas : capturer les erreurs console/GPU et inspecter effectivement la pose ou l’aperçu testé.
@@ -131,3 +132,5 @@ F4 exerce les commandes dans le navigateur quand elles existent ; F5 mesure leur
 `player-hauling.test.ts` complète la famille existante : fractions réservées simultanément et en file, capacités typées, source/destination perdues, livraison sans finition, identité/âge à l'interruption, migration stricte V17 et reprise pendant le portage. Le même parcours UI des ordres couvre livraison → stockage → finition ; le pilote demande une livraison de couchage et le rangement des rations au démarrage.
 
 Workflow : terminer ensemble code, fixtures et pilote, compiler à l'intégration et grouper les contrôles des contrats touchés. Réutiliser les preuves des sous-systèmes inchangés ; ne rejouer un long parcours réussi que si une correction touche son déroulement. Les documents peuvent être entretenus pendant les tests, les sources/configurations de leur exécution restent stables. Un audit CPU suffit lorsque seule la simulation matérielle change ; le nombre d'appels GPU n'est pas réannoncé comme une nouvelle mesure.
+
+L’option `occupancy` de `scripts/cooking-render-bench.mjs` ajoute vingt tables et vingt tabourets portant des piles dans la fixture à cent acteurs. C’est un stress de surfaces synthétique ; ses routes diffèrent du témoin cuisine. Le nombre de travailleurs et les loisirs en fin de phase restent relevés pour ne pas présenter une population inactive comme une foule de bâtisseurs.

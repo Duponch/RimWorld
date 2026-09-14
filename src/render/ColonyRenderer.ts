@@ -1,3 +1,4 @@
+import { pileSurfaces } from './pile-surfaces';
 import { CropLayer } from './CropLayer';
 import { PawnSelectionInput, type ScreenPawn, type SelectionGesture } from './PawnSelectionInput';
 import { GrowingZoneLayer } from './GrowingZoneLayer';
@@ -399,8 +400,9 @@ export class ColonyRenderer {
       clearGroup(this.pileGroup);
       this.pileChunks.clear();
     }
+    const surfaces=pileSurfaces(world);
     const jobById = new Map(world.jobs.map(job => [job.id, job]));
-    type Bundle = { x: number; z: number; kind: MaterialKind; item: ItemId; quantity: number; supplied: boolean };
+    type Bundle = { x: number; z: number; kind: MaterialKind; item: ItemId; quantity: number; supplied: boolean; surface?: import('./pile-surfaces').PileSurface };
     const cells = new Map<string, Bundle>();
     for (const pile of world.piles) {
       if (pile.owner.type === 'pawn') continue;
@@ -410,7 +412,7 @@ export class ColonyRenderer {
       const key = `${position.x}:${position.z}:${pile.item}:${job ? 'job' : 'ground'}`;
       const bundle = cells.get(key);
       if (bundle) bundle.quantity += pile.quantity;
-      else cells.set(key, { x: position.x, z: position.z, kind: pile.kind, item: pile.item, quantity: pile.quantity, supplied: !!job });
+      else cells.set(key, { x: position.x, z: position.z, kind: pile.kind, item: pile.item, quantity: pile.quantity, supplied: !!job, surface:job?undefined:surfaces.get(position.z*world.width+position.x) });
     }
     const chunks = new Map<string, Bundle[]>();
     for (const bundle of cells.values()) {
@@ -422,7 +424,7 @@ export class ColonyRenderer {
       this.boxes.set(chunk.group, `pile:${key}`, []); chunk.signature = '';
     }
     for (const [key, bundles] of chunks) {
-      const signature = bundles.map(bundle => `${bundle.x}:${bundle.z}:${bundle.item}:${bundle.quantity}:${bundle.supplied}`).join('|');
+      const signature = bundles.map(bundle => `${bundle.x}:${bundle.z}:${bundle.item}:${bundle.quantity}:${bundle.supplied}:${bundle.surface?Object.values(bundle.surface).join(','):'ground'}`).join('|');
       const previous = this.pileChunks.get(key);
       if (previous?.signature === signature) continue;
       const group = previous?.group ?? new THREE.Group();
@@ -430,6 +432,7 @@ export class ColonyRenderer {
       group.name = `Material piles ${key}`;
       const logs: Placement[] = [], ends: Placement[] = [], crates: Placement[] = [], food: Placement[] = [];
       for (const bundle of bundles) {
+        const starts=[logs.length,ends.length,crates.length,food.length];
         const x = bundle.x + (bundle.kind === 'wood' ? -0.12 : 0.2), z = bundle.z + (bundle.supplied ? 0.16 : bundle.item === 'berries' ? -0.24 : bundle.item === 'survival-meal' ? 0.24 : 0);
         const height = 0.12 + Math.min(1, bundle.quantity / ITEM_DEFINITIONS[bundle.item].stackLimit) * (WORLD_SCALE.pileMaxHeight - 0.12);
         if (bundle.kind === 'wood') {
@@ -442,6 +445,11 @@ export class ColonyRenderer {
         } else {
           crates.push({ x, z, y: height / 2, sx: 0.5, sy: height, sz: 0.45 });
           for (const dx of [-0.12, 0.12]) for (const dz of [-0.11, 0.11]) food.push({ x: x + dx, z: z + dz, y: height + 0.025, sx: 0.18, sy: 0.1, sz: 0.16, color: ITEM_DEFINITIONS[bundle.item].color });
+        }
+        if(bundle.surface)for(const [index,parts] of [logs,ends,crates,food].entries())for(let i=starts[index]!;i<parts.length;i++) {
+          const p=parts[i]!,surface=bundle.surface;
+          p.x=bundle.x+(p.x-bundle.x)*surface.scale+surface.x;p.z=bundle.z+(p.z-bundle.z)*surface.scale+surface.z;
+          p.y+=surface.y;p.sx=(p.sx??1)*surface.scale;p.sz=(p.sz??1)*surface.scale;
         }
       }
       this.boxes.set(group, `pile:${key}`, [...logs, ...ends.map(p => ({ ...p, color: 0xc9ad77 })), ...crates.map(p => ({ ...p, color: 0x987e51 })), ...food]);

@@ -1,3 +1,5 @@
+import { removeZonesForPlan } from './construction-zones.ts';
+import { occupancyOf, occupies } from './occupancy.ts';
 import { constructionHaulId, constructionSiteFree, constructionWorkTarget, isConstruction } from './construction-rules.ts';
 import { advanceOrders, applyOrderCommand, reconcileOrders } from './player-orders.ts';
 import { gatherResource, clearingDuration } from './gathering.ts';
@@ -110,7 +112,6 @@ export function canDesignate(world: World, command: DesignateCommand): CommandRe
     if (['water', 'rock'].includes(world.tiles[cellIndex(world, cell.x, cell.z)]!.terrain)
       || world.resources.some(item => item.kind==='rock'&&sameCell(item, cell))
       || world.structures.some(item => footprintCells(item).some(target => sameCell(target, cell)))
-      || world.stockpiles.some(item => sameCell(item, cell))
       || world.pawns.some(p => p.haul?.destination.type === 'aside' && sameCell(p.haul.destination, cell))
       || cookingCellReserved(world,cell)) {
       return refusal('occupied', 'Construction impossible : terrain, ouvrage ou réservation incompatible dans l’empreinte.');
@@ -180,7 +181,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
     } else {
       if (growingZoneAt(world, cellIndex(world, command.x, command.z)) || ['water', 'rock'].includes(world.tiles[cellIndex(world, command.x, command.z)]!.terrain)
         || world.resources.some(item => sameCell(item, command))
-        || [...world.structures, ...world.jobs].some(item => footprintCells(item).some(cell => sameCell(cell, command)))) return refusal('occupied', 'Stockage impossible sur cette cellule occupée ou infranchissable.');
+        || [...world.structures, ...world.jobs].some(item => occupancyOf(item.kind)?.zones!==true&&occupies(item,command))) return refusal('occupied', 'Stockage impossible sur cette cellule occupée ou infranchissable.');
       if (existing) {
         existing.filters = command.filters ? { ...command.filters } : existing.filters;
         existing.priority = command.priority ?? existing.priority;
@@ -205,8 +206,9 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   }
   const result = canDesignate(world, command);
   if (!result.ok) return result;
+  removeZonesForPlan(world,command,drops);
   world.jobs.push({ id: world.nextId++, kind: command.kind, ...(isConstruction(command)?{construction:'blueprint' as const}:{}), x: command.x, z: command.z, orientation: command.orientation ?? 0, footprint: 'standard', status: 'pending', reservedBy: null, progress: 0, escrow: { wood: 0, food: 0 } });
-  wakePlanners(world); event(world, 'command', `Nouvel ordre : ${JOB_LABEL[command.kind]} (${command.x}, ${command.z}).`); return { ok: true };
+  refreshStock(world); wakePlanners(world); event(world, 'command', `Nouvel ordre : ${JOB_LABEL[command.kind]} (${command.x}, ${command.z}).`); return { ok: true };
 }
 
 function completeJob(world: World, pawn: Pawn, job: Job): void {

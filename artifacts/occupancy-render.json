@@ -1,0 +1,131 @@
+{
+  "workload": "occupancy",
+  "date": "2026-09-14T18:50:19.207Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "protocol": "Native Chromium WebGPU, 1440×1000, natural 250² with synthetic camps; real worker at UI speed 6; 60 warmup frames then >=300 frames and >=5 seconds per phase. Local/overview phases advance the simulation successively, so they are workload observations, not identical-state camera A/B. RAF includes scheduling; frame CPU is submission, not GPU execution. No parallel tests or CPU benchmarks.",
+  "phases": [
+    {
+      "pawns": 100,
+      "view": "local",
+      "backend": "WebGPU",
+      "frameMs": {
+        "n": 667,
+        "p50": 8.300000000000182,
+        "p95": 8.5,
+        "p99": 20.800000000000182,
+        "max": 33.29999999999927
+      },
+      "frameCpuMs": {
+        "n": 668,
+        "p50": 7.0999999940395355,
+        "p95": 8.200000002980232,
+        "p99": 10,
+        "max": 12.199999995529652
+      },
+      "lastReportedWorkerMs": {
+        "n": 668,
+        "p50": 25.16000000014901,
+        "p95": 27.646153846039223,
+        "p99": 27.646153846039223,
+        "max": 27.646153846039223
+      },
+      "drawCalls": {
+        "n": 668,
+        "p50": 143,
+        "p95": 147,
+        "p99": 147,
+        "max": 147
+      },
+      "triangles": {
+        "n": 668,
+        "p50": 230859,
+        "p95": 240173,
+        "p99": 240173,
+        "max": 240173
+      },
+      "ticks": [
+        0,
+        236
+      ],
+      "cookedInRecentJournal": 5,
+      "active": 30,
+      "recreation": {
+        "skygaze": 0,
+        "horseshoes": 0
+      },
+      "construction": {
+        "plans": 0,
+        "frames": 10,
+        "clearingPlants": 0,
+        "walls": 10,
+        "builders": 10
+      },
+      "surfaceFurniture": 40
+    },
+    {
+      "pawns": 100,
+      "view": "overview",
+      "backend": "WebGPU",
+      "frameMs": {
+        "n": 1078,
+        "p50": 4.199999999998909,
+        "p95": 8.300000000001091,
+        "p99": 8.400000000001455,
+        "max": 21
+      },
+      "frameCpuMs": {
+        "n": 1079,
+        "p50": 4.100000001490116,
+        "p95": 5.200000002980232,
+        "p99": 6,
+        "max": 8.799999997019768
+      },
+      "lastReportedWorkerMs": {
+        "n": 1079,
+        "p50": 18.81999999980132,
+        "p95": 25.985714285501412,
+        "p99": 25.985714285501412,
+        "max": 25.985714285501412
+      },
+      "drawCalls": {
+        "n": 1079,
+        "p50": 45,
+        "p95": 46,
+        "p99": 46,
+        "max": 46
+      },
+      "triangles": {
+        "n": 1079,
+        "p50": 529083,
+        "p95": 530187,
+        "p99": 530187,
+        "max": 530187
+      },
+      "ticks": [
+        266,
+        535
+      ],
+      "cookedInRecentJournal": 1,
+      "active": 100,
+      "recreation": {
+        "skygaze": 100,
+        "horseshoes": 0
+      },
+      "construction": {
+        "plans": 0,
+        "frames": 0,
+        "clearingPlants": 0,
+        "walls": 20,
+        "builders": 0
+      },
+      "surfaceFurniture": 40
+    }
+  ],
+  "errors": [],
+  "adapter": {
+    "vendor": "amd",
+    "architecture": "rdna-1",
+    "device": "",
+    "description": ""
+  }
+}

@@ -177,7 +177,7 @@ Avant de créer une nouvelle colonie, le jeu conserve aussi l'état courant dans
 
 ## Limites et suite
 
-Pas encore d'autres cultures, autres postes/recettes de cuisine, chaîne du froid, minage, déconstruction, autres familles de loisirs, animaux, armes, combat, blessures, médecine, relations, traits, recherche, commerce, électricité, toit, température, incendie, météo dynamique, carte du monde ou storyteller. Les réserves à plusieurs cases partageant une politique, les autres familles sélectionnables, le maintien local du travail priorisé et les tournées logistiques restent à développer. Les modèles sont provisoires ; la congestion entre agents actifs et la calibration des besoins restent ouvertes. La faim ne cause pas encore de malnutrition ni de décès.
+Pas encore d'autres cultures, autres postes/recettes de cuisine, chaîne du froid, minage, déconstruction, autres familles de loisirs, animaux, armes, combat, blessures, médecine, relations, traits, recherche, commerce, électricité, toit, température, incendie, météo dynamique, carte du monde ou storyteller. Le franchissement des tables et les délais du mobilier, les réserves à plusieurs cases partageant une politique, les autres familles sélectionnables, le maintien local du travail priorisé et les tournées logistiques restent à développer. Les modèles sont provisoires ; la congestion entre agents actifs et la calibration des besoins restent ouvertes. La faim ne cause pas encore de malnutrition ni de décès.
 
 La suite est suivie dans [le plan de développement](../ROADMAP.md). Les détails de la référence et les futures interactions sont dans [la matrice des systèmes](systems-matrix.md).
 
@@ -190,3 +190,9 @@ Dans **Architecte → Loisirs**, placer un piquet de fers à cheval : dix bois d
 Sans installation, les colons peuvent rejoindre un emplacement du voisinage et s’allonger pour observer le ciel. Ce loisir appartient à la détente solitaire, les fers à cheval à la dextérité. Multiplier les piquets ne crée pas une nouvelle famille. La météo et les pièces ne modifient pas encore ces activités.
 
 Dans **Horaires**, la plage Loisirs cherche une activité sous 95 % de satisfaction ; Libre sous 35 %. Le colon finit son travail engagé et satisfait ses besoins prioritaires. Il ne gagne rien en chemin. Pendant les premières deux heures de jeu, les loisirs ne démarrent pas. L’inspection montre satisfaction, effet d’humeur et lassitude de chaque famille : au-dessus de 50 %, le colon cesse de choisir cette famille jusqu’à ce qu’elle retombe sous 30 %. Sommeil et variété l’aident à conserver une journée équilibrée ; dormir ne fait toutefois pas baisser la lassitude. Les attentes restent celles d’un petit camp, sans calcul de richesse.
+
+## Construire dans une réserve
+
+Vous pouvez poser un plan dans une réserve. Mur, lit et table retirent les cellules couvertes de la zone, mais laissent les objets présents. Les transporteurs concernés déposent leur cargaison ; si aucun dépôt conservatif n’est possible, le plan est refusé. Annuler le plan ne rétablit pas la réserve.
+
+La table conserve une pile déjà présente, affichée sur son plateau, mais n’accepte pas de zone de stockage. Tabouret et piquet peuvent garder une réserve utilisable. Le feu peut recouvrir son tracé, mais aucun objet ne sera rangé sur sa cellule ; le combustible utilise l’ordre de ravitaillement. Murs, lits et feux attendent le déplacement des piles gênantes. La table reste actuellement infranchissable pour les colons : correction prévue au prochain lot, avec les règles d’arrêt et de passage du mobilier.

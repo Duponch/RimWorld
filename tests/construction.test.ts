@@ -1,3 +1,9 @@
+import { OCCUPANCY } from '../src/sim/occupancy';
+import { groundCapacity, storageCapacity } from '../src/sim/ground-placement';
+import { JOB_WOOD_COST } from '../src/sim/definitions';
+import { queryArea } from '../src/sim/designation';
+import { pileSurfaces } from '../src/render/pile-surfaces';
+import { WORLD_SCALE } from '../src/world/scale';
 import { expect, test } from 'vitest';
 import { createWorld, applyCommand, addGroundMaterial, refreshStock, stepWorld, serializeWorld, deserializeWorld, validateWorld } from '../src/sim/index';
 import { blockedCells, reachableCells, routeToCell } from '../src/sim/pathfinding';
@@ -89,4 +95,82 @@ test('plans and frames remain traversable with calibrated edge delay, completion
   until(dining,()=>dining.pawns.some(p=>p.memories.length>0)||eater.need===null);
   expect(dining.jobs[0]!.construction).toBe('blueprint');
   stepWorld(diningCopy,dining.tick-diningCopy.tick);expect(diningCopy).toEqual(dining);
+});
+
+
+test('construction profiles preserve compatible stacks, clear incompatible ones, trim zones at blueprint time and replay through completion',()=>{
+  for(const kind of ['wall','bed','campfire','table','stool','horseshoes'] as const) {
+    const w=camp();addGroundMaterial(w,'wood',JOB_WOOD_COST[kind],{x:7,z:10},'wood');addGroundMaterial(w,'food',23,{x:12,z:10},'rice');
+    const rice=w.piles.find(p=>p.item==='rice')!,id=rice.id;
+    expect(applyCommand(w,{type:'stockpile',x:12,z:10,enabled:true}).ok).toBe(true);
+    expect(applyCommand(w,{type:'designate',kind,x:12,z:10,orientation:1}).ok).toBe(true);
+    expect(w.stockpiles.length).toBe(OCCUPANCY[kind].zones?1:0);expect(rice.owner).toMatchObject({type:'ground',x:12,z:10});
+    if(w.stockpiles.length)expect(storageCapacity(w,w.stockpiles[0]!,'rice')).toBe(OCCUPANCY[kind].store?52:0);
+    expect(constructionObstructions(w).get(w.jobs[0]!.id)).toEqual(constructionObstruction(w,w.jobs[0]!));
+    expect(!!constructionObstruction(w,w.jobs[0]!).pile).toBe(OCCUPANCY[kind].clearItems);
+    const copy=deserializeWorld(serializeWorld(w));let clearing=false;
+    for(let i=0;i<1200&&!w.structures.length;i++){stepWorld(w);stepWorld(copy);clearing ||= w.pawns[0]!.haul?.destination.type==='aside';expect(validateWorld(w),kind).toEqual([]);expect(copy).toEqual(w);}
+    expect(w.structures[0]?.kind).toBe(kind);expect(clearing).toBe(OCCUPANCY[kind].clearItems);expect(w.stock).toEqual({wood:0,food:23});
+    expect(w.piles.filter(p=>p.item==='rice').reduce((n,p)=>n+p.quantity,0)).toBe(23);
+    if(!OCCUPANCY[kind].clearItems)expect(w.piles.find(p=>p.id===id)?.owner).toMatchObject({type:'ground',x:12,z:10});
+    for(const pile of w.piles)expect(rotAge(pile,w.tick)).toBe(w.tick);
+    expect(deserializeWorld(serializeWorld(w))).toEqual(w);
+    const area=queryArea(w,{type:'area',action:'stockpile',from:{x:12,z:10},to:{x:13,z:10}});expect(area.ok).toBe(true);
+    // Existing zones are skipped, and every new zone uses the same profile as its blueprint.
+    expect(applyCommand(w,{type:'stockpile',x:12,z:10,enabled:true}).ok).toBe(OCCUPANCY[kind].zones);
+    if(kind==='table')expect(pileSurfaces(w).get(12+10*w.width)?.y).toBe(WORLD_SCALE.tableHeight);
+    if(kind==='stool')expect(pileSurfaces(w).get(12+10*w.width)?.y).toBe(WORLD_SCALE.stoolHeight);
+  }
+});
+
+test('replacing storage with a blueprint releases active and queued deliveries atomically, preserves other zone cells, and migrates old furniture contents',()=>{
+  for(const kind of ['wall','campfire','stool'] as const) {
+    const w=camp(2),p=w.pawns[0]!;for(const q of w.pawns)q.priorities={build:0,haul:0,gather:0,grow:0,cook:0};p.priorities.haul=1;
+    addGroundMaterial(w,'food',30,{x:10,z:10},'rice');const pile=w.piles[0]!;
+    expect(applyCommand(w,{type:'area',action:'stockpile',from:{x:15,z:10},to:{x:16,z:10}}).ok).toBe(true);
+    for(const queue of [false,true])expect(applyCommand(w,{type:'order-haul',pawnId:p.id,target:{type:'pile',pileId:pile.id},queue}).ok).toBe(true);
+    until(w,()=>p.haul?.phase==='deliver');const held=w.piles.find(p=>p.owner.type==='pawn')!,age=rotAge(held,w.tick),zones=structuredClone(w.stockpiles);
+    const crowded=JSON.parse(serializeWorld(w)) as World;
+    const occupied=new Set(crowded.piles.filter(p=>p.owner.type==='ground').map(p=>p.owner.type==='ground'?p.owner.z*crowded.width+p.owner.x:-1));
+    for(let i=0;i<crowded.width*crowded.height;i++)if(!occupied.has(i)){const reserved=i===15+10*crowded.width;crowded.piles.push({id:crowded.nextId++,kind:reserved?'food':'wood',item:reserved?'rice':'wood',quantity:reserved?55:75,owner:{type:'ground',x:i%crowded.width,z:Math.floor(i/crowded.width)},...(reserved?{rot:{progress:0,atTick:crowded.tick}}:{})});}
+    refreshStock(crowded);const crowdedRaw=serializeWorld(crowded);
+    if(kind!=='stool'){expect(applyCommand(crowded,{type:'designate',kind,x:15,z:10}).ok).toBe(false);expect(serializeWorld(crowded)).toBe(crowdedRaw);}
+    const failed=serializeWorld(w);expect(applyCommand(w,{type:'designate',kind,x:-1,z:10}).ok).toBe(false);expect(serializeWorld(w)).toBe(failed);
+    expect(applyCommand(w,{type:'designate',kind,x:15,z:10}).ok).toBe(true);expect(validateWorld(w)).toEqual([]);
+    if(kind==='stool'){expect(p.haul).not.toBeNull();expect(p.orders.queue).toHaveLength(1);expect(w.stockpiles).toEqual(zones);}
+    else {expect(p.haul).toBeNull();expect(p.orders.queue).toEqual([]);expect(w.piles.find(p=>p.id===held.id)?.owner.type).toBe('ground');expect(rotAge(held,w.tick)).toBe(age);}
+    expect(w.stock.food).toBe(30);expect(w.stockpiles.some(z=>z.x===16)).toBe(true);expect(w.stockpiles.some(z=>z.x===15)).toBe(kind!=='wall');
+    expect(deserializeWorld(serializeWorld(w))).toEqual(w);
+  }
+  const legacy=camp();legacy.structures.push({id:legacy.nextId++,kind:'bed',x:12,z:10,orientation:1,footprint:'standard'});
+  addGroundMaterial(legacy,'food',10,{x:7,z:10},'rice');const id=legacy.piles[0]!.id;
+  legacy.piles[0]!.owner={type:'ground',x:13,z:10};const raw=JSON.parse(JSON.stringify(legacy));raw.schemaVersion=20;
+  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated.schemaVersion).toBe(21);expect(migrated.stock.food).toBe(10);expect(migrated.piles[0]!.id).toBe(id);expect(migrated.piles[0]!.rot).toEqual(legacy.piles[0]!.rot);
+  expect(migrated.piles[0]!.owner).not.toMatchObject({x:13,z:10});expect(migrated.pawns).toEqual(legacy.pawns);expect(validateWorld(migrated)).toEqual([]);
+  const full=structuredClone(raw);const used=new Set(full.piles.filter((p:any)=>p.owner.type==='ground').map((p:any)=>p.owner.z*full.width+p.owner.x));
+  for(let i=0;i<full.width*full.height;i++)if(!used.has(i))full.piles.push({id:full.nextId++,kind:'wood',item:'wood',quantity:75,owner:{type:'ground',x:i%full.width,z:Math.floor(i/full.width)}});
+  refreshStock(full);expect(()=>deserializeWorld(JSON.stringify(full))).toThrow(/No ground cell/);
+  expect(groundCapacity(migrated,{x:13,z:10},'rice')).toBe(0);
+  const invalid=JSON.parse(serializeWorld(migrated));invalid.stockpiles.push({id:invalid.nextId++,x:12,z:10,filters:{wood:true,food:true},priority:2,capacity:75});expect(()=>deserializeWorld(JSON.stringify(invalid))).toThrow();
+  const oldOverlap=JSON.parse(serializeWorld(migrated));oldOverlap.schemaVersion=20;oldOverlap.structures[0].kind='stool';oldOverlap.stockpiles.push({id:oldOverlap.nextId++,x:12,z:10,filters:{wood:true,food:true},priority:2,capacity:75});expect(()=>deserializeWorld(JSON.stringify(oldOverlap))).toThrow(/version 20/);
+  // Zone compatibility is symmetric: painting after a plan/building uses the
+  // same footprint, while plants and compatible furniture remain paintable.
+  const field=camp();field.pawns[0]!.priorities.build=0;
+  expect(applyCommand(field,{type:'area',action:'growing',from:{x:12,z:10},to:{x:14,z:10}}).ok).toBe(true);
+  const zone=structuredClone(field.growingZones[0]!);
+  expect(applyCommand(field,{type:'designate',kind:'bed',x:12,z:10,orientation:1}).ok).toBe(true);
+  expect(field.growingZones).toEqual([{...zone,cells:[334]}]);expect(validateWorld(field)).toEqual([]);
+  expect(applyCommand(field,{type:'area',action:'growing',from:{x:12,z:10},to:{x:13,z:10}}).ok).toBe(false);
+  const oldField=JSON.parse(serializeWorld(field));oldField.schemaVersion=20;oldField.growingZones=[zone];
+  const newField=deserializeWorld(JSON.stringify(oldField));expect(newField).toEqual(field);
+  oldField.schemaVersion=21;expect(()=>deserializeWorld(JSON.stringify(oldField))).toThrow(/Growing zone overlaps/);
+  expect(applyCommand(field,{type:'cancel',x:12,z:10}).ok).toBe(true);expect(field.growingZones[0]!.cells).toEqual([334]);
+  for(const kind of ['wall','bed','table','stool','campfire','horseshoes'] as const) {
+    const f=camp();f.structures.push({id:f.nextId++,kind,x:12,z:10,orientation:1,footprint:'standard'});
+    const selection=queryArea(f,{type:'area',action:'growing',from:{x:12,z:10},to:{x:13,z:10}});
+    expect(selection.ok&&selection.cells.includes(332)).toBe(OCCUPANCY[kind].zones);
+  }
+  const vegetation=camp();vegetation.resources.push({id:vegetation.nextId++,kind:'tree',x:12,z:10,amount:10});
+  expect(applyCommand(vegetation,{type:'designate',kind:'chop',x:12,z:10}).ok).toBe(true);
+  expect(applyCommand(vegetation,{type:'area',action:'growing',from:{x:12,z:10},to:{x:12,z:10}}).ok).toBe(true);
 });

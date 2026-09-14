@@ -1,0 +1,478 @@
+{
+  "date": "2026-09-14T18:46:36.147Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "map": "250x250 seed 42",
+  "expireAt": 0,
+  "conditions": "2 runs × 300 ticks; setup, validation and diagnostic aggregation excluded; search-counter collection inside stepWorld is timed; needs active, all workers cook/build/haul/grow; no warmup (includes first assignments); expiry injection is a separate stress fixture, not an equivalent gameplay baseline",
+  "rows": [
+    {
+      "pawns": 3,
+      "ticks": 600,
+      "p50Ms": 0.07260000000002265,
+      "p95Ms": 1.2794999999999845,
+      "p99Ms": 3.0283000000000015,
+      "maxMs": 9.701300000000003,
+      "hash": "36b271fd",
+      "cooked": 3,
+      "expiryTickMs": null,
+      "spoiled": {
+        "berries": 0,
+        "rice": 0,
+        "simple-meal": 0
+      },
+      "crops": 6,
+      "walls": 1,
+      "activePawnTicks": {
+        "cook": 259,
+        "haul": 143,
+        "grow": 135,
+        "build": 69,
+        "refuel": 38
+      },
+      "remainingRaw": 80,
+      "remainingMeals": 3,
+      "searchTotals": {
+        "all": 35,
+        "nearest": 18,
+        "full": 0,
+        "visited": 1012,
+        "connectivityVisited": 1636,
+        "unreachedGroups": 0
+      },
+      "worst": [
+        {
+          "tick": 183,
+          "ms": 7.480600000000095,
+          "searches": [
+            {
+              "pawnId": 12419,
+              "mode": "nearest",
+              "visited": 5,
+              "unreachedGroups": 0
+            }
+          ]
+        },
+        {
+          "tick": 1,
+          "ms": 4.054699999999968,
+          "searches": [
+            {
+              "pawnId": 12418,
+              "mode": "all",
+              "visited": 25,
+              "unreachedGroups": 0,
+              "connectivityVisited": 23
+            },
+            {
+              "pawnId": 12419,
+              "mode": "all",
+              "visited": 21,
+              "unreachedGroups": 0,
+              "connectivityVisited": 206
+            },
+            {
+              "pawnId": 12420,
+              "mode": "all",
+              "visited": 25,
+              "unreachedGroups": 0,
+              "connectivityVisited": 168
+            }
+          ]
+        },
+        {
+          "tick": 185,
+          "ms": 3.591099999999983,
+          "searches": [
+            {
+              "pawnId": 12420,
+              "mode": "all",
+              "visited": 0,
+              "unreachedGroups": 0,
+              "connectivityVisited": 11
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "pawns": 30,
+      "ticks": 600,
+      "p50Ms": 1.4454000000000633,
+      "p95Ms": 7.9202999999999975,
+      "p99Ms": 13.069499999999948,
+      "maxMs": 17.375099999999975,
+      "hash": "53ca74db",
+      "cooked": 6,
+      "expiryTickMs": null,
+      "spoiled": {
+        "berries": 0,
+        "rice": 0,
+        "simple-meal": 0
+      },
+      "crops": 36,
+      "walls": 6,
+      "activePawnTicks": {
+        "cook": 1251,
+        "haul": 1496,
+        "grow": 1758,
+        "build": 625,
+        "refuel": 542
+      },
+      "remainingRaw": 600,
+      "remainingMeals": 6,
+      "searchTotals": {
+        "all": 465,
+        "nearest": 97,
+        "full": 0,
+        "visited": 72205,
+        "connectivityVisited": 1992318,
+        "unreachedGroups": 0
+      },
+      "worst": [
+        {
+          "tick": 220,
+          "ms": 17.153800000000047,
+          "searches": [
+            {
+              "pawnId": 12439,
+              "mode": "all",
+              "visited": 0,
+              "unreachedGroups": 0,
+              "connectivityVisited": 5580
+            },
+            {
+              "pawnId": 12440,
+              "mode": "all",
+              "visited": 0,
+              "unreachedGroups": 0,
+              "connectivityVisited": 3337
+            },
+            {
+              "pawnId": 12441,
+              "mode": "all",
+              "visited": 0,
+              "unreachedGroups": 0,
+              "connectivityVisited": 1947
+            },
+            {
+              "pawnId": 12442,
+              "mode": "all",
+              "visited": 0,
+              "unreachedGroups": 0,
+              "connectivityVisited": 4672
+            },
+            {
+              "pawnId": 12443,
+              "mode": "all",
+              "visited": 0,
+              "unreachedGroups": 0,
+              "connectivityVisited": 6333
+            },
+            {
+              "pawnId": 12444,
+              "mode": "all",
+              "visited": 0,
+              "unreachedGroups": 0,
+              "connectivityVisited": 3002
+            },
+            {
+              "pawnId": 12445,
+              "mode": "all",
+              "visited": 0,
+              "unreachedGroups": 0,
+              "connectivityVisited": 3002
+            },
+            {
+              "pawnId": 12447,
+              "mode": "all",
+              "visited": 0,
+              "unreachedGroups": 0,
+              "connectivityVisited": 5163
+            }
+          ]
+        },
+        {
+          "tick": 158,
+          "ms": 13.268800000000283,
+          "searches": [
+            {
+              "pawnId": 12441,
+              "mode": "all",
+              "visited": 0,
+              "unreachedGroups": 0,
+              "connectivityVisited": 1948
+            },
+            {
+              "pawnId": 12442,
+              "mode": "nearest",
+              "visited": 18,
+              "unreachedGroups": 0
+            },
+            {
+              "pawnId": 12443,
+              "mode": "all",
+              "visited": 0,
+              "unreachedGroups": 0,
+              "connectivityVisited": 6334
+            },
+            {
+              "pawnId": 12422,
+              "mode": "all",
+              "visited": 2084,
+              "unreachedGroups": 0,
+              "connectivityVisited": 1490
+            },
+            {
+              "pawnId": 12423,
+              "mode": "all",
+              "visited": 0,
+              "unreachedGroups": 0,
+              "connectivityVisited": 6240
+            },
+            {
+              "pawnId": 12424,
+              "mode": "all",
+              "visited": 0,
+              "unreachedGroups": 0,
+              "connectivityVisited": 5164
+            }
+          ]
+        },
+        {
+          "tick": 59,
+          "ms": 12.555100000000039,
+          "searches": [
+            {
+              "pawnId": 12433,
+              "mode": "all",
+              "visited": 1599,
+              "unreachedGroups": 0,
+              "connectivityVisited": 3652
+            },
+            {
+              "pawnId": 12434,
+              "mode": "all",
+              "visited": 1637,
+              "unreachedGroups": 0,
+              "connectivityVisited": 3634
+            },
+            {
+              "pawnId": 12439,
+              "mode": "all",
+              "visited": 5738,
+              "unreachedGroups": 0,
+              "connectivityVisited": 5778
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "pawns": 100,
+      "ticks": 600,
+      "p50Ms": 21.729299999999057,
+      "p95Ms": 31.331500000000233,
+      "p99Ms": 36.26949999999988,
+      "maxMs": 76.57380000000012,
+      "hash": "048f3969",
+      "cooked": 13,
+      "expiryTickMs": null,
+      "spoiled": {
+        "berries": 0,
+        "rice": 0,
+        "simple-meal": 0
+      },
+      "crops": 120,
+      "walls": 11,
+      "activePawnTicks": {
+        "cook": 3625,
+        "haul": 7315,
+        "grow": 5774,
+        "build": 3193,
+        "refuel": 2338
+      },
+      "remainingRaw": 2070,
+      "remainingMeals": 13,
+      "searchTotals": {
+        "all": 1178,
+        "nearest": 287,
+        "full": 0,
+        "visited": 447083,
+        "connectivityVisited": 10541832,
+        "unreachedGroups": 0
+      },
+      "worst": [
+        {
+          "tick": 102,
+          "ms": 76.57380000000012,
+          "searches": [
+            {
+              "pawnId": 12438,
+              "mode": "nearest",
+              "visited": 21,
+              "unreachedGroups": 0
+            },
+            {
+              "pawnId": 12450,
+              "mode": "nearest",
+              "visited": 5,
+              "unreachedGroups": 0
+            },
+            {
+              "pawnId": 12494,
+              "mode": "nearest",
+              "visited": 9,
+              "unreachedGroups": 0
+            },
+            {
+              "pawnId": 12495,
+              "mode": "all",
+              "visited": 5334,
+              "unreachedGroups": 0,
+              "connectivityVisited": 5370
+            },
+            {
+              "pawnId": 12503,
+              "mode": "all",
+              "visited": 9,
+              "unreachedGroups": 0,
+              "connectivityVisited": 7580
+            },
+            {
+              "pawnId": 12504,
+              "mode": "all",
+              "visited": 5,
+              "unreachedGroups": 0,
+              "connectivityVisited": 10347
+            },
+            {
+              "pawnId": 12513,
+              "mode": "all",
+              "visited": 0,
+              "unreachedGroups": 0,
+              "connectivityVisited": 11539
+            }
+          ]
+        },
+        {
+          "tick": 95,
+          "ms": 37.522899999999936,
+          "searches": [
+            {
+              "pawnId": 12418,
+              "mode": "nearest",
+              "visited": 9,
+              "unreachedGroups": 0
+            },
+            {
+              "pawnId": 12450,
+              "mode": "nearest",
+              "visited": 5,
+              "unreachedGroups": 0
+            },
+            {
+              "pawnId": 12453,
+              "mode": "nearest",
+              "visited": 8,
+              "unreachedGroups": 0
+            },
+            {
+              "pawnId": 12475,
+              "mode": "nearest",
+              "visited": 28,
+              "unreachedGroups": 0
+            },
+            {
+              "pawnId": 12482,
+              "mode": "all",
+              "visited": 5,
+              "unreachedGroups": 0,
+              "connectivityVisited": 4870
+            },
+            {
+              "pawnId": 12489,
+              "mode": "all",
+              "visited": 5,
+              "unreachedGroups": 0,
+              "connectivityVisited": 7199
+            },
+            {
+              "pawnId": 12496,
+              "mode": "all",
+              "visited": 5,
+              "unreachedGroups": 0,
+              "connectivityVisited": 13732
+            },
+            {
+              "pawnId": 12499,
+              "mode": "all",
+              "visited": 5,
+              "unreachedGroups": 0,
+              "connectivityVisited": 13732
+            }
+          ]
+        },
+        {
+          "tick": 106,
+          "ms": 36.85690000000068,
+          "searches": [
+            {
+              "pawnId": 12443,
+              "mode": "nearest",
+              "visited": 6,
+              "unreachedGroups": 0
+            },
+            {
+              "pawnId": 12446,
+              "mode": "all",
+              "visited": 3407,
+              "unreachedGroups": 0,
+              "connectivityVisited": 2708
+            },
+            {
+              "pawnId": 12447,
+              "mode": "all",
+              "visited": 229,
+              "unreachedGroups": 0,
+              "connectivityVisited": 10052
+            },
+            {
+              "pawnId": 12475,
+              "mode": "nearest",
+              "visited": 5,
+              "unreachedGroups": 0
+            },
+            {
+              "pawnId": 12477,
+              "mode": "all",
+              "visited": 9,
+              "unreachedGroups": 0,
+              "connectivityVisited": 7681
+            },
+            {
+              "pawnId": 12480,
+              "mode": "all",
+              "visited": 9,
+              "unreachedGroups": 0,
+              "connectivityVisited": 5023
+            },
+            {
+              "pawnId": 12496,
+              "mode": "all",
+              "visited": 469,
+              "unreachedGroups": 0,
+              "connectivityVisited": 14024
+            },
+            {
+              "pawnId": 12504,
+              "mode": "nearest",
+              "visited": 9,
+              "unreachedGroups": 0
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

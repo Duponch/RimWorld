@@ -30,7 +30,7 @@ La référence est RimWorld de base, transposé en 3D. Une description de RimWor
 | Domaine | Contrat du projet | Recherche et cible |
 |---|---|---|
 | Sélection et ordres directs | [Sélection, file et migration](development/player-orders.md) | [Commandes Core](research/player-orders-reference.md) |
-| Objets, transport, constructions | [Logistique](development/material-logistics.md), [chantiers](development/construction.md), [sol et mouvement](development/spatial-motion-storage.md) | [Plans et cadres Core](research/construction-reference.md), [adoption chap. 9–10](research/reference-adoption.md) |
+| Objets, transport, constructions | [Logistique](development/material-logistics.md), [chantiers](development/construction.md), [sol et mouvement](development/spatial-motion-storage.md) | [Objets et zones Core](research/occupancy-reference.md), [plans et cadres](research/construction-reference.md), [adoption chap. 9–10](research/reference-adoption.md) |
 | Repas, repos et confort | [Besoins](development/needs.md), [repas à table](development/dining.md), [aliments](development/food-items.md) | [Mobilier/repas](research/dining-reference.md), [choix alimentaire](research/food-clearing-reference.md) |
 | Régimes alimentaires | [Autorisations partagées et migration](development/food-policies.md) | [Vérification des politiques](research/food-policies-reference.md) |
 | Horaires et sommeil | [Plages, fatigue et migration](development/schedules.md) | [Vérification des horaires](research/schedules-reference.md) |

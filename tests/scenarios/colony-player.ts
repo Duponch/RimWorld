@@ -72,6 +72,8 @@ export function playerDecisions(world: World): Decision[] {
     const x = cx + dx, z = cz + dz;
     if (!world.stockpiles.some(s => s.x === x && s.z === z)) out.push({ reason: 'Séparer le bois et les aliments près du camp.', command: { type: 'stockpile', x, z, enabled: true, filters: { wood: !food, food }, priority: 2, capacity: 75 } });
   }
+  const ingredientSeat=world.structures.find(s=>s.kind==='stool'&&s.x===cx&&s.z===cz-1);
+  if(ingredientSeat&&!world.stockpiles.some(z=>z.x===ingredientSeat.x&&z.z===ingredientSeat.z))out.push({reason:'Garder une petite réserve alimentaire sur le tabouret près du feu.',command:{type:'stockpile',x:ingredientSeat.x,z:ingredientSeat.z,enabled:true,filters:{wood:false,food:true},priority:2,capacity:75}});
   for(const fire of world.structures.filter(s=>s.kind==='campfire')) {
     const bill=fire.bills?.[0];
     if(!bill)out.push({reason:'Installer une première recette de repas simple au feu de camp.',command:{type:'bill-add',structureId:fire.id}});

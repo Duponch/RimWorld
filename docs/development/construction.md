@@ -1,19 +1,38 @@
-# Chantiers — contrat V16
+# Chantiers — contrat V21
 
 Référence : corpus chap. 10, SYS-056/TEST-056, SYS-005/020..022/051/053/054 et [recherche renouvelée](../research/construction-reference.md). Ce contrat remplace le blocage immédiat des plans de murs/tables et le refus systématique des plantes/piles. Les [écarts](../gameplay/decisions.md) ne sont pas des comportements implicites du jeu commercial.
 
 ## Intention, matière et travaux
 
-Chaque construction a un Job parent : `construction = blueprint | frame`. Le bâtiment terminé entre dans `World.structures` et le Job disparaît. La commande crée un plan sans prendre de matière. Elle peut recouvrir plantes, objets au sol et colons ; eau, massif rocheux, pierre décorative, bâtiment, autre ordre, réserve et certaines destinations engagées restent incompatibles. Empreinte et rotation gardent leurs définitions.
+Chaque construction a un Job parent : `construction = blueprint | frame`. Le bâtiment terminé entre dans `World.structures` et le Job disparaît. La commande crée un plan sans prendre de matière. Elle peut recouvrir plantes, objets au sol et colons ; eau, massif rocheux, pierre décorative, bâtiment, autre ordre et certaines destinations engagées restent incompatibles. Une zone compatible subsiste ; les cellules incompatibles sont retirées au placement du plan, avec conservation des objets. Empreinte et rotation gardent leurs définitions.
 
 1. Une plante obstruant l'empreinte donne au constructeur un sous-travail `clearance {resourceId, progress}`. Il accède à une cellule adjacente, regarde la plante et coupe selon ses règles existantes. `gathering.ts` partage les producteurs entre collecte ordinaire et dégagement : quantité, fraîcheur et PRNG conservés ; un dépôt impossible n'enlève rien.
-2. Une pile gênante est prélevée et portée hors des emprises/champs avec la destination `aside`. Le Job parent, le type et la quantité réservée persistent. Dix unités au plus par trajet selon notre capacité locale ; une pile de 23 unités exige trois voyages. Aucune réserve artificielle n'est créée.
+2. Une pile gênante selon le profil du bâtiment est prélevée et portée hors des emprises/champs avec la destination `aside`. Le Job parent, le type et la quantité réservée persistent. Dix unités au plus par trajet selon notre capacité locale ; une pile de 23 unités exige trois voyages. Aucune réserve artificielle n'est créée.
 3. Construction ou Transport peut livrer. La première livraison réelle transforme le plan en cadre. Le conteneur appartient au Job ; `escrow` reste une vue, pas une seconde matière. Seul Construction finit le cadre après coût entièrement livré.
 4. La finition revalide l'empreinte, incorpore les matériaux, crée le bâtiment, libère le Job et invalide la grille d'obstacles du tick avant le prochain acteur.
 
 Le choix se fait par les priorités du tableau Travail. Construction prend en charge son dégagement et son approvisionnement même si Collecte/Transport valent 0 ; Transport seul peut dégager une pile et apporter, pas couper une plante ni terminer. `forConstruction` mémorise la famille responsable de la cargaison engagée. Les deux familles actives ne produisent pas deux réservations sur les mêmes unités.
 
 Le constructeur attend un colon ou service gênant ; il ne le téléporte pas. La vérification protège position, origine/arrivée/coins d'arête active et place de repas, de lit, de cuisine ou de loisirs déjà réservée. Une place de repas peut recevoir un plan, mais le cadre attend sa libération. Les plans ne réservent pas exclusivement le passage.
+
+## Profils de coexistence V21
+
+[Sources et degré de certitude](../research/occupancy-reference.md). `occupancy.ts` décrit séparément le dégagement d’objets, leur présence, la coexistence avec une zone et l’admissibilité d’un apport de stockage. Ces propriétés ne sont pas déduites des maillages ni de la grille de navigation actuelle.
+
+| Construction | Pile pendant la construction | Zone sous plan/ouvrage | Apport de stockage |
+|---|---|---|---|
+| Mur | Dégager | Retirer/refuser | Refuser |
+| Lit | Dégager | Retirer/refuser | Refuser |
+| Table | Conserver | Retirer/refuser | Refuser |
+| Tabouret | Conserver | Autoriser | Autoriser |
+| Piquet | Conserver | Autoriser | Autoriser |
+| Feu | Dégager | Autoriser | Refuser |
+
+Une table peut garder des objets déjà présents, sans devenir une réserve. Tous les producteurs/transferts conservent pile unique, capacité et réservations typées ; les nouveaux dépôts dans les lits ou feux achevés sont interdits. Les places de service engagées restent protégées par les règles existantes. La coupe des plantes gênantes reste commune à ces constructions.
+
+`construction-zones.ts` prépare les cellules et destinations concernées. Le placement d’un plan incompatible retire uniquement les cellules couvertes des réserves/champs. Les cargaisons des transporteurs sont déposées selon un plan conservatif préparé avant mutation ; s’il n’existe pas de place, toute la commande est refusée. Les recettes qui portent un produit vers une réserve retirée recherchent un autre dépôt. Les ordres quantitatifs en file sont réconciliés. Annuler ensuite le plan ne recrée pas les cellules de zone. Les politiques des cellules restantes sont conservées ; division en zones connexes non livrée.
+
+Pour un feu posé sur une réserve, la zone reste tracée mais les apports actifs/en attente sont libérés : elle ne doit pas alimenter une boucle rangement/dégagement. Pour un tabouret, les apports compatibles restent valides. L’index rectangulaire distingue réserves et cultures : dessiner un champ après un bâtiment/plan interdit les mêmes empreintes incompatibles, tout en autorisant la végétation à défricher. Un meuble compatible peut recouvrir le tracé agricole sans permettre de semer sous son volume.
 
 ## Interruptions, annulation et âge
 
@@ -35,11 +54,15 @@ V15 est d'abord validé avec ses anciens plans solides et ses interdictions de c
 
 Positions, routes, quantités, identités, besoins, graines et PRNG ne changent pas au chargement. Les prochains ticks appliquent les nouvelles règles. V16 valide phases, références de dégagement, propriété du sous-travail, durée et délai des arêtes. Même clé de stockage navigateur ; chargement invalide jamais adopté. Les étapes V1–V14 passent leurs validations/migrations historiques.
 
+## Migration V20 → V21
+
+V20 est d’abord validée selon ses interdictions de superposition de zones. Les nouvelles combinaisons ne peuvent pas se cacher dans une ancienne sauvegarde. Puis les rares piles déposées dans un lit/feu par l’ancien code sont déplacées sur une cellule libre proche en gardant ID, ItemId, quantité et fraîcheur ; sans place, chargement refusé avant adoption. Les références de source restent attachées à l’ID ; les ordres en file incompatibles sont libérés. Les anciennes cellules de culture recouvertes par un bâtiment/plan incompatible sont retirées ; les tâches générées de la zone modifiée sont libérées puis seront redécouvertes sur ses cellules restantes. Les dégagements forcés liés à cette zone déposent leur cargaison après précontrôle ; aucun espace disponible entraîne un refus avant adoption. Identités et politiques des zones restantes sont conservées. Positions des colons, horloges et PRNG restent inchangés ; seuls les engagements concernés sont interrompus. Les autres sauvegardes traversent leurs migrations historiques.
+
 ## Validation et portée
 
-Trois scénarios approfondis couvrent transferts typés et fraîcheur, sauvegarde/annulation en cargaison, plante sur empreinte tournée, priorités, transporteur sans Construction, plans/cadres franchis, durée d'arête, coins protégés, repas réservé et migration stricte. L'oracle spatial indépendant comprend des cadres ; le pilote ordinaire doit terminer son camp et conserver ses bilans. L'UI courte exerce phases et reprise dans le vrai worker ; la partie longue suit trois jours par commandes réelles. Les [preuves courantes](validation.md) distinguent chaque passage et les audits.
+Cinq scénarios approfondis couvrent transferts typés et fraîcheur, sauvegarde/annulation en cargaison, plante sur empreinte tournée, priorités, transporteur sans Construction, plans/cadres franchis, durée d'arête, coins protégés, repas réservé et migration stricte. L'oracle spatial indépendant comprend des cadres ; le pilote ordinaire doit terminer son camp et conserver ses bilans. L'UI courte exerce phases et reprise dans le vrai worker ; la partie longue suit trois jours par commandes réelles. Les [preuves courantes](validation.md) distinguent chaque passage et les audits.
 
-Pas de nouveaux objets : états enrichis du mobilier existant. Coexistence avec objets sur table, plans dans réserves, déplacement des personnes gênantes, support du sol, compétences/qualité/échecs, minage, réparation, remplacement et déconstruction restent ouverts. Ne pas annoncer Construction terminée.
+Pas de nouveaux objets : états enrichis du mobilier existant. Franchissement/coûts du mobilier, déplacement des personnes gênantes, support du sol, compétences/qualité/échecs, minage, réparation, remplacement et déconstruction restent ouverts. Ne pas annoncer Construction terminée.
 
 ## Commandes contextuelles V19
 

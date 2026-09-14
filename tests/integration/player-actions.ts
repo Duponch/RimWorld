@@ -3,7 +3,7 @@ import type { Decision } from '../scenarios/colony-player';
 import type { BillSettings } from '../../src/sim/cooking-types';
 import { world, panel, tool, cell, dragRectangle } from './helpers';
 
-async function revealCells(page:Page,cells:{x:number;z:number}[]):Promise<void> {
+export async function revealCells(page:Page,cells:{x:number;z:number}[]):Promise<void> {
   const visible=()=>page.evaluate(cells=>{
     const bounds=document.querySelector('#viewport canvas')!.getBoundingClientRect();
     return cells.every(c=>{const p=window.__lisiere.projectCell(c.x,c.z);return document.elementFromPoint(bounds.x+p.x,bounds.y+p.y)?.tagName==='CANVAS';});

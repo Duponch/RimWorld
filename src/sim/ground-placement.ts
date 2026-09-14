@@ -1,3 +1,4 @@
+import { groundOccupancyAllows, storageOccupancyAllows } from './occupancy.ts';
 import { isCookingOrder } from './order-types.ts';
 import { blockedCells, cellIndex, inBounds } from './pathfinding.ts';
 import { ITEM_DEFINITIONS, type ItemId } from './items.ts';
@@ -25,6 +26,7 @@ function cellCapacity(world: World, cell: Cell, item: ItemId, limit: number, exc
   const pile = groundPile(world, cell);
   if (pile && pile.item!==item) return 0;
   let capacity = Math.min(limit,ITEM_DEFINITIONS[item].stackLimit)-(pile?.quantity??0);
+  if(capacity<=0||world.schemaVersion>=21&&(!groundOccupancyAllows(world,cell)||zone&&!storageOccupancyAllows(world,cell)))return 0;
   // Hot capacity queries must not allocate an array/generator of every transport.
   for (const pawn of world.pawns) {
     if(pawn.id!==exceptPawn&&pawn.haul)capacity-=reservedAt(world,pawn.haul,cell,item,zone);

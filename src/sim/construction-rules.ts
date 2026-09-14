@@ -1,3 +1,4 @@
+import { clearsGroundItems } from './occupancy.ts';
 import { footprintCells, STRUCTURE_DEFINITIONS } from './definitions.ts';
 import type { Cell, HaulDestination, Job, MaterialPile, Pawn, Resource, World } from './types.ts';
 import { serviceCell } from './service-reservations.ts';
@@ -15,9 +16,9 @@ export interface ConstructionObstruction { plant?:Resource; pile?:MaterialPile }
 /** One synchronous planner decision. Keep array ordering for multi-cell sites,
  * and discard this index before any transfer, cutting or construction occurs. */
 export function constructionObstructions(world:World):ReadonlyMap<number,ConstructionObstruction> {
-  const sites=new Map<number,number[]>(),result=new Map<number,ConstructionObstruction>();
+  const sites=new Map<number,number[]>(),result=new Map<number,ConstructionObstruction>(),clearItems=new Set<number>();
   for(const job of world.jobs)if(isConstruction(job)) {
-    result.set(job.id,{});
+    result.set(job.id,{});if(clearsGroundItems(world,job.kind))clearItems.add(job.id);
     for(const c of footprintCells(job)) {
       const cell=c.z*world.width+c.x,ids=sites.get(cell)??[];
       ids.push(job.id);sites.set(cell,ids);
@@ -25,13 +26,13 @@ export function constructionObstructions(world:World):ReadonlyMap<number,Constru
   }
   if(!sites.size)return result;
   for(const resource of world.resources)for(const id of sites.get(resource.z*world.width+resource.x)??[])result.get(id)!.plant??=resource;
-  for(const pile of world.piles)if(pile.owner.type==='ground')for(const id of sites.get(pile.owner.z*world.width+pile.owner.x)??[])result.get(id)!.pile??=pile;
+  for(const pile of world.piles)if(pile.owner.type==='ground')for(const id of sites.get(pile.owner.z*world.width+pile.owner.x)??[])if(clearItems.has(id))result.get(id)!.pile??=pile;
   return result;
 }
 export function constructionObstruction(world: World, job: Job):ConstructionObstruction {
   const cells=new Set(footprintCells(job).map(c=>c.z*world.width+c.x));
   const plant=world.resources.find(r=>cells.has(r.z*world.width+r.x));
-  const pile=world.piles.find(p=>p.owner.type==='ground'&&cells.has(p.owner.z*world.width+p.owner.x));
+  const pile=clearsGroundItems(world,job.kind)?world.piles.find(p=>p.owner.type==='ground'&&cells.has(p.owner.z*world.width+p.owner.x)):undefined;
   return {plant,pile};
 }
 /** A frame is traversable. Completion must not materialize a building across

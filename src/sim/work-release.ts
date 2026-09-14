@@ -1,3 +1,4 @@
+import { zonesUnderPlan } from './construction-zones.ts';
 import { constructionHaulId } from './construction-rules.ts';
 import type { Cell, Command, MaterialPile, Pawn, World } from './types.ts';
 import { workType } from './work-planner.ts';
@@ -14,6 +15,9 @@ export function planCommandDrops(world:World,command:Command):DropPlan|null {
   const jobs=new Set<number>(),zones=new Set<number>(),pawns=new Set<number>();
   if(command.type==='order-job'||command.type==='order-cook'||command.type==='order-haul'||command.type==='clear-orders') {
     pawns.add(command.pawnId);
+  } else if(command.type==='designate') {
+    const affected=zonesUnderPlan(world,command);for(const id of affected.deliveries)zones.add(id);
+    for(const pawn of world.pawns)if(pawn.haul?.destination.type==='aside'&&affected.growing.has(pawn.haul.destination.growingZoneId??-1))pawns.add(pawn.id);
   } else if(command.type==='cancel') {
     const job=world.jobs.find(j=>footprintCells(j).some(c=>same(c,command)));if(job)jobs.add(job.id);
   } else if(command.type==='area'&&(command.action==='cancel'||command.action==='remove-stockpile')) {
