@@ -18,6 +18,8 @@ Pour les premiers jours :
 
 Il n’y a encore ni victoire ni événement hostile. Les règles suivantes décrivent le jeu présent ; les paramètres provisoires et systèmes manquants restent explicités.
 
+Gardez de la place autour des feux et des accès : le passage entre colons reste trop restrictif et peut provoquer des attentes. Le calcul des tâches a été allégé pour les camps chargés, mais cette amélioration ne supprime pas encore ces conflits de circulation.
+
 ## Se repérer dans l’interface
 
 Le compteur FPS reste dans le coin supérieur droit, même en pause ; il indique la cadence du rendu. Les portraits des colons sont en haut ; cliquer dessus centre la caméra et ouvre leur inspection en bas à gauche. Les stocks sont à gauche, les alertes à droite, l'heure et les vitesses en bas à droite. Les onglets de gestion occupent le bas de l'écran : Architecte pour les désignations et constructions, Travail pour les priorités de tous les colons, Horaires pour leurs plages quotidiennes, Affectations pour leurs régimes alimentaires, Historique pour les événements et Menu pour les sauvegardes. Un seul panneau de gestion est ouvert à la fois. Les onglets grisés correspondent aux domaines encore indisponibles.

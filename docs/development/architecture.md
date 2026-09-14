@@ -145,3 +145,7 @@ Voir [la décision détaillée](../decisions/simulation.md#adr-027--horaires-dis
 ## ADR-028 — Régimes partagés et engagements alimentaires
 
 Voir [la décision détaillée](../decisions/simulation.md#adr-028--régimes-partagés-et-engagements-alimentaires).
+
+## ADR-029 — Accessibilité progressive et routes à la demande
+
+Voir [la décision détaillée](../decisions/simulation.md#adr-029--accessibilité-progressive-et-routes-à-la-demande).

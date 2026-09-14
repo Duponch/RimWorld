@@ -1,6 +1,6 @@
 # Sol, trajets et présentation distante
 
-Contrat introduit en V6, relu sous V10 le 14 septembre 2026. Références fonctionnelles : corpus utilisateur chapitres 2/5/10/21/29/32, SYS-005/020..022/051..061/113..117/172..177 ; scénarios matériels et navigation de F1/F2/F3. Ce document remplace les anciennes descriptions permettant plusieurs piles au sol ou présentant le BFS cardinal comme la navigation actuelle. Les originaux du corpus restent inchangés.
+Contrat introduit en V6, relu sous le schéma V13 le 14 septembre 2026. Références fonctionnelles : corpus utilisateur chapitres 2/5/10/21/29/32, SYS-005/020..022/051..061/113..117/172..177 ; scénarios matériels et navigation de F1/F2/F3. Ce document remplace les anciennes descriptions permettant plusieurs piles au sol ou présentant le BFS cardinal comme le calcul des routes actuelles. Les originaux du corpus restent inchangés.
 
 ## Recherche et décisions
 
@@ -36,6 +36,20 @@ Un surplus produit se répartit sur des cellules accessibles proches ; le dépô
 Les changements de mobilier invalident la place de repas même pendant une arête, puis le colon replanifie après l'arrivée. Les routes sont revérifiées avant chaque arête. Un chantier ne peut matérialiser un obstacle sur l'origine, l'arrivée ou un coin latéral d'une arête active. Le contrôle des acteurs latéraux s'effectue au départ : l'entrée ultérieure d'un autre acteur dans une case latérale n'invalide pas rétroactivement la sauvegarde ; les extrémités restent réservées. La congestion générale entre acteurs actifs, les profils de terrain et les réservations de cases de service restent partiels. Le sidestep d'un acteur inactif est désormais un déplacement temporisé.
 
 `work-planner.ts` isole la planification. Le budget reste huit recherches et 32 768 couples logistiques par tick. `idle-logistics.ts` permet un rejet conservateur en temps linéaire lorsque le stockage ne peut pas être amélioré, avant d'explorer la carte. La file de Dial exploite les coûts entiers bornés ; modifier ces coûts exige de revoir la taille de ses seaux.
+
+### Accès aux candidats et routes précises
+
+Le chapitre 21, SYS-113..117, distingue existence d'un accès, calcul de route et suivi. **Adopter** cette séparation ; **adapter** l'algorithme interne, sans imposer l'A* ou les régions proposés par le corpus. La recherche Internet de circulation ci-dessus a été refaite pour ce lot. Elle confirme un écart de collision, conservé explicitement jusqu'au prochain changement fonctionnel ; elle ne justifie pas de modifier silencieusement les déplacements pendant un audit de coût.
+
+`candidate-access.ts` remplace le parcours pondéré préalable vers tous les travaux et destinations hypothétiques. Il copie obstacles et occupations au début d'une décision synchrone, puis explore la composante en quatre directions **à la demande**, jusqu'à prouver l'accès à la cellule interrogée. Une case occupée est rejetée immédiatement ; une case libre réellement déconnectée peut exiger toute la composante. Les tests des candidats ne calculent plus leur trajet détaillé. Le classement des travaux, priorités, préférences et budgets est conservé.
+
+Cette accessibilité cardinale est exacte sous notre contrat de coins : toute diagonale légale admet un détour cardinal par une cellule latérale libre. Elle ne donne **aucune distance ni route physique**. `CandidateAccess` et `DistanceField` sont des types distincts dans `navigation-types.ts`, empêchant de prendre un arbre non pondéré pour une route optimale. De futures portes, traversées dirigées ou nouveaux profils devront réexaminer cette preuve.
+
+Quand un consommateur demande une vraie route, `weighted-search.ts` avance un Dijkstra pondéré sur le même instantané. La file, les parents et le prochain nœud sont conservés entre demandes de cette décision ; chaque cellule est finalisée au plus une fois. La couche de coût égal est terminée pour conserver les mêmes départages. Les cellules découvertes mais non finalisées ne sont jamais offertes comme destinations. Les recherches ciblées de repas, repos et déplacements gardent leur API immédiate ; le calcul par groupes reste disponible pour comparaison, mais n'alimente plus les candidats spéculatifs du travail.
+
+Les buffers ne survivent pas à la décision et ne sont ni partagés entre colons/ticks ni persistés. Aucun cache global, changement de schéma, calcul dans le rendu ou intégration du laboratoire GPU. Une des huit requêtes budgétées peut contenir l'accès puis plusieurs demandes de route sur sa même file ; ce budget ne compte donc pas chaque reprise ou expansion. Le compteur `visited` mesure les cellules pondérées finalisées ; `connectivityVisited` compte séparément les cellules développées pour l'accès. Leur somme n'est pas une durée CPU ; `unreachedGroups = 0` pour ce nouveau mode signifie que le diagnostic par groupes ne s'applique pas, pas qu'aucun conflit n'existe.
+
+L'oracle indépendant, les demandes successives dans des ordres opposés et les obstacles/occupants modifiés après capture sont vérifiés sur 120 cartes. Trente états complets avant/après restent identiques sur les scénarios de cuisine et faim/régimes à 3/30/100 personnes. Les gains et coûts restants sont dans la [validation courante](validation.md) ; ce résultat ne clôture ni la congestion ni G0.
 
 ## Du worker au GPU
 

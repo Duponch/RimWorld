@@ -1,4 +1,4 @@
-# Noyau de simulation — contrat courant V11
+# Noyau de simulation — contrat courant
 
 Corpus : chapitres 2/4/5/9/10/21/30/32, SYS-005/020..022/041..061/113..117. G0 reste en consolidation. Ce document décrit les frontières ; les règles détaillées font autorité dans leurs contrats de domaine.
 
@@ -24,7 +24,7 @@ Une pile porte son ItemId, sa quantité et un propriétaire unique : sol, colon 
 
 ## Navigation et charge
 
-Dijkstra CPU pondéré sur huit voisins, coins solides exclus ; les durées d’arêtes sont euclidiennes. Les recherches de travail, repas et livraisons sont ciblées ; un repli peut explorer tout le composant accessible. La grille statique est préparée au premier besoin du tick. Occupation transitoire, trajet et invalidation restent distincts.
+Dijkstra CPU pondéré sur huit voisins, coins solides exclus ; les durées d’arêtes sont euclidiennes. Le travail vérifie progressivement l'accès aux candidats avant de demander les routes précises à un Dijkstra réutilisé pendant cette décision. Repas et livraisons gardent leurs recherches ciblées ; un repli peut explorer tout le composant accessible. Les deux types de parcours sont [distincts](spatial-motion-storage.md#accès-aux-candidats-et-routes-précises). La grille statique est préparée au premier besoin du tick ; l'occupation est capturée pour chaque décision. Occupation transitoire, trajet et invalidation restent distincts.
 
 Huit recherches et 32 768 couples logistiques par tick ; curseur de parcours persistant. Ces plafonds n’incluent pas tous les coûts et ne garantissent pas un tick constant. Les colons inactifs peuvent céder le passage ; les conflits entre agents actifs et la réservation générale des cases de service restent ouverts ; les postes de cuisine réservent déjà leur place. Le [laboratoire GPU](../research/gpu-navigation.md) ne dirige pas les colons. [Mesures courantes](validation.md).
 

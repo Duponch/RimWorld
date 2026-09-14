@@ -1,0 +1,217 @@
+{
+  "date": "2026-09-14T13:16:45.060Z",
+  "mode": "compare",
+  "comparison": "Exact serialized bytes at 30 checkpoints, including all simulation state; hashes retained for provenance, no hash-only comparison",
+  "results": [
+    {
+      "scenario": "cooking",
+      "count": 3,
+      "tick": 1,
+      "bytes": 1897813,
+      "sha256": "f8c474a3df5a96ea9b6dd85304688075a4a9035b9e07860d891a61de056f7ae6"
+    },
+    {
+      "scenario": "cooking",
+      "count": 3,
+      "tick": 100,
+      "bytes": 1898986,
+      "sha256": "1aef121738ce07db67d9137e4ae98663dcc8073ea56aaea9b4ec051e5a74bc2c"
+    },
+    {
+      "scenario": "cooking",
+      "count": 3,
+      "tick": 150,
+      "bytes": 1899600,
+      "sha256": "7773aa0134569701deb026dedd7c0d3bfc28181ef60750b0fe0d6c85aa38f73a"
+    },
+    {
+      "scenario": "cooking",
+      "count": 3,
+      "tick": 300,
+      "bytes": 1899099,
+      "sha256": "f2e59a6d1156f13dd3a8784973c25c4060ad0507aa226818df8bfc1b130a7658"
+    },
+    {
+      "scenario": "cooking",
+      "count": 3,
+      "tick": 450,
+      "bytes": 1899335,
+      "sha256": "b4168466abdfbb05d507d29ca504a30bfce80e6be8d16e4dcfefa638a5f2d6b4"
+    },
+    {
+      "scenario": "cooking",
+      "count": 30,
+      "tick": 1,
+      "bytes": 1909311,
+      "sha256": "40436614635941b5df002d6b27febe71fcd8e1c7b46ae03799d4482b03e5712b"
+    },
+    {
+      "scenario": "cooking",
+      "count": 30,
+      "tick": 100,
+      "bytes": 1922943,
+      "sha256": "879d74b29e8bd8123621a7576e6106108a2c51f01f5119750b26d32db7762961"
+    },
+    {
+      "scenario": "cooking",
+      "count": 30,
+      "tick": 150,
+      "bytes": 1923674,
+      "sha256": "7dffc0eb18feab8131fe83b59d606b969dbdc76deec55f3f70bfcfc66943c7ee"
+    },
+    {
+      "scenario": "cooking",
+      "count": 30,
+      "tick": 300,
+      "bytes": 1919210,
+      "sha256": "a4f3ab129c38bc1f3b830de9b2b82953a8232b936d7dd54299ddf55b522f9626"
+    },
+    {
+      "scenario": "cooking",
+      "count": 30,
+      "tick": 450,
+      "bytes": 1920385,
+      "sha256": "21575ef3799a36f8b36cbc2679d9bac26c79dfba28644c45ba2b3d088f3b7772"
+    },
+    {
+      "scenario": "cooking",
+      "count": 100,
+      "tick": 1,
+      "bytes": 1961105,
+      "sha256": "9f99629ff654b48b05ac65b4c7fec46f78df12296c8310a83f926230a9b289e3"
+    },
+    {
+      "scenario": "cooking",
+      "count": 100,
+      "tick": 100,
+      "bytes": 2009133,
+      "sha256": "856bc34b1549fed687ef2159915e4411e0a54fa4ad77eb12112ee3caf40553a9"
+    },
+    {
+      "scenario": "cooking",
+      "count": 100,
+      "tick": 150,
+      "bytes": 2007855,
+      "sha256": "ba0dcdde0da9d9bba4bfecdbb947a0f96fb141ee2d71475b369515af2916c867"
+    },
+    {
+      "scenario": "cooking",
+      "count": 100,
+      "tick": 300,
+      "bytes": 1994795,
+      "sha256": "cf868cfa8cb20965aea8cc3898e01b03990ec19c102fe5768a7f3d15fa91947e"
+    },
+    {
+      "scenario": "cooking",
+      "count": 100,
+      "tick": 450,
+      "bytes": 1987389,
+      "sha256": "fbe34c93f4ae2f86347310eb9e4303aa9537cd49313a8ed2a5038be8454b17a3"
+    },
+    {
+      "scenario": "hungry-policies",
+      "count": 3,
+      "tick": 1,
+      "bytes": 1897813,
+      "sha256": "f8c474a3df5a96ea9b6dd85304688075a4a9035b9e07860d891a61de056f7ae6"
+    },
+    {
+      "scenario": "hungry-policies",
+      "count": 3,
+      "tick": 100,
+      "bytes": 1898986,
+      "sha256": "1aef121738ce07db67d9137e4ae98663dcc8073ea56aaea9b4ec051e5a74bc2c"
+    },
+    {
+      "scenario": "hungry-policies",
+      "count": 3,
+      "tick": 150,
+      "bytes": 1899281,
+      "sha256": "8ac5703a969ac0ed0f86b0ae82f28ce17a6f722ede9500cc897b1a7e02146a2e"
+    },
+    {
+      "scenario": "hungry-policies",
+      "count": 3,
+      "tick": 300,
+      "bytes": 1899219,
+      "sha256": "76c4f1b1b3eefe220b54a684638581bc7667f3fda7cec209a8379c3c7380877c"
+    },
+    {
+      "scenario": "hungry-policies",
+      "count": 3,
+      "tick": 450,
+      "bytes": 1899429,
+      "sha256": "4f0b74d15b800f5c6b7075efd5d5026fee295d2d0372c6ad5bbb651151ed4505"
+    },
+    {
+      "scenario": "hungry-policies",
+      "count": 30,
+      "tick": 1,
+      "bytes": 1909311,
+      "sha256": "40436614635941b5df002d6b27febe71fcd8e1c7b46ae03799d4482b03e5712b"
+    },
+    {
+      "scenario": "hungry-policies",
+      "count": 30,
+      "tick": 100,
+      "bytes": 1922943,
+      "sha256": "879d74b29e8bd8123621a7576e6106108a2c51f01f5119750b26d32db7762961"
+    },
+    {
+      "scenario": "hungry-policies",
+      "count": 30,
+      "tick": 150,
+      "bytes": 1920470,
+      "sha256": "e23f565843e79020c17e0cfc0c5db23de7ac2f3a2d17e73d14a861c3147cb567"
+    },
+    {
+      "scenario": "hungry-policies",
+      "count": 30,
+      "tick": 300,
+      "bytes": 1922136,
+      "sha256": "affc31f720e92f653539543c25ebaafe93244ab632a4012cb4ad0e42e361e5ed"
+    },
+    {
+      "scenario": "hungry-policies",
+      "count": 30,
+      "tick": 450,
+      "bytes": 1923709,
+      "sha256": "1afbf913bb24d2d8c8093decc21afe8383c06ca6a5d65c254c020f7269c71a3f"
+    },
+    {
+      "scenario": "hungry-policies",
+      "count": 100,
+      "tick": 1,
+      "bytes": 1961105,
+      "sha256": "9f99629ff654b48b05ac65b4c7fec46f78df12296c8310a83f926230a9b289e3"
+    },
+    {
+      "scenario": "hungry-policies",
+      "count": 100,
+      "tick": 100,
+      "bytes": 2009133,
+      "sha256": "856bc34b1549fed687ef2159915e4411e0a54fa4ad77eb12112ee3caf40553a9"
+    },
+    {
+      "scenario": "hungry-policies",
+      "count": 100,
+      "tick": 150,
+      "bytes": 2002669,
+      "sha256": "3efb0bb368b3e3e970d6ecee3df1b9a98eabfaccef6148605047aea3dba42fe2"
+    },
+    {
+      "scenario": "hungry-policies",
+      "count": 100,
+      "tick": 300,
+      "bytes": 1998289,
+      "sha256": "746bb2d585613a23e69d851195f802d76d39968052691e29c656e16ee7ab86a8"
+    },
+    {
+      "scenario": "hungry-policies",
+      "count": 100,
+      "tick": 450,
+      "bytes": 2003021,
+      "sha256": "d61f6609272dd321f5c8338910790225628f084a1cde3e8b51975d9b709d206c"
+    }
+  ]
+}

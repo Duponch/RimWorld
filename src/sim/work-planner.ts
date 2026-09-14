@@ -1,5 +1,5 @@
 import { hasCookingWork, planCooking, type CookingPlan } from './cooking-planner.ts';
-import { planningGoals } from './planning-goals.ts';
+import { candidateAccess } from './candidate-access.ts';
 import { fuelCapacity, wantsFuel } from './fuel.ts';
 import { mayImproveStorage } from './idle-logistics.ts';
 import { startTravel } from './movement.ts';
@@ -8,11 +8,11 @@ import { storageCapacity } from './ground-placement.ts';
 import { legacyItem, type ItemId } from './items.ts';
 import { CARRY_CAPACITY, footprintCells, JOB_WOOD_COST } from './definitions.ts';
 import { deliveredStock, groundQuantity, reservedDestination, reservedSource } from './materials.ts';
-import { cellIndex, inBounds, reachableCells, routeToJob, routeToCell, interactionGoals } from './pathfinding.ts';
+import { cellIndex, inBounds, hasReachableCell, reachableCells, routeToJob, routeToCell, interactionGoals } from './pathfinding.ts';
 import type { Reachability } from './pathfinding.ts';
 import type { Cell, HaulDestination, Job, JobKind, MaterialKind, Pawn, WorkType, World } from './types.ts';
 export const PLAN_INTERVAL=20;
-export interface SearchStats { searches:{pawnId:number;mode:'all'|'nearest'|'full';visited:number;unreachedGroups:number}[] }
+export interface SearchStats { searches:{pawnId:number;mode:'all'|'nearest'|'full';visited:number;unreachedGroups:number;connectivityVisited?:number}[] }
 export interface SearchBudget { remaining:number; pairs:number; stats?:SearchStats }
 export type NavigationGrid=()=>Uint8Array;
 export const workType=(job:Pick<Job,'kind'|'growingZoneId'>):WorkType=>job.growingZoneId !== undefined || job.kind === 'sow' ? 'grow' : ['chop','harvest','cut'].includes(job.kind) ? 'gather' : 'build';
@@ -23,6 +23,14 @@ export function search(world: World, pawn: Pawn, blocked: Uint8Array, occupied: 
   budget.remaining--;
   const result=reachableCells(world,pawn,blocked,occupied,goals,allGroups);
   budget.stats?.searches.push({pawnId:pawn.id,mode:allGroups?'all':goals?'nearest':'full',visited:result.visited,unreachedGroups:result.unreachedGroups});
+  return result;
+}
+/** A decision-wide connectivity check replaces speculative paths to every
+ * candidate. Precise routes share one resumable weighted search. */
+function searchCandidates(world:World,pawn:Pawn,blocked:Uint8Array,occupied:Set<number>,budget:SearchBudget):Reachability|null {
+  if(!budget.remaining)return null;budget.remaining--;
+  const result=candidateAccess(world,pawn,blocked,occupied);
+  budget.stats?.searches.push({pawnId:pawn.id,mode:'all',get visited(){return result.visited;},unreachedGroups:0,get connectivityVisited(){return result.connectivityVisited;}});
   return result;
 }
 /** Deterministic sidestep; active and sleeping agents are never teleported or overlapped. */
@@ -67,9 +75,9 @@ interface Candidate { cooking?: CookingPlan; priority: number; rank: number; dis
 function compareCandidate(a: Candidate, b: Candidate): number { return a.priority - b.priority || a.rank - b.rank || a.distance - b.distance || a.id - b.id; }
 function canReach(world: World, target: Cell & { kind?: JobKind }, reachable: Reachability, allowTarget: boolean): boolean {
   const cells = target.kind ? footprintCells(target as Job) : [target];
-  if (allowTarget && reachable.parents[cellIndex(world, target.x, target.z)] !== -2) return true;
+  if (allowTarget && hasReachableCell(reachable,cellIndex(world, target.x, target.z))) return true;
   for (const cell of cells) for (const next of [{ x: cell.x, z: cell.z - 1 }, { x: cell.x + 1, z: cell.z }, { x: cell.x, z: cell.z + 1 }, { x: cell.x - 1, z: cell.z }]) {
-    if (inBounds(world, next.x, next.z) && !cells.some(own => sameCell(own, next)) && reachable.parents[cellIndex(world, next.x, next.z)] !== -2) return true;
+    if (inBounds(world, next.x, next.z) && !cells.some(own => sameCell(own, next)) && hasReachableCell(reachable,cellIndex(world, next.x, next.z))) return true;
   }
   return false;
 }
@@ -110,7 +118,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
       }
     }
   }
-  reachable ??= search(world, pawn, blocked, occupied, budget,undefined,planningGoals(world,pawn,ready.map(c=>c.job),fires)); if (!reachable) return;
+  reachable ??= searchCandidates(world, pawn, blocked, occupied, budget); if (!reachable) return;
   pawn.planCooldown = PLAN_INTERVAL;
   const delivered = new Map<number, number>(); const ground = new Map<number, number>();
   const sourceReserved = new Map<number, number>(); const jobReserved = new Map<number, number>(); const zoneReserved = new Map<number, number>();
@@ -220,6 +228,6 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
     else { best.job!.reservedBy = pawn.id; best.job!.status = 'active'; pawn.jobId = best.job!.id; }
     pawn.path = path; pawn.state = path.length ? 'moving' : 'working'; return;
   }
-  const staticReachable = blockedTargets.length ? search(world, pawn, blocked, new Set(), budget) : null;
+  const staticReachable = blockedTargets.length ? searchCandidates(world, pawn, blocked, new Set(), budget) : null;
   if (staticReachable) for (const candidate of blockedTargets) if (yieldIdleBlocker(world, pawn, candidate.target, blocked, occupied, staticReachable, candidate.allow, candidate.exact)) return;
 }

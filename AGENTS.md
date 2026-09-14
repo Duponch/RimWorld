@@ -57,6 +57,7 @@
 - Navigation CPU pondérée sur huit voisins ; déplacement physique à durée euclidienne, coins solides exclus. L’historique d’arêtes et le tampon de présentation ne sont pas des données autoritaires de simulation. Ne pas réintroduire le lissage relancé par snapshot.
 - Faire face au déplacement et à la cible du travail. Corps et cargaison partagent les poses GPU ; l’anneau de sélection suit le même trajet.
 - Lire docs/development/spatial-motion-storage.md avant de modifier ces contrats, la migration V5→V6 ou la représentation distante. Le laboratoire de navigation GPU reste indépendant.
+- Accès aux candidats et distance sont distincts : le parcours cardinal progressif prouve seulement l'existence sous le contrat de coins ; les routes restent pondérées sur huit voisins. Les deux parcours capturent la même occupation et ne survivent qu'à une décision synchrone. Ne pas partager ces buffers entre colons/ticks ni réutiliser un coût non finalisé.
 
 ## Conservation alimentaire (V11)
 - Lire docs/development/food-preservation.md avant de modifier les transferts, les âges ou la température. Séparer copie l’âge, fusionner pondère les quantités, produire démarre frais. La pourriture précède les actions ; elle réconcilie les réservations et les pertes cumulées.

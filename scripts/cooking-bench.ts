@@ -18,12 +18,12 @@ for(const pawns of populations) {
     const w=cookingFixture(pawns);
     if(expireAt)for(const p of w.piles)if(isPerishable(p.item))p.rot={progress:ROT_DAYS[p.item]*TICKS_PER_DAY-expireAt,atTick:w.tick};
     const errors=validateWorld(w);if(errors.length)throw new Error(errors.join(';'));
-    let cooked=0,expiryTickMs:number|null=null;const active={cook:0,haul:0,grow:0,build:0,refuel:0};const searchTotals={all:0,nearest:0,full:0,visited:0,unreachedGroups:0},worst:{tick:number;ms:number;searches:unknown}[]=[];
+    let cooked=0,expiryTickMs:number|null=null;const active={cook:0,haul:0,grow:0,build:0,refuel:0};const searchTotals={all:0,nearest:0,full:0,visited:0,connectivityVisited:0,unreachedGroups:0},worst:{tick:number;ms:number;searches:unknown}[]=[];
     for(let i=0;i<ticks;i++) {
       const diagnostics={searches:[] as import('../src/sim/work-planner.ts').SearchStats['searches']};
       const start=performance.now();stepWorld(w,1,diagnostics);const ms=performance.now()-start;samples.push(ms);
       if(w.tick===expireAt)expiryTickMs=ms;
-      for(const search of diagnostics.searches){searchTotals[search.mode]++;searchTotals.visited+=search.visited;searchTotals.unreachedGroups+=search.unreachedGroups;}
+      for(const search of diagnostics.searches){searchTotals[search.mode]++;searchTotals.visited+=search.visited;searchTotals.connectivityVisited+=search.connectivityVisited??0;searchTotals.unreachedGroups+=search.unreachedGroups;}
       worst.push({tick:w.tick,ms,searches:diagnostics.searches});worst.sort((a,b)=>b.ms-a.ms);worst.length=Math.min(worst.length,3);
       for(const p of w.pawns){if(p.cooking)active.cook++;if(p.haul)active[p.haul.destination.type==='fuel'?'refuel':'haul']++;if(p.jobId){const j=w.jobs.find(j=>j.id===p.jobId);if(j)active[j.kind==='sow'?'grow':'build']++;}}
       for(const e of w.events)if(e.tick===w.tick&&e.message.includes('a cuisiné'))cooked++;

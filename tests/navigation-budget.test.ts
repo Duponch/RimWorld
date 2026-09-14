@@ -1,4 +1,5 @@
 import { expect, test } from 'vitest';
+import { candidateAccess } from '../src/sim/candidate-access';
 import { createWorld } from '../src/sim/engine';
 import { foodSearchGoals, selectFood } from '../src/sim/food-selection';
 import type { MaterialPile } from '../src/sim/types';
@@ -43,6 +44,27 @@ test('goal-bounded floods retain the full-flood nearest food and exact path acro
     // A free target can still be completely enclosed by transient occupants.
     const trafficFull=reachableCells(w,start,blocked,traffic),trafficGroups=reachableCells(w,start,blocked,traffic,undefined,groups);
     expect(Array.from(trafficFull.costs),`independent distances seed ${run}`).toEqual(oracleCosts(16,16,34,blocked,traffic));
+    const gridSnapshot=blocked.slice(),trafficSnapshot=new Set(traffic),access=candidateAccess(w,start,gridSnapshot,trafficSnapshot);
+    expect(access.visited).toBe(0); // Existence never allocates a speculative route.
+    expect(access.connectivityVisited).toBe(0);
+    // Caller buffers may change after this synchronous query was created. Its
+    // component and weighted continuation must still refer to the same snapshot.
+    gridSnapshot.fill(1);trafficSnapshot.clear();
+    const order=run%2?[...foods].reverse():foods;
+    for(const food of [...order,...order.slice().reverse()]) {
+      const actual=routeToJob(w,food,access,true),expected=routeToJob(w,food,trafficFull,true);
+      expect(actual,`resumed route seed ${run} target ${food.id}`).toEqual(expected);
+      if(actual)expect(routeCost(w,actual,access)).toBe(routeCost(w,expected!,trafficFull));
+      expect(routeToCell(w,food,access),`exact resumed seed ${run}`).toEqual(routeToCell(w,food,trafficFull));
+    }
+    for(const orientation of [0,1,2,3] as const) {
+      const table={kind:'table',x:7,z:7,footprint:'standard' as const,orientation};
+      expect(routeToJob(w,table,access,false)).toEqual(routeToJob(w,table,trafficFull,false));
+    }
+    expect(access.visited).toBeLessThanOrEqual(trafficFull.visited); // Each cell settles at most once across all requests.
+    expect(routeToCell(w,start,access)).toEqual([]);
+    for(let i=0;i<256;i++)expect(access.has(i),`component seed ${run} cell ${i}`).toBe(trafficFull.costs[i]!==Infinity);
+    expect(access.connectivityVisited).toBeLessThanOrEqual(trafficFull.visited);
     for(const food of foods)expect(routeToJob(w,food,trafficGroups,true),`traffic groups seed ${run} target ${food.id}`).toEqual(routeToJob(w,food,trafficFull,true));
     const select = (reach: typeof full) => foods.flatMap(food => {
       const path = routeToJob(w, food, reach, true); return path ? [{ id: food.id, path }] : [];

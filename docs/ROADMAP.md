@@ -10,7 +10,7 @@ RimWorld de base d’abord, extensions après G5. Grille plane en 3D low poly, i
 
 ## Prochains lots
 
-1. **Consolidation G0 liée aux boucles** : circulation entre personnes actives, cases de travail et coûts des replis de navigation. Les audits cuisine et régimes trouvent encore de grandes recherches ; le stress à cent personnes atteint 40,45 ms au p95. Profiler puis corriger les causes, en conservant empreintes, engagements et résultats métier. L’état incohérent d’un chef affamé attendant la navigation est corrigé en V13.
+1. **Consolidation G0 liée aux boucles** : corriger le passage temporaire entre personnes, en le distinguant des réservations exclusives de lits et postes. Le coût des trajets spéculatifs a été réduit : accès progressif, puis Dijkstra précis à la demande ; 30 états complets avant/après identiques. Dans le même scénario de cuisine à cent personnes, le p95 passe de 33,93 à 21,59 ms/tick (deux passes de 300 ticks). Les cibles déconnectées et la congestion coûtent encore cher ; cette mesure n'est pas une garantie à vitesse ×6. Voir les [conditions et limites](development/validation.md). L’état incohérent d’un chef affamé attendant la navigation est corrigé en V13.
 2. **Poursuivre la survie G1** : cuisine, conservation à climat fixe, horaires et régimes alimentaires sont livrés ; poursuivre les besoins et loisirs utiles à la vie du camp. Autres recettes, postes, filtres avancés et compétences restent ouverts ; le feu ne chauffe pas encore les pièces.
 3. **Compléments de G1, puis habitat G2** : statistiques utiles et catalogue progressivement enrichi ; température variable et chaîne du froid restent G2. Faire interagir les systèmes présents avant de multiplier le contenu.
 
