@@ -70,7 +70,13 @@ export function playerDecisions(world: World): Decision[] {
     } else plans.push(temporary);
   }
   const pin=world.structures.find(s=>s.kind==='horseshoes'&&s.x===cx+2&&s.z===cz-3);
-  if(pin&&world.tick>=6000){const c={type:'install' as const,structureId:pin.id,x:cx+4,z:cz-3,orientation:0 as const};if(installCommand(world,c,true).ok)out.push({reason:'Déplacer le jeu à côté du camp sans reconstruire le piquet.',command:c});}
+  if(world.tick>=6000) {
+    const storage={x:cx+4,z:cz};
+    if(!world.stockpiles.some(s=>s.x===storage.x&&s.z===storage.z))out.push({reason:'Préparer une réserve pour les meubles retirés.',command:{type:'stockpile',...storage,enabled:true,filters:{wood:false,food:false,furniture:true},priority:2,capacity:1}});
+    if(pin){const c={type:'designate' as const,kind:'uninstall' as const,x:pin.x,z:pin.z};if(canDesignate(world,c).ok)out.push({reason:'Retirer le jeu pour réorganiser le camp.',command:c});}
+    const stored=world.packed.find(p=>p.building.kind==='horseshoes'&&p.owner.type==='ground'&&p.owner.x===storage.x&&p.owner.z===storage.z);
+    if(stored){const c={type:'install' as const,structureId:stored.building.id,x:cx+4,z:cz-3,orientation:0 as const};if(installCommand(world,c,true).ok)out.push({reason:'Réinstaller le piquet après son rangement en réserve.',command:c});}
+  }
   for (const plan of plans) {
     if(plan.kind==='horseshoes'&&(world.structures.some(s=>s.kind==='horseshoes')||world.packed.some(p=>p.building.kind==='horseshoes')))continue;
     // Beds first, dining next, then an open windbreak. No claim of a roofed room.

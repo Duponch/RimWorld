@@ -59,6 +59,7 @@ export class ColonyRenderer {
   private readonly storageGroup = new THREE.Group();
   private readonly hover: THREE.Mesh;
   private readonly selectionInput: PawnSelectionInput;
+  private selectedPawns:ReadonlySet<number>=new Set();
   onSelection: (gesture:SelectionGesture)=>void=()=>{};
   onContext: (cell:Cell,x:number,y:number,queue:boolean)=>void=()=>{};
   onInteractionCancel: ()=>void=()=>{};
@@ -158,6 +159,13 @@ export class ColonyRenderer {
     this.selectionInput=new PawnSelectionInput(renderer.domElement,{
       enabled:()=>this.tool==='select'&&!document.querySelector('dialog[open]'),
       pawns:()=>this.screenPawns(),select:gesture=>this.onSelection(gesture),
+      selected:()=>this.selectedPawns,
+      canInspect:event=>{
+        const c=this.pick(event),w=this.world;if(!c||!w)return false;
+        const same=(p:Cell)=>p.x===c.x&&p.z===c.z;
+        return w.packed.some(p=>p.owner.type==='ground'&&same(p.owner))||w.piles.some(p=>p.owner.type==='ground'&&same(p.owner))
+          ||w.stockpiles.some(same)||w.resources.some(same)||w.structures.some(s=>footprintCells(s).some(same))||w.jobs.some(j=>footprintCells(j).some(same));
+      },
       inspect:event=>{const cell=this.pick(event);if(cell)this.onPick(cell.x,cell.z);else this.onSelection({ids:[],additive:false,toggle:false});},
       lock:locked=>{this.controls.enabled=!locked;this.keys.clear();},
     });
@@ -317,7 +325,7 @@ export class ColonyRenderer {
     this.controls.update();
   }
 
-  setSelectedPawns(ids:ReadonlySet<number>):void {this.pawns.setSelected(ids);}
+  setSelectedPawns(ids:ReadonlySet<number>):void {this.selectedPawns=new Set(ids);this.pawns.setSelected(ids);}
 
   /** Project lightweight actor proxies only for pointer gestures, using the
    * same confirmed edge as the GPU. Canopies don't prevent selecting a colon. */

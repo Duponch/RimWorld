@@ -47,3 +47,7 @@ Deux activités livrent accès, satisfaction et lassitude sans fermer le catalog
 ## Maintien sur la cellule V23
 
 La préférence après clic droit vise l’ancre de l’emprise du bâtiment présent, pas un rayon de voisins. Famille conservée, file préalable et demi-journée maximale depuis l’acceptation suivent les sources consultées ; aucune promesse de terminer un chantier devenu impossible. Les autres fournisseurs seront intégrés avec leurs systèmes. Les limites de provenance et différences de logistique restent dans le [contrat](../development/player-orders.md) et sa recherche.
+
+## Meubles emballés V26
+
+Le rangement suit des filtres et une priorité strictement meilleure ; le dégagement reste proche avant un éventuel rangement séparé. Le départage déterministe des cellules remplace celui des régions de référence. Les dépôts de dégagement conservent notre restriction aux réserves qui acceptent l'objet, plus conservatrice que le validateur hors stockage lu dans le miroir. Ce point sera réexaminé avec les règles générales de dépôts/interdictions. Les paquets sont des placeholders réduits sur les surfaces du mobilier pour rester lisibles en 3D ; leur propriété et leur unique case au sol ne changent pas. [Sources, certitude et autres absences](../research/furniture-logistics-reference.md).

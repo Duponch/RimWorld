@@ -22,6 +22,7 @@ export function validateFurniture(world:World,version:number,ids:Set<number>,sha
   const seen=new Set<number>();
   for(const job of world.jobs) {
     const f=job.furniture;
+    if(job.installationWork!==undefined&&(version<26||job.kind!=='install'||!['build','haul'].includes(job.installationWork)||job.reservedBy===null))errors.push('Invalid installation work assignment.');
     if(!['install','uninstall'].includes(job.kind)){if(f!==undefined)errors.push('Unexpected furniture target.');continue;}
     if(!record(f)||!integer(f.structureId,1)||!minifiable(f.kind)||Object.keys(f).some(k=>!['structureId','kind'].includes(k))){errors.push('Invalid furniture target.');continue;}
     const source=furnitureObject(world,f.structureId);
@@ -43,7 +44,7 @@ export function validateFurniture(world:World,version:number,ids:Set<number>,sha
       ground.add(key);
     } else {
       const pawn=world.pawns.find(p=>p.id===o.pawnId),job=world.jobs.find(j=>j.id===pawn?.jobId);
-      if(carriers.has(o.pawnId)||!pawn||job?.kind!=='install'||job.furniture?.structureId!==id||world.piles.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===o.pawnId))errors.push('Invalid furniture carrier.');
+      if(carriers.has(o.pawnId)||!pawn||!(job?.kind==='install'&&job.furniture?.structureId===id||version>=26&&pawn?.haul?.whole&&pawn.haul.phase==='deliver'&&pawn.haul.carryPileId===id)||world.piles.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===o.pawnId))errors.push('Invalid furniture carrier.');
       carriers.add(o.pawnId);
     }
   }

@@ -49,7 +49,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 25 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 26 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)
@@ -75,7 +75,7 @@
 - V14 migre à 55 de satisfaction sans inventer de passé ni interrompre les tâches. Le profil de camp à attentes extrêmement basses est provisoire ; ne pas le présenter comme un calcul de richesse. Les fixtures de foule doivent cloner profondément les états des personnes.
 
 ## Construction (V16)
-- Lire docs/development/construction.md : plan traversable, cadre après première livraison, finition après dégagement physique. Construction peut livrer même sans Transport ; Transport seul ne finit pas. Annuler libère les cargaisons de dégagement liées au parent.
+- Lire docs/development/construction.md : plan traversable, cadre après première livraison, finition après dégagement physique. Construction peut livrer même sans Transport ; Transport seul ne finit pas un cadre ordinaire ; la réinstallation d’un meuble entier est aussi accessible à Transport en V26. Annuler libère les cargaisons de dégagement liées au parent.
 - Protéger personnes, arêtes/coins et services avant livraison/achèvement. Le délai de cadre capturé appartient à l'arête sauvegardée. Valider V15 avec ses anciennes exclusions avant migration ; aucun cache d'obstacles de chantier ne survit à une décision synchrone.
 - V21 : profils de coexistence dans src/sim/occupancy.ts ; table/tabouret/piquet gardent les piles compatibles, mur/lit/feu les dégagent. Les plans retirent les cellules de zone incompatibles après préplanification des cargaisons ; un feu peut recouvrir une zone sans accepter le rangement. V22 livre transit/coûts/arrêt des meubles présents ; autres profils restent ouverts. Lire docs/research/occupancy-reference.md.
 
@@ -100,4 +100,4 @@
 ## Meubles entiers V25
 - Lire docs/development/furniture-transfer.md avant de modifier installation, paquet, portage ou annulation. Le bâtiment garde son identité et le propriétaire de son lit entre structures et packed ; une seule représentation autoritaire et un seul propriétaire.
 - Le plan de réinstallation réutilise les règles de chantier, avec exclusion du meuble source. Un paquet occupe une cellule exclusive. Interruption et annulation prévalident le dépôt ; un refus conserve le portage. V24 est strictement validée avant ajout de packed vide.
-- Transport seul, rangement et dégagement automatiques des paquets restent à compléter. La valeur WorkTotal 150 du plan de référence n'est pas une durée de pose : voir la recherche fraîche et la chaîne HaulToContainer.
+- V26 : lire docs/development/furniture-logistics.md. Transport seul, rangement filtré et dégagement des paquets sont livrés. HaulTask.whole réserve la case entière, active ou en file ; pas de conversion en matériau. installationWork conserve le fournisseur de réinstallation. Valider V25 strictement avant migration, filtre absent = meubles refusés. Les capacités peuvent être réutilisées pendant une décision synchrone seulement. Le dégagement reste local avant le rangement ordinaire. La valeur WorkTotal 150 du plan de référence n'est pas une durée de pose : voir la recherche fraîche et la chaîne HaulToContainer.

@@ -1,5 +1,5 @@
 import { advanceFurniture } from './furniture-transfer.ts';
-import { minifiable, furnitureIntentAt } from './furniture-rules.ts';
+import { minifiable, furnitureIntentAt, furnitureSourceCells, packedAt } from './furniture-rules.ts';
 import { designateUninstall, installCommand } from './furniture-commands.ts';
 import { deconstructionAt, deconstructionAvailable, designateDeconstruction } from './deconstruction-rules.ts';
 import { finishDeconstruction } from './deconstruction.ts';
@@ -90,7 +90,7 @@ function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandR
       for(const pawn of world.pawns)if(pawn.cooking?.storageId&&ids.has(pawn.cooking.storageId)){pawn.cooking.storageId=null;pawn.path=[];pawn.planCooldown=0;}
       for (const pawn of world.pawns) if (pawn.haul?.destination.type === 'stockpile' && ids.has(pawn.haul.destination.stockpileId)) releaseWork(world, pawn,drops);
     } else {
-      const jobs = world.jobs.filter(job => footprintCells(job).some(cell => cells.has(cellIndex(world, cell.x, cell.z))));
+      const jobs = world.jobs.filter(job => [...footprintCells(job),...furnitureSourceCells(world,job)].some(cell => cells.has(cellIndex(world, cell.x, cell.z))));
       const ids = new Set(jobs.map(job => job.id)); affected = ids.size;
       const carriers = new Set(world.pawns.filter(pawn => pawn.haul && ids.has(constructionHaulId(pawn.haul.destination) ?? -1)).map(pawn => pawn.id));
       const returning = world.piles.filter(pile => (pile.owner.type === 'job' && ids.has(pile.owner.jobId)) || (pile.owner.type === 'pawn' && carriers.has(pile.owner.pawnId))).length;
@@ -121,7 +121,6 @@ export function canDesignate(world: World, command: DesignateCommand): CommandRe
   if (cells.some(cell => !inBounds(world, cell.x, cell.z))) return refusal('out-of-bounds', 'Empreinte hors de la carte.');
   if (world.jobs.some(job => footprintCells(job).some(cell => cells.some(target => sameCell(cell, target))))) return refusal('occupied', 'Un ordre existe déjà dans cette empreinte.');
   if(command.kind==='deconstruct'||command.kind==='uninstall')return {ok:true};
-  if(cells.some(c=>world.packed?.some(p=>p.owner.type==='ground'&&p.owner.x===c.x&&p.owner.z===c.z)))return refusal('occupied','Déplacez le meuble emballé qui gêne cet emplacement.');
   const resource = world.resources.find(candidate => sameCell(candidate, command));
   if (command.kind === 'chop' || command.kind === 'harvest' || command.kind === 'cut') {
     return resource && (command.kind === 'chop' ? resource.kind === 'tree' : isPlant(resource)) && (command.kind !== 'harvest' || harvestable(world, resource)) ? { ok: true } : refusal('incompatible-resource', 'Ressource incompatible.');
@@ -191,7 +190,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   if (!inBounds(world, command.x, command.z)) return refusal('out-of-bounds', 'Cellule hors de la carte.');
   if (command.type === 'stockpile') {
     if(cookingCellReserved(world,command))return refusal('occupied','Case réservée par un cuisinier.');
-    if (world.pawns.some(p => p.haul?.destination.type === 'aside' && sameCell(p.haul.destination, command))) return refusal('occupied', 'Case réservée pour le dégagement des cultures.');
+    if (world.pawns.some(p => p.haul?.destination.type === 'aside' && !p.haul.whole && sameCell(p.haul.destination, command))) return refusal('occupied', 'Case réservée pour le dégagement des cultures.');
     if (typeof command.enabled !== 'boolean' || !validStorageSettings(command)) return refusal('invalid-storage', 'Filtres, priorité (1–4) ou capacité (1–75) invalides.');
     const existing = world.stockpiles.find(zone => sameCell(zone, command));
     if (!command.enabled) {
@@ -211,6 +210,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
     // Re-evaluate pending capacity reservations atomically after the policy change.
     for (const pawn of world.pawns) if (pawn.haul?.destination.type === 'stockpile'
       && (!destinationValid(world, pawn) || pawn.haul.destination.stockpileId === existing?.id)) releaseWork(world, pawn,drops);
+    for(const p of world.pawns)if(p.haul?.whole&&p.haul.destination.type==='aside'&&!destinationValid(world,p))releaseWork(world,p,drops);
     wakePlanners(world); refreshStock(world); return { ok: true };
   }
   if (command.type === 'cancel') {
@@ -313,6 +313,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
         } else moveToward(world,pawn,constructionWorkTarget(world,job),false,getBlocked,budget);
         continue;
       }
+      if(job.kind==='sow'&&packedAt(world,job)){releaseWork(world,pawn);continue;}
       if(job.furniture){if(advanceFurniture(world,pawn,job,target=>moveToward(world,pawn,target,false,getBlocked,budget),()=>releaseWork(world,pawn))){blocked=undefined;wakePlanners(world);}continue;}
       if(job.kind==='deconstruct'&&!deconstructionAvailable(world,job,pawn.id)){releaseWork(world,pawn);continue;}
       if(isConstruction(job)&&!constructionSiteFree(world,job,pawn.id)){releaseWork(world,pawn);continue;}

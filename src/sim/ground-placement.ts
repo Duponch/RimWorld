@@ -48,6 +48,7 @@ function cellCapacity(world: World, cell: Cell, item: ItemId, limit: number, exc
 function reservedAt(world:World,task:HaulTask,cell:Cell,item:ItemId,zone?:StockpileCell):number {
   const d=task.destination;
   if(!(zone&&d.type==='stockpile'&&d.stockpileId===zone.id)&&!(d.type==='aside'&&d.x===cell.x&&d.z===cell.z))return 0;
+  if(task.whole)return Infinity;
   const pile=world.piles.find(p=>p.id===(task.phase==='pickup'?task.sourcePileId:task.carryPileId));
   return pile?.item===item?task.quantity:Infinity;
 }

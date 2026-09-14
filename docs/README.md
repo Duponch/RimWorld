@@ -52,4 +52,4 @@ Après un changement, mettre à jour **le contrat concerné**, puis les entrées
 
 Déconstruction des bâtiments actuels : [règles et limites](research/deconstruction-reference.md), [contrat V24](development/deconstruction.md).
 
-Déplacement des meubles entiers : [contrat V25](development/furniture-transfer.md), [vérification des branches de référence](research/furniture-transfer-reference.md).
+Déplacement des meubles entiers : [transferts](development/furniture-transfer.md), [rangement et dégagement V26](development/furniture-logistics.md), [vérification des transferts](research/furniture-transfer-reference.md) et [recherche logistique](research/furniture-logistics-reference.md).

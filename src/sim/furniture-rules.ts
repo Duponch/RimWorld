@@ -1,3 +1,4 @@
+import { reservedSource } from './materials.ts';
 import { footprintCells } from './definitions.ts';
 import { constructionObstruction, constructionSiteFree } from './construction-rules.ts';
 import { deconstructionAvailable } from './deconstruction-rules.ts';
@@ -21,12 +22,12 @@ export function furnitureDuration(world:World,job:Job):number {
 export function furnitureReady(world:World,job:Job,pawn:Pawn):boolean {
   const id=job.furniture?.structureId;if(!id)return false;
   const source=world.structures.find(s=>s.id===id),pack=world.packed?.find(p=>p.building.id===id);
-  if(!source&&!pack||pack?.owner.type==='pawn'&&pack.owner.pawnId!==pawn.id)return false;
+  if(!source&&!pack||pack?.owner.type==='pawn'&&pack.owner.pawnId!==pawn.id||reservedSource(world,id,pawn.id)>0)return false;
   if(source&&!deconstructionAvailable(world,{...job,deconstruction:{structureId:id,kind:source.kind}},pawn.id))return false;
   if(job.kind==='install') {
     const obstruction=constructionObstruction(world,job);
     if(obstruction.plant||obstruction.pile)return false;
-    if(footprintCells(job).some(c=>{const p=packedAt(world,c);return p&&p.building.id!==id;}))return false;
+    if(obstruction.pack)return false;
     if(!constructionSiteFree(world,job,pawn.id,obstruction))return false;
   }
   return true;
@@ -40,6 +41,8 @@ export function furnitureSourceCells(world:World,job:Job):Cell[] {
   return pack?.owner.type==='ground'?[pack.owner]:[];
 }
 export function furnitureIntentAt(world:World,cell:Cell):Job|undefined {
-  const object=world.structures.find(s=>footprintCells(s).some(c=>c.x===cell.x&&c.z===cell.z))??packedAt(world,cell)?.building;
+  const pack=packedAt(world,cell),packedJob=pack&&world.jobs.find(j=>j.furniture?.structureId===pack.building.id);
+  if(packedJob)return packedJob;
+  const object=world.structures.find(s=>footprintCells(s).some(c=>c.x===cell.x&&c.z===cell.z));
   return object?world.jobs.find(j=>j.furniture?.structureId===object.id):undefined;
 }

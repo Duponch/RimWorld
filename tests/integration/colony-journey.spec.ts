@@ -23,6 +23,7 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
   // Hardware WebGPU; the dedicated boundary journey still covers software fallback.
   const browser=await playwright.chromium.launch({channel:'chromium',args:[]});
   const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}});
+  page.setDefaultTimeout(10000);
   const errors=observeErrors(page), decisions:{tick:number;reason:string;command:unknown}[]=[], days:ReturnType<typeof colonySummary>[]=[];
   const harvests=new Map<string,number>(), meals=new Map<string,number>(), sleepers=new Set<number>(), cooked=new Set<string>();const recreationActivities=new Set<string>(),clearedSites=new Set<string>();let finalReport:unknown;
   try {

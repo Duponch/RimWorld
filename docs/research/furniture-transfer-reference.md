@@ -19,7 +19,9 @@ La désinstallation utilise par défaut 200 unités de travail et ConstructionSp
 
 `Building_Bed.DeSpawn(Vanish)` conserve les propriétaires. La propriété locale reste donc liée à l'identité du lit, même emballé. Son usage de couchage reste indisponible jusqu'à sa pose. Les autres états médicaux/qualités/dégâts ne sont pas implémentés et ne sont pas prétendus préservés.
 
-## Limites assumées du lot
+## Limites historiques du lot V25
+
+La [vérification V26](furniture-logistics-reference.md) et son contrat remplacent les limites de fournisseur, rangement et dégagement ci-dessous. Elles décrivent le périmètre livré en V25, pas la cible de RimWorld.
 
 Le fournisseur actuel relève de Construction, y compris pour le portage. Le fournisseur par Transport seul, le rangement automatique des meubles emballés en réserve et leur dégagement automatique sont à compléter avant de déclarer la logistique des objets entiers terminée. Un paquet gênant doit être réinstallé ailleurs. Les quatre types présents admis sont lit, table, tabouret et piquet ; mur et feu ne le sont pas. Aucun matériau, qualité, masse ou objet nouveau n'est ajouté.
 

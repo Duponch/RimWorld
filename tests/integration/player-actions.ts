@@ -34,7 +34,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
   if(c.type==='order-job'||c.type==='order-haul'||c.type==='order-cook') {
     await page.keyboard.press('Escape');await page.locator(`[data-pawn="${c.pawnId}"]`).click();
     const current=await world(page);
-    const job=c.type==='order-cook'?current.structures.find(s=>s.id===c.structureId):c.type==='order-job'?current.jobs.find(j=>j.id===c.jobId):c.target.type==='fuel'?current.structures.find(s=>c.target.type==='fuel'&&s.id===c.target.structureId):c.target.type==='pile'?current.piles.find(p=>c.target.type==='pile'&&p.id===c.target.pileId)?.owner:current.jobs.find(j=>(c.target.type==='job'||c.target.type==='clear'||c.target.type==='clear-sow')&&j.id===c.target.jobId);
+    const job=c.type==='order-cook'?current.structures.find(s=>s.id===c.structureId):c.type==='order-job'?current.jobs.find(j=>j.id===c.jobId):c.target.type==='furniture'?current.packed.find(p=>c.target.type==='furniture'&&p.building.id===c.target.structureId)?.owner:c.target.type==='fuel'?current.structures.find(s=>c.target.type==='fuel'&&s.id===c.target.structureId):c.target.type==='pile'?current.piles.find(p=>c.target.type==='pile'&&p.id===c.target.pileId)?.owner:current.jobs.find(j=>(c.target.type==='job'||c.target.type==='clear'||c.target.type==='clear-sow')&&j.id===c.target.jobId);
     if(!job||!('x' in job))throw new Error('Cible directe absente.');
     await revealCells(page,[job]);
     const point=await page.evaluate(({x,z})=>window.__lisiere.projectCell(x,z),job);
@@ -52,7 +52,8 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     await panel(page,'work');await page.locator(`select[data-owner="${c.pawnId}"][data-work="${c.work}"]`).selectOption(String(c.value));
   } else if(c.type==='stockpile') {
     await tool(page,'stockpile');
-    await page.locator('#stockpile-wood').setChecked(c.filters!.wood);await page.locator('#stockpile-food').setChecked(c.filters!.food);
+    await page.locator('#stockpile-wood').setChecked(c.filters!.wood);await page.locator('#stockpile-food').setChecked(c.filters!.food);await page.locator('#stockpile-furniture').setChecked(c.filters!.furniture??false);
+    await page.locator('#stockpile-priority').selectOption(String(c.priority??2));await page.locator('#stockpile-capacity').fill(String(c.capacity??75));
     await revealCells(page,[c]);
     await cell(page,c.x,c.z);
   } else if(c.type==='area') {
@@ -62,7 +63,10 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
   } else if(c.type==='install') {
     const w=await world(page),object=w.structures.find(s=>s.id===c.structureId),pack=w.packed.find(p=>p.building.id===c.structureId);
     const source=object??(pack?.owner.type==='ground'?pack.owner:undefined);if(!source)throw new Error('Furniture source not on map');
-    await page.keyboard.press('Escape');await revealCells(page,[source]);await cell(page,source.x,source.z);await page.locator('#cell-install').click();rotation.value=(object??pack!.building).orientation;
+    await page.keyboard.press('Escape');await revealCells(page,[source]);
+    // An overlapping colonist can be the first selection; cycle like a player.
+    for(let i=0;i<=w.pawns.length;i++){await cell(page,source.x,source.z);if(await page.locator('#cell-install').isVisible())break;}
+    await page.locator('#cell-install').click({timeout:5000});rotation.value=(object??pack!.building).orientation;
     while(rotation.value!==c.orientation){await page.keyboard.press('e');rotation.value=(rotation.value+1)%4;}
     await revealCells(page,[c]);await cell(page,c.x,c.z);
   } else if(c.type==='designate' && c.kind !== 'sow' && c.kind !== 'install') {
@@ -86,7 +90,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     if(c.type==='order-cook') {const pawn=w.pawns.find(p=>p.id===c.pawnId);return pawn?.orders.active==='cook'&&pawn.cooking?.stationId===c.structureId||pawn?.orders.active==='haul'&&pawn.haul?.destination.type==='fuel'&&pawn.haul.destination.structureId===c.structureId||pawn?.orders.queue.some(o=>typeof o!=='number'&&('cooking' in o?o.cooking.stationId===c.structureId:o.destination.type==='fuel'&&o.destination.structureId===c.structureId));}
     if(c.type==='order-haul') {
       const pawn=w.pawns.find(p=>p.id===c.pawnId);if(!pawn)return false;
-      const matches=(t:typeof pawn.haul)=>!!t&&(c.target.type==='pile'?t.sourcePileId===c.target.pileId:c.target.type==='fuel'?t.destination.type==='fuel'&&t.destination.structureId===c.target.structureId:c.target.type==='clear-sow'?t.destination.type==='aside'&&t.destination.sowCell?.x===w.jobs.find(j=>c.target.type==='clear-sow'&&j.id===c.target.jobId)?.x:c.target.type==='clear'?t.destination.type==='aside'&&t.destination.constructionId===c.target.jobId:t.destination.type==='job'&&t.destination.jobId===c.target.jobId);
+      const matches=(t:typeof pawn.haul)=>!!t&&(c.target.type==='furniture'?t.whole&&t.sourcePileId===c.target.structureId:c.target.type==='pile'?t.sourcePileId===c.target.pileId:c.target.type==='fuel'?t.destination.type==='fuel'&&t.destination.structureId===c.target.structureId:c.target.type==='clear-sow'?t.destination.type==='aside'&&t.destination.sowCell?.x===w.jobs.find(j=>c.target.type==='clear-sow'&&j.id===c.target.jobId)?.x:c.target.type==='clear'?t.destination.type==='aside'&&t.destination.constructionId===c.target.jobId:t.destination.type==='job'&&t.destination.jobId===c.target.jobId);
       return pawn.orders.active==='haul'&&matches(pawn.haul)||pawn.orders.queue.some(o=>typeof o!=='number'&&!('cooking' in o)&&matches(o));
     }
     if(c.type==='food-policy-assign')return w.pawns.find(p=>p.id===c.pawnId)?.foodPolicyId===c.policyId;

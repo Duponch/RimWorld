@@ -13,7 +13,7 @@ export const constructionHaulId = (destination: HaulDestination): number|undefin
 export const constructionHaulPriority = (pawn: Pawn): number => Math.min(pawn.priorities.build||Infinity,pawn.priorities.haul||Infinity);
 export const asBuilder = (pawn: Pawn): boolean => pawn.priorities.build>0&&pawn.priorities.build<= (pawn.priorities.haul||Infinity);
 
-export interface ConstructionObstruction { plant?:Resource; pile?:MaterialPile }
+export interface ConstructionObstruction { plant?:Resource; pile?:MaterialPile; pack?:import('./furniture-rules.ts').PackedFurniture }
 /** One synchronous planner decision. Keep array ordering for multi-cell sites,
  * and discard this index before any transfer, cutting or construction occurs. */
 export function constructionObstructions(world:World):ReadonlyMap<number,ConstructionObstruction> {
@@ -28,18 +28,20 @@ export function constructionObstructions(world:World):ReadonlyMap<number,Constru
   if(!sites.size)return result;
   for(const resource of world.resources)for(const id of sites.get(resource.z*world.width+resource.x)??[])result.get(id)!.plant??=resource;
   for(const pile of world.piles)if(pile.owner.type==='ground')for(const id of sites.get(pile.owner.z*world.width+pile.owner.x)??[])if(clearItems.has(id))result.get(id)!.pile??=pile;
+  for(const pack of world.packed??[])if(pack.owner.type==='ground')for(const id of sites.get(pack.owner.z*world.width+pack.owner.x)??[])if(clearItems.has(id)&&world.jobs.find(j=>j.id===id)?.furniture?.structureId!==pack.building.id)result.get(id)!.pack??=pack;
   return result;
 }
 export function constructionObstruction(world: World, job: Job):ConstructionObstruction {
   const cells=new Set(footprintCells(job).map(c=>c.z*world.width+c.x));
   const plant=world.resources.find(r=>cells.has(r.z*world.width+r.x));
   const pile=clearsGroundItems(world,job.furniture?.kind??job.kind)?world.piles.find(p=>p.owner.type==='ground'&&cells.has(p.owner.z*world.width+p.owner.x)):undefined;
-  return {plant,pile};
+  const pack=(job.kind==='sow'||clearsGroundItems(world,job.furniture?.kind??job.kind))?world.packed?.find(p=>p.owner.type==='ground'&&cells.has(p.owner.z*world.width+p.owner.x)&&p.building.id!==job.furniture?.structureId):undefined;
+  return {plant,pile,pack};
 }
 /** A frame is traversable. Completion must not materialize a building across
  * a person, an active edge (including its diagonal corner), or a service. */
 export function constructionSiteFree(world: World, job: Job, workerId?: number, obstacle=constructionObstruction(world,job)): boolean {
-  if(obstacle.plant||obstacle.pile||footprintCells(job).some(c=>world.packed?.some(p=>p.building.id!==job.furniture?.structureId&&p.owner.type==='ground'&&p.owner.x===c.x&&p.owner.z===c.z)))return false;
+  if(obstacle.plant||obstacle.pile||obstacle.pack)return false;
   const cells=footprintCells(job);
   return !world.pawns.some(p=>p.id!==workerId&&cells.some(c=>{
     const edge=p.motion;

@@ -1,3 +1,5 @@
+import { planFurnitureHaulOrder } from './player-furniture-hauling.ts';
+import { furnitureHaulValid } from './furniture-haul-rules.ts';
 import { validSowingClearance } from './sowing-clearance.ts';
 import { planServiceHaul, type ServiceHaulTarget } from './player-service-hauling.ts';
 import { candidateAccess } from './candidate-access.ts';
@@ -11,7 +13,7 @@ import { blockedCells, routeToJob } from './pathfinding.ts';
 import { canReach, destinationCapacity, destinationCell } from './work-planner.ts';
 import type { Cell, HaulTask, Pawn, World } from './types.ts';
 
-export type HaulOrderTarget={type:'pile';pileId:number}|{type:'job';jobId:number}|ServiceHaulTarget;
+export type HaulOrderTarget={type:'furniture';structureId:number}|{type:'pile';pileId:number}|{type:'job';jobId:number}|ServiceHaulTarget;
 export interface HaulProposal { task?:HaulTask; path?:Cell[]; label:string; reason?:string }
 const distance=(a:Cell,b:Cell)=>Math.abs(a.x-b.x)+Math.abs(a.z-b.z);
 const same=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
@@ -19,6 +21,7 @@ const same=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
 /** One read-only decision with one shared, resumable access search. No global
  * logistics cursor or per-frame query. A delivery is one trip, not a build chain. */
 export function planHaulOrder(world:World,pawn:Pawn,target:HaulOrderTarget,access?:import('./pathfinding.ts').Reachability,budget={pairs:32768}):HaulProposal {
+  if(target.type==='furniture')return planFurnitureHaulOrder(world,pawn,target.structureId,access,budget);
   if(target.type==='fuel'||target.type==='clear'||target.type==='clear-sow')return planServiceHaul(world,pawn,target,access,budget);
   const label=target.type==='pile'?'Transporter vers le stockage':'Livrer les matériaux';
   const no=(reason:string):HaulProposal=>({label,reason});
@@ -63,6 +66,7 @@ export function planHaulOrder(world:World,pawn:Pawn,target:HaulOrderTarget,acces
 
 /** Own waiting reservation is excluded exactly once, never the rest of its queue. */
 export function queuedHaulReason(world:World,task:HaulTask):string|undefined {
+  if(task.whole)return furnitureHaulValid(withoutQueuedOrder(world,task),task)?undefined:'Le meuble ou son emplacement réservé n’est plus disponible.';
   const view=withoutQueuedOrder(world,task),pile=world.piles.find(p=>p.id===task.sourcePileId);
   if(pile?.owner.type!=='ground'||pile.quantity-reservedSource(view,pile.id)<task.quantity)return 'La pile ou sa quantité réservée n’est plus disponible.';
   if(destinationCapacity(view,task.destination,pile.kind,undefined,pile.item)<task.quantity)return 'La destination n’accepte plus la quantité réservée.';
@@ -74,6 +78,7 @@ export function queuedHaulReason(world:World,task:HaulTask):string|undefined {
 }
 
 export function haulOrderCell(world:World,task:HaulTask):Cell|undefined {
+  if(task.whole){const pack=world.packed.find(p=>p.building.id===task.sourcePileId);return pack?.owner.type==='ground'?pack.owner:undefined;}
   const pile=world.piles.find(p=>p.id===task.sourcePileId);
   return pile?.owner.type==='ground'?pile.owner:undefined;
 }

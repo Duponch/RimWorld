@@ -30,7 +30,7 @@ export const toolDefinitions: { id: Tool; icon: string; title: string; hint: str
 
 export function storageSettings(prefix: string): string {
   return `<div class="storage-settings" id="${prefix}-settings">
-    <div class="storage-filters"><label><input id="${prefix}-wood" type="checkbox" checked> Bois</label><label><input id="${prefix}-food" type="checkbox" checked> Nourriture</label></div>
+    <div class="storage-filters"><label><input id="${prefix}-wood" type="checkbox" checked> Bois</label><label><input id="${prefix}-food" type="checkbox" checked> Nourriture</label><label><input id="${prefix}-furniture" type="checkbox" checked> Meubles emballés</label></div>
     <label>Priorité de réserve<select id="${prefix}-priority"><option value="1">1 · basse</option><option value="2" selected>2 · normale</option><option value="3">3 · importante</option><option value="4">4 · critique</option></select></label>
     <label>Capacité (unités)<input id="${prefix}-capacity" type="number" min="1" max="75" step="1" value="75"></label>
   </div>`;

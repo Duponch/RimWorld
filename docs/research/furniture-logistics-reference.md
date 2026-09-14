@@ -1,0 +1,31 @@
+# Rangement et dégagement des meubles — vérification V26
+
+Consultations des 14–15 septembre 2026, cible RimWorld de base. Corpus : chapitre 10, **SYS/TEST-051..054 et SYS/TEST-059**, avec SYS-056 pour les chantiers. **Adopter** objet entier, accès, réservations, stockage filtré et priorités ; **adapter** contacts et recherche spatiale 3D ; **différer** masse, qualité, dommages, étagères, interdictions et zones autorisées. Les statuts du classeur ne valent pas validation locale.
+
+## Sources confrontées
+
+- [Work](https://rimworldwiki.com/wiki/Work) place la désinstallation dans Construction et la livraison aux plans/cadres dans Construction **et** Transport. [Buildings](https://rimworldwiki.com/wiki/Buildings) décrit le meuble réduit à un objet transportable puis réinstallé. Sa description générale par les constructeurs ne suffit pas à exclure le fournisseur Transport.
+- [Stockpile zone](https://rimworldwiki.com/wiki/Stockpile_zone) confirme filtres et priorités. Le nombre de piles au sol reste distinct du nombre d'unités dans une pile et des étagères récentes.
+- Miroir décompilé épinglé à **2d508035082e7cb0c8e29e230d26bda6e546928f**, daté du 20 mai 2026 : [StoreUtility](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/RimWorld/StoreUtility.cs), [WorkGiver_HaulGeneral](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/RimWorld/WorkGiver_HaulGeneral.cs), [HaulAIUtility](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/Verse.AI/HaulAIUtility.cs), [WorkGiver_ConstructDeliverResources](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/RimWorld/WorkGiver_ConstructDeliverResources.cs), [MinifiedThing](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/RimWorld/MinifiedThing.cs), [Toils_Construct](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/RimWorld/Toils_Construct.cs).
+
+Le wiki est communautaire et peut reprendre ce miroir : ce ne sont pas des preuves totalement indépendantes. Le miroir montre des branches exécutées, mais ne certifie ni une distribution officielle ni tous les patchs actuels. Confiance élevée sur les branches lues, modérée sur leur parité avec une installation précise non observée ici. Aucun code de référence n'est copié dans le moteur du projet.
+
+## Règles retenues et correction rétroactive
+
+Une destination de rangement doit améliorer strictement la priorité actuelle. Si la réserve source refuse l'objet, celui-ci est traité comme non rangé. Une réserve de même priorité ne provoque donc pas de déplacements successifs. La meilleure priorité passe avant la proximité ; les réservations et la place libre sont contrôlées au moment de proposer puis d'exécuter le transport.
+
+`MinifiedThing` conserve son objet intérieur. Le déplacement entier ne doit ni convertir le meuble en bois, ni lui attribuer une nouvelle identité. Dans Lisière, une case au sol accepte un seul paquet, même si la capacité numérique de sa réserve autoriserait plusieurs unités de bois. La propriété du lit reste attachée à son identité ; ce n'est pas un lit utilisable pendant son emballage.
+
+**Dégager n'est pas ranger.** `HaulAsideJobFor` cherche une place proche et utilise un mode hors stockage. Il ne fait pas d'abord un détour vers la meilleure réserve de toute la carte. Le premier brouillon V26 recherchait une réserve avant le dégagement ; cette différence a été retirée après lecture de cette branche. Le chantier/semis déplace le paquet à proximité, puis le Transport ordinaire peut le ranger. Notre recherche déterministe par cellules remplace le parcours de régions du miroir, avec budget partagé et sans changer la propriété de l'objet pendant la recherche.
+
+La limite V25 « utiliser Construction pour réinstaller » était une limite locale, pas la règle cible. V26 ouvre la réinstallation au fournisseur Transport et conserve la famille choisie pendant une priorité forcée. Désinstaller séparément reste Construction. Désactiver une affectation dans le tableau n'est pas une incapacité : on ne doit pas déduire de cette case vide le multiplicateur de ConstructionSpeed utilisé pour une incapacité réelle. Le retrait et la pose restent ceux de la [recherche V25](furniture-transfer-reference.md), sans délai de pose inventé depuis le WorkTotal d'inspection.
+
+## Adaptations et domaines encore ouverts
+
+La destination de stockage utilise proximité de Manhattan puis identité comme départage stable ; la route réelle conserve ses durées euclidiennes. Le dégagement évite cultures, intentions de chantier, ressources et cases réservées ; il conserve également notre restriction de filtre de réserve pour un dépôt local. Cette restriction est plus conservatrice que le validateur hors stockage du miroir, qui ne consulte pas le filtre à cet endroit. Zones autorisées, interdits, danger, incendie, mines voisines et produits inachevés ne sont pas simulés ici. Ces limites restent visibles dans les contrats ; ce lot ne clôt pas la logistique de tout le catalogue.
+
+Les quatre meubles présents utilisent un emballage procédural provisoire sur la carte et dans la cargaison GPU. Sa réduction sur une table ou un tabouret est une convention de lisibilité 3D, pas un changement de volume de stockage. Voir [contrat courant](../development/furniture-logistics.md) et [preuves](../development/validation.md).
+
+## Sélection des contenus superposés
+
+Le parcours UI a révélé qu’un colon pouvait empêcher de sélectionner le paquet rangé. Le [Selector du même miroir](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/RimWorld/Selector.cs), branche SelectUnderMouse, parcourt les objets sélectionnables en partant de la sélection courante. Les [contrôles du wiki](https://rimworldwiki.com/wiki/Controls) confirment clic simple, Maj et double-clic, sans détailler ce parcours. Chapitre 8 / SYS-031..034 : adopter l’accès par clics successifs, adapter les proxies 3D et conserver Maj/double-clic. Notre inspection regroupe encore les contenus de la cellule ; la sélection individuelle complète entre toutes les familles reste partielle.

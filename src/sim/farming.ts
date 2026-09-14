@@ -42,7 +42,7 @@ interface Context { resources: Map<number, Resource>; fixed: Set<number> }
 function context(world: World): Context {
   return {
     resources: resourceCells(world),
-    fixed: new Set([...world.structures, ...world.jobs.filter(j => ['install','wall', 'bed', 'table', 'stool', 'campfire', 'horseshoes'].includes(j.kind))].flatMap(s => footprintCells(s).map(c => index(world, c))).concat((world.packed??[]).flatMap(p=>p.owner.type==='ground'?[index(world,p.owner)]:[]))),
+    fixed: new Set([...world.structures, ...world.jobs.filter(j => ['install','wall', 'bed', 'table', 'stool', 'campfire', 'horseshoes'].includes(j.kind))].flatMap(s => footprintCells(s).map(c => index(world, c)))),
   };
 }
 function intention(world: World, zone: GrowingZone, cell: number, ctx: Context): { kind: JobKind; cell: number } | null {

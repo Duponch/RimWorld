@@ -41,3 +41,5 @@ V23 sauvegarde une intention facultative `Pawn.priorityWork` (cellule, famille, 
 V24 ajoute les intentions de déconstruction ciblant une identité construite et `world.deconstructed`, bilan des pertes/historiques de combustible. V23 est validée avant ajout du bilan nul ; progression active, PRNG et dépôts restent autoritaires. Voir [déconstruction](deconstruction.md).
 
 V25 conserve le bâtiment entre installation, paquet et portage. V24 est validée avant ajout de `packed: []` ; les intentions nouvelles ciblent une identité unique. Attribution du lit, empreinte et progression sont sérialisées. Voir [contrat de transfert](furniture-transfer.md).
+
+V26 ajoute la [logistique des paquets](furniture-logistics.md) : tâche entière active/en file, filtre de réserve facultatif et fournisseur de réinstallation. V25 est strictement validée avant migration ; filtre absent signifie meubles refusés. Les capacités réutilisées durant une décision de planner ne sont jamais sérialisées et sont abandonnées avant la réservation suivante.

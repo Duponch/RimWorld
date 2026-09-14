@@ -153,7 +153,7 @@ function readStorageSettings(prefix: string) {
   const capacity = Number(el<HTMLInputElement>(`${prefix}-capacity`).value);
   if (!Number.isInteger(capacity) || capacity < 1 || capacity > MAX_STACK) throw new Error(`La capacité doit être un entier entre 1 et ${MAX_STACK}.`);
   return {
-    filters: { wood: el<HTMLInputElement>(`${prefix}-wood`).checked, food: el<HTMLInputElement>(`${prefix}-food`).checked },
+    filters: { wood: el<HTMLInputElement>(`${prefix}-wood`).checked, food: el<HTMLInputElement>(`${prefix}-food`).checked, furniture: el<HTMLInputElement>(`${prefix}-furniture`).checked },
     priority: Number(el<HTMLSelectElement>(`${prefix}-priority`).value), capacity,
   };
 }
@@ -182,6 +182,7 @@ function rebuildInspector() {
     if (storage) {
       el<HTMLInputElement>('selected-stockpile-wood').checked = storage.filters.wood;
       el<HTMLInputElement>('selected-stockpile-food').checked = storage.filters.food;
+      el<HTMLInputElement>('selected-stockpile-furniture').checked = storage.filters.furniture??false;
       el<HTMLSelectElement>('selected-stockpile-priority').value = String(storage.priority);
       el<HTMLInputElement>('selected-stockpile-capacity').value = String(storage.capacity);
     }
@@ -315,7 +316,7 @@ function renderState() {
       el('cell-storage').hidden = !storage;
       el('cell-bed').hidden = structure?.kind !== 'bed';
       if (structure?.kind === 'bed' && document.activeElement !== el('bed-owner')) el<HTMLSelectElement>('bed-owner').value = String(world.pawns.find(pawn => pawn.bedId === structure.id)?.id ?? '');
-      if (storage) el('cell-storage-quantity').textContent = `Réserve · ${piles.reduce((sum, pile) => sum + pile.quantity, 0)} / ${storage.capacity} unités`;
+      if (storage) el('cell-storage-quantity').textContent = `Réserve · ${packed?1:piles.reduce((sum, pile) => sum + pile.quantity, 0)} / ${storage.capacity} unités`;
     }
   }
   const pending = world.jobs.filter(job => job.status === 'pending').length;

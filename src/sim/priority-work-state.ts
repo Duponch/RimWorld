@@ -11,7 +11,7 @@ export const PRIORITY_WORK_TICKS=TICKS_PER_DAY/2;
 export function rememberPriorityWork(world:World,pawn:Pawn,command:OrderCommand,order?:QueuedOrder):void {
   let cell:Cell|undefined,work:PriorityWork['work']='build';
   if(command.type==='order-job') {
-    const job=world.jobs.find(j=>j.id===command.jobId);if(job&&isConstruction(job))cell=job;
+    const job=world.jobs.find(j=>j.id===command.jobId);if(job&&isConstruction(job)){cell=job;work=job.installationWork??'build';}
   } else if(command.type==='order-cook') {
     cell=world.structures.find(s=>s.id===command.structureId);work='cook';
   } else if(command.type==='order-haul'&&order&&typeof order!=='number'&&!isCookingOrder(order)) {

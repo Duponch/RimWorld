@@ -126,3 +126,7 @@ Chapitre 10, **SYS-058 / TEST-058** : **adopter** travail/récupération sans do
 ## Adoption V25 — objets installés conservés
 
 Chapitre 10, **SYS-059 / TEST-059** : **adopter** identité, retrait, transport, rotation et pose ; **adapter** contact 3D et cadence du retrait ; **vérifier** la chaîne exécutée, pas seulement le WorkTotal affiché. [Recherche fraîche](furniture-transfer-reference.md) et [contrat](../development/furniture-transfer.md). **Différer** Transport seul, rangement/dégagement automatiques des paquets, qualité, dégâts et catalogue complet. Les mentions « réinstallation différée » des décisions V16/V24 ci-dessus décrivent leur périmètre historique, remplacé pour ces quatre meubles par V25.
+
+## Adoption V26 — logistique des objets entiers
+
+Chapitre 10, **SYS/TEST-051..054 et SYS/TEST-059** : **adopter** rangement filtré, meilleure priorité, dégagement proche et réinstallation par Transport ; **adapter** recherche déterministe et contact 3D ; **différer** propriétés/filtres détaillés, étagères, interdictions et reste du catalogue. [Nouvelle recherche](furniture-logistics-reference.md) : le dégagement ne recherche pas d'abord la meilleure réserve distante ; restriction locale des filtres de dépôt explicitée. [Contrat](../development/furniture-logistics.md). Remplace les limites de fournisseurs/logistique V25 ci-dessus. Les scénarios de propriété/ordres et le pilote existant sont enrichis ; le paquet ne crée ni matériau ni inventaire personnel.

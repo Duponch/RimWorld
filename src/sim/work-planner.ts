@@ -1,4 +1,6 @@
-import { furnitureReady } from './furniture-rules.ts';
+import { furnitureHaulValid } from './furniture-haul-rules.ts';
+import { furnitureStorageCandidates, mayImproveFurnitureStorage } from './furniture-haul-planner.ts';
+import { furnitureReady, packedAt } from './furniture-rules.ts';
 import { deconstructionAvailable } from './deconstruction-rules.ts';
 import { validSowingClearance } from './sowing-clearance.ts';
 import { constructionCandidates } from './construction-planner.ts';
@@ -20,7 +22,7 @@ export const PLAN_INTERVAL=20;
 export interface SearchStats { searches:{pawnId:number;mode:'all'|'nearest'|'full';visited:number;unreachedGroups:number;connectivityVisited?:number}[] }
 export interface SearchBudget { remaining:number; pairs:number; stats?:SearchStats }
 export type NavigationGrid=()=>Uint8Array;
-export const workType=(job:Pick<Job,'kind'|'growingZoneId'>):WorkType=>job.growingZoneId !== undefined || job.kind === 'sow' ? 'grow' : ['chop','harvest','cut'].includes(job.kind) ? 'gather' : 'build';
+export const workType=(job:Pick<Job,'kind'|'growingZoneId'|'installationWork'>):WorkType=>job.installationWork??(job.growingZoneId !== undefined || job.kind === 'sow' ? 'grow' : ['chop','harvest','cut'].includes(job.kind) ? 'gather' : 'build');
 const sameCell=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
 
 export function search(world: World, pawn: Pawn, blocked: Uint8Array, occupied: ReadonlySet<number>, budget: SearchBudget, goals?: ReadonlySet<number>, allGroups?:readonly ReadonlySet<number>[]): Reachability | null {
@@ -56,12 +58,13 @@ export function destinationCapacity(world: World, destination: HaulDestination, 
 }
 export function destinationValid(world: World, pawn: Pawn): boolean {
   const task = pawn.haul; if (!task) return false;
+  if(task.whole)return furnitureHaulValid(world,task,pawn.id);
   const pile = world.piles.find(item => item.id === (task.phase === 'pickup' ? task.sourcePileId : task.carryPileId));
   const destination=task.destination;
   if(destination.type==='aside'&&destination.constructionId!==undefined&&!world.jobs.some(j=>j.id===destination.constructionId))return false;
   return !!pile && destinationCapacity(world, task.destination, pile.kind, pawn.id, pile.item) >= task.quantity;
 }
-interface Candidate { clearance?:{resourceId:number;progress:number}; cooking?: CookingPlan; priority: number; rank: number; distance: number; id: number; job?: Job; sourceId?: number; quantity?: number; destination?: HaulDestination; target: Cell }
+interface Candidate { whole?:true; clearance?:{resourceId:number;progress:number}; cooking?: CookingPlan; priority: number; rank: number; distance: number; id: number; job?: Job; sourceId?: number; quantity?: number; destination?: HaulDestination; target: Cell }
 function compareCandidate(a: Candidate, b: Candidate): number { return a.priority - b.priority || a.rank - b.rank || a.distance - b.distance || a.id - b.id; }
 export function canReach(world: World, target: Cell & { kind?: JobKind }, reachable: Reachability, allowTarget: boolean): boolean {
   const cells = target.kind ? footprintCells(target as Job) : [target];
@@ -76,14 +79,14 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   if (budget.remaining === 0 || budget.pairs === 0) return;
   const cooking=hasCookingWork(world,pawn);
   const fires=world.structures.filter(s=>wantsFuel(world,s));
-  if (!cooking && !fires.length && !world.jobs.length && (!world.stockpiles.length || !world.piles.length || pawn.priorities.haul === 0)) { pawn.planCooldown = PLAN_INTERVAL; return; }
-  if (!cooking && !fires.length && !world.jobs.length && !mayImproveStorage(world)) {pawn.planCooldown=PLAN_INTERVAL;return;}
+  if (!cooking && !fires.length && !world.jobs.length && (!world.stockpiles.length || !world.piles.length && !world.packed.length || pawn.priorities.haul === 0)) { pawn.planCooldown = PLAN_INTERVAL; return; }
+  if (!cooking && !fires.length && !world.jobs.length && !mayImproveFurnitureStorage(world) && !mayImproveStorage(world)) {pawn.planCooldown=PLAN_INTERVAL;return;}
   const blocked = getBlocked();
   // Rankings do not depend on flood order. Try the top ready job directly;
   // a failed targeted search has explored the full component and is reusable.
   // Logistics with a higher priority still uses the ordinary complete planner.
   const ready = world.jobs.filter(job => !isConstruction(job) && job.reservedBy === null && pawn.priorities[workType(job)] > 0
-    && job.escrow.wood >= JOB_WOOD_COST[job.kind] && (pawn.hunger > 20 || job.kind === 'harvest') && (job.kind!=='deconstruct'||deconstructionAvailable(world,job,pawn.id)) && (!job.furniture||furnitureReady(world,job,pawn)))
+    && (job.kind!=='sow'||!packedAt(world,job)) && job.escrow.wood >= JOB_WOOD_COST[job.kind] && (pawn.hunger > 20 || job.kind === 'harvest') && (job.kind!=='deconstruct'||deconstructionAvailable(world,job,pawn.id)) && (!job.furniture||furnitureReady(world,job,pawn)))
     .map(job => ({ job, target: job, id: job.id, priority: pawn.priorities[workType(job)], rank: job.kind==='uninstall' ? -2 : job.kind==='deconstruct' ? 3 : workType(job) === 'gather' ? 0 : 1, distance: Math.abs(job.x-pawn.x)+Math.abs(job.z-pawn.z) }))
     .sort(compareCandidate);
   let reachable: Reachability | null = null;
@@ -136,6 +139,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
     if(isConstruction(job))continue;
     const work = workType(job);
     if (job.reservedBy !== null || pawn.priorities[work] === 0 || (delivered.get(job.id) ?? 0) < JOB_WOOD_COST[job.kind] || (pawn.hunger <= 20 && job.kind !== 'harvest')) continue;
+    if(job.kind==='sow'&&packedAt(world,job))continue;
     if(job.furniture&&!furnitureReady(world,job,pawn))continue;
     if(job.kind==='deconstruct'&&!deconstructionAvailable(world,job,pawn.id))continue;
     const candidate: Candidate = { priority: pawn.priorities[work], rank: job.kind==='uninstall' ? -2 : job.kind==='deconstruct' ? 3 : work === 'gather' ? 0 : 1, distance: Math.abs(job.x - pawn.x) + Math.abs(job.z - pawn.z), id: job.id, job, target: job };
@@ -152,6 +156,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
     }
     if (canReach(world, job, reachable, false)) { if (!best || compareCandidate(candidate, best) < 0) best = candidate; }
   }
+  for(const candidate of furnitureStorageCandidates(world,pawn,blocked,reachable,budget))if(!best||compareCandidate(candidate,best)<0)best=candidate;
   const constructionObstacles=constructionObstructions(world);
   for(const candidate of constructionCandidates(world,pawn,blocked,reachable,budget,constructionObstacles))if(!best||compareCandidate(candidate,best)<0)best=candidate;
   if(cooking && (!best || pawn.priorities.cook<=best.priority)) {
@@ -216,8 +221,8 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   }
   if (best) {
     const path = routeToJob(world, best.target, reachable, !best.job)!;
-    if (best.destination) pawn.haul = { sourcePileId: best.sourceId!, quantity: best.quantity!, phase: 'pickup', destination: best.destination, carryPileId: null };
-    else { if(best.clearance)best.job!.clearance=best.clearance;best.job!.reservedBy = pawn.id; best.job!.status = 'active'; pawn.jobId = best.job!.id; }
+    if (best.destination) pawn.haul = { ...(best.whole?{whole:true as const}:{}), sourcePileId: best.sourceId!, quantity: best.quantity!, phase: 'pickup', destination: best.destination, carryPileId: null };
+    else { if(best.job!.kind==='install')best.job!.installationWork=asBuilder(pawn)?'build':'haul';if(best.clearance)best.job!.clearance=best.clearance;best.job!.reservedBy = pawn.id; best.job!.status = 'active'; pawn.jobId = best.job!.id; }
     pawn.path = path; pawn.state = path.length ? 'moving' : 'working'; return;
   }
 }

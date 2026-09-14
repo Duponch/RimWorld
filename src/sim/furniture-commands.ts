@@ -1,7 +1,7 @@
 import { footprintCells } from './definitions.ts';
 import { furnitureObject, minifiable } from './furniture-rules.ts';
 import { canDesignate } from './engine.ts';
-import { planCommandDrops } from './work-release.ts';
+import { planCommandDrops, releaseWork } from './work-release.ts';
 import { removeZonesForPlan } from './construction-zones.ts';
 import type { Command, CommandResult, Job, Structure, World } from './types.ts';
 
@@ -23,9 +23,9 @@ export function installCommand(world:World,command:Extract<Command,{type:'instal
   const placement={type:'designate' as const,kind:source.kind,x:command.x,z:command.z,orientation:command.orientation,footprint:source.footprint};
   const view={...world,structures:world.structures.filter(s=>s.id!==source.id),packed:world.packed.filter(p=>p!==pack)};
   const allowed=canDesignate(view,placement);if(!allowed.ok)return allowed;
-  if(footprintCells(placement).some(c=>view.packed.some(p=>p.owner.type==='ground'&&p.owner.x===c.x&&p.owner.z===c.z)))return fail('Un meuble emballé gêne cet emplacement.');
   const drops=planCommandDrops(world,placement);if(!drops)return fail('Pas de place pour les cargaisons libérées.');
   if(preview)return {ok:true};
+  for(const p of world.pawns)if(p.haul?.whole&&p.haul.sourcePileId===source.id)releaseWork(world,p,drops);
   removeZonesForPlan(world,placement,drops);
   const job:Job={id:world.nextId++,kind:'install',furniture:{structureId:source.id,kind:source.kind},x:command.x,z:command.z,orientation:command.orientation,footprint:source.footprint,construction:'blueprint',progress:0,status:'pending',reservedBy:null,escrow:{wood:0,food:0}};
   world.jobs.push(job);for(const p of world.pawns)p.planCooldown=0;

@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 25 as const;
+export const SCHEMA_VERSION = 26 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
@@ -19,10 +19,13 @@ export interface Structure extends Cell { bills?: import('./cooking-types.ts').C
 export interface Stock { wood: number; food: number }
 export type MaterialOwner = ({ type: 'ground' } & Cell) | { type: 'pawn'; pawnId: number } | { type: 'job'; jobId: number };
 export interface MaterialPile { id: number; kind: MaterialKind; item: ItemId; quantity: number; owner: MaterialOwner; rot?: import('./food-preservation.ts').RotState }
-export interface StockpileCell extends Cell { id: number; filters: Record<MaterialKind, boolean>; priority: number; capacity: number }
+export type StorageFilters = Record<MaterialKind, boolean> & { furniture?: boolean };
+export interface StockpileCell extends Cell { id: number; filters: StorageFilters; priority: number; capacity: number }
 export interface GrowingZone { id: number; cells: number[]; plant: 'rice'; allowSow: boolean; allowCut: boolean }
 export type HaulDestination = { type: 'fuel'; structureId: number; forced?: boolean; forCooking?: boolean } | { type: 'stockpile'; stockpileId: number } | { type: 'job'; jobId: number; forConstruction?: boolean } | ({ type: 'aside'; growingZoneId?: number; sowCell?: Cell; constructionId?: number; forConstruction?: boolean } & Cell);
 export interface HaulTask {
+  /** A whole furniture identity, never a divisible material pile. */
+  whole?: true;
   serviceProgress?: number;
   sourcePileId: number;
   quantity: number;
@@ -38,6 +41,7 @@ export type NeedTask =
   | { kind: 'eat'; phase: 'pickup' | 'choose-spot' | 'travel' | 'ingest'; sourcePileId: number; carryPileId: number | null; quantity: number; progress: number; dining: DiningPlace | null }
   | { kind: 'sleep'; phase: 'travel' | 'sleep'; bedId: number | null; target: Cell };
 export interface Job extends Cell {
+  installationWork?: 'build' | 'haul';
   furniture?: import('./furniture-rules.ts').FurnitureTarget;
   deconstruction?: import('./deconstruction-rules.ts').DeconstructionTarget;
   construction?: 'blueprint' | 'frame';
@@ -122,7 +126,7 @@ export interface World {
 }
 export type DesignateCommand = { type: 'designate'; kind: JobKind; orientation?: Orientation } & Cell;
 export type AreaAction = 'deconstruct' | 'chop' | 'harvest' | 'cut' | 'cancel' | 'stockpile' | 'remove-stockpile' | 'growing' | 'remove-growing';
-export interface StorageSettings { filters?: Record<MaterialKind, boolean>; priority?: number; capacity?: number }
+export interface StorageSettings { filters?: StorageFilters; priority?: number; capacity?: number }
 export interface AreaCommand extends StorageSettings { type: 'area'; action: AreaAction; from: Cell; to: Cell }
 export type Command =
   | ({type:'install';structureId:number;orientation:Orientation} & Cell)
@@ -139,7 +143,7 @@ export type Command =
   | { type: 'growing-policy'; zoneId: number; allowSow: boolean; allowCut: boolean }
   | { type: 'assign-bed'; bedId: number; pawnId: number | null }
   | ({ type: 'cancel' } & Cell)
-  | ({ type: 'stockpile'; enabled: boolean; filters?: Record<MaterialKind, boolean>; priority?: number; capacity?: number } & Cell)
+  | ({ type: 'stockpile'; enabled: boolean; filters?: StorageFilters; priority?: number; capacity?: number } & Cell)
   | { type: 'priority'; pawnId: number; work: WorkType; value: number };
 export type RefusalCode = 'invalid-command' | 'out-of-bounds' | 'occupied' | 'incompatible-resource' | 'missing-target' | 'invalid-priority' | 'invalid-storage';
 export interface CommandResult { ok: boolean; reason?: string; code?: RefusalCode; affected?: number; skipped?: number }

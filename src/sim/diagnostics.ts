@@ -15,8 +15,8 @@ export function queryJobStatus(world: World, job: Job): JobDiagnostic {
   if(queued)return {code:'working',reason:`Réservé dans la file de ${queued.name}.`,delivered,required};
   if(job.kind==='deconstruct'&&!deconstructionAvailable(world,job,job.reservedBy??undefined))return {code:'blocked',reason:'Attend la fin de l’utilisation du bâtiment.',delivered,required};
   if(isConstruction(job)){
-    const {plant,pile}=constructionObstruction(world,job);
-    if(plant||pile)return {code:'clearing',reason:plant?'Attend la coupe de la plante qui gêne le chantier.':`Attend le déplacement de ${pile!.quantity} unités hors de l’emprise.`,delivered,required};
+    const {plant,pile,pack}=constructionObstruction(world,job);
+    if(plant||pile||pack)return {code:'clearing',reason:pack?'Attend le déplacement du meuble emballé hors de l’emprise.':plant?'Attend la coupe de la plante qui gêne le chantier.':`Attend le déplacement de ${pile!.quantity} unités hors de l’emprise.`,delivered,required};
     if(!constructionSiteFree(world,job,job.reservedBy??undefined))return {code:'blocked',reason:'Attend la libération de l’emprise par un colon en place ou en mouvement.',delivered,required};
   }
   if (job.reservedBy !== null) return { code: 'working', reason: 'Travail attribué à un colon.', delivered, required };
@@ -24,7 +24,7 @@ export function queryJobStatus(world: World, job: Job): JobDiagnostic {
     const shipping = reservedDestination(world, { type: 'job', jobId: job.id });
     return { code: shipping ? 'delivering' : 'missing-materials', reason: shipping ? `Livraison en cours : ${delivered}/${required} bois reçus.` : `Attend ${required - delivered} bois livrés ; vérifier Construction/Transport et l’accès.`, delivered, required };
   }
-  const enabled = world.pawns.some(pawn => pawn.priorities[workType(job)] > 0);
+  const enabled = world.pawns.some(pawn => job.kind==='install'?pawn.priorities.build>0||pawn.priorities.haul>0:pawn.priorities[workType(job)]>0);
   return { code: enabled ? 'ready' : 'waiting-worker', reason: enabled ? 'Prêt ; attend un colon disponible et un accès.' : 'Travail désactivé pour tous les colons.', delivered, required };
 }
 export function queryPawnStatus(world: World, pawn: Pawn): { code: string; reason: string } {
@@ -46,6 +46,7 @@ export function queryPawnStatus(world: World, pawn: Pawn): { code: string; reaso
   }
   if (pawn.need?.kind === 'eat') return { code: pawn.need.phase, reason: pawn.need.phase === 'pickup' ? 'Va chercher une portion réservée.' : pawn.need.phase === 'choose-spot' ? 'Cherche une place pour manger sa portion.' : pawn.need.phase === 'travel' ? 'Porte sa portion vers sa place réservée.' : `Mange la portion tenue en main (${Math.floor(pawn.need.progress / 50 * 100)} %).` };
   if (pawn.need?.kind === 'sleep') return { code: pawn.need.phase, reason: pawn.need.phase === 'travel' ? pawn.need.bedId === null ? 'Libère le lit et cherche une place au sol.' : 'Se rend à son lit réservé.' : pawn.need.bedId === null ? 'Dort au sol ; aucun lit utilisable ou épuisement.' : 'Dort dans son lit.' };
+  if(pawn.haul?.whole)return {code:pawn.haul.phase,reason:pawn.haul.phase==='pickup'?'Rejoint un meuble emballé réservé.':pawn.haul.destination.type==='aside'?'Déplace le meuble entier pour dégager l’emplacement.':'Porte le meuble entier vers sa réserve.'};
   if (pawn.haul) return { code: pawn.haul.phase, reason: pawn.haul.destination.type === 'aside' ? `Libère ${pawn.haul.destination.constructionId===undefined?'les cultures':'le chantier'} : ${pawn.haul.quantity} unités à déplacer.` : pawn.haul.phase === 'pickup' ? `Va prélever ${pawn.haul.quantity} unités réservées.` : `Porte ${pawn.haul.quantity} unités vers ${pawn.haul.destination.type === 'job' ? 'un chantier' : 'le stockage'}.` };
   if (pawn.jobId !== null) return { code: 'working', reason: pawn.state === 'moving' ? 'Se rend à son travail.' : 'Travaille sur sa cible.' };
   if (pawn.state === 'sleeping') return { code: 'sleeping', reason: 'Se repose.' };

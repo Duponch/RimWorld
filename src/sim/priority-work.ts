@@ -46,8 +46,8 @@ export function advancePriorityWork(world:World,pawn:Pawn,getBlocked:NavigationG
     if(c) {
       const path=routeToJob(world,c.target,reach,!c.job);
       if(path) {
-        if(c.job){startJobOrder(pawn,job,path);if(c.clearance)job.clearance=c.clearance;}
-        else startHaulOrder(pawn,{sourcePileId:c.sourceId!,quantity:c.quantity!,destination:c.destination!,phase:'pickup',carryPileId:null},path);
+        if(c.job){startJobOrder(pawn,job,path);if(job.kind==='install')job.installationWork=intent.work==='haul'?'haul':'build';if(c.clearance)job.clearance=c.clearance;}
+        else startHaulOrder(pawn,{...(c.whole?{whole:true as const}:{}),sourcePileId:c.sourceId!,quantity:c.quantity!,destination:c.destination!,phase:'pickup',carryPileId:null},path);
         return false;
       }
     }

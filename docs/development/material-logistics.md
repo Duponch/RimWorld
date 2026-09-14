@@ -4,9 +4,11 @@ Depuis V9, le [dégagement des cultures](farming.md#dégagement-matériel-v9) aj
 
 Références : rapport utilisateur chapitres 2, 4, 5, 9 et 10 ; SYS-005/020..022/041..061 ; scénarios A et familles F1/F2/F3. La [liste des écarts](../gameplay/decisions.md) distingue les règles retenues des limites temporaires. Les résultats exécutés sont consignés dans [validation.md](validation.md).
 
-Extension V5 : [objets alimentaires](food-items.md), identité `item`, quantités réservées et limites de pile par définition. Les migrations V2/V3 décrites ci-dessous restent datées ; le contrat de continuation courant est V21.
+Extension V5 : [objets alimentaires](food-items.md), identité `item`, quantités réservées et limites de pile par définition. Les migrations V2/V3 décrites ci-dessous restent datées ; le contrat de continuation courant est V26.
 
 ## État autoritaire et vues
+
+Les [meubles entiers V26](furniture-logistics.md) suivent les mêmes contrats de propriété, portage et réservation, dans `World.packed`. Ils occupent chacun une cellule exclusive et ne se fractionnent pas ; leur bois incorporé reste dans le bilan sans s'ajouter au stock de bois disponible.
 
 `World.piles` porte la matière disponible. Chaque pile possède ID, type, quantité entière positive et exactement un propriétaire : sol avec coordonnées, colon porteur, ou chantier identifié. Une référence sociale ou de réservation n'est pas un deuxième propriétaire.
 
@@ -30,7 +32,7 @@ Pour les tâches automatiques, désactiver la famille responsable (Transport ord
 
 Une réserve est actuellement une cellule avec filtre, priorité et capacité totale. Le stockage de meilleure priorité attire les objets ; les réserves de même priorité ne provoquent pas de transport circulaire. Une capacité réduite sous le contenu actuel autorise l'évacuation de l'excédent vers une réserve admissible de priorité égale ou inférieure. Faute de destination, l'excédent reste au sol. Les objets déjà présents ne disparaissent pas lorsque leurs filtres changent. La capacité ne représente pas un second conteneur possédant des copies des piles.
 
-Les [désignations rectangulaires](area-designations.md) créent ou retirent désormais plusieurs cases en une commande. Elles ne fusionnent pas les réserves en une entité commune. La création ignore les réserves déjà présentes ; le retrait invalide ensemble les livraisons qui les ciblaient. L'annulation rectangulaire d'un chantier sélectionne son identité une seule fois, même si plusieurs cellules de son empreinte sont touchées, puis laisse ses matériaux au sol. Cette étape historique avait conservé le schéma 2 ; le schéma courant est V22.
+Les [désignations rectangulaires](area-designations.md) créent ou retirent désormais plusieurs cases en une commande. Elles ne fusionnent pas les réserves en une entité commune. La création ignore les réserves déjà présentes ; le retrait invalide ensemble les livraisons qui les ciblaient. L'annulation rectangulaire d'un chantier sélectionne son identité une seule fois, même si plusieurs cellules de son empreinte sont touchées, puis laisse ses matériaux au sol. Cette étape historique avait conservé le schéma 2 ; le schéma courant est V26.
 
 ## Empreintes, accès et interface
 

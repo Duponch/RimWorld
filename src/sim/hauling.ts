@@ -1,3 +1,4 @@
+import { processFurnitureHaul } from './furniture-hauling.ts';
 import { constructionSiteFree } from './construction-rules.ts';
 import { copyRot } from './food-preservation.ts';
 import { campfire, WOOD_BURN_TICKS, REFUEL_WORK_TICKS } from './fuel.ts';
@@ -12,6 +13,7 @@ const nearby = (a: Cell, b: Cell) => sameCell(a, b) || adjacent(a, b);
 
 export function processHaul(world: World, pawn: Pawn, move: (target: Cell, allowTarget: boolean) => void, wake: () => void): void {
   const task = pawn.haul!;
+  if(task.whole){processFurnitureHaul(world,pawn,move,wake);return;}
   if (!destinationValid(world, pawn)) { releaseWork(world, pawn); return; }
   if (task.phase === 'pickup') {
     const source = world.piles.find(item => item.id === task.sourcePileId);

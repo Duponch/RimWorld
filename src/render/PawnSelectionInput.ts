@@ -3,6 +3,8 @@ export type SelectionGesture = { ids:number[]; additive:boolean; toggle:boolean 
 interface Callbacks {
   enabled():boolean;
   pawns():ScreenPawn[];
+  selected():ReadonlySet<number>;
+  canInspect(event:PointerEvent):boolean;
   select(gesture:SelectionGesture):void;
   inspect(event:PointerEvent):void;
   lock(locked:boolean):void;
@@ -39,17 +41,22 @@ export class PawnSelectionInput {
       const ids=this.callbacks.pawns().filter(p=>p.x>=Math.min(drag.x,event.clientX)&&p.x<=Math.max(drag.x,event.clientX)&&p.y>=Math.min(drag.y,event.clientY)&&p.y<=Math.max(drag.y,event.clientY)).map(p=>p.id);
       this.callbacks.select({ids,additive:drag.shift,toggle:false});
     } else {
-      const pawn=this.hit(event.clientX,event.clientY);
+      const hits=this.hits(event.clientX,event.clientY),selected=this.callbacks.selected();
+      // Cycle overlapping pawns and the floor object on ordinary clicks. Shift
+      // still toggles a pawn; double-click still selects the visible group.
+      const current=drag.shift?-1:hits.findIndex(p=>selected.has(p.id));
+      const next=current+1,inspect=next===hits.length&&this.callbacks.canInspect(event);
+      const pawn=inspect?undefined:hits[next%hits.length];
       if(pawn)this.callbacks.select({ids:[pawn.id],additive:drag.shift,toggle:drag.shift});
       else if(!drag.shift)this.callbacks.inspect(event);
     }
     return true;
   }
-  private hit(x:number,y:number):ScreenPawn|undefined {
-    return this.callbacks.pawns().filter(p=>Math.hypot(x-p.x,y-p.y)<=p.radius).sort((a,b)=>a.depth-b.depth||a.id-b.id)[0];
+  private hits(x:number,y:number):ScreenPawn[] {
+    return this.callbacks.pawns().filter(p=>Math.hypot(x-p.x,y-p.y)<=p.radius).sort((a,b)=>a.depth-b.depth||a.id-b.id);
   }
   private doubleClick=(event:MouseEvent):void=>{
-    if(!this.callbacks.enabled()||event.button!==0||!this.hit(event.clientX,event.clientY))return;
+    if(!this.callbacks.enabled()||event.button!==0||!this.hits(event.clientX,event.clientY).length)return;
     this.callbacks.select({ids:this.callbacks.pawns().map(p=>p.id),additive:event.shiftKey,toggle:false});
     event.preventDefault();
   };

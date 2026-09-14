@@ -1,3 +1,4 @@
+import { pileSurfaces } from './pile-surfaces';
 import type * as THREE from 'three/webgpu';
 import type { BoxBatches } from './BoxBatches';
 import type { World } from '../sim/types';
@@ -39,11 +40,19 @@ export function buildFurniture(world: World, group: THREE.Group, cutaway: boolea
         woodParts.push({ x: x + lx * Math.cos(ry) + lz * Math.sin(ry), z: z + lz * Math.cos(ry) - lx * Math.sin(ry), y: (height - 0.09) / 2, sx: 0.09, sy: height - 0.09, sz: 0.09, ry });
       }
     }
+    const surfaces=pileSurfaces(world);
+    const parcels:Placement[]=[];
+    for(const p of world.packed)if(p.owner.type==='ground') {
+      const s=surfaces.get(p.owner.z*world.width+p.owner.x),scale=s?.scale??1;
+      const x=p.owner.x+(s?.x??0),z=p.owner.z+(s?.z??0),y=s?.y??0;
+      parcels.push({x,z,y:y+.24*scale,sx:.64*scale,sy:.48*scale,sz:.64*scale,color:0xb6996c},
+        {x,z,y:y+.49*scale,sx:.13*scale,sy:.03*scale,sz:.67*scale,color:0x6f634e});
+    }
     const fires=campfireParts(world);
     batches.set(group,'campfire-flames',fires.flames,'border',false);
     batches.set(group, 'furniture', [
       ...fires.base, ...recreationParts(world),
-      ...(world.packed??[]).flatMap(p=>p.owner.type==='ground'?[{x:p.owner.x,z:p.owner.z,y:.24,sx:.64,sy:.48,sz:.64,color:0xb6996c},{x:p.owner.x,z:p.owner.z,y:.49,sx:.13,sy:.03,sz:.67,color:0x6f634e}]:[]),
+      ...parcels,
       ...woodParts.map(p => ({ ...p, color: 0xa38559 })),
       ...walls.map(p => ({ ...p, sx: 0.96, sy: wallHeight - 0.09, sz: 0.96, color: 0xa6916e })),
       ...wallCaps.map(p => ({ ...p, sx: 1.01, sy: 0.09, sz: 1.01, color: 0xc3af86 })),

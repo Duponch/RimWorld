@@ -1,3 +1,4 @@
+import { planFurnitureHaulOrder } from './player-furniture-hauling.ts';
 import { candidateAccess } from './candidate-access.ts';
 import { asBuilder, constructionHaulPriority, constructionObstruction, isConstruction } from './construction-rules.ts';
 import { growingJobValid } from './farming.ts';
@@ -23,6 +24,7 @@ export function planServiceHaul(world:World,pawn:Pawn,target:ServiceHaulTarget,a
   if(job?.reservedBy!==undefined&&job.reservedBy!==null)return no('Chantier déjà réservé.');
   const obstacle=job?constructionObstruction(world,job):undefined;
   if(obstacle?.plant)return no('La plante doit être coupée avant le transport.');
+  if(job&&obstacle?.pack)return planFurnitureHaulOrder(world,pawn,obstacle.pack.building.id,access,budget,job);
   if(job&&!obstacle?.pile)return no('Aucune pile à dégager.');
   if(target.type==='fuel'&&!fire?.fuel)return no('Feu introuvable.');
   if(fire&&fuelStationReserved(world,fire.id))return no('Feu réservé pour la cuisine ou un ravitaillement.');

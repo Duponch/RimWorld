@@ -1,0 +1,99 @@
+{
+  "date": "2026-09-14T22:20:23.742Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "map": 250,
+  "protocol": "Synthetic 3/30/100 haulers, one whole furniture parcel and one exclusive stockpile cell per pawn. Three repetitions, up to 1000 active ticks, then 200 idle ticks. Separate 100-tick warmup. Commands, validation and serialization outside timing. No browser/GPU timing.",
+  "phases": [
+    {
+      "pawns": 3,
+      "activeTickMs": {
+        "samples": 90,
+        "p50": 0.24120000000004893,
+        "p95": 1.530999999999949,
+        "p99": 7.1486999999999625,
+        "max": 7.1486999999999625
+      },
+      "idleTickMs": {
+        "samples": 600,
+        "p50": 0.006999999999948159,
+        "p95": 0.04070000000001528,
+        "p99": 0.15899999999999181,
+        "max": 0.9319000000000415
+      },
+      "ownershipTransitionTickMs": {
+        "samples": 6,
+        "p50": 1.0989999999999327,
+        "p95": 7.1486999999999625,
+        "p99": 7.1486999999999625,
+        "max": 7.1486999999999625
+      },
+      "outcome": {
+        "stored": 3,
+        "carriedPeak": 3,
+        "identitiesConserved": true,
+        "woodConserved": true
+      }
+    },
+    {
+      "pawns": 30,
+      "activeTickMs": {
+        "samples": 153,
+        "p50": 0.48689999999987776,
+        "p95": 7.968399999999974,
+        "p99": 13.695999999999913,
+        "max": 16.364499999999907
+      },
+      "idleTickMs": {
+        "samples": 600,
+        "p50": 0.023799999999937427,
+        "p95": 0.23900000000003274,
+        "p99": 0.4229000000000269,
+        "max": 1.1978999999998905
+      },
+      "ownershipTransitionTickMs": {
+        "samples": 27,
+        "p50": 0.9155000000000655,
+        "p95": 8.799299999999903,
+        "p99": 13.695999999999913,
+        "max": 13.695999999999913
+      },
+      "outcome": {
+        "stored": 30,
+        "carriedPeak": 30,
+        "identitiesConserved": true,
+        "woodConserved": true
+      }
+    },
+    {
+      "pawns": 100,
+      "activeTickMs": {
+        "samples": 138,
+        "p50": 6.5929000000001,
+        "p95": 20.1866,
+        "p99": 25.760899999999992,
+        "max": 31.1558
+      },
+      "idleTickMs": {
+        "samples": 600,
+        "p50": 0.060500000000047294,
+        "p95": 1.6573000000003049,
+        "p99": 2.3669999999997344,
+        "max": 3.6094000000000506
+      },
+      "ownershipTransitionTickMs": {
+        "samples": 102,
+        "p50": 7.040899999999965,
+        "p95": 20.1866,
+        "p99": 25.760899999999992,
+        "max": 31.1558
+      },
+      "outcome": {
+        "stored": 100,
+        "carriedPeak": 100,
+        "identitiesConserved": true,
+        "woodConserved": true
+      }
+    }
+  ]
+}

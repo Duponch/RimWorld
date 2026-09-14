@@ -5,13 +5,13 @@ import type { Cell, Job, Pawn, World } from './types.ts';
 
 /** A whole object needs a completely unreserved slot, never a compatible stack.
  * A full wood-slot capacity also excludes every typed inbound reservation. */
-export function furnitureDropCell(world:World,origin:Cell):Cell|undefined {
-  const free=(c:Cell)=>!groundPile(world,c)&&!packedAt(world,c)&&groundCapacity(world,c,'wood')===MAX_STACK;
+export function furnitureDropCell(world:World,origin:Cell,exceptPawn?:number):Cell|undefined {
+  const free=(c:Cell)=>!groundPile(world,c)&&!packedAt(world,c)&&groundCapacity(world,c,'wood',exceptPawn)===MAX_STACK;
   return free(origin)?{x:origin.x,z:origin.z}:nearbyGround(world,origin).find(free);
 }
 export function releaseFurniture(world:World,pawn:Pawn,plan?:ReadonlyMap<number,Cell>):boolean {
   const pack=world.packed?.find(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);if(!pack)return true;
-  const cell=plan?.get(pack.building.id)??furnitureDropCell(world,pawn);if(!cell)return false;
+  const cell=plan?.get(pack.building.id)??furnitureDropCell(world,pawn,pawn.id);if(!cell)return false;
   pack.owner={type:'ground',...cell};return true;
 }
 function detach(world:World,job:Job,owner:PackedFurniture['owner']):PackedFurniture {
