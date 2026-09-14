@@ -49,7 +49,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 11 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 12 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)
@@ -61,3 +61,6 @@
 ## Conservation alimentaire (V11)
 - Lire docs/development/food-preservation.md avant de modifier les transferts, les âges ou la température. Séparer copie l’âge, fusionner pondère les quantités, produire démarre frais. La pourriture précède les actions ; elle réconcilie les réservations et les pertes cumulées.
 - La température actuelle est constante : un futur climat variable exige de revoir l’intégration des âges. Les effets du froid, de l’exposition et de l’intoxication ne sont pas livrés par ce contrat.
+
+## Horaires (V12)
+- Lire docs/development/schedules.md avant de modifier repos et priorités horaires. Conserver plages, profil de fatigue et état d’épuisement ; une intention ne donne jamais un bonus de besoin. Les loisirs ne sont pas implémentés.

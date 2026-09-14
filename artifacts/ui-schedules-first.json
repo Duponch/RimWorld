@@ -1,0 +1,214 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "E:\\Code\\RimWorld\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "tests/integration/schedules.spec.ts",
+      "tests/integration/production.spec.ts",
+      "--reporter=json"
+    ],
+    "configFile": "E:\\Code\\RimWorld\\playwright.config.ts",
+    "rootDir": "E:/Code/RimWorld/tests/integration",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "E:/Code/RimWorld/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "E:/Code/RimWorld/tests/integration",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": {
+      "command": "npm run dev",
+      "url": "http://127.0.0.1:5173",
+      "reuseExistingServer": true,
+      "timeout": 30000
+    }
+  },
+  "suites": [
+    {
+      "title": "production.spec.ts",
+      "file": "production.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "cuisine par interface : construction, facture, ingrédients portés, reprise et repas rangés",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 14407,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-14T10:48:07.059Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "cooking-state",
+                      "contentType": "application/json",
+                      "body": "eyJiYWNrZW5kIjoiV2ViR1BVIiwidGljayI6MzMxLCJ3b3JrQ2hlY2twb2ludCI6MTQ4LCJyYXciOjEwLCJtZWFscyI6MiwiZXJyb3JzIjpbXX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ed69554c53210704c98c-f69ca065d02780515016",
+          "file": "production.spec.ts",
+          "line": 10,
+          "column": 1
+        },
+        {
+          "title": "conservation dans le worker : migration V10, inspection de fraîcheur, expiration et sauvegarde refusée sans remplacement",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 8098,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-14T10:48:21.501Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "preservation-state",
+                      "contentType": "application/json",
+                      "body": "eyJ0aWNrIjoxNzgsInNwb2lsZWQiOnsiYmVycmllcyI6MTAsInJpY2UiOjAsInNpbXBsZS1tZWFsIjowfSwibWlncmF0aW9uIjoxMCwic2NoZW1hIjoxMiwiZXJyb3JzIjpbXX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ed69554c53210704c98c-82690d88ed86407f3418",
+          "file": "production.spec.ts",
+          "line": 79,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "schedules.spec.ts",
+      "file": "schedules.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "Horaires : peindre, annuler, clavier, copier, reprendre et réveiller physiquement par le worker",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 75000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7112,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-14T10:48:29.632Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "schedule-result",
+                      "contentType": "application/json",
+                      "body": "eyJ0aWNrIjo0OSwiY29uZmlndXJlZCI6W1sic2xlZXAiLCJzbGVlcCIsInNsZWVwIiwic2xlZXAiLCJzbGVlcCIsInNsZWVwIiwiYW55dGhpbmciLCJhbnl0aGluZyIsIndvcmsiLCJ3b3JrIiwid29yayIsIndvcmsiLCJ3b3JrIiwiYW55dGhpbmciLCJhbnl0aGluZyIsImFueXRoaW5nIiwiYW55dGhpbmciLCJhbnl0aGluZyIsImFueXRoaW5nIiwiYW55dGhpbmciLCJhbnl0aGluZyIsImFueXRoaW5nIiwic2xlZXAiLCJzbGVlcCJdLFsid29yayIsInNsZWVwIiwic2xlZXAiLCJzbGVlcCIsInNsZWVwIiwic2xlZXAiLCJhbnl0aGluZyIsImFueXRoaW5nIiwid29yayIsIndvcmsiLCJ3b3JrIiwid29yayIsIndvcmsiLCJhbnl0aGluZyIsImFueXRoaW5nIiwiYW55dGhpbmciLCJhbnl0aGluZyIsImFueXRoaW5nIiwiYW55dGhpbmciLCJhbnl0aGluZyIsImFueXRoaW5nIiwiYW55dGhpbmciLCJzbGVlcCIsInNsZWVwIl0sWyJzbGVlcCIsInNsZWVwIiwic2xlZXAiLCJzbGVlcCIsInNsZWVwIiwic2xlZXAiLCJhbnl0aGluZyIsImFueXRoaW5nIiwiYW55dGhpbmciLCJhbnl0aGluZyIsImFueXRoaW5nIiwiYW55dGhpbmciLCJhbnl0aGluZyIsImFueXRoaW5nIiwiYW55dGhpbmciLCJhbnl0aGluZyIsImFueXRoaW5nIiwiYW55dGhpbmciLCJhbnl0aGluZyIsImFueXRoaW5nIiwiYW55dGhpbmciLCJhbnl0aGluZyIsInNsZWVwIiwic2xlZXAiXV0sInNsZWVwT2JzZXJ2ZWQiOnRydWUsIndvcmtXYWtlIjp0cnVlLCJtaWdyYXRpb24iOjExLCJlcnJvcnMiOltdfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6ec3d340f1699b4ea2ca-0d4c3e8c969b4ec1c72f",
+          "file": "schedules.spec.ts",
+          "line": 6,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-14T10:48:05.278Z",
+    "duration": 31662.148,
+    "expected": 3,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

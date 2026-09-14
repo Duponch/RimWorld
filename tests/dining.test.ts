@@ -65,7 +65,7 @@ test('two diners reserve distinct seats, physically carry food, save every phase
   until(removed, () => removed.stock.food === 0);
   const interrupted = deserializeWorld(phases.get('ingest')!);
   const tired = interrupted.pawns.find(p => p.state === 'eating')!;
-  tired.rest = 0; const before = interrupted.stock.food; checked(interrupted);
+  tired.rest = 0; tired.restZeroTicks = 150; tired.collapsePending = true; const before = interrupted.stock.food; checked(interrupted);
   expect(tired.state).toBe('sleeping'); expect(interrupted.stock.food).toBe(before);
   expect(tired.memories).toEqual([]);
   expect(interrupted.piles.some(pile => pile.owner.type === 'ground' && pile.owner.x === tired.x && pile.owner.z === tired.z)).toBe(true);

@@ -21,7 +21,7 @@ export function validatePreservation(world: World, version: number): string[] {
   return errors;
 }
 export function initializePreservation(world: World): void {
-  world.schemaVersion = 11; world.spoiled = emptySpoilage();
+  (world as unknown as {schemaVersion: number}).schemaVersion = 11; world.spoiled = emptySpoilage();
   // Prior saves did not record age. Start fresh at their existing tick, preserving
   // identities, task progress, quantities and paths; never invent retroactive losses.
   for (const pile of world.piles) Object.assign(pile, freshRot(pile.item, world.tick));

@@ -77,7 +77,7 @@ test.each(['berries','rice'] as const)('aliments (%s) : rÃ©servations fractionnÃ
   const interrupted = deserializeWorld(phases.get('ingest')!);
   const p = interrupted.pawns.find(p => p.state === 'eating')!;
   const before = interrupted.stock.food, held = interrupted.piles.find(pile => pile.owner.type === 'pawn' && pile.owner.pawnId === p.id)!;
-  p.rest = 0; stepWorld(interrupted);
+  p.rest = 0; p.restZeroTicks = 150; p.collapsePending = true; stepWorld(interrupted);
   expect(interrupted.stock.food).toBe(before); expect(held.owner).toEqual({ type: 'ground', x:p.x,z:p.z }); expect(held.item).toBe(item);
   expect(validateWorld(interrupted)).toEqual([]);
 });

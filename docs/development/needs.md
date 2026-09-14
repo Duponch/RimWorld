@@ -1,4 +1,4 @@
-# Repas et couchages physiques — origine V3, état courant V9
+# Repas et couchages physiques — origine V3, état courant V12
 
 Livraison du 13 septembre 2026. Référence : chapitre 14 du corpus utilisateur, SYS-026..027/039/044/076..080, UI-016/026, TEST-189 ; adoption des actions effectives, des réservations et de la continuation. La demande utilisateur interdit de remplacer ces interactions élémentaires par des raccourcis. Leur correction passe avant les zones nommées, sans déclarer G1 terminé.
 
@@ -10,25 +10,19 @@ Un colon fatigué préfère son lit accessible, sinon choisit un lit inoccupé p
 
 La référence permet de manger sans table et de dormir au sol. Les [tables](https://rimworldwiki.com/wiki/Table_(1x2)) offrent un lieu de repas avec siège et des conséquences d'humeur ; elles peuvent être ignorées lorsqu'elles sont trop éloignées. Le [repos](https://rimworldwiki.com/wiki/Rest) distingue fatigue et effondrement. Le [menu des horaires](https://rimworldwiki.com/wiki/Menus) sépare décisions de tâches, sommeil et réveil pour faim critique. Ces pages ont été consultées le 13 septembre ; elles ne certifient pas tous les coefficients de notre moteur.
 
-## Paramètres connus, sans prétention de parité complète
+## Paramètres et domaines associés
 
-| Paramètre | Décision actuelle |
-|---|---|
-| Temps | 10 Hz, 6 000 ticks/jour inchangés. |
-| Faim et repos éveillé | Adulte : 160/6000 points de faim/tick, facteurs de catégorie 1/0,5/0,25/0 ; profil historique V1–V4 : 0,015. Repos éveillé : 0,008. [Unités et migration](food-items.md). |
-| Aliments | Baies/riz +5 points/unité et rations +90 ; quantité réservée selon la faim, 50 ticks d'ingestion. Portion historique +35 pour compatibilité ; [définitions et limites](food-items.md). |
-| Décision | Cherche à manger à 30 ; cherche à dormir à 30 ; faim critique pendant sommeil à 12,5. Horaires, alimentation autorisée, inventaire de repas de secours, température et danger ne sont pas implémentés. |
-| Repos en lit | `100 / (6000 × 10,5 / 24)` points/tick : durée de récupération totale de 10,5 h de jeu convertie à notre journée. Lit sans qualité ni modificateurs. |
-| Repos au sol | 80 % du lit, coefficient local à vérifier avec le futur mobilier. Fin de sommeil à 100. |
-| Épuisement et faim simultanés | Effondrement déterministe à zéro. Au réveil pour faim critique, un minimum de 5 points de repos évite une boucle dormir/se relever avant toute ingestion. Adaptation provisoire explicite ; l'effondrement probabiliste et ses profils de référence restent à étudier avec santé/horaires. |
+Le temps reste à 10 Hz et 6 000 ticks/jour. La faim adulte baisse de 160/6 000 points/tick, pondérés par catégorie ; l'ancien profil alimentaire conserve 0,015. Quantité ingérée, aliments et sélection sont décrits dans [aliments](food-items.md). La nourriture reste physique pendant les 50 ticks d'ingestion.
 
-Tables/tabourets, transport vers une place réservée, confort progressif et souvenir sans table sont désormais livrés : [contrat et recherche](dining.md). Le choix alimentaire neutre est livré en V9 ([contrat](food-items.md)). La première [cuisine](cooking.md) est livrée en V10. Régimes, préférences contextuelles complètes, pourrissement, horaires, malnutrition et maladies restent **absents**. Cette tranche livre les actions physiques actuelles ; elle ne clôt pas tout le domaine survie.
+Le [contrat Horaires V12](schedules.md) définit désormais le départ au lit, les réveils, la baisse de repos adulte par catégorie, l'épuisement différé et la migration historique. Il remplace les anciens coefficients de fatigue et le verrou de cinq points pour les nouvelles parties. Le lit normal récupère 100 points en 10,5 h ; le sol à 80 %. L'intégration et la cadence des interruptions restent adaptées à notre moteur.
+
+Tables, confort et souvenirs : [repas à table](dining.md). Cuisine : [feu et factures](cooking.md). Fraîcheur et pourriture : [conservation](food-preservation.md). Régimes, loisirs, préférences contextuelles complètes, malnutrition et maladies restent absents ; cette chaîne ne clôt pas tout le domaine survie.
 
 ## Persistance et limites de ressources
 
 `Pawn.need`, `bedId` et `needCooldown` entrent dans le schéma 3. Les phases, propriétaire de portion, progression, destination, route et cadence sont sérialisés. La validation refuse tâches simultanées, ingestion sans portion, nourriture surréservée, propriétaire de lit dupliqué et dormeur hors de sa destination. Un trajet devenu bloqué reste valide à sauvegarder : sa réévaluation appartient au tick suivant.
 
-V2 est validé avant migration : terrain, tick, IDs, piles, quantités, trajets de travail, cargaisons et progression restent identiques. Les nouveaux champs sont initialisés ; un ancien dormeur sur place devient disponible et réévalue son couchage au prochain tick, sans changer de case ni de jauge au chargement. V1 conserve sa migration matérielle et initialise aussi ces champs. Les clés locales restent identiques. La tranche V4 a introduit places, confort et souvenirs ([dining.md](dining.md)). Le schéma courant est V11 : V5 a introduit types et quantités alimentaires, profils adulte/historique ([food-items.md](food-items.md)), puis V6–V9 ont étendu sol/déplacement/plantes/cultures et dégagement, V10 les recettes et le combustible, V11 la fraîcheur et les pertes alimentaires ([conservation](food-preservation.md)). La continuation est exacte au sein de ce schéma ; les migrations conservent les champs et règles explicitement décrits.
+V2 est validé avant migration : terrain, tick, IDs, piles, quantités, trajets de travail, cargaisons et progression restent identiques. Les nouveaux champs sont initialisés ; un ancien dormeur sur place devient disponible et réévalue son couchage au prochain tick, sans changer de case ni de jauge au chargement. V1 conserve sa migration matérielle et initialise aussi ces champs. Les clés locales restent identiques. La tranche V4 a introduit places, confort et souvenirs ([dining.md](dining.md)). Le schéma courant est V12 : V5 a introduit types et quantités alimentaires, profils adulte/historique ([food-items.md](food-items.md)), puis V6–V9 ont étendu sol/déplacement/plantes/cultures et dégagement, V10 les recettes et le combustible, V11 la fraîcheur et les pertes alimentaires ([conservation](food-preservation.md)), V12 les horaires et le profil de repos ([migration](schedules.md)). La continuation est exacte au sein de ce schéma ; les migrations conservent les champs et règles explicitement décrits.
 
 Déposer un objet porté change son propriétaire en conservant son ID ; aucune nouvelle identité n'est nécessaire. Prendre une portion entière réutilise aussi son ID. Un fractionnement vérifie les plafonds de piles et d'identités avant toute mutation. La sélection des besoins partage le plafond de huit recherches par tick avec les travaux et réessaie toutes les vingt ticks si nécessaire ; un budget épuisé n'est jamais assimilé à un chemin inaccessible.
 

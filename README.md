@@ -13,7 +13,7 @@ npm run dev
 
 Ouvrir [le jeu local](http://127.0.0.1:5173). Three.js utilise WebGPU si disponible, sinon WebGL 2 ; le backend apparaît dans Menu → Diagnostics. Le compteur FPS reste visible. La carte par défaut est 250×250, graine 42 ; Menu permet de créer une colonie ou de reprendre une sauvegarde. Paramètres de diagnostic : `/?seed=123&size=250`.
 
-Le [guide joueur](docs/gameplay/player-guide.md) décrit contrôles, priorités et règles. Les sauvegardes utilisent actuellement le schéma 11 ; les anciennes versions sont validées puis migrées, sans agrandir leur carte ni remplacer leurs objets. La fraîcheur des aliments et les pertes par pourriture sont persistées.
+Le [guide joueur](docs/gameplay/player-guide.md) décrit contrôles, priorités et règles. Les sauvegardes utilisent actuellement le schéma 12 ; les anciennes versions sont validées puis migrées, sans agrandir leur carte ni remplacer leurs objets. La fraîcheur des aliments et les pertes par pourriture sont persistées.
 
 ## Développer et vérifier
 

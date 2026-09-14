@@ -1,10 +1,11 @@
 import type { JobKind } from '../sim/types';
+import { scheduleLayout } from './schedule-controls';
 import { DEFAULT_MAP_SIZE, MAP_SIZE_PRESETS } from '../sim/map-config';
 
 const mapSizeLabels: Record<number, string> = { 32: 'terrain d’essai', 64: 'compacte', 128: 'compacte', 200: 'petite', 250: 'moyenne' };
 
 export type Tool = 'select' | Exclude<JobKind, 'sow'> | 'cancel' | 'stockpile' | 'remove-stockpile' | 'growing' | 'remove-growing';
-export type Panel = 'architect' | 'work' | 'history' | 'menu' | null;
+export type Panel = 'architect' | 'work' | 'schedule' | 'history' | 'menu' | null;
 export type ArchitectCategory = 'orders' | 'zones' | 'structure' | 'furniture' | 'temperature';
 export const toolDefinitions: { id: Tool; icon: string; title: string; hint: string; key: string; category: ArchitectCategory }[] = [
   { id: 'select', icon: '↖', title: 'Inspecter', hint: 'Choisir une case ou un colon', key: 'Échap', category: 'orders' },
@@ -75,6 +76,7 @@ export function gameLayout(): string {
       <p>Priorités manuelles : <b>1</b> haute · <b>4</b> basse · <b>0</b> désactivée. Le transport livre aussi les chantiers.</p>
       <div class="work-table-wrap"><table><thead><tr><th>Colon</th><th>Collecte</th><th>Construction</th><th>Transport</th><th>Culture</th><th>Cuisine</th><th>Activité</th></tr></thead><tbody id="work-rows"></tbody></table></div>
     </section>
+    ${scheduleLayout()}
     <section id="history-panel" class="management-panel history-panel panel" aria-label="Historique" hidden>
       <div class="panel-heading"><h2>Historique</h2><button data-close-panel aria-label="Fermer Historique">×</button></div>
       <div id="journal-items"></div>
@@ -96,15 +98,15 @@ export function gameLayout(): string {
       </div>
     </aside>
     <div id="metrics" class="diagnostics" hidden></div>
-    <nav class="main-tabs panel" aria-label="Gestion de la colonie">${tabs.map(([id, label]) => `<button data-panel="${id}" ${['architect', 'work', 'history', 'menu'].includes(id) ? 'aria-pressed="false"' : 'disabled title="Fonctionnalité à venir"'}>${label}</button>`).join('')}</nav>
+    <nav class="main-tabs panel" aria-label="Gestion de la colonie">${tabs.map(([id, label]) => `<button data-panel="${id}" ${['architect', 'work', 'schedule', 'history', 'menu'].includes(id) ? 'aria-pressed="false"' : 'disabled title="Fonctionnalité à venir"'}>${label}</button>`).join('')}</nav>
     <div id="loading" class="loading"><h1>LISIÈRE</h1><p>Préparation de votre colonie…</p></div>
     <dialog id="help" class="help-dialog"><form method="dialog"><button class="close" aria-label="Fermer l’aide">×</button></form><span class="section-label">CARNET DE SURVIE</span><h2>Votre première journée</h2>
       <p>Vous donnez les ordres. Les colons choisissent leurs tâches et se déplacent de façon autonome.</p>
       <ol><li><b>Architecte → Ordres</b> : récolter les baies et abattre les arbres ; les matériaux apparaissent au sol.</li><li><b>Architecte → Zones</b> : désigner des cases de réserve et choisir leurs filtres. Les transporteurs y regroupent les objets.</li><li><b>Architecte → Structure / Meubles</b> : poser des murs et des lits. Les matériaux doivent être livrés avant de construire. <b>Q / E</b> tourne le lit.</li><li><b>Travail</b> : régler collecte, construction et transport ; 1 est la plus forte priorité, 0 désactive.</li><li><b>Menu</b> : sauvegarder, recharger ou choisir la taille d'une nouvelle colonie.</li></ol>
       <p>Abattage, récolte, réserves et annulation : cliquer ou maintenir le bouton gauche pour tracer un rectangle. Les cases retenues sont surlignées. Relâcher applique ; Échap ou clic droit annule le tracé.</p>
-      <p><b>Espace</b> : pause · <b>1 / 2 / 3</b> : vitesse · <b>Tab</b> : Architecte · <b>F1</b> : Travail · <b>Échap</b> : annuler le tracé, puis fermer · <b>Ctrl+S</b> : sauvegarder.</p>
+      <p><b>Espace</b> : pause · <b>1 / 2 / 3</b> : vitesse · <b>Tab</b> : Architecte · <b>F1</b> : Travail · <b>F2</b> : Horaires · <b>Échap</b> : annuler le tracé, puis fermer · <b>Ctrl+S</b> : sauvegarder.</p>
       <p>Molette : zoom · glisser le bouton droit : tourner · bouton central ou flèches : déplacer la caméra. La coupe des murs sert à voir les intérieurs ; leurs obstacles restent en place.</p>
-      <p class="muted">Inspectez un chantier pour comprendre son attente, ou une réserve pour modifier ses filtres. Le repos et la prise des repas restent simplifiés. Les onglets grisés indiquent les domaines prévus, actuellement indisponibles.</p>
+      <p class="muted">Inspectez un chantier pour comprendre son attente, ou une réserve pour modifier ses filtres. Horaires permet de régler les plages de travail et de sommeil. Les loisirs, la santé et les pièces restent à développer. Les onglets grisés indiquent les domaines actuellement indisponibles.</p>
     </dialog>
     <dialog id="new-world-dialog" class="help-dialog"><form id="new-world-form"><button type="button" class="close" id="new-world-close" aria-label="Fermer la création">×</button><h2>Nouvelle colonie</h2>
       <label class="field">Graine<input id="world-seed" inputmode="numeric" type="number" min="0" max="4294967295" value="42" required></label>

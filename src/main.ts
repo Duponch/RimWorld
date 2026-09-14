@@ -1,4 +1,5 @@
 import { fireControls, updateFireControls } from './ui/fire-controls';
+import { createScheduleControls } from './ui/schedule-controls';
 import { billControls, updateBillControls } from './ui/bill-controls';
 import { growingControls } from './ui/growing-controls';
 import { growingZoneAt } from './sim/farming';
@@ -49,6 +50,9 @@ function notify(message: string, error = false) {
 async function attempt(action: () => Promise<unknown>) {
   try { await action(); } catch (error) { notify(error instanceof Error ? error.message : String(error), true); }
 }
+const scheduleUI = createScheduleControls(el('schedule-panel'), command => attempt(async () => {
+  await client.command(command); renderState();
+}));
 function setCategory(category: ArchitectCategory) {
   currentCategory = category;
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-category]')) button.classList.toggle('active', button.dataset.category === category);
@@ -56,7 +60,9 @@ function setCategory(category: ArchitectCategory) {
 }
 function setPanel(panel: Panel) {
   currentPanel = panel;
-  for (const name of ['architect', 'work', 'history', 'menu'] as const) el(`${name}-panel`).hidden = panel !== name;
+  scheduleUI.cancel();
+  for (const name of ['architect', 'work', 'schedule', 'history', 'menu'] as const) el(`${name}-panel`).hidden = panel !== name;
+  if (panel === 'schedule' && snapshot) scheduleUI.update(snapshot);
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-panel]:not(:disabled)')) {
     const active = button.dataset.panel === panel;
     button.classList.toggle('active', active);
@@ -207,6 +213,7 @@ function rebuildPawns(world: World) {
 function renderState() {
   if (!snapshot) return;
   const world = snapshot;
+  scheduleUI.update(world);
   el('wood').textContent = String(world.stock.wood); el('food').textContent = availableNutrition(world).toFixed(1); updateFoodStocks(el('food-items'), world);
   const carried = world.piles.filter(pile => pile.owner.type === 'pawn').reduce((sum, pile) => sum + pile.quantity, 0);
   const delivered = world.piles.filter(pile => pile.owner.type === 'job').reduce((sum, pile) => sum + pile.quantity, 0);
@@ -348,7 +355,7 @@ document.addEventListener('keydown', event => {
   if (event.ctrlKey || event.metaKey || event.altKey) return;
   if (event.code === 'Space') { event.preventDefault(); void attempt(() => changeSpeed(currentSpeed === 0 ? lastSpeed : 0)); return; }
   if (event.key === 'Escape') { event.preventDefault(); if (renderer?.cancelDesignation()) return; setPanel(null); clearSelection(); return; }
-  if (event.key === 'Tab' || event.key === 'F1') { event.preventDefault(); const panel = event.key === 'Tab' ? 'architect' : 'work'; setPanel(currentPanel === panel ? null : panel); return; }
+  if (event.key === 'Tab' || event.key === 'F1' || event.key === 'F2') { event.preventDefault(); const panel = event.key === 'Tab' ? 'architect' : event.key === 'F1' ? 'work' : 'schedule'; setPanel(currentPanel === panel ? null : panel); return; }
   const speeds: Record<string, number> = { '1': 1, '2': 3, '3': 6 };
   if (event.key in speeds) { void attempt(() => changeSpeed(speeds[event.key])); return; }
   const shortcuts: Record<string, Tool> = { c: 'chop', r: 'harvest', b: 'wall', l: 'bed', x: 'cancel' };

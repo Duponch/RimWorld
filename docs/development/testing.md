@@ -31,6 +31,7 @@ La matrice conserve [cinq familles F1–F5](../gameplay/systems-matrix.md#strat�
 
 | Scénarios du dépôt | Risques contrôlés |
 |---|---|
+| `schedules.test.ts` | Commandes atomiques, frontières horaires, lit réellement rejoint, famine/réveil, fin de travail, fatigue/effondrement et reprise ; le pilote décale la nuit de la cuisinière par commande. |
 | `food-preservation.test.ts` | Âges pondérés, transferts, ingestion/recette au seuil, sol saturé, 40 jours, migration et pertes groupées ; pilote et UI incluent ces données. |
 | `simulation.test.ts` | Priorités, transformations, annulations, besoins, propriété, corruption, reprise et soak multi-graines. Bilans et résultats métier, pas seulement hash. |
 | `world-generation.test.ts` | Déterminisme 32 bits, dimensions jusqu’à 250² et rectangles extrêmes, rivières/massifs, accès du départ, distributions, débuts de camp et corridor long. |

@@ -31,7 +31,10 @@ export async function editBill(page:Page,id:number,settings:BillSettings):Promis
 
 export async function perform(page: Page, decision: Decision, rotation: { value: number }): Promise<void> {
   const c=decision.command;
-  if(c.type==='priority') {
+  if(c.type==='schedule-paint') {
+    await panel(page,'schedule'); await page.locator(`[data-schedule-brush="${c.assignment}"]`).click();
+    for(const hour of c.hours) await page.locator(`[data-schedule-pawn="${c.pawnId}"][data-schedule-hour="${hour}"]`).click();
+  } else if(c.type==='priority') {
     await panel(page,'work');await page.locator(`select[data-owner="${c.pawnId}"][data-work="${c.work}"]`).selectOption(String(c.value));
   } else if(c.type==='stockpile') {
     await tool(page,'stockpile');
@@ -58,6 +61,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
   } else throw new Error(`Player UI action not supported: ${c.type}`);
   await page.waitForFunction(c=>{
     const w=window.__lisiere.world;
+    if(c.type==='schedule-paint')return c.hours.every(h=>w.pawns.find(p=>p.id===c.pawnId)?.schedule[h]===c.assignment);
     if(c.type==='priority')return w.pawns.find(p=>p.id===c.pawnId)?.priorities[c.work]===c.value;
     if(c.type==='bill-add')return !!w.structures.find(s=>s.id===c.structureId)?.bills?.length;
     if(c.type==='bill-update') {const b=w.structures.find(s=>s.id===c.structureId)?.bills?.find(b=>b.id===c.billId);return !!b&&b.mode===c.settings.mode&&b.target===c.settings.target&&b.suspended===c.settings.suspended;}

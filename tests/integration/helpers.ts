@@ -28,7 +28,7 @@ export function observeErrors(page: Page): string[] {
   return errors;
 }
 
-export async function panel(page: Page, name: 'architect' | 'work' | 'menu') {
+export async function panel(page: Page, name: 'architect' | 'work' | 'schedule' | 'menu') {
   if (!await page.locator(`#${name}-panel`).isVisible()) await page.locator(`[data-panel="${name}"]`).click();
   await expect(page.locator(`#${name}-panel`)).toBeVisible();
 }

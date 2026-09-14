@@ -5,7 +5,7 @@ import { ROT_DAYS, rotAge, rotRateAtTemperature, ticksUntilRot } from '../src/si
 import { foodScore, pileFoodScore } from '../src/sim/food-selection';
 import { TICKS_PER_DAY, type MaterialPile, type World } from '../src/sim/types';
 import { SnapshotDecoder, SnapshotEncoder } from '../src/bridge/snapshots';
-import { withoutPreservation } from './scenarios/legacy-food';
+import { withoutPostV10Fields } from './scenarios/legacy-save';
 import { foodAccount } from './scenarios/colony-player';
 
 function field(size=16):World {
@@ -101,7 +101,7 @@ test('four, fourteen and forty days; stable snapshots, expiry batches, migration
   expect(checkpoint.world.piles).toHaveLength(5); // Adoption did not rewrite a former frame.
   checked(w,60000);expect(w.spoiled.berries).toBe(3);checked(w,100000);checked(w,56000);
   expect(w.tick).toBe(240000);expect(w.spoiled.rice).toBe(3);expect(w.piles.map(p=>p.item)).toEqual(['survival-meal','legacy-portion']);expect(foodAccount(w)).toBe(15);
-  const old=withoutPreservation(JSON.parse(saved));old.schemaVersion=10;
+  const old=withoutPostV10Fields(JSON.parse(saved));old.schemaVersion=10;
   const migrated=deserializeWorld(JSON.stringify(old));expect(migrated.tick).toBe(23999);
   expect(migrated.piles.filter(p=>p.rot).every(p=>rotAge(p,migrated.tick)===0)).toBe(true);
   expect(migrated.piles.map(p=>[p.id,p.item,p.quantity,p.owner])).toEqual(old.piles.map((p:MaterialPile)=>[p.id,p.item,p.quantity,p.owner]));

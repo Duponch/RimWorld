@@ -1,3 +1,4 @@
+import { applyScheduleCommand } from './schedule.ts';
 import { expireFood } from './food-expiration.ts';
 export { queryJobStatus, queryPawnStatus } from './diagnostics.ts';
 import { processCooking } from './cooking.ts';
@@ -117,6 +118,7 @@ export function canDesignate(world: World, command: DesignateCommand): CommandRe
 }
 export function applyCommand(world: World, command: Command): CommandResult {
   if (!command || typeof command !== 'object') return refusal('invalid-command', 'Commande invalide.');
+  if (command.type === 'schedule-paint' || command.type === 'schedule-replace') return applyScheduleCommand(world, command);
   const drops=planCommandDrops(world,command);
   if(!drops)return refusal('occupied','Pas de place à proximité pour les matériaux libérés.');
   if(command.type==='bill-add'||command.type==='bill-update'||command.type==='bill-remove'||command.type==='bill-move') {

@@ -14,6 +14,13 @@ export interface Decision { reason: string; command: Command }
 export function playerDecisions(world: World): Decision[] {
   const cx = Math.floor(world.width / 2), cz = Math.floor(world.height / 2);
   const out: Decision[] = [];
+  // Ordinary player choice: the cook's night is shifted one hour earlier.
+  // Keep eight intended sleep hours; actual rest still depends on bed and needs.
+  if (world.structures.filter(s => s.kind === 'bed').length >= 3) {
+    const cook = world.pawns[2];
+    if (cook) for (const [hour, assignment] of [[5, 'anything'], [21, 'sleep']] as const) if (cook.schedule[hour] !== assignment)
+      out.push({reason: 'Décaler le sommeil de la cuisinière pour préparer le matin.', command: {type: 'schedule-paint', pawnId: cook.id, hours: [hour], assignment}});
+  }
   const priorities = [{ gather: 1, build: 3, haul: 2, grow: 2, cook:3 }, { gather: 3, build: 1, haul: 2, grow: 3, cook:3 }, { gather: 2, build: 3, haul: 2, grow: 2, cook:1 }] as const;
   world.pawns.forEach((pawn, i) => {
     for (const work of ['gather', 'build', 'haul', 'grow','cook'] as const) if (pawn.priorities[work] !== priorities[i % 3]![work]) {
@@ -62,7 +69,7 @@ export function playerDecisions(world: World): Decision[] {
 
 export function colonySummary(world: World) {
   const fields=new Set(world.growingZones.flatMap(z=>z.cells));
-  return { tick: world.tick, spoiled: { ...world.spoiled }, crops: world.resources.filter(r=>r.kind==='rice').length, growingCells:fields.size,
+  return { tick: world.tick, restRules: world.restRules, scheduledSleepHours: world.pawns.map(p=>p.schedule.filter(s=>s==='sleep').length), spoiled: { ...world.spoiled }, crops: world.resources.filter(r=>r.kind==='rice').length, growingCells:fields.size,
     obstructedGrowingCells:world.piles.filter(p=>p.owner.type==='ground'&&fields.has(p.owner.z*world.width+p.owner.x)).length,
     clearing:world.pawns.filter(p=>p.haul?.destination.type==='aside').length,
     structures: Object.fromEntries(['bed','table','stool','wall','campfire'].map(kind => [kind,world.structures.filter(s=>s.kind===kind).length])), preparedMeals:world.piles.filter(p=>p.item==='simple-meal').reduce((n,p)=>n+p.quantity,0), stock: { ...world.stock }, pending: world.jobs.length, minimumFood: Math.min(...world.pawns.map(p=>p.hunger)), minimumRest: Math.min(...world.pawns.map(p=>p.rest)) };

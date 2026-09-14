@@ -1,0 +1,81 @@
+{
+  "date": "2026-09-14T10:56:51.844Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "map": "250x250 seed 42",
+  "conditions": "Synthetic cooking/hauling/growing/building camp, assigned beds; 450 ticks crossing 22h then Work painted at 23h; no warmup. Only stepWorld timed; setup/validation/JSON serialization excluded. Needs and traffic active; not FPS and not a throughput guarantee.",
+  "rows": [
+    {
+      "pawns": 3,
+      "p50Ms": 0.011900000000025557,
+      "p95Ms": 0.38250000000005,
+      "p99Ms": 2.0860000000000127,
+      "maxMs": 11.637,
+      "workTicks": 326,
+      "asleepTicks": 942,
+      "actorsWorked": 3,
+      "actorsSlept": 3,
+      "phaseCosts": [
+        {
+          "phase": "22h: begin sleep schedule",
+          "ms": 0.1260000000000332
+        },
+        {
+          "phase": "23h: work assignment after sleep",
+          "ms": 3.8595000000000255
+        }
+      ],
+      "saveBytes": 1899279,
+      "finalTick": 5851,
+      "errors": []
+    },
+    {
+      "pawns": 30,
+      "p50Ms": 0.17880000000002383,
+      "p95Ms": 5.304200000000037,
+      "p99Ms": 14.299800000000005,
+      "maxMs": 28.722500000000082,
+      "workTicks": 4459,
+      "asleepTicks": 6846,
+      "actorsWorked": 30,
+      "actorsSlept": 30,
+      "phaseCosts": [
+        {
+          "phase": "22h: begin sleep schedule",
+          "ms": 0.4703999999999269
+        },
+        {
+          "phase": "23h: work assignment after sleep",
+          "ms": 25.338600000000042
+        }
+      ],
+      "saveBytes": 1923564,
+      "finalTick": 5851,
+      "errors": []
+    },
+    {
+      "pawns": 100,
+      "p50Ms": 1.4933999999998377,
+      "p95Ms": 26.73109999999997,
+      "p99Ms": 34.333700000000135,
+      "maxMs": 39.653299999999945,
+      "workTicks": 15337,
+      "asleepTicks": 21130,
+      "actorsWorked": 100,
+      "actorsSlept": 97,
+      "phaseCosts": [
+        {
+          "phase": "22h: begin sleep schedule",
+          "ms": 5.280199999999695
+        },
+        {
+          "phase": "23h: work assignment after sleep",
+          "ms": 31.43939999999975
+        }
+      ],
+      "saveBytes": 1992506,
+      "finalTick": 5851,
+      "errors": []
+    }
+  ]
+}

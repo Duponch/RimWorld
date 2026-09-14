@@ -43,5 +43,7 @@ test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp const
     expect(world.growingZones,context).toHaveLength(1); expect(world.resources.filter(r=>r.kind==='rice').length,context).toBeGreaterThan(5); expect(world.stock.food,context).toBeGreaterThan(0);
     expect([...meals.values()].every(n=>n>=10),context).toBe(true);
     expect([...sleep.values()].every(n=>n>4000),context).toBe(true);
+    expect(world.restRules).toBe('adult');expect(world.pawns.map(p=>p.schedule.filter(s=>s==='sleep').length)).toEqual([8,8,8]);
+    expect(world.pawns[2]!.schedule[5]).toBe('anything');expect(world.pawns[2]!.schedule[21]).toBe('sleep');
   }
 }, 180000);

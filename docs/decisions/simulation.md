@@ -93,3 +93,7 @@ Les diagnostics quittent `engine.ts` pour des requêtes pures. Les libellés cui
 ## ADR-026 — Âge alimentaire ancré et interruption conservatrice
 
 Décision du 14 septembre 2026. [Référence vérifiée](../research/food-preservation-reference.md), [contrat V11](../development/food-preservation.md). Le climat constant permet de calculer l’âge depuis un ancrage, sans réécrire toutes les piles par tick. Les fusions utilisent les quantités réelles ; expiration avant action empêche consommation ou recette fantôme. Un chef dont la cargaison survivante ne peut être déposée conserve une tâche interrompue valide, sans référence à l’ingrédient disparu. V10 migre frais au tick chargé puisque son âge historique est inconnu. Les futures températures devront intégrer les périodes thermiques ; aucune file d’événements d’expiration n’est introduite sans coût mesuré.
+
+## ADR-027 — Horaires distincts des besoins physiques
+
+Date : 14 septembre 2026. Les commandes peignent une intention de 24 heures ; le processeur de besoins décide ensuite des tâches physiques. Fatigue, sélection/occupation du couchage et tableau UI sont des responsabilités séparées. Les boutons gardent leur identité entre snapshots. Le compteur d'épuisement et une interruption en attente sont sauvegardés avec le PRNG ; les tirages ne dépendent pas du rendu. V12 conserve explicitement le profil historique pour les anciennes parties, sans modifier leurs tâches au chargement. [Contrat](../development/schedules.md), [sources et limites](../research/schedules-reference.md).

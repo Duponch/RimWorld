@@ -1,4 +1,4 @@
-import { withoutPreservation } from './scenarios/legacy-food';
+import { withoutPostV10Fields } from './scenarios/legacy-save';
 import { expect, test } from 'vitest';
 import { applyCommand, createWorld, deserializeWorld, serializeWorld, stepWorld, validateWorld } from '../src/sim/index';
 import { addGroundMaterial, refreshStock } from '../src/sim/materials';
@@ -24,11 +24,12 @@ function until(w:World,predicate:()=>boolean,max=1000):void {
 
 test('feu construit, deux jours de combustion, ravitaillement concurrent et interruption conservent le bois',()=>{
   const w=camp(),initial=woodAccount(w);
-  const v9=JSON.parse(serializeWorld(w));v9.schemaVersion=9;withoutPreservation(v9);
+  const v9=JSON.parse(serializeWorld(w));v9.schemaVersion=9;withoutPostV10Fields(v9);
   for(const pawn of v9.pawns){delete pawn.cooking;delete pawn.priorities.cook;}
   const migrated=deserializeWorld(JSON.stringify(v9));
   expect(migrated.pawns.every(p=>p.cooking===null&&p.priorities.cook===2)).toBe(true);
-  migrated.pawns.forEach(p=>p.priorities.cook=0);expect(migrated).toEqual(w);
+  migrated.pawns.forEach(p=>p.priorities.cook=0);
+  const historicalExpected=structuredClone(w);historicalExpected.restRules='legacy';historicalExpected.pawns.forEach(p=>p.schedule.fill('anything'));expect(migrated).toEqual(historicalExpected);
   expect(applyCommand(w,{type:'designate',kind:'campfire',x:8,z:8}).ok).toBe(true);
   until(w,()=>w.structures.some(s=>s.kind==='campfire'));
   const fire=w.structures.find(s=>s.kind==='campfire')!;

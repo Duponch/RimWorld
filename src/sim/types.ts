@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 11 as const;
+export const SCHEMA_VERSION = 12 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
@@ -50,6 +50,9 @@ export interface Job extends Cell {
   escrow: Stock;
 }
 export interface Pawn extends Cell {
+  schedule: import('./schedule.ts').ScheduleAssignment[];
+  restZeroTicks: number;
+  collapsePending: boolean;
   id: number;
   name: string;
   hunger: number;
@@ -75,6 +78,7 @@ export interface Pawn extends Cell {
 }
 export interface WorldEvent { tick: number; type: 'job' | 'need' | 'command'; message: string }
 export interface World {
+  restRules: 'legacy' | 'adult';
   schemaVersion: typeof SCHEMA_VERSION;
   /** V1–V4 continuations retain their former nutrition economy explicitly. */
   foodRules: 'legacy' | 'adult';
@@ -106,6 +110,7 @@ export type AreaAction = 'chop' | 'harvest' | 'cut' | 'cancel' | 'stockpile' | '
 export interface StorageSettings { filters?: Record<MaterialKind, boolean>; priority?: number; capacity?: number }
 export interface AreaCommand extends StorageSettings { type: 'area'; action: AreaAction; from: Cell; to: Cell }
 export type Command =
+  | import('./schedule.ts').ScheduleCommand
   | { type: 'bill-add'; structureId: number }
   | { type: 'bill-update'; structureId: number; billId: number; settings: import('./cooking-types.ts').BillSettings }
   | { type: 'bill-remove'; structureId: number; billId: number }

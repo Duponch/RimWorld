@@ -26,7 +26,7 @@ Les messages sont traités en séquence dans un worker unique. Chaque commande r
 
 Simulation pure et déterministe dans `src/sim`, messages ordonnés dans `src/bridge`, présentation sans mutation du World dans `src/render`. Les imports vers DOM/Three restent hors du noyau. Le laboratoire GPU reste isolé.
 
-Le schéma courant est 11. Les contrats de propriété, besoins et mouvement font autorité sur les anciennes descriptions des ADR. Voir [simulation](simulation.md), [logistique](material-logistics.md), [alimentation](food-items.md), [agriculture](farming.md), [cuisine](cooking.md), [conservation](food-preservation.md) et [mouvement](spatial-motion-storage.md).
+Le schéma courant est 12. Les contrats de propriété, besoins et mouvement font autorité sur les anciennes descriptions des ADR. Voir [simulation](simulation.md), [logistique](material-logistics.md), [alimentation](food-items.md), [agriculture](farming.md), [cuisine](cooking.md), [conservation](food-preservation.md), [horaires](schedules.md) et [mouvement](spatial-motion-storage.md).
 
 Extraire une responsabilité cohérente avant de rallonger un module. Ne pas introduire ECS, Rust ou compute sans besoin et mesure. Les audits séparent simulation, transport des snapshots, rendu CPU et GPU.
 
@@ -137,3 +137,7 @@ Voir [la décision détaillée](../decisions/simulation.md#adr-025--occupation-d
 ## ADR-026 — Âge alimentaire ancré et interruption conservatrice
 
 Voir [la décision détaillée](../decisions/simulation.md#adr-026--âge-alimentaire-ancré-et-interruption-conservatrice).
+
+## ADR-027 — Horaires distincts des besoins physiques
+
+Voir [la décision détaillée](../decisions/simulation.md#adr-027--horaires-distincts-des-besoins-physiques).
