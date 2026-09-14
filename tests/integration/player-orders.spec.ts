@@ -1,7 +1,36 @@
 import { test, expect } from '@playwright/test';
-import { createWorld, applyCommand, addGroundMaterial, serializeWorld, refreshStock, validateWorld } from '../../src/sim/index';
+import { createWorld, applyCommand, addGroundMaterial, serializeWorld, refreshStock, stepWorld, validateWorld } from '../../src/sim/index';
+import { newCookingBill } from '../../src/sim/cooking-bills';
 import { perform } from './player-actions';
 import { world, panel, cell, saveKey, expectWorld, observeErrors } from './helpers';
+
+test('dégager un semis puis cuisiner par les menus, réserver ingrédients et poste en file et reprendre la sauvegarde',async({playwright},testInfo)=>{
+  test.setTimeout(60000);
+  const browser=await playwright.chromium.launch({channel:'chromium',args:[]});
+  const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);
+  try {
+    const fixture=createWorld(42,32,32);fixture.tick=2000;fixture.tiles=fixture.tiles.map(()=>({terrain:'grass'}));fixture.resources=[];fixture.piles=[];fixture.jobs=[];fixture.structures=[];fixture.stockpiles=[];fixture.pawns=fixture.pawns.slice(0,1);
+    const pawn=fixture.pawns[0]!;Object.assign(pawn,{x:12,z:16,hunger:100,rest:100});pawn.schedule.fill('anything');pawn.priorities={haul:0,build:0,gather:0,grow:0,cook:0};
+    addGroundMaterial(fixture,'wood',10,{x:18,z:15},'wood');addGroundMaterial(fixture,'food',6,{x:13,z:15},'rice');addGroundMaterial(fixture,'food',4,{x:14,z:15},'berries');
+    expect(applyCommand(fixture,{type:'area',action:'growing',from:{x:18,z:15},to:{x:18,z:15}}).ok).toBe(true);stepWorld(fixture,10);const sow=fixture.jobs.find(j=>j.kind==='sow')!;expect(sow).toBeDefined();
+    const bill=newCookingBill(fixture.nextId++);bill.destination='drop';const station={id:fixture.nextId++,kind:'campfire' as const,x:16,z:12,orientation:0 as const,footprint:'standard' as const,bills:[bill],fuel:{ticks:6000,burned:0,autoRefuel:false}};fixture.structures.push(station);pawn.priorities.cook=1;pawn.priorities.grow=1;
+    await page.addInitScript(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:serializeWorld(fixture)});
+    await page.goto('/?size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,fixture);
+    const rotation={value:0};
+    await perform(page,{reason:'Libérer le semis sans métier Transport.',command:{type:'order-haul',pawnId:pawn.id,target:{type:'clear-sow',jobId:sow.id},queue:false}},rotation);
+    await perform(page,{reason:'Préparer un repas après le dégagement.',command:{type:'order-cook',pawnId:pawn.id,structureId:station.id,queue:true}},rotation);
+    for(const work of ['cook','grow'] as const)await perform(page,{reason:'Vérifier les ordres déjà acceptés.',command:{type:'priority',pawnId:pawn.id,work,value:0}},rotation);
+    const queued=await world(page);expect(validateWorld(queued)).toEqual([]);expect(queued.pawns[0]!.orders.queue).toHaveLength(1);
+    await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,queued);
+    await page.locator('[data-speed="6"]').click();await expect.poll(async()=>{const w=await world(page);return w.structures[0]!.bills![0]!.target===0&&w.pawns[0]!.orders.active===null&&!w.pawns[0]!.orders.queue.length;},{timeout:15000}).toBe(true);await page.locator('[data-speed="0"]').click();
+    const cooked=await world(page);expect(cooked.stock).toEqual({wood:10,food:1});expect(cooked.piles.some(p=>p.owner.type==='ground'&&p.owner.x===18&&p.owner.z===15)).toBe(false);expect(cooked.piles.find(p=>p.item==='simple-meal')?.owner.type).toBe('ground');
+    await perform(page,{reason:'Semer la cellule maintenant dégagée.',command:{type:'priority',pawnId:pawn.id,work:'grow',value:1}},rotation);
+    await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).resources.some(r=>r.kind==='rice'&&r.x===18&&r.z===15)).toBe(true);await page.locator('[data-speed="0"]').click();
+    const final=await world(page);expect(validateWorld(final)).toEqual([]);expect(errors).toEqual([]);expect(await page.locator('#fps-counter').isVisible()).toBe(true);await page.screenshot({path:'artifacts/cooking-orders.png'});
+    await testInfo.attach('cooking-orders',{contentType:'application/json',body:JSON.stringify({tick:final.tick,stock:final.stock,bill:final.structures[0]!.bills![0],orders:final.pawns[0]!.orders,errors})});
+  } catch(error) {await testInfo.attach('cooking-orders-incomplete',{contentType:'application/json',body:JSON.stringify({world:await world(page),errors})});throw error;}
+  finally {await browser.close();}
+});
 
 test('dégager une plante puis ravitailler un feu sans automatisme, reprendre la file et déplacer les matériaux du chantier',async({playwright},testInfo)=>{
   test.setTimeout(60000);

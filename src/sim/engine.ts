@@ -60,7 +60,7 @@ function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandR
   } else if (command.action === 'remove-growing') {
     const selected = new Set(selection.cells);
     const changed = new Set(world.growingZones.filter(zone => zone.cells.some(c => selected.has(c))).map(z => z.id));
-    cancelGrowingJobs(world, changed);
+    cancelGrowingJobs(world, changed,drops);
     world.growingZones = world.growingZones.map(zone => ({...zone, cells: zone.cells.filter(c => !selected.has(c))})).filter(z => z.cells.length);
     world.growingCursor = 0;
   } else if (command.action === 'stockpile') {
@@ -125,7 +125,7 @@ export function applyCommand(world: World, command: Command): CommandResult {
 }
 function applyCommandInternal(world: World, command: Command): CommandResult {
   if (!command || typeof command !== 'object') return refusal('invalid-command', 'Commande invalide.');
-  if(command.type==='order-job'||command.type==='order-haul'||command.type==='clear-orders')return applyOrderCommand(world,command);
+  if(command.type==='order-job'||command.type==='order-cook'||command.type==='order-haul'||command.type==='clear-orders')return applyOrderCommand(world,command);
   if (command.type === 'schedule-paint' || command.type === 'schedule-replace') return applyScheduleCommand(world, command);
   if (command.type === 'food-policy-create' || command.type === 'food-policy-update' || command.type === 'food-policy-delete' || command.type === 'food-policy-assign') return applyFoodPolicyCommand(world, command);
   const drops=planCommandDrops(world,command);
@@ -143,7 +143,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   if (command.type === 'growing-policy') {
     const zone = world.growingZones.find(z => z.id === command.zoneId);
     if (!zone || typeof command.allowSow !== 'boolean' || typeof command.allowCut !== 'boolean') return refusal('invalid-command', 'Zone ou réglages de culture invalides.');
-    cancelGrowingJobs(world, new Set([zone.id]));
+    cancelGrowingJobs(world, new Set([zone.id]),drops);
     world.growingZones = world.growingZones.map(z => z === zone ? {...z, allowSow: command.allowSow, allowCut: command.allowCut} : z);
     wakePlanners(world); return {ok:true};
   }
@@ -164,7 +164,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
     if (!pawn) return refusal('missing-target', 'Colon introuvable.');
     pawn.priorities[command.work] = command.value;
     const job = world.jobs.find(candidate => candidate.id === pawn.jobId);
-    if (command.value === 0 && ((job && workType(job) === command.work && pawn.orders.active===null) || (pawn.haul && pawn.orders.active!=='haul' && command.work === haulingWork(pawn.haul.destination)) || (pawn.cooking && command.work === 'cook'))) releaseWork(world, pawn,drops);
+    if (command.value === 0 && ((job && workType(job) === command.work && pawn.orders.active===null) || (pawn.haul && pawn.orders.active!=='haul' && command.work === haulingWork(pawn.haul.destination)) || (pawn.cooking && pawn.orders.active!=='cook' && command.work === 'cook'))) releaseWork(world, pawn,drops);
     pawn.planCooldown = 0; refreshStock(world); return { ok: true };
   }
   if (!['designate', 'cancel', 'stockpile'].includes(command.type)) return refusal('invalid-command', 'Commande inconnue.');

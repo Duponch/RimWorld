@@ -12,7 +12,7 @@ const same=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
  * Store the selected cells so a later greedy search cannot invalidate the plan. */
 export function planCommandDrops(world:World,command:Command):DropPlan|null {
   const jobs=new Set<number>(),zones=new Set<number>(),pawns=new Set<number>();
-  if(command.type==='order-job'||command.type==='order-haul'||command.type==='clear-orders') {
+  if(command.type==='order-job'||command.type==='order-cook'||command.type==='order-haul'||command.type==='clear-orders') {
     pawns.add(command.pawnId);
   } else if(command.type==='cancel') {
     const job=world.jobs.find(j=>footprintCells(j).some(c=>same(c,command)));if(job)jobs.add(job.id);
@@ -21,11 +21,15 @@ export function planCommandDrops(world:World,command:Command):DropPlan|null {
     const cells=new Set(selection.cells);
     if(command.action==='cancel')for(const job of world.jobs){if(footprintCells(job).some(c=>cells.has(c.z*world.width+c.x)))jobs.add(job.id);}
     else for(const zone of world.stockpiles)if(cells.has(zone.z*world.width+zone.x))zones.add(zone.id);
+  } else if(command.type==='growing-policy'||command.type==='area'&&command.action==='remove-growing') {
+    const cells=command.type==='area'?queryArea(world,command):null;
+    const ids=new Set(command.type==='growing-policy'?[command.zoneId]:cells?.ok?world.growingZones.filter(z=>z.cells.some(c=>cells.cells.includes(c))).map(z=>z.id):[]);
+    for(const pawn of world.pawns)if(pawn.haul?.destination.type==='aside'&&ids.has(pawn.haul.destination.growingZoneId??-1))pawns.add(pawn.id);
   } else if(command.type==='stockpile') {
     const zone=world.stockpiles.find(z=>same(z,command));if(zone)zones.add(zone.id);
   } else if(command.type==='priority'&&command.value===0) {
     const pawn=world.pawns.find(p=>p.id===command.pawnId),job=world.jobs.find(j=>j.id===pawn?.jobId);
-    if(pawn&&((pawn.haul&&pawn.orders.active!=='haul'&&command.work===haulingWork(pawn.haul.destination))||(job&&workType(job)===command.work&&pawn.orders.active===null)||(pawn.cooking&&command.work==='cook')))pawns.add(pawn.id);
+    if(pawn&&((pawn.haul&&pawn.orders.active!=='haul'&&command.work===haulingWork(pawn.haul.destination))||(job&&workType(job)===command.work&&pawn.orders.active===null)||(pawn.cooking&&pawn.orders.active!=='cook'&&command.work==='cook')))pawns.add(pawn.id);
   } else if(command.type==='bill-remove'||command.type==='bill-update') {
     for(const pawn of world.pawns)if(pawn.cooking?.billId===command.billId&&pawn.cooking.stationId===command.structureId)pawns.add(pawn.id);
   } else if(command.type==='refuel-policy' && !command.enabled) {

@@ -1,3 +1,4 @@
+import { isCookingOrder } from './order-types.ts';
 import { newCookingBill, validBillSettings } from './cooking-bills.ts';
 import { releaseWork, type DropPlan } from './work-release.ts';
 import type { Command, CommandResult, World } from './types.ts';
@@ -22,6 +23,7 @@ export function applyBillCommand(world:World,command:BillCommand,drops:DropPlan)
   for(const pawn of world.pawns)if(pawn.cooking?.stationId===station.id&&pawn.cooking.billId===bill.id) {
     if(!releaseWork(world,pawn,drops))return {ok:false,code:'occupied',reason:'Aucune place pour conserver la cargaison.'};
   }
+  for(const pawn of world.pawns)pawn.orders.queue=pawn.orders.queue.filter(o=>!isCookingOrder(o)||o.cooking.stationId!==station.id||o.cooking.billId!==bill.id);
   if(command.type==='bill-remove')station.bills.splice(index,1);
   else {
     const s=command.settings;

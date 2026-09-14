@@ -1,4 +1,5 @@
 import { isPlant, harvestable } from './plants.ts';
+import { isCookingOrder } from './order-types.ts';
 import { MAX_STACK, footprintCells } from './definitions.ts';
 import { inBounds } from './pathfinding.ts';
 import type { AreaAction, AreaCommand, Cell, CommandResult, StorageSettings, World } from './types.ts';
@@ -28,6 +29,7 @@ export function buildAreaIndex(world: World): AreaIndex {
   for (const pawn of world.pawns) {
     if(pawn.haul?.destination.type==='aside')flags[index(pawn.haul.destination)]!|=BLOCKED;
     if(pawn.cooking){flags[index(pawn.cooking.spot)]!|=BLOCKED;for(const i of pawn.cooking.ingredients)if(i.stage!=='placed')flags[index(i.cell)]!|=BLOCKED;}
+    for(const order of pawn.orders?.queue??[])if(isCookingOrder(order)){flags[index(order.cooking.spot)]!|=BLOCKED;for(const i of order.cooking.ingredients)if(i.stage!=='placed')flags[index(i.cell)]!|=BLOCKED;}
   }
   for (const zone of world.growingZones) for (const cell of zone.cells) flags[cell]! |= GROWING;
   return { flags };

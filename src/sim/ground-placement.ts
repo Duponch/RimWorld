@@ -1,3 +1,4 @@
+import { isCookingOrder } from './order-types.ts';
 import { blockedCells, cellIndex, inBounds } from './pathfinding.ts';
 import { ITEM_DEFINITIONS, type ItemId } from './items.ts';
 import type { Cell, HaulTask, MaterialPile, StockpileCell, World } from './types.ts';
@@ -28,7 +29,11 @@ function cellCapacity(world: World, cell: Cell, item: ItemId, limit: number, exc
   for (const pawn of world.pawns) {
     if(pawn.id!==exceptPawn&&pawn.haul)capacity-=reservedAt(world,pawn.haul,cell,item,zone);
     const queue=pawn.orders?.queue;
-    if(queue?.length)for(const task of queue)if(typeof task!=='number')capacity-=reservedAt(world,task,cell,item,zone);
+    if(queue?.length)for(const task of queue)if(typeof task!=='number') {
+      if(isCookingOrder(task)) {
+        for(const i of task.cooking.ingredients)if(i.stage!=='placed'&&i.cell.x===cell.x&&i.cell.z===cell.z){if(i.item!==item)return 0;capacity-=i.quantity;}
+      } else capacity-=reservedAt(world,task,cell,item,zone);
+    }
     if(capacity<=0)return 0;
   }
   for(const pawn of world.pawns)if(pawn.id!==exceptPawn&&pawn.cooking) {

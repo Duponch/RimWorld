@@ -1,3 +1,4 @@
+import { validSowingClearance } from './sowing-clearance.ts';
 import { constructionCandidates } from './construction-planner.ts';
 import { haulReservations } from './haul-reservations.ts';
 import { asBuilder, constructionHaulPriority, constructionObstructions, constructionSiteFree, isConstruction } from './construction-rules.ts';
@@ -42,6 +43,7 @@ export function destinationCell(world: World, destination: HaulDestination): (Ce
 }
 export function destinationCapacity(world: World, destination: HaulDestination, kind: MaterialKind, exceptPawn?: number, item: ItemId = legacyItem(kind)): number {
   if (destination.type === 'fuel') return kind==='wood' ? fuelCapacity(world,destination.structureId,exceptPawn,destination.forced) : 0;
+  if (destination.type === 'aside'&&!validSowingClearance(world,destination))return 0;
   if (destination.type === 'aside') return asideCapacity(world, destination, item, exceptPawn);
   if (destination.type === 'job') {
     const job = world.jobs.find(item => item.id === destination.jobId);

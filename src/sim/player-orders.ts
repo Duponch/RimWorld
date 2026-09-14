@@ -1,3 +1,5 @@
+import { isCookingOrder } from './order-types.ts';
+import { advanceCookingOrder, planCookingOrder, queuedCookingReason, startCookingOrder } from './player-cooking.ts';
 import { JOB_WOOD_COST, footprintCells } from './definitions.ts';
 import { constructionObstruction, constructionSiteFree, isConstruction } from './construction-rules.ts';
 import { growingJobValid } from './farming.ts';
@@ -10,9 +12,9 @@ import { haulOrderCell, planHaulOrder, queuedHaulReason, startHaulOrder, type Ha
 import { canReach, destinationCell } from './work-planner.ts';
 import type { Cell, CommandResult, HaulTask, Job, Pawn, World } from './types.ts';
 
-export interface PlayerOrders { active: number | 'haul' | null; queue: (number | HaulTask)[] }
-export type OrderCommand = { type: 'order-job'; pawnId: number; jobId: number; queue: boolean } | { type:'order-haul';pawnId:number;target:HaulOrderTarget;queue:boolean } | { type: 'clear-orders'; pawnId: number };
-export interface OrderOption { jobId: number; haulTarget?:HaulOrderTarget; label: string; enabled: boolean; reason?: string }
+export interface PlayerOrders { active: number | 'haul' | 'cook' | null; queue: import('./order-types.ts').QueuedOrder[] }
+export type OrderCommand = { type:'order-cook';pawnId:number;structureId:number;queue:boolean } | { type: 'order-job'; pawnId: number; jobId: number; queue: boolean } | { type:'order-haul';pawnId:number;target:HaulOrderTarget;queue:boolean } | { type: 'clear-orders'; pawnId: number };
+export interface OrderOption { jobId: number; cookStationId?:number; haulTarget?:HaulOrderTarget; label: string; enabled: boolean; reason?: string }
 export const MAX_QUEUED_ORDERS = 32;
 const labels: Record<Job['kind'], string> = { chop:'Abattre',harvest:'Récolter',cut:'Couper',sow:'Semer du riz',wall:'Construire le mur',bed:'Construire le lit',table:'Construire la table',stool:'Construire le tabouret',campfire:'Construire le feu',horseshoes:'Construire le piquet' };
 const fail = (reason: string): CommandResult => ({ok:false,code:'invalid-command',reason});
@@ -37,7 +39,7 @@ export function orderReadiness(world: World, pawn: Pawn, job: Job, accepted=fals
     if (job.escrow.wood !== JOB_WOOD_COST[job.kind]) return 'Approvisionnement nécessaire ; choisissez Livrer les matériaux.';
     if (!constructionSiteFree(world,job,pawn.id)) return 'Chantier gêné ; dégagez les piles ou attendez le passage des colons.';
   }
-  if (job.kind === 'sow' && groundPile(world,job)) return 'Le sol doit être dégagé ; choisissez un transport vers une réserve ou attendez le dégagement automatique.';
+  if (job.kind === 'sow' && groundPile(world,job)) return 'Le sol doit être dégagé ; choisissez Dégager avant de semer.';
 }
 function goals(world: World, job: Job) {
   const plant=clearingPlant(world,job),cells=plant?[plant]:footprintCells(job), result=interactionGoals(world,cells);
@@ -66,6 +68,7 @@ export function queryOrderOptions(world:World,pawnId:number,cell:Cell,queue=fals
     if(obstacle.pile&&!obstacle.plant)targets.push({type:'clear',jobId:job.id});
     if(job.escrow.wood<JOB_WOOD_COST[job.kind])targets.push({type:'job',jobId:job.id});
   }
+  if(job?.kind==='sow'&&pile)targets.push({type:'clear-sow',jobId:job.id});
   if(pile)targets.push({type:'pile',pileId:pile.id});
   const fire=world.structures.find(s=>s.kind==='campfire'&&s.x===cell.x&&s.z===cell.z);
   if(fire)targets.push({type:'fuel',structureId:fire.id});
@@ -73,6 +76,10 @@ export function queryOrderOptions(world:World,pawnId:number,cell:Cell,queue=fals
     const view=orderView(world,pawn,queue),proposal=planHaulOrder(view,view.pawns.find(p=>p.id===pawn.id)!,target);
     const reason=exhausted(world,pawn)??proposal.reason;
     options.push({jobId:job?.id??0,haulTarget:target,label:proposal.label,enabled:!reason,...(reason?{reason}:{})});
+  }
+  if(fire) {
+    const view=orderView(world,pawn,queue),proposal=planCookingOrder(view,view.pawns.find(p=>p.id===pawn.id)!,fire.id),reason=exhausted(world,pawn)??proposal.reason;
+    options.push({jobId:0,cookStationId:fire.id,label:proposal.label,enabled:!reason,...(reason?{reason}:{})});
   }
   return options;
 }
@@ -100,20 +107,21 @@ export function applyOrderCommand(world:World,command:OrderCommand):CommandResul
     if(pawn.orders.active!==null&&!releaseWork(world,pawn,drops))return fail('Impossible d’interrompre ce travail.');
     clearQueuedOrders(world,pawn);return {ok:true};
   }
-  if(command.type==='order-haul') {
-    if(typeof command.queue!=='boolean'||!command.target||!['pile','job','clear','fuel'].includes(command.target.type)
-      ||!Number.isSafeInteger(command.target.type==='pile'?command.target.pileId:command.target.type==='fuel'?command.target.structureId:command.target.jobId))return fail('Ordre de transport invalide.');
+  if(command.type==='order-haul'||command.type==='order-cook') {
+    if(typeof command.queue!=='boolean'||(command.type==='order-cook'?!Number.isSafeInteger(command.structureId):!command.target||!['pile','job','clear','clear-sow','fuel'].includes(command.target.type)
+      ||!Number.isSafeInteger(command.target.type==='pile'?command.target.pileId:command.target.type==='fuel'?command.target.structureId:command.target.jobId)))return fail('Ordre de transport invalide.');
     const reason=exhausted(world,pawn);if(reason)return fail(reason);
     if(command.queue&&pawn.orders.queue.length>=MAX_QUEUED_ORDERS)return fail(`File limitée à ${MAX_QUEUED_ORDERS} travaux.`);
     let view=orderView(world,pawn,command.queue);
     const drops=command.queue?new Map():planCommandDrops(view,command);if(!drops)return fail('Pas de place pour déposer la cargaison.');
     if(drops.size)view={...view,piles:view.piles.map(p=>drops.has(p.id)?{...p,owner:{type:'ground',...drops.get(p.id)!}}:p)};
-    const proposal=planHaulOrder(view,view.pawns.find(p=>p.id===pawn.id)!,command.target);
-    if(!proposal.task||!proposal.path)return fail(proposal.reason??'Transport impossible.');
-    if(command.queue&&(busy(pawn)||pawn.orders.queue.length))pawn.orders.queue.push(proposal.task);
+    const actor=view.pawns.find(p=>p.id===pawn.id)!;
+    const proposal=command.type==='order-cook'?planCookingOrder(view,actor,command.structureId):(()=>{const p=planHaulOrder(view,actor,command.target);return {...p,order:p.task};})();
+    if(!proposal.order||!proposal.path)return fail(proposal.reason??'Transport impossible.');
+    if(command.queue&&(busy(pawn)||pawn.orders.queue.length))pawn.orders.queue.push(proposal.order);
     else {
       if(!releaseWork(world,pawn,drops))return fail('Impossible d’interrompre ce travail.');
-      clearQueuedOrders(world,pawn);startHaulOrder(pawn,proposal.task,proposal.path);
+      clearQueuedOrders(world,pawn);if(isCookingOrder(proposal.order))startCookingOrder(pawn,proposal.order,proposal.path);else startHaulOrder(pawn,proposal.order,proposal.path);
     }
     world.events.push({tick:world.tick,type:'command',message:`${pawn.name} : ${proposal.label}${command.queue?' (file)':''}.`});
     if(world.events.length>80)world.events.shift();return {ok:true};
@@ -144,12 +152,12 @@ export function reconcileOrders(world:World):void {
   let jobs:Map<number,Job>|undefined;
   for(const pawn of world.pawns) {
     const orders=pawn.orders;if(orders.active===null&&!orders.queue.length)continue;
-    if(orders.active==='haul'?!pawn.haul:orders.active!==pawn.jobId)orders.active=null;
+    if(orders.active==='haul'?!pawn.haul:orders.active==='cook'?!pawn.cooking:orders.active!==pawn.jobId)orders.active=null;
     if(!orders.queue.length)continue;
     jobs??=new Map(world.jobs.map(j=>[j.id,j]));
     orders.queue=orders.queue.filter(id=>{
       if(typeof id!=='number') {
-        const reason=queuedHaulReason(world,id);
+        const reason=isCookingOrder(id)?queuedCookingReason(world,id):queuedHaulReason(world,id);
         if(reason){world.events.push({tick:world.tick,type:'command',message:`${pawn.name} : livraison abandonnée. ${reason}`});if(world.events.length>80)world.events.shift();}
         return !reason;
       }
@@ -164,6 +172,7 @@ export function reconcileOrders(world:World):void {
 export function advanceOrders(world:World,pawn:Pawn,getBlocked:NavigationGrid,budget:SearchBudget):boolean {
   if(busy(pawn)||!pawn.orders.queue.length)return false;
   const order=pawn.orders.queue[0]!;
+  if(isCookingOrder(order))return advanceCookingOrder(world,pawn,order,getBlocked,budget);
   if(typeof order!=='number') {
     let reason=queuedHaulReason(world,order);const source=haulOrderCell(world,order),target=destinationCell(world,order.destination);
     let path:Cell[]|null=null;

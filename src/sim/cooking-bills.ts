@@ -1,4 +1,5 @@
 import { footprintCells } from './definitions.ts';
+import { isCookingOrder } from './order-types.ts';
 import type { CookingBill, BillSettings } from './cooking-types.ts';
 import type { Cell, Structure, World } from './types.ts';
 
@@ -28,6 +29,7 @@ export function cookingSpot(station:Structure):Cell {
   return {x:station.x+dx!,z:station.z+dz!};
 }
 export function cookingCellReserved(world:World,cell:Cell):boolean {
+  for(const p of world.pawns)for(const order of p.orders?.queue??[])if(isCookingOrder(order)&&(order.cooking.spot.x===cell.x&&order.cooking.spot.z===cell.z||order.cooking.ingredients.some(i=>i.stage!=='placed'&&i.cell.x===cell.x&&i.cell.z===cell.z)))return true;
   return world.pawns.some(p=>p.cooking&&(p.cooking.spot.x===cell.x&&p.cooking.spot.z===cell.z
     ||p.cooking.ingredients.some(i=>i.stage!=='placed'&&i.cell.x===cell.x&&i.cell.z===cell.z)));
 }

@@ -1,4 +1,5 @@
 import { queryOrderOptions } from '../../src/sim/player-orders.ts';
+import { planCookingOrder } from '../../src/sim/player-cooking.ts';
 import { plantGrowth } from '../../src/sim/plants.ts';
 import { availableNutrition } from '../../src/sim/items.ts';
 import { spoiledUnits } from '../../src/sim/food-preservation.ts';
@@ -75,6 +76,10 @@ export function playerDecisions(world: World): Decision[] {
     const bill=fire.bills?.[0];
     if(!bill)out.push({reason:'Installer une première recette de repas simple au feu de camp.',command:{type:'bill-add',structureId:fire.id}});
     else if(bill.mode!=='until'||bill.target!==world.pawns.length*2)out.push({reason:'Maintenir environ deux repas préparés par colon en réserve.',command:{type:'bill-update',structureId:fire.id,billId:bill.id,settings:{...bill,mode:'until',target:world.pawns.length*2}}});
+    else if(!world.piles.some(p=>p.item==='simple-meal')) {
+      const cook=world.pawns.find(p=>p.priorities.cook>0&&p.hunger>35&&p.rest>35&&!p.cooking&&!p.haul&&!p.need&&p.jobId===null&&p.orders.active===null&&!p.orders.queue.length&&planCookingOrder(world,p,fire.id).order);
+      if(cook)out.push({reason:'Prioriser un repas quand la réserve de repas préparés est vide.',command:{type:'order-cook',pawnId:cook.id,structureId:fire.id,queue:false}});
+    }
   }
   if (!world.growingZones.length && world.structures.filter(s => s.kind === 'bed').length === 3) out.push({reason:'Semer un premier potager près du camp, tout en continuant à cueillir pendant sa croissance.',command:{type:'area',action:'growing',from:{x:cx-2,z:cz+5},to:{x:cx+2,z:cz+7}}});
   for(const pawn of world.pawns)if(pawn.schedule[19]!=='recreation'||pawn.schedule[20]!=='recreation')out.push({reason:'Réserver une plage de loisirs du soir, sans remplacer le repos nocturne.',command:{type:'schedule-paint',pawnId:pawn.id,hours:[19,20],assignment:'recreation'}});

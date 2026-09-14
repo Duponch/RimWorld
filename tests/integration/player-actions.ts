@@ -31,17 +31,17 @@ export async function editBill(page:Page,id:number,settings:BillSettings):Promis
 
 export async function perform(page: Page, decision: Decision, rotation: { value: number }): Promise<void> {
   const c=decision.command;
-  if(c.type==='order-job'||c.type==='order-haul') {
+  if(c.type==='order-job'||c.type==='order-haul'||c.type==='order-cook') {
     await page.keyboard.press('Escape');await page.locator(`[data-pawn="${c.pawnId}"]`).click();
     const current=await world(page);
-    const job=c.type==='order-job'?current.jobs.find(j=>j.id===c.jobId):c.target.type==='fuel'?current.structures.find(s=>c.target.type==='fuel'&&s.id===c.target.structureId):c.target.type==='pile'?current.piles.find(p=>c.target.type==='pile'&&p.id===c.target.pileId)?.owner:current.jobs.find(j=>(c.target.type==='job'||c.target.type==='clear')&&j.id===c.target.jobId);
+    const job=c.type==='order-cook'?current.structures.find(s=>s.id===c.structureId):c.type==='order-job'?current.jobs.find(j=>j.id===c.jobId):c.target.type==='fuel'?current.structures.find(s=>c.target.type==='fuel'&&s.id===c.target.structureId):c.target.type==='pile'?current.piles.find(p=>c.target.type==='pile'&&p.id===c.target.pileId)?.owner:current.jobs.find(j=>(c.target.type==='job'||c.target.type==='clear'||c.target.type==='clear-sow')&&j.id===c.target.jobId);
     if(!job||!('x' in job))throw new Error('Cible directe absente.');
     await revealCells(page,[job]);
     const point=await page.evaluate(({x,z})=>window.__lisiere.projectCell(x,z),job);
     const bounds=(await page.locator('#viewport canvas').boundingBox())!;
     if(c.queue)await page.keyboard.down('Shift');
     await page.mouse.click(bounds.x+point.x,bounds.y+point.y,{button:'right'});
-    await page.locator(c.type==='order-job'?`[data-order-job="${c.jobId}"]:not([data-order-haul])`:`[data-order-haul="${c.target.type}"]`).click();
+    await page.locator(c.type==='order-cook'?`[data-order-cook="${c.structureId}"]`:c.type==='order-job'?`[data-order-job="${c.jobId}"]:not([data-order-haul])`:`[data-order-haul="${c.target.type}"]`).click();
     if(c.queue)await page.keyboard.up('Shift');
   } else if(c.type==='food-policy-assign') {
     await panel(page,'assign'); await page.locator(`[data-food-policy-pawn="${c.pawnId}"]`).selectOption(String(c.policyId));
@@ -76,10 +76,11 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
   await page.waitForFunction(c=>{
     const w=window.__lisiere.world;
     if(c.type==='order-job'){const pawn=w.pawns.find(p=>p.id===c.pawnId);return pawn?.orders.active===c.jobId||pawn?.orders.queue.includes(c.jobId);}
+    if(c.type==='order-cook') {const pawn=w.pawns.find(p=>p.id===c.pawnId);return pawn?.orders.active==='cook'&&pawn.cooking?.stationId===c.structureId||pawn?.orders.active==='haul'&&pawn.haul?.destination.type==='fuel'&&pawn.haul.destination.structureId===c.structureId||pawn?.orders.queue.some(o=>typeof o!=='number'&&('cooking' in o?o.cooking.stationId===c.structureId:o.destination.type==='fuel'&&o.destination.structureId===c.structureId));}
     if(c.type==='order-haul') {
       const pawn=w.pawns.find(p=>p.id===c.pawnId);if(!pawn)return false;
-      const matches=(t:typeof pawn.haul)=>!!t&&(c.target.type==='pile'?t.sourcePileId===c.target.pileId:c.target.type==='fuel'?t.destination.type==='fuel'&&t.destination.structureId===c.target.structureId:c.target.type==='clear'?t.destination.type==='aside'&&t.destination.constructionId===c.target.jobId:t.destination.type==='job'&&t.destination.jobId===c.target.jobId);
-      return pawn.orders.active==='haul'&&matches(pawn.haul)||pawn.orders.queue.some(o=>typeof o!=='number'&&matches(o));
+      const matches=(t:typeof pawn.haul)=>!!t&&(c.target.type==='pile'?t.sourcePileId===c.target.pileId:c.target.type==='fuel'?t.destination.type==='fuel'&&t.destination.structureId===c.target.structureId:c.target.type==='clear-sow'?t.destination.type==='aside'&&t.destination.sowCell?.x===w.jobs.find(j=>c.target.type==='clear-sow'&&j.id===c.target.jobId)?.x:c.target.type==='clear'?t.destination.type==='aside'&&t.destination.constructionId===c.target.jobId:t.destination.type==='job'&&t.destination.jobId===c.target.jobId);
+      return pawn.orders.active==='haul'&&matches(pawn.haul)||pawn.orders.queue.some(o=>typeof o!=='number'&&!('cooking' in o)&&matches(o));
     }
     if(c.type==='food-policy-assign')return w.pawns.find(p=>p.id===c.pawnId)?.foodPolicyId===c.policyId;
     if(c.type==='schedule-paint')return c.hours.every(h=>w.pawns.find(p=>p.id===c.pawnId)?.schedule[h]===c.assignment);

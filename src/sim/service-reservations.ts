@@ -1,3 +1,4 @@
+import { isCookingOrder } from './order-types.ts';
 import type { Cell, Pawn, World } from './types.ts';
 
 /** Exclusive use of a workstation, dining place or bed. This is not physical
@@ -15,5 +16,6 @@ export function reservedServiceCells(world: World, exceptPawn?: number): Set<num
   for (const pawn of world.pawns) if (pawn.id !== exceptPawn) {
     const cell = serviceCell(pawn); if (cell) reserved.add(cell.z*world.width+cell.x);
   }
+  for(const pawn of world.pawns)for(const order of pawn.orders?.queue??[])if(isCookingOrder(order))reserved.add(order.cooking.spot.z*world.width+order.cooking.spot.x);
   return reserved;
 }

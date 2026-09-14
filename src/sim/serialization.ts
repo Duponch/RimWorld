@@ -1,5 +1,6 @@
+import { validSowingClearance } from './sowing-clearance.ts';
 import { initializeConstruction, validateConstruction } from './construction-save.ts';
-import { initializePlayerOrders, validatePlayerOrders } from './player-orders-save.ts';
+import { initializePlayerOrders, validatePlayerOrders, validSowingDestination } from './player-orders-save.ts';
 import { isConstruction } from './construction-rules.ts';
 import { initializeRecreation, validateRecreation } from './recreation-save.ts';
 import { validateCooking } from './cooking-save.ts';
@@ -36,7 +37,7 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validateWorld(input: unknown): string[] {
   return validateSchema(input, SCHEMA_VERSION);
 }
-function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19): string[] {
+function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(input)) return ['World must be an object.'];
@@ -84,6 +85,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
           else if((m.terrainDelay!==undefined&&(version<16||m.terrainDelay!==1.4))||Math.abs(m.end-m.start-(m.terrainDelay as number??0)-TRAVEL_TICKS*edgeLength(m.from as unknown as import('./types.ts').Cell,m.to as unknown as import('./types.ts').Cell) )>1e-7 || Math.abs((item.moveCooldown as number)-Math.max(0,m.end-(input.tick as number)))>1e-7) errors.push('Inconsistent travel duration.');
         }
         const haul = item.haul;
+        if(record(haul)&&record(haul.destination)&&('growingZoneId' in haul.destination||'sowCell' in haul.destination)&&(version<20||!validSowingDestination(haul.destination,input as unknown as World)))errors.push('Invalid sowing clearance shape.');
         if(record(haul)&&haul.serviceProgress!==undefined&&(version<10||!record(haul.destination)||haul.destination.type!=='fuel'||haul.phase!=='deliver'||!integer(haul.serviceProgress,1,23)))errors.push('Invalid refuel interaction progress.');
         if(record(haul)&&record(haul.destination)&&haul.destination.forced!==undefined&&(version<19||haul.destination.type!=='fuel'||haul.destination.forced!==true))errors.push('Invalid forced refuel flag.');
         if(record(haul)&&record(haul.destination)&&haul.destination.forCooking!==undefined&&(haul.destination.type!=='fuel'||typeof haul.destination.forCooking!=='boolean'))errors.push('Invalid cooking refuel purpose.');
@@ -254,7 +256,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
         const job = jobById.get(haul.destination.jobId);
         if (!job || pile?.kind !== 'wood' || deliveredStock(world, job.id).wood + reservedDestination(world, haul.destination) > JOB_WOOD_COST[job.kind]) errors.push('Invalid construction delivery reservation.');
       } else if (haul.destination.type === 'aside') {
-        if (!pile || asideCapacity(world, haul.destination, pile.item, pawn.id) < haul.quantity
+        if (!validSowingClearance(world,haul.destination)||!pile || asideCapacity(world, haul.destination, pile.item, pawn.id) < haul.quantity
           || (pile.owner.type === 'ground' && cellKey(pile.owner) === cellKey(haul.destination))) errors.push('Invalid clearing destination reservation.');
       } else {
         const zone = world.stockpiles.find(item => haul.destination.type === 'stockpile' && item.id === haul.destination.stockpileId);
@@ -376,6 +378,10 @@ export function deserializeWorld(serialized: string): World {
   if(record(input)&&input.schemaVersion===18) {
     const errors=validateSchema(input,18);if(errors.length)throw new Error(`Invalid version 18 save: ${errors.join(' ')}`);
     input.schemaVersion=19; // New contextual providers; preserve existing tasks and quantities.
+  }
+  if(record(input)&&input.schemaVersion===19) {
+    const errors=validateSchema(input,19);if(errors.length)throw new Error(`Invalid version 19 save: ${errors.join(' ')}`);
+    input.schemaVersion=20; // Preserve tasks; enable queued recipes and sowing-clearance intents.
   }
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`); return input as World;
 }

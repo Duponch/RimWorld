@@ -19,7 +19,7 @@ export function processCooking(world:World,pawn:Pawn,context:NeedContext):void {
   const task=pawn.cooking!;
   if(task.phase==='interrupted'){context.release();return;}
   const station=world.structures.find(s=>s.id===task.stationId),bill=station?.bills?.find(b=>b.id===task.billId);
-  if(!station||!bill||bill.suspended||pawn.priorities.cook===0||(task.phase!=='output'&&!station.fuel?.ticks)) {context.release();return;}
+  if(!station||!bill||bill.suspended||pawn.priorities.cook===0&&pawn.orders.active!=='cook'||(task.phase!=='output'&&!station.fuel?.ticks)) {context.release();return;}
   if(task.phase==='output') {
     const product=world.piles.find(p=>p.id===task.productId);if(!product){context.release();return;}
     if(bill.destination==='drop'){dropProduct(world,pawn,product);return;}
@@ -79,7 +79,7 @@ export function processCooking(world:World,pawn:Pawn,context:NeedContext):void {
   if(bill.mode==='times')bill.target=Math.max(0,bill.target-1);
   context.event(`${pawn.name} a cuisiné 1 repas simple (${10-rice} baies, ${rice} riz).`);
 }
-function finish(pawn:Pawn):void {pawn.cooking=null;pawn.path=[];pawn.state='idle';pawn.planCooldown=0;}
+function finish(pawn:Pawn):void {pawn.cooking=null;if(pawn.orders.active==='cook')pawn.orders.active=null;pawn.path=[];pawn.state='idle';pawn.planCooldown=0;}
 function dropProduct(world:World,pawn:Pawn,product:MaterialPile):void {
   if(pawn.planCooldown>0)return;
   const plan=planGroundPlacement(world,product.quantity,pawn,product.item);

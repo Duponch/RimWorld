@@ -1,3 +1,4 @@
+import { isCookingOrder } from './order-types.ts';
 import { reservedDestination } from './materials.ts';
 import type { Structure, World } from './types.ts';
 
@@ -15,7 +16,7 @@ export function campfire(world: World, id: number): Structure | undefined {
 export function fuelStationReserved(world: World, id: number, exceptPawn?: number): boolean {
   for(const p of world.pawns) {
     if(p.id!==exceptPawn&&(p.cooking?.stationId===id||p.haul?.destination.type==='fuel'&&p.haul.destination.structureId===id))return true;
-    for(const task of p.orders?.queue??[])if(typeof task!=='number'&&task.destination.type==='fuel'&&task.destination.structureId===id)return true;
+    for(const task of p.orders?.queue??[])if(typeof task!=='number'&&(isCookingOrder(task)?task.cooking.stationId===id:task.destination.type==='fuel'&&task.destination.structureId===id))return true;
   }
   return false;
 }

@@ -49,7 +49,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 19 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 20 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)
@@ -81,5 +81,6 @@
 
 ## Ordres et sélection (V17)
 - Lire docs/development/player-orders.md avant de modifier priorité forcée, file ou sélection. La file réserve les travaux dès acceptation ; métier 0 interdit de nouveaux ordres mais conserve les ordres forcés déjà acceptés. Annulation explicite, effondrement et disparition de cible libèrent les engagements.
-- Un ordre vise un travail exécutable, pas une chaîne de construction implicite. V18 ajoute transport et approvisionnement forcés, avec quantités réservées dès acceptation ; V19 ajoute dégagement des chantiers et combustible forcés ; cuisine et dégagement des piles sur semis restent absents. Le menu interroge le worker hors des frames ; la commande revalide tout.
+- Un ordre vise un travail exécutable, pas une chaîne de construction implicite. V18 ajoute transport et approvisionnement forcés, avec quantités réservées dès acceptation ; V19 ajoute dégagement des chantiers et combustible forcés ; V20 ajoute cuisine et dégagement des piles sur semis ; un ordre de cuisine sur feu vide ravitaille sans promettre la recette suivante. Le menu interroge le worker hors des frames ; la commande revalide tout.
 - Sélection multiple en présentation seulement ; anneaux instanciés partageant les trajectoires GPU. V16 validée avant migration vers des files vides ; V17 validée avant autorisation des entrées quantitatives V18, sans modifier les ordres numériques existants. V18 validée avant les destinations quantitatives V19 ; combustible forcé ignore l’automatisme mais conserve réservation exclusive du poste et phases physiques.
+- V19 validée strictement avant V20 : les recettes en file réservent ingrédients, staging et poste. Un dégagement forcé de semis conserve zone/cellule, jamais un ID agricole renouvelable ; modification de zone/politique libère la cargaison. Lire docs/research/cooking-orders-reference.md.

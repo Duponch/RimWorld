@@ -1,4 +1,5 @@
 import { reservedServiceCells } from './service-reservations.ts';
+import { isCookingOrder } from './order-types.ts';
 import { billWanted, cookingPlaceFree, cookingSpot, INGREDIENT_UNITS } from './cooking-bills.ts';
 import { reservedSource } from './materials.ts';
 import { queryPawnStatus } from './diagnostics.ts';
@@ -11,6 +12,8 @@ import type { Structure, World } from './types.ts';
 export function queryCookingBillStatus(world:World,station:Structure,bill:CookingBill):{code:string;reason:string} {
   const worker=world.pawns.find(p=>p.cooking?.stationId===station.id&&p.cooking.billId===bill.id);
   if(worker)return queryPawnStatus(world,worker);
+  const queued=world.pawns.find(p=>p.orders.queue.some(o=>isCookingOrder(o)&&o.cooking.stationId===station.id&&o.cooking.billId===bill.id));
+  if(queued)return {code:'queued',reason:`Cuisine en file pour ${queued.name} ; ingrédients et poste réservés.`};
   if(bill.suspended)return {code:'suspended',reason:'Facture suspendue.'};
   if(!billWanted(world,bill))return {code:'target-met',reason:bill.mode==='times'?'Quantité demandée terminée.':'Seuil de repas stockés ou portés atteint.'};
   const serving=world.pawns.find(p=>p.cooking?.stationId===station.id||p.haul?.destination.type==='fuel'&&p.haul.destination.structureId===station.id);

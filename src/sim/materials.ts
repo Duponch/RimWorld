@@ -3,6 +3,7 @@ import { freshRot, mergeRot, rotAge } from './food-preservation.ts';
 import { ITEM_DEFINITIONS, legacyItem } from './items.ts';
 import type { ItemId } from './items.ts';
 import { MAX_STACK } from './definitions.ts';
+import { isCookingOrder } from './order-types.ts';
 import { haulReservations } from './haul-reservations.ts';
 import type { Cell, HaulDestination, MaterialKind, MaterialOwner, MaterialPile, Stock, World } from './types.ts';
 
@@ -92,7 +93,10 @@ export function reservedSource(world: World, pileId: number, exceptPawn?: number
       if (pawn.need?.kind === 'eat' && pawn.need.phase === 'pickup' && pawn.need.sourcePileId === pileId) quantity += pawn.need.quantity ?? 1;
     }
     const queue=pawn.orders?.queue;
-    if(queue?.length)for(const task of queue)if(typeof task!=='number'&&task.sourcePileId===pileId)quantity+=task.quantity;
+    if(queue?.length)for(const task of queue)if(typeof task!=='number') {
+      if(isCookingOrder(task)){for(const i of task.cooking.ingredients)if(i.pileId===pileId)quantity+=i.quantity;}
+      else if(task.sourcePileId===pileId)quantity+=task.quantity;
+    }
   }
   return quantity;
 }

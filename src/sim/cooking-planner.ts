@@ -20,8 +20,8 @@ export function availableCookingStations(world:World,pawn:Pawn):Structure[] {
 }
 /** Select without mutation. The ordinary planner compares this proposal with
  * construction/growing/hauling before committing its reservations. */
-export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:{pairs:number}):CookingPlan|null {
-  const stations=availableCookingStations(world,pawn)
+export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:{pairs:number},options?:{stationId:number;forced:boolean}):CookingPlan|null {
+  const stations=availableCookingStations(world,pawn).filter(s=>!options||s.id===options.stationId)
     .sort((a,b)=>distance(pawn,a)-distance(pawn,b)||a.id-b.id);
   for(const station of stations) {
     if(fuelStationReserved(world,station.id,pawn.id))continue;
@@ -33,14 +33,14 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
       if(!billWanted(world,bill))continue;
       // The reference bill worker refuels an empty usable station before cooking.
       if(!station.fuel?.ticks) {
-        const capacity=fuelCapacity(world,station.id);if(!capacity)break;
+        const capacity=fuelCapacity(world,station.id,undefined,options?.forced);if(!capacity)break;
         const wood=world.piles.filter(p=>p.item==='wood'&&p.owner.type==='ground'&&p.quantity>reservedSource(world,p.id))
           .sort((a,b)=>distance(a.owner as Cell,station)-distance(b.owner as Cell,station)||a.id-b.id);
         for(const pile of wood) {
           if(budget.pairs--<=0){budget.pairs=0;return null;}
           const path=routeToJob(world,pile.owner as Cell,reachable,true);
           if(!path)continue;
-          return {station,target:pile.owner as Cell,path,refuel:{sourcePileId:pile.id,quantity:Math.min(10,capacity,pile.quantity-reservedSource(world,pile.id)),phase:'pickup',carryPileId:null,destination:{type:'fuel',structureId:station.id,forCooking:true}}};
+          return {station,target:pile.owner as Cell,path,refuel:{sourcePileId:pile.id,quantity:Math.min(10,capacity,pile.quantity-reservedSource(world,pile.id)),phase:'pickup',carryPileId:null,destination:{type:'fuel',structureId:station.id,forCooking:true,...(options?.forced?{forced:true}:{})}}};
         }
         break;
       }

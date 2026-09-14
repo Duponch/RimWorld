@@ -32,7 +32,7 @@ export function validateCooking(input:unknown,version:number,ids:Set<number>):st
   const stations=new Set<number>(),spots=new Set<number>();
   for(const p of w.pawns)if(p.cooking) {
     const c=p.cooking,station=w.structures.find(s=>s.id===c.stationId&&s.kind==='campfire'),bill=station?.bills?.find(b=>b.id===c.billId);
-    if(!station||!bill||bill.suspended||p.priorities.cook===0||p.jobId!==null||p.haul!==null||p.need!==null){errors.push('Invalid cooking task ownership.');continue;}
+    if(!station||!bill||bill.suspended||p.priorities.cook===0&&!(version>=20&&p.orders.active==='cook')||p.jobId!==null||p.haul!==null||p.need!==null){errors.push('Invalid cooking task ownership.');continue;}
     const spot=cookingSpot(station),key=c.spot.z*w.width+c.spot.x;
     if(spot.x!==c.spot.x||spot.z!==c.spot.z||stations.has(station.id)||spots.has(key))errors.push('Invalid or duplicate cooking work spot.');
     stations.add(station.id);spots.add(key);

@@ -1,6 +1,6 @@
 import { footprintCells, JOB_DURATION } from './definitions.ts';
 import { isPlant, plantGrowth, PLANT_DEFINITIONS } from './plants.ts';
-import { releaseWork } from './work-release.ts';
+import { releaseWork, type DropPlan } from './work-release.ts';
 import type { GrowingZone, Job, JobKind, Resource, World } from './types.ts';
 
 export const FARM_SCAN_INTERVAL = 10;
@@ -64,10 +64,11 @@ function intention(world: World, zone: GrowingZone, cell: number, ctx: Context):
   return { kind: 'sow', cell };
 }
 
-/** Policy/removal cancels only generated work, never explicit player orders. */
-export function cancelGrowingJobs(world: World, zoneIds: ReadonlySet<number>): void {
+/** Cancel generated work and zone-bound clearance; independent designations survive. */
+export function cancelGrowingJobs(world: World, zoneIds: ReadonlySet<number>,drops?:DropPlan): void {
   const ids = new Set(world.jobs.filter(j => j.growingZoneId !== undefined && zoneIds.has(j.growingZoneId)).map(j => j.id));
-  for (const pawn of world.pawns) if (pawn.jobId !== null && ids.has(pawn.jobId)) releaseWork(world, pawn);
+  for (const pawn of world.pawns) if (pawn.jobId !== null && ids.has(pawn.jobId)||pawn.haul?.destination.type==='aside'&&zoneIds.has(pawn.haul.destination.growingZoneId??-1)) releaseWork(world, pawn,drops);
+  for(const pawn of world.pawns)pawn.orders.queue=pawn.orders.queue.filter(o=>typeof o==='number'||!('destination' in o)||o.destination.type!=='aside'||!zoneIds.has(o.destination.growingZoneId??-1));
   world.jobs = world.jobs.filter(j => !ids.has(j.id));
 }
 export function growingJobValid(world: World, job: Job): boolean {
