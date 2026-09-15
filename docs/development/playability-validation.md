@@ -22,6 +22,12 @@ Les captures fixes et le pilote de plusieurs jours apportaient des preuves utile
 - Avant une nouvelle mécanique, écrire ce que le joueur doit constater et les interactions affectées : commande refusée avec motif, trajet, contact, action, conséquence visible, état après pause/rechargement. Vérifier l’oracle contre ce contrat et les sources avant d’ajuster le code. Ne jamais justifier un délai par la seule valeur d’une constante interne.
 - Enrichir un parcours existant avec les nouvelles phases. La croissance thermique ajoute une pièce froide, le blocage expliqué des semis, puis un feu construit qui rétablit croissance et semis dans le vrai worker. Une température injectée sert uniquement à l’état initial de cette fixture ; le réchauffement se produit par les règles du jeu.
 
+## Retour complémentaire V42
+
+Le pilote de huit jours a trouvé un générateur construit mais jamais ravitaillé. Le parcours court réussissait en arrivant près de son ancre ; le vrai camp arrivait sur la seconde face de son empreinte 2×2. La route acceptait cette place, mais la livraison vérifiait seulement la distance à l’ancre : le colon gardait sa cargaison sans progresser. Correction sur l’empreinte complète, test de chacune des quatre faces avec reprise pendant le service, puis nouveau parcours des trois cartes. Cette régression a été détectée avant livraison ; un état final « bâtiment construit » aurait été insuffisant. Les bilans doivent demander son fonctionnement et son entretien.
+
+La sonde de l’audit électrique a également été alignée sur `applyWorld` : mesurer `setWorld` ne mesure plus l’application depuis l’introduction de la file de présentation. Les pointes d’image et les changements groupés restent rapportés séparément.
+
 ## Fréquence et limites
 
 Le contrôle temporel natif est requis pour horloge, bridge, interpolation, transitions visuelles et changements de cadence. Un nouveau travail physique enrichit d’abord son parcours métier puis le contrôle de synchronisation concerné. Pour une retouche de texte/couleur, une inspection ciblée suffit. Regrouper les tests en fin de lot, sans lancer une partie longue à chaque modification.

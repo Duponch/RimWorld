@@ -1,6 +1,10 @@
 # Éclairage local 3D — présentation sous V36
 
-15 septembre 2026. [Recherche et adaptations](../research/environment-lighting-reference.md), [validation](validation.md). Schéma 36 inchangé : aucun nouvel état de simulation, aucune migration ni commande.
+V42 étend les sources communes au générateur et à la lampe alimentés : voir [électricité](power.md). Texture et nœuds conservés ; le changement de puissance est une transition discrète, les halos restent des coefficients artistiques. Rayon brut 12 de la lampe provisoire, pas une certification des Defs actuelles.
+
+15 septembre 2026. [Recherche et adaptations](../research/environment-lighting-reference.md), [validation](validation.md). La présentation initiale sous V36 ne changeait pas le schéma. Les états électriques sont désormais persistés en V42 dans leur contrat distinct.
+
+V42 : le diffuseur conserve son tableau si les sources, les dimensions et les obstacles dans leurs bornes de portée sont identiques. Un minage éloigné peut changer les IDs de pièces sans toucher aucun trajet lumineux. La texture vérifie séparément la topologie, car son canal bleu d’opacité doit tout de même suivre le terrain et les murs ; ne pas déduire son invalidation du seul tableau de lumière. Comparaison contre un cache neuf et contrôle des canaux dans les scénarios existants.
 
 ## Règles et image
 

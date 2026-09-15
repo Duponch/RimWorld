@@ -27,7 +27,7 @@ export function miningDecisions(world:World):Decision[] {
   if(mined>=4) {
     const steel=world.piles.reduce((n,p)=>n+(p.item==='steel'?p.quantity:0),0)+world.structures.reduce((n,s)=>n+requiredMaterial(s,'steel'),0)+world.packed.reduce((n,p)=>n+requiredMaterial(p.building,'steel'),0)+(world.deconstructed.lostSteel??0);
     const active=world.jobs.filter(j=>j.kind==='mine'&&world.tiles[j.z*world.width+j.x]!.ore==='steel').length;
-    let missing=Math.max(0,Math.ceil((80-steel)/40)-active);
+    let missing=Math.max(0,Math.ceil(((world.structures.some(s=>s.kind==='stonecutter')?200:80)-steel)/40)-active);
     const targets=world.tiles.flatMap((t,i)=>t.ore==='steel'?[{x:i%world.width,z:Math.floor(i/world.width)}]:[])
       .sort((a,b)=>Math.hypot(a.x-cx,a.z-cz)-Math.hypot(b.x-cx,b.z-cz));
     for(const target of targets) {

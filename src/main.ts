@@ -1,3 +1,4 @@
+import { powerInspection } from './ui/power-inspection';
 import { outdoorTemperature } from './sim/temperature';
 import { SnapshotHud } from './ui/snapshot-hud';
 import { isRoofArea } from './sim/roof-rules';
@@ -34,7 +35,7 @@ import { gameLayout, storageSettings, toolDefinitions } from './ui/layout';
 import type { ArchitectCategory, Panel, Tool } from './ui/layout';
 
 import { recreationInspection, updateRecreationInspection } from './ui/recreation-inspection';
-const jobLabels: Record<JobKind, string> = { 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'Pose de toit', 'remove-roof':'Retrait de toit', door:'Construction de la porte', stonecutter:'Construction de la table de taille', mine:'Minage', uninstall:'Désinstallation',install:'Réinstallation', deconstruct: 'Déconstruction', chop: 'Abattage', harvest: 'Récolte', cut: 'Coupe de plante', sow: 'Semis de riz', wall: 'Construction du mur', bed: 'Construction du lit', table: 'Construction de la table', stool: 'Construction du tabouret', horseshoes: 'Construction du piquet de fers à cheval', campfire: 'Construction du feu de camp' };
+const jobLabels: Record<JobKind, string> = { 'wood-generator':'Construction du générateur à bois', 'standing-lamp':'Construction de la lampe', 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'Pose de toit', 'remove-roof':'Retrait de toit', door:'Construction de la porte', stonecutter:'Construction de la table de taille', mine:'Minage', uninstall:'Désinstallation',install:'Réinstallation', deconstruct: 'Déconstruction', chop: 'Abattage', harvest: 'Récolte', cut: 'Coupe de plante', sow: 'Semis de riz', wall: 'Construction du mur', bed: 'Construction du lit', table: 'Construction de la table', stool: 'Construction du tabouret', horseshoes: 'Construction du piquet de fers à cheval', campfire: 'Construction du feu de camp' };
 const stateLabels: Record<Pawn['state'], string> = { idle: 'Disponible', moving: 'En chemin', working: 'Au travail', sleeping: 'Se repose', hungry: 'Cherche à manger', eating: 'Mange', recreating: 'Se divertit' };
 const terrainLabels = { 'rough-stone':'Sol rocheux brut', grass: 'Prairie', soil: 'Terre fertile', water: 'Eau infranchissable', rock: 'Massif rocheux infranchissable' };
 const resourceLabels = { tree: 'Arbre', berries: 'Buisson de baies', rock: 'Pierre au sol', rice: 'Plant de riz' };
@@ -140,11 +141,11 @@ function pickCell(x: number, z: number) {
   if (currentTool !== 'select') {
     const tool = currentTool;
     void attempt(() => {
-      if(tool==='install'){if(installationId===undefined)throw new Error('Sélectionnez un meuble à installer.');return client.command({type:'install',structureId:installationId,x,z,orientation:placementOrientation}).then(()=>{applyTool('select');setPanel(null);});}
+      if(tool==='install'){if(installationId===undefined)throw new Error('Sélectionnez un meuble à installer.');return client.command({type:'install',structureId:installationId,x,z,orientation:furnitureObject(snapshot!,installationId)?.kind==='standing-lamp'?0:placementOrientation}).then(()=>{applyTool('select');setPanel(null);});}
       if (isRoofArea(tool) || tool === 'haul-chunks' || tool === 'growing' || tool === 'remove-growing') return client.command({type:'area',action:tool,from:{x,z},to:{x,z}});
       if (tool === 'stockpile') return client.command({ type: 'stockpile', x, z, enabled: true, ...readStorageSettings('stockpile') });
       if (tool === 'remove-stockpile') return client.command({ type: 'stockpile', x, z, enabled: false });
-      return client.command(tool === 'cancel' ? { type: 'cancel', x, z } : { type: 'designate', kind: tool as JobKind, orientation: tool==='door'||tool==='passive-cooler'?0:placementOrientation, x, z, ...(constructionUI.material(tool) ? {material:constructionUI.material(tool)} : {}) });
+      return client.command(tool === 'cancel' ? { type: 'cancel', x, z } : { type: 'designate', kind: tool as JobKind, orientation: tool==='wood-generator'||tool==='standing-lamp'||tool==='door'||tool==='passive-cooler'?0:placementOrientation, x, z, ...(constructionUI.material(tool) ? {material:constructionUI.material(tool)} : {}) });
     });
     return;
   }
@@ -223,7 +224,7 @@ function rebuildInspector() {
       if (bed) void attempt(async () => { await client.command({ type: 'assign-bed', bedId: bed.id, pawnId: owner.value ? Number(owner.value) : null }); });
     };
     bedControls.append(owner); panel.append(bedControls);
-    const fire=snapshot?.structures.find(s=>(stationRecipe(s)!==null||s.kind==='passive-cooler')&&footprintCells(s).some(c=>c.x===selectedCell!.x&&c.z===selectedCell!.z));
+    const fire=snapshot?.structures.find(s=>(stationRecipe(s)!==null||s.kind==='passive-cooler'||s.kind==='wood-generator')&&footprintCells(s).some(c=>c.x===selectedCell!.x&&c.z===selectedCell!.z));
     if(fire) {
       const send=(command:Command)=>void attempt(async()=>{await client.command(command);rebuildInspector();renderState();});
       if(fire.fuel)panel.append(fireControls(fire,send));if(stationRecipe(fire))panel.append(billControls(fire,send));
@@ -335,7 +336,7 @@ function renderState() {
       updateDoorControls(el('inspector'),world,selectedCell);
       roomInspection.update(el('inspector'), world, selectedCell);
       const packed=packedAt(world,selectedCell);
-      el('cell-title').textContent = packed?'Meuble emballé · '+({'passive-cooler':'refroidisseur passif',door:'porte',bed:'lit',table:'table',stool:'tabouret',horseshoes:'piquet',wall:'mur',campfire:'feu',stonecutter:'table de taille'})[packed.building.kind]:structure ? ({ 'passive-cooler':'Refroidisseur passif',door:'Porte', stonecutter:'Table de taille de pierre', wall: 'Mur', bed: 'Lit', table: 'Table', stool: 'Tabouret', horseshoes: 'Piquet de fers à cheval', campfire: 'Feu de camp' })[structure.kind] : resource ? resourceLabels[resource.kind] : terrainLabels[world.tiles[z * world.width + x].terrain];
+      el('cell-title').textContent = packed?'Meuble emballé · '+({'wood-generator':'générateur à bois','standing-lamp':'lampe sur pied','passive-cooler':'refroidisseur passif',door:'porte',bed:'lit',table:'table',stool:'tabouret',horseshoes:'piquet',wall:'mur',campfire:'feu',stonecutter:'table de taille'})[packed.building.kind]:structure ? ({ 'wood-generator':'Générateur à bois','standing-lamp':'Lampe sur pied','passive-cooler':'Refroidisseur passif',door:'Porte', stonecutter:'Table de taille de pierre', wall: 'Mur', bed: 'Lit', table: 'Table', stool: 'Tabouret', horseshoes: 'Piquet de fers à cheval', campfire: 'Feu de camp' })[structure.kind] : resource ? resourceLabels[resource.kind] : terrainLabels[world.tiles[z * world.width + x].terrain];
       el('cell-description').textContent = `Case ${x}, ${z}${resource ? isPlant(resource) ? plantInspection(world,resource) : ` · ${resource.amount} unités à récolter` : ''}${structure ? ` · ${structureFootprintLabel(structure)} cases` : ''}`;
       if(growingZoneAt(world,z*world.width+x))el('cell-description').textContent+=growingTemperatureInspection(world,selectedCell);
       const building = packed?.building ?? structure;
@@ -345,6 +346,7 @@ function renderState() {
       el('cell-materials').textContent = piles.length ? `Au sol : ${piles.map(pile => `${pile.quantity} ${ITEM_DEFINITIONS[pile.item].label}${pile.kind==='food'?` · ${foodFreshnessLabel(pile,world.tick)}`:''}`).join(' · ')}` : '';
       el('cell-job').textContent = job ? `${job.construction==='blueprint'?'Plan · ':job.construction==='frame'?'Cadre · ':''}${jobLabels[job.kind]} · ${queryJobStatus(world, job).reason ?? 'En cours'}${constructionDeliveryLabel(world,job) ? ` · Livré : ${constructionDeliveryLabel(world,job)}` : ''}` : 'Aucun ordre sur cette case.';
       if(structure?.kind==='bed')el('cell-description').textContent += ` · Efficacité du repos : ${structure.material?.endsWith('-blocks')?90:100} %`;
+      if(structure?.power)el('cell-description').textContent+=powerInspection(world,structure);
       if(structure?.kind==='stonecutter')el('cell-description').textContent += ' · 1 fragment → 20 blocs · Artisanat.';
       if(structure?.kind==='horseshoes')el('cell-description').textContent += ` · Dextérité · ${world.pawns.filter(p=>p.recreation.task?.buildingId===structure.id).length}/3 joueurs · places à 5 cases, ligne de vue dégagée.`;
       if(structure?.fuel)updateFireControls(el('inspector'),structure);

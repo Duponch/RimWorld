@@ -1,5 +1,7 @@
 # Adoption du référentiel utilisateur
 
+V42 — chap. 22 et scène E/32, SYS/TEST-126..128, CAT-047 et CAT-006 : adopter ressources physiques, puissance, connexion invalidée et motifs distincts ; adapter temps/PRNG/rendu ; différer conduits, commandes d’interrupteur et stockage. [Recherche fraîche et certitude](power-reference.md).
+
 V41 — chapitres 5–6/9–11/22, SYS/TEST-016, 048–054, 061 et CAT-006/060 : adopter extraction et conservation des composants, adapter génération/rendu/cadence, différer autres acquisitions et appareils. [Recherche et réserves](components-reference.md).
 
 V40 — chapitre 22, SYS/TEST-126 et 128, chapitre 10 SYS-058 : adopter source froide, alimentation et retrait physique ; adapter cadence et rendu 3D ; différer réseau, recherche et santé thermique. [Vérification spécifique](passive-cooling-reference.md). La règle générique du corpus sur deux côtés ne s’applique pas au refroidisseur passif.

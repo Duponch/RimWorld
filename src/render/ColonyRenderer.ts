@@ -251,7 +251,7 @@ export class ColonyRenderer {
     this.roofs.update(world,this.boxes,newMap);
     this.doors.update(world,this.wallCutaway,resetPoses);
     const doorAxes=doorOrientations(world);
-    const structureKey = [...doorAxes].join(':') + packageKey + world.structures.map((s) => `${s.id}:${s.kind}:${s.material}:${s.x}:${s.z}:${s.orientation}:${s.footprint}:${s.fuel?s.fuel.ticks>0:''}`).join('|');
+    const structureKey = [...doorAxes].join(':') + packageKey + world.structures.map((s) => `${s.id}:${s.kind}:${s.material}:${s.x}:${s.z}:${s.orientation}:${s.footprint}:${s.power?.on}:${s.fuel?s.fuel.ticks>0:''}`).join('|');
     if (structureKey !== this.structureKey || newMap) { this.structureKey = structureKey; this.buildStructures(world); }
     // Quantize presentation of progression to avoid rebuilding static meshes for
     // every work tick. Saved simulation progress remains exact and authoritative.
@@ -670,12 +670,12 @@ export class ColonyRenderer {
     this.recreationHints.update(this.world, cell && (this.tool==='horseshoes'||this.tool==='select'&&this.world?.structures.some(s=>s.kind==='horseshoes'&&s.x===cell.x&&s.z===cell.z)) ? cell : undefined);
     this.hover.visible = !!cell;
     if (!cell || !this.world) return;
-    const cells = footprintCells({ ...cell, kind: this.tool==='install'&&this.furniturePlacement?this.furniturePlacement.kind:this.tool === 'stonecutter' || this.tool === 'bed' || this.tool === 'table' || this.tool === 'stool' ? this.tool : 'wall', orientation: this.placementRotation });
+    const cells = footprintCells({ ...cell, kind: this.tool==='install'&&this.furniturePlacement?this.furniturePlacement.kind:this.tool === 'wood-generator' || this.tool === 'stonecutter' || this.tool === 'bed' || this.tool === 'table' || this.tool === 'stool' ? this.tool : 'wall', orientation: this.placementRotation });
     const minX=Math.min(...cells.map(c=>c.x)),maxX=Math.max(...cells.map(c=>c.x)),minZ=Math.min(...cells.map(c=>c.z)),maxZ=Math.max(...cells.map(c=>c.z));
     this.hover.scale.set(maxX-minX+1, maxZ-minZ+1, 1);
     this.hover.position.set((minX+maxX)/2, this.world.tiles[cell.z * this.world.width + cell.x]?.terrain === 'water' ? WORLD_SCALE.waterSurface + 0.04 : 0.055, (minZ+maxZ)/2);
-    const validity = this.tool==='install'&&this.furniturePlacement?installCommand(this.world,{type:'install',structureId:this.furniturePlacement.id,...cell,orientation:this.placementRotation},true):this.tool === 'passive-cooler'||this.tool === 'door'||this.tool === 'stonecutter'||this.tool === 'mine'||this.tool === 'uninstall'||this.tool === 'wall' || this.tool === 'bed' || this.tool === 'table' || this.tool === 'stool' || this.tool === 'campfire' || this.tool === 'horseshoes' || this.tool === 'chop' || this.tool === 'harvest' || this.tool === 'cut'
-      ? canDesignate(this.world, { type: 'designate', kind: this.tool, ...cell, ...(this.tool==='passive-cooler'?{material:'wood' as const}:{}), orientation: this.tool==='door'||this.tool==='passive-cooler'?0:this.placementRotation }) : undefined;
+    const validity = this.tool==='install'&&this.furniturePlacement?installCommand(this.world,{type:'install',structureId:this.furniturePlacement.id,...cell,orientation:this.furniturePlacement.kind==='standing-lamp'?0:this.placementRotation},true):this.tool === 'wood-generator'||this.tool === 'standing-lamp'||this.tool === 'passive-cooler'||this.tool === 'door'||this.tool === 'stonecutter'||this.tool === 'mine'||this.tool === 'uninstall'||this.tool === 'wall' || this.tool === 'bed' || this.tool === 'table' || this.tool === 'stool' || this.tool === 'campfire' || this.tool === 'horseshoes' || this.tool === 'chop' || this.tool === 'harvest' || this.tool === 'cut'
+      ? canDesignate(this.world, { type: 'designate', kind: this.tool, ...cell, ...(this.tool==='wood-generator'||this.tool==='standing-lamp'?{material:'steel' as const}:this.tool==='passive-cooler'?{material:'wood' as const}:{}), orientation: this.tool==='wood-generator'||this.tool==='standing-lamp'||this.tool==='door'||this.tool==='passive-cooler'?0:this.placementRotation }) : undefined;
     const color = validity?.ok === false ? 0xe46f58 : this.tool === 'cancel' || this.tool === 'remove-stockpile' ? 0xe6876a : this.tool === 'select' ? 0xf9ebae : 0x9dd9ca;
     (this.hover.material as THREE.MeshBasicNodeMaterial).color.setHex(color);
     this.renderer.domElement.title = validity?.reason ?? '';

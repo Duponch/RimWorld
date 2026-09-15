@@ -19,6 +19,7 @@ function detach(world:World,job:Job,owner:PackedFurniture['owner']):PackedFurnit
   const building=world.structures.find(s=>s.id===job.furniture!.structureId)!;
   world.structures=world.structures.filter(s=>s!==building);
   for(const p of world.pawns)if(p.need?.kind==='eat'&&p.need.dining?.tableId===building.id)p.need.dining.tableId=null;
+  if(building.power){building.power.parentId=null;building.power.on=false;}
   const pack={building,owner};world.packed.push(pack);return pack;
 }
 /** Returns true only after an authoritative topology/ownership transition. */

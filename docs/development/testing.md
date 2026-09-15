@@ -1,5 +1,7 @@
 # Stratégie de validation
 
+V42 : `power.test.ts` couvre construction/fuel sur toutes les faces, réseaux/surcharge/reprise et refus de sauvegarde ; pilote de trois cartes enrichi de 200 acier extraits et six composants, avec générateur et lampe entretenus. Parcours natif `power.spec.ts`, parcours de colonie UI et audit `power-render-bench.mjs` à 3/100 mineurs avec appareils. Observer `power.on` et le parent comme phases discrètes ; rejouer la garde de présentation après sa modification.
+
 V41 : deux scénarios composants, familles minage/logistique/persistance et pilote cœur regroupés ; parcours minier navigateur enrichi jusqu’au portage/rangement des composants. Audit natif `MINING_COMPONENTS=1` à 3/100 mineurs, quantités finales et programmes/buffers réels contrôlés.
 
 V40 : deux scénarios `passive-cooling.test.ts` enrichissent combustible/température/reprise ; `integration/temperature.spec.ts` joue construction, inspection, recharge manuelle et comptabilise les pipelines natifs. `passive-cooling-bench.ts` mesure 3/30/100 transporteurs, sans navigateur concurrent. Le pilote propose un refroidisseur seulement dans une pièce chaude, et son bilan inclut le combustible de chaque appareil. Les températures initiales synthétiques ne valent pas météo livrée.

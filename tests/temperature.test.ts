@@ -104,7 +104,7 @@ test('thermal food: freeze/thaw intervals, real owner transfers, mixing, thresho
   // A refused command preserves the food age and its thermal anchor.
   const now=rotAge(pile,w.tick);expect(applyCommand(w,{type:'speed',speed:0} as any).ok).toBe(false);expect(rotAge(pile,w.tick)).toBe(now);
   const legacy=createWorld(1,32,32),raw=JSON.parse(serializeWorld(legacy));raw.schemaVersion=37;raw.tiles=raw.tiles.map((t:any)=>t.ore==='machinery'?(({ore:_ore,...rest})=>rest)(t):t);
-  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated).toEqual({...raw,schemaVersion:41});
+  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated).toEqual({...raw,schemaVersion:42});
   raw.piles[0].rot={progress:1,atTick:raw.tick,rate:0};expect(()=>deserializeWorld(JSON.stringify(raw))).toThrow(/version 37/);
   const last=chamber();addMaterial(last,'food',1,{type:'ground',x:4,z:4},'simple-meal');last.piles[0]!.rot!.progress=24000-.25;
   last.thermal!.regions[0]!.temperature=5;updateFoodTemperatures(last);stepWorld(last);expect(last.piles).toEqual([]);expect(last.spoiled['simple-meal']).toBe(1);expect(validateWorld(last)).toEqual([]);
@@ -158,7 +158,7 @@ test('plant climate: integrated local history, query independence, roof changes,
   setHeat(3);const beforeOpen=plantGrowth(w,w.resources[0]!);w.structures=w.structures.filter(s=>!(s.x===2&&s.z===4));updatePlantTemperatures(w,reconcileTemperature(w));
   expect(w.thermal).toBeUndefined();expect(w.resources[0]!.growthThermalFactor).toBeUndefined();expect(plantGrowth(w,w.resources[0]!)).toBeCloseTo(beforeOpen,12);
   const legacy=plantClimateFixture(3),raw=JSON.parse(serializeWorld(legacy));raw.schemaVersion=38;delete raw.resources[0].growthThermalFactor;raw.resources[0].growthTick=1000;
-  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated).toEqual({...raw,schemaVersion:41});const oldGrowth=plantGrowth(migrated,migrated.resources[0]!);updatePlantTemperatures(migrated,reconcileTemperature(migrated));expect(plantGrowth(migrated,migrated.resources[0]!)).toBe(oldGrowth);
+  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated).toEqual({...raw,schemaVersion:42});const oldGrowth=plantGrowth(migrated,migrated.resources[0]!);updatePlantTemperatures(migrated,reconcileTemperature(migrated));expect(plantGrowth(migrated,migrated.resources[0]!)).toBe(oldGrowth);
   for(const factor of [-.01,1.01,null,'0.5']) {const bad=JSON.parse(serializeWorld(legacy));bad.resources[0].growthThermalFactor=factor;expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(/thermal factor/);}
   raw.resources[0].growthThermalFactor=.5;expect(()=>deserializeWorld(JSON.stringify(raw))).toThrow(/version 38/);
   const deltaEncoder=new SnapshotEncoder(),deltaDecoder=new SnapshotDecoder();deltaDecoder.adopt(deltaEncoder.encode(legacy,0,1));legacy.resources[0]!.growthThermalFactor=0;

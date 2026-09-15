@@ -1,3 +1,4 @@
+import { isPowerActive } from './power-rules.ts';
 import type { World } from './types.ts';
 import type { ThermalLayout } from './thermal-topology.ts';
 
@@ -10,7 +11,8 @@ export function applyThermalSources(world:World,layout:ThermalLayout):void {
     if(!source.fuel?.ticks)continue;
     const id=layout.indices[source.z*world.width+source.x]!;if(id<0)continue;
     const room=regions[id]!;
-    if(source.kind==='campfire'&&room.temperature<28)room.temperature=Math.min(28,room.temperature+21/6/room.cells.length);
+    if(source.kind==='wood-generator'&&isPowerActive(source))room.temperature=Math.min(1000,room.temperature+1/room.cells.length);
+    else if(source.kind==='campfire'&&room.temperature<28)room.temperature=Math.min(28,room.temperature+21/6/room.cells.length);
     else if(source.kind==='passive-cooler'&&room.temperature>17)room.temperature=Math.max(17,room.temperature-11/6/room.cells.length);
   }
 }

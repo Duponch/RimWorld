@@ -24,6 +24,9 @@ test('lighting presentation preserves the world and GPU resources through fuel, 
   expect(map.version).toBe(version); expect(layer.field.revision).toBe(revision);
   const door = w.structures.find(s => s.kind === 'door')!;
   door.door!.open = true; layer.update(w); expect(layer.field.revision).toBe(revision);
+  w.tiles[30*w.width+30]!.terrain='rock';layer.update(w);
+  expect(at(30,30,2)).toBe(255);expect(at(6,4)).toBe(255);
+  w.tiles[30*w.width+30]!.terrain='grass';layer.update(w);expect(at(30,30,2)).toBe(0);
   fire.fuel!.ticks = 0; layer.update(w); expect(at(6, 4)).toBe(0);
   expect(layer.field.data).toBe(data); expect(layer.map).toBe(map);
   fire.fuel!.ticks = 100; w.structures = w.structures.filter(s => !(s.x === 7 && s.z === 4));

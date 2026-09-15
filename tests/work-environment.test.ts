@@ -42,6 +42,17 @@ test('lumière : oracle indépendant de distance, coins opaques, portes ouvertes
   fire.x=16;fire.z=16;w.tiles.forEach(t=>t.terrain='grass');w.structures=[fire];const one=cache.read(w).lightAt({x:24,z:16});fixtureFire(w,24,24);
   expect(cache.read(w).lightAt({x:24,z:16})).toBeGreaterThan(one);expect(cache.read(w).lightAt(fire)).toBe(.5);
   expect([0,.15,.3,1].map(lightWorkFactor)).toEqual([.8,.9,1,1]);
+  // A distant excavation can change room IDs without changing any possible
+  // finite light path. Compare retained output to a fresh independent owner.
+  w.structures=[fire];fire.x=2;fire.z=2;w.tiles.forEach(t=>t.terrain='grass');
+  const stable=cache.read(w),builds=cache.localLight.rebuilds;
+  for(const i of [30*32+30,28*32+27,20*32+20]) {
+    w.tiles[i]!.terrain='rock';const next=cache.read(w),fresh=new WorkEnvironmentCache().read(w);
+    expect(cache.localLight.rebuilds).toBe(builds);
+    for(let cell=0;cell<1024;cell++)expect(next.lightAt({x:cell%32,z:Math.floor(cell/32)})).toBe(fresh.lightAt({x:cell%32,z:Math.floor(cell/32)}));
+  }
+  w.tiles[2*32+3]!.terrain='rock';const blocked=cache.read(w);expect(cache.localLight.rebuilds).toBe(builds+1);
+  expect(blocked.lightAt({x:3,z:2})).toBe(0);expect(stable.lightAt({x:3,z:2})).toBe(.5);
 });
 
 test('ateliers : toit distinct de pièce, rôle et lumière au colon ; progression physique, migration et reprise',()=>{

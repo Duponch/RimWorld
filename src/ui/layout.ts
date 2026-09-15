@@ -7,7 +7,7 @@ const mapSizeLabels: Record<number, string> = { 32: 'terrain d’essai', 64: 'co
 
 export type Tool = 'ignore-roof' | 'haul-chunks' | 'select' | Exclude<JobKind, 'sow'> | 'cancel' | 'stockpile' | 'remove-stockpile' | 'growing' | 'remove-growing';
 export type Panel = 'architect' | 'work' | 'schedule' | 'assign' | 'history' | 'menu' | null;
-export type ArchitectCategory = 'orders' | 'zones' | 'structure' | 'furniture' | 'temperature' | 'recreation' | 'production';
+export type ArchitectCategory = 'orders' | 'zones' | 'structure' | 'furniture' | 'temperature' | 'recreation' | 'production' | 'power';
 export const toolDefinitions: { id: Tool; icon: string; title: string; hint: string; key: string; category: ArchitectCategory }[] = [
   { id: 'select', icon: '↖', title: 'Inspecter', hint: 'Choisir une case ou un colon', key: 'Échap', category: 'orders' },
   { id:'mine',icon:'⚒',title:'Miner',hint:'Désigner les massifs à creuser. Les fragments restent au sol après extraction.',key:'M',category:'orders' },
@@ -23,6 +23,8 @@ export const toolDefinitions: { id: Tool; icon: string; title: string; hint: str
   { id: 'bed', icon: '▰', title: 'Lit', hint: 'empreinte 1 × 2 · Q / E pour tourner', key: 'L', category: 'furniture' },
   { id: 'table', icon: '▤', title: 'Table', hint: '1 × 2 · placer des tabourets contre le bord · Q / E pour tourner', key: '', category: 'furniture' },
   { id: 'horseshoes', icon: '∩', title: 'Fers à cheval', hint: '3 joueurs maximum · places de lancer à 5 cases avec vue dégagée', key: '', category: 'recreation' },
+  {id:'wood-generator',icon:'ϟ',title:'Générateur à bois',hint:'2 × 2 · 1 000 W · réservoir vide à remplir · 22 bois/jour',key:'',category:'power'},
+  {id:'standing-lamp',icon:'☀',title:'Lampe sur pied',hint:'30 W · raccordement à un générateur proche · n’éclaire que si alimentée',key:'',category:'furniture'},
   { id: 'passive-cooler', icon: '❄', title: 'Refroidisseur passif', hint: 'combustible initial inclus · seuil de 17 °C · 10 bois/jour', key: '', category: 'temperature' },
   { id: 'campfire', icon: '♨', title: 'Feu de camp', hint: 'combustible initial inclus · brûle 10 bois par jour', key: '', category: 'temperature' },
   { id: 'stonecutter', icon: '⚒', title: 'Table de taille de pierre', hint: '3 × 1 · Q / E pour tourner · 1 fragment → 20 blocs · travail Artisanat', key: '', category: 'production' },
@@ -77,7 +79,7 @@ export function gameLayout(): string {
       <div class="architect-body"><nav class="architect-categories" aria-label="Catégories de construction">
         <button data-category="orders" class="active">Ordres</button><button data-category="zones">Zones</button>
         <button data-category="temperature">Température</button><button data-category="structure">Structure</button><button disabled>Sols</button><button data-category="furniture">Meubles</button>
-        <button data-category="recreation">Loisirs</button><button data-category="production">Production</button><button disabled>Énergie</button><button disabled>Sécurité</button><button disabled>Température</button>
+        <button data-category="recreation">Loisirs</button><button data-category="production">Production</button><button data-category="power">Énergie</button><button disabled>Sécurité</button><button disabled>Température</button>
       </nav><div class="architect-content">
         <div class="tools">${toolDefinitions.map(tool => `<button data-tool="${tool.id}" data-tool-category="${tool.category}" title="${tool.hint}" aria-label="${tool.title}" aria-pressed="false" class="tool"><span class="tool-icon">${tool.icon}</span><span>${tool.title}</span><kbd>${tool.key}</kbd></button>`).join('')}</div>
         <p id="tool-instruction">Choisissez un ordre, puis cliquez sur la carte.</p>

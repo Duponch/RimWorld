@@ -1,0 +1,249 @@
+{
+  "date": "2026-09-15T21:59:58.962Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "protocol": "Native WebGPU 250². 3/100 miners; 100 also has a same-map control without electrical devices. Actual applyWorld timings, not snapshot reception. Four machinery cells and one tree each; 3/100 fueled generators with one lamp each in a separate cleared patch. 6x, no simultaneous heavy tests, 90-frame warmup. Then 8 diagnostic simultaneous lamp on/off transitions on immutable snapshot copies; no worker mutation. Not a frame guarantee or full logistics benchmark.",
+  "runs": [
+    {
+      "count": 3,
+      "electrical": true,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "description": ""
+      },
+      "errors": [],
+      "outcome": {
+        "components": 24,
+        "peakWorkers": 3,
+        "tick": 3040,
+        "lampsOn": 3
+      },
+      "active": {
+        "frames": {
+          "count": 4028,
+          "p50": 4.199999999999818,
+          "p95": 4.300000000001091,
+          "p99": 8.400000000000546,
+          "max": 20.900000000001455
+        },
+        "frameCpu": {
+          "count": 4029,
+          "p50": 3.6999999955296516,
+          "p95": 4.800000004470348,
+          "p99": 6,
+          "max": 21.899999998509884
+        },
+        "drawCalls": {
+          "count": 4029,
+          "p50": 116,
+          "p95": 136,
+          "p99": 141,
+          "max": 141
+        },
+        "adoptions": {
+          "count": 98,
+          "p50": 2.3000000044703484,
+          "p95": 6.700000002980232,
+          "p99": 18.099999994039536,
+          "max": 18.099999994039536
+        },
+        "pipelines": []
+      },
+      "toggles": {
+        "frames": {
+          "count": 377,
+          "p50": 4.19999999999709,
+          "p95": 4.299999999999272,
+          "p99": 8.400000000001455,
+          "max": 12.599999999998545
+        },
+        "frameCpu": {
+          "count": 378,
+          "p50": 3.600000001490116,
+          "p95": 4.600000001490116,
+          "p99": 5,
+          "max": 6.100000001490116
+        },
+        "drawCalls": {
+          "count": 378,
+          "p50": 111,
+          "p95": 111,
+          "p99": 111,
+          "max": 111
+        },
+        "adoptions": {
+          "count": 8,
+          "p50": 3.6999999955296516,
+          "p95": 11.900000005960464,
+          "p99": 11.900000005960464,
+          "max": 11.900000005960464
+        },
+        "pipelines": []
+      },
+      "textureUploads": 8
+    },
+    {
+      "count": 100,
+      "electrical": false,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "description": ""
+      },
+      "errors": [],
+      "outcome": {
+        "components": 800,
+        "peakWorkers": 100,
+        "tick": 3171,
+        "lampsOn": 0
+      },
+      "active": {
+        "frames": {
+          "count": 2915,
+          "p50": 4.200000000000728,
+          "p95": 16.600000000000364,
+          "p99": 20.899999999997817,
+          "max": 33.400000000001455
+        },
+        "frameCpu": {
+          "count": 2916,
+          "p50": 4.899999998509884,
+          "p95": 9.100000001490116,
+          "p99": 17.5,
+          "max": 30
+        },
+        "drawCalls": {
+          "count": 2916,
+          "p50": 157,
+          "p95": 170,
+          "p99": 171,
+          "max": 171
+        },
+        "adoptions": {
+          "count": 252,
+          "p50": 3.600000001490116,
+          "p95": 13.5,
+          "p99": 18.899999998509884,
+          "max": 22.899999998509884
+        },
+        "pipelines": []
+      },
+      "toggles": {
+        "frames": {
+          "count": 377,
+          "p50": 4.19999999999709,
+          "p95": 8.399999999997817,
+          "p99": 8.5,
+          "max": 12.5
+        },
+        "frameCpu": {
+          "count": 378,
+          "p50": 4.100000001490116,
+          "p95": 5.100000001490116,
+          "p99": 5.5,
+          "max": 6.5
+        },
+        "drawCalls": {
+          "count": 378,
+          "p50": 152,
+          "p95": 152,
+          "p99": 152,
+          "max": 152
+        },
+        "adoptions": {
+          "count": 8,
+          "p50": 1.2999999970197678,
+          "p95": 5.399999998509884,
+          "p99": 5.399999998509884,
+          "max": 5.399999998509884
+        },
+        "pipelines": []
+      },
+      "textureUploads": 0
+    },
+    {
+      "count": 100,
+      "electrical": true,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "description": ""
+      },
+      "errors": [],
+      "outcome": {
+        "components": 800,
+        "peakWorkers": 100,
+        "tick": 3179,
+        "lampsOn": 100
+      },
+      "active": {
+        "frames": {
+          "count": 2781,
+          "p50": 4.300000000001091,
+          "p95": 16.599999999998545,
+          "p99": 20.899999999999636,
+          "max": 37.5
+        },
+        "frameCpu": {
+          "count": 2782,
+          "p50": 5.100000001490116,
+          "p95": 9.5,
+          "p99": 18.100000001490116,
+          "max": 31.700000002980232
+        },
+        "drawCalls": {
+          "count": 2782,
+          "p50": 159,
+          "p95": 172,
+          "p99": 173,
+          "max": 173
+        },
+        "adoptions": {
+          "count": 252,
+          "p50": 3.600000001490116,
+          "p95": 14.100000001490116,
+          "p99": 18.100000001490116,
+          "max": 25.19999999552965
+        },
+        "pipelines": []
+      },
+      "toggles": {
+        "frames": {
+          "count": 377,
+          "p50": 4.200000000000728,
+          "p95": 8.400000000001455,
+          "p99": 20.899999999997817,
+          "max": 33.5
+        },
+        "frameCpu": {
+          "count": 378,
+          "p50": 4.5,
+          "p95": 5.600000001490116,
+          "p99": 6.399999998509884,
+          "max": 6.800000004470348
+        },
+        "drawCalls": {
+          "count": 378,
+          "p50": 154,
+          "p95": 154,
+          "p99": 154,
+          "max": 154
+        },
+        "adoptions": {
+          "count": 8,
+          "p50": 14.200000002980232,
+          "p95": 27.5,
+          "p99": 27.5,
+          "max": 27.5
+        },
+        "pipelines": []
+      },
+      "textureUploads": 8
+    }
+  ]
+}

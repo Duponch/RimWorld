@@ -6,6 +6,8 @@ import type { Cell, JobKind, StructureKind, World } from './types.ts';
 export const OCCUPANCY = Object.freeze({
   'build-roof': Object.freeze({clearItems:false,items:true,zones:true,store:true}),
   'remove-roof': Object.freeze({clearItems:false,items:true,zones:true,store:true}),
+  'wood-generator':Object.freeze({clearItems:true,items:false,zones:false,store:false}),
+  'standing-lamp':Object.freeze({clearItems:false,items:true,zones:true,store:true}),
   'passive-cooler': Object.freeze({clearItems:true,items:false,zones:true,store:false}),
   door: Object.freeze({clearItems:false,items:true,zones:true,store:true}),
   stonecutter: Object.freeze({clearItems:false,items:true,zones:false,store:false}),

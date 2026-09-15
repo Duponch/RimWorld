@@ -1,3 +1,4 @@
+import { electricalParts } from './electrical-parts';
 import { passiveCoolerParts } from './passive-cooler-parts';
 import { doorParts } from './door-parts';
 import { pileSurfaces } from './pile-surfaces';
@@ -57,7 +58,7 @@ export function buildFurniture(world: World, group: THREE.Group, cutaway: boolea
     const fires=campfireParts(world);
     batches.set(group,'campfire-flames',fires.flames,'border',false);
     batches.set(group, 'furniture', [
-      ...passiveCoolerParts(world), ...doorParts(world,cutaway), ...fires.base, ...recreationParts(world), ...stonecutterParts(world),
+      ...electricalParts(world), ...passiveCoolerParts(world), ...doorParts(world,cutaway), ...fires.base, ...recreationParts(world), ...stonecutterParts(world),
       ...parcels,
       ...woodParts.map(p => ({ ...p, color: p.color ?? 0xa38559 })),
       ...walls.map(p => ({ ...p, sx: 0.96, sy: wallHeight - 0.09, sz: 0.96, color: p.color ?? 0xa6916e })),

@@ -4,7 +4,7 @@ import type { Cell, Job, Structure, World } from './types.ts';
 
 export interface DeconstructionTarget { structureId: number; kind: Structure['kind']; material?:ConstructionMaterial }
 /** Lost construction wood and retired fuel history are distinct ledger terms. */
-export interface DeconstructionLedger { count: number; lostWood: number; fuelTicks: number; lostSteel?:number; lostBlocks?:Partial<Record<import('./building-materials.ts').BlockMaterial,number>> }
+export interface DeconstructionLedger { count: number; lostWood: number; fuelTicks: number; lostSteel?:number; lostComponents?:number; lostBlocks?:Partial<Record<import('./building-materials.ts').BlockMaterial,number>> }
 export const deconstructionAt = (world: World, cell: Cell) => world.structures.find(s => footprintContains(s, cell));
 export const deconstructionTarget = (world: World, job: Job) => world.structures.find(s => s.id === job.deconstruction?.structureId);
 export function deconstructionReserved(world: World, id: number, exceptPawn?: number): boolean {

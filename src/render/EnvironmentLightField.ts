@@ -1,5 +1,5 @@
 import { LocalLightCache } from '../sim/local-light';
-import { RoomTopologyCache } from '../sim/room-topology';
+import { RoomTopologyCache, type RoomTopology } from '../sim/room-topology';
 import type { World } from '../sim/types';
 
 /** Renderer-owned derived field. Reads are snapshot work, never frame work.
@@ -9,6 +9,7 @@ export class EnvironmentLightField {
   private readonly rooms = new RoomTopologyCache();
   private readonly lights = new LocalLightCache();
   private previousLight?: Float32Array;
+  private previousTopology?:RoomTopology;
   private roofKey = '';
   width = 0;
   height = 0;
@@ -20,7 +21,9 @@ export class EnvironmentLightField {
   update(world: World): boolean {
     const topology = this.rooms.read(world), light = this.lights.read(world, topology);
     const roofs = world.roofing?.constructed ?? [], roofKey = roofs.join(',');
-    if (this.width === world.width && this.height === world.height && this.previousLight === light && this.roofKey === roofKey) return false;
+    // Opacity also feeds wall-side shading: it can change outside the lamps'
+    // influence while LocalLightCache correctly keeps the same light array.
+    if (this.width === world.width && this.height === world.height && this.previousLight === light && this.previousTopology===topology && this.roofKey === roofKey) return false;
     const size = world.width * world.height;
     if (this.width !== world.width || this.height !== world.height) this.data = new Uint8Array(size * 4);
     const data = this.data, bounds = this.bounds;
@@ -39,7 +42,7 @@ export class EnvironmentLightField {
     }
     for (const i of roofs) { data[i * 4 + 1] = 255; include(i); }
     this.width = world.width; this.height = world.height;
-    this.previousLight = light; this.roofKey = roofKey; this.revision++;
+    this.previousLight = light;this.previousTopology=topology; this.roofKey = roofKey; this.revision++;
     return true;
   }
 }

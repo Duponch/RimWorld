@@ -1,3 +1,4 @@
+import { requiredMaterial } from '../../src/sim/construction-materials.ts';
 import { canDesignate } from '../../src/sim/engine.ts';
 import { buildAreaIndex, queryArea } from '../../src/sim/designation.ts';
 import type { World } from '../../src/sim/types.ts';
@@ -8,7 +9,7 @@ import type { Decision } from './colony-player.ts';
 export function componentDecisions(world:World):Decision[] {
   if(!world.structures.some(s=>s.kind==='stonecutter'))return [];
   const out:Decision[]=[],cx=Math.floor(world.width/2),cz=Math.floor(world.height/2);
-  const quantity=world.piles.reduce((n,p)=>n+(p.item==='component'?p.quantity:0),0);
+  const quantity=world.piles.reduce((n,p)=>n+(p.item==='component'?p.quantity:0),0)+world.structures.reduce((n,s)=>n+requiredMaterial(s,'component'),0)+world.packed.reduce((n,p)=>n+requiredMaterial(p.building,'component'),0)+(world.deconstructed.lostComponents??0);
   const pending=world.jobs.filter(j=>j.kind==='mine'&&world.tiles[j.z*world.width+j.x]!.ore==='machinery').length;
   let missing=Math.max(0,Math.ceil((6-quantity)/2)-pending);
   const targets=world.tiles.flatMap((t,i)=>t.ore==='machinery'?[{x:i%world.width,z:Math.floor(i/world.width)}]:[])

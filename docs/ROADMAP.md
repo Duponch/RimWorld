@@ -1,8 +1,8 @@
 # Plan de développement
 
-V41 livre les [composants industriels](development/components.md) : machines compactées, extraction physique, piles de 50, rangement filtré et représentation au sol/portée. Le refroidissement passif V40 reste disponible.
+V42 livre le [premier socle électrique](development/power.md) : générateur à bois construit en acier/composants, recharge physique, réseaux de sources voisines et lampes raccordées directement. Le minage des composants V41 et le refroidisseur passif V40 restent disponibles.
 
-**Prochaine étape : socle électrique**, générateur alimenté et réseau, puis appareils de la chaîne du froid avec coûts acier/composants et conditions de fonctionnement. Le refroidisseur passif ne réfrigère pas les aliments. Mortalité et feuillage doivent précéder gel saisonnier et biomes froids ; confort et santé thermiques restent ouverts. G0 en consolidation, G1 partiel, G2 en cours ; aucun jalon déclaré complet.
+**Prochaine étape : compléter l’électricité de base**, commandes marche/arrêt exécutées par un colon et couche de conduits coexistants avec les bâtiments, puis appareils de la chaîne du froid. Batteries et autres sources restent à livrer. Le refroidisseur passif ne réfrigère pas les aliments. Mortalité et feuillage doivent précéder gel saisonnier et biomes froids ; confort et santé thermiques restent ouverts. G0 en consolidation, G1 partiel, G2 en cours ; aucun jalon déclaré complet.
 
 État : 15 septembre 2026. **ROADMAP est l’unique calendrier G0–G5.** Le [bilan fonctionnel](gameplay/implementation-status.md) fait autorité sur le contenu livré ; les [preuves](development/validation.md) indiquent ce qui a réellement été testé. Voir l’[index documentaire](README.md) pour les contrats et recherches.
 

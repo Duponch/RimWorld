@@ -1,5 +1,7 @@
 # Matrice des systèmes et critères de réalisation
 
+V42 enrichit SYS/TEST-127/128 et CAT-047 avec [générateur, carburant et lampes](../development/power.md). Connexions directes et réseaux de générateurs présents ; conduits, interrupteurs, batteries et incidents restent ouverts. Aucun jalon G0–G5 clôturé.
+
 V41 : CAT-006 partiel et SYS-061 enrichi par les [composants industriels](../development/components.md), extraits/rangés dans la chaîne commune ; autres acquisitions et usages électriques ouverts.
 
 V40 : S10/S12 intègrent le [refroidisseur passif](../development/passive-cooling.md), sa construction et son combustible. Réfrigération électrique, réseau et santé/confort thermiques restent ouverts ; G2 n’est pas déclaré complet.

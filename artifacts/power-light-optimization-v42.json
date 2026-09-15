@@ -1,0 +1,83 @@
+{
+  "beforeDate": "2026-09-15T21:54:38.125Z",
+  "afterDate": "2026-09-15T21:59:58.962Z",
+  "change": "Avoid local-light diffusion when only distant room topology changes; retain separate texture opacity invalidation. Stable-network optimization present in both measurements. Single A/B pair, not a statistical guarantee.",
+  "runs": [
+    {
+      "phase": "before",
+      "electrical": false,
+      "frames": {
+        "count": 3020,
+        "p50": 4.200000000000728,
+        "p95": 12.600000000002183,
+        "p99": 20.899999999997817,
+        "max": 37.5
+      },
+      "applyWorld": {
+        "count": 258,
+        "p50": 3.3000000044703484,
+        "p95": 13.599999994039536,
+        "p99": 19.5,
+        "max": 31.80000000447035
+      },
+      "newPipelines": 0
+    },
+    {
+      "phase": "before",
+      "electrical": true,
+      "frames": {
+        "count": 2639,
+        "p50": 8.299999999999272,
+        "p95": 16.700000000000728,
+        "p99": 29.200000000000728,
+        "max": 66.69999999999891
+      },
+      "applyWorld": {
+        "count": 236,
+        "p50": 3.600000001490116,
+        "p95": 20.600000001490116,
+        "p99": 27.5,
+        "max": 57.70000000298023
+      },
+      "newPipelines": 0
+    },
+    {
+      "phase": "after",
+      "electrical": false,
+      "frames": {
+        "count": 2915,
+        "p50": 4.200000000000728,
+        "p95": 16.600000000000364,
+        "p99": 20.899999999997817,
+        "max": 33.400000000001455
+      },
+      "applyWorld": {
+        "count": 252,
+        "p50": 3.600000001490116,
+        "p95": 13.5,
+        "p99": 18.899999998509884,
+        "max": 22.899999998509884
+      },
+      "newPipelines": 0
+    },
+    {
+      "phase": "after",
+      "electrical": true,
+      "frames": {
+        "count": 2781,
+        "p50": 4.300000000001091,
+        "p95": 16.599999999998545,
+        "p99": 20.899999999999636,
+        "max": 37.5
+      },
+      "applyWorld": {
+        "count": 252,
+        "p50": 3.600000001490116,
+        "p95": 14.100000001490116,
+        "p99": 18.100000001490116,
+        "max": 25.19999999552965
+      },
+      "newPipelines": 0
+    }
+  ]
+}

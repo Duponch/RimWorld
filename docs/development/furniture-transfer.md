@@ -1,5 +1,7 @@
 # Transferts de meubles V25–V26
 
+V42 ajoute la lampe sur pied aux meubles minifiables : identité et acier conservés, orientation fixe, connexion et alimentation réinitialisées au retrait. La réinstallation emploie son matériau réel pour la prévalidation du placement. Le générateur à bois ne peut pas être déplacé entier. [Contrat](power.md).
+
 V37 applique la [lumière](light-work.md) au retrait physique, sans ajouter de travail à la prise/pose du paquet. Les trajets gardent leur facteur capturé et les interruptions effacent aussi le reliquat de retrait.
 
 [Vérification RimWorld](../research/furniture-transfer-reference.md), chapitre 10 / SYS-059 / TEST-059. Cette mécanique complète la [déconstruction](deconstruction.md), qui détruit le bâtiment et restitue des matériaux : ici l'objet reste entier.

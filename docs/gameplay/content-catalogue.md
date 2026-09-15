@@ -1,6 +1,8 @@
 # Catalogue de contenu : couverture connue
 
-V41 ajoute `Tile.ore=machinery` (machines compactées, 2 000 PV, groupes 3–6) et `component` (deux unités par case, pile 50, transport/stockage, CAT-006 partiel). [Contrat](../development/components.md). Aucun composant avancé, recette, usure ou appareil électrique livré.
+V42 ajoute `wood-generator` (générateur à bois, CAT-047 partiel) et `standing-lamp` (mobilier lumineux). Recettes fixes : 100 acier + 2 composants et 20 acier. Puissances 1 000 W / 30 W ; aucune variante avancée, câble ou batterie implicite. [Contrat et limites](../development/power.md).
+
+V41 ajoute `Tile.ore=machinery` (machines compactées, 2 000 PV, groupes 3–6) et `component` (deux unités par case, pile 50, transport/stockage, CAT-006 partiel). [Contrat](../development/components.md). V42 utilise deux composants dans le générateur ; fabrication de composants, usure et composants avancés restent absents.
 
 V40 ajoute un objet : `passive-cooler`, bois fixe, 1×1, réservoir 50 bois et consommation 10/jour, seuil 17 °C ; recharge physique, déconstruction sans restitution, non réinstallable. [Contrat](../development/passive-cooling.md). Aucun appareil électrique ni équipement de protection thermique livré.
 
@@ -36,7 +38,7 @@ L’[audit du 13 septembre](../research/environment-review.md) confirme que les 
 
 | Registre / identifiant local | Usage livré | Limites |
 |---|---|---|
-| Objet `wood` | Bois récolté, piles, portage, construction et combustible du feu/refroidisseur passif ; CAT-005. | Espèces, masse, autres combustibles, dégâts et autres propriétés non implémentés. |
+| Objet `wood` | Bois récolté, piles, portage, construction et combustible du feu/refroidisseur passif/générateur ; CAT-005. | Espèces, masse, autres combustibles, dégâts et autres propriétés non implémentés. |
 | Objet `berries` | Baies récoltées, 0,05 nutrition/unité, piles de 75, ingestion de plusieurs unités ; CAT-011. | Pourrit en 14 jours à température normale ; intoxication absente ; maturité et renouvellement du buisson livrés en V7. |
 | Objet et plante `rice` | Riz semé/récolté ; croissance, fertilité, lumière et température locale ; 6 unités mûres, pile de 75, nutrition 0,05, malus de repas cru. Première culture alimentaire, domaine SYS-070..072. | Pourrit en 40 jours à température normale. Autres recettes, intoxication, santé du plant et compétences absents ; une seule culture sélectionnable. [Référence](../research/farming-reference.md). |
 | Objet `simple-meal` | Repas simple cuisiné au feu : dix baies/riz, nutrition 0,9, pile dix, ingestion un ; première recette Core. [Source et contrat](../research/cooking-reference.md). | Pourrit en 4 jours à température normale. Autres ingrédients, compétence et intoxication absents. |

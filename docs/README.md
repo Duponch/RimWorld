@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+V42 : [générateur à bois, raccordement et lampe](development/power.md), [vérification RimWorld](research/power-reference.md).
+
 V41 : [composants industriels](development/components.md), [vérification RimWorld](research/components-reference.md).
 
 La référence est RimWorld de base, transposé en 3D. Une description de RimWorld, une intention du projet et une fonctionnalité livrée sont trois informations distinctes. Ce dossier les sépare ; les extensions viennent après G5.
@@ -31,6 +33,7 @@ La référence est RimWorld de base, transposé en 3D. Une description de RimWor
 
 | Domaine | Contrat du projet | Recherche et cible |
 |---|---|---|
+| Électricité | [Génération et lampes V42](development/power.md) | [Sources et limites](research/power-reference.md) |
 | Refroidissement passif | [Construction, recharge et air V40](development/passive-cooling.md) | [Sources et limites](research/passive-cooling-reference.md) |
 | Température et conservation | [Air local et âges V38](development/temperature.md), [conservation](development/food-preservation.md) | [Vérifications Core](research/temperature-reference.md) |
 | Lumière, travail et marche | [Travaux/marche V37](development/light-work.md), [ateliers V36](development/work-environment.md), [rendu 3D](development/environment-lighting.md) | [Travaux et marche Core](research/light-work-reference.md), [ateliers Core](research/work-environment-reference.md), [interprétation visuelle](research/environment-lighting-reference.md) |

@@ -50,7 +50,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 40 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 42 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)
@@ -191,4 +191,11 @@
 ## Composants industriels V41
 
 - Lire `docs/development/components.md` et sa recherche. Gisement `machinery`, objet/famille `component` : 2 000 PV, coups naturels 80, deux unités, pile 50 ; ni acier ni combustible. Filtre absent = refus ; génération secondaire indépendante après l’acier, sans injection aux anciennes cartes.
-- V40 strictement validée avant migration. Dépôt final et PRNG prévalidés, transferts communs conservatifs. Les appareils électriques, composants avancés, fabrication et usure restent absents. Coût de passage 1,4 provisoire, pas une parité numérique certifiée. Rendu dans les lots existants et poses GPU communes.
+- V40 strictement validée avant migration. Dépôt final et PRNG prévalidés, transferts communs conservatifs. V42 ajoute générateur et lampe ; composants avancés, fabrication et usure restent absents. Coût de passage 1,4 provisoire, pas une parité numérique certifiée. Rendu dans les lots existants et poses GPU communes.
+
+## Électricité V42
+- Lire docs/development/power.md et sa recherche. Générateur 2×2, 100 acier + 2 composants, réservoir neuf vide ; capacité 75 bois, 22/jour via reste entier sur cinq. Lampe 20 acier/30 W, minifiable, sans rotation ; générateur 1 000 W non minifiable. Réservoir, matériaux et pertes de déconstruction restent distincts.
+- Raccordement carré de six cases, empreinte du transmetteur puis classement par ancre ; garder un parent valide. Réseaux cardinaux dérivés, consommateurs non transmetteurs. Démarrage/délestage progressifs et PRNG persistés. Réseaux équilibrés sans attente ne refont pas dix recherches de candidats par tick ; ordre des autres tirages inchangé.
+- Planification et livraison de combustible emploient toute l’empreinte. Tester chaque face d’un appareil multiple : la route vers la seconde case ne doit pas bloquer le porteur. Les phases power.on/parent sont observées par le bridge.
+- V41 strictement validée avant migration sans appareil injecté. La lampe emballée perd connexion/alimentation. Conduits, interrupteurs physiques, batteries, froid électrique, prérequis de recherche/compétence et incidents restent absents ; rayon brut 12 de lampe provisoire.
+- Diffusion lumineuse V42 : une nouvelle topologie n’exige pas de diffusion si sources/dimensions et obstacles dans leurs bornes de portée sont identiques. Les topologies comparées restent immuables. Le canal d’opacité de la texture doit toutefois suivre chaque changement topologique, indépendamment de l’identité du tableau lumineux.

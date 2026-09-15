@@ -5,15 +5,19 @@ import type { Job, JobKind, StructureKind, World } from './types.ts';
 
 import { BUILDING_MATERIALS, CONSTRUCTION_MATERIALS, isBlockMaterial, type ConstructionMaterial } from './building-materials.ts';
 export type { ConstructionMaterial } from './building-materials.ts';
-export interface ConstructionCost { item: ConstructionMaterial; quantity:number }
+export interface ConstructionCost { item: ItemId; quantity:number }
 export interface ConstructionRecipe { ingredients:readonly ConstructionCost[]; work:number; coreWork:number }
 type ConstructionObject={kind:JobKind;material?:ConstructionMaterial};
 // Core base work before the stuff factor, in Core ticks. Absence of material
 // deliberately keeps the V1–V29 historical recipe on existing objects.
-const costs:Record<StructureKind,number>={'passive-cooler':50,door:25,stonecutter:75,wall:5,bed:45,table:28,stool:25,campfire:20,horseshoes:10};
-const work:Record<StructureKind,number>={'passive-cooler':200,door:850,stonecutter:2000,wall:135,bed:800,table:750,stool:450,campfire:200,horseshoes:100};
+const costs:Record<StructureKind,number>={'wood-generator':100,'standing-lamp':20,'passive-cooler':50,door:25,stonecutter:75,wall:5,bed:45,table:28,stool:25,campfire:20,horseshoes:10};
+const work:Record<StructureKind,number>={'wood-generator':2500,'standing-lamp':300,'passive-cooler':200,door:850,stonecutter:2000,wall:135,bed:800,table:750,stool:450,campfire:200,horseshoes:100};
 const recipes=new Map<string,ConstructionRecipe>();
 for(const kind of Object.keys(JOB_DURATION) as JobKind[]) {
+  if(kind==='wood-generator'||kind==='standing-lamp') {
+    const ingredients:readonly ConstructionCost[]=kind==='wood-generator'?[{item:'steel',quantity:100},{item:'component',quantity:2}]:[{item:'steel',quantity:20}];
+    recipes.set(`${kind}:steel`,Object.freeze({ingredients:Object.freeze(ingredients.map(c=>Object.freeze(c))),work:work[kind]/10,coreWork:work[kind]}));continue;
+  }
   if(kind!=='stonecutter'&&kind!=='passive-cooler')recipes.set(`${kind}:legacy`,Object.freeze({ingredients:Object.freeze(JOB_WOOD_COST[kind]?[Object.freeze({item:'wood' as const,quantity:JOB_WOOD_COST[kind]})]:[]),work:JOB_DURATION[kind],coreWork:JOB_DURATION[kind]*10}));
   if(kind in STRUCTURE_DEFINITIONS)for(const material of CONSTRUCTION_MATERIALS) {
     if((kind==='campfire'||kind==='passive-cooler')&&material!=='wood'||kind==='stonecutter'&&isBlockMaterial(material))continue;
@@ -26,7 +30,8 @@ for(const kind of Object.keys(JOB_DURATION) as JobKind[]) {
     recipes.set(`${kind}:${material}`,Object.freeze({ingredients,work:Math.ceil(coreWork/10),coreWork}));
   }
 }
-export function validConstructionMaterial(kind:unknown,material:unknown,version=40):boolean {
+export function validConstructionMaterial(kind:unknown,material:unknown,version=42):boolean {
+  if(kind==='wood-generator'||kind==='standing-lamp')return version>=42&&material==='steel';
   if(kind==='passive-cooler')return version>=40&&material==='wood';
   return material===undefined||typeof kind==='string'&&typeof material==='string'&&(CONSTRUCTION_MATERIALS as readonly string[]).includes(material)&&(version>=33||!isBlockMaterial(material))&&recipes.has(`${kind}:${material}`);
 }

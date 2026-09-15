@@ -1,5 +1,7 @@
 # Transit et arrêt sur le mobilier — V22
 
+V42 : générateur 2×2 traversable, arrêt exclu et délai 5 ticks ; lampe 1×1, arrêt exclu et délai 1,4. Seul le générateur participe à la non-répétition du mobilier qualifiant. Le service de combustible utilise une face accessible de toute l’empreinte, comme la recherche du trajet. [Contrat et réserves](power.md).
+
 V40 : le refroidisseur passif utilise le profil traversable sans arrêt, supplément 3 ticks locaux et non-répétition commune. Une case, pas de surface de pile ni de toit porteur ; [contrat](passive-cooling.md).
 
 [Recherche Core et incertitudes](../research/furniture-travel-reference.md). Ce contrat complète [sol/mouvement](spatial-motion-storage.md) et [chantiers](construction.md), sans modifier les permissions d'objets/zones V21.

@@ -12,9 +12,10 @@ export function validateDeconstruction(world: World, version: number, shapesOnly
   }
   if (!ledger || typeof ledger !== 'object' || Array.isArray(ledger)
     || ![ledger.count, ledger.lostWood, ledger.fuelTicks].every(n => Number.isSafeInteger(n) && n >= 0)
+    || ledger.lostComponents!==undefined&&(version<42||!Number.isSafeInteger(ledger.lostComponents)||ledger.lostComponents<0)
     || ledger.lostSteel!==undefined&&(version<30||!Number.isSafeInteger(ledger.lostSteel)||ledger.lostSteel<0)
     || ledger.lostBlocks!==undefined&&(version<33||!ledger.lostBlocks||typeof ledger.lostBlocks!=='object'||Array.isArray(ledger.lostBlocks)||Object.entries(ledger.lostBlocks).some(([item,n])=>!isBlockMaterial(item)||!Number.isSafeInteger(n)||n<0))
-    || Object.keys(ledger).some(k => !['count', 'lostWood', 'fuelTicks',...(version>=30?['lostSteel']:[]),...(version>=33?['lostBlocks']:[])].includes(k))) errors.push('Invalid deconstruction ledger.');
+    || Object.keys(ledger).some(k => !['count', 'lostWood', 'fuelTicks',...(version>=42?['lostComponents']:[]),...(version>=30?['lostSteel']:[]),...(version>=33?['lostBlocks']:[])].includes(k))) errors.push('Invalid deconstruction ledger.');
   for (const j of world.jobs) {
     const d = j.deconstruction;
     if (j.kind !== 'deconstruct') { if (d !== undefined) errors.push('Unexpected deconstruction target.'); continue; }

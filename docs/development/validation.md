@@ -1,36 +1,39 @@
-# Validation courante — V41
+# Validation courante — V42
 
-15 septembre 2026. Machines compactées et composants industriels, [contrat](components.md), [recherche et incertitudes](../research/components-reference.md). Les preuves V40 sont conservées dans [l’archive refroidissement passif](../history/validation-v40-passive-cooling.md).
+16 septembre 2026 (recherches et premiers essais le 15). [Contrat électrique](power.md), [sources et adaptations](../research/power-reference.md). Preuves V41 conservées dans [l’archive composants](../history/validation-v41-components.md).
 
-## Simulation, commandes et continuation
+## Simulation et reprise
 
-**128 tests réussis dans 42 fichiers** en 61,15 s, hors pilote long ; **pilote de cinq à huit jours réussi sur trois cartes naturelles** dans le lot regroupé précédent (156,96 s pour ce lot, 34 tests réussis et une fixture historique à corriger). Trois camps construisent leur atelier, extraient puis rangent **six composants**, maintiennent repas/repos/loisirs, matière et reprise exacte. Aucun composant ajouté par le pilote.
+Le lot complet a réussi **131 tests hors pilote long** et trouvé un défaut dans ce pilote. Après correction, le lot transport/électricité/bridge/pilote a réussi **8 tests**, dont les cinq à huit jours sur **trois cartes naturelles**, en 147,74 s. Les contrôles électriques ont été rejoués après optimisation des réseaux stables et ajout du bilan thermique ; le dernier lot lumière/travaux/rendu/électricité réussit **8 tests dans quatre fichiers** en 2,82 s. Les autres familles du lot initial n’ont pas été relancées sans changement les concernant.
 
-Les deux scénarios composants couvrent gisements 3–6, acier et topologie conservés, flux/IDs, migration V40 stricte, état invalide, 25 coups naturels, annulation sans réparation, dernier dépôt différé par saturation d’IDs, delta de minerai/dégât/sol, transport à deux colons, limite 49→50 puis seconde pile et reprise exacte en portage. Les anciennes attentes de version ont été actualisées. Une fixture V37 fabriquée depuis le générateur actuel contenait des machines V41 ; elle est revenue à un terrain légal de sa version, sans relâcher le validateur. Le contrôle initial de débordement a également été corrigé pour utiliser le dépôt sur une cellule, car `addGroundMaterial` est volontairement un répartiteur sur plusieurs cellules.
+Le défaut détecté : la route desservait toute l’empreinte 2×2 du générateur, mais la livraison ne reconnaissait que l’ancre. Le colon arrivait avec du bois sur une autre face et gardait son engagement sans pouvoir le finir. Correction de la condition d’arrivée ; les quatre faces et la reprise pendant les 24 ticks de ravitaillement sont désormais testées. Le pilote vérifie le fonctionnement des appareils, pas seulement leur présence.
 
-## Parcours visible
+Les scénarios couvrent matériaux mixtes, réservoir neuf vide, débit entier 22 bois/jour, déconstruction et pertes, minification de lampe, parents valides et invalides, portée carrée, raccordement conservé, surcharge à 34 lampes, panne/reprise, PRNG, migrations strictes, source chaude arrêtée et lampe sans chaleur. L’oracle de lumière indépendant existant reste exécuté ; un cache neuf est aussi comparé cellule par cellule après mutations éloignées/proches. Les anciens tableaux restent immuables ; le canal graphique d’opacité évolue même quand le tableau lumineux est conservé.
 
-**Chromium natif : 1 parcours réussi, 27,2 s**. Minage/reprise du granite, transport désigné du fragment, acier puis machines : inspection 2 000 PV, travail visible après le premier coup sans produit anticipé, retrait final, compteur deux composants, objet porté, dépôt dans la réserve et rechargement exact. Captures `artifacts/components-deposit-ui.png`, `components-carried-ui.png`, `components-stored-ui.png` examinées. Aucune erreur de page/GPU sur ce parcours.
+## Partie réellement jouée
 
-Une première tentative avait échoué à l’égalité du chargement pendant une modification du module surveillé par Vite. Le diagnostic isolé a trouvé des états exactement égaux ; le parcours complet a ensuite réussi avec les fichiers applicatifs stabilisés. Le rechargement automatique est une cause probable, non une preuve d’un défaut de sauvegarde corrigé. Ne pas modifier les modules applicatifs pendant un parcours navigateur mesuré.
+**Deux parcours natifs réussis en 7,0 min** : trois jours par la vraie interface (6,5 min), puis construction/alimentation/déconstruction/rechargement électrique (25,5 s). Carte 250², seed 42 : 3 lits, table et 3 tabourets, 7 murs, porte, feu, piquet, atelier, générateur et lampe ; 15 plants de riz et 28 cases couvertes. **200 acier extraits, 150 incorporés, 50 rangés ; six composants extraits, deux incorporés, quatre rangés.** 35 blocs restants, 20 repas cuisinés, 18 ingestions observées, trois colons ayant dormi. Générateur ravitaillé, lampe allumée, aucun ordre restant ; bilans bois/aliments et reprises exactes réussis. [Preuve compacte](../../artifacts/power-colony-v42.json).
 
-## Audit de rendu en charge
+La scène électrique dédiée vérifie lumière logique 50 % puis 0 %, quantités consommées/restituées, inspection et FPS ; captures `power-lit.png` et `power-dark.png` examinées. **Aucun programme GPU nouveau** pendant construction/allumage et retrait de la source. [Rapport natif](../../artifacts/power-ui-v42.json). Ces parcours précèdent la dernière optimisation du cache lumineux ; celle-ci conserve les règles et dispose de ses oracles et de l’audit natif ci-dessous.
 
-Rapport `artifacts/components-render-v41.json`, 15 septembre à 20:56 UTC ; Ryzen 5 3600, GPU AMD RDNA-1, Chromium natif/WebGPU, 1 440×1 000, carte naturelle 250² avec chantier dégagé. Même protocole minier qu’avant : quatre cases et un arbre par colon, vitesse 6×, 90 images de chauffe. Fin de mesure après les quatre extractions par mineur, pas après toute la coupe ni un stockage collectif. Données exactes d’adoption séparées de la réception des snapshots ; aucune sérialisation de tout le monde pendant les images mesurées.
+## Performance mesurée
 
-| Charge | Produit final | Image p95 / p99 / max | Application de scène p95 / max | Réception snapshot p95 / max |
-|---|---:|---:|---:|---:|
-| 3 mineurs, 12 cases | 24 composants | 8,4 / 12,4 / 20,9 ms | 6,7 / 15,9 ms | 0,6 / 3,1 ms |
-| 100 mineurs, 400 cases | 800 composants | 16,7 / 20,9 / 37,5 ms | 13,8 / 22,7 ms | 4,1 / 8,1 ms |
+Ryzen 5 3600, AMD RDNA-1, Node 24.11.1, Chromium/WebGPU natif, 1 440×1 000. Carte naturelle 250² avec patches dégagés, quatre machines compactées et un arbre désignés par mineur, vitesse 6× ; 90 images de chauffe. Sources électriques dans un patch séparé, toutes actives avant mesure. Témoin de même carte sans appareils, sans tests lourds concurrents. L’application de scène mesure **applyWorld**, distinct de la réception des snapshots.
 
-Aux fenêtres de retrait de roche, p95/p99 atteignent **25 / 33,3 ms** à cent mineurs. **Zéro programme GPU créé pendant la mesure**, identités de géométrie/attributs/indices de roche et du sol conservées. Un lot de piles passe de 256 à 512 places à cent mineurs, sans compilation ; pas de croissance observée à trois. Appels de rendu p95 : 161 / 176 selon charge. Préparation initiale environ 2,1–2,2 s, remplacement 0,29–0,35 s, exclus du budget d’image ordinaire.
+| Charge finale | Image p95 / p99 / max | Application de scène p95 / max | Appels de rendu p95 |
+|---|---:|---:|---:|
+| 3 mineurs + 3 générateurs/lampes | 4,3 / 8,4 / 20,9 ms | 6,7 / 18,1 ms | 136 |
+| 100 mineurs, témoin sans appareils | 16,6 / 20,9 / 33,4 ms | 13,5 / 22,9 ms | 170 |
+| 100 mineurs + 100 générateurs/lampes | 16,6 / 20,9 / 37,5 ms | 14,1 / 25,2 ms | 172 |
 
-Ce résultat n’est ni une garantie de 60 FPS permanents à cent colons ni une comparaison A/B prouvant un surcoût nul. Le coût d’application de scène et les pointes groupées restent à surveiller dans les futurs lots. La chaîne de transport massive n’est pas mesurée par cette fixture ; la conservation et la réservation sont couvertes séparément.
+Toutes les extractions terminent : 24 ou 800 composants, cent mineurs simultanément au travail observés dans les grosses charges, toutes les lampes restent alimentées. **Zéro programme GPU nouveau**, aucune erreur navigateur/GPU. Huit changements simultanés de cent lampes produisent huit mises à jour de texture ; application jusqu’à 27,5 ms et image jusqu’à 33,5 ms. Le jeu n’est donc pas garanti sous 16,7 ms en toute circonstance. [Mesures finales et protocole](../../artifacts/power-render-v42.json).
 
-Reproduction PowerShell : définir `MINING_COMPONENTS=1`, `MINING_COUNTS=3,100`, puis `node scripts/mining-render-bench.mjs artifacts/components-render-v41.json`, serveur local actif, sans autre test lourd ni modification des modules.
+L’audit a motivé deux corrections de coût : sauter les recherches d’allumage des réseaux déjà équilibrés, puis ne pas rediffuser tous les halos lorsqu’une roche éloignée change la topologie des pièces. Sur la paire mesurée avec cent appareils, cette dernière correction ramène l’application p95 **20,6 → 14,1 ms**, l’image p99 **29,2 → 20,9 ms** et le maximum **66,7 → 37,5 ms**. Le canal d’opacité conserve sa propre invalidation. [Comparaison conservée](../../artifacts/power-light-optimization-v42.json). Une paire de mesures ne prouve pas un gain identique sur tout matériel ni un coût nul. Le transport massif et la construction simultanée de cent réseaux ne sont pas mesurés par cette fixture.
 
-## Livraison et limites
+Reproduction : serveur local actif, puis `node scripts/power-render-bench.mjs`, sans autre test lourd ni modification des modules.
 
-Build TypeScript/Vite réussi ; 200 modules, worker 234,27 kB, jeu 1 080,65 kB (303,65 kB gzip). Avertissement de bundle >500 kB déjà connu. Index/liens et intégrité des trois originaux contrôlés. Les preuves ne prétendent pas couvrir tous les cas du jeu ni tous les défauts visuels ; le long parcours UI de trois jours n’a pas été répété pour ce prolongement d’une chaîne minière existante, couverte par pilote cœur et UI minière.
+## Synchronisation et livraison
 
-Fidélité : forte confiance sur produit/PV/piles, génération adaptée, passage 1,4 et portage dix unités encore provisoires. Pas de composants avancés, fabrication, commerce, usure, appareil électrique ou garantie de conformité totale. Voir [l’inventaire](../gameplay/implementation-status.md).
+La première garde de présentation a détecté une répétition du curseur pendant **une image de 4,2 ms** en abattage. Aucun saut, retrait anticipé ou délai de commande supérieur à 100 ms ; le message générique « Delayed speed controls » provenait ici du critère de starvation, pas du délai des commandes. [Observation conservée](../../artifacts/power-presentation-first-v42.json). Le seuil strict n’a pas été assoupli. **La reprise complète après optimisation réussit** : 9 950 images de minage et 10 273 d’abattage, aucune starvation ni saut/occupation solide/retrait anticipé, délais maximum des changements de vitesse **29,5 / 21,1 ms**. [Preuve finale](../../artifacts/power-presentation-v42.json). La cause du phénomène isolé du premier essai n’est pas établie ; ce second passage ne prouve pas qu’il est impossible et le contrôle reste obligatoire.
+
+Build TypeScript/Vite réussi : 207 modules, worker 241,83 kB, jeu 1 083,64 kB (304,67 kB gzip). Avertissement de bundle >500 kB préexistant. Index/liens et intégrité des trois originaux contrôlés. V42 n’ajoute pas d’appareil aux anciennes sauvegardes. Conduits, interrupteurs physiques, batteries, froid électrique, recherche/compétences et incidents restent absents ; rayon brut de lampe provisoire, [inventaire complet](../gameplay/implementation-status.md).

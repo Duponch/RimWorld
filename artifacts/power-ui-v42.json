@@ -1,0 +1,25 @@
+{
+  "date": "2026-09-15T21:54:03.999Z",
+  "backend": "native WebGPU",
+  "viewport": "1440x1000",
+  "size": 32,
+  "pawns": 1,
+  "newPipelines": {
+    "construction": 0,
+    "loss": 0
+  },
+  "litTick": 922,
+  "finalTick": 1105,
+  "light": {
+    "on": 0.5,
+    "off": 0
+  },
+  "deconstructed": {
+    "count": 1,
+    "lostWood": 0,
+    "fuelTicks": 18000,
+    "lostComponents": 1,
+    "lostSteel": 50
+  },
+  "errors": []
+}

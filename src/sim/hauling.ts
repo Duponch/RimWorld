@@ -30,7 +30,7 @@ export function processHaul(world: World, pawn: Pawn, move: (target: Cell, allow
   const target = destinationCell(world, task.destination);
   const carry = world.piles.find(item => item.id === task.carryPileId);
   if (!target || !carry) { releaseWork(world, pawn); return; }
-  const atTarget = task.destination.type === 'job' ? footprintCells(target as Job).some(cell => adjacent(pawn, cell)) && !footprintCells(target as Job).some(cell => sameCell(pawn, cell)) : nearby(pawn, target);
+  const atTarget = task.destination.type === 'job' ? footprintCells(target as Job).some(cell => adjacent(pawn, cell)) && !footprintCells(target as Job).some(cell => sameCell(pawn, cell)) : task.destination.type==='fuel'?footprintCells(target as Job).some(cell=>nearby(pawn,cell)):nearby(pawn, target);
   if (!atTarget) { move(target, task.destination.type !== 'job'); return; }
   if(task.destination.type==='job'&&!constructionSiteFree(world,target as Job,pawn.id)){releaseWork(world,pawn);return;}
   if (task.destination.type==='fuel') {

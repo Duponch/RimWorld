@@ -30,7 +30,7 @@ test('machinery deposits preserve steel and topology; strict V40 migration never
     expect(w.tiles.map(({ore:_ore,...t})=>t)).toEqual(strip);expect(w.rng).toBe(rng);expect(w.nextId).toBe(id);
   }
   const old=JSON.parse(serializeWorld(miningCamp()));old.schemaVersion=40;old.tiles[0]={terrain:'rock',stone:'slate',miningDamage:80};
-  const restored=deserializeWorld(JSON.stringify(old));expect(restored).toEqual({...old,schemaVersion:41});
+  const restored=deserializeWorld(JSON.stringify(old));expect(restored).toEqual({...old,schemaVersion:42});
   for(const change of [(s:any)=>s.tiles[0].ore='machinery',(s:any)=>s.stockpiles.push({id:s.nextId++,x:20,z:20,filters:{wood:false,food:false,component:true},capacity:50,priority:2}),(s:any)=>s.piles.push({id:s.nextId++,kind:'component',item:'component',quantity:2,owner:{type:'ground',x:20,z:20}})]) {
     const bad=structuredClone(old);change(bad);expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(/version 40/);
   }
