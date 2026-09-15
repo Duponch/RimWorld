@@ -1,0 +1,27 @@
+{
+  "date": "2026-09-15T13:30:08.594Z",
+  "cpu": "AMD Ryzen 5 3600",
+  "gpu": "AMD RDNA-1",
+  "scope": "CDP JavaScript sampling before StaticDrawUsage correction; profile start includes warmup. Not GPU timestamps or an uninstrumented FPS benchmark. Raw profile stays in tmp.",
+  "sha256": "f8da765a72ae269972abbfde84cdd244c0ead3132d7f56490ee7c54bde44564d",
+  "sampledMs": {
+    "writeBuffer": 4472.528,
+    "(program)": 872.954,
+    "updateMatrixWorld": 732.902,
+    "multiplyMatrices": 350.485,
+    "compose": 249.099,
+    "(idle)": 142.86,
+    "querySelector": 96.194,
+    "_projectObject": 95.729,
+    "submit": 90.551,
+    "updateMatrix": 87.361
+  },
+  "dominantCallChain": [
+    "GPUQueue.writeBuffer",
+    "WebGPUAttributeUtils.updateAttribute",
+    "WebGPUBackend.updateAttribute",
+    "Attributes.update",
+    "Geometries.updateAttributes",
+    "Renderer._renderObjectDirect"
+  ]
+}

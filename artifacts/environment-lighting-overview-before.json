@@ -1,0 +1,71 @@
+{
+  "date": "2026-09-15T11:58:43.757Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "protocol": "Natural seed 42, 250² at noon, native WebGPU, verified distant LOD. 120 warmup frames then 1200 samples; shading-only control. Three starting pawns paused; no concurrency or new artificial source.",
+  "runs": [
+    {
+      "enabled": false,
+      "errors": [],
+      "resources": 12411,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1"
+      },
+      "frames": {
+        "count": 1200,
+        "p50": 4.199999999999818,
+        "p95": 4.299999999999272,
+        "p99": 4.300000000000182,
+        "max": 4.300000000001091
+      },
+      "drawCalls": {
+        "count": 1200,
+        "p50": 15,
+        "p95": 15,
+        "p99": 15,
+        "max": 15
+      },
+      "triangles": {
+        "count": 1200,
+        "p50": 429885,
+        "p95": 429885,
+        "p99": 429885,
+        "max": 429885
+      }
+    },
+    {
+      "enabled": true,
+      "errors": [],
+      "resources": 12411,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1"
+      },
+      "frames": {
+        "count": 1200,
+        "p50": 8.300000000000182,
+        "p95": 12.399999999999636,
+        "p99": 12.599999999998545,
+        "max": 16.699999999999818
+      },
+      "drawCalls": {
+        "count": 1200,
+        "p50": 15,
+        "p95": 15,
+        "p99": 15,
+        "max": 15
+      },
+      "triangles": {
+        "count": 1200,
+        "p50": 429885,
+        "p95": 429885,
+        "p99": 429885,
+        "max": 429885
+      }
+    }
+  ]
+}

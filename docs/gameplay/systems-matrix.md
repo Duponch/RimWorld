@@ -4,7 +4,7 @@ Cette matrice traduit les références de RimWorld en exigences de gameplay pour
 
 Révision : **15 septembre 2026**. Périmètre par défaut : jeu de base avant les systèmes comparables aux extensions. Les règles chiffrées du prototype sont nos paramètres provisoires ; elles ne doivent pas être présentées comme des valeurs certifiées de RimWorld.
 
-V36 branche lumière logique et premiers rôles de pièce sur les deux recettes ; les critères globaux de S10–S12 restent des cibles ouvertes.
+V36 branche lumière logique et premiers rôles de pièce sur les deux recettes, puis leur présentation locale 3D ; les critères globaux de S10–S12 restent des cibles ouvertes.
 
 L’[inventaire d’implémentation](implementation-status.md) donne l’état livré et les absences par domaine. Les critères ci-dessous restent des cibles.
 

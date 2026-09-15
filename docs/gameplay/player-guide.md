@@ -288,3 +288,9 @@ La lumière de gameplay figure dans l’inspection. Un toit coupe la lumière du
 Le rôle est calculé depuis les meubles : un lit peut transformer un atelier en chambre, plusieurs tables en salle à manger. La taille subit alors une pénalité de mauvaise pièce de 20 %. L’inspection détaille les facteurs ; une petite cour fermée et un auvent ouvert ne sont pas traités de la même manière. Aucun bonus d’humeur de chambre ou de salle à manger n’est encore associé à ces rôles.
 
 Le ciel et les flammes restent stylisés. Les halos sur le décor et l’assombrissement des intérieurs en vue coupée restent à ajouter : fiez-vous au chiffre de l’inspection pour ces règles. Cette tranche module cuisine et taille ; les autres travaux et les déplacements ne subissent pas encore la pénalité d’obscurité.
+
+## Voir les intérieurs et les feux
+
+Un feu allumé éclaire le sol, le mobilier et les colons à proximité. Son halo respecte les obstacles lumineux ; une porte ouverte ne transmet pas la lumière du feu dans cette version de référence. Les bâtiments couverts restent sombres sans éclairage, même lorsque **Toits : masqués** permet d’en voir l’intérieur. Couper les murs ne supprime pas non plus leur obstacle logique. Ces réglages fonctionnent en iso et en perspective, sans modifier la colonie.
+
+Les couleurs chaudes servent à lire la scène : consultez l’inspection pour le pourcentage exact et les effets sur la production. Les lampes dédiées, le chauffage et les ombres projetées par les feux restent à développer.

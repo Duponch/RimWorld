@@ -34,11 +34,14 @@ test('continuous faceted cells: shared seams, winding, local excavation/restorat
   expect(points[1]!.clone().sub(points[0]!).cross(points[2]!.clone().sub(points[0]!)).y).toBeGreaterThan(0);
   const material=new THREE.MeshStandardNodeMaterial(),layer=new RockLayer(material),before=JSON.stringify(world);
   layer.update(world,true);expect(JSON.stringify(world)).toBe(before);
-  const geometry=layer.mesh.geometry,position=geometry.getAttribute('position'),index=geometry.index,original=Array.from(index!.array).slice(0,geometry.drawRange.count);
+  const geometry=layer.mesh.geometry,position=geometry.getAttribute('position') as THREE.BufferAttribute,index=geometry.index,original=Array.from(index!.array).slice(0,geometry.drawRange.count);
   const vertices=Array.from(position.array);
+  expect(position.usage).toBe(THREE.StaticDrawUsage);expect(index!.usage).toBe(THREE.StaticDrawUsage);
+  const positionVersion=position.version;layer.update(world);expect(position.version).toBe(positionVersion);
   const colors=geometry.getAttribute('color'),oldColors=Array.from(colors.array);
   world.tiles=world.tiles.map((tile,i)=>i===15*32+15?{terrain:'rock',stone:'marble'}:tile);layer.update(world);
   expect(layer.stats.updatedCells).toBe(9);expect(Array.from(colors.array)).not.toEqual(oldColors);
+  expect(position.version).toBeGreaterThan(positionVersion);
   expect(Array.from(position.array)).toEqual(vertices);expect(Array.from(index!.array).slice(0,geometry.drawRange.count)).toEqual(original);
   expect(layer.mesh.geometry).toBe(geometry);expect(geometry.getAttribute('color')).toBe(colors);
   const marbleColors=Array.from(colors.array),bytes=layer.stats.bufferBytes;

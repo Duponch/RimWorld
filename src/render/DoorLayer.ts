@@ -18,7 +18,8 @@ export class DoorLayer {
   readonly mesh:BoxMesh;
   private key='';
   private history=new Map<number,{current:DoorState;previous:DoorState}>();
-  constructor() {
+  constructor(configure?: (material: THREE.MeshStandardNodeMaterial) => void) {
+    configure?.(this.material);
     this.material.positionNode=Fn(()=>{
       const transform=mat4(attribute('boxMatrix0','vec4'),attribute('boxMatrix1','vec4'),attribute('boxMatrix2','vec4'),attribute('boxMatrix3','vec4')).toVar();
       normalLocal.assign(transformNormal(normalLocal,transform));

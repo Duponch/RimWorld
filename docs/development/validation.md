@@ -1,31 +1,39 @@
-# Validation courante — V36, lumière et ateliers
+# Validation courante — éclairage local 3D sous V36
 
-15 septembre 2026. [Contrat](work-environment.md), [recherche](../research/work-environment-reference.md), [état fonctionnel](../gameplay/implementation-status.md). Les preuves V35 et leurs limites graphiques sont conservées dans [l’archive toiture](../history/validation-v35-roofs.md).
+15 septembre 2026. [Contrat](environment-lighting.md), [recherche](../research/environment-lighting-reference.md), [état fonctionnel](../gameplay/implementation-status.md). Les règles de simulation restent V36 ; [preuves de production et du pilote de trois jours](../history/validation-v36-work-environment.md) conservées avec leur date, sans les présenter comme un nouveau passage.
 
-## Simulation et intégration
+## Contrôles ciblés
 
-La suite complète a passé : **116 tests, 38 fichiers, 118,65 s**. Elle comprend le pilote naturel de cinq à huit jours sur trois graines, conservation des matières, besoins et reprise exacte. Cinq contrôles ciblés supplémentaires ont passé après la revue des seuils des pièces ; le dernier lot de six tests (dont le pilote enrichi sur trois graines) a passé en 106,57 s, avec bords lumineux et migration des deux recettes. Les parcours existants de production ont passé dans Chromium natif : taille/construction/reprise 16,6 s ; cuisine 13,4 s ; conservation et refus atomiques 8,0 s.
+Le dernier lot de sept tests dans cinq fichiers a passé en **2,89 s** : lumière de gameplay, topologie associée, rétention des ressources graphiques, changements de source/obstacle/toiture, restauration, dimensions 64×32 puis 32×64, projections et ciel. Aucun World modifié par le nouveau champ. La suite complète et le pilote de plusieurs jours ne sont pas relancés pour cette tranche de présentation sans modification des règles/commandes/persistance.
 
-Le nouveau parcours d’atelier construit un feu avec vingt bois réellement livrés, lit 80 % de production dans l’atelier couvert sombre puis 100 % avec lumière de service à 50 %, fabrique vingt blocs et recharge la sauvegarde. **Passé en 9,9 s** au dernier passage après retrait de l’ancien libellé « atelier extérieur », aucune erreur de page/console/WebGPU. Capture [atelier éclairé logique](../../artifacts/work-environment-ui.png), inspectée. Un premier essai n’avait pas ouvert l’inspection : fixture placée dans le coin, parcours de caméra/clic peu fiable. La fixture est recentrée et vise le côté de l’établi ; aucune règle de jeu ni assertion lumineuse n’a été relâchée.
+Le parcours natif de construction du feu, taille de vingt blocs et sauvegarde/reprise a passé en **8,9 s**. Le contrôle de pixels a passé en **6,5 s**, soit deux tests en 18,2 s avec préparation : intérieur nocturne éteint/allumé, côté extérieur d’un mur inchangé, masquage du toit, perspective, extinction et couverture à midi. Aucune erreur de page/console/WebGPU. Captures inspectées : [nuit sans feu](../../artifacts/interior-night-dark.png), [nuit éclairée](../../artifacts/interior-night-lit.png), [perspective](../../artifacts/interior-night-perspective.png).
 
-Le contrôle du bord et des coins est enrichi dans l’oracle de lumière ; le bilan des postes du pilote inclut désormais taux et lumière de service. Le [parcours UI de trois jours](../../artifacts/colony-work-environment-three-days.json) a **passé en 6,5 minutes** sur WebGPU natif : 21 repas cuisinés, 18 ingestions, trois utilisateurs des lits, deux familles de loisirs, bois conservé et nourriture réconciliée, aucune erreur. Au dernier checkpoint : 28 toits, trois lits, table et trois tabourets, sept murs, feu, piquet, atelier et porte ; quinze blocs restants après un mur et trente acier incorporés à l’atelier. Ce parcours commence sur carte naturelle et n’injecte aucun matériau.
+Le premier contrôle de pixels a atteint son watchdog de 90 s : il injectait la sauvegarde après le calcul initial de disponibilité du bouton Recharger, qui restait désactivé. Injection déplacée avant démarrage, comme les autres fixtures ; timeout d’action limité à 15 s. Aucune règle produit ni assertion de couleur n’a été relâchée. La première commande Playwright sandboxée n’a pas pu créer son processus enfant ; lancement natif autorisé ensuite.
 
-## Petit audit CPU
+## Audit cent artisans / cent feux
 
-[Rapport brut](../../artifacts/work-environment-cpu.json), [reproduction](../../scripts/work-environment-bench.ts). Windows, **Ryzen 5 3600**, Node **24.11.1**, carte 250² synthétique, 3/30/100 artisans avec autant de feux. Trois fragments réels taillés par personne, produits déposés et reprise vérifiée. Aucun autre build/test lourd lancé par cet agent pendant la mesure. Préparation, inspection de validation et sérialisation sont hors mesure du tick ; premiers ticks inclus.
+[Rapport brut](../../artifacts/environment-lighting-render.json), [banc](../../scripts/environment-lighting-render-bench.mjs). **AMD RDNA-1, Ryzen 5 3600, Windows, Chromium natif, Node 24.11.1, viewport 1440×1000, carte synthétique 250²**. Production physique de 300 fragments en 6 000 blocs, pic de cent artisans au travail dans les deux passages. Le témoin retire seulement le nouveau nœud de sortie : texture/cache et règles restent identiques. Aucune charge lourde concurrente de cet agent.
 
-| Artisans | Blocs produits | Pic réellement au travail | Ticks | Tick p95 | Tick p99 | Maximum |
-|---|---:|---:|---:|---:|---:|---:|
-| 3 | 180 | 3 | 674 | 0,461 ms | 3,552 ms | 15,191 ms |
-| 30 | 1 800 | 30 | 677 | 6,237 ms | 13,312 ms | 21,353 ms |
-| 100 | 6 000 | 100 | 708 | 12,408 ms | 20,537 ms | 25,559 ms |
+| Charge | Témoin : p95 / p99 / max image | Éclairée : p95 / p99 / max image | Draw calls max, identiques |
+|---|---|---|---:|
+| Production à 6× | 4,3 / 8,4 / 20,8 ms | 4,3 / 8,4 / 16,7 ms | 73 |
+| Pause iso | 4,3 / 4,3 / 4,3 ms | 4,3 / 4,3 / 4,3 ms | 67 |
+| Pause perspective | 4,3 / 4,3 / 4,3 ms | 4,3 / 4,3 / 4,3 ms | 73 |
+| LOD distant vérifié | 4,3 / 4,3 / 4,3 ms | 4,3 / 4,3 / 4,3 ms | 58 |
+| Huit bascules simultanées de cent feux | 4,3 / 8,3 / 29,2 ms | 4,3 / 8,3 / 20,9 ms | 58 |
 
-La lecture d’un environnement inchangé avec cent feux est à **0,292 ms p95** sur 99 lectures après la première. Vingt changements d’état d’un feu provoquent vingt recombinaisons : **4,707 ms p95**, maximum **4,735 ms**, cent sources au plus. Le premier groupe inclut davantage de chauffe JIT ; les petites séries ne permettent pas de conclure à une variation causale entre populations. Le recalcul des sources est global pour cette première tranche, local dans son domaine de diffusion ; il n’est exécuté ni à chaque unité brûlée ni par personnage. Des pointes de planner persistent pendant les collectes/dépôts ; aucune promesse de fluidité parfaite ou de coût nul.
+**Zéro création de pipeline pendant toutes les fenêtres mesurées**, zéro erreur GPU. L’envoi du champ ne suit pas les ticks : deux révisions depuis le lancement (petite carte puis carte 250²), ensuite exactement huit envois pour les huit bascules. Ces bascules sont un stress de présentation injecté, pas une commande du joueur. Elles réutilisent les références du terrain, comme les snapshots ordinaires.
 
-Le rendu 3D ne reçoit pas de nouvelle source GPU dans cette tranche. Le test natif vérifie la véritable interface, le worker et l’absence d’erreurs ; ce n’est pas un nouvel audit graphique à cent acteurs. Les percentiles graphiques V35 restent historiques et ne sont pas réétiquetés comme mesures V36.
+Adoption des snapshots de production avec éclairage : p95 **2,5 ms**, maximum **3,5 ms** ; bascules simultanées : maximum **21,6 ms**. Des pointes subsistent. Le relevé précédent clonait toute la carte dans chaque mutation de diagnostic et mesurait donc aussi ces allocations artificielles ; il a été corrigé. Le LOD lointain est désormais affirmé explicitement avant la mesure, au lieu de supposer qu’un seul événement molette suffit.
 
-## Compilation et documents
+Ces courtes séries sont plafonnées par l’affichage autour de 240 Hz ; elles ne démontrent ni un shader gratuit, ni une amélioration causale sur les maxima. Boucle CPU de rendu en production : p95 3,8 ms témoin, 3,5 ms avec éclairage ; ce passage seul ne prouve pas une accélération. Pas de timestamps GPU isolant le shader. Les nombres de ticks finaux diffèrent légèrement selon les lots du worker, avec les mêmes objectifs métier atteints. Les coûts de préparation restent hors fenêtres mesurées.
 
-Build/typecheck : **183 modules**, worker **221,13 kB**, entrée graphique **1 071,47 kB / 300,63 kB gzip**. L’avertissement historique de bundle supérieur à 500 kB reste présent. Aucune dépendance ajoutée.
+## Panorama naturel et compilation
 
-Liens locaux, index, décisions, inventaire, guide, calendrier unique et intégrité des trois originaux sont contrôlés avant commit. Reste à développer : autres métiers/déplacements sensibles à la lumière, halos 3D et intérieur en coupe, thermique, météo, toits naturels, dégâts et autres rôles/statistiques ; les systèmes G3–G5 restent ouverts.
+[Panorama naturel final](../../artifacts/environment-lighting-overview.json), [banc](../../scripts/environment-lighting-overview-bench.mjs) : graine 42, 250², **12 411 ressources**, un feu près du camp, 430 137 triangles et **18 draw calls**, 1 200 images après chauffe. Avec et sans shader : **4,3 ms p95/p99** ; maxima 4,3 ms avec et 8,3 ms témoin. Affichage proche de 240 Hz, sans preuve de coût nul.
+
+La [première mesure](../../artifacts/environment-lighting-overview-before.json), sans feu, relevait 12,4 ms p95 avec shader contre 4,3 ms témoin. L’exclusion spatiale/verticale seule n’a pas résolu le coût. Le [profil CPU](../../artifacts/environment-lighting-upload-diagnosis.json) a identifié les écritures de buffers ; végétation distante et roches ont été corrigées pour garder leurs allocations sans envois continus. La mesure finale inclut un feu afin que le shader reste actif localement : les premiers et derniers relevés ne sont pas un A/B de scène strictement identique. Le témoin interne de chaque relevé, lui, garde la même scène.
+
+Contrôle natif après correction : **zéro envoi de buffers de décor pendant les 1 200 images immobiles**. Retirer puis restaurer un arbre et une cellule rocheuse envoie leurs matrices/positions/couleurs/indices à chaque modification, puis revient à zéro transfert. Cette injection teste la présentation, pas une partie jouée.
+
+Compilation finale TypeScript/Vite réussie : 185 modules, bundle jeu 1 074,67 kB (301,73 kB gzip), worker 221,13 kB. L’avertissement existant de chunk supérieur à 500 kB reste présent ; aucune dépendance ajoutée. Le contrôle documentaire vérifie 130 documents, 1 374 liens locaux, 25 domaines et cinq familles de validation ; les trois originaux restent identiques octet par octet. Température, météo, autres sources lumineuses et ombres locales restent absentes ; le prochain lot concerne les facteurs lumineux des autres métiers et déplacements.

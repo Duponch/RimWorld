@@ -146,10 +146,15 @@
 ## Toiture construite V35
 - Lire docs/development/roofing.md et docs/research/roofing-reference.md. Couverture, zone de pose et zone de retrait sont distinctes du sol ; V34 validée avant migration sans toit inventé. Rayon de pose 6,9 avec connexion ; retrait volontaire par composantes sans rayon ; perte d’un support recontrôle la portée locale. Les meubles ordinaires ne sont pas porteurs.
 - Travaux Construction sans matériau/cadre, vrais trajets et défrichage, file réconciliée ; les intentions non réservées tournent pour éviter la monopolisation par des cibles inaccessibles. Les contextes ne survivent ni au tick ni à une mutation de couverture/support. Checkpointer la croissance avant modification du toit.
-- Deux lots graphiques préparés même vides, programmes stables ; masquer la toiture ne change pas World. Toits naturels, dommages/gravats d’effondrement et thermique restent absents ; V36 ajoute les facteurs intérieurs de production, sans éclairage local 3D. Le pilote couvre 28 cases autour du repas sans couvrir le champ.
+- Deux lots graphiques préparés même vides, programmes stables ; masquer la toiture ne change pas World. Toits naturels, dommages/gravats d’effondrement et thermique restent absents ; V36 ajoute les facteurs intérieurs de production, avec éclairage local 3D dans la tranche de présentation suivante. Le pilote couvre 28 cases autour du repas sans couvrir le champ.
 
 ## Lumière et production V36
 
 - Lire `docs/development/work-environment.md` et sa recherche avant de toucher lumière/rôles/taux. Lumière au colon, extérieur psychologique au poste, rôle séparé. Les portes bloquent les feux même ouvertes. Émetteurs actuels plafonnés à 50 %, jamais du soleil agricole.
 - `CookingTask.progress` est en unités entières de travail neutre (10 000/tick), V35 strictement validée avant conversion du pourcentage (repas ×5 000, blocs ×8 000). Caches dérivés par propriétaire, contexte partagé seulement sans mutation du milieu. Pas de calcul par image ni par colon pour la diffusion.
-- Les deux recettes utilisent les facteurs. Autres travaux/déplacements, halos 3D, thermique, rôles sociaux et statistiques complètes restent explicitement absents. Les chambres actuelles concernent les lits civils simples et adultes sans relations.
+- Les deux recettes utilisent les facteurs. Autres travaux/déplacements, thermique, rôles sociaux et statistiques complètes restent explicitement absents. Les chambres actuelles concernent les lits civils simples et adultes sans relations.
+
+## Présentation lumineuse sous V36
+- Lire docs/development/environment-lighting.md avant les changements de matériaux, feux ou coupe. Texture partagée dérivée, sans mutation de World ; diffuseur logique commun, coefficients visuels artistiques. Recalcul aux changements de source/obstacle/toiture, jamais par frame ; identité texture/nœuds conservée au rechargement.
+- Matériaux configurés explicitement à leur création, y compris corps/cargaison/LOD. Toits masqués et murs coupés ne modifient pas le champ. Pas de PointLight/ombre par feu ; vérifier les pipelines réels et les pixels lors des changements du shader.
+- Buffers du LOD végétal et de RockLayer : StaticDrawUsage avec needsUpdate/plages lors des mutations. Three 0.186.0 renvoie DynamicDrawUsage même sans version nouvelle ; ne pas réintroduire ces envois par frame. Le banc panorama vérifie absence au repos et transferts après retrait/restauration.

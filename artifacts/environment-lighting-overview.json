@@ -1,0 +1,103 @@
+{
+  "date": "2026-09-15T13:34:47.231Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "protocol": "Natural seed 42, 250² at noon, native WebGPU, verified distant LOD. 120 warmup frames then 1200 samples; shading-only control. Three starting pawns paused; one campfire near the camp, so the spatial lighting branch is active locally. No heavy concurrency. Native backend verifies no idle scenery uploads, then one tree/rock removal and restoration with actual GPU uploads and return to idle.",
+  "runs": [
+    {
+      "enabled": false,
+      "errors": [],
+      "resources": 12411,
+      "idleUploads": {},
+      "mutation": {
+        "removed": {
+          "rock-color": 1,
+          "rock-position": 1,
+          "rock-index": 1,
+          "instances-tree": 1
+        },
+        "restored": {
+          "rock-color": 1,
+          "rock-position": 1,
+          "rock-index": 1,
+          "instances-tree": 1
+        },
+        "settled": {}
+      },
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1"
+      },
+      "frames": {
+        "count": 1200,
+        "p50": 4.199999999999818,
+        "p95": 4.299999999999272,
+        "p99": 4.300000000000182,
+        "max": 8.299999999999272
+      },
+      "drawCalls": {
+        "count": 1200,
+        "p50": 18,
+        "p95": 18,
+        "p99": 18,
+        "max": 18
+      },
+      "triangles": {
+        "count": 1200,
+        "p50": 430137,
+        "p95": 430137,
+        "p99": 430137,
+        "max": 430137
+      }
+    },
+    {
+      "enabled": true,
+      "errors": [],
+      "resources": 12411,
+      "idleUploads": {},
+      "mutation": {
+        "removed": {
+          "rock-color": 1,
+          "rock-position": 1,
+          "rock-index": 1,
+          "instances-tree": 1
+        },
+        "restored": {
+          "rock-color": 1,
+          "rock-position": 1,
+          "rock-index": 1,
+          "instances-tree": 1
+        },
+        "settled": {}
+      },
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1"
+      },
+      "frames": {
+        "count": 1200,
+        "p50": 4.199999999999818,
+        "p95": 4.299999999999272,
+        "p99": 4.300000000000182,
+        "max": 4.300000000001091
+      },
+      "drawCalls": {
+        "count": 1200,
+        "p50": 18,
+        "p95": 18,
+        "p99": 18,
+        "max": 18
+      },
+      "triangles": {
+        "count": 1200,
+        "p50": 430137,
+        "p95": 430137,
+        "p99": 430137,
+        "max": 430137
+      }
+    }
+  ]
+}

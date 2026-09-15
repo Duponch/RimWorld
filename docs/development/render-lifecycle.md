@@ -28,3 +28,7 @@ Les ajouts de ressources, changements de carte, premières variantes de pipeline
 ## Recontrôle alimentaire V5
 
 L’ajout de baies et rations conserve les lots de piles par chunk ; leur signature comprend l’identité de l’objet. Les couleurs par instance et les formes de cargaison sont présentes dans les buffers dès la création, sans nouvelle variante de matériau à chaque changement de repas. [Audit matériel](validation.md) : cent colons, p95 de frame 4,3 ms, maximum 16,7 ms, aucune tâche longue observée ; état final et scénario différents du profil historique, sans comparaison de vitesse artificielle.
+
+## Recontrôle sous V36 : transferts réellement conditionnels
+
+Le nouvel éclairage a révélé le coût des buffers de décor marqués DynamicDrawUsage : Three 0.186.0 les envoie aussi lorsque leur version reste inchangée. Les matrices du LOD végétal et attributs/indices de RockLayer gardent désormais StaticDrawUsage, avec needsUpdate et les plages explicitement modifiées après abattage/minage. Le [banc natif du panorama](../../scripts/environment-lighting-overview-bench.mjs) vérifie zéro envoi de ces buffers au repos, puis un envoi après suppression/restauration réelle de chaque présentation. Aucun changement de capacité ni de propriété des buffers ; les contrôles de rétention restent actifs. Voir [contrat lumineux](environment-lighting.md) et [mesures](validation.md).

@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+Le feu présent éclaire maintenant aussi le décor et les colons en 3D ; aucun nouvel objet lumineux. Torches, lampes électriques et lumières horticoles restent absentes. [Présentation](../development/environment-lighting.md).
+
 V36 enrichit les propriétés des objets existants : lumière logique du feu allumé, rôle de lit/table/piquet/atelier et facteurs des deux recettes. Aucun nouvel objet ni catalogue lumineux complet. [Contrat](../development/work-environment.md).
 
 V35 ajoute une famille de **toit construit**, couche de couverture indépendante des objets/piles et sans recette matérielle. Zones Construire/Retirer/Ignorer, supports et présentation procédurale livrés ; toits naturels minces/épais, colonnes porteuses, gravats et dégâts restent absents. [Contrat](../development/roofing.md).

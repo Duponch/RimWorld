@@ -9,7 +9,9 @@ import { stoneColor } from './stone-palette';
 
 /** One resident surface shared by close/distant views, including the map slab.
  * Cell slots survive excavation/restoration. Only affected vertices are uploaded;
- * the small active index list is compacted in-place, without reallocating buffers. */
+ * the small active index list is compacted in-place, without reallocating buffers.
+ * Keep default StaticDrawUsage: r186 otherwise uploads unchanged attributes on
+ * every frame. Mining marks exact ranges and increments needsUpdate explicitly. */
 export class RockLayer {
   readonly group=new THREE.Group();
   readonly mesh:THREE.Mesh;
@@ -35,7 +37,7 @@ export class RockLayer {
   private viewGeometry(indices:Uint32Array,box:THREE.Box3):THREE.BufferGeometry {
     const geometry=new THREE.BufferGeometry();
     for(const name of ['position','normal','color'])geometry.setAttribute(name,this.mesh.geometry.getAttribute(name));
-    geometry.setIndex(new THREE.BufferAttribute(indices,1).setUsage(THREE.DynamicDrawUsage));
+    geometry.setIndex(new THREE.BufferAttribute(indices,1));
     geometry.boundingBox=box;geometry.boundingSphere=box.getBoundingSphere(new THREE.Sphere());return geometry;
   }
   private updateLocal(dirty:Set<number>,reset:boolean):void {
@@ -57,7 +59,7 @@ export class RockLayer {
     }
     for(const key of keys) {
       const c=this.chunks.get(key)!;
-      if(c.cells.size>c.capacity) {c.capacity=2**Math.ceil(Math.log2(c.cells.size));c.mesh.geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(c.capacity*ROCK_INDICES),1).setUsage(THREE.DynamicDrawUsage));}
+      if(c.cells.size>c.capacity) {c.capacity=2**Math.ceil(Math.log2(c.cells.size));c.mesh.geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(c.capacity*ROCK_INDICES),1));}
       const indices=c.mesh.geometry.index!;let count=0;
       for(const cell of c.cells){const faces=this.slots.get(cell)!.indices;(indices.array as Uint32Array).set(faces,count);count+=faces.length;}
       c.mesh.geometry.setDrawRange(0,count);indices.clearUpdateRanges();indices.addUpdateRange(0,count);indices.needsUpdate=true;
@@ -69,8 +71,8 @@ export class RockLayer {
     this.capacity=capacity;
     const vertices=24+capacity*ROCK_VERTICES;
     const g=new THREE.BufferGeometry();
-    for(const name of ['position','normal','color'])g.setAttribute(name,new THREE.BufferAttribute(new Float32Array(vertices*3),3).setUsage(THREE.DynamicDrawUsage));
-    g.setIndex(new THREE.BufferAttribute(new Uint32Array(36+capacity*ROCK_INDICES),1).setUsage(THREE.DynamicDrawUsage));
+    for(const name of ['position','normal','color'])g.setAttribute(name,new THREE.BufferAttribute(new Float32Array(vertices*3),3));
+    g.setIndex(new THREE.BufferAttribute(new Uint32Array(36+capacity*ROCK_INDICES),1));
     const slab=new THREE.BoxGeometry(world.width+.15,.8,world.height+.15).translate((world.width-1)/2,-.56,(world.height-1)/2);
     for(const name of ['position','normal']) (g.getAttribute(name).array as Float32Array).set(slab.getAttribute(name).array);
     (g.index!.array as Uint32Array).set(slab.index!.array);

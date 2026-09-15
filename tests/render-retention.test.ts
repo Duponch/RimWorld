@@ -40,7 +40,10 @@ test('objets graphiques résidents : retrait/restauration, frontière de chunk, 
   const overview=new OverviewLayer();world.resources=[...saved];overview.update(world,true);
   const vegetation=overview.group.children[1]!,trees=vegetation.children[0] as THREE.InstancedMesh;
   const matrixBuffer=trees.instanceMatrix,treeGeometry=trees.geometry;
+  expect(matrixBuffer.usage).toBe(THREE.StaticDrawUsage);
+  const matrixVersion=matrixBuffer.version;overview.update(world,false);expect(matrixBuffer.version).toBe(matrixVersion);
   world.resources=saved.filter(r=>r.id!==1);overview.update(world,false);
+  expect(matrixBuffer.version).toBeGreaterThan(matrixVersion);
   expect(trees.instanceMatrix).toBe(matrixBuffer);expect(trees.geometry).toBe(treeGeometry);
   world.resources=saved.map(r=>r.id===1?{...r,x:30,z:30}:r);overview.update(world,false);
   expect(trees.boundingSphere!.containsPoint(new THREE.Vector3(30,3,30))).toBe(true);

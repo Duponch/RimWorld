@@ -1,6 +1,6 @@
 # Plan de développement
 
-V36 livre la [lumière logique et les facteurs des ateliers](development/work-environment.md) : feux, obstacles, toits, rôle des meubles présents, travail réellement modulé et sauvegardes migrées. V35 a livré les toits construits. **Prochaine étape de jour : éclairage visible des intérieurs et des feux**. Ensuite : extension vérifiée des effets lumineux aux autres travaux et déplacements, puis température et conservation au froid. G0 en consolidation, G1 partiel, G2 en cours ; aucun nouveau jalon déclaré complet.
+V36 livre la [lumière logique et les facteurs des ateliers](development/work-environment.md) : feux, obstacles, toits, rôle des meubles présents, travail réellement modulé et sauvegardes migrées. V35 a livré les toits construits. La tranche de présentation sous V36 ajoute maintenant [l’éclairage visible des intérieurs et des feux](development/environment-lighting.md), sans nouvelle version de sauvegarde. **Prochaine étape : extension vérifiée des effets lumineux aux autres travaux et déplacements**, puis température et conservation au froid. G0 en consolidation, G1 partiel, G2 en cours ; aucun nouveau jalon déclaré complet.
 
 État : 15 septembre 2026. **ROADMAP est l’unique calendrier G0–G5.** Le [bilan fonctionnel](gameplay/implementation-status.md) fait autorité sur le contenu livré ; les [preuves](development/validation.md) indiquent ce qui a réellement été testé. Voir l’[index documentaire](README.md) pour les contrats et recherches.
 

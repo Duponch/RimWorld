@@ -21,7 +21,8 @@ export class BoxBatches {
   };
   private readonly batches = new Map<string, BoxMesh>();
 
-  constructor() {
+  constructor(configure?: (material: THREE.MeshStandardNodeMaterial) => void) {
+    configure?.(this.materials.solid as THREE.MeshStandardNodeMaterial);
     this.geometry.userData.rendererOwned = true;
     for (const mat of Object.values(this.materials)) { mat.userData.rendererOwned = true; configureBoxMaterial(mat); }
   }

@@ -1,3 +1,4 @@
+import { EnvironmentLighting } from './EnvironmentLighting';
 import { RoofLayer } from './RoofLayer';
 import { blockParts } from './block-presentation';
 import { sameTerrainSurface } from './terrain-state';
@@ -48,10 +49,11 @@ const scratchColor = new THREE.Color();
 export class ColonyRenderer {
   readonly stats = { fps: 0, frameMs: 0, frameP95: 0, drawCalls: 0, triangles: 0 };
   private readonly frames = new FrameMetrics();
-  private readonly overview = new OverviewLayer();
+  private readonly environmentLighting = new EnvironmentLighting();
+  private readonly overview = new OverviewLayer(this.environmentLighting.configure);
   private readonly timeline = new MotionTimeline();
   private hasTracks = false;
-  private readonly pawns = new PawnLayer();
+  private readonly pawns = new PawnLayer(this.environmentLighting.configure);
   readonly backend: string;
   private readonly renderer: THREE.WebGPURenderer;
   private readonly scene = new THREE.Scene();
@@ -61,7 +63,7 @@ export class ColonyRenderer {
   private readonly terrainGroup = new THREE.Group();
   private readonly resourceGroup = new THREE.Group();
   private readonly roofs=new RoofLayer();
-  private readonly doors=new DoorLayer();
+  private readonly doors=new DoorLayer(this.environmentLighting.configure);
   private readonly structureGroup = new THREE.Group();
   private readonly jobGroup = new THREE.Group();
   private readonly pileGroup = new THREE.Group();
@@ -87,7 +89,7 @@ export class ColonyRenderer {
   private readonly pileChunks = new Map<string, VisualChunk>();
   private readonly staticMaterial = material(0xffffff, { vertexColors: true });
   private readonly waterMaterial = material(0xffffff, { vertexColors: true, roughness: 0.45, metalness: 0.08 });
-  private readonly boxes = new BoxBatches();
+  private readonly boxes = new BoxBatches(this.environmentLighting.configure);
   private readonly recreationHints = new RecreationHints(this.boxes);
   private readonly resources = new ResourceLayer(this.resourceGroup, this.staticMaterial);
   private naturalResources: World['resources'] = [];
@@ -124,6 +126,8 @@ export class ColonyRenderer {
 
   private constructor(private readonly host: HTMLElement, private readonly onPick: (x: number, z: number) => void, renderer: THREE.WebGPURenderer) {
     this.renderer = renderer;
+    this.environmentLighting.configure(this.staticMaterial);
+    this.environmentLighting.configure(this.waterMaterial);
     // Renderer-owned shared material survives deletion of an individual chunk.
     // Reusing its node graph also avoids compiling a pipeline per tree batch.
     this.staticMaterial.userData.rendererOwned = true;
@@ -208,6 +212,7 @@ export class ColonyRenderer {
     // if terrain content and simulation tick match a previous session.
     const resetPoses = resetPresentation || newMap || world.tick < (previousWorld?.tick ?? 0);
     this.world = world;
+    this.environmentLighting.update(world);
     if(tracks) {this.timeline.adopt(world.tick,speed,tracks,now,resetPoses || !this.hasTracks);this.hasTracks=true;}
     if(groundChanged) {
       buildTerrain(world,this.terrainGroup,this.staticMaterial,this.waterMaterial);
@@ -702,6 +707,7 @@ export class ColonyRenderer {
     this.waterMaterial.dispose();
     this.hover.geometry.dispose(); (this.hover.material as THREE.Material).dispose();
     this.daylight.dispose();
+    this.environmentLighting.dispose();
     void this.renderer.dispose();
     canvas.remove();
   }

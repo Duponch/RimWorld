@@ -91,4 +91,8 @@ Différer toits naturels, HP/santé et gravats, thermique et éclairage des int�
 
 Les émetteurs partagent actuellement une couleur : le canal maximal suffit à leur contribution logique. Le miroir récent emploie le maximum RGB, tandis que le tableau wiki utilise sa moyenne ; choix explicite du miroir, sans prétendre avoir mesuré le binaire officiel. Un nouvel émetteur coloré exige une extension RGB. Progression entière à 10 000 unités par tick neutre, erreur d’arrondi maximale 0,00005 tick/action ; les anciennes sauvegardes conservent leur pourcentage de travail accompli.
 
-Les recettes reçoivent les facteurs dans cette tranche. Pénalités lumineuses des autres métiers/déplacements et éclairage visible local sont les suites prioritaires ; ce sont des absences connues, pas la cible définitive. Température, humeur des pièces et autres statistiques ne sont pas implicitement simulées.
+Les recettes reçoivent les facteurs dans cette tranche. Le rendu local est livré dans la tranche graphique suivante sous le même schéma. Les pénalités lumineuses des autres métiers/déplacements sont les suites prioritaires ; ce sont des absences connues, pas la cible définitive. Température, humeur des pièces et autres statistiques ne sont pas implicitement simulées.
+
+## Présentation lumineuse sous V36
+
+[Recherche](../research/environment-lighting-reference.md), [contrat](../development/environment-lighting.md). Adapter le champ logique en teintes chaudes et obscurité de coupe avec un plancher de lisibilité, une interpolation spatiale et une limite de hauteur. Les images ne reproduisent pas numériquement le compositing 2D Core et ne modifient pas les taux de travail. Différer ombres locales, sources colorées multiples, éclairage horticole, fenêtres et étages ; ne pas faire traverser les murs par un PointLight non occlus.

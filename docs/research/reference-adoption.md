@@ -169,3 +169,7 @@ Chapitres 5/10/21/**22**, SYS/TEST-023..025, S10 et scène E relus : adopter enc
 ## V36 — lumière et premiers rôles
 
 Chapitres 5/10/11/12/21/22, SYS/TEST-023..025 et 062..064, UI-025, SYS/TEST-070..072 relus. **Adopter** les facteurs distincts et la continuité matérielle ; **adapter** unités, caches et rôles au catalogue civil présent ; **différer** autres métiers, rendu lumineux local, thermique, social et statistiques absentes. [Recherche fraîche](work-environment-reference.md) : correction des confusions entre minimum statistique et courbe de lumière, entre critères de pièce et entre moyenne/max RGB. Les scénarios de production et le pilote existants sont enrichis.
+
+## Présentation de la lumière sous V36
+
+Chapitres 5/22/29 relus, SYS/TEST-023..025 et UI-005 : adopter séparation entre couverture et visibilité ; adapter l’éclairage des volumes, les surfaces et les poses GPU ; différer brouillard de guerre, coupe automatique par pièce et effets absents. La [recherche fraîche](environment-lighting-reference.md) distingue le champ de gameplay et le compositing visuel Core. Aucun nouveau statut global validé ; contrôles enrichis dans la famille UI/environnement existante.

@@ -1,5 +1,7 @@
 # Stratégie de validation
 
+Présentation lumineuse sous V36 : scénario de rétention du champ et des ressources GPU ; parcours natif enrichi avec comparaison de pixels nuit/jour, extinction, mur, toiture et deux vues. Audits `scripts/environment-lighting-render-bench.mjs` à cent artisans/feux et `scripts/environment-lighting-overview-bench.mjs` sur forêt naturelle 250², avec témoin sans le shader et LOD distant vérifié. Le second contrôle aussi les véritables envois GPU après retrait/restauration arbre/roche et leur absence en pause. Les règles/commandes/sauvegardes étant inchangées, ne pas répéter le long pilote de trois jours pour cette tranche graphique.
+
 V36 : `work-environment.test.ts` confronte un oracle de relaxation indépendant à la diffusion locale ; la famille production couvre unités/migrations, perte de feu, rôles et changements de taux. Le pilote conserve les bilans et expose les facteurs des postes. Audit `scripts/work-environment-bench.ts` avec 3/30/100 artisans et autant de feux ; UI courte puis pilote de trois jours.
 
 Toiture V35 : enrichir les familles espace/temps/intégration avec `roofing.test.ts` et le scénario de pièces. Le pilote couvre 28 cellules du repas, garde ses bilans et son champ découvert ; le parcours UI ajoute les mêmes commandes. `roofing-bench.ts` et `roofing-render-bench.mjs` mesurent la même charge de 100 bâtisseurs, jusqu’à 2 500 cellules et 1 200 bois de défrichage.

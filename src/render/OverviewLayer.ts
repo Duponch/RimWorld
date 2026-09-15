@@ -18,7 +18,7 @@ export class OverviewLayer {
   private readonly tint=new THREE.Color();
   private readonly surface=new THREE.MeshStandardNodeMaterial({roughness:0.95,vertexColors:true});
   private foliage=true;
-  constructor(){this.group.add(this.terrain,this.vegetation);this.group.visible=false;this.surface.userData.rendererOwned=true;}
+  constructor(configure?: (material: THREE.MeshStandardNodeMaterial) => void){configure?.(this.surface);this.group.add(this.terrain,this.vegetation);this.group.visible=false;this.surface.userData.rendererOwned=true;}
   rebuildTerrain(source:THREE.Group):void {
     clearGroup(this.terrain);source.updateMatrixWorld(true);
     const grouped=new Map<THREE.Material,THREE.BufferGeometry[]>();
@@ -43,7 +43,10 @@ export class OverviewLayer {
         const crown=kind==='tree'?paint(new THREE.ConeGeometry(1,.8,4).translate(0,.1,0),0x5f7c52):null;
         const geometry=trunk&&crown?mergeGeometries([trunk,crown],false)!:paint(new THREE.OctahedronGeometry(1),0xffffff);
         if(trunk){geometry.userData.trunkIndices=trunk.index!.count;trunk.dispose();crown!.dispose();}
-        const mesh=new THREE.InstancedMesh(geometry,this.surface,Math.max(1,count));mesh.count=count;mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+        // Three r186 uploads DynamicDrawUsage attributes on every render even
+        // when their version is unchanged. These matrices change on snapshots
+        // only; StaticDrawUsage still uploads each explicit needsUpdate below.
+        const mesh=new THREE.InstancedMesh(geometry,this.surface,Math.max(1,count));mesh.count=count;
         this.batches.set(kind,mesh);this.vegetation.add(mesh);
       }
     }

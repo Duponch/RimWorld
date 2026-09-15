@@ -1,0 +1,330 @@
+{
+  "date": "2026-09-15T13:37:43.233Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "protocol": "Native WebGPU, 250², 100 real artisans, 100 campfires, 300 chunks into 6000 blocks. Same texture/cache cost in both runs; shading disabled in the control only. 90-frame warmup; no heavy concurrent tasks. Separate paused perspective/verified overview LOD and 8 simultaneous 100-emitter toggles. Diagnostic toggles preserve immutable terrain references, with no full-world cloning in timed frames. Each browser closes in finally; workload watchdog 90s.",
+  "runs": [
+    {
+      "enabled": false,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "description": ""
+      },
+      "errors": [],
+      "outcome": {
+        "blocks": 6000,
+        "peakWorkers": 100,
+        "tick": 727,
+        "fieldRevisions": 2
+      },
+      "active": {
+        "frames": {
+          "count": 2837,
+          "p50": 4.199999999998909,
+          "p95": 4.299999999999272,
+          "p99": 8.399999999999636,
+          "max": 20.800000000000182
+        },
+        "frameCpu": {
+          "count": 2838,
+          "p50": 2.7000000001862645,
+          "p95": 3.7999999998137355,
+          "p99": 4.699999999254942,
+          "max": 8
+        },
+        "drawCalls": {
+          "count": 2838,
+          "p50": 71,
+          "p95": 72,
+          "p99": 72,
+          "max": 73
+        },
+        "adoptions": {
+          "count": 51,
+          "p50": 1.1000000005587935,
+          "p95": 2.699999999254942,
+          "p99": 4.6000000005587935,
+          "max": 4.6000000005587935
+        },
+        "pipelines": []
+      },
+      "iso": {
+        "frames": {
+          "count": 359,
+          "p50": 4.19999999999709,
+          "p95": 4.299999999999272,
+          "p99": 4.299999999999272,
+          "max": 4.299999999999272
+        },
+        "frameCpu": {
+          "count": 360,
+          "p50": 2.5,
+          "p95": 2.800000000745058,
+          "p99": 3.199999999254942,
+          "max": 3.300000000745058
+        },
+        "drawCalls": {
+          "count": 360,
+          "p50": 67,
+          "p95": 67,
+          "p99": 67,
+          "max": 67
+        },
+        "adoptions": {
+          "count": 0
+        },
+        "pipelines": []
+      },
+      "perspective": {
+        "frames": {
+          "count": 360,
+          "p50": 4.200000000000728,
+          "p95": 4.299999999999272,
+          "p99": 4.299999999999272,
+          "max": 4.299999999999272
+        },
+        "frameCpu": {
+          "count": 361,
+          "p50": 2.599999999627471,
+          "p95": 2.900000000372529,
+          "p99": 3.1000000005587935,
+          "max": 3.400000000372529
+        },
+        "drawCalls": {
+          "count": 361,
+          "p50": 73,
+          "p95": 73,
+          "p99": 73,
+          "max": 73
+        },
+        "adoptions": {
+          "count": 0
+        },
+        "pipelines": []
+      },
+      "overview": {
+        "frames": {
+          "count": 359,
+          "p50": 4.200000000000728,
+          "p95": 4.299999999999272,
+          "p99": 4.299999999999272,
+          "max": 4.30000000000291
+        },
+        "frameCpu": {
+          "count": 360,
+          "p50": 2.400000000372529,
+          "p95": 2.7000000001862645,
+          "p99": 2.900000000372529,
+          "max": 3.2999999998137355
+        },
+        "drawCalls": {
+          "count": 360,
+          "p50": 58,
+          "p95": 58,
+          "p99": 58,
+          "max": 58
+        },
+        "adoptions": {
+          "count": 0
+        },
+        "pipelines": []
+      },
+      "toggles": {
+        "frames": {
+          "count": 488,
+          "p50": 4.200000000000728,
+          "p95": 4.299999999999272,
+          "p99": 8.299999999999272,
+          "max": 29.200000000000728
+        },
+        "frameCpu": {
+          "count": 489,
+          "p50": 2.5,
+          "p95": 3.099999999627471,
+          "p99": 3.400000000372529,
+          "max": 4.2999999998137355
+        },
+        "drawCalls": {
+          "count": 489,
+          "p50": 58,
+          "p95": 58,
+          "p99": 58,
+          "max": 58
+        },
+        "adoptions": {
+          "count": 8,
+          "p50": 7.2999999998137355,
+          "p95": 27.200000000186265,
+          "p99": 27.200000000186265,
+          "max": 27.200000000186265
+        },
+        "pipelines": []
+      },
+      "textureUploads": 8
+    },
+    {
+      "enabled": true,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "description": ""
+      },
+      "errors": [],
+      "outcome": {
+        "blocks": 6000,
+        "peakWorkers": 100,
+        "tick": 728,
+        "fieldRevisions": 2
+      },
+      "active": {
+        "frames": {
+          "count": 2855,
+          "p50": 4.199999999998909,
+          "p95": 4.299999999999272,
+          "p99": 8.399999999999636,
+          "max": 16.700000000000273
+        },
+        "frameCpu": {
+          "count": 2856,
+          "p50": 2.5,
+          "p95": 3.5,
+          "p99": 4.2999999998137355,
+          "max": 6.7000000001862645
+        },
+        "drawCalls": {
+          "count": 2856,
+          "p50": 71,
+          "p95": 72,
+          "p99": 72,
+          "max": 73
+        },
+        "adoptions": {
+          "count": 51,
+          "p50": 1.199999999254942,
+          "p95": 2.5,
+          "p99": 3.5,
+          "max": 3.5
+        },
+        "pipelines": []
+      },
+      "iso": {
+        "frames": {
+          "count": 360,
+          "p50": 4.199999999998909,
+          "p95": 4.299999999999272,
+          "p99": 4.299999999999272,
+          "max": 4.300000000001091
+        },
+        "frameCpu": {
+          "count": 361,
+          "p50": 2.400000000372529,
+          "p95": 2.7000000001862645,
+          "p99": 2.7999999998137355,
+          "max": 3.199999999254942
+        },
+        "drawCalls": {
+          "count": 361,
+          "p50": 67,
+          "p95": 67,
+          "p99": 67,
+          "max": 67
+        },
+        "adoptions": {
+          "count": 0
+        },
+        "pipelines": []
+      },
+      "perspective": {
+        "frames": {
+          "count": 360,
+          "p50": 4.19999999999709,
+          "p95": 4.299999999999272,
+          "p99": 4.299999999999272,
+          "max": 4.299999999999272
+        },
+        "frameCpu": {
+          "count": 361,
+          "p50": 2.5,
+          "p95": 2.800000000745058,
+          "p99": 2.900000000372529,
+          "max": 3
+        },
+        "drawCalls": {
+          "count": 361,
+          "p50": 73,
+          "p95": 73,
+          "p99": 73,
+          "max": 73
+        },
+        "adoptions": {
+          "count": 0
+        },
+        "pipelines": []
+      },
+      "overview": {
+        "frames": {
+          "count": 359,
+          "p50": 4.200000000000728,
+          "p95": 4.299999999999272,
+          "p99": 4.299999999999272,
+          "max": 4.299999999999272
+        },
+        "frameCpu": {
+          "count": 360,
+          "p50": 2.2999999998137355,
+          "p95": 2.599999999627471,
+          "p99": 2.7000000001862645,
+          "max": 2.8999999994412065
+        },
+        "drawCalls": {
+          "count": 360,
+          "p50": 58,
+          "p95": 58,
+          "p99": 58,
+          "max": 58
+        },
+        "adoptions": {
+          "count": 0
+        },
+        "pipelines": []
+      },
+      "toggles": {
+        "frames": {
+          "count": 488,
+          "p50": 4.200000000000728,
+          "p95": 4.299999999999272,
+          "p99": 8.299999999999272,
+          "max": 20.900000000001455
+        },
+        "frameCpu": {
+          "count": 489,
+          "p50": 2.2999999998137355,
+          "p95": 2.6000000005587935,
+          "p99": 2.8999999994412065,
+          "max": 3.1000000005587935
+        },
+        "drawCalls": {
+          "count": 489,
+          "p50": 58,
+          "p95": 58,
+          "p99": 58,
+          "max": 58
+        },
+        "adoptions": {
+          "count": 8,
+          "p50": 7.5,
+          "p95": 21.59999999962747,
+          "p99": 21.59999999962747,
+          "max": 21.59999999962747
+        },
+        "pipelines": []
+      },
+      "textureUploads": 8
+    }
+  ]
+}

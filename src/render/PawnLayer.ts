@@ -135,6 +135,7 @@ export class PawnLayer {
   private cargoMesh: THREE.Mesh | null = null;
   private readonly targetPoses = new Map<number,THREE.Vector4>();
   private travelSurfaces:ReadonlyMap<number,number>=new Map();
+  constructor(private readonly configure?: (material: THREE.MeshStandardNodeMaterial) => void) {}
   private readonly travelKeys = new Map<number,string>();
   private createPawnMesh(count: number): void {
     clearGroup(this.group);
@@ -147,6 +148,7 @@ export class PawnLayer {
     geometry.setAttribute('aCargo', new THREE.InstancedBufferAttribute(new Float32Array(count * 2), 2));
     for (const name of ['aFrom', 'aTo', 'aMotion', 'aTint', 'aCargo', 'aTravel']) (geometry.getAttribute(name) as THREE.InstancedBufferAttribute).setUsage(THREE.DynamicDrawUsage);
     const mat = material(0xffffff);
+    this.configure?.(mat);
     mat.positionNode = Fn(() => {
       const bone = attribute('boneId', 'float');
       const pivot = attribute('bindPivot', 'vec3');
@@ -198,6 +200,7 @@ export class PawnLayer {
     const cargo = cargoGeometry();
     for (const name of ['aFrom', 'aTo', 'aCargo', 'aMotion', 'aTravel']) cargo.setAttribute(name, geometry.getAttribute(name));
     const cargoMat = material(0xffffff);
+    this.configure?.(cargoMat);
     cargoMat.colorNode = attribute('color', 'vec3');
     cargoMat.positionNode = Fn(() => {
       const pose = pawnPresentationPose(this);
