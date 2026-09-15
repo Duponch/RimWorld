@@ -61,3 +61,5 @@ Minage : [contrat V28](development/mining.md), [référence et divergences](rese
 Fluidité des premiers dépôts : [préparation des ombres](development/shadow-preparation.md).
 
 Acier et premiers minerais : [contrat V29](development/steel.md), [recherche et prérequis des ateliers](research/steel-reference.md).
+
+Choix bois/acier : [contrat V30](development/construction-materials.md), [vérification des recettes](research/construction-materials-reference.md).

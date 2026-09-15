@@ -29,7 +29,7 @@ L’[audit du 13 septembre](../research/environment-review.md) confirme que les 
 | Objet `survival-meal` | Repas de survie du départ, 0,9 nutrition/unité, piles de dix ; CAT-015. | Ne pourrit pas. Recette, ingrédients, recherche et détérioration absents. Le scénario local donne 18 repas ; ce n'est pas Crashlanded. |
 | Objet `legacy-portion` | Compatibilité des sauvegardes V1–V4 : 0,35 nutrition/unité, piles de 75. | Ce n'est aucun objet de RimWorld ; absent des nouvelles parties. |
 | Ressources `tree`, `berries`, `rock` | Arbre générique, buisson générique, pierre au sol. | Pas un catalogue d'espèces ou de roches. Arbre abattable ; buisson persistant, récoltable selon maturité et supprimable par coupe ; les pierres Resource restent décoratives, distinctes des produits de minage V28. |
-| Structures `wall`, `bed`, `table`, `stool` | Mur, lit, table 1×2, tabouret, construits en bois ; les trois meubles sont réinstallables en V25. | Aucun ensemble complet de mobilier, matériaux, qualité ou dégâts. |
+| Structures `wall`, `bed`, `table`, `stool` | Mur, lit, table 1×2, tabouret, construits en bois ou acier V30 ; les trois meubles sont réinstallables en V25. | Aucun ensemble complet de mobilier ; autres matériaux, qualité et dégâts absents. |
 | Terrains `grass`, `soil`, `water`, `rock` | Prairie, sol, eau et massif procéduraux. | Quatre classes locales ; ne correspondent pas à quatre définitions exhaustives du jeu original. |
 
 Le [registre d'objets](../../src/sim/items.ts) est utilisé par simulation, piles et interface. [Definitions](../../src/sim/definitions.ts) contient les constructions et commandes actuelles. Une entrée présente ne signifie pas que tous ses comportements sont livrés : par exemple, un repas disponible au départ ne signifie pas que sa recette existe.
@@ -92,6 +92,10 @@ Distribution régionale, persistance et apparence sont livrées. V28 ajoute les 
 | Identifiant | Livré | Limites |
 |---|---|---|
 | `Tile.ore='steel'` | Acier compacté, 1 500 PV, gisements connectés de 30–40 cases ; minage et sol encaissant conservé. | Profil de site local ; aucune injection sur anciennes cartes, compétences/rendements variables, dégâts externes et toits absents. |
-| Objet `steel` | 40 unités par gisement au profil neutre ; piles de 75, portage, rangement filtré, compteur et barres procédurales. | Recettes constructives et atelier de taille absents ; capacité générale de portage provisoire de dix unités. |
+| Objet `steel` | 40 unités par gisement au profil neutre ; piles de 75, portage, rangement filtré, compteur et barres procédurales ; matériau de construction V30. | Atelier de taille et recettes mixtes absents ; capacité générale de portage provisoire de dix unités. |
 
 [Sources et décisions](../research/steel-reference.md). Argent, or, plasteel, uranium, jade, composants compactés et leurs filières restent absents. Ni ces deux entrées, ni les cinq roches ne constituent un inventaire exhaustif.
+
+## Variantes constructives V30
+
+`wood` et `steel` sont admissibles pour mur, lit simple, table 1×2, tabouret et piquet ; feu fixe en bois. Cinq variantes en acier ajoutées, aucune nouvelle famille de bâtiment. Matériau et recette conservés dans le paquet et après repose ; couleur rétablie sur l’objet, bande de caisse distincte au sol ; moitié restituée avec arrondi pour les ouvrages ordinaires. Les anciennes recettes restent identifiées par absence de matériau. [Contrat et quantités](../development/construction-materials.md). Blocs taillés, atelier, ingrédients mixtes, autres matériaux, qualité, résistance et inflammabilité restent absents.

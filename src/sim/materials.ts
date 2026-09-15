@@ -107,9 +107,10 @@ export function sameDestination(a: HaulDestination, b: HaulDestination): boolean
     : a.type === 'stockpile' && b.type === 'stockpile' ? a.stockpileId === b.stockpileId
       : a.type === 'aside' && b.type === 'aside' && a.x === b.x && a.z === b.z);
 }
-export function reservedDestination(world: World, destination: HaulDestination, exceptPawn?: number): number {
+export function reservedDestination(world: World, destination: HaulDestination, exceptPawn?: number, item?:ItemId): number {
   let quantity = 0;
-  for(const task of haulReservations(world,exceptPawn))if(sameDestination(task.destination,destination))quantity+=task.quantity;
+  for(const task of haulReservations(world,exceptPawn))if(sameDestination(task.destination,destination)
+    &&(item===undefined||!task.whole&&world.piles.find(p=>p.id===(task.phase==='pickup'?task.sourcePileId:task.carryPileId))?.item===item))quantity+=task.quantity;
   return quantity;
 }
 export function groundQuantity(world: World, cell: Cell): number {

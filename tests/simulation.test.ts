@@ -31,7 +31,7 @@ function zone(world: World, x: number, z: number, capacity = 75, wood = true, fo
 function woodMass(world: World): number {
   return world.piles.reduce((sum, pile) => sum + (pile.kind === 'wood' ? pile.quantity : 0), 0)
     + world.resources.reduce((sum, item) => sum + (item.kind === 'tree' ? item.amount : 0), 0)
-    + world.structures.reduce((sum, item) => sum + (item.kind === 'bed' ? 8 : 5), 0);
+    + world.structures.reduce((sum, item) => sum + (item.kind === 'bed' ? (item.material===undefined?8:45) : 5), 0);
 }
 function foodMass(world: World): number {
   return world.piles.reduce((sum, pile) => sum + (pile.kind === 'food' ? pile.quantity : 0), 0)
@@ -68,7 +68,7 @@ describe('deterministic colony simulation', () => {
   test('replay and saves at pickup, carrying, delivery and construction resume exactly', () => {
     expect(hashWorld(createWorld(9))).toBe(hashWorld(createWorld(9))); expect(hashWorld(createWorld(9))).not.toBe(hashWorld(createWorld(10)));
     function scenario(): World {
-      const world = fixture(1); resource(world, 13, 13, 'tree'); resource(world, 10, 10, 'berries');
+      const world = fixture(1); addGroundMaterial(world,'wood',37,{x:1,z:5}); resource(world, 13, 13, 'tree'); resource(world, 10, 10, 'berries');
       world.pawns[0]!.priorities.haul = 1;
       order(world, 'chop', 13, 13); order(world, 'harvest', 10, 10); order(world, 'bed', 7, 8, 1); return world;
     }
@@ -135,8 +135,8 @@ describe('deterministic colony simulation', () => {
     }
     const construction = fixture(1); order(construction, 'bed', 10, 10);
     until(construction, () => construction.piles.some(pile => pile.owner.type === 'job'), 'actual delivery');
-    expect(construction.piles.filter(pile => pile.owner.type === 'job').reduce((sum, pile) => sum + pile.quantity, 0)).toBe(8);
-    expect(construction.stock.wood).toBe(4); command(construction, { type: 'cancel', x: 10, z: 11 });
+    expect(construction.piles.filter(pile => pile.owner.type === 'job').reduce((sum, pile) => sum + pile.quantity, 0)).toBe(10);
+    expect(construction.stock.wood).toBe(2); command(construction, { type: 'cancel', x: 10, z: 11 });
     audit(construction, 12); expect(construction.jobs).toHaveLength(0); expect(construction.stock.wood).toBe(12);
     expect(construction.piles.every(pile => pile.owner.type === 'ground')).toBe(true);
     // Cancellation releases local material; a replacement cannot silently consume a pile under its footprint.
@@ -146,10 +146,10 @@ describe('deterministic colony simulation', () => {
     until(partial, () => partial.jobs[0]!.escrow.wood === 3, 'partial delivery remains at the frame');
     checkedTicks(partial, 80); expect(partial.jobs[0]!.progress).toBe(0); expect(partial.stock.wood).toBe(0);
     const partialResumed = deserializeWorld(serializeWorld(partial)); const resumeTick = partial.tick;
-    for (const copy of [partial, partialResumed]) addGroundMaterial(copy, 'wood', 5, { x: 13, z: 3 });
+    for (const copy of [partial, partialResumed]) addGroundMaterial(copy, 'wood', 42, { x: 13, z: 3 });
     until(partial, () => partial.structures.length === 1, 'later source completes the same partially supplied frame');
     stepWorld(partialResumed, partial.tick - resumeTick); expect(hashWorld(partialResumed)).toBe(hashWorld(partial));
-    expect(partial.stock.wood).toBe(0); audit(partial, 8);
+    expect(partial.stock.wood).toBe(0); audit(partial, 45);
     const surplus = fixture(2); surplus.piles = []; refreshStock(surplus);
     addGroundMaterial(surplus, 'wood', 20, { x: 1, z: 5 }); zone(surplus, 1, 5, 20); zone(surplus, 12, 8, 20);
     command(surplus, { type: 'stockpile', x: 1, z: 5, enabled: true, capacity: 8 });
@@ -161,7 +161,7 @@ describe('deterministic colony simulation', () => {
     const prioritized = fixture(1); prioritized.pawns[0]!.priorities = {mine:2, gather: 1, build: 4, haul: 4, grow: 0 , cook: 0 };
     resource(prioritized, 10, 10, 'berries'); order(prioritized, 'harvest', 10, 10); order(prioritized, 'wall', 2, 3);
     stepWorld(prioritized); expect(prioritized.jobs.find(job => job.id === prioritized.pawns[0]!.jobId)!.kind).toBe('harvest');
-    const world = fixture(1); resource(world, 5, 5, 'berries'); resource(world, 10, 4, 'tree');
+    const world = fixture(1); addGroundMaterial(world,'wood',37,{x:1,z:5}); resource(world, 5, 5, 'berries'); resource(world, 10, 4, 'tree');
     for (const [x, z] of [[4, 5], [6, 5], [5, 4], [5, 6]]) world.tiles[z! * world.width + x!] = { terrain: 'water' };
     order(world, 'harvest', 5, 5); order(world, 'chop', 10, 4); order(world, 'bed', 12, 12, 1);
     const before = hashWorld(world);
@@ -324,7 +324,7 @@ describe('deterministic colony simulation', () => {
       if(world.structures.some(s=>s.x===next.x&&s.z===next.z))expect(world.pawns.some(pawn => pawn.x === next.x && pawn.z === next.z)).toBe(false);
     }
     expect(crossedPlan).toBe(true); expect(world.resources).toHaveLength(0); expect(world.structures).toHaveLength(1); expect(world.jobs).toHaveLength(0);
-    const bed = fixture(1); bed.pawns[0]!.x = 8; bed.pawns[0]!.z = 3;
+    const bed = fixture(1); addGroundMaterial(bed,'wood',37,{x:1,z:5}); bed.pawns[0]!.x = 8; bed.pawns[0]!.z = 3;
     resource(bed, 8, 13, 'tree'); order(bed, 'chop', 8, 13); stepWorld(bed); order(bed, 'bed', 7, 8, 1);
     expect(applyCommand(bed, { type: 'designate', kind: 'wall', x: 8, z: 8 }).ok).toBe(false);
     const mass = woodMass(bed);
@@ -335,7 +335,7 @@ describe('deterministic colony simulation', () => {
 
   test('schema-1 migration preserves stock, escrow, beds and identity; corrupt schema-2 saves are rejected', () => {
     const migrated = deserializeWorld(legacySave());
-    expect(migrated.schemaVersion).toBe(29); expect(migrated.pawns[0]!.id).toBe(4); expect(migrated.structures[0]!.id).toBe(10);
+    expect(migrated.schemaVersion).toBe(30); expect(migrated.pawns[0]!.id).toBe(4); expect(migrated.structures[0]!.id).toBe(10);
     expect(migrated.structures[0]).toMatchObject({ x: 7, z: 7, footprint: 'legacy-single' });
     expect(migrated.pawns[0]!.priorities).toMatchObject({ gather: 2, build: 2 }); audit(migrated, 20); expect(foodMass(migrated)).toBe(18);
     expect(hashWorld(deserializeWorld(legacySave()))).toBe(hashWorld(migrated));
@@ -376,7 +376,7 @@ describe('deterministic colony simulation', () => {
     expect(serializeWorld(world)).toBe(serialized);
     // Captured by running HEAD 489b98a's engine, including an active delivery and ground sleeper.
     const material = deserializeWorld(JSON.stringify(materialFixture));
-    expect(material.schemaVersion).toBe(29);
+    expect(material.schemaVersion).toBe(30);
     // V6 explicitly cancels obsolete hauling reservations and retains all units/IDs.
     expect(material.piles.map(({id,kind,quantity})=>({id,kind,quantity}))).toEqual(materialFixture.piles.map(({id,kind,quantity})=>({id,kind,quantity})));
     expect(material.jobs.map(({construction,...job})=>job)).toEqual(materialFixture.jobs);expect(material.jobs[0]!.construction).toBe('blueprint');

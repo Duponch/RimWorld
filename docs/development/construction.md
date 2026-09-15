@@ -62,7 +62,7 @@ V20 est d’abord validée selon ses interdictions de superposition de zones. Le
 
 Cinq scénarios approfondis couvrent transferts typés et fraîcheur, sauvegarde/annulation en cargaison, plante sur empreinte tournée, priorités, transporteur sans Construction, plans/cadres franchis, durée d'arête, coins protégés, repas réservé et migration stricte. L'oracle spatial indépendant comprend des cadres ; le pilote ordinaire doit terminer son camp et conserver ses bilans. L'UI courte exerce phases et reprise dans le vrai worker ; la partie longue suit trois jours par commandes réelles. Les [preuves courantes](validation.md) distinguent chaque passage et les audits.
 
-Pas de nouveaux objets : états enrichis du mobilier existant. V22 livre le [transit et l’arrêt du mobilier présent](furniture-travel.md). Déplacement des personnes gênantes, support du sol, compétences/qualité/échecs, minage, réparation et remplacement restent ouverts. V23 permet de maintenir un ordre de Construction sur sa cellule pour enchaîner les sous-travaux admissibles ; [règles de priorité et limites](player-orders.md). Ne pas annoncer Construction terminée.
+Pas de nouveaux objets : états enrichis du mobilier existant. V22 livre le [transit et l’arrêt du mobilier présent](furniture-travel.md). Déplacement des personnes gênantes, support du sol, compétences/qualité/échecs, réparation et remplacement restent ouverts ; minage livré en V28. V23 permet de maintenir un ordre de Construction sur sa cellule pour enchaîner les sous-travaux admissibles ; [règles de priorité et limites](player-orders.md). Ne pas annoncer Construction terminée.
 
 ## Commandes contextuelles V19
 
@@ -70,4 +70,4 @@ V19 corrige aussi la création des produits sur un plan de mur : le contrôle de
 
 ## Déconstruction V24
 
-Le [contrat de retrait](deconstruction.md) complète les six bâtiments actuels : ordre au contact, réservations, récupération au sol et annulation. La [réinstallation](furniture-transfer.md) V25–V26 et le [minage](mining.md) V28 ont leurs contrats distincts ; réparation et construction en pierre restent absentes. Les coûts historiques mur/lit ne deviennent pas calibrés du seul fait de restituer une fraction de leur coût local.
+Le [contrat de retrait](deconstruction.md) complète les six bâtiments actuels : ordre au contact, réservations, récupération au sol et annulation. La [réinstallation](furniture-transfer.md) V25–V26 et le [minage](mining.md) V28 ont leurs contrats distincts ; réparation et construction en pierre restent absentes. V30 calibre les nouveaux murs/lits et ajoute bois/acier : [matériaux et compatibilité historique](construction-materials.md). Les anciens ouvrages gardent leurs coûts et durées, y compris lors du remboursement.

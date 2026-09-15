@@ -14,6 +14,7 @@ import { mayImproveStorage } from './idle-logistics.ts';
 import { asideCapacity, findAsideDestination } from './haul-aside.ts';
 import { storageCapacity } from './ground-placement.ts';
 import { legacyItem, type ItemId } from './items.ts';
+import { constructionCapacity, constructionRecipe } from './construction-materials.ts';
 import { CARRY_CAPACITY, footprintCells, JOB_WOOD_COST } from './definitions.ts';
 import { deliveredStock, groundQuantity, reservedDestination, reservedSource } from './materials.ts';
 import { cellIndex, workNeighbours, inBounds, canStopAt, hasReachableCell, reachableCells, routeToJob, interactionGoals } from './pathfinding.ts';
@@ -52,7 +53,7 @@ export function destinationCapacity(world: World, destination: HaulDestination, 
   if (destination.type === 'aside') return asideCapacity(world, destination, item, exceptPawn);
   if (destination.type === 'job') {
     const job = world.jobs.find(item => item.id === destination.jobId);
-    return job && kind === 'wood' ? Math.max(0, JOB_WOOD_COST[job.kind] - deliveredStock(world, job.id).wood - reservedDestination(world, destination, exceptPawn)) : 0;
+    return job ? constructionCapacity(world,job,item,exceptPawn) : 0;
   }
   const zone = world.stockpiles.find(item => item.id === destination.stockpileId);
   return zone ? storageCapacity(world, zone, item, exceptPawn) : 0;
@@ -115,11 +116,11 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   }
   reachable ??= searchCandidates(world, pawn, blocked, occupied, budget); if (!reachable) return;
   pawn.planCooldown = PLAN_INTERVAL;
-  const delivered = new Map<number, number>(); const ground = new Map<number, number>();
-  const sourceReserved = new Map<number, number>(); const jobReserved = new Map<number, number>(); const zoneReserved = new Map<number, number>();
+  const delivered = new Map<string, number>(); const ground = new Map<number, number>();
+  const sourceReserved = new Map<number, number>(); const jobReserved = new Map<string, number>(); const zoneReserved = new Map<number, number>();
   const outbound = new Map<number, number>(); const pileById = new Map(world.piles.map(pile => [pile.id, pile]));
   for (const pile of world.piles) {
-    if (pile.owner.type === 'job' && pile.kind === 'wood') delivered.set(pile.owner.jobId, (delivered.get(pile.owner.jobId) ?? 0) + pile.quantity);
+    if (pile.owner.type === 'job') {const key=`${pile.owner.jobId}:${pile.item}`;delivered.set(key, (delivered.get(key) ?? 0) + pile.quantity);}
     if (pile.owner.type === 'ground') { const key = cellIndex(world, pile.owner.x, pile.owner.z); ground.set(key, (ground.get(key) ?? 0) + pile.quantity); }
   }
   for (const worker of world.pawns) if (worker.need?.kind === 'eat' && worker.need.phase === 'pickup') sourceReserved.set(worker.need.sourcePileId, (sourceReserved.get(worker.need.sourcePileId) ?? 0) + worker.need.quantity);
@@ -131,15 +132,16 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
       if (source?.owner.type === 'ground') { const key = cellIndex(world, source.owner.x, source.owner.z); outbound.set(key, (outbound.get(key) ?? 0) + task.quantity); }
     }
     if (task.destination.type === 'aside' || task.destination.type === 'fuel') continue;
-    const map = task.destination.type === 'job' ? jobReserved : zoneReserved;
-    const id = task.destination.type === 'job' ? task.destination.jobId : task.destination.stockpileId;
-    map.set(id, (map.get(id) ?? 0) + task.quantity);
+    if(task.destination.type==='job') {
+      const pile=pileById.get(task.phase==='pickup'?task.sourcePileId:task.carryPileId!);
+      if(pile){const key=`${task.destination.jobId}:${pile.item}`;jobReserved.set(key,(jobReserved.get(key)??0)+task.quantity);}
+    } else zoneReserved.set(task.destination.stockpileId,(zoneReserved.get(task.destination.stockpileId)??0)+task.quantity);
   }
   let best: Candidate | null = null;
   for (const job of world.jobs) {
     if(isConstruction(job))continue;
     const work = workType(job);
-    if (job.reservedBy !== null || pawn.priorities[work] === 0 || (delivered.get(job.id) ?? 0) < JOB_WOOD_COST[job.kind] || (pawn.hunger <= 20 && job.kind !== 'harvest')) continue;
+    if (job.reservedBy !== null || pawn.priorities[work] === 0 || (delivered.get(`${job.id}:wood`) ?? 0) < JOB_WOOD_COST[job.kind] || (pawn.hunger <= 20 && job.kind !== 'harvest')) continue;
     if(job.kind==='sow'&&packedAt(world,job))continue;
     if(job.furniture&&!furnitureReady(world,job,pawn))continue;
     if(job.kind==='deconstruct'&&!deconstructionAvailable(world,job,pawn.id))continue;
@@ -167,10 +169,11 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   if (Number.isFinite(constructionHaulPriority(pawn)) && pawn.hunger > 20 && (!best || best.priority >= constructionHaulPriority(pawn))) {
     const zonesByCell = new Map(world.stockpiles.map(zone => [cellIndex(world, zone.x, zone.z), zone]));
     const sources = world.piles.filter(pile => automaticallyHaulable(pile) && pile.owner.type === 'ground' && pile.quantity > (sourceReserved.get(pile.id) ?? 0));
-    const destinations: { destination: HaulDestination; target: Cell & { kind?: JobKind }; priority: number; workPriority:number; wood: number; food: number; chunk?:number; steel?:number; reachable: boolean }[] = [];
+    const destinations: { destination: HaulDestination; target: Cell & { kind?: JobKind }; priority: number; workPriority:number; wood: number; food: number; chunk?:number; steel?:number; items?:ReadonlyMap<ItemId,number>; reachable: boolean }[] = [];
     for (const job of world.jobs) {
-      const capacity = JOB_WOOD_COST[job.kind] - (delivered.get(job.id) ?? 0) - (jobReserved.get(job.id) ?? 0);
-      if (capacity > 0 && constructionSiteFree(world,job,pawn.id,constructionObstacles.get(job.id))) destinations.push({ destination: { type: 'job', jobId: job.id, forConstruction:asBuilder(pawn) }, target: job, priority: 5, workPriority:constructionHaulPriority(pawn), wood: capacity, food: 0, reachable: canReach(world, job, reachable, false) });
+      const items=new Map<ItemId,number>();
+      for(const cost of constructionRecipe(job).ingredients){const key=`${job.id}:${cost.item}`,capacity=cost.quantity-(delivered.get(key)??0)-(jobReserved.get(key)??0);if(capacity>0)items.set(cost.item,capacity);}
+      if (items.size && constructionSiteFree(world,job,pawn.id,constructionObstacles.get(job.id))) destinations.push({ destination: { type: 'job', jobId: job.id, forConstruction:asBuilder(pawn) }, target: job, priority: 5, workPriority:constructionHaulPriority(pawn), wood: 0, food: 0,items, reachable: canReach(world, job, reachable, false) });
     }
     if(pawn.priorities.haul>0)for (const fire of fires) destinations.push({destination:{type:'fuel',structureId:fire.id},target:fire,priority:5,workPriority:pawn.priorities.haul,wood:fuelCapacity(world,fire.id),food:0,reachable:canReach(world,fire,reachable,true)});
     if(pawn.priorities.haul>0)for (const zone of world.stockpiles) {
@@ -189,7 +192,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
       const pile = sources[Math.floor(index / destinations.length)]!;
       if (pile.owner.type !== 'ground') continue;
       const destination = destinations[index % destinations.length]!;
-      let capacity=destination[pile.kind]??0;
+      let capacity=destination.items?.get(pile.item)??destination[pile.kind]??0;
       if (sameCell(pile.owner, destination.target)) continue;
       const sourceZone = zonesByCell.get(cellIndex(world, pile.owner.x, pile.owner.z));
       const excess = sourceZone ? Math.max(0, (ground.get(cellIndex(world, pile.owner.x, pile.owner.z)) ?? 0) - sourceZone.capacity) : 0;

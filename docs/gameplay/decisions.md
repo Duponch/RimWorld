@@ -63,3 +63,7 @@ Le [contrat](../development/mining.md) adopte contact, dégâts persistants, pro
 ## Acier V29 et prérequis de la taille
 
 Gisements et produit de base sont adoptés, densité et sol encaissant adaptés au site local. Le portage garde sa calibration provisoire et le rendement son profil neutre. Les anciennes cartes ne reçoivent aucun minerai rétroactif. L’atelier demande de l’acier : extraction/stockage, puis recettes constructives mixtes, puis taille/blocs ; aucun matériau gratuit ne contourne la dépendance. [Recherche et degré de certitude](../research/steel-reference.md).
+
+## Matériaux de construction V30
+
+Les nouveaux ouvrages suivent les coûts bois/acier vérifiés, dont 45 unités pour un lit ; le temps est converti au pas local avec vitesse neutre. Les objets anciens restent au profil historique pour conserver leur matière. Le choix du matériau n’introduit pas encore qualité, résistance, inflammabilité ni recherche : [décisions et certitude](../research/construction-materials-reference.md). Les exigences multiples sont une frontière technique préparée ; aucun atelier mixte n’est déclaré jouable.

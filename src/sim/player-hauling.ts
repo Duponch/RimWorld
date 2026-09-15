@@ -4,10 +4,11 @@ import { validSowingClearance } from './sowing-clearance.ts';
 import { planServiceHaul, type ServiceHaulTarget } from './player-service-hauling.ts';
 import { candidateAccess } from './candidate-access.ts';
 import { asBuilder, constructionHaulPriority, constructionSiteFree, isConstruction } from './construction-rules.ts';
-import { CARRY_CAPACITY, JOB_WOOD_COST } from './definitions.ts';
+import { CARRY_CAPACITY } from './definitions.ts';
 import { storageCapacity } from './ground-placement.ts';
 import { withoutQueuedOrder } from './haul-reservations.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
+import { constructionCapacity, constructionRecipe, requiredMaterial } from './construction-materials.ts';
 import { deliveredStock, reservedDestination, reservedSource } from './materials.ts';
 import { blockedCells, routeToJob } from './pathfinding.ts';
 import { canReach, destinationCapacity, destinationCell } from './work-planner.ts';
@@ -32,10 +33,10 @@ export function planHaulOrder(world:World,pawn:Pawn,target:HaulOrderTarget,acces
   if(target.type==='pile'&&source?.owner.type!=='ground')return no('La pile n’est plus au sol.');
   if(target.type==='job'&&(!job||!isConstruction(job)))return no('Chantier introuvable.');
   if(job&&!constructionSiteFree(world,job,pawn.id))return no('Le chantier doit être dégagé avant la livraison.');
-  if(job&&JOB_WOOD_COST[job.kind]-deliveredStock(world,job.id).wood-reservedDestination(world,{type:'job',jobId:job.id})<=0)return no('Les matériaux sont déjà livrés ou réservés.');
+  if(job&&!constructionRecipe(job).ingredients.some(c=>constructionCapacity(world,job,c.item)>0))return no('Les matériaux sont déjà livrés ou réservés.');
   const reach=access??candidateAccess(world,pawn,blockedCells(world),new Set());
   if(job&&!canReach(world,job,reach,false))return no('Aucun accès praticable au chantier.');
-  const sources=source?[source]:world.piles.filter(p=>p.owner.type==='ground'&&p.item==='wood');
+  const sources=source?[source]:world.piles.filter(p=>p.owner.type==='ground'&&job&&requiredMaterial(job,p.item)>0);
   let best:{task:HaulTask;source:Cell;rank:number;distance:number;id:number}|undefined;
   for(const pile of sources) {
     if(budget.pairs--<=0){budget.pairs=0;return no('Décision reportée : budget de recherche atteint.');}
@@ -47,7 +48,7 @@ export function planHaulOrder(world:World,pawn:Pawn,target:HaulOrderTarget,acces
     const currentPriority=sourceZone?.filters[pile.kind]&&!excess?sourceZone.priority:0;
     if(!job&&sourceZone?.filters[pile.kind]&&excess)available=Math.min(available,Math.max(0,excess-reservedSource(world,pile.id)));
     const destinations=job?[{destination:{type:'job' as const,jobId:job.id,forConstruction:asBuilder(pawn)},cell:job,rank:0,
-      capacity:JOB_WOOD_COST[job.kind]-deliveredStock(world,job.id).wood-reservedDestination(world,{type:'job',jobId:job.id})}]
+      capacity:constructionCapacity(world,job,pile.item)}]
       :world.stockpiles.filter(z=>z.priority>currentPriority&&!same(z,pile.owner as Cell))
         .map(z=>({destination:{type:'stockpile' as const,stockpileId:z.id},cell:z,rank:-z.priority,capacity:storageCapacity(world,z,pile.item)}));
     for(const dest of destinations) {
@@ -58,7 +59,7 @@ export function planHaulOrder(world:World,pawn:Pawn,target:HaulOrderTarget,acces
         best={task:{sourcePileId:pile.id,quantity,phase:'pickup',destination:dest.destination,carryPileId:null},source:pile.owner,rank:dest.rank,distance:cost,id};
     }
   }
-  if(!best)return no(job?'Aucun bois disponible et accessible.':'Aucune réserve accessible de meilleure priorité avec une place compatible, ou pile déjà réservée.');
+  if(!best)return no(job?'Aucun matériau requis disponible et accessible.':'Aucune réserve accessible de meilleure priorité avec une place compatible, ou pile déjà réservée.');
   const path=routeToJob(world,best.source,reach,true);if(!path)return no('Aucun accès praticable à la pile.');
   const item=world.piles.find(p=>p.id===best.task.sourcePileId)!;
   return {task:best.task,path,label:`${label} (${best.task.quantity} ${ITEM_DEFINITIONS[item.item].label})`};

@@ -55,7 +55,7 @@ describe('seeded temperate valley generation', () => {
     for (const tile of raw.tiles) { delete tile.stone; delete tile.ore; }
     for (const resource of raw.resources) delete resource.stone;
     const migrated = deserializeWorld(JSON.stringify(raw));
-    expect(migrated).toEqual({...raw,pawns:raw.pawns.map((p:any)=>({...p,priorities:{...p.priorities,mine:2}})),schemaVersion:29 });
+    expect(migrated).toEqual({...raw,pawns:raw.pawns.map((p:any)=>({...p,priorities:{...p.priorities,mine:2}})),schemaVersion:30 });
     const control = deserializeWorld(JSON.stringify(raw)); stepWorld(migrated, 251); stepWorld(control, 251);
     expect(serializeWorld(migrated)).toBe(serializeWorld(control));
     for (const change of [(w: any) => w.tiles.find((t: any) => t.terrain === 'rock').stone = 'vacstone',
@@ -142,7 +142,7 @@ describe('seeded temperate valley generation', () => {
     expect(grassTrees / grassArea).toBeGreaterThan(soilTrees / soilArea * 1.25);
   });
 
-  test('tutorial resources actually support a first camp on small and larger generated maps, including save during work', () => {
+  test('tutorial resources support a wall and stool even on tiny generated fixtures, including save during work', () => {
     for (const size of [8, 24, 64, 250]) for (const seed of [0, 7, 42]) {
       const world = createWorld(seed, size, size); const cx = size / 2; const cz = size / 2;
       const context = `seed=${seed} map=${size}`;
@@ -151,8 +151,9 @@ describe('seeded temperate valley generation', () => {
         expect(applyCommand(world, { type: 'designate', kind: item.kind === 'tree' ? 'chop' : 'harvest', x: item.x, z: item.z }), context).toEqual({ ok: true });
       }
       expect(applyCommand(world, { type: 'designate', kind: 'wall', x: cx, z: cz + 2 }), context).toEqual({ ok: true });
-      // The old bed cell now contains the physical starting wood pile. Keep its 1x2 footprint clear.
-      expect(applyCommand(world, { type: 'designate', kind: 'bed', x: cx - 2, z: cz + 1 }), context).toEqual({ ok: true });
+      // The tiny 8² fixture supplies 36 wood: a wall (5) and stool (25) fit this budget.
+      // Three modern beds (45 each) are exercised by the natural 250² colony pilot.
+      expect(applyCommand(world, { type: 'designate', kind: 'stool', x: cx - 2, z: cz + 1 }), context).toEqual({ ok: true });
       expect(applyCommand(world, { type: 'stockpile', x: cx + 2, z: cz + 1, enabled: true, filters: { wood: true, food: false }, capacity: 75 }), context).toEqual({ ok: true });
       stepWorld(world, 17);
       const resumed = deserializeWorld(serializeWorld(world));
@@ -163,10 +164,10 @@ describe('seeded temperate valley generation', () => {
       expect(world.jobs, context).toHaveLength(0);
       expect(world.resources.filter(item => tutorialIds.includes(item.id)), context).toMatchObject([{kind:'berries',growth:.3}]);
       expect(world.structures, context).toHaveLength(2);
-      expect(world.stock, context).toEqual({ wood: 23, food: 28 });
+      expect(world.stock, context).toEqual({ wood: 6, food: 28 });
       const storedWood = world.piles.filter(pile => pile.kind === 'wood' && pile.owner.type === 'ground'
         && pile.owner.x === cx + 2 && pile.owner.z === cz + 1).reduce((sum, pile) => sum + pile.quantity, 0);
-      expect(storedWood, context).toBe(23);
+      expect(storedWood, context).toBe(6);
     }
     // A long route crosses the last partial 16-cell rendering chunk, but physics
     // knows only valid grid cells. Topology changes between calls must be seen immediately.

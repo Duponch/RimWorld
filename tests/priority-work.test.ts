@@ -4,7 +4,7 @@ import { advancePriorityWork } from '../src/sim/priority-work';
 import { PRIORITY_WORK_TICKS } from '../src/sim/priority-work-state';
 import { blockedCells } from '../src/sim/pathfinding';
 import { newCookingBill } from '../src/sim/cooking-bills';
-import { JOB_WOOD_COST } from '../src/sim/definitions';
+
 import type { Command, World } from '../src/sim/types';
 
 function camp():World {
@@ -23,7 +23,7 @@ function kitchen(w:World) {
 test('one clicked bed is cleared, supplied over several trips and built; no nearby expansion, stable family, queue ordering and exact replay',()=>{
   const w=camp(),p=w.pawns[0]!;w.resources.push({id:w.nextId++,kind:'tree',x:15,z:8,amount:12});
   for(const x of [14,20])command(w,{type:'designate',kind:'bed',x,z:8,orientation:1});
-  const [bed,neighbour]=w.jobs;addGroundMaterial(w,'wood',30,{x:8,z:8},'wood');
+  const [bed,neighbour]=w.jobs;addGroundMaterial(w,'wood',67,{x:8,z:8},'wood');
   command(w,{type:'order-job',pawnId:p.id,jobId:bed!.id,queue:false});
   expect(p.priorityWork).toEqual({cell:{x:14,z:8},work:'build',startedAt:2000});
   command(w,{type:'priority',pawnId:p.id,work:'build',value:0});
@@ -34,12 +34,12 @@ test('one clicked bed is cleared, supplied over several trips and built; no near
   }
   expect(w.structures.map(s=>[s.x,s.z])).toEqual([[bed!.x,bed!.z]]);expect(phases).toEqual(new Set(['cutting','between','haul-aside','haul-job','building']));
   expect(w.jobs[0]!.id).toBe(neighbour!.id);expect(w.jobs[0]!.escrow.wood).toBe(0);
-  expect(w.stock.wood+JOB_WOOD_COST.bed).toBe(42);tick(w);expect(p.priorityWork).toBeUndefined();
+  expect(w.stock.wood+45).toBe(79);tick(w);expect(p.priorityWork).toBeUndefined();
   // Assignment family is retained: a hauler supplies but never gains building.
-  const h=camp(),a=h.pawns[0]!;a.priorities.build=0;a.priorities.haul=1;addGroundMaterial(h,'wood',20,{x:8,z:8},'wood');
+  const h=camp(),a=h.pawns[0]!;a.priorities.build=0;a.priorities.haul=1;addGroundMaterial(h,'wood',57,{x:8,z:8},'wood');
   command(h,{type:'designate',kind:'bed',x:14,z:8});command(h,{type:'order-haul',pawnId:a.id,target:{type:'job',jobId:h.jobs[0]!.id},queue:false});
   command(h,{type:'priority',pawnId:a.id,work:'haul',value:0});until(h,()=>a.priorityWork===undefined);
-  expect(h.structures).toEqual([]);expect(h.jobs[0]!.escrow.wood).toBe(JOB_WOOD_COST.bed);expect(h.stock.wood).toBe(20-JOB_WOOD_COST.bed);
+  expect(h.structures).toEqual([]);expect(h.jobs[0]!.escrow.wood).toBe(45);expect(h.stock.wood).toBe(12);
 });
 
 test('prioritized cooking refuels then follows bill count, survives disabled assignment, and returns to physical eating; cancellation and collapse release cargo',()=>{
@@ -76,5 +76,5 @@ test('priority decisions share budgets, disappear on lost access or timeout with
     const invalid=structuredClone(raw);invalid.pawns[0].priorityWork=priority;expect(()=>deserializeWorld(JSON.stringify(invalid))).toThrow(/priority work/);
   }
   raw.schemaVersion=22;for(const a of raw.pawns)delete a.priorities.mine;delete raw.deconstructed;delete raw.packed;expect(()=>deserializeWorld(JSON.stringify(raw))).toThrow(/version 22/);delete raw.pawns[0].priorityWork;
-  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated).toEqual({...raw,pawns:raw.pawns.map((p:any)=>({...p,priorities:{...p.priorities,mine:2}})),schemaVersion:29,packed:[],deconstructed:{count:0,lostWood:0,fuelTicks:0}});expect(migrated.pawns[0]!.priorityWork).toBeUndefined();
+  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated).toEqual({...raw,pawns:raw.pawns.map((p:any)=>({...p,priorities:{...p.priorities,mine:2}})),schemaVersion:30,packed:[],deconstructed:{count:0,lostWood:0,fuelTicks:0}});expect(migrated.pawns[0]!.priorityWork).toBeUndefined();
 });

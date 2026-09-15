@@ -10,7 +10,7 @@ export function validateMining(world:World,version:number):string[] {
     if(version<28?value!==undefined:!Number.isInteger(value)||value<0||value>4)errors.push('Invalid mining priority.');
   }
   for(const p of world.piles) {
-    if(p.kind==='steel'&&(version<29||p.owner.type==='job'))errors.push('Invalid steel owner or version.');
+    if(p.kind==='steel'&&(version<29||version<30&&p.owner.type==='job'))errors.push('Invalid steel owner or version.');
     if(p.kind==='chunk'&&(version<28||p.quantity!==1||p.owner.type==='job'))errors.push('Invalid chunk owner or quantity.');
     if(p.haulRequested!==undefined&&(version<28||p.kind!=='chunk'||p.haulRequested!==true))errors.push('Invalid chunk haul designation.');
   }

@@ -16,14 +16,14 @@ export const toolDefinitions: { id: Tool; icon: string; title: string; hint: str
   { id: 'harvest', icon: '⁙', title: 'Récolter', hint: 'Cliquer ou tracer un rectangle sur les plantes récoltables.', key: 'R', category: 'orders' },
   { id: 'cut', icon: '✂', title: 'Couper les plantes', hint: 'Libérer la case du buisson ; récupérer ses baies si elles sont récoltables.', key: '', category: 'orders' },
   { id:'uninstall',icon:'▣',title:'Désinstaller',hint:'Emballer un meuble pour le conserver et le déplacer.',key:'',category:'orders' },
-  { id: 'deconstruct', icon: '⚒', title: 'Déconstruire', hint: 'Retirer un bâtiment par un travail de Construction. Environ la moitié du bois récupérée ; aucun remboursement pour le feu de camp.', key: '', category: 'orders' },
+  { id: 'deconstruct', icon: '⚒', title: 'Déconstruire', hint: 'Retirer un bâtiment par un travail de Construction. Environ la moitié des matériaux récupérée ; aucun remboursement pour le feu de camp.', key: '', category: 'orders' },
   { id: 'cancel', icon: '×', title: 'Annuler', hint: 'Cliquer ou tracer un rectangle pour retirer les ordres. Les matériaux restent sur place.', key: 'X', category: 'orders' },
-  { id: 'wall', icon: '▥', title: 'Mur', hint: '5 bois · une case libre · mur de 2,80 m', key: 'B', category: 'structure' },
-  { id: 'bed', icon: '▰', title: 'Lit', hint: '8 bois livrés · empreinte 1 × 2 · Q / E pour tourner', key: 'L', category: 'furniture' },
-  { id: 'table', icon: '▤', title: 'Table', hint: '28 bois livrés · 1 × 2 · placer des tabourets contre le bord · Q / E pour tourner', key: '', category: 'furniture' },
-  { id: 'horseshoes', icon: '∩', title: 'Fers à cheval', hint: '10 bois livrés · 3 joueurs maximum · places de lancer à 5 cases avec vue dégagée', key: '', category: 'recreation' },
-  { id: 'campfire', icon: '♨', title: 'Feu de camp', hint: '20 bois livrés · combustible initial inclus · brûle 10 bois par jour', key: '', category: 'temperature' },
-  { id: 'stool', icon: '⊓', title: 'Tabouret', hint: '25 bois livrés · 1 × 1 · une place par colon, adjacente à une table', key: '', category: 'furniture' },
+  { id: 'wall', icon: '▥', title: 'Mur', hint: 'une case libre · mur de 2,80 m', key: 'B', category: 'structure' },
+  { id: 'bed', icon: '▰', title: 'Lit', hint: 'empreinte 1 × 2 · Q / E pour tourner', key: 'L', category: 'furniture' },
+  { id: 'table', icon: '▤', title: 'Table', hint: '1 × 2 · placer des tabourets contre le bord · Q / E pour tourner', key: '', category: 'furniture' },
+  { id: 'horseshoes', icon: '∩', title: 'Fers à cheval', hint: '3 joueurs maximum · places de lancer à 5 cases avec vue dégagée', key: '', category: 'recreation' },
+  { id: 'campfire', icon: '♨', title: 'Feu de camp', hint: 'combustible initial inclus · brûle 10 bois par jour', key: '', category: 'temperature' },
+  { id: 'stool', icon: '⊓', title: 'Tabouret', hint: '1 × 1 · une place par colon, adjacente à une table', key: '', category: 'furniture' },
   { id: 'growing', icon: '♧', title: 'Zone de culture', hint: 'Tracer un champ de riz. Semis sans graines et récolte à maturité, via le travail Culture.', key: '', category: 'zones' },
   { id: 'remove-growing', icon: '⊠', title: 'Retirer une culture', hint: 'Retirer la zone conserve les plantes déjà semées.', key: '', category: 'zones' },
   { id: 'stockpile', icon: '▧', title: 'Réserve', hint: 'Tracer un rectangle de stockage. Les cases occupées et les réserves existantes sont ignorées.', key: 'S', category: 'zones' },
@@ -73,6 +73,7 @@ export function gameLayout(): string {
       </nav><div class="architect-content">
         <div class="tools">${toolDefinitions.map(tool => `<button data-tool="${tool.id}" data-tool-category="${tool.category}" title="${tool.hint}" aria-label="${tool.title}" aria-pressed="false" class="tool"><span class="tool-icon">${tool.icon}</span><span>${tool.title}</span><kbd>${tool.key}</kbd></button>`).join('')}</div>
         <p id="tool-instruction">Choisissez un ordre, puis cliquez sur la carte.</p>
+        <label id="construction-material-controls" hidden>Matériau <select id="construction-material"><option value="wood">Bois</option><option value="steel">Acier</option></select></label>
         <div id="placement-controls" hidden><button id="rotate-building" aria-label="Tourner la construction">Tourner · E</button><span id="placement-orientation">0°</span></div>
         <div id="storage-options" hidden>${storageSettings('stockpile')}<p class="muted">Réglages appliqués à chaque case désignée. Une réserve de priorité plus élevée attire les objets.</p></div>
         <p class="muted" id="job-count">Aucun ordre en cours</p>

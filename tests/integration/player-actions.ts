@@ -83,6 +83,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     await revealCells(page,[c]);await cell(page,c.x,c.z);
   } else if(c.type==='designate' && c.kind !== 'sow' && c.kind !== 'install') {
     await tool(page,c.kind);
+    if(['wall','bed','table','stool','horseshoes'].includes(c.kind))await page.locator('#construction-material').selectOption(c.material??'wood');
     if(c.kind==='bed'||c.kind==='table'||c.kind==='campfire') {
       while(rotation.value!==(c.orientation??0)){await page.keyboard.press('e');rotation.value=(rotation.value+1)%4;}
     }
@@ -117,6 +118,6 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
       return w.growingZones.length>0;
     }
     if(c.type==='stockpile')return w.stockpiles.some(s=>s.x===c.x&&s.z===c.z);
-    return c.type==='designate' && w.jobs.some(j=>j.x===c.x&&j.z===c.z&&j.kind===c.kind);
+    return c.type==='designate' && w.jobs.some(j=>j.x===c.x&&j.z===c.z&&j.kind===c.kind&&(!c.material||j.material===c.material));
   },c,{polling:100,timeout:5000});
 }

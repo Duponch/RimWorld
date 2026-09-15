@@ -1,4 +1,5 @@
 import { furnitureDuration } from './furniture-rules.ts';
+import { constructionRecipe } from './construction-materials.ts';
 import { deconstructionDuration } from './deconstruction-rules.ts';
 import { footprintCells, JOB_DURATION } from './definitions.ts';
 import { isPlant, plantGrowth, PLANT_DEFINITIONS } from './plants.ts';
@@ -36,6 +37,7 @@ export const growingZoneAt = (world: World, cell: number): GrowingZone | undefin
 export function jobDuration(world: World, job: Job): number {
   if(job.furniture)return furnitureDuration(world,job);
   if(job.kind==='deconstruct')return deconstructionDuration(job);
+  if(job.material!==undefined)return constructionRecipe(job).work;
   return (job.kind === 'harvest' || job.kind === 'cut') && resourceCells(world).get(index(world, job))?.kind === 'rice' ? 20 : JOB_DURATION[job.kind];
 }
 interface Context { resources: Map<number, Resource>; fixed: Set<number> }

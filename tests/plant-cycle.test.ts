@@ -67,7 +67,7 @@ test('growers clear mixed stacks without storage: reservations, physical trips, 
   addGroundMaterial(sealed,'wood',10,{x:3,z:2});applyCommand(sealed,{type:'area',action:'growing',from:{x:0,z:0},to:{x:7,z:7}});
   stepWorld(sealed,100);expect(sealed.pawns[0]!.haul).toBeNull();expect(sealed.piles[0]!.owner).toEqual({type:'ground',x:3,z:2});expect(validateWorld(sealed)).toEqual([]);
   const old=JSON.parse(serializeWorld(world));old.schemaVersion=8;for(const a of old.pawns)delete a.priorities.mine;delete old.deconstructed;delete old.packed;withoutPostV10Fields(old);for(const p of old.pawns){delete p.cooking;delete p.priorities.cook;}
-  const migrated=deserializeWorld(JSON.stringify(old));expect(migrated.schemaVersion).toBe(29);
+  const migrated=deserializeWorld(JSON.stringify(old));expect(migrated.schemaVersion).toBe(30);
   old.schemaVersion=10;for(const a of old.pawns)delete a.priorities.mine;delete old.deconstructed;delete old.packed;for(const p of old.pawns){p.cooking=null;p.priorities.cook=2;}expect(migrated).toEqual(deserializeWorld(JSON.stringify(old)));
 });
 

@@ -50,7 +50,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 29 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 30 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)
@@ -111,4 +111,8 @@
 - `rough-stone` conserve le type, reste non fertile ; fragments `chunk` pile 1, rangement après désignation, pas de conversion en bois/aliment/bloc. Le maximum terrain/objet conserve le coût du sol entre répétiteurs. V27 strictement validée avant migration. Les roches historiques restent non typées (500 PV provisoires). Toits, minerais, taille et pierres décoratives transportables restent absents.
 
 ## Acier V29
-- Lire docs/development/steel.md et docs/research/steel-reference.md. Tile.ore est distinct de la roche encaissante ; 1 500 PV, dégâts naturels de 80, produit neutre 40 acier, piles 75. V28 est validée avant migration sans ajout de gisement ni de filtre. Acier automatiquement transportable, filtre absent = refus ; aucun usage constructif livré. Avant compétences/rendement variable ou dégâts externes, faire évoluer le suivi des contributions minières. Le coût continu de pile n’est pas supprimé par la non-répétition du mobilier.
+- Lire docs/development/steel.md et docs/research/steel-reference.md. Tile.ore est distinct de la roche encaissante ; 1 500 PV, dégâts naturels de 80, produit neutre 40 acier, piles 75. V28 est validée avant migration sans ajout de gisement ni de filtre. Acier automatiquement transportable, filtre absent = refus ; usages constructifs décrits dans le contrat V30. Avant compétences/rendement variable ou dégâts externes, faire évoluer le suivi des contributions minières. Le coût continu de pile n’est pas supprimé par la non-répétition du mobilier.
+
+## Matériaux constructifs V30
+- Lire docs/development/construction-materials.md et docs/research/construction-materials-reference.md. Job/Structure.material facultatif : absent = recette historique ; nouveaux ordres bois/acier, feu fixe bois. Les nouveaux lits coûtent 45. JOB_WOOD_COST/DURATION sont historiques, pas les recettes des ouvrages typés.
+- Exigences, piles et réservations par ItemId ; escrow reste une vue bois/nourriture. Conserver le matériau dans paquets, réinstallation et restitution ; lostSteel est un bilan, pas un stock. V29 validée avant migration sans réécrire les ouvrages. Les recettes mixtes et propriétés qualité/HP/feu restent absentes ; agréger les ingrédients identiques avant ajout d’un atelier.

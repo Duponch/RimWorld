@@ -6,7 +6,7 @@ Recherche, provenance et limites : [vérification Core](../research/steel-refere
 
 Le job de minage et ses réservations restent communs. PV 1 500, coup 80, cadence neutre dix ticks locaux, donc 190 ticks de travail effectif sans trajet. Dégâts conservés sur la case, préparation du coup sur le job. L’extraction prévalide un dépôt de **40 acier** avant suppression du gisement et engagement du tirage. Le sol brut conserve `stone`, perd `ore` et `miningDamage`. Aucun fragment de pierre n’est généré en plus. Les futurs rendements variables ou dégâts externes exigent une évolution du suivi des dégâts avant livraison.
 
-`ItemId='steel'`, catégorie `steel`, pile de 75, nutrition nulle. Les piles sont l’autorité ; le compteur de gauche somme l’acier physique hors chantier. L’ancien `World.stock` bois/nourriture demeure une vue historique et sera revu avec les recettes de construction typées. Aucune livraison d’acier aux chantiers actuels en bois ni consommation comme combustible. Transferts, réservations et sauvegardes conservent item et quantité. Les piles se divisent/fusionnent au cours du transport ordinaire, sans désignation supplémentaire.
+`ItemId='steel'`, catégorie `steel`, pile de 75, nutrition nulle. Les piles sont l’autorité ; le compteur de gauche somme l’acier physique hors chantier. L’ancien `World.stock` bois/nourriture demeure une vue historique ; les recettes V30 lisent directement les piles typées. Livraison autorisée aux chantiers qui demandent de l’acier, jamais en substitution du bois ni comme combustible. Transferts, réservations et sauvegardes conservent item et quantité. Les piles se divisent/fusionnent au cours du transport ordinaire, sans désignation supplémentaire.
 
 `StorageFilters.steel` absent signifie refus, notamment après migration. La nouvelle case de filtre apparaît dans Architecte et l’inspection d’une réserve ; les commandes revalident le booléen. Les formulaires ne changent pas silencieusement les anciennes réserves. Le pilote de colonie vise deux gisements après les quatre cases de pierre, puis 80 acier rangés ; il choisit des cases libres, et ne suppose pas que le décor a laissé vide une coordonnée fixe.
 
@@ -18,4 +18,8 @@ Le rendu teinte et facette les sommets déjà présents dans RockLayer : aucun n
 
 Validation : scénario profond minage enrichi (génération, dégâts/reprise, saturation, produit, 75+5 après fusion, type réservé, marche, migration), ressources GPU conservées et pilote multi-jours. Les exécutions réellement obtenues sont dans [validation](validation.md).
 
-**Restent absents** : construction en acier, recettes à plusieurs ingrédients constructifs, atelier de taille/blocs, autres minerais, recherche jouable, compétences/capacités et dégâts externes, masse réelle de portage, toits, lissage, strates et stocks initiaux Crashlanded.
+**Restent absents** : recettes à plusieurs ingrédients constructifs, atelier de taille/blocs, autres minerais, recherche jouable, compétences/capacités et dégâts externes, masse réelle de portage, toits, lissage, strates et stocks initiaux Crashlanded.
+
+## Usage constructif V30
+
+L’acier est désormais utilisable pour les cinq familles à matériau substituable présentes. Les [recettes et transferts](construction-materials.md) conservent son type, y compris dans les restitutions ; l’atelier de taille et les blocs restent à développer.

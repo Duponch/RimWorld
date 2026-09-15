@@ -218,12 +218,12 @@ export class ColonyRenderer {
     }
     if (previousWorld?.resources !== world.resources || newMap) this.updateResources(world, newMap);
     else if (Math.floor(previousWorld.tick / 25) !== Math.floor(world.tick / 25)) this.resources.updateGrowth(world);
-    const packageKey=(world.packed??[]).filter(p=>p.owner.type==='ground').map(p=>`${p.building.id}:${p.owner.type==='ground'?`${p.owner.x}:${p.owner.z}`:''}`).join('|');
-    const structureKey = packageKey + world.structures.map((s) => `${s.id}:${s.kind}:${s.x}:${s.z}:${s.orientation}:${s.footprint}:${s.fuel?s.fuel.ticks>0:''}`).join('|');
+    const packageKey=(world.packed??[]).filter(p=>p.owner.type==='ground').map(p=>`${p.building.id}:${p.building.material}:${p.owner.type==='ground'?`${p.owner.x}:${p.owner.z}`:''}`).join('|');
+    const structureKey = packageKey + world.structures.map((s) => `${s.id}:${s.kind}:${s.material}:${s.x}:${s.z}:${s.orientation}:${s.footprint}:${s.fuel?s.fuel.ticks>0:''}`).join('|');
     if (structureKey !== this.structureKey || newMap) { this.structureKey = structureKey; this.buildStructures(world); }
     // Quantize presentation of progression to avoid rebuilding static meshes for
     // every work tick. Saved simulation progress remains exact and authoritative.
-    const jobKey = world.jobs.map((j) => `${j.id}:${j.kind}:${j.x}:${j.z}:${j.orientation}:${j.footprint}:${j.status}:${j.construction}:${j.escrow.wood}:${j.kind === 'mine' || j.kind === 'chop' || j.kind === 'harvest' || j.kind === 'cut' || j.kind === 'sow' || j.kind === 'deconstruct' ? 0 : Math.floor(j.progress / jobDuration(world,j) * 20)}`).join('|');
+    const jobKey = world.jobs.map((j) => `${j.id}:${j.kind}:${j.material}:${j.x}:${j.z}:${j.orientation}:${j.footprint}:${j.status}:${j.construction}:${j.escrow.wood}:${j.kind === 'mine' || j.kind === 'chop' || j.kind === 'harvest' || j.kind === 'cut' || j.kind === 'sow' || j.kind === 'deconstruct' ? 0 : Math.floor(j.progress / jobDuration(world,j) * 20)}`).join('|');
     if (jobKey !== this.jobKey || newMap) { this.jobKey = jobKey; this.buildJobs(world); }
     const storageKey = world.stockpiles.map((s) => `${s.id}:${s.x}:${s.z}:${s.priority}:${s.filters.wood}:${s.filters.food}`).join('|');
     if (storageKey !== this.storageKey || newMap) { this.storageKey = storageKey; this.buildStorage(world); }

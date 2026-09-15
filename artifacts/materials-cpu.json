@@ -1,0 +1,138 @@
+{
+  "date": "2026-09-15T02:03:38.177Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "map": 250,
+  "protocol": "Synthetic clear map: 3/30/100 builders, one wood wall (5) and steel stool (25) per pawn, four real deliveries then building. 3 repetitions to completion, bounded at 2000 ticks. 100 separate warmup ticks. Snapshots every 5 ticks timed separately, validation outside timing. Not a GPU benchmark.",
+  "phases": [
+    {
+      "count": 3,
+      "ticks": {
+        "samples": 570,
+        "p50": 0.01809999999994716,
+        "p95": 0.9673999999999978,
+        "p99": 1.5320999999999572,
+        "max": 3.884900000000016
+      },
+      "snapshots": {
+        "samples": 114,
+        "p50": 0.33360000000004675,
+        "p95": 0.4461000000000013,
+        "p99": 1.44459999999998,
+        "max": 1.468900000000076
+      },
+      "outcomes": [
+        {
+          "tick": 2190,
+          "buildings": 6,
+          "materials": {
+            "wood": 15,
+            "steel": 75
+          }
+        },
+        {
+          "tick": 2190,
+          "buildings": 6,
+          "materials": {
+            "wood": 15,
+            "steel": 75
+          }
+        },
+        {
+          "tick": 2190,
+          "buildings": 6,
+          "materials": {
+            "wood": 15,
+            "steel": 75
+          }
+        }
+      ]
+    },
+    {
+      "count": 30,
+      "ticks": {
+        "samples": 945,
+        "p50": 0.9119000000000597,
+        "p95": 4.504500000000007,
+        "p99": 10.129100000000108,
+        "max": 16.244199999999978
+      },
+      "snapshots": {
+        "samples": 189,
+        "p50": 0.35819999999989705,
+        "p95": 0.4069999999999254,
+        "p99": 0.5579000000000178,
+        "max": 0.588799999999992
+      },
+      "outcomes": [
+        {
+          "tick": 2315,
+          "buildings": 60,
+          "materials": {
+            "wood": 150,
+            "steel": 750
+          }
+        },
+        {
+          "tick": 2315,
+          "buildings": 60,
+          "materials": {
+            "wood": 150,
+            "steel": 750
+          }
+        },
+        {
+          "tick": 2315,
+          "buildings": 60,
+          "materials": {
+            "wood": 150,
+            "steel": 750
+          }
+        }
+      ]
+    },
+    {
+      "count": 100,
+      "ticks": {
+        "samples": 2148,
+        "p50": 3.608200000000579,
+        "p95": 9.84690000000046,
+        "p99": 13.828400000000329,
+        "max": 21.770800000000236
+      },
+      "snapshots": {
+        "samples": 432,
+        "p50": 0.35540000000037253,
+        "p95": 0.3871999999992113,
+        "p99": 0.4672999999984313,
+        "max": 0.6729999999997744
+      },
+      "outcomes": [
+        {
+          "tick": 2716,
+          "buildings": 200,
+          "materials": {
+            "wood": 500,
+            "steel": 2500
+          }
+        },
+        {
+          "tick": 2716,
+          "buildings": 200,
+          "materials": {
+            "wood": 500,
+            "steel": 2500
+          }
+        },
+        {
+          "tick": 2716,
+          "buildings": 200,
+          "materials": {
+            "wood": 500,
+            "steel": 2500
+          }
+        }
+      ]
+    }
+  ]
+}

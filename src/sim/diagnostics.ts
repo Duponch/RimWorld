@@ -1,7 +1,8 @@
 import { deconstructionAvailable } from './deconstruction-rules.ts';
 import { constructionObstruction, constructionSiteFree, isConstruction } from './construction-rules.ts';
-import { JOB_WOOD_COST } from './definitions.ts';
-import { deliveredStock, reservedDestination } from './materials.ts';
+import { constructionRecipe, deliveredMaterial } from './construction-materials.ts';
+import { ITEM_DEFINITIONS } from './items.ts';
+import { reservedDestination } from './materials.ts';
 import { workType } from './work-planner.ts';
 import { COOK_TICKS, INGREDIENT_UNITS } from './cooking-bills.ts';
 import { REFUEL_WORK_TICKS } from './fuel.ts';
@@ -10,7 +11,8 @@ import type { Job, JobDiagnostic, Pawn, World } from './types.ts';
 
 // Pure presentation queries. No navigation flood or world mutation.
 export function queryJobStatus(world: World, job: Job): JobDiagnostic {
-  const delivered = deliveredStock(world, job.id).wood; const required = JOB_WOOD_COST[job.kind];
+  const costs = constructionRecipe(job).ingredients;
+  const required = costs.reduce((n,c) => n+c.quantity,0), delivered = costs.reduce((n,c) => n+deliveredMaterial(world,job,c.item),0);
   const queued=job.reservedBy===null?undefined:world.pawns.find(p=>p.id===job.reservedBy&&p.orders.queue.includes(job.id));
   if(queued)return {code:'working',reason:`Réservé dans la file de ${queued.name}.`,delivered,required};
   if(job.kind==='deconstruct'&&!deconstructionAvailable(world,job,job.reservedBy??undefined))return {code:'blocked',reason:'Attend la fin de l’utilisation du bâtiment.',delivered,required};
@@ -22,7 +24,7 @@ export function queryJobStatus(world: World, job: Job): JobDiagnostic {
   if (job.reservedBy !== null) return { code: 'working', reason: 'Travail attribué à un colon.', delivered, required };
   if (required > delivered) {
     const shipping = reservedDestination(world, { type: 'job', jobId: job.id });
-    return { code: shipping ? 'delivering' : 'missing-materials', reason: shipping ? `Livraison en cours : ${delivered}/${required} bois reçus.` : `Attend ${required - delivered} bois livrés ; vérifier Construction/Transport et l’accès.`, delivered, required };
+    return { code: shipping ? 'delivering' : 'missing-materials', reason: shipping ? `Livraison en cours : ${costs.map(c=>`${deliveredMaterial(world,job,c.item)}/${c.quantity} ${ITEM_DEFINITIONS[c.item].label}`).join(" + ")}.` : `Attend ${costs.filter(c=>deliveredMaterial(world,job,c.item)<c.quantity).map(c=>`${c.quantity-deliveredMaterial(world,job,c.item)} ${ITEM_DEFINITIONS[c.item].label}`).join(" + ")} ; vérifier Construction/Transport et l’accès.`, delivered, required };
   }
   const enabled = world.pawns.some(pawn => job.kind==='install'?pawn.priorities.build>0||pawn.priorities.haul>0:pawn.priorities[workType(job)]>0);
   return { code: enabled ? 'ready' : 'waiting-worker', reason: enabled ? 'Prêt ; attend un colon disponible et un accès.' : 'Travail désactivé pour tous les colons.', delivered, required };

@@ -1,4 +1,6 @@
 import { validateMining } from './mining-save.ts';
+import { validateConstructionMaterials } from './construction-material-save.ts';
+import { constructionCapacity, constructionSupplied, requiredMaterial } from './construction-materials.ts';
 import { validStoneIdentity } from './geology.ts';
 import { validateFurnitureHaul } from './furniture-haul-save.ts';
 import { validateFurniture } from './furniture-transfer-save.ts';
@@ -47,7 +49,7 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validateWorld(input: unknown): string[] {
   return validateSchema(input, SCHEMA_VERSION);
 }
-function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29): string[] {
+function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(input)) return ['World must be an object.'];
@@ -169,6 +171,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
   if(!errors.length)errors.push(...validatePriorityWork(input as unknown as World,version));
   if(!errors.length)errors.push(...validatePlayerOrders(input as unknown as World,version,true));
   if(!errors.length)errors.push(...validateCooking(input,version,ids));
+  if(!errors.length)errors.push(...validateConstructionMaterials(input as unknown as World,version));
   if(!errors.length)errors.push(...validatePreservation(input as unknown as World,version));
   if(!errors.length)errors.push(...validateSchedules(input as unknown as World,version));
   if(!errors.length)errors.push(...validateFoodPolicies(input as unknown as World,version));
@@ -278,7 +281,10 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
         if(pile?.item!=='wood'||fuelCapacity(world,haul.destination.structureId,pawn.id,haul.destination.forced)<haul.quantity)errors.push('Invalid fuel delivery reservation.');
       } else if (haul.destination.type === 'job') {
         const job = jobById.get(haul.destination.jobId);
-        if (!job || pile?.kind !== 'wood' || deliveredStock(world, job.id).wood + reservedDestination(world, haul.destination) > JOB_WOOD_COST[job.kind]) errors.push('Invalid construction delivery reservation.');
+        const capacity = job && pile ? version < 5
+          ? JOB_WOOD_COST[job.kind] - deliveredStock(world,job.id).wood - reservedDestination(world,haul.destination,pawn.id)
+          : constructionCapacity(world,job,pile.item,pawn.id) : 0;
+        if (!job || !pile || version < 5 && pile.kind !== 'wood' || capacity < haul.quantity) errors.push('Invalid construction delivery reservation.');
       } else if (haul.destination.type === 'aside') {
         if (!validSowingClearance(world,haul.destination)||!pile || asideCapacity(world, haul.destination, pile.item, pawn.id) < haul.quantity
           || (pile.owner.type === 'ground' && cellKey(pile.owner) === cellKey(haul.destination))) errors.push('Invalid clearing destination reservation.');
@@ -294,10 +300,10 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
     if ((job.status === 'active') !== (job.reservedBy !== null)) errors.push('Job reservation/status mismatch.');
     if (job.reservedBy !== null && pawnById.get(job.reservedBy)?.jobId !== job.id && !(version>=17&&pawnById.get(job.reservedBy)?.orders.queue.includes(job.id))) errors.push('Job references missing or mismatched pawn.');
     const delivered = deliveredStock(world, job.id);
-    if (job.escrow.wood !== delivered.wood || job.escrow.food !== delivered.food || delivered.food !== 0 || delivered.wood > JOB_WOOD_COST[job.kind]) errors.push('Invalid delivered material view.');
+    if (job.escrow.wood !== delivered.wood || job.escrow.food !== delivered.food || delivered.food !== 0 || delivered.wood > requiredMaterial(job,'wood')) errors.push('Invalid delivered material view.');
     // Version 1 could refund escrow on interruption while retaining progress. Such plans
     // keep that progress, but may only acquire a builder after physical delivery again.
-    if (job.reservedBy !== null && !job.clearance && delivered.wood !== JOB_WOOD_COST[job.kind]) errors.push('Construction work started before delivery.');
+    if (job.reservedBy !== null && !job.clearance && (version<5 ? delivered.wood<JOB_WOOD_COST[job.kind] : !constructionSupplied(world,job))) errors.push('Construction work started before delivery.');
     const resource = resourceCells.get(cellKey(job));
     if (job.kind === 'chop' || job.kind === 'harvest' || job.kind === 'cut') { if (!resource || !(job.kind === 'chop' ? resource.kind === 'tree' : isPlant(resource))) errors.push('Gather job has no matching resource.'); else if (version >= 7 && job.kind === 'harvest' && !(version === 7 ? legacyPlantGrowth(world,resource) > .65 : harvestable(world,resource))) errors.push('Harvest job targets an immature plant.'); }
     else if(job.kind!=='mine'&&job.kind!=='deconstruct'&&job.kind!=='uninstall'&&job.kind!=='install')for (const cell of footprintCells(job)) {
@@ -428,6 +434,7 @@ export function deserializeWorld(serialized: string): World {
   if(record(input)&&input.schemaVersion===26){const errors=validateSchema(input,26);if(errors.length)throw new Error(`Invalid version 26 save: ${errors.join(' ')}`);input.schemaVersion=27;}
   if(record(input)&&input.schemaVersion===27){const errors=validateSchema(input,27);if(errors.length)throw new Error(`Invalid version 27 save: ${errors.join(' ')}`);input.schemaVersion=28;for(const p of (input as unknown as World).pawns)p.priorities.mine=2;}
   if(record(input)&&input.schemaVersion===28){const errors=validateSchema(input,28);if(errors.length)throw new Error(`Invalid version 28 save: ${errors.join(' ')}`);input.schemaVersion=29;}
+  if(record(input)&&input.schemaVersion===29){const errors=validateSchema(input,29);if(errors.length)throw new Error(`Invalid version 29 save: ${errors.join(' ')}`);input.schemaVersion=30;}
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`); return input as World;
 }
 /** Deterministic diagnostic fingerprint, not a cryptographic digest. */

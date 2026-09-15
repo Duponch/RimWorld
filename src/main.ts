@@ -1,3 +1,5 @@
+import { constructionControls, constructionDeliveryLabel } from './ui/construction-controls';
+import { constructionRecipe } from './sim/construction-materials';
 import { rockInspection } from './ui/geology-inspection';
 import { furnitureControls, updateFurnitureControls } from './ui/furniture-controls';
 import { furnitureObject, furnitureIntentAt, packedAt } from './sim/furniture-rules';
@@ -21,7 +23,7 @@ import { ColonyRenderer } from './render/ColonyRenderer';
 import type { JobKind, Pawn, World, WorkType, Orientation, AreaAction, Cell, Command } from './sim/types';
 import { TICKS_PER_DAY } from './sim/types';
 import { DEFAULT_MAP_SIZE, MAP_SIZE_PRESETS } from './sim/map-config';
-import { footprintCells, deliveredStock, queryJobStatus, queryPawnStatus, MAX_STACK, JOB_WOOD_COST } from './sim/index';
+import { footprintCells, queryJobStatus, queryPawnStatus, MAX_STACK } from './sim/index';
 import { gameLayout, storageSettings, toolDefinitions } from './ui/layout';
 import type { ArchitectCategory, Panel, Tool } from './ui/layout';
 
@@ -68,6 +70,7 @@ const foodPolicyUI = createFoodPolicyControls(el('assign-panel'), async command 
   try { await client.command(command); renderState(); return null; }
   catch(error) {return error instanceof Error ? error.message : String(error);}
 });
+const constructionUI = constructionControls(() => applyTool(currentTool));
 function setCategory(category: ArchitectCategory) {
   currentCategory = category;
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-category]')) button.classList.toggle('active', button.dataset.category === category);
@@ -97,7 +100,7 @@ function applyTool(tool: Tool) {
     button.classList.toggle('active', active);
     button.setAttribute('aria-pressed', String(active));
   }
-  el('tool-instruction').textContent = toolDefinitions.find(item => item.id === tool)?.hint??'Choisissez le nouvel emplacement du meuble. Q/E : rotation. Échap : annuler.';
+  el('tool-instruction').textContent = constructionUI.update(tool, toolDefinitions.find(item => item.id === tool)?.hint??'Choisissez le nouvel emplacement du meuble. Q/E : rotation. Échap : annuler.');
   el('placement-controls').hidden = tool !== 'install' && tool !== 'bed' && tool !== 'table' && tool !== 'campfire';
   el('storage-options').hidden = tool !== 'stockpile';
 }
@@ -128,7 +131,7 @@ function pickCell(x: number, z: number) {
       if (tool === 'haul-chunks' || tool === 'growing' || tool === 'remove-growing') return client.command({type:'area',action:tool,from:{x,z},to:{x,z}});
       if (tool === 'stockpile') return client.command({ type: 'stockpile', x, z, enabled: true, ...readStorageSettings('stockpile') });
       if (tool === 'remove-stockpile') return client.command({ type: 'stockpile', x, z, enabled: false });
-      return client.command(tool === 'cancel' ? { type: 'cancel', x, z } : { type: 'designate', kind: tool, orientation: placementOrientation, x, z });
+      return client.command(tool === 'cancel' ? { type: 'cancel', x, z } : { type: 'designate', kind: tool, orientation: placementOrientation, x, z, ...(constructionUI.material(tool) ? {material:constructionUI.material(tool)} : {}) });
     });
     return;
   }
@@ -309,12 +312,14 @@ function renderState() {
       const piles = world.piles.filter(item => item.owner.type === 'ground' && item.owner.x === x && item.owner.z === z);
       updateFurnitureControls(el('inspector'),world,selectedCell);
       const packed=packedAt(world,selectedCell);
-      el('cell-title').textContent = packed?'Meuble emballé · '+({bed:'lit',table:'table',stool:'tabouret',horseshoes:'piquet',wall:'mur',campfire:'feu'})[packed.building.kind]:structure ? ({ wall: 'Mur en bois', bed: 'Lit', table: 'Table en bois', stool: 'Tabouret en bois', horseshoes: 'Piquet de fers à cheval', campfire: 'Feu de camp' })[structure.kind] : resource ? resourceLabels[resource.kind] : terrainLabels[world.tiles[z * world.width + x].terrain];
+      el('cell-title').textContent = packed?'Meuble emballé · '+({bed:'lit',table:'table',stool:'tabouret',horseshoes:'piquet',wall:'mur',campfire:'feu'})[packed.building.kind]:structure ? ({ wall: 'Mur', bed: 'Lit', table: 'Table', stool: 'Tabouret', horseshoes: 'Piquet de fers à cheval', campfire: 'Feu de camp' })[structure.kind] : resource ? resourceLabels[resource.kind] : terrainLabels[world.tiles[z * world.width + x].terrain];
       el('cell-description').textContent = `Case ${x}, ${z}${resource ? isPlant(resource) ? ` · Croissance ${Math.floor(plantGrowth(world, resource) * 100)} % · ${harvestable(world, resource) ? `Récolte : environ ${Math.round(berryYield(world, resource))} ${resource.kind === 'rice' ? 'riz' : 'baies'}` : 'Pas encore récoltable'} · ${plantResting(world.tick) ? 'Repos nocturne' : naturalLight(world.tick) < .51 ? 'Lumière insuffisante' : 'Croissance diurne'}` : ` · ${resource.amount} unités à récolter` : ''}${structure ? ` · ${footprintCells(structure).length === 2 ? '1 × 2' : '1 × 1'} cases` : ''}`;
+      const building = packed?.building ?? structure;
+      if (building && building.kind !== 'campfire') el('cell-title').textContent += ` · ${ITEM_DEFINITIONS[building.material ?? 'wood'].label}${building.material === undefined ? ' (ancien)' : ''}`;
       const rock = rockInspection(world.tiles[z * world.width + x]!, resource);
       if (!packed && !structure && rock) { el('cell-title').textContent = rock.title; el('cell-description').textContent = `Case ${x}, ${z} · ${rock.description}`; }
       el('cell-materials').textContent = piles.length ? `Au sol : ${piles.map(pile => `${pile.quantity} ${ITEM_DEFINITIONS[pile.item].label}${pile.kind==='food'?` · ${foodFreshnessLabel(pile,world.tick)}`:''}`).join(' · ')}` : '';
-      el('cell-job').textContent = job ? `${job.construction==='blueprint'?'Plan · ':job.construction==='frame'?'Cadre · ':''}${jobLabels[job.kind]} · ${queryJobStatus(world, job).reason ?? 'En cours'}${JOB_WOOD_COST[job.kind] > 0 ? ` · ${deliveredStock(world, job.id).wood} bois livrés` : ''}` : 'Aucun ordre sur cette case.';
+      el('cell-job').textContent = job ? `${job.construction==='blueprint'?'Plan · ':job.construction==='frame'?'Cadre · ':''}${jobLabels[job.kind]} · ${queryJobStatus(world, job).reason ?? 'En cours'}${constructionDeliveryLabel(world,job) ? ` · Livré : ${constructionDeliveryLabel(world,job)}` : ''}` : 'Aucun ordre sur cette case.';
       if(structure?.kind==='horseshoes')el('cell-description').textContent += ` · Dextérité · ${world.pawns.filter(p=>p.recreation.task?.buildingId===structure.id).length}/3 joueurs · places à 5 cases, ligne de vue dégagée.`;
       if(structure?.kind==='campfire'){updateFireControls(el('inspector'),structure);updateBillControls(el('inspector'),structure,world);}
       el('cell-deconstruct').hidden=!structure||!!job;
@@ -340,7 +345,7 @@ function renderState() {
   if (hungry) alerts.push(`${hungry} colon(s) affamé(s)`);
   if (pending) alerts.push(`${pending} ordre(s) en attente`);
   if (!world.stockpiles.length) alerts.push('Aucune réserve de stockage');
-  if (world.jobs.some(job => JOB_WOOD_COST[job.kind] > 0) && world.pawns.every(pawn => pawn.priorities.haul === 0&&pawn.priorities.build === 0)) alerts.push('Construction/transport désactivés : chantiers non approvisionnés');
+  if (world.jobs.some(job => constructionRecipe(job).ingredients.length > 0) && world.pawns.every(pawn => pawn.priorities.haul === 0&&pawn.priorities.build === 0)) alerts.push('Construction/transport désactivés : chantiers non approvisionnés');
   const idle = world.pawns.filter(pawn => pawn.state === 'idle').length;
   if (idle) alerts.push(`${idle} colon(s) disponible(s)`);
   el('alerts').replaceChildren(...alerts.map(text => { const item = document.createElement('p'); item.textContent = text; return item; }));

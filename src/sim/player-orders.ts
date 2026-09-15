@@ -3,7 +3,8 @@ import { deconstructionAvailable } from './deconstruction-rules.ts';
 import { rememberPriorityWork, expirePriorityWork } from './priority-work-state.ts';
 import { isCookingOrder } from './order-types.ts';
 import { advanceCookingOrder, planCookingOrder, queuedCookingReason, startCookingOrder } from './player-cooking.ts';
-import { JOB_WOOD_COST, footprintCells } from './definitions.ts';
+import { footprintCells } from './definitions.ts';
+import { constructionSupplied } from './construction-materials.ts';
 import { asBuilder, constructionHaulPriority, constructionObstruction, constructionSiteFree, isConstruction } from './construction-rules.ts';
 import { growingJobValid } from './farming.ts';
 import { groundPile } from './ground-placement.ts';
@@ -40,7 +41,7 @@ export function orderReadiness(world: World, pawn: Pawn, job: Job, accepted=fals
     const plant=clearingPlant(world,job);
     if((!accepted||job.clearance)&&plant&&plant.kind!=='rock')return;
     if(job.clearance)return 'La plante à dégager a disparu.';
-    if (job.escrow.wood !== JOB_WOOD_COST[job.kind]) return 'Approvisionnement nécessaire ; choisissez Livrer les matériaux.';
+    if (!constructionSupplied(world,job)) return 'Approvisionnement nécessaire ; choisissez Livrer les matériaux.';
     if (!constructionSiteFree(world,job,pawn.id)) return 'Chantier gêné ; dégagez les piles ou attendez le passage des colons.';
   }
   if(job.furniture&&!furnitureReady(world,job,pawn))return 'Meuble utilisé ou emplacement encombré.';
@@ -72,7 +73,7 @@ export function queryOrderOptions(world:World,pawnId:number,cell:Cell,queue=fals
   if(job&&isConstruction(job)) {
     const obstacle=constructionObstruction(world,job);
     if((obstacle.pile||obstacle.pack)&&!obstacle.plant)targets.push({type:'clear',jobId:job.id});
-    if(job.escrow.wood<JOB_WOOD_COST[job.kind])targets.push({type:'job',jobId:job.id});
+    if(!constructionSupplied(world,job))targets.push({type:'job',jobId:job.id});
   }
   if(job?.kind==='sow'&&(pile||packedAt(world,cell)))targets.push({type:'clear-sow',jobId:job.id});
   const pack=packedAt(world,cell);if(pack)targets.push({type:'furniture',structureId:pack.building.id});

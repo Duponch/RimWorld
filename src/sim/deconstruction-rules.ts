@@ -1,9 +1,10 @@
 import { footprintContains, JOB_DURATION } from './definitions.ts';
+import { constructionRecipe, type ConstructionMaterial } from './construction-materials.ts';
 import type { Cell, Job, Structure, World } from './types.ts';
 
-export interface DeconstructionTarget { structureId: number; kind: Structure['kind'] }
+export interface DeconstructionTarget { structureId: number; kind: Structure['kind']; material?:ConstructionMaterial }
 /** Lost construction wood and retired fuel history are distinct ledger terms. */
-export interface DeconstructionLedger { count: number; lostWood: number; fuelTicks: number }
+export interface DeconstructionLedger { count: number; lostWood: number; fuelTicks: number; lostSteel?:number }
 export const deconstructionAt = (world: World, cell: Cell) => world.structures.find(s => footprintContains(s, cell));
 export const deconstructionTarget = (world: World, job: Job) => world.structures.find(s => s.id === job.deconstruction?.structureId);
 export function deconstructionReserved(world: World, id: number, exceptPawn?: number): boolean {
@@ -27,11 +28,11 @@ export function deconstructionAvailable(world: World, job: Job, exceptPawn?: num
 /** Core clamps work to 20..3000 ticks and applies ConstructionSpeed × 1.7.
  * Local construction durations retain their documented catalogue calibration. */
 export function deconstructionDuration(job: Job): number {
-  const work = JOB_DURATION[job.deconstruction?.kind ?? 'wall'] * 10;
+  const work = constructionRecipe(job.deconstruction??{kind:'wall'}).coreWork;
   return Math.ceil(Math.min(3000, Math.max(20, work)) / 17);
 }
 export function designateDeconstruction(world: World, structure: Structure): void {
-  world.jobs.push({ id: world.nextId++, kind: 'deconstruct', deconstruction: { structureId: structure.id, kind: structure.kind },
+  world.jobs.push({ id: world.nextId++, kind: 'deconstruct', deconstruction: { structureId: structure.id, kind: structure.kind,...structure.material?{material:structure.material}:{} },
     x: structure.x, z: structure.z, orientation: structure.orientation, footprint: structure.footprint,
     progress: 0, status: 'pending', reservedBy: null, escrow: { wood: 0, food: 0 } });
 }

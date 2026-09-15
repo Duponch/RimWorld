@@ -1,7 +1,7 @@
 import type { Cell, Footprint, JobKind, Orientation, StructureKind } from './types.ts';
 
-/** Immutable catalogue. Legacy wall/bed costs remain uncalibrated. New wooden
- * table/stool use reference costs and ceil(original work / 10); see dining.md. */
+/** Immutable historical catalogue. Typed V30 construction recipes live in
+ * construction-materials.ts; retain these values for untyped saved objects. */
 export const MAX_STACK = 75;
 export const CARRY_CAPACITY = 10;
 export const MATERIAL_DEFINITIONS = Object.freeze({

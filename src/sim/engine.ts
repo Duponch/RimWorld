@@ -31,7 +31,8 @@ import { haulingWork } from './haul-aside.ts';
 import { groundPile } from './ground-placement.ts';
 import { generateWorld } from './generation.ts';
 import { adjacent, blockedCells, cellIndex, inBounds } from './pathfinding.ts';
-import { CARRY_CAPACITY, footprintCells, JOB_WOOD_COST, MAX_STACK } from './definitions.ts';
+import { CARRY_CAPACITY, footprintCells, MAX_STACK } from './definitions.ts';
+import { constructionSupplied, validConstructionMaterial } from './construction-materials.ts';
 import { refreshStock } from './materials.ts';
 import { queryArea, validStorageSettings } from './designation.ts';
 import { processNeeds, updateNeeds } from './needs.ts';
@@ -116,6 +117,7 @@ function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandR
 export function canDesignate(world: World, command: DesignateCommand): CommandResult {
   if (!command || !['mine', 'uninstall', 'deconstruct', 'chop', 'harvest', 'cut', 'wall', 'bed', 'table', 'stool', 'campfire', 'horseshoes'].includes(command.kind)) return refusal('invalid-command', 'Type de travail inconnu.');
   if (command.orientation !== undefined && (!Number.isInteger(command.orientation) || command.orientation < 0 || command.orientation > 3)) return refusal('invalid-command', 'Orientation invalide.');
+  if(!validConstructionMaterial(command.kind,command.material))return refusal('invalid-command','Matériau incompatible avec cette construction.');
   const target = (command.kind==='deconstruct'||command.kind==='uninstall')?deconstructionAt(world,command):undefined;
   if((command.kind==='deconstruct'||command.kind==='uninstall')&&!target)return refusal('missing-target','Aucun bâtiment à déconstruire ici.');
   if(target&&world.jobs.some(j=>j.furniture?.structureId===target.id))return refusal('occupied','Ce meuble a déjà un ordre de déplacement.');
@@ -239,7 +241,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
     wakePlanners(world);event(world,'command','Bâtiment désigné pour déconstruction.');return {ok:true};
   }
   removeZonesForPlan(world,command,drops);
-  world.jobs.push({ id: world.nextId++, kind: command.kind, ...(isConstruction(command)?{construction:'blueprint' as const}:{}), x: command.x, z: command.z, orientation: command.orientation ?? 0, footprint: 'standard', status: 'pending', reservedBy: null, progress: 0, escrow: { wood: 0, food: 0 } });
+  world.jobs.push({ id: world.nextId++, kind: command.kind, ...(isConstruction(command)?{construction:'blueprint' as const,material:command.material??'wood' as const}:{}), x: command.x, z: command.z, orientation: command.orientation ?? 0, footprint: 'standard', status: 'pending', reservedBy: null, progress: 0, escrow: { wood: 0, food: 0 } });
   refreshStock(world); wakePlanners(world); event(world, 'command', `Nouvel ordre : ${JOB_LABEL[command.kind]} (${command.x}, ${command.z}).`); return { ok: true };
 }
 
@@ -258,9 +260,9 @@ function completeJob(world: World, pawn: Pawn, job: Job): void {
   } else if (job.kind === 'sow') {
     finishSowing(world, job);
   } else {
-    if(!constructionSiteFree(world,job,pawn.id)){job.progress=jobDuration(world,job)-1;releaseWork(world,pawn);return;}
+    if(!constructionSupplied(world,job)||!constructionSiteFree(world,job,pawn.id)){job.progress=jobDuration(world,job)-1;releaseWork(world,pawn);return;}
     world.piles = world.piles.filter(pile => pile.owner.type !== 'job' || pile.owner.jobId !== job.id);
-    world.structures.push({ ...(job.kind==='campfire'?{fuel:newCampfireFuel(),bills:[]}:{}), id: world.nextId++, kind: job.kind, x: job.x, z: job.z, orientation: job.orientation, footprint: job.footprint });
+    world.structures.push({ ...(job.material?{material:job.material}:{}),...(job.kind==='campfire'?{fuel:newCampfireFuel(),bills:[]}:{}), id: world.nextId++, kind: job.kind, x: job.x, z: job.z, orientation: job.orientation, footprint: job.footprint });
   }
   const jobIndex=world.jobs.indexOf(job);if(jobIndex>=0)world.jobs.splice(jobIndex,1); pawn.jobId = null; pawn.path = []; pawn.state = 'idle'; pawn.planCooldown = 0;
   event(world, 'job', `${pawn.name} a terminé le travail : ${JOB_LABEL[job.kind]}.`); wakePlanners(world);
@@ -320,7 +322,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if(job.kind==='sow'&&packedAt(world,job)){releaseWork(world,pawn);continue;}
       if(job.furniture){if(advanceFurniture(world,pawn,job,target=>moveToward(world,pawn,target,false,getBlocked,budget),()=>releaseWork(world,pawn))){blocked=undefined;wakePlanners(world);}continue;}
       if(job.kind==='deconstruct'&&!deconstructionAvailable(world,job,pawn.id)){releaseWork(world,pawn);continue;}
-      if(isConstruction(job)&&!constructionSiteFree(world,job,pawn.id)){releaseWork(world,pawn);continue;}
+      if(isConstruction(job)&&(!constructionSupplied(world,job)||!constructionSiteFree(world,job,pawn.id))){releaseWork(world,pawn);continue;}
       if(job.kind==='mine') {
         if(Math.max(Math.abs(pawn.x-job.x),Math.abs(pawn.z-job.z))===1) {
           if(advanceMining(world,pawn,job)) {world.jobs.splice(world.jobs.indexOf(job),1);pawn.jobId=null;pawn.state='idle';pawn.planCooldown=0;blocked=undefined;wakePlanners(world);event(world,'job',`${pawn.name} a terminé le minage.`);}

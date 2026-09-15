@@ -46,7 +46,7 @@ Le soleil, le ciel, les couleurs et les ombres évoluent avec l'heure affichée.
 
 Ce rendu utilise pour l'instant un ciel clair fixe. **Saisons et météo ne sont pas encore jouables** ; les plantes gardent leur climat provisoire. Les effets complets de l'obscurité sur le travail, le déplacement et l'humeur, ainsi que lampes et toits, restent à développer. Arbres, sols et roches sont encore des contenus génériques : leur diversité n'est pas considérée comme terminée.
 
-Les rivières forment des cours continus, les rochers pleins des massifs infranchissables et la végétation des groupes. Le départ possède un dégagement et des ressources de premier essai. La carte n'a pas encore de relief navigable, de ponts ou de minage.
+Les rivières forment des cours continus, les rochers pleins des massifs infranchissables et la végétation des groupes. Le départ possède un dégagement et des ressources de premier essai. La carte n'a pas encore de relief navigable ni de ponts. Les massifs peuvent être minés selon les règles ci-dessous.
 
 La convention 3D est de 1 m par case, 1,75 m pour un humain et 2,80 m pour un mur. Les boutons près de l'horloge permettent de couper visuellement les murs ou de masquer le feuillage pour lire la scène. Ces options ne changent ni les obstacles ni les ordres. Le nouveau lit possède une empreinte 1×2 ; les lits d'une ancienne sauvegarde conservent leur emprise 1×1 pour éviter de recouvrir un voisin au chargement.
 
@@ -69,33 +69,33 @@ Un jour dure dix minutes à vitesse normale (6 000 ticks). Le compteur FPS mesur
 
 En vue très éloignée, les détails minuscules du décor sont remplacés par des silhouettes plus légères. Le terrain, les obstacles et les ordres restent les mêmes. Le compteur FPS continue de mesurer le rendu, y compris en pause.
 
-Les massifs ont maintenant des sommets et parois irréguliers qui se raccordent entre cases. Ils gardent leurs obstacles au sol. **Le minage n'est pas encore jouable** ; leurs retraits locaux sont actuellement un test technique préparant cette mécanique.
+Les massifs ont maintenant des sommets et parois irréguliers qui se raccordent entre cases. Ils gardent leurs obstacles au sol. Le minage retire les cases localement, révèle le sol brut et conserve les fragments typés ; les toits et effondrements restent absents.
 
 ## Désigner et construire
 
 Ouvrir Architecte, choisir Ordres pour abattre/récolter/annuler, Zones pour le stockage, Structure pour le mur, Meubles pour les lits, tables et tabourets, ou Température pour le feu de camp. Pour les ordres de terrain et les réserves, **cliquer ou maintenir le bouton gauche et tracer un rectangle**, dans n'importe quel sens. Les cases compatibles sont surlignées ; un compteur distingue les cases retenues et ignorées. Relâcher sur la carte applique l'ensemble. Échap ou clic droit annule le tracé ; changer d'outil ou quitter la fenêtre l'abandonne également. Relâcher au-dessus d'un panneau n'envoie aucun ordre.
 
-L'abattage cible les arbres ; la récolte cible les buissons et cultures récoltables. Les ressources incompatibles, obstacles et ordres déjà présents sont ignorés, avec un bilan après application. Le rectangle crée du travail futur : les matériaux ne sont produits qu'après le travail des colons. Pour les constructions, cliquer sur un sol compatible : un plan peut recouvrir une plante ou une pile d’objets, que les colons dégageront. Roches et bâtiments existants restent refusés ; les réserves suivent les compatibilités du meuble. Le lit et la table occupent deux cases : Q/E ou le bouton Tourner change leur orientation avant placement. Le fantôme indique un placement refusé. Les matériaux peuvent manquer au moment de poser un plan ; leur livraison précède le travail de construction.
+L'abattage cible les arbres ; la récolte cible les buissons et cultures récoltables. Les ressources incompatibles, obstacles et ordres déjà présents sont ignorés, avec un bilan après application. Le rectangle crée du travail futur : les matériaux ne sont produits qu'après le travail des colons. Pour les constructions, cliquer sur un sol compatible : un plan peut recouvrir une plante ou une pile d’objets, que les colons dégageront. Roches et bâtiments existants restent refusés ; les réserves suivent les compatibilités du meuble. Le lit et la table occupent deux cases : Q/E ou le bouton Tourner change leur orientation avant placement. Le fantôme indique un placement refusé. Dans Architecte, choisissez **Bois** ou **Acier** avant de placer mur, lit, table, tabouret ou piquet. Le coût affiché suit ce choix ; le feu reste en bois. Les matériaux peuvent manquer au moment de poser un plan ; leur livraison précède le travail de construction. Le type choisi reste visible dans l’inspection, après emballage et réinstallation. Les ouvrages d’anciennes sauvegardes signalés « ancien » gardent leurs coûts historiques.
 
 | Action | Règle actuelle |
 |---|---|
 | Abattre | Le colon travaille à côté de l'arbre ; toute sa quantité devient une ou plusieurs piles de bois au sol. |
 | Récolter | Le buisson reste à 30 % de croissance et dépose ses baies ; récoltable au-dessus de 65 %. |
 | Couper les buissons | Le buisson est retiré ; sa récolte éventuelle reste au sol. |
-| Construire un mur | 5 bois, 70 ticks de travail ; seul le mur terminé bloque le passage. |
-| Construire un lit | 8 bois livrés, 120 ticks de travail ; empreinte orientée 1×2, attribution à un colon et repos dans le lit. |
-| Construire une table | 28 bois livrés, 53 ticks de travail ; empreinte orientée 1×2. Plan, cadre et table achevée se traversent ; l’entrée sur le plateau ralentit le colon. |
-| Construire un tabouret | 25 bois livrés, 32 ticks de travail ; une case, une place de repas à côté d’une table. |
+| Construire un mur | 5 bois ou acier, 10 / 14 ticks de travail ; seul le mur terminé bloque le passage. |
+| Construire un lit | 45 bois ou acier livrés, 56 / 80 ticks de travail ; empreinte orientée 1×2, attribution à un colon et repos dans le lit. |
+| Construire une table | 28 bois ou acier livrés, 53 / 75 ticks de travail ; empreinte orientée 1×2. Plan, cadre et table achevée se traversent ; l’entrée sur le plateau ralentit le colon. |
+| Construire un tabouret | 25 bois ou acier livrés, 32 / 45 ticks de travail ; une case, une place de repas à côté d’une table. |
 | Construire un feu | 20 bois livrés, 20 ticks de travail ; une case et une place de service orientée devant. |
 | Annuler | Retire l'ordre et libère ses engagements ; les matériaux restent localisés au sol. Ne détruit pas un bâtiment achevé. On peut cliquer sur chacune des cases de son empreinte. |
 
-Un arbre prend 100 ticks de travail, un buisson 60, hors déplacement et interruptions. La simulation avance à 10 ticks/seconde à vitesse normale. Ces valeurs sont nos paramètres de prototype, pas des valeurs prétendument identiques à RimWorld.
+Un arbre prend 100 ticks de travail, un buisson 60, hors déplacement et interruptions. La simulation avance à 10 ticks/seconde à vitesse normale. Les durées de construction indiquées sont bois / acier, converties au pas local avec vitesse neutre. Les valeurs de collecte restent provisoires ; compétences, qualité et échecs sont absents.
 
 ## Déconstruire un ouvrage
 
 Dans **Architecte → Ordres → Déconstruire**, cliquez ou tracez un rectangle sur les bâtiments. L’inspection propose également Déconstruire et Annuler cet ordre. Un meuble de deux cases reste un seul objet. Le bâtiment subsiste jusqu’à la fin du travail ; un colon rejoint une case adjacente et l’enlève par le travail Construction, après les chantiers ordinaires. Le clic droit permet de le prioriser ou de le mettre en file avec Maj.
 
-Environ la moitié du bois revient **au sol** : un mur de 5 bois rend 2 ou 3 bois. Le feu de camp ne rend rien, y compris son combustible. Un meuble utilisé peut attendre la libération de sa réservation. Un lit retiré perd son propriétaire. Un retrait sans place pour ses matériaux attend ; il ne les efface pas.
+Environ la moitié du matériau revient **au sol** : un mur de 5 bois rend 2 ou 3 bois ; un lit neuf de 45 acier rend 22 ou 23 acier. Le feu de camp ne rend rien, y compris son combustible. Un meuble utilisé peut attendre la libération de sa réservation. Un lit retiré perd son propriétaire. Un retrait sans place pour ses matériaux attend ; il ne les efface pas.
 
 Annuler conserve le bâtiment. Interrompre remet le travail de retrait à zéro ; sauvegarder/recharger conserve l’action exactement. Déconstruire détruit le meuble. Pour le conserver entier, utilisez Désinstaller ou Réinstaller sur un meuble admissible.
 
@@ -225,7 +225,7 @@ Une nouvelle carte répartit les massifs et pierres voisines en régions de gran
 
 Dans **Architecte → Ordres**, choisir **Miner** (M), puis cliquer ou tracer sur les massifs. Activer **Minage** dans Travail. Le colon rejoint la roche, lui fait face et frappe ; ses PV sont inspectables et les dégâts restent acquis après annulation. Un massif extrait découvre un sol rocheux non fertile. Il laisse un fragment de la même roche dans 25 % des cas, sans donner directement des blocs de construction.
 
-Créer une réserve avec **Fragments de roche** autorisés, puis désigner les fragments via **Transporter les fragments** dans Ordres. Un fragment occupe une case entière et se porte individuellement ; les types ne fusionnent pas. Le clic droit du colon peut aussi imposer son rangement. Une interruption après prise conserve le fragment mais peut nécessiter une nouvelle désignation. L’atelier de taille, les minerais et les toits restent absents.
+Créer une réserve avec **Fragments de roche** autorisés, puis désigner les fragments via **Transporter les fragments** dans Ordres. Un fragment occupe une case entière et se porte individuellement ; les types ne fusionnent pas. Le clic droit du colon peut aussi imposer son rangement. Une interruption après prise conserve le fragment mais peut nécessiter une nouvelle désignation. L’atelier de taille, les autres minerais que l’acier et les toits restent absents.
 
 ## Extraire une réserve d’acier
 
@@ -233,4 +233,4 @@ Les **nouvelles colonies** peuvent présenter de l’**acier compacté**, reconn
 
 Créer une réserve autorisant **Acier** : les transporteurs le rangent automatiquement, sans outil « Transporter les fragments ». Une pile contient au plus 75 unités ; le total apparaît à gauche. Les anciennes réserves refusent ce nouveau matériau jusqu’à modification de leur filtre. Les anciennes cartes conservent leur géologie, sans apparition rétroactive de gisements.
 
-L’acier est extractible et stockable ; **son utilisation dans les constructions et l’atelier de taille viennent ensuite**. Le rendement est encore neutre, les compétences n’étant pas simulées.
+L’acier est extractible, stockable et utilisable pour les cinq constructions à matériau sélectionnable dans Architecte. **L’atelier de taille vient ensuite**. Le rendement est encore neutre, les compétences n’étant pas simulées.

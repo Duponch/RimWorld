@@ -7,7 +7,8 @@ import { availableNutrition } from '../../src/sim/items.ts';
 import { spoiledUnits } from '../../src/sim/food-preservation.ts';
 import { canDesignate } from '../../src/sim/engine.ts';
 import { planHaulOrder } from '../../src/sim/player-hauling.ts';
-import { JOB_WOOD_COST, footprintCells } from '../../src/sim/definitions.ts';
+import { requiredMaterial } from '../../src/sim/construction-materials.ts';
+import { footprintCells } from '../../src/sim/definitions.ts';
 import type { Command, DesignateCommand, World } from '../../src/sim/types.ts';
 
 export interface Decision { reason: string; command: Command }
@@ -102,7 +103,7 @@ export function playerDecisions(world: World): Decision[] {
   }
   if (!world.growingZones.length && world.structures.filter(s => s.kind === 'bed').length === 3) out.push({reason:'Semer un premier potager près du camp, tout en continuant à cueillir pendant sa croissance.',command:{type:'area',action:'growing',from:{x:cx-2,z:cz+5},to:{x:cx+2,z:cz+7}}});
   for(const pawn of world.pawns)if(pawn.schedule[19]!=='recreation'||pawn.schedule[20]!=='recreation')out.push({reason:'Réserver une plage de loisirs du soir, sans remplacer le repos nocturne.',command:{type:'schedule-paint',pawnId:pawn.id,hours:[19,20],assignment:'recreation'}});
-  const outstandingWood = [...world.jobs, ...out.flatMap(d => d.command.type === 'designate' ? [d.command] : [])].reduce((n,j) => n + JOB_WOOD_COST[j.kind], 0);
+  const outstandingWood = [...world.jobs, ...out.flatMap(d => d.command.type === 'designate' ? [{...d.command,material:['wall','bed','table','stool','horseshoes','campfire'].includes(d.command.kind)?d.command.material??'wood' as const:undefined}] : [])].reduce((n,j) => n + requiredMaterial(j,'wood'), 0);
   // New plans can overlap trees: their builder will clear the footprint. Do not
   // queue a second gathering order there in the same batch of player commands.
   const newlyPlanned=new Set(out.flatMap(d=>d.command.type==='designate'?footprintCells(d.command).map(c=>c.z*world.width+c.x):[]));
@@ -149,7 +150,7 @@ export function colonySummary(world: World) {
 }
 
 export function woodAccount(world: World): number {
-  return (world.packed??[]).reduce((n,p)=>n+JOB_WOOD_COST[p.building.kind],0) + world.deconstructed.lostWood + world.deconstructed.fuelTicks/600 + world.piles.filter(p=>p.kind==='wood').reduce((n,p)=>n+p.quantity,0) + world.resources.filter(r=>r.kind==='tree').reduce((n,r)=>n+r.amount,0) + world.structures.reduce((n,s)=>n+(s.kind==='campfire' ? ((s.fuel?.ticks??0)+(s.fuel?.burned??0))/600 : JOB_WOOD_COST[s.kind]),0);
+  return (world.packed??[]).reduce((n,p)=>n+requiredMaterial(p.building,'wood'),0) + world.deconstructed.lostWood + world.deconstructed.fuelTicks/600 + world.piles.filter(p=>p.kind==='wood').reduce((n,p)=>n+p.quantity,0) + world.resources.filter(r=>r.kind==='tree').reduce((n,r)=>n+r.amount,0) + world.structures.reduce((n,s)=>n+(s.kind==='campfire' ? ((s.fuel?.ticks??0)+(s.fuel?.burned??0))/600 : requiredMaterial(s,'wood')),0);
 }
 export function foodAccount(world: World): number {
   // Produced units remain accounted for even after spoilage; this is a ledger,

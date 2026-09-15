@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 29 as const;
+export const SCHEMA_VERSION = 30 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
@@ -15,7 +15,7 @@ export type PawnState = 'idle' | 'moving' | 'working' | 'sleeping' | 'hungry' | 
 export interface Cell { x: number; z: number }
 export interface Tile { ore?: 'steel'; miningDamage?: number; terrain: Terrain; stone?: import('./geology.ts').StoneKind }
 export interface Resource extends Cell { id: number; kind: ResourceKind; amount: number; growth?: number; growthTick?: number; stone?: import('./geology.ts').StoneKind }
-export interface Structure extends Cell { bills?: import('./cooking-types.ts').CookingBill[]; fuel?: import('./fuel.ts').FuelState; id: number; kind: StructureKind; orientation: Orientation; footprint: Footprint }
+export interface Structure extends Cell { material?:import('./construction-materials.ts').ConstructionMaterial; bills?: import('./cooking-types.ts').CookingBill[]; fuel?: import('./fuel.ts').FuelState; id: number; kind: StructureKind; orientation: Orientation; footprint: Footprint }
 export interface Stock { wood: number; food: number }
 export type MaterialOwner = ({ type: 'ground' } & Cell) | { type: 'pawn'; pawnId: number } | { type: 'job'; jobId: number };
 export interface MaterialPile { haulRequested?: true; id: number; kind: MaterialKind; item: ItemId; quantity: number; owner: MaterialOwner; rot?: import('./food-preservation.ts').RotState }
@@ -41,6 +41,7 @@ export type NeedTask =
   | { kind: 'eat'; phase: 'pickup' | 'choose-spot' | 'travel' | 'ingest'; sourcePileId: number; carryPileId: number | null; quantity: number; progress: number; dining: DiningPlace | null }
   | { kind: 'sleep'; phase: 'travel' | 'sleep'; bedId: number | null; target: Cell };
 export interface Job extends Cell {
+  material?:import('./construction-materials.ts').ConstructionMaterial;
   installationWork?: 'build' | 'haul';
   furniture?: import('./furniture-rules.ts').FurnitureTarget;
   deconstruction?: import('./deconstruction-rules.ts').DeconstructionTarget;
@@ -124,7 +125,7 @@ export interface World {
   /** Rotating bounded logistics search position, persisted for exact continuation. */
   logisticsCursor: number;
 }
-export type DesignateCommand = { type: 'designate'; kind: JobKind; orientation?: Orientation } & Cell;
+export type DesignateCommand = { type: 'designate'; kind: JobKind; orientation?: Orientation; material?:import('./construction-materials.ts').ConstructionMaterial } & Cell;
 export type AreaAction = 'mine' | 'haul-chunks' | 'deconstruct' | 'chop' | 'harvest' | 'cut' | 'cancel' | 'stockpile' | 'remove-stockpile' | 'growing' | 'remove-growing';
 export interface StorageSettings { filters?: StorageFilters; priority?: number; capacity?: number }
 export interface AreaCommand extends StorageSettings { type: 'area'; action: AreaAction; from: Cell; to: Cell }
