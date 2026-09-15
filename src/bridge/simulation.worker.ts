@@ -1,5 +1,6 @@
 /// <reference lib="webworker" />
 import { MotionRecorder } from './motion-tracks';
+import { PresentationChanges } from './presentation-changes';
 import { queryOrderOptions } from '../sim/player-orders';
 import { applyCommand, createWorld, deserializeWorld, serializeWorld, stepWorld } from '../sim/index';
 import type { World } from '../sim/types';
@@ -17,8 +18,9 @@ let stepMs = 0;
 const send = (message: Response) => scope.postMessage(message);
 const snapshots = new SnapshotEncoder();
 const motion = new MotionRecorder();
+const presentationChanges=new PresentationChanges();
 const publish = (checkpoint = false) => {
-  if (world) {motion.capture(world);send({...snapshots.encode(world, stepMs, speed, checkpoint), motion:motion.snapshot()});}
+  if (world) {presentationChanges.capture(world);motion.capture(world);send({...snapshots.encode(world, stepMs, speed, checkpoint), motion:motion.snapshot()});}
   lastPublish = performance.now();
 };
 
@@ -69,9 +71,12 @@ setInterval(() => {
   accumulator += elapsed * speed;
   const ticks = Math.min(15, Math.floor(accumulator / 100));
   if (ticks > 0) {
-    const started = performance.now();
-    for(let i=0;i<ticks;i++) {stepWorld(world);motion.capture(world);}
-    stepMs = (performance.now() - started) / ticks;
+    let simulationMs=0;
+    for(let i=0;i<ticks;i++) {
+      const started=performance.now();stepWorld(world);simulationMs+=performance.now()-started;stepMs=simulationMs/(i+1);
+      motion.capture(world);
+      if(presentationChanges.capture(world))publish();
+    }
     accumulator -= ticks * 100;
   }
   if (now - lastPublish >= 200) publish();

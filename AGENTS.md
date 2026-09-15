@@ -168,3 +168,8 @@
 - Lire docs/development/temperature.md et sa recherche. Seuil thermique : au moins 25 % découvert ou accès au bord = extérieur, distinct des autres critères. Murs/toits/portes échangent, feux chauffent avec plafond 28 °C ; site quotidien 14–28 °C, saisons et météo absentes.
 - thermal.regions conserve les cellules d’air, pas les IDs de pièce. Reconciliation par recouvrement avant intégration. Le parcours thermique borné vérifie toutes les cellules utilisées dans sa preuve, y compris les parois ; ne pas le remplacer par un cache d’identité/tick.
 - rot.rate absent = 1. Ancrer l’âge avant changement de taux/propriétaire, conserver fractions/mélanges, expiration avant action. V37 strictement validée avant V38 sans passé thermique inventé. L’intégrale agricole froide/chaude doit précéder un contenu sortant de 6–42 °C ; ni santé thermique ni chaîne du froid équipées ne sont implicites.
+
+## Synchronisation de présentation sous V38
+- Lire docs/development/presentation-timing.md. Les changements de vitesse sont des marqueurs au tick confirmé ; ne pas ajouter une attente cumulative ni appliquer le taux nouveau à l’ancien temps tamponné. Seul RAF avance la présentation.
+- Publier les phases discrètes au tick simulé, puis appliquer la scène entière au temps des poses. Ne pas retirer une ressource à la réception avant le corps. Garder les snapshots immuables, les commandes/révisions toutes traitées, le HUD automatique à 5 Hz et les interactions immédiates.
+- Onglet masqué, file excessive ou historique périmé : recalage global explicite. Le benchmark distingue réception/application ; ignorer les callbacks sans rendu durant préparation. Toute nouvelle transition visuelle enrichit l’observateur et un scénario métier.

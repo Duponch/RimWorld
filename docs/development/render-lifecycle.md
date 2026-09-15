@@ -8,6 +8,8 @@ Le coût comporte deux mécanismes observables : reconstruction des géométries
 
 La lecture du code installé Three.js 0.186.0, `nodes/accessors/Instance.js`, montre que les petits lots peuvent devenir des tableaux uniformes dont la longueur dépend de la capacité d'instance. Reconstruire un lot à chaque quantité crée donc aussi des variations de layout. Les [contrats InstancedMesh](https://threejs.org/docs/pages/InstancedMesh.html) permettent de modifier les matrices/couleurs et le nombre actif en gardant les allocations, à condition de signaler les données modifiées et mettre à jour les bornes. La [documentation de mise à jour](https://threejs.org/manual/en/how-to-update-things.html) et la [précompilation du Renderer](https://threejs.org/docs/pages/Renderer.html) rappellent respectivement l'invalidation des buffers et la possibilité de préparer des shaders. Nous supprimons d'abord les reconstructions récurrentes observées.
 
+Depuis le correctif de [synchronisation sous V38](presentation-timing.md), ces mises à jour s’exécutent lors de l’application d’un monde devenu visible, pas systématiquement à sa réception. Les ressources GPU et leurs règles de propriété restent les mêmes.
+
 ## Responsabilités
 
 - `StaticGeometry.ts` fabrique les volumes fusionnés, couleurs et normales procédurales ; le terrain demeure statique et découpé spatialement.

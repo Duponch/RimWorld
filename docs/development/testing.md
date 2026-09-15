@@ -1,5 +1,7 @@
 # Stratégie de validation
 
+Correctif de synchronisation sous V38 : enrichir les scénarios spatiaux et bridge avec changements rapides de vitesse/pause, phases de travail et disparition différée des ressources. Parcours natifs mouvement/transport et pilote UI, puis banc `harvest-sync-bench.mjs` (zones naturelles, changements répétés) et `mining-render-bench.mjs` (100 mineurs). Mesurer l’application de scène distinctement de la réception ; ignorer les callbacks sans rendu pendant préparation. Aucun changement de règle ne justifie de relancer toutes les migrations.
+
 V38 : enrichir les deux scénarios `temperature.test.ts` (oracle spatial global, pièces/toits/portes adjacentes, échanges, chaud/froid, fusion/division, vrais transports, mélanges, seuil, migration, snapshots). Le pilote conserve ses bilans et ajoute les températures. Audit `scripts/temperature-bench.ts` sur 3/30/100 ateliers chauffés, avec reprise et coût de clonage séparé. L’atelier UI construit son feu et vérifie le réchauffement avant le pilote de trois jours.
 
 V37 : deux scénarios profonds dans `light-work.test.ts` couvrent les familles de travail, le dégagement, les fractions, les coups capturés, les changements de milieu, les arêtes/diagonales/délais et la migration V36. Les fixtures pré-V37 sont construites sous leur cadence neutre ; elles ne requalifient pas des arêtes nouvelles en anciennes. Pilote multi-graines et UI de trois jours, parcours mouvement GPU et audit `scripts/light-work-bench.ts` à 3/30/100 travailleurs.

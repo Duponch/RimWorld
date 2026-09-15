@@ -1,5 +1,7 @@
 # Adoption du référentiel utilisateur
 
+Synchronisation sous V38 — chapitres 2/3/5/10/21/29/32, SYS-005/020..022/051..061/113..117/172..177 : conserver trajets et phases physiques ; adapter exclusivement leur transport/présentation. [Recherche et degré de certitude](presentation-timing-reference.md). Aucun nouveau contenu ni règle de récolte.
+
 Température V38 — chapitres 5/6/14/22/32, SYS/TEST-023..025 et 126..131, scène E : adopter les seuils distincts, air/portes/toiture et continuité alimentaire ; adapter intégration, reconstruction par recouvrement et requêtes bornées ; différer appareils/réseaux, saisons/météo, santé et intégrale agricole extrême. [Recherche renouvelée](temperature-reference.md), [contrat](../development/temperature.md). Aucun statut R/P/V du corpus ne vaut validation locale.
 
 Toiture V35 — chapitres 5/10/21/22, SYS/TEST-023..025 et 061, scène E : adopter couverture distincte du sol, supports et travail physique ; adapter graphe/cadence/rendu ; différer plafonds naturels, dégâts et thermique. [Recherche fraîche](roofing-reference.md), [contrat](../development/roofing.md). Les mentions de toiture différée dans les bilans datés ci-dessous décrivent ces lots antérieurs, pas le statut courant.

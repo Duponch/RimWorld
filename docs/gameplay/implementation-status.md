@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+Correctif de présentation sous V38 : déplacements et phases de travail synchronisés avec le retrait des arbres/roches et les cargaisons ; changements répétés de vitesse sans retard cumulatif. [Contrat et limites](../development/presentation-timing.md). Aucun nouveau contenu ni changement des durées de gameplay ; la sauvegarde reste V38.
+
 V38 ajoute les [températures et la conservation variable](../development/temperature.md) : extérieur quotidien 14–28 °C, air retenu, murs/toits/portes et chauffage du feu jusqu’à 28 °C. Gel/dégel et transferts conservent l’âge des aliments. Inspection locale et extérieure visibles. Appareils de froid/chauffage, météo/saisons, santé et inconfort thermique restent absents ; les scénarios gelés sont synthétiques.
 
 V37 livre la [lumière pour les travaux présents et la marche](../development/light-work.md), au-delà des recettes V36. Construction/déconstruction, désinstallation, plantes, défrichage, toits et minage réagissent à l’obscurité sans modifier les quantités. La cadence d’un coup et d’une arête reste stable jusqu’à sa fin. **Limite recontrôlée :** les durées de collecte ne reproduisent pas encore tous les facteurs liés à la croissance des plantes ; cette partie n’est pas terminée.

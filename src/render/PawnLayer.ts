@@ -301,7 +301,7 @@ export class PawnLayer {
       if(this.travelKeys.get(pawn.id)===key)return;
       this.travelKeys.set(pawn.id,key);dirty=true;
       const visual=this.visuals.get(pawn.id)!;
-      if(segment && (active || pawn.state==='moving')) {
+      if(segment && (active || pawn.state==='moving'||world.tick<segment.end)) {
         const yaw=Math.atan2(segment.to.x-segment.from.x,segment.to.z-segment.from.z);
         visual.from.set(segment.from.x,this.travelSurfaces.get(segment.from.z*world.width+segment.from.x)??0,segment.from.z,yaw);visual.to.set(segment.to.x,this.travelSurfaces.get(segment.to.z*world.width+segment.to.x)??0,segment.to.z,yaw);
         times.setXY(i,(segment.start-origin)/10,(segment.end-origin)/10);

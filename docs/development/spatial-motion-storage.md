@@ -55,6 +55,8 @@ L'oracle indépendant, les demandes successives dans des ordres opposés et les 
 
 ## Du worker au GPU
 
+Le [contrat de synchronisation sous V38](presentation-timing.md) précise les marqueurs de vitesse, publications de phases et application différée de la scène. Il corrige le retard cumulatif et les ressources retirées avant l’arrivée affichée.
+
 V14 sépare les réservations dans `service-reservations.ts` : lit utilisé, place de repas et poste de cuisine. Elles excluent un autre utilisateur, jamais un passant. Propriété de lit, facture, travail et quantités de matière gardent leurs contrats. Une fatigue extrême peut coucher une personne au sol sur une cellule de passage ; elle ne s'approprie pas le mobilier ou le poste présent. La représentation 3D peut encore montrer des corps superposés ; aucun évitement visuel ne modifie les trajets ou bonus.
 
 L'ancien lissage repartait de la position affichée à chaque snapshot de 200 ms. Le délai variable et les réponses aux commandes modifiaient ainsi la vitesse ; relier seulement deux positions pouvait aussi couper un virage.

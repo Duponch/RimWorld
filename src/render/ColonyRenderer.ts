@@ -1,4 +1,6 @@
 import { EnvironmentLighting } from './EnvironmentLighting';
+import { PresentationQueue } from './PresentationQueue';
+import { MOTION_HISTORY_TICKS } from '../bridge/motion-tracks';
 import { RoofLayer } from './RoofLayer';
 import { blockParts } from './block-presentation';
 import { sameTerrainSurface } from './terrain-state';
@@ -52,6 +54,8 @@ export class ColonyRenderer {
   private readonly environmentLighting = new EnvironmentLighting();
   private readonly overview = new OverviewLayer(this.environmentLighting.configure);
   private readonly timeline = new MotionTimeline();
+  private readonly presentation = new PresentationQueue();
+  private received:{world:World;speed:number;tracks?:PawnTrack[]}|undefined;
   private hasTracks = false;
   private readonly pawns = new PawnLayer(this.environmentLighting.configure);
   readonly backend: string;
@@ -198,6 +202,21 @@ export class ColonyRenderer {
   }
 
   setWorld(world: World, resetPresentation = false, speed = 1, tracks?: PawnTrack[]): void {
+    if(this.disposed)return;
+    const previous=this.received?.world;
+    const reset=resetPresentation||!previous||world.tick<previous.tick||world.seed!==previous.seed||world.width!==previous.width||world.height!==previous.height;
+    this.received={world,speed,tracks};
+    if(document.hidden)return;
+    if(tracks){this.timeline.adopt(world.tick,speed,tracks,performance.now(),reset||!this.hasTracks);this.hasTracks=true;}
+    if(reset||!tracks){this.presentation.clear();this.applyWorld(world,reset);return;}
+    this.presentation.push(world);
+    // A background/stalled page must not retain an unlimited snapshot history.
+    // Recovery replaces the whole presentation, never only one actor's path.
+    if(this.presentation.size>64||world.tick-this.timeline.tick>MOTION_HISTORY_TICKS){this.presentation.clear();this.timeline.adopt(world.tick,speed,tracks,performance.now(),true);this.applyWorld(world,true);return;}
+    const due=this.presentation.take(this.timeline.tick);if(due)this.applyWorld(due);
+  }
+
+  private applyWorld(world: World, resetPresentation = false): void {
     if (this.disposed) return;
     if (resetPresentation) this.cancelDesignation();
     this.areaIndex = undefined; this.areaSignature = '';
@@ -213,7 +232,6 @@ export class ColonyRenderer {
     const resetPoses = resetPresentation || newMap || world.tick < (previousWorld?.tick ?? 0);
     this.world = world;
     this.environmentLighting.update(world);
-    if(tracks) {this.timeline.adopt(world.tick,speed,tracks,now,resetPoses || !this.hasTracks);this.hasTracks=true;}
     if(groundChanged) {
       buildTerrain(world,this.terrainGroup,this.staticMaterial,this.waterMaterial);
       this.overview.rebuildTerrain(this.terrainGroup);
@@ -479,15 +497,19 @@ export class ColonyRenderer {
     }
   }
 
-  private readonly onVisibility = (): void => { this.frames.reset(); this.lastFrame = 0; };
+  private readonly onVisibility = (): void => {
+    this.frames.reset();this.lastFrame=0;
+    if(!document.hidden&&this.received){const r=this.received;this.setWorld(r.world,true,r.speed,r.tracks);}
+  };
 
   private frame(now: number): void {
     if (this.disposed || this.preparing) return;
+    if(this.hasTracks){this.timeline.advance(now);const due=this.presentation.take(this.timeline.tick);if(due)this.applyWorld(due);}
     const dt = this.lastFrame ? Math.min((now - this.lastFrame) / 1000, 0.05) : 0;
     this.lastFrame = now;
     this.pawns.blend.value = this.snapshotDuration > 0 ? Math.min(1, Math.max(0, (performance.now() - this.snapshotAt) / this.snapshotDuration)) : 1;
     this.pawns.time.value = THREE.MathUtils.lerp(this.timeFrom, this.timeTo, this.pawns.blend.value);
-    if(this.hasTracks && this.world) {this.timeline.advance(now);this.pawns.time.value=(this.timeline.tick/TICKS_PER_SECOND)%(2*Math.PI);this.pawns.updateTravel(this.world,this.timeline);}
+    if(this.hasTracks && this.world) {this.pawns.time.value=(this.timeline.tick/TICKS_PER_SECOND)%(2*Math.PI);this.pawns.updateTravel(this.world,this.timeline);}
     if (!this.areaDrag && !this.selectionInput.active) { this.moveCamera(dt); this.controls.update(); }
     if (this.world) {
       const x = THREE.MathUtils.clamp(this.controls.target.x, 0, this.world.width - 1);

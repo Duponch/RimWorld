@@ -1,0 +1,28 @@
+# Synchronisation de la scène et des colons
+
+Correctif sous V38, 15 septembre 2026. [Mouvement et sol](spatial-motion-storage.md), [recherche récente](../research/presentation-timing-reference.md), [mesures](validation.md). Aucun changement de règle, de durée de travail, de navigation ou de sauvegarde.
+
+## Défaut reproduit
+
+Changer la vitesse remplaçait immédiatement le taux de lecture et ajoutait 400 ms d’attente, même quand le temps déjà tamponné appartenait à l’ancienne vitesse. Les changements répétés accumulaient un retard supérieur aux 64 ticks d’arêtes conservés. L’affichage finissait par utiliser un trajet plus récent que sa propre horloge : téléportations malgré un FPS élevé.
+
+Indépendamment de ce défaut, les ressources et les états de travail du dernier snapshot étaient appliqués immédiatement à la scène, alors que le corps lisait le passé tamponné. La pierre pouvait donc disparaître avant l’arrivée affichée. Enfin, une publication seulement toutes les 200 ms pouvait omettre l’arrêt au travail ou la transition excavation→départ : retarder les snapshots seuls ne suffisait pas.
+
+## Contrat courant
+
+- `MotionTimeline` conserve les changements de vitesse avec leur tick confirmé. Il termine la portion à l’ancien taux avant d’adopter le nouveau. Le marqueur possède une date minimale de lecture, arrivée + 400 ms pour une reprise/vitesse positive ; cette date absolue ne s’ajoute pas à chaque attente déjà consommée. Pause et reprise sur un même tick, commandes rapides et plusieurs marqueurs dans une frame sont ordonnés.
+- Seul le timestamp de la frame fait avancer cette horloge. Une réception avec `performance.now()` plus tardif que le prochain timestamp RAF ne consomme aucun temps de lecture. Sans avance confirmée, attendre ; ne pas extrapoler. Le début d’une arête future ne remplace jamais une arête terminée pendant un arrêt de travail.
+- `PresentationChanges`, dans le bridge, repère les phases discrètes après **chaque tick simulé**, y compris au milieu d’un lot du worker : arrivée/travail, fin de tâche, portage/dépôt, quantités/propriétaires, bâtiments, portes, couverture et événements. Il déclenche une publication au tick concerné. Progression continue du travail, faim, âge et déplacement gardent les publications périodiques. Le diffuseur n’est pas un second moteur de gameplay.
+- `PresentationQueue` retient des références vers les mondes décodés immuables, avec partage des tableaux inchangés. `setWorld` reçoit ; `applyWorld` applique le dernier monde dont le tick est atteint par l’horloge. Corps, animation de travail, cargaison, sélection, décor, terrain et portes suivent ainsi la même présentation. Plusieurs états devenus dus dans une frame peuvent être sautés ensemble ; aucune commande ni révision du décodeur n’est sautée.
+- Une édition à tick identique remplace l’état en attente correspondant. Chargement/nouvelle carte remplacent explicitement toute la présentation. Pendant qu’un onglet est masqué, seule la dernière réception est conservée ; le retour réinitialise ensemble scène et horloge. La file a une borne de 64 snapshots, et un retard supérieur aux 64 ticks de rétention des arêtes déclenche aussi ce recalage global ; une suspension prolongée exige une reprise cohérente, pas le rattrapage visuel de toutes les images perdues.
+- L’interface de gestion lit toujours le dernier état autoritaire : clics, ordres et sauvegardes sont revalidés par le worker. `SnapshotHud` limite ses rafraîchissements automatiques à 5 Hz pour que cent colons ne reconstruisent pas leurs tableaux à chaque tick. Pause, vitesse, remplacement et interactions restent immédiats. Les FPS suivent les vraies images, indépendamment du HUD et de la vitesse.
+
+Le tampon de 400 ms est une adaptation à notre worker, pas une règle de RimWorld. La simulation garde son horloge à 10 Hz et toutes ses phases physiques. La pause arrête immédiatement l’autorité ; l’affichage termine le court passé déjà confirmé avant de s’immobiliser. Le schéma reste **38**, sans migration.
+
+## Évolution et coûts
+
+Tout nouveau contenu produisant une transition visuelle doit enrichir l’observateur et un scénario métier correspondant. Ne pas y ajouter les valeurs continues qui forceraient inutilement une publication à chaque tick. Les snapshots dynamiques et la recherche des deltas conservent un coût proportionnel au monde ; ce correctif n’introduit ni journal de deltas universel ni mémoire partagée.
+
+La publication et l’application de scène sont des coûts distincts. Les bancs doivent mesurer `applyWorld` pour dater une excavation affichée, pas la seule réception `setWorld`. Les sondes de frame ignorent les callbacks suspendus pendant `preparePresentation`, qui ne dessinent aucune image normale. Les attributs GPU restent la source de mesure des poses partagées ; une lecture de ces attributs n’est pas un readback de sommets GPU.
+
+Les tests purs combinent trajectoires à vitesse variable, jitter, pause/reprise, publications clairsemées, vrai minage/abattage, conservation et retrait au bon moment. Le test natif de déplacement vérifie les orientations et les cargaisons ; le banc de zones contrôle sauts de position et pénétration dans une roche encore dessinée. Les mesures matérielles gardent percentiles et maxima : elles ne garantissent pas la fluidité sur toute machine ou après une suspension externe.

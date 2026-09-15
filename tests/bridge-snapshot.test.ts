@@ -2,6 +2,12 @@ import { expect, test } from 'vitest';
 import { SnapshotDecoder, SnapshotEncoder, type SnapshotMessage } from '../src/bridge/snapshots.ts';
 import { applyCommand, createWorld, deserializeWorld, serializeWorld, stepWorld } from '../src/sim/index.ts';
 import type { World } from '../src/sim/types.ts';
+import { PresentationChanges } from '../src/bridge/presentation-changes';
+import { MotionRecorder } from '../src/bridge/motion-tracks';
+import { MotionTimeline } from '../src/render/MotionTimeline';
+import { PresentationQueue } from '../src/render/PresentationQueue';
+import { PawnLayer } from '../src/render/PawnLayer';
+import { miningCamp } from './scenarios/mining';
 
 test('snapshots preserve exact state and previous frames through harvest, patches, replacement and recovery', () => {
   const encoder = new SnapshotEncoder(); const decoder = new SnapshotDecoder();
@@ -107,4 +113,45 @@ test('snapshots preserve exact state and previous frames through harvest, patche
     expect(restored.world).toEqual(source);
     expect(restored.replaced).toBe(true);
   }
+});
+
+test('buffered scene preserves arrival, work, excavation, tree removal and cargo across sparse publications',()=>{
+  const source=miningCamp(),pawn=source.pawns[0]!;pawn.priorities.gather=2;
+  for(const x of [12,13,14]){source.tiles[12*32+x]={terrain:'rock',stone:'sandstone'};expect(applyCommand(source,{type:'designate',kind:'mine',x,z:12}).ok).toBe(true);}
+  source.resources.push({id:source.nextId++,x:15,z:11,kind:'tree',amount:12});expect(applyCommand(source,{type:'designate',kind:'chop',x:15,z:11}).ok).toBe(true);
+  const initial=source.tick,encoder=new SnapshotEncoder(),changes=new PresentationChanges(),motion=new MotionRecorder();
+  const packets:Array<{at:number;message:SnapshotMessage}>=[];
+  const publish=()=>{changes.capture(source);motion.capture(source);packets.push({at:(source.tick-initial)*100/6+30,message:structuredClone({...encoder.encode(source,0,6),motion:motion.snapshot()})});};
+  publish();
+  for(let i=0;i<500;i++) {
+    const previousState=pawn.state,previousJobs=source.jobs.length;stepWorld(source);motion.capture(source);
+    const boundary=changes.capture(source);
+    if(pawn.state!==previousState||source.jobs.length<previousJobs)expect(boundary).toBe(true);
+    if(boundary||i%12===0)publish();
+  }
+  publish();
+  expect(source.jobs).toEqual([]);expect(source.resources).toEqual([]);expect(source.stock.wood).toBe(12);
+  expect(packets.length).toBeLessThan(110); // no publication for each movement/work tick
+  const timeline=new MotionTimeline(),queue=new PresentationQueue(),decoder=new SnapshotDecoder(),layer=new PawnLayer();
+  let world:World|undefined,index=0,previousPosition:{x:number;z:number}|undefined;const worked=new Set<number>();
+  for(let now=0;now<=9000;now+=5) {
+    while(packets[index]&&packets[index]!.at<=now) {
+      const message=packets[index++]!.message,result=decoder.adopt(message);if(result.status!=='applied')throw Error(result.status);
+      timeline.adopt(result.world.tick,6,message.motion!,now,result.replaced);
+      if(result.replaced){queue.clear();world=result.world;layer.update(world,1,true);}else queue.push(result.world);
+      expect(decoder.adopt(message).status).toBe('stale');
+    }
+    if(!world)continue;
+    timeline.advance(now);const due=queue.take(timeline.tick);
+    if(due){for(const job of world.jobs)if(!due.jobs.some(j=>j.id===job.id))expect(worked.has(job.id),`removed before displayed work: ${job.id}`).toBe(true);world=due;layer.update(world,1,false);}
+    expect(world.tick).toBeLessThanOrEqual(timeline.tick);layer.blend.value=1;layer.updateTravel(world,timeline);
+    const g=(layer as any).pawnMesh.geometry,f=g.getAttribute('aFrom'),t=g.getAttribute('aTo'),travel=g.getAttribute('aTravel'),m=g.getAttribute('aMotion');
+    const duration=travel.getY(0)-travel.getX(0),alpha=duration>0?Math.max(0,Math.min(1,(layer.travelTime.value-travel.getX(0))/duration)):1;
+    const x=f.getX(0)+(t.getX(0)-f.getX(0))*alpha,z=f.getZ(0)+(t.getZ(0)-f.getZ(0))*alpha;
+    if(previousPosition)expect(Math.hypot(x-previousPosition.x,z-previousPosition.z),`jump at ${now}`).toBeLessThanOrEqual(.101);
+    previousPosition={x,z};expect(world.tiles[Math.round(z)*32+Math.round(x)]!.terrain,`inside rendered rock at ${now}`).not.toBe('rock');
+    if(m.getY(0)>0){const p=world.pawns[0]!,job=world.jobs.find(j=>j.id===p.jobId);if(job){expect(Math.max(Math.abs(job.x-x),Math.abs(job.z-z))).toBeLessThanOrEqual(1.001);worked.add(job.id);}}
+  }
+  expect(worked.size).toBe(4);expect(queue.size).toBe(0);expect(world).toEqual(source);
+  const replacement=structuredClone(source);replacement.tick=2000;queue.push(replacement);queue.clear();expect(queue.take(Infinity)).toBeUndefined();
 });

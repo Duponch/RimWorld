@@ -1,4 +1,5 @@
 import { outdoorTemperature } from './sim/temperature';
+import { SnapshotHud } from './ui/snapshot-hud';
 import { isRoofArea } from './sim/roof-rules';
 import { stationRecipe } from './sim/production-recipes';
 import { RoomInspection } from './ui/room-inspection';
@@ -58,6 +59,7 @@ let pawnSignature = '';
 const selection=new PawnSelection();
 const roomInspection = new RoomInspection();
 const orderMenu=new OrderMenu(client,notify);
+const snapshotHud=new SnapshotHud(()=>renderState());
 
 function notify(message: string, error = false) {
   el('notice').textContent = message;
@@ -459,12 +461,13 @@ document.addEventListener('keydown', event => {
 });
 client.onError = message => notify(message, true);
 client.onSnapshot = (world, cost, speed, replaced, motion) => {
+  const speedChanged=currentSpeed!==speed;
   snapshot=world;stepMs=cost;currentSpeed=speed;
   const changed=replaced||[...selection.ids].some(id=>!world.pawns.some(p=>p.id===id));
   if(changed){selection.clear();selectedPawn=undefined;selectedCell=undefined;orderMenu.close();rebuildInspector();}
   renderer?.setWorld(world,replaced,speed,motion);
   if(changed)renderer?.setSelectedPawns(selection.ids);
-  renderState();
+  snapshotHud.request(changed||speedChanged);
 };
 async function start() {
   try {

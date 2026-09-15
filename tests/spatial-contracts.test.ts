@@ -140,6 +140,27 @@ test('buffered motion is linear across jitter, duplicate messages, turns, pause 
   interleaved.adopt(101,6,[],452);interleaved.advance(450);
   expect(interleaved.tick-first).toBeCloseTo(1.2,9);
   interleaved.advance(470);expect(interleaved.tick-first).toBeCloseTo(2.4,9);
+  // Speed controls belong to their confirmed tick, not message arrival time.
+  // Repeated changes used to add 400 ms each and exhaust the movement history.
+  const changes=new MotionTimeline();changes.adopt(0,6,[],0,true);
+  let source=0,speed=6;const history=new Map([[0,0]]);
+  for(let ms=10;ms<=30000;ms+=10) {
+    source+=speed*.1;history.set(ms,source);
+    if(ms%1000===0){speed=[1,3,6][ms/1000%3]!;changes.adopt(Math.round(source),speed,[],ms);}
+    else if(ms%200===0)changes.adopt(Math.round(source),speed,[],ms);
+    expect(changes.advance(ms),`speed boundary at ${ms}`).toBeCloseTo(history.get(Math.max(0,ms-400))!,6);
+  }
+  // Several controls can be queued inside the buffer, including pause/resume
+  // on the same tick. One delayed frame must consume them in tick order.
+  const rapid=new MotionTimeline();rapid.adopt(0,6,[],0,true);
+  source=0;speed=6;history.clear();history.set(0,0);
+  for(let ms=10;ms<=3000;ms+=10) {
+    source+=speed*.1;history.set(ms,source);
+    if(ms%100===0){speed=[0,1,3,6][ms/100%4]!;rapid.adopt(Math.round(source),speed,[],ms);}
+    if(ms%250===0)expect(rapid.advance(ms),`rapid control at ${ms}`).toBeCloseTo(history.get(Math.max(0,ms-400))!,6);
+  }
+  rapid.adopt(Math.round(source),0,[],3000);expect(rapid.advance(10000)).toBeCloseTo(source,6);
+  expect(rapid.advance(20000)).toBeCloseTo(source,6); // never extrapolate past confirmed time
 });
 
 test('floor stacks enforce identity, reserved destination type, migration and atomic refusal when no drop fits',()=>{
