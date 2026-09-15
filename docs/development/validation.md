@@ -1,30 +1,37 @@
-# Validation courante — reconnaissance des pièces sous V34
+# Validation courante — toits construits V35
 
-15 septembre 2026. [Contrat](rooms.md), [recherche renouvelée](../research/rooms-reference.md). Schéma 34 inchangé ; G0 en consolidation, G1 partiel, première topologie d’habitat G2 livrée. Les preuves précédentes restent dans l’[audit CPU](../history/validation-v34-spatial-queries.md) et la [livraison des portes](../history/validation-v34-doors.md).
+15 septembre 2026. [Contrat](roofing.md), [recherche renouvelée](../research/roofing-reference.md). G0 en consolidation, G1 partiel, G2 habitat en cours. La preuve précédente des pièces reste dans [history](../history/validation-v34-rooms.md).
 
-## Gameplay contrôlé
+## Contrôles fonctionnels
 
-**Trois tests ciblés passants**, [rapport](../../artifacts/rooms-core.json) : deux scénarios de pièces et le scénario de snapshots. L’oracle indépendant par union compare chaque cellule de 80 cartes rectangulaires ; portes, eau, roches, meubles, changements en place, dimensions et anciens instantanés sont exercés. Le second scénario exécute déconstruction, reconstruction avec plan/cadre, reprise à progression égale et minage d’une brèche. Deux pièces de 36 cases fusionnent en 73, puis se séparent ; une extraction ouvre l’une sur le bord sans modifier l’autre.
+La suite complète a passé **114 tests** après intégration V35 : [rapport](../../artifacts/roofing-core.json). Les premiers échecs correspondaient aux attentes de migration vers l’ancien schéma ; données historiques et exclusions restent vérifiées. Après revue des supports et du pool d’intentions, **six scénarios ciblés passent**, dont le pilote de cinq à huit jours sur trois graines : [rapport final](../../artifacts/roofing-final-core.json).
 
-**Parcours UI natif passé**, 11,9 secondes (13,3 secondes avec lancement) : enceinte synthétique, inspection cellule/colon, vrai abattage imposant le passage de porte, maintien ouvert sans fusion, mur déconstruit par le colon, sauvegarde/rechargement. L’inspection rouverte en pause lit bien la topologie actuelle. Chromium `channel: chromium`, `args: []`, viewport 1440×1000, backend **WebGPU** exigé, aucune erreur capturée. Captures locales `artifacts/rooms-ui-enclosed.png` et `rooms-ui-breach.png` inspectées : texte lisible dans le panneau existant et brèche visible. Le FPS reste présent ; le nombre ponctuel de la capture n’est pas un benchmark.
+Toiture : rayon et connexion, porteur derrière un trou, contact, défrichage et bilan du bois, coexistence avec stockage, croissance interrompue/reprise, annulation en file, supports déconstruits, détour conservé après retrait volontaire et meuble sans rôle porteur. Deux cibles inaccessibles ne monopolisent pas les intentions. Pièces : une reconstruction crée une zone sans couverture immédiate et respecte la zone de retrait. Les reprises restent exactes. La revue finale passe aussi douze tests ciblés de toiture/pièces/ordres/transport : [rapport](../../artifacts/roofing-review-core.json), dont minage d’un support et menu proposant les deux couches.
 
-La première compilation a signalé une union TypeScript insuffisamment discriminée et deux champs manquants de la fixture ; corrigés avant les résultats finaux. Le lancement initial de Vitest dans le bac à sable a échoué sur `spawn EPERM`, puis a réussi avec autorisation des processus. Une extension du parcours UI utilisait Échap, qui efface volontairement la sélection ; le geste est corrigé en fermeture de l’onglet Travail, sans modifier ce comportement du jeu. Aucun échec final ni test ignoré.
+Le pilote développe repas, couchages, champ, ateliers, minage et stocks par commandes. Il couvre **28 cellules du repas** et garde le potager découvert ; bilans alimentaires/matières, besoins et continuation sont conservés. Il vérifie une colonie cohérente, pas toutes les stratégies humaines ni une parité exhaustive de Core.
 
-Le pilote naturel et la longue UI ne sont pas rejoués : commandes, persistance, simulation et boucles de colonie inchangées. Leurs dernières preuves restent historiques au lot précédent. La tranche des toits devra enrichir leur construction et leurs bilans ; les trois tests actuels ne prétendent pas remplacer ces parcours ni couvrir toutes les anomalies.
+Le **parcours UI toiture natif passe** en 30,7 s (avec réponse de sauvegarde retardée), avec vrai worker, tracé, pose, inspection, visibilité sans mutation, Ignorer, retrait, sauvegarde/rechargement. Backend WebGPU exigé, erreurs : zéro. Captures [couverture](../../artifacts/roofing-ui-covered.png) et [coupe](../../artifacts/roofing-ui-cutaway.png) inspectées : dalle au-dessus des murs, interface lisible, compteur FPS visible. Deux parcours longs ont révélé une course sauvegarde/chargement : la relance instrumentée attendait le tick 13 035, mais observait 7 881 après rechargement, simulation active. Charger lisait l’ancienne entrée locale avant la fin de Sauvegarder ; l’assertion immédiate pouvait encore voir l’état précédant le chargement. [Diagnostic conservé](../../artifacts/roofing-journey-race.json). Les boutons de persistance sont désormais exclusifs pendant la sauvegarde, et le contrôle attend la fin du remplacement avant comparaison. Une réponse de sauvegarde artificiellement retardée d’une seconde exerce ce cas dans le parcours court. Dernier checkpoint et bilan compact sont conservés même avec le reporter texte. **La relance complète passe en 6,7 minutes**, jusqu’au tick 18 060, backend WebGPU et aucune erreur capturée : [bilan de trois jours](../../artifacts/colony-roofing-three-days.json). Dix-huit repas préparés et dix-huit ingestions observés, trois utilisateurs de couchages, 28 cases couvertes dès la fin du deuxième jour ; bilans bois/aliments concordants. La réserve de blocs à 15 déclenche une nouvelle désignation de minage acceptée et sauvegardée, conformément au pilote.
 
-## Petit audit CPU
+## Audit de charge
 
-[Mesure brute](../../artifacts/rooms-cpu.json), [script reproductible](../../scripts/room-topology-bench.ts), Ryzen 5 3600, Node 24.11.1. Une exécution sur 250×250, 4 000 murs, 100 enceintes et 100 colons synthétiques ; génération exclue, 100 vérifications d’échauffement. Puis 1 000 lectures sans changement et 300 ouvertures/fermetures de brèche alternées. Aucune suite lourde lancée simultanément par l’agent.
+Ryzen 5 3600, Node 24.11.1, carte 250×250 dégagée, 3/30/100 bâtisseurs, 25 cellules de toit et un arbre par support. Arbres réellement abattus ; résultats : 75/750/2 500 cellules et 36/360/1 200 bois. Besoins actifs. Aucune suite lourde simultanée pendant les mesures.
 
-| Opération | p50 | p95 | p99 | maximum |
+| Bâtisseurs | Actifs simultanés observés | Tick p95 | Tick p99 | Maximum |
 |---|---:|---:|---:|---:|
-| Vérifier les obstacles, topologie inchangée | 0,162 ms | 0,265 ms | 0,325 ms | 0,434 ms |
-| Vérifier et recalculer après modification | 0,885 ms | 1,392 ms | 3,287 ms | 6,936 ms |
+| 3 | 3 | 2,136 ms | 4,534 ms | 14,309 ms |
+| 30 | 30 | 9,106 ms | 16,901 ms | 25,505 ms |
+| 100 | 100 | 17,248 ms | 24,832 ms | 37,109 ms |
 
-Le nombre d’acteurs n’est pas une charge de travailleurs ici : aucun tick n’est mesuré, seulement la requête pure de topologie. Une lecture utile de l’inspecteur partage le résultat ; aucun calcul par acteur ni par frame. Le recalcul reste global, avec des pointes jusqu’à 6,94 ms dans cette exécution. Pas de promesse de coût nul, de FPS garantis ni d’invalidation locale déjà livrée. Rendu et buffers GPU inchangés.
+[Données CPU](../../artifacts/roofing-cpu.json), [script](../../scripts/roofing-bench.ts). `structuredClone` complet, mesuré séparément, atteint 97,27 ms : ce n’est ni le protocole delta réel ni son transfert. La simulation partage le contexte de toit entre actions sans mutation, sans le reconstruire par colon à chaque contrôle. Des pointes CPU restent mesurées.
 
-## Compilation, documentation et portée
+[Audit graphique](../../artifacts/roofing-render.json), [script](../../scripts/roofing-render-bench.mjs) : Chromium natif, `channel: chromium`, sans rendu logiciel, 1440×1000, adaptateur AMD `rdna-1` (modèle commercial non exposé). Cent bâtisseurs, toits visibles, worker ×6, échauffement 90 images. 3 909 intervalles : p95 **8,40 ms**, p99 **20,90 ms**, maximum **29,20 ms**. Adoption p95 4,50 ms/max 5,30 ms ; CPU de rendu p95 5,80 ms/max 14,50 ms. Maximum 144 appels de dessin. **Zéro création native de pipeline pendant les travaux**, aucune erreur. Le lot passe à 2 500 instances avec les programmes préparés ; aucun mesh individuel par tuile.
 
-Build/typecheck final réussis : 177 modules, worker inchangé à 207,64 kB ; entrée graphique 1 069,83 kB, 300,18 kB gzip. Avertissement historique de bundle supérieur à 500 kB conservé. Liens locaux et intégrité des trois originaux contrôlés ; guide, inventaire, recherche, contrat, architecture et ROADMAP actualisés. Aucun objet ni matériau ajouté au catalogue.
+Les mesures ont été rejouées après la revue finale et la correction de sauvegarde, sans autre suite lancée simultanément par l’agent. Le premier relevé graphique avait un p99 de 16,70 ms ; la variation entre exécutions empêche de conclure à un coût constant ou à une régression causale depuis un seul relevé. Les valeurs ci-dessus sont celles du dernier passage, y compris les pointes. Elles valent pour ce scénario et ce matériel, pas pour toute configuration. Carte naturelle dense, effondrement massif, météo et futurs personnages nécessiteront leurs audits propres.
 
-La pièce est **reconnue et inspectable**, encore sans toit ni effets d’abri. Couverture/supports, thermique, rôles/statistiques, effets du lieu sur les ateliers et loisirs restent à développer. Le reste des manques est maintenu dans l’[inventaire fonctionnel](../gameplay/implementation-status.md) ; ce lot ne clôture pas G2.
+## Portée
+
+Toits construits jouables. Toits naturels, thermique, lumière des ateliers, dégâts/gravats d’effondrement et éclairage de coupe absents. La dalle est provisoire ; masquer son mesh retire aussi son ombre, sans changer croissance ou règles. Le [bilan global](../gameplay/implementation-status.md) maintient les autres systèmes partiels/absents.
+
+## Compilation et documentation
+
+Compilation/typecheck finaux réussis : 181 modules, worker 217,37 kB ; entrée graphique 1 071,00 kB, 300,43 kB gzip. Avertissement historique de bundle supérieur à 500 kB conservé. Types Node 24.13.4 vérifiés sur le registre npm et épinglés uniquement en développement pour les diagnostics de tests ; aucune nouvelle dépendance d’exécution. Les liens locaux, les contrats courants et l’intégrité des trois originaux sont contrôlés.

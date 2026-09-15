@@ -5,7 +5,7 @@ import { DEFAULT_MAP_SIZE, MAP_SIZE_PRESETS } from '../sim/map-config';
 
 const mapSizeLabels: Record<number, string> = { 32: 'terrain d’essai', 64: 'compacte', 128: 'compacte', 200: 'petite', 250: 'moyenne' };
 
-export type Tool = 'haul-chunks' | 'select' | Exclude<JobKind, 'sow'> | 'cancel' | 'stockpile' | 'remove-stockpile' | 'growing' | 'remove-growing';
+export type Tool = 'ignore-roof' | 'haul-chunks' | 'select' | Exclude<JobKind, 'sow'> | 'cancel' | 'stockpile' | 'remove-stockpile' | 'growing' | 'remove-growing';
 export type Panel = 'architect' | 'work' | 'schedule' | 'assign' | 'history' | 'menu' | null;
 export type ArchitectCategory = 'orders' | 'zones' | 'structure' | 'furniture' | 'temperature' | 'recreation' | 'production';
 export const toolDefinitions: { id: Tool; icon: string; title: string; hint: string; key: string; category: ArchitectCategory }[] = [
@@ -27,6 +27,9 @@ export const toolDefinitions: { id: Tool; icon: string; title: string; hint: str
   { id: 'stonecutter', icon: '⚒', title: 'Table de taille de pierre', hint: '3 × 1 · Q / E pour tourner · 1 fragment → 20 blocs · travail Artisanat', key: '', category: 'production' },
   { id: 'stool', icon: '⊓', title: 'Tabouret', hint: '1 × 1 · une place par colon, adjacente à une table', key: '', category: 'furniture' },
   { id: 'growing', icon: '♧', title: 'Zone de culture', hint: 'Tracer un champ de riz. Semis sans graines et récolte à maturité, via le travail Culture.', key: '', category: 'zones' },
+  { id:'build-roof',icon:'▱',title:'Construire un toit',hint:'Désigner la couverture à poser par les bâtisseurs. Aucun matériau requis ; supports nécessaires.',key:'',category:'zones' },
+  { id:'remove-roof',icon:'⊟',title:'Retirer un toit',hint:'Retirer physiquement la couverture et empêcher son ajout automatique.',key:'',category:'zones' },
+  { id:'ignore-roof',icon:'⊠',title:'Ignorer le toit',hint:'Effacer la zone de toiture sans changer la couverture déjà posée.',key:'',category:'zones' },
   { id: 'remove-growing', icon: '⊠', title: 'Retirer une culture', hint: 'Retirer la zone conserve les plantes déjà semées.', key: '', category: 'zones' },
   { id: 'stockpile', icon: '▧', title: 'Réserve', hint: 'Tracer un rectangle de stockage. Les cases occupées et les réserves existantes sont ignorées.', key: 'S', category: 'zones' },
   { id: 'remove-stockpile', icon: '⊠', title: 'Retirer', hint: 'Cliquer ou tracer un rectangle pour retirer des cases de réserve ; les objets restent au sol.', key: '', category: 'zones' },
@@ -101,7 +104,7 @@ export function gameLayout(): string {
     </section>
 
     <aside class="time-panel panel" aria-label="Temps de jeu">
-      <div class="view-controls"><button id="wall-cutaway" aria-pressed="false" title="Coupe visuelle : les murs gardent leurs collisions">Murs : hauts</button><button id="foliage-toggle" aria-pressed="false" title="Masquer le feuillage pour voir les colons">Feuillage</button><button id="view-home" title="Recentrer sur la colonie">⌂</button></div>
+      <div class="view-controls"><button id="wall-cutaway" aria-pressed="false" title="Coupe visuelle : les murs gardent leurs collisions">Murs : hauts</button><button id="roof-toggle" aria-pressed="false" title="Afficher la couverture ; masquer ne retire pas le toit">Toits : masqués</button><button id="foliage-toggle" aria-pressed="false" title="Masquer le feuillage pour voir les colons">Feuillage</button><button id="view-home" title="Recentrer sur la colonie">⌂</button></div>
       <div class="camera-controls"><button id="camera-mode" aria-pressed="false" title="Basculer en perspective ; glisser avec le bouton droit pour tourner">Vue : iso</button></div>
       <div id="clock">00:00</div><div id="day">Jour 1</div><div class="biome-label" title="Site tempéré provisoire. Saisons et météo à venir.">Forêt tempérée</div>
       <div class="time-controls" aria-label="Vitesse de simulation">

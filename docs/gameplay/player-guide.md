@@ -69,7 +69,7 @@ Un jour dure dix minutes à vitesse normale (6 000 ticks). Le compteur FPS mesur
 
 En vue très éloignée, les détails minuscules du décor sont remplacés par des silhouettes plus légères. Le terrain, les obstacles et les ordres restent les mêmes. Le compteur FPS continue de mesurer le rendu, y compris en pause.
 
-Les massifs ont maintenant des sommets et parois irréguliers qui se raccordent entre cases. Ils gardent leurs obstacles au sol. Le minage retire les cases localement, révèle le sol brut et conserve les fragments typés ; les toits et effondrements restent absents.
+Les massifs ont maintenant des sommets et parois irréguliers qui se raccordent entre cases. Ils gardent leurs obstacles au sol. Le minage retire les cases localement, révèle le sol brut et conserve les fragments typés ; les toits naturels et dégâts d’effondrement restent absents ; la couverture construite est disponible.
 
 ## Désigner et construire
 
@@ -177,7 +177,7 @@ Un repas déjà engagé peut être terminé après le changement. Transport et i
 
 Transporter ou fractionner conserve la fraîcheur ; mélanger des unités du même aliment produit un âge moyen pondéré. Une nourriture pourrie disparaît, y compris dans les mains d’un colon. La faim n’est pas satisfaite si cela arrive avant la fin du repas. Un ingrédient perdu interrompt la cuisine ; les autres restent physiques. Évitez de cuire une énorme réserve : le mode « jusqu’à X » permet de renouveler progressivement les repas.
 
-Le climat reste fixe. Toits, réfrigérateurs et dégâts d’exposition ne sont pas encore jouables. Les anciennes sauvegardes démarrent leurs aliments frais au tick chargé, faute d’âge historique ; les nouvelles sauvegardes conservent leur âge réel.
+Le climat reste fixe. Réfrigérateurs et dégâts d’exposition ne sont pas encore jouables ; la toiture construite ne réfrigère pas les aliments. Les anciennes sauvegardes démarrent leurs aliments frais au tick chargé, faute d’âge historique ; les nouvelles sauvegardes conservent leur âge réel.
 
 ## Sauvegarder et reprendre
 
@@ -187,7 +187,7 @@ Avant de créer une nouvelle colonie, le jeu conserve aussi l'état courant dans
 
 ## Limites et suite
 
-Pas encore d'autres cultures, autres postes/recettes de cuisine, chaîne du froid, autres minerais que l’acier, autres familles de loisirs, animaux, armes, combat, blessures, médecine, relations, traits, recherche, commerce, électricité, toit, température, incendie, météo dynamique, carte du monde ou storyteller. Les coûts de sols et autres profils de déplacement, les réserves à plusieurs cases partageant une politique, les autres familles sélectionnables, les fournisseurs supplémentaires de travail lié sur une case et les tournées logistiques restent à développer. Les modèles sont provisoires ; la congestion entre agents actifs et la calibration des besoins restent ouvertes. La faim ne cause pas encore de malnutrition ni de décès.
+Pas encore d'autres cultures, autres postes/recettes de cuisine, chaîne du froid, autres minerais que l’acier, autres familles de loisirs, animaux, armes, combat, blessures, médecine, relations, traits, recherche, commerce, électricité, toit naturel, température, incendie, météo dynamique, carte du monde ou storyteller. Les coûts de sols et autres profils de déplacement, les réserves à plusieurs cases partageant une politique, les autres familles sélectionnables, les fournisseurs supplémentaires de travail lié sur une case et les tournées logistiques restent à développer. Les modèles sont provisoires ; la congestion entre agents actifs et la calibration des besoins restent ouvertes. La faim ne cause pas encore de malnutrition ni de décès.
 
 La suite est suivie dans [le plan de développement](../ROADMAP.md). Les détails de la référence et les futures interactions sont dans [la matrice des systèmes](systems-matrix.md).
 
@@ -225,7 +225,7 @@ Une nouvelle carte répartit les massifs et pierres voisines en régions de gran
 
 Dans **Architecte → Ordres**, choisir **Miner** (M), puis cliquer ou tracer sur les massifs. Activer **Minage** dans Travail. Le colon rejoint la roche, lui fait face et frappe ; ses PV sont inspectables et les dégâts restent acquis après annulation. Un massif extrait découvre un sol rocheux non fertile. Il laisse un fragment de la même roche dans 25 % des cas, sans donner directement des blocs de construction.
 
-Créer une réserve avec **Fragments de roche** autorisés, puis désigner les fragments via **Transporter les fragments** dans Ordres. Un fragment occupe une case entière et se porte individuellement ; les types ne fusionnent pas. Le clic droit du colon peut aussi imposer son rangement. Une interruption après prise conserve le fragment mais peut nécessiter une nouvelle désignation. L’atelier de taille peut être construit en V31 ; ses recettes de blocs sont livrées en V32 ; les autres minerais que l’acier et les toits restent absents.
+Créer une réserve avec **Fragments de roche** autorisés, puis désigner les fragments via **Transporter les fragments** dans Ordres. Un fragment occupe une case entière et se porte individuellement ; les types ne fusionnent pas. Le clic droit du colon peut aussi imposer son rangement. Une interruption après prise conserve le fragment mais peut nécessiter une nouvelle désignation. L’atelier de taille peut être construit en V31 ; ses recettes de blocs sont livrées en V32 ; les autres minerais que l’acier et les toits naturels restent absents.
 
 ## Extraire une réserve d’acier
 
@@ -261,7 +261,7 @@ Dans **Architecte → Structure → Porte**, choisissez un matériau. Une porte 
 
 Inspectez-la pour **Maintenir ouverte** après le prochain passage ou **Interdire le passage**, même si elle est ouverte. Retirer le maintien peut attendre un nouveau passage. Les occupants et objets empêchent la fermeture ; dégager ou ranger l'objet libère la porte. Le colon déjà engagé termine son mouvement.
 
-La porte se déconstruit mais ne s'emballe pas. Il faut encore déconstruire un mur avant d'y poser une porte. Toits et isolation thermique restent à développer ; l'ouverture actuelle ne simule pas encore leurs effets.
+La porte se déconstruit mais ne s'emballe pas. Il faut encore déconstruire un mur avant d'y poser une porte. La toiture construite est disponible ; l’isolation thermique reste à développer ; l'ouverture actuelle ne simule pas encore leurs effets.
 
 Les fragments au sol peuvent être traversés, mais ne servent pas de place pour observer le ciel ou jouer aux fers à cheval. Dégagez la case pour la rendre disponible.
 
@@ -269,4 +269,12 @@ Les fragments au sol peuvent être traversés, mais ne servent pas de place pour
 
 Cliquez sur le sol ou un meuble pour lire **Pièce non couverte** et son nombre de cases dans l’inspection, en bas à gauche. Un colon sélectionné indique l’espace de sa cellule. Les murs achevés, roches et portes séparent les pièces ; une porte ouverte reste un seuil. Plans et cadres ne les ferment pas encore. Une brèche latérale peut ouvrir l’espace jusqu’au bord de la carte ; un coin diagonal manquant ne suffit pas.
 
-Le nombre compte le sol intérieur, y compris sous les meubles, sans les murs ni les portes. Ce n’est pas une statistique de confort. La toiture n’est pas encore disponible : reconnaître une enceinte ne chauffe pas le lieu et ne change pas la vitesse des ateliers ou les besoins. La prochaine tranche ajoute la couverture et ses règles physiques.
+Le nombre compte le sol intérieur, y compris sous les meubles, sans les murs ni les portes. Ce n’est pas une statistique de confort. La toiture construite est disponible et son compte figure ici. Reconnaître/couvrir une enceinte ne chauffe pas encore le lieu et ne change pas la vitesse des ateliers ou les besoins.
+
+## Poser ou retirer un toit
+
+Dans **Architecte → Zones**, tracer **Construire un toit**. Les bâtisseurs rejoignent la zone et travaillent sans consommer de matériau. Murs terminés, portes et roches portent le plafond ; il faut une couverture reliée aux supports. Un arbre gênant doit être abattu. Fermer une petite enceinte peut créer automatiquement la zone, mais les colons doivent toujours poser le toit.
+
+**Retirer un toit** commande son retrait et empêche sa repose automatique. **Ignorer le toit** efface les zones sans enlever la couverture. Le bouton **Toits : masqués/visibles** change seulement la vue. L’inspection indique les cases couvertes, indépendamment de ce bouton.
+
+Le riz et les baies ne poussent plus sans soleil sous un toit ; les colons cherchent ailleurs pour regarder le ciel. La température et les effets intérieurs des ateliers restent à développer. Retirer un support peut supprimer la couverture : l’événement précise que les dégâts d’effondrement ne sont pas encore simulés. Les toits naturels des montagnes ne sont pas présents.

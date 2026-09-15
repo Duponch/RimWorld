@@ -1,0 +1,245 @@
+{
+  "result": "failed before save/load fix",
+  "expectedTick": 13035,
+  "observedTick": 7881,
+  "observedNotice": "Dernière sauvegarde rechargée.",
+  "observedPaused": false,
+  "errors": [],
+  "days": [
+    {
+      "tick": 6088,
+      "foodPolicies": [
+        1,
+        1,
+        1
+      ],
+      "restRules": "adult",
+      "scheduledSleepHours": [
+        8,
+        8,
+        8
+      ],
+      "spoiled": {
+        "berries": 0,
+        "rice": 0,
+        "simple-meal": 0
+      },
+      "crops": 15,
+      "growingCells": 15,
+      "mining": {
+        "blocks": 0,
+        "blocksStored": 0,
+        "steelInBuildings": 0,
+        "steel": 0,
+        "steelStored": 0,
+        "cells": 0,
+        "chunks": 0,
+        "stored": 0
+      },
+      "recreation": [
+        {
+          "level": 96.78999999999836,
+          "tolerance": {
+            "solitary": 11.593219946780222,
+            "dexterity": 31.902365036175595
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          }
+        },
+        {
+          "level": 95.33999999999762,
+          "tolerance": {
+            "solitary": 19.344536446993214,
+            "dexterity": 17.55200388716426
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          }
+        },
+        {
+          "level": 96.72999999999833,
+          "tolerance": {
+            "solitary": 18.941204690186964,
+            "dexterity": 18.347500000010214
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          }
+        }
+      ],
+      "furnitureTransit": 0,
+      "furnitureExits": 0,
+      "roofing": {
+        "constructed": 0,
+        "planned": 0,
+        "removal": 0
+      },
+      "sharedPawnCells": 0,
+      "playerOrders": [
+        {
+          "active": null,
+          "queued": 0,
+          "priority": null
+        },
+        {
+          "active": null,
+          "queued": 0,
+          "priority": null
+        },
+        {
+          "active": null,
+          "queued": 0,
+          "priority": null
+        }
+      ],
+      "obstructedGrowingCells": 0,
+      "clearing": 0,
+      "construction": {
+        "blueprints": 0,
+        "frames": 0,
+        "clearingPlants": 0,
+        "clearingPiles": 0
+      },
+      "structures": {
+        "bed": 3,
+        "table": 1,
+        "stool": 3,
+        "wall": 7,
+        "campfire": 1,
+        "horseshoes": 1,
+        "stonecutter": 0,
+        "door": 0
+      },
+      "preparedMeals": 6,
+      "stock": {
+        "wood": 41,
+        "food": 21
+      },
+      "pending": 0,
+      "minimumFood": 60.826666666661396,
+      "minimumRest": 57.90642857142926
+    },
+    {
+      "tick": 12100,
+      "foodPolicies": [
+        3,
+        3,
+        3
+      ],
+      "restRules": "adult",
+      "scheduledSleepHours": [
+        8,
+        8,
+        8
+      ],
+      "spoiled": {
+        "berries": 0,
+        "rice": 0,
+        "simple-meal": 0
+      },
+      "crops": 15,
+      "growingCells": 15,
+      "mining": {
+        "blocks": 35,
+        "blocksStored": 35,
+        "steelInBuildings": 30,
+        "steel": 50,
+        "steelStored": 50,
+        "cells": 6,
+        "chunks": 0,
+        "stored": 0
+      },
+      "recreation": [
+        {
+          "level": 95.48999999999769,
+          "tolerance": {
+            "solitary": 24.293719946791228,
+            "dexterity": 18.492365036175087
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          }
+        },
+        {
+          "level": 93.08999999999646,
+          "tolerance": {
+            "solitary": 10.81203347494949,
+            "dexterity": 24.71300685922012
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          }
+        },
+        {
+          "level": 98.34999999999916,
+          "tolerance": {
+            "solitary": 32.601704690197906,
+            "dexterity": 5.546500000009729
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          }
+        }
+      ],
+      "furnitureTransit": 0,
+      "furnitureExits": 0,
+      "roofing": {
+        "constructed": 28,
+        "planned": 28,
+        "removal": 0
+      },
+      "sharedPawnCells": 0,
+      "playerOrders": [
+        {
+          "active": null,
+          "queued": 0,
+          "priority": null
+        },
+        {
+          "active": null,
+          "queued": 0,
+          "priority": null
+        },
+        {
+          "active": null,
+          "queued": 0,
+          "priority": null
+        }
+      ],
+      "obstructedGrowingCells": 0,
+      "clearing": 0,
+      "construction": {
+        "blueprints": 0,
+        "frames": 0,
+        "clearingPlants": 0,
+        "clearingPiles": 0
+      },
+      "structures": {
+        "bed": 3,
+        "table": 1,
+        "stool": 3,
+        "wall": 7,
+        "campfire": 1,
+        "horseshoes": 1,
+        "stonecutter": 1,
+        "door": 1
+      },
+      "preparedMeals": 3,
+      "stock": {
+        "wood": 49,
+        "food": 48
+      },
+      "pending": 0,
+      "minimumFood": 47.97333333332948,
+      "minimumRest": 42.998571428572234
+    }
+  ],
+  "diagnosis": "Load read the previous localStorage save before the pending save reply was persisted; immediate equality with the pre-load snapshot masked the regression."
+}

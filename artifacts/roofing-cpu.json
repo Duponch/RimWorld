@@ -1,0 +1,71 @@
+{
+  "date": "2026-09-15T10:55:12.301Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "protocol": "250² clear map, 3/30/100 builders, 25 roof cells and one real tree per support; synchronous CPU step and structuredClone measured separately, no rendering.",
+  "results": [
+    {
+      "count": 3,
+      "roofCells": 75,
+      "wood": 36,
+      "peakWorkers": 3,
+      "ticks": 353,
+      "stepMs": {
+        "count": 353,
+        "p50": 0.46270000000004075,
+        "p95": 2.1357000000000426,
+        "p99": 4.534099999999967,
+        "max": 14.308700000000044
+      },
+      "structuredCloneMs": {
+        "count": 4,
+        "p50": 49.80580000000009,
+        "p95": 55.27430000000004,
+        "p99": 55.27430000000004,
+        "max": 55.27430000000004
+      }
+    },
+    {
+      "count": 30,
+      "roofCells": 750,
+      "wood": 360,
+      "peakWorkers": 30,
+      "ticks": 536,
+      "stepMs": {
+        "count": 536,
+        "p50": 2.329300000000103,
+        "p95": 9.105800000000272,
+        "p99": 16.901299999999992,
+        "max": 25.50519999999983
+      },
+      "structuredCloneMs": {
+        "count": 6,
+        "p50": 47.17340000000013,
+        "p95": 51.55229999999983,
+        "p99": 51.55229999999983,
+        "max": 51.55229999999983
+      }
+    },
+    {
+      "count": 100,
+      "roofCells": 2500,
+      "wood": 1200,
+      "peakWorkers": 100,
+      "ticks": 1184,
+      "stepMs": {
+        "count": 1184,
+        "p50": 5.572900000001027,
+        "p95": 17.248199999999997,
+        "p99": 24.832400000000234,
+        "max": 37.108600000000024
+      },
+      "structuredCloneMs": {
+        "count": 12,
+        "p50": 49.083300000000236,
+        "p95": 97.26949999999852,
+        "p99": 97.26949999999852,
+        "max": 97.26949999999852
+      }
+    }
+  ]
+}

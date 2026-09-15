@@ -18,7 +18,7 @@ La baisse ordinaire est 60/6 000 point/tick, facteur 0,7 de 15 à moins de 30, 0
 
 `horseshoes` est une construction de dix bois, sept ticks de travail, empreinte 1×1 non solide. Trois utilisateurs au maximum, douze places potentielles à cinq cellules : chaque place est réservée via `serviceCell`, comme une place de repas ou de cuisine. Un passant civil ne prend aucun droit d'utilisation. Une famille dextérité reste unique quel que soit le nombre de piquets. L'aperçu jaune/rouge indique seulement emplacement praticable et visibilité ; il ne promet pas un chemin depuis chaque colon.
 
-Observer le ciel ne réserve aucun bâtiment. Les cases portant un décor/ouvrage sont écartées, puis le trajet vérifie l'accès. Le voisinage échantillonné reste une adaptation provisoire ; pièces, toits et météo ne sont pas simulés par ce filtre. À reconsidérer lors de G2 et de l'extension des loisirs sans bâtiment.
+Observer le ciel ne réserve aucun bâtiment. Les cases portant un décor/ouvrage sont écartées, puis le trajet vérifie l'accès. Le voisinage échantillonné reste une adaptation provisoire ; V35 exclut les cases de ciel couvertes ; la psychologie de pièce et la météo ne sont pas simulées par ce filtre. À reconsidérer lors de G2 et de l'extension des loisirs sans bâtiment.
 
 L'audit sous V34 corrige l'index des candidats : un fragment au sol interdit la place dès la sélection, comme il l'interdisait déjà lors de l'exécution. Le retirer réautorise la place à la prochaine décision. Les contrôles ponctuels utilisent les empreintes sans allouer de tableaux. [Relecture et limites](../research/spatial-query-reference.md).
 

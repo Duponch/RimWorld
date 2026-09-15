@@ -17,3 +17,6 @@ tmp/
 *.local
 
 artifacts/furniture-transfer-load.json
+
+# Replaced on every browser journey; publish a named compact proof after validation.
+artifacts/colony-last-journey.json

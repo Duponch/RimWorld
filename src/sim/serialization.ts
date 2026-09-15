@@ -1,3 +1,5 @@
+import { validateRoofing } from './roof-save.ts';
+import { isRoofJob } from './roof-rules.ts';
 import { validateDoors } from './door-save.ts';
 import { validateMining } from './mining-save.ts';
 import { validateConstructionMaterials } from './construction-material-save.ts';
@@ -50,7 +52,7 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validateWorld(input: unknown): string[] {
   return validateSchema(input, SCHEMA_VERSION);
 }
-function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34): string[] {
+function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(input)) return ['World must be an object.'];
@@ -71,7 +73,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
   const ids = new Set<number>();
   for (const key of ['pawns', 'resources', 'structures', 'jobs', 'piles', 'stockpiles'] as const) {
     const items = input[key] as unknown[];
-    if (items.length > (key === 'piles' ? 32768 : size)) errors.push(`Too many ${key}.`);
+    if (items.length > (key === 'piles' ? 32768 : key==='jobs'&&version>=35?size*2:size)) errors.push(`Too many ${key}.`);
     for (const item of items) {
       if (!record(item) || !integer(item.id, 1) || (key !== 'piles' && !coord(item))) { errors.push(`Invalid ${key} identity or cell.`); continue; }
       if (ids.has(item.id)) errors.push('Duplicate entity ID.'); ids.add(item.id);
@@ -136,7 +138,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
           if (version < 7 || !(item.kind === 'berries' || (version >= 8 && item.kind === 'rice')) || typeof item.growth !== 'number' || !Number.isFinite(item.growth) || item.growth < 0 || item.growth > 1 || !integer(item.growthTick, 0, input.tick as number)) errors.push('Invalid plant growth checkpoint.');
         }
       } else if (key === 'structures' || key === 'jobs') {
-        if (!oneOf(item.kind, key === 'structures' ? (version < 4 ? ['wall', 'bed'] : ['wall', 'bed', 'table', 'stool', ...(version>=10?['campfire']:[]), ...(version>=15?['horseshoes']:[]), ...(version>=31?['stonecutter']:[]), ...(version>=34?['door']:[])]) : (version < 4 ? ['chop', 'harvest', 'wall', 'bed'] : [...(version>=28?['mine']:[]), ...(version>=25?['install','uninstall']:[]), ...(version>=24?['deconstruct']:[]), 'chop', 'harvest', ...(version >= 7 ? ['cut'] : []), ...(version >= 8 ? ['sow'] : []), 'wall', 'bed', 'table', 'stool', ...(version>=10?['campfire']:[]), ...(version>=15?['horseshoes']:[]), ...(version>=31?['stonecutter']:[]), ...(version>=34?['door']:[])])) || !integer(item.orientation, 0, 3)
+        if (!oneOf(item.kind, key === 'structures' ? (version < 4 ? ['wall', 'bed'] : ['wall', 'bed', 'table', 'stool', ...(version>=10?['campfire']:[]), ...(version>=15?['horseshoes']:[]), ...(version>=31?['stonecutter']:[]), ...(version>=34?['door']:[])]) : (version < 4 ? ['chop', 'harvest', 'wall', 'bed'] : [...(version>=35?['build-roof','remove-roof']:[]), ...(version>=28?['mine']:[]), ...(version>=25?['install','uninstall']:[]), ...(version>=24?['deconstruct']:[]), 'chop', 'harvest', ...(version >= 7 ? ['cut'] : []), ...(version >= 8 ? ['sow'] : []), 'wall', 'bed', 'table', 'stool', ...(version>=10?['campfire']:[]), ...(version>=15?['horseshoes']:[]), ...(version>=31?['stonecutter']:[]), ...(version>=34?['door']:[])])) || !integer(item.orientation, 0, 3)
           || !oneOf(item.footprint, ['standard', 'legacy-single']) || (item.footprint === 'legacy-single' && item.kind !== 'bed' && !(version>=24&&item.kind==='deconstruct'||version>=25&&['install','uninstall'].includes(String(item.kind))))) errors.push('Invalid structure definition or footprint.');
         if (key==='structures' && item.kind==='campfire') {
           const f=item.fuel;
@@ -179,6 +181,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
   if(!errors.length)errors.push(...validateFoodPolicies(input as unknown as World,version));
   if(!errors.length)errors.push(...validateRecreation(input as unknown as World,version));
   if(!errors.length)errors.push(...validateConstruction(input as unknown as World,version));
+  if(!errors.length)errors.push(...validateRoofing(input as unknown as World,version));
   if(!errors.length)errors.push(...validatePlayerOrders(input as unknown as World,version));
   if (errors.length) return errors;
   const world = input as unknown as World;
@@ -193,7 +196,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
   const structureCells = new Map<number, World['structures'][number]>(); const jobCells = new Map<number, World['jobs'][number]>();
   if (resourceCells.size !== world.resources.length || new Set(world.stockpiles.map(cellKey)).size !== world.stockpiles.length) errors.push('Duplicate cell occupancy.');
   for (const [items, map] of [[world.structures, structureCells], [world.jobs, jobCells]] as const) {
-    for (const item of items) for (const cell of footprintCells(item)) {
+    for (const item of items) if(!isRoofJob(item)) for (const cell of footprintCells(item)) {
       if (cell.x < 0 || cell.z < 0 || cell.x >= world.width || cell.z >= world.height) { errors.push('Footprint outside map.'); continue; }
       if (map.has(cellKey(cell))) errors.push('Overlapping footprints.');
       (map as Map<number, typeof item>).set(cellKey(cell), item);
@@ -308,7 +311,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
     if (job.reservedBy !== null && !job.clearance && (version<5 ? delivered.wood<JOB_WOOD_COST[job.kind] : !constructionSupplied(world,job))) errors.push('Construction work started before delivery.');
     const resource = resourceCells.get(cellKey(job));
     if (job.kind === 'chop' || job.kind === 'harvest' || job.kind === 'cut') { if (!resource || !(job.kind === 'chop' ? resource.kind === 'tree' : isPlant(resource))) errors.push('Gather job has no matching resource.'); else if (version >= 7 && job.kind === 'harvest' && !(version === 7 ? legacyPlantGrowth(world,resource) > .65 : harvestable(world,resource))) errors.push('Harvest job targets an immature plant.'); }
-    else if(job.kind!=='mine'&&job.kind!=='deconstruct'&&job.kind!=='uninstall'&&job.kind!=='install')for (const cell of footprintCells(job)) {
+    else if(!isRoofJob(job)&&job.kind!=='mine'&&job.kind!=='deconstruct'&&job.kind!=='uninstall'&&job.kind!=='install')for (const cell of footprintCells(job)) {
       const obstacle=resourceCells.get(cellKey(cell));
       if (obstacle&&(version<16||!isConstruction(job)||obstacle.kind==='rock') || structureCells.has(cellKey(cell))) errors.push('Construction overlaps existing content.');
     }
@@ -441,6 +444,7 @@ export function deserializeWorld(serialized: string): World {
   if(record(input)&&input.schemaVersion===31){const errors=validateSchema(input,31);if(errors.length)throw new Error(`Invalid version 31 save: ${errors.join(' ')}`);input.schemaVersion=32;const w=input as unknown as World;for(const p of w.pawns)p.priorities.craft=2;for(const s of [...w.structures,...w.packed.map(p=>p.building)])if(s.kind==='stonecutter')s.bills=[];}
   if(record(input)&&input.schemaVersion===32){const errors=validateSchema(input,32);if(errors.length)throw new Error(`Invalid version 32 save: ${errors.join(' ')}`);input.schemaVersion=33;}
   if(record(input)&&input.schemaVersion===33){const errors=validateSchema(input,33);if(errors.length)throw new Error(`Invalid version 33 save: ${errors.join(' ')}`);input.schemaVersion=34;}
+  if(record(input)&&input.schemaVersion===34){const errors=validateSchema(input,34);if(errors.length)throw new Error(`Invalid version 34 save: ${errors.join(' ')}`);input.schemaVersion=35;}
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`); return input as World;
 }
 /** Deterministic diagnostic fingerprint, not a cryptographic digest. */

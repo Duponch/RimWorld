@@ -88,6 +88,7 @@ test('real removal, frame, construction, mining and save/reload merge and split 
   expect(room(12, 15)).toMatchObject({ cellCount: 73, touchesMapEdge: false });
   expect(room(12, 15)).toBe(room(17, 15));
   addGroundMaterial(w, 'wood', 5, { x: 17, z: 17 }, 'wood');
+  expect(applyCommand(w,{type:'area',action:'remove-roof',from:{x:12,z:15},to:{x:12,z:15}}).ok).toBe(true);
   expect(applyCommand(w, { type: 'designate', kind: 'wall', material: 'wood', x: 15, z: 14 }).ok).toBe(true);
   expect(cache.read(w)).toBe(merged);
   until(() => w.jobs.some(j => j.kind === 'wall' && j.construction === 'frame'));
@@ -96,6 +97,9 @@ test('real removal, frame, construction, mining and save/reload merge and split 
   expect(replay.read(saved).at(12, 15)).toEqual(room(12, 15));
   until(() => w.structures.some(s => s.kind === 'wall' && s.x === 15 && s.z === 14));
   stepWorld(saved, w.tick - saved.tick); expect(saved).toEqual(w);
+  expect(w.roofing!.build).toContain(15*32+17);
+  expect(w.roofing!.build).not.toContain(15*32+12); // Explicit removal wins over automatic room coverage.
+  expect(w.roofing!.constructed).toEqual([]); // A finished wall only designates, builders still have to act.
   expect(room(12, 15)).toMatchObject({ cellCount: 36, touchesMapEdge: false });
   expect(closed.at(12, 15)).toEqual(room(12, 15));
   // Replace one outer wall with natural rock, then open a real mined breach.

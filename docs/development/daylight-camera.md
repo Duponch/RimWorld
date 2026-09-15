@@ -21,7 +21,7 @@ Au démarrage, `preparePresentation` précompile les matériaux des deux project
 
 ## Limites conservées explicitement
 
-Latitude/longitude du site, saison, météo et calendrier solaire variable ne sont pas encore sérialisés. Les teintes du ciel ne pilotent pas les plantes. La croissance V7 garde son intégrale favorable simplifiée, un climat à 21 °C et sa fenêtre diurne ; cela reste un écart connu, à reprendre avant les cultures. Aucun effet nouveau d'obscurité sur marche, travail ou humeur n'est implicitement ajouté ; éclairage artificiel, toits, ombres de gameplay, éclipses et température restent absents.
+Latitude/longitude du site, saison, météo et calendrier solaire variable ne sont pas encore sérialisés. Les teintes du ciel ne pilotent pas les plantes. Depuis V8, les plantes utilisent l’intégrale de lumière de la latitude fixe ; V35 interrompt cette progression sous couverture construite, avec checkpoint préalable. Le climat reste fixé à 21 °C. Aucun effet nouveau d'obscurité sur marche, travail ou humeur n'est implicitement ajouté ; éclairage artificiel, toits naturels, ombres de gameplay, éclipses et température variable restent absents. Masquer les toits construits retire leur ombre graphique ; l’éclairage intérieur de coupe reste à développer.
 
 Les ombres utilisent une fenêtre locale autour de la cible, pas une couverture précise de la carte entière. En vue rasante, la végétation peut masquer les colons : masquage du feuillage disponible, transparence contextuelle future. Le panoramique reste limité à la carte et les extérieurs du plateau ne sont pas un terrain infini.
 

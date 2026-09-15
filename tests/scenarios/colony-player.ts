@@ -1,4 +1,5 @@
 import { stonecuttingDecisions } from './stonecutting-player.ts';
+import { roofingDecisions } from './roofing-player.ts';
 import { miningDecisions } from './mining-player.ts';
 import { installCommand } from '../../src/sim/furniture-commands.ts';
 import { queryOrderOptions } from '../../src/sim/player-orders.ts';
@@ -138,7 +139,7 @@ export function playerDecisions(world: World): Decision[] {
       if (canDesignate(world, command).ok) { out.push({ reason: kind === 'tree' ? 'Prévoir le bois des chantiers et une petite marge.' : 'Renouveler la réserve alimentaire avant la pénurie.', command }); planned += resource.amount; }
     }
   }
-  out.push(...miningDecisions(world),...stonecuttingDecisions(world));
+  out.push(...miningDecisions(world),...stonecuttingDecisions(world),...roofingDecisions(world));
   return out;
 }
 
@@ -151,6 +152,7 @@ export function colonySummary(world: World) {
     recreation:world.pawns.map(p=>({level:p.recreation.level,tolerance:{...p.recreation.tolerance},bored:{...p.recreation.bored}})),
     furnitureTransit:world.pawns.filter(p=>p.motion&&p.motion.end>world.tick&&(p.motion.terrainDelay??0)>0).length,
     furnitureExits:world.pawns.filter(p=>p.transitExit).length,
+    roofing:{constructed:world.roofing?.constructed.length??0,planned:world.roofing?.build.length??0,removal:world.roofing?.remove.length??0},
     sharedPawnCells:[...occupied.values()].filter(count=>count>1).length,
     playerOrders:world.pawns.map(p=>({active:p.orders.active,queued:p.orders.queue.length,priority:p.priorityWork??null})),
     obstructedGrowingCells:world.piles.filter(p=>p.owner.type==='ground'&&fields.has(p.owner.z*world.width+p.owner.x)).length,

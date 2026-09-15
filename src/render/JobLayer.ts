@@ -1,4 +1,5 @@
 import type * as THREE from 'three/webgpu';
+import { isRoofJob } from '../sim/roof-rules';
 import type { BoxBatches } from './BoxBatches';
 import type { Placement } from './primitives';
 import type { World } from '../sim/types';
@@ -10,7 +11,7 @@ import { WORLD_SCALE } from '../world/scale';
 export function buildJobMarkers(world: World, group: THREE.Group, cutaway: boolean, batches: BoxBatches): void {
     const wallHeight = cutaway ? WORLD_SCALE.wallCutawayHeight : WORLD_SCALE.wallHeight;
     const orders: Placement[] = [], blueprints: Placement[] = [], frames: Placement[] = [], progress: Placement[] = [];
-    for (const job of world.jobs) {
+    for (const job of world.jobs.filter(j=>!isRoofJob(j))) {
       const cells = footprintCells(job), last = cells[cells.length - 1]!;
       for (const cell of cells) orders.push({ x: cell.x, y: 0.032, z: cell.z, color: job.status === 'active' ? 0xe7c17a : 0x99cfc3 });
       if(job.kind==='mine') {for(const ry of [-Math.PI/4,Math.PI/4])frames.push({x:job.x,z:job.z,y:3.65,sx:.6,sy:.035,sz:.08,ry,color:0xeac27d});continue;}

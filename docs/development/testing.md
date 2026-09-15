@@ -1,5 +1,7 @@
 # Stratégie de validation
 
+Toiture V35 : enrichir les familles espace/temps/intégration avec `roofing.test.ts` et le scénario de pièces. Le pilote couvre 28 cellules du repas, garde ses bilans et son champ découvert ; le parcours UI ajoute les mêmes commandes. `roofing-bench.ts` et `roofing-render-bench.mjs` mesurent la même charge de 100 bâtisseurs, jusqu’à 2 500 cellules et 1 200 bois de défrichage.
+
 ## Principes
 
 Maintenir peu de scénarios riches : effets de jeu, invariants, cas limites et diagnostics reproductibles. Un test qui relit simplement la valeur qu’il vient d’écrire apporte peu. Chaque bug important enrichit la famille correspondante ; ni une accumulation de petits tests ni une partie longue sans assertions ne garantissent l’absence d’anomalies.
@@ -180,3 +182,5 @@ Les trois scénarios `doors.test.ts` croisent variantes, livraisons, attente, tr
 ## Première topologie des pièces sous V34
 
 `room-topology.test.ts` enrichit F3 avec deux scénarios profonds : oracle indépendant par union sur 80 rectangles, mutations en place et instantanés conservés ; puis vraie déconstruction, plan/cadre, reconstruction, minage et replay. `integration/rooms.spec.ts` contrôle le panneau dans le vrai worker, porte traversée et maintenue ouverte, brèche et rechargement, réouverture de l’inspection en pause. Le banc `scripts/room-topology-bench.ts` sépare vérification inchangée et recalcul sur 250² avec 4 000 murs ; aucune inférence sur les FPS. Les boucles du pilote ne changent pas dans ce lot de lecture seule ; la toiture l’enrichira.
+
+Le pilote UI conserve `artifacts/colony-last-journey.json` et `tmp/colony-last-checkpoint.json` en cas d’échec, indépendamment du reporter. Copier un bilan nommé dans les preuves publiées après livraison. Un chargement n’est vérifié qu’après la fin de la préparation : l’ancien snapshot peut être identique à la valeur attendue avant même la réponse du worker. Le scénario toiture retarde la réponse de sauvegarde pour vérifier que Charger attend sa persistance.

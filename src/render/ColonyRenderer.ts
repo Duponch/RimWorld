@@ -1,3 +1,4 @@
+import { RoofLayer } from './RoofLayer';
 import { blockParts } from './block-presentation';
 import { sameTerrainSurface } from './terrain-state';
 import { doorOrientations } from '../sim/door-rules';
@@ -59,6 +60,7 @@ export class ColonyRenderer {
   private get controls(): OrbitControls { return this.rig.controls; }
   private readonly terrainGroup = new THREE.Group();
   private readonly resourceGroup = new THREE.Group();
+  private readonly roofs=new RoofLayer();
   private readonly doors=new DoorLayer();
   private readonly structureGroup = new THREE.Group();
   private readonly jobGroup = new THREE.Group();
@@ -153,7 +155,7 @@ export class ColonyRenderer {
     renderer.domElement.tabIndex = 0;
     host.appendChild(renderer.domElement);
     this.daylight = new DayNightLayer(this.scene);
-    this.scene.add(this.doors.group,this.crops.group, this.growing.group, this.overview.group, this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup, this.pawns.group);
+    this.scene.add(this.roofs.surface,this.roofs.areas,this.doors.group,this.crops.group, this.growing.group, this.overview.group, this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup, this.pawns.group);
     this.rig = new CameraRig(renderer.domElement);
     const hoverMat = new THREE.MeshBasicNodeMaterial({ color: 0xf9ebae, transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide });
     this.hover = new THREE.Mesh(new THREE.PlaneGeometry(0.96, 0.96), hoverMat);
@@ -223,6 +225,7 @@ export class ColonyRenderer {
     if (previousWorld?.resources !== world.resources || newMap) this.updateResources(world, newMap);
     else if (Math.floor(previousWorld.tick / 25) !== Math.floor(world.tick / 25)) this.resources.updateGrowth(world);
     const packageKey=(world.packed??[]).filter(p=>p.owner.type==='ground').map(p=>`${p.building.id}:${p.building.material}:${p.owner.type==='ground'?`${p.owner.x}:${p.owner.z}`:''}`).join('|');
+    this.roofs.update(world,this.boxes,newMap);
     this.doors.update(world,this.wallCutaway,resetPoses);
     const doorAxes=doorOrientations(world);
     const structureKey = [...doorAxes].join(':') + packageKey + world.structures.map((s) => `${s.id}:${s.kind}:${s.material}:${s.x}:${s.z}:${s.orientation}:${s.footprint}:${s.fuel?s.fuel.ticks>0:''}`).join('|');
@@ -278,6 +281,8 @@ export class ColonyRenderer {
   }
 
   /** Presentation only: hidden wall volume remains blocked in the simulation. */
+  setRoofsVisible(visible:boolean):void {this.roofs.surface.visible=visible;}
+  setRoofAreasVisible(visible:boolean):void {this.roofs.areas.visible=visible;}
   setWallCutaway(enabled: boolean): void {
     if (this.wallCutaway === enabled) return;
     this.wallCutaway = enabled;
@@ -298,6 +303,7 @@ export class ColonyRenderer {
     this.preparing = true;
     const culling = new Map<THREE.Object3D, boolean>();
     const distant = this.overview.group.visible;
+    const restoreRoofs=this.roofs.prepare();
     const restoreDoors=this.doors.prepareForCompile();
     const restoreCrops = this.crops.prepareForCompile();
     try {
@@ -309,7 +315,7 @@ export class ColonyRenderer {
       await this.renderer.compileAsync(this.scene, this.rig.perspective);
       await prepareShadowPipelines(this.renderer,this.scene,this.rig.orthographic,this.boxes);
     } finally {
-      restoreDoors();restoreCrops();
+      restoreRoofs();restoreDoors();restoreCrops();
       for (const [object, value] of culling) object.frustumCulled = value;
       this.overview.group.visible = distant; this.terrainGroup.visible = this.resourceGroup.visible = !distant;
       this.rocks.setDistant(distant); this.preparing = false;

@@ -1,5 +1,6 @@
 import { deconstructionReserved } from './deconstruction-rules.ts';
 import { canStandAt } from './furniture-travel.ts';
+import { isRoofed, roofIndex } from './roof-rules.ts';
 import { footprintCells, footprintContains } from './definitions.ts';
 import { inBounds } from './pathfinding.ts';
 import type { Cell, Structure, World } from './types.ts';
@@ -58,6 +59,7 @@ export function standableRecreationCell(world: World, cell: Cell, space?: Recrea
     && !(space ? space.solids.has(cell.z*world.width+cell.x) : world.structures.some(s=>['wall','table'].includes(s.kind)&&footprintContains(s,cell))||world.jobs.some(s=>['wall','table'].includes(s.kind)&&footprintContains(s,cell)));
 }
 export function recreationSiteValid(world: World, task: RecreationTask, space?: RecreationSpace): boolean {
+  if(task.activity==='skygaze'&&isRoofed(world,roofIndex(world,task.target)))return false;
   if (!standableRecreationCell(world,task.target,space)) return false;
   if(task.activity==='skygaze'&&space?.resources)return !space.objects.has(task.target.z*world.width+task.target.x)&&!space.resources.has(task.target.z*world.width+task.target.x);
   if (task.activity === 'skygaze') return !world.structures.some(s=>footprintContains(s,task.target))

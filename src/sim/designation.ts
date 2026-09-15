@@ -1,3 +1,4 @@
+import { isRoofArea, isRoofJob } from './roof-rules.ts';
 import { occupancyOf } from './occupancy.ts';
 import { isPlant, harvestable } from './plants.ts';
 import { isCookingOrder } from './order-types.ts';
@@ -6,7 +7,7 @@ import { inBounds } from './pathfinding.ts';
 import type { AreaAction, AreaCommand, Cell, CommandResult, StorageSettings, World } from './types.ts';
 
 const TREE = 1, BERRIES = 2, FIXED = 4, JOB = 8, STORAGE = 16, BLOCKED = 32, RIPE = 64, GROWING = 128, ZONE_BLOCKED = 256, GROW_BLOCKED = 512, DECONSTRUCTIBLE = 1024, ROCK = 2048, CHUNK = 4096;
-export const isAreaAction = (value: unknown): value is AreaAction => ['mine', 'haul-chunks', 'deconstruct', 'chop', 'harvest', 'cut', 'cancel', 'stockpile', 'remove-stockpile', 'growing', 'remove-growing'].includes(value as string);
+export const isAreaAction = (value: unknown): value is AreaAction => ['build-roof', 'remove-roof', 'ignore-roof', 'mine', 'haul-chunks', 'deconstruct', 'chop', 'harvest', 'cut', 'cancel', 'stockpile', 'remove-stockpile', 'growing', 'remove-growing'].includes(value as string);
 export interface AreaBounds { minX: number; maxX: number; minZ: number; maxZ: number }
 export interface AreaIndex { flags: Uint16Array }
 export type AreaQuery = { ok: false; reason: string; code: CommandResult['code'] }
@@ -28,7 +29,7 @@ export function buildAreaIndex(world: World): AreaIndex {
   for (const resource of world.resources) flags[index(resource)]! |= ZONE_BLOCKED | FIXED | (resource.kind === 'tree' ? TREE : isPlant(resource) ? BERRIES | (harvestable(world, resource) ? RIPE : 0) : 0);
   for (const structure of world.structures) for (const cell of footprintCells(structure)) flags[index(cell)]! |= DECONSTRUCTIBLE | FIXED | (occupancyOf(structure.kind)?.zones?0:ZONE_BLOCKED | GROW_BLOCKED);
   for(const job of world.jobs)if(job.furniture){const source=world.structures.find(s=>s.id===job.furniture!.structureId);if(source)for(const c of footprintCells(source))flags[index(c)]!|=JOB;}
-  for (const job of world.jobs) for (const cell of footprintCells(job)) flags[index(cell)]! |= JOB | (job.kind==='deconstruct'||job.kind==='uninstall'||occupancyOf(job.furniture?.kind??job.kind)?.zones?0:ZONE_BLOCKED) | (occupancyOf(job.furniture?.kind??job.kind)?.zones===false?GROW_BLOCKED:0);
+  for (const job of world.jobs.filter(j=>!isRoofJob(j))) for (const cell of footprintCells(job)) flags[index(cell)]! |= JOB | (job.kind==='deconstruct'||job.kind==='uninstall'||occupancyOf(job.furniture?.kind??job.kind)?.zones?0:ZONE_BLOCKED) | (occupancyOf(job.furniture?.kind??job.kind)?.zones===false?GROW_BLOCKED:0);
   for(const pack of world.packed??[])if(pack.owner.type==='ground'&&world.jobs.some(j=>j.furniture?.structureId===pack.building.id))flags[index(pack.owner)]!|=JOB;
   for (const storage of world.stockpiles) flags[index(storage)]! |= STORAGE;
   for (const pawn of world.pawns) {
@@ -55,7 +56,7 @@ export function queryArea(world: World, command: AreaCommand, index?: AreaIndex)
   const cells: number[] = [];
   for (let z = bounds.minZ; z <= bounds.maxZ; z++) for (let x = bounds.minX; x <= bounds.maxX; x++) {
     const i = z * world.width + x, value = flags[i]!;
-    const eligible = command.action === 'mine' ? (value & ROCK) && !(value & JOB)
+    const eligible = isRoofArea(command.action) ? true : command.action === 'mine' ? (value & ROCK) && !(value & JOB)
       : command.action === 'haul-chunks' ? value & CHUNK
       : command.action === 'deconstruct' ? (value & DECONSTRUCTIBLE) && !(value & JOB)
       : command.action === 'chop' ? (value & TREE) && !(value & JOB)

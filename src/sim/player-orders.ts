@@ -6,6 +6,7 @@ import { isCookingOrder } from './order-types.ts';
 import { advanceCookingOrder, planCookingOrder, queuedCookingReason, startCookingOrder } from './player-cooking.ts';
 import { footprintCells } from './definitions.ts';
 import { constructionSupplied } from './construction-materials.ts';
+import { isRoofJob } from './roof-rules.ts';
 import { asBuilder, constructionHaulPriority, constructionObstruction, constructionSiteFree, isConstruction } from './construction-rules.ts';
 import { growingJobValid } from './farming.ts';
 import { groundPile } from './ground-placement.ts';
@@ -21,7 +22,7 @@ export interface PlayerOrders { active: number | 'haul' | 'cook' | null; queue: 
 export type OrderCommand = { type:'order-cook';pawnId:number;structureId:number;queue:boolean } | { type: 'order-job'; pawnId: number; jobId: number; queue: boolean } | { type:'order-haul';pawnId:number;target:HaulOrderTarget;queue:boolean } | { type: 'clear-orders'; pawnId: number };
 export interface OrderOption { jobId: number; cookStationId?:number; haulTarget?:HaulOrderTarget; label: string; enabled: boolean; reason?: string }
 export const MAX_QUEUED_ORDERS = 32;
-const labels: Record<Job['kind'], string> = { door:'Construire la porte', stonecutter:'Construire la table de taille', mine:'Miner', uninstall:'Désinstaller',install:'Réinstaller', deconstruct:'Déconstruire', chop:'Abattre',harvest:'Récolter',cut:'Couper',sow:'Semer du riz',wall:'Construire le mur',bed:'Construire le lit',table:'Construire la table',stool:'Construire le tabouret',campfire:'Construire le feu',horseshoes:'Construire le piquet' };
+const labels: Record<Job['kind'], string> = { 'build-roof':'Poser le toit', 'remove-roof':'Retirer le toit', door:'Construire la porte', stonecutter:'Construire la table de taille', mine:'Miner', uninstall:'Désinstaller',install:'Réinstaller', deconstruct:'Déconstruire', chop:'Abattre',harvest:'Récolter',cut:'Couper',sow:'Semer du riz',wall:'Construire le mur',bed:'Construire le lit',table:'Construire la table',stool:'Construire le tabouret',campfire:'Construire le feu',horseshoes:'Construire le piquet' };
 const fail = (reason: string): CommandResult => ({ok:false,code:'invalid-command',reason});
 const busy = (pawn: Pawn) => pawn.jobId !== null || !!(pawn.haul || pawn.cooking || pawn.need || pawn.recreation.task);
 const clearingPlant=(world:World,job:Job)=>!isConstruction(job)?undefined:job.clearance?world.resources.find(r=>r.id===job.clearance!.resourceId):constructionObstruction(world,job).plant;
@@ -65,10 +66,11 @@ function preflight(world:World,pawn:Pawn,job:Job,queue=false):string|undefined {
 /** Called only for a menu query in the worker, not on render frames/snapshots. */
 export function queryOrderOptions(world:World,pawnId:number,cell:Cell,queue=false):OrderOption[] {
   const pawn=world.pawns.find(p=>p.id===pawnId);if(!pawn)return [];
-  const job=world.jobs.find(j=>footprintCells(j).some(c=>c.x===cell.x&&c.z===cell.z)),pile=groundPile(world,cell),options:OrderOption[]=[];
-  if(job) {
-    const reason=preflight(world,pawn,job,queue) ?? (route(world,pawn,job)===null?'Aucun accès praticable à ce travail.':undefined);
-    options.push({jobId:job.id,label:orderLabel(world,job),enabled:!reason,...(reason?{reason}:{})});
+  const jobs=world.jobs.filter(j=>footprintCells(j).some(c=>c.x===cell.x&&c.z===cell.z));
+  const job=jobs.find(j=>!isRoofJob(j))??jobs[0],pile=groundPile(world,cell),options:OrderOption[]=[];
+  for(const target of jobs) {
+    const reason=preflight(world,pawn,target,queue) ?? (route(world,pawn,target)===null?'Aucun accès praticable à ce travail.':undefined);
+    options.push({jobId:target.id,label:orderLabel(world,target),enabled:!reason,...(reason?{reason}:{})});
   }
   const targets:HaulOrderTarget[]=[];
   if(job&&isConstruction(job)) {

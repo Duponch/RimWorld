@@ -11,6 +11,9 @@ declare global {
 export const serializedWorld = (page: Page): Promise<string> => page.evaluate(() => JSON.stringify(window.__lisiere.world));
 export const world = async (page: Page): Promise<World> => JSON.parse(await serializedWorld(page)) as World;
 export async function expectWorld(page: Page, expected: World) {
+  // The pre-load snapshot can already equal expected: wait for replacement and
+  // presentation to finish before comparing, otherwise the assertion is vacuous.
+  await expect(page.locator('.game-shell')).toHaveJSProperty('inert',false);
   const serialized = JSON.stringify(expected);
   // Exact comparison, with no expensive recursive matcher/tracing over thousands of tile objects.
   await expect.poll(async () => await serializedWorld(page) === serialized, {
@@ -36,9 +39,9 @@ export async function panel(page: Page, name: 'architect' | 'work' | 'schedule' 
   await expect(page.locator(`#${name}-panel`)).toBeVisible();
 }
 
-export async function tool(page: Page, name: 'door' | 'stonecutter' | 'mine' | 'haul-chunks' | 'uninstall' | 'deconstruct' | 'select' | 'chop' | 'harvest' | 'cut' | 'cancel' | 'wall' | 'bed' | 'table' | 'horseshoes' | 'stool' | 'campfire' | 'stockpile' | 'remove-stockpile' | 'growing' | 'remove-growing') {
+export async function tool(page: Page, name: 'build-roof'|'remove-roof'|'ignore-roof'|'door' | 'stonecutter' | 'mine' | 'haul-chunks' | 'uninstall' | 'deconstruct' | 'select' | 'chop' | 'harvest' | 'cut' | 'cancel' | 'wall' | 'bed' | 'table' | 'horseshoes' | 'stool' | 'campfire' | 'stockpile' | 'remove-stockpile' | 'growing' | 'remove-growing') {
   await panel(page, 'architect');
-  const category = name === 'stonecutter' ? 'production' : name === 'horseshoes' ? 'recreation' : name === 'campfire' ? 'temperature' : name === 'door' || name === 'wall' ? 'structure' : name === 'bed' || name === 'table' || name === 'stool' ? 'furniture' : name === 'stockpile' || name === 'remove-stockpile' || name === 'growing' || name === 'remove-growing' ? 'zones' : 'orders';
+  const category = name === 'stonecutter' ? 'production' : name === 'horseshoes' ? 'recreation' : name === 'campfire' ? 'temperature' : name === 'door' || name === 'wall' ? 'structure' : name === 'bed' || name === 'table' || name === 'stool' ? 'furniture' : name === 'build-roof' || name === 'remove-roof' || name === 'ignore-roof' || name === 'stockpile' || name === 'remove-stockpile' || name === 'growing' || name === 'remove-growing' ? 'zones' : 'orders';
   await page.locator(`[data-category="${category}"]`).click();
   await page.locator(`[data-tool="${name}"]`).click();
 }

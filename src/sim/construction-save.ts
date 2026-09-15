@@ -1,3 +1,4 @@
+import { isRoofJob } from './roof-rules.ts';
 import { containsCell, isConstruction } from './construction-rules.ts';
 import { clearingDuration } from './gathering.ts';
 import type { World } from './types.ts';
@@ -11,7 +12,7 @@ export function validateConstruction(world:World,version:number):string[] {
   const errors:string[]=[];
   for(const job of world.jobs) {
     if(version<16){if(job.construction!==undefined||job.clearance!==undefined)errors.push('Legacy save contains construction phases.');continue;}
-    if(isConstruction(job)?!['blueprint','frame'].includes(job.construction!):job.construction!==undefined||job.clearance!==undefined)errors.push('Invalid construction phase.');
+    if(isConstruction(job)?!['blueprint','frame'].includes(job.construction!):job.construction!==undefined||job.clearance!==undefined&&!isRoofJob(job))errors.push('Invalid construction phase.');
     if(job.construction==='blueprint'&&(job.escrow.wood!==0||job.kind!=='install'&&job.progress!==0))errors.push('Blueprint already contains materials or building work.');
     if(job.clearance!==undefined) {
       const c=job.clearance,resource=world.resources.find(r=>r.id===c?.resourceId);

@@ -14,6 +14,8 @@ Le riz au sol rejoint les piles, réservations, transport et ingestion existants
 
 ## Croissance et environnement
 
+V35 : la [couverture construite](roofing.md) arrête la croissance naturelle. Avant pose/retrait, les plantes concernées enregistrent leur progression au tick courant sous l’ancien éclairage ; découvrir reprend sans rattrapage du temps passé sous toit. Mortalité dans l’obscurité, lampes et dépendances complètes du semis à l’environnement restent à développer.
+
 `environment.ts` fixe explicitement un site extérieur à 45° N, à l'équinoxe, ciel clair, 21 °C. La lumière naturelle dépend de l'heure ; elle n'est pas dérivée des pixels ou de l'éclairage nocturne artistique. Croissance nulle sous 51 % de lumière, repos avant 06:00/après 19:12. La prairie vaut actuellement 100 % de fertilité, la terre 70 %. Riz : minimum 70 %, sensibilité 100 %, 3 jours de croissance à taux constant 100 %. Le calendrier réel est plus long : environ sept jours par cycle dans ce preset, avec une date de maturité dépendant de l'heure du semis et du sol. Ne pas afficher « prêt dans trois jours ».
 
 L'intégrale périodique de lumière utilise 6 001 doubles partagés (environ 48 Ko). Chaque requête de croissance coûte O(1), quelle que soit la durée écoulée. Le monde ne parcourt pas tous les végétaux à chaque tick. Température, saisons, météo, fertilisation, toits, lampes et changements environnementaux ne sont pas simulés ; toute future variation devra enregistrer la croissance acquise avant de changer son taux.

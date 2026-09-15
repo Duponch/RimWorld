@@ -84,10 +84,11 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   if (!cooking && !fires.length && !world.jobs.length && (!world.stockpiles.length || !world.piles.length && !world.packed.length || pawn.priorities.haul === 0)) { pawn.planCooldown = PLAN_INTERVAL; return; }
   if (!cooking && !fires.length && !world.jobs.length && !mayImproveFurnitureStorage(world) && !mayImproveStorage(world)) {pawn.planCooldown=PLAN_INTERVAL;return;}
   const blocked = getBlocked();
+  const clearingCells=new Set(world.jobs.filter(j=>j.clearance).map(j=>cellIndex(world,j.x,j.z)));
   // Rankings do not depend on flood order. Try the top ready job directly;
   // a failed targeted search has explored the full component and is reusable.
   // Logistics with a higher priority still uses the ordinary complete planner.
-  const ready = world.jobs.filter(job => !isConstruction(job) && job.reservedBy === null && pawn.priorities[workType(job)] > 0
+  const ready = world.jobs.filter(job => !isConstruction(job) && job.reservedBy === null && !clearingCells.has(cellIndex(world,job.x,job.z)) && pawn.priorities[workType(job)] > 0
     && (job.kind!=='sow'||!packedAt(world,job)) && job.escrow.wood >= JOB_WOOD_COST[job.kind] && (pawn.hunger > 20 || job.kind === 'harvest') && (job.kind!=='deconstruct'||deconstructionAvailable(world,job,pawn.id)) && (!job.furniture||furnitureReady(world,job,pawn)))
     .map(job => ({ job, target: job, id: job.id, priority: pawn.priorities[workType(job)], rank: job.kind==='uninstall' ? -2 : job.kind==='deconstruct' ? 3 : workType(job) === 'gather' ? 0 : 1, distance: Math.abs(job.x-pawn.x)+Math.abs(job.z-pawn.z) }))
     .sort(compareCandidate);
@@ -141,7 +142,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   for (const job of world.jobs) {
     if(isConstruction(job))continue;
     const work = workType(job);
-    if (job.reservedBy !== null || pawn.priorities[work] === 0 || (delivered.get(`${job.id}:wood`) ?? 0) < JOB_WOOD_COST[job.kind] || (pawn.hunger <= 20 && job.kind !== 'harvest')) continue;
+    if (job.reservedBy !== null || clearingCells.has(cellIndex(world,job.x,job.z)) || pawn.priorities[work] === 0 || (delivered.get(`${job.id}:wood`) ?? 0) < JOB_WOOD_COST[job.kind] || (pawn.hunger <= 20 && job.kind !== 'harvest')) continue;
     if(job.kind==='sow'&&packedAt(world,job))continue;
     if(job.furniture&&!furnitureReady(world,job,pawn))continue;
     if(job.kind==='deconstruct'&&!deconstructionAvailable(world,job,pawn.id))continue;

@@ -1,3 +1,4 @@
+import { isRoofArea } from './sim/roof-rules';
 import { stationRecipe } from './sim/production-recipes';
 import { RoomInspection } from './ui/room-inspection';
 import { constructionControls, constructionDeliveryLabel, structureFootprintLabel } from './ui/construction-controls';
@@ -31,7 +32,7 @@ import { gameLayout, storageSettings, toolDefinitions } from './ui/layout';
 import type { ArchitectCategory, Panel, Tool } from './ui/layout';
 
 import { recreationInspection, updateRecreationInspection } from './ui/recreation-inspection';
-const jobLabels: Record<JobKind, string> = { door:'Construction de la porte', stonecutter:'Construction de la table de taille', mine:'Minage', uninstall:'Désinstallation',install:'Réinstallation', deconstruct: 'Déconstruction', chop: 'Abattage', harvest: 'Récolte', cut: 'Coupe de plante', sow: 'Semis de riz', wall: 'Construction du mur', bed: 'Construction du lit', table: 'Construction de la table', stool: 'Construction du tabouret', horseshoes: 'Construction du piquet de fers à cheval', campfire: 'Construction du feu de camp' };
+const jobLabels: Record<JobKind, string> = { 'build-roof':'Pose de toit', 'remove-roof':'Retrait de toit', door:'Construction de la porte', stonecutter:'Construction de la table de taille', mine:'Minage', uninstall:'Désinstallation',install:'Réinstallation', deconstruct: 'Déconstruction', chop: 'Abattage', harvest: 'Récolte', cut: 'Coupe de plante', sow: 'Semis de riz', wall: 'Construction du mur', bed: 'Construction du lit', table: 'Construction de la table', stool: 'Construction du tabouret', horseshoes: 'Construction du piquet de fers à cheval', campfire: 'Construction du feu de camp' };
 const stateLabels: Record<Pawn['state'], string> = { idle: 'Disponible', moving: 'En chemin', working: 'Au travail', sleeping: 'Se repose', hungry: 'Cherche à manger', eating: 'Mange', recreating: 'Se divertit' };
 const terrainLabels = { 'rough-stone':'Sol rocheux brut', grass: 'Prairie', soil: 'Terre fertile', water: 'Eau infranchissable', rock: 'Massif rocheux infranchissable' };
 const resourceLabels = { tree: 'Arbre', berries: 'Buisson de baies', rock: 'Pierre au sol', rice: 'Plant de riz' };
@@ -103,6 +104,7 @@ function applyTool(tool: Tool) {
   if(tool!=='install'){installationId=undefined;renderer?.setFurniturePlacement(undefined);}
   currentTool = tool;
   renderer?.setTool(tool);
+  renderer?.setRoofAreasVisible(isRoofArea(tool));
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-tool]')) {
     const active = button.dataset.tool === tool;
     button.classList.toggle('active', active);
@@ -136,10 +138,10 @@ function pickCell(x: number, z: number) {
     const tool = currentTool;
     void attempt(() => {
       if(tool==='install'){if(installationId===undefined)throw new Error('Sélectionnez un meuble à installer.');return client.command({type:'install',structureId:installationId,x,z,orientation:placementOrientation}).then(()=>{applyTool('select');setPanel(null);});}
-      if (tool === 'haul-chunks' || tool === 'growing' || tool === 'remove-growing') return client.command({type:'area',action:tool,from:{x,z},to:{x,z}});
+      if (isRoofArea(tool) || tool === 'haul-chunks' || tool === 'growing' || tool === 'remove-growing') return client.command({type:'area',action:tool,from:{x,z},to:{x,z}});
       if (tool === 'stockpile') return client.command({ type: 'stockpile', x, z, enabled: true, ...readStorageSettings('stockpile') });
       if (tool === 'remove-stockpile') return client.command({ type: 'stockpile', x, z, enabled: false });
-      return client.command(tool === 'cancel' ? { type: 'cancel', x, z } : { type: 'designate', kind: tool, orientation: tool==='door'?0:placementOrientation, x, z, ...(constructionUI.material(tool) ? {material:constructionUI.material(tool)} : {}) });
+      return client.command(tool === 'cancel' ? { type: 'cancel', x, z } : { type: 'designate', kind: tool as JobKind, orientation: tool==='door'?0:placementOrientation, x, z, ...(constructionUI.material(tool) ? {material:constructionUI.material(tool)} : {}) });
     });
     return;
   }
@@ -152,7 +154,7 @@ function designateArea(action: AreaAction, from: Cell, to: Cell) {
   void attempt(async () => {
     const response = await client.command({ type: 'area', action, from, to, ...(action === 'stockpile' ? readStorageSettings('stockpile') : {}) });
     const result = JSON.parse(response!) as { affected: number; skipped: number };
-    const label = action === 'growing' ? 'case(s) de culture créée(s)' : action === 'remove-growing' ? 'case(s) de culture retirée(s)' : action === 'cancel' ? 'ordre(s) annulé(s)' : action === 'remove-stockpile' ? 'case(s) de réserve retirée(s)' : action === 'stockpile' ? 'case(s) de réserve créée(s)' : 'ordre(s) de collecte créé(s)';
+    const label = isRoofArea(action) ? 'case(s) de zone de toiture modifiée(s)' : action === 'growing' ? 'case(s) de culture créée(s)' : action === 'remove-growing' ? 'case(s) de culture retirée(s)' : action === 'cancel' ? 'ordre(s) annulé(s)' : action === 'remove-stockpile' ? 'case(s) de réserve retirée(s)' : action === 'stockpile' ? 'case(s) de réserve créée(s)' : 'ordre(s) de collecte créé(s)';
     notify(`${result.affected} ${label}${result.skipped ? ` · ${result.skipped} case(s) ignorée(s)` : ''}.`);
   });
 }
@@ -373,15 +375,21 @@ function syncStorageButtons() {
   document.querySelector<HTMLElement>('.game-shell')!.inert=replacingWorld;
   for(const button of document.querySelectorAll<HTMLButtonElement>('[data-speed]'))button.disabled=replacingWorld;
   for (const [id, key] of [['load', SAVE_KEY], ['restore-previous', PREVIOUS_KEY]]) {
-    try { el<HTMLButtonElement>(id).disabled = replacingWorld || !localStorage.getItem(key); } catch { el<HTMLButtonElement>(id).disabled = true; }
+    try { el<HTMLButtonElement>(id).disabled = replacingWorld || savingWorld || !localStorage.getItem(key); } catch { el<HTMLButtonElement>(id).disabled = true; }
   }
+  el<HTMLButtonElement>('save').disabled=replacingWorld||savingWorld;
 }
+let savingWorld=false;
 async function save() {
-  const data = await client.save(); if (!data) throw new Error('Sauvegarde vide.');
-  localStorage.setItem(SAVE_KEY, data); syncStorageButtons(); notify('Colonie sauvegardée dans ce navigateur.');
+  if(replacingWorld||savingWorld)return;
+  savingWorld=true;syncStorageButtons();notify('Sauvegarde en cours…');
+  try {
+    const data = await client.save(); if (!data) throw new Error('Sauvegarde vide.');
+    localStorage.setItem(SAVE_KEY, data);notify('Colonie sauvegardée dans ce navigateur.');
+  } finally {savingWorld=false;syncStorageButtons();}
 }
 async function load(key = SAVE_KEY) {
-  if (replacingWorld) return;
+  if (replacingWorld||savingWorld) return;
   const data = localStorage.getItem(key); if (!data) throw new Error('Aucune sauvegarde locale.');
   replacingWorld = true; syncStorageButtons(); notify('Chargement et préparation de la colonie…');
   try { await client.load(data); await renderer?.preparePresentation(); clearSelection(); setPanel(null); notify(key === PREVIOUS_KEY ? 'Colonie précédente restaurée.' : 'Dernière sauvegarde rechargée.'); }
@@ -420,6 +428,7 @@ el('new-world-close').onclick = () => el<HTMLDialogElement>('new-world-dialog').
 el('new-world-form').onsubmit = event => { event.preventDefault(); void attempt(createWorld); };
 el('show-diagnostics').onclick = () => { const hidden = !el('metrics').hidden; el('metrics').hidden = hidden; el('show-diagnostics').textContent = hidden ? 'Afficher les diagnostics' : 'Masquer les diagnostics'; };
 el('wall-cutaway').onclick = () => { wallCutaway = !wallCutaway; renderer?.setWallCutaway(wallCutaway); el('wall-cutaway').textContent = wallCutaway ? 'Murs : coupés' : 'Murs : hauts'; el('wall-cutaway').setAttribute('aria-pressed', String(wallCutaway)); };
+el('roof-toggle').onclick=()=>{const button=el('roof-toggle'),visible=button.getAttribute('aria-pressed')!=='true';button.setAttribute('aria-pressed',String(visible));button.textContent=visible?'Toits : visibles':'Toits : masqués';renderer?.setRoofsVisible(visible);};
 el('foliage-toggle').onclick = () => { foliageVisible = !foliageVisible; renderer?.setFoliageVisible(foliageVisible); el('foliage-toggle').textContent = foliageVisible ? 'Feuillage' : 'Troncs'; el('foliage-toggle').setAttribute('aria-pressed', String(!foliageVisible)); };
 el('view-home').onclick = () => { const pawn = snapshot?.pawns[0]; if (pawn) renderer?.focusPawn(pawn.id); };
 el('camera-mode').onclick = () => {

@@ -1,0 +1,49 @@
+{
+  "date": "2026-09-15T10:55:53.559Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "protocol": "Native WebGPU, 250², 100 builders, 2500 constructed roofs and 100 trees cleared physically. Roofs visible, worker 6x, 90-frame warmup, native pipeline instrumentation. No concurrent CPU benchmark; 90-second watchdog.",
+  "adapter": {
+    "vendor": "amd",
+    "architecture": "rdna-1",
+    "description": ""
+  },
+  "errors": [],
+  "tick": 3218,
+  "roofCells": 2500,
+  "trees": 0,
+  "wood": 1200,
+  "peakWorkers": 100,
+  "pipelines": [],
+  "frames": {
+    "count": 3909,
+    "p50": 4.199999999999818,
+    "p95": 8.399999999999636,
+    "p99": 20.900000000001455,
+    "max": 29.200000000000728
+  },
+  "frameCpu": {
+    "count": 3910,
+    "p50": 4.2999999998137355,
+    "p95": 5.7999999998137355,
+    "p99": 7.2999999998137355,
+    "max": 14.5
+  },
+  "adoptions": {
+    "count": 82,
+    "p50": 3.3999999994412065,
+    "p95": 4.5,
+    "p99": 5.300000000745058,
+    "max": 5.300000000745058
+  },
+  "drawCalls": {
+    "count": 3910,
+    "p50": 130,
+    "p95": 144,
+    "p99": 144,
+    "max": 144
+  }
+}

@@ -1,5 +1,7 @@
 # Plan de développement
 
+V35 livre les [toits construits](development/roofing.md) : zones, pose/retrait physiques, supports, couverture inspectable et masquage 3D. Le pilote couvre son espace de repas. **Prochaine étape de jour : propriétés fonctionnelles des pièces et lumière**, avec recherche des critères propres aux ateliers/plantes ; thermique, toits naturels et dégâts restent ouverts. G0 en consolidation, G1 partiel, G2 en cours ; aucun jalon complet supplémentaire.
+
 État : 15 septembre 2026. **ROADMAP est l’unique calendrier G0–G5.** Le [bilan fonctionnel](gameplay/implementation-status.md) fait autorité sur le contenu livré ; les [preuves](development/validation.md) indiquent ce qui a réellement été testé. Voir l’[index documentaire](README.md) pour les contrats et recherches.
 
 ## Direction et état

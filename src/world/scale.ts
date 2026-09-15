@@ -5,6 +5,7 @@ export const WORLD_SCALE = Object.freeze({
   metersPerCell: 1,
   humanHeight: 1.75,
   wallHeight: 2.8,
+  roofThickness: 0.12,
   wallCutawayHeight: 0.72,
   futureDoorClearance: 2.15,
   stonecutterHeight: 0.85,

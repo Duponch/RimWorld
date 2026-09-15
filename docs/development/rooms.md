@@ -1,6 +1,6 @@
 # Pièces — première tranche d’habitat sous V34
 
-15 septembre 2026. [Recherche et décisions](../research/rooms-reference.md), [validation](validation.md). Ce lot reconnaît les enceintes et les expose à l’inspection. Il ne livre pas encore la couverture, les rôles de pièce, les statistiques ou les échanges thermiques. Le schéma reste **34**, sans migration ni modification des commandes.
+15 septembre 2026. [Recherche et décisions](../research/rooms-reference.md), [validation](validation.md). Ce lot reconnaît les enceintes et les expose à l’inspection. La topologie introduite sous V34 reste dérivée. V35 ajoute la [couverture construite](roofing.md) et son inspection ; rôles, statistiques et échanges thermiques restent à développer.
 
 ## Connectivité et signification
 
@@ -22,8 +22,8 @@ La simulation, ses commandes et le protocole worker restent inchangés. Le modul
 
 Le panneau existant en bas à gauche indique paroi, seuil, extérieur ou « Pièce non couverte · N cases ». L’inspection d’un colon utilise sa cellule logique. Le texte se met à jour après construction, déconstruction, extraction et chargement, y compris si l’inspecteur est rouvert en pause. Aucun rendu supplémentaire ni nouvel appel GPU.
 
-Toutes les cellules sont encore sans toit dans le modèle actuel. Une enceinte reconnue n’accorde pas de bonus d’abri, de repos, de production ou d’humeur. Le coefficient extérieur fixe des ateliers et le choix de loisirs restent provisoires, désormais explicitement à revoir avec les propriétés environnementales : Core distingue intérieur thermique, travail et psychologie. Les toits naturels, zones de toiture, pose/retrait physiques, supports et effondrements constituent la prochaine tranche ; dégâts/santé, température, rôles, beauté et propreté restent distincts.
+La couverture construite est désormais disponible en V35. Une enceinte reconnue n’accorde pas de bonus d’abri, de repos, de production ou d’humeur. Le coefficient extérieur fixe des ateliers et les critères psychologiques des loisirs restent provisoires, désormais explicitement à revoir avec les propriétés environnementales : Core distingue intérieur thermique, travail et psychologie. Les zones, pose/retrait physiques et supports construits sont livrés par le contrat V35. Toits naturels et conséquences complètes d’effondrement restent ouverts ; dégâts/santé, température, rôles, beauté et propreté restent distincts.
 
 ## Contrôles
 
-Deux scénarios profonds : oracle indépendant par union sur 80 cartes rectangulaires et transitions exécutées par les commandes existantes. Couvrir portes, coins, eau, meubles, plans/cadres, brèche, reconstruction, minage, reprise et conservation des anciens instantanés. Le court parcours navigateur utilise une enceinte synthétique, puis un vrai abattage à travers une porte et une vraie déconstruction ; il ne remplace pas le pilote naturel. Le pilote de colonie n’est pas modifié car aucune boucle ni commande nouvelle n’est introduite. Les toits devront l’enrichir.
+Deux scénarios profonds : oracle indépendant par union sur 80 cartes rectangulaires et transitions exécutées par les commandes existantes. Couvrir portes, coins, eau, meubles, plans/cadres, brèche, reconstruction, minage, reprise et conservation des anciens instantanés. Le court parcours navigateur utilise une enceinte synthétique, puis un vrai abattage à travers une porte et une vraie déconstruction ; il ne remplace pas le pilote naturel. V35 enrichit le pilote de colonie avec un auvent au-dessus du repas, par commande de zone ; ses résultats restent distincts de cet oracle topologique.

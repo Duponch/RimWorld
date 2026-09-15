@@ -50,7 +50,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 34 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 35 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)
@@ -108,7 +108,7 @@
 
 ## Minage V28
 - Lire docs/development/mining.md et docs/research/mining-reference.md. Dégâts sur Tile.miningDamage, cadence de coup sur Job.progress ; annuler ne répare pas la roche. Dernier coup, RNG et produit engagés seulement après prévalidation.
-- `rough-stone` conserve le type, reste non fertile ; fragments `chunk` pile 1, rangement après désignation, pas de conversion en bois/aliment/bloc. Le maximum terrain/objet conserve le coût du sol entre répétiteurs. V27 strictement validée avant migration. Les roches historiques restent non typées (500 PV provisoires). Toits, autres minerais que l’acier et pierres décoratives transportables restent absents ; taille V32 dans son contrat distinct.
+- `rough-stone` conserve le type, reste non fertile ; fragments `chunk` pile 1, rangement après désignation, pas de conversion en bois/aliment/bloc. Le maximum terrain/objet conserve le coût du sol entre répétiteurs. V27 strictement validée avant migration. Les roches historiques restent non typées (500 PV provisoires). Toits naturels, autres minerais que l’acier et pierres décoratives transportables restent absents ; taille V32 dans son contrat distinct.
 
 ## Acier V29
 - Lire docs/development/steel.md et docs/research/steel-reference.md. Tile.ore est distinct de la roche encaissante ; 1 500 PV, dégâts naturels de 80, produit neutre 40 acier, piles 75. V28 est validée avant migration sans ajout de gisement ni de filtre. Acier automatiquement transportable, filtre absent = refus ; usages constructifs décrits dans le contrat V30. Avant compétences/rendement variable ou dégâts externes, faire évoluer le suivi des contributions minières. Le coût continu de pile n’est pas supprimé par la non-répétition du mobilier.
@@ -133,7 +133,7 @@
 
 ## Portes manuelles V34
 - Lire docs/development/doors.md et docs/research/doors-reference.md. Attendre au seuil avant une arête ; permission et animation sont distinctes. Maintenir ouverte ne commande pas une ouverture distante. Corps/arêtes et objets empêchent la fermeture ; une interdiction tardive conserve le passage engagé et sa sortie.
-- V33 strictement validée avant migration. Structure.door conserve temporisations et progression ; les autres objets ne portent pas cet état. Cadres solides pour les coins diagonaux même ouverts ; coût estimé séparé de l'attente physique. Jambages partagés et vantaux TSL sur l'horloge des colons. Pièces/toits/thermique, remplacement direct, factions et autodoors restent absents.
+- V33 strictement validée avant migration. Structure.door conserve temporisations et progression ; les autres objets ne portent pas cet état. Cadres solides pour les coins diagonaux même ouverts ; coût estimé séparé de l'attente physique. Jambages partagés et vantaux TSL sur l'horloge des colons. Propriétés des pièces/toits naturels/thermique, remplacement direct, factions et autodoors restent absents.
 
 ## Requêtes CPU sous V34
 - Lire docs/development/spatial-queries.md. Comparer le classement avant capacité/accès sans modifier ordre des couples, curseur, budgets ou réservations. Une destination mieux classée mais inaccessible ne supprime pas le meilleur candidat valide.
@@ -141,4 +141,9 @@
 
 ## Pièces — inspection sous V34
 - Lire docs/development/rooms.md et docs/research/rooms-reference.md. Connectivité cardinale de l’espace, murs/roches pleins, portes séparées même ouvertes ; eau, plans/cadres et meubles ne ferment pas une enceinte. Ce graphe n’est ni la navigation ni un booléen universel d’intérieur.
-- Cache possédé par l’appelant, masque vérifié à chaque lecture utile, mutations en place et dimensions incluses ; aucun travail par frame. Le recalcul global mesuré garde les instantanés précédents immuables. IDs dérivés non persistants. Toits, propriétés thermiques/travail/psychologie, rôles et effets restent absents ; pas de bonus d’abri par simple enceinte.
+- Cache possédé par l’appelant, masque vérifié à chaque lecture utile, mutations en place et dimensions incluses ; aucun travail par frame. Le recalcul global mesuré garde les instantanés précédents immuables. IDs dérivés non persistants. Toits naturels, propriétés thermiques/travail/psychologie, rôles et effets restent absents ; pas de bonus d’abri par simple enceinte.
+
+## Toiture construite V35
+- Lire docs/development/roofing.md et docs/research/roofing-reference.md. Couverture, zone de pose et zone de retrait sont distinctes du sol ; V34 validée avant migration sans toit inventé. Rayon de pose 6,9 avec connexion ; retrait volontaire par composantes sans rayon ; perte d’un support recontrôle la portée locale. Les meubles ordinaires ne sont pas porteurs.
+- Travaux Construction sans matériau/cadre, vrais trajets et défrichage, file réconciliée ; les intentions non réservées tournent pour éviter la monopolisation par des cibles inaccessibles. Les contextes ne survivent ni au tick ni à une mutation de couverture/support. Checkpointer la croissance avant modification du toit.
+- Deux lots graphiques préparés même vides, programmes stables ; masquer la toiture ne change pas World. Toits naturels, dommages/gravats d’effondrement, thermique et effets intérieurs des ateliers restent absents. Le pilote couvre 28 cases autour du repas sans couvrir le champ.

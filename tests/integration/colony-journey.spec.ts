@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { writeFile } from 'node:fs/promises';
 import { perform } from './player-actions';
 import { playerDecisions, playerFocusDecisions, colonySummary, woodAccount, foodAccount } from '../scenarios/colony-player';
 import { validateWorld } from '../../src/sim/index';
@@ -15,6 +16,13 @@ async function waitForTick(page:Page,tick:number):Promise<void> {
       page.waitForFunction(t=>window.__lisiere.tick>=t,tick,{polling:1000,timeout:30000}),
       new Promise<never>((_,reject)=>{timer=setTimeout(()=>reject(new Error(`Browser stopped responding while advancing to tick ${tick}; inspect hourly-world attachments.`)),35000);}),
     ]);
+  } catch(error) {
+    clearTimeout(timer);
+    const state=await Promise.race([
+      page.evaluate(()=>({tick:window.__lisiere?.tick,notice:document.querySelector('#notice')?.textContent,paused:!(document.querySelector('#pause-banner') as HTMLElement)?.hidden})),
+      new Promise(resolve=>{timer=setTimeout(()=>resolve('Browser did not answer the diagnostic within 1500 ms.'),1500);}),
+    ]).catch(e=>String(e));
+    throw new Error(`Target tick ${tick} timed out; last browser state: ${JSON.stringify(state)}; ${String(error)}`);
   } finally {clearTimeout(timer);}
 }
 
@@ -26,7 +34,7 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
   const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}});
   page.setDefaultTimeout(10000);
   const errors=observeErrors(page), decisions:{tick:number;reason:string;command:unknown}[]=[], days:ReturnType<typeof colonySummary>[]=[];
-  const harvests=new Map<string,number>(), meals=new Map<string,number>(), sleepers=new Set<number>(), cooked=new Set<string>();const recreationActivities=new Set<string>(),clearedSites=new Set<string>();let finalReport:unknown;
+  const harvests=new Map<string,number>(), meals=new Map<string,number>(), sleepers=new Set<number>(), cooked=new Set<string>();const recreationActivities=new Set<string>(),clearedSites=new Set<string>();let finalReport:unknown,waitingFor=0;
   try {
     // No injected fixture, inventory, clocks or simulation speed outside the UI.
     await page.goto('/?e2e&seed=42');await expect(page.locator('#loading')).toHaveCount(0);
@@ -40,7 +48,7 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
     for(let hour=0;hour<=72;hour+=4) {
       if(hour) {
         await page.locator('[data-speed="6"]').click();
-        await waitForTick(page,initial.tick+hour*250);
+        waitingFor=initial.tick+hour*250;await waitForTick(page,waitingFor);
         await page.locator('[data-speed="0"]').click();await expect(page.locator('#pause-banner')).toBeVisible();
       }
       const current=await world(page), summary=colonySummary(current), context=JSON.stringify(summary);
@@ -66,7 +74,7 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
         expect(current.structures.filter(s=>s.kind==='wall'&&isBlockMaterial(s.material)),context).toHaveLength(1);
         expect(current.deconstructed.count,context).toBe(1);expect(current.structures.find(s=>s.kind==='horseshoes')?.x,context).toBe(Math.floor(current.width/2)+4);expect(current.packed,context).toEqual([]);
         expect(summary.structures,context).toEqual({bed:3,table:1,stool:3,wall:7,campfire:1,horseshoes:1,stonecutter:1,door:1});expect(current.jobs.filter(j=>j.growingZoneId===undefined),context).toEqual([]);expect(current.resources.filter(r=>r.kind==='rice').length,context).toBeGreaterThan(5);
-        expect(current.stock.food,context).toBeGreaterThan(0);expect(sleepers.size,context).toBe(3);
+        expect(summary.roofing,context).toEqual({constructed:28,planned:28,removal:0});expect(current.stock.food,context).toBeGreaterThan(0);expect(sleepers.size,context).toBe(3);
         expect(meals.size,context).toBeGreaterThanOrEqual(18);expect(foodAccount(current)+9*cooked.size+[...meals.values()].reduce((a,b)=>a+b,0),context).toBe(initialFood+[...harvests.values()].reduce((a,b)=>a+b,0));
         expect(current.piles.filter(p=>p.kind==='food').every(p=>['berries','survival-meal','rice','simple-meal'].includes(p.item))).toBe(true);
         expect(cooked.size,context).toBeGreaterThanOrEqual(6);
@@ -96,6 +104,10 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
     expect(errors).toEqual([]);
     await testInfo.attach('colony-journey',{contentType:'application/json',body:JSON.stringify(finalReport)});
   } finally {
+    // Persist compact evidence even with the line reporter or a frozen browser.
+    await writeFile('artifacts/colony-last-journey.json',JSON.stringify(finalReport??{complete:false,waitingFor,days,decisions,meals:[...meals],errors},null,2));
+    const checkpoint=[...testInfo.attachments].reverse().find(a=>a.name.startsWith('hourly-world-'));
+    if(checkpoint?.body)await writeFile('tmp/colony-last-checkpoint.json',checkpoint.body);
     if(!finalReport)await testInfo.attach('colony-journey-incomplete',{contentType:'application/json',body:JSON.stringify({days,decisions,meals:[...meals],errors})});
     // A frozen renderer must not hold the test worker indefinitely in teardown.
     let timer:ReturnType<typeof setTimeout>|undefined;

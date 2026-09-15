@@ -78,3 +78,9 @@ Adopter cinq roches pour les cinq familles admissibles ; conserver l’exclusion
 ## Pièces sous V34
 
 Reconnaissance et inspection des enceintes livrées séparément de leur couverture et de leurs effets. Les portes ouvertes restent des seuils. L’eau conserve l’échange d’air malgré son transit interdit. [Contrat](../development/rooms.md), [sources et divergences](../research/rooms-reference.md). Aucun plafond calqué sur le nombre interne de régions Core ni rôle de chambre n’est inventé. La pénalité extérieure fixe des ateliers et les conditions de loisirs restent provisoires et doivent intégrer les propriétés environnementales dans une tranche suivante.
+
+## Toiture construite V35
+
+[Contrat](../development/roofing.md), [relecture Core](../research/roofing-reference.md). Adopter zones distinctes de la couverture, vrais bâtisseurs sans ingrédients, chaîne de supports et retrait physique. Adapter le rayon à notre parcours cardinal, le travail à quatre ticks locaux et le plafond à une dalle 3D masquable. La limite automatique de 320 cases est conservée ; celle de 26 régions dépend du moteur de référence et n’est pas transposée.
+
+Différer toits naturels, HP/santé et gravats, thermique et éclairage des intérieurs. L’effondrement supprime actuellement la couverture et le dit explicitement sans infliger de dégâts ; ce n’est pas la règle définitive de danger. Ces éléments restent dans G2/G3 et dans l’inventaire des manques, sans déclarer l’habitat terminé.

@@ -1,5 +1,7 @@
 # Adoption du référentiel utilisateur
 
+Toiture V35 — chapitres 5/10/21/22, SYS/TEST-023..025 et 061, scène E : adopter couverture distincte du sol, supports et travail physique ; adapter graphe/cadence/rendu ; différer plafonds naturels, dégâts et thermique. [Recherche fraîche](roofing-reference.md), [contrat](../development/roofing.md). Les mentions de toiture différée dans les bilans datés ci-dessous décrivent ces lots antérieurs, pas le statut courant.
+
 Audit sous V34, 15 septembre 2026 : chapitres 5/14/21, SYS-020..022, SYS-080 et SYS-113..117 relus pour occupation, arrêt et recherches de candidats. Contrats conservés par évaluation différée et capture locale ; incohérence des loisirs sur fragments corrigée. [Recherche et décisions](spatial-query-reference.md).
 
 Lecture et décisions : **13 septembre 2026**. Les fichiers de `docs/reference/originals` deviennent notre référence fonctionnelle principale pour développer Lisière, en complément des [recherches précédentes](rimworld-reference.md) et de l'[observation du jeu](visual-reference.md). Ils orientent nos contrats et nos critères de réalisation. Les décisions utilisateur, les observations vérifiées et les mesures du projet continuent de guider leur adaptation.

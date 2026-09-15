@@ -42,6 +42,7 @@ test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp const
     const context=JSON.stringify({seed,report,meals:[...meals],sleep:[...sleep]});
     expect(report[0]!.structures,context).toMatchObject({bed:3,table:1,stool:3});
     expect(report[4]!.structures,context).toEqual({bed:3,table:1,stool:3,wall:7,campfire:1,horseshoes:1,stonecutter:1,door:1});
+    expect(report[4]!.roofing,context).toEqual({constructed:28,planned:28,removal:0});
     expect([...recreationKinds].sort(),context).toEqual(['horseshoes','skygaze']);expect(recreationPawns.size,context).toBe(3);
     expect(cooked,context).toBeGreaterThanOrEqual(12);
     expect(rationAssignments,context).toBeGreaterThanOrEqual(3);

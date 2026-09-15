@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 34 as const;
+export const SCHEMA_VERSION = 35 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
@@ -7,7 +7,7 @@ export type Terrain = 'grass' | 'soil' | 'water' | 'rock' | 'rough-stone';
 export type ResourceKind = 'tree' | 'berries' | 'rock' | 'rice';
 export type MaterialKind = 'wood' | 'food' | 'chunk' | 'steel' | 'blocks';
 export type StructureKind = 'door' | 'wall' | 'bed' | 'table' | 'stool' | 'campfire' | 'horseshoes' | 'stonecutter';
-export type JobKind = 'mine' | 'chop' | 'harvest' | 'cut' | 'sow' | 'deconstruct' | 'uninstall' | 'install' | StructureKind;
+export type JobKind = 'build-roof' | 'remove-roof' | 'mine' | 'chop' | 'harvest' | 'cut' | 'sow' | 'deconstruct' | 'uninstall' | 'install' | StructureKind;
 export type WorkType = 'mine' | 'gather' | 'build' | 'haul' | 'grow' | 'cook' | 'craft';
 export type Orientation = 0 | 1 | 2 | 3;
 export type Footprint = 'standard' | 'legacy-single';
@@ -94,6 +94,7 @@ export interface Pawn extends Cell {
 }
 export interface WorldEvent { tick: number; type: 'job' | 'need' | 'command'; message: string }
 export interface World {
+  roofing?: import('./roof-rules.ts').RoofingState;
   packed: import('./furniture-rules.ts').PackedFurniture[];
   deconstructed: import('./deconstruction-rules.ts').DeconstructionLedger;
   foodPolicies: import('./food-policy.ts').FoodPolicy[];
@@ -126,7 +127,7 @@ export interface World {
   logisticsCursor: number;
 }
 export type DesignateCommand = { type: 'designate'; kind: JobKind; orientation?: Orientation; material?:import('./construction-materials.ts').ConstructionMaterial } & Cell;
-export type AreaAction = 'mine' | 'haul-chunks' | 'deconstruct' | 'chop' | 'harvest' | 'cut' | 'cancel' | 'stockpile' | 'remove-stockpile' | 'growing' | 'remove-growing';
+export type AreaAction = 'build-roof' | 'remove-roof' | 'ignore-roof' | 'mine' | 'haul-chunks' | 'deconstruct' | 'chop' | 'harvest' | 'cut' | 'cancel' | 'stockpile' | 'remove-stockpile' | 'growing' | 'remove-growing';
 export interface StorageSettings { filters?: StorageFilters; priority?: number; capacity?: number }
 export interface AreaCommand extends StorageSettings { type: 'area'; action: AreaAction; from: Cell; to: Cell }
 export type Command =

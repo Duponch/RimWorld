@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+V35 ajoute une famille de **toit construit**, couche de couverture indépendante des objets/piles et sans recette matérielle. Zones Construire/Retirer/Ignorer, supports et présentation procédurale livrés ; toits naturels minces/épais, colonnes porteuses, gravats et dégâts restent absents. [Contrat](../development/roofing.md).
+
 État du 15 septembre 2026. Le jeu de base complet, y compris ses centaines d'objets et leurs variantes, reste la cible. Le bilan par [système](implementation-status.md) ne suffit pas à suivre ce contenu. Ce document distingue ce que contient notre référence et ce qui existe dans le jeu développé.
 
 V24 permet de déconstruire les six bâtiments existants. V25 ajoute désinstallation et réinstallation de lit, table, tabouret et piquet sous forme entière ; **aucune nouvelle famille d’objet**. Le paquet conserve le bâtiment et son identité ; V26 ajoute rangement filtré, dégagement et réinstallation par Transport ; masse, qualité et dégâts restent absents. La présence de ces familles ne clôt ni leurs variantes ni les centaines de définitions attendues.
@@ -92,7 +94,7 @@ Distribution régionale, persistance et apparence sont livrées. V28 ajoute les 
 
 | Identifiant | Livré | Limites |
 |---|---|---|
-| `Tile.ore='steel'` | Acier compacté, 1 500 PV, gisements connectés de 30–40 cases ; minage et sol encaissant conservé. | Profil de site local ; aucune injection sur anciennes cartes, compétences/rendements variables, dégâts externes et toits absents. |
+| `Tile.ore='steel'` | Acier compacté, 1 500 PV, gisements connectés de 30–40 cases ; minage et sol encaissant conservé. | Profil de site local ; aucune injection sur anciennes cartes, compétences/rendements variables, dégâts externes et toits naturels absents. |
 | Objet `steel` | 40 unités par gisement au profil neutre ; piles de 75, portage, rangement filtré, compteur et barres procédurales ; matériau de construction V30. | Atelier et recette constructive mixte livrés en V31 ; fabrication de blocs livrée V32 ; capacité générale de portage provisoire de dix unités. |
 
 [Sources et décisions](../research/steel-reference.md). Argent, or, plasteel, uranium, jade, composants compactés et leurs filières restent absents. Ni ces deux entrées, ni les cinq roches ne constituent un inventaire exhaustif.

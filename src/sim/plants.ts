@@ -1,4 +1,5 @@
 import { TICKS_PER_DAY, type Resource, type World } from './types.ts';
+import { isRoofed, roofIndex } from './roof-rules.ts';
 import { growingLightIntegral, OUTDOOR_TEMPERATURE } from './environment.ts';
 
 export const PLANT_DEFINITIONS = Object.freeze({
@@ -12,7 +13,7 @@ export const HARVEST_MIN_GROWTH = .65;
 export const AFTER_HARVEST_GROWTH = .3;
 const clamp = (n: number): number => Math.max(0, Math.min(1, n));
 
-/** Reference factors; climate/roof/latitude systems are not implemented yet. */
+/** Reference factors; dynamic climate and latitude remain future systems. */
 export function plantGrowthRate(light: number, temperature: number, fertility: number, resting = false): number {
   if (resting || fertility < .5) return 0;
   const heat = temperature < 6 ? clamp(temperature / 6) : temperature > 42 ? clamp((58 - temperature) / 16) : 1;
@@ -45,6 +46,7 @@ export function legacyPlantGrowth(world: World, plant: Resource): number {
 export function plantGrowth(world: World, plant: Resource): number {
   if (!isPlant(plant)) return 1;
   const base = plant.growth ?? 1;
+  if(isRoofed(world,roofIndex(world,plant)))return base;
   if (base >= 1) return 1;
   const def = PLANT_DEFINITIONS[plant.kind], fertility = plantFertility(world, plant);
   if (fertility < def.minFertility) return base;

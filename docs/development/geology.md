@@ -6,7 +6,7 @@
 
 `src/sim/geology.ts` définit les identités, leurs noms, le choix du site et un champ régional déterministe. Deux ou trois types distincts sont choisis ; le meilleur de leurs champs interpolés désigne la roche locale. Les échelles de 80 et 30 cases sont une adaptation artistique et spatiale, indépendante des silhouettes de massifs. Les résultats sont inscrits dans `Tile.stone` sur `terrain: rock` et `Resource.stone` sur les pierres au sol. Ajouter ces échantillons n'avance ni le PRNG de partie ni les tirages des plantes et du relief.
 
-V28 ajoute PV des massifs, sol brut découvert et fragments transportables, sans blocs taillés ni recettes. `Tile.stone` peut aussi identifier le sol `rough-stone`. Les toits restent absents ; les pierres décoratives `Resource` ne sont pas encore des piles exploitables.
+V28 ajoute PV des massifs, sol brut découvert et fragments transportables, sans blocs taillés ni recettes. `Tile.stone` peut aussi identifier le sol `rough-stone`. Les toits naturels restent absents ; les supports de couverture construite relèvent de V35 ; les pierres décoratives `Resource` ne sont pas encore des piles exploitables.
 
 ## Persistance et worker
 

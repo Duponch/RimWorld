@@ -1,3 +1,5 @@
+import { autoRoofRooms, designateRoofArea, scheduleRoofs, reconcileRoofJobs, reconcileRoofSupport, finishRoofJob } from './roofing.ts';
+import { isRoofArea, isRoofJob, roofJobWanted, RoofContext } from './roof-rules.ts';
 import { applyDoorCommand, updateDoors } from './doors.ts';
 import { builtDoorState } from './door-rules.ts';
 import { taskWork } from './production-recipes.ts';
@@ -44,7 +46,7 @@ import type { AreaCommand, Cell, Command, CommandResult, DesignateCommand, Job, 
 export { JOB_DURATION, JOB_WOOD_COST } from './definitions.ts';
 
 const PATH_SEARCHES_PER_TICK = 8;
-const JOB_LABEL: Readonly<Record<JobKind, string>> = { door:'construction de porte', stonecutter:'construction de table de taille de pierre', mine:'minage', uninstall:'désinstallation', install:'réinstallation', deconstruct: 'déconstruction', chop: 'abattage', harvest: 'récolte', cut: 'coupe de plante', sow: 'semis de riz', horseshoes: 'construction de piquet de fers à cheval', campfire: 'construction de feu de camp', wall: 'construction de mur', bed: 'construction de lit', table: 'construction de table', stool: 'construction de tabouret' };
+const JOB_LABEL: Readonly<Record<JobKind, string>> = { 'build-roof':'pose de toit', 'remove-roof':'retrait de toit', door:'construction de porte', stonecutter:'construction de table de taille de pierre', mine:'minage', uninstall:'désinstallation', install:'réinstallation', deconstruct: 'déconstruction', chop: 'abattage', harvest: 'récolte', cut: 'coupe de plante', sow: 'semis de riz', horseshoes: 'construction de piquet de fers à cheval', campfire: 'construction de feu de camp', wall: 'construction de mur', bed: 'construction de lit', table: 'construction de table', stool: 'construction de tabouret' };
 const sameCell = (a: Cell, b: Cell): boolean => a.x === b.x && a.z === b.z;
 const refusal = (code: RefusalCode, reason: string): CommandResult => ({ ok: false, code, reason });
 function event(world: World, type: 'job' | 'need' | 'command', message: string): void {
@@ -67,7 +69,7 @@ function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandR
   const creates = command.action === 'mine' || command.action === 'deconstruct' || command.action === 'chop' || command.action === 'harvest' || command.action === 'cut' || command.action === 'stockpile' || command.action === 'growing';
   if (creates && !Number.isSafeInteger(world.nextId + selection.cells.length)) return refusal('invalid-command', 'Limite des identités atteinte.');
   let affected = selection.cells.length;
-  if (command.action === 'deconstruct') {
+  if (isRoofArea(command.action)) { designateRoofArea(world, selection.cells, command.action); } else if (command.action === 'deconstruct') {
     const selected = new Set(selection.cells);
     const targets = world.structures.filter(s => footprintCells(s).some(c => selected.has(cellIndex(world,c.x,c.z))));
     for (const target of targets) designateDeconstruction(world,target);
@@ -112,7 +114,7 @@ function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandR
     }
   }
   wakePlanners(world); refreshStock(world);
-  event(world, 'command', `Rectangle : ${affected} ${command.action === 'cancel' ? 'ordre(s) annulé(s)' : command.action === 'remove-stockpile' ? 'case(s) de réserve retirée(s)' : command.action === 'stockpile' ? 'case(s) de réserve créée(s)' : command.action==='deconstruct' ? 'ordre(s) de déconstruction créé(s)' : 'ordre(s) de collecte créé(s)'}.`);
+  event(world, 'command', `Rectangle : ${affected} ${command.action === 'cancel' ? 'ordre(s) annulé(s)' : command.action === 'remove-stockpile' ? 'case(s) de réserve retirée(s)' : command.action === 'stockpile' ? 'case(s) de réserve créée(s)' : command.action==='deconstruct' ? 'ordre(s) de déconstruction créé(s)' : isRoofArea(command.action) ? 'case(s) de toiture désignée(s)' : 'ordre(s) de collecte créé(s)'}.`);
   return { ok: true, affected, skipped: selection.skipped };
 }
 
@@ -128,7 +130,7 @@ export function canDesignate(world: World, command: DesignateCommand): CommandRe
   if(command.kind==='uninstall'&&!minifiable(target!.kind))return refusal('incompatible-resource','Ce bâtiment ne peut pas être désinstallé.');
   const cells = footprintCells(target??command);
   if (cells.some(cell => !inBounds(world, cell.x, cell.z))) return refusal('out-of-bounds', 'Empreinte hors de la carte.');
-  if (world.jobs.some(job => footprintCells(job).some(cell => cells.some(target => sameCell(cell, target))))) return refusal('occupied', 'Un ordre existe déjà dans cette empreinte.');
+  if (world.jobs.some(job => !isRoofJob(job) && footprintCells(job).some(cell => cells.some(target => sameCell(cell, target))))) return refusal('occupied', 'Un ordre existe déjà dans cette empreinte.');
   if(command.kind==='deconstruct'||command.kind==='uninstall')return {ok:true};
   if(command.kind==='mine')return world.tiles[cellIndex(world,command.x,command.z)]!.terrain==='rock'?{ok:true}:refusal('incompatible-resource','Désigner un massif rocheux à miner.');
   const resource = world.resources.find(candidate => sameCell(candidate, command));
@@ -227,6 +229,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   if (command.type === 'cancel') {
     const existing = world.jobs.find(job => footprintCells(job).some(cell => sameCell(cell, command)))??furnitureIntentAt(world,command);
     if (!existing) return refusal('missing-target', 'Aucun ordre à annuler ici.');
+    if(isRoofJob(existing)){designateRoofArea(world,[cellIndex(world,command.x,command.z)],'ignore-roof');wakePlanners(world);return {ok:true};}
     for (const pawn of world.pawns) if (pawn.jobId === existing.id || (pawn.haul && constructionHaulId(pawn.haul.destination) === existing.id)) releaseWork(world, pawn,drops);
     world.jobs.splice(world.jobs.indexOf(existing), 1);
     const delivered = world.piles.filter(pile => pile.owner.type === 'job' && pile.owner.jobId === existing.id);
@@ -258,8 +261,12 @@ function completeJob(world: World, pawn: Pawn, job: Job): void {
     const quantity=gatherResource(world,resource,job.kind);
     if(quantity===null){job.progress=jobDuration(world,job)-1;releaseWork(world,pawn);return;}
     if(job.kind!=='chop'&&quantity>0)event(world,'job',`${pawn.name} a récolté ${quantity} ${resource.kind==='rice'?'riz':'baies'}.`);
+  } else if (isRoofJob(job)) {
+    finishRoofJob(world,job);
   } else if (job.kind === 'deconstruct') {
+    const target=world.structures.find(s=>s.id===job.deconstruction?.structureId);
     if(!finishDeconstruction(world,pawn,job)){releaseWork(world,pawn);return;}
+    if(target?.kind==='wall'||target?.kind==='door')reconcileRoofSupport(world,false,target);
   } else if (job.kind==='mine'||job.kind==='install'||job.kind==='uninstall') {
     return; // Furniture transfers are processed by their physical state machine.
   } else if (job.kind === 'sow') {
@@ -267,8 +274,9 @@ function completeJob(world: World, pawn: Pawn, job: Job): void {
   } else {
     if(!constructionSupplied(world,job)||!constructionSiteFree(world,job,pawn.id)){job.progress=jobDuration(world,job)-1;releaseWork(world,pawn);return;}
     world.piles = world.piles.filter(pile => pile.owner.type !== 'job' || pile.owner.jobId !== job.id);
-    world.structures.push({ ...(job.kind==='door'?{door:builtDoorState(world,job)}:{}),...(job.material?{material:job.material}:{}),...(job.kind==='campfire'?{fuel:newCampfireFuel(),bills:[]}:job.kind==='stonecutter'?{bills:[]}:{}), id: world.nextId++, kind: job.kind, x: job.x, z: job.z, orientation: job.orientation, footprint: job.footprint });
+    world.structures.push({ ...(job.kind==='door'?{door:builtDoorState(world,job)}:{}),...(job.material?{material:job.material}:{}),...(job.kind==='campfire'?{fuel:newCampfireFuel(),bills:[]}:job.kind==='stonecutter'?{bills:[]}:{}), id: world.nextId++, kind: job.kind as import('./types.ts').StructureKind, x: job.x, z: job.z, orientation: job.orientation, footprint: job.footprint });
   }
+  if(job.kind==='wall'||job.kind==='door')autoRoofRooms(world,job);
   const jobIndex=world.jobs.indexOf(job);if(jobIndex>=0)world.jobs.splice(jobIndex,1); pawn.jobId = null; pawn.path = []; pawn.state = 'idle'; pawn.planCooldown = 0;
   event(world, 'job', `${pawn.name} a terminé le travail : ${JOB_LABEL[job.kind]}.`); wakePlanners(world);
 }
@@ -280,9 +288,12 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     burnFuel(world);
     updateDoors(world);
     scheduleGrowing(world);
+    scheduleRoofs(world);
     // Build only if this tick actually plans or moves. No cross-tick cache can hide
     // a command, edited terrain, restored save, or a wall that changed between calls.
     let blocked: Uint8Array | undefined;
+    let roofs: RoofContext | undefined;
+    const getRoofs = () => roofs ??= new RoofContext(world);
     const getBlocked: NavigationGrid = () => blocked ??= blockedCells(world);
     const occupied = CIVIL_TRANSIT_BLOCKERS;
     const budget: SearchBudget = { remaining: PATH_SEARCHES_PER_TICK, pairs: 32768,stats:diagnostics };
@@ -313,6 +324,14 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       const job = world.jobs.find(candidate => candidate.id === pawn.jobId); if (!job) { processRecreation(world,pawn,needsContext,true); continue; }
       if (job.growingZoneId !== undefined && !growingJobValid(world, job)) { releaseWork(world, pawn); world.jobs = world.jobs.filter(j => j.id !== job.id); continue; }
       if (job.kind === 'sow' && groundPile(world, job)) { releaseWork(world, pawn); continue; }
+      if(isRoofJob(job)) {
+        if(!roofJobWanted(world,job,getRoofs())){releaseWork(world,pawn);reconcileRoofJobs(world,getRoofs());continue;}
+        const tree=job.kind==='build-roof'?world.resources.find(r=>r.kind==='tree'&&sameCell(r,job)):undefined;
+        if(tree&&!job.clearance){
+          if(world.jobs.some(j=>j.id!==job.id&&sameCell(j,tree)&&(!isRoofJob(j)||j.clearance))){releaseWork(world,pawn);continue;}
+          job.clearance={resourceId:tree.id,progress:0};
+        }
+      }
       if(job.clearance) {
         const plant=world.resources.find(r=>r.id===job.clearance!.resourceId);
         if(!plant){releaseWork(world,pawn);continue;}
@@ -327,21 +346,22 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
         continue;
       }
       if(job.kind==='sow'&&packedAt(world,job)){releaseWork(world,pawn);continue;}
-      if(job.furniture){if(advanceFurniture(world,pawn,job,target=>moveToward(world,pawn,target,false,getBlocked,budget),()=>releaseWork(world,pawn))){blocked=undefined;wakePlanners(world);}continue;}
+      if(job.furniture){if(advanceFurniture(world,pawn,job,target=>moveToward(world,pawn,target,false,getBlocked,budget),()=>releaseWork(world,pawn))){blocked=undefined;roofs=undefined;wakePlanners(world);}continue;}
       if(job.kind==='deconstruct'&&!deconstructionAvailable(world,job,pawn.id)){releaseWork(world,pawn);continue;}
       if(isConstruction(job)&&(!constructionSupplied(world,job)||!constructionSiteFree(world,job,pawn.id))){releaseWork(world,pawn);continue;}
       if(job.kind==='mine') {
         if(Math.max(Math.abs(pawn.x-job.x),Math.abs(pawn.z-job.z))===1) {
-          if(advanceMining(world,pawn,job)) {world.jobs.splice(world.jobs.indexOf(job),1);pawn.jobId=null;pawn.state='idle';pawn.planCooldown=0;blocked=undefined;wakePlanners(world);event(world,'job',`${pawn.name} a terminé le minage.`);}
+          if(advanceMining(world,pawn,job)) {reconcileRoofSupport(world,false,job);world.jobs.splice(world.jobs.indexOf(job),1);pawn.jobId=null;pawn.state='idle';pawn.planCooldown=0;blocked=undefined;roofs=undefined;wakePlanners(world);event(world,'job',`${pawn.name} a terminé le minage.`);}
         } else moveToward(world,pawn,job,false,getBlocked,budget);
         continue;
       }
       const cells = footprintCells(job);
       if (cells.some(cell => adjacent(pawn, cell)) && !cells.some(cell => sameCell(pawn, cell))) {
         pawn.path = []; pawn.state = 'working'; job.progress++;
-        if (job.progress >= jobDuration(world, job)) {completeJob(world, pawn, job);blocked=undefined;}
+        if (job.progress >= jobDuration(world, job)) {completeJob(world, pawn, job);blocked=undefined;roofs=undefined;}
       } else moveToward(world, pawn, job, false, getBlocked, budget);
     }
+    if(world.roofing)reconcileRoofJobs(world,roofs);
     reconcileOrders(world);
     refreshStock(world);
   }
