@@ -64,4 +64,6 @@ Acier et premiers minerais : [contrat V29](development/steel.md), [recherche et 
 
 Choix bois/acier : [contrat V30](development/construction-materials.md), [vérification des recettes](research/construction-materials-reference.md).
 
+Taille de pierre : [production V32](development/stonecutting.md), [recherche de la recette](research/stonecutting-reference.md).
+
 Atelier à ingrédients mixtes : [contrat V31](development/stonecutter.md), [recherche Core](research/stonecutter-reference.md).

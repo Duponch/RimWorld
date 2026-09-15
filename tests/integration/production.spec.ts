@@ -1,11 +1,46 @@
 import { expect, test } from '@playwright/test';
+import { stonecuttingCamp } from '../scenarios/stonecutting';
 import { createWorld, serializeWorld, deserializeWorld, validateWorld } from '../../src/sim/index';
 import { addGroundMaterial, refreshStock } from '../../src/sim/materials';
 import { world, observeErrors, panel, tool, cell, expectWorld, saveKey } from './helpers';
-import { editBill } from './player-actions';
+import { editBill, perform } from './player-actions';
 import { withoutPostV10Fields } from '../scenarios/legacy-save';
 import { ROT_DAYS, rotAge } from '../../src/sim/food-preservation';
 import { TICKS_PER_DAY } from '../../src/sim/types';
+
+test('taille par interface : Artisanat, filtres, ordre physique, sauvegarde et vingt blocs rangés',async({playwright},testInfo)=>{
+  test.setTimeout(60000);
+  const browser=await playwright.chromium.launch({channel:'chromium',args:[]});
+  const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);
+  page.setDefaultTimeout(10000);
+  try {
+    const initial=stonecuttingCamp(1,32),p=initial.pawns[0]!,s=initial.structures[0]!;
+    p.x=15;p.z=13;p.priorities.craft=0;s.x=15;s.z=14;
+    addGroundMaterial(initial,'chunk',1,{x:21,z:13},'marble-chunk');addGroundMaterial(initial,'chunk',1,{x:19,z:13},'granite-chunk');
+    await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
+    await page.goto('/?size=32&seed=42&e2e');await expect(page.locator('#loading')).toHaveCount(0);
+    await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);
+    await panel(page,'work');await page.locator(`select[data-owner="${p.id}"][data-work="craft"]`).selectOption('1');
+    await perform(page,{reason:'Ranger les blocs',command:{type:'stockpile',x:17,z:17,enabled:true,filters:{wood:false,food:false,blocks:true},capacity:75}},{value:0});
+    await page.keyboard.press('Escape');await cell(page,14,14); // Side cell of the same 3×1 bench.
+    await expect(page.locator('#add-cooking-bill')).toHaveText('Ajouter : blocs de pierre');await page.locator('#add-cooking-bill').click();
+    const bill=(await world(page)).structures[0]!.bills![0]!;
+    await editBill(page,bill.id,{...bill,mode:'until',target:20,filters:{'granite-chunk':false,'limestone-chunk':false,'marble-chunk':true,'sandstone-chunk':false,'slate-chunk':false}});
+    await perform(page,{reason:'Prioriser la taille',command:{type:'order-cook',pawnId:p.id,structureId:s.id,queue:false}},{value:0});
+    await page.locator('[data-speed="6"]').click();
+    await expect.poll(async()=>(await world(page)).pawns[0]!.cooking?.phase,{timeout:15000}).toBe('work');
+    await page.locator('[data-speed="0"]').click();const working=await world(page);
+    expect(working.pawns[0]!.cooking?.recipe).toBe('stone-blocks');expect(working.piles.some(q=>q.kind==='blocks')).toBe(false);
+    await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,working);
+    await page.keyboard.press('Escape');await page.locator('[data-speed="6"]').click();
+    await expect.poll(async()=>{const w=await world(page);return w.piles.filter(q=>q.kind==='blocks'&&q.owner.type==='ground'&&q.owner.x===17&&q.owner.z===17).reduce((n,q)=>n+q.quantity,0);},{timeout:20000}).toBe(20);
+    await page.locator('[data-speed="0"]').click();await cell(page,15,14);
+    await expect(page.locator('#blocks')).toHaveText('20');await expect(page.locator('[data-bill-status]')).toContainText('20 / 20');await expect(page.locator('#fps-counter')).toBeVisible();
+    const final=await world(page);expect(validateWorld(final)).toEqual([]);expect(final.piles.find(q=>q.kind==='blocks')?.item).toBe('marble-blocks');expect(final.piles.find(q=>q.item==='granite-chunk')?.quantity).toBe(1);expect(errors).toEqual([]);
+    await page.screenshot({path:'artifacts/stonecutting-ui.png'});
+    await testInfo.attach('stonecutting',{contentType:'application/json',body:JSON.stringify({backend:await page.evaluate(()=>window.__lisiere.backend),workTick:working.tick,tick:final.tick,blocks:20,errors})});
+  } finally {await browser.close();}
+});
 
 test('cuisine par interface : construction, facture, ingrédients portés, reprise et repas rangés',async({playwright},testInfo)=>{
   test.setTimeout(90000);
@@ -14,7 +49,7 @@ test('cuisine par interface : construction, facture, ingrédients portés, repri
   const errors=observeErrors(page);
   try {
     const initial=createWorld(42,32,32);initial.tiles=initial.tiles.map(()=>({terrain:'grass'}));initial.resources=[];initial.piles=[];
-    initial.pawns.forEach(p=>{p.hunger=100;p.rest=100;p.priorities={mine:2,gather:0,build:1,haul:1,grow:0,cook:0};});
+    initial.pawns.forEach(p=>{p.hunger=100;p.rest=100;p.priorities={craft:2,mine:2,gather:0,build:1,haul:1,grow:0,cook:0};});
     addGroundMaterial(initial,'wood',50,{x:14,z:17},'wood');addGroundMaterial(initial,'food',7,{x:21,z:13},'berries');addGroundMaterial(initial,'food',23,{x:21,z:15},'rice');refreshStock(initial);
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
     await page.goto('/?size=32&seed=42&e2e');await expect(page.locator('#loading')).toHaveCount(0);
@@ -83,13 +118,13 @@ test('conservation dans le worker : migration V10, inspection de fraîcheur, exp
   page.setDefaultTimeout(10000);
   try {
     const initial=createWorld(42,32,32);initial.tiles=initial.tiles.map(()=>({terrain:'grass'}));initial.resources=[];initial.piles=[];
-    initial.pawns.forEach((p,i)=>{p.x=11+i;p.z=12;p.hunger=100;p.rest=100;p.priorities={mine:2,gather:0,build:0,haul:0,grow:0,cook:0};});
+    initial.pawns.forEach((p,i)=>{p.x=11+i;p.z=12;p.hunger=100;p.rest=100;p.priorities={craft:2,mine:2,gather:0,build:0,haul:0,grow:0,cook:0};});
     addGroundMaterial(initial,'food',10,{x:17,z:16},'berries');refreshStock(initial);
-    const old=withoutPostV10Fields(JSON.parse(serializeWorld(initial)));old.schemaVersion=10;for(const a of old.pawns)delete a.priorities.mine;delete old.deconstructed;delete old.packed;
+    const old=withoutPostV10Fields(JSON.parse(serializeWorld(initial)));old.schemaVersion=10;for(const a of old.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete old.deconstructed;delete old.packed;
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:JSON.stringify(old)});
     await page.goto('/?size=32&seed=42&e2e');await expect(page.locator('#loading')).toHaveCount(0);
     await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();
-    await expect.poll(async()=>(await world(page)).schemaVersion).toBe(31);
+    await expect.poll(async()=>(await world(page)).schemaVersion).toBe(32);
     expect(await world(page)).toEqual(deserializeWorld(JSON.stringify(old)));await page.keyboard.press('Escape');await cell(page,17,16);
     await expect(page.locator('#cell-materials')).toContainText('pourrit dans 14.0 j');
     const aged=structuredClone(initial);aged.piles[0]!.rot={progress:ROT_DAYS.berries*TICKS_PER_DAY-120,atTick:0};

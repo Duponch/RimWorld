@@ -1,0 +1,196 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "E:\\Code\\RimWorld\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "tests/integration/production.spec.ts",
+      "-g",
+      "taille par interface|cuisine par interface",
+      "--reporter=json"
+    ],
+    "configFile": "E:\\Code\\RimWorld\\playwright.config.ts",
+    "rootDir": "E:/Code/RimWorld/tests/integration",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "E:/Code/RimWorld/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "E:/Code/RimWorld/tests/integration",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": {
+      "command": "npm run dev",
+      "url": "http://127.0.0.1:5173",
+      "reuseExistingServer": true,
+      "timeout": 30000
+    }
+  },
+  "suites": [
+    {
+      "title": "production.spec.ts",
+      "file": "production.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "taille par interface : Artisanat, filtres, ordre physique, sauvegarde et vingt blocs rangés",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 9582,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-15T03:14:07.622Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "stonecutting",
+                      "contentType": "application/json",
+                      "body": "eyJiYWNrZW5kIjoiV2ViR1BVIiwid29ya1RpY2siOjU1LCJ0aWNrIjoyOTIsImJsb2NrcyI6MjAsImVycm9ycyI6W119"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ed69554c53210704c98c-04c0adb872f6d44d47ad",
+          "file": "production.spec.ts",
+          "line": 11,
+          "column": 1
+        },
+        {
+          "title": "cuisine par interface : construction, facture, ingrédients portés, reprise et repas rangés",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 21338,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('[data-bill-reason]')\nExpected substring: \u001b[32m\"Prépare un repas simple\"\u001b[39m\nReceived string:    \u001b[31m\"Repas simple : travail 21 %.\"\u001b[39m\nTimeout: 15000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" locator('[data-bill-reason]') with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-bill-reason]')\u001b[22m\n\u001b[2m    33 × locator resolved to <p class=\"muted\" data-bill-reason=\"183\">Repas simple : travail 21 %.</p>\u001b[22m\n\u001b[2m       - unexpected value \"Repas simple : travail 21 %.\"\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('[data-bill-reason]')\nExpected substring: \u001b[32m\"Prépare un repas simple\"\u001b[39m\nReceived string:    \u001b[31m\"Repas simple : travail 21 %.\"\u001b[39m\nTimeout: 15000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" locator('[data-bill-reason]') with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-bill-reason]')\u001b[22m\n\u001b[2m    33 × locator resolved to <p class=\"muted\" data-bill-reason=\"183\">Repas simple : travail 21 %.</p>\u001b[22m\n\u001b[2m       - unexpected value \"Repas simple : travail 21 %.\"\u001b[22m\n\n    at E:\\Code\\RimWorld\\tests\\integration\\production.spec.ts:81:54",
+                    "location": {
+                      "file": "E:\\Code\\RimWorld\\tests\\integration\\production.spec.ts",
+                      "column": 54,
+                      "line": 81
+                    },
+                    "snippet": "  79 |     expect(cooking.piles.filter(p=>p.kind==='food').reduce((n,p)=>n+p.quantity,0)).toBe(30);\n  80 |     expect(validateWorld(cooking)).toEqual([]);\n> 81 |     await expect(page.locator('[data-bill-reason]')).toContainText('Prépare un repas simple');\n     |                                                      ^\n  82 |     await page.locator(`[data-pawn=\"${chef.id}\"]`).click();\n  83 |     await expect(page.locator('#selected-action')).toContainText('Prépare un repas simple');\n  84 |     await expect(page.locator('#selected-action')).not.toContainText('Aucun travail');"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "E:\\Code\\RimWorld\\tests\\integration\\production.spec.ts",
+                        "column": 54,
+                        "line": 81
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('[data-bill-reason]')\nExpected substring: \u001b[32m\"Prépare un repas simple\"\u001b[39m\nReceived string:    \u001b[31m\"Repas simple : travail 21 %.\"\u001b[39m\nTimeout: 15000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" locator('[data-bill-reason]') with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-bill-reason]')\u001b[22m\n\u001b[2m    33 × locator resolved to <p class=\"muted\" data-bill-reason=\"183\">Repas simple : travail 21 %.</p>\u001b[22m\n\u001b[2m       - unexpected value \"Repas simple : travail 21 %.\"\u001b[22m\n\n\n  79 |     expect(cooking.piles.filter(p=>p.kind==='food').reduce((n,p)=>n+p.quantity,0)).toBe(30);\n  80 |     expect(validateWorld(cooking)).toEqual([]);\n> 81 |     await expect(page.locator('[data-bill-reason]')).toContainText('Prépare un repas simple');\n     |                                                      ^\n  82 |     await page.locator(`[data-pawn=\"${chef.id}\"]`).click();\n  83 |     await expect(page.locator('#selected-action')).toContainText('Prépare un repas simple');\n  84 |     await expect(page.locator('#selected-action')).not.toContainText('Aucun travail');\n    at E:\\Code\\RimWorld\\tests\\integration\\production.spec.ts:81:54"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-15T03:14:17.231Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "E:\\Code\\RimWorld\\test-results\\production-cuisine-par-int-ee544-tés-reprise-et-repas-rangés\\error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "E:\\Code\\RimWorld\\test-results\\production-cuisine-par-int-ee544-tés-reprise-et-repas-rangés\\trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "E:\\Code\\RimWorld\\tests\\integration\\production.spec.ts",
+                    "column": 54,
+                    "line": 81
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "ed69554c53210704c98c-f69ca065d02780515016",
+          "file": "production.spec.ts",
+          "line": 45,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-15T03:14:06.257Z",
+    "duration": 32451.006,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

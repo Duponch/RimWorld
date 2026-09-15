@@ -83,3 +83,5 @@ Autres familles sélectionnables, ordre de sommeil/ingestion manuel, mobilisatio
 Trois scénarios `priority-work` combinent chaîne complète de lit, voisin intact, maintien de famille, cuisine répétée puis ingestion, annulation/effondrement avec cargaison, délais/budgets, accès perdu et migration stricte. Le pilote conserve la préférence dans son diagnostic et évite de réordonner un colon déjà priorisé.
 
 V28 ajoute le job de minage aux ordres directs et à leur file réservée. Son accès autorise le contact diagonal avec le massif sans autoriser le transit à travers les coins solides. Les dégâts persistent après annulation ; la préparation du prochain coup est réinitialisée. Les fragments utilisent le fournisseur de transport existant. [Contrat](mining.md).
+
+V32 ajoute les factures de taille au fournisseur de production existant (`order-cook` conservé dans le protocole historique). La famille de priorité maintenue est `craft`, distincte de `cook` ; les réservations de poste et quantités sont communes. [Contrat](stonecutting.md).

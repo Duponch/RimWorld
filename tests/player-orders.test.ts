@@ -7,7 +7,7 @@ import type { World } from '../src/sim/types';
 
 export function orderCamp(count=2):World {
   const w=createWorld(42,32,32);w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.resources=[];w.piles=[];w.jobs=[];w.structures=[];w.pawns=w.pawns.slice(0,count);
-  w.pawns.forEach((p,i)=>{p.x=12+i*2;p.z=16;p.hunger=100;p.rest=100;p.schedule.fill('anything');p.priorities={mine:2,build:1,haul:0,gather:1,grow:1,cook:0};});
+  w.pawns.forEach((p,i)=>{p.x=12+i*2;p.z=16;p.hunger=100;p.rest=100;p.schedule.fill('anything');p.priorities={craft:2,mine:2,build:1,haul:0,gather:1,grow:1,cook:0};});
   for(const x of [11,18,22]) {
     w.resources.push({id:w.nextId++,kind:'tree',x,z:17,amount:12});
     expect(applyCommand(w,{type:'designate',kind:'chop',x,z:17}).ok).toBe(true);
@@ -92,8 +92,8 @@ test('queue loses an access, clear-orders preserves designations, construction c
   expect(queryOrderOptions(fresh,actor.id,c!,true)[0]!.enabled).toBe(false);expect(queryOrderOptions(fresh,actor.id,c!)[0]!.enabled).toBe(true);
   expect(applyCommand(fresh,{type:'order-job',pawnId:actor.id,jobId:c!.id,queue:false}).ok).toBe(true);expect(actor.orders).toEqual({active:c!.id,queue:[]});expect(b!.reservedBy).toBeNull();
   applyCommand(fresh,{type:'clear-orders',pawnId:actor.id});
-  const raw=JSON.parse(serializeWorld(fresh));raw.schemaVersion=16;for(const a of raw.pawns)delete a.priorities.mine;delete raw.deconstructed;delete raw.packed;for(const a of raw.pawns)delete a.orders;
-  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated.schemaVersion).toBe(31);expect(migrated.pawns[0]!.orders).toEqual({active:null,queue:[]});
+  const raw=JSON.parse(serializeWorld(fresh));raw.schemaVersion=16;for(const a of raw.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete raw.deconstructed;delete raw.packed;for(const a of raw.pawns)delete a.orders;
+  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated.schemaVersion).toBe(32);expect(migrated.pawns[0]!.orders).toEqual({active:null,queue:[]});
   raw.pawns[0].orders={active:null,queue:[]};expect(()=>deserializeWorld(JSON.stringify(raw))).toThrow(/version 16/);
   const corrupt=JSON.parse(serializeWorld(migrated));corrupt.pawns[0].orders.queue=[fresh.jobs[0]!.id,fresh.jobs[0]!.id];expect(()=>deserializeWorld(JSON.stringify(corrupt))).toThrow(/order/);
   for(const orders of [null,[],{active:'oops',queue:[]},{active:null,queue:Array(33).fill(1)},{active:null,queue:null},{active:null,queue:[-1]}]) {

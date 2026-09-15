@@ -10,7 +10,7 @@ import { foodAccount } from './scenarios/colony-player';
 
 function field(size=16):World {
   const w=createWorld(42,size,size);w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.resources=[];w.piles=[];
-  w.pawns=w.pawns.slice(0,1);Object.assign(w.pawns[0]!,{x:2,z:2,hunger:100,rest:100,priorities:{mine:2,gather:0,build:0,haul:0,grow:0,cook:0}});
+  w.pawns=w.pawns.slice(0,1);Object.assign(w.pawns[0]!,{x:2,z:2,hunger:100,rest:100,priorities:{craft:2,mine:2,gather:0,build:0,haul:0,grow:0,cook:0}});
   refreshStock(w);return w;
 }
 function expiresIn(w:World,p:MaterialPile,ticks:number):void {
@@ -101,7 +101,7 @@ test('four, fourteen and forty days; stable snapshots, expiry batches, migration
   expect(checkpoint.world.piles).toHaveLength(5); // Adoption did not rewrite a former frame.
   checked(w,60000);expect(w.spoiled.berries).toBe(3);checked(w,100000);checked(w,56000);
   expect(w.tick).toBe(240000);expect(w.spoiled.rice).toBe(3);expect(w.piles.map(p=>p.item)).toEqual(['survival-meal','legacy-portion']);expect(foodAccount(w)).toBe(15);
-  const old=withoutPostV10Fields(JSON.parse(saved));old.schemaVersion=10;for(const a of old.pawns)delete a.priorities.mine;delete old.deconstructed;delete old.packed;
+  const old=withoutPostV10Fields(JSON.parse(saved));old.schemaVersion=10;for(const a of old.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete old.deconstructed;delete old.packed;
   const migrated=deserializeWorld(JSON.stringify(old));expect(migrated.tick).toBe(23999);
   expect(migrated.piles.filter(p=>p.rot).every(p=>rotAge(p,migrated.tick)===0)).toBe(true);
   expect(migrated.piles.map(p=>[p.id,p.item,p.quantity,p.owner])).toEqual(old.piles.map((p:MaterialPile)=>[p.id,p.item,p.quantity,p.owner]));

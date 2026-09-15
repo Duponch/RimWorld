@@ -8,7 +8,7 @@ import type { Command, World } from '../src/sim/types';
 
 function camp():World {
   const w=createWorld(42,32,32);w.tick=2000;w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.resources=[];w.piles=[];w.jobs=[];w.structures=[];w.stockpiles=[];w.pawns=w.pawns.slice(0,2);
-  w.pawns.forEach((p,i)=>{p.x=8;p.z=10+i;p.hunger=100;p.rest=100;p.schedule.fill('anything');p.priorities={mine:2,haul:1,build:0,grow:0,gather:0,cook:0};});refreshStock(w);return w;
+  w.pawns.forEach((p,i)=>{p.x=8;p.z=10+i;p.hunger=100;p.rest=100;p.schedule.fill('anything');p.priorities={craft:2,mine:2,haul:1,build:0,grow:0,gather:0,cook:0};});refreshStock(w);return w;
 }
 function tick(w:World,n=1) {for(let i=0;i<n;i++){stepWorld(w);expect(validateWorld(w),`tick ${w.tick}`).toEqual([]);}}
 function rejected(w:World,c:Command) {const before=serializeWorld(w);expect(applyCommand(w,c).ok).toBe(false);expect(serializeWorld(w)).toBe(before);}
@@ -29,7 +29,7 @@ test('forced refuel bypasses automation, reserves its station while queued, trav
   for(const mutate of [(s:any)=>s.pawns[0].orders.queue[0].destination.forced=false,(s:any)=>s.pawns[0].orders.queue[0].destination.structureId=999999,(s:any)=>s.pawns[1].orders.queue.push(structuredClone(s.pawns[0].orders.queue[0]))]) {
     const invalid=structuredClone(raw);mutate(invalid);expect(()=>deserializeWorld(JSON.stringify(invalid))).toThrow();
   }
-  q!.priorities={mine:2,haul:0,build:0,gather:0,grow:0,cook:0};
+  q!.priorities={craft:2,mine:2,haul:0,build:0,gather:0,grow:0,cook:0};
   expect(applyCommand(w,{type:'priority',pawnId:p!.id,work:'haul',value:0}).ok).toBe(true);
   const mass=woodMass(w),replay=deserializeWorld(serializeWorld(w)),phases=new Set<string>();
   for(let i=0;i<250&&(p!.haul||p!.orders.queue.length);i++) {
@@ -50,11 +50,11 @@ test('forced refuel bypasses automation, reserves its station while queued, trav
   expect(actor.haul?.phase).toBe('deliver');const held=c.piles.find(p=>p.owner.type==='pawn')!,massBefore=woodMass(c);
   expect(applyCommand(c,{type:'clear-orders',pawnId:actor.id}).ok).toBe(true);expect(c.piles.find(p=>p.id===held.id)?.owner.type).toBe('ground');expect(woodMass(c)).toBe(massBefore);expect(validateWorld(c)).toEqual([]);
   const full=camp(),fullFire=fire(full);fullFire.fuel.ticks=CAMPFIRE_CAPACITY;addGroundMaterial(full,'wood',10,{x:8,z:8},'wood');rejected(full,{type:'order-haul',pawnId:full.pawns[0]!.id,target:{type:'fuel',structureId:fullFire.id},queue:false});
-  const legacy=JSON.parse(serializeWorld(camp()));legacy.schemaVersion=18;for(const a of legacy.pawns)delete a.priorities.mine;delete legacy.deconstructed;delete legacy.packed;expect(deserializeWorld(JSON.stringify(legacy))).toEqual({...legacy,pawns:legacy.pawns.map((p:any)=>({...p,priorities:{...p.priorities,mine:2}})),schemaVersion:31,packed:[],deconstructed:{count:0,lostWood:0,fuelTicks:0}});
+  const legacy=JSON.parse(serializeWorld(camp()));legacy.schemaVersion=18;for(const a of legacy.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete legacy.deconstructed;delete legacy.packed;expect(deserializeWorld(JSON.stringify(legacy))).toEqual({...legacy,pawns:legacy.pawns.map((p:any)=>({...p,priorities:{craft:2,...p.priorities,mine:2}})),schemaVersion:32,packed:[],deconstructed:{count:0,lostWood:0,fuelTicks:0}});
 });
 
 test('forced plant and pile clearing respects rotated footprints, queue cancellation, physical output, parent lifetime and construction assignment without ordinary hauling',()=>{
-  const w=camp(),p=w.pawns[0]!;w.pawns=w.pawns.slice(0,1);p.priorities={mine:2,haul:0,build:1,grow:0,gather:0,cook:0};
+  const w=camp(),p=w.pawns[0]!;w.pawns=w.pawns.slice(0,1);p.priorities={craft:2,mine:2,haul:0,build:1,grow:0,gather:0,cook:0};
   for(const x of [15,21]) {w.resources.push({id:w.nextId++,kind:'tree',amount:12,x:x+1,z:8});expect(applyCommand(w,{type:'designate',kind:'bed',x,z:8,orientation:1}).ok).toBe(true);}
   const [a,b]=w.jobs;
   expect(queryOrderOptions(w,p.id,{x:16,z:8})[0]).toMatchObject({enabled:true,label:'Couper la plante qui gêne le chantier'});
@@ -71,6 +71,6 @@ test('forced plant and pile clearing respects rotated footprints, queue cancella
   applyCommand(w,{type:'priority',pawnId:p.id,work:'build',value:0});for(let i=0;i<150&&p.orders.active!==null;i++)tick(w);expect(applyCommand(w,{type:'clear-orders',pawnId:p.id}).ok).toBe(true);expect(p.haul).toBeNull();expect(w.stock.wood).toBe(12);expect(w.piles.filter(p=>p.owner.type==='ground'&&p.owner.x===16&&p.owner.z===8).reduce((n,p)=>n+p.quantity,0)).toBe(2);
   applyCommand(w,{type:'priority',pawnId:p.id,work:'build',value:1});expect(applyCommand(w,{type:'order-job',pawnId:p.id,jobId:b!.id,queue:false}).ok).toBe(true);
   expect(applyCommand(w,{...clear,queue:true}).ok).toBe(true);expect(validateWorld(w)).toEqual([]);expect(deserializeWorld(serializeWorld(w))).toEqual(w);
-  const raw=JSON.parse(serializeWorld(w));raw.schemaVersion=18;for(const a of raw.pawns)delete a.priorities.mine;delete raw.deconstructed;delete raw.packed;expect(()=>deserializeWorld(JSON.stringify(raw))).toThrow(/version 18/);
+  const raw=JSON.parse(serializeWorld(w));raw.schemaVersion=18;for(const a of raw.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete raw.deconstructed;delete raw.packed;expect(()=>deserializeWorld(JSON.stringify(raw))).toThrow(/version 18/);
   expect(applyCommand(w,{type:'cancel',x:a!.x,z:a!.z}).ok).toBe(true);expect(p.orders.queue).toEqual([]);expect(w.stock.wood).toBe(12);expect(validateWorld(w)).toEqual([]);
 });

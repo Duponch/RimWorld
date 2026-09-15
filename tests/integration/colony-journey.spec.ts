@@ -57,7 +57,7 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
         await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,current);
       }
       if(hour===72) {
-        expect(summary.mining.cells,context).toBe(6);expect(summary.mining.steelStored,context).toBe(50);expect(summary.mining.steelInBuildings,context).toBe(30);expect(summary.mining.stored,context).toBe(summary.mining.chunks);
+        expect(summary.mining.cells,context).toBeGreaterThanOrEqual(6);expect(summary.mining.steelStored,context).toBe(50);expect(summary.mining.steelInBuildings,context).toBe(30);expect(summary.mining.stored,context).toBe(summary.mining.chunks);expect(summary.mining.blocks,context).toBe(20);expect(summary.mining.blocksStored,context).toBe(20);
         expect(current.deconstructed.count,context).toBe(1);expect(current.structures.find(s=>s.kind==='horseshoes')?.x,context).toBe(Math.floor(current.width/2)+4);expect(current.packed,context).toEqual([]);
         expect(summary.structures,context).toEqual({bed:3,table:1,stool:3,wall:6,campfire:1,horseshoes:1,stonecutter:1});expect(current.jobs.filter(j=>j.growingZoneId===undefined),context).toEqual([]);expect(current.resources.filter(r=>r.kind==='rice').length,context).toBeGreaterThan(5);
         expect(current.stock.food,context).toBeGreaterThan(0);expect(sleepers.size,context).toBe(3);

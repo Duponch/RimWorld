@@ -14,7 +14,7 @@ import { initialRecreation } from '../src/sim/recreation-rules';
 
 function camp():World {
   const w=createWorld(42,16,16);w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.resources=[];w.piles=[];
-  w.pawns.forEach((p,i)=>Object.assign(p,{x:2+i*2,z:2,hunger:100,rest:100,priorities:{mine:2,gather:0,build:1,haul:1,grow:0, cook: 0 }}));
+  w.pawns.forEach((p,i)=>Object.assign(p,{x:2+i*2,z:2,hunger:100,rest:100,priorities:{craft:2,mine:2,gather:0,build:1,haul:1,grow:0, cook: 0 }}));
   addGroundMaterial(w,'wood',50,{x:2,z:4},'wood');addGroundMaterial(w,'food',40,{x:3,z:6},'survival-meal');refreshStock(w);
   return w;
 }
@@ -25,7 +25,7 @@ function until(w:World,predicate:()=>boolean,max=1000):void {
 
 test('feu construit, deux jours de combustion, ravitaillement concurrent et interruption conservent le bois',()=>{
   const w=camp(),initial=woodAccount(w);
-  const v9=JSON.parse(serializeWorld(w));v9.schemaVersion=9;for(const a of v9.pawns)delete a.priorities.mine;delete v9.deconstructed;delete v9.packed;withoutPostV10Fields(v9);
+  const v9=JSON.parse(serializeWorld(w));v9.schemaVersion=9;for(const a of v9.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete v9.deconstructed;delete v9.packed;withoutPostV10Fields(v9);
   for(const pawn of v9.pawns){delete pawn.cooking;delete pawn.priorities.cook;}
   const migrated=deserializeWorld(JSON.stringify(v9));
   expect(migrated.pawns.every(p=>p.cooking===null&&p.priorities.cook===2)).toBe(true);
@@ -50,7 +50,7 @@ test('feu construit, deux jours de combustion, ravitaillement concurrent et inte
   until(w,()=>fire.fuel!.ticks>5000);expect(woodAccount(w)).toBe(initial);
   const bad=JSON.parse(serializeWorld(w));bad.structures[0].fuel.ticks=CAMPFIRE_CAPACITY+1;
   expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();
-  const historical=JSON.parse(serializeWorld(w));historical.schemaVersion=9;for(const a of historical.pawns)delete a.priorities.mine;delete historical.deconstructed;delete historical.packed;
+  const historical=JSON.parse(serializeWorld(w));historical.schemaVersion=9;for(const a of historical.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete historical.deconstructed;delete historical.packed;
   expect(()=>deserializeWorld(JSON.stringify(historical))).toThrow();
   const before=serializeWorld(w);
   expect(applyCommand(w,{type:'refuel-policy',structureId:-1,enabled:false}).ok).toBe(false);

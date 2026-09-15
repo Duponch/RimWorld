@@ -15,7 +15,7 @@ import type { World } from '../src/sim/types';
 
 function camp(count=1) {
   const w=createWorld(42,32,32);w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.resources=[];w.piles=[];w.jobs=[];w.structures=[];w.pawns=w.pawns.slice(0,count);
-  w.pawns.forEach((p,i)=>{p.x=8+i;p.z=10;p.hunger=100;p.rest=100;p.schedule.fill('anything');p.priorities={mine:2,build:1,haul:0,gather:0,grow:0,cook:0};});refreshStock(w);return w;
+  w.pawns.forEach((p,i)=>{p.x=8+i;p.z=10;p.hunger=100;p.rest=100;p.schedule.fill('anything');p.priorities={craft:2,mine:2,build:1,haul:0,gather:0,grow:0,cook:0};});refreshStock(w);return w;
 }
 function until(w:World,predicate:()=>boolean,limit=1200) {
   for(let i=0;i<limit&&!predicate();i++){stepWorld(w);expect(validateWorld(w),JSON.stringify({tick:w.tick,jobs:w.jobs,pawns:w.pawns})).toEqual([]);}
@@ -53,7 +53,7 @@ test('plant clearing respects a rotated footprint, saves mid-cut, and transport-
   expect(w.resources.find(r=>r.x===8&&r.z===9)?.amount).toBe(5);
   const saved=deserializeWorld(serializeWorld(w));until(w,()=>w.structures.length===1);
   expect(w.resources).toHaveLength(1);expect(w.stock.wood).toBe(4);expect(w.stock.food).toBe(0);stepWorld(saved,w.tick-saved.tick);expect(saved).toEqual(w);
-  const shipping=camp();shipping.pawns[0]!.priorities={mine:2,build:0,haul:1,gather:0,grow:0,cook:0};addGroundMaterial(shipping,'wood',45,{x:7,z:10},'wood');
+  const shipping=camp();shipping.pawns[0]!.priorities={craft:2,mine:2,build:0,haul:1,gather:0,grow:0,cook:0};addGroundMaterial(shipping,'wood',45,{x:7,z:10},'wood');
   expect(applyCommand(shipping,{type:'designate',kind:'bed',x:12,z:10}).ok).toBe(true);
   until(shipping,()=>shipping.jobs[0]?.escrow.wood===45);stepWorld(shipping,50);expect(shipping.jobs[0]!.progress).toBe(0);expect(shipping.jobs[0]!.construction).toBe('frame');
   expect(applyCommand(shipping,{type:'priority',pawnId:shipping.pawns[0]!.id,work:'build',value:1}).ok).toBe(true);until(shipping,()=>shipping.structures.length===1);
@@ -69,10 +69,10 @@ test('plans and frames remain traversable with calibrated edge delay, completion
   const builder=w.pawns[0]!,passer=w.pawns[1]!;
   for(const p of w.pawns){p.jobId=null;p.path=[];p.haul=null;p.state='idle';p.motion=null;p.moveCooldown=0;p.needCooldown=0;}
   Object.assign(builder,{x:12,z:10,jobId:job.id,state:'working'});Object.assign(job,{progress:jobDuration(w,job)-1,reservedBy:builder.id,status:'active'});
-  Object.assign(passer,{x:10,z:10,priorities:{mine:2,build:0,haul:0,gather:0,grow:0,cook:0}});startTravel(w,passer,{x:11,z:11});
+  Object.assign(passer,{x:10,z:10,priorities:{craft:2,mine:2,build:0,haul:0,gather:0,grow:0,cook:0}});startTravel(w,passer,{x:11,z:11});
   expect(constructionSiteFree(w,job,builder.id)).toBe(false);stepWorld(w);expect(w.structures).toHaveLength(0);expect(validateWorld(w)).toEqual([]);
   until(w,()=>w.structures.length===1);expect(passer).toMatchObject({x:11,z:11});
-  const old=camp();applyCommand(old,{type:'designate',kind:'wall',x:12,z:10});const raw=JSON.parse(serializeWorld(old));raw.schemaVersion=15;for(const a of raw.pawns)delete a.priorities.mine;delete raw.deconstructed;delete raw.packed;for(const pawn of raw.pawns)delete pawn.orders;raw.jobs.forEach((j:any)=>{delete j.construction;delete j.material;});
+  const old=camp();applyCommand(old,{type:'designate',kind:'wall',x:12,z:10});const raw=JSON.parse(serializeWorld(old));raw.schemaVersion=15;for(const a of raw.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete raw.deconstructed;delete raw.packed;for(const pawn of raw.pawns)delete pawn.orders;raw.jobs.forEach((j:any)=>{delete j.construction;delete j.material;});
   const loaded=deserializeWorld(JSON.stringify(raw));expect(loaded.jobs[0]!.construction).toBe('blueprint');expect(loaded.rng).toBe(old.rng);expect(loaded.pawns).toEqual(old.pawns);
   raw.pawns[0].x=12;raw.pawns[0].z=10;expect(()=>deserializeWorld(JSON.stringify(raw))).toThrow(/version 15/);
   const invalid=JSON.parse(serializeWorld(loaded));invalid.jobs[0].construction='finished';expect(()=>deserializeWorld(JSON.stringify(invalid))).toThrow(/phase/);
@@ -128,7 +128,7 @@ test('construction profiles preserve compatible stacks, clear incompatible ones,
 
 test('replacing storage with a blueprint releases active and queued deliveries atomically, preserves other zone cells, and migrates old furniture contents',()=>{
   for(const kind of ['wall','campfire','stool'] as const) {
-    const w=camp(2),p=w.pawns[0]!;for(const q of w.pawns)q.priorities={mine:2,build:0,haul:0,gather:0,grow:0,cook:0};p.priorities.haul=1;
+    const w=camp(2),p=w.pawns[0]!;for(const q of w.pawns)q.priorities={craft:2,mine:2,build:0,haul:0,gather:0,grow:0,cook:0};p.priorities.haul=1;
     addGroundMaterial(w,'food',30,{x:10,z:10},'rice');const pile=w.piles[0]!;
     expect(applyCommand(w,{type:'area',action:'stockpile',from:{x:15,z:10},to:{x:16,z:10}}).ok).toBe(true);
     for(const queue of [false,true])expect(applyCommand(w,{type:'order-haul',pawnId:p.id,target:{type:'pile',pileId:pile.id},queue}).ok).toBe(true);
@@ -147,15 +147,15 @@ test('replacing storage with a blueprint releases active and queued deliveries a
   }
   const legacy=camp();legacy.structures.push({id:legacy.nextId++,kind:'bed',x:12,z:10,orientation:1,footprint:'standard'});
   addGroundMaterial(legacy,'food',10,{x:7,z:10},'rice');const id=legacy.piles[0]!.id;
-  legacy.piles[0]!.owner={type:'ground',x:13,z:10};const raw=JSON.parse(JSON.stringify(legacy));raw.schemaVersion=20;for(const a of raw.pawns)delete a.priorities.mine;delete raw.deconstructed;delete raw.packed;
-  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated.schemaVersion).toBe(31);expect(migrated.stock.food).toBe(10);expect(migrated.piles[0]!.id).toBe(id);expect(migrated.piles[0]!.rot).toEqual(legacy.piles[0]!.rot);
+  legacy.piles[0]!.owner={type:'ground',x:13,z:10};const raw=JSON.parse(JSON.stringify(legacy));raw.schemaVersion=20;for(const a of raw.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete raw.deconstructed;delete raw.packed;
+  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated.schemaVersion).toBe(32);expect(migrated.stock.food).toBe(10);expect(migrated.piles[0]!.id).toBe(id);expect(migrated.piles[0]!.rot).toEqual(legacy.piles[0]!.rot);
   expect(migrated.piles[0]!.owner).not.toMatchObject({x:13,z:10});expect(migrated.pawns).toEqual(legacy.pawns);expect(validateWorld(migrated)).toEqual([]);
   const full=structuredClone(raw);const used=new Set(full.piles.filter((p:any)=>p.owner.type==='ground').map((p:any)=>p.owner.z*full.width+p.owner.x));
   for(let i=0;i<full.width*full.height;i++)if(!used.has(i))full.piles.push({id:full.nextId++,kind:'wood',item:'wood',quantity:75,owner:{type:'ground',x:i%full.width,z:Math.floor(i/full.width)}});
   refreshStock(full);expect(()=>deserializeWorld(JSON.stringify(full))).toThrow(/No ground cell/);
   expect(groundCapacity(migrated,{x:13,z:10},'rice')).toBe(0);
   const invalid=JSON.parse(serializeWorld(migrated));invalid.stockpiles.push({id:invalid.nextId++,x:12,z:10,filters:{wood:true,food:true},priority:2,capacity:75});expect(()=>deserializeWorld(JSON.stringify(invalid))).toThrow();
-  const oldOverlap=JSON.parse(serializeWorld(migrated));oldOverlap.schemaVersion=20;for(const a of oldOverlap.pawns)delete a.priorities.mine;delete oldOverlap.deconstructed;delete oldOverlap.packed;oldOverlap.structures[0].kind='stool';oldOverlap.stockpiles.push({id:oldOverlap.nextId++,x:12,z:10,filters:{wood:true,food:true},priority:2,capacity:75});expect(()=>deserializeWorld(JSON.stringify(oldOverlap))).toThrow(/version 20/);
+  const oldOverlap=JSON.parse(serializeWorld(migrated));oldOverlap.schemaVersion=20;for(const a of oldOverlap.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete oldOverlap.deconstructed;delete oldOverlap.packed;oldOverlap.structures[0].kind='stool';oldOverlap.stockpiles.push({id:oldOverlap.nextId++,x:12,z:10,filters:{wood:true,food:true},priority:2,capacity:75});expect(()=>deserializeWorld(JSON.stringify(oldOverlap))).toThrow(/version 20/);
   // Zone compatibility is symmetric: painting after a plan/building uses the
   // same footprint, while plants and compatible furniture remain paintable.
   const field=camp();field.pawns[0]!.priorities.build=0;
@@ -165,9 +165,9 @@ test('replacing storage with a blueprint releases active and queued deliveries a
   expect(field.growingZones).toEqual([{...zone,cells:[334]}]);expect(validateWorld(field)).toEqual([]);
   expect(applyCommand(field,{type:'area',action:'growing',from:{x:12,z:10},to:{x:13,z:10}}).ok).toBe(false);
   delete field.jobs[0]!.material; // Historical V20 blueprint retains its old recipe after migration.
-  const oldField=JSON.parse(serializeWorld(field));oldField.schemaVersion=20;for(const a of oldField.pawns)delete a.priorities.mine;delete oldField.deconstructed;delete oldField.packed;oldField.growingZones=[zone];
+  const oldField=JSON.parse(serializeWorld(field));oldField.schemaVersion=20;for(const a of oldField.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete oldField.deconstructed;delete oldField.packed;oldField.growingZones=[zone];
   const newField=deserializeWorld(JSON.stringify(oldField));expect(newField).toEqual(field);
-  oldField.schemaVersion=21;for(const a of oldField.pawns)delete a.priorities.mine;delete oldField.deconstructed;delete oldField.packed;expect(()=>deserializeWorld(JSON.stringify(oldField))).toThrow(/Growing zone overlaps/);
+  oldField.schemaVersion=21;for(const a of oldField.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete oldField.deconstructed;delete oldField.packed;expect(()=>deserializeWorld(JSON.stringify(oldField))).toThrow(/Growing zone overlaps/);
   expect(applyCommand(field,{type:'cancel',x:12,z:10}).ok).toBe(true);expect(field.growingZones[0]!.cells).toEqual([334]);
   for(const kind of ['wall','bed','table','stool','campfire','horseshoes'] as const) {
     const f=camp();f.structures.push({id:f.nextId++,kind,x:12,z:10,orientation:1,footprint:'standard'});

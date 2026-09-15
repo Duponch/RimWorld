@@ -1,3 +1,4 @@
+import { taskWork } from './production-recipes.ts';
 import { furnitureIntentAt, furnitureSourceCells } from './furniture-rules.ts';
 import { furnitureDropCell, releaseFurniture } from './furniture-transfer.ts';
 import { zonesUnderPlan } from './construction-zones.ts';
@@ -36,7 +37,7 @@ export function planCommandDrops(world:World,command:Command):DropPlan|null {
     const zone=world.stockpiles.find(z=>same(z,command));if(zone)zones.add(zone.id);
   } else if(command.type==='priority'&&command.value===0) {
     const pawn=world.pawns.find(p=>p.id===command.pawnId),job=world.jobs.find(j=>j.id===pawn?.jobId);
-    if(pawn&&((pawn.haul&&pawn.orders.active!=='haul'&&command.work===haulingWork(pawn.haul.destination))||(job&&workType(job)===command.work&&pawn.orders.active===null)||(pawn.cooking&&pawn.orders.active!=='cook'&&command.work==='cook')))pawns.add(pawn.id);
+    if(pawn&&((pawn.haul&&pawn.orders.active!=='haul'&&command.work===haulingWork(pawn.haul.destination))||(job&&workType(job)===command.work&&pawn.orders.active===null)||(pawn.cooking&&pawn.orders.active!=='cook'&&command.work === taskWork(pawn.cooking))))pawns.add(pawn.id);
   } else if(command.type==='bill-remove'||command.type==='bill-update') {
     for(const pawn of world.pawns)if(pawn.cooking?.billId===command.billId&&pawn.cooking.stationId===command.structureId)pawns.add(pawn.id);
   } else if(command.type==='refuel-policy' && !command.enabled) {

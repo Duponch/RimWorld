@@ -33,7 +33,7 @@ export const toolDefinitions: { id: Tool; icon: string; title: string; hint: str
 
 export function storageSettings(prefix: string): string {
   return `<div class="storage-settings" id="${prefix}-settings">
-    <div class="storage-filters"><label><input id="${prefix}-wood" type="checkbox" checked> Bois</label><label><input id="${prefix}-food" type="checkbox" checked> Nourriture</label><label><input id="${prefix}-steel" type="checkbox" checked> Acier</label><label><input id="${prefix}-chunk" type="checkbox"> Fragments de roche</label><label><input id="${prefix}-furniture" type="checkbox" checked> Meubles emballés</label></div>
+    <div class="storage-filters"><label><input id="${prefix}-wood" type="checkbox" checked> Bois</label><label><input id="${prefix}-food" type="checkbox" checked> Nourriture</label><label><input id="${prefix}-steel" type="checkbox" checked> Acier</label><label><input id="${prefix}-blocks" type="checkbox" checked> Blocs de pierre</label><label><input id="${prefix}-chunk" type="checkbox"> Fragments de roche</label><label><input id="${prefix}-furniture" type="checkbox" checked> Meubles emballés</label></div>
     <label>Priorité de réserve<select id="${prefix}-priority"><option value="1">1 · basse</option><option value="2" selected>2 · normale</option><option value="3">3 · importante</option><option value="4">4 · critique</option></select></label>
     <label>Capacité (unités)<input id="${prefix}-capacity" type="number" min="1" max="75" step="1" value="75"></label>
   </div>`;
@@ -52,6 +52,7 @@ export function gameLayout(): string {
       <div class="resource-heading">Ressources</div>
       <div class="resource"><span class="resource-symbol wood">▤</span><span>Bois</span><strong id="wood">—</strong></div>
       <div class="resource"><span class="resource-symbol">▱</span><span>Acier</span><strong id="steel">—</strong></div>
+      <div class="resource"><span class="resource-symbol">▦</span><span>Blocs</span><strong id="blocks">—</strong></div>
       <div class="resource"><span class="resource-symbol food">⁙</span><span>Nutrition</span><strong id="food">—</strong></div>
       <div id="food-items"></div>
       <div id="material-status" class="material-status"></div>
@@ -83,7 +84,7 @@ export function gameLayout(): string {
     <section id="work-panel" class="management-panel work-panel panel" aria-label="Travail" hidden>
       <div class="panel-heading"><h2>Travail</h2><button data-close-panel aria-label="Fermer Travail">×</button></div>
       <p>Priorités manuelles : <b>1</b> haute · <b>4</b> basse · <b>0</b> désactivée. Le transport livre aussi les chantiers.</p>
-      <div class="work-table-wrap"><table><thead><tr><th>Colon</th><th>Collecte</th><th>Construction</th><th>Transport</th><th>Culture</th><th>Cuisine</th><th>Minage</th><th>Activité</th></tr></thead><tbody id="work-rows"></tbody></table></div>
+      <div class="work-table-wrap"><table><thead><tr><th>Colon</th><th>Collecte</th><th>Construction</th><th>Transport</th><th>Culture</th><th>Cuisine</th><th>Artisanat</th><th>Minage</th><th>Activité</th></tr></thead><tbody id="work-rows"></tbody></table></div>
     </section>
     ${scheduleLayout()}
     ${foodPolicyLayout()}

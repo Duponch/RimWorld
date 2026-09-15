@@ -65,7 +65,7 @@ test('eight-direction routes agree with an independent relaxation oracle and pre
 
 test('civil crossing preserves beds, opposing cargo, every edge and exact continuation without pushing other actors',()=>{
   const w=civilCrossingFixture();expect(validateWorld(w)).toEqual([]);
-  const old=JSON.parse(serializeWorld(w));old.schemaVersion=13;for(const a of old.pawns)delete a.priorities.mine;delete old.deconstructed;delete old.packed;for(const pawn of old.pawns)delete pawn.orders;
+  const old=JSON.parse(serializeWorld(w));old.schemaVersion=13;for(const a of old.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete old.deconstructed;delete old.packed;for(const pawn of old.pawns)delete pawn.orders;
   expect(deserializeWorld(JSON.stringify(old))).toEqual(w); // No rewritten positions, tasks or IDs.
   const start=w.tick;let shared:string|undefined;
   const endings=new Map<number,number>();
@@ -84,7 +84,7 @@ test('civil crossing preserves beds, opposing cargo, every edge and exact contin
   expect(w.pawns.map(p=>[p.x,p.z,p.state])).toEqual([[14,8,'sleeping'],[1,8,'sleeping'],[8,8,'sleeping']]);
   expect(new Set(w.pawns.map(p=>p.bedId)).size).toBe(3);
   const resumed=deserializeWorld(shared!);stepWorld(resumed,w.tick-resumed.tick);expect(resumed).toEqual(w);
-  const overlapV13=JSON.parse(shared!);overlapV13.schemaVersion=13;for(const a of overlapV13.pawns)delete a.priorities.mine;delete overlapV13.deconstructed;delete overlapV13.packed;for(const pawn of overlapV13.pawns){delete pawn.orders;delete pawn.transitExit;if(pawn.motion?.terrainDelay){pawn.motion.end-=pawn.motion.terrainDelay;delete pawn.motion.terrainDelay;pawn.moveCooldown=Math.max(0,pawn.motion.end-overlapV13.tick);}}
+  const overlapV13=JSON.parse(shared!);overlapV13.schemaVersion=13;for(const a of overlapV13.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete overlapV13.deconstructed;delete overlapV13.packed;for(const pawn of overlapV13.pawns){delete pawn.orders;delete pawn.transitExit;if(pawn.motion?.terrainDelay){pawn.motion.end-=pawn.motion.terrainDelay;delete pawn.motion.terrainDelay;pawn.moveCooldown=Math.max(0,pawn.motion.end-overlapV13.tick);}}
   expect(()=>deserializeWorld(JSON.stringify(overlapV13))).toThrow(/overlap/i);
   const duplicate=JSON.parse(serializeWorld(w));duplicate.pawns[0].bedId=duplicate.pawns[1].bedId;
   expect(()=>deserializeWorld(JSON.stringify(duplicate))).toThrow(/bed|sleep/i);
@@ -106,7 +106,7 @@ test('civil crossing preserves beds, opposing cargo, every edge and exact contin
   }
   expect(quantity('wood',14)).toBe(10);expect(quantity('rice',1)).toBe(10);expect(carriedCrossing).toBeDefined();
   const cargoResume=deserializeWorld(carriedCrossing!);stepWorld(cargoResume,haul.tick-cargoResume.tick);expect(cargoResume).toEqual(haul);
-  const legacyEdge=JSON.parse(carriedCrossing!);legacyEdge.schemaVersion=13;for(const a of legacyEdge.pawns)delete a.priorities.mine;delete legacyEdge.deconstructed;delete legacyEdge.packed;for(const pawn of legacyEdge.pawns){delete pawn.orders;delete pawn.transitExit;if(pawn.motion?.terrainDelay){pawn.motion.end-=pawn.motion.terrainDelay;delete pawn.motion.terrainDelay;pawn.moveCooldown=Math.max(0,pawn.motion.end-legacyEdge.tick);}}
+  const legacyEdge=JSON.parse(carriedCrossing!);legacyEdge.schemaVersion=13;for(const a of legacyEdge.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete legacyEdge.deconstructed;delete legacyEdge.packed;for(const pawn of legacyEdge.pawns){delete pawn.orders;delete pawn.transitExit;if(pawn.motion?.terrainDelay){pawn.motion.end-=pawn.motion.terrainDelay;delete pawn.motion.terrainDelay;pawn.moveCooldown=Math.max(0,pawn.motion.end-legacyEdge.tick);}}
   expect(()=>deserializeWorld(JSON.stringify(legacyEdge))).toThrow(/overlap/i);
 });
 
@@ -155,10 +155,10 @@ test('floor stacks enforce identity, reserved destination type, migration and at
   addGroundMaterial(w,'wood',75,zone);
   expect(w.piles.some(p=>p.owner.type==='ground'&&p.owner.x===zone.x&&p.owner.z===zone.z)).toBe(false);
   w.pawns[0]!.haul=null;
-  const old=JSON.parse(serializeWorld(w));old.schemaVersion=5;for(const a of old.pawns)delete a.priorities.mine;delete old.deconstructed;delete old.packed;withoutPostV10Fields(old);for(const p of old.pawns){delete p.cooking;delete p.priorities.cook;}old.piles[1].owner={...old.piles[0].owner};
+  const old=JSON.parse(serializeWorld(w));old.schemaVersion=5;for(const a of old.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete old.deconstructed;delete old.packed;withoutPostV10Fields(old);for(const p of old.pawns){delete p.cooking;delete p.priorities.cook;}old.piles[1].owner={...old.piles[0].owner};
   const migrated=deserializeWorld(JSON.stringify(old));
   expect(migrated.piles.map(p=>[p.id,p.item,p.quantity])).toEqual(w.piles.map(p=>[p.id,p.item,p.quantity]));expect(validateWorld(migrated)).toEqual([]);
-  const impossible=JSON.parse(JSON.stringify(old));impossible.schemaVersion=6;for(const a of impossible.pawns)delete a.priorities.mine;delete impossible.deconstructed;delete impossible.packed;expect(()=>deserializeWorld(JSON.stringify(impossible))).toThrow(/floor cell/);
+  const impossible=JSON.parse(JSON.stringify(old));impossible.schemaVersion=6;for(const a of impossible.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete impossible.deconstructed;delete impossible.packed;expect(()=>deserializeWorld(JSON.stringify(impossible))).toThrow(/floor cell/);
   // Full floor: failed production must leave its entire input/quantity intact.
   w.stockpiles=[];w.piles=[];for(let z=0;z<16;z++)for(let x=0;x<16;x++)w.piles.push({id:w.nextId++,item:'wood',kind:'wood',quantity:75,owner:{type:'ground',x,z}});refreshStock(w);
   const before=JSON.stringify(w);expect(()=>addGroundMaterial(w,'food',76,{x:8,z:8},'berries')).toThrow();expect(JSON.stringify(w)).toBe(before);

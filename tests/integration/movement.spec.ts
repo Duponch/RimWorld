@@ -8,7 +8,7 @@ test('civil crossing in the real worker: shared cell, save/reload, three exclusi
   const browser=await playwright.chromium.launch({channel:'chromium',args:[]});
   const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);
   try {
-    const fixture=civilCrossingFixture(),old=JSON.parse(serializeWorld(fixture));old.schemaVersion=13;for(const a of old.pawns)delete a.priorities.mine;delete old.deconstructed;delete old.packed;for(const pawn of old.pawns){delete pawn.orders;delete pawn.recreation;}
+    const fixture=civilCrossingFixture(),old=JSON.parse(serializeWorld(fixture));old.schemaVersion=13;for(const a of old.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete old.deconstructed;delete old.packed;for(const pawn of old.pawns){delete pawn.orders;delete pawn.recreation;}
     const migrated=deserializeWorld(JSON.stringify(old));expect(migrated).toEqual(fixture);
     await page.addInitScript(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:JSON.stringify(old)});
     await page.goto('/?size=16&e2e');await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();

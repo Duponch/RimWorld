@@ -67,3 +67,7 @@ Gisements et produit de base sont adoptés, densité et sol encaissant adaptés 
 ## Matériaux de construction V30
 
 Les nouveaux ouvrages suivent les coûts bois/acier vérifiés, dont 45 unités pour un lit ; le temps est converti au pas local avec vitesse neutre. Les objets anciens restent au profil historique pour conserver leur matière. Le choix du matériau n’introduit pas encore qualité, résistance, inflammabilité ni recherche : [décisions et certitude](../research/construction-materials-reference.md). Les exigences multiples sont une frontière technique préparée ; aucun atelier mixte n’est déclaré jouable.
+
+## Taille V32
+
+Recette générale filtrable plutôt que six raccourcis de factures : son seuil compte tous les blocs, conformément au compteur inspecté. Travail neutre extérieur 200 ticks locaux (1600 Core / 10 / 0,8). Lumière fonctionnelle et capacités restent absentes, sans facteur inventé à partir de sources contradictoires. Le produit de vingt blocs se porte entier malgré la limite provisoire dix du transport ordinaire. Les blocs ne sont pas encore admissibles aux constructions. [Justification et sources](../research/stonecutting-reference.md).

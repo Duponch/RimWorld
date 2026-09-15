@@ -1,3 +1,4 @@
+import { stationRecipe } from './sim/production-recipes';
 import { constructionControls, constructionDeliveryLabel, structureFootprintLabel } from './ui/construction-controls';
 import { constructionRecipe } from './sim/construction-materials';
 import { rockInspection } from './ui/geology-inspection';
@@ -157,7 +158,7 @@ function readStorageSettings(prefix: string) {
   const capacity = Number(el<HTMLInputElement>(`${prefix}-capacity`).value);
   if (!Number.isInteger(capacity) || capacity < 1 || capacity > MAX_STACK) throw new Error(`La capacité doit être un entier entre 1 et ${MAX_STACK}.`);
   return {
-    filters: { steel: el<HTMLInputElement>(`${prefix}-steel`).checked, chunk: el<HTMLInputElement>(`${prefix}-chunk`).checked, wood: el<HTMLInputElement>(`${prefix}-wood`).checked, food: el<HTMLInputElement>(`${prefix}-food`).checked, furniture: el<HTMLInputElement>(`${prefix}-furniture`).checked },
+    filters: { blocks: el<HTMLInputElement>(`${prefix}-blocks`).checked, steel: el<HTMLInputElement>(`${prefix}-steel`).checked, chunk: el<HTMLInputElement>(`${prefix}-chunk`).checked, wood: el<HTMLInputElement>(`${prefix}-wood`).checked, food: el<HTMLInputElement>(`${prefix}-food`).checked, furniture: el<HTMLInputElement>(`${prefix}-furniture`).checked },
     priority: Number(el<HTMLSelectElement>(`${prefix}-priority`).value), capacity,
   };
 }
@@ -187,6 +188,7 @@ function rebuildInspector() {
       el<HTMLInputElement>('selected-stockpile-wood').checked = storage.filters.wood;
       el<HTMLInputElement>('selected-stockpile-food').checked = storage.filters.food;
       el<HTMLInputElement>('selected-stockpile-furniture').checked = storage.filters.furniture??false;
+      el<HTMLInputElement>('selected-stockpile-blocks').checked = storage.filters.blocks??false;
       el<HTMLInputElement>('selected-stockpile-steel').checked = storage.filters.steel??false;
       el<HTMLInputElement>('selected-stockpile-chunk').checked = storage.filters.chunk??false;
       el<HTMLSelectElement>('selected-stockpile-priority').value = String(storage.priority);
@@ -207,10 +209,10 @@ function rebuildInspector() {
       if (bed) void attempt(async () => { await client.command({ type: 'assign-bed', bedId: bed.id, pawnId: owner.value ? Number(owner.value) : null }); });
     };
     bedControls.append(owner); panel.append(bedControls);
-    const fire=snapshot?.structures.find(s=>s.kind==='campfire'&&s.x===selectedCell!.x&&s.z===selectedCell!.z);
+    const fire=snapshot?.structures.find(s=>stationRecipe(s)!==null&&footprintCells(s).some(c=>c.x===selectedCell!.x&&c.z===selectedCell!.z));
     if(fire) {
       const send=(command:Command)=>void attempt(async()=>{await client.command(command);rebuildInspector();renderState();});
-      panel.append(fireControls(fire,send),billControls(fire,send));
+      if(fire.kind==='campfire')panel.append(fireControls(fire,send));panel.append(billControls(fire,send));
     }
     const zone = snapshot && growingZoneAt(snapshot, selectedCell.z * snapshot.width + selectedCell.x);
     if (zone) panel.append(growingControls(zone, command => void attempt(async () => { await client.command(command); rebuildInspector(); renderState(); })));
@@ -219,7 +221,7 @@ function rebuildInspector() {
   if (close) close.onclick = clearSelection;
 }
 function actionLabel(pawn: Pawn) {
-  if(pawn.cooking)return pawn.cooking.phase==='work'?'Prépare un repas simple':pawn.cooking.phase==='output'?'Range le repas préparé':'Rassemble les ingrédients';
+  if(pawn.cooking)return queryPawnStatus(snapshot!,pawn).reason;
   if (pawn.need) return queryPawnStatus(snapshot!, pawn).reason;
   if (pawn.haul) {
     const destination = pawn.haul.destination.type === 'job' ? 'chantier' : pawn.haul.destination.type === 'aside' ? 'bord du champ' : pawn.haul.destination.type==='fuel' ? 'feu de camp' : 'réserve';
@@ -241,10 +243,10 @@ function rebuildPawns(world: World) {
   el('work-rows').replaceChildren(...world.pawns.map(pawn => {
     const row = document.createElement('tr'); row.dataset.worker = String(pawn.id);
     const name = document.createElement('th'); name.scope = 'row'; name.textContent = pawn.name; row.append(name);
-    for (const work of ['gather', 'build', 'haul', 'grow', 'cook', 'mine'] as WorkType[]) {
+    for (const work of ['gather', 'build', 'haul', 'grow', 'cook', 'craft', 'mine'] as WorkType[]) {
       const cell = document.createElement('td'), select = document.createElement('select');
       select.dataset.work = work; select.dataset.owner = String(pawn.id);
-      select.setAttribute('aria-label', `Priorité ${{ mine:'minage', gather: 'collecte', build: 'construction', haul: 'transport', grow: 'culture', cook: 'cuisine' }[work]} ${pawn.name}`);
+      select.setAttribute('aria-label', `Priorité ${{ mine:'minage', gather: 'collecte', build: 'construction', haul: 'transport', grow: 'culture', cook: 'cuisine', craft:'artisanat' }[work]} ${pawn.name}`);
       for (let value = 0; value <= 4; value++) { const option = document.createElement('option'); option.value = String(value); option.textContent = String(value); select.append(option); }
       select.onchange = () => { void attempt(async () => { try { await client.command({ type: 'priority', pawnId: pawn.id, work, value: Number(select.value) }); } finally { renderState(); } }); };
       cell.append(select); row.append(cell);
@@ -257,6 +259,7 @@ function renderState() {
   const world = snapshot;
   scheduleUI.update(world);
   foodPolicyUI.update(world);
+  el('blocks').textContent=String(world.piles.reduce((n,p)=>n+(p.kind==='blocks'&&p.owner.type!=='job'?p.quantity:0),0));
   el('steel').textContent = String(world.piles.reduce((n,p)=>n+(p.item==='steel'&&p.owner.type!=='job'?p.quantity:0),0));
   el('wood').textContent = String(world.stock.wood); el('food').textContent = availableNutrition(world).toFixed(1); updateFoodStocks(el('food-items'), world);
   const carried = world.piles.filter(pile => pile.owner.type === 'pawn').reduce((sum, pile) => sum + pile.quantity, 0);
@@ -320,9 +323,10 @@ function renderState() {
       if (!packed && !structure && rock) { el('cell-title').textContent = rock.title; el('cell-description').textContent = `Case ${x}, ${z} · ${rock.description}`; }
       el('cell-materials').textContent = piles.length ? `Au sol : ${piles.map(pile => `${pile.quantity} ${ITEM_DEFINITIONS[pile.item].label}${pile.kind==='food'?` · ${foodFreshnessLabel(pile,world.tick)}`:''}`).join(' · ')}` : '';
       el('cell-job').textContent = job ? `${job.construction==='blueprint'?'Plan · ':job.construction==='frame'?'Cadre · ':''}${jobLabels[job.kind]} · ${queryJobStatus(world, job).reason ?? 'En cours'}${constructionDeliveryLabel(world,job) ? ` · Livré : ${constructionDeliveryLabel(world,job)}` : ''}` : 'Aucun ordre sur cette case.';
-      if(structure?.kind==='stonecutter')el('cell-description').textContent += ' · Fabrication de blocs à venir.';
+      if(structure?.kind==='stonecutter')el('cell-description').textContent += ' · 1 fragment → 20 blocs · Artisanat · atelier extérieur.';
       if(structure?.kind==='horseshoes')el('cell-description').textContent += ` · Dextérité · ${world.pawns.filter(p=>p.recreation.task?.buildingId===structure.id).length}/3 joueurs · places à 5 cases, ligne de vue dégagée.`;
-      if(structure?.kind==='campfire'){updateFireControls(el('inspector'),structure);updateBillControls(el('inspector'),structure,world);}
+      if(structure?.kind==='campfire')updateFireControls(el('inspector'),structure);
+      if(structure&&stationRecipe(structure))updateBillControls(el('inspector'),structure,world);
       el('cell-deconstruct').hidden=!structure||!!job;
       el('cell-cancel').hidden=!job;
       el('cell-storage').hidden = !storage;

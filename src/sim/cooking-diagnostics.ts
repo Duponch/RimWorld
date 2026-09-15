@@ -1,6 +1,7 @@
+import { PRODUCTION_RECIPES, admittedIngredient, stationWork } from './production-recipes.ts';
 import { reservedServiceCells } from './service-reservations.ts';
 import { isCookingOrder } from './order-types.ts';
-import { billWanted, cookingPlaceFree, cookingSpot, INGREDIENT_UNITS } from './cooking-bills.ts';
+import { billWanted, cookingPlaceFree, cookingSpot } from './cooking-bills.ts';
 import { reservedSource } from './materials.ts';
 import { queryPawnStatus } from './diagnostics.ts';
 import type { CookingBill } from './cooking-types.ts';
@@ -13,23 +14,23 @@ export function queryCookingBillStatus(world:World,station:Structure,bill:Cookin
   const worker=world.pawns.find(p=>p.cooking?.stationId===station.id&&p.cooking.billId===bill.id);
   if(worker)return queryPawnStatus(world,worker);
   const queued=world.pawns.find(p=>p.orders.queue.some(o=>isCookingOrder(o)&&o.cooking.stationId===station.id&&o.cooking.billId===bill.id));
-  if(queued)return {code:'queued',reason:`Cuisine en file pour ${queued.name} ; ingrédients et poste réservés.`};
+  if(queued)return {code:'queued',reason:`Production en file pour ${queued.name} ; ingrédients et poste réservés.`};
   if(bill.suspended)return {code:'suspended',reason:'Facture suspendue.'};
-  if(!billWanted(world,bill))return {code:'target-met',reason:bill.mode==='times'?'Quantité demandée terminée.':'Seuil de repas stockés ou portés atteint.'};
+  if(!billWanted(world,bill))return {code:'target-met',reason:bill.mode==='times'?'Quantité demandée terminée.':'Seuil de produits stockés ou portés atteint.'};
   const serving=world.pawns.find(p=>p.cooking?.stationId===station.id||p.haul?.destination.type==='fuel'&&p.haul.destination.structureId===station.id);
   if(serving)return {code:'station-busy',reason:`Poste occupé par ${serving.name}.`};
-  if(!world.pawns.some(p=>p.priorities.cook>0))return {code:'waiting-worker',reason:'Cuisine désactivée pour tous les colons dans Travail.'};
+  if(!world.pawns.some(p=>p.priorities[stationWork(station)]>0))return {code:'waiting-worker',reason:'Métier désactivé pour tous les colons dans Travail.'};
   const spot=cookingSpot(station);
-  if(!cookingPlaceFree(world,spot))return {code:'blocked-workplace',reason:'La place de travail devant le feu est obstruée.'};
-  if(!station.fuel?.ticks) {
+  if(!cookingPlaceFree(world,spot))return {code:'blocked-workplace',reason:'La place de travail devant le poste est obstruée.'};
+  if(station.kind==='campfire'&&!station.fuel?.ticks) {
     if(!station.fuel?.autoRefuel)return {code:'refuel-disabled',reason:'Feu éteint ; ravitaillement automatique désactivé.'};
     const wood=world.piles.some(p=>p.item==='wood'&&p.owner.type==='ground'&&p.quantity>reservedSource(world,p.id));
     return {code:wood?'waiting-fuel':'missing-fuel',reason:wood?'Feu éteint ; attend un ravitaillement et un accès au bois.':'Feu éteint ; aucun bois au sol non réservé.'};
   }
   let available=0;
-  for(const pile of world.piles)if((pile.item==='rice'||pile.item==='berries')&&bill.filters[pile.item]&&pile.owner.type==='ground'
+  for(const pile of world.piles)if(admittedIngredient(bill,pile.item)&&pile.owner.type==='ground'
     &&(pile.owner.x-station.x)**2+(pile.owner.z-station.z)**2<=bill.radius**2)available+=Math.max(0,pile.quantity-reservedSource(world,pile.id));
-  if(available<INGREDIENT_UNITS)return {code:'missing-ingredients',reason:`Ingrédients insuffisants : ${available}/${INGREDIENT_UNITS} non réservés dans le rayon et les filtres.`};
-  if(reservedServiceCells(world).has(spot.z*world.width+spot.x))return {code:'workplace-occupied',reason:'La place devant le feu est réservée par une autre activité.'};
-  return {code:'waiting',reason:'Attend un cuisinier disponible ; accès, priorités et place de dépôt à vérifier.'};
+  if(available<PRODUCTION_RECIPES[bill.recipe].units)return {code:'missing-ingredients',reason:`Ingrédients insuffisants : ${available}/${PRODUCTION_RECIPES[bill.recipe].units} non réservés dans le rayon et les filtres.`};
+  if(reservedServiceCells(world).has(spot.z*world.width+spot.x))return {code:'workplace-occupied',reason:'La place devant le poste est réservée par une autre activité.'};
+  return {code:'waiting',reason:'Attend un artisan disponible ; accès, priorités et place de dépôt à vérifier.'};
 }

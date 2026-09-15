@@ -50,7 +50,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 31 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 32 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)
@@ -108,7 +108,7 @@
 
 ## Minage V28
 - Lire docs/development/mining.md et docs/research/mining-reference.md. Dégâts sur Tile.miningDamage, cadence de coup sur Job.progress ; annuler ne répare pas la roche. Dernier coup, RNG et produit engagés seulement après prévalidation.
-- `rough-stone` conserve le type, reste non fertile ; fragments `chunk` pile 1, rangement après désignation, pas de conversion en bois/aliment/bloc. Le maximum terrain/objet conserve le coût du sol entre répétiteurs. V27 strictement validée avant migration. Les roches historiques restent non typées (500 PV provisoires). Toits, minerais, taille et pierres décoratives transportables restent absents.
+- `rough-stone` conserve le type, reste non fertile ; fragments `chunk` pile 1, rangement après désignation, pas de conversion en bois/aliment/bloc. Le maximum terrain/objet conserve le coût du sol entre répétiteurs. V27 strictement validée avant migration. Les roches historiques restent non typées (500 PV provisoires). Toits, autres minerais que l’acier et pierres décoratives transportables restent absents ; taille V32 dans son contrat distinct.
 
 ## Acier V29
 - Lire docs/development/steel.md et docs/research/steel-reference.md. Tile.ore est distinct de la roche encaissante ; 1 500 PV, dégâts naturels de 80, produit neutre 40 acier, piles 75. V28 est validée avant migration sans ajout de gisement ni de filtre. Acier automatiquement transportable, filtre absent = refus ; usages constructifs décrits dans le contrat V30. Avant compétences/rendement variable ou dégâts externes, faire évoluer le suivi des contributions minières. Le coût continu de pile n’est pas supprimé par la non-répétition du mobilier.
@@ -119,4 +119,10 @@
 
 ## Atelier mixte V31
 - Lire docs/development/stonecutter.md et docs/research/stonecutter-reference.md. Table centrée 3×1, 75 bois + 30 acier ou 105 acier agrégés ; pas de recette historique non typée pour cette nouvelle définition. Surface Item, zones interdites, passage 5 ticks sans arrêt, transfert entier conservé.
-- V30 strictement validée avant migration ; la forme des progressions longues V31 précède leur validation par jobDuration. La taille de fragments en blocs reste absente : prochain lot, ne pas lui inventer une facture ou des produits. Le pilote incorpore 30 de ses 80 acier dans l’atelier.
+- V30 strictement validée avant migration ; la forme des progressions longues V31 précède leur validation par jobDuration. V32 ajoute la taille : lire le contrat de production avant modification. Le pilote incorpore 30 de ses 80 acier dans l’atelier.
+
+## Production commune V32
+- Lire docs/development/stonecutting.md et docs/research/stonecutting-reference.md. Artisanat distinct de Cuisine, cinq fragments typés → vingt blocs correspondants ; aucun type inventé pour legacy-chunk. Les blocs passent au sol avec délai 1,4 et restent des piles compatibles de 75.
+- `pawn.cooking` / `orders.active='cook'` sont les enveloppes historiques communes ; `recipe='stone-blocks'` les discrimine. Factures conservées sur le bâtiment emballé, IDs uniques. `storageQuantity` réserve le dépôt partiel réel ; conserver le reliquat porté.
+- Valider V31 strictement avant priorité Craft 2 et factures vides d’atelier. Compte général jusqu'à X = tous les blocs stockés/portés, X fois = opérations. Travail extérieur neutre 200 ticks ; lumière fonctionnelle/capacités restent absentes. Recherche, pièces et construction en pierre ne sont pas implicitement livrées.
+- Le choix de réserve parcourt les candidats par priorité/distance avec l'accès progressif partagé, pendant une décision synchrone seulement. Ne pas construire toutes leurs routes/goals ni réutiliser un coût non finalisé. Le pilote maintient vingt blocs produits sans injection de matériaux.

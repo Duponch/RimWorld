@@ -1,3 +1,4 @@
+import { stationRecipe } from './production-recipes.ts';
 import { furnitureReady, furnitureWorkTarget, packedAt } from './furniture-rules.ts';
 import { deconstructionAvailable } from './deconstruction-rules.ts';
 import { rememberPriorityWork, expirePriorityWork } from './priority-work-state.ts';
@@ -78,8 +79,8 @@ export function queryOrderOptions(world:World,pawnId:number,cell:Cell,queue=fals
   if(job?.kind==='sow'&&(pile||packedAt(world,cell)))targets.push({type:'clear-sow',jobId:job.id});
   const pack=packedAt(world,cell);if(pack)targets.push({type:'furniture',structureId:pack.building.id});
   if(pile)targets.push({type:'pile',pileId:pile.id});
-  const fire=world.structures.find(s=>s.kind==='campfire'&&s.x===cell.x&&s.z===cell.z);
-  if(fire)targets.push({type:'fuel',structureId:fire.id});
+  const fire=world.structures.find(s=>stationRecipe(s)!==null&&footprintCells(s).some(c=>c.x===cell.x&&c.z===cell.z));
+  if(fire?.kind==='campfire')targets.push({type:'fuel',structureId:fire.id});
   for(const target of targets) {
     const view=orderView(world,pawn,queue),proposal=planHaulOrder(view,view.pawns.find(p=>p.id===pawn.id)!,target);
     const reason=exhausted(world,pawn)??proposal.reason;

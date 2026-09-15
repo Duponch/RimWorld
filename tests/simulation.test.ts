@@ -96,7 +96,7 @@ describe('deterministic colony simulation', () => {
     const shared = fixture(); shared.piles = []; refreshStock(shared);
     addGroundMaterial(shared, 'wood', 20, { x: 1, z: 6 }); refreshStock(shared);
     addGroundMaterial(shared, 'wood', 3, { x: 12, z: 8 });
-    shared.pawns.forEach(pawn => { pawn.priorities = {mine:2, gather: 0, build: 0, haul: 1, grow: 0 , cook: 0 }; });
+    shared.pawns.forEach(pawn => { pawn.priorities = {craft:2,mine:2, gather: 0, build: 0, haul: 1, grow: 0 , cook: 0 }; });
     zone(shared, 12, 8, 8); zone(shared, 12, 10, 7); stepWorld(shared); audit(shared, 23);
     expect(shared.pawns.filter(pawn => pawn.haul !== null)).toHaveLength(2);
     expect(shared.pawns.reduce((sum, pawn) => sum + (pawn.haul?.quantity ?? 0), 0)).toBe(12);
@@ -109,7 +109,7 @@ describe('deterministic colony simulation', () => {
     for (const boundary of ['pickup', 'deliver'] as const) for (const interruption of ['disable', 'filter', 'remove'] as const) {
       const world = fixture(1); world.piles = []; refreshStock(world);
       addGroundMaterial(world, 'wood', 12, { x: 1, z: 6 }); refreshStock(world);
-      world.pawns[0]!.priorities = {mine:2, gather: 0, build: 0, haul: 1, grow: 0 , cook: 0 }; zone(world, 13, 12, 8);
+      world.pawns[0]!.priorities = {craft:2,mine:2, gather: 0, build: 0, haul: 1, grow: 0 , cook: 0 }; zone(world, 13, 12, 8);
       until(world, () => world.pawns[0]!.haul?.phase === boundary, `${interruption} during ${boundary}`);
       expect(world.piles.some(pile => pile.owner.type === 'pawn')).toBe(boundary === 'deliver');
       const snapshot = serializeWorld(world);
@@ -158,7 +158,7 @@ describe('deterministic colony simulation', () => {
   });
 
   test('eligibility, rotated footprints and congestion preserve reachable work and atomic commands', () => {
-    const prioritized = fixture(1); prioritized.pawns[0]!.priorities = {mine:2, gather: 1, build: 4, haul: 4, grow: 0 , cook: 0 };
+    const prioritized = fixture(1); prioritized.pawns[0]!.priorities = {craft:2,mine:2, gather: 1, build: 4, haul: 4, grow: 0 , cook: 0 };
     resource(prioritized, 10, 10, 'berries'); order(prioritized, 'harvest', 10, 10); order(prioritized, 'wall', 2, 3);
     stepWorld(prioritized); expect(prioritized.jobs.find(job => job.id === prioritized.pawns[0]!.jobId)!.kind).toBe('harvest');
     const world = fixture(1); addGroundMaterial(world,'wood',37,{x:1,z:5}); resource(world, 5, 5, 'berries'); resource(world, 10, 4, 'tree');
@@ -182,7 +182,7 @@ describe('deterministic colony simulation', () => {
     const corridor = fixture(2); corridor.piles = []; refreshStock(corridor); corridor.tiles = corridor.tiles.map(() => ({ terrain: 'rock' }));
     for (let x = 1; x <= 12; x++) corridor.tiles[4 * corridor.width + x] = { terrain: 'grass' };
     corridor.pawns[0]!.x = 1; corridor.pawns[0]!.z = 4; corridor.pawns[1]!.x = 3; corridor.pawns[1]!.z = 4;
-    corridor.pawns[1]!.priorities = {mine:2, gather: 0, build: 0, haul: 0, grow: 0 , cook: 0 };
+    corridor.pawns[1]!.priorities = {craft:2,mine:2, gather: 0, build: 0, haul: 0, grow: 0 , cook: 0 };
     resource(corridor, 10, 4, 'tree'); order(corridor, 'chop', 10, 4); checkedTicks(corridor, 500);
     expect(corridor.jobs).toHaveLength(0); expect(corridor.resources).toHaveLength(0); expect(corridor.pawns[1]!.x).toBe(3);
     // Transit through an idle colonist must not displace that colonist.
@@ -192,7 +192,7 @@ describe('deterministic colony simulation', () => {
     deliveryCorridor.tiles[5 * deliveryCorridor.width + 4] = { terrain: 'grass' };
     deliveryCorridor.pawns[0]!.x = 1; deliveryCorridor.pawns[0]!.z = 4;
     deliveryCorridor.pawns[1]!.x = 4; deliveryCorridor.pawns[1]!.z = 4;
-    deliveryCorridor.pawns[1]!.priorities = {mine:2, gather: 0, build: 0, haul: 0, grow: 0 , cook: 0 };
+    deliveryCorridor.pawns[1]!.priorities = {craft:2,mine:2, gather: 0, build: 0, haul: 0, grow: 0 , cook: 0 };
     addGroundMaterial(deliveryCorridor, 'wood', 10, { x: 1, z: 4 }); zone(deliveryCorridor, 12, 4);
     until(deliveryCorridor, () => groundAt(deliveryCorridor, 12, 4) === 10, 'delivery passes a stationary colonist', 500);
     // Only a late source is eligible. Exhausting one pair window must not starve it or break replay.
@@ -215,7 +215,7 @@ describe('deterministic colony simulation', () => {
     const crowded = createWorld(7, 24, 24); crowded.tiles = crowded.tiles.map(() => ({ terrain: 'grass' })); crowded.resources = [];
     const template = crowded.pawns[0]!;
     crowded.pawns = Array.from({ length: 40 }, (_, index) => ({ ...structuredClone(template), id: crowded.nextId++, x: 1 + (index % 10) * 2,
-      z: 1 + Math.floor(index / 10) * 2, path: [], priorities: {mine:2, gather: 2, build: 0, haul: 0, grow: 0 , cook: 0 } }));
+      z: 1 + Math.floor(index / 10) * 2, path: [], priorities: {craft:2,mine:2, gather: 2, build: 0, haul: 0, grow: 0 , cook: 0 } }));
     for (let index = 0; index < 40; index++) {
       const x = 1 + (index % 10) * 2; const z = 13 + Math.floor(index / 10) * 2;
       resource(crowded, x, z, 'tree'); order(crowded, 'chop', x, z);
@@ -335,7 +335,7 @@ describe('deterministic colony simulation', () => {
 
   test('schema-1 migration preserves stock, escrow, beds and identity; corrupt schema-2 saves are rejected', () => {
     const migrated = deserializeWorld(legacySave());
-    expect(migrated.schemaVersion).toBe(31); expect(migrated.pawns[0]!.id).toBe(4); expect(migrated.structures[0]!.id).toBe(10);
+    expect(migrated.schemaVersion).toBe(32); expect(migrated.pawns[0]!.id).toBe(4); expect(migrated.structures[0]!.id).toBe(10);
     expect(migrated.structures[0]).toMatchObject({ x: 7, z: 7, footprint: 'legacy-single' });
     expect(migrated.pawns[0]!.priorities).toMatchObject({ gather: 2, build: 2 }); audit(migrated, 20); expect(foodMass(migrated)).toBe(18);
     expect(hashWorld(deserializeWorld(legacySave()))).toBe(hashWorld(migrated));
@@ -376,7 +376,7 @@ describe('deterministic colony simulation', () => {
     expect(serializeWorld(world)).toBe(serialized);
     // Captured by running HEAD 489b98a's engine, including an active delivery and ground sleeper.
     const material = deserializeWorld(JSON.stringify(materialFixture));
-    expect(material.schemaVersion).toBe(31);
+    expect(material.schemaVersion).toBe(32);
     // V6 explicitly cancels obsolete hauling reservations and retains all units/IDs.
     expect(material.piles.map(({id,kind,quantity})=>({id,kind,quantity}))).toEqual(materialFixture.piles.map(({id,kind,quantity})=>({id,kind,quantity})));
     expect(material.jobs.map(({construction,...job})=>job)).toEqual(materialFixture.jobs);expect(material.jobs[0]!.construction).toBe('blueprint');

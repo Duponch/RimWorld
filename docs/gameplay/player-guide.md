@@ -219,13 +219,13 @@ Un constructeur ou cultivateur dégage à proximité un paquet qui gêne son cha
 
 ## Reconnaître les roches
 
-Une nouvelle carte répartit les massifs et pierres voisines en régions de granite, calcaire, marbre, grès ou ardoise. Sélectionner leur case affiche le type. Un ancien massif peut afficher « type historique non défini » : le chargement préserve sa carte. Les massifs sont exploitables par le minage décrit ci-dessous. Les petites pierres décoratives ne sont pas encore transportables ; aucun bloc taillé ni recette de construction en pierre n’est livré.
+Une nouvelle carte répartit les massifs et pierres voisines en régions de granite, calcaire, marbre, grès ou ardoise. Sélectionner leur case affiche le type. Un ancien massif peut afficher « type historique non défini » : le chargement préserve sa carte. Les massifs sont exploitables par le minage décrit ci-dessous. Les petites pierres décoratives ne sont pas encore transportables ; les blocs sont taillables au poste, mais leur emploi en construction reste à venir.
 
 ## Miner et ranger les fragments
 
 Dans **Architecte → Ordres**, choisir **Miner** (M), puis cliquer ou tracer sur les massifs. Activer **Minage** dans Travail. Le colon rejoint la roche, lui fait face et frappe ; ses PV sont inspectables et les dégâts restent acquis après annulation. Un massif extrait découvre un sol rocheux non fertile. Il laisse un fragment de la même roche dans 25 % des cas, sans donner directement des blocs de construction.
 
-Créer une réserve avec **Fragments de roche** autorisés, puis désigner les fragments via **Transporter les fragments** dans Ordres. Un fragment occupe une case entière et se porte individuellement ; les types ne fusionnent pas. Le clic droit du colon peut aussi imposer son rangement. Une interruption après prise conserve le fragment mais peut nécessiter une nouvelle désignation. L’atelier de taille peut être construit en V31 ; ses recettes, les autres minerais que l’acier et les toits restent absents.
+Créer une réserve avec **Fragments de roche** autorisés, puis désigner les fragments via **Transporter les fragments** dans Ordres. Un fragment occupe une case entière et se porte individuellement ; les types ne fusionnent pas. Le clic droit du colon peut aussi imposer son rangement. Une interruption après prise conserve le fragment mais peut nécessiter une nouvelle désignation. L’atelier de taille peut être construit en V31 ; ses recettes de blocs sont livrées en V32 ; les autres minerais que l’acier et les toits restent absents.
 
 ## Extraire une réserve d’acier
 
@@ -239,4 +239,12 @@ L’acier est extractible, stockable et utilisable pour les constructions à mat
 
 **Architecte → Production → Table de taille de pierre** : choisir Bois (75 bois + 30 acier) ou Acier (105 acier), puis tourner l’emprise 3×1 avec Q/E. Tous les matériaux doivent être livrés avant la finition. Le plateau garde les piles compatibles, mais retire les zones sous son empreinte. Les colons peuvent le franchir, sans s’y arrêter pour une autre activité.
 
-L’inspection permet de désinstaller ou réinstaller l’atelier comme un meuble entier, ou de le déconstruire pour récupérer environ la moitié des matériaux. **La fabrication de blocs n’est pas encore disponible** dans cette étape : conserver les fragments extraits pour la prochaine tranche. Recherche et effets d’une pièce ne sont pas simulés.
+L’inspection permet de désinstaller ou réinstaller l’atelier comme un meuble entier, ou de le déconstruire pour récupérer environ la moitié des matériaux. **La fabrication de blocs est disponible** : activer Artisanat dans Travail puis ajouter une facture dans l’inspection de l’atelier. Recherche et effets d’une pièce ne sont pas simulés.
+
+## Tailler et ranger les blocs
+
+La facture générale propose cinq filtres de roche, un rayon, la suspension, la répétition et la destination. Un artisan va chercher un fragment accepté, le porte au plateau, travaille puis range **vingt blocs de la même pierre**. Il n'est pas nécessaire de désigner le fragment au transport. Les fragments historiques non typés sont exclus.
+
+**Faire X fois** compte les fragments taillés ; **Jusqu'à X** compte les blocs stockés ou portés. Attention : cette facture générale compte tous les blocs, même lorsque ses ingrédients sont filtrés sur une seule pierre. Cocher **Blocs de pierre** dans une réserve pour accueillir les produits ; un manque de place conserve la cargaison ou conduit à un dépôt au sol. Une livraison peut remplir plusieurs piles successives.
+
+Clic droit sur le poste avec un colon sélectionné : prioriser la taille ; Maj ajoute en file. Désinstaller/réinstaller l'atelier conserve ses factures. Un atelier déjà réservé attend avant d'être déplacé. Les blocs ne servent pas encore à construire dans cette tranche ; lumière fonctionnelle, effets des pièces, compétences et recherche restent à venir.

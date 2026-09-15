@@ -65,3 +65,5 @@ Le [contrat sol, mouvement et rendu distant](spatial-motion-storage.md) remplace
 Les objets `chunk` utilisent les mêmes propriétaires, capacités typées et transferts ; une pile contient un seul fragment. Leur [désignation de rangement](mining.md) est explicite. Les vues historiques `World.stock` et escrow ne comptent toujours que bois et nourriture ; consulter les piles pour les fragments. Aucun transfert ne les convertit en matériau de chantier ou en aliment.
 
 Les [chantiers V30](construction-materials.md) demandent leurs ingrédients par ItemId. Réserver bois et acier séparément, conserver le type jusque dans le bâtiment et la restitution. `escrow.wood` ne prouve pas qu’un chantier est approvisionné ; seuls les objets physiques satisfont ses exigences.
+
+Blocs V32 : cinq ItemId, catégorie `blocks`, piles 75, filtres optionnels (absence = refus). Le produit initial de vingt blocs est porté entier, puis peut être distribué en plusieurs dépôts physiques ; le transport ordinaire conserve sa limite provisoire de dix. [Contrat](stonecutting.md).

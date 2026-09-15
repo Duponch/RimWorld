@@ -1,3 +1,4 @@
+import { PRODUCTION_RECIPES, taskRecipe } from './production-recipes.ts';
 import { deconstructionAvailable } from './deconstruction-rules.ts';
 import { constructionObstruction, constructionSiteFree, isConstruction } from './construction-rules.ts';
 import { constructionRecipe, deliveredMaterial } from './construction-materials.ts';
@@ -35,12 +36,12 @@ export function queryPawnStatus(world: World, pawn: Pawn): { code: string; reaso
     return {code:'recreation',reason:task.phase==='travel'?`Rejoint une place pour ${activity}.`:`Prend le temps de ${activity} (${Math.round(pawn.recreation.level)} %).`};
   }
   if(pawn.cooking) {
-    const task=pawn.cooking;
+    const task=pawn.cooking,recipe=PRODUCTION_RECIPES[taskRecipe(task)];
     if(task.phase==='interrupted')return {code:'cooking-interrupted',reason:'Ingrédient perdu ; attend une case libre pour déposer la cargaison restante.'};
-    if(task.phase==='work')return {code:'cooking',reason:`Prépare un repas simple (${Math.floor(task.progress/COOK_TICKS*100)} %).`};
-    if(task.phase==='output')return {code:'cooking-output',reason:task.storageId===null?'Porte le repas préparé vers un dépôt au sol.':'Porte le repas préparé vers sa réserve.'};
+    if(task.phase==='work')return {code:'cooking',reason:`${task.recipe==='stone-blocks'?'Taille des blocs de pierre':'Prépare un repas simple'} (${Math.floor(task.progress/recipe.workTicks*100)} %).`};
+    if(task.phase==='output')return {code:'cooking-output',reason:task.storageId===null?'Porte le produit fabriqué vers un dépôt au sol.':'Porte le produit fabriqué vers sa réserve.'};
     const placed=task.ingredients.filter(i=>i.stage==='placed').reduce((n,i)=>n+i.quantity,0);
-    return {code:'gathering-ingredients',reason:placed===INGREDIENT_UNITS?'Ingrédients rassemblés ; rejoint sa place au feu.':`Rassemble les ingrédients (${placed}/${INGREDIENT_UNITS} déposés au poste).`};
+    return {code:'gathering-ingredients',reason:placed===recipe.units?'Ingrédients rassemblés ; rejoint sa place au poste.':`Rassemble les ingrédients (${placed}/${recipe.units} déposés au poste).`};
   }
   if(pawn.haul?.destination.type==='fuel') {
     const task=pawn.haul;

@@ -4,6 +4,11 @@ import type { MaterialKind, MaterialPile, Pawn, World } from './types.ts';
  * rules are tracked in docs/development/food-items.md. Nutrition uses integer
  * hundredths here; the actor's 0..100 meter represents one nutrition unit. */
 export const ITEM_DEFINITIONS = Object.freeze({
+  'granite-blocks': Object.freeze({label:'Blocs de granite',kind:'blocks',stackLimit:75,nutrition:0,maxIngest:0,color:0x99958d}),
+  'limestone-blocks': Object.freeze({label:'Blocs de calcaire',kind:'blocks',stackLimit:75,nutrition:0,maxIngest:0,color:0xafad8b}),
+  'marble-blocks': Object.freeze({label:'Blocs de marbre',kind:'blocks',stackLimit:75,nutrition:0,maxIngest:0,color:0xc5c4b5}),
+  'sandstone-blocks': Object.freeze({label:'Blocs de grès',kind:'blocks',stackLimit:75,nutrition:0,maxIngest:0,color:0xb99d76}),
+  'slate-blocks': Object.freeze({label:'Blocs de ardoise',kind:'blocks',stackLimit:75,nutrition:0,maxIngest:0,color:0x737f83}),
   steel: Object.freeze({label:'Acier',kind:'steel',stackLimit:75,nutrition:0,maxIngest:0,color:0x839399}),
   'granite-chunk': Object.freeze({label:'Fragment de granite',kind:'chunk',stackLimit:1,nutrition:0,maxIngest:0,color:0x99958d}),
   'limestone-chunk': Object.freeze({label:'Fragment de calcaire',kind:'chunk',stackLimit:1,nutrition:0,maxIngest:0,color:0xafad8b}),
@@ -19,7 +24,7 @@ export const ITEM_DEFINITIONS = Object.freeze({
   'legacy-portion': Object.freeze({ label: 'Portion historique', kind: 'food', stackLimit: 75, nutrition: 35, maxIngest: 1, color: 0xba745a }),
 } as const);
 export type ItemId = keyof typeof ITEM_DEFINITIONS;
-export const legacyItem = (kind: MaterialKind): ItemId => kind === 'steel' ? 'steel' : kind === 'wood' ? 'wood' : kind === 'chunk' ? 'legacy-chunk' : 'legacy-portion';
+export const legacyItem = (kind: MaterialKind): ItemId => kind==='blocks'?missingBlockType(): kind === 'steel' ? 'steel' : kind === 'wood' ? 'wood' : kind === 'chunk' ? 'legacy-chunk' : 'legacy-portion';
 export const nutritionOf = (pile: MaterialPile): number => ITEM_DEFINITIONS[pile.item].nutrition * pile.quantity;
 export function availableNutrition(world: World): number {
   return world.piles.reduce((sum, pile) => sum + (pile.owner.type === 'job' ? 0 : nutritionOf(pile)), 0) / 100;
@@ -38,3 +43,5 @@ export function mealQuantity(pawn: Pawn, pile: MaterialPile, available: number):
 export function adultHungerFactor(level: number): number {
   return level <= 0 ? 0 : level < 12 ? 0.25 : level < 24 ? 0.5 : 1;
 }
+
+function missingBlockType():never {throw new Error('Stone blocks require an explicit ItemId.');}

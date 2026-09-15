@@ -1,3 +1,4 @@
+import { blockParts } from './block-presentation';
 import { sameTerrainSurface } from './terrain-state';
 import { prepareShadowPipelines } from './shadow-preparation';
 import { chunkParts } from './chunk-presentation';
@@ -442,6 +443,8 @@ export class ColonyRenderer {
           }
         } else if(bundle.kind==='steel') {
           for(let row=0;row<Math.ceil(bundle.quantity/25);row++)food.push({x:bundle.x,z,y:.07+row*.13,sx:.62,sy:.12,sz:.36,color:row%2?0x6b7a80:ITEM_DEFINITIONS.steel.color});
+        } else if(bundle.kind==='blocks') {
+          food.push(...blockParts(bundle.x,z,bundle.item,bundle.quantity));
         } else if(bundle.kind==='chunk') {
           food.push(...chunkParts(bundle.x,z,bundle.item));
         } else {

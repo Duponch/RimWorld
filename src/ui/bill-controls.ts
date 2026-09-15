@@ -1,4 +1,6 @@
-import { countedMeals } from '../sim/cooking-bills';
+import { ITEM_DEFINITIONS } from '../sim/items';
+import { PRODUCTION_RECIPES, stationRecipe } from '../sim/production-recipes';
+import { countedProducts } from '../sim/cooking-bills';
 import { queryCookingBillStatus } from '../sim/cooking-diagnostics';
 import type { BillSettings } from '../sim/cooking-types';
 import type { Command, Structure, World } from '../sim/types';
@@ -6,7 +8,7 @@ import type { Command, Structure, World } from '../sim/types';
 export function billControls(station:Structure,send:(command:Command)=>void):HTMLElement {
   const root=document.createElement('section');root.className='bill-controls';
   const title=document.createElement('h3');title.textContent='Factures';root.append(title);
-  const add=document.createElement('button');add.id='add-cooking-bill';add.textContent='Ajouter : repas simple';add.onclick=()=>send({type:'bill-add',structureId:station.id});root.append(add);
+  const add=document.createElement('button');add.id='add-cooking-bill';add.textContent=`Ajouter : ${PRODUCTION_RECIPES[stationRecipe(station)!].label.toLowerCase()}`;add.onclick=()=>send({type:'bill-add',structureId:station.id});root.append(add);
   for(const bill of station.bills??[]) {
     const form=document.createElement('div');form.className='bill';form.dataset.bill=String(bill.id);
     const status=document.createElement('p');status.dataset.billStatus=String(bill.id);form.append(status);
@@ -23,14 +25,14 @@ export function billControls(station:Structure,send:(command:Command)=>void):HTM
       for(const [v,text] of choices){const o=document.createElement('option');o.value=v;o.textContent=text;field.append(o);}field.value=value;
       row.append(label,field);fields.set(key,field);return row;
     };
-    form.append(select('mode','Répéter',[['times','Faire X fois'],['until','Jusqu’à X en réserve'],['forever','Sans limite']],bill.mode),input('target','Quantité','number',String(bill.target)),input('suspended','Suspendre','checkbox',bill.suspended));
+    form.append(select('mode','Répéter',[['times','Faire X fois'],['until','Jusqu’à X en réserve'],['forever','Sans limite']],bill.mode),input('target',bill.recipe==='stone-blocks'?'X : opérations / blocs en réserve':'Quantité','number',String(bill.target)),input('suspended','Suspendre','checkbox',bill.suspended));
     const details=document.createElement('details'),summary=document.createElement('summary');summary.textContent='Ingrédients et livraison';details.append(summary);
-    details.append(input('rice','Riz cru','checkbox',bill.filters.rice),input('berries','Baies','checkbox',bill.filters.berries),input('radius','Rayon depuis le poste','number',String(bill.radius)),select('destination','Produit',[['stockpile','Meilleure réserve'],['drop','Déposer au sol']],bill.destination));form.append(details);
+    details.append(...PRODUCTION_RECIPES[bill.recipe].inputs.map(i=>input(i,ITEM_DEFINITIONS[i].label,'checkbox',bill.filters[i]??false)),input('radius','Rayon depuis le poste','number',String(bill.radius)),select('destination','Produit',[['stockpile','Meilleure réserve'],['drop','Déposer au sol']],bill.destination));form.append(details);
     form.addEventListener('input',()=>{form.dataset.dirty='true';});
     const apply=document.createElement('button');apply.dataset.applyBill=String(bill.id);apply.textContent='Appliquer la facture';
     const field=(name:string)=>fields.get(name)!;
     apply.onclick=()=>{
-      const settings:BillSettings={mode:field('mode').value as BillSettings['mode'],target:Number(field('target').value),suspended:(field('suspended') as HTMLInputElement).checked,filters:{rice:(field('rice') as HTMLInputElement).checked,berries:(field('berries') as HTMLInputElement).checked},radius:Number(field('radius').value),destination:field('destination').value as BillSettings['destination']};
+      const settings:BillSettings={mode:field('mode').value as BillSettings['mode'],target:Number(field('target').value),suspended:(field('suspended') as HTMLInputElement).checked,filters:Object.fromEntries(PRODUCTION_RECIPES[bill.recipe].inputs.map(i=>[i,(field(i) as HTMLInputElement).checked])),radius:Number(field('radius').value),destination:field('destination').value as BillSettings['destination']};
       send({type:'bill-update',structureId:station.id,billId:bill.id,settings});
     };
     const actions=document.createElement('div');actions.className='bill-actions';actions.append(apply);
@@ -42,7 +44,7 @@ export function billControls(station:Structure,send:(command:Command)=>void):HTM
 export function updateBillControls(root:ParentNode,station:Structure,world:World):void {
   for(const bill of station.bills??[]) {
     const form=root.querySelector<HTMLElement>(`[data-bill="${bill.id}"]`);if(!form)continue;
-    form.querySelector('[data-bill-status]')!.textContent=`Repas simple · ${bill.suspended?'suspendue':bill.mode==='times'?`${bill.target} restant(s)`:bill.mode==='until'?`${countedMeals(world)} / ${bill.target} stocké(s)/porté(s)`:'sans limite'}`;
+    form.querySelector('[data-bill-status]')!.textContent=`${PRODUCTION_RECIPES[bill.recipe].label} · ${bill.suspended?'suspendue':bill.mode==='times'?`${bill.target} restant(s)`:bill.mode==='until'?`${countedProducts(world,bill)} / ${bill.target} stocké(s)/porté(s)`:'sans limite'}`;
     form.querySelector('[data-bill-reason]')!.textContent=queryCookingBillStatus(world,station,bill).reason;
     if(!form.dataset.dirty)(form.querySelector('[data-field="target"]') as HTMLInputElement).value=String(bill.target);
   }

@@ -41,7 +41,7 @@ function cellCapacity(world: World, cell: Cell, item: ItemId, limit: number, exc
   }
   for(const pawn of world.pawns)if(pawn.id!==exceptPawn&&pawn.cooking) {
     for(const i of pawn.cooking.ingredients)if(i.stage!=='placed'&&i.cell.x===cell.x&&i.cell.z===cell.z) {if(i.item!==item)return 0;capacity-=i.quantity;}
-    if(zone&&pawn.cooking.phase==='output'&&pawn.cooking.storageId===zone.id){if(item!=='simple-meal')return 0;capacity--;}
+    if(zone&&pawn.cooking.phase==='output'&&pawn.cooking.storageId===zone.id){const product=world.piles.find(p=>p.id===pawn.cooking!.productId);if(!product||product.item!==item)return 0;capacity-=pawn.cooking.storageQuantity??product.quantity;}
   }
   return Math.max(0,capacity);
 }

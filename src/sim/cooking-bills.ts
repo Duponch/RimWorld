@@ -1,3 +1,5 @@
+import { groundOccupancyAllows } from './occupancy.ts';
+import { PRODUCTION_RECIPES, blockFor, type ProductionRecipe, type StoneIngredient } from './production-recipes.ts';
 import { canStandAt } from './furniture-travel.ts';
 import { footprintCells } from './definitions.ts';
 import { isCookingOrder } from './order-types.ts';
@@ -6,24 +8,26 @@ import type { Cell, Structure, World } from './types.ts';
 
 export const COOK_TICKS=60; // 300 reference work / 10 local ticks × campfire factor 2.
 export const INGREDIENT_UNITS=10; // 0.5 nutrition, for the two currently supported raw foods.
-export function newCookingBill(id:number):CookingBill {
-  return {id,recipe:'simple-meal',mode:'times',target:1,suspended:false,filters:{rice:true,berries:true},radius:999,destination:'stockpile'};
+export function newCookingBill(id:number,recipe:ProductionRecipe='simple-meal'):CookingBill {
+  return {id,recipe,mode:'times',target:1,suspended:false,filters:Object.fromEntries(PRODUCTION_RECIPES[recipe].inputs.map(i=>[i,true])),radius:999,destination:'stockpile'};
 }
-export function validBillSettings(value:unknown):value is BillSettings {
+export function validBillSettings(value:unknown,recipe:ProductionRecipe='simple-meal'):value is BillSettings {
   if(!value||typeof value!=='object')return false;
   const v=value as BillSettings;
   return ['times','until','forever'].includes(v.mode)&&Number.isSafeInteger(v.target)&&v.target>=0&&v.target<=9999
-    &&typeof v.suspended==='boolean'&&!!v.filters&&typeof v.filters.rice==='boolean'&&typeof v.filters.berries==='boolean'
+    &&typeof v.suspended==='boolean'&&!!v.filters&&PRODUCTION_RECIPES[recipe].inputs.every(i=>typeof v.filters[i]==='boolean')
     &&Number.isFinite(v.radius)&&v.radius>=0&&v.radius<=999&&['stockpile','drop'].includes(v.destination);
 }
 /** Reference resource counter includes stored items and current task cargo.
  * Loose meals outside storage do not satisfy a target-count bill. */
-export function countedMeals(world:World):number {
+export function countedMeals(world:World):number {return countedProducts(world);}
+export function countedProducts(world:World,bill?:CookingBill):number {
+  const products=new Set(bill?.recipe==='stone-blocks'?PRODUCTION_RECIPES['stone-blocks'].inputs.map(i=>blockFor(i as StoneIngredient)):['simple-meal']);
   const stored=new Set(world.stockpiles.map(z=>z.z*world.width+z.x));
-  return world.piles.reduce((n,p)=>n+(p.item==='simple-meal'&&(p.owner.type==='pawn'||p.owner.type==='ground'&&stored.has(p.owner.z*world.width+p.owner.x))?p.quantity:0),0);
+  return world.piles.reduce((n,p)=>n+(products.has(p.item)&&(p.owner.type==='pawn'||p.owner.type==='ground'&&stored.has(p.owner.z*world.width+p.owner.x))?p.quantity:0),0);
 }
 export function billWanted(world:World,bill:CookingBill):boolean {
-  return !bill.suspended&&(bill.mode==='forever'||bill.mode==='times'&&bill.target>0||bill.mode==='until'&&countedMeals(world)<bill.target);
+  return !bill.suspended&&(bill.mode==='forever'||bill.mode==='times'&&bill.target>0||bill.mode==='until'&&countedProducts(world,bill)<bill.target);
 }
 export function cookingSpot(station:Structure):Cell {
   const [dx,dz]=[[0,-1],[-1,0],[0,1],[1,0]][station.orientation]!;
@@ -39,4 +43,13 @@ export function cookingPlaceFree(world:World,cell:Cell):boolean {
     &&!['water','rock'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain)
     &&!world.resources.some(r=>r.x===cell.x&&r.z===cell.z)
     &&![...world.jobs,...world.structures].some(s=>(s.kind==='wall'||s.kind==='table')&&footprintCells(s).some(c=>c.x===cell.x&&c.z===cell.z));
+}
+
+/** Chunk staging may use an Item workbench surface, but never the worker's cell. */
+export function ingredientPlaceFree(world:World,cell:Cell,spot:Cell,recipe:ProductionRecipe):boolean {
+  if(recipe==='simple-meal')return cookingPlaceFree(world,cell);
+  return (cell.x!==spot.x||cell.z!==spot.z)&&Math.abs(cell.x-spot.x)+Math.abs(cell.z-spot.z)<=1
+    &&cell.x>=0&&cell.z>=0&&cell.x<world.width&&cell.z<world.height
+    &&!['water','rock'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain)
+    &&!world.resources.some(r=>r.x===cell.x&&r.z===cell.z)&&groundOccupancyAllows(world,cell);
 }

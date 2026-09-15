@@ -7,7 +7,7 @@ import { validSowingClearance } from './sowing-clearance.ts';
 import { constructionCandidates } from './construction-planner.ts';
 import { haulReservations } from './haul-reservations.ts';
 import { asBuilder, constructionHaulPriority, constructionObstructions, constructionSiteFree, isConstruction } from './construction-rules.ts';
-import { hasCookingWork, planCooking, type CookingPlan } from './cooking-planner.ts';
+import { productionPriority, planCooking, type CookingPlan } from './cooking-planner.ts';
 import { candidateAccess } from './candidate-access.ts';
 import { fuelCapacity, wantsFuel } from './fuel.ts';
 import { mayImproveStorage } from './idle-logistics.ts';
@@ -79,7 +79,7 @@ export function canReach(world: World, target: Cell & { kind?: JobKind }, reacha
 export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, occupied: ReadonlySet<number>, budget: SearchBudget): void {
   // Never enumerate logistics after another colonist exhausted the shared search budget.
   if (budget.remaining === 0 || budget.pairs === 0) return;
-  const cooking=hasCookingWork(world,pawn);
+  const productionRank=productionPriority(world,pawn),cooking=productionRank<5;
   const fires=world.structures.filter(s=>wantsFuel(world,s));
   if (!cooking && !fires.length && !world.jobs.length && (!world.stockpiles.length || !world.piles.length && !world.packed.length || pawn.priorities.haul === 0)) { pawn.planCooldown = PLAN_INTERVAL; return; }
   if (!cooking && !fires.length && !world.jobs.length && !mayImproveFurnitureStorage(world) && !mayImproveStorage(world)) {pawn.planCooldown=PLAN_INTERVAL;return;}
@@ -93,7 +93,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
     .sort(compareCandidate);
   let reachable: Reachability | null = null;
   const first = ready[0];
-  if (first && (!cooking || pawn.priorities.cook>first.priority) && (pawn.priorities.haul === 0 || first.priority <= pawn.priorities.haul)
+  if (first && (!cooking || productionRank>first.priority) && (pawn.priorities.haul === 0 || first.priority <= pawn.priorities.haul)
     && (first.priority<constructionHaulPriority(pawn)||!world.jobs.some(isConstruction))) {
     const source = first.job.kind === 'sow' ? world.piles.find(p => p.owner.type === 'ground' && sameCell(p.owner, first.job)) : undefined;
     if (!source || reservedSource(world, source.id) === 0) {
@@ -162,14 +162,14 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   for(const candidate of furnitureStorageCandidates(world,pawn,blocked,reachable,budget))if(!best||compareCandidate(candidate,best)<0)best=candidate;
   const constructionObstacles=constructionObstructions(world);
   for(const candidate of constructionCandidates(world,pawn,blocked,reachable,budget,constructionObstacles))if(!best||compareCandidate(candidate,best)<0)best=candidate;
-  if(cooking && (!best || pawn.priorities.cook<=best.priority)) {
+  if(cooking && (!best || productionRank<=best.priority)) {
     const proposal=planCooking(world,pawn,reachable,budget);
-    if(proposal)best={cooking:proposal,priority:pawn.priorities.cook,rank:-1,distance:Math.abs(pawn.x-proposal.station.x)+Math.abs(pawn.z-proposal.station.z),id:proposal.station.id,target:proposal.target};
+    if(proposal&&(!best||proposal.priority<=best.priority))best={cooking:proposal,priority:proposal.priority,rank:-1,distance:Math.abs(pawn.x-proposal.station.x)+Math.abs(pawn.z-proposal.station.z),id:proposal.station.id,target:proposal.target};
   }
   if (Number.isFinite(constructionHaulPriority(pawn)) && pawn.hunger > 20 && (!best || best.priority >= constructionHaulPriority(pawn))) {
     const zonesByCell = new Map(world.stockpiles.map(zone => [cellIndex(world, zone.x, zone.z), zone]));
     const sources = world.piles.filter(pile => automaticallyHaulable(pile) && pile.owner.type === 'ground' && pile.quantity > (sourceReserved.get(pile.id) ?? 0));
-    const destinations: { destination: HaulDestination; target: Cell & { kind?: JobKind }; priority: number; workPriority:number; wood: number; food: number; chunk?:number; steel?:number; items?:ReadonlyMap<ItemId,number>; reachable: boolean }[] = [];
+    const destinations: { destination: HaulDestination; target: Cell & { kind?: JobKind }; priority: number; workPriority:number; wood: number; food: number; chunk?:number; steel?:number; blocks?:number; items?:ReadonlyMap<ItemId,number>; reachable: boolean }[] = [];
     for (const job of world.jobs) {
       const items=new Map<ItemId,number>();
       for(const cost of constructionRecipe(job).ingredients){const key=`${job.id}:${cost.item}`,capacity=cost.quantity-(delivered.get(key)??0)-(jobReserved.get(key)??0);if(capacity>0)items.set(cost.item,capacity);}
@@ -178,7 +178,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
     if(pawn.priorities.haul>0)for (const fire of fires) destinations.push({destination:{type:'fuel',structureId:fire.id},target:fire,priority:5,workPriority:pawn.priorities.haul,wood:fuelCapacity(world,fire.id),food:0,reachable:canReach(world,fire,reachable,true)});
     if(pawn.priorities.haul>0)for (const zone of world.stockpiles) {
       const capacity = zone.capacity - (ground.get(cellIndex(world, zone.x, zone.z)) ?? 0) - (zoneReserved.get(zone.id) ?? 0);
-      if (capacity > 0 && (zone.filters.wood || zone.filters.food || zone.filters.chunk || zone.filters.steel)) destinations.push({ destination: { type: 'stockpile', stockpileId: zone.id }, target: zone, priority: zone.priority, workPriority:pawn.priorities.haul, wood: zone.filters.wood ? capacity : 0, food: zone.filters.food ? capacity : 0, chunk: zone.filters.chunk ? 1 : 0, steel: zone.filters.steel ? capacity : 0, reachable: canReach(world, zone, reachable, true) });
+      if (capacity > 0 && (zone.filters.wood || zone.filters.food || zone.filters.chunk || zone.filters.steel || zone.filters.blocks)) destinations.push({ destination: { type: 'stockpile', stockpileId: zone.id }, target: zone, priority: zone.priority, workPriority:pawn.priorities.haul, wood: zone.filters.wood ? capacity : 0, food: zone.filters.food ? capacity : 0, chunk: zone.filters.chunk ? 1 : 0, steel: zone.filters.steel ? capacity : 0, blocks:zone.filters.blocks ? capacity : 0, reachable: canReach(world, zone, reachable, true) });
     }
     const total = sources.length * destinations.length;
     const count = Math.min(total, budget.pairs);

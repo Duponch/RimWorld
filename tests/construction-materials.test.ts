@@ -73,7 +73,7 @@ test('steel furniture retains its material and owner through packing/reinstallat
 test('V29 keeps its eight-wood bed and existing work while V30 new beds require 45; future material and incompatible recipes are rejected',()=>{
   const w=deconstructionCamp();applyCommand(w,{type:'designate',kind:'bed',x:17,z:16});
   const job=w.jobs[0]!;delete job.material;job.construction='frame';addMaterial(w,'wood',8,{type:'job',jobId:job.id},'wood');
-  const raw=JSON.parse(serializeWorld(w));raw.schemaVersion=29;
+  const raw=JSON.parse(serializeWorld(w));raw.schemaVersion=29;for(const a of raw.pawns)delete a.priorities.craft;
   const loaded=deserializeWorld(JSON.stringify(raw));expect(loaded.jobs[0]!.material).toBeUndefined();
   expect(constructionRecipe(loaded.jobs[0]!)).toMatchObject({work:120,ingredients:[{item:'wood',quantity:8}]});
   until(loaded,()=>loaded.structures.length===1);expect(loaded.structures[0]!.material).toBeUndefined();
@@ -122,7 +122,7 @@ test('three-cell workshops require every mixed ingredient; all-steel cost is agg
     expect(applyCommand(w,{type:'install',structureId:bench.id,x:23,z:20,orientation:1}).ok).toBe(true);
     until(w,()=>w.packed[0]?.owner.type==='pawn');
     const moving=deserializeWorld(serializeWorld(w));
-    const old=JSON.parse(serializeWorld(w));old.schemaVersion=30;expect(()=>deserializeWorld(JSON.stringify(old))).toThrow(/version 30/);
+    const old=JSON.parse(serializeWorld(w));old.schemaVersion=30;for(const a of old.pawns)delete a.priorities.craft;expect(()=>deserializeWorld(JSON.stringify(old))).toThrow(/version 30/);
     until(w,()=>!w.jobs.length);stepWorld(moving,w.tick-moving.tick);expect(moving).toEqual(w);
     expect(w.structures[0]).toBe(bench);expect(bench.material).toBe(material);
     expect(footprintCells(bench).map(c=>c.z).sort((a,b)=>a-b)).toEqual([19,20,21]);
@@ -141,7 +141,7 @@ test('workshop rotations reject clipped sides and legacy shapes; mixed refunds p
     for(let z=14;z<=18;z++)for(let x=14;x<=18;x++)expect(footprintContains(s,{x,z})).toBe(expected.some(c=>c[0]===x&&c[1]===z));
     expect(canDesignate(w,{...s,x:orientation%2===0?0:16,z:orientation%2===1?0:16}).ok).toBe(false);
   }
-  const b={id:w.nextId++,kind:'stonecutter',material:'wood',x:17,z:16,orientation:0,footprint:'standard'} as const;w.structures.push(b);
+  const b={id:w.nextId++,kind:'stonecutter',material:'wood',bills:[] as import('../src/sim/cooking-types').CookingBill[],x:17,z:16,orientation:0,footprint:'standard'} as const;w.structures.push(b);
   for(let z=0;z<w.height;z++)for(let x=0;x<w.width;x++)if(x!==17||z!==16)w.piles.push({id:w.nextId++,kind:'food',item:'legacy-portion',quantity:75,owner:{type:'ground',x,z}});
   refreshStock(w);expect(validateWorld(w)).toEqual([]);
   expect(applyCommand(w,{type:'designate',kind:'deconstruct',x:17,z:16}).ok).toBe(true);
@@ -150,6 +150,6 @@ test('workshop rotations reject clipped sides and legacy shapes; mixed refunds p
   w.piles=w.piles.filter(p=>p.owner.type!=='ground'||p.owner.x!==17||p.owner.z!==15);refreshStock(w);
   expect(finishDeconstruction(w,w.pawns[0]!,job)).toBe(true);expect(validateWorld(w)).toEqual([]);
   expect(steelAccount(w)).toBe(30);expect(w.piles.filter(p=>p.kind==='wood').reduce((n,p)=>n+p.quantity,0)+w.deconstructed.lostWood).toBe(75);
-  const legacy=JSON.parse(serializeWorld(deconstructionCamp()));legacy.schemaVersion=30;
-  expect(deserializeWorld(JSON.stringify(legacy))).toEqual({...legacy,schemaVersion:31});
+  const legacy=JSON.parse(serializeWorld(deconstructionCamp()));legacy.schemaVersion=30;for(const a of legacy.pawns)delete a.priorities.craft;
+  expect(deserializeWorld(JSON.stringify(legacy))).toEqual({...legacy,schemaVersion:32,pawns:legacy.pawns.map((p:any)=>({...p,priorities:{...p.priorities,craft:2}}))});
 });

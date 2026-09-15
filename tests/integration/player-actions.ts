@@ -34,8 +34,7 @@ export async function editBill(page:Page,id:number,settings:BillSettings):Promis
   await form.locator('[data-field="target"]').fill(String(settings.target));
   await form.locator('[data-field="suspended"]').setChecked(settings.suspended);
   if(await form.locator('details').getAttribute('open')===null)await form.locator('summary').click();
-  await form.locator('[data-field="rice"]').setChecked(settings.filters.rice);
-  await form.locator('[data-field="berries"]').setChecked(settings.filters.berries);
+  for(const [item,allowed] of Object.entries(settings.filters))await form.locator(`[data-field="${item}"]`).setChecked(allowed===true);
   await form.locator('[data-field="radius"]').fill(String(settings.radius));
   await form.locator('[data-field="destination"]').selectOption(settings.destination);
   await form.locator(`[data-apply-bill="${id}"]`).click();
@@ -64,7 +63,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     await panel(page,'work');await page.locator(`select[data-owner="${c.pawnId}"][data-work="${c.work}"]`).selectOption(String(c.value));
   } else if(c.type==='stockpile') {
     await tool(page,'stockpile');
-    await page.locator('#stockpile-steel').setChecked(c.filters!.steel??false);await page.locator('#stockpile-chunk').setChecked(c.filters!.chunk??false);await page.locator('#stockpile-wood').setChecked(c.filters!.wood);await page.locator('#stockpile-food').setChecked(c.filters!.food);await page.locator('#stockpile-furniture').setChecked(c.filters!.furniture??false);
+    await page.locator('#stockpile-blocks').setChecked(c.filters!.blocks??false);await page.locator('#stockpile-steel').setChecked(c.filters!.steel??false);await page.locator('#stockpile-chunk').setChecked(c.filters!.chunk??false);await page.locator('#stockpile-wood').setChecked(c.filters!.wood);await page.locator('#stockpile-food').setChecked(c.filters!.food);await page.locator('#stockpile-furniture').setChecked(c.filters!.furniture??false);
     await page.locator('#stockpile-priority').selectOption(String(c.priority??2));await page.locator('#stockpile-capacity').fill(String(c.capacity??75));
     await revealCells(page,[c]);
     await cell(page,c.x,c.z);

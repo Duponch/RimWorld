@@ -49,13 +49,13 @@ describe('seeded temperate valley generation', () => {
     expect(seen).toEqual(new Set(STONE_KINDS)); expect(equal / pairs).toBeGreaterThan(.9);
 
     const modern = createWorld(42, 32, 32), raw = JSON.parse(serializeWorld(modern));
-    raw.schemaVersion = 26;for(const a of raw.pawns)delete a.priorities.mine;
+    raw.schemaVersion = 26;for(const a of raw.pawns){delete a.priorities.mine;delete a.priorities.craft;}
     // V26 cannot smuggle a modern geological identity through migration.
     expect(() => deserializeWorld(JSON.stringify(raw))).toThrow(/version 26/);
     for (const tile of raw.tiles) { delete tile.stone; delete tile.ore; }
     for (const resource of raw.resources) delete resource.stone;
     const migrated = deserializeWorld(JSON.stringify(raw));
-    expect(migrated).toEqual({...raw,pawns:raw.pawns.map((p:any)=>({...p,priorities:{...p.priorities,mine:2}})),schemaVersion:31 });
+    expect(migrated).toEqual({...raw,pawns:raw.pawns.map((p:any)=>({...p,priorities:{craft:2,...p.priorities,mine:2}})),schemaVersion:32 });
     const control = deserializeWorld(JSON.stringify(raw)); stepWorld(migrated, 251); stepWorld(control, 251);
     expect(serializeWorld(migrated)).toBe(serializeWorld(control));
     for (const change of [(w: any) => w.tiles.find((t: any) => t.terrain === 'rock').stone = 'vacstone',
@@ -178,7 +178,7 @@ describe('seeded temperate valley generation', () => {
     long.resources = [{ id: long.nextId++, x: 249, z: 125, kind: 'tree', amount: 12 }];
     long.piles = []; refreshStock(long);
     long.pawns = long.pawns.slice(0, 1);
-    const pawn = long.pawns[0]!; pawn.x = 0; pawn.z = 125; pawn.priorities = {mine:2, gather: 1, build: 0, haul: 0, grow: 0 , cook: 0 };
+    const pawn = long.pawns[0]!; pawn.x = 0; pawn.z = 125; pawn.priorities = {craft:2,mine:2, gather: 1, build: 0, haul: 0, grow: 0 , cook: 0 };
     addGroundMaterial(long, 'food', 18, pawn);
     expect(applyCommand(long, { type: 'designate', kind: 'chop', x: 249, z: 125 })).toEqual({ ok: true });
     stepWorld(long);

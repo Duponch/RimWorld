@@ -25,7 +25,7 @@ L’[audit du 13 septembre](../research/environment-review.md) confirme que les 
 | Objet et plante `rice` | Riz semé/récolté ; croissance, fertilité et lumière ; 6 unités mûres, pile de 75, nutrition 0,05, malus de repas cru. Première culture alimentaire, domaine SYS-070..072. | Pourrit en 40 jours à température normale. Autres recettes, intoxication, santé du plant et compétences absents ; une seule culture sélectionnable. [Référence](../research/farming-reference.md). |
 | Objet `simple-meal` | Repas simple cuisiné au feu : dix baies/riz, nutrition 0,9, pile dix, ingestion un ; première recette Core. [Source et contrat](../research/cooking-reference.md). | Pourrit en 4 jours à température normale. Autres ingrédients, compétence et intoxication absents. |
 | Structure `horseshoes` | Piquet bois/acier V30, CAT-050 : dix unités livrées, sept ticks en bois ou dix en acier, trois utilisateurs et places visibles à cinq cases ; famille dextérité. [Référence et limites](../research/recreation-reference.md). | Autres matériaux que bois/acier, capacités/compétence de tir, pièces et dégâts absents ; aucune qualité comme pour le piquet de référence. L’animation ne lance pas encore de projectile visible. |
-| Structure `stonecutter` | Atelier 3×1, bois/acier : 75 bois + 30 acier ou 105 acier ; plan/cadre, rotation, déplacement entier, stockage, transit et restitution V31. [Référence](../research/stonecutter-reference.md). | Taille/blocs, recherche, statistiques complètes et effets du poste absents. La nouvelle famille est partielle. |
+| Structure `stonecutter` | Atelier 3×1, bois/acier : 75 bois + 30 acier ou 105 acier ; plan/cadre, rotation, déplacement entier, stockage, transit et restitution V31. [Référence](../research/stonecutter-reference.md). | Factures de taille et blocs livrés V32 ; recherche, statistiques complètes et effets complets du poste absents. La nouvelle famille est partielle. |
 | Structure `campfire` | 20 bois livrés, combustible initial, combustion/ravitaillement, factures de repas simple. | Chaleur, éclairage fonctionnel, pluie, sociabilité et dégâts absents ; autres postes différés. |
 | Objet `survival-meal` | Repas de survie du départ, 0,9 nutrition/unité, piles de dix ; CAT-015. | Ne pourrit pas. Recette, ingrédients, recherche et détérioration absents. Le scénario local donne 18 repas ; ce n'est pas Crashlanded. |
 | Objet `legacy-portion` | Compatibilité des sauvegardes V1–V4 : 0,35 nutrition/unité, piles de 75. | Ce n'est aucun objet de RimWorld ; absent des nouvelles parties. |
@@ -74,13 +74,13 @@ V22 ne crée aucun objet : elle renseigne transit, arrêt, coûts d’entrée et
 | sandstone | Grès | Massif et pierre décorative typés |
 | slate | Ardoise | Massif et pierre décorative typés |
 
-Distribution régionale, persistance et apparence sont livrées. V28 ajoute les PV et produits ci-dessous, sans blocs utilisables. L’acier compacté et son produit sont livrés en V29 ; autres minerais, compétences, taille et construction en pierre restent absents ; [contrat du minage](../development/mining.md).
+Distribution régionale, persistance et apparence sont livrées. V28 ajoute les PV et produits ci-dessous, sans blocs utilisables. L’acier compacté et son produit sont livrés en V29 ; autres minerais, compétences et construction en pierre restent absents ; taille livrée V32 ; [contrat du minage](../development/mining.md).
 
 ## Produits et sols V28 — CAT-059/060
 
 | Identifiant | Livraison | Limites |
 |---|---|---|
-| `granite-chunk` | Fragment après minage du granite (900 PV), pile 1, transport et stockage filtré. | Taille, blocs, masse fonctionnelle, dégâts et couverture absents. |
+| `granite-chunk` | Fragment après minage du granite (900 PV), pile 1, transport et stockage filtré. | Taille V32 : vingt blocs de granite. Masse fonctionnelle, dégâts et couverture absents. |
 | `limestone-chunk` | Fragment après minage du calcaire (700 PV), mêmes contrats. | Idem. |
 | `marble-chunk` | Fragment après minage du marbre (450 PV), mêmes contrats. | Idem. |
 | `sandstone-chunk` | Fragment après minage du grès (400 PV), mêmes contrats. | Idem. |
@@ -93,10 +93,22 @@ Distribution régionale, persistance et apparence sont livrées. V28 ajoute les 
 | Identifiant | Livré | Limites |
 |---|---|---|
 | `Tile.ore='steel'` | Acier compacté, 1 500 PV, gisements connectés de 30–40 cases ; minage et sol encaissant conservé. | Profil de site local ; aucune injection sur anciennes cartes, compétences/rendements variables, dégâts externes et toits absents. |
-| Objet `steel` | 40 unités par gisement au profil neutre ; piles de 75, portage, rangement filtré, compteur et barres procédurales ; matériau de construction V30. | Atelier et recette constructive mixte livrés en V31 ; fabrication de blocs absente ; capacité générale de portage provisoire de dix unités. |
+| Objet `steel` | 40 unités par gisement au profil neutre ; piles de 75, portage, rangement filtré, compteur et barres procédurales ; matériau de construction V30. | Atelier et recette constructive mixte livrés en V31 ; fabrication de blocs livrée V32 ; capacité générale de portage provisoire de dix unités. |
 
 [Sources et décisions](../research/steel-reference.md). Argent, or, plasteel, uranium, jade, composants compactés et leurs filières restent absents. Ni ces deux entrées, ni les cinq roches ne constituent un inventaire exhaustif.
 
 ## Variantes constructives V30
 
 `wood` et `steel` sont admissibles pour mur, lit simple, table 1×2, tabouret et piquet ; feu fixe en bois. Cinq variantes en acier ajoutées en V30, aucune nouvelle famille de bâtiment dans ce lot. Matériau et recette conservés dans le paquet et après repose ; couleur rétablie sur l’objet, bande de caisse distincte au sol ; moitié restituée avec arrondi pour les ouvrages ordinaires. Les anciennes recettes restent identifiées par absence de matériau. [Contrat et quantités](../development/construction-materials.md). V31 ajoute la famille atelier avec deux variantes constructives et ingrédients mixtes ; blocs taillés, autres matériaux, qualité, résistance et inflammabilité restent absents.
+
+## Blocs V32
+
+| Objet | Production et usage livré | Limites |
+|---|---|---|
+| `granite-blocks` | Vingt par fragment de granite, Artisanat au poste, pile 75, réserve filtrée. | Construction, HP/détérioration et masse fonctionnelle absents. |
+| `limestone-blocks` | Même chaîne pour le calcaire, identité et couleur propres. | Même périmètre. |
+| `marble-blocks` | Même chaîne pour le marbre. | Même périmètre. |
+| `sandstone-blocks` | Même chaîne pour le grès. | Même périmètre. |
+| `slate-blocks` | Même chaîne pour l'ardoise. | Même périmètre. |
+
+SYS-062..064 / matériaux manufacturés du chapitre 11. Aucune nutrition ni pourriture ; passage autorisé, supplément 1,4 tick local, arrêt autorisé. Cinq définitions supplémentaires ne ferment pas le catalogue Core. [Recette, sources et réserves](../research/stonecutting-reference.md).

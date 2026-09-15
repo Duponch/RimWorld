@@ -1,5 +1,6 @@
+import { PRODUCTION_RECIPES, stationRecipe, taskRecipe, taskWork, isRecipeProduct, blockFor, type ProductionIngredient, type StoneIngredient } from './production-recipes.ts';
 import { fuelStationReserved } from './fuel.ts';
-import { COOK_TICKS, cookingSpot, validBillSettings } from './cooking-bills.ts';
+import { cookingSpot, ingredientPlaceFree, validBillSettings } from './cooking-bills.ts';
 import { groundCapacity, storageCapacity } from './ground-placement.ts';
 import { reservedSource } from './materials.ts';
 import type { World } from './types.ts';
@@ -10,44 +11,49 @@ const int=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>Number.isSa
 export function validateCooking(input:unknown,version:number,ids:Set<number>):string[] {
   const w=input as World,errors:string[]=[];
   const cell=(v:unknown)=>record(v)&&int(v.x,0,w.width-1)&&int(v.z,0,w.height-1);
-  for(const s of w.structures) {
-    if(s.kind!=='campfire') {if(s.bills!==undefined)errors.push('Bills attached to a non-workstation.');continue;}
+  for(const s of [...w.structures,...(version>=32?w.packed.map(p=>p.building):[])]) {
+    const recipe=stationRecipe(s);
+    if(!recipe||version<32&&recipe==='stone-blocks') {if(s.bills!==undefined)errors.push('Bills attached to a non-workstation.');continue;}
     if(!Array.isArray(s.bills)||s.bills.length>64){errors.push('Invalid workstation bills.');continue;}
     for(const b of s.bills) {
-      if(!record(b)||!int(b.id,1,w.nextId-1)||b.recipe!=='simple-meal'||!validBillSettings(b))errors.push('Invalid cooking bill.');
+      if(!record(b)||!int(b.id,1,w.nextId-1)||b.recipe!==recipe||!validBillSettings(b,recipe))errors.push('Invalid cooking bill.');
       else {if(ids.has(b.id))errors.push('Duplicate bill identity.');ids.add(b.id);}
     }
   }
   for(const p of w.pawns) {
+    if(version<32?p.priorities.craft!==undefined:!int(p.priorities.craft,0,4))errors.push('Invalid or future craft priority.');
     if(version<10) {if(p.cooking!==undefined||p.priorities.cook!==undefined)errors.push('Legacy save contains cooking fields.');continue;}
     if(!int(p.priorities.cook,0,4))errors.push('Invalid cooking priority.');
     if(p.cooking===null)continue;
     const c=p.cooking;
+    if(!record(c)||c.recipe!==undefined&&(version<32||c.recipe!=='stone-blocks')){errors.push('Invalid or future production recipe.');continue;}
+    const recipe=PRODUCTION_RECIPES[taskRecipe(c)];
+    if(c.storageQuantity!==undefined&&(version<32||c.recipe!=='stone-blocks'||c.phase!=='output'||c.storageId===null||!int(c.storageQuantity,1,20)))errors.push('Invalid production output quantity.');
     if(!record(c)||!int(c.stationId,1)||!int(c.billId,1)||!cell(c.spot)||!cell(c.actionCell)||!['gather','work','output',...(version>=11?['interrupted']:[])].includes(c.phase as string)
-      ||!int(c.progress,0,COOK_TICKS)||!(c.productId===null||int(c.productId,1,w.nextId-1))||!(c.storageId===null||int(c.storageId,1,w.nextId-1))
-      ||!Array.isArray(c.ingredients)||c.ingredients.length>10) {errors.push('Invalid cooking task.');continue;}
-    for(const i of c.ingredients)if(!record(i)||!int(i.pileId,1,w.nextId-1)||!int(i.quantity,1,10)||!['rice','berries'].includes(i.item as string)||!['source','held','placed'].includes(i.stage as string)||!cell(i.cell))errors.push('Invalid recipe ingredient reservation.');
+      ||!int(c.progress,0,recipe.workTicks)||!(c.productId===null||int(c.productId,1,w.nextId-1))||!(c.storageId===null||int(c.storageId,1,w.nextId-1))
+      ||!Array.isArray(c.ingredients)||c.ingredients.length>recipe.units) {errors.push('Invalid cooking task.');continue;}
+    for(const i of c.ingredients)if(!record(i)||!int(i.pileId,1,w.nextId-1)||!int(i.quantity,1,recipe.units)||!recipe.inputs.includes(i.item as ProductionIngredient)||!['source','held','placed'].includes(i.stage as string)||!cell(i.cell))errors.push('Invalid recipe ingredient reservation.');
   }
   if(errors.length||version<10)return errors;
   const stations=new Set<number>(),spots=new Set<number>();
   for(const p of w.pawns)if(p.cooking) {
-    const c=p.cooking,station=w.structures.find(s=>s.id===c.stationId&&s.kind==='campfire'),bill=station?.bills?.find(b=>b.id===c.billId);
-    if(!station||!bill||bill.suspended||p.priorities.cook===0&&!(version>=20&&p.orders.active==='cook')||p.jobId!==null||p.haul!==null||p.need!==null){errors.push('Invalid cooking task ownership.');continue;}
-    const spot=cookingSpot(station),key=c.spot.z*w.width+c.spot.x;
+    const c=p.cooking,station=w.structures.find(s=>s.id===c.stationId&&stationRecipe(s)===taskRecipe(c)),bill=station?.bills?.find(b=>b.id===c.billId);
+    if(!station||!bill||bill.recipe!==taskRecipe(c)||bill.suspended||p.priorities[taskWork(c)]===0&&!(version>=20&&p.orders.active==='cook')||p.jobId!==null||p.haul!==null||p.need!==null){errors.push('Invalid cooking task ownership.');continue;}
+    const recipe=PRODUCTION_RECIPES[taskRecipe(c)],spot=cookingSpot(station),key=c.spot.z*w.width+c.spot.x;
     if(spot.x!==c.spot.x||spot.z!==c.spot.z||stations.has(station.id)||spots.has(key))errors.push('Invalid or duplicate cooking work spot.');
     stations.add(station.id);spots.add(key);
     if(version>=19&&fuelStationReserved(w,station.id,p.id))errors.push('Conflicting queued workstation reservation.');
     if(w.pawns.some(o=>o.id!==p.id&&(o.haul?.destination.type==='fuel'&&o.haul.destination.structureId===station.id||o.need?.kind==='eat'&&o.need.dining?.target.x===spot.x&&o.need.dining?.target.z===spot.z||o.need?.kind==='sleep'&&(version<14||o.need.bedId!==null)&&o.need.target.x===spot.x&&o.need.target.z===spot.z)))errors.push('Conflicting workstation reservation.');
     const owned=w.piles.filter(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id);
     if(c.phase==='output') {
-      if(c.ingredients.length||c.progress!==0||owned.length!==1||owned[0]?.id!==c.productId||owned[0]?.item!=='simple-meal'||owned[0]?.quantity!==1)errors.push('Invalid cooked product ownership.');
-      if(c.storageId!==null){const storage=w.stockpiles.find(s=>s.id===c.storageId);if(!storage||storageCapacity(w,storage,'simple-meal',p.id)<1)errors.push('Invalid cooking output reservation.');}
+      if(c.ingredients.length||c.progress!==0||owned.length!==1||owned[0]?.id!==c.productId||!isRecipeProduct(taskRecipe(c),owned[0]!.item)||!int(owned[0]?.quantity,1,recipe.outputUnits)||c.recipe==='stone-blocks'&&!recipe.inputs.some(i=>bill.filters[i]&&blockFor(i as StoneIngredient)===owned[0]!.item))errors.push('Invalid cooked product ownership.');
+      if(c.storageId!==null){const storage=w.stockpiles.find(s=>s.id===c.storageId),product=owned[0],quantity=c.storageQuantity??1;if(!product||c.recipe==='stone-blocks'&&c.storageQuantity===undefined||quantity>(product?.quantity??0)||!storage||storageCapacity(w,storage,product.item,p.id)<quantity)errors.push('Invalid cooking output reservation.');}
     } else {
       if(c.productId!==null||c.storageId!==null||(c.phase==='gather'||c.phase==='interrupted')&&c.progress!==0
-        ||(c.phase==='interrupted'?c.ingredients.length!==1||c.ingredients[0]?.stage!=='held':c.ingredients.reduce((n,i)=>n+i.quantity,0)!==10))errors.push('Invalid recipe quantity or phase.');
+        ||(c.phase==='interrupted'?c.ingredients.length!==1||c.ingredients[0]?.stage!=='held':c.ingredients.reduce((n,i)=>n+i.quantity,0)!==recipe.units))errors.push('Invalid recipe quantity or phase.');
       const held=c.ingredients.filter(i=>i.stage==='held');
       if(held.length>1||owned.length!==held.length||held.length&&owned[0]?.id!==held[0]?.pileId)errors.push('Invalid ingredient cargo.');
-      const incoming=new Map<number,{item:'rice'|'berries';quantity:number}>();
+      const incoming=new Map<number,{item:ProductionIngredient;quantity:number}>();
       for(const i of c.ingredients) {
         const pile=w.piles.find(q=>q.id===i.pileId);
         if(!bill.filters[i.item]||!pile||pile.item!==i.item||pile.quantity<i.quantity){errors.push('Missing recipe ingredient.');continue;}
@@ -56,7 +62,7 @@ export function validateCooking(input:unknown,version:number,ids:Set<number>):st
           if(pile.owner.type!=='ground'||reservedSource(w,pile.id)>pile.quantity)errors.push('Invalid ground ingredient reservation.');
           if(i.stage==='placed'&&pile.owner.type==='ground'&&(pile.owner.x!==i.cell.x||pile.owner.z!==i.cell.z))errors.push('Ingredient not placed at workstation.');
         }
-        if(Math.abs(i.cell.x-spot.x)+Math.abs(i.cell.z-spot.z)>1)errors.push('Ingredient staging beyond work reach.');
+        if(Math.abs(i.cell.x-spot.x)+Math.abs(i.cell.z-spot.z)>1||c.recipe==='stone-blocks'&&c.phase!=='interrupted'&&!ingredientPlaceFree(w,i.cell,spot,'stone-blocks'))errors.push('Ingredient staging beyond work reach.');
         if(i.stage!=='placed'&&c.phase!=='interrupted') {
           const key=i.cell.z*w.width+i.cell.x,prior=incoming.get(key);
           if(prior&&prior.item!==i.item)errors.push('Mixed ingredient staging reservation.');

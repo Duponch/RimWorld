@@ -1,3 +1,4 @@
+import { stationRecipe } from './production-recipes.ts';
 import { deconstructionAvailable } from './deconstruction-rules.ts';
 import { constructionCandidates } from './construction-planner.ts';
 import { constructionObstruction, containsCell, isConstruction } from './construction-rules.ts';
@@ -20,16 +21,16 @@ export function advancePriorityWork(world:World,pawn:Pawn,getBlocked:NavigationG
   if(!intent||pawn.jobId!==null||pawn.haul||pawn.cooking||pawn.need||pawn.recreation.task||pawn.orders.queue.length)return false;
   if(pawn.collapsePending||world.restRules==='legacy'&&pawn.rest===0)return false;
   const job=world.jobs.find(j=>(isConstruction(j)||intent.work==='build'&&j.kind==='deconstruct')&&containsCell(j,intent.cell));
-  const station=world.structures.find(s=>s.kind==='campfire'&&footprintCells(s).some(c=>c.x===intent.cell.x&&c.z===intent.cell.z));
-  if(intent.work==='cook'?!station:!job&&!(intent.work==='haul'&&station&&wantsFuel(world,station))) {
+  const station=world.structures.find(s=>stationRecipe(s)!==null&&footprintCells(s).some(c=>c.x===intent.cell.x&&c.z===intent.cell.z));
+  if((intent.work==='cook'||intent.work==='craft')?!station:!job&&!(intent.work==='haul'&&station&&wantsFuel(world,station))) {
     delete pawn.priorityWork;return false;
   }
   if(!budget.remaining||!budget.pairs)return true;
   const blocked=getBlocked(),reach=searchCandidates(world,pawn,blocked,new Set(),budget)!;
   // Assignment zero is not an incapacity: a previously accepted priority keeps
   // its provider family, even after the ordinary work table changes.
-  const actor={...pawn,priorities:{...pawn.priorities,build:0,haul:0,cook:0,[intent.work]:1}};
-  if(intent.work==='cook'&&station) {
+  const actor={...pawn,priorities:{...pawn.priorities,build:0,haul:0,cook:0,craft:0,[intent.work]:1}};
+  if((intent.work==='cook'||intent.work==='craft')&&station) {
     const p=planCookingOrder(world,actor,station.id,reach,budget,false);
     if(p.order&&p.path) {
       if(isCookingOrder(p.order))startCookingOrder(pawn,p.order,p.path);

@@ -14,7 +14,7 @@ export function validateFurniture(world:World,version:number,ids:Set<number>,sha
   for(const pack of world.packed) {
     if(!record(pack)||!record(pack.building)||!record(pack.owner)) {errors.push('Invalid furniture package.');continue;}
     const b=pack.building,o:Record<string,unknown>=pack.owner;
-    if(!integer(b.id,1)||b.id>=world.nextId||!minifiable(b.kind)||version<31&&b.kind==='stonecutter'||!cell(b)||!integer(b.orientation)||b.orientation>3||footprintCells(b).some(c=>!cell({x:c.x,z:c.z}))||!['standard','legacy-single'].includes(b.footprint)||b.footprint==='legacy-single'&&b.kind!=='bed'||b.fuel!==undefined||b.bills!==undefined)errors.push('Invalid packed building.');
+    if(!integer(b.id,1)||b.id>=world.nextId||!minifiable(b.kind)||version<31&&b.kind==='stonecutter'||!cell(b)||!integer(b.orientation)||b.orientation>3||footprintCells(b).some(c=>!cell({x:c.x,z:c.z}))||!['standard','legacy-single'].includes(b.footprint)||b.footprint==='legacy-single'&&b.kind!=='bed'||b.fuel!==undefined||b.bills!==undefined&&(version<32||b.kind!=='stonecutter'))errors.push('Invalid packed building.');
     if(shapesOnly){if(ids.has(b.id))errors.push('Duplicate furniture identity.');ids.add(b.id);}
     if(Object.keys(pack).some(k=>!['building','owner'].includes(k))||Object.keys(o).some(k=>!(o.type==='ground'?['type','x','z']:['type','pawnId']).includes(k))||(o.type==='ground'?!cell(o):o.type==='pawn'?!integer(o.pawnId,1):true))errors.push('Invalid furniture owner.');
   }
