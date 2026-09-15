@@ -1,4 +1,4 @@
-import { STEEL_ORE } from '../sim/ore';
+import { ORE_DEFINITIONS } from '../sim/ore';
 import * as THREE from 'three/webgpu';
 import type { World } from '../sim/types';
 import { noise } from './StaticGeometry';
@@ -92,7 +92,7 @@ export class RockLayer {
     if(reset) {this.slots.clear();this.rockMask=new Uint8Array(world.tiles.length);this.width=world.width;this.height=world.height;this.seed=world.seed;}
     for(let i=0;i<world.tiles.length;i++) {
       const tile=world.tiles[i]!;
-      const rock=tile.terrain==='rock'?(tile.ore?8:tile.stone?2+STONE_KINDS.indexOf(tile.stone):1):0;
+      const rock=tile.terrain==='rock'?(tile.ore?tile.ore==='machinery'?9:8:tile.stone?2+STONE_KINDS.indexOf(tile.stone):1):0;
       if(rock!==this.rockMask[i]) {changed.push(i);this.rockMask[i]=rock;}
       if(rock&&!this.slots.has(i))this.slots.set(i,{slot:this.slots.size,indices:[]});
     }
@@ -111,7 +111,7 @@ export class RockLayer {
       for(const i of dirty) {
         const record=this.slots.get(i)!,v=24+record.slot*ROCK_VERTICES,x=i%world.width,z=Math.floor(i/world.width);
         record.indices=writeRockCell(world,x,z,position.array as Float32Array,v);
-        c.setHex(world.tiles[i]!.ore?STEEL_ORE.color:stoneColor(world.tiles[i]!.stone)).multiplyScalar(.96+noise(Math.floor(x/3),Math.floor(z/3),world.seed+211)*.08);
+        c.setHex(world.tiles[i]!.ore?ORE_DEFINITIONS[world.tiles[i]!.ore!].color:stoneColor(world.tiles[i]!.stone)).multiplyScalar(.96+noise(Math.floor(x/3),Math.floor(z/3),world.seed+211)*.08);
         for(let k=0;k<ROCK_VERTICES;k++){normal.setXYZ(v+k,0,1,0);const fleck=world.tiles[i]!.ore&&Math.floor(k/3)%4===0?1.35:1;color.setXYZ(v+k,c.r*fleck,c.g*fleck,c.b*fleck);}
         for(const attribute of [position,normal,color])attribute.addUpdateRange(v*3,ROCK_VERTICES*3);
       }

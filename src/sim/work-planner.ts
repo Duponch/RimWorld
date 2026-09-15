@@ -170,7 +170,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   if (Number.isFinite(constructionHaulPriority(pawn)) && pawn.hunger > 20 && (!best || best.priority >= constructionHaulPriority(pawn))) {
     const zonesByCell = new Map(world.stockpiles.map(zone => [cellIndex(world, zone.x, zone.z), zone]));
     const sources = world.piles.filter(pile => automaticallyHaulable(pile) && pile.owner.type === 'ground' && pile.quantity > (sourceReserved.get(pile.id) ?? 0));
-    const destinations: { destination: HaulDestination; target: Cell & { kind?: JobKind }; priority: number; workPriority:number; wood: number; food: number; chunk?:number; steel?:number; blocks?:number; items?:ReadonlyMap<ItemId,number>; reachable?: boolean }[] = [];
+    const destinations: { destination: HaulDestination; target: Cell & { kind?: JobKind }; priority: number; workPriority:number; wood: number; food: number; chunk?:number; steel?:number; component?:number; blocks?:number; items?:ReadonlyMap<ItemId,number>; reachable?: boolean }[] = [];
     for (const job of world.jobs) {
       const items=new Map<ItemId,number>();
       for(const cost of constructionRecipe(job).ingredients){const key=`${job.id}:${cost.item}`,capacity=cost.quantity-(delivered.get(key)??0)-(jobReserved.get(key)??0);if(capacity>0)items.set(cost.item,capacity);}
@@ -179,7 +179,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
     if(pawn.priorities.haul>0)for (const fire of fires) destinations.push({destination:{type:'fuel',structureId:fire.id},target:fire,priority:5,workPriority:pawn.priorities.haul,wood:fuelCapacity(world,fire.id),food:0});
     if(pawn.priorities.haul>0)for (const zone of world.stockpiles) {
       const capacity = zone.capacity - (ground.get(cellIndex(world, zone.x, zone.z)) ?? 0) - (zoneReserved.get(zone.id) ?? 0);
-      if (capacity > 0 && (zone.filters.wood || zone.filters.food || zone.filters.chunk || zone.filters.steel || zone.filters.blocks)) destinations.push({ destination: { type: 'stockpile', stockpileId: zone.id }, target: zone, priority: zone.priority, workPriority:pawn.priorities.haul, wood: zone.filters.wood ? capacity : 0, food: zone.filters.food ? capacity : 0, chunk: zone.filters.chunk ? 1 : 0, steel: zone.filters.steel ? capacity : 0, blocks:zone.filters.blocks ? capacity : 0 });
+      if (capacity > 0 && (zone.filters.wood || zone.filters.food || zone.filters.chunk || zone.filters.component || zone.filters.steel || zone.filters.blocks)) destinations.push({ destination: { type: 'stockpile', stockpileId: zone.id }, target: zone, priority: zone.priority, workPriority:pawn.priorities.haul, wood: zone.filters.wood ? capacity : 0, food: zone.filters.food ? capacity : 0, chunk: zone.filters.chunk ? 1 : 0, component: zone.filters.component ? capacity : 0, steel: zone.filters.steel ? capacity : 0, blocks:zone.filters.blocks ? capacity : 0 });
     }
     const total = sources.length * destinations.length;
     const count = Math.min(total, budget.pairs);

@@ -1,5 +1,5 @@
 import { SCHEMA_VERSION } from './types.ts';
-import { generateSteel } from './ore.ts';
+import { generateSteel, generateMachinery } from './ore.ts';
 import { geologicalField } from './geology.ts';
 import { initialRecreation } from './recreation-rules.ts';
 import { defaultSchedule } from './schedule.ts';
@@ -186,6 +186,7 @@ export function generateWorld(seed: number, width: number, height: number): Worl
   world.tiles = terrain.map((value, index) => value === 'rock'
     ? { terrain: value, stone: stoneAt(index % width, Math.floor(index / width)) } : { terrain: value });
   generateSteel(world);
+  generateMachinery(world);
   for (let z = 0; z < height; z++) {
     for (let x = 0; x < width; x++) {
       const index = z * width + x; const ground = terrain[index]!;

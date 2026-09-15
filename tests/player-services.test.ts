@@ -50,7 +50,7 @@ test('forced refuel bypasses automation, reserves its station while queued, trav
   expect(actor.haul?.phase).toBe('deliver');const held=c.piles.find(p=>p.owner.type==='pawn')!,massBefore=woodMass(c);
   expect(applyCommand(c,{type:'clear-orders',pawnId:actor.id}).ok).toBe(true);expect(c.piles.find(p=>p.id===held.id)?.owner.type).toBe('ground');expect(woodMass(c)).toBe(massBefore);expect(validateWorld(c)).toEqual([]);
   const full=camp(),fullFire=fire(full);fullFire.fuel.ticks=CAMPFIRE_CAPACITY;addGroundMaterial(full,'wood',10,{x:8,z:8},'wood');rejected(full,{type:'order-haul',pawnId:full.pawns[0]!.id,target:{type:'fuel',structureId:fullFire.id},queue:false});
-  const legacy=JSON.parse(serializeWorld(camp()));legacy.schemaVersion=18;for(const a of legacy.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete legacy.deconstructed;delete legacy.packed;expect(deserializeWorld(JSON.stringify(legacy))).toEqual({...legacy,pawns:legacy.pawns.map((p:any)=>({...p,priorities:{craft:2,...p.priorities,mine:2}})),schemaVersion:40,packed:[],deconstructed:{count:0,lostWood:0,fuelTicks:0}});
+  const legacy=JSON.parse(serializeWorld(camp()));legacy.schemaVersion=18;for(const a of legacy.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete legacy.deconstructed;delete legacy.packed;expect(deserializeWorld(JSON.stringify(legacy))).toEqual({...legacy,pawns:legacy.pawns.map((p:any)=>({...p,priorities:{craft:2,...p.priorities,mine:2}})),schemaVersion:41,packed:[],deconstructed:{count:0,lostWood:0,fuelTicks:0}});
 });
 
 test('forced plant and pile clearing respects rotated footprints, queue cancellation, physical output, parent lifetime and construction assignment without ordinary hauling',()=>{

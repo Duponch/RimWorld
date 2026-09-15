@@ -1,8 +1,8 @@
 # Plan de développement
 
-V40 livre le [refroidissement passif](development/passive-cooling.md) : construction, consommation continue, recharge physique, température locale et retrait conservateur. Le parcours natif contrôle aussi les programmes GPU créés au premier geste ; un défaut de préparation du curseur a été corrigé.
+V41 livre les [composants industriels](development/components.md) : machines compactées, extraction physique, piles de 50, rangement filtré et représentation au sol/portée. Le refroidissement passif V40 reste disponible.
 
-**Prochaine étape : socle électrique**, puis appareils de la chaîne du froid avec leurs composants, réseau et conditions de fonctionnement. Le refroidisseur passif ne réfrigère pas les aliments. Mortalité et feuillage doivent précéder gel saisonnier et biomes froids ; confort et santé thermiques restent ouverts. G0 en consolidation, G1 partiel, G2 en cours ; aucun jalon déclaré complet.
+**Prochaine étape : socle électrique**, générateur alimenté et réseau, puis appareils de la chaîne du froid avec coûts acier/composants et conditions de fonctionnement. Le refroidisseur passif ne réfrigère pas les aliments. Mortalité et feuillage doivent précéder gel saisonnier et biomes froids ; confort et santé thermiques restent ouverts. G0 en consolidation, G1 partiel, G2 en cours ; aucun jalon déclaré complet.
 
 État : 15 septembre 2026. **ROADMAP est l’unique calendrier G0–G5.** Le [bilan fonctionnel](gameplay/implementation-status.md) fait autorité sur le contenu livré ; les [preuves](development/validation.md) indiquent ce qui a réellement été testé. Voir l’[index documentaire](README.md) pour les contrats et recherches.
 
@@ -89,3 +89,9 @@ La scène D du corpus guide les transferts : une personne ou pile garde son iden
 ## Questions de conception ouvertes, sans bloquer le socle
 
 Objectif d'une partie, tonalité fictionnelle, contraintes de verticalité, taille maximale de colonie/carte, profondeur des interactions sociales et matériel cible restent à préciser en jouant les prochains jalons. Aucun ajout d'étages, multijoueur, moteur physique global ou cloud obligatoire n'est présumé.
+
+## Estimation de charge — 15 septembre 2026
+
+Ordre de grandeur de co-lead demandé après trois jours de développement : **10–15 % du travail total**, **3–6 semaines supplémentaires pour une alpha avec une vraie boucle de colonie**, **3–6 mois supplémentaires pour approcher la cible Core en 3D**. Hypothèses : périmètre actuel, rythme soutenu avec sessions autonomes et retours joueur réguliers. Ce sont des fourchettes de planification à forte incertitude, pas des dates promises, une mesure du code ou un inventaire exhaustif de contenu. Elles incluent intégration, tests, correction et contenu ; elles ne supposent pas un débit constant extrapolé des premiers jours. Le niveau de finition final peut déplacer sensiblement la borne haute.
+
+La masse restante concerne surtout G3–G5 : santé/corps/capacités, combat, équipement, relations/humeur, animaux, recherche/événements/commerce, monde et fins de partie ; G1/G2 restent eux-mêmes partiels. Réévaluer à partir du débit de lots réellement joués et intégrés, notamment après santé/combat. Le nombre de schémas, de commits ou de cases cochées ne mesure pas l'effort restant.

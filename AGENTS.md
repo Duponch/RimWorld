@@ -187,3 +187,8 @@
 - Lire docs/development/passive-cooling.md et sa recherche. Une case fixe, 50 bois de construction devenant le réservoir initial ; combustion continue 10/jour, y compris dehors ou sous 17 °C. Refroidissement sans lumière, recettes ou bonus alimentaire. Pas de restitution de déconstruction ni minification.
 - Capacités par définition dans fuel.ts, transferts physiques communs ; aucune confusion avec les besoins Cuisine. V39 strictement validée avant migration sans objet inventé. thermal-sources.ts partage l’intégration V38 ; bornes continues adaptées explicitement.
 - Seize parties dans le lot de mobilier existant. Préparer aussi le curseur double face au chargement, puis restaurer son état depuis le pointeur courant ; le test navigateur exige zéro pipeline nouveau pendant construction et recharge.
+
+## Composants industriels V41
+
+- Lire `docs/development/components.md` et sa recherche. Gisement `machinery`, objet/famille `component` : 2 000 PV, coups naturels 80, deux unités, pile 50 ; ni acier ni combustible. Filtre absent = refus ; génération secondaire indépendante après l’acier, sans injection aux anciennes cartes.
+- V40 strictement validée avant migration. Dépôt final et PRNG prévalidés, transferts communs conservatifs. Les appareils électriques, composants avancés, fabrication et usure restent absents. Coût de passage 1,4 provisoire, pas une parité numérique certifiée. Rendu dans les lots existants et poses GPU communes.

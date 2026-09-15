@@ -1,11 +1,11 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 40 as const;
+export const SCHEMA_VERSION = 41 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
 export type Terrain = 'grass' | 'soil' | 'water' | 'rock' | 'rough-stone';
 export type ResourceKind = 'tree' | 'berries' | 'rock' | 'rice';
-export type MaterialKind = 'wood' | 'food' | 'chunk' | 'steel' | 'blocks';
+export type MaterialKind = 'wood' | 'food' | 'chunk' | 'steel' | 'blocks' | 'component';
 export type StructureKind = 'passive-cooler' | 'door' | 'wall' | 'bed' | 'table' | 'stool' | 'campfire' | 'horseshoes' | 'stonecutter';
 export type JobKind = 'build-roof' | 'remove-roof' | 'mine' | 'chop' | 'harvest' | 'cut' | 'sow' | 'deconstruct' | 'uninstall' | 'install' | StructureKind;
 export type WorkType = 'mine' | 'gather' | 'build' | 'haul' | 'grow' | 'cook' | 'craft';
@@ -13,13 +13,13 @@ export type Orientation = 0 | 1 | 2 | 3;
 export type Footprint = 'standard' | 'legacy-single';
 export type PawnState = 'idle' | 'moving' | 'working' | 'sleeping' | 'hungry' | 'eating' | 'recreating';
 export interface Cell { x: number; z: number }
-export interface Tile { ore?: 'steel'; miningDamage?: number; terrain: Terrain; stone?: import('./geology.ts').StoneKind }
+export interface Tile { ore?: 'steel' | 'machinery'; miningDamage?: number; terrain: Terrain; stone?: import('./geology.ts').StoneKind }
 export interface Resource extends Cell { id: number; kind: ResourceKind; amount: number; growth?: number; growthTick?: number; growthThermalFactor?:number; stone?: import('./geology.ts').StoneKind }
 export interface Structure extends Cell { door?:import('./door-rules.ts').DoorState; material?:import('./construction-materials.ts').ConstructionMaterial; bills?: import('./cooking-types.ts').CookingBill[]; fuel?: import('./fuel.ts').FuelState; id: number; kind: StructureKind; orientation: Orientation; footprint: Footprint }
 export interface Stock { wood: number; food: number }
 export type MaterialOwner = ({ type: 'ground' } & Cell) | { type: 'pawn'; pawnId: number } | { type: 'job'; jobId: number };
 export interface MaterialPile { haulRequested?: true; id: number; kind: MaterialKind; item: ItemId; quantity: number; owner: MaterialOwner; rot?: import('./food-preservation.ts').RotState }
-export type StorageFilters = { wood:boolean; food:boolean; chunk?:boolean; steel?:boolean; blocks?:boolean; furniture?:boolean };
+export type StorageFilters = { wood:boolean; food:boolean; chunk?:boolean; steel?:boolean; component?:boolean; blocks?:boolean; furniture?:boolean };
 export interface StockpileCell extends Cell { id: number; filters: StorageFilters; priority: number; capacity: number }
 export interface GrowingZone { id: number; cells: number[]; plant: 'rice'; allowSow: boolean; allowCut: boolean }
 export type HaulDestination = { type: 'fuel'; structureId: number; forced?: boolean; forCooking?: boolean } | { type: 'stockpile'; stockpileId: number } | { type: 'job'; jobId: number; forConstruction?: boolean } | ({ type: 'aside'; growingZoneId?: number; sowCell?: Cell; constructionId?: number; forConstruction?: boolean } & Cell);

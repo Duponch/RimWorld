@@ -1,0 +1,19 @@
+# Composants industriels — vérification du 15 septembre 2026
+
+Périmètre Core, référence éditoriale PC 1.6. Corpus relu : chapitres 5–6/9–11/22, SYS/TEST-016, 048–054 et 061, CAT-006 et CAT-060. Adopter produit, contact et transferts ; adapter génération, cadence et présentation 3D ; différer fabrication avancée, commerce, usure et usages électriques jusqu'à leurs lots. CAT-006 couvre aussi les composants avancés, **non livrés** par V41.
+
+## Sources recoupées
+
+- [Machines compactées](https://rimworldwiki.com/wiki/Compacted_machinery) : 2 000 PV, rendement neutre deux composants, groupes de 3–6 cases. [Composants](https://rimworldwiki.com/wiki/Component) : piles de 50, fabrication à partir de 12 acier avec compétence/recherche/atelier, autres acquisitions et usages. Wiki communautaire consulté de nouveau ; ses deux pages ne sont pas deux sources indépendantes.
+- Définitions historiques Core du 7 septembre 2018, commit `85954e64ea75334f51e33e27a4128809191e430e` : [Buildings_Natural](https://github.com/RimWorld-zh/RimWorld-Core/blob/85954e64ea75334f51e33e27a4128809191e430e/Core/Defs/ThingDefs_Buildings/Buildings_Natural.xml), [Items_Resource_Manufactured](https://github.com/RimWorld-zh/RimWorld-Core/blob/85954e64ea75334f51e33e27a4128809191e430e/Core/Defs/ThingDefs_Items/Items_Resource_Manufactured.xml), [ResourceBase](https://github.com/RimWorld-zh/RimWorld-Core/blob/85954e64ea75334f51e33e27a4128809191e430e/Core/Defs/ThingDefs_Items/Items_Resource_Base.xml). Confirment PV, produit, quantité, taille du gisement, pile, héritage naturel et transport automatique. Ce miroir ancien n'est pas une exportation actuelle certifiée.
+- Miroir décompilé du 20 mai 2026, commit `2d508035082e7cb0c8e29e230d26bda6e546928f` : [JobDriver_Mine](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/RimWorld/JobDriver_Mine.cs) donne 80 dégâts pour roche naturelle et 100 ticks Core entre coups ; [PathGrid](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/Verse.AI/PathGrid.cs) conserve maximum et seuil de non-répétition à 25. Version de l'assembly non certifiée. Le chemin est **Verse.AI**, correction des anciens liens Verse du domaine minier.
+
+## Décisions et incertitudes
+
+Confiance élevée sur 2 000 PV, deux composants, pile 50 et groupes de 3–6 ; moyenne à élevée sur les 25 coups neutres, d'après cadence et héritage recoupés. Les modificateurs de rendement des opérateurs et de difficulté restent absents, comme pour l'acier : ne pas attribuer le rendement futur au seul dernier mineur.
+
+La densité locale reprend un groupe par 500 cases rocheuses, avec un minimum et un budget d'essais borné, flux indépendant après l'acier. La définition historique donne une fréquence comparable à l'acier avec de plus petites veines ; notre algorithme et notre densité ne prétendent pas reproduire le générateur Core. L'emplacement exact et le rendu ocre sont des adaptations assumées.
+
+Coût de pile provisoire **1,4 tick local**, partagé avec l'acier/blocs, maximum avec terrain/objet et répété à chaque entrée. La définition historique ResourceBase donne 15, tandis que les tableaux actuels de [déplacement](https://rimworldwiki.com/wiki/Move_Speed) emploient fréquemment 14 pour les ressources ; ils n'établissent pas explicitement la valeur actuelle du composant. Aucune soustraction de 1 n'est observée dans PathGrid. **Parité numérique non certifiée sur ce point** : relever les Defs 1.6 résolues avant calibration globale des piles. Portage local dix unités également provisoire, pas une simulation de masse.
+
+Le composant de référence a des PV, une détérioration extérieure et une inflammabilité. Notre système d'usure/incendie est absent : le ranger sous toit n'apporte pas encore de protection mesurable. Pas de recette gratuite de composant, de récupération de vaisseau, de commerce, de composant avancé ni de consommateur électrique ajouté dans cette tranche.

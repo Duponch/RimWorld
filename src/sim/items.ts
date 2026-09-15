@@ -9,6 +9,7 @@ export const ITEM_DEFINITIONS = Object.freeze({
   'marble-blocks': Object.freeze({label:'Blocs de marbre',kind:'blocks',stackLimit:75,nutrition:0,maxIngest:0,color:0xc5c4b5}),
   'sandstone-blocks': Object.freeze({label:'Blocs de grès',kind:'blocks',stackLimit:75,nutrition:0,maxIngest:0,color:0xb99d76}),
   'slate-blocks': Object.freeze({label:'Blocs de ardoise',kind:'blocks',stackLimit:75,nutrition:0,maxIngest:0,color:0x737f83}),
+  component: Object.freeze({label:'Composants',kind:'component',stackLimit:50,nutrition:0,maxIngest:0,color:0xbe914c}),
   steel: Object.freeze({label:'Acier',kind:'steel',stackLimit:75,nutrition:0,maxIngest:0,color:0x839399}),
   'granite-chunk': Object.freeze({label:'Fragment de granite',kind:'chunk',stackLimit:1,nutrition:0,maxIngest:0,color:0x99958d}),
   'limestone-chunk': Object.freeze({label:'Fragment de calcaire',kind:'chunk',stackLimit:1,nutrition:0,maxIngest:0,color:0xafad8b}),
@@ -24,7 +25,7 @@ export const ITEM_DEFINITIONS = Object.freeze({
   'legacy-portion': Object.freeze({ label: 'Portion historique', kind: 'food', stackLimit: 75, nutrition: 35, maxIngest: 1, color: 0xba745a }),
 } as const);
 export type ItemId = keyof typeof ITEM_DEFINITIONS;
-export const legacyItem = (kind: MaterialKind): ItemId => kind==='blocks'?missingBlockType(): kind === 'steel' ? 'steel' : kind === 'wood' ? 'wood' : kind === 'chunk' ? 'legacy-chunk' : 'legacy-portion';
+export const legacyItem = (kind: MaterialKind): ItemId => kind==='component'?'component':kind==='blocks'?missingBlockType(): kind === 'steel' ? 'steel' : kind === 'wood' ? 'wood' : kind === 'chunk' ? 'legacy-chunk' : 'legacy-portion';
 export const nutritionOf = (pile: MaterialPile): number => ITEM_DEFINITIONS[pile.item].nutrition * pile.quantity;
 export function availableNutrition(world: World): number {
   return world.piles.reduce((sum, pile) => sum + (pile.owner.type === 'job' ? 0 : nutritionOf(pile)), 0) / 100;

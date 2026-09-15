@@ -480,6 +480,9 @@ export class ColonyRenderer {
             logs.push({ x, z: lz, y, sx: WORLD_SCALE.pileWidth, sy: 0.12, sz: 0.12, color: row % 2 ? 0x9d794d : 0x896841 });
             ends.push({ x: x + WORLD_SCALE.pileWidth / 2 + 0.003, z: lz, y, sx: 0.012, sy: 0.095, sz: 0.095 });
           }
+        } else if(bundle.kind==='component') {
+          food.push({x:bundle.x,z,y:.14,sx:.48,sy:.26,sz:.4,color:ITEM_DEFINITIONS.component.color});
+          food.push({x:bundle.x,z,y:.29,sx:.2,sy:.07,sz:.26,color:0x637d77});
         } else if(bundle.kind==='steel') {
           for(let row=0;row<Math.ceil(bundle.quantity/25);row++)food.push({x:bundle.x,z,y:.07+row*.13,sx:.62,sy:.12,sz:.36,color:row%2?0x6b7a80:ITEM_DEFINITIONS.steel.color});
         } else if(bundle.kind==='blocks') {

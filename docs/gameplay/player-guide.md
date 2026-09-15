@@ -1,5 +1,7 @@
 # Guide joueur
 
+**Composants industriels** : sur une nouvelle carte, repérez les machines compactées de teinte ocre, inspectez-les puis désignez **Miner**. Chaque case demande 25 coups au profil neutre et fournit deux composants au sol. Activez **Composants** dans une réserve pour les faire transporter ; une pile contient au plus 50 unités. Le compteur à gauche inclut aussi les composants portés. Leur consommation par les appareils électriques reste à venir. Vos anciennes cartes sont préservées et ne reçoivent pas de nouveaux gisements au chargement. [Détails et limites](../development/components.md).
+
 **Refroidir une pièce :** Architecte → Température → Refroidisseur passif. Livrez 50 bois ; le bâtiment démarre rempli pour cinq jours. Il rafraîchit au-dessus de 17 °C et consomme du bois même dehors ou quand il fait déjà frais. Transport le recharge automatiquement à 30 % ; son inspection permet de désactiver cet automatisme, et le clic droit d’un colon de le ravitailler manuellement. Vide, il reste en place. Il ne réfrigère pas la nourriture, ne se réinstalle pas et ne restitue aucun bois à la déconstruction.
 
 Le riz et les buissons croissent normalement entre 6 et 42 °C, plus lentement en approchant 0 ou 58 °C, et cessent de croître au-delà. Les nouveaux semis sont suspendus à 0 °C et moins, ou à 58 °C et plus. L’inspection explique ces contraintes et le manque de lumière ; réchauffer une pièce partiellement découverte peut rétablir la croissance. Mortalité au gel et saisons ne sont pas encore simulées.

@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+V41 ajoute `Tile.ore=machinery` (machines compactées, 2 000 PV, groupes 3–6) et `component` (deux unités par case, pile 50, transport/stockage, CAT-006 partiel). [Contrat](../development/components.md). Aucun composant avancé, recette, usure ou appareil électrique livré.
+
 V40 ajoute un objet : `passive-cooler`, bois fixe, 1×1, réservoir 50 bois et consommation 10/jour, seuil 17 °C ; recharge physique, déconstruction sans restitution, non réinstallable. [Contrat](../development/passive-cooling.md). Aucun appareil électrique ni équipement de protection thermique livré.
 
 V39 ajoute croissance thermique et limites des nouveaux semis aux plantes de riz et buissons existants, sans nouvelle espèce. Mortalité et feuilles restent absentes.
@@ -50,7 +52,7 @@ L’[audit du 13 septembre](../research/environment-review.md) confirme que les 
 
 Le [registre d'objets](../../src/sim/items.ts) est utilisé par simulation, piles et interface. [Definitions](../../src/sim/definitions.ts) contient les constructions et commandes actuelles. Une entrée présente ne signifie pas que tous ses comportements sont livrés : par exemple, un repas disponible au départ ne signifie pas que sa recette existe.
 
-Le contenu restant comprend notamment métaux et pierres, composants, textiles et cuirs par espèce, aliments/cultures/viandes/œufs, repas et ingrédients, médicaments/drogues, organes/prothèses, armes/projectiles, vêtements/armures, mobilier, sols/portes/toits, ateliers, énergie, dispositifs défensifs, art, plantes et animaux. Le détail individuel et ses liens aux recettes, recherches, biomes et systèmes seront acquis et implémentés progressivement. Les DLC restent après G5.
+Le contenu restant comprend notamment métaux et pierres, composants avancés et autres filières de composants ordinaires, textiles et cuirs par espèce, aliments/cultures/viandes/œufs, repas et ingrédients, médicaments/drogues, organes/prothèses, armes/projectiles, vêtements/armures, mobilier, sols/portes/toits, ateliers, énergie, dispositifs défensifs, art, plantes et animaux. Le détail individuel et ses liens aux recettes, recherches, biomes et systèmes seront acquis et implémentés progressivement. Les DLC restent après G5.
 
 Chaque ajout doit avoir un identifiant stable, famille CAT, source/version et champs confirmés, règles réellement disponibles, variantes encore absentes, référence de test et représentation. Les noms traduits ne servent jamais d'identifiants de sauvegarde.
 
@@ -110,7 +112,7 @@ Distribution régionale, persistance et apparence sont livrées. V28 ajoute les 
 | `Tile.ore='steel'` | Acier compacté, 1 500 PV, gisements connectés de 30–40 cases ; minage et sol encaissant conservé. | Profil de site local ; aucune injection sur anciennes cartes, compétences/rendements variables, dégâts externes et toits naturels absents. |
 | Objet `steel` | 40 unités par gisement au profil neutre ; piles de 75, portage, rangement filtré, compteur et barres procédurales ; matériau de construction V30. | Atelier et recette constructive mixte livrés en V31 ; fabrication de blocs livrée V32 ; capacité générale de portage provisoire de dix unités. |
 
-[Sources et décisions](../research/steel-reference.md). Argent, or, plasteel, uranium, jade, composants compactés et leurs filières restent absents. Ni ces deux entrées, ni les cinq roches ne constituent un inventaire exhaustif.
+[Sources et décisions](../research/steel-reference.md). Argent, or, plasteel, uranium, jade et leurs filières restent absents ; V41 ajoute les composants industriels extractibles. Ni ces deux entrées, ni les cinq roches ne constituent un inventaire exhaustif.
 
 ## Variantes constructives V30
 

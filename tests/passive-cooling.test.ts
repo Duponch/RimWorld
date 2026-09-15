@@ -72,7 +72,7 @@ test('threshold, volume, continuous idle fuel, outside, concurrent sources and s
   w.structures.pop();s.fuel!.ticks=9001;expect(wantsFuel(w,s)).toBe(false);s.fuel!.ticks=9000;expect(wantsFuel(w,s)).toBe(true);
   const outside=structuredClone(w);outside.structures=outside.structures.filter(o=>o.kind!=='wall');const outdoors=reconcileTemperature(outside);applyThermalSources(outside,outdoors);burnFuel(outside);expect(outside.thermal?.regions??[]).toEqual([]);expect(outside.structures[0]!.fuel!.ticks).toBe(8999);
   const valid=serializeWorld(w);expect(validateWorld(w)).toEqual([]);
-  for(const mutate of [(v:World)=>v.schemaVersion=39 as 40,(v:World)=>{delete v.structures.at(-1)!.material;},(v:World)=>v.structures.at(-1)!.orientation=1,(v:World)=>v.structures.at(-1)!.fuel!.ticks=PASSIVE_COOLER_CAPACITY+1,(v:World)=>v.structures.at(-1)!.bills=[]]) {
+  for(const mutate of [(v:World)=>v.schemaVersion=39 as 41,(v:World)=>{delete v.structures.at(-1)!.material;},(v:World)=>v.structures.at(-1)!.orientation=1,(v:World)=>v.structures.at(-1)!.fuel!.ticks=PASSIVE_COOLER_CAPACITY+1,(v:World)=>v.structures.at(-1)!.bills=[]]) {
     const bad=JSON.parse(valid);mutate(bad);expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();
   }
   const old=passiveCoolingFixture(),legacy=JSON.parse(serializeWorld(old));legacy.schemaVersion=39;expect(deserializeWorld(JSON.stringify(legacy))).toEqual(old);

@@ -1,5 +1,7 @@
 # Stratégie de validation
 
+V41 : deux scénarios composants, familles minage/logistique/persistance et pilote cœur regroupés ; parcours minier navigateur enrichi jusqu’au portage/rangement des composants. Audit natif `MINING_COMPONENTS=1` à 3/100 mineurs, quantités finales et programmes/buffers réels contrôlés.
+
 V40 : deux scénarios `passive-cooling.test.ts` enrichissent combustible/température/reprise ; `integration/temperature.spec.ts` joue construction, inspection, recharge manuelle et comptabilise les pipelines natifs. `passive-cooling-bench.ts` mesure 3/30/100 transporteurs, sans navigateur concurrent. Le pilote propose un refroidisseur seulement dans une pièce chaude, et son bilan inclut le combustible de chaque appareil. Les températures initiales synthétiques ne valent pas météo livrée.
 
 [Retour d’expérience des défauts visibles en jeu](playability-validation.md) : vérifier des critères utilisateur indépendants du code, séparer état final et chronologie affichée. `npm run test:presentation` impose le parcours naturel avec assertions et fait partie de `npm run check`. Il se lance aux changements d’horloge/bridge/présentation ou des phases de travail, pas après chaque retouche.

@@ -1,9 +1,13 @@
 import type { Tile, World } from './types.ts';
 
 /** Core resource rock; it inherits natural-rock pick damage (80), not 40. */
-export const STEEL_ORE = Object.freeze({ hp: 1500, yield: 40, color: 0x725c53 });
+export const ORE_DEFINITIONS = Object.freeze({
+  steel: Object.freeze({hp:1500,yield:40,item:'steel',label:'Acier compacté',color:0x725c53}),
+  machinery: Object.freeze({hp:2000,yield:2,item:'component',label:'Machines compactées',color:0xb38d53}),
+} as const);
+export const STEEL_ORE = ORE_DEFINITIONS.steel;
 export function validOre(tile: {terrain:unknown;ore?:unknown}, version:number):boolean {
-  return tile.ore===undefined || version>=29 && tile.terrain==='rock' && tile.ore==='steel';
+  return tile.ore===undefined || tile.terrain==='rock' && (version>=29 && tile.ore==='steel' || version>=41 && tile.ore==='machinery');
 }
 
 function sample(seed:number,cell:number):number {
@@ -11,18 +15,21 @@ function sample(seed:number,cell:number):number {
   n=Math.imul(n^(n>>>16),0x7feb352d);n=Math.imul(n^(n>>>15),0x846ca68b);
   return ((n^(n>>>16))>>>0)/4294967296;
 }
-/** Generation-only stream: connected 30–40-cell deposits in existing massifs.
+/** Generation-only streams: connected steel (30–40) and machinery (3–6) deposits.
  * Exposed seeds, compact growth, one-cell separation; no topology/RNG changes.
  * Density is a local valley preset, not a recreation of Core's world generator. */
-export function generateSteel(world:Pick<World,'tiles'|'width'|'height'|'seed'>):void {
-  const {tiles,width,height,seed}=world;
+type GenerationWorld=Pick<World,'tiles'|'width'|'height'|'seed'>;
+export const generateSteel=(world:GenerationWorld):void=>generateDeposit(world,'steel',30,40,0);
+export const generateMachinery=(world:GenerationWorld):void=>generateDeposit(world,'machinery',3,6,0x55c741);
+function generateDeposit(world:GenerationWorld,ore:NonNullable<Tile['ore']>,min:number,max:number,salt:number):void {
+  const {tiles,width,height}=world,seed=world.seed^salt;
   const neighbors=(i:number):number[]=>{
     const x=i%width,z=Math.floor(i/width),out:number[]=[];
     if(x)out.push(i-1);if(x+1<width)out.push(i+1);if(z)out.push(i-width);if(z+1<height)out.push(i+width);
     return out;
   };
   const rocks=tiles.reduce((n,t)=>n+(t.terrain==='rock'?1:0),0);
-  if(rocks<30)return;
+  if(rocks<min)return;
   const candidates=tiles.flatMap((t,i)=>t.terrain==='rock'&&neighbors(i).some(j=>tiles[j]!.terrain!=='rock'&&tiles[j]!.terrain!=='water')?[i]:[])
     .sort((a,b)=>sample(seed,a)-sample(seed,b)||a-b);
   const budget=Math.max(1,Math.floor(rocks/500));
@@ -31,7 +38,7 @@ export function generateSteel(world:Pick<World,'tiles'|'width'|'height'|'seed'>)
     if(deposits>=budget||attempts++>=budget*24)break;
     const eligible=(i:number)=>tiles[i]!.terrain==='rock'&&!tiles[i]!.ore&&!neighbors(i).some(j=>tiles[j]!.ore);
     if(!eligible(origin))continue;
-    const target=30+Math.floor(sample(seed^0x3391,origin)*11),chosen:number[]=[],seen=new Set<number>([origin]),frontier=[origin];
+    const target=min+Math.floor(sample(seed^0x3391,origin)*(max-min+1)),chosen:number[]=[],seen=new Set<number>([origin]),frontier=[origin];
     const ox=origin%width,oz=Math.floor(origin/width);
     const score=(i:number)=>Math.hypot(i%width-ox,Math.floor(i/width)-oz)+sample(seed^0x1271,i)*1.7;
     while(frontier.length&&chosen.length<target) {
@@ -39,8 +46,8 @@ export function generateSteel(world:Pick<World,'tiles'|'width'|'height'|'seed'>)
       const i=frontier.splice(best,1)[0]!;chosen.push(i);
       for(const j of neighbors(i))if(!seen.has(j)&&eligible(j)){seen.add(j);frontier.push(j);}
     }
-    if(chosen.length<30)continue;
-    for(const i of chosen)tiles[i]={...tiles[i]!,ore:'steel'};
+    if(chosen.length<min)continue;
+    for(const i of chosen)tiles[i]={...tiles[i]!,ore};
     deposits++;
   }
 }

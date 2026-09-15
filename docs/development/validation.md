@@ -1,35 +1,36 @@
-# Validation courante — V40
+# Validation courante — V41
 
-15 septembre 2026. Refroidisseur passif, combustible partagé, contrôle du premier geste GPU. [Contrat](passive-cooling.md), [recherche](../research/passive-cooling-reference.md). Les preuves V39 sont conservées dans [l’archive plantes/présentation](../history/validation-v39-plants-playability.md).
+15 septembre 2026. Machines compactées et composants industriels, [contrat](components.md), [recherche et incertitudes](../research/components-reference.md). Les preuves V40 sont conservées dans [l’archive refroidissement passif](../history/validation-v40-passive-cooling.md).
 
-## Simulation et continuité
+## Simulation, commandes et continuation
 
-Le lot regroupé de migrations, commandes et boucles affectées a validé **76 tests** ; le pilote a détecté l’attente de catalogue non actualisée (la nouvelle clé `passive-cooler: 0` manquait). Son bilan métier de cinq jours sur la première graine était cohérent. L’attente a été complétée, sans retirer l’exigence de ne pas construire un appareil inutile dans le camp ouvert. Le rejeu final des deux scénarios thermiques et du pilote passe : **3 tests, 137,43 s**, dont cinq à huit jours sur trois cartes naturelles. Les exigences de stocks, repas, repos, minage, taille, toiture et reprise restent satisfaites.
+**128 tests réussis dans 42 fichiers** en 61,15 s, hors pilote long ; **pilote de cinq à huit jours réussi sur trois cartes naturelles** dans le lot regroupé précédent (156,96 s pour ce lot, 34 tests réussis et une fixture historique à corriger). Trois camps construisent leur atelier, extraient puis rangent **six composants**, maintiennent repas/repos/loisirs, matière et reprise exacte. Aucun composant ajouté par le pilote.
 
-Deux scénarios thermiques couvrent les 50 bois livrés, plan/cadre/finition, réservoir initial, cinq jours de consommation, seuil/volume, extérieur, absence de réfrigération alimentaire, extinction, réapprovisionnement automatique et forcé, interruption conservatrice, reprise de chantier/service et déconstruction sans restitution. Anciennes versions, matériau, orientation, réservoir et factures invalides sont refusés. Le pilote partage les commandes et le bilan de chaque appareil. Les deux scénarios de bridge/snapshots passent également en 1,98 s.
+Les deux scénarios composants couvrent gisements 3–6, acier et topologie conservés, flux/IDs, migration V40 stricte, état invalide, 25 coups naturels, annulation sans réparation, dernier dépôt différé par saturation d’IDs, delta de minerai/dégât/sol, transport à deux colons, limite 49→50 puis seconde pile et reprise exacte en portage. Les anciennes attentes de version ont été actualisées. Une fixture V37 fabriquée depuis le générateur actuel contenait des machines V41 ; elle est revenue à un terrain légal de sa version, sans relâcher le validateur. Le contrôle initial de débordement a également été corrigé pour utiliser le dépôt sur une cellule, car `addGroundMaterial` est volontairement un répartiteur sur plusieurs cellules.
 
-Compilation TypeScript/Vite réussie : 200 modules, worker **233,29 kB**, bundle principal **1 079,86 kB / gzip 303,50 kB**. L’avertissement existant de taille demeure. Un lancement Vite restreint a échoué sur le lancement de processus Windows (`EPERM`) ; le lancement autorisé a réussi, sans changement de code pour contourner une erreur de compilation.
+## Parcours visible
 
-## Partie visible et GPU
+**Chromium natif : 1 parcours réussi, 27,2 s**. Minage/reprise du granite, transport désigné du fragment, acier puis machines : inspection 2 000 PV, travail visible après le premier coup sans produit anticipé, retrait final, compteur deux composants, objet porté, dépôt dans la réserve et rechargement exact. Captures `artifacts/components-deposit-ui.png`, `components-carried-ui.png`, `components-stored-ui.png` examinées. Aucune erreur de page/GPU sur ce parcours.
 
-Chromium natif WebGPU, AMD RDNA-1 / Ryzen 5 3600, 1440×1000. [Rapport thermique](../../artifacts/passive-cooler-ui-v40.json) : construction et livraison par UI dans une pièce initialement chaude, température affichée à 17 °C, âge du riz identique à une continuation sans refroidisseur, sauvegarde/rechargement exact. Une seconde fixture démarre vide pour tester l’ordre manuel, le travail de service visible et le retour à un réservoir alimenté ; aucune injection ne remplace les actions de ravitaillement. Captures inspectées ; compteur FPS visible. Le parcours final passe en **14,9 s** (16,4 s avec le runner), avec une rotation préalable puis un aperçu valide du bâtiment fixe.
+Une première tentative avait échoué à l’égalité du chargement pendant une modification du module surveillé par Vite. Le diagnostic isolé a trouvé des états exactement égaux ; le parcours complet a ensuite réussi avec les fichiers applicatifs stabilisés. Le rechargement automatique est une cause probable, non une preuve d’un défaut de sauvegarde corrigé. Ne pas modifier les modules applicatifs pendant un parcours navigateur mesuré.
 
-Le premier contrôle a trouvé **deux pipelines synchrones** de curseur double face au tick initial, avant construction. Ils sont maintenant préparés au chargement. **Zéro pipeline nouveau** pendant la construction et zéro pendant la recharge dans le parcours final. Seize parties du bâtiment partagent le lot instancié existant ; aucune lampe ni matériau supplémentaire. Les percentiles du rapport UI comprennent les chargements explicites et ne constituent pas un audit de simulation à 100 colons.
+## Audit de rendu en charge
 
-[Contrôle temporel naturel](../../artifacts/harvest-sync-v40-validation.json) : deux zones de 45 secondes, trois colons sur 250², **44 changements de vitesse** ; délai **9,4–25,5 ms**, zéro saut, occupation de roche affichée, snapshot affamé après amorçage ou retrait anticipé détecté. Frames p95/p99 : **8,3/8,4 ms** ; maximum **20,9 ms** au minage et **29,2 ms** à l’abattage. 31 retraits miniers et 39 arbres observés. Ce contrôle teste les poses et conséquences affichées, pas seulement les états finaux.
+Rapport `artifacts/components-render-v41.json`, 15 septembre à 20:56 UTC ; Ryzen 5 3600, GPU AMD RDNA-1, Chromium natif/WebGPU, 1 440×1 000, carte naturelle 250² avec chantier dégagé. Même protocole minier qu’avant : quatre cases et un arbre par colon, vitesse 6×, 90 images de chauffe. Fin de mesure après les quatre extractions par mineur, pas après toute la coupe ni un stockage collectif. Données exactes d’adoption séparées de la réception des snapshots ; aucune sérialisation de tout le monde pendant les images mesurées.
 
-## Audit CPU avec ravitaillement
-
-[Rapport brut](../../artifacts/passive-cooling-cpu-v40.json), [script](../../scripts/passive-cooling-bench.ts). Node 24.11.1, Ryzen 5 3600, sans autre test lourd concurrent. Carte synthétique 250², autant de pièces couvertes de 16 cellules que de transporteurs ; appareils initialement vides, stocks physiques de bois, 600 ticks de prélèvement/trajet/service/besoins/température. Un watchdog interrompt chaque cas après 45 secondes. Aucun rendu ni forêt dans cette mesure.
-
-| Transporteurs actifs au pic | Tick p95 | Tick maximum | Clonage p95 | Sources seules p95 |
+| Charge | Produit final | Image p95 / p99 / max | Application de scène p95 / max | Réception snapshot p95 / max |
 |---|---:|---:|---:|---:|
-| 3 | 0,811 ms | 27,008 ms | 0,727 ms | 0,0027 ms |
-| 30 | 2,588 ms | 43,348 ms | 2,115 ms | 0,0092 ms |
-| 100 | 26,592 ms | 43,232 ms | 6,116 ms | 0,0324 ms |
+| 3 mineurs, 12 cases | 24 composants | 8,4 / 12,4 / 20,9 ms | 6,7 / 15,9 ms | 0,6 / 3,1 ms |
+| 100 mineurs, 400 cases | 800 composants | 16,7 / 20,9 / 37,5 ms | 13,8 / 22,7 ms | 4,1 / 8,1 ms |
 
-Tous les appareils sont ravitaillés, les pièces atteignent 17 °C, le bois reste conservé et la reprise est exacte. Les sources seules sont mesurées séparément sur une copie : ce coût marginal ne représente pas l’ensemble des échanges/planners. Le premier checkpoint peut atteindre **63,5 ms**. Le coût complet à 100 travailleurs dépasse le budget d’une simulation à 60 ticks/s ; ne pas présenter cet essai comme une garantie de vitesse 6×. Les coûts des décisions/navigation et de communication restent à optimiser avant généralisation des grandes colonies.
+Aux fenêtres de retrait de roche, p95/p99 atteignent **25 / 33,3 ms** à cent mineurs. **Zéro programme GPU créé pendant la mesure**, identités de géométrie/attributs/indices de roche et du sol conservées. Un lot de piles passe de 256 à 512 places à cent mineurs, sans compilation ; pas de croissance observée à trois. Appels de rendu p95 : 161 / 176 selon charge. Préparation initiale environ 2,1–2,2 s, remplacement 0,29–0,35 s, exclus du budget d’image ordinaire.
 
-La partie UI de trois jours n’est pas rejouée dans ce lot : son inventaire attendu est entretenu, le pilote cœur complet et le nouveau parcours UI ciblé apportent des preuves distinctes. Santé/confort thermiques, réseau électrique, météo, saisons et appareils réfrigérants restent non exercés car non implémentés.
+Ce résultat n’est ni une garantie de 60 FPS permanents à cent colons ni une comparaison A/B prouvant un surcoût nul. Le coût d’application de scène et les pointes groupées restent à surveiller dans les futurs lots. La chaîne de transport massive n’est pas mesurée par cette fixture ; la conservation et la réservation sont couvertes séparément.
 
-Contrôle documentaire final : **147 documents, 1 521 liens locaux**, références originales inchangées octet pour octet. `git diff --check` passe.
+Reproduction PowerShell : définir `MINING_COMPONENTS=1`, `MINING_COUNTS=3,100`, puis `node scripts/mining-render-bench.mjs artifacts/components-render-v41.json`, serveur local actif, sans autre test lourd ni modification des modules.
+
+## Livraison et limites
+
+Build TypeScript/Vite réussi ; 200 modules, worker 234,27 kB, jeu 1 080,65 kB (303,65 kB gzip). Avertissement de bundle >500 kB déjà connu. Index/liens et intégrité des trois originaux contrôlés. Les preuves ne prétendent pas couvrir tous les cas du jeu ni tous les défauts visuels ; le long parcours UI de trois jours n’a pas été répété pour ce prolongement d’une chaîne minière existante, couverte par pilote cœur et UI minière.
+
+Fidélité : forte confiance sur produit/PV/piles, génération adaptée, passage 1,4 et portage dix unités encore provisoires. Pas de composants avancés, fabrication, commerce, usure, appareil électrique ou garantie de conformité totale. Voir [l’inventaire](../gameplay/implementation-status.md).

@@ -1,5 +1,7 @@
 # Matrice des systèmes et critères de réalisation
 
+V41 : CAT-006 partiel et SYS-061 enrichi par les [composants industriels](../development/components.md), extraits/rangés dans la chaîne commune ; autres acquisitions et usages électriques ouverts.
+
 V40 : S10/S12 intègrent le [refroidisseur passif](../development/passive-cooling.md), sa construction et son combustible. Réfrigération électrique, réseau et santé/confort thermiques restent ouverts ; G2 n’est pas déclaré complet.
 
 V39 : températures de croissance et de semis intégrées à S09, avec conservation du passé et inspection ; maladies/mortalité restent ouvertes. [Contrat](../development/plant-temperature.md).
@@ -137,7 +139,7 @@ Une anomalie doit conserver graine, version, commandes, état pertinent et diff�
 
 S06/S07 : table et tabouret construits après livraison, repas avec transport à une place réservée. S10/S14 sont partiellement anticipés : confort des meubles normaux et souvenir sans table, sans pièces ni humeur complète. S03 : compteur FPS permanent. La [recherche](../research/dining-reference.md), le [contrat](../development/dining.md) et les [preuves](../development/validation.md) précisent la portée ; G1 et G0 restent ouverts.
 
-V27 : [régions et identités géologiques](../development/geology.md) livrées dans la génération locale ; SYS-061 minage, CAT-059 sols et le reste de CAT-060 demeurent partiels. V28 ajoute minage physique, sol brut et fragments transportables ; V29 ajoute acier compacté et piles d’acier ; toits, autres minerais et taille restent ouverts. Le calendrier reste ROADMAP.
+V27 : [régions et identités géologiques](../development/geology.md) livrées dans la génération locale ; SYS-061 minage, CAT-059 sols et le reste de CAT-060 demeurent partiels. V28 ajoute minage physique, sol brut et fragments transportables ; V29 ajoute acier compacté et piles d’acier ; V32 ajoute la taille, V35 les toits construits et V41 les composants industriels ; toits naturels et autres minerais restent ouverts. Le calendrier reste ROADMAP.
 
 S10, sous V34 : reconnaissance des enceintes, seuils et inspection livrées ; fusion/division, coins, eau et reprise contrôlés. Toits construits V35, premiers rôles V36 et thermique V38 sont ajoutés dans leurs contrats ; confort et autres effets de pièce restent ouverts ; ce lot ne satisfait pas encore l’acceptation G2. [Contrat](../development/rooms.md).
 

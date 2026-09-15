@@ -1,4 +1,5 @@
-import { STEEL_ORE, minedFloor } from './ore.ts';
+import { ITEM_DEFINITIONS } from './items.ts';
+import { ORE_DEFINITIONS, minedFloor } from './ore.ts';
 import { PICK_DAMAGE, pickDuration, CHUNK_CHANCE, rockMaxHP, chunkItem } from './mining-rules.ts';
 import { addMaterial } from './materials.ts';
 import { groundCapacity } from './ground-placement.ts';
@@ -23,8 +24,9 @@ export function advanceMining(world:World,pawn:Pawn,job:Job,workRate:()=>number=
   const damage=(tile.miningDamage??0)+PICK_DAMAGE;
   if(damage<rockMaxHP(tile)){world.tiles[i]={...tile,miningDamage:damage};return nextStroke();}
   let rng=world.rng;rng^=rng<<13;rng^=rng>>>17;rng^=rng<<5;rng>>>=0;
-  const quantity=tile.ore ? STEEL_ORE.yield : rng/0x100000000<CHUNK_CHANCE?1:0;
-  const item=tile.ore?'steel':chunkItem(tile),kind=tile.ore?'steel':'chunk';
+  const ore=tile.ore?ORE_DEFINITIONS[tile.ore]:undefined;
+  const quantity=ore ? ore.yield : rng/0x100000000<CHUNK_CHANCE?1:0;
+  const item=ore?.item??chunkItem(tile),kind=ITEM_DEFINITIONS[item].kind;
   // A solid cell cannot contain an item. Validate the future floor in an isolated
   // one-cell view, retaining all live destination/service reservations.
   const floor=minedFloor(tile);

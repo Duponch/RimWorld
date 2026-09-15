@@ -1,8 +1,10 @@
 # Acier compacté — contrat V29
 
+V41 ajoute les [composants industriels](components.md) au registre commun des gisements. L’acier conserve son flux, ses recettes et son rendement.
+
 Recherche, provenance et limites : [vérification Core](../research/steel-reference.md). Dépend de [minage](mining.md), [géologie](geology.md), [logistique](material-logistics.md) et [mouvement](spatial-motion-storage.md).
 
-`Tile.ore?: 'steel'` identifie un gisement plein, séparément de `Tile.stone`, sa roche encaissante. Champ autorisé uniquement sur `terrain='rock'`, à partir de V29. `ore.ts` contient définition et génération ; elle s’exécute après le relief et la géologie, ne change ni accessibilité, ni ressources végétales, ni IDs, ni PRNG de travail. Les groupes connectés sont séparés d’au moins une case cardinale ; tailles 30–40, densité du site provisoire. Un petit massif peut manquer d’acier, sans création artificielle d’un nouveau massif.
+`Tile.ore='steel'` identifie un gisement plein, séparément de `Tile.stone`, sa roche encaissante. Champ autorisé uniquement sur `terrain='rock'`, à partir de V29. `ore.ts` contient définition et génération ; elle s’exécute après le relief et la géologie, ne change ni accessibilité, ni ressources végétales, ni IDs, ni PRNG de travail. Les groupes connectés sont séparés d’au moins une case cardinale ; tailles 30–40, densité du site provisoire. Un petit massif peut manquer d’acier, sans création artificielle d’un nouveau massif.
 
 Le job de minage et ses réservations restent communs. PV 1 500, coup 80, cadence neutre dix ticks locaux, donc 190 ticks de travail effectif sans trajet. Dégâts conservés sur la case, préparation du coup sur le job. L’extraction prévalide un dépôt de **40 acier** avant suppression du gisement et engagement du tirage. Le sol brut conserve `stone`, perd `ore` et `miningDamage`. Aucun fragment de pierre n’est généré en plus. Les futurs rendements variables ou dégâts externes exigent une évolution du suivi des dégâts avant livraison.
 

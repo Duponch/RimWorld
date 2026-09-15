@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+V41 : [composants industriels](development/components.md), [vérification RimWorld](research/components-reference.md).
+
 La référence est RimWorld de base, transposé en 3D. Une description de RimWorld, une intention du projet et une fonctionnalité livrée sont trois informations distinctes. Ce dossier les sépare ; les extensions viennent après G5.
 
 ## Trouver la bonne information

@@ -53,6 +53,7 @@ test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp const
     expect(rationAssignments,context).toBeGreaterThanOrEqual(3);
     expect(world.tiles.filter(t=>t.terrain==='rough-stone').length,context).toBeGreaterThanOrEqual(6);
     expect(colonySummary(world).mining.blocks,context).toBe(35);expect(colonySummary(world).mining.blocksStored,context).toBe(35);
+    expect(colonySummary(world).mining.components,context).toBe(6);expect(colonySummary(world).mining.componentsStored,context).toBe(6);
     expect(colonySummary(world).mining.steel,context).toBe(50);expect(colonySummary(world).mining.steelStored,context).toBe(50);expect(colonySummary(world).mining.steelInBuildings,context).toBe(30);expect(colonySummary(world).structures.stonecutter,context).toBe(1);
     expect(colonySummary(world).mining.stored,context).toBe(colonySummary(world).mining.chunks);
     expect(world.deconstructed.count,context).toBe(1);
