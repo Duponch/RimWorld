@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+Santé en préparation : [socle anatomique testé, encore non activé](development/body.md), [vérification des parties et capacités](research/body-reference.md).
+
 V43 : [première compétence et apprentissage](development/skills.md), [recherche et réorientation des priorités](research/skills-reference.md).
 
 V42 : [générateur à bois, raccordement et lampe](development/power.md), [vérification RimWorld](research/power-reference.md).

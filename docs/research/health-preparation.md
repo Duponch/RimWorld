@@ -1,10 +1,10 @@
-# Santé : préparation, non implémentée
+# Santé : préparation de l’activation et des blessures
 
-Lecture du 16 septembre 2026, pendant la validation UI de V43. Ce document prépare la prochaine entrée de la [ROADMAP](../ROADMAP.md) ; il ne constitue ni contrat livré ni preuve de tests.
+Lecture du 16 septembre 2026, pendant la validation UI de V43. Ce document prépare la prochaine entrée de la [ROADMAP](../ROADMAP.md) ; le [socle anatomique](../development/body.md) est maintenant codé/testé, mais l’activation dans la partie reste à faire. Cette note conserve les risques à traiter avant blessures et soins.
 
 ## Corpus et intention
 
-Chapitre 15 : corps hiérarchique, organes, capacités dérivées, douleur/saignement, traitements physiques, état à terre distinct de mort. Chapitre 13 : race/corps différents du profil et des compétences. SYS-081..097 doit être redécoupé au domaine exact lors du prochain lot, plutôt que marqué complet globalement.
+Chapitre 15 : corps hiérarchique, organes, capacités dérivées, douleur/saignement, traitements physiques, état à terre distinct de mort. Chapitre 13 : race/corps différents du profil et des compétences. IDs relus : SYS/TEST-089 anatomie, 090 blessures, 091 capacités, 092 maladies, 093 immunité, 094 traitement, 095 chirurgie, 096 incapacité, 097 cadavres. Aucun ensemble n’est marqué complet.
 
 Le prochain contrat doit préserver l'identité, les blessures localisées et les conséquences sur travail/marche. Soins et équipement suivront sans remplacement par une jauge globale générique. Définir les transitions de tâches, réservations et cargaisons avant de rendre un acteur indisponible. Une blessure en fixture peut vérifier une frontière ; elle ne livre pas implicitement un incident, un combat ou un soin jouable.
 

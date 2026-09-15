@@ -150,3 +150,5 @@ S10, sous V34 : reconnaissance des enceintes, seuils et inspection livrées ; fu
 V37 étend la lumière aux travaux et déplacements des domaines S02/S04/S06/S09/S10 ; [contrat](../development/light-work.md). G0/G1 restent partiels et G2 en cours. Ni catalogue, compétences, psychologie ni thermique livrés par cette extension.
 
 V43 commence S13/S14 via Construction et son apprentissage individuel ; [contrat](../development/skills.md). Les fondations humaines passent avant l’approfondissement électrique, conformément à la ROADMAP. Aucun jalon ni domaine de personnalité n’est déclaré complet.
+
+Socle santé sous V43 : SYS/TEST-089..091 et 096 alimentent l’arbre et les calculs de capacités [codés/testés isolément](../development/body.md). Aucun changement de statut jouable de la santé : producteurs, persistance, transitions et soins restent à livrer.

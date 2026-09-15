@@ -1,5 +1,7 @@
 # Adoption du référentiel utilisateur
 
+Socle anatomique sous V43 — chapitre 15, SYS/TEST-089..091 et 096 : adopter arbre et capacités distinctes ; adapter IDs/évaluation immuable ; différer activation, blessures, interruptions et soins. [Recherche recoupée](body-reference.md), [statut technique précis](../development/body.md).
+
 V43 — chapitre 13, SYS-085 / TEST-085 : [compétences vérifiées](skills-reference.md), [contrat](../development/skills.md). Adopter niveau/XP/passion/capacité distincts ; adapter horloge et profils initiaux, Construction premier consommateur ; différer onze autres compétences, biographies, traits, qualité/échecs et santé. La priorité G3 commence maintenant, sans attendre la fin de l’habitat G2.
 
 V42 — chap. 22 et scène E/32, SYS/TEST-126..128, CAT-047 et CAT-006 : adopter ressources physiques, puissance, connexion invalidée et motifs distincts ; adapter temps/PRNG/rendu ; différer conduits, commandes d’interrupteur et stockage. [Recherche fraîche et certitude](power-reference.md).

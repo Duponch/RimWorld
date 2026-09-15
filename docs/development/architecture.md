@@ -227,3 +227,7 @@ Pendant une sauvegarde manuelle, les commandes de sauvegarde et de chargement so
 ### Lumière des actions V37
 
 `light-environment.ts` sépare lecture lumineuse et rôles de `work-environment.ts`. La simulation injecte un contexte partagé aux départs d'arêtes et aux actions, invalidé après mutation. `work-progress.ts` et `work-progress-save.ts` possèdent unités fractionnaires et migration ; ni rendu ni navigation ne deviennent propriétaires de l'avancement. [Contrat](light-work.md).
+
+## Anatomie : frontière préalable à la santé
+
+`body-definition.ts` garde le corps naturel et ses index immuables, distincts du squelette GPU. `body-capacities.ts` évalue une projection de pertes/absences/douleur, avec résultat immuable et voie saine partagée. Le modèle ne possède pas `World` et ne déclenche ni mort ni interruption. [Contrat et activation restante](body.md). Aucun champ de sauvegarde n’est ajouté pour ce socle seul.

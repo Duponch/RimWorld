@@ -139,3 +139,7 @@ V33 ajoute **25 variantes constructives** des familles présentes, aucune nouvel
 ## Porte manuelle V34
 
 Nouvelle famille `door`, sept variantes : bois, acier, granite, calcaire, marbre, grès, ardoise. Une case, 25 unités, travail de base 850 Core avant matériau ; restitution 12/13, non réinstallable. Trois cadences d'ouverture (bois/acier/pierre), maintien/interdiction, coexistence des objets. Autodoors, résistance et isolation fonctionnelle encore absentes. [Sources](../research/doors-reference.md), [contrat](../development/doors.md).
+
+## Corps humain : socle encore non actif
+
+[Définition anatomique](../../src/sim/body-definition.ts) : 64 entrées dont un emplacement utilitaire conceptuel, parties symétriques, organes et doigts/orteils. Il ne s’agit ni de 64 objets transportables ni d’un inventaire médical déjà jouable. [Capacités et limites](../development/body.md). Autres races/corps, implants, pathologies, blessures persistantes et équipement restent absents du contenu actif.
