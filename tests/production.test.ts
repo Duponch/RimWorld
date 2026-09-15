@@ -1,3 +1,4 @@
+import { withoutPawnSkills, withMigratedSkills } from './scenarios/legacy-skills';
 import { withoutV37LightWork } from './scenarios/legacy-light-work';
 import { withoutPostV10Fields } from './scenarios/legacy-save';
 import { expect, test } from 'vitest';
@@ -26,12 +27,12 @@ function until(w:World,predicate:()=>boolean,max=1000):void {
 
 test('feu construit, deux jours de combustion, ravitaillement concurrent et interruption conservent le bois',()=>{
   const w=camp(),initial=woodAccount(w);
-  const v9=JSON.parse(serializeWorld(w));v9.schemaVersion=9;for(const a of v9.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete v9.deconstructed;delete v9.packed;withoutPostV10Fields(v9);
+  const v9=JSON.parse(serializeWorld(w));(v9.schemaVersion=9,withoutPawnSkills(v9));for(const a of v9.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete v9.deconstructed;delete v9.packed;withoutPostV10Fields(v9);
   for(const pawn of v9.pawns){delete pawn.cooking;delete pawn.priorities.cook;}
   const migrated=deserializeWorld(JSON.stringify(v9));
   expect(migrated.pawns.every(p=>p.cooking===null&&p.priorities.cook===2)).toBe(true);
   migrated.pawns.forEach(p=>p.priorities.cook=0);
-  const historicalExpected=structuredClone(w);historicalExpected.restRules='legacy';historicalExpected.pawns.forEach(p=>{p.schedule.fill('anything');p.recreation=initialRecreation();});expect(migrated).toEqual(historicalExpected);
+  const historicalExpected=structuredClone(w);historicalExpected.restRules='legacy';historicalExpected.pawns.forEach(p=>{p.schedule.fill('anything');p.recreation=initialRecreation();});expect(migrated).toEqual(withMigratedSkills(historicalExpected));
   expect(applyCommand(w,{type:'designate',kind:'campfire',x:8,z:8}).ok).toBe(true);
   until(w,()=>w.structures.some(s=>s.kind==='campfire'));
   const fire=w.structures.find(s=>s.kind==='campfire')!;
@@ -51,7 +52,7 @@ test('feu construit, deux jours de combustion, ravitaillement concurrent et inte
   until(w,()=>fire.fuel!.ticks>5000);expect(woodAccount(w)).toBe(initial);
   const bad=JSON.parse(serializeWorld(w));bad.structures[0].fuel.ticks=CAMPFIRE_CAPACITY+1;
   expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();
-  const historical=JSON.parse(serializeWorld(w));historical.schemaVersion=9;for(const a of historical.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete historical.deconstructed;delete historical.packed;
+  const historical=JSON.parse(serializeWorld(w));(historical.schemaVersion=9,withoutPawnSkills(historical));for(const a of historical.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete historical.deconstructed;delete historical.packed;
   expect(()=>deserializeWorld(JSON.stringify(historical))).toThrow();
   const before=serializeWorld(w);
   expect(applyCommand(w,{type:'refuel-policy',structureId:-1,enabled:false}).ok).toBe(false);
@@ -93,7 +94,7 @@ test('cuisine physique : mélange, interruption, sauvegarde du travail, deux rep
   until(w,()=>pawn.cooking?.phase==='work'&&pawn.cooking.progress>=84000);
   expect(pawn).toMatchObject({x:8,z:7,state:'working'});
   expect(queryPawnStatus(w,pawn).reason).toContain('28 %');
-  const oldWork=JSON.parse(serializeWorld(w));oldWork.schemaVersion=35;withoutV37LightWork(oldWork);oldWork.pawns[0].cooking.progress=17;
+  const oldWork=JSON.parse(serializeWorld(w));(oldWork.schemaVersion=35,withoutPawnSkills(oldWork));withoutV37LightWork(oldWork);oldWork.pawns[0].cooking.progress=17;
   expect(deserializeWorld(JSON.stringify(oldWork)).pawns[0]!.cooking!.progress).toBe(85000);
   oldWork.pawns[0].cooking.progress=61;expect(()=>deserializeWorld(JSON.stringify(oldWork))).toThrow(/version 35/);
   expect(queryCookingBillStatus(w,fire,bill).code).toBe('cooking');

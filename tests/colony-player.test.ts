@@ -60,7 +60,17 @@ test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp const
     expect(colonySummary(world).mining.stored,context).toBe(colonySummary(world).mining.chunks);
     expect(world.deconstructed.count,context).toBe(1);
     expect(world.structures.find(s=>s.kind==='horseshoes')?.x,context).toBe(Math.floor(world.width/2)+4);expect(world.packed,context).toEqual([]);
-    expect(world.jobs.filter(j=>j.growingZoneId===undefined),context).toEqual([]);
+    const maintenance=world.jobs.filter(j=>j.growingZoneId===undefined);
+    expect(maintenance.filter(j=>j.kind!=='chop'),context).toEqual([]);
+    // Midnight is not a drained queue: prove the specific remaining fuel jobs
+    // finish after normal sleep, without adding orders or changing needs.
+    if(maintenance.length) {
+      const followup=deserializeWorld(serializeWorld(world)),ids=new Set(maintenance.map(j=>j.id));
+      for(let t=0;t<6000&&followup.jobs.some(j=>ids.has(j.id));t++)stepWorld(followup);
+      expect(followup.jobs.filter(j=>ids.has(j.id)),context).toEqual([]);
+      expect(validateWorld(followup),context).toEqual([]);
+    }
+    expect(world.pawns.some(p=>p.skills.construction.xp>1000000),context).toBe(true);
     expect(world.growingZones,context).toHaveLength(1); expect(world.resources.filter(r=>r.kind==='rice').length,context).toBeGreaterThan(5); expect(world.stock.food,context).toBeGreaterThan(0);
     expect([...meals.values()].every(n=>n>=10),context).toBe(true);
     expect([...sleep.values()].every(n=>n>4000),context).toBe(true);

@@ -72,9 +72,10 @@ export function playerDecisions(world: World): Decision[] {
       out.push({reason: 'Décaler le sommeil de la cuisinière pour préparer le matin.', command: {type: 'schedule-paint', pawnId: cook.id, hours: [hour], assignment}});
   }
   const priorities = [{ craft:3, mine:2, gather: 1, build: 3, haul: 2, grow: 2, cook:3 }, { craft:2, mine:2, gather: 3, build: 1, haul: 2, grow: 3, cook:3 }, { craft:3, mine:3, gather: 2, build: 3, haul: 2, grow: 2, cook:1 }] as const;
+  const builder=world.pawns.reduce((best,p)=>!best||p.skills.construction.level>best.skills.construction.level?p:best,world.pawns[0]);
   world.pawns.forEach((pawn, i) => {
-    for (const work of ['gather', 'build', 'haul', 'grow','cook','craft','mine'] as const) if (pawn.priorities[work] !== priorities[i % 3]![work]) {
-      out.push({ reason: 'Répartir collecte, construction, cuisine et transport entre les trois colons.', command: { type: 'priority', pawnId: pawn.id, work, value: priorities[i % 3]![work] } });
+    for (const work of ['gather', 'build', 'haul', 'grow','cook','craft','mine'] as const) if (pawn.priorities[work] !== (work==='build'?(pawn===builder?1:3):priorities[i % 3]![work])) {
+      out.push({ reason: 'Affecter le meilleur bâtisseur selon sa compétence et répartir les autres travaux.', command: { type: 'priority', pawnId: pawn.id, work, value: work==='build'?(pawn===builder?1:3):priorities[i % 3]![work] } });
     }
   });
   const plans: DesignateCommand[] = [
@@ -169,6 +170,7 @@ export function colonySummary(world: World) {
     power:world.structures.filter(s=>s.power).map(s=>({kind:s.kind,on:s.power!.on,parent:s.power!.parentId,fuel:s.fuel?.ticks??null})),
     mining:{componentsInBuildings:world.structures.reduce((n,s)=>n+requiredMaterial(s,'component'),0),components:world.piles.reduce((n,p)=>n+(p.item==='component'?p.quantity:0),0),componentsStored:world.piles.reduce((n,p)=>n+(p.item==='component'&&p.owner.type==='ground'&&world.stockpiles.some(s=>s.filters.component&&p.owner.type==='ground'&&s.x===p.owner.x&&s.z===p.owner.z)?p.quantity:0),0),blocks:world.piles.reduce((n,p)=>n+(p.kind==='blocks'?p.quantity:0),0),blocksStored:world.piles.reduce((n,p)=>n+(p.kind==='blocks'&&p.owner.type==='ground'&&world.stockpiles.some(s=>s.filters.blocks&&p.owner.type==='ground'&&s.x===p.owner.x&&s.z===p.owner.z)?p.quantity:0),0),steelInBuildings:world.structures.reduce((n,s)=>n+requiredMaterial(s,'steel'),0),steel:world.piles.reduce((n,p)=>n+(p.item==='steel'?p.quantity:0),0),steelStored:world.piles.reduce((n,p)=>n+(p.item==='steel'&&p.owner.type==='ground'&&world.stockpiles.some(s=>s.filters.steel&&p.owner.type==='ground'&&s.x===p.owner.x&&s.z===p.owner.z)?p.quantity:0),0),cells:world.tiles.filter(t=>t.terrain==='rough-stone').length,chunks:world.piles.filter(p=>p.kind==='chunk').length,stored:world.piles.filter(p=>p.kind==='chunk'&&p.owner.type==='ground'&&world.stockpiles.some(s=>s.filters.chunk&&p.owner.type==='ground'&&s.x===p.owner.x&&s.z===p.owner.z)).length},
     recreation:world.pawns.map(p=>({level:p.recreation.level,tolerance:{...p.recreation.tolerance},bored:{...p.recreation.bored}})),
+    skills:world.pawns.map(p=>({id:p.id,...structuredClone(p.skills)})),
     furnitureTransit:world.pawns.filter(p=>p.motion&&p.motion.end>world.tick&&(p.motion.terrainDelay??0)>0).length,
     furnitureExits:world.pawns.filter(p=>p.transitExit).length,
     roofing:{constructed:world.roofing?.constructed.length??0,planned:world.roofing?.build.length??0,removal:world.roofing?.remove.length??0},

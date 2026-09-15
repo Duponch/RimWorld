@@ -37,4 +37,6 @@ Trois scénarios profonds dans `power.test.ts` : construction et transport, tout
 
 Le parcours natif `power.spec.ts` exerce vrais boutons, construction, lumière, déconstruction et rechargement. `power-render-bench.mjs` mesure 3/100 mineurs avec autant de générateurs/lampes, puis des changements simultanés du champ. [Résultats mesurés](validation.md), sans promesse de couverture exhaustive.
 
-Conduits, interrupteurs physiques, batteries, appareils frigorifiques, autres producteurs, recherche, compétences, qualité/HP/dégâts, incidents électriques et réglages avancés de lumière restent absents. Les bâtiments sont disponibles dans le départ unique ; cela ne simule pas leurs prérequis de recherche/Construction 4.
+Conduits, interrupteurs physiques, batteries, appareils frigorifiques, autres producteurs, recherche, seuils de compétence, qualité/HP/dégâts, incidents électriques et réglages avancés de lumière restent absents. Les bâtiments sont disponibles dans le départ unique ; cela ne simule pas leurs prérequis de recherche/Construction 4.
+
+V43 : la vitesse de Construction et les gains d’expérience s’appliquent à ces chantiers ; le prérequis Core Construction 4 n’est pas encore imposé. [Contrat](skills.md).

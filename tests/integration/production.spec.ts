@@ -1,3 +1,4 @@
+import { withoutPawnSkills } from '../scenarios/legacy-skills';
 import { expect, test } from '@playwright/test';
 import { stonecuttingCamp } from '../scenarios/stonecutting';
 import { createWorld, serializeWorld, deserializeWorld, validateWorld } from '../../src/sim/index';
@@ -130,11 +131,11 @@ test('conservation dans le worker : migration V10, inspection de fraîcheur, exp
     const initial=createWorld(42,32,32);initial.tiles=initial.tiles.map(()=>({terrain:'grass'}));initial.resources=[];initial.piles=[];
     initial.pawns.forEach((p,i)=>{p.x=11+i;p.z=12;p.hunger=100;p.rest=100;p.priorities={craft:2,mine:2,gather:0,build:0,haul:0,grow:0,cook:0};});
     addGroundMaterial(initial,'food',10,{x:17,z:16},'berries');refreshStock(initial);
-    const old=withoutPostV10Fields(JSON.parse(serializeWorld(initial)));old.schemaVersion=10;for(const a of old.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete old.deconstructed;delete old.packed;
+    const old=withoutPostV10Fields(JSON.parse(serializeWorld(initial)));(old.schemaVersion=10,withoutPawnSkills(old));for(const a of old.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete old.deconstructed;delete old.packed;
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:JSON.stringify(old)});
     await page.goto('/?size=32&seed=42&e2e');await expect(page.locator('#loading')).toHaveCount(0);
     await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();
-    await expect.poll(async()=>(await world(page)).schemaVersion).toBe(42);
+    await expect.poll(async()=>(await world(page)).schemaVersion).toBe(43);
     expect(await world(page)).toEqual(deserializeWorld(JSON.stringify(old)));await page.keyboard.press('Escape');await cell(page,17,16);
     await expect(page.locator('#cell-materials')).toContainText('pourrit dans 14.0 j');
     const aged=structuredClone(initial);aged.piles[0]!.rot={progress:ROT_DAYS.berries*TICKS_PER_DAY-120,atTick:0};

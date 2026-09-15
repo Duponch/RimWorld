@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+V43 : [première compétence et apprentissage](development/skills.md), [recherche et réorientation des priorités](research/skills-reference.md).
+
 V42 : [générateur à bois, raccordement et lampe](development/power.md), [vérification RimWorld](research/power-reference.md).
 
 V41 : [composants industriels](development/components.md), [vérification RimWorld](research/components-reference.md).

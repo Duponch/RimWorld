@@ -23,3 +23,5 @@ artifacts/colony-last-journey.json
 
 # Rolling native presentation run; named validation proofs are tracked.
 artifacts/harvest-sync-verification.json
+
+artifacts/skills-cpu-latest.json

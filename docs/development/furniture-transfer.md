@@ -1,5 +1,7 @@
 # Transferts de meubles V25–V26
 
+V43 applique désormais la [compétence Construction](skills.md) aux phases concernées : vitesse relative, apprentissage seulement lors de la finition d’un cadre approvisionné et de la déconstruction à coût. Les durées du catalogue restent des unités de travail neutre.
+
 V42 ajoute la lampe sur pied aux meubles minifiables : identité et acier conservés, orientation fixe, connexion et alimentation réinitialisées au retrait. La réinstallation emploie son matériau réel pour la prévalidation du placement. Le générateur à bois ne peut pas être déplacé entier. [Contrat](power.md).
 
 V37 applique la [lumière](light-work.md) au retrait physique, sans ajouter de travail à la prise/pose du paquet. Les trajets gardent leur facteur capturé et les interruptions effacent aussi le reliquat de retrait.

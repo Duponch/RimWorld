@@ -1,3 +1,4 @@
+import { withoutPawnSkills, withMigratedSkills } from './scenarios/legacy-skills';
 import { passiveCoolingFixture } from './scenarios/passive-cooling';
 import { reconcileTemperature } from '../src/sim/temperature';
 import { applyThermalSources } from '../src/sim/thermal-sources';
@@ -91,8 +92,8 @@ test('transmitter connectivity, square connector range, retention, gradual short
 });
 
 test('V41 migrates without devices; malformed electrical ownership, recipes and fuel never load',()=>{
-  const old=JSON.parse(serializeWorld(miningCamp()));old.schemaVersion=41;
-  expect(deserializeWorld(JSON.stringify(old))).toEqual({...old,schemaVersion:42});
+  const old=JSON.parse(serializeWorld(miningCamp()));(old.schemaVersion=41,withoutPawnSkills(old));
+  expect(deserializeWorld(JSON.stringify(old))).toEqual(withMigratedSkills({...old,schemaVersion:43}));
   const w=miningCamp(),g=fixturePower(w,'wood-generator',16,16),l=fixturePower(w,'standing-lamp',20,16);reconcilePower(w);
   expect(validateWorld(w)).toEqual([]);
   for(const mutate of [(v:any)=>v.schemaVersion=41,(v:World)=>v.structures[0]!.fuel!.burnRemainder=5,(v:World)=>v.structures[0]!.fuel!.ticks=45001,(v:World)=>v.structures[0]!.material='wood',(v:World)=>v.structures[0]!.power!.parentId=l.id,(v:World)=>v.structures[1]!.power!.parentId=999,(v:World)=>v.structures[1]!.power={on:true,parentId:null},(v:World)=>v.structures[1]!.orientation=1]) {

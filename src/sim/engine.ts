@@ -1,3 +1,4 @@
+import { tickSkills, constructionWorkRate } from './skills.ts';
 import { advancePower, reconcilePower } from './power.ts';
 import { isElectrical, newPowerState } from './power-rules.ts';
 import { autoRoofRooms, designateRoofArea, scheduleRoofs, reconcileRoofJobs, reconcileRoofSupport, finishRoofJob } from './roofing.ts';
@@ -324,6 +325,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     for (let offset = 0; offset < world.pawns.length; offset++) {
       const pawn = world.pawns[((world.tick - 1) + offset) % world.pawns.length]!;
       pawn.moveCooldown = Math.max(0, (pawn.motion?.end ?? world.tick) - world.tick); if (pawn.planCooldown > 0) pawn.planCooldown--;
+      tickSkills(world,pawn);
       updateNeeds(world, pawn);
       if(pawn.need?.kind==='eat' && pawn.need.dining && !validDiningPlace(world,pawn.need.dining)) {pawn.need.phase='choose-spot';pawn.need.dining=null;pawn.need.progress=0;pawn.path=[];pawn.state='moving';}
       if (pawn.moveCooldown > 0) { pawn.state = pawn.jobId !== null || pawn.haul || pawn.need || pawn.cooking || pawn.recreation.task ? 'moving' : 'idle'; continue; }
@@ -371,7 +373,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
         continue;
       }
       if(job.kind==='sow'&&packedAt(world,job)){releaseWork(world,pawn);continue;}
-      if(job.furniture){if(advanceFurniture(world,pawn,job,target=>moveToward(world,pawn,target,false,getBlocked,budget,false,getLight),()=>releaseWork(world,pawn),()=>getLight().speedAt(pawn))){blocked=undefined;roofs=undefined;invalidateEnvironment();wakePlanners(world);}continue;}
+      if(job.furniture){if(advanceFurniture(world,pawn,job,target=>moveToward(world,pawn,target,false,getBlocked,budget,false,getLight),()=>releaseWork(world,pawn),()=>constructionWorkRate(pawn,job,getLight().speedAt(pawn)))){blocked=undefined;roofs=undefined;invalidateEnvironment();wakePlanners(world);}continue;}
       if(job.kind==='deconstruct'&&!deconstructionAvailable(world,job,pawn.id)){releaseWork(world,pawn);continue;}
       if(isConstruction(job)&&(!constructionSupplied(world,job)||!constructionSiteFree(world,job,pawn.id))){releaseWork(world,pawn);continue;}
       if(job.kind==='mine') {
@@ -382,7 +384,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       }
       const cells = footprintCells(job);
       if (cells.some(cell => adjacent(pawn, cell)) && !cells.some(cell => sameCell(pawn, cell))) {
-        pawn.path = []; pawn.state = 'working'; advanceWork(job,getLight().speedAt(pawn));
+        pawn.path = []; pawn.state = 'working'; advanceWork(job,constructionWorkRate(pawn,job,getLight().speedAt(pawn)));
         if (job.progress >= jobDuration(world, job)) {completeJob(world, pawn, job);blocked=undefined;roofs=undefined;invalidateEnvironment();}
       } else moveToward(world, pawn, job, false, getBlocked, budget,false,getLight);
     }

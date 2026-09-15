@@ -1,0 +1,2167 @@
+{
+  "first": {
+    "numTotalTests": 135,
+    "numPassedTests": 111,
+    "numFailedTests": 24,
+    "startTime": 1789511643498,
+    "success": false,
+    "files": [
+      {
+        "name": "area-designation.test.ts",
+        "tests": [
+          {
+            "title": "rectangles : sélection exacte, frontières, reprise, concurrence et conservation des annulations",
+            "status": "passed",
+            "duration": 581.2746999999999
+          }
+        ]
+      },
+      {
+        "name": "bridge-snapshot.test.ts",
+        "tests": [
+          {
+            "title": "snapshots preserve exact state and previous frames through harvest, patches, replacement and recovery",
+            "status": "passed",
+            "duration": 393.18399999999997
+          },
+          {
+            "title": "buffered scene preserves arrival, work, excavation, tree removal and cargo across sparse publications",
+            "status": "passed",
+            "duration": 127.50490000000002
+          }
+        ]
+      },
+      {
+        "name": "colony-player.test.ts",
+        "tests": [
+          {
+            "title": "joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp construit, stocks entretenus et reprise exacte",
+            "status": "failed",
+            "duration": 160160.0967
+          }
+        ]
+      },
+      {
+        "name": "components.test.ts",
+        "tests": [
+          {
+            "title": "machinery deposits preserve steel and topology; strict V40 migration never invents industrial content",
+            "status": "failed",
+            "duration": 1359.3535000000002
+          },
+          {
+            "title": "25 physical strikes, delayed final commit, snapshots and two haulers conserve components across a 50-unit stack boundary",
+            "status": "passed",
+            "duration": 149.1839
+          }
+        ]
+      },
+      {
+        "name": "construction-materials.test.ts",
+        "tests": [
+          {
+            "title": "typed deliveries reserve only requested ingredients, survive cancellation/replay and never substitute wood for steel",
+            "status": "passed",
+            "duration": 226.34210000000002
+          },
+          {
+            "title": "steel furniture retains its material and owner through packing/reinstallation; blocked odd refunds are atomic",
+            "status": "passed",
+            "duration": 106.20580000000007
+          },
+          {
+            "title": "V29 keeps its eight-wood bed and existing work while V30 new beds require 45; future material and incompatible recipes are rejected",
+            "status": "passed",
+            "duration": 62.46429999999998
+          },
+          {
+            "title": "three-cell workshops require every mixed ingredient; all-steel cost is aggregated, progress beyond 119 and in-flight orders resume exactly",
+            "status": "passed",
+            "duration": 340.5526
+          },
+          {
+            "title": "workshop rotations reject clipped sides and legacy shapes; mixed refunds preflight both types without mutation or RNG loss",
+            "status": "failed",
+            "duration": 89.3628000000001
+          }
+        ]
+      },
+      {
+        "name": "construction.test.ts",
+        "tests": [
+          {
+            "title": "a builder clears a typed pile physically, preserves freshness and cargo on cancellation, supplies a frame and completes it",
+            "status": "passed",
+            "duration": 93.86009999999999
+          },
+          {
+            "title": "plant clearing respects a rotated footprint, saves mid-cut, and transport-only actors can supply but cannot finish a frame",
+            "status": "passed",
+            "duration": 246.4903
+          },
+          {
+            "title": "plans and frames remain traversable with calibrated edge delay, completion protects active corners, and V15 migration is strict",
+            "status": "failed",
+            "duration": 30.413999999999987
+          },
+          {
+            "title": "construction profiles preserve compatible stacks, clear incompatible ones, trim zones at blueprint time and replay through completion",
+            "status": "failed",
+            "duration": 5.276100000000042
+          },
+          {
+            "title": "replacing storage with a blueprint releases active and queued deliveries atomically, preserves other zone cells, and migrates old furniture contents",
+            "status": "failed",
+            "duration": 124.12720000000002
+          }
+        ]
+      },
+      {
+        "name": "daylight-camera.test.ts",
+        "tests": [
+          {
+            "title": "les projections préservent cible, échelle et désignation du sol aux bornes de zoom et de carte",
+            "status": "passed",
+            "duration": 28.09989999999999
+          },
+          {
+            "title": "ciel : horloge périodique, continuité minuit/crépuscule et ressources graphiques stables sur plusieurs jours",
+            "status": "passed",
+            "duration": 1725.773
+          }
+        ]
+      },
+      {
+        "name": "deconstruction.test.ts",
+        "tests": [
+          {
+            "title": "construction precedes demolition; forced and queued removals preserve footprints, interruption semantics, refunds and exact replay",
+            "status": "passed",
+            "duration": 153.4853
+          },
+          {
+            "title": "odd refunds can round either way; saturated ground and identity limits do not delete buildings, consume RNG or duplicate material",
+            "status": "passed",
+            "duration": 402.03549999999996
+          },
+          {
+            "title": "object reservations coordinate beds, seats, recreation and fuel; removal cleans ownership and table references while preserving held food",
+            "status": "passed",
+            "duration": 54.3812999999999
+          },
+          {
+            "title": "rectangle deduplicates multi-cell furniture, cancellation preserves it, and V23 migration rejects corrupted or disguised removal state",
+            "status": "failed",
+            "duration": 53.80559999999991
+          }
+        ]
+      },
+      {
+        "name": "dining.test.ts",
+        "tests": [
+          {
+            "title": "two diners reserve distinct seats, physically carry food, save every phase and conserve meals through interruption",
+            "status": "passed",
+            "duration": 613.2943
+          },
+          {
+            "title": "seat search uses the pickup position and food radius, cardinal adjacency and reachability, with standing fallback",
+            "status": "passed",
+            "duration": 719.5177
+          },
+          {
+            "title": "wood must be delivered before furniture construction; comfort approaches a ceiling and meal memory expires without stacking",
+            "status": "passed",
+            "duration": 203.06690000000003
+          }
+        ]
+      },
+      {
+        "name": "doors.test.ts",
+        "tests": [
+          {
+            "title": "seven material doors build from delivered items, retain policy/save state and deconstruct without becoming furniture",
+            "status": "passed",
+            "duration": 256.46680000000003
+          },
+          {
+            "title": "opening waits before travel; concurrent bodies, items, hold and forbid preserve physical passages and replay",
+            "status": "passed",
+            "duration": 25.796799999999962
+          },
+          {
+            "title": "a sleeping colonist crosses a real closed corridor door; navigation, solid corners, migration and corrupt saves agree",
+            "status": "failed",
+            "duration": 72.07869999999991
+          }
+        ]
+      },
+      {
+        "name": "environment-lighting.test.ts",
+        "tests": [
+          {
+            "title": "lighting presentation preserves the world and GPU resources through fuel, roofs, barriers and checkpoint sizes",
+            "status": "passed",
+            "duration": 64.99610000000001
+          }
+        ]
+      },
+      {
+        "name": "food-items.test.ts",
+        "tests": [
+          {
+            "title": "food choice: neutral-adult taste, distance, inaccessible meals, legacy economy and held raw cargo",
+            "status": "passed",
+            "duration": 66.6139
+          },
+          {
+            "title": "aliments (berries) : réservations fractionnées, repas simultanés, interruption et continuation sans conversion ni duplication",
+            "status": "passed",
+            "duration": 141.92300000000006
+          },
+          {
+            "title": "aliments (rice) : réservations fractionnées, repas simultanés, interruption et continuation sans conversion ni duplication",
+            "status": "passed",
+            "duration": 93.38279999999997
+          },
+          {
+            "title": "catalogue : limites par objet, logistique hétérogène, arrondis, faim et migration V4 hostile",
+            "status": "passed",
+            "duration": 88.31110000000001
+          }
+        ]
+      },
+      {
+        "name": "food-policy.test.ts",
+        "tests": [
+          {
+            "title": "régimes partagés : commandes atomiques, copie indépendante, limites et migration V12 sans réécrire les états",
+            "status": "failed",
+            "duration": 98.43520000000001
+          },
+          {
+            "title": "choix physique : exclure avant préférence et pourriture, accès de repli et faim sans exception silencieuse",
+            "status": "passed",
+            "duration": 54.18169999999998
+          },
+          {
+            "title": "repas engagé : changement pendant prélèvement, transport ou ingestion, réservations et reprise exacte",
+            "status": "passed",
+            "duration": 156.29729999999995
+          },
+          {
+            "title": "régime personnel indépendant du transport et des ingrédients ; une cargaison interdite reste de la matière",
+            "status": "passed",
+            "duration": 59.83259999999996
+          }
+        ]
+      },
+      {
+        "name": "food-preservation.test.ts",
+        "tests": [
+          {
+            "title": "freshness follows split cargo and weighted merges; last-tick ingestion cannot eat spoiled units",
+            "status": "passed",
+            "duration": 68.02999999999997
+          },
+          {
+            "title": "recipe expiry releases remote, placed, held and output references; blocked drops preserve surviving cargo across save/load",
+            "status": "passed",
+            "duration": 67.74349999999998
+          },
+          {
+            "title": "four, fourteen and forty days; stable snapshots, expiry batches, migration and corrupt-age rejection",
+            "status": "passed",
+            "duration": 446.15049999999997
+          }
+        ]
+      },
+      {
+        "name": "frame-metrics.test.ts",
+        "tests": [
+          {
+            "title": "frame telemetry measures real cadence, counts stalls and resets hidden/resumed windows without growing memory",
+            "status": "passed",
+            "duration": 5.070899999999995
+          },
+          {
+            "title": "presentation acceptance rejects the recorded speed defect and incomplete or desynchronized observations",
+            "status": "passed",
+            "duration": 8.188400000000001
+          }
+        ]
+      },
+      {
+        "name": "furniture-logistics.test.ts",
+        "tests": [
+          {
+            "title": "whole parcels reserve exclusive sources and floor slots, queue through player commands and resume without copying their identities",
+            "status": "passed",
+            "duration": 103.5541
+          },
+          {
+            "title": "filter changes and removal release cargo at the carrier; equal priority never causes shuffling and a full floor refuses interruption atomically",
+            "status": "passed",
+            "duration": 57.36299999999994
+          },
+          {
+            "title": "builders and growers clear whole objects before finishing while a table keeps its compatible floor object",
+            "status": "passed",
+            "duration": 164.1321999999999
+          },
+          {
+            "title": "a hauler alone can reinstall the same bed; accepted work survives disabled priority and V25 migration rejects future fields",
+            "status": "failed",
+            "duration": 53.65020000000004
+          },
+          {
+            "title": "reinstalling preempts an uncollected storage claim; cancelling the source or clearing parent releases every whole-object reservation",
+            "status": "passed",
+            "duration": 16.84559999999999
+          }
+        ]
+      },
+      {
+        "name": "furniture-transfer.test.ts",
+        "tests": [
+          {
+            "title": "a bed keeps its identity, ownership and resources through uninstall, ground storage, pickup, interruption, rotation and exact resume",
+            "status": "passed",
+            "duration": 104.59289999999999
+          },
+          {
+            "title": "direct reinstall clears a planted destination, reserves the source, and cancel while carried retains exactly one recoverable object",
+            "status": "passed",
+            "duration": 107.70220000000006
+          },
+          {
+            "title": "full floors and conflicting uses refuse atomically; migration and corrupt identity/carrier/target data remain strict",
+            "status": "passed",
+            "duration": 211.29330000000004
+          },
+          {
+            "title": "a sleeping user delays removal, source cancellation preserves the object, and in-place rotation preserves the bed",
+            "status": "passed",
+            "duration": 33.25069999999994
+          }
+        ]
+      },
+      {
+        "name": "furniture-travel.test.ts",
+        "tests": [
+          {
+            "title": "furniture routes agree with an independent directed-cost oracle, repeat across different furniture, and retain exact timed edges",
+            "status": "passed",
+            "duration": 98.80359999999996
+          },
+          {
+            "title": "opposite loaded trips cross furniture, cancel in transit without teleport or loss, and migrate old edges strictly",
+            "status": "failed",
+            "duration": 159.91319999999996
+          }
+        ]
+      },
+      {
+        "name": "gpu-navigation.test.ts",
+        "tests": [
+          {
+            "title": "independent weighted oracle, cardinal geometry and result validation across obstacles and endpoints",
+            "status": "passed",
+            "duration": 5.056900000000013
+          },
+          {
+            "title": "bounded integer inputs prevent overflow, aliasing-sized buffers, duplicate ids and oversized batches",
+            "status": "passed",
+            "duration": 5.159700000000015
+          }
+        ]
+      },
+      {
+        "name": "light-work.test.ts",
+        "tests": [
+          {
+            "title": "travaux physiques : lumière au travailleur, fractions conservées, interruption et dégagement avant construction",
+            "status": "passed",
+            "duration": 196.83410000000003
+          },
+          {
+            "title": "coups et arêtes : durée capturée, diagonales exactes, délais additifs, migration V36 stricte et reprise",
+            "status": "passed",
+            "duration": 73.38190000000009
+          }
+        ]
+      },
+      {
+        "name": "mining.test.ts",
+        "tests": [
+          {
+            "title": "steel veins preserve topology, extraction commits 40 units, transport splits and merges real stacks, V28 is validated before migration",
+            "status": "passed",
+            "duration": 1741.1770000000001
+          },
+          {
+            "title": "physical mining conserves wall damage across cancellation, diagonal contact, save and incremental snapshots for all five stones",
+            "status": "passed",
+            "duration": 140.97149999999965
+          },
+          {
+            "title": "excavation yields use one committed roll, expose the interior and chunks require hauling designation, typed reservations and real travel",
+            "status": "passed",
+            "duration": 165.2197000000001
+          },
+          {
+            "title": "rough terrain and chunks share weighted and physical travel, strict V27 migration rejects future fields and resumes active edges",
+            "status": "passed",
+            "duration": 22.03670000000011
+          }
+        ]
+      },
+      {
+        "name": "navigation-budget.test.ts",
+        "tests": [
+          {
+            "title": "logistics proves only competitive access, retains ties and skips an inaccessible higher-priority reserve",
+            "status": "passed",
+            "duration": 50.49630000000002
+          },
+          {
+            "title": "goal-bounded floods retain the full-flood nearest food and exact path across ties, walls and unreachable goals",
+            "status": "passed",
+            "duration": 852.2946
+          }
+        ]
+      },
+      {
+        "name": "passive-cooling.test.ts",
+        "tests": [
+          {
+            "title": "physical 50-wood construction, cooling without refrigeration, empty refill, interruption and deconstruction conserve matter",
+            "status": "passed",
+            "duration": 194.5917
+          },
+          {
+            "title": "threshold, volume, continuous idle fuel, outside, concurrent sources and strict V39 migration",
+            "status": "failed",
+            "duration": 69.36120000000005
+          }
+        ]
+      },
+      {
+        "name": "plant-cycle.test.ts",
+        "tests": [
+          {
+            "title": "growers clear mixed stacks without storage: reservations, physical trips, interruption, blocked exits and V8 continuation",
+            "status": "passed",
+            "duration": 171.5122
+          },
+          {
+            "title": "renewable bush: conditions, strict threshold, physical yield, repeated harvest, cutting and exact saves",
+            "status": "passed",
+            "duration": 42.82370000000003
+          },
+          {
+            "title": "rice field: eight real days, clearing, sowing, physical mature yield, hauling and a second sowing",
+            "status": "passed",
+            "duration": 403.04110000000003
+          },
+          {
+            "title": "growing policies, interrupted sowing, migration and resident crop slots preserve their contracts",
+            "status": "passed",
+            "duration": 71.66629999999986
+          },
+          {
+            "title": "full floor, migration, snapshot immutability and resident fruit disappear/reappear without geometry rebuild",
+            "status": "passed",
+            "duration": 27.888500000000022
+          }
+        ]
+      },
+      {
+        "name": "player-cooking.test.ts",
+        "tests": [
+          {
+            "title": "queued cooking reserves mixed ingredients and staging, follows bill order, survives every phase with disabled work and produces exactly one meal",
+            "status": "passed",
+            "duration": 567.4717
+          },
+          {
+            "title": "manual recipe respects suspension/radius, refuels first without hauling, rejects corrupt queues and preserves ingredients when recipes or food disappear",
+            "status": "failed",
+            "duration": 97.84949999999992
+          },
+          {
+            "title": "forced sowing clearance uses growing assignment, survives regenerated intents and cancels a carried stack conservatively when the zone changes",
+            "status": "passed",
+            "duration": 238.71449999999982
+          }
+        ]
+      },
+      {
+        "name": "player-hauling.test.ts",
+        "tests": [
+          {
+            "title": "forced stock hauling reserves active and queued quantities/capacity against other workers, preserves priority and exact continuation",
+            "status": "passed",
+            "duration": 188.5856
+          },
+          {
+            "title": "forced construction deliveries are physical subjobs, builders need no hauling assignment, cancellation keeps delivered and carried materials",
+            "status": "passed",
+            "duration": 138.15099999999995
+          },
+          {
+            "title": "waiting hauling survives migration/replay, releases vanished sources, rejects corrupt quantities and legacy extensions atomically",
+            "status": "failed",
+            "duration": 102.01699999999994
+          }
+        ]
+      },
+      {
+        "name": "player-orders.test.ts",
+        "tests": [
+          {
+            "title": "forced work overrides proximity and schedule, queues reserve exclusively, then ordinary eating resumes; save replay is exact",
+            "status": "passed",
+            "duration": 217.10999999999996
+          },
+          {
+            "title": "interruptions keep the active diagonal and food age, and invalid/unreachable orders have no side effects",
+            "status": "passed",
+            "duration": 17.41669999999999
+          },
+          {
+            "title": "Shift waits for ingestion, accepted orders survive priority zero, explicit cancellation and collapse release reservations",
+            "status": "passed",
+            "duration": 120.70719999999994
+          },
+          {
+            "title": "queue loses an access, clear-orders preserves designations, construction cannot skip delivery, V16 migration is strict",
+            "status": "passed",
+            "duration": 178.6571
+          }
+        ]
+      },
+      {
+        "name": "player-services.test.ts",
+        "tests": [
+          {
+            "title": "forced refuel bypasses automation, reserves its station while queued, travels and works, persists every phase and conserves fuel on interruption",
+            "status": "failed",
+            "duration": 279.5477
+          },
+          {
+            "title": "forced plant and pile clearing respects rotated footprints, queue cancellation, physical output, parent lifetime and construction assignment without ordinary hauling",
+            "status": "passed",
+            "duration": 72.0664999999999
+          }
+        ]
+      },
+      {
+        "name": "power.test.ts",
+        "tests": [
+          {
+            "title": "physical mixed construction, empty generator, hauling, light, lamp relocation and dismantling preserve ownership and material",
+            "status": "passed",
+            "duration": 208.50230000000005
+          },
+          {
+            "title": "transmitter connectivity, square connector range, retention, gradual shortage, integer fuel and exact power continuation",
+            "status": "passed",
+            "duration": 564.1567
+          },
+          {
+            "title": "V41 migrates without devices; malformed electrical ownership, recipes and fuel never load",
+            "status": "failed",
+            "duration": 39.316699999999855
+          }
+        ]
+      },
+      {
+        "name": "priority-work.test.ts",
+        "tests": [
+          {
+            "title": "one clicked bed is cleared, supplied over several trips and built; no nearby expansion, stable family, queue ordering and exact replay",
+            "status": "passed",
+            "duration": 624.0575000000001
+          },
+          {
+            "title": "prioritized cooking refuels then follows bill count, survives disabled assignment, and returns to physical eating; cancellation and collapse release cargo",
+            "status": "passed",
+            "duration": 640.8761999999999
+          },
+          {
+            "title": "priority decisions share budgets, disappear on lost access or timeout without cancelling active work, and validate strict V22 migration",
+            "status": "failed",
+            "duration": 96.87349999999992
+          }
+        ]
+      },
+      {
+        "name": "production.test.ts",
+        "tests": [
+          {
+            "title": "feu construit, deux jours de combustion, ravitaillement concurrent et interruption conservent le bois",
+            "status": "failed",
+            "duration": 51.70460000000003
+          },
+          {
+            "title": "cuisine physique : mélange, interruption, sauvegarde du travail, deux repas et arrêt de facture",
+            "status": "passed",
+            "duration": 209.02870000000001
+          },
+          {
+            "title": "factures ordonnées et réservations : deux cuisiniers, une recette disponible, repli et ravitaillement sans transporteur",
+            "status": "passed",
+            "duration": 195.36079999999993
+          }
+        ]
+      },
+      {
+        "name": "recreation.test.ts",
+        "tests": [
+          {
+            "title": "recreation rates, cap, boredom hysteresis, sleep freeze and schedule gates have explicit boundaries",
+            "status": "passed",
+            "duration": 18.72270000000003
+          },
+          {
+            "title": "physical horseshoes: delivered construction, three reserved players, transit, interruption, occlusion and exact saves",
+            "status": "passed",
+            "duration": 111.88030000000003
+          },
+          {
+            "title": "skygazing requires arrival; unavailable or boring activities give no joy; V14 migration preserves existing state",
+            "status": "failed",
+            "duration": 72.24170000000004
+          }
+        ]
+      },
+      {
+        "name": "render-retention.test.ts",
+        "tests": [
+          {
+            "title": "objets graphiques résidents : retrait/restauration, frontière de chunk, croissance et libération",
+            "status": "passed",
+            "duration": 229.50419999999997
+          }
+        ]
+      },
+      {
+        "name": "rock-surface.test.ts",
+        "tests": [
+          {
+            "title": "continuous faceted cells: shared seams, winding, local excavation/restoration, resident buffers and map boundaries",
+            "status": "passed",
+            "duration": 42.2457
+          }
+        ]
+      },
+      {
+        "name": "roofing.test.ts",
+        "tests": [
+          {
+            "title": "roof support requires a connected 6.9-radius path, separated from areas, and strict V34 migration rejects future data",
+            "status": "passed",
+            "duration": 80.46039999999999
+          },
+          {
+            "title": "builders physically roof a camp, clear a tree, preserve ceiling/floor coexistence and resume interrupted work exactly",
+            "status": "passed",
+            "duration": 308.7987
+          },
+          {
+            "title": "support destruction collapses coverage; voluntary removal preserves connected detours outside the build radius",
+            "status": "passed",
+            "duration": 73.27949999999998
+          }
+        ]
+      },
+      {
+        "name": "room-topology.test.ts",
+        "tests": [
+          {
+            "title": "enclosures agree with an independent oracle across rectangles, in-place edits, replacement and unchanged snapshots",
+            "status": "passed",
+            "duration": 316.79269999999997
+          },
+          {
+            "title": "real removal, frame, construction, mining and save/reload merge and split rooms without confusing doors, water or furniture",
+            "status": "passed",
+            "duration": 109.26920000000007
+          }
+        ]
+      },
+      {
+        "name": "schedules.test.ts",
+        "tests": [
+          {
+            "title": "24 plages atomiques : frontières de sommeil, passage minuit/aube, lit physique et continuation exacte",
+            "status": "passed",
+            "duration": 109.17090000000002
+          },
+          {
+            "title": "horaires et actions : finir la tâche, manger malgré Travail, réveil critique accessible et aucun sommeil volontaire affamé",
+            "status": "passed",
+            "duration": 98.95839999999998
+          },
+          {
+            "title": "fatigue adulte, effondrement probabiliste et migration V11 préservent les états et le rejeu",
+            "status": "passed",
+            "duration": 31.670400000000086
+          }
+        ]
+      },
+      {
+        "name": "simulation.test.ts",
+        "tests": [
+          {
+            "title": "replay and saves at pickup, carrying, delivery and construction resume exactly",
+            "status": "passed",
+            "duration": 462.07689999999997
+          },
+          {
+            "title": "shared piles, partial capacities and interruptions preserve matter at every transfer boundary",
+            "status": "passed",
+            "duration": 431.9764000000001
+          },
+          {
+            "title": "eligibility, rotated footprints and congestion preserve reachable work and atomic commands",
+            "status": "passed",
+            "duration": 1176.3189999999997
+          },
+          {
+            "title": "sleep preserves delivered material; only an occupied bed improves recovery, with exclusive ownership and exact resumption",
+            "status": "passed",
+            "duration": 467.1080999999999
+          },
+          {
+            "title": "hunger interrupts construction without undoing delivery and allows recovery through gathering",
+            "status": "passed",
+            "duration": 201.20049999999992
+          },
+          {
+            "title": "plans allow transit until completion and rotated furniture keeps its full placement footprint",
+            "status": "passed",
+            "duration": 273.4991
+          },
+          {
+            "title": "schema-1 migration preserves stock, escrow, beds and identity; corrupt schema-2 saves are rejected",
+            "status": "passed",
+            "duration": 337.4672999999998
+          },
+          {
+            "title": "five seeded two-day colonies conserve matter each tick through command churn and real outcomes",
+            "status": "passed",
+            "duration": 31023.0477
+          }
+        ]
+      },
+      {
+        "name": "skills.test.ts",
+        "tests": [
+          {
+            "title": "learning: independent XP thresholds, passion, soft cap, debt, mastery and midnight cadence",
+            "status": "passed",
+            "duration": 39.25240000000008
+          },
+          {
+            "title": "builders: physical work, distinct speeds, no training in travel/clearance, switching worker and exact continuation",
+            "status": "passed",
+            "duration": 58.659599999999955
+          },
+          {
+            "title": "skills persistence: strict V42 migration, invalid records, deep actor state and worker snapshots",
+            "status": "passed",
+            "duration": 25.935899999999947
+          }
+        ]
+      },
+      {
+        "name": "spatial-contracts.test.ts",
+        "tests": [
+          {
+            "title": "eight-direction routes agree with an independent relaxation oracle and preserve geometric travel time",
+            "status": "passed",
+            "duration": 174.32119999999998
+          },
+          {
+            "title": "civil crossing preserves beds, opposing cargo, every edge and exact continuation without pushing other actors",
+            "status": "failed",
+            "duration": 36.8895
+          },
+          {
+            "title": "buffered motion is linear across jitter, duplicate messages, turns, pause and replacement",
+            "status": "passed",
+            "duration": 69.54399999999998
+          },
+          {
+            "title": "floor stacks enforce identity, reserved destination type, migration and atomic refusal when no drop fits",
+            "status": "passed",
+            "duration": 24.56140000000005
+          }
+        ]
+      },
+      {
+        "name": "stone-buildings.test.ts",
+        "tests": [
+          {
+            "title": "five stones obey build factors plus offsets, exact deliveries and typed recovery without mixed-rock substitution",
+            "status": "passed",
+            "duration": 484.0154
+          },
+          {
+            "title": "a stone bed keeps its identity and reduced rest through use, packing and replay; saturated or overflowing refunds are atomic",
+            "status": "passed",
+            "duration": 179.6839
+          },
+          {
+            "title": "V32 migration preserves in-flight wood work and blocks; stone buildings and loss ledgers cannot hide in old saves",
+            "status": "failed",
+            "duration": 78.18079999999986
+          }
+        ]
+      },
+      {
+        "name": "stonecutting.test.ts",
+        "tests": [
+          {
+            "title": "cinq roches : collecte réelle, staging hors de la place, reprises et livraison fractionnée de vingt blocs",
+            "status": "passed",
+            "duration": 484.13130000000007
+          },
+          {
+            "title": "ordres réservés, métier désactivé, annulation conservatrice, factures et meuble entier",
+            "status": "passed",
+            "duration": 45.827999999999975
+          },
+          {
+            "title": "filtres, rayon et seuil comptent les blocs ; sol saturé conserve le produit puis reprend",
+            "status": "passed",
+            "duration": 329.3717999999999
+          }
+        ]
+      },
+      {
+        "name": "temperature.test.ts",
+        "tests": [
+          {
+            "title": "air history: exact roof threshold, heating, leakage, doors, split/merge and serialization",
+            "status": "passed",
+            "duration": 293.5963
+          },
+          {
+            "title": "thermal food: freeze/thaw intervals, real owner transfers, mixing, threshold expiry and legacy continuation",
+            "status": "failed",
+            "duration": 79.91870000000006
+          },
+          {
+            "title": "plant climate: integrated local history, query independence, roof changes, migration and deltas",
+            "status": "failed",
+            "duration": 1167.2932
+          },
+          {
+            "title": "cold farming: no new sowing, stale intent rejected, accepted sowing completes and mature harvest remains available",
+            "status": "passed",
+            "duration": 46.447999999999865
+          }
+        ]
+      },
+      {
+        "name": "work-environment.test.ts",
+        "tests": [
+          {
+            "title": "lumière : oracle indépendant de distance, coins opaques, portes ouvertes, sources cumulées et mutations",
+            "status": "passed",
+            "duration": 138.90110000000004
+          },
+          {
+            "title": "ateliers : toit distinct de pièce, rôle et lumière au colon ; progression physique, migration et reprise",
+            "status": "passed",
+            "duration": 96.00100000000003
+          }
+        ]
+      },
+      {
+        "name": "world-generation.test.ts",
+        "tests": [
+          {
+            "title": "regional Core geology is persistent, coherent, independent of work RNG and strictly migrated",
+            "status": "failed",
+            "duration": 10487.485999999999
+          },
+          {
+            "title": "same seed reproduces every entity; rectangular boundary fixtures and saved edited maps remain valid",
+            "status": "passed",
+            "duration": 12448.301700000002
+          },
+          {
+            "title": "many seeds produce continuous rivers, coherent patches, walkable starts and readable rock clusters",
+            "status": "passed",
+            "duration": 8191.403599999998
+          },
+          {
+            "title": "tutorial resources support a wall and stool even on tiny generated fixtures, including save during work",
+            "status": "passed",
+            "duration": 5343.242300000002
+          }
+        ]
+      }
+    ]
+  },
+  "integration": {
+    "numTotalTests": 135,
+    "numPassedTests": 134,
+    "numFailedTests": 1,
+    "startTime": 1789512047836,
+    "success": false,
+    "files": [
+      {
+        "name": "area-designation.test.ts",
+        "tests": [
+          {
+            "title": "rectangles : sélection exacte, frontières, reprise, concurrence et conservation des annulations",
+            "status": "passed",
+            "duration": 592.1234
+          }
+        ]
+      },
+      {
+        "name": "bridge-snapshot.test.ts",
+        "tests": [
+          {
+            "title": "snapshots preserve exact state and previous frames through harvest, patches, replacement and recovery",
+            "status": "passed",
+            "duration": 401.8197
+          },
+          {
+            "title": "buffered scene preserves arrival, work, excavation, tree removal and cargo across sparse publications",
+            "status": "passed",
+            "duration": 129.5861
+          }
+        ]
+      },
+      {
+        "name": "colony-player.test.ts",
+        "tests": [
+          {
+            "title": "joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp construit, stocks entretenus et reprise exacte",
+            "status": "passed",
+            "duration": 163808.6096
+          }
+        ]
+      },
+      {
+        "name": "components.test.ts",
+        "tests": [
+          {
+            "title": "machinery deposits preserve steel and topology; strict V40 migration never invents industrial content",
+            "status": "passed",
+            "duration": 1309.9335
+          },
+          {
+            "title": "25 physical strikes, delayed final commit, snapshots and two haulers conserve components across a 50-unit stack boundary",
+            "status": "passed",
+            "duration": 147.79290000000015
+          }
+        ]
+      },
+      {
+        "name": "construction-materials.test.ts",
+        "tests": [
+          {
+            "title": "typed deliveries reserve only requested ingredients, survive cancellation/replay and never substitute wood for steel",
+            "status": "passed",
+            "duration": 225.54129999999998
+          },
+          {
+            "title": "steel furniture retains its material and owner through packing/reinstallation; blocked odd refunds are atomic",
+            "status": "passed",
+            "duration": 103.21759999999995
+          },
+          {
+            "title": "V29 keeps its eight-wood bed and existing work while V30 new beds require 45; future material and incompatible recipes are rejected",
+            "status": "passed",
+            "duration": 65.57679999999993
+          },
+          {
+            "title": "three-cell workshops require every mixed ingredient; all-steel cost is aggregated, progress beyond 119 and in-flight orders resume exactly",
+            "status": "passed",
+            "duration": 362.87149999999997
+          },
+          {
+            "title": "workshop rotations reject clipped sides and legacy shapes; mixed refunds preflight both types without mutation or RNG loss",
+            "status": "passed",
+            "duration": 59.047000000000025
+          }
+        ]
+      },
+      {
+        "name": "construction.test.ts",
+        "tests": [
+          {
+            "title": "a builder clears a typed pile physically, preserves freshness and cargo on cancellation, supplies a frame and completes it",
+            "status": "passed",
+            "duration": 78.8716
+          },
+          {
+            "title": "plant clearing respects a rotated footprint, saves mid-cut, and transport-only actors can supply but cannot finish a frame",
+            "status": "passed",
+            "duration": 240.72319999999996
+          },
+          {
+            "title": "plans and frames remain traversable with calibrated edge delay, completion protects active corners, and V15 migration is strict",
+            "status": "passed",
+            "duration": 87.03800000000001
+          },
+          {
+            "title": "construction profiles preserve compatible stacks, clear incompatible ones, trim zones at blueprint time and replay through completion",
+            "status": "passed",
+            "duration": 1216.6500999999998
+          },
+          {
+            "title": "replacing storage with a blueprint releases active and queued deliveries atomically, preserves other zone cells, and migrates old furniture contents",
+            "status": "passed",
+            "duration": 159.33439999999996
+          }
+        ]
+      },
+      {
+        "name": "daylight-camera.test.ts",
+        "tests": [
+          {
+            "title": "les projections préservent cible, échelle et désignation du sol aux bornes de zoom et de carte",
+            "status": "passed",
+            "duration": 27.971299999999985
+          },
+          {
+            "title": "ciel : horloge périodique, continuité minuit/crépuscule et ressources graphiques stables sur plusieurs jours",
+            "status": "passed",
+            "duration": 1673.2257
+          }
+        ]
+      },
+      {
+        "name": "deconstruction.test.ts",
+        "tests": [
+          {
+            "title": "construction precedes demolition; forced and queued removals preserve footprints, interruption semantics, refunds and exact replay",
+            "status": "passed",
+            "duration": 148.16330000000005
+          },
+          {
+            "title": "odd refunds can round either way; saturated ground and identity limits do not delete buildings, consume RNG or duplicate material",
+            "status": "passed",
+            "duration": 450.7146
+          },
+          {
+            "title": "object reservations coordinate beds, seats, recreation and fuel; removal cleans ownership and table references while preserving held food",
+            "status": "passed",
+            "duration": 60.59610000000009
+          },
+          {
+            "title": "rectangle deduplicates multi-cell furniture, cancellation preserves it, and V23 migration rejects corrupted or disguised removal state",
+            "status": "failed",
+            "duration": 59.371700000000146
+          }
+        ]
+      },
+      {
+        "name": "dining.test.ts",
+        "tests": [
+          {
+            "title": "two diners reserve distinct seats, physically carry food, save every phase and conserve meals through interruption",
+            "status": "passed",
+            "duration": 653.8998000000001
+          },
+          {
+            "title": "seat search uses the pickup position and food radius, cardinal adjacency and reachability, with standing fallback",
+            "status": "passed",
+            "duration": 765.0513000000001
+          },
+          {
+            "title": "wood must be delivered before furniture construction; comfort approaches a ceiling and meal memory expires without stacking",
+            "status": "passed",
+            "duration": 222.68369999999982
+          }
+        ]
+      },
+      {
+        "name": "doors.test.ts",
+        "tests": [
+          {
+            "title": "seven material doors build from delivered items, retain policy/save state and deconstruct without becoming furniture",
+            "status": "passed",
+            "duration": 267.8482
+          },
+          {
+            "title": "opening waits before travel; concurrent bodies, items, hold and forbid preserve physical passages and replay",
+            "status": "passed",
+            "duration": 30.314300000000003
+          },
+          {
+            "title": "a sleeping colonist crosses a real closed corridor door; navigation, solid corners, migration and corrupt saves agree",
+            "status": "passed",
+            "duration": 46.986099999999965
+          }
+        ]
+      },
+      {
+        "name": "environment-lighting.test.ts",
+        "tests": [
+          {
+            "title": "lighting presentation preserves the world and GPU resources through fuel, roofs, barriers and checkpoint sizes",
+            "status": "passed",
+            "duration": 73.01309999999995
+          }
+        ]
+      },
+      {
+        "name": "food-items.test.ts",
+        "tests": [
+          {
+            "title": "food choice: neutral-adult taste, distance, inaccessible meals, legacy economy and held raw cargo",
+            "status": "passed",
+            "duration": 57.25890000000004
+          },
+          {
+            "title": "aliments (berries) : réservations fractionnées, repas simultanés, interruption et continuation sans conversion ni duplication",
+            "status": "passed",
+            "duration": 129.87710000000004
+          },
+          {
+            "title": "aliments (rice) : réservations fractionnées, repas simultanés, interruption et continuation sans conversion ni duplication",
+            "status": "passed",
+            "duration": 90.63419999999996
+          },
+          {
+            "title": "catalogue : limites par objet, logistique hétérogène, arrondis, faim et migration V4 hostile",
+            "status": "passed",
+            "duration": 90.76549999999997
+          }
+        ]
+      },
+      {
+        "name": "food-policy.test.ts",
+        "tests": [
+          {
+            "title": "régimes partagés : commandes atomiques, copie indépendante, limites et migration V12 sans réécrire les états",
+            "status": "passed",
+            "duration": 83.67809999999997
+          },
+          {
+            "title": "choix physique : exclure avant préférence et pourriture, accès de repli et faim sans exception silencieuse",
+            "status": "passed",
+            "duration": 48.71539999999999
+          },
+          {
+            "title": "repas engagé : changement pendant prélèvement, transport ou ingestion, réservations et reprise exacte",
+            "status": "passed",
+            "duration": 155.9937
+          },
+          {
+            "title": "régime personnel indépendant du transport et des ingrédients ; une cargaison interdite reste de la matière",
+            "status": "passed",
+            "duration": 53.59659999999997
+          }
+        ]
+      },
+      {
+        "name": "food-preservation.test.ts",
+        "tests": [
+          {
+            "title": "freshness follows split cargo and weighted merges; last-tick ingestion cannot eat spoiled units",
+            "status": "passed",
+            "duration": 70.56390000000005
+          },
+          {
+            "title": "recipe expiry releases remote, placed, held and output references; blocked drops preserve surviving cargo across save/load",
+            "status": "passed",
+            "duration": 67.4377
+          },
+          {
+            "title": "four, fourteen and forty days; stable snapshots, expiry batches, migration and corrupt-age rejection",
+            "status": "passed",
+            "duration": 452.92650000000003
+          }
+        ]
+      },
+      {
+        "name": "frame-metrics.test.ts",
+        "tests": [
+          {
+            "title": "frame telemetry measures real cadence, counts stalls and resets hidden/resumed windows without growing memory",
+            "status": "passed",
+            "duration": 4.277299999999997
+          },
+          {
+            "title": "presentation acceptance rejects the recorded speed defect and incomplete or desynchronized observations",
+            "status": "passed",
+            "duration": 4.616700000000009
+          }
+        ]
+      },
+      {
+        "name": "furniture-logistics.test.ts",
+        "tests": [
+          {
+            "title": "whole parcels reserve exclusive sources and floor slots, queue through player commands and resume without copying their identities",
+            "status": "passed",
+            "duration": 109.6925
+          },
+          {
+            "title": "filter changes and removal release cargo at the carrier; equal priority never causes shuffling and a full floor refuses interruption atomically",
+            "status": "passed",
+            "duration": 60.06270000000006
+          },
+          {
+            "title": "builders and growers clear whole objects before finishing while a table keeps its compatible floor object",
+            "status": "passed",
+            "duration": 163.43010000000004
+          },
+          {
+            "title": "a hauler alone can reinstall the same bed; accepted work survives disabled priority and V25 migration rejects future fields",
+            "status": "passed",
+            "duration": 100.23239999999998
+          },
+          {
+            "title": "reinstalling preempts an uncollected storage claim; cancelling the source or clearing parent releases every whole-object reservation",
+            "status": "passed",
+            "duration": 16.089699999999993
+          }
+        ]
+      },
+      {
+        "name": "furniture-transfer.test.ts",
+        "tests": [
+          {
+            "title": "a bed keeps its identity, ownership and resources through uninstall, ground storage, pickup, interruption, rotation and exact resume",
+            "status": "passed",
+            "duration": 108.6762
+          },
+          {
+            "title": "direct reinstall clears a planted destination, reserves the source, and cancel while carried retains exactly one recoverable object",
+            "status": "passed",
+            "duration": 127.7378
+          },
+          {
+            "title": "full floors and conflicting uses refuse atomically; migration and corrupt identity/carrier/target data remain strict",
+            "status": "passed",
+            "duration": 216.3795
+          },
+          {
+            "title": "a sleeping user delays removal, source cancellation preserves the object, and in-place rotation preserves the bed",
+            "status": "passed",
+            "duration": 36.04570000000001
+          }
+        ]
+      },
+      {
+        "name": "furniture-travel.test.ts",
+        "tests": [
+          {
+            "title": "furniture routes agree with an independent directed-cost oracle, repeat across different furniture, and retain exact timed edges",
+            "status": "passed",
+            "duration": 96.25319999999999
+          },
+          {
+            "title": "opposite loaded trips cross furniture, cancel in transit without teleport or loss, and migrate old edges strictly",
+            "status": "passed",
+            "duration": 262.81190000000004
+          }
+        ]
+      },
+      {
+        "name": "gpu-navigation.test.ts",
+        "tests": [
+          {
+            "title": "independent weighted oracle, cardinal geometry and result validation across obstacles and endpoints",
+            "status": "passed",
+            "duration": 5.701900000000023
+          },
+          {
+            "title": "bounded integer inputs prevent overflow, aliasing-sized buffers, duplicate ids and oversized batches",
+            "status": "passed",
+            "duration": 5.893100000000004
+          }
+        ]
+      },
+      {
+        "name": "light-work.test.ts",
+        "tests": [
+          {
+            "title": "travaux physiques : lumière au travailleur, fractions conservées, interruption et dégagement avant construction",
+            "status": "passed",
+            "duration": 173.83340000000004
+          },
+          {
+            "title": "coups et arêtes : durée capturée, diagonales exactes, délais additifs, migration V36 stricte et reprise",
+            "status": "passed",
+            "duration": 69.00649999999996
+          }
+        ]
+      },
+      {
+        "name": "mining.test.ts",
+        "tests": [
+          {
+            "title": "steel veins preserve topology, extraction commits 40 units, transport splits and merges real stacks, V28 is validated before migration",
+            "status": "passed",
+            "duration": 1788.8740000000003
+          },
+          {
+            "title": "physical mining conserves wall damage across cancellation, diagonal contact, save and incremental snapshots for all five stones",
+            "status": "passed",
+            "duration": 159.50459999999975
+          },
+          {
+            "title": "excavation yields use one committed roll, expose the interior and chunks require hauling designation, typed reservations and real travel",
+            "status": "passed",
+            "duration": 171.60289999999986
+          },
+          {
+            "title": "rough terrain and chunks share weighted and physical travel, strict V27 migration rejects future fields and resumes active edges",
+            "status": "passed",
+            "duration": 25.984600000000228
+          }
+        ]
+      },
+      {
+        "name": "navigation-budget.test.ts",
+        "tests": [
+          {
+            "title": "logistics proves only competitive access, retains ties and skips an inaccessible higher-priority reserve",
+            "status": "passed",
+            "duration": 56.377200000000016
+          },
+          {
+            "title": "goal-bounded floods retain the full-flood nearest food and exact path across ties, walls and unreachable goals",
+            "status": "passed",
+            "duration": 848.4378999999999
+          }
+        ]
+      },
+      {
+        "name": "passive-cooling.test.ts",
+        "tests": [
+          {
+            "title": "physical 50-wood construction, cooling without refrigeration, empty refill, interruption and deconstruction conserve matter",
+            "status": "passed",
+            "duration": 183.42680000000001
+          },
+          {
+            "title": "threshold, volume, continuous idle fuel, outside, concurrent sources and strict V39 migration",
+            "status": "passed",
+            "duration": 31.12390000000005
+          }
+        ]
+      },
+      {
+        "name": "plant-cycle.test.ts",
+        "tests": [
+          {
+            "title": "growers clear mixed stacks without storage: reservations, physical trips, interruption, blocked exits and V8 continuation",
+            "status": "passed",
+            "duration": 170.72539999999992
+          },
+          {
+            "title": "renewable bush: conditions, strict threshold, physical yield, repeated harvest, cutting and exact saves",
+            "status": "passed",
+            "duration": 45.87800000000004
+          },
+          {
+            "title": "rice field: eight real days, clearing, sowing, physical mature yield, hauling and a second sowing",
+            "status": "passed",
+            "duration": 375.6099999999999
+          },
+          {
+            "title": "growing policies, interrupted sowing, migration and resident crop slots preserve their contracts",
+            "status": "passed",
+            "duration": 70.41270000000009
+          },
+          {
+            "title": "full floor, migration, snapshot immutability and resident fruit disappear/reappear without geometry rebuild",
+            "status": "passed",
+            "duration": 28.05659999999989
+          }
+        ]
+      },
+      {
+        "name": "player-cooking.test.ts",
+        "tests": [
+          {
+            "title": "queued cooking reserves mixed ingredients and staging, follows bill order, survives every phase with disabled work and produces exactly one meal",
+            "status": "passed",
+            "duration": 560.4818
+          },
+          {
+            "title": "manual recipe respects suspension/radius, refuels first without hauling, rejects corrupt queues and preserves ingredients when recipes or food disappear",
+            "status": "passed",
+            "duration": 76.18880000000001
+          },
+          {
+            "title": "forced sowing clearance uses growing assignment, survives regenerated intents and cancels a carried stack conservatively when the zone changes",
+            "status": "passed",
+            "duration": 246.08659999999998
+          }
+        ]
+      },
+      {
+        "name": "player-hauling.test.ts",
+        "tests": [
+          {
+            "title": "forced stock hauling reserves active and queued quantities/capacity against other workers, preserves priority and exact continuation",
+            "status": "passed",
+            "duration": 167.99460000000005
+          },
+          {
+            "title": "forced construction deliveries are physical subjobs, builders need no hauling assignment, cancellation keeps delivered and carried materials",
+            "status": "passed",
+            "duration": 115.54960000000005
+          },
+          {
+            "title": "waiting hauling survives migration/replay, releases vanished sources, rejects corrupt quantities and legacy extensions atomically",
+            "status": "passed",
+            "duration": 91.46979999999996
+          }
+        ]
+      },
+      {
+        "name": "player-orders.test.ts",
+        "tests": [
+          {
+            "title": "forced work overrides proximity and schedule, queues reserve exclusively, then ordinary eating resumes; save replay is exact",
+            "status": "passed",
+            "duration": 222.2681
+          },
+          {
+            "title": "interruptions keep the active diagonal and food age, and invalid/unreachable orders have no side effects",
+            "status": "passed",
+            "duration": 19.749399999999923
+          },
+          {
+            "title": "Shift waits for ingestion, accepted orders survive priority zero, explicit cancellation and collapse release reservations",
+            "status": "passed",
+            "duration": 119.47919999999999
+          },
+          {
+            "title": "queue loses an access, clear-orders preserves designations, construction cannot skip delivery, V16 migration is strict",
+            "status": "passed",
+            "duration": 164.6382000000001
+          }
+        ]
+      },
+      {
+        "name": "player-services.test.ts",
+        "tests": [
+          {
+            "title": "forced refuel bypasses automation, reserves its station while queued, travels and works, persists every phase and conserves fuel on interruption",
+            "status": "passed",
+            "duration": 241.53539999999998
+          },
+          {
+            "title": "forced plant and pile clearing respects rotated footprints, queue cancellation, physical output, parent lifetime and construction assignment without ordinary hauling",
+            "status": "passed",
+            "duration": 77.21889999999996
+          }
+        ]
+      },
+      {
+        "name": "power.test.ts",
+        "tests": [
+          {
+            "title": "physical mixed construction, empty generator, hauling, light, lamp relocation and dismantling preserve ownership and material",
+            "status": "passed",
+            "duration": 199.1279
+          },
+          {
+            "title": "transmitter connectivity, square connector range, retention, gradual shortage, integer fuel and exact power continuation",
+            "status": "passed",
+            "duration": 579.2569000000001
+          },
+          {
+            "title": "V41 migrates without devices; malformed electrical ownership, recipes and fuel never load",
+            "status": "passed",
+            "duration": 30.54950000000008
+          }
+        ]
+      },
+      {
+        "name": "priority-work.test.ts",
+        "tests": [
+          {
+            "title": "one clicked bed is cleared, supplied over several trips and built; no nearby expansion, stable family, queue ordering and exact replay",
+            "status": "passed",
+            "duration": 644.912
+          },
+          {
+            "title": "prioritized cooking refuels then follows bill count, survives disabled assignment, and returns to physical eating; cancellation and collapse release cargo",
+            "status": "passed",
+            "duration": 627.1324
+          },
+          {
+            "title": "priority decisions share budgets, disappear on lost access or timeout without cancelling active work, and validate strict V22 migration",
+            "status": "passed",
+            "duration": 45.40730000000008
+          }
+        ]
+      },
+      {
+        "name": "production.test.ts",
+        "tests": [
+          {
+            "title": "feu construit, deux jours de combustion, ravitaillement concurrent et interruption conservent le bois",
+            "status": "passed",
+            "duration": 416.05789999999996
+          },
+          {
+            "title": "cuisine physique : mélange, interruption, sauvegarde du travail, deux repas et arrêt de facture",
+            "status": "passed",
+            "duration": 161.09759999999994
+          },
+          {
+            "title": "factures ordonnées et réservations : deux cuisiniers, une recette disponible, repli et ravitaillement sans transporteur",
+            "status": "passed",
+            "duration": 155.13020000000006
+          }
+        ]
+      },
+      {
+        "name": "recreation.test.ts",
+        "tests": [
+          {
+            "title": "recreation rates, cap, boredom hysteresis, sleep freeze and schedule gates have explicit boundaries",
+            "status": "passed",
+            "duration": 20.50630000000001
+          },
+          {
+            "title": "physical horseshoes: delivered construction, three reserved players, transit, interruption, occlusion and exact saves",
+            "status": "passed",
+            "duration": 109.77389999999997
+          },
+          {
+            "title": "skygazing requires arrival; unavailable or boring activities give no joy; V14 migration preserves existing state",
+            "status": "passed",
+            "duration": 34.84560000000005
+          }
+        ]
+      },
+      {
+        "name": "render-retention.test.ts",
+        "tests": [
+          {
+            "title": "objets graphiques résidents : retrait/restauration, frontière de chunk, croissance et libération",
+            "status": "passed",
+            "duration": 238.53840000000002
+          }
+        ]
+      },
+      {
+        "name": "rock-surface.test.ts",
+        "tests": [
+          {
+            "title": "continuous faceted cells: shared seams, winding, local excavation/restoration, resident buffers and map boundaries",
+            "status": "passed",
+            "duration": 46.73829999999998
+          }
+        ]
+      },
+      {
+        "name": "roofing.test.ts",
+        "tests": [
+          {
+            "title": "roof support requires a connected 6.9-radius path, separated from areas, and strict V34 migration rejects future data",
+            "status": "passed",
+            "duration": 77.17539999999997
+          },
+          {
+            "title": "builders physically roof a camp, clear a tree, preserve ceiling/floor coexistence and resume interrupted work exactly",
+            "status": "passed",
+            "duration": 347.02500000000003
+          },
+          {
+            "title": "support destruction collapses coverage; voluntary removal preserves connected detours outside the build radius",
+            "status": "passed",
+            "duration": 68.47429999999997
+          }
+        ]
+      },
+      {
+        "name": "room-topology.test.ts",
+        "tests": [
+          {
+            "title": "enclosures agree with an independent oracle across rectangles, in-place edits, replacement and unchanged snapshots",
+            "status": "passed",
+            "duration": 345.21279999999996
+          },
+          {
+            "title": "real removal, frame, construction, mining and save/reload merge and split rooms without confusing doors, water or furniture",
+            "status": "passed",
+            "duration": 128.78539999999998
+          }
+        ]
+      },
+      {
+        "name": "schedules.test.ts",
+        "tests": [
+          {
+            "title": "24 plages atomiques : frontières de sommeil, passage minuit/aube, lit physique et continuation exacte",
+            "status": "passed",
+            "duration": 112.39339999999999
+          },
+          {
+            "title": "horaires et actions : finir la tâche, manger malgré Travail, réveil critique accessible et aucun sommeil volontaire affamé",
+            "status": "passed",
+            "duration": 88.58239999999995
+          },
+          {
+            "title": "fatigue adulte, effondrement probabiliste et migration V11 préservent les états et le rejeu",
+            "status": "passed",
+            "duration": 28.968200000000024
+          }
+        ]
+      },
+      {
+        "name": "simulation.test.ts",
+        "tests": [
+          {
+            "title": "replay and saves at pickup, carrying, delivery and construction resume exactly",
+            "status": "passed",
+            "duration": 440.59970000000004
+          },
+          {
+            "title": "shared piles, partial capacities and interruptions preserve matter at every transfer boundary",
+            "status": "passed",
+            "duration": 407.7827
+          },
+          {
+            "title": "eligibility, rotated footprints and congestion preserve reachable work and atomic commands",
+            "status": "passed",
+            "duration": 1189.9088
+          },
+          {
+            "title": "sleep preserves delivered material; only an occupied bed improves recovery, with exclusive ownership and exact resumption",
+            "status": "passed",
+            "duration": 465.12090000000035
+          },
+          {
+            "title": "hunger interrupts construction without undoing delivery and allows recovery through gathering",
+            "status": "passed",
+            "duration": 193.92679999999973
+          },
+          {
+            "title": "plans allow transit until completion and rotated furniture keeps its full placement footprint",
+            "status": "passed",
+            "duration": 260.22929999999997
+          },
+          {
+            "title": "schema-1 migration preserves stock, escrow, beds and identity; corrupt schema-2 saves are rejected",
+            "status": "passed",
+            "duration": 305.77610000000004
+          },
+          {
+            "title": "five seeded two-day colonies conserve matter each tick through command churn and real outcomes",
+            "status": "passed",
+            "duration": 31090.378999999997
+          }
+        ]
+      },
+      {
+        "name": "skills.test.ts",
+        "tests": [
+          {
+            "title": "learning: independent XP thresholds, passion, soft cap, debt, mastery and midnight cadence",
+            "status": "passed",
+            "duration": 46.13229999999999
+          },
+          {
+            "title": "builders: physical work, distinct speeds, no training in travel/clearance, switching worker and exact continuation",
+            "status": "passed",
+            "duration": 57.53469999999993
+          },
+          {
+            "title": "skills persistence: strict V42 migration, invalid records, deep actor state and worker snapshots",
+            "status": "passed",
+            "duration": 26.32009999999991
+          }
+        ]
+      },
+      {
+        "name": "spatial-contracts.test.ts",
+        "tests": [
+          {
+            "title": "eight-direction routes agree with an independent relaxation oracle and preserve geometric travel time",
+            "status": "passed",
+            "duration": 163.49540000000002
+          },
+          {
+            "title": "civil crossing preserves beds, opposing cargo, every edge and exact continuation without pushing other actors",
+            "status": "passed",
+            "duration": 66.00229999999999
+          },
+          {
+            "title": "buffered motion is linear across jitter, duplicate messages, turns, pause and replacement",
+            "status": "passed",
+            "duration": 66.10559999999998
+          },
+          {
+            "title": "floor stacks enforce identity, reserved destination type, migration and atomic refusal when no drop fits",
+            "status": "passed",
+            "duration": 17.742999999999938
+          }
+        ]
+      },
+      {
+        "name": "stone-buildings.test.ts",
+        "tests": [
+          {
+            "title": "five stones obey build factors plus offsets, exact deliveries and typed recovery without mixed-rock substitution",
+            "status": "passed",
+            "duration": 515.3793000000001
+          },
+          {
+            "title": "a stone bed keeps its identity and reduced rest through use, packing and replay; saturated or overflowing refunds are atomic",
+            "status": "passed",
+            "duration": 190.42560000000003
+          },
+          {
+            "title": "V32 migration preserves in-flight wood work and blocks; stone buildings and loss ledgers cannot hide in old saves",
+            "status": "passed",
+            "duration": 58.35519999999997
+          }
+        ]
+      },
+      {
+        "name": "stonecutting.test.ts",
+        "tests": [
+          {
+            "title": "cinq roches : collecte réelle, staging hors de la place, reprises et livraison fractionnée de vingt blocs",
+            "status": "passed",
+            "duration": 424.38759999999996
+          },
+          {
+            "title": "ordres réservés, métier désactivé, annulation conservatrice, factures et meuble entier",
+            "status": "passed",
+            "duration": 46.487499999999955
+          },
+          {
+            "title": "filtres, rayon et seuil comptent les blocs ; sol saturé conserve le produit puis reprend",
+            "status": "passed",
+            "duration": 349.4076
+          }
+        ]
+      },
+      {
+        "name": "temperature.test.ts",
+        "tests": [
+          {
+            "title": "air history: exact roof threshold, heating, leakage, doors, split/merge and serialization",
+            "status": "passed",
+            "duration": 306.35229999999996
+          },
+          {
+            "title": "thermal food: freeze/thaw intervals, real owner transfers, mixing, threshold expiry and legacy continuation",
+            "status": "passed",
+            "duration": 52.23219999999992
+          },
+          {
+            "title": "plant climate: integrated local history, query independence, roof changes, migration and deltas",
+            "status": "passed",
+            "duration": 1024.1908
+          },
+          {
+            "title": "cold farming: no new sowing, stale intent rejected, accepted sowing completes and mature harvest remains available",
+            "status": "passed",
+            "duration": 42.20869999999991
+          }
+        ]
+      },
+      {
+        "name": "work-environment.test.ts",
+        "tests": [
+          {
+            "title": "lumière : oracle indépendant de distance, coins opaques, portes ouvertes, sources cumulées et mutations",
+            "status": "passed",
+            "duration": 137.20979999999997
+          },
+          {
+            "title": "ateliers : toit distinct de pièce, rôle et lumière au colon ; progression physique, migration et reprise",
+            "status": "passed",
+            "duration": 99.74639999999994
+          }
+        ]
+      },
+      {
+        "name": "world-generation.test.ts",
+        "tests": [
+          {
+            "title": "regional Core geology is persistent, coherent, independent of work RNG and strictly migrated",
+            "status": "passed",
+            "duration": 10926.7527
+          },
+          {
+            "title": "same seed reproduces every entity; rectangular boundary fixtures and saved edited maps remain valid",
+            "status": "passed",
+            "duration": 12375.0462
+          },
+          {
+            "title": "many seeds produce continuous rivers, coherent patches, walkable starts and readable rock clusters",
+            "status": "passed",
+            "duration": 8293.5337
+          },
+          {
+            "title": "tutorial resources support a wall and stool even on tiny generated fixtures, including save during work",
+            "status": "passed",
+            "duration": 5319.359799999998
+          }
+        ]
+      }
+    ]
+  },
+  "followup": {
+    "numTotalTests": 7,
+    "numPassedTests": 7,
+    "numFailedTests": 0,
+    "startTime": 1789512304815,
+    "success": true,
+    "files": [
+      {
+        "name": "deconstruction.test.ts",
+        "tests": [
+          {
+            "title": "construction precedes demolition; forced and queued removals preserve footprints, interruption semantics, refunds and exact replay",
+            "status": "passed",
+            "duration": 152.98400000000015
+          },
+          {
+            "title": "odd refunds can round either way; saturated ground and identity limits do not delete buildings, consume RNG or duplicate material",
+            "status": "passed",
+            "duration": 397.1410999999998
+          },
+          {
+            "title": "object reservations coordinate beds, seats, recreation and fuel; removal cleans ownership and table references while preserving held food",
+            "status": "passed",
+            "duration": 56.02729999999997
+          },
+          {
+            "title": "rectangle deduplicates multi-cell furniture, cancellation preserves it, and V23 migration rejects corrupted or disguised removal state",
+            "status": "passed",
+            "duration": 27.72569999999996
+          }
+        ]
+      },
+      {
+        "name": "skills.test.ts",
+        "tests": [
+          {
+            "title": "learning: independent XP thresholds, passion, soft cap, debt, mastery and midnight cadence",
+            "status": "passed",
+            "duration": 37.25579999999991
+          },
+          {
+            "title": "builders: physical work, distinct speeds, no training in travel/clearance, switching worker and exact continuation",
+            "status": "passed",
+            "duration": 61.90300000000002
+          },
+          {
+            "title": "skills persistence: strict V42 migration, invalid records, deep actor state and worker snapshots",
+            "status": "passed",
+            "duration": 21.853200000000015
+          }
+        ]
+      }
+    ]
+  },
+  "midnight_followup": {
+    "numTotalTests": 20,
+    "numPassedTests": 20,
+    "numFailedTests": 0,
+    "startTime": 1789513355373,
+    "success": true,
+    "files": [
+      {
+        "name": "construction.test.ts",
+        "tests": [
+          {
+            "title": "a builder clears a typed pile physically, preserves freshness and cargo on cancellation, supplies a frame and completes it",
+            "status": "passed",
+            "duration": 79.22939999999994
+          },
+          {
+            "title": "plant clearing respects a rotated footprint, saves mid-cut, and transport-only actors can supply but cannot finish a frame",
+            "status": "passed",
+            "duration": 218.41349999999989
+          },
+          {
+            "title": "plans and frames remain traversable with calibrated edge delay, completion protects active corners, and V15 migration is strict",
+            "status": "passed",
+            "duration": 67.3886
+          },
+          {
+            "title": "construction profiles preserve compatible stacks, clear incompatible ones, trim zones at blueprint time and replay through completion",
+            "status": "passed",
+            "duration": 930.8445999999999
+          },
+          {
+            "title": "replacing storage with a blueprint releases active and queued deliveries atomically, preserves other zone cells, and migrates old furniture contents",
+            "status": "passed",
+            "duration": 154.83449999999993
+          }
+        ]
+      },
+      {
+        "name": "deconstruction.test.ts",
+        "tests": [
+          {
+            "title": "construction precedes demolition; forced and queued removals preserve footprints, interruption semantics, refunds and exact replay",
+            "status": "passed",
+            "duration": 128.7246
+          },
+          {
+            "title": "odd refunds can round either way; saturated ground and identity limits do not delete buildings, consume RNG or duplicate material",
+            "status": "passed",
+            "duration": 392.55989999999997
+          },
+          {
+            "title": "object reservations coordinate beds, seats, recreation and fuel; removal cleans ownership and table references while preserving held food",
+            "status": "passed",
+            "duration": 46.70500000000004
+          },
+          {
+            "title": "rectangle deduplicates multi-cell furniture, cancellation preserves it, and V23 migration rejects corrupted or disguised removal state",
+            "status": "passed",
+            "duration": 26.736400000000003
+          }
+        ]
+      },
+      {
+        "name": "simulation.test.ts",
+        "tests": [
+          {
+            "title": "deterministic colony simulation replay and saves at pickup, carrying, delivery and construction resume exactly",
+            "status": "passed",
+            "duration": 386.32400000000007
+          },
+          {
+            "title": "deterministic colony simulation shared piles, partial capacities and interruptions preserve matter at every transfer boundary",
+            "status": "passed",
+            "duration": 321.5323000000001
+          },
+          {
+            "title": "deterministic colony simulation eligibility, rotated footprints and congestion preserve reachable work and atomic commands",
+            "status": "passed",
+            "duration": 996.5412000000001
+          },
+          {
+            "title": "deterministic colony simulation sleep preserves delivered material; only an occupied bed improves recovery, with exclusive ownership and exact resumption",
+            "status": "passed",
+            "duration": 363.9023000000002
+          },
+          {
+            "title": "deterministic colony simulation hunger interrupts construction without undoing delivery and allows recovery through gathering",
+            "status": "passed",
+            "duration": 158.66449999999986
+          },
+          {
+            "title": "deterministic colony simulation plans allow transit until completion and rotated furniture keeps its full placement footprint",
+            "status": "passed",
+            "duration": 204.09439999999995
+          },
+          {
+            "title": "deterministic colony simulation schema-1 migration preserves stock, escrow, beds and identity; corrupt schema-2 saves are rejected",
+            "status": "passed",
+            "duration": 234.8530999999998
+          },
+          {
+            "title": "deterministic colony simulation five seeded two-day colonies conserve matter each tick through command churn and real outcomes",
+            "status": "passed",
+            "duration": 21014.2736
+          }
+        ]
+      },
+      {
+        "name": "skills.test.ts",
+        "tests": [
+          {
+            "title": "learning: independent XP thresholds, passion, soft cap, debt, mastery and midnight cadence",
+            "status": "passed",
+            "duration": 33.1019
+          },
+          {
+            "title": "builders: physical work, distinct speeds, no training in travel/clearance, switching worker and exact continuation",
+            "status": "passed",
+            "duration": 56.71780000000001
+          },
+          {
+            "title": "skills persistence: strict V42 migration, invalid records, deep actor state and worker snapshots",
+            "status": "passed",
+            "duration": 22.13040000000001
+          }
+        ]
+      }
+    ]
+  },
+  "optimization_followup": {
+    "numTotalTests": 24,
+    "numPassedTests": 24,
+    "numFailedTests": 0,
+    "startTime": 1789514347054,
+    "success": true,
+    "files": [
+      {
+        "name": "construction-materials.test.ts",
+        "tests": [
+          {
+            "title": "typed deliveries reserve only requested ingredients, survive cancellation/replay and never substitute wood for steel",
+            "status": "passed",
+            "duration": 177.59929999999997
+          },
+          {
+            "title": "steel furniture retains its material and owner through packing/reinstallation; blocked odd refunds are atomic",
+            "status": "passed",
+            "duration": 79.5926
+          },
+          {
+            "title": "V29 keeps its eight-wood bed and existing work while V30 new beds require 45; future material and incompatible recipes are rejected",
+            "status": "passed",
+            "duration": 52.623500000000035
+          },
+          {
+            "title": "three-cell workshops require every mixed ingredient; all-steel cost is aggregated, progress beyond 119 and in-flight orders resume exactly",
+            "status": "passed",
+            "duration": 274.84489999999994
+          },
+          {
+            "title": "workshop rotations reject clipped sides and legacy shapes; mixed refunds preflight both types without mutation or RNG loss",
+            "status": "passed",
+            "duration": 115.3075
+          }
+        ]
+      },
+      {
+        "name": "construction.test.ts",
+        "tests": [
+          {
+            "title": "a builder clears a typed pile physically, preserves freshness and cargo on cancellation, supplies a frame and completes it",
+            "status": "passed",
+            "duration": 116.52820000000008
+          },
+          {
+            "title": "plant clearing respects a rotated footprint, saves mid-cut, and transport-only actors can supply but cannot finish a frame",
+            "status": "passed",
+            "duration": 214.27929999999992
+          },
+          {
+            "title": "plans and frames remain traversable with calibrated edge delay, completion protects active corners, and V15 migration is strict",
+            "status": "passed",
+            "duration": 64.9815000000001
+          },
+          {
+            "title": "construction profiles preserve compatible stacks, clear incompatible ones, trim zones at blueprint time and replay through completion",
+            "status": "passed",
+            "duration": 837.3815999999999
+          },
+          {
+            "title": "replacing storage with a blueprint releases active and queued deliveries atomically, preserves other zone cells, and migrates old furniture contents",
+            "status": "passed",
+            "duration": 136.5981999999999
+          }
+        ]
+      },
+      {
+        "name": "doors.test.ts",
+        "tests": [
+          {
+            "title": "seven material doors build from delivered items, retain policy/save state and deconstruct without becoming furniture",
+            "status": "passed",
+            "duration": 216.9235
+          },
+          {
+            "title": "opening waits before travel; concurrent bodies, items, hold and forbid preserve physical passages and replay",
+            "status": "passed",
+            "duration": 25.514399999999966
+          },
+          {
+            "title": "a sleeping colonist crosses a real closed corridor door; navigation, solid corners, migration and corrupt saves agree",
+            "status": "passed",
+            "duration": 38.086599999999976
+          }
+        ]
+      },
+      {
+        "name": "furniture-travel.test.ts",
+        "tests": [
+          {
+            "title": "furniture routes agree with an independent directed-cost oracle, repeat across different furniture, and retain exact timed edges",
+            "status": "passed",
+            "duration": 73.15190000000001
+          },
+          {
+            "title": "opposite loaded trips cross furniture, cancel in transit without teleport or loss, and migrate old edges strictly",
+            "status": "passed",
+            "duration": 195.9923
+          }
+        ]
+      },
+      {
+        "name": "navigation-budget.test.ts",
+        "tests": [
+          {
+            "title": "logistics proves only competitive access, retains ties and skips an inaccessible higher-priority reserve",
+            "status": "passed",
+            "duration": 59.14599999999996
+          },
+          {
+            "title": "goal-bounded floods retain the full-flood nearest food and exact path across ties, walls and unreachable goals",
+            "status": "passed",
+            "duration": 755.1685
+          }
+        ]
+      },
+      {
+        "name": "skills.test.ts",
+        "tests": [
+          {
+            "title": "learning: independent XP thresholds, passion, soft cap, debt, mastery and midnight cadence",
+            "status": "passed",
+            "duration": 27.522800000000018
+          },
+          {
+            "title": "builders: physical work, distinct speeds, no training in travel/clearance, switching worker and exact continuation",
+            "status": "passed",
+            "duration": 50.58479999999997
+          },
+          {
+            "title": "skills persistence: strict V42 migration, invalid records, deep actor state and worker snapshots",
+            "status": "passed",
+            "duration": 20.21120000000002
+          }
+        ]
+      },
+      {
+        "name": "spatial-contracts.test.ts",
+        "tests": [
+          {
+            "title": "eight-direction routes agree with an independent relaxation oracle and preserve geometric travel time",
+            "status": "passed",
+            "duration": 146.277
+          },
+          {
+            "title": "civil crossing preserves beds, opposing cargo, every edge and exact continuation without pushing other actors",
+            "status": "passed",
+            "duration": 49.5086
+          },
+          {
+            "title": "buffered motion is linear across jitter, duplicate messages, turns, pause and replacement",
+            "status": "passed",
+            "duration": 52.59529999999995
+          },
+          {
+            "title": "floor stacks enforce identity, reserved destination type, migration and atomic refusal when no drop fits",
+            "status": "passed",
+            "duration": 14.392599999999902
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,5 +1,7 @@
 # Construction avec matériau — contrat V30–V33
 
+V43 applique désormais la [compétence Construction](skills.md) aux phases concernées : vitesse relative, apprentissage seulement lors de la finition d’un cadre approvisionné et de la déconstruction à coût. Les durées du catalogue restent des unités de travail neutre.
+
 V42 ajoute deux recettes fixes explicites en acier : générateur 100 acier + 2 composants, lampe 20 acier. Les ingrédients acceptent `ItemId`, distinct du matériau structurel substituable ; aucun remplacement du composant par de l’acier. Aucun profil historique sans matériau pour ces nouvelles définitions. [Électricité et sauvegarde](power.md).
 
 V40 ajoute `passive-cooler` : bois fixe explicite, 50 unités livrées et 200 ticks Core de travail sans facteur de matériau, convertis en 20 ticks neutres locaux. Une case, orientation zéro. Ces mêmes 50 bois constituent le combustible initial ; [contrat](passive-cooling.md).

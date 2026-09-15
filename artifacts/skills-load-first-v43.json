@@ -1,0 +1,7 @@
+{
+  "date": "2026-09-16",
+  "scenario": "doorTraffic, mixed construction levels 0/4/8/12/20, no initial food",
+  "result": "bound reached at 6000 local ticks for 100 actors",
+  "outcome": {"doors":100,"trees":9,"stored":864,"hauling":0,"jobs":10},
+  "interpretation": "The fixture had no food and now lasts more than a day. Sustained load will be measured with physically accessible rations; no needs are disabled. No FPS or zero regression conclusion can be drawn from this unsuccessful completion."
+}

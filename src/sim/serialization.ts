@@ -1,3 +1,5 @@
+import { validSkills } from './skills-save.ts';
+import { initialSkills } from './skills.ts';
 import { validPlantThermalFactor } from './thermal-plants.ts';
 import { validateTemperature } from './temperature-save.ts';
 import { initializeLightWork, validateWorkProgress } from './work-progress-save.ts';
@@ -58,7 +60,7 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validateWorld(input: unknown): string[] {
   return validateSchema(input, SCHEMA_VERSION);
 }
-function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42): string[] {
+function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(input)) return ['World must be an object.'];
@@ -85,6 +87,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
       if (ids.has(item.id)) errors.push('Duplicate entity ID.'); ids.add(item.id);
       if (integer(input.nextId, 1) && item.id >= input.nextId) errors.push('nextId must exceed all entity IDs.');
       if (key === 'pawns') {
+        if(version>=43 ? !validSkills(item.skills,input.tick as number) : item.skills!==undefined) errors.push('Invalid pawn skills for schema.');
         if (typeof item.name !== 'string' || item.name.length === 0 || item.name.length > 80 || !bounded(item.hunger) || !bounded(item.rest) || !bounded(item.mood)
           || !oneOf(item.state, legacyV2 ? ['idle', 'moving', 'working', 'sleeping', 'hungry'] : ['idle', 'moving', 'working', 'sleeping', 'hungry', 'eating', ...(version>=15?['recreating']:[])]) || !(item.jobId === null || integer(item.jobId, 1))
           || !record(item.priorities) || !integer(item.priorities.gather, 0, 4) || !integer(item.priorities.build, 0, 4) || !integer(item.priorities.haul, 0, 4) || (version >= 8 && !integer(item.priorities.grow, 0, 4))
@@ -464,6 +467,7 @@ export function deserializeWorld(serialized: string): World {
   if(record(input)&&input.schemaVersion===39){const errors=validateSchema(input,39);if(errors.length)throw new Error('Invalid version 39 save: '+errors.join(' '));input.schemaVersion=40;}
   if(record(input)&&input.schemaVersion===40){const errors=validateSchema(input,40);if(errors.length)throw new Error('Invalid version 40 save: '+errors.join(' '));input.schemaVersion=41;}
   if(record(input)&&input.schemaVersion===41){const errors=validateSchema(input,41);if(errors.length)throw new Error('Invalid version 41 save: '+errors.join(' '));input.schemaVersion=42;}
+  if(record(input)&&input.schemaVersion===42){const errors=validateSchema(input,42);if(errors.length)throw new Error('Invalid version 42 save: '+errors.join(' '));const w=input as unknown as World;for(const p of w.pawns)p.skills=initialSkills(8,0);input.schemaVersion=43;}
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`); return input as World;
 }
 /** Deterministic diagnostic fingerprint, not a cryptographic digest. */

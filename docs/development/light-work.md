@@ -1,5 +1,7 @@
 # Lumière des travaux et déplacements — V37
 
+V43 applique désormais la [compétence Construction](skills.md) aux phases concernées : vitesse relative, apprentissage seulement lors de la finition d’un cadre approvisionné et de la déconstruction à coût. Les durées du catalogue restent des unités de travail neutre.
+
 15 septembre 2026. [Recherche précise](../research/light-work-reference.md), [lumière et ateliers](work-environment.md), [validation](validation.md). Cette tranche étend les consommateurs du champ V36 ; aucun nouveau contenu ni shader.
 
 ## Règles exécutées

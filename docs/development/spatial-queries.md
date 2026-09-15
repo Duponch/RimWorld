@@ -23,3 +23,7 @@ Les empreintes des parties de charge sont comparées intégralement avant/après
 ## Limites
 
 Il reste des scans et des pointes CPU à forte charge. Les résultats concernent une carte synthétique, pas toutes les colonies. Ne pas en déduire des FPS ni une cadence 6× garantie. Pièces/toits et leurs révisions topologiques feront l'objet d'un contrat propre ; pas d'index persistant implicite ajouté pour anticiper ce chantier.
+
+## Réduction des allocations sous V43
+
+L’audit de cent bâtisseurs avec toiture a encore trouvé des recherches d’emprise coûteuses. `footprintContains` rejette les cellules distantes avant lecture des enveloppes ; toutes ses branches actuelles restent dans le voisinage immédiat de l’ancre. Toute future extension d’empreinte doit étendre cette borne, contrôlée contre `footprintCells` pour tout le catalogue et ses rotations. `frameAt` emploie la requête ponctuelle, les sorties de mobilier partagent leurs quatre directions constantes. Aucun ordre d’énumération, coût, budget ou cache persistant nouveau. [Comparaison mesurée](validation.md#charge-cpu-et-copie-des-états).

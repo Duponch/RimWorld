@@ -1,3 +1,4 @@
+import { withoutPawnSkills, withMigratedSkills } from './scenarios/legacy-skills';
 import { expect, test } from 'vitest';
 import { applyCommand, stepWorld, serializeWorld, deserializeWorld, validateWorld, addGroundMaterial, refreshStock } from '../src/sim/index';
 import { addMaterial } from '../src/sim/materials';
@@ -6,7 +7,7 @@ import { finishDeconstruction } from '../src/sim/deconstruction';
 import { planHaulOrder } from '../src/sim/player-hauling';
 import { deconstructionCamp } from './scenarios/deconstruction';
 import type { World } from '../src/sim/types';
-import { footprintCells, footprintContains } from '../src/sim/definitions';
+import { footprintCells, footprintContains, STRUCTURE_DEFINITIONS } from '../src/sim/definitions';
 import { furnitureDelay, canStandAt } from '../src/sim/furniture-travel';
 import { constructionSupplied } from '../src/sim/construction-materials';
 import { canDesignate } from '../src/sim/engine';
@@ -73,7 +74,7 @@ test('steel furniture retains its material and owner through packing/reinstallat
 test('V29 keeps its eight-wood bed and existing work while V30 new beds require 45; future material and incompatible recipes are rejected',()=>{
   const w=deconstructionCamp();applyCommand(w,{type:'designate',kind:'bed',x:17,z:16});
   const job=w.jobs[0]!;delete job.material;job.construction='frame';addMaterial(w,'wood',8,{type:'job',jobId:job.id},'wood');
-  const raw=JSON.parse(serializeWorld(w));raw.schemaVersion=29;for(const a of raw.pawns)delete a.priorities.craft;
+  const raw=JSON.parse(serializeWorld(w));(raw.schemaVersion=29,withoutPawnSkills(raw));for(const a of raw.pawns)delete a.priorities.craft;
   const loaded=deserializeWorld(JSON.stringify(raw));expect(loaded.jobs[0]!.material).toBeUndefined();
   expect(constructionRecipe(loaded.jobs[0]!)).toMatchObject({work:120,ingredients:[{item:'wood',quantity:8}]});
   until(loaded,()=>loaded.structures.length===1);expect(loaded.structures[0]!.material).toBeUndefined();
@@ -113,7 +114,7 @@ test('three-cell workshops require every mixed ingredient; all-steel cost is agg
     until(w,()=>job.progress>=125);
     if(material==='steel')expect(w.piles.filter(p=>p.owner.type==='job').map(p=>p.quantity).sort((a,b)=>a-b)).toEqual([30,75]);
     const raw=serializeWorld(w),copy=deserializeWorld(raw);
-    for(const change of ['legacy','material','excess'] as const){const bad=JSON.parse(raw);if(change==='legacy')bad.schemaVersion=30;else if(change==='material')delete bad.jobs[0].material;else bad.jobs[0].progress=constructionRecipe(job).work;expect(()=>deserializeWorld(JSON.stringify(bad)),change).toThrow();}
+    for(const change of ['legacy','material','excess'] as const){const bad=JSON.parse(raw);if(change==='legacy')(bad.schemaVersion=30,withoutPawnSkills(bad));else if(change==='material')delete bad.jobs[0].material;else bad.jobs[0].progress=constructionRecipe(job).work;expect(()=>deserializeWorld(JSON.stringify(bad)),change).toThrow();}
     until(w,()=>w.structures.length===1);stepWorld(copy,w.tick-copy.tick);expect(copy).toEqual(w);
     expect(steelAccount(w)).toBe(material==='wood'?30:105);expect(w.piles.find(p=>p.id===preserved.id)?.owner).toEqual(preserved.owner);
     const bench=w.structures[0]!;
@@ -122,7 +123,7 @@ test('three-cell workshops require every mixed ingredient; all-steel cost is agg
     expect(applyCommand(w,{type:'install',structureId:bench.id,x:23,z:20,orientation:1}).ok).toBe(true);
     until(w,()=>w.packed[0]?.owner.type==='pawn');
     const moving=deserializeWorld(serializeWorld(w));
-    const old=JSON.parse(serializeWorld(w));old.schemaVersion=30;for(const a of old.pawns)delete a.priorities.craft;expect(()=>deserializeWorld(JSON.stringify(old))).toThrow(/version 30/);
+    const old=JSON.parse(serializeWorld(w));(old.schemaVersion=30,withoutPawnSkills(old));for(const a of old.pawns)delete a.priorities.craft;expect(()=>deserializeWorld(JSON.stringify(old))).toThrow(/version 30/);
     until(w,()=>!w.jobs.length);stepWorld(moving,w.tick-moving.tick);expect(moving).toEqual(w);
     expect(w.structures[0]).toBe(bench);expect(bench.material).toBe(material);
     expect(footprintCells(bench).map(c=>c.z).sort((a,b)=>a-b)).toEqual([19,20,21]);
@@ -134,6 +135,14 @@ test('three-cell workshops require every mixed ingredient; all-steel cost is agg
 
 test('workshop rotations reject clipped sides and legacy shapes; mixed refunds preflight both types without mutation or RNG loss',()=>{
   const w=deconstructionCamp();
+  // The point-query fast path must keep every catalogue footprint, including
+  // wrapped removal/installation targets. The array query is unchanged.
+  for(const kind of Object.keys(STRUCTURE_DEFINITIONS) as (keyof typeof STRUCTURE_DEFINITIONS)[])for(const orientation of [0,1,2,3] as const) {
+    const s={kind,x:8,z:8,orientation,footprint:'standard' as const};
+    const occupied=footprintCells(s);
+    for(const shape of [s,{...s,kind:'deconstruct' as const,deconstruction:{kind}},{...s,kind:'install' as const,furniture:{kind}}])
+      for(let z=4;z<=12;z++)for(let x=4;x<=12;x++)expect(footprintContains(shape,{x,z})).toBe(occupied.some(c=>c.x===x&&c.z===z));
+  }
   for(const orientation of [0,1,2,3] as const){
     const s={type:'designate',kind:'stonecutter',material:'wood',x:16,z:16,orientation} as const;
     expect(canDesignate(w,s).ok).toBe(true);
@@ -150,6 +159,6 @@ test('workshop rotations reject clipped sides and legacy shapes; mixed refunds p
   w.piles=w.piles.filter(p=>p.owner.type!=='ground'||p.owner.x!==17||p.owner.z!==15);refreshStock(w);
   expect(finishDeconstruction(w,w.pawns[0]!,job)).toBe(true);expect(validateWorld(w)).toEqual([]);
   expect(steelAccount(w)).toBe(30);expect(w.piles.filter(p=>p.kind==='wood').reduce((n,p)=>n+p.quantity,0)+w.deconstructed.lostWood).toBe(75);
-  const legacy=JSON.parse(serializeWorld(deconstructionCamp()));legacy.schemaVersion=30;for(const a of legacy.pawns)delete a.priorities.craft;
-  expect(deserializeWorld(JSON.stringify(legacy))).toEqual({...legacy,schemaVersion:42,pawns:legacy.pawns.map((p:any)=>({...p,priorities:{...p.priorities,craft:2}}))});
+  const legacy=JSON.parse(serializeWorld(deconstructionCamp()));(legacy.schemaVersion=30,withoutPawnSkills(legacy));for(const a of legacy.pawns)delete a.priorities.craft;
+  expect(deserializeWorld(JSON.stringify(legacy))).toEqual(withMigratedSkills({...legacy,schemaVersion:43,pawns:legacy.pawns.map((p:any)=>({...p,priorities:{...p.priorities,craft:2}}))}));
 });

@@ -1,5 +1,7 @@
 # Toits construits — contrat V35
 
+V43 applique désormais la [compétence Construction](skills.md) aux phases concernées : vitesse relative, apprentissage seulement lors de la finition d’un cadre approvisionné et de la déconstruction à coût. Les durées du catalogue restent des unités de travail neutre.
+
 15 septembre 2026. [Recherche](../research/roofing-reference.md), [validation](validation.md). Corpus : chapitres 5/10/21/22, SYS/TEST-023..025 et 061, scène E. Ce contrat couvre la toiture construite ; les plafonds rocheux naturels et les conséquences de dégâts restent ouverts.
 
 ## Couverture, zones et travail

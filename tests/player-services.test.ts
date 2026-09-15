@@ -1,3 +1,4 @@
+import { withoutPawnSkills, withMigratedSkills } from './scenarios/legacy-skills';
 import { expect, test } from 'vitest';
 import { addGroundMaterial, applyCommand, createWorld, deserializeWorld, refreshStock, serializeWorld, stepWorld, validateWorld } from '../src/sim/index';
 import { queryOrderOptions } from '../src/sim/player-orders';
@@ -50,7 +51,7 @@ test('forced refuel bypasses automation, reserves its station while queued, trav
   expect(actor.haul?.phase).toBe('deliver');const held=c.piles.find(p=>p.owner.type==='pawn')!,massBefore=woodMass(c);
   expect(applyCommand(c,{type:'clear-orders',pawnId:actor.id}).ok).toBe(true);expect(c.piles.find(p=>p.id===held.id)?.owner.type).toBe('ground');expect(woodMass(c)).toBe(massBefore);expect(validateWorld(c)).toEqual([]);
   const full=camp(),fullFire=fire(full);fullFire.fuel.ticks=CAMPFIRE_CAPACITY;addGroundMaterial(full,'wood',10,{x:8,z:8},'wood');rejected(full,{type:'order-haul',pawnId:full.pawns[0]!.id,target:{type:'fuel',structureId:fullFire.id},queue:false});
-  const legacy=JSON.parse(serializeWorld(camp()));legacy.schemaVersion=18;for(const a of legacy.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete legacy.deconstructed;delete legacy.packed;expect(deserializeWorld(JSON.stringify(legacy))).toEqual({...legacy,pawns:legacy.pawns.map((p:any)=>({...p,priorities:{craft:2,...p.priorities,mine:2}})),schemaVersion:42,packed:[],deconstructed:{count:0,lostWood:0,fuelTicks:0}});
+  const legacy=JSON.parse(serializeWorld(camp()));(legacy.schemaVersion=18,withoutPawnSkills(legacy));for(const a of legacy.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete legacy.deconstructed;delete legacy.packed;expect(deserializeWorld(JSON.stringify(legacy))).toEqual(withMigratedSkills({...legacy,pawns:legacy.pawns.map((p:any)=>({...p,priorities:{craft:2,...p.priorities,mine:2}})),schemaVersion:43,packed:[],deconstructed:{count:0,lostWood:0,fuelTicks:0}}));
 });
 
 test('forced plant and pile clearing respects rotated footprints, queue cancellation, physical output, parent lifetime and construction assignment without ordinary hauling',()=>{
@@ -71,6 +72,6 @@ test('forced plant and pile clearing respects rotated footprints, queue cancella
   applyCommand(w,{type:'priority',pawnId:p.id,work:'build',value:0});for(let i=0;i<150&&p.orders.active!==null;i++)tick(w);expect(applyCommand(w,{type:'clear-orders',pawnId:p.id}).ok).toBe(true);expect(p.haul).toBeNull();expect(w.stock.wood).toBe(12);expect(w.piles.filter(p=>p.owner.type==='ground'&&p.owner.x===16&&p.owner.z===8).reduce((n,p)=>n+p.quantity,0)).toBe(2);
   applyCommand(w,{type:'priority',pawnId:p.id,work:'build',value:1});expect(applyCommand(w,{type:'order-job',pawnId:p.id,jobId:b!.id,queue:false}).ok).toBe(true);
   expect(applyCommand(w,{...clear,queue:true}).ok).toBe(true);expect(validateWorld(w)).toEqual([]);expect(deserializeWorld(serializeWorld(w))).toEqual(w);
-  const raw=JSON.parse(serializeWorld(w));raw.schemaVersion=18;for(const a of raw.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete raw.deconstructed;delete raw.packed;expect(()=>deserializeWorld(JSON.stringify(raw))).toThrow(/version 18/);
+  const raw=JSON.parse(serializeWorld(w));(raw.schemaVersion=18,withoutPawnSkills(raw));for(const a of raw.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete raw.deconstructed;delete raw.packed;expect(()=>deserializeWorld(JSON.stringify(raw))).toThrow(/version 18/);
   expect(applyCommand(w,{type:'cancel',x:a!.x,z:a!.z}).ok).toBe(true);expect(p.orders.queue).toEqual([]);expect(w.stock.wood).toBe(12);expect(validateWorld(w)).toEqual([]);
 });

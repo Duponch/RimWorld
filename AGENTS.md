@@ -50,7 +50,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 42 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 43 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)
@@ -199,3 +199,11 @@
 - Planification et livraison de combustible emploient toute l’empreinte. Tester chaque face d’un appareil multiple : la route vers la seconde case ne doit pas bloquer le porteur. Les phases power.on/parent sont observées par le bridge.
 - V41 strictement validée avant migration sans appareil injecté. La lampe emballée perd connexion/alimentation. Conduits, interrupteurs physiques, batteries, froid électrique, prérequis de recherche/compétence et incidents restent absents ; rayon brut 12 de lampe provisoire.
 - Diffusion lumineuse V42 : une nouvelle topologie n’exige pas de diffusion si sources/dimensions et obstacles dans leurs bornes de portée sont identiques. Les topologies comparées restent immuables. Le canal d’opacité de la texture doit toutefois suivre chaque changement topologique, indépendamment de l’identité du tableau lumineux.
+
+## Compétences V43
+
+- Lire docs/development/skills.md et sa recherche. Construction est la première compétence branchée, pas une personnalité complète. Milli-XP entières, saturation strictement après 4000 XP nets, dette −1000 avant perte de niveau, cadence déphasée et remise à zéro sauvegardée.
+- Gains seulement en finition de cadre approvisionné et déconstruction à coût ; pas pendant trajet, transport, dégagement, toiture ou désinstallation. Ces deux derniers travaux utilisent néanmoins la vitesse. Les anciennes durées restent explicitement calibrées ; qualité/échecs, seuils, capacités, humeur de passion et autres compétences demeurent ouverts.
+- V42 strictement validée avant profil 8/sans passion/0 XP et dernière remise inconnue (-1), sans passé inventé ni modification des routes/ressources. Cloner profondément skills dans les fixtures de foule. La ROADMAP privilégie désormais corps/capacités, soins puis équipement/combat avant de poursuivre les appareils électriques.
+
+- Emprises V43 : le rejet rapide de `footprintContains` suppose les branches actuelles dans le voisinage immédiat de l’ancre. Étendre sa borne lors de futurs volumes et conserver la comparaison de tout le catalogue/rotations/enveloppes contre `footprintCells`. Les directions de sortie sont constantes, sans changer leur ordre.

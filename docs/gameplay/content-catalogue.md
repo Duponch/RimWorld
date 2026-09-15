@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+V43 ajoute un profil numérique Construction aux personnes (aucun nouvel objet). Niveau, passion et XP sont des états individuels ; ils ne constituent ni un catalogue de biographies ni les douze compétences complètes. [Contrat](../development/skills.md).
+
 V42 ajoute `wood-generator` (générateur à bois, CAT-047 partiel) et `standing-lamp` (mobilier lumineux). Recettes fixes : 100 acier + 2 composants et 20 acier. Puissances 1 000 W / 30 W ; aucune variante avancée, câble ou batterie implicite. [Contrat et limites](../development/power.md).
 
 V41 ajoute `Tile.ore=machinery` (machines compactées, 2 000 PV, groupes 3–6) et `component` (deux unités par case, pile 50, transport/stockage, CAT-006 partiel). [Contrat](../development/components.md). V42 utilise deux composants dans le générateur ; fabrication de composants, usure et composants avancés restent absents.
@@ -93,7 +95,7 @@ V22 ne crée aucun objet : elle renseigne transit, arrêt, coûts d’entrée et
 | sandstone | Grès | Massif et pierre décorative typés |
 | slate | Ardoise | Massif et pierre décorative typés |
 
-Distribution régionale, persistance et apparence sont livrées. V28 ajoute les PV et produits ci-dessous, sans blocs utilisables. L’acier compacté et son produit sont livrés en V29 ; autres minerais, compétences et construction en pierre restent absents ; taille livrée V32 ; [contrat du minage](../development/mining.md).
+Distribution régionale, persistance et apparence sont livrées. V28 ajoute les PV et produits ci-dessous, sans blocs utilisables. L’acier compacté et son produit sont livrés en V29 ; autres minerais hors machines compactées et compétences de minage restent absents ; taille livrée V32, construction en pierre V33 ; [contrat du minage](../development/mining.md).
 
 ## Produits et sols V28 — CAT-059/060
 

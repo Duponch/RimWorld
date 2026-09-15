@@ -1,5 +1,7 @@
 # Déconstruction — contrat V24
 
+V43 applique désormais la [compétence Construction](skills.md) aux phases concernées : vitesse relative, apprentissage seulement lors de la finition d’un cadre approvisionné et de la déconstruction à coût. Les durées du catalogue restent des unités de travail neutre.
+
 V42 étend la restitution aux appareils électriques : générateur 50 acier + 1 composant, lampe 10 acier ; pertes `lostComponents` distinctes et prévalidées, réservoir retiré dans le bilan de combustible. [Contrat](power.md).
 
 V40 : le [refroidisseur passif](passive-cooling.md) rejoint les bâtiments sans restitution matérielle. Comme le feu, son combustible restant et consommé passe dans le bilan `fuelTicks`, sans double comptage du coût de construction.

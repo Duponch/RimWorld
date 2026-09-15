@@ -32,6 +32,9 @@ const FOOTPRINT_DIRECTIONS = [[0, 1], [1, 0], [0, -1], [-1, 0]] as const;
 export function footprintContains(entity: FootprintEntity, cell: Cell): boolean {
   const dx=cell.x-entity.x,dz=cell.z-entity.z;
   if(dx===0&&dz===0)return true;
+  // All branches below occupy the anchor or its immediate neighbours.
+  // Reject distant queries before reading optional payloads in large colonies.
+  if(dx < -1||dx > 1||dz < -1||dz > 1)return false;
   const kind=entity.furniture?.kind??entity.deconstruction?.kind??entity.kind;
   if(kind==='wood-generator')return dx>=0&&dx<=1&&dz>=0&&dz<=1;
   if(kind==='stonecutter') {

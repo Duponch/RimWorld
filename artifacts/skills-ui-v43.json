@@ -1,0 +1,33 @@
+{
+  "date": "2026-09-15T23:03:23.157Z",
+  "backend": "native WebGPU",
+  "viewport": "1440x1000",
+  "checkpoint": {
+    "construction": {
+      "level": 10,
+      "xp": 33650,
+      "dailyXp": 33650,
+      "passion": 2
+    },
+    "lastResetTick": -1
+  },
+  "final": {
+    "construction": {
+      "level": 10,
+      "xp": 179700,
+      "dailyXp": 179700,
+      "passion": 2
+    },
+    "lastResetTick": -1
+  },
+  "bed": {
+    "material": "wood",
+    "id": 218,
+    "kind": "bed",
+    "x": 11,
+    "z": 10,
+    "orientation": 0,
+    "footprint": "standard"
+  },
+  "errors": []
+}

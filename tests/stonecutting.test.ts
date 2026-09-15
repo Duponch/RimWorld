@@ -1,3 +1,4 @@
+import { withoutPawnSkills } from './scenarios/legacy-skills';
 import { expect,test } from 'vitest';
 import { applyCommand,deserializeWorld,serializeWorld,stepWorld,validateWorld } from '../src/sim/index';
 import { newCookingBill,countedProducts } from '../src/sim/cooking-bills';
@@ -62,7 +63,7 @@ test('ordres réservés, métier désactivé, annulation conservatrice, factures
   until(w,()=>w.packed.some(q=>q.building.id===s!.id));replay(w);
   expect(w.packed[0]!.building.bills).toEqual([bill]);
   const saved=JSON.parse(serializeWorld(w));saved.packed[0].building.bills[0].recipe='simple-meal';expect(()=>deserializeWorld(JSON.stringify(saved))).toThrow();
-  const legacy=JSON.parse(serializeWorld(stonecuttingCamp()));legacy.schemaVersion=31;for(const a of legacy.pawns)delete a.priorities.craft;for(const b of legacy.structures)delete b.bills;
+  const legacy=JSON.parse(serializeWorld(stonecuttingCamp()));(legacy.schemaVersion=31,withoutPawnSkills(legacy));for(const a of legacy.pawns)delete a.priorities.craft;for(const b of legacy.structures)delete b.bills;
   const migrated=deserializeWorld(JSON.stringify(legacy));expect(migrated.structures[0]!.bills).toEqual([]);expect(migrated.pawns[0]!.priorities.craft).toBe(2);
   for(const bad of [()=>{legacy.pawns[0].priorities.craft=2;},()=>{delete legacy.pawns[0].priorities.craft;legacy.structures[0].bills=[];}]){bad();expect(()=>deserializeWorld(JSON.stringify(legacy))).toThrow(/version 31/);}
 });

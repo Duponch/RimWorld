@@ -1,5 +1,7 @@
 # Matrice des systèmes et critères de réalisation
 
+V43 commence les différences humaines par Construction et son apprentissage. Les autres compétences, traits et la santé restent ouverts. [Priorité et limites](../research/skills-reference.md).
+
 V42 enrichit SYS/TEST-127/128 et CAT-047 avec [générateur, carburant et lampes](../development/power.md). Connexions directes et réseaux de générateurs présents ; conduits, interrupteurs, batteries et incidents restent ouverts. Aucun jalon G0–G5 clôturé.
 
 V41 : CAT-006 partiel et SYS-061 enrichi par les [composants industriels](../development/components.md), extraits/rangés dans la chaîne commune ; autres acquisitions et usages électriques ouverts.
@@ -12,7 +14,7 @@ V38 : thermique quotidienne/locale, chauffage du feu et âge alimentaire variabl
 
 Cette matrice traduit les références de RimWorld en exigences de gameplay pour notre simulation de colonie 3D. Les trois documents de `docs/reference/originals` constituent désormais le corpus fonctionnel principal, utilisé selon la [note d'adoption et de lecture critique](../research/reference-adoption.md), avec la [première recherche](../research/rimworld-reference.md) en complément. Elle décrit une cible et un ordre de construction, **pas une déclaration de fonctionnalités livrées**. Le [plan de développement](../ROADMAP.md) définit le calendrier canonique G0 à G5 et l'état technique ; les résumés ci-dessous s'y conforment. Les extensions viennent après G5.
 
-Révision : **15 septembre 2026**. Périmètre par défaut : jeu de base avant les systèmes comparables aux extensions. Les règles chiffrées du prototype sont nos paramètres provisoires ; elles ne doivent pas être présentées comme des valeurs certifiées de RimWorld.
+Révision : **16 septembre 2026**. Périmètre par défaut : jeu de base avant les systèmes comparables aux extensions. Les règles chiffrées du prototype sont nos paramètres provisoires ; elles ne doivent pas être présentées comme des valeurs certifiées de RimWorld.
 
 V36 branche lumière logique et premiers rôles de pièce sur les deux recettes, puis leur présentation locale 3D ; les critères globaux de S10–S12 restent des cibles ouvertes.
 
@@ -146,3 +148,5 @@ V27 : [régions et identités géologiques](../development/geology.md) livrées 
 S10, sous V34 : reconnaissance des enceintes, seuils et inspection livrées ; fusion/division, coins, eau et reprise contrôlés. Toits construits V35, premiers rôles V36 et thermique V38 sont ajoutés dans leurs contrats ; confort et autres effets de pièce restent ouverts ; ce lot ne satisfait pas encore l’acceptation G2. [Contrat](../development/rooms.md).
 
 V37 étend la lumière aux travaux et déplacements des domaines S02/S04/S06/S09/S10 ; [contrat](../development/light-work.md). G0/G1 restent partiels et G2 en cours. Ni catalogue, compétences, psychologie ni thermique livrés par cette extension.
+
+V43 commence S13/S14 via Construction et son apprentissage individuel ; [contrat](../development/skills.md). Les fondations humaines passent avant l’approfondissement électrique, conformément à la ROADMAP. Aucun jalon ni domaine de personnalité n’est déclaré complet.

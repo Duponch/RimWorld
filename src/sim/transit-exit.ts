@@ -10,6 +10,8 @@ import { releaseWork } from './work-release.ts';
 import type { World, Pawn, Cell } from './types.ts';
 import type { LightReader } from './light-environment.ts';
 
+const EXIT_DIRECTIONS=[[0,-1],[1,0],[0,1],[-1,0]] as const;
+
 /** Finish a through-route or leave furniture physically after interruption.
  * Bed use is an explicit service exception. No pushing, teleport or lost cargo. */
 export function leaveTransitCell(world:World,pawn:Pawn,getBlocked:NavigationGrid,budget:SearchBudget,getLight?:LightReader):boolean {
@@ -30,8 +32,8 @@ export function leaveTransitCell(world:World,pawn:Pawn,getBlocked:NavigationGrid
     const add=(c:Cell)=>{if(standable(c)&&!reserved.has(c.z*world.width+c.x))goals.add(c.z*world.width+c.x);};
     // The nearest standable exit of a connected furniture patch is on its
     // cardinal boundary under our solid-corner rule.
-    for(const s of [...world.structures,...world.jobs])for(const c of footprintCells(s))for(const [dx,dz] of [[0,-1],[1,0],[0,1],[-1,0]])add({x:c.x+dx!,z:c.z+dz!});
-    for(const [dx,dz] of [[0,-1],[1,0],[0,1],[-1,0]])add({x:pawn.x+dx!,z:pawn.z+dz!});
+    for(const s of [...world.structures,...world.jobs])for(const c of footprintCells(s))for(const [dx,dz] of EXIT_DIRECTIONS)add({x:c.x+dx,z:c.z+dz});
+    for(const [dx,dz] of EXIT_DIRECTIONS)add({x:pawn.x+dx,z:pawn.z+dz});
     const reach=search(world,pawn,blocked,CIVIL_TRANSIT_BLOCKERS,budget,goals);if(!reach)return true;
     pawn.planCooldown=PLAN_INTERVAL;let path:Cell[]|null=null;
     for(const i of goals){const p=routeToCell(world,{x:i%world.width,z:Math.floor(i/world.width)},reach);if(p&&(path===null||routeCost(world,p,reach)<routeCost(world,path,reach)))path=p;}

@@ -1,3 +1,4 @@
+import { createSkillsInspection, updateSkillsInspection, updateWorkSkills } from './ui/skills-inspection';
 import { powerInspection } from './ui/power-inspection';
 import { outdoorTemperature } from './sim/temperature';
 import { SnapshotHud } from './ui/snapshot-hud';
@@ -193,6 +194,7 @@ function rebuildInspector() {
     el('manage-work').onclick = () => setPanel('work');
     const orders=document.createElement('p');orders.id='selected-orders';panel.append(orders);
     const cancel=document.createElement('button');cancel.id='clear-orders';cancel.textContent='Annuler les ordres directs';
+    createSkillsInspection(panel);
     cancel.onclick=()=>{if(selectedPawn!==undefined)void attempt(()=>client.command({type:'clear-orders',pawnId:selectedPawn!}));};panel.append(cancel);
   } else if (selectedCell) {
     panel.innerHTML = `<div class="panel-heading"><h2 id="cell-title"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><p id="cell-description"></p><p id="cell-materials"></p><p id="cell-job"></p><button id="cell-deconstruct" class="secondary-action" hidden>Déconstruire</button><button id="cell-cancel" class="secondary-action" hidden>Annuler cet ordre</button><div id="cell-storage" hidden><p id="cell-storage-quantity"></p>${storageSettings('selected-stockpile')}<button id="update-stockpile" class="secondary-action">Appliquer les réglages</button><button id="delete-stockpile" class="secondary-action">Retirer cette réserve</button></div>`;
@@ -302,6 +304,7 @@ function renderState() {
     button.querySelector('.pawn-symbol')!.textContent = pawn.state === 'sleeping' ? 'Z' : pawn.state === 'hungry' ? '!' : '';
     (button.querySelector('i') as HTMLElement).style.width = `${pawn.mood}%`;
     const row = document.querySelector<HTMLElement>(`[data-worker="${pawn.id}"]`)!;
+    updateWorkSkills(row,pawn);
     row.querySelector('.work-activity')!.textContent = actionLabel(pawn);
     for (const select of row.querySelectorAll<HTMLSelectElement>('select')) select.value = String(pawn.priorities[select.dataset.work as WorkType]);
   }
@@ -316,6 +319,7 @@ function renderState() {
     if (!pawn) clearSelection();
     else {
       el('selected-name').textContent = pawn.name; el('selected-action').textContent = pawn.need ? actionLabel(pawn) : `${actionLabel(pawn)} · ${queryPawnStatus(world, pawn).reason}`;
+      updateSkillsInspection(el('inspector'),pawn);
       updateRecreationInspection(el('inspector'),pawn);
       roomInspection.update(el('inspector'), world, pawn);
       el('selected-orders').textContent=`${pawn.orders.active!==null?'Travail imposé · ':''}${pawn.orders.queue.length} ordre(s) en file${pawn.priorityWork?` · Priorité case ${pawn.priorityWork.cell.x}, ${pawn.priorityWork.cell.z}`:''}`;

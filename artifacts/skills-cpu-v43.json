@@ -1,0 +1,1289 @@
+{
+  "date": "2026-09-15T23:17:06.193Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "protocol": "250², 3/30/100 actors, build doors then chop and haul through them. Level cycle 0/4/8/12/20, all passions, ordinary needs and eight physically accessible survival meals per person. Separate 100 tick warmup. Tick and snapshot clone measured separately, validation outside timing. 9000 tick watchdog per population. This is CPU/transfer work, not an FPS claim.",
+  "runs": [
+    {
+      "count": 3,
+      "peakWorkers": 3,
+      "elapsedTicks": 1071,
+      "tick": {
+        "samples": 1071,
+        "p50": 0.5473999999999251,
+        "p95": 1.6386999999999716,
+        "p99": 4.168300000000045,
+        "max": 10.476200000000063
+      },
+      "snapshotClone": {
+        "samples": 215,
+        "p50": 0.6680999999998676,
+        "p95": 1.3654000000000224,
+        "p99": 7.2503999999999,
+        "max": 37.1155
+      },
+      "outcome": {
+        "doors": 3,
+        "trees": 0,
+        "stored": 36,
+        "hauling": 0,
+        "jobs": 0
+      },
+      "skills": [
+        {
+          "construction": {
+            "level": 0,
+            "xp": 175000,
+            "dailyXp": 175000,
+            "passion": 0
+          },
+          "lastResetTick": 2000
+        },
+        {
+          "construction": {
+            "level": 4,
+            "xp": 232500,
+            "dailyXp": 232500,
+            "passion": 1
+          },
+          "lastResetTick": 2000
+        },
+        {
+          "construction": {
+            "level": 8,
+            "xp": 225000,
+            "dailyXp": 225000,
+            "passion": 2
+          },
+          "lastResetTick": 2000
+        }
+      ]
+    },
+    {
+      "count": 30,
+      "peakWorkers": 30,
+      "elapsedTicks": 1741,
+      "tick": {
+        "samples": 1741,
+        "p50": 1.4017000000003463,
+        "p95": 8.740099999999984,
+        "p99": 14.271499999999833,
+        "max": 30.1257999999998
+      },
+      "snapshotClone": {
+        "samples": 349,
+        "p50": 1.86200000000008,
+        "p95": 2.3542999999999665,
+        "p99": 5.707599999999729,
+        "max": 39.010299999999916
+      },
+      "outcome": {
+        "doors": 30,
+        "trees": 0,
+        "stored": 360,
+        "hauling": 0,
+        "jobs": 0
+      },
+      "skills": [
+        {
+          "construction": {
+            "level": 0,
+            "xp": 175000,
+            "dailyXp": 175000,
+            "passion": 0
+          },
+          "lastResetTick": 2000
+        },
+        {
+          "construction": {
+            "level": 4,
+            "xp": 232500,
+            "dailyXp": 232500,
+            "passion": 1
+          },
+          "lastResetTick": 2000
+        },
+        {
+          "construction": {
+            "level": 8,
+            "xp": 225000,
+            "dailyXp": 225000,
+            "passion": 2
+          },
+          "lastResetTick": 2000
+        },
+        {
+          "construction": {
+            "level": 12,
+            "xp": 4175,
+            "dailyXp": 4175,
+            "passion": 0
+          },
+          "lastResetTick": 2000
+        },
+        {
+          "construction": {
+            "level": 20,
+            "xp": -981000,
+            "dailyXp": -981000,
+            "passion": 1
+          },
+          "lastResetTick": 2000
+        },
+        {
+          "construction": {
+            "level": 0,
+            "xp": 750000,
+            "dailyXp": 750000,
+            "passion": 2
+          },
+          "lastResetTick": 2000
+        },
+        {
+          "construction": {
+            "level": 4,
+            "xp": 81375,
+            "dailyXp": 81375,
+            "passion": 0
+          },
+          "lastResetTick": 2000
+        },
+        {
+          "construction": {
+            "level": 8,
+            "xp": 150000,
+            "dailyXp": 150000,
+            "passion": 1
+          },
+          "lastResetTick": 2000
+        },
+        {
+          "construction": {
+            "level": 12,
+            "xp": 133550,
+            "dailyXp": 133550,
+            "passion": 2
+          },
+          "lastResetTick": 2000
+        },
+        {
+          "construction": {
+            "level": 19,
+            "xp": 28978250,
+            "dailyXp": -1021750,
+            "passion": 0
+          },
+          "lastResetTick": 2000
+        },
+        {
+          "construction": {
+            "level": 0,
+            "xp": 500000,
+            "dailyXp": 500000,
+            "passion": 1
+          },
+          "lastResetTick": 2000
+        },
+        {
+          "construction": {
+            "level": 4,
+            "xp": 348750,
+            "dailyXp": 348750,
+            "passion": 2
+          },
+          "lastResetTick": 2000
+        },
+        {
+          "construction": {
+            "level": 8,
+            "xp": 52500,
+            "dailyXp": 52500,
+            "passion": 0
+          },
+          "lastResetTick": 2000
+        },
+        {
+          "construction": {
+            "level": 12,
+            "xp": 76900,
+            "dailyXp": 76900,
+            "passion": 1
+          },
+          "lastResetTick": 2000
+        },
+        {
+          "construction": {
+            "level": 20,
+            "xp": -955500,
+            "dailyXp": -955500,
+            "passion": 2
+          },
+          "lastResetTick": 2000
+        },
+        {
+          "construction": {
+            "level": 0,
+            "xp": 175000,
+            "dailyXp": 175000,
+            "passion": 0
+          },
+          "lastResetTick": 2000
+        },
+        {
+          "construction": {
+            "level": 4,
+            "xp": 232500,
+            "dailyXp": 232500,
+            "passion": 1
+          },
+          "lastResetTick": 2000
+        },
+        {
+          "construction": {
+            "level": 8,
+            "xp": 225000,
+            "dailyXp": 225000,
+            "passion": 2
+          },
+          "lastResetTick": 2000
+        },
+        {
+          "construction": {
+            "level": 12,
+            "xp": 3775,
+            "dailyXp": 3775,
+            "passion": 0
+          },
+          "lastResetTick": 2000
+        },
+        {
+          "construction": {
+            "level": 20,
+            "xp": -993000,
+            "dailyXp": -993000,
+            "passion": 1
+          },
+          "lastResetTick": 2000
+        },
+        {
+          "construction": {
+            "level": 0,
+            "xp": 750000,
+            "dailyXp": 750000,
+            "passion": 2
+          },
+          "lastResetTick": 2000
+        },
+        {
+          "construction": {
+            "level": 4,
+            "xp": 81375,
+            "dailyXp": 81375,
+            "passion": 0
+          },
+          "lastResetTick": 2000
+        },
+        {
+          "construction": {
+            "level": 8,
+            "xp": 150000,
+            "dailyXp": 150000,
+            "passion": 1
+          },
+          "lastResetTick": 2000
+        },
+        {
+          "construction": {
+            "level": 12,
+            "xp": 133550,
+            "dailyXp": 133550,
+            "passion": 2
+          },
+          "lastResetTick": 2000
+        },
+        {
+          "construction": {
+            "level": 19,
+            "xp": 28978250,
+            "dailyXp": -1021750,
+            "passion": 0
+          },
+          "lastResetTick": 2000
+        },
+        {
+          "construction": {
+            "level": 0,
+            "xp": 500000,
+            "dailyXp": 500000,
+            "passion": 1
+          },
+          "lastResetTick": 2000
+        },
+        {
+          "construction": {
+            "level": 4,
+            "xp": 348750,
+            "dailyXp": 348750,
+            "passion": 2
+          },
+          "lastResetTick": 2000
+        },
+        {
+          "construction": {
+            "level": 8,
+            "xp": 52500,
+            "dailyXp": 52500,
+            "passion": 0
+          },
+          "lastResetTick": 2000
+        },
+        {
+          "construction": {
+            "level": 12,
+            "xp": 77300,
+            "dailyXp": 77300,
+            "passion": 1
+          },
+          "lastResetTick": 2000
+        },
+        {
+          "construction": {
+            "level": 20,
+            "xp": -943500,
+            "dailyXp": -943500,
+            "passion": 2
+          },
+          "lastResetTick": 2000
+        }
+      ]
+    },
+    {
+      "count": 100,
+      "peakWorkers": 29,
+      "elapsedTicks": 4601,
+      "tick": {
+        "samples": 4601,
+        "p50": 13.946400000000722,
+        "p95": 25.3012000000017,
+        "p99": 41.80240000000049,
+        "max": 144.42690000000584
+      },
+      "snapshotClone": {
+        "samples": 921,
+        "p50": 5.823200000002544,
+        "p95": 7.028599999997823,
+        "p99": 8.194299999988289,
+        "max": 38.38090000000011
+      },
+      "outcome": {
+        "doors": 100,
+        "trees": 0,
+        "stored": 1200,
+        "hauling": 0,
+        "jobs": 0
+      },
+      "skills": [
+        {
+          "construction": {
+            "level": 0,
+            "xp": 216125,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "lastResetTick": 6002
+        },
+        {
+          "construction": {
+            "level": 4,
+            "xp": 232500,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "lastResetTick": 6001
+        },
+        {
+          "construction": {
+            "level": 8,
+            "xp": 225000,
+            "dailyXp": 0,
+            "passion": 2
+          },
+          "lastResetTick": 6000
+        },
+        {
+          "construction": {
+            "level": 12,
+            "xp": -13650,
+            "dailyXp": -12400,
+            "passion": 0
+          },
+          "lastResetTick": 6019
+        },
+        {
+          "construction": {
+            "level": 19,
+            "xp": 27867000,
+            "dailyXp": -248000,
+            "passion": 1
+          },
+          "lastResetTick": 6018
+        },
+        {
+          "construction": {
+            "level": 0,
+            "xp": 750000,
+            "dailyXp": 0,
+            "passion": 2
+          },
+          "lastResetTick": 6017
+        },
+        {
+          "construction": {
+            "level": 4,
+            "xp": 189000,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "lastResetTick": 6016
+        },
+        {
+          "construction": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "lastResetTick": 6015
+        },
+        {
+          "construction": {
+            "level": 12,
+            "xp": 76350,
+            "dailyXp": -12400,
+            "passion": 2
+          },
+          "lastResetTick": 6014
+        },
+        {
+          "construction": {
+            "level": 19,
+            "xp": 27816000,
+            "dailyXp": -248000,
+            "passion": 0
+          },
+          "lastResetTick": 6013
+        },
+        {
+          "construction": {
+            "level": 0,
+            "xp": 527500,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "lastResetTick": 6012
+        },
+        {
+          "construction": {
+            "level": 4,
+            "xp": 348750,
+            "dailyXp": 0,
+            "passion": 2
+          },
+          "lastResetTick": 6011
+        },
+        {
+          "construction": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "lastResetTick": 6010
+        },
+        {
+          "construction": {
+            "level": 12,
+            "xp": 19700,
+            "dailyXp": -12800,
+            "passion": 1
+          },
+          "lastResetTick": 6009
+        },
+        {
+          "construction": {
+            "level": 19,
+            "xp": 27884500,
+            "dailyXp": -256000,
+            "passion": 2
+          },
+          "lastResetTick": 6008
+        },
+        {
+          "construction": {
+            "level": 0,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "lastResetTick": 6007
+        },
+        {
+          "construction": {
+            "level": 4,
+            "xp": 232500,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "lastResetTick": 6006
+        },
+        {
+          "construction": {
+            "level": 8,
+            "xp": 225000,
+            "dailyXp": 0,
+            "passion": 2
+          },
+          "lastResetTick": 6005
+        },
+        {
+          "construction": {
+            "level": 12,
+            "xp": -53425,
+            "dailyXp": -12800,
+            "passion": 0
+          },
+          "lastResetTick": 6004
+        },
+        {
+          "construction": {
+            "level": 19,
+            "xp": 27885500,
+            "dailyXp": -256000,
+            "passion": 1
+          },
+          "lastResetTick": 6003
+        },
+        {
+          "construction": {
+            "level": 0,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 2
+          },
+          "lastResetTick": 6002
+        },
+        {
+          "construction": {
+            "level": 4,
+            "xp": 81375,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "lastResetTick": 6001
+        },
+        {
+          "construction": {
+            "level": 8,
+            "xp": 150000,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "lastResetTick": 6000
+        },
+        {
+          "construction": {
+            "level": 12,
+            "xp": -92400,
+            "dailyXp": -12400,
+            "passion": 2
+          },
+          "lastResetTick": 6019
+        },
+        {
+          "construction": {
+            "level": 19,
+            "xp": 27834250,
+            "dailyXp": -248000,
+            "passion": 0
+          },
+          "lastResetTick": 6018
+        },
+        {
+          "construction": {
+            "level": 1,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "lastResetTick": 6017
+        },
+        {
+          "construction": {
+            "level": 4,
+            "xp": 697500,
+            "dailyXp": 0,
+            "passion": 2
+          },
+          "lastResetTick": 6016
+        },
+        {
+          "construction": {
+            "level": 8,
+            "xp": 52500,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "lastResetTick": 6015
+        },
+        {
+          "construction": {
+            "level": 12,
+            "xp": -92400,
+            "dailyXp": -12400,
+            "passion": 1
+          },
+          "lastResetTick": 6014
+        },
+        {
+          "construction": {
+            "level": 19,
+            "xp": 28008750,
+            "dailyXp": -248000,
+            "passion": 2
+          },
+          "lastResetTick": 6013
+        },
+        {
+          "construction": {
+            "level": 0,
+            "xp": 175000,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "lastResetTick": 6012
+        },
+        {
+          "construction": {
+            "level": 4,
+            "xp": 232500,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "lastResetTick": 6011
+        },
+        {
+          "construction": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 2
+          },
+          "lastResetTick": 6010
+        },
+        {
+          "construction": {
+            "level": 12,
+            "xp": -53425,
+            "dailyXp": -12800,
+            "passion": 0
+          },
+          "lastResetTick": 6009
+        },
+        {
+          "construction": {
+            "level": 19,
+            "xp": 27910000,
+            "dailyXp": -256000,
+            "passion": 1
+          },
+          "lastResetTick": 6008
+        },
+        {
+          "construction": {
+            "level": 0,
+            "xp": 750000,
+            "dailyXp": 0,
+            "passion": 2
+          },
+          "lastResetTick": 6007
+        },
+        {
+          "construction": {
+            "level": 4,
+            "xp": 81375,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "lastResetTick": 6006
+        },
+        {
+          "construction": {
+            "level": 8,
+            "xp": 150000,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "lastResetTick": 6005
+        },
+        {
+          "construction": {
+            "level": 12,
+            "xp": 75950,
+            "dailyXp": -12800,
+            "passion": 2
+          },
+          "lastResetTick": 6004
+        },
+        {
+          "construction": {
+            "level": 19,
+            "xp": 27857000,
+            "dailyXp": -256000,
+            "passion": 0
+          },
+          "lastResetTick": 6003
+        },
+        {
+          "construction": {
+            "level": 0,
+            "xp": 500000,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "lastResetTick": 6002
+        },
+        {
+          "construction": {
+            "level": 4,
+            "xp": 322500,
+            "dailyXp": 0,
+            "passion": 2
+          },
+          "lastResetTick": 6001
+        },
+        {
+          "construction": {
+            "level": 8,
+            "xp": 105000,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "lastResetTick": 6000
+        },
+        {
+          "construction": {
+            "level": 12,
+            "xp": -92400,
+            "dailyXp": -12400,
+            "passion": 1
+          },
+          "lastResetTick": 6019
+        },
+        {
+          "construction": {
+            "level": 19,
+            "xp": 27816000,
+            "dailyXp": -248000,
+            "passion": 2
+          },
+          "lastResetTick": 6018
+        },
+        {
+          "construction": {
+            "level": 0,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "lastResetTick": 6017
+        },
+        {
+          "construction": {
+            "level": 4,
+            "xp": 65000,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "lastResetTick": 6016
+        },
+        {
+          "construction": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 2
+          },
+          "lastResetTick": 6015
+        },
+        {
+          "construction": {
+            "level": 12,
+            "xp": -53025,
+            "dailyXp": -12400,
+            "passion": 0
+          },
+          "lastResetTick": 6014
+        },
+        {
+          "construction": {
+            "level": 19,
+            "xp": 27893500,
+            "dailyXp": -248000,
+            "passion": 1
+          },
+          "lastResetTick": 6013
+        },
+        {
+          "construction": {
+            "level": 0,
+            "xp": 750000,
+            "dailyXp": 0,
+            "passion": 2
+          },
+          "lastResetTick": 6012
+        },
+        {
+          "construction": {
+            "level": 4,
+            "xp": 81375,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "lastResetTick": 6011
+        },
+        {
+          "construction": {
+            "level": 8,
+            "xp": 2500,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "lastResetTick": 6010
+        },
+        {
+          "construction": {
+            "level": 12,
+            "xp": 75950,
+            "dailyXp": -12800,
+            "passion": 2
+          },
+          "lastResetTick": 6009
+        },
+        {
+          "construction": {
+            "level": 19,
+            "xp": 27823625,
+            "dailyXp": -256000,
+            "passion": 0
+          },
+          "lastResetTick": 6008
+        },
+        {
+          "construction": {
+            "level": 0,
+            "xp": 500000,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "lastResetTick": 6007
+        },
+        {
+          "construction": {
+            "level": 4,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 2
+          },
+          "lastResetTick": 6006
+        },
+        {
+          "construction": {
+            "level": 8,
+            "xp": 52500,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "lastResetTick": 6005
+        },
+        {
+          "construction": {
+            "level": 12,
+            "xp": 132200,
+            "dailyXp": -12800,
+            "passion": 1
+          },
+          "lastResetTick": 6004
+        },
+        {
+          "construction": {
+            "level": 19,
+            "xp": 27946250,
+            "dailyXp": -256000,
+            "passion": 2
+          },
+          "lastResetTick": 6003
+        },
+        {
+          "construction": {
+            "level": 0,
+            "xp": 13125,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "lastResetTick": 6002
+        },
+        {
+          "construction": {
+            "level": 4,
+            "xp": 227500,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "lastResetTick": 6001
+        },
+        {
+          "construction": {
+            "level": 8,
+            "xp": 453750,
+            "dailyXp": 0,
+            "passion": 2
+          },
+          "lastResetTick": 6000
+        },
+        {
+          "construction": {
+            "level": 12,
+            "xp": -92400,
+            "dailyXp": -12400,
+            "passion": 0
+          },
+          "lastResetTick": 6019
+        },
+        {
+          "construction": {
+            "level": 19,
+            "xp": 27939500,
+            "dailyXp": -248000,
+            "passion": 1
+          },
+          "lastResetTick": 6018
+        },
+        {
+          "construction": {
+            "level": 0,
+            "xp": 750000,
+            "dailyXp": 0,
+            "passion": 2
+          },
+          "lastResetTick": 6017
+        },
+        {
+          "construction": {
+            "level": 4,
+            "xp": 162750,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "lastResetTick": 6016
+        },
+        {
+          "construction": {
+            "level": 8,
+            "xp": 300000,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "lastResetTick": 6015
+        },
+        {
+          "construction": {
+            "level": 12,
+            "xp": 76350,
+            "dailyXp": -12400,
+            "passion": 2
+          },
+          "lastResetTick": 6014
+        },
+        {
+          "construction": {
+            "level": 19,
+            "xp": 27834250,
+            "dailyXp": -248000,
+            "passion": 0
+          },
+          "lastResetTick": 6013
+        },
+        {
+          "construction": {
+            "level": 0,
+            "xp": 500000,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "lastResetTick": 6012
+        },
+        {
+          "construction": {
+            "level": 4,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 2
+          },
+          "lastResetTick": 6011
+        },
+        {
+          "construction": {
+            "level": 8,
+            "xp": 52500,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "lastResetTick": 6010
+        },
+        {
+          "construction": {
+            "level": 12,
+            "xp": 132200,
+            "dailyXp": -12800,
+            "passion": 1
+          },
+          "lastResetTick": 6009
+        },
+        {
+          "construction": {
+            "level": 19,
+            "xp": 27808000,
+            "dailyXp": -256000,
+            "passion": 2
+          },
+          "lastResetTick": 6008
+        },
+        {
+          "construction": {
+            "level": 0,
+            "xp": 175000,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "lastResetTick": 6007
+        },
+        {
+          "construction": {
+            "level": 4,
+            "xp": 362500,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "lastResetTick": 6006
+        },
+        {
+          "construction": {
+            "level": 8,
+            "xp": 450000,
+            "dailyXp": 0,
+            "passion": 2
+          },
+          "lastResetTick": 6005
+        },
+        {
+          "construction": {
+            "level": 12,
+            "xp": -53425,
+            "dailyXp": -12800,
+            "passion": 0
+          },
+          "lastResetTick": 6004
+        },
+        {
+          "construction": {
+            "level": 19,
+            "xp": 27808000,
+            "dailyXp": -256000,
+            "passion": 1
+          },
+          "lastResetTick": 6003
+        },
+        {
+          "construction": {
+            "level": 0,
+            "xp": 742500,
+            "dailyXp": 0,
+            "passion": 2
+          },
+          "lastResetTick": 6002
+        },
+        {
+          "construction": {
+            "level": 4,
+            "xp": 81375,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "lastResetTick": 6001
+        },
+        {
+          "construction": {
+            "level": 8,
+            "xp": 300000,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "lastResetTick": 6000
+        },
+        {
+          "construction": {
+            "level": 12,
+            "xp": 245100,
+            "dailyXp": -12400,
+            "passion": 2
+          },
+          "lastResetTick": 6019
+        },
+        {
+          "construction": {
+            "level": 19,
+            "xp": 27816000,
+            "dailyXp": -248000,
+            "passion": 0
+          },
+          "lastResetTick": 6018
+        },
+        {
+          "construction": {
+            "level": 0,
+            "xp": 500000,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "lastResetTick": 6017
+        },
+        {
+          "construction": {
+            "level": 4,
+            "xp": 697500,
+            "dailyXp": 0,
+            "passion": 2
+          },
+          "lastResetTick": 6016
+        },
+        {
+          "construction": {
+            "level": 8,
+            "xp": 52500,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "lastResetTick": 6015
+        },
+        {
+          "construction": {
+            "level": 12,
+            "xp": 20100,
+            "dailyXp": -12400,
+            "passion": 1
+          },
+          "lastResetTick": 6014
+        },
+        {
+          "construction": {
+            "level": 19,
+            "xp": 27892500,
+            "dailyXp": -248000,
+            "passion": 2
+          },
+          "lastResetTick": 6013
+        },
+        {
+          "construction": {
+            "level": 0,
+            "xp": 175000,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "lastResetTick": 6012
+        },
+        {
+          "construction": {
+            "level": 4,
+            "xp": 232500,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "lastResetTick": 6011
+        },
+        {
+          "construction": {
+            "level": 8,
+            "xp": 675000,
+            "dailyXp": 0,
+            "passion": 2
+          },
+          "lastResetTick": 6010
+        },
+        {
+          "construction": {
+            "level": 12,
+            "xp": -92800,
+            "dailyXp": -12800,
+            "passion": 0
+          },
+          "lastResetTick": 6009
+        },
+        {
+          "construction": {
+            "level": 19,
+            "xp": 27910000,
+            "dailyXp": -256000,
+            "passion": 1
+          },
+          "lastResetTick": 6008
+        },
+        {
+          "construction": {
+            "level": 0,
+            "xp": 750000,
+            "dailyXp": 0,
+            "passion": 2
+          },
+          "lastResetTick": 6007
+        },
+        {
+          "construction": {
+            "level": 4,
+            "xp": 162750,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "lastResetTick": 6006
+        },
+        {
+          "construction": {
+            "level": 8,
+            "xp": 12500,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "lastResetTick": 6005
+        },
+        {
+          "construction": {
+            "level": 12,
+            "xp": -92800,
+            "dailyXp": -12800,
+            "passion": 2
+          },
+          "lastResetTick": 6004
+        },
+        {
+          "construction": {
+            "level": 19,
+            "xp": 27826250,
+            "dailyXp": -256000,
+            "passion": 0
+          },
+          "lastResetTick": 6003
+        }
+      ]
+    }
+  ]
+}

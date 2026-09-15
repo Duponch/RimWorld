@@ -1,0 +1,133 @@
+{
+  "date": "2026-09-16",
+  "profile": "1500 ticks, 100 people, before optimization. Sample weights, not per-call durations; profiling run excluded from timing comparison.",
+  "hotspots": [
+    {
+      "function": "advance",
+      "file": "weighted-search.ts",
+      "line": 30,
+      "sampledMs": 2889.545
+    },
+    {
+      "function": "leaveTransitCell",
+      "file": "transit-exit.ts",
+      "line": 15,
+      "sampledMs": 2388.827
+    },
+    {
+      "function": "planWork",
+      "file": "work-planner.ts",
+      "line": 79,
+      "sampledMs": 2112.487
+    },
+    {
+      "function": "startTravel",
+      "file": "movement.ts",
+      "line": 13,
+      "sampledMs": 1653.453
+    },
+    {
+      "function": "canStandAt",
+      "file": "furniture-travel.ts",
+      "line": 18,
+      "sampledMs": 1158.684
+    },
+    {
+      "function": "hasReachableCell",
+      "file": "pathfinding.ts",
+      "line": 33,
+      "sampledMs": 965.912
+    },
+    {
+      "function": "has",
+      "file": "candidate-access.ts",
+      "line": 18,
+      "sampledMs": 825.843
+    },
+    {
+      "function": "furnitureDelay",
+      "file": "furniture-travel.ts",
+      "line": 34,
+      "sampledMs": 812.903
+    },
+    {
+      "function": "footprintContains",
+      "file": "definitions.ts",
+      "line": 32,
+      "sampledMs": 749.251
+    },
+    {
+      "function": "RoofContext",
+      "file": "roof-rules.ts",
+      "line": 27,
+      "sampledMs": 736.809
+    },
+    {
+      "function": "stepWorld",
+      "file": "engine.ts",
+      "line": 293,
+      "sampledMs": 662.08
+    },
+    {
+      "function": "resolve",
+      "file": "candidate-access.ts",
+      "line": 33,
+      "sampledMs": 568.595
+    },
+    {
+      "function": "navigationCosts",
+      "file": "furniture-travel.ts",
+      "line": 51,
+      "sampledMs": 500.126
+    },
+    {
+      "function": "read",
+      "file": "thermal-topology.ts",
+      "line": 16,
+      "sampledMs": 480.08
+    },
+    {
+      "function": "read",
+      "file": "room-topology.ts",
+      "line": 42,
+      "sampledMs": 476.93
+    },
+    {
+      "function": "blockedCells",
+      "file": "pathfinding.ts",
+      "line": 17,
+      "sampledMs": 402.531
+    },
+    {
+      "function": "",
+      "file": "construction-rules.ts",
+      "line": 46,
+      "sampledMs": 344.461
+    },
+    {
+      "function": "(garbage collector)",
+      "file": "",
+      "line": 0,
+      "sampledMs": 261.802
+    }
+  ],
+  "changes": [
+    "Reject distant footprint point queries before optional metadata reads",
+    "Reuse cardinal offsets in transit exit enumeration",
+    "Query frame footprint without allocating cells",
+    "Skip recipe lookups for work which never trains Construction"
+  ],
+  "exactWorldCheckpoints": [
+    {
+      "tick": 3500,
+      "sha256": "b1abc710670f562c2bfebd344f3c2dd19b1390240b7d8e4fb5274d61f4378f32",
+      "beforeAfterIdentical": true
+    },
+    {
+      "tick": 6601,
+      "sha256": "e9451dcb6613898c45eebbc8304691797f6109c11cc7da3878097e7452af6801",
+      "beforeAfterIdentical": true
+    }
+  ],
+  "finalRoofs": 2100
+}

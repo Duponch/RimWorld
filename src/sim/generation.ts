@@ -1,3 +1,4 @@
+import { startingSkills } from './skills.ts';
 import { SCHEMA_VERSION } from './types.ts';
 import { generateSteel, generateMachinery } from './ore.ts';
 import { geologicalField } from './geology.ts';
@@ -204,7 +205,7 @@ export function generateWorld(seed: number, width: number, height: number): Worl
     }
   }
   for (const [offset, name] of ['Ada', 'Noé', 'Mina'].entries()) {
-    world.pawns.push({ recreation: initialRecreation(50 + sample(world.seed, offset, 0, 101)*10), foodPolicyId: 1, schedule: defaultSchedule(), restZeroTicks: 0, collapsePending: false, id: world.nextId++, name, x: cx + offset - 1, z: cz, hunger: 90 - offset * 5,
+    world.pawns.push({ skills:startingSkills(offset), recreation: initialRecreation(50 + sample(world.seed, offset, 0, 101)*10), foodPolicyId: 1, schedule: defaultSchedule(), restZeroTicks: 0, collapsePending: false, id: world.nextId++, name, x: cx + offset - 1, z: cz, hunger: 90 - offset * 5,
       rest: 90 - offset * 3, mood: 80, comfort: 50, memories: [], orders: {active:null,queue:[]}, jobId: null, haul: null, cooking: null, need: null, bedId: null, needCooldown: 0, state: 'idle', priorities: { mine: 2, gather: 2, build: 2, haul: 3, grow: 2, cook: 2, craft: 2 },
       path: [], moveCooldown: 0, planCooldown: 0 });
   }

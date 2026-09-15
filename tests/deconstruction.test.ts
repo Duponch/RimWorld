@@ -1,3 +1,4 @@
+import { withoutPawnSkills, withMigratedSkills } from './scenarios/legacy-skills';
 import { expect, test } from 'vitest';
 import { applyCommand, stepWorld, serializeWorld, deserializeWorld, validateWorld, addGroundMaterial } from '../src/sim/index';
 import { footprintCells } from '../src/sim/definitions';
@@ -85,8 +86,8 @@ test('object reservations coordinate beds, seats, recreation and fuel; removal c
 
 test('rectangle deduplicates multi-cell furniture, cancellation preserves it, and V23 migration rejects corrupted or disguised removal state',()=>{
   const w=deconstructionCamp();fixtureBuilding(w,'bed',14,16,1);fixtureBuilding(w,'table',16,17,2);
-  const old=JSON.parse(serializeWorld(w));old.schemaVersion=23;for(const a of old.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete old.deconstructed;delete old.packed;
-  expect(deserializeWorld(JSON.stringify(old))).toEqual(w);
+  const old=JSON.parse(serializeWorld(w));(old.schemaVersion=23,withoutPawnSkills(old));for(const a of old.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete old.deconstructed;delete old.packed;
+  expect(deserializeWorld(JSON.stringify(old))).toEqual(withMigratedSkills(w));
   expect(applyCommand(w,{type:'area',action:'deconstruct',from:{x:14,z:16},to:{x:16,z:17}}).affected).toBe(2);
   const saved=serializeWorld(w);expect(deserializeWorld(saved)).toEqual(w);expect(deconstructionDuration(w.jobs[0]!)).toBeGreaterThan(1);
   for(const mutate of [(s:any)=>s.jobs[0].deconstruction=null,(s:any)=>s.jobs[0].deconstruction.structureId=999999,(s:any)=>s.jobs[0].deconstruction.kind='table',(s:any)=>s.jobs[0].x++,(s:any)=>s.jobs[0].progress=1,(s:any)=>s.deconstructed.lostWood=-1,(s:any)=>s.schemaVersion=23]) {
