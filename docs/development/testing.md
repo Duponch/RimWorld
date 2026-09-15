@@ -1,5 +1,7 @@
 # Stratégie de validation
 
+Réactivité des vitesses sous V38 : oracle indépendant de taux à la frame suivante, changements toutes les 100 ms, fractions du worker conservées, démarrage/reprise et pénurie de snapshots. Le banc de zones mesure clic→vitesse effective et les frames sans progression après amorçage. Ces contrôles remplacent l’ancienne attente de 400 ms à chaque commande positive.
+
 Correctif de synchronisation sous V38 : enrichir les scénarios spatiaux et bridge avec changements rapides de vitesse/pause, phases de travail et disparition différée des ressources. Parcours natifs mouvement/transport et pilote UI, puis banc `harvest-sync-bench.mjs` (zones naturelles, changements répétés) et `mining-render-bench.mjs` (100 mineurs). Mesurer l’application de scène distinctement de la réception ; ignorer les callbacks sans rendu pendant préparation. Aucun changement de règle ne justifie de relancer toutes les migrations.
 
 V38 : enrichir les deux scénarios `temperature.test.ts` (oracle spatial global, pièces/toits/portes adjacentes, échanges, chaud/froid, fusion/division, vrais transports, mélanges, seuil, migration, snapshots). Le pilote conserve ses bilans et ajoute les températures. Audit `scripts/temperature-bench.ts` sur 3/30/100 ateliers chauffés, avec reprise et coût de clonage séparé. L’atelier UI construit son feu et vérifie le réchauffement avant le pilote de trois jours.

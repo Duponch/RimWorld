@@ -213,7 +213,7 @@ export class ColonyRenderer {
     // A background/stalled page must not retain an unlimited snapshot history.
     // Recovery replaces the whole presentation, never only one actor's path.
     if(this.presentation.size>64||world.tick-this.timeline.tick>MOTION_HISTORY_TICKS){this.presentation.clear();this.timeline.adopt(world.tick,speed,tracks,performance.now(),true);this.applyWorld(world,true);return;}
-    const due=this.presentation.take(this.timeline.tick);if(due)this.applyWorld(due);
+    const due=this.presentation.take(this.timeline.tick,performance.now());if(due)this.applyWorld(due);
   }
 
   private applyWorld(world: World, resetPresentation = false): void {
@@ -504,7 +504,7 @@ export class ColonyRenderer {
 
   private frame(now: number): void {
     if (this.disposed || this.preparing) return;
-    if(this.hasTracks){this.timeline.advance(now);const due=this.presentation.take(this.timeline.tick);if(due)this.applyWorld(due);}
+    if(this.hasTracks){this.timeline.advance(now);const due=this.presentation.take(this.timeline.tick,now);if(due)this.applyWorld(due);}
     const dt = this.lastFrame ? Math.min((now - this.lastFrame) / 1000, 0.05) : 0;
     this.lastFrame = now;
     this.pawns.blend.value = this.snapshotDuration > 0 ? Math.min(1, Math.max(0, (performance.now() - this.snapshotAt) / this.snapshotDuration)) : 1;

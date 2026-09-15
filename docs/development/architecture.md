@@ -8,7 +8,7 @@ Préparation graphique après V28 : les lots vides disposent d’une [passe de p
 
 V29 : `BoxMesh.ts` extrait transformations TSL, attributs instanciés, capacités et bornes. Les programmes des piles ne dépendent plus d’un identifiant de buffer généré ; leur croissance conserve les programmes partagés. Les minuscules sommets de cube sont possédés par lot, pour une libération indépendante. Voir [contrat et mesure](shadow-preparation.md#croissance-des-piles-v29).
 
-La [synchronisation de présentation sous V38](presentation-timing.md) sépare réception, application de la scène et rafraîchissement du HUD. Les transitions de vitesse suivent leurs ticks ; les transitions de travail/ressource attendent la même horloge que les corps.
+La [synchronisation de présentation sous V38](presentation-timing.md) sépare réception, application de la scène et rafraîchissement du HUD. Les vitesses positives prennent effet dès confirmation ; les transitions de travail/ressource attendent la même horloge que les corps. Les mises à jour continues de scène sont regroupées à 5 Hz ; les phases discrètes restent appliquées au tick de lecture, et les trajectoires GPU avancent à chaque frame.
 
 ## Objectif
 
@@ -28,9 +28,9 @@ flowchart LR
   Worker -->|État validé et versionné| Save[Stockage local navigateur]
 ```
 
-Le worker exécute des ticks fixes de 100 ms. Les vitesses modifient le nombre de ticks, jamais leur signification. Un retard réel est plafonné à 250 ms par passage et à 15 ticks par lot : après suspension du navigateur, le jeu ralentit au lieu de tenter de rattraper des heures. Aucun jour de simulation n'est sauté dans le noyau. Cette politique concerne le temps réel, pas les règles du monde.
+Le worker exécute des ticks fixes de 100 ms. Les vitesses modifient le nombre de ticks, jamais leur signification. `FixedClock` conserve la fraction du tick entre changements de vitesse ; le temps déjà écoulé est traité à son ancien taux avant le changement. Un retard réel est plafonné à 250 ms par passage et à 15 ticks par lot : après suspension du navigateur, le jeu ralentit au lieu de tenter de rattraper des heures. Aucun jour de simulation n'est sauté dans le noyau. Cette politique concerne le temps réel, pas les règles du monde.
 
-Les messages sont traités en séquence dans un worker unique. Chaque commande reçoit une réponse ; un échec est affiché. Un checkpoint complet initialise ou remplace une carte ; les publications suivantes, périodiquement toutes les 200 ms, aux transitions visuelles et après une demande réussie (hors requête de menu en lecture seule), transportent l'état dynamique et les changements de terrain/ressources. Le client reconstruit un monde complet pour ses observateurs sans recopier les tableaux inchangés. L'application propose 64/128/200/250 cases par côté, défaut 250 ; les anciennes petites cartes sont conservées. Le protocole, ses révisions et les coûts encore complets sont précisés dans ADR-013.
+Les messages sont traités en séquence dans un worker unique. Chaque commande reçoit une réponse ; un échec est affiché. Un checkpoint complet initialise ou remplace une carte ; les publications suivantes, à la fin des lots actifs de 20 ms et aux transitions visuelles et après une demande réussie (hors requête de menu en lecture seule), transportent l'état dynamique et les changements de terrain/ressources. Le client reconstruit un monde complet pour ses observateurs sans recopier les tableaux inchangés. L'application propose 64/128/200/250 cases par côté, défaut 250 ; les anciennes petites cartes sont conservées. Le protocole, ses révisions et les coûts encore complets sont précisés dans ADR-013.
 
 ## Contrats actuels
 

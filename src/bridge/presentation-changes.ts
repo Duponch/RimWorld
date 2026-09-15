@@ -4,11 +4,10 @@ import type { World } from '../sim/types.ts';
  * hunger, work progress and food age still use the periodic snapshots. This
  * transport observer never changes the simulation or enters a save. */
 export class PresentationChanges {
-  private world:World|undefined;
-  private event:World['events'][number]|undefined;
-  private signature='';
+  private signature:string|undefined;
   capture(world:World):boolean {
     const signature=JSON.stringify([
+      world.seed,world.width,world.height,world.events.at(-1),
       world.pawns.map(p=>[p.id,p.state,p.jobId,p.need?.phase,p.need?.kind==='sleep'?p.need.bedId:undefined,
         p.haul?.phase,p.haul?.carryPileId,p.cooking?.phase,p.cooking?.productId,
         p.recreation.task?.activity,p.recreation.task?.buildingId]),
@@ -17,7 +16,7 @@ export class PresentationChanges {
       (world.packed??[]).map(p=>[p.building.id,p.owner]),
       world.roofing?.constructed,
     ]);
-    const event=world.events.at(-1),changed=this.world!==world||this.event!==event||this.signature!==signature;
-    this.world=world;this.event=event;this.signature=signature;return changed;
+    // Value comparison also works on immutable worlds decoded across a worker.
+    const changed=this.signature!==signature;this.signature=signature;return changed;
   }
 }

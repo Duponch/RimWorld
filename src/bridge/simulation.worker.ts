@@ -1,5 +1,6 @@
 /// <reference lib="webworker" />
 import { MotionRecorder } from './motion-tracks';
+import { FixedClock } from './fixed-clock';
 import { PresentationChanges } from './presentation-changes';
 import { queryOrderOptions } from '../sim/player-orders';
 import { applyCommand, createWorld, deserializeWorld, serializeWorld, stepWorld } from '../sim/index';
@@ -11,9 +12,8 @@ import { SnapshotEncoder } from './snapshots';
 const scope = self as unknown as DedicatedWorkerGlobalScope;
 let world: World | undefined;
 let speed = 1;
-let accumulator = 0;
-let previous = performance.now();
-let lastPublish = 0;
+const clock=new FixedClock();clock.reset(performance.now());
+let lastPublishedTick=-1;
 let stepMs = 0;
 const send = (message: Response) => scope.postMessage(message);
 const snapshots = new SnapshotEncoder();
@@ -21,7 +21,7 @@ const motion = new MotionRecorder();
 const presentationChanges=new PresentationChanges();
 const publish = (checkpoint = false) => {
   if (world) {presentationChanges.capture(world);motion.capture(world);send({...snapshots.encode(world, stepMs, speed, checkpoint), motion:motion.snapshot()});}
-  lastPublish = performance.now();
+  lastPublishedTick=world?.tick??-1;
 };
 
 scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
@@ -31,13 +31,11 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
       if (request.size !== 32 && !(MAP_SIZE_PRESETS as readonly number[]).includes(request.size)) throw new Error('Taille de carte invalide.');
       world = createWorld(request.seed, request.size, request.size);
       motion.reset();
-      accumulator = 0;
-      previous = performance.now();
+      clock.reset(performance.now());
     } else if (request.type === 'speed') {
       if (![0, 1, 3, 6].includes(request.speed)) throw new Error('Vitesse invalide.');
+      advanceSimulation(performance.now());
       speed = request.speed;
-      accumulator = 0;
-      previous = performance.now();
     } else {
       if (!world) throw new Error('La simulation ne répond pas encore.');
       if(request.type==='order-options') {
@@ -51,8 +49,7 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
       } else if (request.type === 'load') {
         const restored = deserializeWorld(request.data);
         world = restored; motion.reset();
-        accumulator = 0;
-        previous = performance.now();
+        clock.reset(performance.now());
       }
     }
     if(request.type!=='order-options')publish(request.type === 'resync');
@@ -63,13 +60,9 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
 };
 
 // Fixed 10 Hz gameplay clock. Wall-clock time never enters the simulation core.
-setInterval(() => {
-  const now = performance.now();
-  const elapsed = Math.min(250, Math.max(0, now - previous));
-  previous = now;
-  if (!world || speed === 0) return;
-  accumulator += elapsed * speed;
-  const ticks = Math.min(15, Math.floor(accumulator / 100));
+function advanceSimulation(now:number):void {
+  if(!world){clock.reset(now);return;}
+  const ticks=clock.advance(now,speed);
   if (ticks > 0) {
     let simulationMs=0;
     for(let i=0;i<ticks;i++) {
@@ -77,7 +70,9 @@ setInterval(() => {
       motion.capture(world);
       if(presentationChanges.capture(world))publish();
     }
-    accumulator -= ticks * 100;
   }
-  if (now - lastPublish >= 200) publish();
-}, 50);
+  // Supply confirmed motion every active batch (20 ms), including batches
+  // without discrete events. Do not duplicate a phase snapshot of the last tick.
+  if(ticks>0&&lastPublishedTick!==world.tick)publish();
+}
+setInterval(()=>advanceSimulation(performance.now()),20);

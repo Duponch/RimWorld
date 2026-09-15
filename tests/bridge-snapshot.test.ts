@@ -142,7 +142,7 @@ test('buffered scene preserves arrival, work, excavation, tree removal and cargo
       expect(decoder.adopt(message).status).toBe('stale');
     }
     if(!world)continue;
-    timeline.advance(now);const due=queue.take(timeline.tick);
+    timeline.advance(now);const due=queue.take(timeline.tick,now);
     if(due){for(const job of world.jobs)if(!due.jobs.some(j=>j.id===job.id))expect(worked.has(job.id),`removed before displayed work: ${job.id}`).toBe(true);world=due;layer.update(world,1,false);}
     expect(world.tick).toBeLessThanOrEqual(timeline.tick);layer.blend.value=1;layer.updateTravel(world,timeline);
     const g=(layer as any).pawnMesh.geometry,f=g.getAttribute('aFrom'),t=g.getAttribute('aTo'),travel=g.getAttribute('aTravel'),m=g.getAttribute('aMotion');
@@ -153,5 +153,12 @@ test('buffered scene preserves arrival, work, excavation, tree removal and cargo
     if(m.getY(0)>0){const p=world.pawns[0]!,job=world.jobs.find(j=>j.id===p.jobId);if(job){expect(Math.max(Math.abs(job.x-x),Math.abs(job.z-z))).toBeLessThanOrEqual(1.001);worked.add(job.id);}}
   }
   expect(worked.size).toBe(4);expect(queue.size).toBe(0);expect(world).toEqual(source);
+  // An unchanged phase survives structured cloning. Its final continuous
+  // update is retained even when no further worker snapshot arrives in pause.
+  const phase=new PresentationChanges();expect(phase.capture(source)).toBe(true);expect(phase.capture(structuredClone(source))).toBe(false);
+  const continuous=structuredClone(source);continuous.tick++;
+  queue.clear();queue.push(source);expect(queue.take(source.tick,0)).toBe(source);
+  queue.push(continuous);expect(queue.take(continuous.tick,10)).toBeUndefined();expect(queue.size).toBe(1);
+  expect(queue.take(continuous.tick,199)).toBeUndefined();expect(queue.take(continuous.tick,200)).toBe(continuous);
   const replacement=structuredClone(source);replacement.tick=2000;queue.push(replacement);queue.clear();expect(queue.take(Infinity)).toBeUndefined();
 });

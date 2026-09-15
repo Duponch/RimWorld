@@ -1,10 +1,10 @@
 import type { PawnTrack } from '../bridge/motion-tracks';
 import type { TravelSegment } from '../sim/movement';
 
-export const MOTION_BUFFER_MS = 400;
+export const MOTION_BUFFER_TICKS = 4;
 
-/** Fixed-rate playout with a 400 ms buffer (two publication intervals). Arrival jitter never restarts an edge.
- * Stops at confirmed time on starvation; never predicts through an obstacle. */
+/** Confirmed-time playout. Running speed changes affect the next frame without
+ * moving the playhead or inserting a new wait. No prediction on starvation. */
 export class MotionTimeline {
   readonly tracks=new Map<number,TravelSegment[]>();
   tick=0;
@@ -12,34 +12,33 @@ export class MotionTimeline {
   private rate=0;
   private speed=0;
   private previous=0;
-  private ready=0;
-  private changes:Array<{tick:number;rate:number;ready:number}>=[];
+  private ready=Infinity;
+  private buffering=true;
   adopt(tick:number,speed:number,tracks:PawnTrack[],now:number,reset=false):void {
-    if(reset){this.tick=tick;this.latest=tick;this.previous=now;this.ready=now+MOTION_BUFFER_MS;this.tracks.clear();this.changes=[];this.speed=speed;this.rate=speed*10;}
-    // Message delivery uses performance.now(), which can be later than the
-    // timestamp of the next RAF callback. Only RAF advances the playhead.
+    if(reset){this.tick=tick;this.latest=tick;this.previous=now;this.ready=Infinity;this.buffering=true;this.tracks.clear();this.speed=speed;this.rate=speed*10;}
+    // Only RAF advances the playhead. A delivery timestamp can be later than
+    // the next frame timestamp; changing rate here never consumes that time.
     if(speed!==this.speed) {
-      // Consume the old-rate portion first. Rebuffering every speed command
-      // accumulated an unbounded delay, eventually beyond the 64-tick history.
-      this.changes.push({tick,rate:speed*10,ready:speed>0?now+MOTION_BUFFER_MS:0});
+      if(speed>0){
+        if(this.rate===0){this.buffering=true;this.ready=Infinity;}
+        this.rate=speed*10;
+      }
       this.speed=speed;
     }
     this.latest=Math.max(this.latest,tick);
+    // Buffer once at start/fully drained resume, in simulation ticks rather
+    // than wall time. At 6x this needs ~67 ms, not another fixed 400 ms.
+    if(this.buffering&&(this.latest-this.tick>=MOTION_BUFFER_TICKS||speed===0&&this.latest>this.tick)) {
+      this.buffering=false;this.ready=now;
+    }
     for(const track of tracks)this.tracks.set(track.id,track.segments);
   }
   advance(now:number):number {
-    let cursor=Math.max(this.previous,this.ready);this.previous=Math.max(this.previous,now);
-    while(cursor<=now) {
-      const change=this.changes[0];
-      if(change&&this.tick>=change.tick) {
-        this.changes.shift();this.rate=change.rate;this.ready=change.ready;cursor=Math.max(cursor,this.ready);continue;
-      }
-      if(!this.rate)break;
-      const limit=Math.min(this.latest,change?.tick??Infinity),duration=(limit-this.tick)/this.rate*1000;
-      if(duration>now-cursor){this.tick+=(now-cursor)*this.rate/1000;break;}
-      this.tick=limit;cursor+=duration;
-      if(!change||limit<change.tick)break;
-    }
+    const elapsed=Math.max(0,now-Math.max(this.previous,this.ready));
+    this.previous=Math.max(this.previous,now);
+    this.tick=Math.min(this.latest,this.tick+elapsed*this.rate/1000);
+    // Drain only confirmed time on pause so paused edits can be displayed.
+    if(this.speed===0&&this.tick>=this.latest)this.rate=0;
     return this.tick;
   }
   segment(id:number):TravelSegment|undefined {

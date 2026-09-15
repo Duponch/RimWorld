@@ -67,7 +67,7 @@ La convention 3D est de 1 m par case, 1,75 m pour un humain et 2,80 m pour un mu
 | Échap | Annuler le rectangle en cours ; sinon fermer le panneau et revenir à l'inspection |
 | Ctrl+S | Sauvegarder |
 
-Le déplacement, le travail et la disparition des ressources partagent un court tampon d’affichage. Une pause arrête la simulation immédiatement ; la scène termine les instants déjà confirmés, puis se fige. Changer plusieurs fois de vitesse ne doit pas accumuler de retard.
+Le déplacement, le travail et la disparition des ressources partagent un court tampon d’affichage. Une pause arrête la simulation immédiatement ; la scène termine les instants déjà confirmés, puis se fige. Les passages entre 1×, 3× et 6× répondent dès confirmation, sans attendre la fin du tampon. Le démarrage et la reprise après une pause entièrement vidée conservent une courte réserve de mouvement.
 
 Un jour dure dix minutes à vitesse normale (6 000 ticks). Le compteur FPS mesure le rendu ; une simulation chargée peut avancer plus lentement malgré une bonne cadence d’image.
 

@@ -1,3 +1,4 @@
+import { FixedClock } from '../src/bridge/fixed-clock';
 import { withoutPostV10Fields } from './scenarios/legacy-save';
 import { expect, test } from 'vitest';
 import { createWorld, addGroundMaterial, applyCommand, canDesignate, stepWorld, serializeWorld, deserializeWorld, validateWorld, refreshStock } from '../src/sim/index';
@@ -113,7 +114,7 @@ test('civil crossing preserves beds, opposing cargo, every edge and exact contin
 test('buffered motion is linear across jitter, duplicate messages, turns, pause and replacement',()=>{
   const segments=[{from:{x:0,z:0},to:{x:1,z:0},start:0,end:3},{from:{x:1,z:0},to:{x:1,z:1},start:3,end:6}];
   const timeline=new MotionTimeline();timeline.adopt(0,1,[{id:1,segments}],0,true);
-  const arrivals=new Map([[180,2],[390,4],[580,6],[600,6],[700,6]]);
+  const arrivals=new Map([[180,2],[400,4],[580,6],[600,6],[700,6]]);
   let previous={x:0,z:0},distance=0;
   for(let ms=10;ms<=1000;ms+=10) {
     if(arrivals.has(ms))timeline.adopt(arrivals.get(ms)!,1,[{id:1,segments}],ms);
@@ -130,37 +131,51 @@ test('buffered motion is linear across jitter, duplicate messages, turns, pause 
   timeline.adopt(100,1,[],2100,true);expect(timeline.advance(2200)).toBe(100);expect(timeline.segment(1)).toBeUndefined();
   // A worker message can run before RAF while performance.now() is already
   // later than that frame's timestamp. Only rendered timestamps pace playback.
-  // Five-Hz publications with 80–130 ms delivery jitter at speed 6 stay linear.
+  // Active worker batches every 50 ms, plus 10–20 ms delivery jitter.
   const jitter=new MotionTimeline();jitter.adopt(0,6,[],0,true);
-  const delayed=new Map([[280,12],[530,24],[680,36],[900,48],[1130,60]]);
-  for(let ms=10;ms<=1200;ms+=10){if(delayed.has(ms))jitter.adopt(delayed.get(ms)!,6,[],ms);expect(jitter.advance(ms)).toBeCloseTo(Math.max(0,ms-400)*.06,9);}
+  const delayed=new Map<number,number>();
+  for(let ms=50;ms<=1200;ms+=50)delayed.set(ms+(ms/50%2?10:20),ms*.06);
+  for(let ms=10;ms<=1200;ms+=10){if(delayed.has(ms))jitter.adopt(delayed.get(ms)!,6,[],ms);expect(jitter.advance(ms)).toBeCloseTo(Math.max(0,ms-120)*.06,9);}
   const interleaved=new MotionTimeline();interleaved.adopt(0,6,[],0,true);
   interleaved.adopt(100,6,[],420);interleaved.advance(430);
   const first=interleaved.tick;
   interleaved.adopt(101,6,[],452);interleaved.advance(450);
   expect(interleaved.tick-first).toBeCloseTo(1.2,9);
   interleaved.advance(470);expect(interleaved.tick-first).toBeCloseTo(2.4,9);
-  // Speed controls belong to their confirmed tick, not message arrival time.
-  // Repeated changes used to add 400 ms each and exhaust the movement history.
-  const changes=new MotionTimeline();changes.adopt(0,6,[],0,true);
-  let source=0,speed=6;const history=new Map([[0,0]]);
-  for(let ms=10;ms<=30000;ms+=10) {
-    source+=speed*.1;history.set(ms,source);
-    if(ms%1000===0){speed=[1,3,6][ms/1000%3]!;changes.adopt(Math.round(source),speed,[],ms);}
-    else if(ms%200===0)changes.adopt(Math.round(source),speed,[],ms);
-    expect(changes.advance(ms),`speed boundary at ${ms}`).toBeCloseTo(history.get(Math.max(0,ms-400))!,6);
+  // Integrate the requested rate independently. Speed controls must affect the
+  // NEXT frame, without waiting for old-rate history or resetting position.
+  for(const period of [100,1000]) {
+    const changes=new MotionTimeline();changes.adopt(0,1,[],0,true);
+    let gameMs=0,speed=1,expected=0;
+    for(let ms=10;ms<=30000;ms+=10) {
+      gameMs+=speed*10;
+      if(ms>400&&ms%period===0)speed=[1,6,3][ms/period%3]!;
+      if(ms%50===0)changes.adopt(Math.floor(gameMs/100),speed,[],ms);
+      if(ms>400)expected+=speed*.1;
+      expect(changes.advance(ms),`speed ${speed} at ${ms}, controls every ${period}`).toBeCloseTo(expected,7);
+    }
+    const confirmed=Math.floor(gameMs/100);changes.adopt(confirmed,0,[],30000);
+    expect(changes.advance(31000)).toBe(confirmed);expect(changes.advance(32000)).toBe(confirmed);
+    // A drained pause refills once, at the requested rate, not for a fixed 400 ms.
+    changes.adopt(confirmed,6,[],32000);changes.advance(32010);expect(changes.tick).toBe(confirmed);
+    changes.adopt(confirmed+4,6,[],32070);changes.advance(32070);expect(changes.tick).toBe(confirmed);
+    expect(changes.advance(32080)).toBeCloseTo(confirmed+.6,8);
+    changes.adopt(confirmed+4,0,[],32080);changes.adopt(confirmed+4,1,[],32080);
+    expect(changes.advance(32090)).toBeCloseTo(confirmed+.7,8); // resume before drain: no refill
+    expect(changes.advance(40000)).toBe(confirmed+4); // starvation never predicts
   }
-  // Several controls can be queued inside the buffer, including pause/resume
-  // on the same tick. One delayed frame must consume them in tick order.
-  const rapid=new MotionTimeline();rapid.adopt(0,6,[],0,true);
-  source=0;speed=6;history.clear();history.set(0,0);
-  for(let ms=10;ms<=3000;ms+=10) {
-    source+=speed*.1;history.set(ms,source);
-    if(ms%100===0){speed=[0,1,3,6][ms/100%4]!;rapid.adopt(Math.round(source),speed,[],ms);}
-    if(ms%250===0)expect(rapid.advance(ms),`rapid control at ${ms}`).toBeCloseTo(history.get(Math.max(0,ms-400))!,6);
+  // Frequent controls must not discard partial ticks in the worker. The oracle
+  // integrates elapsed game milliseconds independently of batching and pauses.
+  const clock=new FixedClock();clock.reset(0);let integral=0,ticks=0,speed=1;
+  for(let i=1;i<=1000;i++) {
+    integral+=7*speed;ticks+=clock.advance(i*7,speed);
+    expect(ticks).toBe(Math.floor(integral/100));
+    speed=[0,1,3,6][i%4]!;expect(clock.advance(i*7,speed)).toBe(0);
   }
-  rapid.adopt(Math.round(source),0,[],3000);expect(rapid.advance(10000)).toBeCloseTo(source,6);
-  expect(rapid.advance(20000)).toBeCloseTo(source,6); // never extrapolate past confirmed time
+  clock.reset(100);expect(clock.advance(0,6)).toBe(0);expect(clock.advance(100000,6)).toBe(15);
+  expect(clock.advance(100000,6)).toBe(0);clock.reset(100000);
+  expect(clock.advance(100050,1)).toBe(0);expect(clock.advance(100100,1)).toBe(1);
+
 });
 
 test('floor stacks enforce identity, reserved destination type, migration and atomic refusal when no drop fits',()=>{

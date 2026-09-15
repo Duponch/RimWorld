@@ -1,6 +1,6 @@
 # Plan de développement
 
-Priorité de réparation sous V38 : [synchronisation du minage, de l’abattage et des déplacements](development/presentation-timing.md), après le signalement utilisateur. Corrige horloge, phases et cadence du HUD ; aucune étape de gameplay supplémentaire dans ce lot. La progression G0–G5 ci-dessous reste inchangée.
+Priorité de réparation sous V38 : [synchronisation du minage, de l’abattage et des déplacements](development/presentation-timing.md), après le signalement utilisateur. Corrige horloge, phases et cadence du HUD ; supprime ensuite le délai des changements entre vitesses positives avec réserve en ticks et publications rapprochées ; aucune étape de gameplay supplémentaire dans ce lot. La progression G0–G5 ci-dessous reste inchangée.
 
 V38 livre les [températures locales et la conservation variable](development/temperature.md) : cycle extérieur, pièces/toits/portes, chauffage du feu, âges alimentaires conservés et inspection. V37 conserve les effets lumineux sur travaux et déplacements. **Prochaine étape : compléter le consommateur thermique des plantes et préparer le refroidissement passif**, puis les appareils et le réseau de la chaîne du froid. G0 en consolidation, G1 partiel, G2 en cours ; aucun nouveau jalon déclaré complet.
 

@@ -13,3 +13,9 @@ Les deux documents MDN décrivent les API utilisées, pas RimWorld. Le miroir ap
 ## Preuve locale et décision
 
 Le banc natif sur carte naturelle 250² reproduit 23 sauts en 45 secondes après changements 1×/3×/6× toutes les deux secondes, avec un retard atteignant 268,49 ticks et un FPS pourtant élevé. Après correction de l’horloge seule, le contrôle a révélé des images où le colon entrait dans la roche encore affichée : les publications périodiques manquaient une transition. L’observation des phases à chaque tick et l’application différée du monde résolvent les deux causes dans les scénarios mesurés. Les [rapports courants](../development/validation.md) distinguent ces preuves des objectifs généraux.
+
+## Réactivité des vitesses — recontrôle du 15 septembre
+
+Le [TickManager à la même révision](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/Verse/TickManager.cs) affecte directement la vitesse courante après vérification du contrôle du joueur ; le multiplicateur de ticks lit cette valeur. Le miroir ne justifie aucun délai fixe d’une seconde au changement normal/rapide. Cela ne prouve pas une latence mesurée de RimWorld commercial : limites de charge et ralentissements forcés restent distincts. Le contrat RAF de MDN a aussi été relu.
+
+Décision : **adapter** la présentation navigateur pour appliquer la vitesse confirmée à la frame suivante, conserver le curseur et les phases de scène, remplir une réserve de quatre ticks seulement à l’amorçage. Publier les fins de lots actifs de 20 ms en plus des transitions ; conserver le temps partiel du worker. Le taux demandé change immédiatement, mais une simulation trop coûteuse peut toujours fournir moins de ticks par seconde. Le démarrage/reprise après vidage est un cas distinct, explicitement documenté.
