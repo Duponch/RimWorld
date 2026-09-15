@@ -1,3 +1,4 @@
+import { outdoorTemperature } from './sim/temperature';
 import { isRoofArea } from './sim/roof-rules';
 import { stationRecipe } from './sim/production-recipes';
 import { RoomInspection } from './ui/room-inspection';
@@ -276,6 +277,7 @@ function renderState() {
   const delivered = world.piles.filter(pile => pile.owner.type === 'job').reduce((sum, pile) => sum + pile.quantity, 0);
   el('material-status').textContent = `${carried} portées · ${delivered} au chantier`;
   el('population').textContent = String(world.pawns.length); el('map-size').textContent = `${world.width} × ${world.height}`;
+  el('outdoor-temperature').textContent = `Extérieur : ${outdoorTemperature(world.tick).toFixed(1)} °C`;
   el('day').textContent = `Jour ${1 + Math.floor(world.tick / TICKS_PER_DAY)}`;
   const hour = 24 * (world.tick % TICKS_PER_DAY) / TICKS_PER_DAY;
   el('clock').textContent = `${String(Math.floor(hour)).padStart(2, '0')}:${String(Math.floor((hour % 1) * 60)).padStart(2, '0')}`;

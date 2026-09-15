@@ -106,7 +106,7 @@ export function gameLayout(): string {
     <aside class="time-panel panel" aria-label="Temps de jeu">
       <div class="view-controls"><button id="wall-cutaway" aria-pressed="false" title="Coupe visuelle : les murs gardent leurs collisions">Murs : hauts</button><button id="roof-toggle" aria-pressed="false" title="Afficher la couverture ; masquer ne retire pas le toit">Toits : masqués</button><button id="foliage-toggle" aria-pressed="false" title="Masquer le feuillage pour voir les colons">Feuillage</button><button id="view-home" title="Recentrer sur la colonie">⌂</button></div>
       <div class="camera-controls"><button id="camera-mode" aria-pressed="false" title="Basculer en perspective ; glisser avec le bouton droit pour tourner">Vue : iso</button></div>
-      <div id="clock">00:00</div><div id="day">Jour 1</div><div class="biome-label" title="Site tempéré provisoire. Saisons et météo à venir.">Forêt tempérée</div>
+      <div id="clock">00:00</div><div id="day">Jour 1</div><div id="outdoor-temperature" class="biome-label"></div><div class="biome-label" title="Site tempéré provisoire. Saisons et météo à venir.">Forêt tempérée</div>
       <div class="time-controls" aria-label="Vitesse de simulation">
         <button data-speed="0" aria-label="Pause" title="Pause · Espace">Ⅱ</button><button data-speed="1" aria-label="Vitesse normale" title="1× · touche 1">▷</button>
         <button data-speed="3" aria-label="Vitesse 3 fois" title="3× · touche 2">▷▷</button><button data-speed="6" aria-label="Vitesse 6 fois" title="6× · touche 3">▷▷▷</button>

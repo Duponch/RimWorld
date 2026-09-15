@@ -54,6 +54,8 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
       const current=await world(page), summary=colonySummary(current), context=JSON.stringify(summary);
       await testInfo.attach(`hourly-world-${hour}`,{contentType:'application/json',body:JSON.stringify(current)});
       expect(validateWorld(current),context).toEqual([]);expect(woodAccount(current),context).toBe(initialWood);
+      expect(summary.thermal.outdoors).toBeGreaterThanOrEqual(14);expect(summary.thermal.outdoors).toBeLessThanOrEqual(28);
+      for(const t of summary.thermal.temperatures){expect(t).toBeGreaterThanOrEqual(14);expect(t).toBeLessThanOrEqual(28);}
       for(const light of summary.lighting) {
         expect(light.cellFactor).toBeCloseTo(.8+.2*Math.min(1,light.cellLight/.3),8);
         expect(light.travelFactor).toBeGreaterThanOrEqual(.8);expect(light.travelFactor).toBeLessThanOrEqual(1);

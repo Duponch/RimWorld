@@ -14,7 +14,7 @@ export function validatePreservation(world: World, version: number): string[] {
   for (const pile of world.piles) {
     if (!isPerishable(pile.item)) { if (pile.rot !== undefined) errors.push('Unexpected food age.'); continue; }
     const rot = pile.rot;
-    if (!record(rot) || Object.keys(rot).length !== 2 || !Number.isSafeInteger(rot.atTick) || rot.atTick < 0 || rot.atTick > world.tick
+    if (!record(rot) || Object.keys(rot).length !== (rot.rate===undefined?2:3) || rot.rate!==undefined&&(version<38||typeof rot.rate!=='number'||!Number.isFinite(rot.rate)||rot.rate<0||rot.rate>=1) || !Number.isSafeInteger(rot.atTick) || rot.atTick < 0 || rot.atTick > world.tick
       || typeof rot.progress !== 'number' || !Number.isFinite(rot.progress) || rot.progress < 0 || rot.progress >= ROT_DAYS[pile.item] * TICKS_PER_DAY
       || ticksUntilRot(pile, world.tick) <= 0) errors.push('Invalid or expired food age.');
   }

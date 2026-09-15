@@ -1,5 +1,7 @@
 # Cycle visuel et projections de caméra
 
+V38 ajoute le [cycle quotidien de température](temperature.md), séparé de l’éclairage artistique. Saisons et météo restent futures.
+
 Mise à jour V8 : le preset de croissance binaire décrit historiquement ci-dessous est remplacé par la [lumière naturelle et la première culture de riz](farming.md), avec migration des checkpoints. Météo et saisons restent absentes.
 Livraison du 13 septembre 2026, schéma de sauvegarde **7 inchangé**. [Recherche et audit rétroactif](../research/environment-review.md). Corpus chap. 3/7/29, SYS-012/131/172..177 et UI-005 : adapter la présentation 3D, différer la simulation climatique complète. Cette tranche transversale ne clôture ni G0 ni G2.
 
@@ -21,7 +23,7 @@ Au démarrage, `preparePresentation` précompile les matériaux des deux project
 
 ## Limites conservées explicitement
 
-Latitude/longitude du site, saison, météo et calendrier solaire variable ne sont pas encore sérialisés. Les teintes du ciel ne pilotent pas les plantes. Depuis V8, les plantes utilisent l’intégrale de lumière de la latitude fixe ; V35 interrompt cette progression sous couverture construite, avec checkpoint préalable. Le climat reste fixé à 21 °C. V36 branche la lumière de gameplay sur les recettes et son [rendu local](environment-lighting.md) sur les surfaces/personnes. V37 étend les facteurs lumineux à la marche et aux travaux présents. Humeur lumineuse, toits naturels, ombres de gameplay, éclipses et température variable restent absents. Masquer les toits retire leur carte d’ombre graphique, mais conserve désormais l’assombrissement intérieur et la lumière des feux.
+Latitude/longitude du site, saison, météo et calendrier solaire variable ne sont pas encore sérialisés. Les teintes du ciel ne pilotent pas les plantes. Depuis V8, les plantes utilisent l’intégrale de lumière de la latitude fixe ; V35 interrompt cette progression sous couverture construite, avec checkpoint préalable. V38 ajoute le cycle thermique quotidien 14–28 °C et les échanges des pièces. V36 branche la lumière de gameplay sur les recettes et son [rendu local](environment-lighting.md) sur les surfaces/personnes. V37 étend les facteurs lumineux à la marche et aux travaux présents. Humeur lumineuse, toits naturels, ombres de gameplay, éclipses et climat saisonnier restent absents. Masquer les toits retire leur carte d’ombre graphique, mais conserve désormais l’assombrissement intérieur et la lumière des feux.
 
 Les ombres utilisent une fenêtre locale autour de la cible, pas une couverture précise de la carte entière. En vue rasante, la végétation peut masquer les colons : masquage du feuillage disponible, transparence contextuelle future. Le panoramique reste limité à la carte et les extérieurs du plateau ne sont pas un terrain infini.
 

@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+V38 ajoute des propriétés au contenu existant, sans nouvel objet : chaleur du feu, échanges des murs/toits/portes, conservation locale des denrées. Réfrigérateurs, refroidissement passif, radiateurs et équipement thermique restent à livrer ; aucun catalogue clos par ce lot.
+
 V37 étend les effets des feux/toits existants aux travaux et déplacements ; aucun nouvel objet. Le catalogue reste ouvert, notamment plantes, terrains et éclairages supplémentaires.
 
 Le feu présent éclaire maintenant aussi le décor et les colons en 3D ; aucun nouvel objet lumineux. Torches, lampes électriques et lumières horticoles restent absentes. [Présentation](../development/environment-lighting.md).

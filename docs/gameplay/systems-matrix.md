@@ -1,5 +1,7 @@
 # Matrice des systèmes et critères de réalisation
 
+V38 : thermique quotidienne/locale, chauffage du feu et âge alimentaire variable ajoutés à S10/S11/S12 et aux contrats alimentaires ; systèmes toujours partiels. G0 en consolidation, G1 partiel, G2 en cours, conformément à ROADMAP.
+
 Cette matrice traduit les références de RimWorld en exigences de gameplay pour notre simulation de colonie 3D. Les trois documents de `docs/reference/originals` constituent désormais le corpus fonctionnel principal, utilisé selon la [note d'adoption et de lecture critique](../research/reference-adoption.md), avec la [première recherche](../research/rimworld-reference.md) en complément. Elle décrit une cible et un ordre de construction, **pas une déclaration de fonctionnalités livrées**. Le [plan de développement](../ROADMAP.md) définit le calendrier canonique G0 à G5 et l'état technique ; les résumés ci-dessous s'y conforment. Les extensions viennent après G5.
 
 Révision : **15 septembre 2026**. Périmètre par défaut : jeu de base avant les systèmes comparables aux extensions. Les règles chiffrées du prototype sont nos paramètres provisoires ; elles ne doivent pas être présentées comme des valeurs certifiées de RimWorld.
@@ -133,6 +135,6 @@ S06/S07 : table et tabouret construits après livraison, repas avec transport à
 
 V27 : [régions et identités géologiques](../development/geology.md) livrées dans la génération locale ; SYS-061 minage, CAT-059 sols et le reste de CAT-060 demeurent partiels. V28 ajoute minage physique, sol brut et fragments transportables ; V29 ajoute acier compacté et piles d’acier ; toits, autres minerais et taille restent ouverts. Le calendrier reste ROADMAP.
 
-S10, sous V34 : reconnaissance des enceintes, seuils et inspection livrées ; fusion/division, coins, eau et reprise contrôlés. Toits, rôles, thermique et confort de pièce restent ouverts ; ce lot ne satisfait pas encore l’acceptation G2. [Contrat](../development/rooms.md).
+S10, sous V34 : reconnaissance des enceintes, seuils et inspection livrées ; fusion/division, coins, eau et reprise contrôlés. Toits construits V35, premiers rôles V36 et thermique V38 sont ajoutés dans leurs contrats ; confort et autres effets de pièce restent ouverts ; ce lot ne satisfait pas encore l’acceptation G2. [Contrat](../development/rooms.md).
 
 V37 étend la lumière aux travaux et déplacements des domaines S02/S04/S06/S09/S10 ; [contrat](../development/light-work.md). G0/G1 restent partiels et G2 en cours. Ni catalogue, compétences, psychologie ni thermique livrés par cette extension.

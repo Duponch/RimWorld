@@ -3,6 +3,7 @@ import { cookingSpot } from '../sim/cooking-bills';
 import { footprintCells } from '../sim/definitions';
 import { isRoofed, roofIndex } from '../sim/roof-rules';
 import type { Cell, World } from '../sim/types';
+import { TemperatureView } from '../sim/temperature';
 
 /** One cache per inspector owner, refreshed on snapshots/selection, never RAF. */
 export class RoomInspection {
@@ -24,6 +25,7 @@ export class RoomInspection {
       : covered?`Pièce ${covered===room.cellCount?'couverte':'partiellement couverte'} · ${covered} / ${room.cellCount} cases.`
       : `Pièce non couverte · ${room.cellCount} case${room.cellCount > 1 ? 's' : ''}.`;
     const i=roofIndex(world,cell);
+    if(room&&room.kind!=='solid')text+=` Température : ${new TemperatureView(world).at(world,cell).toFixed(1)} °C.`;
     if(isRoofed(world,i))text+=' Toit construit sur cette case.';
     if(world.roofing?.remove.includes(i))text+=' Zone : retirer le toit.';
     else if(world.roofing?.build.includes(i))text+=' Zone : construire un toit.';

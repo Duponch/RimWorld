@@ -1,5 +1,7 @@
 # Première boucle de culture — V8
 
+Limite thermique après V38 : le site quotidien livré (14–28 °C), avec chauffage des feux plafonné à 28 °C, reste dans la plage végétale de croissance pleine. L’intégrale agricole conserve donc son profil tempéré. Intégrer les historiques locaux de froid/chaleur avant de livrer un refroidisseur, une saison ou un biome sortant de 6–42 °C ; les fixtures de pièces artificiellement froides ne constituent pas une validation de croissance thermique.
+
 État : 13 septembre 2026. Tranche G1 ; [recherche et limites de fidélité](../research/farming-reference.md). L'agriculture n'est pas un domaine terminé.
 
 ## Contrat livré

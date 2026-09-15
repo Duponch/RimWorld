@@ -25,6 +25,8 @@ import { processCooking } from './cooking.ts';
 import { WorkEnvironmentCache, type WorkEnvironment } from './work-environment.ts';
 import type { LightEnvironment } from './light-environment.ts';
 import { advanceWork } from './work-progress.ts';
+import { reconcileTemperature, advanceTemperature } from './temperature.ts';
+import { updateFoodTemperatures } from './thermal-food.ts';
 import { applyBillCommand } from './cooking-commands.ts';
 import { cookingCellReserved } from './cooking-bills.ts';
 import { burnFuel, campfire, newCampfireFuel } from './fuel.ts';
@@ -153,7 +155,7 @@ export function canDesignate(world: World, command: DesignateCommand): CommandRe
 }
 export function applyCommand(world: World, command: Command): CommandResult {
   const result=applyCommandInternal(world,command);
-  if(result.ok)reconcileOrders(world);
+  if(result.ok){reconcileOrders(world);updateFoodTemperatures(world,reconcileTemperature(world));}
   return result;
 }
 function applyCommandInternal(world: World, command: Command): CommandResult {
@@ -286,9 +288,12 @@ function completeJob(world: World, pawn: Pawn, job: Job): void {
 const workEnvironments=new WeakMap<World,WorkEnvironmentCache>();
 export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-planner.ts').SearchStats): void {
   if (!Number.isInteger(ticks) || ticks < 0 || ticks > 100000) throw new Error('Tick count must be an integer between 0 and 100000.');
+  if(!ticks)return;
+  let thermal=reconcileTemperature(world);updateFoodTemperatures(world,thermal);
   for (let step = 0; step < ticks; step++) {
     world.tick++;
     expireFood(world);
+    advanceTemperature(world,thermal);
     burnFuel(world);
     updateDoors(world);
     scheduleGrowing(world);
@@ -305,7 +310,8 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     };
     const getLight=()=>light??=getEnvironmentCache().readLight(world);
     const getEnvironment=()=>environment??=getEnvironmentCache().read(world,getLight());
-    const invalidateEnvironment=()=>{environment=undefined;light=undefined;};
+    let thermalDirty=false;
+    const invalidateEnvironment=()=>{environment=undefined;light=undefined;thermalDirty=true;};
     const getRoofs = () => roofs ??= new RoofContext(world);
     const getBlocked: NavigationGrid = () => blocked ??= blockedCells(world);
     const occupied = CIVIL_TRANSIT_BLOCKERS;
@@ -378,5 +384,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     if(world.roofing)reconcileRoofJobs(world,roofs);
     reconcileOrders(world);
     refreshStock(world);
+    if(thermalDirty)thermal=reconcileTemperature(world);
+    updateFoodTemperatures(world,thermal);
   }
 }

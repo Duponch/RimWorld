@@ -24,7 +24,7 @@ Le retrait volontaire élimine seulement les composantes sans connexion à un po
 
 Avant toute variation de couverture, les plantes concernées enregistrent leur croissance acquise à l’ancien taux. Sous toit, la lumière naturelle ne fait plus croître riz/baies ; découvrir reprend la progression depuis ce point, sans croissance rétroactive. Mortalité dans l’obscurité et éclairage horticole restent absents. Regarder le ciel exige une cellule sans toit ; la psychologie complète de la pièce attend son consommateur.
 
-L’inspection distingue enceinte, couverture partielle/totale et cellule sélectionnée. Aucun bonus de température, repos, humeur ou atelier n’est accordé par cette seule information. V36 branche les [critères distincts de pièce/lumière](work-environment.md) sur les recettes, sans autre bonus implicite.
+L’inspection distingue enceinte, couverture partielle/totale et cellule sélectionnée. Aucun bonus de température, repos, humeur ou atelier n’est accordé par cette seule information. V36 branche les [critères distincts de pièce/lumière](work-environment.md) sur les recettes ; V38 ajoute les [échanges thermiques](temperature.md), sans bonus psychologique implicite.
 
 La dalle de 12 cm se place au-dessus des murs suivant `WORLD_SCALE`. Le bouton permanent affiche/masque les toits sans effet sur World. `RoofLayer` réutilise deux lots instanciés de `BoxBatches`, préparés aussi lorsqu’ils sont vides. Programme TSL stable pendant croissance des buffers ; aucune géométrie par frame. Le masquage retire le toit de la carte d’ombres, mais le [champ d’éclairage intérieur](environment-lighting.md) conserve l’obscurité et les feux sous la couverture logique. Cette première dalle est une présentation procédurale provisoire, sans étage jouable.
 

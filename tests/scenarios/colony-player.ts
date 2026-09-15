@@ -1,6 +1,7 @@
 import { stonecuttingDecisions } from './stonecutting-player.ts';
 import { roofingDecisions } from './roofing-player.ts';
 import { WorkEnvironmentCache } from '../../src/sim/work-environment.ts';
+import { outdoorTemperature } from '../../src/sim/temperature.ts';
 import { cookingSpot } from '../../src/sim/cooking-bills.ts';
 import { miningDecisions } from './mining-player.ts';
 import { installCommand } from '../../src/sim/furniture-commands.ts';
@@ -21,6 +22,7 @@ function environmentSummary(world:World) {
   let cache=environmentCaches.get(world);if(!cache){cache=new WorkEnvironmentCache();environmentCaches.set(world,cache);}
   const env=cache.read(world);
   return {
+    thermal:{outdoors:outdoorTemperature(world.tick),retainedCells:(world.thermal?.regions??[]).reduce((n,r)=>n+r.cells.length,0),temperatures:(world.thermal?.regions??[]).map(r=>r.temperature)},
     workplaces:world.structures.filter(s=>s.kind==='campfire'||s.kind==='stonecutter').map(s=>({id:s.id,kind:s.kind,role:env.room(s)?.role,...env.production(s,cookingSpot(s))})),
     lighting:world.pawns.map(p=>({id:p.id,cellLight:env.lightAt(p),cellFactor:env.speedAt(p),moving:p.motion!==null&&p.motion!==undefined&&p.motion.end>world.tick,travelFactor:p.motion?.speedFactor??1})),
   };

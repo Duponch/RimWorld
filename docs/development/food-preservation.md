@@ -1,10 +1,10 @@
-# Conservation des aliments — contrat V11
+# Conservation des aliments — contrat V11–V38
 
 Voir la [recherche fraîcheur](../research/food-preservation-reference.md) pour provenance, confiance et écarts. Cette responsabilité est séparée de la [nutrition](food-items.md), des [recettes](cooking.md) et des futurs dégâts d’exposition.
 
 ## État et transitions
 
-`food-preservation.ts` définit les durées : baies 14 jours, riz 40 jours, repas simple 4 jours. `pile.rot = { progress, atTick }` conserve l’âge thermique au dernier point d’ancrage. Le site actuel est partout à 21 °C ; chaque tick écoulé ajoute un tick d’âge. Les rations de survie, portions historiques et bois n’ont pas ce champ. Le calcul est indépendant de la lumière rendue, de la vitesse choisie et des FPS.
+`food-preservation.ts` définit les durées : baies 14 jours, riz 40 jours, repas simple 4 jours. `pile.rot = { progress, atTick }` conserve l’âge thermique au dernier point d’ancrage. V38 ajoute un taux local sauvegardé, nul au gel, linéaire de 0 à 10 °C et plafonné à 1 ; son absence conserve le taux historique 1. Voir le [contrat thermique](temperature.md). Les rations de survie, portions historiques et bois n’ont pas ce champ. Le calcul est indépendant de la lumière rendue, de la vitesse choisie et des FPS.
 
 Une récolte démarre fraîche. Séparer une pile copie son âge ; changer de propriétaire le conserve. Fusionner additionne les âges pondérés par les quantités réellement transférées avant de modifier la quantité cible. Cuire consomme les ingrédients vivants et crée un nouveau repas frais. Aucun transport, annulation, dépôt ou rechargement ne réinitialise une denrée existante.
 
@@ -20,7 +20,7 @@ Le choix alimentaire adulte ajoute 12 au score d’un aliment qui pourrira dans 
 
 `food-preservation-save.ts` refuse âge manquant, futur, négatif, non fini, déjà expiré, champs incohérents sur un non-périssable et compteur de pertes invalide. Une ancienne version ne peut pas masquer ces nouveaux champs. Une sauvegarde refusée ne remplace pas le monde courant.
 
-Les snapshots transmettent le compteur et les piles avec le reste de l’état dynamique. Le calcul d’âge ne réécrit pas les piles entre transitions ; les signatures de géométrie ne dépendent pas de leur fraîcheur. Une future température variable devra intégrer les périodes thermiques et ancrer l’âge avant chaque changement de taux. Changer simplement la constante actuelle invaliderait cette hypothèse de continuation.
+Les snapshots transmettent le compteur et les piles avec le reste de l’état dynamique. Le calcul ancre l’âge avant chaque changement de taux, à la cellule du propriétaire réel après les transitions. Les signatures de géométrie ne dépendent pas de la fraîcheur ; une pile restant chaude ne change pas d’ancre. La durée restante affichée suppose la température actuelle constante. Le gel suspend le vieillissement sans réparer l’âge.
 
 ## Contrôles et suites
 
@@ -28,4 +28,4 @@ Trois scénarios profonds regroupent transports/fusions/ingestion au seuil, inte
 
 Le passage normal est linéaire dans les piles, sans allocation d’âge par tick. Les réconciliations n’arrivent qu’aux expirations. Mesurer aussi une expiration groupée avant de remplacer cette boucle par une file d’échéances : les fusions, suppressions et températures futures imposeraient des invalidations supplémentaires.
 
-Température constante et absence de toits/dégâts restent des limites explicites. Le feu ne chauffe pas les denrées ; ni froid, ni météo, ni intoxication ne sont déduits de ce module.
+V38 utilise les températures des pièces, leur couverture et le chauffage du feu. Froid artificiel constructible, saisons/météo, dégâts d’exposition et intoxication restent absents. Les scénarios froids synthétiques valident les transferts et les seuils ; ils ne livrent pas un congélateur.

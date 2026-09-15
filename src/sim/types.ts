@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 37 as const;
+export const SCHEMA_VERSION = 38 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
@@ -98,6 +98,7 @@ export interface Pawn extends Cell {
 export interface WorldEvent { tick: number; type: 'job' | 'need' | 'command'; message: string }
 export interface World {
   roofing?: import('./roof-rules.ts').RoofingState;
+  thermal?: import('./temperature.ts').ThermalState;
   packed: import('./furniture-rules.ts').PackedFurniture[];
   deconstructed: import('./deconstruction-rules.ts').DeconstructionLedger;
   foodPolicies: import('./food-policy.ts').FoodPolicy[];

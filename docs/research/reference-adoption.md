@@ -1,5 +1,7 @@
 # Adoption du référentiel utilisateur
 
+Température V38 — chapitres 5/6/14/22/32, SYS/TEST-023..025 et 126..131, scène E : adopter les seuils distincts, air/portes/toiture et continuité alimentaire ; adapter intégration, reconstruction par recouvrement et requêtes bornées ; différer appareils/réseaux, saisons/météo, santé et intégrale agricole extrême. [Recherche renouvelée](temperature-reference.md), [contrat](../development/temperature.md). Aucun statut R/P/V du corpus ne vaut validation locale.
+
 Toiture V35 — chapitres 5/10/21/22, SYS/TEST-023..025 et 061, scène E : adopter couverture distincte du sol, supports et travail physique ; adapter graphe/cadence/rendu ; différer plafonds naturels, dégâts et thermique. [Recherche fraîche](roofing-reference.md), [contrat](../development/roofing.md). Les mentions de toiture différée dans les bilans datés ci-dessous décrivent ces lots antérieurs, pas le statut courant.
 
 Audit sous V34, 15 septembre 2026 : chapitres 5/14/21, SYS-020..022, SYS-080 et SYS-113..117 relus pour occupation, arrêt et recherches de candidats. Contrats conservés par évaluation différée et capture locale ; incohérence des loisirs sur fragments corrigée. [Recherche et décisions](spatial-query-reference.md).

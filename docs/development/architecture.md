@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+V38 : `thermal-topology.ts` possède les preuves spatiales bornées, `temperature.ts` les échanges et le remappage d’air sauvegardé, `thermal-food.ts` les changements de taux alimentaires, `temperature-save.ts` la validation. Aucun calcul thermique dans Three ou dans les frames. [Contrat](temperature.md).
+
 Éclairage 3D sous V36 : [champ dérivé et texture TSL partagée](environment-lighting.md), propres au renderer ; aucune donnée persistante ni nouvel émetteur Three par feu. Les matériaux reçoivent explicitement la configuration à leur création.
 
 Préparation graphique après V28 : les lots vides disposent d’une [passe de préparation des ombres](shadow-preparation.md) avant de devenir visibles en jeu. Elle complète la compilation des deux projections sans modifier la simulation.

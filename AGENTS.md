@@ -50,7 +50,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 37 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 38 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)
@@ -63,7 +63,7 @@
 
 ## Conservation alimentaire (V11)
 - Lire docs/development/food-preservation.md avant de modifier les transferts, les âges ou la température. Séparer copie l’âge, fusionner pondère les quantités, produire démarre frais. La pourriture précède les actions ; elle réconcilie les réservations et les pertes cumulées.
-- La température actuelle est constante : un futur climat variable exige de revoir l’intégration des âges. Les effets du froid, de l’exposition et de l’intoxication ne sont pas livrés par ce contrat.
+- V38 intègre les taux locaux variables : lire aussi docs/development/temperature.md ; un taux change après ancrage de l’ancien intervalle. Les effets du froid, de l’exposition et de l’intoxication ne sont pas livrés par ce contrat.
 
 ## Horaires (V12)
 - Lire docs/development/schedules.md avant de modifier repos et priorités horaires. Conserver plages, profil de fatigue et état d’épuisement ; une intention ne donne jamais un bonus de besoin. V15 ajoute les plages Loisirs et deux activités physiques ; lire docs/development/recreation.md. Les attentes liées à la richesse restent absentes.
@@ -133,7 +133,7 @@
 
 ## Portes manuelles V34
 - Lire docs/development/doors.md et docs/research/doors-reference.md. Attendre au seuil avant une arête ; permission et animation sont distinctes. Maintenir ouverte ne commande pas une ouverture distante. Corps/arêtes et objets empêchent la fermeture ; une interdiction tardive conserve le passage engagé et sa sortie.
-- V33 strictement validée avant migration. Structure.door conserve temporisations et progression ; les autres objets ne portent pas cet état. Cadres solides pour les coins diagonaux même ouverts ; coût estimé séparé de l'attente physique. Jambages partagés et vantaux TSL sur l'horloge des colons. Propriétés des pièces/toits naturels/thermique, remplacement direct, factions et autodoors restent absents.
+- V33 strictement validée avant migration. Structure.door conserve temporisations et progression ; les autres objets ne portent pas cet état. Cadres solides pour les coins diagonaux même ouverts ; coût estimé séparé de l'attente physique. Jambages partagés et vantaux TSL sur l'horloge des colons. V36 ajoute les rôles de pièces et V38 les échanges thermiques ; toits naturels, remplacement direct, factions et autodoors restent absents.
 
 ## Requêtes CPU sous V34
 - Lire docs/development/spatial-queries.md. Comparer le classement avant capacité/accès sans modifier ordre des couples, curseur, budgets ou réservations. Une destination mieux classée mais inaccessible ne supprime pas le meilleur candidat valide.
@@ -141,18 +141,18 @@
 
 ## Pièces — inspection sous V34
 - Lire docs/development/rooms.md et docs/research/rooms-reference.md. Connectivité cardinale de l’espace, murs/roches pleins, portes séparées même ouvertes ; eau, plans/cadres et meubles ne ferment pas une enceinte. Ce graphe n’est ni la navigation ni un booléen universel d’intérieur.
-- Cache possédé par l’appelant, masque vérifié à chaque lecture utile, mutations en place et dimensions incluses ; aucun travail par frame. Le recalcul global mesuré garde les instantanés précédents immuables. IDs dérivés non persistants. V36 ajoute les rôles du mobilier présent et leurs facteurs de production ; toits naturels, thermique et psychologie restent absents. Pas de bonus d’abri par simple enceinte.
+- Cache possédé par l’appelant, masque vérifié à chaque lecture utile, mutations en place et dimensions incluses ; aucun travail par frame. Le recalcul global mesuré garde les instantanés précédents immuables. IDs dérivés non persistants. V36 ajoute les rôles du mobilier présent et leurs facteurs de production ; V38 ajoute les échanges thermiques ; toits naturels et psychologie restent absents. Pas de bonus d’abri par simple enceinte.
 
 ## Toiture construite V35
 - Lire docs/development/roofing.md et docs/research/roofing-reference.md. Couverture, zone de pose et zone de retrait sont distinctes du sol ; V34 validée avant migration sans toit inventé. Rayon de pose 6,9 avec connexion ; retrait volontaire par composantes sans rayon ; perte d’un support recontrôle la portée locale. Les meubles ordinaires ne sont pas porteurs.
 - Travaux Construction sans matériau/cadre, vrais trajets et défrichage, file réconciliée ; les intentions non réservées tournent pour éviter la monopolisation par des cibles inaccessibles. Les contextes ne survivent ni au tick ni à une mutation de couverture/support. Checkpointer la croissance avant modification du toit.
-- Deux lots graphiques préparés même vides, programmes stables ; masquer la toiture ne change pas World. Toits naturels, dommages/gravats d’effondrement et thermique restent absents ; V36 ajoute les facteurs intérieurs de production, avec éclairage local 3D dans la tranche de présentation suivante. Le pilote couvre 28 cases autour du repas sans couvrir le champ.
+- Deux lots graphiques préparés même vides, programmes stables ; masquer la toiture ne change pas World. Toits naturels et dommages/gravats d’effondrement restent absents ; V38 ajoute la thermique et V36 ajoute les facteurs intérieurs de production, avec éclairage local 3D dans la tranche de présentation suivante. Le pilote couvre 28 cases autour du repas sans couvrir le champ.
 
 ## Lumière et production V36
 
 - Lire `docs/development/work-environment.md` et sa recherche avant de toucher lumière/rôles/taux. Lumière au colon, extérieur psychologique au poste, rôle séparé. Les portes bloquent les feux même ouvertes. Émetteurs actuels plafonnés à 50 %, jamais du soleil agricole.
 - `CookingTask.progress` est en unités entières de travail neutre (10 000/tick), V35 strictement validée avant conversion du pourcentage (repas ×5 000, blocs ×8 000). Caches dérivés par propriétaire, contexte partagé seulement sans mutation du milieu. Pas de calcul par image ni par colon pour la diffusion.
-- Les deux recettes utilisent les facteurs. Autres travaux/déplacements, thermique, rôles sociaux et statistiques complètes restent explicitement absents. Les chambres actuelles concernent les lits civils simples et adultes sans relations.
+- Les deux recettes utilisent les facteurs. V37 étend la lumière aux travaux/déplacements et V38 ajoute la thermique. Rôles sociaux et statistiques complètes restent explicitement absents. Les chambres actuelles concernent les lits civils simples et adultes sans relations.
 
 ## Présentation lumineuse sous V36
 - Lire docs/development/environment-lighting.md avant les changements de matériaux, feux ou coupe. Texture partagée dérivée, sans mutation de World ; diffuseur logique commun, coefficients visuels artistiques. Recalcul aux changements de source/obstacle/toiture, jamais par frame ; identité texture/nœuds conservée au rechargement.
@@ -163,3 +163,8 @@
 - Lire `docs/development/light-work.md` et sa recherche. `workRemainder` conserve les fractions de travail sans changer les ticks historiques ; réinitialiser aussi cette fraction lorsqu'une famille interrompt sa progression.
 - `Job.pickTicks` capture le coup minier, `motion.speedFactor` capture la marche à l'origine après attente de porte. Ne pas retimer un coup/une arête engagés. Le délai terrain/objet reste additif ; conserver le reliquat temporel entre arêtes et coups.
 - V36 validée strictement avant migration ; ancien coup entamé = 100 ticks Core, anciennes arêtes intactes. Les contextes de lumière sont partagés seulement sans mutation, les rôles de pièce calculés uniquement pour les consommateurs qui les demandent. Pas de diffusion par colon ou par frame.
+
+## Température V38
+- Lire docs/development/temperature.md et sa recherche. Seuil thermique : au moins 25 % découvert ou accès au bord = extérieur, distinct des autres critères. Murs/toits/portes échangent, feux chauffent avec plafond 28 °C ; site quotidien 14–28 °C, saisons et météo absentes.
+- thermal.regions conserve les cellules d’air, pas les IDs de pièce. Reconciliation par recouvrement avant intégration. Le parcours thermique borné vérifie toutes les cellules utilisées dans sa preuve, y compris les parois ; ne pas le remplacer par un cache d’identité/tick.
+- rot.rate absent = 1. Ancrer l’âge avant changement de taux/propriétaire, conserver fractions/mélanges, expiration avant action. V37 strictement validée avant V38 sans passé thermique inventé. L’intégrale agricole froide/chaude doit précéder un contenu sortant de 6–42 °C ; ni santé thermique ni chaîne du froid équipées ne sont implicites.
