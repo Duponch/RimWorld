@@ -64,6 +64,16 @@ test('physical horseshoes: delivered construction, three reserved players, trans
     const task={activity,buildingId:activity==='horseshoes'?pin.id:null,target:site,phase:'travel' as const,elapsed:0};
     expect(recreationSiteValid(w,task,index)).toBe(recreationSiteValid(w,task));
   }
+  const looseRock={x:10,z:15};addGroundMaterial(w,'chunk',1,looseRock,'granite-chunk');
+  for(const activity of ['skygaze','horseshoes'] as const) {
+    const task={activity,buildingId:activity==='horseshoes'?pin.id:null,target:looseRock,phase:'travel' as const,elapsed:0};
+    expect(recreationSiteValid(w,task)).toBe(false);
+    expect(recreationSiteValid(w,task,recreationSpace(w,sites))).toBe(false);
+  }
+  // Removing that obstacle must make a fresh decision usable again.
+  w.piles=w.piles.filter(p=>p.kind!=='chunk');
+  const clearSite={activity:'skygaze' as const,buildingId:null,target:looseRock,phase:'travel' as const,elapsed:0};
+  expect(recreationSiteValid(w,clearSite,recreationSpace(w,sites))).toBe(true);
   const blocked=w.pawns.find(p=>p.recreation.task)!;blocked.recreation.task!.target=target;blocked.recreation.task!.phase='travel';blocked.recreation.task!.elapsed=0;blocked.state='moving';blocked.path=[];
   const blockedJoy=blocked.recreation.level;stepWorld(w);expect(blocked.recreation.task).toBeNull();expect(blocked.recreation.level).toBeLessThanOrEqual(blockedJoy);
   const resume=deserializeWorld(serializeWorld(w));stepWorld(w,500);stepWorld(resume,500);expect(resume).toEqual(w);expect(validateWorld(w)).toEqual([]);

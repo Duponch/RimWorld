@@ -23,6 +23,8 @@ Regrouper les changements cohérents avant de lancer leur lot de contrôles. Apr
 
 Compiler à l’intégration du lot. Les suites longues, compilations et benchmarks lourds ne tournent pas en concurrence. Vitest borne le parallélisme à deux workers ; les parcours navigateur utilisent un worker. Une optimisation interne conservant exactement les états n’exige pas de rejouer une longue UI déjà verte si ses contrôles n’ont pas changé.
 
+L'audit `scripts/spatial-query-bench.ts` compare des empreintes SHA-256 du monde entier à cadence fixe et à achèvement, pour 3/30/100 bâtisseurs. Exécuter `before` sur la révision témoin exportée puis `after` sur le code modifié ; conserver même scénario, échauffement, cadence et machine. Hash/validation/snapshot sont hors mesure du tick. Cette égalité complète les bilans et l'oracle ; elle ne remplace pas un test d'une correction de règle volontaire. Navigation vérifie aussi égalités, réserve supérieure inaccessible puis ouverte et absence d'exploration d'un candidat déjà dominé ; loisirs vérifie fragments et retrait.
+
 Une commande sans progrès doit être diagnostiquée puis arrêtée. Les scripts d’audit disposent de bornes ; le pilote long suit ses ticks et checkpoints, avec surveillance des attentes. Une partie de trois jours qui avance normalement prend plusieurs minutes : distinguer durée attendue et blocage. Si un arrêt est nécessaire, conserver motif et dernier état avant correction/reprise.
 
 ## Familles en place

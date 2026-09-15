@@ -71,3 +71,5 @@ Atelier à ingrédients mixtes : [contrat V31](development/stonecutter.md), [rec
 Constructions en pierre V33 : [contrat des matériaux](development/construction-materials.md), [règles vérifiées](research/stone-buildings-reference.md).
 
 Portes manuelles V34 : [contrat](development/doors.md), [recherche Core](research/doors-reference.md).
+
+Requêtes CPU sous V34 : [contrat et durée de vie](development/spatial-queries.md), [relecture accès/arrêt/loisirs](research/spatial-query-reference.md).

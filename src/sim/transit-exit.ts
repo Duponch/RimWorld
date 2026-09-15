@@ -1,4 +1,4 @@
-import { canStandAt } from './furniture-travel.ts';
+import { canStandAt, captureStandability } from './furniture-travel.ts';
 import { footprintCells } from './definitions.ts';
 import { canStep, routeToCell, routeCost } from './pathfinding.ts';
 import { search, PLAN_INTERVAL, type NavigationGrid, type SearchBudget } from './work-planner.ts';
@@ -25,8 +25,8 @@ export function leaveTransitCell(world:World,pawn:Pawn,getBlocked:NavigationGrid
   const blocked=getBlocked();let next=pawn.path[0];
   if(!next||!canStep(world,pawn,next,blocked,CIVIL_TRANSIT_BLOCKERS)) {
     if(pawn.planCooldown>0)return true;
-    const reserved=reservedServiceCells(world,pawn.id),goals=new Set<number>();
-    const add=(c:Cell)=>{if(canStandAt(world,c)&&!reserved.has(c.z*world.width+c.x))goals.add(c.z*world.width+c.x);};
+    const reserved=reservedServiceCells(world,pawn.id),goals=new Set<number>(),standable=captureStandability(world);
+    const add=(c:Cell)=>{if(standable(c)&&!reserved.has(c.z*world.width+c.x))goals.add(c.z*world.width+c.x);};
     // The nearest standable exit of a connected furniture patch is on its
     // cardinal boundary under our solid-corner rule.
     for(const s of [...world.structures,...world.jobs])for(const c of footprintCells(s))for(const [dx,dz] of [[0,-1],[1,0],[0,1],[-1,0]])add({x:c.x+dx!,z:c.z+dz!});

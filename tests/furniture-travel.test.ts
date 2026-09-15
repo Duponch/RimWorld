@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import { createWorld, stepWorld, validateWorld, serializeWorld, deserializeWorld, applyCommand, refreshStock } from '../src/sim/index';
-import { furnitureDelay, canStandAt } from '../src/sim/furniture-travel';
+import { furnitureDelay, canStandAt, captureStandability } from '../src/sim/furniture-travel';
 import { startTravel } from '../src/sim/movement';
 import { blockedCells, reachableCells, routeToJob } from '../src/sim/pathfinding';
 import { candidateAccess } from '../src/sim/candidate-access';
@@ -33,6 +33,9 @@ test('furniture routes agree with an independent directed-cost oracle, repeat ac
     for(const target of [102,170,58]){expect(access.has(target)).toBe(Number.isFinite(oracle[target]));expect(access.resolve(new Set([target])).costs[target]).toBe(oracle[target]);}
     expect(canStandAt(w,{x:6,z:6})).toBe(false);expect(canStandAt(w,{x:10,z:3})).toBe(false);expect(canStandAt(w,{x:4,z:6})).toBe(true);
     const path=routeToJob(w,{x:6,z:6},reach,true);expect(path).not.toBeNull();expect(canStandAt(w,path!.at(-1)!)).toBe(true);
+    const standable=captureStandability(w);
+    for(let z=-1;z<=16;z++)for(let x=-1;x<=16;x++)expect(standable({x,z}),`standing index ${orientation}:${x},${z}`).toBe(canStandAt(w,{x,z}));
+    expect(standable({x:6.5,z:6})).toBe(false);
     const p=w.pawns[0]!;p.x=6;p.z=orientation===2?7:5;w.tick=20;p.motion=null;p.moveCooldown=0;
     startTravel(w,p,{x:6,z:6});expect(p.motion!.end-p.motion!.start).toBeCloseTo(7.2,9);
     const captured=structuredClone(p.motion);w.structures=w.structures.filter(s=>s.kind!=='table');expect(p.motion).toEqual(captured);

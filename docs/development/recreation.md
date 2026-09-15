@@ -20,6 +20,8 @@ La baisse ordinaire est 60/6 000 point/tick, facteur 0,7 de 15 à moins de 30, 0
 
 Observer le ciel ne réserve aucun bâtiment. Les cases portant un décor/ouvrage sont écartées, puis le trajet vérifie l'accès. Le voisinage échantillonné reste une adaptation provisoire ; pièces, toits et météo ne sont pas simulés par ce filtre. À reconsidérer lors de G2 et de l'extension des loisirs sans bâtiment.
 
+L'audit sous V34 corrige l'index des candidats : un fragment au sol interdit la place dès la sélection, comme il l'interdisait déjà lors de l'exécution. Le retirer réautorise la place à la prochaine décision. Les contrôles ponctuels utilisent les empreintes sans allouer de tableaux. [Relecture et limites](../research/spatial-query-reference.md).
+
 Les modèles sont inclus dans le lot de mobilier existant. Les poses utilisent les attributs GPU actuels : allongé face au ciel, bras de lancer et orientation vers le piquet. Pas de squelette CPU par acteur, ni nouveau travail par image pour simuler le besoin. La trajectoire visible du fer reste absente. L'inspection ajoute satisfaction, effet d'humeur et lassitude par famille ; Horaires et Architecte conservent leur organisation.
 
 ## Sauvegardes et preuves

@@ -198,8 +198,8 @@ Les [transferts de meubles](furniture-transfer.md) séparent règles, commandes,
 
 Deux recettes partagent le même moteur physique. `production-recipes.ts` décrit leurs contrats et `production-output.ts` extrait livraison/fractionnement ; noms persistants `cooking` conservés, recette de blocs explicitement discriminée. Pas de nouveau moteur de réservations. Les recherches de réserve utilisent l'accès progressif commun, uniquement pendant une décision synchrone. [Contrat](stonecutting.md).
 
-## Portes et prochain audit de charge V34
+## Portes et audit de charge V34
 
 [Portes manuelles](doors.md) : attente avant engagement de l'arête, permission distincte de l'état ouvert, temporisations sauvegardées. Index des corps et objets local à la mise à jour ; recherche/candidats toujours bornés à une décision synchrone. Jambages dans le lot statique partagé, vantaux instanciés par attributs et TSL sur le temps des colons. Aucun nouveau solveur physique ni animation CPU par objet.
 
-Le scénario 100 portes/100 colons termine mais révèle un coût CPU élevé avec 1 500 murs et recherches simultanées. Le profil échantillonné charge surtout accès, sortie de mobilier/arrêt et capacité des dépôts ; la mesure graphique ne montre pas de compilation tardive. Le prochain lot optimisera ces requêtes, avec comparaison des mêmes continuations. Aucun cache persistant implicite ne doit masquer une création, un déplacement de pile ou un changement d'autorisation.
+Le scénario 100 portes/100 colons a révélé un coût CPU élevé avec 1 500 murs et recherches simultanées. L'[optimisation des requêtes](spatial-queries.md) compare le classement avant accès/capacité, capture les cellules d'arrêt pendant une recherche de sortie et évite les allocations d'empreintes dans les loisirs. Les mêmes états de charge sont conservés, avec des pointes CPU encore ouvertes ; voir [mesures](validation.md). Aucun cache persistant implicite ne doit masquer une création, un déplacement de pile ou un changement d'autorisation.

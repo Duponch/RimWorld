@@ -1,10 +1,39 @@
 import { expect, test } from 'vitest';
 import { candidateAccess } from '../src/sim/candidate-access';
-import { createWorld } from '../src/sim/engine';
+import { applyCommand, createWorld } from '../src/sim/engine';
+import { planWork, type SearchStats } from '../src/sim/work-planner';
+import { addGroundMaterial } from '../src/sim/materials';
+import { deconstructionCamp, fixtureBuilding } from './scenarios/deconstruction';
 import { foodSearchGoals, selectFood } from '../src/sim/food-selection';
 import type { MaterialPile } from '../src/sim/types';
 import { newDoorState } from '../src/sim/door-rules';
 import { routeCost, blockedCells, interactionGoals, reachableCells, routeToJob, routeToCell } from '../src/sim/pathfinding';
+
+test('logistics proves only competitive access, retains ties and skips an inaccessible higher-priority reserve',()=>{
+  const setup=()=>{
+    const w=deconstructionCamp(1,64),p=w.pawns[0]!;p.x=10;p.z=10;p.priorities={mine:0,craft:0,gather:0,build:0,haul:1,grow:0,cook:0};
+    addGroundMaterial(w,'wood',20,{x:11,z:10},'wood');
+    for(const [x,z] of [[12,10],[11,11],[55,55]])expect(applyCommand(w,{type:'stockpile',x:x!,z:z!,enabled:true,filters:{wood:true,food:false},capacity:75,priority:3}).ok).toBe(true);
+    return {w,p};
+  };
+  const {w,p}=setup(),stats:SearchStats={searches:[]},budget={remaining:8,pairs:32768,stats};
+  planWork(w,p,()=>blockedCells(w),new Set(),budget);
+  expect(p.haul?.destination).toEqual({type:'stockpile',stockpileId:w.stockpiles[0]!.id});
+  expect(p.haul?.quantity).toBe(10);expect(budget.pairs).toBe(32768-3);expect(budget.remaining).toBe(7);
+  // Both close cells tie. Array order chooses the first; the remote reserve
+  // cannot beat it and must not flood the map merely to prove its existence.
+  expect(stats.searches[0]!.connectivityVisited).toBeLessThan(100);
+  const blockedCase=setup();
+  expect(applyCommand(blockedCase.w,{type:'stockpile',x:30,z:30,enabled:true,filters:{wood:true,food:false},capacity:75,priority:4}).ok).toBe(true);
+  for(let dx=-2;dx<=2;dx++)for(let dz=-2;dz<=2;dz++)if(Math.abs(dx)===2||Math.abs(dz)===2)fixtureBuilding(blockedCase.w,'wall',30+dx,30+dz);
+  planWork(blockedCase.w,blockedCase.p,()=>blockedCells(blockedCase.w),new Set(),{remaining:8,pairs:32768});
+  expect(blockedCase.p.haul?.destination).toEqual({type:'stockpile',stockpileId:blockedCase.w.stockpiles[0]!.id});
+  // A new decision must see the opening and may select the superior reserve.
+  blockedCase.p.haul=null;blockedCase.p.path=[];
+  blockedCase.w.structures=blockedCase.w.structures.filter(s=>!(s.x===28&&s.z===30));
+  planWork(blockedCase.w,blockedCase.p,()=>blockedCells(blockedCase.w),new Set(),{remaining:8,pairs:32768});
+  expect(blockedCase.w.pawns[0]!.haul?.destination).toEqual({type:'stockpile',stockpileId:blockedCase.w.stockpiles[3]!.id});
+});
 
 // Independent O(V²) oracle on small maps: no engine frontier, neighbour helper
 // or pruning logic. Different tie order is fine; optimal costs must agree.

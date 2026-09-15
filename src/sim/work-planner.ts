@@ -157,7 +157,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
       if (destination) best = { ...candidate, job: undefined, sourceId: source.id, quantity, destination };
       continue;
     }
-    if (canReach(world, job, reachable, false)) { if (!best || compareCandidate(candidate, best) < 0) best = candidate; }
+    if ((!best || compareCandidate(candidate,best)<0) && canReach(world,job,reachable,false)) best=candidate;
   }
   for(const candidate of furnitureStorageCandidates(world,pawn,blocked,reachable,budget))if(!best||compareCandidate(candidate,best)<0)best=candidate;
   const constructionObstacles=constructionObstructions(world);
@@ -169,16 +169,16 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   if (Number.isFinite(constructionHaulPriority(pawn)) && pawn.hunger > 20 && (!best || best.priority >= constructionHaulPriority(pawn))) {
     const zonesByCell = new Map(world.stockpiles.map(zone => [cellIndex(world, zone.x, zone.z), zone]));
     const sources = world.piles.filter(pile => automaticallyHaulable(pile) && pile.owner.type === 'ground' && pile.quantity > (sourceReserved.get(pile.id) ?? 0));
-    const destinations: { destination: HaulDestination; target: Cell & { kind?: JobKind }; priority: number; workPriority:number; wood: number; food: number; chunk?:number; steel?:number; blocks?:number; items?:ReadonlyMap<ItemId,number>; reachable: boolean }[] = [];
+    const destinations: { destination: HaulDestination; target: Cell & { kind?: JobKind }; priority: number; workPriority:number; wood: number; food: number; chunk?:number; steel?:number; blocks?:number; items?:ReadonlyMap<ItemId,number>; reachable?: boolean }[] = [];
     for (const job of world.jobs) {
       const items=new Map<ItemId,number>();
       for(const cost of constructionRecipe(job).ingredients){const key=`${job.id}:${cost.item}`,capacity=cost.quantity-(delivered.get(key)??0)-(jobReserved.get(key)??0);if(capacity>0)items.set(cost.item,capacity);}
-      if (items.size && constructionSiteFree(world,job,pawn.id,constructionObstacles.get(job.id))) destinations.push({ destination: { type: 'job', jobId: job.id, forConstruction:asBuilder(pawn) }, target: job, priority: 5, workPriority:constructionHaulPriority(pawn), wood: 0, food: 0,items, reachable: canReach(world, job, reachable, false) });
+      if (items.size && constructionSiteFree(world,job,pawn.id,constructionObstacles.get(job.id))) destinations.push({ destination: { type: 'job', jobId: job.id, forConstruction:asBuilder(pawn) }, target: job, priority: 5, workPriority:constructionHaulPriority(pawn), wood: 0, food: 0,items });
     }
-    if(pawn.priorities.haul>0)for (const fire of fires) destinations.push({destination:{type:'fuel',structureId:fire.id},target:fire,priority:5,workPriority:pawn.priorities.haul,wood:fuelCapacity(world,fire.id),food:0,reachable:canReach(world,fire,reachable,true)});
+    if(pawn.priorities.haul>0)for (const fire of fires) destinations.push({destination:{type:'fuel',structureId:fire.id},target:fire,priority:5,workPriority:pawn.priorities.haul,wood:fuelCapacity(world,fire.id),food:0});
     if(pawn.priorities.haul>0)for (const zone of world.stockpiles) {
       const capacity = zone.capacity - (ground.get(cellIndex(world, zone.x, zone.z)) ?? 0) - (zoneReserved.get(zone.id) ?? 0);
-      if (capacity > 0 && (zone.filters.wood || zone.filters.food || zone.filters.chunk || zone.filters.steel || zone.filters.blocks)) destinations.push({ destination: { type: 'stockpile', stockpileId: zone.id }, target: zone, priority: zone.priority, workPriority:pawn.priorities.haul, wood: zone.filters.wood ? capacity : 0, food: zone.filters.food ? capacity : 0, chunk: zone.filters.chunk ? 1 : 0, steel: zone.filters.steel ? capacity : 0, blocks:zone.filters.blocks ? capacity : 0, reachable: canReach(world, zone, reachable, true) });
+      if (capacity > 0 && (zone.filters.wood || zone.filters.food || zone.filters.chunk || zone.filters.steel || zone.filters.blocks)) destinations.push({ destination: { type: 'stockpile', stockpileId: zone.id }, target: zone, priority: zone.priority, workPriority:pawn.priorities.haul, wood: zone.filters.wood ? capacity : 0, food: zone.filters.food ? capacity : 0, chunk: zone.filters.chunk ? 1 : 0, steel: zone.filters.steel ? capacity : 0, blocks:zone.filters.blocks ? capacity : 0 });
     }
     const total = sources.length * destinations.length;
     const count = Math.min(total, budget.pairs);
@@ -201,6 +201,12 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
       let available = pile.quantity - (sourceReserved.get(pile.id) ?? 0);
       if (sourceZone?.filters[pile.kind] && excess > 0 && destination.destination.type === 'stockpile') available = Math.min(available, Math.max(0, excess - (outbound.get(cellIndex(world, pile.owner.x, pile.owner.z)) ?? 0)));
       if (available <= 0) continue;
+      // Ranking is independent of capacity/access. A candidate that cannot beat
+      // the winner cannot affect this decision; retain pair order/cursor/budget.
+      const candidate:Candidate={priority:destination.workPriority,rank:2+(5-destination.priority)/10,
+        distance:Math.abs(pawn.x-pile.owner.x)+Math.abs(pawn.z-pile.owner.z)+Math.abs(destination.target.x-pile.owner.x)+Math.abs(destination.target.z-pile.owner.z),id:pile.id,
+        sourceId:pile.id,quantity:0,destination:destination.destination,target:pile.owner};
+      if(best&&compareCandidate(candidate,best)>=0)continue;
       // Same-priority storage pairs cannot win; avoid their pure capacity scan.
       if(destination.destination.type==='stockpile') {
         const key=`${destination.destination.stockpileId}:${pile.item}`;
@@ -211,10 +217,10 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
       if (capacity <= 0) continue;
       let sourceAccess = sourceReachable.get(pile.id);
       if (sourceAccess === undefined) { sourceAccess = canReach(world, pile.owner, reachable, true); sourceReachable.set(pile.id, sourceAccess); }
-      if (!sourceAccess || !destination.reachable) continue;
-      const candidate: Candidate = { priority: destination.workPriority, rank: 2 + (5 - destination.priority) / 10, distance: Math.abs(pawn.x - pile.owner.x) + Math.abs(pawn.z - pile.owner.z) + Math.abs(destination.target.x - pile.owner.x) + Math.abs(destination.target.z - pile.owner.z), id: pile.id,
-        sourceId: pile.id, quantity: Math.min(CARRY_CAPACITY, available, capacity), destination: destination.destination, target: pile.owner };
-      if (!best || compareCandidate(candidate, best) < 0) best = candidate;
+      if(!sourceAccess)continue;
+      destination.reachable??=canReach(world,destination.target,reachable,destination.destination.type!=='job');
+      if(!destination.reachable)continue;
+      candidate.quantity=Math.min(CARRY_CAPACITY,available,capacity);best=candidate;
     }
     budget.pairs -= count;
     if (total) world.logisticsCursor = (start + count) % total;

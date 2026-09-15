@@ -1,5 +1,7 @@
 # Adoption du référentiel utilisateur
 
+Audit sous V34, 15 septembre 2026 : chapitres 5/14/21, SYS-020..022, SYS-080 et SYS-113..117 relus pour occupation, arrêt et recherches de candidats. Contrats conservés par évaluation différée et capture locale ; incohérence des loisirs sur fragments corrigée. [Recherche et décisions](spatial-query-reference.md).
+
 Lecture et décisions : **13 septembre 2026**. Les fichiers de `docs/reference/originals` deviennent notre référence fonctionnelle principale pour développer Lisière, en complément des [recherches précédentes](rimworld-reference.md) et de l'[observation du jeu](visual-reference.md). Ils orientent nos contrats et nos critères de réalisation. Les décisions utilisateur, les observations vérifiées et les mesures du projet continuent de guider leur adaptation.
 
 Cette note conserve les décisions aux dates indiquées. Les états de prototype décrits dans ses sections historiques ne remplacent pas l’[inventaire actuel](../gameplay/implementation-status.md). Les originaux ont été reclassés le 14 septembre dans `docs/reference/originals`, sans modification ; leur [manifeste](../reference/originals/manifest.json) permet de le vérifier.

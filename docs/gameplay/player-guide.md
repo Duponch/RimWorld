@@ -247,7 +247,7 @@ La facture générale propose cinq filtres de roche, un rayon, la suspension, la
 
 **Faire X fois** compte les fragments taillés ; **Jusqu'à X** compte les blocs stockés ou portés. Attention : cette facture générale compte tous les blocs, même lorsque ses ingrédients sont filtrés sur une seule pierre. Cocher **Blocs de pierre** dans une réserve pour accueillir les produits ; un manque de place conserve la cargaison ou conduit à un dépôt au sol. Une livraison peut remplir plusieurs piles successives.
 
-Clic droit sur le poste avec un colon sélectionné : prioriser la taille ; Maj ajoute en file. Désinstaller/réinstaller l'atelier conserve ses factures. Un atelier déjà réservé attend avant d'être déplacé. Les blocs ne servent pas encore à construire dans cette tranche ; lumière fonctionnelle, effets des pièces, compétences et recherche restent à venir.
+Clic droit sur le poste avec un colon sélectionné : prioriser la taille ; Maj ajoute en file. Désinstaller/réinstaller l'atelier conserve ses factures. Un atelier déjà réservé attend avant d'être déplacé. Les blocs servent aux constructions décrites ci-dessous ; lumière fonctionnelle, effets des pièces, compétences et recherche restent à venir.
 
 ## Construire avec la pierre
 
@@ -262,3 +262,5 @@ Dans **Architecte → Structure → Porte**, choisissez un matériau. Une porte 
 Inspectez-la pour **Maintenir ouverte** après le prochain passage ou **Interdire le passage**, même si elle est ouverte. Retirer le maintien peut attendre un nouveau passage. Les occupants et objets empêchent la fermeture ; dégager ou ranger l'objet libère la porte. Le colon déjà engagé termine son mouvement.
 
 La porte se déconstruit mais ne s'emballe pas. Il faut encore déconstruire un mur avant d'y poser une porte. Toits, pièces fermées et isolation thermique restent à développer ; l'ouverture actuelle ne simule pas encore leurs effets.
+
+Les fragments au sol peuvent être traversés, mais ne servent pas de place pour observer le ciel ou jouer aux fers à cheval. Dégagez la case pour la rendre disponible.

@@ -1,6 +1,6 @@
 import { deconstructionReserved } from './deconstruction-rules.ts';
 import { canStandAt } from './furniture-travel.ts';
-import { footprintCells } from './definitions.ts';
+import { footprintCells, footprintContains } from './definitions.ts';
 import { inBounds } from './pathfinding.ts';
 import type { Cell, Structure, World } from './types.ts';
 import type { RecreationTask } from './recreation-rules.ts';
@@ -21,6 +21,8 @@ export function recreationSpace(world: World, resourceTargets?: readonly Cell[])
     if(!('status' in s)&&(s.kind==='wall'||s.kind==='door'&&!s.door!.open))index.walls.add(s.z*world.width+s.x);
     if(s.kind==='wall'||s.kind==='table'||world.schemaVersion>=22&&(!('status' in s)&&(s.kind==='bed'||s.kind==='campfire'||s.kind==='stonecutter')||'construction' in s&&s.construction==='frame'))for(const c of footprintCells(s))index.solids.add(c.z*world.width+c.x);
   }
+  // Match the direct standability check: chunks permit transit, not stopping.
+  if(world.schemaVersion>=28)for(const p of world.piles)if(p.kind==='chunk'&&p.owner.type==='ground')index.solids.add(p.owner.z*world.width+p.owner.x);
   if(resourceTargets) {
     // At most 24 sky sites: retain only their obstacles, not a copy of the forest.
     const wanted=new Set(resourceTargets.map(c=>c.z*world.width+c.x));index.resources=new Set();
@@ -53,12 +55,12 @@ export function clearThrow(world: World, pin: Cell, cell: Cell, space?: Recreati
 }
 export function standableRecreationCell(world: World, cell: Cell, space?: RecreationSpace): boolean {
   return (world.schemaVersion<22||space||canStandAt(world,cell))&&inBounds(world,cell.x,cell.z) && !['rock','water'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain)
-    && !(space ? space.solids.has(cell.z*world.width+cell.x) : [...world.structures,...world.jobs].some(s => ['wall','table'].includes(s.kind) && footprintCells(s).some(c=>c.x===cell.x&&c.z===cell.z)));
+    && !(space ? space.solids.has(cell.z*world.width+cell.x) : world.structures.some(s=>['wall','table'].includes(s.kind)&&footprintContains(s,cell))||world.jobs.some(s=>['wall','table'].includes(s.kind)&&footprintContains(s,cell)));
 }
 export function recreationSiteValid(world: World, task: RecreationTask, space?: RecreationSpace): boolean {
   if (!standableRecreationCell(world,task.target,space)) return false;
   if(task.activity==='skygaze'&&space?.resources)return !space.objects.has(task.target.z*world.width+task.target.x)&&!space.resources.has(task.target.z*world.width+task.target.x);
-  if (task.activity === 'skygaze') return !world.structures.some(s=>footprintCells(s).some(c=>c.x===task.target.x&&c.z===task.target.z))
+  if (task.activity === 'skygaze') return !world.structures.some(s=>footprintContains(s,task.target))
     && !world.jobs.some(s=>s.x===task.target.x&&s.z===task.target.z)
     && !world.resources.some(r=>r.x===task.target.x&&r.z===task.target.z);
   const pin=space ? space.pins.get(task.buildingId!) : world.structures.find(s=>s.id===task.buildingId&&s.kind==='horseshoes');

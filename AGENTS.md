@@ -134,3 +134,7 @@
 ## Portes manuelles V34
 - Lire docs/development/doors.md et docs/research/doors-reference.md. Attendre au seuil avant une arête ; permission et animation sont distinctes. Maintenir ouverte ne commande pas une ouverture distante. Corps/arêtes et objets empêchent la fermeture ; une interdiction tardive conserve le passage engagé et sa sortie.
 - V33 strictement validée avant migration. Structure.door conserve temporisations et progression ; les autres objets ne portent pas cet état. Cadres solides pour les coins diagonaux même ouverts ; coût estimé séparé de l'attente physique. Jambages partagés et vantaux TSL sur l'horloge des colons. Pièces/toits/thermique, remplacement direct, factions et autodoors restent absents.
+
+## Requêtes CPU sous V34
+- Lire docs/development/spatial-queries.md. Comparer le classement avant capacité/accès sans modifier ordre des couples, curseur, budgets ou réservations. Une destination mieux classée mais inaccessible ne supprime pas le meilleur candidat valide.
+- Capture d’arrêt locale à l’énumération des sorties, après libération du service ; ne pas conserver la fermeture après mutation ni partager les buffers de navigation entre décisions. Les fragments interdisent aussi les places de loisirs dans leur index de sélection.

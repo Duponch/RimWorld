@@ -26,6 +26,8 @@ Une entrée depuis un autre meuble qualifiant supprime le supplément, même ent
 
 `transit-exit.ts` laisse finir un trajet à travers le meuble avant toute nouvelle action stationnaire. Après annulation ou disparition d'un objectif, il cherche une sortie standable sur la frontière des ouvrages, respecte les services réservés et utilise le budget ordinaire. Pas de téléportation, pas de poussée des autres colons. Un budget épuisé ou l'absence de sortie peut entraîner une attente ; aucune garantie de fluidité universelle n'est déduite de ce repli. Une tâche ou une cargaison encore valide est conservée. Les services devenus incompatibles sont libérés selon le contrat conservatif existant.
 
+Depuis l'audit sous V34, cette énumération capture les cellules sans arrêt une fois, après libération éventuelle du service, au lieu de rescanner chaque meuble pour chaque voisin. Ordre des buts inchangé ; capture jetée avant toute mutation. [Contrat de durée de vie](spatial-queries.md).
+
 `Pawn.transitExit?: true` mémorise ce trajet lorsqu'aucune tâche métier ne suffit à le représenter. La sauvegarde exige une arête physique ; l'arrivée sur une cellule admissible efface l'intention. Les commandes qui libèrent le travail l'effacent, sans modifier l'arête en cours. Le dormeur à son lit réservé conserve son usage ; sa traversée ne prend pas le lit d'un autre.
 
 ## Présentation GPU

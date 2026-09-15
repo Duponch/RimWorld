@@ -18,6 +18,16 @@ export function canStandAt(world:World,cell:Cell):boolean {
   if(world.schemaVersion>=28&&world.piles.some(p=>p.kind==='chunk'&&p.owner.type==='ground'&&p.owner.x===cell.x&&p.owner.z===cell.z))return false;
   return !world.jobs.some(j=>(world.schemaVersion<16&&(j.kind==='wall'||j.kind==='table')||world.schemaVersion>=22&&j.construction==='frame')&&footprintContains(j,cell));
 }
+/** For a batch of point queries in one read-only decision. Discard before any
+ * world mutation; this is not a shared navigation or cross-actor cache. */
+export function captureStandability(world:World):(cell:Cell)=>boolean {
+  const denied=new Set<number>(),add=(s:Parameters<typeof footprintCells>[0])=>{for(const c of footprintCells(s))denied.add(c.z*world.width+c.x);};
+  for(const s of world.structures)if(world.schemaVersion<22?s.kind==='wall'||s.kind==='table':!FURNITURE_TRAVEL[s.kind].stand)add(s);
+  for(const j of world.jobs)if(world.schemaVersion<16&&(j.kind==='wall'||j.kind==='table')||world.schemaVersion>=22&&j.construction==='frame')add(j);
+  if(world.schemaVersion>=28)for(const p of world.piles)if(p.kind==='chunk'&&p.owner.type==='ground')denied.add(p.owner.z*world.width+p.owner.x);
+  return cell=>Number.isInteger(cell.x)&&Number.isInteger(cell.z)&&cell.x>=0&&cell.z>=0&&cell.x<world.width&&cell.z<world.height
+    &&!['rock','water'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain)&&!denied.has(cell.z*world.width+cell.x);
+}
 export function furnitureDelay(world:World,from:Cell,to:Cell):number {
   if(world.schemaVersion<22)return frameAt(world,to)?FRAME_TRAVEL_DELAY:0;
   let target:StructureKind|undefined,previousRepeats=false;
