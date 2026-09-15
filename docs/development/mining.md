@@ -1,5 +1,7 @@
 # Minage physique — V28
 
+V37 complète la [cadence selon la lumière au mineur](light-work.md) : durée du coup capturée, reliquat conservé et migration des coups déjà entamés. Dégâts, produits et transactions restent ceux du présent contrat.
+
 [Vérification de référence](../research/mining-reference.md), [géologie](geology.md), [logistique](material-logistics.md), [mouvement](spatial-motion-storage.md).
 
 ## État et transitions

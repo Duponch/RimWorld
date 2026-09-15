@@ -8,10 +8,11 @@ import { reservedServiceCells } from './service-reservations.ts';
 import { wantsSleep } from './schedule.ts';
 import { releaseWork } from './work-release.ts';
 import type { World, Pawn, Cell } from './types.ts';
+import type { LightReader } from './light-environment.ts';
 
 /** Finish a through-route or leave furniture physically after interruption.
  * Bed use is an explicit service exception. No pushing, teleport or lost cargo. */
-export function leaveTransitCell(world:World,pawn:Pawn,getBlocked:NavigationGrid,budget:SearchBudget):boolean {
+export function leaveTransitCell(world:World,pawn:Pawn,getBlocked:NavigationGrid,budget:SearchBudget,getLight?:LightReader):boolean {
   if(world.schemaVersion<22)return false;
   if(canStandAt(world,pawn)){
     if(pawn.transitExit&&!pawn.need&&!pawn.haul&&!pawn.cooking&&pawn.jobId===null&&!pawn.recreation.task){pawn.path=[];pawn.state='idle';}
@@ -37,6 +38,6 @@ export function leaveTransitCell(world:World,pawn:Pawn,getBlocked:NavigationGrid
     if(!path?.length)return true;
     pawn.path=path;next=path[0];
   }
-  if(next){pawn.transitExit=true;pawn.state='moving';if(startTravel(world,pawn,next))pawn.path.shift();}
+  if(next){pawn.transitExit=true;pawn.state='moving';if(startTravel(world,pawn,next,getLight))pawn.path.shift();}
   return true;
 }

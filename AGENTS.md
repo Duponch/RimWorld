@@ -50,7 +50,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 36 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 37 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)
@@ -158,3 +158,8 @@
 - Lire docs/development/environment-lighting.md avant les changements de matériaux, feux ou coupe. Texture partagée dérivée, sans mutation de World ; diffuseur logique commun, coefficients visuels artistiques. Recalcul aux changements de source/obstacle/toiture, jamais par frame ; identité texture/nœuds conservée au rechargement.
 - Matériaux configurés explicitement à leur création, y compris corps/cargaison/LOD. Toits masqués et murs coupés ne modifient pas le champ. Pas de PointLight/ombre par feu ; vérifier les pipelines réels et les pixels lors des changements du shader.
 - Buffers du LOD végétal et de RockLayer : StaticDrawUsage avec needsUpdate/plages lors des mutations. Three 0.186.0 renvoie DynamicDrawUsage même sans version nouvelle ; ne pas réintroduire ces envois par frame. Le banc panorama vérifie absence au repos et transferts après retrait/restauration.
+
+## Lumière des travaux et marche V37
+- Lire `docs/development/light-work.md` et sa recherche. `workRemainder` conserve les fractions de travail sans changer les ticks historiques ; réinitialiser aussi cette fraction lorsqu'une famille interrompt sa progression.
+- `Job.pickTicks` capture le coup minier, `motion.speedFactor` capture la marche à l'origine après attente de porte. Ne pas retimer un coup/une arête engagés. Le délai terrain/objet reste additif ; conserver le reliquat temporel entre arêtes et coups.
+- V36 validée strictement avant migration ; ancien coup entamé = 100 ticks Core, anciennes arêtes intactes. Les contextes de lumière sont partagés seulement sans mutation, les rôles de pièce calculés uniquement pour les consommateurs qui les demandent. Pas de diffusion par colon ou par frame.

@@ -1,5 +1,7 @@
 # Chantiers — contrat V24
 
+V37 module finition et défrichage par la [lumière du travailleur](light-work.md), avec fractions persistantes. Le dégagement garde sa progression distincte ; la livraison ne gagne aucun travail de finition.
+
 Référence : corpus chap. 10, SYS-056/TEST-056, SYS-005/020..022/051/053/054 et [recherche renouvelée](../research/construction-reference.md). Ce contrat remplace le blocage immédiat des plans de murs/tables et le refus systématique des plantes/piles. Les [écarts](../gameplay/decisions.md) ne sont pas des comportements implicites du jeu commercial.
 
 ## Intention, matière et travaux

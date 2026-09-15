@@ -173,3 +173,7 @@ Chapitres 5/10/11/12/21/22, SYS/TEST-023..025 et 062..064, UI-025, SYS/TEST-070.
 ## Présentation de la lumière sous V36
 
 Chapitres 5/22/29 relus, SYS/TEST-023..025 et UI-005 : adopter séparation entre couverture et visibilité ; adapter l’éclairage des volumes, les surfaces et les poses GPU ; différer brouillard de guerre, coupe automatique par pièce et effets absents. La [recherche fraîche](environment-lighting-reference.md) distingue le champ de gameplay et le compositing visuel Core. Aucun nouveau statut global validé ; contrôles enrichis dans la famille UI/environnement existante.
+
+## V37 — lumière des travaux et déplacements
+
+Chapitres 5/9–12/21–22 ; SYS/TEST-020..025, 041..050, 056/058/059/061, 070..072 et 113..117 : adopter statistiques à la position du colon et continuation des actions ; adapter horloge, accumulation et navigation ; différer capacités, paramètres de croissance du travail des plantes et autres profils. La [recherche fraîche](light-work-reference.md) distingue travail continu, capture minière et capture d’arête. Les scénarios existants et le pilote sont enrichis, sans considérer ces familles complètes.

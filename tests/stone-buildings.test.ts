@@ -53,7 +53,7 @@ test('a stone bed keeps its identity and reduced rest through use, packing and r
 
 test('V32 migration preserves in-flight wood work and blocks; stone buildings and loss ledgers cannot hide in old saves',()=>{
   for(const material of ['legacy','__proto__','marble','marble-chunk',null,7])expect(validConstructionMaterial('wall',material)).toBe(false);
-  const w=deconstructionCamp();addGroundMaterial(w,'wood',45,{x:12,z:16},'wood');addGroundMaterial(w,'blocks',20,{x:12,z:17},'slate-blocks');
+  const w=deconstructionCamp();w.tick=3000;addGroundMaterial(w,'wood',45,{x:12,z:16},'wood');addGroundMaterial(w,'blocks',20,{x:12,z:17},'slate-blocks');
   applyCommand(w,{type:'designate',kind:'bed',material:'wood',x:17,z:16});until(w,()=>w.jobs[0]!.progress>0);
   const raw=JSON.parse(serializeWorld(w));raw.schemaVersion=32;const loaded=deserializeWorld(JSON.stringify(raw));expect(loaded).toEqual(w);
   for(const mutation of ['job','ledger'] as const){const bad=structuredClone(raw);if(mutation==='job')bad.jobs[0].material='slate-blocks';else bad.deconstructed.lostBlocks={};expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(/version 32/);}

@@ -64,7 +64,7 @@ test('plans and frames remain traversable with calibrated edge delay, completion
   addGroundMaterial(w,'wood',5,{x:7,z:10},'wood');until(w,()=>job.construction==='frame');
   const path=reachableCells(w,{x:10,z:10},blockedCells(w),new Set());expect(path.costs[331]).toBe(1467);expect(routeToCell(w,{x:11,z:10},path)).toEqual([{x:11,z:10}]);
   const entrant=camp();Object.assign(entrant.pawns[0]!,{x:10,z:10});entrant.jobs=[{...structuredClone(job),id:entrant.nextId++,reservedBy:null,status:'pending',progress:0,escrow:{wood:0,food:0}}];
-  startTravel(entrant,entrant.pawns[0]!,{x:11,z:10});expect(entrant.pawns[0]!.motion!.end-entrant.pawns[0]!.motion!.start).toBeCloseTo(4.4,9);
+  startTravel(entrant,entrant.pawns[0]!,{x:11,z:10});expect(entrant.pawns[0]!.motion!.end-entrant.pawns[0]!.motion!.start).toBeCloseTo(3/.8+1.4,9);
   const mid=deserializeWorld(serializeWorld(entrant));expect(mid.pawns[0]!.motion!.terrainDelay).toBe(1.4);
   const builder=w.pawns[0]!,passer=w.pawns[1]!;
   for(const p of w.pawns){p.jobId=null;p.path=[];p.haul=null;p.state='idle';p.motion=null;p.moveCooldown=0;p.needCooldown=0;}
@@ -148,7 +148,7 @@ test('replacing storage with a blueprint releases active and queued deliveries a
   const legacy=camp();legacy.structures.push({id:legacy.nextId++,kind:'bed',x:12,z:10,orientation:1,footprint:'standard'});
   addGroundMaterial(legacy,'food',10,{x:7,z:10},'rice');const id=legacy.piles[0]!.id;
   legacy.piles[0]!.owner={type:'ground',x:13,z:10};const raw=JSON.parse(JSON.stringify(legacy));raw.schemaVersion=20;for(const a of raw.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete raw.deconstructed;delete raw.packed;
-  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated.schemaVersion).toBe(36);expect(migrated.stock.food).toBe(10);expect(migrated.piles[0]!.id).toBe(id);expect(migrated.piles[0]!.rot).toEqual(legacy.piles[0]!.rot);
+  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated.schemaVersion).toBe(37);expect(migrated.stock.food).toBe(10);expect(migrated.piles[0]!.id).toBe(id);expect(migrated.piles[0]!.rot).toEqual(legacy.piles[0]!.rot);
   expect(migrated.piles[0]!.owner).not.toMatchObject({x:13,z:10});expect(migrated.pawns).toEqual(legacy.pawns);expect(validateWorld(migrated)).toEqual([]);
   const full=structuredClone(raw);const used=new Set(full.piles.filter((p:any)=>p.owner.type==='ground').map((p:any)=>p.owner.z*full.width+p.owner.x));
   for(let i=0;i<full.width*full.height;i++)if(!used.has(i))full.piles.push({id:full.nextId++,kind:'wood',item:'wood',quantity:75,owner:{type:'ground',x:i%full.width,z:Math.floor(i/full.width)}});

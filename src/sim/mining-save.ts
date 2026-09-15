@@ -1,6 +1,7 @@
 import { validOre } from './ore.ts';
 import { PICK_TICKS, validMiningDamage } from './mining-rules.ts';
 import type { World } from './types.ts';
+import { workProgress } from './work-progress.ts';
 
 export function validateMining(world:World,version:number):string[] {
   const errors:string[]=[];
@@ -14,6 +15,6 @@ export function validateMining(world:World,version:number):string[] {
     if(p.kind==='chunk'&&(version<28||p.quantity!==1||p.owner.type==='job'))errors.push('Invalid chunk owner or quantity.');
     if(p.haulRequested!==undefined&&(version<28||p.kind!=='chunk'||p.haulRequested!==true))errors.push('Invalid chunk haul designation.');
   }
-  for(const j of world.jobs)if(j.kind==='mine'&&(version<28||world.tiles[j.z*world.width+j.x]?.terrain!=='rock'||j.footprint!=='standard'||j.escrow.wood||j.escrow.food||j.progress>=PICK_TICKS))errors.push('Invalid mining target or pick preparation.');
+  for(const j of world.jobs)if(j.kind==='mine'&&(version<28||world.tiles[j.z*world.width+j.x]?.terrain!=='rock'||j.footprint!=='standard'||j.escrow.wood||j.escrow.food||workProgress(j)>=(version>=37&&j.pickTicks!==undefined?j.pickTicks/10:PICK_TICKS)))errors.push('Invalid mining target or pick preparation.');
   return errors;
 }

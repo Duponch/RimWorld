@@ -4,13 +4,14 @@ import { canStep, cellIndex, interactionGoals, routeToCell, routeToJob } from '.
 import { PLAN_INTERVAL, search, type NavigationGrid, type SearchBudget } from './work-planner.ts';
 import { releaseWork } from './work-release.ts';
 import type { Cell, Job, Pawn, World } from './types.ts';
+import type { LightReader } from './light-environment.ts';
 
 /** Current actors are peaceful colonists: their bodies do not obstruct transit.
  * Furniture/job reservations govern use, not this graph. Combat must introduce
  * an explicit collision profile here before hostile actors become playable. */
 export const CIVIL_TRANSIT_BLOCKERS: ReadonlySet<number> = new Set<number>();
 
-export function moveToward(world: World, pawn: Pawn, target: Cell, allowTarget: boolean, getBlocked: NavigationGrid, budget: SearchBudget, exact = false): void {
+export function moveToward(world: World, pawn: Pawn, target: Cell, allowTarget: boolean, getBlocked: NavigationGrid, budget: SearchBudget, exact = false, getLight?:LightReader): void {
   pawn.state = 'moving'; if (pawn.moveCooldown > 0) return;
   const blocked = getBlocked();
   let next = pawn.path[0];
@@ -25,5 +26,5 @@ export function moveToward(world: World, pawn: Pawn, target: Cell, allowTarget: 
     if (path === null) { releaseWork(world,pawn); return; }
     pawn.path = path; next = path[0];
   }
-  if (next&&startTravel(world,pawn,next)) pawn.path.shift();
+  if (next&&startTravel(world,pawn,next,getLight)) pawn.path.shift();
 }

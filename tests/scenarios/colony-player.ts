@@ -17,10 +17,13 @@ import type { Command, DesignateCommand, World } from '../../src/sim/types.ts';
 
 export interface Decision { reason: string; command: Command }
 const environmentCaches=new WeakMap<World,WorkEnvironmentCache>();
-function workplaceSummary(world:World) {
+function environmentSummary(world:World) {
   let cache=environmentCaches.get(world);if(!cache){cache=new WorkEnvironmentCache();environmentCaches.set(world,cache);}
   const env=cache.read(world);
-  return world.structures.filter(s=>s.kind==='campfire'||s.kind==='stonecutter').map(s=>({id:s.id,kind:s.kind,role:env.room(s)?.role,...env.production(s,cookingSpot(s))}));
+  return {
+    workplaces:world.structures.filter(s=>s.kind==='campfire'||s.kind==='stonecutter').map(s=>({id:s.id,kind:s.kind,role:env.room(s)?.role,...env.production(s,cookingSpot(s))})),
+    lighting:world.pawns.map(p=>({id:p.id,cellLight:env.lightAt(p),cellFactor:env.speedAt(p),moving:p.motion!==null&&p.motion!==undefined&&p.motion.end>world.tick,travelFactor:p.motion?.speedFactor??1})),
+  };
 }
 
 /** First observation, after designations are acknowledged: an ordinary player
@@ -161,7 +164,7 @@ export function colonySummary(world: World) {
     furnitureTransit:world.pawns.filter(p=>p.motion&&p.motion.end>world.tick&&(p.motion.terrainDelay??0)>0).length,
     furnitureExits:world.pawns.filter(p=>p.transitExit).length,
     roofing:{constructed:world.roofing?.constructed.length??0,planned:world.roofing?.build.length??0,removal:world.roofing?.remove.length??0},
-    workplaces:workplaceSummary(world),
+    ...environmentSummary(world),
     sharedPawnCells:[...occupied.values()].filter(count=>count>1).length,
     playerOrders:world.pawns.map(p=>({active:p.orders.active,queued:p.orders.queue.length,priority:p.priorityWork??null})),
     obstructedGrowingCells:world.piles.filter(p=>p.owner.type==='ground'&&fields.has(p.owner.z*world.width+p.owner.x)).length,

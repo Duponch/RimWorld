@@ -1,3 +1,4 @@
+import { withoutV37LightWork } from './scenarios/legacy-light-work';
 import { withoutPostV10Fields } from './scenarios/legacy-save';
 import { expect, test } from 'vitest';
 import { applyCommand, createWorld, deserializeWorld, serializeWorld, stepWorld, validateWorld } from '../src/sim/index';
@@ -92,7 +93,7 @@ test('cuisine physique : mélange, interruption, sauvegarde du travail, deux rep
   until(w,()=>pawn.cooking?.phase==='work'&&pawn.cooking.progress>=84000);
   expect(pawn).toMatchObject({x:8,z:7,state:'working'});
   expect(queryPawnStatus(w,pawn).reason).toContain('28 %');
-  const oldWork=JSON.parse(serializeWorld(w));oldWork.schemaVersion=35;oldWork.pawns[0].cooking.progress=17;
+  const oldWork=JSON.parse(serializeWorld(w));oldWork.schemaVersion=35;withoutV37LightWork(oldWork);oldWork.pawns[0].cooking.progress=17;
   expect(deserializeWorld(JSON.stringify(oldWork)).pawns[0]!.cooking!.progress).toBe(85000);
   oldWork.pawns[0].cooking.progress=61;expect(()=>deserializeWorld(JSON.stringify(oldWork))).toThrow(/version 35/);
   expect(queryCookingBillStatus(w,fire,bill).code).toBe('cooking');

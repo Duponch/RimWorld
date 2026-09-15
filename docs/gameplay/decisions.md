@@ -96,3 +96,7 @@ Les recettes reçoivent les facteurs dans cette tranche. Le rendu local est livr
 ## Présentation lumineuse sous V36
 
 [Recherche](../research/environment-lighting-reference.md), [contrat](../development/environment-lighting.md). Adapter le champ logique en teintes chaudes et obscurité de coupe avec un plancher de lisibilité, une interpolation spatiale et une limite de hauteur. Les images ne reproduisent pas numériquement le compositing 2D Core et ne modifient pas les taux de travail. Différer ombres locales, sources colorées multiples, éclairage horticole, fenêtres et étages ; ne pas faire traverser les murs par un PointLight non occlus.
+
+### V37 — cadence lumineuse et unités locales
+
+Adopter la lumière au colon, le travail variable, les coups et arêtes capturés. Adapter le report sous-tick à l’horloge 10 Hz ; conserver notre base de marche et nos coûts de recherche neutres, sans les annoncer comme durées Core. Les fractions ne changent pas les matériaux ni les interruptions. La relecture du travail des plantes révèle un facteur de croissance encore absent : dette connue à traiter avec leur calibration. [Recherche et certitude](../research/light-work-reference.md).

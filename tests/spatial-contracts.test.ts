@@ -41,10 +41,10 @@ test('eight-direction routes agree with an independent relaxation oracle and pre
   for(let i=0;i<8;i++) {
     startTravel(w,p,{x:p.x+1,z:p.z+1});
     expect(p.motion!.start).toBeCloseTo(previousEnd,9);
-    expect(Math.hypot(p.motion!.to.x-p.motion!.from.x,p.motion!.to.z-p.motion!.from.z)/(p.motion!.end-p.motion!.start)*10).toBeCloseTo(10/3,3);
+    expect(Math.hypot(p.motion!.to.x-p.motion!.from.x,p.motion!.to.z-p.motion!.from.z)/(p.motion!.end-p.motion!.start)*10).toBeCloseTo(.8*10/3,3);
     previousEnd=p.motion!.end;w.tick=Math.ceil(previousEnd);
   }
-  expect(previousEnd-10).toBeCloseTo(8*3*Math.SQRT2,9);
+  expect(previousEnd-10).toBeCloseTo(8*3*Math.SQRT2/.8,9);
   const savedWorld=createWorld(5,16,16);savedWorld.tiles=savedWorld.tiles.map(()=>({terrain:'grass'}));savedWorld.resources=[];savedWorld.pawns=savedWorld.pawns.slice(0,1);
   const actor=savedWorld.pawns[0]!;actor.x=1;actor.z=1;
   startTravel(savedWorld,actor,{x:2,z:2});

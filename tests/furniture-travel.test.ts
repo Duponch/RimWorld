@@ -37,7 +37,7 @@ test('furniture routes agree with an independent directed-cost oracle, repeat ac
     for(let z=-1;z<=16;z++)for(let x=-1;x<=16;x++)expect(standable({x,z}),`standing index ${orientation}:${x},${z}`).toBe(canStandAt(w,{x,z}));
     expect(standable({x:6.5,z:6})).toBe(false);
     const p=w.pawns[0]!;p.x=6;p.z=orientation===2?7:5;w.tick=20;p.motion=null;p.moveCooldown=0;
-    startTravel(w,p,{x:6,z:6});expect(p.motion!.end-p.motion!.start).toBeCloseTo(7.2,9);
+    startTravel(w,p,{x:6,z:6});expect(p.motion!.end-p.motion!.start).toBeCloseTo(3/.8+4.2,9);
     const captured=structuredClone(p.motion);w.structures=w.structures.filter(s=>s.kind!=='table');expect(p.motion).toEqual(captured);
   }
   const w=furnitureTrafficFixture();expect(furnitureDelay(w,{x:6,z:8},{x:7,z:8})).toBe(4.2);expect(furnitureDelay(w,{x:7,z:8},{x:8,z:8})).toBe(0);

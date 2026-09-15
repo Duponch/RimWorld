@@ -3,9 +3,14 @@ import type { Tile, MaterialPile } from './types.ts';
 import type { StoneKind } from './geology.ts';
 import type { ItemId } from './items.ts';
 
-/** Core natural walls. Neutral 100% speed until skills/capacities exist. */
+/** Core natural walls. Light modulates speed; skills/capacities remain absent. */
 export const ROCK_HP: Readonly<Record<StoneKind, number>> = Object.freeze({granite:900,limestone:700,marble:450,sandstone:400,slate:500});
 export const PICK_TICKS = 10;
+/** Core divides floats, then Math.Round uses nearest-even at an exact midpoint. */
+export function pickDuration(rate:number):number {
+  const ticks=Math.fround(PICK_TICKS*10/Math.fround(rate)),lower=Math.floor(ticks);
+  return ticks-lower===.5 ? lower+(lower%2) : Math.round(ticks);
+}
 export const PICK_DAMAGE = 80;
 export const CHUNK_CHANCE = .25;
 export const rockMaxHP = (tile: Tile): number => tile.ore ? STEEL_ORE.hp : tile.stone ? ROCK_HP[tile.stone] : 500;

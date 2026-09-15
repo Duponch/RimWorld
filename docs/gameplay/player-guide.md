@@ -294,3 +294,9 @@ Le ciel et les flammes restent stylisés. Les halos sur le décor et l’assombr
 Un feu allumé éclaire le sol, le mobilier et les colons à proximité. Son halo respecte les obstacles lumineux ; une porte ouverte ne transmet pas la lumière du feu dans cette version de référence. Les bâtiments couverts restent sombres sans éclairage, même lorsque **Toits : masqués** permet d’en voir l’intérieur. Couper les murs ne supprime pas non plus leur obstacle logique. Ces réglages fonctionnent en iso et en perspective, sans modifier la colonie.
 
 Les couleurs chaudes servent à lire la scène : consultez l’inspection pour le pourcentage exact et les effets sur la production. Les lampes dédiées, le chauffage et les ombres projetées par les feux restent à développer.
+
+## Travailler et circuler dans l’obscurité
+
+La lumière agit aussi sur l’abattage, les récoltes, les semis, les constructions/retraits et les toits : 80 % du rythme dans le noir, retour à 100 % dès 30 % de lumière. Éclairer le colon compte ; éclairer seulement sa cible ne suffit pas. L’inspection indique ce facteur, distinct des autres propriétés encore absentes.
+
+Les mineurs préparent leurs coups plus lentement dans le noir. Les colons marchent aussi plus lentement, y compris pour porter un objet, manger ou rejoindre leur lit. Un coup ou un passage déjà engagé conserve sa cadence ; le suivant prend le nouvel éclairage. Les besoins et quantités produites ne sont pas eux-mêmes réduits de 20 %.

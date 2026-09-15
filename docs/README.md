@@ -29,7 +29,7 @@ La référence est RimWorld de base, transposé en 3D. Une description de RimWor
 
 | Domaine | Contrat du projet | Recherche et cible |
 |---|---|---|
-| Lumière et ateliers | [Facteurs et migration V36](development/work-environment.md), [rendu 3D](development/environment-lighting.md) | [Sources et contradictions résolues](research/work-environment-reference.md), [interprétation visuelle](research/environment-lighting-reference.md) |
+| Lumière, travail et marche | [Travaux/marche V37](development/light-work.md), [ateliers V36](development/work-environment.md), [rendu 3D](development/environment-lighting.md) | [Travaux et marche Core](research/light-work-reference.md), [ateliers Core](research/work-environment-reference.md), [interprétation visuelle](research/environment-lighting-reference.md) |
 | Sélection et ordres directs | [Sélection, file et migration](development/player-orders.md) | [Commandes Core](research/player-orders-reference.md) |
 | Objets, transport, constructions | [Logistique](development/material-logistics.md), [chantiers](development/construction.md), [sol et mouvement](development/spatial-motion-storage.md) | [Objets et zones Core](research/occupancy-reference.md), [plans et cadres](research/construction-reference.md), [adoption chap. 9–10](research/reference-adoption.md) |
 | Repas, repos et confort | [Besoins](development/needs.md), [repas à table](development/dining.md), [aliments](development/food-items.md) | [Mobilier/repas](research/dining-reference.md), [choix alimentaire](research/food-clearing-reference.md) |

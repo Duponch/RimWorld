@@ -55,7 +55,7 @@ describe('seeded temperate valley generation', () => {
     for (const tile of raw.tiles) { delete tile.stone; delete tile.ore; }
     for (const resource of raw.resources) delete resource.stone;
     const migrated = deserializeWorld(JSON.stringify(raw));
-    expect(migrated).toEqual({...raw,pawns:raw.pawns.map((p:any)=>({...p,priorities:{craft:2,...p.priorities,mine:2}})),schemaVersion:36 });
+    expect(migrated).toEqual({...raw,pawns:raw.pawns.map((p:any)=>({...p,priorities:{craft:2,...p.priorities,mine:2}})),schemaVersion:37 });
     const control = deserializeWorld(JSON.stringify(raw)); stepWorld(migrated, 251); stepWorld(control, 251);
     expect(serializeWorld(migrated)).toBe(serializeWorld(control));
     for (const change of [(w: any) => w.tiles.find((t: any) => t.terrain === 'rock').stone = 'vacstone',
@@ -172,6 +172,7 @@ describe('seeded temperate valley generation', () => {
     // A long route crosses the last partial 16-cell rendering chunk, but physics
     // knows only valid grid cells. Topology changes between calls must be seen immediately.
     const long = createWorld(42, 250, 250);
+    long.tick=3000; // Isolate the long-route contract at neutral daylight speed.
     long.tiles = long.tiles.map(() => ({ terrain: 'rock' }));
     for (let x = 0; x < 250; x++) long.tiles[125 * 250 + x] = { terrain: 'grass' };
     for (let x = 100; x <= 102; x++) long.tiles[124 * 250 + x] = { terrain: 'grass' };

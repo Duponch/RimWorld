@@ -1,5 +1,7 @@
 # Transferts de meubles V25–V26
 
+V37 applique la [lumière](light-work.md) au retrait physique, sans ajouter de travail à la prise/pose du paquet. Les trajets gardent leur facteur capturé et les interruptions effacent aussi le reliquat de retrait.
+
 [Vérification RimWorld](../research/furniture-transfer-reference.md), chapitre 10 / SYS-059 / TEST-059. Cette mécanique complète la [déconstruction](deconstruction.md), qui détruit le bâtiment et restitue des matériaux : ici l'objet reste entier.
 
 ## Propriété et progression

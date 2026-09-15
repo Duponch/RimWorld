@@ -1,7 +1,6 @@
-import { naturalLight } from './environment.ts';
 import { footprintCells } from './definitions.ts';
-import { LocalLightCache } from './local-light.ts';
-import { RoomTopologyCache, type RoomSpace, type RoomTopology } from './room-topology.ts';
+import { LightEnvironment, LightEnvironmentCache, lightSpeedFactor } from './light-environment.ts';
+import { type RoomSpace } from './room-topology.ts';
 import type { Cell, Structure, World } from './types.ts';
 
 export type WorkRoomRole='none'|'bedroom'|'barracks'|'workshop'|'dining'|'recreation';
@@ -9,26 +8,17 @@ export const ROOM_ROLE_LABEL:Record<WorkRoomRole,string>={none:'Sans spécialisa
 export interface WorkRoom {
   readonly space:RoomSpace;readonly covered:number;readonly psychologicallyOutdoors:boolean;readonly role:WorkRoomRole;
 }
-export const lightWorkFactor=(glow:number):number=>.8+.2*Math.min(1,Math.max(0,glow)/.3);
+export const lightWorkFactor=lightSpeedFactor;
 export interface ProductionFactors {light:number;lighting:number;outdoors:number;roomRole:number;station:number;total:number}
 
 /** Read-only decision snapshot. No temperature, beauty, comfort or mood implied. */
-export class WorkEnvironment {
-  readonly topology:RoomTopology;
+export class WorkEnvironment extends LightEnvironment {
   private rooms:ReadonlyMap<number,WorkRoom>;
-  private roofs:ReadonlySet<number>;
-  private artificial:Float32Array;
-  private sky:number;
-  constructor(topology:RoomTopology,rooms:ReadonlyMap<number,WorkRoom>,roofs:ReadonlySet<number>,artificial:Float32Array,sky:number){
-    this.topology=topology;this.rooms=rooms;this.roofs=roofs;this.artificial=artificial;this.sky=sky;
+  constructor(light:LightEnvironment,rooms:ReadonlyMap<number,WorkRoom>){
+    super(light.topology,light.roofs,light.artificial,light.sky);this.rooms=rooms;
   }
   room(cell:Cell):WorkRoom|undefined {
     const space=this.topology.at(cell.x,cell.z);return space?.kind==='space'?this.rooms.get(space.id):undefined;
-  }
-  lightAt(cell:Cell):number {
-    if(!this.topology.at(cell.x,cell.z))return 0;
-    const index=cell.z*this.topology.width+cell.x;
-    return Math.max(this.roofs.has(index)?0:this.sky,this.artificial[index]??0);
   }
   production(station:Structure,worker:Cell):ProductionFactors {
     const room=this.room(station),light=this.lightAt(worker),lighting=lightWorkFactor(light);
@@ -43,10 +33,11 @@ export class WorkEnvironment {
  * Local glow is rebuilt only on barrier or lit-source changes. Tick and roof
  * coverage affect sky sampling without rerunning the flood. */
 export class WorkEnvironmentCache {
-  private topology=new RoomTopologyCache();
-  readonly localLight=new LocalLightCache();
-  read(world:World):WorkEnvironment {
-    const topology=this.topology.read(world),roofs=new Set(world.roofing?.constructed??[]);
+  private readonly light=new LightEnvironmentCache();
+  readonly localLight=this.light.localLight;
+  readLight(world:World):LightEnvironment {return this.light.read(world);}
+  read(world:World,light=this.readLight(world)):WorkEnvironment {
+    const {topology,roofs}=light;
     const covered=new Map<number,number>(),scores=new Map<number,{beds:number;workshop:number;dining:number;recreation:number}>();
     for(const index of roofs){const room=topology.at(index%world.width,Math.floor(index/world.width));if(room?.kind==='space')covered.set(room.id,(covered.get(room.id)??0)+1);}
     for(const s of world.structures) {
@@ -67,6 +58,6 @@ export class WorkEnvironmentCache {
       }
       rooms.set(space.id,{space,covered:count,psychologicallyOutdoors,role});
     }
-    return new WorkEnvironment(topology,rooms,roofs,this.localLight.read(world,topology),naturalLight(world.tick));
+    return new WorkEnvironment(light,rooms);
   }
 }

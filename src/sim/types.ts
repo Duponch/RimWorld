@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 36 as const;
+export const SCHEMA_VERSION = 37 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
@@ -41,13 +41,16 @@ export type NeedTask =
   | { kind: 'eat'; phase: 'pickup' | 'choose-spot' | 'travel' | 'ingest'; sourcePileId: number; carryPileId: number | null; quantity: number; progress: number; dining: DiningPlace | null }
   | { kind: 'sleep'; phase: 'travel' | 'sleep'; bedId: number | null; target: Cell };
 export interface Job extends Cell {
+  /** Captured Core ticks for the current pick stroke; light changes affect the next. */
+  pickTicks?:number;
+  workRemainder?:number;
   material?:import('./construction-materials.ts').ConstructionMaterial;
   installationWork?: 'build' | 'haul';
   furniture?: import('./furniture-rules.ts').FurnitureTarget;
   deconstruction?: import('./deconstruction-rules.ts').DeconstructionTarget;
   construction?: 'blueprint' | 'frame';
   /** Plant clearing is work on the same construction intent, before delivery. */
-  clearance?: {resourceId:number; progress:number};
+  clearance?: {resourceId:number; progress:number; workRemainder?:number};
   /** Generated intention, rechecked against this zone while pending/active. */
   growingZoneId?: number;
   id: number;

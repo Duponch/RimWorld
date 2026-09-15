@@ -2,6 +2,7 @@ import { groundCapacity, groundPile, nearbyGround } from './ground-placement.ts'
 import { MAX_STACK, footprintCells } from './definitions.ts';
 import { furnitureDuration, furnitureReady, furnitureWorkTarget, packedAt, type PackedFurniture } from './furniture-rules.ts';
 import type { Cell, Job, Pawn, World } from './types.ts';
+import { advanceWork, resetWork, workProgress } from './work-progress.ts';
 
 /** A whole object needs a completely unreserved slot, never a compatible stack.
  * A full wood-slot capacity also excludes every typed inbound reservation. */
@@ -21,7 +22,7 @@ function detach(world:World,job:Job,owner:PackedFurniture['owner']):PackedFurnit
   const pack={building,owner};world.packed.push(pack);return pack;
 }
 /** Returns true only after an authoritative topology/ownership transition. */
-export function advanceFurniture(world:World,pawn:Pawn,job:Job,move:(target:Cell & {kind?:Job['kind']})=>void,release:()=>boolean):boolean {
+export function advanceFurniture(world:World,pawn:Pawn,job:Job,move:(target:Cell & {kind?:Job['kind']})=>void,release:()=>boolean,workRate:()=>number=()=>1):boolean {
   if(!furnitureReady(world,job,pawn)){release();return false;}
   const target=furnitureWorkTarget(world,job),cells='kind' in target?footprintCells(target as Job):[target];
   if(!cells.some(c=>Math.abs(c.x-pawn.x)+Math.abs(c.z-pawn.z)===1)||cells.some(c=>c.x===pawn.x&&c.z===pawn.z)) {move(target);return false;}
@@ -29,18 +30,18 @@ export function advanceFurniture(world:World,pawn:Pawn,job:Job,move:(target:Cell
   const id=job.furniture!.structureId,source=world.structures.find(s=>s.id===id);
   let pack=world.packed.find(p=>p.building.id===id);
   if(source) {
-    job.progress++;
-    if(job.progress<furnitureDuration(world,job))return false;
+    advanceWork(job,workRate());
+    if(workProgress(job)<furnitureDuration(world,job))return false;
     if(job.kind==='uninstall') {
       const view={...world,structures:world.structures.filter(s=>s.id!==id)};
       const cell=furnitureDropCell(view,source);
       if(!cell){release();return false;}
       detach(world,job,{type:'ground',...cell});
     } else {
-      pack=detach(world,job,{type:'pawn',pawnId:pawn.id});job.progress=0;return true;
+      pack=detach(world,job,{type:'pawn',pawnId:pawn.id});resetWork(job);return true;
     }
   } else if(pack?.owner.type==='ground') {
-    pack.owner={type:'pawn',pawnId:pawn.id};job.progress=0;return true;
+    pack.owner={type:'pawn',pawnId:pawn.id};resetWork(job);return true;
   } else if(pack?.owner.type==='pawn') {
     // The consulted hauling driver has no timed install work for a blueprint.
     // The 150 WorkTotal field is inspection text, not its execution duration.

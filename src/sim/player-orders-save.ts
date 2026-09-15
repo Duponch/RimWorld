@@ -30,7 +30,7 @@ export function validatePlayerOrders(world:World,version:number,shapesOnly=false
       if(reserved.has(id)||id===pawn.jobId)errors.push('Duplicate queued order reservation.');
       reserved.add(id);
       if(!job||job.reservedBy!==pawn.id||job.status!=='active')errors.push('Queued order reservation mismatch.');
-      if(job?.clearance&&job.clearance.progress!==0)errors.push('Waiting clearing already has work progress.');
+      if(job?.clearance&&(job.clearance.progress!==0||job.clearance.workRemainder!==undefined))errors.push('Waiting clearing already has work progress.');
     }
   }
   // Only inspect cross-references after every queue has passed its shape check.

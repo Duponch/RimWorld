@@ -134,3 +134,5 @@ S06/S07 : table et tabouret construits après livraison, repas avec transport à
 V27 : [régions et identités géologiques](../development/geology.md) livrées dans la génération locale ; SYS-061 minage, CAT-059 sols et le reste de CAT-060 demeurent partiels. V28 ajoute minage physique, sol brut et fragments transportables ; V29 ajoute acier compacté et piles d’acier ; toits, autres minerais et taille restent ouverts. Le calendrier reste ROADMAP.
 
 S10, sous V34 : reconnaissance des enceintes, seuils et inspection livrées ; fusion/division, coins, eau et reprise contrôlés. Toits, rôles, thermique et confort de pièce restent ouverts ; ce lot ne satisfait pas encore l’acceptation G2. [Contrat](../development/rooms.md).
+
+V37 étend la lumière aux travaux et déplacements des domaines S02/S04/S06/S09/S10 ; [contrat](../development/light-work.md). G0/G1 restent partiels et G2 en cours. Ni catalogue, compétences, psychologie ni thermique livrés par cette extension.

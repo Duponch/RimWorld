@@ -55,7 +55,7 @@ test('opening waits before travel; concurrent bodies, items, hold and forbid pre
     const began=w.tick;
     for(let t=1;t<Math.ceil(doorOpenTicks(s));t++){tickTravel(w);expect(startTravel(w,p,s)).toBe(false);expect(startTravel(w,other,s)).toBe(false);}
     tickTravel(w);expect(startTravel(w,p,s)).toBe(true);expect(startTravel(w,other,s)).toBe(true);
-    expect(p.motion!.start).toBeGreaterThanOrEqual(began+doorOpenTicks(s));expect(p.motion!.end-p.motion!.start).toBe(3);
+    expect(p.motion!.start).toBeGreaterThanOrEqual(began+doorOpenTicks(s));expect(p.motion!.end-p.motion!.start).toBe(3/.8);
     expect(applyCommand(w,{type:'door-policy',structureId:s.id,setting:'forbidden',value:true}).ok).toBe(true);
     expect(validateWorld(w)).toEqual([]);const saved=serializeWorld(w),copy=deserializeWorld(saved);expect(copy).toEqual(w);
     for(let i=0;i<4;i++)tickTravel(w);

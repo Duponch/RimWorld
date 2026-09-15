@@ -1,3 +1,4 @@
+import { withoutV37LightWork } from './scenarios/legacy-light-work';
 import { expect, test } from 'vitest';
 import { createWorld, applyCommand, stepWorld, refreshStock, addGroundMaterial, serializeWorld, deserializeWorld, validateWorld } from '../src/sim/index';
 import { queryOrderOptions } from '../src/sim/player-orders';
@@ -63,7 +64,7 @@ test('Shift waits for ingestion, accepted orders survive priority zero, explicit
   expect(applyCommand(w,{type:'cancel',x:second.x,z:second.z}).ok).toBe(true);expect(p.orders.queue).toEqual([]);expect(validateWorld(w)).toEqual([]);
   expect(applyCommand(w,{type:'order-job',pawnId:p.id,jobId:w.jobs[0]!.id,queue:true}).ok).toBe(true);
   expect(applyCommand(w,{type:'priority',pawnId:p.id,work:'gather',value:0}).ok).toBe(true);expect(p.orders.active).toBe(job.id);expect(p.orders.queue).toHaveLength(1);
-  const disabled=deserializeWorld(serializeWorld(w));ticks(disabled,280);expect(disabled.jobs).toEqual([]);expect(disabled.stock.wood).toBe(24);
+  const disabled=deserializeWorld(serializeWorld(w));ticks(disabled,350);expect(disabled.jobs).toEqual([]);expect(disabled.stock.wood).toBe(24);
   expect(applyCommand(w,{type:'clear-orders',pawnId:p.id}).ok).toBe(true);expect(p.orders).toEqual({active:null,queue:[]});expect(w.jobs.every(j=>j.reservedBy===null)).toBe(true);
   p.priorities.gather=1;expect(applyCommand(w,{type:'order-job',pawnId:p.id,jobId:job.id,queue:false}).ok).toBe(true);
   expect(applyCommand(w,{type:'order-job',pawnId:p.id,jobId:w.jobs[0]!.id,queue:true}).ok).toBe(true);p.collapsePending=true;p.rest=0;p.restZeroTicks=150;
@@ -92,8 +93,8 @@ test('queue loses an access, clear-orders preserves designations, construction c
   expect(queryOrderOptions(fresh,actor.id,c!,true)[0]!.enabled).toBe(false);expect(queryOrderOptions(fresh,actor.id,c!)[0]!.enabled).toBe(true);
   expect(applyCommand(fresh,{type:'order-job',pawnId:actor.id,jobId:c!.id,queue:false}).ok).toBe(true);expect(actor.orders).toEqual({active:c!.id,queue:[]});expect(b!.reservedBy).toBeNull();
   applyCommand(fresh,{type:'clear-orders',pawnId:actor.id});
-  const raw=JSON.parse(serializeWorld(fresh));raw.schemaVersion=16;for(const a of raw.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete raw.deconstructed;delete raw.packed;for(const a of raw.pawns)delete a.orders;
-  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated.schemaVersion).toBe(36);expect(migrated.pawns[0]!.orders).toEqual({active:null,queue:[]});
+  const raw=JSON.parse(serializeWorld(fresh));raw.schemaVersion=16;withoutV37LightWork(raw);for(const a of raw.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete raw.deconstructed;delete raw.packed;for(const a of raw.pawns)delete a.orders;
+  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated.schemaVersion).toBe(37);expect(migrated.pawns[0]!.orders).toEqual({active:null,queue:[]});
   raw.pawns[0].orders={active:null,queue:[]};expect(()=>deserializeWorld(JSON.stringify(raw))).toThrow(/version 16/);
   const corrupt=JSON.parse(serializeWorld(migrated));corrupt.pawns[0].orders.queue=[fresh.jobs[0]!.id,fresh.jobs[0]!.id];expect(()=>deserializeWorld(JSON.stringify(corrupt))).toThrow(/order/);
   for(const orders of [null,[],{active:'oops',queue:[]},{active:null,queue:Array(33).fill(1)},{active:null,queue:null},{active:null,queue:[-1]}]) {

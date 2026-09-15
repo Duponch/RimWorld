@@ -29,6 +29,7 @@ export class RoomInspection {
     else if(world.roofing?.build.includes(i))text+=' Zone : construire un toit.';
     if(properties&&properties.role!=='none')text+=` ${ROOM_ROLE_LABEL[properties.role]}.`;
     text+=` Lumière : ${Math.round(environment.lightAt(cell)*100)} %.`;
+    text+=` Vitesse de travail et de marche : ${Math.round(environment.speedAt(cell)*100)} % (effet de la lumière sur cette case).`;
     const station=world.structures.find(s=>(s.kind==='stonecutter'||s.kind==='campfire')&&footprintCells(s).some(c=>c.x===cell.x&&c.z===cell.z));
     if(station){const f=environment.production(station,cookingSpot(station));
       text+=` Production : ${Math.round(f.total*100)} % · lumière à la place ${Math.round(f.light*100)} %`;

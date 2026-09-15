@@ -1,0 +1,319 @@
+{
+  "date": "2026-09-15T14:47:15.130Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "protocol": "No rendering or concurrent benchmark. Seed 42, natural 250², 3/30/100 workers, four rocks and one tree each, dark versus one campfire per worker. Real commands, needs, navigation and yields; state validation outside timed steps. 90s watchdog per case. Includes initial tick/cache warmup in simulation maxima; light-read stats discard first read.",
+  "results": [
+    {
+      "count": 3,
+      "lit": false,
+      "mined": 12,
+      "producedWood": 36,
+      "peakWorkers": 3,
+      "edges": 20,
+      "slowEdges": 20,
+      "checkpoints": [
+        "72eccff4a292c0dd49419bcf87dff58caa0da8847214298310ddbe9b454d1398",
+        "fea7d7b5f31d1936cf8d52bd45ec081514b5aa8f494fbc12c2bcfef369547c73",
+        "672610e1ea5074febb35a14c18cb110159806224c13fdd13eb5712841727724e",
+        "e1dd158467f70c99a97b91983232d2efcce64231e9c4004488a96acc2394e243",
+        "170d53048161f4db4ad6ad9d483b3afdc60c9f9458bbd329a915ad5bf44c41bd",
+        "488af2dd61ab728260c22d2fab09067696bb2305fdf5c32a891c357c13dfd068"
+      ],
+      "stepMs": {
+        "count": 432,
+        "p50": 0.48270000000002256,
+        "p95": 0.9794000000000551,
+        "p99": 4.322999999999979,
+        "max": 13.769400000000019
+      },
+      "lightReadMs": {
+        "count": 60,
+        "p50": 0.28710000000000946,
+        "p95": 0.46860000000003765,
+        "p99": 1.8444999999999823,
+        "max": 1.8444999999999823
+      },
+      "worst": [
+        {
+          "tick": 6001,
+          "ms": 13.769400000000019,
+          "jobs": 15
+        },
+        {
+          "tick": 6064,
+          "ms": 11.169600000000003,
+          "jobs": 12
+        }
+      ]
+    },
+    {
+      "count": 3,
+      "lit": true,
+      "mined": 12,
+      "producedWood": 36,
+      "peakWorkers": 3,
+      "edges": 22,
+      "slowEdges": 0,
+      "checkpoints": [
+        "89c46d30659ec366a28fa8c47063cf1ab3820e9f334ddce8c061624bf96606a6",
+        "8e41d44a425a2972023202964af34396f738c0105ea1211fd7a590a7e507dc19",
+        "15a43c65ca61a0fa8c02b04794a628a38407ae9450137d4d171f96147bce9caa",
+        "74e22015c1cb0eff96137a67e8b46fece39704e9c437da0269adc6393e1ebd56",
+        "4656202ed1ee4fcffabab6c7e32c32a952539c4a5a5ad116dc4c4b96fd8b4cde"
+      ],
+      "stepMs": {
+        "count": 350,
+        "p50": 0.4983999999999469,
+        "p95": 1.5623000000000502,
+        "p99": 5.041100000000142,
+        "max": 9.545700000000124
+      },
+      "lightReadMs": {
+        "count": 60,
+        "p50": 0.531099999999924,
+        "p95": 0.6449999999999818,
+        "p99": 0.7786999999998443,
+        "max": 0.7786999999998443
+      },
+      "worst": []
+    },
+    {
+      "count": 30,
+      "lit": false,
+      "mined": 120,
+      "producedWood": 360,
+      "peakWorkers": 30,
+      "edges": 315,
+      "slowEdges": 315,
+      "checkpoints": [
+        "1a3cd50d26e0108ed0e37f7bc21f05045c17c8825a8c5222694b28b323ec2cd3",
+        "5f29a1c384811fa98544f45d68a6a35111d9c699fb04a2e5ce28f3921ea6483c",
+        "f56831a7beb6a4f2dbb50363e9165ea0960bbe34aab19f6eae01241f30c52737",
+        "95be74519ae63a8250cd401aa968e3a7081745f84d2f4eb182a97416f58d5d71",
+        "be3e096d81c96b0d42924751034545657d0d82e9d1bcd5b27fcc1db15cdc4853",
+        "e9f0d55a08a75293994d82f0a8be3186051df3809f3333d5888d43a532624bf5",
+        "cccbb4d2eafe89ae70d75acc480be2678d6d4b4e99c5a102044c85201ba82e39",
+        "b243c93eb7eca303e3b327769d410d947a5037464c7a8aa947a9026ed0e651b7"
+      ],
+      "stepMs": {
+        "count": 604,
+        "p50": 0.626299999999901,
+        "p95": 6.613000000000284,
+        "p99": 11.639300000000048,
+        "max": 25.471500000000106
+      },
+      "lightReadMs": {
+        "count": 60,
+        "p50": 0.49090000000001055,
+        "p95": 0.6501000000000658,
+        "p99": 4.853200000000015,
+        "max": 4.853200000000015
+      },
+      "worst": [
+        {
+          "tick": 6191,
+          "ms": 25.471500000000106,
+          "jobs": 69
+        },
+        {
+          "tick": 6066,
+          "ms": 22.68159999999989,
+          "jobs": 120
+        },
+        {
+          "tick": 6392,
+          "ms": 15.136199999999917,
+          "jobs": 12
+        },
+        {
+          "tick": 6391,
+          "ms": 12.938500000000204,
+          "jobs": 17
+        },
+        {
+          "tick": 6127,
+          "ms": 12.03729999999996,
+          "jobs": 104
+        }
+      ]
+    },
+    {
+      "count": 30,
+      "lit": true,
+      "mined": 120,
+      "producedWood": 360,
+      "peakWorkers": 30,
+      "edges": 315,
+      "slowEdges": 0,
+      "checkpoints": [
+        "3d3d2667e681f46be6f3b3554770aa91c04ed87eb3c0e055d4bed63be83b9d3a",
+        "221b42e7e3ddf6cf6921f509a8f1dc2f31ba5ddd7abe5b17ca8a29d3d505832e",
+        "6c7dd8c74fc1ea83e02d341706ebd9a6e63170ff7f2a3533fd65fe4f1185fbfe",
+        "87ea0e8d255dac29125069251163e6a0798f7358416b227e507df3cb6dc6b6df",
+        "5ed0be845952d42db1b22366c3a15d0b40c2d0da8df73a41bef9b20bd7b37779",
+        "e661c22f3c0e2d42b6884511c7341f967353bd5ae2a6906b2da156831519e49e"
+      ],
+      "stepMs": {
+        "count": 491,
+        "p50": 0.7151999999996406,
+        "p95": 7.714600000000246,
+        "p99": 12.91319999999996,
+        "max": 19.9083999999998
+      },
+      "lightReadMs": {
+        "count": 60,
+        "p50": 0.5041000000001077,
+        "p95": 0.6176000000000386,
+        "p99": 0.7055000000000291,
+        "max": 0.7055000000000291
+      },
+      "worst": [
+        {
+          "tick": 6053,
+          "ms": 19.9083999999998,
+          "jobs": 120
+        },
+        {
+          "tick": 6212,
+          "ms": 15.470600000000104,
+          "jobs": 42
+        },
+        {
+          "tick": 6311,
+          "ms": 14.06230000000005,
+          "jobs": 17
+        },
+        {
+          "tick": 6102,
+          "ms": 13.682999999999993,
+          "jobs": 96
+        },
+        {
+          "tick": 6154,
+          "ms": 12.91319999999996,
+          "jobs": 63
+        }
+      ]
+    },
+    {
+      "count": 100,
+      "lit": false,
+      "mined": 400,
+      "producedWood": 1200,
+      "peakWorkers": 100,
+      "edges": 1171,
+      "slowEdges": 1171,
+      "checkpoints": [
+        "9b622b0a8deba953bfbda335568d7451695e005095998e251288ad332b082dbc",
+        "da82401bfdc86cb082f43a754fa9e7091b195fdcd40809dc62ec1bc0411923c7",
+        "7dd78a467f808633a1ad3ea818b7f6b6ec0b985cfa3bd63be9a44bacc2bc2d6f",
+        "c5170d2156347fc14e2cd1b081a8012b223b25939d41049b650d5d8389770f07",
+        "5a79c107769936d43f7c8d1e35c97373ccf827355067d4877d46d8c23715066b",
+        "5facff3cb2ec5b3ca40778a801a91bf5fddc9eae6d0d8ce5c85894378aa9a360",
+        "595db442260e5eb1086722c46a83dd6e14261f7c9f8a28e1826c4eeac9a16d59",
+        "10ace6858a728fe84bb11dea03c640967c45c75205039d2d4c69d96d3c7b5ae8"
+      ],
+      "stepMs": {
+        "count": 619,
+        "p50": 3.159700000000157,
+        "p95": 12.006900000000314,
+        "p99": 17.761599999999817,
+        "max": 20.292999999999665
+      },
+      "lightReadMs": {
+        "count": 60,
+        "p50": 0.5047999999997046,
+        "p95": 0.6403999999993175,
+        "p99": 0.7275999999992564,
+        "max": 0.7275999999992564
+      },
+      "worst": [
+        {
+          "tick": 6438,
+          "ms": 20.292999999999665,
+          "jobs": 29
+        },
+        {
+          "tick": 6072,
+          "ms": 19.80159999999978,
+          "jobs": 420
+        },
+        {
+          "tick": 6067,
+          "ms": 19.063199999999597,
+          "jobs": 460
+        },
+        {
+          "tick": 6198,
+          "ms": 18.502300000000105,
+          "jobs": 223
+        },
+        {
+          "tick": 6006,
+          "ms": 18.46680000000015,
+          "jobs": 500
+        }
+      ]
+    },
+    {
+      "count": 100,
+      "lit": true,
+      "mined": 400,
+      "producedWood": 1200,
+      "peakWorkers": 100,
+      "edges": 1191,
+      "slowEdges": 0,
+      "checkpoints": [
+        "470138ff5962dee7261c573b2c94cba6efcbbb295a01f4c296a3c64433a770ed",
+        "f85d26c8999675d9382bc4ecb58926a4fc7c72f146c02458933f905d624ca068",
+        "612a122e6dc8225782881e9ab3442b9f384b83b7e32b8f0557fa096cce3baaba",
+        "40034c11201bd887713b1c3e2c16b1a7dcfdf2b270902341b42e3d80a2ec3ab9",
+        "23c0f287d88e8152e6edfad2bbe87b55d671e87ab2ca5935d963bc7f8571bde5",
+        "be27f0b6ad0d7779c54b1156736268bd9fe366393f674ee695b9e94fbc67775b",
+        "d32ed52c90eb773eda075c413f581fb57c5c8b304518cd862c2732383fc9f7b2"
+      ],
+      "stepMs": {
+        "count": 502,
+        "p50": 5.624499999999898,
+        "p95": 20.11160000000018,
+        "p99": 29.650900000000547,
+        "max": 37.55630000000019
+      },
+      "lightReadMs": {
+        "count": 60,
+        "p50": 0.5059000000001106,
+        "p95": 0.6251000000002023,
+        "p99": 0.7548999999999069,
+        "max": 0.7548999999999069
+      },
+      "worst": [
+        {
+          "tick": 6215,
+          "ms": 37.55630000000019,
+          "jobs": 161
+        },
+        {
+          "tick": 6219,
+          "ms": 34.83210000000145,
+          "jobs": 143
+        },
+        {
+          "tick": 6212,
+          "ms": 32.58220000000074,
+          "jobs": 174
+        },
+        {
+          "tick": 6223,
+          "ms": 30.783799999999246,
+          "jobs": 133
+        },
+        {
+          "tick": 6216,
+          "ms": 29.85699999999997,
+          "jobs": 157
+        }
+      ]
+    }
+  ]
+}

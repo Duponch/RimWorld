@@ -54,6 +54,10 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
       const current=await world(page), summary=colonySummary(current), context=JSON.stringify(summary);
       await testInfo.attach(`hourly-world-${hour}`,{contentType:'application/json',body:JSON.stringify(current)});
       expect(validateWorld(current),context).toEqual([]);expect(woodAccount(current),context).toBe(initialWood);
+      for(const light of summary.lighting) {
+        expect(light.cellFactor).toBeCloseTo(.8+.2*Math.min(1,light.cellLight/.3),8);
+        expect(light.travelFactor).toBeGreaterThanOrEqual(.8);expect(light.travelFactor).toBeLessThanOrEqual(1);
+      }
       expect(current.pawns.every(p=>p.hunger>0&&p.rest>0),context).toBe(true);
       for(const e of current.events)if(e.type==='need'&&e.message.includes('a mangé une portion'))meals.set(`${e.tick}:${e.message}`,Number(e.message.match(/portion \((\d+) /)?.[1] ?? 0));
       for(const e of current.events) {const match=e.message.match(/a récolté (\d+) (?:baies|riz)/);if(match)harvests.set(`${e.tick}:${e.message}`,Number(match[1]));}

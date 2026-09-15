@@ -35,6 +35,7 @@ function zoneCells(world: World) {
 }
 export const growingZoneAt = (world: World, cell: number): GrowingZone | undefined => zoneCells(world).byCell.get(cell);
 export function jobDuration(world: World, job: Job): number {
+  if(job.kind==='mine'&&job.pickTicks!==undefined)return job.pickTicks/10;
   if(job.furniture)return furnitureDuration(world,job);
   if(job.kind==='deconstruct')return deconstructionDuration(job);
   if(job.material!==undefined)return constructionRecipe(job).work;

@@ -60,7 +60,8 @@ test('GPU travel preserves speed, corners and work-facing through real worker sn
       const a=result.frames[i-1],b=result.frames[i],dt=(b.now-a.now)/1000;
       if(a.start!==b.start||!a.walking||!b.walking||dt<=0||dt>0.05||b.clock>=b.end||a.clock<=a.start)continue;
       samples++;turns.add(Math.round(b.yaw*100));
-      const speedError=Math.abs(Math.hypot(b.x-a.x,b.z-a.z)/dt-20);
+      // This entire route is before dawn: 0.8 × 10/3 cells/s at 6× speed.
+      const speedError=Math.abs(Math.hypot(b.x-a.x,b.z-a.z)/dt-16);
       if(speedError>maxSpeedError){maxSpeedError=speedError;worstSample={a,b,dt};}
       maxFacingError=Math.max(maxFacingError,Math.abs(Math.atan2(Math.sin(b.yaw-Math.atan2(b.dx,b.dz)),Math.cos(b.yaw-Math.atan2(b.dx,b.dz)))));
     }
@@ -80,7 +81,7 @@ test('loaded furniture crossing shares GPU heights, preserves speed within each 
   const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);
   const fixture=furnitureTrafficFixture();
   // Observe the attributes actually submitted to native WebGPU. This is not a vertex readback.
-  const probe=`window.__furniture={frames:[],active:false};const originalFurnitureFrame=ColonyRenderer.prototype.frame;ColonyRenderer.prototype.frame=function(now){const result=originalFurnitureFrame.call(this,now),b=window.__furniture;if(!b.active||!this.world)return result;const p=this.pawns,g=p.pawnMesh.geometry,a=g.getAttribute('aFrom'),z=g.getAttribute('aTo'),t=g.getAttribute('aTravel'),c=g.getAttribute('aCargo');b.shared=['aFrom','aTo','aTravel'].every(k=>g.getAttribute(k)===p.cargoMesh.geometry.getAttribute(k)&&g.getAttribute(k)===p.selectionMesh.geometry.getAttribute(k));for(let i=0;i<this.world.pawns.length;i++){const start=t.getX(i),end=t.getY(i),clock=p.travelTime.value,alpha=Math.max(0,Math.min(1,(clock-start)/(end-start)));if(end<=start||alpha<=0||alpha>=1)continue;b.frames.push({id:this.world.pawns[i].id,now,start,end,clock,alpha,x:a.getX(i)+(z.getX(i)-a.getX(i))*alpha,z:a.getZ(i)+(z.getZ(i)-a.getZ(i))*alpha,fromY:a.getY(i),toY:z.getY(i),load:c.getX(i),dx:z.getX(i)-a.getX(i),dz:z.getZ(i)-a.getZ(i)});}return result;};\n`;
+  const probe=`window.__furniture={frames:[],active:false,epoch:0};const originalFurnitureWorld=ColonyRenderer.prototype.setWorld;ColonyRenderer.prototype.setWorld=function(...args){if(args[1])window.__furniture.epoch++;return originalFurnitureWorld.apply(this,args);};const originalFurnitureFrame=ColonyRenderer.prototype.frame;ColonyRenderer.prototype.frame=function(now){const result=originalFurnitureFrame.call(this,now),b=window.__furniture;if(!b.active||!this.world)return result;const p=this.pawns,g=p.pawnMesh.geometry,a=g.getAttribute('aFrom'),z=g.getAttribute('aTo'),t=g.getAttribute('aTravel'),c=g.getAttribute('aCargo');b.shared=['aFrom','aTo','aTravel'].every(k=>g.getAttribute(k)===p.cargoMesh.geometry.getAttribute(k)&&g.getAttribute(k)===p.selectionMesh.geometry.getAttribute(k));for(let i=0;i<this.world.pawns.length;i++){const start=t.getX(i),end=t.getY(i),clock=p.travelTime.value,alpha=Math.max(0,Math.min(1,(clock-start)/(end-start)));if(end<=start||alpha<=0||alpha>=1)continue;b.frames.push({ready:this.timeline.ready,confirmed:this.timeline.latest/10,epoch:b.epoch,id:this.world.pawns[i].id,now,start,end,clock,alpha,x:a.getX(i)+(z.getX(i)-a.getX(i))*alpha,z:a.getZ(i)+(z.getZ(i)-a.getZ(i))*alpha,fromY:a.getY(i),toY:z.getY(i),load:c.getX(i),dx:z.getX(i)-a.getX(i),dz:z.getZ(i)-a.getZ(i)});}return result;};\n`;
   try {
     await page.route('**/src/main.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:probe+await response.text()});});
     await page.addInitScript(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:serializeWorld(fixture)});
@@ -102,15 +103,20 @@ test('loaded furniture crossing shares GPU heights, preserves speed within each 
     await page.waitForFunction(()=>window.__lisiere.world.pawns.every(p=>!p.haul),undefined,{timeout:14000});
     await page.locator('[data-speed="0"]').click();const final=await world(page);
     const report=await page.evaluate(()=>{const b=(window as any).__furniture;b.active=false;return {frames:b.frames,shared:b.shared};});
-    let samples=0,maxSpeedError=0;const previous=new Map<number,any>();
+    let samples=0,maxSpeedError=0;let worstSample:unknown;const epochs=new Set<number>(),resetSamples:unknown[]=[],boundarySamples:unknown[]=[];const previous=new Map<number,any>();
     for(const b of report.frames){const a=previous.get(b.id);previous.set(b.id,b);if(!a||a.start!==b.start||b.clock<=a.clock)continue;const dt=(b.now-a.now)/1000;if(dt<=0||dt>.05)continue;
-      const expected=Math.hypot(b.dx,b.dz)/(b.end-b.start);maxSpeedError=Math.max(maxSpeedError,Math.abs(Math.hypot(b.x-a.x,b.z-a.z)/dt-expected));samples++;
+      const expected=Math.hypot(b.dx,b.dz)/(b.end-b.start),error=Math.abs(Math.hypot(b.x-a.x,b.z-a.z)/dt-expected);
+      // A checkpoint explicitly resets presentation to authoritative time. Compare
+      // continuous motion within each epoch, never across save restoration.
+      if(a.epoch!==b.epoch){resetSamples.push({a,b,error});continue;}
+      if(a.now<b.ready||b.clock>=b.confirmed){boundarySamples.push({a,b,error});expect(Math.hypot(b.x-a.x,b.z-a.z)/dt).toBeLessThanOrEqual(expected+.01);continue;}
+      epochs.add(b.epoch);if(error>maxSpeedError){maxSpeedError=error;worstSample={a,b,dt,expected};}samples++;
     }
     const elevated=report.frames.filter((f:any)=>f.load&&f.fromY>.7&&f.toY>.7);
     const climbs=report.frames.filter((f:any)=>f.load&&f.fromY===0&&f.toY>.7);
-    const summary={samples,maxSpeedError,shared:report.shared,loadedPlateauFrames:elevated.length,loadedClimbFrames:climbs.length,crossingTick:crossing.tick,finalTick:final.tick,errors};
+    const summary={samples,maxSpeedError,worstSample,epochs:[...epochs],resetSamples,boundarySamples,shared:report.shared,loadedPlateauFrames:elevated.length,loadedClimbFrames:climbs.length,crossingTick:crossing.tick,finalTick:final.tick,errors};
     await testInfo.attach('furniture-gpu-contract',{contentType:'application/json',body:JSON.stringify(summary)});
-    expect(samples).toBeGreaterThan(100);expect(maxSpeedError).toBeLessThan(.01);expect(report.shared).toBe(true);
+    expect(epochs.size).toBe(2);expect(samples).toBeGreaterThan(100);expect(maxSpeedError).toBeLessThan(.01);expect(report.shared).toBe(true);
     expect(elevated.length).toBeGreaterThan(5);expect(climbs.length).toBeGreaterThan(5);
     expect(final.piles.find(p=>p.item==='wood')?.owner).toEqual({type:'ground',x:2,z:8});expect(final.piles.find(p=>p.item==='rice')?.owner).toEqual({type:'ground',x:13,z:8});expect(validateWorld(final)).toEqual([]);expect(errors).toEqual([]);
   } finally {await browser.close();}
