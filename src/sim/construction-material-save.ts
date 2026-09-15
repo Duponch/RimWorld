@@ -5,6 +5,7 @@ import type { World } from './types.ts';
 export function validateConstructionMaterials(world:World,version:number):string[] {
   const errors:string[]=[];
   for(const entity of [...world.jobs,...world.structures,...(world.packed??[]).map(p=>p.building)]) {
+    if(entity.kind==='passive-cooler'&&(version<40||entity.material!=='wood'||entity.orientation!==0))errors.push('Passive cooler requires V40, wood and fixed orientation.');
     if(entity.kind==='door'&&(version<34||entity.material===undefined))errors.push('Door requires V34 and an explicit material.');
     if(entity.kind==='stonecutter'&&(version<31||entity.material===undefined))errors.push('Stonecutter requires V31 and an explicit material.');
     if(entity.material!==undefined&&(version<30||!validConstructionMaterial(entity.kind,entity.material,version)||entity.footprint==='legacy-single'))errors.push('Invalid or future construction material.');

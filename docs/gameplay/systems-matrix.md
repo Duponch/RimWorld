@@ -1,5 +1,7 @@
 # Matrice des systèmes et critères de réalisation
 
+V40 : S10/S12 intègrent le [refroidisseur passif](../development/passive-cooling.md), sa construction et son combustible. Réfrigération électrique, réseau et santé/confort thermiques restent ouverts ; G2 n’est pas déclaré complet.
+
 V39 : températures de croissance et de semis intégrées à S09, avec conservation du passé et inspection ; maladies/mortalité restent ouvertes. [Contrat](../development/plant-temperature.md).
 
 V38 : thermique quotidienne/locale, chauffage du feu et âge alimentaire variable ajoutés à S10/S11/S12 et aux contrats alimentaires ; systèmes toujours partiels. G0 en consolidation, G1 partiel, G2 en cours, conformément à ROADMAP.
@@ -75,7 +77,7 @@ Première partie livrée avant la clôture de G0 : [repas et couchages physiques
 
 La colonie est autonome plusieurs jours grâce à la croissance agricole, aux récoltes renouvelables, aux recettes et aux aliments réellement accessibles, transportés puis ingérés. Les couchages sont réservés et rejoints ; les horaires orientent les activités sans satisfaire directement les besoins. Les premiers effets de traits et compétences sont mesurables.
 
-Le joueur peut provoquer une pénurie, comprendre sa cause et la corriger. Distance, ingrédients, seuil de production, interruption et expiration simple des aliments ont des conséquences vérifiables. Les unités temporelles et de nutrition sont décidées explicitement avant calibration ; les constantes du corpus ne sont pas injectées telles quelles dans les ticks du prototype. Refroidissement et effets des pièces attendent G2.
+Le joueur peut provoquer une pénurie, comprendre sa cause et la corriger. Distance, ingrédients, seuil de production, interruption et expiration simple des aliments ont des conséquences vérifiables. Les unités temporelles et de nutrition sont décidées explicitement avant calibration ; les constantes du corpus ne sont pas injectées telles quelles dans les ticks du prototype. Refroidissement passif et premiers effets des pièces livrés pendant G2 ; appareils réfrigérants et effets psychologiques restent ouverts.
 
 ### G2 — Habitat et environnement
 

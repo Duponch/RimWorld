@@ -30,7 +30,7 @@ import { updatePlantTemperatures } from './thermal-plants.ts';
 import { updateFoodTemperatures } from './thermal-food.ts';
 import { applyBillCommand } from './cooking-commands.ts';
 import { cookingCellReserved } from './cooking-bills.ts';
-import { burnFuel, campfire, newCampfireFuel } from './fuel.ts';
+import { burnFuel, refuelable, newBuildingFuel, isFueledBuilding } from './fuel.ts';
 import { processHaul } from './hauling.ts';
 import { scheduleGrowing, cancelGrowingJobs, growingJobValid, finishSowing, jobDuration, growingZoneAt } from './farming.ts';
 import { isPlant, harvestable } from './plants.ts';
@@ -52,7 +52,7 @@ import type { AreaCommand, Cell, Command, CommandResult, DesignateCommand, Job, 
 export { JOB_DURATION, JOB_WOOD_COST } from './definitions.ts';
 
 const PATH_SEARCHES_PER_TICK = 8;
-const JOB_LABEL: Readonly<Record<JobKind, string>> = { 'build-roof':'pose de toit', 'remove-roof':'retrait de toit', door:'construction de porte', stonecutter:'construction de table de taille de pierre', mine:'minage', uninstall:'désinstallation', install:'réinstallation', deconstruct: 'déconstruction', chop: 'abattage', harvest: 'récolte', cut: 'coupe de plante', sow: 'semis de riz', horseshoes: 'construction de piquet de fers à cheval', campfire: 'construction de feu de camp', wall: 'construction de mur', bed: 'construction de lit', table: 'construction de table', stool: 'construction de tabouret' };
+const JOB_LABEL: Readonly<Record<JobKind, string>> = { 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'pose de toit', 'remove-roof':'retrait de toit', door:'construction de porte', stonecutter:'construction de table de taille de pierre', mine:'minage', uninstall:'désinstallation', install:'réinstallation', deconstruct: 'déconstruction', chop: 'abattage', harvest: 'récolte', cut: 'coupe de plante', sow: 'semis de riz', horseshoes: 'construction de piquet de fers à cheval', campfire: 'construction de feu de camp', wall: 'construction de mur', bed: 'construction de lit', table: 'construction de table', stool: 'construction de tabouret' };
 const sameCell = (a: Cell, b: Cell): boolean => a.x === b.x && a.z === b.z;
 const refusal = (code: RefusalCode, reason: string): CommandResult => ({ ok: false, code, reason });
 function event(world: World, type: 'job' | 'need' | 'command', message: string): void {
@@ -126,8 +126,8 @@ function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandR
 
 /** Pure shared rule used by preview and command execution. */
 export function canDesignate(world: World, command: DesignateCommand): CommandResult {
-  if (!command || !['door','stonecutter', 'mine', 'uninstall', 'deconstruct', 'chop', 'harvest', 'cut', 'wall', 'bed', 'table', 'stool', 'campfire', 'horseshoes'].includes(command.kind)) return refusal('invalid-command', 'Type de travail inconnu.');
-  if(command.kind==='door'&&command.orientation!==undefined&&command.orientation!==0)return refusal('invalid-command','La porte s’oriente automatiquement.');
+  if (!command || !['passive-cooler','door','stonecutter', 'mine', 'uninstall', 'deconstruct', 'chop', 'harvest', 'cut', 'wall', 'bed', 'table', 'stool', 'campfire', 'horseshoes'].includes(command.kind)) return refusal('invalid-command', 'Type de travail inconnu.');
+  if((command.kind==='door'||command.kind==='passive-cooler')&&command.orientation!==undefined&&command.orientation!==0)return refusal('invalid-command','Ce bâtiment ne se tourne pas manuellement.');
   if (command.orientation !== undefined && (!Number.isInteger(command.orientation) || command.orientation < 0 || command.orientation > 3)) return refusal('invalid-command', 'Orientation invalide.');
   if(!validConstructionMaterial(command.kind,command.material))return refusal('invalid-command','Matériau incompatible avec cette construction.');
   const target = (command.kind==='deconstruct'||command.kind==='uninstall')?deconstructionAt(world,command):undefined;
@@ -173,8 +173,8 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   }
   if (command.type === 'area') return applyArea(world, command,drops);
   if (command.type === 'refuel-policy') {
-    const fire=campfire(world,command.structureId);
-    if (!fire || typeof command.enabled!=='boolean') return refusal('invalid-command','Feu ou réglage de ravitaillement invalide.');
+    const fire=refuelable(world,command.structureId);
+    if (!fire || typeof command.enabled!=='boolean') return refusal('invalid-command','Bâtiment ou réglage de ravitaillement invalide.');
     if(!command.enabled)for(const pawn of world.pawns)if(pawn.haul?.destination.type==='fuel'&&!pawn.haul.destination.forced&&pawn.haul.destination.structureId===fire.id)releaseWork(world,pawn,drops);
     fire.fuel!.autoRefuel=command.enabled;wakePlanners(world);refreshStock(world);return {ok:true};
   }
@@ -280,7 +280,7 @@ function completeJob(world: World, pawn: Pawn, job: Job): void {
   } else {
     if(!constructionSupplied(world,job)||!constructionSiteFree(world,job,pawn.id)){job.progress=jobDuration(world,job)-1;delete job.workRemainder;releaseWork(world,pawn);return;}
     world.piles = world.piles.filter(pile => pile.owner.type !== 'job' || pile.owner.jobId !== job.id);
-    world.structures.push({ ...(job.kind==='door'?{door:builtDoorState(world,job)}:{}),...(job.material?{material:job.material}:{}),...(job.kind==='campfire'?{fuel:newCampfireFuel(),bills:[]}:job.kind==='stonecutter'?{bills:[]}:{}), id: world.nextId++, kind: job.kind as import('./types.ts').StructureKind, x: job.x, z: job.z, orientation: job.orientation, footprint: job.footprint });
+    world.structures.push({ ...(job.kind==='door'?{door:builtDoorState(world,job)}:{}),...(job.material?{material:job.material}:{}),...(isFueledBuilding(job.kind)?{fuel:newBuildingFuel(job.kind as import('./types.ts').StructureKind)}:{}),...(job.kind==='campfire'||job.kind==='stonecutter'?{bills:[]}:{}), id: world.nextId++, kind: job.kind as import('./types.ts').StructureKind, x: job.x, z: job.z, orientation: job.orientation, footprint: job.footprint });
   }
   if(job.kind==='wall'||job.kind==='door')autoRoofRooms(world,job);
   const jobIndex=world.jobs.indexOf(job);if(jobIndex>=0)world.jobs.splice(jobIndex,1); pawn.jobId = null; pawn.path = []; pawn.state = 'idle'; pawn.planCooldown = 0;

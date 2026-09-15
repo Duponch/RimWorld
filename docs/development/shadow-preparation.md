@@ -1,5 +1,7 @@
 # Préparation des ombres des lots résidents
 
+V40 : le parcours de construction a détecté deux pipelines `MeshBasicNodeMaterial` au tick initial, provenant des deux faces du curseur de survol jusqu’alors invisible pendant `compileAsync`. Le curseur est désormais préparé au chargement, puis sa visibilité est recalculée depuis le pointeur courant. Aucun pipeline nouveau observé à la construction/recharge du refroidisseur ; les seize parties emploient le lot de mobilier existant.
+
 15 septembre 2026, Three.js 0.186.0. Contrat de présentation, complété lors de V29 ; aucune règle, quantité, trajectoire ou sauvegarde ne change du fait de cette optimisation. Voir les [mesures courantes](validation.md) et les [preuves initiales V28](../history/validation-v28-mining-shadows.md).
 
 ## Cause vérifiée

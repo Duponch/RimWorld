@@ -2,6 +2,7 @@
  * The simulation remains a planar cell grid; visual height adds no walkable floor.
  */
 export const WORLD_SCALE = Object.freeze({
+  passiveCoolerHeight: .85,
   metersPerCell: 1,
   humanHeight: 1.75,
   wallHeight: 2.8,

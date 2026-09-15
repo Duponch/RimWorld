@@ -1,5 +1,7 @@
 # Choix et écarts de gameplay
 
+V40 — [Refroidissement passif](../development/passive-cooling.md) : seuil 17 °C, combustible continu et alimentation physique adoptés. Impulsions thermiques intégrées/écrêtées, remplissage entier conservateur hérité et recherche disponible d’emblée sont des adaptations explicites ; confort, dégâts et appareil électrique différés. [Confrontation des sources](../research/passive-cooling-reference.md).
+
 V38 — [Températures](../development/temperature.md) : cycle quotidien Core sur moyenne de site provisoire, échanges intégrés à dix ticks locaux/s, moyenne exhaustive des candidats de paroi, feu plafonné à 28 °C. Ces choix adaptent cadences et reconstruction d’air ; ils ne revendiquent pas la même suite de températures que le binaire RimWorld. Saisons, météo, dégâts et consommateurs agricoles extrêmes sont différés explicitement.
 
 État : 15 septembre 2026, G1 partiel et chaîne pierre G2 jouable, G0 encore ouvert. Les nouvelles [références utilisateur](../research/reference-adoption.md) définissent le comportement visé par défaut. Cette liste rend explicites les adaptations et simplifications actuelles ; une limite temporaire ne devient pas automatiquement notre cible définitive. [ROADMAP](../ROADMAP.md) suit leur progression.

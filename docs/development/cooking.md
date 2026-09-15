@@ -1,5 +1,7 @@
 # Cuisine, factures et combustible
 
+V40 étend le réservoir et les transports au [refroidisseur passif](passive-cooling.md). Les factures, recettes et lumière restent propres aux postes qui les définissent ; un appareil à combustible n’est pas automatiquement un atelier.
+
 Contrat introduit en V10, complété en V11 et validé dans les scénarios décrits ci-dessous. [Recherche de référence](../research/cooking-reference.md) : chap. 11/32, SYS-062..064, UI-025. Les effets absents du feu et des recettes restent dans l’[inventaire](../gameplay/implementation-status.md).
 
 ## Chaîne physique

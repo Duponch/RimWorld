@@ -19,7 +19,7 @@ export function finishDeconstruction(world: World, pawn: Pawn, job: Job): boolea
   const refunds: { item: ConstructionMaterial; quantity: number; cell: { x:number; z:number } }[] = [];
   let rng = world.rng, lostWood = 0, lostSteel = 0;
   const lostBlocks:Partial<Record<BlockMaterial,number>>={...world.deconstructed.lostBlocks};
-  for (const cost of structure.kind === 'campfire' ? [] : constructionRecipe(structure).ingredients) {
+  for (const cost of structure.kind === 'campfire' || structure.kind === 'passive-cooler' ? [] : constructionRecipe(structure).ingredients) {
     let quantity = Math.floor(cost.quantity / 2);
     if (cost.quantity % 2) {
       rng ^= rng << 13; rng ^= rng >>> 17; rng ^= rng << 5; rng >>>= 0;

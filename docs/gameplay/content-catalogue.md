@@ -1,8 +1,10 @@
 # Catalogue de contenu : couverture connue
 
+V40 ajoute un objet : `passive-cooler`, bois fixe, 1×1, réservoir 50 bois et consommation 10/jour, seuil 17 °C ; recharge physique, déconstruction sans restitution, non réinstallable. [Contrat](../development/passive-cooling.md). Aucun appareil électrique ni équipement de protection thermique livré.
+
 V39 ajoute croissance thermique et limites des nouveaux semis aux plantes de riz et buissons existants, sans nouvelle espèce. Mortalité et feuilles restent absentes.
 
-V38 ajoute des propriétés au contenu existant, sans nouvel objet : chaleur du feu, échanges des murs/toits/portes, conservation locale des denrées. Réfrigérateurs, refroidissement passif, radiateurs et équipement thermique restent à livrer ; aucun catalogue clos par ce lot.
+V38 ajoute des propriétés au contenu existant, sans nouvel objet : chaleur du feu, échanges des murs/toits/portes, conservation locale des denrées. Réfrigérateurs électriques, radiateurs et équipement thermique restent à livrer ; aucun catalogue clos par ce lot.
 
 V37 étend les effets des feux/toits existants aux travaux et déplacements ; aucun nouvel objet. Le catalogue reste ouvert, notamment plantes, terrains et éclairages supplémentaires.
 
@@ -32,13 +34,14 @@ L’[audit du 13 septembre](../research/environment-review.md) confirme que les 
 
 | Registre / identifiant local | Usage livré | Limites |
 |---|---|---|
-| Objet `wood` | Bois récolté, piles, portage, construction et combustible du feu ; CAT-005. | Espèces, masse, autres combustibles, dégâts et autres propriétés non implémentés. |
+| Objet `wood` | Bois récolté, piles, portage, construction et combustible du feu/refroidisseur passif ; CAT-005. | Espèces, masse, autres combustibles, dégâts et autres propriétés non implémentés. |
 | Objet `berries` | Baies récoltées, 0,05 nutrition/unité, piles de 75, ingestion de plusieurs unités ; CAT-011. | Pourrit en 14 jours à température normale ; intoxication absente ; maturité et renouvellement du buisson livrés en V7. |
 | Objet et plante `rice` | Riz semé/récolté ; croissance, fertilité, lumière et température locale ; 6 unités mûres, pile de 75, nutrition 0,05, malus de repas cru. Première culture alimentaire, domaine SYS-070..072. | Pourrit en 40 jours à température normale. Autres recettes, intoxication, santé du plant et compétences absents ; une seule culture sélectionnable. [Référence](../research/farming-reference.md). |
 | Objet `simple-meal` | Repas simple cuisiné au feu : dix baies/riz, nutrition 0,9, pile dix, ingestion un ; première recette Core. [Source et contrat](../research/cooking-reference.md). | Pourrit en 4 jours à température normale. Autres ingrédients, compétence et intoxication absents. |
 | Structure `horseshoes` | Piquet bois/acier V30 et cinq pierres V33, CAT-050 : dix unités livrées, sept ticks en bois ou dix en acier, trois utilisateurs et places visibles à cinq cases ; famille dextérité. [Référence et limites](../research/recreation-reference.md). | Autres matériaux que bois/acier/cinq pierres, capacités/compétence de tir, pièces et dégâts absents ; aucune qualité comme pour le piquet de référence. L’animation ne lance pas encore de projectile visible. |
 | Structure `stonecutter` | Atelier 3×1, bois/acier : 75 bois + 30 acier ou 105 acier ; plan/cadre, rotation, déplacement entier, stockage, transit et restitution V31. [Référence](../research/stonecutter-reference.md). | Factures de taille et blocs livrés V32 ; recherche, statistiques complètes et effets complets du poste absents. La nouvelle famille est partielle. |
-| Structure `campfire` | 20 bois livrés, combustible initial, combustion/ravitaillement, factures de repas simple. | Chaleur, éclairage fonctionnel, pluie, sociabilité et dégâts absents ; autres postes différés. |
+| Structure `passive-cooler` | 50 bois livrés devenant combustible, consommation continue, refroidissement vers 17 °C, recharges réelles, retrait sans restitution. | Recherche offerte au départ ; confort/santé et dégâts absents. Aucun froid alimentaire, éclairage, recette ou réinstallation. |
+| Structure `campfire` | 20 bois livrés, combustible initial, combustion/ravitaillement, factures de repas simple, lumière locale et chaleur jusqu’à 28 °C. | Pluie, sociabilité et dégâts absents ; autres postes différés. |
 | Objet `survival-meal` | Repas de survie du départ, 0,9 nutrition/unité, piles de dix ; CAT-015. | Ne pourrit pas. Recette, ingrédients, recherche et détérioration absents. Le scénario local donne 18 repas ; ce n'est pas Crashlanded. |
 | Objet `legacy-portion` | Compatibilité des sauvegardes V1–V4 : 0,35 nutrition/unité, piles de 75. | Ce n'est aucun objet de RimWorld ; absent des nouvelles parties. |
 | Ressources `tree`, `berries`, `rock` | Arbre générique, buisson générique, pierre au sol. | Pas un catalogue d'espèces ou de roches. Arbre abattable ; buisson persistant, récoltable selon maturité et supprimable par coupe ; les pierres Resource restent décoratives, distinctes des produits de minage V28. |

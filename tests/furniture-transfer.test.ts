@@ -48,7 +48,7 @@ test('full floors and conflicting uses refuse atomically; migration and corrupt 
  const corrupted=JSON.parse(full);corrupted.packed[0].owner.pawnId=999999;expect(()=>deserializeWorld(JSON.stringify(corrupted))).toThrow();
  const duplicate=JSON.parse(full);duplicate.packed.push(duplicate.packed[0]);expect(()=>deserializeWorld(JSON.stringify(duplicate))).toThrow();
  const bad=JSON.parse(full);bad.jobs[0].furniture.structureId=wall.id;expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();
- const legacy=JSON.parse(before);legacy.schemaVersion=24;for(const a of legacy.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete legacy.packed;const migrated=deserializeWorld(JSON.stringify(legacy));expect(migrated.packed).toEqual([]);expect(migrated.structures).toEqual(JSON.parse(before).structures);expect(migrated.schemaVersion).toBe(39);
+ const legacy=JSON.parse(before);legacy.schemaVersion=24;for(const a of legacy.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete legacy.packed;const migrated=deserializeWorld(JSON.stringify(legacy));expect(migrated.packed).toEqual([]);expect(migrated.structures).toEqual(JSON.parse(before).structures);expect(migrated.schemaVersion).toBe(40);
  legacy.packed=[];expect(()=>deserializeWorld(JSON.stringify(legacy))).toThrow();
 });
 

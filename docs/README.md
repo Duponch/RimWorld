@@ -29,6 +29,7 @@ La référence est RimWorld de base, transposé en 3D. Une description de RimWor
 
 | Domaine | Contrat du projet | Recherche et cible |
 |---|---|---|
+| Refroidissement passif | [Construction, recharge et air V40](development/passive-cooling.md) | [Sources et limites](research/passive-cooling-reference.md) |
 | Température et conservation | [Air local et âges V38](development/temperature.md), [conservation](development/food-preservation.md) | [Vérifications Core](research/temperature-reference.md) |
 | Lumière, travail et marche | [Travaux/marche V37](development/light-work.md), [ateliers V36](development/work-environment.md), [rendu 3D](development/environment-lighting.md) | [Travaux et marche Core](research/light-work-reference.md), [ateliers Core](research/work-environment-reference.md), [interprétation visuelle](research/environment-lighting-reference.md) |
 | Sélection et ordres directs | [Sélection, file et migration](development/player-orders.md) | [Commandes Core](research/player-orders-reference.md) |

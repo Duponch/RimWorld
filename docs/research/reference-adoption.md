@@ -1,5 +1,7 @@
 # Adoption du référentiel utilisateur
 
+V40 — chapitre 22, SYS/TEST-126 et 128, chapitre 10 SYS-058 : adopter source froide, alimentation et retrait physique ; adapter cadence et rendu 3D ; différer réseau, recherche et santé thermique. [Vérification spécifique](passive-cooling-reference.md). La règle générique du corpus sur deux côtés ne s’applique pas au refroidisseur passif.
+
 Synchronisation sous V38 — chapitres 2/3/5/10/21/29/32, SYS-005/020..022/051..061/113..117/172..177 : conserver trajets et phases physiques ; adapter exclusivement leur transport/présentation. [Recherche et degré de certitude](presentation-timing-reference.md). Aucun nouveau contenu ni règle de récolte.
 
 Température V38 — chapitres 5/6/14/22/32, SYS/TEST-023..025 et 126..131, scène E : adopter les seuils distincts, air/portes/toiture et continuité alimentaire ; adapter intégration, reconstruction par recouvrement et requêtes bornées ; différer appareils/réseaux, saisons/météo, santé et intégrale agricole extrême. [Recherche renouvelée](temperature-reference.md), [contrat](../development/temperature.md). Aucun statut R/P/V du corpus ne vaut validation locale.

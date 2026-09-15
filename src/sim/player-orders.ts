@@ -22,7 +22,7 @@ export interface PlayerOrders { active: number | 'haul' | 'cook' | null; queue: 
 export type OrderCommand = { type:'order-cook';pawnId:number;structureId:number;queue:boolean } | { type: 'order-job'; pawnId: number; jobId: number; queue: boolean } | { type:'order-haul';pawnId:number;target:HaulOrderTarget;queue:boolean } | { type: 'clear-orders'; pawnId: number };
 export interface OrderOption { jobId: number; cookStationId?:number; haulTarget?:HaulOrderTarget; label: string; enabled: boolean; reason?: string }
 export const MAX_QUEUED_ORDERS = 32;
-const labels: Record<Job['kind'], string> = { 'build-roof':'Poser le toit', 'remove-roof':'Retirer le toit', door:'Construire la porte', stonecutter:'Construire la table de taille', mine:'Miner', uninstall:'Désinstaller',install:'Réinstaller', deconstruct:'Déconstruire', chop:'Abattre',harvest:'Récolter',cut:'Couper',sow:'Semer du riz',wall:'Construire le mur',bed:'Construire le lit',table:'Construire la table',stool:'Construire le tabouret',campfire:'Construire le feu',horseshoes:'Construire le piquet' };
+const labels: Record<Job['kind'], string> = { 'passive-cooler':'Construire le refroidisseur passif', 'build-roof':'Poser le toit', 'remove-roof':'Retirer le toit', door:'Construire la porte', stonecutter:'Construire la table de taille', mine:'Miner', uninstall:'Désinstaller',install:'Réinstaller', deconstruct:'Déconstruire', chop:'Abattre',harvest:'Récolter',cut:'Couper',sow:'Semer du riz',wall:'Construire le mur',bed:'Construire le lit',table:'Construire la table',stool:'Construire le tabouret',campfire:'Construire le feu',horseshoes:'Construire le piquet' };
 const fail = (reason: string): CommandResult => ({ok:false,code:'invalid-command',reason});
 const busy = (pawn: Pawn) => pawn.jobId !== null || !!(pawn.haul || pawn.cooking || pawn.need || pawn.recreation.task);
 const clearingPlant=(world:World,job:Job)=>!isConstruction(job)?undefined:job.clearance?world.resources.find(r=>r.id===job.clearance!.resourceId):constructionObstruction(world,job).plant;
@@ -81,14 +81,14 @@ export function queryOrderOptions(world:World,pawnId:number,cell:Cell,queue=fals
   if(job?.kind==='sow'&&(pile||packedAt(world,cell)))targets.push({type:'clear-sow',jobId:job.id});
   const pack=packedAt(world,cell);if(pack)targets.push({type:'furniture',structureId:pack.building.id});
   if(pile)targets.push({type:'pile',pileId:pile.id});
-  const fire=world.structures.find(s=>stationRecipe(s)!==null&&footprintCells(s).some(c=>c.x===cell.x&&c.z===cell.z));
-  if(fire?.kind==='campfire')targets.push({type:'fuel',structureId:fire.id});
+  const fire=world.structures.find(s=>(stationRecipe(s)!==null||s.kind==='passive-cooler')&&footprintCells(s).some(c=>c.x===cell.x&&c.z===cell.z));
+  if(fire&&(fire.kind==='campfire'||fire.kind==='passive-cooler'))targets.push({type:'fuel',structureId:fire.id});
   for(const target of targets) {
     const view=orderView(world,pawn,queue),proposal=planHaulOrder(view,view.pawns.find(p=>p.id===pawn.id)!,target);
     const reason=exhausted(world,pawn)??proposal.reason;
     options.push({jobId:job?.id??0,haulTarget:target,label:proposal.label,enabled:!reason,...(reason?{reason}:{})});
   }
-  if(fire) {
+  if(fire&&stationRecipe(fire)) {
     const view=orderView(world,pawn,queue),proposal=planCookingOrder(view,view.pawns.find(p=>p.id===pawn.id)!,fire.id),reason=exhausted(world,pawn)??proposal.reason;
     options.push({jobId:0,cookStationId:fire.id,label:proposal.label,enabled:!reason,...(reason?{reason}:{})});
   }

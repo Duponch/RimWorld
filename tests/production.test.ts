@@ -168,7 +168,7 @@ test('factures ordonnées et réservations : deux cuisiniers, une recette dispon
   expect(carrier.priorities.haul).toBe(0);
   until(w,()=>!!carrier.haul?.serviceProgress);
   expect(queryPawnStatus(w,carrier).code).toBe('refueling');
-  expect(queryPawnStatus(w,carrier).reason).toContain('Recharge le feu');
+  expect(queryPawnStatus(w,carrier).reason).toContain('Ravitaille le bâtiment');
   const restored=deserializeWorld(serializeWorld(w));const control=structuredClone(w);stepWorld(restored,100);stepWorld(control,100);expect(restored).toEqual(control);
   until(w,()=>meals(w)===2&&!w.pawns.some(p=>p.cooking),2500);
   expect(raw(w)).toBe(0);expect(fire.fuel!.ticks).toBeGreaterThan(0);expect(validateWorld(w)).toEqual([]);

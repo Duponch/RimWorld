@@ -23,6 +23,7 @@ export const toolDefinitions: { id: Tool; icon: string; title: string; hint: str
   { id: 'bed', icon: '▰', title: 'Lit', hint: 'empreinte 1 × 2 · Q / E pour tourner', key: 'L', category: 'furniture' },
   { id: 'table', icon: '▤', title: 'Table', hint: '1 × 2 · placer des tabourets contre le bord · Q / E pour tourner', key: '', category: 'furniture' },
   { id: 'horseshoes', icon: '∩', title: 'Fers à cheval', hint: '3 joueurs maximum · places de lancer à 5 cases avec vue dégagée', key: '', category: 'recreation' },
+  { id: 'passive-cooler', icon: '❄', title: 'Refroidisseur passif', hint: 'combustible initial inclus · seuil de 17 °C · 10 bois/jour', key: '', category: 'temperature' },
   { id: 'campfire', icon: '♨', title: 'Feu de camp', hint: 'combustible initial inclus · brûle 10 bois par jour', key: '', category: 'temperature' },
   { id: 'stonecutter', icon: '⚒', title: 'Table de taille de pierre', hint: '3 × 1 · Q / E pour tourner · 1 fragment → 20 blocs · travail Artisanat', key: '', category: 'production' },
   { id: 'stool', icon: '⊓', title: 'Tabouret', hint: '1 × 1 · une place par colon, adjacente à une table', key: '', category: 'furniture' },

@@ -1,5 +1,7 @@
 # Construction avec matériau — contrat V30–V33
 
+V40 ajoute `passive-cooler` : bois fixe explicite, 50 unités livrées et 200 ticks Core de travail sans facteur de matériau, convertis en 20 ticks neutres locaux. Une case, orientation zéro. Ces mêmes 50 bois constituent le combustible initial ; [contrat](passive-cooling.md).
+
 [Recherche fraîche et décisions](../research/construction-materials-reference.md), [chantiers](construction.md), [logistique](material-logistics.md), [réinstallation](furniture-transfer.md). Le choix bois/acier et cinq pierres est livré pour mur, lit simple, table 1×2, tabouret et piquet ; le feu reste à 20 bois fixes. Les nouvelles quantités et durées sont dans la recherche. V31 ajoute la [table de taille à ingrédients mixtes](stonecutter.md). V33 ajoute les cinq blocs, leur travail constructif et le repos réduit des lits. Résistance, feu, beauté, valeur et qualité restent absents ; [vérification précise](../research/stone-buildings-reference.md).
 
 ## Définitions et livraison

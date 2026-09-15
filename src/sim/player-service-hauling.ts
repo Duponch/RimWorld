@@ -3,7 +3,7 @@ import { candidateAccess } from './candidate-access.ts';
 import { asBuilder, constructionHaulPriority, constructionObstruction, isConstruction } from './construction-rules.ts';
 import { growingJobValid } from './farming.ts';
 import { CARRY_CAPACITY } from './definitions.ts';
-import { campfire, fuelCapacity, fuelStationReserved } from './fuel.ts';
+import { refuelable, fuelCapacity, fuelStationReserved } from './fuel.ts';
 import { findAsideDestination } from './haul-aside.ts';
 import { reservedSource } from './materials.ts';
 import { blockedCells, routeToJob } from './pathfinding.ts';
@@ -14,11 +14,11 @@ import type { Cell, HaulDestination, Pawn, World } from './types.ts';
 export type ServiceHaulTarget={type:'fuel';structureId:number}|{type:'clear';jobId:number}|{type:'clear-sow';jobId:number};
 /** Contextual sub-jobs reuse the ordinary physical transport executor. */
 export function planServiceHaul(world:World,pawn:Pawn,target:ServiceHaulTarget,access?:import('./pathfinding.ts').Reachability,budget={pairs:32768}):HaulProposal {
-  const label=target.type==='fuel'?'Ravitailler le feu':target.type==='clear-sow'?'Dégager avant de semer':'Dégager le chantier';
+  const label=target.type==='fuel'?'Ravitailler en bois':target.type==='clear-sow'?'Dégager avant de semer':'Dégager le chantier';
   const no=(reason:string):HaulProposal=>({label,reason});
   if(target.type==='fuel'?!pawn.priorities.haul:target.type==='clear-sow'?!pawn.priorities.grow:!Number.isFinite(constructionHaulPriority(pawn)))return no('Ce travail est désactivé dans le tableau Travail.');
   const job=target.type!=='fuel'?world.jobs.find(j=>j.id===target.jobId):undefined;
-  const fire=target.type==='fuel'?campfire(world,target.structureId):undefined;
+  const fire=target.type==='fuel'?refuelable(world,target.structureId):undefined;
   if(target.type==='clear'&&(!job||!isConstruction(job)))return no('Chantier introuvable.');
   if(target.type==='clear-sow'&&(!job||job.kind!=='sow'||!growingJobValid(world,job)))return no('Le semis n’est plus autorisé sur cette cellule.');
   if(job?.reservedBy!==undefined&&job.reservedBy!==null)return no('Chantier déjà réservé.');
@@ -26,12 +26,12 @@ export function planServiceHaul(world:World,pawn:Pawn,target:ServiceHaulTarget,a
   if(obstacle?.plant)return no('La plante doit être coupée avant le transport.');
   if(job&&obstacle?.pack)return planFurnitureHaulOrder(world,pawn,obstacle.pack.building.id,access,budget,job);
   if(job&&!obstacle?.pile)return no('Aucune pile à dégager.');
-  if(target.type==='fuel'&&!fire?.fuel)return no('Feu introuvable.');
-  if(fire&&fuelStationReserved(world,fire.id))return no('Feu réservé pour la cuisine ou un ravitaillement.');
+  if(target.type==='fuel'&&!fire?.fuel)return no('Bâtiment introuvable.');
+  if(fire&&fuelStationReserved(world,fire.id))return no('Bâtiment déjà réservé.');
   const capacity=fire?fuelCapacity(world,fire.id,undefined,true):CARRY_CAPACITY;
-  if(!capacity)return no('Le feu ne peut pas encore recevoir une unité entière de bois.');
+  if(!capacity)return no('Le réservoir ne peut pas encore recevoir une unité entière de bois.');
   const blocked=blockedCells(world),reach=access??candidateAccess(world,pawn,blocked,new Set());
-  if(fire&&!canReach(world,fire,reach,true))return no('Aucun accès praticable au feu.');
+  if(fire&&!canReach(world,fire,reach,true))return no('Aucun accès praticable au bâtiment.');
   const sources=obstacle?.pile?[obstacle.pile]:world.piles.filter(p=>p.item==='wood'&&p.owner.type==='ground');
   let best:{source:Cell;id:number;quantity:number;distance:number;destination:HaulDestination}|undefined;
   for(const pile of sources) {

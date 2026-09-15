@@ -1,5 +1,7 @@
 # Stratégie de validation
 
+V40 : deux scénarios `passive-cooling.test.ts` enrichissent combustible/température/reprise ; `integration/temperature.spec.ts` joue construction, inspection, recharge manuelle et comptabilise les pipelines natifs. `passive-cooling-bench.ts` mesure 3/30/100 transporteurs, sans navigateur concurrent. Le pilote propose un refroidisseur seulement dans une pièce chaude, et son bilan inclut le combustible de chaque appareil. Les températures initiales synthétiques ne valent pas météo livrée.
+
 [Retour d’expérience des défauts visibles en jeu](playability-validation.md) : vérifier des critères utilisateur indépendants du code, séparer état final et chronologie affichée. `npm run test:presentation` impose le parcours naturel avec assertions et fait partie de `npm run check`. Il se lance aux changements d’horloge/bridge/présentation ou des phases de travail, pas après chaque retouche.
 
 Réactivité des vitesses sous V38 : oracle indépendant de taux à la frame suivante, changements toutes les 100 ms, fractions du worker conservées, démarrage/reprise et pénurie de snapshots. Le banc de zones mesure clic→vitesse effective et les frames sans progression après amorçage. Ces contrôles remplacent l’ancienne attente de 400 ms à chaque commande positive.

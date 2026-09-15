@@ -1,3 +1,4 @@
+import { applyThermalSources } from './thermal-sources.ts';
 import { TICKS_PER_DAY, type Cell, type World } from './types.ts';
 import { ThermalTopologyCache, type ThermalLayout } from './thermal-topology.ts';
 
@@ -63,8 +64,5 @@ export function advanceTemperature(world:World,layout:ThermalLayout):void {
     for(const i of layout.rooms[id]!.equalize){const target=layout.indices[i]!;change+=((target===-2?(temperature+outside)/2:air(target))-temperature)*.00017*10;}
     r.temperature=Math.max(-273.15,Math.min(1000,temperature+change));
   }
-  for(const fire of world.structures)if(fire.kind==='campfire'&&(fire.fuel?.ticks??0)>0) {
-    const id=layout.indices[fire.z*world.width+fire.x]!;if(id<0)continue;
-    const r=regions[id]!;if(r.temperature<28)r.temperature=Math.min(28,r.temperature+21/6/r.cells.length);
-  }
+  applyThermalSources(world,layout);
 }

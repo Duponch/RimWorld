@@ -1,5 +1,7 @@
 # Déconstruction — contrat V24
 
+V40 : le [refroidisseur passif](passive-cooling.md) rejoint les bâtiments sans restitution matérielle. Comme le feu, son combustible restant et consommé passe dans le bilan `fuelTicks`, sans double comptage du coût de construction.
+
 [Règles et sources](../research/deconstruction-reference.md), corpus chapitre 10 **SYS-058 / TEST-058**. Ce contrat complète les [chantiers](construction.md), les [ordres](player-orders.md) et la [logistique](material-logistics.md).
 
 ## Intention et action

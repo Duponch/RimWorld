@@ -45,7 +45,7 @@ export function queryPawnStatus(world: World, pawn: Pawn): { code: string; reaso
   }
   if(pawn.haul?.destination.type==='fuel') {
     const task=pawn.haul;
-    return {code:'refueling',reason:task.phase==='pickup'?`Va prélever ${task.quantity} bois pour le feu.`:task.serviceProgress?`Recharge le feu (${Math.floor(task.serviceProgress/REFUEL_WORK_TICKS*100)} %).`:`Porte ${task.quantity} bois vers le feu.`};
+    return {code:'refueling',reason:task.phase==='pickup'?`Va prélever ${task.quantity} bois pour le combustible.`:task.serviceProgress?`Ravitaille le bâtiment (${Math.floor(task.serviceProgress/REFUEL_WORK_TICKS*100)} %).`:`Porte ${task.quantity} bois vers le bâtiment.`};
   }
   if (pawn.need?.kind === 'eat') return { code: pawn.need.phase, reason: pawn.need.phase === 'pickup' ? 'Va chercher une portion réservée.' : pawn.need.phase === 'choose-spot' ? 'Cherche une place pour manger sa portion.' : pawn.need.phase === 'travel' ? 'Porte sa portion vers sa place réservée.' : `Mange la portion tenue en main (${Math.floor(pawn.need.progress / 50 * 100)} %).` };
   if (pawn.need?.kind === 'sleep') return { code: pawn.need.phase, reason: pawn.need.phase === 'travel' ? pawn.need.bedId === null ? 'Libère le lit et cherche une place au sol.' : 'Se rend à son lit réservé.' : pawn.need.bedId === null ? 'Dort au sol ; aucun lit utilisable ou épuisement.' : 'Dort dans son lit.' };

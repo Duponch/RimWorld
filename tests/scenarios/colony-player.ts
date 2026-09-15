@@ -1,3 +1,4 @@
+import { coolingDecisions } from './cooling-player.ts';
 import { stonecuttingDecisions } from './stonecutting-player.ts';
 import { roofingDecisions } from './roofing-player.ts';
 import { WorkEnvironmentCache } from '../../src/sim/work-environment.ts';
@@ -60,7 +61,7 @@ export function playerFocusDecisions(world:World):Decision[] {
  */
 export function playerDecisions(world: World): Decision[] {
   const cx = Math.floor(world.width / 2), cz = Math.floor(world.height / 2);
-  const out: Decision[] = [];
+  const out: Decision[] = coolingDecisions(world);
   // Ordinary player choice: the cook's night is shifted one hour earlier.
   // Keep eight intended sleep hours; actual rest still depends on bed and needs.
   if (world.structures.filter(s => s.kind === 'bed').length >= 3) {
@@ -129,7 +130,7 @@ export function playerDecisions(world: World): Decision[] {
       if(canDesignate(world,command).ok){out.push({reason:'Préparer un atelier de taille avec le bois du camp et l’acier extrait.',command});break;}
     }
   }
-  const outstandingWood = [...world.jobs, ...out.flatMap(d => d.command.type === 'designate' ? [{...d.command,material:['wall','bed','table','stool','horseshoes','campfire','stonecutter','door'].includes(d.command.kind)?d.command.material??'wood' as const:undefined}] : [])].reduce((n,j) => n + requiredMaterial(j,'wood'), 0);
+  const outstandingWood = [...world.jobs, ...out.flatMap(d => d.command.type === 'designate' ? [{...d.command,material:['passive-cooler','wall','bed','table','stool','horseshoes','campfire','stonecutter','door'].includes(d.command.kind)?d.command.material??'wood' as const:undefined}] : [])].reduce((n,j) => n + requiredMaterial(j,'wood'), 0);
   // New plans can overlap trees: their builder will clear the footprint. Do not
   // queue a second gathering order there in the same batch of player commands.
   const newlyPlanned=new Set(out.flatMap(d=>d.command.type==='designate'?footprintCells(d.command).map(c=>c.z*world.width+c.x):[]));
@@ -174,11 +175,11 @@ export function colonySummary(world: World) {
     obstructedGrowingCells:world.piles.filter(p=>p.owner.type==='ground'&&fields.has(p.owner.z*world.width+p.owner.x)).length,
     clearing:world.pawns.filter(p=>p.haul?.destination.type==='aside').length,
     construction: {blueprints:world.jobs.filter(j=>j.construction==='blueprint').length,frames:world.jobs.filter(j=>j.construction==='frame').length,clearingPlants:world.jobs.filter(j=>j.clearance).length,clearingPiles:world.pawns.filter(p=>p.haul?.destination.type==='aside'&&p.haul.destination.constructionId!==undefined).length},
-    structures: Object.fromEntries(['bed','table','stool','wall','campfire','horseshoes','stonecutter','door'].map(kind => [kind,world.structures.filter(s=>s.kind===kind).length])), preparedMeals:world.piles.filter(p=>p.item==='simple-meal').reduce((n,p)=>n+p.quantity,0), stock: { ...world.stock }, pending: world.jobs.length, minimumFood: Math.min(...world.pawns.map(p=>p.hunger)), minimumRest: Math.min(...world.pawns.map(p=>p.rest)) };
+    structures: Object.fromEntries(['passive-cooler','bed','table','stool','wall','campfire','horseshoes','stonecutter','door'].map(kind => [kind,world.structures.filter(s=>s.kind===kind).length])), preparedMeals:world.piles.filter(p=>p.item==='simple-meal').reduce((n,p)=>n+p.quantity,0), stock: { ...world.stock }, pending: world.jobs.length, minimumFood: Math.min(...world.pawns.map(p=>p.hunger)), minimumRest: Math.min(...world.pawns.map(p=>p.rest)) };
 }
 
 export function woodAccount(world: World): number {
-  return (world.packed??[]).reduce((n,p)=>n+requiredMaterial(p.building,'wood'),0) + world.deconstructed.lostWood + world.deconstructed.fuelTicks/600 + world.piles.filter(p=>p.kind==='wood').reduce((n,p)=>n+p.quantity,0) + world.resources.filter(r=>r.kind==='tree').reduce((n,r)=>n+r.amount,0) + world.structures.reduce((n,s)=>n+(s.kind==='campfire' ? ((s.fuel?.ticks??0)+(s.fuel?.burned??0))/600 : requiredMaterial(s,'wood')),0);
+  return (world.packed??[]).reduce((n,p)=>n+requiredMaterial(p.building,'wood'),0) + world.deconstructed.lostWood + world.deconstructed.fuelTicks/600 + world.piles.filter(p=>p.kind==='wood').reduce((n,p)=>n+p.quantity,0) + world.resources.filter(r=>r.kind==='tree').reduce((n,r)=>n+r.amount,0) + world.structures.reduce((n,s)=>n+(s.fuel ? ((s.fuel?.ticks??0)+(s.fuel?.burned??0))/600 : requiredMaterial(s,'wood')),0);
 }
 export function foodAccount(world: World): number {
   // Produced units remain accounted for even after spoilage; this is a ledger,

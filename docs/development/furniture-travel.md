@@ -1,5 +1,7 @@
 # Transit et arrêt sur le mobilier — V22
 
+V40 : le refroidisseur passif utilise le profil traversable sans arrêt, supplément 3 ticks locaux et non-répétition commune. Une case, pas de surface de pile ni de toit porteur ; [contrat](passive-cooling.md).
+
 [Recherche Core et incertitudes](../research/furniture-travel-reference.md). Ce contrat complète [sol/mouvement](spatial-motion-storage.md) et [chantiers](construction.md), sans modifier les permissions d'objets/zones V21.
 
 ## Profils

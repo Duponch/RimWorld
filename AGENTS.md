@@ -50,7 +50,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 39 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 40 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)
@@ -182,3 +182,8 @@
 ## Plantes V39
 - Lire docs/development/plant-temperature.md et sa recherche. Croissance thermique neutre 6–42 °C, nulle aux bornes 0/58 ; semis strictement entre 0/58, récolte et travail accepté indépendants. Resource.growthThermalFactor porte le facteur de l’intervalle sauvegardé ; absent = 1. Checkpointer avant changement, sans appliquer la température au passé.
 - Groupes dérivés par World, tableau de ressources et disposition thermique ; les producteurs remplacent les tableaux. Valider V38 avant migration sans histoire froide inventée ; transmettre le facteur dans les deltas. Mortalité, feuilles et saisons restent absentes.
+
+## Refroidissement passif V40
+- Lire docs/development/passive-cooling.md et sa recherche. Une case fixe, 50 bois de construction devenant le réservoir initial ; combustion continue 10/jour, y compris dehors ou sous 17 °C. Refroidissement sans lumière, recettes ou bonus alimentaire. Pas de restitution de déconstruction ni minification.
+- Capacités par définition dans fuel.ts, transferts physiques communs ; aucune confusion avec les besoins Cuisine. V39 strictement validée avant migration sans objet inventé. thermal-sources.ts partage l’intégration V38 ; bornes continues adaptées explicitement.
+- Seize parties dans le lot de mobilier existant. Préparer aussi le curseur double face au chargement, puis restaurer son état depuis le pointeur courant ; le test navigateur exige zéro pipeline nouveau pendant construction et recharge.

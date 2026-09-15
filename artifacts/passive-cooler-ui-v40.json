@@ -1,0 +1,25 @@
+{
+  "date": "2026-09-15T20:31:03.760Z",
+  "backend": "native WebGPU",
+  "viewport": "1440x1000",
+  "size": 32,
+  "pawns": 1,
+  "constructionNewPipelines": 0,
+  "refillNewPipelines": 0,
+  "frameMsIncludingLoads": {
+    "pipelines": 33,
+    "frames": 2395,
+    "p95": 4.299999999999272,
+    "p99": 4.300000000001091,
+    "max": 120.89999999999964
+  },
+  "initialTick": 2000,
+  "cooledTick": 2246,
+  "cooledTemperature": 17,
+  "finalFuel": {
+    "ticks": 5999,
+    "burned": 30001,
+    "autoRefuel": false
+  },
+  "errors": []
+}

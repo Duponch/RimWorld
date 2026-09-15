@@ -1,7 +1,7 @@
 import { processFurnitureHaul } from './furniture-hauling.ts';
 import { constructionSiteFree } from './construction-rules.ts';
 import { copyRot } from './food-preservation.ts';
-import { campfire, WOOD_BURN_TICKS, REFUEL_WORK_TICKS } from './fuel.ts';
+import { refuelable, WOOD_BURN_TICKS, REFUEL_WORK_TICKS } from './fuel.ts';
 import { destinationCell, destinationValid } from './work-planner.ts';
 import { releaseWork } from './work-release.ts';
 import { footprintCells } from './definitions.ts';
@@ -36,7 +36,7 @@ export function processHaul(world: World, pawn: Pawn, move: (target: Cell, allow
   if (task.destination.type==='fuel') {
     pawn.state='working';pawn.path=[];task.serviceProgress=(task.serviceProgress??0)+1;
     if(task.serviceProgress<REFUEL_WORK_TICKS)return;
-    const fire=campfire(world,task.destination.structureId)!;
+    const fire=refuelable(world,task.destination.structureId)!;
     fire.fuel!.ticks+=carry.quantity*WOOD_BURN_TICKS;
     world.piles.splice(world.piles.indexOf(carry),1);
   } else if(!transferPile(world,carry,task.destination.type === 'job' ? { type:'job',jobId:task.destination.jobId } : {type:'ground',x:target.x,z:target.z})) {releaseWork(world,pawn);return;}

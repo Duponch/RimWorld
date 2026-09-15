@@ -330,6 +330,9 @@ export class ColonyRenderer {
     const restoreDoors=this.doors.prepareForCompile();
     const restoreCrops = this.crops.prepareForCompile();
     try {
+      // The double-sided cursor otherwise compiles both face variants on the
+      // first map interaction. Include it behind the loading overlay.
+      this.hover.visible = true;
       this.overview.group.visible = this.terrainGroup.visible = this.resourceGroup.visible = true;
       this.rocks.setDistant(false); this.rocks.mesh.visible = true;
       this.scene.traverse(object => { culling.set(object, object.frustumCulled); object.frustumCulled = false; });
@@ -342,6 +345,7 @@ export class ColonyRenderer {
       for (const [object, value] of culling) object.frustumCulled = value;
       this.overview.group.visible = distant; this.terrainGroup.visible = this.resourceGroup.visible = !distant;
       this.rocks.setDistant(distant); this.preparing = false;
+      this.updateHover();
       this.frames.reset(); this.lastFrame = 0;
     }
   }
@@ -667,8 +671,8 @@ export class ColonyRenderer {
     const minX=Math.min(...cells.map(c=>c.x)),maxX=Math.max(...cells.map(c=>c.x)),minZ=Math.min(...cells.map(c=>c.z)),maxZ=Math.max(...cells.map(c=>c.z));
     this.hover.scale.set(maxX-minX+1, maxZ-minZ+1, 1);
     this.hover.position.set((minX+maxX)/2, this.world.tiles[cell.z * this.world.width + cell.x]?.terrain === 'water' ? WORLD_SCALE.waterSurface + 0.04 : 0.055, (minZ+maxZ)/2);
-    const validity = this.tool==='install'&&this.furniturePlacement?installCommand(this.world,{type:'install',structureId:this.furniturePlacement.id,...cell,orientation:this.placementRotation},true):this.tool === 'door'||this.tool === 'stonecutter'||this.tool === 'mine'||this.tool === 'uninstall'||this.tool === 'wall' || this.tool === 'bed' || this.tool === 'table' || this.tool === 'stool' || this.tool === 'campfire' || this.tool === 'horseshoes' || this.tool === 'chop' || this.tool === 'harvest' || this.tool === 'cut'
-      ? canDesignate(this.world, { type: 'designate', kind: this.tool, ...cell, orientation: this.tool==='door'?0:this.placementRotation }) : undefined;
+    const validity = this.tool==='install'&&this.furniturePlacement?installCommand(this.world,{type:'install',structureId:this.furniturePlacement.id,...cell,orientation:this.placementRotation},true):this.tool === 'passive-cooler'||this.tool === 'door'||this.tool === 'stonecutter'||this.tool === 'mine'||this.tool === 'uninstall'||this.tool === 'wall' || this.tool === 'bed' || this.tool === 'table' || this.tool === 'stool' || this.tool === 'campfire' || this.tool === 'horseshoes' || this.tool === 'chop' || this.tool === 'harvest' || this.tool === 'cut'
+      ? canDesignate(this.world, { type: 'designate', kind: this.tool, ...cell, ...(this.tool==='passive-cooler'?{material:'wood' as const}:{}), orientation: this.tool==='door'||this.tool==='passive-cooler'?0:this.placementRotation }) : undefined;
     const color = validity?.ok === false ? 0xe46f58 : this.tool === 'cancel' || this.tool === 'remove-stockpile' ? 0xe6876a : this.tool === 'select' ? 0xf9ebae : 0x9dd9ca;
     (this.hover.material as THREE.MeshBasicNodeMaterial).color.setHex(color);
     this.renderer.domElement.title = validity?.reason ?? '';

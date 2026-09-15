@@ -28,7 +28,7 @@ test('roof support requires a connected 6.9-radius path, separated from areas, a
   const legacy=structuredClone(w) as unknown as Record<string,unknown>;legacy.schemaVersion=34;
   expect(()=>deserializeWorld(JSON.stringify(legacy))).toThrow(/version 34/);
   delete legacy.roofing;const migrated=deserializeWorld(JSON.stringify(legacy));
-  expect(migrated.schemaVersion).toBe(39);expect(migrated.roofing).toBeUndefined();
+  expect(migrated.schemaVersion).toBe(40);expect(migrated.roofing).toBeUndefined();
   for(const change of [(x:World)=>x.roofing!.constructed.push(16*32+16),(x:World)=>x.roofing!.constructed.push(999999),(x:World)=>{x.roofing!.build=[1];x.roofing!.remove=[1];},(x:World)=>x.roofing!.cursor=-1]) {
     const bad=structuredClone(w);change(bad);expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();
   }

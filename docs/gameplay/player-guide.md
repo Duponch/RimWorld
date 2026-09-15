@@ -1,8 +1,10 @@
 # Guide joueur
 
+**Refroidir une pièce :** Architecte → Température → Refroidisseur passif. Livrez 50 bois ; le bâtiment démarre rempli pour cinq jours. Il rafraîchit au-dessus de 17 °C et consomme du bois même dehors ou quand il fait déjà frais. Transport le recharge automatiquement à 30 % ; son inspection permet de désactiver cet automatisme, et le clic droit d’un colon de le ravitailler manuellement. Vide, il reste en place. Il ne réfrigère pas la nourriture, ne se réinstalle pas et ne restitue aucun bois à la déconstruction.
+
 Le riz et les buissons croissent normalement entre 6 et 42 °C, plus lentement en approchant 0 ou 58 °C, et cessent de croître au-delà. Les nouveaux semis sont suspendus à 0 °C et moins, ou à 58 °C et plus. L’inspection explique ces contraintes et le manque de lumière ; réchauffer une pièce partiellement découverte peut rétablir la croissance. Mortalité au gel et saisons ne sont pas encore simulées.
 
-Le panneau de temps indique la température extérieure. Sélectionner une cellule affiche la température locale de son air. Une enceinte dont moins de 25 % des cases restent découvertes peut retenir la chaleur ; un feu allumé la chauffe jusqu’à 28 °C. Portes ouvertes et trous du toit augmentent les échanges. Les denrées vieillissent moins vite entre 0 et 10 °C et cessent de vieillir au gel, sans retrouver leur fraîcheur passée. Le délai affiché suppose la température actuelle constante. Aucun refroidisseur n’est encore constructible ; le climat quotidien tempéré ne gèle pas naturellement.
+Le panneau de temps indique la température extérieure. Sélectionner une cellule affiche la température locale de son air. Une enceinte dont moins de 25 % des cases restent découvertes peut retenir la chaleur ; un feu allumé la chauffe jusqu’à 28 °C. Portes ouvertes et trous du toit augmentent les échanges. Les denrées vieillissent moins vite entre 0 et 10 °C et cessent de vieillir au gel, sans retrouver leur fraîcheur passée. Le délai affiché suppose la température actuelle constante. Le refroidisseur passif peut rafraîchir une pièce vers 17 °C, sans réfrigérer les aliments ; le climat quotidien tempéré ne gèle pas naturellement.
 
 Ce guide décrit la version jouable actuelle. Le [bilan fonctionnel](implementation-status.md) distingue les systèmes livrés, partiels et absents.
 
@@ -79,7 +81,7 @@ Les massifs ont maintenant des sommets et parois irréguliers qui se raccordent 
 
 ## Désigner et construire
 
-Ouvrir Architecte, choisir Ordres pour abattre/récolter/annuler, Zones pour le stockage, Structure pour le mur, Meubles pour les lits, tables et tabourets, ou Température pour le feu de camp. Pour les ordres de terrain et les réserves, **cliquer ou maintenir le bouton gauche et tracer un rectangle**, dans n'importe quel sens. Les cases compatibles sont surlignées ; un compteur distingue les cases retenues et ignorées. Relâcher sur la carte applique l'ensemble. Échap ou clic droit annule le tracé ; changer d'outil ou quitter la fenêtre l'abandonne également. Relâcher au-dessus d'un panneau n'envoie aucun ordre.
+Ouvrir Architecte, choisir Ordres pour abattre/récolter/annuler, Zones pour le stockage, Structure pour le mur, Meubles pour les lits, tables et tabourets, ou Température pour le feu de camp et le refroidisseur passif. Pour les ordres de terrain et les réserves, **cliquer ou maintenir le bouton gauche et tracer un rectangle**, dans n'importe quel sens. Les cases compatibles sont surlignées ; un compteur distingue les cases retenues et ignorées. Relâcher sur la carte applique l'ensemble. Échap ou clic droit annule le tracé ; changer d'outil ou quitter la fenêtre l'abandonne également. Relâcher au-dessus d'un panneau n'envoie aucun ordre.
 
 L'abattage cible les arbres ; la récolte cible les buissons et cultures récoltables. Les ressources incompatibles, obstacles et ordres déjà présents sont ignorés, avec un bilan après application. Le rectangle crée du travail futur : les matériaux ne sont produits qu'après le travail des colons. Pour les constructions, cliquer sur un sol compatible : un plan peut recouvrir une plante ou une pile d’objets, que les colons dégageront. Roches et bâtiments existants restent refusés ; les réserves suivent les compatibilités du meuble. Le lit et la table occupent deux cases : Q/E ou le bouton Tourner change leur orientation avant placement. Le fantôme indique un placement refusé. Dans Architecte, choisissez **Bois** ou **Acier** avant de placer mur, lit, table, tabouret ou piquet. Le coût affiché suit ce choix ; le feu reste en bois. Les matériaux peuvent manquer au moment de poser un plan ; leur livraison précède le travail de construction. Le type choisi reste visible dans l’inspection, après emballage et réinstallation. Les ouvrages d’anciennes sauvegardes signalés « ancien » gardent leurs coûts historiques.
 
@@ -149,7 +151,7 @@ Les colons peuvent manger le riz cru : 0,05 nutrition par unité, avec un souven
 
 ## Préparer des repas au feu
 
-Construisez un **feu de camp** dans Architecte → Température : vingt bois doivent être livrés. Il démarre rempli et brûle dix bois par jour. L’inspection indique son combustible et permet de désactiver son ravitaillement automatique. Le feu vide reste en place et ne permet plus de cuire. Son chauffage et son éclairage sur les règles de jeu ne sont pas encore simulés.
+Construisez un **feu de camp** dans Architecte → Température : vingt bois doivent être livrés. Il démarre rempli et brûle dix bois par jour. L’inspection indique son combustible et permet de désactiver son ravitaillement automatique. Le feu vide reste en place et ne permet plus de cuire. Il éclaire localement et chauffe une pièce retenant son air jusqu’à 28 °C.
 
 Activez **Cuisine** dans Travail, puis inspectez le feu et ajoutez une facture « repas simple ». Choisissez un nombre de fabrications, un stock cible ou une répétition sans limite. Le détail permet d’autoriser baies/riz, limiter le rayon de recherche et choisir rangement ou dépôt au sol. Cliquez **Appliquer la facture** après modification. Les flèches ordonnent les factures ; une facture suspendue ou impossible laisse passer la suivante.
 
@@ -299,7 +301,7 @@ Le ciel et les flammes restent stylisés. Les halos sur le décor et l’assombr
 
 Un feu allumé éclaire le sol, le mobilier et les colons à proximité. Son halo respecte les obstacles lumineux ; une porte ouverte ne transmet pas la lumière du feu dans cette version de référence. Les bâtiments couverts restent sombres sans éclairage, même lorsque **Toits : masqués** permet d’en voir l’intérieur. Couper les murs ne supprime pas non plus leur obstacle logique. Ces réglages fonctionnent en iso et en perspective, sans modifier la colonie.
 
-Les couleurs chaudes servent à lire la scène : consultez l’inspection pour le pourcentage exact et les effets sur la production. Les lampes dédiées, le chauffage et les ombres projetées par les feux restent à développer.
+Les couleurs chaudes servent à lire la scène : consultez l’inspection pour le pourcentage exact et les effets sur la production. Les lampes dédiées, le chauffage électrique et les ombres projetées par les feux restent à développer.
 
 ## Travailler et circuler dans l’obscurité
 

@@ -21,7 +21,7 @@ export function advancePriorityWork(world:World,pawn:Pawn,getBlocked:NavigationG
   if(!intent||pawn.jobId!==null||pawn.haul||pawn.cooking||pawn.need||pawn.recreation.task||pawn.orders.queue.length)return false;
   if(pawn.collapsePending||world.restRules==='legacy'&&pawn.rest===0)return false;
   const job=world.jobs.find(j=>(isConstruction(j)||intent.work==='build'&&j.kind==='deconstruct')&&containsCell(j,intent.cell));
-  const station=world.structures.find(s=>stationRecipe(s)!==null&&footprintCells(s).some(c=>c.x===intent.cell.x&&c.z===intent.cell.z));
+  const station=world.structures.find(s=>(stationRecipe(s)!==null||s.kind==='passive-cooler')&&footprintCells(s).some(c=>c.x===intent.cell.x&&c.z===intent.cell.z));
   if((intent.work==='cook'||intent.work==='craft')?!station:!job&&!(intent.work==='haul'&&station&&wantsFuel(world,station))) {
     delete pawn.priorityWork;return false;
   }
