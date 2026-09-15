@@ -73,7 +73,7 @@ V22 ne crée aucun objet : elle renseigne transit, arrêt, coûts d’entrée et
 | sandstone | Grès | Massif et pierre décorative typés |
 | slate | Ardoise | Massif et pierre décorative typés |
 
-Distribution régionale, persistance et apparence sont livrées. V28 ajoute les PV et produits ci-dessous, sans blocs utilisables. Minerais, compétences, taille et construction en pierre restent absents ; [contrat du minage](../development/mining.md).
+Distribution régionale, persistance et apparence sont livrées. V28 ajoute les PV et produits ci-dessous, sans blocs utilisables. L’acier compacté et son produit sont livrés en V29 ; autres minerais, compétences, taille et construction en pierre restent absents ; [contrat du minage](../development/mining.md).
 
 ## Produits et sols V28 — CAT-059/060
 
@@ -86,3 +86,12 @@ Distribution régionale, persistance et apparence sont livrées. V28 ajoute les 
 | `slate-chunk` | Fragment après minage de l’ardoise (500 PV), mêmes contrats. | Idem. |
 | `legacy-chunk` | Produit d’une roche historique sans type, profil local 500 PV. | Compatibilité explicite, pas une sixième roche Core. |
 | Terrain `rough-stone` | Sol découvert, cinq identités ou type historique, fertilité zéro, coût de marche. | Lissage, sous-sols alternatifs et sols construits absents. |
+
+## Acier V29 — CAT-060 et matériaux Core
+
+| Identifiant | Livré | Limites |
+|---|---|---|
+| `Tile.ore='steel'` | Acier compacté, 1 500 PV, gisements connectés de 30–40 cases ; minage et sol encaissant conservé. | Profil de site local ; aucune injection sur anciennes cartes, compétences/rendements variables, dégâts externes et toits absents. |
+| Objet `steel` | 40 unités par gisement au profil neutre ; piles de 75, portage, rangement filtré, compteur et barres procédurales. | Recettes constructives et atelier de taille absents ; capacité générale de portage provisoire de dix unités. |
+
+[Sources et décisions](../research/steel-reference.md). Argent, or, plasteel, uranium, jade, composants compactés et leurs filières restent absents. Ni ces deux entrées, ni les cinq roches ne constituent un inventaire exhaustif.

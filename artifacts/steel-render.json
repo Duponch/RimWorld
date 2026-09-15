@@ -1,0 +1,366 @@
+{
+  "date": "2026-09-15T01:15:34.847Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "ore": "steel",
+  "protocol": "Native Chromium WebGPU, actual worker 6x, natural 250² with cleared mining patch; 3/30/100 miners × 4 sandstone or steel walls and 1 tree. 90 warmup frames; no full-world serialization during timed frames. Ground/rock buffer identities checked after excavation.",
+  "phases": [
+    {
+      "count": 100,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "description": ""
+      },
+      "errors": [],
+      "frames": {
+        "count": 2459,
+        "p50": 6,
+        "p95": 6.100000000002183,
+        "p99": 12,
+        "max": 30
+      },
+      "frameCpu": {
+        "count": 2460,
+        "p50": 4.700000002980232,
+        "p95": 6,
+        "p99": 7.399999998509884,
+        "max": 11.5
+      },
+      "adoptions": {
+        "count": 64,
+        "p50": 1.7999999970197678,
+        "p95": 10,
+        "p99": 14.5,
+        "max": 14.5
+      },
+      "drawCalls": {
+        "count": 2460,
+        "p50": 164,
+        "p95": 179,
+        "p99": 184,
+        "max": 185
+      },
+      "excavationFrames": {
+        "count": 304,
+        "p50": 6,
+        "p95": 11.900000000001455,
+        "p99": 23.900000000001455,
+        "max": 30
+      },
+      "mined": 400,
+      "steelUnits": 16000,
+      "chunks": 0,
+      "stableRock": true,
+      "stableGround": true,
+      "formats": [
+        {
+          "key": "campfire-flames",
+          "material": 22,
+          "storage": true,
+          "capacity": 256
+        },
+        {
+          "key": "furniture",
+          "material": 20,
+          "storage": true,
+          "capacity": 256
+        },
+        {
+          "key": "job-orders",
+          "material": 23,
+          "storage": true,
+          "capacity": 512
+        },
+        {
+          "key": "job-plans",
+          "material": 24,
+          "storage": true,
+          "capacity": 256
+        },
+        {
+          "key": "job-solids",
+          "material": 20,
+          "storage": true,
+          "capacity": 1024
+        }
+      ],
+      "growths": [
+        {
+          "key": "pile:7:7",
+          "prior": 256,
+          "next": 512
+        }
+      ],
+      "shadowPreparation": true,
+      "snapshots": {
+        "count": 64,
+        "p50": 5.5,
+        "p95": 13.5,
+        "p99": 17.600000001490116,
+        "max": 17.600000001490116
+      },
+      "longFrames": [],
+      "excavations": [
+        {
+          "at": 18563.40000000596,
+          "tick": 2203,
+          "mined": 100,
+          "dirty": 360
+        },
+        {
+          "at": 21729.40000000596,
+          "tick": 2395,
+          "mined": 100,
+          "dirty": 400
+        },
+        {
+          "at": 24890,
+          "tick": 2583,
+          "mined": 98,
+          "dirty": 356
+        },
+        {
+          "at": 25112.20000000298,
+          "tick": 2599,
+          "mined": 2,
+          "dirty": 8
+        },
+        {
+          "at": 28003.20000000298,
+          "tick": 2772,
+          "mined": 15,
+          "dirty": 60
+        },
+        {
+          "at": 28262,
+          "tick": 2787,
+          "mined": 59,
+          "dirty": 232
+        },
+        {
+          "at": 28506.80000000447,
+          "tick": 2802,
+          "mined": 10,
+          "dirty": 40
+        },
+        {
+          "at": 28756.90000000596,
+          "tick": 2817,
+          "mined": 3,
+          "dirty": 8
+        },
+        {
+          "at": 29005.20000000298,
+          "tick": 2832,
+          "mined": 7,
+          "dirty": 28
+        },
+        {
+          "at": 29455.60000000149,
+          "tick": 2859,
+          "mined": 2,
+          "dirty": 8
+        },
+        {
+          "at": 29758.20000000298,
+          "tick": 2874,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 30023.30000000447,
+          "tick": 2892,
+          "mined": 2,
+          "dirty": 8
+        },
+        {
+          "at": 30274.10000000149,
+          "tick": 2907,
+          "mined": 1,
+          "dirty": 4
+        }
+      ],
+      "slowFrames": [
+        {
+          "at": 18585.70000000298,
+          "cpu": 5.700000002980232,
+          "interval": 23.900000000001455,
+          "calls": 184
+        },
+        {
+          "at": 21477.30000000447,
+          "cpu": 6.399999998509884,
+          "interval": 24.099999999998545,
+          "calls": 169
+        },
+        {
+          "at": 29471.80000000447,
+          "cpu": 5,
+          "interval": 20.100000000002183,
+          "calls": 156
+        },
+        {
+          "at": 29782.20000000298,
+          "cpu": 5.399999998509884,
+          "interval": 23.900000000001455,
+          "calls": 155
+        },
+        {
+          "at": 30054.10000000149,
+          "cpu": 5.100000001490116,
+          "interval": 29.900000000001455,
+          "calls": 156
+        },
+        {
+          "at": 30087.10000000149,
+          "cpu": 6.200000002980232,
+          "interval": 30,
+          "calls": 156
+        }
+      ],
+      "pipelines": [
+        {
+          "at": 30046,
+          "method": "createRenderPipeline",
+          "label": "renderPipeline_ShadowMaterial_30",
+          "primitive": {
+            "topology": "triangle-list",
+            "frontFace": "cw",
+            "cullMode": "back"
+          },
+          "depthStencil": {
+            "format": "depth24plus",
+            "depthWriteEnabled": true,
+            "depthCompare": "less-equal"
+          },
+          "targets": [
+            {
+              "format": "rgba8unorm",
+              "writeMask": 15
+            }
+          ],
+          "buffers": [
+            {
+              "arrayStride": 12,
+              "attributes": [
+                {
+                  "shaderLocation": 0,
+                  "offset": 0,
+                  "format": "float32x3"
+                }
+              ],
+              "stepMode": "vertex"
+            },
+            {
+              "arrayStride": 12,
+              "attributes": [
+                {
+                  "shaderLocation": 1,
+                  "offset": 0,
+                  "format": "float32x3"
+                }
+              ],
+              "stepMode": "vertex"
+            },
+            {
+              "arrayStride": 12,
+              "attributes": [
+                {
+                  "shaderLocation": 2,
+                  "offset": 0,
+                  "format": "float32x3"
+                }
+              ],
+              "stepMode": "instance"
+            }
+          ],
+          "vertexArrays": [
+            "value : array< mat4x4<f32> >"
+          ],
+          "object": {
+            "name": "pile:7:7",
+            "type": "Mesh",
+            "count": 300,
+            "capacity": 512,
+            "material": 30
+          }
+        },
+        {
+          "at": 30052.20000000298,
+          "method": "createRenderPipeline",
+          "label": "renderPipeline_MeshStandardNodeMaterial_20",
+          "primitive": {
+            "topology": "triangle-list",
+            "frontFace": "ccw",
+            "cullMode": "back"
+          },
+          "depthStencil": {
+            "format": "depth24plus",
+            "depthWriteEnabled": true,
+            "depthCompare": "less-equal"
+          },
+          "targets": [
+            {
+              "format": "rgba16float",
+              "writeMask": 15
+            }
+          ],
+          "buffers": [
+            {
+              "arrayStride": 12,
+              "attributes": [
+                {
+                  "shaderLocation": 0,
+                  "offset": 0,
+                  "format": "float32x3"
+                }
+              ],
+              "stepMode": "vertex"
+            },
+            {
+              "arrayStride": 12,
+              "attributes": [
+                {
+                  "shaderLocation": 1,
+                  "offset": 0,
+                  "format": "float32x3"
+                }
+              ],
+              "stepMode": "vertex"
+            },
+            {
+              "arrayStride": 12,
+              "attributes": [
+                {
+                  "shaderLocation": 2,
+                  "offset": 0,
+                  "format": "float32x3"
+                }
+              ],
+              "stepMode": "instance"
+            }
+          ],
+          "vertexArrays": [
+            "value : array< mat4x4<f32> >"
+          ],
+          "object": {
+            "name": "pile:7:7",
+            "type": "Mesh",
+            "count": 300,
+            "capacity": 512,
+            "material": 20
+          }
+        }
+      ],
+      "preparations": [
+        11592.60000000149,
+        218
+      ]
+    }
+  ],
+  "error": "Error: {\"count\":100,\"adapter\":{\"vendor\":\"amd\",\"architecture\":\"rdna-1\",\"description\":\"\"},\"errors\":[],\"frames\":{\"count\":2459,\"p50\":6,\"p95\":6.100000000002183,\"p99\":12,\"max\":30},\"frameCpu\":{\"count\":2460,\"p50\":4.700000002980232,\"p95\":6,\"p99\":7.399999998509884,\"max\":11.5},\"adoptions\":{\"count\":64,\"p50\":1.7999999970197678,\"p95\":10,\"p99\":14.5,\"max\":14.5},\"drawCalls\":{\"count\":2460,\"p50\":164,\"p95\":179,\"p99\":184,\"max\":185},\"excavationFrames\":{\"count\":304,\"p50\":6,\"p95\":11.900000000001455,\"p99\":23.900000000001455,\"max\":30},\"mined\":400,\"steelUnits\":16000,\"chunks\":0,\"stableRock\":true,\"stableGround\":true,\"formats\":[{\"key\":\"campfire-flames\",\"material\":22,\"storage\":true,\"capacity\":256},{\"key\":\"furniture\",\"material\":20,\"storage\":true,\"capacity\":256},{\"key\":\"job-orders\",\"material\":23,\"storage\":true,\"capacity\":512},{\"key\":\"job-plans\",\"material\":24,\"storage\":true,\"capacity\":256},{\"key\":\"job-solids\",\"material\":20,\"storage\":true,\"capacity\":1024}],\"growths\":[{\"key\":\"pile:7:7\",\"prior\":256,\"next\":512}],\"shadowPreparation\":true,\"snapshots\":{\"count\":64,\"p50\":5.5,\"p95\":13.5,\"p99\":17.600000001490116,\"max\":17.600000001490116},\"longFrames\":[],\"excavations\":[{\"at\":18563.40000000596,\"tick\":2203,\"mined\":100,\"dirty\":360},{\"at\":21729.40000000596,\"tick\":2395,\"mined\":100,\"dirty\":400},{\"at\":24890,\"tick\":2583,\"mined\":98,\"dirty\":356},{\"at\":25112.20000000298,\"tick\":2599,\"mined\":2,\"dirty\":8},{\"at\":28003.20000000298,\"tick\":2772,\"mined\":15,\"dirty\":60},{\"at\":28262,\"tick\":2787,\"mined\":59,\"dirty\":232},{\"at\":28506.80000000447,\"tick\":2802,\"mined\":10,\"dirty\":40},{\"at\":28756.90000000596,\"tick\":2817,\"mined\":3,\"dirty\":8},{\"at\":29005.20000000298,\"tick\":2832,\"mined\":7,\"dirty\":28},{\"at\":29455.60000000149,\"tick\":2859,\"mined\":2,\"dirty\":8},{\"at\":29758.20000000298,\"tick\":2874,\"mined\":1,\"dirty\":4},{\"at\":30023.30000000447,\"tick\":2892,\"mined\":2,\"dirty\":8},{\"at\":30274.10000000149,\"tick\":2907,\"mined\":1,\"dirty\":4}],\"slowFrames\":[{\"at\":18585.70000000298,\"cpu\":5.700000002980232,\"interval\":23.900000000001455,\"calls\":184},{\"at\":21477.30000000447,\"cpu\":6.399999998509884,\"interval\":24.099999999998545,\"calls\":169},{\"at\":29471.80000000447,\"cpu\":5,\"interval\":20.100000000002183,\"calls\":156},{\"at\":29782.20000000298,\"cpu\":5.399999998509884,\"interval\":23.900000000001455,\"calls\":155},{\"at\":30054.10000000149,\"cpu\":5.100000001490116,\"interval\":29.900000000001455,\"calls\":156},{\"at\":30087.10000000149,\"cpu\":6.200000002980232,\"interval\":30,\"calls\":156}],\"pipelines\":[{\"at\":30046,\"method\":\"createRenderPipeline\",\"label\":\"renderPipeline_ShadowMaterial_30\",\"primitive\":{\"topology\":\"triangle-list\",\"frontFace\":\"cw\",\"cullMode\":\"back\"},\"depthStencil\":{\"format\":\"depth24plus\",\"depthWriteEnabled\":true,\"depthCompare\":\"less-equal\"},\"targets\":[{\"format\":\"rgba8unorm\",\"writeMask\":15}],\"buffers\":[{\"arrayStride\":12,\"attributes\":[{\"shaderLocation\":0,\"offset\":0,\"format\":\"float32x3\"}],\"stepMode\":\"vertex\"},{\"arrayStride\":12,\"attributes\":[{\"shaderLocation\":1,\"offset\":0,\"format\":\"float32x3\"}],\"stepMode\":\"vertex\"},{\"arrayStride\":12,\"attributes\":[{\"shaderLocation\":2,\"offset\":0,\"format\":\"float32x3\"}],\"stepMode\":\"instance\"}],\"vertexArrays\":[\"value : array< mat4x4<f32> >\"],\"object\":{\"name\":\"pile:7:7\",\"type\":\"Mesh\",\"count\":300,\"capacity\":512,\"material\":30}},{\"at\":30052.20000000298,\"method\":\"createRenderPipeline\",\"label\":\"renderPipeline_MeshStandardNodeMaterial_20\",\"primitive\":{\"topology\":\"triangle-list\",\"frontFace\":\"ccw\",\"cullMode\":\"back\"},\"depthStencil\":{\"format\":\"depth24plus\",\"depthWriteEnabled\":true,\"depthCompare\":\"less-equal\"},\"targets\":[{\"format\":\"rgba16float\",\"writeMask\":15}],\"buffers\":[{\"arrayStride\":12,\"attributes\":[{\"shaderLocation\":0,\"offset\":0,\"format\":\"float32x3\"}],\"stepMode\":\"vertex\"},{\"arrayStride\":12,\"attributes\":[{\"shaderLocation\":1,\"offset\":0,\"format\":\"float32x3\"}],\"stepMode\":\"vertex\"},{\"arrayStride\":12,\"attributes\":[{\"shaderLocation\":2,\"offset\":0,\"format\":\"float32x3\"}],\"stepMode\":\"instance\"}],\"vertexArrays\":[\"value : array< mat4x4<f32> >\"],\"object\":{\"name\":\"pile:7:7\",\"type\":\"Mesh\",\"count\":300,\"capacity\":512,\"material\":20}}],\"preparations\":[11592.60000000149,218]}"
+}

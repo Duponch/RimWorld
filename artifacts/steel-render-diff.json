@@ -1,0 +1,386 @@
+{
+  "date": "2026-09-15T01:23:22.499Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "ore": "steel",
+  "protocol": "Native Chromium WebGPU, actual worker 6x, natural 250² with cleared mining patch; 3/30/100 miners × 4 sandstone or steel walls and 1 tree. 90 warmup frames; no full-world serialization during timed frames. Ground/rock buffer identities checked after excavation.",
+  "phases": [
+    {
+      "count": 100,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "description": ""
+      },
+      "errors": [],
+      "frames": {
+        "count": 2505,
+        "p50": 6,
+        "p95": 6.100000000002183,
+        "p99": 12,
+        "max": 36.10000000000218
+      },
+      "frameCpu": {
+        "count": 2506,
+        "p50": 4.199999995529652,
+        "p95": 5.299999997019768,
+        "p99": 6.0999999940395355,
+        "max": 18.299999997019768
+      },
+      "adoptions": {
+        "count": 65,
+        "p50": 1.7999999970197678,
+        "p95": 10.700000002980232,
+        "p99": 14,
+        "max": 14
+      },
+      "drawCalls": {
+        "count": 2506,
+        "p50": 164,
+        "p95": 179,
+        "p99": 184,
+        "max": 185
+      },
+      "excavationFrames": {
+        "count": 382,
+        "p50": 6,
+        "p95": 6.100000000002183,
+        "p99": 18,
+        "max": 36.10000000000218
+      },
+      "mined": 400,
+      "steelUnits": 16000,
+      "chunks": 0,
+      "stableRock": true,
+      "stableGround": true,
+      "formats": [
+        {
+          "key": "campfire-flames",
+          "material": 22,
+          "storage": false,
+          "capacity": 256
+        },
+        {
+          "key": "furniture",
+          "material": 20,
+          "storage": false,
+          "capacity": 256
+        },
+        {
+          "key": "job-orders",
+          "material": 23,
+          "storage": false,
+          "capacity": 512
+        },
+        {
+          "key": "job-plans",
+          "material": 24,
+          "storage": false,
+          "capacity": 256
+        },
+        {
+          "key": "job-solids",
+          "material": 20,
+          "storage": false,
+          "capacity": 1024
+        }
+      ],
+      "growths": [
+        {
+          "key": "pile:7:7",
+          "prior": 256,
+          "next": 512
+        }
+      ],
+      "shadowPreparation": true,
+      "snapshots": {
+        "count": 65,
+        "p50": 5.5,
+        "p95": 13.800000004470348,
+        "p99": 17,
+        "max": 17
+      },
+      "longFrames": [],
+      "excavations": [
+        {
+          "at": 18603.70000000298,
+          "tick": 2200,
+          "mined": 88,
+          "dirty": 316
+        },
+        {
+          "at": 18843.60000000149,
+          "tick": 2217,
+          "mined": 12,
+          "dirty": 44
+        },
+        {
+          "at": 21752.89999999851,
+          "tick": 2389,
+          "mined": 80,
+          "dirty": 320
+        },
+        {
+          "at": 21998.20000000298,
+          "tick": 2407,
+          "mined": 20,
+          "dirty": 80
+        },
+        {
+          "at": 24819.20000000298,
+          "tick": 2574,
+          "mined": 36,
+          "dirty": 128
+        },
+        {
+          "at": 25040.5,
+          "tick": 2589,
+          "mined": 63,
+          "dirty": 232
+        },
+        {
+          "at": 25293.60000000149,
+          "tick": 2605,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 27956.20000000298,
+          "tick": 2764,
+          "mined": 4,
+          "dirty": 16
+        },
+        {
+          "at": 28244.29999999702,
+          "tick": 2779,
+          "mined": 51,
+          "dirty": 204
+        },
+        {
+          "at": 28508.89999999851,
+          "tick": 2797,
+          "mined": 28,
+          "dirty": 100
+        },
+        {
+          "at": 28743.5,
+          "tick": 2811,
+          "mined": 4,
+          "dirty": 12
+        },
+        {
+          "at": 28994.79999999702,
+          "tick": 2827,
+          "mined": 7,
+          "dirty": 28
+        },
+        {
+          "at": 29717,
+          "tick": 2869,
+          "mined": 3,
+          "dirty": 12
+        },
+        {
+          "at": 29985,
+          "tick": 2884,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 30207.89999999851,
+          "tick": 2898,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 30466,
+          "tick": 2914,
+          "mined": 1,
+          "dirty": 4
+        }
+      ],
+      "slowFrames": [
+        {
+          "at": 29739.20000000298,
+          "cpu": 4.899999998509884,
+          "interval": 24,
+          "calls": 156
+        },
+        {
+          "at": 30023.70000000298,
+          "cpu": 4.299999997019768,
+          "interval": 36.10000000000218,
+          "calls": 156
+        },
+        {
+          "at": 30051,
+          "cpu": 7,
+          "interval": 24,
+          "calls": 156
+        }
+      ],
+      "pipelines": [
+        {
+          "at": 30007.39999999851,
+          "method": "createRenderPipeline",
+          "label": "renderPipeline_ShadowMaterial_30",
+          "primitive": {
+            "topology": "triangle-list",
+            "frontFace": "cw",
+            "cullMode": "back"
+          },
+          "depthStencil": {
+            "format": "depth24plus",
+            "depthWriteEnabled": true,
+            "depthCompare": "less-equal"
+          },
+          "targets": [
+            {
+              "format": "rgba8unorm",
+              "writeMask": 15
+            }
+          ],
+          "buffers": [
+            {
+              "arrayStride": 12,
+              "attributes": [
+                {
+                  "shaderLocation": 0,
+                  "offset": 0,
+                  "format": "float32x3"
+                }
+              ],
+              "stepMode": "vertex"
+            },
+            {
+              "arrayStride": 12,
+              "attributes": [
+                {
+                  "shaderLocation": 1,
+                  "offset": 0,
+                  "format": "float32x3"
+                }
+              ],
+              "stepMode": "vertex"
+            },
+            {
+              "arrayStride": 12,
+              "attributes": [
+                {
+                  "shaderLocation": 2,
+                  "offset": 0,
+                  "format": "float32x3"
+                }
+              ],
+              "stepMode": "instance"
+            }
+          ],
+          "vertexArrays": [
+            "value : array< mat4x4<f32>, 512 >"
+          ],
+          "object": {
+            "name": "pile:7:7",
+            "type": "Mesh",
+            "count": 292,
+            "capacity": 512,
+            "material": 30
+          },
+          "vertexDifference": {
+            "at": 95,
+            "old": "// Three.js r186 - Node System\n\n// directives\n\n\n// structs\n\n\n// uniforms\n\nstruct NodeBuffer_265102Struct {\n\tvalue : array< mat4x4<f32>, 1010 >\n};\n@binding( 3 ) @group( 1 )\nvar<uniform> NodeBuffer_265102 : NodeBuffer_265102Struct;\n\nstruct renderStruct {\n\tcameraProjectionMatrix : mat4x4<f32>,\n\tcameraViewMatrix : mat4x4<f32>,\n\tnodeUniform14 : vec3<f32>,\n\tnodeUniform16 : vec3<f32>,\n\tnodeUniform17 : vec3<f32>,\n\tnodeUniform15 : vec3<f32>,\n\tnodeUniform12 : vec3<f32>,\n\tnodeUniform13 : vec3<f32>\n};\n",
+            "next": "// Three.js r186 - Node System\n\n// directives\n\n\n// structs\n\n\n// uniforms\n\nstruct NodeBuffer_265727Struct {\n\tvalue : array< mat4x4<f32>, 512 >\n};\n@binding( 1 ) @group( 1 )\nvar<uniform> NodeBuffer_265727 : NodeBuffer_265727Struct;\n\nstruct renderStruct {\n\tcameraProjectionMatrix : mat4x4<f32>,\n\tcameraViewMatrix : mat4x4<f32>\n};\n@binding( 0 ) @group( 0 )\nvar<uniform> render : renderStruct;\n\nstruct objectStruct {\n\tnodeUniform2 : f32,\n\tnodeUniform5 : mat4x4<f32>\n};\n@binding( 0 ) @group( 1 )\nvar<un"
+          },
+          "fragmentDifference": {
+            "at": 882,
+            "old": " vec4<f32>( 0.0 ) );\n\tOutput = nodeVar0;\n\n\t// result\n\n\toutput.color = nodeVar0;\n\n\treturn output;\n\n}\n",
+            "next": " vec4<f32>( 0.0 ) );\n\tOutput = nodeVar0;\n\n\t// result\n\n\toutput.color = nodeVar0;\n\n\treturn output;\n\n}\n"
+          }
+        },
+        {
+          "at": 30016.70000000298,
+          "method": "createRenderPipeline",
+          "label": "renderPipeline_MeshStandardNodeMaterial_20",
+          "primitive": {
+            "topology": "triangle-list",
+            "frontFace": "ccw",
+            "cullMode": "back"
+          },
+          "depthStencil": {
+            "format": "depth24plus",
+            "depthWriteEnabled": true,
+            "depthCompare": "less-equal"
+          },
+          "targets": [
+            {
+              "format": "rgba16float",
+              "writeMask": 15
+            }
+          ],
+          "buffers": [
+            {
+              "arrayStride": 12,
+              "attributes": [
+                {
+                  "shaderLocation": 0,
+                  "offset": 0,
+                  "format": "float32x3"
+                }
+              ],
+              "stepMode": "vertex"
+            },
+            {
+              "arrayStride": 12,
+              "attributes": [
+                {
+                  "shaderLocation": 1,
+                  "offset": 0,
+                  "format": "float32x3"
+                }
+              ],
+              "stepMode": "vertex"
+            },
+            {
+              "arrayStride": 12,
+              "attributes": [
+                {
+                  "shaderLocation": 2,
+                  "offset": 0,
+                  "format": "float32x3"
+                }
+              ],
+              "stepMode": "instance"
+            }
+          ],
+          "vertexArrays": [
+            "value : array< mat4x4<f32>, 512 >"
+          ],
+          "object": {
+            "name": "pile:7:7",
+            "type": "Mesh",
+            "count": 292,
+            "capacity": 512,
+            "material": 20
+          },
+          "vertexDifference": {
+            "at": 95,
+            "old": "// Three.js r186 - Node System\n\n// directives\n\n\n// structs\n\n\n// uniforms\n\nstruct NodeBuffer_265102Struct {\n\tvalue : array< mat4x4<f32>, 1010 >\n};\n@binding( 3 ) @group( 1 )\nvar<uniform> NodeBuffer_265102 : NodeBuffer_265102Struct;\n\nstruct renderStruct {\n\tcameraProjectionMatrix : mat4x4<f32>,\n\tcameraViewMatrix : mat4x4<f32>,\n\tnodeUniform14 : vec3<f32>,\n\tnodeUniform16 : vec3<f32>,\n\tnodeUniform17 : vec3<f32>,\n\tnodeUniform15 : vec3<f32>,\n\tnodeUniform12 : vec3<f32>,\n\tnodeUniform13 : vec3<f32>\n};\n",
+            "next": "// Three.js r186 - Node System\n\n// directives\n\n\n// structs\n\n\n// uniforms\n\nstruct NodeBuffer_265826Struct {\n\tvalue : array< mat4x4<f32>, 512 >\n};\n@binding( 5 ) @group( 1 )\nvar<uniform> NodeBuffer_265826 : NodeBuffer_265826Struct;\n\nstruct renderStruct {\n\tcameraProjectionMatrix : mat4x4<f32>,\n\tcameraViewMatrix : mat4x4<f32>,\n\tnodeUniform14 : vec3<f32>,\n\tnodeUniform23 : vec3<f32>,\n\tnodeUniform24 : vec3<f32>,\n\tnodeUniform22 : vec3<f32>,\n\tnodeUniform12 : vec3<f32>,\n\tnodeUniform13 : vec3<f32>,\n\tno"
+          },
+          "fragmentDifference": {
+            "at": 20135,
+            "old": "4<f32>( 0.0 ) );\n\tOutput = nodeVar154;\n\n\t// result\n\n\toutput.color = nodeVar154;\n\n\treturn output;\n\n}\n",
+            "next": "4<f32>( 0.0 ) );\n\tOutput = nodeVar154;\n\n\t// result\n\n\toutput.color = nodeVar154;\n\n\treturn output;\n\n}\n"
+          }
+        }
+      ],
+      "preparations": [
+        11789.30000000447,
+        199.10000000149012
+      ]
+    }
+  ],
+  "error": "Error: {\"count\":100,\"adapter\":{\"vendor\":\"amd\",\"architecture\":\"rdna-1\",\"description\":\"\"},\"errors\":[],\"frames\":{\"count\":2505,\"p50\":6,\"p95\":6.100000000002183,\"p99\":12,\"max\":36.10000000000218},\"frameCpu\":{\"count\":2506,\"p50\":4.199999995529652,\"p95\":5.299999997019768,\"p99\":6.0999999940395355,\"max\":18.299999997019768},\"adoptions\":{\"count\":65,\"p50\":1.7999999970197678,\"p95\":10.700000002980232,\"p99\":14,\"max\":14},\"drawCalls\":{\"count\":2506,\"p50\":164,\"p95\":179,\"p99\":184,\"max\":185},\"excavationFrames\":{\"count\":382,\"p50\":6,\"p95\":6.100000000002183,\"p99\":18,\"max\":36.10000000000218},\"mined\":400,\"steelUnits\":16000,\"chunks\":0,\"stableRock\":true,\"stableGround\":true,\"formats\":[{\"key\":\"campfire-flames\",\"material\":22,\"storage\":false,\"capacity\":256},{\"key\":\"furniture\",\"material\":20,\"storage\":false,\"capacity\":256},{\"key\":\"job-orders\",\"material\":23,\"storage\":false,\"capacity\":512},{\"key\":\"job-plans\",\"material\":24,\"storage\":false,\"capacity\":256},{\"key\":\"job-solids\",\"material\":20,\"storage\":false,\"capacity\":1024}],\"growths\":[{\"key\":\"pile:7:7\",\"prior\":256,\"next\":512}],\"shadowPreparation\":true,\"snapshots\":{\"count\":65,\"p50\":5.5,\"p95\":13.800000004470348,\"p99\":17,\"max\":17},\"longFrames\":[],\"excavations\":[{\"at\":18603.70000000298,\"tick\":2200,\"mined\":88,\"dirty\":316},{\"at\":18843.60000000149,\"tick\":2217,\"mined\":12,\"dirty\":44},{\"at\":21752.89999999851,\"tick\":2389,\"mined\":80,\"dirty\":320},{\"at\":21998.20000000298,\"tick\":2407,\"mined\":20,\"dirty\":80},{\"at\":24819.20000000298,\"tick\":2574,\"mined\":36,\"dirty\":128},{\"at\":25040.5,\"tick\":2589,\"mined\":63,\"dirty\":232},{\"at\":25293.60000000149,\"tick\":2605,\"mined\":1,\"dirty\":4},{\"at\":27956.20000000298,\"tick\":2764,\"mined\":4,\"dirty\":16},{\"at\":28244.29999999702,\"tick\":2779,\"mined\":51,\"dirty\":204},{\"at\":28508.89999999851,\"tick\":2797,\"mined\":28,\"dirty\":100},{\"at\":28743.5,\"tick\":2811,\"mined\":4,\"dirty\":12},{\"at\":28994.79999999702,\"tick\":2827,\"mined\":7,\"dirty\":28},{\"at\":29717,\"tick\":2869,\"mined\":3,\"dirty\":12},{\"at\":29985,\"tick\":2884,\"mined\":1,\"dirty\":4},{\"at\":30207.89999999851,\"tick\":2898,\"mined\":1,\"dirty\":4},{\"at\":30466,\"tick\":2914,\"mined\":1,\"dirty\":4}],\"slowFrames\":[{\"at\":29739.20000000298,\"cpu\":4.899999998509884,\"interval\":24,\"calls\":156},{\"at\":30023.70000000298,\"cpu\":4.299999997019768,\"interval\":36.10000000000218,\"calls\":156},{\"at\":30051,\"cpu\":7,\"interval\":24,\"calls\":156}],\"pipelines\":[{\"at\":30007.39999999851,\"method\":\"createRenderPipeline\",\"label\":\"renderPipeline_ShadowMaterial_30\",\"primitive\":{\"topology\":\"triangle-list\",\"frontFace\":\"cw\",\"cullMode\":\"back\"},\"depthStencil\":{\"format\":\"depth24plus\",\"depthWriteEnabled\":true,\"depthCompare\":\"less-equal\"},\"targets\":[{\"format\":\"rgba8unorm\",\"writeMask\":15}],\"buffers\":[{\"arrayStride\":12,\"attributes\":[{\"shaderLocation\":0,\"offset\":0,\"format\":\"float32x3\"}],\"stepMode\":\"vertex\"},{\"arrayStride\":12,\"attributes\":[{\"shaderLocation\":1,\"offset\":0,\"format\":\"float32x3\"}],\"stepMode\":\"vertex\"},{\"arrayStride\":12,\"attributes\":[{\"shaderLocation\":2,\"offset\":0,\"format\":\"float32x3\"}],\"stepMode\":\"instance\"}],\"vertexArrays\":[\"value : array< mat4x4<f32>, 512 >\"],\"object\":{\"name\":\"pile:7:7\",\"type\":\"Mesh\",\"count\":292,\"capacity\":512,\"material\":30},\"vertexDifference\":{\"at\":95,\"old\":\"// Three.js r186 - Node System\\n\\n// directives\\n\\n\\n// structs\\n\\n\\n// uniforms\\n\\nstruct NodeBuffer_265102Struct {\\n\\tvalue : array< mat4x4<f32>, 1010 >\\n};\\n@binding( 3 ) @group( 1 )\\nvar<uniform> NodeBuffer_265102 : NodeBuffer_265102Struct;\\n\\nstruct renderStruct {\\n\\tcameraProjectionMatrix : mat4x4<f32>,\\n\\tcameraViewMatrix : mat4x4<f32>,\\n\\tnodeUniform14 : vec3<f32>,\\n\\tnodeUniform16 : vec3<f32>,\\n\\tnodeUniform17 : vec3<f32>,\\n\\tnodeUniform15 : vec3<f32>,\\n\\tnodeUniform12 : vec3<f32>,\\n\\tnodeUniform13 : vec3<f32>\\n};\\n\",\"next\":\"// Three.js r186 - Node System\\n\\n// directives\\n\\n\\n// structs\\n\\n\\n// uniforms\\n\\nstruct NodeBuffer_265727Struct {\\n\\tvalue : array< mat4x4<f32>, 512 >\\n};\\n@binding( 1 ) @group( 1 )\\nvar<uniform> NodeBuffer_265727 : NodeBuffer_265727Struct;\\n\\nstruct renderStruct {\\n\\tcameraProjectionMatrix : mat4x4<f32>,\\n\\tcameraViewMatrix : mat4x4<f32>\\n};\\n@binding( 0 ) @group( 0 )\\nvar<uniform> render : renderStruct;\\n\\nstruct objectStruct {\\n\\tnodeUniform2 : f32,\\n\\tnodeUniform5 : mat4x4<f32>\\n};\\n@binding( 0 ) @group( 1 )\\nvar<un\"},\"fragmentDifference\":{\"at\":882,\"old\":\" vec4<f32>( 0.0 ) );\\n\\tOutput = nodeVar0;\\n\\n\\t// result\\n\\n\\toutput.color = nodeVar0;\\n\\n\\treturn output;\\n\\n}\\n\",\"next\":\" vec4<f32>( 0.0 ) );\\n\\tOutput = nodeVar0;\\n\\n\\t// result\\n\\n\\toutput.color = nodeVar0;\\n\\n\\treturn output;\\n\\n}\\n\"}},{\"at\":30016.70000000298,\"method\":\"createRenderPipeline\",\"label\":\"renderPipeline_MeshStandardNodeMaterial_20\",\"primitive\":{\"topology\":\"triangle-list\",\"frontFace\":\"ccw\",\"cullMode\":\"back\"},\"depthStencil\":{\"format\":\"depth24plus\",\"depthWriteEnabled\":true,\"depthCompare\":\"less-equal\"},\"targets\":[{\"format\":\"rgba16float\",\"writeMask\":15}],\"buffers\":[{\"arrayStride\":12,\"attributes\":[{\"shaderLocation\":0,\"offset\":0,\"format\":\"float32x3\"}],\"stepMode\":\"vertex\"},{\"arrayStride\":12,\"attributes\":[{\"shaderLocation\":1,\"offset\":0,\"format\":\"float32x3\"}],\"stepMode\":\"vertex\"},{\"arrayStride\":12,\"attributes\":[{\"shaderLocation\":2,\"offset\":0,\"format\":\"float32x3\"}],\"stepMode\":\"instance\"}],\"vertexArrays\":[\"value : array< mat4x4<f32>, 512 >\"],\"object\":{\"name\":\"pile:7:7\",\"type\":\"Mesh\",\"count\":292,\"capacity\":512,\"material\":20},\"vertexDifference\":{\"at\":95,\"old\":\"// Three.js r186 - Node System\\n\\n// directives\\n\\n\\n// structs\\n\\n\\n// uniforms\\n\\nstruct NodeBuffer_265102Struct {\\n\\tvalue : array< mat4x4<f32>, 1010 >\\n};\\n@binding( 3 ) @group( 1 )\\nvar<uniform> NodeBuffer_265102 : NodeBuffer_265102Struct;\\n\\nstruct renderStruct {\\n\\tcameraProjectionMatrix : mat4x4<f32>,\\n\\tcameraViewMatrix : mat4x4<f32>,\\n\\tnodeUniform14 : vec3<f32>,\\n\\tnodeUniform16 : vec3<f32>,\\n\\tnodeUniform17 : vec3<f32>,\\n\\tnodeUniform15 : vec3<f32>,\\n\\tnodeUniform12 : vec3<f32>,\\n\\tnodeUniform13 : vec3<f32>\\n};\\n\",\"next\":\"// Three.js r186 - Node System\\n\\n// directives\\n\\n\\n// structs\\n\\n\\n// uniforms\\n\\nstruct NodeBuffer_265826Struct {\\n\\tvalue : array< mat4x4<f32>, 512 >\\n};\\n@binding( 5 ) @group( 1 )\\nvar<uniform> NodeBuffer_265826 : NodeBuffer_265826Struct;\\n\\nstruct renderStruct {\\n\\tcameraProjectionMatrix : mat4x4<f32>,\\n\\tcameraViewMatrix : mat4x4<f32>,\\n\\tnodeUniform14 : vec3<f32>,\\n\\tnodeUniform23 : vec3<f32>,\\n\\tnodeUniform24 : vec3<f32>,\\n\\tnodeUniform22 : vec3<f32>,\\n\\tnodeUniform12 : vec3<f32>,\\n\\tnodeUniform13 : vec3<f32>,\\n\\tno\"},\"fragmentDifference\":{\"at\":20135,\"old\":\"4<f32>( 0.0 ) );\\n\\tOutput = nodeVar154;\\n\\n\\t// result\\n\\n\\toutput.color = nodeVar154;\\n\\n\\treturn output;\\n\\n}\\n\",\"next\":\"4<f32>( 0.0 ) );\\n\\tOutput = nodeVar154;\\n\\n\\t// result\\n\\n\\toutput.color = nodeVar154;\\n\\n\\treturn output;\\n\\n}\\n\"}}],\"preparations\":[11789.30000000447,199.10000000149012]}"
+}

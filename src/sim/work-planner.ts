@@ -167,7 +167,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   if (Number.isFinite(constructionHaulPriority(pawn)) && pawn.hunger > 20 && (!best || best.priority >= constructionHaulPriority(pawn))) {
     const zonesByCell = new Map(world.stockpiles.map(zone => [cellIndex(world, zone.x, zone.z), zone]));
     const sources = world.piles.filter(pile => automaticallyHaulable(pile) && pile.owner.type === 'ground' && pile.quantity > (sourceReserved.get(pile.id) ?? 0));
-    const destinations: { destination: HaulDestination; target: Cell & { kind?: JobKind }; priority: number; workPriority:number; wood: number; food: number; chunk?:number; reachable: boolean }[] = [];
+    const destinations: { destination: HaulDestination; target: Cell & { kind?: JobKind }; priority: number; workPriority:number; wood: number; food: number; chunk?:number; steel?:number; reachable: boolean }[] = [];
     for (const job of world.jobs) {
       const capacity = JOB_WOOD_COST[job.kind] - (delivered.get(job.id) ?? 0) - (jobReserved.get(job.id) ?? 0);
       if (capacity > 0 && constructionSiteFree(world,job,pawn.id,constructionObstacles.get(job.id))) destinations.push({ destination: { type: 'job', jobId: job.id, forConstruction:asBuilder(pawn) }, target: job, priority: 5, workPriority:constructionHaulPriority(pawn), wood: capacity, food: 0, reachable: canReach(world, job, reachable, false) });
@@ -175,7 +175,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
     if(pawn.priorities.haul>0)for (const fire of fires) destinations.push({destination:{type:'fuel',structureId:fire.id},target:fire,priority:5,workPriority:pawn.priorities.haul,wood:fuelCapacity(world,fire.id),food:0,reachable:canReach(world,fire,reachable,true)});
     if(pawn.priorities.haul>0)for (const zone of world.stockpiles) {
       const capacity = zone.capacity - (ground.get(cellIndex(world, zone.x, zone.z)) ?? 0) - (zoneReserved.get(zone.id) ?? 0);
-      if (capacity > 0 && (zone.filters.wood || zone.filters.food || zone.filters.chunk)) destinations.push({ destination: { type: 'stockpile', stockpileId: zone.id }, target: zone, priority: zone.priority, workPriority:pawn.priorities.haul, wood: zone.filters.wood ? capacity : 0, food: zone.filters.food ? capacity : 0, chunk: zone.filters.chunk ? 1 : 0, reachable: canReach(world, zone, reachable, true) });
+      if (capacity > 0 && (zone.filters.wood || zone.filters.food || zone.filters.chunk || zone.filters.steel)) destinations.push({ destination: { type: 'stockpile', stockpileId: zone.id }, target: zone, priority: zone.priority, workPriority:pawn.priorities.haul, wood: zone.filters.wood ? capacity : 0, food: zone.filters.food ? capacity : 0, chunk: zone.filters.chunk ? 1 : 0, steel: zone.filters.steel ? capacity : 0, reachable: canReach(world, zone, reachable, true) });
     }
     const total = sources.length * destinations.length;
     const count = Math.min(total, budget.pairs);

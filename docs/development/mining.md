@@ -26,6 +26,8 @@ Le delta de terrain transporte aussi les dégâts, y compris leur suppression ap
 
 ## Validation et suite
 
-Trois scénarios profonds de minage vérifient cinq roches, contact diagonal, annulation, dommages persistants, reprise au coup près, snapshots, ouverture progressive, produit typé, transport demandé, réservations, sol non cultivable et mouvement pondéré. Le pilote de colonie ouvre quatre cases après installation du camp et range les fragments obtenus ; les bilans bois/nourriture restent indépendants. Le parcours UI utilise les vrais outils, priorités, réserve et sauvegarde. Mesures CPU/snapshots et rendu avec 3/30/100 mineurs : voir [validation](validation.md).
+Quatre scénarios profonds de minage vérifient cinq roches, contact diagonal, annulation, dommages persistants, reprise au coup près, snapshots, ouverture progressive, produit typé, transport demandé, réservations, sol non cultivable et mouvement pondéré. Le pilote de colonie ouvre quatre cases après installation du camp et range les fragments obtenus ; les bilans bois/nourriture restent indépendants. Le parcours UI utilise les vrais outils, priorités, réserve et sauvegarde. Mesures CPU/snapshots et rendu avec 3/30/100 mineurs : voir [validation](validation.md).
 
-Restent : conversion des pierres décoratives historiques, taille des fragments, blocs et matériaux de construction, minerais, compétences/capacités/XP, dégâts externes, lissage, sous-sols variés, toits, effondrements et couverture de combat. La mécanique livrée ne ferme pas la famille « roches » ni G2.
+Restent : conversion des pierres décoratives historiques, taille des fragments, blocs et matériaux de construction, autres minerais que l’acier V29, compétences/capacités/XP, dégâts externes, lissage, sous-sols variés, toits, effondrements et couverture de combat. La mécanique livrée ne ferme pas la famille « roches » ni G2.
+
+V29 étend le même job à [l’acier compacté](steel.md) : le produit et les PV dépendent du gisement. Les règles de fragments ci-dessus concernent les murs de pierre sans minerai ; un gisement produit uniquement son acier.

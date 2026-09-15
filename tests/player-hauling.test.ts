@@ -74,7 +74,7 @@ test('waiting hauling survives migration/replay, releases vanished sources, reje
     const invalid=structuredClone(raw);mutate(invalid);expect(()=>deserializeWorld(JSON.stringify(invalid))).toThrow();expect(w).toEqual(raw);
   }
   rice.rot={progress:ROT_DAYS.rice*TICKS_PER_DAY-1,atTick:w.tick};tick(w);expect(w.spoiled.rice).toBe(20);expect(p.orders).toEqual({active:null,queue:[]});expect(w.stock.food).toBe(0);
-  const old=JSON.parse(serializeWorld(camp()));old.schemaVersion=17;for(const a of old.pawns)delete a.priorities.mine;delete old.deconstructed;delete old.packed;const migrated=deserializeWorld(JSON.stringify(old));expect(migrated).toEqual({...old,pawns:old.pawns.map((p:any)=>({...p,priorities:{...p.priorities,mine:2}})),schemaVersion:28,packed:[],deconstructed:{count:0,lostWood:0,fuelTicks:0}});
+  const old=JSON.parse(serializeWorld(camp()));old.schemaVersion=17;for(const a of old.pawns)delete a.priorities.mine;delete old.deconstructed;delete old.packed;const migrated=deserializeWorld(JSON.stringify(old));expect(migrated).toEqual({...old,pawns:old.pawns.map((p:any)=>({...p,priorities:{...p.priorities,mine:2}})),schemaVersion:29,packed:[],deconstructed:{count:0,lostWood:0,fuelTicks:0}});
 
   const blocked=camp(),actor=blocked.pawns[0]!;blocked.pawns=blocked.pawns.slice(0,1);storage(blocked,20,30);addGroundMaterial(blocked,'wood',20,{x:8,z:8},'wood');const wood=blocked.piles[0]!;
   applyCommand(blocked,{type:'order-haul',pawnId:actor.id,target:{type:'pile',pileId:wood.id},queue:false});applyCommand(blocked,{type:'order-haul',pawnId:actor.id,target:{type:'pile',pileId:wood.id},queue:true});

@@ -79,7 +79,7 @@ test('colonie matérielle : réserve filtrée, transport visible, trois couchage
   await page.getByLabel('Priorité collecte Ada', { exact: true }).selectOption('1');
   await page.getByLabel('Priorité construction Ada', { exact: true }).selectOption('3');
   await page.getByLabel('Priorité transport Ada', { exact: true }).selectOption('2');
-  await expect.poll(async () => (await world(page)).pawns[0].priorities).toEqual({ gather: 1, build: 3, haul: 2, grow: 2, cook: 2 });
+  await expect.poll(async () => (await world(page)).pawns[0].priorities).toEqual({ gather: 1, build: 3, haul: 2, grow: 2, cook: 2, mine: 2 });
   await tool(page, 'stockpile');
   await page.locator('#stockpile-food').uncheck();
   await page.locator('#stockpile-capacity').fill('10');
@@ -107,7 +107,7 @@ test('colonie matérielle : réserve filtrée, transport visible, trois couchage
   await page.locator('#save').click();
   await expect(page.getByRole('status')).toContainText('sauvegardée');
   const saved = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!) as World, saveKey);
-  expect(saved.schemaVersion).toBe(28);
+  expect(saved.schemaVersion).toBe(29);
   expect(saved.pawns.some(pawn => pawn.haul?.phase === 'deliver')).toBe(true);
   expect(JSON.stringify(saved)).toBe(JSON.stringify(duringHaul));
 
@@ -148,7 +148,7 @@ test('colonie matérielle : réserve filtrée, transport visible, trois couchage
   await page.locator('#selected-stockpile-wood').uncheck();
   await page.locator('#selected-stockpile-food').check();
   await page.locator('#update-stockpile').click();
-  await expect.poll(async () => (await world(page)).stockpiles.find(zone => zone.x === 14 && zone.z === 17)?.filters).toEqual({ wood: false, food: true });
+  await expect.poll(async () => (await world(page)).stockpiles.find(zone => zone.x === 14 && zone.z === 17)?.filters).toEqual({ wood: false, food: true, steel: true, chunk: false, furniture: true });
   await page.locator('#delete-stockpile').click();
   await expect.poll(async () => (await world(page)).stockpiles.length).toBe(1);
   await page.keyboard.press('Escape');

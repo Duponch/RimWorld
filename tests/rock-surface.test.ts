@@ -41,6 +41,13 @@ test('continuous faceted cells: shared seams, winding, local excavation/restorat
   expect(layer.stats.updatedCells).toBe(9);expect(Array.from(colors.array)).not.toEqual(oldColors);
   expect(Array.from(position.array)).toEqual(vertices);expect(Array.from(index!.array).slice(0,geometry.drawRange.count)).toEqual(original);
   expect(layer.mesh.geometry).toBe(geometry);expect(geometry.getAttribute('color')).toBe(colors);
+  const marbleColors=Array.from(colors.array),bytes=layer.stats.bufferBytes;
+  world.tiles=world.tiles.map((tile,i)=>i===15*32+15?{...tile,ore:'steel'}:tile);layer.update(world);
+  expect(layer.stats.updatedCells).toBe(9);expect(layer.stats.bufferBytes).toBe(bytes);
+  expect(Array.from(colors.array)).not.toEqual(marbleColors);expect(Array.from(position.array)).toEqual(vertices);
+  expect(layer.mesh.geometry).toBe(geometry);expect(geometry.index).toBe(index);
+  world.tiles=world.tiles.map((tile,i)=>i===15*32+15?{...tile,miningDamage:80}:tile);layer.update(world);
+  expect(layer.stats.updatedCells).toBe(0);
   world.tiles=world.tiles.map((tile,i)=>i===15*32+15?{terrain:'soil'}:tile);layer.update(world);
   expect(layer.stats.updatedCells).toBe(9);expect(layer.mesh.geometry).toBe(geometry);expect(geometry.index).toBe(index);expect(geometry.getAttribute('position')).toBe(position);
   expect(layer.stats.indexCount).toBe(original.length+42); // remove top, expose four neighbours

@@ -28,7 +28,8 @@ export function furnitureDelay(world:World,from:Cell,to:Cell):number {
     if(p.owner.x===to.x&&p.owner.z===to.z){objectDelay=Math.max(objectDelay,4.2);repeats=true;}
     if(p.owner.x===from.x&&p.owner.z===from.z)previousRepeats=true;
   }
-  return Math.max(repeats&&previousRepeats?0:objectDelay,world.tiles[to.z*world.width+to.x]?.terrain==='rough-stone'?.2:0);
+  const steelDelay=world.schemaVersion>=29&&world.piles.some(p=>p.kind==='steel'&&p.owner.type==='ground'&&p.owner.x===to.x&&p.owner.z===to.z)?1.4:0;
+  return Math.max(repeats&&previousRepeats?0:objectDelay,steelDelay,world.tiles[to.z*world.width+to.x]?.terrain==='rough-stone'?.2:0);
 }
 /** Captured once per synchronous search. No shared mutation or cross-tick cache. */
 export function navigationCosts(world:World):{costs:ReadonlyMap<number,number>|undefined;repeaters:ReadonlySet<number>;stops:ReadonlySet<number>;floors:ReadonlyMap<number,number>} {
@@ -46,5 +47,6 @@ export function navigationCosts(world:World):{costs:ReadonlyMap<number,number>|u
     for(const p of world.piles)if(p.kind==='chunk'&&p.owner.type==='ground'){const i=p.owner.z*world.width+p.owner.x;costs.set(i,Math.max(costs.get(i)??0,1400));repeaters.add(i);stops.add(i);}
     for(let i=0;i<world.tiles.length;i++)if(world.tiles[i]!.terrain==='rough-stone'){floors.set(i,67);costs.set(i,Math.max(costs.get(i)??0,67));}
   }
+  if(world.schemaVersion>=29)for(const p of world.piles)if(p.kind==='steel'&&p.owner.type==='ground'){const i=p.owner.z*world.width+p.owner.x;floors.set(i,Math.max(floors.get(i)??0,467));costs.set(i,Math.max(costs.get(i)??0,467));}
   return {costs:costs.size?costs:undefined,repeaters,stops,floors};
 }

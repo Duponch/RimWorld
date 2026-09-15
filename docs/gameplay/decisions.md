@@ -58,4 +58,8 @@ Cinq identités Core, sélection de deux ou trois types par site et régions con
 
 ## Minage V28
 
-Le [contrat](../development/mining.md) adopte contact, dégâts persistants, produit probabiliste et transport désigné. Le profil neutre utilise 100 ticks Core entre coups selon le miroir, malgré une ancienne page wiki indiquant 120 ; aucune compétence simulée n’est revendiquée. La roche historique reste sans type avec 500 PV provisoires. Les massifs actuels révèlent leur sol brut correspondant et sont sans toit ; minerais, couches de sol alternatives et effondrements restent des travaux explicites. Le dernier coup est différé si son produit ne peut être conservé. [Sources et certitude](../research/mining-reference.md).
+Le [contrat](../development/mining.md) adopte contact, dégâts persistants, produit probabiliste et transport désigné. Le profil neutre utilise 100 ticks Core entre coups selon le miroir, malgré une ancienne page wiki indiquant 120 ; aucune compétence simulée n’est revendiquée. La roche historique reste sans type avec 500 PV provisoires. Les massifs actuels révèlent leur sol brut correspondant et sont sans toit ; autres minerais que l’acier V29, couches de sol alternatives et effondrements restent des travaux explicites. Le dernier coup est différé si son produit ne peut être conservé. [Sources et certitude](../research/mining-reference.md).
+
+## Acier V29 et prérequis de la taille
+
+Gisements et produit de base sont adoptés, densité et sol encaissant adaptés au site local. Le portage garde sa calibration provisoire et le rendement son profil neutre. Les anciennes cartes ne reçoivent aucun minerai rétroactif. L’atelier demande de l’acier : extraction/stockage, puis recettes constructives mixtes, puis taille/blocs ; aucun matériau gratuit ne contourne la dépendance. [Recherche et degré de certitude](../research/steel-reference.md).

@@ -47,3 +47,5 @@ V26 ajoute la [logistique des paquets](furniture-logistics.md) : tâche entière
 V27 ajoute les [identités rocheuses](geology.md) facultatives, validées strictement et conservées par les snapshots. Aucun nouveau travail ni produit n’est ajouté dans ce lot.
 
 V28 ajoute le [minage physique](mining.md). La roche conserve les dégâts indépendamment de la réservation du job ; le dernier coup engage ensemble ouverture, tirage et fragment. Les fragments sont des piles `chunk` à un exemplaire, avec autorisation de rangement explicite. Le schéma 28 valide strictement V27 avant migration ; le terrain et les arêtes existantes restent conservés.
+
+V29 ajoute [l’acier](steel.md) : gisements connectés, identité de minerai, dégâts persistants et produit de 40 unités à rendement neutre. La catégorie conserve ses piles, filtres et coûts de marche propres ; `World.stock` reste la vue historique bois/nourriture, sans autorité sur ce nouveau matériau.

@@ -136,7 +136,7 @@ export function colonySummary(world: World) {
   const occupied=new Map<number,number>();
   for(const p of world.pawns){const cell=p.z*world.width+p.x;occupied.set(cell,(occupied.get(cell)??0)+1);}
   return { tick: world.tick, foodPolicies: world.pawns.map(p=>p.foodPolicyId), restRules: world.restRules, scheduledSleepHours: world.pawns.map(p=>p.schedule.filter(s=>s==='sleep').length), spoiled: { ...world.spoiled }, crops: world.resources.filter(r=>r.kind==='rice').length, growingCells:fields.size,
-    mining:{cells:world.tiles.filter(t=>t.terrain==='rough-stone').length,chunks:world.piles.filter(p=>p.kind==='chunk').length,stored:world.piles.filter(p=>p.kind==='chunk'&&p.owner.type==='ground'&&world.stockpiles.some(s=>s.filters.chunk&&p.owner.type==='ground'&&s.x===p.owner.x&&s.z===p.owner.z)).length},
+    mining:{steel:world.piles.reduce((n,p)=>n+(p.item==='steel'?p.quantity:0),0),steelStored:world.piles.reduce((n,p)=>n+(p.item==='steel'&&p.owner.type==='ground'&&world.stockpiles.some(s=>s.filters.steel&&p.owner.type==='ground'&&s.x===p.owner.x&&s.z===p.owner.z)?p.quantity:0),0),cells:world.tiles.filter(t=>t.terrain==='rough-stone').length,chunks:world.piles.filter(p=>p.kind==='chunk').length,stored:world.piles.filter(p=>p.kind==='chunk'&&p.owner.type==='ground'&&world.stockpiles.some(s=>s.filters.chunk&&p.owner.type==='ground'&&s.x===p.owner.x&&s.z===p.owner.z)).length},
     recreation:world.pawns.map(p=>({level:p.recreation.level,tolerance:{...p.recreation.tolerance},bored:{...p.recreation.bored}})),
     furnitureTransit:world.pawns.filter(p=>p.motion&&p.motion.end>world.tick&&(p.motion.terrainDelay??0)>0).length,
     furnitureExits:world.pawns.filter(p=>p.transitExit).length,

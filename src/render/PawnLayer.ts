@@ -100,6 +100,7 @@ function cargoGeometry(): THREE.InstancedBufferGeometry {
   part([0.12,0.46,0.48],[0,0,0],4,0x6f634e);
   part([0.38, 0.16, 0.26], [0, 0, 0], 3, 0xc7b96b);
   part([0.09, 0.17, 0.27], [0, 0, 0], 3, 0x86804e);
+  part([.55,.2,.3],[0,0,0],11,ITEM_DEFINITIONS.steel.color);
   CHUNK_ITEMS.forEach((item,i)=>{part([.52,.34,.42],[0,0,0],5+i,ITEM_DEFINITIONS[item].color);part([.22,.2,.27],[.18,-.05,-.12],5+i,ITEM_DEFINITIONS[item].color);});
   const vertices = new THREE.InterleavedBuffer(new Float32Array(data), 10);
   const geometry = new THREE.InstancedBufferGeometry();
@@ -269,7 +270,7 @@ export class PawnLayer {
       tint.setXYZ(index, scratchColor.r, scratchColor.g, scratchColor.b);
       const load = carried.get(pawn.id);
       const packed=world.packed?.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
-      cargo.setXY(index, packed?4:load ? load.kind === 'chunk' ? chunkCargoKind(load.item) : load.kind === 'wood' ? 1 : load.item === 'survival-meal' ? 3 : 2 : 0, packed?1:load ? Math.min(1, load.quantity / CARRY_CAPACITY) : 0);
+      cargo.setXY(index, packed?4:load ? load.kind === 'steel' ? 11 : load.kind === 'chunk' ? chunkCargoKind(load.item) : load.kind === 'wood' ? 1 : load.item === 'survival-meal' ? 3 : 2 : 0, packed?1:load ? Math.min(1, load.quantity / CARRY_CAPACITY) : 0);
     });
     for (const id of this.visuals.keys()) if (!present.has(id)) this.visuals.delete(id);
     for (const attr of [fromAttribute, toAttribute, motion, tint, cargo]) attr.needsUpdate = true;

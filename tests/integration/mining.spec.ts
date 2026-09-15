@@ -9,7 +9,7 @@ test('miner, reprendre la roche endommagée et ranger son fragment par les comma
   const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}});page.setDefaultTimeout(10000);
   const errors=observeErrors(page);
   try {
-    const fixture=miningCamp(),target={x:13,z:14},index=target.z*32+target.x;fixture.tiles[index]={terrain:'rock',stone:'granite'};fixture.rng=1;
+    const fixture=miningCamp(),target={x:13,z:14},index=target.z*32+target.x;fixture.tiles[index]={terrain:'rock',stone:'granite'};fixture.rng=1;fixture.tiles[11*32+12]={terrain:'rock',stone:'granite',ore:'steel'};
     await page.addInitScript(({key,saved})=>localStorage.setItem(key,saved),{key:saveKey,saved:serializeWorld(fixture)});
     await page.goto('/?e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
     await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,fixture);await page.keyboard.press('Escape');
@@ -30,6 +30,14 @@ test('miner, reprendre la roche endommagée et ranger son fragment par les comma
     await page.waitForFunction(()=>{const w=window.__lisiere.world;return w.piles.length===1&&w.piles[0]!.owner.type==='ground'&&w.piles[0]!.owner.x===19;},undefined,{polling:100});await page.locator('[data-speed="0"]').click();
     current=await world(page);expect(validateWorld(current)).toEqual([]);expect(current.piles[0]).toMatchObject({item:'granite-chunk',quantity:1,owner:{type:'ground',x:19,z:16}});
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,current);await page.keyboard.press('Escape');
-    await page.screenshot({path:'artifacts/mining-ui.png'});expect(errors).toEqual([]);await testInfo.attach('mining-outcome',{body:JSON.stringify({tile:current.tiles[index],piles:current.piles,errors}),contentType:'application/json'});
+    await page.screenshot({path:'artifacts/mining-ui.png'});
+    await tool(page,'mine');await revealCells(page,[{x:12,z:11}]);await cell(page,12,11);await page.keyboard.press('Escape');
+    await page.locator('[data-speed="6"]').click();await page.waitForFunction(()=>window.__lisiere.world.tiles[11*32+12]!.terrain==='rough-stone');await page.locator('[data-speed="0"]').click();
+    await expect(page.locator('#steel')).toHaveText('40');
+    await tool(page,'stockpile');await page.locator('#stockpile-chunk').uncheck();await page.locator('#stockpile-steel').check();await revealCells(page,[{x:19,z:17}]);await cell(page,19,17);await page.keyboard.press('Escape');
+    await page.locator('[data-speed="6"]').click();await page.waitForFunction(()=>{const w=window.__lisiere.world;return w.piles.some(p=>p.item==='steel'&&p.quantity===40&&p.owner.type==='ground'&&p.owner.x===19&&p.owner.z===17);});await page.locator('[data-speed="0"]').click();
+    current=await world(page);expect(validateWorld(current)).toEqual([]);expect(current.piles.filter(p=>p.item==='steel')).toHaveLength(1);
+    await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,current);await page.keyboard.press('Escape');
+    await page.screenshot({path:'artifacts/steel-ui.png'});expect(errors).toEqual([]);await testInfo.attach('mining-outcome',{body:JSON.stringify({tile:current.tiles[index],piles:current.piles,errors}),contentType:'application/json'});
   }finally{await browser.close();}
 });

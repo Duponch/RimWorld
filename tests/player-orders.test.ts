@@ -93,7 +93,7 @@ test('queue loses an access, clear-orders preserves designations, construction c
   expect(applyCommand(fresh,{type:'order-job',pawnId:actor.id,jobId:c!.id,queue:false}).ok).toBe(true);expect(actor.orders).toEqual({active:c!.id,queue:[]});expect(b!.reservedBy).toBeNull();
   applyCommand(fresh,{type:'clear-orders',pawnId:actor.id});
   const raw=JSON.parse(serializeWorld(fresh));raw.schemaVersion=16;for(const a of raw.pawns)delete a.priorities.mine;delete raw.deconstructed;delete raw.packed;for(const a of raw.pawns)delete a.orders;
-  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated.schemaVersion).toBe(28);expect(migrated.pawns[0]!.orders).toEqual({active:null,queue:[]});
+  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated.schemaVersion).toBe(29);expect(migrated.pawns[0]!.orders).toEqual({active:null,queue:[]});
   raw.pawns[0].orders={active:null,queue:[]};expect(()=>deserializeWorld(JSON.stringify(raw))).toThrow(/version 16/);
   const corrupt=JSON.parse(serializeWorld(migrated));corrupt.pawns[0].orders.queue=[fresh.jobs[0]!.id,fresh.jobs[0]!.id];expect(()=>deserializeWorld(JSON.stringify(corrupt))).toThrow(/order/);
   for(const orders of [null,[],{active:'oops',queue:[]},{active:null,queue:Array(33).fill(1)},{active:null,queue:null},{active:null,queue:[-1]}]) {

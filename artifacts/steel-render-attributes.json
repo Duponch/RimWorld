@@ -1,0 +1,232 @@
+{
+  "date": "2026-09-15T01:26:49.546Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "ore": "steel",
+  "protocol": "Native Chromium WebGPU, actual worker 6x, natural 250² with cleared mining patch; 3/30/100 miners × 4 sandstone or steel walls and 1 tree. 90 warmup frames; no full-world serialization during timed frames. Ground/rock buffer identities checked after excavation.",
+  "phases": [
+    {
+      "count": 100,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "description": ""
+      },
+      "errors": [],
+      "frames": {
+        "count": 2507,
+        "p50": 6,
+        "p95": 6.100000000002183,
+        "p99": 12,
+        "max": 24.100000000002183
+      },
+      "frameCpu": {
+        "count": 2508,
+        "p50": 4.100000001490116,
+        "p95": 5.200000002980232,
+        "p99": 5.899999998509884,
+        "max": 10
+      },
+      "adoptions": {
+        "count": 66,
+        "p50": 1.6999999955296516,
+        "p95": 10.700000002980232,
+        "p99": 14.299999997019768,
+        "max": 14.299999997019768
+      },
+      "drawCalls": {
+        "count": 2508,
+        "p50": 164,
+        "p95": 179,
+        "p99": 183,
+        "max": 185
+      },
+      "excavationFrames": {
+        "count": 383,
+        "p50": 6,
+        "p95": 6.100000000002183,
+        "p99": 18,
+        "max": 24.100000000002183
+      },
+      "mined": 400,
+      "steelUnits": 16000,
+      "chunks": 0,
+      "stableRock": true,
+      "stableGround": true,
+      "formats": [
+        {
+          "key": "campfire-flames",
+          "material": 22,
+          "storage": false,
+          "capacity": 256
+        },
+        {
+          "key": "furniture",
+          "material": 20,
+          "storage": false,
+          "capacity": 256
+        },
+        {
+          "key": "job-orders",
+          "material": 23,
+          "storage": false,
+          "capacity": 512
+        },
+        {
+          "key": "job-plans",
+          "material": 24,
+          "storage": false,
+          "capacity": 256
+        },
+        {
+          "key": "job-solids",
+          "material": 20,
+          "storage": false,
+          "capacity": 1024
+        }
+      ],
+      "growths": [
+        {
+          "key": "pile:7:7",
+          "prior": 256,
+          "next": 512
+        }
+      ],
+      "shadowPreparation": true,
+      "snapshots": {
+        "count": 66,
+        "p50": 5.399999998509884,
+        "p95": 13.700000002980232,
+        "p99": 17.399999998509884,
+        "max": 17.399999998509884
+      },
+      "longFrames": [],
+      "excavations": [
+        {
+          "at": 7762.20000000298,
+          "tick": 2195,
+          "mined": 48,
+          "dirty": 172
+        },
+        {
+          "at": 7972.70000000298,
+          "tick": 2209,
+          "mined": 52,
+          "dirty": 188
+        },
+        {
+          "at": 10899.80000000447,
+          "tick": 2383,
+          "mined": 32,
+          "dirty": 128
+        },
+        {
+          "at": 11115.70000000298,
+          "tick": 2398,
+          "mined": 68,
+          "dirty": 272
+        },
+        {
+          "at": 14158.20000000298,
+          "tick": 2579,
+          "mined": 76,
+          "dirty": 272
+        },
+        {
+          "at": 14385,
+          "tick": 2594,
+          "mined": 24,
+          "dirty": 88
+        },
+        {
+          "at": 17226,
+          "tick": 2764,
+          "mined": 4,
+          "dirty": 16
+        },
+        {
+          "at": 17487.80000000447,
+          "tick": 2779,
+          "mined": 51,
+          "dirty": 204
+        },
+        {
+          "at": 17720.70000000298,
+          "tick": 2794,
+          "mined": 25,
+          "dirty": 96
+        },
+        {
+          "at": 17972.80000000447,
+          "tick": 2810,
+          "mined": 6,
+          "dirty": 20
+        },
+        {
+          "at": 18224.90000000596,
+          "tick": 2825,
+          "mined": 8,
+          "dirty": 32
+        },
+        {
+          "at": 18724.5,
+          "tick": 2855,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 18989.20000000298,
+          "tick": 2870,
+          "mined": 2,
+          "dirty": 8
+        },
+        {
+          "at": 19253.20000000298,
+          "tick": 2885,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 19486,
+          "tick": 2899,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 19741.60000000149,
+          "tick": 2914,
+          "mined": 1,
+          "dirty": 4
+        }
+      ],
+      "slowFrames": [
+        {
+          "at": 19011.20000000298,
+          "cpu": 4.700000002980232,
+          "interval": 24.100000000002183,
+          "calls": 156
+        },
+        {
+          "at": 19277.70000000298,
+          "cpu": 4.899999998509884,
+          "interval": 24,
+          "calls": 156
+        },
+        {
+          "at": 19762.30000000447,
+          "cpu": 4.299999997019768,
+          "interval": 24,
+          "calls": 155
+        }
+      ],
+      "pipelines": [],
+      "preparations": [
+        1352.9000000059605,
+        202.19999999552965
+      ]
+    }
+  ]
+}

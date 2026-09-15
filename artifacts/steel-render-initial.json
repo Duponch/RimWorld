@@ -1,0 +1,307 @@
+{
+  "date": "2026-09-15T01:07:01.711Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "ore": "steel",
+  "protocol": "Native Chromium WebGPU, actual worker 6x, natural 250² with cleared mining patch; 3/30/100 miners × 4 sandstone or steel walls and 1 tree. 90 warmup frames; no full-world serialization during timed frames. Ground/rock buffer identities checked after excavation.",
+  "phases": [
+    {
+      "count": 100,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "description": ""
+      },
+      "errors": [],
+      "frames": {
+        "count": 2467,
+        "p50": 6,
+        "p95": 6.100000000002183,
+        "p99": 12.099999999998545,
+        "max": 30
+      },
+      "frameCpu": {
+        "count": 2468,
+        "p50": 4.699999995529652,
+        "p95": 5.699999995529652,
+        "p99": 6.699999995529652,
+        "max": 11
+      },
+      "adoptions": {
+        "count": 65,
+        "p50": 1.8999999985098839,
+        "p95": 8.700000002980232,
+        "p99": 13.600000001490116,
+        "max": 13.600000001490116
+      },
+      "drawCalls": {
+        "count": 2468,
+        "p50": 164,
+        "p95": 179,
+        "p99": 184,
+        "max": 185
+      },
+      "excavationFrames": {
+        "count": 357,
+        "p50": 6,
+        "p95": 12,
+        "p99": 24,
+        "max": 30
+      },
+      "mined": 400,
+      "steelUnits": 16000,
+      "chunks": 0,
+      "stableRock": true,
+      "stableGround": true,
+      "shadowPreparation": true,
+      "snapshots": {
+        "count": 65,
+        "p50": 5.600000001490116,
+        "p95": 12.800000004470348,
+        "p99": 16.600000001490116,
+        "max": 16.600000001490116
+      },
+      "longFrames": [],
+      "excavations": [
+        {
+          "at": 18337.5,
+          "tick": 2198,
+          "mined": 72,
+          "dirty": 256
+        },
+        {
+          "at": 18551.80000000447,
+          "tick": 2213,
+          "mined": 28,
+          "dirty": 104
+        },
+        {
+          "at": 21581.60000000149,
+          "tick": 2393,
+          "mined": 100,
+          "dirty": 400
+        },
+        {
+          "at": 24629.70000000298,
+          "tick": 2576,
+          "mined": 52,
+          "dirty": 184
+        },
+        {
+          "at": 24839.20000000298,
+          "tick": 2590,
+          "mined": 47,
+          "dirty": 176
+        },
+        {
+          "at": 25050.20000000298,
+          "tick": 2603,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 27857,
+          "tick": 2771,
+          "mined": 8,
+          "dirty": 32
+        },
+        {
+          "at": 28097.60000000149,
+          "tick": 2786,
+          "mined": 63,
+          "dirty": 248
+        },
+        {
+          "at": 28343.30000000447,
+          "tick": 2801,
+          "mined": 13,
+          "dirty": 52
+        },
+        {
+          "at": 28595.20000000298,
+          "tick": 2816,
+          "mined": 3,
+          "dirty": 8
+        },
+        {
+          "at": 28799.90000000596,
+          "tick": 2828,
+          "mined": 7,
+          "dirty": 28
+        },
+        {
+          "at": 29309.10000000149,
+          "tick": 2858,
+          "mined": 2,
+          "dirty": 8
+        },
+        {
+          "at": 29566.80000000447,
+          "tick": 2872,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 29812.60000000149,
+          "tick": 2887,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 30057.5,
+          "tick": 2903,
+          "mined": 2,
+          "dirty": 8
+        }
+      ],
+      "slowFrames": [
+        {
+          "at": 18360.40000000596,
+          "cpu": 5.899999998509884,
+          "interval": 24.100000000002183,
+          "calls": 184
+        },
+        {
+          "at": 29589.90000000596,
+          "cpu": 5.5,
+          "interval": 24,
+          "calls": 156
+        },
+        {
+          "at": 29842,
+          "cpu": 5,
+          "interval": 30,
+          "calls": 156
+        },
+        {
+          "at": 29873.5,
+          "cpu": 6.800000004470348,
+          "interval": 24,
+          "calls": 156
+        }
+      ],
+      "pipelines": [
+        {
+          "at": 29834.30000000447,
+          "method": "createRenderPipeline",
+          "label": "renderPipeline_ShadowMaterial_30",
+          "primitive": {
+            "topology": "triangle-list",
+            "frontFace": "cw",
+            "cullMode": "back"
+          },
+          "depthStencil": {
+            "format": "depth24plus",
+            "depthWriteEnabled": true,
+            "depthCompare": "less-equal"
+          },
+          "targets": [
+            {
+              "format": "rgba8unorm",
+              "writeMask": 15
+            }
+          ],
+          "buffers": [
+            {
+              "arrayStride": 12,
+              "attributes": [
+                {
+                  "shaderLocation": 0,
+                  "offset": 0,
+                  "format": "float32x3"
+                }
+              ],
+              "stepMode": "vertex"
+            },
+            {
+              "arrayStride": 12,
+              "attributes": [
+                {
+                  "shaderLocation": 1,
+                  "offset": 0,
+                  "format": "float32x3"
+                }
+              ],
+              "stepMode": "vertex"
+            },
+            {
+              "arrayStride": 12,
+              "attributes": [
+                {
+                  "shaderLocation": 2,
+                  "offset": 0,
+                  "format": "float32x3"
+                }
+              ],
+              "stepMode": "instance"
+            }
+          ]
+        },
+        {
+          "at": 29840,
+          "method": "createRenderPipeline",
+          "label": "renderPipeline_MeshStandardNodeMaterial_20",
+          "primitive": {
+            "topology": "triangle-list",
+            "frontFace": "ccw",
+            "cullMode": "back"
+          },
+          "depthStencil": {
+            "format": "depth24plus",
+            "depthWriteEnabled": true,
+            "depthCompare": "less-equal"
+          },
+          "targets": [
+            {
+              "format": "rgba16float",
+              "writeMask": 15
+            }
+          ],
+          "buffers": [
+            {
+              "arrayStride": 12,
+              "attributes": [
+                {
+                  "shaderLocation": 0,
+                  "offset": 0,
+                  "format": "float32x3"
+                }
+              ],
+              "stepMode": "vertex"
+            },
+            {
+              "arrayStride": 12,
+              "attributes": [
+                {
+                  "shaderLocation": 1,
+                  "offset": 0,
+                  "format": "float32x3"
+                }
+              ],
+              "stepMode": "vertex"
+            },
+            {
+              "arrayStride": 12,
+              "attributes": [
+                {
+                  "shaderLocation": 2,
+                  "offset": 0,
+                  "format": "float32x3"
+                }
+              ],
+              "stepMode": "instance"
+            }
+          ]
+        }
+      ],
+      "preparations": [
+        11667.29999999702,
+        209.20000000298023
+      ]
+    }
+  ],
+  "error": "Error: {\"count\":100,\"adapter\":{\"vendor\":\"amd\",\"architecture\":\"rdna-1\",\"description\":\"\"},\"errors\":[],\"frames\":{\"count\":2467,\"p50\":6,\"p95\":6.100000000002183,\"p99\":12.099999999998545,\"max\":30},\"frameCpu\":{\"count\":2468,\"p50\":4.699999995529652,\"p95\":5.699999995529652,\"p99\":6.699999995529652,\"max\":11},\"adoptions\":{\"count\":65,\"p50\":1.8999999985098839,\"p95\":8.700000002980232,\"p99\":13.600000001490116,\"max\":13.600000001490116},\"drawCalls\":{\"count\":2468,\"p50\":164,\"p95\":179,\"p99\":184,\"max\":185},\"excavationFrames\":{\"count\":357,\"p50\":6,\"p95\":12,\"p99\":24,\"max\":30},\"mined\":400,\"steelUnits\":16000,\"chunks\":0,\"stableRock\":true,\"stableGround\":true,\"shadowPreparation\":true,\"snapshots\":{\"count\":65,\"p50\":5.600000001490116,\"p95\":12.800000004470348,\"p99\":16.600000001490116,\"max\":16.600000001490116},\"longFrames\":[],\"excavations\":[{\"at\":18337.5,\"tick\":2198,\"mined\":72,\"dirty\":256},{\"at\":18551.80000000447,\"tick\":2213,\"mined\":28,\"dirty\":104},{\"at\":21581.60000000149,\"tick\":2393,\"mined\":100,\"dirty\":400},{\"at\":24629.70000000298,\"tick\":2576,\"mined\":52,\"dirty\":184},{\"at\":24839.20000000298,\"tick\":2590,\"mined\":47,\"dirty\":176},{\"at\":25050.20000000298,\"tick\":2603,\"mined\":1,\"dirty\":4},{\"at\":27857,\"tick\":2771,\"mined\":8,\"dirty\":32},{\"at\":28097.60000000149,\"tick\":2786,\"mined\":63,\"dirty\":248},{\"at\":28343.30000000447,\"tick\":2801,\"mined\":13,\"dirty\":52},{\"at\":28595.20000000298,\"tick\":2816,\"mined\":3,\"dirty\":8},{\"at\":28799.90000000596,\"tick\":2828,\"mined\":7,\"dirty\":28},{\"at\":29309.10000000149,\"tick\":2858,\"mined\":2,\"dirty\":8},{\"at\":29566.80000000447,\"tick\":2872,\"mined\":1,\"dirty\":4},{\"at\":29812.60000000149,\"tick\":2887,\"mined\":1,\"dirty\":4},{\"at\":30057.5,\"tick\":2903,\"mined\":2,\"dirty\":8}],\"slowFrames\":[{\"at\":18360.40000000596,\"cpu\":5.899999998509884,\"interval\":24.100000000002183,\"calls\":184},{\"at\":29589.90000000596,\"cpu\":5.5,\"interval\":24,\"calls\":156},{\"at\":29842,\"cpu\":5,\"interval\":30,\"calls\":156},{\"at\":29873.5,\"cpu\":6.800000004470348,\"interval\":24,\"calls\":156}],\"pipelines\":[{\"at\":29834.30000000447,\"method\":\"createRenderPipeline\",\"label\":\"renderPipeline_ShadowMaterial_30\",\"primitive\":{\"topology\":\"triangle-list\",\"frontFace\":\"cw\",\"cullMode\":\"back\"},\"depthStencil\":{\"format\":\"depth24plus\",\"depthWriteEnabled\":true,\"depthCompare\":\"less-equal\"},\"targets\":[{\"format\":\"rgba8unorm\",\"writeMask\":15}],\"buffers\":[{\"arrayStride\":12,\"attributes\":[{\"shaderLocation\":0,\"offset\":0,\"format\":\"float32x3\"}],\"stepMode\":\"vertex\"},{\"arrayStride\":12,\"attributes\":[{\"shaderLocation\":1,\"offset\":0,\"format\":\"float32x3\"}],\"stepMode\":\"vertex\"},{\"arrayStride\":12,\"attributes\":[{\"shaderLocation\":2,\"offset\":0,\"format\":\"float32x3\"}],\"stepMode\":\"instance\"}]},{\"at\":29840,\"method\":\"createRenderPipeline\",\"label\":\"renderPipeline_MeshStandardNodeMaterial_20\",\"primitive\":{\"topology\":\"triangle-list\",\"frontFace\":\"ccw\",\"cullMode\":\"back\"},\"depthStencil\":{\"format\":\"depth24plus\",\"depthWriteEnabled\":true,\"depthCompare\":\"less-equal\"},\"targets\":[{\"format\":\"rgba16float\",\"writeMask\":15}],\"buffers\":[{\"arrayStride\":12,\"attributes\":[{\"shaderLocation\":0,\"offset\":0,\"format\":\"float32x3\"}],\"stepMode\":\"vertex\"},{\"arrayStride\":12,\"attributes\":[{\"shaderLocation\":1,\"offset\":0,\"format\":\"float32x3\"}],\"stepMode\":\"vertex\"},{\"arrayStride\":12,\"attributes\":[{\"shaderLocation\":2,\"offset\":0,\"format\":\"float32x3\"}],\"stepMode\":\"instance\"}]}],\"preparations\":[11667.29999999702,209.20000000298023]}"
+}

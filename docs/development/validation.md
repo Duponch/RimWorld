@@ -1,67 +1,54 @@
-# Validation courante — V28, minage et préparation des ombres
+# Validation courante — V29, acier compacté
 
-15 septembre 2026. G0 en consolidation, G1 partiel, première tranche de minage G2. [Contrat](mining.md), [recherche confrontée](../research/mining-reference.md), [preuves V27 archivées](../history/validation-v27-geology.md).
+15 septembre 2026. G0 en consolidation, G1 partiel ; chaîne minière G2 en cours. [Contrat](steel.md), [recherche](../research/steel-reference.md), [preuves V28 et ombres](../history/validation-v28-mining-shadows.md).
 
-## Simulation, persistance et parcours joueur
+## Simulation et continuité
 
-Le [lot complet](../../artifacts/mining-simulation-initial.json) passe **93/93 tests en 55,9 secondes**. Il comprend migrations, réservations, besoins, construction, logistique et continuation exacte. Après extension du pilote à quatre cases minées et au rangement des fragments, le [lot pilote/minage](../../artifacts/mining-player.json) passe **4/4**, avec trois cartes naturelles, huit jours pour la graine 42 et cinq jours pour 93/2048. Le bilan conserve les flux bois/nourriture, les repas, les couchages et les loisirs en ajoutant les résultats du minage.
+94 scénarios distincts contrôlés par le [lot complet](../../artifacts/steel-simulation.json) et sa [reprise ciblée](../../artifacts/steel-simulation-recheck.json). Le premier lot en passe 89 ; quatre fixtures attendaient encore un numéro final V28 et le pilote supposait libre une case de stockage sur la graine 93. Après mise à jour des attentes et choix de cases admissibles, les douze scénarios concernés passent en 52,6 secondes. Les 89 autres résultats restent valides : aucune règle de simulation n’a été modifiée entre ces exécutions. Aucune garantie d’absence de tout bug.
 
-Le [dernier contrôle ciblé](../../artifacts/mining-final-targeted.json) passe **5/5** : cinq roches, contact diagonal sans traversée des coins solides, préparation du coup, dégâts après interruption, reprise exacte et deltas, produit typé, transport demandé, saturation du budget d’ID sans consommation du tirage, coûts physiques/pondérés et buffers géométriques conservés. Il refuse aussi une préparation de coup sauvegardée hors intervalle et vérifie la libération de l’ordre forcé terminé. L’optimisation du terrain est contrôlée pour dégâts seuls, extraction, changement de roche, surface différente et terrain historique sans type. Le [contrat complet de snapshots](../../artifacts/mining-final-bridge.json), également inclus dans ce dernier lot, vérifie refus atomique, révisions perdues, resynchronisation et chargement. Ces assertions enrichissent les scénarios existants ; elles ne promettent pas une couverture exhaustive.
+Le scénario de minage couvre génération répétable, groupes connectés de 30–40, topologie/RNG conservés, dégâts persistants, saturation du dernier coup sans perte ni tirage consommé, 40 acier produits, transferts et reprise pendant portage, piles finales 75+5, destination incompatible, marche et migration stricte V28. Les contrôles de surface conservent positions, indices, buffers et absence d’actualisation graphique sur un simple dégât.
 
-Le [premier lot UI](../../artifacts/mining-ui-journey.json) contient un parcours minage réussi en **16,0 secondes** : véritables outils, priorité, sauvegarde au milieu des coups, fragment de granite, réserve filtrée, attente sans transport automatique, désignation et livraison physique. Le parcours long y échoue sur la caméra du pilote : un massif hors du cadrage maximal n’était pas visible. Le pilote utilise maintenant aussi le véritable glissement du bouton central avec retour des coordonnées projetées. Les erreurs initiales sont conservées, les checkpoints volumineux extraits dans `tmp` avec SHA-256.
+Le pilote joue huit jours sur la graine 42 et cinq sur 93/2048 : quatre cases de pierre puis deux d’acier, **80 acier rangés**, camp entretenu et bilans bois/aliments préservés. Aucun minerai ni stock injecté dans le scénario naturel.
 
-Le [parcours UI de trois jours corrigé](../../artifacts/mining-journey-rerun.json) passe en **356,7 secondes**, sans retry ni erreur navigateur. Il utilise la carte naturelle 250², les commandes visibles et les vitesses accessibles au joueur. Il vérifie quatre cases minées, rangement de tous les fragments obtenus, trois lits, table et sièges, six murs, feu et piquet, repas réellement consommés, deux activités de loisirs et reprise exacte à chaque journée. Le coût de ce scénario justifie de le réserver aux changements de boucle, commandes ou persistance ; il n’est pas lancé pour une retouche cosmétique.
+## Navigateur et présentation
 
-Compilation de production finale réussie : 157 modules, worker **189,07 kB**, bundle jeu **1 054,93 kB / 295,53 kB gzip**. Aucune dépendance ajoutée ; avertissement préexistant du bundle supérieur à 500 kB. Captures du minage et de la charge de cent acteurs inspectées. Le compteur FPS demeure visible. Le dernier durcissement du validateur de préparation a été contrôlé dans le lot ciblé après le parcours UI, sans modifier la progression valide des coups.
+[Deux parcours natifs](../../artifacts/steel-ui.json), sans échec ni reprise automatique :
 
-## Charge CPU et communication
+- Colonie naturelle 250² pendant trois jours, vraies commandes UI et worker, repas, couchages, culture, cuisine, réorganisation du camp, six cases extraites et 80 acier rangés ; sauvegardes quotidiennes exactes. **363,0 secondes**.
+- Fixture compacte signalée : granite, reprise des dégâts, rangement du fragment, extraction/transport de 40 acier, compteur et sauvegarde/rechargement. **28,3 secondes**.
 
-[Banc reproductible](../../scripts/mining-bench.ts), [résultats](../../artifacts/mining-cpu.json). Windows, AMD Ryzen 5 3600, Node 24.11.1. Carte naturelle 250² avec aire préparée ; quatre cases de grès et un arbre par colon, trois répétitions de 500 ticks, 100 ticks d’échauffement séparés. Validation hors mesure ; encodage de snapshot mesuré tous les cinq ticks. Les trois répétitions donnent exactement les mêmes extractions et produits.
+Les 19 mondes intermédiaires volumineux sont dans `tmp/steel-ui-checkpoints`, avec taille/hash dans le rapport suivi. Assertions et erreurs restent dans le rapport. Capture finale `artifacts/steel-ui.png` inspectée : pile d’acier, ressource à gauche et FPS visibles. PNG locaux non suivis par Git.
 
-| Acteurs | Tick p50 | Tick p95 | Tick p99 | Tick max | Encodage p95 | Cases extraites / fragments |
-|---|---:|---:|---:|---:|---:|---:|
-| 3 | 0,006 ms | 0,161 ms | 1,554 ms | 7,004 ms | 2,410 ms | 12 / 3 |
-| 30 | 0,061 ms | 3,532 ms | 6,854 ms | 18,996 ms | 2,809 ms | 120 / 30 |
-| 100 | 2,039 ms | 8,424 ms | 12,844 ms | 21,604 ms | 3,377 ms | 400 / 114 |
+## Petit audit CPU
 
-Ce banc mesure minage, navigation et tâches concurrentes de collecte. Il ne constitue ni une colonie de cent habitants autonome plusieurs jours, ni une mesure de transport IPC, ni un engagement sur tous les matériels.
+[Mesures brutes](../../artifacts/steel-cpu.json), Ryzen 5 3600, Windows, Node 24.11.1. Carte 250² ; 3/30/100 mineurs, chacun quatre gisements et un arbre dans une zone dégagée, milieu naturel autour. Trois répétitions de 1 200 ticks, 100 ticks de chauffe distincts ; encodage séparé toutes les cinq étapes, validation hors chronométrage. Charge différente des 500 ticks de pierre V28 : pas une comparaison contrôlée entre versions.
 
-## Rendu natif et limites de fluidité
+| Colons | Tick p95 / p99 / max, ms | Snapshot p95, ms | Résultat par répétition |
+|---|---|---|---|
+| 3 | 0,023 / 1,266 / 7,199 | 2,848 | 12 gisements, 480 acier |
+| 30 | 3,876 / 7,897 / 22,227 | 4,062 | 120 gisements, 4 800 acier |
+| 100 | 9,495 / 13,979 / 18,352 | 4,415 | 400 gisements, 16 000 acier |
 
-[Banc WebGPU](../../scripts/mining-render-bench.mjs), [avant suppression des allocations de terrain](../../artifacts/mining-render-before.json), [après](../../artifacts/mining-render.json). Chromium natif, GPU AMD RDNA1 (modèle précis non exposé), 1440×1000, carte 250², simulation worker à ×6, 90 images d’échauffement. Les suppressions résultent de véritables actions de minage. Aucune sérialisation complète du monde pendant les images chronométrées.
+Tous les travaux demandés terminés, zéro erreur d’invariant. Génération des graines 42/93/2048 : **68,7 / 64,4 / 60,6 ms**, avec 553/847/840 cases d’acier. Trois échantillons, sans prétention de percentile robuste ; densité du preset explicite. Snapshots et navigation restent à surveiller sous charge mixte prolongée.
 
-| Mineurs | Intervalle p95 | p99 | Max avant → après | Adoption rendu p95 avant → après | Appels/image p95 / max |
-|---|---:|---:|---:|---:|---:|
-| 3 | 6,1 ms | 6,1 ms | 24,1 → 29,9 ms | 5,8 → 4,6 ms | 165 / 166 |
-| 30 | 6,1 ms | 11,9 ms | 29,9 → 30,0 ms | 10,0 → 7,5 ms | 175 / 176 |
-| 100 | 6,1 ms | 18,0 ms | 78,0 → 84,0 ms | 13,4 → 11,7 ms | 190 / 194 |
+## Audit graphique et correction de croissance
 
-Les buffers rocheux et objets de sol restent identiques pendant les extractions ; aucune erreur navigateur/WebGPU observée. La comparaison de surface évite une chaîne et un tableau couvrant 62 500 cases à chaque mise à jour de dégâts. Ces deux exécutions successives montraient une baisse du coût d’adoption, **pas une disparition des pointes**. Les maximums de 78–84 ms ont motivé le complément ci-dessous. Le temps CPU de la méthode de rendu culminait à 11 ms : il n’expliquait pas à lui seul l’intervalle maximal.
+[Témoin initial](../../artifacts/steel-render-initial.json), [diagnostic des shaders](../../artifacts/steel-render-diff.json), [résultat final](../../artifacts/steel-render-final.json). Chromium natif WebGPU, AMD RDNA-1 (modèle exact non exposé), 1440×1000, même charge de 100 mineurs sur 250², vrai worker à 6×. Contrôles lourds exécutés séparément. La trace de comparaison des shaders est désactivée pour le relevé final.
 
-Le [diagnostic complémentaire à 100 mineurs](../../artifacts/mining-render-diagnostic.json) enregistre une pointe à **108 ms** avec l’[API Chromium Long Animation Frames](https://developer.chrome.com/docs/web-platform/long-animation-frames). L’entrée de 108,3 ms ne contient que 6,4 ms de callback de rendu attribué ; son début de rendu arrive environ 102 ms après le début de l’intervalle. L’adoption complète avec UI culmine à 18,2 ms. Ces durées seules ne localisaient pas la cause. Aucune ancienne commande de test du projet n’était encore active lors du contrôle des processus. Le recoupement suivant utilise aussi les demandes de pipelines et les événements GPU.
+Deux pipelines apparaissaient à la croissance 256→512 d’un lot de piles, avec un maximum de frame de 30 ms. Les attributs explicites de `BoxMesh` corrigent ce cas sans augmenter le nombre de lots, ni réserver une grande capacité sur toute la carte. Le relevé final retrouve cette croissance avec **zéro pipeline en jeu**, 400 extractions, 16 000 acier et géométries roche/sol conservées. **2 508 intervalles** : p95 **6,1 ms**, p99 **12 ms**, max **24 ms** ; coût CPU de frame p95 **5,0 ms**, max **8,1 ms**. Draw calls p95 **179**, maximum **185**, identiques au maximum initial. Zéro Long Animation Frame au-delà de 50 ms et zéro erreur GPU/console.
 
-Le [tout premier banc](../../artifacts/mining-render-initial.json) capturait les objets de terrain avant l’adoption du chargement asynchrone : sa conclusion `stableGround: false` était invalide. Le banc attend désormais le tick, la population et les désignations exacts avant de mémoriser les buffers.
+Adoption de snapshot p95 **10,5 ms**, callback complet p95 **13,8 ms**, max **16,7 ms** : coût toujours à surveiller. Préparation initiale **1 254,3 ms**, rechargement **195,2 ms** dans ce relevé ; ce sont des échantillons, dépendants des caches et du matériel. Pas de promesse de 60 FPS sans exception : le maximum dépasse encore 16,7 ms, ni de généralisation à tous les nouveaux matériaux.
 
-## Correction vérifiée : ombres des premières piles
+[Deux contrats de rendu](../../artifacts/steel-render-contracts.json) passent après modification : rétention, restauration, croissance, bornes et surface rocheuse. Captures des gisements, extraction et camp naturel inspectées. Les essais intermédiaires sont conservés pour le diagnostic ; leurs hypothèses rejetées ne décrivent pas le moteur final.
 
-[Contrat](shadow-preparation.md). La [trace initiale](../../artifacts/mining-render-trace.json) et son [extraction compacte](../../artifacts/mining-gpu-attribution.json) montrent un traitement de commandes de **115,955 ms sur CrGpuMain**, juste avant l’image retardée. C’est du temps du processus GPU, pas une durée d’exécution matérielle des shaders. La capture perturbe la cadence ; ses percentiles ne sont pas utilisés comme témoin de fluidité. Un [essai Dawn trop détaillé](../../artifacts/mining-render-pipeline-trace.json) a dépassé 128 MiB et a été arrêté ; le collecteur conserve désormais les résultats de phase même si la trace échoue.
+[Six contrôles navigateur](../../artifacts/steel-render-ui.json), puis [reprise ciblée de deux](../../artifacts/steel-ui-recheck.json), désormais tous passants : repas/lits orientés, transport/réserves/reprise, frontières en **WebGL 2 réellement relevé**, rectangles 250², transitions 32/128/200/250 et minage d’acier natif. Le premier lot rencontre une attente ancienne sans priorité Minage et un timeout de 180 s : le pilote ouvrait le menu après adoption du snapshot, avant la fermeture des panneaux en fin de préparation. L’aide `panel` attend maintenant `.game-shell.inert=false`, sans délai arbitraire ni augmentation des timeouts. Les filtres attendus incluent acier/fragments/meubles. Les deux reprises passent ensemble en **24,2 s** ; aucune modification de gameplay pour satisfaire ces attentes.
 
-Sans trace lourde, le [relevé des pipelines](../../artifacts/mining-render-pipelines.json) observe huit créations synchrones `ShadowMaterial` au premier dépôt et une pointe de 84 ms. Le code officiel Three r186 exclut les ombres de `compileAsync` : les lots vides manquaient donc de préparation. Une passe réelle des lots résidents pendant le chargement, suivie d’une restauration exacte, supprime ces demandes dans notre scénario.
+Les premières sondes de croissance de buffer importaient un autre module Vite que l’instance active ; leurs tableaux `growths` vides ne prouvent donc pas l’absence de croissance. La sonde finale enveloppe l’instance du renderer réellement exécutée. `MINING_SHADER_DIFF=1` active seulement le diagnostic de sources ; conserver cette instrumentation lourde hors des relevés comparables.
 
-| Charge | p95 des intervalles | p99 | Maximum après préparation | Pipelines créés pendant le jeu |
-|---|---:|---:|---:|---:|
-| 3 mineurs | 6,1 ms | 6,1 ms | 12,0 ms | 0 |
-| 30 mineurs | 6,1 ms | 6,1 ms | 18,0 ms | 0 |
-| 100 mineurs | 6,1 ms | 17,9 ms | 24,1 ms | 0 |
+## Construction et documentation
 
-[Relevé final 3/30/100](../../artifacts/mining-shadow-final.json) : respectivement 12/120/400 extractions et 3/30/114 fragments, buffers conservés, aucune erreur GPU ni image longue signalée. Un [premier essai corrigé à 100](../../artifacts/mining-render-shadow-warm.json) plafonne aussi à 24 ms. En [désactivant uniquement le helper de préparation](../../artifacts/mining-shadow-control.json), huit compilations et une pointe de 107,9 ms reviennent. Cela étaye le lien causal sans garantir une cadence parfaite sur tout matériel ou tout contenu futur.
+Build et typage réussis, 160 modules ; worker **191,51 kB**, entrée graphique **1 058,15 kB** (296,48 kB gzip). Aucune dépendance ajoutée. L’avertissement de taille du bundle demeure. Contrats, guide, inventaire, catalogue et calendrier G0–G5 actualisés ; les originaux restent conservés.
 
-Le compromis est mesuré : préparation initiale 7,33 s pour le témoin, 11,52–11,73 s pour le lot corrigé ; rechargement dans le même renderer 0,20–0,21 s. Ce sont les durées de préparation, pas tout le chargement de page. Aucun draw call permanent supplémentaire ni nouveau buffer de simulation. Les deux scénarios purs [rétention et surface](../../artifacts/shadow-preparation-targeted.json) passent ; ils couvrent aussi un snapshot intervenant pendant l’attente GPU afin de ne pas écraser ses nouvelles instances. Compilation finale : 158 modules, worker inchangé 189,07 kB, jeu 1 055,88 kB / 295,82 kB gzip.
+## Suite et limites
 
-Le [parcours minage natif](../../artifacts/shadow-preparation-ui.json) passe après correction. Le parcours de frontières du même lot recharge correctement V28 mais échoue sur une ancienne assertion `23` ; ce défaut de fixture est corrigé pour vérifier le schéma courant. Le [parcours de frontières corrigé](../../artifacts/shadow-preparation-boundaries.json) passe en **38,6 secondes**, avec backend **WebGL 2** effectivement relevé, commandes répétées, refus de sauvegarde invalide et reprise de la partie historique. Les captures natives après extraction ont été inspectées. Les 98 documents, leurs 1 067 liens locaux et les trois originaux conservés passent le contrôle d’intégrité.
-
-La simulation et les commandes n’ont pas été modifiées dans ce complément. Le pilote de trois jours et le lot 93/93 ci-dessus restent les preuves du gameplay V28 ; ils n’ont pas été rejoués pour une préparation graphique.
-
-## Suite et limites fonctionnelles
-
-Le minage ne clôt pas G2 : toits/effondrements, minerais, compétences/capacités/XP, lissage et sous-sols variés restent absents. Les fragments sont des objets physiques avec représentation procédurale provisoire ; taille, blocs et matériaux de construction constituent la suite. Les anciennes pierres décoratives ne sont pas encore converties en fragments transportables. Les cinq roches, leur dureté et leur produit ne signifient pas que toute la famille géologique soit achevée. Le mode nuit poursuit ces étapes après commit/push sur main, en maintenant l’audit des nouveaux pipelines et des capacités graphiques.
+Acier extractible et stockable, pas encore constructif. Prochaine dépendance : recettes de chantier à plusieurs matériaux, puis atelier de taille et blocs. Portage à dix unités et rendement neutre explicites. Autres minerais, compétences/capacités/XP, dégâts externes, sols alternatifs, lissage, toits/effondrements absents ; le catalogue géologique n’est pas terminé.

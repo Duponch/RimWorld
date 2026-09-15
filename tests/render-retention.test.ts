@@ -1,6 +1,7 @@
 import { expect, test } from 'vitest';
 import * as THREE from 'three/webgpu';
 import { BoxBatches } from '../src/render/BoxBatches';
+import { BoxMesh } from '../src/render/BoxMesh';
 import { ResourceLayer } from '../src/render/ResourceLayer';
 import { OverviewLayer } from '../src/render/OverviewLayer';
 import { PawnLayer } from '../src/render/PawnLayer';
@@ -50,21 +51,29 @@ test('objets graphiques résidents : retrait/restauration, frontière de chunk, 
   const boxes=new BoxBatches(), boxGroup=new THREE.Group();
   const items=Array.from({length:700},(_,i)=>({x:i,y:1,z:i%3,sx:1,sy:2,sz:.5,color:0xff0000}));
   boxes.set(boxGroup,'test',items.slice(0,4));
-  const mesh=boxGroup.children[0] as THREE.InstancedMesh, original=mesh.instanceMatrix;
-  for(const n of [1,0,200,4]){boxes.set(boxGroup,'test',items.slice(0,n));expect(mesh.instanceMatrix).toBe(original);expect(mesh.count).toBe(n);}
+  const mesh=boxGroup.children[0] as BoxMesh, original=mesh.instanceMatrix;
+  const neighborGroup=new THREE.Group();boxes.set(neighborGroup,'neighbor',[{x:4,y:2,z:3,ry:Math.PI/2,sx:2,sy:3,sz:.5,color:0x00ff00}]);
+  const neighbor=neighborGroup.children[0] as BoxMesh,neighborGeometry=neighbor.geometry;
+  let neighborDisposals=0;neighborGeometry.addEventListener('dispose',()=>neighborDisposals++);
+  expect(neighbor.material).toBe(mesh.material);
+  expect(neighbor.geometry.getAttribute('position')).not.toBe(mesh.geometry.getAttribute('position'));
+  expect(neighbor.geometry.index).not.toBe(mesh.geometry.index);
+  for(const n of [1,0,200,4]){boxes.set(boxGroup,'test',items.slice(0,n));expect(mesh.instanceMatrix).toBe(original);expect(mesh.activeCount).toBe(n);}
   boxes.set(boxGroup,'test',items); expect(boxGroup.children[0]).toBe(mesh);expect(mesh.instanceMatrix.count).toBe(1024);
+  expect(neighborDisposals).toBe(0);expect(neighbor.geometry).toBe(neighborGeometry);expect(neighbor.activeCount).toBe(1);
   const matrix=new THREE.Matrix4();mesh.getMatrixAt(699,matrix);expect(new THREE.Vector3().setFromMatrixPosition(matrix).x).toBe(699);
   expect(mesh.boundingSphere!.containsPoint(new THREE.Vector3(699,1,0))).toBe(true);
   boxes.set(boxGroup,'test',[]);
   const resident=mesh.instanceMatrix,bounds=mesh.boundingSphere,values=Array.from(resident.array);
-  const restoreShadows=boxes.prepareEmptyShadows();expect(mesh.count).toBe(1);expect(mesh.instanceMatrix).toBe(resident);
+  const restoreShadows=boxes.prepareEmptyShadows();expect(mesh.activeCount).toBe(1);expect(mesh.instanceMatrix).toBe(resident);
   mesh.getMatrixAt(0,matrix);expect(matrix.determinant()).toBe(0);
-  restoreShadows();expect(mesh.count).toBe(0);expect(mesh.boundingSphere).toBe(bounds);expect(Array.from(resident.array)).toEqual(values);
-  boxes.set(boxGroup,'test',items.slice(0,4));const restoreLive=boxes.prepareEmptyShadows();restoreLive();expect(mesh.count).toBe(4);expect(mesh.instanceMatrix).toBe(resident);
+  restoreShadows();expect(mesh.activeCount).toBe(0);expect(mesh.boundingSphere).toBe(bounds);expect(Array.from(resident.array)).toEqual(values);
+  boxes.set(boxGroup,'test',items.slice(0,4));const restoreLive=boxes.prepareEmptyShadows();restoreLive();expect(mesh.activeCount).toBe(4);expect(mesh.instanceMatrix).toBe(resident);
   boxes.set(boxGroup,'test',[]);const restoreBeforeSnapshot=boxes.prepareEmptyShadows();
   boxes.set(boxGroup,'test',items.slice(17,18));const updated=Array.from(mesh.instanceMatrix.array);
-  restoreBeforeSnapshot();expect(mesh.count).toBe(1);expect(Array.from(mesh.instanceMatrix.array)).toEqual(updated);
+  restoreBeforeSnapshot();expect(mesh.activeCount).toBe(1);expect(Array.from(mesh.instanceMatrix.array)).toEqual(updated);
   boxes.clear();expect(boxGroup.children).toEqual([]);boxes.set(boxGroup,'test',items.slice(0,2));expect(boxGroup.children[0]).not.toBe(mesh);
+  expect(neighborDisposals).toBe(1);expect(neighborGroup.children).toEqual([]);
   boxes.dispose();expect(boxGroup.children).toEqual([]);
   // A fully picked-up stack no longer exists, but its position still drives
   // both GPU pose endpoints after a save/reload, in all cardinal directions.

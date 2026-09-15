@@ -52,10 +52,10 @@ describe('seeded temperate valley generation', () => {
     raw.schemaVersion = 26;for(const a of raw.pawns)delete a.priorities.mine;
     // V26 cannot smuggle a modern geological identity through migration.
     expect(() => deserializeWorld(JSON.stringify(raw))).toThrow(/version 26/);
-    for (const tile of raw.tiles) delete tile.stone;
+    for (const tile of raw.tiles) { delete tile.stone; delete tile.ore; }
     for (const resource of raw.resources) delete resource.stone;
     const migrated = deserializeWorld(JSON.stringify(raw));
-    expect(migrated).toEqual({...raw,pawns:raw.pawns.map((p:any)=>({...p,priorities:{...p.priorities,mine:2}})),schemaVersion:28 });
+    expect(migrated).toEqual({...raw,pawns:raw.pawns.map((p:any)=>({...p,priorities:{...p.priorities,mine:2}})),schemaVersion:29 });
     const control = deserializeWorld(JSON.stringify(raw)); stepWorld(migrated, 251); stepWorld(control, 251);
     expect(serializeWorld(migrated)).toBe(serializeWorld(control));
     for (const change of [(w: any) => w.tiles.find((t: any) => t.terrain === 'rock').stone = 'vacstone',

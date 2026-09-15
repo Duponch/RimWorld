@@ -187,7 +187,7 @@ Avant de créer une nouvelle colonie, le jeu conserve aussi l'état courant dans
 
 ## Limites et suite
 
-Pas encore d'autres cultures, autres postes/recettes de cuisine, chaîne du froid, minerais et taille de pierre, autres familles de loisirs, animaux, armes, combat, blessures, médecine, relations, traits, recherche, commerce, électricité, toit, température, incendie, météo dynamique, carte du monde ou storyteller. Les coûts de sols et autres profils de déplacement, les réserves à plusieurs cases partageant une politique, les autres familles sélectionnables, les fournisseurs supplémentaires de travail lié sur une case et les tournées logistiques restent à développer. Les modèles sont provisoires ; la congestion entre agents actifs et la calibration des besoins restent ouvertes. La faim ne cause pas encore de malnutrition ni de décès.
+Pas encore d'autres cultures, autres postes/recettes de cuisine, chaîne du froid, autres minerais que l’acier, utilisation constructive de l’acier et taille de pierre, autres familles de loisirs, animaux, armes, combat, blessures, médecine, relations, traits, recherche, commerce, électricité, toit, température, incendie, météo dynamique, carte du monde ou storyteller. Les coûts de sols et autres profils de déplacement, les réserves à plusieurs cases partageant une politique, les autres familles sélectionnables, les fournisseurs supplémentaires de travail lié sur une case et les tournées logistiques restent à développer. Les modèles sont provisoires ; la congestion entre agents actifs et la calibration des besoins restent ouvertes. La faim ne cause pas encore de malnutrition ni de décès.
 
 La suite est suivie dans [le plan de développement](../ROADMAP.md). Les détails de la référence et les futures interactions sont dans [la matrice des systèmes](systems-matrix.md).
 
@@ -226,3 +226,11 @@ Une nouvelle carte répartit les massifs et pierres voisines en régions de gran
 Dans **Architecte → Ordres**, choisir **Miner** (M), puis cliquer ou tracer sur les massifs. Activer **Minage** dans Travail. Le colon rejoint la roche, lui fait face et frappe ; ses PV sont inspectables et les dégâts restent acquis après annulation. Un massif extrait découvre un sol rocheux non fertile. Il laisse un fragment de la même roche dans 25 % des cas, sans donner directement des blocs de construction.
 
 Créer une réserve avec **Fragments de roche** autorisés, puis désigner les fragments via **Transporter les fragments** dans Ordres. Un fragment occupe une case entière et se porte individuellement ; les types ne fusionnent pas. Le clic droit du colon peut aussi imposer son rangement. Une interruption après prise conserve le fragment mais peut nécessiter une nouvelle désignation. L’atelier de taille, les minerais et les toits restent absents.
+
+## Extraire une réserve d’acier
+
+Les **nouvelles colonies** peuvent présenter de l’**acier compacté**, reconnaissable à ses teintes brunes et son inspection. Architecte → Ordres → **Miner** le désigne comme un massif ; le métier Minage doit être actif. Le colon rejoint le gisement, frappe et produit 40 unités d’acier dans la case libérée. Les dégâts restent après annulation et sauvegarde.
+
+Créer une réserve autorisant **Acier** : les transporteurs le rangent automatiquement, sans outil « Transporter les fragments ». Une pile contient au plus 75 unités ; le total apparaît à gauche. Les anciennes réserves refusent ce nouveau matériau jusqu’à modification de leur filtre. Les anciennes cartes conservent leur géologie, sans apparition rétroactive de gisements.
+
+L’acier est extractible et stockable ; **son utilisation dans les constructions et l’atelier de taille viennent ensuite**. Le rendement est encore neutre, les compétences n’étant pas simulées.

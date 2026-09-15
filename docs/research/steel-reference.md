@@ -1,0 +1,27 @@
+# Acier et prérequis de la taille — 15 septembre 2026
+
+Périmètre Core, référence éditoriale PC 1.6. Corpus relu : chapitres 5–6/10/11, SYS/TEST-016 et 061–064, CAT-059/060. **Adopter** identité et transferts physiques ; **adapter** génération et temps ; **différer** toits, compétences, autres minerais et recettes. Le test de support de toit de TEST-061 reste inexécutable sans système de toits.
+
+## Sources et contradictions
+
+- [Acier compacté](https://rimworldwiki.com/wiki/Compacted_steel) : 1 500 PV, rendement de base 40, gisements de 30–40 cases, rendement affecté par difficulté et colon. [Acier](https://rimworldwiki.com/wiki/Steel) : pile de 75 et coût de passage 14. Wiki communautaire relu, pas export certifié d’une installation.
+- Définitions historiques Core, commit `85954e64ea75334f51e33e27a4128809191e430e`, **7 septembre 2018** : [Buildings_Natural](https://github.com/RimWorld-zh/RimWorld-Core/blob/85954e64ea75334f51e33e27a4128809191e430e/Core/Defs/ThingDefs_Buildings/Buildings_Natural.xml), [ResourceBase](https://github.com/RimWorld-zh/RimWorld-Core/blob/85954e64ea75334f51e33e27a4128809191e430e/Core/Defs/ThingDefs_Items/Items_Resource_Base.xml), [Steel](https://github.com/RimWorld-zh/RimWorld-Core/blob/85954e64ea75334f51e33e27a4128809191e430e/Core/Defs/ThingDefs_Items/Items_Resource_Stuff.xml). Recoupement inspectable des héritages, **pas données actuelles**. L’ancien coût de passage 15 diffère du 14 actuel du wiki : adopter 14, confiance moyenne, à revoir avec des définitions 1.6 résolues.
+- Miroir décompilé au commit `2d508035082e7cb0c8e29e230d26bda6e546928f` du 20 mai 2026 : [JobDriver_Mine](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/RimWorld/JobDriver_Mine.cs), [Mineable](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/RimWorld/Mineable.cs), [PathGrid](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/Verse/PathGrid.cs). Version de l’assembly non certifiée. Les coups naturels valent 80, les autres 40 ; l’acier compacté hérite de `RockBase.isNaturalRock=true`. Donc **19 coups**, pas 38. À cadence neutre 100 ticks Core, cela donne 1 900 ticks, cohérent avec [le calcul acier](https://rimworldwiki.com/wiki/Steel/Calculations). La page [Mining Speed](https://rimworldwiki.com/wiki/Mining_Speed) conserve une ancienne valeur de 120 et une validation 1.2 : ne pas la recopier aveuglément.
+
+## Décisions locales
+
+| Sujet | Contrat retenu et limite |
+|---|---|
+| Extraction | 1 500 PV, coups de 80 toutes les dix unités de temps locales, 40 unités d’acier à la fin. Pas de transformation intermédiaire en fer ni de fonderie obligatoire. Confiance élevée sur produit/PV, moyenne à élevée sur héritage/cadence. |
+| Rendement | Profil neutre explicite à 100 %. Les dégâts actuels sont exclusivement miniers et tous les opérateurs ont le même rendement ; `miningDamage` suffit donc à représenter ce passé. Le miroir pondère le rendement par les dégâts et capacités de chaque opérateur : **revoir le schéma avant d’ajouter compétences ou dégâts externes**, ne pas attribuer tout le rendement au dernier mineur. |
+| Gisements | Groupes connectés de 30–40 cases, amorcés en bord de massif. Flux déterministe indépendant ; roche encaissante conservée. Densité locale d’un groupe par 500 cases de roche, minimum un si un groupe admissible existe ; budget d’essais borné. Cette densité est une adaptation du site tempéré, pas celle du générateur Core. Les petits massifs peuvent ne recevoir aucun gisement. |
+| Sol | Le gisement révèle la roche brute encaissante du site. Autres sous-sols et strates restent absents ; aucun minerai n’est ajouté aux anciennes cartes au chargement. |
+| Rangement | Acier automatiquement transportable vers une réserve autorisée ; aucune désignation de fragment nécessaire. Pile de 75, identité conservée, capacité et type réservés. Portage conserve la calibration générale provisoire de dix unités : ce n’est pas encore la capacité adulte de référence. |
+| Marche | Supplément continu de 1,4 tick local, maximum avec le sol et le mobilier. Un objet coûtant 14 reste sous le seuil de non-répétition de 25 du miroir. Arrêt autorisé sur la pile. Les autres piles ordinaires attendent encore la relecture de leurs coûts. |
+| Saturation | Le dernier coup attend si le produit ne peut pas être déposé ou identifié. Roche, matière et PRNG conservés ; adaptation de robustesse déjà employée par V28. |
+
+## Ordre des prochains travaux
+
+[L’atelier de taille](https://rimworldwiki.com/wiki/Stonecutter%27s_table) demande 75 unités d’un matériau admissible **et 30 acier**. Il produit 20 blocs par fragment et relève du métier Crafting, sans XP de Crafting ; la vitesse générale de travail intervient. La recherche Stonecutting est nécessaire, déjà acquise dans le scénario Crashlanded de référence. Notre départ reste un camp personnalisé, pas une reproduction complète de ce scénario.
+
+Le lot V29 rend donc l’acier extractible et stockable avant les recettes de construction à plusieurs matériaux, puis l’atelier. **Aucun atelier entièrement en bois, aucun acier gratuit ne sont introduits pour contourner ce prérequis.** L’atelier, les blocs, les recettes, le calcul de recherche et les modificateurs de matériau ne sont pas livrés dans ce lot. Nouvelle vérification requise au moment de chacun de ces ajouts.

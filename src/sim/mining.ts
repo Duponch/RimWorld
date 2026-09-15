@@ -1,3 +1,4 @@
+import { STEEL_ORE, minedFloor } from './ore.ts';
 import { PICK_DAMAGE, PICK_TICKS, CHUNK_CHANCE, rockMaxHP, chunkItem } from './mining-rules.ts';
 import { addMaterial } from './materials.ts';
 import { groundCapacity } from './ground-placement.ts';
@@ -14,16 +15,17 @@ export function advanceMining(world:World,pawn:Pawn,job:Job):boolean {
   const damage=(tile.miningDamage??0)+PICK_DAMAGE;
   if(damage<rockMaxHP(tile)){world.tiles[i]={...tile,miningDamage:damage};return false;}
   let rng=world.rng;rng^=rng<<13;rng^=rng>>>17;rng^=rng<<5;rng>>>=0;
-  const drops=rng/0x100000000<CHUNK_CHANCE,item=chunkItem(tile);
+  const quantity=tile.ore ? STEEL_ORE.yield : rng/0x100000000<CHUNK_CHANCE?1:0;
+  const item=tile.ore?'steel':chunkItem(tile),kind=tile.ore?'steel':'chunk';
   // A solid cell cannot contain an item. Validate the future floor in an isolated
   // one-cell view, retaining all live destination/service reservations.
-  const floor={terrain:'rough-stone' as const,...tile.stone?{stone:tile.stone}:{}};
-  if(drops) {
+  const floor=minedFloor(tile);
+  if(quantity) {
     if(world.piles.length>=32768||!Number.isSafeInteger(world.nextId+1))return false;
     const tiles=world.tiles.slice();tiles[i]=floor;
-    if(groundCapacity({...world,tiles},job,item)<1)return false;
+    if(groundCapacity({...world,tiles},job,item)<quantity)return false;
   }
   world.tiles[i]=floor;world.rng=rng;
-  if(drops)addMaterial(world,'chunk',1,{type:'ground',x:job.x,z:job.z},item);
+  if(quantity)addMaterial(world,kind,quantity,{type:'ground',x:job.x,z:job.z},item);
   return true;
 }

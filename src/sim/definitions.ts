@@ -5,6 +5,7 @@ import type { Cell, Footprint, JobKind, Orientation, StructureKind } from './typ
 export const MAX_STACK = 75;
 export const CARRY_CAPACITY = 10;
 export const MATERIAL_DEFINITIONS = Object.freeze({
+  steel: Object.freeze({id:'steel',label:'Acier',unit:'unit',stackLimit:MAX_STACK}),
   chunk: Object.freeze({id:'chunk',label:'Fragments de roche',unit:'fragment',stackLimit:1}),
   wood: Object.freeze({ id: 'wood', label: 'Bois', unit: 'unit', stackLimit: MAX_STACK }),
   food: Object.freeze({ id: 'food', label: 'Nourriture', unit: 'portion', stackLimit: MAX_STACK, chairSearchRadius: 32, tableDesired: true }),

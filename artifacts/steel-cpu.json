@@ -1,0 +1,148 @@
+{
+  "date": "2026-09-15T01:05:40.623Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "map": 250,
+  "ore": "steel",
+  "measuredTicks": 1200,
+  "protocol": "3/30/100 miners; 4 sandstone or steel cells + 1 tree each in cleared patch surrounded by the natural map. 3 repetitions; 100 separate warmup ticks. Snapshots every 5 ticks measured separately; validation outside timing.",
+  "generation": [
+    {
+      "seed": 42,
+      "milliseconds": 68.66530000000003,
+      "oreCells": 553
+    },
+    {
+      "seed": 93,
+      "milliseconds": 64.41910000000001,
+      "oreCells": 847
+    },
+    {
+      "seed": 2048,
+      "milliseconds": 60.571000000000026,
+      "oreCells": 840
+    }
+  ],
+  "phases": [
+    {
+      "count": 3,
+      "ticks": {
+        "samples": 3600,
+        "p50": 0.005200000000058935,
+        "p95": 0.023199999999974352,
+        "p99": 1.266399999999976,
+        "max": 7.198700000000031
+      },
+      "snapshots": {
+        "samples": 720,
+        "p50": 2.5978999999999814,
+        "p95": 2.8481000000001586,
+        "p99": 4.054399999999987,
+        "max": 9.900199999999927
+      },
+      "outcomes": [
+        {
+          "steelUnits": 480,
+          "tick": 3200,
+          "mined": 12,
+          "chunks": 0,
+          "remaining": 0
+        },
+        {
+          "steelUnits": 480,
+          "tick": 3200,
+          "mined": 12,
+          "chunks": 0,
+          "remaining": 0
+        },
+        {
+          "steelUnits": 480,
+          "tick": 3200,
+          "mined": 12,
+          "chunks": 0,
+          "remaining": 0
+        }
+      ]
+    },
+    {
+      "count": 30,
+      "ticks": {
+        "samples": 3600,
+        "p50": 0.03569999999990614,
+        "p95": 3.8764000000001033,
+        "p99": 7.897000000000389,
+        "max": 22.227300000000014
+      },
+      "snapshots": {
+        "samples": 720,
+        "p50": 2.717800000000352,
+        "p95": 4.061700000000201,
+        "p99": 5.133000000000266,
+        "max": 14.92109999999957
+      },
+      "outcomes": [
+        {
+          "steelUnits": 4800,
+          "tick": 3200,
+          "mined": 120,
+          "chunks": 0,
+          "remaining": 0
+        },
+        {
+          "steelUnits": 4800,
+          "tick": 3200,
+          "mined": 120,
+          "chunks": 0,
+          "remaining": 0
+        },
+        {
+          "steelUnits": 4800,
+          "tick": 3200,
+          "mined": 120,
+          "chunks": 0,
+          "remaining": 0
+        }
+      ]
+    },
+    {
+      "count": 100,
+      "ticks": {
+        "samples": 3600,
+        "p50": 0.21919999999954598,
+        "p95": 9.495199999999386,
+        "p99": 13.97860000000037,
+        "max": 18.35150000000067
+      },
+      "snapshots": {
+        "samples": 720,
+        "p50": 2.7528000000002066,
+        "p95": 4.415000000000873,
+        "p99": 5.01890000000094,
+        "max": 17.963200000000143
+      },
+      "outcomes": [
+        {
+          "steelUnits": 16000,
+          "tick": 3200,
+          "mined": 400,
+          "chunks": 0,
+          "remaining": 0
+        },
+        {
+          "steelUnits": 16000,
+          "tick": 3200,
+          "mined": 400,
+          "chunks": 0,
+          "remaining": 0
+        },
+        {
+          "steelUnits": 16000,
+          "tick": 3200,
+          "mined": 400,
+          "chunks": 0,
+          "remaining": 0
+        }
+      ]
+    }
+  ]
+}

@@ -29,6 +29,9 @@ export function observeErrors(page: Page): string[] {
 }
 
 export async function panel(page: Page, name: 'architect' | 'work' | 'schedule' | 'assign' | 'menu') {
+    // Snapshot adoption precedes GPU preparation and the closing of old panels.
+    // Wait for the same interactive state a player needs, not just visibility.
+    await expect(page.locator('.game-shell')).toHaveJSProperty('inert', false);
   if (!await page.locator(`#${name}-panel`).isVisible()) await page.locator(`[data-panel="${name}"]`).click();
   await expect(page.locator(`#${name}-panel`)).toBeVisible();
 }

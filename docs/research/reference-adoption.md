@@ -138,3 +138,5 @@ Chapitres 5–7/10/29 ; **SYS/TEST-016..019/061, CAT-059/060** : adopter les cin
 ## V28 — minage, sol brut et produits
 
 Chapitres 5–7/10/21/29, **SYS/TEST-061**, **CAT-059/060**, logistique **SYS/TEST-051..054** : adopter accès, dégât persistant, produit typé et demande de transport ; adapter la cadence locale, les anciennes roches et le dépôt conservatif ; différer minerais, taille, sous-sols, toits/effondrements. [Recherche fraîche](mining-reference.md), [contrat](../development/mining.md). Le test de support de toit du corpus reste non exécuté. Les scénarios existants de colonie et de navigation sont enrichis ; les statuts du corpus ne valent pas validation locale.
+
+Acier V29 : chapitres 5–6/10/11 et SYS/TEST-016, 061–064, CAT-059/060 relus. Adoption des identités et transferts physiques ; génération locale adaptée ; toits, compétences, ateliers et blocs différés. La [recherche fraîche](steel-reference.md) relève le prérequis de 30 acier de l’atelier et la contradiction 120/100 ticks entre wiki historique et miroir de code. Aucun SYS de famille n’est déclaré terminé par ce seul contenu.

@@ -59,3 +59,5 @@ Géologie des nouvelles cartes : [contrat V27](development/geology.md), [recherc
 Minage : [contrat V28](development/mining.md), [référence et divergences](research/mining-reference.md).
 
 Fluidité des premiers dépôts : [préparation des ombres](development/shadow-preparation.md).
+
+Acier et premiers minerais : [contrat V29](development/steel.md), [recherche et prérequis des ateliers](research/steel-reference.md).

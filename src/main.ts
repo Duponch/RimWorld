@@ -154,7 +154,7 @@ function readStorageSettings(prefix: string) {
   const capacity = Number(el<HTMLInputElement>(`${prefix}-capacity`).value);
   if (!Number.isInteger(capacity) || capacity < 1 || capacity > MAX_STACK) throw new Error(`La capacité doit être un entier entre 1 et ${MAX_STACK}.`);
   return {
-    filters: { chunk: el<HTMLInputElement>(`${prefix}-chunk`).checked, wood: el<HTMLInputElement>(`${prefix}-wood`).checked, food: el<HTMLInputElement>(`${prefix}-food`).checked, furniture: el<HTMLInputElement>(`${prefix}-furniture`).checked },
+    filters: { steel: el<HTMLInputElement>(`${prefix}-steel`).checked, chunk: el<HTMLInputElement>(`${prefix}-chunk`).checked, wood: el<HTMLInputElement>(`${prefix}-wood`).checked, food: el<HTMLInputElement>(`${prefix}-food`).checked, furniture: el<HTMLInputElement>(`${prefix}-furniture`).checked },
     priority: Number(el<HTMLSelectElement>(`${prefix}-priority`).value), capacity,
   };
 }
@@ -184,6 +184,7 @@ function rebuildInspector() {
       el<HTMLInputElement>('selected-stockpile-wood').checked = storage.filters.wood;
       el<HTMLInputElement>('selected-stockpile-food').checked = storage.filters.food;
       el<HTMLInputElement>('selected-stockpile-furniture').checked = storage.filters.furniture??false;
+      el<HTMLInputElement>('selected-stockpile-steel').checked = storage.filters.steel??false;
       el<HTMLInputElement>('selected-stockpile-chunk').checked = storage.filters.chunk??false;
       el<HTMLSelectElement>('selected-stockpile-priority').value = String(storage.priority);
       el<HTMLInputElement>('selected-stockpile-capacity').value = String(storage.capacity);
@@ -253,6 +254,7 @@ function renderState() {
   const world = snapshot;
   scheduleUI.update(world);
   foodPolicyUI.update(world);
+  el('steel').textContent = String(world.piles.reduce((n,p)=>n+(p.item==='steel'&&p.owner.type!=='job'?p.quantity:0),0));
   el('wood').textContent = String(world.stock.wood); el('food').textContent = availableNutrition(world).toFixed(1); updateFoodStocks(el('food-items'), world);
   const carried = world.piles.filter(pile => pile.owner.type === 'pawn').reduce((sum, pile) => sum + pile.quantity, 0);
   const delivered = world.piles.filter(pile => pile.owner.type === 'job').reduce((sum, pile) => sum + pile.quantity, 0);
