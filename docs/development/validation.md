@@ -1,4 +1,4 @@
-# Validation courante — V28, minage et fragments
+# Validation courante — V28, minage et préparation des ombres
 
 15 septembre 2026. G0 en consolidation, G1 partiel, première tranche de minage G2. [Contrat](mining.md), [recherche confrontée](../research/mining-reference.md), [preuves V27 archivées](../history/validation-v27-geology.md).
 
@@ -36,12 +36,32 @@ Ce banc mesure minage, navigation et tâches concurrentes de collecte. Il ne con
 | 30 | 6,1 ms | 11,9 ms | 29,9 → 30,0 ms | 10,0 → 7,5 ms | 175 / 176 |
 | 100 | 6,1 ms | 18,0 ms | 78,0 → 84,0 ms | 13,4 → 11,7 ms | 190 / 194 |
 
-Les buffers rocheux et objets de sol restent identiques pendant les extractions ; aucune erreur navigateur/WebGPU observée. La comparaison de surface évite une chaîne et un tableau couvrant 62 500 cases à chaque mise à jour de dégâts. Ces deux exécutions successives montrent une baisse du coût d’adoption, **pas une disparition des pointes**. Les maximums de 78–84 ms restent une anomalie à traiter ; la scène ne justifie pas une promesse de fluidité parfaite. Le temps CPU de la méthode de rendu culmine à 11 ms dans le second relevé : il n’explique pas à lui seul l’intervalle maximal.
+Les buffers rocheux et objets de sol restent identiques pendant les extractions ; aucune erreur navigateur/WebGPU observée. La comparaison de surface évite une chaîne et un tableau couvrant 62 500 cases à chaque mise à jour de dégâts. Ces deux exécutions successives montraient une baisse du coût d’adoption, **pas une disparition des pointes**. Les maximums de 78–84 ms ont motivé le complément ci-dessous. Le temps CPU de la méthode de rendu culminait à 11 ms : il n’expliquait pas à lui seul l’intervalle maximal.
 
-Le [diagnostic complémentaire à 100 mineurs](../../artifacts/mining-render-diagnostic.json) enregistre une pointe à **108 ms** avec l’[API Chromium Long Animation Frames](https://developer.chrome.com/docs/web-platform/long-animation-frames). L’entrée de 108,3 ms ne contient que 6,4 ms de callback de rendu attribué ; son début de rendu arrive environ 102 ms après le début de l’intervalle. L’adoption complète avec UI culmine à 18,2 ms. Cela ne localise pas encore la cause : l’API n’attribue pas le travail des workers, et ces durées seules ne distinguent pas attente GPU, pilote ou ordonnancement. Aucune ancienne commande de test du projet n’était encore active lors du contrôle des processus. La suite doit capturer une trace incluant le GPU et les événements de minage avant de choisir une nouvelle optimisation ; pas de reconstruction globale du sol ni de hausse des appels attribuable aux types de fragments dans ce scénario.
+Le [diagnostic complémentaire à 100 mineurs](../../artifacts/mining-render-diagnostic.json) enregistre une pointe à **108 ms** avec l’[API Chromium Long Animation Frames](https://developer.chrome.com/docs/web-platform/long-animation-frames). L’entrée de 108,3 ms ne contient que 6,4 ms de callback de rendu attribué ; son début de rendu arrive environ 102 ms après le début de l’intervalle. L’adoption complète avec UI culmine à 18,2 ms. Ces durées seules ne localisaient pas la cause. Aucune ancienne commande de test du projet n’était encore active lors du contrôle des processus. Le recoupement suivant utilise aussi les demandes de pipelines et les événements GPU.
 
 Le [tout premier banc](../../artifacts/mining-render-initial.json) capturait les objets de terrain avant l’adoption du chargement asynchrone : sa conclusion `stableGround: false` était invalide. Le banc attend désormais le tick, la population et les désignations exacts avant de mémoriser les buffers.
 
+## Correction vérifiée : ombres des premières piles
+
+[Contrat](shadow-preparation.md). La [trace initiale](../../artifacts/mining-render-trace.json) et son [extraction compacte](../../artifacts/mining-gpu-attribution.json) montrent un traitement de commandes de **115,955 ms sur CrGpuMain**, juste avant l’image retardée. C’est du temps du processus GPU, pas une durée d’exécution matérielle des shaders. La capture perturbe la cadence ; ses percentiles ne sont pas utilisés comme témoin de fluidité. Un [essai Dawn trop détaillé](../../artifacts/mining-render-pipeline-trace.json) a dépassé 128 MiB et a été arrêté ; le collecteur conserve désormais les résultats de phase même si la trace échoue.
+
+Sans trace lourde, le [relevé des pipelines](../../artifacts/mining-render-pipelines.json) observe huit créations synchrones `ShadowMaterial` au premier dépôt et une pointe de 84 ms. Le code officiel Three r186 exclut les ombres de `compileAsync` : les lots vides manquaient donc de préparation. Une passe réelle des lots résidents pendant le chargement, suivie d’une restauration exacte, supprime ces demandes dans notre scénario.
+
+| Charge | p95 des intervalles | p99 | Maximum après préparation | Pipelines créés pendant le jeu |
+|---|---:|---:|---:|---:|
+| 3 mineurs | 6,1 ms | 6,1 ms | 12,0 ms | 0 |
+| 30 mineurs | 6,1 ms | 6,1 ms | 18,0 ms | 0 |
+| 100 mineurs | 6,1 ms | 17,9 ms | 24,1 ms | 0 |
+
+[Relevé final 3/30/100](../../artifacts/mining-shadow-final.json) : respectivement 12/120/400 extractions et 3/30/114 fragments, buffers conservés, aucune erreur GPU ni image longue signalée. Un [premier essai corrigé à 100](../../artifacts/mining-render-shadow-warm.json) plafonne aussi à 24 ms. En [désactivant uniquement le helper de préparation](../../artifacts/mining-shadow-control.json), huit compilations et une pointe de 107,9 ms reviennent. Cela étaye le lien causal sans garantir une cadence parfaite sur tout matériel ou tout contenu futur.
+
+Le compromis est mesuré : préparation initiale 7,33 s pour le témoin, 11,52–11,73 s pour le lot corrigé ; rechargement dans le même renderer 0,20–0,21 s. Ce sont les durées de préparation, pas tout le chargement de page. Aucun draw call permanent supplémentaire ni nouveau buffer de simulation. Les deux scénarios purs [rétention et surface](../../artifacts/shadow-preparation-targeted.json) passent ; ils couvrent aussi un snapshot intervenant pendant l’attente GPU afin de ne pas écraser ses nouvelles instances. Compilation finale : 158 modules, worker inchangé 189,07 kB, jeu 1 055,88 kB / 295,82 kB gzip.
+
+Le [parcours minage natif](../../artifacts/shadow-preparation-ui.json) passe après correction. Le parcours de frontières du même lot recharge correctement V28 mais échoue sur une ancienne assertion `23` ; ce défaut de fixture est corrigé pour vérifier le schéma courant. Le [parcours de frontières corrigé](../../artifacts/shadow-preparation-boundaries.json) passe en **38,6 secondes**, avec backend **WebGL 2** effectivement relevé, commandes répétées, refus de sauvegarde invalide et reprise de la partie historique. Les captures natives après extraction ont été inspectées. Les 98 documents, leurs 1 067 liens locaux et les trois originaux conservés passent le contrôle d’intégrité.
+
+La simulation et les commandes n’ont pas été modifiées dans ce complément. Le pilote de trois jours et le lot 93/93 ci-dessus restent les preuves du gameplay V28 ; ils n’ont pas été rejoués pour une préparation graphique.
+
 ## Suite et limites fonctionnelles
 
-Le minage ne clôt pas G2 : toits/effondrements, minerais, compétences/capacités/XP, lissage et sous-sols variés restent absents. Les fragments sont des objets physiques avec représentation procédurale provisoire ; taille, blocs et matériaux de construction constituent la suite. Les anciennes pierres décoratives ne sont pas encore converties en fragments transportables. Les cinq roches, leur dureté et leur produit ne signifient pas que toute la famille géologique soit achevée. Le mode nuit poursuit ces étapes après commit/push sur main, en conservant les pointes de performance parmi les travaux ouverts.
+Le minage ne clôt pas G2 : toits/effondrements, minerais, compétences/capacités/XP, lissage et sous-sols variés restent absents. Les fragments sont des objets physiques avec représentation procédurale provisoire ; taille, blocs et matériaux de construction constituent la suite. Les anciennes pierres décoratives ne sont pas encore converties en fragments transportables. Les cinq roches, leur dureté et leur produit ne signifient pas que toute la famille géologique soit achevée. Le mode nuit poursuit ces étapes après commit/push sur main, en maintenant l’audit des nouveaux pipelines et des capacités graphiques.

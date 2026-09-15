@@ -56,5 +56,23 @@ export class BoxBatches {
     this.batches.clear();
   }
 
+  /** Empty batches otherwise miss the real shadow pass. Expose one degenerate
+   * instance only during loading, restoring the exact resident data afterwards. */
+  prepareEmptyShadows(): () => void {
+    const empty=[...this.batches.values()].filter(mesh=>mesh.count===0);
+    const saved=empty.map(mesh=>({attribute:mesh.instanceMatrix,first:mesh.instanceMatrix.array.slice(0,16),version:mesh.instanceMatrix.version+1}));
+    for(const mesh of empty) {
+      mesh.instanceMatrix.array.fill(0,0,16);mesh.instanceMatrix.array[15]=1;
+      mesh.instanceMatrix.needsUpdate=true;mesh.count=1;
+    }
+    return ()=>{empty.forEach((mesh,i)=>{
+      const state=saved[i]!;
+      // Snapshot adoption may run while the GPU queue is draining. Never
+      // overwrite a newer logical batch, even when its count is also one.
+      if(mesh.instanceMatrix!==state.attribute||mesh.instanceMatrix.version!==state.version)return;
+      mesh.count=0;mesh.instanceMatrix.array.set(state.first,0);mesh.instanceMatrix.needsUpdate=true;
+    });};
+  }
+
   dispose(): void { this.clear(); this.geometry.dispose(); for (const mat of Object.values(this.materials)) mat.dispose(); }
 }

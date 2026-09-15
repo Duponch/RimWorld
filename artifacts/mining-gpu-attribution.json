@@ -1,0 +1,225 @@
+{
+  "source": "artifacts/mining-render-trace.json",
+  "phases": [
+    {
+      "actors": 100,
+      "trace": {
+        "path": "tmp/render-traces/mining-100-1789431554113.json",
+        "bytes": 78172444,
+        "categories": [
+          "blink.user_timing",
+          "cc",
+          "devtools.timeline",
+          "disabled-by-default-devtools.timeline",
+          "disabled-by-default-devtools.timeline.frame",
+          "disabled-by-default-devtools.timeline.inputs",
+          "disabled-by-default-devtools.timeline.invalidationTracking",
+          "disabled-by-default-devtools.timeline.layers",
+          "disabled-by-default-devtools.timeline.picture",
+          "disabled-by-default-devtools.timeline.stack",
+          "disabled-by-default-gpu.dawn",
+          "disabled-by-default-v8.gc",
+          "gpu",
+          "renderer.scheduler",
+          "toplevel",
+          "v8",
+          "viz"
+        ],
+        "sha256": "ddb1674e9cf4cd898679ae1305203914b02f74fa6ccc1383756940a84cabcaf2"
+      },
+      "eventCount": 240773,
+      "longFrames": [
+        {
+          "name": "long-animation-frame",
+          "entryType": "long-animation-frame",
+          "startTime": 11704.79999999702,
+          "duration": 80.70000000298023,
+          "navigationId": 406,
+          "paintTime": 11785.5,
+          "presentationTime": 11792,
+          "renderStart": 11779,
+          "styleAndLayoutStart": 11785.5,
+          "firstUIEventTimestamp": 0,
+          "blockingDuration": 0,
+          "scripts": [
+            {
+              "name": "script",
+              "entryType": "script",
+              "startTime": 11779,
+              "duration": 6.5,
+              "navigationId": 406,
+              "invoker": "FrameRequestCallback",
+              "invokerType": "user-callback",
+              "windowAttribution": "self",
+              "executionStart": 11779,
+              "forcedStyleAndLayoutDuration": 0,
+              "pauseDuration": 0,
+              "sourceURL": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=7e7a4eb2",
+              "sourceFunctionName": "update",
+              "sourceCharPosition": 1967496
+            }
+          ]
+        }
+      ],
+      "largestGpuTasks": [
+        {
+          "at": 11659.608,
+          "duration": 115.955,
+          "thread": "CrGpuMain",
+          "data": {
+            "data": {
+              "renderer_pid": 24740,
+              "used_bytes": 38735872
+            }
+          },
+          "commandBatches": [
+            {
+              "at": 11660.13,
+              "duration": 35.272,
+              "data": {
+                "bytes": 51504
+              }
+            },
+            {
+              "at": 11695.406,
+              "duration": 32.612,
+              "data": {
+                "bytes": 63456
+              }
+            },
+            {
+              "at": 11728.025,
+              "duration": 31.565,
+              "data": {
+                "bytes": 51208
+              }
+            },
+            {
+              "at": 11759.594,
+              "duration": 15.954,
+              "data": {
+                "bytes": 20576
+              }
+            }
+          ]
+        },
+        {
+          "at": 11859.519,
+          "duration": 18.026,
+          "thread": "CrGpuMain",
+          "data": {
+            "data": {
+              "renderer_pid": 24740,
+              "used_bytes": 38735872
+            }
+          },
+          "commandBatches": [
+            {
+              "at": 11859.864,
+              "duration": 17.664,
+              "data": {
+                "bytes": 59952
+              }
+            }
+          ]
+        },
+        {
+          "at": 11784.46,
+          "duration": 1.674,
+          "thread": "CrGpuMain",
+          "data": {
+            "data": {
+              "renderer_pid": 24740,
+              "used_bytes": 38735872
+            }
+          },
+          "commandBatches": []
+        },
+        {
+          "at": 10543.099,
+          "duration": 1.577,
+          "thread": "CrGpuMain",
+          "data": {
+            "data": {
+              "renderer_pid": 24740,
+              "used_bytes": 38735872
+            }
+          },
+          "commandBatches": []
+        },
+        {
+          "at": 11215.737,
+          "duration": 1.512,
+          "thread": "CrGpuMain",
+          "data": {
+            "data": {
+              "renderer_pid": 24740,
+              "used_bytes": 38735872
+            }
+          },
+          "commandBatches": []
+        },
+        {
+          "at": 10660.728,
+          "duration": 1.459,
+          "thread": "CrGpuMain",
+          "data": {
+            "data": {
+              "renderer_pid": 24740,
+              "used_bytes": 38735872
+            }
+          },
+          "commandBatches": []
+        },
+        {
+          "at": 11780.495,
+          "duration": 1.459,
+          "thread": "CrGpuMain",
+          "data": {
+            "data": {
+              "renderer_pid": 24740,
+              "used_bytes": 38735872
+            }
+          },
+          "commandBatches": []
+        },
+        {
+          "at": 12143.463,
+          "duration": 1.419,
+          "thread": "CrGpuMain",
+          "data": {
+            "data": {
+              "renderer_pid": 24740,
+              "used_bytes": 38735872
+            }
+          },
+          "commandBatches": []
+        },
+        {
+          "at": 12405.747,
+          "duration": 1.313,
+          "thread": "CrGpuMain",
+          "data": {
+            "data": {
+              "renderer_pid": 24740,
+              "used_bytes": 38735872
+            }
+          },
+          "commandBatches": []
+        },
+        {
+          "at": 12460.416,
+          "duration": 1.312,
+          "thread": "CrGpuMain",
+          "data": {
+            "data": {
+              "renderer_pid": 24740,
+              "used_bytes": 38735872
+            }
+          },
+          "commandBatches": []
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,184 @@
+{
+  "date": "2026-09-15T00:25:30.081Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "protocol": "Native Chromium WebGPU, actual worker 6x, natural 250² with cleared mining patch; 3/30/100 miners × 4 sandstone walls and 1 tree. 90 warmup frames; no full-world serialization during timed frames. Ground/rock buffer identities checked after excavation.",
+  "phases": [
+    {
+      "count": 100,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "description": ""
+      },
+      "errors": [],
+      "frames": {
+        "count": 988,
+        "p50": 6,
+        "p95": 6.099999999998545,
+        "p99": 12.099999999998545,
+        "max": 24
+      },
+      "frameCpu": {
+        "count": 989,
+        "p50": 4.399999998509884,
+        "p95": 5.399999998509884,
+        "p99": 6.100000001490116,
+        "max": 7.299999997019768
+      },
+      "adoptions": {
+        "count": 27,
+        "p50": 2.8000000044703484,
+        "p95": 12.600000001490116,
+        "p99": 13.900000005960464,
+        "max": 13.900000005960464
+      },
+      "drawCalls": {
+        "count": 989,
+        "p50": 179,
+        "p95": 191,
+        "p99": 193,
+        "max": 194
+      },
+      "excavationFrames": {
+        "count": 360,
+        "p50": 6,
+        "p95": 11.900000000001455,
+        "p99": 17.900000000001455,
+        "max": 23.900000000001455
+      },
+      "mined": 400,
+      "chunks": 114,
+      "stableRock": true,
+      "stableGround": true,
+      "snapshots": {
+        "count": 27,
+        "p50": 6.600000001490116,
+        "p95": 15.899999998509884,
+        "p99": 17.100000001490116,
+        "max": 17.100000001490116
+      },
+      "longFrames": [],
+      "excavations": [
+        {
+          "at": 15673.70000000298,
+          "tick": 2055,
+          "mined": 48,
+          "dirty": 172
+        },
+        {
+          "at": 15884.10000000149,
+          "tick": 2070,
+          "mined": 52,
+          "dirty": 188
+        },
+        {
+          "at": 16604,
+          "tick": 2112,
+          "mined": 100,
+          "dirty": 400
+        },
+        {
+          "at": 17319.40000000596,
+          "tick": 2154,
+          "mined": 36,
+          "dirty": 128
+        },
+        {
+          "at": 17534.20000000298,
+          "tick": 2169,
+          "mined": 64,
+          "dirty": 232
+        },
+        {
+          "at": 18200.60000000149,
+          "tick": 2208,
+          "mined": 8,
+          "dirty": 32
+        },
+        {
+          "at": 18440.10000000149,
+          "tick": 2223,
+          "mined": 59,
+          "dirty": 232
+        },
+        {
+          "at": 18685.80000000447,
+          "tick": 2238,
+          "mined": 13,
+          "dirty": 52
+        },
+        {
+          "at": 18889.80000000447,
+          "tick": 2250,
+          "mined": 7,
+          "dirty": 28
+        },
+        {
+          "at": 19142,
+          "tick": 2265,
+          "mined": 4,
+          "dirty": 12
+        },
+        {
+          "at": 19394.10000000149,
+          "tick": 2280,
+          "mined": 3,
+          "dirty": 12
+        },
+        {
+          "at": 19651.70000000298,
+          "tick": 2295,
+          "mined": 2,
+          "dirty": 8
+        },
+        {
+          "at": 19899.70000000298,
+          "tick": 2310,
+          "mined": 2,
+          "dirty": 8
+        },
+        {
+          "at": 20403.90000000596,
+          "tick": 2340,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 20655.30000000447,
+          "tick": 2355,
+          "mined": 1,
+          "dirty": 4
+        }
+      ],
+      "slowFrames": [
+        {
+          "at": 19922.30000000447,
+          "cpu": 4.5,
+          "interval": 23.900000000001455,
+          "calls": 177
+        },
+        {
+          "at": 20175.5,
+          "cpu": 4.700000002980232,
+          "interval": 24,
+          "calls": 177
+        },
+        {
+          "at": 20679,
+          "cpu": 5,
+          "interval": 23.900000000001455,
+          "calls": 171
+        }
+      ],
+      "pipelines": [],
+      "preparations": [
+        11666.69999999553,
+        203
+      ]
+    }
+  ]
+}

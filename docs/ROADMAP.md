@@ -16,7 +16,7 @@ RimWorld de base d’abord, extensions après G5. Grille plane en 3D low poly, i
 
 La documentation est reclassée en contrats courants, recherches, sources originales, décisions et preuves historiques. Les prochains ajouts enrichissent les scénarios de colonie existants ; les lots de tests sont regroupés selon les contrats touchés.
 
-Audit suivant : localiser les pointes graphiques de 78–108 ms observées avec 100 mineurs V28 à l’aide d’une trace comprenant les événements GPU, puis traiter la cause mesurée avant d’étendre la chaîne de la pierre. Les buffers restent stables et le p95 est faible, ce qui ne suffit pas à conclure à une fluidité parfaite.
+Audit V28 complété : les premières piles déclenchaient des compilations synchrones d’ombres. Leur préparation au chargement ramène le maximum observé à 24,1 ms avec 100 mineurs, contre 107,9 ms dans le témoin sans préparation. Le chargement initial coûte environ quatre secondes supplémentaires sur le matériel mesuré. La chaîne de la pierre peut reprendre ; conserver ce contrôle à l’introduction de nouveaux lots et capacités, sans promesse de fluidité parfaite.
 
 Les lots V25–V26 ajoutent retrait, portage, rangement, dégagement et pose du même meuble ; les propriétés et filtres du catalogue complet restent ouverts. Le lot V24 a ajouté retrait physique et récupération. L’audit de 100 colons a réduit une partie des pointes graphiques du premier dépôt en préparant les lots au chargement ; des pointes résiduelles et les limites du planner à charge mixte restent mesurées dans [validation](development/validation.md). Le minage V28 possède un audit de 3/30/100 mineurs ; les futurs ateliers devront enrichir les mêmes conditions de charge.
 

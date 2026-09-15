@@ -1,0 +1,11 @@
+{
+  "date": "2026-09-15T00:21:11.319Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "protocol": "Native Chromium WebGPU, actual worker 6x, natural 250\u00b2 with cleared mining patch; 3/30/100 miners \u00d7 4 sandstone walls and 1 tree. 90 warmup frames; no full-world serialization during timed frames. Ground/rock buffer identities checked after excavation.",
+  "phases": [],
+  "error": "GPU trace exceeded 128 MiB diagnostic budget; stopped. Phase data were not retained by the initial collector; collector now preserves phase results on trace failure."
+}

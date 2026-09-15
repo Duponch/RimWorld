@@ -87,6 +87,8 @@ Comparer à carte/population/cadrage/actions équivalents et sans autre build/te
 
 `scripts/compact-ui-report.py` extrait les grands checkpoints base64 vers `tmp/<rapport>-checkpoints` en gardant tick, taille et SHA-256 dans le JSON versionné. Il conserve erreurs et assertions, y compris pour les essais échoués. Ne pas supprimer une preuve d’échec diagnostiqué pour présenter artificiellement tous les passages comme réussis.
 
+L’audit de minage observe aussi les créations natives de pipelines. Les premiers dépôts doivent réutiliser les ombres préparées ; le témoin peut désactiver uniquement leur helper. Les traces GPU sont des diagnostics bornés et intrusifs, séparés des percentiles sans trace. Voir [préparation et reproduction](shadow-preparation.md). La restauration des lots vides ne doit pas écraser un snapshot reçu pendant l’attente de la file GPU.
+
 ## Exploiter les scénarios du référentiel
 
 Le [corpus utilisateur](../research/reference-adoption.md) fournit 196 propositions TEST, pas des tests directement exécutables. TEST-001..181 reformulent les contrats SYS ; ils enrichissent nos familles sans créer une suite par ligne. Les quinze autres entrées peuvent être plus précises, synthétiques ou propres à une version/extension. Le statut d’une cellule du classeur ne vaut pas validation locale.

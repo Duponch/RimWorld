@@ -1,4 +1,5 @@
 import { sameTerrainSurface } from './terrain-state';
+import { prepareShadowPipelines } from './shadow-preparation';
 import { chunkParts } from './chunk-presentation';
 import { installCommand } from '../sim/furniture-commands';
 import type { Structure } from '../sim/types';
@@ -299,6 +300,7 @@ export class ColonyRenderer {
       this.daylight.update(this.world?.tick ?? 0, this.controls.target);
       await this.renderer.compileAsync(this.scene, this.rig.orthographic);
       await this.renderer.compileAsync(this.scene, this.rig.perspective);
+      await prepareShadowPipelines(this.renderer,this.scene,this.rig.orthographic,this.boxes);
     } finally {
       restoreCrops();
       for (const [object, value] of culling) object.frustumCulled = value;

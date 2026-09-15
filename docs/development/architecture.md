@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+Préparation graphique après V28 : les lots vides disposent d’une [passe de préparation des ombres](shadow-preparation.md) avant de devenir visibles en jeu. Elle complète la compilation des deux projections sans modifier la simulation.
+
 ## Objectif
 
 Obtenir une simulation de colonie déterministe, observable et indépendante de sa représentation 3D. Les événements émergent des règles de travail, de survie et de vie sociale. La fidélité à la référence est documentée par domaine ; la première tranche ne tente pas de livrer tous ces domaines simultanément.

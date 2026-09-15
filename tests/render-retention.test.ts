@@ -55,6 +55,15 @@ test('objets graphiques résidents : retrait/restauration, frontière de chunk, 
   boxes.set(boxGroup,'test',items); expect(boxGroup.children[0]).toBe(mesh);expect(mesh.instanceMatrix.count).toBe(1024);
   const matrix=new THREE.Matrix4();mesh.getMatrixAt(699,matrix);expect(new THREE.Vector3().setFromMatrixPosition(matrix).x).toBe(699);
   expect(mesh.boundingSphere!.containsPoint(new THREE.Vector3(699,1,0))).toBe(true);
+  boxes.set(boxGroup,'test',[]);
+  const resident=mesh.instanceMatrix,bounds=mesh.boundingSphere,values=Array.from(resident.array);
+  const restoreShadows=boxes.prepareEmptyShadows();expect(mesh.count).toBe(1);expect(mesh.instanceMatrix).toBe(resident);
+  mesh.getMatrixAt(0,matrix);expect(matrix.determinant()).toBe(0);
+  restoreShadows();expect(mesh.count).toBe(0);expect(mesh.boundingSphere).toBe(bounds);expect(Array.from(resident.array)).toEqual(values);
+  boxes.set(boxGroup,'test',items.slice(0,4));const restoreLive=boxes.prepareEmptyShadows();restoreLive();expect(mesh.count).toBe(4);expect(mesh.instanceMatrix).toBe(resident);
+  boxes.set(boxGroup,'test',[]);const restoreBeforeSnapshot=boxes.prepareEmptyShadows();
+  boxes.set(boxGroup,'test',items.slice(17,18));const updated=Array.from(mesh.instanceMatrix.array);
+  restoreBeforeSnapshot();expect(mesh.count).toBe(1);expect(Array.from(mesh.instanceMatrix.array)).toEqual(updated);
   boxes.clear();expect(boxGroup.children).toEqual([]);boxes.set(boxGroup,'test',items.slice(0,2));expect(boxGroup.children[0]).not.toBe(mesh);
   boxes.dispose();expect(boxGroup.children).toEqual([]);
   // A fully picked-up stack no longer exists, but its position still drives

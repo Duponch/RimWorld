@@ -1,0 +1,405 @@
+{
+  "date": "2026-09-15T00:28:49.126Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "protocol": "Native Chromium WebGPU, actual worker 6x, natural 250² with cleared mining patch; 3/30/100 miners × 4 sandstone walls and 1 tree. 90 warmup frames; no full-world serialization during timed frames. Ground/rock buffer identities checked after excavation.",
+  "phases": [
+    {
+      "count": 3,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "description": ""
+      },
+      "errors": [],
+      "frames": {
+        "count": 684,
+        "p50": 6,
+        "p95": 6.100000000000364,
+        "p99": 6.100000000000364,
+        "max": 12
+      },
+      "frameCpu": {
+        "count": 685,
+        "p50": 4.100000001490116,
+        "p95": 4.600000001490116,
+        "p99": 5.199999995529652,
+        "max": 6.299999997019768
+      },
+      "adoptions": {
+        "count": 20,
+        "p50": 1.3000000044703484,
+        "p95": 5,
+        "p99": 5.800000004470348,
+        "max": 5.800000004470348
+      },
+      "drawCalls": {
+        "count": 685,
+        "p50": 161,
+        "p95": 166,
+        "p99": 166,
+        "max": 166
+      },
+      "excavationFrames": {
+        "count": 149,
+        "p50": 6,
+        "p95": 6.099999999998545,
+        "p99": 6.19999999999709,
+        "max": 12
+      },
+      "mined": 12,
+      "chunks": 3,
+      "stableRock": true,
+      "stableGround": true,
+      "shadowPreparation": true,
+      "snapshots": {
+        "count": 20,
+        "p50": 1.7000000029802322,
+        "p95": 5.299999997019768,
+        "p99": 6.300000004470348,
+        "max": 6.300000004470348
+      },
+      "longFrames": [],
+      "excavations": [
+        {
+          "at": 15594.60000000149,
+          "tick": 2052,
+          "mined": 3,
+          "dirty": 8
+        },
+        {
+          "at": 16490,
+          "tick": 2106,
+          "mined": 3,
+          "dirty": 12
+        },
+        {
+          "at": 17340.80000000447,
+          "tick": 2157,
+          "mined": 3,
+          "dirty": 8
+        },
+        {
+          "at": 18193.89999999851,
+          "tick": 2209,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 18432.5,
+          "tick": 2223,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 18636.60000000149,
+          "tick": 2235,
+          "mined": 1,
+          "dirty": 4
+        }
+      ],
+      "slowFrames": [],
+      "pipelines": [],
+      "preparations": [
+        11730.09999999404,
+        196.69999999552965
+      ]
+    },
+    {
+      "count": 30,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "description": ""
+      },
+      "errors": [],
+      "frames": {
+        "count": 896,
+        "p50": 6,
+        "p95": 6.100000000002183,
+        "p99": 6.100000000002183,
+        "max": 18
+      },
+      "frameCpu": {
+        "count": 897,
+        "p50": 4.399999998509884,
+        "p95": 5,
+        "p99": 5.700000002980232,
+        "max": 7.600000001490116
+      },
+      "adoptions": {
+        "count": 24,
+        "p50": 1.5,
+        "p95": 7.5,
+        "p99": 12.200000002980232,
+        "max": 12.200000002980232
+      },
+      "drawCalls": {
+        "count": 897,
+        "p50": 171,
+        "p95": 175,
+        "p99": 176,
+        "max": 176
+      },
+      "excavationFrames": {
+        "count": 222,
+        "p50": 6,
+        "p95": 6.100000000002183,
+        "p99": 12,
+        "max": 18
+      },
+      "mined": 120,
+      "chunks": 30,
+      "stableRock": true,
+      "stableGround": true,
+      "shadowPreparation": true,
+      "snapshots": {
+        "count": 24,
+        "p50": 2.7999999970197678,
+        "p95": 8.699999995529652,
+        "p99": 13.200000002980232,
+        "max": 13.200000002980232
+      },
+      "longFrames": [],
+      "excavations": [
+        {
+          "at": 15483.39999999851,
+          "tick": 2054,
+          "mined": 30,
+          "dirty": 108
+        },
+        {
+          "at": 16419.79999999702,
+          "tick": 2112,
+          "mined": 30,
+          "dirty": 120
+        },
+        {
+          "at": 17074,
+          "tick": 2151,
+          "mined": 14,
+          "dirty": 52
+        },
+        {
+          "at": 17307.5,
+          "tick": 2165,
+          "mined": 16,
+          "dirty": 60
+        },
+        {
+          "at": 17919.69999999553,
+          "tick": 2201,
+          "mined": 6,
+          "dirty": 24
+        },
+        {
+          "at": 18159.59999999404,
+          "tick": 2216,
+          "mined": 14,
+          "dirty": 48
+        },
+        {
+          "at": 18405.19999999553,
+          "tick": 2231,
+          "mined": 7,
+          "dirty": 28
+        },
+        {
+          "at": 19509.69999999553,
+          "tick": 2297,
+          "mined": 2,
+          "dirty": 8
+        },
+        {
+          "at": 19721.29999999702,
+          "tick": 2309,
+          "mined": 1,
+          "dirty": 4
+        }
+      ],
+      "slowFrames": [],
+      "pipelines": [],
+      "preparations": [
+        11561.5,
+        203.89999999850988
+      ]
+    },
+    {
+      "count": 100,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "description": ""
+      },
+      "errors": [],
+      "frames": {
+        "count": 952,
+        "p50": 6,
+        "p95": 6.100000000000364,
+        "p99": 17.900000000001455,
+        "max": 24.099999999998545
+      },
+      "frameCpu": {
+        "count": 953,
+        "p50": 5,
+        "p95": 6.199999995529652,
+        "p99": 7.600000001490116,
+        "max": 9
+      },
+      "adoptions": {
+        "count": 26,
+        "p50": 2.600000001490116,
+        "p95": 12.699999995529652,
+        "p99": 13.700000002980232,
+        "max": 13.700000002980232
+      },
+      "drawCalls": {
+        "count": 953,
+        "p50": 179,
+        "p95": 191,
+        "p99": 192,
+        "max": 192
+      },
+      "excavationFrames": {
+        "count": 358,
+        "p50": 6,
+        "p95": 11.900000000001455,
+        "p99": 18,
+        "max": 24.099999999998545
+      },
+      "mined": 400,
+      "chunks": 114,
+      "stableRock": true,
+      "stableGround": true,
+      "shadowPreparation": true,
+      "snapshots": {
+        "count": 26,
+        "p50": 6.5,
+        "p95": 16.19999999552965,
+        "p99": 16.80000000447035,
+        "max": 16.80000000447035
+      },
+      "longFrames": [],
+      "excavations": [
+        {
+          "at": 15557.70000000298,
+          "tick": 2059,
+          "mined": 80,
+          "dirty": 288
+        },
+        {
+          "at": 15769.30000000447,
+          "tick": 2074,
+          "mined": 20,
+          "dirty": 72
+        },
+        {
+          "at": 16204.80000000447,
+          "tick": 2100,
+          "mined": 8,
+          "dirty": 32
+        },
+        {
+          "at": 16464.5,
+          "tick": 2115,
+          "mined": 92,
+          "dirty": 368
+        },
+        {
+          "at": 17151.70000000298,
+          "tick": 2155,
+          "mined": 45,
+          "dirty": 160
+        },
+        {
+          "at": 17418.80000000447,
+          "tick": 2173,
+          "mined": 55,
+          "dirty": 200
+        },
+        {
+          "at": 18127,
+          "tick": 2214,
+          "mined": 37,
+          "dirty": 148
+        },
+        {
+          "at": 18354,
+          "tick": 2229,
+          "mined": 39,
+          "dirty": 156
+        },
+        {
+          "at": 18563,
+          "tick": 2242,
+          "mined": 5,
+          "dirty": 20
+        },
+        {
+          "at": 18814.80000000447,
+          "tick": 2257,
+          "mined": 7,
+          "dirty": 28
+        },
+        {
+          "at": 19071.10000000149,
+          "tick": 2272,
+          "mined": 6,
+          "dirty": 20
+        },
+        {
+          "at": 19511.89999999851,
+          "tick": 2298,
+          "mined": 3,
+          "dirty": 12
+        },
+        {
+          "at": 19783.20000000298,
+          "tick": 2313,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 20027.89999999851,
+          "tick": 2329,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 20268.39999999851,
+          "tick": 2344,
+          "mined": 1,
+          "dirty": 4
+        }
+      ],
+      "slowFrames": [
+        {
+          "at": 15583,
+          "cpu": 6.200000002980232,
+          "interval": 24,
+          "calls": 191
+        },
+        {
+          "at": 19807.30000000447,
+          "cpu": 5.899999998509884,
+          "interval": 24,
+          "calls": 177
+        },
+        {
+          "at": 20051.60000000149,
+          "cpu": 5.5,
+          "interval": 24.099999999998545,
+          "calls": 176
+        }
+      ],
+      "pipelines": [],
+      "preparations": [
+        11518.10000000149,
+        209
+      ]
+    }
+  ]
+}

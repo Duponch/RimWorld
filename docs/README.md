@@ -57,3 +57,5 @@ Déplacement des meubles entiers : [transferts](development/furniture-transfer.m
 Géologie des nouvelles cartes : [contrat V27](development/geology.md), [recherche Core](research/geology-reference.md).
 
 Minage : [contrat V28](development/mining.md), [référence et divergences](research/mining-reference.md).
+
+Fluidité des premiers dépôts : [préparation des ombres](development/shadow-preparation.md).

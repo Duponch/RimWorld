@@ -3,7 +3,7 @@ import { createWorld } from '../../src/sim/engine';
 import { deserializeWorld, serializeWorld } from '../../src/sim/serialization';
 import { addGroundMaterial, refreshStock } from '../../src/sim/materials';
 import legacySave from '../fixtures/schema-1-active-construction.json' with { type: 'json' };
-import type { World } from '../../src/sim/types';
+import { SCHEMA_VERSION, type World } from '../../src/sim/types';
 
 import { world, serializedWorld, expectWorld, saveKey, observeErrors, panel, tool, cell, dragRectangle, startPaused } from './helpers';
 
@@ -157,7 +157,7 @@ test('colonie matérielle : réserve filtrée, transport visible, trois couchage
   } finally { await browser.close(); }
 });
 
-test('frontières : commandes répétées, sauvegarde invalide atomique, aide et organisation compacte', async ({ page }) => {
+test('frontières : commandes répétées, sauvegarde invalide atomique, aide et organisation compacte', async ({ page },testInfo) => {
   const errors = observeErrors(page);
   await startPaused(page);
   await panel(page, 'work');
@@ -234,7 +234,8 @@ test('frontières : commandes répétées, sauvegarde invalide atomique, aide et
   expect((await world(page)).structures.find(structure => structure.kind === 'bed')?.footprint).toBe('legacy-single');
   await panel(page, 'menu'); await page.locator('#save').click();
   await expect(page.getByRole('status')).toContainText('sauvegardée');
-  expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).schemaVersion, saveKey)).toBe(23);
+  expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).schemaVersion, saveKey)).toBe(SCHEMA_VERSION);
+  await testInfo.attach('render-backend',{body:JSON.stringify({backend:await page.evaluate(()=>window.__lisiere.backend)}),contentType:'application/json'});
   expect(errors).toEqual([]);
 });
 

@@ -1,0 +1,397 @@
+{
+  "date": "2026-09-15T00:19:02.821Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "protocol": "Native Chromium WebGPU, actual worker 6x, natural 250² with cleared mining patch; 3/30/100 miners × 4 sandstone walls and 1 tree. 90 warmup frames; no full-world serialization during timed frames. Ground/rock buffer identities checked after excavation.",
+  "phases": [
+    {
+      "count": 100,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "description": ""
+      },
+      "errors": [],
+      "frames": {
+        "count": 795,
+        "p50": 6,
+        "p95": 12,
+        "p99": 54,
+        "max": 83.89999999999964
+      },
+      "frameCpu": {
+        "count": 796,
+        "p50": 5.100000001490116,
+        "p95": 6.600000001490116,
+        "p99": 8,
+        "max": 14.099999994039536
+      },
+      "adoptions": {
+        "count": 27,
+        "p50": 2.4000000059604645,
+        "p95": 12.200000002980232,
+        "p99": 13.700000002980232,
+        "max": 13.700000002980232
+      },
+      "drawCalls": {
+        "count": 796,
+        "p50": 179,
+        "p95": 191,
+        "p99": 192,
+        "max": 193
+      },
+      "excavationFrames": {
+        "count": 248,
+        "p50": 6,
+        "p95": 42,
+        "p99": 54,
+        "max": 66.10000000000036
+      },
+      "mined": 400,
+      "chunks": 114,
+      "stableRock": true,
+      "stableGround": true,
+      "snapshots": {
+        "count": 27,
+        "p50": 9.900000005960464,
+        "p95": 20.200000002980232,
+        "p99": 22.100000001490116,
+        "max": 22.100000001490116
+      },
+      "longFrames": [
+        {
+          "name": "long-animation-frame",
+          "entryType": "long-animation-frame",
+          "startTime": 11704.79999999702,
+          "duration": 80.70000000298023,
+          "navigationId": 406,
+          "paintTime": 11785.5,
+          "presentationTime": 11792,
+          "renderStart": 11779,
+          "styleAndLayoutStart": 11785.5,
+          "firstUIEventTimestamp": 0,
+          "blockingDuration": 0,
+          "scripts": [
+            {
+              "name": "script",
+              "entryType": "script",
+              "startTime": 11779,
+              "duration": 6.5,
+              "navigationId": 406,
+              "invoker": "FrameRequestCallback",
+              "invokerType": "user-callback",
+              "windowAttribution": "self",
+              "executionStart": 11779,
+              "forcedStyleAndLayoutDuration": 0,
+              "pauseDuration": 0,
+              "sourceURL": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=7e7a4eb2",
+              "sourceFunctionName": "update",
+              "sourceCharPosition": 1967496
+            }
+          ]
+        }
+      ],
+      "excavations": [
+        {
+          "at": 11624.19999999553,
+          "tick": 2059,
+          "mined": 80,
+          "dirty": 288
+        },
+        {
+          "at": 11839.19999999553,
+          "tick": 2074,
+          "mined": 20,
+          "dirty": 72
+        },
+        {
+          "at": 12315,
+          "tick": 2102,
+          "mined": 24,
+          "dirty": 96
+        },
+        {
+          "at": 12544.59999999404,
+          "tick": 2117,
+          "mined": 76,
+          "dirty": 304
+        },
+        {
+          "at": 13266.69999999553,
+          "tick": 2158,
+          "mined": 68,
+          "dirty": 244
+        },
+        {
+          "at": 13490.5,
+          "tick": 2173,
+          "mined": 32,
+          "dirty": 120
+        },
+        {
+          "at": 14210.59999999404,
+          "tick": 2215,
+          "mined": 42,
+          "dirty": 160
+        },
+        {
+          "at": 14442.09999999404,
+          "tick": 2230,
+          "mined": 35,
+          "dirty": 140
+        },
+        {
+          "at": 14689.59999999404,
+          "tick": 2245,
+          "mined": 6,
+          "dirty": 24
+        },
+        {
+          "at": 14941.59999999404,
+          "tick": 2260,
+          "mined": 6,
+          "dirty": 20
+        },
+        {
+          "at": 15188.09999999404,
+          "tick": 2275,
+          "mined": 5,
+          "dirty": 20
+        },
+        {
+          "at": 15595.59999999404,
+          "tick": 2300,
+          "mined": 3,
+          "dirty": 12
+        },
+        {
+          "at": 15873.19999999553,
+          "tick": 2315,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 16113.59999999404,
+          "tick": 2330,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 16368.39999999851,
+          "tick": 2345,
+          "mined": 1,
+          "dirty": 4
+        }
+      ],
+      "slowFrames": [
+        {
+          "at": 10545.19999999553,
+          "cpu": 5.100000001490116,
+          "interval": 53.899999999999636,
+          "calls": 179
+        },
+        {
+          "at": 10550.89999999851,
+          "cpu": 4.799999997019768,
+          "interval": 24,
+          "calls": 179
+        },
+        {
+          "at": 10660.59999999404,
+          "cpu": 5.100000001490116,
+          "interval": 54.100000000000364,
+          "calls": 179
+        },
+        {
+          "at": 10904.89999999851,
+          "cpu": 4.899999998509884,
+          "interval": 54.100000000000364,
+          "calls": 179
+        },
+        {
+          "at": 11140.5,
+          "cpu": 5.0999999940395355,
+          "interval": 47.899999999999636,
+          "calls": 179
+        },
+        {
+          "at": 11388.39999999851,
+          "cpu": 4.899999998509884,
+          "interval": 42,
+          "calls": 176
+        },
+        {
+          "at": 11692.89999999851,
+          "cpu": 5.699999995529652,
+          "interval": 66.10000000000036,
+          "calls": 191
+        },
+        {
+          "at": 11779.19999999553,
+          "cpu": 6.200000002980232,
+          "interval": 83.89999999999964,
+          "calls": 191
+        },
+        {
+          "at": 11892.59999999404,
+          "cpu": 5.300000004470348,
+          "interval": 47.899999999999636,
+          "calls": 192
+        },
+        {
+          "at": 12138.59999999404,
+          "cpu": 6.200000002980232,
+          "interval": 47.899999999999636,
+          "calls": 191
+        },
+        {
+          "at": 12372.19999999553,
+          "cpu": 5.899999998509884,
+          "interval": 54,
+          "calls": 189
+        },
+        {
+          "at": 12599.69999999553,
+          "cpu": 6.700000002980232,
+          "interval": 54,
+          "calls": 189
+        },
+        {
+          "at": 12790,
+          "cpu": 5.5,
+          "interval": 41.899999999999636,
+          "calls": 190
+        },
+        {
+          "at": 13043.19999999553,
+          "cpu": 5.300000004470348,
+          "interval": 42.100000000000364,
+          "calls": 188
+        },
+        {
+          "at": 13320.09999999404,
+          "cpu": 5.4000000059604645,
+          "interval": 54,
+          "calls": 188
+        },
+        {
+          "at": 13537.5,
+          "cpu": 5.5999999940395355,
+          "interval": 47.899999999999636,
+          "calls": 187
+        },
+        {
+          "at": 13738.89999999851,
+          "cpu": 5.100000001490116,
+          "interval": 42,
+          "calls": 185
+        },
+        {
+          "at": 13985,
+          "cpu": 5.799999997019768,
+          "interval": 42.100000000000364,
+          "calls": 184
+        },
+        {
+          "at": 14262.79999999702,
+          "cpu": 6,
+          "interval": 48,
+          "calls": 183
+        },
+        {
+          "at": 14489,
+          "cpu": 6.0999999940395355,
+          "interval": 47.899999999999636,
+          "calls": 179
+        },
+        {
+          "at": 14736.19999999553,
+          "cpu": 5,
+          "interval": 42,
+          "calls": 177
+        },
+        {
+          "at": 14988.29999999702,
+          "cpu": 5.200000002980232,
+          "interval": 42,
+          "calls": 177
+        },
+        {
+          "at": 15232,
+          "cpu": 5.299999997019768,
+          "interval": 41.899999999999636,
+          "calls": 178
+        },
+        {
+          "at": 15435.79999999702,
+          "cpu": 5.299999997019768,
+          "interval": 42,
+          "calls": 178
+        },
+        {
+          "at": 15641.29999999702,
+          "cpu": 5.200000002980232,
+          "interval": 41.899999999999636,
+          "calls": 176
+        },
+        {
+          "at": 15926.89999999851,
+          "cpu": 6.199999995529652,
+          "interval": 54,
+          "calls": 177
+        },
+        {
+          "at": 16169.19999999553,
+          "cpu": 5.5,
+          "interval": 54,
+          "calls": 176
+        },
+        {
+          "at": 16425.79999999702,
+          "cpu": 6.100000001490116,
+          "interval": 54.10000000000218,
+          "calls": 172
+        },
+        {
+          "at": 16651.5,
+          "cpu": 7.399999998509884,
+          "interval": 24.100000000002183,
+          "calls": 170
+        },
+        {
+          "at": 16691.79999999702,
+          "cpu": 5.600000001490116,
+          "interval": 59.89999999999782,
+          "calls": 170
+        }
+      ],
+      "trace": {
+        "path": "tmp/render-traces/mining-100-1789431554113.json",
+        "bytes": 78172444,
+        "categories": [
+          "blink.user_timing",
+          "cc",
+          "devtools.timeline",
+          "disabled-by-default-devtools.timeline",
+          "disabled-by-default-devtools.timeline.frame",
+          "disabled-by-default-devtools.timeline.inputs",
+          "disabled-by-default-devtools.timeline.invalidationTracking",
+          "disabled-by-default-devtools.timeline.layers",
+          "disabled-by-default-devtools.timeline.picture",
+          "disabled-by-default-devtools.timeline.stack",
+          "disabled-by-default-gpu.dawn",
+          "disabled-by-default-v8.gc",
+          "gpu",
+          "renderer.scheduler",
+          "toplevel",
+          "v8",
+          "viz"
+        ],
+        "sha256": "ddb1674e9cf4cd898679ae1305203914b02f74fa6ccc1383756940a84cabcaf2"
+      }
+    }
+  ]
+}
