@@ -1,0 +1,128 @@
+{
+  "date": "2026-09-15T19:58:43.744Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "protocol": "CPU only, synthetic 250² grass map, 3/30/100 farmers in separate 16-cell rooms with 3 roof openings, one existing rice and two empty growing cells per room. 900 ticks of real sowing and natural air exchange at initial 21 or 3 °C. No forests, injected ongoing weather or rendering. Clone sampled every ten ticks, first checkpoint included; 45s watchdog per case.",
+  "results": [
+    {
+      "count": 3,
+      "temperature": 21,
+      "plants": 9,
+      "peakGrowers": 3,
+      "stepMs": {
+        "p50": 0.041600000000016735,
+        "p95": 0.4029000000000451,
+        "p99": 1.453899999999976,
+        "max": 20.19409999999999
+      },
+      "snapshotCloneMs": {
+        "p50": 0.18910000000005311,
+        "p95": 0.3586999999999989,
+        "p99": 40.621200000000044,
+        "max": 40.621200000000044
+      },
+      "changedInitialPlants": 0,
+      "meanGrowth": 0.11641675966775754
+    },
+    {
+      "count": 3,
+      "temperature": 3,
+      "plants": 9,
+      "peakGrowers": 3,
+      "stepMs": {
+        "p50": 0.05880000000001928,
+        "p95": 0.854799999999841,
+        "p99": 1.6870999999999867,
+        "max": 17.090200000000095
+      },
+      "snapshotCloneMs": {
+        "p50": 0.2882000000001881,
+        "p95": 0.5793999999999642,
+        "p99": 40.82439999999997,
+        "max": 40.82439999999997
+      },
+      "changedInitialPlants": 3,
+      "meanGrowth": 0.11597326718114608
+    },
+    {
+      "count": 30,
+      "temperature": 21,
+      "plants": 90,
+      "peakGrowers": 30,
+      "stepMs": {
+        "p50": 0.3735999999998967,
+        "p95": 1.597400000000107,
+        "p99": 8.115000000000009,
+        "max": 23.997600000000148
+      },
+      "snapshotCloneMs": {
+        "p50": 1.2795999999998457,
+        "p95": 1.9216999999998734,
+        "p99": 54.143100000000004,
+        "max": 54.143100000000004
+      },
+      "changedInitialPlants": 0,
+      "meanGrowth": 0.11636490781590558
+    },
+    {
+      "count": 30,
+      "temperature": 3,
+      "plants": 90,
+      "peakGrowers": 30,
+      "stepMs": {
+        "p50": 0.37229999999999563,
+        "p95": 1.591899999999896,
+        "p99": 6.852699999999913,
+        "max": 14.475100000000111
+      },
+      "snapshotCloneMs": {
+        "p50": 1.3157000000001062,
+        "p95": 2.043499999999767,
+        "p99": 36.72490000000016,
+        "max": 36.72490000000016
+      },
+      "changedInitialPlants": 30,
+      "meanGrowth": 0.11593207061840606
+    },
+    {
+      "count": 100,
+      "temperature": 21,
+      "plants": 300,
+      "peakGrowers": 92,
+      "stepMs": {
+        "p50": 2.399800000000141,
+        "p95": 20.339099999999235,
+        "p99": 28.8100000000004,
+        "max": 38.28570000000036
+      },
+      "snapshotCloneMs": {
+        "p50": 3.816399999999703,
+        "p95": 7.92910000000029,
+        "p99": 53.54500000000007,
+        "max": 53.54500000000007
+      },
+      "changedInitialPlants": 0,
+      "meanGrowth": 0.1157936115196097
+    },
+    {
+      "count": 100,
+      "temperature": 3,
+      "plants": 300,
+      "peakGrowers": 92,
+      "stepMs": {
+        "p50": 2.1257000000005064,
+        "p95": 20.559699999999793,
+        "p99": 28.915499999999156,
+        "max": 36.98570000000109
+      },
+      "snapshotCloneMs": {
+        "p50": 3.6965999999993073,
+        "p95": 5.5262000000002445,
+        "p99": 43.163399999999456,
+        "max": 43.163399999999456
+      },
+      "changedInitialPlants": 100,
+      "meanGrowth": 0.11542055473479733
+    }
+  ]
+}

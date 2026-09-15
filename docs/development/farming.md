@@ -1,6 +1,6 @@
 # Première boucle de culture — V8
 
-Limite thermique après V38 : le site quotidien livré (14–28 °C), avec chauffage des feux plafonné à 28 °C, reste dans la plage végétale de croissance pleine. L’intégrale agricole conserve donc son profil tempéré. Intégrer les historiques locaux de froid/chaleur avant de livrer un refroidisseur, une saison ou un biome sortant de 6–42 °C ; les fixtures de pièces artificiellement froides ne constituent pas une validation de croissance thermique.
+V39 : [croissance et semis sous température locale](plant-temperature.md). Le site quotidien 14–28 °C reste favorable ; le froid et la chaleur des volumes conservés modifient réellement la croissance. Les nouveaux semis attendent une température admissible. Mortalité et saisons restent absentes.
 
 État : 13 septembre 2026. Tranche G1 ; [recherche et limites de fidélité](../research/farming-reference.md). L'agriculture n'est pas un domaine terminé.
 
@@ -18,9 +18,9 @@ Le riz au sol rejoint les piles, réservations, transport et ingestion existants
 
 V35 : la [couverture construite](roofing.md) arrête la croissance naturelle. Avant pose/retrait, les plantes concernées enregistrent leur progression au tick courant sous l’ancien éclairage ; découvrir reprend sans rattrapage du temps passé sous toit. Mortalité dans l’obscurité, lampes et dépendances complètes du semis à l’environnement restent à développer.
 
-`environment.ts` fixe explicitement un site extérieur à 45° N, à l'équinoxe, ciel clair, 21 °C. La lumière naturelle dépend de l'heure ; elle n'est pas dérivée des pixels ou de l'éclairage nocturne artistique. Croissance nulle sous 51 % de lumière, repos avant 06:00/après 19:12. La prairie vaut actuellement 100 % de fertilité, la terre 70 %. Riz : minimum 70 %, sensibilité 100 %, 3 jours de croissance à taux constant 100 %. Le calendrier réel est plus long : environ sept jours par cycle dans ce preset, avec une date de maturité dépendant de l'heure du semis et du sol. Ne pas afficher « prêt dans trois jours ».
+`environment.ts` fixe la lumière d’un site à 45° N, à l’équinoxe et ciel clair ; `temperature.ts` fournit désormais l’air local et le cycle thermique quotidien. La lumière naturelle dépend de l'heure ; elle n'est pas dérivée des pixels ou de l'éclairage nocturne artistique. Croissance nulle sous 51 % de lumière, repos avant 06:00/après 19:12. La prairie vaut actuellement 100 % de fertilité, la terre 70 %. Riz : minimum 70 %, sensibilité 100 %, 3 jours de croissance à taux constant 100 %. Le calendrier réel est plus long : environ sept jours par cycle dans ce preset, avec une date de maturité dépendant de l'heure du semis et du sol. Ne pas afficher « prêt dans trois jours ».
 
-L'intégrale périodique de lumière utilise 6 001 doubles partagés (environ 48 Ko). Chaque requête de croissance coûte O(1), quelle que soit la durée écoulée. Le monde ne parcourt pas tous les végétaux à chaque tick. Température, saisons, météo, fertilisation, toits, lampes et changements environnementaux ne sont pas simulés ; toute future variation devra enregistrer la croissance acquise avant de changer son taux.
+L'intégrale périodique de lumière utilise 6 001 doubles partagés (environ 48 Ko). Chaque requête de croissance coûte O(1), quelle que soit la durée écoulée. Le monde ne parcourt pas tous les végétaux à chaque tick. Toits V35 et températures V39 conservent cette intégrale entre changements de taux, en checkpointtant la croissance acquise. Saisons, météo, fertilisation et lampes restent absentes.
 
 ## Frontières et coût
 

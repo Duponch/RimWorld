@@ -12,7 +12,7 @@ La référence est RimWorld de base, transposé en 3D. Une description de RimWor
 | Connaître les prochains travaux | [ROADMAP](ROADMAP.md), unique calendrier G0–G5 |
 | Recenser objets et variantes | [Catalogue de contenu](gameplay/content-catalogue.md), couverture individuelle encore incomplète |
 | Comprendre les frontières techniques | [Architecture actuelle](development/architecture.md) et [simulation](development/simulation.md) |
-| Choisir un contrôle et lire ses résultats | [Stratégie de tests](development/testing.md), [validation courante](development/validation.md) |
+| Choisir un contrôle et lire ses résultats | [Stratégie de tests](development/testing.md), [retour sur les défauts visibles](development/playability-validation.md), [validation courante](development/validation.md) |
 | Retrouver les comportements de référence | [Adoption du corpus](research/reference-adoption.md), puis recherche du domaine |
 | Comprendre une adaptation volontaire | [Décisions de gameplay](gameplay/decisions.md) et [décisions techniques](development/architecture.md#registre-des-décisions) |
 
@@ -39,7 +39,7 @@ La référence est RimWorld de base, transposé en 3D. Une description de RimWor
 | Loisirs | [Activités, lassitude et migration](development/recreation.md) | [Vérification Core](research/recreation-reference.md) |
 | Conservation des aliments | [Âge, transferts et expiration](development/food-preservation.md) | [Fraîcheur et référence Core](research/food-preservation-reference.md) |
 | Cuisine et combustible | [Factures, ingrédients, feu](development/cooking.md) | [Recettes et ravitaillement](research/cooking-reference.md), [ordres de cuisine/semis](research/cooking-orders-reference.md), [dégagement/recharge](research/context-services-reference.md) |
-| Plantes et cultures | [Agriculture](development/farming.md), [rochers et plantes](development/rocks-and-plants.md) | [Agriculture](research/farming-reference.md), [croissance sauvage](research/plant-growth.md) |
+| Plantes et cultures | [Agriculture](development/farming.md), [croissance thermique V39](development/plant-temperature.md), [rochers et plantes](development/rocks-and-plants.md) | [Agriculture](research/farming-reference.md), [croissance sauvage](research/plant-growth.md) |
 | Toits construits | [Couverture, supports, zones et sauvegarde](development/roofing.md) | [Vérification Core](research/roofing-reference.md) |
 | Carte et environnement | [Génération](development/world-generation.md), [dimensions](development/world-generation.md#contrat-et-sauvegarde), [jour/nuit](development/daylight-camera.md) | [Espace 3D](research/spatial-design.md), [audit environnement](research/environment-review.md) |
 | Synchronisation visuelle | [Horloge, phases et HUD](development/presentation-timing.md) | [Vérification et diagnostic](research/presentation-timing-reference.md) |

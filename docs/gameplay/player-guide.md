@@ -1,5 +1,7 @@
 # Guide joueur
 
+Le riz et les buissons croissent normalement entre 6 et 42 °C, plus lentement en approchant 0 ou 58 °C, et cessent de croître au-delà. Les nouveaux semis sont suspendus à 0 °C et moins, ou à 58 °C et plus. L’inspection explique ces contraintes et le manque de lumière ; réchauffer une pièce partiellement découverte peut rétablir la croissance. Mortalité au gel et saisons ne sont pas encore simulées.
+
 Le panneau de temps indique la température extérieure. Sélectionner une cellule affiche la température locale de son air. Une enceinte dont moins de 25 % des cases restent découvertes peut retenir la chaleur ; un feu allumé la chauffe jusqu’à 28 °C. Portes ouvertes et trous du toit augmentent les échanges. Les denrées vieillissent moins vite entre 0 et 10 °C et cessent de vieillir au gel, sans retrouver leur fraîcheur passée. Le délai affiché suppose la température actuelle constante. Aucun refroidisseur n’est encore constructible ; le climat quotidien tempéré ne gèle pas naturellement.
 
 Ce guide décrit la version jouable actuelle. Le [bilan fonctionnel](implementation-status.md) distingue les systèmes livrés, partiels et absents.
@@ -181,7 +183,7 @@ Un repas déjà engagé peut être terminé après le changement. Transport et i
 
 Transporter ou fractionner conserve la fraîcheur ; mélanger des unités du même aliment produit un âge moyen pondéré. Une nourriture pourrie disparaît, y compris dans les mains d’un colon. La faim n’est pas satisfaite si cela arrive avant la fin du repas. Un ingrédient perdu interrompt la cuisine ; les autres restent physiques. Évitez de cuire une énorme réserve : le mode « jusqu’à X » permet de renouveler progressivement les repas.
 
-Le climat reste fixe. Réfrigérateurs et dégâts d’exposition ne sont pas encore jouables ; la toiture construite ne réfrigère pas les aliments. Les anciennes sauvegardes démarrent leurs aliments frais au tick chargé, faute d’âge historique ; les nouvelles sauvegardes conservent leur âge réel.
+Le site conserve son cycle quotidien tempéré, sans saisons ni météo. Réfrigérateurs et dégâts d’exposition ne sont pas encore jouables ; la toiture construite ne réfrigère pas les aliments. Les anciennes sauvegardes démarrent leurs aliments frais au tick chargé, faute d’âge historique ; les nouvelles sauvegardes conservent leur âge réel.
 
 ## Sauvegarder et reprendre
 

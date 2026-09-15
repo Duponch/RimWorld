@@ -15,7 +15,8 @@
     "test:watch": "vitest",
     "test:integration": "playwright test",
     "bench": "node --experimental-strip-types scripts/benchmark.ts",
-    "check": "npm run test && npm run build && npm run test:integration"
+    "test:presentation": "node scripts/check-presentation.mjs",
+    "check": "npm run test && npm run build && npm run test:integration && npm run test:presentation"
   },
   "dependencies": {
     "three": "0.186.0"

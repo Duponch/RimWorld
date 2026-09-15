@@ -1,5 +1,7 @@
 # Matrice des systèmes et critères de réalisation
 
+V39 : températures de croissance et de semis intégrées à S09, avec conservation du passé et inspection ; maladies/mortalité restent ouvertes. [Contrat](../development/plant-temperature.md).
+
 V38 : thermique quotidienne/locale, chauffage du feu et âge alimentaire variable ajoutés à S10/S11/S12 et aux contrats alimentaires ; systèmes toujours partiels. G0 en consolidation, G1 partiel, G2 en cours, conformément à ROADMAP.
 
 Cette matrice traduit les références de RimWorld en exigences de gameplay pour notre simulation de colonie 3D. Les trois documents de `docs/reference/originals` constituent désormais le corpus fonctionnel principal, utilisé selon la [note d'adoption et de lecture critique](../research/reference-adoption.md), avec la [première recherche](../research/rimworld-reference.md) en complément. Elle décrit une cible et un ordre de construction, **pas une déclaration de fonctionnalités livrées**. Le [plan de développement](../ROADMAP.md) définit le calendrier canonique G0 à G5 et l'état technique ; les résumés ci-dessous s'y conforment. Les extensions viennent après G5.

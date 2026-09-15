@@ -2,7 +2,8 @@ import { furnitureDuration } from './furniture-rules.ts';
 import { constructionRecipe } from './construction-materials.ts';
 import { deconstructionDuration } from './deconstruction-rules.ts';
 import { footprintCells, JOB_DURATION, STRUCTURE_DEFINITIONS } from './definitions.ts';
-import { isPlant, plantGrowth, PLANT_DEFINITIONS } from './plants.ts';
+import { isPlant, plantGrowth, PLANT_DEFINITIONS, sowingTemperatureAllowed } from './plants.ts';
+import { TemperatureView, outdoorTemperature } from './temperature.ts';
 import { releaseWork, type DropPlan } from './work-release.ts';
 import type { GrowingZone, Job, JobKind, Resource, World } from './types.ts';
 
@@ -41,20 +42,23 @@ export function jobDuration(world: World, job: Job): number {
   if(job.material!==undefined)return constructionRecipe(job).work;
   return (job.kind === 'harvest' || job.kind === 'cut') && resourceCells(world).get(index(world, job))?.kind === 'rice' ? 20 : JOB_DURATION[job.kind];
 }
-interface Context { resources: Map<number, Resource>; fixed: Set<number> }
+interface Context { resources: Map<number, Resource>; fixed: Set<number>; temperatures:TemperatureView }
 function context(world: World): Context {
   return {
     resources: resourceCells(world),
+    temperatures: new TemperatureView(world),
     fixed: new Set([...world.structures, ...world.jobs.filter(j => j.kind==='install'||j.kind in STRUCTURE_DEFINITIONS)].flatMap(s => footprintCells(s).map(c => index(world, c)))),
   };
 }
-function intention(world: World, zone: GrowingZone, cell: number, ctx: Context): { kind: JobKind; cell: number } | null {
+function intention(world: World, zone: GrowingZone, cell: number, ctx: Context, committed=false): { kind: JobKind; cell: number } | null {
   if (ctx.fixed.has(cell)) return null;
   const plant = ctx.resources.get(cell);
   if (plant?.kind === zone.plant || (!zone.allowSow && zone.allowCut && plant && isPlant(plant))) {
     return plantGrowth(world, plant) >= 1 ? { kind: 'harvest', cell } : null;
   }
   if (!zone.allowSow) return null;
+  // Temperature gates new sowing work, not harvesting or an accepted job.
+  if(!committed&&!sowingTemperatureAllowed(ctx.temperatures.at(world,{x:cell%world.width,z:Math.floor(cell/world.width)})))return null;
   if (plant) return zone.allowCut && plant.kind !== 'rock' ? { kind: plant.kind === 'tree' ? 'chop' : 'cut', cell } : null;
   // A sowing intention stays pending while its floor items are hauled aside.
   if (!['grass', 'soil'].includes(world.tiles[cell]!.terrain)) return null;
@@ -78,21 +82,29 @@ export function cancelGrowingJobs(world: World, zoneIds: ReadonlySet<number>,dro
   for(const pawn of world.pawns)pawn.orders.queue=pawn.orders.queue.filter(o=>typeof o==='number'||!('destination' in o)||o.destination.type!=='aside'||!zoneIds.has(o.destination.growingZoneId??-1));
   world.jobs = world.jobs.filter(j => !ids.has(j.id));
 }
-export function growingJobValid(world: World, job: Job): boolean {
+export function growingJobValid(world: World, job: Job, shared?:Context): boolean {
   if (job.growingZoneId === undefined) return job.kind !== 'sow';
   const zone = world.growingZones.find(z => z.id === job.growingZoneId);
   if (!zone) return false;
-  const target = index(world, job), ctx = context(world);
+  const target = index(world, job), ctx = shared??context(world);
   // Tree clearing can originate in a neighbouring cell outside the zone.
   const origins = job.kind === 'chop' ? [target, target - world.width, target + 1, target + world.width, target - 1] : [target];
   return origins.some(cell => growingZoneAt(world, cell)?.id === zone.id && (() => {
-    const desired = intention(world, zone, cell, ctx);
+    const desired = intention(world, zone, cell, ctx,job.reservedBy!==null);
     return desired?.kind === job.kind && desired.cell === target;
   })());
 }
 
 /** Bounded rotating discovery; work execution and reservations use the ordinary planner. */
 export function scheduleGrowing(world: World): void {
+  // Discard stale sowing/preparation intents before a planner can accept one.
+  // Accepted work keeps its own interruption contract, including queued orders.
+  if((!sowingTemperatureAllowed(outdoorTemperature(world.tick))||world.thermal?.regions.some(r=>!sowingTemperatureAllowed(r.temperature)))
+    &&world.jobs.some(j=>j.growingZoneId!==undefined&&j.reservedBy===null)) {
+    const ctx=context(world);
+    const allowed=(j:Job)=>j.growingZoneId===undefined||j.reservedBy!==null||growingJobValid(world,j,ctx);
+    if(world.jobs.some(j=>!allowed(j)))world.jobs=world.jobs.filter(allowed);
+  }
   if (!world.growingZones.length || world.tick % FARM_SCAN_INTERVAL) return;
   const { entries } = zoneCells(world);
   if (!entries.length) return;

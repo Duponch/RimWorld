@@ -181,3 +181,7 @@ Chapitres 5/22/29 relus, SYS/TEST-023..025 et UI-005 : adopter séparation entre
 ## V37 — lumière des travaux et déplacements
 
 Chapitres 5/9–12/21–22 ; SYS/TEST-020..025, 041..050, 056/058/059/061, 070..072 et 113..117 : adopter statistiques à la position du colon et continuation des actions ; adapter horloge, accumulation et navigation ; différer capacités, paramètres de croissance du travail des plantes et autres profils. La [recherche fraîche](light-work-reference.md) distingue travail continu, capture minière et capture d’arête. Les scénarios existants et le pilote sont enrichis, sans considérer ces familles complètes.
+
+## V39 — température des plantes
+
+Chapitre 12, SYS/TEST-070, 071, 072, 075 relus dans les originaux. **Adopter** temps favorable, facteurs locaux, sélection des semis et récolte indépendante ; **adapter** les intervalles sauvegardés à 10 Hz ; **différer** survie au gel, feuilles, autres espèces et saisons. [Recherche fraîche et contradiction 6/10 °C](plant-temperature-reference.md), [contrat](../development/plant-temperature.md). Les scénarios thermiques et agricoles existants couvrent les interactions ; le pilote conserve ses bilans en climat tempéré. L’inspection sous toit est corrigée, l’écart de voisinage cardinal/diagonal au semis reste consigné.

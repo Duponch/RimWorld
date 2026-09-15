@@ -76,5 +76,5 @@ test('priority decisions share budgets, disappear on lost access or timeout with
     const invalid=structuredClone(raw);invalid.pawns[0].priorityWork=priority;expect(()=>deserializeWorld(JSON.stringify(invalid))).toThrow(/priority work/);
   }
   raw.schemaVersion=22;for(const a of raw.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete raw.deconstructed;delete raw.packed;expect(()=>deserializeWorld(JSON.stringify(raw))).toThrow(/version 22/);delete raw.pawns[0].priorityWork;
-  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated).toEqual({...raw,pawns:raw.pawns.map((p:any)=>({...p,priorities:{craft:2,...p.priorities,mine:2}})),schemaVersion:38,packed:[],deconstructed:{count:0,lostWood:0,fuelTicks:0}});expect(migrated.pawns[0]!.priorityWork).toBeUndefined();
+  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated).toEqual({...raw,pawns:raw.pawns.map((p:any)=>({...p,priorities:{craft:2,...p.priorities,mine:2}})),schemaVersion:39,packed:[],deconstructed:{count:0,lostWood:0,fuelTicks:0}});expect(migrated.pawns[0]!.priorityWork).toBeUndefined();
 });

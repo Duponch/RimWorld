@@ -1,3 +1,4 @@
+import { validPlantThermalFactor } from './thermal-plants.ts';
 import { validateTemperature } from './temperature-save.ts';
 import { initializeLightWork, validateWorkProgress } from './work-progress-save.ts';
 import { workProgress } from './work-progress.ts';
@@ -56,7 +57,7 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validateWorld(input: unknown): string[] {
   return validateSchema(input, SCHEMA_VERSION);
 }
-function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38): string[] {
+function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(input)) return ['World must be an object.'];
@@ -136,6 +137,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
             || !(haul.destination.type === 'job' ? integer(haul.destination.jobId, 1) : haul.destination.type === 'fuel' && version>=10 ? integer(haul.destination.structureId,1) : haul.destination.type === 'stockpile' ? integer(haul.destination.stockpileId, 1) : version >= 9 && haul.destination.type === 'aside' && coord(haul.destination))) errors.push('Invalid haul task.');
         }
       } else if (key === 'resources') {
+        if (!validPlantThermalFactor(item,version)) errors.push('Invalid plant thermal factor.');
         if (!validStoneIdentity(item.stone, item.kind, version)) errors.push('Invalid resource stone identity.');
         if (!oneOf(item.kind, ['tree', 'berries', 'rock', ...(version >= 8 ? ['rice'] : [])]) || !integer(item.amount, 1, 1000000)) errors.push('Invalid resource.');
         if (item.growth !== undefined || item.growthTick !== undefined) {
@@ -454,6 +456,7 @@ export function deserializeWorld(serialized: string): World {
   if(record(input)&&input.schemaVersion===35){const errors=validateSchema(input,35);if(errors.length)throw new Error(`Invalid version 35 save: ${errors.join(' ')}`);const w=input as unknown as World;for(const p of w.pawns)if(p.cooking)p.cooking.progress*=productionWorkTotal(taskRecipe(p.cooking))/legacyProductionTicks(taskRecipe(p.cooking));input.schemaVersion=36;}
   if(record(input)&&input.schemaVersion===36){const errors=validateSchema(input,36);if(errors.length)throw new Error(`Invalid version 36 save: ${errors.join(' ')}`);initializeLightWork(input as unknown as World);}
   if(record(input)&&input.schemaVersion===37){const errors=validateSchema(input,37);if(errors.length)throw new Error('Invalid version 37 save: '+errors.join(' '));input.schemaVersion=38;}
+  if(record(input)&&input.schemaVersion===38){const errors=validateSchema(input,38);if(errors.length)throw new Error('Invalid version 38 save: '+errors.join(' '));input.schemaVersion=39;}
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`); return input as World;
 }
 /** Deterministic diagnostic fingerprint, not a cryptographic digest. */

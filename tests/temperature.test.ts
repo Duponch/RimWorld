@@ -1,3 +1,9 @@
+import { finishRoofJob } from '../src/sim/roofing';
+import { plantClimateFixture } from './scenarios/plant-climate';
+import { plantGrowth, plantTemperatureFactor, sowingTemperatureAllowed } from '../src/sim/plants';
+import { updatePlantTemperatures } from '../src/sim/thermal-plants';
+import { scheduleGrowing, growingJobValid } from '../src/sim/farming';
+import { plantInspection } from '../src/ui/plant-inspection';
 import { expect,test } from 'vitest';
 import { createWorld,stepWorld,applyCommand,validateWorld,serializeWorld,deserializeWorld } from '../src/sim/index';
 import { advanceTemperature,outdoorTemperature,reconcileTemperature,TemperatureView } from '../src/sim/temperature';
@@ -98,7 +104,7 @@ test('thermal food: freeze/thaw intervals, real owner transfers, mixing, thresho
   // A refused command preserves the food age and its thermal anchor.
   const now=rotAge(pile,w.tick);expect(applyCommand(w,{type:'speed',speed:0} as any).ok).toBe(false);expect(rotAge(pile,w.tick)).toBe(now);
   const legacy=createWorld(1,32,32),raw=JSON.parse(serializeWorld(legacy));raw.schemaVersion=37;
-  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated).toEqual({...raw,schemaVersion:38});
+  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated).toEqual({...raw,schemaVersion:39});
   raw.piles[0].rot={progress:1,atTick:raw.tick,rate:0};expect(()=>deserializeWorld(JSON.stringify(raw))).toThrow(/version 37/);
   const last=chamber();addMaterial(last,'food',1,{type:'ground',x:4,z:4},'simple-meal');last.piles[0]!.rot!.progress=24000-.25;
   last.thermal!.regions[0]!.temperature=5;updateFoodTemperatures(last);stepWorld(last);expect(last.piles).toEqual([]);expect(last.spoiled['simple-meal']).toBe(1);expect(validateWorld(last)).toEqual([]);
@@ -116,4 +122,70 @@ test('thermal food: freeze/thaw intervals, real owner transfers, mixing, thresho
   expect(mid).toBeDefined();expect(mid).toEqual(haul);expect(validateWorld(haul)).toEqual([]);
   expect(haul.piles[0]!.owner).toEqual({type:'ground',x:0,z:4});expect(haul.piles[0]!.quantity).toBe(5);
   expect(rotAge(haul.piles[0]!,haul.tick)).toBeGreaterThan(10);expect(rotAge(haul.piles[0]!,haul.tick)).toBeLessThan(10+haul.tick);
+});
+
+
+test('plant climate: integrated local history, query independence, roof changes, migration and deltas',()=>{
+  for(const [t,f] of [[-10,0],[0,0],[3,.5],[6,1],[42,1],[50,.5],[58,0],[70,0]])expect(plantTemperatureFactor(t!)).toBe(f);
+  for(const t of [0,58,-1,59])expect(sowingTemperatureAllowed(t)).toBe(false);
+  for(const t of [.00001,3,42,57.99999])expect(sowingTemperatureAllowed(t)).toBe(true);
+  const w=plantClimateFixture(),crop=w.resources[0]!;
+  let expected=.2,copy:World|undefined;
+  const setHeat=(temperature:number)=>{w.thermal!.regions[0]!.temperature=temperature;updatePlantTemperatures(w,reconcileTemperature(w));};
+  const encoder=new SnapshotEncoder(),decoder=new SnapshotDecoder();decoder.adopt(encoder.encode(w,0,1));
+  for(let i=0;i<1200;i++) {
+    if(i===100)setHeat(50);if(i===250)setHeat(-2);if(i===450)setHeat(21);
+    if(i===500)copy=deserializeWorld(serializeWorld(w));
+    const temperature=w.thermal!.regions[0]!.temperature,tick=w.tick+1;
+    // Independent per-tick oracle: no production integral/rate helper.
+    const factor=temperature<=0||temperature>=58?0:temperature<6?temperature/6:temperature>42?(58-temperature)/16:1;
+    const phase=tick%6000/6000;
+    const zenith=Math.acos(Math.cos((phase-.5)*Math.PI*2)/Math.sqrt(2));
+    const glow=Math.max(0,Math.min(1,Math.cos(Math.max(0,zenith-23.25*Math.PI/180))/.7));
+    if(phase>=.25&&phase<=.8)expected+=Math.max(0,(glow-.51)/.49)*factor/18000;
+    const untouched=serializeWorld(w);for(let q=0;q<i%5;q++)plantGrowth(w,crop);expect(serializeWorld(w)).toBe(untouched);
+    stepWorld(w);if(copy)stepWorld(copy);
+    if(i%47===0) {expect(plantGrowth(w,crop)).toBeCloseTo(expected,11);const result=decoder.adopt(encoder.encode(w,0,1));expect(result.status).toBe('applied');if(result.status==='applied')expect(plantGrowth(result.world,result.world.resources[0]!)).toBeCloseTo(expected,11);}
+  }
+  expect(copy).toEqual(w);expect(crop.growthThermalFactor).toBeUndefined();expect(validateWorld(w)).toEqual([]);
+  const beforeRoof=plantGrowth(w,crop);
+  // The public roof completion checkpoints the old illumination before coverage.
+  const job={id:w.nextId++,kind:'build-roof' as const,x:4,z:4,orientation:0 as const,footprint:'standard' as const,status:'active' as const,reservedBy:w.pawns[0]!.id,progress:1,escrow:{wood:0,food:0}};
+  w.roofing!.build.push(4*32+4);finishRoofJob(w,job);w.roofing!.build=[];stepWorld(w,80);expect(plantGrowth(w,w.resources[0]!)).toBeCloseTo(beforeRoof,11);
+  expect(plantInspection(w,w.resources[0]!)).toContain('Lumière insuffisante');
+  finishRoofJob(w,{...job,kind:'remove-roof'});const opened=plantGrowth(w,w.resources[0]!);stepWorld(w,80);expect(plantGrowth(w,w.resources[0]!)).toBeGreaterThan(opened);
+  // Opening the enclosure restores the outside rate, without replaying cold time.
+  setHeat(3);const beforeOpen=plantGrowth(w,w.resources[0]!);w.structures=w.structures.filter(s=>!(s.x===2&&s.z===4));updatePlantTemperatures(w,reconcileTemperature(w));
+  expect(w.thermal).toBeUndefined();expect(w.resources[0]!.growthThermalFactor).toBeUndefined();expect(plantGrowth(w,w.resources[0]!)).toBeCloseTo(beforeOpen,12);
+  const legacy=plantClimateFixture(3),raw=JSON.parse(serializeWorld(legacy));raw.schemaVersion=38;delete raw.resources[0].growthThermalFactor;raw.resources[0].growthTick=1000;
+  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated).toEqual({...raw,schemaVersion:39});const oldGrowth=plantGrowth(migrated,migrated.resources[0]!);updatePlantTemperatures(migrated,reconcileTemperature(migrated));expect(plantGrowth(migrated,migrated.resources[0]!)).toBe(oldGrowth);
+  for(const factor of [-.01,1.01,null,'0.5']) {const bad=JSON.parse(serializeWorld(legacy));bad.resources[0].growthThermalFactor=factor;expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(/thermal factor/);}
+  raw.resources[0].growthThermalFactor=.5;expect(()=>deserializeWorld(JSON.stringify(raw))).toThrow(/version 38/);
+  const deltaEncoder=new SnapshotEncoder(),deltaDecoder=new SnapshotDecoder();deltaDecoder.adopt(deltaEncoder.encode(legacy,0,1));legacy.resources[0]!.growthThermalFactor=0;
+  const message=deltaEncoder.encode(legacy,0,1);expect(message.kind).toBe('delta');const adopted=deltaDecoder.adopt(message);expect(adopted.status).toBe('applied');if(adopted.status==='applied')expect(adopted.world.resources[0]!.growthThermalFactor).toBe(0);
+  legacy.resources[0]!.growthThermalFactor=.25;const corrupt=deltaEncoder.encode(legacy,0,1);if(corrupt.kind==='delta'){corrupt.resources!.upserted[0]!.growthThermalFactor=2;expect(deltaDecoder.adopt(corrupt).status).toBe('resync');expect((deltaDecoder as any).current?.resources[0]!.growthThermalFactor).toBe(0);}
+});
+
+test('cold farming: no new sowing, stale intent rejected, accepted sowing completes and mature harvest remains available',()=>{
+  const w=plantClimateFixture(-10),plant=w.resources[0]!;
+  expect(applyCommand(w,{type:'area',action:'growing',from:{x:4,z:4},to:{x:5,z:4}}).ok).toBe(true);
+  scheduleGrowing(w);expect(w.jobs).toEqual([]);
+  w.thermal!.regions[0]!.temperature=3;updatePlantTemperatures(w,reconcileTemperature(w));scheduleGrowing(w);
+  expect(w.jobs).toHaveLength(1);const pending=w.jobs[0]!;expect(pending.kind).toBe('sow');
+  // Preparation has the same selection gate: an old cut intent is not accepted
+  // just because it was generated before the cold arrived.
+  const prep=plantClimateFixture(3);prep.resources=[{id:prep.nextId++,kind:'berries',x:5,z:4,amount:10,growth:.3,growthTick:prep.tick}];
+  applyCommand(prep,{type:'area',action:'growing',from:{x:5,z:4},to:{x:5,z:4}});scheduleGrowing(prep);expect(prep.jobs[0]!.kind).toBe('cut');
+  prep.thermal!.regions[0]!.temperature=-10;stepWorld(prep);expect(prep.jobs).toEqual([]);expect(prep.resources).toHaveLength(1);
+
+  w.thermal!.regions[0]!.temperature=-10;expect(growingJobValid(w,pending)).toBe(false);stepWorld(w);expect(w.jobs).toEqual([]);
+  w.thermal!.regions[0]!.temperature=3;updatePlantTemperatures(w,reconcileTemperature(w));
+  for(let i=0;i<100&&!w.jobs.some(j=>j.kind==='sow'&&j.reservedBy!==null);i++)stepWorld(w);
+  const accepted=w.jobs.find(j=>j.kind==='sow'&&j.reservedBy!==null)!;expect(accepted).toBeDefined();
+  w.thermal!.regions[0]!.temperature=-10;updatePlantTemperatures(w,reconcileTemperature(w));expect(growingJobValid(w,accepted)).toBe(true);
+  const resumed=deserializeWorld(serializeWorld(w));stepWorld(w,100);stepWorld(resumed,100);expect(resumed).toEqual(w);
+  expect(w.resources.filter(p=>p.kind==='rice')).toHaveLength(2);expect(w.resources.find(p=>p.x===5)!.growth).toBe(.0001);
+  plant.growth=1;plant.growthTick=w.tick;
+  expect(applyCommand(w,{type:'designate',kind:'harvest',x:4,z:4}).ok).toBe(true);stepWorld(w,200);
+  expect(w.resources.some(p=>p.id===plant.id)).toBe(false);expect(w.piles.filter(p=>p.item==='rice').reduce((n,p)=>n+p.quantity,0)).toBe(6);expect(validateWorld(w)).toEqual([]);
 });

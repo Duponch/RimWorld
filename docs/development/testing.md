@@ -1,5 +1,7 @@
 # Stratégie de validation
 
+[Retour d’expérience des défauts visibles en jeu](playability-validation.md) : vérifier des critères utilisateur indépendants du code, séparer état final et chronologie affichée. `npm run test:presentation` impose le parcours naturel avec assertions et fait partie de `npm run check`. Il se lance aux changements d’horloge/bridge/présentation ou des phases de travail, pas après chaque retouche.
+
 Réactivité des vitesses sous V38 : oracle indépendant de taux à la frame suivante, changements toutes les 100 ms, fractions du worker conservées, démarrage/reprise et pénurie de snapshots. Le banc de zones mesure clic→vitesse effective et les frames sans progression après amorçage. Ces contrôles remplacent l’ancienne attente de 400 ms à chaque commande positive.
 
 Correctif de synchronisation sous V38 : enrichir les scénarios spatiaux et bridge avec changements rapides de vitesse/pause, phases de travail et disparition différée des ressources. Parcours natifs mouvement/transport et pilote UI, puis banc `harvest-sync-bench.mjs` (zones naturelles, changements répétés) et `mining-render-bench.mjs` (100 mineurs). Mesurer l’application de scène distinctement de la réception ; ignorer les callbacks sans rendu pendant préparation. Aucun changement de règle ne justifie de relancer toutes les migrations.
@@ -13,6 +15,8 @@ Présentation lumineuse sous V36 : scénario de rétention du champ et des resso
 V36 : `work-environment.test.ts` confronte un oracle de relaxation indépendant à la diffusion locale ; la famille production couvre unités/migrations, perte de feu, rôles et changements de taux. Le pilote conserve les bilans et expose les facteurs des postes. Audit `scripts/work-environment-bench.ts` avec 3/30/100 artisans et autant de feux ; UI courte puis pilote de trois jours.
 
 Toiture V35 : enrichir les familles espace/temps/intégration avec `roofing.test.ts` et le scénario de pièces. Le pilote couvre 28 cellules du repas, garde ses bilans et son champ découvert ; le parcours UI ajoute les mêmes commandes. `roofing-bench.ts` et `roofing-render-bench.mjs` mesurent la même charge de 100 bâtisseurs, jusqu’à 2 500 cellules et 1 200 bois de défrichage.
+
+V39 : croissance intégrée, sauvegarde/deltas et semis aux limites thermiques dans `temperature.test.ts` ; feu construit et progression réellement affichée dans `integration/farming.spec.ts`. Le pilote suit les facteurs végétaux. Audit CPU à 3/30/100 cultivateurs, comparaison tempérée/froide avec continuation.
 
 ## Principes
 

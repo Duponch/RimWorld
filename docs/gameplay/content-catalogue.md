@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+V39 ajoute croissance thermique et limites des nouveaux semis aux plantes de riz et buissons existants, sans nouvelle espèce. Mortalité et feuilles restent absentes.
+
 V38 ajoute des propriétés au contenu existant, sans nouvel objet : chaleur du feu, échanges des murs/toits/portes, conservation locale des denrées. Réfrigérateurs, refroidissement passif, radiateurs et équipement thermique restent à livrer ; aucun catalogue clos par ce lot.
 
 V37 étend les effets des feux/toits existants aux travaux et déplacements ; aucun nouvel objet. Le catalogue reste ouvert, notamment plantes, terrains et éclairages supplémentaires.
@@ -32,7 +34,7 @@ L’[audit du 13 septembre](../research/environment-review.md) confirme que les 
 |---|---|---|
 | Objet `wood` | Bois récolté, piles, portage, construction et combustible du feu ; CAT-005. | Espèces, masse, autres combustibles, dégâts et autres propriétés non implémentés. |
 | Objet `berries` | Baies récoltées, 0,05 nutrition/unité, piles de 75, ingestion de plusieurs unités ; CAT-011. | Pourrit en 14 jours à température normale ; intoxication absente ; maturité et renouvellement du buisson livrés en V7. |
-| Objet et plante `rice` | Riz semé/récolté ; croissance, fertilité et lumière ; 6 unités mûres, pile de 75, nutrition 0,05, malus de repas cru. Première culture alimentaire, domaine SYS-070..072. | Pourrit en 40 jours à température normale. Autres recettes, intoxication, santé du plant et compétences absents ; une seule culture sélectionnable. [Référence](../research/farming-reference.md). |
+| Objet et plante `rice` | Riz semé/récolté ; croissance, fertilité, lumière et température locale ; 6 unités mûres, pile de 75, nutrition 0,05, malus de repas cru. Première culture alimentaire, domaine SYS-070..072. | Pourrit en 40 jours à température normale. Autres recettes, intoxication, santé du plant et compétences absents ; une seule culture sélectionnable. [Référence](../research/farming-reference.md). |
 | Objet `simple-meal` | Repas simple cuisiné au feu : dix baies/riz, nutrition 0,9, pile dix, ingestion un ; première recette Core. [Source et contrat](../research/cooking-reference.md). | Pourrit en 4 jours à température normale. Autres ingrédients, compétence et intoxication absents. |
 | Structure `horseshoes` | Piquet bois/acier V30 et cinq pierres V33, CAT-050 : dix unités livrées, sept ticks en bois ou dix en acier, trois utilisateurs et places visibles à cinq cases ; famille dextérité. [Référence et limites](../research/recreation-reference.md). | Autres matériaux que bois/acier/cinq pierres, capacités/compétence de tir, pièces et dégâts absents ; aucune qualité comme pour le piquet de référence. L’animation ne lance pas encore de projectile visible. |
 | Structure `stonecutter` | Atelier 3×1, bois/acier : 75 bois + 30 acier ou 105 acier ; plan/cadre, rotation, déplacement entier, stockage, transit et restitution V31. [Référence](../research/stonecutter-reference.md). | Factures de taille et blocs livrés V32 ; recherche, statistiques complètes et effets complets du poste absents. La nouvelle famille est partielle. |

@@ -1,3 +1,4 @@
+import { validPlantThermalFactor } from '../sim/thermal-plants.ts';
 import { validOre } from '../sim/ore.ts';
 import { validMiningDamage } from '../sim/mining-rules.ts';
 import { validStoneIdentity } from '../sim/geology.ts';
@@ -12,7 +13,7 @@ export type SnapshotMessage = SnapshotHeader & (
 );
 
 const equalResource = (a: Resource, b: Resource): boolean => a.id === b.id && a.kind === b.kind
-  && a.x === b.x && a.z === b.z && a.amount === b.amount && a.growth === b.growth && a.growthTick === b.growthTick && a.stone === b.stone;
+  && a.x === b.x && a.z === b.z && a.amount === b.amount && a.growth === b.growth && a.growthTick === b.growthTick && a.growthThermalFactor === b.growthThermalFactor && a.stone === b.stone;
 
 /** Transport cache only: never mutates the simulation or contributes to a saved game. */
 export class SnapshotEncoder {
@@ -125,6 +126,7 @@ export class SnapshotDecoder {
           touched.add(id);
         }
         for (const resource of upserted) {
+          if (!validPlantThermalFactor(resource,message.world.schemaVersion)) return resync('Facteur thermique végétal invalide.');
           if (!validStoneIdentity(resource.stone, resource.kind, message.world.schemaVersion)) return resync('Identité géologique invalide.');
           if (touched.has(resource.id)) return resync('Ressource modifiée plusieurs fois.');
           touched.add(resource.id); byId.set(resource.id, resource);

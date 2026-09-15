@@ -1,6 +1,6 @@
 import { TICKS_PER_DAY, type Resource, type World } from './types.ts';
 import { isRoofed, roofIndex } from './roof-rules.ts';
-import { growingLightIntegral, OUTDOOR_TEMPERATURE } from './environment.ts';
+import { growingLightIntegral } from './environment.ts';
 
 export const PLANT_DEFINITIONS = Object.freeze({
   berries: { label: 'Buisson de baies', growDays: 6, minFertility: .5, sensitivity: .5, afterHarvest: .3, yield: 10 },
@@ -13,10 +13,13 @@ export const HARVEST_MIN_GROWTH = .65;
 export const AFTER_HARVEST_GROWTH = .3;
 const clamp = (n: number): number => Math.max(0, Math.min(1, n));
 
-/** Reference factors; dynamic climate and latitude remain future systems. */
+export const plantTemperatureFactor = (temperature:number):number => temperature < 6 ? clamp(temperature / 6) : temperature > 42 ? clamp((58 - temperature) / 16) : 1;
+export const sowingTemperatureAllowed = (temperature:number):boolean => temperature > 0 && temperature < 58;
+
+/** Factors for the two current species; other climates/species stay explicit. */
 export function plantGrowthRate(light: number, temperature: number, fertility: number, resting = false): number {
   if (resting || fertility < .5) return 0;
-  const heat = temperature < 6 ? clamp(temperature / 6) : temperature > 42 ? clamp((58 - temperature) / 16) : 1;
+  const heat = plantTemperatureFactor(temperature);
   return clamp((light - .51) / .49) * heat * (.5 + fertility * .5);
 }
 export const plantFertility = (world: World, plant: Resource): number => {
@@ -51,7 +54,7 @@ export function plantGrowth(world: World, plant: Resource): number {
   const def = PLANT_DEFINITIONS[plant.kind], fertility = plantFertility(world, plant);
   if (fertility < def.minFertility) return base;
   const lightTime = growingLightIntegral(world.tick) - growingLightIntegral(plant.growthTick ?? world.tick);
-  const factor = plantGrowthRate(1, OUTDOOR_TEMPERATURE, 1) * (1 - def.sensitivity + fertility * def.sensitivity);
+  const factor = (plant.growthThermalFactor ?? 1) * (1 - def.sensitivity + fertility * def.sensitivity);
   return clamp(base + lightTime * factor / (def.growDays * TICKS_PER_DAY));
 }
 export const harvestable = (world: World, plant: Resource): boolean => isPlant(plant) && plantGrowth(world, plant) > HARVEST_MIN_GROWTH;

@@ -20,3 +20,6 @@ artifacts/furniture-transfer-load.json
 
 # Replaced on every browser journey; publish a named compact proof after validation.
 artifacts/colony-last-journey.json
+
+# Rolling native presentation run; named validation proofs are tracked.
+artifacts/harvest-sync-verification.json

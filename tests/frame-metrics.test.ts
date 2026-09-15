@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { assertHarvestPhase } from '../scripts/harvest-assertions';
 import { expect, test } from 'vitest';
 import { FrameMetrics } from '../src/render/FrameMetrics';
 
@@ -16,4 +18,16 @@ test('frame telemetry measures real cadence, counts stalls and resets hidden/res
   metrics.record(now);
   for (let i = 0; i < 1000; i++) metrics.record(now += 1);
   expect(metrics.fps).toBe(1000);
+});
+
+
+test('presentation acceptance rejects the recorded speed defect and incomplete or desynchronized observations',()=>{
+  const load=(name:string)=>JSON.parse(readFileSync(new URL('../artifacts/'+name,import.meta.url),'utf8')).phases;
+  const old=load('harvest-sync-speed-before.json')[0];
+  expect(()=>assertHarvestPhase({...old,starvedFrames:0,controls:old.controls.filter((c:any)=>c.delay!==null)})).toThrow(/Delayed speed/);
+  const corrected=load('harvest-sync-speed-coalesced.json');
+  for(const phase of corrected)expect(()=>assertHarvestPhase(phase)).not.toThrow();
+  for(const change of [(p:any)=>p.controls=[],(p:any)=>p.controls[0].delay=null,(p:any)=>p.controls[0].delay=101,(p:any)=>p.starvedFrames=1,(p:any)=>p.jumpCount=1,(p:any)=>p.solidOccupancyCount=1,(p:any)=>p.removals=[],(p:any)=>p.removals[0].play=p.removals[0].tick-1]) {
+    const bad=structuredClone(corrected[0]);change(bad);expect(()=>assertHarvestPhase(bad)).toThrow();
+  }
 });

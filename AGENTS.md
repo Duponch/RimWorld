@@ -50,7 +50,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 38 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 39 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)
@@ -174,3 +174,11 @@
 - Publier les phases discrètes au tick simulé, puis appliquer la scène entière au temps des poses. Ne pas retirer une ressource à la réception avant le corps. Garder les snapshots immuables, les commandes/révisions toutes traitées, le HUD automatique à 5 Hz et les interactions immédiates.
 - Onglet masqué, file excessive ou historique périmé : recalage global explicite. Le benchmark distingue réception/application ; ignorer les callbacks sans rendu durant préparation. Toute nouvelle transition visuelle enrichit l’observateur et un scénario métier.
 - Les publications actives à 20 ms alimentent les trajectoires ; `PresentationQueue` regroupe les valeurs continues de scène à 5 Hz. `PresentationChanges` compare les phases par valeur pour le worker et les snapshots décodés ; une transition discrète reste appliquée dès son tick. Conserver le dernier état continu en attente même en pause.
+
+## Critères de partie jouable
+- Lire docs/development/playability-validation.md. État final et FPS ne prouvent pas la chronologie visible. Fixer les attentes joueur avant l’oracle ; ne pas valider un délai parce qu’il correspond au buffer interne.
+- `npm run test:presentation` impose les vérifications sur zones naturelles et vitesses répétées ; requis aux changements d’horloge, bridge, interpolation ou phases de travail. Il appartient au contrôle complet, pas aux retouches cosmétiques. Distinguer exécution réelle, observation de présentation, mesure matérielle et cas non exercés.
+
+## Plantes V39
+- Lire docs/development/plant-temperature.md et sa recherche. Croissance thermique neutre 6–42 °C, nulle aux bornes 0/58 ; semis strictement entre 0/58, récolte et travail accepté indépendants. Resource.growthThermalFactor porte le facteur de l’intervalle sauvegardé ; absent = 1. Checkpointer avant changement, sans appliquer la température au passé.
+- Groupes dérivés par World, tableau de ressources et disposition thermique ; les producteurs remplacent les tableaux. Valider V38 avant migration sans histoire froide inventée ; transmettre le facteur dans les deltas. Mortalité, feuilles et saisons restent absentes.

@@ -107,7 +107,7 @@ test('colonie matérielle : réserve filtrée, transport visible, trois couchage
   await page.locator('#save').click();
   await expect(page.getByRole('status')).toContainText('sauvegardée');
   const saved = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!) as World, saveKey);
-  expect(saved.schemaVersion).toBe(38);
+  expect(saved.schemaVersion).toBe(39);
   expect(saved.pawns.some(pawn => pawn.haul?.phase === 'deliver')).toBe(true);
   expect(JSON.stringify(saved)).toBe(JSON.stringify(duringHaul));
 

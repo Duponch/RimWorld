@@ -1,12 +1,14 @@
+import { assertHarvestPhase } from './harvest-assertions.ts';
 import { writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import os from 'node:os';
 import { createWorld,applyCommand,serializeWorld } from '../src/sim/index.ts';
 process.env.PLAYWRIGHT_BROWSERS_PATH??=resolve('.playwright');
 const {chromium}=await import('@playwright/test');
-const label=process.argv[2]??'before',seconds=Number(process.env.HARVEST_SECONDS??45),switches=process.env.HARVEST_SWITCHES==='1';
-const initialSpeed=Number(process.env.HARVEST_INITIAL_SPEED??6),speedCycle=(process.env.HARVEST_SPEEDS??'1,3,6').split(',').map(Number);
+const label=process.argv[2]??'verification',seconds=Number(process.env.HARVEST_SECONDS??45),switches=process.env.HARVEST_SWITCHES!=='0';
+const initialSpeed=Number(process.env.HARVEST_INITIAL_SPEED??1),speedCycle=(process.env.HARVEST_SPEEDS??'6,1,3').split(',').map(Number);
 if(![1,3,6].includes(initialSpeed)||!speedCycle.length||speedCycle.some(s=>![1,3,6].includes(s)))throw Error('Invalid speed sequence');
+if(!Number.isFinite(seconds)||seconds<7||seconds>300)throw Error('Duration must be 7–300 seconds');
 if(!/^[a-z0-9-]+$/.test(label))throw Error('Invalid report label');
 const stats=a=>{if(!a.length)return null;const s=a.slice().sort((a,b)=>a-b);return {count:s.length,p50:s[Math.ceil(s.length*.5)-1],p95:s[Math.ceil(s.length*.95)-1],p99:s[Math.ceil(s.length*.99)-1],max:s.at(-1)};};
 const probe=`
@@ -62,6 +64,5 @@ try{for(const action of (process.env.HARVEST_ACTIONS??'mine,chop').split(',')){
   if(r.latest<phase.tick+64||r.display>r.play||r.play>r.latest||r.latest-r.play>64||r.queued>64)throw Error('Incoherent recovery: '+JSON.stringify(r));
  }
  await page.screenshot({path:'artifacts/harvest-'+action+'-'+label+'.png'});await page.close();
- if(process.env.HARVEST_VERIFY_SPEED==='1'&&(starvedFrames>0||phase.controls.some(c=>c.delay===null||c.delay>100)))throw Error('Delayed speed controls: '+JSON.stringify(phase.controls));
- if(process.env.HARVEST_VERIFY==='1'&&(phase.jumpCount||phase.solidOccupancyCount||errors.length||phase.remainingJobs>=phase.initialJobs||phase.removals.some(r=>r.play<r.tick)))throw Error('Harvest presentation regression: '+action);
+ assertHarvestPhase(phase,process.env.HARVEST_VERIFY_SPEED!=='0',process.env.HARVEST_VERIFY!=='0',switches);
  }}finally{await browser.close();await writeFile('artifacts/harvest-sync-'+label+'.json',JSON.stringify(report,null,2)+'\n');}
