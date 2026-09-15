@@ -11,7 +11,7 @@ export function miningDecisions(world:World):Decision[] {
   const out:Decision[]=[],cx=Math.floor(world.width/2),cz=Math.floor(world.height/2);
   const mined=world.tiles.filter(t=>t.terrain==='rough-stone').length;
   const pending=world.jobs.filter(j=>j.kind==='mine').length;
-  const missingChunk=world.structures.some(s=>s.kind==='stonecutter')&&!world.piles.some(p=>p.kind==='chunk'&&p.item!=='legacy-chunk'||p.kind==='blocks');
+  const missingChunk=world.structures.some(s=>s.kind==='stonecutter')&&world.piles.reduce((n,p)=>n+(p.kind==='blocks'?p.quantity:0),0)<20&&!world.piles.some(p=>p.kind==='chunk'&&p.item!=='legacy-chunk');
   const targetCount=missingChunk?Math.max(4,mined+1):4;
   if(mined+pending<targetCount) {
     const targets=world.tiles.flatMap((t,i)=>t.terrain==='rock'&&!t.ore?[{x:i%world.width,z:Math.floor(i/world.width)}]:[])

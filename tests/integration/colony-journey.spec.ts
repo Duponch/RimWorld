@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { perform } from './player-actions';
 import { playerDecisions, playerFocusDecisions, colonySummary, woodAccount, foodAccount } from '../scenarios/colony-player';
 import { validateWorld } from '../../src/sim/index';
+import { isBlockMaterial } from '../../src/sim/building-materials';
 import { world, observeErrors, panel, expectWorld } from './helpers';
 
 // Full tracing recorded ~500 MB during a stalled run. Keep compact checkpoints
@@ -57,9 +58,14 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
         await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,current);
       }
       if(hour===72) {
-        expect(summary.mining.cells,context).toBeGreaterThanOrEqual(6);expect(summary.mining.steelStored,context).toBe(50);expect(summary.mining.steelInBuildings,context).toBe(30);expect(summary.mining.stored,context).toBe(summary.mining.chunks);expect(summary.mining.blocks,context).toBe(20);expect(summary.mining.blocksStored,context).toBe(20);
+        expect(summary.mining.cells,context).toBeGreaterThanOrEqual(6);expect(summary.mining.steelStored,context).toBe(50);expect(summary.mining.steelInBuildings,context).toBe(30);expect(summary.mining.stored,context).toBe(summary.mining.chunks);
+        // The player checks only every four hours, unlike the hourly core pilot.
+        // One complete batch minus the new wall is sufficient on day 3; a second
+        // batch needs another random chunk. Prove the deficit has a real next action.
+        expect([15,35],context).toContain(summary.mining.blocks);expect(summary.mining.blocksStored,context).toBe(summary.mining.blocks);
+        expect(current.structures.filter(s=>s.kind==='wall'&&isBlockMaterial(s.material)),context).toHaveLength(1);
         expect(current.deconstructed.count,context).toBe(1);expect(current.structures.find(s=>s.kind==='horseshoes')?.x,context).toBe(Math.floor(current.width/2)+4);expect(current.packed,context).toEqual([]);
-        expect(summary.structures,context).toEqual({bed:3,table:1,stool:3,wall:6,campfire:1,horseshoes:1,stonecutter:1});expect(current.jobs.filter(j=>j.growingZoneId===undefined),context).toEqual([]);expect(current.resources.filter(r=>r.kind==='rice').length,context).toBeGreaterThan(5);
+        expect(summary.structures,context).toEqual({bed:3,table:1,stool:3,wall:7,campfire:1,horseshoes:1,stonecutter:1});expect(current.jobs.filter(j=>j.growingZoneId===undefined),context).toEqual([]);expect(current.resources.filter(r=>r.kind==='rice').length,context).toBeGreaterThan(5);
         expect(current.stock.food,context).toBeGreaterThan(0);expect(sleepers.size,context).toBe(3);
         expect(meals.size,context).toBeGreaterThanOrEqual(18);expect(foodAccount(current)+9*cooked.size+[...meals.values()].reduce((a,b)=>a+b,0),context).toBe(initialFood+[...harvests.values()].reduce((a,b)=>a+b,0));
         expect(current.piles.filter(p=>p.kind==='food').every(p=>['berries','survival-meal','rice','simple-meal'].includes(p.item))).toBe(true);
@@ -67,6 +73,14 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
         expect(decisions.filter(d=>{const c=d.command as {type:string;policyId?:number};return c.type==='food-policy-assign'&&c.policyId===3;}).length,context).toBeGreaterThanOrEqual(3);
         expect([...recreationActivities].sort(),context).toEqual(['horseshoes','skygaze']);
         expect(clearedSites.size,context).toBeGreaterThan(0);
+        if(summary.mining.blocks===15) {
+          expect(current.piles.filter(p=>p.kind==='chunk'),context).toEqual([]);
+          const replenish=playerDecisions(current).find(d=>d.command.type==='designate'&&d.command.kind==='mine');
+          expect(replenish,'A low block reserve without a chunk must trigger new mining').toBeDefined();
+          await perform(page,replenish!,rotation);decisions.push({tick:current.tick,...replenish!});
+          const planned=await world(page);expect(planned.jobs.filter(j=>j.kind==='mine')).toHaveLength(1);expect(validateWorld(planned)).toEqual([]);
+          await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,planned);
+        }
         finalReport={clearedSites:clearedSites.size,recreationActivities:[...recreationActivities],cooked:cooked.size,backend:await page.evaluate(()=>window.__lisiere.backend),days,meals:meals.size,sleepers:sleepers.size,woodConserved:true,foodReconciled:true,decisions,errors};
         break;
       }

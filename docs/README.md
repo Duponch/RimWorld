@@ -67,3 +67,5 @@ Choix bois/acier : [contrat V30](development/construction-materials.md), [vérif
 Taille de pierre : [production V32](development/stonecutting.md), [recherche de la recette](research/stonecutting-reference.md).
 
 Atelier à ingrédients mixtes : [contrat V31](development/stonecutter.md), [recherche Core](research/stonecutter-reference.md).
+
+Constructions en pierre V33 : [contrat des matériaux](development/construction-materials.md), [règles vérifiées](research/stone-buildings-reference.md).

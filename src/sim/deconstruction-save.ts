@@ -1,4 +1,5 @@
 import { STRUCTURE_DEFINITIONS } from './definitions.ts';
+import { isBlockMaterial } from './building-materials.ts';
 import { validConstructionMaterial } from './construction-materials.ts';
 import { deconstructionAvailable, deconstructionTarget } from './deconstruction-rules.ts';
 import type { World } from './types.ts';
@@ -12,12 +13,13 @@ export function validateDeconstruction(world: World, version: number, shapesOnly
   if (!ledger || typeof ledger !== 'object' || Array.isArray(ledger)
     || ![ledger.count, ledger.lostWood, ledger.fuelTicks].every(n => Number.isSafeInteger(n) && n >= 0)
     || ledger.lostSteel!==undefined&&(version<30||!Number.isSafeInteger(ledger.lostSteel)||ledger.lostSteel<0)
-    || Object.keys(ledger).some(k => !['count', 'lostWood', 'fuelTicks',...(version>=30?['lostSteel']:[])].includes(k))) errors.push('Invalid deconstruction ledger.');
+    || ledger.lostBlocks!==undefined&&(version<33||!ledger.lostBlocks||typeof ledger.lostBlocks!=='object'||Array.isArray(ledger.lostBlocks)||Object.entries(ledger.lostBlocks).some(([item,n])=>!isBlockMaterial(item)||!Number.isSafeInteger(n)||n<0))
+    || Object.keys(ledger).some(k => !['count', 'lostWood', 'fuelTicks',...(version>=30?['lostSteel']:[]),...(version>=33?['lostBlocks']:[])].includes(k))) errors.push('Invalid deconstruction ledger.');
   for (const j of world.jobs) {
     const d = j.deconstruction;
     if (j.kind !== 'deconstruct') { if (d !== undefined) errors.push('Unexpected deconstruction target.'); continue; }
     if (!d || typeof d !== 'object' || Array.isArray(d) || !Number.isSafeInteger(d.structureId)
-      || !Object.hasOwn(STRUCTURE_DEFINITIONS, d.kind) || !validConstructionMaterial(d.kind,d.material) || d.material!==undefined&&version<30 || Object.keys(d).some(k => !['structureId', 'kind',...(version>=30?['material']:[])].includes(k))) {
+      || !Object.hasOwn(STRUCTURE_DEFINITIONS, d.kind) || !validConstructionMaterial(d.kind,d.material,version) || d.material!==undefined&&version<30 || Object.keys(d).some(k => !['structureId', 'kind',...(version>=30?['material']:[])].includes(k))) {
       errors.push('Invalid deconstruction target.'); continue;
     }
     const s = deconstructionTarget(world, j);

@@ -1,4 +1,5 @@
 import { deconstructionReserved } from './deconstruction-rules.ts';
+import { BUILDING_MATERIALS } from './building-materials.ts';
 import { canStandAt } from './furniture-travel.ts';
 import { routeCost, routeToCell, type Reachability } from './pathfinding.ts';
 import { footprintCells } from './definitions.ts';
@@ -56,7 +57,7 @@ export function processSleeping(world: World, pawn: Pawn, context: NeedContext, 
     if (!same(pawn, task.target)) { context.move(task.target, true); return true; }
     if (task.phase === 'travel') context.event(`${pawn.name} s’allonge ${bed ? 'dans son lit' : 'au sol'}.`);
     task.phase = 'sleep'; pawn.path = []; pawn.state = 'sleeping'; pawn.collapsePending = false; pawn.restZeroTicks = 0;
-    pawn.rest = Math.min(100, pawn.rest + (bed ? BED_REST_PER_TICK : GROUND_REST_PER_TICK));
+    pawn.rest = Math.min(100, pawn.rest + (bed ? BED_REST_PER_TICK * BUILDING_MATERIALS[bed.material??'wood'].restFactor : GROUND_REST_PER_TICK));
     if (pawn.rest >= 100) { pawn.need = null; pawn.state = 'idle'; pawn.planCooldown = 0; pawn.needCooldown = 0; }
     return true;
   }

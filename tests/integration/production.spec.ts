@@ -8,7 +8,7 @@ import { withoutPostV10Fields } from '../scenarios/legacy-save';
 import { ROT_DAYS, rotAge } from '../../src/sim/food-preservation';
 import { TICKS_PER_DAY } from '../../src/sim/types';
 
-test('taille par interface : Artisanat, filtres, ordre physique, sauvegarde et vingt blocs rangés',async({playwright},testInfo)=>{
+test('taille et construction par interface : Artisanat, vingt blocs rangés puis mur typé et reprise',async({playwright},testInfo)=>{
   test.setTimeout(60000);
   const browser=await playwright.chromium.launch({channel:'chromium',args:[]});
   const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);
@@ -38,7 +38,17 @@ test('taille par interface : Artisanat, filtres, ordre physique, sauvegarde et v
     await expect(page.locator('#blocks')).toHaveText('20');await expect(page.locator('[data-bill-status]')).toContainText('20 / 20');await expect(page.locator('#fps-counter')).toBeVisible();
     const final=await world(page);expect(validateWorld(final)).toEqual([]);expect(final.piles.find(q=>q.kind==='blocks')?.item).toBe('marble-blocks');expect(final.piles.find(q=>q.item==='granite-chunk')?.quantity).toBe(1);expect(errors).toEqual([]);
     await page.screenshot({path:'artifacts/stonecutting-ui.png'});
-    await testInfo.attach('stonecutting',{contentType:'application/json',body:JSON.stringify({backend:await page.evaluate(()=>window.__lisiere.backend),workTick:working.tick,tick:final.tick,blocks:20,errors})});
+    await panel(page,'work');await page.locator(`select[data-owner="${p.id}"][data-work="build"]`).selectOption('1');
+    await tool(page,'bed');await page.locator('#construction-material').selectOption('marble-blocks');await expect(page.locator('#tool-instruction')).toContainText('Efficacité du repos : 90 %');
+    await tool(page,'stonecutter');await expect(page.locator('#construction-material option')).toHaveCount(2);await expect(page.locator('#construction-material')).toHaveValue('wood');
+    await perform(page,{reason:'Construire avec les blocs fabriqués',command:{type:'designate',kind:'wall',material:'marble-blocks',x:19,z:17}},{value:0});
+    await page.keyboard.press('Escape');await page.locator('[data-speed="6"]').click();
+    await expect.poll(async()=>(await world(page)).structures.some(s=>s.kind==='wall'&&s.material==='marble-blocks'),{timeout:15000}).toBe(true);
+    await page.locator('[data-speed="0"]').click();await cell(page,19,17);await expect(page.locator('#cell-title')).toContainText('Blocs de marbre');
+    const built=await world(page);expect(built.piles.filter(p=>p.kind==='blocks').reduce((n,p)=>n+p.quantity,0)).toBe(15);expect(validateWorld(built)).toEqual([]);
+    await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,built);await page.keyboard.press('Escape');
+    await page.screenshot({path:'artifacts/stone-buildings-ui.png'});expect(errors).toEqual([]);
+    await testInfo.attach('stonecutting',{contentType:'application/json',body:JSON.stringify({backend:await page.evaluate(()=>window.__lisiere.backend),workTick:working.tick,tick:built.tick,blocksProduced:20,blocksRemaining:15,wall:'marble-blocks',errors})});
   } finally {await browser.close();}
 });
 
@@ -124,7 +134,7 @@ test('conservation dans le worker : migration V10, inspection de fraîcheur, exp
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:JSON.stringify(old)});
     await page.goto('/?size=32&seed=42&e2e');await expect(page.locator('#loading')).toHaveCount(0);
     await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();
-    await expect.poll(async()=>(await world(page)).schemaVersion).toBe(32);
+    await expect.poll(async()=>(await world(page)).schemaVersion).toBe(33);
     expect(await world(page)).toEqual(deserializeWorld(JSON.stringify(old)));await page.keyboard.press('Escape');await cell(page,17,16);
     await expect(page.locator('#cell-materials')).toContainText('pourrit dans 14.0 j');
     const aged=structuredClone(initial);aged.piles[0]!.rot={progress:ROT_DAYS.berries*TICKS_PER_DAY-120,atTick:0};

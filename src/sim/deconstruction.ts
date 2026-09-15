@@ -1,4 +1,6 @@
 import { constructionRecipe } from './construction-materials.ts';
+import { isBlockMaterial, type ConstructionMaterial, type BlockMaterial } from './building-materials.ts';
+import { ITEM_DEFINITIONS } from './items.ts';
 import { deconstructionAvailable, deconstructionTarget } from './deconstruction-rules.ts';
 import { groundPile, groundCapacity, planGroundPlacement } from './ground-placement.ts';
 import { addMaterial } from './materials.ts';
@@ -14,8 +16,9 @@ export function finishDeconstruction(world: World, pawn: Pawn, job: Job): boolea
   // The preview owns piles and escrow: planning several ingredient refunds must
   // neither mutate live stacks nor promise one ground cell to incompatible items.
   const view = { ...world, structures, jobs: jobs.map(j => ({ ...j, escrow: { ...j.escrow } })), piles: world.piles.map(p => ({ ...p, owner: { ...p.owner } })) };
-  const refunds: { item: 'wood' | 'steel'; quantity: number; cell: { x:number; z:number } }[] = [];
+  const refunds: { item: ConstructionMaterial; quantity: number; cell: { x:number; z:number } }[] = [];
   let rng = world.rng, lostWood = 0, lostSteel = 0;
+  const lostBlocks:Partial<Record<BlockMaterial,number>>={...world.deconstructed.lostBlocks};
   for (const cost of structure.kind === 'campfire' ? [] : constructionRecipe(structure).ingredients) {
     let quantity = Math.floor(cost.quantity / 2);
     if (cost.quantity % 2) {
@@ -29,18 +32,20 @@ export function finishDeconstruction(world: World, pawn: Pawn, job: Job): boolea
     if (view.piles.length + newPiles > 32768 || !Number.isSafeInteger(view.nextId + newPiles)) return false;
     for (const drop of drops) {
       refunds.push({ ...drop, item: cost.item });
-      addMaterial(view, cost.item, drop.quantity, { type: 'ground', ...drop.cell }, cost.item);
+      addMaterial(view, ITEM_DEFINITIONS[cost.item].kind, drop.quantity, { type: 'ground', ...drop.cell }, cost.item);
     }
     if (cost.item === 'wood') lostWood += cost.quantity - quantity;
-    else lostSteel += cost.quantity - quantity;
+    else if(cost.item==='steel')lostSteel += cost.quantity - quantity;
+    else if(isBlockMaterial(cost.item))lostBlocks[cost.item]=(lostBlocks[cost.item]??0)+cost.quantity-quantity;
   }
   const fuelTicks = structure.fuel ? structure.fuel.ticks + structure.fuel.burned : 0;
   const ledger = world.deconstructed;
-  if (![ledger.count + 1, ledger.lostWood + lostWood, (ledger.lostSteel ?? 0) + lostSteel, ledger.fuelTicks + fuelTicks].every(Number.isSafeInteger)) return false;
+  if (![ledger.count + 1, ledger.lostWood + lostWood, (ledger.lostSteel ?? 0) + lostSteel, ledger.fuelTicks + fuelTicks,...Object.values(lostBlocks)].every(Number.isSafeInteger)) return false;
   world.structures = structures; world.jobs = jobs; world.rng = rng;
-  for (const d of refunds) addMaterial(world, d.item, d.quantity, { type: 'ground', ...d.cell }, d.item);
+  for (const d of refunds) addMaterial(world, ITEM_DEFINITIONS[d.item].kind, d.quantity, { type: 'ground', ...d.cell }, d.item);
   ledger.count++; ledger.lostWood += lostWood; ledger.fuelTicks += fuelTicks;
   if (lostSteel) ledger.lostSteel = (ledger.lostSteel ?? 0) + lostSteel;
+  if(Object.keys(lostBlocks).length)ledger.lostBlocks=lostBlocks;
   for (const p of world.pawns) {
     if (p.bedId === structure.id) p.bedId = null;
     // A table is not exclusively reserved by its eaters. Keep their actual meal

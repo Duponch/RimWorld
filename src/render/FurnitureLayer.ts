@@ -1,4 +1,5 @@
 import { pileSurfaces } from './pile-surfaces';
+import { buildingMaterialColor } from './building-material-color';
 import type * as THREE from 'three/webgpu';
 import type { BoxBatches } from './BoxBatches';
 import type { World } from '../sim/types';
@@ -15,7 +16,7 @@ export function buildFurniture(world: World, group: THREE.Group, cutaway: boolea
     const walls: Placement[] = [], wallCaps: Placement[] = [], bedFrames: Placement[] = [], bedding: Placement[] = [], pillows: Placement[] = [], headboards: Placement[] = [], woodParts: Placement[] = [];
     for (const structure of world.structures) {
       const { x, z } = structure;
-      const color = structure.material === 'steel' ? 0x89999e : undefined;
+      const color = buildingMaterialColor(structure.material);
       if (structure.kind === 'wall') {
         walls.push({ x, z, color, y: (wallHeight - 0.09) / 2 }); wallCaps.push({ x, z, color, y: wallHeight - 0.045 });
       } else if (structure.kind === 'bed') {
@@ -31,7 +32,7 @@ export function buildFurniture(world: World, group: THREE.Group, cutaway: boolea
     for (const structure of world.structures) {
       if (structure.kind !== 'table' && structure.kind !== 'stool') continue;
       const table = structure.kind === 'table';
-      const color = structure.material === 'steel' ? 0x89999e : 0xa38559;
+      const color = buildingMaterialColor(structure.material,0xa38559);
       const cells = footprintCells(structure), last = cells[cells.length - 1]!;
       const x = (structure.x + last.x) / 2, z = (structure.z + last.z) / 2, ry = structure.orientation * Math.PI / 2;
       const width = table ? WORLD_SCALE.tableWidth : WORLD_SCALE.stoolWidth;
@@ -49,7 +50,7 @@ export function buildFurniture(world: World, group: THREE.Group, cutaway: boolea
       const s=surfaces.get(p.owner.z*world.width+p.owner.x),scale=s?.scale??1;
       const x=p.owner.x+(s?.x??0),z=p.owner.z+(s?.z??0),y=s?.y??0;
       parcels.push({x,z,y:y+.24*scale,sx:.64*scale,sy:.48*scale,sz:.64*scale,color:0xb6996c},
-        {x,z,y:y+.49*scale,sx:.13*scale,sy:.03*scale,sz:.67*scale,color:p.building.material==='steel'?0x89999e:0x6f634e});
+        {x,z,y:y+.49*scale,sx:.13*scale,sy:.03*scale,sz:.67*scale,color:buildingMaterialColor(p.building.material,0x6f634e)});
     }
     const fires=campfireParts(world);
     batches.set(group,'campfire-flames',fires.flames,'border',false);

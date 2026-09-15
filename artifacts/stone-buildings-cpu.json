@@ -1,0 +1,185 @@
+{
+  "stone": true,
+  "workshops": false,
+  "date": "2026-09-15T03:48:33.289Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "map": 250,
+  "protocol": "Synthetic clear 250²: 3/30/100 builders, five stone types cycled through one wall (5) and stool (25) per worker; 3 repetitions to completion, bound 2000 ticks, 100 separate warmup ticks; physical delivery, needs active, snapshots every 5 ticks, validation outside timing. CPU only.",
+  "phases": [
+    {
+      "count": 3,
+      "ticks": {
+        "samples": 1182,
+        "p50": 0.011500000000012278,
+        "p95": 0.10899999999998045,
+        "p99": 1.3723999999999705,
+        "max": 5.427700000000016
+      },
+      "snapshots": {
+        "samples": 237,
+        "p50": 0.3403000000000702,
+        "p95": 0.3982000000000312,
+        "p99": 0.6895999999999844,
+        "max": 1.3736000000000104
+      },
+      "outcomes": [
+        {
+          "tick": 2394,
+          "buildings": 6,
+          "materials": {
+            "wood": 0,
+            "steel": 0,
+            "granite-blocks": 5,
+            "limestone-blocks": 30,
+            "marble-blocks": 30,
+            "sandstone-blocks": 25,
+            "slate-blocks": 0
+          }
+        },
+        {
+          "tick": 2394,
+          "buildings": 6,
+          "materials": {
+            "wood": 0,
+            "steel": 0,
+            "granite-blocks": 5,
+            "limestone-blocks": 30,
+            "marble-blocks": 30,
+            "sandstone-blocks": 25,
+            "slate-blocks": 0
+          }
+        },
+        {
+          "tick": 2394,
+          "buildings": 6,
+          "materials": {
+            "wood": 0,
+            "steel": 0,
+            "granite-blocks": 5,
+            "limestone-blocks": 30,
+            "marble-blocks": 30,
+            "sandstone-blocks": 25,
+            "slate-blocks": 0
+          }
+        }
+      ]
+    },
+    {
+      "count": 30,
+      "ticks": {
+        "samples": 2394,
+        "p50": 0.25749999999993634,
+        "p95": 2.2438999999999396,
+        "p99": 6.822699999999941,
+        "max": 19.11310000000003
+      },
+      "snapshots": {
+        "samples": 480,
+        "p50": 0.33799999999996544,
+        "p95": 0.4025000000001455,
+        "p99": 0.6871000000001004,
+        "max": 7.511900000000196
+      },
+      "outcomes": [
+        {
+          "tick": 2798,
+          "buildings": 60,
+          "materials": {
+            "wood": 0,
+            "steel": 0,
+            "granite-blocks": 180,
+            "limestone-blocks": 180,
+            "marble-blocks": 180,
+            "sandstone-blocks": 180,
+            "slate-blocks": 180
+          }
+        },
+        {
+          "tick": 2798,
+          "buildings": 60,
+          "materials": {
+            "wood": 0,
+            "steel": 0,
+            "granite-blocks": 180,
+            "limestone-blocks": 180,
+            "marble-blocks": 180,
+            "sandstone-blocks": 180,
+            "slate-blocks": 180
+          }
+        },
+        {
+          "tick": 2798,
+          "buildings": 60,
+          "materials": {
+            "wood": 0,
+            "steel": 0,
+            "granite-blocks": 180,
+            "limestone-blocks": 180,
+            "marble-blocks": 180,
+            "sandstone-blocks": 180,
+            "slate-blocks": 180
+          }
+        }
+      ]
+    },
+    {
+      "count": 100,
+      "ticks": {
+        "samples": 2955,
+        "p50": 2.9393999999992957,
+        "p95": 8.048800000000028,
+        "p99": 10.586100000000442,
+        "max": 19.936999999999898
+      },
+      "snapshots": {
+        "samples": 591,
+        "p50": 0.3562000000001717,
+        "p95": 0.3930000000000291,
+        "p99": 0.47299999999995634,
+        "max": 0.6914999999999054
+      },
+      "outcomes": [
+        {
+          "tick": 2985,
+          "buildings": 200,
+          "materials": {
+            "wood": 0,
+            "steel": 0,
+            "granite-blocks": 600,
+            "limestone-blocks": 600,
+            "marble-blocks": 600,
+            "sandstone-blocks": 600,
+            "slate-blocks": 600
+          }
+        },
+        {
+          "tick": 2985,
+          "buildings": 200,
+          "materials": {
+            "wood": 0,
+            "steel": 0,
+            "granite-blocks": 600,
+            "limestone-blocks": 600,
+            "marble-blocks": 600,
+            "sandstone-blocks": 600,
+            "slate-blocks": 600
+          }
+        },
+        {
+          "tick": 2985,
+          "buildings": 200,
+          "materials": {
+            "wood": 0,
+            "steel": 0,
+            "granite-blocks": 600,
+            "limestone-blocks": 600,
+            "marble-blocks": 600,
+            "sandstone-blocks": 600,
+            "slate-blocks": 600
+          }
+        }
+      ]
+    }
+  ]
+}

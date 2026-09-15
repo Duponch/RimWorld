@@ -55,7 +55,7 @@ test('steel veins preserve topology, extraction commits 40 units, transport spli
   expect(furnitureDelay(w,{x:18,z:15},targets[0]!)).toBe(1.4);expect(furnitureDelay(w,targets[0]!,targets[1]!)).toBe(1.4);
   expect(navigationCosts(w).costs!.get(15*32+19)).toBe(467);
   const old=JSON.parse(serializeWorld(miningCamp()));old.schemaVersion=28;for(const a of old.pawns)delete a.priorities.craft;old.tiles[i]={terrain:'rock',stone:'granite',miningDamage:80};
-  const migrated=deserializeWorld(JSON.stringify(old));expect(migrated.schemaVersion).toBe(32);expect(migrated.tiles).toEqual(old.tiles);expect(migrated.stockpiles).toEqual(old.stockpiles);
+  const migrated=deserializeWorld(JSON.stringify(old));expect(migrated.schemaVersion).toBe(33);expect(migrated.tiles).toEqual(old.tiles);expect(migrated.stockpiles).toEqual(old.stockpiles);
   for(const change of [(s:any)=>s.tiles[i].ore='steel',(s:any)=>s.stockpiles.push({id:s.nextId++,x:20,z:20,filters:{wood:false,food:false,steel:true},capacity:75,priority:2}),(s:any)=>s.piles.push({id:s.nextId++,kind:'steel',item:'steel',quantity:40,owner:{type:'ground',x:20,z:20}})]){const bad=structuredClone(old);change(bad);expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(/version 28/);}
   for(const tile of [{terrain:'grass',ore:'steel'},{terrain:'rough-stone',ore:'steel'},{terrain:'rock',ore:'gold'},{terrain:'rock',ore:'steel',miningDamage:1520}]){const bad=JSON.parse(serializeWorld(migrated));bad.tiles[i]=tile;expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();}
 });
@@ -124,7 +124,7 @@ test('rough terrain and chunks share weighted and physical travel, strict V27 mi
   addGroundMaterial(w,'chunk',1,{x:11,z:10},'granite-chunk');addGroundMaterial(w,'chunk',1,{x:12,z:10},'slate-chunk');
   startTravel(w,p,{x:11,z:10});expect(p.motion!.end-p.motion!.start).toBeCloseTo(7.2);w.tick+=8;startTravel(w,p,{x:12,z:10});expect(p.motion!.end-p.motion!.start).toBeCloseTo(3);
   const old=JSON.parse(serializeWorld(miningCamp()));old.schemaVersion=27;for(const a of old.pawns){delete a.priorities.mine;delete a.priorities.craft;}
-  const migrated=deserializeWorld(JSON.stringify(old));expect(migrated.schemaVersion).toBe(32);expect(migrated.pawns[0]!.priorities.mine).toBe(2);expect(migrated.tiles).toEqual(old.tiles);
+  const migrated=deserializeWorld(JSON.stringify(old));expect(migrated.schemaVersion).toBe(33);expect(migrated.pawns[0]!.priorities.mine).toBe(2);expect(migrated.tiles).toEqual(old.tiles);
   for(const mutate of [(s:any)=>s.tiles[0].miningDamage=80,(s:any)=>s.tiles[0].terrain='rough-stone',(s:any)=>s.pawns[0].priorities.mine=1]){const bad=structuredClone(old);mutate(bad);expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(/version 27/);}
   const broken=JSON.parse(serializeWorld(migrated));broken.tiles[0]={terrain:'rock',stone:'sandstone',miningDamage:400};expect(validateWorld(broken).length).toBeGreaterThan(0);
 });

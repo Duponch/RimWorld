@@ -1,6 +1,6 @@
 # Choix et écarts de gameplay
 
-État : 14 septembre 2026, première cuisine G1, G0 encore ouvert. Les nouvelles [références utilisateur](../research/reference-adoption.md) définissent le comportement visé par défaut. Cette liste rend explicites les adaptations et simplifications actuelles ; une limite temporaire ne devient pas automatiquement notre cible définitive. [ROADMAP](../ROADMAP.md) suit leur progression.
+État : 15 septembre 2026, G1 partiel et chaîne pierre G2 jouable, G0 encore ouvert. Les nouvelles [références utilisateur](../research/reference-adoption.md) définissent le comportement visé par défaut. Cette liste rend explicites les adaptations et simplifications actuelles ; une limite temporaire ne devient pas automatiquement notre cible définitive. [ROADMAP](../ROADMAP.md) suit leur progression.
 
 | Domaine / référence | Choix ou écart actuel | Motif et suite |
 |---|---|---|
@@ -70,4 +70,7 @@ Les nouveaux ouvrages suivent les coûts bois/acier vérifiés, dont 45 unités 
 
 ## Taille V32
 
-Recette générale filtrable plutôt que six raccourcis de factures : son seuil compte tous les blocs, conformément au compteur inspecté. Travail neutre extérieur 200 ticks locaux (1600 Core / 10 / 0,8). Lumière fonctionnelle et capacités restent absentes, sans facteur inventé à partir de sources contradictoires. Le produit de vingt blocs se porte entier malgré la limite provisoire dix du transport ordinaire. Les blocs ne sont pas encore admissibles aux constructions. [Justification et sources](../research/stonecutting-reference.md).
+Recette générale filtrable plutôt que six raccourcis de factures : son seuil compte tous les blocs, conformément au compteur inspecté. Travail neutre extérieur 200 ticks locaux (1600 Core / 10 / 0,8). Lumière fonctionnelle et capacités restent absentes, sans facteur inventé à partir de sources contradictoires. Le produit de vingt blocs se porte entier malgré la limite provisoire dix du transport ordinaire. Les constructions admissibles acceptent ces blocs depuis V33, avec leur travail propre et le repos des lits réduit. [Justification et sources](../research/stonecutting-reference.md).
+
+## Construction en pierre V33
+Adopter cinq roches pour les cinq familles admissibles ; conserver l’exclusion de la pierre à l’atelier de taille. Travail = base × facteur + offset, sommeil du lit ×0,9. Géométrie existante teintée ; emballage générique conservé. Résistance, incendie, beauté, économie, fondations et qualités attendent leurs vrais systèmes. [Sources, unités et niveau de certitude](../research/stone-buildings-reference.md).

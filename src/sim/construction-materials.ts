@@ -3,7 +3,8 @@ import { reservedDestination } from './materials.ts';
 import type { ItemId } from './items.ts';
 import type { Job, JobKind, StructureKind, World } from './types.ts';
 
-export type ConstructionMaterial = 'wood' | 'steel';
+import { BUILDING_MATERIALS, CONSTRUCTION_MATERIALS, isBlockMaterial, type ConstructionMaterial } from './building-materials.ts';
+export type { ConstructionMaterial } from './building-materials.ts';
 export interface ConstructionCost { item: ConstructionMaterial; quantity:number }
 export interface ConstructionRecipe { ingredients:readonly ConstructionCost[]; work:number; coreWork:number }
 type ConstructionObject={kind:JobKind;material?:ConstructionMaterial};
@@ -14,19 +15,21 @@ const work:Record<StructureKind,number>={stonecutter:2000,wall:135,bed:800,table
 const recipes=new Map<string,ConstructionRecipe>();
 for(const kind of Object.keys(JOB_DURATION) as JobKind[]) {
   if(kind!=='stonecutter')recipes.set(`${kind}:legacy`,Object.freeze({ingredients:Object.freeze(JOB_WOOD_COST[kind]?[Object.freeze({item:'wood' as const,quantity:JOB_WOOD_COST[kind]})]:[]),work:JOB_DURATION[kind],coreWork:JOB_DURATION[kind]*10}));
-  if(kind in STRUCTURE_DEFINITIONS)for(const material of ['wood','steel'] as const) {
-    if(kind==='campfire'&&material==='steel')continue;
+  if(kind in STRUCTURE_DEFINITIONS)for(const material of CONSTRUCTION_MATERIALS) {
+    if(kind==='campfire'&&material!=='wood'||kind==='stonecutter'&&isBlockMaterial(material))continue;
     const k=kind as StructureKind;
-    const coreWork=Math.round(work[k]*(material==='wood'&&k!=='campfire'?.7:1));
+    const stats=BUILDING_MATERIALS[material];
+    const coreWork=Math.round(k==='campfire'?work[k]:work[k]*stats.workFactor+stats.workOffset);
     const amounts=new Map<ConstructionMaterial,number>([[material,costs[k]]]);
     if(k==='stonecutter')amounts.set('steel',(amounts.get('steel')??0)+30);
     const ingredients=Object.freeze([...amounts].map(([item,quantity])=>Object.freeze({item,quantity})));
     recipes.set(`${kind}:${material}`,Object.freeze({ingredients,work:Math.ceil(coreWork/10),coreWork}));
   }
 }
-export function validConstructionMaterial(kind:unknown,material:unknown):boolean {
-  return material===undefined||typeof kind==='string'&&(material==='wood'||material==='steel')&&recipes.has(`${kind}:${material}`);
+export function validConstructionMaterial(kind:unknown,material:unknown,version=33):boolean {
+  return material===undefined||typeof kind==='string'&&typeof material==='string'&&(CONSTRUCTION_MATERIALS as readonly string[]).includes(material)&&(version>=33||!isBlockMaterial(material))&&recipes.has(`${kind}:${material}`);
 }
+export const constructionMaterials=(kind:string):readonly ConstructionMaterial[]=>CONSTRUCTION_MATERIALS.filter(material=>validConstructionMaterial(kind,material));
 export function constructionRecipe(entity:ConstructionObject):ConstructionRecipe {
   return recipes.get(`${entity.kind}:${entity.material??'legacy'}`)!;
 }

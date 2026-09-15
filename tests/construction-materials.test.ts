@@ -151,5 +151,5 @@ test('workshop rotations reject clipped sides and legacy shapes; mixed refunds p
   expect(finishDeconstruction(w,w.pawns[0]!,job)).toBe(true);expect(validateWorld(w)).toEqual([]);
   expect(steelAccount(w)).toBe(30);expect(w.piles.filter(p=>p.kind==='wood').reduce((n,p)=>n+p.quantity,0)+w.deconstructed.lostWood).toBe(75);
   const legacy=JSON.parse(serializeWorld(deconstructionCamp()));legacy.schemaVersion=30;for(const a of legacy.pawns)delete a.priorities.craft;
-  expect(deserializeWorld(JSON.stringify(legacy))).toEqual({...legacy,schemaVersion:32,pawns:legacy.pawns.map((p:any)=>({...p,priorities:{...p.priorities,craft:2}}))});
+  expect(deserializeWorld(JSON.stringify(legacy))).toEqual({...legacy,schemaVersion:33,pawns:legacy.pawns.map((p:any)=>({...p,priorities:{...p.priorities,craft:2}}))});
 });

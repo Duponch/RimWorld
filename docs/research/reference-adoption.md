@@ -150,3 +150,6 @@ V31 : relecture chapitres 5/10/11, SYS/TEST-020..022/051..064 ; [atelier de tail
 ## Production de pierre V32
 
 Chapitre 11 relu ; **SYS/TEST-062..064, UI-025** : adopter transactions, filtrage et reprise selon recette ; adapter horloge, catégories et rendu ; différer paramètres avancés/objets inachevés d'autres recettes, capacités et recherche. [Nouvelle confrontation](stonecutting-reference.md) : facture générale compte tous les blocs, X fois compte les opérations. Une recette sans objet inachevé conserve les ingrédients après interruption, pas ses ticks de travail hors sauvegarde. Les scénarios de colonie et production sont enrichis sans suite automatique par ligne du corpus.
+
+## Construction pierre V33 — 15 septembre
+Chapitre 10, SYS/TEST-056, 058, 059 et UI-019/024 relus dans les originaux : adopter choix de matière, livraison quantitative, retrait et identité du meuble ; adapter 3D/horloge ; différer fondations détaillées, réparation, remplacement, qualité et autres statistiques. Vérification actuelle de l’exclusion de pierre à la table de taille et du repos réduit des lits, facteurs de construction distincts de fabrication : [sources et décisions](stone-buildings-reference.md).

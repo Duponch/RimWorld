@@ -29,7 +29,7 @@ test('atelier mixte : choix du matériau, trois cases tournées, chantier long r
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,working);
     await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).structures.length).toBe(1);await page.locator('[data-speed="0"]').click();
     const built=await world(page),bench=built.structures[0]!;expect(bench.material).toBe('steel');expect(built.piles).toEqual([]);
-    await page.keyboard.press('Escape');await cell(page,17,16);await expect(page.locator('#cell-description')).toContainText('Fabrication de blocs à venir');await expect(page.locator('#cell-description')).toContainText('1 × 3 cases');
+    await page.keyboard.press('Escape');await cell(page,17,16);await expect(page.locator('#cell-description')).toContainText('1 fragment → 20 blocs');await expect(page.locator('#cell-description')).toContainText('1 × 3 cases');
     await perform(page,{reason:'Déplacer et tourner l’atelier sans reconstruire ses matériaux.',command:{type:'install',structureId:bench.id,x:20,z:20,orientation:0}},{value:1});
     await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).structures.find(s=>s.id===bench.id)?.x).toBe(20);await page.locator('[data-speed="0"]').click();
     const moved=await world(page);expect(validateWorld(moved)).toEqual([]);expect(moved.packed).toEqual([]);expect(moved.piles).toEqual([]);
@@ -51,7 +51,7 @@ test('chantier par interface : plan sur une pile, dégagement porté, cadre, sau
     const old=JSON.parse(serializeWorld(fixture));old.schemaVersion=15;for(const a of old.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete old.deconstructed;delete old.packed;for(const pawn of old.pawns)delete pawn.orders;
     await page.addInitScript(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:JSON.stringify(old)});
     await page.goto('/?size=32&e2e');await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();
-    await expect.poll(async()=>(await world(page)).schemaVersion).toBe(32);
+    await expect.poll(async()=>(await world(page)).schemaVersion).toBe(33);
     await tool(page,'wall');await cell(page,16,14);await page.keyboard.press('Escape');await cell(page,16,14);
     await expect(page.locator('#cell-job')).toContainText('Plan');
     await page.locator('[data-speed="6"]').click();

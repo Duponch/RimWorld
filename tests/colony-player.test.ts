@@ -41,12 +41,12 @@ test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp const
     }
     const context=JSON.stringify({seed,report,meals:[...meals],sleep:[...sleep]});
     expect(report[0]!.structures,context).toMatchObject({bed:3,table:1,stool:3});
-    expect(report[4]!.structures,context).toEqual({bed:3,table:1,stool:3,wall:6,campfire:1,horseshoes:1,stonecutter:1});
+    expect(report[4]!.structures,context).toEqual({bed:3,table:1,stool:3,wall:7,campfire:1,horseshoes:1,stonecutter:1});
     expect([...recreationKinds].sort(),context).toEqual(['horseshoes','skygaze']);expect(recreationPawns.size,context).toBe(3);
     expect(cooked,context).toBeGreaterThanOrEqual(12);
     expect(rationAssignments,context).toBeGreaterThanOrEqual(3);
     expect(world.tiles.filter(t=>t.terrain==='rough-stone').length,context).toBeGreaterThanOrEqual(6);
-    expect(colonySummary(world).mining.blocks,context).toBe(20);expect(colonySummary(world).mining.blocksStored,context).toBe(20);
+    expect(colonySummary(world).mining.blocks,context).toBe(35);expect(colonySummary(world).mining.blocksStored,context).toBe(35);
     expect(colonySummary(world).mining.steel,context).toBe(50);expect(colonySummary(world).mining.steelStored,context).toBe(50);expect(colonySummary(world).mining.steelInBuildings,context).toBe(30);expect(colonySummary(world).structures.stonecutter,context).toBe(1);
     expect(colonySummary(world).mining.stored,context).toBe(colonySummary(world).mining.chunks);
     expect(world.deconstructed.count,context).toBe(1);

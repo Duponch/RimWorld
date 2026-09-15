@@ -1,0 +1,1028 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "E:\\Code\\RimWorld\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "tests/integration/production.spec.ts",
+      "tests/integration/construction.spec.ts",
+      "tests/integration/colony-journey.spec.ts",
+      "--grep",
+      "taille et construction|atelier mixte|partie de trois jours",
+      "--workers=1",
+      "--reporter=json"
+    ],
+    "configFile": "E:\\Code\\RimWorld\\playwright.config.ts",
+    "rootDir": "E:/Code/RimWorld/tests/integration",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "E:/Code/RimWorld/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "E:/Code/RimWorld/tests/integration",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": {
+      "command": "npm run dev",
+      "url": "http://127.0.0.1:5173",
+      "reuseExistingServer": true,
+      "timeout": 30000
+    }
+  },
+  "suites": [
+    {
+      "title": "colony-journey.spec.ts",
+      "file": "colony-journey.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "partie de trois jours : un joueur équipe son camp et entretient ses stocks par la vraie interface",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 480000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 372493,
+                  "error": {
+                    "message": "Error: {\"tick\":18077,\"foodPolicies\":[3,3,3],\"restRules\":\"adult\",\"scheduledSleepHours\":[8,8,8],\"spoiled\":{\"berries\":0,\"rice\":0,\"simple-meal\":0},\"crops\":15,\"growingCells\":15,\"mining\":{\"blocks\":15,\"blocksStored\":15,\"steelInBuildings\":30,\"steel\":50,\"steelStored\":50,\"cells\":11,\"chunks\":0,\"stored\":0},\"recreation\":[{\"level\":94.86999999999738,\"tolerance\":{\"solitary\":18.748500000010697,\"dexterity\":27.366280741111133},\"bored\":{\"solitary\":false,\"dexterity\":false}},{\"level\":94.98999999999744,\"tolerance\":{\"solitary\":19.1790000000109,\"dexterity\":18.22350388717475},\"bored\":{\"solitary\":false,\"dexterity\":false}},{\"level\":97.67999999999881,\"tolerance\":{\"solitary\":19.85220469019732,\"dexterity\":23.420500000011614},\"bored\":{\"solitary\":false,\"dexterity\":false}}],\"furnitureTransit\":0,\"furnitureExits\":0,\"sharedPawnCells\":0,\"playerOrders\":[{\"active\":null,\"queued\":0,\"priority\":null},{\"active\":null,\"queued\":0,\"priority\":null},{\"active\":null,\"queued\":0,\"priority\":null}],\"obstructedGrowingCells\":0,\"clearing\":0,\"construction\":{\"blueprints\":0,\"frames\":0,\"clearingPlants\":0,\"clearingPiles\":0},\"structures\":{\"bed\":3,\"table\":1,\"stool\":3,\"wall\":7,\"campfire\":1,\"horseshoes\":1,\"stonecutter\":1},\"preparedMeals\":6,\"stock\":{\"wood\":40,\"food\":21},\"pending\":0,\"minimumFood\":41.46666666666353,\"minimumRest\":55.01988095238167}\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m35\u001b[39m\nReceived: \u001b[31m15\u001b[39m",
+                    "stack": "Error: {\"tick\":18077,\"foodPolicies\":[3,3,3],\"restRules\":\"adult\",\"scheduledSleepHours\":[8,8,8],\"spoiled\":{\"berries\":0,\"rice\":0,\"simple-meal\":0},\"crops\":15,\"growingCells\":15,\"mining\":{\"blocks\":15,\"blocksStored\":15,\"steelInBuildings\":30,\"steel\":50,\"steelStored\":50,\"cells\":11,\"chunks\":0,\"stored\":0},\"recreation\":[{\"level\":94.86999999999738,\"tolerance\":{\"solitary\":18.748500000010697,\"dexterity\":27.366280741111133},\"bored\":{\"solitary\":false,\"dexterity\":false}},{\"level\":94.98999999999744,\"tolerance\":{\"solitary\":19.1790000000109,\"dexterity\":18.22350388717475},\"bored\":{\"solitary\":false,\"dexterity\":false}},{\"level\":97.67999999999881,\"tolerance\":{\"solitary\":19.85220469019732,\"dexterity\":23.420500000011614},\"bored\":{\"solitary\":false,\"dexterity\":false}}],\"furnitureTransit\":0,\"furnitureExits\":0,\"sharedPawnCells\":0,\"playerOrders\":[{\"active\":null,\"queued\":0,\"priority\":null},{\"active\":null,\"queued\":0,\"priority\":null},{\"active\":null,\"queued\":0,\"priority\":null}],\"obstructedGrowingCells\":0,\"clearing\":0,\"construction\":{\"blueprints\":0,\"frames\":0,\"clearingPlants\":0,\"clearingPiles\":0},\"structures\":{\"bed\":3,\"table\":1,\"stool\":3,\"wall\":7,\"campfire\":1,\"horseshoes\":1,\"stonecutter\":1},\"preparedMeals\":6,\"stock\":{\"wood\":40,\"food\":21},\"pending\":0,\"minimumFood\":41.46666666666353,\"minimumRest\":55.01988095238167}\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m35\u001b[39m\nReceived: \u001b[31m15\u001b[39m\n    at E:\\Code\\RimWorld\\tests\\integration\\colony-journey.spec.ts:60:285",
+                    "location": {
+                      "file": "E:\\Code\\RimWorld\\tests\\integration\\colony-journey.spec.ts",
+                      "column": 285,
+                      "line": 60
+                    },
+                    "snippet": "  58 |       }\n  59 |       if(hour===72) {\n> 60 |         expect(summary.mining.cells,context).toBeGreaterThanOrEqual(6);expect(summary.mining.steelStored,context).toBe(50);expect(summary.mining.steelInBuildings,context).toBe(30);expect(summary.mining.stored,context).toBe(summary.mining.chunks);expect(summary.mining.blocks,context).toBe(35);expect(summary.mining.blocksStored,context).toBe(35);\n     |                                                                                                                                                                                                                                                                                             ^\n  61 |         expect(current.deconstructed.count,context).toBe(1);expect(current.structures.find(s=>s.kind==='horseshoes')?.x,context).toBe(Math.floor(current.width/2)+4);expect(current.packed,context).toEqual([]);\n  62 |         expect(summary.structures,context).toEqual({bed:3,table:1,stool:3,wall:7,campfire:1,horseshoes:1,stonecutter:1});expect(current.jobs.filter(j=>j.growingZoneId===undefined),context).toEqual([]);expect(current.resources.filter(r=>r.kind==='rice').length,context).toBeGreaterThan(5);\n  63 |         expect(current.stock.food,context).toBeGreaterThan(0);expect(sleepers.size,context).toBe(3);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "E:\\Code\\RimWorld\\tests\\integration\\colony-journey.spec.ts",
+                        "column": 285,
+                        "line": 60
+                      },
+                      "message": "Error: {\"tick\":18077,\"foodPolicies\":[3,3,3],\"restRules\":\"adult\",\"scheduledSleepHours\":[8,8,8],\"spoiled\":{\"berries\":0,\"rice\":0,\"simple-meal\":0},\"crops\":15,\"growingCells\":15,\"mining\":{\"blocks\":15,\"blocksStored\":15,\"steelInBuildings\":30,\"steel\":50,\"steelStored\":50,\"cells\":11,\"chunks\":0,\"stored\":0},\"recreation\":[{\"level\":94.86999999999738,\"tolerance\":{\"solitary\":18.748500000010697,\"dexterity\":27.366280741111133},\"bored\":{\"solitary\":false,\"dexterity\":false}},{\"level\":94.98999999999744,\"tolerance\":{\"solitary\":19.1790000000109,\"dexterity\":18.22350388717475},\"bored\":{\"solitary\":false,\"dexterity\":false}},{\"level\":97.67999999999881,\"tolerance\":{\"solitary\":19.85220469019732,\"dexterity\":23.420500000011614},\"bored\":{\"solitary\":false,\"dexterity\":false}}],\"furnitureTransit\":0,\"furnitureExits\":0,\"sharedPawnCells\":0,\"playerOrders\":[{\"active\":null,\"queued\":0,\"priority\":null},{\"active\":null,\"queued\":0,\"priority\":null},{\"active\":null,\"queued\":0,\"priority\":null}],\"obstructedGrowingCells\":0,\"clearing\":0,\"construction\":{\"blueprints\":0,\"frames\":0,\"clearingPlants\":0,\"clearingPiles\":0},\"structures\":{\"bed\":3,\"table\":1,\"stool\":3,\"wall\":7,\"campfire\":1,\"horseshoes\":1,\"stonecutter\":1},\"preparedMeals\":6,\"stock\":{\"wood\":40,\"food\":21},\"pending\":0,\"minimumFood\":41.46666666666353,\"minimumRest\":55.01988095238167}\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m35\u001b[39m\nReceived: \u001b[31m15\u001b[39m\n\n  58 |       }\n  59 |       if(hour===72) {\n> 60 |         expect(summary.mining.cells,context).toBeGreaterThanOrEqual(6);expect(summary.mining.steelStored,context).toBe(50);expect(summary.mining.steelInBuildings,context).toBe(30);expect(summary.mining.stored,context).toBe(summary.mining.chunks);expect(summary.mining.blocks,context).toBe(35);expect(summary.mining.blocksStored,context).toBe(35);\n     |                                                                                                                                                                                                                                                                                             ^\n  61 |         expect(current.deconstructed.count,context).toBe(1);expect(current.structures.find(s=>s.kind==='horseshoes')?.x,context).toBe(Math.floor(current.width/2)+4);expect(current.packed,context).toEqual([]);\n  62 |         expect(summary.structures,context).toEqual({bed:3,table:1,stool:3,wall:7,campfire:1,horseshoes:1,stonecutter:1});expect(current.jobs.filter(j=>j.growingZoneId===undefined),context).toEqual([]);expect(current.resources.filter(r=>r.kind==='rice').length,context).toBeGreaterThan(5);\n  63 |         expect(current.stock.food,context).toBeGreaterThan(0);expect(sleepers.size,context).toBe(3);\n    at E:\\Code\\RimWorld\\tests\\integration\\colony-journey.spec.ts:60:285"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "Répartir collecte, construction, cuisine et transport entre les trois colons. {\"type\":\"priority\",\"pawnId\":12409,\"work\":\"gather\",\"value\":1}",
+                      "duration": 173
+                    },
+                    {
+                      "title": "Répartir collecte, construction, cuisine et transport entre les trois colons. {\"type\":\"priority\",\"pawnId\":12409,\"work\":\"build\",\"value\":3}",
+                      "duration": 94
+                    },
+                    {
+                      "title": "Répartir collecte, construction, cuisine et transport entre les trois colons. {\"type\":\"priority\",\"pawnId\":12409,\"work\":\"haul\",\"value\":2}",
+                      "duration": 84
+                    },
+                    {
+                      "title": "Répartir collecte, construction, cuisine et transport entre les trois colons. {\"type\":\"priority\",\"pawnId\":12409,\"work\":\"cook\",\"value\":3}",
+                      "duration": 89
+                    },
+                    {
+                      "title": "Répartir collecte, construction, cuisine et transport entre les trois colons. {\"type\":\"priority\",\"pawnId\":12409,\"work\":\"craft\",\"value\":3}",
+                      "duration": 83
+                    },
+                    {
+                      "title": "Répartir collecte, construction, cuisine et transport entre les trois colons. {\"type\":\"priority\",\"pawnId\":12410,\"work\":\"gather\",\"value\":3}",
+                      "duration": 82
+                    },
+                    {
+                      "title": "Répartir collecte, construction, cuisine et transport entre les trois colons. {\"type\":\"priority\",\"pawnId\":12410,\"work\":\"build\",\"value\":1}",
+                      "duration": 89
+                    },
+                    {
+                      "title": "Répartir collecte, construction, cuisine et transport entre les trois colons. {\"type\":\"priority\",\"pawnId\":12410,\"work\":\"haul\",\"value\":2}",
+                      "duration": 80
+                    },
+                    {
+                      "title": "Répartir collecte, construction, cuisine et transport entre les trois colons. {\"type\":\"priority\",\"pawnId\":12410,\"work\":\"grow\",\"value\":3}",
+                      "duration": 92
+                    },
+                    {
+                      "title": "Répartir collecte, construction, cuisine et transport entre les trois colons. {\"type\":\"priority\",\"pawnId\":12410,\"work\":\"cook\",\"value\":3}",
+                      "duration": 82
+                    },
+                    {
+                      "title": "Répartir collecte, construction, cuisine et transport entre les trois colons. {\"type\":\"priority\",\"pawnId\":12411,\"work\":\"build\",\"value\":3}",
+                      "duration": 83
+                    },
+                    {
+                      "title": "Répartir collecte, construction, cuisine et transport entre les trois colons. {\"type\":\"priority\",\"pawnId\":12411,\"work\":\"haul\",\"value\":2}",
+                      "duration": 84
+                    },
+                    {
+                      "title": "Répartir collecte, construction, cuisine et transport entre les trois colons. {\"type\":\"priority\",\"pawnId\":12411,\"work\":\"cook\",\"value\":1}",
+                      "duration": 85
+                    },
+                    {
+                      "title": "Répartir collecte, construction, cuisine et transport entre les trois colons. {\"type\":\"priority\",\"pawnId\":12411,\"work\":\"craft\",\"value\":3}",
+                      "duration": 105
+                    },
+                    {
+                      "title": "Répartir collecte, construction, cuisine et transport entre les trois colons. {\"type\":\"priority\",\"pawnId\":12411,\"work\":\"mine\",\"value\":3}",
+                      "duration": 95
+                    },
+                    {
+                      "title": "Aménager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"bed\",\"x\":122,\"z\":127,\"orientation\":0}",
+                      "duration": 344
+                    },
+                    {
+                      "title": "Aménager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"bed\",\"x\":125,\"z\":127,\"orientation\":0}",
+                      "duration": 346
+                    },
+                    {
+                      "title": "Aménager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"bed\",\"x\":128,\"z\":127,\"orientation\":0}",
+                      "duration": 237
+                    },
+                    {
+                      "title": "Séparer le bois et les aliments près du camp. {\"type\":\"stockpile\",\"x\":123,\"z\":125,\"enabled\":true,\"filters\":{\"wood\":true,\"food\":false},\"priority\":2,\"capacity\":75}",
+                      "duration": 602
+                    },
+                    {
+                      "title": "Séparer le bois et les aliments près du camp. {\"type\":\"stockpile\",\"x\":123,\"z\":126,\"enabled\":true,\"filters\":{\"wood\":true,\"food\":false},\"priority\":2,\"capacity\":75}",
+                      "duration": 510
+                    },
+                    {
+                      "title": "Séparer le bois et les aliments près du camp. {\"type\":\"stockpile\",\"x\":127,\"z\":126,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":true},\"priority\":2,\"capacity\":75}",
+                      "duration": 386
+                    },
+                    {
+                      "title": "Séparer le bois et les aliments près du camp. {\"type\":\"stockpile\",\"x\":127,\"z\":125,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":true},\"priority\":2,\"capacity\":75}",
+                      "duration": 441
+                    },
+                    {
+                      "title": "Séparer le bois et les aliments près du camp. {\"type\":\"stockpile\",\"x\":127,\"z\":124,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":true},\"priority\":2,\"capacity\":75}",
+                      "duration": 474
+                    },
+                    {
+                      "title": "Séparer le bois et les aliments près du camp. {\"type\":\"stockpile\",\"x\":124,\"z\":126,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":true},\"priority\":2,\"capacity\":75}",
+                      "duration": 450
+                    },
+                    {
+                      "title": "Séparer le bois et les aliments près du camp. {\"type\":\"stockpile\",\"x\":125,\"z\":126,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":true},\"priority\":2,\"capacity\":75}",
+                      "duration": 894
+                    },
+                    {
+                      "title": "Séparer le bois et les aliments près du camp. {\"type\":\"stockpile\",\"x\":126,\"z\":126,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":true},\"priority\":2,\"capacity\":75}",
+                      "duration": 468
+                    },
+                    {
+                      "title": "Réserver une plage de loisirs du soir, sans remplacer le repos nocturne. {\"type\":\"schedule-paint\",\"pawnId\":12409,\"hours\":[19,20],\"assignment\":\"recreation\"}",
+                      "duration": 240
+                    },
+                    {
+                      "title": "Réserver une plage de loisirs du soir, sans remplacer le repos nocturne. {\"type\":\"schedule-paint\",\"pawnId\":12410,\"hours\":[19,20],\"assignment\":\"recreation\"}",
+                      "duration": 207
+                    },
+                    {
+                      "title": "Réserver une plage de loisirs du soir, sans remplacer le repos nocturne. {\"type\":\"schedule-paint\",\"pawnId\":12411,\"hours\":[19,20],\"assignment\":\"recreation\"}",
+                      "duration": 249
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":123,\"z\":123}",
+                      "duration": 353
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":124,\"z\":120}",
+                      "duration": 324
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":129,\"z\":123}",
+                      "duration": 329
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":130,\"z\":126}",
+                      "duration": 348
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":124,\"z\":130}",
+                      "duration": 323
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":125,\"z\":118}",
+                      "duration": 323
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":119,\"z\":124}",
+                      "duration": 225
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":131,\"z\":124}",
+                      "duration": 174
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":120,\"z\":127}",
+                      "duration": 342
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":126,\"z\":118}",
+                      "duration": 239
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":121,\"z\":129}",
+                      "duration": 183
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":120,\"z\":121}",
+                      "duration": 309
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":133,\"z\":126}",
+                      "duration": 312
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":118,\"z\":127}",
+                      "duration": 465
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":122,\"z\":131}",
+                      "duration": 229
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":128,\"z\":131}",
+                      "duration": 246
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":123,\"z\":117}",
+                      "duration": 360
+                    },
+                    {
+                      "title": "Décaler le sommeil de la cuisinière pour préparer le matin. {\"type\":\"schedule-paint\",\"pawnId\":12411,\"hours\":[5],\"assignment\":\"anything\"}",
+                      "duration": 221
+                    },
+                    {
+                      "title": "Décaler le sommeil de la cuisinière pour préparer le matin. {\"type\":\"schedule-paint\",\"pawnId\":12411,\"hours\":[21],\"assignment\":\"sleep\"}",
+                      "duration": 166
+                    },
+                    {
+                      "title": "Aménager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"table\",\"x\":125,\"z\":123,\"orientation\":1}",
+                      "duration": 293
+                    },
+                    {
+                      "title": "Aménager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"horseshoes\",\"x\":127,\"z\":122}",
+                      "duration": 278
+                    },
+                    {
+                      "title": "Aménager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"campfire\",\"x\":124,\"z\":124,\"orientation\":0}",
+                      "duration": 374
+                    },
+                    {
+                      "title": "Aménager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"stool\",\"x\":125,\"z\":122}",
+                      "duration": 370
+                    },
+                    {
+                      "title": "Aménager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"stool\",\"x\":126,\"z\":122}",
+                      "duration": 212
+                    },
+                    {
+                      "title": "Aménager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"stool\",\"x\":125,\"z\":124}",
+                      "duration": 271
+                    },
+                    {
+                      "title": "Semer un premier potager près du camp, tout en continuant à cueillir pendant sa croissance. {\"type\":\"area\",\"action\":\"growing\",\"from\":{\"x\":123,\"z\":130},\"to\":{\"x\":127,\"z\":132}}",
+                      "duration": 534
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":120,\"z\":120}",
+                      "duration": 350
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":118,\"z\":122}",
+                      "duration": 383
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":122,\"z\":117}",
+                      "duration": 221
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":120,\"z\":119}",
+                      "duration": 349
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":136,\"z\":125}",
+                      "duration": 229
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":115,\"z\":126}",
+                      "duration": 248
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":135,\"z\":126}",
+                      "duration": 368
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":118,\"z\":129}",
+                      "duration": 353
+                    },
+                    {
+                      "title": "Aménager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"wall\",\"x\":122,\"z\":122}",
+                      "duration": 406
+                    },
+                    {
+                      "title": "Aménager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"wall\",\"x\":122,\"z\":123}",
+                      "duration": 390
+                    },
+                    {
+                      "title": "Aménager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"wall\",\"x\":122,\"z\":124}",
+                      "duration": 439
+                    },
+                    {
+                      "title": "Aménager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"wall\",\"x\":128,\"z\":122}",
+                      "duration": 448
+                    },
+                    {
+                      "title": "Aménager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"wall\",\"x\":128,\"z\":123}",
+                      "duration": 394
+                    },
+                    {
+                      "title": "Aménager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"wall\",\"x\":128,\"z\":124}",
+                      "duration": 278
+                    },
+                    {
+                      "title": "Aménager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"wall\",\"x\":129,\"z\":124}",
+                      "duration": 393
+                    },
+                    {
+                      "title": "Garder une petite réserve alimentaire sur le tabouret près du feu. {\"type\":\"stockpile\",\"x\":125,\"z\":124,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":true},\"priority\":2,\"capacity\":75}",
+                      "duration": 583
+                    },
+                    {
+                      "title": "Installer une première recette de repas simple au feu de camp. {\"type\":\"bill-add\",\"structureId\":12535}",
+                      "duration": 369
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":128,\"z\":133}",
+                      "duration": 692
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":121,\"z\":117}",
+                      "duration": 401
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":119,\"z\":119}",
+                      "duration": 378
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":117,\"z\":121}",
+                      "duration": 398
+                    },
+                    {
+                      "title": "Renouveler la réserve alimentaire avant la pénurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":127,\"z\":123}",
+                      "duration": 431
+                    },
+                    {
+                      "title": "Renouveler la réserve alimentaire avant la pénurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":129,\"z\":127}",
+                      "duration": 405
+                    },
+                    {
+                      "title": "Renouveler la réserve alimentaire avant la pénurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":121,\"z\":122}",
+                      "duration": 402
+                    },
+                    {
+                      "title": "Renouveler la réserve alimentaire avant la pénurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":129,\"z\":128}",
+                      "duration": 389
+                    },
+                    {
+                      "title": "Renouveler la réserve alimentaire avant la pénurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":120,\"z\":122}",
+                      "duration": 408
+                    },
+                    {
+                      "title": "Maintenir environ deux repas préparés par colon en réserve. {\"type\":\"bill-update\",\"structureId\":12535,\"billId\":12598,\"settings\":{\"id\":12598,\"recipe\":\"simple-meal\",\"mode\":\"until\",\"target\":6,\"suspended\":false,\"filters\":{\"rice\":true,\"berries\":true},\"radius\":999,\"destination\":\"stockpile\"}}",
+                      "duration": 628
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":136,\"z\":124}",
+                      "duration": 501
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":132,\"z\":130}",
+                      "duration": 425
+                    },
+                    {
+                      "title": "Renouveler la réserve alimentaire avant la pénurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":124,\"z\":116}",
+                      "duration": 437
+                    },
+                    {
+                      "title": "Renouveler la réserve alimentaire avant la pénurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":128,\"z\":118}",
+                      "duration": 439
+                    },
+                    {
+                      "title": "Renouveler la réserve alimentaire avant la pénurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":135,\"z\":125}",
+                      "duration": 419
+                    },
+                    {
+                      "title": "Ouvrir le passage du camp après la première journée. {\"type\":\"designate\",\"kind\":\"deconstruct\",\"x\":129,\"z\":124}",
+                      "duration": 562
+                    },
+                    {
+                      "title": "Préparer une réserve pour les meubles retirés. {\"type\":\"stockpile\",\"x\":129,\"z\":125,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":false,\"furniture\":true},\"priority\":2,\"capacity\":1}",
+                      "duration": 694
+                    },
+                    {
+                      "title": "Retirer le jeu pour réorganiser le camp. {\"type\":\"designate\",\"kind\":\"uninstall\",\"x\":127,\"z\":122}",
+                      "duration": 396
+                    },
+                    {
+                      "title": "Conserver les rations de voyage tant que la cuisine assure les repas. {\"type\":\"food-policy-assign\",\"pawnId\":12409,\"policyId\":3}",
+                      "duration": 317
+                    },
+                    {
+                      "title": "Conserver les rations de voyage tant que la cuisine assure les repas. {\"type\":\"food-policy-assign\",\"pawnId\":12410,\"policyId\":3}",
+                      "duration": 233
+                    },
+                    {
+                      "title": "Conserver les rations de voyage tant que la cuisine assure les repas. {\"type\":\"food-policy-assign\",\"pawnId\":12411,\"policyId\":3}",
+                      "duration": 234
+                    },
+                    {
+                      "title": "Ouvrir quelques cases du massif proche pour préparer la pierre. {\"type\":\"designate\",\"kind\":\"mine\",\"x\":150,\"z\":160}",
+                      "duration": 2264
+                    },
+                    {
+                      "title": "Ouvrir quelques cases du massif proche pour préparer la pierre. {\"type\":\"designate\",\"kind\":\"mine\",\"x\":149,\"z\":161}",
+                      "duration": 483
+                    },
+                    {
+                      "title": "Ouvrir quelques cases du massif proche pour préparer la pierre. {\"type\":\"designate\",\"kind\":\"mine\",\"x\":151,\"z\":160}",
+                      "duration": 477
+                    },
+                    {
+                      "title": "Ouvrir quelques cases du massif proche pour préparer la pierre. {\"type\":\"designate\",\"kind\":\"mine\",\"x\":149,\"z\":162}",
+                      "duration": 478
+                    },
+                    {
+                      "title": "Réserver des cases aux fragments, sans les mélanger aux aliments. {\"type\":\"stockpile\",\"x\":130,\"z\":124,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":false,\"chunk\":true},\"capacity\":1}",
+                      "duration": 923
+                    },
+                    {
+                      "title": "Réserver des cases aux fragments, sans les mélanger aux aliments. {\"type\":\"stockpile\",\"x\":130,\"z\":125,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":false,\"chunk\":true},\"capacity\":1}",
+                      "duration": 791
+                    },
+                    {
+                      "title": "Réserver des cases aux fragments, sans les mélanger aux aliments. {\"type\":\"stockpile\",\"x\":130,\"z\":126,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":false,\"chunk\":true},\"capacity\":1}",
+                      "duration": 765
+                    },
+                    {
+                      "title": "Réserver des cases aux fragments, sans les mélanger aux aliments. {\"type\":\"stockpile\",\"x\":130,\"z\":127,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":false,\"chunk\":true},\"capacity\":1}",
+                      "duration": 782
+                    },
+                    {
+                      "title": "Réinstaller le piquet après son rangement en réserve. {\"type\":\"install\",\"structureId\":12572,\"x\":129,\"z\":122,\"orientation\":0}",
+                      "duration": 715
+                    },
+                    {
+                      "title": "Renouveler la réserve alimentaire avant la pénurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":117,\"z\":127}",
+                      "duration": 585
+                    },
+                    {
+                      "title": "Renouveler la réserve alimentaire avant la pénurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":124,\"z\":115}",
+                      "duration": 499
+                    },
+                    {
+                      "title": "Renouveler la réserve alimentaire avant la pénurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":122,\"z\":133}",
+                      "duration": 529
+                    },
+                    {
+                      "title": "Extraire une réserve d’acier pour les futurs ateliers. {\"type\":\"designate\",\"kind\":\"mine\",\"x\":165,\"z\":159}",
+                      "duration": 496
+                    },
+                    {
+                      "title": "Extraire une réserve d’acier pour les futurs ateliers. {\"type\":\"designate\",\"kind\":\"mine\",\"x\":162,\"z\":163}",
+                      "duration": 483
+                    },
+                    {
+                      "title": "Ranger l’acier extrait dans des cases libres près du camp. {\"type\":\"stockpile\",\"x\":130,\"z\":128,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":false,\"steel\":true},\"capacity\":75}",
+                      "duration": 935
+                    },
+                    {
+                      "title": "Ranger l’acier extrait dans des cases libres près du camp. {\"type\":\"stockpile\",\"x\":131,\"z\":128,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":false,\"steel\":true},\"capacity\":75}",
+                      "duration": 821
+                    },
+                    {
+                      "title": "Désigner les fragments extraits pour leur transport. {\"type\":\"area\",\"action\":\"haul-chunks\",\"from\":{\"type\":\"ground\",\"x\":149,\"z\":161},\"to\":{\"type\":\"ground\",\"x\":149,\"z\":161}}",
+                      "duration": 657
+                    },
+                    {
+                      "title": "Préparer un atelier de taille avec le bois du camp et l’acier extrait. {\"type\":\"designate\",\"kind\":\"stonecutter\",\"material\":\"wood\",\"x\":119,\"z\":121,\"orientation\":0}",
+                      "duration": 474
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":126,\"z\":113}",
+                      "duration": 514
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":120,\"z\":117}",
+                      "duration": 515
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":118,\"z\":119}",
+                      "duration": 475
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":115,\"z\":122}",
+                      "duration": 488
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":137,\"z\":124}",
+                      "duration": 478
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":112,\"z\":125}",
+                      "duration": 497
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":113,\"z\":126}",
+                      "duration": 518
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":137,\"z\":126}",
+                      "duration": 512
+                    },
+                    {
+                      "title": "Tailler les premiers blocs du camp. {\"type\":\"bill-add\",\"structureId\":12742}",
+                      "duration": 413
+                    },
+                    {
+                      "title": "Ranger les blocs taillés près des autres matériaux. {\"type\":\"stockpile\",\"x\":132,\"z\":128,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":false,\"blocks\":true},\"capacity\":75}",
+                      "duration": 1039
+                    },
+                    {
+                      "title": "Renouveler la réserve alimentaire avant la pénurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":113,\"z\":125}",
+                      "duration": 506
+                    },
+                    {
+                      "title": "Renouveler la réserve alimentaire avant la pénurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":114,\"z\":126}",
+                      "duration": 482
+                    },
+                    {
+                      "title": "Renouveler la réserve alimentaire avant la pénurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":118,\"z\":130}",
+                      "duration": 524
+                    },
+                    {
+                      "title": "Prolonger le premier abri avec cinq blocs taillés sur place. {\"type\":\"designate\",\"kind\":\"wall\",\"material\":\"limestone-blocks\",\"x\":121,\"z\":122}",
+                      "duration": 597
+                    },
+                    {
+                      "title": "Maintenir vingt blocs de pierre disponibles. {\"type\":\"bill-update\",\"structureId\":12742,\"billId\":12746,\"settings\":{\"id\":12746,\"recipe\":\"stone-blocks\",\"mode\":\"until\",\"target\":20,\"suspended\":false,\"filters\":{\"granite-chunk\":true,\"limestone-chunk\":true,\"marble-chunk\":true,\"sandstone-chunk\":true,\"slate-chunk\":true},\"radius\":999,\"destination\":\"stockpile\"}}",
+                      "duration": 859
+                    },
+                    {
+                      "title": "Ouvrir quelques cases du massif proche pour préparer la pierre. {\"type\":\"designate\",\"kind\":\"mine\",\"x\":150,\"z\":161}",
+                      "duration": 662
+                    },
+                    {
+                      "title": "Renouveler la réserve alimentaire avant la pénurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":114,\"z\":123}",
+                      "duration": 494
+                    },
+                    {
+                      "title": "Renouveler la réserve alimentaire avant la pénurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":131,\"z\":132}",
+                      "duration": 486
+                    },
+                    {
+                      "title": "Renouveler la réserve alimentaire avant la pénurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":127,\"z\":113}",
+                      "duration": 497
+                    },
+                    {
+                      "title": "Ouvrir quelques cases du massif proche pour préparer la pierre. {\"type\":\"designate\",\"kind\":\"mine\",\"x\":151,\"z\":161}",
+                      "duration": 508
+                    },
+                    {
+                      "title": "Ouvrir quelques cases du massif proche pour préparer la pierre. {\"type\":\"designate\",\"kind\":\"mine\",\"x\":148,\"z\":163}",
+                      "duration": 500
+                    },
+                    {
+                      "title": "Renouveler la réserve alimentaire avant la pénurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":138,\"z\":126}",
+                      "duration": 513
+                    },
+                    {
+                      "title": "Ouvrir quelques cases du massif proche pour préparer la pierre. {\"type\":\"designate\",\"kind\":\"mine\",\"x\":150,\"z\":162}",
+                      "duration": 496
+                    },
+                    {
+                      "title": "Prévoir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":132,\"z\":131}",
+                      "duration": 495
+                    },
+                    {
+                      "title": "Renouveler la réserve alimentaire avant la pénurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":116,\"z\":130}",
+                      "duration": 481
+                    },
+                    {
+                      "title": "Renouveler la réserve alimentaire avant la pénurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":129,\"z\":135}",
+                      "duration": 499
+                    },
+                    {
+                      "title": "Ouvrir quelques cases du massif proche pour préparer la pierre. {\"type\":\"designate\",\"kind\":\"mine\",\"x\":149,\"z\":163}",
+                      "duration": 501
+                    }
+                  ],
+                  "startTime": "2026-09-15T03:49:19.296Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "hourly-world-0",
+                      "contentType": "application/json",
+                      "localCheckpoint": {
+                        "path": "tmp/stone-buildings-ui-checkpoints/hourly-world-0.json",
+                        "tick": 25,
+                        "bytes": 2080918,
+                        "sha256": "0fd5ca24671de110945760ae4121178726cfbd1272ca45416d3699f1e3ce45a3"
+                      }
+                    },
+                    {
+                      "name": "hourly-world-4",
+                      "contentType": "application/json",
+                      "localCheckpoint": {
+                        "path": "tmp/stone-buildings-ui-checkpoints/hourly-world-4.json",
+                        "tick": 1048,
+                        "bytes": 2086581,
+                        "sha256": "5a6a9c6ffc23edb3c73a37046aa50aa79cd1931478fe8ea3e77460f485dbe128"
+                      }
+                    },
+                    {
+                      "name": "hourly-world-8",
+                      "contentType": "application/json",
+                      "localCheckpoint": {
+                        "path": "tmp/stone-buildings-ui-checkpoints/hourly-world-8.json",
+                        "tick": 2074,
+                        "bytes": 2088002,
+                        "sha256": "03cb9efd3da43a687061c8cb542a81ee4e473b8c65ccc5a156252b0205a34954"
+                      }
+                    },
+                    {
+                      "name": "hourly-world-12",
+                      "contentType": "application/json",
+                      "localCheckpoint": {
+                        "path": "tmp/stone-buildings-ui-checkpoints/hourly-world-12.json",
+                        "tick": 3038,
+                        "bytes": 2090580,
+                        "sha256": "aaed1168ae96123b125e61ea9cc05fffeeff031ad0840dc2022027dc2f10505e"
+                      }
+                    },
+                    {
+                      "name": "hourly-world-16",
+                      "contentType": "application/json",
+                      "localCheckpoint": {
+                        "path": "tmp/stone-buildings-ui-checkpoints/hourly-world-16.json",
+                        "tick": 4062,
+                        "bytes": 2092119,
+                        "sha256": "ffbfa1c376469af18dbc02d2f4de3a36e07ac1c1b9a4780868c09f6a65be0ed6"
+                      }
+                    },
+                    {
+                      "name": "hourly-world-20",
+                      "contentType": "application/json",
+                      "localCheckpoint": {
+                        "path": "tmp/stone-buildings-ui-checkpoints/hourly-world-20.json",
+                        "tick": 5027,
+                        "bytes": 2091621,
+                        "sha256": "daa8b5ad463e2f22f2dbdb648398aac970df98d9db175b3153c4787dcf051002"
+                      }
+                    },
+                    {
+                      "name": "hourly-world-24",
+                      "contentType": "application/json",
+                      "localCheckpoint": {
+                        "path": "tmp/stone-buildings-ui-checkpoints/hourly-world-24.json",
+                        "tick": 6054,
+                        "bytes": 2091780,
+                        "sha256": "bca9ea5727a2d4e968b9758402a03f611ba0a5724086823a1d42014e24cdba41"
+                      }
+                    },
+                    {
+                      "name": "hourly-world-28",
+                      "contentType": "application/json",
+                      "localCheckpoint": {
+                        "path": "tmp/stone-buildings-ui-checkpoints/hourly-world-28.json",
+                        "tick": 7089,
+                        "bytes": 2093945,
+                        "sha256": "c5353d4e7f0ed754b308fdce8a2a052b864b8f79c6a262a4b8baab14ef5601dc"
+                      }
+                    },
+                    {
+                      "name": "hourly-world-32",
+                      "contentType": "application/json",
+                      "localCheckpoint": {
+                        "path": "tmp/stone-buildings-ui-checkpoints/hourly-world-32.json",
+                        "tick": 8061,
+                        "bytes": 2092201,
+                        "sha256": "7cfb12de584b43a1637be171e4e9f1ae9f96182e082173fd5c34e8845146e6aa"
+                      }
+                    },
+                    {
+                      "name": "hourly-world-36",
+                      "contentType": "application/json",
+                      "localCheckpoint": {
+                        "path": "tmp/stone-buildings-ui-checkpoints/hourly-world-36.json",
+                        "tick": 9033,
+                        "bytes": 2094644,
+                        "sha256": "87296af843913121aa5f8ac8fa7bc1aeda26f104e78d2472a7f4f6c802a34313"
+                      }
+                    },
+                    {
+                      "name": "hourly-world-40",
+                      "contentType": "application/json",
+                      "localCheckpoint": {
+                        "path": "tmp/stone-buildings-ui-checkpoints/hourly-world-40.json",
+                        "tick": 10065,
+                        "bytes": 2092696,
+                        "sha256": "99db77529b28773c34e6dffce75fc64082825c968aede22ce1127b76bce02411"
+                      }
+                    },
+                    {
+                      "name": "hourly-world-44",
+                      "contentType": "application/json",
+                      "localCheckpoint": {
+                        "path": "tmp/stone-buildings-ui-checkpoints/hourly-world-44.json",
+                        "tick": 11098,
+                        "bytes": 2093047,
+                        "sha256": "b82c6b41d3d23e7ae32f73a2839eec314ed6d7be9c421e88a8a6b80c7edebde8"
+                      }
+                    },
+                    {
+                      "name": "hourly-world-48",
+                      "contentType": "application/json",
+                      "localCheckpoint": {
+                        "path": "tmp/stone-buildings-ui-checkpoints/hourly-world-48.json",
+                        "tick": 12069,
+                        "bytes": 2093212,
+                        "sha256": "e9ce56cf274df289c8fe1fe900b701e1fc19f6d3417beff983bf56d4035b6d01"
+                      }
+                    },
+                    {
+                      "name": "hourly-world-52",
+                      "contentType": "application/json",
+                      "localCheckpoint": {
+                        "path": "tmp/stone-buildings-ui-checkpoints/hourly-world-52.json",
+                        "tick": 13039,
+                        "bytes": 2093375,
+                        "sha256": "ab00d0257a94840b0f5bde142e00d5af760301b7d9bad090d5b3b9b241db9769"
+                      }
+                    },
+                    {
+                      "name": "hourly-world-56",
+                      "contentType": "application/json",
+                      "localCheckpoint": {
+                        "path": "tmp/stone-buildings-ui-checkpoints/hourly-world-56.json",
+                        "tick": 14070,
+                        "bytes": 2092920,
+                        "sha256": "e16d87a7e5c04fdc54016c441365b3f15bf3e1bd9aea057c4f6317efb1b5b727"
+                      }
+                    },
+                    {
+                      "name": "hourly-world-60",
+                      "contentType": "application/json",
+                      "localCheckpoint": {
+                        "path": "tmp/stone-buildings-ui-checkpoints/hourly-world-60.json",
+                        "tick": 15039,
+                        "bytes": 2093000,
+                        "sha256": "d8a5231d3005b6faa727646fab4011728bffa306fbc2f72b60073f788cd53172"
+                      }
+                    },
+                    {
+                      "name": "hourly-world-64",
+                      "contentType": "application/json",
+                      "localCheckpoint": {
+                        "path": "tmp/stone-buildings-ui-checkpoints/hourly-world-64.json",
+                        "tick": 16071,
+                        "bytes": 2094014,
+                        "sha256": "23ea9761f5a9910d3037176f79bdb7509e8b6953c9a14d226c794b266783f3ed"
+                      }
+                    },
+                    {
+                      "name": "hourly-world-68",
+                      "contentType": "application/json",
+                      "localCheckpoint": {
+                        "path": "tmp/stone-buildings-ui-checkpoints/hourly-world-68.json",
+                        "tick": 17043,
+                        "bytes": 2093133,
+                        "sha256": "a8e0e72e05683dc1b298786406d224596bc4a3aad23a974c89bb0d3812f1e3d0"
+                      }
+                    },
+                    {
+                      "name": "hourly-world-72",
+                      "contentType": "application/json",
+                      "localCheckpoint": {
+                        "path": "tmp/stone-buildings-ui-checkpoints/hourly-world-72.json",
+                        "tick": 18077,
+                        "bytes": 2093190,
+                        "sha256": "e711522dd57da95eec42af7b37327cfa7f036665c2c7db9f5ccc514ecd556041"
+                      }
+                    },
+                    {
+                      "name": "colony-journey-incomplete",
+                      "contentType": "application/json",
+                      "body": "eyJkYXlzIjpbeyJ0aWNrIjo2MDU0LCJmb29kUG9saWNpZXMiOlsxLDEsMV0sInJlc3RSdWxlcyI6ImFkdWx0Iiwic2NoZWR1bGVkU2xlZXBIb3VycyI6WzgsOCw4XSwic3BvaWxlZCI6eyJiZXJyaWVzIjowLCJyaWNlIjowLCJzaW1wbGUtbWVhbCI6MH0sImNyb3BzIjoxNSwiZ3Jvd2luZ0NlbGxzIjoxNSwibWluaW5nIjp7ImJsb2NrcyI6MCwiYmxvY2tzU3RvcmVkIjowLCJzdGVlbEluQnVpbGRpbmdzIjowLCJzdGVlbCI6MCwic3RlZWxTdG9yZWQiOjAsImNlbGxzIjowLCJjaHVua3MiOjAsInN0b3JlZCI6MH0sInJlY3JlYXRpb24iOlt7ImxldmVsIjo5NC4wNjk5OTk5OTk5OTY5NywidG9sZXJhbmNlIjp7InNvbGl0YXJ5IjoxMS41NDgzMDQyNDE4NTY4MTksImRleHRlcml0eSI6MjkuNDYxMjgwNzQxMTAwMTgyfSwiYm9yZWQiOnsic29saXRhcnkiOmZhbHNlLCJkZXh0ZXJpdHkiOmZhbHNlfX0seyJsZXZlbCI6OTUuMjk5OTk5OTk5OTk3NiwidG9sZXJhbmNlIjp7InNvbGl0YXJ5IjoxOS4zMDI1MzY0NDY5OTMyMTIsImRleHRlcml0eSI6MTcuNTQwMDAzODg3MTY0MzA3fSwiYm9yZWQiOnsic29saXRhcnkiOmZhbHNlLCJkZXh0ZXJpdHkiOmZhbHNlfX0seyJsZXZlbCI6OTYuODk5OTk5OTk5OTk4NDEsInRvbGVyYW5jZSI6eyJzb2xpdGFyeSI6MTguODk0MjA0NjkwMTg2OTcsImRleHRlcml0eSI6MTguNDY3MDAwMDAwMDEwMjV9LCJib3JlZCI6eyJzb2xpdGFyeSI6ZmFsc2UsImRleHRlcml0eSI6ZmFsc2V9fV0sImZ1cm5pdHVyZVRyYW5zaXQiOjAsImZ1cm5pdHVyZUV4aXRzIjowLCJzaGFyZWRQYXduQ2VsbHMiOjAsInBsYXllck9yZGVycyI6W3siYWN0aXZlIjpudWxsLCJxdWV1ZWQiOjAsInByaW9yaXR5IjpudWxsfSx7ImFjdGl2ZSI6bnVsbCwicXVldWVkIjowLCJwcmlvcml0eSI6bnVsbH0seyJhY3RpdmUiOm51bGwsInF1ZXVlZCI6MCwicHJpb3JpdHkiOm51bGx9XSwib2JzdHJ1Y3RlZEdyb3dpbmdDZWxscyI6MCwiY2xlYXJpbmciOjAsImNvbnN0cnVjdGlvbiI6eyJibHVlcHJpbnRzIjowLCJmcmFtZXMiOjAsImNsZWFyaW5nUGxhbnRzIjowLCJjbGVhcmluZ1BpbGVzIjowfSwic3RydWN0dXJlcyI6eyJiZWQiOjMsInRhYmxlIjoxLCJzdG9vbCI6Mywid2FsbCI6NywiY2FtcGZpcmUiOjEsImhvcnNlc2hvZXMiOjEsInN0b25lY3V0dGVyIjowfSwicHJlcGFyZWRNZWFscyI6Niwic3RvY2siOnsid29vZCI6NDEsImZvb2QiOjIxfSwicGVuZGluZyI6MCwibWluaW11bUZvb2QiOjYyLjAyNjY2NjY2NjY2MTI2NCwibWluaW11bVJlc3QiOjU2LjM4OTUyMzgwOTUyNDUwNX0seyJ0aWNrIjoxMjA2OSwiZm9vZFBvbGljaWVzIjpbMywzLDNdLCJyZXN0UnVsZXMiOiJhZHVsdCIsInNjaGVkdWxlZFNsZWVwSG91cnMiOls4LDgsOF0sInNwb2lsZWQiOnsiYmVycmllcyI6MCwicmljZSI6MCwic2ltcGxlLW1lYWwiOjB9LCJjcm9wcyI6MTUsImdyb3dpbmdDZWxscyI6MTUsIm1pbmluZyI6eyJibG9ja3MiOjE1LCJibG9ja3NTdG9yZWQiOjE1LCJzdGVlbEluQnVpbGRpbmdzIjozMCwic3RlZWwiOjUwLCJzdGVlbFN0b3JlZCI6NTAsImNlbGxzIjo2LCJjaHVua3MiOjAsInN0b3JlZCI6MH0sInJlY3JlYXRpb24iOlt7ImxldmVsIjo5Ni4zNjk5OTk5OTk5OTgxNCwidG9sZXJhbmNlIjp7InNvbGl0YXJ5IjoyLjEzODgwNDI0MTg1ODMzMSwiZGV4dGVyaXR5IjozOS45MDkyODA3NDExMTE2MX0sImJvcmVkIjp7InNvbGl0YXJ5IjpmYWxzZSwiZGV4dGVyaXR5IjpmYWxzZX19LHsibGV2ZWwiOjk1LjkzOTk5OTk5OTk5NzkyLCJ0b2xlcmFuY2UiOnsic29saXRhcnkiOjYuMzMzNTM2NDQ2OTkyNzIxLCJkZXh0ZXJpdHkiOjMwLjgxMTUwMzg4NzE3NTIyOH0sImJvcmVkIjp7InNvbGl0YXJ5IjpmYWxzZSwiZGV4dGVyaXR5IjpmYWxzZX19LHsibGV2ZWwiOjk3LjgzOTk5OTk5OTk5ODksInRvbGVyYW5jZSI6eyJzb2xpdGFyeSI6MzIuMzY4MjA0NjkwMTk3NzksImRleHRlcml0eSI6NS40NDcwMDAwMDAwMDk3NTV9LCJib3JlZCI6eyJzb2xpdGFyeSI6ZmFsc2UsImRleHRlcml0eSI6ZmFsc2V9fV0sImZ1cm5pdHVyZVRyYW5zaXQiOjAsImZ1cm5pdHVyZUV4aXRzIjowLCJzaGFyZWRQYXduQ2VsbHMiOjAsInBsYXllck9yZGVycyI6W3siYWN0aXZlIjpudWxsLCJxdWV1ZWQiOjAsInByaW9yaXR5IjpudWxsfSx7ImFjdGl2ZSI6bnVsbCwicXVldWVkIjowLCJwcmlvcml0eSI6bnVsbH0seyJhY3RpdmUiOm51bGwsInF1ZXVlZCI6MCwicHJpb3JpdHkiOm51bGx9XSwib2JzdHJ1Y3RlZEdyb3dpbmdDZWxscyI6MCwiY2xlYXJpbmciOjAsImNvbnN0cnVjdGlvbiI6eyJibHVlcHJpbnRzIjowLCJmcmFtZXMiOjAsImNsZWFyaW5nUGxhbnRzIjowLCJjbGVhcmluZ1BpbGVzIjowfSwic3RydWN0dXJlcyI6eyJiZWQiOjMsInRhYmxlIjoxLCJzdG9vbCI6Mywid2FsbCI6NywiY2FtcGZpcmUiOjEsImhvcnNlc2hvZXMiOjEsInN0b25lY3V0dGVyIjoxfSwicHJlcGFyZWRNZWFscyI6NSwic3RvY2siOnsid29vZCI6NDAsImZvb2QiOjMwfSwicGVuZGluZyI6MCwibWluaW11bUZvb2QiOjQ4LjMxOTk5OTk5OTk5NjExLCJtaW5pbXVtUmVzdCI6NTEuNTk1MzU3MTQyODU3OTF9LHsidGljayI6MTgwNzcsImZvb2RQb2xpY2llcyI6WzMsMywzXSwicmVzdFJ1bGVzIjoiYWR1bHQiLCJzY2hlZHVsZWRTbGVlcEhvdXJzIjpbOCw4LDhdLCJzcG9pbGVkIjp7ImJlcnJpZXMiOjAsInJpY2UiOjAsInNpbXBsZS1tZWFsIjowfSwiY3JvcHMiOjE1LCJncm93aW5nQ2VsbHMiOjE1LCJtaW5pbmciOnsiYmxvY2tzIjoxNSwiYmxvY2tzU3RvcmVkIjoxNSwic3RlZWxJbkJ1aWxkaW5ncyI6MzAsInN0ZWVsIjo1MCwic3RlZWxTdG9yZWQiOjUwLCJjZWxscyI6MTEsImNodW5rcyI6MCwic3RvcmVkIjowfSwicmVjcmVhdGlvbiI6W3sibGV2ZWwiOjk0Ljg2OTk5OTk5OTk5NzM4LCJ0b2xlcmFuY2UiOnsic29saXRhcnkiOjE4Ljc0ODUwMDAwMDAxMDY5NywiZGV4dGVyaXR5IjoyNy4zNjYyODA3NDExMTExMzN9LCJib3JlZCI6eyJzb2xpdGFyeSI6ZmFsc2UsImRleHRlcml0eSI6ZmFsc2V9fSx7ImxldmVsIjo5NC45ODk5OTk5OTk5OTc0NCwidG9sZXJhbmNlIjp7InNvbGl0YXJ5IjoxOS4xNzkwMDAwMDAwMTA5LCJkZXh0ZXJpdHkiOjE4LjIyMzUwMzg4NzE3NDc1fSwiYm9yZWQiOnsic29saXRhcnkiOmZhbHNlLCJkZXh0ZXJpdHkiOmZhbHNlfX0seyJsZXZlbCI6OTcuNjc5OTk5OTk5OTk4ODEsInRvbGVyYW5jZSI6eyJzb2xpdGFyeSI6MTkuODUyMjA0NjkwMTk3MzIsImRleHRlcml0eSI6MjMuNDIwNTAwMDAwMDExNjE0fSwiYm9yZWQiOnsic29saXRhcnkiOmZhbHNlLCJkZXh0ZXJpdHkiOmZhbHNlfX1dLCJmdXJuaXR1cmVUcmFuc2l0IjowLCJmdXJuaXR1cmVFeGl0cyI6MCwic2hhcmVkUGF3bkNlbGxzIjowLCJwbGF5ZXJPcmRlcnMiOlt7ImFjdGl2ZSI6bnVsbCwicXVldWVkIjowLCJwcmlvcml0eSI6bnVsbH0seyJhY3RpdmUiOm51bGwsInF1ZXVlZCI6MCwicHJpb3JpdHkiOm51bGx9LHsiYWN0aXZlIjpudWxsLCJxdWV1ZWQiOjAsInByaW9yaXR5IjpudWxsfV0sIm9ic3RydWN0ZWRHcm93aW5nQ2VsbHMiOjAsImNsZWFyaW5nIjowLCJjb25zdHJ1Y3Rpb24iOnsiYmx1ZXByaW50cyI6MCwiZnJhbWVzIjowLCJjbGVhcmluZ1BsYW50cyI6MCwiY2xlYXJpbmdQaWxlcyI6MH0sInN0cnVjdHVyZXMiOnsiYmVkIjozLCJ0YWJsZSI6MSwic3Rvb2wiOjMsIndhbGwiOjcsImNhbXBmaXJlIjoxLCJob3JzZXNob2VzIjoxLCJzdG9uZWN1dHRlciI6MX0sInByZXBhcmVkTWVhbHMiOjYsInN0b2NrIjp7Indvb2QiOjQwLCJmb29kIjoyMX0sInBlbmRpbmciOjAsIm1pbmltdW1Gb29kIjo0MS40NjY2NjY2NjY2NjM1MywibWluaW11bVJlc3QiOjU1LjAxOTg4MDk1MjM4MTY3fV0sImRlY2lzaW9ucyI6W3sidGljayI6MjUsInJlYXNvbiI6IlLDqXBhcnRpciBjb2xsZWN0ZSwgY29uc3RydWN0aW9uLCBjdWlzaW5lIGV0IHRyYW5zcG9ydCBlbnRyZSBsZXMgdHJvaXMgY29sb25zLiIsImNvbW1hbmQiOnsidHlwZSI6InByaW9yaXR5IiwicGF3bklkIjoxMjQwOSwid29yayI6ImdhdGhlciIsInZhbHVlIjoxfX0seyJ0aWNrIjoyNSwicmVhc29uIjoiUsOpcGFydGlyIGNvbGxlY3RlLCBjb25zdHJ1Y3Rpb24sIGN1aXNpbmUgZXQgdHJhbnNwb3J0IGVudHJlIGxlcyB0cm9pcyBjb2xvbnMuIiwiY29tbWFuZCI6eyJ0eXBlIjoicHJpb3JpdHkiLCJwYXduSWQiOjEyNDA5LCJ3b3JrIjoiYnVpbGQiLCJ2YWx1ZSI6M319LHsidGljayI6MjUsInJlYXNvbiI6IlLDqXBhcnRpciBjb2xsZWN0ZSwgY29uc3RydWN0aW9uLCBjdWlzaW5lIGV0IHRyYW5zcG9ydCBlbnRyZSBsZXMgdHJvaXMgY29sb25zLiIsImNvbW1hbmQiOnsidHlwZSI6InByaW9yaXR5IiwicGF3bklkIjoxMjQwOSwid29yayI6ImhhdWwiLCJ2YWx1ZSI6Mn19LHsidGljayI6MjUsInJlYXNvbiI6IlLDqXBhcnRpciBjb2xsZWN0ZSwgY29uc3RydWN0aW9uLCBjdWlzaW5lIGV0IHRyYW5zcG9ydCBlbnRyZSBsZXMgdHJvaXMgY29sb25zLiIsImNvbW1hbmQiOnsidHlwZSI6InByaW9yaXR5IiwicGF3bklkIjoxMjQwOSwid29yayI6ImNvb2siLCJ2YWx1ZSI6M319LHsidGljayI6MjUsInJlYXNvbiI6IlLDqXBhcnRpciBjb2xsZWN0ZSwgY29uc3RydWN0aW9uLCBjdWlzaW5lIGV0IHRyYW5zcG9ydCBlbnRyZSBsZXMgdHJvaXMgY29sb25zLiIsImNvbW1hbmQiOnsidHlwZSI6InByaW9yaXR5IiwicGF3bklkIjoxMjQwOSwid29yayI6ImNyYWZ0IiwidmFsdWUiOjN9fSx7InRpY2siOjI1LCJyZWFzb24iOiJSw6lwYXJ0aXIgY29sbGVjdGUsIGNvbnN0cnVjdGlvbiwgY3Vpc2luZSBldCB0cmFuc3BvcnQgZW50cmUgbGVzIHRyb2lzIGNvbG9ucy4iLCJjb21tYW5kIjp7InR5cGUiOiJwcmlvcml0eSIsInBhd25JZCI6MTI0MTAsIndvcmsiOiJnYXRoZXIiLCJ2YWx1ZSI6M319LHsidGljayI6MjUsInJlYXNvbiI6IlLDqXBhcnRpciBjb2xsZWN0ZSwgY29uc3RydWN0aW9uLCBjdWlzaW5lIGV0IHRyYW5zcG9ydCBlbnRyZSBsZXMgdHJvaXMgY29sb25zLiIsImNvbW1hbmQiOnsidHlwZSI6InByaW9yaXR5IiwicGF3bklkIjoxMjQxMCwid29yayI6ImJ1aWxkIiwidmFsdWUiOjF9fSx7InRpY2siOjI1LCJyZWFzb24iOiJSw6lwYXJ0aXIgY29sbGVjdGUsIGNvbnN0cnVjdGlvbiwgY3Vpc2luZSBldCB0cmFuc3BvcnQgZW50cmUgbGVzIHRyb2lzIGNvbG9ucy4iLCJjb21tYW5kIjp7InR5cGUiOiJwcmlvcml0eSIsInBhd25JZCI6MTI0MTAsIndvcmsiOiJoYXVsIiwidmFsdWUiOjJ9fSx7InRpY2siOjI1LCJyZWFzb24iOiJSw6lwYXJ0aXIgY29sbGVjdGUsIGNvbnN0cnVjdGlvbiwgY3Vpc2luZSBldCB0cmFuc3BvcnQgZW50cmUgbGVzIHRyb2lzIGNvbG9ucy4iLCJjb21tYW5kIjp7InR5cGUiOiJwcmlvcml0eSIsInBhd25JZCI6MTI0MTAsIndvcmsiOiJncm93IiwidmFsdWUiOjN9fSx7InRpY2siOjI1LCJyZWFzb24iOiJSw6lwYXJ0aXIgY29sbGVjdGUsIGNvbnN0cnVjdGlvbiwgY3Vpc2luZSBldCB0cmFuc3BvcnQgZW50cmUgbGVzIHRyb2lzIGNvbG9ucy4iLCJjb21tYW5kIjp7InR5cGUiOiJwcmlvcml0eSIsInBhd25JZCI6MTI0MTAsIndvcmsiOiJjb29rIiwidmFsdWUiOjN9fSx7InRpY2siOjI1LCJyZWFzb24iOiJSw6lwYXJ0aXIgY29sbGVjdGUsIGNvbnN0cnVjdGlvbiwgY3Vpc2luZSBldCB0cmFuc3BvcnQgZW50cmUgbGVzIHRyb2lzIGNvbG9ucy4iLCJjb21tYW5kIjp7InR5cGUiOiJwcmlvcml0eSIsInBhd25JZCI6MTI0MTEsIndvcmsiOiJidWlsZCIsInZhbHVlIjozfX0seyJ0aWNrIjoyNSwicmVhc29uIjoiUsOpcGFydGlyIGNvbGxlY3RlLCBjb25zdHJ1Y3Rpb24sIGN1aXNpbmUgZXQgdHJhbnNwb3J0IGVudHJlIGxlcyB0cm9pcyBjb2xvbnMuIiwiY29tbWFuZCI6eyJ0eXBlIjoicHJpb3JpdHkiLCJwYXduSWQiOjEyNDExLCJ3b3JrIjoiaGF1bCIsInZhbHVlIjoyfX0seyJ0aWNrIjoyNSwicmVhc29uIjoiUsOpcGFydGlyIGNvbGxlY3RlLCBjb25zdHJ1Y3Rpb24sIGN1aXNpbmUgZXQgdHJhbnNwb3J0IGVudHJlIGxlcyB0cm9pcyBjb2xvbnMuIiwiY29tbWFuZCI6eyJ0eXBlIjoicHJpb3JpdHkiLCJwYXduSWQiOjEyNDExLCJ3b3JrIjoiY29vayIsInZhbHVlIjoxfX0seyJ0aWNrIjoyNSwicmVhc29uIjoiUsOpcGFydGlyIGNvbGxlY3RlLCBjb25zdHJ1Y3Rpb24sIGN1aXNpbmUgZXQgdHJhbnNwb3J0IGVudHJlIGxlcyB0cm9pcyBjb2xvbnMuIiwiY29tbWFuZCI6eyJ0eXBlIjoicHJpb3JpdHkiLCJwYXduSWQiOjEyNDExLCJ3b3JrIjoiY3JhZnQiLCJ2YWx1ZSI6M319LHsidGljayI6MjUsInJlYXNvbiI6IlLDqXBhcnRpciBjb2xsZWN0ZSwgY29uc3RydWN0aW9uLCBjdWlzaW5lIGV0IHRyYW5zcG9ydCBlbnRyZSBsZXMgdHJvaXMgY29sb25zLiIsImNvbW1hbmQiOnsidHlwZSI6InByaW9yaXR5IiwicGF3bklkIjoxMjQxMSwid29yayI6Im1pbmUiLCJ2YWx1ZSI6M319LHsidGljayI6MjUsInJlYXNvbiI6IkFtw6luYWdlciBwcm9ncmVzc2l2ZW1lbnQgbGUgY2FtcCBzYW5zIGZlcm1lciBzb24gcGFzc2FnZSBjZW50cmFsLiIsImNvbW1hbmQiOnsidHlwZSI6ImRlc2lnbmF0ZSIsImtpbmQiOiJiZWQiLCJ4IjoxMjIsInoiOjEyNywib3JpZW50YXRpb24iOjB9fSx7InRpY2siOjI1LCJyZWFzb24iOiJBbcOpbmFnZXIgcHJvZ3Jlc3NpdmVtZW50IGxlIGNhbXAgc2FucyBmZXJtZXIgc29uIHBhc3NhZ2UgY2VudHJhbC4iLCJjb21tYW5kIjp7InR5cGUiOiJkZXNpZ25hdGUiLCJraW5kIjoiYmVkIiwieCI6MTI1LCJ6IjoxMjcsIm9yaWVudGF0aW9uIjowfX0seyJ0aWNrIjoyNSwicmVhc29uIjoiQW3DqW5hZ2VyIHByb2dyZXNzaXZlbWVudCBsZSBjYW1wIHNhbnMgZmVybWVyIHNvbiBwYXNzYWdlIGNlbnRyYWwuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6ImJlZCIsIngiOjEyOCwieiI6MTI3LCJvcmllbnRhdGlvbiI6MH19LHsidGljayI6MjUsInJlYXNvbiI6IlPDqXBhcmVyIGxlIGJvaXMgZXQgbGVzIGFsaW1lbnRzIHByw6hzIGR1IGNhbXAuIiwiY29tbWFuZCI6eyJ0eXBlIjoic3RvY2twaWxlIiwieCI6MTIzLCJ6IjoxMjUsImVuYWJsZWQiOnRydWUsImZpbHRlcnMiOnsid29vZCI6dHJ1ZSwiZm9vZCI6ZmFsc2V9LCJwcmlvcml0eSI6MiwiY2FwYWNpdHkiOjc1fX0seyJ0aWNrIjoyNSwicmVhc29uIjoiU8OpcGFyZXIgbGUgYm9pcyBldCBsZXMgYWxpbWVudHMgcHLDqHMgZHUgY2FtcC4iLCJjb21tYW5kIjp7InR5cGUiOiJzdG9ja3BpbGUiLCJ4IjoxMjMsInoiOjEyNiwiZW5hYmxlZCI6dHJ1ZSwiZmlsdGVycyI6eyJ3b29kIjp0cnVlLCJmb29kIjpmYWxzZX0sInByaW9yaXR5IjoyLCJjYXBhY2l0eSI6NzV9fSx7InRpY2siOjI1LCJyZWFzb24iOiJTw6lwYXJlciBsZSBib2lzIGV0IGxlcyBhbGltZW50cyBwcsOocyBkdSBjYW1wLiIsImNvbW1hbmQiOnsidHlwZSI6InN0b2NrcGlsZSIsIngiOjEyNywieiI6MTI2LCJlbmFibGVkIjp0cnVlLCJmaWx0ZXJzIjp7Indvb2QiOmZhbHNlLCJmb29kIjp0cnVlfSwicHJpb3JpdHkiOjIsImNhcGFjaXR5Ijo3NX19LHsidGljayI6MjUsInJlYXNvbiI6IlPDqXBhcmVyIGxlIGJvaXMgZXQgbGVzIGFsaW1lbnRzIHByw6hzIGR1IGNhbXAuIiwiY29tbWFuZCI6eyJ0eXBlIjoic3RvY2twaWxlIiwieCI6MTI3LCJ6IjoxMjUsImVuYWJsZWQiOnRydWUsImZpbHRlcnMiOnsid29vZCI6ZmFsc2UsImZvb2QiOnRydWV9LCJwcmlvcml0eSI6MiwiY2FwYWNpdHkiOjc1fX0seyJ0aWNrIjoyNSwicmVhc29uIjoiU8OpcGFyZXIgbGUgYm9pcyBldCBsZXMgYWxpbWVudHMgcHLDqHMgZHUgY2FtcC4iLCJjb21tYW5kIjp7InR5cGUiOiJzdG9ja3BpbGUiLCJ4IjoxMjcsInoiOjEyNCwiZW5hYmxlZCI6dHJ1ZSwiZmlsdGVycyI6eyJ3b29kIjpmYWxzZSwiZm9vZCI6dHJ1ZX0sInByaW9yaXR5IjoyLCJjYXBhY2l0eSI6NzV9fSx7InRpY2siOjI1LCJyZWFzb24iOiJTw6lwYXJlciBsZSBib2lzIGV0IGxlcyBhbGltZW50cyBwcsOocyBkdSBjYW1wLiIsImNvbW1hbmQiOnsidHlwZSI6InN0b2NrcGlsZSIsIngiOjEyNCwieiI6MTI2LCJlbmFibGVkIjp0cnVlLCJmaWx0ZXJzIjp7Indvb2QiOmZhbHNlLCJmb29kIjp0cnVlfSwicHJpb3JpdHkiOjIsImNhcGFjaXR5Ijo3NX19LHsidGljayI6MjUsInJlYXNvbiI6IlPDqXBhcmVyIGxlIGJvaXMgZXQgbGVzIGFsaW1lbnRzIHByw6hzIGR1IGNhbXAuIiwiY29tbWFuZCI6eyJ0eXBlIjoic3RvY2twaWxlIiwieCI6MTI1LCJ6IjoxMjYsImVuYWJsZWQiOnRydWUsImZpbHRlcnMiOnsid29vZCI6ZmFsc2UsImZvb2QiOnRydWV9LCJwcmlvcml0eSI6MiwiY2FwYWNpdHkiOjc1fX0seyJ0aWNrIjoyNSwicmVhc29uIjoiU8OpcGFyZXIgbGUgYm9pcyBldCBsZXMgYWxpbWVudHMgcHLDqHMgZHUgY2FtcC4iLCJjb21tYW5kIjp7InR5cGUiOiJzdG9ja3BpbGUiLCJ4IjoxMjYsInoiOjEyNiwiZW5hYmxlZCI6dHJ1ZSwiZmlsdGVycyI6eyJ3b29kIjpmYWxzZSwiZm9vZCI6dHJ1ZX0sInByaW9yaXR5IjoyLCJjYXBhY2l0eSI6NzV9fSx7InRpY2siOjI1LCJyZWFzb24iOiJSw6lzZXJ2ZXIgdW5lIHBsYWdlIGRlIGxvaXNpcnMgZHUgc29pciwgc2FucyByZW1wbGFjZXIgbGUgcmVwb3Mgbm9jdHVybmUuIiwiY29tbWFuZCI6eyJ0eXBlIjoic2NoZWR1bGUtcGFpbnQiLCJwYXduSWQiOjEyNDA5LCJob3VycyI6WzE5LDIwXSwiYXNzaWdubWVudCI6InJlY3JlYXRpb24ifX0seyJ0aWNrIjoyNSwicmVhc29uIjoiUsOpc2VydmVyIHVuZSBwbGFnZSBkZSBsb2lzaXJzIGR1IHNvaXIsIHNhbnMgcmVtcGxhY2VyIGxlIHJlcG9zIG5vY3R1cm5lLiIsImNvbW1hbmQiOnsidHlwZSI6InNjaGVkdWxlLXBhaW50IiwicGF3bklkIjoxMjQxMCwiaG91cnMiOlsxOSwyMF0sImFzc2lnbm1lbnQiOiJyZWNyZWF0aW9uIn19LHsidGljayI6MjUsInJlYXNvbiI6IlLDqXNlcnZlciB1bmUgcGxhZ2UgZGUgbG9pc2lycyBkdSBzb2lyLCBzYW5zIHJlbXBsYWNlciBsZSByZXBvcyBub2N0dXJuZS4iLCJjb21tYW5kIjp7InR5cGUiOiJzY2hlZHVsZS1wYWludCIsInBhd25JZCI6MTI0MTEsImhvdXJzIjpbMTksMjBdLCJhc3NpZ25tZW50IjoicmVjcmVhdGlvbiJ9fSx7InRpY2siOjI1LCJyZWFzb24iOiJQcsOpdm9pciBsZSBib2lzIGRlcyBjaGFudGllcnMgZXQgdW5lIHBldGl0ZSBtYXJnZS4iLCJjb21tYW5kIjp7InR5cGUiOiJkZXNpZ25hdGUiLCJraW5kIjoiY2hvcCIsIngiOjEyMywieiI6MTIzfX0seyJ0aWNrIjoyNSwicmVhc29uIjoiUHLDqXZvaXIgbGUgYm9pcyBkZXMgY2hhbnRpZXJzIGV0IHVuZSBwZXRpdGUgbWFyZ2UuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6ImNob3AiLCJ4IjoxMjQsInoiOjEyMH19LHsidGljayI6MjUsInJlYXNvbiI6IlByw6l2b2lyIGxlIGJvaXMgZGVzIGNoYW50aWVycyBldCB1bmUgcGV0aXRlIG1hcmdlLiIsImNvbW1hbmQiOnsidHlwZSI6ImRlc2lnbmF0ZSIsImtpbmQiOiJjaG9wIiwieCI6MTI5LCJ6IjoxMjN9fSx7InRpY2siOjI1LCJyZWFzb24iOiJQcsOpdm9pciBsZSBib2lzIGRlcyBjaGFudGllcnMgZXQgdW5lIHBldGl0ZSBtYXJnZS4iLCJjb21tYW5kIjp7InR5cGUiOiJkZXNpZ25hdGUiLCJraW5kIjoiY2hvcCIsIngiOjEzMCwieiI6MTI2fX0seyJ0aWNrIjoyNSwicmVhc29uIjoiUHLDqXZvaXIgbGUgYm9pcyBkZXMgY2hhbnRpZXJzIGV0IHVuZSBwZXRpdGUgbWFyZ2UuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6ImNob3AiLCJ4IjoxMjQsInoiOjEzMH19LHsidGljayI6MjUsInJlYXNvbiI6IlByw6l2b2lyIGxlIGJvaXMgZGVzIGNoYW50aWVycyBldCB1bmUgcGV0aXRlIG1hcmdlLiIsImNvbW1hbmQiOnsidHlwZSI6ImRlc2lnbmF0ZSIsImtpbmQiOiJjaG9wIiwieCI6MTI1LCJ6IjoxMTh9fSx7InRpY2siOjI1LCJyZWFzb24iOiJQcsOpdm9pciBsZSBib2lzIGRlcyBjaGFudGllcnMgZXQgdW5lIHBldGl0ZSBtYXJnZS4iLCJjb21tYW5kIjp7InR5cGUiOiJkZXNpZ25hdGUiLCJraW5kIjoiY2hvcCIsIngiOjExOSwieiI6MTI0fX0seyJ0aWNrIjoyNSwicmVhc29uIjoiUHLDqXZvaXIgbGUgYm9pcyBkZXMgY2hhbnRpZXJzIGV0IHVuZSBwZXRpdGUgbWFyZ2UuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6ImNob3AiLCJ4IjoxMzEsInoiOjEyNH19LHsidGljayI6MjUsInJlYXNvbiI6IlByw6l2b2lyIGxlIGJvaXMgZGVzIGNoYW50aWVycyBldCB1bmUgcGV0aXRlIG1hcmdlLiIsImNvbW1hbmQiOnsidHlwZSI6ImRlc2lnbmF0ZSIsImtpbmQiOiJjaG9wIiwieCI6MTIwLCJ6IjoxMjd9fSx7InRpY2siOjI1LCJyZWFzb24iOiJQcsOpdm9pciBsZSBib2lzIGRlcyBjaGFudGllcnMgZXQgdW5lIHBldGl0ZSBtYXJnZS4iLCJjb21tYW5kIjp7InR5cGUiOiJkZXNpZ25hdGUiLCJraW5kIjoiY2hvcCIsIngiOjEyNiwieiI6MTE4fX0seyJ0aWNrIjoyNSwicmVhc29uIjoiUHLDqXZvaXIgbGUgYm9pcyBkZXMgY2hhbnRpZXJzIGV0IHVuZSBwZXRpdGUgbWFyZ2UuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6ImNob3AiLCJ4IjoxMjEsInoiOjEyOX19LHsidGljayI6MjUsInJlYXNvbiI6IlByw6l2b2lyIGxlIGJvaXMgZGVzIGNoYW50aWVycyBldCB1bmUgcGV0aXRlIG1hcmdlLiIsImNvbW1hbmQiOnsidHlwZSI6ImRlc2lnbmF0ZSIsImtpbmQiOiJjaG9wIiwieCI6MTIwLCJ6IjoxMjF9fSx7InRpY2siOjI1LCJyZWFzb24iOiJQcsOpdm9pciBsZSBib2lzIGRlcyBjaGFudGllcnMgZXQgdW5lIHBldGl0ZSBtYXJnZS4iLCJjb21tYW5kIjp7InR5cGUiOiJkZXNpZ25hdGUiLCJraW5kIjoiY2hvcCIsIngiOjEzMywieiI6MTI2fX0seyJ0aWNrIjoyNSwicmVhc29uIjoiUHJpb3Jpc2VyIGxlcyBwcmVtaWVycyBsb3RzIGRlIGJvaXMgcG91ciBpbnN0YWxsZXIgbGUgY2FtcC4iLCJjb21tYW5kIjp7InR5cGUiOiJvcmRlci1qb2IiLCJwYXduSWQiOjEyNDA5LCJqb2JJZCI6MTI0MjksInF1ZXVlIjpmYWxzZX19LHsidGljayI6MjUsInJlYXNvbiI6IlByaW9yaXNlciBsZXMgcHJlbWllcnMgbG90cyBkZSBib2lzIHBvdXIgaW5zdGFsbGVyIGxlIGNhbXAuIiwiY29tbWFuZCI6eyJ0eXBlIjoib3JkZXItam9iIiwicGF3bklkIjoxMjQwOSwiam9iSWQiOjEyNDM3LCJxdWV1ZSI6dHJ1ZX19LHsidGljayI6MjUsInJlYXNvbiI6IkTDqWdhZ2VyIGxlIGNvdWNoYWdlIHByaW9yaXRhaXJlLiIsImNvbW1hbmQiOnsidHlwZSI6Im9yZGVyLWpvYiIsInBhd25JZCI6MTI0MTAsImpvYklkIjoxMjQxOCwicXVldWUiOmZhbHNlfX0seyJ0aWNrIjoyNSwicmVhc29uIjoiUmFuZ2VyIGxlcyByYXRpb25zIGFwcsOocyBsYSBsaXZyYWlzb24uIiwiY29tbWFuZCI6eyJ0eXBlIjoib3JkZXItaGF1bCIsInBhd25JZCI6MTI0MTAsInRhcmdldCI6eyJ0eXBlIjoicGlsZSIsInBpbGVJZCI6MTI0MTd9LCJxdWV1ZSI6dHJ1ZX19LHsidGljayI6MTA0OCwicmVhc29uIjoiUHLDqXZvaXIgbGUgYm9pcyBkZXMgY2hhbnRpZXJzIGV0IHVuZSBwZXRpdGUgbWFyZ2UuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6ImNob3AiLCJ4IjoxMTgsInoiOjEyN319LHsidGljayI6MTA0OCwicmVhc29uIjoiUHLDqXZvaXIgbGUgYm9pcyBkZXMgY2hhbnRpZXJzIGV0IHVuZSBwZXRpdGUgbWFyZ2UuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6ImNob3AiLCJ4IjoxMjIsInoiOjEzMX19LHsidGljayI6MTA0OCwicmVhc29uIjoiUHLDqXZvaXIgbGUgYm9pcyBkZXMgY2hhbnRpZXJzIGV0IHVuZSBwZXRpdGUgbWFyZ2UuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6ImNob3AiLCJ4IjoxMjgsInoiOjEzMX19LHsidGljayI6MTA0OCwicmVhc29uIjoiUHLDqXZvaXIgbGUgYm9pcyBkZXMgY2hhbnRpZXJzIGV0IHVuZSBwZXRpdGUgbWFyZ2UuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6ImNob3AiLCJ4IjoxMjMsInoiOjExN319LHsidGljayI6MjA3NCwicmVhc29uIjoiRMOpY2FsZXIgbGUgc29tbWVpbCBkZSBsYSBjdWlzaW5pw6hyZSBwb3VyIHByw6lwYXJlciBsZSBtYXRpbi4iLCJjb21tYW5kIjp7InR5cGUiOiJzY2hlZHVsZS1wYWludCIsInBhd25JZCI6MTI0MTEsImhvdXJzIjpbNV0sImFzc2lnbm1lbnQiOiJhbnl0aGluZyJ9fSx7InRpY2siOjIwNzQsInJlYXNvbiI6IkTDqWNhbGVyIGxlIHNvbW1laWwgZGUgbGEgY3Vpc2luacOocmUgcG91ciBwcsOpcGFyZXIgbGUgbWF0aW4uIiwiY29tbWFuZCI6eyJ0eXBlIjoic2NoZWR1bGUtcGFpbnQiLCJwYXduSWQiOjEyNDExLCJob3VycyI6WzIxXSwiYXNzaWdubWVudCI6InNsZWVwIn19LHsidGljayI6MjA3NCwicmVhc29uIjoiQW3DqW5hZ2VyIHByb2dyZXNzaXZlbWVudCBsZSBjYW1wIHNhbnMgZmVybWVyIHNvbiBwYXNzYWdlIGNlbnRyYWwuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6InRhYmxlIiwieCI6MTI1LCJ6IjoxMjMsIm9yaWVudGF0aW9uIjoxfX0seyJ0aWNrIjoyMDc0LCJyZWFzb24iOiJBbcOpbmFnZXIgcHJvZ3Jlc3NpdmVtZW50IGxlIGNhbXAgc2FucyBmZXJtZXIgc29uIHBhc3NhZ2UgY2VudHJhbC4iLCJjb21tYW5kIjp7InR5cGUiOiJkZXNpZ25hdGUiLCJraW5kIjoiaG9yc2VzaG9lcyIsIngiOjEyNywieiI6MTIyfX0seyJ0aWNrIjoyMDc0LCJyZWFzb24iOiJBbcOpbmFnZXIgcHJvZ3Jlc3NpdmVtZW50IGxlIGNhbXAgc2FucyBmZXJtZXIgc29uIHBhc3NhZ2UgY2VudHJhbC4iLCJjb21tYW5kIjp7InR5cGUiOiJkZXNpZ25hdGUiLCJraW5kIjoiY2FtcGZpcmUiLCJ4IjoxMjQsInoiOjEyNCwib3JpZW50YXRpb24iOjB9fSx7InRpY2siOjIwNzQsInJlYXNvbiI6IkFtw6luYWdlciBwcm9ncmVzc2l2ZW1lbnQgbGUgY2FtcCBzYW5zIGZlcm1lciBzb24gcGFzc2FnZSBjZW50cmFsLiIsImNvbW1hbmQiOnsidHlwZSI6ImRlc2lnbmF0ZSIsImtpbmQiOiJzdG9vbCIsIngiOjEyNSwieiI6MTIyfX0seyJ0aWNrIjoyMDc0LCJyZWFzb24iOiJBbcOpbmFnZXIgcHJvZ3Jlc3NpdmVtZW50IGxlIGNhbXAgc2FucyBmZXJtZXIgc29uIHBhc3NhZ2UgY2VudHJhbC4iLCJjb21tYW5kIjp7InR5cGUiOiJkZXNpZ25hdGUiLCJraW5kIjoic3Rvb2wiLCJ4IjoxMjYsInoiOjEyMn19LHsidGljayI6MjA3NCwicmVhc29uIjoiQW3DqW5hZ2VyIHByb2dyZXNzaXZlbWVudCBsZSBjYW1wIHNhbnMgZmVybWVyIHNvbiBwYXNzYWdlIGNlbnRyYWwuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6InN0b29sIiwieCI6MTI1LCJ6IjoxMjR9fSx7InRpY2siOjIwNzQsInJlYXNvbiI6IlNlbWVyIHVuIHByZW1pZXIgcG90YWdlciBwcsOocyBkdSBjYW1wLCB0b3V0IGVuIGNvbnRpbnVhbnQgw6AgY3VlaWxsaXIgcGVuZGFudCBzYSBjcm9pc3NhbmNlLiIsImNvbW1hbmQiOnsidHlwZSI6ImFyZWEiLCJhY3Rpb24iOiJncm93aW5nIiwiZnJvbSI6eyJ4IjoxMjMsInoiOjEzMH0sInRvIjp7IngiOjEyNywieiI6MTMyfX19LHsidGljayI6MjA3NCwicmVhc29uIjoiUHLDqXZvaXIgbGUgYm9pcyBkZXMgY2hhbnRpZXJzIGV0IHVuZSBwZXRpdGUgbWFyZ2UuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6ImNob3AiLCJ4IjoxMjAsInoiOjEyMH19LHsidGljayI6MjA3NCwicmVhc29uIjoiUHLDqXZvaXIgbGUgYm9pcyBkZXMgY2hhbnRpZXJzIGV0IHVuZSBwZXRpdGUgbWFyZ2UuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6ImNob3AiLCJ4IjoxMTgsInoiOjEyMn19LHsidGljayI6MjA3NCwicmVhc29uIjoiUHLDqXZvaXIgbGUgYm9pcyBkZXMgY2hhbnRpZXJzIGV0IHVuZSBwZXRpdGUgbWFyZ2UuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6ImNob3AiLCJ4IjoxMjIsInoiOjExN319LHsidGljayI6MjA3NCwicmVhc29uIjoiUHLDqXZvaXIgbGUgYm9pcyBkZXMgY2hhbnRpZXJzIGV0IHVuZSBwZXRpdGUgbWFyZ2UuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6ImNob3AiLCJ4IjoxMjAsInoiOjExOX19LHsidGljayI6MjA3NCwicmVhc29uIjoiUHLDqXZvaXIgbGUgYm9pcyBkZXMgY2hhbnRpZXJzIGV0IHVuZSBwZXRpdGUgbWFyZ2UuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6ImNob3AiLCJ4IjoxMzYsInoiOjEyNX19LHsidGljayI6MjA3NCwicmVhc29uIjoiUHLDqXZvaXIgbGUgYm9pcyBkZXMgY2hhbnRpZXJzIGV0IHVuZSBwZXRpdGUgbWFyZ2UuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6ImNob3AiLCJ4IjoxMTUsInoiOjEyNn19LHsidGljayI6MjA3NCwicmVhc29uIjoiUHLDqXZvaXIgbGUgYm9pcyBkZXMgY2hhbnRpZXJzIGV0IHVuZSBwZXRpdGUgbWFyZ2UuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6ImNob3AiLCJ4IjoxMzUsInoiOjEyNn19LHsidGljayI6MjA3NCwicmVhc29uIjoiUHLDqXZvaXIgbGUgYm9pcyBkZXMgY2hhbnRpZXJzIGV0IHVuZSBwZXRpdGUgbWFyZ2UuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6ImNob3AiLCJ4IjoxMTgsInoiOjEyOX19LHsidGljayI6MzAzOCwicmVhc29uIjoiQW3DqW5hZ2VyIHByb2dyZXNzaXZlbWVudCBsZSBjYW1wIHNhbnMgZmVybWVyIHNvbiBwYXNzYWdlIGNlbnRyYWwuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6IndhbGwiLCJ4IjoxMjIsInoiOjEyMn19LHsidGljayI6MzAzOCwicmVhc29uIjoiQW3DqW5hZ2VyIHByb2dyZXNzaXZlbWVudCBsZSBjYW1wIHNhbnMgZmVybWVyIHNvbiBwYXNzYWdlIGNlbnRyYWwuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6IndhbGwiLCJ4IjoxMjIsInoiOjEyM319LHsidGljayI6MzAzOCwicmVhc29uIjoiQW3DqW5hZ2VyIHByb2dyZXNzaXZlbWVudCBsZSBjYW1wIHNhbnMgZmVybWVyIHNvbiBwYXNzYWdlIGNlbnRyYWwuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6IndhbGwiLCJ4IjoxMjIsInoiOjEyNH19LHsidGljayI6MzAzOCwicmVhc29uIjoiQW3DqW5hZ2VyIHByb2dyZXNzaXZlbWVudCBsZSBjYW1wIHNhbnMgZmVybWVyIHNvbiBwYXNzYWdlIGNlbnRyYWwuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6IndhbGwiLCJ4IjoxMjgsInoiOjEyMn19LHsidGljayI6MzAzOCwicmVhc29uIjoiQW3DqW5hZ2VyIHByb2dyZXNzaXZlbWVudCBsZSBjYW1wIHNhbnMgZmVybWVyIHNvbiBwYXNzYWdlIGNlbnRyYWwuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6IndhbGwiLCJ4IjoxMjgsInoiOjEyM319LHsidGljayI6MzAzOCwicmVhc29uIjoiQW3DqW5hZ2VyIHByb2dyZXNzaXZlbWVudCBsZSBjYW1wIHNhbnMgZmVybWVyIHNvbiBwYXNzYWdlIGNlbnRyYWwuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6IndhbGwiLCJ4IjoxMjgsInoiOjEyNH19LHsidGljayI6MzAzOCwicmVhc29uIjoiQW3DqW5hZ2VyIHByb2dyZXNzaXZlbWVudCBsZSBjYW1wIHNhbnMgZmVybWVyIHNvbiBwYXNzYWdlIGNlbnRyYWwuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6IndhbGwiLCJ4IjoxMjksInoiOjEyNH19LHsidGljayI6MzAzOCwicmVhc29uIjoiR2FyZGVyIHVuZSBwZXRpdGUgcsOpc2VydmUgYWxpbWVudGFpcmUgc3VyIGxlIHRhYm91cmV0IHByw6hzIGR1IGZldS4iLCJjb21tYW5kIjp7InR5cGUiOiJzdG9ja3BpbGUiLCJ4IjoxMjUsInoiOjEyNCwiZW5hYmxlZCI6dHJ1ZSwiZmlsdGVycyI6eyJ3b29kIjpmYWxzZSwiZm9vZCI6dHJ1ZX0sInByaW9yaXR5IjoyLCJjYXBhY2l0eSI6NzV9fSx7InRpY2siOjMwMzgsInJlYXNvbiI6Ikluc3RhbGxlciB1bmUgcHJlbWnDqHJlIHJlY2V0dGUgZGUgcmVwYXMgc2ltcGxlIGF1IGZldSBkZSBjYW1wLiIsImNvbW1hbmQiOnsidHlwZSI6ImJpbGwtYWRkIiwic3RydWN0dXJlSWQiOjEyNTM1fX0seyJ0aWNrIjozMDM4LCJyZWFzb24iOiJQcsOpdm9pciBsZSBib2lzIGRlcyBjaGFudGllcnMgZXQgdW5lIHBldGl0ZSBtYXJnZS4iLCJjb21tYW5kIjp7InR5cGUiOiJkZXNpZ25hdGUiLCJraW5kIjoiY2hvcCIsIngiOjEyOCwieiI6MTMzfX0seyJ0aWNrIjozMDM4LCJyZWFzb24iOiJQcsOpdm9pciBsZSBib2lzIGRlcyBjaGFudGllcnMgZXQgdW5lIHBldGl0ZSBtYXJnZS4iLCJjb21tYW5kIjp7InR5cGUiOiJkZXNpZ25hdGUiLCJraW5kIjoiY2hvcCIsIngiOjEyMSwieiI6MTE3fX0seyJ0aWNrIjozMDM4LCJyZWFzb24iOiJQcsOpdm9pciBsZSBib2lzIGRlcyBjaGFudGllcnMgZXQgdW5lIHBldGl0ZSBtYXJnZS4iLCJjb21tYW5kIjp7InR5cGUiOiJkZXNpZ25hdGUiLCJraW5kIjoiY2hvcCIsIngiOjExOSwieiI6MTE5fX0seyJ0aWNrIjozMDM4LCJyZWFzb24iOiJQcsOpdm9pciBsZSBib2lzIGRlcyBjaGFudGllcnMgZXQgdW5lIHBldGl0ZSBtYXJnZS4iLCJjb21tYW5kIjp7InR5cGUiOiJkZXNpZ25hdGUiLCJraW5kIjoiY2hvcCIsIngiOjExNywieiI6MTIxfX0seyJ0aWNrIjozMDM4LCJyZWFzb24iOiJSZW5vdXZlbGVyIGxhIHLDqXNlcnZlIGFsaW1lbnRhaXJlIGF2YW50IGxhIHDDqW51cmllLiIsImNvbW1hbmQiOnsidHlwZSI6ImRlc2lnbmF0ZSIsImtpbmQiOiJoYXJ2ZXN0IiwieCI6MTI3LCJ6IjoxMjN9fSx7InRpY2siOjMwMzgsInJlYXNvbiI6IlJlbm91dmVsZXIgbGEgcsOpc2VydmUgYWxpbWVudGFpcmUgYXZhbnQgbGEgcMOpbnVyaWUuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6ImhhcnZlc3QiLCJ4IjoxMjksInoiOjEyN319LHsidGljayI6MzAzOCwicmVhc29uIjoiUmVub3V2ZWxlciBsYSByw6lzZXJ2ZSBhbGltZW50YWlyZSBhdmFudCBsYSBww6ludXJpZS4iLCJjb21tYW5kIjp7InR5cGUiOiJkZXNpZ25hdGUiLCJraW5kIjoiaGFydmVzdCIsIngiOjEyMSwieiI6MTIyfX0seyJ0aWNrIjozMDM4LCJyZWFzb24iOiJSZW5vdXZlbGVyIGxhIHLDqXNlcnZlIGFsaW1lbnRhaXJlIGF2YW50IGxhIHDDqW51cmllLiIsImNvbW1hbmQiOnsidHlwZSI6ImRlc2lnbmF0ZSIsImtpbmQiOiJoYXJ2ZXN0IiwieCI6MTI5LCJ6IjoxMjh9fSx7InRpY2siOjMwMzgsInJlYXNvbiI6IlJlbm91dmVsZXIgbGEgcsOpc2VydmUgYWxpbWVudGFpcmUgYXZhbnQgbGEgcMOpbnVyaWUuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6ImhhcnZlc3QiLCJ4IjoxMjAsInoiOjEyMn19LHsidGljayI6NDA2MiwicmVhc29uIjoiTWFpbnRlbmlyIGVudmlyb24gZGV1eCByZXBhcyBwcsOpcGFyw6lzIHBhciBjb2xvbiBlbiByw6lzZXJ2ZS4iLCJjb21tYW5kIjp7InR5cGUiOiJiaWxsLXVwZGF0ZSIsInN0cnVjdHVyZUlkIjoxMjUzNSwiYmlsbElkIjoxMjU5OCwic2V0dGluZ3MiOnsiaWQiOjEyNTk4LCJyZWNpcGUiOiJzaW1wbGUtbWVhbCIsIm1vZGUiOiJ1bnRpbCIsInRhcmdldCI6Niwic3VzcGVuZGVkIjpmYWxzZSwiZmlsdGVycyI6eyJyaWNlIjp0cnVlLCJiZXJyaWVzIjp0cnVlfSwicmFkaXVzIjo5OTksImRlc3RpbmF0aW9uIjoic3RvY2twaWxlIn19fSx7InRpY2siOjQwNjIsInJlYXNvbiI6IlByw6l2b2lyIGxlIGJvaXMgZGVzIGNoYW50aWVycyBldCB1bmUgcGV0aXRlIG1hcmdlLiIsImNvbW1hbmQiOnsidHlwZSI6ImRlc2lnbmF0ZSIsImtpbmQiOiJjaG9wIiwieCI6MTM2LCJ6IjoxMjR9fSx7InRpY2siOjQwNjIsInJlYXNvbiI6IlByw6l2b2lyIGxlIGJvaXMgZGVzIGNoYW50aWVycyBldCB1bmUgcGV0aXRlIG1hcmdlLiIsImNvbW1hbmQiOnsidHlwZSI6ImRlc2lnbmF0ZSIsImtpbmQiOiJjaG9wIiwieCI6MTMyLCJ6IjoxMzB9fSx7InRpY2siOjUwMjcsInJlYXNvbiI6IlJlbm91dmVsZXIgbGEgcsOpc2VydmUgYWxpbWVudGFpcmUgYXZhbnQgbGEgcMOpbnVyaWUuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6ImhhcnZlc3QiLCJ4IjoxMjQsInoiOjExNn19LHsidGljayI6NTAyNywicmVhc29uIjoiUmVub3V2ZWxlciBsYSByw6lzZXJ2ZSBhbGltZW50YWlyZSBhdmFudCBsYSBww6ludXJpZS4iLCJjb21tYW5kIjp7InR5cGUiOiJkZXNpZ25hdGUiLCJraW5kIjoiaGFydmVzdCIsIngiOjEyOCwieiI6MTE4fX0seyJ0aWNrIjo1MDI3LCJyZWFzb24iOiJSZW5vdXZlbGVyIGxhIHLDqXNlcnZlIGFsaW1lbnRhaXJlIGF2YW50IGxhIHDDqW51cmllLiIsImNvbW1hbmQiOnsidHlwZSI6ImRlc2lnbmF0ZSIsImtpbmQiOiJoYXJ2ZXN0IiwieCI6MTM1LCJ6IjoxMjV9fSx7InRpY2siOjYwNTQsInJlYXNvbiI6Ik91dnJpciBsZSBwYXNzYWdlIGR1IGNhbXAgYXByw6hzIGxhIHByZW1pw6hyZSBqb3VybsOpZS4iLCJjb21tYW5kIjp7InR5cGUiOiJkZXNpZ25hdGUiLCJraW5kIjoiZGVjb25zdHJ1Y3QiLCJ4IjoxMjksInoiOjEyNH19LHsidGljayI6NjA1NCwicmVhc29uIjoiUHLDqXBhcmVyIHVuZSByw6lzZXJ2ZSBwb3VyIGxlcyBtZXVibGVzIHJldGlyw6lzLiIsImNvbW1hbmQiOnsidHlwZSI6InN0b2NrcGlsZSIsIngiOjEyOSwieiI6MTI1LCJlbmFibGVkIjp0cnVlLCJmaWx0ZXJzIjp7Indvb2QiOmZhbHNlLCJmb29kIjpmYWxzZSwiZnVybml0dXJlIjp0cnVlfSwicHJpb3JpdHkiOjIsImNhcGFjaXR5IjoxfX0seyJ0aWNrIjo2MDU0LCJyZWFzb24iOiJSZXRpcmVyIGxlIGpldSBwb3VyIHLDqW9yZ2FuaXNlciBsZSBjYW1wLiIsImNvbW1hbmQiOnsidHlwZSI6ImRlc2lnbmF0ZSIsImtpbmQiOiJ1bmluc3RhbGwiLCJ4IjoxMjcsInoiOjEyMn19LHsidGljayI6NjA1NCwicmVhc29uIjoiQ29uc2VydmVyIGxlcyByYXRpb25zIGRlIHZveWFnZSB0YW50IHF1ZSBsYSBjdWlzaW5lIGFzc3VyZSBsZXMgcmVwYXMuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZm9vZC1wb2xpY3ktYXNzaWduIiwicGF3bklkIjoxMjQwOSwicG9saWN5SWQiOjN9fSx7InRpY2siOjYwNTQsInJlYXNvbiI6IkNvbnNlcnZlciBsZXMgcmF0aW9ucyBkZSB2b3lhZ2UgdGFudCBxdWUgbGEgY3Vpc2luZSBhc3N1cmUgbGVzIHJlcGFzLiIsImNvbW1hbmQiOnsidHlwZSI6ImZvb2QtcG9saWN5LWFzc2lnbiIsInBhd25JZCI6MTI0MTAsInBvbGljeUlkIjozfX0seyJ0aWNrIjo2MDU0LCJyZWFzb24iOiJDb25zZXJ2ZXIgbGVzIHJhdGlvbnMgZGUgdm95YWdlIHRhbnQgcXVlIGxhIGN1aXNpbmUgYXNzdXJlIGxlcyByZXBhcy4iLCJjb21tYW5kIjp7InR5cGUiOiJmb29kLXBvbGljeS1hc3NpZ24iLCJwYXduSWQiOjEyNDExLCJwb2xpY3lJZCI6M319LHsidGljayI6NjA1NCwicmVhc29uIjoiT3V2cmlyIHF1ZWxxdWVzIGNhc2VzIGR1IG1hc3NpZiBwcm9jaGUgcG91ciBwcsOpcGFyZXIgbGEgcGllcnJlLiIsImNvbW1hbmQiOnsidHlwZSI6ImRlc2lnbmF0ZSIsImtpbmQiOiJtaW5lIiwieCI6MTUwLCJ6IjoxNjB9fSx7InRpY2siOjYwNTQsInJlYXNvbiI6Ik91dnJpciBxdWVscXVlcyBjYXNlcyBkdSBtYXNzaWYgcHJvY2hlIHBvdXIgcHLDqXBhcmVyIGxhIHBpZXJyZS4iLCJjb21tYW5kIjp7InR5cGUiOiJkZXNpZ25hdGUiLCJraW5kIjoibWluZSIsIngiOjE0OSwieiI6MTYxfX0seyJ0aWNrIjo2MDU0LCJyZWFzb24iOiJPdXZyaXIgcXVlbHF1ZXMgY2FzZXMgZHUgbWFzc2lmIHByb2NoZSBwb3VyIHByw6lwYXJlciBsYSBwaWVycmUuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6Im1pbmUiLCJ4IjoxNTEsInoiOjE2MH19LHsidGljayI6NjA1NCwicmVhc29uIjoiT3V2cmlyIHF1ZWxxdWVzIGNhc2VzIGR1IG1hc3NpZiBwcm9jaGUgcG91ciBwcsOpcGFyZXIgbGEgcGllcnJlLiIsImNvbW1hbmQiOnsidHlwZSI6ImRlc2lnbmF0ZSIsImtpbmQiOiJtaW5lIiwieCI6MTQ5LCJ6IjoxNjJ9fSx7InRpY2siOjYwNTQsInJlYXNvbiI6IlLDqXNlcnZlciBkZXMgY2FzZXMgYXV4IGZyYWdtZW50cywgc2FucyBsZXMgbcOpbGFuZ2VyIGF1eCBhbGltZW50cy4iLCJjb21tYW5kIjp7InR5cGUiOiJzdG9ja3BpbGUiLCJ4IjoxMzAsInoiOjEyNCwiZW5hYmxlZCI6dHJ1ZSwiZmlsdGVycyI6eyJ3b29kIjpmYWxzZSwiZm9vZCI6ZmFsc2UsImNodW5rIjp0cnVlfSwiY2FwYWNpdHkiOjF9fSx7InRpY2siOjYwNTQsInJlYXNvbiI6IlLDqXNlcnZlciBkZXMgY2FzZXMgYXV4IGZyYWdtZW50cywgc2FucyBsZXMgbcOpbGFuZ2VyIGF1eCBhbGltZW50cy4iLCJjb21tYW5kIjp7InR5cGUiOiJzdG9ja3BpbGUiLCJ4IjoxMzAsInoiOjEyNSwiZW5hYmxlZCI6dHJ1ZSwiZmlsdGVycyI6eyJ3b29kIjpmYWxzZSwiZm9vZCI6ZmFsc2UsImNodW5rIjp0cnVlfSwiY2FwYWNpdHkiOjF9fSx7InRpY2siOjYwNTQsInJlYXNvbiI6IlLDqXNlcnZlciBkZXMgY2FzZXMgYXV4IGZyYWdtZW50cywgc2FucyBsZXMgbcOpbGFuZ2VyIGF1eCBhbGltZW50cy4iLCJjb21tYW5kIjp7InR5cGUiOiJzdG9ja3BpbGUiLCJ4IjoxMzAsInoiOjEyNiwiZW5hYmxlZCI6dHJ1ZSwiZmlsdGVycyI6eyJ3b29kIjpmYWxzZSwiZm9vZCI6ZmFsc2UsImNodW5rIjp0cnVlfSwiY2FwYWNpdHkiOjF9fSx7InRpY2siOjYwNTQsInJlYXNvbiI6IlLDqXNlcnZlciBkZXMgY2FzZXMgYXV4IGZyYWdtZW50cywgc2FucyBsZXMgbcOpbGFuZ2VyIGF1eCBhbGltZW50cy4iLCJjb21tYW5kIjp7InR5cGUiOiJzdG9ja3BpbGUiLCJ4IjoxMzAsInoiOjEyNywiZW5hYmxlZCI6dHJ1ZSwiZmlsdGVycyI6eyJ3b29kIjpmYWxzZSwiZm9vZCI6ZmFsc2UsImNodW5rIjp0cnVlfSwiY2FwYWNpdHkiOjF9fSx7InRpY2siOjcwODksInJlYXNvbiI6IlLDqWluc3RhbGxlciBsZSBwaXF1ZXQgYXByw6hzIHNvbiByYW5nZW1lbnQgZW4gcsOpc2VydmUuIiwiY29tbWFuZCI6eyJ0eXBlIjoiaW5zdGFsbCIsInN0cnVjdHVyZUlkIjoxMjU3MiwieCI6MTI5LCJ6IjoxMjIsIm9yaWVudGF0aW9uIjowfX0seyJ0aWNrIjo4MDYxLCJyZWFzb24iOiJSZW5vdXZlbGVyIGxhIHLDqXNlcnZlIGFsaW1lbnRhaXJlIGF2YW50IGxhIHDDqW51cmllLiIsImNvbW1hbmQiOnsidHlwZSI6ImRlc2lnbmF0ZSIsImtpbmQiOiJoYXJ2ZXN0IiwieCI6MTE3LCJ6IjoxMjd9fSx7InRpY2siOjgwNjEsInJlYXNvbiI6IlJlbm91dmVsZXIgbGEgcsOpc2VydmUgYWxpbWVudGFpcmUgYXZhbnQgbGEgcMOpbnVyaWUuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6ImhhcnZlc3QiLCJ4IjoxMjQsInoiOjExNX19LHsidGljayI6ODA2MSwicmVhc29uIjoiUmVub3V2ZWxlciBsYSByw6lzZXJ2ZSBhbGltZW50YWlyZSBhdmFudCBsYSBww6ludXJpZS4iLCJjb21tYW5kIjp7InR5cGUiOiJkZXNpZ25hdGUiLCJraW5kIjoiaGFydmVzdCIsIngiOjEyMiwieiI6MTMzfX0seyJ0aWNrIjo4MDYxLCJyZWFzb24iOiJFeHRyYWlyZSB1bmUgcsOpc2VydmUgZOKAmWFjaWVyIHBvdXIgbGVzIGZ1dHVycyBhdGVsaWVycy4iLCJjb21tYW5kIjp7InR5cGUiOiJkZXNpZ25hdGUiLCJraW5kIjoibWluZSIsIngiOjE2NSwieiI6MTU5fX0seyJ0aWNrIjo4MDYxLCJyZWFzb24iOiJFeHRyYWlyZSB1bmUgcsOpc2VydmUgZOKAmWFjaWVyIHBvdXIgbGVzIGZ1dHVycyBhdGVsaWVycy4iLCJjb21tYW5kIjp7InR5cGUiOiJkZXNpZ25hdGUiLCJraW5kIjoibWluZSIsIngiOjE2MiwieiI6MTYzfX0seyJ0aWNrIjo4MDYxLCJyZWFzb24iOiJSYW5nZXIgbOKAmWFjaWVyIGV4dHJhaXQgZGFucyBkZXMgY2FzZXMgbGlicmVzIHByw6hzIGR1IGNhbXAuIiwiY29tbWFuZCI6eyJ0eXBlIjoic3RvY2twaWxlIiwieCI6MTMwLCJ6IjoxMjgsImVuYWJsZWQiOnRydWUsImZpbHRlcnMiOnsid29vZCI6ZmFsc2UsImZvb2QiOmZhbHNlLCJzdGVlbCI6dHJ1ZX0sImNhcGFjaXR5Ijo3NX19LHsidGljayI6ODA2MSwicmVhc29uIjoiUmFuZ2VyIGzigJlhY2llciBleHRyYWl0IGRhbnMgZGVzIGNhc2VzIGxpYnJlcyBwcsOocyBkdSBjYW1wLiIsImNvbW1hbmQiOnsidHlwZSI6InN0b2NrcGlsZSIsIngiOjEzMSwieiI6MTI4LCJlbmFibGVkIjp0cnVlLCJmaWx0ZXJzIjp7Indvb2QiOmZhbHNlLCJmb29kIjpmYWxzZSwic3RlZWwiOnRydWV9LCJjYXBhY2l0eSI6NzV9fSx7InRpY2siOjgwNjEsInJlYXNvbiI6IkTDqXNpZ25lciBsZXMgZnJhZ21lbnRzIGV4dHJhaXRzIHBvdXIgbGV1ciB0cmFuc3BvcnQuIiwiY29tbWFuZCI6eyJ0eXBlIjoiYXJlYSIsImFjdGlvbiI6ImhhdWwtY2h1bmtzIiwiZnJvbSI6eyJ0eXBlIjoiZ3JvdW5kIiwieCI6MTQ5LCJ6IjoxNjF9LCJ0byI6eyJ0eXBlIjoiZ3JvdW5kIiwieCI6MTQ5LCJ6IjoxNjF9fX0seyJ0aWNrIjo5MDMzLCJyZWFzb24iOiJQcsOpcGFyZXIgdW4gYXRlbGllciBkZSB0YWlsbGUgYXZlYyBsZSBib2lzIGR1IGNhbXAgZXQgbOKAmWFjaWVyIGV4dHJhaXQuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6InN0b25lY3V0dGVyIiwibWF0ZXJpYWwiOiJ3b29kIiwieCI6MTE5LCJ6IjoxMjEsIm9yaWVudGF0aW9uIjowfX0seyJ0aWNrIjo5MDMzLCJyZWFzb24iOiJQcsOpdm9pciBsZSBib2lzIGRlcyBjaGFudGllcnMgZXQgdW5lIHBldGl0ZSBtYXJnZS4iLCJjb21tYW5kIjp7InR5cGUiOiJkZXNpZ25hdGUiLCJraW5kIjoiY2hvcCIsIngiOjEyNiwieiI6MTEzfX0seyJ0aWNrIjo5MDMzLCJyZWFzb24iOiJQcsOpdm9pciBsZSBib2lzIGRlcyBjaGFudGllcnMgZXQgdW5lIHBldGl0ZSBtYXJnZS4iLCJjb21tYW5kIjp7InR5cGUiOiJkZXNpZ25hdGUiLCJraW5kIjoiY2hvcCIsIngiOjEyMCwieiI6MTE3fX0seyJ0aWNrIjo5MDMzLCJyZWFzb24iOiJQcsOpdm9pciBsZSBib2lzIGRlcyBjaGFudGllcnMgZXQgdW5lIHBldGl0ZSBtYXJnZS4iLCJjb21tYW5kIjp7InR5cGUiOiJkZXNpZ25hdGUiLCJraW5kIjoiY2hvcCIsIngiOjExOCwieiI6MTE5fX0seyJ0aWNrIjo5MDMzLCJyZWFzb24iOiJQcsOpdm9pciBsZSBib2lzIGRlcyBjaGFudGllcnMgZXQgdW5lIHBldGl0ZSBtYXJnZS4iLCJjb21tYW5kIjp7InR5cGUiOiJkZXNpZ25hdGUiLCJraW5kIjoiY2hvcCIsIngiOjExNSwieiI6MTIyfX0seyJ0aWNrIjo5MDMzLCJyZWFzb24iOiJQcsOpdm9pciBsZSBib2lzIGRlcyBjaGFudGllcnMgZXQgdW5lIHBldGl0ZSBtYXJnZS4iLCJjb21tYW5kIjp7InR5cGUiOiJkZXNpZ25hdGUiLCJraW5kIjoiY2hvcCIsIngiOjEzNywieiI6MTI0fX0seyJ0aWNrIjo5MDMzLCJyZWFzb24iOiJQcsOpdm9pciBsZSBib2lzIGRlcyBjaGFudGllcnMgZXQgdW5lIHBldGl0ZSBtYXJnZS4iLCJjb21tYW5kIjp7InR5cGUiOiJkZXNpZ25hdGUiLCJraW5kIjoiY2hvcCIsIngiOjExMiwieiI6MTI1fX0seyJ0aWNrIjoxMDA2NSwicmVhc29uIjoiUHLDqXZvaXIgbGUgYm9pcyBkZXMgY2hhbnRpZXJzIGV0IHVuZSBwZXRpdGUgbWFyZ2UuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6ImNob3AiLCJ4IjoxMTMsInoiOjEyNn19LHsidGljayI6MTAwNjUsInJlYXNvbiI6IlByw6l2b2lyIGxlIGJvaXMgZGVzIGNoYW50aWVycyBldCB1bmUgcGV0aXRlIG1hcmdlLiIsImNvbW1hbmQiOnsidHlwZSI6ImRlc2lnbmF0ZSIsImtpbmQiOiJjaG9wIiwieCI6MTM3LCJ6IjoxMjZ9fSx7InRpY2siOjEwMDY1LCJyZWFzb24iOiJUYWlsbGVyIGxlcyBwcmVtaWVycyBibG9jcyBkdSBjYW1wLiIsImNvbW1hbmQiOnsidHlwZSI6ImJpbGwtYWRkIiwic3RydWN0dXJlSWQiOjEyNzQyfX0seyJ0aWNrIjoxMDA2NSwicmVhc29uIjoiUmFuZ2VyIGxlcyBibG9jcyB0YWlsbMOpcyBwcsOocyBkZXMgYXV0cmVzIG1hdMOpcmlhdXguIiwiY29tbWFuZCI6eyJ0eXBlIjoic3RvY2twaWxlIiwieCI6MTMyLCJ6IjoxMjgsImVuYWJsZWQiOnRydWUsImZpbHRlcnMiOnsid29vZCI6ZmFsc2UsImZvb2QiOmZhbHNlLCJibG9ja3MiOnRydWV9LCJjYXBhY2l0eSI6NzV9fSx7InRpY2siOjExMDk4LCJyZWFzb24iOiJSZW5vdXZlbGVyIGxhIHLDqXNlcnZlIGFsaW1lbnRhaXJlIGF2YW50IGxhIHDDqW51cmllLiIsImNvbW1hbmQiOnsidHlwZSI6ImRlc2lnbmF0ZSIsImtpbmQiOiJoYXJ2ZXN0IiwieCI6MTEzLCJ6IjoxMjV9fSx7InRpY2siOjExMDk4LCJyZWFzb24iOiJSZW5vdXZlbGVyIGxhIHLDqXNlcnZlIGFsaW1lbnRhaXJlIGF2YW50IGxhIHDDqW51cmllLiIsImNvbW1hbmQiOnsidHlwZSI6ImRlc2lnbmF0ZSIsImtpbmQiOiJoYXJ2ZXN0IiwieCI6MTE0LCJ6IjoxMjZ9fSx7InRpY2siOjExMDk4LCJyZWFzb24iOiJSZW5vdXZlbGVyIGxhIHLDqXNlcnZlIGFsaW1lbnRhaXJlIGF2YW50IGxhIHDDqW51cmllLiIsImNvbW1hbmQiOnsidHlwZSI6ImRlc2lnbmF0ZSIsImtpbmQiOiJoYXJ2ZXN0IiwieCI6MTE4LCJ6IjoxMzB9fSx7InRpY2siOjExMDk4LCJyZWFzb24iOiJQcm9sb25nZXIgbGUgcHJlbWllciBhYnJpIGF2ZWMgY2lucSBibG9jcyB0YWlsbMOpcyBzdXIgcGxhY2UuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6IndhbGwiLCJtYXRlcmlhbCI6ImxpbWVzdG9uZS1ibG9ja3MiLCJ4IjoxMjEsInoiOjEyMn19LHsidGljayI6MTEwOTgsInJlYXNvbiI6Ik1haW50ZW5pciB2aW5ndCBibG9jcyBkZSBwaWVycmUgZGlzcG9uaWJsZXMuIiwiY29tbWFuZCI6eyJ0eXBlIjoiYmlsbC11cGRhdGUiLCJzdHJ1Y3R1cmVJZCI6MTI3NDIsImJpbGxJZCI6MTI3NDYsInNldHRpbmdzIjp7ImlkIjoxMjc0NiwicmVjaXBlIjoic3RvbmUtYmxvY2tzIiwibW9kZSI6InVudGlsIiwidGFyZ2V0IjoyMCwic3VzcGVuZGVkIjpmYWxzZSwiZmlsdGVycyI6eyJncmFuaXRlLWNodW5rIjp0cnVlLCJsaW1lc3RvbmUtY2h1bmsiOnRydWUsIm1hcmJsZS1jaHVuayI6dHJ1ZSwic2FuZHN0b25lLWNodW5rIjp0cnVlLCJzbGF0ZS1jaHVuayI6dHJ1ZX0sInJhZGl1cyI6OTk5LCJkZXN0aW5hdGlvbiI6InN0b2NrcGlsZSJ9fX0seyJ0aWNrIjoxMjA2OSwicmVhc29uIjoiT3V2cmlyIHF1ZWxxdWVzIGNhc2VzIGR1IG1hc3NpZiBwcm9jaGUgcG91ciBwcsOpcGFyZXIgbGEgcGllcnJlLiIsImNvbW1hbmQiOnsidHlwZSI6ImRlc2lnbmF0ZSIsImtpbmQiOiJtaW5lIiwieCI6MTUwLCJ6IjoxNjF9fSx7InRpY2siOjE0MDcwLCJyZWFzb24iOiJSZW5vdXZlbGVyIGxhIHLDqXNlcnZlIGFsaW1lbnRhaXJlIGF2YW50IGxhIHDDqW51cmllLiIsImNvbW1hbmQiOnsidHlwZSI6ImRlc2lnbmF0ZSIsImtpbmQiOiJoYXJ2ZXN0IiwieCI6MTE0LCJ6IjoxMjN9fSx7InRpY2siOjE0MDcwLCJyZWFzb24iOiJSZW5vdXZlbGVyIGxhIHLDqXNlcnZlIGFsaW1lbnRhaXJlIGF2YW50IGxhIHDDqW51cmllLiIsImNvbW1hbmQiOnsidHlwZSI6ImRlc2lnbmF0ZSIsImtpbmQiOiJoYXJ2ZXN0IiwieCI6MTMxLCJ6IjoxMzJ9fSx7InRpY2siOjE0MDcwLCJyZWFzb24iOiJSZW5vdXZlbGVyIGxhIHLDqXNlcnZlIGFsaW1lbnRhaXJlIGF2YW50IGxhIHDDqW51cmllLiIsImNvbW1hbmQiOnsidHlwZSI6ImRlc2lnbmF0ZSIsImtpbmQiOiJoYXJ2ZXN0IiwieCI6MTI3LCJ6IjoxMTN9fSx7InRpY2siOjE0MDcwLCJyZWFzb24iOiJPdXZyaXIgcXVlbHF1ZXMgY2FzZXMgZHUgbWFzc2lmIHByb2NoZSBwb3VyIHByw6lwYXJlciBsYSBwaWVycmUuIiwiY29tbWFuZCI6eyJ0eXBlIjoiZGVzaWduYXRlIiwia2luZCI6Im1pbmUiLCJ4IjoxNTEsInoiOjE2MX19LHsidGljayI6MTUwMzksInJlYXNvbiI6Ik91dnJpciBxdWVscXVlcyBjYXNlcyBkdSBtYXNzaWYgcHJvY2hlIHBvdXIgcHLDqXBhcmVyIGxhIHBpZXJyZS4iLCJjb21tYW5kIjp7InR5cGUiOiJkZXNpZ25hdGUiLCJraW5kIjoibWluZSIsIngiOjE0OCwieiI6MTYzfX0seyJ0aWNrIjoxNjA3MSwicmVhc29uIjoiUmVub3V2ZWxlciBsYSByw6lzZXJ2ZSBhbGltZW50YWlyZSBhdmFudCBsYSBww6ludXJpZS4iLCJjb21tYW5kIjp7InR5cGUiOiJkZXNpZ25hdGUiLCJraW5kIjoiaGFydmVzdCIsIngiOjEzOCwieiI6MTI2fX0seyJ0aWNrIjoxNjA3MSwicmVhc29uIjoiT3V2cmlyIHF1ZWxxdWVzIGNhc2VzIGR1IG1hc3NpZiBwcm9jaGUgcG91ciBwcsOpcGFyZXIgbGEgcGllcnJlLiIsImNvbW1hbmQiOnsidHlwZSI6ImRlc2lnbmF0ZSIsImtpbmQiOiJtaW5lIiwieCI6MTUwLCJ6IjoxNjJ9fSx7InRpY2siOjE3MDQzLCJyZWFzb24iOiJQcsOpdm9pciBsZSBib2lzIGRlcyBjaGFudGllcnMgZXQgdW5lIHBldGl0ZSBtYXJnZS4iLCJjb21tYW5kIjp7InR5cGUiOiJkZXNpZ25hdGUiLCJraW5kIjoiY2hvcCIsIngiOjEzMiwieiI6MTMxfX0seyJ0aWNrIjoxNzA0MywicmVhc29uIjoiUmVub3V2ZWxlciBsYSByw6lzZXJ2ZSBhbGltZW50YWlyZSBhdmFudCBsYSBww6ludXJpZS4iLCJjb21tYW5kIjp7InR5cGUiOiJkZXNpZ25hdGUiLCJraW5kIjoiaGFydmVzdCIsIngiOjExNiwieiI6MTMwfX0seyJ0aWNrIjoxNzA0MywicmVhc29uIjoiUmVub3V2ZWxlciBsYSByw6lzZXJ2ZSBhbGltZW50YWlyZSBhdmFudCBsYSBww6ludXJpZS4iLCJjb21tYW5kIjp7InR5cGUiOiJkZXNpZ25hdGUiLCJraW5kIjoiaGFydmVzdCIsIngiOjEyOSwieiI6MTM1fX0seyJ0aWNrIjoxNzA0MywicmVhc29uIjoiT3V2cmlyIHF1ZWxxdWVzIGNhc2VzIGR1IG1hc3NpZiBwcm9jaGUgcG91ciBwcsOpcGFyZXIgbGEgcGllcnJlLiIsImNvbW1hbmQiOnsidHlwZSI6ImRlc2lnbmF0ZSIsImtpbmQiOiJtaW5lIiwieCI6MTQ5LCJ6IjoxNjN9fV0sIm1lYWxzIjpbWyIxOTQzOk1pbmEgYSBtYW5nw6kgdW5lIHBvcnRpb24gKDEgw5cgUmVwYXMgZGUgc3VydmllKSBzYW5zIHRhYmxlLiIsMV0sWyIyMTIyOk5vw6kgYSBtYW5nw6kgdW5lIHBvcnRpb24gKDEgw5cgUmVwYXMgZGUgc3VydmllKSBzYW5zIHRhYmxlLiIsMV0sWyIyMzI2OkFkYSBhIG1hbmfDqSB1bmUgcG9ydGlvbiAoMSDDlyBSZXBhcyBkZSBzdXJ2aWUpIHNhbnMgdGFibGUuIiwxXSxbIjQ2MzA6TWluYSBhIG1hbmfDqSB1bmUgcG9ydGlvbiAoMSDDlyBSZXBhcyBzaW1wbGUpIMOgIHRhYmxlLiIsMV0sWyI0Nzk4Ok5vw6kgYSBtYW5nw6kgdW5lIHBvcnRpb24gKDEgw5cgUmVwYXMgc2ltcGxlKSDDoCB0YWJsZS4iLDFdLFsiNTAyMjpBZGEgYSBtYW5nw6kgdW5lIHBvcnRpb24gKDEgw5cgUmVwYXMgc2ltcGxlKSDDoCB0YWJsZS4iLDFdLFsiNzQ0NDpNaW5hIGEgbWFuZ8OpIHVuZSBwb3J0aW9uICgxIMOXIFJlcGFzIHNpbXBsZSkgw6AgdGFibGUuIiwxXSxbIjc2MTQ6Tm/DqSBhIG1hbmfDqSB1bmUgcG9ydGlvbiAoMSDDlyBSZXBhcyBzaW1wbGUpIMOgIHRhYmxlLiIsMV0sWyI3ODQxOkFkYSBhIG1hbmfDqSB1bmUgcG9ydGlvbiAoMSDDlyBSZXBhcyBzaW1wbGUpIMOgIHRhYmxlLiIsMV0sWyIxMDEzMTpNaW5hIGEgbWFuZ8OpIHVuZSBwb3J0aW9uICgxIMOXIFJlcGFzIHNpbXBsZSkgw6AgdGFibGUuIiwxXSxbIjEwMzE4Ok5vw6kgYSBtYW5nw6kgdW5lIHBvcnRpb24gKDEgw5cgUmVwYXMgc2ltcGxlKSDDoCB0YWJsZS4iLDFdLFsiMTA1NDU6QWRhIGEgbWFuZ8OpIHVuZSBwb3J0aW9uICgxIMOXIFJlcGFzIHNpbXBsZSkgw6AgdGFibGUuIiwxXSxbIjEzMjA2Ok1pbmEgYSBtYW5nw6kgdW5lIHBvcnRpb24gKDEgw5cgUmVwYXMgc2ltcGxlKSDDoCB0YWJsZS4iLDFdLFsiMTMzODE6Tm/DqSBhIG1hbmfDqSB1bmUgcG9ydGlvbiAoMSDDlyBSZXBhcyBzaW1wbGUpIMOgIHRhYmxlLiIsMV0sWyIxMzQxNTpBZGEgYSBtYW5nw6kgdW5lIHBvcnRpb24gKDEgw5cgUmVwYXMgc2ltcGxlKSDDoCB0YWJsZS4iLDFdLFsiMTU4ODI6TWluYSBhIG1hbmfDqSB1bmUgcG9ydGlvbiAoMSDDlyBSZXBhcyBzaW1wbGUpIMOgIHRhYmxlLiIsMV0sWyIxNjIwMDpOb8OpIGEgbWFuZ8OpIHVuZSBwb3J0aW9uICgxIMOXIFJlcGFzIHNpbXBsZSkgw6AgdGFibGUuIiwxXSxbIjE2MjQyOkFkYSBhIG1hbmfDqSB1bmUgcG9ydGlvbiAoMSDDlyBSZXBhcyBzaW1wbGUpIMOgIHRhYmxlLiIsMV1dLCJlcnJvcnMiOltdfQ=="
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "E:\\Code\\RimWorld\\test-results\\colony-journey-partie-de-t-625fe-ocks-par-la-vraie-interface\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "E:\\Code\\RimWorld\\tests\\integration\\colony-journey.spec.ts",
+                    "column": 285,
+                    "line": 60
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "555f966565dc11b6db98-9085b14c50fcc33d1534",
+          "file": "colony-journey.spec.ts",
+          "line": 21,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "construction.spec.ts",
+      "file": "construction.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "atelier mixte : choix du matériau, trois cases tournées, chantier long rechargé et meuble réinstallé",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 26440,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('#cell-description')\nExpected substring: \u001b[32m\"Fabrication de blocs à venir\"\u001b[39m\nReceived string:    \u001b[31m\"Case 17, 16 · 1 × 3 cases · 1 fragment → 20 blocs · Artisanat · atelier extérieur.\"\u001b[39m\nTimeout: 15000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" locator('#cell-description') with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for locator('#cell-description')\u001b[22m\n\u001b[2m    34 × locator resolved to <p id=\"cell-description\">Case 17, 16 · 1 × 3 cases · 1 fragment → 20 blocs…</p>\u001b[22m\n\u001b[2m       - unexpected value \"Case 17, 16 · 1 × 3 cases · 1 fragment → 20 blocs · Artisanat · atelier extérieur.\"\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('#cell-description')\nExpected substring: \u001b[32m\"Fabrication de blocs à venir\"\u001b[39m\nReceived string:    \u001b[31m\"Case 17, 16 · 1 × 3 cases · 1 fragment → 20 blocs · Artisanat · atelier extérieur.\"\u001b[39m\nTimeout: 15000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" locator('#cell-description') with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for locator('#cell-description')\u001b[22m\n\u001b[2m    34 × locator resolved to <p id=\"cell-description\">Case 17, 16 · 1 × 3 cases · 1 fragment → 20 blocs…</p>\u001b[22m\n\u001b[2m       - unexpected value \"Case 17, 16 · 1 × 3 cases · 1 fragment → 20 blocs · Artisanat · atelier extérieur.\"\u001b[22m\n\n    at E:\\Code\\RimWorld\\tests\\integration\\construction.spec.ts:32:112",
+                    "location": {
+                      "file": "E:\\Code\\RimWorld\\tests\\integration\\construction.spec.ts",
+                      "column": 112,
+                      "line": 32
+                    },
+                    "snippet": "  30 |     await page.locator('[data-speed=\"6\"]').click();await expect.poll(async()=>(await world(page)).structures.length).toBe(1);await page.locator('[data-speed=\"0\"]').click();\n  31 |     const built=await world(page),bench=built.structures[0]!;expect(bench.material).toBe('steel');expect(built.piles).toEqual([]);\n> 32 |     await page.keyboard.press('Escape');await cell(page,17,16);await expect(page.locator('#cell-description')).toContainText('Fabrication de blocs à venir');await expect(page.locator('#cell-description')).toContainText('1 × 3 cases');\n     |                                                                                                                ^\n  33 |     await perform(page,{reason:'Déplacer et tourner l’atelier sans reconstruire ses matériaux.',command:{type:'install',structureId:bench.id,x:20,z:20,orientation:0}},{value:1});\n  34 |     await page.locator('[data-speed=\"6\"]').click();await expect.poll(async()=>(await world(page)).structures.find(s=>s.id===bench.id)?.x).toBe(20);await page.locator('[data-speed=\"0\"]').click();\n  35 |     const moved=await world(page);expect(validateWorld(moved)).toEqual([]);expect(moved.packed).toEqual([]);expect(moved.piles).toEqual([]);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "E:\\Code\\RimWorld\\tests\\integration\\construction.spec.ts",
+                        "column": 112,
+                        "line": 32
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('#cell-description')\nExpected substring: \u001b[32m\"Fabrication de blocs à venir\"\u001b[39m\nReceived string:    \u001b[31m\"Case 17, 16 · 1 × 3 cases · 1 fragment → 20 blocs · Artisanat · atelier extérieur.\"\u001b[39m\nTimeout: 15000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" locator('#cell-description') with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for locator('#cell-description')\u001b[22m\n\u001b[2m    34 × locator resolved to <p id=\"cell-description\">Case 17, 16 · 1 × 3 cases · 1 fragment → 20 blocs…</p>\u001b[22m\n\u001b[2m       - unexpected value \"Case 17, 16 · 1 × 3 cases · 1 fragment → 20 blocs · Artisanat · atelier extérieur.\"\u001b[22m\n\n\n  30 |     await page.locator('[data-speed=\"6\"]').click();await expect.poll(async()=>(await world(page)).structures.length).toBe(1);await page.locator('[data-speed=\"0\"]').click();\n  31 |     const built=await world(page),bench=built.structures[0]!;expect(bench.material).toBe('steel');expect(built.piles).toEqual([]);\n> 32 |     await page.keyboard.press('Escape');await cell(page,17,16);await expect(page.locator('#cell-description')).toContainText('Fabrication de blocs à venir');await expect(page.locator('#cell-description')).toContainText('1 × 3 cases');\n     |                                                                                                                ^\n  33 |     await perform(page,{reason:'Déplacer et tourner l’atelier sans reconstruire ses matériaux.',command:{type:'install',structureId:bench.id,x:20,z:20,orientation:0}},{value:1});\n  34 |     await page.locator('[data-speed=\"6\"]').click();await expect.poll(async()=>(await world(page)).structures.find(s=>s.id===bench.id)?.x).toBe(20);await page.locator('[data-speed=\"0\"]').click();\n  35 |     const moved=await world(page);expect(validateWorld(moved)).toEqual([]);expect(moved.packed).toEqual([]);expect(moved.piles).toEqual([]);\n    at E:\\Code\\RimWorld\\tests\\integration\\construction.spec.ts:32:112"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-15T03:55:32.410Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "E:\\Code\\RimWorld\\test-results\\construction-atelier-mixte-03ce0-chargé-et-meuble-réinstallé\\error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "E:\\Code\\RimWorld\\test-results\\construction-atelier-mixte-03ce0-chargé-et-meuble-réinstallé\\trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "E:\\Code\\RimWorld\\tests\\integration\\construction.spec.ts",
+                    "column": 112,
+                    "line": 32
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "958bc23c3a948be7677b-4275b9cb506444c94671",
+          "file": "construction.spec.ts",
+          "line": 8,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "production.spec.ts",
+      "file": "production.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "taille et construction par interface : Artisanat, vingt blocs rangés puis mur typé et reprise",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 12207,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-15T03:55:59.520Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "stonecutting",
+                      "contentType": "application/json",
+                      "body": "eyJiYWNrZW5kIjoiV2ViR1BVIiwid29ya1RpY2siOjUyLCJ0aWNrIjo0MDQsImJsb2Nrc1Byb2R1Y2VkIjoyMCwiYmxvY2tzUmVtYWluaW5nIjoxNSwid2FsbCI6Im1hcmJsZS1ibG9ja3MiLCJlcnJvcnMiOltdfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ed69554c53210704c98c-c44e8f76a3e2b87a33f5",
+          "file": "production.spec.ts",
+          "line": 11,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-15T03:49:18.146Z",
+    "duration": 413703.481,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 2,
+    "flaky": 0
+  }
+}

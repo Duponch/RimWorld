@@ -50,7 +50,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 32 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 33 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)
@@ -114,7 +114,7 @@
 - Lire docs/development/steel.md et docs/research/steel-reference.md. Tile.ore est distinct de la roche encaissante ; 1 500 PV, dégâts naturels de 80, produit neutre 40 acier, piles 75. V28 est validée avant migration sans ajout de gisement ni de filtre. Acier automatiquement transportable, filtre absent = refus ; usages constructifs décrits dans le contrat V30. Avant compétences/rendement variable ou dégâts externes, faire évoluer le suivi des contributions minières. Le coût continu de pile n’est pas supprimé par la non-répétition du mobilier.
 
 ## Matériaux constructifs V30
-- Lire docs/development/construction-materials.md et docs/research/construction-materials-reference.md. Job/Structure.material facultatif : absent = recette historique ; nouveaux ordres bois/acier, feu fixe bois. Les nouveaux lits coûtent 45. JOB_WOOD_COST/DURATION sont historiques, pas les recettes des ouvrages typés.
+- Lire docs/development/construction-materials.md et docs/research/construction-materials-reference.md. Job/Structure.material facultatif : absent = recette historique ; nouveaux ordres bois/acier et cinq pierres V33 pour les familles admissibles, feu fixe bois. Les nouveaux lits coûtent 45. JOB_WOOD_COST/DURATION sont historiques, pas les recettes des ouvrages typés.
 - Exigences, piles et réservations par ItemId ; escrow reste une vue bois/nourriture. Conserver le matériau dans paquets, réinstallation et restitution ; lostSteel est un bilan, pas un stock. V29 validée avant migration sans réécrire les ouvrages. Les recettes mixtes et propriétés qualité/HP/feu restent absentes ; agréger les ingrédients identiques avant ajout d’un atelier.
 
 ## Atelier mixte V31
@@ -126,3 +126,7 @@
 - `pawn.cooking` / `orders.active='cook'` sont les enveloppes historiques communes ; `recipe='stone-blocks'` les discrimine. Factures conservées sur le bâtiment emballé, IDs uniques. `storageQuantity` réserve le dépôt partiel réel ; conserver le reliquat porté.
 - Valider V31 strictement avant priorité Craft 2 et factures vides d’atelier. Compte général jusqu'à X = tous les blocs stockés/portés, X fois = opérations. Travail extérieur neutre 200 ticks ; lumière fonctionnelle/capacités restent absentes. Recherche, pièces et construction en pierre ne sont pas implicitement livrées.
 - Le choix de réserve parcourt les candidats par priorité/distance avec l'accès progressif partagé, pendant une décision synchrone seulement. Ne pas construire toutes leurs routes/goals ni réutiliser un coût non finalisé. Le pilote maintient vingt blocs produits sans injection de matériaux.
+
+## Constructions en pierre V33
+- Lire docs/development/construction-materials.md et docs/research/stone-buildings-reference.md. Cinq blocs pour mur/lit/table/tabouret/piquet ; table de taille limitée bois/acier, feu bois fixe. `building-materials.ts` sépare WorkToBuild (base × facteur + 140) de WorkToMake ; repos des lits pierre ×0,9, sans inventer qualité ni résistance.
+- Valider V32 strictement avant migration, sans réécrire un ouvrage, un stock ou une route. `lostBlocks?` suit les pertes par ItemId ; capacité, ID, bilan et PRNG prévalidés avant tout retrait. Une chaîne de caractères `legacy` n'est jamais un matériau accepté : seule l'absence de champ conserve la recette ancienne.

@@ -28,4 +28,4 @@ Trois scénarios profonds couvrent les cinq transformations, reprises aux diffé
 
 ## Reste ouvert
 
-Les constructions en pierre, recettes individuelles de chaque roche, catalogue complet, recherche, compétences/capacités, éclairage fonctionnel, pièces/toits, climat, propreté et confort au travail ne sont pas livrés par cette tranche. La majoration extérieure est fixe tant que toutes les tables sont dehors ; les autres modificateurs sont neutres. Les anciennes pierres décoratives ne sont toujours pas des fragments utilisables.
+Les constructions en pierre sont livrées en [V33](construction-materials.md). Recettes individuelles de chaque roche, catalogue complet, recherche, compétences/capacités, éclairage fonctionnel, pièces/toits, climat, propreté et confort au travail ne sont pas livrés par cette tranche. La majoration extérieure est fixe tant que toutes les tables sont dehors ; les autres modificateurs sont neutres. Les anciennes pierres décoratives ne sont toujours pas des fragments utilisables.

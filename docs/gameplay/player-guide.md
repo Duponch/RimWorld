@@ -187,7 +187,7 @@ Avant de créer une nouvelle colonie, le jeu conserve aussi l'état courant dans
 
 ## Limites et suite
 
-Pas encore d'autres cultures, autres postes/recettes de cuisine, chaîne du froid, autres minerais que l’acier, utilisation constructive de l’acier et taille de pierre, autres familles de loisirs, animaux, armes, combat, blessures, médecine, relations, traits, recherche, commerce, électricité, toit, température, incendie, météo dynamique, carte du monde ou storyteller. Les coûts de sols et autres profils de déplacement, les réserves à plusieurs cases partageant une politique, les autres familles sélectionnables, les fournisseurs supplémentaires de travail lié sur une case et les tournées logistiques restent à développer. Les modèles sont provisoires ; la congestion entre agents actifs et la calibration des besoins restent ouvertes. La faim ne cause pas encore de malnutrition ni de décès.
+Pas encore d'autres cultures, autres postes/recettes de cuisine, chaîne du froid, autres minerais que l’acier, autres familles de loisirs, animaux, armes, combat, blessures, médecine, relations, traits, recherche, commerce, électricité, toit, température, incendie, météo dynamique, carte du monde ou storyteller. Les coûts de sols et autres profils de déplacement, les réserves à plusieurs cases partageant une politique, les autres familles sélectionnables, les fournisseurs supplémentaires de travail lié sur une case et les tournées logistiques restent à développer. Les modèles sont provisoires ; la congestion entre agents actifs et la calibration des besoins restent ouvertes. La faim ne cause pas encore de malnutrition ni de décès.
 
 La suite est suivie dans [le plan de développement](../ROADMAP.md). Les détails de la référence et les futures interactions sont dans [la matrice des systèmes](systems-matrix.md).
 
@@ -219,7 +219,7 @@ Un constructeur ou cultivateur dégage à proximité un paquet qui gêne son cha
 
 ## Reconnaître les roches
 
-Une nouvelle carte répartit les massifs et pierres voisines en régions de granite, calcaire, marbre, grès ou ardoise. Sélectionner leur case affiche le type. Un ancien massif peut afficher « type historique non défini » : le chargement préserve sa carte. Les massifs sont exploitables par le minage décrit ci-dessous. Les petites pierres décoratives ne sont pas encore transportables ; les blocs sont taillables au poste, mais leur emploi en construction reste à venir.
+Une nouvelle carte répartit les massifs et pierres voisines en régions de granite, calcaire, marbre, grès ou ardoise. Sélectionner leur case affiche le type. Un ancien massif peut afficher « type historique non défini » : le chargement préserve sa carte. Les massifs sont exploitables par le minage décrit ci-dessous. Les petites pierres décoratives ne sont pas encore transportables ; les blocs taillés au poste servent aux constructions admissibles décrites plus bas.
 
 ## Miner et ranger les fragments
 
@@ -248,3 +248,9 @@ La facture générale propose cinq filtres de roche, un rayon, la suspension, la
 **Faire X fois** compte les fragments taillés ; **Jusqu'à X** compte les blocs stockés ou portés. Attention : cette facture générale compte tous les blocs, même lorsque ses ingrédients sont filtrés sur une seule pierre. Cocher **Blocs de pierre** dans une réserve pour accueillir les produits ; un manque de place conserve la cargaison ou conduit à un dépôt au sol. Une livraison peut remplir plusieurs piles successives.
 
 Clic droit sur le poste avec un colon sélectionné : prioriser la taille ; Maj ajoute en file. Désinstaller/réinstaller l'atelier conserve ses factures. Un atelier déjà réservé attend avant d'être déplacé. Les blocs ne servent pas encore à construire dans cette tranche ; lumière fonctionnelle, effets des pièces, compétences et recherche restent à venir.
+
+## Construire avec la pierre
+
+Dans Architecte, mur, lit, table, tabouret et piquet proposent aussi granite, calcaire, marbre, grès et ardoise. Chaque chantier exige les blocs choisis : les autres pierres ne les remplacent pas. La table de taille reste en bois ou acier ; le feu reste en bois.
+
+La construction en pierre demande davantage de travail, le grès moins que les autres pierres disponibles. Un lit en pierre restaure le repos à **90 %** de l’efficacité du lit bois/acier ; l’interface indique ce choix. Déplacer le meuble conserve ce comportement. Déconstruction rend environ la moitié du matériau d’origine, sans transformer la pierre. Résistance, beauté et inflammabilité des ouvrages ne sont pas encore simulées.

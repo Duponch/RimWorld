@@ -22,7 +22,7 @@ L'interface conserve Architecte → Ordres et les boutons d'inspection. « Réin
 
 ## Périmètre et suites
 
-Lit, table, tabouret et piquet ; V31 ajoute la table de taille 3×1 avec son matériau, [contrat](stonecutter.md). Désinstallation par clic ou inspection ; pas encore de rectangle dédié. Fournisseur Transport, rangement et dégagement des paquets livrés en V26 ; voir [contrat courant](furniture-logistics.md). Matériaux bois/acier conservés en V30–V31 ; autres matériaux, qualité, dégâts, masse et états médicaux des meubles restent absents. Les coûts historiques de certains bâtiments et les compétences ne sont pas calibrés implicitement par ce lot.
+Lit, table, tabouret et piquet ; V31 ajoute la table de taille 3×1 avec son matériau, [contrat](stonecutter.md). Désinstallation par clic ou inspection ; pas encore de rectangle dédié. Fournisseur Transport, rangement et dégagement des paquets livrés en V26 ; voir [contrat courant](furniture-logistics.md). Matériaux bois/acier et cinq pierres conservés en V30–V33 ; matériaux supplémentaires, qualité, dégâts, masse et états médicaux des meubles restent absents. Les coûts historiques de certains bâtiments et les compétences ne sont pas calibrés implicitement par ce lot.
 
 Les quatre scénarios ciblés couvrent accès, interruption, saturation, identité, lit occupé, rotation, données corrompues et reprise ; le pilote de colonie retire, range puis réinstalle son piquet après le premier jour. Les mesures CPU séparent ticks actifs et période complète. Voir [validation](validation.md).
 

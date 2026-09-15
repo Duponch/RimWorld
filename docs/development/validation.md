@@ -1,51 +1,39 @@
-# Validation courante — V32, production de blocs de pierre
+# Validation courante — V33, constructions en pierre
 
-15 septembre 2026. G0 en consolidation, G1 partiel ; chaîne pierre G2 en cours. [Contrat](stonecutting.md), [recherche](../research/stonecutting-reference.md), [preuves V31 archivées](../history/validation-v31-stonecutter.md).
+15 septembre 2026. G0 en consolidation, G1 partiel, filière pierre G2 désormais utilisable. [Contrat des matériaux](construction-materials.md), [recherche récente](../research/stone-buildings-reference.md), [preuves V32 archivées](../history/validation-v32-stonecutting.md).
 
-## Simulation et continuité
+## Simulation et sauvegardes
 
-**89 scénarios distincts passants**, union des lots [initial](../../artifacts/stonecutting-focused.json), [frontières communes](../../artifacts/stonecutting-suite.json), [colonie et matériaux](../../artifacts/stonecutting-colony.json) et [lot final de 50 scénarios](../../artifacts/stonecutting-final-core.json). Ces lots se recouvrent ; leurs totaux ne s'additionnent pas. Les premiers passages ont révélé un propriétaire au sol contenant des champs de zone, une attente de schéma périmée, une commande de fixture dont le type était écrasé et un atelier manuel sans factures. Corrections et reprises réussies ; aucun échec restant sur ces scénarios. Les tests ne constituent pas une couverture exhaustive.
+**75 scénarios distincts passants**, union du [premier lot](../../artifacts/stone-buildings-focused.json), du [lot colonie et ordres](../../artifacts/stone-buildings-colony.json) et des [56 scénarios finaux](../../artifacts/stone-buildings-final-core.json). Les lots se recouvrent. Un échec initial provenait d'une attente de schéma 32 encore écrite dans une fixture ; correction puis reprise réussie, aucun échec restant dans ces scénarios. Aucun objectif de couverture exhaustive n'est annoncé.
 
-Trois scénarios profonds de taille couvrent les cinq transformations physiques, filtre/rayon, phases reprises après sauvegarde, réservation concurrente du fragment et du poste, métier désactivé après ordre accepté, annulation conservative, factures conservées avec le meuble emballé, anciennes sauvegardes strictement validées, destinations saturées et sortie partielle 7+13. Une réserve inaccessible de haute priorité ne bloque pas une autre destination ; une réserve accessible plus loin garde sa priorité devant celle qui est proche. Le compteur général compte tous les blocs malgré un filtre d'ingrédients limité. Traversée à coût 1,4 local, absence de non-répétition et arrêt sur une pile contrôlés.
+Trois scénarios riches ajoutent les matrices indépendantes de coût/travail, cinq chaînes physiques de murs, plusieurs fournisseurs, livraison d'une unité manquante, absence de substitution de roche, annulation, reprise exacte et récupération 2/3 blocs avec bilan du type. Le lit de marbre est construit, rejoint et utilisé : dix ticks donnent exactement le gain de repos ×0,9 du témoin bois. Sauvegarde pendant sommeil puis portage, rotation et identité/propriétaire conservés. Déconstruction plafonnée, refus sans mutation ni PRNG engagé lorsque les IDs ou le compteur de pertes déborderaient. V32 migrée sans changement d'objet, bloc ou travail ; champs pierre futurs dans plans, bâtiments, paquets et bilan refusés. Matériaux inconnus, dont la chaîne `legacy`, explicitement refusés.
 
-Le pilote joue **huit jours sur la graine 42, cinq sur 93 et 2048**, cartes naturelles 250². Il récolte, construit, cultive, cuisine, dort, joue, extrait l'acier et prépare son atelier sans don de matière. Bilan acier : **80 extraits = 30 incorporés + 50 rangés**. Il poursuit le minage jusqu'à obtenir un fragment utilisable, puis fabrique et range au moins vingt blocs par une facture réelle. Bilans, besoins et continuation quotidienne identiques ; aucun résultat aléatoire de fragment forcé pour satisfaire le scénario.
+Le pilote naturel joue **huit jours sur 42, cinq sur 93 et 2048**, cartes 250². Il mine des fragments, fabrique, construit son premier mur de pierre puis reconstitue la réserve : **40 blocs produits = 5 incorporés + 35 rangés**. Sept murs au lieu de six, acier toujours **80 extraits = 30 incorporés à l'atelier + 50 rangés** ; aucun stock initial supplémentaire ni tirage de fragment forcé. Alimentation, couchages, loisirs, cultures et continuation quotidienne restent cohérents.
 
-## Interface réelle et inspection visuelle
+## Interface native
 
-[Trois parcours finaux WebGPU natif](../../artifacts/stonecutting-ui-final.json), sans arguments de rendu logiciel hérités :
+**Trois parcours natifs passants**, répartis entre le [premier lot](../../artifacts/stone-buildings-ui.json) et la [reprise ciblée](../../artifacts/stone-buildings-ui-recheck.json). Chromium sans arguments logiciels hérités, WebGPU sur le même poste Windows que le banc CPU, viewport 1440×1000.
 
-- Colonie naturelle trois jours : **369,815 s**, camp entretenu, atelier construit, vingt blocs stockés, rechargements quotidiens cohérents. Dix-neuf checkpoints complets extraits dans `tmp/stonecutting-ui-final-checkpoints` ; tailles et SHA-256 conservés dans le rapport suivi.
-- Taille : **9,524 s**, colonne Artisanat, cinq filtres, inspection latérale de l'atelier, ordre contextuel, transport réel, sauvegarde pendant travail, vingt blocs de marbre rangés et fragment de granite conservé. Compteur de cible et FPS vérifiés.
-- Cuisine existante : **10,468 s**, construction, facture, ingrédients portés, reprise et repas rangés. Un premier passage échouait sur une formulation de diagnostic changée ; la formulation du repas a été rétablie et le parcours rejoué avec succès. [Rapport intermédiaire conservé](../../artifacts/stonecutting-ui.json).
+- Production→construction : **12,207 s**. Fragment de marbre transporté et taillé, vingt blocs rangés, nouveau mur consommant cinq blocs, quinze restants. Reprise sauvegardée, matériau inspecté, repos 90 % annoncé au choix d'un lit, cinq pierres exclues du choix d'atelier, compteur FPS visible.
+- Atelier mixte : **12,653 s** à la reprise. Choix 75 bois + 30 acier / 105 acier, rotation 1×3, chantier long rechargé, déplacement entier avec même matière/identité. Le premier passage échouait sur l'ancienne description « fabrication à venir », devenue obsolète en V32 ; assertion corrigée.
+- Colonie naturelle trois jours : **373,474 s** à la reprise, nourriture et bois réconciliés, sept murs dont un en pierre, besoins satisfaits et rechargements quotidiens. Le premier passage exigeait à tort 35 blocs disponibles au même jalon que le pilote de cinq jours. Le joueur UI observe toutes les quatre heures, le pilote CPU chaque heure, et les fragments ont un rendement aléatoire. Le jalon corrigé exige un mur, quinze ou trente-cinq blocs rangés, et vérifie le réapprovisionnement lorsqu'il n'en reste que quinze : aucun fragment disponible, nouvelle désignation de minage effectivement acceptée puis sauvegardée/rechargée. Le bilan observé à trois jours est **20 produits = 5 incorporés + 15 rangés** ; la réserve de trente-cinq n'est pas revendiquée à ce stade. Les scénarios CPU de cinq/huit jours conservent leur exigence de trente-cinq.
 
-Aucune erreur console/GPU dans les trois parcours finaux. Captures locales `stonecutting-ui.png`, `stonecutting-render-100.png` et `colony-three-days.png` inspectées : blocs visibles, organisation UI et FPS conservés. La colonie atteint le début du jour 4 avec vingt blocs et cinquante aciers en réserve. Une capture ne remplace pas une mesure de fluidité.
+Deux ensembles de dix-neuf checkpoints extraits sous `tmp/stone-buildings-ui-checkpoints` et `tmp/stone-buildings-ui-recheck-checkpoints` ; tailles et SHA-256 restent dans les rapports suivis. Aucun autre scénario n'a été relancé pour ces corrections d'assertions. Zéro erreur console/GPU dans les parcours passants. Captures locales `stone-buildings-ui.png`, `stonebench-ui.png` et `colony-three-days.png` produites ; mur de marbre et colonie inspectés visuellement. Aucune performance de rendu n'est déduite de ces captures.
 
-## Audit CPU et optimisation
+## Audit CPU et snapshots
 
-Windows, Ryzen 5 3600, Node 24.11.1. Carte dégagée 250², 3/30/100 artisans, un atelier et trois fragments par personne, besoins actifs. Trois répétitions de 1 100 ticks, sans chauffe excluant les premières affectations ; création, validation et agrégation des diagnostics hors chronométrage, collecte des compteurs de recherche incluse. Les noms historiques `cooked` et `activePawnTicks.cook` désignent ici l'exécuteur commun de fabrication, pas la cuisine de repas.
+[Données brutes](../../artifacts/stone-buildings-cpu.json). Windows, Ryzen 5 3600, Node 24.11.1. Carte dégagée 250², un mur de cinq blocs et un tabouret de vingt-cinq par personne ; cinq pierres cyclées, vrais prélèvements/livraisons/travaux, besoins actifs. Trois répétitions jusqu'à achèvement, borne 2 000 ticks, départ à 2 000, cent ticks de chauffe séparés. Snapshots toutes les cinq étapes, validation hors chronométrage. Aucune charge de tests/browser lourde simultanée.
 
-Le [témoin initial](../../artifacts/stonecutting-bench.json) à cent artisans donnait p95 **17,4435 ms**, p99 **32,2624 ms**, max **49,4636 ms**. Le profil CPU a identifié la recherche de réserve et ses calculs répétés de capacité et d'accès. L'évaluation des candidats à la demande, avec parcours de connectivité partagé pendant la décision, donne dans le [témoin optimisé](../../artifacts/stonecutting-bench-optimized.json) p95 **7,0269 ms**, p99 **9,8307 ms**, max **18,8911 ms**. Les empreintes finales de ces deux témoins sont identiques pour chaque population : gain sans changement de résultat dans cette comparaison.
-
-Après ajout du coût Core de passage sur les blocs, [mesure du code final](../../artifacts/stonecutting-bench-final.json) :
-
-| Artisans | Tick p95 / p99 / max, ms | Blocs obtenus | Empreinte finale |
+| Bâtisseurs | Tick p95 / p99 / max, ms | Snapshot p95, ms | Résultat identique des trois répétitions |
 |---|---|---:|---|
-| 3 | 0,0279 / 0,3345 / 9,7341 | 180 | `0e3a0645` |
-| 30 | 0,2117 / 5,8333 / 16,0238 | 1 800 | `45d1a4da` |
-| 100 | 7,1411 / 10,5001 / 22,0633 | 6 000 | `3adc972b` |
+| 3 | 0,109 / 1,372 / 5,428 | 0,398 | 6 ouvrages, 394 ticks, 90 blocs incorporés |
+| 30 | 2,244 / 6,823 / 19,113 | 0,403 | 60 ouvrages, 798 ticks, 900 blocs incorporés |
+| 100 | 8,049 / 10,586 / 19,937 | 0,393 | 200 ouvrages, 985 ticks, 3 000 blocs incorporés |
 
-Le coût de passage change légitimement les trajets temporels et donc les empreintes par rapport aux deux témoins précédents. La conservation fragment→blocs reste vérifiée à chaque répétition. Ce scénario d'ateliers homogènes n'évalue pas toutes les futures charges mixtes ni le coût GPU.
+Chaque roche est comptabilisée séparément ; aucune matière substituée, aucun ouvrage restant en chantier. Le dernier cas incorpore 600 blocs de chaque type. Les coûts de travail diffèrent des bancs bois/acier antérieurs : ne pas présenter cette comparaison comme un gain de performance à comportement identique. Pas de mesure GPU matérielle ni promesse de FPS universels. Les nouvelles variantes ne changent ni géométrie ni nombre d'instances par ouvrage ; l'audit natif V32 reste une preuve historique et n'est pas réétiqueté V33.
 
-## Audit WebGPU natif
+## Build, docs et suites
 
-[Rapport complet](../../artifacts/stonecutting-render.json), Chromium natif, adaptateur AMD `rdna-1`, modèle précis non exposé, même CPU, viewport 1440×1000. Cent artisans, carte dégagée 250², worker à ×6 ; 90 frames de chauffe, aucun banc CPU lourd simultané. Trois cents opérations terminées, **6 000 blocs**, aucun fragment restant. Les champs historiques `mined`/`excavations` de l'outil partagé représentent les achèvements de recette dans ce mode explicite.
+Typage/build réussis : 169 modules, worker 202,25 kB, entrée graphique 1 062,56 kB / 297,98 kB gzip. Pas de dépendance ajoutée ; avertissement existant de bundle supérieur à 500 kB. Guide, catalogue, inventaire, contrats et ROADMAP actualisés. Originaux conservés byte-identiques et liens vérifiés. Une [première recherche des portes](../research/doors-reference.md) prépare le lot suivant sans en annoncer la livraison.
 
-1 935 intervalles mesurés : p50 **6 ms**, p95 **6,1 ms**, p99 **12 ms**, max **18 ms**. Soumission CPU du rendu p95 6,5 ms, max 8,6 ; adoption du World p95 1,5 ms, max 1,7 ; callback complet de snapshot p95 5,4 ms, max 6,2. Draw calls p95 359, max 360, terrain et passes compris. Zéro erreur console/GPU, compilation tardive, croissance de capacité ou long animation frame signalé. Géométrie et buffers de terrain/roche stables ; les blocs rejoignent les lots existants.
-
-Scène synthétique sans forêt : aucune garantie universelle de fluidité, de charge naturelle équivalente ou de performances sur un autre matériel. Aucun chronométrage GPU matériel n'est revendiqué.
-
-## Build, documentation et suite
-
-Build et typage réussis : 167 modules, worker 200,91 kB, entrée graphique 1 062,10 kB / 297,75 kB gzip. Aucune dépendance ajoutée ; avertissement de bundle supérieur à 500 kB conservé. Contrats, guide, catalogue, inventaire, migrations et ROADMAP actualisés ; originaux préservés et liens contrôlés.
-
-**Production et stockage des cinq blocs livrés ; utilisation constructive encore absente.** Prochain lot : constructions en pierre, puis habitat G2. Factures individuelles par roche, lumière fonctionnelle, compétences/capacités, pièces/toits, climat variable, qualité, santé/combat et autres systèmes restent ouverts dans l'[inventaire](../gameplay/implementation-status.md). Le facteur extérieur fixe ne constitue pas une simulation complète de la vitesse de travail Core.
+**V33 livre 25 variantes constructives**, sans nouvelle famille de bâtiment. La table de taille reste bois/acier ; le feu reste bois. Les lits en pierre récupèrent le repos 10 % moins vite ; les autres gains et services restent inchangés. Portes/toits/pièces sont les prochaines dépendances G2. Résistance, feu, beauté, valeur, qualité, fondations détaillées et autres contenus restent ouverts dans l'[inventaire](../gameplay/implementation-status.md).
