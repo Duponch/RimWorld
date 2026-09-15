@@ -1,0 +1,125 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "E:\\Code\\RimWorld\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "tests/integration/doors.spec.ts",
+      "--reporter=json"
+    ],
+    "configFile": "E:\\Code\\RimWorld\\playwright.config.ts",
+    "rootDir": "E:/Code/RimWorld/tests/integration",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "E:/Code/RimWorld/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "E:/Code/RimWorld/tests/integration",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": {
+      "command": "npm run dev",
+      "url": "http://127.0.0.1:5173",
+      "reuseExistingServer": true,
+      "timeout": 30000
+    }
+  },
+  "suites": [
+    {
+      "title": "doors.spec.ts",
+      "file": "doors.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "porte : construction, ouverture physique, maintien/interdiction, sauvegarde animée et GPU natif",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 18043,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-15T04:26:30.182Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "doors",
+                      "contentType": "application/json",
+                      "body": "eyJiYWNrZW5kIjoiV2ViR1BVIiwib3BlbmluZ1RpY2siOjI2MDMsImNvbXBsZXRlZFRpY2siOjI3NzgsInBhd24iOnsicmVjcmVhdGlvbiI6eyJsZXZlbCI6NDguNDc1MjUzODcyMzcwMDMsInRvbGVyYW5jZSI6eyJzb2xpdGFyeSI6MCwiZGV4dGVyaXR5IjowfSwiYm9yZWQiOnsic29saXRhcnkiOmZhbHNlLCJkZXh0ZXJpdHkiOmZhbHNlfSwidGFzayI6bnVsbH0sImZvb2RQb2xpY3lJZCI6MSwic2NoZWR1bGUiOlsiYW55dGhpbmciLCJhbnl0aGluZyIsImFueXRoaW5nIiwiYW55dGhpbmciLCJhbnl0aGluZyIsImFueXRoaW5nIiwiYW55dGhpbmciLCJhbnl0aGluZyIsImFueXRoaW5nIiwiYW55dGhpbmciLCJhbnl0aGluZyIsImFueXRoaW5nIiwiYW55dGhpbmciLCJhbnl0aGluZyIsImFueXRoaW5nIiwiYW55dGhpbmciLCJhbnl0aGluZyIsImFueXRoaW5nIiwiYW55dGhpbmciLCJhbnl0aGluZyIsImFueXRoaW5nIiwiYW55dGhpbmciLCJhbnl0aGluZyIsImFueXRoaW5nIl0sInJlc3RaZXJvVGlja3MiOjAsImNvbGxhcHNlUGVuZGluZyI6ZmFsc2UsImlkIjoxNzUsIm5hbWUiOiJCw6J0aXNzZXVyIDEiLCJ4IjoyMCwieiI6MTYsImh1bmdlciI6NzkuMjUzMzMzMzMzMzMwMDksInJlc3QiOjg3LjY4MTY2NjY2NjY2NjgxLCJtb29kIjo4MywiY29tZm9ydCI6MzcuNTUyMDAwMDAwMDAxMzcsIm1lbW9yaWVzIjpbXSwib3JkZXJzIjp7ImFjdGl2ZSI6bnVsbCwicXVldWUiOltdfSwiam9iSWQiOm51bGwsImhhdWwiOm51bGwsImNvb2tpbmciOm51bGwsIm5lZWQiOm51bGwsImJlZElkIjpudWxsLCJuZWVkQ29vbGRvd24iOjAsInN0YXRlIjoiaWRsZSIsInByaW9yaXRpZXMiOnsiY3JhZnQiOjIsIm1pbmUiOjIsImJ1aWxkIjoxLCJoYXVsIjowLCJnYXRoZXIiOjEsImdyb3ciOjAsImNvb2siOjB9LCJwYXRoIjpbXSwibW92ZUNvb2xkb3duIjowLCJwbGFuQ29vbGRvd24iOjAsIm1vdGlvbiI6eyJmcm9tIjp7IngiOjE5LCJ6IjoxNn0sInRvIjp7IngiOjIwLCJ6IjoxNn0sInN0YXJ0IjoyNjI0LCJlbmQiOjI2Mjd9fSwiZG9vciI6eyJkb29yIjp7Im9wZW4iOnRydWUsImhvbGRPcGVuIjp0cnVlLCJmb3JiaWRkZW4iOnRydWUsImNoYW5nZWRBdCI6MjYwMiwiZnJvbSI6MCwiY2xvc2VBdCI6bnVsbCwibGFzdFRvdWNoIjoyNjE3fSwibWF0ZXJpYWwiOiJncmFuaXRlLWJsb2NrcyIsImlkIjoyMTMsImtpbmQiOiJkb29yIiwieCI6MTYsInoiOjE2LCJvcmllbnRhdGlvbiI6MCwiZm9vdHByaW50Ijoic3RhbmRhcmQifSwiZXJyb3JzIjpbXX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c035636ef8569748ac4f-bc60963ed1ad4ebbaeae",
+          "file": "doors.spec.ts",
+          "line": 8,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-15T04:26:28.945Z",
+    "duration": 19428.1,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

@@ -254,3 +254,11 @@ Clic droit sur le poste avec un colon sélectionné : prioriser la taille ; Maj 
 Dans Architecte, mur, lit, table, tabouret et piquet proposent aussi granite, calcaire, marbre, grès et ardoise. Chaque chantier exige les blocs choisis : les autres pierres ne les remplacent pas. La table de taille reste en bois ou acier ; le feu reste en bois.
 
 La construction en pierre demande davantage de travail, le grès moins que les autres pierres disponibles. Un lit en pierre restaure le repos à **90 %** de l’efficacité du lit bois/acier ; l’interface indique ce choix. Déplacer le meuble conserve ce comportement. Déconstruction rend environ la moitié du matériau d’origine, sans transformer la pierre. Résistance, beauté et inflammabilité des ouvrages ne sont pas encore simulées.
+
+## Portes manuelles
+
+Dans **Architecte → Structure → Porte**, choisissez un matériau. Une porte coûte 25 unités et s'oriente selon les murs voisins. Le colon s'arrête au seuil pour l'ouvrir ; le bois est plus rapide que l'acier, lui-même plus rapide que la pierre.
+
+Inspectez-la pour **Maintenir ouverte** après le prochain passage ou **Interdire le passage**, même si elle est ouverte. Retirer le maintien peut attendre un nouveau passage. Les occupants et objets empêchent la fermeture ; dégager ou ranger l'objet libère la porte. Le colon déjà engagé termine son mouvement.
+
+La porte se déconstruit mais ne s'emballe pas. Il faut encore déconstruire un mur avant d'y poser une porte. Toits, pièces fermées et isolation thermique restent à développer ; l'ouverture actuelle ne simule pas encore leurs effets.

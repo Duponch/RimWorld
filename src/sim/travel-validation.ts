@@ -13,7 +13,7 @@ export function validateTravel(world:World, exclusivePawns = false):string[] {
   const active=world.pawns.filter(p=>p.motion&&p.motion.end>world.tick);
   const errors:string[]=[];
   if(!active.length)return errors;
-  const blocked=blockedCells(world);
+  const blocked=blockedCells(world,true);
   for(const pawn of active) {
     const occupied=new Set<number>();
     if(exclusivePawns)for(const other of world.pawns)if(other.id!==pawn.id) {

@@ -37,6 +37,6 @@ export function leaveTransitCell(world:World,pawn:Pawn,getBlocked:NavigationGrid
     if(!path?.length)return true;
     pawn.path=path;next=path[0];
   }
-  if(next){pawn.transitExit=true;pawn.state='moving';startTravel(world,pawn,next);pawn.path.shift();}
+  if(next){pawn.transitExit=true;pawn.state='moving';if(startTravel(world,pawn,next))pawn.path.shift();}
   return true;
 }

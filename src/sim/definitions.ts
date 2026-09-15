@@ -10,9 +10,10 @@ export const MATERIAL_DEFINITIONS = Object.freeze({
   wood: Object.freeze({ id: 'wood', label: 'Bois', unit: 'unit', stackLimit: MAX_STACK }),
   food: Object.freeze({ id: 'food', label: 'Nourriture', unit: 'portion', stackLimit: MAX_STACK, chairSearchRadius: 32, tableDesired: true }),
 });
-export const JOB_DURATION: Readonly<Record<JobKind, number>> = Object.freeze({ stonecutter:200, mine:10, uninstall:12, install:1, deconstruct: 1, chop: 100, harvest: 60, cut: 60, sow: 17, horseshoes: 7, campfire: 20, wall: 70, bed: 120, table: 53, stool: 32 });
-export const JOB_WOOD_COST: Readonly<Record<JobKind, number>> = Object.freeze({ stonecutter:0, mine:0, uninstall:0, install:0, deconstruct: 0, chop: 0, harvest: 0, cut: 0, sow: 0, horseshoes: 10, campfire: 20, wall: 5, bed: 8, table: 28, stool: 25 });
+export const JOB_DURATION: Readonly<Record<JobKind, number>> = Object.freeze({ door:60, stonecutter:200, mine:10, uninstall:12, install:1, deconstruct: 1, chop: 100, harvest: 60, cut: 60, sow: 17, horseshoes: 7, campfire: 20, wall: 70, bed: 120, table: 53, stool: 32 });
+export const JOB_WOOD_COST: Readonly<Record<JobKind, number>> = Object.freeze({ door:25, stonecutter:0, mine:0, uninstall:0, install:0, deconstruct: 0, chop: 0, harvest: 0, cut: 0, sow: 0, horseshoes: 10, campfire: 20, wall: 5, bed: 8, table: 28, stool: 25 });
 export const STRUCTURE_DEFINITIONS = Object.freeze({
+  door: Object.freeze({ id:'door', width:1, depth:1, blocksMovement:false }),
   stonecutter: Object.freeze({ id: 'stonecutter', width: 3, depth: 1, blocksMovement: false }),
   horseshoes: Object.freeze({ id: 'horseshoes', width: 1, depth: 1, blocksMovement: false }),
   campfire: Object.freeze({ id: 'campfire', width: 1, depth: 1, blocksMovement: false }),

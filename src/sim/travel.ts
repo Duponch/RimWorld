@@ -25,5 +25,5 @@ export function moveToward(world: World, pawn: Pawn, target: Cell, allowTarget: 
     if (path === null) { releaseWork(world,pawn); return; }
     pawn.path = path; next = path[0];
   }
-  if (next) { startTravel(world,pawn,next); pawn.path.shift(); }
+  if (next&&startTravel(world,pawn,next)) pawn.path.shift();
 }

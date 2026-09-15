@@ -5,6 +5,8 @@ import { BoxMesh } from '../src/render/BoxMesh';
 import { ResourceLayer } from '../src/render/ResourceLayer';
 import { OverviewLayer } from '../src/render/OverviewLayer';
 import { PawnLayer } from '../src/render/PawnLayer';
+import { DoorLayer } from '../src/render/DoorLayer';
+import { newDoorState } from '../src/sim/door-rules';
 import { clearGroup } from '../src/render/primitives';
 import { createWorld, addGroundMaterial, applyCommand, stepWorld, serializeWorld, deserializeWorld } from '../src/sim/index';
 
@@ -75,6 +77,19 @@ test('objets graphiques résidents : retrait/restauration, frontière de chunk, 
   boxes.clear();expect(boxGroup.children).toEqual([]);boxes.set(boxGroup,'test',items.slice(0,2));expect(boxGroup.children[0]).not.toBe(mesh);
   expect(neighborDisposals).toBe(1);expect(neighborGroup.children).toEqual([]);
   boxes.dispose();expect(boxGroup.children).toEqual([]);
+  // First door and capacity growth preserve the material; policies/time alone
+  // never rebuild static transforms. Removal keeps allocation for rebuilding.
+  const doors=new DoorLayer(),dw=createWorld(42,250,250);dw.structures=[];
+  const restoreEmpty=doors.prepareForCompile();expect(doors.mesh.activeCount).toBe(1);restoreEmpty();expect(doors.mesh.activeCount).toBe(0);
+  dw.structures=Array.from({length:300},(_,i)=>({id:dw.nextId++,kind:'door',material:'wood',x:10+i%100,z:10+Math.floor(i/100),orientation:0,footprint:'standard',door:newDoorState(dw.tick)}));
+  const doorMaterial=doors.mesh.material,beforeDoors=JSON.stringify(dw);doors.update(dw,false);
+  expect(JSON.stringify(dw)).toBe(beforeDoors);expect(doors.mesh.activeCount).toBe(600);expect(doors.mesh.material).toBe(doorMaterial);
+  const doorGeometry=doors.mesh.geometry,doorMatrices=doors.mesh.instanceMatrix,version=doorMatrices.version;
+  dw.structures[0]!.door!.holdOpen=true;dw.tick++;doors.update(dw,false);expect(doorMatrices.version).toBe(version);
+  dw.structures[0]!.door!.open=true;dw.structures[0]!.door!.changedAt=dw.tick;doors.update(dw,false);
+  expect(doors.mesh.geometry).toBe(doorGeometry);expect(doors.mesh.instanceMatrix).toBe(doorMatrices);
+  expect(doorGeometry.getAttribute('doorCurrent').getZ(0)).toBeGreaterThan(0);expect(doorGeometry.getAttribute('doorPrevious').getZ(0)).toBeLessThan(0);
+  dw.structures=[];doors.update(dw,false);expect(doors.mesh.activeCount).toBe(0);expect(doors.mesh.instanceMatrix).toBe(doorMatrices);doors.dispose();
   // A fully picked-up stack no longer exists, but its position still drives
   // both GPU pose endpoints after a save/reload, in all cardinal directions.
   for(const [dx,dz] of [[1,0],[0,1],[-1,0],[0,-1]]) {

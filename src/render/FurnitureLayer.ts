@@ -1,3 +1,4 @@
+import { doorParts } from './door-parts';
 import { pileSurfaces } from './pile-surfaces';
 import { buildingMaterialColor } from './building-material-color';
 import type * as THREE from 'three/webgpu';
@@ -55,7 +56,7 @@ export function buildFurniture(world: World, group: THREE.Group, cutaway: boolea
     const fires=campfireParts(world);
     batches.set(group,'campfire-flames',fires.flames,'border',false);
     batches.set(group, 'furniture', [
-      ...fires.base, ...recreationParts(world), ...stonecutterParts(world),
+      ...doorParts(world,cutaway), ...fires.base, ...recreationParts(world), ...stonecutterParts(world),
       ...parcels,
       ...woodParts.map(p => ({ ...p, color: p.color ?? 0xa38559 })),
       ...walls.map(p => ({ ...p, sx: 0.96, sy: wallHeight - 0.09, sz: 0.96, color: p.color ?? 0xa6916e })),

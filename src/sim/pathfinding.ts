@@ -1,3 +1,4 @@
+import { doorCorners } from './door-rules.ts';
 import { WeightedSearch } from './weighted-search.ts';
 import { canStandAt, navigationCosts } from './furniture-travel.ts';
 import { jobBlocksTransit } from './construction-rules.ts';
@@ -13,13 +14,14 @@ export const workNeighbours=(cell:Cell,kind?:string):Cell[]=>[[0,-1],[1,0],[0,1]
 export const adjacent = (a: Cell, b: Cell): boolean => Math.abs(a.x - b.x) + Math.abs(a.z - b.z) === 1;
 
 /** Only finished solids block V16 transit. Completion checks active actors/edges. */
-export function blockedCells(world: World): Uint8Array {
+export function blockedCells(world: World, physical=false): Uint8Array {
   const blocked = new Uint8Array(world.width * world.height);
   for (let i = 0; i < world.tiles.length; i++) {
     const terrain = world.tiles[i]!.terrain;
     if (terrain === 'water' || terrain === 'rock') blocked[i] = 1;
   }
   for (const structure of world.structures) {
+    if (!physical&&structure.kind==='door'&&structure.door?.forbidden)blocked[cellIndex(world,structure.x,structure.z)]=1;
     if (structure.kind === 'wall' || world.schemaVersion<22&&structure.kind === 'table') for (const cell of footprintCells(structure)) blocked[cellIndex(world, cell.x, cell.z)] = 1;
   }
   for (const job of world.jobs) {
@@ -41,7 +43,7 @@ export function canStep(world:World,from:Cell,to:Cell,blocked:Uint8Array,occupie
   const dx=to.x-from.x,dz=to.z-from.z;
   if(!inBounds(world,to.x,to.z)||Math.max(Math.abs(dx),Math.abs(dz))!==1) return false;
   const free=(x:number,z:number)=>!blocked[cellIndex(world,x,z)]&&!occupied.has(cellIndex(world,x,z));
-  return free(to.x,to.z) && (!dx||!dz||(free(from.x+dx,from.z)&&free(from.x,from.z+dz)));
+  return free(to.x,to.z) && (!dx||!dz||(free(from.x+dx,from.z)&&free(from.x,from.z+dz)&&!world.structures.some(s=>s.kind==='door'&&(s.x===from.x+dx&&s.z===from.z||s.x===from.x&&s.z===from.z+dz))));
 }
 
 /** Occupy a destination cell (beds), unlike interaction from a neighbouring cell. */
@@ -65,7 +67,7 @@ export function routeToCell(world: World, target: Cell, reachable: Reachability)
 export function reachableCells(world: World, start: Cell, blocked: Uint8Array, occupied: ReadonlySet<number>, goals?: ReadonlySet<number>, allGroups?:readonly ReadonlySet<number>[]): DistanceField {
   const unavailable=blocked.slice();for(const index of occupied)unavailable[index]=1;
   const {costs,repeaters,stops,floors}=navigationCosts(world);
-  const result=new WeightedSearch(world.width,world.height,cellIndex(world,start.x,start.z),unavailable,costs,repeaters,floors).finish(goals,allGroups);result.stops=stops;return result;
+  const result=new WeightedSearch(world.width,world.height,cellIndex(world,start.x,start.z),unavailable,costs,repeaters,floors,doorCorners(world)).finish(goals,allGroups);result.stops=stops;return result;
 }
 
 export function routeToJob(world: World, target: Cell & { kind?: string; orientation?: 0 | 1 | 2 | 3; footprint?: 'standard' | 'legacy-single' }, reachable: Reachability, allowTarget = false): Cell[] | null {

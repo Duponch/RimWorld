@@ -1,0 +1,52 @@
+{
+  "date": "2026-09-15T04:40:01.774Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "protocol": "Native WebGPU, real worker 6x, clear 250², 100 builders construct doors then cut trees inside walled plots and haul 1200 wood outside. Frame and snapshot timing, runtime native pipeline calls. 90-frame warmup before first door. No concurrent CPU benchmark. 90s watchdog.",
+  "count": 100,
+  "adapter": {
+    "vendor": "amd",
+    "architecture": "rdna-1",
+    "description": ""
+  },
+  "errors": [],
+  "tick": 4650,
+  "doors": 100,
+  "trees": 0,
+  "jobs": 0,
+  "woodStored": 1200,
+  "doorTransitions": 350,
+  "stableLeafBuffer": true,
+  "pipelines": [],
+  "frames": {
+    "count": 7412,
+    "p50": 6,
+    "p95": 6.100000000000364,
+    "p99": 12,
+    "max": 24.100000000000364
+  },
+  "frameCpu": {
+    "count": 7413,
+    "p50": 2.5,
+    "p95": 3.3999999910593033,
+    "p99": 4.0999999940395355,
+    "max": 6.0999999940395355
+  },
+  "adoptions": {
+    "count": 155,
+    "p50": 1.2000000029802322,
+    "p95": 4,
+    "p99": 5.4000000059604645,
+    "max": 6.799999997019768
+  },
+  "drawCalls": {
+    "count": 7413,
+    "p50": 70,
+    "p95": 84,
+    "p99": 85,
+    "max": 86
+  }
+}

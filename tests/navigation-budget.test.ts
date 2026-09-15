@@ -3,11 +3,12 @@ import { candidateAccess } from '../src/sim/candidate-access';
 import { createWorld } from '../src/sim/engine';
 import { foodSearchGoals, selectFood } from '../src/sim/food-selection';
 import type { MaterialPile } from '../src/sim/types';
+import { newDoorState } from '../src/sim/door-rules';
 import { routeCost, blockedCells, interactionGoals, reachableCells, routeToJob, routeToCell } from '../src/sim/pathfinding';
 
 // Independent O(V²) oracle on small maps: no engine frontier, neighbour helper
 // or pruning logic. Different tie order is fine; optimal costs must agree.
-function oracleCosts(width:number,height:number,start:number,blocked:Uint8Array,traffic:Set<number>):number[] {
+function oracleCosts(width:number,height:number,start:number,blocked:Uint8Array,traffic:Set<number>,doors=new Map<number,number>()):number[] {
   const costs=Array<number>(width*height).fill(Infinity),done=new Set<number>();costs[start]=0;
   for(;;) {
     let cell=-1;
@@ -18,8 +19,8 @@ function oracleCosts(width:number,height:number,start:number,blocked:Uint8Array,
       if(!dx&&!dz||x+dx<0||x+dx>=width||z+dz<0||z+dz>=height)continue;
       const next=(z+dz)*width+x+dx;
       if(blocked[next]||traffic.has(next))continue;
-      if(dx&&dz&&(blocked[cell+dx]||traffic.has(cell+dx)||blocked[cell+dz*width]||traffic.has(cell+dz*width)))continue;
-      costs[next]=Math.min(costs[next]!,costs[cell]!+(dx&&dz?1414:1000));
+      if(dx&&dz&&(blocked[cell+dx]||traffic.has(cell+dx)||blocked[cell+dz*width]||traffic.has(cell+dz*width)||doors.has(cell+dx)||doors.has(cell+dz*width)))continue;
+      costs[next]=Math.min(costs[next]!,costs[cell]!+(dx&&dz?1414:1000)+(doors.get(next)??0));
     }
   }
 }
@@ -31,6 +32,13 @@ test('goal-bounded floods retain the full-flood nearest food and exact path acro
     const w = createWorld(run, 16, 16), start = { x: 2, z: 2 };
     w.structures = []; w.jobs = []; w.resources = [];
     w.tiles = w.tiles.map(() => ({ terrain: draw() % 5 === 0 ? 'rock' : 'grass' })); w.tiles[34] = { terrain: 'grass' };
+    const doors=new Map<number,number>();
+    if(run%2)for(let n=0;n<5;n++) {
+      const index=draw()%256;if(index===34||w.tiles[index]!.terrain==='rock'||doors.has(index))continue;
+      const material=(['wood','steel','granite-blocks'] as const)[n%3]!,open=n%2===0,state=newDoorState(w.tick);state.open=open;state.from=open?1:0;state.forbidden=n===4;
+      w.structures.push({id:w.nextId++,kind:'door',material,x:index%16,z:Math.floor(index/16),orientation:0,footprint:'standard',door:state});
+      doors.set(index,open?0:material==='wood'?1267:material==='steel'?1500:3333);
+    }
     const foods = Array.from({ length: 12 }, (_, id) => ({ id, x: draw() % 16, z: (draw() >>> 9) % 16 }));
     const blocked = blockedCells(w), occupied = new Set<number>();
     const full = reachableCells(w, start, blocked, occupied);
@@ -43,7 +51,7 @@ test('goal-bounded floods retain the full-flood nearest food and exact path acro
     const traffic=new Set(Array.from({length:40},()=>draw()%256).filter(i=>i!==34));
     // A free target can still be completely enclosed by transient occupants.
     const trafficFull=reachableCells(w,start,blocked,traffic),trafficGroups=reachableCells(w,start,blocked,traffic,undefined,groups);
-    expect(Array.from(trafficFull.costs),`independent distances seed ${run}`).toEqual(oracleCosts(16,16,34,blocked,traffic));
+    expect(Array.from(trafficFull.costs),`independent distances seed ${run}`).toEqual(oracleCosts(16,16,34,blocked,traffic,doors));
     const gridSnapshot=blocked.slice(),trafficSnapshot=new Set(traffic),access=candidateAccess(w,start,gridSnapshot,trafficSnapshot);
     expect(access.visited).toBe(0); // Existence never allocates a speculative route.
     expect(access.connectivityVisited).toBe(0);

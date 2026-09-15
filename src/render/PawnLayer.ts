@@ -1,3 +1,4 @@
+import { doorAt } from '../sim/door-rules';
 import { BLOCK_ITEMS, blockCargoKind } from './block-presentation';
 import { furnitureSurfaces } from './furniture-motion';
 import { pawnPresentationPose } from './pawn-presentation';
@@ -293,7 +294,7 @@ export class PawnLayer {
     world.pawns.forEach((pawn,i)=>{
       const segment=timeline.segment(pawn.id);
       const active=!!segment && timeline.tick<segment.end;
-      const key=`${origin}:${segment?.start}:${active}:${!!segment&&timeline.tick>=segment.start}:${pawn.state}`;
+      const key=`${origin}:${segment?.start}:${active}:${!!segment&&timeline.tick>=segment.start}:${pawn.state}:${pawn.path[0]?.x}:${pawn.path[0]?.z}`;
       if(this.travelKeys.get(pawn.id)===key)return;
       this.travelKeys.set(pawn.id,key);dirty=true;
       const visual=this.visuals.get(pawn.id)!;
@@ -308,6 +309,7 @@ export class PawnLayer {
         const dining=pawn.need?.kind==='eat'?pawn.need.dining:null;
         motion.setZ(i,pawn.state==='recreating'?pawn.recreation.task?.activity==='horseshoes'?4:5:pawn.state==='sleeping'?1:pawn.state==='eating'?dining&&dining.seatId!==null?3:2:0);
       }
+      if(!active&&pawn.state==='moving'&&pawn.path[0]&&doorAt(world,pawn.path[0])) {const target=pawn.path[0];visual.from.w=visual.to.w=Math.atan2(target.x-pawn.x,target.z-pawn.z);}
       from.setXYZW(i,visual.from.x,visual.from.y,visual.from.z,visual.from.w);to.setXYZW(i,visual.to.x,visual.to.y,visual.to.z,visual.to.w);
     });
     if(dirty)for(const attribute of [from,to,times,motion])attribute.needsUpdate=true;

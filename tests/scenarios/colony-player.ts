@@ -66,6 +66,7 @@ export function playerDecisions(world: World): Decision[] {
     ...[[0, -3], [1, -3], [0, -1]].map(([x, z]) => ({ type: 'designate' as const, kind: 'stool' as const, x: cx + x!, z: cz + z! })),
     ...[-3, 3].flatMap(x => [-3, -2, -1].map(z => ({ type: 'designate' as const, kind: 'wall' as const, x: cx + x, z: cz + z }))),
   ];
+  if(world.tick>=6000)plans.push({type:'designate',kind:'door',material:'wood',x:cx-3,z:cz,orientation:0});
   if(world.deconstructed.count===0) {
     const temporary={type:'designate' as const,kind:'wall' as const,x:cx+4,z:cz-1};
     if(world.structures.some(s=>s.x===temporary.x&&s.z===temporary.z)&&world.tick>=6000) {
@@ -112,7 +113,7 @@ export function playerDecisions(world: World): Decision[] {
       if(canDesignate(world,command).ok){out.push({reason:'Préparer un atelier de taille avec le bois du camp et l’acier extrait.',command});break;}
     }
   }
-  const outstandingWood = [...world.jobs, ...out.flatMap(d => d.command.type === 'designate' ? [{...d.command,material:['wall','bed','table','stool','horseshoes','campfire','stonecutter'].includes(d.command.kind)?d.command.material??'wood' as const:undefined}] : [])].reduce((n,j) => n + requiredMaterial(j,'wood'), 0);
+  const outstandingWood = [...world.jobs, ...out.flatMap(d => d.command.type === 'designate' ? [{...d.command,material:['wall','bed','table','stool','horseshoes','campfire','stonecutter','door'].includes(d.command.kind)?d.command.material??'wood' as const:undefined}] : [])].reduce((n,j) => n + requiredMaterial(j,'wood'), 0);
   // New plans can overlap trees: their builder will clear the footprint. Do not
   // queue a second gathering order there in the same batch of player commands.
   const newlyPlanned=new Set(out.flatMap(d=>d.command.type==='designate'?footprintCells(d.command).map(c=>c.z*world.width+c.x):[]));
@@ -155,7 +156,7 @@ export function colonySummary(world: World) {
     obstructedGrowingCells:world.piles.filter(p=>p.owner.type==='ground'&&fields.has(p.owner.z*world.width+p.owner.x)).length,
     clearing:world.pawns.filter(p=>p.haul?.destination.type==='aside').length,
     construction: {blueprints:world.jobs.filter(j=>j.construction==='blueprint').length,frames:world.jobs.filter(j=>j.construction==='frame').length,clearingPlants:world.jobs.filter(j=>j.clearance).length,clearingPiles:world.pawns.filter(p=>p.haul?.destination.type==='aside'&&p.haul.destination.constructionId!==undefined).length},
-    structures: Object.fromEntries(['bed','table','stool','wall','campfire','horseshoes','stonecutter'].map(kind => [kind,world.structures.filter(s=>s.kind===kind).length])), preparedMeals:world.piles.filter(p=>p.item==='simple-meal').reduce((n,p)=>n+p.quantity,0), stock: { ...world.stock }, pending: world.jobs.length, minimumFood: Math.min(...world.pawns.map(p=>p.hunger)), minimumRest: Math.min(...world.pawns.map(p=>p.rest)) };
+    structures: Object.fromEntries(['bed','table','stool','wall','campfire','horseshoes','stonecutter','door'].map(kind => [kind,world.structures.filter(s=>s.kind===kind).length])), preparedMeals:world.piles.filter(p=>p.item==='simple-meal').reduce((n,p)=>n+p.quantity,0), stock: { ...world.stock }, pending: world.jobs.length, minimumFood: Math.min(...world.pawns.map(p=>p.hunger)), minimumRest: Math.min(...world.pawns.map(p=>p.rest)) };
 }
 
 export function woodAccount(world: World): number {

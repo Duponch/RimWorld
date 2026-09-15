@@ -99,13 +99,13 @@ Distribution régionale, persistance et apparence sont livrées. V28 ajoute les 
 
 ## Variantes constructives V30
 
-`wood` et `steel` sont admissibles pour mur, lit simple, table 1×2, tabouret et piquet ; feu fixe en bois. Cinq variantes en acier ajoutées en V30, aucune nouvelle famille de bâtiment dans ce lot. Matériau et recette conservés dans le paquet et après repose ; couleur rétablie sur l’objet, bande de caisse distincte au sol ; moitié restituée avec arrondi pour les ouvrages ordinaires. Les anciennes recettes restent identifiées par absence de matériau. [Contrat et quantités](../development/construction-materials.md). V31 ajoute la famille atelier avec deux variantes constructives et ingrédients mixtes ; blocs taillés, autres matériaux, qualité, résistance et inflammabilité restent absents.
+`wood` et `steel` sont admissibles pour mur, lit simple, table 1×2, tabouret et piquet ; feu fixe en bois. Cinq variantes en acier ajoutées en V30, aucune nouvelle famille de bâtiment dans ce lot. Matériau et recette conservés dans le paquet et après repose ; couleur rétablie sur l’objet, bande de caisse distincte au sol ; moitié restituée avec arrondi pour les ouvrages ordinaires. Les anciennes recettes restent identifiées par absence de matériau. [Contrat et quantités](../development/construction-materials.md). V31 ajoute la famille atelier avec deux variantes constructives et ingrédients mixtes ; blocs taillés livrés V32, constructions en pierre V33 ; autres matériaux, qualité, résistance et inflammabilité restent absents.
 
 ## Blocs V32
 
 | Objet | Production et usage livré | Limites |
 |---|---|---|
-| `granite-blocks` | Vingt par fragment de granite, Artisanat au poste, pile 75, réserve filtrée. | Construction, HP/détérioration et masse fonctionnelle absents. |
+| `granite-blocks` | Vingt par fragment de granite, Artisanat au poste, pile 75, réserve filtrée. | Construction disponible depuis V33 ; HP/détérioration et masse fonctionnelle absents. |
 | `limestone-blocks` | Même chaîne pour le calcaire, identité et couleur propres. | Même périmètre. |
 | `marble-blocks` | Même chaîne pour le marbre. | Même périmètre. |
 | `sandstone-blocks` | Même chaîne pour le grès. | Même périmètre. |
@@ -114,3 +114,7 @@ Distribution régionale, persistance et apparence sont livrées. V28 ajoute les 
 SYS-062..064 / matériaux manufacturés du chapitre 11. Aucune nutrition ni pourriture ; passage autorisé, supplément 1,4 tick local, arrêt autorisé. Cinq définitions supplémentaires ne ferment pas le catalogue Core. [Recette, sources et réserves](../research/stonecutting-reference.md).
 
 V33 ajoute **25 variantes constructives** des familles présentes, aucune nouvelle définition d’objet : cinq pierres × mur/lit/table/tabouret/piquet. Les cinq ItemId de blocs V32 restent les mêmes dans piles, chantier et restitution. Table de taille non admissible en pierre ; matériaux absents et propriétés non simulées restent explicites dans la [recherche](../research/stone-buildings-reference.md).
+
+## Porte manuelle V34
+
+Nouvelle famille `door`, sept variantes : bois, acier, granite, calcaire, marbre, grès, ardoise. Une case, 25 unités, travail de base 850 Core avant matériau ; restitution 12/13, non réinstallable. Trois cadences d'ouverture (bois/acier/pierre), maintien/interdiction, coexistence des objets. Autodoors, résistance et isolation fonctionnelle encore absentes. [Sources](../research/doors-reference.md), [contrat](../development/doors.md).

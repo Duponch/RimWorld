@@ -1,3 +1,4 @@
+import { doorWait } from './door-rules.ts';
 import { footprintCells, footprintContains } from './definitions.ts';
 import { frameAt, frameCosts, FRAME_TRAVEL_DELAY } from './construction-costs.ts';
 import type { Cell, StructureKind, World } from './types.ts';
@@ -5,6 +6,7 @@ import type { Cell, StructureKind, World } from './types.ts';
 /** Current Core wiki path costs, converted by the local day/tick ratio (10).
  * Repeat suppression is shared by all qualifying furniture, not by instance. */
 export const FURNITURE_TRAVEL:Readonly<Record<StructureKind,Readonly<{delay:number;stand:boolean;repeat:boolean}>>>=Object.freeze({
+  door:{delay:0,stand:true,repeat:false},
   stonecutter:{delay:5,stand:false,repeat:true},
   wall:{delay:0,stand:false,repeat:false},table:{delay:4.2,stand:false,repeat:true},
   bed:{delay:4.2,stand:false,repeat:true},campfire:{delay:4.2,stand:false,repeat:true},
@@ -49,5 +51,6 @@ export function navigationCosts(world:World):{costs:ReadonlyMap<number,number>|u
     for(let i=0;i<world.tiles.length;i++)if(world.tiles[i]!.terrain==='rough-stone'){floors.set(i,67);costs.set(i,Math.max(costs.get(i)??0,67));}
   }
   if(world.schemaVersion>=29)for(const p of world.piles)if((p.kind==='steel'||world.schemaVersion>=32&&p.kind==='blocks')&&p.owner.type==='ground'){const i=p.owner.z*world.width+p.owner.x;floors.set(i,Math.max(floors.get(i)??0,467));costs.set(i,Math.max(costs.get(i)??0,467));}
+  for(const s of world.structures)if(s.kind==='door') {const i=s.z*world.width+s.x;repeaters.delete(i);costs.set(i,(costs.get(i)??0)+Math.round(doorWait(s,world.tick)/3*1000));}
   return {costs:costs.size?costs:undefined,repeaters,stops,floors};
 }

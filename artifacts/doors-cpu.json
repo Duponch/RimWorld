@@ -1,0 +1,90 @@
+{
+  "date": "2026-09-15T04:34:51.622Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "map": 250,
+  "protocol": "Clear 250², 3/30/100 colonists build 25-wood doors in walled plots, cut an inside tree and haul 12 wood outside. One run per population, bound 3200 ticks, separate warmup 100 ticks; needs enabled. Snapshot every 5 ticks, validation outside timing. CPU only.",
+  "phases": [
+    {
+      "count": 3,
+      "ticks": {
+        "samples": 251,
+        "p50": 0.019200000000012096,
+        "p95": 1.6326999999999998,
+        "p99": 3.088300000000004,
+        "max": 4.037599999999998
+      },
+      "snapshots": {
+        "samples": 51,
+        "p50": 0.36199999999996635,
+        "p95": 0.5312000000000126,
+        "p99": 5.113500000000045,
+        "max": 5.113500000000045
+      },
+      "outcomes": [
+        {
+          "tick": 2251,
+          "doors": 3,
+          "trees": 0,
+          "stored": 36,
+          "hauling": 0,
+          "jobs": 0
+        }
+      ]
+    },
+    {
+      "count": 30,
+      "ticks": {
+        "samples": 251,
+        "p50": 0.4517000000000735,
+        "p95": 16.25130000000013,
+        "p99": 25.231699999999933,
+        "max": 30.887200000000007
+      },
+      "snapshots": {
+        "samples": 51,
+        "p50": 0.3288000000000011,
+        "p95": 2.0546999999999116,
+        "p99": 6.544399999999996,
+        "max": 6.544399999999996
+      },
+      "outcomes": [
+        {
+          "tick": 2251,
+          "doors": 30,
+          "trees": 0,
+          "stored": 360,
+          "hauling": 0,
+          "jobs": 0
+        }
+      ]
+    },
+    {
+      "count": 100,
+      "ticks": {
+        "samples": 2621,
+        "p50": 11.961599999998725,
+        "p95": 32.7675999999999,
+        "p99": 54.560999999999694,
+        "max": 102.24290000000019
+      },
+      "snapshots": {
+        "samples": 525,
+        "p50": 0.3978000000024622,
+        "p95": 0.5101999999969848,
+        "p99": 0.5888999999999669,
+        "max": 6.251400000001013
+      },
+      "outcomes": [
+        {
+          "tick": 4621,
+          "doors": 100,
+          "trees": 0,
+          "stored": 1200,
+          "hauling": 0,
+          "jobs": 0
+        }
+      ]
+    }
+  ]
+}

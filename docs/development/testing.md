@@ -170,3 +170,7 @@ V31 enrichit les mêmes familles avec atelier mixte, agrégation de 105 acier, e
 V32 enrichit `stonecutting.test.ts` (trois scénarios profonds), les parcours `production.spec.ts` et le pilote partagé. Bancs existants : `cooking-bench.ts --stonecutting=true` et `STONECUTTING=1` pour `mining-render-bench.mjs`. Leurs champs historiques `cooked`/`mined` comptent ici des recettes terminées, pas des repas/minages. [Validation](validation.md).
 
 V33 enrichit les contrôles de matériaux avec `stone-buildings.test.ts` (trois scénarios profonds), le pilote naturel avec un mur produit depuis le minage, et `construction-bench.ts --stone`. Rejouer le parcours UI production→construction et la colonie lorsque ces commandes ou leur persistance changent ; une simple couleur de pierre ne justifie pas ce long parcours.
+
+## Portes V34
+
+Les trois scénarios `doors.test.ts` croisent variantes, livraisons, attente, trafic, obstruction, permissions, sauvegarde et déconstruction. L'oracle indépendant de `navigation-budget.test.ts` reçoit aussi des portes ouvertes, fermées et interdites ; la rétention GPU existante inclut croissance/retrait/réouverture. Le pilote naturel construit sa porte après la première journée. Parcours court `doors.spec.ts` et parcours UI existant de trois jours ; mesures séparées `doors-bench.ts` / `doors-render-bench.mjs`, bornées et avec résultats métier. Le profil CPU sert au prochain lot d'optimisation, pas à annoncer un budget respecté.

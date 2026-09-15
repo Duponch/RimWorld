@@ -82,7 +82,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     await revealCells(page,[c]);await cell(page,c.x,c.z);
   } else if(c.type==='designate' && c.kind !== 'sow' && c.kind !== 'install') {
     await tool(page,c.kind);
-    if(['wall','bed','table','stool','horseshoes'].includes(c.kind))await page.locator('#construction-material').selectOption(c.material??'wood');
+    if(['door','wall','bed','table','stool','horseshoes','stonecutter'].includes(c.kind))await page.locator('#construction-material').selectOption(c.material??'wood');
     if(c.kind==='bed'||c.kind==='table'||c.kind==='campfire') {
       while(rotation.value!==(c.orientation??0)){await page.keyboard.press('e');rotation.value=(rotation.value+1)%4;}
     }

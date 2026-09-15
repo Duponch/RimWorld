@@ -18,8 +18,9 @@ export class WeightedSearch {
   private readonly extraCosts:ReadonlyMap<number,number>|undefined;
   private readonly repeaters:ReadonlySet<number>;
   private readonly floors:ReadonlyMap<number,number>;
-  constructor(width:number, height:number, start:number, unavailable:Uint8Array, extraCosts?:ReadonlyMap<number,number>,repeaters:ReadonlySet<number>=new Set(),floors:ReadonlyMap<number,number>=new Map()) {
-    this.extraCosts=extraCosts;this.repeaters=repeaters;this.floors=floors;
+  private readonly corners:ReadonlySet<number>;
+  constructor(width:number, height:number, start:number, unavailable:Uint8Array, extraCosts?:ReadonlyMap<number,number>,repeaters:ReadonlySet<number>=new Set(),floors:ReadonlyMap<number,number>=new Map(),corners:ReadonlySet<number>=new Set()) {
+    this.extraCosts=extraCosts;this.repeaters=repeaters;this.floors=floors;this.corners=corners;
     this.width=width;this.height=height;this.unavailable=unavailable;
     const size=width*height,parents=new Int32Array(size).fill(-2),costs=new Float64Array(size).fill(Infinity);
     this.settled=new Uint8Array(size);this.field={parents,costs,start,visited:0,unreachedGroups:0,settled:this.settled};
@@ -51,7 +52,7 @@ export class WeightedSearch {
       for(const [dx,dz] of DIRECTIONS) {
         const nx=x+dx,nz=z+dz,next=nz*this.width+nx;
         if(nx<0||nz<0||nx>=this.width||nz>=this.height||blocked[next]||this.settled[next])continue;
-        if(dx&&dz&&(blocked[index+dx]||blocked[index+dz*this.width]))continue;
+        if(dx&&dz&&(blocked[index+dx]||blocked[index+dz*this.width]||this.corners.has(index+dx)||this.corners.has(index+dz*this.width)))continue;
         const cost=costs[index]!+(dx&&dz?DIAGONAL_COST:CARDINAL_COST)+(this.repeaters.has(index)&&this.repeaters.has(next)?this.floors.get(next)??0:this.extraCosts?.get(next)??0);
         if(cost<costs[next]!) {costs[next]=cost;parents[next]=index;this.frontier.push(next);}
       }

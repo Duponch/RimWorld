@@ -50,7 +50,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 33 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 34 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)
@@ -130,3 +130,7 @@
 ## Constructions en pierre V33
 - Lire docs/development/construction-materials.md et docs/research/stone-buildings-reference.md. Cinq blocs pour mur/lit/table/tabouret/piquet ; table de taille limitée bois/acier, feu bois fixe. `building-materials.ts` sépare WorkToBuild (base × facteur + 140) de WorkToMake ; repos des lits pierre ×0,9, sans inventer qualité ni résistance.
 - Valider V32 strictement avant migration, sans réécrire un ouvrage, un stock ou une route. `lostBlocks?` suit les pertes par ItemId ; capacité, ID, bilan et PRNG prévalidés avant tout retrait. Une chaîne de caractères `legacy` n'est jamais un matériau accepté : seule l'absence de champ conserve la recette ancienne.
+
+## Portes manuelles V34
+- Lire docs/development/doors.md et docs/research/doors-reference.md. Attendre au seuil avant une arête ; permission et animation sont distinctes. Maintenir ouverte ne commande pas une ouverture distante. Corps/arêtes et objets empêchent la fermeture ; une interdiction tardive conserve le passage engagé et sa sortie.
+- V33 strictement validée avant migration. Structure.door conserve temporisations et progression ; les autres objets ne portent pas cet état. Cadres solides pour les coins diagonaux même ouverts ; coût estimé séparé de l'attente physique. Jambages partagés et vantaux TSL sur l'horloge des colons. Pièces/toits/thermique, remplacement direct, factions et autodoors restent absents.

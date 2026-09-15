@@ -153,3 +153,7 @@ Chapitre 11 relu ; **SYS/TEST-062..064, UI-025** : adopter transactions, filtrag
 
 ## Construction pierre V33 — 15 septembre
 Chapitre 10, SYS/TEST-056, 058, 059 et UI-019/024 relus dans les originaux : adopter choix de matière, livraison quantitative, retrait et identité du meuble ; adapter 3D/horloge ; différer fondations détaillées, réparation, remplacement, qualité et autres statistiques. Vérification actuelle de l’exclusion de pierre à la table de taille et du repos réduit des lits, facteurs de construction distincts de fabrication : [sources et décisions](stone-buildings-reference.md).
+
+## V34 — portes manuelles
+
+Chapitres 5/10/21, SYS-020..024 et SYS-113..117 : adopter accès/recherche/suivi distincts, attente avant passage et état persistant ; adapter cadence, protection volumique et rendu GPU. [Recherche renouvelée](doors-reference.md), [contrat](../development/doors.md). Différer remplacement direct, pièces/toits/température et profils d'acteurs absents. Les scénarios de navigation, construction, colonie et UI sont enrichis ; aucun statut du corpus ne vaut preuve locale.

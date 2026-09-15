@@ -1,5 +1,7 @@
 import { blockParts } from './block-presentation';
 import { sameTerrainSurface } from './terrain-state';
+import { doorOrientations } from '../sim/door-rules';
+import { DoorLayer } from './DoorLayer';
 import { prepareShadowPipelines } from './shadow-preparation';
 import { chunkParts } from './chunk-presentation';
 import { installCommand } from '../sim/furniture-commands';
@@ -57,6 +59,7 @@ export class ColonyRenderer {
   private get controls(): OrbitControls { return this.rig.controls; }
   private readonly terrainGroup = new THREE.Group();
   private readonly resourceGroup = new THREE.Group();
+  private readonly doors=new DoorLayer();
   private readonly structureGroup = new THREE.Group();
   private readonly jobGroup = new THREE.Group();
   private readonly pileGroup = new THREE.Group();
@@ -150,7 +153,7 @@ export class ColonyRenderer {
     renderer.domElement.tabIndex = 0;
     host.appendChild(renderer.domElement);
     this.daylight = new DayNightLayer(this.scene);
-    this.scene.add(this.crops.group, this.growing.group, this.overview.group, this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup, this.pawns.group);
+    this.scene.add(this.doors.group,this.crops.group, this.growing.group, this.overview.group, this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup, this.pawns.group);
     this.rig = new CameraRig(renderer.domElement);
     const hoverMat = new THREE.MeshBasicNodeMaterial({ color: 0xf9ebae, transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide });
     this.hover = new THREE.Mesh(new THREE.PlaneGeometry(0.96, 0.96), hoverMat);
@@ -220,7 +223,9 @@ export class ColonyRenderer {
     if (previousWorld?.resources !== world.resources || newMap) this.updateResources(world, newMap);
     else if (Math.floor(previousWorld.tick / 25) !== Math.floor(world.tick / 25)) this.resources.updateGrowth(world);
     const packageKey=(world.packed??[]).filter(p=>p.owner.type==='ground').map(p=>`${p.building.id}:${p.building.material}:${p.owner.type==='ground'?`${p.owner.x}:${p.owner.z}`:''}`).join('|');
-    const structureKey = packageKey + world.structures.map((s) => `${s.id}:${s.kind}:${s.material}:${s.x}:${s.z}:${s.orientation}:${s.footprint}:${s.fuel?s.fuel.ticks>0:''}`).join('|');
+    this.doors.update(world,this.wallCutaway,resetPoses);
+    const doorAxes=doorOrientations(world);
+    const structureKey = [...doorAxes].join(':') + packageKey + world.structures.map((s) => `${s.id}:${s.kind}:${s.material}:${s.x}:${s.z}:${s.orientation}:${s.footprint}:${s.fuel?s.fuel.ticks>0:''}`).join('|');
     if (structureKey !== this.structureKey || newMap) { this.structureKey = structureKey; this.buildStructures(world); }
     // Quantize presentation of progression to avoid rebuilding static meshes for
     // every work tick. Saved simulation progress remains exact and authoritative.
@@ -293,6 +298,7 @@ export class ColonyRenderer {
     this.preparing = true;
     const culling = new Map<THREE.Object3D, boolean>();
     const distant = this.overview.group.visible;
+    const restoreDoors=this.doors.prepareForCompile();
     const restoreCrops = this.crops.prepareForCompile();
     try {
       this.overview.group.visible = this.terrainGroup.visible = this.resourceGroup.visible = true;
@@ -303,7 +309,7 @@ export class ColonyRenderer {
       await this.renderer.compileAsync(this.scene, this.rig.perspective);
       await prepareShadowPipelines(this.renderer,this.scene,this.rig.orthographic,this.boxes);
     } finally {
-      restoreCrops();
+      restoreDoors();restoreCrops();
       for (const [object, value] of culling) object.frustumCulled = value;
       this.overview.group.visible = distant; this.terrainGroup.visible = this.resourceGroup.visible = !distant;
       this.rocks.setDistant(distant); this.preparing = false;
@@ -369,7 +375,7 @@ export class ColonyRenderer {
     this.resources.update(view, newMap); this.overview.update(view,newMap);
   }
 
-  private buildStructures(world: World): void { buildFurniture(world, this.structureGroup, this.wallCutaway, this.boxes); }
+  private buildStructures(world: World): void { this.doors.update(world,this.wallCutaway);buildFurniture(world, this.structureGroup, this.wallCutaway, this.boxes); }
 
   private buildJobs(world: World): void { buildJobMarkers(world,this.jobGroup,this.wallCutaway,this.boxes); }
 
@@ -482,6 +488,7 @@ export class ColonyRenderer {
     // Share the confirmed presentation clock with pawn motion. Loading a save
     // restores the sky; pausing cannot continue an independent wall-clock sun.
     const skyTick = this.hasTracks ? this.timeline.tick : THREE.MathUtils.lerp(this.timeFrom, this.timeTo, this.pawns.blend.value) * TICKS_PER_SECOND;
+    this.doors.tick.value=skyTick;
     this.daylight.update(skyTick, this.controls.target);
     const cellPixels=this.rig.pixelsPerCell(this.host.clientHeight);
     const distant=this.overview.group.visible ? cellPixels<9 : cellPixels<7;
@@ -627,8 +634,8 @@ export class ColonyRenderer {
     const minX=Math.min(...cells.map(c=>c.x)),maxX=Math.max(...cells.map(c=>c.x)),minZ=Math.min(...cells.map(c=>c.z)),maxZ=Math.max(...cells.map(c=>c.z));
     this.hover.scale.set(maxX-minX+1, maxZ-minZ+1, 1);
     this.hover.position.set((minX+maxX)/2, this.world.tiles[cell.z * this.world.width + cell.x]?.terrain === 'water' ? WORLD_SCALE.waterSurface + 0.04 : 0.055, (minZ+maxZ)/2);
-    const validity = this.tool==='install'&&this.furniturePlacement?installCommand(this.world,{type:'install',structureId:this.furniturePlacement.id,...cell,orientation:this.placementRotation},true):this.tool === 'stonecutter'||this.tool === 'mine'||this.tool === 'uninstall'||this.tool === 'wall' || this.tool === 'bed' || this.tool === 'table' || this.tool === 'stool' || this.tool === 'campfire' || this.tool === 'horseshoes' || this.tool === 'chop' || this.tool === 'harvest' || this.tool === 'cut'
-      ? canDesignate(this.world, { type: 'designate', kind: this.tool, ...cell, orientation: this.placementRotation }) : undefined;
+    const validity = this.tool==='install'&&this.furniturePlacement?installCommand(this.world,{type:'install',structureId:this.furniturePlacement.id,...cell,orientation:this.placementRotation},true):this.tool === 'door'||this.tool === 'stonecutter'||this.tool === 'mine'||this.tool === 'uninstall'||this.tool === 'wall' || this.tool === 'bed' || this.tool === 'table' || this.tool === 'stool' || this.tool === 'campfire' || this.tool === 'horseshoes' || this.tool === 'chop' || this.tool === 'harvest' || this.tool === 'cut'
+      ? canDesignate(this.world, { type: 'designate', kind: this.tool, ...cell, orientation: this.tool==='door'?0:this.placementRotation }) : undefined;
     const color = validity?.ok === false ? 0xe46f58 : this.tool === 'cancel' || this.tool === 'remove-stockpile' ? 0xe6876a : this.tool === 'select' ? 0xf9ebae : 0x9dd9ca;
     (this.hover.material as THREE.MeshBasicNodeMaterial).color.setHex(color);
     this.renderer.domElement.title = validity?.reason ?? '';
@@ -682,6 +689,7 @@ export class ColonyRenderer {
     this.rocks.dispose();
     this.crops.dispose();
     this.resources.clear();
+    this.doors.dispose();
     for (const group of [this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup, this.pawns.group]) clearGroup(group);
     this.pileChunks.clear();
     this.staticMaterial.dispose();

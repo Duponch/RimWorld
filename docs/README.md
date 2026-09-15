@@ -69,3 +69,5 @@ Taille de pierre : [production V32](development/stonecutting.md), [recherche de 
 Atelier à ingrédients mixtes : [contrat V31](development/stonecutter.md), [recherche Core](research/stonecutter-reference.md).
 
 Constructions en pierre V33 : [contrat des matériaux](development/construction-materials.md), [règles vérifiées](research/stone-buildings-reference.md).
+
+Portes manuelles V34 : [contrat](development/doors.md), [recherche Core](research/doors-reference.md).
