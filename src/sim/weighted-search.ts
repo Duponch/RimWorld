@@ -17,8 +17,9 @@ export class WeightedSearch {
   private finished=false;
   private readonly extraCosts:ReadonlyMap<number,number>|undefined;
   private readonly repeaters:ReadonlySet<number>;
-  constructor(width:number, height:number, start:number, unavailable:Uint8Array, extraCosts?:ReadonlyMap<number,number>,repeaters:ReadonlySet<number>=new Set()) {
-    this.extraCosts=extraCosts;this.repeaters=repeaters;
+  private readonly floors:ReadonlyMap<number,number>;
+  constructor(width:number, height:number, start:number, unavailable:Uint8Array, extraCosts?:ReadonlyMap<number,number>,repeaters:ReadonlySet<number>=new Set(),floors:ReadonlyMap<number,number>=new Map()) {
+    this.extraCosts=extraCosts;this.repeaters=repeaters;this.floors=floors;
     this.width=width;this.height=height;this.unavailable=unavailable;
     const size=width*height,parents=new Int32Array(size).fill(-2),costs=new Float64Array(size).fill(Infinity);
     this.settled=new Uint8Array(size);this.field={parents,costs,start,visited:0,unreachedGroups:0,settled:this.settled};
@@ -51,7 +52,7 @@ export class WeightedSearch {
         const nx=x+dx,nz=z+dz,next=nz*this.width+nx;
         if(nx<0||nz<0||nx>=this.width||nz>=this.height||blocked[next]||this.settled[next])continue;
         if(dx&&dz&&(blocked[index+dx]||blocked[index+dz*this.width]))continue;
-        const cost=costs[index]!+(dx&&dz?DIAGONAL_COST:CARDINAL_COST)+(this.repeaters.has(index)&&this.repeaters.has(next)?0:this.extraCosts?.get(next)??0);
+        const cost=costs[index]!+(dx&&dz?DIAGONAL_COST:CARDINAL_COST)+(this.repeaters.has(index)&&this.repeaters.has(next)?this.floors.get(next)??0:this.extraCosts?.get(next)??0);
         if(cost<costs[next]!) {costs[next]=cost;parents[next]=index;this.frontier.push(next);}
       }
       this.pending=this.frontier.pop();

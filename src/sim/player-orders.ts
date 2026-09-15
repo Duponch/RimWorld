@@ -19,7 +19,7 @@ export interface PlayerOrders { active: number | 'haul' | 'cook' | null; queue: 
 export type OrderCommand = { type:'order-cook';pawnId:number;structureId:number;queue:boolean } | { type: 'order-job'; pawnId: number; jobId: number; queue: boolean } | { type:'order-haul';pawnId:number;target:HaulOrderTarget;queue:boolean } | { type: 'clear-orders'; pawnId: number };
 export interface OrderOption { jobId: number; cookStationId?:number; haulTarget?:HaulOrderTarget; label: string; enabled: boolean; reason?: string }
 export const MAX_QUEUED_ORDERS = 32;
-const labels: Record<Job['kind'], string> = { uninstall:'Désinstaller',install:'Réinstaller', deconstruct:'Déconstruire', chop:'Abattre',harvest:'Récolter',cut:'Couper',sow:'Semer du riz',wall:'Construire le mur',bed:'Construire le lit',table:'Construire la table',stool:'Construire le tabouret',campfire:'Construire le feu',horseshoes:'Construire le piquet' };
+const labels: Record<Job['kind'], string> = { mine:'Miner', uninstall:'Désinstaller',install:'Réinstaller', deconstruct:'Déconstruire', chop:'Abattre',harvest:'Récolter',cut:'Couper',sow:'Semer du riz',wall:'Construire le mur',bed:'Construire le lit',table:'Construire la table',stool:'Construire le tabouret',campfire:'Construire le feu',horseshoes:'Construire le piquet' };
 const fail = (reason: string): CommandResult => ({ok:false,code:'invalid-command',reason});
 const busy = (pawn: Pawn) => pawn.jobId !== null || !!(pawn.haul || pawn.cooking || pawn.need || pawn.recreation.task);
 const clearingPlant=(world:World,job:Job)=>!isConstruction(job)?undefined:job.clearance?world.resources.find(r=>r.id===job.clearance!.resourceId):constructionObstruction(world,job).plant;
@@ -31,6 +31,7 @@ export function orderReadiness(world: World, pawn: Pawn, job: Job, accepted=fals
   if (!accepted&&(job.kind==='install'?!Number.isFinite(constructionHaulPriority(pawn)):!pawn.priorities[workType(job)])) return 'Ce travail est désactivé dans le tableau Travail.';
   if (job.reservedBy !== null && job.reservedBy !== pawn.id) return 'Travail réservé par un autre colon.';
   if (job.growingZoneId !== undefined && !growingJobValid(world,job)) return 'La culture ne permet plus ce travail.';
+  if(job.kind==='mine'&&world.tiles[job.z*world.width+job.x]?.terrain!=='rock')return 'Le massif a disparu.';
   if (job.kind === 'harvest') {
     const plant = world.resources.find(r=>r.x===job.x&&r.z===job.z);
     if (!plant || !harvestable(world,plant)) return 'La plante ne peut pas être récoltée.';
@@ -47,7 +48,7 @@ export function orderReadiness(world: World, pawn: Pawn, job: Job, accepted=fals
   if (job.kind === 'sow' && (groundPile(world,job)||packedAt(world,job))) return 'Le sol doit être dégagé ; choisissez Dégager avant de semer.';
 }
 function goals(world: World, job: Job) {
-  const plant=clearingPlant(world,job),cells=plant?[plant]:footprintCells(furnitureWorkTarget(world,job) as Job), result=interactionGoals(world,cells);
+  const plant=clearingPlant(world,job),cells=plant?[plant]:footprintCells(furnitureWorkTarget(world,job) as Job), result=interactionGoals(world,cells,job.kind);
   for(const cell of cells)result.delete(cellIndex(world,cell.x,cell.z));
   return result;
 }

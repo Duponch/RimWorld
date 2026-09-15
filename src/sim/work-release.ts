@@ -74,7 +74,7 @@ export function releaseWork(world:World,pawn:Pawn,plan?:DropPlan):boolean {
   const held=world.piles.find(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
   if(held&&!commitDrop(world,held,pawn,plan))return false;
   const job=world.jobs.find(j=>j.id===pawn.jobId);
-  if(job?.reservedBy===pawn.id){delete job.installationWork;delete job.clearance;job.reservedBy=null;job.status='pending';if(job.furniture||job.kind==='sow'||job.kind==='deconstruct')job.progress=0;}
+  if(job?.reservedBy===pawn.id){delete job.installationWork;delete job.clearance;job.reservedBy=null;job.status='pending';if(job.furniture||job.kind==='mine'||job.kind==='sow'||job.kind==='deconstruct')job.progress=0;}
   delete pawn.transitExit;
   pawn.orders.active=null;
   pawn.recreation.task=null;pawn.jobId=null;pawn.haul=null;pawn.cooking=null;pawn.need=null;pawn.path=[];pawn.state='idle';pawn.planCooldown=20;pawn.needCooldown=20;

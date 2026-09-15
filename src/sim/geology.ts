@@ -47,5 +47,5 @@ export function geologicalField(seed: number): (x: number, z: number) => StoneKi
 
 /** Optional identity preserves untyped historic maps without assigning invented deposits. */
 export function validStoneIdentity(value: unknown, kind: unknown, version: number): boolean {
-  return value === undefined || version >= 27 && kind === 'rock' && isStoneKind(value);
+  return value === undefined || version >= 27 && (kind === 'rock' || version >= 28 && kind === 'rough-stone') && isStoneKind(value);
 }

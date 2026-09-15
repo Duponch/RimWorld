@@ -49,13 +49,13 @@ describe('seeded temperate valley generation', () => {
     expect(seen).toEqual(new Set(STONE_KINDS)); expect(equal / pairs).toBeGreaterThan(.9);
 
     const modern = createWorld(42, 32, 32), raw = JSON.parse(serializeWorld(modern));
-    raw.schemaVersion = 26;
+    raw.schemaVersion = 26;for(const a of raw.pawns)delete a.priorities.mine;
     // V26 cannot smuggle a modern geological identity through migration.
     expect(() => deserializeWorld(JSON.stringify(raw))).toThrow(/version 26/);
     for (const tile of raw.tiles) delete tile.stone;
     for (const resource of raw.resources) delete resource.stone;
     const migrated = deserializeWorld(JSON.stringify(raw));
-    expect(migrated).toEqual({ ...raw, schemaVersion: 27 });
+    expect(migrated).toEqual({...raw,pawns:raw.pawns.map((p:any)=>({...p,priorities:{...p.priorities,mine:2}})),schemaVersion:28 });
     const control = deserializeWorld(JSON.stringify(raw)); stepWorld(migrated, 251); stepWorld(control, 251);
     expect(serializeWorld(migrated)).toBe(serializeWorld(control));
     for (const change of [(w: any) => w.tiles.find((t: any) => t.terrain === 'rock').stone = 'vacstone',
@@ -117,7 +117,7 @@ describe('seeded temperate valley generation', () => {
         }
         for (const target of world.resources.slice(-3)) expect(routeToJob(world, target, reachable), context).not.toBeNull();
         // Compare local agreement to the independent-noise baseline with the SAME terrain shares.
-        const counts = { grass: 0, soil: 0, rock: 0, water: 0 }; let same = 0; let pairs = 0;
+        const counts = { grass: 0, soil: 0, rock: 0, water: 0, 'rough-stone':0 }; let same = 0; let pairs = 0;
         world.tiles.forEach((tile, index) => {
           counts[tile.terrain]++;
           for (const next of neighbors(world, index)) if (next > index) { pairs++; if (world.tiles[next]!.terrain === tile.terrain) same++; }
@@ -177,7 +177,7 @@ describe('seeded temperate valley generation', () => {
     long.resources = [{ id: long.nextId++, x: 249, z: 125, kind: 'tree', amount: 12 }];
     long.piles = []; refreshStock(long);
     long.pawns = long.pawns.slice(0, 1);
-    const pawn = long.pawns[0]!; pawn.x = 0; pawn.z = 125; pawn.priorities = { gather: 1, build: 0, haul: 0, grow: 0 , cook: 0 };
+    const pawn = long.pawns[0]!; pawn.x = 0; pawn.z = 125; pawn.priorities = {mine:2, gather: 1, build: 0, haul: 0, grow: 0 , cook: 0 };
     addGroundMaterial(long, 'food', 18, pawn);
     expect(applyCommand(long, { type: 'designate', kind: 'chop', x: 249, z: 125 })).toEqual({ ok: true });
     stepWorld(long);

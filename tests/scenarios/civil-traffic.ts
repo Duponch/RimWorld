@@ -14,7 +14,7 @@ export function civilCrossingFixture(): World {
     w.structures.push({id:w.nextId++,kind:'bed',x,z:8,orientation:0,footprint:'standard'});
   }
   w.pawns.forEach((p,i)=>{
-    Object.assign(p,{x:[2,13,8][i]!,z:8,hunger:100,rest:10,priorities:{gather:0,build:0,haul:0,grow:0,cook:0}});
+    Object.assign(p,{x:[2,13,8][i]!,z:8,hunger:100,rest:10,priorities:{mine:2,gather:0,build:0,haul:0,grow:0,cook:0}});
     p.schedule.fill('anything');p.recreation=initialRecreation();
     if(!applyCommand(w,{type:'assign-bed',bedId:w.structures[[2,0,1][i]!]!.id,pawnId:p.id}).ok)throw new Error('Invalid bed assignment fixture');
   });

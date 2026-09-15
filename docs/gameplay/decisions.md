@@ -54,4 +54,8 @@ Le rangement suit des filtres et une priorité strictement meilleure ; le dégag
 
 ## Géologie locale V27
 
-Cinq identités Core, sélection de deux ou trois types par site et régions continues sont adoptées ; bruit local, échelle des régions et palette sont adaptés à notre scène 3D. Les anciennes cartes restent non typées. Les pierres décoratives ne sont pas des matériaux disponibles. Sols révélés, toits et produits restent à livrer avec le minage : [sources et limites](../research/geology-reference.md).
+Cinq identités Core, sélection de deux ou trois types par site et régions continues sont adoptées ; bruit local, échelle des régions et palette sont adaptés à notre scène 3D. Les anciennes cartes restent non typées. Les pierres décoratives ne sont pas des matériaux disponibles. V28 complète les sols révélés et produits ; toits et autres dépendances restent ouverts : [sources et limites](../research/geology-reference.md).
+
+## Minage V28
+
+Le [contrat](../development/mining.md) adopte contact, dégâts persistants, produit probabiliste et transport désigné. Le profil neutre utilise 100 ticks Core entre coups selon le miroir, malgré une ancienne page wiki indiquant 120 ; aucune compétence simulée n’est revendiquée. La roche historique reste sans type avec 500 PV provisoires. Les massifs actuels révèlent leur sol brut correspondant et sont sans toit ; minerais, couches de sol alternatives et effondrements restent des travaux explicites. Le dernier coup est différé si son produit ne peut être conservé. [Sources et certitude](../research/mining-reference.md).

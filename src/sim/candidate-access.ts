@@ -9,7 +9,7 @@ import { navigationCosts } from './furniture-travel.ts';
 export function candidateAccess(world:World,start:Cell,blocked:Uint8Array,occupied:ReadonlySet<number>):CandidateAccess {
   const width=world.width,height=world.height,size=width*height,origin=start.z*width+start.x;
   const unavailable=blocked.slice();for(const index of occupied)unavailable[index]=1;
-  const {costs,repeaters,stops}=navigationCosts(world);
+  const {costs,repeaters,stops,floors}=navigationCosts(world);
   const connected=new Uint8Array(size),queue=new Int32Array(size);let head=0,tail=1;
   queue[0]=origin;connected[origin]=1;
   const visit=(i:number)=>{if(!unavailable[i]&&!connected[i]){connected[i]=1;queue[tail++]=i;}};
@@ -28,7 +28,7 @@ export function candidateAccess(world:World,start:Cell,blocked:Uint8Array,occupi
   return {
     kind:'candidate-access',start:origin,stops,
     has,
-    resolve:goals=>{weighted??=new WeightedSearch(width,height,origin,unavailable,costs,repeaters);weighted.field.stops=stops;return weighted.advance(goals);},
+    resolve:goals=>{weighted??=new WeightedSearch(width,height,origin,unavailable,costs,repeaters,floors);weighted.field.stops=stops;return weighted.advance(goals);},
     costTo:index=>index===origin?0:weighted?.field.settled?.[index]?weighted.field.costs[index]!:Infinity,
     get visited(){return weighted?.field.visited??0;},
     get connectivityVisited(){return head;},unreachedGroups:0,

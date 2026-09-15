@@ -1,3 +1,4 @@
+import { automaticallyHaulable } from './mining-rules.ts';
 import { furnitureHaulValid } from './furniture-haul-rules.ts';
 import { furnitureStorageCandidates, mayImproveFurnitureStorage } from './furniture-haul-planner.ts';
 import { furnitureReady, packedAt } from './furniture-rules.ts';
@@ -15,14 +16,14 @@ import { storageCapacity } from './ground-placement.ts';
 import { legacyItem, type ItemId } from './items.ts';
 import { CARRY_CAPACITY, footprintCells, JOB_WOOD_COST } from './definitions.ts';
 import { deliveredStock, groundQuantity, reservedDestination, reservedSource } from './materials.ts';
-import { cellIndex, inBounds, canStopAt, hasReachableCell, reachableCells, routeToJob, interactionGoals } from './pathfinding.ts';
+import { cellIndex, workNeighbours, inBounds, canStopAt, hasReachableCell, reachableCells, routeToJob, interactionGoals } from './pathfinding.ts';
 import type { Reachability } from './pathfinding.ts';
 import type { Cell, HaulDestination, Job, JobKind, MaterialKind, Pawn, WorkType, World } from './types.ts';
 export const PLAN_INTERVAL=20;
 export interface SearchStats { searches:{pawnId:number;mode:'all'|'nearest'|'full';visited:number;unreachedGroups:number;connectivityVisited?:number}[] }
 export interface SearchBudget { remaining:number; pairs:number; stats?:SearchStats }
 export type NavigationGrid=()=>Uint8Array;
-export const workType=(job:Pick<Job,'kind'|'growingZoneId'|'installationWork'>):WorkType=>job.installationWork??(job.growingZoneId !== undefined || job.kind === 'sow' ? 'grow' : ['chop','harvest','cut'].includes(job.kind) ? 'gather' : 'build');
+export const workType=(job:Pick<Job,'kind'|'growingZoneId'|'installationWork'>):WorkType=>job.kind==='mine'?'mine':job.installationWork??(job.growingZoneId !== undefined || job.kind === 'sow' ? 'grow' : ['chop','harvest','cut'].includes(job.kind) ? 'gather' : 'build');
 const sameCell=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
 
 export function search(world: World, pawn: Pawn, blocked: Uint8Array, occupied: ReadonlySet<number>, budget: SearchBudget, goals?: ReadonlySet<number>, allGroups?:readonly ReadonlySet<number>[]): Reachability | null {
@@ -69,7 +70,7 @@ function compareCandidate(a: Candidate, b: Candidate): number { return a.priorit
 export function canReach(world: World, target: Cell & { kind?: JobKind }, reachable: Reachability, allowTarget: boolean): boolean {
   const cells = target.kind ? footprintCells(target as Job) : [target];
   if (allowTarget && canStopAt(world,target,reachable) && hasReachableCell(reachable,cellIndex(world, target.x, target.z))) return true;
-  for (const cell of cells) for (const next of [{ x: cell.x, z: cell.z - 1 }, { x: cell.x + 1, z: cell.z }, { x: cell.x, z: cell.z + 1 }, { x: cell.x - 1, z: cell.z }]) {
+  for (const cell of cells) for (const next of workNeighbours(cell,target.kind)) {
     if (canStopAt(world,next,reachable) && !cells.some(own => sameCell(own, next)) && hasReachableCell(reachable,cellIndex(world, next.x, next.z))) return true;
   }
   return false;
@@ -165,8 +166,8 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   }
   if (Number.isFinite(constructionHaulPriority(pawn)) && pawn.hunger > 20 && (!best || best.priority >= constructionHaulPriority(pawn))) {
     const zonesByCell = new Map(world.stockpiles.map(zone => [cellIndex(world, zone.x, zone.z), zone]));
-    const sources = world.piles.filter(pile => pile.owner.type === 'ground' && pile.quantity > (sourceReserved.get(pile.id) ?? 0));
-    const destinations: { destination: HaulDestination; target: Cell & { kind?: JobKind }; priority: number; workPriority:number; wood: number; food: number; reachable: boolean }[] = [];
+    const sources = world.piles.filter(pile => automaticallyHaulable(pile) && pile.owner.type === 'ground' && pile.quantity > (sourceReserved.get(pile.id) ?? 0));
+    const destinations: { destination: HaulDestination; target: Cell & { kind?: JobKind }; priority: number; workPriority:number; wood: number; food: number; chunk?:number; reachable: boolean }[] = [];
     for (const job of world.jobs) {
       const capacity = JOB_WOOD_COST[job.kind] - (delivered.get(job.id) ?? 0) - (jobReserved.get(job.id) ?? 0);
       if (capacity > 0 && constructionSiteFree(world,job,pawn.id,constructionObstacles.get(job.id))) destinations.push({ destination: { type: 'job', jobId: job.id, forConstruction:asBuilder(pawn) }, target: job, priority: 5, workPriority:constructionHaulPriority(pawn), wood: capacity, food: 0, reachable: canReach(world, job, reachable, false) });
@@ -174,7 +175,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
     if(pawn.priorities.haul>0)for (const fire of fires) destinations.push({destination:{type:'fuel',structureId:fire.id},target:fire,priority:5,workPriority:pawn.priorities.haul,wood:fuelCapacity(world,fire.id),food:0,reachable:canReach(world,fire,reachable,true)});
     if(pawn.priorities.haul>0)for (const zone of world.stockpiles) {
       const capacity = zone.capacity - (ground.get(cellIndex(world, zone.x, zone.z)) ?? 0) - (zoneReserved.get(zone.id) ?? 0);
-      if (capacity > 0 && (zone.filters.wood || zone.filters.food)) destinations.push({ destination: { type: 'stockpile', stockpileId: zone.id }, target: zone, priority: zone.priority, workPriority:pawn.priorities.haul, wood: zone.filters.wood ? capacity : 0, food: zone.filters.food ? capacity : 0, reachable: canReach(world, zone, reachable, true) });
+      if (capacity > 0 && (zone.filters.wood || zone.filters.food || zone.filters.chunk)) destinations.push({ destination: { type: 'stockpile', stockpileId: zone.id }, target: zone, priority: zone.priority, workPriority:pawn.priorities.haul, wood: zone.filters.wood ? capacity : 0, food: zone.filters.food ? capacity : 0, chunk: zone.filters.chunk ? 1 : 0, reachable: canReach(world, zone, reachable, true) });
     }
     const total = sources.length * destinations.length;
     const count = Math.min(total, budget.pairs);
@@ -188,7 +189,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
       const pile = sources[Math.floor(index / destinations.length)]!;
       if (pile.owner.type !== 'ground') continue;
       const destination = destinations[index % destinations.length]!;
-      let capacity=destination[pile.kind];
+      let capacity=destination[pile.kind]??0;
       if (sameCell(pile.owner, destination.target)) continue;
       const sourceZone = zonesByCell.get(cellIndex(world, pile.owner.x, pile.owner.z));
       const excess = sourceZone ? Math.max(0, (ground.get(cellIndex(world, pile.owner.x, pile.owner.z)) ?? 0) - sourceZone.capacity) : 0;

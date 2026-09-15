@@ -1,3 +1,4 @@
+import { automaticallyHaulable } from './mining-rules.ts';
 import { ITEM_DEFINITIONS, type ItemId } from './items.ts';
 import type { World } from './types.ts';
 
@@ -14,7 +15,7 @@ export function mayImproveStorage(world:World):boolean {
       if(zone.filters[definition.kind]&&(!pile||pile.item===item)&&Math.min(zone.capacity,definition.stackLimit)>(pile?.quantity??0))best.set(item,Math.max(best.get(item)??0,zone.priority));
     }
   }
-  for(const pile of piles.values())if(pile.owner.type==='ground') {
+  for(const pile of piles.values())if(automaticallyHaulable(pile)&&pile.owner.type==='ground') {
     const zone=zones.get(pile.owner.z*world.width+pile.owner.x);
     const current=zone?.filters[pile.kind]&&pile.quantity<=zone.capacity?zone.priority:0;
     if((best.get(pile.item)??0)>current)return true;

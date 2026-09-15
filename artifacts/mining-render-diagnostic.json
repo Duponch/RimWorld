@@ -1,0 +1,99 @@
+{
+  "date": "2026-09-15T00:11:47.951Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "protocol": "Native Chromium WebGPU, actual worker 6x, natural 250² with cleared mining patch; 3/30/100 miners × 4 sandstone walls and 1 tree. 90 warmup frames; no full-world serialization during timed frames. Ground/rock buffer identities checked after excavation.",
+  "phases": [
+    {
+      "count": 100,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "description": ""
+      },
+      "errors": [],
+      "frames": {
+        "count": 936,
+        "p50": 6,
+        "p95": 6.100000000000364,
+        "p99": 17.899999999999636,
+        "max": 108
+      },
+      "frameCpu": {
+        "count": 937,
+        "p50": 4.899999998509884,
+        "p95": 6.0999999940395355,
+        "p99": 6.799999997019768,
+        "max": 15.800000004470348
+      },
+      "adoptions": {
+        "count": 26,
+        "p50": 2.5,
+        "p95": 13.800000004470348,
+        "p99": 15.100000001490116,
+        "max": 15.100000001490116
+      },
+      "drawCalls": {
+        "count": 937,
+        "p50": 179,
+        "p95": 191,
+        "p99": 192,
+        "max": 193
+      },
+      "excavationFrames": {
+        "count": 363,
+        "p50": 6,
+        "p95": 12,
+        "p99": 23.899999999999636,
+        "max": 108
+      },
+      "mined": 400,
+      "chunks": 114,
+      "stableRock": true,
+      "stableGround": true,
+      "snapshots": {
+        "count": 26,
+        "p50": 6,
+        "p95": 17,
+        "p99": 18.19999999552965,
+        "max": 18.19999999552965
+      },
+      "longFrames": [
+        {
+          "name": "long-animation-frame",
+          "entryType": "long-animation-frame",
+          "startTime": 11590.79999999702,
+          "duration": 108.29999999701977,
+          "navigationId": 5023,
+          "paintTime": 11699.09999999404,
+          "presentationTime": 11712,
+          "renderStart": 11692.69999999553,
+          "styleAndLayoutStart": 11699.09999999404,
+          "firstUIEventTimestamp": 0,
+          "blockingDuration": 0,
+          "scripts": [
+            {
+              "name": "script",
+              "entryType": "script",
+              "startTime": 11692.69999999553,
+              "duration": 6.399999998509884,
+              "navigationId": 5023,
+              "invoker": "FrameRequestCallback",
+              "invokerType": "user-callback",
+              "windowAttribution": "self",
+              "executionStart": 11692.69999999553,
+              "forcedStyleAndLayoutDuration": 0,
+              "pauseDuration": 0,
+              "sourceURL": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=7e7a4eb2",
+              "sourceFunctionName": "update",
+              "sourceCharPosition": 1967496
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

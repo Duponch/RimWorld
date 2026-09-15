@@ -5,15 +5,15 @@ import { MAX_STACK, footprintCells } from './definitions.ts';
 import { inBounds } from './pathfinding.ts';
 import type { AreaAction, AreaCommand, Cell, CommandResult, StorageSettings, World } from './types.ts';
 
-const TREE = 1, BERRIES = 2, FIXED = 4, JOB = 8, STORAGE = 16, BLOCKED = 32, RIPE = 64, GROWING = 128, ZONE_BLOCKED = 256, GROW_BLOCKED = 512, DECONSTRUCTIBLE = 1024;
-export const isAreaAction = (value: unknown): value is AreaAction => ['deconstruct', 'chop', 'harvest', 'cut', 'cancel', 'stockpile', 'remove-stockpile', 'growing', 'remove-growing'].includes(value as string);
+const TREE = 1, BERRIES = 2, FIXED = 4, JOB = 8, STORAGE = 16, BLOCKED = 32, RIPE = 64, GROWING = 128, ZONE_BLOCKED = 256, GROW_BLOCKED = 512, DECONSTRUCTIBLE = 1024, ROCK = 2048, CHUNK = 4096;
+export const isAreaAction = (value: unknown): value is AreaAction => ['mine', 'haul-chunks', 'deconstruct', 'chop', 'harvest', 'cut', 'cancel', 'stockpile', 'remove-stockpile', 'growing', 'remove-growing'].includes(value as string);
 export interface AreaBounds { minX: number; maxX: number; minZ: number; maxZ: number }
 export interface AreaIndex { flags: Uint16Array }
 export type AreaQuery = { ok: false; reason: string; code: CommandResult['code'] }
   | { ok: true; bounds: AreaBounds; cells: number[]; selected: number; skipped: number };
 
 export function validStorageSettings(settings: StorageSettings): boolean {
-  return (settings.filters === undefined || (!!settings.filters && typeof settings.filters.wood === 'boolean' && typeof settings.filters.food === 'boolean' && (settings.filters.furniture===undefined||typeof settings.filters.furniture==='boolean')))
+  return (settings.filters === undefined || (!!settings.filters && typeof settings.filters.wood === 'boolean' && typeof settings.filters.food === 'boolean' && (settings.filters.chunk===undefined||typeof settings.filters.chunk==='boolean') && (settings.filters.furniture===undefined||typeof settings.filters.furniture==='boolean')))
     && (settings.priority === undefined || (Number.isInteger(settings.priority) && settings.priority >= 1 && settings.priority <= 4))
     && (settings.capacity === undefined || (Number.isInteger(settings.capacity) && settings.capacity >= 1 && settings.capacity <= MAX_STACK));
 }
@@ -22,7 +22,9 @@ export function validStorageSettings(settings: StorageSettings): boolean {
 export function buildAreaIndex(world: World): AreaIndex {
   const flags = new Uint16Array(world.width * world.height);
   const index = (cell: Cell) => cell.z * world.width + cell.x;
-  for (let i = 0; i < flags.length; i++) if (world.tiles[i]!.terrain === 'water' || world.tiles[i]!.terrain === 'rock') flags[i] = BLOCKED;
+  for (let i = 0; i < flags.length; i++) if (world.tiles[i]!.terrain === 'water' || world.tiles[i]!.terrain === 'rock') flags[i] = BLOCKED | (world.tiles[i]!.terrain==='rock'?ROCK:0);
+  for(let i=0;i<flags.length;i++)if(world.tiles[i]!.terrain==='rough-stone')flags[i]!|=GROW_BLOCKED;
+  for(const pile of world.piles)if(pile.kind==='chunk'&&pile.owner.type==='ground'&&!pile.haulRequested)flags[index(pile.owner)]!|=CHUNK;
   for (const resource of world.resources) flags[index(resource)]! |= ZONE_BLOCKED | FIXED | (resource.kind === 'tree' ? TREE : isPlant(resource) ? BERRIES | (harvestable(world, resource) ? RIPE : 0) : 0);
   for (const structure of world.structures) for (const cell of footprintCells(structure)) flags[index(cell)]! |= DECONSTRUCTIBLE | FIXED | (occupancyOf(structure.kind)?.zones?0:ZONE_BLOCKED | GROW_BLOCKED);
   for(const job of world.jobs)if(job.furniture){const source=world.structures.find(s=>s.id===job.furniture!.structureId);if(source)for(const c of footprintCells(source))flags[index(c)]!|=JOB;}
@@ -53,7 +55,9 @@ export function queryArea(world: World, command: AreaCommand, index?: AreaIndex)
   const cells: number[] = [];
   for (let z = bounds.minZ; z <= bounds.maxZ; z++) for (let x = bounds.minX; x <= bounds.maxX; x++) {
     const i = z * world.width + x, value = flags[i]!;
-    const eligible = command.action === 'deconstruct' ? (value & DECONSTRUCTIBLE) && !(value & JOB)
+    const eligible = command.action === 'mine' ? (value & ROCK) && !(value & JOB)
+      : command.action === 'haul-chunks' ? value & CHUNK
+      : command.action === 'deconstruct' ? (value & DECONSTRUCTIBLE) && !(value & JOB)
       : command.action === 'chop' ? (value & TREE) && !(value & JOB)
       : command.action === 'cut' ? (value & BERRIES) && !(value & JOB)
       : command.action === 'harvest' ? (value & RIPE) && !(value & JOB)

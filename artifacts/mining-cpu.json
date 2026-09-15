@@ -1,0 +1,120 @@
+{
+  "date": "2026-09-14T23:48:26.584Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "map": 250,
+  "protocol": "3/30/100 miners; 4 sandstone cells + 1 tree each in cleared patch surrounded by the natural map. 3 repetitions of 500 ticks; 100 separate warmup ticks. Snapshots every 5 ticks measured separately; validation outside timing.",
+  "phases": [
+    {
+      "count": 3,
+      "ticks": {
+        "samples": 1500,
+        "p50": 0.006300000000010186,
+        "p95": 0.16059999999993124,
+        "p99": 1.5538000000000238,
+        "max": 7.0038999999999305
+      },
+      "snapshots": {
+        "samples": 300,
+        "p50": 0.9772000000000389,
+        "p95": 2.4103999999999814,
+        "p99": 4.404099999999971,
+        "max": 6.963700000000017
+      },
+      "outcomes": [
+        {
+          "tick": 2500,
+          "mined": 12,
+          "chunks": 3,
+          "remaining": 0
+        },
+        {
+          "tick": 2500,
+          "mined": 12,
+          "chunks": 3,
+          "remaining": 0
+        },
+        {
+          "tick": 2500,
+          "mined": 12,
+          "chunks": 3,
+          "remaining": 0
+        }
+      ]
+    },
+    {
+      "count": 30,
+      "ticks": {
+        "samples": 1500,
+        "p50": 0.06149999999979627,
+        "p95": 3.5319999999999254,
+        "p99": 6.853799999999865,
+        "max": 18.99590000000012
+      },
+      "snapshots": {
+        "samples": 300,
+        "p50": 1.110400000000027,
+        "p95": 2.8086000000000695,
+        "p99": 6.269400000000132,
+        "max": 11.597200000000157
+      },
+      "outcomes": [
+        {
+          "tick": 2500,
+          "mined": 120,
+          "chunks": 30,
+          "remaining": 0
+        },
+        {
+          "tick": 2500,
+          "mined": 120,
+          "chunks": 30,
+          "remaining": 0
+        },
+        {
+          "tick": 2500,
+          "mined": 120,
+          "chunks": 30,
+          "remaining": 0
+        }
+      ]
+    },
+    {
+      "count": 100,
+      "ticks": {
+        "samples": 1500,
+        "p50": 2.0387000000000626,
+        "p95": 8.423600000000079,
+        "p99": 12.843900000000758,
+        "max": 21.604299999999967
+      },
+      "snapshots": {
+        "samples": 300,
+        "p50": 1.3096999999997934,
+        "p95": 3.3770999999997002,
+        "p99": 3.719600000000355,
+        "max": 13.100400000000263
+      },
+      "outcomes": [
+        {
+          "tick": 2500,
+          "mined": 400,
+          "chunks": 114,
+          "remaining": 0
+        },
+        {
+          "tick": 2500,
+          "mined": 400,
+          "chunks": 114,
+          "remaining": 0
+        },
+        {
+          "tick": 2500,
+          "mined": 400,
+          "chunks": 114,
+          "remaining": 0
+        }
+      ]
+    }
+  ]
+}

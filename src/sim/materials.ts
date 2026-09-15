@@ -15,13 +15,14 @@ export function pileCell(world: World, pile: MaterialPile): Cell | null {
 }
 export function deliveredStock(world: World, jobId: number): Stock {
   const stock: Stock = { wood: 0, food: 0 };
-  for (const pile of world.piles) if (pile.owner.type === 'job' && pile.owner.jobId === jobId) stock[pile.kind] += pile.quantity;
+  for (const pile of world.piles) if (pile.kind !== 'chunk' && pile.owner.type === 'job' && pile.owner.jobId === jobId) stock[pile.kind] += pile.quantity;
   return stock;
 }
 export function refreshStock(world: World): void {
   const stock: Stock = { wood: 0, food: 0 };
   const delivered = new Map(world.jobs.map(job => [job.id, { wood: 0, food: 0 }]));
   for (const pile of world.piles) {
+    if(pile.kind==='chunk')continue;
     if (pile.owner.type === 'job') {
       const value = delivered.get(pile.owner.jobId);
       if (value) value[pile.kind] += pile.quantity;

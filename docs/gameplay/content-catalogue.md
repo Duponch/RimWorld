@@ -28,7 +28,7 @@ L’[audit du 13 septembre](../research/environment-review.md) confirme que les 
 | Structure `campfire` | 20 bois livrés, combustible initial, combustion/ravitaillement, factures de repas simple. | Chaleur, éclairage fonctionnel, pluie, sociabilité et dégâts absents ; autres postes différés. |
 | Objet `survival-meal` | Repas de survie du départ, 0,9 nutrition/unité, piles de dix ; CAT-015. | Ne pourrit pas. Recette, ingrédients, recherche et détérioration absents. Le scénario local donne 18 repas ; ce n'est pas Crashlanded. |
 | Objet `legacy-portion` | Compatibilité des sauvegardes V1–V4 : 0,35 nutrition/unité, piles de 75. | Ce n'est aucun objet de RimWorld ; absent des nouvelles parties. |
-| Ressources `tree`, `berries`, `rock` | Arbre générique, buisson générique, pierre au sol. | Pas un catalogue d'espèces ou de roches. Arbre abattable ; buisson persistant, récoltable selon maturité et supprimable par coupe ; minage absent. |
+| Ressources `tree`, `berries`, `rock` | Arbre générique, buisson générique, pierre au sol. | Pas un catalogue d'espèces ou de roches. Arbre abattable ; buisson persistant, récoltable selon maturité et supprimable par coupe ; les pierres Resource restent décoratives, distinctes des produits de minage V28. |
 | Structures `wall`, `bed`, `table`, `stool` | Mur, lit, table 1×2, tabouret, construits en bois ; les trois meubles sont réinstallables en V25. | Aucun ensemble complet de mobilier, matériaux, qualité ou dégâts. |
 | Terrains `grass`, `soil`, `water`, `rock` | Prairie, sol, eau et massif procéduraux. | Quatre classes locales ; ne correspondent pas à quatre définitions exhaustives du jeu original. |
 
@@ -73,4 +73,16 @@ V22 ne crée aucun objet : elle renseigne transit, arrêt, coûts d’entrée et
 | sandstone | Grès | Massif et pierre décorative typés |
 | slate | Ardoise | Massif et pierre décorative typés |
 
-Distribution régionale, persistance et apparence sont livrées ; ces cinq entrées ne comptent pas comme blocs utilisables ni fragments transportables. Les rochers historiques sans identité restent explicites. Minerais, stats, sols rocheux, taille et construction en pierre sont encore absents ; [contrat V27](../development/geology.md).
+Distribution régionale, persistance et apparence sont livrées. V28 ajoute les PV et produits ci-dessous, sans blocs utilisables. Minerais, compétences, taille et construction en pierre restent absents ; [contrat du minage](../development/mining.md).
+
+## Produits et sols V28 — CAT-059/060
+
+| Identifiant | Livraison | Limites |
+|---|---|---|
+| `granite-chunk` | Fragment après minage du granite (900 PV), pile 1, transport et stockage filtré. | Taille, blocs, masse fonctionnelle, dégâts et couverture absents. |
+| `limestone-chunk` | Fragment après minage du calcaire (700 PV), mêmes contrats. | Idem. |
+| `marble-chunk` | Fragment après minage du marbre (450 PV), mêmes contrats. | Idem. |
+| `sandstone-chunk` | Fragment après minage du grès (400 PV), mêmes contrats. | Idem. |
+| `slate-chunk` | Fragment après minage de l’ardoise (500 PV), mêmes contrats. | Idem. |
+| `legacy-chunk` | Produit d’une roche historique sans type, profil local 500 PV. | Compatibilité explicite, pas une sixième roche Core. |
+| Terrain `rough-stone` | Sol découvert, cinq identités ou type historique, fertilité zéro, coût de marche. | Lissage, sous-sols alternatifs et sols construits absents. |

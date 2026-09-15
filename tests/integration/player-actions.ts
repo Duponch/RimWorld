@@ -13,6 +13,18 @@ export async function revealCells(page:Page,cells:{x:number;z:number}[]):Promise
     // Let the camera's damped wheel movement settle before projecting again.
     await page.waitForTimeout(200);
   }
+  // A player pans when the next outcrop lies outside the maximum zoom span.
+  // Use the actual middle-button gesture and screen feedback, not a camera API.
+  for(let attempt=0;attempt<6&&!await visible();attempt++) {
+    const center=await page.evaluate(cells=>{
+      const b=document.querySelector('#viewport canvas')!.getBoundingClientRect();
+      const points=cells.map(c=>window.__lisiere.projectCell(c.x,c.z));
+      return {x:b.x+points.reduce((n,p)=>n+p.x,0)/points.length,y:b.y+points.reduce((n,p)=>n+p.y,0)/points.length};
+    },cells);
+    const dx=Math.max(-300,Math.min(300,900-center.x)),dy=Math.max(-200,Math.min(200,350-center.y));
+    await page.mouse.move(900,350);await page.mouse.down({button:'middle'});
+    await page.mouse.move(900+dx,350+dy,{steps:8});await page.mouse.up({button:'middle'});await page.waitForTimeout(200);
+  }
   await expect.poll(visible,{message:`Le joueur doit voir les cases visées : ${JSON.stringify(cells)}`}).toBe(true);
 }
 
@@ -52,7 +64,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     await panel(page,'work');await page.locator(`select[data-owner="${c.pawnId}"][data-work="${c.work}"]`).selectOption(String(c.value));
   } else if(c.type==='stockpile') {
     await tool(page,'stockpile');
-    await page.locator('#stockpile-wood').setChecked(c.filters!.wood);await page.locator('#stockpile-food').setChecked(c.filters!.food);await page.locator('#stockpile-furniture').setChecked(c.filters!.furniture??false);
+    await page.locator('#stockpile-chunk').setChecked(c.filters!.chunk??false);await page.locator('#stockpile-wood').setChecked(c.filters!.wood);await page.locator('#stockpile-food').setChecked(c.filters!.food);await page.locator('#stockpile-furniture').setChecked(c.filters!.furniture??false);
     await page.locator('#stockpile-priority').selectOption(String(c.priority??2));await page.locator('#stockpile-capacity').fill(String(c.capacity??75));
     await revealCells(page,[c]);
     await cell(page,c.x,c.z);
@@ -98,7 +110,12 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     if(c.type==='priority')return w.pawns.find(p=>p.id===c.pawnId)?.priorities[c.work]===c.value;
     if(c.type==='bill-add')return !!w.structures.find(s=>s.id===c.structureId)?.bills?.length;
     if(c.type==='bill-update') {const b=w.structures.find(s=>s.id===c.structureId)?.bills?.find(b=>b.id===c.billId);return !!b&&b.mode===c.settings.mode&&b.target===c.settings.target&&b.suspended===c.settings.suspended;}
-    if(c.type==='area')return c.action==='deconstruct'?w.jobs.some(j=>j.kind==='deconstruct'):w.growingZones.length>0;
+    if(c.type==='area') {
+      if(c.action==='deconstruct')return w.jobs.some(j=>j.kind==='deconstruct');
+      if(c.action==='haul-chunks')return w.piles.some(p=>p.kind==='chunk'&&p.haulRequested&&p.owner.type==='ground'&&p.owner.x>=Math.min(c.from.x,c.to.x)&&p.owner.x<=Math.max(c.from.x,c.to.x)&&p.owner.z>=Math.min(c.from.z,c.to.z)&&p.owner.z<=Math.max(c.from.z,c.to.z));
+      if(c.action==='mine')return w.jobs.some(j=>j.kind==='mine'&&j.x>=Math.min(c.from.x,c.to.x)&&j.x<=Math.max(c.from.x,c.to.x)&&j.z>=Math.min(c.from.z,c.to.z)&&j.z<=Math.max(c.from.z,c.to.z));
+      return w.growingZones.length>0;
+    }
     if(c.type==='stockpile')return w.stockpiles.some(s=>s.x===c.x&&s.z===c.z);
     return c.type==='designate' && w.jobs.some(j=>j.x===c.x&&j.z===c.z&&j.kind===c.kind);
   },c,{polling:100,timeout:5000});

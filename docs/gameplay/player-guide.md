@@ -187,7 +187,7 @@ Avant de créer une nouvelle colonie, le jeu conserve aussi l'état courant dans
 
 ## Limites et suite
 
-Pas encore d'autres cultures, autres postes/recettes de cuisine, chaîne du froid, minage, autres familles de loisirs, animaux, armes, combat, blessures, médecine, relations, traits, recherche, commerce, électricité, toit, température, incendie, météo dynamique, carte du monde ou storyteller. Les coûts de sols et autres profils de déplacement, les réserves à plusieurs cases partageant une politique, les autres familles sélectionnables, les fournisseurs supplémentaires de travail lié sur une case et les tournées logistiques restent à développer. Les modèles sont provisoires ; la congestion entre agents actifs et la calibration des besoins restent ouvertes. La faim ne cause pas encore de malnutrition ni de décès.
+Pas encore d'autres cultures, autres postes/recettes de cuisine, chaîne du froid, minerais et taille de pierre, autres familles de loisirs, animaux, armes, combat, blessures, médecine, relations, traits, recherche, commerce, électricité, toit, température, incendie, météo dynamique, carte du monde ou storyteller. Les coûts de sols et autres profils de déplacement, les réserves à plusieurs cases partageant une politique, les autres familles sélectionnables, les fournisseurs supplémentaires de travail lié sur une case et les tournées logistiques restent à développer. Les modèles sont provisoires ; la congestion entre agents actifs et la calibration des besoins restent ouvertes. La faim ne cause pas encore de malnutrition ni de décès.
 
 La suite est suivie dans [le plan de développement](../ROADMAP.md). Les détails de la référence et les futures interactions sont dans [la matrice des systèmes](systems-matrix.md).
 
@@ -219,4 +219,10 @@ Un constructeur ou cultivateur dégage à proximité un paquet qui gêne son cha
 
 ## Reconnaître les roches
 
-Une nouvelle carte répartit les massifs et pierres voisines en régions de granite, calcaire, marbre, grès ou ardoise. Sélectionner leur case affiche le type. Un ancien massif peut afficher « type historique non défini » : le chargement préserve sa carte. Les rochers ne sont pas encore exploitables ; leur couleur ne donne ni blocs disponibles ni recette de construction.
+Une nouvelle carte répartit les massifs et pierres voisines en régions de granite, calcaire, marbre, grès ou ardoise. Sélectionner leur case affiche le type. Un ancien massif peut afficher « type historique non défini » : le chargement préserve sa carte. Les massifs sont exploitables par le minage décrit ci-dessous. Les petites pierres décoratives ne sont pas encore transportables ; aucun bloc taillé ni recette de construction en pierre n’est livré.
+
+## Miner et ranger les fragments
+
+Dans **Architecte → Ordres**, choisir **Miner** (M), puis cliquer ou tracer sur les massifs. Activer **Minage** dans Travail. Le colon rejoint la roche, lui fait face et frappe ; ses PV sont inspectables et les dégâts restent acquis après annulation. Un massif extrait découvre un sol rocheux non fertile. Il laisse un fragment de la même roche dans 25 % des cas, sans donner directement des blocs de construction.
+
+Créer une réserve avec **Fragments de roche** autorisés, puis désigner les fragments via **Transporter les fragments** dans Ordres. Un fragment occupe une case entière et se porte individuellement ; les types ne fusionnent pas. Le clic droit du colon peut aussi imposer son rangement. Une interruption après prise conserve le fragment mais peut nécessiter une nouvelle désignation. L’atelier de taille, les minerais et les toits restent absents.

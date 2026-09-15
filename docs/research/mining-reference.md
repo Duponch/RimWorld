@@ -1,0 +1,26 @@
+# Minage et fragments — vérification du 15 septembre 2026
+
+Périmètre : RimWorld Core. Corpus utilisateur chapitres 5–7/10/21/29, **SYS/TEST-061**, **CAT-059/060**, et logistique **SYS/TEST-051..054**. Les sources ne constituent pas une preuve de parité avec une installation actuelle identifiée.
+
+## Sources confrontées
+
+- Miroir décompilé épinglé au commit `2d508035082e7cb0c8e29e230d26bda6e546928f` (20 mai 2026) : [JobDriver_Mine](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/RimWorld/JobDriver_Mine.cs), [WorkGiver_Miner](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/RimWorld/WorkGiver_Miner.cs), [Mineable](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/RimWorld/Mineable.cs), [contact aux coins](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/Verse.AI/TouchPathEndModeUtility.cs), [PathGrid](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/Verse.AI/PathGrid.cs). Source de comportement inspectable, indépendante du wiki, mais version de l’assembly non certifiée.
+- Wiki communautaire relu : [Granite](https://rimworldwiki.com/wiki/Granite), [Calcaire](https://rimworldwiki.com/wiki/Limestone), [Marbre](https://rimworldwiki.com/wiki/Marble), [Grès](https://rimworldwiki.com/wiki/Sandstone), [Ardoise](https://rimworldwiki.com/wiki/Slate), [fragments](https://rimworldwiki.com/wiki/Stone_chunk), [sol rocheux brut](https://rimworldwiki.com/wiki/Rough_stone), [vitesse de minage](https://rimworldwiki.com/wiki/Mining_Speed), [coûts de déplacement](https://rimworldwiki.com/wiki/Path_cost).
+- [Données historiques du wiki](https://rimworldwiki.com/wiki/Module:Test/data) : définitions Core 1.2.2753 et héritages ; recoupement historique, jamais présentation comme export actuel résolu. Les valeurs doivent rester révisables.
+
+## Décisions
+
+| Règle | Décision et certitude |
+|---|---|
+| Travail au contact, cible réservée, dommage conservé sur la roche | **Adopter**. Le job décrémente un délai entre coups ; les dégâts modifient les PV du massif. Annuler le travail ne répare pas la roche. Confiance élevée. |
+| Contact diagonal | **Adopter** pour le massif : le helper du miroir autorise les coins d’un édifice portant un toit. Cela ne permet pas au corps de traverser un coin solide. Les extraits de recherche du wiki et témoignages ne sont pas tous cohérents ; le chemin de code motive notre décision. Confiance moyenne à élevée. |
+| PV granite/calcaire/marbre/grès/ardoise | **Adopter** 900/700/450/400/500, recoupés entre fiches et données historiques. Les blocs taillés ont d’autres propriétés. |
+| Coups : 80 dégâts sur roche naturelle | **Adopter**. Le miroir utilise 100 ticks Core entre coups à 100 % de vitesse ; la page Mining Speed annonce encore 120 et porte une ancienne validation 1.2. **Adapter** à 10 ticks locaux par coup, en suivant le code consulté. Ce n’est pas une compétence de niveau 8 effectivement simulée. Compétence, vision, manipulation, XP et effets de vitesse restent différés. |
+| Produit | **Adopter** un fragment de la même roche avec probabilité 25 %. Tirage déterministe local et dépôt physique dans la case libérée. Pas de blocs de construction gratuits. Les dégâts pondérant le rendement des minerais ne sont pas livrés par cette règle de roche naturelle. |
+| Fragments | **Adopter** une unité par pile/case, filtre de rangement et désignation explicite de transport. La prise consomme la désignation ; une interruption après prise conserve l’objet au sol mais peut demander une nouvelle désignation. Le clic droit peut imposer le transport sans désignation préalable. |
+| Marche | **Adopter** coût de fragment 42 ticks Core et non-répétition entre objets qualifiants ; sol brut 2 ticks Core continus. PathGrid prend le maximum terrain/objet, sans additionner les deux. **Adapter** à 4,2 et 0,2 ticks locaux ; recherche entière 1400/67. Le « 24 » d’un tableau du wiki est le temps d’un corridor expérimental en secondes, pas le coût de case du fragment. |
+| Sol révélé | **Adopter** sol brut non fertile et identité conservée. **Adapter** les massifs actuels : ils découvrent tous leur roche correspondante. Sous-sols alternatifs, lissage, placement de sols et couches de terrain restent différés. |
+| Saturation et ancienne roche non typée | **Adapter explicitement** : refus conservatif du dernier coup si le dépôt/ID ne peut être garanti, sans avancer le RNG ; ancienne roche à 500 PV avec fragment historique sans type inventé. |
+| Toits, minerais, taille | **Différer**, sans déclarer SYS/TEST-061 clos : supports/toits et effondrements absents, aucune veine métallique, aucun atelier ni bloc taillé. Le test du corpus « miner un support invalide le toit » n’est pas exécuté tant que le toit n’existe pas. |
+
+Le [contrat local](../development/mining.md) et les [preuves](../development/validation.md) distinguent implementation et validation. La prochaine relecture doit vérifier les définitions résolues des chunks, leurs coexistences avec meubles, interdictions et usages de couverture lors de l’introduction de ces systèmes.

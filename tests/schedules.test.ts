@@ -7,7 +7,7 @@ import type { Command, World } from '../src/sim/types';
 
 function camp(): World {
   const w = createWorld(42, 16, 16); w.pawns = [w.pawns[0]!]; w.tiles = w.tiles.map(() => ({terrain: 'grass'})); w.resources = []; w.piles = []; w.stock = {wood: 0, food: 0};
-  Object.assign(w.pawns[0]!, {x: 2, z: 2, rest: 70, hunger: 90, priorities: {gather: 0, build: 0, haul: 0, grow: 0, cook: 0}});
+  Object.assign(w.pawns[0]!, {x: 2, z: 2, rest: 70, hunger: 90, priorities: {mine:2,gather: 0, build: 0, haul: 0, grow: 0, cook: 0}});
   const bed = {id: w.nextId++, kind: 'bed' as const, x: 10, z: 10, orientation: 0 as const, footprint: 'standard' as const};
   w.structures = [bed]; w.pawns[0]!.bedId = bed.id; return w;
 }
@@ -82,8 +82,8 @@ test('fatigue adulte, effondrement probabiliste et migration V11 préservent les
   for(const mutate of [(v:any)=>v.pawns[0].schedule.push('work'),(v:any)=>v.pawns[0].schedule[1]='joy',(v:any)=>v.pawns[0].restZeroTicks=4501,(v:any)=>v.pawns[0].collapsePending=true,(v:any)=>v.restRules='other']) {
     const bad=JSON.parse(serializeWorld(w));mutate(bad);expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();
   }
-  const old=withoutPostV11Fields(JSON.parse(checkpoint));old.schemaVersion=11;delete old.deconstructed;delete old.packed;
+  const old=withoutPostV11Fields(JSON.parse(checkpoint));old.schemaVersion=11;for(const a of old.pawns)delete a.priorities.mine;delete old.deconstructed;delete old.packed;
   const migrated=deserializeWorld(JSON.stringify(old));expect(migrated.restRules).toBe('legacy');expect(migrated.pawns[0]!.schedule).toEqual(Array(24).fill('anything'));
-  const stripped=withoutPostV11Fields(JSON.parse(serializeWorld(migrated)));stripped.schemaVersion=11;delete stripped.deconstructed;delete stripped.packed;expect(stripped).toEqual(old);
+  const stripped=withoutPostV11Fields(JSON.parse(serializeWorld(migrated)));stripped.schemaVersion=11;for(const a of stripped.pawns)delete a.priorities.mine;delete stripped.deconstructed;delete stripped.packed;expect(stripped).toEqual(old);
   migrated.pawns[0]!.rest=80;const before=migrated.pawns[0]!.rest;checked(migrated);expect(migrated.pawns[0]!.rest).toBeCloseTo(before-.008,10);
 });

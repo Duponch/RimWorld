@@ -70,4 +70,4 @@ V19 corrige aussi la création des produits sur un plan de mur : le contrôle de
 
 ## Déconstruction V24
 
-Le [contrat de retrait](deconstruction.md) complète les six bâtiments actuels : ordre au contact, réservations, récupération au sol et annulation. Réinstallation, réparation et minage sont distincts et restent absents. Les coûts historiques mur/lit ne deviennent pas calibrés du seul fait de restituer une fraction de leur coût local.
+Le [contrat de retrait](deconstruction.md) complète les six bâtiments actuels : ordre au contact, réservations, récupération au sol et annulation. La [réinstallation](furniture-transfer.md) V25–V26 et le [minage](mining.md) V28 ont leurs contrats distincts ; réparation et construction en pierre restent absentes. Les coûts historiques mur/lit ne deviennent pas calibrés du seul fait de restituer une fraction de leur coût local.

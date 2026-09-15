@@ -1,0 +1,59 @@
+{
+  "date": "2026-09-14T23:53:03.637Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "protocol": "Native Chromium WebGPU, actual worker 6x, natural 250² with cleared mining patch; 3/30/100 miners × 4 sandstone walls and 1 tree. 90 warmup frames; no full-world serialization during timed frames. Ground/rock buffer identities checked after excavation.",
+  "phases": [
+    {
+      "count": 3,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "description": ""
+      },
+      "errors": [],
+      "frames": {
+        "count": 682,
+        "p50": 6,
+        "p95": 6.099999999998545,
+        "p99": 6.099999999998545,
+        "max": 24
+      },
+      "frameCpu": {
+        "count": 683,
+        "p50": 4,
+        "p95": 4.600000001490116,
+        "p99": 5.299999997019768,
+        "max": 6.600000001490116
+      },
+      "adoptions": {
+        "count": 20,
+        "p50": 2.4000000059604645,
+        "p95": 5.299999997019768,
+        "p99": 5.5,
+        "max": 5.5
+      },
+      "drawCalls": {
+        "count": 683,
+        "p50": 161,
+        "p95": 165,
+        "p99": 166,
+        "max": 166
+      },
+      "excavationFrames": {
+        "count": 121,
+        "p50": 6,
+        "p95": 6.099999999998545,
+        "p99": 12,
+        "max": 24
+      },
+      "mined": 12,
+      "chunks": 3,
+      "stableRock": true,
+      "stableGround": false
+    }
+  ]
+}

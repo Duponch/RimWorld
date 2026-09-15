@@ -1,12 +1,12 @@
 # Identités géologiques — V27
 
-[Recherche et décisions](../research/geology-reference.md). Cinq types Core sont disponibles pour les massifs et pierres décoratives des nouvelles cartes. Ce lot prépare le minage ; il n'ajoute pas encore de tâche de mineur.
+[Recherche et décisions](../research/geology-reference.md). Cinq types Core sont disponibles pour les massifs et pierres décoratives des nouvelles cartes. Le minage est désormais livré par le [contrat V28](mining.md) ; ce document décrit la génération et les identités.
 
 ## Génération et données
 
 `src/sim/geology.ts` définit les identités, leurs noms, le choix du site et un champ régional déterministe. Deux ou trois types distincts sont choisis ; le meilleur de leurs champs interpolés désigne la roche locale. Les échelles de 80 et 30 cases sont une adaptation artistique et spatiale, indépendante des silhouettes de massifs. Les résultats sont inscrits dans `Tile.stone` sur `terrain: rock` et `Resource.stone` sur les pierres au sol. Ajouter ces échantillons n'avance ni le PRNG de partie ni les tirages des plantes et du relief.
 
-Les cinq types ne sont pas cinq nouveaux matériaux consommables. Leurs points de vie, produits, statistiques de construction et recettes seront introduits avec leurs interactions. Le terrain sous les massifs reste brun dans cette étape ; le prochain lot doit séparer roche pleine et sol découvert avec les règles de déplacement/fertilité correspondantes. Les toits ne sont pas encore simulés.
+V28 ajoute PV des massifs, sol brut découvert et fragments transportables, sans blocs taillés ni recettes. `Tile.stone` peut aussi identifier le sol `rough-stone`. Les toits restent absents ; les pierres décoratives `Resource` ne sont pas encore des piles exploitables.
 
 ## Persistance et worker
 
@@ -22,6 +22,6 @@ Les pierres isolées utilisent le même type en proximité et panorama. Un rempl
 
 ## Validation et suite
 
-Les scénarios existants de génération, surface rocheuse et snapshots sont enrichis : continuité statistique, cinq types rencontrés, cartes de bord, absence de mutation/RNG, sauvegarde exacte, rejet des champs invalides, delta d'identité seul, retrait/restauration et buffers résidents. Le court parcours UI inspecte les cinq types puis recharge une carte historique. Le pilote de colonie reste inchangé dans ses décisions : aucune nouvelle commande ne lui est disponible ; son exécution de plusieurs jours vérifie les boucles existantes avec le nouveau contenu.
+Les scénarios existants de génération, surface rocheuse et snapshots sont enrichis : continuité statistique, cinq types rencontrés, cartes de bord, absence de mutation/RNG, sauvegarde exacte, rejet des champs invalides, delta d'identité seul, retrait/restauration et buffers résidents. Le court parcours UI inspecte les cinq types puis recharge une carte historique. Le pilote V28 ouvre quatre cases après installation du camp et demande le rangement des fragments ; les preuves V27 restent historiques.
 
-Le banc `rock-edit-bench.mjs <rapport.json> [legacy]` compare les couleurs typées au témoin historique sur la même topologie/caméra. Ses excavations sont des injections graphiques, jamais du minage jouable. Voir [preuves](validation.md) pour les résultats, limites et contrôles effectivement réalisés. La prochaine étape traite accès/travail du mineur, progression persistante, produit au sol, terrain révélé, ordres et logistique ; les dépendances de toit doivent rester explicites.
+Le banc `rock-edit-bench.mjs <rapport.json> [legacy]` compare les couleurs typées au témoin historique sur la même topologie/caméra. Ses excavations sont des injections graphiques, jamais du minage jouable. Voir [preuves](validation.md) pour les résultats, limites et contrôles effectivement réalisés. Ces interactions sont livrées en V28 ; taille, minerais et dépendances de toit restent à compléter.

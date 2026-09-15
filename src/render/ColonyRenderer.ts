@@ -1,3 +1,5 @@
+import { sameTerrainSurface } from './terrain-state';
+import { chunkParts } from './chunk-presentation';
 import { installCommand } from '../sim/furniture-commands';
 import type { Structure } from '../sim/types';
 import { buildJobMarkers } from './JobLayer';
@@ -87,7 +89,6 @@ export class ColonyRenderer {
   private readonly rocks = new RockLayer(this.staticMaterial);
   private readonly daylight: DayNightLayer;
   private world: World | null = null;
-  private terrainKey = '';
   private structureKey = '';
   private jobKey = '';
   private storageKey = '';
@@ -193,10 +194,8 @@ export class ColonyRenderer {
     const previousWorld = this.world;
     // Worker deltas keep immutable terrain/resources references stable. A changed
     // collection is inspected once; ordinary pawn snapshots do not scan the map.
-    const nextTerrainKey = previousWorld?.tiles === world.tiles ? this.terrainKey
-      : `${world.seed}:${world.width}:${world.height}:${world.tiles.map(t=>t.terrain==='rock'?'s':t.terrain[0]).join('')}`;
     const newMap = !previousWorld||previousWorld.seed!==world.seed||previousWorld.width!==world.width||previousWorld.height!==world.height;
-    const groundChanged = newMap || this.terrainKey !== nextTerrainKey;
+    const groundChanged = !sameTerrainSurface(previousWorld,world);
     if (newMap) this.cancelDesignation();
     // The worker epoch distinguishes a checkpoint from an ordinary delta even
     // if terrain content and simulation tick match a previous session.
@@ -204,7 +203,6 @@ export class ColonyRenderer {
     this.world = world;
     if(tracks) {this.timeline.adopt(world.tick,speed,tracks,now,resetPoses || !this.hasTracks);this.hasTracks=true;}
     if(groundChanged) {
-      this.terrainKey = nextTerrainKey;
       buildTerrain(world,this.terrainGroup,this.staticMaterial,this.waterMaterial);
       this.overview.rebuildTerrain(this.terrainGroup);
     }
@@ -224,7 +222,7 @@ export class ColonyRenderer {
     if (structureKey !== this.structureKey || newMap) { this.structureKey = structureKey; this.buildStructures(world); }
     // Quantize presentation of progression to avoid rebuilding static meshes for
     // every work tick. Saved simulation progress remains exact and authoritative.
-    const jobKey = world.jobs.map((j) => `${j.id}:${j.kind}:${j.x}:${j.z}:${j.orientation}:${j.footprint}:${j.status}:${j.construction}:${j.escrow.wood}:${j.kind === 'chop' || j.kind === 'harvest' || j.kind === 'cut' || j.kind === 'sow' || j.kind === 'deconstruct' ? 0 : Math.floor(j.progress / jobDuration(world,j) * 20)}`).join('|');
+    const jobKey = world.jobs.map((j) => `${j.id}:${j.kind}:${j.x}:${j.z}:${j.orientation}:${j.footprint}:${j.status}:${j.construction}:${j.escrow.wood}:${j.kind === 'mine' || j.kind === 'chop' || j.kind === 'harvest' || j.kind === 'cut' || j.kind === 'sow' || j.kind === 'deconstruct' ? 0 : Math.floor(j.progress / jobDuration(world,j) * 20)}`).join('|');
     if (jobKey !== this.jobKey || newMap) { this.jobKey = jobKey; this.buildJobs(world); }
     const storageKey = world.stockpiles.map((s) => `${s.id}:${s.x}:${s.z}:${s.priority}:${s.filters.wood}:${s.filters.food}`).join('|');
     if (storageKey !== this.storageKey || newMap) { this.storageKey = storageKey; this.buildStorage(world); }
@@ -440,6 +438,8 @@ export class ColonyRenderer {
             logs.push({ x, z: lz, y, sx: WORLD_SCALE.pileWidth, sy: 0.12, sz: 0.12, color: row % 2 ? 0x9d794d : 0x896841 });
             ends.push({ x: x + WORLD_SCALE.pileWidth / 2 + 0.003, z: lz, y, sx: 0.012, sy: 0.095, sz: 0.095 });
           }
+        } else if(bundle.kind==='chunk') {
+          food.push(...chunkParts(bundle.x,z,bundle.item));
         } else {
           crates.push({ x, z, y: height / 2, sx: 0.5, sy: height, sz: 0.45 });
           for (const dx of [-0.12, 0.12]) for (const dz of [-0.11, 0.11]) food.push({ x: x + dx, z: z + dz, y: height + 0.025, sx: 0.18, sy: 0.1, sz: 0.16, color: ITEM_DEFINITIONS[bundle.item].color });
@@ -620,7 +620,7 @@ export class ColonyRenderer {
     const last = cells[cells.length - 1]!;
     this.hover.scale.set(Math.abs(cell.x - last.x) + 1, Math.abs(cell.z - last.z) + 1, 1);
     this.hover.position.set((cell.x + last.x) / 2, this.world.tiles[cell.z * this.world.width + cell.x]?.terrain === 'water' ? WORLD_SCALE.waterSurface + 0.04 : 0.055, (cell.z + last.z) / 2);
-    const validity = this.tool==='install'&&this.furniturePlacement?installCommand(this.world,{type:'install',structureId:this.furniturePlacement.id,...cell,orientation:this.placementRotation},true):this.tool === 'uninstall'||this.tool === 'wall' || this.tool === 'bed' || this.tool === 'table' || this.tool === 'stool' || this.tool === 'campfire' || this.tool === 'horseshoes' || this.tool === 'chop' || this.tool === 'harvest' || this.tool === 'cut'
+    const validity = this.tool==='install'&&this.furniturePlacement?installCommand(this.world,{type:'install',structureId:this.furniturePlacement.id,...cell,orientation:this.placementRotation},true):this.tool === 'mine'||this.tool === 'uninstall'||this.tool === 'wall' || this.tool === 'bed' || this.tool === 'table' || this.tool === 'stool' || this.tool === 'campfire' || this.tool === 'horseshoes' || this.tool === 'chop' || this.tool === 'harvest' || this.tool === 'cut'
       ? canDesignate(this.world, { type: 'designate', kind: this.tool, ...cell, orientation: this.placementRotation }) : undefined;
     const color = validity?.ok === false ? 0xe46f58 : this.tool === 'cancel' || this.tool === 'remove-stockpile' ? 0xe6876a : this.tool === 'select' ? 0xf9ebae : 0x9dd9ca;
     (this.hover.material as THREE.MeshBasicNodeMaterial).color.setHex(color);

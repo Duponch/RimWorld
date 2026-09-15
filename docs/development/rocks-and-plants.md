@@ -1,6 +1,6 @@
 # Rochers continus et buissons persistants — V7
 
-Contrat courant V27 : les [identités géologiques](geology.md) ajoutent les cinq pierres Core aux nouvelles cartes, sans clore le minage. lumière naturelle et première culture de riz décrites dans [agriculture](farming.md). Les preuves V7 en fin de document sont historiques ; météo et saisons restent absentes.
+Contrat courant V28 : les [identités géologiques](geology.md) ajoutent les cinq pierres Core aux nouvelles cartes, complétées par le [minage physique](mining.md), sans clore les roches. Lumière naturelle et première culture de riz décrites dans [agriculture](farming.md). Les preuves V7 en fin de document sont historiques ; météo et saisons restent absentes.
 Décision du 13 septembre 2026. [Plan canonique](../ROADMAP.md) : consolidation G0 et première croissance renouvelable G1 ; le minage reste G2. Les images fournies par l'utilisateur servent de cible artistique, sans reprendre les affirmations de l'autre IA comme des règles techniques.
 
 ## Massifs rocheux

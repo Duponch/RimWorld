@@ -35,7 +35,7 @@ Le [contrat courant](../development/player-orders.md) et l'[inventaire](../gamep
 
 ## Relecture V18 — transport et construction, 14 septembre 2026
 
-Chapitres 9/10 et lignes SYS/TEST-047..054 et 056 relus : réservation par quantité, conservation lors des transferts, capacité compatible, interruption et chantier. Décision **adopter** ces contrats ; les statuts du corpus ne sont pas des validations locales. SYS-055 (inventaire), 057..061 (réparation, démontage, réinstallation, remplacement, minage) restent différés.
+Chapitres 9/10 et lignes SYS/TEST-047..054 et 056 relus : réservation par quantité, conservation lors des transferts, capacité compatible, interruption et chantier. Décision **adopter** ces contrats ; les statuts du corpus ne sont pas des validations locales. SYS-055 (inventaire), 057..061 (réparation, démontage, réinstallation, remplacement, minage) étaient différés par ce lot initial. Les lots V24–V28 ont depuis livré déconstruction, transferts de meubles et minage partiel ; consulter l’[inventaire courant](../gameplay/implementation-status.md) pour les manques persistants.
 
 Recherches fraîches : Hauling/Orders du wiki, puis lecture des fournisseurs du miroir à révision épinglée et recoupement avec l'annonce officielle. Les discussions de joueurs et pages de mods trouvées par recherche ne servent pas de règle de code. Les fichiers du miroir ont été téléchargés à nouveau pour cette étape ; ils ne sont pas incorporés au jeu.
 

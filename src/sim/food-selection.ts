@@ -8,11 +8,11 @@ import type { Cell, MaterialPile, Pawn, World } from './types.ts';
 /** Neutral adult. Reference mood curve maps raw-food -7 to
  * -82 optimality; survival packs have a -5 definition offset. The +12 bonus
  * for imminent spoilage is applied to physical piles; traits remain open. */
-const FOOD_OFFSETS: Readonly<Record<ItemId, number>> = {
+const FOOD_OFFSETS: Readonly<Partial<Record<ItemId, number>>> = {
   wood: -Infinity, 'simple-meal': 16, berries: 0, rice: -82, 'survival-meal': -5, 'legacy-portion': 0,
 };
 export function foodScore(item: ItemId, distance: number): number {
-  return FOOD_OFFSETS[item] - distance;
+  return (FOOD_OFFSETS[item] ?? -Infinity) - distance;
 }
 export function pileFoodScore(world: World, pile: MaterialPile, distance: number): number {
   return foodScore(pile.item, distance) + (ticksUntilRot(pile, world.tick) < TICKS_PER_DAY / 2 ? 12 : 0);

@@ -3,10 +3,26 @@ import * as THREE from 'three/webgpu';
 import { createWorld } from '../src/sim/engine';
 import { RockLayer } from '../src/render/RockLayer';
 import { writeRockCell, ROCK_VERTICES } from '../src/render/RockSurface';
+import { sameTerrainSurface } from '../src/render/terrain-state';
 
 test('continuous faceted cells: shared seams, winding, local excavation/restoration, resident buffers and map boundaries',()=>{
   const world=createWorld(42,32,32);world.tiles=world.tiles.map(()=>({terrain:'soil'}));
   for(let z=12;z<=18;z++)for(let x=12;x<=18;x++)world.tiles[z*32+x]={terrain:'rock'};
+  const typed=structuredClone(world);typed.tiles[15*32+15]={terrain:'rock',stone:'granite'};
+  const damaged=structuredClone(typed);damaged.tiles[15*32+15]!.miningDamage=80;
+  const mined=structuredClone(damaged);mined.tiles[15*32+15]={terrain:'rough-stone',stone:'granite'};
+  expect(sameTerrainSurface(null,typed)).toBe(false);
+  expect(sameTerrainSurface(typed,typed)).toBe(true);
+  expect(sameTerrainSurface(world,typed)).toBe(false);
+  expect(sameTerrainSurface(typed,damaged)).toBe(true);
+  expect(sameTerrainSurface(damaged,mined)).toBe(true);
+  const altered=structuredClone(mined);altered.tiles[15*32+15]!.stone='marble';
+  expect(sameTerrainSurface(mined,altered)).toBe(false);
+  altered.tiles[15*32+15]={terrain:'soil'};
+  expect(sameTerrainSurface(mined,altered)).toBe(false);
+  const legacy=structuredClone(world);legacy.tiles[15*32+15]={terrain:'rough-stone'};
+  expect(sameTerrainSurface(world,legacy)).toBe(true);
+  expect(typed.tiles[15*32+15]).toEqual({terrain:'rock',stone:'granite'});
   const a=new Float32Array(ROCK_VERTICES*3),b=new Float32Array(ROCK_VERTICES*3);
   const faces=writeRockCell(world,15,15,a,0);writeRockCell(world,16,15,b,0);
   expect(faces).toHaveLength(6); // two top triangles only, no hidden internal walls

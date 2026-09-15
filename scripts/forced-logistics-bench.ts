@@ -15,7 +15,7 @@ const deadline=performance.now()+90000,rows=[];
 for(const count of [3,30,100]) {
   const w=createWorld(42,250,250),model=w.pawns[0]!;
   w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.resources=[];w.piles=[];w.structures=[];w.jobs=[];w.stockpiles=[];
-  w.pawns=Array.from({length:count},(_,i)=>({...structuredClone(model),id:w.nextId++,x:20+(i%10)*3,z:20+Math.floor(i/10)*3,hunger:100,rest:100,priorities:{haul:1,build:0,gather:0,grow:0,cook:cook?1:0}}));
+  w.pawns=Array.from({length:count},(_,i)=>({...structuredClone(model),id:w.nextId++,x:20+(i%10)*3,z:20+Math.floor(i/10)*3,hunger:100,rest:100,priorities:{mine:0,haul:1,build:0,gather:0,grow:0,cook:cook?1:0}}));
   refreshStock(w);
   for(const p of w.pawns) {
     p.schedule.fill('anything');

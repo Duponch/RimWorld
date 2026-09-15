@@ -1,6 +1,6 @@
 # Déconstruction — relecture du 14 septembre 2026
 
-Périmètre Core, six bâtiments actuellement constructibles. Le chapitre 10 du [corpus](reference-adoption.md), **SYS-058 / TEST-058**, demande travail, restitution et absence de double remboursement. Nous adoptons ce contrat, pas une architecture imposée. **SYS-059** (désinstallation/réinstallation), **SYS-057** (réparation) et **SYS-061** (minage) restent distincts et différés.
+Périmètre Core, six bâtiments actuellement constructibles. Le chapitre 10 du [corpus](reference-adoption.md), **SYS-058 / TEST-058**, demande travail, restitution et absence de double remboursement. Nous adoptons ce contrat, pas une architecture imposée. **SYS-059** (désinstallation/réinstallation), **SYS-057** (réparation) et **SYS-061** (minage) étaient différés par ce lot V24. Depuis, V25–V26 et V28 livrent respectivement [réinstallation](../development/furniture-transfer.md) et [minage partiel](mining-reference.md) ; réparation reste absente.
 
 ## Sources et confiance
 

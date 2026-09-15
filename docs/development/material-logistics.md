@@ -59,3 +59,7 @@ Le journal d'événements affiché est borné ; ce n'est pas encore un journal c
 ## Mise à jour spatiale V6
 
 Le [contrat sol, mouvement et rendu distant](spatial-motion-storage.md) remplace les descriptions antérieures de piles multiples au sol et du BFS cardinal. La migration V5→V6 est explicite ; la croissance et la récolte répétée des buissons sont livrées depuis V7 ([contrat actuel](rocks-and-plants.md)).
+
+## Fragments V28
+
+Les objets `chunk` utilisent les mêmes propriétaires, capacités typées et transferts ; une pile contient un seul fragment. Leur [désignation de rangement](mining.md) est explicite. Les vues historiques `World.stock` et escrow ne comptent toujours que bois et nourriture ; consulter les piles pour les fragments. Aucun transfert ne les convertit en matériau de chantier ou en aliment.

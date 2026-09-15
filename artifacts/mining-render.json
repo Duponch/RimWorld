@@ -1,0 +1,155 @@
+{
+  "date": "2026-09-15T00:04:03.677Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "protocol": "Native Chromium WebGPU, actual worker 6x, natural 250² with cleared mining patch; 3/30/100 miners × 4 sandstone walls and 1 tree. 90 warmup frames; no full-world serialization during timed frames. Ground/rock buffer identities checked after excavation.",
+  "phases": [
+    {
+      "count": 3,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "description": ""
+      },
+      "errors": [],
+      "frames": {
+        "count": 685,
+        "p50": 6,
+        "p95": 6.100000000000364,
+        "p99": 6.100000000000364,
+        "max": 29.899999999999636
+      },
+      "frameCpu": {
+        "count": 686,
+        "p50": 3.9000000059604645,
+        "p95": 4.700000002980232,
+        "p99": 5.800000004470348,
+        "max": 6.300000004470348
+      },
+      "adoptions": {
+        "count": 20,
+        "p50": 1.3999999985098839,
+        "p95": 4.600000001490116,
+        "p99": 5,
+        "max": 5
+      },
+      "drawCalls": {
+        "count": 686,
+        "p50": 161,
+        "p95": 165,
+        "p99": 166,
+        "max": 166
+      },
+      "excavationFrames": {
+        "count": 171,
+        "p50": 6,
+        "p95": 6.100000000000364,
+        "p99": 6.100000000000364,
+        "max": 29.899999999999636
+      },
+      "mined": 12,
+      "chunks": 3,
+      "stableRock": true,
+      "stableGround": true
+    },
+    {
+      "count": 30,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "description": ""
+      },
+      "errors": [],
+      "frames": {
+        "count": 844,
+        "p50": 6,
+        "p95": 6.100000000000364,
+        "p99": 11.900000000001455,
+        "max": 30
+      },
+      "frameCpu": {
+        "count": 845,
+        "p50": 4.300000004470348,
+        "p95": 5.5,
+        "p99": 6.5,
+        "max": 10.199999995529652
+      },
+      "adoptions": {
+        "count": 24,
+        "p50": 1.4000000059604645,
+        "p95": 7.5,
+        "p99": 11.100000001490116,
+        "max": 11.100000001490116
+      },
+      "drawCalls": {
+        "count": 845,
+        "p50": 171,
+        "p95": 175,
+        "p99": 176,
+        "max": 176
+      },
+      "excavationFrames": {
+        "count": 202,
+        "p50": 6,
+        "p95": 6.100000000000364,
+        "p99": 12.099999999998545,
+        "max": 30
+      },
+      "mined": 120,
+      "chunks": 30,
+      "stableRock": true,
+      "stableGround": true
+    },
+    {
+      "count": 100,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "description": ""
+      },
+      "errors": [],
+      "frames": {
+        "count": 936,
+        "p50": 6,
+        "p95": 6.099999999998545,
+        "p99": 18,
+        "max": 84
+      },
+      "frameCpu": {
+        "count": 937,
+        "p50": 4.800000004470348,
+        "p95": 6,
+        "p99": 7.100000001490116,
+        "max": 11
+      },
+      "adoptions": {
+        "count": 27,
+        "p50": 2.600000001490116,
+        "p95": 11.700000002980232,
+        "p99": 13.100000001490116,
+        "max": 13.100000001490116
+      },
+      "drawCalls": {
+        "count": 937,
+        "p50": 179,
+        "p95": 190,
+        "p99": 192,
+        "max": 194
+      },
+      "excavationFrames": {
+        "count": 404,
+        "p50": 6,
+        "p95": 12,
+        "p99": 24,
+        "max": 84
+      },
+      "mined": 400,
+      "chunks": 114,
+      "stableRock": true,
+      "stableGround": true
+    }
+  ]
+}

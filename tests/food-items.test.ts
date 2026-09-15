@@ -7,7 +7,7 @@ import legacyMeal from './fixtures/schema-4-meal.json';
 function fixture() {
   const w = createWorld(42, 16, 16); w.resources = []; w.piles = []; w.stockpiles = [];
   w.tiles = w.tiles.map(() => ({ terrain: 'grass' })); w.pawns = w.pawns.slice(0, 2);
-  w.pawns.forEach((p, i) => { p.x = 2; p.z = 2 + i * 2; p.hunger = 20; p.rest = 100; p.priorities = { gather: 0, build: 0, haul: 0, grow: 0 , cook: 0 }; });
+  w.pawns.forEach((p, i) => { p.x = 2; p.z = 2 + i * 2; p.hunger = 20; p.rest = 100; p.priorities = {mine:2, gather: 0, build: 0, haul: 0, grow: 0 , cook: 0 }; });
   refreshStock(w); return w;
 }
 

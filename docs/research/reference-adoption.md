@@ -134,3 +134,7 @@ Chapitre 10, **SYS/TEST-051..054 et SYS/TEST-059** : **adopter** rangement filtr
 ## V27 — régions géologiques
 
 Chapitres 5–7/10/29 ; **SYS/TEST-016..019/061, CAT-059/060** : adopter les cinq types Core et la distinction des produits ; adapter le choix du site et les champs régionaux ; différer sols révélés, minage, minerais, toit et taille. [Relecture précise](geology-reference.md). Les identités seules ne satisfont ni SYS-061 ni son test de support de toit. Les métadonnées historiques absentes restent absentes.
+
+## V28 — minage, sol brut et produits
+
+Chapitres 5–7/10/21/29, **SYS/TEST-061**, **CAT-059/060**, logistique **SYS/TEST-051..054** : adopter accès, dégât persistant, produit typé et demande de transport ; adapter la cadence locale, les anciennes roches et le dépôt conservatif ; différer minerais, taille, sous-sols, toits/effondrements. [Recherche fraîche](mining-reference.md), [contrat](../development/mining.md). Le test de support de toit du corpus reste non exécuté. Les scénarios existants de colonie et de navigation sont enrichis ; les statuts du corpus ne valent pas validation locale.

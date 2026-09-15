@@ -10,10 +10,10 @@ test('loisirs par interface : migration, piquet construit, horaire, activité ph
     const fixture=createWorld(42,32,32);fixture.tick=2000;fixture.tiles=fixture.tiles.map(()=>({terrain:'grass'}));fixture.resources=[];fixture.piles=[];
     for(const p of fixture.pawns)p.schedule.fill('anything');
     addGroundMaterial(fixture,'wood',30,{x:15,z:17},'wood');refreshStock(fixture);
-    const old=JSON.parse(serializeWorld(fixture));old.schemaVersion=14;delete old.deconstructed;delete old.packed;for(const pawn of old.pawns)delete pawn.orders;old.pawns.forEach((p:any)=>delete p.recreation);
+    const old=JSON.parse(serializeWorld(fixture));old.schemaVersion=14;for(const a of old.pawns)delete a.priorities.mine;delete old.deconstructed;delete old.packed;for(const pawn of old.pawns)delete pawn.orders;old.pawns.forEach((p:any)=>delete p.recreation);
     await page.addInitScript(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:JSON.stringify(old)});
     await page.goto('/?size=32&e2e');await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();
-    await expect.poll(async()=>(await world(page)).schemaVersion).toBe(27);expect((await world(page)).pawns.map(p=>p.recreation.level)).toEqual([55,55,55]);
+    await expect.poll(async()=>(await world(page)).schemaVersion).toBe(28);expect((await world(page)).pawns.map(p=>p.recreation.level)).toEqual([55,55,55]);
     await tool(page,'horseshoes');await cell(page,16,14);
     await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).structures.some(s=>s.kind==='horseshoes'),{timeout:18000}).toBe(true);
     await page.locator('[data-speed="0"]').click();const built=await world(page);expect(built.stock.wood).toBe(20);

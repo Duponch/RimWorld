@@ -9,6 +9,7 @@ import { footprintCells } from './definitions.ts';
 export const cellIndex = (world: World, x: number, z: number): number => z * world.width + x;
 export const inBounds = (world: World, x: number, z: number): boolean =>
   Number.isInteger(x) && Number.isInteger(z) && x >= 0 && z >= 0 && x < world.width && z < world.height;
+export const workNeighbours=(cell:Cell,kind?:string):Cell[]=>[[0,-1],[1,0],[0,1],[-1,0],...(kind==='mine'?[[-1,-1],[1,-1],[1,1],[-1,1]]:[])].map(([dx,dz])=>({x:cell.x+dx!,z:cell.z+dz!}));
 export const adjacent = (a: Cell, b: Cell): boolean => Math.abs(a.x - b.x) + Math.abs(a.z - b.z) === 1;
 
 /** Only finished solids block V16 transit. Completion checks active actors/edges. */
@@ -63,16 +64,13 @@ export function routeToCell(world: World, target: Cell, reachable: Reachability)
  * exhausts the component. This supports ranking all work targets exactly. */
 export function reachableCells(world: World, start: Cell, blocked: Uint8Array, occupied: ReadonlySet<number>, goals?: ReadonlySet<number>, allGroups?:readonly ReadonlySet<number>[]): DistanceField {
   const unavailable=blocked.slice();for(const index of occupied)unavailable[index]=1;
-  const {costs,repeaters,stops}=navigationCosts(world);
-  const result=new WeightedSearch(world.width,world.height,cellIndex(world,start.x,start.z),unavailable,costs,repeaters).finish(goals,allGroups);result.stops=stops;return result;
+  const {costs,repeaters,stops,floors}=navigationCosts(world);
+  const result=new WeightedSearch(world.width,world.height,cellIndex(world,start.x,start.z),unavailable,costs,repeaters,floors).finish(goals,allGroups);result.stops=stops;return result;
 }
 
 export function routeToJob(world: World, target: Cell & { kind?: string; orientation?: 0 | 1 | 2 | 3; footprint?: 'standard' | 'legacy-single' }, reachable: Reachability, allowTarget = false): Cell[] | null {
   const cells = target.kind ? footprintCells(target as Job) : [target];
-  const candidates: Cell[] = cells.flatMap(cell => [
-    { x: cell.x, z: cell.z - 1 }, { x: cell.x + 1, z: cell.z },
-    { x: cell.x, z: cell.z + 1 }, { x: cell.x - 1, z: cell.z },
-  ]).filter(cell => (allowTarget || !cells.some(occupied => occupied.x === cell.x && occupied.z === cell.z))&&canStopAt(world,cell,reachable));
+  const candidates: Cell[] = cells.flatMap(cell => workNeighbours(cell,target.kind)).filter(cell => (allowTarget || !cells.some(occupied => occupied.x === cell.x && occupied.z === cell.z))&&canStopAt(world,cell,reachable));
   if (allowTarget&&canStopAt(world,target,reachable)) candidates.unshift({ x: target.x, z: target.z });
   const goals=new Set(candidates.filter(c=>inBounds(world,c.x,c.z)).map(c=>cellIndex(world,c.x,c.z)).filter(i=>hasReachableCell(reachable,i)));
   if(!goals.size)return null;
@@ -99,7 +97,7 @@ export function canStopAt(world:World,cell:Cell,reach?:Reachability):boolean {
 }
 
 /** Same interaction cells as routeToJob(..., true) for single-cell food piles. */
-export function interactionGoals(world: World, cells: Cell[]): Set<number> {
+export function interactionGoals(world: World, cells: Cell[], kind?:string): Set<number> {
   const goals = new Set<number>();
   for (const cell of cells) {
     const index = cellIndex(world, cell.x, cell.z); goals.add(index);
@@ -108,6 +106,7 @@ export function interactionGoals(world: World, cells: Cell[]): Set<number> {
     if (cell.z + 1 < world.height) goals.add(index + world.width);
     if (cell.x > 0) goals.add(index - 1);
   }
+  if(kind==='mine')for(const c of cells)for(const n of workNeighbours(c,kind))if(inBounds(world,n.x,n.z))goals.add(cellIndex(world,n.x,n.z));
   for(const i of goals)if(!canStandAt(world,{x:i%world.width,z:Math.floor(i/world.width)}))goals.delete(i);
   return goals;
 }

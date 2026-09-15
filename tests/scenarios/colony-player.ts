@@ -1,3 +1,4 @@
+import { miningDecisions } from './mining-player.ts';
 import { installCommand } from '../../src/sim/furniture-commands.ts';
 import { queryOrderOptions } from '../../src/sim/player-orders.ts';
 import { planCookingOrder } from '../../src/sim/player-cooking.ts';
@@ -49,9 +50,9 @@ export function playerDecisions(world: World): Decision[] {
     if (cook) for (const [hour, assignment] of [[5, 'anything'], [21, 'sleep']] as const) if (cook.schedule[hour] !== assignment)
       out.push({reason: 'Décaler le sommeil de la cuisinière pour préparer le matin.', command: {type: 'schedule-paint', pawnId: cook.id, hours: [hour], assignment}});
   }
-  const priorities = [{ gather: 1, build: 3, haul: 2, grow: 2, cook:3 }, { gather: 3, build: 1, haul: 2, grow: 3, cook:3 }, { gather: 2, build: 3, haul: 2, grow: 2, cook:1 }] as const;
+  const priorities = [{ mine:2, gather: 1, build: 3, haul: 2, grow: 2, cook:3 }, { mine:2, gather: 3, build: 1, haul: 2, grow: 3, cook:3 }, { mine:3, gather: 2, build: 3, haul: 2, grow: 2, cook:1 }] as const;
   world.pawns.forEach((pawn, i) => {
-    for (const work of ['gather', 'build', 'haul', 'grow','cook'] as const) if (pawn.priorities[work] !== priorities[i % 3]![work]) {
+    for (const work of ['gather', 'build', 'haul', 'grow','cook','mine'] as const) if (pawn.priorities[work] !== priorities[i % 3]![work]) {
       out.push({ reason: 'Répartir collecte, construction, cuisine et transport entre les trois colons.', command: { type: 'priority', pawnId: pawn.id, work, value: priorities[i % 3]![work] } });
     }
   });
@@ -126,6 +127,7 @@ export function playerDecisions(world: World): Decision[] {
       if (canDesignate(world, command).ok) { out.push({ reason: kind === 'tree' ? 'Prévoir le bois des chantiers et une petite marge.' : 'Renouveler la réserve alimentaire avant la pénurie.', command }); planned += resource.amount; }
     }
   }
+  out.push(...miningDecisions(world));
   return out;
 }
 
@@ -134,6 +136,7 @@ export function colonySummary(world: World) {
   const occupied=new Map<number,number>();
   for(const p of world.pawns){const cell=p.z*world.width+p.x;occupied.set(cell,(occupied.get(cell)??0)+1);}
   return { tick: world.tick, foodPolicies: world.pawns.map(p=>p.foodPolicyId), restRules: world.restRules, scheduledSleepHours: world.pawns.map(p=>p.schedule.filter(s=>s==='sleep').length), spoiled: { ...world.spoiled }, crops: world.resources.filter(r=>r.kind==='rice').length, growingCells:fields.size,
+    mining:{cells:world.tiles.filter(t=>t.terrain==='rough-stone').length,chunks:world.piles.filter(p=>p.kind==='chunk').length,stored:world.piles.filter(p=>p.kind==='chunk'&&p.owner.type==='ground'&&world.stockpiles.some(s=>s.filters.chunk&&p.owner.type==='ground'&&s.x===p.owner.x&&s.z===p.owner.z)).length},
     recreation:world.pawns.map(p=>({level:p.recreation.level,tolerance:{...p.recreation.tolerance},bored:{...p.recreation.bored}})),
     furnitureTransit:world.pawns.filter(p=>p.motion&&p.motion.end>world.tick&&(p.motion.terrainDelay??0)>0).length,
     furnitureExits:world.pawns.filter(p=>p.transitExit).length,

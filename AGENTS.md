@@ -49,7 +49,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 27 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 28 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)
@@ -95,7 +95,7 @@
 
 ## Déconstruction V24
 - Lire docs/development/deconstruction.md avant de toucher aux retraits, restitutions ou réservations de bâtiments. Déconstruction est un Job ciblant un Structure.id ; désignation seule ne bloque pas les usages, réservation oui. Progression réinitialisée après interruption, conservée après sauvegarde.
-- Une restitution n’avance le PRNG et ne supprime le bâtiment qu’après prévalidation des dépôts. Le bilan world.deconstructed conserve pertes et historique combustible retiré. V23 est strictement validée avant migration. Réinstallation des quatre meubles admissibles livrée en V25 ; minage, autres matériaux et compétences restent distincts et absents.
+- Une restitution n’avance le PRNG et ne supprime le bâtiment qu’après prévalidation des dépôts. Le bilan world.deconstructed conserve pertes et historique combustible retiré. V23 est strictement validée avant migration. Réinstallation des quatre meubles admissibles livrée en V25 ; minage V28 distinct ; autres matériaux et compétences restent absents.
 
 ## Meubles entiers V25
 - Lire docs/development/furniture-transfer.md avant de modifier installation, paquet, portage ou annulation. Le bâtiment garde son identité et le propriétaire de son lit entre structures et packed ; une seule représentation autoritaire et un seul propriétaire.
@@ -104,3 +104,7 @@
 
 ## Géologie V27
 - Lire docs/development/geology.md et docs/research/geology-reference.md. Tile.stone et Resource.stone identifient les cinq roches Core, uniquement sur leurs porteurs rocheux ; absence = contenu historique non typé. Valider V26 strictement avant migration sans régénérer le site. Les couleurs et identités ne livrent pas le minage, le sol découvert, les chunks, les recettes ou les toits. Les futurs transferts doivent conserver le type.
+
+## Minage V28
+- Lire docs/development/mining.md et docs/research/mining-reference.md. Dégâts sur Tile.miningDamage, cadence de coup sur Job.progress ; annuler ne répare pas la roche. Dernier coup, RNG et produit engagés seulement après prévalidation.
+- `rough-stone` conserve le type, reste non fertile ; fragments `chunk` pile 1, rangement après désignation, pas de conversion en bois/aliment/bloc. Le maximum terrain/objet conserve le coût du sol entre répétiteurs. V27 strictement validée avant migration. Les roches historiques restent non typées (500 PV provisoires). Toits, minerais, taille et pierres décoratives transportables restent absents.

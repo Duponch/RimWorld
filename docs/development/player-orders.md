@@ -81,3 +81,5 @@ Trois scénarios `player-cooking` vérifient recettes mélangées, réservations
 Autres familles sélectionnables, ordre de sommeil/ingestion manuel, mobilisation restent absents. Équipement et accessoires attendent le [contrat de présentation des personnages](character-presentation.md).
 
 Trois scénarios `priority-work` combinent chaîne complète de lit, voisin intact, maintien de famille, cuisine répétée puis ingestion, annulation/effondrement avec cargaison, délais/budgets, accès perdu et migration stricte. Le pilote conserve la préférence dans son diagnostic et évite de réordonner un colon déjà priorisé.
+
+V28 ajoute le job de minage aux ordres directs et à leur file réservée. Son accès autorise le contact diagonal avec le massif sans autoriser le transit à travers les coins solides. Les dégâts persistent après annulation ; la préparation du prochain coup est réinitialisée. Les fragments utilisent le fournisseur de transport existant. [Contrat](mining.md).

@@ -17,7 +17,7 @@ export function moveToward(world: World, pawn: Pawn, target: Cell, allowTarget: 
   if (!next || !canStep(world,pawn,next,blocked,CIVIL_TRANSIT_BLOCKERS)) {
     if (pawn.planCooldown > 0) return;
     const cells = 'kind' in target ? footprintCells(target as Job) : [target];
-    const goals = exact ? new Set([cellIndex(world,target.x,target.z)]) : interactionGoals(world,cells);
+    const goals = exact ? new Set([cellIndex(world,target.x,target.z)]) : interactionGoals(world,cells,'kind' in target?String(target.kind):undefined);
     if (!exact && !allowTarget) for (const cell of cells) goals.delete(cellIndex(world,cell.x,cell.z));
     const reachable = search(world,pawn,blocked,CIVIL_TRANSIT_BLOCKERS,budget,goals); if (!reachable) return;
     const path = exact ? routeToCell(world,target,reachable) : routeToJob(world,target,reachable,allowTarget);
