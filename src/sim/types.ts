@@ -1,12 +1,12 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 30 as const;
+export const SCHEMA_VERSION = 31 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
 export type Terrain = 'grass' | 'soil' | 'water' | 'rock' | 'rough-stone';
 export type ResourceKind = 'tree' | 'berries' | 'rock' | 'rice';
 export type MaterialKind = 'wood' | 'food' | 'chunk' | 'steel';
-export type StructureKind = 'wall' | 'bed' | 'table' | 'stool' | 'campfire' | 'horseshoes';
+export type StructureKind = 'wall' | 'bed' | 'table' | 'stool' | 'campfire' | 'horseshoes' | 'stonecutter';
 export type JobKind = 'mine' | 'chop' | 'harvest' | 'cut' | 'sow' | 'deconstruct' | 'uninstall' | 'install' | StructureKind;
 export type WorkType = 'mine' | 'gather' | 'build' | 'haul' | 'grow' | 'cook';
 export type Orientation = 0 | 1 | 2 | 3;

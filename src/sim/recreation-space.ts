@@ -19,7 +19,7 @@ export function recreationSpace(world: World, resourceTargets?: readonly Cell[])
   for(const job of world.jobs)index.objects.add(job.z*world.width+job.x);
   for(const s of [...world.structures,...world.jobs]) {
     if(s.kind==='wall'&&!('construction' in s))index.walls.add(s.z*world.width+s.x);
-    if(s.kind==='wall'||s.kind==='table'||world.schemaVersion>=22&&(!('status' in s)&&(s.kind==='bed'||s.kind==='campfire')||'construction' in s&&s.construction==='frame'))for(const c of footprintCells(s))index.solids.add(c.z*world.width+c.x);
+    if(s.kind==='wall'||s.kind==='table'||world.schemaVersion>=22&&(!('status' in s)&&(s.kind==='bed'||s.kind==='campfire'||s.kind==='stonecutter')||'construction' in s&&s.construction==='frame'))for(const c of footprintCells(s))index.solids.add(c.z*world.width+c.x);
   }
   if(resourceTargets) {
     // At most 24 sky sites: retain only their obstacles, not a copy of the forest.

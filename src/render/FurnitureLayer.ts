@@ -4,6 +4,7 @@ import type { BoxBatches } from './BoxBatches';
 import type { World } from '../sim/types';
 import { recreationParts } from './recreation-parts';
 import { campfireParts } from './campfire-parts';
+import { stonecutterParts } from './stonecutter-parts';
 import { footprintCells } from '../sim/definitions';
 import { WORLD_SCALE } from '../world/scale';
 import type { Placement } from './primitives';
@@ -53,7 +54,7 @@ export function buildFurniture(world: World, group: THREE.Group, cutaway: boolea
     const fires=campfireParts(world);
     batches.set(group,'campfire-flames',fires.flames,'border',false);
     batches.set(group, 'furniture', [
-      ...fires.base, ...recreationParts(world),
+      ...fires.base, ...recreationParts(world), ...stonecutterParts(world),
       ...parcels,
       ...woodParts.map(p => ({ ...p, color: p.color ?? 0xa38559 })),
       ...walls.map(p => ({ ...p, sx: 0.96, sy: wallHeight - 0.09, sz: 0.96, color: p.color ?? 0xa6916e })),

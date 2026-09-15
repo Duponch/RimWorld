@@ -225,7 +225,7 @@ Une nouvelle carte répartit les massifs et pierres voisines en régions de gran
 
 Dans **Architecte → Ordres**, choisir **Miner** (M), puis cliquer ou tracer sur les massifs. Activer **Minage** dans Travail. Le colon rejoint la roche, lui fait face et frappe ; ses PV sont inspectables et les dégâts restent acquis après annulation. Un massif extrait découvre un sol rocheux non fertile. Il laisse un fragment de la même roche dans 25 % des cas, sans donner directement des blocs de construction.
 
-Créer une réserve avec **Fragments de roche** autorisés, puis désigner les fragments via **Transporter les fragments** dans Ordres. Un fragment occupe une case entière et se porte individuellement ; les types ne fusionnent pas. Le clic droit du colon peut aussi imposer son rangement. Une interruption après prise conserve le fragment mais peut nécessiter une nouvelle désignation. L’atelier de taille, les autres minerais que l’acier et les toits restent absents.
+Créer une réserve avec **Fragments de roche** autorisés, puis désigner les fragments via **Transporter les fragments** dans Ordres. Un fragment occupe une case entière et se porte individuellement ; les types ne fusionnent pas. Le clic droit du colon peut aussi imposer son rangement. Une interruption après prise conserve le fragment mais peut nécessiter une nouvelle désignation. L’atelier de taille peut être construit en V31 ; ses recettes, les autres minerais que l’acier et les toits restent absents.
 
 ## Extraire une réserve d’acier
 
@@ -233,4 +233,10 @@ Les **nouvelles colonies** peuvent présenter de l’**acier compacté**, reconn
 
 Créer une réserve autorisant **Acier** : les transporteurs le rangent automatiquement, sans outil « Transporter les fragments ». Une pile contient au plus 75 unités ; le total apparaît à gauche. Les anciennes réserves refusent ce nouveau matériau jusqu’à modification de leur filtre. Les anciennes cartes conservent leur géologie, sans apparition rétroactive de gisements.
 
-L’acier est extractible, stockable et utilisable pour les cinq constructions à matériau sélectionnable dans Architecte. **L’atelier de taille vient ensuite**. Le rendement est encore neutre, les compétences n’étant pas simulées.
+L’acier est extractible, stockable et utilisable pour les constructions à matériau sélectionnable dans Architecte, dont la table de taille V31. Le rendement est encore neutre, les compétences n’étant pas simulées.
+
+## Préparer un atelier de taille
+
+**Architecte → Production → Table de taille de pierre** : choisir Bois (75 bois + 30 acier) ou Acier (105 acier), puis tourner l’emprise 3×1 avec Q/E. Tous les matériaux doivent être livrés avant la finition. Le plateau garde les piles compatibles, mais retire les zones sous son empreinte. Les colons peuvent le franchir, sans s’y arrêter pour une autre activité.
+
+L’inspection permet de désinstaller ou réinstaller l’atelier comme un meuble entier, ou de le déconstruire pour récupérer environ la moitié des matériaux. **La fabrication de blocs n’est pas encore disponible** dans cette étape : conserver les fragments extraits pour la prochaine tranche. Recherche et effets d’une pièce ne sont pas simulés.

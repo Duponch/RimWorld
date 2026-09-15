@@ -18,8 +18,8 @@ Le rendu teinte et facette les sommets déjà présents dans RockLayer : aucun n
 
 Validation : scénario profond minage enrichi (génération, dégâts/reprise, saturation, produit, 75+5 après fusion, type réservé, marche, migration), ressources GPU conservées et pilote multi-jours. Les exécutions réellement obtenues sont dans [validation](validation.md).
 
-**Restent absents** : recettes à plusieurs ingrédients constructifs, atelier de taille/blocs, autres minerais, recherche jouable, compétences/capacités et dégâts externes, masse réelle de portage, toits, lissage, strates et stocks initiaux Crashlanded.
+**Restent absents** : fabrication de blocs, autres ateliers/minerais, recherche jouable, compétences/capacités et dégâts externes, masse réelle de portage, toits, lissage, strates et stocks initiaux Crashlanded. V31 livre la table de taille avec sa recette constructive mixte.
 
 ## Usage constructif V30
 
-L’acier est désormais utilisable pour les cinq familles à matériau substituable présentes. Les [recettes et transferts](construction-materials.md) conservent son type, y compris dans les restitutions ; l’atelier de taille et les blocs restent à développer.
+L’acier est utilisable pour les cinq familles à matériau substituable de V30, puis la table de taille V31. Les [recettes et transferts](construction-materials.md) conservent son type, y compris dans les restitutions ; les [ingrédients mixtes de l’atelier](stonecutter.md) sont livrés, la fabrication de blocs reste à développer.

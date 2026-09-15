@@ -6,6 +6,10 @@ import { finishDeconstruction } from '../src/sim/deconstruction';
 import { planHaulOrder } from '../src/sim/player-hauling';
 import { deconstructionCamp } from './scenarios/deconstruction';
 import type { World } from '../src/sim/types';
+import { footprintCells, footprintContains } from '../src/sim/definitions';
+import { furnitureDelay, canStandAt } from '../src/sim/furniture-travel';
+import { constructionSupplied } from '../src/sim/construction-materials';
+import { canDesignate } from '../src/sim/engine';
 
 function until(w:World, done:()=>boolean, limit=1600) {
   for(let i=0;i<limit&&!done();i++) { stepWorld(w); expect(validateWorld(w),JSON.stringify({tick:w.tick,jobs:w.jobs,pawns:w.pawns})).toEqual([]); }
@@ -80,4 +84,72 @@ test('V29 keeps its eight-wood bed and existing work while V30 new beds require 
   expect(serializeWorld(loaded)).toBe(before);
   expect(constructionRecipe({kind:'bed',material:'wood'}).work).toBe(56);
   expect(constructionRecipe({kind:'bed',material:'steel'}).work).toBe(80);
+});
+
+test('three-cell workshops require every mixed ingredient; all-steel cost is aggregated, progress beyond 119 and in-flight orders resume exactly',()=>{
+  for(const material of ['wood','steel'] as const) {
+    const w=deconstructionCamp(2);w.tick=2000;
+    for(const p of w.pawns){p.priorities.build=0;p.priorities.haul=1;}
+    addGroundMaterial(w,material,75,{x:10,z:16},material);
+    addGroundMaterial(w,'steel',29,{x:11,z:17},'steel');
+    addGroundMaterial(w,'food',5,{x:18,z:16},'legacy-portion');
+    const preserved=w.piles.find(p=>p.kind==='food')!;
+    expect(applyCommand(w,{type:'stockpile',x:18,z:16,enabled:true,filters:{wood:false,food:true}}).ok).toBe(true);
+    expect(applyCommand(w,{type:'designate',kind:'stonecutter',material,x:17,z:16}).ok).toBe(true);
+    const job=w.jobs[0]!;
+    expect(w.stockpiles).toEqual([]);expect(w.piles.find(p=>p.id===preserved.id)).toBe(preserved);
+    expect(constructionRecipe(job).ingredients).toEqual(material==='wood'?[{item:'wood',quantity:75},{item:'steel',quantity:30}]:[{item:'steel',quantity:105}]);
+    expect(footprintCells(job)).toHaveLength(3);
+    for(const p of w.pawns)expect(applyCommand(w,{type:'order-haul',pawnId:p.id,target:{type:'job',jobId:job.id},queue:false}).ok).toBe(true);
+    until(w,()=>w.pawns.some(p=>p.haul?.phase==='deliver'));
+    const interrupted=deserializeWorld(serializeWorld(w));
+    expect(applyCommand(interrupted,{type:'cancel',x:16,z:16}).ok).toBe(true);
+    expect(validateWorld(interrupted)).toEqual([]);expect(steelAccount(interrupted)).toBe(material==='wood'?29:104);
+    until(w,()=>w.piles.filter(p=>p.owner.type==='job').reduce((n,p)=>n+p.quantity,0)===104);
+    expect(job.progress).toBe(0);expect(constructionSupplied(w,job)).toBe(false);
+    for(const p of w.pawns)applyCommand(w,{type:'priority',pawnId:p.id,work:'build',value:1});
+    stepWorld(w,20);expect(job.progress).toBe(0);
+    addGroundMaterial(w,'steel',1,{x:11,z:17},'steel');
+    until(w,()=>job.progress>=125);
+    if(material==='steel')expect(w.piles.filter(p=>p.owner.type==='job').map(p=>p.quantity).sort((a,b)=>a-b)).toEqual([30,75]);
+    const raw=serializeWorld(w),copy=deserializeWorld(raw);
+    for(const change of ['legacy','material','excess'] as const){const bad=JSON.parse(raw);if(change==='legacy')bad.schemaVersion=30;else if(change==='material')delete bad.jobs[0].material;else bad.jobs[0].progress=constructionRecipe(job).work;expect(()=>deserializeWorld(JSON.stringify(bad)),change).toThrow();}
+    until(w,()=>w.structures.length===1);stepWorld(copy,w.tick-copy.tick);expect(copy).toEqual(w);
+    expect(steelAccount(w)).toBe(material==='wood'?30:105);expect(w.piles.find(p=>p.id===preserved.id)?.owner).toEqual(preserved.owner);
+    const bench=w.structures[0]!;
+    for(const c of footprintCells(bench))expect(canStandAt(w,c)).toBe(false);
+    expect(furnitureDelay(w,{x:17,z:15},bench)).toBe(5);expect(furnitureDelay(w,{x:16,z:16},bench)).toBe(0);
+    expect(applyCommand(w,{type:'install',structureId:bench.id,x:23,z:20,orientation:1}).ok).toBe(true);
+    until(w,()=>w.packed[0]?.owner.type==='pawn');
+    const moving=deserializeWorld(serializeWorld(w));
+    const old=JSON.parse(serializeWorld(w));old.schemaVersion=30;expect(()=>deserializeWorld(JSON.stringify(old))).toThrow(/version 30/);
+    until(w,()=>!w.jobs.length);stepWorld(moving,w.tick-moving.tick);expect(moving).toEqual(w);
+    expect(w.structures[0]).toBe(bench);expect(bench.material).toBe(material);
+    expect(footprintCells(bench).map(c=>c.z).sort((a,b)=>a-b)).toEqual([19,20,21]);
+    expect(applyCommand(w,{type:'designate',kind:'deconstruct',x:23,z:19}).ok).toBe(true);
+    until(w,()=>!w.structures.length);expect(steelAccount(w)).toBe(material==='wood'?30:105);
+    expect(w.piles.filter(p=>p.item==='steel').reduce((n,p)=>n+p.quantity,0)).toBeOneOf(material==='wood'?[15]:[52,53]);
+  }
+});
+
+test('workshop rotations reject clipped sides and legacy shapes; mixed refunds preflight both types without mutation or RNG loss',()=>{
+  const w=deconstructionCamp();
+  for(const orientation of [0,1,2,3] as const){
+    const s={type:'designate',kind:'stonecutter',material:'wood',x:16,z:16,orientation} as const;
+    expect(canDesignate(w,s).ok).toBe(true);
+    const expected=orientation%2===0?[[15,16],[16,16],[17,16]]:[[16,15],[16,16],[16,17]];
+    for(let z=14;z<=18;z++)for(let x=14;x<=18;x++)expect(footprintContains(s,{x,z})).toBe(expected.some(c=>c[0]===x&&c[1]===z));
+    expect(canDesignate(w,{...s,x:orientation%2===0?0:16,z:orientation%2===1?0:16}).ok).toBe(false);
+  }
+  const b={id:w.nextId++,kind:'stonecutter',material:'wood',x:17,z:16,orientation:0,footprint:'standard'} as const;w.structures.push(b);
+  for(let z=0;z<w.height;z++)for(let x=0;x<w.width;x++)if(x!==17||z!==16)w.piles.push({id:w.nextId++,kind:'food',item:'legacy-portion',quantity:75,owner:{type:'ground',x,z}});
+  refreshStock(w);expect(validateWorld(w)).toEqual([]);
+  expect(applyCommand(w,{type:'designate',kind:'deconstruct',x:17,z:16}).ok).toBe(true);
+  const job=w.jobs[0]!,before=serializeWorld(w);
+  expect(finishDeconstruction(w,w.pawns[0]!,job)).toBe(false);expect(serializeWorld(w)).toBe(before);
+  w.piles=w.piles.filter(p=>p.owner.type!=='ground'||p.owner.x!==17||p.owner.z!==15);refreshStock(w);
+  expect(finishDeconstruction(w,w.pawns[0]!,job)).toBe(true);expect(validateWorld(w)).toEqual([]);
+  expect(steelAccount(w)).toBe(30);expect(w.piles.filter(p=>p.kind==='wood').reduce((n,p)=>n+p.quantity,0)+w.deconstructed.lostWood).toBe(75);
+  const legacy=JSON.parse(serializeWorld(deconstructionCamp()));legacy.schemaVersion=30;
+  expect(deserializeWorld(JSON.stringify(legacy))).toEqual({...legacy,schemaVersion:31});
 });

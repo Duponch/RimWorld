@@ -7,6 +7,7 @@
 | Objet | Traverser | Arrêt ordinaire | Supplément local d'entrée | Supprime la répétition |
 |---|---|---|---:|---|
 | Mur | Non | Non | — | Non |
+| Table de taille V31 | Oui | Non | 5 ticks | Oui |
 | Table | Oui | Non | 4,2 ticks | Oui |
 | Lit | Oui | Non ; sommeil réservé autorisé | 4,2 ticks | Oui |
 | Feu | Oui | Non | 4,2 ticks | Oui |
@@ -44,3 +45,5 @@ Une ancienne place de repas désormais interdite passe en recherche de place apr
 Deux scénarios `furniture-travel.test.ts` : oracle indépendant des coûts dirigés dans quatre orientations, arêtes capturées, accès progressif, transit/arrêt, portages opposés, interruption sur table, conservation et continuation. La famille spatiale conserve les traversées de lits ; construction contrôle une place de repas réservée depuis un checkpoint synthétique. Le pilote ordinaire suit aussi les suppléments et sorties dans son bilan.
 
 Le parcours natif de déplacement observe les attributs réellement soumis, leur partage corps/cargaison/anneau, la vitesse par arête, le portage sur table et la reprise dans le worker. Ce n'est pas une lecture des sommets calculés sur GPU. Captures inspectées, trois jours par UI et audits séparés : voir [validation courante](validation.md).
+
+V31 ajoute le supplément 5 de la table de taille ; V30 refuse cette valeur avant migration. Le même oracle dirigé couvre ses trois cases dans quatre rotations. La hauteur du plateau est de 0,85 m, partagée avec les piles et poses de transit. [Contrat](stonecutter.md).

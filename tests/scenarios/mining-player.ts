@@ -1,3 +1,4 @@
+import { requiredMaterial } from '../../src/sim/construction-materials.ts';
 import { canDesignate } from '../../src/sim/engine.ts';
 import { buildAreaIndex, queryArea } from '../../src/sim/designation.ts';
 import type { World } from '../../src/sim/types.ts';
@@ -22,7 +23,7 @@ export function miningDecisions(world:World):Decision[] {
   }
   // Obtain a modest steel reserve from exposed deposits after opening the camp.
   if(mined>=4) {
-    const steel=world.piles.reduce((n,p)=>n+(p.item==='steel'?p.quantity:0),0);
+    const steel=world.piles.reduce((n,p)=>n+(p.item==='steel'?p.quantity:0),0)+world.structures.reduce((n,s)=>n+requiredMaterial(s,'steel'),0)+world.packed.reduce((n,p)=>n+requiredMaterial(p.building,'steel'),0)+(world.deconstructed.lostSteel??0);
     const active=world.jobs.filter(j=>j.kind==='mine'&&world.tiles[j.z*world.width+j.x]!.ore==='steel').length;
     let missing=Math.max(0,Math.ceil((80-steel)/40)-active);
     const targets=world.tiles.flatMap((t,i)=>t.ore==='steel'?[{x:i%world.width,z:Math.floor(i/world.width)}]:[])

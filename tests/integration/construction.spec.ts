@@ -1,7 +1,44 @@
-import { revealCells } from './player-actions';
+import { revealCells, perform } from './player-actions';
+import { deconstructionCamp } from '../scenarios/deconstruction';
+import { footprintCells } from '../../src/sim/definitions';
 import { expect, test } from '@playwright/test';
 import { createWorld, refreshStock, addGroundMaterial, serializeWorld, validateWorld } from '../../src/sim/index';
 import { world, panel, tool, cell, saveKey, expectWorld, observeErrors } from './helpers';
+
+test('atelier mixte : choix du matériau, trois cases tournées, chantier long rechargé et meuble réinstallé',async({playwright},testInfo)=>{
+  test.setTimeout(90000);
+  const browser=await playwright.chromium.launch({channel:'chromium',args:[]});
+  const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);
+  try {
+    const fixture=deconstructionCamp();fixture.tick=2000;
+    addGroundMaterial(fixture,'steel',75,{x:12,z:16},'steel');addGroundMaterial(fixture,'steel',30,{x:12,z:17},'steel');
+    await page.addInitScript(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:serializeWorld(fixture)});
+    await page.goto('/?size=32&e2e');await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,fixture);
+    await tool(page,'stonecutter');await expect(page.locator('#tool-instruction')).toContainText('75 Bois + 30 Acier');
+    await page.locator('#construction-material').selectOption('steel');await expect(page.locator('#tool-instruction')).toContainText('105 Acier');
+    await revealCells(page,[{x:17,z:16}]);await page.locator('#viewport canvas').focus();
+    await page.keyboard.press('e');await cell(page,17,16);
+    await expect.poll(async()=>(await world(page)).jobs.length).toBe(1);
+    await page.keyboard.press('Escape');await cell(page,17,15);
+    const plan=(await world(page)).jobs[0]!;expect(plan).toMatchObject({kind:'stonecutter',material:'steel',orientation:1});
+    expect(footprintCells(plan).map(c=>[c.x,c.z]).sort()).toEqual([[17,15],[17,16],[17,17]]);
+    await expect(page.locator('#cell-job')).toContainText('105 Acier');
+    await page.locator('[data-speed="6"]').click();
+    await page.waitForFunction(()=>{if(!window.__lisiere.world.jobs.some(j=>j.kind==='stonecutter'&&j.progress>=125))return false;document.querySelector<HTMLButtonElement>('[data-speed="0"]')!.click();return true;},undefined,{timeout:30000,polling:'raf'});
+    await expect(page.locator('#pause-banner')).toBeVisible();const working=await world(page);expect(validateWorld(working)).toEqual([]);
+    await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,working);
+    await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).structures.length).toBe(1);await page.locator('[data-speed="0"]').click();
+    const built=await world(page),bench=built.structures[0]!;expect(bench.material).toBe('steel');expect(built.piles).toEqual([]);
+    await page.keyboard.press('Escape');await cell(page,17,16);await expect(page.locator('#cell-description')).toContainText('Fabrication de blocs à venir');await expect(page.locator('#cell-description')).toContainText('1 × 3 cases');
+    await perform(page,{reason:'Déplacer et tourner l’atelier sans reconstruire ses matériaux.',command:{type:'install',structureId:bench.id,x:20,z:20,orientation:0}},{value:1});
+    await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).structures.find(s=>s.id===bench.id)?.x).toBe(20);await page.locator('[data-speed="0"]').click();
+    const moved=await world(page);expect(validateWorld(moved)).toEqual([]);expect(moved.packed).toEqual([]);expect(moved.piles).toEqual([]);
+    expect(moved.structures[0]).toMatchObject({...bench,x:20,z:20,orientation:0});
+    await page.keyboard.press('Escape');await revealCells(page,[{x:20,z:20}]);await cell(page,20,20);await expect(page.locator('#cell-title')).toContainText('Acier');await expect(page.locator('#cell-description')).toContainText('3 × 1 cases');await expect(page.locator('#fps-counter')).toBeVisible();
+    await page.screenshot({path:'artifacts/stonebench-ui.png'});expect(errors).toEqual([]);
+    await testInfo.attach('stonebench',{contentType:'application/json',body:JSON.stringify({tick:moved.tick,bench:moved.structures[0],errors})});
+  } catch(error) {await page.screenshot({path:'artifacts/stonebench-ui-failure.png'});throw error;} finally {await browser.close();}
+});
 
 test('chantier par interface : plan sur une pile, dégagement porté, cadre, sauvegarde et achèvement',async({playwright},testInfo)=>{
   test.setTimeout(90000);
@@ -14,7 +51,7 @@ test('chantier par interface : plan sur une pile, dégagement porté, cadre, sau
     const old=JSON.parse(serializeWorld(fixture));old.schemaVersion=15;for(const a of old.pawns)delete a.priorities.mine;delete old.deconstructed;delete old.packed;for(const pawn of old.pawns)delete pawn.orders;
     await page.addInitScript(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:JSON.stringify(old)});
     await page.goto('/?size=32&e2e');await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();
-    await expect.poll(async()=>(await world(page)).schemaVersion).toBe(30);
+    await expect.poll(async()=>(await world(page)).schemaVersion).toBe(31);
     await tool(page,'wall');await cell(page,16,14);await page.keyboard.press('Escape');await cell(page,16,14);
     await expect(page.locator('#cell-job')).toContainText('Plan');
     await page.locator('[data-speed="6"]').click();

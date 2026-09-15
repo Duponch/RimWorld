@@ -12,10 +12,11 @@ test('furniture routes agree with an independent directed-cost oracle, repeat ac
   for(let orientation=0;orientation<4;orientation++) {
     const w=createWorld(orientation,16,16);w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.structures=[];w.jobs=[];w.resources=[];
     const added=new Map<number,number>(),repeat=new Set<number>();
-    const cells=[{kind:'table' as const,x:6,z:6,cost:1400},{kind:'bed' as const,x:10,z:10,cost:1400},{kind:'stool' as const,x:4,z:6,cost:1000},{kind:'campfire' as const,x:7,z:5,cost:1400},{kind:'horseshoes' as const,x:12,z:8,cost:467}];
+    const cells=[{kind:'stonecutter' as const,x:3,z:10,cost:1667},{kind:'table' as const,x:6,z:6,cost:1400},{kind:'bed' as const,x:10,z:10,cost:1400},{kind:'stool' as const,x:4,z:6,cost:1000},{kind:'campfire' as const,x:7,z:5,cost:1400},{kind:'horseshoes' as const,x:12,z:8,cost:467}];
     for(const s of cells) {
-      w.structures.push({id:w.nextId++,kind:s.kind,x:s.x,z:s.z,orientation:orientation as Orientation,footprint:'standard'});
+      w.structures.push({id:w.nextId++,kind:s.kind,x:s.x,z:s.z,orientation:orientation as Orientation,footprint:'standard',...(s.kind==='stonecutter'?{material:'wood' as const}:{})});
       const occupied=[s.z*16+s.x];
+      if(s.kind==='stonecutter'){const delta=[1,-16,-1,16][orientation]!;occupied.push(occupied[0]!+delta,occupied[0]!-delta);}
       if(s.kind==='table'||s.kind==='bed')occupied.push(occupied[0]!+[16,1,-16,-1][orientation]!);
       for(const c of occupied){added.set(c,s.cost);if(s.kind!=='horseshoes')repeat.add(c);}
     }

@@ -1,0 +1,417 @@
+{
+  "workshops": true,
+  "date": "2026-09-15T02:42:24.914Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "ore": "stone",
+  "protocol": "Native WebGPU: clear 250² map, 100 builders, alternating 75 wood + 30 steel / 105 steel workshops, actual worker 6x. 90 warmup frames. Frame/snapshot timings, pipelines and buffer growth. Same mining-render instrumentation; extraction event counts represent completed workshops. No natural forest in this fixture.",
+  "phases": [
+    {
+      "workshops": 100,
+      "count": 100,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "description": ""
+      },
+      "errors": [],
+      "frames": {
+        "count": 3335,
+        "p50": 6,
+        "p95": 12,
+        "p99": 18,
+        "max": 24
+      },
+      "frameCpu": {
+        "count": 3336,
+        "p50": 5.700000002980232,
+        "p95": 7.399999998509884,
+        "p99": 8.5,
+        "max": 11.200000002980232
+      },
+      "adoptions": {
+        "count": 90,
+        "p50": 1.1000000014901161,
+        "p95": 2.100000001490116,
+        "p99": 2.2999999970197678,
+        "max": 2.2999999970197678
+      },
+      "drawCalls": {
+        "count": 3336,
+        "p50": 347,
+        "p95": 383,
+        "p99": 387,
+        "max": 387
+      },
+      "excavationFrames": {
+        "count": 1051,
+        "p50": 6,
+        "p95": 12,
+        "p99": 17.899999999999636,
+        "max": 18.100000000000364
+      },
+      "mined": 100,
+      "steelUnits": 0,
+      "chunks": 0,
+      "stableRock": true,
+      "stableGround": true,
+      "formats": [
+        {
+          "key": "campfire-flames",
+          "material": 22,
+          "storage": false,
+          "capacity": 256
+        },
+        {
+          "key": "furniture",
+          "material": 20,
+          "storage": false,
+          "capacity": 256
+        },
+        {
+          "key": "job-orders",
+          "material": 23,
+          "storage": false,
+          "capacity": 512
+        },
+        {
+          "key": "job-plans",
+          "material": 24,
+          "storage": false,
+          "capacity": 256
+        },
+        {
+          "key": "job-solids",
+          "material": 20,
+          "storage": false,
+          "capacity": 256
+        }
+      ],
+      "growths": [
+        {
+          "key": "job-solids",
+          "prior": 256,
+          "next": 512
+        },
+        {
+          "key": "furniture",
+          "prior": 256,
+          "next": 512
+        },
+        {
+          "key": "furniture",
+          "prior": 512,
+          "next": 1024
+        },
+        {
+          "key": "furniture",
+          "prior": 1024,
+          "next": 2048
+        }
+      ],
+      "shadowPreparation": true,
+      "snapshots": {
+        "count": 90,
+        "p50": 4.200000002980232,
+        "p95": 6.100000001490116,
+        "p99": 6.9000000059604645,
+        "max": 6.9000000059604645
+      },
+      "longFrames": [],
+      "excavations": [
+        {
+          "at": 11882.39999999851,
+          "tick": 2451,
+          "mined": 2,
+          "dirty": 0
+        },
+        {
+          "at": 12135.59999999404,
+          "tick": 2466,
+          "mined": 1,
+          "dirty": 0
+        },
+        {
+          "at": 12379.89999999851,
+          "tick": 2481,
+          "mined": 1,
+          "dirty": 0
+        },
+        {
+          "at": 12882.19999999553,
+          "tick": 2511,
+          "mined": 2,
+          "dirty": 0
+        },
+        {
+          "at": 13132,
+          "tick": 2526,
+          "mined": 1,
+          "dirty": 0
+        },
+        {
+          "at": 13640.5,
+          "tick": 2556,
+          "mined": 2,
+          "dirty": 0
+        },
+        {
+          "at": 13887.29999999702,
+          "tick": 2571,
+          "mined": 3,
+          "dirty": 0
+        },
+        {
+          "at": 14112.19999999553,
+          "tick": 2585,
+          "mined": 1,
+          "dirty": 0
+        },
+        {
+          "at": 14329.69999999553,
+          "tick": 2598,
+          "mined": 2,
+          "dirty": 0
+        },
+        {
+          "at": 14583,
+          "tick": 2613,
+          "mined": 4,
+          "dirty": 0
+        },
+        {
+          "at": 14826.79999999702,
+          "tick": 2628,
+          "mined": 2,
+          "dirty": 0
+        },
+        {
+          "at": 15085,
+          "tick": 2643,
+          "mined": 7,
+          "dirty": 0
+        },
+        {
+          "at": 15328.5,
+          "tick": 2658,
+          "mined": 2,
+          "dirty": 0
+        },
+        {
+          "at": 15567.69999999553,
+          "tick": 2672,
+          "mined": 1,
+          "dirty": 0
+        },
+        {
+          "at": 15835.79999999702,
+          "tick": 2688,
+          "mined": 4,
+          "dirty": 0
+        },
+        {
+          "at": 16080.69999999553,
+          "tick": 2703,
+          "mined": 2,
+          "dirty": 0
+        },
+        {
+          "at": 16327,
+          "tick": 2718,
+          "mined": 3,
+          "dirty": 0
+        },
+        {
+          "at": 16584,
+          "tick": 2733,
+          "mined": 9,
+          "dirty": 0
+        },
+        {
+          "at": 16842.29999999702,
+          "tick": 2748,
+          "mined": 1,
+          "dirty": 0
+        },
+        {
+          "at": 17081.29999999702,
+          "tick": 2763,
+          "mined": 5,
+          "dirty": 0
+        },
+        {
+          "at": 17341,
+          "tick": 2778,
+          "mined": 2,
+          "dirty": 0
+        },
+        {
+          "at": 17568.89999999851,
+          "tick": 2792,
+          "mined": 6,
+          "dirty": 0
+        },
+        {
+          "at": 17825.5,
+          "tick": 2808,
+          "mined": 4,
+          "dirty": 0
+        },
+        {
+          "at": 18065,
+          "tick": 2822,
+          "mined": 1,
+          "dirty": 0
+        },
+        {
+          "at": 18316.59999999404,
+          "tick": 2837,
+          "mined": 2,
+          "dirty": 0
+        },
+        {
+          "at": 18569.79999999702,
+          "tick": 2852,
+          "mined": 1,
+          "dirty": 0
+        },
+        {
+          "at": 18819,
+          "tick": 2867,
+          "mined": 3,
+          "dirty": 0
+        },
+        {
+          "at": 19078,
+          "tick": 2883,
+          "mined": 2,
+          "dirty": 0
+        },
+        {
+          "at": 19336.39999999851,
+          "tick": 2898,
+          "mined": 1,
+          "dirty": 0
+        },
+        {
+          "at": 19563.69999999553,
+          "tick": 2912,
+          "mined": 1,
+          "dirty": 0
+        },
+        {
+          "at": 19818.29999999702,
+          "tick": 2927,
+          "mined": 1,
+          "dirty": 0
+        },
+        {
+          "at": 20068.39999999851,
+          "tick": 2943,
+          "mined": 5,
+          "dirty": 0
+        },
+        {
+          "at": 20320.89999999851,
+          "tick": 2958,
+          "mined": 2,
+          "dirty": 0
+        },
+        {
+          "at": 21075.89999999851,
+          "tick": 3003,
+          "mined": 1,
+          "dirty": 0
+        },
+        {
+          "at": 21532.5,
+          "tick": 3030,
+          "mined": 1,
+          "dirty": 0
+        },
+        {
+          "at": 21766.09999999404,
+          "tick": 3044,
+          "mined": 1,
+          "dirty": 0
+        },
+        {
+          "at": 22031.39999999851,
+          "tick": 3060,
+          "mined": 1,
+          "dirty": 0
+        },
+        {
+          "at": 22276.19999999553,
+          "tick": 3075,
+          "mined": 2,
+          "dirty": 0
+        },
+        {
+          "at": 23025.5,
+          "tick": 3120,
+          "mined": 1,
+          "dirty": 0
+        },
+        {
+          "at": 23265.79999999702,
+          "tick": 3134,
+          "mined": 2,
+          "dirty": 0
+        },
+        {
+          "at": 23980.5,
+          "tick": 3177,
+          "mined": 1,
+          "dirty": 0
+        },
+        {
+          "at": 24232.39999999851,
+          "tick": 3192,
+          "mined": 2,
+          "dirty": 0
+        },
+        {
+          "at": 24479.5,
+          "tick": 3207,
+          "mined": 1,
+          "dirty": 0
+        },
+        {
+          "at": 25912.69999999553,
+          "tick": 3293,
+          "mined": 1,
+          "dirty": 0
+        }
+      ],
+      "slowFrames": [
+        {
+          "at": 4653.79999999702,
+          "cpu": 8,
+          "interval": 23.899999999999636,
+          "calls": 387
+        },
+        {
+          "at": 7920.79999999702,
+          "cpu": 6.399999998509884,
+          "interval": 24,
+          "calls": 375
+        },
+        {
+          "at": 8676.39999999851,
+          "cpu": 6.5,
+          "interval": 24,
+          "calls": 367
+        }
+      ],
+      "pipelines": [],
+      "preparations": [
+        1253.5,
+        167
+      ]
+    }
+  ]
+}

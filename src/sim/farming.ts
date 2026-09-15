@@ -1,7 +1,7 @@
 import { furnitureDuration } from './furniture-rules.ts';
 import { constructionRecipe } from './construction-materials.ts';
 import { deconstructionDuration } from './deconstruction-rules.ts';
-import { footprintCells, JOB_DURATION } from './definitions.ts';
+import { footprintCells, JOB_DURATION, STRUCTURE_DEFINITIONS } from './definitions.ts';
 import { isPlant, plantGrowth, PLANT_DEFINITIONS } from './plants.ts';
 import { releaseWork, type DropPlan } from './work-release.ts';
 import type { GrowingZone, Job, JobKind, Resource, World } from './types.ts';
@@ -44,7 +44,7 @@ interface Context { resources: Map<number, Resource>; fixed: Set<number> }
 function context(world: World): Context {
   return {
     resources: resourceCells(world),
-    fixed: new Set([...world.structures, ...world.jobs.filter(j => ['install','wall', 'bed', 'table', 'stool', 'campfire', 'horseshoes'].includes(j.kind))].flatMap(s => footprintCells(s).map(c => index(world, c)))),
+    fixed: new Set([...world.structures, ...world.jobs.filter(j => j.kind==='install'||j.kind in STRUCTURE_DEFINITIONS)].flatMap(s => footprintCells(s).map(c => index(world, c)))),
   };
 }
 function intention(world: World, zone: GrowingZone, cell: number, ctx: Context): { kind: JobKind; cell: number } | null {

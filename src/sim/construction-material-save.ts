@@ -5,6 +5,7 @@ import type { World } from './types.ts';
 export function validateConstructionMaterials(world:World,version:number):string[] {
   const errors:string[]=[];
   for(const entity of [...world.jobs,...world.structures,...(world.packed??[]).map(p=>p.building)]) {
+    if(entity.kind==='stonecutter'&&(version<31||entity.material===undefined))errors.push('Stonecutter requires V31 and an explicit material.');
     if(entity.material!==undefined&&(version<30||!validConstructionMaterial(entity.kind,entity.material)||entity.footprint==='legacy-single'))errors.push('Invalid or future construction material.');
   }
   // V2–V4 do not have ItemId; their kind/escrow checks remain in validateSchema.

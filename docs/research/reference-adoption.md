@@ -144,3 +144,5 @@ Acier V29 : chapitres 5–6/10/11 et SYS/TEST-016, 061–064, CAT-059/060 relus.
 ## Matériau des ouvrages V30
 
 Chapitre 10, SYS/TEST-056, 058, 059 et UI-019/020/024 relus : **adopter** choix du matériau, quantités réellement livrées et identité réinstallée ; **adapter** temps local et apparence 3D ; **différer** réparation/remplacement, compétence, qualité et atelier mixte. La [recherche fraîche](construction-materials-reference.md) corrige le coût historique des nouveaux lits et distingue les propriétés encore absentes. Les propositions de tests enrichissent les parcours de construction/colonie existants.
+
+V31 : relecture chapitres 5/10/11, SYS/TEST-020..022/051..064 ; [atelier de taille et contradictions des sources](stonecutter-reference.md). Adopter empreinte, matériaux et transfert ; adapter unités/présentation ; différer les recettes de taille et la recherche. Le XML historique donne un coût de passage 70, les données actuelles 50 : la divergence est tracée.

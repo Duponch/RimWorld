@@ -50,7 +50,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 30 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 31 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)
@@ -116,3 +116,7 @@
 ## Matériaux constructifs V30
 - Lire docs/development/construction-materials.md et docs/research/construction-materials-reference.md. Job/Structure.material facultatif : absent = recette historique ; nouveaux ordres bois/acier, feu fixe bois. Les nouveaux lits coûtent 45. JOB_WOOD_COST/DURATION sont historiques, pas les recettes des ouvrages typés.
 - Exigences, piles et réservations par ItemId ; escrow reste une vue bois/nourriture. Conserver le matériau dans paquets, réinstallation et restitution ; lostSteel est un bilan, pas un stock. V29 validée avant migration sans réécrire les ouvrages. Les recettes mixtes et propriétés qualité/HP/feu restent absentes ; agréger les ingrédients identiques avant ajout d’un atelier.
+
+## Atelier mixte V31
+- Lire docs/development/stonecutter.md et docs/research/stonecutter-reference.md. Table centrée 3×1, 75 bois + 30 acier ou 105 acier agrégés ; pas de recette historique non typée pour cette nouvelle définition. Surface Item, zones interdites, passage 5 ticks sans arrêt, transfert entier conservé.
+- V30 strictement validée avant migration ; la forme des progressions longues V31 précède leur validation par jobDuration. La taille de fragments en blocs reste absente : prochain lot, ne pas lui inventer une facture ou des produits. Le pilote incorpore 30 de ses 80 acier dans l’atelier.

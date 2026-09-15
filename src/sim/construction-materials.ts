@@ -9,16 +9,19 @@ export interface ConstructionRecipe { ingredients:readonly ConstructionCost[]; w
 type ConstructionObject={kind:JobKind;material?:ConstructionMaterial};
 // Core base work before the stuff factor, in Core ticks. Absence of material
 // deliberately keeps the V1–V29 historical recipe on existing objects.
-const costs:Record<StructureKind,number>={wall:5,bed:45,table:28,stool:25,campfire:20,horseshoes:10};
-const work:Record<StructureKind,number>={wall:135,bed:800,table:750,stool:450,campfire:200,horseshoes:100};
+const costs:Record<StructureKind,number>={stonecutter:75,wall:5,bed:45,table:28,stool:25,campfire:20,horseshoes:10};
+const work:Record<StructureKind,number>={stonecutter:2000,wall:135,bed:800,table:750,stool:450,campfire:200,horseshoes:100};
 const recipes=new Map<string,ConstructionRecipe>();
 for(const kind of Object.keys(JOB_DURATION) as JobKind[]) {
-  recipes.set(`${kind}:legacy`,Object.freeze({ingredients:Object.freeze(JOB_WOOD_COST[kind]?[Object.freeze({item:'wood' as const,quantity:JOB_WOOD_COST[kind]})]:[]),work:JOB_DURATION[kind],coreWork:JOB_DURATION[kind]*10}));
+  if(kind!=='stonecutter')recipes.set(`${kind}:legacy`,Object.freeze({ingredients:Object.freeze(JOB_WOOD_COST[kind]?[Object.freeze({item:'wood' as const,quantity:JOB_WOOD_COST[kind]})]:[]),work:JOB_DURATION[kind],coreWork:JOB_DURATION[kind]*10}));
   if(kind in STRUCTURE_DEFINITIONS)for(const material of ['wood','steel'] as const) {
     if(kind==='campfire'&&material==='steel')continue;
     const k=kind as StructureKind;
     const coreWork=Math.round(work[k]*(material==='wood'&&k!=='campfire'?.7:1));
-    recipes.set(`${kind}:${material}`,Object.freeze({ingredients:Object.freeze([Object.freeze({item:material,quantity:costs[k]})]),work:Math.ceil(coreWork/10),coreWork}));
+    const amounts=new Map<ConstructionMaterial,number>([[material,costs[k]]]);
+    if(k==='stonecutter')amounts.set('steel',(amounts.get('steel')??0)+30);
+    const ingredients=Object.freeze([...amounts].map(([item,quantity])=>Object.freeze({item,quantity})));
+    recipes.set(`${kind}:${material}`,Object.freeze({ingredients,work:Math.ceil(coreWork/10),coreWork}));
   }
 }
 export function validConstructionMaterial(kind:unknown,material:unknown):boolean {
