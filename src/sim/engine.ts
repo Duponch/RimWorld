@@ -22,6 +22,7 @@ import { applyFoodPolicyCommand } from './food-policy.ts';
 import { expireFood } from './food-expiration.ts';
 export { queryJobStatus, queryPawnStatus } from './diagnostics.ts';
 import { processCooking } from './cooking.ts';
+import { WorkEnvironmentCache, type WorkEnvironment } from './work-environment.ts';
 import { applyBillCommand } from './cooking-commands.ts';
 import { cookingCellReserved } from './cooking-bills.ts';
 import { burnFuel, campfire, newCampfireFuel } from './fuel.ts';
@@ -280,6 +281,7 @@ function completeJob(world: World, pawn: Pawn, job: Job): void {
   const jobIndex=world.jobs.indexOf(job);if(jobIndex>=0)world.jobs.splice(jobIndex,1); pawn.jobId = null; pawn.path = []; pawn.state = 'idle'; pawn.planCooldown = 0;
   event(world, 'job', `${pawn.name} a terminé le travail : ${JOB_LABEL[job.kind]}.`); wakePlanners(world);
 }
+const workEnvironments=new WeakMap<World,WorkEnvironmentCache>();
 export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-planner.ts').SearchStats): void {
   if (!Number.isInteger(ticks) || ticks < 0 || ticks > 100000) throw new Error('Tick count must be an integer between 0 and 100000.');
   for (let step = 0; step < ticks; step++) {
@@ -293,6 +295,12 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     // a command, edited terrain, restored save, or a wall that changed between calls.
     let blocked: Uint8Array | undefined;
     let roofs: RoofContext | undefined;
+    let environment:WorkEnvironment|undefined;
+    const getEnvironment=()=>{
+      if(environment)return environment;
+      let cache=workEnvironments.get(world);if(!cache){cache=new WorkEnvironmentCache();workEnvironments.set(world,cache);}
+      return environment=cache.read(world);
+    };
     const getRoofs = () => roofs ??= new RoofContext(world);
     const getBlocked: NavigationGrid = () => blocked ??= blockedCells(world);
     const occupied = CIVIL_TRANSIT_BLOCKERS;
@@ -314,8 +322,9 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if (advancePriorityWork(world,pawn,getBlocked,budget)) continue;
       if (processNeeds(world, pawn, needsContext) || pawn.orders.active===null&&processRecreation(world, pawn, needsContext)) continue;
       if (pawn.jobId === null && pawn.haul === null && !pawn.cooking && pawn.planCooldown === 0) planWork(world, pawn, getBlocked, occupied, budget);
-      if (pawn.haul) { processHaul(world, pawn, (target, allow) => moveToward(world, pawn, target, allow, getBlocked, budget), () => wakePlanners(world)); continue; }
+      if (pawn.haul) { const refueling=pawn.haul.destination.type==='fuel';processHaul(world, pawn, (target, allow) => moveToward(world, pawn, target, allow, getBlocked, budget), () => {wakePlanners(world);if(refueling)environment=undefined;});continue; }
       if(pawn.cooking) {processCooking(world,pawn,{
+        workRate:(station,worker)=>getEnvironment().production(station,worker).total,
         candidates:()=>searchCandidates(world,pawn,getBlocked(),occupied,budget),
         search:goals=>search(world,pawn,getBlocked(),occupied,budget,goals),
         move:(target,exact)=>moveToward(world,pawn,target,true,getBlocked,budget,exact),
@@ -346,19 +355,19 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
         continue;
       }
       if(job.kind==='sow'&&packedAt(world,job)){releaseWork(world,pawn);continue;}
-      if(job.furniture){if(advanceFurniture(world,pawn,job,target=>moveToward(world,pawn,target,false,getBlocked,budget),()=>releaseWork(world,pawn))){blocked=undefined;roofs=undefined;wakePlanners(world);}continue;}
+      if(job.furniture){if(advanceFurniture(world,pawn,job,target=>moveToward(world,pawn,target,false,getBlocked,budget),()=>releaseWork(world,pawn))){blocked=undefined;roofs=undefined;environment=undefined;wakePlanners(world);}continue;}
       if(job.kind==='deconstruct'&&!deconstructionAvailable(world,job,pawn.id)){releaseWork(world,pawn);continue;}
       if(isConstruction(job)&&(!constructionSupplied(world,job)||!constructionSiteFree(world,job,pawn.id))){releaseWork(world,pawn);continue;}
       if(job.kind==='mine') {
         if(Math.max(Math.abs(pawn.x-job.x),Math.abs(pawn.z-job.z))===1) {
-          if(advanceMining(world,pawn,job)) {reconcileRoofSupport(world,false,job);world.jobs.splice(world.jobs.indexOf(job),1);pawn.jobId=null;pawn.state='idle';pawn.planCooldown=0;blocked=undefined;roofs=undefined;wakePlanners(world);event(world,'job',`${pawn.name} a terminé le minage.`);}
+          if(advanceMining(world,pawn,job)) {reconcileRoofSupport(world,false,job);world.jobs.splice(world.jobs.indexOf(job),1);pawn.jobId=null;pawn.state='idle';pawn.planCooldown=0;blocked=undefined;roofs=undefined;environment=undefined;wakePlanners(world);event(world,'job',`${pawn.name} a terminé le minage.`);}
         } else moveToward(world,pawn,job,false,getBlocked,budget);
         continue;
       }
       const cells = footprintCells(job);
       if (cells.some(cell => adjacent(pawn, cell)) && !cells.some(cell => sameCell(pawn, cell))) {
         pawn.path = []; pawn.state = 'working'; job.progress++;
-        if (job.progress >= jobDuration(world, job)) {completeJob(world, pawn, job);blocked=undefined;roofs=undefined;}
+        if (job.progress >= jobDuration(world, job)) {completeJob(world, pawn, job);blocked=undefined;roofs=undefined;environment=undefined;}
       } else moveToward(world, pawn, job, false, getBlocked, budget);
     }
     if(world.roofing)reconcileRoofJobs(world,roofs);

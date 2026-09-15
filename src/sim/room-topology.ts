@@ -21,6 +21,8 @@ export class RoomTopology {
     width: number, height: number, labels: Int32Array, spaces: ReadonlyMap<number, RoomSpace>,
   ) { this.width = width; this.height = height; this.labels = labels; this.spaces = spaces; }
 
+  allSpaces():Iterable<RoomSpace> { return this.spaces.values(); }
+
   at(x: number, z: number): RoomCell | undefined {
     if (!Number.isInteger(x) || !Number.isInteger(z) || x < 0 || z < 0 || x >= this.width || z >= this.height) return;
     const id = this.labels[z * this.width + x]!;

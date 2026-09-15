@@ -3,10 +3,10 @@ import { groundCapacity, groundPile, nearbyGround, storageCapacity } from './gro
 import { refreshStock, transferPile } from './materials.ts';
 import { routeToJob, type Reachability } from './pathfinding.ts';
 import type { NeedContext } from './needs.ts';
-import type { Cell, MaterialPile, Pawn, World } from './types.ts';
+import type { Cell, MaterialPile, Pawn, Structure, World } from './types.ts';
 
 const near=(a:Cell,b:Cell)=>Math.abs(a.x-b.x)+Math.abs(a.z-b.z)<=1;
-export interface ProductionContext extends NeedContext { candidates?():Reachability|null }
+export interface ProductionContext extends NeedContext { candidates?():Reachability|null; workRate(station:Structure,worker:Cell):number }
 function finish(pawn:Pawn):void {pawn.cooking=null;if(pawn.orders.active==='cook')pawn.orders.active=null;pawn.path=[];pawn.state='idle';pawn.planCooldown=0;}
 /** A partial output keeps the held ID; only its deposited fraction can merge. */
 function deposit(world:World,pawn:Pawn,product:MaterialPile,cell:Cell,quantity:number):boolean {

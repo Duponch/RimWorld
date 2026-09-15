@@ -89,9 +89,12 @@ test('cuisine physique : mélange, interruption, sauvegarde du travail, deux rep
   const carry=serializeWorld(w),interrupted=deserializeWorld(carry);
   expect(applyCommand(interrupted,{type:'priority',pawnId:pawn.id,work:'cook',value:0}).ok).toBe(true);
   expect(interrupted.pawns[0]!.cooking).toBeNull();expect(raw(interrupted)).toBe(40);expect(validateWorld(interrupted)).toEqual([]);
-  until(w,()=>pawn.cooking?.phase==='work'&&pawn.cooking.progress===17);
+  until(w,()=>pawn.cooking?.phase==='work'&&pawn.cooking.progress>=84000);
   expect(pawn).toMatchObject({x:8,z:7,state:'working'});
   expect(queryPawnStatus(w,pawn).reason).toContain('28 %');
+  const oldWork=JSON.parse(serializeWorld(w));oldWork.schemaVersion=35;oldWork.pawns[0].cooking.progress=17;
+  expect(deserializeWorld(JSON.stringify(oldWork)).pawns[0]!.cooking!.progress).toBe(85000);
+  oldWork.pawns[0].cooking.progress=61;expect(()=>deserializeWorld(JSON.stringify(oldWork))).toThrow(/version 35/);
   expect(queryCookingBillStatus(w,fire,bill).code).toBe('cooking');
   expect(pawn.cooking!.ingredients.every(i=>i.stage==='placed')).toBe(true);expect(raw(w)).toBe(40);
   // A passer collapsing on the floor does not acquire the chef's workstation.
@@ -100,7 +103,7 @@ test('cuisine physique : mélange, interruption, sauvegarde du travail, deux rep
   Object.assign(visitor,{x:8,z:7,rest:0,restZeroTicks:101,collapsePending:true,motion:undefined,moveCooldown:0});
   expect(validateWorld(collapse)).toEqual([]);stepWorld(collapse);
   expect(visitor).toMatchObject({state:'sleeping',need:{kind:'sleep',bedId:null}});
-  expect(collapse.pawns[0]!.cooking?.progress).toBe(18);expect(validateWorld(collapse)).toEqual([]);
+  expect(collapse.pawns[0]!.cooking!.progress-pawn.cooking!.progress).toBe(4000);expect(validateWorld(collapse)).toEqual([]);
   const collapseResume=deserializeWorld(serializeWorld(collapse));stepWorld(collapse,45);stepWorld(collapseResume,45);expect(collapseResume).toEqual(collapse);
   const stolen=structuredClone(w);stolen.pawns[1]!.cooking=structuredClone(pawn.cooking);stolen.pawns[1]!.priorities.cook=1;
   expect(()=>deserializeWorld(JSON.stringify(stolen))).toThrow(/duplicate|reservation|ownership/i);

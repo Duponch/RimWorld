@@ -8,7 +8,7 @@ Un feu demande 20 bois réellement livrés et 20 ticks de construction. Il naît
 
 Une facture de repas simple choisit dix unités parmi baies et riz admis, réserve les sources et les cases de dépôt, puis les rassemble par portages réels. Chaque case conserve une seule pile compatible. Le colon rejoint exactement la place orientée du poste. Les ingrédients déposés restent des piles au sol réservées ; ils ne sont ni consommés à la prise ni cachés dans un inventaire d’atelier abstrait.
 
-Après 60 ticks de travail au feu allumé, une transaction retire les dix unités, crée un repas simple porté et décrémente une facture X fois une seule fois. Le chef transporte ce produit vers une réserve admissible ou le pose au sol. Une destination devenue indisponible est replanifiée ; aucun produit ne disparaît faute de place.
+Après 30 ticks neutres, divisés par les facteurs effectifs du feu allumé (60 ticks intérieur éclairé, 75 extérieur éclairé en V36), une transaction retire les dix unités, crée un repas simple porté et décrémente une facture X fois une seule fois. Le chef transporte ce produit vers une réserve admissible ou le pose au sol. Une destination devenue indisponible est replanifiée ; aucun produit ne disparaît faute de place.
 
 Les factures sont ordonnées et disposent des trois modes de répétition, suspension, filtres baies/riz, rayon et destination. « Jusqu’à X » compte produits en réserve et cargaisons courantes ; un produit lâché hors réserve n’arrête pas durablement la facture. Un travail déjà commencé n’est pas annulé parce qu’un autre poste atteint le seuil. Modifier ou supprimer sa facture l’interrompt explicitement et conserve la matière.
 
@@ -35,7 +35,7 @@ La recette simple n’a pas d’objet inachevé : annulation remet le travail à
 
 Les données par ingrédient retiennent type, quantité, pile et phase source/porté/posé. `actionCell` décrit la cible actuelle de l’interaction pour orienter le personnage ; la pose graphique n’a aucune autorité sur la transformation.
 
-Les stocks, compétences, fraicheur, chaleur, pluie, lumière fonctionnelle et autres paramètres non livrés ne doivent pas être supposés existants. Les adaptations de temps, de réservoir entier et de place de dépôt sont détaillées dans la recherche, sans revendication de parité à 100 %.
+Les stocks, compétences, fraicheur, chaleur, pluie et autres paramètres non livrés ne doivent pas être supposés existants. Les adaptations de temps, de réservoir entier et de place de dépôt sont détaillées dans la recherche, sans revendication de parité à 100 %.
 
 ## Validation de la livraison
 
@@ -52,3 +52,5 @@ V23 maintient la priorité du poste après l’ordre manuel : recharge préalabl
 ## Production commune V32
 
 Les repas conservent leurs ingrédients et règles. La [taille](stonecutting.md) partage factures, tâches et réservations via `production-recipes.ts` ; les noms persistants historiques « cooking » désignent désormais cette enveloppe commune. `production-output.ts` extrait le dépôt et gère des sorties partielles, avec déplacements physiques et réservations quantitatives. Le choix de réserve vérifie les candidats dans l'ordre priorité/distance avec une recherche progressive propre à la décision : ne pas utiliser une distance non finalisée, ni réutiliser un cache entre ticks.
+
+V36 remplace la durée fixe et l’unité de progression par le [contrat de lumière/production](work-environment.md). Les recettes, ingrédients et quantités restent identiques ; seule la suite d’un travail migre vers les facteurs présents.

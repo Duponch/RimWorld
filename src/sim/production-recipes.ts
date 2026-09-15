@@ -7,11 +7,15 @@ export type StoneIngredient = typeof STONE_INPUTS[number];
 export type ProductionIngredient = 'rice'|'berries'|StoneIngredient;
 export type ProductionRecipe = 'simple-meal'|'stone-blocks';
 export const PRODUCTION_RECIPES = Object.freeze({
-  'simple-meal': Object.freeze({label:'Repas simple',station:'campfire',work:'cook',inputs:['rice','berries'] as readonly ProductionIngredient[],units:10,workTicks:60,outputUnits:1}),
-  // 1600 Core ticks / 10 local; current open-air workshop factor 0.8.
-  // Light, capacities and room roles remain explicit missing environment systems.
-  'stone-blocks': Object.freeze({label:'Blocs de pierre',station:'stonecutter',work:'craft',inputs:STONE_INPUTS as readonly ProductionIngredient[],units:1,workTicks:200,outputUnits:20}),
+  // Neutral recipe work, before station/room/light factors; Core ticks / 10.
+  'simple-meal': Object.freeze({label:'Repas simple',station:'campfire',work:'cook',inputs:['rice','berries'] as readonly ProductionIngredient[],units:10,workTicks:30,outputUnits:1}),
+  'stone-blocks': Object.freeze({label:'Blocs de pierre',station:'stonecutter',work:'craft',inputs:STONE_INPUTS as readonly ProductionIngredient[],units:1,workTicks:160,outputUnits:20}),
 } as const);
+/** Persist integer work units; rounding error is at most 0.00005 neutral ticks
+ * per action. A rate change never rewrites previously performed work. */
+export const PRODUCTION_WORK_SCALE=10000;
+export const productionWorkTotal=(recipe:ProductionRecipe):number=>PRODUCTION_RECIPES[recipe].workTicks*PRODUCTION_WORK_SCALE;
+export const legacyProductionTicks=(recipe:ProductionRecipe):number=>recipe==='simple-meal'?60:200;
 export const taskRecipe=(task:CookingTask):ProductionRecipe=>task.recipe??'simple-meal';
 export const taskWork=(task:CookingTask):WorkType=>PRODUCTION_RECIPES[taskRecipe(task)].work;
 export const stationRecipe=(station:Pick<Structure,'kind'>):ProductionRecipe|null=>station.kind==='campfire'?'simple-meal':station.kind==='stonecutter'?'stone-blocks':null;

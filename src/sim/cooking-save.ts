@@ -1,4 +1,4 @@
-import { PRODUCTION_RECIPES, stationRecipe, taskRecipe, taskWork, isRecipeProduct, blockFor, type ProductionIngredient, type StoneIngredient } from './production-recipes.ts';
+import { PRODUCTION_RECIPES, productionWorkTotal, legacyProductionTicks, stationRecipe, taskRecipe, taskWork, isRecipeProduct, blockFor, type ProductionIngredient, type StoneIngredient } from './production-recipes.ts';
 import { fuelStationReserved } from './fuel.ts';
 import { cookingSpot, ingredientPlaceFree, validBillSettings } from './cooking-bills.ts';
 import { groundCapacity, storageCapacity } from './ground-placement.ts';
@@ -30,7 +30,7 @@ export function validateCooking(input:unknown,version:number,ids:Set<number>):st
     const recipe=PRODUCTION_RECIPES[taskRecipe(c)];
     if(c.storageQuantity!==undefined&&(version<32||c.recipe!=='stone-blocks'||c.phase!=='output'||c.storageId===null||!int(c.storageQuantity,1,20)))errors.push('Invalid production output quantity.');
     if(!record(c)||!int(c.stationId,1)||!int(c.billId,1)||!cell(c.spot)||!cell(c.actionCell)||!['gather','work','output',...(version>=11?['interrupted']:[])].includes(c.phase as string)
-      ||!int(c.progress,0,recipe.workTicks)||!(c.productId===null||int(c.productId,1,w.nextId-1))||!(c.storageId===null||int(c.storageId,1,w.nextId-1))
+      ||!int(c.progress,0,version>=36?productionWorkTotal(taskRecipe(c)):legacyProductionTicks(taskRecipe(c)))||!(c.productId===null||int(c.productId,1,w.nextId-1))||!(c.storageId===null||int(c.storageId,1,w.nextId-1))
       ||!Array.isArray(c.ingredients)||c.ingredients.length>recipe.units) {errors.push('Invalid cooking task.');continue;}
     for(const i of c.ingredients)if(!record(i)||!int(i.pileId,1,w.nextId-1)||!int(i.quantity,1,recipe.units)||!recipe.inputs.includes(i.item as ProductionIngredient)||!['source','held','placed'].includes(i.stage as string)||!cell(i.cell))errors.push('Invalid recipe ingredient reservation.');
   }

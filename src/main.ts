@@ -337,7 +337,7 @@ function renderState() {
       el('cell-materials').textContent = piles.length ? `Au sol : ${piles.map(pile => `${pile.quantity} ${ITEM_DEFINITIONS[pile.item].label}${pile.kind==='food'?` · ${foodFreshnessLabel(pile,world.tick)}`:''}`).join(' · ')}` : '';
       el('cell-job').textContent = job ? `${job.construction==='blueprint'?'Plan · ':job.construction==='frame'?'Cadre · ':''}${jobLabels[job.kind]} · ${queryJobStatus(world, job).reason ?? 'En cours'}${constructionDeliveryLabel(world,job) ? ` · Livré : ${constructionDeliveryLabel(world,job)}` : ''}` : 'Aucun ordre sur cette case.';
       if(structure?.kind==='bed')el('cell-description').textContent += ` · Efficacité du repos : ${structure.material?.endsWith('-blocks')?90:100} %`;
-      if(structure?.kind==='stonecutter')el('cell-description').textContent += ' · 1 fragment → 20 blocs · Artisanat · atelier extérieur.';
+      if(structure?.kind==='stonecutter')el('cell-description').textContent += ' · 1 fragment → 20 blocs · Artisanat.';
       if(structure?.kind==='horseshoes')el('cell-description').textContent += ` · Dextérité · ${world.pawns.filter(p=>p.recreation.task?.buildingId===structure.id).length}/3 joueurs · places à 5 cases, ligne de vue dégagée.`;
       if(structure?.kind==='campfire')updateFireControls(el('inspector'),structure);
       if(structure&&stationRecipe(structure))updateBillControls(el('inspector'),structure,world);

@@ -29,6 +29,7 @@ export interface CookingTask {
   actionCell:Cell;
   phase:'gather'|'work'|'output'|'interrupted';
   ingredients:CookingIngredient[];
+  /** V36: integer neutral work units (10 000 per local work tick). */
   progress:number;
   productId:number|null;
   storageId:number|null;

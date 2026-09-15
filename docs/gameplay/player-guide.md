@@ -239,7 +239,7 @@ L’acier est extractible, stockable et utilisable pour les constructions à mat
 
 **Architecte → Production → Table de taille de pierre** : choisir Bois (75 bois + 30 acier) ou Acier (105 acier), puis tourner l’emprise 3×1 avec Q/E. Tous les matériaux doivent être livrés avant la finition. Le plateau garde les piles compatibles, mais retire les zones sous son empreinte. Les colons peuvent le franchir, sans s’y arrêter pour une autre activité.
 
-L’inspection permet de désinstaller ou réinstaller l’atelier comme un meuble entier, ou de le déconstruire pour récupérer environ la moitié des matériaux. **La fabrication de blocs est disponible** : activer Artisanat dans Travail puis ajouter une facture dans l’inspection de l’atelier. Recherche et effets d’une pièce ne sont pas simulés.
+L’inspection permet de désinstaller ou réinstaller l’atelier comme un meuble entier, ou de le déconstruire pour récupérer environ la moitié des matériaux. **La fabrication de blocs est disponible** : activer Artisanat dans Travail puis ajouter une facture dans l’inspection de l’atelier. La recherche reste absente ; les facteurs de lumière et de pièce sont décrits ci-dessous.
 
 ## Tailler et ranger les blocs
 
@@ -247,7 +247,7 @@ La facture générale propose cinq filtres de roche, un rayon, la suspension, la
 
 **Faire X fois** compte les fragments taillés ; **Jusqu'à X** compte les blocs stockés ou portés. Attention : cette facture générale compte tous les blocs, même lorsque ses ingrédients sont filtrés sur une seule pierre. Cocher **Blocs de pierre** dans une réserve pour accueillir les produits ; un manque de place conserve la cargaison ou conduit à un dépôt au sol. Une livraison peut remplir plusieurs piles successives.
 
-Clic droit sur le poste avec un colon sélectionné : prioriser la taille ; Maj ajoute en file. Désinstaller/réinstaller l'atelier conserve ses factures. Un atelier déjà réservé attend avant d'être déplacé. Les blocs servent aux constructions décrites ci-dessous ; lumière fonctionnelle, effets des pièces, compétences et recherche restent à venir.
+Clic droit sur le poste avec un colon sélectionné : prioriser la taille ; Maj ajoute en file. Désinstaller/réinstaller l'atelier conserve ses factures. Un atelier déjà réservé attend avant d'être déplacé. Les blocs servent aux constructions décrites ci-dessous ; la lumière et la pièce influencent désormais la vitesse ; compétences et recherche restent à venir.
 
 ## Construire avec la pierre
 
@@ -278,3 +278,13 @@ Dans **Architecte → Zones**, tracer **Construire un toit**. Les bâtisseurs re
 **Retirer un toit** commande son retrait et empêche sa repose automatique. **Ignorer le toit** efface les zones sans enlever la couverture. Le bouton **Toits : masqués/visibles** change seulement la vue. L’inspection indique les cases couvertes, indépendamment de ce bouton.
 
 Le riz et les baies ne poussent plus sans soleil sous un toit ; les colons cherchent ailleurs pour regarder le ciel. La température et les effets intérieurs des ateliers restent à développer. Retirer un support peut supprimer la couverture : l’événement précise que les dégâts d’effondrement ne sont pas encore simulés. Les toits naturels des montagnes ne sont pas présents.
+
+## Éclairer les ateliers
+
+La lumière de gameplay figure dans l’inspection. Un toit coupe la lumière du ciel. Un feu allumé éclaire les cases proches, jusqu’à 50 %, même la nuit ; murs, roches et portes arrêtent cette diffusion. Plusieurs feux ne dépassent pas 50 % : ils ne permettent pas de faire pousser du riz sous un toit.
+
+Éclairez **la place du colon devant le poste**. À 30 % de lumière, sa vitesse de production ne subit plus de pénalité lumineuse ; dans l’obscurité complète, elle tombe à 80 %. La taille demande 160 ticks de travail dans un atelier éclairé, 200 dehors éclairé, 250 dehors dans le noir. Le feu éclairant son cuisinier demande 60 ticks par repas à l’intérieur, 75 dehors.
+
+Le rôle est calculé depuis les meubles : un lit peut transformer un atelier en chambre, plusieurs tables en salle à manger. La taille subit alors une pénalité de mauvaise pièce de 20 %. L’inspection détaille les facteurs ; une petite cour fermée et un auvent ouvert ne sont pas traités de la même manière. Aucun bonus d’humeur de chambre ou de salle à manger n’est encore associé à ces rôles.
+
+Le ciel et les flammes restent stylisés. Les halos sur le décor et l’assombrissement des intérieurs en vue coupée restent à ajouter : fiez-vous au chiffre de l’inspection pour ces règles. Cette tranche module cuisine et taille ; les autres travaux et les déplacements ne subissent pas encore la pénalité d’obscurité.

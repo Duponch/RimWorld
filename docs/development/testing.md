@@ -1,5 +1,7 @@
 # Stratégie de validation
 
+V36 : `work-environment.test.ts` confronte un oracle de relaxation indépendant à la diffusion locale ; la famille production couvre unités/migrations, perte de feu, rôles et changements de taux. Le pilote conserve les bilans et expose les facteurs des postes. Audit `scripts/work-environment-bench.ts` avec 3/30/100 artisans et autant de feux ; UI courte puis pilote de trois jours.
+
 Toiture V35 : enrichir les familles espace/temps/intégration avec `roofing.test.ts` et le scénario de pièces. Le pilote couvre 28 cellules du repas, garde ses bilans et son champ découvert ; le parcours UI ajoute les mêmes commandes. `roofing-bench.ts` et `roofing-render-bench.mjs` mesurent la même charge de 100 bâtisseurs, jusqu’à 2 500 cellules et 1 200 bois de défrichage.
 
 ## Principes

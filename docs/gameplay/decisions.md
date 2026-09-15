@@ -84,3 +84,11 @@ Reconnaissance et inspection des enceintes livrées séparément de leur couvert
 [Contrat](../development/roofing.md), [relecture Core](../research/roofing-reference.md). Adopter zones distinctes de la couverture, vrais bâtisseurs sans ingrédients, chaîne de supports et retrait physique. Adapter le rayon à notre parcours cardinal, le travail à quatre ticks locaux et le plafond à une dalle 3D masquable. La limite automatique de 320 cases est conservée ; celle de 26 régions dépend du moteur de référence et n’est pas transposée.
 
 Différer toits naturels, HP/santé et gravats, thermique et éclairage des intérieurs. L’effondrement supprime actuellement la couverture et le dit explicitement sans infliger de dégâts ; ce n’est pas la règle définitive de danger. Ces éléments restent dans G2/G3 et dans l’inventaire des manques, sans déclarer l’habitat terminé.
+
+## V36 — lumière et pièces des recettes
+
+[Recherche et incertitudes](../research/work-environment-reference.md), [contrat](../development/work-environment.md). Adopter les facteurs Core séparés ; lumière à la place du colon, extérieur/rôle au centre du poste. Les chambres actuelles concernent des lits simples civils et des adultes sans relations. La limite Core de 60 régions n’est pas remplacée par un nombre arbitraire de cases ; son effet sur les très grandes pièces est différé. Égalités de rôles basées sur l’ordre du XML publié historique, à confirmer avec un export de définitions récentes.
+
+Les émetteurs partagent actuellement une couleur : le canal maximal suffit à leur contribution logique. Le miroir récent emploie le maximum RGB, tandis que le tableau wiki utilise sa moyenne ; choix explicite du miroir, sans prétendre avoir mesuré le binaire officiel. Un nouvel émetteur coloré exige une extension RGB. Progression entière à 10 000 unités par tick neutre, erreur d’arrondi maximale 0,00005 tick/action ; les anciennes sauvegardes conservent leur pourcentage de travail accompli.
+
+Les recettes reçoivent les facteurs dans cette tranche. Pénalités lumineuses des autres métiers/déplacements et éclairage visible local sont les suites prioritaires ; ce sont des absences connues, pas la cible définitive. Température, humeur des pièces et autres statistiques ne sont pas implicitement simulées.

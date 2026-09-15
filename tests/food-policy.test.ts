@@ -42,7 +42,7 @@ test('régimes partagés : commandes atomiques, copie indépendante, limites et 
     const bad=JSON.parse(full);mutate(bad);expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();
   }
   const old=withoutFoodPolicies(JSON.parse(full));old.schemaVersion=12;for(const a of old.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete old.deconstructed;delete old.packed;
-  const restored=deserializeWorld(JSON.stringify(old));expect(restored.schemaVersion).toBe(35);expect(restored.pawns.every(p=>p.foodPolicyId===1)).toBe(true);
+  const restored=deserializeWorld(JSON.stringify(old));expect(restored.schemaVersion).toBe(36);expect(restored.pawns.every(p=>p.foodPolicyId===1)).toBe(true);
   const stripped=withoutFoodPolicies(JSON.parse(serializeWorld(restored)));stripped.schemaVersion=12;for(const a of stripped.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete stripped.deconstructed;delete stripped.packed;expect(stripped).toEqual(old);
   const control=deserializeWorld(full);checked(restored,100);checked(control,100);
   expect(withoutFoodPolicies(JSON.parse(serializeWorld(restored)))).toEqual(withoutFoodPolicies(JSON.parse(serializeWorld(control))));
@@ -94,7 +94,7 @@ test('régime personnel indépendant du transport et des ingrédients ; une carg
   // while the tick's path-search budget was exhausted. The task must stay valid.
   p.hunger=19;p.needCooldown=0;p.planCooldown=0;
   const budgetExhausted:NeedContext={search:()=>null,move:()=>{throw new Error('No route was granted');},release:()=>{throw new Error('Cooking should continue');},event:()=>{throw new Error('No new work finished');}};
-  expect(processNeeds(w,p,budgetExhausted)).toBe(false);processCooking(w,p,budgetExhausted);
+  expect(processNeeds(w,p,budgetExhausted)).toBe(false);processCooking(w,p,{...budgetExhausted,workRate:()=>{throw new Error('Output must not do recipe work');}});
   expect(p.cooking?.phase).toBe('output');expect(p.state).toBe('working');expect(validateWorld(w)).toEqual([]);
   const replay=deserializeWorld(serializeWorld(w));until(w,()=>p.cooking===null);checked(replay,w.tick-replay.tick);expect(serializeWorld(replay)).toBe(serializeWorld(w));expect(w.stock.food).toBe(1);
 });

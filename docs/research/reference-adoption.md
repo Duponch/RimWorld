@@ -165,3 +165,7 @@ Chapitres 5/10/21, SYS-020..024 et SYS-113..117 : adopter accès/recherche/suivi
 ## Pièces sous V34 — première tranche
 
 Chapitres 5/10/21/**22**, SYS/TEST-023..025, S10 et scène E relus : adopter enceintes, portes comme seuils et distinction air/transit ; adapter la topologie et sa durée de vie ; différer toits, thermique, rôles et statistiques. [Recherche récente](rooms-reference.md), [contrat livré](../development/rooms.md). L’inspection expose les fusions/divisions ; aucune acceptation globale de S10 n’est annoncée. Les seuils d’intérieur différents et les limites de grandes pièces sont explicitement relevés pour les prochains consommateurs.
+
+## V36 — lumière et premiers rôles
+
+Chapitres 5/10/11/12/21/22, SYS/TEST-023..025 et 062..064, UI-025, SYS/TEST-070..072 relus. **Adopter** les facteurs distincts et la continuité matérielle ; **adapter** unités, caches et rôles au catalogue civil présent ; **différer** autres métiers, rendu lumineux local, thermique, social et statistiques absentes. [Recherche fraîche](work-environment-reference.md) : correction des confusions entre minimum statistique et courbe de lumière, entre critères de pièce et entre moyenne/max RGB. Les scénarios de production et le pilote existants sont enrichis.

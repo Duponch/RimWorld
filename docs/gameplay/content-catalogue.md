@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+V36 enrichit les propriétés des objets existants : lumière logique du feu allumé, rôle de lit/table/piquet/atelier et facteurs des deux recettes. Aucun nouvel objet ni catalogue lumineux complet. [Contrat](../development/work-environment.md).
+
 V35 ajoute une famille de **toit construit**, couche de couverture indépendante des objets/piles et sans recette matérielle. Zones Construire/Retirer/Ignorer, supports et présentation procédurale livrés ; toits naturels minces/épais, colonnes porteuses, gravats et dégâts restent absents. [Contrat](../development/roofing.md).
 
 État du 15 septembre 2026. Le jeu de base complet, y compris ses centaines d'objets et leurs variantes, reste la cible. Le bilan par [système](implementation-status.md) ne suffit pas à suivre ce contenu. Ce document distingue ce que contient notre référence et ce qui existe dans le jeu développé.

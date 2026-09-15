@@ -1,5 +1,5 @@
 import { ITEM_DEFINITIONS } from './items.ts';
-import { PRODUCTION_RECIPES, recipeProduct, taskRecipe, taskWork } from './production-recipes.ts';
+import { PRODUCTION_RECIPES, PRODUCTION_WORK_SCALE, productionWorkTotal, recipeProduct, taskRecipe, taskWork } from './production-recipes.ts';
 import { processProductionOutput, type ProductionContext } from './production-output.ts';
 import { copyRot, freshRot } from './food-preservation.ts';
 import { groundPile } from './ground-placement.ts';
@@ -45,8 +45,10 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   }
   if(pawn.x!==task.spot.x||pawn.z!==task.spot.z){context.move(task.spot,true);return;}
   task.actionCell={x:station.x,z:station.z};
-  task.phase='work';pawn.state='working';pawn.path=[];task.progress=Math.min(recipe.workTicks,task.progress+1);
-  if(task.progress<recipe.workTicks)return;
+  const total=productionWorkTotal(taskRecipe(task));
+  task.phase='work';pawn.state='working';pawn.path=[];
+  task.progress=Math.min(total,task.progress+Math.round(context.workRate(station,pawn)*PRODUCTION_WORK_SCALE));
+  if(task.progress<total)return;
   const used=new Map<number,number>();for(const i of task.ingredients)used.set(i.pileId,(used.get(i.pileId)??0)+i.quantity);
   const freed=[...used].filter(([id,n])=>world.piles.find(p=>p.id===id)?.quantity===n).length;
   if(world.piles.length-freed+1>32768||!Number.isSafeInteger(world.nextId+1))return;

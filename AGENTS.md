@@ -50,7 +50,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 35 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 36 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)
@@ -141,9 +141,15 @@
 
 ## Pièces — inspection sous V34
 - Lire docs/development/rooms.md et docs/research/rooms-reference.md. Connectivité cardinale de l’espace, murs/roches pleins, portes séparées même ouvertes ; eau, plans/cadres et meubles ne ferment pas une enceinte. Ce graphe n’est ni la navigation ni un booléen universel d’intérieur.
-- Cache possédé par l’appelant, masque vérifié à chaque lecture utile, mutations en place et dimensions incluses ; aucun travail par frame. Le recalcul global mesuré garde les instantanés précédents immuables. IDs dérivés non persistants. Toits naturels, propriétés thermiques/travail/psychologie, rôles et effets restent absents ; pas de bonus d’abri par simple enceinte.
+- Cache possédé par l’appelant, masque vérifié à chaque lecture utile, mutations en place et dimensions incluses ; aucun travail par frame. Le recalcul global mesuré garde les instantanés précédents immuables. IDs dérivés non persistants. V36 ajoute les rôles du mobilier présent et leurs facteurs de production ; toits naturels, thermique et psychologie restent absents. Pas de bonus d’abri par simple enceinte.
 
 ## Toiture construite V35
 - Lire docs/development/roofing.md et docs/research/roofing-reference.md. Couverture, zone de pose et zone de retrait sont distinctes du sol ; V34 validée avant migration sans toit inventé. Rayon de pose 6,9 avec connexion ; retrait volontaire par composantes sans rayon ; perte d’un support recontrôle la portée locale. Les meubles ordinaires ne sont pas porteurs.
 - Travaux Construction sans matériau/cadre, vrais trajets et défrichage, file réconciliée ; les intentions non réservées tournent pour éviter la monopolisation par des cibles inaccessibles. Les contextes ne survivent ni au tick ni à une mutation de couverture/support. Checkpointer la croissance avant modification du toit.
-- Deux lots graphiques préparés même vides, programmes stables ; masquer la toiture ne change pas World. Toits naturels, dommages/gravats d’effondrement, thermique et effets intérieurs des ateliers restent absents. Le pilote couvre 28 cases autour du repas sans couvrir le champ.
+- Deux lots graphiques préparés même vides, programmes stables ; masquer la toiture ne change pas World. Toits naturels, dommages/gravats d’effondrement et thermique restent absents ; V36 ajoute les facteurs intérieurs de production, sans éclairage local 3D. Le pilote couvre 28 cases autour du repas sans couvrir le champ.
+
+## Lumière et production V36
+
+- Lire `docs/development/work-environment.md` et sa recherche avant de toucher lumière/rôles/taux. Lumière au colon, extérieur psychologique au poste, rôle séparé. Les portes bloquent les feux même ouvertes. Émetteurs actuels plafonnés à 50 %, jamais du soleil agricole.
+- `CookingTask.progress` est en unités entières de travail neutre (10 000/tick), V35 strictement validée avant conversion du pourcentage (repas ×5 000, blocs ×8 000). Caches dérivés par propriétaire, contexte partagé seulement sans mutation du milieu. Pas de calcul par image ni par colon pour la diffusion.
+- Les deux recettes utilisent les facteurs. Autres travaux/déplacements, halos 3D, thermique, rôles sociaux et statistiques complètes restent explicitement absents. Les chambres actuelles concernent les lits civils simples et adultes sans relations.

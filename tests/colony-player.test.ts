@@ -32,6 +32,11 @@ test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp const
       }
       if (world.tick % 6000 === 0) {
         report.push(colonySummary(world));
+        for(const workplace of report.at(-1)!.workplaces) {
+          expect(workplace.total).toBeGreaterThanOrEqual(.32);expect(workplace.total).toBeLessThanOrEqual(1);
+          const fire=world.structures.find(s=>s.id===workplace.id);
+          if(fire?.kind==='campfire'&&fire.fuel!.ticks>0)expect(workplace.lighting).toBe(1);
+        }
         const saved=serializeWorld(world), resumed=deserializeWorld(saved);
         stepWorld(world,250);stepWorld(resumed,250);
         expect(serializeWorld(resumed)).toBe(serializeWorld(world));

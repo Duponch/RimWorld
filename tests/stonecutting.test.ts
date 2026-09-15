@@ -27,7 +27,7 @@ test('cinq roches : collecte réelle, staging hors de la place, reprises et livr
     until(w,()=>p.cooking?.ingredients.some(i=>i.stage==='held')===true);replay(w);
     expect(w.piles.find(q=>q.item===item)?.owner).toEqual({type:'pawn',pawnId:p.id});
     expect(amount(w)).toBe(40);expect(w.piles.some(q=>q.kind==='blocks')).toBe(false);
-    until(w,()=>p.cooking?.phase==='work'&&p.cooking.progress===100);replay(w);
+    until(w,()=>p.cooking?.phase==='work'&&p.cooking.progress>=800000);replay(w);
     expect(p.cooking!.ingredients[0]!.cell).not.toEqual(p.cooking!.spot);
     expect(p.cooking!.ingredients[0]!.cell).toEqual({x:s.x,z:s.z});
     until(w,()=>p.cooking?.phase==='output');replay(w);
