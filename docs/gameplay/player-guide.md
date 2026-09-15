@@ -261,6 +261,12 @@ Dans **Architecte → Structure → Porte**, choisissez un matériau. Une porte 
 
 Inspectez-la pour **Maintenir ouverte** après le prochain passage ou **Interdire le passage**, même si elle est ouverte. Retirer le maintien peut attendre un nouveau passage. Les occupants et objets empêchent la fermeture ; dégager ou ranger l'objet libère la porte. Le colon déjà engagé termine son mouvement.
 
-La porte se déconstruit mais ne s'emballe pas. Il faut encore déconstruire un mur avant d'y poser une porte. Toits, pièces fermées et isolation thermique restent à développer ; l'ouverture actuelle ne simule pas encore leurs effets.
+La porte se déconstruit mais ne s'emballe pas. Il faut encore déconstruire un mur avant d'y poser une porte. Toits et isolation thermique restent à développer ; l'ouverture actuelle ne simule pas encore leurs effets.
 
 Les fragments au sol peuvent être traversés, mais ne servent pas de place pour observer le ciel ou jouer aux fers à cheval. Dégagez la case pour la rendre disponible.
+
+## Inspecter une pièce
+
+Cliquez sur le sol ou un meuble pour lire **Pièce non couverte** et son nombre de cases dans l’inspection, en bas à gauche. Un colon sélectionné indique l’espace de sa cellule. Les murs achevés, roches et portes séparent les pièces ; une porte ouverte reste un seuil. Plans et cadres ne les ferment pas encore. Une brèche latérale peut ouvrir l’espace jusqu’au bord de la carte ; un coin diagonal manquant ne suffit pas.
+
+Le nombre compte le sol intérieur, y compris sous les meubles, sans les murs ni les portes. Ce n’est pas une statistique de confort. La toiture n’est pas encore disponible : reconnaître une enceinte ne chauffe pas le lieu et ne change pas la vitesse des ateliers ou les besoins. La prochaine tranche ajoute la couverture et ses règles physiques.

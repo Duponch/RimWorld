@@ -1,0 +1,20 @@
+{
+  "date": "2026-09-15T09:45:48.639Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "protocol": "CPU only, 250x250, 4000 walls / 100 rooms / 100 pawns. Setup excluded; 100 warmup scans; 1000 unchanged reads then 300 alternating real barrier changes. One run; no simulation tick or GPU/FPS inference.",
+  "unchanged": {
+    "samples": 1000,
+    "p50": 0.16169999999999618,
+    "p95": 0.26529999999991105,
+    "p99": 0.32529999999997017,
+    "max": 0.43449999999995725
+  },
+  "rebuild": {
+    "samples": 300,
+    "p50": 0.8854000000000042,
+    "p95": 1.3921000000000276,
+    "p99": 3.2866000000000213,
+    "max": 6.9360000000000355
+  }
+}

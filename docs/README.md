@@ -73,3 +73,5 @@ Constructions en pierre V33 : [contrat des matériaux](development/construction-
 Portes manuelles V34 : [contrat](development/doors.md), [recherche Core](research/doors-reference.md).
 
 Requêtes CPU sous V34 : [contrat et durée de vie](development/spatial-queries.md), [relecture accès/arrêt/loisirs](research/spatial-query-reference.md).
+
+Pièces sous V34 : [topologie et inspection](development/rooms.md), [relecture Core et préparation des toits](research/rooms-reference.md).

@@ -1,31 +1,30 @@
-# Validation courante — requêtes CPU sous V34
+# Validation courante — reconnaissance des pièces sous V34
 
-15 septembre 2026. [Contrat](spatial-queries.md), [recherche renouvelée](../research/spatial-query-reference.md), [livraison des portes archivée](../history/validation-v34-doors.md). Schéma 34 inchangé ; G0 en consolidation, G1 partiel, habitat G2 en cours.
+15 septembre 2026. [Contrat](rooms.md), [recherche renouvelée](../research/rooms-reference.md). Schéma 34 inchangé ; G0 en consolidation, G1 partiel, première topologie d’habitat G2 livrée. Les preuves précédentes restent dans l’[audit CPU](../history/validation-v34-spatial-queries.md) et la [livraison des portes](../history/validation-v34-doors.md).
 
-## Contrats et gameplay
+## Gameplay contrôlé
 
-**109 tests passants, aucun échec final**, [rapport complet](../../artifacts/spatial-query-core.json). L'oracle indépendant porte sur 120 cartes ; le nouveau scénario vérifie égalités de choix, réserve supérieure inaccessible puis rendue accessible, priorité/réservation et budgets inchangés. L'index d'arrêt est comparé au test ponctuel sur emprises tournées, cadres, terrain et limites. Les loisirs testent les fragments au sol puis leur retrait.
+**Trois tests ciblés passants**, [rapport](../../artifacts/rooms-core.json) : deux scénarios de pièces et le scénario de snapshots. L’oracle indépendant par union compare chaque cellule de 80 cartes rectangulaires ; portes, eau, roches, meubles, changements en place, dimensions et anciens instantanés sont exercés. Le second scénario exécute déconstruction, reconstruction avec plan/cadre, reprise à progression égale et minage d’une brèche. Deux pièces de 36 cases fusionnent en 73, puis se séparent ; une extraction ouvre l’une sur le bord sans modifier l’autre.
 
-Le [premier lot ciblé](../../artifacts/spatial-query-focused.json) comportait une erreur de fixture : priorité 5 de stockage, alors que nos commandes acceptent 1–4. Correction en 4, [rejeu ciblé réussi](../../artifacts/spatial-query-navigation.json), puis lot complet. Aucun seuil de gameplay n'a été relâché. Une première exécution complète précédait le correctif de loisirs ; le rapport final ci-dessus a été renouvelé après ce correctif.
+**Parcours UI natif passé**, 11,9 secondes (13,3 secondes avec lancement) : enceinte synthétique, inspection cellule/colon, vrai abattage imposant le passage de porte, maintien ouvert sans fusion, mur déconstruit par le colon, sauvegarde/rechargement. L’inspection rouverte en pause lit bien la topologie actuelle. Chromium `channel: chromium`, `args: []`, viewport 1440×1000, backend **WebGPU** exigé, aucune erreur capturée. Captures locales `artifacts/rooms-ui-enclosed.png` et `rooms-ui-breach.png` inspectées : texte lisible dans le panneau existant et brèche visible. Le FPS reste présent ; le nombre ponctuel de la capture n’est pas un benchmark.
 
-Pilote naturel conservé : huit jours sur graine 42, cinq sur 93 et 2048, repas/sommeil/loisirs, agriculture et construction, conservation des ressources et reprises quotidiennes. Quarante blocs produits = cinq incorporés au mur + trente-cinq rangés ; quatre-vingts acier = trente atelier + cinquante rangés. Le correctif écarte dès la sélection une place de loisirs qu'un fragment rendait déjà invalide à l'exécution.
+La première compilation a signalé une union TypeScript insuffisamment discriminée et deux champs manquants de la fixture ; corrigés avant les résultats finaux. Le lancement initial de Vitest dans le bac à sable a échoué sur `spawn EPERM`, puis a réussi avec autorisation des processus. Une extension du parcours UI utilisait Échap, qui efface volontairement la sélection ; le geste est corrigé en fermeture de l’onglet Travail, sans modifier ce comportement du jeu. Aucun échec final ni test ignoré.
 
-## Comparaison CPU
+Le pilote naturel et la longue UI ne sont pas rejoués : commandes, persistance, simulation et boucles de colonie inchangées. Leurs dernières preuves restent historiques au lot précédent. La tranche des toits devra enrichir leur construction et leurs bilans ; les trois tests actuels ne prétendent pas remplacer ces parcours ni couvrir toutes les anomalies.
 
-[Avant](../../artifacts/spatial-query-before.json) et [après](../../artifacts/spatial-query-after.json), même script [spatial-query-bench.ts](../../scripts/spatial-query-bench.ts), Ryzen 5 3600, Node 24.11.1, carte 250² dégagée. Une exécution par population, besoins actifs, échauffement séparé de 100 ticks ; chaque colon construit une porte de 25 bois, coupe son arbre intérieur puis range douze bois à l'extérieur. Borne 3 200 ticks, snapshots tous les cinq ticks, empreintes du monde entier tous les vingt-cinq ticks et à la fin. Hash, snapshots et validation hors mesure du tick.
+## Petit audit CPU
 
-Après l'interruption de session, les deux mesures finales ont été rejouées successivement : témoin exporté du commit **018cb788d00c877445adfe0b1bbde682b0cf0e75** par `git archive` dans `tmp/spatial-v34`, puis code courant. Aucun benchmark lourd concurrent piloté par l'agent ; environnement bureau non isolé. Les premiers relevés sont conservés localement dans `tmp/spatial-query-early-before.json` et `tmp/spatial-query-resumed-after.json`, sans les mélanger à la paire finale.
+[Mesure brute](../../artifacts/rooms-cpu.json), [script reproductible](../../scripts/room-topology-bench.ts), Ryzen 5 3600, Node 24.11.1. Une exécution sur 250×250, 4 000 murs, 100 enceintes et 100 colons synthétiques ; génération exclue, 100 vérifications d’échauffement. Puis 1 000 lectures sans changement et 300 ouvertures/fermetures de brèche alternées. Aucune suite lourde lancée simultanément par l’agent.
 
-| Colons | Tick avant p95/p99/max (ms) | Tick après p95/p99/max (ms) | Snapshot p95 avant → après (ms) |
-|---|---|---|---|
-| 3 | 1.667/3.888/8.233 | 1.138/2.874/6.162 | 0.738 → 0.446 |
-| 30 | 19.932/33.248/34.116 | 11.178/17.494/23.286 | 2.512 → 1.909 |
-| 100 | 39.073/63.081/113.803 | 20.401/35.725/67.741 | 0.632 → 0.648 |
+| Opération | p50 | p95 | p99 | maximum |
+|---|---:|---:|---:|---:|
+| Vérifier les obstacles, topologie inchangée | 0,162 ms | 0,265 ms | 0,325 ms | 0,434 ms |
+| Vérifier et recalculer après modification | 0,885 ms | 1,392 ms | 3,287 ms | 6,936 ms |
 
-À 100 colons, p95 diminué d'environ **48 %** dans cette paire ; 100 portes et 1 200 bois rangés au même tick 4 621 (2 621 ticks simulés). **130 empreintes de mondes complets identiques** sur les trois populations. Les conditions sont synthétiques et une seule répétition ne mesure pas toute la variabilité du bureau. Pointes résiduelles jusqu'à environ 68 ms ; pas de promesse de simulation 6× constante ou de fluidité universelle. Snapshots non optimisés par ce lot.
+Le nombre d’acteurs n’est pas une charge de travailleurs ici : aucun tick n’est mesuré, seulement la requête pure de topologie. Une lecture utile de l’inspecteur partage le résultat ; aucun calcul par acteur ni par frame. Le recalcul reste global, avec des pointes jusqu’à 6,94 ms dans cette exécution. Pas de promesse de coût nul, de FPS garantis ni d’invalidation locale déjà livrée. Rendu et buffers GPU inchangés.
 
-## Intégration et limites
+## Compilation, documentation et portée
 
-Build et typage réussis : 175 modules, worker 207,64 kB, entrée graphique inchangée 1 067,57 kB / 299,30 kB gzip. Avertissement historique du bundle supérieur à 500 kB conservé. Une assertion de test, rétrécie à `null` par TypeScript après remise à zéro du transport, lit maintenant le colon depuis le monde après planification ; aucune modification du moteur pour résoudre cette erreur de typage. Aucun changement de rendu, d'UI, de commande ou de format persistant ; les derniers parcours UI porte/colonie et l'audit GPU sont ceux du commit témoin, explicitement historiques dans l'archive. Le présent lot n'annonce pas de nouveau résultat FPS. Les contrôles CPU et la correction de sélection ciblée justifient de ne pas répéter le long parcours graphique.
+Build/typecheck final réussis : 177 modules, worker inchangé à 207,64 kB ; entrée graphique 1 069,83 kB, 300,18 kB gzip. Avertissement historique de bundle supérieur à 500 kB conservé. Liens locaux et intégrité des trois originaux contrôlés ; guide, inventaire, recherche, contrat, architecture et ROADMAP actualisés. Aucun objet ni matériau ajouté au catalogue.
 
-Guide, contrats, inventaire, calendrier et adoption du corpus actualisés ; catalogue d'objets inchangé. **118 documents, 1 263 liens** et intégrité des trois originaux vérifiés. Les toits/pièces sont le prochain lot ; climat, énergie, santé/combat, faune, social, économie/narrateur, monde et catalogue complet restent partiels ou absents selon l'[inventaire](../gameplay/implementation-status.md).
+La pièce est **reconnue et inspectable**, encore sans toit ni effets d’abri. Couverture/supports, thermique, rôles/statistiques, effets du lieu sur les ateliers et loisirs restent à développer. Le reste des manques est maintenu dans l’[inventaire fonctionnel](../gameplay/implementation-status.md) ; ce lot ne clôture pas G2.

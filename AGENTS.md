@@ -138,3 +138,7 @@
 ## Requêtes CPU sous V34
 - Lire docs/development/spatial-queries.md. Comparer le classement avant capacité/accès sans modifier ordre des couples, curseur, budgets ou réservations. Une destination mieux classée mais inaccessible ne supprime pas le meilleur candidat valide.
 - Capture d’arrêt locale à l’énumération des sorties, après libération du service ; ne pas conserver la fermeture après mutation ni partager les buffers de navigation entre décisions. Les fragments interdisent aussi les places de loisirs dans leur index de sélection.
+
+## Pièces — inspection sous V34
+- Lire docs/development/rooms.md et docs/research/rooms-reference.md. Connectivité cardinale de l’espace, murs/roches pleins, portes séparées même ouvertes ; eau, plans/cadres et meubles ne ferment pas une enceinte. Ce graphe n’est ni la navigation ni un booléen universel d’intérieur.
+- Cache possédé par l’appelant, masque vérifié à chaque lecture utile, mutations en place et dimensions incluses ; aucun travail par frame. Le recalcul global mesuré garde les instantanés précédents immuables. IDs dérivés non persistants. Toits, propriétés thermiques/travail/psychologie, rôles et effets restent absents ; pas de bonus d’abri par simple enceinte.

@@ -74,3 +74,7 @@ Recette générale filtrable plutôt que six raccourcis de factures : son seuil 
 
 ## Construction en pierre V33
 Adopter cinq roches pour les cinq familles admissibles ; conserver l’exclusion de la pierre à l’atelier de taille. Travail = base × facteur + offset, sommeil du lit ×0,9. Géométrie existante teintée ; emballage générique conservé. Résistance, incendie, beauté, économie, fondations et qualités attendent leurs vrais systèmes. [Sources, unités et niveau de certitude](../research/stone-buildings-reference.md).
+
+## Pièces sous V34
+
+Reconnaissance et inspection des enceintes livrées séparément de leur couverture et de leurs effets. Les portes ouvertes restent des seuils. L’eau conserve l’échange d’air malgré son transit interdit. [Contrat](../development/rooms.md), [sources et divergences](../research/rooms-reference.md). Aucun plafond calqué sur le nombre interne de régions Core ni rôle de chambre n’est inventé. La pénalité extérieure fixe des ateliers et les conditions de loisirs restent provisoires et doivent intégrer les propriétés environnementales dans une tranche suivante.

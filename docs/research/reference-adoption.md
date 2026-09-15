@@ -159,3 +159,7 @@ Chapitre 10, SYS/TEST-056, 058, 059 et UI-019/024 relus dans les originaux : ado
 ## V34 — portes manuelles
 
 Chapitres 5/10/21, SYS-020..024 et SYS-113..117 : adopter accès/recherche/suivi distincts, attente avant passage et état persistant ; adapter cadence, protection volumique et rendu GPU. [Recherche renouvelée](doors-reference.md), [contrat](../development/doors.md). Différer remplacement direct, pièces/toits/température et profils d'acteurs absents. Les scénarios de navigation, construction, colonie et UI sont enrichis ; aucun statut du corpus ne vaut preuve locale.
+
+## Pièces sous V34 — première tranche
+
+Chapitres 5/10/21/**22**, SYS/TEST-023..025, S10 et scène E relus : adopter enceintes, portes comme seuils et distinction air/transit ; adapter la topologie et sa durée de vie ; différer toits, thermique, rôles et statistiques. [Recherche récente](rooms-reference.md), [contrat livré](../development/rooms.md). L’inspection expose les fusions/divisions ; aucune acceptation globale de S10 n’est annoncée. Les seuils d’intérieur différents et les limites de grandes pièces sont explicitement relevés pour les prochains consommateurs.

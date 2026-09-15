@@ -1,6 +1,6 @@
 # Requêtes spatiales — optimisation sous schéma V34
 
-15 septembre 2026. [Recherche rétroactive](../research/spatial-query-reference.md), [mesures et contrôles](validation.md). Aucun nouveau champ persistant, aucune migration ; les règles de circulation, priorités et réservations restent celles de V34.
+15 septembre 2026. [Recherche rétroactive](../research/spatial-query-reference.md), [mesures et contrôles](../history/validation-v34-spatial-queries.md). Aucun nouveau champ persistant, aucune migration ; les règles de circulation, priorités et réservations restent celles de V34.
 
 ## Écarter les candidats dominés
 

@@ -1,4 +1,5 @@
 import { stationRecipe } from './sim/production-recipes';
+import { RoomInspection } from './ui/room-inspection';
 import { constructionControls, constructionDeliveryLabel, structureFootprintLabel } from './ui/construction-controls';
 import { constructionRecipe } from './sim/construction-materials';
 import { rockInspection } from './ui/geology-inspection';
@@ -53,6 +54,7 @@ let renderer: ColonyRenderer | undefined;
 let noticeTimer: ReturnType<typeof setTimeout> | undefined;
 let pawnSignature = '';
 const selection=new PawnSelection();
+const roomInspection = new RoomInspection();
 const orderMenu=new OrderMenu(client,notify);
 
 function notify(message: string, error = false) {
@@ -92,6 +94,10 @@ function setPanel(panel: Panel) {
   }
   el('inspector').hidden = panel !== null || (!selection.ids.size && !selectedCell);
   if (panel !== 'architect') applyTool('select');
+  if (panel === null && snapshot) {
+    const cell = selectedCell ?? snapshot.pawns.find(p => p.id === selectedPawn);
+    if (cell) roomInspection.update(el('inspector'), snapshot, cell);
+  }
 }
 function applyTool(tool: Tool) {
   if(tool!=='install'){installationId=undefined;renderer?.setFurniturePlacement(undefined);}
@@ -301,6 +307,7 @@ function renderState() {
     else {
       el('selected-name').textContent = pawn.name; el('selected-action').textContent = pawn.need ? actionLabel(pawn) : `${actionLabel(pawn)} · ${queryPawnStatus(world, pawn).reason}`;
       updateRecreationInspection(el('inspector'),pawn);
+      roomInspection.update(el('inspector'), world, pawn);
       el('selected-orders').textContent=`${pawn.orders.active!==null?'Travail imposé · ':''}${pawn.orders.queue.length} ordre(s) en file${pawn.priorityWork?` · Priorité case ${pawn.priorityWork.cell.x}, ${pawn.priorityWork.cell.z}`:''}`;
       el<HTMLButtonElement>('clear-orders').disabled=pawn.orders.active===null&&!pawn.orders.queue.length&&!pawn.priorityWork;
       el('selected-memories').textContent = pawn.memories.map(memory => `${memory.kind === 'ate-raw-food' ? 'Mangé cru : −7' : 'Mangé sans table : −3'} humeur · encore ${Math.ceil((memory.expiresAt - world.tick) / (TICKS_PER_DAY / 24))} h`).join(' · ');
@@ -317,6 +324,7 @@ function renderState() {
       const piles = world.piles.filter(item => item.owner.type === 'ground' && item.owner.x === x && item.owner.z === z);
       updateFurnitureControls(el('inspector'),world,selectedCell);
       updateDoorControls(el('inspector'),world,selectedCell);
+      roomInspection.update(el('inspector'), world, selectedCell);
       const packed=packedAt(world,selectedCell);
       el('cell-title').textContent = packed?'Meuble emballé · '+({door:'porte',bed:'lit',table:'table',stool:'tabouret',horseshoes:'piquet',wall:'mur',campfire:'feu',stonecutter:'table de taille'})[packed.building.kind]:structure ? ({ door:'Porte', stonecutter:'Table de taille de pierre', wall: 'Mur', bed: 'Lit', table: 'Table', stool: 'Tabouret', horseshoes: 'Piquet de fers à cheval', campfire: 'Feu de camp' })[structure.kind] : resource ? resourceLabels[resource.kind] : terrainLabels[world.tiles[z * world.width + x].terrain];
       el('cell-description').textContent = `Case ${x}, ${z}${resource ? isPlant(resource) ? ` · Croissance ${Math.floor(plantGrowth(world, resource) * 100)} % · ${harvestable(world, resource) ? `Récolte : environ ${Math.round(berryYield(world, resource))} ${resource.kind === 'rice' ? 'riz' : 'baies'}` : 'Pas encore récoltable'} · ${plantResting(world.tick) ? 'Repos nocturne' : naturalLight(world.tick) < .51 ? 'Lumière insuffisante' : 'Croissance diurne'}` : ` · ${resource.amount} unités à récolter` : ''}${structure ? ` · ${structureFootprintLabel(structure)} cases` : ''}`;

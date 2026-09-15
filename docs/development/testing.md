@@ -176,3 +176,7 @@ V33 enrichit les contrôles de matériaux avec `stone-buildings.test.ts` (trois 
 ## Portes V34
 
 Les trois scénarios `doors.test.ts` croisent variantes, livraisons, attente, trafic, obstruction, permissions, sauvegarde et déconstruction. L'oracle indépendant de `navigation-budget.test.ts` reçoit aussi des portes ouvertes, fermées et interdites ; la rétention GPU existante inclut croissance/retrait/réouverture. Le pilote naturel construit sa porte après la première journée. Parcours court `doors.spec.ts` et parcours UI existant de trois jours ; mesures séparées `doors-bench.ts` / `doors-render-bench.mjs`, bornées et avec résultats métier. Le profil CPU sert au prochain lot d'optimisation, pas à annoncer un budget respecté.
+
+## Première topologie des pièces sous V34
+
+`room-topology.test.ts` enrichit F3 avec deux scénarios profonds : oracle indépendant par union sur 80 rectangles, mutations en place et instantanés conservés ; puis vraie déconstruction, plan/cadre, reconstruction, minage et replay. `integration/rooms.spec.ts` contrôle le panneau dans le vrai worker, porte traversée et maintenue ouverte, brèche et rechargement, réouverture de l’inspection en pause. Le banc `scripts/room-topology-bench.ts` sépare vérification inchangée et recalcul sur 250² avec 4 000 murs ; aucune inférence sur les FPS. Les boucles du pilote ne changent pas dans ce lot de lecture seule ; la toiture l’enrichira.
