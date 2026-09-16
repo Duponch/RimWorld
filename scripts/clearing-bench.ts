@@ -8,7 +8,7 @@ function fixture(count: number, obstructed: boolean) {
   const w=createWorld(42,250,250), template=w.pawns[0]!;
   w.resources=w.resources.filter(r=>r.x<80||r.x>150||r.z<80||r.z>120);w.piles=[];
   for(let z=80;z<=120;z++)for(let x=80;x<=150;x++)w.tiles[z*250+x]={terrain:'grass'};
-  w.pawns=Array.from({length:count},(_,i)=>({...structuredClone(template),id:w.nextId++,x:85+i%10*6,z:85+Math.floor(i/10)*8,hunger:100,rest:100,priorities: { doctor: 0,craft:2,mine:0,grow:1,haul:0,build:0,gather:0, cook: 0 }}));
+  w.pawns=Array.from({length:count},(_,i)=>({...structuredClone(template),id:w.nextId++,x:85+i%10*6,z:85+Math.floor(i/10)*8,hunger:100,rest:100,priorities: { patient:0,bedrest:0,doctor:0,craft:2,mine:0,grow:1,haul:0,build:0,gather:0, cook: 0 }}));
   for(const p of w.pawns) {
     const from={x:p.x+1,z:p.z},to={x:p.x+2,z:p.z+1};
     if(obstructed)for(let z=from.z;z<=to.z;z++)for(let x=from.x;x<=to.x;x++)addGroundMaterial(w,'wood',10,{x,z});

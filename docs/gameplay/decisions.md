@@ -1,5 +1,7 @@
 # Choix et écarts de gameplay
 
+**Traitements V47** : adopter la chaîne physique sans médicament, Patient/Repos au lit et Médecine ; adapter la place de travail à un chevet cardinal en 3D et la progression aux ticks locaux. La politique actuelle autorise ou refuse les seuls soins disponibles ; elle ne prétend pas fournir les cinq plafonds Core. [Contrat et absences assumées](../development/tending.md), [preuves de référence](../research/tending-reference.md).
+
 V46 : prise d’un blessé sur sa cellule et dépôt sur l’ancre du lit, adaptés à nos services 3D ; trajectoire commune sans transfert instantané à distance. La file de secours et les critères de danger/température restent partiels explicitement. [Contrat et décisions](../development/rescue.md).
 
 V44 — dépôt interrompu : rayon connecté de douze cases et identité conservée sans fusion ; en cas d’échec, sommeil/réveil possibles mais autre travail suspendu jusqu’à libération locale. C’est une adaptation logistique explicitement bornée, non une règle Core certifiée. [Motif et vérification](../research/interrupted-cargo-reference.md).
@@ -112,4 +114,4 @@ Adopter la lumière au colon, le travail variable, les coups et arêtes capturé
 
 ## Santé active V45
 
-[Référence et décisions](../research/health-reference.md), [contrat](../development/health.md). Adopter corps naturel adulte, incapacités et dégâts construits, sans vie globale. Adapter unités entières, phases et fin d’arête allongée après arrêt des actions. Profil de mort instantanée autorisée par défaut ; pas de réglage de difficulté complet. Différer secours/soins, ramper, capacité quantitative de portage, armures et gestion des dépouilles ; aucune guérison instantanée ne compense ces absences.
+[Référence et décisions](../research/health-reference.md), [contrat](../development/health.md). Adopter corps naturel adulte, incapacités et dégâts construits, sans vie globale. Adapter unités entières, phases et fin d’arête allongée après arrêt des actions. Profil de mort instantanée autorisée par défaut ; pas de réglage de difficulté complet. Secours livrés en V46, traitements sans médicament en V47 ; différer soins complets, ramper, capacité quantitative de portage, armures et gestion des dépouilles ; aucune guérison instantanée ne compense ces absences.

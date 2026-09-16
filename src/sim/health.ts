@@ -33,13 +33,13 @@ export function reconcilePawnHealth(world:World,pawn:Pawn,body=pawnBody(pawn)):v
     pawn.need=null;delete pawn.medicalSleep;pawn.state='idle';pawn.planCooldown=0;pawn.needCooldown=0;
     announce(world,`${pawn.name} peut de nouveau se relever.`);
   }
-  if(body.capacities.manipulation===0&&(pawn.jobId!==null||pawn.rescue||pawn.haul||pawn.cooking||pawn.orders.active!==null||pawn.orders.queue.length||pawn.priorityWork))interruptWork(world,pawn);
+  if(body.capacities.manipulation===0&&(pawn.jobId!==null||pawn.tend||pawn.rescue||pawn.haul||pawn.cooking||pawn.orders.active!==null||pawn.orders.queue.length||pawn.priorityWork))interruptWork(world,pawn);
 }
 export function updatePawnHealth(world:World,pawn:Pawn):BodyAssessment|undefined {
   const record=pawn.health;if(!record)return;
   if(record.death){if(!carrierOf(world,pawn.id)&&pawn.moveCooldown===0)retryInterruptedCargo(world,pawn);return;}
   if(!record.death) {
-    const resting=!carrierOf(world,pawn.id)&&pawn.moveCooldown===0&&(pawn.state==='sleeping'||pawn.state==='downed');
+    const resting=!carrierOf(world,pawn.id)&&pawn.moveCooldown===0&&(pawn.state==='sleeping'||pawn.state==='resting'||pawn.state==='downed');
     const need=pawn.need;
     const bed=resting&&need?.kind==='sleep'&&need.phase==='sleep'&&need.bedId!==null&&world.structures.some(s=>s.id===need.bedId&&s.kind==='bed');
     advanceMedical(record,world.tick-record.tick,{phase:pawn.id%60,posture:bed?'bed':resting?'ground':'standing',starving:pawn.hunger<=0},()=>healthRandom(world));

@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+V47 ajoute un profil de compétence **Médecine**, les activités Patient/Repos au lit/Traitement et une politique individuelle autoriser/refuser. Aucun objet médical supplémentaire : les soins sans médicament utilisent les lits existants. Médicaments, consommables, lits d’hôpital et équipements restent absents ; ne pas compter les nouvelles actions comme de nouveaux objets. [Contrat](../development/tending.md).
+
 V46 ajoute un **rôle médical aux lits existants**, conservé lorsque le meuble est emballé. Aucun nouvel objet lit d’hôpital, médicament ou sac de patient : une personne portée garde son identité. Les variantes bois/acier/cinq pierres gardent leurs propriétés existantes. [Contrat](../development/rescue.md).
 
 V43 ajoute un profil numérique Construction aux personnes (aucun nouvel objet). Niveau, passion et XP sont des états individuels ; ils ne constituent ni un catalogue de biographies ni les douze compétences complètes. [Contrat](../development/skills.md).

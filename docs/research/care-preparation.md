@@ -1,6 +1,6 @@
 # Secours V46 et préparation des traitements
 
-Recherche du 16–17 septembre 2026, après la livraison santé V45. **V46 livre désormais les secours physiques et lits médicaux ; les sections sur le traitement restent préparatoires.** [Contrat de la tranche livrée](../development/rescue.md). [Plan canonique](../ROADMAP.md), [santé actuelle](../development/health.md). Corpus relu : chapitre 15, SYS/TEST-094 et 096, chapitre 8/9 pour tâches, accès et réservations. Adopter la chaîne physique, adapter son état persistant au moteur, différer chirurgie/maladies avec leurs producteurs.
+Recherche du 16–17 septembre 2026, après la livraison santé V45. **V46 livre les secours physiques et lits médicaux ; la préparation des traitements ci-dessous est désormais complétée et précisée par la [recherche V47](tending-reference.md).** [Contrat des secours](../development/rescue.md), [traitements livrés](../development/tending.md). [Plan canonique](../ROADMAP.md), [santé actuelle](../development/health.md). Corpus relu : chapitre 15, SYS/TEST-094 et 096, chapitre 8/9 pour tâches, accès et réservations. Adopter la chaîne physique, adapter son état persistant au moteur, différer chirurgie/maladies avec leurs producteurs.
 
 ## Références recoupées
 
@@ -22,9 +22,9 @@ Le traitement attend une durée capturée issue de 600 ticks Core divisés par l
 
 Le soin ne doit pas recalculer les capacités ni avancer le PRNG à chaque image. Son résultat rejoint les opérations physiologiques existantes ; la qualité aléatoire finale et ses bornes doivent encore être relues dans HediffComp_TendDuration, pas déduites de la seule qualité de base. L'expérience médicale est accordée au traitement fini (500 × facteur du médicament chez l'humain ; facteur sans médicament 0,5 dans le chemin étudié), pas pendant le trajet. Les courbes exactes de qualité et leurs modificateurs restent à recouper avant branchement.
 
-## Prochain lot concret et critères de sortie
+## Périmètre de sortie des secours V46
 
-**Secours physique et couchage médical livrés sous V46**, puis traitement et alimentation du patient à développer. Cette coupure ne présente pas le système de soins complet comme terminé. Les politiques et métiers restent dans Travail/Affectations ; le rendu du patient porté partage la trajectoire GPU du porteur. Lire les contrats de besoins, interruptions, occupation et présentation avant modification ; une nouvelle propriété persistante exige validation stricte V45 puis migration.
+**Secours physique et couchage médical livrés sous V46**, traitement sans médicament et repos volontaire ajoutés sous V47 ; alimentation du patient encore absente. Ces tranches ne présentent pas le système de soins complet comme terminé. Les métiers restent dans Travail, l'autorisation individuelle dans Santé ; le rendu du patient porté partage la trajectoire GPU du porteur. Lire les contrats de besoins, interruptions, occupation et présentation avant modification ; une nouvelle propriété persistante exige validation stricte du schéma précédent puis migration.
 
 Enrichir les scénarios médicaux existants : deux sauveteurs disputent un patient et le dernier lit ; chemin fermé puis rouvert ; lit réaffecté/retiré ; patient qui récupère ou meurt à chaque phase ; sauveteur blessé/épuisé ; sol encombré et cargaison antérieure ; sauvegarde/reprise pendant approche, portage et dépôt. Vérifier propriétaire unique, engagements libérés, absence de soin/nutrition à distance et santé qui continue pendant le trajet. Le navigateur doit observer corps, anneaux et gestes sur la même trajectoire, puis transition au lit au tick affiché. Le pilote ordinaire doit conserver ses résultats ; ajouter ensuite un parcours d'accident survivable avec véritable secours et bilan de récupération.
 

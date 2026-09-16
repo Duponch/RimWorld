@@ -1,0 +1,31 @@
+{
+  "date": "2026-09-16T23:40:58.871Z",
+  "backend": "native WebGPU",
+  "frames": 722,
+  "first": {
+    "tick": 3136,
+    "play": 3136.022000000008,
+    "work": 1,
+    "patientPose": 1,
+    "distance": 1,
+    "yaw": 0,
+    "expectedYaw": 0
+  },
+  "last": {
+    "tick": 3264,
+    "play": 3271.8959999999943,
+    "work": 1,
+    "patientPose": 1,
+    "distance": 1,
+    "yaw": 0,
+    "expectedYaw": 0
+  },
+  "duringTick": 3144,
+  "finishedTick": 3323,
+  "quality": [
+    475,
+    482
+  ],
+  "xp": 175000,
+  "errors": []
+}

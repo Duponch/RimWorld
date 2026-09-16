@@ -34,6 +34,8 @@ export function queryJobStatus(world: World, job: Job): JobDiagnostic {
 export function queryPawnStatus(world: World, pawn: Pawn): { code: string; reason: string } {
   const carrier=carrierOf(world,pawn.id);
   if(carrier)return {code:'carried-patient',reason:`Transporté par ${carrier.name} vers un lit.`};
+  if(pawn.tend)return {code:'tend',reason:`${pawn.tend.phase==='tend'?'Traite':'Rejoint'} ${world.pawns.find(p=>p.id===pawn.tend!.patientId)?.name??'un patient'} sans médicament.`};
+  if(pawn.state==='resting')return {code:'patient',reason:pawn.medicalSleep?'Dort pendant sa récupération médicale.':'Attend des soins ou récupère au lit, éveillé.'};
   if(pawn.rescue)return {code:'rescue',reason:`${pawn.rescue.phase==='carry'?'Porte':'Rejoint'} ${world.pawns.find(p=>p.id===pawn.rescue!.patientId)?.name??'un patient'} pour le secourir.`};
   if(pawn.state==='dead')return {code:'dead',reason:'Décédé ; dépouille conservée sur place. Le transport et les sépultures ne sont pas encore disponibles.'};
   if(pawn.state==='downed')return {code:'downed',reason:'Incapacité médicale : ne peut pas agir. Consultez ses blessures et ses capacités dans Santé.'};

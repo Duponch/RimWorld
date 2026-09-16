@@ -57,7 +57,7 @@ describe('seeded temperate valley generation', () => {
     for (const tile of raw.tiles) { delete tile.stone; delete tile.ore; }
     for (const resource of raw.resources) delete resource.stone;
     const migrated = deserializeWorld(JSON.stringify(raw));
-    expect(migrated).toEqual(withMigratedSkills({...raw,pawns:raw.pawns.map((p:any)=>({...p,priorities: { doctor: 0,craft:2,...p.priorities,mine:2}})),schemaVersion:SCHEMA_VERSION }));
+    expect(migrated).toEqual(withMigratedSkills({...raw,pawns:raw.pawns.map((p:any)=>({...p,priorities: { patient:0,bedrest:0,doctor:0,craft:2,...p.priorities,mine:2}})),schemaVersion:SCHEMA_VERSION }));
     const control = deserializeWorld(JSON.stringify(raw)); stepWorld(migrated, 251); stepWorld(control, 251);
     expect(serializeWorld(migrated)).toBe(serializeWorld(control));
     for (const change of [(w: any) => w.tiles.find((t: any) => t.terrain === 'rock').stone = 'vacstone',
@@ -70,6 +70,14 @@ describe('seeded temperate valley generation', () => {
     }
   });
   test('same seed reproduces every entity; rectangular boundary fixtures and saved edited maps remain valid', () => {
+    // Repeated creation after fractional field writes exposed shared numeric
+    // defaults in optimized literal allocation on the local Node/V8 runtime.
+    const original=structuredClone(createWorld(42,32,32).pawns);
+    for(let i=0;i<60;i++){
+      const fresh=createWorld(42,32,32);expect(fresh.pawns).toEqual(original);
+      fresh.pawns[0]!.comfort=46.192;fresh.pawns[0]!.moveCooldown=5.15;
+      fresh.pawns[0]!.skills.medicine.xp=123456;fresh.pawns[0]!.schedule[0]='work';
+    }
     for (const [width, height] of [[8, 8], [8, 128], [128, 8], [16, 12], [32, 64], [64, 32], [128, 128], [8, 250], [250, 8], [249, 250], [250, 249], [200, 200], [250, 250]]) {
       const fingerprints = new Set<string>();
       for (const seed of [0, 1, 7, 42, -1, 0xffffffff, 0x100000000]) {
@@ -181,7 +189,7 @@ describe('seeded temperate valley generation', () => {
     long.resources = [{ id: long.nextId++, x: 249, z: 125, kind: 'tree', amount: 12 }];
     long.piles = []; refreshStock(long);
     long.pawns = long.pawns.slice(0, 1);
-    const pawn = long.pawns[0]!; pawn.x = 0; pawn.z = 125; pawn.priorities = { doctor:0,craft:2,mine:2, gather: 1, build: 0, haul: 0, grow: 0 , cook: 0 };
+    const pawn = long.pawns[0]!; pawn.x = 0; pawn.z = 125; pawn.priorities = { patient:0,bedrest:0,doctor:0,craft:2,mine:2, gather: 1, build: 0, haul: 0, grow: 0 , cook: 0 };
     addGroundMaterial(long, 'food', 18, pawn);
     expect(applyCommand(long, { type: 'designate', kind: 'chop', x: 249, z: 125 })).toEqual({ ok: true });
     stepWorld(long);

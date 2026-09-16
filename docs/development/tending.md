@@ -1,0 +1,39 @@
+# Traitement et repos médical — V47
+
+17 septembre 2026. [Recherche fraîche et incertitudes](../research/tending-reference.md), [santé](health.md), [secours](rescue.md), [compétences](skills.md), [validation](validation.md). Corpus chapitre 15 SYS/TEST-094 et 096 ; chapitres 8/9 pour priorités et réservations. Cette tranche livre les traitements **sans médicament**, pas l'hôpital complet.
+
+## Chaîne jouable
+
+Travail sépare **Patient**, **Médecin** et **Repos au lit**, par défaut 1/1/3. Patient recherche un traitement autorisé et un médecin valide, éveillé et accessible ; l'urgence hémorragique estimée à moins de 0,75 jour dispense de cette dernière condition. Repos au lit permet aussi la récupération après traitement. Si aucun médecin n'est disponible, ce second métier peut encore faire rejoindre un couchage. Un blessé fatigué peut utiliser le même choix médical lors du coucher ; un colon sain ne prend pas un lit médical pour dormir.
+
+Les lits sont classés médical, propriétaire du patient, puis lit ordinaire libre, avec distance/ID et accès réel. Usage temporaire et propriété restent distincts ; un lit ordinaire choisi est attribué avant le départ. Aucun bonus pendant le trajet. À l'arrivée, l'état `resting` désigne une personne allongée, pas nécessairement endormie : `medicalSleep` porte son sommeil réel, et le repos ne monte que selon les règles de sommeil. La faim continue ; un patient mobile peut quitter le lit pour manger physiquement. Nourrir une personne incapable reste absent.
+
+Médecin choisit un patient réellement couché, réserve son identité et une place cardinale libre au chevet, la rejoint, fait face au patient et travaille. La place cardinale est une **adaptation 3D** du contact avec le lit. Deux médecins ne traitent pas simultanément le même patient. Aucun soin à distance, pendant l'approche, ou dans les bras du sauveteur. Un patient dans un lit ordinaire peut aussi être traité.
+
+Le clic droit propose **Soigner sans médicament**. Comme les autres ordres directs, un ordre accepté peut continuer après désactivation du métier ; l'ordre automatique est libéré. Maj/file de soins est refusée explicitement. L'inspection Santé permet d'autoriser ou d'interdire tout traitement et affiche la qualité des plaies traitées. Cette politique binaire couvre seulement les deux choix disponibles aujourd'hui ; les cinq plafonds Core ne sont pas tous livrés.
+
+## Travail et résultat
+
+Une opération traite une seule lésion admissible : saignement prioritaire (×1,5 dans le classement), puis sévérité. Les parties fraîchement manquantes peuvent être traitées sans faire repousser un membre. Les cicatrices permanentes ne sont pas guéries par cette action. Traiter arrête le saignement de la plaie et contribue à sa guérison ultérieure ; il n'ajoute pas immédiatement des PV.
+
+Durée capturée au début du travail : partie entière de `600 / vitesse` ticks Core ; progression de dix unités par tick local et reliquat conservé entre plaies. La vitesse combine niveau Médecine (`0,4 + 0,06 × niveau`), Manipulation, Vue (importance 80 %, plafond 130 %) et lumière, avec minimum 0,1. Un changement pendant une opération ne retime pas la durée capturée. Sauvegarder conserve la progression ; interrompre la perd.
+
+À l'achèvement, 250 XP de base humaines sans médicament passent par passion/saturation communes **avant** la qualité. Aucun apprentissage pendant trajet ou interruption. Qualité : base `0,2 + 0,1 × niveau`, Manipulation à 100 %, Vue à 70 %, capacités plafonnées à 140 %, puis courbe Core documentée. Sans médicament, puissance 0,3, plafond 0,7 ; variation **additive** uniforme −0,25..+0,25, bornée, résultat persisté en millièmes. Lumière et lit ordinaire ne donnent pas un bonus de qualité. Le PRNG autoritaire n'avance qu'au résultat qui en a besoin.
+
+Politique désactivée, patient mort/déplacé, service perdu, place devenue solide ou médecin incapable arrêtent les soins avant résultat/XP. Les intervalles de santé sont ancrés sous leur ancienne posture avant changement ou libération. Les réservations ne survivent pas à leur tâche.
+
+Une personne devenue incapable alors qu'elle repose déjà au lit conserve son service physique, indépendamment des priorités Patient/Repos au lit et de la fin du traitement. Le marqueur d'intention volontaire est retiré ; cela évite de libérer artificiellement le lit puis de secourir une seconde fois son occupant.
+
+## Frontières et continuation
+
+`care-rules.ts` porte cibles et statistiques ; `patient-rest.ts` les intentions et l'utilisation médicale ; `tending.ts` choix, commandes et exécution ; `care-save.ts` formes et relations. Navigation/budgets et réservations restent communs. Aucun DOM, horloge réelle ou rendu dans la simulation. La présentation observe approche/travail, posture et résultats sur sa même horloge ; geste de travail et pose allongée réutilisent les buffers GPU existants.
+
+V46 est strictement validée avant V47 : Patient 1, Repos au lit 3 et Médecine niveau 8/sans passion/0 XP ajoutés ; rien d'autre n'est inventé. Les nouvelles parties utilisent Ada 6/passion, Noé 3/sans passion, Mina 8/passion brûlante en Médecine. Ce sont des profils de départ, pas une génération de biographies. La migration V42→43 reste strictement limitée à Construction ; elle ne doit pas injecter Médecine avant validation V46.
+
+La sauvegarde rejette futurs champs dans les anciens schémas, conflits d'activités, doublons de patient, mauvaises phases, progression/durée invalides, place éloignée et absence de lit réel. Les données de chemin/pose restent distinctes de ces réservations.
+
+## Limites maintenues
+
+Alimentation assistée, médicaments, auto-soin, ordres de repos forcé, files médicales, chirurgie, infections/maladies, immunité, hôpital spécialisé et propreté restent à développer. Le planner classe les urgences lors d'une décision, mais ne dispose pas encore d'une interruption médicale générale des travaux engagés. Les menaces/factions, prisonniers, animaux et restrictions thermiques seront branchés sur leurs systèmes ; aucune parité exhaustive n'est annoncée.
+
+Les cinq scénarios profonds de `care.test.ts` croisent statistiques/résultats, repos/sommeil, réservations, accès, interruptions, mort, amputations, migration, snapshots et reprise. Le parcours UI observe les gestes, l'inspection, les attributs GPU et le rechargement pendant traitement. Le pilote de colonie enregistre état médical et XP sans injecter de blessure dans son camp sûr. Les audits 2/30/100 personnes mesurent CPU et navigateur séparément.

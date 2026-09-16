@@ -1,3 +1,4 @@
+import { tendingReason,tendingProposal,lyingPatient } from './tending.ts';
 import { carrierOf } from './rescue-state.ts';
 import { rescueReason,rescueProposal,wantsRescue } from './rescue.ts';
 import { stationRecipe } from './production-recipes.ts';
@@ -20,13 +21,13 @@ import { haulOrderCell, planHaulOrder, queuedHaulReason, startHaulOrder, type Ha
 import { canReach, destinationCell } from './work-planner.ts';
 import type { Cell, CommandResult, HaulTask, Job, Pawn, World } from './types.ts';
 
-export interface PlayerOrders { active: number | 'haul' | 'cook' | 'rescue' | null; queue: import('./order-types.ts').QueuedOrder[] }
+export interface PlayerOrders { active: number | 'haul' | 'cook' | 'tend' | 'rescue' | null; queue: import('./order-types.ts').QueuedOrder[] }
 export type OrderCommand = { type:'order-cook';pawnId:number;structureId:number;queue:boolean } | { type: 'order-job'; pawnId: number; jobId: number; queue: boolean } | { type:'order-haul';pawnId:number;target:HaulOrderTarget;queue:boolean } | { type: 'clear-orders'; pawnId: number };
-export interface OrderOption { jobId: number; cookStationId?:number; rescuePatientId?:number; haulTarget?:HaulOrderTarget; label: string; enabled: boolean; reason?: string }
+export interface OrderOption { jobId: number; cookStationId?:number; rescuePatientId?:number; tendPatientId?:number; haulTarget?:HaulOrderTarget; label: string; enabled: boolean; reason?: string }
 export const MAX_QUEUED_ORDERS = 32;
 const labels: Record<Job['kind'], string> = { 'wood-generator':'construire le générateur à bois', 'standing-lamp':'construire la lampe', 'passive-cooler':'Construire le refroidisseur passif', 'build-roof':'Poser le toit', 'remove-roof':'Retirer le toit', door:'Construire la porte', stonecutter:'Construire la table de taille', mine:'Miner', uninstall:'Désinstaller',install:'Réinstaller', deconstruct:'Déconstruire', chop:'Abattre',harvest:'Récolter',cut:'Couper',sow:'Semer du riz',wall:'Construire le mur',bed:'Construire le lit',table:'Construire la table',stool:'Construire le tabouret',campfire:'Construire le feu',horseshoes:'Construire le piquet' };
 const fail = (reason: string): CommandResult => ({ok:false,code:'invalid-command',reason});
-const busy = (pawn: Pawn) => pawn.jobId !== null || !!(pawn.rescue || pawn.haul || pawn.cooking || pawn.need || pawn.recreation.task);
+const busy = (pawn: Pawn) => pawn.jobId !== null || !!(pawn.tend || pawn.rescue || pawn.haul || pawn.cooking || pawn.need || pawn.recreation.task);
 const clearingPlant=(world:World,job:Job)=>!isConstruction(job)?undefined:job.clearance?world.resources.find(r=>r.id===job.clearance!.resourceId):constructionObstruction(world,job).plant;
 const orderLabel=(world:World,job:Job)=>clearingPlant(world,job)?'Couper la plante qui gêne le chantier':labels[job.kind];
 
@@ -100,6 +101,10 @@ export function queryOrderOptions(world:World,pawnId:number,cell:Cell,queue=fals
     const reason=queue?'Le secours direct ne peut pas encore être ajouté à une file.':exhausted(world,pawn)??rescueReason(world,pawn,patient)
       ??(!rescueProposal(world,pawn,patient,reachableCells(world,pawn,blockedCells(world),new Set()))?'Aucun couchage accessible et disponible.':undefined);
     options.push({jobId:0,rescuePatientId:patient.id,label:`Secourir ${patient.name}`,enabled:!reason,...reason?{reason}:{}});
+  }
+  for(const patient of world.pawns)if(patient!==pawn&&patient.x===cell.x&&patient.z===cell.z&&lyingPatient(patient)){
+    const reason=queue?'La file de soins n’est pas encore disponible.':tendingReason(world,pawn,patient)??(!tendingProposal(world,pawn,patient,reachableCells(world,pawn,blockedCells(world),new Set()))?'Aucune place accessible au chevet.':undefined);
+    options.push({jobId:0,tendPatientId:patient.id,label:`Soigner ${patient.name} sans médicament`,enabled:!reason,...reason?{reason}:{}});
   }
   return options;
 }
@@ -177,7 +182,7 @@ export function reconcileOrders(world:World):void {
   for(const pawn of world.pawns) {
     expirePriorityWork(world,pawn);
     const orders=pawn.orders;if(orders.active===null&&!orders.queue.length)continue;
-    if(orders.active==='haul'?!pawn.haul:orders.active==='cook'?!pawn.cooking:orders.active==='rescue'?!pawn.rescue:orders.active!==pawn.jobId)orders.active=null;
+    if(orders.active==='haul'?!pawn.haul:orders.active==='cook'?!pawn.cooking:orders.active==='tend'?!pawn.tend:orders.active==='rescue'?!pawn.rescue:orders.active!==pawn.jobId)orders.active=null;
     if(!orders.queue.length)continue;
     jobs??=new Map(world.jobs.map(j=>[j.id,j]));
     orders.queue=orders.queue.filter(id=>{

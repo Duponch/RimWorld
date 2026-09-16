@@ -24,7 +24,7 @@ export function updateRest(world: World, pawn: Pawn): void {
     pawn.rest=Math.max(0,pawn.rest-(world.restRules==='legacy'?LEGACY_REST_PER_TICK:REST_PER_TICK*restFallFactor(pawn.rest)));
     return;
   }
-  if(pawn.state==='downed') {
+  if(pawn.state==='downed'||pawn.state==='resting') {
     pawn.restZeroTicks=0;pawn.collapsePending=false;
     if(pawn.moveCooldown>0){delete pawn.medicalSleep;return;}
     if(pawn.medicalSleep&&pawn.rest>=100)delete pawn.medicalSleep;

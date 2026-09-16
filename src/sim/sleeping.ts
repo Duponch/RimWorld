@@ -1,3 +1,4 @@
+import { patientWork,patientProposal,startPatientRest,processPatientRest } from './patient-rest.ts';
 import { deconstructionReserved } from './deconstruction-rules.ts';
 import { BUILDING_MATERIALS } from './building-materials.ts';
 import { canStandAt } from './furniture-travel.ts';
@@ -14,12 +15,18 @@ const NEED_INTERVAL = 20;
 
 /** Ownership, accessibility and rest gain all depend on the actual sleeping cell. */
 export function processSleeping(world: World, pawn: Pawn, context: NeedContext, canPlan: boolean): boolean {
+  if(pawn.need?.kind==='sleep'&&pawn.need.medical)return processPatientRest(world,pawn,context);
   let reach: Reachability | null;
-  if (!pawn.need && wantsSleep(world, pawn) && canPlan && (world.restRules === 'legacy' || (pawn.jobId === null && !pawn.haul && !pawn.cooking&&!pawn.rescue))) {
+  if (!pawn.need && wantsSleep(world, pawn) && canPlan && (world.restRules === 'legacy' || (pawn.jobId === null && !pawn.haul && !pawn.cooking&&!pawn.tend&&!pawn.rescue))) {
     // Transit does not claim bed ownership; only a sleep reservation excludes another sleeper.
     const ownedBed = world.structures.find(item => item.id === pawn.bedId && item.kind === 'bed');
-    reach = context.search( ownedBed ? new Set([ownedBed.z * world.width + ownedBed.x]) : undefined);
+    const medical=patientWork(pawn);
+    reach = context.search( !medical&&ownedBed ? new Set([ownedBed.z * world.width + ownedBed.x]) : undefined);
     if (!reach) return true;
+    // A wounded sleeper may use a medical bed. Do not fall back to the floor
+    // merely because the sleep provider runs before the ordinary work planner.
+    const patient=medical?patientProposal(world,pawn,reach):undefined;
+    if(patient){if(!context.release())return true;startPatientRest(world,pawn,patient);return processPatientRest(world,pawn,context);}
     const owners = new Map(world.pawns.filter(other => other.bedId !== null).map(other => [other.bedId, other.id]));
     const reserved = new Set(world.pawns.filter(other => other.id !== pawn.id && other.need?.kind === 'sleep').map(other => other.need?.kind === 'sleep' ? other.need.bedId : null));
     const services = reservedServiceCells(world,pawn.id);

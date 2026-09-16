@@ -21,7 +21,7 @@ export function validateRescues(world:World):string[] {
     if(!patient||patient===actor||!wantsRescue(patient)||patient.rescue||patients.has(t.patientId))errors.push('Invalid or duplicate rescue patient.');
     if(!bed||!patient||!rescueBedAvailable(world,bed,patient,actor.id)||beds.has(t.bedId))errors.push('Invalid or duplicate rescue bed.');
     patients.add(t.patientId);beds.add(t.bedId);
-    if(medicalWorkRefusal(actor)||actor.priorities.doctor===0&&actor.orders.active!=='rescue'||actor.jobId!==null||actor.need||actor.haul||actor.cooking||actor.recreation.task||actor.interruptedCargo||actor.state!=='moving')errors.push('Rescue conflicts with actor activity.');
+    if(medicalWorkRefusal(actor)||actor.priorities.doctor===0&&actor.orders.active!=='rescue'||actor.jobId!==null||actor.need||actor.tend||actor.haul||actor.cooking||actor.recreation.task||actor.interruptedCargo||actor.state!=='moving')errors.push('Rescue conflicts with actor activity.');
     if(patient&&t.phase==='carry'){
       if(patient.x!==actor.x||patient.z!==actor.z||patient.moveCooldown!==actor.moveCooldown||!sameEdge(patient.motion,actor.motion))errors.push('Carried patient does not share carrier edge.');
       if(patient.need||patient.path.length||patient.medicalSleep)errors.push('Carried patient still uses a service.');

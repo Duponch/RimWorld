@@ -1,5 +1,7 @@
 # Adoption du référentiel utilisateur
 
+**Soins V47 (17 septembre 2026)** : chapitre 15 SYS/TEST-094 et 096, chapitres 8/9 relus. Adopter patient/médecin, trajet/service, capacités, interruption et continuation ; adapter chevet cardinal 3D et temps entier ; différer médicaments, alimentation assistée, auto-soins, chirurgie et maladies. Le [contrat](../development/tending.md) et la [recherche fraîche](tending-reference.md) confrontent wiki, définitions et chemins de traitement : qualité additive, XP avant qualité, durée capturée, Patient distinct de Repos au lit. Ces choix enrichissent cinq scénarios profonds, pas une suite par entrée du corpus.
+
 V45 — chapitre 15, SYS/TEST-089..091, 094, 096..097 : adopter anatomie, lésions, capacités et interruptions ; adapter horloge, dossiers sparse et fin d’arête allongée ; différer soins physiques, ramper et gestion de dépouilles. Chapitres 5/21 : premier producteur par toiture construite. [Recherche fraîche](health-reference.md), [contrat et limites](../development/health.md). Le module initial V44 reste la base physiologique ; ses tests ne suffisent pas à valider la partie intégrée.
 
 V44 — chapitres 8/9/14, SYS/TEST-044/079 et réservations 031..034/047..054 ; chapitre 15 SYS/TEST-096 pour la suite médicale. Adopter interruption/propriété séparées, adapter dépôt local et cadence déphasée, différer incapacité médicale et secours. [Sources recoupées](interrupted-cargo-reference.md), [contrat livré](../development/interrupted-cargo.md).

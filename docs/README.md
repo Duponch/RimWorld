@@ -1,10 +1,12 @@
 # Documentation de Lisière
 
-V46 : [secours physiques et lits médicaux](development/rescue.md). Médecin, clic droit, portage GPU et reprise en cours de transport ; traitement et alimentation assistée restent à développer.
+V47 : [traitements sans médicament, repos médical et Médecine](development/tending.md), [règles revérifiées](research/tending-reference.md). Les médicaments, l’alimentation assistée et les auto-soins restent ouverts.
+
+V46 : [secours physiques et lits médicaux](development/rescue.md). Médecin, clic droit, portage GPU et reprise en cours de transport ; traitements ajoutés en V47, alimentation assistée encore absente.
 
 V44 : [interruptions et cargaisons conservées](development/interrupted-cargo.md), [relecture de l’épuisement et du dépôt](research/interrupted-cargo-reference.md).
 
-V45 : [santé active](development/health.md), [recherche des transitions et accidents](research/health-reference.md). Anatomie, lésions, incapacités, décès et effets physiques intégrés ; soins, équipement et combat restent à développer ; secours ajoutés en V46. [Référence des secours et préparation des traitements](research/care-preparation.md).
+V45 : [santé active](development/health.md), [recherche des transitions et accidents](research/health-reference.md). Anatomie, lésions, incapacités, décès et effets physiques intégrés ; secours ajoutés en V46, traitements sans médicament en V47 ; équipement et combat restent à développer. [Référence des secours et préparation des traitements](research/care-preparation.md).
 
 V43 : [première compétence et apprentissage](development/skills.md), [recherche et réorientation des priorités](research/skills-reference.md).
 

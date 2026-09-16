@@ -89,7 +89,7 @@ export function processNeeds(world: World, pawn: Pawn, context: NeedContext): bo
     // Cooking may still provide food for others even under a restrictive diet.
     // Its processor can wait for a navigation budget while keeping its product;
     // do not overwrite the active task's state during that wait.
-    if (pawn.jobId === null && pawn.haul === null && !pawn.cooking && !pawn.rescue) pawn.state = 'hungry';
+    if (pawn.jobId === null && pawn.haul === null && !pawn.cooking && !pawn.tend && !pawn.rescue) pawn.state = 'hungry';
   } else if (pawn.state === 'hungry') pawn.state = 'idle';
   return false;
 }

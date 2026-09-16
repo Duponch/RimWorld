@@ -1,10 +1,12 @@
-# Compétences — premier consommateur Construction V43
+# Compétences — Construction V43 et Médecine V47
+
+Médecine utilise les mêmes règles de milli-XP, passion, saturation, oubli et remise à zéro que Construction. Le gain de 250 XP de base est attribué à chaque traitement humain sans médicament effectivement terminé, avant sa qualité. Aucun gain pour la seule réservation, le trajet ou une opération interrompue. V46 est validée avant ajout du profil neutre 8/sans passion/0 XP ; la migration V42 reste limitée à Construction.
 
 [Recherche et décisions](../research/skills-reference.md). Corpus chapitre 13, SYS-085 / TEST-085 ; chapitre 9 pour affectations et chapitre 10 pour travail physique. Le système est **partiel**, pas une livraison des douze compétences Core.
 
 ## État et temps
 
-`Pawn.skills` contient Construction : niveau 0–20, expérience et bilan quotidien en milli-XP, passion 0/1/2, plus la dernière remise à zéro. Aucune horloge réelle, tirage aléatoire ou cache dérivé n'affecte l'apprentissage. Trois profils de scénario : Ada 8/passion, Noé 10/passion brûlante, Mina 4/sans passion. Ces choix ne reproduisent pas la génération de biographies Core ; les onze autres compétences ne reçoivent pas de nombres fictifs.
+`Pawn.skills` contient Construction et Médecine : niveau 0–20, expérience et bilan quotidien en milli-XP, passion 0/1/2, plus la dernière remise à zéro. Aucune horloge réelle, tirage aléatoire ou cache dérivé n'affecte l'apprentissage. Trois profils de scénario : Ada 8/passion, Noé 10/passion brûlante, Mina 4/sans passion. Ces choix ne reproduisent pas la génération de biographies Core ; les dix autres compétences ne reçoivent pas de nombres fictifs. Médecine utilise Ada 6/passion, Noé 3/sans passion, Mina 8/passion brûlante ; vitesse, qualité et XP ne s’appliquent qu’aux traitements réels décrits dans le [contrat V47](tending.md).
 
 Seuil vers le niveau suivant : 1 000–10 000 XP entre niveaux 0–9, puis 12 000–30 000 entre 10–19. Au niveau 20, réserve plafonnée à 29 999 XP. L'oubli permet une dette jusqu'à −1 000 XP avant la perte d'un niveau. Il se produit tous les vingt ticks locaux, déphasé par ID, pour les niveaux 10–20 : 0,1 / 0,2 / 0,4 / 0,6 / 1 / 1,8 / 2,8 / 4 / 6 / 8 / 12 XP par intervalle. Aucun oubli aux niveaux inférieurs.
 
@@ -22,7 +24,7 @@ Les quantités, réservations, propriétaires et trajets restent ceux des contra
 
 V42 est entièrement validée avant migration. Ajout d'un profil 8/sans passion/0 XP par personne, dernière remise à zéro inconnue (`-1`) : vitesse antérieure conservée, aucun apprentissage rétroactif, aucune carte/route/ressource/PRNG réécrite. Les autres migrations atteignent V42 avant cette étape. V43 exige le profil, des entiers bornés, une passion valide et une date non future ou la sentinelle `-1` ; un état invalide ne remplace pas la partie.
 
-L'inspection en bas à gauche présente Biographie/compétences avec niveau, barre d'XP, dette éventuelle et facteurs. Travail conserve les priorités et affiche niveau/flammes sous Construction. Le HUD suit sa cadence habituelle ; aucun calcul de compétence par image ni changement des poses GPU.
+L'inspection en bas à gauche présente Biographie/compétences avec niveau, barre d'XP, dette éventuelle et facteurs. Travail conserve les priorités et affiche niveau/flammes sous Construction et Médecin. Le HUD suit sa cadence habituelle ; aucun calcul de compétence par image ni changement des poses GPU.
 
 ## Vérification
 

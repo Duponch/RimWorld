@@ -83,7 +83,7 @@ test('interrupted production frees station and staged ingredients without finish
 
 test('schema 43 is checked before migration; passive ownership cannot hide illegal work, movement, duplicate objects or missing cargo',()=>{
   const initial=exhaustedCarrier(),legacy=JSON.parse(serializeWorld(initial));legacy.schemaVersion=43;withoutMedicalWork(legacy);
-  expect(deserializeWorld(JSON.stringify(legacy))).toEqual({...initial,pawns:initial.pawns.map(p=>({...p,priorities:{...p.priorities,doctor:1}}))});
+  expect(deserializeWorld(JSON.stringify(legacy))).toEqual({...initial,pawns:initial.pawns.map(p=>({...p,skills:{...p.skills,medicine:{level:8,xp:0,dailyXp:0,passion:0}},priorities:{...p.priorities,doctor:1,patient:1,bedrest:3}}))});
   legacy.pawns[0].interruptedCargo=true;expect(()=>deserializeWorld(JSON.stringify(legacy))).toThrow(/version 43/);
   checked(initial);const saved=serializeWorld(initial);expect(deserializeWorld(saved)).toEqual(initial);
   for(const mutate of [(w:World)=>{w.pawns[0]!.interruptedCargo=false as true;},(w:World)=>{w.pawns[0]!.interruptedCargo=null as unknown as true;},(w:World)=>{w.piles=w.piles.filter(q=>q.owner.type!=='pawn');refreshStock(w);},(w:World)=>{w.pawns[0]!.state='working';},(w:World)=>{w.pawns[0]!.path=[{x:3,z:2}];},(w:World)=>{w.pawns[0]!.orders.active='haul';},(w:World)=>{addMaterial(w,'food',1,{type:'pawn',pawnId:w.pawns[0]!.id},'survival-meal');refreshStock(w);},(w:World)=>{delete w.pawns[0]!.interruptedCargo;}]) {

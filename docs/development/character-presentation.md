@@ -1,5 +1,7 @@
 # Inventaire, équipement et apparence des colons
 
+V47 réutilise la pose allongée pour le repos médical et le geste de travail orienté vers le patient pour les soins. Les phases viennent des snapshots présentés, sans nouveau squelette CPU ni lot par médecin. [Contrat](tending.md).
+
 V46 ajoute une pose portée calculée en TSL : corps du patient, sa cargaison éventuelle et son anneau partagent les attributs de trajectoire du sauveteur. Les relations d’équipement et les amputations visuelles restent absentes ; [contrat](rescue.md).
 
 Décision du 13 septembre 2026, à la demande utilisateur. **Contrat cible, pas fonctionnalité livrée.** Le prototype ne possède aujourd'hui qu'une cargaison temporaire de travail ou de repas, éventuellement conservée après interruption involontaire V44 ; les portraits CSS ne représentent pas un équipement réel.

@@ -32,7 +32,7 @@ Les travaux suivent le contrat des fractions entières. L'ingestion conserve mai
 
 Profil actuel : autorisation de mort instantanée à 100 %, valeur par défaut du code de difficulté étudié. Les réglages de difficulté/personnages, armures et protections ne sont pas livrés. Un retrait volontaire de toit ne blesse pas. Le travail qui enlève le support termine sa transaction avant les conséquences médicales ; aucun job voisin ne doit être supprimé ou colon réactivé par le nettoyage de fin d'action.
 
-Dommages aux objets/bâtiments, gravats, sang au sol, pause automatique et toits naturels restent absents. Aucune blessure climatique ou de famine n'est produite implicitement. Ramper après incapacité (Core depuis 1.5) reste différé avec les déplacements tactiques. Les [secours et lits médicaux V46](rescue.md) utilisent maintenant cette santé ; traitements et alimentation assistée restent absents.
+Dommages aux objets/bâtiments, gravats, sang au sol, pause automatique et toits naturels restent absents. Aucune blessure climatique ou de famine n'est produite implicitement. Ramper après incapacité (Core depuis 1.5) reste différé avec les déplacements tactiques. Les [secours et lits médicaux V46](rescue.md) utilisent maintenant cette santé ; [traitements V47](tending.md) ajoutés, alimentation assistée encore absente.
 
 ## Sauvegarde et contrôles
 

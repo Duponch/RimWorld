@@ -1,5 +1,7 @@
 # Sélection et commandes directes — V23
 
+V47 ajoute `order-tend` au clic droit : réservation d’un patient réellement au lit, approche et traitement sans médicament. Acceptation atomique, annulation explicite, priorité Médecin désactivée respectée pour les nouveaux ordres. Maj/file de soins est refusée, comme celle des secours V46. [Contrat](tending.md).
+
 V46 : [secours direct](rescue.md) par clic droit, validation de l’accès/patient/lit et prévalidation du dépôt de cargaison. L’ordre persiste si Médecin passe ensuite à zéro. Maj/file de secours reste explicitement refusé ; les anciennes files ne changent pas.
 
 V44 : une [interruption involontaire](interrupted-cargo.md) libère la file et les engagements même si le dépôt échoue. L’objet reste porté sans travail associé ; les nouveaux ordres sont refusés jusqu’au dépôt. Les commandes volontaires conservent leur refus atomique.

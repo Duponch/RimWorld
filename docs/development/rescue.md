@@ -1,6 +1,6 @@
 # Secours physiques et lits médicaux — V46
 
-17 septembre 2026. [Recherche et limites](../research/care-preparation.md), [santé](health.md), [interruptions](interrupted-cargo.md), [ordres](player-orders.md), [validation](validation.md). Corpus : chapitre 15, SYS/TEST-094 et 096 ; chapitres 8/9 pour tâches, accès et réservations. La tranche livre le secours, **pas encore le traitement des plaies ni l'alimentation assistée**.
+17 septembre 2026. [Recherche et limites](../research/care-preparation.md), [santé](health.md), [interruptions](interrupted-cargo.md), [ordres](player-orders.md), [validation](validation.md). Corpus : chapitre 15, SYS/TEST-094 et 096 ; chapitres 8/9 pour tâches, accès et réservations. La tranche V46 livre le secours ; [V47](tending.md) ajoute le traitement sans médicament et le repos volontaire. L’alimentation assistée reste absente.
 
 ## Actions et propriété
 
@@ -18,7 +18,7 @@ Récupération ou décès du patient, perte du lit, interruption/fatigue/blessur
 
 L'inspection d'un lit construit propose **Usage médical**. `Structure.medical?:true` est un rôle, pas une définition « lit d'hôpital ». Le matelas bleuté utilise le même lot de mobilier. Ce rôle exclut le sommeil ordinaire et retire les propriétaires durables ; une réservation médicale reste une réservation temporaire. Les meubles emballés conservent ce rôle. Les plans de construction sont ordinaires jusqu'à leur achèvement.
 
-Le changement de rôle annule les approches/transports visant le lit et les usages ordinaires. Un patient déjà couché conserve son utilisation ; si le lit redevient ordinaire il le possède. Un lit occupé/réservé n'est pas simultanément disponible pour un autre secours ou une déconstruction. Une désignation seule ne détruit pas la réservation de service.
+Le changement de rôle annule les approches/transports visant le lit et les usages ordinaires. Un patient incapable déjà couché conserve son utilisation ; si le lit redevient ordinaire il le possède. Un lit occupé/réservé n'est pas simultanément disponible pour un autre secours ou une déconstruction. Une désignation seule ne détruit pas la réservation de service.
 
 Un lit ordinaire choisi est attribué au patient dès le début du secours, conformément au chemin ClaimBedIfNonMedical relu ; interrompre le secours ne retire pas cette propriété. Un lit médical ne remplace pas le lit ordinaire possédé. L'arrivée crée l'utilisation physique du lit chez le patient incapable. Repos et guérison utilisent alors les règles médicales V45 ; être au lit ne cautérise pas une plaie, n'apporte pas de nourriture et ne restaure pas instantanément des PV. La récupération libère l'utilisation médicale. Le besoin de repos normal peut ensuite chercher un couchage ordinaire.
 
@@ -33,7 +33,7 @@ Le bridge observe prise/dépôt et rôle du lit comme phases discrètes. La pré
 ## Limites assumées et suite
 
 - L'ordre de secours peut être forcé immédiatement ; **Maj/file de secours n'est pas encore livré** et fait l'objet d'un refus explicite. Les anciennes familles gardent leurs files existantes.
-- Aucun médicament, soin physique, compétence médicale/XP, politique de traitement, repos médical autonome d'un patient mobile, alimentation assistée, chirurgie, infection ou maladie n'est annoncé livré. C'est le prochain ensemble de boucles de G3.
+- Traitement sans médicament, Médecine/XP, autorisation de soins et repos médical volontaire sont ajoutés en [V47](tending.md). Médicaments, alimentation assistée, chirurgie, infection et maladie restent absents.
 - Les acteurs actuels sont des colons adultes alliés. Contrôle d'ennemi proche, permission de faction, prisonnier, animal et dangers tactiques restent à brancher sur ces futurs systèmes. Le domaine thermique jouable actuel est tempéré ; le filtre médical des températures extrêmes/confort vestimentaire reste absent, avec son contrat de référence conservé dans la recherche.
 - Les modèles gardent leurs membres de placeholder malgré les amputations. Les relations de propriétaire, de lit partagé et les types de couchages enrichiront le même contrat.
 

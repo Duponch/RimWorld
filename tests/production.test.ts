@@ -16,7 +16,7 @@ import { initialRecreation } from '../src/sim/recreation-rules';
 
 function camp():World {
   const w=createWorld(42,16,16);w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.resources=[];w.piles=[];
-  w.pawns.forEach((p,i)=>Object.assign(p,{x:2+i*2,z:2,hunger:100,rest:100,priorities: { doctor: 0,craft:2,mine:2,gather:0,build:1,haul:1,grow:0, cook: 0 }}));
+  w.pawns.forEach((p,i)=>Object.assign(p,{x:2+i*2,z:2,hunger:100,rest:100,priorities: { patient:0,bedrest:0,doctor:0,craft:2,mine:2,gather:0,build:1,haul:1,grow:0, cook: 0 }}));
   addGroundMaterial(w,'wood',50,{x:2,z:4},'wood');addGroundMaterial(w,'food',40,{x:3,z:6},'survival-meal');refreshStock(w);
   return w;
 }

@@ -1,3 +1,4 @@
+import { withoutCare } from './scenarios/legacy-skills';
 import { expect,test } from 'vitest';
 import { applyCommand,createWorld,deserializeWorld,serializeWorld,stepWorld,validateWorld } from '../src/sim/index';
 import { constructionSpeed, initialSkills, learnSkill, tickSkills, xpRequired } from '../src/sim/skills';
@@ -65,7 +66,7 @@ test('builders: physical work, distinct speeds, no training in travel/clearance,
 });
 
 test('skills persistence: strict V42 migration, invalid records, deep actor state and worker snapshots',()=>{
-  const {w}=site(),old=JSON.parse(serializeWorld(w));old.schemaVersion=42;for(const p of old.pawns)delete p.priorities.doctor;
+  const {w}=site(),old=JSON.parse(serializeWorld(w));old.schemaVersion=42;withoutCare(old);for(const p of old.pawns)delete p.priorities.doctor;
   for(const p of old.pawns)delete p.skills;
   const migrated=deserializeWorld(JSON.stringify(old));expect(migrated.pawns[0]!.skills).toEqual(initialSkills(8,0));
   expect(migrated.jobs).toEqual(w.jobs);expect(migrated.piles).toEqual(w.piles);expect(migrated.rng).toBe(w.rng);

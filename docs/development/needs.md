@@ -1,5 +1,7 @@
 # Repas et couchages physiques — origine V3, état courant V18
 
+V47 ajoute le [repos médical volontaire](tending.md) : rejoindre un lit ne donne rien à distance ; posture allongée, sommeil réel et faim restent distincts. Le choix médical est aussi disponible au coucher d’un blessé ; les colons sains conservent le sommeil ordinaire.
+
 V46 exclut les lits médicaux du sommeil ordinaire et introduit leur utilisation physique après un [secours](rescue.md). Posture médicale, sommeil, propriétaire et réservation restent distincts.
 
 Livraison du 13 septembre 2026. Référence : chapitre 14 du corpus utilisateur, SYS-026..027/039/044/076..080, UI-016/026, TEST-189 ; adoption des actions effectives, des réservations et de la continuation. La demande utilisateur interdit de remplacer ces interactions élémentaires par des raccourcis. Leur correction passe avant les zones nommées, sans déclarer G1 terminé.
