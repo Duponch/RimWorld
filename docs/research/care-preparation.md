@@ -1,6 +1,6 @@
-# Secours et soins : préparation du prochain lot
+# Secours V46 et préparation des traitements
 
-Recherche du 16–17 septembre 2026, après la livraison santé V45. **Document de préparation, aucun secours ni soin joueur livré ici.** [Plan canonique](../ROADMAP.md), [santé actuelle](../development/health.md). Corpus relu : chapitre 15, SYS/TEST-094 et 096, chapitre 8/9 pour tâches, accès et réservations. Adopter la chaîne physique, adapter son état persistant au moteur, différer chirurgie/maladies avec leurs producteurs.
+Recherche du 16–17 septembre 2026, après la livraison santé V45. **V46 livre désormais les secours physiques et lits médicaux ; les sections sur le traitement restent préparatoires.** [Contrat de la tranche livrée](../development/rescue.md). [Plan canonique](../ROADMAP.md), [santé actuelle](../development/health.md). Corpus relu : chapitre 15, SYS/TEST-094 et 096, chapitre 8/9 pour tâches, accès et réservations. Adopter la chaîne physique, adapter son état persistant au moteur, différer chirurgie/maladies avec leurs producteurs.
 
 ## Références recoupées
 
@@ -24,8 +24,14 @@ Le soin ne doit pas recalculer les capacités ni avancer le PRNG à chaque image
 
 ## Prochain lot concret et critères de sortie
 
-Commencer par **secours physique et couchage médical**, puis traitement et alimentation du patient. Cette coupure ne présente pas le système de soins complet comme terminé. Les politiques et métiers restent dans Travail/Affectations ; le rendu du patient porté partage la trajectoire GPU du porteur. Lire les contrats de besoins, interruptions, occupation et présentation avant modification ; une nouvelle propriété persistante exige validation stricte V45 puis migration.
+**Secours physique et couchage médical livrés sous V46**, puis traitement et alimentation du patient à développer. Cette coupure ne présente pas le système de soins complet comme terminé. Les politiques et métiers restent dans Travail/Affectations ; le rendu du patient porté partage la trajectoire GPU du porteur. Lire les contrats de besoins, interruptions, occupation et présentation avant modification ; une nouvelle propriété persistante exige validation stricte V45 puis migration.
 
 Enrichir les scénarios médicaux existants : deux sauveteurs disputent un patient et le dernier lit ; chemin fermé puis rouvert ; lit réaffecté/retiré ; patient qui récupère ou meurt à chaque phase ; sauveteur blessé/épuisé ; sol encombré et cargaison antérieure ; sauvegarde/reprise pendant approche, portage et dépôt. Vérifier propriétaire unique, engagements libérés, absence de soin/nutrition à distance et santé qui continue pendant le trajet. Le navigateur doit observer corps, anneaux et gestes sur la même trajectoire, puis transition au lit au tick affiché. Le pilote ordinaire doit conserver ses résultats ; ajouter ensuite un parcours d'accident survivable avec véritable secours et bilan de récupération.
 
 L'audit matériel V45 couvre déjà cent colons blessés au travail. Le prochain audit doit ajouter des couples sauveteur/patient et des interruptions, sans rejouer tous les bancs à chaque retouche. Pointes de planification/publication à cent acteurs encore ouvertes ; ne pas confondre réception et application des snapshots.
+
+## Décisions V46 et vérification du 17 septembre
+
+La relecture de `JobDriver_TakeToBed` confirme que `ClaimBedIfNonMedical` précède le trajet de prise : V46 attribue donc le lit ordinaire dès le début, et non à l'arrivée. L'annulation garde cette propriété ; le lit médical reste une utilisation temporaire. Le moteur ancre également l'intervalle médical sous l'ancienne posture avant chaque prise/dépôt/interruption : c'est une exigence de notre horloge, sans bonus rétroactif de lit.
+
+Le wiki Rescue a été relu pendant l’implantation ; la page reste un stub. Les copies des chemins Core au commit identifié confirment réservations, trajet, disparition/reprise de cible et distinction lit médical/normal. Adopter ces contrats ; adapter les cellules de contact au service 3D et le portage au rig GPU commun. Température extrême, proximité hostile, lits partagés/qualité et file de secours sont différés explicitement. La règle de confort thermique du sauveteur (marge 90 °C citée par le wiki) demande encore confrontation complète à la future plage vestimentaire ; ne pas fabriquer maintenant une température de confort par colon. Aucune certitude de parité binaire ni exhaustivité n’est revendiquée.

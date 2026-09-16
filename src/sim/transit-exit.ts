@@ -16,6 +16,10 @@ const EXIT_DIRECTIONS=[[0,-1],[1,0],[0,1],[-1,0]] as const;
  * Bed use is an explicit service exception. No pushing, teleport or lost cargo. */
 export function leaveTransitCell(world:World,pawn:Pawn,getBlocked:NavigationGrid,budget:SearchBudget,getLight?:LightReader):boolean {
   if(world.schemaVersion<22)return false;
+  if(pawn.rescue){
+    const target=pawn.rescue.phase==='carry'?world.structures.find(s=>s.id===pawn.rescue!.bedId):world.pawns.find(p=>p.id===pawn.rescue!.patientId);
+    if(target?.x===pawn.x&&target.z===pawn.z){delete pawn.transitExit;return false;}
+  }
   if(canStandAt(world,pawn)){
     if(pawn.transitExit&&!pawn.need&&!pawn.haul&&!pawn.cooking&&pawn.jobId===null&&!pawn.recreation.task){pawn.path=[];pawn.state='idle';}
     delete pawn.transitExit;return false;

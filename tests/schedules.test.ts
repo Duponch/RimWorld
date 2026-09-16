@@ -8,7 +8,7 @@ import type { Command, World } from '../src/sim/types';
 
 function camp(): World {
   const w = createWorld(42, 16, 16); w.pawns = [w.pawns[0]!]; w.tiles = w.tiles.map(() => ({terrain: 'grass'})); w.resources = []; w.piles = []; w.stock = {wood: 0, food: 0};
-  Object.assign(w.pawns[0]!, {x: 2, z: 2, rest: 70, hunger: 90, priorities: {craft:2,mine:2,gather: 0, build: 0, haul: 0, grow: 0, cook: 0}});
+  Object.assign(w.pawns[0]!, {x: 2, z: 2, rest: 70, hunger: 90, priorities: { doctor: 0,craft:2,mine:2,gather: 0, build: 0, haul: 0, grow: 0, cook: 0}});
   const bed = {id: w.nextId++, kind: 'bed' as const, x: 10, z: 10, orientation: 0 as const, footprint: 'standard' as const};
   w.structures = [bed]; w.pawns[0]!.bedId = bed.id; return w;
 }

@@ -50,7 +50,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 45 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 46 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)
@@ -227,3 +227,9 @@
 - V44 validée strictement avant migration sans dossier inventé. Santé sparse, horloge vivante au tick World, dossier figé au décès. Incapacité libère immédiatement engagements/file/services ; cargo indéposable conservé. Ne jamais réactiver un blessé depuis releaseAssignments ou un nettoyage de fin de job.
 - Fin de l’arête capturée pendant la chute = adaptation 3D explicite ; aucun nouveau pas ni travail. Repos et guérison allongée après arrêt. medicalSleep distingue sommeil et posture, doit être sauvegardé. Un lit n’est gardé que s’il était réellement utilisé.
 - Réutiliser les capacités uniquement dans la décision courante après évolution médicale, pas entre ticks ni après dommage. Dégâts de toiture construite Top/Outside/Crush, distincts de Blunt et montagnes ; retrait volontaire sans blessure. Cadavre encore Pawn sur place, aucun transport de dépouille implicite.
+
+## Secours V46
+
+- Lire docs/development/rescue.md et la recherche associée. Relation sur le porteur, patient unique, réservation patient/lit, approche et transport physiques. Santé/faim continuent ; ni soin ni nourriture donnés implicitement. Dépôt passif de la cargaison propre au patient suspendu pendant portage.
+- Le rôle medical appartient seulement à un lit et survit à son emballage. Exclure sommeil ordinaire, distinguer usage temporaire et propriétaire. Interruption et invalidation libèrent aussi le patient ; aucune nouvelle arête autonome pendant portage.
+- V45 validée strictement avant priorité doctor 1, sans patient ni secours inventé. Corps/cargaison/anneaux partagent les attributs GPU du sauveteur ; observer les phases et invalider le mobilier au changement de rôle. File de secours, traitement et alimentation assistée restent ouverts.

@@ -1,3 +1,5 @@
+import { bedControls,updateBedControls } from './ui/bed-controls.ts';
+import { carrierOf } from './sim/rescue-state.ts';
 import { medicalBleed } from './sim/injury-state';
 import { createHealthInspection,updateHealthInspection } from './ui/health-inspection';
 import { createSkillsInspection, updateSkillsInspection, updateWorkSkills } from './ui/skills-inspection';
@@ -218,16 +220,7 @@ function rebuildInspector() {
     el('cell-cancel').onclick=()=>{if(selectedCell)void attempt(()=>client.command({type:'cancel',...selectedCell!}));};
     doorControls(panel,()=>snapshot,()=>selectedCell,c=>void attempt(()=>client.command(c)));
     furnitureControls(panel,()=>snapshot,()=>selectedCell,c=>void attempt(()=>client.command(c)),id=>{const object=furnitureObject(snapshot!,id);if(!object)return;setPanel('architect');applyTool('install');installationId=id;placementOrientation=object.orientation;renderer?.setPlacementRotation(placementOrientation);renderer?.setFurniturePlacement(object);});
-    const bedControls = document.createElement('label'); bedControls.id = 'cell-bed'; bedControls.hidden = true;
-    bedControls.append('Propriétaire du lit ');
-    const owner = document.createElement('select'); owner.id = 'bed-owner'; owner.setAttribute('aria-label', 'Propriétaire du lit');
-    owner.append(new Option('Non attribué', ''));
-    for (const pawn of snapshot?.pawns ?? []) owner.append(new Option(pawn.name, String(pawn.id)));
-    owner.onchange = () => {
-      const bed = snapshot?.structures.find(item => item.kind === 'bed' && footprintCells(item).some(cell => cell.x === selectedCell?.x && cell.z === selectedCell?.z));
-      if (bed) void attempt(async () => { await client.command({ type: 'assign-bed', bedId: bed.id, pawnId: owner.value ? Number(owner.value) : null }); });
-    };
-    bedControls.append(owner); panel.append(bedControls);
+    bedControls(panel,()=>snapshot,()=>selectedCell,c=>void attempt(()=>client.command(c)));
     const fire=snapshot?.structures.find(s=>(stationRecipe(s)!==null||s.kind==='passive-cooler'||s.kind==='wood-generator')&&footprintCells(s).some(c=>c.x===selectedCell!.x&&c.z===selectedCell!.z));
     if(fire) {
       const send=(command:Command)=>void attempt(async()=>{await client.command(command);rebuildInspector();renderState();});
@@ -240,6 +233,7 @@ function rebuildInspector() {
   if (close) close.onclick = clearSelection;
 }
 function actionLabel(pawn: Pawn) {
+  if(pawn.rescue||carrierOf(snapshot!,pawn.id))return queryPawnStatus(snapshot!,pawn).reason;
   if(pawn.state==='downed'||pawn.state==='dead')return stateLabels[pawn.state];
   if(pawn.interruptedCargo)return pawn.state==='sleeping'?'Se repose · cargaison à déposer':'Cargaison à déposer · sol proche encombré';
   if(pawn.cooking)return queryPawnStatus(snapshot!,pawn).reason;
@@ -265,10 +259,10 @@ function rebuildPawns(world: World) {
   el('work-rows').replaceChildren(...world.pawns.map(pawn => {
     const row = document.createElement('tr'); row.dataset.worker = String(pawn.id);
     const name = document.createElement('th'); name.scope = 'row'; name.textContent = pawn.name; row.append(name);
-    for (const work of ['gather', 'build', 'haul', 'grow', 'cook', 'craft', 'mine'] as WorkType[]) {
+    for (const work of ['doctor', 'gather', 'build', 'haul', 'grow', 'cook', 'craft', 'mine'] as WorkType[]) {
       const cell = document.createElement('td'), select = document.createElement('select');
       select.dataset.work = work; select.dataset.owner = String(pawn.id);
-      select.setAttribute('aria-label', `Priorité ${{ mine:'minage', gather: 'collecte', build: 'construction', haul: 'transport', grow: 'culture', cook: 'cuisine', craft:'artisanat' }[work]} ${pawn.name}`);
+      select.setAttribute('aria-label', `Priorité ${{ doctor:'médecin', mine:'minage', gather: 'collecte', build: 'construction', haul: 'transport', grow: 'culture', cook: 'cuisine', craft:'artisanat' }[work]} ${pawn.name}`);
       for (let value = 0; value <= 4; value++) { const option = document.createElement('option'); option.value = String(value); option.textContent = String(value); select.append(option); }
       select.onchange = () => { void attempt(async () => { try { await client.command({ type: 'priority', pawnId: pawn.id, work, value: Number(select.value) }); } finally { renderState(); } }); };
       cell.append(select); row.append(cell);
@@ -322,7 +316,7 @@ function renderState() {
     const pawn = world.pawns.find(item => item.id === selectedPawn);
     if (!pawn) clearSelection();
     else {
-      el('selected-name').textContent = pawn.name; el('selected-action').textContent = pawn.need||pawn.state==='dead'||pawn.state==='downed' ? actionLabel(pawn) : `${actionLabel(pawn)} · ${queryPawnStatus(world, pawn).reason}`;
+      el('selected-name').textContent = pawn.name; el('selected-action').textContent = pawn.need||pawn.rescue||pawn.state==='dead'||pawn.state==='downed' ? actionLabel(pawn) : `${actionLabel(pawn)} · ${queryPawnStatus(world, pawn).reason}`;
       updateSkillsInspection(el('inspector'),pawn);updateHealthInspection(el('inspector'),pawn);
       updateRecreationInspection(el('inspector'),pawn);
       roomInspection.update(el('inspector'), world, pawn);
@@ -362,8 +356,7 @@ function renderState() {
       el('cell-deconstruct').hidden=!structure||!!job;
       el('cell-cancel').hidden=!job;
       el('cell-storage').hidden = !storage;
-      el('cell-bed').hidden = structure?.kind !== 'bed';
-      if (structure?.kind === 'bed' && document.activeElement !== el('bed-owner')) el<HTMLSelectElement>('bed-owner').value = String(world.pawns.find(pawn => pawn.bedId === structure.id)?.id ?? '');
+      updateBedControls(el('inspector'),world,structure);
       if (storage) el('cell-storage-quantity').textContent = `Réserve · ${packed?1:piles.reduce((sum, pile) => sum + pile.quantity, 0)} / ${storage.capacity} unités`;
     }
   }
@@ -393,7 +386,7 @@ function renderState() {
   const idle = world.pawns.filter(pawn => pawn.state === 'idle'&&!pawn.interruptedCargo).length;
   if (idle) alerts.push(`${idle} colon(s) disponible(s)`);
   el('alerts').replaceChildren(...alerts.map(text => { const item = document.createElement('p'); item.textContent = text; return item; }));
-  const beds = world.structures.filter(structure => structure.kind === 'bed').length;
+  const beds = world.structures.filter(structure => structure.kind === 'bed'&&!structure.medical).length;
   if (beds < living.length) { const item = document.createElement('p'); item.dataset.alert = 'beds'; item.textContent = `${living.length - beds} couchage(s) manquant(s)`; el('alerts').append(item); }
 }
 function syncStorageButtons() {

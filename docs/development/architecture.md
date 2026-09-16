@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+V46 : [secours](rescue.md), relation possédée par le porteur, patient conservé comme acteur, rôle du lit et validation dans des modules séparés. Trajectoire GPU partagée et pose portée dans le lot existant ; aucune physiologie dans le rendu.
+
 V45 : [santé active](health.md). Module médical séparé, dossiers sparse par Pawn, règles/évolution/propriété/validation/accident de toit dans des modules distincts. Calcul anatomique réutilisé uniquement dans la décision courante après évolution médicale ; aucun cache entre ticks. Poses de chute et décès dans les attributs GPU existants ; pas de squelette CPU ni de lot supplémentaire.
 
 V44 : [interruption involontaire](interrupted-cargo.md), engagements libérés indépendamment du dépôt, cargaison unique persistante, reprises déphasées et index de sol limité à une décision. Le bridge publie la phase ; aucun ajout aux shaders.

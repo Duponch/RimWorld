@@ -199,3 +199,7 @@ Chapitres 5/9–12/21–22 ; SYS/TEST-020..025, 041..050, 056/058/059/061, 070..
 ## V39 — température des plantes
 
 Chapitre 12, SYS/TEST-070, 071, 072, 075 relus dans les originaux. **Adopter** temps favorable, facteurs locaux, sélection des semis et récolte indépendante ; **adapter** les intervalles sauvegardés à 10 Hz ; **différer** survie au gel, feuilles, autres espèces et saisons. [Recherche fraîche et contradiction 6/10 °C](plant-temperature-reference.md), [contrat](../development/plant-temperature.md). Les scénarios thermiques et agricoles existants couvrent les interactions ; le pilote conserve ses bilans en climat tempéré. L’inspection sous toit est corrigée, l’écart de voisinage cardinal/diagonal au semis reste consigné.
+
+## Secours V46 — 17 septembre
+
+Chapitre 15, SYS/TEST-094 et 096, chapitres 8/9 : adopter patient unique, réservation de lit, trajet et interruption ; adapter contacts 3D, état sparse persistant et trajectoire GPU ; différer traitement, alimentation assistée, politiques et dangers aux tranches suivantes. [Contrat](../development/rescue.md), [recherche fraîche et degré de certitude](care-preparation.md). Les entrées de tests ont enrichi six scénarios croisés, pas une suite par ligne du corpus.

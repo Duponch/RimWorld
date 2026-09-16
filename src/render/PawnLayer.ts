@@ -137,6 +137,7 @@ export class PawnLayer {
   private cargoMesh: THREE.Mesh | null = null;
   private readonly targetPoses = new Map<number,THREE.Vector4>();
   private travelSurfaces:ReadonlyMap<number,number>=new Map();
+  private rescuePairs:readonly (readonly [number,number])[]=[];
   constructor(private readonly configure?: (material: THREE.MeshStandardNodeMaterial) => void) {}
   private readonly travelKeys = new Map<number,string>();
   private createPawnMesh(count: number): void {
@@ -163,7 +164,7 @@ export class PawnLayer {
         angle.assign(sin(this.time.mul(9).add(motion.w)).mul(motion.x).mul(sign).mul(0.65));
         If(bone.lessThan(3.5), () => {
           angle.addAssign(sin(this.time.mul(12).add(motion.w)).mul(0.35).sub(0.8).mul(motion.y));
-          If(attribute('aCargo', 'vec2').x.greaterThan(0.5), () => {
+          If(attribute('aCargo', 'vec2').x.abs().greaterThan(0.5), () => {
             angle.assign(float(-0.9).add(sin(this.time.mul(9).add(motion.w)).mul(motion.x).mul(0.06)));
             If(motion.z.greaterThan(1.5), () => { angle.assign(float(-1.3).add(sin(this.time.mul(4).add(motion.w)).mul(0.22))); });
           });
@@ -186,6 +187,10 @@ export class PawnLayer {
         const y = animated.y.toVar();
         animated.y.assign(animated.z.add(0.19));
         animated.z.assign(float(0.65).sub(y));
+      });
+      If(motion.z.equal(6),()=>{
+        const x=animated.x.toVar(),y=animated.y.toVar(),z=animated.z.toVar();
+        animated.assign(vec3(float(.65).sub(y),z.add(.19+.95/PAWN_MODEL_SCALE),x.add(.3)));
       });
       const cy = cos(pose.w), sy = sin(pose.w);
       return vec3(animated.x.mul(cy).add(animated.z.mul(sy)), animated.y, animated.z.mul(cy).sub(animated.x.mul(sy))).mul(PAWN_MODEL_SCALE).add(pose.xyz);
@@ -211,8 +216,9 @@ export class PawnLayer {
       If(attribute('cargoKind', 'float').equal(load.x), () => { scale.assign(load.y.mul(0.25).add(0.75)); });
       const height = float(WORLD_SCALE.carriedHeight).toVar();
       If(attribute('aMotion','vec4').z.equal(1),()=>{height.assign(.28);});
-      If(attribute('aMotion', 'vec4').z.greaterThan(1.5), () => { height.assign(sin(this.time.mul(4).add(attribute('aMotion', 'vec4').w)).mul(0.08).add(1.32)); });
-      If(attribute('aMotion', 'vec4').z.greaterThan(2.5), () => { height.addAssign(WORLD_SCALE.stoolHeight - 0.605 * PAWN_MODEL_SCALE); });
+      If(attribute('aMotion', 'vec4').z.greaterThan(1.5).and(attribute('aMotion','vec4').z.lessThan(3.5)), () => { height.assign(sin(this.time.mul(4).add(attribute('aMotion', 'vec4').w)).mul(0.08).add(1.32)); });
+      If(attribute('aMotion', 'vec4').z.equal(3), () => { height.addAssign(WORLD_SCALE.stoolHeight - 0.605 * PAWN_MODEL_SCALE); });
+      If(attribute('aMotion','vec4').z.equal(6),()=>{height.assign(1.3);});
       const local = positionLocal.mul(scale).add(vec3(0, height, WORLD_SCALE.carriedForward));
       const cy = cos(pose.w), sy = sin(pose.w);
       return vec3(local.x.mul(cy).add(local.z.mul(sy)), local.y, local.z.mul(cy).sub(local.x.mul(sy))).add(pose.xyz);
@@ -228,6 +234,8 @@ export class PawnLayer {
 
   update(world: World, oldBlend: number, newMap: boolean): void {
     this.travelKeys.clear();this.travelSurfaces=furnitureSurfaces(world);
+    const indices=new Map(world.pawns.map((p,i)=>[p.id,i]));
+    this.rescuePairs=world.pawns.flatMap((p,i)=>p.rescue?.phase==='carry'&&indices.has(p.rescue.patientId)?[[i,indices.get(p.rescue.patientId)!] as const]:[]);
     if (!this.pawnMesh || (this.pawnMesh.geometry.getAttribute('aFrom')?.count ?? 0) !== world.pawns.length) this.createPawnMesh(world.pawns.length);
     const geometry = this.pawnMesh!.geometry as THREE.InstancedBufferGeometry;
     const fromAttribute = geometry.getAttribute('aFrom') as THREE.InstancedBufferAttribute;
@@ -280,7 +288,7 @@ export class PawnLayer {
       tint.setXYZ(index, scratchColor.r, scratchColor.g, scratchColor.b);
       const load = carried.get(pawn.id);
       const packed=world.packed?.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
-      cargo.setXY(index, packed?4:load ? load.kind === 'component' ? 17 : load.kind === 'blocks' ? blockCargoKind(load.item) : load.kind === 'steel' ? 11 : load.kind === 'chunk' ? chunkCargoKind(load.item) : load.kind === 'wood' ? 1 : load.item === 'survival-meal' ? 3 : 2 : 0, packed?1:load ? Math.min(1, load.quantity / CARRY_CAPACITY) : 0);
+      cargo.setXY(index, pawn.rescue?.phase==='carry'?-1:packed?4:load ? load.kind === 'component' ? 17 : load.kind === 'blocks' ? blockCargoKind(load.item) : load.kind === 'steel' ? 11 : load.kind === 'chunk' ? chunkCargoKind(load.item) : load.kind === 'wood' ? 1 : load.item === 'survival-meal' ? 3 : 2 : 0, packed?1:load ? Math.min(1, load.quantity / CARRY_CAPACITY) : 0);
     });
     for (const id of this.visuals.keys()) if (!present.has(id)) this.visuals.delete(id);
     for (const attr of [fromAttribute, toAttribute, motion, tint, cargo]) attr.needsUpdate = true;
@@ -319,7 +327,18 @@ export class PawnLayer {
       if(!active&&pawn.state==='moving'&&pawn.path[0]&&doorAt(world,pawn.path[0])) {const target=pawn.path[0];visual.from.w=visual.to.w=Math.atan2(target.x-pawn.x,target.z-pawn.z);}
       from.setXYZW(i,visual.from.x,visual.from.y,visual.from.z,visual.from.w);to.setXYZW(i,visual.to.x,visual.to.y,visual.to.z,visual.to.w);
     });
-    if(dirty)for(const attribute of [from,to,times,motion])attribute.needsUpdate=true;
+    if(dirty){
+      // Both actors, their loads and selection rings use exactly the same edge
+      // and yaw. The carried rig is an extra pose in the existing GPU batch.
+      for(const [carrier,patient] of this.rescuePairs){
+        from.setXYZW(patient,from.getX(carrier),from.getY(carrier),from.getZ(carrier),from.getW(carrier));
+        to.setXYZW(patient,to.getX(carrier),to.getY(carrier),to.getZ(carrier),to.getW(carrier));
+        times.setXY(patient,times.getX(carrier),times.getY(carrier));motion.setXYZ(patient,0,0,6);
+        const source=this.visuals.get(world.pawns[carrier]!.id)!,target=this.visuals.get(world.pawns[patient]!.id)!;
+        target.from.copy(source.from);target.to.copy(source.to);
+      }
+      for(const attribute of [from,to,times,motion])attribute.needsUpdate=true;
+    }
   }
 
 }

@@ -12,7 +12,7 @@ export function cookingFixture(count:number) {
   for(let z=85;z<=85+rows*12;z++)for(let x=85;x<=85+columns*12;x++)w.tiles[z*w.width+x]={terrain:'grass'};
   w.pawns=Array.from({length:count},(_,i)=>{
     const group=Math.floor(i/5),x=88+group%columns*12,z=88+Math.floor(group/columns)*12;
-    return {...structuredClone(template),id:w.nextId++,x:x+i%5,z,hunger:100,rest:100,priorities:{craft:2,mine:0,gather:0,build:2,haul:2,grow:2,cook:1}};
+    return {...structuredClone(template),id:w.nextId++,x:x+i%5,z,hunger:100,rest:100,priorities: { doctor: 0,craft:2,mine:0,gather:0,build:2,haul:2,grow:2,cook:1}};
   });
   for(let i=0;i<groups;i++) {
     const x=88+i%columns*12,z=88+Math.floor(i/columns)*12;

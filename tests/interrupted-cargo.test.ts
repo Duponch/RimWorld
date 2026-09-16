@@ -1,3 +1,4 @@
+import { withoutMedicalWork } from './scenarios/legacy-skills';
 import { expect,test } from 'vitest';
 import { applyCommand,deserializeWorld,serializeWorld,stepWorld,validateWorld } from '../src/sim/index';
 import { addMaterial,refreshStock } from '../src/sim/materials';
@@ -81,8 +82,8 @@ test('interrupted production frees station and staged ingredients without finish
 });
 
 test('schema 43 is checked before migration; passive ownership cannot hide illegal work, movement, duplicate objects or missing cargo',()=>{
-  const initial=exhaustedCarrier(),legacy=JSON.parse(serializeWorld(initial));legacy.schemaVersion=43;
-  expect(deserializeWorld(JSON.stringify(legacy))).toEqual(initial);
+  const initial=exhaustedCarrier(),legacy=JSON.parse(serializeWorld(initial));legacy.schemaVersion=43;withoutMedicalWork(legacy);
+  expect(deserializeWorld(JSON.stringify(legacy))).toEqual({...initial,pawns:initial.pawns.map(p=>({...p,priorities:{...p.priorities,doctor:1}}))});
   legacy.pawns[0].interruptedCargo=true;expect(()=>deserializeWorld(JSON.stringify(legacy))).toThrow(/version 43/);
   checked(initial);const saved=serializeWorld(initial);expect(deserializeWorld(saved)).toEqual(initial);
   for(const mutate of [(w:World)=>{w.pawns[0]!.interruptedCargo=false as true;},(w:World)=>{w.pawns[0]!.interruptedCargo=null as unknown as true;},(w:World)=>{w.piles=w.piles.filter(q=>q.owner.type!=='pawn');refreshStock(w);},(w:World)=>{w.pawns[0]!.state='working';},(w:World)=>{w.pawns[0]!.path=[{x:3,z:2}];},(w:World)=>{w.pawns[0]!.orders.active='haul';},(w:World)=>{addMaterial(w,'food',1,{type:'pawn',pawnId:w.pawns[0]!.id},'survival-meal');refreshStock(w);},(w:World)=>{delete w.pawns[0]!.interruptedCargo;}]) {

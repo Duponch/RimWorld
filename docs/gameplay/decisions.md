@@ -1,5 +1,7 @@
 # Choix et écarts de gameplay
 
+V46 : prise d’un blessé sur sa cellule et dépôt sur l’ancre du lit, adaptés à nos services 3D ; trajectoire commune sans transfert instantané à distance. La file de secours et les critères de danger/température restent partiels explicitement. [Contrat et décisions](../development/rescue.md).
+
 V44 — dépôt interrompu : rayon connecté de douze cases et identité conservée sans fusion ; en cas d’échec, sommeil/réveil possibles mais autre travail suspendu jusqu’à libération locale. C’est une adaptation logistique explicitement bornée, non une règle Core certifiée. [Motif et vérification](../research/interrupted-cargo-reference.md).
 
 V40 — [Refroidissement passif](../development/passive-cooling.md) : seuil 17 °C, combustible continu et alimentation physique adoptés. Impulsions thermiques intégrées/écrêtées, remplissage entier conservateur hérité et recherche disponible d’emblée sont des adaptations explicites ; confort, dégâts et appareil électrique différés. [Confrontation des sources](../research/passive-cooling-reference.md).

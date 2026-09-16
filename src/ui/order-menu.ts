@@ -39,8 +39,11 @@ export class OrderMenu {
         if(option.cookStationId!==undefined)button.dataset.orderCook=String(option.cookStationId);
         button.textContent=option.enabled?`${queue?'Mettre en file :':'Prioriser :'} ${option.label}`:`${option.label} — ${option.reason}`;
         button.disabled=!option.enabled;
+        if(option.rescuePatientId!==undefined)button.dataset.orderRescue=String(option.rescuePatientId);
         button.onclick=event=>{
-          this.close();void this.client.command(option.cookStationId!==undefined
+          this.close();void this.client.command(option.rescuePatientId!==undefined
+            ? {type:'order-rescue',pawnId:pawn.id,patientId:option.rescuePatientId,queue:queue||event.shiftKey}
+            : option.cookStationId!==undefined
             ? {type:'order-cook',pawnId:pawn.id,structureId:option.cookStationId,queue:queue||event.shiftKey}
             : option.haulTarget
             ? {type:'order-haul',pawnId:pawn.id,target:option.haulTarget,queue:queue||event.shiftKey}

@@ -1,3 +1,4 @@
+import { withoutMedicalWork } from './scenarios/legacy-skills';
 import { expect,test } from 'vitest';
 import { applyCommand,stepWorld } from '../src/sim/engine';
 import { deserializeWorld,serializeWorld,validateWorld } from '../src/sim/serialization';
@@ -76,7 +77,7 @@ test('blood loss, recovery, true sleep and irreversible death respect world time
 });
 
 test('strict V44 migration adds no injury; malformed records, clock, states and activity are rejected before replacement',()=>{
-  const w=medicalCamp(),p=w.pawns[0]!;const old=structuredClone(w);old.schemaVersion=44 as typeof old.schemaVersion;const migrated=deserializeWorld(JSON.stringify(old));expect(migrated).toEqual({...old,schemaVersion:45});
+  const w=medicalCamp(),p=w.pawns[0]!;const old=structuredClone(w);old.schemaVersion=44 as typeof old.schemaVersion;withoutMedicalWork(old);const migrated=deserializeWorld(JSON.stringify(old));expect(migrated).toEqual({...old,schemaVersion:46,pawns:old.pawns.map(p=>({...p,priorities:{...p.priorities,doctor:1}}))});
   controlledInjury(w,p,'left-leg',30000);controlledInjury(w,p,'right-leg',30000);valid(w);
   const edits=[(q:World)=>q.pawns[0]!.health!.tick--,(q:World)=>q.pawns[0]!.state='idle',(q:World)=>q.pawns[0]!.health!.missing.push({...q.pawns[0]!.health!.missing[0]!}),(q:World)=>{q.pawns[0]!.health=undefined;},(q:World)=>{q.schemaVersion=44 as typeof q.schemaVersion;}];
   for(const edit of edits){const bad=structuredClone(w);edit(bad);expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();}

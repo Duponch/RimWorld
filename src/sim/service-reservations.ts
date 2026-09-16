@@ -16,6 +16,7 @@ export function reservedServiceCells(world: World, exceptPawn?: number): Set<num
   for (const pawn of world.pawns) if (pawn.id !== exceptPawn) {
     const cell = serviceCell(pawn); if (cell) reserved.add(cell.z*world.width+cell.x);
   }
+  for(const pawn of world.pawns)if(pawn.id!==exceptPawn&&pawn.rescue){const bed=world.structures.find(s=>s.id===pawn.rescue!.bedId);if(bed)reserved.add(bed.z*world.width+bed.x);}
   for(const pawn of world.pawns)for(const order of pawn.orders?.queue??[])if(isCookingOrder(order))reserved.add(order.cooking.spot.z*world.width+order.cooking.spot.x);
   return reserved;
 }

@@ -10,7 +10,7 @@ Une incapacité interrompt immédiatement travail, ingestion, loisirs, priorité
 
 **Adaptation 3D explicite :** une arête déjà engagée finit comme translation du corps allongé ; aucun nouveau pas ni travail n'est exécuté pendant cette fin d'arête. Position, collision et historique restent ceux du segment capturé. Le pather Core annule vers sa cellule logique d'origine avec recentrage visuel ; nos cellules sont engagées à destination dès le début du segment. Cette décision évite une téléportation sans inventer une position logique fractionnaire. Elle peut être révisée avec la locomotion tactique. Le repos et son bonus de guérison ne commencent qu'une fois la translation terminée.
 
-`downed` est distinct de `sleeping`. Un patient conserve un lit seulement s'il l'utilisait réellement lors de la chute. Aucune réservation de lit voisin ni téléportation vers un couchage. La posture allongée favorise la guérison ; le besoin de repos augmente seulement pendant le sommeil effectif. `medicalSleep?:true` conserve ce sommeil : endormissement sous 75 de repos hors famine, réveil à 100. L'inconscience, le sommeil et la mort suspendent les loisirs ; un blessé conscient peut encore les perdre.
+`downed` est distinct de `sleeping`. Au moment de la chute, un patient conserve un lit seulement s'il l'utilisait réellement. V46 peut ensuite lui donner un usage de lit après un transport physique. Aucune réservation de lit voisin ni téléportation vers un couchage. La posture allongée favorise la guérison ; le besoin de repos augmente seulement pendant le sommeil effectif. `medicalSleep?:true` conserve ce sommeil : endormissement sous 75 de repos hors famine, réveil à 100. L'inconscience, le sommeil et la mort suspendent les loisirs ; un blessé conscient peut encore les perdre.
 
 Le décès est irréversible : pas de nouveaux besoins, apprentissage, action ou guérison. L'identité du colon et sa position sont conservées, avec pose couchée grisée et inspection du dossier. Le dossier médical garde son tick de décès ; la simulation peut seulement finir l'arête capturée et déposer passivement une cargaison devenue déposable. **La dépouille n'est pas encore un objet transportable** : sépulture, décomposition, boucherie et effets sociaux restent absents. Le compteur de besoins et les alertes alimentaires excluent les morts.
 
@@ -32,7 +32,7 @@ Les travaux suivent le contrat des fractions entières. L'ingestion conserve mai
 
 Profil actuel : autorisation de mort instantanée à 100 %, valeur par défaut du code de difficulté étudié. Les réglages de difficulté/personnages, armures et protections ne sont pas livrés. Un retrait volontaire de toit ne blesse pas. Le travail qui enlève le support termine sa transaction avant les conséquences médicales ; aucun job voisin ne doit être supprimé ou colon réactivé par le nettoyage de fin d'action.
 
-Dommages aux objets/bâtiments, gravats, sang au sol, pause automatique et toits naturels restent absents. Aucune blessure climatique ou de famine n'est produite implicitement. Ramper après incapacité (Core depuis 1.5) est également différé avec les secours et déplacements tactiques.
+Dommages aux objets/bâtiments, gravats, sang au sol, pause automatique et toits naturels restent absents. Aucune blessure climatique ou de famine n'est produite implicitement. Ramper après incapacité (Core depuis 1.5) reste différé avec les déplacements tactiques. Les [secours et lits médicaux V46](rescue.md) utilisent maintenant cette santé ; traitements et alimentation assistée restent absents.
 
 ## Sauvegarde et contrôles
 

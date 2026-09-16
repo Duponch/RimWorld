@@ -1,5 +1,7 @@
 # Noyau de simulation — contrat courant
 
+V46 : [transport des blessés](rescue.md) dans le planner commun, réservations exclusives de patient/lit, santé active pendant le trajet. V45 validée avant la nouvelle priorité Médecin ; pas d’état médical inventé.
+
 V45 : [santé persistante et interruptions](health.md), migration V44 stricte, capacités par action et premier accident de toiture. Aucun dossier inventé pour une ancienne sauvegarde.
 
 V38 ajoute l’air retenu et les taux alimentaires ; [règles, ordre des transitions et migration](temperature.md). Les pièces sont réconciliées avant intégration, les aliments expirent avant action et leur nouvelle position fixe le taux de l’intervalle suivant.

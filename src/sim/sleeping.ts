@@ -15,7 +15,7 @@ const NEED_INTERVAL = 20;
 /** Ownership, accessibility and rest gain all depend on the actual sleeping cell. */
 export function processSleeping(world: World, pawn: Pawn, context: NeedContext, canPlan: boolean): boolean {
   let reach: Reachability | null;
-  if (!pawn.need && wantsSleep(world, pawn) && canPlan && (world.restRules === 'legacy' || (pawn.jobId === null && !pawn.haul && !pawn.cooking))) {
+  if (!pawn.need && wantsSleep(world, pawn) && canPlan && (world.restRules === 'legacy' || (pawn.jobId === null && !pawn.haul && !pawn.cooking&&!pawn.rescue))) {
     // Transit does not claim bed ownership; only a sleep reservation excludes another sleeper.
     const ownedBed = world.structures.find(item => item.id === pawn.bedId && item.kind === 'bed');
     reach = context.search( ownedBed ? new Set([ownedBed.z * world.width + ownedBed.x]) : undefined);
@@ -25,7 +25,7 @@ export function processSleeping(world: World, pawn: Pawn, context: NeedContext, 
     const services = reservedServiceCells(world,pawn.id);
     let best: { id: number; path: Cell[]; target: Cell; owned: boolean } | undefined;
     for (const bed of world.structures) {
-      if (bed.kind !== 'bed' || deconstructionReserved(world,bed.id,pawn.id) || reserved.has(bed.id) || services.has(bed.z*world.width+bed.x) || (owners.has(bed.id) && owners.get(bed.id) !== pawn.id)) continue;
+      if (bed.kind !== 'bed' || bed.medical || world.pawns.some(p=>p.rescue?.bedId===bed.id) || deconstructionReserved(world,bed.id,pawn.id) || reserved.has(bed.id) || services.has(bed.z*world.width+bed.x) || (owners.has(bed.id) && owners.get(bed.id) !== pawn.id)) continue;
       const path = routeToCell(world, bed, reach);
       const owned = pawn.bedId === bed.id;
       if (path && (!best || (owned && !best.owned) || (owned === best.owned && (routeCost(world,path,reach) < routeCost(world,best.path,reach) || (routeCost(world,path,reach) === routeCost(world,best.path,reach) && bed.id < best.id))))) best = { id: bed.id, path, target: { x: bed.x, z: bed.z }, owned };

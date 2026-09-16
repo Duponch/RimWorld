@@ -1,6 +1,6 @@
 # Matrice des systèmes et critères de réalisation
 
-S13 : [santé active V45](../development/health.md), blessures localisées, capacités, incapacité/décès et dégâts de toiture construite. Les critères du domaine restent ouverts : secours, soins physiques, pathologies et dépouilles complètes absents.
+S13 : [santé active V45](../development/health.md), blessures localisées, capacités, incapacité/décès et dégâts de toiture construite. Les critères du domaine restent ouverts : soins physiques, pathologies et dépouilles complètes absents ; [secours et lits médicaux V46](../development/rescue.md) ajoutés, avec limites explicites.
 
 V44 consolide S04/S07 : sommeil forcé avec cargaison indéposable, engagements libérés, conservation et récupération après dégagement. Les transitions médicales de S13 sont ajoutées en V45 ; [contrat](../development/interrupted-cargo.md).
 
@@ -155,4 +155,4 @@ V37 étend la lumière aux travaux et déplacements des domaines S02/S04/S06/S09
 
 V43 commence S13/S14 via Construction et son apprentissage individuel ; [contrat](../development/skills.md). Les fondations humaines passent avant l’approfondissement électrique, conformément à la ROADMAP. Aucun jalon ni domaine de personnalité n’est déclaré complet.
 
-Socle santé sous V43 : SYS/TEST-089..091 et 096 alimentent l’arbre et les calculs de capacités [codés/testés isolément](../development/body.md). V45 active producteurs de toit, persistance et transitions ; soins et secours restent à livrer.
+Socle santé sous V43 : SYS/TEST-089..091 et 096 alimentent l’arbre et les calculs de capacités [codés/testés isolément](../development/body.md). V45 active producteurs de toit, persistance et transitions ; secours livrés en V46 ; soins physiques restent à livrer.

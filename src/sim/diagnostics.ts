@@ -1,3 +1,4 @@
+import { carrierOf } from './rescue-state.ts';
 import { PRODUCTION_RECIPES, productionWorkTotal, taskRecipe } from './production-recipes.ts';
 import { deconstructionAvailable } from './deconstruction-rules.ts';
 import { constructionObstruction, constructionSiteFree, isConstruction } from './construction-rules.ts';
@@ -31,6 +32,9 @@ export function queryJobStatus(world: World, job: Job): JobDiagnostic {
   return { code: enabled ? 'ready' : 'waiting-worker', reason: enabled ? 'Prêt ; attend un colon disponible et un accès.' : 'Travail désactivé pour tous les colons.', delivered, required };
 }
 export function queryPawnStatus(world: World, pawn: Pawn): { code: string; reason: string } {
+  const carrier=carrierOf(world,pawn.id);
+  if(carrier)return {code:'carried-patient',reason:`Transporté par ${carrier.name} vers un lit.`};
+  if(pawn.rescue)return {code:'rescue',reason:`${pawn.rescue.phase==='carry'?'Porte':'Rejoint'} ${world.pawns.find(p=>p.id===pawn.rescue!.patientId)?.name??'un patient'} pour le secourir.`};
   if(pawn.state==='dead')return {code:'dead',reason:'Décédé ; dépouille conservée sur place. Le transport et les sépultures ne sont pas encore disponibles.'};
   if(pawn.state==='downed')return {code:'downed',reason:'Incapacité médicale : ne peut pas agir. Consultez ses blessures et ses capacités dans Santé.'};
   if(pawn.interruptedCargo)return {code:'interrupted-cargo',reason:'Travail interrompu ; cargaison conservée. Libérez une case de sol proche pour permettre son dépôt.'};

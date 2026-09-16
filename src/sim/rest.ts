@@ -1,3 +1,4 @@
+import { carrierOf } from './rescue-state.ts';
 import { TICKS_PER_DAY, type Pawn, type World } from './types.ts';
 import { BUILDING_MATERIALS } from './building-materials.ts';
 
@@ -18,6 +19,11 @@ export function collapseProbability(zeroTicks: number): number {
 
 export function updateRest(world: World, pawn: Pawn): void {
   if(pawn.state==='dead')return;
+  if(carrierOf(world,pawn.id)){
+    delete pawn.medicalSleep;
+    pawn.rest=Math.max(0,pawn.rest-(world.restRules==='legacy'?LEGACY_REST_PER_TICK:REST_PER_TICK*restFallFactor(pawn.rest)));
+    return;
+  }
   if(pawn.state==='downed') {
     pawn.restZeroTicks=0;pawn.collapsePending=false;
     if(pawn.moveCooldown>0){delete pawn.medicalSleep;return;}

@@ -1,3 +1,4 @@
+import { rescueProposal,startRescue,wantsRescue } from './rescue.ts';
 import { automaticallyHaulable } from './mining-rules.ts';
 import { furnitureHaulValid } from './furniture-haul-rules.ts';
 import { furnitureStorageCandidates, mayImproveFurnitureStorage } from './furniture-haul-planner.ts';
@@ -66,7 +67,7 @@ export function destinationValid(world: World, pawn: Pawn): boolean {
   if(destination.type==='aside'&&destination.constructionId!==undefined&&!world.jobs.some(j=>j.id===destination.constructionId))return false;
   return !!pile && destinationCapacity(world, task.destination, pile.kind, pawn.id, pile.item) >= task.quantity;
 }
-interface Candidate { whole?:true; clearance?:{resourceId:number;progress:number}; cooking?: CookingPlan; priority: number; rank: number; distance: number; id: number; job?: Job; sourceId?: number; quantity?: number; destination?: HaulDestination; target: Cell }
+interface Candidate { rescue?:{patientId:number;bedId:number;path:Cell[]}; whole?:true; clearance?:{resourceId:number;progress:number}; cooking?: CookingPlan; priority: number; rank: number; distance: number; id: number; job?: Job; sourceId?: number; quantity?: number; destination?: HaulDestination; target: Cell }
 function compareCandidate(a: Candidate, b: Candidate): number { return a.priority - b.priority || a.rank - b.rank || a.distance - b.distance || a.id - b.id; }
 export function canReach(world: World, target: Cell & { kind?: JobKind }, reachable: Reachability, allowTarget: boolean): boolean {
   const cells = target.kind ? footprintCells(target as Job) : [target];
@@ -81,9 +82,10 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   // Never enumerate logistics after another colonist exhausted the shared search budget.
   if (budget.remaining === 0 || budget.pairs === 0) return;
   const productionRank=productionPriority(world,pawn),cooking=productionRank<5;
+  const patients=pawn.priorities.doctor>0?world.pawns.filter(wantsRescue):[];
   const fires=world.structures.filter(s=>wantsFuel(world,s));
-  if (!cooking && !fires.length && !world.jobs.length && (!world.stockpiles.length || !world.piles.length && !world.packed.length || pawn.priorities.haul === 0)) { pawn.planCooldown = PLAN_INTERVAL; return; }
-  if (!cooking && !fires.length && !world.jobs.length && !mayImproveFurnitureStorage(world) && !mayImproveStorage(world)) {pawn.planCooldown=PLAN_INTERVAL;return;}
+  if (!patients.length && !cooking && !fires.length && !world.jobs.length && (!world.stockpiles.length || !world.piles.length && !world.packed.length || pawn.priorities.haul === 0)) { pawn.planCooldown = PLAN_INTERVAL; return; }
+  if (!patients.length && !cooking && !fires.length && !world.jobs.length && !mayImproveFurnitureStorage(world) && !mayImproveStorage(world)) {pawn.planCooldown=PLAN_INTERVAL;return;}
   const blocked = getBlocked();
   const clearingCells=new Set(world.jobs.filter(j=>j.clearance).map(j=>cellIndex(world,j.x,j.z)));
   // Rankings do not depend on flood order. Try the top ready job directly;
@@ -95,7 +97,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
     .sort(compareCandidate);
   let reachable: Reachability | null = null;
   const first = ready[0];
-  if (first && (!cooking || productionRank>first.priority) && (pawn.priorities.haul === 0 || first.priority <= pawn.priorities.haul)
+  if (first && (!patients.length||pawn.priorities.doctor>first.priority) && (!cooking || productionRank>first.priority) && (pawn.priorities.haul === 0 || first.priority <= pawn.priorities.haul)
     && (first.priority<constructionHaulPriority(pawn)||!world.jobs.some(isConstruction))) {
     const source = first.job.kind === 'sow' ? world.piles.find(p => p.owner.type === 'ground' && sameCell(p.owner, first.job)) : undefined;
     if (!source || reservedSource(world, source.id) === 0) {
@@ -140,6 +142,13 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
     } else zoneReserved.set(task.destination.stockpileId,(zoneReserved.get(task.destination.stockpileId)??0)+task.quantity);
   }
   let best: Candidate | null = null;
+  for(const patient of patients) {
+    const candidate:Candidate={priority:pawn.priorities.doctor,rank:-3,distance:Math.abs(patient.x-pawn.x)+Math.abs(patient.z-pawn.z),id:patient.id,target:patient};
+    if(best&&compareCandidate(candidate,best)>=0)continue;
+    const proposal=rescueProposal(world,pawn,patient,reachable);
+    if(!proposal)continue;
+    best={...candidate,rescue:proposal};
+  }
   for (const job of world.jobs) {
     if(isConstruction(job))continue;
     const work = workType(job);
@@ -166,7 +175,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   for(const candidate of constructionCandidates(world,pawn,blocked,reachable,budget,constructionObstacles))if(!best||compareCandidate(candidate,best)<0)best=candidate;
   if(cooking && (!best || productionRank<=best.priority)) {
     const proposal=planCooking(world,pawn,reachable,budget);
-    if(proposal&&(!best||proposal.priority<=best.priority))best={cooking:proposal,priority:proposal.priority,rank:-1,distance:Math.abs(pawn.x-proposal.station.x)+Math.abs(pawn.z-proposal.station.z),id:proposal.station.id,target:proposal.target};
+    if(proposal&&(!best||proposal.priority<best.priority||proposal.priority===best.priority&&best.rank>=-1))best={cooking:proposal,priority:proposal.priority,rank:-1,distance:Math.abs(pawn.x-proposal.station.x)+Math.abs(pawn.z-proposal.station.z),id:proposal.station.id,target:proposal.target};
   }
   if (Number.isFinite(constructionHaulPriority(pawn)) && pawn.hunger > 20 && (!best || best.priority >= constructionHaulPriority(pawn))) {
     const zonesByCell = new Map(world.stockpiles.map(zone => [cellIndex(world, zone.x, zone.z), zone]));
@@ -227,6 +236,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
     budget.pairs -= count;
     if (total) world.logisticsCursor = (start + count) % total;
   }
+  if(best?.rescue){startRescue(world,pawn,best.rescue);return;}
   if (best?.cooking) {
     const proposal=best.cooking;
     pawn.cooking=proposal.task??null;pawn.haul=proposal.refuel??null;pawn.path=proposal.path;pawn.state=proposal.path.length?'moving':'working';pawn.planCooldown=0;return;

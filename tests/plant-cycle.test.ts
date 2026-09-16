@@ -30,7 +30,7 @@ function finish(world:World,kind:'harvest'|'cut') {
 
 test('growers clear mixed stacks without storage: reservations, physical trips, interruption, blocked exits and V8 continuation', () => {
   const world=createWorld(93,16,16);world.tiles=world.tiles.map(()=>({terrain:'grass'}));world.resources=[];world.piles=[];
-  world.pawns=world.pawns.slice(0,2);world.pawns.forEach((p,i)=>Object.assign(p,{x:3,z:4+i*2,hunger:100,rest:100,priorities:{craft:2,mine:2,grow:1,haul:0,gather:0,build:0, cook: 0 }}));
+  world.pawns=world.pawns.slice(0,2);world.pawns.forEach((p,i)=>Object.assign(p,{x:3,z:4+i*2,hunger:100,rest:100,priorities: { doctor: 0,craft:2,mine:2,grow:1,haul:0,gather:0,build:0, cook: 0 }}));
   addGroundMaterial(world,'wood',25,{x:5,z:5});addGroundMaterial(world,'food',12,{x:6,z:5},'rice');
   expect(applyCommand(world,{type:'area',action:'growing',from:{x:5,z:4},to:{x:7,z:6}}).ok).toBe(true);
   const phases=new Map<string,string>();let carried=false;
@@ -66,7 +66,7 @@ test('growers clear mixed stacks without storage: reservations, physical trips, 
   ]) { const bad=JSON.parse(phases.get('deliver')!);mutate(bad);expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(); }
   // No outside destination: never pick up an obstruction and strand the cargo.
   const sealed=createWorld(42,8,8);sealed.resources=[];sealed.piles=[];sealed.tiles=sealed.tiles.map(()=>({terrain:'grass'}));
-  sealed.pawns=sealed.pawns.slice(0,1);Object.assign(sealed.pawns[0]!,{x:2,z:2,hunger:100,rest:100,priorities:{craft:2,mine:2,grow:1,haul:0,gather:0,build:0, cook: 0 }});
+  sealed.pawns=sealed.pawns.slice(0,1);Object.assign(sealed.pawns[0]!,{x:2,z:2,hunger:100,rest:100,priorities: { doctor: 0,craft:2,mine:2,grow:1,haul:0,gather:0,build:0, cook: 0 }});
   addGroundMaterial(sealed,'wood',10,{x:3,z:2});applyCommand(sealed,{type:'area',action:'growing',from:{x:0,z:0},to:{x:7,z:7}});
   stepWorld(sealed,100);expect(sealed.pawns[0]!.haul).toBeNull();expect(sealed.piles[0]!.owner).toEqual({type:'ground',x:3,z:2});expect(validateWorld(sealed)).toEqual([]);
   const old=JSON.parse(serializeWorld(world));(old.schemaVersion=8,withoutPawnSkills(old));withoutV37LightWork(old);for(const a of old.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete old.deconstructed;delete old.packed;withoutPostV10Fields(old);for(const p of old.pawns){delete p.cooking;delete p.priorities.cook;}

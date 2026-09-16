@@ -1,47 +1,49 @@
-# Validation courante — V45
+# Validation courante — V46
 
-16–17 septembre 2026. [Santé active](health.md), [références recontrôlées](../research/health-reference.md). Les preuves antérieures du noyau médical isolé et des interruptions de fatigue sont [archivées](../history/validation-health-preparation-v44.md).
+17 septembre 2026. [Secours physiques et lits médicaux](rescue.md), [recherche et limites de parité](../research/care-preparation.md). La validation de la santé V45 et ses mesures de charge sont [archivées](../history/validation-health-v45.md).
 
-## Simulation et intégration
+## Simulation et continuation
 
-La suite entière passe : **163 scénarios**, dont quinze anatomiques/médicaux isolés et cinq scénarios de santé intégrée. Le pilote normal conserve ses résultats métier sur cinq/huit jours et trois graines 250², avec nouveaux contrôles de santé. [Suite avant optimisation locale](../../artifacts/core-health-v45.json). Après réutilisation du calcul anatomique dans la décision courante, les treize scénarios ciblés de santé, lumière, compétences et loisirs repassent : [rapport](../../artifacts/health-optimized-v45.json). Aucune mise en cache entre ticks ou acteurs.
+La suite entière a passé **168 scénarios** : [rapport](../../artifacts/core-rescue-final-v46.json). La relecture suivante a ajouté un sixième scénario de secours et corrigé les frontières temporelles de guérison et l'attribution du lit ordinaire dès le départ. Les **18 scénarios ciblés** de secours, santé, ordres et horaires passent après ces changements : [rapport](../../artifacts/rescue-review-final-v46.json). Enfin, les six scénarios de secours repassent après ajout du transfert d'un lit médical emballé et correction du repos porté sous le profil historique : [contrôle final](../../artifacts/rescue-latest-v46.json). La suite entière n'a pas été rejouée après ces derniers ajustements ciblés ; ces comptes ne sont pas additionnés comme des scénarios uniques.
 
-Cas intégrés : retrait réel du support et retrait volontaire ; blessé/mort pendant une arête avec sol saturé, second colon libérant le dépôt ; pertes de capacités et refus du travail ; ingestion fractionnée sans gain lors d’interruption ; hémorragie/décès, récupération, conscience et vrai sommeil ; lit et réaffectation ; corruption et migration V44 stricte. Le premier contrôle a révélé l’exclusion trop large des patients dans la validation des lits : corrigée uniquement en V45. Les erreurs d’oracle (arrondi du travail, récupération immédiate à un seuil exact et saignement attendu) ont été corrigées sur les règles indépendantes du module. [Essai initial](../../artifacts/health-world-v45-first.json), [interactions](../../artifacts/health-world-v45-second.json), [dernier cas de fixture](../../artifacts/health-world-v45-third.json).
+Les cas croisent concurrence entre sauveteurs, dernier lit, chemin inaccessible et repli, changement de rôle, propriété ordinaire et utilisation médicale, interruption, fatigue, perte des mains, récupération, décès, perte du lit et cargaison indéposable. Approche, portage et dépôt conservent une seule personne ; sauvegarde/reprise et snapshots conservent ses relations et sa physiologie. Les horloges sont ancrées sous l'ancienne posture avant prise/dépôt/interruption. La validation compare les valeurs des arêtes, indépendamment de l'ordre des clés JSON.
+
+Les premiers essais ont révélé des fixtures anciennes contenant la nouvelle priorité Médecin : elles ont été corrigées sans assouplir le validateur V45. Un oracle d'épuisement incomplet a également été corrigé. Les échecs restent disponibles : [suite initiale](../../artifacts/core-rescue-v46.json), [migrations](../../artifacts/rescue-migrations-v46.json), [relecture initiale](../../artifacts/rescue-review-v46.json). Ces scénarios ne constituent pas une preuve de couverture exhaustive.
+
+## Partie et gestes réels dans le navigateur
+
+Chromium natif WebGPU, AMD RDNA 1, Ryzen 5 3600, Windows 11 10.0.26200, viewport 1440×1000. Le pilote de colonie réalise **trois jours** par les commandes de l'interface, avec pauses, sauvegarde et rechargement : 20 repas préparés, trois lits, table et tabourets, 28 cellules couvertes, 15 cellules de riz, taille de pierre, extraction, générateur et lampe. Bois conservé, nourriture réconciliée, faim minimale 44,05 et repos minimal 55,49, aucune erreur : [partie et secours](../../artifacts/rescue-colony-v46.json). Ce camp sûr reste sans blessure ; les secours sont exercés dans un scénario dédié, sans injecter de blessure dans le parcours normal.
+
+Le parcours de secours utilise Travail, le rôle médical dans l'inspection, le clic droit, les vitesses et la sauvegarde pendant le portage ; il vérifie le placement final et la couleur réelle du matelas. Une inspection visuelle a révélé une invalidation manquante du mobilier au changement de rôle ; elle est corrigée et contrôlée par le test. Le dernier passage, après la relecture médicale, passe en 7,4 s : [rapport UI](../../artifacts/rescue-ui-v46.json). Les captures de portage et de lit ont été inspectées. Aucun pipeline supplémentaire ni squelette CPU n'est nécessaire pour la pose portée.
+
+`npm run test:presentation` passe après les changements de phase : 45 s de minage puis 45 s d'abattage naturels, carte 250², trois colons et changements 1×/6×/3× toutes les deux secondes. **Aucun saut, aucune occupation solide, aucune famine du tampon** ; réponses maximales aux changements de vitesse 17,2 et 24,6 ms. Intervalles entre images p95 4,3 ms dans les deux phases ; maximum 12,6 / 20,8 ms. [Chronologie et mesures](../../artifacts/rescue-presentation-v46.json). La correction finale du profil historique de repos ne modifie pas le profil adulte utilisé par ces parcours.
 
 ## Charge CPU séparée
 
-Ryzen 5 3600, Windows 11 10.0.26200, Node 24.11.1. Neuf combinaisons : 3/30/100 colons × 0/20/100 petites lésions initiales, carte 250², 24 arbres désignés par colon, travail/besoins/santé/navigation réels ; 60 ticks d’échauffement, 540 mesurés, 20 copies intégrales séparées. Guérison active et continuation exacte contrôlée hors chronométrage. [Avant](../../artifacts/health-world-cpu-v45.json), [après réutilisation locale](../../artifacts/health-world-cpu-optimized-v45.json).
+Même Ryzen 5 3600 et Windows, Node 24.11.1. Carte dégagée 250², 400 ticks incluant les décisions initiales, 1/15/50 secours concurrents, besoins et santé actifs. Continuation exacte et conservation vérifiées hors chronométrage ; copies intégrales mesurées séparément. [Mesures finales](../../artifacts/rescue-cpu-v46.json).
 
-| Colons / lésions initiales | Tick médian avant → après | p95 après | p99 / maximum après | Copie intégrale p95 après |
+| Acteurs / secours | Tick p50 | p95 | p99 / maximum | Copie intégrale p95 |
 |---|---|---|---|---|
-| 3 / 100 | 0,287 → 0,211 ms | 0,422 ms | 1,667 / 2,621 ms | 39,84 ms |
-| 30 / 100 | 1,574 → 0,938 ms | 4,565 ms | 14,58 / 20,54 ms | 54,18 ms |
-| 100 / 0 | 3,690 → 3,752 ms | 26,19 ms | 32,23 / 41,36 ms | 46,62 ms |
-| 100 / 20 | 6,660 → 4,830 ms | 25,45 ms | 33,29 / 42,21 ms | 49,23 ms |
-| 100 / 100 | 7,697 → 5,175 ms | 26,02 ms | 36,01 / 40,97 ms | 64,38 ms |
+| 2 / 1 | 0,032 ms | 0,206 ms | 2,095 / 18,363 ms | 40,47 ms |
+| 30 / 15 | 0,302 ms | 0,995 ms | 10,541 / 21,170 ms | 64,11 ms |
+| 100 / 50 | 0,979 ms | 7,596 ms | 17,123 / 23,078 ms | 65,28 ms |
 
-Les pointes de planification sont déjà présentes sans blessure. Le calcul médical répété a été réduit, mais ces chiffres ne prouvent pas une fluidité parfaite à cent colons. La copie intégrale de 62 500 cellules est un diagnostic volontairement séparé, pas le coût exact d’un message différentiel du worker. Un seul passage par combinaison, effets GC et charge hôte possibles ; aucun FPS déduit de ce tableau. Prochaines optimisations doivent suivre les profils de décisions et publications réelles, sans fausser les règles ni les réservations.
+La copie des 62 500 cellules n'est pas le coût d'un message différentiel du worker. Un passage par combinaison, GC et charge hôte possibles ; aucun FPS déduit de ces ticks. Le [premier passage](../../artifacts/rescue-cpu-before-boundaries-v46.json) reste disponible, mais les variations entre passages ne constituent pas une démonstration d'optimisation.
 
-## Partie et présentation natives
+## Charge WebGPU et synchronisation du portage
 
-Chromium natif WebGPU, 1440×1000, AMD RDNA 1, même Ryzen 5 3600. Le parcours de trois jours par l'interface passe en sept minutes : dix-neuf recettes préparées, dix-huit portions consommées, trois dormeurs, réserves entretenues, bois conservé, bilan alimentaire réconcilié et aucun accident dans l'aménagement sûr. [Partie et commandes](../../artifacts/health-colony-v45.json). Les checkpoints passent par pause, sauvegarde et rechargement ; la capture finale a été inspectée.
+Même matériel, vrai worker en 6×, carte dégagée 250², 90 images d'échauffement. Les patients ont de vraies lésions incapacitantes ; les couples sauveteur/patient passent par les réservations et déplacements communs. [Mesures finales](../../artifacts/rescue-native-v46.json).
 
-Le scénario médical passe en 8,5 s : dernier support retiré par commande, blessure létale du travailleur et blessure du témoin, inspection, puis colon à terre chargé, pause et reprise exacte. La première image avec lésions montre déjà le toit retiré au tick affiché ; 735 observations de poses à terre/mortes exigent animation de travail nulle et pose GPU allongée. [Rapport](../../artifacts/health-ui-v45.json). L'oracle initial attendait un survivant ; la graine produit une blessure létale au cou, maintenant exigée également par le test de simulation. Les cinq scénarios médicaux ont repassé après cet ajustement : [contrôle final](../../artifacts/health-final-v45.json). Les captures d'accident et de patient ont été inspectées ; le compteur exclut les morts et leurs quatre besoins principaux affichent un tiret.
+| Acteurs / secours | Intervalle image p50 / p95 / p99 / max | CPU image p95 | Draw calls max | Observations de corps portés |
+|---|---|---|---|---|
+| 2 / 1 | 4,2 / 4,3 / 8,4 / 8,4 ms | 4,9 ms | 121 | 136 |
+| 30 / 15 | 4,2 / 8,4 / 12,5 / 12,6 ms | 5,1 ms | 121 | 2 070 |
+| 100 / 50 | 4,2 / 16,7 / 29,2 / 33,2 ms | 6,7 ms | 122 | 5 226 |
 
-`npm run test:presentation` passe : 45 s de minage puis 45 s d'abattage naturels, carte 250², 1×/6×/3× répétés. Aucun saut, aucune occupation solide, aucune famine du tampon ; réponses maximales aux changements de vitesse 21 et 22,3 ms. Intervalles entre images p95 4,3 ms dans les deux phases ; maximum 12,5 / 20,9 ms. [Mesures et chronologie des retraits](../../artifacts/health-presentation-v45.json). Les pauses ordinaires entre trajets restent distinctes des sauts et des attentes anormales : aucun FPS seul n'est utilisé comme preuve de synchronisation.
+Aucune pose incohérente détectée, aucune erreur JS/GPU, aucun pipeline créé pendant la mesure et géométries stables. Les corps partagent les véritables attributs GPU du porteur ; les résultats ne se limitent pas à l'état final de simulation. Le [premier audit](../../artifacts/rescue-native-before-boundaries-v46.json) a mesuré un maximum de 37,6 ms à cent acteurs. **Les pointes de 33–38 ms restent ouvertes**, notamment côté planification/publications ; ces essais courts en terrain dégagé ne prouvent ni une fluidité parfaite, ni le comportement d'une forêt ou d'un combat complet, ni celui d'une colonie de cent personnes entretenue plusieurs jours. Le temps GPU direct n'est pas mesuré.
 
-## Charge navigateur avec santé
+## Livraison et périmètre
 
-`MINING_MEDICAL_WOUNDS=20 node --experimental-strip-types scripts/mining-render-bench.mjs artifacts/health-mining-render-v45.json` : 3/30/100 colons avec vingt petites lésions initiales chacun, monde naturel 250² et zone d'extraction dégagée, vrai worker en 6×. Quatre parois et un arbre désignés par colon, arrêt après achèvement des extractions ; ce parcours court ne mesure pas l'entretien d'une colonie de cent personnes pendant plusieurs jours. [Rapport brut](../../artifacts/health-mining-render-v45.json).
+Compilation TypeScript et bundle Vite réussis après le dernier ajustement ; avertissement habituel sur le chunk graphique conservé, sans déduire d'effet sur les FPS. Contrôle documentaire et intégrité des trois originaux vérifiés avant commit. La version 46 migre strictement la V45 sans inventer blessure, secours, lit ou historique.
 
-| Colons | Parois extraites | Intervalle image p50 / p95 / p99 / max | Application de scène p95 | Réception snapshot p95 | Draw calls max |
-|---|---|---|---|---|---|
-| 3 | 12 | 4,2 / 4,3 / 8,3 / 12,5 ms | 7,1 ms | 0,1 ms | 165 |
-| 30 | 120 | 4,2 / 4,3 / 8,4 / 24,9 ms | 8,4 ms | 0,1 ms | 178 |
-| 100 | 400 | 4,2 / 16,7 / 25 / 37,5 ms | 13,1 ms | 0,1 ms | 188 |
-
-Aucune erreur JS/GPU, aucun pipeline créé pendant la mesure, aucune croissance des lots de boîtes ; identités des buffers roche/sol conservées. Préparation et échauffement exclus des intervalles actifs. La réception des snapshots est distincte de leur application graphique. La médiane proche de 240 Hz ne masque pas les pointes à cent colons : publications groupées, application de scène et planification restent des axes mesurés pour les prochains audits. Ce n'est ni une garantie de 240 FPS sur tout matériel ni une mesure directe du temps GPU.
-
-## Livraison
-
-Compilation TypeScript et bundle Vite réussis ; avertissement habituel sur la taille du chunk graphique conservé, sans impact déduit sur les FPS. Contrôle documentaire réussi : 167 documents, 1 711 liens locaux, 25 domaines et cinq familles de validation ; les trois originaux sont inchangés octet pour octet. Soins, secours, soins auto-administrés, ramper, dépouilles transportables et combat ne sont pas validés par ce lot : ils restent absents. Aucun test ne prétend couvrir toutes les combinaisons futures.
+Le traitement des plaies, les médicaments, l'alimentation assistée et le repos médical volontaire restent absents. File de secours, températures extrêmes, ennemis proches et autres catégories de personnes restent explicitement ouverts dans le [contrat](rescue.md). La pose 3D et les cellules de service constituent des adaptations documentées, pas une parité visuelle ou binaire certifiée avec RimWorld.

@@ -1,3 +1,6 @@
+import { applyRescue,processRescue,reconcileRescues } from './rescue.ts';
+import { applyMedicalBed } from './medical-beds.ts';
+import { carrierOf } from './rescue-state.ts';
 import { tickSkills, constructionWorkRate } from './skills.ts';
 import { advancePower, reconcilePower } from './power.ts';
 import { isElectrical, newPowerState } from './power-rules.ts';
@@ -159,11 +162,13 @@ export function canDesignate(world: World, command: DesignateCommand): CommandRe
 }
 export function applyCommand(world: World, command: Command): CommandResult {
   const result=applyCommandInternal(world,command);
-  if(result.ok){reconcileOrders(world);const thermal=reconcileTemperature(world);updateFoodTemperatures(world,thermal);updatePlantTemperatures(world,thermal);}
+  if(result.ok){reconcileRescues(world);reconcileOrders(world);const thermal=reconcileTemperature(world);updateFoodTemperatures(world,thermal);updatePlantTemperatures(world,thermal);}
   return result;
 }
 function applyCommandInternal(world: World, command: Command): CommandResult {
   if (!command || typeof command !== 'object') return refusal('invalid-command', 'Commande invalide.');
+  if(command.type==='order-rescue')return applyRescue(world,command);
+  if(command.type==='medical-bed')return applyMedicalBed(world,command);
   if(command.type==='order-job'||command.type==='order-cook'||command.type==='order-haul'||command.type==='clear-orders')return applyOrderCommand(world,command);
   if (command.type === 'schedule-paint' || command.type === 'schedule-replace') return applyScheduleCommand(world, command);
   if (command.type === 'food-policy-create' || command.type === 'food-policy-update' || command.type === 'food-policy-delete' || command.type === 'food-policy-assign') return applyFoodPolicyCommand(world, command);
@@ -191,7 +196,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   if (command.type === 'assign-bed') {
     const bed = world.structures.find(item => item.id === command.bedId && item.kind === 'bed');
     const owner = world.pawns.find(item => item.id === command.pawnId);
-    if (!bed || (command.pawnId !== null && !owner)) return refusal('missing-target', 'Lit ou colon introuvable.');
+    if (!bed || bed.medical || (command.pawnId !== null && (!owner||owner.state==='dead'))) return refusal('missing-target', 'Lit ou colon introuvable.');
     for (const pawn of world.pawns) if (pawn.bedId === bed.id || pawn === owner) {
       if (pawn.need?.kind === 'sleep') releaseWork(world, pawn,drops);
       pawn.bedId = null; pawn.needCooldown = 0;
@@ -200,10 +205,11 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
     return { ok: true };
   }
   if (command.type === 'priority') {
-    if (!['mine', 'gather', 'build', 'haul', 'grow', 'cook', 'craft'].includes(command.work) || !Number.isInteger(command.value) || command.value < 0 || command.value > 4) return refusal('invalid-priority', 'La priorité doit être comprise entre 0 et 4.');
+    if (!['doctor','mine', 'gather', 'build', 'haul', 'grow', 'cook', 'craft'].includes(command.work) || !Number.isInteger(command.value) || command.value < 0 || command.value > 4) return refusal('invalid-priority', 'La priorité doit être comprise entre 0 et 4.');
     const pawn = world.pawns.find(candidate => candidate.id === command.pawnId);
     if (!pawn) return refusal('missing-target', 'Colon introuvable.');
     pawn.priorities[command.work] = command.value;
+    if(command.work==='doctor'&&command.value===0&&pawn.rescue&&pawn.orders.active!=='rescue')releaseWork(world,pawn,drops);
     const job = world.jobs.find(candidate => candidate.id === pawn.jobId);
     if (command.value === 0 && ((job && workType(job) === command.work && pawn.orders.active===null) || (pawn.haul && pawn.orders.active!=='haul' && command.work === haulingWork(pawn.haul.destination)) || (pawn.cooking && pawn.orders.active!=='cook' && command.work === taskWork(pawn.cooking)))) releaseWork(world, pawn,drops);
     pawn.planCooldown = 0; refreshStock(world); return { ok: true };
@@ -303,7 +309,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     burnFuel(world);
     updateDoors(world);
     scheduleGrowing(world);
-    scheduleRoofs(world);
+    scheduleRoofs(world);reconcileRescues(world);
     // Build only if this tick actually plans or moves. No cross-tick cache can hide
     // a command, edited terrain, restored save, or a wall that changed between calls.
     let blocked: Uint8Array | undefined;
@@ -329,9 +335,9 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if(pawn.state==='dead')continue;
       tickSkills(world,pawn);
       updateNeeds(world, pawn,body);
-      if(pawn.state==='downed')continue;
+      if(pawn.state==='downed'||carrierOf(world,pawn.id))continue;
       if(pawn.need?.kind==='eat' && pawn.need.dining && !validDiningPlace(world,pawn.need.dining)) {pawn.need.phase='choose-spot';pawn.need.dining=null;pawn.need.progress=0;delete pawn.need.workRemainder;pawn.path=[];pawn.state='moving';}
-      if (pawn.moveCooldown > 0) { pawn.state = pawn.jobId !== null || pawn.haul || pawn.need || pawn.cooking || pawn.recreation.task ? 'moving' : 'idle'; continue; }
+      if (pawn.moveCooldown > 0) { pawn.state = pawn.jobId !== null || pawn.rescue || pawn.haul || pawn.need || pawn.cooking || pawn.recreation.task ? 'moving' : 'idle'; continue; }
       const needsContext = {
         search: (goals?: ReadonlySet<number>) => search(world, pawn, getBlocked(), occupied, budget, goals),
         move: (target: Cell, exact: boolean) => moveToward(world, pawn, target, true, getBlocked, budget, exact, getLight),
@@ -341,9 +347,10 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if(pawn.interruptedCargo){processNeeds(world,pawn,needsContext);continue;}
       if (leaveTransitCell(world,pawn,getBlocked,budget,getLight)) continue;
       if (advanceOrders(world,pawn,getBlocked,budget)) continue;
-      if (advancePriorityWork(world,pawn,getBlocked,budget)) continue;
-      if (processNeeds(world, pawn, needsContext) || pawn.orders.active===null&&processRecreation(world, pawn, needsContext)) continue;
-      if (pawn.jobId === null && pawn.haul === null && !pawn.cooking && pawn.planCooldown === 0) planWork(world, pawn, getBlocked, occupied, budget);
+      if (!pawn.rescue&&advancePriorityWork(world,pawn,getBlocked,budget)) continue;
+      if (processNeeds(world, pawn, needsContext) || !pawn.rescue&&pawn.orders.active===null&&processRecreation(world, pawn, needsContext)) continue;
+      if (pawn.jobId === null && pawn.haul === null && !pawn.rescue && !pawn.cooking && pawn.planCooldown === 0) planWork(world, pawn, getBlocked, occupied, budget);
+      if(pawn.rescue){processRescue(world,pawn,needsContext);continue;}
       if (pawn.haul) { const refueling=pawn.haul.destination.type==='fuel';processHaul(world, pawn, (target, allow) => moveToward(world, pawn, target, allow, getBlocked, budget,false,getLight), () => {wakePlanners(world);if(refueling)invalidateEnvironment();});continue; }
       if(pawn.cooking) {processCooking(world,pawn,{
         workRate:(station,worker)=>getEnvironment().production(station,worker).total*physicalWorkFactor(pawn,pawn.cooking?.recipe==='stone-blocks'?'craft':'cook',body),
@@ -398,7 +405,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     reconcilePower(world);
     if(thermalDirty)thermal=reconcileTemperature(world);
     updateFoodTemperatures(world,thermal);
-    updatePlantTemperatures(world,thermal);
+    updatePlantTemperatures(world,thermal);reconcileRescues(world);
   }
 }
 import { updatePawnHealth,reconcilePawnHealth } from './health.ts';

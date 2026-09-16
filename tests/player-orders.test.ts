@@ -10,7 +10,7 @@ import type { World } from '../src/sim/types';
 
 export function orderCamp(count=2):World {
   const w=createWorld(42,32,32);w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.resources=[];w.piles=[];w.jobs=[];w.structures=[];w.pawns=w.pawns.slice(0,count);
-  w.pawns.forEach((p,i)=>{p.x=12+i*2;p.z=16;p.hunger=100;p.rest=100;p.schedule.fill('anything');p.priorities={craft:2,mine:2,build:1,haul:0,gather:1,grow:1,cook:0};});
+  w.pawns.forEach((p,i)=>{p.x=12+i*2;p.z=16;p.hunger=100;p.rest=100;p.schedule.fill('anything');p.priorities={ doctor:0,craft:2,mine:2,build:1,haul:0,gather:1,grow:1,cook:0};});
   for(const x of [11,18,22]) {
     w.resources.push({id:w.nextId++,kind:'tree',x,z:17,amount:12});
     expect(applyCommand(w,{type:'designate',kind:'chop',x,z:17}).ok).toBe(true);

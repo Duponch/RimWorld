@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+V46 ajoute un **rôle médical aux lits existants**, conservé lorsque le meuble est emballé. Aucun nouvel objet lit d’hôpital, médicament ou sac de patient : une personne portée garde son identité. Les variantes bois/acier/cinq pierres gardent leurs propriétés existantes. [Contrat](../development/rescue.md).
+
 V43 ajoute un profil numérique Construction aux personnes (aucun nouvel objet). Niveau, passion et XP sont des états individuels ; ils ne constituent ni un catalogue de biographies ni les douze compétences complètes. [Contrat](../development/skills.md).
 
 V42 ajoute `wood-generator` (générateur à bois, CAT-047 partiel) et `standing-lamp` (mobilier lumineux). Recettes fixes : 100 acier + 2 composants et 20 acier. Puissances 1 000 W / 30 W ; aucune variante avancée, câble ou batterie implicite. [Contrat et limites](../development/power.md).

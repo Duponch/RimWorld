@@ -1,0 +1,113 @@
+{
+  "date": "2026-09-16T22:44:31.419Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "protocol": "Native WebGPU, real worker at 6x, cleared 250², concurrent rescues and live physiology; 90 warmup frames. No claim about forests or full combat.",
+  "results": [
+    {
+      "actors": 2,
+      "rescued": 1,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1"
+      },
+      "frames": {
+        "count": 229,
+        "p50": 4.199999999999818,
+        "p95": 4.300000000000182,
+        "p99": 8.400000000000546,
+        "max": 8.400000000000546
+      },
+      "frameCpu": {
+        "count": 230,
+        "p50": 3.7000000001862645,
+        "p95": 4.900000000372529,
+        "p99": 5.400000000372529,
+        "max": 6.199999999254942
+      },
+      "drawCalls": {
+        "count": 230,
+        "p50": 121,
+        "p95": 121,
+        "p99": 121,
+        "max": 121
+      },
+      "carriedFrames": 136,
+      "invalidPoses": 0,
+      "stableGeometry": true,
+      "pipelines": [],
+      "errors": []
+    },
+    {
+      "actors": 30,
+      "rescued": 15,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1"
+      },
+      "frames": {
+        "count": 238,
+        "p50": 4.199999999999818,
+        "p95": 8.399999999999636,
+        "p99": 12.5,
+        "max": 12.599999999999454
+      },
+      "frameCpu": {
+        "count": 239,
+        "p50": 3.5,
+        "p95": 5.1000000005587935,
+        "p99": 5.8999999994412065,
+        "max": 6
+      },
+      "drawCalls": {
+        "count": 239,
+        "p50": 121,
+        "p95": 121,
+        "p99": 121,
+        "max": 121
+      },
+      "carriedFrames": 2070,
+      "invalidPoses": 0,
+      "stableGeometry": true,
+      "pipelines": [],
+      "errors": []
+    },
+    {
+      "actors": 100,
+      "rescued": 50,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1"
+      },
+      "frames": {
+        "count": 285,
+        "p50": 4.199999999999818,
+        "p95": 16.699999999999818,
+        "p99": 29.199999999999818,
+        "max": 33.19999999999982
+      },
+      "frameCpu": {
+        "count": 286,
+        "p50": 4.199999999254942,
+        "p95": 6.7000000001862645,
+        "p99": 8.5,
+        "max": 10.700000000186265
+      },
+      "drawCalls": {
+        "count": 286,
+        "p50": 121,
+        "p95": 122,
+        "p99": 122,
+        "max": 122
+      },
+      "carriedFrames": 5226,
+      "invalidPoses": 0,
+      "stableGeometry": true,
+      "pipelines": [],
+      "errors": []
+    }
+  ]
+}

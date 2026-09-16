@@ -1,0 +1,24 @@
+import { performance } from 'node:perf_hooks';
+import { cpus,platform,release } from 'node:os';
+import { writeFileSync } from 'node:fs';
+import { rescueCamp } from '../tests/scenarios/rescue.ts';
+import { stepWorld } from '../src/sim/engine.ts';
+import { serializeWorld,deserializeWorld,validateWorld } from '../src/sim/serialization.ts';
+const stats=(a:number[])=>{a.sort((x,y)=>x-y);return {p50:a[Math.floor(a.length*.5)],p95:a[Math.floor(a.length*.95)],p99:a[Math.floor(a.length*.99)],max:a.at(-1)};};
+const start=performance.now(),results=[];
+for(const pairs of [1,15,50]){
+  const w=rescueCamp(pairs,250),samples:number[]=[],copies:number[]=[];let carryTicks=0;
+  if(validateWorld(w).length)throw Error(validateWorld(w).join(';'));
+  for(let t=0;t<400;t++){
+    const now=performance.now();stepWorld(w);samples.push(performance.now()-now);
+    carryTicks+=w.pawns.filter(p=>p.rescue?.phase==='carry').length;
+    if(t%30===0){const a=performance.now();structuredClone(w);copies.push(performance.now()-a);}
+    if(performance.now()-start>90000)throw Error('Rescue benchmark exceeded 90 seconds');
+  }
+  const rescued=w.pawns.filter(p=>p.state==='downed'&&p.need?.kind==='sleep'&&p.need.bedId!==null).length;
+  if(rescued!==pairs||!carryTicks||validateWorld(w).length)throw Error(JSON.stringify({pairs,rescued,carryTicks,errors:validateWorld(w)}));
+  const copy=deserializeWorld(serializeWorld(w));stepWorld(copy,10);stepWorld(w,10);if(serializeWorld(copy)!==serializeWorld(w))throw Error('Continuation differs');
+  results.push({actors:pairs*2,pairs,stepMs:stats(samples),cloneMs:stats(copies),rescued,carryTicks});
+}
+const report={date:new Date().toISOString(),cpu:cpus()[0]?.model,node:process.version,os:`${platform()} ${release()}`,scope:'250² cleared map; concurrent reservations, physical rescues, moving wounded bodies, continuing health/needs; cold and warm ticks included, clones separate',results};
+writeFileSync('artifacts/rescue-cpu-v46.json',JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report));
