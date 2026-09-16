@@ -2,7 +2,7 @@
 
 V44 : [interruptions et cargaisons conservées](development/interrupted-cargo.md), [relecture de l’épuisement et du dépôt](research/interrupted-cargo-reference.md).
 
-V45 : [santé active](development/health.md), [recherche des transitions et accidents](research/health-reference.md). Anatomie, lésions, incapacités, décès et effets physiques intégrés ; secours, soins, équipement et combat restent à développer.
+V45 : [santé active](development/health.md), [recherche des transitions et accidents](research/health-reference.md). Anatomie, lésions, incapacités, décès et effets physiques intégrés ; secours, soins, équipement et combat restent à développer. [Préparation de la prochaine chaîne de secours et soins](research/care-preparation.md).
 
 V43 : [première compétence et apprentissage](development/skills.md), [recherche et réorientation des priorités](research/skills-reference.md).
 
