@@ -31,6 +31,8 @@ export function queryJobStatus(world: World, job: Job): JobDiagnostic {
   return { code: enabled ? 'ready' : 'waiting-worker', reason: enabled ? 'Prêt ; attend un colon disponible et un accès.' : 'Travail désactivé pour tous les colons.', delivered, required };
 }
 export function queryPawnStatus(world: World, pawn: Pawn): { code: string; reason: string } {
+  if(pawn.state==='dead')return {code:'dead',reason:'Décédé ; dépouille conservée sur place. Le transport et les sépultures ne sont pas encore disponibles.'};
+  if(pawn.state==='downed')return {code:'downed',reason:'Incapacité médicale : ne peut pas agir. Consultez ses blessures et ses capacités dans Santé.'};
   if(pawn.interruptedCargo)return {code:'interrupted-cargo',reason:'Travail interrompu ; cargaison conservée. Libérez une case de sol proche pour permettre son dépôt.'};
   if(pawn.recreation.task) {
     const task=pawn.recreation.task, activity=task.activity==='horseshoes'?'jouer aux fers à cheval':'observer le ciel';

@@ -1,8 +1,8 @@
 # Santé : préparation de l’activation et des blessures
 
-V44 a résolu le cas de saturation pour l’épuisement : [libération des engagements et rétention conservatrice](../development/interrupted-cargo.md). Restent le déclencheur médical, l’arrêt immédiat en cours d’arête, les blessures persistantes et les soins. La recherche ci-dessous prépare ces contrats encore absents.
+V44 a résolu la saturation lors de l’épuisement. V45 active maintenant [santé, interruptions et dégâts de toiture](../development/health.md). Cette préparation reste une trace de recherche ; [la vérification V45](health-reference.md) précise les décisions courantes, notamment mouvement et sommeil. Secours, soins et autres producteurs restent à développer.
 
-Lecture du 16 septembre 2026, pendant la validation UI de V43. Ce document prépare la prochaine entrée de la [ROADMAP](../ROADMAP.md) ; le [socle anatomique](../development/body.md) est maintenant codé/testé, mais l’activation dans la partie reste à faire. Cette note conserve les risques à traiter avant blessures et soins.
+Lecture du 16 septembre 2026, pendant la validation UI de V43. Ce document prépare la prochaine entrée de la [ROADMAP](../ROADMAP.md) ; le [socle anatomique](../development/body.md) est maintenant codé/testé, et V45 l’a depuis activé dans la partie. Cette note conserve les risques à traiter avant blessures et soins.
 
 ## Corpus et intention
 
@@ -35,7 +35,7 @@ Ce producteur peut compléter une interaction déjà présente, après l’anato
 
 ## Frontière technique proposée
 
-Définitions anatomiques immuables et identifiants stables, séparés des blessures persistantes de chaque personne. Éviter de recopier un corps sain complet par colon et par snapshot : l’absence de lésion peut rester un état sparse, les capacités étant dérivées. Les invalidations doivent suivre les lésions, traitements et modificateurs effectivement livrés, jamais une horloge graphique. Mesurer le coût des personnes saines séparément des foules blessées. Les socles anatomique et [lésions](../development/injuries.md) sont maintenant codés et mesurés isolément ; leur intégration au monde et au rendu reste à faire.
+Définitions anatomiques immuables et identifiants stables, séparés des blessures persistantes de chaque personne. Éviter de recopier un corps sain complet par colon et par snapshot : l’absence de lésion peut rester un état sparse, les capacités étant dérivées. Les invalidations doivent suivre les lésions, traitements et modificateurs effectivement livrés, jamais une horloge graphique. Mesurer le coût des personnes saines séparément des foules blessées. Les socles anatomique et [lésions](../development/injuries.md) sont maintenant codés et mesurés isolément ; leur intégration au monde et au rendu est livrée en V45.
 
 ## Asymétrie des membres
 

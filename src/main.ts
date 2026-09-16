@@ -1,3 +1,5 @@
+import { medicalBleed } from './sim/injury-state';
+import { createHealthInspection,updateHealthInspection } from './ui/health-inspection';
 import { createSkillsInspection, updateSkillsInspection, updateWorkSkills } from './ui/skills-inspection';
 import { powerInspection } from './ui/power-inspection';
 import { outdoorTemperature } from './sim/temperature';
@@ -37,7 +39,7 @@ import type { ArchitectCategory, Panel, Tool } from './ui/layout';
 
 import { recreationInspection, updateRecreationInspection } from './ui/recreation-inspection';
 const jobLabels: Record<JobKind, string> = { 'wood-generator':'Construction du générateur à bois', 'standing-lamp':'Construction de la lampe', 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'Pose de toit', 'remove-roof':'Retrait de toit', door:'Construction de la porte', stonecutter:'Construction de la table de taille', mine:'Minage', uninstall:'Désinstallation',install:'Réinstallation', deconstruct: 'Déconstruction', chop: 'Abattage', harvest: 'Récolte', cut: 'Coupe de plante', sow: 'Semis de riz', wall: 'Construction du mur', bed: 'Construction du lit', table: 'Construction de la table', stool: 'Construction du tabouret', horseshoes: 'Construction du piquet de fers à cheval', campfire: 'Construction du feu de camp' };
-const stateLabels: Record<Pawn['state'], string> = { idle: 'Disponible', moving: 'En chemin', working: 'Au travail', sleeping: 'Se repose', hungry: 'Cherche à manger', eating: 'Mange', recreating: 'Se divertit' };
+const stateLabels: Record<Pawn['state'], string> = { downed:'À terre', dead:'Décédé', idle: 'Disponible', moving: 'En chemin', working: 'Au travail', sleeping: 'Se repose', hungry: 'Cherche à manger', eating: 'Mange', recreating: 'Se divertit' };
 const terrainLabels = { 'rough-stone':'Sol rocheux brut', grass: 'Prairie', soil: 'Terre fertile', water: 'Eau infranchissable', rock: 'Massif rocheux infranchissable' };
 const resourceLabels = { tree: 'Arbre', berries: 'Buisson de baies', rock: 'Pierre au sol', rice: 'Plant de riz' };
 const SAVE_KEY = 'lisiere.save.v1';
@@ -194,7 +196,7 @@ function rebuildInspector() {
     el('manage-work').onclick = () => setPanel('work');
     const orders=document.createElement('p');orders.id='selected-orders';panel.append(orders);
     const cancel=document.createElement('button');cancel.id='clear-orders';cancel.textContent='Annuler les ordres directs';
-    createSkillsInspection(panel);
+    createSkillsInspection(panel);createHealthInspection(panel);
     cancel.onclick=()=>{if(selectedPawn!==undefined)void attempt(()=>client.command({type:'clear-orders',pawnId:selectedPawn!}));};panel.append(cancel);
   } else if (selectedCell) {
     panel.innerHTML = `<div class="panel-heading"><h2 id="cell-title"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><p id="cell-description"></p><p id="cell-materials"></p><p id="cell-job"></p><button id="cell-deconstruct" class="secondary-action" hidden>Déconstruire</button><button id="cell-cancel" class="secondary-action" hidden>Annuler cet ordre</button><div id="cell-storage" hidden><p id="cell-storage-quantity"></p>${storageSettings('selected-stockpile')}<button id="update-stockpile" class="secondary-action">Appliquer les réglages</button><button id="delete-stockpile" class="secondary-action">Retirer cette réserve</button></div>`;
@@ -238,6 +240,7 @@ function rebuildInspector() {
   if (close) close.onclick = clearSelection;
 }
 function actionLabel(pawn: Pawn) {
+  if(pawn.state==='downed'||pawn.state==='dead')return stateLabels[pawn.state];
   if(pawn.interruptedCargo)return pawn.state==='sleeping'?'Se repose · cargaison à déposer':'Cargaison à déposer · sol proche encombré';
   if(pawn.cooking)return queryPawnStatus(snapshot!,pawn).reason;
   if (pawn.need) return queryPawnStatus(snapshot!, pawn).reason;
@@ -285,7 +288,7 @@ function renderState() {
   const carried = world.piles.filter(pile => pile.owner.type === 'pawn').reduce((sum, pile) => sum + pile.quantity, 0);
   const delivered = world.piles.filter(pile => pile.owner.type === 'job').reduce((sum, pile) => sum + pile.quantity, 0);
   el('material-status').textContent = `${carried} portées · ${delivered} au chantier`;
-  el('population').textContent = String(world.pawns.length); el('map-size').textContent = `${world.width} × ${world.height}`;
+  el('population').textContent = String(world.pawns.filter(p=>p.state!=='dead').length); el('map-size').textContent = `${world.width} × ${world.height}`;
   el('outdoor-temperature').textContent = `Extérieur : ${outdoorTemperature(world.tick).toFixed(1)} °C`;
   el('day').textContent = `Jour ${1 + Math.floor(world.tick / TICKS_PER_DAY)}`;
   const hour = 24 * (world.tick % TICKS_PER_DAY) / TICKS_PER_DAY;
@@ -302,8 +305,8 @@ function renderState() {
     button.classList.toggle('selected', selection.ids.has(pawn.id));
     button.setAttribute('aria-pressed', String(selection.ids.has(pawn.id)));
     button.querySelector('strong')!.textContent = pawn.name; button.title = `${pawn.name} · ${actionLabel(pawn)}`;
-    button.querySelector('.pawn-symbol')!.textContent = pawn.state === 'sleeping' ? 'Z' : pawn.state === 'hungry' ? '!' : '';
-    (button.querySelector('i') as HTMLElement).style.width = `${pawn.mood}%`;
+    button.querySelector('.pawn-symbol')!.textContent = pawn.state==='dead'?'†':pawn.state==='downed'?'!':pawn.state === 'sleeping' ? 'Z' : pawn.state === 'hungry' ? '!' : '';
+    (button.querySelector('i') as HTMLElement).style.width = `${pawn.state==='dead'?0:pawn.mood}%`;
     const row = document.querySelector<HTMLElement>(`[data-worker="${pawn.id}"]`)!;
     updateWorkSkills(row,pawn);
     row.querySelector('.work-activity')!.textContent = actionLabel(pawn);
@@ -319,14 +322,14 @@ function renderState() {
     const pawn = world.pawns.find(item => item.id === selectedPawn);
     if (!pawn) clearSelection();
     else {
-      el('selected-name').textContent = pawn.name; el('selected-action').textContent = pawn.need ? actionLabel(pawn) : `${actionLabel(pawn)} · ${queryPawnStatus(world, pawn).reason}`;
-      updateSkillsInspection(el('inspector'),pawn);
+      el('selected-name').textContent = pawn.name; el('selected-action').textContent = pawn.need||pawn.state==='dead'||pawn.state==='downed' ? actionLabel(pawn) : `${actionLabel(pawn)} · ${queryPawnStatus(world, pawn).reason}`;
+      updateSkillsInspection(el('inspector'),pawn);updateHealthInspection(el('inspector'),pawn);
       updateRecreationInspection(el('inspector'),pawn);
       roomInspection.update(el('inspector'), world, pawn);
       el('selected-orders').textContent=`${pawn.orders.active!==null?'Travail imposé · ':''}${pawn.orders.queue.length} ordre(s) en file${pawn.priorityWork?` · Priorité case ${pawn.priorityWork.cell.x}, ${pawn.priorityWork.cell.z}`:''}`;
       el<HTMLButtonElement>('clear-orders').disabled=pawn.orders.active===null&&!pawn.orders.queue.length&&!pawn.priorityWork;
       el('selected-memories').textContent = pawn.memories.map(memory => `${memory.kind === 'ate-raw-food' ? 'Mangé cru : −7' : 'Mangé sans table : −3'} humeur · encore ${Math.ceil((memory.expiresAt - world.tick) / (TICKS_PER_DAY / 24))} h`).join(' · ');
-      for (const need of ['hunger', 'rest', 'comfort', 'mood'] as const) { el(`selected-${need}`).textContent = `${Math.round(pawn[need])} %`; el<HTMLMeterElement>(`${need}-meter`).value = pawn[need]; }
+      for (const need of ['hunger', 'rest', 'comfort', 'mood'] as const) { el(`selected-${need}`).textContent = pawn.state==='dead'?'—':`${Math.round(pawn[need])} %`; el<HTMLMeterElement>(`${need}-meter`).value = pawn.state==='dead'?0:pawn[need]; }
     }
   } else if (selectedCell) {
     const { x, z } = selectedCell;
@@ -373,9 +376,14 @@ function renderState() {
     item.append(time, document.createTextNode(entry.message)); return item;
   }));
   if (!entries.length) el('journal-items').textContent = 'Trois survivants. Une nouvelle histoire.';
+  const living=world.pawns.filter(p=>p.state!=='dead');
   const alerts: string[] = [];
-  if (availableNutrition(world) < world.pawns.length * 1.6) alerts.push('Réserves de nourriture faibles');
-  const hungry = world.pawns.filter(pawn => pawn.hunger < 25).length;
+  const downed=living.filter(p=>p.state==='downed').length,bleeding=living.filter(p=>p.health&&medicalBleed(p.health)>=.1).length,deaths=world.pawns.length-living.length;
+  if(downed)alerts.push(`${downed} colon(s) à terre`);
+  if(bleeding)alerts.push(`${bleeding} colon(s) saignent`);
+  if(deaths)alerts.push(`${deaths} colon(s) décédé(s)`);
+  if (availableNutrition(world) < living.length * 1.6) alerts.push('Réserves de nourriture faibles');
+  const hungry = living.filter(pawn => pawn.hunger < 25).length;
   if (hungry) alerts.push(`${hungry} colon(s) affamé(s)`);
   if (pending) alerts.push(`${pending} ordre(s) en attente`);
   if (!world.stockpiles.length) alerts.push('Aucune réserve de stockage');
@@ -386,7 +394,7 @@ function renderState() {
   if (idle) alerts.push(`${idle} colon(s) disponible(s)`);
   el('alerts').replaceChildren(...alerts.map(text => { const item = document.createElement('p'); item.textContent = text; return item; }));
   const beds = world.structures.filter(structure => structure.kind === 'bed').length;
-  if (beds < world.pawns.length) { const item = document.createElement('p'); item.dataset.alert = 'beds'; item.textContent = `${world.pawns.length - beds} couchage(s) manquant(s)`; el('alerts').append(item); }
+  if (beds < living.length) { const item = document.createElement('p'); item.dataset.alert = 'beds'; item.textContent = `${living.length - beds} couchage(s) manquant(s)`; el('alerts').append(item); }
 }
 function syncStorageButtons() {
   document.querySelector<HTMLElement>('.game-shell')!.inert=replacingWorld;

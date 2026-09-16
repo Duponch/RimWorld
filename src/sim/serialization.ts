@@ -61,7 +61,7 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validateWorld(input: unknown): string[] {
   return validateSchema(input, SCHEMA_VERSION);
 }
-function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44): string[] {
+function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(input)) return ['World must be an object.'];
@@ -88,12 +88,14 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
       if (ids.has(item.id)) errors.push('Duplicate entity ID.'); ids.add(item.id);
       if (integer(input.nextId, 1) && item.id >= input.nextId) errors.push('nextId must exceed all entity IDs.');
       if (key === 'pawns') {
+        if(item.medicalSleep!==undefined&&(version<45||item.medicalSleep!==true))errors.push('Invalid medical sleep marker for schema.');
+        if(item.health!==undefined&&(version<45||validateMedicalRecord(item.health)))errors.push('Invalid medical record for schema.');
         if(version>=43 ? !validSkills(item.skills,input.tick as number) : item.skills!==undefined) errors.push('Invalid pawn skills for schema.');
         if(item.interruptedCargo!==undefined&&(version<44||item.interruptedCargo!==true))errors.push('Invalid interrupted cargo marker for schema.');
         if (typeof item.name !== 'string' || item.name.length === 0 || item.name.length > 80 || !bounded(item.hunger) || !bounded(item.rest) || !bounded(item.mood)
-          || !oneOf(item.state, legacyV2 ? ['idle', 'moving', 'working', 'sleeping', 'hungry'] : ['idle', 'moving', 'working', 'sleeping', 'hungry', 'eating', ...(version>=15?['recreating']:[])]) || !(item.jobId === null || integer(item.jobId, 1))
+          || !oneOf(item.state, legacyV2 ? ['idle', 'moving', 'working', 'sleeping', 'hungry'] : ['idle', 'moving', 'working', 'sleeping', 'hungry', 'eating', ...(version>=15?['recreating']:[]),...(version>=45?['downed','dead']:[])]) || !(item.jobId === null || integer(item.jobId, 1))
           || !record(item.priorities) || !integer(item.priorities.gather, 0, 4) || !integer(item.priorities.build, 0, 4) || !integer(item.priorities.haul, 0, 4) || (version >= 8 && !integer(item.priorities.grow, 0, 4))
-          || !(version < 6 ? integer(item.moveCooldown, 0, 3) : typeof item.moveCooldown === 'number' && Number.isFinite(item.moveCooldown) && item.moveCooldown >= 0 && item.moveCooldown <= (version>=37?10.304:version>=22?8.443:version>=16?5.643:4.243)) || !integer(item.planCooldown, 0, 20)) errors.push('Invalid pawn state.');
+          || !(version < 6 ? integer(item.moveCooldown, 0, 3) : typeof item.moveCooldown === 'number' && Number.isFinite(item.moveCooldown) && item.moveCooldown >= 0 && item.moveCooldown <= (version>=45?38.146:version>=37?10.304:version>=22?8.443:version>=16?5.643:4.243)) || !integer(item.planCooldown, 0, 20)) errors.push('Invalid pawn state.');
         if (!Array.isArray(item.path) || item.path.length > size) errors.push('Invalid pawn path.');
         else {
           let previous = item;
@@ -109,7 +111,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
         if(version>=6 && item.motion!=null) {
           const m=item.motion;
           if(!record(m)||!record(m.from)||!record(m.to)||!coord(m.from)||!coord(m.to)||typeof m.start!=='number'||typeof m.end!=='number'||!Number.isFinite(m.start)||!Number.isFinite(m.end)||m.start<0||m.start>(input.tick as number)||m.to.x!==item.x||m.to.z!==item.z||Math.max(Math.abs((m.to.x as number)-(m.from.x as number)),Math.abs((m.to.z as number)-(m.from.z as number)))!==1) errors.push('Invalid travel segment.');
-          else if((m.speedFactor!==undefined&&(version<37||typeof m.speedFactor!=='number'||!Number.isFinite(m.speedFactor)||m.speedFactor<.8||m.speedFactor>1))||(m.terrainDelay!==undefined&&(version<16||(version<22?m.terrainDelay!==1.4:!(version>=31?[.2,1.4,3,4.2,5]:version>=28?[.2,1.4,3,4.2]:[1.4,3,4.2]).includes(m.terrainDelay as number))))||Math.abs(m.end-m.start-(m.terrainDelay as number??0)-TRAVEL_TICKS*edgeLength(m.from as unknown as import('./types.ts').Cell,m.to as unknown as import('./types.ts').Cell)/(m.speedFactor as number??1) )>1e-7 || Math.abs((item.moveCooldown as number)-Math.max(0,m.end-(input.tick as number)))>1e-7) errors.push('Inconsistent travel duration.');
+          else if((m.speedFactor!==undefined&&(version<37||typeof m.speedFactor!=='number'||!Number.isFinite(m.speedFactor)||m.speedFactor<(version>=45?.128:.8)||m.speedFactor>1))||(m.terrainDelay!==undefined&&(version<16||(version<22?m.terrainDelay!==1.4:!(version>=31?[.2,1.4,3,4.2,5]:version>=28?[.2,1.4,3,4.2]:[1.4,3,4.2]).includes(m.terrainDelay as number))))||Math.abs(m.end-m.start-(m.terrainDelay as number??0)-TRAVEL_TICKS*edgeLength(m.from as unknown as import('./types.ts').Cell,m.to as unknown as import('./types.ts').Cell)/(m.speedFactor as number??1) )>1e-7 || Math.abs((item.moveCooldown as number)-Math.max(0,m.end-(input.tick as number)))>1e-7) errors.push('Inconsistent travel duration.');
         }
         const haul = item.haul;
         if(record(haul)&&haul.whole!==undefined&&(version<26||haul.whole!==true||haul.quantity!==1||!record(haul.destination)||!['stockpile','aside'].includes(String(haul.destination.type))))errors.push('Invalid whole furniture haul shape.');
@@ -200,6 +202,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
   if (errors.length) return errors;
   const world = input as unknown as World;
   if(version>=44)errors.push(...validateInterruptedCargo(world));
+  if(version>=45)errors.push(...validatePawnHealth(world));
   errors.push(...validateFurniture(world,version,ids));
   if(!errors.length)errors.push(...validatePower(world,version));
   if(errors.length)return errors;
@@ -286,7 +289,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
           sleepingBeds.add(need.bedId);
         }
         if(version>=22&&need.bedId===null&&!canStandAt(world,need.target)) errors.push('Ground sleep requires a standable cell.');
-        if (need.phase === 'sleep' ? pawn.state !== 'sleeping' || pawn.path.length > 0 || cellKey(pawn) !== cellKey(need.target) : pawn.state !== 'moving') errors.push('Invalid sleep position or phase.');
+        if (need.phase === 'sleep' ? (pawn.state !== 'sleeping' && !(version>=45&&pawn.state==='downed')) || pawn.path.length > 0 || cellKey(pawn) !== cellKey(need.target) : pawn.state !== 'moving') errors.push('Invalid sleep position or phase.');
       } else if (['eating', 'sleeping'].includes(pawn.state)) errors.push('Need action without a task.');
     }
     if(pawn.haul?.whole)errors.push(...validateFurnitureHaul(world,pawn));
@@ -472,6 +475,7 @@ export function deserializeWorld(serialized: string): World {
   if(record(input)&&input.schemaVersion===41){const errors=validateSchema(input,41);if(errors.length)throw new Error('Invalid version 41 save: '+errors.join(' '));input.schemaVersion=42;}
   if(record(input)&&input.schemaVersion===42){const errors=validateSchema(input,42);if(errors.length)throw new Error('Invalid version 42 save: '+errors.join(' '));const w=input as unknown as World;for(const p of w.pawns)p.skills=initialSkills(8,0);input.schemaVersion=43;}
   if(record(input)&&input.schemaVersion===43){const errors=validateSchema(input,43);if(errors.length)throw new Error('Invalid version 43 save: '+errors.join(' '));input.schemaVersion=44;}
+  if(record(input)&&input.schemaVersion===44){const errors=validateSchema(input,44);if(errors.length)throw new Error('Invalid version 44 save: '+errors.join(' '));input.schemaVersion=45;}
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`); return input as World;
 }
 /** Deterministic diagnostic fingerprint, not a cryptographic digest. */
@@ -480,3 +484,5 @@ export function hashWorld(world: World): string {
   for (let index = 0; index < serialized.length; index++) { hash ^= serialized.charCodeAt(index); hash = Math.imul(hash, 0x01000193); }
   return (hash >>> 0).toString(16).padStart(8, '0');
 }
+import { validateMedicalRecord } from './injury-validation.ts';
+import { validatePawnHealth } from './health-save.ts';

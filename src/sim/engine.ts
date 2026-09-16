@@ -286,7 +286,7 @@ function completeJob(world: World, pawn: Pawn, job: Job): void {
     world.structures.push({ ...(isElectrical(job.kind)?{power:newPowerState(job.kind)}:{}),...(job.kind==='door'?{door:builtDoorState(world,job)}:{}),...(job.material?{material:job.material}:{}),...(isFueledBuilding(job.kind)?{fuel:newBuildingFuel(job.kind as import('./types.ts').StructureKind)}:{}),...(job.kind==='campfire'||job.kind==='stonecutter'?{bills:[]}:{}), id: world.nextId++, kind: job.kind as import('./types.ts').StructureKind, x: job.x, z: job.z, orientation: job.orientation, footprint: job.footprint });
   }
   if(job.kind==='wall'||job.kind==='door')autoRoofRooms(world,job);
-  const jobIndex=world.jobs.indexOf(job);if(jobIndex>=0)world.jobs.splice(jobIndex,1); pawn.jobId = null; pawn.path = []; pawn.state = 'idle'; pawn.planCooldown = 0;
+  const jobIndex=world.jobs.indexOf(job);if(jobIndex>=0)world.jobs.splice(jobIndex,1); pawn.jobId = null; pawn.path = []; if(!medicallyStopped(pawn))pawn.state = 'idle'; pawn.planCooldown = 0;
   event(world, 'job', `${pawn.name} a terminé le travail : ${JOB_LABEL[job.kind]}.`); wakePlanners(world);
 }
 const workEnvironments=new WeakMap<World,WorkEnvironmentCache>();
@@ -325,9 +325,12 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     for (let offset = 0; offset < world.pawns.length; offset++) {
       const pawn = world.pawns[((world.tick - 1) + offset) % world.pawns.length]!;
       pawn.moveCooldown = Math.max(0, (pawn.motion?.end ?? world.tick) - world.tick); if (pawn.planCooldown > 0) pawn.planCooldown--;
+      const body=updatePawnHealth(world,pawn);
+      if(pawn.state==='dead')continue;
       tickSkills(world,pawn);
-      updateNeeds(world, pawn);
-      if(pawn.need?.kind==='eat' && pawn.need.dining && !validDiningPlace(world,pawn.need.dining)) {pawn.need.phase='choose-spot';pawn.need.dining=null;pawn.need.progress=0;pawn.path=[];pawn.state='moving';}
+      updateNeeds(world, pawn,body);
+      if(pawn.state==='downed')continue;
+      if(pawn.need?.kind==='eat' && pawn.need.dining && !validDiningPlace(world,pawn.need.dining)) {pawn.need.phase='choose-spot';pawn.need.dining=null;pawn.need.progress=0;delete pawn.need.workRemainder;pawn.path=[];pawn.state='moving';}
       if (pawn.moveCooldown > 0) { pawn.state = pawn.jobId !== null || pawn.haul || pawn.need || pawn.cooking || pawn.recreation.task ? 'moving' : 'idle'; continue; }
       const needsContext = {
         search: (goals?: ReadonlySet<number>) => search(world, pawn, getBlocked(), occupied, budget, goals),
@@ -343,7 +346,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if (pawn.jobId === null && pawn.haul === null && !pawn.cooking && pawn.planCooldown === 0) planWork(world, pawn, getBlocked, occupied, budget);
       if (pawn.haul) { const refueling=pawn.haul.destination.type==='fuel';processHaul(world, pawn, (target, allow) => moveToward(world, pawn, target, allow, getBlocked, budget,false,getLight), () => {wakePlanners(world);if(refueling)invalidateEnvironment();});continue; }
       if(pawn.cooking) {processCooking(world,pawn,{
-        workRate:(station,worker)=>getEnvironment().production(station,worker).total,
+        workRate:(station,worker)=>getEnvironment().production(station,worker).total*physicalWorkFactor(pawn,pawn.cooking?.recipe==='stone-blocks'?'craft':'cook',body),
         candidates:()=>searchCandidates(world,pawn,getBlocked(),occupied,budget),
         search:goals=>search(world,pawn,getBlocked(),occupied,budget,goals),
         move:(target,exact)=>moveToward(world,pawn,target,true,getBlocked,budget,exact,getLight),
@@ -364,7 +367,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
         const plant=world.resources.find(r=>r.id===job.clearance!.resourceId);
         if(!plant){releaseWork(world,pawn);continue;}
         if(adjacent(pawn,plant)) {
-          pawn.path=[];pawn.state='working';advanceWork(job.clearance,getLight().speedAt(pawn));
+          pawn.path=[];pawn.state='working';advanceWork(job.clearance,getLight().speedAt(pawn)*physicalWorkFactor(pawn,'plant',body));
           if(job.clearance.progress>=clearingDuration(plant)) {
             const quantity=gatherResource(world,plant,plant.kind==='tree'?'chop':'cut');
             if(quantity!==null)event(world,'job',`${pawn.name} a dégagé le chantier${plant.kind!=='tree'&&quantity>0?` et a récolté ${quantity} ${plant.kind==='rice'?'riz':'baies'}`:''}.`);
@@ -374,18 +377,18 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
         continue;
       }
       if(job.kind==='sow'&&packedAt(world,job)){releaseWork(world,pawn);continue;}
-      if(job.furniture){if(advanceFurniture(world,pawn,job,target=>moveToward(world,pawn,target,false,getBlocked,budget,false,getLight),()=>releaseWork(world,pawn),()=>constructionWorkRate(pawn,job,getLight().speedAt(pawn)))){blocked=undefined;roofs=undefined;invalidateEnvironment();wakePlanners(world);}continue;}
+      if(job.furniture){if(advanceFurniture(world,pawn,job,target=>moveToward(world,pawn,target,false,getBlocked,budget,false,getLight),()=>releaseWork(world,pawn),()=>constructionWorkRate(pawn,job,getLight().speedAt(pawn),body))){blocked=undefined;roofs=undefined;invalidateEnvironment();wakePlanners(world);}continue;}
       if(job.kind==='deconstruct'&&!deconstructionAvailable(world,job,pawn.id)){releaseWork(world,pawn);continue;}
       if(isConstruction(job)&&(!constructionSupplied(world,job)||!constructionSiteFree(world,job,pawn.id))){releaseWork(world,pawn);continue;}
       if(job.kind==='mine') {
         if(Math.max(Math.abs(pawn.x-job.x),Math.abs(pawn.z-job.z))===1) {
-          if(advanceMining(world,pawn,job,()=>getLight().speedAt(pawn))) {reconcileRoofSupport(world,false,job);world.jobs.splice(world.jobs.indexOf(job),1);pawn.jobId=null;pawn.state='idle';pawn.planCooldown=0;blocked=undefined;roofs=undefined;invalidateEnvironment();wakePlanners(world);event(world,'job',`${pawn.name} a terminé le minage.`);}
+          if(advanceMining(world,pawn,job,()=>getLight().speedAt(pawn)*physicalWorkFactor(pawn,'mine',body))) {world.jobs.splice(world.jobs.indexOf(job),1);pawn.jobId=null;pawn.state='idle';pawn.planCooldown=0;reconcileRoofSupport(world,false,job);reconcilePawnHealth(world,pawn);blocked=undefined;roofs=undefined;invalidateEnvironment();wakePlanners(world);event(world,'job',`${pawn.name} a terminé le minage.`);}
         } else moveToward(world,pawn,job,false,getBlocked,budget,false,getLight);
         continue;
       }
       const cells = footprintCells(job);
       if (cells.some(cell => adjacent(pawn, cell)) && !cells.some(cell => sameCell(pawn, cell))) {
-        pawn.path = []; pawn.state = 'working'; advanceWork(job,constructionWorkRate(pawn,job,getLight().speedAt(pawn)));
+        pawn.path = []; pawn.state = 'working'; advanceWork(job,constructionWorkRate(pawn,job,getLight().speedAt(pawn),body));
         if (job.progress >= jobDuration(world, job)) {completeJob(world, pawn, job);blocked=undefined;roofs=undefined;invalidateEnvironment();}
       } else moveToward(world, pawn, job, false, getBlocked, budget,false,getLight);
     }
@@ -398,3 +401,5 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     updatePlantTemperatures(world,thermal);
   }
 }
+import { updatePawnHealth,reconcilePawnHealth } from './health.ts';
+import { medicallyStopped,physicalWorkFactor } from './health-rules.ts';

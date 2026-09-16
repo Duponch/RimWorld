@@ -89,7 +89,7 @@ Reconnaissance et inspection des enceintes livrées séparément de leur couvert
 
 [Contrat](../development/roofing.md), [relecture Core](../research/roofing-reference.md). Adopter zones distinctes de la couverture, vrais bâtisseurs sans ingrédients, chaîne de supports et retrait physique. Adapter le rayon à notre parcours cardinal, le travail à quatre ticks locaux et le plafond à une dalle 3D masquable. La limite automatique de 320 cases est conservée ; celle de 26 régions dépend du moteur de référence et n’est pas transposée.
 
-Différer toits naturels, HP/santé et gravats, thermique et éclairage des intérieurs. L’effondrement supprime actuellement la couverture et le dit explicitement sans infliger de dégâts ; ce n’est pas la règle définitive de danger. Ces éléments restent dans G2/G3 et dans l’inventaire des manques, sans déclarer l’habitat terminé.
+La toiture V35 différait toits naturels et dommages. V45 ajoute les blessures aux personnes lors d’un effondrement construit ; dommages aux objets et gravats restent absents. Thermique et lumière ont été livrées séparément. [Contrat courant](../development/health.md).
 
 ## V36 — lumière et pièces des recettes
 
@@ -106,3 +106,8 @@ Les recettes reçoivent les facteurs dans cette tranche. Le rendu local est livr
 ### V37 — cadence lumineuse et unités locales
 
 Adopter la lumière au colon, le travail variable, les coups et arêtes capturés. Adapter le report sous-tick à l’horloge 10 Hz ; conserver notre base de marche et nos coûts de recherche neutres, sans les annoncer comme durées Core. Les fractions ne changent pas les matériaux ni les interruptions. La relecture du travail des plantes révèle un facteur de croissance encore absent : dette connue à traiter avec leur calibration. [Recherche et certitude](../research/light-work-reference.md).
+
+
+## Santé active V45
+
+[Référence et décisions](../research/health-reference.md), [contrat](../development/health.md). Adopter corps naturel adulte, incapacités et dégâts construits, sans vie globale. Adapter unités entières, phases et fin d’arête allongée après arrêt des actions. Profil de mort instantanée autorisée par défaut ; pas de réglage de difficulté complet. Différer secours/soins, ramper, capacité quantitative de portage, armures et gestion des dépouilles ; aucune guérison instantanée ne compense ces absences.

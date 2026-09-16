@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 44 as const;
+export const SCHEMA_VERSION = 45 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
@@ -11,7 +11,7 @@ export type JobKind = 'build-roof' | 'remove-roof' | 'mine' | 'chop' | 'harvest'
 export type WorkType = 'mine' | 'gather' | 'build' | 'haul' | 'grow' | 'cook' | 'craft';
 export type Orientation = 0 | 1 | 2 | 3;
 export type Footprint = 'standard' | 'legacy-single';
-export type PawnState = 'idle' | 'moving' | 'working' | 'sleeping' | 'hungry' | 'eating' | 'recreating';
+export type PawnState = 'idle' | 'moving' | 'working' | 'sleeping' | 'hungry' | 'eating' | 'recreating' | 'downed' | 'dead';
 export interface Cell { x: number; z: number }
 export interface Tile { ore?: 'steel' | 'machinery'; miningDamage?: number; terrain: Terrain; stone?: import('./geology.ts').StoneKind }
 export interface Resource extends Cell { id: number; kind: ResourceKind; amount: number; growth?: number; growthTick?: number; growthThermalFactor?:number; stone?: import('./geology.ts').StoneKind }
@@ -38,7 +38,7 @@ export interface HaulTask {
 export interface DiningPlace { target: Cell; seatId: number | null; tableId: number | null }
 export interface Memory { kind: 'ate-without-table' | 'ate-raw-food'; expiresAt: number }
 export type NeedTask =
-  | { kind: 'eat'; phase: 'pickup' | 'choose-spot' | 'travel' | 'ingest'; sourcePileId: number; carryPileId: number | null; quantity: number; progress: number; dining: DiningPlace | null }
+  | { kind: 'eat'; phase: 'pickup' | 'choose-spot' | 'travel' | 'ingest'; sourcePileId: number; carryPileId: number | null; quantity: number; progress: number; workRemainder?:number; dining: DiningPlace | null }
   | { kind: 'sleep'; phase: 'travel' | 'sleep'; bedId: number | null; target: Cell };
 export interface Job extends Cell {
   /** Captured Core ticks for the current pick stroke; light changes affect the next. */
@@ -63,6 +63,9 @@ export interface Job extends Cell {
   escrow: Stock;
 }
 export interface Pawn extends Cell {
+  health?: import('./injury-types.ts').MedicalRecord;
+  /** Actual sleep while incapacitated, separate from lying posture. */
+  medicalSleep?:true;
   /** Involuntary task release retained one undroppable object, not an inventory. */
   interruptedCargo?: true;
   skills: import('./skills.ts').PawnSkills;

@@ -83,19 +83,21 @@ export function autoRoofRooms(world: World, at: Cell): void {
   if(cells.size)designateRoofArea(world,[...cells],'build-roof');
 }
 
-/** Loss of support removes constructed coverage; damage awaits health/HP.
+/** Loss of support removes constructed coverage and damages people below.
  * Re-evaluate until stable because one lost connection can expose another. */
 export function reconcileRoofSupport(world: World, removal = false, lostSupport?: Cell): number {
   const state=world.roofing;if(!state?.constructed.length)return 0;
-  let removed=0;
+  let removed=0;const collapsed=new Set<number>();
   for(;;) {
     const context=new RoofContext(world), connected=context.connectedRoofs();
     const retained=state.constructed.filter(i=>connected.has(i) && (removal || lostSupport && (i%world.width-lostSupport.x)**2+(Math.floor(i/world.width)-lostSupport.z)**2>6.9**2 || context.supported(i)));
     if(retained.length===state.constructed.length)break;
+    const kept=new Set(retained);for(const cell of state.constructed)if(!kept.has(cell))collapsed.add(cell);
     removed+=state.constructed.length-retained.length;setConstructedRoofs(world,retained);
   }
   if(removed&&!removal) {
-    world.events.push({tick:world.tick,type:'job',message:`Effondrement : ${removed} case(s) de toit sans support. Les dégâts ne sont pas encore simulés.`});
+    damageFromRoofCollapse(world,collapsed);
+    world.events.push({tick:world.tick,type:'job',message:`Effondrement : ${removed} case(s) de toit sans support.`});
     if(world.events.length>80)world.events.splice(0,world.events.length-80);
   }
   reconcileRoofJobs(world);return removed;
@@ -117,3 +119,4 @@ export function finishRoofJob(world: World, job: Job): void {
     setConstructedRoofs(world,[...context.roof].sort((a,b)=>a-b));
   }
 }
+import { damageFromRoofCollapse } from './roof-damage.ts';

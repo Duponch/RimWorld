@@ -50,7 +50,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 44 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 45 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)
@@ -146,7 +146,7 @@
 ## Toiture construite V35
 - Lire docs/development/roofing.md et docs/research/roofing-reference.md. Couverture, zone de pose et zone de retrait sont distinctes du sol ; V34 validée avant migration sans toit inventé. Rayon de pose 6,9 avec connexion ; retrait volontaire par composantes sans rayon ; perte d’un support recontrôle la portée locale. Les meubles ordinaires ne sont pas porteurs.
 - Travaux Construction sans matériau/cadre, vrais trajets et défrichage, file réconciliée ; les intentions non réservées tournent pour éviter la monopolisation par des cibles inaccessibles. Les contextes ne survivent ni au tick ni à une mutation de couverture/support. Checkpointer la croissance avant modification du toit.
-- Deux lots graphiques préparés même vides, programmes stables ; masquer la toiture ne change pas World. Toits naturels et dommages/gravats d’effondrement restent absents ; V38 ajoute la thermique et V36 ajoute les facteurs intérieurs de production, avec éclairage local 3D dans la tranche de présentation suivante. Le pilote couvre 28 cases autour du repas sans couvrir le champ.
+- Deux lots graphiques préparés même vides, programmes stables ; masquer la toiture ne change pas World. V45 ajoute les blessures de toit aux personnes ; toits naturels, dommages aux objets et gravats restent absents ; V38 ajoute la thermique et V36 ajoute les facteurs intérieurs de production, avec éclairage local 3D dans la tranche de présentation suivante. Le pilote couvre 28 cases autour du repas sans couvrir le champ.
 
 ## Lumière et production V36
 
@@ -203,7 +203,7 @@
 ## Compétences V43
 
 - Lire docs/development/skills.md et sa recherche. Construction est la première compétence branchée, pas une personnalité complète. Milli-XP entières, saturation strictement après 4000 XP nets, dette −1000 avant perte de niveau, cadence déphasée et remise à zéro sauvegardée.
-- Gains seulement en finition de cadre approvisionné et déconstruction à coût ; pas pendant trajet, transport, dégagement, toiture ou désinstallation. Ces deux derniers travaux utilisent néanmoins la vitesse. Les anciennes durées restent explicitement calibrées ; qualité/échecs, seuils, capacités, humeur de passion et autres compétences demeurent ouverts.
+- Gains seulement en finition de cadre approvisionné et déconstruction à coût ; pas pendant trajet, transport, dégagement, toiture ou désinstallation. Ces deux derniers travaux utilisent néanmoins la vitesse. Les anciennes durées restent explicitement calibrées ; qualité/échecs, seuils, humeur de passion et autres compétences demeurent ouverts ; capacités physiques livrées V45.
 - V42 strictement validée avant profil 8/sans passion/0 XP et dernière remise inconnue (-1), sans passé inventé ni modification des routes/ressources. Cloner profondément skills dans les fixtures de foule. La ROADMAP privilégie désormais corps/capacités, soins puis équipement/combat avant de poursuivre les appareils électriques.
 
 - Emprises V43 : le rejet rapide de `footprintContains` suppose les branches actuelles dans le voisinage immédiat de l’ancre. Étendre sa borne lors de futurs volumes et conserver la comparaison de tout le catalogue/rotations/enveloppes contre `footprintCells`. Les directions de sortie sont constantes, sans changer leur ordre.
@@ -211,12 +211,19 @@
 ## Interruptions V44
 
 - Lire docs/development/interrupted-cargo.md. Une interruption involontaire libère les engagements même si le dépôt échoue ; Pawn.interruptedCargo conserve un seul objet, jamais un inventaire. Sommeil/réveil et pourriture continuent, travail bloqué jusqu’au dépôt proche. Les commandes volontaires gardent leur refus atomique.
-- V43 strictement validée avant migration sans marqueur inventé. Le nouveau marqueur est une phase observée par le bridge ; arêtes capturées terminées avant effondrement de fatigue, arrêt médical immédiat encore absent.
+- V43 strictement validée avant migration sans marqueur inventé. Le nouveau marqueur est une phase observée par le bridge ; arêtes capturées terminées avant effondrement de fatigue, arrêt médical immédiat ajouté en V45 selon son contrat.
 - Les index de cellules de piles ne survivent qu’à une décision de dépôt. Tentatives déphasées, vingt ticks entre échecs ; commandes explicites peuvent réveiller la planification. Conserver ordre des cellules, quantités, identités, âge et meuble entier.
 
-## Module médical isolé sous V44
+## Module médical, intégré sous V45
 
-- Lire docs/development/injuries.md et sa recherche avant intégration. Aucun champ médical de Pawn ni dommage jouable : conserver cette distinction. Le module reçoit un impact déjà localisé/résolu, pas les dégâts bruts d’une arme ou d’un toit.
+- Lire docs/development/injuries.md, docs/development/health.md et leurs recherches. Pawn.health est actif en V45 ; soins physiques et combat restent absents. Le module reçoit un impact déjà localisé/résolu, pas les dégâts bruts d’une arme ou d’un toit.
 - Milli-PV et unités sanguines entières ; racines manquantes sans descendants redondants ; Cut ne fusionne pas, Crush peut fusionner. Famine bloque guérison naturelle et contribution du soin ; cicatrices décidées avant guérison, douleur permanente activée au seuil.
-- `MedicalRecord.tick` est figé au décès. L’appelant doit couper les intervalles aux changements de contexte ; la future intégration doit appliquer interruptions et présentation au tick effectif. Validation du dossier isolé ne vaut pas validation/migration de World.
+- `MedicalRecord.tick` est figé au décès. L’appelant doit couper les intervalles aux changements de contexte ; l’intégration applique interruptions et présentation au tick effectif. Validation du dossier isolé ne vaut pas validation/migration de World.
 - Le seuil sanguin de 0,1/jour suit le miroir identifié, malgré la formulation générale du wiki ; stade extrême = offset −0,4 et plafond 0,1, ne pas restaurer le vieux XML. Aucun cache d’anatomie par frame ; copies des dossiers très chargés restent un coût à traiter à l’intégration worker.
+
+
+## Santé active V45
+
+- V44 validée strictement avant migration sans dossier inventé. Santé sparse, horloge vivante au tick World, dossier figé au décès. Incapacité libère immédiatement engagements/file/services ; cargo indéposable conservé. Ne jamais réactiver un blessé depuis releaseAssignments ou un nettoyage de fin de job.
+- Fin de l’arête capturée pendant la chute = adaptation 3D explicite ; aucun nouveau pas ni travail. Repos et guérison allongée après arrêt. medicalSleep distingue sommeil et posture, doit être sauvegardé. Un lit n’est gardé que s’il était réellement utilisé.
+- Réutiliser les capacités uniquement dans la décision courante après évolution médicale, pas entre ticks ni après dommage. Dégâts de toiture construite Top/Outside/Crush, distincts de Blunt et montagnes ; retrait volontaire sans blessure. Cadavre encore Pawn sur place, aucun transport de dépouille implicite.

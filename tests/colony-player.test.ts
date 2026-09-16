@@ -29,6 +29,7 @@ test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp const
         expect(validateWorld(world),context).toEqual([]);expect(woodAccount(world),context).toBe(initialWood);
         expect(foodAccount(world)+consumed+9*cooked,context).toBe(initialFood+produced);
         expect(world.pawns.every(p=>p.hunger>0 && p.rest>0),context).toBe(true);
+        expect(world.pawns.every(p=>p.state!=='dead'&&p.state!=='downed'&&!p.health?.injuries.length&&!p.health?.missing.length),context).toBe(true);
       }
       if (world.tick % 6000 === 0) {
         report.push(colonySummary(world));

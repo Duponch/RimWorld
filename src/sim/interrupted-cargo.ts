@@ -1,4 +1,5 @@
 import { releaseFurniture } from './furniture-transfer.ts';
+import { pawnBody } from './health-rules.ts';
 import { clearQueuedOrders } from './player-orders.ts';
 import { commitDrop,releaseAssignments,releaseWork } from './work-release.ts';
 import type { Pawn,World } from './types.ts';
@@ -34,7 +35,7 @@ export function validateInterruptedCargo(world:World):string[] {
     const owners=world.piles.filter(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id).length
       +world.packed.filter(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id).length;
     if(owners!==1||pawn.jobId!==null||pawn.haul||pawn.cooking||pawn.recreation.task||pawn.orders.active!==null||pawn.orders.queue.length||pawn.priorityWork
-      ||pawn.path.length||pawn.moveCooldown>0||pawn.transitExit||pawn.need&&(pawn.need.kind!=='sleep'||pawn.need.phase!=='sleep')||!['sleeping','idle','hungry'].includes(pawn.state))errors.push('Invalid interrupted cargo ownership or task.');
+      ||pawn.path.length||pawn.moveCooldown>0&&!(world.schemaVersion>=45&&(pawn.state==='downed'||pawn.state==='dead'||pawnBody(pawn).capacities.manipulation===0))||pawn.transitExit||pawn.need&&(pawn.need.kind!=='sleep'||pawn.need.phase!=='sleep')||!['sleeping','idle','hungry',...(world.schemaVersion>=45?['downed','dead']:[])].includes(pawn.state))errors.push('Invalid interrupted cargo ownership or task.');
   }
   return errors;
 }

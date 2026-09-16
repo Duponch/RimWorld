@@ -77,6 +77,7 @@ export function canReach(world: World, target: Cell & { kind?: JobKind }, reacha
   return false;
 }
 export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, occupied: ReadonlySet<number>, budget: SearchBudget): void {
+  if(medicalWorkRefusal(pawn)){pawn.planCooldown=20;return;}
   // Never enumerate logistics after another colonist exhausted the shared search budget.
   if (budget.remaining === 0 || budget.pairs === 0) return;
   const productionRank=productionPriority(world,pawn),cooking=productionRank<5;
@@ -237,3 +238,4 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
     pawn.path = path; pawn.state = path.length ? 'moving' : 'working'; return;
   }
 }
+import { medicalWorkRefusal } from './health-rules.ts';

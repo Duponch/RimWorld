@@ -14,13 +14,13 @@ V38 ajoute des propriétés au contenu existant, sans nouvel objet : chaleur du 
 
 V37 étend les effets des feux/toits existants aux travaux et déplacements ; aucun nouvel objet. Le catalogue reste ouvert, notamment plantes, terrains et éclairages supplémentaires.
 
-Le feu présent éclaire maintenant aussi le décor et les colons en 3D ; aucun nouvel objet lumineux. Torches, lampes électriques et lumières horticoles restent absentes. [Présentation](../development/environment-lighting.md).
+Le feu présent éclaire maintenant aussi le décor et les colons en 3D ; aucun nouvel objet lumineux. Lampe électrique livrée V42 ; torches et lumières horticoles restent absentes. [Présentation](../development/environment-lighting.md).
 
 V36 enrichit les propriétés des objets existants : lumière logique du feu allumé, rôle de lit/table/piquet/atelier et facteurs des deux recettes. Aucun nouvel objet ni catalogue lumineux complet. [Contrat](../development/work-environment.md).
 
-V35 ajoute une famille de **toit construit**, couche de couverture indépendante des objets/piles et sans recette matérielle. Zones Construire/Retirer/Ignorer, supports et présentation procédurale livrés ; toits naturels minces/épais, colonnes porteuses, gravats et dégâts restent absents. [Contrat](../development/roofing.md).
+V35 ajoute une famille de **toit construit**, couche de couverture indépendante des objets/piles et sans recette matérielle. Zones Construire/Retirer/Ignorer, supports et présentation procédurale livrés ; toits naturels minces/épais, colonnes porteuses, gravats et dégâts aux objets restent absents ; blessures de toit construit aux personnes livrées V45. [Contrat](../development/roofing.md).
 
-État du 15 septembre 2026. Le jeu de base complet, y compris ses centaines d'objets et leurs variantes, reste la cible. Le bilan par [système](implementation-status.md) ne suffit pas à suivre ce contenu. Ce document distingue ce que contient notre référence et ce qui existe dans le jeu développé.
+État du 16 septembre 2026. Le jeu de base complet, y compris ses centaines d'objets et leurs variantes, reste la cible. Le bilan par [système](implementation-status.md) ne suffit pas à suivre ce contenu. Ce document distingue ce que contient notre référence et ce qui existe dans le jeu développé.
 
 V24 permet de déconstruire les six bâtiments existants. V25 ajoute désinstallation et réinstallation de lit, table, tabouret et piquet sous forme entière ; **aucune nouvelle famille d’objet**. Le paquet conserve le bâtiment et son identité ; V26 ajoute rangement filtré, dégagement et réinstallation par Transport ; masse, qualité et dégâts restent absents. La présence de ces familles ne clôt ni leurs variantes ni les centaines de définitions attendues.
 
@@ -142,7 +142,7 @@ Nouvelle famille `door`, sept variantes : bois, acier, granite, calcaire, marbre
 
 ## Corps humain : socle encore non actif
 
-[Définition anatomique](../../src/sim/body-definition.ts) : 64 entrées dont un emplacement utilitaire conceptuel, parties symétriques, organes et doigts/orteils. Il ne s’agit ni de 64 objets transportables ni d’un inventaire médical déjà jouable. [Capacités et limites](../development/body.md). Quatre profils de lésions sont codés dans le [module médical isolé](../development/injuries.md) : coupure, écrasement, fissure, contusion ; ce ne sont pas des objets ni un catalogue médical complet. Autres races/corps, implants, pathologies, blessures persistantes de Pawn et équipement restent absents du contenu actif.
+[Définition anatomique](../../src/sim/body-definition.ts) : 64 entrées dont un emplacement utilitaire conceptuel, parties symétriques, organes et doigts/orteils. Il ne s’agit ni de 64 objets transportables ni d’un inventaire médical déjà jouable. [Capacités et limites](../development/body.md). Quatre profils de lésions sont codés dans le [module médical](../development/injuries.md) : coupure, écrasement, fissure, contusion ; ce ne sont pas des objets ni un catalogue médical complet. V45 active les blessures persistantes de Pawn et les chutes de toit construit. Autres races/corps, implants, pathologies, médicaments utilisables et équipement restent absents du contenu actif. Une dépouille est encore le Pawn décédé, pas un nouvel objet transportable.
 
 ## Cargaison interrompue V44
 

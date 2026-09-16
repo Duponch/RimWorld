@@ -85,7 +85,7 @@ Un jour dure dix minutes à vitesse normale (6 000 ticks). Le compteur FPS mesur
 
 En vue très éloignée, les détails minuscules du décor sont remplacés par des silhouettes plus légères. Le terrain, les obstacles et les ordres restent les mêmes. Le compteur FPS continue de mesurer le rendu, y compris en pause.
 
-Les massifs ont maintenant des sommets et parois irréguliers qui se raccordent entre cases. Ils gardent leurs obstacles au sol. Le minage retire les cases localement, révèle le sol brut et conserve les fragments typés ; les toits naturels et dégâts d’effondrement restent absents ; la couverture construite est disponible.
+Les massifs ont maintenant des sommets et parois irréguliers qui se raccordent entre cases. Ils gardent leurs obstacles au sol. Le minage retire les cases localement, révèle le sol brut et conserve les fragments typés ; les toits naturels restent absents ; perdre un support de toit construit peut désormais blesser les colons ; la couverture construite est disponible.
 
 ## Désigner et construire
 
@@ -175,7 +175,7 @@ Une valeur de nourriture élevée signifie que le colon est rassasié. À 30 ou 
 
 Sous 30 de repos en plage Libre, ou sous 75 en plage Sommeil, le colon termine son travail engagé puis rejoint son lit accessible ou s’attribue un lit libre. Une plage Travail empêche le départ volontaire au lit et réveille un dormeur ayant au moins 20 de repos. La réservation est exclusive et le sommeil commence une fois arrivé ; le personnage est allongé sur le matelas dans son orientation réelle. Inspecter un lit permet de modifier son propriétaire. Sans couchage utilisable, il dort au sol ; l'épuisement peut aussi interrompre le trajet. Il se réveille une fois reposé à 100, ou pour une faim critique si une portion accessible existe. Il ne mange jamais en dormant et un lit voisin ne donne aucun bonus. Le confort augmente progressivement pendant l’utilisation du lit ou d’un tabouret, jusqu’au plafond du meuble, puis baisse en dehors de son utilisation. L’humeur combine encore les besoins avec ces premiers effets ; les autres pensées, relations et crises mentales restent absentes.
 
-Les personnages provisoires possèdent des animations de marche, travail, ingestion debout/assise et sommeil calculées sur le GPU. Le profil adulte consomme au rythme de base de 1,6 nutrition/jour, réduit sous les seuils de faim ; traits et santé ne sont pas encore simulés. Voir [les aliments](../development/food-items.md) et le [catalogue de contenu](content-catalogue.md).
+Les personnages provisoires possèdent des animations de marche, travail, ingestion debout/assise et sommeil calculées sur le GPU. Le profil adulte consomme au rythme de base de 1,6 nutrition/jour, réduit sous les seuils de faim ; traits absents, capacités physiques et blessures intégrées V45. Voir [les aliments](../development/food-items.md) et le [catalogue de contenu](content-catalogue.md).
 
 Les colons choisissent les aliments accessibles en tenant compte du goût et de la distance. Des baies fraîches proches peuvent être préférées à une ration de survie ; le riz cru est moins apprécié, mais reste consommé lorsque les alternatives sont trop loin ou inaccessibles. Un aliment qui va pourrir dans moins d’une demi-journée bénéficie d’une préférence supplémentaire, tout en tenant compte du trajet. Les autorisations du régime sont appliquées avant ces préférences, y compris si la faim devient critique.
 
@@ -203,7 +203,7 @@ Avant de créer une nouvelle colonie, le jeu conserve aussi l'état courant dans
 
 ## Limites et suite
 
-Pas encore d'autres cultures, autres postes/recettes de cuisine, chaîne du froid, autres minerais que l’acier et les machines compactées, autres familles de loisirs, animaux, armes, combat, blessures, médecine, relations, traits, recherche, commerce, câbles/batteries/interrupteurs électriques, toit naturel, santé thermique, incendie, météo dynamique, carte du monde ou storyteller. Les coûts de sols et autres profils de déplacement, les réserves à plusieurs cases partageant une politique, les autres familles sélectionnables, les fournisseurs supplémentaires de travail lié sur une case et les tournées logistiques restent à développer. Les modèles sont provisoires ; la congestion entre agents actifs et la calibration des besoins restent ouvertes. La faim ne cause pas encore de malnutrition ni de décès.
+Pas encore d'autres cultures, autres postes/recettes de cuisine, chaîne du froid, autres minerais que l’acier et les machines compactées, autres familles de loisirs, animaux, armes, combat, médecine, relations, traits, recherche, commerce, câbles/batteries/interrupteurs électriques, toit naturel, santé thermique, incendie, météo dynamique, carte du monde ou storyteller. Les coûts de sols et autres profils de déplacement, les réserves à plusieurs cases partageant une politique, les autres familles sélectionnables, les fournisseurs supplémentaires de travail lié sur une case et les tournées logistiques restent à développer. Les modèles sont provisoires ; la congestion entre agents actifs et la calibration des besoins restent ouvertes. La faim ne cause pas encore de malnutrition ni de décès.
 
 La suite est suivie dans [le plan de développement](../ROADMAP.md). Les détails de la référence et les futures interactions sont dans [la matrice des systèmes](systems-matrix.md).
 
@@ -293,7 +293,7 @@ Dans **Architecte → Zones**, tracer **Construire un toit**. Les bâtisseurs re
 
 **Retirer un toit** commande son retrait et empêche sa repose automatique. **Ignorer le toit** efface les zones sans enlever la couverture. Le bouton **Toits : masqués/visibles** change seulement la vue. L’inspection indique les cases couvertes, indépendamment de ce bouton.
 
-Le riz et les baies ne poussent plus sans soleil sous un toit ; les colons cherchent ailleurs pour regarder le ciel. Les pièces ont une température locale et les ateliers tiennent compte de leur milieu. Les dégâts thermiques sur les plantes restent à développer avant les contenus froids/chauds. Retirer un support peut supprimer la couverture : l’événement précise que les dégâts d’effondrement ne sont pas encore simulés. Les toits naturels des montagnes ne sont pas présents.
+Le riz et les baies ne poussent plus sans soleil sous un toit ; les colons cherchent ailleurs pour regarder le ciel. Les pièces ont une température locale et les ateliers tiennent compte de leur milieu. Les dégâts thermiques sur les plantes restent à développer avant les contenus froids/chauds. Retirer un support peut faire tomber la couverture et blesser les colons dessous. Les dégâts aux objets et les gravats restent absents. Les toits naturels des montagnes ne sont pas présents.
 
 ## Éclairer les ateliers
 
@@ -316,3 +316,12 @@ Les couleurs chaudes servent à lire la scène : consultez l’inspection pour l
 La lumière agit aussi sur l’abattage, les récoltes, les semis, les constructions/retraits et les toits : 80 % du rythme dans le noir, retour à 100 % dès 30 % de lumière. Éclairer le colon compte ; éclairer seulement sa cible ne suffit pas. L’inspection indique ce facteur, distinct des autres propriétés encore absentes.
 
 Les mineurs préparent leurs coups plus lentement dans le noir. Les colons marchent aussi plus lentement, y compris pour porter un objet, manger ou rejoindre leur lit. Un coup ou un passage déjà engagé conserve sa cadence ; le suivant prend le nouvel éclairage. Les besoins et quantités produites ne sont pas eux-mêmes réduits de 20 %.
+
+
+## Blessures et incapacité
+
+Évitez de déconstruire ou miner le dernier appui d’un toit construit sous lequel se trouvent des colons. Retirez d’abord la toiture depuis Architecte. Un effondrement peut causer des lésions, une hémorragie ou une perte de partie corporelle. Sélectionnez le colon : **Santé** affiche ses blessures, sa douleur, son sang perdu et ses principales capacités. Les alertes signalent blessés à terre et saignements.
+
+Une blessure peut ralentir déplacements, travaux et ingestion. Un colon à terre cesse ses actions et conserve sa cargaison si le sol empêche le dépôt. Il reste dans son lit seulement s’il l’utilisait déjà. Les blessures non permanentes guérissent progressivement, avec avantage à la posture allongée et au lit réel ; la famine bloque cette guérison. Les cicatrices et parties perdues persistent. **Les secours et soins par un médecin ne sont pas encore disponibles**, pas plus que ramper vers un lit.
+
+Un colon décédé reste visible et inspectable sur place, sans agir. Transport des dépouilles, enterrement et décomposition seront ajoutés. La santé thermique, la malnutrition, les maladies et les blessures de combat restent également à développer.

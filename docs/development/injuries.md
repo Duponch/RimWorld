@@ -1,6 +1,6 @@
-# Module des lésions sous V44
+# Module des lésions
 
-**Codé et testé, encore absent de la partie.** `MedicalRecord` n’est pas un champ de `Pawn`. Aucun producteur de dommage ni commande de soin n’est exposé ; le schéma de sauvegarde du monde reste 44. [Recherche](../research/injuries-reference.md), [anatomie](body.md), [ordre de livraison](../ROADMAP.md).
+**Actif en V45 via le [contrat de santé](health.md).** Le module isolé initial V44 reste séparé de la propriété World ; `Pawn.health` et `health-save.ts` ajoutent horloge, activité et migration stricte. Premier dommage : toiture construite. Aucune commande de soin encore exposée. [Recherche du module](../research/injuries-reference.md).
 
 ## Responsabilités
 
@@ -20,12 +20,12 @@ Les PV utilisent des millièmes entiers. Douleur et évolution sanguine utilisen
 
 60 ticks Core deviennent six ticks du jeu ; 600 deviennent 60, en préservant le jour de 6 000 ticks. Le propriétaire fournit une phase stable 0..59, une posture effective et l’état de famine. L’intervalle doit être coupé dès qu’ils changent. La posture `bed` signifie un lit réellement utilisé ; ce module ne prouve pas son accès. Le bonus de soin est une seconde sélection après guérison naturelle, et non une distribution à toutes les lésions. Les résultats `tendInjury`/`tendMissingPart` sont des opérations physiologiques internes, **pas des commandes de soin à distance**.
 
-Le dossier sain avance sans parcours anatomique. Le passage d’un seuil sanguin réévalue le risque vital ; les variations entre seuils ne recalculent pas toutes les capacités. Une lésion ajoutée réévalue immédiatement ce risque. Après décès, dossier et horloge médicale sont figés ; le propriétaire conserve l’identité et prend en charge dépouille, cargaison et notifications. Le module ne supprime aucun colon et ne crée aucun cadavre. `downed` et `mobile` sont dérivés, pas des poses ni des autorisations de travail déjà branchées.
+Le dossier sain avance sans parcours anatomique. Le passage d’un seuil sanguin réévalue le risque vital ; les variations entre seuils ne recalculent pas toutes les capacités. Une lésion ajoutée réévalue immédiatement ce risque. Après décès, dossier et horloge médicale sont figés ; le propriétaire conserve l’identité et prend en charge dépouille, cargaison et notifications. Le module ne supprime aucun colon et ne crée aucun cadavre. `downed` et `mobile` sont dérivés ; `health.ts` les applique maintenant aux actions et à la présentation.
 
 ## Validation et limites
 
 Huit scénarios de blessures, plus sept d’anatomie : seuils, côtés, organes/solides, racines perdues, coagulation, guérison par posture et famine, soin nul/élevé, cicatrices permanentes, dégâts létaux progressifs et arrêt irréversible. Le parcours de plusieurs jours couvre chaque partie non conceptuelle, sauvegarde JSON du dossier **et du PRNG**, puis continuation en lot contre pas unitaires. Il s’agit d’une validation du module, pas de la sauvegarde du monde ou d’une partie joueur médicale.
 
-Le banc `scripts/injury-bench.ts` mesure 3/30/100 dossiers, 0/1/20/100 petites coupures, phases réparties et copies séparées. La famine imposée maintient les plaies pendant la mesure ; il ne mesure ni une charge de soins, ni navigation, worker ou GPU. [Mesures et limites](validation.md#module-médical-isolé--16-septembre).
+Le banc `scripts/injury-bench.ts` mesure 3/30/100 dossiers, 0/1/20/100 petites coupures, phases réparties et copies séparées. La famine imposée maintient les plaies pendant la mesure ; il ne mesure ni une charge de soins, ni navigation, worker ou GPU. [Mesures et limites](../history/validation-health-preparation-v44.md#module-médical-isolé--16-septembre).
 
-Prochaine intégration : version explicite du monde et validation de l’ancienne version ; arrêt médical pendant une arête, suppression des engagements, conservation des objets, pose à terre/décès appliquée au même tick ; inspection santé ; consommateurs distincts pour marche/travaux ; premier dommage de toit avec résolution complète. Puis secours, soins physiques et alimentation du patient. Infections, maladies/immunité, prothèses, autres blessures et blessures non destructrices de bagarre restent absentes. Les adaptations de ce module ne clôturent aucun de ces systèmes.
+Intégration au monde, sauvegarde, interruption et premiers dommages livrés en [V45](health.md), avec ses adaptations explicites. Prochaine tranche : secours, soins physiques et alimentation du patient. Infections, maladies/immunité, prothèses, autres blessures et blessures non destructrices de bagarre restent absentes. Les adaptations de ce module ne clôturent aucun de ces systèmes.

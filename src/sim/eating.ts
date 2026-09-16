@@ -1,4 +1,6 @@
 import { copyRot } from './food-preservation.ts';
+import { physicalEatingFactor } from './health-rules.ts';
+import { advanceWork } from './work-progress.ts';
 import { nutritionOf, ITEM_DEFINITIONS } from './items.ts';
 import { adjacent } from './pathfinding.ts';
 import { reservedSource } from './materials.ts';
@@ -30,7 +32,7 @@ export function processEating(world: World, pawn: Pawn, context: NeedContext): v
   }
   if (pile.owner.type !== 'pawn' || pile.owner.pawnId !== pawn.id || pile.quantity !== task.quantity) { context.release(); return; }
   if (task.dining && !validDiningPlace(world, task.dining)) {
-    task.phase = 'choose-spot'; task.dining = null; task.progress = 0;
+    task.phase = 'choose-spot'; task.dining = null; task.progress = 0;delete task.workRemainder;
     pawn.path = []; pawn.state = 'moving'; pawn.needCooldown = 0;
   }
   if (task.phase === 'choose-spot') {
@@ -47,7 +49,8 @@ export function processEating(world: World, pawn: Pawn, context: NeedContext): v
     return;
   }
   pawn.state = 'eating';
-  if (++task.progress >= INGEST_TICKS) {
+  advanceWork(task,physicalEatingFactor(pawn));
+  if (task.progress >= INGEST_TICKS) {
     world.piles.splice(world.piles.indexOf(pile), 1);
     pawn.hunger = Math.min(100, pawn.hunger + nutritionOf(pile));
     const atTable = adjacentTable(world, pawn) !== null;

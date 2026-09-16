@@ -45,12 +45,13 @@ export function usesConstructionSkill(job:Job):boolean {
   return !job.clearance&&(isConstruction(job)||job.kind==='deconstruct'||job.kind==='uninstall'||job.kind==='install'||job.kind==='build-roof'||job.kind==='remove-roof');
 }
 /** Called only at the physically reached, executable work phase. */
-export function constructionWorkRate(pawn:Pawn,job:Job,light:number):number {
-  if(!usesConstructionSkill(job))return light;
+export function constructionWorkRate(pawn:Pawn,job:Job,light:number,body?:import('./body-capacities.ts').BodyAssessment):number {
+  if(!usesConstructionSkill(job))return light*physicalWorkFactor(pawn,'plant',body);
   // Learning precedes the stat query, as in ConstructFinishFrame.
   if(job.kind==='deconstruct'||isConstruction(job)&&!job.furniture) {
     const recipe=job.kind==='deconstruct'&&job.deconstruction ? constructionRecipe(job.deconstruction) : constructionRecipe(job);
     if(recipe.ingredients.length>0)learnSkill(pawn.skills.construction,2500);
   }
-  return light*constructionSpeed(pawn);
+  return light*constructionSpeed(pawn)*physicalWorkFactor(pawn,'build',body);
 }
+import { physicalWorkFactor } from './health-rules.ts';

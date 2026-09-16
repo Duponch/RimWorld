@@ -59,6 +59,7 @@ function route(world:World,pawn:Pawn,job:Job):Cell[]|null {
   return routeToJob(world,clearingPlant(world,job)??furnitureWorkTarget(world,job),reachableCells(world,pawn,blockedCells(world),new Set(),goals(world,job)),false);
 }
 function preflight(world:World,pawn:Pawn,job:Job,queue=false):string|undefined {
+  const medical=medicalWorkRefusal(pawn);if(medical)return medical;
   if(pawn.interruptedCargo)return 'Ce colon doit d’abord déposer sa cargaison interrompue. Libérez une case de sol à proximité.';
   if(pawn.collapsePending || world.restRules==='legacy'&&pawn.rest===0) return 'Ce colon doit récupérer de son épuisement.';
   if(pawn.jobId===job.id || queue&&pawn.orders.queue.includes(job.id)) return 'Ce travail est déjà attribué à ce colon.';
@@ -95,7 +96,7 @@ export function queryOrderOptions(world:World,pawnId:number,cell:Cell,queue=fals
   }
   return options;
 }
-const exhausted=(world:World,pawn:Pawn)=>pawn.interruptedCargo?'Ce colon doit d’abord déposer sa cargaison interrompue. Libérez une case de sol à proximité.':pawn.collapsePending||world.restRules==='legacy'&&pawn.rest===0?'Ce colon doit récupérer de son épuisement.':undefined;
+const exhausted=(world:World,pawn:Pawn)=>medicalWorkRefusal(pawn)??(pawn.interruptedCargo?'Ce colon doit d’abord déposer sa cargaison interrompue. Libérez une case de sol à proximité.':pawn.collapsePending||world.restRules==='legacy'&&pawn.rest===0?'Ce colon doit récupérer de son épuisement.':undefined);
 function orderView(world:World,pawn:Pawn,queue:boolean):World {
   if(queue)return world;
   return {...world,pawns:world.pawns.map(p=>p!==pawn?p:{...p,haul:null,need:null,cooking:null,orders:{active:null,queue:[]}})};
@@ -226,3 +227,4 @@ export function advanceOrders(world:World,pawn:Pawn,getBlocked:NavigationGrid,bu
   }
   return false;
 }
+import { medicalWorkRefusal } from './health-rules.ts';

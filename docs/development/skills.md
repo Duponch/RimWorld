@@ -16,7 +16,7 @@ Vitesse Construction = `0,30 + 0,0875 × niveau`, multipliée séparément par l
 
 Les quantités, réservations, propriétaires et trajets restent ceux des contrats existants. Le compte d'XP ne dépend pas du travail produit : un débutant lent travaille plus longtemps pour un ouvrage, et peut donc en retirer davantage d'expérience. L'annulation n'efface pas l'apprentissage réellement effectué.
 
-**Durées encore calibrées** : les recettes locales conservent leurs unités documentées, y compris les anciens ouvrages ; le facteur d'exécution Core ×1,7 est déjà absorbé dans certains travaux (toiture, déconstruction et désinstallation), mais pas uniformément dans le catalogue historique. La vitesse relative est livrée, pas une parité des durées absolues. Échecs de construction, niveaux requis, qualité, capacités physiques, traits, autres compétences et humeur liée à la passion restent à intégrer. Ne pas les déduire de l'affichage d'un niveau.
+**Durées encore calibrées** : les recettes locales conservent leurs unités documentées, y compris les anciens ouvrages ; le facteur d'exécution Core ×1,7 est déjà absorbé dans certains travaux (toiture, déconstruction et désinstallation), mais pas uniformément dans le catalogue historique. La vitesse relative est livrée, pas une parité des durées absolues. Échecs de construction, niveaux requis, qualité, traits, autres compétences et humeur liée à la passion restent à intégrer. Ne pas les déduire de l'affichage d'un niveau. Les facteurs physiques de Construction sont intégrés en [V45](health.md).
 
 ## Sauvegarde et interface
 

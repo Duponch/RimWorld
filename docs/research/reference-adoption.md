@@ -1,10 +1,10 @@
 # Adoption du référentiel utilisateur
 
-Sous V44 — chapitre 15, SYS/TEST-089..091/094/096 : [module des lésions](../development/injuries.md) isolé ; adopter blessures locales, racines absentes, guérison sélective et famine ; adapter précision entière/PRNG ; corriger le vieux stade d’hémorragie extrême. [Recherche et incertitudes](injuries-reference.md). Activation, secours, infections/immunité et cadavres restent différés.
+V45 — chapitre 15, SYS/TEST-089..091, 094, 096..097 : adopter anatomie, lésions, capacités et interruptions ; adapter horloge, dossiers sparse et fin d’arête allongée ; différer soins physiques, ramper et gestion de dépouilles. Chapitres 5/21 : premier producteur par toiture construite. [Recherche fraîche](health-reference.md), [contrat et limites](../development/health.md). Le module initial V44 reste la base physiologique ; ses tests ne suffisent pas à valider la partie intégrée.
 
 V44 — chapitres 8/9/14, SYS/TEST-044/079 et réservations 031..034/047..054 ; chapitre 15 SYS/TEST-096 pour la suite médicale. Adopter interruption/propriété séparées, adapter dépôt local et cadence déphasée, différer incapacité médicale et secours. [Sources recoupées](interrupted-cargo-reference.md), [contrat livré](../development/interrupted-cargo.md).
 
-Socle anatomique sous V43 — chapitre 15, SYS/TEST-089..091 et 096 : adopter arbre et capacités distinctes ; adapter IDs/évaluation immuable ; différer activation, blessures et soins ; interruption de fatigue sécurisée en V44, interruption médicale encore ouverte. [Recherche recoupée](body-reference.md), [statut technique précis](../development/body.md).
+Socle anatomique sous V43 — chapitre 15, SYS/TEST-089..091 et 096 : adopter arbre et capacités distinctes ; adapter IDs/évaluation immuable ; différer activation, blessures et soins ; interruption de fatigue sécurisée en V44, interruption médicale ajoutée en V45. [Recherche recoupée](body-reference.md), [statut technique précis](../development/body.md).
 
 V43 — chapitre 13, SYS-085 / TEST-085 : [compétences vérifiées](skills-reference.md), [contrat](../development/skills.md). Adopter niveau/XP/passion/capacité distincts ; adapter horloge et profils initiaux, Construction premier consommateur ; différer onze autres compétences, biographies, traits, qualité/échecs et santé. La priorité G3 commence maintenant, sans attendre la fin de l’habitat G2.
 

@@ -1,8 +1,8 @@
 # Matrice des systèmes et critères de réalisation
 
-S13 : [calcul des lésions, saignement, cicatrices et guérison](../development/injuries.md) testé isolément sous V44 ; toujours aucune blessure ni soin jouable. Ce socle ne valide pas le critère d’acceptation du domaine.
+S13 : [santé active V45](../development/health.md), blessures localisées, capacités, incapacité/décès et dégâts de toiture construite. Les critères du domaine restent ouverts : secours, soins physiques, pathologies et dépouilles complètes absents.
 
-V44 consolide S04/S07 : sommeil forcé avec cargaison indéposable, engagements libérés, conservation et récupération après dégagement. Les transitions médicales de S13 restent à implémenter ; [contrat](../development/interrupted-cargo.md).
+V44 consolide S04/S07 : sommeil forcé avec cargaison indéposable, engagements libérés, conservation et récupération après dégagement. Les transitions médicales de S13 sont ajoutées en V45 ; [contrat](../development/interrupted-cargo.md).
 
 V43 commence les différences humaines par Construction et son apprentissage. Les autres compétences, traits et la santé restent ouverts. [Priorité et limites](../research/skills-reference.md).
 
@@ -155,4 +155,4 @@ V37 étend la lumière aux travaux et déplacements des domaines S02/S04/S06/S09
 
 V43 commence S13/S14 via Construction et son apprentissage individuel ; [contrat](../development/skills.md). Les fondations humaines passent avant l’approfondissement électrique, conformément à la ROADMAP. Aucun jalon ni domaine de personnalité n’est déclaré complet.
 
-Socle santé sous V43 : SYS/TEST-089..091 et 096 alimentent l’arbre et les calculs de capacités [codés/testés isolément](../development/body.md). Aucun changement de statut jouable de la santé : producteurs, persistance, transitions et soins restent à livrer.
+Socle santé sous V43 : SYS/TEST-089..091 et 096 alimentent l’arbre et les calculs de capacités [codés/testés isolément](../development/body.md). V45 active producteurs de toit, persistance et transitions ; soins et secours restent à livrer.

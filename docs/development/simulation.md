@@ -1,5 +1,7 @@
 # Noyau de simulation — contrat courant
 
+V45 : [santé persistante et interruptions](health.md), migration V44 stricte, capacités par action et premier accident de toiture. Aucun dossier inventé pour une ancienne sauvegarde.
+
 V38 ajoute l’air retenu et les taux alimentaires ; [règles, ordre des transitions et migration](temperature.md). Les pièces sont réconciliées avant intégration, les aliments expirent avant action et leur nouvelle position fixe le taux de l’intervalle suivant.
 
 V35 : [toiture construite](roofing.md) persistée séparément du sol ; V34 strictement validée avant migration sans régénération. La couverture interrompt la croissance naturelle avec checkpoint préalable. Les contextes de support sont invalidés après mutation ; aucun calcul de toit par frame.

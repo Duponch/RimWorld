@@ -28,6 +28,10 @@ Le pilote de huit jours a trouvé un générateur construit mais jamais ravitail
 
 La sonde de l’audit électrique a également été alignée sur `applyWorld` : mesurer `setWorld` ne mesure plus l’application depuis l’introduction de la file de présentation. Les pointes d’image et les changements groupés restent rapportés séparément.
 
+## Transition médicale V45
+
+Le scénario d'accident commence par un retrait réel de support via l'interface. Il exige que le toit disparaisse avec les blessures au temps de présentation, et lit les attributs GPU après les vraies frames : une personne à terre ou morte ne continue ni sa marche animée ni son geste de travail. Pause, sauvegarde/rechargement et cargaison conservée complètent l'observation. Un second contrôle de simulation exige explicitement l'issue létale de la graine ; le scénario UI ne choisit pas artificiellement un survivant pour simplifier son assertion. La partie normale de trois jours vérifie en parallèle que les boucles non médicales continuent à fonctionner. [Preuves courantes](validation.md).
+
 ## Fréquence et limites
 
 Le contrôle temporel natif est requis pour horloge, bridge, interpolation, transitions visuelles et changements de cadence. Un nouveau travail physique enrichit d’abord son parcours métier puis le contrôle de synchronisation concerné. Pour une retouche de texte/couleur, une inspection ciblée suffit. Regrouper les tests en fin de lot, sans lancer une partie longue à chaque modification.

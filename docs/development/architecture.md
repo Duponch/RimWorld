@@ -1,6 +1,6 @@
 # Architecture et décisions
 
-Santé sous V44 : [module des lésions](injuries.md) isolé du World, avec règles, état local, évolution et validation séparés. Il enrichit le calcul anatomique sans champ de Pawn, commande ni rendu. Le futur propriétaire doit appliquer les transitions médicales au tick effectif et éviter de recopier tous les dossiers à chaque publication ; le banc mesure ce coût séparément.
+V45 : [santé active](health.md). Module médical séparé, dossiers sparse par Pawn, règles/évolution/propriété/validation/accident de toit dans des modules distincts. Calcul anatomique réutilisé uniquement dans la décision courante après évolution médicale ; aucun cache entre ticks. Poses de chute et décès dans les attributs GPU existants ; pas de squelette CPU ni de lot supplémentaire.
 
 V44 : [interruption involontaire](interrupted-cargo.md), engagements libérés indépendamment du dépôt, cargaison unique persistante, reprises déphasées et index de sol limité à une décision. Le bridge publie la phase ; aucun ajout aux shaders.
 
@@ -234,4 +234,4 @@ Pendant une sauvegarde manuelle, les commandes de sauvegarde et de chargement so
 
 ## Anatomie : frontière préalable à la santé
 
-`body-definition.ts` garde le corps naturel et ses index immuables, distincts du squelette GPU. `body-capacities.ts` évalue une projection de pertes/absences/douleur, avec résultat immuable et voie saine partagée. Le modèle ne possède pas `World` et ne déclenche ni mort ni interruption. [Contrat et activation restante](body.md). Aucun champ de sauvegarde n’est ajouté pour ce socle seul.
+`body-definition.ts` garde le corps naturel et ses index immuables, distincts du squelette GPU. `body-capacities.ts` évalue une projection de pertes/absences/douleur, avec résultat immuable et voie saine partagée. Le modèle ne possède pas `World` et ne déclenche ni mort ni interruption. [Contrat anatomique et intégration V45](body.md). Aucun champ de sauvegarde n’est ajouté pour ce socle seul.

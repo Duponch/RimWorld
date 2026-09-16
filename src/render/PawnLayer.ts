@@ -210,6 +210,7 @@ export class PawnLayer {
       const scale = float(0).toVar();
       If(attribute('cargoKind', 'float').equal(load.x), () => { scale.assign(load.y.mul(0.25).add(0.75)); });
       const height = float(WORLD_SCALE.carriedHeight).toVar();
+      If(attribute('aMotion','vec4').z.equal(1),()=>{height.assign(.28);});
       If(attribute('aMotion', 'vec4').z.greaterThan(1.5), () => { height.assign(sin(this.time.mul(4).add(attribute('aMotion', 'vec4').w)).mul(0.08).add(1.32)); });
       If(attribute('aMotion', 'vec4').z.greaterThan(2.5), () => { height.addAssign(WORLD_SCALE.stoolHeight - 0.605 * PAWN_MODEL_SCALE); });
       const local = positionLocal.mul(scale).add(vec3(0, height, WORLD_SCALE.carriedForward));
@@ -248,8 +249,8 @@ export class PawnLayer {
         yaw = from.w + Math.atan2(Math.sin(target - from.w), Math.cos(target - from.w));
       }
       const bedId = pawn.need?.kind === 'sleep' ? pawn.need.bedId : null;
-      const bed = pawn.state === 'sleeping' && bedId !== null ? world.structures.find(item => item.id === bedId) : undefined;
-      let px = pawn.x, pz = pawn.z, py = pawn.state==='eating'||pawn.state==='sleeping'?0:this.travelSurfaces.get(pawn.z*world.width+pawn.x)??0;
+      const bed = (pawn.state === 'sleeping'||pawn.state==='downed') && bedId !== null ? world.structures.find(item => item.id === bedId) : undefined;
+      let px = pawn.x, pz = pawn.z, py = pawn.state==='eating'||pawn.state==='sleeping'||medicallyStopped(pawn)?0:this.travelSurfaces.get(pawn.z*world.width+pawn.x)??0;
       if (bed) {
         const cells = footprintCells(bed), last = cells[cells.length - 1]!;
         px = (bed.x + last.x) / 2; pz = (bed.z + last.z) / 2; py = WORLD_SCALE.bedSurfaceHeight;
@@ -273,8 +274,9 @@ export class PawnLayer {
       this.visuals.set(pawn.id, { from, to });
       fromAttribute.setXYZW(index, from.x, from.y, from.z, from.w);
       toAttribute.setXYZW(index, to.x, to.y, to.z, to.w);
-      motion.setXYZW(index, pawn.state === 'moving' ? 1 : 0, pawn.state === 'working' ? 1 : 0, pawn.state === 'recreating' ? pawn.recreation.task?.activity==='horseshoes'?4:5 : pawn.state === 'sleeping' ? 1 : pawn.state === 'eating' ? dining?.seatId !== null && dining ? 3 : 2 : 0, pawn.id * 1.7);
+      motion.setXYZW(index, pawn.state === 'moving' ? 1 : 0, pawn.state === 'working' ? 1 : 0, pawn.state === 'recreating' ? pawn.recreation.task?.activity==='horseshoes'?4:5 : pawn.state === 'sleeping'||medicallyStopped(pawn) ? 1 : pawn.state === 'eating' ? dining?.seatId !== null && dining ? 3 : 2 : 0, pawn.id * 1.7);
       scratchColor.setHex(PAWN_COLORS[index % PAWN_COLORS.length]);
+      if(pawn.state==='dead')scratchColor.setHex(0x73756c);
       tint.setXYZ(index, scratchColor.r, scratchColor.g, scratchColor.b);
       const load = carried.get(pawn.id);
       const packed=world.packed?.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
@@ -307,12 +309,12 @@ export class PawnLayer {
         const yaw=Math.atan2(segment.to.x-segment.from.x,segment.to.z-segment.from.z);
         visual.from.set(segment.from.x,this.travelSurfaces.get(segment.from.z*world.width+segment.from.x)??0,segment.from.z,yaw);visual.to.set(segment.to.x,this.travelSurfaces.get(segment.to.z*world.width+segment.to.x)??0,segment.to.z,yaw);
         times.setXY(i,(segment.start-origin)/10,(segment.end-origin)/10);
-        motion.setX(i,active && timeline.tick>=segment.start?1:0);motion.setY(i,0);motion.setZ(i,0);
+        motion.setX(i,!medicallyStopped(pawn)&&active && timeline.tick>=segment.start?1:0);motion.setY(i,0);motion.setZ(i,medicallyStopped(pawn)?1:0);
       } else {
         visual.to.copy(this.targetPoses.get(pawn.id)!);visual.from.copy(visual.to);times.setXY(i,0,0);
         motion.setX(i,0);motion.setY(i,pawn.state==='working'?1:0);
         const dining=pawn.need?.kind==='eat'?pawn.need.dining:null;
-        motion.setZ(i,pawn.state==='recreating'?pawn.recreation.task?.activity==='horseshoes'?4:5:pawn.state==='sleeping'?1:pawn.state==='eating'?dining&&dining.seatId!==null?3:2:0);
+        motion.setZ(i,pawn.state==='recreating'?pawn.recreation.task?.activity==='horseshoes'?4:5:pawn.state==='sleeping'||medicallyStopped(pawn)?1:pawn.state==='eating'?dining&&dining.seatId!==null?3:2:0);
       }
       if(!active&&pawn.state==='moving'&&pawn.path[0]&&doorAt(world,pawn.path[0])) {const target=pawn.path[0];visual.from.w=visual.to.w=Math.atan2(target.x-pawn.x,target.z-pawn.z);}
       from.setXYZW(i,visual.from.x,visual.from.y,visual.from.z,visual.from.w);to.setXYZW(i,visual.to.x,visual.to.y,visual.to.z,visual.to.w);
@@ -321,3 +323,4 @@ export class PawnLayer {
   }
 
 }
+import { medicallyStopped } from '../sim/health-rules';

@@ -95,7 +95,8 @@ test('coups et arêtes : durée capturée, diagonales exactes, délais additifs,
   expect(deserializeWorld(JSON.stringify(pending)).jobs[0]).toMatchObject({status:'pending',progress:4,pickTicks:100});
   old.jobs[0].pickTicks=125;expect(()=>deserializeWorld(JSON.stringify(old))).toThrow(/version 36/);delete old.jobs[0].pickTicks;
   old.jobs[0].workRemainder=1;expect(()=>deserializeWorld(JSON.stringify(old))).toThrow(/version 36/);
-  const bad=JSON.parse(serializeWorld(w));bad.jobs[0].pickTicks=126;expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(/pick duration/);
+  const bad=JSON.parse(serializeWorld(w));bad.jobs[0].pickTicks=25001;expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(/pick duration/);
+  bad.schemaVersion=44;bad.jobs[0].pickTicks=126;expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(/version 44/);
   releaseWork(w,p);expect(job.pickTicks).toBeUndefined();expect(job.workRemainder).toBeUndefined();expect(validateWorld(w)).toEqual([]);
 
   const walk=camp(),actor=walk.pawns[0]!;walk.tick=3000;walk.structures.push({id:walk.nextId++,kind:'wall',x:10,z:9,orientation:0,footprint:'standard'});walk.roofing={constructed:[330],build:[],remove:[],cursor:0};

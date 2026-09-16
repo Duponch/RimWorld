@@ -35,7 +35,7 @@ Le contexte de décision est partagé entre artisans du même tick, créé seule
 
 ## Portée à compléter
 
-V36 branche les **recettes** présentes ; [V37](light-work.md) étend la lumière aux autres travaux actuels et à la marche. V38 ajoute les [températures locales](temperature.md). Effets psychologiques, capacités/compétences, propreté, confort et richesse restent à développer. La croissance naturelle conserve son intégrale et son arrêt sous toit ; les feux ne franchissent pas son seuil. Mort des plantes dans l’obscurité et autres espèces restent absentes.
+V36 branche les **recettes** présentes ; [V37](light-work.md) étend la lumière aux autres travaux actuels et à la marche. V38 ajoute les [températures locales](temperature.md). V45 ajoute les [capacités physiques](health.md) aux recettes ; compétences de production, effets psychologiques, propreté, confort et richesse restent à développer. La croissance naturelle conserve son intégrale et son arrêt sous toit ; les feux ne franchissent pas son seuil. Mort des plantes dans l’obscurité et autres espèces restent absentes.
 
 L’inspection affiche lumière de la cellule, rôle et facteurs de production à la place orientée du poste. Le [rendu local 3D](environment-lighting.md) transpose désormais le champ lumineux sur le décor et les personnes, avec obscurité sous toit même en coupe. Ses coefficients artistiques ne remplacent pas les pourcentages de gameplay ; pas de `PointLight` ni d’ombres supplémentaires par feu. Les rôles livrés ne donnent aucun bonus de chambre, de salle à manger ou d’humeur.
 

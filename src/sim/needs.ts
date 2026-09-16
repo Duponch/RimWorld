@@ -94,10 +94,10 @@ export function processNeeds(world: World, pawn: Pawn, context: NeedContext): bo
   return false;
 }
 
-export function updateNeeds(world: World, pawn: Pawn): void {
+export function updateNeeds(world: World, pawn: Pawn,body?:import('./body-capacities.ts').BodyAssessment): void {
   pawn.hunger = Math.max(0, pawn.hunger - (world.foodRules === 'legacy' ? 0.015 : HUNGER_PER_TICK * adultHungerFactor(pawn.hunger)));
   updateRest(world, pawn);
-  updateRecreation(pawn);
+  updateRecreation(pawn,body);
   if (pawn.needCooldown > 0) pawn.needCooldown--;
   updateWellbeing(world, pawn);
 }

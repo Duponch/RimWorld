@@ -1,7 +1,7 @@
 import type { BodyPartId } from './body-definition.ts';
 import type { InjuryKind,ScarPain } from './injury-rules.ts';
 
-/** Standalone medical kernel, not yet a Pawn field or a World schema extension. */
+/** Local medical kernel. World ownership and clocks are checked by health-save. */
 export interface Injury {
   id:number; part:BodyPartId; kind:InjuryKind;
   /** Milli-HP; no global health bar. */

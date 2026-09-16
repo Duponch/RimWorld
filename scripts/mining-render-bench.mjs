@@ -1,3 +1,4 @@
+import { controlledInjury } from '../tests/scenarios/health.ts';
 import { stonecuttingLoad } from '../tests/scenarios/stonecutting.ts';
 import { writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
@@ -10,6 +11,8 @@ import { installGpuCallProbe } from './gpu-call-probe.mjs';
 process.env.PLAYWRIGHT_BROWSERS_PATH??=resolve('.playwright');
 const {chromium}=await import('@playwright/test');
 const stats=a=>{const s=[...a].sort((a,b)=>a-b);return {count:s.length,p50:s[Math.ceil(s.length*.5)-1],p95:s[Math.ceil(s.length*.95)-1],p99:s[Math.ceil(s.length*.99)-1],max:s.at(-1)};};
+const medicalWounds=Number(process.env.MINING_MEDICAL_WOUNDS??0);
+if(!Number.isInteger(medicalWounds)||medicalWounds<0||medicalWounds>100)throw Error('Invalid medical load');
 const machinery=process.env.MINING_COMPONENTS==='1';
 const stonecutting=process.env.STONECUTTING==='1';
 const workshops=process.env.CONSTRUCTION_WORKSHOPS==='1';
@@ -29,7 +32,7 @@ else {b.adoptions.push(elapsed);const after=${stonecutting?"args[0].piles.reduce
 return result;};}
 `;
 const steel=process.env.MINING_MATERIAL==='steel';
-const report={stonecutting,workshops,date:new Date().toISOString(),cpu:os.cpus()[0].model,viewport:{width:1440,height:1000},ore:machinery?'machinery':steel?'steel':'stone',protocol:stonecutting?'Native WebGPU: clear 250², 3 chunks per stonecutter, real gather/work/output via worker 6x, 90-frame warmup. Instrument event mined means completed recipe; no natural forest.':workshops?'Native WebGPU: clear 250² map, 100 builders, alternating 75 wood + 30 steel / 105 steel workshops, actual worker 6x. 90 warmup frames. Frame/snapshot timings, pipelines and buffer growth. Same mining-render instrumentation; extraction event counts represent completed workshops. No natural forest in this fixture.':'Native Chromium WebGPU, actual worker 6x, natural 250² with cleared mining patch; 3/30/100 miners × 4 sandstone, steel or machinery walls and 1 tree. 90 warmup frames; no full-world serialization during timed frames. Ground/rock buffer identities checked after excavation.',phases:[]};
+const report={medicalWounds,stonecutting,workshops,date:new Date().toISOString(),cpu:os.cpus()[0].model,viewport:{width:1440,height:1000},ore:machinery?'machinery':steel?'steel':'stone',protocol:stonecutting?'Native WebGPU: clear 250², 3 chunks per stonecutter, real gather/work/output via worker 6x, 90-frame warmup. Instrument event mined means completed recipe; no natural forest.':workshops?'Native WebGPU: clear 250² map, 100 builders, alternating 75 wood + 30 steel / 105 steel workshops, actual worker 6x. 90 warmup frames. Frame/snapshot timings, pipelines and buffer growth. Same mining-render instrumentation; extraction event counts represent completed workshops. No natural forest in this fixture.':'Native Chromium WebGPU, actual worker 6x, natural 250² with cleared mining patch; 3/30/100 miners × 4 sandstone, steel or machinery walls and 1 tree. 90 warmup frames; no full-world serialization during timed frames. Ground/rock buffer identities checked after excavation.',phases:[]};
 const browser=await chromium.launch({channel:'chromium'});
 try {
  for(const count of (process.env.MINING_COUNTS??'3,30,100').split(',').map(Number)) {
@@ -38,7 +41,9 @@ try {
   if(process.env.MINING_SKIP_SHADOW_PREPARATION)await page.route('**/src/render/shadow-preparation.ts*',route=>route.fulfill({contentType:'application/javascript',body:'export async function prepareShadowPipelines() {}'}));
   page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error'||/GPUValidationError|invalid pipeline/i.test(m.text()))errors.push(m.text());});
   await page.route('**/src/main.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:probe+await response.text()+`\nconst originalMiningSnapshot=client.onSnapshot;client.onSnapshot=(...args)=>{const start=performance.now();try{return originalMiningSnapshot(...args);}finally{if(window.__miningBench.active)window.__miningBench.snapshots.push(performance.now()-start);}};`});});
-  await page.addInitScript(saved=>localStorage.setItem('lisiere.save.v1',saved),serializeWorld(stonecutting?stonecuttingLoad(count):workshops?constructionLoad(count,true):miningLoad(count,steel,machinery)));
+  const initial=stonecutting?stonecuttingLoad(count):workshops?constructionLoad(count,true):miningLoad(count,steel,machinery);
+  for(const pawn of initial.pawns)for(let i=0;i<medicalWounds;i++)controlledInjury(initial,pawn,i%2?'left-arm':'right-leg',100,'cut');
+  await page.addInitScript(saved=>localStorage.setItem('lisiere.save.v1',saved),serializeWorld(initial));
   await page.goto('http://127.0.0.1:5173/?e2e&size=250&seed=42');await page.waitForFunction(()=>window.__miningBench.view?.world);
   await page.locator('[data-speed="0"]').click();await page.locator('[data-panel="menu"]').click();await page.locator('#load').click();await page.keyboard.press('Escape');
   await page.waitForFunction(({n,workshops,stonecutting})=>{const w=window.__miningBench.view.world;if(stonecutting)return w.tick===0&&w.pawns.length===n&&w.structures.filter(s=>s.kind==='stonecutter').length===n;return w.tick===2000&&w.pawns.length===n&&w.jobs.filter(j=>j.kind===(workshops?'stonecutter':'mine')).length===(workshops?1:4)*n;},{n:count,workshops,stonecutting});

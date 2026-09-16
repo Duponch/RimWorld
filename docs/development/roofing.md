@@ -2,7 +2,7 @@
 
 V43 applique désormais la [compétence Construction](skills.md) aux phases concernées : vitesse relative, apprentissage seulement lors de la finition d’un cadre approvisionné et de la déconstruction à coût. Les durées du catalogue restent des unités de travail neutre.
 
-15 septembre 2026. [Recherche](../research/roofing-reference.md), [validation](validation.md). Corpus : chapitres 5/10/21/22, SYS/TEST-023..025 et 061, scène E. Ce contrat couvre la toiture construite ; les plafonds rocheux naturels et les conséquences de dégâts restent ouverts.
+15 septembre 2026. [Recherche](../research/roofing-reference.md), [validation](validation.md). Corpus : chapitres 5/10/21/22, SYS/TEST-023..025 et 061, scène E. Ce contrat couvre la toiture construite ; les plafonds rocheux naturels et les dégâts aux objets restent ouverts ; V45 ajoute les blessures humaines.
 
 ## Couverture, zones et travail
 
@@ -20,7 +20,7 @@ Mur terminé, porte et roche pleine sont porteurs. La pose exige un chemin cardi
 
 Le retrait volontaire élimine seulement les composantes sans connexion à un porteur, sans limiter la longueur de cette connexion. Il peut laisser un détour dépassant le disque de pose. Déconstruire/miner un support teste la portée près du support perdu, puis la connexion des composantes ; retirer un tabouret ne déclenche pas ce calcul. La résolution locale de portée et globale de connexion est synchrone, sans physique de corps rigides. Les contextes sont partagés uniquement dans une décision/tick sans mutation ; changer toiture ou support les invalide.
 
-**Effondrement partiel :** la couverture sans support disparaît et un événement signale explicitement l’absence de dégâts simulés. Blessures, dommages aux objets/bâtiments, gravats et pause automatique de l’alerte Core ne sont pas livrés. Ce comportement doit être complété avec HP/santé, pas présenté comme une toiture sans danger dans le jeu cible.
+**Effondrement partiel V45 :** la couverture perdue inflige maintenant des blessures anatomiques aux personnes dessous. Le retrait volontaire reste sans dommage. [Résolution, sources et limites](health.md). Dommages aux objets/bâtiments, gravats, toits naturels et pause automatique restent absents.
 
 ## Plantes, inspection et présentation
 
