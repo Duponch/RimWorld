@@ -143,3 +143,7 @@ Nouvelle famille `door`, sept variantes : bois, acier, granite, calcaire, marbre
 ## Corps humain : socle encore non actif
 
 [Définition anatomique](../../src/sim/body-definition.ts) : 64 entrées dont un emplacement utilitaire conceptuel, parties symétriques, organes et doigts/orteils. Il ne s’agit ni de 64 objets transportables ni d’un inventaire médical déjà jouable. [Capacités et limites](../development/body.md). Autres races/corps, implants, pathologies, blessures persistantes et équipement restent absents du contenu actif.
+
+## Cargaison interrompue V44
+
+Aucun objet ajouté : la pile ou le meuble déjà porté garde son identité quand la fatigue impose le sommeil sans dépôt libre. Cela ne livre ni inventaire personnel, ni équipement, ni corps transportable. [Contrat et limites](../development/interrupted-cargo.md).

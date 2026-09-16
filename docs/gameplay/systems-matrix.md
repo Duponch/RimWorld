@@ -1,5 +1,7 @@
 # Matrice des systèmes et critères de réalisation
 
+V44 consolide S04/S07 : sommeil forcé avec cargaison indéposable, engagements libérés, conservation et récupération après dégagement. Les transitions médicales de S13 restent à implémenter ; [contrat](../development/interrupted-cargo.md).
+
 V43 commence les différences humaines par Construction et son apprentissage. Les autres compétences, traits et la santé restent ouverts. [Priorité et limites](../research/skills-reference.md).
 
 V42 enrichit SYS/TEST-127/128 et CAT-047 avec [générateur, carburant et lampes](../development/power.md). Connexions directes et réseaux de générateurs présents ; conduits, interrupteurs, batteries et incidents restent ouverts. Aucun jalon G0–G5 clôturé.

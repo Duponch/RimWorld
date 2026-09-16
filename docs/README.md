@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+V44 : [interruptions et cargaisons conservées](development/interrupted-cargo.md), [relecture de l’épuisement et du dépôt](research/interrupted-cargo-reference.md).
+
 Santé en préparation : [socle anatomique testé, encore non activé](development/body.md), [vérification des parties et capacités](research/body-reference.md).
 
 V43 : [première compétence et apprentissage](development/skills.md), [recherche et réorientation des priorités](research/skills-reference.md).

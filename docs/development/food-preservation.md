@@ -29,3 +29,5 @@ Trois scénarios profonds regroupent transports/fusions/ingestion au seuil, inte
 Le passage normal est linéaire dans les piles, sans allocation d’âge par tick. Les réconciliations n’arrivent qu’aux expirations. Mesurer aussi une expiration groupée avant de remplacer cette boucle par une file d’échéances : les fusions, suppressions et températures futures imposeraient des invalidations supplémentaires.
 
 V38 utilise les températures des pièces, leur couverture et le chauffage du feu. Froid artificiel constructible, saisons/météo, dégâts d’exposition et intoxication restent absents. Les scénarios froids synthétiques valident les transferts et les seuils ; ils ne livrent pas un congélateur.
+
+V44 : si un effondrement de fatigue interrompt ensuite cette attente de recette, il libère aussi le poste et conserve l’unique objet via `interruptedCargo`. Ce chemin involontaire est distinct de la recette rendue invalide par expiration. L’aliment retenu continue de vieillir ; sa pourriture efface le marqueur sans interrompre le sommeil. [Contrat](interrupted-cargo.md).

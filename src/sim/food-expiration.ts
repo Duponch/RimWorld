@@ -13,8 +13,11 @@ export function expireFood(world: World): void {
     (losses ??= emptySpoilage())[pile.item] += pile.quantity;
   }
   if (!expired) return;
+  const expiredCarriers=new Set(world.piles.filter(p=>expired.has(p.id)&&p.owner.type==='pawn').map(p=>p.owner.type==='pawn'?p.owner.pawnId:-1));
   world.piles = world.piles.filter(pile => !expired.has(pile.id));
   for (const pawn of world.pawns) {
+    // A retained payload still ages normally; its loss does not cancel sleep.
+    if(pawn.interruptedCargo&&expiredCarriers.has(pawn.id)){delete pawn.interruptedCargo;pawn.planCooldown=0;}
     const c = pawn.cooking, h = pawn.haul, n = pawn.need;
     const affected = c && (c.ingredients.some(i => expired.has(i.pileId)) || c.productId !== null && expired.has(c.productId))
       || h && expired.has(h.phase === 'pickup' ? h.sourcePileId : h.carryPileId!)

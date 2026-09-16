@@ -22,6 +22,12 @@ export function nearbyGround(world: World, origin: Cell, radius = 12): Cell[] {
 export function groundPile(world: World, cell: Cell): MaterialPile | undefined {
   return world.piles.find(p=>p.owner.type==='ground' && p.owner.x===cell.x && p.owner.z===cell.z);
 }
+/** One synchronous placement decision only; never retain across ownership changes. */
+export function groundPileCells(world:World):ReadonlySet<number> {
+  const cells=new Set<number>();
+  for(const p of world.piles)if(p.owner.type==='ground')cells.add(p.owner.z*world.width+p.owner.x);
+  return cells;
+}
 function cellCapacity(world: World, cell: Cell, item: ItemId, limit: number, exceptPawn?: number, zone=world.stockpiles.find(z=>z.x===cell.x&&z.z===cell.z)): number {
   if(world.packed?.some(p=>p.owner.type==='ground'&&p.owner.x===cell.x&&p.owner.z===cell.z))return 0;
   const pile = groundPile(world, cell);
@@ -70,7 +76,8 @@ export function planGroundPlacement(world: World, quantity: number, origin: Cell
 /** Retains identity, including an interrupted meal that will be reserved again. */
 export function dropRetainingIdentity(world: World, pile: MaterialPile, origin: Cell): boolean {
   const carrier=pile.owner.type==='pawn'?pile.owner.pawnId:undefined;
-  const cell=nearbyGround(world,origin).find(c=>!groundPile(world,c)&&groundCapacity(world,c,pile.item,carrier)>=pile.quantity);
+  const occupied=groundPileCells(world);
+  const cell=nearbyGround(world,origin).find(c=>!occupied.has(c.z*world.width+c.x)&&groundCapacity(world,c,pile.item,carrier)>=pile.quantity);
   if(!cell) return false;
   pile.owner={type:'ground',...cell}; return true;
 }

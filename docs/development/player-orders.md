@@ -1,5 +1,7 @@
 # Sélection et commandes directes — V23
 
+V44 : une [interruption involontaire](interrupted-cargo.md) libère la file et les engagements même si le dépôt échoue. L’objet reste porté sans travail associé ; les nouveaux ordres sont refusés jusqu’au dépôt. Les commandes volontaires conservent leur refus atomique.
+
 G0 partiel. [Vérification de la référence](../research/player-orders-reference.md), corpus chap. 8/9/10, SYS/TEST-031..034, 047..054 et 056. Ce contrat n'achève pas tous les ordres de RimWorld.
 
 ## Sélection et interface

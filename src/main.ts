@@ -238,6 +238,7 @@ function rebuildInspector() {
   if (close) close.onclick = clearSelection;
 }
 function actionLabel(pawn: Pawn) {
+  if(pawn.interruptedCargo)return pawn.state==='sleeping'?'Se repose · cargaison à déposer':'Cargaison à déposer · sol proche encombré';
   if(pawn.cooking)return queryPawnStatus(snapshot!,pawn).reason;
   if (pawn.need) return queryPawnStatus(snapshot!, pawn).reason;
   if(pawn.haul?.destination.type==='fuel')return queryPawnStatus(snapshot!,pawn).reason;
@@ -379,7 +380,9 @@ function renderState() {
   if (pending) alerts.push(`${pending} ordre(s) en attente`);
   if (!world.stockpiles.length) alerts.push('Aucune réserve de stockage');
   if (world.jobs.some(job => constructionRecipe(job).ingredients.length > 0) && world.pawns.every(pawn => pawn.priorities.haul === 0&&pawn.priorities.build === 0)) alerts.push('Construction/transport désactivés : chantiers non approvisionnés');
-  const idle = world.pawns.filter(pawn => pawn.state === 'idle').length;
+  const interrupted=world.pawns.filter(pawn=>pawn.interruptedCargo).length;
+  if(interrupted)alerts.push(`${interrupted} cargaison(s) à déposer : libérez le sol proche`);
+  const idle = world.pawns.filter(pawn => pawn.state === 'idle'&&!pawn.interruptedCargo).length;
   if (idle) alerts.push(`${idle} colon(s) disponible(s)`);
   el('alerts').replaceChildren(...alerts.map(text => { const item = document.createElement('p'); item.textContent = text; return item; }));
   const beds = world.structures.filter(structure => structure.kind === 'bed').length;

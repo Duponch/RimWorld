@@ -1,3 +1,4 @@
+import { SCHEMA_VERSION } from '../src/sim/types';
 import { withoutPawnSkills } from './scenarios/legacy-skills';
 import { expect,test } from 'vitest';
 import { applyCommand,stepWorld,serializeWorld,deserializeWorld,validateWorld,addGroundMaterial } from '../src/sim/index';
@@ -49,7 +50,7 @@ test('full floors and conflicting uses refuse atomically; migration and corrupt 
  const corrupted=JSON.parse(full);corrupted.packed[0].owner.pawnId=999999;expect(()=>deserializeWorld(JSON.stringify(corrupted))).toThrow();
  const duplicate=JSON.parse(full);duplicate.packed.push(duplicate.packed[0]);expect(()=>deserializeWorld(JSON.stringify(duplicate))).toThrow();
  const bad=JSON.parse(full);bad.jobs[0].furniture.structureId=wall.id;expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();
- const legacy=JSON.parse(before);(legacy.schemaVersion=24,withoutPawnSkills(legacy));for(const a of legacy.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete legacy.packed;const migrated=deserializeWorld(JSON.stringify(legacy));expect(migrated.packed).toEqual([]);expect(migrated.structures).toEqual(JSON.parse(before).structures);expect(migrated.schemaVersion).toBe(43);
+ const legacy=JSON.parse(before);(legacy.schemaVersion=24,withoutPawnSkills(legacy));for(const a of legacy.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete legacy.packed;const migrated=deserializeWorld(JSON.stringify(legacy));expect(migrated.packed).toEqual([]);expect(migrated.structures).toEqual(JSON.parse(before).structures);expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);
  legacy.packed=[];expect(()=>deserializeWorld(JSON.stringify(legacy))).toThrow();
 });
 

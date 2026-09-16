@@ -45,7 +45,7 @@ export function validateFurniture(world:World,version:number,ids:Set<number>,sha
       ground.add(key);
     } else {
       const pawn=world.pawns.find(p=>p.id===o.pawnId),job=world.jobs.find(j=>j.id===pawn?.jobId);
-      if(carriers.has(o.pawnId)||!pawn||!(job?.kind==='install'&&job.furniture?.structureId===id||version>=26&&pawn?.haul?.whole&&pawn.haul.phase==='deliver'&&pawn.haul.carryPileId===id)||world.piles.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===o.pawnId))errors.push('Invalid furniture carrier.');
+      if(carriers.has(o.pawnId)||!pawn||!(version>=44&&pawn.interruptedCargo||job?.kind==='install'&&job.furniture?.structureId===id||version>=26&&pawn?.haul?.whole&&pawn.haul.phase==='deliver'&&pawn.haul.carryPileId===id)||world.piles.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===o.pawnId))errors.push('Invalid furniture carrier.');
       carriers.add(o.pawnId);
     }
   }

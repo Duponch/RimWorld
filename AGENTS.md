@@ -50,7 +50,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 43 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 44 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)
@@ -207,3 +207,9 @@
 - V42 strictement validée avant profil 8/sans passion/0 XP et dernière remise inconnue (-1), sans passé inventé ni modification des routes/ressources. Cloner profondément skills dans les fixtures de foule. La ROADMAP privilégie désormais corps/capacités, soins puis équipement/combat avant de poursuivre les appareils électriques.
 
 - Emprises V43 : le rejet rapide de `footprintContains` suppose les branches actuelles dans le voisinage immédiat de l’ancre. Étendre sa borne lors de futurs volumes et conserver la comparaison de tout le catalogue/rotations/enveloppes contre `footprintCells`. Les directions de sortie sont constantes, sans changer leur ordre.
+
+## Interruptions V44
+
+- Lire docs/development/interrupted-cargo.md. Une interruption involontaire libère les engagements même si le dépôt échoue ; Pawn.interruptedCargo conserve un seul objet, jamais un inventaire. Sommeil/réveil et pourriture continuent, travail bloqué jusqu’au dépôt proche. Les commandes volontaires gardent leur refus atomique.
+- V43 strictement validée avant migration sans marqueur inventé. Le nouveau marqueur est une phase observée par le bridge ; arêtes capturées terminées avant effondrement de fatigue, arrêt médical immédiat encore absent.
+- Les index de cellules de piles ne survivent qu’à une décision de dépôt. Tentatives déphasées, vingt ticks entre échecs ; commandes explicites peuvent réveiller la planification. Conserver ordre des cellules, quantités, identités, âge et meuble entier.

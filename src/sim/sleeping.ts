@@ -51,7 +51,13 @@ export function processSleeping(world: World, pawn: Pawn, context: NeedContext, 
   }
   if (pawn.need?.kind === 'sleep') {
     const task = pawn.need;
-    if (scheduleWakes(world, pawn) || (world.restRules === 'adult' && task.phase === 'travel' && pawn.hunger <= 0)) { context.release(); pawn.needCooldown = 0; pawn.planCooldown = 0; return false; }
+    if (scheduleWakes(world, pawn) || (world.restRules === 'adult' && task.phase === 'travel' && pawn.hunger <= 0)) {
+      // Passive emergency cargo is independent of sleep. A full floor must not
+      // prevent waking or reset the bounded drop retry on every awake tick.
+      if(pawn.interruptedCargo){pawn.need=null;pawn.state='idle';pawn.needCooldown=0;}
+      else {if(!context.release())return true;pawn.needCooldown=0;pawn.planCooldown=0;}
+      return false;
+    }
     const bed = task.bedId === null ? null : world.structures.find(item => item.id === task.bedId && item.kind === 'bed');
     if (task.bedId !== null && (!bed || pawn.bedId !== bed.id || !same(bed, task.target))) { if (!context.release()) return true; return true; }
     if (!same(pawn, task.target)) { context.move(task.target, true); return true; }

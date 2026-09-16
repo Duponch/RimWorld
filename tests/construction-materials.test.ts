@@ -1,3 +1,4 @@
+import { SCHEMA_VERSION } from '../src/sim/types';
 import { withoutPawnSkills, withMigratedSkills } from './scenarios/legacy-skills';
 import { expect, test } from 'vitest';
 import { applyCommand, stepWorld, serializeWorld, deserializeWorld, validateWorld, addGroundMaterial, refreshStock } from '../src/sim/index';
@@ -160,5 +161,5 @@ test('workshop rotations reject clipped sides and legacy shapes; mixed refunds p
   expect(finishDeconstruction(w,w.pawns[0]!,job)).toBe(true);expect(validateWorld(w)).toEqual([]);
   expect(steelAccount(w)).toBe(30);expect(w.piles.filter(p=>p.kind==='wood').reduce((n,p)=>n+p.quantity,0)+w.deconstructed.lostWood).toBe(75);
   const legacy=JSON.parse(serializeWorld(deconstructionCamp()));(legacy.schemaVersion=30,withoutPawnSkills(legacy));for(const a of legacy.pawns)delete a.priorities.craft;
-  expect(deserializeWorld(JSON.stringify(legacy))).toEqual(withMigratedSkills({...legacy,schemaVersion:43,pawns:legacy.pawns.map((p:any)=>({...p,priorities:{...p.priorities,craft:2}}))}));
+  expect(deserializeWorld(JSON.stringify(legacy))).toEqual(withMigratedSkills({...legacy,schemaVersion:SCHEMA_VERSION,pawns:legacy.pawns.map((p:any)=>({...p,priorities:{...p.priorities,craft:2}}))}));
 });

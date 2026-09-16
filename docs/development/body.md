@@ -1,6 +1,6 @@
 # Socle anatomique sous V43
 
-**Implémenté et testé, pas encore actif dans la partie.** Ce lot ajoute les définitions et le calcul physiologique ; il n'ajoute aucun champ à `Pawn`, aucune blessure de gameplay, aucun état à terre et aucune statistique fictive à l'interface. Le schéma reste 43. [Vérification des références](../research/body-reference.md), [préparation des transitions et blessures](../research/health-preparation.md).
+**Implémenté et testé, pas encore actif dans la partie.** Ce lot ajoute les définitions et le calcul physiologique ; il n'ajoute aucun champ à `Pawn`, aucune blessure de gameplay, aucun état à terre et aucune statistique fictive à l'interface. Ce lot seul conservait le schéma 43 ; le schéma courant V44 ajoute séparément les [interruptions de fatigue](interrupted-cargo.md). [Vérification des références](../research/body-reference.md), [préparation des transitions et blessures](../research/health-preparation.md).
 
 ## Frontière du modèle
 
@@ -16,4 +16,4 @@ Résultats gelés ; corps sain renvoie une référence constante sans allocation
 
 Sept scénarios couvrent arbre complet et exposition conservée, côtés, arrondis locaux/capacités, os protégés, membres lésés du même côté ou de côtés opposés, organes vitaux, seuils d'éveil/mobilité/douleur, indépendance des acteurs et recomposition JSON. Un scénario parcourt toutes les paires de retraits et toutes les pertes entières de chaque partie : valeurs finies, monotonie et ordre des retraits. Ces combinaisons anatomiques ne prouvent pas toutes les interactions médicales futures.
 
-Avant activation : état persistant des lésions et migration validée ; interruption forcée qui libère les engagements tout en conservant une cargaison indéposable ; transitions chronologiques corps/travail/cargaison ; consommateurs par statistique ; première cause réelle de blessure, puis secours/soins. Enrichir alors le pilote de colonie, les sauvegardes, l'observateur de présentation et un scénario UI. Les tests graphiques et la longue partie n'ont pas été relancés pour ce module encore non branché.
+Avant activation : état persistant des lésions et migration validée ; interruption médicale immédiate (fatigue et cargaison sécurisées en V44) ; transitions chronologiques corps/travail/cargaison ; consommateurs par statistique ; première cause réelle de blessure, puis secours/soins. Enrichir alors le pilote de colonie, les sauvegardes, l'observateur de présentation et un scénario UI. Les tests graphiques et la longue partie n'ont pas été relancés pour ce module encore non branché.

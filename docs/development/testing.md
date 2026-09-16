@@ -1,5 +1,7 @@
 # Stratégie de validation
 
+V44 : huit scénarios `interrupted-cargo.test.ts` regroupent interruption, conservation, dégagement par un autre colon, repas/pourriture, meubles, recettes, arêtes, migration et comparaison des dépôts. Le pilote relève `interruptedCargo` ; le navigateur dédié vérifie sommeil, rechargement et dégagement par commandes UI. L’audit `scripts/interruption-bench.ts` sépare coût initial, ticks, copies et résultats pour 3/30/100 acteurs et 0/10 000 piles de sol. [Contrat](interrupted-cargo.md).
+
 V43 : `skills.test.ts` confronte seuils XP indépendants, saturation, oubli/dette, minuit, travail physique et sauvegarde corrompue. Le pilote relève les apprentissages et utilise les aptitudes affichées pour son bâtisseur ; les anciennes fixtures retirent le profil V43 avant validation de leur version. [Contrat](skills.md).
 
 V42 : `power.test.ts` couvre construction/fuel sur toutes les faces, réseaux/surcharge/reprise et refus de sauvegarde ; pilote de trois cartes enrichi de 200 acier extraits et six composants, avec générateur et lampe entretenus. Parcours natif `power.spec.ts`, parcours de colonie UI et audit `power-render-bench.mjs` à 3/100 mineurs avec appareils. Observer `power.on` et le parent comme phases discrètes ; rejouer la garde de présentation après sa modification.

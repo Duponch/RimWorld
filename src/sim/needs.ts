@@ -1,5 +1,5 @@
 import type { Reachability } from './pathfinding.ts';
-import { clearQueuedOrders } from './player-orders.ts';
+import { interruptWork,retryInterruptedCargo } from './interrupted-cargo.ts';
 import { reservedSource } from './materials.ts';
 import { mealQuantity, adultHungerFactor } from './items.ts';
 import { TICKS_PER_DAY } from './types.ts';
@@ -35,11 +35,19 @@ export function processNeeds(world: World, pawn: Pawn, context: NeedContext): bo
 
   // Collapse is an emergency interruption, including travel with a meal in hand.
   if ((world.restRules === 'legacy' ? pawn.rest === 0 : pawn.collapsePending) && pawn.need?.kind !== 'sleep') {
-    if (!context.release()) return true;
-    clearQueuedOrders(world,pawn);delete pawn.priorityWork;
+    interruptWork(world,pawn);
     pawn.need = { kind: 'sleep', phase: 'sleep', bedId: null, target: { x: pawn.x, z: pawn.z } };
     pawn.state = 'sleeping'; pawn.collapsePending = false; pawn.restZeroTicks = 0;
     context.event(`${pawn.name} s’effondre de fatigue au sol.`);
+  }
+
+  if(pawn.interruptedCargo) {
+    retryInterruptedCargo(world,pawn);
+    if(pawn.interruptedCargo) {
+      if(pawn.need?.kind==='sleep')processSleeping(world,pawn,context,canPlan);
+      else pawn.state='idle';
+      return true;
+    }
   }
 
   // A direct player job postpones ordinary needs and schedules; depletion and

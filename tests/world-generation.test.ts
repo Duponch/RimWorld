@@ -1,3 +1,4 @@
+import { SCHEMA_VERSION } from '../src/sim/types';
 import { withoutPawnSkills, withMigratedSkills } from './scenarios/legacy-skills';
 import { describe, expect, test } from 'vitest';
 import { addGroundMaterial, applyCommand, createWorld, deserializeWorld, hashWorld, refreshStock, serializeWorld, stepWorld, validateWorld } from '../src/sim/index.ts';
@@ -56,7 +57,7 @@ describe('seeded temperate valley generation', () => {
     for (const tile of raw.tiles) { delete tile.stone; delete tile.ore; }
     for (const resource of raw.resources) delete resource.stone;
     const migrated = deserializeWorld(JSON.stringify(raw));
-    expect(migrated).toEqual(withMigratedSkills({...raw,pawns:raw.pawns.map((p:any)=>({...p,priorities:{craft:2,...p.priorities,mine:2}})),schemaVersion:43 }));
+    expect(migrated).toEqual(withMigratedSkills({...raw,pawns:raw.pawns.map((p:any)=>({...p,priorities:{craft:2,...p.priorities,mine:2}})),schemaVersion:SCHEMA_VERSION }));
     const control = deserializeWorld(JSON.stringify(raw)); stepWorld(migrated, 251); stepWorld(control, 251);
     expect(serializeWorld(migrated)).toBe(serializeWorld(control));
     for (const change of [(w: any) => w.tiles.find((t: any) => t.terrain === 'rock').stone = 'vacstone',

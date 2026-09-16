@@ -335,6 +335,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
         release: () => releaseWork(world, pawn),
         event: (message: string) => event(world, 'need', message),
       };
+      if(pawn.interruptedCargo){processNeeds(world,pawn,needsContext);continue;}
       if (leaveTransitCell(world,pawn,getBlocked,budget,getLight)) continue;
       if (advanceOrders(world,pawn,getBlocked,budget)) continue;
       if (advancePriorityWork(world,pawn,getBlocked,budget)) continue;

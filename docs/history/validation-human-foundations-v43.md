@@ -1,0 +1,53 @@
+# Validation V43 — compétences et socle anatomique
+
+16 septembre 2026. [Compétences](../development/skills.md), [recherche et priorité revue](../research/skills-reference.md). Les preuves électriques précédentes restent dans [l’archive V42](../history/validation-power-v42.md). Ce lot livre le premier consommateur Construction ; ni santé, ni combat, ni douze compétences complètes ne sont annoncés.
+
+## Socle anatomique ajouté sous V43
+
+Le [modèle de corps](../development/body.md) est testé isolément et **n'est pas encore branché à la partie**. Le premier passage comptait à tort 66 entrées ; vérification du corps historique (63) et de la langue additionnelle : la définition de 64 entrées était correcte, l'attente a été corrigée. Sept scénarios passent ensuite, avec toutes les paires de retraits, toutes les pertes entières par partie, cas d'asymétrie, arrondis et seuils physiologiques. [Résultat](../../artifacts/body-tests-v43.json). Typage contrôlé. Aucun code de commande, persistance ou rendu n'est modifié dans ce socle ; pas de relance du parcours UI long ni de la présentation pour ce seul ajout. Les contrôles V43 ci-dessous restent leurs dernières preuves, pas une validation de blessures jouables.
+
+Audit isolé sur le même Ryzen 5 3600, Node 24.11.1, Windows 11 : 3/30/100 projections, 0/1/20/100 pertes par personne ; 100 lots de chauffe, 500 mesurés, copie séparée tous les dix lots. À 100 personnes, p95 de l'évaluation : 0,0013 ms sans lésion (résultat constant), 0,8533 ms avec une perte, 0,8914 ms avec vingt, 1,0999 ms avec cent ; dernier maximum 1,4395 ms. La copie de cent projections à cent pertes coûte **6,9611 ms p95**, 7,9621 ms maximum : ne pas publier tout un arbre ou recalculer toute la clinique par frame. [Mesures](../../artifacts/body-cpu-v43.json), script `scripts/body-bench.ts`. Ce n'est **ni un benchmark de foule en activité, ni un résultat de FPS** ; le coût réel de sauvegarde/worker sera mesuré après intégration de l'état médical. Les pointes de navigation de l'audit complet V43 restent ouvertes.
+
+## Simulation et sauvegardes
+
+Le premier lot de 135 tests a trouvé des fixtures anciennes portant encore un champ V43, des attentes de migration devenues fausses et une hypothèse trop stricte du pilote à minuit. Le lot d’intégration suivant a réussi 134/135 tests ; l’ultime attente de déconstruction corrigée a passé son lot de 7 tests. Après correction de la première remise à zéro quotidienne lors d’une migration proche de minuit, les 20 tests Construction/déconstruction/compétences/simulation ont réussi. Ces lots se recouvrent : ils ne représentent pas 162 scénarios indépendants. [Résultats des exécutions](../../artifacts/skills-core-v43.json).
+
+Les trois scénarios de compétences vérifient des seuils tabulés indépendamment, passions, saturation stricte, oubli/dette, niveau maximal, passage de minuit, débutant/expert sur chantier approvisionné, apprentissage au contact et pas en trajet/dégagement, désinstallation/réinstallation sans XP, déconstruction avec XP, annulation et continuation. V42 est validée avant ajout du profil neutre. La migration conserve une date de remise inconnue (-1), pour ne pas reporter d’un jour le premier reset si le chargement a lieu juste avant minuit. États invalides et snapshots sont contrôlés.
+
+Le pilote de cinq à huit jours sur trois cartes naturelles est passé dans le lot d’intégration. Il affecte Construction selon le niveau et vérifie l’expérience acquise. À la graine 2048, deux coupes d’entretien restent désignées quand tout le monde dort au bilan final : le test poursuit la sauvegarde sans nouvelles commandes jusqu’à leur achèvement après le réveil. Il exige toujours que le camp et les autres travaux soient terminés.
+
+Deux erreurs « Missing travel segment for movement delay » sont apparues dans le premier lot Construction et n’ont pas été reproduites dans les reprises ciblées ni le lot d’intégration. Leur cause n’est pas établie ; une reprise verte ne les prouve pas impossibles. Les rapports initiaux sont conservés.
+
+## Interface réelle
+
+Le parcours natif de compétences a réussi en 8,8 s (12,8 s avec démarrage) après la correction de minuit. Il choisit un bâtisseur dans Travail, approvisionne et construit un lit, constate l’XP, ouvre Biographie, sauvegarde/recharge en plein travail et termine. Capture `skills-construction.png` examinée : texte lisible, état du chantier et FPS visibles. [Preuve](../../artifacts/skills-ui-v43.json).
+
+Le premier parcours de trois jours a atteint un camp équipé mais échoué sur une exigence incorrecte : un fragment miné depuis la dernière observation du joueur devait déjà être rangé. Le scénario renforcé distingue absence d’ingrédient (nouvelle désignation de minage) et fragment découvert (désignation de transport puis véritable réveil/transport/taille). [Premier résultat conservé](../../artifacts/skills-colony-first-v43.json). Le deuxième parcours a confirmé une autre occurrence : deux récoltes d’entretien en attente pendant le sommeil. [Deuxième résultat](../../artifacts/skills-colony-second-v43.json). Le contrôle traite maintenant ensemble coupes, récoltes et fragments, tout en exigeant le camp terminé puis l’achèvement des IDs de maintenance acceptés. Le dernier parcours a réussi en **6,3 min** : 3 lits, table/3 tabourets, 7 murs, porte, feu, piquet, atelier, générateur et lampe ; 15 plants de riz, 28 toits, 35 blocs rangés, 50 acier et 4 composants en réserve, 150 acier et 2 composants incorporés. 19 repas cuisinés, 18 ingestions observées et trois dormeurs ; Noé finit avec 3 026,05 XP de Construction. Bilans bois/aliments, reprises quotidiennes et absence d’erreur réussis. Capture `colony-three-days.png` examinée. [Preuve finale](../../artifacts/skills-colony-v43.json).
+
+Ce passage final finit sans maintenance restante : il **n’exerce pas la branche UI conditionnelle du lendemain**. La suite du premier checkpoint avec fragment a été vérifiée séparément en simulation : désignation ordinaire de transport puis 1 940 ticks donnent 35 blocs rangés, sans injection de ressources/besoins. Le pilote cœur vérifie également les deux coupes après sommeil sur la graine 2048. Ne pas présenter ces contrôles distincts comme une exécution graphique de toutes les branches.
+
+## Charge CPU et copie des états
+
+Ryzen 5 3600, Node 24.11.1, carte dégagée 250², besoins actifs, huit rations accessibles par personne ; niveaux 0/4/8/12/20 et toutes les passions. Les colons construisent les portes, couvrent automatiquement leurs enceintes, coupent puis transportent le bois. Une chauffe séparée de 100 ticks ; copie réelle d’un snapshot tous les cinq ticks ; validations hors temps mesuré ; borne de 9 000 ticks. Une exécution par population dans chaque version, sans test lourd concurrent piloté par l’agent. Bureau non isolé ; ces données ne sont pas des FPS.
+
+| Colons | Tick p95 / p99 / maximum | Snapshot + copie p95 / maximum | Fin des tâches |
+| --- | --- | --- | --- |
+| 3 | 1,64 / 4,17 / 10,48 ms | 1,37 / 37,12 ms | 1 071 ticks, 3 portes, 36 bois rangés |
+| 30 | 8,74 / 14,27 / 30,13 ms | 2,35 / 39,01 ms | 1 741 ticks, 30 portes, 360 bois rangés |
+| 100 | 25,30 / 41,80 / 144,43 ms | 7,03 / 38,38 ms | 4 601 ticks, 100 portes, 1 200 bois rangés |
+
+La grande charge construit également **2 100 cellules de toiture** ; le pic observé est de 29 personnes dans l’état « working », les autres se déplaçant ou satisfaisant leurs besoins. Cent acteurs ne signifie donc pas cent coups de travail simultanés. Tous les travaux finissent, les sauvegardes continuent exactement et les records de compétences sont indépendants. [Mesures finales](../../artifacts/skills-cpu-v43.json).
+
+Le profil échantillonné sur 1 500 ticks pointe navigation, recherche de travail et tests d’emprise. Quatre réductions de coût : rejet rapide des emprises éloignées, directions cardinales partagées pour les sorties, recherche ponctuelle des cadres sans tableau de cellules, absence de lecture de recette pour les activités sans XP. Aucun cache de navigation entre décisions. Les empreintes ponctuelles sont comparées au parcours de cellules de tout le catalogue, dans les quatre orientations et sous leurs enveloppes de retrait/installation ; **24 tests** espace/construction/portes/compétences passent après optimisation.
+
+Dans la paire avant/après à cent colons, tick p95 **29,91 → 25,30 ms**, p99 **46,14 → 41,80 ms**, maximum **162,77 → 144,43 ms**. Mondes entiers strictement identiques au tick 3 500 et à la fin au tick 6 601, PRNG, tâches, objets et apprentissage compris. [Mesures avant](../../artifacts/skills-cpu-before-v43.json), [profil et empreintes](../../artifacts/skills-optimization-v43.json). Les gains à trois personnes ne se distinguent pas du bruit ; les pointes résiduelles restent élevées. Cette charge ne garantit pas une simulation 6× constante. Il reste à traiter les recherches synchrones coûteuses avec leurs contrats, sans remplacer les règles par des raccourcis.
+
+Le tout premier essai sans nourriture dépassait une journée et ne finissait pas. La reprise ajoute des aliments physiques, sans neutraliser les besoins. [Échec conservé](../../artifacts/skills-load-first-v43.json). Il ne sert pas de témoin numérique à la comparaison.
+
+## Présentation et livraison
+
+Build TypeScript/Vite réussi après les optimisations : 210 modules, worker 243,87 kB, jeu 1 085,13 kB / 305,23 kB gzip. Avertissement historique de bundle >500 kB. La garde native `npm run test:presentation` réussit : **10 778 images minage et 10 729 abattage**, zéro saut, occupation solide ou retrait anticipé, aucune famine de snapshots après amorçage et aucune erreur navigateur. Maximum image 12,6 / 16,8 ms ; délai maximal clic→vitesse effective 14,9 / 17,0 ms sur changements répétés 1×/3×/6×. Carte naturelle 250², trois colons, AMD RDNA-1, 1 440×1 000, deux parcours de 45 s. Les trous signalés pendant l’amorçage sont conservés dans les données, pas présentés comme des saccades en régime établi. [Preuve native](../../artifacts/skills-presentation-v43.json).
+
+Typage et vérification documentaire finaux réussis ; trois originaux byte-identiques. Le parcours UI long n’a pas été répété pour le dernier ajustement de sa branche de maintenance non empruntée, qui accepte aussi les fragments déjà désignés/portés sans commande dupliquée. Cette branche reste à exercer graphiquement sur une occurrence future ; les preuves précédentes ne sont pas renommées en couverture exhaustive.
+
+Les durées absolues historiques, échecs/qualité et niveaux requis restent partiels ; [inventaire courant](../gameplay/implementation-status.md). La santé a une préparation documentée, aucune implémentation livrée par ce lot.

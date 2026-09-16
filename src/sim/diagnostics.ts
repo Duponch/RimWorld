@@ -31,6 +31,7 @@ export function queryJobStatus(world: World, job: Job): JobDiagnostic {
   return { code: enabled ? 'ready' : 'waiting-worker', reason: enabled ? 'Prêt ; attend un colon disponible et un accès.' : 'Travail désactivé pour tous les colons.', delivered, required };
 }
 export function queryPawnStatus(world: World, pawn: Pawn): { code: string; reason: string } {
+  if(pawn.interruptedCargo)return {code:'interrupted-cargo',reason:'Travail interrompu ; cargaison conservée. Libérez une case de sol proche pour permettre son dépôt.'};
   if(pawn.recreation.task) {
     const task=pawn.recreation.task, activity=task.activity==='horseshoes'?'jouer aux fers à cheval':'observer le ciel';
     return {code:'recreation',reason:task.phase==='travel'?`Rejoint une place pour ${activity}.`:`Prend le temps de ${activity} (${Math.round(pawn.recreation.level)} %).`};

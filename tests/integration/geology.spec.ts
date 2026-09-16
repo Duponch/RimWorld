@@ -1,3 +1,4 @@
+import { SCHEMA_VERSION } from '../../src/sim/types';
 import { withoutPawnSkills } from '../scenarios/legacy-skills';
 import { test, expect } from '@playwright/test';
 import { createWorld, serializeWorld, validateWorld } from '../../src/sim/index';
@@ -32,7 +33,7 @@ test('inspecter les cinq roches, sauvegarder leurs identités et reprendre une c
     const old = JSON.parse(serializeWorld(fixture)); (old.schemaVersion = 26,withoutPawnSkills(old));for(const a of old.pawns){delete a.priorities.mine;delete a.priorities.craft;}
     for (const t of old.tiles) delete t.stone; for (const r of old.resources) delete r.stone;
     await page.evaluate(({ key, saved }) => localStorage.setItem(key, saved), { key: saveKey, saved: JSON.stringify(old) });
-    await panel(page, 'menu'); await page.locator('#load').click(); await expect.poll(async () => (await world(page)).schemaVersion).toBe(43);
+    await panel(page, 'menu'); await page.locator('#load').click(); await expect.poll(async () => (await world(page)).schemaVersion).toBe(SCHEMA_VERSION);
     await page.keyboard.press('Escape'); await revealCells(page, cells); await cell(page, 12, 12);
     await expect(page.locator('#cell-title')).toContainText('type historique non défini');
     expect(errors).toEqual([]); await testInfo.attach('geology', { body: JSON.stringify({ cells, errors, schemaVersion: (await world(page)).schemaVersion }), contentType: 'application/json' });

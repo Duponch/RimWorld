@@ -1,5 +1,7 @@
 # Santé : préparation de l’activation et des blessures
 
+V44 a résolu le cas de saturation pour l’épuisement : [libération des engagements et rétention conservatrice](../development/interrupted-cargo.md). Restent le déclencheur médical, l’arrêt immédiat en cours d’arête, les blessures persistantes et les soins. La recherche ci-dessous prépare ces contrats encore absents.
+
 Lecture du 16 septembre 2026, pendant la validation UI de V43. Ce document prépare la prochaine entrée de la [ROADMAP](../ROADMAP.md) ; le [socle anatomique](../development/body.md) est maintenant codé/testé, mais l’activation dans la partie reste à faire. Cette note conserve les risques à traiter avant blessures et soins.
 
 ## Corpus et intention
@@ -44,3 +46,13 @@ La relecture de [Moving](https://rimworldwiki.com/wiki/Moving) face à `Calculat
 ## Interruption forcée : cas de saturation
 
 Avant d’activer douleur incapacitante ou mort, résoudre le cas où `releaseWork` refuse un dépôt faute de place. Un blessé ne peut continuer à travailler seulement parce que son objet ne peut pas être posé ; l’objet ne peut pas non plus disparaître. Définir une propriété physique durable de la cargaison interrompue, distincte d’une réservation de chantier/service, puis sa récupération. Tester portage, repas engagé, ingrédients et meuble entier ; queue forcée, lit, arête/porte et cellules saturées doivent rester cohérents. Il faut aussi distinguer le corps transportable d’un simple colon supprimé : décès, équipement et dépouille ont des implications de propriété différentes.
+
+## Relecture des dégâts pendant la validation V44
+
+La distinction entre **type de dommage** et **type de blessure** est nécessaire. [Damages_MeleeWeapon, XML historique identifié](https://github.com/RimWorld-zh/RimWorld-Core/blob/85954e64ea75334f51e33e27a4128809191e430e/Core/Defs/DamageDefs/Damages_MeleeWeapon.xml) distingue `Crush` (résolveur AddInjury, peau Cut, solide Crack) de `Blunt` (résolveur Blunt, peau Bruise, possibilité de choc interne). [HealthUtility](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/Verse/HealthUtility.cs) confirme le choix selon peau/solidité. Il serait incorrect d’appliquer directement au toit les 40 % de choc interne du vieux profil Blunt. Le fichier XML ancien n’est pas certifié actuel : recouper avant de fixer les nombres.
+
+[DamageWorker_AddInjury](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/Verse/DamageWorker_AddInjury.cs) préserve souvent une partie extérieure à un PV en l’absence d’excès de dégâts suffisant ; une partie à zéro de capacité n’est donc pas automatiquement une amputation. Le résolveur des dommages doit décider cet état avant le calcul anatomique. Protection contre la mort instantanée du colon et difficulté constituent une autre étape distincte, encore non implémentée.
+
+[Injury](https://rimworldwiki.com/wiki/Injury) et [Health Difficulties](https://rimworldwiki.com/wiki/Health_Difficulties) ne concordent pas sur tous les vieux taux d’infection/cicatrice ; ne pas recopier la table générale comme une constante actuelle. Le code `Hediff_Injury` coupe le saignement des os, blessures soignées/permanentes et blessures devenues assez anciennes, alors que certaines formulations générales simplifient ce point. Les nouveaux contrats devront conserver type, partie, âge, sévérité, soin et état de cicatrice séparément.
+
+La guérison dans `Pawn_HealthTracker` applique une quantité à une blessure admissible choisie, pas la quantité journalière à toutes les blessures. Le repos et le lit ajoutent leurs facteurs, les soins ont une contribution distincte et la famine bloque celle-ci. Ces lectures préparent la suite ; elles n’ajoutent aucun état médical en partie dans V44.

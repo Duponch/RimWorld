@@ -1,6 +1,6 @@
 # Inventaire, équipement et apparence des colons
 
-Décision du 13 septembre 2026, à la demande utilisateur. **Contrat cible, pas fonctionnalité livrée.** Le prototype ne possède aujourd'hui qu'une cargaison de travail ou de repas ; les portraits CSS ne représentent pas un équipement réel.
+Décision du 13 septembre 2026, à la demande utilisateur. **Contrat cible, pas fonctionnalité livrée.** Le prototype ne possède aujourd'hui qu'une cargaison temporaire de travail ou de repas, éventuellement conservée après interruption involontaire V44 ; les portraits CSS ne représentent pas un équipement réel.
 
 ## Ce que prévoit le corpus
 

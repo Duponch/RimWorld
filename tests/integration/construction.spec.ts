@@ -1,3 +1,4 @@
+import { SCHEMA_VERSION } from '../../src/sim/types';
 import { withoutPawnSkills } from '../scenarios/legacy-skills';
 import { revealCells, perform } from './player-actions';
 import { deconstructionCamp } from '../scenarios/deconstruction';
@@ -52,7 +53,7 @@ test('chantier par interface : plan sur une pile, dégagement porté, cadre, sau
     const old=JSON.parse(serializeWorld(fixture));(old.schemaVersion=15,withoutPawnSkills(old));for(const a of old.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete old.deconstructed;delete old.packed;for(const pawn of old.pawns)delete pawn.orders;
     await page.addInitScript(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:JSON.stringify(old)});
     await page.goto('/?size=32&e2e');await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();
-    await expect.poll(async()=>(await world(page)).schemaVersion).toBe(43);
+    await expect.poll(async()=>(await world(page)).schemaVersion).toBe(SCHEMA_VERSION);
     await tool(page,'wall');await cell(page,16,14);await page.keyboard.press('Escape');await cell(page,16,14);
     await expect(page.locator('#cell-job')).toContainText('Plan');
     await page.locator('[data-speed="6"]').click();

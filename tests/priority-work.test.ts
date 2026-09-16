@@ -1,3 +1,4 @@
+import { SCHEMA_VERSION } from '../src/sim/types';
 import { withoutPawnSkills, withMigratedSkills } from './scenarios/legacy-skills';
 import { expect, test } from 'vitest';
 import { createWorld, applyCommand, addGroundMaterial, refreshStock, stepWorld, validateWorld, serializeWorld, deserializeWorld } from '../src/sim/index';
@@ -77,5 +78,5 @@ test('priority decisions share budgets, disappear on lost access or timeout with
     const invalid=structuredClone(raw);invalid.pawns[0].priorityWork=priority;expect(()=>deserializeWorld(JSON.stringify(invalid))).toThrow(/priority work/);
   }
   (raw.schemaVersion=22,withoutPawnSkills(raw));for(const a of raw.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete raw.deconstructed;delete raw.packed;expect(()=>deserializeWorld(JSON.stringify(raw))).toThrow(/version 22/);delete raw.pawns[0].priorityWork;
-  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated).toEqual(withMigratedSkills({...raw,pawns:raw.pawns.map((p:any)=>({...p,priorities:{craft:2,...p.priorities,mine:2}})),schemaVersion:43,packed:[],deconstructed:{count:0,lostWood:0,fuelTicks:0}}));expect(migrated.pawns[0]!.priorityWork).toBeUndefined();
+  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated).toEqual(withMigratedSkills({...raw,pawns:raw.pawns.map((p:any)=>({...p,priorities:{craft:2,...p.priorities,mine:2}})),schemaVersion:SCHEMA_VERSION,packed:[],deconstructed:{count:0,lostWood:0,fuelTicks:0}}));expect(migrated.pawns[0]!.priorityWork).toBeUndefined();
 });

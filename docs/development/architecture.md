@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+V44 : [interruption involontaire](interrupted-cargo.md), engagements libérés indépendamment du dépôt, cargaison unique persistante, reprises déphasées et index de sol limité à une décision. Le bridge publie la phase ; aucun ajout aux shaders.
+
 V43 : [compétences](skills.md), données individuelles en milli-XP, horloge déterministe déphasée et premier consommateur Construction. Le renderer ne calcule aucun apprentissage ; la présentation lit les snapshots du worker.
 
 V42 : [électricité](power.md), index de transmetteurs dérivé par propriétaire, états de connexion/alimentation persistants et combustible entier fractionné. Les appareils réutilisent chantiers/transport/thermique et le diffuseur lumineux commun ; phases électriques suivies par le bridge, parties dans le lot de mobilier existant.
