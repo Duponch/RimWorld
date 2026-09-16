@@ -6,6 +6,10 @@ export interface BodyAssessmentInput {
   readonly damage:readonly {readonly part:BodyPartId;readonly loss:number}[];
   readonly missing:readonly BodyPartId[];
   readonly pain:number;
+  /** Condition modifiers apply after the physiological consciousness formula,
+   * before its rounding and before capacities that consume consciousness. */
+  readonly consciousnessOffset?:number;
+  readonly consciousnessMax?:number;
 }
 export interface BodyCapacities {
   readonly consciousness:number; readonly moving:number; readonly manipulation:number;
@@ -58,7 +62,8 @@ function calculate(input:BodyAssessmentInput):BodyAssessment {
   const breathing=round(pair('left-lung','right-lung')*part('neck')*pair('ribcage','sternum'));
   const digestion=round(pair('stomach','liver'));
   const painOffset=Math.min(.4,Math.max(0,(input.pain-.1)*(.4/.9)));
-  const consciousness=round((part('brain')-(painOffset>=.01?painOffset:0))*(.8+.2*bloodPumping)*(.8+.2*breathing)*(.9+.1*bloodFiltration));
+  const naturalConsciousness=(part('brain')-(painOffset>=.01?painOffset:0))*(.8+.2*bloodPumping)*(.8+.2*breathing)*(.9+.1*bloodFiltration);
+  const consciousness=round(Math.min(input.consciousnessMax??Infinity,naturalConsciousness+(input.consciousnessOffset??0)));
   const canBeAwake=consciousness>=.3;
   let arms=0,legs=0,functionalLegs=0;
   for(const side of ['left','right'] as const) {
@@ -81,5 +86,5 @@ export const HEALTHY_BODY:BodyAssessment=calculate(HEALTHY_BODY_INPUT);
 /** Caller supplies a current health projection. No cache keyed solely by pawn ID
  * or tick: in-place injury changes must be visible within the same tick. */
 export function assessBody(input:BodyAssessmentInput=HEALTHY_BODY_INPUT):BodyAssessment {
-  return input.damage.length===0&&input.missing.length===0&&input.pain===0?HEALTHY_BODY:calculate(input);
+  return input.damage.length===0&&input.missing.length===0&&input.pain===0&&!input.consciousnessOffset&&(input.consciousnessMax??1)>=1?HEALTHY_BODY:calculate(input);
 }

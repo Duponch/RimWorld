@@ -1,5 +1,7 @@
 # Stratégie de validation
 
+Module médical isolé sous V44 : `injuries.test.ts` enrichit les scénarios anatomiques avec état local, évolution sur plusieurs jours, seuils létaux et continuation du PRNG. `scripts/injury-bench.ts` mesure dossiers et copies à 3/30/100 acteurs. Comme il ne change aucune commande, Pawn, worker ou pose, la longue UI n’est pas rejouée ; elle devient obligatoire avec l’activation des dommages. [Contrat](injuries.md).
+
 V44 : huit scénarios `interrupted-cargo.test.ts` regroupent interruption, conservation, dégagement par un autre colon, repas/pourriture, meubles, recettes, arêtes, migration et comparaison des dépôts. Le pilote relève `interruptedCargo` ; le navigateur dédié vérifie sommeil, rechargement et dégagement par commandes UI. L’audit `scripts/interruption-bench.ts` sépare coût initial, ticks, copies et résultats pour 3/30/100 acteurs et 0/10 000 piles de sol. [Contrat](interrupted-cargo.md).
 
 V43 : `skills.test.ts` confronte seuils XP indépendants, saturation, oubli/dette, minuit, travail physique et sauvegarde corrompue. Le pilote relève les apprentissages et utilise les aptitudes affichées pour son bâtisseur ; les anciennes fixtures retirent le profil V43 avant validation de leur version. [Contrat](skills.md).

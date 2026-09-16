@@ -213,3 +213,10 @@
 - Lire docs/development/interrupted-cargo.md. Une interruption involontaire libère les engagements même si le dépôt échoue ; Pawn.interruptedCargo conserve un seul objet, jamais un inventaire. Sommeil/réveil et pourriture continuent, travail bloqué jusqu’au dépôt proche. Les commandes volontaires gardent leur refus atomique.
 - V43 strictement validée avant migration sans marqueur inventé. Le nouveau marqueur est une phase observée par le bridge ; arêtes capturées terminées avant effondrement de fatigue, arrêt médical immédiat encore absent.
 - Les index de cellules de piles ne survivent qu’à une décision de dépôt. Tentatives déphasées, vingt ticks entre échecs ; commandes explicites peuvent réveiller la planification. Conserver ordre des cellules, quantités, identités, âge et meuble entier.
+
+## Module médical isolé sous V44
+
+- Lire docs/development/injuries.md et sa recherche avant intégration. Aucun champ médical de Pawn ni dommage jouable : conserver cette distinction. Le module reçoit un impact déjà localisé/résolu, pas les dégâts bruts d’une arme ou d’un toit.
+- Milli-PV et unités sanguines entières ; racines manquantes sans descendants redondants ; Cut ne fusionne pas, Crush peut fusionner. Famine bloque guérison naturelle et contribution du soin ; cicatrices décidées avant guérison, douleur permanente activée au seuil.
+- `MedicalRecord.tick` est figé au décès. L’appelant doit couper les intervalles aux changements de contexte ; la future intégration doit appliquer interruptions et présentation au tick effectif. Validation du dossier isolé ne vaut pas validation/migration de World.
+- Le seuil sanguin de 0,1/jour suit le miroir identifié, malgré la formulation générale du wiki ; stade extrême = offset −0,4 et plafond 0,1, ne pas restaurer le vieux XML. Aucun cache d’anatomie par frame ; copies des dossiers très chargés restent un coût à traiter à l’intégration worker.

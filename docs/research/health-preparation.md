@@ -35,7 +35,7 @@ Ce producteur peut compléter une interaction déjà présente, après l’anato
 
 ## Frontière technique proposée
 
-Définitions anatomiques immuables et identifiants stables, séparés des blessures persistantes de chaque personne. Éviter de recopier un corps sain complet par colon et par snapshot : l’absence de lésion peut rester un état sparse, les capacités étant dérivées. Les invalidations doivent suivre les lésions, traitements et modificateurs effectivement livrés, jamais une horloge graphique. Mesurer le coût des personnes saines séparément des foules blessées. Cette proposition n’est pas encore du code ni une preuve de performance.
+Définitions anatomiques immuables et identifiants stables, séparés des blessures persistantes de chaque personne. Éviter de recopier un corps sain complet par colon et par snapshot : l’absence de lésion peut rester un état sparse, les capacités étant dérivées. Les invalidations doivent suivre les lésions, traitements et modificateurs effectivement livrés, jamais une horloge graphique. Mesurer le coût des personnes saines séparément des foules blessées. Les socles anatomique et [lésions](../development/injuries.md) sont maintenant codés et mesurés isolément ; leur intégration au monde et au rendu reste à faire.
 
 ## Asymétrie des membres
 
@@ -55,4 +55,4 @@ La distinction entre **type de dommage** et **type de blessure** est nécessaire
 
 [Injury](https://rimworldwiki.com/wiki/Injury) et [Health Difficulties](https://rimworldwiki.com/wiki/Health_Difficulties) ne concordent pas sur tous les vieux taux d’infection/cicatrice ; ne pas recopier la table générale comme une constante actuelle. Le code `Hediff_Injury` coupe le saignement des os, blessures soignées/permanentes et blessures devenues assez anciennes, alors que certaines formulations générales simplifient ce point. Les nouveaux contrats devront conserver type, partie, âge, sévérité, soin et état de cicatrice séparément.
 
-La guérison dans `Pawn_HealthTracker` applique une quantité à une blessure admissible choisie, pas la quantité journalière à toutes les blessures. Le repos et le lit ajoutent leurs facteurs, les soins ont une contribution distincte et la famine bloque celle-ci. Ces lectures préparent la suite ; elles n’ajoutent aucun état médical en partie dans V44.
+La guérison dans `Pawn_HealthTracker` applique une quantité à une blessure admissible choisie, pas la quantité journalière à toutes les blessures. Le repos et le lit ajoutent leurs facteurs, les soins ont une contribution distincte et la famine bloque les deux contributions (naturelle et soin), comme confirmé lors de la [relecture des lésions](injuries-reference.md). Le module isolé les calcule désormais ; aucun état médical en partie n’est ajouté dans V44.

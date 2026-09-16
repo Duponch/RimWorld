@@ -1,0 +1,49 @@
+import { BODY_PARTS,HUMAN_BODY,type BodyPartId } from './body-definition.ts';
+
+/** Adult natural body only. These are injury properties, not weapon/armor rules.
+ * Provenance and unresolved version differences: docs/research/injuries-reference.md. */
+export const HP_UNIT=1000;
+export const PAIN_UNIT=800000;
+/** Integer units make both thirds/day recovery and wound bleeding exact. */
+export const BLOOD_UNIT=300_000_000;
+export const MEDICAL_INTERVAL=6; // 60 Core ticks, day preserved at 6000 local ticks
+export const HEAL_INTERVAL=60;
+export const FRESH_MISSING_TICKS=9000;
+export type InjuryKind='cut'|'crush'|'crack'|'bruise';
+export type ScarPain=0|1|3|6;
+/** Per milli-HP: numerator of pain / PAIN_UNIT, and blood units per interval. */
+export const INJURY_RULES=Object.freeze({
+  cut:Object.freeze({label:'Coupure',painUnits:10,bleedUnits:18,scar:true,merge:false}),
+  crush:Object.freeze({label:'Écrasement',painUnits:10,bleedUnits:3,scar:true,merge:true}),
+  crack:Object.freeze({label:'Fissure',painUnits:8,bleedUnits:0,scar:true,merge:false}),
+  bruise:Object.freeze({label:'Contusion',painUnits:10,bleedUnits:0,scar:false,merge:false}),
+});
+const bone=(id:BodyPartId)=>['ribcage','sternum','pelvis','spine','skull','nose','jaw'].includes(id)||/-(clavicle|humerus|radius|femur|tibia)$/.test(id);
+export const PART_INJURY_RULES=Object.freeze(Object.fromEntries(HUMAN_BODY.map(part=>{
+  const solid=bone(part.id),eye=part.id.endsWith('-eye');
+  const skin=part.depth==='outside'&&!eye&&!['jaw','tongue','waist'].includes(part.id);
+  return [part.id,Object.freeze({solid,skin,bleed:solid?0:part.id==='heart'?5:part.id==='neck'?4:part.id==='head'?2:1,
+    delicate:eye||part.id==='brain',scarFactor:part.id==='brain'?9999999:eye?15:part.id==='spine'?6:solid?0:1})];
+})) as Record<BodyPartId,Readonly<{solid:boolean;skin:boolean;bleed:number;delicate:boolean;scarFactor:number}>>);
+
+export function isWithinPart(candidate:BodyPartId,ancestor:BodyPartId):boolean {
+  for(let id:BodyPartId|null=candidate;id!==null;id=BODY_PARTS[id].parent)if(id===ancestor)return true;
+  return false;
+}
+export function coagulationAge(severity:number):number {
+  // Convert the rounded Core deadline, retaining its fractional local tick.
+  const core=90000*Math.max(0,Math.min(1,(severity/HP_UNIT-1)/29)),floor=Math.floor(core);
+  return (90000+(core-floor===.5?floor+floor%2:Math.round(core)))/10;
+}
+export function scarChance(part:BodyPartId,kind:InjuryKind,severity:number):number {
+  const rules=PART_INJURY_RULES[part];
+  return INJURY_RULES[kind].scar?Math.min(1,.02*rules.scarFactor*(rules.delicate?1:Math.max(0,Math.min(1,(severity/HP_UNIT-4)/10)))):0;
+}
+export function bloodConsciousness(loss:number):{consciousnessOffset:number;consciousnessMax?:number} {
+  if(loss>=BLOOD_UNIT*.6)return {consciousnessOffset:-.4,consciousnessMax:.1};
+  return {consciousnessOffset:loss>=BLOOD_UNIT*.45?-.4:loss>=BLOOD_UNIT*.3?-.2:loss>=BLOOD_UNIT*.15?-.1:0};
+}
+/** Only these boundaries can change capacities or cause blood-loss death. */
+export function bloodStage(loss:number):number {
+  return loss>=BLOOD_UNIT?5:loss>=BLOOD_UNIT*.6?4:loss>=BLOOD_UNIT*.45?3:loss>=BLOOD_UNIT*.3?2:loss>=BLOOD_UNIT*.15?1:0;
+}

@@ -1,5 +1,7 @@
 # Matrice des systèmes et critères de réalisation
 
+S13 : [calcul des lésions, saignement, cicatrices et guérison](../development/injuries.md) testé isolément sous V44 ; toujours aucune blessure ni soin jouable. Ce socle ne valide pas le critère d’acceptation du domaine.
+
 V44 consolide S04/S07 : sommeil forcé avec cargaison indéposable, engagements libérés, conservation et récupération après dégagement. Les transitions médicales de S13 restent à implémenter ; [contrat](../development/interrupted-cargo.md).
 
 V43 commence les différences humaines par Construction et son apprentissage. Les autres compétences, traits et la santé restent ouverts. [Priorité et limites](../research/skills-reference.md).

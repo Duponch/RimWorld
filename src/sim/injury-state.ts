@@ -1,0 +1,96 @@
+import { assessBody,type BodyAssessment } from './body-capacities.ts';
+import { BODY_PARTS,bodyPartExists,type BodyPartId } from './body-definition.ts';
+import { BLOOD_UNIT,HP_UNIT,PAIN_UNIT,FRESH_MISSING_TICKS,INJURY_RULES,PART_INJURY_RULES,bloodConsciousness,coagulationAge,isWithinPart,scarChance,type InjuryKind,type ScarPain } from './injury-rules.ts';
+import type { Injury,MedicalRandom,MedicalRecord } from './injury-types.ts';
+
+export function createMedicalRecord(tick=0):MedicalRecord {
+  if(!Number.isSafeInteger(tick)||tick<0)throw new Error('Invalid medical tick');
+  return {tick,nextInjuryId:1,injuries:[],missing:[],bloodLoss:0};
+}
+export function partMissing(record:MedicalRecord,part:BodyPartId):boolean {return record.missing.some(m=>isWithinPart(part,m.part));}
+export function remainingPartHealth(record:MedicalRecord,part:BodyPartId):number {
+  if(partMissing(record,part))return 0;
+  const hp=Math.max(BODY_PARTS[part].destroyable?0:1,BODY_PARTS[part].hp-record.injuries.reduce((n,i)=>n+(i.part===part?i.severity/HP_UNIT:0),0));
+  const floor=Math.floor(hp);
+  return (hp-floor===.5?floor+floor%2:Math.round(hp))*HP_UNIT;
+}
+export function freshMissing(record:MedicalRecord,part:MedicalRecord['missing'][number]):boolean {
+  return !part.tended&&record.tick-part.bornAt<FRESH_MISSING_TICKS&&BODY_PARTS[part.part].depth==='outside'&&!PART_INJURY_RULES[part.part].solid;
+}
+export function injuryBleed(record:MedicalRecord,injury:Injury):number {
+  return injuryBleedUnits(record,injury)*1000/BLOOD_UNIT;
+}
+function injuryBleedUnits(record:MedicalRecord,injury:Injury):number {
+  if(record.death||injury.tended!==undefined||injury.scar?.pain!==undefined||record.tick-injury.bornAt>=coagulationAge(injury.severity))return 0;
+  return injury.severity*INJURY_RULES[injury.kind].bleedUnits*PART_INJURY_RULES[injury.part].bleed;
+}
+export function medicalPain(record:MedicalRecord):number {
+  if(record.death)return 0;
+  let pain=0;
+  for(const i of record.injuries)pain+=i.severity*(i.scar?.pain!==undefined?5*i.scar.pain:INJURY_RULES[i.kind].painUnits);
+  for(const m of record.missing)if(freshMissing(record,m))pain+=BODY_PARTS[m.part].hp*10000;
+  return Math.min(1,pain/PAIN_UNIT);
+}
+export function medicalBleed(record:MedicalRecord):number {
+  return medicalBleedUnits(record)*1000/BLOOD_UNIT;
+}
+/** Blood units gained per reference 60-tick interval; exact integer threshold. */
+export function medicalBleedUnits(record:MedicalRecord):number {
+  if(record.death)return 0;
+  let rate=record.injuries.reduce((n,i)=>n+injuryBleedUnits(record,i),0);
+  for(const m of record.missing)if(freshMissing(record,m))rate+=BODY_PARTS[m.part].hp*HP_UNIT*36*PART_INJURY_RULES[m.part].bleed;
+  return rate;
+}
+export function assessMedical(record:MedicalRecord):BodyAssessment {
+  return assessBody({damage:record.injuries.map(i=>({part:i.part,loss:i.severity/HP_UNIT})),missing:record.missing.map(m=>m.part),pain:medicalPain(record),...bloodConsciousness(record.bloodLoss)});
+}
+export function medicalStatus(record:MedicalRecord,body=assessMedical(record)):'mobile'|'downed'|'dead' {
+  return record.death?'dead':body.painShock||!body.canBeAwake||!body.movingCapable?'downed':'mobile';
+}
+export function reconcileMedicalDeath(record:MedicalRecord):void {
+  if(record.death)return;
+  const cause=record.bloodLoss>=BLOOD_UNIT?'blood-loss':assessMedical(record).vitalFailure?'vital-failure':record.injuries.reduce((n,i)=>n+i.severity,0)>=150*HP_UNIT?'trauma':null;
+  if(cause)record.death={tick:record.tick,cause};
+}
+export function rollScarPain(random:MedicalRandom):ScarPain {const n=random();return n<.5?0:n<.7?1:n<.9?3:6;}
+
+/** Apply already localized, post-armor/post-overkill damage. The producer must
+ * resolve hit selection, outside-part preservation and instant-kill protection.
+ * It must NOT feed raw weapon damage into this lower layer. */
+export function addResolvedInjury(record:MedicalRecord,part:BodyPartId,kind:InjuryKind,severity:number,random:MedicalRandom):Injury|null {
+  if(!bodyPartExists(part)||BODY_PARTS[part].conceptual||!Object.hasOwn(INJURY_RULES,kind)||!Number.isSafeInteger(severity)||severity<0)throw new Error('Invalid localized injury');
+  if(record.death||severity===0||partMissing(record,part))return null;
+  if(!Number.isSafeInteger((record.injuries.reduce((n,i)=>n+i.severity,0)+severity)*100))throw new Error('Medical severity overflow');
+  if(!Number.isSafeInteger(record.nextInjuryId+1))throw new Error('Medical identity exhausted');
+  const injury:Injury={id:record.nextInjuryId++,part,kind,severity,bornAt:record.tick};
+  const chance=scarChance(part,kind,severity);
+  if(chance>0&&(chance>=1||random()<chance)) {
+    injury.scar=PART_INJURY_RULES[part].delicate?{threshold:severity,pain:rollScarPain(random)}:
+      {threshold:Math.round(HP_UNIT+random()*(severity/2-HP_UNIT))};
+  }
+  // Crush can merge into an untreated nonpermanent injury. Its older scar
+  // threshold survives; the incoming threshold is discarded by that merge.
+  const existing=INJURY_RULES[kind].merge&&injury.scar?.pain===undefined?record.injuries.find(i=>i.part===part&&i.kind===kind&&i.tended===undefined&&i.scar?.pain===undefined):undefined;
+  if(existing){existing.severity+=severity;existing.bornAt=record.tick;}else record.injuries.push(injury);
+  if(part!=='torso'&&remainingPartHealth(record,part)===0) {
+    record.injuries=record.injuries.filter(i=>!isWithinPart(i.part,part));
+    record.missing=record.missing.filter(m=>!isWithinPart(m.part,part));
+    record.missing.push({part,bornAt:record.tick});
+    reconcileMedicalDeath(record);return null;
+  }
+  reconcileMedicalDeath(record);return existing??injury;
+}
+
+/** Physiological result only, not a remote-care player command. */
+export function tendInjury(record:MedicalRecord,id:number,quality:number):boolean {
+  if(!Number.isSafeInteger(quality)||quality<0||quality>1300)throw new Error('Invalid tending quality');
+  if(record.death)return false;
+  const injury=record.injuries.find(i=>i.id===id);
+  if(!injury||injury.tended!==undefined||injury.scar?.pain!==undefined)return false;
+  injury.tended=quality;return true;
+}
+export function tendMissingPart(record:MedicalRecord,part:BodyPartId):boolean {
+  const missing=record.missing.find(m=>m.part===part);
+  if(record.death||!missing||!freshMissing(record,missing))return false;
+  missing.tended=true;return true;
+}

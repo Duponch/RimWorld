@@ -1,5 +1,7 @@
 # Adoption du référentiel utilisateur
 
+Sous V44 — chapitre 15, SYS/TEST-089..091/094/096 : [module des lésions](../development/injuries.md) isolé ; adopter blessures locales, racines absentes, guérison sélective et famine ; adapter précision entière/PRNG ; corriger le vieux stade d’hémorragie extrême. [Recherche et incertitudes](injuries-reference.md). Activation, secours, infections/immunité et cadavres restent différés.
+
 V44 — chapitres 8/9/14, SYS/TEST-044/079 et réservations 031..034/047..054 ; chapitre 15 SYS/TEST-096 pour la suite médicale. Adopter interruption/propriété séparées, adapter dépôt local et cadence déphasée, différer incapacité médicale et secours. [Sources recoupées](interrupted-cargo-reference.md), [contrat livré](../development/interrupted-cargo.md).
 
 Socle anatomique sous V43 — chapitre 15, SYS/TEST-089..091 et 096 : adopter arbre et capacités distinctes ; adapter IDs/évaluation immuable ; différer activation, blessures et soins ; interruption de fatigue sécurisée en V44, interruption médicale encore ouverte. [Recherche recoupée](body-reference.md), [statut technique précis](../development/body.md).

@@ -2,6 +2,21 @@
 
 16 septembre 2026. [Interruptions involontaires et cargaisons](interrupted-cargo.md), [recherche renouvelée](../research/interrupted-cargo-reference.md). Les compétences, l’anatomie isolée et le dernier audit mixte cent colons restent dans [la preuve V43](../history/validation-human-foundations-v43.md). La santé médicale n’est pas encore active.
 
+## Module médical isolé — 16 septembre
+
+[Contrat et limites](injuries.md), [recherches fraîches](../research/injuries-reference.md). Quinze scénarios passent : huit pour les lésions, sept pour le corps. Le parcours médical teste 63 parties sur plusieurs jours avec continuation du dossier et du PRNG ; il ne teste pas encore un champ médical de `Pawn`. [Rapport final](../../artifacts/injuries-kernel-v44-final.json). Le [premier passage](../../artifacts/injuries-kernel-v44.json) conservait une différence flottante 0,15000000000000002/0,15 ; douleur et progression sanguine ont été converties en numérateurs entiers, avec contrôles explicites des seuils mixtes. TypeScript et le build Vite passent (211 modules ; mêmes tailles de worker et de jeu que V44). Avertissement historique du bundle au-delà de 500 kB inchangé.
+
+Petit audit CPU isolé : Ryzen 5 3600, Windows 11 10.0.26200, Node 24.11.1 ; 3/30/100 dossiers, 0/1/20/100 petites coupures, 60 pas d’échauffement et 1 200 pas mesurés par combinaison. Phases réparties ; famine injectée pour maintenir les lésions ; validation et continuation exacte hors chronométrage. [Avant](../../artifacts/injuries-cpu-before-v44.json), [après](../../artifacts/injuries-cpu-v44.json). Réévaluer les capacités uniquement au franchissement d’un stade sanguin réduit le travail sans cache périmé ; les dossiers sains ont aussi leur chemin direct.
+
+| Cent dossiers, lésions par personne | Pas p95 avant → après | Pas p99 / maximum après | Copie p95 après |
+| --- | --- | --- | --- |
+| 0 | 0,0071 → 0,0023 ms | 0,0026 / 0,1953 ms | 0,1472 ms |
+| 1 | 0,1697 → 0,0039 ms | 0,0056 / 0,1137 ms | 0,3258 ms |
+| 20 | 0,1932 → 0,0166 ms | 0,0201 / 0,2594 ms | 2,0122 ms |
+| 100 | 0,2753 → 0,0785 ms | 0,0973 / 0,2036 ms | 10,2714 ms |
+
+Une passe par combinaison : ne pas interpréter les variations des maxima/GC comme une garantie. Le cas extrême conserve 10 000 lésions ; sa copie coûte beaucoup plus que l’évolution et doit guider le futur protocole médical. Ce n’est pas un temps de tick de colonie, une mesure de soins actifs ou un FPS. Aucun moteur, commande, pose ou schéma du monde n’ayant changé, les UI longues précédentes ne sont pas relancées pour le module isolé. L’activation des blessures nécessitera scénario joueur, worker, migration, chronologie visuelle et charge mixte.
+
 ## Régression et contrats
 
 Le transporteur épuisé sur sol saturé restait en mouvement : le [scénario avant correctif](../../artifacts/interrupted-cargo-before-v44.json) échoue sur le passage au sommeil. Huit scénarios profonds couvrent désormais file/engagements, identité des matériaux/meubles, âge/expiration alimentaire, recette inachevée, réveil, dépôt par un second colon, continuation et états illégaux. Le parcours de dépôt optimisé est comparé à l’ancien ordre de candidats sur 32 dispositions avec obstacles et cases incompatibles ; deux décisions successives observent les mutations.

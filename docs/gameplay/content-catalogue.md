@@ -142,7 +142,7 @@ Nouvelle famille `door`, sept variantes : bois, acier, granite, calcaire, marbre
 
 ## Corps humain : socle encore non actif
 
-[Définition anatomique](../../src/sim/body-definition.ts) : 64 entrées dont un emplacement utilitaire conceptuel, parties symétriques, organes et doigts/orteils. Il ne s’agit ni de 64 objets transportables ni d’un inventaire médical déjà jouable. [Capacités et limites](../development/body.md). Autres races/corps, implants, pathologies, blessures persistantes et équipement restent absents du contenu actif.
+[Définition anatomique](../../src/sim/body-definition.ts) : 64 entrées dont un emplacement utilitaire conceptuel, parties symétriques, organes et doigts/orteils. Il ne s’agit ni de 64 objets transportables ni d’un inventaire médical déjà jouable. [Capacités et limites](../development/body.md). Quatre profils de lésions sont codés dans le [module médical isolé](../development/injuries.md) : coupure, écrasement, fissure, contusion ; ce ne sont pas des objets ni un catalogue médical complet. Autres races/corps, implants, pathologies, blessures persistantes de Pawn et équipement restent absents du contenu actif.
 
 ## Cargaison interrompue V44
 

@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+Santé sous V44 : [module des lésions](injuries.md) isolé du World, avec règles, état local, évolution et validation séparés. Il enrichit le calcul anatomique sans champ de Pawn, commande ni rendu. Le futur propriétaire doit appliquer les transitions médicales au tick effectif et éviter de recopier tous les dossiers à chaque publication ; le banc mesure ce coût séparément.
+
 V44 : [interruption involontaire](interrupted-cargo.md), engagements libérés indépendamment du dépôt, cargaison unique persistante, reprises déphasées et index de sol limité à une décision. Le bridge publie la phase ; aucun ajout aux shaders.
 
 V43 : [compétences](skills.md), données individuelles en milli-XP, horloge déterministe déphasée et premier consommateur Construction. Le renderer ne calcule aucun apprentissage ; la présentation lit les snapshots du worker.

@@ -2,7 +2,7 @@
 
 V44 : [interruptions et cargaisons conservées](development/interrupted-cargo.md), [relecture de l’épuisement et du dépôt](research/interrupted-cargo-reference.md).
 
-Santé en préparation : [socle anatomique testé, encore non activé](development/body.md), [vérification des parties et capacités](research/body-reference.md).
+Santé en préparation : [socle anatomique](development/body.md) et [module des lésions](development/injuries.md) codés/testés, encore non activés dans la partie ; [vérification anatomique](research/body-reference.md) et [relecture blessures/guérison](research/injuries-reference.md).
 
 V43 : [première compétence et apprentissage](development/skills.md), [recherche et réorientation des priorités](research/skills-reference.md).
 
