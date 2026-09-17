@@ -19,7 +19,7 @@ Le diagnostic de cadence V52 a produit une correction mesurée : comparaison ord
 
 Chaque lot commence par corpus et recherche fraîche. Les audits rétroactifs peuvent modifier cet ordre sur preuve. Voir [motif et sources de la réorientation](research/skills-reference.md). Les extensions restent après G5.
 
-La [recherche de mobilisation](research/drafting-reference.md) consigne les adaptations V53 et les limites à reprendre avec le combat : hostiles, couvert, formation, actions civiles mobilisées et exceptions de sommeil. Le mode tactique seul ne livre pas le combat.
+La [recherche de mobilisation](research/drafting-reference.md) consigne les adaptations V53 et les limites à reprendre avec le combat : hostiles, couvert, formation, actions civiles mobilisées et exceptions de sommeil. La [préparation du premier combat](research/combat-preparation.md) reprend les chapitres 17–20, les sources datées et les prérequis de ligne, projectile, anatomie et réaction civile ; les données numériques encore incertaines y restent signalées. Le mode tactique seul ne livre pas le combat.
 
 ## Contrats de progression
 

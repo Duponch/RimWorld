@@ -2,6 +2,8 @@
 
 V53 : [mobilisation et déplacements physiques](development/drafting.md), [règles et adaptations vérifiées](research/drafting-reference.md). Bouton/R, groupes, clic droit/Maj, arrêt, besoins et conservation lors des interruptions. Tirs et adversaires restent le prochain lot humain.
 
+Suite de V53 : [préparation du premier combat](research/combat-preparation.md), avec lignes/couvert, cible mobile, impact anatomique et réactions civiles. Recherche et prérequis uniquement ; aucun tir livré par cette note.
+
 Transport sous V52 : [comparaison ordonnée des ressources](development/presentation-timing.md#coût-de-recherche-des-deltas-sous-v52), mêmes états et règles, coût d’encodage réduit. Garde native minage/abattage verte après modification ; [preuves et limites de charge](development/validation.md). La mobilisation est ajoutée en V53.
 
 V52 : [premier équipement physique](development/equipment.md), [règles revérifiées](research/equipment-reference.md). Revolver au sol, accès/échange/dépôt, propriété distincte de la cargaison et attache GPU. Mobilisation ajoutée V53 ; tirs, vêtements et inventaire restent ouverts.
