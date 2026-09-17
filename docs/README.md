@@ -1,8 +1,10 @@
 # Documentation de Lisière
 
-Transport sous V52 : [comparaison ordonnée des ressources](development/presentation-timing.md#coût-de-recherche-des-deltas-sous-v52), mêmes états et règles, coût d’encodage réduit. Garde native minage/abattage verte après modification ; [preuves et limites de charge](development/validation.md). Mobilisation/déplacement tactique constituent le prochain lot de gameplay.
+V53 : [mobilisation et déplacements physiques](development/drafting.md), [règles et adaptations vérifiées](research/drafting-reference.md). Bouton/R, groupes, clic droit/Maj, arrêt, besoins et conservation lors des interruptions. Tirs et adversaires restent le prochain lot humain.
 
-V52 : [premier équipement physique](development/equipment.md), [règles revérifiées](research/equipment-reference.md). Revolver au sol, accès/échange/dépôt, propriété distincte de la cargaison et attache GPU. Mobilisation, tirs, vêtements et inventaire restent ouverts.
+Transport sous V52 : [comparaison ordonnée des ressources](development/presentation-timing.md#coût-de-recherche-des-deltas-sous-v52), mêmes états et règles, coût d’encodage réduit. Garde native minage/abattage verte après modification ; [preuves et limites de charge](development/validation.md). La mobilisation est ajoutée en V53.
+
+V52 : [premier équipement physique](development/equipment.md), [règles revérifiées](research/equipment-reference.md). Revolver au sol, accès/échange/dépôt, propriété distincte de la cargaison et attache GPU. Mobilisation ajoutée V53 ; tirs, vêtements et inventaire restent ouverts.
 
 V51 : [médicaments et cinq plafonds de soins](development/medicines.md), [sources et subtilités vérifiées](research/medicines-reference.md). Prélèvement, portage, doses par opération et soins groupés ; trente doses industrielles sur les nouveaux sites. Acquisition complète et maladies restent ouvertes.
 

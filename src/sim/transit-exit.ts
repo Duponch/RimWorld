@@ -21,10 +21,10 @@ export function leaveTransitCell(world:World,pawn:Pawn,getBlocked:NavigationGrid
     if(target?.x===pawn.x&&target.z===pawn.z){delete pawn.transitExit;return false;}
   }
   if(canStandAt(world,pawn)){
-    if(pawn.transitExit&&!pawn.need&&!pawn.haul&&!pawn.cooking&&pawn.jobId===null&&!pawn.recreation.task){pawn.path=[];pawn.state='idle';}
+    if(pawn.transitExit&&!pawn.draft?.target&&!pawn.need&&!pawn.haul&&!pawn.cooking&&pawn.jobId===null&&!pawn.recreation.task){pawn.path=[];pawn.state='idle';}
     delete pawn.transitExit;return false;
   }
-  if(!pawn.need&&wantsSleep(world,pawn)&&world.structures.some(s=>s.id===pawn.bedId&&s.x===pawn.x&&s.z===pawn.z))return false;
+  if(!pawn.draft&&!pawn.need&&wantsSleep(world,pawn)&&world.structures.some(s=>s.id===pawn.bedId&&s.x===pawn.x&&s.z===pawn.z))return false;
   if(pawn.need?.kind==='sleep'&&pawn.need.bedId!==null&&pawn.need.target.x===pawn.x&&pawn.need.target.z===pawn.z){delete pawn.transitExit;return false;}
   if(pawn.need?.kind==='sleep'&&pawn.need.bedId===null||pawn.recreation.task&&pawn.recreation.task.target.x===pawn.x&&pawn.recreation.task.target.z===pawn.z||pawn.cooking&&pawn.cooking.spot.x===pawn.x&&pawn.cooking.spot.z===pawn.z) {
     if(!releaseWork(world,pawn))return true;

@@ -27,3 +27,6 @@
 .skills-inspection{margin-top:.6rem;max-height:13rem;overflow:auto}
 .skills-inspection progress{width:100%}
 #health-inspection > label{display:block;margin:6px 0;font-size:11px;line-height:1.5}#health-inspection > small{display:block;color:#efce8c;line-height:1.5}
+
+[data-pawn][data-drafted="true"] { border-bottom: 3px solid #d5b477; }
+#toggle-draft[aria-pressed="true"] { background: #655433; }

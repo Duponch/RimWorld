@@ -43,7 +43,17 @@ export async function editBill(page:Page,id:number,settings:BillSettings):Promis
 
 export async function perform(page: Page, decision: Decision, rotation: { value: number }): Promise<void> {
   const c=decision.command;
-  if(c.type==='order-equipment'||c.type==='order-feed'||c.type==='order-tend'||c.type==='order-rescue'||c.type==='order-job'||c.type==='order-haul'||c.type==='order-cook') {
+  if(c.type==='draft'||c.type==='draft-move'||c.type==='draft-stop') {
+    await page.keyboard.press('Escape');
+    for(const [i,id] of c.pawnIds.entries())await page.locator(`[data-pawn="${id}"]`).click({modifiers:i?['Shift']:[]});
+    if(c.type==='draft') {
+      const current=await world(page);if(c.pawnIds.some(id=>!!current.pawns.find(p=>p.id===id)?.draft!==c.enabled))await page.locator('#toggle-draft').click();
+    } else if(c.type==='draft-stop')await page.locator('#stop-draft').click();
+    else {
+      await revealCells(page,[c.target]);const point=await page.evaluate(t=>window.__lisiere.projectCell(t.x,t.z),c.target),bounds=(await page.locator('#viewport canvas').boundingBox())!;
+      if(c.queue)await page.keyboard.down('Shift');await page.mouse.click(bounds.x+point.x,bounds.y+point.y,{button:'right'});if(c.queue)await page.keyboard.up('Shift');
+    }
+  } else if(c.type==='order-equipment'||c.type==='order-feed'||c.type==='order-tend'||c.type==='order-rescue'||c.type==='order-job'||c.type==='order-haul'||c.type==='order-cook') {
     await page.keyboard.press('Escape');await page.locator(`[data-pawn="${c.pawnId}"]`).click();
     const current=await world(page);
     const job=c.type==='order-equipment'?(c.action==='equip'?current.piles.find(p=>p.id===c.itemId)?.owner:current.pawns.find(p=>p.id===c.pawnId)):c.type==='order-feed'||c.type==='order-tend'||c.type==='order-rescue'?current.pawns.find(p=>p.id===c.patientId):c.type==='order-cook'?current.structures.find(s=>s.id===c.structureId):c.type==='order-job'?current.jobs.find(j=>j.id===c.jobId):c.target.type==='furniture'?current.packed.find(p=>c.target.type==='furniture'&&p.building.id===c.target.structureId)?.owner:c.target.type==='fuel'?current.structures.find(s=>c.target.type==='fuel'&&s.id===c.target.structureId):c.target.type==='pile'?current.piles.find(p=>c.target.type==='pile'&&p.id===c.target.pileId)?.owner:current.jobs.find(j=>(c.target.type==='job'||c.target.type==='clear'||c.target.type==='clear-sow')&&j.id===c.target.jobId);
@@ -98,6 +108,9 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
   } else throw new Error(`Player UI action not supported: ${c.type}`);
   try { await page.waitForFunction(c=>{
     const w=window.__lisiere.world;
+    if(c.type==='draft')return c.pawnIds.every(id=>!!w.pawns.find(p=>p.id===id)?.draft===c.enabled);
+    if(c.type==='draft-stop')return c.pawnIds.every(id=>w.pawns.find(p=>p.id===id)?.draft?.target===null);
+    if(c.type==='draft-move')return c.pawnIds.every(id=>{const d=w.pawns.find(p=>p.id===id)?.draft;return c.queue?!!d?.queue.length:!!d?.target;});
     if(c.type==='order-equipment')return w.pawns.some(p=>p.id===c.pawnId&&p.equipmentTask?.itemId===c.itemId)||w.piles.some(p=>p.id===c.itemId&&(c.action==='equip'?p.owner.type==='equipment'&&p.owner.pawnId===c.pawnId:p.owner.type==='ground'));
     if(c.type==='order-feed')return w.pawns.some(p=>p.id===c.pawnId&&p.feed?.patientId===c.patientId);
     if(c.type==='order-tend')return w.pawns.some(p=>p.id===c.pawnId&&p.tend?.patientId===c.patientId);

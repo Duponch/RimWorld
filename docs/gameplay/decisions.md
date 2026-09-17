@@ -1,5 +1,7 @@
 # Choix et écarts de gameplay
 
+V53 : [mobilisation](../development/drafting.md) adaptée à la 3D par conservation des arêtes engagées, conservation de cargaison indéposable et sortie physique du mobilier. Repli par proximité sans couvert, pas de formation par glisser ; commandes civiles demandent démobilisation. Ces limites ne constituent pas la cible finale de fidélité. [Sources/version/incertitudes](../research/drafting-reference.md).
+
 V52 : [adaptations de l’équipement](../research/equipment-reference.md). Conserver l’arme désactivée sur sol saturé ; récupération mémorisée après besoins/ordres avec ignorance de sa propre interdiction ; arme visible à la hanche hors combat. File d’équipement différée explicitement. Le buste CSS n’affiche pas une arme hors cadre, mais partage son état/libellé. Ces choix ne valent pas inventaire ou combat livrés.
 
 V51 : adopter doses/plafonds/puissance et soins groupés après [recherche](../research/medicines-reference.md). Adapter trajet/chevet à la 3D et conserver la cargaison commune. Différer explicitement collecte opportuniste sur piles voisines, acquisition complète et inventaire personnel ; aucune création distante de produit. Trente médicaments industriels seulement sur les nouvelles cartes, sans présenter le départ entier comme Crashlanded.

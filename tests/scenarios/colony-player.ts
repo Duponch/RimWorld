@@ -204,3 +204,17 @@ export function foodAccount(world: World): number {
   // not the edible stock used by the player's decisions.
   return world.piles.filter(p=>p.kind==='food').reduce((n,p)=>n+p.quantity,0) + spoiledUnits(world);
 }
+
+/** A first look around the landing site, then return before building the camp. */
+export function playerArrivalDecisions(world:World):Decision[] {
+  const p=world.pawns[0]!;
+  return [
+    {reason:'Mobiliser un colon pour reconnaître le terrain proche.',command:{type:'draft',pawnIds:[p.id],enabled:true}},
+    {reason:'Marcher à proximité du camp.',command:{type:'draft-move',pawnIds:[p.id],target:{x:p.x+2,z:p.z+1},queue:false}},
+    {reason:'Revenir au camp par un ordre en file.',command:{type:'draft-move',pawnIds:[p.id],target:{x:p.x,z:p.z},queue:true}},
+  ];
+}
+export function playerArrivalComplete(world:World):boolean {
+  const p=world.pawns[0]!,d=p.draft;
+  return !!d?.target&&!d.queue.length&&p.moveCooldown===0&&p.x===d.target.x&&p.z===d.target.z;
+}

@@ -82,7 +82,7 @@ export function releaseWork(world:World,pawn:Pawn,plan?:DropPlan):boolean {
   releaseAssignments(world,pawn);
   return true;
 }
-/** Release task/service claims independently of ownership. Only involuntary
+/** Release task/service claims independently of ownership. Only involuntary or tactical
  * interruption may use this while an object is still carried. */
 export function releaseAssignments(world:World,pawn:Pawn):void {
   if(pawn.need?.kind==='sleep'&&pawn.need.medical&&pawn.health&&!pawn.health.death&&pawn.health.tick<world.tick)updatePawnHealth(world,pawn);

@@ -1,5 +1,7 @@
 # Sélection et commandes directes — V23
 
+V53 ajoute un [mode tactique et sa file distincte](drafting.md). Mobiliser libère la file/priorité civile ; démobiliser rend le choix autonome. Les commandes civiles directes demandent encore de démobiliser explicitement.
+
 V52 ajoute l’ordre d’équiper au clic droit et le dépôt depuis Équipement. La file spécifique d’équipement est refusée explicitement ; les travaux ordinaires ajoutés derrière cet ordre conservent leurs réservations. [Contrat](equipment.md).
 
 V47 ajoute `order-tend` au clic droit : réservation d’un patient réellement au lit, approche et traitement sans médicament. Acceptation atomique, annulation explicite, priorité Médecin désactivée respectée pour les nouveaux ordres. Maj/file de soins est refusée, comme celle des secours V46. [Contrat](tending.md).
@@ -86,7 +88,7 @@ Les scénarios `tests/player-orders.test.ts` vérifient bilans, besoins différ�
 
 Trois scénarios `player-cooking` vérifient recettes mélangées, réservations de staging, factures non exécutables, feu vide, expiration en file, accès perdu, reprise à chaque phase et dégagement lié au champ. Le parcours UI associe dégagement, cuisine en file, sauvegarde et semis suivant. Le pilote peut prioriser une première recette lorsque le camp en manque.
 
-Autres familles sélectionnables, ordre de sommeil/ingestion manuel, mobilisation restent absents. Équipement et accessoires attendent le [contrat de présentation des personnages](character-presentation.md).
+Autres familles sélectionnables, ordre de sommeil/ingestion manuel restent absents. Première principale V52 et mobilisation V53 livrées ; accessoires attendent le [contrat de présentation des personnages](character-presentation.md).
 
 Trois scénarios `priority-work` combinent chaîne complète de lit, voisin intact, maintien de famille, cuisine répétée puis ingestion, annulation/effondrement avec cargaison, délais/budgets, accès perdu et migration stricte. Le pilote conserve la préférence dans son diagnostic et évite de réordonner un colon déjà priorisé.
 

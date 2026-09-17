@@ -101,7 +101,7 @@ test('herbal age survives pickup and expires before treatment; policy cancellati
 });
 
 test('V50 migration rejects future medicine state, carries exact snapshots, and a hundred adults retain the material balance',()=>{
-  const old=selfTendingCamp();for(const p of old.pawns)delete p.medicalCare;old.schemaVersion=50 as World['schemaVersion'];expect(deserializeWorld(JSON.stringify(old))).toEqual({...old,schemaVersion:52});
+  const old=selfTendingCamp();for(const p of old.pawns)delete p.medicalCare;old.schemaVersion=50 as World['schemaVersion'];expect(deserializeWorld(JSON.stringify(old))).toEqual({...old,schemaVersion:53});
   const w=medicineCamp();until(w,()=>w.pawns[0]!.tend?.phase==='tend');
   for(const mutate of [(a:World)=>a.schemaVersion=50 as World['schemaVersion'],(a:World)=>a.pawns[0]!.tend!.medicine!.quantity++, (a:World)=>(a.pawns[0]!.tend!.medicine as any).item=['medicine'],(a:World)=>a.pawns[0]!.tend!.medicine!.carryPileId=null]){const bad=structuredClone(w);mutate(bad);expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();}
   const e=new SnapshotEncoder(),d=new SnapshotDecoder(),r=d.adopt(structuredClone(e.encode(w,0,6)));expect(r.status).toBe('applied');if(r.status==='applied')expect(r.world).toEqual(w);

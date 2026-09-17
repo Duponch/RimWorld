@@ -1,10 +1,14 @@
 import { expect, test } from 'vitest';
 import { createWorld, applyCommand, stepWorld, validateWorld, serializeWorld, deserializeWorld } from '../src/sim/index';
-import { playerDecisions, playerFocusDecisions, colonySummary, woodAccount, foodAccount } from './scenarios/colony-player';
+import { playerArrivalDecisions,playerArrivalComplete,playerDecisions, playerFocusDecisions, colonySummary, woodAccount, foodAccount } from './scenarios/colony-player';
 
 test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp construit, stocks entretenus et reprise exacte', () => {
   for (const seed of [42, 93, 2048]) {
     let world = createWorld(seed, 250, 250);
+    for(const decision of playerArrivalDecisions(world))expect(applyCommand(world,decision.command)).toMatchObject({ok:true});
+    for(let i=0;i<120&&!playerArrivalComplete(world);i++)stepWorld(world);
+    expect(playerArrivalComplete(world)).toBe(true);expect(validateWorld(world)).toEqual([]);
+    expect(applyCommand(world,{type:'draft',pawnIds:[world.pawns[0]!.id],enabled:false})).toMatchObject({ok:true});
     const initialWeapon=structuredClone(world.piles.find(p=>p.kind==='weapon')!);
     const initialWood = woodAccount(world), initialFood = foodAccount(world);
     let consumed = 0, produced = 0, cooked = 0, rationAssignments = 0;

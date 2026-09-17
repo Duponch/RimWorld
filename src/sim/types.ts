@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 52 as const;
+export const SCHEMA_VERSION = 53 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
@@ -63,6 +63,7 @@ export interface Job extends Cell {
   escrow: Stock;
 }
 export interface Pawn extends Cell {
+  draft?:import('./drafting-rules.ts').DraftState;
   equipmentTask?:import('./equipment-rules.ts').EquipmentTask;
   equipmentDropPending?:true;
   droppedWeaponId?:number;
@@ -75,7 +76,7 @@ export interface Pawn extends Cell {
   health?: import('./injury-types.ts').MedicalRecord;
   /** Actual sleep while incapacitated, separate from lying posture. */
   medicalSleep?:true;
-  /** Involuntary task release retained one undroppable object, not an inventory. */
+  /** Interruption retained one undroppable/in-flight object, not an inventory. */
   interruptedCargo?: true;
   skills: import('./skills.ts').PawnSkills;
   priorityWork?: import('./priority-work-state.ts').PriorityWork;
@@ -150,6 +151,7 @@ export type AreaAction = 'build-roof' | 'remove-roof' | 'ignore-roof' | 'mine' |
 export interface StorageSettings { filters?: StorageFilters; priority?: number; capacity?: number }
 export interface AreaCommand extends StorageSettings { type: 'area'; action: AreaAction; from: Cell; to: Cell }
 export type Command =
+  | import('./drafting-rules.ts').DraftCommand
   | import('./equipment-rules.ts').EquipmentCommand
   | import('./medical-beds.ts').MedicalBedCommand
   | {type:'medical-care';pawnId:number;care:import('./medicine-rules.ts').MedicalCare}

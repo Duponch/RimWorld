@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+V53 ajoute des commandes de mobilisation et déplacement, **aucun objet**. Le revolver reste une principale physique sans tir ; aucune nouvelle arme, munition, tenue ou espèce implicitement livrée. [Contrat](../development/drafting.md).
+
 V52 — `revolver` : **un nouvel objet obtenu au départ**, pile de un, propriétaire d'équipement distinct. Sept qualités conservées, 100 PV maximum ; nouveau site : qualité normale/100 PV. Transport, échange, dépôt et interdiction physiques. Pas de recette, commerce, usure ni tir ; fusil/couteau du départ Core et catalogue militaire restent absents. Les 95 familles CAT ne constituent toujours pas une liste exhaustive. [Contrat](../development/equipment.md), [recherche](../research/equipment-reference.md).
 
 V51 — **CAT-018 partiel** : trois ItemId médicaux distincts, piles de 25, stockage/portage et soins : `herbal-medicine` (puissance 0,6 ; plafond 70 % ; pourriture 150 jours), `medicine` (1 ; 100 % ; sans pourriture), `glitterworld-medicine` (1,6 ; 130 % ; sans pourriture). Trente unités industrielles disponibles au départ des **nouvelles** cartes. Plantes et avancés sont définis/testés mais leur acquisition normale est absente. Healroot, recettes, commerce, bionique et chirurgie ne sont pas implicitement livrés. [Contrat](../development/medicines.md), [recherche](../research/medicines-reference.md).

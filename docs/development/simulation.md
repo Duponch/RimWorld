@@ -1,5 +1,7 @@
 # Noyau de simulation — contrat courant
 
+Schéma courant **53** : [mobilisation et destinations tactiques](drafting.md). V52 strictement validée avant ajout facultatif de l’état, sans réécriture des personnes, objets ou trajets. Aucun hostile ni résolution de tir livré.
+
 V51 : [médicaments](medicines.md), V50 strictement validée avant migration sans injection ; plafond du patient, dose réservée/portée, résultat groupé après travail. Âge médicinal distinct du bilan alimentaire et expiration avant actions. Nouveau stock seulement à la génération.
 
 V50 : [branche médicale urgente](urgent-care.md) avant les besoins aux points de décision livrés, revue périodique au lit et auto-soin en une opération. La réévaluation générale des autres travaux reste distincte.

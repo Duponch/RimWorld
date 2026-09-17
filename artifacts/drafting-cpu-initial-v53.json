@@ -1,0 +1,135 @@
+{
+  "date": "2026-09-17T22:35:40.775Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "os": "win32 10.0.26200",
+  "protocol": "One pass per count, natural 250² with cleared working patch. Every actor armed and twenty small injuries. Half drafted with two directed moves, others mine/chop; manual undraft at tick 400, 800 measured ticks, strict continuation. Initial commands and periodic encoding measured separately, cold work included. No browser running this benchmark.",
+  "results": [
+    {
+      "actors": 3,
+      "map": 250,
+      "resources": 12117,
+      "injuriesPerPawn": 20,
+      "commands": [
+        {
+          "type": "draft",
+          "ms": 0.6246000000000436
+        },
+        {
+          "type": "draft-move",
+          "ms": 17.918900000000008
+        },
+        {
+          "type": "draft-move",
+          "ms": 8.394000000000005
+        },
+        {
+          "type": "draft",
+          "ms": 0.17709999999999582
+        }
+      ],
+      "tickMs": {
+        "count": 800,
+        "p50": 0.20150000000001,
+        "p95": 1.376700000000028,
+        "p99": 3.154700000000048,
+        "max": 17.939100000000053
+      },
+      "encodingMs": {
+        "count": 40,
+        "p50": 2.024599999999964,
+        "p95": 5.8115999999999985,
+        "p99": 8.20659999999998,
+        "max": 8.20659999999998
+      },
+      "movingTicks": 448,
+      "maxDrafted": 2,
+      "mined": 12,
+      "remainingJobs": 0
+    },
+    {
+      "actors": 30,
+      "map": 250,
+      "resources": 12117,
+      "injuriesPerPawn": 20,
+      "commands": [
+        {
+          "type": "draft",
+          "ms": 0.7049999999999272
+        },
+        {
+          "type": "draft-move",
+          "ms": 36.97659999999996
+        },
+        {
+          "type": "draft-move",
+          "ms": 25.855699999999842
+        },
+        {
+          "type": "draft",
+          "ms": 0.6369999999997162
+        }
+      ],
+      "tickMs": {
+        "count": 800,
+        "p50": 2.1322000000000116,
+        "p95": 7.1875,
+        "p99": 13.111499999999978,
+        "max": 29.18229999999994
+      },
+      "encodingMs": {
+        "count": 40,
+        "p50": 2.245300000000043,
+        "p95": 5.1723000000001775,
+        "p99": 7.406800000000203,
+        "max": 7.406800000000203
+      },
+      "movingTicks": 3098,
+      "maxDrafted": 15,
+      "mined": 120,
+      "remainingJobs": 0
+    },
+    {
+      "actors": 100,
+      "map": 250,
+      "resources": 12117,
+      "injuriesPerPawn": 20,
+      "commands": [
+        {
+          "type": "draft",
+          "ms": 3.2111000000004424
+        },
+        {
+          "type": "draft-move",
+          "ms": 97.35710000000017
+        },
+        {
+          "type": "draft-move",
+          "ms": 83.45289999999932
+        },
+        {
+          "type": "draft",
+          "ms": 1.7515000000003056
+        }
+      ],
+      "tickMs": {
+        "count": 800,
+        "p50": 6.774499999999534,
+        "p95": 18.550399999998263,
+        "p99": 28.8117000000002,
+        "max": 42.194400000000314
+      },
+      "encodingMs": {
+        "count": 40,
+        "p50": 2.461099999999533,
+        "p95": 9.937700000000405,
+        "p99": 11.395000000000437,
+        "max": 11.395000000000437
+      },
+      "movingTicks": 10117,
+      "maxDrafted": 50,
+      "mined": 400,
+      "remainingJobs": 0
+    }
+  ]
+}

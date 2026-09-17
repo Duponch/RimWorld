@@ -1,0 +1,27 @@
+{
+  "date": "2026-09-18",
+  "schema": 53,
+  "general": {
+    "files": 57,
+    "scenarios": 210,
+    "seconds": 152.19
+  },
+  "finalTargeted": {
+    "conservationEquipmentDraftBridge": 23,
+    "draftAfterQueueOptimization": 8
+  },
+  "nativeUI": {
+    "draftSeconds": 33,
+    "colonyMinutes": 7.6,
+    "colonyReport": "drafting-colony-v53.json"
+  },
+  "cpu": "drafting-cpu-v53.json",
+  "nativeMixed": "drafting-native-v53.json",
+  "presentation": "harvest-sync-drafting-v53.json",
+  "build": "passed",
+  "limits": [
+    "General suite precedes final targeted fixes; not rerun wholesale.",
+    "No hostile combat, cover ranking, formations or drafted civilian actions.",
+    "Performance results are observed scenarios, not universal guarantees."
+  ]
+}

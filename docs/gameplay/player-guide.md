@@ -1,12 +1,18 @@
 # Guide joueur
 
+## Commander les déplacements
+
+Sélectionnez un ou plusieurs colons, puis **Mobiliser** ou **R**. Un clic droit au sol les déplace ; **Maj + clic droit** ajoute un déplacement à la file. Le bouton **Arrêter le déplacement** annule la destination et la file, sans téléportation. **Démobiliser/R** rend leur autonomie aux colons. R sans colon sélectionné conserve le raccourci Récolter.
+
+Les mobilisés ne vont pas travailler, manger ou chercher un lit seuls. Leurs besoins et leur santé continuent : un épuisement peut les faire dormir au sol. Une longue attente sans menace les démobilise automatiquement. Les objets portés sont déposés ; si le sol est saturé, le colon conserve sa cargaison jusqu’à une place libre. Tirs et ennemis ne sont pas encore jouables. Pour équiper une arme ou donner un ordre civil de soin, démobilisez d’abord. [Contrat et limites](../development/drafting.md).
+
 ## Équiper le revolver
 
 Les nouvelles cartes possèdent un revolver près des réserves initiales. Sélectionnez un colon, puis clic droit sur l'arme et **Équiper**. Il la rejoint avant de la prendre ; s'il possède déjà une arme, il dépose l'ancienne sur un sol libre au contact. L'inspection **Équipement** affiche sa qualité, ses PV et sa cargaison séparée. **Déposer l'arme** prend un court temps sur place. Une arme volontairement déposée est interdite : sélectionnez-la et **Autoriser cette arme** pour permettre le rangement automatique dans une réserve acceptant **Armes**. Équiper directement l'autorise aussi.
 
 Une chute hors lit, la perte de manipulation ou le décès fait tomber l'arme. Une chute dans un lit déjà utilisé la conserve. Si le sol est saturé, le colon garde l'arme désactivée jusqu'à un dépôt possible. Après rétablissement, il peut rejoindre sa propre arme mémorisée ; le bouton **Ne pas récupérer l'arme perdue** annule cette intention. Cette récupération attend les besoins et travaux engagés et ignore l'interdiction de sa propre arme.
 
-Pour l'instant, cette arme ne permet pas encore de combattre : mobilisation et tirs sont la prochaine boucle. La file d'équipement, les autres armes, vêtements et inventaires personnels restent à venir ; la cargaison de travail n'est pas un inventaire. L'arme à la hanche est un modèle procédural provisoire.
+Pour l'instant, cette arme ne permet pas encore de combattre : la mobilisation permet maintenant les déplacements, les tirs restent à venir. La file d'équipement, les autres armes, vêtements et inventaires personnels restent à venir ; la cargaison de travail n'est pas un inventaire. L'arme à la hanche est un modèle procédural provisoire.
 
 
 **Médicaments :** les nouvelles colonies disposent de trente doses industrielles. Dans Santé, choisissez le plafond du patient : aucun soin, à sec, plantes, industriel ou meilleur disponible. Le médecin rejoint une pile autorisée, prélève, porte puis travaille ; une dose peut traiter plusieurs plaies. Sans produit accessible, il soigne à sec si autorisé. Activez **Médicaments** dans une réserve pour les ranger. Les anciens sites ne reçoivent pas de stock au chargement. Culture et fabrication médicales restent absentes. [Règles et limites](../development/medicines.md).

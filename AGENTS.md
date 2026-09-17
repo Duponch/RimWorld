@@ -50,7 +50,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 52 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 53 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)
@@ -267,3 +267,10 @@
 - Lire docs/development/equipment.md et sa recherche. Propriétaire equipment distinct de pawn/cargaison ; une arme principale, identité/qualité/PV préservés. Réserver avant approche, échanger au contact après prévalidation du dépôt, délai de dépôt trois ticks locaux. File d’équipement différée ; file ordinaire suivante conservée.
 - Chute hors lit, décès ou perte de manipulation déposent l’arme ; lit déjà utilisé conservé sauf manipulation perdue. Sol saturé conserve via equipmentDropPending, sans destruction ; récupération de l’arme mémorisée seulement après besoins/ordres (adaptation documentée). Recontrôler l’exception du lit avant sauvegarde après changement de service.
 - V51 strictement validée avant V52 sans arme injectée. Nouvelle carte : un revolver normal ; combat/inventaire/vêtements absents. Attache rigide GPU dans le lot corporel, géométrie isolée et projection commune UI/carte ; ne pas ajouter de squelette CPU par arme.
+
+
+## Mobilisation V53
+- Lire docs/development/drafting.md et sa recherche. Mode sparse distinct des tâches civiles ; destination active exclusive, file réservée seulement à activation. Transit allié reste commun, collision hostile à intégrer avant ennemis. Arête capturée intacte lors des changements d’ordre.
+- Faim/fatigue/santé continuent, sommeil involontaire au sol possible ; aucune prise de besoin/travail autonome. Démobilisation après 1 000 ticks locaux d’attente sans menace ; ajouter son prédicat au premier combat. Incapacité supprime le mode, Manipulation seule n’interdit pas la marche.
+- Saturation conserve une seule cargaison via interruptedCargo, autorisée en déplacement tactique ; tentative de dépôt après navigation et hors arête pour éviter la famine de recalcul avec planCooldown partagé. Démobilisation finit l’arête, travail civil ensuite bloqué jusqu’au dépôt. V52 validée strictement avant migration sans mode inventé.
+- Repli spatial sans couvert/formation et ordres civils mobilisés refusés : limites documentées, pas parité complète. Bouton/R sur sélection, clic droit/Maj, arrêt ; aucune option de tir décorative. Mode/destination/file sont des phases bridge, dernière activité seule ne l’est pas.

@@ -1,3 +1,4 @@
+import { createDraftControls,updateDraftControls,toggleDraft,draftLabel } from './ui/drafting-controls';
 import { createEquipmentInspection,updateEquipmentInspection } from './ui/equipment-inspection';
 import { equipmentProjection,equipmentDescription } from './render/character-equipment';
 import { bedControls,updateBedControls } from './ui/bed-controls.ts';
@@ -234,10 +235,12 @@ function rebuildInspector() {
     const zone = snapshot && growingZoneAt(snapshot, selectedCell.z * snapshot.width + selectedCell.x);
     if (zone) panel.append(growingControls(zone, command => void attempt(async () => { await client.command(command); rebuildInspector(); renderState(); })));
   } else panel.replaceChildren();
+  if(selection.ids.size)createDraftControls(panel,()=>snapshot?.pawns.filter(p=>selection.ids.has(p.id))??[],c=>void attempt(async()=>{await client.command(c);renderState();}));
   const close = document.getElementById('inspect-close');
   if (close) close.onclick = clearSelection;
 }
 function actionLabel(pawn: Pawn) {
+  if(pawn.draft)return draftLabel(pawn);
   if(pawn.equipmentTask)return pawn.equipmentTask.action==='equip'?'Va équiper son arme':'Dépose son arme';
   if(pawn.feed||pawn.tend||pawn.state==='resting'||pawn.rescue||carrierOf(snapshot!,pawn.id))return queryPawnStatus(snapshot!,pawn).reason;
   if(pawn.state==='downed'||pawn.state==='dead')return stateLabels[pawn.state];
@@ -304,7 +307,7 @@ function renderState() {
   const equipment=equipmentProjection(world);
   for (const pawn of world.pawns) {
     const button = document.querySelector<HTMLButtonElement>(`[data-pawn="${pawn.id}"]`)!;
-    button.classList.toggle('selected', selection.ids.has(pawn.id));
+    button.classList.toggle('selected', selection.ids.has(pawn.id));button.dataset.drafted=String(!!pawn.draft);
     button.setAttribute('aria-pressed', String(selection.ids.has(pawn.id)));
     button.querySelector('strong')!.textContent = pawn.name; button.title = `${pawn.name} · ${actionLabel(pawn)} · ${equipmentDescription(equipment.get(pawn.id),pawn)}`;button.dataset.equipment=equipment.get(pawn.id)?.item??'';
     button.querySelector('.pawn-symbol')!.textContent = pawn.state==='dead'?'†':pawn.state==='downed'?'!':pawn.state === 'sleeping' ? 'Z' : pawn.state === 'hungry' ? '!' : '';
@@ -314,6 +317,7 @@ function renderState() {
     row.querySelector('.work-activity')!.textContent = actionLabel(pawn);
     for (const select of row.querySelectorAll<HTMLSelectElement>('select')) select.value = String(pawn.priorities[select.dataset.work as WorkType]);
   }
+  updateDraftControls(el('inspector'),world.pawns.filter(p=>selection.ids.has(p.id)));
   if(selection.ids.size>1) {
     el('group-title').textContent=`${selection.ids.size} colons sélectionnés`;
     for(const button of el('group-members').querySelectorAll<HTMLButtonElement>('button')) {
@@ -324,7 +328,7 @@ function renderState() {
     const pawn = world.pawns.find(item => item.id === selectedPawn);
     if (!pawn) clearSelection();
     else {
-      el('selected-name').textContent = pawn.name; el('selected-action').textContent = pawn.equipmentTask||pawn.need||pawn.feed||pawn.tend||pawn.rescue||pawn.state==='dead'||pawn.state==='downed' ? actionLabel(pawn) : `${actionLabel(pawn)} · ${queryPawnStatus(world, pawn).reason}`;
+      el('selected-name').textContent = pawn.name; el('selected-action').textContent = pawn.draft||pawn.equipmentTask||pawn.need||pawn.feed||pawn.tend||pawn.rescue||pawn.state==='dead'||pawn.state==='downed' ? actionLabel(pawn) : `${actionLabel(pawn)} · ${queryPawnStatus(world, pawn).reason}`;
       updateEquipmentInspection(el('inspector'),world,pawn);updateSkillsInspection(el('inspector'),pawn);updateHealthInspection(el('inspector'),pawn);
       updateRecreationInspection(el('inspector'),pawn);
       roomInspection.update(el('inspector'), world, pawn);
@@ -392,8 +396,8 @@ function renderState() {
   if (!world.stockpiles.length) alerts.push('Aucune réserve de stockage');
   if (world.jobs.some(job => constructionRecipe(job).ingredients.length > 0) && world.pawns.every(pawn => pawn.priorities.haul === 0&&pawn.priorities.build === 0)) alerts.push('Construction/transport désactivés : chantiers non approvisionnés');
   const interrupted=world.pawns.filter(pawn=>pawn.interruptedCargo).length;
-  if(interrupted)alerts.push(`${interrupted} cargaison(s) à déposer : libérez le sol proche`);
-  const idle = world.pawns.filter(pawn => pawn.state === 'idle'&&!pawn.interruptedCargo).length;
+  if(interrupted)alerts.push(`${interrupted} cargaison(s) conservée(s) : fin de déplacement ou sol proche à libérer`);
+  const idle = world.pawns.filter(pawn => pawn.state === 'idle'&&!pawn.draft&&!pawn.interruptedCargo).length;
   if (idle) alerts.push(`${idle} colon(s) disponible(s)`);
   el('alerts').replaceChildren(...alerts.map(text => { const item = document.createElement('p'); item.textContent = text; return item; }));
   const beds = world.structures.filter(structure => structure.kind === 'bed'&&!structure.medical).length;
@@ -478,6 +482,7 @@ document.addEventListener('keydown', event => {
   if (event.key === 'Tab' || event.key === 'F1' || event.key === 'F2' || event.key === 'F3') { event.preventDefault(); const panel = event.key === 'Tab' ? 'architect' : event.key === 'F1' ? 'work' : event.key === 'F2' ? 'schedule' : 'assign'; setPanel(currentPanel === panel ? null : panel); return; }
   const speeds: Record<string, number> = { '1': 1, '2': 3, '3': 6 };
   if (event.key in speeds) { void attempt(() => changeSpeed(speeds[event.key])); return; }
+  if(event.key.toLowerCase()==='r'&&selection.ids.size){event.preventDefault();if(!event.repeat)toggleDraft(snapshot?.pawns.filter(p=>selection.ids.has(p.id))??[],c=>void attempt(async()=>{await client.command(c);renderState();}));return;}
   const shortcuts: Record<string, Tool> = { m:'mine', c: 'chop', r: 'harvest', b: 'wall', l: 'bed', x: 'cancel' };
   const key = event.key.toLowerCase(); if (key in shortcuts) setTool(shortcuts[key]);
   else if ((currentTool === 'install' || currentTool === 'bed' || currentTool === 'table' || currentTool === 'campfire' || currentTool === 'stonecutter') && (key === 'q' || key === 'e')) { event.preventDefault(); rotatePlacement(key === 'q' ? -1 : 1); }
@@ -501,7 +506,7 @@ async function start() {
     renderer = await ColonyRenderer.create(el('viewport'), pickCell);
     renderer.onSelection=gesture=>selectPawns(gesture);
     renderer.onInteractionCancel=()=>orderMenu.close();
-    renderer.onContext=(cell,x,y,queue)=>{if(snapshot&&!replacingWorld)void orderMenu.open(snapshot,selection.ids,cell,x,y,queue);};
+    renderer.onContext=(cell,x,y,queue)=>{if(!snapshot||replacingWorld)return;const selected=snapshot.pawns.filter(p=>selection.ids.has(p.id));if(selected.some(p=>p.draft)){orderMenu.close();void attempt(()=>client.command({type:'draft-move',pawnIds:selected.map(p=>p.id),target:cell,queue}));}else void orderMenu.open(snapshot,selection.ids,cell,x,y,queue);};
     renderer.onArea = designateArea;
     renderer.onAreaPreview = info => {
       el('area-feedback').hidden = !info;

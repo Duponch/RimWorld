@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { writeFile } from 'node:fs/promises';
 import { perform } from './player-actions';
-import { playerDecisions, playerFocusDecisions, colonySummary, woodAccount, foodAccount } from '../scenarios/colony-player';
+import { playerArrivalDecisions,playerArrivalComplete,playerDecisions, playerFocusDecisions, colonySummary, woodAccount, foodAccount } from '../scenarios/colony-player';
 import { validateWorld } from '../../src/sim/index';
 import { isBlockMaterial } from '../../src/sim/building-materials';
 import { world, observeErrors, panel, expectWorld } from './helpers';
@@ -45,6 +45,9 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
     await expect(page.locator('#food-items [data-item="survival-meal"] strong')).toHaveText('18');
     await expect(page.locator('#food-items [data-item="legacy-portion"]')).toBeHidden();
     const initialWood=woodAccount(initial), initialFood=foodAccount(initial);const rotation={value:0};
+    for(const d of playerArrivalDecisions(initial))await perform(page,d,rotation);
+    await page.locator('[data-speed="1"]').click();await expect.poll(async()=>playerArrivalComplete(await world(page))).toBe(true);await page.locator('[data-speed="0"]').click();
+    await perform(page,{reason:'Reprendre les travaux civils après la reconnaissance.',command:{type:'draft',pawnIds:[initial.pawns[0]!.id],enabled:false}},rotation);
     for(let hour=0;hour<=72;hour+=4) {
       if(hour) {
         await page.locator('[data-speed="6"]').click();

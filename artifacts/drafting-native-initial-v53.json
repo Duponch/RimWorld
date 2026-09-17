@@ -1,0 +1,202 @@
+{
+  "drafting": true,
+  "profiled": false,
+  "armed": true,
+  "medicalWounds": 20,
+  "stonecutting": false,
+  "workshops": false,
+  "date": "2026-09-17T22:38:43.557Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "ore": "stone",
+  "protocol": "Native Chromium WebGPU, actual worker 6x, natural 250² with cleared mining patch; 3/30/100 miners × 4 sandstone, steel or machinery walls and 1 tree. 90 warmup frames; no full-world serialization during timed frames. Ground/rock buffer identities checked after excavation.",
+  "phases": [
+    {
+      "drafted": 2,
+      "armed": 3,
+      "blocks": 0,
+      "workshops": 0,
+      "count": 3,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "description": ""
+      },
+      "errors": [],
+      "frames": {
+        "count": 2608,
+        "p50": 4.199999999998909,
+        "p95": 4.299999999999272,
+        "p99": 4.300000000001091,
+        "max": 20.800000000000182
+      },
+      "frameCpu": {
+        "count": 2609,
+        "p50": 3.099999997764826,
+        "p95": 4.300000000745058,
+        "p99": 5.199999999254942,
+        "max": 20.800000000745058
+      },
+      "adoptions": {
+        "count": 81,
+        "p50": 1.699999999254942,
+        "p95": 6,
+        "p99": 16.399999998509884,
+        "max": 16.399999998509884
+      },
+      "drawCalls": {
+        "count": 2609,
+        "p50": 144,
+        "p95": 162,
+        "p99": 165,
+        "max": 165
+      },
+      "excavationFrames": {
+        "count": 419,
+        "p50": 4.199999999998909,
+        "p95": 4.299999999999272,
+        "p99": 8.300000000001091,
+        "max": 20.800000000000182
+      },
+      "mined": 12,
+      "componentUnits": 0,
+      "steelUnits": 0,
+      "chunks": 1,
+      "stableRock": true,
+      "stableGround": true,
+      "formats": [
+        {
+          "key": "constructed-roofs",
+          "material": 21,
+          "storage": false,
+          "capacity": 256
+        },
+        {
+          "key": "roof-areas",
+          "material": 24,
+          "storage": false,
+          "capacity": 256
+        },
+        {
+          "key": "campfire-flames",
+          "material": 23,
+          "storage": false,
+          "capacity": 256
+        },
+        {
+          "key": "furniture",
+          "material": 21,
+          "storage": false,
+          "capacity": 256
+        },
+        {
+          "key": "job-orders",
+          "material": 24,
+          "storage": false,
+          "capacity": 256
+        }
+      ],
+      "growths": [],
+      "shadowPreparation": true,
+      "snapshots": {
+        "count": 532,
+        "p50": 0,
+        "p95": 0.10000000149011612,
+        "p99": 1.6000000014901161,
+        "max": 7.399999998509884
+      },
+      "longFrames": [],
+      "excavations": [
+        {
+          "at": 5929.89999999851,
+          "tick": 2051,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 6779.89999999851,
+          "tick": 2102,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 7696.5,
+          "tick": 2157,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 8546.5,
+          "tick": 2208,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 9397,
+          "tick": 2259,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 10363.199999999255,
+          "tick": 2317,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 11213.199999999255,
+          "tick": 2368,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 12063.199999999255,
+          "tick": 2419,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 13029.89999999851,
+          "tick": 2477,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 13946.5,
+          "tick": 2532,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 14796.5,
+          "tick": 2583,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 15647.5,
+          "tick": 2634,
+          "mined": 1,
+          "dirty": 4
+        }
+      ],
+      "slowFrames": [
+        {
+          "at": 5951.199999999255,
+          "cpu": 4,
+          "interval": 20.800000000000182,
+          "calls": 160
+        }
+      ],
+      "pipelines": [],
+      "preparations": [
+        1566.300000000745,
+        213.89999999850988
+      ]
+    }
+  ],
+  "error": "Error: {\"drafted\":2,\"armed\":3,\"blocks\":0,\"workshops\":0,\"count\":3,\"adapter\":{\"vendor\":\"amd\",\"architecture\":\"rdna-1\",\"description\":\"\"},\"errors\":[],\"frames\":{\"count\":2608,\"p50\":4.199999999998909,\"p95\":4.299999999999272,\"p99\":4.300000000001091,\"max\":20.800000000000182},\"frameCpu\":{\"count\":2609,\"p50\":3.099999997764826,\"p95\":4.300000000745058,\"p99\":5.199999999254942,\"max\":20.800000000745058},\"adoptions\":{\"count\":81,\"p50\":1.699999999254942,\"p95\":6,\"p99\":16.399999998509884,\"max\":16.399999998509884},\"drawCalls\":{\"count\":2609,\"p50\":144,\"p95\":162,\"p99\":165,\"max\":165},\"excavationFrames\":{\"count\":419,\"p50\":4.199999999998909,\"p95\":4.299999999999272,\"p99\":8.300000000001091,\"max\":20.800000000000182},\"mined\":12,\"componentUnits\":0,\"steelUnits\":0,\"chunks\":1,\"stableRock\":true,\"stableGround\":true,\"formats\":[{\"key\":\"constructed-roofs\",\"material\":21,\"storage\":false,\"capacity\":256},{\"key\":\"roof-areas\",\"material\":24,\"storage\":false,\"capacity\":256},{\"key\":\"campfire-flames\",\"material\":23,\"storage\":false,\"capacity\":256},{\"key\":\"furniture\",\"material\":21,\"storage\":false,\"capacity\":256},{\"key\":\"job-orders\",\"material\":24,\"storage\":false,\"capacity\":256}],\"growths\":[],\"shadowPreparation\":true,\"snapshots\":{\"count\":532,\"p50\":0,\"p95\":0.10000000149011612,\"p99\":1.6000000014901161,\"max\":7.399999998509884},\"longFrames\":[],\"excavations\":[{\"at\":5929.89999999851,\"tick\":2051,\"mined\":1,\"dirty\":4},{\"at\":6779.89999999851,\"tick\":2102,\"mined\":1,\"dirty\":4},{\"at\":7696.5,\"tick\":2157,\"mined\":1,\"dirty\":4},{\"at\":8546.5,\"tick\":2208,\"mined\":1,\"dirty\":4},{\"at\":9397,\"tick\":2259,\"mined\":1,\"dirty\":4},{\"at\":10363.199999999255,\"tick\":2317,\"mined\":1,\"dirty\":4},{\"at\":11213.199999999255,\"tick\":2368,\"mined\":1,\"dirty\":4},{\"at\":12063.199999999255,\"tick\":2419,\"mined\":1,\"dirty\":4},{\"at\":13029.89999999851,\"tick\":2477,\"mined\":1,\"dirty\":4},{\"at\":13946.5,\"tick\":2532,\"mined\":1,\"dirty\":4},{\"at\":14796.5,\"tick\":2583,\"mined\":1,\"dirty\":4},{\"at\":15647.5,\"tick\":2634,\"mined\":1,\"dirty\":4}],\"slowFrames\":[{\"at\":5951.199999999255,\"cpu\":4,\"interval\":20.800000000000182,\"calls\":160}],\"pipelines\":[],\"preparations\":[1566.300000000745,213.89999999850988]}"
+}

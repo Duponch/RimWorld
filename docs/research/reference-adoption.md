@@ -1,6 +1,6 @@
 # Adoption du référentiel utilisateur
 
-Préparation de mobilisation après V52 — chap. 8/20/21, SYS/TEST-035, UI-007/008/011 et navigation SYS/TEST-113..117 relus. [Recherche fraîche et points encore à vérifier](drafting-reference.md) : adopter mode/destination distincts, adapter les arêtes 3D ; différer attaque/hostiles/couvert. Aucune implémentation ni migration annoncée par cette préparation.
+V53 — chap. 8/20/21, SYS/TEST-035, UI-007/008/011 et SYS/TEST-113..117 : adopter mode/destinations distincts, besoins et trajets physiques ; adapter arêtes 3D, dépôt saturé et repli sans couvert ; différer attaque/hostiles/formation et commandes civiles mobilisées. [Sources fraîches et incertitudes](drafting-reference.md), [contrat intégré](../development/drafting.md).
 
 Transport sous V52 : contrats de synchronisation déjà adoptés (chap. 2/3/5/10/21/29/32) inchangés. Comparaison ordonnée de copies et voie structurelle séparée, sans nouvel algorithme de gameplay ni migration ; [relecture technique](presentation-timing-reference.md#encodeur--contrôle-du-17-septembre-sous-v52), [preuves avant/après](../development/validation.md).
 

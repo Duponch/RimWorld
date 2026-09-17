@@ -1,5 +1,7 @@
 # Inventaire, équipement et apparence des colons
 
+V53 : déplacements dirigés utilisent les poses GPU existantes ; bordure et état de mobilisation des portraits, inspection du groupe et commandes tactiques. Aucune pose de tir ou visée imposée livrée. [Contrat](drafting.md).
+
 V52 livre la première attache GPU de revolver et une projection d’équipement partagée. Arme visible à la hanche ; portrait CSS cadré sur le buste, libellé et attribut d’état actualisés, arme hors cadre non dessinée. Géométrie extraite du rig ; vêtements et portraits 3D définitifs restent la cible ci-dessous. [Contrat actuel](equipment.md).
 
 V51 : les trois doses médicales utilisent les variantes du lot de cargaison existant ; la dose tenue pendant collecte/soin disparaît au résultat présenté, pas à réception anticipée. Pas d’inventaire ni d’équipement permanent implicite. [Contrat](medicines.md).

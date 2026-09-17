@@ -34,13 +34,7 @@ export function processNeeds(world: World, pawn: Pawn, context: NeedContext): bo
   const canPlan = pawn.needCooldown === 0;
   if (pawn.bedId !== null && !world.structures.some(bed => bed.id === pawn.bedId && bed.kind === 'bed')&&!world.packed?.some(pack=>pack.building.id===pawn.bedId&&pack.building.kind==='bed')) pawn.bedId = null;
 
-  // Collapse is an emergency interruption, including travel with a meal in hand.
-  if ((world.restRules === 'legacy' ? pawn.rest === 0 : pawn.collapsePending) && pawn.need?.kind !== 'sleep') {
-    interruptWork(world,pawn);
-    pawn.need = { kind: 'sleep', phase: 'sleep', bedId: null, target: { x: pawn.x, z: pawn.z } };
-    pawn.state = 'sleeping'; pawn.collapsePending = false; pawn.restZeroTicks = 0;
-    context.event(`${pawn.name} s’effondre de fatigue au sol.`);
-  }
+  collapseFromExhaustion(world,pawn,context);
 
   if(pawn.interruptedCargo) {
     retryInterruptedCargo(world,pawn);
@@ -107,4 +101,24 @@ export function updateNeeds(world: World, pawn: Pawn,body?:import('./body-capaci
   updateRecreation(pawn,body);
   if (pawn.needCooldown > 0) pawn.needCooldown--;
   updateWellbeing(world, pawn);
+}
+
+function collapseFromExhaustion(world:World,pawn:Pawn,context:NeedContext):void {
+  // Collapse is an emergency interruption, including travel with a meal in hand.
+  if ((world.restRules === 'legacy' ? pawn.rest === 0 : pawn.collapsePending) && pawn.need?.kind !== 'sleep') {
+    interruptWork(world,pawn);
+    if(pawn.draft){pawn.draft.target=null;pawn.draft.queue=[];}
+    pawn.need = { kind: 'sleep', phase: 'sleep', bedId: null, target: { x: pawn.x, z: pawn.z } };
+    pawn.state = 'sleeping'; pawn.collapsePending = false; pawn.restZeroTicks = 0;
+    context.event(`${pawn.name} s’effondre de fatigue au sol.`);
+  }
+
+}
+
+export function processDraftSleep(world:World,pawn:Pawn,context:NeedContext):boolean {
+  collapseFromExhaustion(world,pawn,context);
+  if(pawn.need?.kind!=='sleep')return false;
+  pawn.draft!.lastActiveTick=world.tick;
+  retryInterruptedCargo(world,pawn);
+  return processSleeping(world,pawn,context,false);
 }

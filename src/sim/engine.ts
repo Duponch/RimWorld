@@ -1,3 +1,6 @@
+import { retryInterruptedCargo } from './interrupted-cargo.ts';
+import { applyDraftCommand,processDraft } from './drafting.ts';
+import { processDraftSleep } from './needs.ts';
 import { applyEquipment,processEquipment,reconcileEquipmentTasks,recoverDroppedWeapon } from './equipment.ts';
 import { dropIncapacitatedEquipment,reconcileWeaponMemory } from './equipment-state.ts';
 import { applyFeeding,processFeeding,reconcileFeeding } from './feeding.ts';
@@ -174,6 +177,9 @@ export function applyCommand(world: World, command: Command): CommandResult {
 }
 function applyCommandInternal(world: World, command: Command): CommandResult {
   if (!command || typeof command !== 'object') return refusal('invalid-command', 'Commande invalide.');
+  if(command.type==='draft'||command.type==='draft-move'||command.type==='draft-stop')return applyDraftCommand(world,command);
+  if(typeof command.type==='string'&&command.type.startsWith('order-')&&'pawnId' in command&&world.pawns.find(p=>p.id===command.pawnId)?.draft)return refusal('invalid-command','Démobilisez ce colon avant un ordre civil.');
+  if(command.type==='clear-orders'&&world.pawns.find(p=>p.id===command.pawnId)?.draft)return applyDraftCommand(world,{type:'draft-stop',pawnIds:[command.pawnId]});
   if(command.type==='order-equipment'||command.type==='weapon-permission'||command.type==='forget-weapon')return applyEquipment(world,command);
   if(command.type==='order-feed')return applyFeeding(world,command);
   if(command.type==='order-tend')return applyTending(world,command);
@@ -367,13 +373,14 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       updateNeeds(world, pawn,body);
       if(pawn.state==='downed'||carrierOf(world,pawn.id))continue;
       if(pawn.need?.kind==='eat' && pawn.need.dining && !validDiningPlace(world,pawn.need.dining)) {pawn.need.phase='choose-spot';pawn.need.dining=null;pawn.need.progress=0;delete pawn.need.workRemainder;pawn.path=[];pawn.state='moving';}
-      if (pawn.moveCooldown > 0) { pawn.state = pawn.jobId !== null || pawn.equipmentTask || pawn.feed || pawn.tend || pawn.rescue || pawn.haul || pawn.need || pawn.cooking || pawn.recreation.task ? 'moving' : 'idle'; continue; }
+      if (pawn.moveCooldown > 0) { if(pawn.draft)pawn.draft.lastActiveTick=world.tick; pawn.state = pawn.draft || pawn.jobId !== null || pawn.equipmentTask || pawn.feed || pawn.tend || pawn.rescue || pawn.haul || pawn.need || pawn.cooking || pawn.recreation.task ? 'moving' : 'idle'; continue; }
       const needsContext = {
         search: (goals?: ReadonlySet<number>) => search(world, pawn, getBlocked(), occupied, budget, goals),
         move: (target: Cell, exact: boolean) => moveToward(world, pawn, target, true, getBlocked, budget, exact, getLight),
         release: () => releaseWork(world, pawn),
         event: (message: string) => event(world, 'need', message),
       };
+      if(pawn.draft){if(!processDraftSleep(world,pawn,needsContext)){processDraft(world,pawn,getBlocked,budget,getLight);if(pawn.moveCooldown===0)retryInterruptedCargo(world,pawn);}continue;}
       if(pawn.interruptedCargo){processNeeds(world,pawn,needsContext);continue;}
       if (leaveTransitCell(world,pawn,getBlocked,budget,getLight)) continue;
       if(pawn.equipmentTask){processEquipment(world,pawn,needsContext);continue;}

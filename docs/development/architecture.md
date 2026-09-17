@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+V53 : [mode tactique](drafting.md) sparse séparé des tâches civiles. Modules règles/destinations/exécution/validation, budgets de navigation communs, UI isolée dans `drafting-controls`. Déclencheurs discrets mode/destination/file observés par le bridge ; aucune nouvelle géométrie ou horloge de rendu.
+
 V52 : [propriété et équipement](equipment.md). La principale est un propriétaire de pile distinct ; règles/actions/incapacité/validation sont séparées dans les modules `equipment-*`. Géométrie du rig extraite vers `pawn-geometry.ts`, petite attache rigide dans le lot GPU existant ; projection commune pour inspection/portrait. Aucun inventaire générique ou moteur de combat anticipé.
 
 V51 : [médicaments](medicines.md), règles/statistiques et logistique dans deux modules ciblés ; réservation source commune, cargaison unique, phases publiées et boîtes GPU existantes. Aucun inventaire personnel ou nouveau lot graphique implicite.
