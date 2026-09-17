@@ -1,0 +1,386 @@
+{
+  "date": "2026-09-17T23:39:27.554Z",
+  "backend": "native WebGPU",
+  "accidentTick": 3116,
+  "firstVisibleInjury": {
+    "tick": 3053,
+    "play": 3053.1839999998233,
+    "roof": 0,
+    "pawns": [
+      {
+        "id": 178,
+        "state": "dead",
+        "health": true,
+        "work": 0,
+        "pose": 1
+      },
+      {
+        "id": 179,
+        "state": "idle",
+        "health": true,
+        "work": 0,
+        "pose": 0
+      }
+    ]
+  },
+  "fallenPoseObservations": 645,
+  "stopped": {
+    "medicalCare": "industrial",
+    "skills": {
+      "construction": {
+        "level": 8,
+        "xp": 0,
+        "dailyXp": 0,
+        "passion": 1
+      },
+      "medicine": {
+        "level": 6,
+        "xp": 0,
+        "dailyXp": 0,
+        "passion": 1
+      },
+      "lastResetTick": -1
+    },
+    "recreation": {
+      "level": 99.8099999999999,
+      "tolerance": {
+        "solitary": 0,
+        "dexterity": 0
+      },
+      "bored": {
+        "solitary": false,
+        "dexterity": false
+      },
+      "task": null
+    },
+    "foodPolicyId": 1,
+    "schedule": [
+      "work",
+      "work",
+      "work",
+      "work",
+      "work",
+      "work",
+      "work",
+      "work",
+      "work",
+      "work",
+      "work",
+      "work",
+      "work",
+      "work",
+      "work",
+      "work",
+      "work",
+      "work",
+      "work",
+      "work",
+      "work",
+      "work",
+      "work",
+      "work"
+    ],
+    "restZeroTicks": 0,
+    "collapsePending": false,
+    "id": 49,
+    "name": "Ada",
+    "x": 2,
+    "z": 2,
+    "hunger": 79.49333333333325,
+    "rest": 79.69916666666667,
+    "mood": 90,
+    "comfort": 49.69600000000003,
+    "memories": [],
+    "orders": {
+      "active": null,
+      "queue": []
+    },
+    "jobId": null,
+    "haul": null,
+    "cooking": null,
+    "need": null,
+    "bedId": null,
+    "needCooldown": 1,
+    "state": "downed",
+    "priorities": {
+      "patient": 1,
+      "bedrest": 3,
+      "doctor": 1,
+      "mine": 2,
+      "gather": 2,
+      "build": 2,
+      "haul": 3,
+      "grow": 2,
+      "cook": 2,
+      "craft": 2
+    },
+    "path": [],
+    "moveCooldown": 0,
+    "planCooldown": 11,
+    "health": {
+      "tick": 3019,
+      "nextInjuryId": 3,
+      "injuries": [],
+      "missing": [
+        {
+          "part": "left-leg",
+          "bornAt": 3000
+        },
+        {
+          "part": "right-leg",
+          "bornAt": 3000
+        }
+      ],
+      "bloodLoss": 8640000
+    },
+    "interruptedCargo": true
+  },
+  "treated": [
+    {
+      "skills": {
+        "construction": {
+          "level": 8,
+          "xp": 0,
+          "dailyXp": 0,
+          "passion": 1
+        },
+        "medicine": {
+          "level": 8,
+          "xp": 175000,
+          "dailyXp": 175000,
+          "passion": 0
+        },
+        "lastResetTick": -1
+      },
+      "recreation": {
+        "level": 97.58999999999877,
+        "tolerance": {
+          "solitary": 0,
+          "dexterity": 0
+        },
+        "bored": {
+          "solitary": false,
+          "dexterity": false
+        },
+        "task": null
+      },
+      "foodPolicyId": 1,
+      "schedule": [
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work"
+      ],
+      "restZeroTicks": 0,
+      "collapsePending": false,
+      "id": 178,
+      "name": "Médecin 1",
+      "x": 3,
+      "z": 10,
+      "hunger": 93.57333333333233,
+      "rest": 96.18416666666671,
+      "mood": 100,
+      "comfort": 46.144000000000425,
+      "memories": [],
+      "orders": {
+        "active": null,
+        "queue": []
+      },
+      "jobId": null,
+      "haul": null,
+      "cooking": null,
+      "need": null,
+      "bedId": null,
+      "needCooldown": 0,
+      "state": "idle",
+      "priorities": {
+        "patient": 0,
+        "bedrest": 0,
+        "doctor": 1,
+        "craft": 0,
+        "mine": 0,
+        "build": 0,
+        "haul": 0,
+        "gather": 0,
+        "grow": 0,
+        "cook": 0
+      },
+      "path": [],
+      "moveCooldown": 0,
+      "planCooldown": 17,
+      "motion": {
+        "from": {
+          "x": 3,
+          "z": 9
+        },
+        "to": {
+          "x": 3,
+          "z": 10
+        },
+        "start": 3059,
+        "end": 3062
+      }
+    },
+    {
+      "skills": {
+        "construction": {
+          "level": 8,
+          "xp": 0,
+          "dailyXp": 0,
+          "passion": 1
+        },
+        "medicine": {
+          "level": 6,
+          "xp": 0,
+          "dailyXp": 0,
+          "passion": 1
+        },
+        "lastResetTick": -1
+      },
+      "recreation": {
+        "level": 97.58999999999877,
+        "tolerance": {
+          "solitary": 0,
+          "dexterity": 0
+        },
+        "bored": {
+          "solitary": false,
+          "dexterity": false
+        },
+        "task": null
+      },
+      "foodPolicyId": 1,
+      "schedule": [
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work"
+      ],
+      "restZeroTicks": 0,
+      "collapsePending": false,
+      "id": 179,
+      "name": "Blessé 1",
+      "x": 3,
+      "z": 11,
+      "hunger": 93.57333333333233,
+      "rest": 96.18416666666671,
+      "mood": 100,
+      "comfort": 46.144000000000425,
+      "memories": [],
+      "orders": {
+        "active": null,
+        "queue": []
+      },
+      "jobId": null,
+      "haul": null,
+      "cooking": null,
+      "need": {
+        "kind": "sleep",
+        "phase": "travel",
+        "bedId": 180,
+        "target": {
+          "x": 3,
+          "z": 11
+        },
+        "medical": "bedrest"
+      },
+      "bedId": null,
+      "needCooldown": 0,
+      "state": "moving",
+      "priorities": {
+        "patient": 1,
+        "bedrest": 3,
+        "doctor": 0,
+        "craft": 0,
+        "mine": 0,
+        "build": 0,
+        "haul": 0,
+        "gather": 0,
+        "grow": 0,
+        "cook": 0
+      },
+      "path": [],
+      "moveCooldown": 5.3914893617020425,
+      "planCooldown": 0,
+      "health": {
+        "tick": 3241,
+        "nextInjuryId": 3,
+        "injuries": [
+          {
+            "id": 1,
+            "part": "left-lung",
+            "kind": "gunshot",
+            "severity": 3792,
+            "bornAt": 3000,
+            "tended": 105
+          },
+          {
+            "id": 2,
+            "part": "torso",
+            "kind": "gunshot",
+            "severity": 3543,
+            "bornAt": 3000,
+            "tended": 218
+          }
+        ],
+        "missing": [],
+        "bloodLoss": 3110240
+      },
+      "motion": {
+        "from": {
+          "x": 3,
+          "z": 10
+        },
+        "to": {
+          "x": 3,
+          "z": 11
+        },
+        "start": 3239,
+        "end": 3246.391489361702,
+        "terrainDelay": 4.2,
+        "speedFactor": 0.94
+      }
+    }
+  ],
+  "errors": []
+}

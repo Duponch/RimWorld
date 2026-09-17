@@ -58,10 +58,30 @@ export function rollScarPain(random:MedicalRandom):ScarPain {const n=random();re
  * resolve hit selection, outside-part preservation and instant-kill protection.
  * It must NOT feed raw weapon damage into this lower layer. */
 export function addResolvedInjury(record:MedicalRecord,part:BodyPartId,kind:InjuryKind,severity:number,random:MedicalRandom):Injury|null {
-  if(!bodyPartExists(part)||BODY_PARTS[part].conceptual||!Object.hasOwn(INJURY_RULES,kind)||!Number.isSafeInteger(severity)||severity<0)throw new Error('Invalid localized injury');
+  validateResolvedInjury(part,kind,severity);
   if(record.death||severity===0||partMissing(record,part))return null;
   if(!Number.isSafeInteger((record.injuries.reduce((n,i)=>n+i.severity,0)+severity)*100))throw new Error('Medical severity overflow');
   if(!Number.isSafeInteger(record.nextInjuryId+1))throw new Error('Medical identity exhausted');
+  const injury=applyResolvedInjury(record,part,kind,severity,random);
+  reconcileMedicalDeath(record);return injury;
+}
+export interface ResolvedInjury {part:BodyPartId;kind:InjuryKind;severity:number}
+/** One already-resolved physical impact may injure several anatomical layers.
+ * Commit all layers at the same medical tick, then evaluate the final status.
+ * No future impact can extend a dead record. Input/capacity checks precede RNG. */
+export function addResolvedInjuryBatch(record:MedicalRecord,hits:readonly ResolvedInjury[],random:MedicalRandom):void {
+  if(hits.length>64)throw new Error('Too many layers in one impact');
+  let severity=record.injuries.reduce((n,i)=>n+i.severity,0);
+  for(const hit of hits){validateResolvedInjury(hit.part,hit.kind,hit.severity);severity+=hit.severity;}
+  if(!Number.isSafeInteger(severity*100)||!Number.isSafeInteger(record.nextInjuryId+hits.length))throw new Error('Medical impact capacity exhausted');
+  if(record.death)return;
+  for(const hit of hits)if(hit.severity>0&&!partMissing(record,hit.part))applyResolvedInjury(record,hit.part,hit.kind,hit.severity,random);
+  reconcileMedicalDeath(record);
+}
+function validateResolvedInjury(part:BodyPartId,kind:InjuryKind,severity:number):void {
+  if(!bodyPartExists(part)||BODY_PARTS[part].conceptual||!Object.hasOwn(INJURY_RULES,kind)||!Number.isSafeInteger(severity)||severity<0)throw new Error('Invalid localized injury');
+}
+function applyResolvedInjury(record:MedicalRecord,part:BodyPartId,kind:InjuryKind,severity:number,random:MedicalRandom):Injury|null {
   const injury:Injury={id:record.nextInjuryId++,part,kind,severity,bornAt:record.tick};
   const chance=scarChance(part,kind,severity);
   if(chance>0&&(chance>=1||random()<chance)) {
@@ -76,9 +96,9 @@ export function addResolvedInjury(record:MedicalRecord,part:BodyPartId,kind:Inju
     record.injuries=record.injuries.filter(i=>!isWithinPart(i.part,part));
     record.missing=record.missing.filter(m=>!isWithinPart(m.part,part));
     record.missing.push({part,bornAt:record.tick});
-    reconcileMedicalDeath(record);return null;
+    return null;
   }
-  reconcileMedicalDeath(record);return existing??injury;
+  return existing??injury;
 }
 
 /** Physiological result only, not a remote-care player command. */

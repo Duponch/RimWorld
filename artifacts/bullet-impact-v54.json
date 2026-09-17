@@ -1,0 +1,112 @@
+{
+  "date": "2026-09-17T23:41:51.491Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "os": "win32 10.0.26200",
+  "scope": "isolated impact resolution + medical record copy; 1/3 exterior overkill, 1/3 brain/outer propagation, 1/3 weighted selection; fixed input reset per batch; no navigation/World steps/worker/render; validation and baseline construction excluded",
+  "durationMs": 3172.4516,
+  "results": [
+    {
+      "actors": 3,
+      "woundsPerActor": 0,
+      "batches": 500,
+      "impacts": 1500,
+      "layers": 2687,
+      "states": {
+        "mobile": 997,
+        "dead": 503
+      },
+      "batchMs": {
+        "p50": 0.0473999999999819,
+        "p95": 0.08789999999999054,
+        "p99": 0.2529999999999859,
+        "max": 0.4088000000000136
+      }
+    },
+    {
+      "actors": 3,
+      "woundsPerActor": 20,
+      "batches": 500,
+      "impacts": 1500,
+      "layers": 2687,
+      "states": {
+        "mobile": 997,
+        "dead": 503
+      },
+      "batchMs": {
+        "p50": 0.051400000000001,
+        "p95": 0.07789999999999964,
+        "p99": 0.16219999999998436,
+        "max": 0.29050000000000864
+      }
+    },
+    {
+      "actors": 30,
+      "woundsPerActor": 0,
+      "batches": 500,
+      "impacts": 15000,
+      "layers": 26953,
+      "states": {
+        "mobile": 9947,
+        "dead": 5053
+      },
+      "batchMs": {
+        "p50": 0.36410000000000764,
+        "p95": 0.5050999999999704,
+        "p99": 0.6683000000000447,
+        "max": 1.0465000000000373
+      }
+    },
+    {
+      "actors": 30,
+      "woundsPerActor": 20,
+      "batches": 500,
+      "impacts": 15000,
+      "layers": 26953,
+      "states": {
+        "mobile": 9947,
+        "dead": 5053
+      },
+      "batchMs": {
+        "p50": 0.4613000000000511,
+        "p95": 0.6345999999999776,
+        "p99": 0.8170000000000073,
+        "max": 1.014099999999985
+      }
+    },
+    {
+      "actors": 100,
+      "woundsPerActor": 0,
+      "batches": 500,
+      "impacts": 50000,
+      "layers": 89402,
+      "states": {
+        "mobile": 33352,
+        "dead": 16648
+      },
+      "batchMs": {
+        "p50": 1.1371000000001459,
+        "p95": 1.3631000000000313,
+        "p99": 1.5433999999997923,
+        "max": 1.5773000000001502
+      }
+    },
+    {
+      "actors": 100,
+      "woundsPerActor": 20,
+      "batches": 500,
+      "impacts": 50000,
+      "layers": 89402,
+      "states": {
+        "mobile": 33352,
+        "dead": 16648
+      },
+      "batchMs": {
+        "p50": 1.3974000000002889,
+        "p95": 1.64870000000019,
+        "p99": 1.92450000000008,
+        "max": 2.074999999999818
+      }
+    }
+  ]
+}

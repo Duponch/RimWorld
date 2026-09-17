@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+V54 : [producteur d'impact anatomique et Gunshot](development/bullet-impact.md), [règles revérifiées](research/bullet-impact-reference.md). Localisation, préservation extérieure, propagation et intégration aux soins/sauvegardes testées. **Pas encore de tir jouable** : le déclencheur, le vol et l'adversaire restent à intégrer.
+
 V53 : [mobilisation et déplacements physiques](development/drafting.md), [règles et adaptations vérifiées](research/drafting-reference.md). Bouton/R, groupes, clic droit/Maj, arrêt, besoins et conservation lors des interruptions. Tirs et adversaires restent le prochain lot humain.
 
 Suite de V53 : [préparation du premier combat](research/combat-preparation.md) et [socle testé](development/combat-queries.md), avec lignes/couvert, visée et [statistiques du revolver revérifiées](research/ranged-statistics-reference.md). Modules isolés, aucun tir jouable ; compétence active, projectile, impact anatomique et adversaire restent à intégrer.

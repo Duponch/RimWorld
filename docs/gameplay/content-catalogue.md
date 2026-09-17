@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+V54 ajoute la famille médicale **Gunshot**, sans fusion, avec soins et cicatrices ; [contrat](../development/bullet-impact.md). Le producteur anatomique est testé, son déclenchement par une arme reste absent. Aucun objet, munition, protection ou nouvelle recette obtenable.
+
 Le socle isolé de tir sous V53 n'ajoute aucun objet obtenable. Les [sept profils de combat du revolver](../research/ranged-statistics-reference.md) sont définis et testés mais **non utilisés par la partie** ; portée, précision, cadence et dégâts ne sont pas encore jouables. Les obstacles synthétiques des requêtes ne définissent pas les propriétés tactiques du mobilier présent.
 
 V53 ajoute des commandes de mobilisation et déplacement, **aucun objet**. Le revolver reste une principale physique sans tir ; aucune nouvelle arme, munition, tenue ou espèce implicitement livrée. [Contrat](../development/drafting.md).
@@ -161,7 +163,7 @@ Nouvelle famille `door`, sept variantes : bois, acier, granite, calcaire, marbre
 
 ## Corps humain : socle encore non actif
 
-[Définition anatomique](../../src/sim/body-definition.ts) : 64 entrées dont un emplacement utilitaire conceptuel, parties symétriques, organes et doigts/orteils. Il ne s’agit ni de 64 objets transportables ni d’un inventaire médical déjà jouable. [Capacités et limites](../development/body.md). Quatre profils de lésions sont codés dans le [module médical](../development/injuries.md) : coupure, écrasement, fissure, contusion ; ce ne sont pas des objets ni un catalogue médical complet. V45 active les blessures persistantes de Pawn et les chutes de toit construit. Autres races/corps, implants, pathologies et équipement restent absents du contenu actif ; médicaments utilisables ajoutés V51. Une dépouille est encore le Pawn décédé, pas un nouvel objet transportable.
+[Définition anatomique](../../src/sim/body-definition.ts) : 64 entrées dont un emplacement utilitaire conceptuel, parties symétriques, organes et doigts/orteils. Il ne s’agit ni de 64 objets transportables ni d’un inventaire médical déjà jouable. [Capacités et limites](../development/body.md). Cinq profils de lésions sont codés dans le [module médical](../development/injuries.md) : coupure, écrasement, fissure, contusion et Gunshot V54 ; ce ne sont pas des objets ni un catalogue médical complet. V45 active les blessures persistantes de Pawn et les chutes de toit construit. Autres races/corps, implants, pathologies et équipement complet restent absents du contenu actif ; médicaments utilisables ajoutés V51. Une dépouille est encore le Pawn décédé, pas un nouvel objet transportable.
 
 ## Cargaison interrompue V44
 

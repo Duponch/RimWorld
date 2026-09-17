@@ -1,4 +1,30 @@
-# Validation courante — V53
+# Validation courante — V54
+
+18 septembre 2026. [Impact anatomique Bullet](bullet-impact.md), [règles et limites vérifiées](../research/bullet-impact-reference.md). Le producteur médical est validé ; tirs dirigés et adversaires ne sont pas livrés. Les preuves de mobilisation V53 ci-dessous restent datées et ne sont pas annoncées comme rejouées intégralement.
+
+## Impact, migration et clinique V54
+
+Regroupement de onze fichiers : **65/65 scénarios, 10,23 s** (impact, blessures, santé, soins, médicaments, équipement, mobilisation et migrations). Puis sauvegardes générales, snapshots, anatomie, requêtes et pilote de colonie multi-jours : **26/26, 115,57 s**. Le premier passage ciblé avait 36 réussites et un échec de fixture : phase de trajet médical appelée `travel` au lieu de `approach`, également signalée par TypeScript. Corrigée sans assouplir l'exigence de trajet et de travail au contact.
+
+Six scénarios nouveaux regroupent 100 000 choix anatomiques, préservation du dernier PV, parties manquantes/hauteur/profondeur, propagation létale complète, Gunshot sur os et tissus, soins/reprise et refus atomique. Le contrôle de migration refuse Gunshot en V53 avant toute montée de version. Le pilote civil relève la nouvelle lésion sans créer artificiellement des tirs ; sa partie reste un parcours de camp.
+
+Le parcours médical **Chromium natif WebGPU passe en 14,1 s** : accident réel de toiture, poses au sol et cargaison, puis chargement d'une fixture Gunshot, inspection, traitement physique, sauvegarde/rechargement. Deux blessures traitées, XP du médecin, zéro erreur navigateur ; [compte rendu](../../artifacts/health-ui-v54.json), [capture inspectée](../../artifacts/bullet-care-v54.png), compteur FPS visible. Une fixture de blessure ne valide pas une émission de projectile ni la synchronisation d'un combat.
+
+TypeScript et build Vite passent ; avertissement du bundle principal (~1,10 Mo brut) inchangé. Pas de longue UI civile ni garde minage/abattage rejouée : aucune commande, horloge de présentation, pose ou phase de récolte n'est changée ; l'UI médicale et les snapshots ciblent ici le nouveau type persistant. Elles seront complétées avec émission/vol/impact visibles.
+
+## Coût de résolution V54
+
+[Données brutes](../../artifacts/bullet-impact-v54.json), Ryzen 5 3600, Node 24.11.1, Windows 11 10.0.26200. Cinquante lots de chauffe puis cinq cents mesures : un tiers d'impacts extérieurs avec excès, un tiers cerveau/couches externes, un tiers sélection pondérée. Dossiers initiaux identiques par lot, sains ou avec vingt petites lésions ; copie et résolution incluses, création/validation et comptage hors mesure. Aucun navigateur de test concurrent.
+
+| Impacts par lot | Lésions préexistantes par personne | p95 | p99 | Maximum |
+|---|---:|---:|---:|---:|
+| 3 | 0 / 20 | 0,0879 / 0,0779 ms | 0,2530 / 0,1622 ms | 0,4088 / 0,2905 ms |
+| 30 | 0 / 20 | 0,5051 / 0,6346 ms | 0,6683 / 0,8170 ms | 1,0465 / 1,0141 ms |
+| 100 | 0 / 20 | 1,3631 / 1,6487 ms | 1,5434 / 1,9245 ms | 1,5773 / 2,0750 ms |
+
+La suite vérifie la continuation exacte du dossier et du PRNG. Ce sont des **impacts simultanés isolés**, pas cent combattants avec navigation/worker/rendu ; aucune promesse de FPS. Aucun coût observé ne justifie ici de cache médical persistant ou de compute supplémentaire. Reprendre la charge mixte intégrée lors du premier affrontement.
+
+## Dernières preuves intégrées de mobilisation — V53
 
 18 septembre 2026. [Mobilisation et déplacements](drafting.md), [règles et incertitudes](../research/drafting-reference.md). Les [preuves V52](../history/validation-equipment-v52.md) conservent mesures et échecs antérieurs. Aucun résultat ne vaut couverture exhaustive ni fluidité universelle.
 

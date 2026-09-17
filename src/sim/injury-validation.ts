@@ -8,13 +8,13 @@ const integer=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>Number.
 const keys=(v:Record<string,unknown>,allowed:readonly string[])=>Object.keys(v).every(k=>allowed.includes(k));
 /** Strict isolated record validator. World ownership/migration is not implemented
  * by this function and must precede accepting a medical Pawn field. */
-export function validateMedicalRecord(value:unknown):string|null {
+export function validateMedicalRecord(value:unknown,allowGunshot=true):string|null {
   const fail='Invalid medical record';
   if(!object(value)||!keys(value,['tick','nextInjuryId','injuries','missing','bloodLoss','death'])||!integer(value.tick)||!integer(value.nextInjuryId,1)||!integer(value.bloodLoss,0,BLOOD_UNIT)||!Array.isArray(value.injuries)||!Array.isArray(value.missing))return fail;
   const ids=new Set<number>();let total=0;
   for(const i of value.injuries) {
     if(!object(i)||!keys(i,['id','part','kind','severity','bornAt','scar','tended'])||!integer(i.id,1,value.nextInjuryId-1)||ids.has(i.id)||
-      !bodyPartExists(i.part)||BODY_PARTS[i.part].conceptual||typeof i.kind!=='string'||!Object.hasOwn(INJURY_RULES,i.kind)||!integer(i.severity,1)||!integer(i.bornAt,0,value.tick)||
+      !bodyPartExists(i.part)||BODY_PARTS[i.part].conceptual||typeof i.kind!=='string'||!Object.hasOwn(INJURY_RULES,i.kind)||!allowGunshot&&i.kind==='gunshot'||!integer(i.severity,1)||!integer(i.bornAt,0,value.tick)||
       i.tended!==undefined&&!integer(i.tended,0,1300))return fail;
     ids.add(i.id);total+=i.severity;if(!Number.isSafeInteger(total*100))return fail;
     if(i.scar!==undefined&&(!object(i.scar)||!keys(i.scar,['threshold','pain'])||i.kind==='bruise'||PART_INJURY_RULES[i.part].scarFactor===0||!integer(i.scar.threshold,1,i.severity)||

@@ -9,7 +9,7 @@ import type { BodyPartId } from './body-definition.ts';
 import type { InjuryKind } from './injury-rules.ts';
 import type { Pawn,World } from './types.ts';
 
-export function healthRandom(world:World):number {let n=world.rng;n^=n<<13;n^=n>>>17;n^=n<<5;world.rng=n>>>0;return world.rng/0x100000000;}
+export function healthRandom(world:Pick<World,'rng'>):number {let n=world.rng;n^=n<<13;n^=n>>>17;n^=n<<5;world.rng=n>>>0;return world.rng/0x100000000;}
 function announce(world:World,message:string):void {world.events.push({tick:world.tick,type:'need',message});if(world.events.length>80)world.events.splice(0,world.events.length-80);}
 
 /** Actions stop at this tick. A captured edge finishes as the fall's translation:

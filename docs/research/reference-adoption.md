@@ -1,5 +1,7 @@
 # Adoption du référentiel utilisateur
 
+V54 — chapitres 15/19/20, SYS/TEST-089..091/105/111..112 : [impact Bullet revérifié](bullet-impact-reference.md), [producteur et migration](../development/bullet-impact.md). Adopter pondération anatomique, préservation extérieure, propagation et Gunshot ; adapter transaction au tick et PRNG local ; différer armures, difficulté personnalisée, déclencheur/vol et réactions. Scènes médicales et UI ne valident pas encore une attaque joueur.
+
 Socle de requêtes sous V53 — chapitres 17/18, SYS/TEST-098/101..103/106/119 : règles de ligne, penchement, couvert et rapport adoptées dans [deux modules isolés](../development/combat-queries.md), testées par oracle et scénarios locaux. Aucune intégration d'attaque, migration ou validation globale du combat ; comparaison à l'exécutable actuel ouverte. Les tableaux restent des cibles.
 
 Statistiques isolées sous V53 — chapitres 13/17–20, SYS/TEST-085/099..101/105/111..112 : [profils de revolver, capacités et unités revérifiés](ranged-statistics-reference.md). Adopter les qualités et offsets, adapter la journée Core par dix, différer compétence active, Gunshot et phases. L'ancien XML 45/35 % n'est pas la précision contemporaine 55/40 %. Tests numériques et anatomiques ne ferment aucun SYS/TEST global.

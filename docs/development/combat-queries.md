@@ -34,7 +34,7 @@ Le facteur de distance d'interception libre est séparé : zéro jusqu'à une di
 
 Dégâts arrondis au pair, pénétration indépendante de cet arrondi, précisions plafonnées à 1. Les valeurs de temps sont en **ticks locaux fractionnaires**, après conversion de la journée Core par dix. Le cycle neutre de 11,4 ticks ne doit pas devenir deux phases arrondies séparément ; le futur pilote devra transporter le reliquat. L'unité du cycle d'apprentissage est au contraire la **seconde Core** et conserve le cooldown non arrondi ainsi que la préparation de base. Le temps de vol reçoit une distance vers la destination déjà capturée ; aucun tirage ou suivi de cible dans ce helper.
 
-Ce module ne change ni `Pawn.skills`, ni `InjuryKind`, ni les sauvegardes V53. Pas de tir jouable, armure, ralentissement ou Gunshot ajouté implicitement. Données concrètes préparées ne signifie pas système livré.
+Ce module numérique ne change ni `Pawn.skills`, ni la persistance. Gunshot et le producteur anatomique sont ajoutés ensuite par [V54](bullet-impact.md), toujours sans tir joueur. Données concrètes préparées ne signifie pas système de combat livré.
 
 ## Validation et coût
 
@@ -52,4 +52,4 @@ Une passe, résultats et lectures contrôlés. Ce ne sont ni cent combattants si
 
 ## Suite du lot
 
-[ROADMAP](../ROADMAP.md) demeure canonique. Restent propriétés tactiques du décor, compétence Tir active et lésions Bullet, appartenance/hostilité, préparation/récupération, sauvegarde du vol, impacts et réactions civiles. Les coins et bords sont confrontés au miroir identifié, pas à un exécutable commercial récent ; conserver ce point dans les futurs essais comparatifs. Aucun SYS global n'est clos.
+[ROADMAP](../ROADMAP.md) demeure canonique. Le producteur anatomique est ajouté en [V54](bullet-impact.md). Restent propriétés tactiques du décor, compétence Tir active, appartenance/hostilité, préparation/récupération, sauvegarde du vol et réactions civiles. Les coins et bords sont confrontés au miroir identifié, pas à un exécutable commercial récent ; conserver ce point dans les futurs essais comparatifs. Aucun SYS global n'est clos.

@@ -6,6 +6,8 @@ Incréments réalisés : [requêtes isolées de ligne, couvert et rapport](../de
 
 ## Corpus et solidité des sources
 
+V54 complète cette préparation avec [la résolution anatomique et Gunshot](../development/bullet-impact.md) ; [recherche complémentaire](bullet-impact-reference.md). Profil adulte sans armure et réglage ordinaire de mort instantanée explicites. Le déclencheur, le vol et les réactions demeurent ouverts ; les impacts de test ne sont pas des attaques jouables.
+
 Chapitres **17–20** relus : précision, lignes/couvert, projectile/cible mobile, anatomie/armure ; chapitres 8/15/21 pour ordres, santé et navigation. Entrées **SYS/TEST-098..107, 110..112, 118..120**, **UI-009/010**, avec SYS/TEST-089..091/094/096 pour les conséquences médicales. Les tests proposés enrichiront nos scénarios de combat, de santé et de colonie ; leurs statuts ne constituent pas des validations locales.
 
 Le miroir de code est épinglé à **`2d508035082e7cb0c8e29e230d26bda6e546928f`**, daté du 20 mai 2026. Il fournit une observation précise d'un code décompilé, sans identifier avec certitude l'exécutable commercial correspondant. L'[annonce officielle 1.6.4850 du 8 juin](https://ludeon.com/blog/2026/06/update-1-6-4850-released/) est postérieure et mentionne des corrections de blocage entre personnages : le miroir ne suffit donc pas à certifier la collision actuelle. Les pages communautaires servent de recoupement du gameplay et des valeurs ; ni leur date d'indexation ni un tutoriel de modding ne prouvent une version de données Core.
