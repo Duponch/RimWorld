@@ -3,15 +3,17 @@ import { BLOOD_UNIT,HP_UNIT,INJURY_RULES } from '../sim/injury-rules';
 import { medicalBleed,medicalPain } from '../sim/injury-state';
 import { pawnBody } from '../sim/health-rules';
 import type { Pawn,Command } from '../sim/types';
+import { MEDICAL_CARE,medicalCare,type MedicalCare } from '../sim/medicine-rules';
 
 export function createHealthInspection(panel:HTMLElement,selected?:()=>Pawn|undefined,send?:(c:Command)=>void):void {
   const details=document.createElement('details');details.id='health-inspection';details.open=true;
   const summary=document.createElement('summary');summary.textContent='Santé';details.append(summary);
   for(const name of ['status','capacities','injuries']) {const p=document.createElement('p');p.dataset.health=name;details.append(p);}
   if(selected&&send){
-    const label=document.createElement('label'),input=document.createElement('input');input.type='checkbox';input.id='medical-policy';
-    input.onchange=()=>{const p=selected();if(p)send({type:'medical-policy',pawnId:p.id,enabled:input.checked});};
-    label.append(input,' Autoriser les soins (sans médicament disponible)');details.append(label);
+    const label=document.createElement('label'),input=document.createElement('select');input.id='medical-policy';
+    for(const [value,name] of Object.entries(MEDICAL_CARE)){const o=document.createElement('option');o.value=value;o.textContent=name;input.append(o);}
+    input.onchange=()=>{const p=selected();if(p)send({type:'medical-care',pawnId:p.id,care:input.value as MedicalCare});};
+    label.append('Soins autorisés ',input);details.append(label);
     const selfLabel=document.createElement('label'),selfInput=document.createElement('input');selfInput.type='checkbox';selfInput.id='self-tend-policy';
     selfInput.onchange=()=>{const p=selected();if(p)send({type:'self-tend-policy',pawnId:p.id,enabled:selfInput.checked});};
     selfLabel.append(selfInput,' Autoriser les auto-soins');selfLabel.title='Médecin doit être activé. Qualité de base ×70 %, avant variation ; pas de pénalité de vitesse propre aux auto-soins.';details.append(selfLabel);
@@ -23,7 +25,7 @@ export function createHealthInspection(panel:HTMLElement,selected?:()=>Pawn|unde
 export function updateHealthInspection(panel:HTMLElement,pawn:Pawn):void {
   const details=panel.querySelector('#health-inspection');if(!details)return;
   const health=pawn.health,c=pawnBody(pawn).capacities;
-  const policy=details.querySelector<HTMLInputElement>('#medical-policy');if(policy){policy.checked=!pawn.careDisabled;policy.disabled=pawn.state==='dead';}
+  const policy=details.querySelector<HTMLSelectElement>('#medical-policy');if(policy){policy.value=medicalCare(pawn);policy.disabled=pawn.state==='dead';}
   const self=details.querySelector<HTMLInputElement>('#self-tend-policy');if(self){self.checked=!!pawn.selfTend;self.disabled=pawn.state==='dead';}
   const hint=details.querySelector('[data-health="self-tend-hint"]');if(hint)hint.textContent=pawn.selfTend&&pawn.priorities.doctor===0?'Auto-soins autorisés, mais Médecin est désactivé dans Travail.':'';
   details.querySelector('[data-health="status"]')!.textContent=pawn.state==='dead'?'Décédé · dépouille sur place':!health?'Aucune lésion':`${pawn.state==='downed'?'À terre · ':''}Douleur ${Math.round(medicalPain(health)*100)} % · Sang perdu ${(health.bloodLoss/BLOOD_UNIT*100).toFixed(1)} % · Saignement ${(medicalBleed(health)*100).toFixed(0)} %/jour`;

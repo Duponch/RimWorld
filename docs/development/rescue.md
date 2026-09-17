@@ -33,7 +33,7 @@ Le bridge observe prise/dépôt et rôle du lit comme phases discrètes. La pré
 ## Limites assumées et suite
 
 - L'ordre de secours peut être forcé immédiatement ; **Maj/file de secours n'est pas encore livré** et fait l'objet d'un refus explicite. Les anciennes familles gardent leurs files existantes.
-- Traitement sans médicament, Médecine/XP, autorisation de soins et repos médical volontaire sont ajoutés en [V47](tending.md). L’alimentation assistée au lit est ajoutée en [V48](feeding.md). Médicaments, chirurgie, infection et maladie restent absents.
+- Traitement sans médicament, Médecine/XP, autorisation de soins et repos médical volontaire sont ajoutés en [V47](tending.md). L’alimentation assistée au lit est ajoutée en [V48](feeding.md). Médicaments ajoutés en [V51](medicines.md) ; chirurgie, infection et maladie restent absentes.
 - Les acteurs actuels sont des colons adultes alliés. Contrôle d'ennemi proche, permission de faction, prisonnier, animal et dangers tactiques restent à brancher sur ces futurs systèmes. Le domaine thermique jouable actuel est tempéré ; le filtre médical des températures extrêmes/confort vestimentaire reste absent, avec son contrat de référence conservé dans la recherche.
 - Les modèles gardent leurs membres de placeholder malgré les amputations. Les relations de propriétaire, de lit partagé et les types de couchages enrichiront le même contrat.
 

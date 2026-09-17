@@ -1,6 +1,6 @@
 # Traitement et repos médical — V47
 
-17 septembre 2026. [Recherche fraîche et incertitudes](../research/tending-reference.md), [santé](health.md), [secours](rescue.md), [compétences](skills.md), [validation](validation.md). Corpus chapitre 15 SYS/TEST-094 et 096 ; chapitres 8/9 pour priorités et réservations. Cette tranche livre les traitements **sans médicament**, pas l'hôpital complet.
+17 septembre 2026. [Recherche fraîche et incertitudes](../research/tending-reference.md), [santé](health.md), [secours](rescue.md), [compétences](skills.md), [validation](validation.md). Corpus chapitre 15 SYS/TEST-094 et 096 ; chapitres 8/9 pour priorités et réservations. Le socle V47 décrit les traitements à sec ; [V51](medicines.md) l’étend avec produits et cinq plafonds, sans livrer l’hôpital complet.
 
 ## Chaîne jouable
 
@@ -10,11 +10,11 @@ Les lits sont classés médical, propriétaire du patient, puis lit ordinaire li
 
 Médecin choisit un patient réellement couché, réserve son identité et une place cardinale libre au chevet, la rejoint, fait face au patient et travaille. La place cardinale est une **adaptation 3D** du contact avec le lit. Deux médecins ne traitent pas simultanément le même patient. Aucun soin à distance, pendant l'approche, ou dans les bras du sauveteur. Un patient dans un lit ordinaire peut aussi être traité.
 
-Le clic droit propose **Soigner sans médicament**. Comme les autres ordres directs, un ordre accepté peut continuer après désactivation du métier ; l'ordre automatique est libéré. Maj/file de soins est refusée explicitement. L'inspection Santé permet d'autoriser ou d'interdire tout traitement et affiche la qualité des plaies traitées. Cette politique binaire couvre seulement les deux choix disponibles aujourd'hui ; les cinq plafonds Core ne sont pas tous livrés.
+Le clic droit propose **Soigner** ; les doses éventuelles dépendent du plafond du patient ([V51](medicines.md)). Comme les autres ordres directs, un ordre accepté peut continuer après désactivation du métier ; l'ordre automatique est libéré. Maj/file de soins est refusée explicitement. Santé affiche la qualité et les cinq plafonds V51. Les anciens réglages binaires restent reconnus dans les sauvegardes historiques.
 
 ## Travail et résultat
 
-Une opération traite une seule lésion admissible : saignement prioritaire (×1,5 dans le classement), puis sévérité. Les parties fraîchement manquantes peuvent être traitées sans faire repousser un membre. Les cicatrices permanentes ne sont pas guéries par cette action. Traiter arrête le saignement de la plaie et contribue à sa guérison ultérieure ; il n'ajoute pas immédiatement des PV.
+Sans médicament, une opération traite une seule lésion admissible : saignement prioritaire (×1,5 dans le classement), puis sévérité. Les parties fraîchement manquantes peuvent être traitées sans faire repousser un membre. Les cicatrices permanentes ne sont pas guéries par cette action. Traiter arrête le saignement de la plaie et contribue à sa guérison ultérieure ; il n'ajoute pas immédiatement des PV.
 
 Durée capturée au début du travail : partie entière de `600 / vitesse` ticks Core ; progression de dix unités par tick local et reliquat conservé entre plaies. La vitesse combine niveau Médecine (`0,4 + 0,06 × niveau`), Manipulation, Vue (importance 80 %, plafond 130 %) et lumière, avec minimum 0,1. Un changement pendant une opération ne retime pas la durée capturée. Sauvegarder conserve la progression ; interrompre la perd.
 
@@ -34,6 +34,6 @@ La sauvegarde rejette futurs champs dans les anciens schémas, conflits d'activi
 
 ## Limites maintenues
 
-Auto-soins ordinaires ajoutés en [V49](self-tending.md). Médicaments, ordres de repos forcé, files médicales, chirurgie, infections/maladies, immunité, hôpital spécialisé et propreté restent à développer. V50 ajoute la [branche urgente et la revue au lit](urgent-care.md). Les recherches ne justifient pas une interruption universelle des travaux ; leurs expirations et réactions aux dégâts restent à développer. Les menaces/factions, prisonniers, animaux et restrictions thermiques seront branchés sur leurs systèmes ; aucune parité exhaustive n'est annoncée.
+Auto-soins ordinaires ajoutés en [V49](self-tending.md). Médicaments ajoutés en [V51](medicines.md). Ordres de repos forcé, files médicales, chirurgie, infections/maladies, immunité, hôpital spécialisé et propreté restent à développer. V50 ajoute la [branche urgente et la revue au lit](urgent-care.md). Les recherches ne justifient pas une interruption universelle des travaux ; leurs expirations et réactions aux dégâts restent à développer. Les menaces/factions, prisonniers, animaux et restrictions thermiques seront branchés sur leurs systèmes ; aucune parité exhaustive n'est annoncée.
 
 Les cinq scénarios profonds de `care.test.ts` croisent statistiques/résultats, repos/sommeil, réservations, accès, interruptions, mort, amputations, migration, snapshots et reprise. Le parcours UI observe les gestes, l'inspection, les attributs GPU et le rechargement pendant traitement. Le pilote de colonie enregistre état médical et XP sans injecter de blessure dans son camp sûr. Les audits 2/30/100 personnes mesurent CPU et navigateur séparément.

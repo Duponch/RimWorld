@@ -1,0 +1,138 @@
+{
+  "source": "tmp/medical-main-before.cpuprofile",
+  "sha256": "de0480b3128f05ac068f6811b1803770a5f0af6f3668811f8e25a6e31b2a26fa",
+  "durationMs": 4283.261,
+  "protocol": "CDP sampling on the native 100-actor medicinal care workload. Diagnostic only; profiler overhead and short sample limit comparisons.",
+  "topSelf": [
+    {
+      "function": "(program)",
+      "url": "",
+      "ms": 735.619
+    },
+    {
+      "function": "_projectObject",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=d62ca415",
+      "ms": 399.607
+    },
+    {
+      "function": "updateMatrixWorld",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=d62ca415",
+      "ms": 345.247
+    },
+    {
+      "function": "(idle)",
+      "url": "",
+      "ms": 333.237
+    },
+    {
+      "function": "SimulationClient.worker.onmessage",
+      "url": "http://127.0.0.1:5173/src/bridge/SimulationClient.ts",
+      "ms": 332.079
+    },
+    {
+      "function": "visitNode",
+      "url": "",
+      "ms": 251.5
+    },
+    {
+      "function": "querySelector",
+      "url": "",
+      "ms": 245.685
+    },
+    {
+      "function": "renderState",
+      "url": "http://127.0.0.1:5173/src/main.ts",
+      "ms": 124.478
+    },
+    {
+      "function": "multiplyMatrices",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=d62ca415",
+      "ms": 108.962
+    },
+    {
+      "function": "applyMatrix4",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=d62ca415",
+      "ms": 85.933
+    },
+    {
+      "function": "_renderObjectDirect",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=d62ca415",
+      "ms": 83.134
+    },
+    {
+      "function": "(garbage collector)",
+      "url": "",
+      "ms": 71.581
+    },
+    {
+      "function": "frame",
+      "url": "http://127.0.0.1:5173/src/render/ColonyRenderer.ts",
+      "ms": 67.56
+    },
+    {
+      "function": "update",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=d62ca415",
+      "ms": 61.104
+    },
+    {
+      "function": "read",
+      "url": "http://127.0.0.1:5173/src/sim/room-topology.ts",
+      "ms": 60.571
+    },
+    {
+      "function": "get",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=d62ca415",
+      "ms": 51.536
+    },
+    {
+      "function": "writeBuffer",
+      "url": "",
+      "ms": 51.048
+    },
+    {
+      "function": "visitChild",
+      "url": "",
+      "ms": 46.33
+    },
+    {
+      "function": "updateForRender",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=d62ca415",
+      "ms": 42.956
+    },
+    {
+      "function": "",
+      "url": "http://127.0.0.1:5173/src/render/PawnLayer.ts",
+      "ms": 36.846
+    },
+    {
+      "function": "setVertexBuffer",
+      "url": "",
+      "ms": 31.329
+    },
+    {
+      "function": "setIndexBuffer",
+      "url": "",
+      "ms": 30.635
+    },
+    {
+      "function": "expectValue",
+      "url": "",
+      "ms": 24.295
+    },
+    {
+      "function": "capture",
+      "url": "http://127.0.0.1:5173/src/bridge/presentation-changes.ts",
+      "ms": 22.171
+    },
+    {
+      "function": "draw",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=d62ca415",
+      "ms": 21.832
+    }
+  ],
+  "querySelectorParentsMs": {
+    "moveCamera": 204.09799999999996,
+    "renderState": 35.505,
+    "updateWorkSkills": 6.082
+  }
+}

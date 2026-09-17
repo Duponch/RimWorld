@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+V51 : [médicaments](medicines.md), règles/statistiques et logistique dans deux modules ciblés ; réservation source commune, cargaison unique, phases publiées et boîtes GPU existantes. Aucun inventaire personnel ou nouveau lot graphique implicite.
+
 V50 : [décisions urgentes](urgent-care.md) dans un module ciblé, budget de navigation commun, marqueur de tâche sparse et migration sans urgence inventée. Les besoins ordinaires ne coupent pas le soin urgent engagé ; aucun ordonnanceur global supplémentaire.
 
 V49 : [auto-soins](self-tending.md), permission persistante sparse et réutilisation de la tâche/du dossier médical. Le rendu récupère la dernière orientation de marche au chargement, sans état de gameplay graphique supplémentaire.

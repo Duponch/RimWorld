@@ -1,5 +1,7 @@
 # Adoption du référentiel utilisateur
 
+V51 — chapitres 8/9/11/15, SYS/TEST-051..054 et 094/096, CAT-018 : adopter plafonds, puissance, doses et groupes ; adapter contact/temps ; différer acquisition complète, inventaire personnel, collecte opportuniste et complications. [Recherche fraîche](medicines-reference.md), [contrat](../development/medicines.md).
+
 V50 — chapitres 8/9/15, SYS/TEST-044 et 094/096 : adopter filtre de priorité et réévaluation des soins, adapter cadence/sortie 3D, différer expiration/réaction aux dégâts des autres tâches. La [recherche fraîche](urgent-care-reference.md) corrige la cible trop large de préemption médicale universelle ; [contrat](../development/urgent-care.md).
 
 V49 — chapitre 15, SYS/TEST-094 et 096, chapitres 8/9 relus : adopter permission, réservations et traitement commun ; adapter sortie du mobilier 3D ; différer préemption médicale générale et médicaments. [Recherche renouvelée](self-tending-reference.md), [contrat](../development/self-tending.md).

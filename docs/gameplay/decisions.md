@@ -1,12 +1,14 @@
 # Choix et écarts de gameplay
 
+V51 : adopter doses/plafonds/puissance et soins groupés après [recherche](../research/medicines-reference.md). Adapter trajet/chevet à la 3D et conserver la cargaison commune. Différer explicitement collecte opportuniste sur piles voisines, acquisition complète et inventaire personnel ; aucune création distante de produit. Trente médicaments industriels seulement sur les nouvelles cartes, sans présenter le départ entier comme Crashlanded.
+
 V50 : corriger la cible de préemption universelle après [recherche](../research/urgent-care-reference.md). Adopter la branche urgente aux points de décision et la revue au lit ; conserver les tâches engagées hors leurs contrats d’interruption. La cadence Core 211 devient 21/22 ticks locaux alternés ; sortie du meuble toujours physique.
 
 V49 : [auto-soins ordinaires](../development/self-tending.md), qualité de base ×0,7 et lit facultatif. Adaptation 3D assumée : sortie physique vers une cellule cardinale d’arrêt avant le geste si le colon occupait un meuble. Préemption urgente explicitement différée, pas simulée par une guérison instantanée.
 
 V48 — [alimentation assistée](../development/feeding.md) : adopter régime du patient et prélèvement/transport/ingestion ; contact cardinal et geste générique adaptés à la 3D. Seuil de 26 % retenu selon le miroir identifié malgré 27 % suggéré par le wiki. Durée locale ×1,5, aucune XP médicale ; capacité générale de portage et inventaire personnel restent ouverts. [Sources](../research/feeding-reference.md).
 
-**Traitements V47** : adopter la chaîne physique sans médicament, Patient/Repos au lit et Médecine ; adapter la place de travail à un chevet cardinal en 3D et la progression aux ticks locaux. La politique actuelle autorise ou refuse les seuls soins disponibles ; elle ne prétend pas fournir les cinq plafonds Core. [Contrat et absences assumées](../development/tending.md), [preuves de référence](../research/tending-reference.md).
+**Traitements V47** : adopter la chaîne physique sans médicament, Patient/Repos au lit et Médecine ; adapter la place de travail à un chevet cardinal en 3D et la progression aux ticks locaux. Cette politique initiale est prolongée par les cinq plafonds V51. [Contrat et absences assumées](../development/tending.md), [preuves de référence](../research/tending-reference.md).
 
 V46 : prise d’un blessé sur sa cellule et dépôt sur l’ancre du lit, adaptés à nos services 3D ; trajectoire commune sans transfert instantané à distance. La file de secours et les critères de danger/température restent partiels explicitement. [Contrat et décisions](../development/rescue.md).
 

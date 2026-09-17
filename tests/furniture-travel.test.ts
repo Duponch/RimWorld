@@ -81,7 +81,7 @@ test('opposite loaded trips cross furniture, cancel in transit without teleport 
     }else if(service==='ground-sleep'){actor.need={kind:'sleep',phase:'sleep',bedId:null,target:{x:8,z:8}};actor.state='sleeping';}
     else{actor.motion={from:{x:7,z:8},to:{x:8,z:8},start:0,end:3};actor.moveCooldown=3;}
     refreshStock(old);const raw=structuredClone(old) as any;(raw.schemaVersion=21,withoutPawnSkills(raw));for(const a of raw.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete raw.deconstructed;delete raw.packed;
-    const loaded=deserializeWorld(JSON.stringify(raw));expect(loaded.tick).toBe(old.tick);expect(loaded.rng).toBe(old.rng);expect(loaded.piles).toEqual(old.piles);expect(loaded.pawns[0]!.motion).toEqual(actor.motion);
+    const loaded=deserializeWorld(JSON.stringify(raw));expect(loaded.tick).toBe(old.tick);expect(loaded.rng).toBe(old.rng);expect(loaded.piles).toEqual(raw.piles);expect(loaded.pawns[0]!.motion).toEqual(actor.motion);
     if(service==='meal')expect(loaded.pawns[0]!.need).toMatchObject({kind:'eat',phase:'choose-spot',progress:0,dining:null});
     if(service==='ground-sleep')expect(loaded.pawns[0]!.need).toBeNull();
     const resumed=deserializeWorld(serializeWorld(loaded));for(let t=0;t<35;t++){stepWorld(loaded);stepWorld(resumed);expect(validateWorld(loaded)).toEqual([]);expect(resumed).toEqual(loaded);}

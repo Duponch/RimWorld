@@ -9,7 +9,7 @@ import type { Pawn } from './types.ts';
  * keeps scenario profiles separate from terrain/geology generation. */
 export function startingPawn(id:number,name:string,x:number,z:number,index:number,recreation:number):Pawn {
   return {
-    skills:startingSkills(index),recreation:initialRecreation(recreation),foodPolicyId:1,
+    medicalCare:'industrial',skills:startingSkills(index),recreation:initialRecreation(recreation),foodPolicyId:1,
     schedule:defaultSchedule(),restZeroTicks:0,collapsePending:false,id,name,x,z,
     hunger:90-index*5,rest:90-index*3,mood:80,comfort:50,memories:[],
     orders:{active:null,queue:[]},jobId:null,haul:null,cooking:null,need:null,bedId:null,

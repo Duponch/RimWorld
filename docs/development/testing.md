@@ -1,5 +1,13 @@
 # Stratégie de validation
 
+V51 : six scénarios `medicine.test.ts` croisent groupes, plafonds, puissance/XP, sources inaccessibles, recharges, dix réservations, auto-soins urgents, saturation/pourriture, migrations et cent acteurs. `integration/medicine.spec.ts` observe les attributs GPU après rendu aux phases physiques et conserve les snapshots. Le pilote civil range/conserve trente doses ; il ne crée pas de blessure. Bancs partagés `--medicine` / `MEDICINE_LOAD=1` mesurés séparément ; conserver les échecs initiaux et les limites de charge.
+
+Le mode facultatif `MEDICAL_PROFILE=1` du banc natif conserve un profil CDP du thread principal dans `tmp/medical-main-profile.cpuprofile`, sur le seul cas de cent acteurs. `MEDICAL_LOAD_REPORT` permet de préserver la mesure normale ; ne pas mélanger les percentiles avec et sans profileur. Le profil sert à attribuer les coûts, puis une mesure sans instrumentation lourde confirme l'effet du changement.
+
+Pour une attente de présentation intermittente, `HARVEST_TRACE=1` ajoute au banc existant les tâches longues et un contexte borné des images/réceptions autour de chaque attente. Une reprise de diagnostic conserve le premier échec ; elle ne prouve pas sa disparition universelle et ne change ni le budget de 100 ms ni l'oracle de progression.
+
+Les clics/tracés de cellule attendent maintenant une projection caméra stable sur trois images, avec une borne de 2,5 s, avant l'entrée souris réelle. Une cellule visible peut encore bouger après un zoom ou un déplacement amorti ; un délai fixe ne suffit pas à fort dézoom. `CAMERA_TRACE=1` conserve le déplacement observé pendant cette attente. Le pilote conserve aussi commande, outil, notification, événements et capture sur un échec d'action ; les attentes métier restent inchangées.
+
 V50 : cinq scénarios de décision urgente croisent meilleur métier activé, seuil strict, soin unique puis repas, lit, budget, interruptions, migration et cent acteurs. Le parcours UI urgent vérifie la chronologie du geste puis de l’ingestion ; le banc médical partagé accepte `URGENT_LOAD=1` et mesure aussi scène/réception, le banc CPU `--urgent`. Ne pas assimiler ces camps dégagés à une charge mixte en forêt.
 
 V49 : cinq scénarios d’auto-soins enrichissent les contrats médicaux (sortie du lit, interruptions, qualité, migration et cent acteurs) ; le parcours UI observe orientation, annulation et reprise. Un échec natif a révélé une orientation perdue au rechargement, corrigée sans assouplir l’oracle.

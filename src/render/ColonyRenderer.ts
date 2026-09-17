@@ -480,6 +480,9 @@ export class ColonyRenderer {
             logs.push({ x, z: lz, y, sx: WORLD_SCALE.pileWidth, sy: 0.12, sz: 0.12, color: row % 2 ? 0x9d794d : 0x896841 });
             ends.push({ x: x + WORLD_SCALE.pileWidth / 2 + 0.003, z: lz, y, sx: 0.012, sy: 0.095, sz: 0.095 });
           }
+        } else if(bundle.kind==='medicine') {
+          food.push({x:bundle.x,z,y:.14,sx:.42,sy:.26,sz:.36,color:ITEM_DEFINITIONS[bundle.item].color});
+          food.push({x:bundle.x,z,y:.285,sx:.23,sy:.03,sz:.07,color:0xf0eee0},{x:bundle.x,z,y:.285,sx:.07,sy:.03,sz:.23,color:0xf0eee0});
         } else if(bundle.kind==='component') {
           food.push({x:bundle.x,z,y:.14,sx:.48,sy:.26,sz:.4,color:ITEM_DEFINITIONS.component.color});
           food.push({x:bundle.x,z,y:.29,sx:.2,sy:.07,sz:.26,color:0x637d77});
@@ -545,6 +548,9 @@ export class ColonyRenderer {
   }
 
   private moveCamera(dt: number): void {
+    // The hidden management tables can contain hundreds of people. Avoid a
+    // document-wide modal query every frame when there is no keyboard motion.
+    if (!this.keys.size) return;
     if (document.querySelector('dialog[open]')) { this.keys.clear(); return; }
     let horizontal = 0, vertical = 0;
     if (this.keys.has('arrowleft') || this.keys.has('q') || this.keys.has('a')) horizontal--;

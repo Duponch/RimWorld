@@ -1,0 +1,266 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "E:\\Code\\RimWorld\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "tests/integration/medicine.spec.ts",
+      "tests/integration/care.spec.ts",
+      "tests/integration/colony-journey.spec.ts",
+      "--reporter=json"
+    ],
+    "configFile": "E:\\Code\\RimWorld\\playwright.config.ts",
+    "rootDir": "E:/Code/RimWorld/tests/integration",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "E:/Code/RimWorld/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "E:/Code/RimWorld/tests/integration",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": {
+      "command": "npm run dev",
+      "url": "http://127.0.0.1:5173",
+      "reuseExistingServer": true,
+      "timeout": 30000
+    }
+  },
+  "suites": [
+    {
+      "title": "care.spec.ts",
+      "file": "care.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "player enables treatment, orders at bedside, saves mid-care and observes actual GPU work and wound quality",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 23144,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T20:04:47.222Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "5aa28a381ae5e037210e-89df4385ff15421f8a4c",
+          "file": "care.spec.ts",
+          "line": 15,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "colony-journey.spec.ts",
+      "file": "colony-journey.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "partie de trois jours : un joueur équipe son camp et entretient ses stocks par la vraie interface",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 480000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 16922,
+                  "error": {
+                    "message": "TimeoutError: page.waitForFunction: Timeout 5000ms exceeded.",
+                    "stack": "TimeoutError: page.waitForFunction: Timeout 5000ms exceeded.\n    at perform (E:\\Code\\RimWorld\\tests\\integration\\player-actions.ts:98:14)\n    at E:\\Code\\RimWorld\\tests\\integration\\colony-journey.spec.ts:126:9",
+                    "location": {
+                      "file": "E:\\Code\\RimWorld\\tests\\integration\\player-actions.ts",
+                      "column": 14,
+                      "line": 98
+                    },
+                    "snippet": "\u001b[90m   at \u001b[39mplayer-actions.ts:98\n\n   96 |     else await editBill(page,c.billId,c.settings);\n   97 |   } else throw new Error(`Player UI action not supported: ${c.type}`);\n>  98 |   await page.waitForFunction(c=>{\n      |              ^\n   99 |     const w=window.__lisiere.world;\n  100 |     if(c.type==='order-feed')return w.pawns.some(p=>p.id===c.pawnId&&p.feed?.patientId===c.patientId);\n  101 |     if(c.type==='order-tend')return w.pawns.some(p=>p.id===c.pawnId&&p.tend?.patientId===c.patientId);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "E:\\Code\\RimWorld\\tests\\integration\\player-actions.ts",
+                        "column": 14,
+                        "line": 98
+                      },
+                      "message": "TimeoutError: page.waitForFunction: Timeout 5000ms exceeded.\n\n   at player-actions.ts:98\n\n   96 |     else await editBill(page,c.billId,c.settings);\n   97 |   } else throw new Error(`Player UI action not supported: ${c.type}`);\n>  98 |   await page.waitForFunction(c=>{\n      |              ^\n   99 |     const w=window.__lisiere.world;\n  100 |     if(c.type==='order-feed')return w.pawns.some(p=>p.id===c.pawnId&&p.feed?.patientId===c.patientId);\n  101 |     if(c.type==='order-tend')return w.pawns.some(p=>p.id===c.pawnId&&p.tend?.patientId===c.patientId);\n    at perform (E:\\Code\\RimWorld\\tests\\integration\\player-actions.ts:98:14)\n    at E:\\Code\\RimWorld\\tests\\integration\\colony-journey.spec.ts:126:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "Conserver les médicaments près des couchages, dans deux piles dédiées. {\"type\":\"stockpile\",\"x\":124,\"z\":129,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":false,\"medicine\":true},\"priority\":2,\"capacity\":25}",
+                      "duration": 8318,
+                      "error": {
+                        "message": "TimeoutError: page.waitForFunction: Timeout 5000ms exceeded.",
+                        "stack": "TimeoutError: page.waitForFunction: Timeout 5000ms exceeded.\n    at perform (E:\\Code\\RimWorld\\tests\\integration\\player-actions.ts:98:14)\n    at E:\\Code\\RimWorld\\tests\\integration\\colony-journey.spec.ts:126:9",
+                        "location": {
+                          "file": "E:\\Code\\RimWorld\\tests\\integration\\player-actions.ts",
+                          "column": 14,
+                          "line": 98
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39mplayer-actions.ts:98\n\n   96 |     else await editBill(page,c.billId,c.settings);\n   97 |   } else throw new Error(`Player UI action not supported: ${c.type}`);\n>  98 |   await page.waitForFunction(c=>{\n      |              ^\n   99 |     const w=window.__lisiere.world;\n  100 |     if(c.type==='order-feed')return w.pawns.some(p=>p.id===c.pawnId&&p.feed?.patientId===c.patientId);\n  101 |     if(c.type==='order-tend')return w.pawns.some(p=>p.id===c.pawnId&&p.tend?.patientId===c.patientId);"
+                      }
+                    }
+                  ],
+                  "startTime": "2026-09-17T20:05:33.744Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "hourly-world-0",
+                      "contentType": "application/json",
+                      "localCheckpoint": {
+                        "path": "tmp/medicine-ui-final-run-v51-checkpoints/hourly-world-0.json",
+                        "tick": 50,
+                        "bytes": 2083146,
+                        "sha256": "3d451383e61c01f1f31d666c6903f6459ae30d794a7be28eed330c91576d499a"
+                      }
+                    },
+                    {
+                      "name": "colony-journey-incomplete",
+                      "contentType": "application/json",
+                      "body": "eyJkYXlzIjpbXSwiZGVjaXNpb25zIjpbXSwibWVhbHMiOltdLCJlcnJvcnMiOltdfQ=="
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "E:\\Code\\RimWorld\\test-results\\colony-journey-partie-de-t-625fe-ocks-par-la-vraie-interface\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "E:\\Code\\RimWorld\\tests\\integration\\player-actions.ts",
+                    "column": 14,
+                    "line": 98
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "555f966565dc11b6db98-9085b14c50fcc33d1534",
+          "file": "colony-journey.spec.ts",
+          "line": 30,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "medicine.spec.ts",
+      "file": "medicine.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "patient chooses medicine ceiling; doctor collects, carries, cancels without loss and treats a batch visibly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 21719,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T20:05:10.444Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "96d133265508b393c1e2-ee18507bec436ba1cb60",
+          "file": "medicine.spec.ts",
+          "line": 15,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-17T20:04:41.440Z",
+    "duration": 69768.399,
+    "expected": 2,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

@@ -1,5 +1,7 @@
 # Inventaire, équipement et apparence des colons
 
+V51 : les trois doses médicales utilisent les variantes du lot de cargaison existant ; la dose tenue pendant collecte/soin disparaît au résultat présenté, pas à réception anticipée. Pas d’inventaire ni d’équipement permanent implicite. [Contrat](medicines.md).
+
 V49 : l’auto-soin garde la direction précédente, sans angle vers soi-même. Au rechargement, `PawnLayer` retrouve la direction depuis la dernière arête sauvegardée avant les orientations de lit/cible. Le scénario natif a détecté puis vérifié la correction du retour arbitraire à 36°. Geste de travail générique maintenu.
 
 V48 : [alimentation assistée](feeding.md), portion tenue par le médecin, geste GPU générique orienté vers le patient et posture allongée. Les trois phases et la consommation partagent l’horloge de scène. Animation définitive spécifique, équipement et portraits synchronisés restent ouverts.

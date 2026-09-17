@@ -1,0 +1,59 @@
+{
+  "date": "2026-09-17T20:14:33.927Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "protocol": "Physical medicine collection and bedside batch treatment; one dose per patient; cargo pose checked. Native WebGPU, real worker at 6x, cleared 250², concurrent medical services and live physiology; 90 warmup frames. Scene CPU is within frame CPU; snapshot callback includes HUD scheduling, not complete IPC/decoding. No claim about forests or full combat.",
+  "results": [
+    {
+      "actors": 100,
+      "rescued": 50,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1"
+      },
+      "frames": {
+        "count": 219,
+        "p50": 12.599999999998545,
+        "p95": 41.80000000000109,
+        "p99": 62.5,
+        "max": 79.20000000000073
+      },
+      "frameCpu": {
+        "count": 220,
+        "p50": 9.800000000745058,
+        "p95": 13.800000000745058,
+        "p99": 19,
+        "max": 21
+      },
+      "sceneCpu": {
+        "count": 85,
+        "p50": 1.400000000372529,
+        "p95": 2.400000000372529,
+        "p99": 8.900000000372529,
+        "max": 8.900000000372529
+      },
+      "snapshotCpu": {
+        "count": 166,
+        "p50": 0,
+        "p95": 10.599999999627471,
+        "p99": 15.699999999254942,
+        "max": 25.59999999962747
+      },
+      "drawCalls": {
+        "count": 220,
+        "p50": 133,
+        "p95": 133,
+        "p99": 134,
+        "max": 134
+      },
+      "carriedFrames": 3873,
+      "invalidPoses": 0,
+      "stableGeometry": true,
+      "pipelines": [],
+      "errors": []
+    }
+  ]
+}

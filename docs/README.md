@@ -1,12 +1,14 @@
 # Documentation de Lisière
 
+V51 : [médicaments et cinq plafonds de soins](development/medicines.md), [sources et subtilités vérifiées](research/medicines-reference.md). Prélèvement, portage, doses par opération et soins groupés ; trente doses industrielles sur les nouveaux sites. Acquisition complète et maladies restent ouvertes.
+
 V50 : [priorités médicales urgentes](development/urgent-care.md), [recherche et correction de portée](research/urgent-care-reference.md). Branche avant les besoins aux décisions admissibles, revue au lit et réévaluation après une plaie auto-traitée ; aucune préemption universelle des tâches engagées.
 
-V49 : [auto-soins ordinaires](development/self-tending.md), [vérification des règles](research/self-tending-reference.md). Option Santé désactivée au départ, métier Médecin, qualité de base ×0,7 et traitement physique sans lit obligatoire. Décisions urgentes ajoutées V50 ; médicaments encore ouverts.
+V49 : [auto-soins ordinaires](development/self-tending.md), [vérification des règles](research/self-tending-reference.md). Option Santé désactivée au départ, métier Médecin, qualité de base ×0,7 et traitement physique sans lit obligatoire. Décisions urgentes ajoutées V50 ; médicaments ajoutés en V51.
 
-V48 : [alimentation assistée au lit](development/feeding.md), [sources recoupées et seuil adulte](research/feeding-reference.md). Médecin prend et porte la portion selon le régime du patient ; nutrition seulement au terme du repas. Médicaments encore ouverts ; auto-soins ordinaires ajoutés en V49.
+V48 : [alimentation assistée au lit](development/feeding.md), [sources recoupées et seuil adulte](research/feeding-reference.md). Médecin prend et porte la portion selon le régime du patient ; nutrition seulement au terme du repas. Médicaments ajoutés en V51 ; auto-soins ordinaires ajoutés en V49.
 
-V47 : [traitements sans médicament, repos médical et Médecine](development/tending.md), [règles revérifiées](research/tending-reference.md). Les médicaments restent ouverts ; auto-soins ordinaires ajoutés en V49 ; alimentation assistée ajoutée en V48.
+V47 : [traitements sans médicament, repos médical et Médecine](development/tending.md), [règles revérifiées](research/tending-reference.md). Les médicaments sont ajoutés en V51 ; auto-soins ordinaires ajoutés en V49 ; alimentation assistée ajoutée en V48.
 
 V46 : [secours physiques et lits médicaux](development/rescue.md). Médecin, clic droit, portage GPU et reprise en cours de transport ; traitements ajoutés en V47, alimentation assistée ajoutée en V48.
 

@@ -1,6 +1,7 @@
 import { applyFeeding,processFeeding,reconcileFeeding } from './feeding.ts';
 import { applyTending,processTending,reconcileTending } from './tending.ts';
 import { reconcilePatientRest } from './patient-rest.ts';
+import { MEDICAL_CARE } from './medicine-rules.ts';
 import { planUrgentCare } from './urgent-care.ts';
 import { applyRescue,processRescue,reconcileRescues } from './rescue.ts';
 import { applyMedicalBed } from './medical-beds.ts';
@@ -179,10 +180,15 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
     if(command.enabled)p.selfTend=true;else delete p.selfTend;
     p.planCooldown=0;return {ok:true};
   }
+  if(command.type==='medical-care'){
+    const p=world.pawns.find(p=>p.id===command.pawnId);
+    if(!p||p.state==='dead'||typeof command.care!=='string'||!Object.hasOwn(MEDICAL_CARE,command.care))return refusal('invalid-command','Plafond médical invalide.');
+    delete p.careDisabled;p.medicalCare=command.care;p.planCooldown=0;return {ok:true};
+  }
   if(command.type==='medical-policy'){
     const p=world.pawns.find(p=>p.id===command.pawnId);
     if(!p||typeof command.enabled!=='boolean')return refusal('invalid-command','Politique médicale invalide.');
-    if(command.enabled)delete p.careDisabled;else p.careDisabled=true;
+    delete p.medicalCare;if(command.enabled)delete p.careDisabled;else p.careDisabled=true;
     p.planCooldown=0;return {ok:true};
   }
   if(command.type==='order-rescue')return applyRescue(world,command);
@@ -372,7 +378,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if (processNeeds(world, pawn, needsContext) || !pawn.feed&&!pawn.tend&&!pawn.rescue&&pawn.orders.active===null&&processRecreation(world, pawn, needsContext)) continue;
       if (pawn.jobId === null && pawn.haul === null && !pawn.rescue && !pawn.feed&&!pawn.tend && !pawn.cooking && pawn.planCooldown === 0) planWork(world, pawn, getBlocked, occupied, budget);
       if(pawn.feed){processFeeding(world,pawn,needsContext);continue;}
-      if(pawn.tend){processTending(world,pawn,needsContext,()=>getLight().speedAt(pawn));continue;}
+      if(pawn.tend){processTending(world,pawn,needsContext,()=>getLight().speedAt(pawn),()=>searchCandidates(world,pawn,getBlocked(),occupied,budget));continue;}
       if(pawn.rescue){processRescue(world,pawn,needsContext);continue;}
       if (pawn.haul) { const refueling=pawn.haul.destination.type==='fuel';processHaul(world, pawn, (target, allow) => moveToward(world, pawn, target, allow, getBlocked, budget,false,getLight), () => {wakePlanners(world);if(refueling)invalidateEnvironment();});continue; }
       if(pawn.cooking) {processCooking(world,pawn,{

@@ -164,7 +164,8 @@ describe('seeded temperate valley generation', () => {
       // The tiny 8² fixture supplies 36 wood: a wall (5) and stool (25) fit this budget.
       // Three modern beds (45 each) are exercised by the natural 250² colony pilot.
       expect(applyCommand(world, { type: 'designate', kind: 'stool', x: cx - 2, z: cz + 1 }), context).toEqual({ ok: true });
-      expect(applyCommand(world, { type: 'stockpile', x: cx + 2, z: cz + 1, enabled: true, filters: { wood: true, food: false }, capacity: 75 }), context).toEqual({ ok: true });
+      // V51 starts medicine east of camp. Give wood its own empty cell.
+      expect(applyCommand(world, { type: 'stockpile', x: cx - 2, z: cz, enabled: true, filters: { wood: true, food: false }, capacity: 75 }), context).toEqual({ ok: true });
       stepWorld(world, 17);
       const resumed = deserializeWorld(serializeWorld(world));
       stepWorld(world, 983);
@@ -176,7 +177,7 @@ describe('seeded temperate valley generation', () => {
       expect(world.structures, context).toHaveLength(2);
       expect(world.stock, context).toEqual({ wood: 6, food: 28 });
       const storedWood = world.piles.filter(pile => pile.kind === 'wood' && pile.owner.type === 'ground'
-        && pile.owner.x === cx + 2 && pile.owner.z === cz + 1).reduce((sum, pile) => sum + pile.quantity, 0);
+        && pile.owner.x === cx - 2 && pile.owner.z === cz).reduce((sum, pile) => sum + pile.quantity, 0);
       expect(storedWood, context).toBe(6);
     }
     // A long route crosses the last partial 16-cell rendering chunk, but physics

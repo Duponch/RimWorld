@@ -69,7 +69,7 @@ test('self-treatment leaves a bed physically, preserves the captured path and re
 });
 
 test('self-treatment roundtrips snapshots and rejects corrupted or premature V48 data',()=>{
-  const old=selfTendingCamp();old.schemaVersion=48 as World['schemaVersion'];expect(deserializeWorld(JSON.stringify(old))).toEqual({...old,schemaVersion:50});
+  const old=selfTendingCamp();old.schemaVersion=48 as World['schemaVersion'];expect(deserializeWorld(JSON.stringify(old))).toEqual({...old,schemaVersion:51});
   const badOld=structuredClone(old);badOld.pawns[0]!.selfTend=true;expect(()=>deserializeWorld(JSON.stringify(badOld))).toThrow();
   const w=selfTendingCamp(),p=w.pawns[0]!;enable(w);until(w,()=>p.tend?.phase==='tend');replay(w);
   for(const mutate of [(v:World)=>delete v.pawns[0]!.selfTend,(v:World)=>v.pawns[0]!.tend!.spot.x++,(v:World)=>v.schemaVersion=48 as World['schemaVersion']]){const bad=structuredClone(w);mutate(bad);expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();}

@@ -11,6 +11,8 @@ export function withMigratedSkills<T extends {tick:number;pawns:unknown[]}>(worl
   const expected=structuredClone(world);
   for(const p of expected.pawns as {skills:unknown}[])p.skills=initialSkills(8,0);
   for(const p of expected.pawns as {priorities:{doctor?:number;patient?:number;bedrest?:number}}[])Object.assign(p.priorities,{doctor:1,patient:1,bedrest:3});
+  for(const p of expected.pawns as {medicalCare?:unknown}[])delete p.medicalCare;
+  withoutMedicineItems(expected);
   return expected;
 }
 
@@ -24,8 +26,14 @@ export function withoutMedicalWork<T>(world:T):T {
 
 /** Explicit historical fixture only. Never used to sanitize a rejected save. */
 export function withoutCare<T>(world:T):T {
-  for(const p of (world as {pawns:Array<{skills?:{medicine?:unknown};priorities:{patient?:number;bedrest?:number}}>}).pawns){
-    delete p.priorities.patient;delete p.priorities.bedrest;if(p.skills)delete p.skills.medicine;
+  withoutMedicineItems(world);
+  for(const p of (world as {pawns:Array<{medicalCare?:unknown;skills?:{medicine?:unknown};priorities:{patient?:number;bedrest?:number}}>}).pawns){
+    delete p.medicalCare;delete p.priorities.patient;delete p.priorities.bedrest;if(p.skills)delete p.skills.medicine;
   }
   return world;
+}
+
+function withoutMedicineItems(world:unknown):void {
+  const w=world as {piles?:{kind:string}[]};
+  if(w.piles)w.piles=w.piles.filter(p=>p.kind!=='medicine');
 }

@@ -50,7 +50,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 50 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 51 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)
@@ -238,7 +238,7 @@
 
 - Lire docs/development/tending.md et sa recherche. Patient, Médecin et Repos au lit sont distincts ; allongé n’est pas endormi. Le choix médical reste disponible à l’heure du coucher. Pas de soin/XP pendant trajet ni de PV instantanés.
 - Réserver patient et chevet cardinal, capturer la durée au début du travail, conserver reliquat et continuation. Une plaie sans médicament par opération ; XP avant qualité, variation additive et plafond 70 %. Politique, accès, incapacité et mort libèrent avant résultat.
-- V46 validée strictement avant Patient 1, Repos au lit 3 et Médecine 8/sans passion/0 XP. La migration V42→43 ne doit pas introduire ce nouveau profil trop tôt. Alimentation assistée ajoutée V48 ; auto-soins ordinaires ajoutés V49 ; médicaments, files et interruption médicale générale restent absents.
+- V46 validée strictement avant Patient 1, Repos au lit 3 et Médecine 8/sans passion/0 XP. La migration V42→43 ne doit pas introduire ce nouveau profil trop tôt. Alimentation assistée ajoutée V48 ; auto-soins ordinaires ajoutés V49 ; médicaments ajoutés V51, files et expirations des autres tâches restent ouvertes.
 - Incapacité dans un lit déjà utilisé : retirer l'intention volontaire mais conserver le service physique ; fin de traitement et priorité Patient 0 ne doivent pas déclencher un second secours. Valider les affections admissibles et la place au chevet.
 - Fabrique des colons séparée dans starting-pawns.ts : lire docs/development/starting-pawns.md avant réintégration au générateur. L'indépendance entre créations doit résister aux mutations fractionnaires et imbriquées ; ne pas contourner les erreurs par une remise à zéro des sauvegardes.
 
@@ -256,3 +256,8 @@
 - Lire docs/development/urgent-care.md et sa recherche. La branche urgente n'est disponible qu'à la meilleure priorité de travail activée ; Patient avant Médecin à égalité. Seuil strict de saignement avant 0,75 jour, pas toutes les lésions.
 - TendTask.urgent capture la voie ; auto-soin urgent termine après une plaie puis réévalue, ordre direct garde sa chaîne complète. Revue au lit 211 ticks Core, alternance 21/22 ticks locaux dérivée du tick/ID. Pas d'annulation universelle des travaux engagés ; expirations/dégâts restent ouverts.
 - V49 validée strictement avant V50 sans marqueur inventé. Navigation progressive et réservations communes ; budget épuisé reporte, accès impossible conserve le service. Aucun gain pendant trajet ni bonus de lit debout.
+
+## Médicaments V51
+- Lire docs/development/medicines.md et sa recherche. Plafond du patient parmi cinq grades, puissance puis distance au patient, accès du médecin. Réservations quantitatives communes ; dix médecins maximum par source. Prélèvement/portage physiques, une dose par opération, premier dommage puis autres lésions tenant dans vingt PV. Sans dose, une seule plaie.
+- XP une fois avant qualité, variation par plaie. Auto-soin urgent termine après une opération et dépose le reliquat ; politique invalide/cargaison indéposable conserve la matière via interruptedCargo. Pas d'inventaire personnel implicite.
+- V50 strictement validée avant V51 sans doses ni plafond inventés. Absence du champ = ancien soin à sec ; nouveaux colons plafond industriel, nouvelles cartes trente doses industrielles. Herbal/avancé définis et testés mais acquisition normale encore absente ; plantes médicinales pourrissent en 150 jours via le taux local, bilan distinct de la nourriture.

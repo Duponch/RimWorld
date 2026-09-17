@@ -1,0 +1,63 @@
+{
+  "date": "2026-09-17T20:02:25.801Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "os": "win32 10.0.26200",
+  "scope": "Physical medicine pickup and multi-wound treatment; one industrial dose per patient. Cleared 250x250 map; concurrent reservations, continuing health/needs; cold and warm ticks included, clones separate",
+  "results": [
+    {
+      "actors": 2,
+      "pairs": 1,
+      "stepMs": {
+        "p50": 0.051400000000057844,
+        "p95": 0.3310000000000173,
+        "p99": 2.5009000000000015,
+        "max": 16.939499999999953
+      },
+      "cloneMs": {
+        "p50": 48.6739,
+        "p95": 69.0157999999999,
+        "p99": 78.28250000000003,
+        "max": 78.28250000000003
+      },
+      "rescued": 1,
+      "carryTicks": 68
+    },
+    {
+      "actors": 30,
+      "pairs": 15,
+      "stepMs": {
+        "p50": 0.4639999999999418,
+        "p95": 1.2997999999997774,
+        "p99": 7.139999999999873,
+        "max": 23.393800000000283
+      },
+      "cloneMs": {
+        "p50": 39.923199999999724,
+        "p95": 48.41359999999986,
+        "p99": 52.6237000000001,
+        "max": 52.6237000000001
+      },
+      "rescued": 15,
+      "carryTicks": 1020
+    },
+    {
+      "actors": 100,
+      "pairs": 50,
+      "stepMs": {
+        "p50": 1.8572999999996682,
+        "p95": 7.095699999999852,
+        "p99": 26.44669999999951,
+        "max": 34.66319999999996
+      },
+      "cloneMs": {
+        "p50": 43.33899999999994,
+        "p95": 58.09990000000016,
+        "p99": 61.81009999999969,
+        "max": 61.81009999999969
+      },
+      "rescued": 50,
+      "carryTicks": 3400
+    }
+  ]
+}

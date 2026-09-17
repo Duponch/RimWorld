@@ -1,11 +1,11 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 50 as const;
+export const SCHEMA_VERSION = 51 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
 export type Terrain = 'grass' | 'soil' | 'water' | 'rock' | 'rough-stone';
 export type ResourceKind = 'tree' | 'berries' | 'rock' | 'rice';
-export type MaterialKind = 'wood' | 'food' | 'chunk' | 'steel' | 'blocks' | 'component';
+export type MaterialKind = 'wood' | 'food' | 'chunk' | 'steel' | 'blocks' | 'component' | 'medicine';
 export type StructureKind = 'wood-generator' | 'standing-lamp' | 'passive-cooler' | 'door' | 'wall' | 'bed' | 'table' | 'stool' | 'campfire' | 'horseshoes' | 'stonecutter';
 export type JobKind = 'build-roof' | 'remove-roof' | 'mine' | 'chop' | 'harvest' | 'cut' | 'sow' | 'deconstruct' | 'uninstall' | 'install' | StructureKind;
 export type WorkType = 'patient' | 'bedrest' | 'doctor' | 'mine' | 'gather' | 'build' | 'haul' | 'grow' | 'cook' | 'craft';
@@ -19,7 +19,7 @@ export interface Structure extends Cell { medical?:true; power?:import('./power-
 export interface Stock { wood: number; food: number }
 export type MaterialOwner = ({ type: 'ground' } & Cell) | { type: 'pawn'; pawnId: number } | { type: 'job'; jobId: number };
 export interface MaterialPile { haulRequested?: true; id: number; kind: MaterialKind; item: ItemId; quantity: number; owner: MaterialOwner; rot?: import('./food-preservation.ts').RotState }
-export type StorageFilters = { wood:boolean; food:boolean; chunk?:boolean; steel?:boolean; component?:boolean; blocks?:boolean; furniture?:boolean };
+export type StorageFilters = { wood:boolean; food:boolean; chunk?:boolean; steel?:boolean; component?:boolean; medicine?:boolean; blocks?:boolean; furniture?:boolean };
 export interface StockpileCell extends Cell { id: number; filters: StorageFilters; priority: number; capacity: number }
 export interface GrowingZone { id: number; cells: number[]; plant: 'rice'; allowSow: boolean; allowCut: boolean }
 export type HaulDestination = { type: 'fuel'; structureId: number; forced?: boolean; forCooking?: boolean } | { type: 'stockpile'; stockpileId: number } | { type: 'job'; jobId: number; forConstruction?: boolean } | ({ type: 'aside'; growingZoneId?: number; sowCell?: Cell; constructionId?: number; forConstruction?: boolean } & Cell);
@@ -66,6 +66,7 @@ export interface Pawn extends Cell {
   feed?: import('./feeding-rules.ts').FeedTask;
   tend?: import('./care-rules.ts').TendTask;
   careDisabled?:true;
+  medicalCare?:import('./medicine-rules.ts').MedicalCare;
   selfTend?:true;
   rescue?: import('./rescue-state.ts').RescueTask;
   health?: import('./injury-types.ts').MedicalRecord;
@@ -147,6 +148,7 @@ export interface StorageSettings { filters?: StorageFilters; priority?: number; 
 export interface AreaCommand extends StorageSettings { type: 'area'; action: AreaAction; from: Cell; to: Cell }
 export type Command =
   | import('./medical-beds.ts').MedicalBedCommand
+  | {type:'medical-care';pawnId:number;care:import('./medicine-rules.ts').MedicalCare}
   | {type:'medical-policy';pawnId:number;enabled:boolean}
   | {type:'order-feed';pawnId:number;patientId:number;queue:boolean}
   | {type:'order-tend';pawnId:number;patientId:number;queue:boolean}

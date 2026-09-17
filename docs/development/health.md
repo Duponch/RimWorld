@@ -1,6 +1,6 @@
 # Santé active V45
 
-16 septembre 2026. [Recherche recoupée](../research/health-reference.md), [anatomie](body.md), [lésions](injuries.md), [validation](validation.md). Corpus : chapitre 15, SYS/TEST-089..091, 094, 096..097 ; chapitres 5/21 pour les toits. Le socle médical est maintenant intégré ; soins et combat restent les prochains consommateurs, pas des fonctions implicitement livrées.
+16 septembre 2026. [Recherche recoupée](../research/health-reference.md), [anatomie](body.md), [lésions](injuries.md), [validation](validation.md). Corpus : chapitre 15, SYS/TEST-089..091, 094, 096..097 ; chapitres 5/21 pour les toits. Le socle médical est maintenant intégré ; secours et soins sont ajoutés par V46–V51, dont les [médicaments](medicines.md) ; combat, maladies et chirurgie restent ouverts.
 
 ## Propriété et transitions
 

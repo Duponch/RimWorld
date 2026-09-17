@@ -1,0 +1,138 @@
+{
+  "source": "tmp/medical-main-profile.cpuprofile",
+  "sha256": "3380e07a689b12ea676d92f1e15e130ba18c9d416229733eb9b14fbce3bb7bd0",
+  "durationMs": 4387.503,
+  "protocol": "CDP sampling on the native 100-actor medicinal care workload. Diagnostic only; profiler overhead and short sample limit comparisons.",
+  "topSelf": [
+    {
+      "function": "(program)",
+      "url": "",
+      "ms": 669.089
+    },
+    {
+      "function": "_projectObject",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=d62ca415",
+      "ms": 555.617
+    },
+    {
+      "function": "updateMatrixWorld",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=d62ca415",
+      "ms": 393.708
+    },
+    {
+      "function": "SimulationClient.worker.onmessage",
+      "url": "http://127.0.0.1:5173/src/bridge/SimulationClient.ts",
+      "ms": 384.319
+    },
+    {
+      "function": "visitNode",
+      "url": "",
+      "ms": 325.477
+    },
+    {
+      "function": "multiplyMatrices",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=d62ca415",
+      "ms": 170.939
+    },
+    {
+      "function": "renderState",
+      "url": "http://127.0.0.1:5173/src/main.ts",
+      "ms": 143.926
+    },
+    {
+      "function": "_renderObjectDirect",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=d62ca415",
+      "ms": 116.82
+    },
+    {
+      "function": "update",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=d62ca415",
+      "ms": 98.765
+    },
+    {
+      "function": "applyMatrix4",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=d62ca415",
+      "ms": 93.044
+    },
+    {
+      "function": "(garbage collector)",
+      "url": "",
+      "ms": 84.888
+    },
+    {
+      "function": "frame",
+      "url": "http://127.0.0.1:5173/src/render/ColonyRenderer.ts",
+      "ms": 83.419
+    },
+    {
+      "function": "get",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=d62ca415",
+      "ms": 60.526
+    },
+    {
+      "function": "",
+      "url": "http://127.0.0.1:5173/src/render/PawnLayer.ts",
+      "ms": 56.663
+    },
+    {
+      "function": "writeBuffer",
+      "url": "",
+      "ms": 55.684
+    },
+    {
+      "function": "updateWorkSkills",
+      "url": "http://127.0.0.1:5173/src/ui/skills-inspection.ts",
+      "ms": 48.983
+    },
+    {
+      "function": "read",
+      "url": "http://127.0.0.1:5173/src/sim/room-topology.ts",
+      "ms": 47.826
+    },
+    {
+      "function": "querySelector",
+      "url": "",
+      "ms": 44.32
+    },
+    {
+      "function": "visitChild",
+      "url": "",
+      "ms": 44.086
+    },
+    {
+      "function": "setVertexBuffer",
+      "url": "",
+      "ms": 35.723
+    },
+    {
+      "function": "(idle)",
+      "url": "",
+      "ms": 32.853
+    },
+    {
+      "function": "_update",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=d62ca415",
+      "ms": 29.057
+    },
+    {
+      "function": "setBindGroup",
+      "url": "",
+      "ms": 28.378
+    },
+    {
+      "function": "setAttribute",
+      "url": "",
+      "ms": 28.054
+    },
+    {
+      "function": "carrierOf",
+      "url": "http://127.0.0.1:5173/src/sim/rescue-state.ts",
+      "ms": 24.265
+    }
+  ],
+  "querySelectorParentsMs": {
+    "renderState": 30.26,
+    "updateWorkSkills": 12.545,
+    "updateFoodStocks": 1.515
+  }
+}

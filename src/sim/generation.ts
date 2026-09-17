@@ -211,5 +211,6 @@ export function generateWorld(seed: number, width: number, height: number): Worl
   }
   addGroundMaterial(world, 'wood', 12, { x: cx - 1, z: cz + 1 });
   addGroundMaterial(world, 'food', 18, { x: cx + 1, z: cz + 1 }, 'survival-meal');
+  addGroundMaterial(world,'medicine',30,{x:cx+2,z:cz+1},'medicine');
   return world;
 }

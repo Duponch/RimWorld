@@ -9,8 +9,9 @@ export function validatePreservation(world: World, version: number): string[] {
     if (world.spoiled !== undefined || world.piles.some(p => p.rot !== undefined)) errors.push('Legacy save contains food preservation fields.');
     return errors;
   }
-  if (!record(world.spoiled) || Object.keys(world.spoiled).length !== 3
-    || Object.keys(ROT_DAYS).some(key => !Number.isSafeInteger(world.spoiled[key as keyof typeof ROT_DAYS]) || world.spoiled[key as keyof typeof ROT_DAYS] < 0)) errors.push('Invalid cumulative food spoilage.');
+  if (!record(world.spoiled) || Object.keys(world.spoiled).length !== (world.spoiled['herbal-medicine']===undefined?3:4)
+    || world.spoiled['herbal-medicine']!==undefined&&(version<51||!Number.isSafeInteger(world.spoiled['herbal-medicine'])||world.spoiled['herbal-medicine']<0)
+    || (['berries','rice','simple-meal'] as const).some(key => !Number.isSafeInteger(world.spoiled[key]) || world.spoiled[key] < 0)) errors.push('Invalid cumulative food spoilage.');
   for (const pile of world.piles) {
     if (!isPerishable(pile.item)) { if (pile.rot !== undefined) errors.push('Unexpected food age.'); continue; }
     const rot = pile.rot;

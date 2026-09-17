@@ -1,12 +1,14 @@
 # Catalogue de contenu : couverture connue
 
+V51 — **CAT-018 partiel** : trois ItemId médicaux distincts, piles de 25, stockage/portage et soins : `herbal-medicine` (puissance 0,6 ; plafond 70 % ; pourriture 150 jours), `medicine` (1 ; 100 % ; sans pourriture), `glitterworld-medicine` (1,6 ; 130 % ; sans pourriture). Trente unités industrielles disponibles au départ des **nouvelles** cartes. Plantes et avancés sont définis/testés mais leur acquisition normale est absente. Healroot, recettes, commerce, bionique et chirurgie ne sont pas implicitement livrés. [Contrat](../development/medicines.md), [recherche](../research/medicines-reference.md).
+
 V50 change les décisions médicales, sans ajouter d’objet. Aucun médicament, arme, vêtement ou nouvel équipement livré par ce lot ; [portée](../development/urgent-care.md).
 
-V49 ajoute une action d’auto-soin et une permission individuelle, aucun nouvel objet. Les aliments et matériaux restent inchangés ; médicaments et équipement demeurent absents du gameplay livré.
+V49 ajoute une action d’auto-soin et une permission individuelle, aucun nouvel objet. Les aliments et matériaux restent inchangés ; médicaments ajoutés en V51, équipement encore absent.
 
 V48 ajoute l’action **Nourrir un patient** avec les cinq aliments existants, leurs quantités et leur régime ; aucun nouvel objet ni médicament. Ni inventaire personnel ni distributeur implicite. [Contrat](../development/feeding.md).
 
-V47 ajoute un profil de compétence **Médecine**, les activités Patient/Repos au lit/Traitement et une politique individuelle autoriser/refuser. Aucun objet médical supplémentaire : les soins sans médicament utilisent les lits existants. Médicaments, consommables, lits d’hôpital et équipements restent absents ; ne pas compter les nouvelles actions comme de nouveaux objets. [Contrat](../development/tending.md).
+V47 ajoute un profil de compétence **Médecine**, les activités Patient/Repos au lit/Traitement et une politique individuelle autoriser/refuser. Aucun objet médical supplémentaire : les soins sans médicament utilisent les lits existants. Médicaments ajoutés V51 ; lits d’hôpital et équipements restent absents ; ne pas compter les nouvelles actions comme de nouveaux objets. [Contrat](../development/tending.md).
 
 V46 ajoute un **rôle médical aux lits existants**, conservé lorsque le meuble est emballé. Aucun nouvel objet lit d’hôpital, médicament ou sac de patient : une personne portée garde son identité. Les variantes bois/acier/cinq pierres gardent leurs propriétés existantes. [Contrat](../development/rescue.md).
 
@@ -30,7 +32,7 @@ V36 enrichit les propriétés des objets existants : lumière logique du feu all
 
 V35 ajoute une famille de **toit construit**, couche de couverture indépendante des objets/piles et sans recette matérielle. Zones Construire/Retirer/Ignorer, supports et présentation procédurale livrés ; toits naturels minces/épais, colonnes porteuses, gravats et dégâts aux objets restent absents ; blessures de toit construit aux personnes livrées V45. [Contrat](../development/roofing.md).
 
-État du 16 septembre 2026. Le jeu de base complet, y compris ses centaines d'objets et leurs variantes, reste la cible. Le bilan par [système](implementation-status.md) ne suffit pas à suivre ce contenu. Ce document distingue ce que contient notre référence et ce qui existe dans le jeu développé.
+État du 17 septembre 2026. Le jeu de base complet, y compris ses centaines d'objets et leurs variantes, reste la cible. Le bilan par [système](implementation-status.md) ne suffit pas à suivre ce contenu. Ce document distingue ce que contient notre référence et ce qui existe dans le jeu développé.
 
 V24 permet de déconstruire les six bâtiments existants. V25 ajoute désinstallation et réinstallation de lit, table, tabouret et piquet sous forme entière ; **aucune nouvelle famille d’objet**. Le paquet conserve le bâtiment et son identité ; V26 ajoute rangement filtré, dégagement et réinstallation par Transport ; masse, qualité et dégâts restent absents. La présence de ces familles ne clôt ni leurs variantes ni les centaines de définitions attendues.
 
@@ -59,6 +61,7 @@ L’[audit du 13 septembre](../research/environment-review.md) confirme que les 
 | Structure `passive-cooler` | 50 bois livrés devenant combustible, consommation continue, refroidissement vers 17 °C, recharges réelles, retrait sans restitution. | Recherche offerte au départ ; confort/santé et dégâts absents. Aucun froid alimentaire, éclairage, recette ou réinstallation. |
 | Structure `campfire` | 20 bois livrés, combustible initial, combustion/ravitaillement, factures de repas simple, lumière locale et chaleur jusqu’à 28 °C. | Pluie, sociabilité et dégâts absents ; autres postes différés. |
 | Objet `survival-meal` | Repas de survie du départ, 0,9 nutrition/unité, piles de dix ; CAT-015. | Ne pourrit pas. Recette, ingrédients, recherche et détérioration absents. Le scénario local donne 18 repas ; ce n'est pas Crashlanded. |
+| Objet `medicine` | Trente doses industrielles au départ, piles 25, rangement, portage et soins. CAT-018 partiel. | Fabrication et commerce absents. Les deux autres grades sont définis/testés sans acquisition normale ; détails V51 ci-dessus. |
 | Objet `legacy-portion` | Compatibilité des sauvegardes V1–V4 : 0,35 nutrition/unité, piles de 75. | Ce n'est aucun objet de RimWorld ; absent des nouvelles parties. |
 | Ressources `tree`, `berries`, `rock` | Arbre générique, buisson générique, pierre au sol. | Pas un catalogue d'espèces ou de roches. Arbre abattable ; buisson persistant, récoltable selon maturité et supprimable par coupe ; les pierres Resource restent décoratives, distinctes des produits de minage V28. |
 | Structures `wall`, `bed`, `table`, `stool` | Mur, lit, table 1×2, tabouret, construits en bois ou acier V30 et cinq pierres V33 ; les trois meubles sont réinstallables en V25. | Aucun ensemble complet de mobilier ; autres matériaux, qualité et dégâts absents. Le lit en pierre a un repos ×0,9, les ouvrages un travail spécifique. |
@@ -66,7 +69,7 @@ L’[audit du 13 septembre](../research/environment-review.md) confirme que les 
 
 Le [registre d'objets](../../src/sim/items.ts) est utilisé par simulation, piles et interface. [Definitions](../../src/sim/definitions.ts) contient les constructions et commandes actuelles. Une entrée présente ne signifie pas que tous ses comportements sont livrés : par exemple, un repas disponible au départ ne signifie pas que sa recette existe.
 
-Le contenu restant comprend notamment métaux et pierres, composants avancés et autres filières de composants ordinaires, textiles et cuirs par espèce, aliments/cultures/viandes/œufs, repas et ingrédients, médicaments/drogues, organes/prothèses, armes/projectiles, vêtements/armures, mobilier, sols/portes/toits, ateliers, énergie, dispositifs défensifs, art, plantes et animaux. Le détail individuel et ses liens aux recettes, recherches, biomes et systèmes seront acquis et implémentés progressivement. Les DLC restent après G5.
+Le contenu restant comprend notamment métaux et pierres, composants avancés et autres filières de composants ordinaires, textiles et cuirs par espèce, aliments/cultures/viandes/œufs, repas et ingrédients, acquisition médicale et drogues, organes/prothèses, armes/projectiles, vêtements/armures, mobilier, sols/portes/toits, ateliers, énergie, dispositifs défensifs, art, plantes et animaux. Le détail individuel et ses liens aux recettes, recherches, biomes et systèmes seront acquis et implémentés progressivement. Les DLC restent après G5.
 
 Chaque ajout doit avoir un identifiant stable, famille CAT, source/version et champs confirmés, règles réellement disponibles, variantes encore absentes, référence de test et représentation. Les noms traduits ne servent jamais d'identifiants de sauvegarde.
 
@@ -152,7 +155,7 @@ Nouvelle famille `door`, sept variantes : bois, acier, granite, calcaire, marbre
 
 ## Corps humain : socle encore non actif
 
-[Définition anatomique](../../src/sim/body-definition.ts) : 64 entrées dont un emplacement utilitaire conceptuel, parties symétriques, organes et doigts/orteils. Il ne s’agit ni de 64 objets transportables ni d’un inventaire médical déjà jouable. [Capacités et limites](../development/body.md). Quatre profils de lésions sont codés dans le [module médical](../development/injuries.md) : coupure, écrasement, fissure, contusion ; ce ne sont pas des objets ni un catalogue médical complet. V45 active les blessures persistantes de Pawn et les chutes de toit construit. Autres races/corps, implants, pathologies, médicaments utilisables et équipement restent absents du contenu actif. Une dépouille est encore le Pawn décédé, pas un nouvel objet transportable.
+[Définition anatomique](../../src/sim/body-definition.ts) : 64 entrées dont un emplacement utilitaire conceptuel, parties symétriques, organes et doigts/orteils. Il ne s’agit ni de 64 objets transportables ni d’un inventaire médical déjà jouable. [Capacités et limites](../development/body.md). Quatre profils de lésions sont codés dans le [module médical](../development/injuries.md) : coupure, écrasement, fissure, contusion ; ce ne sont pas des objets ni un catalogue médical complet. V45 active les blessures persistantes de Pawn et les chutes de toit construit. Autres races/corps, implants, pathologies et équipement restent absents du contenu actif ; médicaments utilisables ajoutés V51. Une dépouille est encore le Pawn décédé, pas un nouvel objet transportable.
 
 ## Cargaison interrompue V44
 

@@ -1,0 +1,109 @@
+{
+  "scope": "Diagnostic after the 180-second Vitest journey budget was exceeded. Native Node --cpu-prof, 108000 ticks across seeds 42/93/2048 on 250x250; player commands, no deep assertion/continuation costs. Not a controlled before/after comparison. All checkpoints retained 30 stored industrial doses.",
+  "simulationWallSeconds": 98.647127,
+  "profileSeconds": 99.168667,
+  "localProfile": "tmp\\medicine-pilot.cpuprofile",
+  "sha256": "62ad114727dff73fae5b89e692374fa60411731e5c17d28ae3f060c7c8fca583",
+  "hotspotsSelfSeconds": [
+    {
+      "function": "read",
+      "source": "src/sim/room-topology.ts",
+      "seconds": 15.8608
+    },
+    {
+      "function": "readLight",
+      "source": "src/sim/work-environment.ts",
+      "seconds": 9.622
+    },
+    {
+      "function": "scheduleRoofs",
+      "source": "src/sim/roofing.ts",
+      "seconds": 8.0655
+    },
+    {
+      "function": "RoofContext",
+      "source": "src/sim/roof-rules.ts",
+      "seconds": 7.5711
+    },
+    {
+      "function": "getBlocked",
+      "source": "src/sim/engine.ts",
+      "seconds": 6.8405
+    },
+    {
+      "function": "read",
+      "source": "src/sim/light-environment.ts",
+      "seconds": 6.2513
+    },
+    {
+      "function": "blockedCells",
+      "source": "src/sim/pathfinding.ts",
+      "seconds": 5.9538
+    },
+    {
+      "function": "stepWorld",
+      "source": "src/sim/engine.ts",
+      "seconds": 2.5049
+    },
+    {
+      "function": "recreationSiteValid",
+      "source": "src/sim/recreation-space.ts",
+      "seconds": 2.0201
+    },
+    {
+      "function": "candidateAccess",
+      "source": "src/sim/candidate-access.ts",
+      "seconds": 1.8832
+    },
+    {
+      "function": "canDesignate",
+      "source": "src/sim/engine.ts",
+      "seconds": 1.7332
+    },
+    {
+      "function": "constructionObstruction",
+      "source": "src/sim/construction-rules.ts",
+      "seconds": 1.6369
+    },
+    {
+      "function": "read",
+      "source": "src/sim/thermal-topology.ts",
+      "seconds": 1.4943
+    },
+    {
+      "function": "navigationCosts",
+      "source": "src/sim/furniture-travel.ts",
+      "seconds": 1.4936
+    },
+    {
+      "function": "advance",
+      "source": "src/sim/weighted-search.ts",
+      "seconds": 1.2173
+    },
+    {
+      "function": "reconcileRoofJobs",
+      "source": "src/sim/roofing.ts",
+      "seconds": 1.1529
+    },
+    {
+      "function": "(garbage collector)",
+      "source": "",
+      "seconds": 1.1272
+    },
+    {
+      "function": "cookingPlaceFree",
+      "source": "src/sim/cooking-bills.ts",
+      "seconds": 0.9964
+    },
+    {
+      "function": "WeightedSearch",
+      "source": "src/sim/weighted-search.ts",
+      "seconds": 0.8739
+    },
+    {
+      "function": "",
+      "source": "src/sim/engine.ts",
+      "seconds": 0.8243
+    }
+  ]
+}

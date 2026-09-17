@@ -1,7 +1,7 @@
 import { expect, type Page } from '@playwright/test';
 import type { Decision } from '../scenarios/colony-player';
 import type { BillSettings } from '../../src/sim/cooking-types';
-import { world, panel, tool, cell, dragRectangle } from './helpers';
+import { world, panel, tool, cell, dragRectangle, settledCells } from './helpers';
 
 export async function revealCells(page:Page,cells:{x:number;z:number}[]):Promise<void> {
   const visible=()=>page.evaluate(cells=>{
@@ -25,6 +25,7 @@ export async function revealCells(page:Page,cells:{x:number;z:number}[]):Promise
     await page.mouse.move(900,350);await page.mouse.down({button:'middle'});
     await page.mouse.move(900+dx,350+dy,{steps:8});await page.mouse.up({button:'middle'});await page.waitForTimeout(200);
   }
+  await settledCells(page,cells);
   await expect.poll(visible,{message:`Le joueur doit voir les cases visées : ${JSON.stringify(cells)}`}).toBe(true);
 }
 
@@ -63,7 +64,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     await panel(page,'work');await page.locator(`select[data-owner="${c.pawnId}"][data-work="${c.work}"]`).selectOption(String(c.value));
   } else if(c.type==='stockpile') {
     await tool(page,'stockpile');
-    await page.locator('#stockpile-component').setChecked(c.filters!.component??false);await page.locator('#stockpile-blocks').setChecked(c.filters!.blocks??false);await page.locator('#stockpile-steel').setChecked(c.filters!.steel??false);await page.locator('#stockpile-chunk').setChecked(c.filters!.chunk??false);await page.locator('#stockpile-wood').setChecked(c.filters!.wood);await page.locator('#stockpile-food').setChecked(c.filters!.food);await page.locator('#stockpile-furniture').setChecked(c.filters!.furniture??false);
+    await page.locator('#stockpile-medicine').setChecked(c.filters!.medicine??false);await page.locator('#stockpile-component').setChecked(c.filters!.component??false);await page.locator('#stockpile-blocks').setChecked(c.filters!.blocks??false);await page.locator('#stockpile-steel').setChecked(c.filters!.steel??false);await page.locator('#stockpile-chunk').setChecked(c.filters!.chunk??false);await page.locator('#stockpile-wood').setChecked(c.filters!.wood);await page.locator('#stockpile-food').setChecked(c.filters!.food);await page.locator('#stockpile-furniture').setChecked(c.filters!.furniture??false);
     await page.locator('#stockpile-priority').selectOption(String(c.priority??2));await page.locator('#stockpile-capacity').fill(String(c.capacity??75));
     await revealCells(page,[c]);
     await cell(page,c.x,c.z);
@@ -95,7 +96,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     if(c.type==='bill-add')await page.locator('#add-cooking-bill').click();
     else await editBill(page,c.billId,c.settings);
   } else throw new Error(`Player UI action not supported: ${c.type}`);
-  await page.waitForFunction(c=>{
+  try { await page.waitForFunction(c=>{
     const w=window.__lisiere.world;
     if(c.type==='order-feed')return w.pawns.some(p=>p.id===c.pawnId&&p.feed?.patientId===c.patientId);
     if(c.type==='order-tend')return w.pawns.some(p=>p.id===c.pawnId&&p.tend?.patientId===c.patientId);
@@ -122,4 +123,9 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     if(c.type==='stockpile')return w.stockpiles.some(s=>s.x===c.x&&s.z===c.z);
     return c.type==='designate' && w.jobs.some(j=>j.x===c.x&&j.z===c.z&&j.kind===c.kind&&(!c.material||j.material===c.material));
   },c,{polling:100,timeout:5000});
+  } catch(error) {
+    const diagnostic=await page.evaluate(()=>({tick:window.__lisiere.tick,notice:document.querySelector('#notice')?.textContent,stockpiles:window.__lisiere.world.stockpiles,events:window.__lisiere.world.events.slice(-5),tool:document.querySelector('[data-tool].active')?.getAttribute('data-tool')}));
+    await page.screenshot({path:'artifacts/player-action-failure.png'});
+    throw new Error(`Player command did not produce its expected result: ${JSON.stringify({command:c,diagnostic})}; ${String(error)}`);
+  }
 }

@@ -1,0 +1,51 @@
+{
+  "date": "2026-09-17T20:05:31.827Z",
+  "backend": "native WebGPU",
+  "frames": 2156,
+  "carrying": 211,
+  "working": 340,
+  "firstCarry": {
+    "tick": 3084,
+    "play": 3084,
+    "phase": "approach",
+    "work": 0,
+    "cargo": 19,
+    "patientPose": 1,
+    "held": true,
+    "xp": 0,
+    "treated": 0,
+    "units": 4
+  },
+  "firstWork": {
+    "tick": 3176,
+    "play": 3176.772000000003,
+    "phase": "tend",
+    "work": 1,
+    "cargo": 19,
+    "patientPose": 1,
+    "held": true,
+    "xp": 0,
+    "treated": 0,
+    "units": 4
+  },
+  "firstResult": {
+    "tick": 3244,
+    "play": 3244.0600000000645,
+    "phase": "idle",
+    "work": 0,
+    "cargo": 0,
+    "patientPose": 0,
+    "held": false,
+    "xp": 122500,
+    "treated": 2,
+    "units": 3
+  },
+  "savedTicks": [
+    3032,
+    3084,
+    3211
+  ],
+  "finishedTick": 3275,
+  "remainingMedicine": 3,
+  "errors": []
+}

@@ -32,6 +32,7 @@ test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp const
         expect(world.pawns.every(p=>p.state!=='dead'&&p.state!=='downed'&&!p.health?.injuries.length&&!p.health?.missing.length),context).toBe(true);
       }
       if (world.tick % 6000 === 0) {
+        if(process.env.COLONY_PROGRESS==='1')console.info(`Colony ${seed}: day ${world.tick/6000}, ${world.jobs.length} pending jobs`);
         report.push(colonySummary(world));
         for(const workplace of report.at(-1)!.workplaces) {
           expect(workplace.total).toBeGreaterThanOrEqual(.32);expect(workplace.total).toBeLessThanOrEqual(1);
@@ -58,6 +59,7 @@ test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp const
     expect(colonySummary(world).mining.steel,context).toBe(50);expect(colonySummary(world).mining.steelStored,context).toBe(50);expect(colonySummary(world).mining.steelInBuildings,context).toBe(150);expect(colonySummary(world).structures.stonecutter,context).toBe(1);
     expect(colonySummary(world).mining.componentsInBuildings,context).toBe(2);
     expect(colonySummary(world).power.filter(s=>s.on),context).toHaveLength(2);
+    expect(colonySummary(world).medicines,context).toEqual({total:30,stored:30,policies:['industrial','industrial','industrial']});
     expect(colonySummary(world).mining.stored,context).toBe(colonySummary(world).mining.chunks);
     expect(world.deconstructed.count,context).toBe(1);
     expect(world.structures.find(s=>s.kind==='horseshoes')?.x,context).toBe(Math.floor(world.width/2)+4);expect(world.packed,context).toEqual([]);
@@ -79,4 +81,6 @@ test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp const
     expect(world.restRules).toBe('adult');expect(world.pawns.map(p=>p.schedule.filter(s=>s==='sleep').length)).toEqual([8,8,8]);
     expect(world.pawns[2]!.schedule[5]).toBe('anything');expect(world.pawns[2]!.schedule[21]).toBe('sleep');
   }
-}, 180000);
+// This is a correctness journey with deep checkpoints, not a tick-time budget.
+// Keep a wall-clock ceiling while separate profiling measures simulation costs.
+}, 300000);

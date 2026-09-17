@@ -106,13 +106,13 @@ export function queryOrderOptions(world:World,pawnId:number,cell:Cell,queue=fals
   }
   for(const patient of world.pawns)if(patient!==pawn&&patient.x===cell.x&&patient.z===cell.z&&lyingPatient(patient)){
     const reason=queue?'La file de soins n’est pas encore disponible.':tendingReason(world,pawn,patient)??(!tendingProposal(world,pawn,patient,reachableCells(world,pawn,blockedCells(world),new Set()))?'Aucune place accessible au chevet.':undefined);
-    options.push({jobId:0,tendPatientId:patient.id,label:`Soigner ${patient.name} sans médicament`,enabled:!reason,...reason?{reason}:{}});
+    options.push({jobId:0,tendPatientId:patient.id,label:`Soigner ${patient.name}`,enabled:!reason,...reason?{reason}:{}});
     const feedReason=queue?'La file d’alimentation assistée n’est pas encore disponible.':feedingReason(world,pawn,patient)??(!feedingProposal(world,pawn,patient,reachableCells(world,pawn,blockedCells(world),new Set()))?'Aucun aliment autorisé ou accès au chevet.':undefined);
     options.push({jobId:0,feedPatientId:patient.id,label:`Nourrir ${patient.name}`,enabled:!feedReason,...feedReason?{reason:feedReason}:{}});
   }
   if(pawn.x===cell.x&&pawn.z===cell.z){
     const reason=queue?'La file de soins n’est pas encore disponible.':tendingReason(world,pawn,pawn)??(!tendingProposal(world,pawn,pawn,reachableCells(world,pawn,blockedCells(world),new Set()))?'Aucune place pour se soigner.':undefined);
-    options.push({jobId:0,tendPatientId:pawn.id,label:'Se soigner sans médicament',enabled:!reason,...reason?{reason}:{}});
+    options.push({jobId:0,tendPatientId:pawn.id,label:'Se soigner',enabled:!reason,...reason?{reason}:{}});
   }
   return options;
 }

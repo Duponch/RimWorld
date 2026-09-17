@@ -1,6 +1,8 @@
 # Matrice des systèmes et critères de réalisation
 
-S13 : [santé active V45](../development/health.md), blessures localisées, capacités, incapacité/décès et dégâts de toiture construite ; [secours et lits médicaux V46](../development/rescue.md), [traitements sans médicament et repos médical V47](../development/tending.md), [alimentation assistée V48](../development/feeding.md). [Auto-soins ordinaires V49](../development/self-tending.md). [Décisions urgentes et revue au lit V50](../development/urgent-care.md). Domaine encore partiel : expirations/dégâts des autres tâches, médicaments, chirurgie/pathologies et dépouilles complètes absents. Aucun jalon clôturé.
+S13 / CAT-018 : [V51](../development/medicines.md) ajoute les doses physiques, plafonds individuels et soins groupés ; acquisition complète, maladies et chirurgie restent ouvertes. Prochain lot selon ROADMAP : équipement puis premier combat.
+
+S13 : [santé active V45](../development/health.md), blessures localisées, capacités, incapacité/décès et dégâts de toiture construite ; [secours et lits médicaux V46](../development/rescue.md), [traitements sans médicament et repos médical V47](../development/tending.md), [alimentation assistée V48](../development/feeding.md). [Auto-soins ordinaires V49](../development/self-tending.md). [Décisions urgentes et revue au lit V50](../development/urgent-care.md). Domaine encore partiel : expirations/dégâts des autres tâches, acquisition médicale complète, chirurgie/pathologies et dépouilles complètes absents. Aucun jalon clôturé.
 
 V44 consolide S04/S07 : sommeil forcé avec cargaison indéposable, engagements libérés, conservation et récupération après dégagement. Les transitions médicales de S13 sont ajoutées en V45 ; [contrat](../development/interrupted-cargo.md).
 
@@ -18,7 +20,7 @@ V38 : thermique quotidienne/locale, chauffage du feu et âge alimentaire variabl
 
 Cette matrice traduit les références de RimWorld en exigences de gameplay pour notre simulation de colonie 3D. Les trois documents de `docs/reference/originals` constituent désormais le corpus fonctionnel principal, utilisé selon la [note d'adoption et de lecture critique](../research/reference-adoption.md), avec la [première recherche](../research/rimworld-reference.md) en complément. Elle décrit une cible et un ordre de construction, **pas une déclaration de fonctionnalités livrées**. Le [plan de développement](../ROADMAP.md) définit le calendrier canonique G0 à G5 et l'état technique ; les résumés ci-dessous s'y conforment. Les extensions viennent après G5.
 
-Révision : **16 septembre 2026**. Périmètre par défaut : jeu de base avant les systèmes comparables aux extensions. Les règles chiffrées du prototype sont nos paramètres provisoires ; elles ne doivent pas être présentées comme des valeurs certifiées de RimWorld.
+Révision : **17 septembre 2026**. Périmètre par défaut : jeu de base avant les systèmes comparables aux extensions. Les règles chiffrées du prototype sont nos paramètres provisoires ; elles ne doivent pas être présentées comme des valeurs certifiées de RimWorld.
 
 V36 branche lumière logique et premiers rôles de pièce sur les deux recettes, puis leur présentation locale 3D ; les critères globaux de S10–S12 restent des cibles ouvertes.
 

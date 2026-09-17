@@ -46,14 +46,33 @@ export async function tool(page: Page, name: 'wood-generator'|'standing-lamp'|'p
   await page.locator(`[data-tool="${name}"]`).click();
 }
 
+/** Wheel/pan damping can continue after the target becomes visible. At map
+ * overview a few screen pixels are a different cell. Observe stability before
+ * acting, as a player does; do not disable damping or bypass the pointer path. */
+export async function settledCells(page:Page,cells:{x:number;z:number}[]) {
+  const sample=await page.evaluate(cells=>new Promise<{points:{x:number;y:number}[];shift:number;milliseconds:number}>((resolve,reject)=>{
+    const project=()=>cells.map(c=>window.__lisiere.projectCell(c.x,c.z));
+    const first=project(),start=performance.now();let previous=first,stable=0;
+    const observe=()=>{const points=project(),now=performance.now();
+      const delta=Math.max(...points.map((p,i)=>Math.hypot(p.x-previous[i]!.x,p.y-previous[i]!.y)));previous=points;
+      stable=delta<.03?stable+1:0;
+      if(stable>=3)resolve({points,shift:Math.max(...points.map((p,i)=>Math.hypot(p.x-first[i]!.x,p.y-first[i]!.y))),milliseconds:now-start});
+      else if(now-start>2500)reject(new Error('Camera projection did not settle within 2500 ms.'));
+      else requestAnimationFrame(observe);
+    };requestAnimationFrame(observe);
+  }),cells);
+  if(process.env.CAMERA_TRACE==='1'&&sample.shift>.25)console.info(JSON.stringify({cameraSettlement:{cells,shift:sample.shift,milliseconds:sample.milliseconds}}));
+  return sample.points;
+}
 export async function cell(page: Page, x: number, z: number) {
-  const point = await page.evaluate(({ x, z }) => window.__lisiere.projectCell(x, z), { x, z });
+  const [point] = await settledCells(page,[{x,z}]);
   const bounds = await page.locator('#viewport canvas').boundingBox();
   if (!bounds) throw new Error('Canvas absent');
-  await page.mouse.click(bounds.x + point.x, bounds.y + point.y);
+  expect(await page.evaluate(p=>document.elementFromPoint(p.x,p.y)?.tagName,{x:bounds.x+point!.x,y:bounds.y+point!.y}),'Cell click must reach the visible canvas.').toBe('CANVAS');
+  await page.mouse.click(bounds.x + point!.x, bounds.y + point!.y);
 }
 export async function dragRectangle(page: Page, from: { x: number; z: number }, to: { x: number; z: number }, release = true) {
-  const points = await page.evaluate(({ from, to }) => [window.__lisiere.projectCell(from.x, from.z), window.__lisiere.projectCell(to.x, to.z)], { from, to });
+  const points = await settledCells(page,[from,to]);
   const bounds = await page.locator('#viewport canvas').boundingBox();
   if (!bounds) throw new Error('Canvas absent');
   expect(await page.evaluate(({ points, bounds }) => points.map(point => document.elementFromPoint(bounds.x + point.x, bounds.y + point.y)?.tagName), { points, bounds }), 'Les extrémités du tracé doivent être sur la carte visible, hors panneaux.').toEqual(['CANVAS', 'CANVAS']);

@@ -176,7 +176,7 @@ function readStorageSettings(prefix: string) {
   const capacity = Number(el<HTMLInputElement>(`${prefix}-capacity`).value);
   if (!Number.isInteger(capacity) || capacity < 1 || capacity > MAX_STACK) throw new Error(`La capacité doit être un entier entre 1 et ${MAX_STACK}.`);
   return {
-    filters: { component: el<HTMLInputElement>(`${prefix}-component`).checked, blocks: el<HTMLInputElement>(`${prefix}-blocks`).checked, steel: el<HTMLInputElement>(`${prefix}-steel`).checked, chunk: el<HTMLInputElement>(`${prefix}-chunk`).checked, wood: el<HTMLInputElement>(`${prefix}-wood`).checked, food: el<HTMLInputElement>(`${prefix}-food`).checked, furniture: el<HTMLInputElement>(`${prefix}-furniture`).checked },
+    filters: { medicine:el<HTMLInputElement>(`${prefix}-medicine`).checked, component: el<HTMLInputElement>(`${prefix}-component`).checked, blocks: el<HTMLInputElement>(`${prefix}-blocks`).checked, steel: el<HTMLInputElement>(`${prefix}-steel`).checked, chunk: el<HTMLInputElement>(`${prefix}-chunk`).checked, wood: el<HTMLInputElement>(`${prefix}-wood`).checked, food: el<HTMLInputElement>(`${prefix}-food`).checked, furniture: el<HTMLInputElement>(`${prefix}-furniture`).checked },
     priority: Number(el<HTMLSelectElement>(`${prefix}-priority`).value), capacity,
   };
 }
@@ -208,6 +208,7 @@ function rebuildInspector() {
       el<HTMLInputElement>('selected-stockpile-food').checked = storage.filters.food;
       el<HTMLInputElement>('selected-stockpile-furniture').checked = storage.filters.furniture??false;
       el<HTMLInputElement>('selected-stockpile-blocks').checked = storage.filters.blocks??false;
+      el<HTMLInputElement>('selected-stockpile-medicine').checked=storage.filters.medicine??false;
       el<HTMLInputElement>('selected-stockpile-component').checked = storage.filters.component??false;
       el<HTMLInputElement>('selected-stockpile-steel').checked = storage.filters.steel??false;
       el<HTMLInputElement>('selected-stockpile-chunk').checked = storage.filters.chunk??false;
@@ -276,6 +277,7 @@ function renderState() {
   scheduleUI.update(world);
   foodPolicyUI.update(world);
   el('blocks').textContent=String(world.piles.reduce((n,p)=>n+(p.kind==='blocks'&&p.owner.type!=='job'?p.quantity:0),0));
+  el('medicine').textContent=String(world.piles.reduce((n,p)=>n+(p.kind==='medicine'&&p.owner.type!=='job'?p.quantity:0),0));
   el('component').textContent = String(world.piles.reduce((n,p)=>n+(p.item==='component'&&p.owner.type!=='job'?p.quantity:0),0));
   el('steel').textContent = String(world.piles.reduce((n,p)=>n+(p.item==='steel'&&p.owner.type!=='job'?p.quantity:0),0));
   el('wood').textContent = String(world.stock.wood); el('food').textContent = availableNutrition(world).toFixed(1); updateFoodStocks(el('food-items'), world);

@@ -1,10 +1,10 @@
 import type { ItemId } from './items.ts';
 import { TICKS_PER_DAY, type MaterialPile, type World } from './types.ts';
 
-export const ROT_DAYS = Object.freeze({ berries: 14, rice: 40, 'simple-meal': 4 } as const);
+export const ROT_DAYS = Object.freeze({ berries: 14, rice: 40, 'simple-meal': 4, 'herbal-medicine':150 } as const);
 export type PerishableItem = keyof typeof ROT_DAYS;
 export interface RotState { progress: number; atTick: number; rate?:number }
-export type SpoiledFood = Record<PerishableItem, number>;
+export type SpoiledFood = Record<Exclude<PerishableItem,'herbal-medicine'>, number>&{'herbal-medicine'?:number};
 export const emptySpoilage = (): SpoiledFood => ({ berries: 0, rice: 0, 'simple-meal': 0 });
 export const isPerishable = (item: ItemId): item is PerishableItem => Object.hasOwn(ROT_DAYS, item);
 export const rotRateAtTemperature = (temperature: number): number => Math.max(0, Math.min(1, temperature / 10));

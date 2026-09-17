@@ -1,5 +1,7 @@
 # Conservation des aliments — contrat V11–V38
 
+V51 étend le même âge/taux thermique aux [plantes médicinales](medicines.md) (150 jours) ; `spoiled["herbal-medicine"]` facultatif comptabilise leur perte sans entrer dans `spoiledUnits`, bilan **alimentaire**. Réservation/portage médical interrompus avant résultat si la dose expire. Les deux autres médicaments ne pourrissent pas.
+
 V48 : les portions d’[alimentation assistée](feeding.md) partagent réservations quantitatives, copie d’âge au prélèvement, température du médecin porteur, expiration avant action et cargaison interrompue. Un repas pourri ne nourrit jamais le patient.
 
 Voir la [recherche fraîcheur](../research/food-preservation-reference.md) pour provenance, confiance et écarts. Cette responsabilité est séparée de la [nutrition](food-items.md), des [recettes](cooking.md) et des futurs dégâts d’exposition.

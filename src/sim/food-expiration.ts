@@ -10,7 +10,7 @@ export function expireFood(world: World): void {
   let losses: ReturnType<typeof emptySpoilage> | undefined;
   for (const pile of world.piles) if (isPerishable(pile.item) && ticksUntilRot(pile, world.tick) <= 0) {
     (expired ??= new Set()).add(pile.id);
-    (losses ??= emptySpoilage())[pile.item] += pile.quantity;
+    losses??=emptySpoilage();losses[pile.item]=(losses[pile.item]??0)+pile.quantity;
   }
   if (!expired) return;
   const expiredCarriers=new Set(world.piles.filter(p=>expired.has(p.id)&&p.owner.type==='pawn').map(p=>p.owner.type==='pawn'?p.owner.pawnId:-1));
@@ -21,6 +21,7 @@ export function expireFood(world: World): void {
     const c = pawn.cooking, h = pawn.haul, n = pawn.need;
     const affected = c && (c.ingredients.some(i => expired.has(i.pileId)) || c.productId !== null && expired.has(c.productId))
       || h && expired.has(h.phase === 'pickup' ? h.sourcePileId : h.carryPileId!)
+      || pawn.tend?.medicine && expired.has(pawn.tend.phase==='pickup'?pawn.tend.medicine.sourcePileId:pawn.tend.medicine.carryPileId!)
       || pawn.feed && expired.has(pawn.feed.phase==='pickup'?pawn.feed.sourcePileId:pawn.feed.carryPileId!)
       || n?.kind === 'eat' && expired.has(n.phase === 'pickup' ? n.sourcePileId : n.carryPileId!);
     if (!affected || releaseWork(world, pawn)) continue;
@@ -33,8 +34,8 @@ export function expireFood(world: World): void {
       pawn.path = []; pawn.state = pawn.moveCooldown > 0 ? 'moving' : 'working';
     }
   }
-  for (const item of ['berries', 'rice', 'simple-meal'] as const) if (losses![item]) {
-    world.spoiled[item] += losses![item];
+  for (const item of ['berries', 'rice', 'simple-meal','herbal-medicine'] as const) if (losses![item]) {
+    world.spoiled[item]=(world.spoiled[item]??0)+losses![item]!;
     world.events.push({ tick: world.tick, type: 'need', message: `${losses![item]} ${ITEM_DEFINITIONS[item].label} ont pourri.` });
   }
   if (world.events.length > 80) world.events.splice(0, world.events.length - 80);
