@@ -176,6 +176,7 @@
 - Les publications actives à 20 ms alimentent les trajectoires ; `PresentationQueue` regroupe les valeurs continues de scène à 5 Hz. `PresentationChanges` compare les phases par valeur pour le worker et les snapshots décodés ; une transition discrète reste appliquée dès son tick. Conserver le dernier état continu en attente même en pause.
 
 ## Critères de partie jouable
+- Encodeur sous V52 : copies ordonnées pour le chemin stable, recherche par ID après permutation ; seules les mutations structurelles reconstruisent les ensembles. Comparer tous les champs à chaque publication, y compris au même tick ; ne jamais conserver une référence mutable de simulation comme valeur témoin. Vérifier l’égalité des paquets, les anciens snapshots et les suppressions avec `scripts/snapshot-encoder-bench.ts` et les scénarios bridge avant la garde native.
 - Lire docs/development/playability-validation.md. État final et FPS ne prouvent pas la chronologie visible. Fixer les attentes joueur avant l’oracle ; ne pas valider un délai parce qu’il correspond au buffer interne.
 - `npm run test:presentation` impose les vérifications sur zones naturelles et vitesses répétées ; requis aux changements d’horloge, bridge, interpolation ou phases de travail. Il appartient au contrôle complet, pas aux retouches cosmétiques. Distinguer exécution réelle, observation de présentation, mesure matérielle et cas non exercés.
 

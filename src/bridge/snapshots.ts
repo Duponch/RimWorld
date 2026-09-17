@@ -27,7 +27,7 @@ export class SnapshotEncoder {
   private ores: Tile['ore'][] = [];
   private stones: Tile['stone'][] = [];
   private resources = new Map<number, Resource>();
-  private resourceOrder: number[] = [];
+  private orderedResources: Resource[] = [];
 
   /** postMessage must follow synchronously: it owns cloning the returned dynamic state. */
   encode(world: World, stepMs: number, speed: number, checkpoint = false): SnapshotMessage {
@@ -39,42 +39,56 @@ export class SnapshotEncoder {
       this.source = world; this.width = world.width; this.height = world.height;
       this.terrain = world.tiles.map(tile => tile.terrain);
       this.stones = world.tiles.map(tile => tile.stone);this.damage=world.tiles.map(t=>t.miningDamage);this.ores=world.tiles.map(t=>t.ore);
-      this.resources = new Map(world.resources.map(resource => [resource.id, { ...resource }]));
-      this.resourceOrder = world.resources.map(resource => resource.id);
+      this.orderedResources = world.resources.map(resource => ({ ...resource }));
+      this.resources = new Map(this.orderedResources.map(resource => [resource.id, resource]));
       return { ...header, kind: 'checkpoint', world };
     }
 
     const tiles: Array<[number, Terrain, Tile['stone']?, Tile['miningDamage']?, Tile['ore']?]> = [];
     for (let index = 0; index < world.tiles.length; index++) {
-      const terrain = world.tiles[index]!.terrain;
-      const stone = world.tiles[index]!.stone;
-      const damage=world.tiles[index]!.miningDamage,ore=world.tiles[index]!.ore;
+      const {terrain,stone,miningDamage:damage,ore}=world.tiles[index]!;
       if (this.terrain[index] !== terrain || this.stones[index] !== stone || this.damage[index]!==damage || this.ores[index]!==ore) {
         tiles.push(ore!==undefined?[index,terrain,stone,damage,ore]:damage!==undefined?[index,terrain,stone,damage]:stone === undefined ? [index, terrain] : [index, terrain, stone]);
         this.terrain[index] = terrain; this.stones[index] = stone;this.damage[index]=damage;this.ores[index]=ore;
       }
     }
     const upserted: Resource[] = [];
-    let orderChanged = world.resources.length !== this.resourceOrder.length;
+    let nextOrder: Resource[] | undefined = world.resources.length !== this.orderedResources.length ? [] : undefined;
     for (let index = 0; index < world.resources.length; index++) {
       const resource = world.resources[index]!;
-      const previous = this.resources.get(resource.id);
-      if (!previous || !equalResource(previous, resource)) upserted.push({ ...resource });
-      if (resource.id !== this.resourceOrder[index]) orderChanged = true;
+      const ordered = this.orderedResources[index];
+      const sameSlot = ordered?.id === resource.id;
+      if (!sameSlot && !nextOrder) nextOrder = this.orderedResources.slice(0, index);
+      // Most publications preserve order. Avoid hashing every unchanged plant,
+      // but still compare values: simulation edits objects in place.
+      const previous = sameSlot ? ordered : this.resources.get(resource.id);
+      let cached = previous;
+      if (!previous || !equalResource(previous, resource)) {
+        const copy = { ...resource }; upserted.push(copy);
+        if (sameSlot) this.orderedResources[index] = copy;
+        cached = copy;
+      }
+      nextOrder?.push(cached!);
     }
     let changes: ResourceChanges | undefined;
-    if (upserted.length || orderChanged) {
-      const currentIds = new Set(world.resources.map(resource => resource.id));
-      const removed = this.resourceOrder.filter(id => !currentIds.has(id));
-      // Deletions and appended entities need no long list of unchanged identities.
-      const implicitOrder = this.resourceOrder.filter(id => currentIds.has(id));
-      for (const resource of upserted) if (!this.resources.has(resource.id)) implicitOrder.push(resource.id);
-      const explicitOrder = implicitOrder.some((id, index) => id !== world.resources[index]?.id);
+    if (upserted.length || nextOrder) {
+      const removed: number[] = [];
       changes = { removed, upserted };
-      if (explicitOrder) changes.order = world.resources.map(resource => resource.id);
+      // Metadata/quantities alone cannot alter membership or ordering. Only
+      // structural edits need the ID set and an optional explicit order.
+      if (nextOrder) {
+        const currentIds = new Set(world.resources.map(resource => resource.id));
+        const implicitOrder: number[] = [];
+        for (const resource of this.orderedResources) {
+          if (currentIds.has(resource.id)) implicitOrder.push(resource.id);
+          else removed.push(resource.id);
+        }
+        for (const resource of upserted) if (!this.resources.has(resource.id)) implicitOrder.push(resource.id);
+        if (implicitOrder.some((id, index) => id !== world.resources[index]?.id)) changes.order = world.resources.map(resource => resource.id);
+      }
       for (const id of removed) this.resources.delete(id);
       for (const resource of upserted) this.resources.set(resource.id, resource);
-      if (orderChanged) this.resourceOrder = world.resources.map(resource => resource.id);
+      if (nextOrder) this.orderedResources = nextOrder;
     }
     const { tiles: _tiles, resources: _resources, ...dynamic } = world;
     return { ...header, kind: 'delta', baseRevision, world: dynamic,

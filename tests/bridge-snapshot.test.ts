@@ -82,6 +82,27 @@ test('snapshots preserve exact state and previous frames through harvest, patche
   expect(changed.tiles).not.toBe(last.tiles); expect(changed.tiles[1]).toBe(last.tiles[1]);
   expect(decoder.adopt(patch).status).toBe('stale');
 
+  // Same-tick edits cannot be hidden behind array/object identity. Exercise the
+  // ordered fast path followed by membership changes, including retained refs.
+  const retained=source.resources[0]!,oldFrames:Array<{world:World;value:World}>=[];
+  const edits:Array<()=>void>=[
+    ()=>{retained.amount++;},
+    ()=>{source.resources.reverse();retained.amount++;},
+    ()=>{source.resources[1]={...source.resources[1]!,id:source.nextId++};},
+    ()=>{source.resources.splice(1,1);source.resources.push({id:source.nextId++,x:3,z:3,kind:'berries',amount:2,growth:.4,growthTick:source.tick,growthThermalFactor:.8});},
+    ()=>{const r=source.resources.at(-1)!;delete r.growthThermalFactor;r.growth=.5;},
+    ()=>{const r=source.resources.pop()!;source.resources.unshift(r);retained.amount++;},
+    ()=>{source.resources=source.resources.map(r=>({...r}));},
+    ()=>{source.resources.length=0;},
+    ()=>{source.resources.push({...retained,amount:3});},
+    ()=>{source.resources[0]!.amount=4;},
+  ];
+  for(const edit of edits){
+    edit();const frame=apply(transfer());oldFrames.push({world:frame,value:structuredClone(frame)});
+    const unchanged=transfer();expect(unchanged.kind==='delta'&&unchanged.resources).toBeUndefined();apply(unchanged);
+    for(const old of oldFrames)expect(old.world).toEqual(old.value);
+  }
+
   // A missing delta cannot quietly corrupt the baseline. A same-epoch checkpoint repairs it.
   source.tick++; const missed = transfer();
   source.tick++; const ahead = transfer();

@@ -62,6 +62,8 @@ Le worker exécute des ticks fixes de 100 ms. Les vitesses modifient le nombre d
 
 Les messages sont traités en séquence dans un worker unique. Chaque commande reçoit une réponse ; un échec est affiché. Un checkpoint complet initialise ou remplace une carte ; les publications suivantes, à la fin des lots actifs de 20 ms et aux transitions visuelles et après une demande réussie (hors requête de menu en lecture seule), transportent l'état dynamique et les changements de terrain/ressources. Le client reconstruit un monde complet pour ses observateurs sans recopier les tableaux inchangés. L'application propose 64/128/200/250 cases par côté, défaut 250 ; les anciennes petites cartes sont conservées. Le protocole, ses révisions et les coûts encore complets sont précisés dans ADR-013.
 
+Sous V52, la comparaison de ressources réutilise des copies ordonnées et réserve les ensembles d’IDs aux changements structurels. Les champs restent tous vérifiés à chaque publication : aucune dépendance à un compteur de mutations, au tick ou à l’identité du tableau. Voir [contrat de transport](presentation-timing.md#coût-de-recherche-des-deltas-sous-v52) et mesures séparées de l’IPC/rendu.
+
 ## Contrats actuels
 
 Simulation pure et déterministe dans `src/sim`, messages ordonnés dans `src/bridge`, présentation sans mutation du World dans `src/render`. Les imports vers DOM/Three restent hors du noyau. Le laboratoire GPU reste isolé.

@@ -1,5 +1,7 @@
 # Adoption du référentiel utilisateur
 
+Transport sous V52 : contrats de synchronisation déjà adoptés (chap. 2/3/5/10/21/29/32) inchangés. Comparaison ordonnée de copies et voie structurelle séparée, sans nouvel algorithme de gameplay ni migration ; [relecture technique](presentation-timing-reference.md#encodeur--contrôle-du-17-septembre-sous-v52), [preuves avant/après](../development/validation.md).
+
 V52 — chapitres 2/8/13/20/29, UI-014 et SYS/TEST-055 : adopter propriétaire séparé, transfert physique et ancienne arme conservée ; adapter dépôt saturé, récupération/attache 3D ; différer UI-015, CAT-034..037, GAP-007 et inventaire complet. [Recherche fraîche](equipment-reference.md), [contrat](../development/equipment.md).
 
 V51 — chapitres 8/9/11/15, SYS/TEST-051..054 et 094/096, CAT-018 : adopter plafonds, puissance, doses et groupes ; adapter contact/temps ; différer acquisition complète, inventaire personnel, collecte opportuniste et complications. [Recherche fraîche](medicines-reference.md), [contrat](../development/medicines.md).

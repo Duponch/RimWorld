@@ -2,6 +2,8 @@
 
 17 septembre 2026. [Équipement physique](equipment.md), [recherche](../research/equipment-reference.md), [preuves V51 archivées](../history/validation-medicines-v51.md). Aucun résultat ne vaut couverture exhaustive ou fluidité universelle.
 
+**Dernier état :** optimisation de l’encodeur vérifiée sous V52. Garde native complète minage/abattage verte après modification, sans changement de ses seuils ; détails en fin de page. Les passages rouges ci-dessous sont les preuves antérieures conservées, pas le résultat de cette dernière version.
+
 ## Simulation et continuité
 
 Le premier passage général couvre 56 fichiers et 200 scénarios en 149,57 s : 192 réussites et huit échecs. Sept attentes de schéma ancien sont actualisées ; les fixtures migrées retirent explicitement les nouvelles armes. Le huitième trouve une vraie régression : le dispatch d’équipement lisait une commande nulle avant la garde de validation. La garde reste en premier. Le passage ciblé des neuf fichiers touchés réussit ensuite, **47/47 en 156,51 s**, incluant le pilote de trois graines, cinq à huit jours, bilans et continuation. Cette combinaison de passages n’est pas présentée comme une seconde suite générale entièrement rejouée.
@@ -65,8 +67,48 @@ Le parcours d’équipement final repasse en **20,2 s** avec l’intégrateur co
 
 Nouvelle principale physiquement collectée, échangée, déposée, transportée et récupérée après incapacité ; inspection, apparence GPU et sauvegarde strictes. Le camp reste jouable avec production/construction, minage, repas/repos/loisirs, premier habitat électrique et secours/soins. Mobilisation, combats et adversaires, autres armes/vêtements, inventaire personnel, social/narration, météo/biomes complets, monde/commerce/recherche et catalogue complet restent absents ou partiels. File d’équipement et priorité exacte de récupération Core ne sont pas livrées comme parité. G0 en consolidation, G1/G2 partiels, fondations de G3, G4/G5 absents.
 
-## Étape suivante engagée : attribuer le coût worker
+## Diagnostic préalable : attribuer le coût worker
 
 Après publication de V52, le [banc instrumenté par phases](../../artifacts/harvest-sync-worker-phases-v52.json) sépare le temps de réveil, `stepWorld`, encodeur et `postMessage` sans modifier le protocole de production. Sur 2 273 lots en abattage : réveil p95/p99 **31,6/32,5 ms**, simulation **3,3/6,9 ms**, encodage **7,5/11 ms**, envoi **0,6/1,1 ms**, lot entier **10,6/17,7 ms**. La première itération froide atteint 62 ms, dont 51,8 ms de simulation. Le coût régulier d’encodage dépasse celui de simulation dans cette charge.
 
 Aucune frame figée cette fois, mais une commande 1×→3× a son premier effet à **113,2 ms**, donc l’oracle reste rouge. Ce passage instrumenté ne clôt ni la cause du silence de 100 ms du passage précédent ni les problèmes de réactivité. Le travail utile suivant est de comparer l’encodeur sur carte naturelle, mutations et ordre des ressources, puis de vérifier toute optimisation avec la même garde native. Le profileur du thread principal reste distinct de ces mesures worker ; aucun gain de FPS n’est revendiqué par l’ajout des sondes.
+
+## Optimisation livrée de l’encodeur — sous V52
+
+La comparaison ordonnée évite une recherche par ID pour chaque ressource stable. Les changements de quantité/croissance ne reconstruisent plus les ensembles d’identifiants ; après suppression/permutation, le prochain ordre est produit pendant la comparaison. Copies indépendantes, champs comparés à chaque publication, paquets/révisions et cadence inchangés. Pas d’élargissement de tampon ni de modification du gameplay.
+
+`scripts/snapshot-encoder-bench.ts`, Node 24.11.1, Ryzen 5 3600, Windows 11 10.0.26200, graine 42 naturelle 250² : 62 500 cellules, 12 411 ressources. Témoin Git `5df8af0` et candidat alternés, 300 échauffements puis 900 encodages mesurés par cas. Treize paires de paquets par cas vérifiées byte à byte et reconstruites avant mesure ; mutations/clonage/décodage exclus du temps. Ce sont des fixtures de transport, pas un nouveau pilote de gameplay.
+
+| Mutation | Témoin p95 | Final p95 | Final p99 / max |
+|---|---:|---:|---:|
+| Aucune | 2,480 ms | 1,537 ms | 1,989 / 2,980 ms |
+| Quantité | 6,016 ms | 1,916 ms | 2,432 / 4,397 ms |
+| Terrain/dégâts | 3,096 ms | 2,101 ms | 2,748 / 3,458 ms |
+| Suppression puis ajout | 6,958 ms | 6,439 ms | 9,664 / 12,773 ms |
+| Permutation | 7,176 ms | 5,850 ms | 8,689 / 13,255 ms |
+| Croissance groupée | 9,497 ms | 4,824 ms | 6,004 / 8,730 ms |
+
+[Résultat final](../../artifacts/snapshot-encoder-ordered-final-v52.json). Le [premier candidat](../../artifacts/snapshot-encoder-ordered-v52.json) régressait sur suppression/ajout (p95 7,154 contre 5,697 ms) : son second parcours de hachage a été supprimé avant le contrôle natif. Deux essais préalables du banc ont refusé des fixtures invalides (dégâts miniers non multiples de 80, facteur thermique sur arbre) ; leurs données ont été corrigées, sans modifier les validateurs. Aucun de ces essais incomplets n’est compté comme validation.
+
+Les scénarios Bridge/Spatial/Métriques passent **9/9 en 3,67 s**. Le scénario bridge existant intègre les modifications au même tick, quantités après permutation avec référence conservée, remplacement à effectif égal, suppression de champ, vidage/réapparition et immutabilité de chaque ancien monde. La comparaison des paquets témoin complète cet oracle ; elle ne suffit pas seule à valider leur reconstruction.
+
+### Garde native après la modification
+
+[Minage + abattage, 45 secondes chacun](../../artifacts/harvest-sync-encoder-ordered-v52.json), mêmes Chromium WebGPU natif / AMD RDNA 1 / 1440×1000 / graine 42 / trois colons / changements 1×–3×–6×. Instrumentation worker activée, sources figées, aucun autre banc lourd simultané. **Zéro frame figée sur 5 749 puis 4 735 intervalles**, aucun saut/pénétration/retrait anticipé, aucune erreur. **44 premiers effets de vitesse sous 90 ms** (maximum 89,3 ms en minage, 61,3 ms en abattage), budget 100 ms inchangé.
+
+Abattage : encodage p50/p95/p99/max **2,5/5,1/7,4/21,3 ms**, contre 3,6/7,5/11/25,6 dans le diagnostic précédent ; lot entier **3,9/8,6/13,6/40,9 ms**. Réveil p95 31,6 ms et IPC p95 9,2 ms restent distincts. Intervalle d’image minage p95/p99/max **12,6/25/79 ms**, abattage **25/37,6/79,1 ms**. Le changement mesuré précède cette reprise verte ; il ne prouve pas l’absence universelle d’attente ni n’attribue chaque échec historique au seul encodeur.
+
+### Charge native 3 / 100 colons
+
+[Passage sans instrumentation worker](../../artifacts/encoder-ordered-native-v52.json), même banc minier V52 : forêt 250², quatre roches et un arbre par colon, vingt lésions et une arme chacun, 6×, 90 images d’échauffement. **12 / 400 roches terminées**, 3 / 100 armes conservées, buffers roche/terrain stables, zéro nouveau pipeline/erreur, maximum 165 / 188 draw calls.
+
+| Colons | Images mesurées | Intervalle p50 / p95 / p99 / max | CPU image p95 | Scène p95 | Réception p95 |
+|---|---:|---|---:|---:|---:|
+| 3 | 586 | 8,3 / 12,5 / 16,6 / 20,9 ms | 10 ms | 10,5 ms | 0,8 ms |
+| 100 | 598 | 12,4 / 29,2 / 45,8 / 50 ms | 21,1 ms | 16 ms | 10,3 ms |
+
+Les résultats sont meilleurs que le passage V52 précédent dans le même protocole, mais ce passage global n’isole pas le gain d’encodeur comme la comparaison CPU alternée. À cent acteurs, des images de 50 ms restent présentes : cette charge n’est pas qualifiée de parfaitement fluide. Les règles, commandes et sauvegardes n’ont pas changé ; la partie UI de trois jours déjà verte n’est pas répétée pour ce seul cache de transport.
+
+Prochain lot autorisé : mobilisation/déplacement tactique, avec les gardes temporelles maintenues. G0 en consolidation, G1/G2 partiels, fondations humaines de G3 ; G4/G5 toujours absents. Aucun contenu supplémentaire livré par cette optimisation.
+
+TypeScript et build Vite réussis (avertissement connu du bundle principal supérieur à 500 kB). Contrôle documentaire : 189 documents, 2 019 liens locaux, 25 domaines et cinq familles de validation ; trois originaux inchangés. `git diff --check` propre. Aucun banc lourd exécuté en concurrence.

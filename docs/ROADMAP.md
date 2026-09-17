@@ -1,6 +1,6 @@
 # Plan de développement
 
-V52 — premier équipement physique livré ; [contrat et limites](development/equipment.md). Prochain lot précis : diagnostiquer le silence de publication du worker détecté en abattage (100 ms, garde de présentation encore rouge), puis mobilisation et ordres de déplacement avant tirs dirigés. Équipement validé fonctionnellement ; aucune clôture globale de validation revendiquée. Le combat, les vêtements et l’inventaire restent ouverts ; aucun jalon G0–G5 déclaré clos.
+V52 — premier équipement physique livré ; [contrat et limites](development/equipment.md). Prochain lot précis : mobilisation et ordres de déplacement avant tirs dirigés. L’optimisation mesurée de l’encodeur sous V52 conserve les paquets et rend verte la garde native minage/abattage sur le passage de contrôle ; les échecs antérieurs et pointes de charge restent documentés. Aucune clôture globale de validation revendiquée. Le combat, les vêtements et l’inventaire restent ouverts ; aucun jalon G0–G5 déclaré clos.
 
 État : 17 septembre 2026. **ROADMAP est l’unique calendrier G0–G5.** G0 en consolidation, G1 et G2 partiels ; G3 commence par ses fondations humaines. Aucun jalon complet. [Inventaire réel](gameplay/implementation-status.md), [validation](development/validation.md), [index](README.md).
 
@@ -15,7 +15,7 @@ Le camp possède matériaux, construction, nourriture, repos, loisirs, toits, te
 5. **Pensées, traits et relations** : causes consultables, avis dirigés, premiers événements sociaux et crises, en réutilisant les situations effectivement vécues. Enrichir ensuite narration/incidents et progression économique.
 6. **Retour sur l’habitat et les ressources** : interrupteurs physiques, conduits, batteries et froid électrique, recettes/recherche, météo/saisons et biomes. Ces systèmes restent nécessaires ; leur profondeur vient après les premières boucles humaines.
 
-La garde V52 conserve trois micro-attentes d’abattage malgré une première correction causale de l’intégrateur de vitesse. Priorité courte : les sondes réveil/simulation/encodage/envoi sont maintenant ajoutées ; l’encodage atteint 7,5 ms p95 contre 3,3 ms pour la simulation dans le passage instrumenté. Comparer son coût sur carte naturelle et mutations/reclassement, corriger le coût démontré avant le lot de mobilisation. Les détails et échecs restent dans la validation ; ne pas relancer jusqu’à obtenir un passage favorable.
+Le diagnostic de cadence V52 a produit une correction mesurée : comparaison ordonnée des ressources et reconstruction des identifiants seulement lors d’un changement structurel. Paquets et mondes reconstruits inchangés ; encodage d’abattage p95 7,5 → 5,1 ms dans les deux passages instrumentés. La garde complète suivant cette modification passe sans attente ni saut et avec 44 commandes sous 90 ms. Une mesure ne garantit pas l’absence universelle d’attente ; garder ces contrôles lors de la mobilisation et poursuivre les audits de charge aux changements utiles. Détails, limites et échecs antérieurs dans la validation.
 
 Chaque lot commence par corpus et recherche fraîche. Les audits rétroactifs peuvent modifier cet ordre sur preuve. Voir [motif et sources de la réorientation](research/skills-reference.md). Les extensions restent après G5.
 

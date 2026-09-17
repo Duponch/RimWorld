@@ -27,3 +27,11 @@ Tout nouveau contenu produisant une transition visuelle doit enrichir l’observ
 La publication et l’application de scène sont des coûts distincts. Les bancs doivent mesurer `applyWorld` pour dater une excavation affichée, pas la seule réception `setWorld`. Les sondes de frame ignorent les callbacks suspendus pendant `preparePresentation`, qui ne dessinent aucune image normale. Les attributs GPU restent la source de mesure des poses partagées ; une lecture de ces attributs n’est pas un readback de sommets GPU.
 
 Les tests purs combinent trajectoires à vitesse variable, jitter, pause/reprise, publications clairsemées, vrai minage/abattage, conservation et retrait au bon moment. Le test natif de déplacement vérifie les orientations et les cargaisons ; le banc de zones contrôle sauts de position et pénétration dans une roche encore dessinée. Les mesures matérielles gardent percentiles et maxima : elles ne garantissent pas la fluidité sur toute machine ou après une suspension externe.
+
+## Coût de recherche des deltas sous V52
+
+L’encodeur conserve des copies de ressources dans leur ordre précédent. Si l’identité reste à la même position, comparer directement cette copie ; sinon chercher par ID. Chaque champ reste comparé à chaque publication, même à tick identique et sur un objet muté en place. Le cache n’est donc ni un journal de mutations de simulation ni un raccourci fondé sur l’identité du tableau.
+
+Un changement de quantité/croissance sans changement d’ordre ne reconstruit plus les ensembles d’identifiants. Suppressions, ajouts et réordonnancements suivent la voie structurelle ; le prochain ordre est collecté pendant la comparaison, sans second parcours de hachage. Les copies ne sont jamais des références aux objets mutables du monde. Les anciens snapshots décodés restent immuables ; epoch, révisions, checkpoints et protocole sont inchangés, comme le schéma 52 et la cadence de publication.
+
+Le banc `snapshot-encoder-bench.ts` exporte un témoin Git dans `tmp`, compare les paquets et leur reconstruction, puis alterne les mesures témoin/candidat sur 62 500 cellules et 12 411 ressources. Il mesure l’encodage seul, pas les FPS ni l’IPC. Les gains, régressions intermédiaires et contrôles natifs restent dans la [validation](validation.md).

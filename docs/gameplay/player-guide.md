@@ -102,6 +102,8 @@ La convention 3D est de 1 m par case, 1,75 m pour un humain et 2,80 m pour un mu
 
 Le déplacement, le travail et la disparition des ressources partagent un court tampon d’affichage. Une pause arrête la simulation immédiatement ; la scène termine les instants déjà confirmés, puis se fige. Les passages entre 1×, 3× et 6× répondent dès confirmation, sans attendre la fin du tampon. Le démarrage et la reprise après une pause entièrement vidée conservent une courte réserve de mouvement.
 
+La mise à jour du décor après récolte utilise désormais un transport moins coûteux ; elle ne modifie ni les durées de travail ni les quantités obtenues. Le contrôle courant sur carte 250×250 ne détecte plus d’immobilité pendant minage/abattage, avec changements répétés de vitesse. Cela reste une mesure sur la machine de développement, pas une garantie pour toute charge ou tout matériel.
+
 Un jour dure dix minutes à vitesse normale (6 000 ticks). Le compteur FPS mesure le rendu ; une simulation chargée peut avancer plus lentement malgré une bonne cadence d’image.
 
 En vue très éloignée, les détails minuscules du décor sont remplacés par des silhouettes plus légères. Le terrain, les obstacles et les ordres restent les mêmes. Le compteur FPS continue de mesurer le rendu, y compris en pause.
