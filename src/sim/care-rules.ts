@@ -4,7 +4,7 @@ import { freshMissing,injuryBleed,medicalBleed } from './injury-state.ts';
 import { BLOOD_UNIT,HP_UNIT,PART_INJURY_RULES } from './injury-rules.ts';
 import type { Cell,Pawn } from './types.ts';
 
-export interface TendTask { patientId:number; spot:Cell; phase:'approach'|'tend'; progress:number; duration?:number }
+export interface TendTask { patientId:number; spot:Cell; phase:'approach'|'tend'; progress:number; duration?:number; urgent?:true }
 export type TreatmentTarget={injuryId:number;part?:never}|{part:BodyPartId;injuryId?:never};
 /** Core ranks bleeding first, then severity. Deterministic ID/order breaks ties. */
 export function treatmentTarget(p:Pawn):TreatmentTarget|undefined {

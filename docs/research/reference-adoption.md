@@ -1,5 +1,7 @@
 # Adoption du référentiel utilisateur
 
+V50 — chapitres 8/9/15, SYS/TEST-044 et 094/096 : adopter filtre de priorité et réévaluation des soins, adapter cadence/sortie 3D, différer expiration/réaction aux dégâts des autres tâches. La [recherche fraîche](urgent-care-reference.md) corrige la cible trop large de préemption médicale universelle ; [contrat](../development/urgent-care.md).
+
 V49 — chapitre 15, SYS/TEST-094 et 096, chapitres 8/9 relus : adopter permission, réservations et traitement commun ; adapter sortie du mobilier 3D ; différer préemption médicale générale et médicaments. [Recherche renouvelée](self-tending-reference.md), [contrat](../development/self-tending.md).
 
 **Alimentation assistée V48 (17 septembre 2026)** : chapitres 14/15, SYS/TEST-077, 094 et 096, réservations 8/9. Adopter chaîne physique et régime du patient ; adapter contact cardinal, temps local et poses ; différer inventaires/distributeurs, animaux, malnutrition et maladies. [Recherche](feeding-reference.md) : le miroir calcule 26 %, le wiki suggère 27 % ; choix motivé sans certitude universelle. [Contrat](../development/feeding.md). Six scénarios croisés et clinique de cinq jours, pas une suite par entrée.

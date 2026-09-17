@@ -50,7 +50,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 49 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 50 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)
@@ -249,5 +249,10 @@
 
 ## Auto-soins ordinaires V49
 - Lire docs/development/self-tending.md et sa recherche. Permission sparse désactivée, métier Médecin et politique de soins distincts. Même tâche de traitement avec patientId égal au médecin ; qualité de base ×0,7 avant plafond/variation additive, vitesse et XP communs.
-- Lit facultatif ; quitter physiquement son service pour une case cardinale d’arrêt si nécessaire (adaptation 3D). Réservation du patient commune, pas de sommeil simultané, pas de bonus de repos. Désactiver l’option arrête aussi un ordre forcé. Préemption urgente encore ouverte ; ne pas la confondre avec le fournisseur ordinaire.
+- Lit facultatif ; quitter physiquement son service pour une case cardinale d’arrêt si nécessaire (adaptation 3D). Réservation du patient commune, pas de sommeil simultané, pas de bonus de repos. Désactiver l’option arrête aussi un ordre forcé. Décisions urgentes ajoutées V50 ; ne pas les confondre avec une préemption universelle.
 - V48 strictement validée avant V49, sans permission inventée. L’orientation graphique récupère la dernière arête au rechargement ; ne pas viser sa propre position.
+
+## Décisions médicales urgentes V50
+- Lire docs/development/urgent-care.md et sa recherche. La branche urgente n'est disponible qu'à la meilleure priorité de travail activée ; Patient avant Médecin à égalité. Seuil strict de saignement avant 0,75 jour, pas toutes les lésions.
+- TendTask.urgent capture la voie ; auto-soin urgent termine après une plaie puis réévalue, ordre direct garde sa chaîne complète. Revue au lit 211 ticks Core, alternance 21/22 ticks locaux dérivée du tick/ID. Pas d'annulation universelle des travaux engagés ; expirations/dégâts restent ouverts.
+- V49 validée strictement avant V50 sans marqueur inventé. Navigation progressive et réservations communes ; budget épuisé reporte, accès impossible conserve le service. Aucun gain pendant trajet ni bonus de lit debout.

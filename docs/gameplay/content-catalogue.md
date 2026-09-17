@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+V50 change les décisions médicales, sans ajouter d’objet. Aucun médicament, arme, vêtement ou nouvel équipement livré par ce lot ; [portée](../development/urgent-care.md).
+
 V49 ajoute une action d’auto-soin et une permission individuelle, aucun nouvel objet. Les aliments et matériaux restent inchangés ; médicaments et équipement demeurent absents du gameplay livré.
 
 V48 ajoute l’action **Nourrir un patient** avec les cinq aliments existants, leurs quantités et leur régime ; aucun nouvel objet ni médicament. Ni inventaire personnel ni distributeur implicite. [Contrat](../development/feeding.md).

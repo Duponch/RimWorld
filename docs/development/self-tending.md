@@ -20,6 +20,6 @@ V48 est strictement validée avant passage à V49, sans permission inventée ni 
 
 ## Limites et contrôles
 
-**La préemption médicale urgente reste absente.** Cocher n'interrompt pas tout travail ou repos déjà engagé. Un blessé qui attend un autre médecin peut continuer à attendre ; le clic droit commande l'auto-soin immédiatement. La voie urgente du jeu de référence, qui réévalue après une opération, est documentée pour la prochaine tranche. Cette version ne clôture donc pas toute la décision médicale. Médicaments, maladies, chirurgie, mobilisation et incapacités biographiques restent absents.
+[V50](urgent-care.md) ajoute la voie urgente, la réévaluation après une opération et la revue au lit selon les priorités. Cocher n'interrompt pas universellement toutes les activités : la recherche a corrigé cette cible trop large. Patient prioritaire peut toujours maintenir l'attente au lit ; le clic droit commande l'auto-soin immédiatement. Les expirations/réactions aux dégâts des autres tâches restent distinctes. Médicaments, maladies, chirurgie, mobilisation et incapacités biographiques restent absents.
 
 Cinq scénarios croisés vérifient formule/ordre des facteurs, opt-in, priorités, autres patients, interruptions, sortie réelle du lit, obstacle, sauvegarde/snapshots, migration stricte et cent adultes soignés simultanément. Le parcours navigateur utilise Santé, Travail et clic droit, annule puis recharge pendant l'action, et observe les vrais attributs GPU. Il ne déduit pas la chronologie visible du seul résultat de simulation.

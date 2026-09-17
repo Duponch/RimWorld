@@ -1,0 +1,155 @@
+{
+  "date": "2026-09-17T01:20:12.250Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "protocol": "Urgent self-treatment followed by ordinary care; carriedFrames counts work observations; rescued counts fully treated adults. Native WebGPU, real worker at 6x, cleared 250², concurrent medical services and live physiology; 90 warmup frames. Scene CPU is within frame CPU; snapshot callback includes HUD scheduling, not complete IPC/decoding. No claim about forests or full combat.",
+  "results": [
+    {
+      "actors": 2,
+      "rescued": 2,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1"
+      },
+      "frames": {
+        "count": 481,
+        "p50": 6,
+        "p95": 6.100000000000364,
+        "p99": 6.100000000000364,
+        "max": 12.100000000000364
+      },
+      "frameCpu": {
+        "count": 482,
+        "p50": 3.300000000745058,
+        "p95": 5,
+        "p99": 6.400000000372529,
+        "max": 7.300000000745058
+      },
+      "sceneCpu": {
+        "count": 17,
+        "p50": 0.5,
+        "p95": 3.199999999254942,
+        "p99": 3.199999999254942,
+        "max": 3.199999999254942
+      },
+      "snapshotCpu": {
+        "count": 143,
+        "p50": 0,
+        "p95": 0.10000000149011612,
+        "p99": 1,
+        "max": 3.199999999254942
+      },
+      "drawCalls": {
+        "count": 482,
+        "p50": 119,
+        "p95": 119,
+        "p99": 120,
+        "max": 120
+      },
+      "carriedFrames": 866,
+      "invalidPoses": 0,
+      "stableGeometry": true,
+      "pipelines": [],
+      "errors": []
+    },
+    {
+      "actors": 30,
+      "rescued": 30,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1"
+      },
+      "frames": {
+        "count": 487,
+        "p50": 6,
+        "p95": 6.100000000000364,
+        "p99": 12,
+        "max": 12.099999999999454
+      },
+      "frameCpu": {
+        "count": 488,
+        "p50": 3.300000000745058,
+        "p95": 4.200000001117587,
+        "p99": 4.900000000372529,
+        "max": 5.600000001490116
+      },
+      "sceneCpu": {
+        "count": 26,
+        "p50": 0.5,
+        "p95": 1.1000000014901161,
+        "p99": 2,
+        "max": 2
+      },
+      "snapshotCpu": {
+        "count": 148,
+        "p50": 0,
+        "p95": 0.40000000037252903,
+        "p99": 2.599999999627471,
+        "max": 3.300000000745058
+      },
+      "drawCalls": {
+        "count": 488,
+        "p50": 119,
+        "p95": 119,
+        "p99": 120,
+        "max": 120
+      },
+      "carriedFrames": 12995,
+      "invalidPoses": 0,
+      "stableGeometry": true,
+      "pipelines": [],
+      "errors": []
+    },
+    {
+      "actors": 100,
+      "rescued": 100,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1"
+      },
+      "frames": {
+        "count": 496,
+        "p50": 6,
+        "p95": 12,
+        "p99": 23.899999999999636,
+        "max": 30
+      },
+      "frameCpu": {
+        "count": 497,
+        "p50": 3.600000001490116,
+        "p95": 5.300000000745058,
+        "p99": 6.799999998882413,
+        "max": 9
+      },
+      "sceneCpu": {
+        "count": 52,
+        "p50": 0.6000000014901161,
+        "p95": 1.099999999627471,
+        "p99": 2.600000001490116,
+        "max": 2.600000001490116
+      },
+      "snapshotCpu": {
+        "count": 163,
+        "p50": 0,
+        "p95": 0.5,
+        "p99": 8.099999999627471,
+        "max": 8.400000000372529
+      },
+      "drawCalls": {
+        "count": 497,
+        "p50": 119,
+        "p95": 119,
+        "p99": 120,
+        "max": 120
+      },
+      "carriedFrames": 41878,
+      "invalidPoses": 0,
+      "stableGeometry": true,
+      "pipelines": [],
+      "errors": []
+    }
+  ]
+}

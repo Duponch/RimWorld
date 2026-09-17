@@ -1,6 +1,7 @@
 import { applyFeeding,processFeeding,reconcileFeeding } from './feeding.ts';
 import { applyTending,processTending,reconcileTending } from './tending.ts';
 import { reconcilePatientRest } from './patient-rest.ts';
+import { planUrgentCare } from './urgent-care.ts';
 import { applyRescue,processRescue,reconcileRescues } from './rescue.ts';
 import { applyMedicalBed } from './medical-beds.ts';
 import { carrierOf } from './rescue-state.ts';
@@ -367,6 +368,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if (leaveTransitCell(world,pawn,getBlocked,budget,getLight)) continue;
       if (advanceOrders(world,pawn,getBlocked,budget)) continue;
       if (!pawn.feed&&!pawn.tend&&!pawn.rescue&&advancePriorityWork(world,pawn,getBlocked,budget)) continue;
+      if (planUrgentCare(world,pawn,()=>searchCandidates(world,pawn,getBlocked(),occupied,budget))) continue;
       if (processNeeds(world, pawn, needsContext) || !pawn.feed&&!pawn.tend&&!pawn.rescue&&pawn.orders.active===null&&processRecreation(world, pawn, needsContext)) continue;
       if (pawn.jobId === null && pawn.haul === null && !pawn.rescue && !pawn.feed&&!pawn.tend && !pawn.cooking && pawn.planCooldown === 0) planWork(world, pawn, getBlocked, occupied, budget);
       if(pawn.feed){processFeeding(world,pawn,needsContext);continue;}

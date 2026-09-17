@@ -1,41 +1,47 @@
-# Validation courante — V49
+# Validation courante — V50
 
-17 septembre 2026. [Auto-soins ordinaires](self-tending.md), [sources et portée](../research/self-tending-reference.md). [Validation V48 archivée](../history/validation-feeding-v48.md). Aucun résultat ci-dessous ne prouve tous les cas possibles ni une fluidité parfaite.
+17 septembre 2026. [Décisions urgentes](urgent-care.md), [sources et correction de portée](../research/urgent-care-reference.md). [V49 archivée](../history/validation-self-tending-v49.md). Les preuves ne garantissent ni tous les cas limites ni une fluidité parfaite.
 
-## Simulation et reprise
+## Simulation et partie
 
-**185 scénarios sur 185 passent, 56 suites, 134,6 s** : [rapport global](../../artifacts/core-self-tending-v49.json). Le pilote sur trois cartes 250² pendant cinq jours, puis huit jours pour la graine 42, passe en 133,2 s. La clinique de cinq jours de V48 est également conservée : secours, traitement, alimentation répétée et bilan exact des repas.
+Le premier lot médical passe **31/32** scénarios : [rapport](../../artifacts/urgent-care-initial-v50.json). Le cas de sortie du lit attendait une arête encore dans la file, alors que le même tick avait déjà engagé le mouvement. Le contrôle vérifie maintenant l'arête réelle, son origine dans le lit, son temps restant et l'absence d'XP, sans remplacer l'exigence de sortie physique. Les [cinq scénarios urgents](../../artifacts/urgent-care-targeted-v50.json) passent ensuite.
 
-Les cinq scénarios d'auto-soins croisent option désactivée, Médecin/Patient distincts, politique de soins, priorité directe conservée, autres patients, réservations, absence de lit obligatoire, perte des mains, incapacité, décès, épuisement, annulation, sortie réelle du mobilier, absence de sortie, progression sauvegardée, snapshots et validation V48 stricte. Cent adultes terminent chacun leurs deux traitements avec XP exacte et continuation identique. Les cas de qualité exigent 0,7 sur la base avant plafond/variation : ce n'est pas 0,7 sur le résultat final ni une pénalité de vitesse.
+Ils croisent seuil strict, meilleure catégorie activée même sans tâche prête, Patient/Médecin à égalité, besoins/horaire, une plaie puis ingestion physique, revue au lit, budget épuisé, réservations communes, absence de préemption universelle, ordre direct conservé, politiques, incapacité/épuisement, snapshots, migration V49 stricte et cent acteurs. La [suite générale](../../artifacts/core-urgent-care-v50.json) passe **190/190 scénarios, 57 suites, 117,5 s**, dont le pilote de trois cartes 250² sur cinq jours, puis huit jours pour la graine 42, en 116,3 s. La clinique de cinq jours reste vérifiée. Le résumé du pilote enregistre déjà la tâche médicale entière et donc son nouveau marqueur ; le camp civil n'injecte pas de blessures pour forcer artificiellement cette branche.
 
-Le [premier passage ciblé](../../artifacts/self-tending-initial-v49.json) passe 25/27 cas ; deux fixtures sont corrigées : attente de schéma encore 48 et roche synthétique placée sur la seconde case du lit. Le [passage ciblé suivant](../../artifacts/self-tending-targeted-v49.json) passe, puis la suite entière ci-dessus. Aucun validateur assoupli. Ces comptes se recouvrent et ne s'additionnent pas.
+## Interface et présentation
 
-## Interface et chronologie
+Chromium natif WebGPU, AMD RDNA 1, Ryzen 5 3600, Windows 11 10.0.26200, viewport 1440×1000. Le nouveau parcours utilise Santé et Travail : Patient prioritaire maintient l'attente, Médecin prioritaire permet le départ physique et l'auto-soin automatique, sauvegarde/rechargement pendant le geste, puis un vrai repas après la première plaie. Il observe les attributs GPU après rendu et ne déduit pas le geste du seul état final.
 
-Chromium natif WebGPU, AMD RDNA 1, Ryzen 5 3600, Windows 11 10.0.26200, viewport 1440×1000. Le parcours d'auto-soins utilise Santé, Travail et clic droit ; il quitte un lit, commence le geste, annule sans XP puis reprend et sauvegarde/recharge pendant traitement. Les assertions regardent les vrais attributs GPU après rendu, la position, l'orientation, la posture et l'XP par lésion traitée.
+Le premier essai atteint les assertions métier mais échoue sur les erreurs de sa sonde : elle lisait `health.injuries` sur la carte saine affichée avant le chargement. [Contexte conservé](../../artifacts/urgent-care-ui-initial-v50.md). La sonde ignore désormais les acteurs sans dossier médical ; aucun filtre d'erreur d'application n'est ajouté. Le parcours corrigé passe en **11,0 s** : [preuve](../../artifacts/urgent-care-ui-v50.json), 1 081 images, 319 observations de travail urgent et 203 d'ingestion. XP 0 pendant la première plaie, 87,5 pendant le repas ; dix rations deviennent neuf. Capture inspectée, FPS visible, aucune erreur.
 
-**Le premier parcours a détecté une perte d'orientation au rechargement** : l'acteur immobile repartait vers l'angle arbitraire de 36°, malgré un trajet précédent vers le nord. `PawnLayer` récupère maintenant l'orientation de la dernière arête sauvegardée lorsque la présentation est reconstruite ; les cibles externes et la posture de lit gardent leur priorité. L'oracle n'a pas été assoupli. Le passage corrigé réussit, puis le contrôle final passe en 10,8 s avec 701 observations de travail, deux plaies traitées et 175 XP nettes sans passion. [Rapport natif](../../artifacts/self-tending-ui-v49.json). Capture inspectée ; les deux permissions médicales sont sur des lignes séparées pour la lisibilité.
+La [partie UI de trois jours](../../artifacts/urgent-care-colony-v50.json) passe sans reprise en **363,0 s**, 156 décisions par les commandes du joueur. Son [bilan métier](../../artifacts/urgent-care-colony-gameplay-v50.json) conserve vingt repas cuisinés, dix-huit ingérés, trois couchages utilisés, camp équipé, générateur et lampe opérationnels, réserves entretenues, bois conservé et nourriture réconciliée, aucune erreur. Les dix-neuf checkpoints complets sont extraits dans `tmp` avec leurs empreintes conservées dans le rapport. Le parcours civil n'injecte pas de blessure ; les arbitrages urgents restent exercés par leur scénario dédié.
 
-Le [parcours final regroupé](../../artifacts/self-tending-colony-v49.json) passe ses deux scénarios sans reprise en 423,8 s. La partie de trois jours dure 411,2 s, avec [bilan métier](../../artifacts/self-tending-colony-gameplay-v49.json) : vingt repas cuisinés, dix-huit ingérés, camp équipé, générateur et lampe opérationnels, stocks entretenus, bois conservé et nourriture réconciliée, aucune erreur. Elle vérifie les boucles civiles sans blessure injectée ; les auto-soins sont exercés séparément. Les gros corps encodés des pièces jointes sont retirés du rapport compact, pas ses résultats.
-
-Le [contrôle natif minage/abattage](../../artifacts/self-tending-presentation-v49.json) passe aussi : deux phases de 45 s, carte naturelle 250², trois colons, vitesses 1/6/3 alternées toutes les deux secondes. Les 21 493 images observées ne montrent aucun saut ni occupation solide ; temps d'image p95 4,3 ms, maxima 16,6/16,7 ms. Le délai maximal de changement de vitesse mesuré est 17,4 ms. Ce petit scénario ne remplace pas l'audit graphique à cent acteurs.
+Le [contrôle natif minage/abattage/vitesses](../../artifacts/urgent-care-presentation-v50.json) passe : deux phases de 45 s sur carte naturelle 250², trois colons, vitesses 1/6/3 alternées. Sur **14 991 images**, zéro saut, occupation solide, manque de snapshots ou erreur ; retraits de ressources synchronisés. Intervalle d'image p95 **6,1 ms**, maxima **12,1/24 ms** ; réponse maximale au changement de vitesse **21,6 ms**. L'application de scène atteint ponctuellement **19,4 ms** pendant l'abattage : piste de profilage conservée, sans prétendre à une fluidité parfaite. La suite d'intégration entière n'est pas annoncée rejouée.
 
 ## Charge CPU isolée
 
-Même Ryzen/Windows, Node 24.11.1. `scripts/rescue-bench.ts --self`, carte dégagée 250², 800 ticks, tous les acteurs possédant deux lésions et les auto-soins autorisés. Validité/résultats/continuation contrôlés hors chronométrage. Aucun autre banc de test simultané. [Rapport](../../artifacts/self-tending-cpu-v49.json).
+Node 24.11.1, même Ryzen/Windows, `scripts/rescue-bench.ts --urgent`, carte dégagée 250², 800 ticks. Chaque adulte traite une coupure urgente puis une contusion ordinaire. Résultats, validité et continuation contrôlés hors chronométrage ; aucun autre banc simultané. [Rapport CPU](../../artifacts/urgent-care-cpu-v50.json).
 
-| Adultes intégralement traités | Tick p50 / p95 / p99 / max | Clone intégral p95 |
+| Acteurs tous traités | Tick p50 / p95 / p99 / max | Clone intégral p95 |
 |---|---|---|
-| 2 | 0,052 / 0,269 / 0,579 / 20,573 ms | 51,96 ms |
-| 30 | 0,471 / 1,755 / 2,366 / 12,568 ms | 48,40 ms |
-| 100 | 1,792 / 6,883 / 8,299 / 14,373 ms | 49,83 ms |
+| 2 | 0,039 / 0,169 / 0,348 / 14,437 ms | 47,07 ms |
+| 30 | 0,383 / 1,524 / 4,030 / 19,551 ms | 42,66 ms |
+| 100 | 1,453 / 5,252 / 7,325 / 13,217 ms | 37,11 ms |
 
-Un passage par combinaison. Le banc médical partagé conserve `rescued` pour les adultes traités et `carryTicks` pour les observations actives de travail, explicités dans le protocole. Le clone intégral ne représente pas les messages différentiels. Pas de FPS déduit du CPU ni de comparaison causale avec V48, où seule la moitié des acteurs travaillait comme médecin.
+Un passage par combinaison ; clone complet distinct des deltas du worker. Pas de comparaison causale avec V49 : lésions et décisions diffèrent. Les clés historiques `rescued`/`carryTicks` désignent ici adultes traités/observations actives, explicitées dans le rapport.
 
-Les pointes graphiques à cent acteurs relevées en [V48](../history/validation-feeding-v48.md) restent ouvertes. Ce lot vérifie cent auto-soins en simulation ; il ne renouvelle pas le banc graphique de cent acteurs. L'audit mixte scène/transferts/HUD/rendu reste à faire, et zéro compilation de pipeline ne prouverait pas son absence de saccades.
+## Charge graphique isolée
 
-## Périmètre
+`URGENT_LOAD=1 npx playwright test tests/integration/rescue-load.spec.ts`, même machine/GPU, vrai worker 6×, carte dégagée 250², 90 images d'échauffement. Le scénario passe en **30,5 s** ; [rapport natif](../../artifacts/urgent-care-native-v50.json).
 
-Compilation TypeScript/Vite réussie, avec l'avertissement habituel de taille du chunk graphique. Contrats, guide, catalogue, inventaire et roadmap actualisés ; aucun nouvel objet ni médicament. V48 validée avant V49, sans autorisation d'auto-soin inventée.
+| Adultes traités | Intervalle image p50 / p95 / p99 / max | CPU image p95 | Scène p95 / max | Réception p95 / max |
+|---|---|---|---|---|
+| 2 | 6 / 6,1 / 6,1 / 12,1 ms | 5 ms | 3,2 / 3,2 ms | 0,1 / 3,2 ms |
+| 30 | 6 / 6,1 / 12 / 12,1 ms | 4,2 ms | 1,1 / 2 ms | 0,4 / 3,3 ms |
+| 100 | 6 / 12 / 23,9 / 30 ms | 5,3 ms | 1,1 / 2,6 ms | 0,5 / 8,4 ms |
 
-Les auto-soins livrés sont le fournisseur ordinaire et l'ordre direct. **Préemption urgente et réévaluation après une seule plaie restent à implémenter** ; cocher l'option n'interrompt pas automatiquement toute activité ou attente au lit. Médicaments, maladies/chirurgie, files, équipement/combat et relations restent absents. G0 se consolide, G1/G2 sont partiels, les fondations humaines de G3 avancent ; aucun jalon déclaré terminé.
+Géométrie conservée, zéro nouveau pipeline, au plus 120 draw calls et aucune pose invalide ; 41 878 observations de soin à cent acteurs. Le coût scène est inclus dans le CPU d'image, pas additionnel. Réception mesure le callback et la programmation/mise à jour HUD, pas tout le décodage/IPC. Un maximum de 30 ms subsiste à cent acteurs ; les maxima non corrélés ne prouvent pas sa cause. Ce cas d'auto-soins n'est ni le même que la clinique V48 ni une charge mixte en forêt : leurs pointes restent ouvertes. Les mesures n'établissent pas une optimisation de rendu ni une fluidité universelle.
+
+## Portée
+
+Compilation TypeScript/Vite réussie, avertissement habituel de taille du chunk graphique. Le premier lancement du lot ciblé et celui de Vite ont rencontré `spawn EPERM` dans le bac à sable Windows ; relance autorisée hors de cette restriction, sans changement de configuration du projet. Aucun médicament ou autre objet ajouté. La recherche a corrigé la cible : urgence n'implique pas annulation universelle du travail en cours. Les expirations et réactions aux dégâts des autres tâches restent à étudier avec les comportements et combats. Médicaments, maladies/chirurgie, équipement/combat, social et monde restent incomplets ou absents. G0 en consolidation, G1/G2 partiels, fondations humaines de G3 en cours ; aucun jalon déclaré terminé.

@@ -1,0 +1,32 @@
+{
+  "date": "2026-09-17T01:14:20.468Z",
+  "backend": "native WebGPU",
+  "frames": 1081,
+  "working": 319,
+  "eating": 203,
+  "firstWork": {
+    "tick": 3068,
+    "play": 3068.0279999999925,
+    "phase": "tend",
+    "urgent": true,
+    "work": 1,
+    "lying": 0,
+    "xp": 0,
+    "treated": 0
+  },
+  "firstMeal": {
+    "tick": 3153,
+    "play": 3153.274000000001,
+    "phase": "meal-ingest",
+    "urgent": false,
+    "work": 0,
+    "lying": 2,
+    "xp": 87500,
+    "treated": 1
+  },
+  "savedTick": 3076,
+  "mealTick": 3193,
+  "finishedTick": 3248,
+  "remainingFood": 9,
+  "errors": []
+}

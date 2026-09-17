@@ -6,7 +6,8 @@ export function validTendShape(value:unknown,version:number,w:World):boolean {
   if(version<47||!value||typeof value!=='object'||Array.isArray(value))return false;
   const t=value as Record<string,unknown>,s=t.spot as Record<string,unknown>;
   const int=(n:unknown,min:number,max=Number.MAX_SAFE_INTEGER)=>typeof n==='number'&&Number.isSafeInteger(n)&&n>=min&&n<=max;
-  return Object.keys(t).every(k=>['patientId','spot','phase','progress','duration'].includes(k))&&int(t.patientId,1)
+  return Object.keys(t).every(k=>['patientId','spot','phase','progress','duration','urgent'].includes(k))&&int(t.patientId,1)
+    &&(t.urgent===undefined||version>=50&&t.urgent===true)
     &&!!s&&typeof s==='object'&&Object.keys(s).every(k=>k==='x'||k==='z')&&int(s.x,0,w.width-1)&&int(s.z,0,w.height-1)
     &&(t.phase==='approach'||t.phase==='tend')&&int(t.progress,0,5999)
     &&(t.duration===undefined?t.phase==='approach'&&t.progress===0:int(t.duration,1,6000)&&Number(t.progress)<Number(t.duration));

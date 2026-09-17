@@ -1,5 +1,7 @@
 # Noyau de simulation — contrat courant
 
+V50 : [branche médicale urgente](urgent-care.md) avant les besoins aux points de décision livrés, revue périodique au lit et auto-soin en une opération. La réévaluation générale des autres travaux reste distincte.
+
 V49 : [auto-soins ordinaires](self-tending.md) intégrés au classement Médecin et au traitement commun ; option, cellules, qualité et sauvegarde ont leurs contrôles croisés. La préemption médicale générale reste distincte.
 
 V48 : [alimentation assistée](feeding.md), patient unique, portion et chevet réservés, transferts et ingestion physiques. V47 validée strictement avant changement de numéro uniquement ; invalidation involontaire conserve une cargaison indéposable sans garder le patient réservé.

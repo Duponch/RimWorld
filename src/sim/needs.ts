@@ -1,5 +1,6 @@
 import type { Reachability } from './pathfinding.ts';
 import { interruptWork,retryInterruptedCargo } from './interrupted-cargo.ts';
+import { urgentMedicalTask } from './urgent-care.ts';
 import { reservedSource } from './materials.ts';
 import { mealQuantity, adultHungerFactor } from './items.ts';
 import { TICKS_PER_DAY } from './types.ts';
@@ -53,6 +54,12 @@ export function processNeeds(world: World, pawn: Pawn, context: NeedContext): bo
   // A direct player job postpones ordinary needs and schedules; depletion and
   // emergency collapse still run. Queuing behind a need does not interrupt it.
   if(pawn.orders.active!==null)return false;
+  // Urgent medical work precedes ordinary hunger/schedule choices. Fatigue
+  // collapse above still interrupts; the patient's physical bed keeps running.
+  if(world.schemaVersion>=50&&urgentMedicalTask(pawn)){
+    if(pawn.need?.kind==='sleep')return processSleeping(world,pawn,context,canPlan);
+    return false;
+  }
 
   // Sleep only ends for hunger if a physically reachable portion can be reserved.
   const wantsFood = pawn.hunger <= (pawn.need?.kind === 'sleep' ? 12.5 : 30);

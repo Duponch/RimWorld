@@ -1,6 +1,8 @@
 # Documentation de Lisière
 
-V49 : [auto-soins ordinaires](development/self-tending.md), [vérification des règles](research/self-tending-reference.md). Option Santé désactivée au départ, métier Médecin, qualité de base ×0,7 et traitement physique sans lit obligatoire. Préemption urgente et médicaments restent ouverts.
+V50 : [priorités médicales urgentes](development/urgent-care.md), [recherche et correction de portée](research/urgent-care-reference.md). Branche avant les besoins aux décisions admissibles, revue au lit et réévaluation après une plaie auto-traitée ; aucune préemption universelle des tâches engagées.
+
+V49 : [auto-soins ordinaires](development/self-tending.md), [vérification des règles](research/self-tending-reference.md). Option Santé désactivée au départ, métier Médecin, qualité de base ×0,7 et traitement physique sans lit obligatoire. Décisions urgentes ajoutées V50 ; médicaments encore ouverts.
 
 V48 : [alimentation assistée au lit](development/feeding.md), [sources recoupées et seuil adulte](research/feeding-reference.md). Médecin prend et porte la portion selon le régime du patient ; nutrition seulement au terme du repas. Médicaments encore ouverts ; auto-soins ordinaires ajoutés en V49.
 

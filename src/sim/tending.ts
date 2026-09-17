@@ -1,6 +1,6 @@
 import { lyingPatient,patientClaimed,bedsideAccess } from './care-access.ts';
 export { lyingPatient } from './care-access.ts';
-import { dryTendQuality,medicalTendQuality,medicalTendSpeed,treatmentTarget,type TendTask } from './care-rules.ts';
+import { dryTendQuality,medicalTendQuality,medicalTendSpeed,treatmentTarget,urgentTreatment,type TendTask } from './care-rules.ts';
 import { medicalWorkRefusal } from './health-rules.ts';
 import { healthRandom,updatePawnHealth,reconcilePawnHealth } from './health.ts';
 import { tendInjury,tendMissingPart } from './injury-state.ts';
@@ -31,7 +31,7 @@ export function tendingProposal(world:World,doctor:Pawn,patient:Pawn,reach:Reach
     // service physically for an adjacent work cell under the 3D stop contract.
     const reserved=reservedServiceCells(world,doctor.id);
     for(const spot of [{x:doctor.x,z:doctor.z},...workNeighbours(doctor)])if(canStandAt(world,spot)&&!reserved.has(spot.z*world.width+spot.x)){
-      const path=routeToCell(world,spot,reach);if(path)return {task:{patientId:doctor.id,spot,phase:'approach',progress:0},path};
+      const path=routeToCell(world,spot,reach);if(path)return {task:{...(world.schemaVersion>=50&&urgentTreatment(doctor)?{urgent:true as const}:{}),patientId:doctor.id,spot,phase:'approach',progress:0},path};
     }
     return;
   }
@@ -54,6 +54,8 @@ export function applyTending(world:World,command:{pawnId:number;patientId:number
   const proposal=tendingProposal(world,doctor,patient,reachableCells(world,doctor,blockedCells(world),new Set()));
   if(!proposal)return fail('Aucune place de soin accessible au chevet.');
   const drops=planCommandDrops(world,{type:'order-tend',...command});if(!drops||!releaseWork(world,doctor,drops))return fail('Pas de place pour déposer la cargaison.');
+  // A direct order is the ordinary provider, even for a bleeding actor.
+  delete proposal.task.urgent;
   clearQueuedOrders(world,doctor);delete doctor.priorityWork;startTending(doctor,proposal,true);return {ok:true};
 }
 export function reconcileTending(world:World):void {
@@ -77,5 +79,5 @@ export function processTending(world:World,doctor:Pawn,context:NeedContext,light
   reconcilePawnHealth(world,patient);
   context.event(doctor===patient?`${doctor.name} a traité une de ses plaies sans médicament.`:`${doctor.name} a traité une plaie de ${patient.name} sans médicament.`);
   task.progress-=task.duration;
-  if(!treatmentTarget(patient))releaseWork(world,doctor);
+  if(!treatmentTarget(patient)||task.urgent&&doctor===patient){releaseWork(world,doctor);if(task.urgent){doctor.planCooldown=0;doctor.needCooldown=0;}}
 }

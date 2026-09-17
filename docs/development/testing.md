@@ -1,5 +1,7 @@
 # Stratégie de validation
 
+V50 : cinq scénarios de décision urgente croisent meilleur métier activé, seuil strict, soin unique puis repas, lit, budget, interruptions, migration et cent acteurs. Le parcours UI urgent vérifie la chronologie du geste puis de l’ingestion ; le banc médical partagé accepte `URGENT_LOAD=1` et mesure aussi scène/réception, le banc CPU `--urgent`. Ne pas assimiler ces camps dégagés à une charge mixte en forêt.
+
 V49 : cinq scénarios d’auto-soins enrichissent les contrats médicaux (sortie du lit, interruptions, qualité, migration et cent acteurs) ; le parcours UI observe orientation, annulation et reprise. Un échec natif a révélé une orientation perdue au rechargement, corrigée sans assouplir l’oracle.
 
 V48 : six scénarios `feeding.test.ts`, dont clinique de cinq jours, stock/régime partagé, reprise de chaque phase, pourriture et sol saturé. `integration/feeding.spec.ts` joue Travail/clic droit/sauvegarde et inspecte les poses GPU réellement présentées. `scripts/rescue-bench.ts --feeding` et `FEED_LOAD=1` dans `integration/rescue-load.spec.ts` réutilisent le banc médical 2/30/100, à lancer séparément. Les clés historiques rescued/carryTicks/carriedFrames signifient patients nourris, ticks et observations au chevet dans ce mode. Le pilote commun relève tâche feed et faim.
