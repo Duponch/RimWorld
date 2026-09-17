@@ -25,3 +25,5 @@ Certitude élevée sur l'existence du passage civil et la séparation avec les r
 **Différer** collisions hostiles, mobilisation, tailles corporelles, poussée de combat et dispersions jusqu'aux systèmes correspondants. Avant leur livraison, remplacer la politique civile explicite par un profil de collision déterministe commun à recherche, exécution et validation. Le laboratoire GPU demeure indépendant.
 
 Le [contrat V14](../development/spatial-motion-storage.md) décrit migration et implémentation. Les tests prouvent notre cohérence et continuation ; ils ne sont pas des observations de toutes les situations du jeu de référence.
+
+Recontrôle du 17 septembre pour la [mobilisation](drafting-reference.md) : le [texte officiel 1.6.4850](https://ludeon.com/blog/2026/06/update-1-6-4850-released/) expose désormais directement les deux correctifs de bloqueurs. La limitation de lecture Steam dans le tableau décrit l’audit du 14 septembre. Réservation de destination tactique et collision en transit restent deux contrats différents ; aucune mobilisation livrée par cette relecture.

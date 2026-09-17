@@ -1,5 +1,7 @@
 # Adoption du référentiel utilisateur
 
+Préparation de mobilisation après V52 — chap. 8/20/21, SYS/TEST-035, UI-007/008/011 et navigation SYS/TEST-113..117 relus. [Recherche fraîche et points encore à vérifier](drafting-reference.md) : adopter mode/destination distincts, adapter les arêtes 3D ; différer attaque/hostiles/couvert. Aucune implémentation ni migration annoncée par cette préparation.
+
 Transport sous V52 : contrats de synchronisation déjà adoptés (chap. 2/3/5/10/21/29/32) inchangés. Comparaison ordonnée de copies et voie structurelle séparée, sans nouvel algorithme de gameplay ni migration ; [relecture technique](presentation-timing-reference.md#encodeur--contrôle-du-17-septembre-sous-v52), [preuves avant/après](../development/validation.md).
 
 V52 — chapitres 2/8/13/20/29, UI-014 et SYS/TEST-055 : adopter propriétaire séparé, transfert physique et ancienne arme conservée ; adapter dépôt saturé, récupération/attache 3D ; différer UI-015, CAT-034..037, GAP-007 et inventaire complet. [Recherche fraîche](equipment-reference.md), [contrat](../development/equipment.md).

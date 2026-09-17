@@ -19,6 +19,8 @@ Le diagnostic de cadence V52 a produit une correction mesurée : comparaison ord
 
 Chaque lot commence par corpus et recherche fraîche. Les audits rétroactifs peuvent modifier cet ordre sur preuve. Voir [motif et sources de la réorientation](research/skills-reference.md). Les extensions restent après G5.
 
+La [préparation du lot de mobilisation](research/drafting-reference.md) est engagée : sources relues, distinction destination/transit confirmée, cargaisons et exceptions de sommeil à résoudre avant activation. Cette note n’est ni un second calendrier ni une fonctionnalité livrée.
+
 ## Contrats de progression
 
 La grille plane 3D low poly, les interactions physiques, l’UI de référence et le [corpus](research/reference-adoption.md) restent la cible. Les [adaptations](gameplay/decisions.md) sont explicites. Carte 250², simulation déterministe, travail ordonné, sauvegardes migrées strictement et rendu GPU sont des frontières maintenues, pas des raisons de retarder indéfiniment le gameplay.
