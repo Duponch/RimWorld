@@ -332,13 +332,13 @@ La lumière de gameplay figure dans l’inspection. Un toit coupe la lumière du
 
 Le rôle est calculé depuis les meubles : un lit peut transformer un atelier en chambre, plusieurs tables en salle à manger. La taille subit alors une pénalité de mauvaise pièce de 20 %. L’inspection détaille les facteurs ; une petite cour fermée et un auvent ouvert ne sont pas traités de la même manière. Aucun bonus d’humeur de chambre ou de salle à manger n’est encore associé à ces rôles.
 
-Le ciel et les flammes restent stylisés. Les halos sur le décor et l’assombrissement des intérieurs en vue coupée restent à ajouter : fiez-vous au chiffre de l’inspection pour ces règles. Cette tranche module cuisine et taille ; les autres travaux et les déplacements ne subissent pas encore la pénalité d’obscurité.
+Le ciel et les flammes restent stylisés. Les halos sur le décor et l’assombrissement des intérieurs sont visibles aussi en vue coupée ; l’inspection donne les valeurs de gameplay. La lumière module cuisine et taille, ainsi que les travaux et déplacements décrits ci-dessous.
 
 ## Voir les intérieurs et les feux
 
 Un feu allumé éclaire le sol, le mobilier et les colons à proximité. Son halo respecte les obstacles lumineux ; une porte ouverte ne transmet pas la lumière du feu dans cette version de référence. Les bâtiments couverts restent sombres sans éclairage, même lorsque **Toits : masqués** permet d’en voir l’intérieur. Couper les murs ne supprime pas non plus leur obstacle logique. Ces réglages fonctionnent en iso et en perspective, sans modifier la colonie.
 
-Les couleurs chaudes servent à lire la scène : consultez l’inspection pour le pourcentage exact et les effets sur la production. Les lampes dédiées, le chauffage électrique et les ombres projetées par les feux restent à développer.
+Les couleurs chaudes servent à lire la scène : consultez l’inspection pour le pourcentage exact et les effets sur la production. Les lampes sur pied peuvent être alimentées par un générateur à bois. Le chauffage électrique et les ombres projetées par les feux restent à développer.
 
 ## Travailler et circuler dans l’obscurité
 
@@ -351,6 +351,6 @@ Les mineurs préparent leurs coups plus lentement dans le noir. Les colons march
 
 Évitez de déconstruire ou miner le dernier appui d’un toit construit sous lequel se trouvent des colons. Retirez d’abord la toiture depuis Architecte. Un effondrement peut causer des lésions, une hémorragie ou une perte de partie corporelle. Sélectionnez le colon : **Santé** affiche ses blessures, sa douleur, son sang perdu et ses principales capacités. Les alertes signalent blessés à terre et saignements.
 
-Une blessure peut ralentir déplacements, travaux et ingestion. Un colon à terre cesse ses actions et conserve sa cargaison si le sol empêche le dépôt. Il reste dans son lit s’il l’utilisait déjà ; sinon un sauveteur peut désormais l’y porter. Les blessures non permanentes guérissent progressivement, avec avantage à la posture allongée et au lit réel ; la famine bloque cette guérison. Les cicatrices et parties perdues persistent. **Traitements sans médicament et alimentation assistée sont disponibles** après installation au lit. Médicaments et ramper vers un lit restent absents.
+Une blessure peut ralentir déplacements, travaux et ingestion. Un colon à terre cesse ses actions et conserve sa cargaison si le sol empêche le dépôt. Il reste dans son lit s’il l’utilisait déjà ; sinon un sauveteur peut l’y porter. Les blessures non permanentes guérissent progressivement, avec avantage à la posture allongée et au lit réel ; la famine bloque cette guérison. Les cicatrices et parties perdues persistent. **Traitements à sec ou avec médicament et alimentation assistée sont disponibles** selon les politiques décrites plus haut. Ramper vers un lit reste absent.
 
 Un colon décédé reste visible et inspectable sur place, sans agir. Transport des dépouilles, enterrement et décomposition seront ajoutés. La santé thermique, la malnutrition, les maladies et les blessures de combat restent également à développer.

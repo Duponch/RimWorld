@@ -1,0 +1,54 @@
+{
+  "date": "2026-09-17T23:05:31.626Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "os": "win32 10.0.26200",
+  "protocol": "Isolated synchronous queries only; no World stepping, worker, renderer or real combat. Four synthetic 250² maps: clear cover, opaque wall, alternating door and full-target exposed edge. Unrelated cover populated. 100 warmup batches then 1000 measured batches of 3/30/100 candidate shooters; a local query reads current fields. Construction and door mutation excluded. Stable deterministic sequence, one pass per count.",
+  "results": [
+    {
+      "actors": 3,
+      "queries": 3000,
+      "legal": 2000,
+      "blocked": 1000,
+      "estimatedHitSum": 624.6338352273251,
+      "reads": 143500,
+      "queryBatchMs": {
+        "count": 1000,
+        "p50": 0.011299999999991428,
+        "p95": 0.02410000000000423,
+        "p99": 0.10170000000000812,
+        "max": 0.34890000000000043
+      }
+    },
+    {
+      "actors": 30,
+      "queries": 30000,
+      "legal": 18750,
+      "blocked": 11250,
+      "estimatedHitSum": 5899.961444952714,
+      "reads": 1432500,
+      "queryBatchMs": {
+        "count": 1000,
+        "p50": 0.04449999999999932,
+        "p95": 0.09800000000001319,
+        "p99": 0.17660000000000764,
+        "max": 0.33140000000000214
+      }
+    },
+    {
+      "actors": 100,
+      "queries": 100000,
+      "legal": 62500,
+      "blocked": 37500,
+      "estimatedHitSum": 19666.53814985245,
+      "reads": 4775000,
+      "queryBatchMs": {
+        "count": 1000,
+        "p50": 0.1449000000000069,
+        "p95": 0.22230000000001837,
+        "p99": 0.26789999999999736,
+        "max": 0.5124999999999886
+      }
+    }
+  ]
+}

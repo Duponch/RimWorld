@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+Le socle isolé de requêtes de tir sous V53 n'ajoute aucun contenu : ses obstacles et courbes synthétiques de test ne sont pas des définitions d'armes ou de mobilier jouables.
+
 V53 ajoute des commandes de mobilisation et déplacement, **aucun objet**. Le revolver reste une principale physique sans tir ; aucune nouvelle arme, munition, tenue ou espèce implicitement livrée. [Contrat](../development/drafting.md).
 
 V52 — `revolver` : **un nouvel objet obtenu au départ**, pile de un, propriétaire d'équipement distinct. Sept qualités conservées, 100 PV maximum ; nouveau site : qualité normale/100 PV. Transport, échange, dépôt et interdiction physiques. Pas de recette, commerce, usure ni tir ; fusil/couteau du départ Core et catalogue militaire restent absents. Les 95 familles CAT ne constituent toujours pas une liste exhaustive. [Contrat](../development/equipment.md), [recherche](../research/equipment-reference.md).

@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+Sous V53, [requêtes de tir isolées](combat-queries.md) : grille en lecture seule dans `combat-space`, couvert/rapport dans `combat-report`. Pas de mutation, PRNG caché, adaptateur World ni appel par frame ; l'intégration reste à faire. Visibilité et occupation/navigation restent distinctes.
+
 V53 : [mode tactique](drafting.md) sparse séparé des tâches civiles. Modules règles/destinations/exécution/validation, budgets de navigation communs, UI isolée dans `drafting-controls`. Déclencheurs discrets mode/destination/file observés par le bridge ; aucune nouvelle géométrie ou horloge de rendu.
 
 V52 : [propriété et équipement](equipment.md). La principale est un propriétaire de pile distinct ; règles/actions/incapacité/validation sont séparées dans les modules `equipment-*`. Géométrie du rig extraite vers `pawn-geometry.ts`, petite attache rigide dans le lot GPU existant ; projection commune pour inspection/portrait. Aucun inventaire générique ou moteur de combat anticipé.

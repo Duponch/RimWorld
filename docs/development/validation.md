@@ -2,6 +2,10 @@
 
 18 septembre 2026. [Mobilisation et déplacements](drafting.md), [règles et incertitudes](../research/drafting-reference.md). Les [preuves V52](../history/validation-equipment-v52.md) conservent mesures et échecs antérieurs. Aucun résultat ne vaut couverture exhaustive ni fluidité universelle.
 
+## Incrément de combat isolé après V53
+
+[Requêtes de ligne/couvert/visée](combat-queries.md) : six scénarios passent (433 ms au dernier passage, dont 117 649 cas de l'oracle central), TypeScript passe après correction de l'inférence du tableau de directions. [Banc CPU](../../artifacts/combat-queries-v53.json) : mille lots de cent requêtes, p95 0,2223 ms, p99 0,2679 ms, maximum 0,5125 ms sur Ryzen 5 3600. Pas de World, worker ou rendu dans cette mesure ; aucune nouvelle fonctionnalité jouable. Les validations de partie V53 ci-dessous demeurent les dernières preuves intégrées, pas des résultats rejoués pour cet incrément.
+
 ## Simulation et continuité
 
 Huit scénarios tactiques couvrent groupes et refus atomiques, files, porte/diagonale, conservation de l’arête, retour civil, sommeil/auto-démobilisation, incapacité/Manipulation, passager interrompu, repas/médicament/meuble indéposable, validation/migration et snapshots. Le premier regroupement a trouvé des erreurs de fixture : porte sans matériau explicite et ItemId médical inexistant ; la correction utilise les vraies définitions. La durée neutre sparse est lue avec son défaut 1 et la cellule libérée du scénario saturé est replacée hors du rayon de dépôt. Le passage corrigé réussit **8/8**. Aucun seuil de gameplay assoupli.

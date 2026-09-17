@@ -2,6 +2,8 @@
 
 18 septembre 2026. **Recherche et décisions de préparation, pas gameplay livré.** Le [mode tactique V53](../development/drafting.md) est publié ; le tir et les adversaires restent absents. [ROADMAP](../ROADMAP.md) conserve le prochain lot et les jalons. Cette note évite de transformer les raccourcis du prototype en règles définitives.
 
+Premier incrément réalisé : [requêtes isolées de ligne, couvert et rapport](../development/combat-queries.md), sans adaptateur World ni ordre de tir. Relecture fraîche le 18 septembre de la fiche Revolver, de GenSight, ShootLeanUtility, Verb, CoverUtility et ShotReport au commit ci-dessous. L'oracle valide notre géométrie centrale ; coins/bords restent une observation du miroir. Les autres prérequis restent ouverts.
+
 ## Corpus et solidité des sources
 
 Chapitres **17–20** relus : précision, lignes/couvert, projectile/cible mobile, anatomie/armure ; chapitres 8/15/21 pour ordres, santé et navigation. Entrées **SYS/TEST-098..107, 110..112, 118..120**, **UI-009/010**, avec SYS/TEST-089..091/094/096 pour les conséquences médicales. Les tests proposés enrichiront nos scénarios de combat, de santé et de colonie ; leurs statuts ne constituent pas des validations locales.

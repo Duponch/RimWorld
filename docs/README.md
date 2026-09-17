@@ -2,7 +2,7 @@
 
 V53 : [mobilisation et déplacements physiques](development/drafting.md), [règles et adaptations vérifiées](research/drafting-reference.md). Bouton/R, groupes, clic droit/Maj, arrêt, besoins et conservation lors des interruptions. Tirs et adversaires restent le prochain lot humain.
 
-Suite de V53 : [préparation du premier combat](research/combat-preparation.md), avec lignes/couvert, cible mobile, impact anatomique et réactions civiles. Recherche et prérequis uniquement ; aucun tir livré par cette note.
+Suite de V53 : [préparation du premier combat](research/combat-preparation.md) et [socle de requêtes testé](development/combat-queries.md), avec lignes/couvert et estimation de visée. Modules isolés, aucun tir jouable ; projectile, impact anatomique et adversaire restent à intégrer.
 
 Transport sous V52 : [comparaison ordonnée des ressources](development/presentation-timing.md#coût-de-recherche-des-deltas-sous-v52), mêmes états et règles, coût d’encodage réduit. Garde native minage/abattage verte après modification ; [preuves et limites de charge](development/validation.md). La mobilisation est ajoutée en V53.
 
