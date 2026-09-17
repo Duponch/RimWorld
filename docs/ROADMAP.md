@@ -15,7 +15,7 @@ Le camp possède matériaux, construction, nourriture, repos, loisirs, toits, te
 5. **Pensées, traits et relations** : causes consultables, avis dirigés, premiers événements sociaux et crises, en réutilisant les situations effectivement vécues. Enrichir ensuite narration/incidents et progression économique.
 6. **Retour sur l’habitat et les ressources** : interrupteurs physiques, conduits, batteries et froid électrique, recettes/recherche, météo/saisons et biomes. Ces systèmes restent nécessaires ; leur profondeur vient après les premières boucles humaines.
 
-La garde V52 conserve trois micro-attentes d’abattage malgré une première correction causale de l’intégrateur de vitesse. Priorité courte : mesurer réveil, simulation, encodage et envoi du worker autour du silence observé, corriger le coût démontré avant le lot de mobilisation. Les détails et échecs restent dans la validation ; ne pas relancer jusqu’à obtenir un passage favorable.
+La garde V52 conserve trois micro-attentes d’abattage malgré une première correction causale de l’intégrateur de vitesse. Priorité courte : les sondes réveil/simulation/encodage/envoi sont maintenant ajoutées ; l’encodage atteint 7,5 ms p95 contre 3,3 ms pour la simulation dans le passage instrumenté. Comparer son coût sur carte naturelle et mutations/reclassement, corriger le coût démontré avant le lot de mobilisation. Les détails et échecs restent dans la validation ; ne pas relancer jusqu’à obtenir un passage favorable.
 
 Chaque lot commence par corpus et recherche fraîche. Les audits rétroactifs peuvent modifier cet ordre sur preuve. Voir [motif et sources de la réorientation](research/skills-reference.md). Les extensions restent après G5.
 

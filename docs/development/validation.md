@@ -64,3 +64,9 @@ Le parcours d’équipement final repasse en **20,2 s** avec l’intégrateur co
 ## Gameplay et suite
 
 Nouvelle principale physiquement collectée, échangée, déposée, transportée et récupérée après incapacité ; inspection, apparence GPU et sauvegarde strictes. Le camp reste jouable avec production/construction, minage, repas/repos/loisirs, premier habitat électrique et secours/soins. Mobilisation, combats et adversaires, autres armes/vêtements, inventaire personnel, social/narration, météo/biomes complets, monde/commerce/recherche et catalogue complet restent absents ou partiels. File d’équipement et priorité exacte de récupération Core ne sont pas livrées comme parité. G0 en consolidation, G1/G2 partiels, fondations de G3, G4/G5 absents.
+
+## Étape suivante engagée : attribuer le coût worker
+
+Après publication de V52, le [banc instrumenté par phases](../../artifacts/harvest-sync-worker-phases-v52.json) sépare le temps de réveil, `stepWorld`, encodeur et `postMessage` sans modifier le protocole de production. Sur 2 273 lots en abattage : réveil p95/p99 **31,6/32,5 ms**, simulation **3,3/6,9 ms**, encodage **7,5/11 ms**, envoi **0,6/1,1 ms**, lot entier **10,6/17,7 ms**. La première itération froide atteint 62 ms, dont 51,8 ms de simulation. Le coût régulier d’encodage dépasse celui de simulation dans cette charge.
+
+Aucune frame figée cette fois, mais une commande 1×→3× a son premier effet à **113,2 ms**, donc l’oracle reste rouge. Ce passage instrumenté ne clôt ni la cause du silence de 100 ms du passage précédent ni les problèmes de réactivité. Le travail utile suivant est de comparer l’encodeur sur carte naturelle, mutations et ordre des ressources, puis de vérifier toute optimisation avec la même garde native. Le profileur du thread principal reste distinct de ces mesures worker ; aucun gain de FPS n’est revendiqué par l’ajout des sondes.
