@@ -1,6 +1,6 @@
 # Architecture et décisions
 
-Sous V53, [requêtes de tir isolées](combat-queries.md) : grille en lecture seule dans `combat-space`, couvert/rapport dans `combat-report`. Pas de mutation, PRNG caché, adaptateur World ni appel par frame ; l'intégration reste à faire. Visibilité et occupation/navigation restent distinctes.
+Sous V53, [socle de tir isolé](combat-queries.md) : grille en lecture seule dans `combat-space`, couvert/rapport dans `combat-report`, profils immuables et unités dans `ranged-statistics`. Pas de mutation, PRNG caché, adaptateur World ni appel par frame ; l'intégration reste à faire. Visibilité et occupation/navigation restent distinctes, calcul de précision et compétence persistée aussi.
 
 V53 : [mode tactique](drafting.md) sparse séparé des tâches civiles. Modules règles/destinations/exécution/validation, budgets de navigation communs, UI isolée dans `drafting-controls`. Déclencheurs discrets mode/destination/file observés par le bridge ; aucune nouvelle géométrie ou horloge de rendu.
 

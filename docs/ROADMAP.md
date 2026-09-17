@@ -2,7 +2,7 @@
 
 V53 — mobilisation et déplacements tactiques physiques livrés ; [contrat et limites](development/drafting.md). Prochain lot précis : premier tir dirigé et adversaire, en séparant visibilité/couvert, préparation, émission, projectile et impact anatomique. Ne pas ajouter une attaque instantanée générique. La préparation de cette boucle inclut une relecture des statistiques du revolver et des réactions civiles au danger. Aucun jalon G0–G5 déclaré clos.
 
-Premier incrément technique du lot : [requêtes de ligne, couvert et visée](development/combat-queries.md) isolées, six scénarios et coût CPU mesuré. Elles ne pilotent pas encore la partie. Prochaine dépendance : données du revolver, précision/Tir et impact Bullet, puis états persistants et intégration de l'adversaire selon la préparation ; ces sous-étapes ne sont pas des livraisons de combat jouable.
+Incréments techniques du lot : [requêtes de ligne, couvert et visée](development/combat-queries.md) isolées, puis [profils du revolver et calcul de précision](research/ranged-statistics-reference.md). Huit scénarios dédiés, regroupement anatomique 15/15 et coût des requêtes mesuré. Ils ne pilotent pas encore la partie. Prochaine dépendance : résolution anatomique Bullet, puis compétence Tir active, phases persistantes et intégration de l'adversaire selon la préparation ; ces sous-étapes ne sont pas des livraisons de combat jouable.
 
 État : 18 septembre 2026. **ROADMAP est l’unique calendrier G0–G5.** G0 en consolidation, G1 et G2 partiels ; G3 commence par ses fondations humaines. Aucun jalon complet. [Inventaire réel](gameplay/implementation-status.md), [validation](development/validation.md), [index](README.md).
 

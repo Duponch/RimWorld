@@ -2,6 +2,8 @@
 
 Socle de requêtes sous V53 — chapitres 17/18, SYS/TEST-098/101..103/106/119 : règles de ligne, penchement, couvert et rapport adoptées dans [deux modules isolés](../development/combat-queries.md), testées par oracle et scénarios locaux. Aucune intégration d'attaque, migration ou validation globale du combat ; comparaison à l'exécutable actuel ouverte. Les tableaux restent des cibles.
 
+Statistiques isolées sous V53 — chapitres 13/17–20, SYS/TEST-085/099..101/105/111..112 : [profils de revolver, capacités et unités revérifiés](ranged-statistics-reference.md). Adopter les qualités et offsets, adapter la journée Core par dix, différer compétence active, Gunshot et phases. L'ancien XML 45/35 % n'est pas la précision contemporaine 55/40 %. Tests numériques et anatomiques ne ferment aucun SYS/TEST global.
+
 Préparation après V53 — chapitres 17–20, SYS/TEST-098..107, 110..112, 118..120 et UI-009/010 : **adopter comme cible** la séparation ligne/couvert, émission/vol/impact et conséquences anatomiques ; **adapter** horloge et présentation 3D ; **vérifier** définitions d'arme, tissus, interruptions, réactions et collision après correctifs ; **différer** catalogue militaire, armures équipées, boucliers et explosions. [Recherche fraîche](combat-preparation.md). Aucune de ces entrées ne devient livrée par cette préparation.
 
 V53 — chap. 8/20/21, SYS/TEST-035, UI-007/008/011 et SYS/TEST-113..117 : adopter mode/destinations distincts, besoins et trajets physiques ; adapter arêtes 3D, dépôt saturé et repli sans couvert ; différer attaque/hostiles/formation et commandes civiles mobilisées. [Sources fraîches et incertitudes](drafting-reference.md), [contrat intégré](../development/drafting.md).

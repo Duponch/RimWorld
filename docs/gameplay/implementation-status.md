@@ -1,6 +1,6 @@
 # Ce qui est jouable et ce qui manque
 
-Préparation technique sous V53 : [calculs de ligne, couvert et visée testés](../development/combat-queries.md), **non branchés dans la partie**. Ils n'ajoutent ni attaque, ni dégâts d'arme, ni ennemi ; le bilan jouable ci-dessous est inchangé.
+Préparation technique sous V53 : [calculs de ligne, couvert, visée, qualités du revolver et capacités testés](../development/combat-queries.md), **non branchés dans la partie**. Ils n'ajoutent ni compétence Tir active, ni attaque, ni dégâts d'arme, ni ennemi ; le bilan jouable ci-dessous est inchangé.
 
 V53 livre la [mobilisation et les déplacements dirigés](../development/drafting.md) : individuel/groupe, destinations distinctes, clic droit/Maj, file, arrêt, démobilisation et sauvegarde. Les besoins/santé continuent ; déplacements, cargaisons et patients interrompus restent physiques. **Partiel :** tactique sans couvert/formation, commandes civiles pendant mobilisation refusées ; collisions hostiles et orientations imposées ouvertes. **Absents :** tirs/mêlée, ennemis et résolution du combat. Aucun jalon global terminé.
 

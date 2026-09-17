@@ -1,6 +1,6 @@
 # Catalogue de contenu : couverture connue
 
-Le socle isolé de requêtes de tir sous V53 n'ajoute aucun contenu : ses obstacles et courbes synthétiques de test ne sont pas des définitions d'armes ou de mobilier jouables.
+Le socle isolé de tir sous V53 n'ajoute aucun objet obtenable. Les [sept profils de combat du revolver](../research/ranged-statistics-reference.md) sont définis et testés mais **non utilisés par la partie** ; portée, précision, cadence et dégâts ne sont pas encore jouables. Les obstacles synthétiques des requêtes ne définissent pas les propriétés tactiques du mobilier présent.
 
 V53 ajoute des commandes de mobilisation et déplacement, **aucun objet**. Le revolver reste une principale physique sans tir ; aucune nouvelle arme, munition, tenue ou espèce implicitement livrée. [Contrat](../development/drafting.md).
 

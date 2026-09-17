@@ -1,0 +1,62 @@
+import type { AccuracyCurve } from './combat-report.ts';
+import { WEAPON_QUALITIES,type WeaponQuality } from './equipment-rules.ts';
+import { TICKS_PER_DAY } from './types.ts';
+
+/** Data/units only; not yet a Pawn skill or attack producer. See the explicit
+ * current/historical source decisions in research/ranged-statistics-reference. */
+const shootingCurve:readonly (readonly [number,number])[]=[[-20,.70],[-10,.80],[-6,.83],[-4,.85],[-2,.87],[0,.89],[2,.93],[4,.94],[6,.95],[8,.96],[10,.97],[12,.975],[14,.98],[16,.98333],[18,.98666],[20,.99],[22,.9925],[26,.995],[30,.9965],[40,.998],[60,.999]];
+function finiteNonnegative(value:number):void {if(!Number.isFinite(value)||value<0)throw new RangeError('Invalid ranged stat input');}
+export function shootingAccuracy(level:number,sight:number,manipulation:number):{score:number;perCell:number} {
+  if(!Number.isInteger(level)||level<0||level>20)throw new RangeError('Invalid shooting level');
+  finiteNonnegative(sight);finiteNonnegative(manipulation);
+  const score=level+12*(Math.min(sight,2)-1)+8*(Math.min(manipulation,1)-1);
+  for(let i=1;i<shootingCurve.length;i++)if(score<=shootingCurve[i][0]) {
+    const [low,a]=shootingCurve[i-1],[high,b]=shootingCurve[i];
+    return {score,perCell:a+(b-a)*(score-low)/(high-low)};
+  }
+  return {score,perCell:shootingCurve.at(-1)![1]};
+}
+
+/** Reference Mathf.RoundToInt uses nearest/even, not JS's positive tie-up. */
+export function rangedRound(value:number):number {
+  finiteNonnegative(value);if(value>Number.MAX_SAFE_INTEGER)throw new RangeError('Ranged value overflow');
+  const floor=Math.floor(value);return value-floor===.5?floor+floor%2:Math.round(value);
+}
+export interface RevolverProfile {
+  readonly quality:WeaponQuality;
+  readonly damage:number;
+  readonly armorPenetration:number;
+  readonly accuracy:AccuracyCurve;
+  readonly range:number;
+  readonly warmupCoreTicks:number;
+  readonly cooldownCoreTicks:number;
+  readonly projectileTilesPerCoreTick:number;
+  readonly stoppingPower:number;
+}
+const accuracyFactors=[.8,.9,1,1.1,1.2,1.35,1.5],damageFactors=[.9,1,1,1,1,1.25,1.5];
+const profiles=Object.freeze(Object.fromEntries(WEAPON_QUALITIES.map((quality,i)=>[quality,Object.freeze({
+  quality,damage:rangedRound(12*damageFactors[i]),armorPenetration:.18*damageFactors[i],
+  accuracy:Object.freeze([.8,.75,.55,.4].map(a=>Math.min(1,a*accuracyFactors[i]))) as AccuracyCurve,
+  range:25.9,warmupCoreTicks:18,cooldownCoreTicks:96,projectileTilesPerCoreTick:55/100,stoppingPower:1,
+})])) as Record<WeaponQuality,RevolverProfile>);
+export function revolverProfile(quality:WeaponQuality):RevolverProfile {
+  if(!Object.hasOwn(profiles,quality))throw new RangeError('Invalid weapon quality');return profiles[quality];
+}
+
+/** Preserve the existing game-day conversion. A displayed Core second is not a
+ * local wall-clock second. The future phase driver must carry fractional time. */
+export const CORE_TICKS_PER_LOCAL=60000/TICKS_PER_DAY;
+export function rangedTimings(profile:RevolverProfile,aimFactor=1,cooldownFactor=1):{warmup:number;cooldown:number;cycle:number;learningCycleSeconds:number} {
+  finiteNonnegative(aimFactor);finiteNonnegative(cooldownFactor);
+  const rawCooldownCore=profile.cooldownCoreTicks*Math.max(.01,cooldownFactor);
+  const warmupCore=rangedRound(profile.warmupCoreTicks*Math.max(.01,aimFactor)),cooldownCore=rangedRound(rawCooldownCore);
+  // WarmupComplete XP uses the verb's base warmup, not the aiming-time factor.
+  return {warmup:warmupCore/CORE_TICKS_PER_LOCAL,cooldown:cooldownCore/CORE_TICKS_PER_LOCAL,cycle:(warmupCore+cooldownCore)/CORE_TICKS_PER_LOCAL,learningCycleSeconds:(profile.warmupCoreTicks+rawCooldownCore)/60};
+}
+/** Destination jitter must already be captured; no draw or target tracking here. */
+export function projectileFlightTicks(distance:number,profile:RevolverProfile):number {
+  finiteNonnegative(distance);
+  const core=Math.max(1,Math.ceil(distance/profile.projectileTilesPerCoreTick));
+  if(!Number.isSafeInteger(core))throw new RangeError('Flight duration overflow');
+  return core/CORE_TICKS_PER_LOCAL;
+}

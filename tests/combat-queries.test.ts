@@ -3,6 +3,9 @@ import { clearShotSegment,findShotLine,leaningCells } from '../src/sim/combat-sp
 import { accuracyAtDistance,chooseMissCover,coverBase,interceptionDistanceFactor,shotAim,shotCover } from '../src/sim/combat-report';
 import { combatQueryField } from './scenarios/combat-queries';
 import type { Cell } from '../src/sim/types';
+import { projectileFlightTicks,rangedRound,rangedTimings,revolverProfile,shootingAccuracy } from '../src/sim/ranged-statistics';
+import { assessBody } from '../src/sim/body-capacities';
+import { WEAPON_QUALITIES,type WeaponQuality } from '../src/sim/equipment-rules';
 
 /** Independent continuous segment/box clipping oracle. An infinitesimal vertical
  * offset resolves exact-corner ambiguity on the canonical increasing-x segment;
@@ -141,4 +144,41 @@ test('queries are pure and local on a 250-square field, independent of unrelated
   expect(f.reads()).toBeLessThan(100);
   a.x=119;expect(first).toMatchObject({ok:true,from:{x:120,z:120}});
   expect(f.covers).toEqual(new Map(before));expect(f.walls).toEqual(walls);
+});
+
+test('revolver quality keeps bounded band stats, actual rounded damage and reference tick units',()=>{
+  const damage=[11,12,12,12,12,15,18],penetration=[.162,.18,.18,.18,.18,.225,.27];
+  const medium=[.44,.495,.55,.605,.66,.7425,.825];
+  for(const [i,quality] of WEAPON_QUALITIES.entries()) {
+    const p=revolverProfile(quality);expect(p.damage).toBe(damage[i]);expect(p.armorPenetration).toBeCloseTo(penetration[i],14);
+    expect(p.accuracy[2]).toBeCloseTo(medium[i],14);expect(p.accuracy.every(a=>a>=0&&a<=1)).toBe(true);
+    expect(Object.isFrozen(p)&&Object.isFrozen(p.accuracy)).toBe(true);expect(revolverProfile(quality)).toBe(p);
+    const time=rangedTimings(p);expect(time).toEqual({warmup:1.8,cooldown:9.6,cycle:11.4,learningCycleSeconds:1.9});
+    expect(projectileFlightTicks(11,p)).toBe(2); // 20 Core ticks at .55 cells/tick, NOT 55 cells/second.
+    expect(projectileFlightTicks(11.01,p)).toBe(2.1);expect(projectileFlightTicks(0,p)).toBe(.1);
+  }
+  expect(revolverProfile('masterwork').accuracy[0]).toBe(1);expect(revolverProfile('legendary').accuracy[1]).toBe(1);
+  expect(rangedRound(2.5)).toBe(2);expect(rangedRound(3.5)).toBe(4);
+  expect(rangedTimings(revolverProfile('normal'),.5).learningCycleSeconds).toBe(1.9);
+  expect(rangedTimings(revolverProfile('normal'),.5).warmup).toBe(.9);
+  const fractional=rangedTimings(revolverProfile('normal'),1,.83);
+  expect(fractional.cooldown).toBe(8);expect(fractional.learningCycleSeconds).toBeCloseTo(1.628,14);
+  expect(()=>revolverProfile('legend' as WeaponQuality)).toThrow();
+  expect(()=>projectileFlightTicks(Infinity,revolverProfile('normal'))).toThrow();
+});
+
+test('shooting precision uses skill plus capped capacity offsets, with actual anatomical loss',()=>{
+  const healthy=assessBody(),blind=assessBody({damage:[],pain:0,missing:['left-eye','right-eye']}),oneEye=assessBody({damage:[],pain:0,missing:['left-eye']});
+  const score=(body:ReturnType<typeof assessBody>,level=8)=>shootingAccuracy(level,body.capacities.sight,body.capacities.manipulation);
+  expect(score(healthy)).toEqual({score:8,perCell:.96});
+  expect(score(blind)).toEqual({score:-4,perCell:.85});
+  expect(score(oneEye).perCell).toBeLessThan(score(healthy).perCell);
+  expect(shootingAccuracy(0,1,1)).toEqual({score:0,perCell:.89});expect(shootingAccuracy(20,1,1)).toEqual({score:20,perCell:.99});
+  expect(shootingAccuracy(8,2,1)).toEqual({score:20,perCell:.99});
+  expect(shootingAccuracy(8,3,2)).toEqual(shootingAccuracy(8,2,1));
+  expect(shootingAccuracy(0,0,0)).toEqual({score:-20,perCell:.7});
+  expect(shootingAccuracy(8,1,.5)).toEqual({score:4,perCell:.94});
+  let previous=0;
+  for(let level=0;level<=20;level++){const current=shootingAccuracy(level,1,1).perCell;expect(current).toBeGreaterThan(previous);previous=current;}
+  expect(()=>shootingAccuracy(21,1,1)).toThrow();expect(()=>shootingAccuracy(8,-1,1)).toThrow();
 });
