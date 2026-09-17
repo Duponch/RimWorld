@@ -1,0 +1,90 @@
+{
+  "date": "2026-09-17",
+  "schema": 52,
+  "coreInitial": {
+    "files": 56,
+    "tests": 200,
+    "passed": 192,
+    "failed": 8,
+    "seconds": 149.57,
+    "failures": "7 schema expectations; dispatch accessed null before command guard"
+  },
+  "coreFollowup": {
+    "files": 9,
+    "passed": 47,
+    "seconds": 156.51,
+    "includes": "three-seed 5–8 day colony player and exact continuation"
+  },
+  "equipmentOrdersMedicine": {
+    "files": 3,
+    "passed": 15,
+    "seconds": 7.37
+  },
+  "finalEquipmentHealthRescueOrders": {
+    "files": 4,
+    "passed": 20,
+    "seconds": 5.8
+  },
+  "clockNegativeControl": {
+    "passed": 4,
+    "failed": 1,
+    "observed": 1,
+    "expected": 3.5
+  },
+  "clockCorrected": {
+    "files": 2,
+    "passed": 7,
+    "seconds": 3.4
+  },
+  "nativeUi": {
+    "passed": 2,
+    "longColonyMinutes": 6.7,
+    "equipmentSeconds": 18.2,
+    "initialAttempt": "invalidated by a source edit triggering Vite HMR; incomplete artifact preserved"
+  },
+  "presentationInitial": {
+    "passed": false,
+    "mineStarvedFrames": 2
+  },
+  "presentationAfterClockCorrection": {
+    "passed": false,
+    "mineStarvedFrames": 0,
+    "chopStarvedFrames": 2,
+    "limits": "8.2 + 4.2 ms without playhead advance; no jump or premature removal; further worker/IPC attribution in progress"
+  },
+  "build": {
+    "passed": true,
+    "warning": "Three bundle exceeds 500kB; final build passed after timing patch"
+  },
+  "plan": "G0 consolidation; G1/G2 partial; human foundations of G3; G4/G5 absent",
+  "finalRegression": {
+    "files": 4,
+    "passed": 14,
+    "seconds": 4.8
+  },
+  "nativeUiFinal": {
+    "passed": 1,
+    "seconds": 20.2
+  },
+  "presentationFinal": {
+    "passed": false,
+    "mineStarvedFrames": 0,
+    "chopStarvedFrames": 3,
+    "chopFrozenIntervalsMs": [
+      8.3,
+      8.4,
+      4.1
+    ],
+    "controls": 44,
+    "firstVisibleDelayMs": [
+      10.6,
+      90.5
+    ],
+    "workerSilenceMs": 100.3,
+    "next": "Distinguish timer scheduling, simulation and encoder within worker before drafting."
+  },
+  "docs": {
+    "passed": true,
+    "originalsByteIdentical": 3
+  }
+}

@@ -1,4 +1,4 @@
-import { assertHarvestPhase } from './harvest-assertions.ts';
+import { assertHarvestPhase,visibleSpeedResponse } from './harvest-assertions.ts';
 import { writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import os from 'node:os';
@@ -12,16 +12,17 @@ if(!Number.isFinite(seconds)||seconds<7||seconds>300)throw Error('Duration must 
 if(!/^[a-z0-9-]+$/.test(label))throw Error('Invalid report label');
 const stats=a=>{if(!a.length)return null;const s=a.slice().sort((a,b)=>a-b);return {count:s.length,p50:s[Math.ceil(s.length*.5)-1],p95:s[Math.ceil(s.length*.95)-1],p99:s[Math.ceil(s.length*.99)-1],max:s.at(-1)};};
 const probe=`
+const visibleSpeedResponse=${visibleSpeedResponse.toString()};
 window.__sync={view:null,active:false,frames:[],snapshots:[],removals:[],previous:null,poses:new Map(),jumps:[],gaps:[],solidOccupancy:[],controls:[],lastPlay:null};
 ${process.env.HARVEST_TRACE==='1'?`window.__sync.longTasks=[];new PerformanceObserver(list=>{for(const e of list.getEntries())window.__sync.longTasks.push({at:e.startTime,duration:e.duration});}).observe({type:'longtask'});`:''}
-document.addEventListener('click',e=>{const button=e.target.closest?.('[data-speed]');if(!button||!window.__sync.active)return;const b=window.__sync,speed=Number(button.dataset.speed),old=b.view.received?.speed;if(speed>0&&old>0&&speed!==old)b.controls.push({speed,at:performance.now(),delay:null});},true);
+document.addEventListener('click',e=>{const button=e.target.closest?.('[data-speed]');if(!button||!window.__sync.active)return;const b=window.__sync,speed=Number(button.dataset.speed),old=b.view.received?.speed;if(speed>0&&old>0&&speed!==old)b.controls.push({speed,previousSpeed:old,at:performance.now(),delay:null,fullRateDelay:null});},true);
 for(const method of ['frame','setWorld','applyWorld']){const original=ColonyRenderer.prototype[method];if(!original)continue;ColonyRenderer.prototype[method]=function(...args){
 const b=window.__sync;b.view=this;const old=this.world,start=performance.now(),result=original.apply(this,args);
 if(!b.active)return result;
 if(method!=='frame'){b.snapshots.push({method,ms:performance.now()-start,tick:args[0].tick,play:this.timeline.tick,at:start});
 if((method==='applyWorld'||!ColonyRenderer.prototype.applyWorld)&&old&&old.jobs.length>args[0].jobs.length)b.removals.push({tick:args[0].tick,play:this.timeline.tick,removed:old.jobs.length-args[0].jobs.length});return result;}
 const now=args[0],dt=b.previous===null?0:now-b.previous;b.previous=now;
-const control=b.controls.at(-1);if(control&&control.delay===null&&b.lastPlay!==null&&dt>0&&Math.abs((this.timeline.tick-b.lastPlay)/dt-control.speed*.01)<.00001)control.delay=performance.now()-control.at;b.lastPlay=this.timeline.tick;
+const control=b.controls.at(-1);if(control&&b.lastPlay!==null&&dt>0){const delta=this.timeline.tick-b.lastPlay;if(control.delay===null&&visibleSpeedResponse(delta,dt,control.previousSpeed,control.speed))control.delay=performance.now()-control.at;if(control.fullRateDelay===null&&Math.abs(delta/dt-control.speed*.01)<.00001)control.fullRateDelay=performance.now()-control.at;}b.lastPlay=this.timeline.tick;
 b.frames.push({at:now,speed:this.received?.speed,dt,cpu:performance.now()-start,lag:(this.received?.world.tick??this.world.tick)-this.timeline.tick,tick:this.world.tick,play:this.timeline.tick});
 const g=this.pawns.pawnMesh?.geometry;if(!g)return result;
 const f=g.getAttribute('aFrom'),t=g.getAttribute('aTo'),travel=g.getAttribute('aTravel'),motion=g.getAttribute('aMotion');
@@ -40,6 +41,12 @@ try{for(const action of (process.env.HARVEST_ACTIONS??'mine,chop').split(',')){
  const command={type:'area',action,from:{x:Math.max(0,c.x-20),z:Math.max(0,c.z-20)},to:{x:Math.min(249,c.x+20),z:Math.min(249,c.z+20)}};
  if(!applyCommand(w,command).ok)throw Error('Designation rejected');
  const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];page.setDefaultTimeout(30000);
+ if(process.env.HARVEST_TRACE==='1'){
+  // Diagnostic only: compare worker publication with main-thread receipt in a
+  // shared time origin. No production protocol or simulation state is changed.
+  await page.route('**/src/bridge/simulation.worker.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:await response.text()+`\nconst originalTracePost=self.postMessage.bind(self);self.postMessage=(message,...rest)=>{if(message.type==='snapshot')message.__publishedAt=performance.timeOrigin+performance.now();return originalTracePost(message,...rest);};`});});
+  await page.addInitScript(()=>{const Original=window.Worker;window.Worker=class extends Original{constructor(...args){super(...args);this.addEventListener('message',({data})=>{const b=window.__sync;if(b?.active&&data.__publishedAt!==undefined)(b.workerSnapshots??=[]).push({tick:data.world.tick,speed:data.speed,published:data.__publishedAt-performance.timeOrigin,received:performance.now()});});}};});
+ }
  page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
  await page.route('**/src/main.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:probe+await response.text()+`\nconst originalSync=client.onSnapshot;client.onSnapshot=(...args)=>{window.__sync.stepMs=args[1];return originalSync(...args);};`});});
  await page.addInitScript(data=>localStorage.setItem('lisiere.save.v1',data),serializeWorld(w));
@@ -50,10 +57,10 @@ try{for(const action of (process.env.HARVEST_ACTIONS??'mine,chop').split(',')){
  if(switches)await page.evaluate(speeds=>{let i=0;window.__sync.switchTimer=setInterval(()=>document.querySelector('[data-speed="'+speeds[i++%speeds.length]+'"]').click(),2000);},speedCycle);
  await page.waitForFunction(start=>performance.now()-start>=0,await page.evaluate(s=>performance.now()+s*1000,seconds),{timeout:(seconds+15)*1000,polling:200});
  await page.evaluate(()=>clearInterval(window.__sync.switchTimer));await page.locator('[data-speed="0"]').click();
- const data=await page.evaluate(()=>{const b=window.__sync;b.active=false;const d=b.view.renderer.getContext().getConfiguration().device;return {adapter:{vendor:d.adapterInfo.vendor,architecture:d.adapterInfo.architecture},longTasks:b.longTasks,frames:b.frames,snapshots:b.snapshots,controls:b.controls,removals:b.removals,jumps:b.jumps,gaps:b.gaps,solidOccupancy:b.solidOccupancy,stepMs:b.stepMs,tick:b.view.world.tick,jobs:b.view.world.jobs.length};});
+ const data=await page.evaluate(()=>{const b=window.__sync;b.active=false;const d=b.view.renderer.getContext().getConfiguration().device;return {workerSnapshots:b.workerSnapshots,adapter:{vendor:d.adapterInfo.vendor,architecture:d.adapterInfo.architecture},longTasks:b.longTasks,frames:b.frames,snapshots:b.snapshots,controls:b.controls,removals:b.removals,jumps:b.jumps,gaps:b.gaps,solidOccupancy:b.solidOccupancy,stepMs:b.stepMs,tick:b.view.world.tick,jobs:b.view.world.jobs.length};});
  const starvation=data.frames.flatMap((f,i,a)=>i>0&&f.at-a[0].at>1000&&f.speed>0&&a[i-1].speed>0&&f.play===a[i-1].play?[{previous:a[i-1],current:f}]:[]);
  const starvedFrames=starvation.length;
- const trace=process.env.HARVEST_TRACE==='1'?{longTasks:data.longTasks,starvationContext:starvation.slice(0,10).map(s=>({frames:data.frames.filter(f=>Math.abs(f.at-s.current.at)<300),snapshots:data.snapshots.filter(f=>Math.abs(f.at-s.current.at)<300)}))}:{};
+ const trace=process.env.HARVEST_TRACE==='1'?{longTasks:data.longTasks,workerDeliveryMs:stats((data.workerSnapshots??[]).map(s=>s.received-s.published)),workerPublicationGapMs:stats((data.workerSnapshots??[]).flatMap((s,i,a)=>i&&s.speed===a[i-1].speed?[s.published-a[i-1].published]:[])),starvationContext:starvation.slice(0,10).map(s=>({frames:data.frames.filter(f=>Math.abs(f.at-s.current.at)<300),snapshots:data.snapshots.filter(f=>Math.abs(f.at-s.current.at)<300),worker:(data.workerSnapshots??[]).filter(f=>Math.abs(f.received-s.current.at)<300)}))}:{};
  const phase={starvation:starvation.slice(0,10),starvedFrames,controls:data.controls,action,command,initialJobs:w.jobs.length,adapter:data.adapter,errors,tick:data.tick,remainingJobs:data.jobs,stepMs:data.stepMs,frames:stats(data.frames.filter(f=>f.dt>0).map(f=>f.dt)),frameCpu:stats(data.frames.map(f=>f.cpu)),lagTicks:stats(data.frames.map(f=>f.lag)),adoptions:stats(data.snapshots.map(s=>s.ms)),deliveries:stats(data.snapshots.filter(s=>s.method==='setWorld').map(s=>s.ms)),sceneApplications:stats(data.snapshots.filter(s=>s.method==='applyWorld').map(s=>s.ms)),jumpCount:data.jumps.length,jumps:data.jumps.slice(0,80),gapCount:data.gaps.length,gaps:data.gaps.slice(0,5),solidOccupancyCount:data.solidOccupancy.length,solidOccupancy:data.solidOccupancy.slice(0,5),removals:data.removals,lagTimeline:data.frames.filter((_,i)=>i%240===0).map(f=>({tick:f.tick,play:f.play,lag:f.lag}))};report.phases.push(phase);console.log(JSON.stringify({action,frames:phase.frames,jumpCount:phase.jumpCount,solidOccupancyCount:phase.solidOccupancyCount}));
  Object.assign(phase,trace);
  if(process.env.HARVEST_RECOVERY==='1'){

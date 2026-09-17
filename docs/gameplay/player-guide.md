@@ -1,5 +1,14 @@
 # Guide joueur
 
+## Équiper le revolver
+
+Les nouvelles cartes possèdent un revolver près des réserves initiales. Sélectionnez un colon, puis clic droit sur l'arme et **Équiper**. Il la rejoint avant de la prendre ; s'il possède déjà une arme, il dépose l'ancienne sur un sol libre au contact. L'inspection **Équipement** affiche sa qualité, ses PV et sa cargaison séparée. **Déposer l'arme** prend un court temps sur place. Une arme volontairement déposée est interdite : sélectionnez-la et **Autoriser cette arme** pour permettre le rangement automatique dans une réserve acceptant **Armes**. Équiper directement l'autorise aussi.
+
+Une chute hors lit, la perte de manipulation ou le décès fait tomber l'arme. Une chute dans un lit déjà utilisé la conserve. Si le sol est saturé, le colon garde l'arme désactivée jusqu'à un dépôt possible. Après rétablissement, il peut rejoindre sa propre arme mémorisée ; le bouton **Ne pas récupérer l'arme perdue** annule cette intention. Cette récupération attend les besoins et travaux engagés et ignore l'interdiction de sa propre arme.
+
+Pour l'instant, cette arme ne permet pas encore de combattre : mobilisation et tirs sont la prochaine boucle. La file d'équipement, les autres armes, vêtements et inventaires personnels restent à venir ; la cargaison de travail n'est pas un inventaire. L'arme à la hanche est un modèle procédural provisoire.
+
+
 **Médicaments :** les nouvelles colonies disposent de trente doses industrielles. Dans Santé, choisissez le plafond du patient : aucun soin, à sec, plantes, industriel ou meilleur disponible. Le médecin rejoint une pile autorisée, prélève, porte puis travaille ; une dose peut traiter plusieurs plaies. Sans produit accessible, il soigne à sec si autorisé. Activez **Médicaments** dans une réserve pour les ranger. Les anciens sites ne reçoivent pas de stock au chargement. Culture et fabrication médicales restent absentes. [Règles et limites](../development/medicines.md).
 
 **Urgences et priorités :** si le saignement menace la vie avant trois quarts de jour, Patient/Médecin peut passer avant les besoins à la prochaine décision, à condition d’atteindre la meilleure priorité activée. Médecin 2 avec Construction 1 ne suffit pas. Patient passe avant Médecin à égalité ; mettez Médecin devant Patient pour privilégier l’auto-soin autorisé. Le repos au lit est réexaminé périodiquement ; un auto-soin urgent traite une plaie puis réévalue. Les travaux déjà engagés ne sont pas tous annulés automatiquement. [Contrat et limites](../development/urgent-care.md).

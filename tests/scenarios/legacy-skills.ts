@@ -35,5 +35,5 @@ export function withoutCare<T>(world:T):T {
 
 function withoutMedicineItems(world:unknown):void {
   const w=world as {piles?:{kind:string}[]};
-  if(w.piles)w.piles=w.piles.filter(p=>p.kind!=='medicine');
+  if(w.piles)w.piles=w.piles.filter(p=>p.kind!=='medicine'&&p.kind!=='weapon');
 }

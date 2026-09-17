@@ -1,0 +1,430 @@
+{
+  "durationMs": 10476.574,
+  "sampledMs": 10475.001,
+  "sampleCount": 6302,
+  "protocol": "Main-thread CDP sampling during native 100 armed miners with 20 small injuries each; separate from unprofiled frame percentiles.",
+  "self": [
+    {
+      "function": "_projectObject",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js",
+      "line": 86588,
+      "ms": 1255.433
+    },
+    {
+      "function": "(program)",
+      "url": "",
+      "line": 0,
+      "ms": 1013.819
+    },
+    {
+      "function": "updateMatrixWorld",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js",
+      "line": 10028,
+      "ms": 962.881
+    },
+    {
+      "function": "SimulationClient.worker.onmessage",
+      "url": "http://127.0.0.1:5173/src/bridge/SimulationClient.ts",
+      "line": 12,
+      "ms": 879.052
+    },
+    {
+      "function": "_renderObjectDirect",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js",
+      "line": 86878,
+      "ms": 482.359
+    },
+    {
+      "function": "multiplyMatrices",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js",
+      "line": 8234,
+      "ms": 375.583
+    },
+    {
+      "function": "renderState",
+      "url": "http://127.0.0.1:5173/src/main.ts",
+      "line": 571,
+      "ms": 345.243
+    },
+    {
+      "function": "update",
+      "url": "http://127.0.0.1:5173/src/render/RockLayer.ts",
+      "line": 137,
+      "ms": 306.252
+    },
+    {
+      "function": "applyMatrix4",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js",
+      "line": 13638,
+      "ms": 279.706
+    },
+    {
+      "function": "read",
+      "url": "http://127.0.0.1:5173/src/sim/room-topology.ts",
+      "line": 32,
+      "ms": 238.633
+    },
+    {
+      "function": "frame",
+      "url": "http://127.0.0.1:5173/src/render/ColonyRenderer.ts",
+      "line": 758,
+      "ms": 226.559
+    },
+    {
+      "function": "writeBuffer",
+      "url": "",
+      "line": 0,
+      "ms": 188.025
+    },
+    {
+      "function": "(garbage collector)",
+      "url": "",
+      "line": 0,
+      "ms": 184.472
+    },
+    {
+      "function": "update",
+      "url": "http://127.0.0.1:5173/src/render/ResourceLayer.ts",
+      "line": 50,
+      "ms": 140.594
+    },
+    {
+      "function": "update",
+      "url": "http://127.0.0.1:5173/src/render/EnvironmentLightField.ts",
+      "line": 23,
+      "ms": 137.654
+    },
+    {
+      "function": "querySelector",
+      "url": "",
+      "line": 0,
+      "ms": 135.843
+    },
+    {
+      "function": "update",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js",
+      "line": 87407,
+      "ms": 119.02
+    },
+    {
+      "function": "updateResources",
+      "url": "http://127.0.0.1:5173/src/render/ColonyRenderer.ts",
+      "line": 481,
+      "ms": 112.62
+    },
+    {
+      "function": "get",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js",
+      "line": 63182,
+      "ms": 112.366
+    },
+    {
+      "function": "update",
+      "url": "http://127.0.0.1:5173/src/render/OverviewLayer.ts",
+      "line": 53,
+      "ms": 98.544
+    },
+    {
+      "function": "draw",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js",
+      "line": 102036,
+      "ms": 95.334
+    },
+    {
+      "function": "setBindGroup",
+      "url": "",
+      "line": 0,
+      "ms": 94.138
+    },
+    {
+      "function": "at",
+      "url": "http://127.0.0.1:5173/src/sim/room-topology.ts",
+      "line": 18,
+      "ms": 76.122
+    },
+    {
+      "function": "updateAttributes",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js",
+      "line": 63565,
+      "ms": 75.575
+    },
+    {
+      "function": "setIndexBuffer",
+      "url": "",
+      "line": 0,
+      "ms": 74.123
+    },
+    {
+      "function": "setVertexBuffer",
+      "url": "",
+      "line": 0,
+      "ms": 67.762
+    },
+    {
+      "function": "needsRenderUpdate",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js",
+      "line": 102120,
+      "ms": 67.276
+    },
+    {
+      "function": "updateForRender",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js",
+      "line": 82321,
+      "ms": 62.381
+    },
+    {
+      "function": "_update",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js",
+      "line": 64705,
+      "ms": 61.959
+    },
+    {
+      "function": "",
+      "url": "http://127.0.0.1:5173/src/render/PawnLayer.ts",
+      "line": 285,
+      "ms": 60.136
+    },
+    {
+      "function": "(idle)",
+      "url": "",
+      "line": 0,
+      "ms": 57.627
+    },
+    {
+      "function": "_draw",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js",
+      "line": 101947,
+      "ms": 57.248
+    },
+    {
+      "function": "adopt",
+      "url": "http://127.0.0.1:5173/src/bridge/snapshots.ts",
+      "line": 119,
+      "ms": 56.823
+    },
+    {
+      "function": "",
+      "url": "http://127.0.0.1:5173/src/render/ResourceLayer.ts",
+      "line": 70,
+      "ms": 56.55
+    },
+    {
+      "function": "sameTerrainSurface",
+      "url": "http://127.0.0.1:5173/src/render/terrain-state.ts",
+      "line": 4,
+      "ms": 54.944
+    }
+  ],
+  "applicationInclusive": [
+    {
+      "function": "",
+      "url": "http://127.0.0.1:5173/src/render/ColonyRenderer.ts",
+      "line": 139,
+      "ms": 7510.845
+    },
+    {
+      "function": "ColonyRenderer.<computed>",
+      "url": "http://127.0.0.1:5173/src/main.ts",
+      "line": 6,
+      "ms": 7499.487
+    },
+    {
+      "function": "frame",
+      "url": "http://127.0.0.1:5173/src/render/ColonyRenderer.ts",
+      "line": 758,
+      "ms": 7470.405
+    },
+    {
+      "function": "applyWorld",
+      "url": "http://127.0.0.1:5173/src/render/ColonyRenderer.ts",
+      "line": 270,
+      "ms": 1561.795
+    },
+    {
+      "function": "SimulationClient.worker.onmessage",
+      "url": "http://127.0.0.1:5173/src/bridge/SimulationClient.ts",
+      "line": 12,
+      "ms": 1227.268
+    },
+    {
+      "function": "request",
+      "url": "http://127.0.0.1:5173/src/ui/snapshot-hud.ts",
+      "line": 11,
+      "ms": 707.388
+    },
+    {
+      "function": "",
+      "url": "http://127.0.0.1:5173/src/main.ts",
+      "line": 124,
+      "ms": 704.12
+    },
+    {
+      "function": "renderState",
+      "url": "http://127.0.0.1:5173/src/main.ts",
+      "line": 571,
+      "ms": 676.803
+    },
+    {
+      "function": "update",
+      "url": "http://127.0.0.1:5173/src/render/EnvironmentLighting.ts",
+      "line": 53,
+      "ms": 462.627
+    },
+    {
+      "function": "update",
+      "url": "http://127.0.0.1:5173/src/render/EnvironmentLightField.ts",
+      "line": 23,
+      "ms": 458.343
+    },
+    {
+      "function": "updateResources",
+      "url": "http://127.0.0.1:5173/src/render/ColonyRenderer.ts",
+      "line": 481,
+      "ms": 440.266
+    },
+    {
+      "function": "",
+      "url": "http://127.0.0.1:5173/src/ui/snapshot-hud.ts",
+      "line": 19,
+      "ms": 432.646
+    },
+    {
+      "function": "update",
+      "url": "http://127.0.0.1:5173/src/render/RockLayer.ts",
+      "line": 137,
+      "ms": 320.461
+    },
+    {
+      "function": "client.onSnapshot",
+      "url": "http://127.0.0.1:5173/src/main.ts",
+      "line": 1038,
+      "ms": 285.006
+    },
+    {
+      "function": "client.onSnapshot",
+      "url": "http://127.0.0.1:5173/src/main.ts",
+      "line": 967,
+      "ms": 282.03
+    },
+    {
+      "function": "read",
+      "url": "http://127.0.0.1:5173/src/sim/room-topology.ts",
+      "line": 32,
+      "ms": 238.633
+    },
+    {
+      "function": "update",
+      "url": "http://127.0.0.1:5173/src/render/ResourceLayer.ts",
+      "line": 50,
+      "ms": 206.126
+    },
+    {
+      "function": "update",
+      "url": "http://127.0.0.1:5173/src/render/OverviewLayer.ts",
+      "line": 53,
+      "ms": 113.464
+    },
+    {
+      "function": "updateTravel",
+      "url": "http://127.0.0.1:5173/src/render/PawnLayer.ts",
+      "line": 278,
+      "ms": 106.972
+    },
+    {
+      "function": "",
+      "url": "http://127.0.0.1:5173/src/render/PawnLayer.ts",
+      "line": 285,
+      "ms": 89.896
+    },
+    {
+      "function": "buildJobMarkers",
+      "url": "http://127.0.0.1:5173/src/render/JobLayer.ts",
+      "line": 6,
+      "ms": 88.342
+    },
+    {
+      "function": "buildJobs",
+      "url": "http://127.0.0.1:5173/src/render/ColonyRenderer.ts",
+      "line": 499,
+      "ms": 88.342
+    },
+    {
+      "function": "at",
+      "url": "http://127.0.0.1:5173/src/sim/room-topology.ts",
+      "line": 18,
+      "ms": 76.122
+    },
+    {
+      "function": "boxes.set",
+      "url": "http://127.0.0.1:5173/src/main.ts",
+      "line": 9,
+      "ms": 74.92
+    },
+    {
+      "function": "set",
+      "url": "http://127.0.0.1:5173/src/render/BoxBatches.ts",
+      "line": 48,
+      "ms": 73.438
+    },
+    {
+      "function": "update",
+      "url": "http://127.0.0.1:5173/src/render/PawnLayer.ts",
+      "line": 179,
+      "ms": 69.001
+    },
+    {
+      "function": "updateWorkSkills",
+      "url": "http://127.0.0.1:5173/src/ui/skills-inspection.ts",
+      "line": 29,
+      "ms": 67.086
+    },
+    {
+      "function": "adopt",
+      "url": "http://127.0.0.1:5173/src/bridge/snapshots.ts",
+      "line": 119,
+      "ms": 63.21
+    },
+    {
+      "function": "",
+      "url": "http://127.0.0.1:5173/src/render/ResourceLayer.ts",
+      "line": 70,
+      "ms": 56.55
+    },
+    {
+      "function": "sameTerrainSurface",
+      "url": "http://127.0.0.1:5173/src/render/terrain-state.ts",
+      "line": 4,
+      "ms": 55.151
+    },
+    {
+      "function": "actionLabel",
+      "url": "http://127.0.0.1:5173/src/main.ts",
+      "line": 479,
+      "ms": 51.019
+    },
+    {
+      "function": "",
+      "url": "http://127.0.0.1:5173/src/render/PawnLayer.ts",
+      "line": 195,
+      "ms": 48.993
+    },
+    {
+      "function": "updatePiles",
+      "url": "http://127.0.0.1:5173/src/render/ColonyRenderer.ts",
+      "line": 541,
+      "ms": 48.045
+    },
+    {
+      "function": "capture",
+      "url": "http://127.0.0.1:5173/src/bridge/presentation-changes.ts",
+      "line": 6,
+      "ms": 38.591
+    },
+    {
+      "function": "take",
+      "url": "http://127.0.0.1:5173/src/render/PresentationQueue.ts",
+      "line": 23,
+      "ms": 38.591
+    }
+  ]
+}

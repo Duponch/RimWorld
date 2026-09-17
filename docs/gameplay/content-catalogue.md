@@ -1,10 +1,12 @@
 # Catalogue de contenu : couverture connue
 
+V52 — `revolver` : **un nouvel objet obtenu au départ**, pile de un, propriétaire d'équipement distinct. Sept qualités conservées, 100 PV maximum ; nouveau site : qualité normale/100 PV. Transport, échange, dépôt et interdiction physiques. Pas de recette, commerce, usure ni tir ; fusil/couteau du départ Core et catalogue militaire restent absents. Les 95 familles CAT ne constituent toujours pas une liste exhaustive. [Contrat](../development/equipment.md), [recherche](../research/equipment-reference.md).
+
 V51 — **CAT-018 partiel** : trois ItemId médicaux distincts, piles de 25, stockage/portage et soins : `herbal-medicine` (puissance 0,6 ; plafond 70 % ; pourriture 150 jours), `medicine` (1 ; 100 % ; sans pourriture), `glitterworld-medicine` (1,6 ; 130 % ; sans pourriture). Trente unités industrielles disponibles au départ des **nouvelles** cartes. Plantes et avancés sont définis/testés mais leur acquisition normale est absente. Healroot, recettes, commerce, bionique et chirurgie ne sont pas implicitement livrés. [Contrat](../development/medicines.md), [recherche](../research/medicines-reference.md).
 
 V50 change les décisions médicales, sans ajouter d’objet. Aucun médicament, arme, vêtement ou nouvel équipement livré par ce lot ; [portée](../development/urgent-care.md).
 
-V49 ajoute une action d’auto-soin et une permission individuelle, aucun nouvel objet. Les aliments et matériaux restent inchangés ; médicaments ajoutés en V51, équipement encore absent.
+V49 ajoute une action d’auto-soin et une permission individuelle, aucun nouvel objet. Les aliments et matériaux restent inchangés ; médicaments ajoutés en V51, première arme équipée ajoutée V52.
 
 V48 ajoute l’action **Nourrir un patient** avec les cinq aliments existants, leurs quantités et leur régime ; aucun nouvel objet ni médicament. Ni inventaire personnel ni distributeur implicite. [Contrat](../development/feeding.md).
 

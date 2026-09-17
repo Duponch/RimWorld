@@ -43,17 +43,17 @@ export async function editBill(page:Page,id:number,settings:BillSettings):Promis
 
 export async function perform(page: Page, decision: Decision, rotation: { value: number }): Promise<void> {
   const c=decision.command;
-  if(c.type==='order-feed'||c.type==='order-tend'||c.type==='order-rescue'||c.type==='order-job'||c.type==='order-haul'||c.type==='order-cook') {
+  if(c.type==='order-equipment'||c.type==='order-feed'||c.type==='order-tend'||c.type==='order-rescue'||c.type==='order-job'||c.type==='order-haul'||c.type==='order-cook') {
     await page.keyboard.press('Escape');await page.locator(`[data-pawn="${c.pawnId}"]`).click();
     const current=await world(page);
-    const job=c.type==='order-feed'||c.type==='order-tend'||c.type==='order-rescue'?current.pawns.find(p=>p.id===c.patientId):c.type==='order-cook'?current.structures.find(s=>s.id===c.structureId):c.type==='order-job'?current.jobs.find(j=>j.id===c.jobId):c.target.type==='furniture'?current.packed.find(p=>c.target.type==='furniture'&&p.building.id===c.target.structureId)?.owner:c.target.type==='fuel'?current.structures.find(s=>c.target.type==='fuel'&&s.id===c.target.structureId):c.target.type==='pile'?current.piles.find(p=>c.target.type==='pile'&&p.id===c.target.pileId)?.owner:current.jobs.find(j=>(c.target.type==='job'||c.target.type==='clear'||c.target.type==='clear-sow')&&j.id===c.target.jobId);
+    const job=c.type==='order-equipment'?(c.action==='equip'?current.piles.find(p=>p.id===c.itemId)?.owner:current.pawns.find(p=>p.id===c.pawnId)):c.type==='order-feed'||c.type==='order-tend'||c.type==='order-rescue'?current.pawns.find(p=>p.id===c.patientId):c.type==='order-cook'?current.structures.find(s=>s.id===c.structureId):c.type==='order-job'?current.jobs.find(j=>j.id===c.jobId):c.target.type==='furniture'?current.packed.find(p=>c.target.type==='furniture'&&p.building.id===c.target.structureId)?.owner:c.target.type==='fuel'?current.structures.find(s=>c.target.type==='fuel'&&s.id===c.target.structureId):c.target.type==='pile'?current.piles.find(p=>c.target.type==='pile'&&p.id===c.target.pileId)?.owner:current.jobs.find(j=>(c.target.type==='job'||c.target.type==='clear'||c.target.type==='clear-sow')&&j.id===c.target.jobId);
     if(!job||!('x' in job))throw new Error('Cible directe absente.');
     await revealCells(page,[job]);
     const point=await page.evaluate(({x,z})=>window.__lisiere.projectCell(x,z),job);
     const bounds=(await page.locator('#viewport canvas').boundingBox())!;
     if(c.queue)await page.keyboard.down('Shift');
     await page.mouse.click(bounds.x+point.x,bounds.y+point.y,{button:'right'});
-    await page.locator(c.type==='order-feed'?`[data-order-feed="${c.patientId}"]`:c.type==='order-tend'?`[data-order-tend="${c.patientId}"]`:c.type==='order-rescue'?`[data-order-rescue="${c.patientId}"]`:c.type==='order-cook'?`[data-order-cook="${c.structureId}"]`:c.type==='order-job'?`[data-order-job="${c.jobId}"]:not([data-order-haul])`:`[data-order-haul="${c.target.type}"]`).click();
+    await page.locator(c.type==='order-equipment'?`[data-order-equipment="${c.itemId}"]`:c.type==='order-feed'?`[data-order-feed="${c.patientId}"]`:c.type==='order-tend'?`[data-order-tend="${c.patientId}"]`:c.type==='order-rescue'?`[data-order-rescue="${c.patientId}"]`:c.type==='order-cook'?`[data-order-cook="${c.structureId}"]`:c.type==='order-job'?`[data-order-job="${c.jobId}"]:not([data-order-haul])`:`[data-order-haul="${c.target.type}"]`).click();
     if(c.queue)await page.keyboard.up('Shift');
   } else if(c.type==='food-policy-assign') {
     await panel(page,'assign'); await page.locator(`[data-food-policy-pawn="${c.pawnId}"]`).selectOption(String(c.policyId));
@@ -64,7 +64,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     await panel(page,'work');await page.locator(`select[data-owner="${c.pawnId}"][data-work="${c.work}"]`).selectOption(String(c.value));
   } else if(c.type==='stockpile') {
     await tool(page,'stockpile');
-    await page.locator('#stockpile-medicine').setChecked(c.filters!.medicine??false);await page.locator('#stockpile-component').setChecked(c.filters!.component??false);await page.locator('#stockpile-blocks').setChecked(c.filters!.blocks??false);await page.locator('#stockpile-steel').setChecked(c.filters!.steel??false);await page.locator('#stockpile-chunk').setChecked(c.filters!.chunk??false);await page.locator('#stockpile-wood').setChecked(c.filters!.wood);await page.locator('#stockpile-food').setChecked(c.filters!.food);await page.locator('#stockpile-furniture').setChecked(c.filters!.furniture??false);
+    await page.locator('#stockpile-weapon').setChecked(c.filters!.weapon??false);await page.locator('#stockpile-medicine').setChecked(c.filters!.medicine??false);await page.locator('#stockpile-component').setChecked(c.filters!.component??false);await page.locator('#stockpile-blocks').setChecked(c.filters!.blocks??false);await page.locator('#stockpile-steel').setChecked(c.filters!.steel??false);await page.locator('#stockpile-chunk').setChecked(c.filters!.chunk??false);await page.locator('#stockpile-wood').setChecked(c.filters!.wood);await page.locator('#stockpile-food').setChecked(c.filters!.food);await page.locator('#stockpile-furniture').setChecked(c.filters!.furniture??false);
     await page.locator('#stockpile-priority').selectOption(String(c.priority??2));await page.locator('#stockpile-capacity').fill(String(c.capacity??75));
     await revealCells(page,[c]);
     await cell(page,c.x,c.z);
@@ -98,6 +98,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
   } else throw new Error(`Player UI action not supported: ${c.type}`);
   try { await page.waitForFunction(c=>{
     const w=window.__lisiere.world;
+    if(c.type==='order-equipment')return w.pawns.some(p=>p.id===c.pawnId&&p.equipmentTask?.itemId===c.itemId)||w.piles.some(p=>p.id===c.itemId&&(c.action==='equip'?p.owner.type==='equipment'&&p.owner.pawnId===c.pawnId:p.owner.type==='ground'));
     if(c.type==='order-feed')return w.pawns.some(p=>p.id===c.pawnId&&p.feed?.patientId===c.patientId);
     if(c.type==='order-tend')return w.pawns.some(p=>p.id===c.pawnId&&p.tend?.patientId===c.patientId);
     if(c.type==='order-rescue')return w.pawns.find(p=>p.id===c.pawnId)?.rescue?.patientId===c.patientId;

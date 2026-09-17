@@ -23,13 +23,16 @@ import { haulOrderCell, planHaulOrder, queuedHaulReason, startHaulOrder, type Ha
 import { canReach, destinationCell } from './work-planner.ts';
 import type { Cell, CommandResult, HaulTask, Job, Pawn, World } from './types.ts';
 
-export interface PlayerOrders { active: number | 'haul' | 'cook' | 'feed' | 'tend' | 'rescue' | null; queue: import('./order-types.ts').QueuedOrder[] }
+import { equipmentOrderReason } from './equipment.ts';
+import { equippedWeapon,weaponLabel } from './equipment-rules.ts';
+
+export interface PlayerOrders { active: number | 'equipment' | 'haul' | 'cook' | 'feed' | 'tend' | 'rescue' | null; queue: import('./order-types.ts').QueuedOrder[] }
 export type OrderCommand = { type:'order-cook';pawnId:number;structureId:number;queue:boolean } | { type: 'order-job'; pawnId: number; jobId: number; queue: boolean } | { type:'order-haul';pawnId:number;target:HaulOrderTarget;queue:boolean } | { type: 'clear-orders'; pawnId: number };
-export interface OrderOption { jobId: number; cookStationId?:number; rescuePatientId?:number; tendPatientId?:number; feedPatientId?:number; haulTarget?:HaulOrderTarget; label: string; enabled: boolean; reason?: string }
+export interface OrderOption { jobId: number; equipmentItemId?:number; equipmentAction?:'equip'|'drop'; cookStationId?:number; rescuePatientId?:number; tendPatientId?:number; feedPatientId?:number; haulTarget?:HaulOrderTarget; label: string; enabled: boolean; reason?: string }
 export const MAX_QUEUED_ORDERS = 32;
 const labels: Record<Job['kind'], string> = { 'wood-generator':'construire le générateur à bois', 'standing-lamp':'construire la lampe', 'passive-cooler':'Construire le refroidisseur passif', 'build-roof':'Poser le toit', 'remove-roof':'Retirer le toit', door:'Construire la porte', stonecutter:'Construire la table de taille', mine:'Miner', uninstall:'Désinstaller',install:'Réinstaller', deconstruct:'Déconstruire', chop:'Abattre',harvest:'Récolter',cut:'Couper',sow:'Semer du riz',wall:'Construire le mur',bed:'Construire le lit',table:'Construire la table',stool:'Construire le tabouret',campfire:'Construire le feu',horseshoes:'Construire le piquet' };
 const fail = (reason: string): CommandResult => ({ok:false,code:'invalid-command',reason});
-const busy = (pawn: Pawn) => pawn.jobId !== null || !!(pawn.feed || pawn.tend || pawn.rescue || pawn.haul || pawn.cooking || pawn.need || pawn.recreation.task);
+const busy = (pawn: Pawn) => pawn.jobId !== null || !!(pawn.equipmentTask || pawn.feed || pawn.tend || pawn.rescue || pawn.haul || pawn.cooking || pawn.need || pawn.recreation.task);
 const clearingPlant=(world:World,job:Job)=>!isConstruction(job)?undefined:job.clearance?world.resources.find(r=>r.id===job.clearance!.resourceId):constructionObstruction(world,job).plant;
 const orderLabel=(world:World,job:Job)=>clearingPlant(world,job)?'Couper la plante qui gêne le chantier':labels[job.kind];
 
@@ -78,6 +81,14 @@ export function queryOrderOptions(world:World,pawnId:number,cell:Cell,queue=fals
   for(const target of jobs) {
     const reason=preflight(world,pawn,target,queue) ?? (route(world,pawn,target)===null?'Aucun accès praticable à ce travail.':undefined);
     options.push({jobId:target.id,label:orderLabel(world,target),enabled:!reason,...(reason?{reason}:{})});
+  }
+  const primary=equippedWeapon(world,pawn);
+  const weapon=pile?.kind==='weapon'?pile:pawn.x===cell.x&&pawn.z===cell.z?primary:undefined;
+  if(weapon){
+    const action=weapon===primary?'drop':'equip';
+    const reason=queue?'La file d’équipement n’est pas encore disponible.':equipmentOrderReason(world,pawn,weapon,action)
+      ??(action==='equip'&&routeToJob(world,cell,reachableCells(world,pawn,blockedCells(world),new Set()),true)===null?'Aucun accès praticable à cette arme.':undefined);
+    options.push({jobId:0,equipmentItemId:weapon.id,equipmentAction:action,label:`${action==='equip'?'Équiper':'Déposer'} ${weaponLabel(weapon)}`,enabled:!reason,...reason?{reason}:{}});
   }
   const targets:HaulOrderTarget[]=[];
   if(job&&isConstruction(job)) {
@@ -190,7 +201,7 @@ export function reconcileOrders(world:World):void {
   for(const pawn of world.pawns) {
     expirePriorityWork(world,pawn);
     const orders=pawn.orders;if(orders.active===null&&!orders.queue.length)continue;
-    if(orders.active==='haul'?!pawn.haul:orders.active==='cook'?!pawn.cooking:orders.active==='feed'?!pawn.feed:orders.active==='tend'?!pawn.tend:orders.active==='rescue'?!pawn.rescue:orders.active!==pawn.jobId)orders.active=null;
+    if(orders.active==='equipment'?!pawn.equipmentTask:orders.active==='haul'?!pawn.haul:orders.active==='cook'?!pawn.cooking:orders.active==='feed'?!pawn.feed:orders.active==='tend'?!pawn.tend:orders.active==='rescue'?!pawn.rescue:orders.active!==pawn.jobId)orders.active=null;
     if(!orders.queue.length)continue;
     jobs??=new Map(world.jobs.map(j=>[j.id,j]));
     orders.queue=orders.queue.filter(id=>{

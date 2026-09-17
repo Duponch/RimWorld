@@ -1,0 +1,2614 @@
+{
+  "armed": true,
+  "medicalWounds": 20,
+  "stonecutting": false,
+  "workshops": false,
+  "date": "2026-09-17T21:14:53.031Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "ore": "stone",
+  "protocol": "Native Chromium WebGPU, actual worker 6x, natural 250² with cleared mining patch; 3/30/100 miners × 4 sandstone, steel or machinery walls and 1 tree. 90 warmup frames; no full-world serialization during timed frames. Ground/rock buffer identities checked after excavation.",
+  "phases": [
+    {
+      "armed": 3,
+      "blocks": 0,
+      "workshops": 0,
+      "count": 3,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "description": ""
+      },
+      "errors": [],
+      "frames": {
+        "count": 294,
+        "p50": 12.5,
+        "p95": 29.299999999999272,
+        "p99": 54.30000000000109,
+        "max": 74.89999999999964
+      },
+      "frameCpu": {
+        "count": 295,
+        "p50": 6.400000002235174,
+        "p95": 10.900000002235174,
+        "p99": 17.800000000745058,
+        "max": 21.199999999254942
+      },
+      "adoptions": {
+        "count": 33,
+        "p50": 2.899999998509884,
+        "p95": 10.699999999254942,
+        "p99": 16.5,
+        "max": 16.5
+      },
+      "drawCalls": {
+        "count": 295,
+        "p50": 158,
+        "p95": 165,
+        "p99": 165,
+        "max": 165
+      },
+      "excavationFrames": {
+        "count": 62,
+        "p50": 12.5,
+        "p95": 29.30000000000109,
+        "p99": 58.29999999999927,
+        "max": 58.29999999999927
+      },
+      "mined": 12,
+      "componentUnits": 0,
+      "steelUnits": 0,
+      "chunks": 1,
+      "stableRock": true,
+      "stableGround": true,
+      "formats": [
+        {
+          "key": "constructed-roofs",
+          "material": 21,
+          "storage": false,
+          "capacity": 256
+        },
+        {
+          "key": "roof-areas",
+          "material": 24,
+          "storage": false,
+          "capacity": 256
+        },
+        {
+          "key": "campfire-flames",
+          "material": 23,
+          "storage": false,
+          "capacity": 256
+        },
+        {
+          "key": "furniture",
+          "material": 21,
+          "storage": false,
+          "capacity": 256
+        },
+        {
+          "key": "job-orders",
+          "material": 24,
+          "storage": false,
+          "capacity": 256
+        }
+      ],
+      "growths": [],
+      "shadowPreparation": true,
+      "snapshots": {
+        "count": 184,
+        "p50": 0,
+        "p95": 0.8999999985098839,
+        "p99": 4.399999998509884,
+        "max": 10.799999997019768
+      },
+      "longFrames": [
+        {
+          "name": "long-animation-frame",
+          "entryType": "long-animation-frame",
+          "startTime": 8915.60000000149,
+          "duration": 56.600000001490116,
+          "navigationId": 5101,
+          "paintTime": 8972.20000000298,
+          "presentationTime": 8988,
+          "renderStart": 8962.20000000298,
+          "styleAndLayoutStart": 8972.20000000298,
+          "firstUIEventTimestamp": 0,
+          "blockingDuration": 0,
+          "scripts": [
+            {
+              "name": "script",
+              "entryType": "script",
+              "startTime": 8962.20000000298,
+              "duration": 10,
+              "navigationId": 5101,
+              "invoker": "FrameRequestCallback",
+              "invokerType": "user-callback",
+              "windowAttribution": "self",
+              "executionStart": 8962.20000000298,
+              "forcedStyleAndLayoutDuration": 0,
+              "pauseDuration": 0,
+              "sourceURL": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=d62ca415",
+              "sourceFunctionName": "update",
+              "sourceCharPosition": 1967496
+            }
+          ]
+        },
+        {
+          "name": "long-animation-frame",
+          "entryType": "long-animation-frame",
+          "startTime": 9951.5,
+          "duration": 53,
+          "navigationId": 5101,
+          "paintTime": 10004.5,
+          "presentationTime": 10064,
+          "renderStart": 9999.20000000298,
+          "styleAndLayoutStart": 10004.400000002235,
+          "firstUIEventTimestamp": 0,
+          "blockingDuration": 0,
+          "scripts": [
+            {
+              "name": "script",
+              "entryType": "script",
+              "startTime": 9999.20000000298,
+              "duration": 5.099999997764826,
+              "navigationId": 5101,
+              "invoker": "FrameRequestCallback",
+              "invokerType": "user-callback",
+              "windowAttribution": "self",
+              "executionStart": 9999.20000000298,
+              "forcedStyleAndLayoutDuration": 0,
+              "pauseDuration": 0,
+              "sourceURL": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=d62ca415",
+              "sourceFunctionName": "update",
+              "sourceCharPosition": 1967496
+            }
+          ]
+        },
+        {
+          "name": "long-animation-frame",
+          "entryType": "long-animation-frame",
+          "startTime": 10644.60000000149,
+          "duration": 73.69999999925494,
+          "navigationId": 5101,
+          "paintTime": 10718.300000000745,
+          "presentationTime": 10772,
+          "renderStart": 10711.70000000298,
+          "styleAndLayoutStart": 10718.20000000298,
+          "firstUIEventTimestamp": 0,
+          "blockingDuration": 0,
+          "scripts": [
+            {
+              "name": "script",
+              "entryType": "script",
+              "startTime": 10711.70000000298,
+              "duration": 6.5,
+              "navigationId": 5101,
+              "invoker": "FrameRequestCallback",
+              "invokerType": "user-callback",
+              "windowAttribution": "self",
+              "executionStart": 10711.70000000298,
+              "forcedStyleAndLayoutDuration": 0,
+              "pauseDuration": 0,
+              "sourceURL": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=d62ca415",
+              "sourceFunctionName": "update",
+              "sourceCharPosition": 1967496
+            }
+          ]
+        },
+        {
+          "name": "long-animation-frame",
+          "entryType": "long-animation-frame",
+          "startTime": 12313.5,
+          "duration": 64.20000000298023,
+          "navigationId": 5101,
+          "paintTime": 12377.70000000298,
+          "presentationTime": 12412,
+          "renderStart": 12364.70000000298,
+          "styleAndLayoutStart": 12377.5,
+          "firstUIEventTimestamp": 0,
+          "blockingDuration": 0,
+          "scripts": [
+            {
+              "name": "script",
+              "entryType": "script",
+              "startTime": 12364.70000000298,
+              "duration": 12.799999997019768,
+              "navigationId": 5101,
+              "invoker": "FrameRequestCallback",
+              "invokerType": "user-callback",
+              "windowAttribution": "self",
+              "executionStart": 12364.70000000298,
+              "forcedStyleAndLayoutDuration": 0,
+              "pauseDuration": 0,
+              "sourceURL": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=d62ca415",
+              "sourceFunctionName": "update",
+              "sourceCharPosition": 1967496
+            }
+          ]
+        }
+      ],
+      "excavations": [
+        {
+          "at": 9617.300000000745,
+          "tick": 2051,
+          "mined": 3,
+          "dirty": 8
+        },
+        {
+          "at": 10470.300000000745,
+          "tick": 2102,
+          "mined": 3,
+          "dirty": 12
+        },
+        {
+          "at": 11317,
+          "tick": 2153,
+          "mined": 2,
+          "dirty": 4
+        },
+        {
+          "at": 11390.900000002235,
+          "tick": 2157,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 12258,
+          "tick": 2209,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 12364.900000002235,
+          "tick": 2215,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 12607.70000000298,
+          "tick": 2230,
+          "mined": 1,
+          "dirty": 4
+        }
+      ],
+      "slowFrames": [
+        {
+          "at": 8962.20000000298,
+          "cpu": 9.899999998509884,
+          "interval": 54.30000000000109,
+          "calls": 164
+        },
+        {
+          "at": 9095.5,
+          "cpu": 5,
+          "interval": 20.899999999999636,
+          "calls": 162
+        },
+        {
+          "at": 9135.20000000298,
+          "cpu": 8.099999997764826,
+          "interval": 29.19999999999891,
+          "calls": 162
+        },
+        {
+          "at": 9163.60000000149,
+          "cpu": 5.100000001490116,
+          "interval": 29.200000000000728,
+          "calls": 162
+        },
+        {
+          "at": 9226.70000000298,
+          "cpu": 7.699999999254942,
+          "interval": 29.30000000000109,
+          "calls": 161
+        },
+        {
+          "at": 9245.70000000298,
+          "cpu": 6.699999999254942,
+          "interval": 20.69999999999891,
+          "calls": 162
+        },
+        {
+          "at": 9317.60000000149,
+          "cpu": 8.600000001490116,
+          "interval": 20.80000000000109,
+          "calls": 162
+        },
+        {
+          "at": 9345.800000000745,
+          "cpu": 6.5,
+          "interval": 24.899999999999636,
+          "calls": 162
+        },
+        {
+          "at": 9526,
+          "cpu": 8.5,
+          "interval": 29.200000000000728,
+          "calls": 161
+        },
+        {
+          "at": 9545.400000002235,
+          "cpu": 7.800000000745058,
+          "interval": 21,
+          "calls": 162
+        },
+        {
+          "at": 9587.60000000149,
+          "cpu": 8.199999999254942,
+          "interval": 28.899999999999636,
+          "calls": 161
+        },
+        {
+          "at": 9617.300000000745,
+          "cpu": 21.199999999254942,
+          "interval": 29.100000000000364,
+          "calls": 160
+        },
+        {
+          "at": 9708.900000002235,
+          "cpu": 7.899999998509884,
+          "interval": 45.79999999999927,
+          "calls": 160
+        },
+        {
+          "at": 9734.5,
+          "cpu": 11,
+          "interval": 25,
+          "calls": 159
+        },
+        {
+          "at": 9764,
+          "cpu": 9.900000002235174,
+          "interval": 29.30000000000109,
+          "calls": 159
+        },
+        {
+          "at": 9791.20000000298,
+          "cpu": 6.199999999254942,
+          "interval": 29.100000000000364,
+          "calls": 158
+        },
+        {
+          "at": 9832.5,
+          "cpu": 5,
+          "interval": 41.599999999998545,
+          "calls": 158
+        },
+        {
+          "at": 9891,
+          "cpu": 7.900000002235174,
+          "interval": 24.900000000001455,
+          "calls": 159
+        },
+        {
+          "at": 9929.800000000745,
+          "cpu": 6.400000002235174,
+          "interval": 25,
+          "calls": 159
+        },
+        {
+          "at": 9999.300000000745,
+          "cpu": 4.900000002235174,
+          "interval": 54.20000000000073,
+          "calls": 157
+        },
+        {
+          "at": 10025,
+          "cpu": 6.100000001490116,
+          "interval": 25,
+          "calls": 157
+        },
+        {
+          "at": 10045,
+          "cpu": 4.900000002235174,
+          "interval": 20.799999999999272,
+          "calls": 157
+        },
+        {
+          "at": 10099.300000000745,
+          "cpu": 6.800000000745058,
+          "interval": 29.200000000000728,
+          "calls": 157
+        },
+        {
+          "at": 10139.900000002235,
+          "cpu": 9.399999998509884,
+          "interval": 20.600000000000364,
+          "calls": 157
+        },
+        {
+          "at": 10207.70000000298,
+          "cpu": 7.299999997019768,
+          "interval": 29.299999999999272,
+          "calls": 156
+        },
+        {
+          "at": 10241.20000000298,
+          "cpu": 6.399999998509884,
+          "interval": 20.80000000000109,
+          "calls": 157
+        },
+        {
+          "at": 10284,
+          "cpu": 8.200000002980232,
+          "interval": 29.299999999999272,
+          "calls": 157
+        },
+        {
+          "at": 10374.5,
+          "cpu": 7.5,
+          "interval": 20.799999999999272,
+          "calls": 157
+        },
+        {
+          "at": 10488.900000002235,
+          "cpu": 9.699999999254942,
+          "interval": 20.899999999999636,
+          "calls": 159
+        },
+        {
+          "at": 10593.70000000298,
+          "cpu": 6.099999997764826,
+          "interval": 20.80000000000109,
+          "calls": 160
+        },
+        {
+          "at": 10711.800000000745,
+          "cpu": 6.300000000745058,
+          "interval": 74.89999999999964,
+          "calls": 159
+        },
+        {
+          "at": 10739.800000000745,
+          "cpu": 8.400000002235174,
+          "interval": 25.100000000000364,
+          "calls": 159
+        },
+        {
+          "at": 10770.10000000149,
+          "cpu": 7.199999999254942,
+          "interval": 20.899999999999636,
+          "calls": 159
+        },
+        {
+          "at": 10937.5,
+          "cpu": 10.300000000745058,
+          "interval": 33.29999999999927,
+          "calls": 159
+        },
+        {
+          "at": 11074.5,
+          "cpu": 6.400000002235174,
+          "interval": 25.100000000000364,
+          "calls": 158
+        },
+        {
+          "at": 11101.5,
+          "cpu": 7,
+          "interval": 24.899999999999636,
+          "calls": 158
+        },
+        {
+          "at": 11142.70000000298,
+          "cpu": 5.399999998509884,
+          "interval": 25,
+          "calls": 158
+        },
+        {
+          "at": 11199.20000000298,
+          "cpu": 5.399999998509884,
+          "interval": 41.600000000000364,
+          "calls": 157
+        },
+        {
+          "at": 11360.20000000298,
+          "cpu": 6.099999997764826,
+          "interval": 29.099999999998545,
+          "calls": 156
+        },
+        {
+          "at": 11390.900000002235,
+          "cpu": 15.599999997764826,
+          "interval": 33.30000000000109,
+          "calls": 156
+        },
+        {
+          "at": 11426.800000000745,
+          "cpu": 7.900000002235174,
+          "interval": 24.899999999999636,
+          "calls": 156
+        },
+        {
+          "at": 11446.60000000149,
+          "cpu": 5,
+          "interval": 20.899999999999636,
+          "calls": 155
+        },
+        {
+          "at": 11538.10000000149,
+          "cpu": 4.100000001490116,
+          "interval": 20.899999999999636,
+          "calls": 155
+        },
+        {
+          "at": 11629.5,
+          "cpu": 6.600000001490116,
+          "interval": 45.80000000000109,
+          "calls": 155
+        },
+        {
+          "at": 11747.5,
+          "cpu": 6,
+          "interval": 20.899999999999636,
+          "calls": 154
+        },
+        {
+          "at": 11792.70000000298,
+          "cpu": 7.599999997764826,
+          "interval": 33.30000000000109,
+          "calls": 154
+        },
+        {
+          "at": 11812.800000000745,
+          "cpu": 3.699999999254942,
+          "interval": 20.899999999999636,
+          "calls": 154
+        },
+        {
+          "at": 12099.400000002235,
+          "cpu": 6.5,
+          "interval": 20.899999999999636,
+          "calls": 151
+        },
+        {
+          "at": 12131.10000000149,
+          "cpu": 4.5,
+          "interval": 29.100000000000364,
+          "calls": 151
+        },
+        {
+          "at": 12241.70000000298,
+          "cpu": 4.899999998509884,
+          "interval": 20.80000000000109,
+          "calls": 149
+        },
+        {
+          "at": 12364.800000000745,
+          "cpu": 12.699999999254942,
+          "interval": 58.29999999999927,
+          "calls": 147
+        },
+        {
+          "at": 12411.800000000745,
+          "cpu": 5.300000000745058,
+          "interval": 29.100000000000364,
+          "calls": 147
+        },
+        {
+          "at": 12462.5,
+          "cpu": 5.700000002980232,
+          "interval": 20.799999999999272,
+          "calls": 147
+        },
+        {
+          "at": 12491.900000002235,
+          "cpu": 8.099999997764826,
+          "interval": 29.200000000000728,
+          "calls": 147
+        },
+        {
+          "at": 12524.300000000745,
+          "cpu": 5.300000000745058,
+          "interval": 33.29999999999927,
+          "calls": 147
+        },
+        {
+          "at": 12549.300000000745,
+          "cpu": 6.600000001490116,
+          "interval": 20.69999999999891,
+          "calls": 147
+        },
+        {
+          "at": 12577,
+          "cpu": 6.600000001490116,
+          "interval": 25.100000000000364,
+          "calls": 147
+        },
+        {
+          "at": 12645.300000000745,
+          "cpu": 8.300000000745058,
+          "interval": 25,
+          "calls": 144
+        },
+        {
+          "at": 12675.900000002235,
+          "cpu": 7.899999998509884,
+          "interval": 20.799999999999272,
+          "calls": 144
+        },
+        {
+          "at": 12787.900000002235,
+          "cpu": 4.099999997764826,
+          "interval": 29.200000000000728,
+          "calls": 145
+        }
+      ],
+      "pipelines": [],
+      "preparations": [
+        3069.400000002235,
+        365.5
+      ]
+    },
+    {
+      "armed": 100,
+      "blocks": 0,
+      "workshops": 0,
+      "count": 100,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "description": ""
+      },
+      "errors": [],
+      "frames": {
+        "count": 385,
+        "p50": 16.69999999999891,
+        "p95": 45.899999999999636,
+        "p99": 66.70000000000073,
+        "max": 112.5
+      },
+      "frameCpu": {
+        "count": 386,
+        "p50": 8.800000000745058,
+        "p95": 23.399999998509884,
+        "p99": 31.899999998509884,
+        "max": 41.400000002235174
+      },
+      "adoptions": {
+        "count": 143,
+        "p50": 7.300000000745058,
+        "p95": 17.700000002980232,
+        "p99": 23.399999998509884,
+        "max": 34.30000000074506
+      },
+      "drawCalls": {
+        "count": 386,
+        "p50": 176,
+        "p95": 186,
+        "p99": 187,
+        "max": 188
+      },
+      "excavationFrames": {
+        "count": 124,
+        "p50": 16.80000000000109,
+        "p95": 58.30000000000109,
+        "p99": 66.70000000000073,
+        "max": 75.10000000000036
+      },
+      "mined": 400,
+      "componentUnits": 0,
+      "steelUnits": 0,
+      "chunks": 114,
+      "stableRock": true,
+      "stableGround": true,
+      "formats": [
+        {
+          "key": "constructed-roofs",
+          "material": 21,
+          "storage": false,
+          "capacity": 256
+        },
+        {
+          "key": "roof-areas",
+          "material": 24,
+          "storage": false,
+          "capacity": 256
+        },
+        {
+          "key": "campfire-flames",
+          "material": 23,
+          "storage": false,
+          "capacity": 256
+        },
+        {
+          "key": "furniture",
+          "material": 21,
+          "storage": false,
+          "capacity": 256
+        },
+        {
+          "key": "job-orders",
+          "material": 24,
+          "storage": false,
+          "capacity": 512
+        }
+      ],
+      "growths": [],
+      "shadowPreparation": true,
+      "snapshots": {
+        "count": 214,
+        "p50": 0,
+        "p95": 10.699999999254942,
+        "p99": 14.800000000745058,
+        "max": 19.400000002235174
+      },
+      "longFrames": [
+        {
+          "name": "long-animation-frame",
+          "entryType": "long-animation-frame",
+          "startTime": 12008,
+          "duration": 66.39999999850988,
+          "navigationId": 5144,
+          "paintTime": 12074.39999999851,
+          "presentationTime": 12124,
+          "renderStart": 12056.39999999851,
+          "styleAndLayoutStart": 12074.29999999702,
+          "firstUIEventTimestamp": 0,
+          "blockingDuration": 0,
+          "scripts": [
+            {
+              "name": "script",
+              "entryType": "script",
+              "startTime": 12056.5,
+              "duration": 17.799999997019768,
+              "navigationId": 5144,
+              "invoker": "FrameRequestCallback",
+              "invokerType": "user-callback",
+              "windowAttribution": "self",
+              "executionStart": 12056.5,
+              "forcedStyleAndLayoutDuration": 0,
+              "pauseDuration": 0,
+              "sourceURL": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=d62ca415",
+              "sourceFunctionName": "update",
+              "sourceCharPosition": 1967496
+            }
+          ]
+        },
+        {
+          "name": "long-animation-frame",
+          "entryType": "long-animation-frame",
+          "startTime": 12323.89999999851,
+          "duration": 50.100000001490116,
+          "navigationId": 5144,
+          "paintTime": 12374,
+          "presentationTime": 12484,
+          "renderStart": 12365.29999999702,
+          "styleAndLayoutStart": 12373.89999999851,
+          "firstUIEventTimestamp": 0,
+          "blockingDuration": 0,
+          "scripts": [
+            {
+              "name": "script",
+              "entryType": "script",
+              "startTime": 12365.29999999702,
+              "duration": 8.600000001490116,
+              "navigationId": 5144,
+              "invoker": "FrameRequestCallback",
+              "invokerType": "user-callback",
+              "windowAttribution": "self",
+              "executionStart": 12365.29999999702,
+              "forcedStyleAndLayoutDuration": 0,
+              "pauseDuration": 0,
+              "sourceURL": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=d62ca415",
+              "sourceFunctionName": "update",
+              "sourceCharPosition": 1967496
+            }
+          ]
+        },
+        {
+          "name": "long-animation-frame",
+          "entryType": "long-animation-frame",
+          "startTime": 12648.79999999702,
+          "duration": 114.30000000074506,
+          "navigationId": 5144,
+          "paintTime": 12763.099999997765,
+          "presentationTime": 12836,
+          "renderStart": 12752.39999999851,
+          "styleAndLayoutStart": 12763,
+          "firstUIEventTimestamp": 0,
+          "blockingDuration": 0,
+          "scripts": [
+            {
+              "name": "script",
+              "entryType": "script",
+              "startTime": 12752.39999999851,
+              "duration": 10.600000001490116,
+              "navigationId": 5144,
+              "invoker": "FrameRequestCallback",
+              "invokerType": "user-callback",
+              "windowAttribution": "self",
+              "executionStart": 12752.39999999851,
+              "forcedStyleAndLayoutDuration": 0,
+              "pauseDuration": 0,
+              "sourceURL": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=d62ca415",
+              "sourceFunctionName": "update",
+              "sourceCharPosition": 1967496
+            }
+          ]
+        },
+        {
+          "name": "long-animation-frame",
+          "entryType": "long-animation-frame",
+          "startTime": 12902.39999999851,
+          "duration": 64.69999999925494,
+          "navigationId": 5144,
+          "paintTime": 12967.099999997765,
+          "presentationTime": 13000,
+          "renderStart": 12952.39999999851,
+          "styleAndLayoutStart": 12967,
+          "firstUIEventTimestamp": 0,
+          "blockingDuration": 0,
+          "scripts": [
+            {
+              "name": "script",
+              "entryType": "script",
+              "startTime": 12952.39999999851,
+              "duration": 14.600000001490116,
+              "navigationId": 5144,
+              "invoker": "FrameRequestCallback",
+              "invokerType": "user-callback",
+              "windowAttribution": "self",
+              "executionStart": 12952.39999999851,
+              "forcedStyleAndLayoutDuration": 0,
+              "pauseDuration": 0,
+              "sourceURL": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=d62ca415",
+              "sourceFunctionName": "update",
+              "sourceCharPosition": 1967496
+            }
+          ]
+        },
+        {
+          "name": "long-animation-frame",
+          "entryType": "long-animation-frame",
+          "startTime": 13094.699999999255,
+          "duration": 71.69999999925494,
+          "navigationId": 5144,
+          "paintTime": 13166.39999999851,
+          "presentationTime": 13244,
+          "renderStart": 13152.39999999851,
+          "styleAndLayoutStart": 13166.29999999702,
+          "firstUIEventTimestamp": 0,
+          "blockingDuration": 0,
+          "scripts": [
+            {
+              "name": "script",
+              "entryType": "script",
+              "startTime": 13152.39999999851,
+              "duration": 13.899999998509884,
+              "navigationId": 5144,
+              "invoker": "FrameRequestCallback",
+              "invokerType": "user-callback",
+              "windowAttribution": "self",
+              "executionStart": 13152.39999999851,
+              "forcedStyleAndLayoutDuration": 0,
+              "pauseDuration": 0,
+              "sourceURL": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=d62ca415",
+              "sourceFunctionName": "update",
+              "sourceCharPosition": 1967496
+            }
+          ]
+        },
+        {
+          "name": "long-animation-frame",
+          "entryType": "long-animation-frame",
+          "startTime": 13199,
+          "duration": 60.5,
+          "navigationId": 5144,
+          "paintTime": 13259.5,
+          "presentationTime": 13308,
+          "renderStart": 13243.89999999851,
+          "styleAndLayoutStart": 13259.5,
+          "firstUIEventTimestamp": 0,
+          "blockingDuration": 0,
+          "scripts": [
+            {
+              "name": "script",
+              "entryType": "script",
+              "startTime": 13203,
+              "duration": 9.399999998509884,
+              "navigationId": 5144,
+              "invoker": "TimerHandler:setTimeout",
+              "invokerType": "user-callback",
+              "windowAttribution": "self",
+              "executionStart": 13203,
+              "forcedStyleAndLayoutDuration": 0,
+              "pauseDuration": 0,
+              "sourceURL": "http://127.0.0.1:5173/src/ui/snapshot-hud.ts",
+              "sourceFunctionName": "",
+              "sourceCharPosition": 614
+            },
+            {
+              "name": "script",
+              "entryType": "script",
+              "startTime": 13245.099999997765,
+              "duration": 14.300000000745058,
+              "navigationId": 5144,
+              "invoker": "FrameRequestCallback",
+              "invokerType": "user-callback",
+              "windowAttribution": "self",
+              "executionStart": 13245.099999997765,
+              "forcedStyleAndLayoutDuration": 0,
+              "pauseDuration": 0,
+              "sourceURL": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=d62ca415",
+              "sourceFunctionName": "update",
+              "sourceCharPosition": 1967496
+            }
+          ]
+        },
+        {
+          "name": "long-animation-frame",
+          "entryType": "long-animation-frame",
+          "startTime": 13358.29999999702,
+          "duration": 51.400000002235174,
+          "navigationId": 5144,
+          "paintTime": 13409.699999999255,
+          "presentationTime": 13432,
+          "renderStart": 13396.199999999255,
+          "styleAndLayoutStart": 13409.599999997765,
+          "firstUIEventTimestamp": 0,
+          "blockingDuration": 0,
+          "scripts": [
+            {
+              "name": "script",
+              "entryType": "script",
+              "startTime": 13396.199999999255,
+              "duration": 13.399999998509884,
+              "navigationId": 5144,
+              "invoker": "FrameRequestCallback",
+              "invokerType": "user-callback",
+              "windowAttribution": "self",
+              "executionStart": 13396.199999999255,
+              "forcedStyleAndLayoutDuration": 0,
+              "pauseDuration": 0,
+              "sourceURL": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=d62ca415",
+              "sourceFunctionName": "update",
+              "sourceCharPosition": 1967496
+            }
+          ]
+        },
+        {
+          "name": "long-animation-frame",
+          "entryType": "long-animation-frame",
+          "startTime": 14425,
+          "duration": 57.19999999925494,
+          "navigationId": 5144,
+          "paintTime": 14482.199999999255,
+          "presentationTime": 14536,
+          "renderStart": 14456.79999999702,
+          "styleAndLayoutStart": 14481.29999999702,
+          "firstUIEventTimestamp": 0,
+          "blockingDuration": 0,
+          "scripts": [
+            {
+              "name": "script",
+              "entryType": "script",
+              "startTime": 14436.5,
+              "duration": 18.899999998509884,
+              "navigationId": 5144,
+              "invoker": "Worker.onmessage",
+              "invokerType": "event-listener",
+              "windowAttribution": "self",
+              "executionStart": 14436.5,
+              "forcedStyleAndLayoutDuration": 0,
+              "pauseDuration": 0,
+              "sourceURL": "http://127.0.0.1:5173/src/bridge/SimulationClient.ts?t=1789677909122",
+              "sourceFunctionName": "",
+              "sourceCharPosition": 498
+            },
+            {
+              "name": "script",
+              "entryType": "script",
+              "startTime": 14456.79999999702,
+              "duration": 24.5,
+              "navigationId": 5144,
+              "invoker": "FrameRequestCallback",
+              "invokerType": "user-callback",
+              "windowAttribution": "self",
+              "executionStart": 14456.79999999702,
+              "forcedStyleAndLayoutDuration": 5.9,
+              "pauseDuration": 0,
+              "sourceURL": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=d62ca415",
+              "sourceFunctionName": "update",
+              "sourceCharPosition": 1967496
+            }
+          ]
+        },
+        {
+          "name": "long-animation-frame",
+          "entryType": "long-animation-frame",
+          "startTime": 14498.199999999255,
+          "duration": 52,
+          "navigationId": 5144,
+          "paintTime": 14550.199999999255,
+          "presentationTime": 14576,
+          "renderStart": 14538.699999999255,
+          "styleAndLayoutStart": 14550.199999999255,
+          "firstUIEventTimestamp": 0,
+          "blockingDuration": 0,
+          "scripts": [
+            {
+              "name": "script",
+              "entryType": "script",
+              "startTime": 14538.699999999255,
+              "duration": 11.5,
+              "navigationId": 5144,
+              "invoker": "FrameRequestCallback",
+              "invokerType": "user-callback",
+              "windowAttribution": "self",
+              "executionStart": 14538.699999999255,
+              "forcedStyleAndLayoutDuration": 0,
+              "pauseDuration": 0,
+              "sourceURL": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=d62ca415",
+              "sourceFunctionName": "update",
+              "sourceCharPosition": 1967496
+            }
+          ]
+        },
+        {
+          "name": "long-animation-frame",
+          "entryType": "long-animation-frame",
+          "startTime": 14644.699999999255,
+          "duration": 82.19999999925494,
+          "navigationId": 5144,
+          "paintTime": 14726.89999999851,
+          "presentationTime": 14812,
+          "renderStart": 14707.599999997765,
+          "styleAndLayoutStart": 14725.89999999851,
+          "firstUIEventTimestamp": 0,
+          "blockingDuration": 0,
+          "scripts": [
+            {
+              "name": "script",
+              "entryType": "script",
+              "startTime": 14644.89999999851,
+              "duration": 14.5,
+              "navigationId": 5144,
+              "invoker": "Worker.onmessage",
+              "invokerType": "event-listener",
+              "windowAttribution": "self",
+              "executionStart": 14644.89999999851,
+              "forcedStyleAndLayoutDuration": 0,
+              "pauseDuration": 0,
+              "sourceURL": "http://127.0.0.1:5173/src/bridge/SimulationClient.ts?t=1789677909122",
+              "sourceFunctionName": "",
+              "sourceCharPosition": 498
+            },
+            {
+              "name": "script",
+              "entryType": "script",
+              "startTime": 14707.699999999255,
+              "duration": 18.199999999254942,
+              "navigationId": 5144,
+              "invoker": "FrameRequestCallback",
+              "invokerType": "user-callback",
+              "windowAttribution": "self",
+              "executionStart": 14707.699999999255,
+              "forcedStyleAndLayoutDuration": 1.9,
+              "pauseDuration": 0,
+              "sourceURL": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=d62ca415",
+              "sourceFunctionName": "update",
+              "sourceCharPosition": 1967496
+            }
+          ]
+        },
+        {
+          "name": "long-animation-frame",
+          "entryType": "long-animation-frame",
+          "startTime": 14728.79999999702,
+          "duration": 53.400000002235174,
+          "navigationId": 5144,
+          "paintTime": 14782.199999999255,
+          "presentationTime": 14828,
+          "renderStart": 14766.29999999702,
+          "styleAndLayoutStart": 14782.199999999255,
+          "firstUIEventTimestamp": 0,
+          "blockingDuration": 0,
+          "scripts": [
+            {
+              "name": "script",
+              "entryType": "script",
+              "startTime": 14760.199999999255,
+              "duration": 5.899999998509884,
+              "navigationId": 5144,
+              "invoker": "Worker.onmessage",
+              "invokerType": "event-listener",
+              "windowAttribution": "self",
+              "executionStart": 14760.199999999255,
+              "forcedStyleAndLayoutDuration": 0,
+              "pauseDuration": 0,
+              "sourceURL": "http://127.0.0.1:5173/src/bridge/SimulationClient.ts?t=1789677909122",
+              "sourceFunctionName": "",
+              "sourceCharPosition": 498
+            },
+            {
+              "name": "script",
+              "entryType": "script",
+              "startTime": 14766.39999999851,
+              "duration": 15.800000000745058,
+              "navigationId": 5144,
+              "invoker": "FrameRequestCallback",
+              "invokerType": "user-callback",
+              "windowAttribution": "self",
+              "executionStart": 14766.39999999851,
+              "forcedStyleAndLayoutDuration": 0,
+              "pauseDuration": 0,
+              "sourceURL": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=d62ca415",
+              "sourceFunctionName": "update",
+              "sourceCharPosition": 1967496
+            }
+          ]
+        },
+        {
+          "name": "long-animation-frame",
+          "entryType": "long-animation-frame",
+          "startTime": 15067.5,
+          "duration": 67.39999999850988,
+          "navigationId": 5144,
+          "paintTime": 15134.89999999851,
+          "presentationTime": 15180,
+          "renderStart": 15116.5,
+          "styleAndLayoutStart": 15134,
+          "firstUIEventTimestamp": 0,
+          "blockingDuration": 0,
+          "scripts": [
+            {
+              "name": "script",
+              "entryType": "script",
+              "startTime": 15067.79999999702,
+              "duration": 17,
+              "navigationId": 5144,
+              "invoker": "Worker.onmessage",
+              "invokerType": "event-listener",
+              "windowAttribution": "self",
+              "executionStart": 15067.79999999702,
+              "forcedStyleAndLayoutDuration": 0,
+              "pauseDuration": 0,
+              "sourceURL": "http://127.0.0.1:5173/src/bridge/SimulationClient.ts?t=1789677909122",
+              "sourceFunctionName": "",
+              "sourceCharPosition": 498
+            },
+            {
+              "name": "script",
+              "entryType": "script",
+              "startTime": 15116.599999997765,
+              "duration": 17.300000000745058,
+              "navigationId": 5144,
+              "invoker": "FrameRequestCallback",
+              "invokerType": "user-callback",
+              "windowAttribution": "self",
+              "executionStart": 15116.599999997765,
+              "forcedStyleAndLayoutDuration": 3.3,
+              "pauseDuration": 0,
+              "sourceURL": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=d62ca415",
+              "sourceFunctionName": "update",
+              "sourceCharPosition": 1967496
+            }
+          ]
+        },
+        {
+          "name": "long-animation-frame",
+          "entryType": "long-animation-frame",
+          "startTime": 15744.099999997765,
+          "duration": 52,
+          "navigationId": 5144,
+          "paintTime": 15796.099999997765,
+          "presentationTime": 15832,
+          "renderStart": 15779.199999999255,
+          "styleAndLayoutStart": 15796,
+          "firstUIEventTimestamp": 0,
+          "blockingDuration": 0,
+          "scripts": [
+            {
+              "name": "script",
+              "entryType": "script",
+              "startTime": 15770.099999997765,
+              "duration": 5.699999999254942,
+              "navigationId": 5144,
+              "invoker": "Worker.onmessage",
+              "invokerType": "event-listener",
+              "windowAttribution": "self",
+              "executionStart": 15770.099999997765,
+              "forcedStyleAndLayoutDuration": 0,
+              "pauseDuration": 0,
+              "sourceURL": "http://127.0.0.1:5173/src/bridge/SimulationClient.ts?t=1789677909122",
+              "sourceFunctionName": "",
+              "sourceCharPosition": 498
+            },
+            {
+              "name": "script",
+              "entryType": "script",
+              "startTime": 15779.199999999255,
+              "duration": 16.800000000745058,
+              "navigationId": 5144,
+              "invoker": "FrameRequestCallback",
+              "invokerType": "user-callback",
+              "windowAttribution": "self",
+              "executionStart": 15779.199999999255,
+              "forcedStyleAndLayoutDuration": 0,
+              "pauseDuration": 0,
+              "sourceURL": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=d62ca415",
+              "sourceFunctionName": "update",
+              "sourceCharPosition": 1967496
+            }
+          ]
+        },
+        {
+          "name": "long-animation-frame",
+          "entryType": "long-animation-frame",
+          "startTime": 15880.39999999851,
+          "duration": 57.899999998509884,
+          "navigationId": 5144,
+          "paintTime": 15938.29999999702,
+          "presentationTime": 16004,
+          "renderStart": 15897.599999997765,
+          "styleAndLayoutStart": 15937,
+          "firstUIEventTimestamp": 0,
+          "blockingDuration": 1.9,
+          "scripts": [
+            {
+              "name": "script",
+              "entryType": "script",
+              "startTime": 15886.199999999255,
+              "duration": 11.199999999254942,
+              "navigationId": 5144,
+              "invoker": "TimerHandler:setTimeout",
+              "invokerType": "user-callback",
+              "windowAttribution": "self",
+              "executionStart": 15886.199999999255,
+              "forcedStyleAndLayoutDuration": 0,
+              "pauseDuration": 0,
+              "sourceURL": "http://127.0.0.1:5173/src/ui/snapshot-hud.ts",
+              "sourceFunctionName": "",
+              "sourceCharPosition": 614
+            },
+            {
+              "name": "script",
+              "entryType": "script",
+              "startTime": 15897.599999997765,
+              "duration": 39.400000002235174,
+              "navigationId": 5144,
+              "invoker": "FrameRequestCallback",
+              "invokerType": "user-callback",
+              "windowAttribution": "self",
+              "executionStart": 15897.599999997765,
+              "forcedStyleAndLayoutDuration": 6.8,
+              "pauseDuration": 0,
+              "sourceURL": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=d62ca415",
+              "sourceFunctionName": "update",
+              "sourceCharPosition": 1967496
+            }
+          ]
+        },
+        {
+          "name": "long-animation-frame",
+          "entryType": "long-animation-frame",
+          "startTime": 16742.39999999851,
+          "duration": 52.600000001490116,
+          "navigationId": 5144,
+          "paintTime": 16795,
+          "presentationTime": 16804,
+          "renderStart": 16760.39999999851,
+          "styleAndLayoutStart": 16794,
+          "firstUIEventTimestamp": 0,
+          "blockingDuration": 0,
+          "scripts": [
+            {
+              "name": "script",
+              "entryType": "script",
+              "startTime": 16742.5,
+              "duration": 12.5,
+              "navigationId": 5144,
+              "invoker": "TimerHandler:setTimeout",
+              "invokerType": "user-callback",
+              "windowAttribution": "self",
+              "executionStart": 16742.5,
+              "forcedStyleAndLayoutDuration": 0,
+              "pauseDuration": 0,
+              "sourceURL": "http://127.0.0.1:5173/src/ui/snapshot-hud.ts",
+              "sourceFunctionName": "",
+              "sourceCharPosition": 614
+            },
+            {
+              "name": "script",
+              "entryType": "script",
+              "startTime": 16755.199999999255,
+              "duration": 5.099999997764826,
+              "navigationId": 5144,
+              "invoker": "Worker.onmessage",
+              "invokerType": "event-listener",
+              "windowAttribution": "self",
+              "executionStart": 16755.199999999255,
+              "forcedStyleAndLayoutDuration": 0,
+              "pauseDuration": 0,
+              "sourceURL": "http://127.0.0.1:5173/src/bridge/SimulationClient.ts?t=1789677909122",
+              "sourceFunctionName": "",
+              "sourceCharPosition": 498
+            },
+            {
+              "name": "script",
+              "entryType": "script",
+              "startTime": 16760.599999997765,
+              "duration": 33.400000002235174,
+              "navigationId": 5144,
+              "invoker": "FrameRequestCallback",
+              "invokerType": "user-callback",
+              "windowAttribution": "self",
+              "executionStart": 16760.599999997765,
+              "forcedStyleAndLayoutDuration": 4.7,
+              "pauseDuration": 0,
+              "sourceURL": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=d62ca415",
+              "sourceFunctionName": "update",
+              "sourceCharPosition": 1967496
+            }
+          ]
+        },
+        {
+          "name": "long-animation-frame",
+          "entryType": "long-animation-frame",
+          "startTime": 16919.89999999851,
+          "duration": 63.600000001490116,
+          "navigationId": 5144,
+          "paintTime": 16983.5,
+          "presentationTime": 17016,
+          "renderStart": 16974.199999999255,
+          "styleAndLayoutStart": 16982.699999999255,
+          "firstUIEventTimestamp": 0,
+          "blockingDuration": 0,
+          "scripts": [
+            {
+              "name": "script",
+              "entryType": "script",
+              "startTime": 16943,
+              "duration": 13.799999997019768,
+              "navigationId": 5144,
+              "invoker": "Worker.onmessage",
+              "invokerType": "event-listener",
+              "windowAttribution": "self",
+              "executionStart": 16943,
+              "forcedStyleAndLayoutDuration": 0,
+              "pauseDuration": 0,
+              "sourceURL": "http://127.0.0.1:5173/src/bridge/SimulationClient.ts?t=1789677909122",
+              "sourceFunctionName": "",
+              "sourceCharPosition": 498
+            },
+            {
+              "name": "script",
+              "entryType": "script",
+              "startTime": 16974.199999999255,
+              "duration": 8.5,
+              "navigationId": 5144,
+              "invoker": "FrameRequestCallback",
+              "invokerType": "user-callback",
+              "windowAttribution": "self",
+              "executionStart": 16974.199999999255,
+              "forcedStyleAndLayoutDuration": 2.5,
+              "pauseDuration": 0,
+              "sourceURL": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=d62ca415",
+              "sourceFunctionName": "update",
+              "sourceCharPosition": 1967496
+            }
+          ]
+        }
+      ],
+      "excavations": [
+        {
+          "at": 11108.79999999702,
+          "tick": 2051,
+          "mined": 8,
+          "dirty": 28
+        },
+        {
+          "at": 11130.29999999702,
+          "tick": 2052,
+          "mined": 8,
+          "dirty": 28
+        },
+        {
+          "at": 11166.599999997765,
+          "tick": 2054,
+          "mined": 16,
+          "dirty": 56
+        },
+        {
+          "at": 11198.199999999255,
+          "tick": 2056,
+          "mined": 16,
+          "dirty": 60
+        },
+        {
+          "at": 11215,
+          "tick": 2057,
+          "mined": 8,
+          "dirty": 28
+        },
+        {
+          "at": 11233.29999999702,
+          "tick": 2059,
+          "mined": 16,
+          "dirty": 56
+        },
+        {
+          "at": 11261.79999999702,
+          "tick": 2060,
+          "mined": 8,
+          "dirty": 32
+        },
+        {
+          "at": 11280.099999997765,
+          "tick": 2061,
+          "mined": 8,
+          "dirty": 28
+        },
+        {
+          "at": 11302.39999999851,
+          "tick": 2063,
+          "mined": 12,
+          "dirty": 44
+        },
+        {
+          "at": 12056.79999999702,
+          "tick": 2105,
+          "mined": 32,
+          "dirty": 128
+        },
+        {
+          "at": 12078.699999999255,
+          "tick": 2106,
+          "mined": 8,
+          "dirty": 32
+        },
+        {
+          "at": 12117.099999997765,
+          "tick": 2108,
+          "mined": 16,
+          "dirty": 64
+        },
+        {
+          "at": 12139,
+          "tick": 2109,
+          "mined": 8,
+          "dirty": 32
+        },
+        {
+          "at": 12155.599999997765,
+          "tick": 2110,
+          "mined": 8,
+          "dirty": 32
+        },
+        {
+          "at": 12192.79999999702,
+          "tick": 2112,
+          "mined": 16,
+          "dirty": 64
+        },
+        {
+          "at": 12228.599999997765,
+          "tick": 2114,
+          "mined": 12,
+          "dirty": 48
+        },
+        {
+          "at": 12952.599999997765,
+          "tick": 2156,
+          "mined": 28,
+          "dirty": 100
+        },
+        {
+          "at": 12983.099999997765,
+          "tick": 2157,
+          "mined": 9,
+          "dirty": 36
+        },
+        {
+          "at": 13011.699999999255,
+          "tick": 2158,
+          "mined": 8,
+          "dirty": 28
+        },
+        {
+          "at": 13034.79999999702,
+          "tick": 2160,
+          "mined": 15,
+          "dirty": 52
+        },
+        {
+          "at": 13075.599999997765,
+          "tick": 2163,
+          "mined": 25,
+          "dirty": 92
+        },
+        {
+          "at": 13152.599999997765,
+          "tick": 2167,
+          "mined": 14,
+          "dirty": 52
+        },
+        {
+          "at": 13169.79999999702,
+          "tick": 2168,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 13791.79999999702,
+          "tick": 2206,
+          "mined": 2,
+          "dirty": 8
+        },
+        {
+          "at": 13843,
+          "tick": 2209,
+          "mined": 2,
+          "dirty": 8
+        },
+        {
+          "at": 13870.89999999851,
+          "tick": 2211,
+          "mined": 2,
+          "dirty": 8
+        },
+        {
+          "at": 13896.39999999851,
+          "tick": 2212,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 13912.39999999851,
+          "tick": 2213,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 13931.89999999851,
+          "tick": 2214,
+          "mined": 4,
+          "dirty": 16
+        },
+        {
+          "at": 13948,
+          "tick": 2215,
+          "mined": 3,
+          "dirty": 12
+        },
+        {
+          "at": 13963.29999999702,
+          "tick": 2216,
+          "mined": 7,
+          "dirty": 28
+        },
+        {
+          "at": 14013.89999999851,
+          "tick": 2218,
+          "mined": 12,
+          "dirty": 48
+        },
+        {
+          "at": 14049.699999999255,
+          "tick": 2219,
+          "mined": 6,
+          "dirty": 24
+        },
+        {
+          "at": 14082.199999999255,
+          "tick": 2220,
+          "mined": 5,
+          "dirty": 20
+        },
+        {
+          "at": 14157.79999999702,
+          "tick": 2222,
+          "mined": 7,
+          "dirty": 28
+        },
+        {
+          "at": 14205.199999999255,
+          "tick": 2223,
+          "mined": 5,
+          "dirty": 20
+        },
+        {
+          "at": 14273.599999997765,
+          "tick": 2224,
+          "mined": 7,
+          "dirty": 28
+        },
+        {
+          "at": 14331.699999999255,
+          "tick": 2226,
+          "mined": 7,
+          "dirty": 28
+        },
+        {
+          "at": 14408.199999999255,
+          "tick": 2229,
+          "mined": 2,
+          "dirty": 8
+        },
+        {
+          "at": 14457,
+          "tick": 2230,
+          "mined": 3,
+          "dirty": 12
+        },
+        {
+          "at": 14538.89999999851,
+          "tick": 2233,
+          "mined": 3,
+          "dirty": 12
+        },
+        {
+          "at": 14552.5,
+          "tick": 2234,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 14579.599999997765,
+          "tick": 2235,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 14707.89999999851,
+          "tick": 2242,
+          "mined": 2,
+          "dirty": 8
+        },
+        {
+          "at": 14766.699999999255,
+          "tick": 2246,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 14794.29999999702,
+          "tick": 2247,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 14846.699999999255,
+          "tick": 2250,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 14873.39999999851,
+          "tick": 2251,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 14970.39999999851,
+          "tick": 2255,
+          "mined": 4,
+          "dirty": 16
+        },
+        {
+          "at": 14998.79999999702,
+          "tick": 2257,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 15116.89999999851,
+          "tick": 2264,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 15704.699999999255,
+          "tick": 2297,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 15779.39999999851,
+          "tick": 2302,
+          "mined": 3,
+          "dirty": 12
+        },
+        {
+          "at": 15947.699999999255,
+          "tick": 2311,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 16641.39999999851,
+          "tick": 2334,
+          "mined": 1,
+          "dirty": 4
+        },
+        {
+          "at": 17033.89999999851,
+          "tick": 2347,
+          "mined": 1,
+          "dirty": 4
+        }
+      ],
+      "slowFrames": [
+        {
+          "at": 9491.29999999702,
+          "cpu": 6.400000002235174,
+          "interval": 25,
+          "calls": 179
+        },
+        {
+          "at": 9526.199999999255,
+          "cpu": 9,
+          "interval": 29.299999999999272,
+          "calls": 179
+        },
+        {
+          "at": 9644.79999999702,
+          "cpu": 9.400000002235174,
+          "interval": 25,
+          "calls": 179
+        },
+        {
+          "at": 9673.39999999851,
+          "cpu": 12.600000001490116,
+          "interval": 29.200000000000728,
+          "calls": 179
+        },
+        {
+          "at": 9725.89999999851,
+          "cpu": 16.800000000745058,
+          "interval": 24.899999999999636,
+          "calls": 179
+        },
+        {
+          "at": 9747.5,
+          "cpu": 9.599999997764826,
+          "interval": 29.19999999999891,
+          "calls": 179
+        },
+        {
+          "at": 9809.599999997765,
+          "cpu": 14.5,
+          "interval": 20.799999999999272,
+          "calls": 179
+        },
+        {
+          "at": 9859.199999999255,
+          "cpu": 13.800000000745058,
+          "interval": 20.899999999999636,
+          "calls": 179
+        },
+        {
+          "at": 9965.699999999255,
+          "cpu": 17,
+          "interval": 45.899999999999636,
+          "calls": 179
+        },
+        {
+          "at": 9993.699999999255,
+          "cpu": 9.599999997764826,
+          "interval": 24.799999999999272,
+          "calls": 179
+        },
+        {
+          "at": 10008.29999999702,
+          "cpu": 13.800000000745058,
+          "interval": 20.900000000001455,
+          "calls": 179
+        },
+        {
+          "at": 10154,
+          "cpu": 13.199999999254942,
+          "interval": 29.099999999998545,
+          "calls": 179
+        },
+        {
+          "at": 10167.79999999702,
+          "cpu": 11,
+          "interval": 20.900000000001455,
+          "calls": 179
+        },
+        {
+          "at": 10247.199999999255,
+          "cpu": 6.899999998509884,
+          "interval": 33.29999999999927,
+          "calls": 178
+        },
+        {
+          "at": 10295.599999997765,
+          "cpu": 7.600000001490116,
+          "interval": 20.799999999999272,
+          "calls": 178
+        },
+        {
+          "at": 10366.29999999702,
+          "cpu": 6,
+          "interval": 29.200000000000728,
+          "calls": 178
+        },
+        {
+          "at": 10528.29999999702,
+          "cpu": 10.5,
+          "interval": 20.80000000000109,
+          "calls": 176
+        },
+        {
+          "at": 10565.79999999702,
+          "cpu": 6.600000001490116,
+          "interval": 25.100000000000364,
+          "calls": 176
+        },
+        {
+          "at": 10675.699999999255,
+          "cpu": 8.5,
+          "interval": 29.200000000000728,
+          "calls": 176
+        },
+        {
+          "at": 10776.5,
+          "cpu": 8.799999997019768,
+          "interval": 37.5,
+          "calls": 176
+        },
+        {
+          "at": 10860.79999999702,
+          "cpu": 9,
+          "interval": 20.799999999999272,
+          "calls": 176
+        },
+        {
+          "at": 10935.79999999702,
+          "cpu": 6.5,
+          "interval": 20.899999999999636,
+          "calls": 176
+        },
+        {
+          "at": 11108.699999999255,
+          "cpu": 18.099999997764826,
+          "interval": 20.899999999999636,
+          "calls": 174
+        },
+        {
+          "at": 11166.39999999851,
+          "cpu": 25,
+          "interval": 29.200000000000728,
+          "calls": 180
+        },
+        {
+          "at": 11198,
+          "cpu": 14.099999997764826,
+          "interval": 37.399999999999636,
+          "calls": 180
+        },
+        {
+          "at": 11233.099999997765,
+          "cpu": 15,
+          "interval": 33.29999999999927,
+          "calls": 183
+        },
+        {
+          "at": 11302.29999999702,
+          "cpu": 15.300000000745058,
+          "interval": 25,
+          "calls": 182
+        },
+        {
+          "at": 11322.599999997765,
+          "cpu": 11.900000002235174,
+          "interval": 20.899999999999636,
+          "calls": 182
+        },
+        {
+          "at": 11344.89999999851,
+          "cpu": 10.699999999254942,
+          "interval": 20.799999999999272,
+          "calls": 182
+        },
+        {
+          "at": 11373.099999997765,
+          "cpu": 6.100000001490116,
+          "interval": 25,
+          "calls": 182
+        },
+        {
+          "at": 11517.599999997765,
+          "cpu": 6.400000002235174,
+          "interval": 33.20000000000073,
+          "calls": 182
+        },
+        {
+          "at": 11569.89999999851,
+          "cpu": 9,
+          "interval": 24.899999999999636,
+          "calls": 181
+        },
+        {
+          "at": 11586.699999999255,
+          "cpu": 6.099999997764826,
+          "interval": 29.200000000000728,
+          "calls": 181
+        },
+        {
+          "at": 11606.5,
+          "cpu": 5.899999998509884,
+          "interval": 20.799999999999272,
+          "calls": 181
+        },
+        {
+          "at": 11631.89999999851,
+          "cpu": 8.100000001490116,
+          "interval": 25,
+          "calls": 181
+        },
+        {
+          "at": 11782.39999999851,
+          "cpu": 9.199999999254942,
+          "interval": 37.5,
+          "calls": 181
+        },
+        {
+          "at": 11798.199999999255,
+          "cpu": 7.599999997764826,
+          "interval": 21,
+          "calls": 181
+        },
+        {
+          "at": 11821.599999997765,
+          "cpu": 8.800000000745058,
+          "interval": 24.799999999999272,
+          "calls": 181
+        },
+        {
+          "at": 11885.599999997765,
+          "cpu": 6.5,
+          "interval": 49.899999999999636,
+          "calls": 181
+        },
+        {
+          "at": 12056.599999997765,
+          "cpu": 17.699999999254942,
+          "interval": 83.29999999999927,
+          "calls": 186
+        },
+        {
+          "at": 12116.79999999702,
+          "cpu": 18.400000002235174,
+          "interval": 41.70000000000073,
+          "calls": 186
+        },
+        {
+          "at": 12154.89999999851,
+          "cpu": 17.399999998509884,
+          "interval": 20.700000000000728,
+          "calls": 186
+        },
+        {
+          "at": 12228.29999999702,
+          "cpu": 21.200000002980232,
+          "interval": 45.80000000000109,
+          "calls": 188
+        },
+        {
+          "at": 12254.39999999851,
+          "cpu": 13.899999998509884,
+          "interval": 37.600000000000364,
+          "calls": 187
+        },
+        {
+          "at": 12300.199999999255,
+          "cpu": 13.300000000745058,
+          "interval": 41.70000000000073,
+          "calls": 187
+        },
+        {
+          "at": 12365.29999999702,
+          "cpu": 8.600000001490116,
+          "interval": 58.30000000000109,
+          "calls": 187
+        },
+        {
+          "at": 12416.099999997765,
+          "cpu": 7.5,
+          "interval": 50,
+          "calls": 187
+        },
+        {
+          "at": 12452.39999999851,
+          "cpu": 7.199999999254942,
+          "interval": 37.5,
+          "calls": 187
+        },
+        {
+          "at": 12481.599999997765,
+          "cpu": 8.600000001490116,
+          "interval": 29.299999999999272,
+          "calls": 186
+        },
+        {
+          "at": 12517,
+          "cpu": 8.699999999254942,
+          "interval": 33.30000000000109,
+          "calls": 187
+        },
+        {
+          "at": 12549.199999999255,
+          "cpu": 5.199999999254942,
+          "interval": 20.799999999999272,
+          "calls": 186
+        },
+        {
+          "at": 12577.29999999702,
+          "cpu": 5.200000002980232,
+          "interval": 20.700000000000728,
+          "calls": 186
+        },
+        {
+          "at": 12640.39999999851,
+          "cpu": 8.100000001490116,
+          "interval": 45.70000000000073,
+          "calls": 186
+        },
+        {
+          "at": 12752.5,
+          "cpu": 10.5,
+          "interval": 112.5,
+          "calls": 186
+        },
+        {
+          "at": 12815.699999999255,
+          "cpu": 3.800000000745058,
+          "interval": 45.80000000000109,
+          "calls": 185
+        },
+        {
+          "at": 12835.89999999851,
+          "cpu": 12.399999998509884,
+          "interval": 20.799999999999272,
+          "calls": 184
+        },
+        {
+          "at": 12952.39999999851,
+          "cpu": 14.5,
+          "interval": 58.30000000000109,
+          "calls": 184
+        },
+        {
+          "at": 13034.599999997765,
+          "cpu": 13.5,
+          "interval": 33.29999999999927,
+          "calls": 183
+        },
+        {
+          "at": 13075.29999999702,
+          "cpu": 19.100000001490116,
+          "interval": 41.600000000000364,
+          "calls": 183
+        },
+        {
+          "at": 13152.5,
+          "cpu": 13.799999997019768,
+          "interval": 75.10000000000036,
+          "calls": 183
+        },
+        {
+          "at": 13188.89999999851,
+          "cpu": 9.800000000745058,
+          "interval": 33.399999999999636,
+          "calls": 183
+        },
+        {
+          "at": 13245.29999999702,
+          "cpu": 14.100000001490116,
+          "interval": 58.399999999999636,
+          "calls": 182
+        },
+        {
+          "at": 13278,
+          "cpu": 7.5,
+          "interval": 33.20000000000073,
+          "calls": 182
+        },
+        {
+          "at": 13396.39999999851,
+          "cpu": 13.199999999254942,
+          "interval": 37.5,
+          "calls": 182
+        },
+        {
+          "at": 13428.599999997765,
+          "cpu": 15.5,
+          "interval": 29.30000000000109,
+          "calls": 182
+        },
+        {
+          "at": 13454.099999997765,
+          "cpu": 12.5,
+          "interval": 29.099999999998545,
+          "calls": 183
+        },
+        {
+          "at": 13467.5,
+          "cpu": 18.599999997764826,
+          "interval": 20.80000000000109,
+          "calls": 182
+        },
+        {
+          "at": 13487.29999999702,
+          "cpu": 12.400000002235174,
+          "interval": 21,
+          "calls": 182
+        },
+        {
+          "at": 13565.199999999255,
+          "cpu": 5.099999997764826,
+          "interval": 20.80000000000109,
+          "calls": 182
+        },
+        {
+          "at": 13643.79999999702,
+          "cpu": 11.600000001490116,
+          "interval": 29.100000000000364,
+          "calls": 181
+        },
+        {
+          "at": 13703.599999997765,
+          "cpu": 7.300000000745058,
+          "interval": 33.30000000000109,
+          "calls": 179
+        },
+        {
+          "at": 13744.599999997765,
+          "cpu": 5.300000000745058,
+          "interval": 20.80000000000109,
+          "calls": 178
+        },
+        {
+          "at": 13791.599999997765,
+          "cpu": 20.199999999254942,
+          "interval": 29.399999999999636,
+          "calls": 177
+        },
+        {
+          "at": 13842.89999999851,
+          "cpu": 13,
+          "interval": 45.70000000000073,
+          "calls": 177
+        },
+        {
+          "at": 13870.79999999702,
+          "cpu": 12.400000002235174,
+          "interval": 33.29999999999927,
+          "calls": 177
+        },
+        {
+          "at": 13931.79999999702,
+          "cpu": 11.600000001490116,
+          "interval": 20.899999999999636,
+          "calls": 175
+        },
+        {
+          "at": 13963.099999997765,
+          "cpu": 18.400000002235174,
+          "interval": 20.799999999999272,
+          "calls": 175
+        },
+        {
+          "at": 14013.39999999851,
+          "cpu": 17.899999998509884,
+          "interval": 50,
+          "calls": 175
+        },
+        {
+          "at": 14049.5,
+          "cpu": 23.399999998509884,
+          "interval": 20.799999999999272,
+          "calls": 175
+        },
+        {
+          "at": 14082,
+          "cpu": 15.799999997019768,
+          "interval": 41.70000000000073,
+          "calls": 175
+        },
+        {
+          "at": 14098.599999997765,
+          "cpu": 10.600000001490116,
+          "interval": 25,
+          "calls": 175
+        },
+        {
+          "at": 14157.599999997765,
+          "cpu": 16.300000000745058,
+          "interval": 29.099999999998545,
+          "calls": 175
+        },
+        {
+          "at": 14204.89999999851,
+          "cpu": 19.600000001490116,
+          "interval": 29.200000000000728,
+          "calls": 175
+        },
+        {
+          "at": 14225,
+          "cpu": 11.299999997019768,
+          "interval": 20.899999999999636,
+          "calls": 175
+        },
+        {
+          "at": 14273.5,
+          "cpu": 12.299999997019768,
+          "interval": 41.600000000000364,
+          "calls": 175
+        },
+        {
+          "at": 14331.599999997765,
+          "cpu": 13.900000002235174,
+          "interval": 45.899999999999636,
+          "calls": 175
+        },
+        {
+          "at": 14379.599999997765,
+          "cpu": 15.699999999254942,
+          "interval": 20.700000000000728,
+          "calls": 175
+        },
+        {
+          "at": 14408.099999997765,
+          "cpu": 16.699999999254942,
+          "interval": 29.19999999999891,
+          "calls": 175
+        },
+        {
+          "at": 14456.79999999702,
+          "cpu": 24.5,
+          "interval": 37.5,
+          "calls": 175
+        },
+        {
+          "at": 14484.599999997765,
+          "cpu": 4.800000000745058,
+          "interval": 29.200000000000728,
+          "calls": 175
+        },
+        {
+          "at": 14538.79999999702,
+          "cpu": 11.400000002235174,
+          "interval": 45.79999999999927,
+          "calls": 174
+        },
+        {
+          "at": 14633.199999999255,
+          "cpu": 11.300000000745058,
+          "interval": 41.69999999999891,
+          "calls": 175
+        },
+        {
+          "at": 14707.79999999702,
+          "cpu": 18.100000001490116,
+          "interval": 66.70000000000073,
+          "calls": 175
+        },
+        {
+          "at": 14766.5,
+          "cpu": 15.599999997764826,
+          "interval": 62.5,
+          "calls": 176
+        },
+        {
+          "at": 14794.099999997765,
+          "cpu": 13.800000000745058,
+          "interval": 33.29999999999927,
+          "calls": 176
+        },
+        {
+          "at": 14846.39999999851,
+          "cpu": 11.300000000745058,
+          "interval": 20.899999999999636,
+          "calls": 177
+        },
+        {
+          "at": 14873.099999997765,
+          "cpu": 24.699999999254942,
+          "interval": 29.100000000000364,
+          "calls": 176
+        },
+        {
+          "at": 14922,
+          "cpu": 11.699999999254942,
+          "interval": 45.79999999999927,
+          "calls": 176
+        },
+        {
+          "at": 14970.199999999255,
+          "cpu": 14,
+          "interval": 45.900000000001455,
+          "calls": 176
+        },
+        {
+          "at": 15116.699999999255,
+          "cpu": 17.199999999254942,
+          "interval": 58.5,
+          "calls": 176
+        },
+        {
+          "at": 15148.599999997765,
+          "cpu": 7.199999999254942,
+          "interval": 33.19999999999891,
+          "calls": 176
+        },
+        {
+          "at": 15236.199999999255,
+          "cpu": 9.099999997764826,
+          "interval": 41.600000000000364,
+          "calls": 176
+        },
+        {
+          "at": 15324.5,
+          "cpu": 8.799999997019768,
+          "interval": 45.899999999999636,
+          "calls": 175
+        },
+        {
+          "at": 15353.39999999851,
+          "cpu": 6.100000001490116,
+          "interval": 25,
+          "calls": 174
+        },
+        {
+          "at": 15398,
+          "cpu": 9.099999997764826,
+          "interval": 45.69999999999891,
+          "calls": 174
+        },
+        {
+          "at": 15425.5,
+          "cpu": 11.099999997764826,
+          "interval": 25.100000000000364,
+          "calls": 173
+        },
+        {
+          "at": 15501.79999999702,
+          "cpu": 15.5,
+          "interval": 33.29999999999927,
+          "calls": 174
+        },
+        {
+          "at": 15526.199999999255,
+          "cpu": 6.599999997764826,
+          "interval": 25,
+          "calls": 174
+        },
+        {
+          "at": 15549.79999999702,
+          "cpu": 13.100000001490116,
+          "interval": 29.100000000000364,
+          "calls": 175
+        },
+        {
+          "at": 15583.699999999255,
+          "cpu": 5.5,
+          "interval": 33.399999999999636,
+          "calls": 175
+        },
+        {
+          "at": 15704.5,
+          "cpu": 18.199999999254942,
+          "interval": 29.200000000000728,
+          "calls": 175
+        },
+        {
+          "at": 15735.79999999702,
+          "cpu": 8.100000001490116,
+          "interval": 33.29999999999927,
+          "calls": 175
+        },
+        {
+          "at": 15779.199999999255,
+          "cpu": 16.800000000745058,
+          "interval": 41.70000000000073,
+          "calls": 175
+        },
+        {
+          "at": 15798.099999997765,
+          "cpu": 6.400000002235174,
+          "interval": 20.799999999999272,
+          "calls": 175
+        },
+        {
+          "at": 15947.599999997765,
+          "cpu": 41.400000002235174,
+          "interval": 50.100000000000364,
+          "calls": 174
+        },
+        {
+          "at": 15999.39999999851,
+          "cpu": 19.899999998509884,
+          "interval": 58.399999999999636,
+          "calls": 174
+        },
+        {
+          "at": 16033.89999999851,
+          "cpu": 31,
+          "interval": 28.899999999999636,
+          "calls": 174
+        },
+        {
+          "at": 16065.79999999702,
+          "cpu": 31.200000002980232,
+          "interval": 37.70000000000073,
+          "calls": 174
+        },
+        {
+          "at": 16113.199999999255,
+          "cpu": 27.599999997764826,
+          "interval": 29.099999999998545,
+          "calls": 174
+        },
+        {
+          "at": 16144.89999999851,
+          "cpu": 7.600000001490116,
+          "interval": 50,
+          "calls": 174
+        },
+        {
+          "at": 16195.599999997765,
+          "cpu": 6.100000001490116,
+          "interval": 29.299999999999272,
+          "calls": 174
+        },
+        {
+          "at": 16256.79999999702,
+          "cpu": 21.400000002235174,
+          "interval": 41.69999999999891,
+          "calls": 173
+        },
+        {
+          "at": 16278.599999997765,
+          "cpu": 5.900000002235174,
+          "interval": 20.80000000000109,
+          "calls": 173
+        },
+        {
+          "at": 16320.199999999255,
+          "cpu": 25.399999998509884,
+          "interval": 37.5,
+          "calls": 173
+        },
+        {
+          "at": 16352.79999999702,
+          "cpu": 7.300000000745058,
+          "interval": 29.200000000000728,
+          "calls": 172
+        },
+        {
+          "at": 16384.5,
+          "cpu": 18.799999997019768,
+          "interval": 25,
+          "calls": 171
+        },
+        {
+          "at": 16407.599999997765,
+          "cpu": 14.800000000745058,
+          "interval": 20.799999999999272,
+          "calls": 171
+        },
+        {
+          "at": 16446.699999999255,
+          "cpu": 5.599999997764826,
+          "interval": 25.100000000002183,
+          "calls": 171
+        },
+        {
+          "at": 16484.599999997765,
+          "cpu": 23.600000001490116,
+          "interval": 33.39999999999782,
+          "calls": 171
+        },
+        {
+          "at": 16526.199999999255,
+          "cpu": 25,
+          "interval": 29.200000000000728,
+          "calls": 171
+        },
+        {
+          "at": 16562.5,
+          "cpu": 23.699999999254942,
+          "interval": 41.70000000000073,
+          "calls": 171
+        },
+        {
+          "at": 16586.699999999255,
+          "cpu": 7.699999999254942,
+          "interval": 33.29999999999927,
+          "calls": 171
+        },
+        {
+          "at": 16670.599999997765,
+          "cpu": 19,
+          "interval": 37.39999999999782,
+          "calls": 171
+        },
+        {
+          "at": 16690,
+          "cpu": 5.5,
+          "interval": 25,
+          "calls": 171
+        },
+        {
+          "at": 16716.199999999255,
+          "cpu": 26,
+          "interval": 20.900000000001455,
+          "calls": 171
+        },
+        {
+          "at": 16760.599999997765,
+          "cpu": 33.400000002235174,
+          "interval": 24.899999999997817,
+          "calls": 170
+        },
+        {
+          "at": 16797.5,
+          "cpu": 7.299999997019768,
+          "interval": 54.10000000000218,
+          "calls": 170
+        },
+        {
+          "at": 16848.599999997765,
+          "cpu": 8.800000000745058,
+          "interval": 29.200000000000728,
+          "calls": 170
+        },
+        {
+          "at": 16877.39999999851,
+          "cpu": 21.100000001490116,
+          "interval": 29.200000000000728,
+          "calls": 170
+        },
+        {
+          "at": 16900.199999999255,
+          "cpu": 7,
+          "interval": 20.799999999999272,
+          "calls": 170
+        },
+        {
+          "at": 16974.29999999702,
+          "cpu": 8.400000002235174,
+          "interval": 62.599999999998545,
+          "calls": 170
+        },
+        {
+          "at": 17061.39999999851,
+          "cpu": 21.5,
+          "interval": 33.400000000001455,
+          "calls": 167
+        },
+        {
+          "at": 17117.89999999851,
+          "cpu": 20.199999999254942,
+          "interval": 37.70000000000073,
+          "calls": 167
+        },
+        {
+          "at": 17142.89999999851,
+          "cpu": 22.800000000745058,
+          "interval": 37.29999999999927,
+          "calls": 167
+        },
+        {
+          "at": 17178.699999999255,
+          "cpu": 6.399999998509884,
+          "interval": 25,
+          "calls": 167
+        }
+      ],
+      "pipelines": [],
+      "preparations": [
+        3040.699999999255,
+        513.3000000007451
+      ]
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 # Matrice des systèmes et critères de réalisation
 
+V52 prolonge les domaines objets/personnages par une première principale physique : revolver, transfert d’identité, dépôt/incapacité et attache GPU. Équipement reste partiel ; combat et inventaire ne sont pas livrés. [État détaillé](implementation-status.md), [contrat](../development/equipment.md). ROADMAP conserve l’ordre canonique G0–G5.
+
 S13 / CAT-018 : [V51](../development/medicines.md) ajoute les doses physiques, plafonds individuels et soins groupés ; acquisition complète, maladies et chirurgie restent ouvertes. Prochain lot selon ROADMAP : équipement puis premier combat.
 
 S13 : [santé active V45](../development/health.md), blessures localisées, capacités, incapacité/décès et dégâts de toiture construite ; [secours et lits médicaux V46](../development/rescue.md), [traitements sans médicament et repos médical V47](../development/tending.md), [alimentation assistée V48](../development/feeding.md). [Auto-soins ordinaires V49](../development/self-tending.md). [Décisions urgentes et revue au lit V50](../development/urgent-care.md). Domaine encore partiel : expirations/dégâts des autres tâches, acquisition médicale complète, chirurgie/pathologies et dépouilles complètes absents. Aucun jalon clôturé.

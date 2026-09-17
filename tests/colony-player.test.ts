@@ -5,6 +5,7 @@ import { playerDecisions, playerFocusDecisions, colonySummary, woodAccount, food
 test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp construit, stocks entretenus et reprise exacte', () => {
   for (const seed of [42, 93, 2048]) {
     let world = createWorld(seed, 250, 250);
+    const initialWeapon=structuredClone(world.piles.find(p=>p.kind==='weapon')!);
     const initialWood = woodAccount(world), initialFood = foodAccount(world);
     let consumed = 0, produced = 0, cooked = 0, rationAssignments = 0;
     const recreationKinds=new Set<string>(), recreationPawns=new Set<number>();
@@ -26,6 +27,8 @@ test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp const
       for(const pawn of world.pawns)if(pawn.state==='recreating'&&pawn.recreation.task){recreationKinds.add(pawn.recreation.task.activity);recreationPawns.add(pawn.id);}
       if (t % 50 === 0) {
         const context=JSON.stringify({seed,...colonySummary(world)});
+        expect(world.piles.filter(p=>p.kind==='weapon')).toHaveLength(1);expect(world.piles.find(p=>p.id===initialWeapon.id)?.weapon).toEqual(initialWeapon.weapon);
+        if(t>=250)expect(world.piles.find(p=>p.id===initialWeapon.id)?.owner.type).toBe('equipment');
         expect(validateWorld(world),context).toEqual([]);expect(woodAccount(world),context).toBe(initialWood);
         expect(foodAccount(world)+consumed+9*cooked,context).toBe(initialFood+produced);
         expect(world.pawns.every(p=>p.hunger>0 && p.rest>0),context).toBe(true);

@@ -1,11 +1,11 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 51 as const;
+export const SCHEMA_VERSION = 52 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
 export type Terrain = 'grass' | 'soil' | 'water' | 'rock' | 'rough-stone';
 export type ResourceKind = 'tree' | 'berries' | 'rock' | 'rice';
-export type MaterialKind = 'wood' | 'food' | 'chunk' | 'steel' | 'blocks' | 'component' | 'medicine';
+export type MaterialKind = 'wood' | 'food' | 'chunk' | 'steel' | 'blocks' | 'component' | 'medicine' | 'weapon';
 export type StructureKind = 'wood-generator' | 'standing-lamp' | 'passive-cooler' | 'door' | 'wall' | 'bed' | 'table' | 'stool' | 'campfire' | 'horseshoes' | 'stonecutter';
 export type JobKind = 'build-roof' | 'remove-roof' | 'mine' | 'chop' | 'harvest' | 'cut' | 'sow' | 'deconstruct' | 'uninstall' | 'install' | StructureKind;
 export type WorkType = 'patient' | 'bedrest' | 'doctor' | 'mine' | 'gather' | 'build' | 'haul' | 'grow' | 'cook' | 'craft';
@@ -17,9 +17,9 @@ export interface Tile { ore?: 'steel' | 'machinery'; miningDamage?: number; terr
 export interface Resource extends Cell { id: number; kind: ResourceKind; amount: number; growth?: number; growthTick?: number; growthThermalFactor?:number; stone?: import('./geology.ts').StoneKind }
 export interface Structure extends Cell { medical?:true; power?:import('./power-rules.ts').PowerState; door?:import('./door-rules.ts').DoorState; material?:import('./construction-materials.ts').ConstructionMaterial; bills?: import('./cooking-types.ts').CookingBill[]; fuel?: import('./fuel.ts').FuelState; id: number; kind: StructureKind; orientation: Orientation; footprint: Footprint }
 export interface Stock { wood: number; food: number }
-export type MaterialOwner = ({ type: 'ground' } & Cell) | { type: 'pawn'; pawnId: number } | { type: 'job'; jobId: number };
-export interface MaterialPile { haulRequested?: true; id: number; kind: MaterialKind; item: ItemId; quantity: number; owner: MaterialOwner; rot?: import('./food-preservation.ts').RotState }
-export type StorageFilters = { wood:boolean; food:boolean; chunk?:boolean; steel?:boolean; component?:boolean; medicine?:boolean; blocks?:boolean; furniture?:boolean };
+export type MaterialOwner = ({ type: 'ground' } & Cell) | { type: 'pawn'; pawnId: number } | {type:'equipment';pawnId:number} | { type: 'job'; jobId: number };
+export interface MaterialPile { weapon?:import('./equipment-rules.ts').WeaponState; haulRequested?: true; id: number; kind: MaterialKind; item: ItemId; quantity: number; owner: MaterialOwner; rot?: import('./food-preservation.ts').RotState }
+export type StorageFilters = { wood:boolean; food:boolean; chunk?:boolean; steel?:boolean; component?:boolean; medicine?:boolean; weapon?:boolean; blocks?:boolean; furniture?:boolean };
 export interface StockpileCell extends Cell { id: number; filters: StorageFilters; priority: number; capacity: number }
 export interface GrowingZone { id: number; cells: number[]; plant: 'rice'; allowSow: boolean; allowCut: boolean }
 export type HaulDestination = { type: 'fuel'; structureId: number; forced?: boolean; forCooking?: boolean } | { type: 'stockpile'; stockpileId: number } | { type: 'job'; jobId: number; forConstruction?: boolean } | ({ type: 'aside'; growingZoneId?: number; sowCell?: Cell; constructionId?: number; forConstruction?: boolean } & Cell);
@@ -63,6 +63,9 @@ export interface Job extends Cell {
   escrow: Stock;
 }
 export interface Pawn extends Cell {
+  equipmentTask?:import('./equipment-rules.ts').EquipmentTask;
+  equipmentDropPending?:true;
+  droppedWeaponId?:number;
   feed?: import('./feeding-rules.ts').FeedTask;
   tend?: import('./care-rules.ts').TendTask;
   careDisabled?:true;
@@ -147,6 +150,7 @@ export type AreaAction = 'build-roof' | 'remove-roof' | 'ignore-roof' | 'mine' |
 export interface StorageSettings { filters?: StorageFilters; priority?: number; capacity?: number }
 export interface AreaCommand extends StorageSettings { type: 'area'; action: AreaAction; from: Cell; to: Cell }
 export type Command =
+  | import('./equipment-rules.ts').EquipmentCommand
   | import('./medical-beds.ts').MedicalBedCommand
   | {type:'medical-care';pawnId:number;care:import('./medicine-rules.ts').MedicalCare}
   | {type:'medical-policy';pawnId:number;enabled:boolean}

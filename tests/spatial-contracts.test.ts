@@ -112,6 +112,18 @@ test('civil crossing preserves beds, opposing cargo, every edge and exact contin
   expect(()=>deserializeWorld(JSON.stringify(legacyEdge))).toThrow(/overlap/i);
 });
 
+test('confirmed rate changes integrate only their own wall-clock intervals, even between delayed frames',()=>{
+  const timeline=new MotionTimeline();timeline.adopt(0,1,[],0,true);
+  timeline.adopt(10000,1,[],0);timeline.advance(0);
+  expect(timeline.advance(16)).toBeCloseTo(.16);
+  timeline.adopt(10000,6,[],20);timeline.adopt(10000,1,[],70);
+  expect(timeline.advance(100)).toBeCloseTo(3.5); // 20 ms at 1x, 50 at 6x, 30 at 1x.
+  timeline.adopt(10000,3,[],110);
+  expect(timeline.advance(108)).toBeCloseTo(3.58); // RAF can precede delivery's timestamp.
+  expect(timeline.advance(124)).toBeCloseTo(4.02);
+  expect(timeline.advance(140)).toBeCloseTo(4.5);
+});
+
 test('buffered motion is linear across jitter, duplicate messages, turns, pause and replacement',()=>{
   const segments=[{from:{x:0,z:0},to:{x:1,z:0},start:0,end:3},{from:{x:1,z:0},to:{x:1,z:1},start:3,end:6}];
   const timeline=new MotionTimeline();timeline.adopt(0,1,[{id:1,segments}],0,true);
@@ -150,9 +162,9 @@ test('buffered motion is linear across jitter, duplicate messages, turns, pause 
     let gameMs=0,speed=1,expected=0;
     for(let ms=10;ms<=30000;ms+=10) {
       gameMs+=speed*10;
+      if(ms>400)expected+=speed*.1;
       if(ms>400&&ms%period===0)speed=[1,6,3][ms/period%3]!;
       if(ms%50===0)changes.adopt(Math.floor(gameMs/100),speed,[],ms);
-      if(ms>400)expected+=speed*.1;
       expect(changes.advance(ms),`speed ${speed} at ${ms}, controls every ${period}`).toBeCloseTo(expected,7);
     }
     const confirmed=Math.floor(gameMs/100);changes.adopt(confirmed,0,[],30000);

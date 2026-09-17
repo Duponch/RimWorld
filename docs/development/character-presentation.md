@@ -1,16 +1,18 @@
 # Inventaire, équipement et apparence des colons
 
+V52 livre la première attache GPU de revolver et une projection d’équipement partagée. Arme visible à la hanche ; portrait CSS cadré sur le buste, libellé et attribut d’état actualisés, arme hors cadre non dessinée. Géométrie extraite du rig ; vêtements et portraits 3D définitifs restent la cible ci-dessous. [Contrat actuel](equipment.md).
+
 V51 : les trois doses médicales utilisent les variantes du lot de cargaison existant ; la dose tenue pendant collecte/soin disparaît au résultat présenté, pas à réception anticipée. Pas d’inventaire ni d’équipement permanent implicite. [Contrat](medicines.md).
 
 V49 : l’auto-soin garde la direction précédente, sans angle vers soi-même. Au rechargement, `PawnLayer` retrouve la direction depuis la dernière arête sauvegardée avant les orientations de lit/cible. Le scénario natif a détecté puis vérifié la correction du retour arbitraire à 36°. Geste de travail générique maintenu.
 
-V48 : [alimentation assistée](feeding.md), portion tenue par le médecin, geste GPU générique orienté vers le patient et posture allongée. Les trois phases et la consommation partagent l’horloge de scène. Animation définitive spécifique, équipement et portraits synchronisés restent ouverts.
+V48 : [alimentation assistée](feeding.md), portion tenue par le médecin, geste GPU générique orienté vers le patient et posture allongée. Les trois phases et la consommation partagent l’horloge de scène. Animation définitive spécifique et portraits 3D restent ouverts ; arme ajoutée V52.
 
 V47 réutilise la pose allongée pour le repos médical et le geste de travail orienté vers le patient pour les soins. Les phases viennent des snapshots présentés, sans nouveau squelette CPU ni lot par médecin. [Contrat](tending.md).
 
-V46 ajoute une pose portée calculée en TSL : corps du patient, sa cargaison éventuelle et son anneau partagent les attributs de trajectoire du sauveteur. Les relations d’équipement et les amputations visuelles restent absentes ; [contrat](rescue.md).
+V46 ajoute une pose portée calculée en TSL : corps du patient, sa cargaison éventuelle et son anneau partagent les attributs de trajectoire du sauveteur. La principale est ajoutée V52 ; les amputations visuelles restent absentes ; [contrat](rescue.md).
 
-Décision du 13 septembre 2026, à la demande utilisateur. **Contrat cible, pas fonctionnalité livrée.** Le prototype ne possède aujourd'hui qu'une cargaison temporaire de travail ou de repas, éventuellement conservée après interruption involontaire V44 ; les portraits CSS ne représentent pas un équipement réel.
+Décision du 13 septembre 2026, à la demande utilisateur. **Contrat cible, pas fonctionnalité livrée.** Le prototype possède une cargaison temporaire de travail/repas, éventuellement conservée après interruption V44, et une arme principale V52. Les portraits CSS ne représentent pas encore des vêtements réels.
 
 ## Ce que prévoit le corpus
 
@@ -26,7 +28,7 @@ Un objet appartient à un seul lieu : sol, inventaire personnel, équipement, v�
 
 Équiper/enfiler exige accès et transfert, contrôle des incompatibilités, puis traitement explicite de l'ancienne arme ou des vêtements incompatibles. Annuler ou perdre la cible ne duplique ni ne supprime l'objet. Les vêtements couvrent des groupes anatomiques et occupent des couches ; plusieurs pièces compatibles peuvent coexister. Les politiques de tenue, l'usure, les matériaux et la qualité doivent agir sur leurs règles propres, pas seulement sur leur couleur.
 
-Sauvegarder ces propriétaires et états exige une prochaine migration. L'onglet d'inspection distinguera inventaire, équipement, vêtements et cargaison. Un simple champ cosmétique ajouté au modèle ne constituera pas la livraison de l'inventaire.
+Le propriétaire d’arme est sauvegardé en V52 ; inventaire et vêtements exigeront une autre migration. L'onglet d'inspection distinguera inventaire, équipement, vêtements et cargaison. Un simple champ cosmétique ajouté au modèle ne constituera pas la livraison de l'inventaire.
 
 ## Projection 3D et portraits
 
@@ -40,4 +42,4 @@ Les portraits utiliseront un atlas ou des rendus hors écran conservés, invalid
 
 G0 : prolonger le contrat de propriété avec l'inventaire ; G3 : équipement, anatomie, protections et représentation correspondante ; G5 : contenu et finitions. Cela reste dans le calendrier [ROADMAP](../ROADMAP.md).
 
-Enrichir les scénarios existants avec échange d'arme, vêtements compatibles/incompatibles, cible disparue, interruption, pleine capacité et reprise sauvegardée. Côté présentation, vérifier la même identité/tenue dans la carte et les portraits après changement puis chargement, y compris couvre-chef masquant les cheveux. Auditer un lot de changements simultanés sur une foule, en séparant projection CPU, uploads et rendu. Ces validations ne sont pas encore exécutées, puisque ces systèmes sont absents.
+Enrichir les scénarios existants avec échange d'arme, vêtements compatibles/incompatibles, cible disparue, interruption, pleine capacité et reprise sauvegardée. Côté présentation, vérifier la même identité/tenue dans la carte et les portraits après changement puis chargement, y compris couvre-chef masquant les cheveux. Auditer un lot de changements simultanés sur une foule, en séparant projection CPU, uploads et rendu. Les validations d’arme seule sont exécutées en V52 ; celles des vêtements et portraits définitifs restent futures.

@@ -1,0 +1,87 @@
+{
+  "date": "2026-09-17T20:58:32.865Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "os": "win32 10.0.26200",
+  "scope": "250² cleared synthetic site; 3/30/100 adults, physical equipment then mining, trees, storage and self-care; 1200 ticks, snapshots and continuation; no GPU claim",
+  "durationMs": 12445.135,
+  "results": [
+    {
+      "count": 3,
+      "armed": 3,
+      "stepMs": {
+        "p50": 0.07019999999988613,
+        "p95": 0.4779999999999518,
+        "p99": 1.8605000000000018,
+        "max": 11.033000000000015
+      },
+      "cloneMs": {
+        "p50": 37.0616,
+        "p95": 48.73270000000002,
+        "p99": 48.73270000000002,
+        "max": 48.73270000000002
+      },
+      "states": {
+        "equipment": 3,
+        "tend": 1,
+        "chop": 6,
+        "idle": 47,
+        "mine": 3
+      },
+      "treesRemaining": 0,
+      "remainingMining": 0
+    },
+    {
+      "count": 30,
+      "armed": 30,
+      "stepMs": {
+        "p50": 0.7303999999999178,
+        "p95": 4.3396999999999935,
+        "p99": 10.529300000000148,
+        "max": 83.55880000000025
+      },
+      "cloneMs": {
+        "p50": 34.960599999999886,
+        "p95": 48.654199999999946,
+        "p99": 48.654199999999946,
+        "max": 48.654199999999946
+      },
+      "states": {
+        "equipment": 30,
+        "tend": 10,
+        "chop": 60,
+        "idle": 451,
+        "mine": 34,
+        "haul": 15
+      },
+      "treesRemaining": 0,
+      "remainingMining": 0
+    },
+    {
+      "count": 100,
+      "armed": 100,
+      "stepMs": {
+        "p50": 3.1031000000002678,
+        "p95": 12.281299999999646,
+        "p99": 18.5016999999998,
+        "max": 26.713699999999335
+      },
+      "cloneMs": {
+        "p50": 36.11149999999907,
+        "p95": 51.15979999999945,
+        "p99": 51.15979999999945,
+        "max": 51.15979999999945
+      },
+      "states": {
+        "equipment": 100,
+        "tend": 35,
+        "chop": 208,
+        "idle": 1403,
+        "mine": 119,
+        "haul": 135
+      },
+      "treesRemaining": 0,
+      "remainingMining": 0
+    }
+  ]
+}

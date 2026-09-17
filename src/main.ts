@@ -1,3 +1,5 @@
+import { createEquipmentInspection,updateEquipmentInspection } from './ui/equipment-inspection';
+import { equipmentProjection,equipmentDescription } from './render/character-equipment';
 import { bedControls,updateBedControls } from './ui/bed-controls.ts';
 import { carrierOf } from './sim/rescue-state.ts';
 import { medicalBleed } from './sim/injury-state';
@@ -176,7 +178,7 @@ function readStorageSettings(prefix: string) {
   const capacity = Number(el<HTMLInputElement>(`${prefix}-capacity`).value);
   if (!Number.isInteger(capacity) || capacity < 1 || capacity > MAX_STACK) throw new Error(`La capacité doit être un entier entre 1 et ${MAX_STACK}.`);
   return {
-    filters: { medicine:el<HTMLInputElement>(`${prefix}-medicine`).checked, component: el<HTMLInputElement>(`${prefix}-component`).checked, blocks: el<HTMLInputElement>(`${prefix}-blocks`).checked, steel: el<HTMLInputElement>(`${prefix}-steel`).checked, chunk: el<HTMLInputElement>(`${prefix}-chunk`).checked, wood: el<HTMLInputElement>(`${prefix}-wood`).checked, food: el<HTMLInputElement>(`${prefix}-food`).checked, furniture: el<HTMLInputElement>(`${prefix}-furniture`).checked },
+    filters: { weapon:el<HTMLInputElement>(`${prefix}-weapon`).checked, medicine:el<HTMLInputElement>(`${prefix}-medicine`).checked, component: el<HTMLInputElement>(`${prefix}-component`).checked, blocks: el<HTMLInputElement>(`${prefix}-blocks`).checked, steel: el<HTMLInputElement>(`${prefix}-steel`).checked, chunk: el<HTMLInputElement>(`${prefix}-chunk`).checked, wood: el<HTMLInputElement>(`${prefix}-wood`).checked, food: el<HTMLInputElement>(`${prefix}-food`).checked, furniture: el<HTMLInputElement>(`${prefix}-furniture`).checked },
     priority: Number(el<HTMLSelectElement>(`${prefix}-priority`).value), capacity,
   };
 }
@@ -198,16 +200,18 @@ function rebuildInspector() {
     el('manage-work').onclick = () => setPanel('work');
     const orders=document.createElement('p');orders.id='selected-orders';panel.append(orders);
     const cancel=document.createElement('button');cancel.id='clear-orders';cancel.textContent='Annuler les ordres directs';
+    createEquipmentInspection(panel,()=>{const pawn=snapshot?.pawns.find(p=>p.id===selectedPawn);return snapshot&&pawn?{world:snapshot,pawn}:undefined;},c=>void attempt(()=>client.command(c)));
     createSkillsInspection(panel);createHealthInspection(panel,()=>snapshot?.pawns.find(p=>p.id===selectedPawn),c=>void attempt(()=>client.command(c)));
     cancel.onclick=()=>{if(selectedPawn!==undefined)void attempt(()=>client.command({type:'clear-orders',pawnId:selectedPawn!}));};panel.append(cancel);
   } else if (selectedCell) {
-    panel.innerHTML = `<div class="panel-heading"><h2 id="cell-title"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><p id="cell-description"></p><p id="cell-materials"></p><p id="cell-job"></p><button id="cell-deconstruct" class="secondary-action" hidden>Déconstruire</button><button id="cell-cancel" class="secondary-action" hidden>Annuler cet ordre</button><div id="cell-storage" hidden><p id="cell-storage-quantity"></p>${storageSettings('selected-stockpile')}<button id="update-stockpile" class="secondary-action">Appliquer les réglages</button><button id="delete-stockpile" class="secondary-action">Retirer cette réserve</button></div>`;
+    panel.innerHTML = `<div class="panel-heading"><h2 id="cell-title"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><p id="cell-description"></p><p id="cell-materials"></p><button id="weapon-permission" class="secondary-action" hidden></button><p id="cell-job"></p><button id="cell-deconstruct" class="secondary-action" hidden>Déconstruire</button><button id="cell-cancel" class="secondary-action" hidden>Annuler cet ordre</button><div id="cell-storage" hidden><p id="cell-storage-quantity"></p>${storageSettings('selected-stockpile')}<button id="update-stockpile" class="secondary-action">Appliquer les réglages</button><button id="delete-stockpile" class="secondary-action">Retirer cette réserve</button></div>`;
     const storage = snapshot?.stockpiles.find(item => item.x === selectedCell!.x && item.z === selectedCell!.z);
     if (storage) {
       el<HTMLInputElement>('selected-stockpile-wood').checked = storage.filters.wood;
       el<HTMLInputElement>('selected-stockpile-food').checked = storage.filters.food;
       el<HTMLInputElement>('selected-stockpile-furniture').checked = storage.filters.furniture??false;
       el<HTMLInputElement>('selected-stockpile-blocks').checked = storage.filters.blocks??false;
+      el<HTMLInputElement>('selected-stockpile-weapon').checked=storage.filters.weapon??false;
       el<HTMLInputElement>('selected-stockpile-medicine').checked=storage.filters.medicine??false;
       el<HTMLInputElement>('selected-stockpile-component').checked = storage.filters.component??false;
       el<HTMLInputElement>('selected-stockpile-steel').checked = storage.filters.steel??false;
@@ -234,6 +238,7 @@ function rebuildInspector() {
   if (close) close.onclick = clearSelection;
 }
 function actionLabel(pawn: Pawn) {
+  if(pawn.equipmentTask)return pawn.equipmentTask.action==='equip'?'Va équiper son arme':'Dépose son arme';
   if(pawn.feed||pawn.tend||pawn.state==='resting'||pawn.rescue||carrierOf(snapshot!,pawn.id))return queryPawnStatus(snapshot!,pawn).reason;
   if(pawn.state==='downed'||pawn.state==='dead')return stateLabels[pawn.state];
   if(pawn.interruptedCargo)return pawn.state==='sleeping'?'Se repose · cargaison à déposer':'Cargaison à déposer · sol proche encombré';
@@ -296,11 +301,12 @@ function renderState() {
   }
   const signature = JSON.stringify(world.pawns.map(pawn => [pawn.id, pawn.name]));
   if (signature !== pawnSignature) { pawnSignature = signature; rebuildPawns(world); }
+  const equipment=equipmentProjection(world);
   for (const pawn of world.pawns) {
     const button = document.querySelector<HTMLButtonElement>(`[data-pawn="${pawn.id}"]`)!;
     button.classList.toggle('selected', selection.ids.has(pawn.id));
     button.setAttribute('aria-pressed', String(selection.ids.has(pawn.id)));
-    button.querySelector('strong')!.textContent = pawn.name; button.title = `${pawn.name} · ${actionLabel(pawn)}`;
+    button.querySelector('strong')!.textContent = pawn.name; button.title = `${pawn.name} · ${actionLabel(pawn)} · ${equipmentDescription(equipment.get(pawn.id),pawn)}`;button.dataset.equipment=equipment.get(pawn.id)?.item??'';
     button.querySelector('.pawn-symbol')!.textContent = pawn.state==='dead'?'†':pawn.state==='downed'?'!':pawn.state === 'sleeping' ? 'Z' : pawn.state === 'hungry' ? '!' : '';
     (button.querySelector('i') as HTMLElement).style.width = `${pawn.state==='dead'?0:pawn.mood}%`;
     const row = document.querySelector<HTMLElement>(`[data-worker="${pawn.id}"]`)!;
@@ -318,8 +324,8 @@ function renderState() {
     const pawn = world.pawns.find(item => item.id === selectedPawn);
     if (!pawn) clearSelection();
     else {
-      el('selected-name').textContent = pawn.name; el('selected-action').textContent = pawn.need||pawn.feed||pawn.tend||pawn.rescue||pawn.state==='dead'||pawn.state==='downed' ? actionLabel(pawn) : `${actionLabel(pawn)} · ${queryPawnStatus(world, pawn).reason}`;
-      updateSkillsInspection(el('inspector'),pawn);updateHealthInspection(el('inspector'),pawn);
+      el('selected-name').textContent = pawn.name; el('selected-action').textContent = pawn.equipmentTask||pawn.need||pawn.feed||pawn.tend||pawn.rescue||pawn.state==='dead'||pawn.state==='downed' ? actionLabel(pawn) : `${actionLabel(pawn)} · ${queryPawnStatus(world, pawn).reason}`;
+      updateEquipmentInspection(el('inspector'),world,pawn);updateSkillsInspection(el('inspector'),pawn);updateHealthInspection(el('inspector'),pawn);
       updateRecreationInspection(el('inspector'),pawn);
       roomInspection.update(el('inspector'), world, pawn);
       el('selected-orders').textContent=`${pawn.orders.active!==null?'Travail imposé · ':''}${pawn.orders.queue.length} ordre(s) en file${pawn.priorityWork?` · Priorité case ${pawn.priorityWork.cell.x}, ${pawn.priorityWork.cell.z}`:''}`;
@@ -347,6 +353,8 @@ function renderState() {
       if (building && building.kind !== 'campfire' && building.kind !== 'passive-cooler') el('cell-title').textContent += ` · ${ITEM_DEFINITIONS[building.material ?? 'wood'].label}${building.material === undefined ? ' (ancien)' : ''}`;
       const rock = rockInspection(world.tiles[z * world.width + x]!, resource);
       if (!packed && !structure && rock) { el('cell-title').textContent = rock.title; el('cell-description').textContent = `Case ${x}, ${z} · ${rock.description}`; }
+      const weapon=piles.find(p=>p.kind==='weapon'),permission=el<HTMLButtonElement>('weapon-permission');permission.hidden=!weapon;
+      if(weapon){permission.textContent=weapon.weapon?.forbidden?'Autoriser cette arme':'Interdire cette arme';permission.onclick=()=>void attempt(()=>client.command({type:'weapon-permission',itemId:weapon.id,allowed:!!weapon.weapon?.forbidden}));}
       el('cell-materials').textContent = piles.length ? `Au sol : ${piles.map(pile => `${pile.quantity} ${ITEM_DEFINITIONS[pile.item].label}${pile.kind==='food'?` · ${foodFreshnessLabel(pile,world.tick)}`:''}`).join(' · ')}` : '';
       el('cell-job').textContent = job ? `${job.construction==='blueprint'?'Plan · ':job.construction==='frame'?'Cadre · ':''}${jobLabels[job.kind]} · ${queryJobStatus(world, job).reason ?? 'En cours'}${constructionDeliveryLabel(world,job) ? ` · Livré : ${constructionDeliveryLabel(world,job)}` : ''}` : 'Aucun ordre sur cette case.';
       if(structure?.kind==='bed')el('cell-description').textContent += ` · Efficacité du repos : ${structure.material?.endsWith('-blocks')?90:100} %`;

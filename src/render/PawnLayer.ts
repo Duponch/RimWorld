@@ -1,5 +1,7 @@
+import { pawnGeometry,cargoGeometry } from './pawn-geometry';
+import { equipmentProjection } from './character-equipment';
 import { doorAt } from '../sim/door-rules';
-import { BLOCK_ITEMS, blockCargoKind } from './block-presentation';
+import { blockCargoKind } from './block-presentation';
 import { furnitureSurfaces } from './furniture-motion';
 import { pawnPresentationPose } from './pawn-presentation';
 import { constructionWorkTarget } from '../sim/construction-rules';
@@ -8,8 +10,7 @@ import type { MotionTimeline } from './MotionTimeline';
 import * as THREE from 'three/webgpu';
 import { Fn, If, attribute, cos, float, mix, positionLocal, sin, uniform, vec3 } from 'three/tsl';
 import type { World } from '../sim/types';
-import { CHUNK_ITEMS, chunkCargoKind } from './chunk-presentation';
-import { ITEM_DEFINITIONS } from '../sim/items';
+import { chunkCargoKind } from './chunk-presentation';
 import { adjacentTable } from '../sim/dining';
 import { CARRY_CAPACITY, footprintCells } from '../sim/definitions';
 import { PAWN_MODEL_SCALE, WORLD_SCALE } from '../world/scale';
@@ -18,107 +19,6 @@ type VisualPawn = { from: THREE.Vector4; to: THREE.Vector4 };
 const PAWN_COLORS = [0xeab969, 0x639eac, 0xc57c65, 0x809864, 0xaa8db2];
 const scratchColor = new THREE.Color();
 
-/** Eight rigid bones, authored entirely in code. Each vertex has one bone influence.
- * The bind position/pivot and animation state are evaluated in the vertex shader.
- * There is no per-pawn AnimationMixer, bone Object3D tree or CPU bone update.
- * This deliberately small prototype rig is not yet the future glTF atlas importer.
- */
-function pawnGeometry(): THREE.InstancedBufferGeometry {
-  const positions: number[] = [], normals: number[] = [], colors: number[] = [];
-  const bones: number[] = [], pivots: number[] = [], dyes: number[] = [];
-  const addPart = (size: number[], center: number[], bone: number, pivot: number[], color: number, dye = 0) => {
-    const box = new THREE.BoxGeometry(size[0], size[1], size[2]).toNonIndexed();
-    const pos = box.getAttribute('position'), normal = box.getAttribute('normal');
-    const col = new THREE.Color(color);
-    for (let i = 0; i < pos.count; i++) {
-      positions.push(pos.getX(i) + center[0], pos.getY(i) + center[1], pos.getZ(i) + center[2]);
-      normals.push(normal.getX(i), normal.getY(i), normal.getZ(i));
-      colors.push(col.r, col.g, col.b);
-      bones.push(bone); pivots.push(...pivot); dyes.push(dye);
-    }
-    box.dispose();
-  };
-  addPart([0.35, 0.43, 0.22], [0, 0.82, 0], 0, [0, 0.61, 0], 0xffffff, 1);
-  addPart([0.3, 0.3, 0.28], [0, 1.19, 0.01], 1, [0, 1.04, 0], 0xe2b899);
-  addPart([0.32, 0.11, 0.3], [0, 1.35, -0.02], 1, [0, 1.04, 0], 0x554741);
-  addPart([0.27, 0.15, 0.08], [0, 1.23, -0.13], 1, [0, 1.04, 0], 0x554741);
-  for (const side of [-1, 1]) {
-    const arm = side < 0 ? 2 : 3, leg = side < 0 ? 4 : 5, calf = side < 0 ? 6 : 7;
-    addPart([0.12, 0.28, 0.15], [side * 0.23, 0.85, 0], arm, [side * 0.23, 1.01, 0], 0xffffff, 1);
-    addPart([0.115, 0.12, 0.14], [side * 0.23, 0.65, 0], arm, [side * 0.23, 1.01, 0], 0xe2b899);
-    addPart([0.135, 0.21, 0.17], [side * 0.105, 0.505, 0], leg, [side * 0.105, 0.61, 0], 0x495052);
-    addPart([0.13, 0.235, 0.16], [side * 0.105, 0.2825, 0], calf, [side * 0.105, 0.61, 0], 0x495052);
-    addPart([0.145, 0.12, 0.23], [side * 0.105, 0.11, 0.03], calf, [side * 0.105, 0.61, 0], 0x443e37);
-    addPart([0.035, 0.035, 0.014], [side * 0.07, 1.2, 0.157], 1, [0, 1.04, 0], 0x433e39);
-  }
-  const geometry = new THREE.InstancedBufferGeometry();
-  // WebGPU guarantees only eight vertex-buffer slots. Keeping authored attributes
-  // interleaved leaves room for the five independent per-instance attributes.
-  const vertexData = new Float32Array(bones.length * 14);
-  for (let i = 0; i < bones.length; i++) {
-    vertexData.set(positions.slice(i * 3, i * 3 + 3), i * 14);
-    vertexData.set(normals.slice(i * 3, i * 3 + 3), i * 14 + 3);
-    vertexData.set(colors.slice(i * 3, i * 3 + 3), i * 14 + 6);
-    vertexData[i * 14 + 9] = bones[i];
-    vertexData.set(pivots.slice(i * 3, i * 3 + 3), i * 14 + 10);
-    vertexData[i * 14 + 13] = dyes[i];
-  }
-  const vertices = new THREE.InterleavedBuffer(vertexData, 14);
-  geometry.setAttribute('position', new THREE.InterleavedBufferAttribute(vertices, 3, 0));
-  geometry.setAttribute('normal', new THREE.InterleavedBufferAttribute(vertices, 3, 3));
-  geometry.setAttribute('color', new THREE.InterleavedBufferAttribute(vertices, 3, 6));
-  geometry.setAttribute('boneId', new THREE.InterleavedBufferAttribute(vertices, 1, 9));
-  geometry.setAttribute('bindPivot', new THREE.InterleavedBufferAttribute(vertices, 3, 10));
-  geometry.setAttribute('dye', new THREE.InterleavedBufferAttribute(vertices, 1, 13));
-  geometry.instanceCount = 0;
-  return geometry;
-}
-
-/** Cargo is a second instanced batch sharing the pawn pose attributes. Its
- * attachment and interpolation stay on the GPU, including during camera motion.
- * These bundles indicate kind/load; individual logs are not individual items.
- */
-function cargoGeometry(): THREE.InstancedBufferGeometry {
-  const data: number[] = [];
-  const part = (size: number[], center: number[], kind: number, color: number) => {
-    const box = new THREE.BoxGeometry(size[0], size[1], size[2]).toNonIndexed();
-    const positions = box.getAttribute('position'), normals = box.getAttribute('normal');
-    const tint = new THREE.Color(color);
-    for (let i = 0; i < positions.count; i++) data.push(
-      positions.getX(i) + center[0], positions.getY(i) + center[1], positions.getZ(i) + center[2],
-      normals.getX(i), normals.getY(i), normals.getZ(i), tint.r, tint.g, tint.b, kind,
-    );
-    box.dispose();
-  };
-  part([0.56, 0.105, 0.12], [0, -0.025, -0.08], 1, 0xa37b4d);
-  part([0.56, 0.105, 0.12], [0, -0.025, 0.08], 1, 0xb08c5d);
-  part([0.54, 0.105, 0.12], [0, 0.07, 0], 1, 0xc6a477);
-  part([0.07, 0.22, 0.3], [0.14, 0.015, 0], 1, 0x66584b);
-  part([0.44, 0.2, 0.32], [0, -0.035, 0], 2, 0x947653);
-  for (const x of [-0.1, 0.1]) for (const z of [-0.075, 0.075]) {
-    part([0.15, 0.1, 0.12], [x, 0.09, z], 2, x * z > 0 ? 0xba7e65 : 0xb9705c);
-  }
-  part([0.60,0.44,0.46],[0,0,0],4,0xb6996c);
-  part([0.12,0.46,0.48],[0,0,0],4,0x6f634e);
-  part([0.38, 0.16, 0.26], [0, 0, 0], 3, 0xc7b96b);
-  part([0.09, 0.17, 0.27], [0, 0, 0], 3, 0x86804e);
-  part([.55,.2,.3],[0,0,0],11,ITEM_DEFINITIONS.steel.color);
-  part([.48,.26,.4],[0,0,0],17,ITEM_DEFINITIONS.component.color);
-  part([.2,.07,.26],[0,.16,0],17,0x637d77);
-  (['herbal-medicine','medicine','glitterworld-medicine'] as const).forEach((item,i)=>{part([.38,.25,.3],[0,0,0],18+i,ITEM_DEFINITIONS[item].color);part([.2,.03,.065],[0,.14,0],18+i,0xf0eee0);part([.065,.03,.2],[0,.14,0],18+i,0xf0eee0);});
-  BLOCK_ITEMS.forEach((item,i)=>{part([.27,.17,.36],[-.145,0,0],12+i,ITEM_DEFINITIONS[item].color);part([.27,.17,.36],[.145,0,0],12+i,ITEM_DEFINITIONS[item].color);});
-  CHUNK_ITEMS.forEach((item,i)=>{part([.52,.34,.42],[0,0,0],5+i,ITEM_DEFINITIONS[item].color);part([.22,.2,.27],[.18,-.05,-.12],5+i,ITEM_DEFINITIONS[item].color);});
-  const vertices = new THREE.InterleavedBuffer(new Float32Array(data), 10);
-  const geometry = new THREE.InstancedBufferGeometry();
-  geometry.setAttribute('position', new THREE.InterleavedBufferAttribute(vertices, 3, 0));
-  geometry.setAttribute('normal', new THREE.InterleavedBufferAttribute(vertices, 3, 3));
-  geometry.setAttribute('color', new THREE.InterleavedBufferAttribute(vertices, 3, 6));
-  geometry.setAttribute('cargoKind', new THREE.InterleavedBufferAttribute(vertices, 1, 9));
-  geometry.instanceCount = 0;
-  return geometry;
-}
-
-/** Owns GPU actor/cargo batches; receives snapshots, never simulates gameplay. */
 export class PawnLayer {
   private selected:ReadonlySet<number>=new Set();
   private pawnIds:number[]=[];
@@ -149,8 +49,9 @@ export class PawnLayer {
     geometry.setAttribute('aTo', new THREE.InstancedBufferAttribute(new Float32Array(count * 4), 4));
     geometry.setAttribute('aMotion', new THREE.InstancedBufferAttribute(new Float32Array(count * 4), 4));
     geometry.setAttribute('aTint', new THREE.InstancedBufferAttribute(new Float32Array(count * 3), 3));
+    geometry.setAttribute('aEquipment',new THREE.InstancedBufferAttribute(new Float32Array(count),1));
     geometry.setAttribute('aCargo', new THREE.InstancedBufferAttribute(new Float32Array(count * 2), 2));
-    for (const name of ['aFrom', 'aTo', 'aMotion', 'aTint', 'aCargo', 'aTravel']) (geometry.getAttribute(name) as THREE.InstancedBufferAttribute).setUsage(THREE.DynamicDrawUsage);
+    for (const name of ['aFrom', 'aTo', 'aMotion', 'aTint', 'aCargo', 'aTravel', 'aEquipment']) (geometry.getAttribute(name) as THREE.InstancedBufferAttribute).setUsage(THREE.DynamicDrawUsage);
     const mat = material(0xffffff);
     this.configure?.(mat);
     mat.positionNode = Fn(() => {
@@ -193,10 +94,11 @@ export class PawnLayer {
         const x=animated.x.toVar(),y=animated.y.toVar(),z=animated.z.toVar();
         animated.assign(vec3(float(.65).sub(y),z.add(.19+.95/PAWN_MODEL_SCALE),x.add(.3)));
       });
+      If(attribute('dye','float').lessThan(0).and(attribute('aEquipment','float').lessThan(.5)),()=>{animated.assign(vec3(0));});
       const cy = cos(pose.w), sy = sin(pose.w);
       return vec3(animated.x.mul(cy).add(animated.z.mul(sy)), animated.y, animated.z.mul(cy).sub(animated.x.mul(sy))).mul(PAWN_MODEL_SCALE).add(pose.xyz);
     })();
-    mat.colorNode = mix(attribute('color', 'vec3'), attribute('aTint', 'vec3'), attribute('dye', 'float'));
+    mat.colorNode = mix(attribute('color', 'vec3'), attribute('aTint', 'vec3'), attribute('dye', 'float').max(0));
     const mesh = new THREE.Mesh(geometry, mat);
     // CPU bounds cannot follow the shader positions. Individual culling/LOD is a later measured optimization.
     mesh.frustumCulled = false;
@@ -244,6 +146,7 @@ export class PawnLayer {
     const motion = geometry.getAttribute('aMotion') as THREE.InstancedBufferAttribute;
     const tint = geometry.getAttribute('aTint') as THREE.InstancedBufferAttribute;
     const cargo = geometry.getAttribute('aCargo') as THREE.InstancedBufferAttribute;
+    const equipment=geometry.getAttribute('aEquipment') as THREE.InstancedBufferAttribute,gears=equipmentProjection(world);
     const carried = new Map<number, World['piles'][number]>();
     for (const pile of world.piles) if (pile.owner.type === 'pawn') carried.set(pile.owner.pawnId, pile);
     const present = new Set<number>();
@@ -292,12 +195,13 @@ export class PawnLayer {
       scratchColor.setHex(PAWN_COLORS[index % PAWN_COLORS.length]);
       if(pawn.state==='dead')scratchColor.setHex(0x73756c);
       tint.setXYZ(index, scratchColor.r, scratchColor.g, scratchColor.b);
+      equipment.setX(index,gears.has(pawn.id)?1:0);
       const load = carried.get(pawn.id);
       const packed=world.packed?.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
-      cargo.setXY(index, pawn.rescue?.phase==='carry'?-1:packed?4:load ? load.kind==='medicine' ? (load.item==='herbal-medicine'?18:load.item==='medicine'?19:20) : load.kind === 'component' ? 17 : load.kind === 'blocks' ? blockCargoKind(load.item) : load.kind === 'steel' ? 11 : load.kind === 'chunk' ? chunkCargoKind(load.item) : load.kind === 'wood' ? 1 : load.item === 'survival-meal' ? 3 : 2 : 0, packed?1:load ? Math.min(1, load.quantity / CARRY_CAPACITY) : 0);
+      cargo.setXY(index, pawn.rescue?.phase==='carry'?-1:packed?4:load ? load.kind==='weapon'?21:load.kind==='medicine' ? (load.item==='herbal-medicine'?18:load.item==='medicine'?19:20) : load.kind === 'component' ? 17 : load.kind === 'blocks' ? blockCargoKind(load.item) : load.kind === 'steel' ? 11 : load.kind === 'chunk' ? chunkCargoKind(load.item) : load.kind === 'wood' ? 1 : load.item === 'survival-meal' ? 3 : 2 : 0, packed||load?.kind==='weapon'?1:load ? Math.min(1, load.quantity / CARRY_CAPACITY) : 0);
     });
     for (const id of this.visuals.keys()) if (!present.has(id)) this.visuals.delete(id);
-    for (const attr of [fromAttribute, toAttribute, motion, tint, cargo]) attr.needsUpdate = true;
+    for (const attr of [fromAttribute, toAttribute, motion, tint, cargo, equipment]) attr.needsUpdate = true;
     geometry.instanceCount = world.pawns.length;
     (this.cargoMesh!.geometry as THREE.InstancedBufferGeometry).instanceCount = world.pawns.length;
     (this.selectionMesh!.geometry as THREE.InstancedBufferGeometry).instanceCount=world.pawns.length;

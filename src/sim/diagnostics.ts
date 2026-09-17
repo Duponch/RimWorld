@@ -32,10 +32,15 @@ export function queryJobStatus(world: World, job: Job): JobDiagnostic {
   return { code: enabled ? 'ready' : 'waiting-worker', reason: enabled ? 'Prêt ; attend un colon disponible et un accès.' : 'Travail désactivé pour tous les colons.', delivered, required };
 }
 export function queryPawnStatus(world: World, pawn: Pawn): { code: string; reason: string } {
+  if(pawn.equipmentTask)return {code:'equipment',reason:pawn.equipmentTask.action==='equip'?'Rejoint son arme avant de l’équiper.':'Dépose son arme au sol.'};
   const carrier=carrierOf(world,pawn.id);
   if(carrier)return {code:'carried-patient',reason:`Transporté par ${carrier.name} vers un lit.`};
   if(pawn.feed)return {code:'feed',reason:`${pawn.feed.phase==='pickup'?'Prélève une portion pour':pawn.feed.phase==='deliver'?'Apporte une portion à':'Nourrit'} ${world.pawns.find(p=>p.id===pawn.feed!.patientId)?.name??'un patient'}.`};
-  if(pawn.tend)return {code:'tend',reason:pawn.tend.patientId===pawn.id?(pawn.tend.phase==='tend'?'Soigne ses propres blessures sans médicament.':'Se place pour soigner ses propres blessures.'):`${pawn.tend.phase==='tend'?'Traite':'Rejoint'} ${world.pawns.find(p=>p.id===pawn.tend!.patientId)?.name??'un patient'} sans médicament.`};
+    if(pawn.tend){
+      const t=pawn.tend,target=t.patientId===pawn.id?'ses propres blessures':world.pawns.find(p=>p.id===t.patientId)?.name??'un patient';
+      const supply=t.medicine?`avec ${ITEM_DEFINITIONS[t.medicine.item].label.toLowerCase()}`:'sans médicament';
+      return {code:'tend',reason:t.phase==='pickup'?`Prélève ${ITEM_DEFINITIONS[t.medicine!.item].label.toLowerCase()} pour ${target}.`:t.phase==='find-medicine'?`Recherche une nouvelle dose pour ${target}.`:`${t.phase==='tend'?'Soigne':'Rejoint'} ${target} ${supply}.`};
+    }
   if(pawn.state==='resting')return {code:'patient',reason:pawn.medicalSleep?'Dort pendant sa récupération médicale.':'Attend des soins ou récupère au lit, éveillé.'};
   if(pawn.rescue)return {code:'rescue',reason:`${pawn.rescue.phase==='carry'?'Porte':'Rejoint'} ${world.pawns.find(p=>p.id===pawn.rescue!.patientId)?.name??'un patient'} pour le secourir.`};
   if(pawn.state==='dead')return {code:'dead',reason:'Décédé ; dépouille conservée sur place. Le transport et les sépultures ne sont pas encore disponibles.'};

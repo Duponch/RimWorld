@@ -13,6 +13,7 @@ import type { Structure } from '../sim/types';
 import { buildJobMarkers } from './JobLayer';
 import { jobDuration } from '../sim/farming';
 import { travelHeight } from './furniture-motion';
+import { REVOLVER_PARTS } from './weapon-shape';
 import { pileSurfaces } from './pile-surfaces';
 import { CropLayer } from './CropLayer';
 import { PawnSelectionInput, type ScreenPawn, type SelectionGesture } from './PawnSelectionInput';
@@ -443,7 +444,7 @@ export class ColonyRenderer {
     type Bundle = { x: number; z: number; kind: MaterialKind; item: ItemId; quantity: number; supplied: boolean; surface?: import('./pile-surfaces').PileSurface };
     const cells = new Map<string, Bundle>();
     for (const pile of world.piles) {
-      if (pile.owner.type === 'pawn') continue;
+      if (pile.owner.type === 'pawn'||pile.owner.type==='equipment') continue;
       const job = pile.owner.type === 'job' ? jobById.get(pile.owner.jobId) : undefined;
       if (pile.owner.type === 'job' && !job) continue;
       const position = pile.owner.type === 'ground' ? pile.owner : job!;
@@ -480,6 +481,8 @@ export class ColonyRenderer {
             logs.push({ x, z: lz, y, sx: WORLD_SCALE.pileWidth, sy: 0.12, sz: 0.12, color: row % 2 ? 0x9d794d : 0x896841 });
             ends.push({ x: x + WORLD_SCALE.pileWidth / 2 + 0.003, z: lz, y, sx: 0.012, sy: 0.095, sz: 0.095 });
           }
+        } else if(bundle.kind==='weapon'){
+          for(const p of REVOLVER_PARTS)food.push({x:x+p.center[0],y:.07+p.center[2],z:z+p.center[1],sx:p.size[0],sy:p.size[2],sz:p.size[1],color:p.color});
         } else if(bundle.kind==='medicine') {
           food.push({x:bundle.x,z,y:.14,sx:.42,sy:.26,sz:.36,color:ITEM_DEFINITIONS[bundle.item].color});
           food.push({x:bundle.x,z,y:.285,sx:.23,sy:.03,sz:.07,color:0xf0eee0},{x:bundle.x,z,y:.285,sx:.07,sy:.03,sz:.23,color:0xf0eee0});

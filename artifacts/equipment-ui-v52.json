@@ -1,0 +1,26 @@
+{
+  "date": "2026-09-17T21:30:13.221Z",
+  "backend": "native WebGPU",
+  "frames": 1401,
+  "approach": 742,
+  "held": 472,
+  "dropping": 151,
+  "firstEquipped": {
+    "tick": 3025,
+    "play": 3025.008999999997,
+    "dt": 4.600000001490116,
+    "equipped": 1,
+    "cargo": 0,
+    "phase": "idle",
+    "progress": null,
+    "owner": "equipment",
+    "x": 11,
+    "z": 5
+  },
+  "savedTicks": [
+    3000,
+    3031
+  ],
+  "finalTick": 3036,
+  "errors": []
+}

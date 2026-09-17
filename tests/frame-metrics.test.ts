@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { assertHarvestPhase } from '../scripts/harvest-assertions';
+import { assertHarvestPhase,visibleSpeedResponse } from '../scripts/harvest-assertions';
 import { expect, test } from 'vitest';
 import { FrameMetrics } from '../src/render/FrameMetrics';
 
@@ -22,6 +22,8 @@ test('frame telemetry measures real cadence, counts stalls and resets hidden/res
 
 
 test('presentation acceptance rejects the recorded speed defect and incomplete or desynchronized observations',()=>{
+  for(const [delta,dt,old,next,result] of [[.2,20,1,6,false],[.7,20,1,6,true],[1.2,20,1,6,true],[.7,20,6,1,true],[.2,20,6,1,true],[0,20,6,1,false],[1.4,20,1,6,false],[NaN,20,1,6,false],[1,0,1,6,false]])
+    expect(visibleSpeedResponse(delta as number,dt as number,old as number,next as number)).toBe(result);
   const load=(name:string)=>JSON.parse(readFileSync(new URL('../artifacts/'+name,import.meta.url),'utf8')).phases;
   const old=load('harvest-sync-speed-before.json')[0];
   expect(()=>assertHarvestPhase({...old,starvedFrames:0,controls:old.controls.filter((c:any)=>c.delay!==null)})).toThrow(/Delayed speed/);

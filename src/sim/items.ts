@@ -4,6 +4,7 @@ import type { MaterialKind, MaterialPile, Pawn, World } from './types.ts';
  * rules are tracked in docs/development/food-items.md. Nutrition uses integer
  * hundredths here; the actor's 0..100 meter represents one nutrition unit. */
 export const ITEM_DEFINITIONS = Object.freeze({
+  revolver:Object.freeze({label:'Revolver',kind:'weapon',stackLimit:1,nutrition:0,maxIngest:0,color:0x606b72}),
   'herbal-medicine':Object.freeze({label:'Plantes médicinales',kind:'medicine',stackLimit:25,nutrition:0,maxIngest:0,color:0x7d985c}),
   medicine:Object.freeze({label:'Médicaments',kind:'medicine',stackLimit:25,nutrition:0,maxIngest:0,color:0x91c6cc}),
   'glitterworld-medicine':Object.freeze({label:'Médicaments avancés',kind:'medicine',stackLimit:25,nutrition:0,maxIngest:0,color:0xbcdce6}),
@@ -28,7 +29,7 @@ export const ITEM_DEFINITIONS = Object.freeze({
   'legacy-portion': Object.freeze({ label: 'Portion historique', kind: 'food', stackLimit: 75, nutrition: 35, maxIngest: 1, color: 0xba745a }),
 } as const);
 export type ItemId = keyof typeof ITEM_DEFINITIONS;
-export const legacyItem = (kind: MaterialKind): ItemId => kind==='medicine'?missingMedicineType():kind==='component'?'component':kind==='blocks'?missingBlockType(): kind === 'steel' ? 'steel' : kind === 'wood' ? 'wood' : kind === 'chunk' ? 'legacy-chunk' : 'legacy-portion';
+export const legacyItem = (kind: MaterialKind): ItemId => kind==='weapon'?missingWeaponType():kind==='medicine'?missingMedicineType():kind==='component'?'component':kind==='blocks'?missingBlockType(): kind === 'steel' ? 'steel' : kind === 'wood' ? 'wood' : kind === 'chunk' ? 'legacy-chunk' : 'legacy-portion';
 export const nutritionOf = (pile: MaterialPile): number => ITEM_DEFINITIONS[pile.item].nutrition * pile.quantity;
 export function availableNutrition(world: World): number {
   return world.piles.reduce((sum, pile) => sum + (pile.owner.type === 'job' ? 0 : nutritionOf(pile)), 0) / 100;
@@ -51,3 +52,5 @@ export function adultHungerFactor(level: number): number {
 function missingBlockType():never {throw new Error('Stone blocks require an explicit ItemId.');}
 
 function missingMedicineType():never {throw new Error('Medicine requires an explicit ItemId.');}
+
+function missingWeaponType():never {throw new Error('Weapon producers require an explicit item.');}

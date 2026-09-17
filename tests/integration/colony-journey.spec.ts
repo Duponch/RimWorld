@@ -53,6 +53,7 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
       }
       const current=await world(page), summary=colonySummary(current), context=JSON.stringify(summary);
       await testInfo.attach(`hourly-world-${hour}`,{contentType:'application/json',body:JSON.stringify(current)});
+      expect(summary.equipment).toHaveLength(1);if(hour)expect(summary.equipment[0]!.owner.type).toBe('equipment');
       expect(validateWorld(current),context).toEqual([]);expect(woodAccount(current),context).toBe(initialWood);
       expect(summary.thermal.outdoors).toBeGreaterThanOrEqual(14);expect(summary.thermal.outdoors).toBeLessThanOrEqual(28);
       for(const t of summary.thermal.temperatures){expect(t).toBeGreaterThanOrEqual(14);expect(t).toBeLessThanOrEqual(28);}

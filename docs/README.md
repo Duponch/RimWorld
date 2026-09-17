@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+V52 : [premier équipement physique](development/equipment.md), [règles revérifiées](research/equipment-reference.md). Revolver au sol, accès/échange/dépôt, propriété distincte de la cargaison et attache GPU. Mobilisation, tirs, vêtements et inventaire restent ouverts.
+
 V51 : [médicaments et cinq plafonds de soins](development/medicines.md), [sources et subtilités vérifiées](research/medicines-reference.md). Prélèvement, portage, doses par opération et soins groupés ; trente doses industrielles sur les nouveaux sites. Acquisition complète et maladies restent ouvertes.
 
 V50 : [priorités médicales urgentes](development/urgent-care.md), [recherche et correction de portée](research/urgent-care-reference.md). Branche avant les besoins aux décisions admissibles, revue au lit et réévaluation après une plaie auto-traitée ; aucune préemption universelle des tâches engagées.
@@ -14,7 +16,7 @@ V46 : [secours physiques et lits médicaux](development/rescue.md). Médecin, cl
 
 V44 : [interruptions et cargaisons conservées](development/interrupted-cargo.md), [relecture de l’épuisement et du dépôt](research/interrupted-cargo-reference.md).
 
-V45 : [santé active](development/health.md), [recherche des transitions et accidents](research/health-reference.md). Anatomie, lésions, incapacités, décès et effets physiques intégrés ; secours ajoutés en V46, traitements sans médicament en V47 ; équipement et combat restent à développer. [Référence des secours et préparation des traitements](research/care-preparation.md).
+V45 : [santé active](development/health.md), [recherche des transitions et accidents](research/health-reference.md). Anatomie, lésions, incapacités, décès et effets physiques intégrés ; secours ajoutés en V46, traitements sans médicament en V47 ; première arme ajoutée en V52, combat encore absent. [Référence des secours et préparation des traitements](research/care-preparation.md).
 
 V43 : [première compétence et apprentissage](development/skills.md), [recherche et réorientation des priorités](research/skills-reference.md).
 

@@ -1,5 +1,7 @@
 # Stratégie de validation
 
+V52 : cinq scénarios `equipment.test.ts` croisent propriété/accès/échange, file ordinaire, dépôts, incapacité/lit/décès/sol saturé, récupération, filtres, migrations et snapshots. `integration/equipment.spec.ts` observe les attributs GPU sur le vrai parcours UI. Pilote naturel enrichi d’une arme obtenue par commande et conservée plusieurs jours. `equipment-bench.ts` mélange équipement, soins, abattage, minage et stockage à 3/30/100 acteurs ; `MINING_EQUIPMENT=1` arme le banc natif minier. Résultats dans [validation](validation.md).
+
 V51 : six scénarios `medicine.test.ts` croisent groupes, plafonds, puissance/XP, sources inaccessibles, recharges, dix réservations, auto-soins urgents, saturation/pourriture, migrations et cent acteurs. `integration/medicine.spec.ts` observe les attributs GPU après rendu aux phases physiques et conserve les snapshots. Le pilote civil range/conserve trente doses ; il ne crée pas de blessure. Bancs partagés `--medicine` / `MEDICINE_LOAD=1` mesurés séparément ; conserver les échecs initiaux et les limites de charge.
 
 Le mode facultatif `MEDICAL_PROFILE=1` du banc natif conserve un profil CDP du thread principal dans `tmp/medical-main-profile.cpuprofile`, sur le seul cas de cent acteurs. `MEDICAL_LOAD_REPORT` permet de préserver la mesure normale ; ne pas mélanger les percentiles avec et sans profileur. Le profil sert à attribuer les coûts, puis une mesure sans instrumentation lourde confirme l'effet du changement.

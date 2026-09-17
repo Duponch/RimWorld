@@ -1,5 +1,7 @@
 # Sélection et commandes directes — V23
 
+V52 ajoute l’ordre d’équiper au clic droit et le dépôt depuis Équipement. La file spécifique d’équipement est refusée explicitement ; les travaux ordinaires ajoutés derrière cet ordre conservent leurs réservations. [Contrat](equipment.md).
+
 V47 ajoute `order-tend` au clic droit : réservation d’un patient réellement au lit, approche et traitement sans médicament. Acceptation atomique, annulation explicite, priorité Médecin désactivée respectée pour les nouveaux ordres. Maj/file de soins est refusée, comme celle des secours V46. [Contrat](tending.md).
 
 V46 : [secours direct](rescue.md) par clic droit, validation de l’accès/patient/lit et prévalidation du dépôt de cargaison. L’ordre persiste si Médecin passe ensuite à zéro. Maj/file de secours reste explicitement refusé ; les anciennes files ne changent pas.

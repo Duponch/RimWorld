@@ -1,4 +1,5 @@
 import { carrierOf } from './rescue-state.ts';
+import { dropIncapacitatedEquipment } from './equipment-state.ts';
 import type { BodyAssessment } from './body-capacities.ts';
 import { advanceMedical } from './injury-evolution.ts';
 import { addResolvedInjury,createMedicalRecord,medicalStatus } from './injury-state.ts';
@@ -26,14 +27,15 @@ export function reconcilePawnHealth(world:World,pawn:Pawn,body=pawnBody(pawn)):v
       pawn.collapsePending=false;pawn.restZeroTicks=0;pawn.state=status;
       announce(world,status==='dead'?`${pawn.name} est décédé.`:`${pawn.name} est à terre.`);
     }
-    return;
+    dropIncapacitatedEquipment(world,pawn);return;
   }
   if(pawn.state==='downed') {
     // Releases the medical use of a bed. Ordinary needs may seek it again.
     pawn.need=null;delete pawn.medicalSleep;pawn.state='idle';pawn.planCooldown=0;pawn.needCooldown=0;
     announce(world,`${pawn.name} peut de nouveau se relever.`);
   }
-  if(body.capacities.manipulation===0&&(pawn.jobId!==null||pawn.feed||pawn.tend||pawn.rescue||pawn.haul||pawn.cooking||pawn.orders.active!==null||pawn.orders.queue.length||pawn.priorityWork))interruptWork(world,pawn);
+  if(body.capacities.manipulation===0&&(pawn.equipmentTask||pawn.jobId!==null||pawn.feed||pawn.tend||pawn.rescue||pawn.haul||pawn.cooking||pawn.orders.active!==null||pawn.orders.queue.length||pawn.priorityWork))interruptWork(world,pawn);
+  dropIncapacitatedEquipment(world,pawn);
 }
 export function updatePawnHealth(world:World,pawn:Pawn):BodyAssessment|undefined {
   const record=pawn.health;if(!record)return;

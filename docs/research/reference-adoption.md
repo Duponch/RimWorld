@@ -1,5 +1,7 @@
 # Adoption du référentiel utilisateur
 
+V52 — chapitres 2/8/13/20/29, UI-014 et SYS/TEST-055 : adopter propriétaire séparé, transfert physique et ancienne arme conservée ; adapter dépôt saturé, récupération/attache 3D ; différer UI-015, CAT-034..037, GAP-007 et inventaire complet. [Recherche fraîche](equipment-reference.md), [contrat](../development/equipment.md).
+
 V51 — chapitres 8/9/11/15, SYS/TEST-051..054 et 094/096, CAT-018 : adopter plafonds, puissance, doses et groupes ; adapter contact/temps ; différer acquisition complète, inventaire personnel, collecte opportuniste et complications. [Recherche fraîche](medicines-reference.md), [contrat](../development/medicines.md).
 
 V50 — chapitres 8/9/15, SYS/TEST-044 et 094/096 : adopter filtre de priorité et réévaluation des soins, adapter cadence/sortie 3D, différer expiration/réaction aux dégâts des autres tâches. La [recherche fraîche](urgent-care-reference.md) corrige la cible trop large de préemption médicale universelle ; [contrat](../development/urgent-care.md).
@@ -125,7 +127,7 @@ La [recherche repas/confort](dining-reference.md) corrige les généralisations 
 
 ## Complément : catalogue, équipement et alimentation V5
 
-Les chapitres 1/4/11/31/34 n’apportent pas un catalogue individuel exhaustif ni un manifeste de version ; [couverture vérifiée](../gameplay/content-catalogue.md). Les chapitres 2/8/13/20/29, SYS-055, UI-014/015 et CAT-034..037 sont adoptés comme contrat d’inventaire/équipement ; la synchronisation des portraits est explicitée dans [character-presentation.md](../development/character-presentation.md), encore prévue.
+Les chapitres 1/4/11/31/34 n’apportent pas un catalogue individuel exhaustif ni un manifeste de version ; [couverture vérifiée](../gameplay/content-catalogue.md). Les chapitres 2/8/13/20/29, SYS-055, UI-014/015 et CAT-034..037 sont adoptés comme contrat d’inventaire/équipement ; la synchronisation des portraits est explicitée dans [character-presentation.md](../development/character-presentation.md), commencée pour la principale V52 ; vêtements et avatars définitifs restent prévus.
 
 CAT-005/011/015, SYS-076..078 et TEST-076..078 orientent les [aliments V5](../development/food-items.md). Adoption des quantités et de la nutrition, adaptation du temps à 10 Hz et maintien explicite des anciens profils ; préférences complètes, agriculture et conservation différées. Les arrondis et facteurs contextuels ont été revérifiés ; le nombre de tests du corpus ne définit pas celui de notre suite.
 
