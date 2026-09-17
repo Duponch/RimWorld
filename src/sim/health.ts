@@ -33,7 +33,7 @@ export function reconcilePawnHealth(world:World,pawn:Pawn,body=pawnBody(pawn)):v
     pawn.need=null;delete pawn.medicalSleep;pawn.state='idle';pawn.planCooldown=0;pawn.needCooldown=0;
     announce(world,`${pawn.name} peut de nouveau se relever.`);
   }
-  if(body.capacities.manipulation===0&&(pawn.jobId!==null||pawn.tend||pawn.rescue||pawn.haul||pawn.cooking||pawn.orders.active!==null||pawn.orders.queue.length||pawn.priorityWork))interruptWork(world,pawn);
+  if(body.capacities.manipulation===0&&(pawn.jobId!==null||pawn.feed||pawn.tend||pawn.rescue||pawn.haul||pawn.cooking||pawn.orders.active!==null||pawn.orders.queue.length||pawn.priorityWork))interruptWork(world,pawn);
 }
 export function updatePawnHealth(world:World,pawn:Pawn):BodyAssessment|undefined {
   const record=pawn.health;if(!record)return;

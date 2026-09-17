@@ -17,7 +17,7 @@ const NEED_INTERVAL = 20;
 export function processSleeping(world: World, pawn: Pawn, context: NeedContext, canPlan: boolean): boolean {
   if(pawn.need?.kind==='sleep'&&pawn.need.medical)return processPatientRest(world,pawn,context);
   let reach: Reachability | null;
-  if (!pawn.need && wantsSleep(world, pawn) && canPlan && (world.restRules === 'legacy' || (pawn.jobId === null && !pawn.haul && !pawn.cooking&&!pawn.tend&&!pawn.rescue))) {
+  if (!pawn.need && wantsSleep(world, pawn) && canPlan && (world.restRules === 'legacy' || (pawn.jobId === null && !pawn.haul && !pawn.cooking&&!pawn.feed&&!pawn.tend&&!pawn.rescue))) {
     // Transit does not claim bed ownership; only a sleep reservation excludes another sleeper.
     const ownedBed = world.structures.find(item => item.id === pawn.bedId && item.kind === 'bed');
     const medical=patientWork(pawn);

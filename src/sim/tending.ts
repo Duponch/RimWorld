@@ -1,18 +1,18 @@
+import { lyingPatient,patientClaimed,bedsideAccess } from './care-access.ts';
+export { lyingPatient } from './care-access.ts';
 import { dryTendQuality,medicalTendQuality,medicalTendSpeed,treatmentTarget,type TendTask } from './care-rules.ts';
 import { medicalWorkRefusal } from './health-rules.ts';
 import { healthRandom,updatePawnHealth,reconcilePawnHealth } from './health.ts';
 import { tendInjury,tendMissingPart } from './injury-state.ts';
 import { learnSkill } from './skills.ts';
-import { blockedCells,reachableCells,routeToCell,routeCost,workNeighbours,type Reachability } from './pathfinding.ts';
+import { blockedCells,reachableCells,type Reachability } from './pathfinding.ts';
 import { canStandAt } from './furniture-travel.ts';
-import { reservedServiceCells } from './service-reservations.ts';
 import { carrierOf } from './rescue-state.ts';
 import { clearQueuedOrders } from './player-orders.ts';
 import { planCommandDrops,releaseWork } from './work-release.ts';
 import type { NeedContext } from './needs.ts';
 import type { Cell,CommandResult,Pawn,World } from './types.ts';
 
-export const lyingPatient=(p:Pawn):boolean=>p.state!=='dead'&&p.moveCooldown===0&&p.need?.kind==='sleep'&&p.need.phase==='sleep'&&p.need.bedId!==null;
 export function tendingReason(world:World,doctor:Pawn,patient:Pawn|undefined,accepted=false):string|undefined {
   return medicalWorkRefusal(doctor)??(!accepted&&doctor.priorities.doctor===0?'Médecin est désactivé.'
     :doctor.interruptedCargo?'La cargaison doit être déposée avant les soins.'
@@ -20,14 +20,11 @@ export function tendingReason(world:World,doctor:Pawn,patient:Pawn|undefined,acc
     :!patient||patient===doctor?'Les soins auto-administrés ne sont pas encore disponibles.'
     :!lyingPatient(patient)||carrierOf(world,patient.id)?'Le patient doit être installé dans un lit.'
     :!treatmentTarget(patient)?'Aucune plaie autorisée ne nécessite un traitement.'
-    :world.pawns.some(p=>p!==doctor&&p.tend?.patientId===patient.id)?'Ce patient est déjà réservé par un médecin.':undefined);
+    :patientClaimed(world,patient.id,doctor)?'Ce patient est déjà réservé par un médecin.':undefined);
 }
 export function tendingProposal(world:World,doctor:Pawn,patient:Pawn,reach:Reachability):{task:TendTask;path:Cell[]}|undefined {
   if(tendingReason(world,doctor,patient))return;
-  const reserved=reservedServiceCells(world,doctor.id);let best:{spot:Cell;path:Cell[];cost:number}|undefined;
-  for(const spot of workNeighbours(patient))if(canStandAt(world,spot)&&!reserved.has(spot.z*world.width+spot.x)){
-    const path=routeToCell(world,spot,reach);if(path){const cost=routeCost(world,path,reach);if(!best||cost<best.cost)best={spot,path,cost};}
-  }
+  const best=bedsideAccess(world,doctor,patient,reach);
   return best?{task:{patientId:patient.id,spot:best.spot,phase:'approach',progress:0},path:best.path}:undefined;
 }
 export function startTending(doctor:Pawn,proposal:{task:TendTask;path:Cell[]},forced=false):void {

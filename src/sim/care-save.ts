@@ -24,7 +24,7 @@ export function validateCare(world:World):string[] {
     patients.add(t.patientId);
     if(!p||Math.abs(t.spot.x-p.x)+Math.abs(t.spot.z-p.z)!==1||!canStandAt(world,t.spot))errors.push('Tending place is not accessible at the bedside.');
     if(t.phase==='tend'&&(d.state!=='working'||d.moveCooldown>0||d.x!==t.spot.x||d.z!==t.spot.z||d.path.length)||t.phase==='approach'&&d.state!=='moving')errors.push('Invalid tending phase/position.');
-    if(d.recreation.task||d.rescue||d.need||d.haul||d.cooking||d.jobId!==null)errors.push('Tending conflicts with another activity.');
+    if(d.recreation.task||d.feed||d.rescue||d.need||d.haul||d.cooking||d.jobId!==null)errors.push('Tending conflicts with another activity.');
   }
   return errors;
 }

@@ -1,0 +1,37 @@
+{
+  "date": "2026-09-17T00:03:25.364Z",
+  "backend": "native WebGPU",
+  "frames": 1179,
+  "bedsideFrames": 414,
+  "first": {
+    "tick": 3027,
+    "play": 3027.020000000021,
+    "phase": "feed",
+    "work": 1,
+    "patientPose": 1,
+    "distance": 1,
+    "yaw": 0,
+    "expectedYaw": 0,
+    "hunger": 23.626666666666704,
+    "held": true,
+    "food": 5
+  },
+  "last": {
+    "tick": 3097,
+    "play": 3100.7880000000914,
+    "phase": "feed",
+    "work": 1,
+    "patientPose": 1,
+    "distance": 1,
+    "yaw": 0,
+    "expectedYaw": 0,
+    "hunger": 22.693333333333474,
+    "held": true,
+    "food": 5
+  },
+  "duringTick": 3030,
+  "finishedTick": 3151,
+  "remaining": 4,
+  "medicineXp": 0,
+  "errors": []
+}

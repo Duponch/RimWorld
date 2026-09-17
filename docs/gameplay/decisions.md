@@ -1,5 +1,7 @@
 # Choix et écarts de gameplay
 
+V48 — [alimentation assistée](../development/feeding.md) : adopter régime du patient et prélèvement/transport/ingestion ; contact cardinal et geste générique adaptés à la 3D. Seuil de 26 % retenu selon le miroir identifié malgré 27 % suggéré par le wiki. Durée locale ×1,5, aucune XP médicale ; capacité générale de portage et inventaire personnel restent ouverts. [Sources](../research/feeding-reference.md).
+
 **Traitements V47** : adopter la chaîne physique sans médicament, Patient/Repos au lit et Médecine ; adapter la place de travail à un chevet cardinal en 3D et la progression aux ticks locaux. La politique actuelle autorise ou refuse les seuls soins disponibles ; elle ne prétend pas fournir les cinq plafonds Core. [Contrat et absences assumées](../development/tending.md), [preuves de référence](../research/tending-reference.md).
 
 V46 : prise d’un blessé sur sa cellule et dépôt sur l’ancre du lit, adaptés à nos services 3D ; trajectoire commune sans transfert instantané à distance. La file de secours et les critères de danger/température restent partiels explicitement. [Contrat et décisions](../development/rescue.md).

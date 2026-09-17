@@ -1,6 +1,6 @@
 # Secours physiques et lits médicaux — V46
 
-17 septembre 2026. [Recherche et limites](../research/care-preparation.md), [santé](health.md), [interruptions](interrupted-cargo.md), [ordres](player-orders.md), [validation](validation.md). Corpus : chapitre 15, SYS/TEST-094 et 096 ; chapitres 8/9 pour tâches, accès et réservations. La tranche V46 livre le secours ; [V47](tending.md) ajoute le traitement sans médicament et le repos volontaire. L’alimentation assistée reste absente.
+17 septembre 2026. [Recherche et limites](../research/care-preparation.md), [santé](health.md), [interruptions](interrupted-cargo.md), [ordres](player-orders.md), [validation](validation.md). Corpus : chapitre 15, SYS/TEST-094 et 096 ; chapitres 8/9 pour tâches, accès et réservations. La tranche V46 livre le secours ; [V47](tending.md) ajoute le traitement sans médicament et le repos volontaire. L’alimentation assistée au lit est ajoutée en [V48](feeding.md).
 
 ## Actions et propriété
 
@@ -33,7 +33,7 @@ Le bridge observe prise/dépôt et rôle du lit comme phases discrètes. La pré
 ## Limites assumées et suite
 
 - L'ordre de secours peut être forcé immédiatement ; **Maj/file de secours n'est pas encore livré** et fait l'objet d'un refus explicite. Les anciennes familles gardent leurs files existantes.
-- Traitement sans médicament, Médecine/XP, autorisation de soins et repos médical volontaire sont ajoutés en [V47](tending.md). Médicaments, alimentation assistée, chirurgie, infection et maladie restent absents.
+- Traitement sans médicament, Médecine/XP, autorisation de soins et repos médical volontaire sont ajoutés en [V47](tending.md). L’alimentation assistée au lit est ajoutée en [V48](feeding.md). Médicaments, chirurgie, infection et maladie restent absents.
 - Les acteurs actuels sont des colons adultes alliés. Contrôle d'ennemi proche, permission de faction, prisonnier, animal et dangers tactiques restent à brancher sur ces futurs systèmes. Le domaine thermique jouable actuel est tempéré ; le filtre médical des températures extrêmes/confort vestimentaire reste absent, avec son contrat de référence conservé dans la recherche.
 - Les modèles gardent leurs membres de placeholder malgré les amputations. Les relations de propriétaire, de lit partagé et les types de couchages enrichiront le même contrat.
 

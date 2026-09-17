@@ -1,8 +1,10 @@
 # Documentation de Lisière
 
-V47 : [traitements sans médicament, repos médical et Médecine](development/tending.md), [règles revérifiées](research/tending-reference.md). Les médicaments, l’alimentation assistée et les auto-soins restent ouverts.
+V48 : [alimentation assistée au lit](development/feeding.md), [sources recoupées et seuil adulte](research/feeding-reference.md). Médecin prend et porte la portion selon le régime du patient ; nutrition seulement au terme du repas. Médicaments et auto-soins restent ouverts.
 
-V46 : [secours physiques et lits médicaux](development/rescue.md). Médecin, clic droit, portage GPU et reprise en cours de transport ; traitements ajoutés en V47, alimentation assistée encore absente.
+V47 : [traitements sans médicament, repos médical et Médecine](development/tending.md), [règles revérifiées](research/tending-reference.md). Les médicaments et les auto-soins restent ouverts ; alimentation assistée ajoutée en V48.
+
+V46 : [secours physiques et lits médicaux](development/rescue.md). Médecin, clic droit, portage GPU et reprise en cours de transport ; traitements ajoutés en V47, alimentation assistée ajoutée en V48.
 
 V44 : [interruptions et cargaisons conservées](development/interrupted-cargo.md), [relecture de l’épuisement et du dépôt](research/interrupted-cargo-reference.md).
 

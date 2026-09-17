@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+V48 ajoute l’action **Nourrir un patient** avec les cinq aliments existants, leurs quantités et leur régime ; aucun nouvel objet ni médicament. Ni inventaire personnel ni distributeur implicite. [Contrat](../development/feeding.md).
+
 V47 ajoute un profil de compétence **Médecine**, les activités Patient/Repos au lit/Traitement et une politique individuelle autoriser/refuser. Aucun objet médical supplémentaire : les soins sans médicament utilisent les lits existants. Médicaments, consommables, lits d’hôpital et équipements restent absents ; ne pas compter les nouvelles actions comme de nouveaux objets. [Contrat](../development/tending.md).
 
 V46 ajoute un **rôle médical aux lits existants**, conservé lorsque le meuble est emballé. Aucun nouvel objet lit d’hôpital, médicament ou sac de patient : une personne portée garde son identité. Les variantes bois/acier/cinq pierres gardent leurs propriétés existantes. [Contrat](../development/rescue.md).

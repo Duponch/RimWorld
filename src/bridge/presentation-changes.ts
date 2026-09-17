@@ -8,7 +8,7 @@ export class PresentationChanges {
   capture(world:World):boolean {
     const signature=JSON.stringify([
       world.seed,world.width,world.height,world.events.at(-1),
-      world.pawns.map(p=>[p.id,p.state,p.jobId,p.rescue,p.tend?.patientId,p.tend?.phase,p.medicalSleep,p.interruptedCargo,p.need?.phase,p.need?.kind==='sleep'?p.need.bedId:undefined,
+      world.pawns.map(p=>[p.id,p.state,p.jobId,p.rescue,p.tend?.patientId,p.tend?.phase,p.feed?.patientId,p.feed?.phase,p.medicalSleep,p.interruptedCargo,p.need?.phase,p.need?.kind==='sleep'?p.need.bedId:undefined,
         p.haul?.phase,p.haul?.carryPileId,p.cooking?.phase,p.cooking?.productId,
         p.recreation.task?.activity,p.recreation.task?.buildingId]),
       world.piles.map(p=>[p.id,p.item,p.quantity,p.owner]),

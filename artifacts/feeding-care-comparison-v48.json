@@ -1,0 +1,113 @@
+{
+  "date": "2026-09-17T00:11:20.017Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "protocol": "Physical treatments and medical rest; carriedFrames counts active bedside observations; rescued counts fully treated patients. Native WebGPU, real worker at 6x, cleared 250², concurrent medical services and live physiology; 90 warmup frames. No claim about forests or full combat.",
+  "results": [
+    {
+      "actors": 2,
+      "rescued": 1,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1"
+      },
+      "frames": {
+        "count": 732,
+        "p50": 4.199999999999818,
+        "p95": 8.399999999999636,
+        "p99": 8.5,
+        "max": 12.5
+      },
+      "frameCpu": {
+        "count": 733,
+        "p50": 4.199999999254942,
+        "p95": 7.100000001490116,
+        "p99": 8.5,
+        "max": 10.199999999254942
+      },
+      "drawCalls": {
+        "count": 733,
+        "p50": 118,
+        "p95": 120,
+        "p99": 120,
+        "max": 120
+      },
+      "carriedFrames": 498,
+      "invalidPoses": 0,
+      "stableGeometry": true,
+      "pipelines": [],
+      "errors": []
+    },
+    {
+      "actors": 30,
+      "rescued": 15,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1"
+      },
+      "frames": {
+        "count": 595,
+        "p50": 4.200000000000728,
+        "p95": 12.5,
+        "p99": 16.600000000000364,
+        "max": 20.900000000001455
+      },
+      "frameCpu": {
+        "count": 596,
+        "p50": 5,
+        "p95": 8.400000000372529,
+        "p99": 9.699999999254942,
+        "max": 11
+      },
+      "drawCalls": {
+        "count": 596,
+        "p50": 120,
+        "p95": 121,
+        "p99": 122,
+        "max": 122
+      },
+      "carriedFrames": 5949,
+      "invalidPoses": 0,
+      "stableGeometry": true,
+      "pipelines": [],
+      "errors": []
+    },
+    {
+      "actors": 100,
+      "rescued": 50,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1"
+      },
+      "frames": {
+        "count": 664,
+        "p50": 4.200000000000728,
+        "p95": 16.5,
+        "p99": 29.299999999999272,
+        "max": 45.899999999999636
+      },
+      "frameCpu": {
+        "count": 665,
+        "p50": 4.799999998882413,
+        "p95": 7.699999999254942,
+        "p99": 9.799999998882413,
+        "max": 15.199999999254942
+      },
+      "drawCalls": {
+        "count": 665,
+        "p50": 119,
+        "p95": 121,
+        "p99": 122,
+        "max": 122
+      },
+      "carriedFrames": 19489,
+      "invalidPoses": 0,
+      "stableGeometry": true,
+      "pipelines": [],
+      "errors": []
+    }
+  ]
+}

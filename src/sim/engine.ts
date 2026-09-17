@@ -1,3 +1,4 @@
+import { applyFeeding,processFeeding,reconcileFeeding } from './feeding.ts';
 import { applyTending,processTending,reconcileTending } from './tending.ts';
 import { reconcilePatientRest } from './patient-rest.ts';
 import { applyRescue,processRescue,reconcileRescues } from './rescue.ts';
@@ -164,11 +165,12 @@ export function canDesignate(world: World, command: DesignateCommand): CommandRe
 }
 export function applyCommand(world: World, command: Command): CommandResult {
   const result=applyCommandInternal(world,command);
-  if(result.ok){reconcileRescues(world);reconcilePatientRest(world);reconcileTending(world);reconcileOrders(world);const thermal=reconcileTemperature(world);updateFoodTemperatures(world,thermal);updatePlantTemperatures(world,thermal);}
+  if(result.ok){reconcileRescues(world);reconcilePatientRest(world);reconcileTending(world);reconcileFeeding(world);reconcileOrders(world);const thermal=reconcileTemperature(world);updateFoodTemperatures(world,thermal);updatePlantTemperatures(world,thermal);}
   return result;
 }
 function applyCommandInternal(world: World, command: Command): CommandResult {
   if (!command || typeof command !== 'object') return refusal('invalid-command', 'Commande invalide.');
+  if(command.type==='order-feed')return applyFeeding(world,command);
   if(command.type==='order-tend')return applyTending(world,command);
   if(command.type==='medical-policy'){
     const p=world.pawns.find(p=>p.id===command.pawnId);
@@ -218,6 +220,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
     const pawn = world.pawns.find(candidate => candidate.id === command.pawnId);
     if (!pawn) return refusal('missing-target', 'Colon introuvable.');
     pawn.priorities[command.work] = command.value;
+    if(command.work==='doctor'&&command.value===0&&pawn.feed&&pawn.orders.active!=='feed')releaseWork(world,pawn,drops);
     if(command.work==='doctor'&&command.value===0&&pawn.tend&&pawn.orders.active!=='tend')releaseWork(world,pawn);
     if(command.work==='doctor'&&command.value===0&&pawn.rescue&&pawn.orders.active!=='rescue')releaseWork(world,pawn,drops);
     const job = world.jobs.find(candidate => candidate.id === pawn.jobId);
@@ -319,7 +322,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     burnFuel(world);
     updateDoors(world);
     scheduleGrowing(world);
-    scheduleRoofs(world);reconcileRescues(world);reconcilePatientRest(world);reconcileTending(world);
+    scheduleRoofs(world);reconcileRescues(world);reconcilePatientRest(world);reconcileTending(world);reconcileFeeding(world);
     // Build only if this tick actually plans or moves. No cross-tick cache can hide
     // a command, edited terrain, restored save, or a wall that changed between calls.
     let blocked: Uint8Array | undefined;
@@ -347,7 +350,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       updateNeeds(world, pawn,body);
       if(pawn.state==='downed'||carrierOf(world,pawn.id))continue;
       if(pawn.need?.kind==='eat' && pawn.need.dining && !validDiningPlace(world,pawn.need.dining)) {pawn.need.phase='choose-spot';pawn.need.dining=null;pawn.need.progress=0;delete pawn.need.workRemainder;pawn.path=[];pawn.state='moving';}
-      if (pawn.moveCooldown > 0) { pawn.state = pawn.jobId !== null || pawn.tend || pawn.rescue || pawn.haul || pawn.need || pawn.cooking || pawn.recreation.task ? 'moving' : 'idle'; continue; }
+      if (pawn.moveCooldown > 0) { pawn.state = pawn.jobId !== null || pawn.feed || pawn.tend || pawn.rescue || pawn.haul || pawn.need || pawn.cooking || pawn.recreation.task ? 'moving' : 'idle'; continue; }
       const needsContext = {
         search: (goals?: ReadonlySet<number>) => search(world, pawn, getBlocked(), occupied, budget, goals),
         move: (target: Cell, exact: boolean) => moveToward(world, pawn, target, true, getBlocked, budget, exact, getLight),
@@ -357,9 +360,10 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if(pawn.interruptedCargo){processNeeds(world,pawn,needsContext);continue;}
       if (leaveTransitCell(world,pawn,getBlocked,budget,getLight)) continue;
       if (advanceOrders(world,pawn,getBlocked,budget)) continue;
-      if (!pawn.tend&&!pawn.rescue&&advancePriorityWork(world,pawn,getBlocked,budget)) continue;
-      if (processNeeds(world, pawn, needsContext) || !pawn.tend&&!pawn.rescue&&pawn.orders.active===null&&processRecreation(world, pawn, needsContext)) continue;
-      if (pawn.jobId === null && pawn.haul === null && !pawn.rescue && !pawn.tend && !pawn.cooking && pawn.planCooldown === 0) planWork(world, pawn, getBlocked, occupied, budget);
+      if (!pawn.feed&&!pawn.tend&&!pawn.rescue&&advancePriorityWork(world,pawn,getBlocked,budget)) continue;
+      if (processNeeds(world, pawn, needsContext) || !pawn.feed&&!pawn.tend&&!pawn.rescue&&pawn.orders.active===null&&processRecreation(world, pawn, needsContext)) continue;
+      if (pawn.jobId === null && pawn.haul === null && !pawn.rescue && !pawn.feed&&!pawn.tend && !pawn.cooking && pawn.planCooldown === 0) planWork(world, pawn, getBlocked, occupied, budget);
+      if(pawn.feed){processFeeding(world,pawn,needsContext);continue;}
       if(pawn.tend){processTending(world,pawn,needsContext,()=>getLight().speedAt(pawn));continue;}
       if(pawn.rescue){processRescue(world,pawn,needsContext);continue;}
       if (pawn.haul) { const refueling=pawn.haul.destination.type==='fuel';processHaul(world, pawn, (target, allow) => moveToward(world, pawn, target, allow, getBlocked, budget,false,getLight), () => {wakePlanners(world);if(refueling)invalidateEnvironment();});continue; }
@@ -416,7 +420,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     reconcilePower(world);
     if(thermalDirty)thermal=reconcileTemperature(world);
     updateFoodTemperatures(world,thermal);
-    updatePlantTemperatures(world,thermal);reconcileRescues(world);reconcilePatientRest(world);reconcileTending(world);
+    updatePlantTemperatures(world,thermal);reconcileRescues(world);reconcilePatientRest(world);reconcileTending(world);reconcileFeeding(world);
   }
 }
 import { updatePawnHealth,reconcilePawnHealth } from './health.ts';

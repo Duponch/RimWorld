@@ -30,8 +30,8 @@ export function foodSearchGoals(world: World, pawn: Pawn, sources: readonly Mate
   // selectFood can then find the best accessible fallback without another search.
   return interactionGoals(world, best?.owner.type === 'ground' ? [best.owner] : []);
 }
-export function selectFood(world: World, pawn: Pawn, sources: readonly MaterialPile[], reachable: Reachability): { id: number; path: Cell[]; score: number } | undefined {
-  const allowed = allowedFood(world, pawn);
+export function selectFood(world: World, pawn: Pawn, sources: readonly MaterialPile[], reachable: Reachability, eater: Pawn = pawn): { id: number; path: Cell[]; score: number } | undefined {
+  const allowed = allowedFood(world, eater);
   let best: { id: number; path: Cell[]; score: number } | undefined;
   for (const pile of sources) {
     if (pile.owner.type !== 'ground' || !ITEM_DEFINITIONS[pile.item].nutrition || !allowed.includes(pile.item as FoodItemId)) continue;

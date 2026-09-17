@@ -1,5 +1,7 @@
 # Noyau de simulation — contrat courant
 
+V48 : [alimentation assistée](feeding.md), patient unique, portion et chevet réservés, transferts et ingestion physiques. V47 validée strictement avant changement de numéro uniquement ; invalidation involontaire conserve une cargaison indéposable sans garder le patient réservé.
+
 V47 : [traitements et repos médical](tending.md), Médecine appliquée aux résultats réels, patient/chevet réservés et durée de travail capturée. V46 strictement validée avant les nouveaux profils ; interruption sans résultat et reprise exacte.
 
 V46 : [transport des blessés](rescue.md) dans le planner commun, réservations exclusives de patient/lit, santé active pendant le trajet. V45 validée avant la nouvelle priorité Médecin ; pas d’état médical inventé.

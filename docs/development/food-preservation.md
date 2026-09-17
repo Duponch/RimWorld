@@ -1,5 +1,7 @@
 # Conservation des aliments — contrat V11–V38
 
+V48 : les portions d’[alimentation assistée](feeding.md) partagent réservations quantitatives, copie d’âge au prélèvement, température du médecin porteur, expiration avant action et cargaison interrompue. Un repas pourri ne nourrit jamais le patient.
+
 Voir la [recherche fraîcheur](../research/food-preservation-reference.md) pour provenance, confiance et écarts. Cette responsabilité est séparée de la [nutrition](food-items.md), des [recettes](cooking.md) et des futurs dégâts d’exposition.
 
 ## État et transitions

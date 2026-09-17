@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 47 as const;
+export const SCHEMA_VERSION = 48 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
@@ -63,6 +63,7 @@ export interface Job extends Cell {
   escrow: Stock;
 }
 export interface Pawn extends Cell {
+  feed?: import('./feeding-rules.ts').FeedTask;
   tend?: import('./care-rules.ts').TendTask;
   careDisabled?:true;
   rescue?: import('./rescue-state.ts').RescueTask;
@@ -146,6 +147,7 @@ export interface AreaCommand extends StorageSettings { type: 'area'; action: Are
 export type Command =
   | import('./medical-beds.ts').MedicalBedCommand
   | {type:'medical-policy';pawnId:number;enabled:boolean}
+  | {type:'order-feed';pawnId:number;patientId:number;queue:boolean}
   | {type:'order-tend';pawnId:number;patientId:number;queue:boolean}
   | {type:'order-rescue';pawnId:number;patientId:number;queue:boolean}
   | import('./doors.ts').DoorCommand

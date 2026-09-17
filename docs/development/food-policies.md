@@ -26,6 +26,6 @@ L'audit à cent personnes a révélé une interaction avec la cuisine : sans ali
 
 ## Limites et validation
 
-Absents : provenance carnée des repas, filtres spéciaux, profils complets, choix du régime par défaut des futurs arrivants, repas personnel de secours, ordre forcé d'ingestion, traits, crises mentales, prisonniers et nourrissage. La faim à zéro n'applique toujours pas de malnutrition ou de décès. Le score neutre, les interruptions de travail et les autres calibrations déjà documentées ne deviennent pas une parité exhaustive par cet ajout.
+Absents : provenance carnée des repas, filtres spéciaux, profils complets, choix du régime par défaut des futurs arrivants, repas personnel de secours, ordre forcé d'ingestion, traits, crises mentales, prisonniers et nourrissage animal. L’alimentation assistée adulte au lit est livrée en [V48](feeding.md) : régime du patient, médecin indépendant, portion engagée conservée lors d’un changement ultérieur. La faim à zéro n'applique toujours pas de malnutrition ou de décès. Le score neutre, les interruptions de travail et les autres calibrations déjà documentées ne deviennent pas une parité exhaustive par cet ajout.
 
 Quatre scénarios de domaine traversent autorisations, copies/partage, refus atomiques, seuils, accès, faim, tâches physiques, cuisine, matières et reprise. Le pilote de colonie modifie ses affectations par commandes selon le stock préparé, via les mêmes gestes dans le parcours UI. [Validation courante](validation.md) pour les résultats et mesures réellement exécutés.

@@ -21,6 +21,7 @@ export function expireFood(world: World): void {
     const c = pawn.cooking, h = pawn.haul, n = pawn.need;
     const affected = c && (c.ingredients.some(i => expired.has(i.pileId)) || c.productId !== null && expired.has(c.productId))
       || h && expired.has(h.phase === 'pickup' ? h.sourcePileId : h.carryPileId!)
+      || pawn.feed && expired.has(pawn.feed.phase==='pickup'?pawn.feed.sourcePileId:pawn.feed.carryPileId!)
       || n?.kind === 'eat' && expired.has(n.phase === 'pickup' ? n.sourcePileId : n.carryPileId!);
     if (!affected || releaseWork(world, pawn)) continue;
     // Another ingredient may still be carried when a remote reservation rots.

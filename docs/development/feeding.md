@@ -1,0 +1,23 @@
+# Nourrir physiquement un patient — V48
+
+17 septembre 2026. [Sources et divergence 26/27 %](../research/feeding-reference.md), [soins](tending.md), [aliments](food-items.md), [conservation](food-preservation.md), [preuves](validation.md).
+
+Un médecin disponible nourrit un adulte à **26 % de nourriture ou moins**, réellement installé au lit et nécessitant du repos médical. Incapacité, plaie non permanente et blessure en guérison sont les cas actuels. Un dormeur sain ou un blessé au sol ne suffit pas. La politique de traitement n’interdit pas les repas ; le régime du **patient** filtre les sources, pas celui du médecin. Les traitements passent avant l’alimentation, puis viennent les secours, à priorité numérique égale lors d’une décision. Pas de préemption médicale générale des travaux engagés.
+
+Le médecin réserve un patient unique, une place cardinale au chevet et une quantité de nourriture au sol. La réservation du patient est commune avec les traitements. Les réservations de piles sont communes avec cuisine, transport et repas ordinaires : aucune double promesse. Il rejoint la source, prélève/sépare une portion, la porte lui-même, rejoint le chevet et travaille pendant 75 ticks locaux. La nutrition et la consommation arrivent ensemble à la fin. Type, quantité et âge thermique suivent chaque transfert ; la pourriture est traitée avant les actions. Aucun XP Médecine ni qualité de soin n’est donné par l’alimentation. Le patient couché ne reçoit pas un nouveau souvenir de repas sans table ; manger du riz cru conserve son effet propre.
+
+Le clic droit individuel propose **Nourrir** avec motif de refus. La priorité Médecin contrôle les automatismes ; un ordre forcé accepté peut finir après sa désactivation. La file est explicitement refusée. Modifier le régime ou dépasser ensuite le seuil de faim ne retire pas la portion engagée. Mort, fin du besoin médical, départ du lit, disparition de l’aliment, incapacité du médecin ou place devenue solide interrompent avant le résultat. Une annulation volontaire refuse sans mutation si la cargaison ne peut pas être déposée ; une interruption involontaire garde alors l’objet en `interruptedCargo`, en libérant le patient et les services. La portion pourra être déposée ultérieurement, jamais convertie en nutrition distante.
+
+## Frontières et sauvegarde
+
+`care-access.ts` mutualise accès et réservation de patient avec les traitements. `feeding-rules.ts` définit éligibilité et état ; `feeding.ts` gère proposition/commande/exécution ; `feeding-save.ts` valide formes et relations. `Pawn.feed` possède trois phases : `pickup`, `deliver`, `feed`. Le patient conserve son dossier et son usage du lit ; l’objet porté appartient seulement au médecin. Le choix alimentaire commun accepte un mangeur différent du chercheur. Aucun cache ne traverse une mutation ou un tick.
+
+V47 est strictement validée avant migration V48, qui change seulement le numéro de schéma. Aucun repas, stock ou patient ajouté. V48 conserve progression, identités, réservations et âge pendant toute la chaîne ; rejette source sur-réservée, quantité supérieure au maximum ingérable, propriétaire incorrect, patient dupliqué, chevet invalide et activités concurrentes. Un champ `feed` ou ordre correspondant reste interdit dans une sauvegarde se déclarant V47.
+
+Le bridge observe chaque phase discrète avec les changements de propriétaire. La scène, le corps, la cargaison et la disparition finale utilisent la même horloge de présentation. Le médecin regarde le patient pendant l’action ; la personne couchée garde sa pose. Buffers et programmes GPU existants, aucun nouvel objet graphique par médecin ou par frame. Geste générique provisoire, pas une animation définitive d’alimentation.
+
+## Validation et limites
+
+Six scénarios profonds réunissent seuils, régimes différents, accès, priorité/file, patient mobile/incapable, source partagée, sauvegarde de chaque phase, snapshots, nourriture crue, mort, perte des mains, pourriture, annulation sur sol saturé et cinq jours de secours/traitements/repas avec bilan de nourriture. Le pilote normal ajoute alimentation assistée et faim au bilan médical ; son camp sûr reste distinct de la clinique blessée. Le parcours UI regarde les attributs GPU après rendu et recharge pendant le repas. Charge 2/30/100 acteurs sur 250² et parcours minage/abattage complètent les contrôles, sans prouver tous les cas possibles.
+
+Inventaire personnel, équipement, médicaments, auto-soins, urgences interrompant les autres travaux, maladies, malnutrition, chirurgie, animaux/prisonniers et distributeurs restent ouverts. Le lit médical simple n’est pas un lit d’hôpital. Aucune famine mortelle ni pathologie guérie artificiellement par ce lot.

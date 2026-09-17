@@ -1,5 +1,7 @@
 # Aliments et nutrition — contrat courant V11
 
+Audit V48 : les seuils adultes 24/12 sont confirmés dans les classes publiques identifiées, malgré 25/12,5 indiqués par le wiki. L’[alimentation assistée](feeding.md) démarre à 26 %, conserve les portions typées et respecte le régime du patient. [Sources et incertitude de version](../research/feeding-reference.md).
+
 Corpus : chapitres 4/10/11/14, CAT-005/011/015, SYS-076..078, TEST-076..078, CONST-001..007. [Recherche nutritionnelle](../research/food-items-reference.md) et [nouvelle vérification du choix alimentaire](../research/food-clearing-reference.md). Les nombres sont adaptés à notre horloge ; ils ne certifient pas tous les profils de RimWorld.
 
 | Objet | Nutrition/unité | Pile maximale | Ingestion maximale |
@@ -16,7 +18,7 @@ Corpus : chapitres 4/10/11/14, CAT-005/011/015, SYS-076..078, TEST-076..078, CON
 
 Le repas a sa propre `NeedTask.quantity`, partagée avec les réservations logistiques et validée au chargement. Il peut donc contenir seize baies même si le transport de travail est encore limité à dix unités. C'est une quantité d'ingestion dérivée de la faim, pas un inventaire personnel caché. Le colon prend exactement les unités réservées, choisit/rejoint sa place puis les consomme ensemble après 50 ticks. Interrompre conserve la cargaison, son type et sa quantité au sol. Lorsqu’un colon remplace son transport par un repas, sa propre réservation de transport est libérée dans la même transition ; les réservations des autres restent opposables. Une régression vérifie seize baies disponibles au lieu des six laissées à tort après déduction de son ancien transport. Aucun gain avant la fin.
 
-Le besoin adulte utilise une capacité actuelle d'une nutrition, affichée par une jauge 0–100. Une baie vaut cinq points, une ration 90 ; l'excès au-delà de 100 n'est pas conservé. Baisse de base : `160 / 6000` points/tick, facteurs 0,5 sous 24 et 0,25 sous 12, zéro à saturation nulle. Le seuil de recherche reste 30. Intégration continue à 10 Hz adaptée à notre horloge, au lieu des intervalles de 150 ticks du miroir ; de petits décalages de seuil sont assumés. Santé, traits, âge, race et lits particuliers ne sont pas implémentés et n'ont pas de modificateurs inventés.
+Le besoin adulte utilise une capacité actuelle d'une nutrition, affichée par une jauge 0–100. Une baie vaut cinq points, une ration 90 ; l'excès au-delà de 100 n'est pas conservé. Baisse de base : `160 / 6000` points/tick, facteurs 0,5 sous 24 et 0,25 sous 12, zéro à saturation nulle. Le seuil de recherche reste 30. Intégration continue à 10 Hz adaptée à notre horloge, au lieu des intervalles de 150 ticks du miroir ; de petits décalages de seuil sont assumés. Les capacités physiques influencent l’ingestion depuis V45 ; les modificateurs complets de santé, traits, âge, races et lits particuliers sur la faim restent ouverts.
 
 Les nouvelles parties commencent avec 18 repas de survie, répartis en piles de dix et huit. Le départ reste local et ne prétend pas reproduire l'ensemble Crashlanded. Les récoltes produisent `berries`. L'UI affiche nutrition totale puis quantités de chaque aliment ; l'inspection et le journal identifient les aliments. Les rations et baies ont des couleurs de piles distinctes, et la ration portée a un paquet GPU distinct. Les lots et matériaux restent conservés.
 

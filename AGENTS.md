@@ -50,7 +50,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 47 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 48 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)
@@ -232,12 +232,17 @@
 
 - Lire docs/development/rescue.md et la recherche associée. Relation sur le porteur, patient unique, réservation patient/lit, approche et transport physiques. Santé/faim continuent ; ni soin ni nourriture donnés implicitement. Dépôt passif de la cargaison propre au patient suspendu pendant portage.
 - Le rôle medical appartient seulement à un lit et survit à son emballage. Exclure sommeil ordinaire, distinguer usage temporaire et propriétaire. Interruption et invalidation libèrent aussi le patient ; aucune nouvelle arête autonome pendant portage.
-- V45 validée strictement avant priorité doctor 1, sans patient ni secours inventé. Corps/cargaison/anneaux partagent les attributs GPU du sauveteur ; observer les phases et invalider le mobilier au changement de rôle. File de secours et alimentation assistée restent ouvertes ; traitement sans médicament ajouté V47.
+- V45 validée strictement avant priorité doctor 1, sans patient ni secours inventé. Corps/cargaison/anneaux partagent les attributs GPU du sauveteur ; observer les phases et invalider le mobilier au changement de rôle. File de secours encore ouverte ; traitement sans médicament ajouté V47, alimentation assistée V48.
 
 ## Traitements V47
 
 - Lire docs/development/tending.md et sa recherche. Patient, Médecin et Repos au lit sont distincts ; allongé n’est pas endormi. Le choix médical reste disponible à l’heure du coucher. Pas de soin/XP pendant trajet ni de PV instantanés.
 - Réserver patient et chevet cardinal, capturer la durée au début du travail, conserver reliquat et continuation. Une plaie sans médicament par opération ; XP avant qualité, variation additive et plafond 70 %. Politique, accès, incapacité et mort libèrent avant résultat.
-- V46 validée strictement avant Patient 1, Repos au lit 3 et Médecine 8/sans passion/0 XP. La migration V42→43 ne doit pas introduire ce nouveau profil trop tôt. Médicaments, alimentation assistée, auto-soins, files et interruption médicale générale restent absents.
+- V46 validée strictement avant Patient 1, Repos au lit 3 et Médecine 8/sans passion/0 XP. La migration V42→43 ne doit pas introduire ce nouveau profil trop tôt. Alimentation assistée ajoutée V48 ; médicaments, auto-soins, files et interruption médicale générale restent absents.
 - Incapacité dans un lit déjà utilisé : retirer l'intention volontaire mais conserver le service physique ; fin de traitement et priorité Patient 0 ne doivent pas déclencher un second secours. Valider les affections admissibles et la place au chevet.
 - Fabrique des colons séparée dans starting-pawns.ts : lire docs/development/starting-pawns.md avant réintégration au générateur. L'indépendance entre créations doit résister aux mutations fractionnaires et imbriquées ; ne pas contourner les erreurs par une remise à zéro des sauvegardes.
+
+## Alimentation assistée V48
+- Lire docs/development/feeding.md et sa recherche. Seuil adulte 26 % selon le miroir (0,3 × 0,8 + 0,02), pas 27 % déduit du wiki. Patient réellement au lit avec besoin médical, également mobile en récupération ; politique de traitement indépendante du régime alimentaire.
+- Médecin possède Pawn.feed, le patient conserve son lit. Patient/chevet exclusifs communs aux traitements, source quantitative commune aux repas/transports/cuisine. Prélèvement, portage et 75 ticks au contact avant consommation/nutrition ; ni XP ni facteur de vitesse d’ingestion du patient. Pas de nouveau souvenir sans table en posture couchée.
+- Invalidation libère les services, conserve l’objet indéposable via interruptedCargo. Reprise exacte des trois phases ; V47 strictement validée avant V48 sans donnée inventée. Inventaires personnels, médicaments, auto-soins, distributeurs et malnutrition ne sont pas livrés par cette action.
