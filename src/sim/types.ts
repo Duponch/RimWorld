@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 48 as const;
+export const SCHEMA_VERSION = 49 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
@@ -66,6 +66,7 @@ export interface Pawn extends Cell {
   feed?: import('./feeding-rules.ts').FeedTask;
   tend?: import('./care-rules.ts').TendTask;
   careDisabled?:true;
+  selfTend?:true;
   rescue?: import('./rescue-state.ts').RescueTask;
   health?: import('./injury-types.ts').MedicalRecord;
   /** Actual sleep while incapacitated, separate from lying posture. */
@@ -149,6 +150,7 @@ export type Command =
   | {type:'medical-policy';pawnId:number;enabled:boolean}
   | {type:'order-feed';pawnId:number;patientId:number;queue:boolean}
   | {type:'order-tend';pawnId:number;patientId:number;queue:boolean}
+  | {type:'self-tend-policy';pawnId:number;enabled:boolean}
   | {type:'order-rescue';pawnId:number;patientId:number;queue:boolean}
   | import('./doors.ts').DoorCommand
   | ({type:'install';structureId:number;orientation:Orientation} & Cell)

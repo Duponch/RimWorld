@@ -64,7 +64,7 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validateWorld(input: unknown): string[] {
   return validateSchema(input, SCHEMA_VERSION);
 }
-function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48): string[] {
+function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(input)) return ['World must be an object.'];
@@ -95,6 +95,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
         for(const key of ['patient','bedrest'])if(version>=47?!integer((item.priorities as Record<string,unknown>)?.[key],0,4):(item.priorities as Record<string,unknown>)?.[key]!==undefined)errors.push('Invalid patient priority for schema.');
         if(item.feed!==undefined&&!validFeedShape(item.feed,version,input as unknown as World))errors.push('Invalid feeding task shape.');
         if(item.tend!==undefined&&!validTendShape(item.tend,version,input as unknown as World))errors.push('Invalid tending shape for schema.');
+        if(item.selfTend!==undefined&&(version<49||item.selfTend!==true))errors.push('Invalid self-tend policy for schema.');
         if(item.careDisabled!==undefined&&(version<47||item.careDisabled!==true))errors.push('Invalid medical policy for schema.');
         if(record(item.need)&&item.need.medical!==undefined&&(version<47||item.need.kind!=='sleep'||!oneOf(item.need.medical,['patient','bedrest'])))errors.push('Invalid medical rest purpose for schema.');
         if(item.rescue!==undefined&&!validRescueShape(item.rescue,version))errors.push('Invalid rescue shape for schema.');
@@ -493,6 +494,7 @@ export function deserializeWorld(serialized: string): World {
   if(record(input)&&input.schemaVersion===45){const errors=validateSchema(input,45);if(errors.length)throw new Error('Invalid version 45 save: '+errors.join(' '));for(const p of (input as unknown as World).pawns)p.priorities.doctor=1;input.schemaVersion=46;}
   if(record(input)&&input.schemaVersion===46){const errors=validateSchema(input,46);if(errors.length)throw new Error('Invalid version 46 save: '+errors.join(' '));for(const p of (input as unknown as World).pawns){p.priorities.patient=1;p.priorities.bedrest=3;p.skills.medicine={level:8,xp:0,dailyXp:0,passion:0};}input.schemaVersion=47;}
   if(record(input)&&input.schemaVersion===47){const errors=validateSchema(input,47);if(errors.length)throw new Error('Invalid version 47 save: '+errors.join(' '));input.schemaVersion=48;}
+  if(record(input)&&input.schemaVersion===48){const errors=validateSchema(input,48);if(errors.length)throw new Error('Invalid version 48 save: '+errors.join(' '));input.schemaVersion=49;}
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`); return input as World;
 }
 /** Deterministic diagnostic fingerprint, not a cryptographic digest. */

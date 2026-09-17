@@ -1,5 +1,7 @@
 # Noyau de simulation — contrat courant
 
+V49 : [auto-soins ordinaires](self-tending.md) intégrés au classement Médecin et au traitement commun ; option, cellules, qualité et sauvegarde ont leurs contrôles croisés. La préemption médicale générale reste distincte.
+
 V48 : [alimentation assistée](feeding.md), patient unique, portion et chevet réservés, transferts et ingestion physiques. V47 validée strictement avant changement de numéro uniquement ; invalidation involontaire conserve une cargaison indéposable sans garder le patient réservé.
 
 V47 : [traitements et repos médical](tending.md), Médecine appliquée aux résultats réels, patient/chevet réservés et durée de travail capturée. V46 strictement validée avant les nouveaux profils ; interruption sans résultat et reprise exacte.

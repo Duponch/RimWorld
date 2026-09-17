@@ -1,5 +1,7 @@
 # Choix et écarts de gameplay
 
+V49 : [auto-soins ordinaires](../development/self-tending.md), qualité de base ×0,7 et lit facultatif. Adaptation 3D assumée : sortie physique vers une cellule cardinale d’arrêt avant le geste si le colon occupait un meuble. Préemption urgente explicitement différée, pas simulée par une guérison instantanée.
+
 V48 — [alimentation assistée](../development/feeding.md) : adopter régime du patient et prélèvement/transport/ingestion ; contact cardinal et geste générique adaptés à la 3D. Seuil de 26 % retenu selon le miroir identifié malgré 27 % suggéré par le wiki. Durée locale ×1,5, aucune XP médicale ; capacité générale de portage et inventaire personnel restent ouverts. [Sources](../research/feeding-reference.md).
 
 **Traitements V47** : adopter la chaîne physique sans médicament, Patient/Repos au lit et Médecine ; adapter la place de travail à un chevet cardinal en 3D et la progression aux ticks locaux. La politique actuelle autorise ou refuse les seuls soins disponibles ; elle ne prétend pas fournir les cinq plafonds Core. [Contrat et absences assumées](../development/tending.md), [preuves de référence](../research/tending-reference.md).

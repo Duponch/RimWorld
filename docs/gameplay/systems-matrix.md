@@ -1,6 +1,6 @@
 # Matrice des systèmes et critères de réalisation
 
-S13 : [santé active V45](../development/health.md), blessures localisées, capacités, incapacité/décès et dégâts de toiture construite ; [secours et lits médicaux V46](../development/rescue.md), [traitements sans médicament et repos médical V47](../development/tending.md), [alimentation assistée V48](../development/feeding.md). Domaine encore partiel : médicaments, auto-soins, chirurgie/pathologies et dépouilles complètes absents. Aucun jalon clôturé.
+S13 : [santé active V45](../development/health.md), blessures localisées, capacités, incapacité/décès et dégâts de toiture construite ; [secours et lits médicaux V46](../development/rescue.md), [traitements sans médicament et repos médical V47](../development/tending.md), [alimentation assistée V48](../development/feeding.md). [Auto-soins ordinaires V49](../development/self-tending.md). Domaine encore partiel : préemption urgente, médicaments, chirurgie/pathologies et dépouilles complètes absents. Aucun jalon clôturé.
 
 V44 consolide S04/S07 : sommeil forcé avec cargaison indéposable, engagements libérés, conservation et récupération après dégagement. Les transitions médicales de S13 sont ajoutées en V45 ; [contrat](../development/interrupted-cargo.md).
 

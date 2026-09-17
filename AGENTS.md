@@ -50,7 +50,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 48 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 49 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)
@@ -238,7 +238,7 @@
 
 - Lire docs/development/tending.md et sa recherche. Patient, Médecin et Repos au lit sont distincts ; allongé n’est pas endormi. Le choix médical reste disponible à l’heure du coucher. Pas de soin/XP pendant trajet ni de PV instantanés.
 - Réserver patient et chevet cardinal, capturer la durée au début du travail, conserver reliquat et continuation. Une plaie sans médicament par opération ; XP avant qualité, variation additive et plafond 70 %. Politique, accès, incapacité et mort libèrent avant résultat.
-- V46 validée strictement avant Patient 1, Repos au lit 3 et Médecine 8/sans passion/0 XP. La migration V42→43 ne doit pas introduire ce nouveau profil trop tôt. Alimentation assistée ajoutée V48 ; médicaments, auto-soins, files et interruption médicale générale restent absents.
+- V46 validée strictement avant Patient 1, Repos au lit 3 et Médecine 8/sans passion/0 XP. La migration V42→43 ne doit pas introduire ce nouveau profil trop tôt. Alimentation assistée ajoutée V48 ; auto-soins ordinaires ajoutés V49 ; médicaments, files et interruption médicale générale restent absents.
 - Incapacité dans un lit déjà utilisé : retirer l'intention volontaire mais conserver le service physique ; fin de traitement et priorité Patient 0 ne doivent pas déclencher un second secours. Valider les affections admissibles et la place au chevet.
 - Fabrique des colons séparée dans starting-pawns.ts : lire docs/development/starting-pawns.md avant réintégration au générateur. L'indépendance entre créations doit résister aux mutations fractionnaires et imbriquées ; ne pas contourner les erreurs par une remise à zéro des sauvegardes.
 
@@ -246,3 +246,8 @@
 - Lire docs/development/feeding.md et sa recherche. Seuil adulte 26 % selon le miroir (0,3 × 0,8 + 0,02), pas 27 % déduit du wiki. Patient réellement au lit avec besoin médical, également mobile en récupération ; politique de traitement indépendante du régime alimentaire.
 - Médecin possède Pawn.feed, le patient conserve son lit. Patient/chevet exclusifs communs aux traitements, source quantitative commune aux repas/transports/cuisine. Prélèvement, portage et 75 ticks au contact avant consommation/nutrition ; ni XP ni facteur de vitesse d’ingestion du patient. Pas de nouveau souvenir sans table en posture couchée.
 - Invalidation libère les services, conserve l’objet indéposable via interruptedCargo. Reprise exacte des trois phases ; V47 strictement validée avant V48 sans donnée inventée. Inventaires personnels, médicaments, auto-soins, distributeurs et malnutrition ne sont pas livrés par cette action.
+
+## Auto-soins ordinaires V49
+- Lire docs/development/self-tending.md et sa recherche. Permission sparse désactivée, métier Médecin et politique de soins distincts. Même tâche de traitement avec patientId égal au médecin ; qualité de base ×0,7 avant plafond/variation additive, vitesse et XP communs.
+- Lit facultatif ; quitter physiquement son service pour une case cardinale d’arrêt si nécessaire (adaptation 3D). Réservation du patient commune, pas de sommeil simultané, pas de bonus de repos. Désactiver l’option arrête aussi un ordre forcé. Préemption urgente encore ouverte ; ne pas la confondre avec le fournisseur ordinaire.
+- V48 strictement validée avant V49, sans permission inventée. L’orientation graphique récupère la dernière arête au rechargement ; ne pas viser sa propre position.

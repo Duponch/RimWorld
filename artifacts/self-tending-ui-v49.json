@@ -1,0 +1,38 @@
+{
+  "date": "2026-09-17T00:52:11.153Z",
+  "backend": "native WebGPU",
+  "frames": 992,
+  "working": 701,
+  "first": {
+    "tick": 3005,
+    "play": 3005.018000000016,
+    "phase": "tend",
+    "x": 3,
+    "z": 2,
+    "work": 1,
+    "lying": 0,
+    "yaw": 3.1415927410125732,
+    "xp": 0,
+    "treated": 0
+  },
+  "last": {
+    "tick": 3159,
+    "play": 3168.762000000041,
+    "phase": "tend",
+    "x": 3,
+    "z": 2,
+    "work": 1,
+    "lying": 0,
+    "yaw": 3.1415927410125732,
+    "xp": 87500,
+    "treated": 1
+  },
+  "savedTick": 3006,
+  "finishedTick": 3184,
+  "quality": [
+    254,
+    362
+  ],
+  "xp": 175000,
+  "errors": []
+}

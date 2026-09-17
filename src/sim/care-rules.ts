@@ -28,4 +28,4 @@ export function medicalTendQuality(p:Pawn):number {
   return v<=1?v:v<=2?1+(v-1)*.5:1.5+(v-2)*.25;
 }
 /** Additive variation, not a multiplicative +/-25%. Thousandths persisted. */
-export const dryTendQuality=(stat:number,random:number):number=>Math.round(Math.max(0,Math.min(.7,Math.min(.7,stat*.3)+random*.5-.25))*1000);
+export const dryTendQuality=(stat:number,random:number,self=false):number=>Math.round(Math.max(0,Math.min(.7,Math.min(.7,stat*.3*(self ? .7 : 1))+random*.5-.25))*1000);

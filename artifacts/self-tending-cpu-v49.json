@@ -1,0 +1,63 @@
+{
+  "date": "2026-09-17T00:45:01.308Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "os": "win32 10.0.26200",
+  "scope": "Ordinary self-treatment; carryTicks counts work ticks; rescued counts fully self-treated adults. Cleared 250x250 map; concurrent reservations, continuing health/needs; cold and warm ticks included, clones separate",
+  "results": [
+    {
+      "actors": 2,
+      "pairs": 1,
+      "stepMs": {
+        "p50": 0.05239999999980682,
+        "p95": 0.26929999999993015,
+        "p99": 0.5792000000000144,
+        "max": 20.573499999999967
+      },
+      "cloneMs": {
+        "p50": 42.29269999999997,
+        "p95": 51.95590000000004,
+        "p99": 56.883800000000065,
+        "max": 56.883800000000065
+      },
+      "rescued": 2,
+      "carryTicks": 328
+    },
+    {
+      "actors": 30,
+      "pairs": 15,
+      "stepMs": {
+        "p50": 0.4713000000001557,
+        "p95": 1.754699999999957,
+        "p99": 2.365600000000086,
+        "max": 12.567900000000009
+      },
+      "cloneMs": {
+        "p50": 37.932000000000244,
+        "p95": 48.40069999999969,
+        "p99": 48.88390000000027,
+        "max": 48.88390000000027
+      },
+      "rescued": 30,
+      "carryTicks": 4920
+    },
+    {
+      "actors": 100,
+      "pairs": 50,
+      "stepMs": {
+        "p50": 1.7923000000000684,
+        "p95": 6.882599999999911,
+        "p99": 8.299399999999878,
+        "max": 14.37310000000025
+      },
+      "cloneMs": {
+        "p50": 38.50370000000021,
+        "p95": 49.832900000000336,
+        "p99": 62.83150000000023,
+        "max": 62.83150000000023
+      },
+      "rescued": 100,
+      "carryTicks": 16400
+    }
+  ]
+}

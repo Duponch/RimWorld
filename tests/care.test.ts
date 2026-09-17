@@ -84,6 +84,6 @@ test('strict V46 migration and relational rejects preserve continuing treatment 
   const healthy=structuredClone(w);delete healthy.pawns[0]!.tend;healthy.pawns[0]!.state='idle';delete healthy.pawns[1]!.health;
   expect(validateWorld(healthy)).toContain('Medical rest without an eligible condition.');
   const old=careCamp();for(const p of old.pawns){delete (p.skills as Partial<typeof p.skills>).medicine;delete (p.priorities as Partial<typeof p.priorities>).patient;delete (p.priorities as Partial<typeof p.priorities>).bedrest;}old.schemaVersion=46 as World['schemaVersion'];
-  const upgraded=deserializeWorld(JSON.stringify(old));expect(upgraded.schemaVersion).toBe(48);expect(upgraded.pawns[0]!.skills.medicine).toEqual({level:8,xp:0,dailyXp:0,passion:0});expect(upgraded.pawns[0]!.priorities.patient).toBe(1);expect(upgraded.pawns[0]!.priorities.bedrest).toBe(3);
+  const upgraded=deserializeWorld(JSON.stringify(old));expect(upgraded.schemaVersion).toBe(49);expect(upgraded.pawns[0]!.skills.medicine).toEqual({level:8,xp:0,dailyXp:0,passion:0});expect(upgraded.pawns[0]!.priorities.patient).toBe(1);expect(upgraded.pawns[0]!.priorities.bedrest).toBe(3);
   const bad=structuredClone(old);bad.pawns[0]!.careDisabled=true;expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();releaseWork(w,w.pawns[0]!);valid(w);
 });

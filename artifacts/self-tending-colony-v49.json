@@ -1,0 +1,853 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "E:\\Code\\RimWorld\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "tests/integration/self-tending.spec.ts",
+      "tests/integration/colony-journey.spec.ts",
+      "--reporter=json"
+    ],
+    "configFile": "E:\\Code\\RimWorld\\playwright.config.ts",
+    "rootDir": "E:/Code/RimWorld/tests/integration",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "E:/Code/RimWorld/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "E:/Code/RimWorld/tests/integration",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": {
+      "command": "npm run dev",
+      "url": "http://127.0.0.1:5173",
+      "reuseExistingServer": true,
+      "timeout": 30000
+    }
+  },
+  "suites": [
+    {
+      "title": "colony-journey.spec.ts",
+      "file": "colony-journey.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "partie de trois jours : un joueur \u00e9quipe son camp et entretient ses stocks par la vraie interface",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 480000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 411189,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "Affecter le meilleur b\u00e2tisseur selon sa comp\u00e9tence et r\u00e9partir les autres travaux. {\"type\":\"priority\",\"pawnId\":12409,\"work\":\"gather\",\"value\":1}",
+                      "duration": 198
+                    },
+                    {
+                      "title": "Affecter le meilleur b\u00e2tisseur selon sa comp\u00e9tence et r\u00e9partir les autres travaux. {\"type\":\"priority\",\"pawnId\":12409,\"work\":\"build\",\"value\":3}",
+                      "duration": 94
+                    },
+                    {
+                      "title": "Affecter le meilleur b\u00e2tisseur selon sa comp\u00e9tence et r\u00e9partir les autres travaux. {\"type\":\"priority\",\"pawnId\":12409,\"work\":\"haul\",\"value\":2}",
+                      "duration": 83
+                    },
+                    {
+                      "title": "Affecter le meilleur b\u00e2tisseur selon sa comp\u00e9tence et r\u00e9partir les autres travaux. {\"type\":\"priority\",\"pawnId\":12409,\"work\":\"cook\",\"value\":3}",
+                      "duration": 87
+                    },
+                    {
+                      "title": "Affecter le meilleur b\u00e2tisseur selon sa comp\u00e9tence et r\u00e9partir les autres travaux. {\"type\":\"priority\",\"pawnId\":12409,\"work\":\"craft\",\"value\":3}",
+                      "duration": 86
+                    },
+                    {
+                      "title": "Affecter le meilleur b\u00e2tisseur selon sa comp\u00e9tence et r\u00e9partir les autres travaux. {\"type\":\"priority\",\"pawnId\":12410,\"work\":\"gather\",\"value\":3}",
+                      "duration": 92
+                    },
+                    {
+                      "title": "Affecter le meilleur b\u00e2tisseur selon sa comp\u00e9tence et r\u00e9partir les autres travaux. {\"type\":\"priority\",\"pawnId\":12410,\"work\":\"build\",\"value\":1}",
+                      "duration": 84
+                    },
+                    {
+                      "title": "Affecter le meilleur b\u00e2tisseur selon sa comp\u00e9tence et r\u00e9partir les autres travaux. {\"type\":\"priority\",\"pawnId\":12410,\"work\":\"haul\",\"value\":2}",
+                      "duration": 85
+                    },
+                    {
+                      "title": "Affecter le meilleur b\u00e2tisseur selon sa comp\u00e9tence et r\u00e9partir les autres travaux. {\"type\":\"priority\",\"pawnId\":12410,\"work\":\"grow\",\"value\":3}",
+                      "duration": 95
+                    },
+                    {
+                      "title": "Affecter le meilleur b\u00e2tisseur selon sa comp\u00e9tence et r\u00e9partir les autres travaux. {\"type\":\"priority\",\"pawnId\":12410,\"work\":\"cook\",\"value\":3}",
+                      "duration": 87
+                    },
+                    {
+                      "title": "Affecter le meilleur b\u00e2tisseur selon sa comp\u00e9tence et r\u00e9partir les autres travaux. {\"type\":\"priority\",\"pawnId\":12411,\"work\":\"build\",\"value\":3}",
+                      "duration": 90
+                    },
+                    {
+                      "title": "Affecter le meilleur b\u00e2tisseur selon sa comp\u00e9tence et r\u00e9partir les autres travaux. {\"type\":\"priority\",\"pawnId\":12411,\"work\":\"haul\",\"value\":2}",
+                      "duration": 101
+                    },
+                    {
+                      "title": "Affecter le meilleur b\u00e2tisseur selon sa comp\u00e9tence et r\u00e9partir les autres travaux. {\"type\":\"priority\",\"pawnId\":12411,\"work\":\"cook\",\"value\":1}",
+                      "duration": 105
+                    },
+                    {
+                      "title": "Affecter le meilleur b\u00e2tisseur selon sa comp\u00e9tence et r\u00e9partir les autres travaux. {\"type\":\"priority\",\"pawnId\":12411,\"work\":\"craft\",\"value\":3}",
+                      "duration": 99
+                    },
+                    {
+                      "title": "Affecter le meilleur b\u00e2tisseur selon sa comp\u00e9tence et r\u00e9partir les autres travaux. {\"type\":\"priority\",\"pawnId\":12411,\"work\":\"mine\",\"value\":3}",
+                      "duration": 86
+                    },
+                    {
+                      "title": "Am\u00e9nager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"bed\",\"x\":122,\"z\":127,\"orientation\":0}",
+                      "duration": 374
+                    },
+                    {
+                      "title": "Am\u00e9nager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"bed\",\"x\":125,\"z\":127,\"orientation\":0}",
+                      "duration": 388
+                    },
+                    {
+                      "title": "Am\u00e9nager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"bed\",\"x\":128,\"z\":127,\"orientation\":0}",
+                      "duration": 225
+                    },
+                    {
+                      "title": "S\u00e9parer le bois et les aliments pr\u00e8s du camp. {\"type\":\"stockpile\",\"x\":123,\"z\":125,\"enabled\":true,\"filters\":{\"wood\":true,\"food\":false},\"priority\":2,\"capacity\":75}",
+                      "duration": 2365
+                    },
+                    {
+                      "title": "S\u00e9parer le bois et les aliments pr\u00e8s du camp. {\"type\":\"stockpile\",\"x\":123,\"z\":126,\"enabled\":true,\"filters\":{\"wood\":true,\"food\":false},\"priority\":2,\"capacity\":75}",
+                      "duration": 670
+                    },
+                    {
+                      "title": "S\u00e9parer le bois et les aliments pr\u00e8s du camp. {\"type\":\"stockpile\",\"x\":127,\"z\":126,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":true},\"priority\":2,\"capacity\":75}",
+                      "duration": 778
+                    },
+                    {
+                      "title": "S\u00e9parer le bois et les aliments pr\u00e8s du camp. {\"type\":\"stockpile\",\"x\":127,\"z\":125,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":true},\"priority\":2,\"capacity\":75}",
+                      "duration": 645
+                    },
+                    {
+                      "title": "S\u00e9parer le bois et les aliments pr\u00e8s du camp. {\"type\":\"stockpile\",\"x\":127,\"z\":124,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":true},\"priority\":2,\"capacity\":75}",
+                      "duration": 649
+                    },
+                    {
+                      "title": "S\u00e9parer le bois et les aliments pr\u00e8s du camp. {\"type\":\"stockpile\",\"x\":124,\"z\":126,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":true},\"priority\":2,\"capacity\":75}",
+                      "duration": 662
+                    },
+                    {
+                      "title": "S\u00e9parer le bois et les aliments pr\u00e8s du camp. {\"type\":\"stockpile\",\"x\":125,\"z\":126,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":true},\"priority\":2,\"capacity\":75}",
+                      "duration": 646
+                    },
+                    {
+                      "title": "S\u00e9parer le bois et les aliments pr\u00e8s du camp. {\"type\":\"stockpile\",\"x\":126,\"z\":126,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":true},\"priority\":2,\"capacity\":75}",
+                      "duration": 649
+                    },
+                    {
+                      "title": "R\u00e9server une plage de loisirs du soir, sans remplacer le repos nocturne. {\"type\":\"schedule-paint\",\"pawnId\":12409,\"hours\":[19,20],\"assignment\":\"recreation\"}",
+                      "duration": 337
+                    },
+                    {
+                      "title": "R\u00e9server une plage de loisirs du soir, sans remplacer le repos nocturne. {\"type\":\"schedule-paint\",\"pawnId\":12410,\"hours\":[19,20],\"assignment\":\"recreation\"}",
+                      "duration": 264
+                    },
+                    {
+                      "title": "R\u00e9server une plage de loisirs du soir, sans remplacer le repos nocturne. {\"type\":\"schedule-paint\",\"pawnId\":12411,\"hours\":[19,20],\"assignment\":\"recreation\"}",
+                      "duration": 296
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":123,\"z\":123}",
+                      "duration": 335
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":124,\"z\":120}",
+                      "duration": 399
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":129,\"z\":123}",
+                      "duration": 405
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":130,\"z\":126}",
+                      "duration": 416
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":124,\"z\":130}",
+                      "duration": 404
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":125,\"z\":118}",
+                      "duration": 422
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":119,\"z\":124}",
+                      "duration": 401
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":131,\"z\":124}",
+                      "duration": 406
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":120,\"z\":127}",
+                      "duration": 256
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":126,\"z\":118}",
+                      "duration": 260
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":121,\"z\":129}",
+                      "duration": 255
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":120,\"z\":121}",
+                      "duration": 410
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":133,\"z\":126}",
+                      "duration": 282
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":118,\"z\":127}",
+                      "duration": 497
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":122,\"z\":131}",
+                      "duration": 426
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":128,\"z\":131}",
+                      "duration": 451
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":123,\"z\":117}",
+                      "duration": 424
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":120,\"z\":120}",
+                      "duration": 283
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":118,\"z\":122}",
+                      "duration": 408
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":122,\"z\":117}",
+                      "duration": 263
+                    },
+                    {
+                      "title": "D\u00e9caler le sommeil de la cuisini\u00e8re pour pr\u00e9parer le matin. {\"type\":\"schedule-paint\",\"pawnId\":12411,\"hours\":[5],\"assignment\":\"anything\"}",
+                      "duration": 306
+                    },
+                    {
+                      "title": "D\u00e9caler le sommeil de la cuisini\u00e8re pour pr\u00e9parer le matin. {\"type\":\"schedule-paint\",\"pawnId\":12411,\"hours\":[21],\"assignment\":\"sleep\"}",
+                      "duration": 216
+                    },
+                    {
+                      "title": "Am\u00e9nager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"table\",\"x\":125,\"z\":123,\"orientation\":1}",
+                      "duration": 515
+                    },
+                    {
+                      "title": "Am\u00e9nager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"horseshoes\",\"x\":127,\"z\":122}",
+                      "duration": 446
+                    },
+                    {
+                      "title": "Am\u00e9nager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"campfire\",\"x\":124,\"z\":124,\"orientation\":0}",
+                      "duration": 312
+                    },
+                    {
+                      "title": "Am\u00e9nager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"stool\",\"x\":125,\"z\":122}",
+                      "duration": 301
+                    },
+                    {
+                      "title": "Am\u00e9nager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"stool\",\"x\":126,\"z\":122}",
+                      "duration": 355
+                    },
+                    {
+                      "title": "Am\u00e9nager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"stool\",\"x\":125,\"z\":124}",
+                      "duration": 522
+                    },
+                    {
+                      "title": "Semer un premier potager pr\u00e8s du camp, tout en continuant \u00e0 cueillir pendant sa croissance. {\"type\":\"area\",\"action\":\"growing\",\"from\":{\"x\":123,\"z\":130},\"to\":{\"x\":127,\"z\":132}}",
+                      "duration": 588
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":120,\"z\":119}",
+                      "duration": 417
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":136,\"z\":125}",
+                      "duration": 419
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":115,\"z\":126}",
+                      "duration": 437
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":135,\"z\":126}",
+                      "duration": 414
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":118,\"z\":129}",
+                      "duration": 272
+                    },
+                    {
+                      "title": "Am\u00e9nager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"wall\",\"x\":122,\"z\":122}",
+                      "duration": 494
+                    },
+                    {
+                      "title": "Am\u00e9nager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"wall\",\"x\":122,\"z\":123}",
+                      "duration": 316
+                    },
+                    {
+                      "title": "Am\u00e9nager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"wall\",\"x\":122,\"z\":124}",
+                      "duration": 461
+                    },
+                    {
+                      "title": "Am\u00e9nager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"wall\",\"x\":128,\"z\":122}",
+                      "duration": 314
+                    },
+                    {
+                      "title": "Am\u00e9nager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"wall\",\"x\":128,\"z\":123}",
+                      "duration": 315
+                    },
+                    {
+                      "title": "Am\u00e9nager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"wall\",\"x\":128,\"z\":124}",
+                      "duration": 465
+                    },
+                    {
+                      "title": "Am\u00e9nager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"wall\",\"x\":129,\"z\":124}",
+                      "duration": 472
+                    },
+                    {
+                      "title": "Garder une petite r\u00e9serve alimentaire sur le tabouret pr\u00e8s du feu. {\"type\":\"stockpile\",\"x\":125,\"z\":124,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":true},\"priority\":2,\"capacity\":75}",
+                      "duration": 742
+                    },
+                    {
+                      "title": "Installer une premi\u00e8re recette de repas simple au feu de camp. {\"type\":\"bill-add\",\"structureId\":12528}",
+                      "duration": 400
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":128,\"z\":133}",
+                      "duration": 584
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":121,\"z\":117}",
+                      "duration": 479
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":119,\"z\":119}",
+                      "duration": 443
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":117,\"z\":121}",
+                      "duration": 286
+                    },
+                    {
+                      "title": "Renouveler la r\u00e9serve alimentaire avant la p\u00e9nurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":127,\"z\":123}",
+                      "duration": 443
+                    },
+                    {
+                      "title": "Renouveler la r\u00e9serve alimentaire avant la p\u00e9nurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":129,\"z\":127}",
+                      "duration": 299
+                    },
+                    {
+                      "title": "Renouveler la r\u00e9serve alimentaire avant la p\u00e9nurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":121,\"z\":122}",
+                      "duration": 436
+                    },
+                    {
+                      "title": "Renouveler la r\u00e9serve alimentaire avant la p\u00e9nurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":129,\"z\":128}",
+                      "duration": 456
+                    },
+                    {
+                      "title": "Renouveler la r\u00e9serve alimentaire avant la p\u00e9nurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":120,\"z\":122}",
+                      "duration": 440
+                    },
+                    {
+                      "title": "Maintenir environ deux repas pr\u00e9par\u00e9s par colon en r\u00e9serve. {\"type\":\"bill-update\",\"structureId\":12528,\"billId\":12593,\"settings\":{\"id\":12593,\"recipe\":\"simple-meal\",\"mode\":\"until\",\"target\":6,\"suspended\":false,\"filters\":{\"rice\":true,\"berries\":true},\"radius\":999,\"destination\":\"stockpile\"}}",
+                      "duration": 694
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":136,\"z\":124}",
+                      "duration": 536
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":132,\"z\":130}",
+                      "duration": 453
+                    },
+                    {
+                      "title": "Renouveler la r\u00e9serve alimentaire avant la p\u00e9nurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":124,\"z\":116}",
+                      "duration": 481
+                    },
+                    {
+                      "title": "Renouveler la r\u00e9serve alimentaire avant la p\u00e9nurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":128,\"z\":118}",
+                      "duration": 435
+                    },
+                    {
+                      "title": "Renouveler la r\u00e9serve alimentaire avant la p\u00e9nurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":135,\"z\":125}",
+                      "duration": 433
+                    },
+                    {
+                      "title": "Ouvrir le passage du camp apr\u00e8s la premi\u00e8re journ\u00e9e. {\"type\":\"designate\",\"kind\":\"deconstruct\",\"x\":129,\"z\":124}",
+                      "duration": 524
+                    },
+                    {
+                      "title": "Pr\u00e9parer une r\u00e9serve pour les meubles retir\u00e9s. {\"type\":\"stockpile\",\"x\":129,\"z\":125,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":false,\"furniture\":true},\"priority\":2,\"capacity\":1}",
+                      "duration": 827
+                    },
+                    {
+                      "title": "Retirer le jeu pour r\u00e9organiser le camp. {\"type\":\"designate\",\"kind\":\"uninstall\",\"x\":127,\"z\":122}",
+                      "duration": 447
+                    },
+                    {
+                      "title": "Am\u00e9nager progressivement le camp sans fermer son passage central. {\"type\":\"designate\",\"kind\":\"door\",\"material\":\"wood\",\"x\":122,\"z\":125,\"orientation\":0}",
+                      "duration": 470
+                    },
+                    {
+                      "title": "Conserver les rations de voyage tant que la cuisine assure les repas. {\"type\":\"food-policy-assign\",\"pawnId\":12409,\"policyId\":3}",
+                      "duration": 339
+                    },
+                    {
+                      "title": "Conserver les rations de voyage tant que la cuisine assure les repas. {\"type\":\"food-policy-assign\",\"pawnId\":12410,\"policyId\":3}",
+                      "duration": 270
+                    },
+                    {
+                      "title": "Conserver les rations de voyage tant que la cuisine assure les repas. {\"type\":\"food-policy-assign\",\"pawnId\":12411,\"policyId\":3}",
+                      "duration": 245
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":126,\"z\":113}",
+                      "duration": 394
+                    },
+                    {
+                      "title": "Ouvrir quelques cases du massif proche pour pr\u00e9parer la pierre. {\"type\":\"designate\",\"kind\":\"mine\",\"x\":150,\"z\":160}",
+                      "duration": 2086
+                    },
+                    {
+                      "title": "Ouvrir quelques cases du massif proche pour pr\u00e9parer la pierre. {\"type\":\"designate\",\"kind\":\"mine\",\"x\":149,\"z\":161}",
+                      "duration": 334
+                    },
+                    {
+                      "title": "Ouvrir quelques cases du massif proche pour pr\u00e9parer la pierre. {\"type\":\"designate\",\"kind\":\"mine\",\"x\":151,\"z\":160}",
+                      "duration": 351
+                    },
+                    {
+                      "title": "Ouvrir quelques cases du massif proche pour pr\u00e9parer la pierre. {\"type\":\"designate\",\"kind\":\"mine\",\"x\":149,\"z\":162}",
+                      "duration": 329
+                    },
+                    {
+                      "title": "R\u00e9server des cases aux fragments, sans les m\u00e9langer aux aliments. {\"type\":\"stockpile\",\"x\":130,\"z\":124,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":false,\"chunk\":true},\"capacity\":1}",
+                      "duration": 552
+                    },
+                    {
+                      "title": "R\u00e9server des cases aux fragments, sans les m\u00e9langer aux aliments. {\"type\":\"stockpile\",\"x\":130,\"z\":125,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":false,\"chunk\":true},\"capacity\":1}",
+                      "duration": 457
+                    },
+                    {
+                      "title": "R\u00e9server des cases aux fragments, sans les m\u00e9langer aux aliments. {\"type\":\"stockpile\",\"x\":130,\"z\":126,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":false,\"chunk\":true},\"capacity\":1}",
+                      "duration": 447
+                    },
+                    {
+                      "title": "R\u00e9server des cases aux fragments, sans les m\u00e9langer aux aliments. {\"type\":\"stockpile\",\"x\":130,\"z\":127,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":false,\"chunk\":true},\"capacity\":1}",
+                      "duration": 450
+                    },
+                    {
+                      "title": "Couvrir l\u2019espace de repas apr\u00e8s avoir construit ses supports. {\"type\":\"area\",\"action\":\"build-roof\",\"from\":{\"x\":122,\"z\":122},\"to\":{\"x\":128,\"z\":125}}",
+                      "duration": 340
+                    },
+                    {
+                      "title": "R\u00e9installer le piquet apr\u00e8s son rangement en r\u00e9serve. {\"type\":\"install\",\"structureId\":12550,\"x\":129,\"z\":122,\"orientation\":0}",
+                      "duration": 505
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":120,\"z\":117}",
+                      "duration": 363
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":118,\"z\":119}",
+                      "duration": 325
+                    },
+                    {
+                      "title": "Renouveler la r\u00e9serve alimentaire avant la p\u00e9nurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":117,\"z\":127}",
+                      "duration": 331
+                    },
+                    {
+                      "title": "Renouveler la r\u00e9serve alimentaire avant la p\u00e9nurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":124,\"z\":115}",
+                      "duration": 366
+                    },
+                    {
+                      "title": "Renouveler la r\u00e9serve alimentaire avant la p\u00e9nurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":122,\"z\":133}",
+                      "duration": 336
+                    },
+                    {
+                      "title": "Extraire une r\u00e9serve d\u2019acier pour les futurs ateliers. {\"type\":\"designate\",\"kind\":\"mine\",\"x\":165,\"z\":159}",
+                      "duration": 312
+                    },
+                    {
+                      "title": "Extraire une r\u00e9serve d\u2019acier pour les futurs ateliers. {\"type\":\"designate\",\"kind\":\"mine\",\"x\":162,\"z\":163}",
+                      "duration": 333
+                    },
+                    {
+                      "title": "Ranger l\u2019acier extrait dans des cases libres pr\u00e8s du camp. {\"type\":\"stockpile\",\"x\":130,\"z\":128,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":false,\"steel\":true},\"capacity\":75}",
+                      "duration": 508
+                    },
+                    {
+                      "title": "Ranger l\u2019acier extrait dans des cases libres pr\u00e8s du camp. {\"type\":\"stockpile\",\"x\":131,\"z\":128,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":false,\"steel\":true},\"capacity\":75}",
+                      "duration": 536
+                    },
+                    {
+                      "title": "D\u00e9signer les fragments extraits pour leur transport. {\"type\":\"area\",\"action\":\"haul-chunks\",\"from\":{\"type\":\"ground\",\"x\":150,\"z\":160},\"to\":{\"type\":\"ground\",\"x\":150,\"z\":160}}",
+                      "duration": 379
+                    },
+                    {
+                      "title": "Pr\u00e9parer un atelier de taille avec le bois du camp et l\u2019acier extrait. {\"type\":\"designate\",\"kind\":\"stonecutter\",\"material\":\"wood\",\"x\":119,\"z\":121,\"orientation\":0}",
+                      "duration": 357
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":115,\"z\":122}",
+                      "duration": 349
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":137,\"z\":124}",
+                      "duration": 320
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":112,\"z\":125}",
+                      "duration": 310
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":113,\"z\":126}",
+                      "duration": 318
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":137,\"z\":126}",
+                      "duration": 324
+                    },
+                    {
+                      "title": "Construire une alimentation au bois \u00e0 l\u2019ext\u00e9rieur du camp. {\"type\":\"designate\",\"kind\":\"wood-generator\",\"x\":131,\"z\":121,\"material\":\"steel\",\"orientation\":0}",
+                      "duration": 343
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":132,\"z\":131}",
+                      "duration": 316
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":124,\"z\":112}",
+                      "duration": 322
+                    },
+                    {
+                      "title": "Extraire une r\u00e9serve d\u2019acier pour les futurs ateliers. {\"type\":\"designate\",\"kind\":\"mine\",\"x\":165,\"z\":160}",
+                      "duration": 328
+                    },
+                    {
+                      "title": "Extraire une r\u00e9serve d\u2019acier pour les futurs ateliers. {\"type\":\"designate\",\"kind\":\"mine\",\"x\":166,\"z\":159}",
+                      "duration": 323
+                    },
+                    {
+                      "title": "Extraire une r\u00e9serve d\u2019acier pour les futurs ateliers. {\"type\":\"designate\",\"kind\":\"mine\",\"x\":167,\"z\":158}",
+                      "duration": 327
+                    },
+                    {
+                      "title": "Extraire six composants pour pr\u00e9parer les appareils \u00e9lectriques. {\"type\":\"designate\",\"kind\":\"mine\",\"x\":125,\"z\":181}",
+                      "duration": 335
+                    },
+                    {
+                      "title": "Extraire six composants pour pr\u00e9parer les appareils \u00e9lectriques. {\"type\":\"designate\",\"kind\":\"mine\",\"x\":124,\"z\":182}",
+                      "duration": 308
+                    },
+                    {
+                      "title": "Extraire six composants pour pr\u00e9parer les appareils \u00e9lectriques. {\"type\":\"designate\",\"kind\":\"mine\",\"x\":124,\"z\":183}",
+                      "duration": 320
+                    },
+                    {
+                      "title": "Ranger s\u00e9par\u00e9ment les composants extraits. {\"type\":\"stockpile\",\"x\":132,\"z\":128,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":false,\"component\":true},\"capacity\":50}",
+                      "duration": 521
+                    },
+                    {
+                      "title": "Tailler les premiers blocs du camp. {\"type\":\"bill-add\",\"structureId\":12902}",
+                      "duration": 323
+                    },
+                    {
+                      "title": "Ranger les blocs taill\u00e9s pr\u00e8s des autres mat\u00e9riaux. {\"type\":\"stockpile\",\"x\":132,\"z\":128,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":false,\"blocks\":true},\"capacity\":75}",
+                      "duration": 411
+                    },
+                    {
+                      "title": "Renouveler la r\u00e9serve alimentaire avant la p\u00e9nurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":113,\"z\":125}",
+                      "duration": 366
+                    },
+                    {
+                      "title": "Renouveler la r\u00e9serve alimentaire avant la p\u00e9nurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":114,\"z\":126}",
+                      "duration": 344
+                    },
+                    {
+                      "title": "Renouveler la r\u00e9serve alimentaire avant la p\u00e9nurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":118,\"z\":130}",
+                      "duration": 329
+                    },
+                    {
+                      "title": "Prolonger le premier abri avec cinq blocs taill\u00e9s sur place. {\"type\":\"designate\",\"kind\":\"wall\",\"material\":\"limestone-blocks\",\"x\":121,\"z\":122}",
+                      "duration": 344
+                    },
+                    {
+                      "title": "Maintenir vingt blocs de pierre disponibles. {\"type\":\"bill-update\",\"structureId\":12902,\"billId\":12918,\"settings\":{\"id\":12918,\"recipe\":\"stone-blocks\",\"mode\":\"until\",\"target\":20,\"suspended\":false,\"filters\":{\"granite-chunk\":true,\"limestone-chunk\":true,\"marble-chunk\":true,\"sandstone-chunk\":true,\"slate-chunk\":true},\"radius\":999,\"destination\":\"stockpile\"}}",
+                      "duration": 542
+                    },
+                    {
+                      "title": "Ranger les blocs taill\u00e9s pr\u00e8s des autres mat\u00e9riaux. {\"type\":\"stockpile\",\"x\":129,\"z\":129,\"enabled\":true,\"filters\":{\"wood\":false,\"food\":false,\"blocks\":true},\"capacity\":75}",
+                      "duration": 531
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":119,\"z\":117}",
+                      "duration": 380
+                    },
+                    {
+                      "title": "Renouveler la r\u00e9serve alimentaire avant la p\u00e9nurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":114,\"z\":123}",
+                      "duration": 325
+                    },
+                    {
+                      "title": "Renouveler la r\u00e9serve alimentaire avant la p\u00e9nurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":131,\"z\":132}",
+                      "duration": 337
+                    },
+                    {
+                      "title": "Renouveler la r\u00e9serve alimentaire avant la p\u00e9nurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":127,\"z\":113}",
+                      "duration": 312
+                    },
+                    {
+                      "title": "Ouvrir quelques cases du massif proche pour pr\u00e9parer la pierre. {\"type\":\"designate\",\"kind\":\"mine\",\"x\":150,\"z\":161}",
+                      "duration": 354
+                    },
+                    {
+                      "title": "\u00c9clairer le camp couvert avec une lampe raccord\u00e9e au g\u00e9n\u00e9rateur. {\"type\":\"designate\",\"kind\":\"standing-lamp\",\"x\":127,\"z\":123,\"material\":\"steel\",\"orientation\":0}",
+                      "duration": 338
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":137,\"z\":123}",
+                      "duration": 336
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":111,\"z\":125}",
+                      "duration": 328
+                    },
+                    {
+                      "title": "Renouveler la r\u00e9serve alimentaire avant la p\u00e9nurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":138,\"z\":126}",
+                      "duration": 320
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":136,\"z\":128}",
+                      "duration": 390
+                    },
+                    {
+                      "title": "Pr\u00e9voir le bois des chantiers et une petite marge. {\"type\":\"designate\",\"kind\":\"chop\",\"x\":133,\"z\":131}",
+                      "duration": 302
+                    },
+                    {
+                      "title": "Renouveler la r\u00e9serve alimentaire avant la p\u00e9nurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":116,\"z\":130}",
+                      "duration": 306
+                    },
+                    {
+                      "title": "Renouveler la r\u00e9serve alimentaire avant la p\u00e9nurie. {\"type\":\"designate\",\"kind\":\"harvest\",\"x\":129,\"z\":135}",
+                      "duration": 309
+                    }
+                  ],
+                  "startTime": "2026-09-17T00:45:08.633Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "hourly-world-0",
+                      "contentType": "application/json"
+                    },
+                    {
+                      "name": "hourly-world-4",
+                      "contentType": "application/json"
+                    },
+                    {
+                      "name": "hourly-world-8",
+                      "contentType": "application/json"
+                    },
+                    {
+                      "name": "hourly-world-12",
+                      "contentType": "application/json"
+                    },
+                    {
+                      "name": "hourly-world-16",
+                      "contentType": "application/json"
+                    },
+                    {
+                      "name": "hourly-world-20",
+                      "contentType": "application/json"
+                    },
+                    {
+                      "name": "hourly-world-24",
+                      "contentType": "application/json"
+                    },
+                    {
+                      "name": "hourly-world-28",
+                      "contentType": "application/json"
+                    },
+                    {
+                      "name": "hourly-world-32",
+                      "contentType": "application/json"
+                    },
+                    {
+                      "name": "hourly-world-36",
+                      "contentType": "application/json"
+                    },
+                    {
+                      "name": "hourly-world-40",
+                      "contentType": "application/json"
+                    },
+                    {
+                      "name": "hourly-world-44",
+                      "contentType": "application/json"
+                    },
+                    {
+                      "name": "hourly-world-48",
+                      "contentType": "application/json"
+                    },
+                    {
+                      "name": "hourly-world-52",
+                      "contentType": "application/json"
+                    },
+                    {
+                      "name": "hourly-world-56",
+                      "contentType": "application/json"
+                    },
+                    {
+                      "name": "hourly-world-60",
+                      "contentType": "application/json"
+                    },
+                    {
+                      "name": "hourly-world-64",
+                      "contentType": "application/json"
+                    },
+                    {
+                      "name": "hourly-world-68",
+                      "contentType": "application/json"
+                    },
+                    {
+                      "name": "hourly-world-72",
+                      "contentType": "application/json"
+                    },
+                    {
+                      "name": "colony-journey",
+                      "contentType": "application/json"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "555f966565dc11b6db98-9085b14c50fcc33d1534",
+          "file": "colony-journey.spec.ts",
+          "line": 30,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "self-tending.spec.ts",
+      "file": "self-tending.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "player opts into self-treatment, leaves the bed, keeps facing, cancels and reloads without duplicate care",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 10794,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-17T00:52:00.549Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f97352e74d3be1e08446-ec06c7234563a7a3aa22",
+          "file": "self-tending.spec.ts",
+          "line": 16,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-17T00:45:07.664Z",
+    "duration": 423789.377,
+    "expected": 2,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

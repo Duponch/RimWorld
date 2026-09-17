@@ -1,5 +1,7 @@
 # Stratégie de validation
 
+V49 : cinq scénarios d’auto-soins enrichissent les contrats médicaux (sortie du lit, interruptions, qualité, migration et cent acteurs) ; le parcours UI observe orientation, annulation et reprise. Un échec natif a révélé une orientation perdue au rechargement, corrigée sans assouplir l’oracle.
+
 V48 : six scénarios `feeding.test.ts`, dont clinique de cinq jours, stock/régime partagé, reprise de chaque phase, pourriture et sol saturé. `integration/feeding.spec.ts` joue Travail/clic droit/sauvegarde et inspecte les poses GPU réellement présentées. `scripts/rescue-bench.ts --feeding` et `FEED_LOAD=1` dans `integration/rescue-load.spec.ts` réutilisent le banc médical 2/30/100, à lancer séparément. Les clés historiques rescued/carryTicks/carriedFrames signifient patients nourris, ticks et observations au chevet dans ce mode. Le pilote commun relève tâche feed et faim.
 
 V47 : `care.test.ts` croise résultats réels, XP/qualité, réservations, repos/sommeil, interruption, accès, migration et continuation. `integration/care.spec.ts` contrôle les commandes, la sauvegarde au chevet et les poses GPU effectivement présentées. Charge : `scripts/rescue-bench.ts --care` et `CARE_LOAD=1` avec `integration/rescue-load.spec.ts`, à exécuter séparément. Les anciennes clés `rescued`/`carryTicks`/`carriedFrames` désignent alors patients entièrement traités, ticks travaillés et observations de soin au chevet ; ce ne sont pas des mesures de secours. Le pilote commun relève traitements, repos médical et XP.

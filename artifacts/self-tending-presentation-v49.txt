@@ -1,0 +1,6 @@
+
+> lisiere@0.1.0 test:presentation
+> node scripts/check-presentation.mjs
+
+{"action":"mine","frames":{"count":10756,"p50":4.19999999999709,"p95":4.299999999999272,"p99":4.30000000000291,"max":16.599999999998545},"jumpCount":0,"solidOccupancyCount":0}
+{"action":"chop","frames":{"count":10737,"p50":4.19999999999709,"p95":4.299999999999272,"p99":4.30000000000291,"max":16.699999999999818},"jumpCount":0,"solidOccupancyCount":0}

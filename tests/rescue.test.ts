@@ -84,7 +84,7 @@ test('doctor priority, direct-order persistence and malformed rescue/medical sav
   const corruptions=[(v:World)=>v.pawns[0]!.rescue!.patientId=v.pawns[0]!.id,(v:World)=>v.pawns[1]!.x++,(v:World)=>v.pawns[0]!.rescue!.bedId=99999,(v:World)=>v.structures[0]!.kind='table',(v:World)=>v.pawns[1]!.bedId=v.structures[0]!.id,(v:World)=>v.pawns[0]!.orders.active=null];
   for(const mutate of corruptions){const bad=structuredClone(w);mutate(bad);expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();}
   const old=rescueCamp();old.structures=[];old.pawns.splice(1);old.schemaVersion=45 as typeof old.schemaVersion;withoutCare(old);delete (old.pawns[0]!.priorities as Partial<typeof a.priorities>).doctor;
-  const migrated=deserializeWorld(JSON.stringify(old));expect(migrated.schemaVersion).toBe(48);expect(migrated.pawns[0]!.priorities.doctor).toBe(1);expect(migrated.pawns[0]!.rescue).toBeUndefined();
+  const migrated=deserializeWorld(JSON.stringify(old));expect(migrated.schemaVersion).toBe(49);expect(migrated.pawns[0]!.priorities.doctor).toBe(1);expect(migrated.pawns[0]!.rescue).toBeUndefined();
   const future=structuredClone(old);future.pawns[0]!.priorities.doctor=1;expect(()=>deserializeWorld(JSON.stringify(future))).toThrow(/priority/);
   releaseWork(w,a!);valid(w);
   const regular=rescueCamp();delete regular.structures[0]!.medical;expect(order(regular).ok).toBe(true);

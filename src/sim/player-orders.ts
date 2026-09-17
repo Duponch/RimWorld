@@ -110,6 +110,10 @@ export function queryOrderOptions(world:World,pawnId:number,cell:Cell,queue=fals
     const feedReason=queue?'La file d’alimentation assistée n’est pas encore disponible.':feedingReason(world,pawn,patient)??(!feedingProposal(world,pawn,patient,reachableCells(world,pawn,blockedCells(world),new Set()))?'Aucun aliment autorisé ou accès au chevet.':undefined);
     options.push({jobId:0,feedPatientId:patient.id,label:`Nourrir ${patient.name}`,enabled:!feedReason,...feedReason?{reason:feedReason}:{}});
   }
+  if(pawn.x===cell.x&&pawn.z===cell.z){
+    const reason=queue?'La file de soins n’est pas encore disponible.':tendingReason(world,pawn,pawn)??(!tendingProposal(world,pawn,pawn,reachableCells(world,pawn,blockedCells(world),new Set()))?'Aucune place pour se soigner.':undefined);
+    options.push({jobId:0,tendPatientId:pawn.id,label:'Se soigner sans médicament',enabled:!reason,...reason?{reason}:{}});
+  }
   return options;
 }
 const exhausted=(world:World,pawn:Pawn)=>(carrierOf(world,pawn.id)?'Ce colon est transporté.':undefined)??medicalWorkRefusal(pawn)??(pawn.interruptedCargo?'Ce colon doit d’abord déposer sa cargaison interrompue. Libérez une case de sol à proximité.':pawn.collapsePending||world.restRules==='legacy'&&pawn.rest===0?'Ce colon doit récupérer de son épuisement.':undefined);

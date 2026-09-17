@@ -12,6 +12,10 @@ export function createHealthInspection(panel:HTMLElement,selected?:()=>Pawn|unde
     const label=document.createElement('label'),input=document.createElement('input');input.type='checkbox';input.id='medical-policy';
     input.onchange=()=>{const p=selected();if(p)send({type:'medical-policy',pawnId:p.id,enabled:input.checked});};
     label.append(input,' Autoriser les soins (sans médicament disponible)');details.append(label);
+    const selfLabel=document.createElement('label'),selfInput=document.createElement('input');selfInput.type='checkbox';selfInput.id='self-tend-policy';
+    selfInput.onchange=()=>{const p=selected();if(p)send({type:'self-tend-policy',pawnId:p.id,enabled:selfInput.checked});};
+    selfLabel.append(selfInput,' Autoriser les auto-soins');selfLabel.title='Médecin doit être activé. Qualité de base ×70 %, avant variation ; pas de pénalité de vitesse propre aux auto-soins.';details.append(selfLabel);
+    const hint=document.createElement('small');hint.dataset.health='self-tend-hint';details.append(hint);
   }
   panel.append(details);
 }
@@ -20,6 +24,8 @@ export function updateHealthInspection(panel:HTMLElement,pawn:Pawn):void {
   const details=panel.querySelector('#health-inspection');if(!details)return;
   const health=pawn.health,c=pawnBody(pawn).capacities;
   const policy=details.querySelector<HTMLInputElement>('#medical-policy');if(policy){policy.checked=!pawn.careDisabled;policy.disabled=pawn.state==='dead';}
+  const self=details.querySelector<HTMLInputElement>('#self-tend-policy');if(self){self.checked=!!pawn.selfTend;self.disabled=pawn.state==='dead';}
+  const hint=details.querySelector('[data-health="self-tend-hint"]');if(hint)hint.textContent=pawn.selfTend&&pawn.priorities.doctor===0?'Auto-soins autorisés, mais Médecin est désactivé dans Travail.':'';
   details.querySelector('[data-health="status"]')!.textContent=pawn.state==='dead'?'Décédé · dépouille sur place':!health?'Aucune lésion':`${pawn.state==='downed'?'À terre · ':''}Douleur ${Math.round(medicalPain(health)*100)} % · Sang perdu ${(health.bloodLoss/BLOOD_UNIT*100).toFixed(1)} % · Saignement ${(medicalBleed(health)*100).toFixed(0)} %/jour`;
   details.querySelector('[data-health="capacities"]')!.textContent=pawn.state==='dead'?'':`Conscience ${Math.round(c.consciousness*100)} % · Mobilité ${Math.round(c.moving*100)} % · Manipulation ${Math.round(c.manipulation*100)} % · Vue ${Math.round(c.sight*100)} %`;
   details.querySelector('[data-health="injuries"]')!.textContent=health?[...health.injuries.map(i=>`${BODY_PARTS[i.part].label} : ${i.scar?.pain!==undefined?'Cicatrice':INJURY_RULES[i.kind].label}, −${(i.severity/HP_UNIT).toFixed(2)} PV${i.tended!==undefined?` (traitée, qualité ${Math.round(i.tended/10)} %)`:''}`),...health.missing.map(m=>`${BODY_PARTS[m.part].label} : partie perdue${m.tended?' (plaie traitée)':''}`)].join(' ; '):'';

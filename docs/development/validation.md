@@ -1,53 +1,41 @@
-# Validation courante — V48
+# Validation courante — V49
 
-17 septembre 2026. [Alimentation assistée physique](feeding.md), [sources et incertitudes](../research/feeding-reference.md). Preuves V47 [archivées](../history/validation-tending-v47.md). Les résultats ci-dessous ne garantissent ni tous les cas possibles ni une fluidité parfaite.
+17 septembre 2026. [Auto-soins ordinaires](self-tending.md), [sources et portée](../research/self-tending-reference.md). [Validation V48 archivée](../history/validation-feeding-v48.md). Aucun résultat ci-dessous ne prouve tous les cas possibles ni une fluidité parfaite.
 
-## Simulation, sauvegardes et partie
+## Simulation et reprise
 
-**180 scénarios sur 180 passent, 55 suites, 155,2 s** : [rapport global](../../artifacts/core-feeding-v48.json). Le pilote développe trois cartes 250² pendant cinq jours et poursuit la graine 42 pendant huit jours ; il dure 153,8 s dans ce passage. Après relecture, le seuil adulte du nourrissage est corrigé de 27 à 26 % selon le miroir identifié, le type de phase est validé strictement sans coercition et l'ingestion complète de riz cru est ajoutée au scénario existant. Les **22 contrôles médicaux ciblés** repassent ensuite : [rapport final](../../artifacts/feeding-final-v48.json). Ces comptes se recouvrent et ne sont pas additionnés. La suite d'intégration complète n'a pas été rejouée.
+**185 scénarios sur 185 passent, 56 suites, 134,6 s** : [rapport global](../../artifacts/core-self-tending-v49.json). Le pilote sur trois cartes 250² pendant cinq jours, puis huit jours pour la graine 42, passe en 133,2 s. La clinique de cinq jours de V48 est également conservée : secours, traitement, alimentation répétée et bilan exact des repas.
 
-Les six scénarios de nourrissage croisent source réservée, prélèvement partiel, type et âge de l'aliment, portage, chevet cardinal, nutrition seulement au terme du repas, régime du patient, seuil exact, patient mobile au repos, politique de soin indépendante, priorité forcée, incapacité, décès, obstacle et pourriture. Ils vérifient aussi deux médecins pour un patient, source unique, refus atomique sur sol saturé, cargaison indéposable puis récupération, reprise exacte des trois phases, snapshots et migration V47 stricte. Un repas couché ne crée pas de pensée sans table ; le riz conserve sa pensée de nourriture crue. Aucun gain de Médecine pendant l'alimentation.
+Les cinq scénarios d'auto-soins croisent option désactivée, Médecin/Patient distincts, politique de soins, priorité directe conservée, autres patients, réservations, absence de lit obligatoire, perte des mains, incapacité, décès, épuisement, annulation, sortie réelle du mobilier, absence de sortie, progression sauvegardée, snapshots et validation V48 stricte. Cent adultes terminent chacun leurs deux traitements avec XP exacte et continuation identique. Les cas de qualité exigent 0,7 sur la base avant plafond/variation : ce n'est pas 0,7 sur le résultat final ni une pénalité de vitesse.
 
-La clinique de cinq jours commence avec une personne à secourir, des blessures à traiter et quarante repas au sol. Les médecins la transportent, la soignent et la nourrissent plusieurs fois par les commandes de travail ; aucun repas injecté pendant l'exécution. Nutrition maintenue, lit conservé, bilan exact repas présents + ingérés, expérience provenant uniquement des soins et continuation sauvegardée contrôlés. Le pilote civil et cette clinique couvrent des situations complémentaires, pas toutes les urgences médicales.
+Le [premier passage ciblé](../../artifacts/self-tending-initial-v49.json) passe 25/27 cas ; deux fixtures sont corrigées : attente de schéma encore 48 et roche synthétique placée sur la seconde case du lit. Le [passage ciblé suivant](../../artifacts/self-tending-targeted-v49.json) passe, puis la suite entière ci-dessus. Aucun validateur assoupli. Ces comptes se recouvrent et ne s'additionnent pas.
 
-Les essais initiaux ont révélé des fixtures à corriger : version attendue encore 47, dépôt artificiel sur une case de lit incompatible, XP attendue sans tenir compte de la passion brûlante, annulation d'un travail automatique confondue avec annulation d'un ordre forcé. Ces corrections n'assouplissent ni le validateur ni les règles de conservation.
+## Interface et chronologie
 
-## Gestes et présentation dans le navigateur
+Chromium natif WebGPU, AMD RDNA 1, Ryzen 5 3600, Windows 11 10.0.26200, viewport 1440×1000. Le parcours d'auto-soins utilise Santé, Travail et clic droit ; il quitte un lit, commence le geste, annule sans XP puis reprend et sauvegarde/recharge pendant traitement. Les assertions regardent les vrais attributs GPU après rendu, la position, l'orientation, la posture et l'XP par lésion traitée.
 
-Chromium natif WebGPU, AMD RDNA 1, Ryzen 5 3600, Windows 11 10.0.26200, viewport 1440×1000. Le parcours médical emploie Travail, clic droit **Nourrir**, pauses/vitesses et sauvegarde/rechargement pendant le repas. Il observe les vrais attributs GPU après rendu : médecin face au patient, travail au chevet, cargaison visible et patient allongé. [Rapport](../../artifacts/feeding-ui-v48.json) : 1 179 observations, dont 414 pendant l'alimentation, cinq portions conservées jusqu'à consommation puis quatre, zéro XP et aucune erreur. Capture du chevet inspectée. Ce parcours a partagé une partie de son exécution avec des tests CPU ; aucune mesure de performance n'en est déduite.
+**Le premier parcours a détecté une perte d'orientation au rechargement** : l'acteur immobile repartait vers l'angle arbitraire de 36°, malgré un trajet précédent vers le nord. `PawnLayer` récupère maintenant l'orientation de la dernière arête sauvegardée lorsque la présentation est reconstruite ; les cibles externes et la posture de lit gardent leur priorité. L'oracle n'a pas été assoupli. Le passage corrigé réussit, puis le contrôle final passe en 10,8 s avec 701 observations de travail, deux plaies traitées et 175 XP nettes sans passion. [Rapport natif](../../artifacts/self-tending-ui-v49.json). Capture inspectée ; les deux permissions médicales sont sur des lignes séparées pour la lisibilité.
 
-Le [parcours de trois jours par l'interface](../../artifacts/feeding-colony-v48.json) passe en **419,9 s**, avec [bilan métier](../../artifacts/feeding-colony-gameplay-v48.json) : trois lits, repas et sièges, cultures, taille de pierre, porte, toiture, générateur et lampe opérationnels, stocks entretenus, bois conservé et nourriture réconciliée. Dix-neuf repas cuisinés, dix-huit ingérés pendant le parcours observé. Ce camp sans blessure vérifie les anciennes boucles, les soins étant exercés séparément. Les corps encodés des pièces jointes sont retirés du rapport compact, pas les résultats et assertions.
+Le [parcours final regroupé](../../artifacts/self-tending-colony-v49.json) passe ses deux scénarios sans reprise en 423,8 s. La partie de trois jours dure 411,2 s, avec [bilan métier](../../artifacts/self-tending-colony-gameplay-v49.json) : vingt repas cuisinés, dix-huit ingérés, camp équipé, générateur et lampe opérationnels, stocks entretenus, bois conservé et nourriture réconciliée, aucune erreur. Elle vérifie les boucles civiles sans blessure injectée ; les auto-soins sont exercés séparément. Les gros corps encodés des pièces jointes sont retirés du rapport compact, pas ses résultats.
 
-`npm run test:presentation` passe après les derniers changements : 45 s de minage puis 45 s d'abattage naturels, trois colons sur 250², changements 1×/6×/3× toutes les deux secondes. Aucun saut, aucune occupation solide et aucune famine du tampon observés ; réponses aux changements de vitesse entre 8,2 et 19,4 ms. Intervalle image p95 4,3 ms dans les deux cas, maxima 25 / 20,9 ms. [Rapport complet](../../artifacts/feeding-presentation-v48.json). Ces mesures de trois colons ne remplacent pas celles de charge ci-dessous.
+Le [contrôle natif minage/abattage](../../artifacts/self-tending-presentation-v49.json) passe aussi : deux phases de 45 s, carte naturelle 250², trois colons, vitesses 1/6/3 alternées toutes les deux secondes. Les 21 493 images observées ne montrent aucun saut ni occupation solide ; temps d'image p95 4,3 ms, maxima 16,6/16,7 ms. Le délai maximal de changement de vitesse mesuré est 17,4 ms. Ce petit scénario ne remplace pas l'audit graphique à cent acteurs.
 
-## Charge CPU séparée
+## Charge CPU isolée
 
-Node 24.11.1, même Ryzen/Windows. `scripts/rescue-bench.ts --feeding` : carte dégagée 250², 800 ticks, 1/15/50 couples médecin/patient. Résultats, validité et continuation exacte contrôlés hors chronométrage. [Mesures](../../artifacts/feeding-cpu-v48.json).
+Même Ryzen/Windows, Node 24.11.1. `scripts/rescue-bench.ts --self`, carte dégagée 250², 800 ticks, tous les acteurs possédant deux lésions et les auto-soins autorisés. Validité/résultats/continuation contrôlés hors chronométrage. Aucun autre banc de test simultané. [Rapport](../../artifacts/self-tending-cpu-v49.json).
 
-| Acteurs / patients nourris | Tick p50 / p95 | p99 / maximum | Clone intégral p95 |
-|---|---|---|---|
-| 2 / 1 | 0,039 / 0,173 ms | 0,766 / 20,458 ms | 52,50 ms |
-| 30 / 15 | 0,244 / 0,738 ms | 1,333 / 23,406 ms | 57,25 ms |
-| 100 / 50 | 0,878 / 2,474 ms | 11,512 / 29,961 ms | 49,64 ms |
+| Adultes intégralement traités | Tick p50 / p95 / p99 / max | Clone intégral p95 |
+|---|---|---|
+| 2 | 0,052 / 0,269 / 0,579 / 20,573 ms | 51,96 ms |
+| 30 | 0,471 / 1,755 / 2,366 / 12,568 ms | 48,40 ms |
+| 100 | 1,792 / 6,883 / 8,299 / 14,373 ms | 49,83 ms |
 
-Le banc partagé conserve les clés `rescued` pour les patients nourris et `carryTicks` pour les ticks observés au chevet ; le protocole les explicite. La dernière des 75 étapes consomme le repas et retire la tâche : 74 observations actives par patient. Le clone intégral des 62 500 cellules ne mesure pas les messages différentiels du worker. Un passage par combinaison, sans autre banc natif simultané ; aucun FPS déduit des temps CPU.
+Un passage par combinaison. Le banc médical partagé conserve `rescued` pour les adultes traités et `carryTicks` pour les observations actives de travail, explicités dans le protocole. Le clone intégral ne représente pas les messages différentiels. Pas de FPS déduit du CPU ni de comparaison causale avec V48, où seule la moitié des acteurs travaillait comme médecin.
 
-## Charge graphique et limites ouvertes
+Les pointes graphiques à cent acteurs relevées en [V48](../history/validation-feeding-v48.md) restent ouvertes. Ce lot vérifie cent auto-soins en simulation ; il ne renouvelle pas le banc graphique de cent acteurs. L'audit mixte scène/transferts/HUD/rendu reste à faire, et zéro compilation de pipeline ne prouverait pas son absence de saccades.
 
-Même matériel, vrai worker en 6×, carte dégagée 250², 90 images d'échauffement. `FEED_LOAD=1` active le nourrissage dans le banc médical partagé. [Rapport](../../artifacts/feeding-native-v48.json).
+## Périmètre
 
-| Acteurs / patients nourris | Intervalle image p50 / p95 / p99 / max | CPU image p95 | Draw calls max | Observations au chevet |
-|---|---|---|---|---|
-| 2 / 1 | 4,2 / 12,3 / 12,6 / 16,6 ms | 8,7 ms | 121 | 210 |
-| 30 / 15 | 4,2 / 8,5 / 16,6 / 25,1 ms | 7,4 ms | 131 | 3 427 |
-| 100 / 50 | 8,3 / 24,9 / 37,5 / 41,7 ms | 9,2 ms | 144 | 8 426 |
+Compilation TypeScript/Vite réussie, avec l'avertissement habituel de taille du chunk graphique. Contrats, guide, catalogue, inventaire et roadmap actualisés ; aucun nouvel objet ni médicament. V48 validée avant V49, sans autorisation d'auto-soin inventée.
 
-Tous les patients sont nourris, aucune pose invalide détectée, géométrie stable, zéro nouveau pipeline et aucune erreur JS/GPU. **Les pointes restent un problème ouvert**, malgré ces invariants graphiques. Le temps GPU direct n'est pas mesuré.
-
-Un [passage comparatif du traitement existant](../../artifacts/feeding-care-comparison-v48.json), mêmes paramètres de banc, retrouve à cent acteurs p50 4,2 ms, p95 16,5 ms, p99 29,3 ms, maximum 45,9 ms ; CPU image p95 7,7 ms, 122 draw calls maximum. Il montre que des pointes existent aussi dans l'activité précédente, sans isoler leur cause. Les fixtures n'ont pas la même disposition ni le même nombre de piles ; ce n'est pas une comparaison causale à contenu identique. Le coût exact du nourrissage, des transferts, de l'application de scène, du HUD et du rendu demande un audit mixte instrumenté. Ni ces essais courts ni les FPS ne prouvent une colonie de cent personnes entretenue plusieurs jours, une forêt chargée ou un combat.
-
-## Périmètre livré
-
-TypeScript et Vite compilent le lot ; avertissement habituel de taille du chunk graphique. Documentation, guide, inventaire et catalogue distinguent l'action médicale et les objets : aucun nouvel aliment ni médicament ajouté. Originaux du corpus préservés. V47 validée strictement avant passage à V48, sans repas ou tâche inventés.
-
-Auto-soins, médicaments, préemption générale d'urgence, files médicales, maladies/complications et chirurgie restent absents. L'équipement/combat et les relations restent les prochains grands systèmes après la chaîne médicale élémentaire. Aucun jalon G0–G5 n'est déclaré terminé.
+Les auto-soins livrés sont le fournisseur ordinaire et l'ordre direct. **Préemption urgente et réévaluation après une seule plaie restent à implémenter** ; cocher l'option n'interrompt pas automatiquement toute activité ou attente au lit. Médicaments, maladies/chirurgie, files, équipement/combat et relations restent absents. G0 se consolide, G1/G2 sont partiels, les fondations humaines de G3 avancent ; aucun jalon déclaré terminé.

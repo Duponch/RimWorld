@@ -172,6 +172,12 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   if (!command || typeof command !== 'object') return refusal('invalid-command', 'Commande invalide.');
   if(command.type==='order-feed')return applyFeeding(world,command);
   if(command.type==='order-tend')return applyTending(world,command);
+  if(command.type==='self-tend-policy'){
+    const p=world.pawns.find(p=>p.id===command.pawnId);
+    if(!p||p.state==='dead'||typeof command.enabled!=='boolean')return refusal('invalid-command','Réglage d’auto-soin invalide.');
+    if(command.enabled)p.selfTend=true;else delete p.selfTend;
+    p.planCooldown=0;return {ok:true};
+  }
   if(command.type==='medical-policy'){
     const p=world.pawns.find(p=>p.id===command.pawnId);
     if(!p||typeof command.enabled!=='boolean')return refusal('invalid-command','Politique médicale invalide.');

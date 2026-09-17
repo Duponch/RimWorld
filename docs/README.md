@@ -1,8 +1,10 @@
 # Documentation de Lisière
 
-V48 : [alimentation assistée au lit](development/feeding.md), [sources recoupées et seuil adulte](research/feeding-reference.md). Médecin prend et porte la portion selon le régime du patient ; nutrition seulement au terme du repas. Médicaments et auto-soins restent ouverts.
+V49 : [auto-soins ordinaires](development/self-tending.md), [vérification des règles](research/self-tending-reference.md). Option Santé désactivée au départ, métier Médecin, qualité de base ×0,7 et traitement physique sans lit obligatoire. Préemption urgente et médicaments restent ouverts.
 
-V47 : [traitements sans médicament, repos médical et Médecine](development/tending.md), [règles revérifiées](research/tending-reference.md). Les médicaments et les auto-soins restent ouverts ; alimentation assistée ajoutée en V48.
+V48 : [alimentation assistée au lit](development/feeding.md), [sources recoupées et seuil adulte](research/feeding-reference.md). Médecin prend et porte la portion selon le régime du patient ; nutrition seulement au terme du repas. Médicaments encore ouverts ; auto-soins ordinaires ajoutés en V49.
+
+V47 : [traitements sans médicament, repos médical et Médecine](development/tending.md), [règles revérifiées](research/tending-reference.md). Les médicaments restent ouverts ; auto-soins ordinaires ajoutés en V49 ; alimentation assistée ajoutée en V48.
 
 V46 : [secours physiques et lits médicaux](development/rescue.md). Médecin, clic droit, portage GPU et reprise en cours de transport ; traitements ajoutés en V47, alimentation assistée ajoutée en V48.
 

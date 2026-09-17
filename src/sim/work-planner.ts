@@ -88,11 +88,12 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   if (budget.remaining === 0 || budget.pairs === 0) return;
   const productionRank=productionPriority(world,pawn),cooking=productionRank<5;
   const selfCare=patientWork(pawn),tendable=pawn.priorities.doctor>0?world.pawns.filter(p=>p!==pawn&&lyingPatient(p)&&treatmentTarget(p)):[];
+  const selfTreatment=pawn.selfTend&&pawn.priorities.doctor>0&&treatmentTarget(pawn);
   const feedable=pawn.priorities.doctor>0?world.pawns.filter(p=>p!==pawn&&p.hunger<=FEED_HUNGER&&needsAssistedFeeding(p)):[];
   const patients=pawn.priorities.doctor>0?world.pawns.filter(wantsRescue):[];
   const fires=world.structures.filter(s=>wantsFuel(world,s));
-  if (!selfCare && !tendable.length && !feedable.length && !patients.length && !cooking && !fires.length && !world.jobs.length && (!world.stockpiles.length || !world.piles.length && !world.packed.length || pawn.priorities.haul === 0)) { pawn.planCooldown = PLAN_INTERVAL; return; }
-  if (!selfCare && !tendable.length && !feedable.length && !patients.length && !cooking && !fires.length && !world.jobs.length && !mayImproveFurnitureStorage(world) && !mayImproveStorage(world)) {pawn.planCooldown=PLAN_INTERVAL;return;}
+  if (!selfCare && !selfTreatment && !tendable.length && !feedable.length && !patients.length && !cooking && !fires.length && !world.jobs.length && (!world.stockpiles.length || !world.piles.length && !world.packed.length || pawn.priorities.haul === 0)) { pawn.planCooldown = PLAN_INTERVAL; return; }
+  if (!selfCare && !selfTreatment && !tendable.length && !feedable.length && !patients.length && !cooking && !fires.length && !world.jobs.length && !mayImproveFurnitureStorage(world) && !mayImproveStorage(world)) {pawn.planCooldown=PLAN_INTERVAL;return;}
   const blocked = getBlocked();
   const clearingCells=new Set(world.jobs.filter(j=>j.clearance).map(j=>cellIndex(world,j.x,j.z)));
   // Rankings do not depend on flood order. Try the top ready job directly;
@@ -104,7 +105,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
     .sort(compareCandidate);
   let reachable: Reachability | null = null;
   const first = ready[0];
-  if (first && !selfCare && !tendable.length && !feedable.length && (!patients.length||pawn.priorities.doctor>first.priority) && (!cooking || productionRank>first.priority) && (pawn.priorities.haul === 0 || first.priority <= pawn.priorities.haul)
+  if (first && !selfCare && !selfTreatment && !tendable.length && !feedable.length && (!patients.length||pawn.priorities.doctor>first.priority) && (!cooking || productionRank>first.priority) && (pawn.priorities.haul === 0 || first.priority <= pawn.priorities.haul)
     && (first.priority<constructionHaulPriority(pawn)||!world.jobs.some(isConstruction))) {
     const source = first.job.kind === 'sow' ? world.piles.find(p => p.owner.type === 'ground' && sameCell(p.owner, first.job)) : undefined;
     if (!source || reservedSource(world, source.id) === 0) {
@@ -151,6 +152,10 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   }
   let best: Candidate | null = null;
   if(selfCare){const proposal=patientProposal(world,pawn,reachable);if(proposal)best={patientRest:proposal,priority:pawn.priorities[proposal.work],rank:proposal.work==='patient'?-6:-2,distance:0,id:pawn.id,target:pawn};}
+  if(selfTreatment){
+    const candidate:Candidate={priority:pawn.priorities.doctor,rank:-3.75,distance:0,id:pawn.id,target:pawn};
+    if(!best||compareCandidate(candidate,best)<0){const proposal=tendingProposal(world,pawn,pawn,reachable);if(proposal)best={...candidate,tend:proposal};}
+  }
   for(const patient of tendable){
     const candidate:Candidate={priority:pawn.priorities.doctor,rank:urgentTreatment(patient)?-5:-4,distance:Math.abs(patient.x-pawn.x)+Math.abs(patient.z-pawn.z),id:patient.id,target:patient};
     if(best&&compareCandidate(candidate,best)>=0)continue;

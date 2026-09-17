@@ -35,7 +35,7 @@ export function queryPawnStatus(world: World, pawn: Pawn): { code: string; reaso
   const carrier=carrierOf(world,pawn.id);
   if(carrier)return {code:'carried-patient',reason:`Transporté par ${carrier.name} vers un lit.`};
   if(pawn.feed)return {code:'feed',reason:`${pawn.feed.phase==='pickup'?'Prélève une portion pour':pawn.feed.phase==='deliver'?'Apporte une portion à':'Nourrit'} ${world.pawns.find(p=>p.id===pawn.feed!.patientId)?.name??'un patient'}.`};
-  if(pawn.tend)return {code:'tend',reason:`${pawn.tend.phase==='tend'?'Traite':'Rejoint'} ${world.pawns.find(p=>p.id===pawn.tend!.patientId)?.name??'un patient'} sans médicament.`};
+  if(pawn.tend)return {code:'tend',reason:pawn.tend.patientId===pawn.id?(pawn.tend.phase==='tend'?'Soigne ses propres blessures sans médicament.':'Se place pour soigner ses propres blessures.'):`${pawn.tend.phase==='tend'?'Traite':'Rejoint'} ${world.pawns.find(p=>p.id===pawn.tend!.patientId)?.name??'un patient'} sans médicament.`};
   if(pawn.state==='resting')return {code:'patient',reason:pawn.medicalSleep?'Dort pendant sa récupération médicale.':'Attend des soins ou récupère au lit, éveillé.'};
   if(pawn.rescue)return {code:'rescue',reason:`${pawn.rescue.phase==='carry'?'Porte':'Rejoint'} ${world.pawns.find(p=>p.id===pawn.rescue!.patientId)?.name??'un patient'} pour le secourir.`};
   if(pawn.state==='dead')return {code:'dead',reason:'Décédé ; dépouille conservée sur place. Le transport et les sépultures ne sont pas encore disponibles.'};

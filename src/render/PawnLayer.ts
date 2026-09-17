@@ -249,7 +249,10 @@ export class PawnLayer {
     world.pawns.forEach((pawn, index) => {
       present.add(pawn.id);
       const previous = newMap ? undefined : this.visuals.get(pawn.id);
-      const from = previous ? previous.from.clone().lerp(previous.to, oldBlend) : new THREE.Vector4(pawn.x, 0, pawn.z, Math.PI * 0.2);
+      // A stationary actor retains its last travel heading after a save reload.
+      // Work with an external target and bed posture override it below.
+      const initialYaw=pawn.motion?Math.atan2(pawn.motion.to.x-pawn.motion.from.x,pawn.motion.to.z-pawn.motion.from.z):Math.PI*.2;
+      const from = previous ? previous.from.clone().lerp(previous.to, oldBlend) : new THREE.Vector4(pawn.x, 0, pawn.z, initialYaw);
       let yaw = from.w;
       const dx = pawn.x - from.x, dz = pawn.z - from.z;
       if (dx * dx + dz * dz > 0.01) {
@@ -258,7 +261,7 @@ export class PawnLayer {
       }
       const bedId = pawn.need?.kind === 'sleep' ? pawn.need.bedId : null;
       if(pawn.feed?.phase==='feed'){const p=world.pawns.find(p=>p.id===pawn.feed!.patientId);if(p)yaw=Math.atan2(p.x-pawn.x,p.z-pawn.z);}
-      if(pawn.tend?.phase==='tend'){const p=world.pawns.find(p=>p.id===pawn.tend!.patientId);if(p)yaw=Math.atan2(p.x-pawn.x,p.z-pawn.z);}
+      if(pawn.tend?.phase==='tend'&&pawn.tend.patientId!==pawn.id){const p=world.pawns.find(p=>p.id===pawn.tend!.patientId);if(p)yaw=Math.atan2(p.x-pawn.x,p.z-pawn.z);}
       const bed = (pawn.state === 'sleeping'||pawn.state==='resting'||pawn.state==='downed') && bedId !== null ? world.structures.find(item => item.id === bedId) : undefined;
       let px = pawn.x, pz = pawn.z, py = pawn.state==='eating'||pawn.state==='sleeping'||pawn.state==='resting'||medicallyStopped(pawn)?0:this.travelSurfaces.get(pawn.z*world.width+pawn.x)??0;
       if (bed) {

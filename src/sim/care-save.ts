@@ -1,6 +1,5 @@
-import { tendingReason } from './tending.ts';
+import { tendingReason,tendingPlaceValid } from './tending.ts';
 import { treatmentTarget,healingInjury } from './care-rules.ts';
-import { canStandAt } from './furniture-travel.ts';
 import type { World } from './types.ts';
 
 export function validTendShape(value:unknown,version:number,w:World):boolean {
@@ -22,7 +21,7 @@ export function validateCare(world:World):string[] {
     const t=d.tend,p=world.pawns.find(p=>p.id===t.patientId);
     if(tendingReason(world,d,p,true)||d.priorities.doctor===0&&d.orders.active!=='tend'||patients.has(t.patientId))errors.push('Invalid or duplicate tending reservation.');
     patients.add(t.patientId);
-    if(!p||Math.abs(t.spot.x-p.x)+Math.abs(t.spot.z-p.z)!==1||!canStandAt(world,t.spot))errors.push('Tending place is not accessible at the bedside.');
+    if(!p||!tendingPlaceValid(world,d,p,t))errors.push('Tending place is not accessible at the bedside or self-treatment cell.');
     if(t.phase==='tend'&&(d.state!=='working'||d.moveCooldown>0||d.x!==t.spot.x||d.z!==t.spot.z||d.path.length)||t.phase==='approach'&&d.state!=='moving')errors.push('Invalid tending phase/position.');
     if(d.recreation.task||d.feed||d.rescue||d.need||d.haul||d.cooking||d.jobId!==null)errors.push('Tending conflicts with another activity.');
   }
