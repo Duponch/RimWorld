@@ -1,5 +1,7 @@
 # Ralentissement des impacts — V57
 
+V59 ajoute un arrêt distinct du ralentissement : `motion.stuns` conserve des intervalles à distance constante, combinés par `travelPieces`. Voir [mêlée](melee.md). Les anciennes sauvegardes conservent leurs arêtes ; le bridge doit développer aussi les arêtes portant uniquement `stuns`.
+
 18 septembre 2026. [Recherche fraîche](../research/stagger-reference.md), [preuves](../history/validation-stagger-v57.md), [guide](../gameplay/player-guide.md). Un impact du revolver ralentit réellement un adulte, y compris pendant une arête déjà engagée. Aucun ennemi, raid ou étourdissement n’est ajouté.
 
 ## Simulation et continuation

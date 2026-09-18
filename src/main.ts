@@ -252,6 +252,8 @@ function rebuildInspector() {
 }
 function actionLabel(pawn: Pawn) {
   if(pawn.flee)return pawn.path.length||pawn.moveCooldown>0?'Fuit une menace':'Reste à couvert après la fuite';
+  if(pawn.stun)return 'Étourdi';
+  if(pawn.melee)return pawn.melee.strike?'Mêlée · récupération':pawn.path.length?'Mêlée · approche':'Mêlée · au contact';
   if(!isColonist(pawn)&&activeThreat(pawn))return pawn.shooting?.stance?.phase==='aim'?'Sentinelle · vise':pawn.shooting?'Sentinelle · récupération après tir':'Sentinelle · surveille les alentours';
   if(pawn.draft)return draftLabel(pawn);
   if(pawn.shooting?.stance?.phase==='cooldown')return 'Récupération après tir';
@@ -522,7 +524,7 @@ async function start() {
     const seed = seedText && /^\d{1,10}$/.test(seedText) ? Number(seedText) >>> 0 : 42;
     await client.init(seed, [32, ...MAP_SIZE_PRESETS].includes(requestedSize) ? requestedSize : DEFAULT_MAP_SIZE);
     renderer = await ColonyRenderer.create(el('viewport'), pickCell);
-    renderer.onSelection=gesture=>{if(shootingControls.active){const targetId=gesture.ids[0];if(targetId!==undefined){shootingControls.cancel();void attempt(async()=>{await client.command({type:'shoot',pawnIds:[...selection.ids],targetId});renderState();});}return;}selectPawns(gesture);};
+    renderer.onSelection=gesture=>{if(shootingControls.active){const targetId=gesture.ids[0];if(targetId!==undefined){const type=shootingControls.mode!;shootingControls.cancel();void attempt(async()=>{await client.command({type,pawnIds:[...selection.ids],targetId});renderState();});}return;}selectPawns(gesture);};
     renderer.onInteractionCancel=()=>orderMenu.close();
     renderer.onContext=(cell,x,y,queue)=>{if(shootingControls.active){shootingControls.cancel();renderState();return;}if(!snapshot||replacingWorld)return;const selected=snapshot.pawns.filter(p=>selection.ids.has(p.id));if(selected.some(p=>p.draft)){orderMenu.close();void attempt(()=>client.command({type:'draft-move',pawnIds:selected.map(p=>p.id),target:cell,queue}));}else void orderMenu.open(snapshot,selection.ids,cell,x,y,queue);};
     renderer.onArea = designateArea;

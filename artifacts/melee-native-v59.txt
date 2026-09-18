@@ -1,0 +1,9 @@
+
+Running 2 tests using 1 worker
+
+(node:21272) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 tests\integration\melee.spec.ts:13:1 › native UI: choose melee, approach, GPU strike, wounds and exact save/load at 1×/6× (18.4s)
+  ok 2 tests\integration\shooting-load.spec.ts:18:1 › native mixed shooting load: 3/30/100 actors, 250², worker/scene/frames and GPU capacity growth (1.2m)
+
+  2 passed (1.5m)

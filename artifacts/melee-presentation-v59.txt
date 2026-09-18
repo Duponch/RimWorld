@@ -1,0 +1,25 @@
+
+> lisiere@0.1.0 test:presentation
+> node scripts/check-presentation.mjs
+
+{"action":"mine","frames":{"count":7891,"p50":4.200000000000728,"p95":8.5,"p99":12.599999999998545,"max":29},"jumpCount":0,"solidOccupancyCount":0}
+{"action":"chop","frames":{"count":7770,"p50":4.200000000000728,"p95":8.5,"p99":12.599999999999454,"max":29.19999999999709},"jumpCount":0,"solidOccupancyCount":0}
+file:///E:/Code/RimWorld/scripts/harvest-assertions.ts:21
+    ||phase.controls.some(c=>c.delay===null||!Number.isFinite(c.delay)||c.delay<0||c.delay>100)))throw Error('Delayed speed controls: '+phase.action);
+                                                                                                       ^
+
+Error: Delayed speed controls: chop
+    at assertHarvestPhase (file:///E:/Code/RimWorld/scripts/harvest-assertions.ts:21:104)
+    at file:///E:/Code/RimWorld/scripts/harvest-sync-bench.mjs:88:2
+
+Node.js v24.11.1
+file:///E:/Code/RimWorld/scripts/check-presentation.mjs:15
+    run.on('error',e=>{clearTimeout(timeout);fail(e);});run.on('exit',code=>{clearTimeout(timeout);code===0?ok():fail(Error(`Presentation check failed (${code})`));});
+                                                                                                                      ^
+
+Error: Presentation check failed (1)
+    at ChildProcess.<anonymous> (file:///E:/Code/RimWorld/scripts/check-presentation.mjs:15:119)
+    at ChildProcess.emit (node:events:508:28)
+    at ChildProcess._handle.onexit (node:internal/child_process:294:12)
+
+Node.js v24.11.1

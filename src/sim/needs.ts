@@ -108,7 +108,7 @@ export function collapseFromExhaustion(world:World,pawn:Pawn,context:NeedContext
   if ((world.restRules === 'legacy' ? pawn.rest === 0 : pawn.collapsePending) && pawn.need?.kind !== 'sleep') {
     // Involuntary collapse is a hard interruption, unlike a player cancelling
     // an order. A fired bullet keeps its independent world lifetime.
-    delete pawn.shooting;delete pawn.flee;
+    delete pawn.shooting;delete pawn.flee;delete pawn.melee;
     interruptWork(world,pawn);
     if(pawn.draft){pawn.draft.target=null;pawn.draft.queue=[];}
     pawn.need = { kind: 'sleep', phase: 'sleep', bedId: null, target: { x: pawn.x, z: pawn.z } };

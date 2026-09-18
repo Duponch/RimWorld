@@ -1,5 +1,7 @@
 # Inventaire, équipement et apparence des colons
 
+V59 : frappe orientée vers la cible et étourdissement stationnaire dans les attributs du rig GPU existant. La frappe part du sous-tick confirmé, sur l’horloge commune ; un segment immobile gèle aussi le pas des jambes. Le corps, la cargaison, le blessé porté et l’anneau gardent la même trajectoire fractionnée. Pas de nouveau lot par personnage, pas de squelette CPU. [Contrat](melee.md).
+
 V56 ajoute orientation vers la cible, bras et arme levés dans le rig GPU existant, avec [projectiles instanciés](shooting.md) sur la même horloge. Les modèles restent procéduraux ; jauges, audio, effets et portraits 3D définitifs restent ouverts.
 
 V53 : déplacements dirigés utilisent les poses GPU existantes ; bordure et état de mobilisation des portraits, inspection du groupe et commandes tactiques. [Contrat](drafting.md).

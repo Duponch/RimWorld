@@ -36,13 +36,13 @@ export function withoutCare<T>(world:T):T {
 
 /** Only authentic pre-V56 fixtures; never apply to the serializer's input in production. */
 export function withoutShootingSkills<T>(world:T):T {
-  for(const p of (world as {pawns:{skills?:{shooting?:unknown}}[]}).pawns)if(p.skills)delete p.skills.shooting;
+  for(const p of (world as {pawns:{skills?:{shooting?:unknown;melee?:unknown}}[]}).pawns)if(p.skills){delete p.skills.shooting;delete p.skills.melee;}
   return world;
 }
-/** Independent expectation of the additive V55→V56 migration. */
+/** Independent expectation of the additive skill migrations. */
 export function withMigratedShootingSkills<T>(world:T):T {
   const copy=structuredClone(world);
-  for(const p of (copy as {pawns:{skills:{shooting?:unknown}}[]}).pawns)p.skills.shooting={level:8,xp:0,dailyXp:0,passion:0};
+  for(const p of (copy as {pawns:{skills:{shooting?:unknown;melee?:unknown}}[]}).pawns){p.skills.shooting={level:8,xp:0,dailyXp:0,passion:0};p.skills.melee={level:8,xp:0,dailyXp:0,passion:0};}
   return copy;
 }
 

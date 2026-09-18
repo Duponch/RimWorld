@@ -1,0 +1,14 @@
+
+ RUN  v5.0.0 E:/Code/RimWorld
+
+ ✓ tests/colony-player.test.ts > joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp construit, stocks entretenus et reprise exacte 147481ms
+ ✓ tests/health-world.test.ts > real roof support removal injures the worker and bystander, voluntary removal is harmless, replay keeps hits and job cleanup 136ms
+ ✓ tests/health-world.test.ts > incapacity during a captured edge releases tasks immediately, conserves undroppable cargo and allows another actor to clear the floor 183ms
+ ✓ tests/health-world.test.ts > capacities scale future edges, real work and ingestion; captured edges and saved fractions survive injury changes 41ms
+ ✓ tests/health-world.test.ts > blood loss, recovery, true sleep and irreversible death respect world time, cognition and bed use 47ms
+ ✓ tests/health-world.test.ts > strict V44 migration adds no injury; malformed records, clock, states and activity are rejected before replacement 39ms
+
+ Test Files  2 passed (2)
+      Tests  6 passed (6)
+   Start at  00:43:30
+   Duration  150.18s (tests 99%, transform 1%)

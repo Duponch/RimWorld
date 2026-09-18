@@ -1,10 +1,11 @@
+import { cancelMelee } from './melee-state.ts';
+import { isStunned } from './stun.ts';
 import { activeThreat,hostileTo,isColonist,distanceSquared } from './affiliation.ts';
 import type { CommandResult,Pawn,World } from './types.ts';
 import type { ShootingCommand } from './shooting-state.ts';
 import { cancelShooting } from './shooting-state.ts';
 import { equippedWeapon } from './equipment-rules.ts';
 import { pawnBody,medicallyStopped } from './health-rules.ts';
-import { carrierOf } from './rescue-state.ts';
 import { captureWorldShotGrid } from './combat-world.ts';
 import { captureWorldProjectileTargets } from './projectile-world.ts';
 import { findShotLine } from './combat-space.ts';
@@ -19,25 +20,27 @@ import { captureStandability } from './furniture-travel.ts';
 /** Captures are shared only during this synchronous, unchanged decision. */
 export function shootingQueries(world:World,readGrid=()=>captureWorldShotGrid(world)) {
   let grid:ReturnType<typeof captureWorldShotGrid>|undefined,targets:ReturnType<typeof captureWorldProjectileTargets>|undefined;
-  let stand:ReturnType<typeof captureStandability>|undefined;
-  return {grid:()=>grid??=readGrid(),targets:()=>targets??=captureWorldProjectileTargets(world),stands:()=>stand??=captureStandability(world)};
+  let stand:ReturnType<typeof captureStandability>|undefined,carried:Set<number>|undefined;
+  const bodies=new Map<Pawn,ReturnType<typeof pawnBody>>();
+  const body=(p:Pawn)=>{let b=bodies.get(p);if(!b){b=pawnBody(p);bodies.set(p,b);}return b;};
+  return {body,carried:(id:number)=>(carried??=new Set(world.pawns.filter(p=>p.rescue?.phase==='carry').map(p=>p.rescue!.patientId))).has(id),grid:()=>grid??=readGrid(),targets:()=>targets??=captureWorldProjectileTargets(world),stands:()=>stand??=captureStandability(world)};
 }
 type Queries=ReturnType<typeof shootingQueries>;
 export function shotPlan(world:World,pawn:Pawn,targetId:number,queries:Queries) {
-  if(!pawn.draft&&isColonist(pawn)||medicallyStopped(pawn)||pawn.state==='sleeping'||pawn.need||pawn.collapsePending||carrierOf(world,pawn.id))return {reason:'Le tireur doit être mobilisé, éveillé et capable de tirer.'} as const;
+  if(!pawn.draft&&isColonist(pawn)||medicallyStopped(pawn)||pawn.state==='sleeping'||pawn.need||pawn.collapsePending||queries.carried(pawn.id))return {reason:'Le tireur doit être mobilisé, éveillé et capable de tirer.'} as const;
   if(!queries.stands()(pawn))return {reason:'Le colon doit terminer le franchissement avant de viser.'} as const;
   const weapon=equippedWeapon(world,pawn);
-  if(!weapon?.weapon||weapon.item!=='revolver'||pawn.equipmentDropPending||pawnBody(pawn).capacities.manipulation<=0)return {reason:'Aucun revolver utilisable en main.'} as const;
+  if(!weapon?.weapon||weapon.item!=='revolver'||pawn.equipmentDropPending||queries.body(pawn).capacities.manipulation<=0)return {reason:'Aucun revolver utilisable en main.'} as const;
   const target=world.pawns.find(p=>p.id===targetId);
-  if(!target||target.id===pawn.id||target.state==='dead'||carrierOf(world,targetId))return {reason:'Cible humaine absente ou invalide.'} as const;
-  if(hostileTo(pawn,target)&&target.state!=='downed'&&distanceSquared(pawn,target)<1.421**2)return {reason:'Un adversaire adjacent empêche le tir. La mêlée reste à développer.'} as const;
+  if(!target||target.id===pawn.id||target.state==='dead'||queries.carried(targetId))return {reason:'Cible humaine absente ou invalide.'} as const;
+  if(hostileTo(pawn,target)&&target.state!=='downed'&&distanceSquared(pawn,target)<1.421**2)return {reason:'Un adversaire adjacent empêche le tir : utilisez la mêlée.'} as const;
   const profile=revolverProfile(weapon.weapon.quality),line=findShotLine(queries.grid(),pawn,{cell:target,leans:!['downed','resting','sleeping'].includes(target.state)},profile.range);
   if(!line.ok)return {reason:line.reason==='range'?'La cible est hors de portée.':'La ligne de tir est bloquée.'} as const;
   return {weapon,target,profile,line} as const;
 }
 function startAim(world:World,pawn:Pawn,core:number,queries:Queries):void {
   const order=pawn.shooting?.order;if(!order)return;
-  if((pawn.motion?.end??0)*CORE_TICKS_PER_LOCAL>core)return;
+  if(isStunned(pawn,core)||pawn.melee?.strike||(pawn.motion?.end??0)*CORE_TICKS_PER_LOCAL>core)return;
   const plan=shotPlan(world,pawn,order.targetId,queries);
   if('reason' in plan||plan.weapon.id!==order.weaponId){cancelShooting(pawn);return;}
   pawn.shooting!.stance={phase:'aim',startedAtCore:core,endsAtCore:core+plan.profile.warmupCoreTicks,targetStartedDowned:plan.target.state==='downed'};
@@ -54,7 +57,7 @@ export function applyShootingCommand(world:World,command:ShootingCommand):Comman
   }
   // Atomic group acceptance. Preserve the captured edge and every cooldown.
   for(const {pawn,plan} of plans) {
-    const stance=pawn.shooting?.stance;
+    cancelMelee(pawn);const stance=pawn.shooting?.stance;
     pawn.shooting={order:{targetId:command.targetId,weaponId:plan.weapon.id,startedDowned:plan.target.state==='downed'},stance:stance?.phase==='cooldown'?stance:null};
     pawn.draft!.target=null;pawn.draft!.queue=[];pawn.draft!.lastActiveTick=world.tick;pawn.path=[];
     if(!pawn.shooting.stance)startAim(world,pawn,world.tick*CORE_TICKS_PER_LOCAL,queries);
@@ -65,7 +68,7 @@ export function applyShootingCommand(world:World,command:ShootingCommand):Comman
 /** Core clock is shared with flight. Caller invalidates queries after an impact. */
 export function advanceShooter(world:World,pawn:Pawn,core:number,queries:Queries):void {
   const shot=pawn.shooting;if(!shot)return;
-  if(medicallyStopped(pawn)||pawnBody(pawn).capacities.manipulation===0){delete pawn.shooting;return;}
+  if(medicallyStopped(pawn)||queries.body(pawn).capacities.manipulation===0){delete pawn.shooting;return;}
   if(shot.order&&!pawn.draft&&isColonist(pawn))cancelShooting(pawn);
   if(shot.order) {
     const target=world.pawns.find(p=>p.id===shot.order!.targetId);
@@ -77,12 +80,13 @@ export function advanceShooter(world:World,pawn:Pawn,core:number,queries:Queries
     if(core<shot.stance.endsAtCore)return;
     shot.stance=null;if(!shot.order){delete pawn.shooting;return;}
   }
+  if(isStunned(pawn,core)||pawn.melee?.strike)return;
   if(!shot.stance){startAim(world,pawn,core,queries);return;}
   if(shot.stance.phase!=='aim'||!shot.order)return;
   const plan=shotPlan(world,pawn,shot.order.targetId,queries);
   if('reason' in plan||plan.weapon.id!==shot.order.weaponId||!shot.stance.targetStartedDowned&&plan.target.state==='downed'){cancelShooting(pawn);return;}
   if(core<shot.stance.endsAtCore)return;
-  const {target,weapon,profile,line}=plan,standing=!['sleeping','resting','downed'].includes(target.state),body=pawnBody(pawn).capacities;
+  const {target,weapon,profile,line}=plan,standing=!['sleeping','resting','downed'].includes(target.state),body=queries.body(pawn).capacities;
   const cover=shotCover(queries.grid(),pawn,target,`pawn:${target.id}`);
   const aim=shotAim({distance:line.distance,pawnAccuracy:shootingAccuracy(pawn.skills.shooting.level,body.sight,body.manipulation).perCell,weaponAccuracy:profile.accuracy,targetSize:1,standing,weather:1,blindSmoke:false},cover.passChance);
   const random={rng:world.rng};

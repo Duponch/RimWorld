@@ -1,5 +1,7 @@
 # Rencontre armée et réponses civiles — V58
 
+Mise à jour V59 : la sentinelle possède maintenant une riposte au contact via le [contrat de mêlée](melee.md). Elle reste sans poursuite autonome ; les descriptions V58 ci-dessous concernent le lot initial.
+
 [Référence vérifiée et écarts](../research/encounter-reference.md). Une nouvelle colonie peut choisir Camp paisible (défaut inchangé) ou Rencontre armée, à partir de 64². Trois colons, leur camp et leurs ressources restent les mêmes ; Ada commence avec le revolver de départ déjà équipé. Une sentinelle équipée d’un second revolver normal est placée sur un emplacement accessible, à plus de 27 cases de tous les colons. Aucun spawn pendant une partie ou son chargement. Création et choix du site reproductibles ; échec sans remplacer le monde précédent.
 
 ## Autorité et représentation

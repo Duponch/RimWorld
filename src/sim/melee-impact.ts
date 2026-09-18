@@ -1,0 +1,55 @@
+import { BODY_COVERAGE,BODY_INDEX,BODY_PARTS,HUMAN_BODY,bodyPartExists,type BodyPartId } from './body-definition.ts';
+import { HP_UNIT,PART_INJURY_RULES,isWithinPart,type InjuryKind } from './injury-rules.ts';
+import { addResolvedInjuryBatch,partMissing,remainingPartHealth,type ResolvedInjury } from './injury-state.ts';
+import type { MedicalRecord } from './injury-types.ts';
+import { curve,type MeleeDamage } from './melee-statistics.ts';
+
+export interface MeleeImpact { damage:number;kind:MeleeDamage;part?:BodyPartId }
+export interface MeleeImpactResult {record:MedicalRecord;selected:BodyPartId|null;layers:ResolvedInjury[];stun:boolean}
+/** Unarmored natural adult. Independent resolution, explicit random stream;
+ * actor, XP, cadence and attack commands belong to the combat controller. */
+export function resolveUnarmoredMelee(record:MedicalRecord,hit:MeleeImpact,random:()=>number):MeleeImpactResult {
+  if(!Number.isFinite(hit.damage)||hit.damage<0||hit.damage>1000000||!['blunt','poke','bite'].includes(hit.kind)||hit.part!==undefined&&(!bodyPartExists(hit.part)||BODY_PARTS[hit.part].conceptual||BODY_PARTS[hit.part].depth!=='outside'))throw new RangeError('Invalid melee impact');
+  const next=structuredClone(record),result:MeleeImpactResult={record:next,selected:null,layers:[],stun:false};
+  if(record.death||!hit.damage||hit.part&&partMissing(record,hit.part))return result;
+  const draw=()=>{const n=random();if(!Number.isFinite(n)||n<0||n>=1)throw new RangeError('Invalid impact random');return n;};
+  const select=(predicate:(id:BodyPartId)=>boolean):BodyPartId|null=>{
+    const candidates=HUMAN_BODY.filter(p=>!p.conceptual&&!partMissing(next,p.id)&&predicate(p.id)&&BODY_COVERAGE[BODY_INDEX[p.id]]>0&&!(hit.kind==='blunt'&&p.id.endsWith('-eye')));
+    const total=candidates.reduce((n,p)=>n+BODY_COVERAGE[BODY_INDEX[p.id]],0);if(!total)return null;
+    let roll=draw()*total;for(const p of candidates){roll-=BODY_COVERAGE[BODY_INDEX[p.id]];if(roll<0)return p.id;}return candidates.at(-1)!.id;
+  };
+  let part=hit.part??select(id=>BODY_PARTS[id].depth==='outside');if(!part)return result;
+  result.selected=part;
+  const kind=(id:BodyPartId):InjuryKind=>PART_INJURY_RULES[id].solid?'crack':hit.kind==='bite'?'bite':PART_INJURY_RULES[id].skin?'bruise':'crush';
+  const add=(id:BodyPartId,damage:number)=>{
+    const severity=Math.round(damage*HP_UNIT),hp=remainingPartHealth(next,id)/HP_UNIT;
+    if(severity>0){const layer={part:id,kind:kind(id),severity};result.layers.push(layer);delete next.death;addResolvedInjuryBatch(next,[layer],draw);}
+    return Math.min(damage,hp);
+  };
+  const preserve=(id:BodyPartId,damage:number,min:number,max:number)=>{
+    const hp=remainingPartHealth(next,id)/HP_UNIT;
+    if(id==='torso'||BODY_PARTS[id].depth==='inside'||damage<hp)return damage;
+    const chance=Math.max(0,Math.min(1,((damage-hp)/BODY_PARTS[id].hp-min)/(max-min)));
+    return draw()<chance?damage:Math.max(0,hp-1);
+  };
+  if(hit.kind==='blunt') {
+    const inner=draw()<.4,converted=inner?.1+draw()*.1:0;
+    let remainder=hit.damage*(1-converted);
+    // Blunt uses excess propagation, not the generic outside-preservation roll.
+    for(;;){remainder-=add(part,remainder);if(!partMissing(next,part)||remainder<=1||!BODY_PARTS[part].parent)break;part=BODY_PARTS[part].parent!;}
+    if(inner&&!PART_INJURY_RULES[part].solid&&BODY_PARTS[part].depth==='outside') {
+      const bone=select(id=>BODY_PARTS[id].parent===part&&BODY_PARTS[id].depth==='inside'&&PART_INJURY_RULES[id].solid);
+      if(bone)add(bone,hit.damage*(converted+.2+draw()*.15));
+    }
+    if(!next.death) {
+      const head=isWithinPart(part,'neck');
+      if(part==='torso'||head)result.stun=draw()<curve(hit.damage/40,head?[[.04,.2],[.5,1]]:[[.4,0],[.9,.15]]);
+    }
+  } else {
+    if(hit.kind==='poke'&&draw()<.4)part=select(id=>BODY_PARTS[id].depth==='inside'&&isWithinPart(id,part!))??part;
+    const damage=preserve(part,hit.damage,hit.kind==='bite'?0:.4,hit.kind==='bite'?.1:1);
+    const inner=BODY_PARTS[part].depth==='inside';
+    for(let id:BodyPartId|null=part;id!==null;id=BODY_PARTS[id].parent){const outside=BODY_PARTS[id].depth==='outside';add(id,damage*(inner?(outside?.75:.4):1));if(outside)break;}
+  }
+  return result;
+}

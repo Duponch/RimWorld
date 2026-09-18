@@ -20,7 +20,7 @@ export function validateShooting(world:World):string[] {
     if(p.state==='dead'||p.state==='downed'||p.jobId!==null||p.haul||p.cooking||p.equipmentTask||p.tend||p.feed||p.rescue||p.need||p.recreation.task||p.orders.active!==null||p.orders.queue.length||p.priorityWork)errors.push('Shooting conflicts with another activity.');
     if(order&&((isColonist(p)?!p.draft:!world.pawns.some(t=>t.id===order.targetId&&hostileTo(p,t)))||p.draft?.target||p.draft?.queue.length||p.path.length||!world.pawns.some(t=>t.id===order.targetId&&t.id!==p.id)||equippedWeapon(world,p)?.id!==order.weaponId))errors.push('Invalid shooting order ownership.');
     if(stance&&(p.motion?.end??0)>world.tick)errors.push('Shooting stance during a captured edge.');
-    if(!stance&&(!order||!p.motion||(p.motion.end<=world.tick)))errors.push('Shooting wait without active travel.');
+    if(!stance&&!p.melee?.strike&&!p.stun&&(!order||!p.motion||(p.motion.end<=world.tick)))errors.push('Shooting wait without active travel.');
   }
   return errors;
 }

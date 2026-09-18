@@ -1,5 +1,7 @@
 # Synchronisation de la scène et des colons
 
+V59 : [mêlée](melee.md), ordre/frappe/étourdissement détectés comme phases discrètes. Les intervalles immobiles et ralentis se combinent sur l’arête originale ; `MotionRecorder` transmet aussi un intervalle d’étourdissement sans ralentissement. Les poses GPU utilisent l’instant Core confirmé de frappe. Un nouvel ordre de déplacement conserve la récupération et attend sans présenter un départ anticipé.
+
 V57 : [impacts et marche](stagger.md). Les transitions de ralentissement sont discrètes ; les historiques remplacent les morceaux futurs d’une même arête sans réinterpoler le passé. Même horloge confirmée et mêmes buffers GPU pour corps/cargaison/sélection. La garde de récolte existante reste applicable ; le parcours de tir mobile ajoute un oracle indépendant de distance.
 
 V56 : [tirs](shooting.md), phases de tireur observées par valeur et traces de balles reçues avant présentation. Un vol apparu/terminé entre deux ticks reste visible à son instant confirmé, via le même curseur que corps/arme/scène. Les conséquences World/HUD sont publiées au tick local contenant l'événement ; la trajectoire garde ses fractions Core. Aucun second RAF ni animation CPU de balle.

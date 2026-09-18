@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+V59 active les outils humains naturels (poings, tête, dents) et les trois coups de mêlée du revolver existant. Nouvelle lésion Morsure, capacité d’étourdissement et compétence Mêlée ; aucun nouvel ItemId. Les qualités définies du revolver modifient ses dégâts de mêlée. Autres armes, armures, outils de terrain et infections restent absents. [Contrat](../development/melee.md).
+
 V58 ajoute un **profil humain de scénario**, la sentinelle hors-la-loi (même corps adulte, revolver normal, santé commune), et les appartenances colony/outlaws à relations fixes. Aucun nouvel ItemId, armure ou catalogue de factions. Nouvelle colonie Rencontre armée : revolver initial équipé par Ada et un revolver supplémentaire sur la sentinelle ; aucun ajout lors de la migration. [Contrat](../development/encounters.md).
 
 V56 rend le **revolver déjà obtenu** utilisable : tir dirigé, préparation/récupération, précision et XP Tir, balle GPU et impact Gunshot. Aucun nouvel objet ni munition. Normal au départ, sept qualités conservées ; acquisition/fabrication des autres qualités, autres armes, vêtements et armures restent absents. [Contrat de tir](../development/shooting.md), [équipement physique](../development/equipment.md).

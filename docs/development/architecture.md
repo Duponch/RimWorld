@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+V59 : [mêlée](melee.md) séparée en statistiques/outils, espace, impact anatomique, état/validation et orchestration. Tir, mêlée et projectiles partagent les sous-pas Core. Les évaluations anatomiques et personnes portées sont capturées à la demande pendant la transaction, puis invalidées après chaque tentative de mêlée ou impact de projectile, jamais conservées entre ticks. `stun` ajoute des intervalles immobiles à la même arête ; aucun second moteur de déplacement ni rig CPU.
+
 V58 : `affiliation.ts` sépare contrôle et relation ; `combat-navigation.ts` porte le profil hostile commun aux requêtes et au suivi ; `threats.ts` gère la réponse civile et la sentinelle. Le scénario de création reste isolé dans `encounter-scenario.ts`. Aucun moteur anatomique, projectile ou rig dupliqué pour les ennemis. [Contrat](encounters.md).
 
 V57 : `stagger.ts` possède le marqueur d’impact ; `travel-timing.ts` isole les fenêtres et l’intégration de distance. `MotionRecorder` publie des morceaux linéaires de la même arête ; les attributs GPU existants restent communs au corps et aux objets portés. La simulation ne dépend ni des frames ni des poses. [Contrat](stagger.md).

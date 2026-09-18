@@ -313,3 +313,10 @@
 - V57 strictement validée avant migration ; aucun scénario injecté au chargement. Exclure adversaires des commandes/portraits/gestion/soins civils. Les captures de combat ne survivent pas à une décision avec mutation. Pilote de rencontre complémentaire au camp, sans injection de blessures.
 
 - Captures V58 : lire combat-world.md et encounters.md. `combat-shot-batch` ne vit que dans `advanceWorldCombat`, où les impacts ne modifient pas le décor fixe. Vérifier les couvertures mobiles après chaque impact et recapturer cibles/places ; tout futur dommage d’objet exige extension de l’invalidation. Topologie de refuge revérifiée par masque complet, jamais par tick seul.
+
+## Mêlée V59
+
+- Lire `docs/development/melee.md` et sa recherche : contact diagonal distinct du transit, outils naturels/revolver, toucher puis esquive, récupération conservée après annulation. Ne pas réduire les coups à une vie globale ni faire dépendre les dégâts de l’animation.
+- V58 validée strictement avant Mêlée neutre ; nouvelles formes melee/stun/stuns et morsure interdites auparavant. Arrêt au milieu d’une arête sans saut, propagation commune corps/cargo/patient/sélection. Durée du stun calibrée à 45 ticks Core, divergence documentée.
+- Les capacités et portages capturés par shootingQueries ne survivent qu’à la transaction synchrone ; renouveler après chaque impact, avant le combattant/projectile suivant. Aucune réutilisation entre ticks ou après mutation médicale.
+- La sentinelle riposte au contact sans poursuite autonome. Tir automatique/réaction Attaquer et tactique générale restent ouverts ; maintenir le bilan exact.

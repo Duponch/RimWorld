@@ -5,7 +5,7 @@ const actor=(world:World,origin:Cell):Pawn|undefined=>'id' in origin?world.pawns
 /** Capture only within one synchronous decision. Both endpoints protect 3D travel. */
 export function hostileCells(world:World,pawn:Pawn):Set<number> {
   const cells=new Set<number>();
-  for(const p of world.pawns)if(hostileTo(pawn,p)&&p.state!=='dead'&&p.state!=='downed') {
+  for(const p of world.pawns)if(p!==pawn&&(hostileTo(pawn,p)||!!pawn.melee?.order&&!!p.melee?.order)&&p.state!=='dead'&&p.state!=='downed') {
     cells.add(p.z*world.width+p.x);
     if(p.motion&&p.motion.end>world.tick)cells.add(p.motion.from.z*world.width+p.motion.from.x);
   }

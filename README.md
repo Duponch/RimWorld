@@ -1,6 +1,6 @@
 # Lisière
 
-V58 : première **rencontre armée** optionnelle dans Nouvelle colonie (64² minimum). Sentinelle au revolver, adversaires distincts des colons, portes/collisions hostiles, réponse civile Fuir/Ignorer et chaîne blessures → secours → soins. Camp paisible reste le défaut. **Poursuite, mêlée et raids encore absents.** [Guide](docs/gameplay/player-guide.md), [contrat et limites](docs/development/encounters.md).
+V59 : **mêlée de base** avec approche commandée, poings ou revolver, toucher/esquive, blessures et étourdissement. La sentinelle de la rencontre optionnelle riposte au contact ; le camp paisible reste le défaut. **Tir automatique des colons, poursuite autonome, autres armes/armures et raids restent à développer.** [Guide](docs/gameplay/player-guide.md), [contrat et limites](docs/development/melee.md).
 
 Jeu de colonie en 3D low poly pour navigateur, avec RimWorld de base comme référence fonctionnelle. G0 est en consolidation, G1/G2 sont partiels et G3 possède ses premières fondations humaines : récolte, transport, stockage, construction, minage avec fragments transportables, déconstruction et déplacement du mobilier d’un camp, repas et sommeil physiques, culture de riz, feu ravitaillé et cuisine sur factures. Le [bilan fonctionnel](docs/gameplay/implementation-status.md) distingue les systèmes présents, partiels et absents.
 

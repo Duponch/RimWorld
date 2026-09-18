@@ -1,3 +1,4 @@
+import { startSentryMelee } from './melee.ts';
 import { equippedWeapon } from './equipment-rules.ts';
 import { revolverProfile } from './ranged-statistics.ts';
 import { RoomTopologyCache } from './room-topology.ts';
@@ -29,14 +30,14 @@ export function threatQueries(world:World) {
 type Context=ReturnType<typeof threatQueries>;
 /** Forced civilian jobs and drafted control take precedence over default flee. */
 export function considerFlee(world:World,pawn:Pawn,context:Context):void {
-  if(!isColonist(pawn)||pawn.draft||pawn.hostilityResponse==='ignore'||pawn.shooting||pawn.flee||pawn.need?.kind==='sleep'||pawn.orders.active!==null||pawn.orders.queue.length||pawn.priorityWork||pawn.equipmentTask)return;
+  if(!isColonist(pawn)||pawn.draft||pawn.hostilityResponse==='ignore'||pawn.shooting||pawn.melee||pawn.flee||pawn.need?.kind==='sleep'||pawn.orders.active!==null||pawn.orders.queue.length||pawn.priorityWork||pawn.equipmentTask)return;
   if(!context.nearby(pawn).length)return;
   interruptDraftWork(world,pawn);
   pawn.flee={target:{x:pawn.x,z:pawn.z},until:0};pawn.path=[];pawn.planCooldown=0;
 }
 /** Fixed sentry scenario, deliberately not an assault/raid or melee controller. */
 export function processSentry(world:World,pawn:Pawn,context:Context):void {
-  if(pawn.shooting)return;
+  if(startSentryMelee(world,pawn)||pawn.shooting)return;
   pawn.state='idle';
   const weapon=equippedWeapon(world,pawn);if(!weapon?.weapon)return;
   const range=revolverProfile(weapon.weapon.quality).range;

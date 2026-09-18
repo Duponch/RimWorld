@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+V59 : [mêlée jouable](development/melee.md), [règles et incertitudes](research/melee-reference.md), [preuves](history/validation-melee-v59.md). Approche, frappes naturelles/arme, toucher/esquive, blessures, étourdissement et riposte au contact de la sentinelle ; poursuite autonome et tir automatique restent ouverts.
+
 V58 : [rencontre armée et fuite](development/encounters.md), [sources et adaptations explicites](research/encounter-reference.md), [preuves](history/validation-encounter-v58.md). Sentinelle de scénario, pas un raid ; mêlée et poursuite à compléter. Les anciennes entrées ci-dessous décrivent leur lot, l’[inventaire](gameplay/implementation-status.md) donne l’état consolidé.
 
 V57 : [ralentissement des impacts](development/stagger.md), [sources et interprétation 3D](research/stagger-reference.md), [validation](history/validation-stagger-v57.md). Le trajet en cours ralentit sans saut puis retrouve sa vitesse ; sauvegarde et portage médical conservent la trajectoire. Premier adversaire toujours à venir.

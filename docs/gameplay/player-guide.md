@@ -1,5 +1,11 @@
 # Guide joueur
 
+## Attaquer au corps à corps (V59)
+
+Mobilisez le colon, choisissez **Attaquer au corps à corps**, puis cliquez le personnage ciblé. Le colon rejoint une place accessible et frappe avec ses outils naturels ou son arme. L’ordre peut viser explicitement un allié. Arrêter, déplacer ou démobiliser interrompt l’attaque, mais conserve la récupération entre deux coups. Une cible nouvellement à terre termine l’engagement.
+
+La sentinelle riposte au contact. Les coups peuvent blesser, ralentir ou étourdir ; vue, manipulation, mouvement et compétence Mêlée comptent. Démobilisez les survivants pour leur rendre l’accès aux besoins et soins. Armures, autres armes, infections et poursuite autonome restent à venir.
+
 ## Rencontre armée (V58)
 
 Dans **Menu → Nouvelle colonie**, choisissez **Rencontre armée**, sur une carte de 64 × 64 minimum. Ada commence équipée ; une sentinelle rouge attend à distance. Préparez lits médicaux, médecin et médicaments avant l’approche. « Menace armée · voir » centre la caméra sur elle. Elle tire sur les colons visibles à portée : les blessures, le saignement et le risque de décès sont réels.
@@ -8,11 +14,11 @@ Mobilisez un colon équipé puis utilisez **Tirer sur une cible** et cliquez la 
 
 **Affectations → Réaction hostile** propose Fuir (défaut) et Ignorer. Un civil éveillé sans ordre imposé fuit une menace visible à moins de huit cases, cherche un refuge puis attend avant de reprendre ses activités. Un ordre direct ou la mobilisation prévaut. Les portes fermées protègent du passage hostile ; une porte ouverte, même interdite à vos colons, peut laisser passer l’ennemi.
 
-**Limites importantes :** cette sentinelle reste sur place, sans poursuite ni mêlée. Le tir sur un adversaire debout adjacent est refusé ; le combat rapproché sera la prochaine base à compléter. Tir automatique des colons mobilisés, réaction Attaquer, raids, armures et diplomatie ne sont pas livrés. Le camp paisible reste le scénario par défaut.
+**Limites importantes :** cette sentinelle reste sur place, sans poursuite autonome. Elle riposte au contact en V59. Le tir sur un adversaire debout adjacent est refusé ; utilisez la mêlée. Tir automatique des colons mobilisés, réaction Attaquer, raids, armures et diplomatie ne sont pas livrés. Le camp paisible reste le scénario par défaut.
 
 ## Commander un tir
 
-Équipez un colon du revolver, sélectionnez-le et **Mobiliser/R**, puis **Tirer sur une cible**. Cliquez le personnage visé sur la carte ; Échap ou clic droit annule le ciblage. Les personnages présents sont encore des alliés : cette commande peut réellement les blesser. Aucun ennemi n’est encore généré.
+Équipez un colon du revolver, sélectionnez-le et **Mobiliser/R**, puis **Tirer sur une cible**. Cliquez le personnage visé sur la carte ; Échap ou clic droit annule le ciblage. Cette commande peut réellement blesser un allié. Une sentinelle existe dans le scénario Rencontre armée ; le camp ordinaire reste paisible.
 
 Le colon termine son pas en cours, vise, tire puis récupère avant de recommencer. Un déplacement ou **Arrêter l’ordre** interrompt la visée ; après une balle partie, la récupération reste obligatoire même en changeant d’ordre ou en démobilisant. Une cible devenue inaccessible, morte ou nouvellement à terre arrête la suite. La balle poursuit son trajet indépendamment du tireur ; couvert, précision, capacités et Tir déterminent le résultat. L’expérience vient du tir admissible, pas seulement d’un coup au but. La compétence est consultable dans Biographie · compétences.
 

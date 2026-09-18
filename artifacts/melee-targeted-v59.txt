@@ -1,0 +1,47 @@
+
+ RUN  v5.0.0 E:/Code/RimWorld
+
+ ✓ tests/encounter.test.ts > autonomous sentry fires with real anatomy, hostile XP, captured relations and exact phase continuation 1290ms
+ ✓ tests/encounter.test.ts > affiliation does not grant player control, colony services or friendly targets; direct refusals remain atomic 42ms
+ ✓ tests/encounter.test.ts > civilian flees from visible proximity, preserves a moving load, continues after save and returns to work eligibility 1492ms
+ ✓ tests/encounter.test.ts > visibility, forced work and ignore suppress automatic fleeing; room refuge is preferred to open ground 21ms
+ ✓ tests/encounter.test.ts > one collision contract for queries and following: enemies, moving endpoints, diagonals and door permission 30ms
+ ✓ tests/encounter.test.ts > new encounter is reproducible, opt-in and separated from strict V57 migration 126ms
+ ✓ tests/encounter.test.ts > player encounter → downed ally → directed defense → physical rescue and medicine, then one day of recovery 2800ms
+ ✓ tests/bridge-snapshot.test.ts > snapshots preserve exact state and previous frames through harvest, patches, replacement and recovery 953ms
+ ✓ tests/bridge-snapshot.test.ts > buffered scene preserves arrival, work, excavation, tree removal and cargo across sparse publications 288ms
+ ✓ tests/stagger.test.ts > piecewise distance matches independent fine-step integration on cardinal/diagonal, terrain and slow bodies 299ms
+ ✓ tests/stagger.test.ts > impact changes only future movement, refreshes without stacking and carries exact history through save and bridge 180ms
+ ✓ tests/stagger.test.ts > real moving-target impact, immediate visible slowdown and no attack cooldown penalty 176ms
+ ✓ tests/stagger.test.ts > carried patient and carrier share retimed travel; expiry and next edge retain the remaining fraction 201ms
+ ✓ tests/shooting.test.ts > command → preparation → real emission → medical impact, precise Core cadence and replay of every phase 657ms
+ ✓ tests/shooting.test.ts > cancel aim spends no RNG/XP; stop, retarget, undraft and movement cannot erase cooldown 44ms
+ ✓ tests/shooting.test.ts > atomic refusals, lost line, captured edge, target falls and shooter incapacity 51ms
+ ✓ tests/shooting.test.ts > V55 migration is strict; current phase shape and skill cannot conceal invalid ownership or timing 30ms
+ ✓ tests/shooting.test.ts > fractional cadence, fall between cycles and an emitted bullet outlive interruption independently 104ms
+ ✓ tests/melee.test.ts > adult hit/dodge curves, weighted tools and natural fallback after loss of hands 41ms
+ ✓ tests/melee.test.ts > blunt excess and inner bone split differ from poke; source record remains immutable and injuries remain valid 14ms
+ ✓ tests/melee.test.ts > real approach → reciprocal melee → wounds, exact recovery, phase saves and incapacitation 601ms
+ ✓ tests/melee.test.ts > orders are atomic; contact corners differ from walking; stop, undraft and retarget preserve recovery 29ms
+ ✓ tests/melee.test.ts > stun holds a moving pawn at its exact fraction, resumes continuously and saves the whole piecewise edge 60ms
+ ✓ tests/melee.test.ts > stun and stagger share an edge without changing prior distances: independent small-step timing oracle 87ms
+ ✓ tests/melee.test.ts > V58 migration adds neutral melee skill only; old schemas reject new states and new injury kinds 17ms
+ ✓ tests/melee.test.ts > thirty actors mix real melee, ranged retaliation, flight and excavation without resetting health 3747ms
+ ✓ tests/spatial-contracts.test.ts > eight-direction routes agree with an independent relaxation oracle and preserve geometric travel time 264ms
+ ✓ tests/spatial-contracts.test.ts > civil crossing preserves beds, opposing cargo, every edge and exact continuation without pushing other actors 155ms
+ ✓ tests/spatial-contracts.test.ts > confirmed rate changes integrate only their own wall-clock intervals, even between delayed frames 2ms
+ ✓ tests/spatial-contracts.test.ts > buffered motion is linear across jitter, duplicate messages, turns, pause and replacement 101ms
+ ✓ tests/spatial-contracts.test.ts > floor stacks enforce identity, reserved destination type, migration and atomic refusal when no drop fits 38ms
+ ✓ tests/health-world.test.ts > real roof support removal injures the worker and bystander, voluntary removal is harmless, replay keeps hits and job cleanup 333ms
+ ✓ tests/health-world.test.ts > incapacity during a captured edge releases tasks immediately, conserves undroppable cargo and allows another actor to clear the floor 350ms
+ ✓ tests/health-world.test.ts > capacities scale future edges, real work and ingestion; captured edges and saved fractions survive injury changes 88ms
+ ✓ tests/health-world.test.ts > blood loss, recovery, true sleep and irreversible death respect world time, cognition and bed use 89ms
+ ✓ tests/health-world.test.ts > strict V44 migration adds no injury; malformed records, clock, states and activity are rejected before replacement 84ms
+
+ Test Files  7 passed (7)
+      Tests  36 passed (36)
+   Start at  00:55:18
+   Duration  25.95s (tests 63%, import 22%, transform 15%)
+
+    Isolate  7 workers spawned · ~294ms startup each (spawn + environment, per file)
+             at least ~1.77s faster with isolate: false — reuses workers across files instead of one per file

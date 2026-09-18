@@ -1,0 +1,54 @@
+
+ RUN  v5.0.0 E:/Code/RimWorld
+
+···············································································································································x·····························································································································x
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/colony-player.test.ts > joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp construit, stocks entretenus et reprise exacte
+Error: Test timed out in 300000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/colony-player.test.ts:5:1
+      3| import { playerArrivalDecisions,playerArrivalComplete,playerDecisions,…
+      4|
+      5| test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, c…
+       | ^
+      6|   for (const seed of [42, 93, 2048]) {
+      7|     let world = createWorld(seed, 250, 250);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/health-world.test.ts > strict V44 migration adds no injury; malformed records, clock, states and activity are rejected before replacement
+AssertionError: expected { Object (schemaVersion, packed, ...) } to deeply equal { Object (schemaVersion, packed, ...) }
+
+- Expected
++ Received
+
+@@ -139,10 +139,16 @@
+            "dailyXp": 0,
+            "level": 8,
+            "passion": 0,
+            "xp": 0,
+          },
++         "melee": {
++           "dailyXp": 0,
++           "level": 8,
++           "passion": 0,
++           "xp": 0,
++         },
+          "shooting": {
+            "dailyXp": 0,
+            "level": 8,
+            "passion": 0,
+            "xp": 0,
+
+ ❯ tests/health-world.test.ts:81:211
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed | 64 passed (66)
+      Tests  2 failed | 268 passed (270)
+   Start at  00:35:26
+   Duration  304.48s (tests 92%, import 7%, transform 1%)

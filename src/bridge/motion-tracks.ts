@@ -13,7 +13,7 @@ export class MotionRecorder {
       const last=track.at(-1),edgeStart=last?.edgeStart??last?.start;
       if(motion&&(edgeStart!==motion.start||last?.end!==motion.end)) {
         if(edgeStart===motion.start){track=track.filter(s=>(s.edgeStart??s.start)!==motion.start);this.tracks.set(pawn.id,track);}
-        if(motion.stagger)for(const s of travelPieces(motion))track.push({...s,from:{...s.from},to:{...s.to}});
+        if(motion.stagger||motion.stuns)for(const s of travelPieces(motion))track.push({...s,from:{...s.from},to:{...s.to}});
         else track.push({...motion,from:{...motion.from},to:{...motion.to}});
       }
       while(track.length>1&&track[1]!.end<world.tick-MOTION_HISTORY_TICKS)track.shift();

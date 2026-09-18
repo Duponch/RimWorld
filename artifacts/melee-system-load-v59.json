@@ -1,0 +1,15 @@
+{
+  "date": "2026-09-19",
+  "windowSeconds": 5,
+  "phase": "Read-only process CPU sample after the traced harvest guard, not during it. GPU contention unmeasured. No user process stopped.",
+  "processCpuSeconds": {
+    "firefox-3556": 5.88,
+    "Battle.net-26944": 3.47,
+    "Battle.net-32104": 3.39,
+    "VALORANT-26484": 3.25,
+    "firefox-24296": 1.38,
+    "firefox-27060": 1.27,
+    "Discord-14212": 1.19,
+    "firefox-30584": 0.91
+  }
+}

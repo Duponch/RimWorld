@@ -9,10 +9,11 @@ export const BLOOD_UNIT=300_000_000;
 export const MEDICAL_INTERVAL=6; // 60 Core ticks, day preserved at 6000 local ticks
 export const HEAL_INTERVAL=60;
 export const FRESH_MISSING_TICKS=9000;
-export type InjuryKind='cut'|'crush'|'crack'|'bruise'|'gunshot';
+export type InjuryKind='cut'|'crush'|'crack'|'bruise'|'gunshot'|'bite';
 export type ScarPain=0|1|3|6;
 /** Per milli-HP: numerator of pain / PAIN_UNIT, and blood units per interval. */
 export const INJURY_RULES=Object.freeze({
+  bite:Object.freeze({label:'Morsure',painUnits:10,bleedUnits:18,scar:true,merge:false}),
   cut:Object.freeze({label:'Coupure',painUnits:10,bleedUnits:18,scar:true,merge:false}),
   crush:Object.freeze({label:'Écrasement',painUnits:10,bleedUnits:3,scar:true,merge:true}),
   crack:Object.freeze({label:'Fissure',painUnits:8,bleedUnits:0,scar:true,merge:false}),

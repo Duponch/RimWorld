@@ -23,7 +23,7 @@ export function registerWorldProjectile(world:World,flight:BulletFlight,quality:
 /** Run after doors/environment, before civilian actions. Core substep FIRST,
  * then persistent ID: a closer/lower-ID impact may change the next projectile's
  * admissible targets. Never finish each projectile's whole flight in sequence. */
-export function advanceWorldProjectiles(world:World,beforeCore?:(core:number)=>void,afterImpact?:()=>void):void {
+export function advanceWorldProjectiles(world:World,beforeCore?:(core:number)=>boolean|void,afterImpact?:()=>void):void {
   if(!world.projectiles&&!beforeCore)return;
   const end=world.tick*CORE_TICKS_PER_LOCAL,start=end-CORE_TICKS_PER_LOCAL;
   if(world.projectiles)world.projectiles=world.projectiles.filter(p=>!p.arrival||p.advancedAtCore>start);
@@ -34,7 +34,7 @@ export function advanceWorldProjectiles(world:World,beforeCore?:(core:number)=>v
   const scene=(p:WorldProjectile)=>{
     let s=scenes.get(p);if(!s){batch??=captureProjectileBatch(world);targets??=batch.refresh(world);s=targets(new Set(p.relations.friendlyPawnIds),p.relations.friendlyFireFactor);scenes.set(p,s);}return s;
   };
-  for(let core=start+1;core<=end;core++) {beforeCore?.(core);for(const p of world.projectiles??[]) {
+  for(let core=start+1;core<=end;core++) {if(beforeCore?.(core)){targets=undefined;scenes.clear();}for(const p of world.projectiles??[]) {
     if(p.arrival||p.advancedAtCore>=core)continue;
     if(p.advancedAtCore!==core-1)throw new Error('Stale projectile clock');
     const randomState={rng:world.rng},next=advanceBulletFlight(p.flight,scene(p),()=>healthRandom(randomState),1);

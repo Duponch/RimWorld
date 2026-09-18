@@ -1,5 +1,7 @@
 # Compétences — Construction, Médecine et Tir
 
+V59 ajoute Mêlée avec producteurs/consommateurs réels ; apprentissage même après raté/esquive contre une cible mobile, toucher/esquive dépendants des capacités. La borne journalière de validation est spécifique à cette compétence (80 000 XP) pour permettre ses passions et saturation. [Contrat](melee.md).
+
 Tir est intégré en [V56](shooting.md) : précision via niveau/Vue/Manipulation, XP à l’émission admissible, passion/oubli communs et migration stricte. Les autres compétences ne sont pas implicitement livrées.
 
 Médecine utilise les mêmes règles de milli-XP, passion, saturation, oubli et remise à zéro que Construction. Le gain de 250 XP de base est attribué à chaque traitement humain sans médicament effectivement terminé, avant sa qualité. Aucun gain pour la seule réservation, le trajet ou une opération interrompue. V46 est validée avant ajout du profil neutre 8/sans passion/0 XP ; la migration V42 reste limitée à Construction.

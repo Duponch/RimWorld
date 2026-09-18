@@ -1,5 +1,7 @@
 # Choix et écarts de gameplay
 
+V59 : le contact diagonal permet un flanc dégagé, distinct du déplacement 3D. Arrêt de stun à fraction conservée sur l’arête ; poses GPU artistiques. Durée 45 ticks Core provisoire face aux sources contradictoires, et milli-PV comme les autres lésions. Terrain offensif, surprise, armure et catalogue complet restent absents. [Décisions et références](../research/melee-reference.md).
+
 V57 — [pouvoir d’arrêt](../development/stagger.md) : adopter durée, seuil adulte, renouvellement et paiement minimal Core ; adapter l’intégration au trajet 3D continu. La base anatomique/lumineuse reste capturée au départ, le ralentissement s’applique immédiatement au sous-pas d’impact. La fin de l’arête après incapacité reste notre choix V45 ; aucun ennemi ni réaction civile implicite. [Recherche](../research/stagger-reference.md).
 
 V56 : [premier tir](../development/shooting.md). Cadence fractionnaire Core conservée, arête physique terminée avant visée, ordre simultané stable par ID et commande de groupe atomique. Ciblage uniquement des personnages actuels, tous alliés ; aucun ennemi fictif. Pouvoir d’arrêt ajouté V57 ; réactions, jauges et audio restent différés. Le HUD/médical garde la résolution du tick local, le projectile son interpolation continue.

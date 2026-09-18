@@ -1,6 +1,16 @@
-# Validation courante — V58
+# Validation courante — V59
 
-## Rencontre armée et fuite V58
+## Mêlée et étourdissement V59
+
+19 septembre 2026. [Contrat](melee.md), [sources et incertitudes](../research/melee-reference.md), [preuves, échecs et mesures](../history/validation-melee-v59.md). Approche commandée, outils naturels et revolver, toucher/esquive, Mêlée/XP, lésions soignables, riposte locale et étourdissement intégré à la même trajectoire. Schéma 59, V58 strictement validée avant migration ; durée d’étourdissement explicitement provisoire.
+
+Passe globale : 268/270 avant revue, puis correction d’une attente historique et reprise isolée du pilote ayant atteint sa limite sous charge concurrente. Pilote civil et santé : 6/6 ; contrôles finaux : 36/36 puis 16/16 après revue de récupération. Build réussi. Vraie UI à 1×/6× puis charge 3/30/100 sur WebGPU natif : 2/2, 1,5 minute, aucune erreur navigateur. La longue UI civile de trois jours n’est pas rejouée (dernière preuve V56).
+
+Audit 250² : réutilisation des évaluations anatomiques et porteurs pendant les mêmes sous-pas, invalidation après impact. CPU mixte à cent acteurs p95 **40,86 → 28,14 ms**, mais pointes actives jusqu’à **204,53 ms**. Cela ne garantit ni 6× soutenu ni fluidité parfaite ; rendu, encodage, conditions et essais non retenus sont chiffrés dans le rapport. Les seuils de synchronisation restent inchangés. **Garde de récolte non validée intégralement** : minage sans attente, une attente de 16,5 ms en abattage ; aucun saut/erreur/retrait anticipé, 44 changements de vitesse sous 40,7 ms. Pointe worker et charge externe constatées, causalité non établie ; reprendre sur machine disponible avant de densifier les combats.
+
+G0 en consolidation, G1/G2 partiels, G3 premières boucles de conflit ; G4/G5 ouverts. Prochaine étape : tir automatique des mobilisés et réaction Attaquer, puis poursuite/positions. Estimation globale inchangée : environ 20 % (15–25 %). Les sections suivantes décrivent les livraisons historiques.
+
+## Historique — rencontre armée et fuite V58
 
 Livraison finalisée le 19 septembre 2026. [Contrat](encounters.md), [sources et adaptations](../research/encounter-reference.md), [preuves détaillées](../history/validation-encounter-v58.md). Sentinelle optionnelle, affiliation/permissions/collisions, fuite civile, vrai tir blessant puis secours et soins ; sauvegarde V58 avec migration V57 stricte. Aucun raid ni mêlée annoncé.
 
