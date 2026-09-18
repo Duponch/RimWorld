@@ -15,3 +15,8 @@ export const RESOURCE_SHOT_FILL:Readonly<Record<ResourceKind,number>>=Object.fre
 });
 export const FRAME_SHOT_FILL=.2;
 export const itemShotFill=(item:ItemId):number=>ITEM_DEFINITIONS[item].kind==='chunk'?.5:0;
+
+/** Relative definition layers for ThingCovered, NOT physical/render heights.
+ * A logical OPEN door retains its full fill and definition layer in that test. */
+export const SHOT_LAYER=Object.freeze({lowPlant:11,door:14,building:15,item:18,pawn:23});
+export const structureShotLayer=(kind:StructureKind):number=>kind==='door'?SHOT_LAYER.door:SHOT_LAYER.building;

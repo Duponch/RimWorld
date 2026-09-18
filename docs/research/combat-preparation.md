@@ -2,7 +2,7 @@
 
 18 septembre 2026. **Recherche et décisions de préparation, pas gameplay livré.** Le [mode tactique V53](../development/drafting.md) est publié ; le tir et les adversaires restent absents. [ROADMAP](../ROADMAP.md) conserve le prochain lot et les jalons. Cette note évite de transformer les raccourcis du prototype en règles définitives.
 
-Incréments réalisés : [requêtes isolées de ligne, couvert et rapport](../development/combat-queries.md), puis [statistiques du revolver, capacités et unités](ranged-statistics-reference.md), [capture du décor World](../development/combat-world.md) et [noyau d'émission/vol](../development/projectiles.md), toujours sans ordre de tir. Relecture fraîche le 18 septembre des définitions datées et chemins de calcul. L'oracle valide notre géométrie centrale ; coins/bords restent une observation du miroir. Adaptateur exhaustif, phases dans World, compétence active et adversaire restent ouverts.
+Incréments réalisés : [requêtes isolées de ligne, couvert et rapport](../development/combat-queries.md), puis [statistiques du revolver, capacités et unités](ranged-statistics-reference.md), [capture du décor World](../development/combat-world.md) et [noyau d'émission/vol](../development/projectiles.md), toujours sans ordre de tir. Relecture fraîche le 18 septembre des définitions datées et chemins de calcul. L'oracle valide notre géométrie centrale ; coins/bords restent une observation du miroir. La capture des cibles actuelles est ajoutée et testée avec les vrais secours/déplacements ; phases dans World, compétence active, dégâts au décor/dépouilles et adversaire restent ouverts.
 
 ## Corpus et solidité des sources
 

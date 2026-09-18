@@ -1,6 +1,6 @@
 # Noyau d'émission et de vol — sous V54
 
-18 septembre 2026. [Recherche et décisions de référence](../research/projectiles-reference.md). **Isolé de la boucle World et du rendu** : neuf scénarios profonds et un banc CPU, aucune commande de tir. Le schéma reste 54 ; une copie JSON du noyau n'est pas une sauvegarde de projectiles dans le jeu.
+18 septembre 2026. [Recherche et décisions de référence](../research/projectiles-reference.md). **Hors boucle normale et rendu** : noyau de neuf scénarios, désormais relié aux cibles d'une capture World par cinq scénarios supplémentaires. Toujours aucune commande de tir. Le schéma reste 54 ; une copie JSON du noyau n'est pas une sauvegarde de projectiles dans le jeu.
 
 ## Responsabilités
 
@@ -8,7 +8,19 @@
 - `projectile-rules.ts` sépare permissions, interception en vol et résolution de destination. La scène fournit les candidats actuels, leur recouvrement par objet plein, leur posture et la relation avec le tireur. Aucun accès caché à World.
 - `bullet-flight.ts` copie l'état reçu, avance les sous-pas et retourne au plus une arrivée. Terminé signifie inerte : pas de second impact ni nouveau tirage. `bulletPosition` sert au futur rendu, sans horloge réelle ni mutation.
 
-L'appelant possède le PRNG local et engage son état avec le résultat. Un refus tardif (couvert disparu, entrée invalide, budget dépassé) ne doit jamais engager des tirages seuls dans World. Une scène doit rester cohérente pendant chaque appel, puis être renouvelée après déplacement, porte, destruction ou impact. Pas de cache global par identité de monde/tick. L'adaptateur des candidats reste à écrire : `captureWorldShotGrid` expose le meilleur couvert, pas toutes les personnes/objets interceptables.
+L'appelant possède le PRNG local et engage son état avec le résultat. Un refus tardif (couvert disparu, entrée invalide, budget dépassé) ne doit jamais engager des tirages seuls dans World. Une scène doit rester cohérente pendant chaque appel, puis être renouvelée après déplacement, porte, destruction ou impact. Pas de cache global par identité de monde/tick. `captureWorldProjectileTargets` fournit maintenant les candidats du contenu actuel ; `captureWorldShotGrid` reste la capture distincte du meilleur couvert.
+
+## Scène du monde et relations
+
+`projectile-world.ts` capture massifs/filons, ouvrages et cadres, plantes, toutes les piles au sol, paquets posés et adultes vivants non portés. Objets de remplissage nul encore présents comme cibles intentionnelles, plans exclus. Patients portés, cargaisons de tâche/chantier, équipement et meubles portés ne sont pas des cibles supplémentaires sur la carte. Personnes endormies, au repos médical ou à terre sont allongées ; leur taille adulte reste 1. La cellule logique sauvegardée pilote la présence, jamais la position interpolée du mesh. L'identité d'un bâtiment emballé utilise `packed:id`, pas `structure:id` ; son ancienne empreinte ne reste pas exposée.
+
+`anchor(key)` renvoie l'ancre copiée ; toutes les cellules d'empreinte d'un meuble pointent vers le même objet. `scene(friendlyPawnIds, friendlyFireFactor)` copie une relation explicite du tireur, sans supposer que tous les Pawn sont alliés. Plusieurs tireurs peuvent partager la capture géométrique avec des vues de relations différentes. Le futur système de factions doit fournir les personnes non hostiles ayant une faction, et conserver la relation du lanceur lorsque celui-ci n'est plus sur la carte. Cette entrée ne livre pas les factions ni leur sauvegarde.
+
+Recouvrement : un autre objet plein de couche logique supérieure ou égale doit recouvrir **chaque cellule** de l'empreinte. La porte ouverte garde son remplissage/couche pour cette seule règle. Une plante basse peut donc être recouverte par une porte ouverte ; la présence dans la même case ne rend pas automatiquement personne/pile inatteignable. Couches de définition et hauteurs 3D restent distinctes. Les relations d'ordre testées sont plante basse < porte < bâtiment/arbre < objet < adulte ; les réserves de provenance figurent dans la recherche.
+
+Les petits cailloux décoratifs sont exclus. Les paquets gardent leur profil nul antérieur, avec confirmation du XML contemporain encore ouverte. Le Pawn décédé cesse d'être une cible vivante ; **aucun objet de dépouille n'est inventé**. Sa projection en objet et ses dégâts restent absents, tout comme les dégâts aux autres objets. Ne pas annoncer une résolution complète du décor ou des morts.
+
+Stockage : colonnes numériques, listes d'incidence par cellule et objets immuables matérialisés à la demande. Les plages par catégorie sont contiguës ; leur ordre d'identifiants est vérifié pendant la capture. Recherche binaire si ordonné, index d'identité créé au premier besoin sinon. Aucun tri de World, ni hypothèse d'identifiants 32 bits. Ordre de candidats stable par catégorie puis identifiant, adaptation assumée de l'ordre d'enregistrement non persisté de Core. Coordonnées, tableaux de candidats et vues exposés sont immuables ; aucun accès ne touche au PRNG.
 
 ## Émission
 
@@ -29,7 +41,7 @@ Les clés doivent identifier une entité présente sur la même carte ; le lance
 | Cible utilisée | Identité encore admissible ; personne allongée à distance ≥4,5 : jet 0,5 ; échec au sol sans autre candidat |
 | Autres candidats finaux | Mélange local ; personne 0,5 × taille, allongée lointaine ×0,5, amie × distance ; objet 1,5 × remplissage |
 
-La prévention et le facteur de difficulté des tirs amis ne sont pas ajoutés au dernier chemin. L'adaptateur devra fournir la relation réelle, pas supposer que tous les Pawn sont des colons alliés. Les sorties sont des **clés d'impact**, pas des destructions automatiques. La santé V54 s'applique seulement aux adultes naturels sans armure admissibles à son contrat ; autres dommages et protections restent nécessaires.
+La prévention et le facteur de difficulté des tirs amis ne sont pas ajoutés au dernier chemin. La vue de scène reçoit la relation réelle du futur pilote de combat. Les sorties sont des **clés d'impact**, pas des destructions automatiques. La santé V54 s'applique seulement aux adultes naturels sans armure admissibles à son contrat ; autres dommages et protections restent nécessaires.
 
 ## Temps, reprise et présentation future
 
@@ -54,3 +66,19 @@ Le banc `scripts/bullet-flight-bench.ts` possède une scène indexée 250² et 3
 | 100 | 0,5648 ms | 1,3412 ms | 1,8975 ms | 2,5924 ms |
 
 Une passe finale ; petites durées sensibles à l'ordonnanceur/JIT. L'interception ponctuelle est une fonction partagée, sans closure créée à chaque sous-pas. Ces résultats ne justifient ni promesse de FPS ni dépendance compute/WASM. La charge mixte et la garde visible restent exigées lors de l'intégration des attaques. Aucun parcours UI/colonie complet rejoué pour ce noyau non branché.
+
+### Capture et cibles réelles
+
+Cinq scénarios ajoutés à `combat-world.test.ts` contrôlent candidats superposés, identités/propriétaires/empreintes, recouvrement complet et couches, relations copiées, carte rectangulaire/entiers sûrs/réordonnancement, puis secours réels avec disparition du patient porté et retour au lit après sauvegarde. Le cinquième relie ligne/émission/cible déplacée par commande V53/impact médical, avec continuation exacte du World et de l'enveloppe de test séparée. Les fixtures géométriques artificielles sont distinctes des parcours sérialisés valides. TypeScript et **18/18 scénarios** de décor/projectile passent après optimisation (3,03 s).
+
+`projectile-world-bench.ts` mesure une capture partagée et la terminaison de plans de vol sur les cartes minières 250² (12 120–12 217 ressources, 8 449–8 837 massifs), à 3/30/100 acteurs. Cinquante chauffes puis trois cents lots ; génération et pas World exclus. Les plans synthétiques dirigés/ratés partent d'un tireur vers les autres acteurs, sans commande ni calcul de portée/visée. Une mesure séparée de cent échantillons inclut le premier accès d'identité aux plantes et cent consultations ; elle exclut la capture. Ce ne sont pas des combats ni une mesure worker/rendu.
+
+Sur le même Ryzen 5 3600 / Windows 11 / Node 24.11.1, l'[initiale](../../artifacts/projectile-world-baseline-v54.json) a exposé le coût des index de chaque plante et des objets temporaires par cellule. Index à la demande puis recherche binaire vérifiée et coordonnées numériques réduisent ce travail. Résultats métier et sommes des dates d'impact identiques. [Passe finale](../../artifacts/projectile-world-v54.json) :
+
+| Acteurs/plans | Capture p95 avant → après | Total capture + vols p95 | p99 total | Maximum total |
+|---|---:|---:|---:|---:|
+| 3 | 9,0148 → 2,4493 ms | 2,5546 ms | 2,9837 ms | 3,5383 ms |
+| 30 | 8,1350 → 2,5424 ms | 2,9598 ms | 3,7486 ms | 3,8492 ms |
+| 100 | 8,0959 → 1,8939 ms | 3,1338 ms | 3,7564 ms | 4,5183 ms |
+
+Premiers accès aux plantes dans la charge cent : p95 0,1487 ms, p99 0,2222 ms, maximum 0,2276 ms. Le repli d'identités non ordonnées est testé fonctionnellement ; ces chiffres du générateur ordonné ne mesurent pas son coût spécifique. Comparaison de passes successives, sans prétendre isoler toute variabilité JIT/ordonnanceur. La scène ne doit pas être reconstruite par projectile ou frame lors du branchement.

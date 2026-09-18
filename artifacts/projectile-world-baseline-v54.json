@@ -1,0 +1,99 @@
+{
+  "date": "2026-09-18T17:42:12.386Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "os": "win32 10.0.26200",
+  "protocol": "250² generated mining fixtures with 3/30/100 actors and designations retained. 50 warmup + 300 measured batches. Every batch captures all current candidates and an explicit friendly relation view ONCE, then creates and COMPLETES 3/30/100 direct/miss flight plans sequentially. One fixture shooter aims toward the other actor positions; these synthetic plans bypass range/aim/commands. Includes columns, indexes, lazy records, relations, collision and allocation. Generation, World stepping, emission, damage, worker and renderer excluded. Not simultaneous gameplay and not a frame or local-tick budget. One pass.",
+  "results": [
+    {
+      "pawns": 3,
+      "resources": 12120,
+      "rockCells": 8449,
+      "flightsPerBatch": 3,
+      "hits": 600,
+      "ground": 300,
+      "checksum": 6900,
+      "captureMs": {
+        "count": 300,
+        "p50": 5.111199999999826,
+        "p95": 9.014799999999923,
+        "p99": 13.153299999999945,
+        "max": 19.153400000000147
+      },
+      "completeFlightsMs": {
+        "count": 300,
+        "p50": 0.12669999999980064,
+        "p95": 0.3731999999999971,
+        "p99": 0.7318000000000211,
+        "max": 1.3982999999998356
+      },
+      "totalMs": {
+        "count": 300,
+        "p50": 5.261799999999766,
+        "p95": 9.102899999999863,
+        "p99": 13.266699999999673,
+        "max": 19.244500000000244
+      }
+    },
+    {
+      "pawns": 30,
+      "resources": 12147,
+      "rockCells": 8557,
+      "flightsPerBatch": 30,
+      "hits": 7800,
+      "ground": 1200,
+      "checksum": 168000,
+      "captureMs": {
+        "count": 300,
+        "p50": 5.180299999999988,
+        "p95": 8.135000000000218,
+        "p99": 12.28480000000036,
+        "max": 14.82629999999972
+      },
+      "completeFlightsMs": {
+        "count": 300,
+        "p50": 0.5216000000000349,
+        "p95": 1.5466000000005806,
+        "p99": 2.106300000000374,
+        "max": 2.667699999999968
+      },
+      "totalMs": {
+        "count": 300,
+        "p50": 5.768000000000029,
+        "p95": 8.406500000000051,
+        "p99": 13.136700000000019,
+        "max": 15.26550000000043
+      }
+    },
+    {
+      "pawns": 100,
+      "resources": 12217,
+      "rockCells": 8837,
+      "flightsPerBatch": 100,
+      "hits": 27600,
+      "ground": 2400,
+      "checksum": 747900,
+      "captureMs": {
+        "count": 300,
+        "p50": 4.224600000000464,
+        "p95": 8.095900000000256,
+        "p99": 10.691199999999299,
+        "max": 11.782799999999952
+      },
+      "completeFlightsMs": {
+        "count": 300,
+        "p50": 1.7910000000001673,
+        "p95": 3.7681000000002314,
+        "p99": 4.63130000000001,
+        "max": 5.077400000000125
+      },
+      "totalMs": {
+        "count": 300,
+        "p50": 6.443600000000515,
+        "p95": 9.817199999999502,
+        "p99": 13.500099999999293,
+        "max": 15.06750000000011
+      }
+    }
+  ]
+}
