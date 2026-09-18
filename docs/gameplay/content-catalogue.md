@@ -2,9 +2,9 @@
 
 V55 branche le [projectile du revolver](../development/projectiles.md) dans World et la sauvegarde, avec émissions encore injectées par les fixtures. Aucun objet de munition, nouvelle arme ou recette ; le revolver obtenu au départ conserve ses seules interactions d'équipement. Dépouilles et dommages aux objets restent absents ; un contact avec le décor ne le détruit pas. Le remplissage nul des paquets est conservé explicitement, sa confirmation Core récente restant ouverte.
 
-V54 ajoute la famille médicale **Gunshot**, sans fusion, avec soins et cicatrices ; [contrat](../development/bullet-impact.md). Le producteur anatomique est testé, son déclenchement par une arme reste absent. Aucun objet, munition, protection ou nouvelle recette obtenable.
+V54 ajoute la famille médicale **Gunshot**, sans fusion, avec soins et cicatrices ; [contrat](../development/bullet-impact.md). Le producteur anatomique est testé et appelé par les vols V55 ; son déclenchement par un ordre joueur reste absent. Aucun objet, munition, protection ou nouvelle recette obtenable.
 
-Le socle isolé de tir sous V53 n'ajoute aucun objet obtenable. Les [sept profils de combat du revolver](../research/ranged-statistics-reference.md) sont définis et testés mais **non utilisés par la partie** ; portée, précision, cadence et dégâts ne sont pas encore jouables. Les [propriétés tactiques du contenu présent](../research/combat-world-reference.md) sont désormais définies et testées sous V54 : meubles, portes, plantes, massifs, fragments et cadres. Aucun nouvel objet obtenu ; les petits cailloux décoratifs restent sans couvert, distincts des fragments à 50 %.
+Le socle isolé de tir sous V53 n'ajoute aucun objet obtenable. Les [sept profils de combat du revolver](../research/ranged-statistics-reference.md) sont définis et testés, puis utilisés par le service de vol V55 sans émission commandée ; portée, précision, cadence et dégâts ne sont pas encore jouables. Les [propriétés tactiques du contenu présent](../research/combat-world-reference.md) sont désormais définies et testées sous V54 : meubles, portes, plantes, massifs, fragments et cadres. Aucun nouvel objet obtenu ; les petits cailloux décoratifs restent sans couvert, distincts des fragments à 50 %.
 
 V53 ajoute des commandes de mobilisation et déplacement, **aucun objet**. Le revolver reste une principale physique sans tir ; aucune nouvelle arme, munition, tenue ou espèce implicitement livrée. [Contrat](../development/drafting.md).
 
@@ -42,7 +42,7 @@ V36 enrichit les propriétés des objets existants : lumière logique du feu all
 
 V35 ajoute une famille de **toit construit**, couche de couverture indépendante des objets/piles et sans recette matérielle. Zones Construire/Retirer/Ignorer, supports et présentation procédurale livrés ; toits naturels minces/épais, colonnes porteuses, gravats et dégâts aux objets restent absents ; blessures de toit construit aux personnes livrées V45. [Contrat](../development/roofing.md).
 
-État du 17 septembre 2026. Le jeu de base complet, y compris ses centaines d'objets et leurs variantes, reste la cible. Le bilan par [système](implementation-status.md) ne suffit pas à suivre ce contenu. Ce document distingue ce que contient notre référence et ce qui existe dans le jeu développé.
+État relu le 18 septembre 2026, sans nouvel objet lors du bilan de retour en mode jour. Le jeu de base complet, y compris ses centaines d'objets et leurs variantes, reste la cible. Le bilan par [système](implementation-status.md) ne suffit pas à suivre ce contenu. Ce document distingue ce que contient notre référence et ce qui existe dans le jeu développé.
 
 V24 permet de déconstruire les six bâtiments existants. V25 ajoute désinstallation et réinstallation de lit, table, tabouret et piquet sous forme entière ; **aucune nouvelle famille d’objet**. Le paquet conserve le bâtiment et son identité ; V26 ajoute rangement filtré, dégagement et réinstallation par Transport ; masse, qualité et dégâts restent absents. La présence de ces familles ne clôt ni leurs variantes ni les centaines de définitions attendues.
 
@@ -83,7 +83,7 @@ Le contenu restant comprend notamment métaux et pierres, composants avancés et
 
 Chaque ajout doit avoir un identifiant stable, famille CAT, source/version et champs confirmés, règles réellement disponibles, variantes encore absentes, référence de test et représentation. Les noms traduits ne servent jamais d'identifiants de sauvegarde.
 
-L'inventaire des personnes, leurs vêtements et les portraits ont un [contrat distinct](../development/character-presentation.md), actuellement prévu et non livré.
+L'inventaire des personnes, leurs vêtements et les portraits ont un [contrat distinct](../development/character-presentation.md), partiellement livré pour la principale V52 ; inventaire personnel, vêtements et portraits habillés restent prévus.
 
 
 V9 enrichit les interactions des objets existants : bois et aliments peuvent être déplacés hors des cultures ; baies, riz et rations ont un classement alimentaire neutre vérifié. Aucun nouvel objet ni fragment de roche collectable n’est ajouté par cette tranche. Voir [sources et limites](../research/food-clearing-reference.md).

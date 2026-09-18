@@ -1,12 +1,14 @@
 # Documentation de Lisière
 
+Bilan courant consolidé le 18 septembre : [jouable, partiel et absent](gameplay/implementation-status.md), [estimation globale et par domaine](ROADMAP.md#estimation-de-charge--18-septembre-2026). Les lots techniques ne comptent pas comme de nouvelles commandes jouables.
+
 V55, [projectiles persistants](development/projectiles.md) : avancement dans `stepWorld`, impacts anatomiques ordonnés, sauvegarde stricte et snapshots. Les émissions restent injectées par les fixtures : aucun bouton de tir ni projectile affiché. Le prochain lot reste préparation/récupération, Tir/XP, commande visible puis adversaire. [Règles recontrôlées](research/projectiles-reference.md), [preuves et audit mixte](development/validation.md).
 
-V54 : [producteur d'impact anatomique et Gunshot](development/bullet-impact.md), [règles revérifiées](research/bullet-impact-reference.md). Localisation, préservation extérieure, propagation et intégration aux soins/sauvegardes testées. **Pas encore de tir jouable** : le déclencheur, le vol et l'adversaire restent à intégrer. La [capture tactique du décor](development/combat-world.md) prépare maintenant les propriétés réelles de ligne/couvert ; [sources et adaptations](research/combat-world-reference.md), coût mesuré et réduit sans appel par frame.
+V54 : [producteur d'impact anatomique et Gunshot](development/bullet-impact.md), [règles revérifiées](research/bullet-impact-reference.md). Localisation, préservation extérieure, propagation et intégration aux soins/sauvegardes testées. **Pas encore de tir jouable** : le vol est intégré en V55 ; le déclencheur, les phases du tireur et l'adversaire restent à intégrer. La [capture tactique du décor](development/combat-world.md) prépare maintenant les propriétés réelles de ligne/couvert ; [sources et adaptations](research/combat-world-reference.md), coût mesuré et réduit sans appel par frame.
 
 V53 : [mobilisation et déplacements physiques](development/drafting.md), [règles et adaptations vérifiées](research/drafting-reference.md). Bouton/R, groupes, clic droit/Maj, arrêt, besoins et conservation lors des interruptions. Tirs et adversaires restent le prochain lot humain.
 
-Suite de V53 : [préparation du premier combat](research/combat-preparation.md) et [socle testé](development/combat-queries.md), avec lignes/couvert, visée et [statistiques du revolver revérifiées](research/ranged-statistics-reference.md). Modules isolés, aucun tir jouable ; compétence active, projectile et adversaire restent à intégrer ; le producteur anatomique est ajouté en V54.
+Suite de V53 : [préparation du premier combat](research/combat-preparation.md) et [socle testé](development/combat-queries.md), avec lignes/couvert, visée et [statistiques du revolver revérifiées](research/ranged-statistics-reference.md). Aucun tir jouable ; compétence active, phases du tireur et adversaire restent à intégrer. Le producteur anatomique est ajouté en V54, les vols persistants en V55.
 
 Transport sous V52 : [comparaison ordonnée des ressources](development/presentation-timing.md#coût-de-recherche-des-deltas-sous-v52), mêmes états et règles, coût d’encodage réduit. Garde native minage/abattage verte après modification ; [preuves et limites de charge](development/validation.md). La mobilisation est ajoutée en V53.
 

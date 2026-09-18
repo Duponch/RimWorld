@@ -1,5 +1,11 @@
 # Validation courante — V55
 
+## Bilan de retour en mode jour — 18 septembre
+
+Le lot de code V55 est déjà publié dans `37a6791`. Cette reprise consolide l'[inventaire courant](../gameplay/implementation-status.md), corrige les absences périmées dans l'index/catalogue et reprend les [estimations dans ROADMAP](../ROADMAP.md#estimation-de-charge--18-septembre-2026). Recherche renouvelée sur les [interruptions de préparation et la récupération](../research/combat-preparation.md#préparation-et-récupération--relecture-du-18-septembre), sans ajout de commande ni changement de règle livré. Le retour en mode jour suspend l'automatisation de nuit ; prochain lot visible défini dans ROADMAP.
+
+Vérifications adaptées : liens/ancres, identifiants de domaines, empreintes des trois originaux et `git diff --check`. Aucun code, état de sauvegarde ou rendu changé ; les suites de simulation/UI et les mesures V55 ci-dessous ne sont pas annoncées comme rejouées pour ce bilan documentaire. Les estimations sont un jugement de planification, pas une nouvelle preuve de couverture ou de performance.
+
 ## Vols persistants et ordre des impacts V55
 
 18 septembre 2026. [Contrat](projectiles.md), [relecture des sources](../research/projectiles-reference.md). Cinq scénarios intégrés ajoutés : sauvegarde réelle à chaque phase, cible mobile, impact unique, ordre des sous-pas entre balles, mort avant contact suivant, scènes renouvelées, sorties/disparition, enveloppes invalides et comparaison de la capture optimisée avec la capture complète. La première passe a révélé que le décodeur gardait une collection optionnelle supprimée du World. Le correctif supprime les champs dynamiques absents et préserve les snapshots précédents ; les attentes du scénario n'ont pas été affaiblies.
