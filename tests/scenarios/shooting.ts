@@ -13,7 +13,7 @@ export function firingCamp():World {
   return w;
 }
 
-export function shootingLoad(count:number):{world:World;pairs:number[][]} {
+export function shootingLoad(count:number,movingTargets=false):{world:World;pairs:number[][]} {
   const world=miningLoad(count,true),pairs:number[][]=[];
   const inside=(x:number,z:number)=>x>=65&&x<=90&&z>=65&&z<=140;
   for(let z=65;z<=140;z++)for(let x=65;x<=90;x++)world.tiles[z*world.width+x]={terrain:'grass'};
@@ -21,6 +21,7 @@ export function shootingLoad(count:number):{world:World;pairs:number[][]} {
   for(let i=0;i+2<count;i+=3){const a=world.pawns[i],b=world.pawns[i+1],z=70+i/3*2;Object.assign(a,{x:70,z});Object.assign(b,{x:80,z});
     addMaterial(world,'weapon',1,{type:'equipment',pawnId:a.id},'revolver');
     if(!applyCommand(world,{type:'draft',pawnIds:[a.id,b.id],enabled:true}).ok)throw Error('Draft refused');pairs.push([a.id,b.id]);
+    if(movingTargets)for(let leg=0;leg<16;leg++)if(!applyCommand(world,{type:'draft-move',pawnIds:[b.id],target:{x:80,z:z+(leg%2===0?4:0)},queue:leg>0}).ok)throw Error('Moving target refused');
   }
   return {world,pairs};
 }

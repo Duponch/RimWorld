@@ -1,6 +1,6 @@
 # Plan de développement
 
-V56 — [premier tir commandé et visible](development/shooting.md) livré : préparation/récupération, Tir/XP, projectile GPU et impact médical. La prochaine tranche est l’adversaire avec hostilité, collisions et réactions, en complétant le pouvoir d’arrêt. Aucun jalon G0–G5 déclaré clos.
+V57 — [pouvoir d’arrêt et marche continue](development/stagger.md) livré après le tir V56 : ralentissement temporaire dès l’impact, renouvellement, reprise et sauvegarde pendant le trajet. La prochaine tranche reste l’adversaire avec hostilité, collisions et réactions. Aucun jalon G0–G5 déclaré clos.
 
 Le parcours assemble les requêtes ligne/couvert, profils du revolver, impacts V54 et vols V55. Le lot V56 vérifie les ordres, la continuation et la présentation à 1×/6×, puis la charge mixte 3/30/100 acteurs. Les pointes à forte charge restent dans les preuves ; traiter leurs causes observées avant d’augmenter la densité du premier affrontement.
 
@@ -8,9 +8,9 @@ Le parcours assemble les requêtes ligne/couvert, profils du revolver, impacts V
 
 ## Priorité actuelle
 
-**Mode jour rétabli le 18 septembre à la demande utilisateur.** La reprise automatique de nuit est suspendue ; terminer un lot cohérent, commit/push et bilan, puis attendre la prochaine instruction. V56 termine le lot visible engagé ; aucune reprise nocturne implicite.
+**Mode jour rétabli le 18 septembre à la demande utilisateur.** La reprise automatique de nuit est suspendue ; terminer un lot cohérent, commit/push et bilan, puis attendre la prochaine instruction. V57 termine le lot visible engagé ; aucune reprise nocturne implicite.
 
-**Prochaine livraison visée : premier adversaire et réactions cohérentes.** Introduire appartenance/hostilité distinctes, permissions de portes, collision hostile commune à recherche et suivi, choix de cible et réaction civile. Compléter le ralentissement du pouvoir d’arrêt avant de qualifier l’affrontement de fidèle. Critère : menace de scénario → ordre/réaction → tir/blessure → secours/soins → retour au camp, avec continuation et véritable UI. Ne pas appeler « raid » ce scénario ; narrateur et diplomatie restent ultérieurs. Reprendre d’abord la garde de fluidité sur machine disponible : V56 observe de brèves attentes sous charge concurrente et ne la déclare pas verte. Reprofiler ensuite les coûts de snapshots/scène à 100 acteurs avant extension de la charge.
+**Prochaine livraison visée : premier adversaire et réactions cohérentes.** Introduire appartenance/hostilité distinctes, permissions de portes, collision hostile commune à recherche et suivi, choix de cible et réaction civile. Le ralentissement du pouvoir d’arrêt V57 est maintenant intégré ; cette dépendance a été traitée séparément car elle modifie les arêtes déjà engagées et leur présentation. Critère : menace de scénario → ordre/réaction → tir/blessure → secours/soins → retour au camp, avec continuation et véritable UI. Ne pas appeler « raid » ce scénario ; narrateur et diplomatie restent ultérieurs. La reprise de la garde V56 sans autre jeu 3D passe sur minage et abattage (zéro attente/saut, 44 changements de vitesse) ; les échecs sous charge antérieure restent conservés. La garde finale V57 passe également : zéro attente/saut, 44 changements de vitesse sous 24,8 ms. Voir les preuves courantes pour conditions et limites. Reprofiler ensuite les coûts de snapshots/scène à 100 acteurs avant extension de la charge.
 
 **Cadence de livraison :** les extractions techniques restent utiles à l'intérieur d'un lot, mais le prochain bilan de développement doit privilégier une action visible. Regrouper scénario métier, continuation et contrôle UI à 1×/6× ; mesurer la charge mixte une fois le parcours intégré. Ne pas rejouer les suites de simulation pour une correction documentaire. Aucune réduction des contrats physiques ou des vérifications de règles n'est déduite de cette organisation.
 
@@ -118,7 +118,7 @@ Objectif d'une partie, tonalité fictionnelle, contraintes de verticalité, tail
 | Anatomie, santé et soins | 35–50 % | Blessures/capacités/secours/soins intégrés ; maladies, infections, immunité, chirurgie, prothèses et dépouilles restent importantes. |
 | Compétences, traits et identité | 15–25 % | Construction, Médecine et Tir actifs ; neuf autres compétences, biographies, traits et effets croisés absents. |
 | Équipement, vêtements et inventaire | 10–20 % | Une principale physique ; inventaire personnel, vêtements, armures, masse et grand catalogue absents. |
-| Combat | 5–15 % | Tir commandé, phases, XP et impact désormais jouables ; aucun affrontement contre une menace. Ennemis, réactions, pouvoir d’arrêt, mêlée et protections à intégrer. |
+| Combat | 5–15 % | Tir commandé, phases, XP et impact désormais jouables ; aucun affrontement contre une menace. Pouvoir d’arrêt ajouté V57 ; ennemis, réactions, mêlée et protections à intégrer. |
 | Humeur et relations | 5–10 % | Quelques besoins/souvenirs ; pensées complètes, crises, personnalités et réseau social absents. |
 | Production, recherche et contenu | 10–20 % | Deux filières de production ; ateliers, nombreuses recettes, économie matérielle et recherche absents. Ce n'est pas un ratio d'objets : aucun catalogue exhaustif vérifié. |
 | Animaux et élevage | 0–5 % | Aucun animal jouable ; le socle spatial/médical est réutilisable, ses règles animales ne sont pas développées. |

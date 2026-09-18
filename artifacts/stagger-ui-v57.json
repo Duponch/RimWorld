@@ -1,0 +1,23 @@
+{
+  "date": "2026-09-18T20:54:56.969Z",
+  "backend": "native WebGPU",
+  "reports": [
+    {
+      "speed": 1,
+      "frames": 581,
+      "checked": 573,
+      "slow": 172,
+      "maxError": 0.000011339436760238186,
+      "arrived": true
+    },
+    {
+      "speed": 6,
+      "frames": 216,
+      "checked": 210,
+      "slow": 75,
+      "maxError": 0.00001048860582208988,
+      "arrived": true
+    }
+  ],
+  "errors": []
+}

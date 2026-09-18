@@ -1,6 +1,6 @@
 # Mobilisation et destinations tactiques — recherche V53
 
-Recherches des 17–18 septembre 2026. **Intégration V53 : [contrat et limites](../development/drafting.md).** Schéma courant 53. Calendrier : [ROADMAP](../ROADMAP.md). Corpus relu : chapitres 8, 20 et 21, **SYS/TEST-035**, **UI-007/008/011**, navigation **SYS/TEST-113..117**. UI-009/010 et SYS/TEST-119 restent liés aux attaques/couvert ultérieurs. Le corpus propose un état tactique distinct du transport, avec destination validée et déplacement physique.
+Recherches des 17–18 septembre 2026. **Intégration V53 : [contrat et limites](../development/drafting.md).** Schéma introduit par ce lot : 53. Calendrier : [ROADMAP](../ROADMAP.md). Corpus relu : chapitres 8, 20 et 21, **SYS/TEST-035**, **UI-007/008/011**, navigation **SYS/TEST-113..117**. UI-009/010 et SYS/TEST-119 restent liés aux attaques/couvert ultérieurs. Le corpus propose un état tactique distinct du transport, avec destination validée et déplacement physique.
 
 ## Sources et limites
 

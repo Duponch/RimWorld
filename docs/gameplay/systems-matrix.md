@@ -1,6 +1,8 @@
 # Matrice des systèmes et critères de réalisation
 
-V56 : sous-parties SYS/TEST-085/099..107/111..112 et UI-009/010 désormais utilisées par une commande de tir visible, avec XP, phases, vol, impact et reprise. Factions/adversaires, réactions, pouvoir d’arrêt et UI complète restent ouverts. Aucun domaine G3 complet ; [état exact](implementation-status.md).
+V57 : SYS/TEST-099..107 et 111..117 enrichis par la conséquence temporaire du projectile, les coûts variables pendant une arête et la continuité GPU. Aucun domaine fermé ; [contrat et limites](../development/stagger.md).
+
+V56 : sous-parties SYS/TEST-085/099..107/111..112 et UI-009/010 désormais utilisées par une commande de tir visible, avec XP, phases, vol, impact et reprise. Pouvoir d’arrêt ajouté en V57 ; factions/adversaires, réactions et UI complète restent ouverts. Aucun domaine G3 complet ; [état exact](implementation-status.md).
 
 V53 : [mobilisation/déplacements physiques](../development/drafting.md), SYS-035/UI-007/008/011 partiellement intégrés à G0/G3. Tir dirigé V56 livré ; hostiles et formations restent absents ; propriétés/requêtes de couvert V54 intégrées au tir ; G0–G2 partiels, G3 fondations, G4/G5 non livrés. Calendrier exclusif dans ROADMAP.
 

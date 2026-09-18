@@ -38,7 +38,7 @@ Depuis l'audit sous V34, cette énumération capture les cellules sans arrêt un
 
 `furniture-motion.ts` crée un petit index de hauteurs par snapshot. `PawnLayer` renseigne les hauteurs dans **aFrom/aTo existants**, au même moment que les extrémités de trajet. `pawn-presentation.ts` fournit une formule TSL partagée par corps, cargaison et anneaux. X/Z et orientation restent ceux du déplacement autoritaire ; seul Y monte durant le premier tiers ou descend durant le dernier tiers. Le proxy de sélection applique la même formule de hauteur.
 
-Aucun nouveau lot de personnages ni attribut d'instance ; pas de mise à jour de squelette CPU. Il existe néanmoins un coût de préparation par snapshot et quelques opérations shader : mesurer, ne pas annoncer un coût total nul. Le lit et la position assise gardent leurs poses de service. Les transitions vers ces poses et les passants superposés restent stylisés, sans évitement physique.
+Aucun nouveau lot de personnages ni attribut d'instance ; pas de mise à jour de squelette CPU. V57 étend `aTravel` à quatre composantes (temps et fractions d’arête, +8 octets par personne) pour préserver cette hauteur pendant un ralentissement au milieu d’un meuble ; [contrat](stagger.md). Il existe néanmoins un coût de préparation par snapshot et quelques opérations shader : mesurer, ne pas annoncer un coût total nul. Le lit et la position assise gardent leurs poses de service. Les transitions vers ces poses et les passants superposés restent stylisés, sans évitement physique.
 
 ## Migration V21 → V22
 

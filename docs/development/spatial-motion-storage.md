@@ -1,5 +1,7 @@
 # Sol, trajets et présentation distante
 
+V57 : le [pouvoir d’arrêt](stagger.md) ajoute un taux temporaire vivant aux arêtes engagées, distinct de leur base capturée (lumière/anatomie/terrain). Fenêtres persistées et morceaux de présentation conservent exactement la distance passée ; le trajet normal garde sa voie directe. La navigation reste indépendante de ces morceaux.
+
 V37 ajoute le [facteur lumineux capturé à l’origine de chaque arête](light-work.md). Les délais du terrain/mobilier restent additionnels ; les durées neutres de ce document décrivent un facteur 1. Le classement des routes reste neutre, pas une ETA sous lumière variable.
 
 Contrat introduit en V6, relu sous le schéma V22 le 14 septembre 2026. Références fonctionnelles : corpus utilisateur chapitres 2/5/10/21/29/32, SYS-005/020..022/051..061/113..117/172..177 ; scénarios matériels et navigation de F1/F2/F3. Ce document remplace les anciennes descriptions permettant plusieurs piles au sol ou présentant le BFS cardinal comme le calcul des routes actuelles. Les originaux du corpus restent inchangés.

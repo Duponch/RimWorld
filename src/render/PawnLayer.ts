@@ -44,7 +44,9 @@ export class PawnLayer {
   private createPawnMesh(count: number): void {
     clearGroup(this.group);
     const geometry = pawnGeometry();
-    geometry.setAttribute('aTravel', new THREE.InstancedBufferAttribute(new Float32Array(count * 2), 2));
+    const travel = new THREE.InstancedBufferAttribute(new Float32Array(count * 4), 4);
+    for(let i=0;i<count;i++)travel.setW(i,1);
+    geometry.setAttribute('aTravel', travel);
     geometry.setAttribute('aFrom', new THREE.InstancedBufferAttribute(new Float32Array(count * 4), 4));
     geometry.setAttribute('aTo', new THREE.InstancedBufferAttribute(new Float32Array(count * 4), 4));
     geometry.setAttribute('aMotion', new THREE.InstancedBufferAttribute(new Float32Array(count * 4), 4));
@@ -223,17 +225,22 @@ export class PawnLayer {
     world.pawns.forEach((pawn,i)=>{
       const segment=timeline.segment(pawn.id);
       const active=!!segment && timeline.tick<segment.end;
-      const key=`${origin}:${segment?.start}:${active}:${!!segment&&timeline.tick>=segment.start}:${pawn.state}:${pawn.path[0]?.x}:${pawn.path[0]?.z}`;
+      const key=`${origin}:${segment?.start}:${segment?.end}:${active}:${!!segment&&timeline.tick>=segment.start}:${pawn.state}:${pawn.path[0]?.x}:${pawn.path[0]?.z}`;
       if(this.travelKeys.get(pawn.id)===key)return;
       this.travelKeys.set(pawn.id,key);dirty=true;
       const visual=this.visuals.get(pawn.id)!;
       if(segment && (active || pawn.state==='moving'||world.tick<segment.end)) {
         const yaw=Math.atan2(segment.to.x-segment.from.x,segment.to.z-segment.from.z);
-        visual.from.set(segment.from.x,this.travelSurfaces.get(segment.from.z*world.width+segment.from.x)??0,segment.from.z,yaw);visual.to.set(segment.to.x,this.travelSurfaces.get(segment.to.z*world.width+segment.to.x)??0,segment.to.z,yaw);
-        times.setXY(i,(segment.start-origin)/10,(segment.end-origin)/10);
+        const a=segment.fromFraction??0,b=segment.toFraction??1,lerp=THREE.MathUtils.lerp;
+        const y0=this.travelSurfaces.get(segment.from.z*world.width+segment.from.x)??0,y1=this.travelSurfaces.get(segment.to.z*world.width+segment.to.x)??0;
+        // Preserve full-edge heights: climbing uses distance on the original
+        // edge, not a fresh first/last third for every change of pace.
+        visual.from.set(lerp(segment.from.x,segment.to.x,a),y0,lerp(segment.from.z,segment.to.z,a),yaw);
+        visual.to.set(lerp(segment.from.x,segment.to.x,b),y1,lerp(segment.from.z,segment.to.z,b),yaw);
+        times.setXYZW(i,(segment.start-origin)/10,(segment.end-origin)/10,a,b);
         motion.setX(i,!medicallyStopped(pawn)&&active && timeline.tick>=segment.start?1:0);motion.setY(i,0);motion.setZ(i,medicallyStopped(pawn)?1:0);
       } else {
-        visual.to.copy(this.targetPoses.get(pawn.id)!);visual.from.copy(visual.to);times.setXY(i,0,0);
+        visual.to.copy(this.targetPoses.get(pawn.id)!);visual.from.copy(visual.to);times.setXYZW(i,0,0,0,1);
         motion.setX(i,0);motion.setY(i,pawn.state==='working'?1:0);
         const dining=pawn.need?.kind==='eat'?pawn.need.dining:null;
         motion.setZ(i,pawn.shooting?.stance?7:pawn.state==='recreating'?pawn.recreation.task?.activity==='horseshoes'?4:5:pawn.state==='sleeping'||pawn.state==='resting'||medicallyStopped(pawn)?1:pawn.state==='eating'?dining&&dining.seatId!==null?3:2:0);
@@ -247,7 +254,7 @@ export class PawnLayer {
       for(const [carrier,patient] of this.rescuePairs){
         from.setXYZW(patient,from.getX(carrier),from.getY(carrier),from.getZ(carrier),from.getW(carrier));
         to.setXYZW(patient,to.getX(carrier),to.getY(carrier),to.getZ(carrier),to.getW(carrier));
-        times.setXY(patient,times.getX(carrier),times.getY(carrier));motion.setXYZ(patient,0,0,6);
+        times.setXYZW(patient,times.getX(carrier),times.getY(carrier),times.getZ(carrier),times.getW(carrier));motion.setXYZ(patient,0,0,6);
         const source=this.visuals.get(world.pawns[carrier]!.id)!,target=this.visuals.get(world.pawns[patient]!.id)!;
         target.from.copy(source.from);target.to.copy(source.to);
       }

@@ -2,6 +2,7 @@ import { retryInterruptedCargo } from './interrupted-cargo.ts';
 import { applyDraftCommand,processDraft } from './drafting.ts';
 import { advanceWorldCombat } from './combat-system.ts';
 import { applyShootingCommand } from './shooting.ts';
+import { expireStaggers } from './stagger.ts';
 import { collapseFromExhaustion,processDraftSleep } from './needs.ts';
 import { applyEquipment,processEquipment,reconcileEquipmentTasks,recoverDroppedWeapon } from './equipment.ts';
 import { dropIncapacitatedEquipment,reconcileWeaponMemory } from './equipment-state.ts';
@@ -348,6 +349,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     burnFuel(world);
     updateDoors(world);
     advanceWorldCombat(world);
+    expireStaggers(world);
     scheduleGrowing(world);
     scheduleRoofs(world);reconcileRescues(world);reconcilePatientRest(world);reconcileTending(world);reconcileFeeding(world);reconcileEquipmentTasks(world);for(const pawn of world.pawns)reconcileWeaponMemory(world,pawn);
     // Build only if this tick actually plans or moves. No cross-tick cache can hide

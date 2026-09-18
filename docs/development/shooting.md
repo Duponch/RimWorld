@@ -30,6 +30,6 @@ Les traces confirmées sont retenues brièvement afin de montrer aussi une balle
 
 ## Périmètre encore incomplet
 
-Pas de factions/ennemis, tir autonome, réaction civile, collision hostile, mêlée, armure, objets endommagés ni dépouille transportable. Le ralentissement temporaire du pouvoir d'arrêt, la jauge graphique de visée/récupération, le son et les effets d'impact ne sont pas livrés. Ces absences ne modifient pas silencieusement la définition du revolver : le premier affrontement doit compléter notamment pouvoir d'arrêt et réactions. Portraits encore schématiques, vêtements et inventaire personnel absents.
+Pas de factions/ennemis, tir autonome, réaction civile, collision hostile, mêlée, armure, objets endommagés ni dépouille transportable. Le [ralentissement temporaire du pouvoir d’arrêt](stagger.md) est ajouté en V57. Jauge graphique de visée/récupération, son et effets d’impact restent absents. Le premier affrontement doit encore intégrer les réactions et les permissions/collisions hostiles. Portraits encore schématiques, vêtements et inventaire personnel absents.
 
 Le pilote civil conserve ses bilans et vérifie l'absence de tirs spontanés entre colons ; le parcours compagnon de tir utilise une scène contrôlée explicitement alliée. Il ne représente pas le comportement moyen consistant à attaquer ses propres colons. La menace naturelle rejoindra le pilote lorsque des adversaires existeront.

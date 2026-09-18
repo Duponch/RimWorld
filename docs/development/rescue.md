@@ -1,5 +1,7 @@
 # Secours physiques et lits médicaux — V46
 
+V57 : le [ralentissement du sauveteur](stagger.md) recopie aussi les fenêtres de son trajet au patient porté. La validation croisée refuse une divergence même si les cellules restent identiques. Les impacts qui libèrent le patient sont réconciliés avant ce transfert.
+
 17 septembre 2026. [Recherche et limites](../research/care-preparation.md), [santé](health.md), [interruptions](interrupted-cargo.md), [ordres](player-orders.md), [validation](validation.md). Corpus : chapitre 15, SYS/TEST-094 et 096 ; chapitres 8/9 pour tâches, accès et réservations. La tranche V46 livre le secours ; [V47](tending.md) ajoute le traitement sans médicament et le repos volontaire. L’alimentation assistée au lit est ajoutée en [V48](feeding.md).
 
 ## Actions et propriété

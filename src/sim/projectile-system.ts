@@ -8,6 +8,7 @@ import type { ProjectileScene } from './projectile-rules.ts';
 import type { ProjectileRelations,WorldProjectile } from './projectile-state.ts';
 import type { WeaponQuality } from './equipment-rules.ts';
 import type { World } from './types.ts';
+import { applyBulletStagger } from './stagger.ts';
 
 /** Commit a producer's validated emission and its private PRNG together.
  * Internal boundary, not a player command or a replacement for aiming/cadence. */
@@ -43,6 +44,7 @@ export function advanceWorldProjectiles(world:World,beforeCore?:(core:number)=>v
     p.arrival={...a,effect:a.kind==='exit'?'exit':pawn?'pawn':a.targetKey?'unsupported-object':'ground'};
     if(pawn) {
       damageUnarmoredPawnWithBullet(world,pawn,{damage:revolverProfile(p.quality).damage});
+      applyBulletStagger(world,pawn,core,revolverProfile(p.quality).stoppingPower);
       // A fall can change posture, release a carried patient and drop objects.
       // Do not reuse a capture across the medical reconciliation.
       targets=undefined;scenes.clear();afterImpact?.();

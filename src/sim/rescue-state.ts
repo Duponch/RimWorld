@@ -10,7 +10,7 @@ export function syncPatient(world:World,carrier:Pawn):void {
   if(carrier.rescue?.phase!=='carry')return;
   const patient=world.pawns.find(p=>p.id===carrier.rescue!.patientId);if(!patient)return;
   patient.x=carrier.x;patient.z=carrier.z;
-  patient.motion=carrier.motion?{...carrier.motion,from:{...carrier.motion.from},to:{...carrier.motion.to}}:null;
+  patient.motion=carrier.motion?{...carrier.motion,from:{...carrier.motion.from},to:{...carrier.motion.to},...carrier.motion.stagger?{stagger:carrier.motion.stagger.map(s=>({...s}))}:{}}:null;
   patient.moveCooldown=carrier.moveCooldown;
 }
 /** Civil people can share the floor, including an emergency fall on furniture.

@@ -1,0 +1,10 @@
+{
+  "date": "2026-09-18T20:46:49.996Z",
+  "backend": "native WebGPU",
+  "frames": 6954,
+  "samples": 3537,
+  "maxSpeedError": 1.0805578654071724e-11,
+  "maxFacingError": 4.3711390063094775e-8,
+  "savedTick": 3019,
+  "errors": []
+}

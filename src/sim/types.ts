@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 56 as const;
+export const SCHEMA_VERSION = 57 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
@@ -64,6 +64,7 @@ export interface Job extends Cell {
 }
 export interface Pawn extends Cell {
   shooting?:import('./shooting-state.ts').ShootingState;
+  stagger?:import('./stagger.ts').StaggerState;
   draft?:import('./drafting-rules.ts').DraftState;
   equipmentTask?:import('./equipment-rules.ts').EquipmentTask;
   equipmentDropPending?:true;

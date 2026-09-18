@@ -1,6 +1,17 @@
-# Validation courante — V56
+# Validation courante — V57
 
-## Tir commandé et visible V56
+## Ralentissement après impact V57
+
+18 septembre 2026. [Contrat](stagger.md), [recherche fraîche](../research/stagger-reference.md), [preuves complètes et limites](../history/validation-stagger-v57.md). Le revolver ralentit l’adulte dès l’impact, même au milieu d’un pas ; renouvellement, expiration, portage d’un blessé et sauvegarde gardent la continuité. La montée/descente des meubles utilise aussi la distance originale, sans saut vertical. Adversaires et réactions restent à venir.
+
+**Simulation : 255 scénarios réussis sur la passe complète, puis les quatre du nouveau fichier réussis après correction d’une attente de diagnostic.** Neuf scénarios ciblés repassent après revue des hauteurs ; build réussi. La suite complète inclut le pilote civil de plusieurs jours. La longue partie UI de trois jours n’a pas été répétée : commandes civiles inchangées, parcours compagnons ciblés sur la nouvelle mécanique.
+
+**Vraie UI native :** déplacement tactique, tir suivi de soins, cible mobile à 1×/6× et rechargement pendant l’effet. Contrôle de distance indépendant et buffers communs ; aucun diagnostic navigateur. Les mesures de charge 250² à 3/30/100 personnes et la garde minage/abattage sont détaillées dans les preuves ; les pointes résiduelles ne sont pas masquées par les percentiles. Garde finale de minage/abattage : zéro attente/saut/occupation rocheuse/erreur, 44 changements de vitesse sous 24,8 ms. À cent acteurs mobiles, image p95 16,7 ms et p99 33,4 ms, mais maximum 120,8 ms : la fluidité sous forte charge reste à améliorer. Les anciennes mesures V56 ci-dessous sont historiques, pas une description de la validation courante.
+
+G0 en consolidation, G1/G2 partiels, G3 engagé ; G4/G5 ouverts. Prochaine étape selon [ROADMAP](../ROADMAP.md) : premier adversaire avec permissions/collisions hostiles et réaction civile. Estimation globale inchangée, environ 20 % (15–25 %).
+
+
+## Historique — tir commandé et visible V56
 
 18 septembre 2026. [Contrat](shooting.md), [recherche fraîche](../research/shooting-reference.md), [preuves détaillées, erreurs et limites](../history/validation-shooting-v56.md). Préparation/récupération, cible explicite, Tir/XP, projectile GPU et blessure médicale sont branchés dans un parcours joueur. Les ennemis et réactions ne sont pas livrés par cette étape.
 

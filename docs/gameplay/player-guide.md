@@ -6,7 +6,7 @@
 
 Le colon termine son pas en cours, vise, tire puis récupère avant de recommencer. Un déplacement ou **Arrêter l’ordre** interrompt la visée ; après une balle partie, la récupération reste obligatoire même en changeant d’ordre ou en démobilisant. Une cible devenue inaccessible, morte ou nouvellement à terre arrête la suite. La balle poursuit son trajet indépendamment du tireur ; couvert, précision, capacités et Tir déterminent le résultat. L’expérience vient du tir admissible, pas seulement d’un coup au but. La compétence est consultable dans Biographie · compétences.
 
-Après un accident, démobilisez les personnes concernées et utilisez Patient/Médecin, un lit médical et les soins déjà disponibles. Les ennemis, réactions automatiques, armures, mêlée et ralentissement du pouvoir d’arrêt restent absents. [Périmètre exact](../development/shooting.md).
+Après un accident, démobilisez les personnes concernées et utilisez Patient/Médecin, un lit médical et les soins déjà disponibles. Le revolver ralentit temporairement un adulte touché, même pendant un pas : la marche reprend ensuite sans saut. Un nouvel impact renouvelle la durée sans cumuler les pénalités. Santé affiche cet effet séparément des blessures. Les ennemis, réactions automatiques, armures et mêlée restent absents. [Périmètre exact](../development/shooting.md).
 
 
 ## Commander les déplacements

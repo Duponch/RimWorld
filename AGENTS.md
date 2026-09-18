@@ -50,7 +50,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 56 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 57 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)
@@ -300,3 +300,7 @@
 - V55 strictement validée avant Tir 8/sans passion/0 XP, sans ordre inventé. XP seulement à l’émission admissible, cible non à terre, taux non hostile 20 × durée Core du cycle ; les personnages actuels sont tous alliés. Ne pas appliquer le taux hostile sans appartenance explicite.
 - ProjectileLayer partage l’horloge de présentation ; buffers instanciés stables, préparés même vides, libérés à la croissance. Traces reçues avant application mais visibles seulement à leur date. Phases World/médical au tick local, trajectoire continue au sous-pas.
 - Ennemi/réactions, collision hostile, pouvoir d’arrêt, armures, mêlée, jauges graphiques et audio restent ouverts. Le pilote civil ne doit pas attaquer ses propres colons pour fabriquer une étape de combat ; parcours de tir allié contrôlé distinct jusqu’à une vraie menace.
+
+## Pouvoir d’arrêt V57
+- Lire docs/development/stagger.md et sa recherche. Ralentissement distinct des blessures et postures de tir : adulte naturel, 95 ticks Core, facteur 0,17 avec paiement minimal de l’arête/450 Core. Renouveler la durée sans addition ni facteur empilé.
+- Ne pas retimer le passé : fenêtres persistées sur l’arête, morceaux linéaires seulement en présentation. Lumière/anatomie/terrain restent la base capturée ; patient porté partage toutes les fenêtres. V56 strictement validée avant V57, sans impact inventé. Autres corps, factions/réactions et armures restent ouverts.

@@ -1,8 +1,10 @@
 # Documentation de Lisière
 
+V57 : [ralentissement des impacts](development/stagger.md), [sources et interprétation 3D](research/stagger-reference.md), [validation](history/validation-stagger-v57.md). Le trajet en cours ralentit sans saut puis retrouve sa vitesse ; sauvegarde et portage médical conservent la trajectoire. Premier adversaire toujours à venir.
+
 Bilan courant consolidé le 18 septembre : [jouable, partiel et absent](gameplay/implementation-status.md), [estimation globale et par domaine](ROADMAP.md#estimation-de-charge--18-septembre-2026). Les lots techniques ne comptent pas comme de nouvelles commandes jouables.
 
-V56 : [premier tir commandé et visible](development/shooting.md). Revolver équipé, cible explicite, préparation interruptible, récupération persistante, compétence Tir/XP, projectile GPU et conséquence anatomique. [Sources revérifiées](research/shooting-reference.md), [preuves et charge](development/validation.md). Les adversaires, réactions civiles, mêlée, armures et pouvoir d'arrêt restent à intégrer.
+V56 : [premier tir commandé et visible](development/shooting.md). Revolver équipé, cible explicite, préparation interruptible, récupération persistante, compétence Tir/XP, projectile GPU et conséquence anatomique. [Sources revérifiées](research/shooting-reference.md), [preuves et charge](development/validation.md). Le pouvoir d’arrêt est ajouté en V57 ; adversaires, réactions civiles, mêlée et armures restent à intégrer.
 
 Ce parcours branche les [vols V55](development/projectiles.md), [impacts V54](development/bullet-impact.md), [ligne/couvert](development/combat-queries.md), [captures du décor](development/combat-world.md) et [mobilisation V53](development/drafting.md). Le socle testé est désormais utilisé par une commande joueur ; aucun combat contre une menace ni raid n'est implicitement livré.
 

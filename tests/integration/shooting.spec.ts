@@ -1,3 +1,4 @@
+const proofVersion=process.env.VALIDATION_VERSION??'v57';
 import { expect,test } from '@playwright/test';
 import { writeFileSync } from 'node:fs';
 import { firingCamp } from '../scenarios/shooting';
@@ -34,7 +35,7 @@ test('native UI: explicit target, cancel, saved aim, visible GPU flight/pose and
       await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,aiming);await page.keyboard.press('Escape');
       await page.locator(`[data-pawn="${initial.pawns[0].id}"]`).click();
       await expect.poll(()=>page.evaluate(id=>(window as any).__shootFrames.at(-1).phases.find((p:any)=>p.id===id).pose,initial.pawns[0].id)).toBe(7);
-      if(speed===1)await page.screenshot({path:'artifacts/shooting-v56.png'});
+      if(speed===1)await page.screenshot({path:`artifacts/shooting-${proofVersion}.png`});
       const pipelines=await page.evaluate(()=>{(window as any).__shootFrames=[];return (window as any).__pipelines;});
       await page.locator(`[data-speed="${speed}"]`).click();
       await expect.poll(async()=>(await world(page)).pawns[1].health?.injuries.length??0,{timeout:10000}).toBeGreaterThan(0);
@@ -57,10 +58,10 @@ test('native UI: explicit target, cancel, saved aim, visible GPU flight/pose and
         await expect.poll(async()=>(await world(page)).pawns[1].health!.injuries.some(i=>i.tended!==undefined),{timeout:25000}).toBe(true);
         await page.locator('[data-speed="0"]').click();const cared=await world(page);expect(validateWorld(cared)).toEqual([]);expect(cared.pawns[2].skills.medicine.xp).toBeGreaterThan(0);
         await page.locator(`[data-pawn="${initial.pawns[1].id}"]`).click();await expect(page.locator('#health-inspection')).toContainText('qualité');
-        await page.screenshot({path:'artifacts/shooting-care-v56.png'});
+        await page.screenshot({path:`artifacts/shooting-care-${proofVersion}.png`});
         await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,cared);
       }
     }
-    expect(errors).toEqual([]);writeFileSync('artifacts/shooting-ui-v56.json',JSON.stringify({date:new Date().toISOString(),backend:'native WebGPU',reports,errors},null,2)+'\n');
+    expect(errors).toEqual([]);writeFileSync(`artifacts/shooting-ui-${proofVersion}.json`,JSON.stringify({date:new Date().toISOString(),backend:'native WebGPU',reports,errors},null,2)+'\n');
   } finally {await browser.close();}
 });

@@ -1,6 +1,8 @@
 # Choix et écarts de gameplay
 
-V56 : [premier tir](../development/shooting.md). Cadence fractionnaire Core conservée, arête physique terminée avant visée, ordre simultané stable par ID et commande de groupe atomique. Ciblage uniquement des personnages actuels, tous alliés ; aucun ennemi fictif. Pouvoir d’arrêt/réactions, jauges et audio explicitement différés. Le HUD/médical garde la résolution du tick local, le projectile son interpolation continue.
+V57 — [pouvoir d’arrêt](../development/stagger.md) : adopter durée, seuil adulte, renouvellement et paiement minimal Core ; adapter l’intégration au trajet 3D continu. La base anatomique/lumineuse reste capturée au départ, le ralentissement s’applique immédiatement au sous-pas d’impact. La fin de l’arête après incapacité reste notre choix V45 ; aucun ennemi ni réaction civile implicite. [Recherche](../research/stagger-reference.md).
+
+V56 : [premier tir](../development/shooting.md). Cadence fractionnaire Core conservée, arête physique terminée avant visée, ordre simultané stable par ID et commande de groupe atomique. Ciblage uniquement des personnages actuels, tous alliés ; aucun ennemi fictif. Pouvoir d’arrêt ajouté V57 ; réactions, jauges et audio restent différés. Le HUD/médical garde la résolution du tick local, le projectile son interpolation continue.
 
 V55 : [enveloppes de vol](../development/projectiles.md) ordonnées par sous-pas Core puis identifiant ; santé datée au tick local, contact Core conservé séparément. Relations capturées au départ en attendant les factions ; contact avec objet explicitement non résolu, sans destruction fictive. Les résultats terminés restent un tick pour la présentation/reprise. Ces adaptations ne valent pas commande de combat livrée. [Relecture de persistance](../research/projectiles-reference.md#relecture-pour-la-persistance-v55).
 

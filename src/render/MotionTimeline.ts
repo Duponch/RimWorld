@@ -1,5 +1,5 @@
 import type { PawnTrack } from '../bridge/motion-tracks';
-import type { TravelSegment } from '../sim/movement';
+import type { PresentationSegment as TravelSegment } from '../sim/travel-timing';
 
 export const MOTION_BUFFER_TICKS = 4;
 

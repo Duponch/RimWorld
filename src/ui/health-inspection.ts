@@ -8,7 +8,7 @@ import { MEDICAL_CARE,medicalCare,type MedicalCare } from '../sim/medicine-rules
 export function createHealthInspection(panel:HTMLElement,selected?:()=>Pawn|undefined,send?:(c:Command)=>void):void {
   const details=document.createElement('details');details.id='health-inspection';details.open=true;
   const summary=document.createElement('summary');summary.textContent='Santé';details.append(summary);
-  for(const name of ['status','capacities','injuries']) {const p=document.createElement('p');p.dataset.health=name;details.append(p);}
+  for(const name of ['status','capacities','stagger','injuries']) {const p=document.createElement('p');p.dataset.health=name;details.append(p);}
   if(selected&&send){
     const label=document.createElement('label'),input=document.createElement('select');input.id='medical-policy';
     for(const [value,name] of Object.entries(MEDICAL_CARE)){const o=document.createElement('option');o.value=value;o.textContent=name;input.append(o);}
@@ -25,6 +25,7 @@ export function createHealthInspection(panel:HTMLElement,selected?:()=>Pawn|unde
 export function updateHealthInspection(panel:HTMLElement,pawn:Pawn):void {
   const details=panel.querySelector('#health-inspection');if(!details)return;
   const health=pawn.health,c=pawnBody(pawn).capacities;
+  details.querySelector('[data-health="stagger"]')!.textContent=pawn.stagger?'Ralenti temporairement par un impact de balle.':'';
   const policy=details.querySelector<HTMLSelectElement>('#medical-policy');if(policy){policy.value=medicalCare(pawn);policy.disabled=pawn.state==='dead';}
   const self=details.querySelector<HTMLInputElement>('#self-tend-policy');if(self){self.checked=!!pawn.selfTend;self.disabled=pawn.state==='dead';}
   const hint=details.querySelector('[data-health="self-tend-hint"]');if(hint)hint.textContent=pawn.selfTend&&pawn.priorities.doctor===0?'Auto-soins autorisés, mais Médecin est désactivé dans Travail.':'';

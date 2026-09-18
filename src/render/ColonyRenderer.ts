@@ -378,7 +378,9 @@ export class ColonyRenderer {
     for(const [id,visual] of this.pawns.visuals) {
       const segment=this.hasTracks?this.timeline.segment(id):undefined;
       const alpha=segment?THREE.MathUtils.clamp((this.timeline.tick-segment.start)/(segment.end-segment.start),0,1):this.pawns.blend.value;
-      const position=new THREE.Vector3().lerpVectors(visual.from,visual.to,alpha);position.y=travelHeight(visual.from.y,visual.to.y,alpha);
+      const position=new THREE.Vector3().lerpVectors(visual.from,visual.to,alpha);
+      const distance=segment?THREE.MathUtils.lerp(segment.fromFraction??0,segment.toFraction??1,alpha):alpha;
+      position.y=travelHeight(visual.from.y,visual.to.y,distance);
       const center=position.clone().add(new THREE.Vector3(0,.75,0)).project(this.camera);
       if(center.z < -1||center.z>1||Math.abs(center.x)>1||Math.abs(center.y)>1)continue;
       const head=position.clone().add(new THREE.Vector3(0,1.75,0)).project(this.camera);
