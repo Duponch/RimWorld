@@ -1,6 +1,24 @@
-# Noyau d'émission et de vol — sous V54
+# Émission, vol et persistance — V55
 
-18 septembre 2026. [Recherche et décisions de référence](../research/projectiles-reference.md). **Hors boucle normale et rendu** : noyau de neuf scénarios, désormais relié aux cibles d'une capture World par cinq scénarios supplémentaires. Toujours aucune commande de tir. Le schéma reste 54 ; une copie JSON du noyau n'est pas une sauvegarde de projectiles dans le jeu.
+18 septembre 2026. [Recherche et décisions de référence](../research/projectiles-reference.md). V55 branche les projectiles dans `stepWorld`, la sauvegarde et les snapshots ; les fixtures enregistrent encore explicitement une émission déjà calculée. **Aucune commande de tir ni présentation de balle livrée.** Préparation/récupération, Tir/XP, adversaire et réactions civiles restent le prochain branchement. Le noyau V54 isolé est conservé comme oracle de règles.
+
+## Contrat World V55
+
+`World.projectiles` est une collection sparse ordonnée par identifiant global. Chaque enveloppe conserve qualité de l'arme au départ, origine/destination, identités, permissions, dates Core d'émission et d'avancement, compte du vol et relations explicites. L'arme et le lanceur peuvent disparaître sans annuler une balle déjà émise. `registerWorldProjectile` copie les entrées et valide avant d'engager identifiant et PRNG de l'émetteur ; ce service interne ne vérifie pas une visée/commande et ne la remplace pas.
+
+Après portes/environnement, avant actions civiles, `advanceWorldProjectiles` exécute dix sous-pas Core, dans l'ordre **sous-pas puis identifiant**. Terminer tous les pas d'une première balle avant la seconde donnerait un mauvais ordre d'impacts et de PRNG. Un résultat médical renouvelle immédiatement la scène mobile : décès, posture, patient lâché et objets déposés changent les candidats de la balle suivante. La santé garde son horloge locale entière ; la date Core du contact reste disponible séparément.
+
+Un contact avec un adulte déclenche le résolveur anatomique V54. Un contact avec un objet porte explicitement `unsupported-object` : l'objet reste intact, aucun dégât fictif ni conversion en ressource. Sol et sortie sont distincts. Une enveloppe terminée reste inerte pendant le tick local de son impact, pour les snapshots et la reprise, puis disparaît au tick suivant. Elle ne réapplique jamais sa blessure. L'observateur publie naissance, arrivée et retrait, sans publier chaque décrément de vol. Le futur rendu doit consommer cette chronologie avant de rendre une commande disponible.
+
+La liste d'amis et le facteur de tir ami sont capturés au départ, sans déduire que tout Pawn est allié. **Adaptation transitoire sans factions** : le futur fournisseur de relations devra préciser les changements diplomatiques en cours de vol. Pas de munition consommable ajoutée. Le service accepte uniquement le profil du revolver actuel ; autres vitesses/armes exigent un contrat de contenu.
+
+V54 est strictement validée, avec tout champ de projectile interdit, avant passage V55 sans émission inventée. Le validateur refuse doublons/ordre/identifiants réutilisés, relations invalides, horloges ou comptes incohérents, arrivées prématurées et enveloppes terminales périmées. Une cible historique n'a pas à exister encore. Le décodeur de snapshots traite les champs dynamiques comme un remplacement complet : l'absence d'une collection sparse supprime aussi la copie distante, sans modifier un ancien snapshot.
+
+## Capture au sein d'un lot médical
+
+Le premier banc intégré a exposé une recapture de plus de 12 000 plantes et de toute la carte après chaque blessure. `projectile-batch` conserve maintenant le décor fixe **uniquement pendant le traitement synchrone des projectiles du tick** ; il reconstruit acteurs, piles et paquets après chaque impact. Les consultations restent immuables, dans le même ordre que la capture complète. Le couvert des objets mobiles lit les volumes pleins de la capture fixe.
+
+Cette séparation repose sur une frontière vérifiable : la réconciliation médicale ne change ni terrain, ni plante, ni bâtiment/cadre ; les objets mobiles actuels ne sont jamais pleins. Un futur mobile plein déclenche une erreur explicite tant que le recouvrement mutuel n'est pas intégré. Les futurs dommages au décor devront invalider le décor fixe. Aucun cache ne passe au tick suivant, à une commande ou au rendu. Le scénario compare toutes les cellules à une capture complète avant/après posture, décès et dépôt, y compris tableaux réordonnés et anciennes vues conservées.
 
 ## Responsabilités
 
@@ -49,9 +67,25 @@ Le compte à rebours est entier en ticks Core, la durée géométrique reste flo
 
 Un tick local vaut dix pas Core selon le rapport des journées. `advanceBulletFlight` les parcourt tous et s'arrête au premier résultat ; vitesse ×3 du jeu ne permet pas de sauter des cellules. Les cellules visitées sont dédoublonnées seulement au sein d'un sous-pas diagonal/long ; une arrivée cardinale teste uniquement sa nouvelle case. Regrouper 1 ou 10 pas produit le même résultat si la scène n'a pas changé. Cela ne dispense pas la future boucle d'intercaler ses mutations et de résoudre les événements dans leur ordre.
 
-Les tests copient l'enveloppe par JSON puis continuent exactement avec le même état aléatoire. World ne contient pas encore cette enveloppe : migration stricte, phases préparation/récupération, identité persistante du projectile, défauts d'ancienne sauvegarde et observateur de présentation doivent être ajoutés ensemble. Le HUD et la géométrie resteront à la même date que les conséquences médicales ; aucun retrait à la réception réseau avant l'impact affiché.
+Les tests isolés copient l'enveloppe par JSON ; V55 ajoute la vraie sérialisation World, l'identité persistante, la migration et l'observateur décrits plus haut. Préparation/récupération et rendu restent absents. Le HUD et la géométrie devront rester à la même date que les conséquences médicales ; aucun retrait à la réception réseau avant l'impact affiché.
 
 ## Validation et mesure
+
+V55 : `projectile-system.test.ts` ajoute cinq scénarios profonds. Les sauvegardes utilisent réellement le sérialiseur World pendant le vol et après arrivée ; les clones continuent à l'identique jusqu'au retrait. Le scénario multi-projectile prouve qu'une balle de plus grand ID arrive avant une autre et que le décès change le contact suivant. Enregistrement invalide sans consommation d'ID/PRNG, relations copiées et mutations d'enveloppe sont contrôlés. Le défaut de suppression d'une collection optionnelle dans les deltas a été détecté par cette chaîne, puis corrigé dans `SnapshotDecoder`.
+
+`projectile-system-bench.ts` mesure des pas World sur cartes minières 250², avec 3/30/100 acteurs. Rafale : cinq chauffes, trente premiers ticks indépendants ; une émission proche injectée par acteur, génération/copie/enregistrement exclus. Parcours mixte et témoin : 240 ticks, vingt premiers exclus, rafale tous les soixante ticks ; blessures, décès, besoins et travaux conservés. Ni visée/commande, ni worker/rendu. Le retrait d'arbres reste nul sur cette courte fenêtre : il s'agit d'activité engagée, pas d'un bilan de colonie développé.
+
+Ryzen 5 3600, Windows 11 10.0.26200, Node 24.11.1. [Initiale](../../artifacts/projectile-system-baseline-v55.json) et [passe après partage du décor](../../artifacts/projectile-system-v55.json), mêmes nombres de contacts et bilans médicaux :
+
+| Acteurs | Rafale p95 avant → après | p99 rafale après | Mixte p95 avant → après | Mixte p99 avant → après | Maximum mixte après |
+|---|---:|---:|---:|---:|---:|
+| 3 | 19,192 → 20,832 ms | 23,297 ms | 2,244 → 2,485 ms | 12,165 → 10,562 ms | 26,417 ms |
+| 30 | 105,998 → 47,265 ms | 51,628 ms | 3,138 → 3,574 ms | 56,933 → 8,960 ms | 12,356 ms |
+| 100 | 284,789 → 65,738 ms | 85,904 ms | 7,106 → 15,865 ms | 200,176 → 27,811 ms | 35,179 ms |
+
+Le coût des grandes rafales diminue nettement, mais **le p95 mixte ne s'améliore pas** dans ces deux passes. Le témoin sans balle varie lui aussi (cent acteurs p95 21,449 → 28,217 ms). Les pointes du premier tick incluent le démarrage des décisions civiles et leurs caches ; les chiffres ne doivent pas être attribués entièrement aux balles. Pas de garantie de fluidité ; poursuivre la décomposition worker/scène et l'audit de combat réel lors de l'ajout du déclencheur. Cent contacts simultanés restent un scénario coûteux, conservé comme limite connue.
+
+### Preuves historiques V54
 
 `bullet-flight.test.ts` regroupe permissions sur les huit masques, probabilités distinctes, cible déplacée/supprimée/recouverte, posture, portes modifiées en cours de vol, bords, trajets rapides, arrêt/idempotence, erreur de données, 72 continuations dans tous les octants, ordre des tirages, dispersion/penchement/ancre et liaison de fixture au producteur Gunshot. L'état médical utilise le vrai sérialiseur ; l'enveloppe de vol reste explicitement propre au test. Pas d'attaque artificiellement présentée comme une commande joueur.
 

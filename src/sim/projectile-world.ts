@@ -6,6 +6,8 @@ import type { ProjectileScene,ProjectileTarget } from './projectile-rules.ts';
 export interface WorldProjectileTargets {
   readonly width:number;readonly height:number;readonly capturedAt:number;
   anchor(key:string):Cell|undefined;
+  /** Read-only covering volumes; used by a batch's fresh movable overlay. */
+  covers(cell:Cell,layer:number):boolean;
   /** Explicit relation snapshot for THIS launcher. Membership means both have
    * factions and are non-hostile; no inference from being in world.pawns. */
   scene(friendlyPawnIds:ReadonlySet<number>,friendlyFireFactor:number):ProjectileScene;
@@ -86,6 +88,11 @@ export function captureWorldProjectileTargets(world:World):WorldProjectileTarget
     values=candidates.length?Object.freeze(candidates):EMPTY;cellRecords.set(i,values);return values;
   };
   return Object.freeze({width,height,capturedAt,anchor:(key:string)=>lookup(key)?.cell,
+    covers(cell:Cell,layer:number):boolean {
+      if(!inBounds(cell))return false;const i=cellIndex(cell.x,cell.z);
+      if(rocks[i]&&SHOT_LAYER.building>=layer)return true;
+      for(let entry=heads[i];entry;entry=next[entry]){const s=links[entry];if(fills[s]>.99&&layers[s]>=layer)return true;}return false;
+    },
     scene(friendlyPawnIds:ReadonlySet<number>,friendlyFireFactor:number):ProjectileScene {
       if(!Number.isFinite(friendlyFireFactor)||friendlyFireFactor<0||friendlyFireFactor>1)throw new RangeError('Invalid friendly fire factor');
       const friendly=new Set(friendlyPawnIds),view=new Map<string,ProjectileTarget>(),cells=new Map<number,readonly ProjectileTarget[]>();

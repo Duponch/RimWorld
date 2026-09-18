@@ -1,6 +1,7 @@
 import { startTravel } from '../../src/sim/movement';
 import { expect,test } from '@playwright/test';
 import { writeFileSync } from 'node:fs';
+const proofVersion=process.env.VALIDATION_VERSION??'v53';
 import { equipmentCamp } from '../scenarios/equipment';
 import { addMaterial } from '../../src/sim/materials';
 import { serializeWorld,validateWorld } from '../../src/sim/serialization';
@@ -36,7 +37,7 @@ test('native tactical UI: R, group button, physical queued movement, saved trave
     await page.locator('[data-speed="1"]').click();await expect.poll(async()=>(await world(page)).pawns[0]!.x).toBeGreaterThan(5);await page.locator('[data-speed="0"]').click();
     const walking=await world(page);expect(validateWorld(walking)).toEqual([]);await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,walking);await page.keyboard.press('Escape');
     await page.locator('[data-speed="1"]').click();await expect.poll(async()=>{const w=await world(page);return w.pawns.every(p=>p.draft?.target&&p.x===p.draft.target.x&&p.z===p.draft.target.z&&!p.moveCooldown&&!p.draft.queue.length);},{timeout:20000}).toBe(true);await page.locator('[data-speed="0"]').click();
-    await perform(page,{reason:'Arrêter le groupe.',command:{type:'draft-stop',pawnIds:initial.pawns.map(p=>p.id)}},rotation);await page.screenshot({path:'artifacts/drafting-v53.png'});
+    await perform(page,{reason:'Arrêter le groupe.',command:{type:'draft-stop',pawnIds:initial.pawns.map(p=>p.id)}},rotation);await page.screenshot({path:`artifacts/drafting-${proofVersion}.png`});
     await perform(page,{reason:'Reprendre la vie civile.',command:{type:'draft',pawnIds:initial.pawns.map(p=>p.id),enabled:false}},rotation);expect(validateWorld(await world(page))).toEqual([]);
     const frames=await page.evaluate(()=>(window as any).__draftFrames as any[]);let samples=0,maxSpeedError=0,maxFacingError=0;
     const previous=new Map<number,any>();
@@ -47,6 +48,6 @@ test('native tactical UI: R, group button, physical queued movement, saved trave
       samples++;const actual=Math.hypot(f.x-a.x,f.z-a.z)/(f.clock-a.clock),expected=Math.hypot(f.dx,f.dz)/(f.end-f.start);maxSpeedError=Math.max(maxSpeedError,Math.abs(actual-expected));
     }
     expect(samples).toBeGreaterThan(100);expect(maxSpeedError).toBeLessThan(.001);expect(maxFacingError).toBeLessThan(.12);expect(errors).toEqual([]);
-    writeFileSync('artifacts/drafting-ui-v53.json',JSON.stringify({date:new Date().toISOString(),backend:'native WebGPU',frames:frames.length,samples,maxSpeedError,maxFacingError,savedTick:walking.tick,errors},null,2)+'\n');
+    writeFileSync(`artifacts/drafting-ui-${proofVersion}.json`,JSON.stringify({date:new Date().toISOString(),backend:'native WebGPU',frames:frames.length,samples,maxSpeedError,maxFacingError,savedTick:walking.tick,errors},null,2)+'\n');
   }finally{await browser.close();}
 });

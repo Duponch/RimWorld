@@ -1,6 +1,14 @@
-# Émission et vol du revolver — sous V54
+# Émission et vol du revolver — V54–V55
 
-18 septembre 2026. Chapitres 17–19 du corpus, **SYS/TEST-099..107, 111..112**, puis UI-009/010 pour l'intégration future. Adopter les branches et leurs probabilités distinctes ; adapter horloge, représentation et PRNG ; différer leur pilotage par les commandes et l'adversaire. [Contrat et état réel](../development/projectiles.md). Ce lot est un noyau isolé, pas un combat jouable.
+18 septembre 2026. Chapitres 17–19 du corpus, **SYS/TEST-099..107, 111..112**, puis UI-009/010 pour l'intégration future. Adopter les branches et leurs probabilités distinctes ; adapter horloge, représentation et PRNG ; différer leur pilotage par les commandes et l'adversaire. [Contrat et état réel](../development/projectiles.md). V55 ajoute l'avancement et la persistance World aux fixtures du noyau, sans combat jouable.
+
+## Relecture pour la persistance V55
+
+Nouvelle consultation du 18 septembre : [Projectile.ExposeData et TickInterval](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/Verse/Projectile.cs), récupéré à nouveau depuis la source brute. Origine/destination, compte restant, cible utilisée/intentionnelle, lanceur, arme, qualité et permissions sont conservés. Le chemin de tick vérifie sortie puis interception puis arrivée ; une arme perdue n'efface pas le projectile déjà lancé. V55 adopte ces responsabilités, avec enveloppe propre au moteur et dix sous-pas Core par tick local. L'ordre stable des identifiants et le maintien du résultat pendant un tick sont des adaptations de continuation/transport, pas une affirmation sur l'ordre global de Core.
+
+L'[annonce officielle 1.6.4850](https://ludeon.com/blog/2026/06/update-1-6-4850-released/) et la page générale [Combat](https://rimworldwiki.com/wiki/Combat) ont aussi été revérifiées : elles ne prouvent pas les détails de sérialisation du miroir. La version du binaire reste incertaine. Le wiki rappelle les tirs automatiques et le corps-à-corps au contact ; V55 ne livre aucun de ces comportements. Les pages Aiming Time/Weapons/Draft consultées pour la tranche suivante ne justifient pas de remplacer préparation/récupération par l'enregistrement immédiat utilisé dans les fixtures.
+
+Relations capturées au départ : choix temporaire explicite en l'absence de factions. Dommages aux objets, dépouilles, boucliers et arrêts de projectile restent ouverts. La séparation décor fixe/acteurs et objets mobiles concerne uniquement une transaction médicale synchrone ; elle ne modifie pas les règles d'interception et est confrontée à la capture complète.
 
 ## Sources et confiance
 

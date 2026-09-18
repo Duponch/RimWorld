@@ -153,6 +153,9 @@ export class SnapshotDecoder {
       }
       // Keep the checkpoint's property order for exact JSON/save comparisons.
       next = { ...previous, ...message.world, tiles, resources };
+      // DynamicWorld is a complete replacement, not a partial field patch.
+      // In particular an absent sparse collection means it was removed.
+      for(const key of Object.keys(previous) as (keyof World)[])if(key!=='tiles'&&key!=='resources'&&!Object.hasOwn(message.world,key))delete (next as Partial<World>)[key];
     }
     // Commit only after every patch is checked. A refusal preserves both state and revision.
     const replaced = message.epoch !== this.epoch;

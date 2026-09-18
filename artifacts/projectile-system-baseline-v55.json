@@ -1,0 +1,108 @@
+{
+  "date": "2026-09-18T18:06:29.317Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "os": "win32 10.0.26200",
+  "protocol": "Generated 250² mining/chopping camp, 3/30/100 actors. Burst: 5 warmup + 30 independent measured first ticks, one synthetic close aimed bullet per actor, cloning/registration excluded. Mixed and quiet controls: 240 sequential real stepWorld ticks, first 20 omitted; injected burst every 60 ticks, actual wounds/deaths/needs/work retained, not reset. Active flight/health/capture/simulation included; aim/commands/emission/worker/render excluded. One pass, no claim of playable combat or frame cost.",
+  "results": [
+    {
+      "pawns": 3,
+      "resources": 12120,
+      "burstTickMs": {
+        "count": 30,
+        "p50": 14.742799999999988,
+        "p95": 19.191900000000032,
+        "p99": 26.4221,
+        "max": 26.4221
+      },
+      "measuredBurstImpacts": 90,
+      "quietTickMs": {
+        "count": 220,
+        "p50": 0.04620000000022628,
+        "p95": 1.5855999999998858,
+        "p99": 2.0908999999996922,
+        "max": 14.80159999999978
+      },
+      "mixedTickMs": {
+        "count": 220,
+        "p50": 0.13510000000042055,
+        "p95": 2.243800000000192,
+        "p99": 12.164600000000064,
+        "max": 17.829400000000078
+      },
+      "injected": 12,
+      "completions": 12,
+      "mixedDead": 0,
+      "mixedDowned": 1,
+      "quietResourcesRemoved": 0,
+      "mixedResourcesRemoved": 0,
+      "mixedGroundPiles": 1
+    },
+    {
+      "pawns": 30,
+      "resources": 12147,
+      "burstTickMs": {
+        "count": 30,
+        "p50": 82.76000000000022,
+        "p95": 105.9975000000004,
+        "p99": 106.71849999999995,
+        "max": 106.71849999999995
+      },
+      "measuredBurstImpacts": 900,
+      "quietTickMs": {
+        "count": 220,
+        "p50": 0.35639999999875727,
+        "p95": 2.1013999999995576,
+        "p99": 18.22739999999976,
+        "max": 37.02480000000105
+      },
+      "mixedTickMs": {
+        "count": 220,
+        "p50": 1.9583000000002357,
+        "p95": 3.137799999998606,
+        "p99": 56.93289999999979,
+        "max": 92.05019999999968
+      },
+      "injected": 118,
+      "completions": 118,
+      "mixedDead": 4,
+      "mixedDowned": 9,
+      "quietResourcesRemoved": 0,
+      "mixedResourcesRemoved": 0,
+      "mixedGroundPiles": 4
+    },
+    {
+      "pawns": 100,
+      "resources": 12217,
+      "burstTickMs": {
+        "count": 30,
+        "p50": 210.5617000000002,
+        "p95": 284.7891000000018,
+        "p99": 307.9279999999999,
+        "max": 307.9279999999999
+      },
+      "measuredBurstImpacts": 3000,
+      "quietTickMs": {
+        "count": 220,
+        "p50": 2.853900000001886,
+        "p95": 21.448700000000827,
+        "p99": 24.865099999999074,
+        "max": 39.39899999999761
+      },
+      "mixedTickMs": {
+        "count": 220,
+        "p50": 4.32470000000103,
+        "p95": 7.1062999999994645,
+        "p99": 200.1762000000017,
+        "max": 242.0756999999976
+      },
+      "injected": 396,
+      "completions": 396,
+      "mixedDead": 7,
+      "mixedDowned": 42,
+      "quietResourcesRemoved": 0,
+      "mixedResourcesRemoved": 0,
+      "mixedGroundPiles": 10
+    }
+  ]
+}

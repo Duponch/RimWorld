@@ -68,7 +68,7 @@ function interceptBetween(f:BulletFlight,from:Cell,to:Cell,scene:ProjectileScene
  * up-to-date scene and commits its local PRNG with the returned flight/result.
  * Ten Core steps correspond to a local tick; NEVER skip crossed intermediate
  * Core steps at accelerated game speeds. Stop at first impact, idempotent after.
- * JSON continuation here is not integration with World save schema yet. */
+ * World persistence/clock live in projectile-system, not in this kernel. */
 export function advanceBulletFlight(input:BulletFlight,scene:ProjectileScene,random:ProjectileRandom,coreSteps=10):BulletAdvance {
   validateBulletFlight(input);
   if(!Number.isInteger(coreSteps)||coreSteps<0||coreSteps>1000||!Number.isSafeInteger(scene.width)||!Number.isSafeInteger(scene.height)||scene.width<=0||scene.height<=0||!Number.isFinite(scene.friendlyFireFactor)||scene.friendlyFireFactor<0||scene.friendlyFireFactor>1)throw new RangeError('Invalid bullet advance');

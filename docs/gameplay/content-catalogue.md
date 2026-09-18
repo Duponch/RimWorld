@@ -1,6 +1,6 @@
 # Catalogue de contenu : couverture connue
 
-Sous V54, [noyau du projectile de revolver](../development/projectiles.md) testé hors partie, maintenant avec cibles du contenu réel : ouvrages/cadres, plantes, massifs, objets au sol et adultes non portés. Aucun objet de munition, nouvelle arme ou recette ; le revolver obtenu au départ conserve ses seules interactions d'équipement. Dépouilles et dommages aux objets restent absents ; les branches et contacts préparés ne constituent pas un catalogue militaire livré. Le remplissage nul des paquets est conservé explicitement, sa confirmation Core récente restant ouverte.
+V55 branche le [projectile du revolver](../development/projectiles.md) dans World et la sauvegarde, avec émissions encore injectées par les fixtures. Aucun objet de munition, nouvelle arme ou recette ; le revolver obtenu au départ conserve ses seules interactions d'équipement. Dépouilles et dommages aux objets restent absents ; un contact avec le décor ne le détruit pas. Le remplissage nul des paquets est conservé explicitement, sa confirmation Core récente restant ouverte.
 
 V54 ajoute la famille médicale **Gunshot**, sans fusion, avec soins et cicatrices ; [contrat](../development/bullet-impact.md). Le producteur anatomique est testé, son déclenchement par une arme reste absent. Aucun objet, munition, protection ou nouvelle recette obtenable.
 

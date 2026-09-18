@@ -1,4 +1,5 @@
 import { validDraftShape,validateDrafting } from './drafting-save.ts';
+import { validateProjectiles } from './projectile-save.ts';
 import { validEquipmentShape,validWeaponShape,validateEquipment } from './equipment-save.ts';
 import { validFeedShape,validateFeeding } from './feeding-save.ts';
 import { validTendShape,validateCare } from './care-save.ts';
@@ -66,7 +67,7 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validateWorld(input: unknown): string[] {
   return validateSchema(input, SCHEMA_VERSION);
 }
-function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54): string[] {
+function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(input)) return ['World must be an object.'];
@@ -226,6 +227,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
   if(version>=47)errors.push(...validateCare(world));
   if(version>=52)errors.push(...validateEquipment(world));
   if(version>=53)errors.push(...validateDrafting(world));
+  errors.push(...validateProjectiles(world,version,ids));
   errors.push(...validateFurniture(world,version,ids));
   if(!errors.length)errors.push(...validatePower(world,version));
   if(errors.length)return errors;
@@ -509,6 +511,7 @@ export function deserializeWorld(serialized: string): World {
   if(record(input)&&input.schemaVersion===51){const errors=validateSchema(input,51);if(errors.length)throw new Error('Invalid version 51 save: '+errors.join(' '));input.schemaVersion=52;}
   if(record(input)&&input.schemaVersion===52){const errors=validateSchema(input,52);if(errors.length)throw new Error('Invalid version 52 save: '+errors.join(' '));input.schemaVersion=53;}
   if(record(input)&&input.schemaVersion===53){const errors=validateSchema(input,53);if(errors.length)throw new Error('Invalid version 53 save: '+errors.join(' '));input.schemaVersion=54;}
+  if(record(input)&&input.schemaVersion===54){const errors=validateSchema(input,54);if(errors.length)throw new Error('Invalid version 54 save: '+errors.join(' '));input.schemaVersion=55;}
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`); return input as World;
 }
 /** Deterministic diagnostic fingerprint, not a cryptographic digest. */

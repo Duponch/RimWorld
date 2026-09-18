@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 54 as const;
+export const SCHEMA_VERSION = 55 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
@@ -113,6 +113,7 @@ export interface Pawn extends Cell {
 }
 export interface WorldEvent { tick: number; type: 'job' | 'need' | 'command'; message: string }
 export interface World {
+  projectiles?:import('./projectile-state.ts').WorldProjectile[];
   roofing?: import('./roof-rules.ts').RoofingState;
   thermal?: import('./temperature.ts').ThermalState;
   packed: import('./furniture-rules.ts').PackedFurniture[];

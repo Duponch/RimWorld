@@ -1,4 +1,16 @@
-# Validation courante — V54
+# Validation courante — V55
+
+## Vols persistants et ordre des impacts V55
+
+18 septembre 2026. [Contrat](projectiles.md), [relecture des sources](../research/projectiles-reference.md). Cinq scénarios intégrés ajoutés : sauvegarde réelle à chaque phase, cible mobile, impact unique, ordre des sous-pas entre balles, mort avant contact suivant, scènes renouvelées, sorties/disparition, enveloppes invalides et comparaison de la capture optimisée avec la capture complète. La première passe a révélé que le décodeur gardait une collection optionnelle supprimée du World. Le correctif supprime les champs dynamiques absents et préserve les snapshots précédents ; les attentes du scénario n'ont pas été affaiblies.
+
+**40/40 scénarios passent en 290,88 s**, dont le pilote civil de cinq à huit jours sur trois cartes, déplacements tactiques, noyau de vol, anatomie et bridge. TypeScript passe. Après renforcement des bornes de position, **7/7 scénarios ciblés** repassent en 5,11 s et le build passe (avertissement existant de taille de chunk). Le pilote ne déclenche aucun tir artificiel : les commandes du joueur restent inchangées. La longue UI de colonie et la garde graphique complète ne sont pas annoncées comme rejouées pour ce service sans déclencheur joueur.
+
+Régression **Chromium natif WebGPU : 2/2 parcours** passent en 1,2 minute : mobilisation/déplacement/file/arrêt/reprise (43,5 s), accident de toiture/posture/cargaison puis soins Gunshot et sauvegarde (19,6 s). Zéro erreur navigateur et FPS visible. [Rapport tactique](../../artifacts/drafting-ui-v55.json), [rapport médical](../../artifacts/health-ui-v55.json), [capture tactique](../../artifacts/drafting-v55.png) et [clinique](../../artifacts/bullet-care-v55.png). Ces parcours valident les boucles existantes sous le nouveau schéma, pas un rendu de projectile inexistant. `VALIDATION_VERSION=v55` conserve les preuves historiques V53/V54.
+
+Audit intégré 250² à 3/30/100 acteurs, émissions injectées dans minage/coupe/besoins. La recapture complète du décor après chaque impact faisait monter le p95 du premier tick de cent contacts à **284,789 ms**. Le décor est maintenant partagé pendant la transaction médicale, avec une nouvelle capture mobile après chaque impact : **65,738 ms** au p95, **85,904 ms** au maximum. Le p99 de la séquence mixte cent acteurs passe **200,176 → 27,811 ms**, mais son p95 monte **7,106 → 15,865 ms** ; le témoin sans balle varie aussi. Ce sont des passes successives CPU, sans worker/rendu, avec des pointes résiduelles. Bilans médicaux/contact identiques, aucune promesse de fluidité. [Données initiales](../../artifacts/projectile-system-baseline-v55.json), [finales](../../artifacts/projectile-system-v55.json), [protocole complet](projectiles.md#validation-et-mesure).
+
+## Preuves antérieures V54
 
 18 septembre 2026. [Impact anatomique Bullet](bullet-impact.md), [règles et limites vérifiées](../research/bullet-impact-reference.md). Le producteur médical est validé ; tirs dirigés et adversaires ne sont pas livrés. Les preuves de mobilisation V53 ci-dessous restent datées et ne sont pas annoncées comme rejouées intégralement.
 

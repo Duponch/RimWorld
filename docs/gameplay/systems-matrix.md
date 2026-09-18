@@ -1,5 +1,7 @@
 # Matrice des systèmes et critères de réalisation
 
+V55 : sous-partie SYS/TEST-099..107, 111..112 persistée dans World, impacts et sauvegardes testés par fixtures. Commandes/XP, phases du tireur, affichage, factions/adversaire et UI-009/010 restent ouverts. Aucun domaine G3 déclaré complet ; [état exact](implementation-status.md).
+
 V53 : [mobilisation/déplacements physiques](../development/drafting.md), SYS-035/UI-007/008/011 partiellement intégrés à G0/G3. Tirs, hostiles et formations restent absents ; propriétés/requêtes de couvert préparées sous V54 sans boucle de combat ; G0–G2 partiels, G3 fondations, G4/G5 non livrés. Calendrier exclusif dans ROADMAP.
 
 V52 prolonge les domaines objets/personnages par une première principale physique : revolver, transfert d’identité, dépôt/incapacité et attache GPU. Équipement reste partiel ; combat et inventaire ne sont pas livrés. [État détaillé](implementation-status.md), [contrat](../development/equipment.md). ROADMAP conserve l’ordre canonique G0–G5.

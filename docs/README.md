@@ -1,6 +1,6 @@
 # Documentation de Lisière
 
-Sous V54, [émission et vol du revolver](development/projectiles.md) : branches cible/couvert/raté, interception et continuation déterministe testées, désormais avec capture des cibles réelles du World et relations explicites. Secours et déplacement tactique traversent les nouveaux scénarios ; [règles recontrôlées](research/projectiles-reference.md). Aucun projectile encore piloté par la partie, sauvegardé dans World ou affiché. Le prochain lot reste l'intégration du tir dirigé et de l'adversaire.
+V55, [projectiles persistants](development/projectiles.md) : avancement dans `stepWorld`, impacts anatomiques ordonnés, sauvegarde stricte et snapshots. Les émissions restent injectées par les fixtures : aucun bouton de tir ni projectile affiché. Le prochain lot reste préparation/récupération, Tir/XP, commande visible puis adversaire. [Règles recontrôlées](research/projectiles-reference.md), [preuves et audit mixte](development/validation.md).
 
 V54 : [producteur d'impact anatomique et Gunshot](development/bullet-impact.md), [règles revérifiées](research/bullet-impact-reference.md). Localisation, préservation extérieure, propagation et intégration aux soins/sauvegardes testées. **Pas encore de tir jouable** : le déclencheur, le vol et l'adversaire restent à intégrer. La [capture tactique du décor](development/combat-world.md) prépare maintenant les propriétés réelles de ligne/couvert ; [sources et adaptations](research/combat-world-reference.md), coût mesuré et réduit sans appel par frame.
 
