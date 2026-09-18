@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+Sous V54, [noyau du projectile de revolver](../development/projectiles.md) testé hors partie. Aucun objet de munition, nouvelle arme ou recette ; le revolver obtenu au départ conserve ses seules interactions d'équipement. Les branches et contacts préparés ne constituent pas un catalogue militaire livré.
+
 V54 ajoute la famille médicale **Gunshot**, sans fusion, avec soins et cicatrices ; [contrat](../development/bullet-impact.md). Le producteur anatomique est testé, son déclenchement par une arme reste absent. Aucun objet, munition, protection ou nouvelle recette obtenable.
 
 Le socle isolé de tir sous V53 n'ajoute aucun objet obtenable. Les [sept profils de combat du revolver](../research/ranged-statistics-reference.md) sont définis et testés mais **non utilisés par la partie** ; portée, précision, cadence et dégâts ne sont pas encore jouables. Les [propriétés tactiques du contenu présent](../research/combat-world-reference.md) sont désormais définies et testées sous V54 : meubles, portes, plantes, massifs, fragments et cadres. Aucun nouvel objet obtenu ; les petits cailloux décoratifs restent sans couvert, distincts des fragments à 50 %.

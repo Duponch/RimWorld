@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+Sous V54, [noyau de projectile](projectiles.md) : `bullet-emission` choisit la branche, `projectile-rules` résout les permissions/probabilités, `bullet-flight` avance les sous-pas sur une scène possédée par l'appelant. PRNG explicite, entrées copiées, arrivée unique, aucun World/DOM/rendu. L'adaptateur de tous les candidats et l'engagement World restent à écrire ; la capture du meilleur couvert ne peut pas les remplacer. Le schéma 54 n'est pas modifié par les enveloppes de tests.
+
 V54 : [impacts anatomiques](bullet-impact.md) séparés en résolution sur copie (`bullet-impact`) et engagement World (`bullet-damage`). PRNG engagé avec le dossier, couches du même impact avant réconciliation de l'incapacité. Gunshot versionné, V53 validée avant migration. Le producteur sans armure ne remplace pas le futur résolveur de protections ni les phases de tir.
 
 Sous V53, [socle de tir isolé](combat-queries.md) : grille en lecture seule dans `combat-space`, couvert/rapport dans `combat-report`, profils immuables et unités dans `ranged-statistics`. Pas de mutation ni PRNG caché. La capture World sous V54 utilise des colonnes numériques et des rapports créés à la demande ; [contrat et durée de vie](combat-world.md). Aucun appel par frame ; la boucle de tir reste à intégrer. Visibilité et occupation/navigation restent distinctes, calcul de précision et compétence persistée aussi.

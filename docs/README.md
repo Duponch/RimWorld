@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+Sous V54, [émission et vol isolés du revolver](development/projectiles.md) : branches cible/couvert/raté, interception, arrivée et continuation déterministe testées ; [règles recontrôlées](research/projectiles-reference.md). Aucun projectile encore dans World, dans les sauvegardes de partie ou à l'écran. Le prochain lot reste l'intégration du tir dirigé et de l'adversaire.
+
 V54 : [producteur d'impact anatomique et Gunshot](development/bullet-impact.md), [règles revérifiées](research/bullet-impact-reference.md). Localisation, préservation extérieure, propagation et intégration aux soins/sauvegardes testées. **Pas encore de tir jouable** : le déclencheur, le vol et l'adversaire restent à intégrer. La [capture tactique du décor](development/combat-world.md) prépare maintenant les propriétés réelles de ligne/couvert ; [sources et adaptations](research/combat-world-reference.md), coût mesuré et réduit sans appel par frame.
 
 V53 : [mobilisation et déplacements physiques](development/drafting.md), [règles et adaptations vérifiées](research/drafting-reference.md). Bouton/R, groupes, clic droit/Maj, arrêt, besoins et conservation lors des interruptions. Tirs et adversaires restent le prochain lot humain.

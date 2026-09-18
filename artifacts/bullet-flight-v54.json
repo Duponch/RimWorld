@@ -1,0 +1,57 @@
+{
+  "date": "2026-09-18T17:16:33.915Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "os": "win32 10.0.26200",
+  "protocol": "Isolated projectile kernel and explicit indexed scene fixture 250², not World combat. 3/30/100 flight plans (25 cells), directed/wild/cover permission profiles, open/closed doors, chunks and standing/lying/friendly candidates. 50 warmup + 300 measured batches per count; each batch CREATES AND COMPLETES every flight in ten-Core-step slices with PRNG reset to 9173. Includes flight allocation, geometry, queries, probability, shuffle and termination. Scene creation excluded; no launch aim/warmup, damage, World stepping, worker or rendering. One pass; full-flight batch is not a frame cost.",
+  "results": [
+    {
+      "flightsPerBatch": 3,
+      "completeFlights": 900,
+      "hits": 600,
+      "ground": 300,
+      "checksum": 34200,
+      "draws": 900,
+      "cellQueries": 13800,
+      "fullFlightBatchMs": {
+        "count": 300,
+        "p50": 0.032199999999988904,
+        "p95": 0.11859999999995807,
+        "p99": 0.41689999999999827,
+        "max": 0.8122000000000185
+      }
+    },
+    {
+      "flightsPerBatch": 30,
+      "completeFlights": 9000,
+      "hits": 6900,
+      "ground": 2100,
+      "checksum": 324600,
+      "draws": 9600,
+      "cellQueries": 128100,
+      "fullFlightBatchMs": {
+        "count": 300,
+        "p50": 0.1502999999999588,
+        "p95": 0.607599999999934,
+        "p99": 0.8238000000000056,
+        "max": 1.6066000000000713
+      }
+    },
+    {
+      "flightsPerBatch": 100,
+      "completeFlights": 30000,
+      "hits": 27900,
+      "ground": 2100,
+      "checksum": 1083300,
+      "draws": 48600,
+      "cellQueries": 428100,
+      "fullFlightBatchMs": {
+        "count": 300,
+        "p50": 0.5647999999999911,
+        "p95": 1.3412000000000717,
+        "p99": 1.8975000000000364,
+        "max": 2.592399999999998
+      }
+    }
+  ]
+}

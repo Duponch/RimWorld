@@ -1,6 +1,8 @@
 # Adoption du référentiel utilisateur
 
-Décor sous V54 — chapitres 5/10/18/19, SYS/TEST-061/102/103/106/119 : [remplissages et visibilité revérifiés](combat-world-reference.md), [capture World](../development/combat-world.md). Adopter les valeurs, le plus grand remplissage et l'état logique des portes ; adapter égalités par identifiant et cailloux décoratifs sans couvert ; différer l'interception exhaustive et les dégâts au décor. Pas de tir joueur ni de SYS clos.
+Projectile sous V54 — chapitres 17–19, SYS/TEST-099..107/111..112 : [branches et contacts revérifiés](projectiles-reference.md), [noyau isolé](../development/projectiles.md). Adopter cible/couvert/raté, identité de cible mobile et branches distinctes d'interception ; adapter sous-pas Core, PRNG et masque de bits ; différer scène World exhaustive, phases sauvegardées, UI-009/010 et adversaire. Neuf scénarios locaux ne ferment pas les SYS/TEST de combat.
+
+Décor sous V54 — chapitres 5/10/18/19, SYS/TEST-061/102/103/106/119 : [remplissages et visibilité revérifiés](combat-world-reference.md), [capture World](../development/combat-world.md). Adopter les valeurs, le plus grand remplissage et l'état logique des portes ; adapter égalités par identifiant et cailloux décoratifs sans couvert ; différer l'adaptateur exhaustif d'interception et les dégâts au décor. Pas de tir joueur ni de SYS clos.
 
 V54 — chapitres 15/19/20, SYS/TEST-089..091/105/111..112 : [impact Bullet revérifié](bullet-impact-reference.md), [producteur et migration](../development/bullet-impact.md). Adopter pondération anatomique, préservation extérieure, propagation et Gunshot ; adapter transaction au tick et PRNG local ; différer armures, difficulté personnalisée, déclencheur/vol et réactions. Scènes médicales et UI ne valident pas encore une attaque joueur.
 

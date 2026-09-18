@@ -1,5 +1,7 @@
 # Choix et écarts de gameplay
 
+Sous V54, [émission et vol isolés](../development/projectiles.md) : masques locaux à trois bits, PRNG et mélange stables propres au projet, rejet borné des directions invalides. Aucun résultat Core identique à graine égale promis. La cible utilisée peut être touchée après déplacement selon le chemin de référence ; ne pas la remplacer par une collision physique de mesh 3D. Les protections des tirs amis diffèrent selon les branches et ne deviennent pas une immunité universelle. [Sources et limites](../research/projectiles-reference.md).
+
 Sous V54, [capture tactique du décor](../development/combat-world.md) : les égalités de remplissage utilisent l'identifiant persistant plutôt qu'un ordre d'apparition non sauvegardé. Les petits cailloux décoratifs restent sans couvert, distincts des fragments transportables à 50 % ; conversion future à traiter explicitement. Le remplissage tactique ne se déduit pas de la hauteur d'un mesh. Ces propriétés préparent le combat, sans tir jouable.
 
 V53 : [mobilisation](../development/drafting.md) adaptée à la 3D par conservation des arêtes engagées, conservation de cargaison indéposable et sortie physique du mobilier. Repli par proximité sans couvert, pas de formation par glisser ; commandes civiles demandent démobilisation. Ces limites ne constituent pas la cible finale de fidélité. [Sources/version/incertitudes](../research/drafting-reference.md).
