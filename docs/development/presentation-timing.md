@@ -1,5 +1,7 @@
 # Synchronisation de la scène et des colons
 
+V56 : [tirs](shooting.md), phases de tireur observées par valeur et traces de balles reçues avant présentation. Un vol apparu/terminé entre deux ticks reste visible à son instant confirmé, via le même curseur que corps/arme/scène. Les conséquences World/HUD sont publiées au tick local contenant l'événement ; la trajectoire garde ses fractions Core. Aucun second RAF ni animation CPU de balle.
+
 Correctif sous V38, 15 septembre 2026. [Mouvement et sol](spatial-motion-storage.md), [recherche récente](../research/presentation-timing-reference.md), [mesures](validation.md). Aucun changement de règle, de durée de travail, de navigation ou de sauvegarde.
 
 ## Défaut reproduit

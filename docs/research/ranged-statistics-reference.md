@@ -1,6 +1,6 @@
 # Statistiques du premier tir — vérification sous V53
 
-18 septembre 2026. Chapitres 13/17–20 du corpus, SYS/TEST-085/099..101/105/111..112 : **adopter** les statistiques distinctes du tireur, de l'arme et du projectile ; **adapter** les unités à notre journée existante ; **différer** apprentissage actif, phases, impacts et équipement de protection. Le module `ranged-statistics.ts` est isolé : aucune compétence Tir persistée, aucun projectile ni dommage en partie. [Contrat et preuves](../development/combat-queries.md).
+18 septembre 2026. Chapitres 13/17–20, SYS/TEST-085/099..101/105/111..112 : adopter statistiques distinctes ; adapter la journée Core. Initialement isolé sous V53, ce module est consommé par le [tir commandé V56](../development/shooting.md), avec compétence/XP persistées. Protections et effets manquants restent différés ; nombres et incertitudes ci-dessous restent applicables.
 
 ## Sources et décisions
 

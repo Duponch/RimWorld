@@ -1,3 +1,4 @@
+import { withoutShootingSkills,withMigratedShootingSkills } from './scenarios/legacy-skills';
 import { SCHEMA_VERSION } from '../src/sim/types';
 import { expect,test } from 'vitest';
 import { urgentSelfCamp,urgentBedCamp } from './scenarios/urgent-care';
@@ -67,7 +68,7 @@ test('urgent other-patient care respects claims/access while current work and di
 });
 
 test('urgent state migrates strictly, survives snapshots, and stops on policy/incapacity without premature results',()=>{
-  const old=urgentSelfCamp();old.schemaVersion=49 as World['schemaVersion'];const copy=deserializeWorld(JSON.stringify(old));expect(copy).toEqual({...old,schemaVersion:SCHEMA_VERSION});
+  const old=urgentSelfCamp();old.schemaVersion=49 as World['schemaVersion'];withoutShootingSkills(old);const copy=deserializeWorld(JSON.stringify(old));expect(copy).toEqual(withMigratedShootingSkills({...old,schemaVersion:SCHEMA_VERSION}));
   const w=urgentSelfCamp(),p=w.pawns[0]!;until(w,()=>p.tend?.phase==='tend');replay(w);
   for(const mutate of [(v:World)=>v.schemaVersion=49 as World['schemaVersion'],(v:World)=>(v.pawns[0]!.tend as any).urgent=false]){const bad=structuredClone(w);mutate(bad);expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();}
   const enc=new SnapshotEncoder(),dec=new SnapshotDecoder();const adopted=dec.adopt(structuredClone(enc.encode(w,0,6)));expect(adopted.status).toBe('applied');if(adopted.status==='applied')expect(adopted.world).toEqual(w);

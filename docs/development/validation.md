@@ -1,4 +1,22 @@
-# Validation courante — V55
+# Validation courante — V56
+
+## Tir commandé et visible V56
+
+18 septembre 2026. [Contrat](shooting.md), [recherche fraîche](../research/shooting-reference.md), [preuves détaillées, erreurs et limites](../history/validation-shooting-v56.md). Préparation/récupération, cible explicite, Tir/XP, projectile GPU et blessure médicale sont branchés dans un parcours joueur. Les ennemis et réactions ne sont pas livrés par cette étape.
+
+**252/252 scénarios de simulation passent en 200,59 s**, puis **15/15 ciblés** après la garde de franchissement. Le build final passe, avec l’avertissement existant de taille du chunk graphique. Migration V55 strictement validée ; anciennes fixtures corrigées sans accepter les nouveaux champs dans les anciens schémas.
+
+**Trois parcours natifs passent en 9,4 minutes** : colonie réelle de trois jours (7,7 min), déplacements tactiques (1,1 min), tir puis soins (23,3 s). La partie exécute 159 décisions UI, 20 repas cuisinés, 18 repas observés et trois dormeurs ; bois conservé, nourriture réconciliée et aucune erreur. [Bilan compact](../../artifacts/colony-journey-v56.json), [poses/déplacements](../../artifacts/drafting-ui-v56.json). La durée de cette partie vient principalement de ses trois jours à vitesse maximale réelle, pas d'une répétition de toutes les suites.
+
+Après la garde de transit : **2/2 parcours ciblés repassent en 1,5 minute**, tir/soins à 1×/6× et charge 3/30/100. Le dernier relevé observe 84/20 frames contenant un projectile aux deux vitesses, l'arme orientée et les soins du blessé réel ; pas d’émission médicale injectée pour cette chaîne. [Rapport](../../artifacts/shooting-ui-v56.json), [visée](../../artifacts/shooting-v56.png), [prise en charge](../../artifacts/shooting-care-v56.png).
+
+**Audit 250² natif, cent acteurs à 6× : image p95 58,7 ms, p99 87,6 ms, maximum 195,6 ms.** Zéro compilation de pipeline pendant le parcours, buffer de balles réellement passé de 32 à 256, maximum 171 appels de dessin. Les pointes résiduelles empêchent toute promesse de fluidité parfaite ; snapshots/scène restent la cible du prochain profilage. [Mesures 3/30/100 et matériel](../../artifacts/shooting-native-v56.json), [simulation et encodage séparés](../../artifacts/shooting-cpu-v56.json). Ne pas confondre zéro pipeline nouveau avec zéro ralentissement.
+
+
+**Contrôle de fluidité non validé dans cette session.** Le premier passage minage détecte une attente de 12,4 ms ; le passage instrumenté en détecte deux. Aucun saut ni pénétration dans une roche, commandes de vitesse sous 42 ms au premier passage. La trace contient des pointes de simulation et d’encodage. Une observation système ultérieure constate une autre application 3D fortement active (25,39 secondes de CPU sur une fenêtre de 5 secondes) ; la charge GPU concurrente n’est pas quantifiée. Ces données ne permettent donc pas d’attribuer les pointes au seul lot V56 ni d’annoncer une performance isolée. Aucun programme utilisateur arrêté, aucun seuil de test assoupli. Reprendre le contrôle sur machine disponible avant d’augmenter la densité du combat ; [détail et échecs conservés](../history/validation-shooting-v56.md#contrôle-de-fluidité-et-conditions-de-mesure).
+
+Dernière revue : **23/23 scénarios ciblés passent en 5,11 s** après correction de l’effondrement de fatigue pendant la récupération. Le dernier parcours UI tir/soins repasse en 18,4 s (20,9 s avec lancement), après revue du masque GPU : l’absence d’équipement doit masquer l’arme même pendant une posture de tir. Le sommeil forcé interrompt aussi la posture, sans supprimer la balle en vol ; préparation, récupération mobilisée/démobilisée et reprise exacte sont vérifiées.
+
 
 ## Bilan de retour en mode jour — 18 septembre
 

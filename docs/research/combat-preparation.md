@@ -1,5 +1,7 @@
 # Premier combat — préparation après V53
 
+Le branchement préparation/récupération, Tir/XP, commande et rendu est livré en [V56](../development/shooting.md), après [relecture détaillée](shooting-reference.md). Les points ci-dessous retracent sa préparation ; la prochaine tranche canonique est l’adversaire/réactions, pas une nouvelle préparation technique isolée.
+
 18 septembre 2026. **Recherche et décisions de préparation, pas gameplay livré.** Le [mode tactique V53](../development/drafting.md) est publié ; le tir et les adversaires restent absents. [ROADMAP](../ROADMAP.md) conserve le prochain lot et les jalons. Cette note évite de transformer les raccourcis du prototype en règles définitives.
 
 Incréments réalisés : [requêtes isolées de ligne, couvert et rapport](../development/combat-queries.md), puis [statistiques du revolver, capacités et unités](ranged-statistics-reference.md), [capture du décor World](../development/combat-world.md) et [noyau d'émission/vol](../development/projectiles.md), toujours sans ordre de tir. Relecture fraîche le 18 septembre des définitions datées et chemins de calcul. L'oracle valide notre géométrie centrale ; coins/bords restent une observation du miroir. La capture des cibles actuelles est ajoutée et testée avec les vrais secours/déplacements ; V55 persiste désormais les vols et leurs impacts dans World ; phases du tireur, compétence active, dégâts au décor/dépouilles et adversaire restent ouverts.

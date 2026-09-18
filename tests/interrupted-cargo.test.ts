@@ -83,7 +83,7 @@ test('interrupted production frees station and staged ingredients without finish
 
 test('schema 43 is checked before migration; passive ownership cannot hide illegal work, movement, duplicate objects or missing cargo',()=>{
   const initial=exhaustedCarrier(),legacy=JSON.parse(serializeWorld(initial));legacy.schemaVersion=43;withoutMedicalWork(legacy);
-  const expected={...initial,pawns:initial.pawns.map(p=>({...p,skills:{...p.skills,medicine:{level:8,xp:0,dailyXp:0,passion:0}},priorities:{...p.priorities,doctor:1,patient:1,bedrest:3}}))};
+  const expected={...initial,pawns:initial.pawns.map(p=>({...p,skills:{...p.skills,shooting:{level:8,xp:0,dailyXp:0,passion:0},medicine:{level:8,xp:0,dailyXp:0,passion:0}},priorities:{...p.priorities,doctor:1,patient:1,bedrest:3}}))};
   for(const p of expected.pawns)delete p.medicalCare;
   expect(deserializeWorld(JSON.stringify(legacy))).toEqual(expected);
   legacy.pawns[0].interruptedCargo=true;expect(()=>deserializeWorld(JSON.stringify(legacy))).toThrow(/version 43/);

@@ -1,0 +1,150 @@
+{
+  "date": "2026-09-18T19:30:54.300Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "os": "win32 10.0.26200",
+  "protocol": "250², 3/30/100 actors; one third shoots commanded friendly targets, one third remains mobilized, rest mines/chops/hauls. 240 ticks per case, first 20 excluded from mixed/quiet/encoding percentiles; active-combat includes initial ticks. Independent quiet twin without shot orders, alternating run order. Real health/cadence/XP/PRNG, retarget every 60 ticks, no healing reset. Worker/render excluded. Single pass, timings include JIT/GC and are not a frame guarantee.",
+  "results": [
+    {
+      "actors": 3,
+      "pairs": 1,
+      "accepted": 4,
+      "refused": 0,
+      "emissions": 20,
+      "impacts": 7,
+      "commandsMs": {
+        "count": 4,
+        "p50": 2.680399999999736,
+        "p95": 8.066500000000019,
+        "p99": 8.066500000000019,
+        "max": 8.066500000000019
+      },
+      "mixedTickMs": {
+        "count": 220,
+        "p50": 0.4899000000000342,
+        "p95": 7.019199999999955,
+        "p99": 9.166799999999967,
+        "max": 30.48889999999983
+      },
+      "quietTickMs": {
+        "count": 220,
+        "p50": 0.14819999999986067,
+        "p95": 1.8906999999999243,
+        "p99": 2.3038000000001375,
+        "max": 12.21329999999989
+      },
+      "activeCombatTickMs": {
+        "count": 215,
+        "p50": 0.9877000000001317,
+        "p95": 8.308700000000044,
+        "p99": 14.940599999999904,
+        "max": 30.48889999999983
+      },
+      "encodeMs": {
+        "count": 220,
+        "p50": 4.882400000000189,
+        "p95": 7.531199999999899,
+        "p99": 11.740099999999984,
+        "max": 12.129699999999957
+      },
+      "dead": 0,
+      "downed": 1,
+      "mixedResourcesRemoved": 0,
+      "quietResourcesRemoved": 0
+    },
+    {
+      "actors": 30,
+      "pairs": 10,
+      "accepted": 37,
+      "refused": 3,
+      "emissions": 169,
+      "impacts": 75,
+      "commandsMs": {
+        "count": 40,
+        "p50": 2.922899999999572,
+        "p95": 4.572400000000016,
+        "p99": 6.828899999999976,
+        "max": 6.828899999999976
+      },
+      "mixedTickMs": {
+        "count": 220,
+        "p50": 5.648499999999331,
+        "p95": 13.135099999999511,
+        "p99": 30.521999999999935,
+        "max": 56.424699999999575
+      },
+      "quietTickMs": {
+        "count": 220,
+        "p50": 0.6941999999999098,
+        "p95": 4.536799999999857,
+        "p99": 13.337800000000243,
+        "max": 46.46259999999984
+      },
+      "activeCombatTickMs": {
+        "count": 240,
+        "p50": 5.497299999999996,
+        "p95": 13.163800000000265,
+        "p99": 43.7217999999998,
+        "max": 56.424699999999575
+      },
+      "encodeMs": {
+        "count": 220,
+        "p50": 5.641500000000178,
+        "p95": 10.379699999999957,
+        "p99": 43.92500000000018,
+        "max": 55.95169999999962
+      },
+      "dead": 2,
+      "downed": 8,
+      "mixedResourcesRemoved": 0,
+      "quietResourcesRemoved": 0
+    },
+    {
+      "actors": 100,
+      "pairs": 33,
+      "accepted": 118,
+      "refused": 14,
+      "emissions": 516,
+      "impacts": 216,
+      "commandsMs": {
+        "count": 132,
+        "p50": 2.884100000000217,
+        "p95": 6.725899999999456,
+        "p99": 10.559000000001106,
+        "max": 10.861700000000383
+      },
+      "mixedTickMs": {
+        "count": 220,
+        "p50": 12.750500000000102,
+        "p95": 28.712000000001353,
+        "p99": 66.77610000000095,
+        "max": 110.15729999999894
+      },
+      "quietTickMs": {
+        "count": 220,
+        "p50": 4.368400000001202,
+        "p95": 10.750599999999395,
+        "p99": 57.85579999999936,
+        "max": 64.10360000000037
+      },
+      "activeCombatTickMs": {
+        "count": 240,
+        "p50": 12.586999999999534,
+        "p95": 31.870999999999185,
+        "p99": 66.77610000000095,
+        "max": 110.15729999999894
+      },
+      "encodeMs": {
+        "count": 220,
+        "p50": 6.574099999999817,
+        "p95": 12.49869999999828,
+        "p99": 16.226800000000367,
+        "max": 29.201900000000023
+      },
+      "dead": 18,
+      "downed": 15,
+      "mixedResourcesRemoved": 0,
+      "quietResourcesRemoved": 0
+    }
+  ]
+}

@@ -1,0 +1,155 @@
+{
+  "date": "2026-09-18T19:32:33.570Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "protocol": "Native WebGPU, real worker at 6× for 240 ticks, generated forest 250² with cleared shooting lanes; one third shoots, one third targets, remainder mines/chops/hauls. Actual shot commands accepted before fixture load; health, XP and all decisions evolve in worker. 90 warmup frames before measurement. Scene time is included in frame time; callback excludes IPC decoding. No claim of perfect frame pacing.",
+  "results": [
+    {
+      "actors": 3,
+      "pairs": 1,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1"
+      },
+      "framesMs": {
+        "count": 433,
+        "p50": 9.699999999998909,
+        "p95": 20.600000000000364,
+        "p99": 25.100000000000364,
+        "max": 137.60000000000036
+      },
+      "frameCpuMs": {
+        "count": 434,
+        "p50": 9.200000001117587,
+        "p95": 15.400000000372529,
+        "p99": 20.200000001117587,
+        "max": 24.90000000037253
+      },
+      "sceneMs": {
+        "count": 52,
+        "p50": 2.599999999627471,
+        "p95": 10.700000001117587,
+        "p99": 14.599999999627471,
+        "max": 14.599999999627471
+      },
+      "snapshotCallbackMs": {
+        "count": 190,
+        "p50": 0.09999999962747097,
+        "p95": 3.5,
+        "p99": 4.800000000745058,
+        "max": 5.300000000745058
+      },
+      "drawCalls": {
+        "count": 434,
+        "p50": 164,
+        "p95": 167,
+        "p99": 168,
+        "max": 168
+      },
+      "visibleFlightSamples": 23,
+      "capacity": 32,
+      "gunshotPatients": 1,
+      "pipelines": [],
+      "errors": []
+    },
+    {
+      "actors": 30,
+      "pairs": 10,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1"
+      },
+      "framesMs": {
+        "count": 350,
+        "p50": 12.5,
+        "p95": 29.100000000000364,
+        "p99": 38.69999999999891,
+        "max": 158.5
+      },
+      "frameCpuMs": {
+        "count": 351,
+        "p50": 10.200000001117587,
+        "p95": 16.700000001117587,
+        "p99": 27.40000000037253,
+        "max": 34.40000000037253
+      },
+      "sceneMs": {
+        "count": 65,
+        "p50": 3.400000000372529,
+        "p95": 9.200000001117587,
+        "p99": 20,
+        "max": 20
+      },
+      "snapshotCallbackMs": {
+        "count": 181,
+        "p50": 0.09999999962747097,
+        "p95": 6.699999999254942,
+        "p99": 10.900000000372529,
+        "max": 11
+      },
+      "drawCalls": {
+        "count": 351,
+        "p50": 167,
+        "p95": 170,
+        "p99": 171,
+        "max": 171
+      },
+      "visibleFlightSamples": 117,
+      "capacity": 64,
+      "gunshotPatients": 10,
+      "pipelines": [],
+      "errors": []
+    },
+    {
+      "actors": 100,
+      "pairs": 33,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1"
+      },
+      "framesMs": {
+        "count": 258,
+        "p50": 16.600000000000364,
+        "p95": 58.70000000000073,
+        "p99": 87.60000000000218,
+        "max": 195.59999999999854
+      },
+      "frameCpuMs": {
+        "count": 259,
+        "p50": 12.099999999627471,
+        "p95": 22,
+        "p99": 34.29999999888241,
+        "max": 39.90000000037253
+      },
+      "sceneMs": {
+        "count": 87,
+        "p50": 4.5,
+        "p95": 11.800000000745058,
+        "p99": 16.40000000037253,
+        "max": 16.40000000037253
+      },
+      "snapshotCallbackMs": {
+        "count": 173,
+        "p50": 0.09999999962747097,
+        "p95": 19.5,
+        "p99": 24.09999999962747,
+        "max": 24.59999999962747
+      },
+      "drawCalls": {
+        "count": 259,
+        "p50": 165,
+        "p95": 170,
+        "p99": 171,
+        "max": 171
+      },
+      "visibleFlightSamples": 383,
+      "capacity": 256,
+      "gunshotPatients": 33,
+      "pipelines": [],
+      "errors": []
+    }
+  ]
+}

@@ -1,10 +1,19 @@
 # Guide joueur
 
+## Commander un tir
+
+Équipez un colon du revolver, sélectionnez-le et **Mobiliser/R**, puis **Tirer sur une cible**. Cliquez le personnage visé sur la carte ; Échap ou clic droit annule le ciblage. Les personnages présents sont encore des alliés : cette commande peut réellement les blesser. Aucun ennemi n’est encore généré.
+
+Le colon termine son pas en cours, vise, tire puis récupère avant de recommencer. Un déplacement ou **Arrêter l’ordre** interrompt la visée ; après une balle partie, la récupération reste obligatoire même en changeant d’ordre ou en démobilisant. Une cible devenue inaccessible, morte ou nouvellement à terre arrête la suite. La balle poursuit son trajet indépendamment du tireur ; couvert, précision, capacités et Tir déterminent le résultat. L’expérience vient du tir admissible, pas seulement d’un coup au but. La compétence est consultable dans Biographie · compétences.
+
+Après un accident, démobilisez les personnes concernées et utilisez Patient/Médecin, un lit médical et les soins déjà disponibles. Les ennemis, réactions automatiques, armures, mêlée et ralentissement du pouvoir d’arrêt restent absents. [Périmètre exact](../development/shooting.md).
+
+
 ## Commander les déplacements
 
-Sélectionnez un ou plusieurs colons, puis **Mobiliser** ou **R**. Un clic droit au sol les déplace ; **Maj + clic droit** ajoute un déplacement à la file. Le bouton **Arrêter le déplacement** annule la destination et la file, sans téléportation. **Démobiliser/R** rend leur autonomie aux colons. R sans colon sélectionné conserve le raccourci Récolter.
+Sélectionnez un ou plusieurs colons, puis **Mobiliser** ou **R**. Un clic droit au sol les déplace ; **Maj + clic droit** ajoute un déplacement à la file. Le bouton **Arrêter l’ordre** annule la destination et la file, sans téléportation. **Démobiliser/R** rend leur autonomie aux colons. R sans colon sélectionné conserve le raccourci Récolter.
 
-Les mobilisés ne vont pas travailler, manger ou chercher un lit seuls. Leurs besoins et leur santé continuent : un épuisement peut les faire dormir au sol. Une longue attente sans menace les démobilise automatiquement. Les objets portés sont déposés ; si le sol est saturé, le colon conserve sa cargaison jusqu’à une place libre. Le revolver ne tire pas encore, même mobilisé, et les ennemis sont absents. Les vols peuvent maintenant être conservés dans les sauvegardes techniques V55, mais aucun contrôle joueur ne les émet encore : le combat reste à venir. Les valeurs de couvert du décor sont préparées, mais ne constituent pas encore une protection utilisable en combat. Pour équiper une arme ou donner un ordre civil de soin, démobilisez d’abord. [Contrat et limites](../development/drafting.md).
+Les mobilisés ne vont pas travailler, manger ou chercher un lit seuls. Leurs besoins et leur santé continuent : un épuisement peut les faire dormir au sol. Une longue attente sans menace les démobilise automatiquement. Les objets portés sont déposés ; si le sol est saturé, le colon conserve sa cargaison jusqu’à une place libre. Le tir dirigé du revolver est décrit ci-dessus ; adversaires et combat automatique restent absents.
 
 ## Équiper le revolver
 
@@ -12,7 +21,7 @@ Les nouvelles cartes possèdent un revolver près des réserves initiales. Séle
 
 Une chute hors lit, la perte de manipulation ou le décès fait tomber l'arme. Une chute dans un lit déjà utilisé la conserve. Si le sol est saturé, le colon garde l'arme désactivée jusqu'à un dépôt possible. Après rétablissement, il peut rejoindre sa propre arme mémorisée ; le bouton **Ne pas récupérer l'arme perdue** annule cette intention. Cette récupération attend les besoins et travaux engagés et ignore l'interdiction de sa propre arme.
 
-Pour l'instant, cette arme ne permet pas encore de combattre : la mobilisation permet maintenant les déplacements, les tirs restent à venir. V54 prépare les blessures par balle et leur prise en charge médicale, mais elles ne sont pas encore déclenchées en partie ordinaire. La file d'équipement, les autres armes, vêtements et inventaires personnels restent à venir ; la cargaison de travail n'est pas un inventaire. L'arme à la hanche est un modèle procédural provisoire.
+Le revolver permet désormais le tir dirigé décrit plus haut, avec blessures et prise en charge médicale. La file d'équipement, les autres armes, vêtements et inventaires personnels restent à venir ; la cargaison de travail n'est pas un inventaire. L'arme procédurale est portée à la hanche puis levée vers la cible ; les modèles restent provisoires.
 
 
 **Médicaments :** les nouvelles colonies disposent de trente doses industrielles. Dans Santé, choisissez le plafond du patient : aucun soin, à sec, plantes, industriel ou meilleur disponible. Le médecin rejoint une pile autorisée, prélève, porte puis travaille ; une dose peut traiter plusieurs plaies. Sans produit accessible, il soigne à sec si autorisé. Activez **Médicaments** dans une réserve pour les ranger. Les anciens sites ne reçoivent pas de stock au chargement. Culture et fabrication médicales restent absentes. [Règles et limites](../development/medicines.md).

@@ -1,6 +1,6 @@
 # Requêtes de tir — socle isolé sous V53
 
-18 septembre 2026. [Recherche et limites de version](../research/combat-preparation.md), chapitres 17–20 et SYS/TEST-098/101..103/106/119. **Ces modules sont testés mais pas appelés par la partie.** Ils ne livrent ni ordre de tir, ni projectile, ni ennemi. Ce socle ne modifie pas le schéma ; la santé porte désormais V54.
+18 septembre 2026. [Recherche et limites de version](../research/combat-preparation.md), chapitres 17–20 et SYS/TEST-098/101..103/106/119. Initialement isolés sous V53, **ces modules sont maintenant appelés par le [tir commandé V56](shooting.md)**. Les ennemis restent absents ; requêtes, ordre, vol et impact gardent des frontières distinctes.
 
 ## Frontières
 
@@ -8,7 +8,7 @@
 
 Le fournisseur appartient à l'appelant, pour une décision synchrone. Aucun cache d'identité, de tick ou de ligne ne survit implicitement à une mutation. Une porte fermée doit être vue à la requête suivante, même au même tick. Les résultats gardent des copies de cellules et coefficients ; un changement ultérieur ne réécrit pas un ancien rapport.
 
-Les requêtes ne consomment pas le PRNG, ne modifient pas le monde et ne réservent rien. Les commandes futures devront vérifier acteur, cible, hostilité et état avant le calcul, puis revalider à l'émission. Un rapport probabiliste seul ne donne jamais l'autorisation de tirer.
+Les requêtes ne consomment pas le PRNG, ne modifient pas le monde et ne réservent rien. V56 vérifie acteur, cible et état avant le calcul, puis revalide à l'émission ; l'hostilité reste à intégrer. Un rapport probabiliste seul ne donne jamais l'autorisation de tirer.
 
 ## Ligne et portée
 
@@ -30,11 +30,11 @@ Le facteur de distance d'interception libre est séparé : zéro jusqu'à une di
 
 ## Données et unités du revolver
 
-`src/sim/ranged-statistics.ts` ajoute les profils immuables des sept qualités du revolver et la courbe adulte de Tir, après [recherche et corrections des unités](../research/ranged-statistics-reference.md). Calcul pur sur niveau/Vue/Manipulation fournis ; aucune compétence persistée ni XP attribuée. L'admissibilité à tirer reste un contrôle séparé. Les PV d'usure de l'arme ne deviennent pas un multiplicateur inventé.
+`src/sim/ranged-statistics.ts` ajoute les profils immuables des sept qualités du revolver et la courbe adulte de Tir, après [recherche et corrections des unités](../research/ranged-statistics-reference.md). Calcul pur sur niveau/Vue/Manipulation fournis ; le consommateur V56 possède séparément la compétence persistée et l’attribution XP. L'admissibilité à tirer reste un contrôle séparé. Les PV d'usure de l'arme ne deviennent pas un multiplicateur inventé.
 
-Dégâts arrondis au pair, pénétration indépendante de cet arrondi, précisions plafonnées à 1. Les valeurs de temps sont en **ticks locaux fractionnaires**, après conversion de la journée Core par dix. Le cycle neutre de 11,4 ticks ne doit pas devenir deux phases arrondies séparément ; le futur pilote devra transporter le reliquat. L'unité du cycle d'apprentissage est au contraire la **seconde Core** et conserve le cooldown non arrondi ainsi que la préparation de base. Le temps de vol reçoit une distance vers la destination déjà capturée ; aucun tirage ou suivi de cible dans ce helper.
+Dégâts arrondis au pair, pénétration indépendante de cet arrondi, précisions plafonnées à 1. Les valeurs de temps sont en **ticks locaux fractionnaires**, après conversion de la journée Core par dix. Le cycle neutre de 11,4 ticks ne doit pas devenir deux phases arrondies séparément ; le pilote V56 conserve ces sous-pas Core. L'unité du cycle d'apprentissage est au contraire la **seconde Core** et conserve le cooldown non arrondi ainsi que la préparation de base. Le temps de vol reçoit une distance vers la destination déjà capturée ; aucun tirage ou suivi de cible dans ce helper.
 
-Ce module numérique ne change ni `Pawn.skills`, ni la persistance. Gunshot et le producteur anatomique sont ajoutés ensuite par [V54](bullet-impact.md), toujours sans tir joueur. Données concrètes préparées ne signifie pas système de combat livré.
+Ce module numérique ne change ni `Pawn.skills`, ni la persistance. Gunshot et le producteur anatomique sont ajoutés par [V54](bullet-impact.md), puis le tir joueur par [V56](shooting.md). Données concrètes préparées ne signifie pas système de combat livré.
 
 ## Validation et coût
 
@@ -48,7 +48,7 @@ Ce module numérique ne change ni `Pawn.skills`, ni la persistance. Gunshot et l
 | 30 | 30 000 | 0,0980 ms | 0,1766 ms | 0,3314 ms |
 | 100 | 100 000 | 0,2223 ms | 0,2679 ms | 0,5125 ms |
 
-Une passe, résultats et lectures contrôlés. Ce ne sont ni cent combattants simulés, ni un audit worker/rendu ; ce banc précède les helpers numériques et ne mesure pas une boucle de combat complète. Pas de suite UI ou de long pilote civil pour ces modules non branchés ; ils deviennent nécessaires avec commandes, tirs persistants et effets visibles. La capture du monde est mesurée dans son contrat V54 ; acquisition de cibles et projectiles restent à mesurer lors de l'intégration.
+Une passe, résultats et lectures contrôlés. Ce ne sont ni cent combattants simulés, ni un audit worker/rendu ; ce banc précède les helpers numériques et ne mesure pas une boucle de combat complète. Les preuves isolées ci-dessus précèdent le branchement ; suites UI et pilote civil ajoutés/rejoués pour V56 sont consignés dans la validation courante. La capture du monde est mesurée dans son contrat V54 ; acquisition de cibles et projectiles restent à mesurer lors de l'intégration.
 
 ## Suite du lot
 

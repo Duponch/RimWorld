@@ -1,0 +1,25 @@
+{
+  "date": "2026-09-18T19:50:33.236Z",
+  "backend": "native WebGPU",
+  "reports": [
+    {
+      "speed": 1,
+      "frames": 550,
+      "visibleFlightFrames": 84,
+      "aimingFrames": 212,
+      "finalTick": 3020,
+      "injuries": 1,
+      "maxDrawCalls": 39
+    },
+    {
+      "speed": 6,
+      "frames": 171,
+      "visibleFlightFrames": 20,
+      "aimingFrames": 53,
+      "finalTick": 3030,
+      "injuries": 2,
+      "maxDrawCalls": 39
+    }
+  ],
+  "errors": []
+}

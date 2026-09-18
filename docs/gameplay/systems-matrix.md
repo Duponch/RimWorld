@@ -1,10 +1,10 @@
 # Matrice des systèmes et critères de réalisation
 
-V55 : sous-partie SYS/TEST-099..107, 111..112 persistée dans World, impacts et sauvegardes testés par fixtures. Commandes/XP, phases du tireur, affichage, factions/adversaire et UI-009/010 restent ouverts. Aucun domaine G3 déclaré complet ; [état exact](implementation-status.md).
+V56 : sous-parties SYS/TEST-085/099..107/111..112 et UI-009/010 désormais utilisées par une commande de tir visible, avec XP, phases, vol, impact et reprise. Factions/adversaires, réactions, pouvoir d’arrêt et UI complète restent ouverts. Aucun domaine G3 complet ; [état exact](implementation-status.md).
 
-V53 : [mobilisation/déplacements physiques](../development/drafting.md), SYS-035/UI-007/008/011 partiellement intégrés à G0/G3. Tirs, hostiles et formations restent absents ; propriétés/requêtes de couvert préparées sous V54 sans boucle de combat ; G0–G2 partiels, G3 fondations, G4/G5 non livrés. Calendrier exclusif dans ROADMAP.
+V53 : [mobilisation/déplacements physiques](../development/drafting.md), SYS-035/UI-007/008/011 partiellement intégrés à G0/G3. Tir dirigé V56 livré ; hostiles et formations restent absents ; propriétés/requêtes de couvert V54 intégrées au tir ; G0–G2 partiels, G3 fondations, G4/G5 non livrés. Calendrier exclusif dans ROADMAP.
 
-V52 prolonge les domaines objets/personnages par une première principale physique : revolver, transfert d’identité, dépôt/incapacité et attache GPU. Équipement reste partiel ; combat et inventaire ne sont pas livrés. [État détaillé](implementation-status.md), [contrat](../development/equipment.md). ROADMAP conserve l’ordre canonique G0–G5.
+V52 prolonge les domaines objets/personnages par une première principale physique : revolver, transfert d’identité, dépôt/incapacité et attache GPU. Équipement reste partiel ; combat contre une menace et inventaire personnel ne sont pas livrés. [État détaillé](implementation-status.md), [contrat](../development/equipment.md). ROADMAP conserve l’ordre canonique G0–G5.
 
 S13 / CAT-018 : [V51](../development/medicines.md) ajoute les doses physiques, plafonds individuels et soins groupés ; acquisition complète, maladies et chirurgie restent ouvertes. Équipement V52 livré ; prochain lot selon ROADMAP : premier combat.
 

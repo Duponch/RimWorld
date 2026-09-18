@@ -1,6 +1,6 @@
 # Équipement physique V52
 
-[Recherche fraîche et adaptations](../research/equipment-reference.md), corpus chapitres 2/8/13/20/29, UI-014 et SYS/TEST-055. Première arme : revolver. Le combat, les vêtements et l'inventaire personnel ne sont pas livrés.
+[Recherche fraîche et adaptations](../research/equipment-reference.md), corpus chapitres 2/8/13/20/29, UI-014 et SYS/TEST-055. Première arme : revolver. Le tir dirigé est ajouté en [V56](shooting.md) ; vêtements et inventaire personnel restent absents.
 
 ## Propriété et actions
 
@@ -10,7 +10,7 @@
 
 `equipment-state.ts` traite l'incapacité : à terre hors lit, décès ou manipulation nulle provoquent un dépôt ; à terre dans un lit déjà occupé conserve l'arme sauf perte de manipulation. Un lit supprimé ou un service perdu recontrôle cette exception avant qu'une sauvegarde soit exposée. Sol saturé : `equipmentDropPending`, arme inactive conservée, un seul réessai depuis la boucle des acteurs tous les vingt ticks décalés par ID, même si plusieurs réconciliations ont lieu. Après chute, mémoriser l'arme encore au sol ; récupération physique aux décisions libres après besoins et ordres. Transport par un autre acteur ou disparition fait oublier cette cible. Le bouton Oublier permet de renoncer. La priorité de récupération et son ignorance de l'interdiction sont des adaptations déclarées, pas une reproduction validée de la ThinkTree Core.
 
-Une nouvelle carte contient un revolver normal à 100 PV. Un ancien site n'en reçoit pas automatiquement. Le filtre Armes accepte une arme par case ; une arme interdite n'est pas rangée automatiquement. Inventaire personnel, masse cumulée, vêtements, usure, fabrication/commerce, tirs et mêlée restent absents.
+Une nouvelle carte contient un revolver normal à 100 PV. Un ancien site n'en reçoit pas automatiquement. Le filtre Armes accepte une arme par case ; une arme interdite n'est pas rangée automatiquement. Inventaire personnel, masse cumulée, vêtements, usure, fabrication/commerce et mêlée restent absents ; tir dirigé livré V56.
 
 ## Persistance et présentation
 

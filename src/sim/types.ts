@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 55 as const;
+export const SCHEMA_VERSION = 56 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
@@ -63,6 +63,7 @@ export interface Job extends Cell {
   escrow: Stock;
 }
 export interface Pawn extends Cell {
+  shooting?:import('./shooting-state.ts').ShootingState;
   draft?:import('./drafting-rules.ts').DraftState;
   equipmentTask?:import('./equipment-rules.ts').EquipmentTask;
   equipmentDropPending?:true;
@@ -152,6 +153,7 @@ export type AreaAction = 'build-roof' | 'remove-roof' | 'ignore-roof' | 'mine' |
 export interface StorageSettings { filters?: StorageFilters; priority?: number; capacity?: number }
 export interface AreaCommand extends StorageSettings { type: 'area'; action: AreaAction; from: Cell; to: Cell }
 export type Command =
+  | import('./shooting-state.ts').ShootingCommand
   | import('./drafting-rules.ts').DraftCommand
   | import('./equipment-rules.ts').EquipmentCommand
   | import('./medical-beds.ts').MedicalBedCommand

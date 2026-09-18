@@ -1,6 +1,6 @@
 # Capture tactique du monde — sous V54
 
-18 septembre 2026. [Recherche fraîche, propriétés et adaptations](../research/combat-world-reference.md). `combat-content.ts` attribue les remplissages logiques du catalogue actuel ; `combat-world.ts` expose leur capture aux [requêtes de tir](combat-queries.md). **Préparation technique : aucun appel depuis la boucle normale, aucune commande de tir.** Schéma 54 inchangé.
+18 septembre 2026. [Recherche, propriétés et adaptations](../research/combat-world-reference.md). `combat-content.ts` attribue les remplissages logiques du catalogue actuel ; `combat-world.ts` expose leur capture aux [requêtes de tir](combat-queries.md). Initialement préparée sous V54, cette capture est utilisée par la [commande de tir V56](shooting.md).
 
 ## Frontière et durée de vie
 

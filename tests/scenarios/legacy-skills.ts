@@ -26,11 +26,24 @@ export function withoutMedicalWork<T>(world:T):T {
 
 /** Explicit historical fixture only. Never used to sanitize a rejected save. */
 export function withoutCare<T>(world:T):T {
+  withoutShootingSkills(world);
   withoutMedicineItems(world);
   for(const p of (world as {pawns:Array<{medicalCare?:unknown;skills?:{medicine?:unknown};priorities:{patient?:number;bedrest?:number}}>}).pawns){
     delete p.medicalCare;delete p.priorities.patient;delete p.priorities.bedrest;if(p.skills)delete p.skills.medicine;
   }
   return world;
+}
+
+/** Only authentic pre-V56 fixtures; never apply to the serializer's input in production. */
+export function withoutShootingSkills<T>(world:T):T {
+  for(const p of (world as {pawns:{skills?:{shooting?:unknown}}[]}).pawns)if(p.skills)delete p.skills.shooting;
+  return world;
+}
+/** Independent expectation of the additive V55→V56 migration. */
+export function withMigratedShootingSkills<T>(world:T):T {
+  const copy=structuredClone(world);
+  for(const p of (copy as {pawns:{skills:{shooting?:unknown}}[]}).pawns)p.skills.shooting={level:8,xp:0,dailyXp:0,passion:0};
+  return copy;
 }
 
 function withoutMedicineItems(world:unknown):void {

@@ -1,6 +1,8 @@
 # Inventaire, équipement et apparence des colons
 
-V53 : déplacements dirigés utilisent les poses GPU existantes ; bordure et état de mobilisation des portraits, inspection du groupe et commandes tactiques. Aucune pose de tir ou visée imposée livrée. [Contrat](drafting.md).
+V56 ajoute orientation vers la cible, bras et arme levés dans le rig GPU existant, avec [projectiles instanciés](shooting.md) sur la même horloge. Les modèles restent procéduraux ; jauges, audio, effets et portraits 3D définitifs restent ouverts.
+
+V53 : déplacements dirigés utilisent les poses GPU existantes ; bordure et état de mobilisation des portraits, inspection du groupe et commandes tactiques. [Contrat](drafting.md).
 
 V52 livre la première attache GPU de revolver et une projection d’équipement partagée. Arme visible à la hanche ; portrait CSS cadré sur le buste, libellé et attribut d’état actualisés, arme hors cadre non dessinée. Géométrie extraite du rig ; vêtements et portraits 3D définitifs restent la cible ci-dessous. [Contrat actuel](equipment.md).
 

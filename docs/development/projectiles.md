@@ -1,6 +1,6 @@
 # Émission, vol et persistance — V55
 
-18 septembre 2026. [Recherche et décisions de référence](../research/projectiles-reference.md). V55 branche les projectiles dans `stepWorld`, la sauvegarde et les snapshots ; les fixtures enregistrent encore explicitement une émission déjà calculée. **Aucune commande de tir ni présentation de balle livrée.** Préparation/récupération, Tir/XP, adversaire et réactions civiles restent le prochain branchement. Le noyau V54 isolé est conservé comme oracle de règles.
+18 septembre 2026. [Recherche de vol](../research/projectiles-reference.md). V55 branche les projectiles dans `stepWorld`, sauvegardes et snapshots. **V56 ajoute le producteur, la commande et la présentation : [contrat du tir](shooting.md).** Adversaires, réactions, protections et dommages au décor restent ouverts ; le noyau V54 reste l’oracle de règles.
 
 ## Contrat World V55
 
@@ -67,7 +67,7 @@ Le compte à rebours est entier en ticks Core, la durée géométrique reste flo
 
 Un tick local vaut dix pas Core selon le rapport des journées. `advanceBulletFlight` les parcourt tous et s'arrête au premier résultat ; vitesse ×3 du jeu ne permet pas de sauter des cellules. Les cellules visitées sont dédoublonnées seulement au sein d'un sous-pas diagonal/long ; une arrivée cardinale teste uniquement sa nouvelle case. Regrouper 1 ou 10 pas produit le même résultat si la scène n'a pas changé. Cela ne dispense pas la future boucle d'intercaler ses mutations et de résoudre les événements dans leur ordre.
 
-Les tests isolés copient l'enveloppe par JSON ; V55 ajoute la vraie sérialisation World, l'identité persistante, la migration et l'observateur décrits plus haut. Préparation/récupération et rendu restent absents. Le HUD et la géométrie devront rester à la même date que les conséquences médicales ; aucun retrait à la réception réseau avant l'impact affiché.
+Les tests isolés copient l'enveloppe par JSON ; V55 ajoute la vraie sérialisation World, l'identité persistante, la migration et l'observateur décrits plus haut. Préparation/récupération et rendu sont ajoutés en [V56](shooting.md). Le HUD et la géométrie suivent le temps des conséquences médicales ; aucun retrait à la réception réseau avant l’impact affiché.
 
 ## Validation et mesure
 

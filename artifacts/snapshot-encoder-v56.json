@@ -1,0 +1,126 @@
+{
+  "date": "2026-09-18T19:44:10.170Z",
+  "reference": "3df0ebc",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "os": "win32 10.0.26200",
+  "scope": "Encoder only, natural 250Â² seed 42; alternating order; 300 warmup + 900 timed encodes per mode; mutation/clone/decode outside timings. Packet byte equality and reconstructed World checked before timing. No browser/IPC/FPS claim.",
+  "elapsedMs": 38932.987,
+  "results": [
+    {
+      "mode": "unchanged",
+      "resources": 12411,
+      "tiles": 62500,
+      "packetsVerified": 13,
+      "samples": 900,
+      "baseline": {
+        "p50": 1.3146999999999025,
+        "p95": 2.271299999999428,
+        "p99": 3.0877000000000407,
+        "max": 7.283699999999953
+      },
+      "candidate": {
+        "p50": 1.3291999999992186,
+        "p95": 2.2497000000003027,
+        "p99": 3.517700000000332,
+        "max": 5.298999999999978
+      }
+    },
+    {
+      "mode": "metadata",
+      "resources": 12411,
+      "tiles": 62500,
+      "packetsVerified": 13,
+      "samples": 900,
+      "baseline": {
+        "p50": 1.0226000000002387,
+        "p95": 1.5802000000003318,
+        "p99": 2.0393000000003667,
+        "max": 2.441999999999098
+      },
+      "candidate": {
+        "p50": 1.0522000000000844,
+        "p95": 1.6326000000008207,
+        "p99": 2.040100000000166,
+        "max": 2.563799999999901
+      }
+    },
+    {
+      "mode": "terrain",
+      "resources": 12411,
+      "tiles": 62500,
+      "packetsVerified": 13,
+      "samples": 900,
+      "baseline": {
+        "p50": 1.3086000000002969,
+        "p95": 1.8764000000010128,
+        "p99": 2.3000000000010914,
+        "max": 2.863599999998769
+      },
+      "candidate": {
+        "p50": 1.3020999999989726,
+        "p95": 1.834499999999025,
+        "p99": 2.318199999999706,
+        "max": 3.702099999998609
+      }
+    },
+    {
+      "mode": "remove-append",
+      "resources": 12411,
+      "tiles": 62500,
+      "packetsVerified": 13,
+      "samples": 900,
+      "baseline": {
+        "p50": 3.967899999999645,
+        "p95": 6.114799999999377,
+        "p99": 9.501299999999901,
+        "max": 12.73750000000291
+      },
+      "candidate": {
+        "p50": 3.985000000000582,
+        "p95": 6.112199999999575,
+        "p99": 10.642100000000937,
+        "max": 32.62159999999858
+      }
+    },
+    {
+      "mode": "reorder",
+      "resources": 12411,
+      "tiles": 62500,
+      "packetsVerified": 13,
+      "samples": 900,
+      "baseline": {
+        "p50": 2.90139999999883,
+        "p95": 3.987300000000687,
+        "p99": 6.862400000001799,
+        "max": 7.802400000000489
+      },
+      "candidate": {
+        "p50": 2.9285000000018044,
+        "p95": 4.02639999999883,
+        "p99": 7.571599999999307,
+        "max": 10.809499999999389
+      }
+    },
+    {
+      "mode": "growth",
+      "resources": 12411,
+      "tiles": 62500,
+      "packetsVerified": 13,
+      "samples": 900,
+      "baseline": {
+        "p50": 2.8887999999933527,
+        "p95": 3.9553999999989173,
+        "p99": 4.982100000001083,
+        "max": 7.689400000002934
+      },
+      "candidate": {
+        "p50": 2.822599999999511,
+        "p95": 3.7925000000032014,
+        "p99": 4.529300000001967,
+        "max": 5.365599999997357
+      }
+    }
+  ],
+  "decision": "Rejected experiment, not retained in shipped source: specialize terrain metadata reads by valid terrain carriers. No useful general improvement. Baseline encoder restored exactly."
+}

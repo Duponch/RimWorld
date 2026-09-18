@@ -1,3 +1,4 @@
+import { withoutShootingSkills,withMigratedShootingSkills } from './scenarios/legacy-skills';
 import { expect,test } from 'vitest';
 import { registerWorldProjectile,advanceWorldProjectiles } from '../src/sim/projectile-system';
 import { createBulletFlight } from '../src/sim/bullet-flight';
@@ -64,11 +65,11 @@ test('a newly inserted obstruction and disappeared target are observed; exits an
 });
 
 test('registration is atomic; launch data is owned; V54 is validated before migration; corrupt flight envelopes are rejected',()=>{
-  const w=camp(),legacy=structuredClone(w) as unknown as Record<string,unknown>;legacy.schemaVersion=54;
-  expect(deserializeWorld(JSON.stringify(legacy))).toEqual({...legacy,schemaVersion:SCHEMA_VERSION});
+  const w=camp(),legacy=structuredClone(w) as unknown as Record<string,unknown>;legacy.schemaVersion=54;withoutShootingSkills(legacy);
+  expect(deserializeWorld(JSON.stringify(legacy))).toEqual(withMigratedShootingSkills({...legacy,schemaVersion:SCHEMA_VERSION}));
   const before=serializeWorld(w),next=w.nextId;
   expect(()=>launch(w,{x:-1,z:10})).toThrow();expect(serializeWorld(w)).toBe(before);expect(w.nextId).toBe(next);
-  const shot=launch(w),saved=serializeWorld(w);expect(()=>deserializeWorld(saved.replace('"schemaVersion":55','"schemaVersion":54'))).toThrow(/version 54/);
+  const shot=launch(w),saved=serializeWorld(w);expect(()=>deserializeWorld(saved.replace(`"schemaVersion":${SCHEMA_VERSION}`,'"schemaVersion":54'))).toThrow(/version 54/);
   const mutations:Array<(v:World)=>void>=[
     v=>{v.projectiles![0].flight.remainingCoreTicks--;},v=>{v.projectiles![0].flight.completed=true;},v=>{v.projectiles![0].advancedAtCore--;},v=>{v.projectiles![0].emittedAtCore++;},
     v=>{v.projectiles![0].id=v.pawns[0].id;},v=>{v.projectiles![0].relations.friendlyPawnIds.reverse();},v=>{v.projectiles![0].relations.friendlyFireFactor=2;},v=>{v.projectiles![0].flight.speedPerCoreTick=2;},

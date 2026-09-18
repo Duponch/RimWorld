@@ -11,29 +11,29 @@ import type { World } from './types.ts';
 
 /** Commit a producer's validated emission and its private PRNG together.
  * Internal boundary, not a player command or a replacement for aiming/cadence. */
-export function registerWorldProjectile(world:World,flight:BulletFlight,quality:WeaponQuality,relations:ProjectileRelations,rng=world.rng):WorldProjectile {
+export function registerWorldProjectile(world:World,flight:BulletFlight,quality:WeaponQuality,relations:ProjectileRelations,rng=world.rng,at=world.tick*CORE_TICKS_PER_LOCAL):WorldProjectile {
   if(world.schemaVersion<55||!Number.isSafeInteger(world.nextId+1)||!Number.isSafeInteger(rng)||rng<1||rng>0xffffffff||world.projectiles&&world.projectiles.length>=world.width*world.height)throw new RangeError('Cannot register projectile');
-  const at=world.tick*CORE_TICKS_PER_LOCAL;
+  if(!Number.isSafeInteger(at)||at<Math.max(0,(world.tick-1)*CORE_TICKS_PER_LOCAL)||at>world.tick*CORE_TICKS_PER_LOCAL)throw new RangeError('Invalid emission time');
   const projectile:WorldProjectile={id:world.nextId,quality,emittedAtCore:at,advancedAtCore:at,flight:{...flight,origin:{...flight.origin},destination:{...flight.destination}},relations:{friendlyPawnIds:[...new Set(relations.friendlyPawnIds)].sort((a,b)=>a-b),friendlyFireFactor:relations.friendlyFireFactor},arrival:null};
-  if(projectile.flight.completed||!validWorldProjectile(projectile,world))throw new RangeError('Invalid projectile emission');
+  if(projectile.flight.completed||!validWorldProjectile(projectile,{...world,tick:at/CORE_TICKS_PER_LOCAL}))throw new RangeError('Invalid projectile emission');
   world.nextId++;world.rng=rng;(world.projectiles??=[]).push(projectile);return projectile;
 }
 
 /** Run after doors/environment, before civilian actions. Core substep FIRST,
  * then persistent ID: a closer/lower-ID impact may change the next projectile's
  * admissible targets. Never finish each projectile's whole flight in sequence. */
-export function advanceWorldProjectiles(world:World):void {
-  if(!world.projectiles)return;
+export function advanceWorldProjectiles(world:World,beforeCore?:(core:number)=>void,afterImpact?:()=>void):void {
+  if(!world.projectiles&&!beforeCore)return;
   const end=world.tick*CORE_TICKS_PER_LOCAL,start=end-CORE_TICKS_PER_LOCAL;
-  world.projectiles=world.projectiles.filter(p=>!p.arrival||p.advancedAtCore>start);
-  if(!world.projectiles.length){delete world.projectiles;return;}
+  if(world.projectiles)world.projectiles=world.projectiles.filter(p=>!p.arrival||p.advancedAtCore>start);
+  if(!world.projectiles?.length){delete world.projectiles;if(!beforeCore)return;}
   let batch:ReturnType<typeof captureProjectileBatch>|undefined;
   let targets:ReturnType<ReturnType<typeof captureProjectileBatch>['refresh']>|undefined;
   const scenes=new Map<WorldProjectile,ProjectileScene>();
   const scene=(p:WorldProjectile)=>{
     let s=scenes.get(p);if(!s){batch??=captureProjectileBatch(world);targets??=batch.refresh(world);s=targets(new Set(p.relations.friendlyPawnIds),p.relations.friendlyFireFactor);scenes.set(p,s);}return s;
   };
-  for(let core=start+1;core<=end;core++)for(const p of world.projectiles) {
+  for(let core=start+1;core<=end;core++) {beforeCore?.(core);for(const p of world.projectiles??[]) {
     if(p.arrival||p.advancedAtCore>=core)continue;
     if(p.advancedAtCore!==core-1)throw new Error('Stale projectile clock');
     const randomState={rng:world.rng},next=advanceBulletFlight(p.flight,scene(p),()=>healthRandom(randomState),1);
@@ -45,7 +45,7 @@ export function advanceWorldProjectiles(world:World):void {
       damageUnarmoredPawnWithBullet(world,pawn,{damage:revolverProfile(p.quality).damage});
       // A fall can change posture, release a carried patient and drop objects.
       // Do not reuse a capture across the medical reconciliation.
-      targets=undefined;scenes.clear();
+      targets=undefined;scenes.clear();afterImpact?.();
     }
-  }
+  }}
 }

@@ -1,7 +1,8 @@
 import { retryInterruptedCargo } from './interrupted-cargo.ts';
 import { applyDraftCommand,processDraft } from './drafting.ts';
-import { advanceWorldProjectiles } from './projectile-system.ts';
-import { processDraftSleep } from './needs.ts';
+import { advanceWorldCombat } from './combat-system.ts';
+import { applyShootingCommand } from './shooting.ts';
+import { collapseFromExhaustion,processDraftSleep } from './needs.ts';
 import { applyEquipment,processEquipment,reconcileEquipmentTasks,recoverDroppedWeapon } from './equipment.ts';
 import { dropIncapacitatedEquipment,reconcileWeaponMemory } from './equipment-state.ts';
 import { applyFeeding,processFeeding,reconcileFeeding } from './feeding.ts';
@@ -178,6 +179,8 @@ export function applyCommand(world: World, command: Command): CommandResult {
 }
 function applyCommandInternal(world: World, command: Command): CommandResult {
   if (!command || typeof command !== 'object') return refusal('invalid-command', 'Commande invalide.');
+  if(command.type==='shoot')return applyShootingCommand(world,command);
+  if(typeof command.type==='string'&&'pawnId' in command&&command.type.startsWith('order-')&&world.pawns.find(p=>p.id===command.pawnId)?.shooting?.stance?.phase==='cooldown')return {ok:false,code:'invalid-command',reason:'Le colon récupère après son tir.'};
   if(command.type==='draft'||command.type==='draft-move'||command.type==='draft-stop')return applyDraftCommand(world,command);
   if(typeof command.type==='string'&&command.type.startsWith('order-')&&'pawnId' in command&&world.pawns.find(p=>p.id===command.pawnId)?.draft)return refusal('invalid-command','Démobilisez ce colon avant un ordre civil.');
   if(command.type==='clear-orders'&&world.pawns.find(p=>p.id===command.pawnId)?.draft)return applyDraftCommand(world,{type:'draft-stop',pawnIds:[command.pawnId]});
@@ -344,7 +347,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     updatePlantTemperatures(world,thermal);
     burnFuel(world);
     updateDoors(world);
-    advanceWorldProjectiles(world);
+    advanceWorldCombat(world);
     scheduleGrowing(world);
     scheduleRoofs(world);reconcileRescues(world);reconcilePatientRest(world);reconcileTending(world);reconcileFeeding(world);reconcileEquipmentTasks(world);for(const pawn of world.pawns)reconcileWeaponMemory(world,pawn);
     // Build only if this tick actually plans or moves. No cross-tick cache can hide
@@ -382,6 +385,8 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
         release: () => releaseWork(world, pawn),
         event: (message: string) => event(world, 'need', message),
       };
+      if(pawn.shooting)collapseFromExhaustion(world,pawn,needsContext);
+      if(pawn.shooting){if(pawn.draft)pawn.draft.lastActiveTick=world.tick;continue;}
       if(pawn.draft){if(!processDraftSleep(world,pawn,needsContext)){processDraft(world,pawn,getBlocked,budget,getLight);if(pawn.moveCooldown===0)retryInterruptedCargo(world,pawn);}continue;}
       if(pawn.interruptedCargo){processNeeds(world,pawn,needsContext);continue;}
       if (leaveTransitCell(world,pawn,getBlocked,budget,getLight)) continue;

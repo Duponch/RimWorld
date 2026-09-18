@@ -1,3 +1,4 @@
+import { withoutShootingSkills,withMigratedShootingSkills } from './scenarios/legacy-skills';
 import { expect,test } from 'vitest';
 import { BODY_COVERAGE,BODY_INDEX,BODY_PARTS,HUMAN_BODY,type BodyPartId } from '../src/sim/body-definition';
 import { resolveUnarmoredBullet,selectBulletPart } from '../src/sim/bullet-impact';
@@ -95,8 +96,8 @@ test('world impact, snapshot and physical care preserve the new lesions through 
 });
 
 test('V53 migration is strict and injury-free; incapacity preserves captured movement and cargo at the impact tick',()=>{
-  const old=medicalCamp();(old as {schemaVersion:number}).schemaVersion=53;
-  expect(deserializeWorld(JSON.stringify(old))).toEqual({...old,schemaVersion:SCHEMA_VERSION});
+  const old=medicalCamp();(old as {schemaVersion:number}).schemaVersion=53;withoutShootingSkills(old);
+  expect(deserializeWorld(JSON.stringify(old))).toEqual(withMigratedShootingSkills({...old,schemaVersion:SCHEMA_VERSION}));
   const w=medicalCarrier(),p=w.pawns[0]!,motion=structuredClone(p.motion),cargo=w.piles.filter(s=>s.owner.type==='pawn'&&s.owner.pawnId===p.id).map(s=>({id:s.id,quantity:s.quantity,item:s.item}));
   damageUnarmoredPawnWithBullet(w,p,{part:'left-leg',damage:100});damageUnarmoredPawnWithBullet(w,p,{part:'right-leg',damage:100});
   expect(p.state).toBe('downed');expect(p.motion).toEqual(motion);expect(p.path).toEqual([]);expect(p.jobId).toBeNull();

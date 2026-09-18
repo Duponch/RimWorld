@@ -1,6 +1,6 @@
 # Impacts anatomiques — V54
 
-18 septembre 2026. [Recherche fraîche et limites](../research/bullet-impact-reference.md), corpus chapitres 15/19/20, SYS/TEST-089..091/105/111..112. **Le producteur est disponible dans la simulation et testé, mais aucun tir ne peut encore être ordonné en partie.** Les scènes de validation injectent explicitement un impact pour exercer la suite médicale existante ; elles ne prouvent pas préparation, vol, interception ou combat jouable.
+18 septembre 2026. [Recherche et limites](../research/bullet-impact-reference.md), corpus chapitres 15/19/20, SYS/TEST-089..091/105/111..112. Le producteur anatomique V54 est appelé par les vols V55 et le [tir commandé V56](shooting.md). Les anciennes scènes d'impact injecté restent distinctes du nouveau parcours UI de tir ; elles ne prouvaient pas seules préparation, vol ou interception.
 
 ## Frontières et déroulement
 

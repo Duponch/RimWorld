@@ -1,3 +1,5 @@
+import { ShootingControls } from './ui/shooting-controls';
+const shootingControls=new ShootingControls();
 import { createDraftControls,updateDraftControls,toggleDraft,draftLabel } from './ui/drafting-controls';
 import { createEquipmentInspection,updateEquipmentInspection } from './ui/equipment-inspection';
 import { equipmentProjection,equipmentDescription } from './render/character-equipment';
@@ -113,6 +115,7 @@ function setPanel(panel: Panel) {
   }
 }
 function applyTool(tool: Tool) {
+  shootingControls.cancel();
   if(tool!=='install'){installationId=undefined;renderer?.setFurniturePlacement(undefined);}
   currentTool = tool;
   renderer?.setTool(tool);
@@ -137,6 +140,7 @@ function selectPawn(id: number) {
 }
 function selectPawns(gesture:SelectionGesture,focus=false) {
   if(!snapshot||replacingWorld)return;
+  shootingControls.cancel();
   selection.apply(gesture,new Set(snapshot.pawns.map(p=>p.id)));
   selectedPawn=selection.single;selectedCell=undefined;
   renderer?.setSelectedPawns(selection.ids);
@@ -146,6 +150,7 @@ function selectPawns(gesture:SelectionGesture,focus=false) {
 }
 function pickCell(x: number, z: number) {
   if (!snapshot || replacingWorld) return;
+  if(shootingControls.active){shootingControls.cancel();renderState();return;}
   if (currentTool !== 'select') {
     const tool = currentTool;
     void attempt(() => {
@@ -235,12 +240,13 @@ function rebuildInspector() {
     const zone = snapshot && growingZoneAt(snapshot, selectedCell.z * snapshot.width + selectedCell.x);
     if (zone) panel.append(growingControls(zone, command => void attempt(async () => { await client.command(command); rebuildInspector(); renderState(); })));
   } else panel.replaceChildren();
-  if(selection.ids.size)createDraftControls(panel,()=>snapshot?.pawns.filter(p=>selection.ids.has(p.id))??[],c=>void attempt(async()=>{await client.command(c);renderState();}));
+  if(selection.ids.size){createDraftControls(panel,()=>snapshot?.pawns.filter(p=>selection.ids.has(p.id))??[],c=>void attempt(async()=>{await client.command(c);renderState();}));shootingControls.create(panel,()=>snapshot?.pawns.filter(p=>selection.ids.has(p.id))??[],()=>renderState());}
   const close = document.getElementById('inspect-close');
   if (close) close.onclick = clearSelection;
 }
 function actionLabel(pawn: Pawn) {
   if(pawn.draft)return draftLabel(pawn);
+  if(pawn.shooting?.stance?.phase==='cooldown')return 'Récupération après tir';
   if(pawn.equipmentTask)return pawn.equipmentTask.action==='equip'?'Va équiper son arme':'Dépose son arme';
   if(pawn.feed||pawn.tend||pawn.state==='resting'||pawn.rescue||carrierOf(snapshot!,pawn.id))return queryPawnStatus(snapshot!,pawn).reason;
   if(pawn.state==='downed'||pawn.state==='dead')return stateLabels[pawn.state];
@@ -318,6 +324,7 @@ function renderState() {
     for (const select of row.querySelectorAll<HTMLSelectElement>('select')) select.value = String(pawn.priorities[select.dataset.work as WorkType]);
   }
   updateDraftControls(el('inspector'),world.pawns.filter(p=>selection.ids.has(p.id)));
+  shootingControls.update(el('inspector'),world.pawns.filter(p=>selection.ids.has(p.id)));
   if(selection.ids.size>1) {
     el('group-title').textContent=`${selection.ids.size} colons sélectionnés`;
     for(const button of el('group-members').querySelectorAll<HTMLButtonElement>('button')) {
@@ -478,7 +485,7 @@ document.addEventListener('keydown', event => {
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') { event.preventDefault(); void attempt(save); return; }
   if (event.ctrlKey || event.metaKey || event.altKey) return;
   if (event.code === 'Space') { event.preventDefault(); void attempt(() => changeSpeed(currentSpeed === 0 ? lastSpeed : 0)); return; }
-  if (event.key === 'Escape') { event.preventDefault(); if (orderMenu.close() || renderer?.cancelDesignation()) return; setPanel(null); clearSelection(); return; }
+  if (event.key === 'Escape') { event.preventDefault(); if(shootingControls.active){shootingControls.cancel();renderState();return;} if (orderMenu.close() || renderer?.cancelDesignation()) return; setPanel(null); clearSelection(); return; }
   if (event.key === 'Tab' || event.key === 'F1' || event.key === 'F2' || event.key === 'F3') { event.preventDefault(); const panel = event.key === 'Tab' ? 'architect' : event.key === 'F1' ? 'work' : event.key === 'F2' ? 'schedule' : 'assign'; setPanel(currentPanel === panel ? null : panel); return; }
   const speeds: Record<string, number> = { '1': 1, '2': 3, '3': 6 };
   if (event.key in speeds) { void attempt(() => changeSpeed(speeds[event.key])); return; }
@@ -504,9 +511,9 @@ async function start() {
     const seed = seedText && /^\d{1,10}$/.test(seedText) ? Number(seedText) >>> 0 : 42;
     await client.init(seed, [32, ...MAP_SIZE_PRESETS].includes(requestedSize) ? requestedSize : DEFAULT_MAP_SIZE);
     renderer = await ColonyRenderer.create(el('viewport'), pickCell);
-    renderer.onSelection=gesture=>selectPawns(gesture);
+    renderer.onSelection=gesture=>{if(shootingControls.active){const targetId=gesture.ids[0];if(targetId!==undefined){shootingControls.cancel();void attempt(async()=>{await client.command({type:'shoot',pawnIds:[...selection.ids],targetId});renderState();});}return;}selectPawns(gesture);};
     renderer.onInteractionCancel=()=>orderMenu.close();
-    renderer.onContext=(cell,x,y,queue)=>{if(!snapshot||replacingWorld)return;const selected=snapshot.pawns.filter(p=>selection.ids.has(p.id));if(selected.some(p=>p.draft)){orderMenu.close();void attempt(()=>client.command({type:'draft-move',pawnIds:selected.map(p=>p.id),target:cell,queue}));}else void orderMenu.open(snapshot,selection.ids,cell,x,y,queue);};
+    renderer.onContext=(cell,x,y,queue)=>{if(shootingControls.active){shootingControls.cancel();renderState();return;}if(!snapshot||replacingWorld)return;const selected=snapshot.pawns.filter(p=>selection.ids.has(p.id));if(selected.some(p=>p.draft)){orderMenu.close();void attempt(()=>client.command({type:'draft-move',pawnIds:selected.map(p=>p.id),target:cell,queue}));}else void orderMenu.open(snapshot,selection.ids,cell,x,y,queue);};
     renderer.onArea = designateArea;
     renderer.onAreaPreview = info => {
       el('area-feedback').hidden = !info;

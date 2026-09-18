@@ -1,4 +1,6 @@
-# Compétences — Construction V43 et Médecine V47
+# Compétences — Construction, Médecine et Tir
+
+Tir est intégré en [V56](shooting.md) : précision via niveau/Vue/Manipulation, XP à l’émission admissible, passion/oubli communs et migration stricte. Les autres compétences ne sont pas implicitement livrées.
 
 Médecine utilise les mêmes règles de milli-XP, passion, saturation, oubli et remise à zéro que Construction. Le gain de 250 XP de base est attribué à chaque traitement humain sans médicament effectivement terminé, avant sa qualité. Aucun gain pour la seule réservation, le trajet ou une opération interrompue. V46 est validée avant ajout du profil neutre 8/sans passion/0 XP ; la migration V42 reste limitée à Construction.
 
@@ -6,7 +8,7 @@ Médecine utilise les mêmes règles de milli-XP, passion, saturation, oubli et 
 
 ## État et temps
 
-`Pawn.skills` contient Construction et Médecine : niveau 0–20, expérience et bilan quotidien en milli-XP, passion 0/1/2, plus la dernière remise à zéro. Aucune horloge réelle, tirage aléatoire ou cache dérivé n'affecte l'apprentissage. Trois profils de scénario : Ada 8/passion, Noé 10/passion brûlante, Mina 4/sans passion. Ces choix ne reproduisent pas la génération de biographies Core ; les dix autres compétences ne reçoivent pas de nombres fictifs. Médecine utilise Ada 6/passion, Noé 3/sans passion, Mina 8/passion brûlante ; vitesse, qualité et XP ne s’appliquent qu’aux traitements réels décrits dans le [contrat V47](tending.md).
+`Pawn.skills` contient Construction, Médecine et Tir : niveau 0–20, expérience et bilan quotidien en milli-XP, passion 0/1/2, plus la dernière remise à zéro. Aucune horloge réelle, tirage aléatoire ou cache dérivé n'affecte l'apprentissage. Trois profils de Construction : Ada 8/passion, Noé 10/passion brûlante, Mina 4/sans passion. Ces choix ne reproduisent pas la génération de biographies Core ; les neuf autres compétences ne reçoivent pas de nombres fictifs. Médecine utilise Ada 6/passion, Noé 3/sans passion, Mina 8/passion brûlante ; vitesse, qualité et XP s’appliquent aux traitements réels du [contrat V47](tending.md). Les profils et règles de Tir sont dans le [contrat V56](shooting.md).
 
 Seuil vers le niveau suivant : 1 000–10 000 XP entre niveaux 0–9, puis 12 000–30 000 entre 10–19. Au niveau 20, réserve plafonnée à 29 999 XP. L'oubli permet une dette jusqu'à −1 000 XP avant la perte d'un niveau. Il se produit tous les vingt ticks locaux, déphasé par ID, pour les niveaux 10–20 : 0,1 / 0,2 / 0,4 / 0,6 / 1 / 1,8 / 2,8 / 4 / 6 / 8 / 12 XP par intervalle. Aucun oubli aux niveaux inférieurs.
 

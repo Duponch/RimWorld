@@ -5,7 +5,7 @@ import type { Pawn } from '../sim/types.ts';
 const passions=['Sans passion','Passion 🔥','Passion brûlante 🔥🔥'];
 export function createSkillsInspection(panel:HTMLElement):void {
   const details=document.createElement('details');details.className='skills-inspection';
-  details.innerHTML='<summary>Biographie · compétences</summary><p data-skill="construction"></p><progress data-skill-xp max="1"></progress><p data-skill-description class="muted"></p><p data-skill="medicine"></p><progress data-medicine-xp max="1"></progress><p data-medicine-description class="muted"></p><p class="muted">Les autres compétences, les traits et l’histoire personnelle restent à développer.</p>';
+  details.innerHTML='<summary>Biographie · compétences</summary><p data-skill="construction"></p><progress data-skill-xp max="1"></progress><p data-skill-description class="muted"></p><p data-skill="medicine"></p><progress data-medicine-xp max="1"></progress><p data-medicine-description class="muted"></p><p data-skill="shooting"></p><progress data-shooting-xp max="1"></progress><p class="muted">Les autres compétences, les traits et l’histoire personnelle restent à développer.</p>';
   panel.append(details);
 }
 export function updateSkillsInspection(panel:HTMLElement,pawn:Pawn):void {
@@ -14,6 +14,8 @@ export function updateSkillsInspection(panel:HTMLElement,pawn:Pawn):void {
   const progress=panel.querySelector<HTMLProgressElement>('[data-skill-xp]')!;
   progress.value=Math.max(0,s.xp/xpRequired(s.level));progress.setAttribute('aria-label','Expérience de construction');
   panel.querySelector('[data-skill-description]')!.textContent=`${(s.xp/XP_SCALE).toFixed(1)} / ${xpRequired(s.level)/XP_SCALE} XP · Vitesse ${Math.round(constructionSpeed(pawn)*100)} % · Apprentissage ${Math.round(learningFactor(s)*100)} %${s.dailyXp>4000*XP_SCALE?' (saturation quotidienne)':''}. La lumière s’applique séparément.`;
+  const shot=pawn.skills.shooting;panel.querySelector('[data-skill="shooting"]')!.textContent=`Tir ${shot.level}/20 · ${passions[shot.passion]} · ${(shot.xp/XP_SCALE).toFixed(1)} XP`;
+  const sp=panel.querySelector<HTMLProgressElement>('[data-shooting-xp]')!;sp.value=Math.max(0,shot.xp/xpRequired(shot.level));sp.setAttribute('aria-label','Expérience de tir');
   const m=pawn.skills.medicine;
   panel.querySelector('[data-skill="medicine"]')!.textContent=`Médecine ${m.level}/20 · ${passions[m.passion]}`;
   const mp=panel.querySelector<HTMLProgressElement>('[data-medicine-xp]')!;mp.value=Math.max(0,m.xp/xpRequired(m.level));mp.setAttribute('aria-label','Expérience de médecine');

@@ -18,7 +18,7 @@ export function reconcilePawnHealth(world:World,pawn:Pawn,body=pawnBody(pawn)):v
   if(!pawn.health)return;
   const status=medicalStatus(pawn.health,body);
   if(status!=='mobile') {
-    delete pawn.draft;
+    delete pawn.draft;delete pawn.shooting;
     if(pawn.state!==status) {
       const wasSleeping=pawn.state==='sleeping';
       const bed=pawn.need?.kind==='sleep'&&pawn.need.phase==='sleep'&&pawn.need.bedId!==null?pawn.need:null;
@@ -36,6 +36,7 @@ export function reconcilePawnHealth(world:World,pawn:Pawn,body=pawnBody(pawn)):v
     announce(world,`${pawn.name} peut de nouveau se relever.`);
   }
   if(body.capacities.manipulation===0&&(pawn.equipmentTask||pawn.jobId!==null||pawn.feed||pawn.tend||pawn.rescue||pawn.haul||pawn.cooking||pawn.orders.active!==null||pawn.orders.queue.length||pawn.priorityWork))interruptWork(world,pawn);
+  if(body.capacities.manipulation===0)delete pawn.shooting;
   dropIncapacitatedEquipment(world,pawn);
 }
 export function updatePawnHealth(world:World,pawn:Pawn):BodyAssessment|undefined {

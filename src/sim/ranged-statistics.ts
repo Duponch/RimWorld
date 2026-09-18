@@ -2,7 +2,7 @@ import type { AccuracyCurve } from './combat-report.ts';
 import { WEAPON_QUALITIES,type WeaponQuality } from './equipment-rules.ts';
 import { TICKS_PER_DAY } from './types.ts';
 
-/** Data/units only; not yet a Pawn skill or attack producer. See the explicit
+/** Data/units shared by the persistent shooting skill and attack producer. See the explicit
  * current/historical source decisions in research/ranged-statistics-reference. */
 const shootingCurve:readonly (readonly [number,number])[]=[[-20,.70],[-10,.80],[-6,.83],[-4,.85],[-2,.87],[0,.89],[2,.93],[4,.94],[6,.95],[8,.96],[10,.97],[12,.975],[14,.98],[16,.98333],[18,.98666],[20,.99],[22,.9925],[26,.995],[30,.9965],[40,.998],[60,.999]];
 function finiteNonnegative(value:number):void {if(!Number.isFinite(value)||value<0)throw new RangeError('Invalid ranged stat input');}

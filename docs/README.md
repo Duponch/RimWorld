@@ -2,17 +2,13 @@
 
 Bilan courant consolidé le 18 septembre : [jouable, partiel et absent](gameplay/implementation-status.md), [estimation globale et par domaine](ROADMAP.md#estimation-de-charge--18-septembre-2026). Les lots techniques ne comptent pas comme de nouvelles commandes jouables.
 
-V55, [projectiles persistants](development/projectiles.md) : avancement dans `stepWorld`, impacts anatomiques ordonnés, sauvegarde stricte et snapshots. Les émissions restent injectées par les fixtures : aucun bouton de tir ni projectile affiché. Le prochain lot reste préparation/récupération, Tir/XP, commande visible puis adversaire. [Règles recontrôlées](research/projectiles-reference.md), [preuves et audit mixte](development/validation.md).
+V56 : [premier tir commandé et visible](development/shooting.md). Revolver équipé, cible explicite, préparation interruptible, récupération persistante, compétence Tir/XP, projectile GPU et conséquence anatomique. [Sources revérifiées](research/shooting-reference.md), [preuves et charge](development/validation.md). Les adversaires, réactions civiles, mêlée, armures et pouvoir d'arrêt restent à intégrer.
 
-V54 : [producteur d'impact anatomique et Gunshot](development/bullet-impact.md), [règles revérifiées](research/bullet-impact-reference.md). Localisation, préservation extérieure, propagation et intégration aux soins/sauvegardes testées. **Pas encore de tir jouable** : le vol est intégré en V55 ; le déclencheur, les phases du tireur et l'adversaire restent à intégrer. La [capture tactique du décor](development/combat-world.md) prépare maintenant les propriétés réelles de ligne/couvert ; [sources et adaptations](research/combat-world-reference.md), coût mesuré et réduit sans appel par frame.
-
-V53 : [mobilisation et déplacements physiques](development/drafting.md), [règles et adaptations vérifiées](research/drafting-reference.md). Bouton/R, groupes, clic droit/Maj, arrêt, besoins et conservation lors des interruptions. Tirs et adversaires restent le prochain lot humain.
-
-Suite de V53 : [préparation du premier combat](research/combat-preparation.md) et [socle testé](development/combat-queries.md), avec lignes/couvert, visée et [statistiques du revolver revérifiées](research/ranged-statistics-reference.md). Aucun tir jouable ; compétence active, phases du tireur et adversaire restent à intégrer. Le producteur anatomique est ajouté en V54, les vols persistants en V55.
+Ce parcours branche les [vols V55](development/projectiles.md), [impacts V54](development/bullet-impact.md), [ligne/couvert](development/combat-queries.md), [captures du décor](development/combat-world.md) et [mobilisation V53](development/drafting.md). Le socle testé est désormais utilisé par une commande joueur ; aucun combat contre une menace ni raid n'est implicitement livré.
 
 Transport sous V52 : [comparaison ordonnée des ressources](development/presentation-timing.md#coût-de-recherche-des-deltas-sous-v52), mêmes états et règles, coût d’encodage réduit. Garde native minage/abattage verte après modification ; [preuves et limites de charge](development/validation.md). La mobilisation est ajoutée en V53.
 
-V52 : [premier équipement physique](development/equipment.md), [règles revérifiées](research/equipment-reference.md). Revolver au sol, accès/échange/dépôt, propriété distincte de la cargaison et attache GPU. Mobilisation ajoutée V53 ; tirs, vêtements et inventaire restent ouverts.
+V52 : [premier équipement physique](development/equipment.md), [règles revérifiées](research/equipment-reference.md). Revolver au sol, accès/échange/dépôt, propriété distincte de la cargaison et attache GPU. Mobilisation ajoutée V53 et tir dirigé V56 ; vêtements et inventaire restent ouverts.
 
 V51 : [médicaments et cinq plafonds de soins](development/medicines.md), [sources et subtilités vérifiées](research/medicines-reference.md). Prélèvement, portage, doses par opération et soins groupés ; trente doses industrielles sur les nouveaux sites. Acquisition complète et maladies restent ouvertes.
 
@@ -28,7 +24,7 @@ V46 : [secours physiques et lits médicaux](development/rescue.md). Médecin, cl
 
 V44 : [interruptions et cargaisons conservées](development/interrupted-cargo.md), [relecture de l’épuisement et du dépôt](research/interrupted-cargo-reference.md).
 
-V45 : [santé active](development/health.md), [recherche des transitions et accidents](research/health-reference.md). Anatomie, lésions, incapacités, décès et effets physiques intégrés ; secours ajoutés en V46, traitements sans médicament en V47 ; première arme ajoutée en V52, combat encore absent. [Référence des secours et préparation des traitements](research/care-preparation.md).
+V45 : [santé active](development/health.md), [recherche des transitions et accidents](research/health-reference.md). Anatomie, lésions, incapacités, décès et effets physiques intégrés ; secours ajoutés en V46, traitements sans médicament en V47 ; première arme V52 et tir dirigé V56, combat contre une menace encore absent. [Référence des secours et préparation des traitements](research/care-preparation.md).
 
 V43 : [première compétence et apprentissage](development/skills.md), [recherche et réorientation des priorités](research/skills-reference.md).
 

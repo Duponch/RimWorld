@@ -1,3 +1,4 @@
+import { cancelShooting } from './shooting-state.ts';
 import { AUTO_UNDRAFT_TICKS,DRAFT_QUEUE_LIMIT,sameCell,type DraftCommand } from './drafting-rules.ts';
 import { draftDestination,draftDestinationContext } from './drafting-destinations.ts';
 import { clearQueuedOrders } from './player-orders.ts';
@@ -29,7 +30,7 @@ function interruptDraftWork(world:World,pawn:Pawn):void {
 }
 
 export function endDraft(world:World,pawn:Pawn):void {
-  delete pawn.draft;interruptDraftWork(world,pawn);pawn.planCooldown=0;pawn.needCooldown=0;
+  cancelShooting(pawn);delete pawn.draft;interruptDraftWork(world,pawn);pawn.planCooldown=0;pawn.needCooldown=0;
 }
 export function applyDraftCommand(world:World,command:DraftCommand):CommandResult {
   if(!Array.isArray(command.pawnIds)||!command.pawnIds.length||command.pawnIds.some(id=>!Number.isSafeInteger(id))||new Set(command.pawnIds).size!==command.pawnIds.length)return refuse('Sélection tactique invalide.');
@@ -47,7 +48,7 @@ export function applyDraftCommand(world:World,command:DraftCommand):CommandResul
   }
   if(selected.some(p=>!p.draft||medicallyStopped(p)))return refuse('Mobilisez d’abord tous les colons sélectionnés.');
   if(command.type==='draft-stop') {
-    for(const pawn of selected){interruptDraftWork(world,pawn);pawn.draft={lastActiveTick:world.tick,target:null,queue:[]};pawn.planCooldown=0;}
+    for(const pawn of selected){cancelShooting(pawn);interruptDraftWork(world,pawn);pawn.draft={lastActiveTick:world.tick,target:null,queue:[]};pawn.planCooldown=0;}
     return {ok:true};
   }
   if(!command.target||!Number.isInteger(command.target.x)||!Number.isInteger(command.target.z)||typeof command.queue!=='boolean')return refuse('Destination tactique invalide.');
@@ -65,8 +66,9 @@ export function applyDraftCommand(world:World,command:DraftCommand):CommandResul
   for(const {pawn,target,path} of plans) {
     const draft=pawn.draft!;
     if(command.queue&&(draft.target||draft.queue.length)){draft.queue.push(target);continue;}
-    interruptDraftWork(world,pawn);draft.target=target;draft.queue=[];draft.lastActiveTick=world.tick;
+    cancelShooting(pawn);interruptDraftWork(world,pawn);draft.target=target;draft.queue=[];draft.lastActiveTick=world.tick;
     pawn.path=path;pawn.planCooldown=0;pawn.state=path.length||pawn.moveCooldown>0?'moving':'idle';
+    if(pawn.shooting?.stance?.phase==='cooldown'){pawn.path=[];pawn.state='idle';}
   }
   return {ok:true};
 }

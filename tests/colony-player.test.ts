@@ -37,6 +37,9 @@ test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp const
         expect(foodAccount(world)+consumed+9*cooked,context).toBe(initialFood+produced);
         expect(world.pawns.every(p=>p.hunger>0 && p.rest>0),context).toBe(true);
         expect(world.pawns.every(p=>p.state!=='dead'&&p.state!=='downed'&&!p.health?.injuries.length&&!p.health?.missing.length),context).toBe(true);
+        // An ordinary player does not attack its own settlers to manufacture a
+        // combat milestone. The companion UI scenario explicitly tests that order.
+        expect(colonySummary(world).combat,context).toEqual({shooters:0,flights:0,impacts:0});
       }
       if (world.tick % 6000 === 0) {
         if(process.env.COLONY_PROGRESS==='1')console.info(`Colony ${seed}: day ${world.tick/6000}, ${world.jobs.length} pending jobs`);

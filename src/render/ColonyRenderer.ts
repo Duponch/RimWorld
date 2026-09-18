@@ -1,3 +1,4 @@
+import { ProjectileLayer } from './ProjectileLayer';
 import { EnvironmentLighting } from './EnvironmentLighting';
 import { PresentationQueue } from './PresentationQueue';
 import { MOTION_HISTORY_TICKS } from '../bridge/motion-tracks';
@@ -58,6 +59,7 @@ export class ColonyRenderer {
   private readonly presentation = new PresentationQueue();
   private received:{world:World;speed:number;tracks?:PawnTrack[]}|undefined;
   private hasTracks = false;
+  private readonly projectiles = new ProjectileLayer();
   private readonly pawns = new PawnLayer(this.environmentLighting.configure);
   readonly backend: string;
   private readonly renderer: THREE.WebGPURenderer;
@@ -164,7 +166,7 @@ export class ColonyRenderer {
     renderer.domElement.tabIndex = 0;
     host.appendChild(renderer.domElement);
     this.daylight = new DayNightLayer(this.scene);
-    this.scene.add(this.roofs.surface,this.roofs.areas,this.doors.group,this.crops.group, this.growing.group, this.overview.group, this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup, this.pawns.group);
+    this.scene.add(this.projectiles.mesh,this.roofs.surface,this.roofs.areas,this.doors.group,this.crops.group, this.growing.group, this.overview.group, this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup, this.pawns.group);
     this.rig = new CameraRig(renderer.domElement);
     const hoverMat = new THREE.MeshBasicNodeMaterial({ color: 0xf9ebae, transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide });
     this.hover = new THREE.Mesh(new THREE.PlaneGeometry(0.96, 0.96), hoverMat);
@@ -207,6 +209,7 @@ export class ColonyRenderer {
     const previous=this.received?.world;
     const reset=resetPresentation||!previous||world.tick<previous.tick||world.seed!==previous.seed||world.width!==previous.width||world.height!==previous.height;
     this.received={world,speed,tracks};
+    this.projectiles.adopt(world,reset);
     if(document.hidden)return;
     if(tracks){this.timeline.adopt(world.tick,speed,tracks,performance.now(),reset||!this.hasTracks);this.hasTracks=true;}
     if(reset||!tracks){this.presentation.clear();this.applyWorld(world,reset);return;}
@@ -534,7 +537,7 @@ export class ColonyRenderer {
     // Share the confirmed presentation clock with pawn motion. Loading a save
     // restores the sky; pausing cannot continue an independent wall-clock sun.
     const skyTick = this.hasTracks ? this.timeline.tick : THREE.MathUtils.lerp(this.timeFrom, this.timeTo, this.pawns.blend.value) * TICKS_PER_SECOND;
-    this.doors.tick.value=skyTick;
+    this.doors.tick.value=skyTick;this.projectiles.present(skyTick);
     this.daylight.update(skyTick, this.controls.target);
     const cellPixels=this.rig.pixelsPerCell(this.host.clientHeight);
     const distant=this.overview.group.visible ? cellPixels<9 : cellPixels<7;
@@ -738,7 +741,7 @@ export class ColonyRenderer {
     this.rocks.dispose();
     this.crops.dispose();
     this.resources.clear();
-    this.doors.dispose();
+    this.doors.dispose();this.projectiles.dispose();
     for (const group of [this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup, this.pawns.group]) clearGroup(group);
     this.pileChunks.clear();
     this.staticMaterial.dispose();
