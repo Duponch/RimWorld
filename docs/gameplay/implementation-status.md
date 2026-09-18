@@ -2,7 +2,7 @@
 
 V54 : [producteur d'impact anatomique](../development/bullet-impact.md) pour adulte naturel sans armure, Gunshot persisté, localisation/propagation et conséquences médicales. Tests et clinique UI passent avec impacts injectés. **Partiel :** ce producteur n'a pas encore de déclencheur joueur ; préparation, vol, interception, ralentissement et adversaire restent absents. Aucun tir ajouté au revolver par ce seul lot. Le camp, les soins, l'équipement et la mobilisation déjà jouables restent présents.
 
-Préparation technique sous V53 : [calculs de ligne, couvert, visée, qualités du revolver et capacités testés](../development/combat-queries.md), **non branchés dans la partie**. Ils n'ajoutent ni compétence Tir active, ni attaque, ni dégâts d'arme, ni ennemi ; le bilan jouable ci-dessous est inchangé.
+Préparation technique V53–V54 : [calculs de ligne, couvert, visée, qualités du revolver et capacités testés](../development/combat-queries.md), avec [propriétés et capture du décor réel](../development/combat-world.md), **non branchés dans la partie**. Ils n'ajoutent ni compétence Tir active, ni attaque déclenchée par le joueur, ni ennemi ; le producteur médical V54 reste isolé du tir. Le bilan jouable ci-dessous est inchangé.
 
 V53 livre la [mobilisation et les déplacements dirigés](../development/drafting.md) : individuel/groupe, destinations distinctes, clic droit/Maj, file, arrêt, démobilisation et sauvegarde. Les besoins/santé continuent ; déplacements, cargaisons et patients interrompus restent physiques. **Partiel :** tactique sans couvert/formation, commandes civiles pendant mobilisation refusées ; collisions hostiles et orientations imposées ouvertes. **Absents :** tirs/mêlée, ennemis et résolution du combat. Aucun jalon global terminé.
 

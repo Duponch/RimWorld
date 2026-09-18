@@ -1,7 +1,7 @@
 import type { Cell } from './types.ts';
 
 /** Read-only query surface. The caller owns its lifetime; never cache across a
- * mutation of cover/doors. No World adapter is active before combat integration. */
+ * mutation of cover/doors. combat-world captures concrete content separately. */
 export interface ShotCover { readonly key:string; readonly fill:number; readonly full?:boolean; readonly openDoor?:boolean }
 export interface ShotGrid {
   readonly width:number;

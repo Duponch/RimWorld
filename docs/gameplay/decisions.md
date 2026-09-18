@@ -1,5 +1,7 @@
 # Choix et écarts de gameplay
 
+Sous V54, [capture tactique du décor](../development/combat-world.md) : les égalités de remplissage utilisent l'identifiant persistant plutôt qu'un ordre d'apparition non sauvegardé. Les petits cailloux décoratifs restent sans couvert, distincts des fragments transportables à 50 % ; conversion future à traiter explicitement. Le remplissage tactique ne se déduit pas de la hauteur d'un mesh. Ces propriétés préparent le combat, sans tir jouable.
+
 V53 : [mobilisation](../development/drafting.md) adaptée à la 3D par conservation des arêtes engagées, conservation de cargaison indéposable et sortie physique du mobilier. Repli par proximité sans couvert, pas de formation par glisser ; commandes civiles demandent démobilisation. Ces limites ne constituent pas la cible finale de fidélité. [Sources/version/incertitudes](../research/drafting-reference.md).
 
 V52 : [adaptations de l’équipement](../research/equipment-reference.md). Conserver l’arme désactivée sur sol saturé ; récupération mémorisée après besoins/ordres avec ignorance de sa propre interdiction ; arme visible à la hanche hors combat. File d’équipement différée explicitement. Le buste CSS n’affiche pas une arme hors cadre, mais partage son état/libellé. Ces choix ne valent pas inventaire ou combat livrés.

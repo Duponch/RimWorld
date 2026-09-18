@@ -2,7 +2,7 @@
 
 V54 ajoute la famille médicale **Gunshot**, sans fusion, avec soins et cicatrices ; [contrat](../development/bullet-impact.md). Le producteur anatomique est testé, son déclenchement par une arme reste absent. Aucun objet, munition, protection ou nouvelle recette obtenable.
 
-Le socle isolé de tir sous V53 n'ajoute aucun objet obtenable. Les [sept profils de combat du revolver](../research/ranged-statistics-reference.md) sont définis et testés mais **non utilisés par la partie** ; portée, précision, cadence et dégâts ne sont pas encore jouables. Les obstacles synthétiques des requêtes ne définissent pas les propriétés tactiques du mobilier présent.
+Le socle isolé de tir sous V53 n'ajoute aucun objet obtenable. Les [sept profils de combat du revolver](../research/ranged-statistics-reference.md) sont définis et testés mais **non utilisés par la partie** ; portée, précision, cadence et dégâts ne sont pas encore jouables. Les [propriétés tactiques du contenu présent](../research/combat-world-reference.md) sont désormais définies et testées sous V54 : meubles, portes, plantes, massifs, fragments et cadres. Aucun nouvel objet obtenu ; les petits cailloux décoratifs restent sans couvert, distincts des fragments à 50 %.
 
 V53 ajoute des commandes de mobilisation et déplacement, **aucun objet**. Le revolver reste une principale physique sans tir ; aucune nouvelle arme, munition, tenue ou espèce implicitement livrée. [Contrat](../development/drafting.md).
 

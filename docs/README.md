@@ -1,10 +1,10 @@
 # Documentation de Lisière
 
-V54 : [producteur d'impact anatomique et Gunshot](development/bullet-impact.md), [règles revérifiées](research/bullet-impact-reference.md). Localisation, préservation extérieure, propagation et intégration aux soins/sauvegardes testées. **Pas encore de tir jouable** : le déclencheur, le vol et l'adversaire restent à intégrer.
+V54 : [producteur d'impact anatomique et Gunshot](development/bullet-impact.md), [règles revérifiées](research/bullet-impact-reference.md). Localisation, préservation extérieure, propagation et intégration aux soins/sauvegardes testées. **Pas encore de tir jouable** : le déclencheur, le vol et l'adversaire restent à intégrer. La [capture tactique du décor](development/combat-world.md) prépare maintenant les propriétés réelles de ligne/couvert ; [sources et adaptations](research/combat-world-reference.md), coût mesuré et réduit sans appel par frame.
 
 V53 : [mobilisation et déplacements physiques](development/drafting.md), [règles et adaptations vérifiées](research/drafting-reference.md). Bouton/R, groupes, clic droit/Maj, arrêt, besoins et conservation lors des interruptions. Tirs et adversaires restent le prochain lot humain.
 
-Suite de V53 : [préparation du premier combat](research/combat-preparation.md) et [socle testé](development/combat-queries.md), avec lignes/couvert, visée et [statistiques du revolver revérifiées](research/ranged-statistics-reference.md). Modules isolés, aucun tir jouable ; compétence active, projectile, impact anatomique et adversaire restent à intégrer.
+Suite de V53 : [préparation du premier combat](research/combat-preparation.md) et [socle testé](development/combat-queries.md), avec lignes/couvert, visée et [statistiques du revolver revérifiées](research/ranged-statistics-reference.md). Modules isolés, aucun tir jouable ; compétence active, projectile et adversaire restent à intégrer ; le producteur anatomique est ajouté en V54.
 
 Transport sous V52 : [comparaison ordonnée des ressources](development/presentation-timing.md#coût-de-recherche-des-deltas-sous-v52), mêmes états et règles, coût d’encodage réduit. Garde native minage/abattage verte après modification ; [preuves et limites de charge](development/validation.md). La mobilisation est ajoutée en V53.
 

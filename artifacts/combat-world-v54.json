@@ -1,0 +1,111 @@
+{
+  "date": "2026-09-18T00:05:10.338Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "os": "win32 10.0.26200",
+  "protocol": "Concrete 250² generated World, seed 42, 3/30/100 miners with existing mining/chopping designations; fixed geometric query corridor injected apart from working patch. 50 warmup + 500 measured batches per count, alternating logical door; one full capture shared by all candidate shots, then line/cover/aim. Capture allocations included; generation and door mutation excluded. No simulation stepping, worker, renderer, projectiles or actual firing. One pass; unrelated scene content retained.",
+  "results": [
+    {
+      "actors": 3,
+      "map": [
+        250,
+        250
+      ],
+      "resources": 11914,
+      "rockCells": 8408,
+      "jobs": 15,
+      "legal": 875,
+      "blocked": 625,
+      "hitSum": 175.59015959277068,
+      "captureMs": {
+        "count": 500,
+        "p50": 0.6879999999999882,
+        "p95": 0.9954000000000178,
+        "p99": 1.3147000000000162,
+        "max": 1.4078000000000657
+      },
+      "queryBatchMs": {
+        "count": 500,
+        "p50": 0.013599999999996726,
+        "p95": 0.025200000000040745,
+        "p99": 0.05059999999997444,
+        "max": 0.33969999999999345
+      },
+      "totalBatchMs": {
+        "count": 500,
+        "p50": 0.7014000000000351,
+        "p95": 1.0237999999999374,
+        "p99": 1.3419999999999845,
+        "max": 1.4284999999999854
+      }
+    },
+    {
+      "actors": 30,
+      "map": [
+        250,
+        250
+      ],
+      "resources": 11941,
+      "rockCells": 8516,
+      "jobs": 150,
+      "legal": 9375,
+      "blocked": 5625,
+      "hitSum": 1940.7333428675718,
+      "captureMs": {
+        "count": 500,
+        "p50": 0.690900000000056,
+        "p95": 1.0235000000000127,
+        "p99": 1.2803999999998723,
+        "max": 1.3593999999998232
+      },
+      "queryBatchMs": {
+        "count": 500,
+        "p50": 0.05050000000005639,
+        "p95": 0.07789999999999964,
+        "p99": 0.1426000000001295,
+        "max": 0.31759999999985666
+      },
+      "totalBatchMs": {
+        "count": 500,
+        "p50": 0.7471000000000458,
+        "p95": 1.1014999999999873,
+        "p99": 1.3358999999998105,
+        "max": 1.4385999999999513
+      }
+    },
+    {
+      "actors": 100,
+      "map": [
+        250,
+        250
+      ],
+      "resources": 12011,
+      "rockCells": 8796,
+      "jobs": 500,
+      "legal": 31250,
+      "blocked": 18750,
+      "hitSum": 6469.111142893514,
+      "captureMs": {
+        "count": 500,
+        "p50": 0.6455000000000837,
+        "p95": 0.8929000000000542,
+        "p99": 1.0576000000000931,
+        "max": 1.2484999999999218
+      },
+      "queryBatchMs": {
+        "count": 500,
+        "p50": 0.15819999999985157,
+        "p95": 0.19119999999998072,
+        "p99": 0.4053000000001248,
+        "max": 0.5097999999998137
+      },
+      "totalBatchMs": {
+        "count": 500,
+        "p50": 0.8049999999998363,
+        "p95": 1.0856000000001131,
+        "p99": 1.2666999999999007,
+        "max": 1.4342999999998938
+      }
+    }
+  ]
+}

@@ -1,10 +1,12 @@
 # Adoption du référentiel utilisateur
 
+Décor sous V54 — chapitres 5/10/18/19, SYS/TEST-061/102/103/106/119 : [remplissages et visibilité revérifiés](combat-world-reference.md), [capture World](../development/combat-world.md). Adopter les valeurs, le plus grand remplissage et l'état logique des portes ; adapter égalités par identifiant et cailloux décoratifs sans couvert ; différer l'interception exhaustive et les dégâts au décor. Pas de tir joueur ni de SYS clos.
+
 V54 — chapitres 15/19/20, SYS/TEST-089..091/105/111..112 : [impact Bullet revérifié](bullet-impact-reference.md), [producteur et migration](../development/bullet-impact.md). Adopter pondération anatomique, préservation extérieure, propagation et Gunshot ; adapter transaction au tick et PRNG local ; différer armures, difficulté personnalisée, déclencheur/vol et réactions. Scènes médicales et UI ne valident pas encore une attaque joueur.
 
 Socle de requêtes sous V53 — chapitres 17/18, SYS/TEST-098/101..103/106/119 : règles de ligne, penchement, couvert et rapport adoptées dans [deux modules isolés](../development/combat-queries.md), testées par oracle et scénarios locaux. Aucune intégration d'attaque, migration ou validation globale du combat ; comparaison à l'exécutable actuel ouverte. Les tableaux restent des cibles.
 
-Statistiques isolées sous V53 — chapitres 13/17–20, SYS/TEST-085/099..101/105/111..112 : [profils de revolver, capacités et unités revérifiés](ranged-statistics-reference.md). Adopter les qualités et offsets, adapter la journée Core par dix, différer compétence active, Gunshot et phases. L'ancien XML 45/35 % n'est pas la précision contemporaine 55/40 %. Tests numériques et anatomiques ne ferment aucun SYS/TEST global.
+Statistiques isolées sous V53 — chapitres 13/17–20, SYS/TEST-085/099..101/105/111..112 : [profils de revolver, capacités et unités revérifiés](ranged-statistics-reference.md). Adopter les qualités et offsets, adapter la journée Core par dix, différer compétence active et phases ; Gunshot ajouté en V54. L'ancien XML 45/35 % n'est pas la précision contemporaine 55/40 %. Tests numériques et anatomiques ne ferment aucun SYS/TEST global.
 
 Préparation après V53 — chapitres 17–20, SYS/TEST-098..107, 110..112, 118..120 et UI-009/010 : **adopter comme cible** la séparation ligne/couvert, émission/vol/impact et conséquences anatomiques ; **adapter** horloge et présentation 3D ; **vérifier** définitions d'arme, tissus, interruptions, réactions et collision après correctifs ; **différer** catalogue militaire, armures équipées, boucliers et explosions. [Recherche fraîche](combat-preparation.md). Aucune de ces entrées ne devient livrée par cette préparation.
 

@@ -4,7 +4,7 @@
 
 Sélectionnez un ou plusieurs colons, puis **Mobiliser** ou **R**. Un clic droit au sol les déplace ; **Maj + clic droit** ajoute un déplacement à la file. Le bouton **Arrêter le déplacement** annule la destination et la file, sans téléportation. **Démobiliser/R** rend leur autonomie aux colons. R sans colon sélectionné conserve le raccourci Récolter.
 
-Les mobilisés ne vont pas travailler, manger ou chercher un lit seuls. Leurs besoins et leur santé continuent : un épuisement peut les faire dormir au sol. Une longue attente sans menace les démobilise automatiquement. Les objets portés sont déposés ; si le sol est saturé, le colon conserve sa cargaison jusqu’à une place libre. Tirs et ennemis ne sont pas encore jouables. Pour équiper une arme ou donner un ordre civil de soin, démobilisez d’abord. [Contrat et limites](../development/drafting.md).
+Les mobilisés ne vont pas travailler, manger ou chercher un lit seuls. Leurs besoins et leur santé continuent : un épuisement peut les faire dormir au sol. Une longue attente sans menace les démobilise automatiquement. Les objets portés sont déposés ; si le sol est saturé, le colon conserve sa cargaison jusqu’à une place libre. Tirs et ennemis ne sont pas encore jouables : les valeurs de couvert du décor sont préparées, mais ne constituent pas encore une protection utilisable en combat. Pour équiper une arme ou donner un ordre civil de soin, démobilisez d’abord. [Contrat et limites](../development/drafting.md).
 
 ## Équiper le revolver
 

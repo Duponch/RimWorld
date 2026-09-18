@@ -2,7 +2,7 @@
 
 18 septembre 2026. **Recherche et décisions de préparation, pas gameplay livré.** Le [mode tactique V53](../development/drafting.md) est publié ; le tir et les adversaires restent absents. [ROADMAP](../ROADMAP.md) conserve le prochain lot et les jalons. Cette note évite de transformer les raccourcis du prototype en règles définitives.
 
-Incréments réalisés : [requêtes isolées de ligne, couvert et rapport](../development/combat-queries.md), puis [statistiques du revolver, capacités et unités](ranged-statistics-reference.md), sans adaptateur World ni ordre de tir. Relecture fraîche le 18 septembre des définitions datées et chemins de calcul. L'oracle valide notre géométrie centrale ; coins/bords restent une observation du miroir. Les autres prérequis restent ouverts.
+Incréments réalisés : [requêtes isolées de ligne, couvert et rapport](../development/combat-queries.md), puis [statistiques du revolver, capacités et unités](ranged-statistics-reference.md), avec désormais [capture du décor World](../development/combat-world.md), toujours sans ordre de tir. Relecture fraîche le 18 septembre des définitions datées et chemins de calcul. L'oracle valide notre géométrie centrale ; coins/bords restent une observation du miroir. Les autres prérequis restent ouverts.
 
 ## Corpus et solidité des sources
 
@@ -53,7 +53,7 @@ Le premier adversaire exigera une appartenance/commande distincte : il ne doit n
 Ordre de dépendance du prochain lot, sans second calendrier :
 
 1. Finaliser les données encore incertaines et isoler règles de tir, requête de ligne/couvert et résolution anatomique. Réutiliser anatomie/compétences ; séparer les propriétés tactiques des profils de navigation. Aucun effet de gameplay calculé par image.
-2. Persister intention, préparation/récupération, tirs en vol et appartenance. Valider strictement V53 avant tout nouveau schéma ; ne pas réinitialiser un combat au chargement. Préserver PRNG, identité de l'arme à l'émission et phases d'interruption. Définir précisément la conversion du temps Core vers 10 Hz et ses arrondis avant les tests de cadence.
+2. Persister intention, préparation/récupération, tirs en vol et appartenance. Valider strictement V54 avant tout nouveau schéma ; ne pas réinitialiser un combat au chargement. Préserver PRNG, identité de l'arme à l'émission et phases d'interruption. Définir précisément la conversion du temps Core vers 10 Hz et ses arrondis avant les tests de cadence.
 3. Intégrer ordre contextuel, position de visée, adversaire et réactions nécessaires, puis présentation instanciée. Publication de l'émission et de l'impact à leurs ticks respectifs sur la même horloge que corps, arme et ressources ; les effets graphiques ne causent jamais une blessure.
 4. Valider un affrontement court qui mène réellement à secours, transport, traitement et retour au camp. Reporter explicitement les contenus et branches encore absents avant publication.
 
@@ -63,4 +63,4 @@ Le pilote de colonie conservera son développement et ses bilans, avec un épiso
 
 Audit prévu : 3/30/100 personnes, travailleurs/civils/mobilisés/hostiles, lignes ouvertes et bloquées, déplacements et projectiles simultanés. Mesurer décisions spatiales, pas de simulation, encodage, adoption de scène et images séparément ; conserver p95/p99/max, matériel et graines. Réutiliser les buffers et borner les requêtes spatiales avant d'envisager un compute nouveau. Les mesures V53 de déplacement ne prouvent pas la charge d'un combat.
 
-**Restent à lever avant intégration :** résolution Bullet/Gunshot et protections anatomiques, altération des objets touchés, interruptions précises de visée/récupération, réaction à courte portée, politiques de fuite et collision après les correctifs de juin. Les données d'arme/qualité/précision sont adoptées avec leurs limites de version dans la recherche dédiée, qui consigne aussi les pièges de Gunshot et des statistiques d'arme en vol. Aucun binaire commercial actuel n'est certifié par ces recoupements.
+**Restent à lever avant intégration :** protections équipées et difficulté personnalisée (profil sans armure Bullet/Gunshot V54 livré), altération des objets touchés, interruptions précises de visée/récupération, réaction à courte portée, politiques de fuite et collision après les correctifs de juin. Les données d'arme/qualité/précision sont adoptées avec leurs limites de version dans la recherche dédiée, qui consigne aussi les pièges de Gunshot et des statistiques d'arme en vol. Aucun binaire commercial actuel n'est certifié par ces recoupements.

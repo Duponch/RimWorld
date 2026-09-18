@@ -2,7 +2,7 @@
 
 V54 : [impacts anatomiques](bullet-impact.md) séparés en résolution sur copie (`bullet-impact`) et engagement World (`bullet-damage`). PRNG engagé avec le dossier, couches du même impact avant réconciliation de l'incapacité. Gunshot versionné, V53 validée avant migration. Le producteur sans armure ne remplace pas le futur résolveur de protections ni les phases de tir.
 
-Sous V53, [socle de tir isolé](combat-queries.md) : grille en lecture seule dans `combat-space`, couvert/rapport dans `combat-report`, profils immuables et unités dans `ranged-statistics`. Pas de mutation, PRNG caché, adaptateur World ni appel par frame ; l'intégration reste à faire. Visibilité et occupation/navigation restent distinctes, calcul de précision et compétence persistée aussi.
+Sous V53, [socle de tir isolé](combat-queries.md) : grille en lecture seule dans `combat-space`, couvert/rapport dans `combat-report`, profils immuables et unités dans `ranged-statistics`. Pas de mutation ni PRNG caché. La capture World sous V54 utilise des colonnes numériques et des rapports créés à la demande ; [contrat et durée de vie](combat-world.md). Aucun appel par frame ; la boucle de tir reste à intégrer. Visibilité et occupation/navigation restent distinctes, calcul de précision et compétence persistée aussi.
 
 V53 : [mode tactique](drafting.md) sparse séparé des tâches civiles. Modules règles/destinations/exécution/validation, budgets de navigation communs, UI isolée dans `drafting-controls`. Déclencheurs discrets mode/destination/file observés par le bridge ; aucune nouvelle géométrie ou horloge de rendu.
 

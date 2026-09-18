@@ -1,10 +1,10 @@
 # Matrice des systèmes et critères de réalisation
 
-V53 : [mobilisation/déplacements physiques](../development/drafting.md), SYS-035/UI-007/008/011 partiellement intégrés à G0/G3. Tirs, hostiles, couvert et formations restent absents ; G0–G2 partiels, G3 fondations, G4/G5 non livrés. Calendrier exclusif dans ROADMAP.
+V53 : [mobilisation/déplacements physiques](../development/drafting.md), SYS-035/UI-007/008/011 partiellement intégrés à G0/G3. Tirs, hostiles et formations restent absents ; propriétés/requêtes de couvert préparées sous V54 sans boucle de combat ; G0–G2 partiels, G3 fondations, G4/G5 non livrés. Calendrier exclusif dans ROADMAP.
 
 V52 prolonge les domaines objets/personnages par une première principale physique : revolver, transfert d’identité, dépôt/incapacité et attache GPU. Équipement reste partiel ; combat et inventaire ne sont pas livrés. [État détaillé](implementation-status.md), [contrat](../development/equipment.md). ROADMAP conserve l’ordre canonique G0–G5.
 
-S13 / CAT-018 : [V51](../development/medicines.md) ajoute les doses physiques, plafonds individuels et soins groupés ; acquisition complète, maladies et chirurgie restent ouvertes. Prochain lot selon ROADMAP : équipement puis premier combat.
+S13 / CAT-018 : [V51](../development/medicines.md) ajoute les doses physiques, plafonds individuels et soins groupés ; acquisition complète, maladies et chirurgie restent ouvertes. Équipement V52 livré ; prochain lot selon ROADMAP : premier combat.
 
 S13 : [santé active V45](../development/health.md), blessures localisées, capacités, incapacité/décès et dégâts de toiture construite ; [secours et lits médicaux V46](../development/rescue.md), [traitements sans médicament et repos médical V47](../development/tending.md), [alimentation assistée V48](../development/feeding.md). [Auto-soins ordinaires V49](../development/self-tending.md). [Décisions urgentes et revue au lit V50](../development/urgent-care.md). Domaine encore partiel : expirations/dégâts des autres tâches, acquisition médicale complète, chirurgie/pathologies et dépouilles complètes absents. Aucun jalon clôturé.
 

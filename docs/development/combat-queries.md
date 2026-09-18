@@ -1,10 +1,10 @@
 # Requêtes de tir — socle isolé sous V53
 
-18 septembre 2026. [Recherche et limites de version](../research/combat-preparation.md), chapitres 17–20 et SYS/TEST-098/101..103/106/119. **Ces modules sont testés mais pas appelés par la partie.** Ils ne livrent ni ordre de tir, ni projectile, ni ennemi. Schéma, sauvegardes et cadences civiles restent V53.
+18 septembre 2026. [Recherche et limites de version](../research/combat-preparation.md), chapitres 17–20 et SYS/TEST-098/101..103/106/119. **Ces modules sont testés mais pas appelés par la partie.** Ils ne livrent ni ordre de tir, ni projectile, ni ennemi. Ce socle ne modifie pas le schéma ; la santé porte désormais V54.
 
 ## Frontières
 
-`src/sim/combat-space.ts` expose une grille en lecture seule : dimensions, obstruction visuelle et couvert par cellule. Aucun adaptateur `World` n'attribue encore de remplissage tactique aux plantes, objets ou meubles du catalogue. L'intégration devra relever ces définitions ; nos valeurs synthétiques de tests ne sont pas celles de ces objets. La visibilité reste distincte des meshes et de la navigation.
+`src/sim/combat-space.ts` expose une grille en lecture seule : dimensions, obstruction visuelle et couvert par cellule. La [capture `World` sous V54](combat-world.md) attribue maintenant les propriétés revérifiées aux plantes, objets et meubles ; les fixtures synthétiques initiales restent distinctes de ce catalogue. La visibilité reste distincte des meshes et de la navigation.
 
 Le fournisseur appartient à l'appelant, pour une décision synchrone. Aucun cache d'identité, de tick ou de ligne ne survit implicitement à une mutation. Une porte fermée doit être vue à la requête suivante, même au même tick. Les résultats gardent des copies de cellules et coefficients ; un changement ultérieur ne réécrit pas un ancien rapport.
 
@@ -48,8 +48,8 @@ Ce module numérique ne change ni `Pawn.skills`, ni la persistance. Gunshot et l
 | 30 | 30 000 | 0,0980 ms | 0,1766 ms | 0,3314 ms |
 | 100 | 100 000 | 0,2223 ms | 0,2679 ms | 0,5125 ms |
 
-Une passe, résultats et lectures contrôlés. Ce ne sont ni cent combattants simulés, ni un audit worker/rendu ; ce banc précède les helpers numériques et ne mesure pas une boucle de combat complète. Pas de suite UI ou de long pilote civil pour ces modules non branchés ; ils deviennent nécessaires avec commandes, tirs persistants et effets visibles. Adaptation du monde, acquisition de cibles et projectiles restent à mesurer lors de l'intégration.
+Une passe, résultats et lectures contrôlés. Ce ne sont ni cent combattants simulés, ni un audit worker/rendu ; ce banc précède les helpers numériques et ne mesure pas une boucle de combat complète. Pas de suite UI ou de long pilote civil pour ces modules non branchés ; ils deviennent nécessaires avec commandes, tirs persistants et effets visibles. La capture du monde est mesurée dans son contrat V54 ; acquisition de cibles et projectiles restent à mesurer lors de l'intégration.
 
 ## Suite du lot
 
-[ROADMAP](../ROADMAP.md) demeure canonique. Le producteur anatomique est ajouté en [V54](bullet-impact.md). Restent propriétés tactiques du décor, compétence Tir active, appartenance/hostilité, préparation/récupération, sauvegarde du vol et réactions civiles. Les coins et bords sont confrontés au miroir identifié, pas à un exécutable commercial récent ; conserver ce point dans les futurs essais comparatifs. Aucun SYS global n'est clos.
+[ROADMAP](../ROADMAP.md) demeure canonique. Le producteur anatomique est ajouté en [V54](bullet-impact.md). La capture du décor est ajoutée sous V54. Restent compétence Tir active, appartenance/hostilité, préparation/récupération, sauvegarde du vol et réactions civiles. Les coins et bords sont confrontés au miroir identifié, pas à un exécutable commercial récent ; conserver ce point dans les futurs essais comparatifs. Aucun SYS global n'est clos.
