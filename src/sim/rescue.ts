@@ -1,3 +1,4 @@
+import { isColonist } from './affiliation.ts';
 import { medicalWorkRefusal } from './health-rules.ts';
 import { updatePawnHealth } from './health.ts';
 import { rescueBedAvailable } from './medical-beds.ts';
@@ -8,7 +9,7 @@ import { planCommandDrops,releaseWork } from './work-release.ts';
 import type { NeedContext } from './needs.ts';
 import type { Cell,CommandResult,Pawn,World } from './types.ts';
 
-export const wantsRescue=(p:Pawn):boolean=>p.state==='downed'&&!(p.need?.kind==='sleep'&&p.need.bedId!==null&&p.need.phase==='sleep');
+export const wantsRescue=(p:Pawn):boolean=>isColonist(p)&&p.state==='downed'&&!(p.need?.kind==='sleep'&&p.need.bedId!==null&&p.need.phase==='sleep');
 export function rescueReason(world:World,actor:Pawn,patient:Pawn|undefined):string|undefined {
   return medicalWorkRefusal(actor)??(actor.priorities.doctor===0?'Médecin est désactivé dans le tableau Travail.'
     :actor.collapsePending||world.restRules==='legacy'&&actor.rest===0?'Ce colon doit récupérer de son épuisement.'

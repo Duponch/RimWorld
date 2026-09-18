@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+V58 : `affiliation.ts` sépare contrôle et relation ; `combat-navigation.ts` porte le profil hostile commun aux requêtes et au suivi ; `threats.ts` gère la réponse civile et la sentinelle. Le scénario de création reste isolé dans `encounter-scenario.ts`. Aucun moteur anatomique, projectile ou rig dupliqué pour les ennemis. [Contrat](encounters.md).
+
 V57 : `stagger.ts` possède le marqueur d’impact ; `travel-timing.ts` isole les fenêtres et l’intégration de distance. `MotionRecorder` publie des morceaux linéaires de la même arête ; les attributs GPU existants restent communs au corps et aux objets portés. La simulation ne dépend ni des frames ni des poses. [Contrat](stagger.md).
 
 V56 : [tir commandé](shooting.md), séparé en état/validation/exécution et ordonnanceur `combat-system`. Les dix sous-pas communs aux tireurs et balles gardent les fractions de cadence ; XP et impacts restent autoritaires. `ShootingControls` gère uniquement le ciblage ; `ProjectileLayer` conserve les traces confirmées dans un lot TSL, en utilisant la même horloge que les poses. Aucun nouveau moteur générique ni animation de squelette CPU.

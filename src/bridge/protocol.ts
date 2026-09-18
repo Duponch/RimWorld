@@ -2,7 +2,7 @@ import type { Command } from '../sim/types';
 import type { SnapshotMessage } from './snapshots';
 
 export type Request =
-  | { id: number; type: 'init'; seed: number; size: number }
+  | { id: number; type: 'init'; seed: number; size: number; scenario?:import('../sim/encounter-scenario').ScenarioId }
   | { id: number; type: 'command'; command: Command }
   | { id: number; type: 'order-options'; pawnId: number; x: number; z: number; queue: boolean }
   | { id: number; type: 'speed'; speed: number }

@@ -1,3 +1,4 @@
+import { isColonist } from '../sim/affiliation';
 import { pawnGeometry,cargoGeometry } from './pawn-geometry';
 import { equipmentProjection } from './character-equipment';
 import { doorAt } from '../sim/door-rules';
@@ -198,7 +199,7 @@ export class PawnLayer {
       fromAttribute.setXYZW(index, from.x, from.y, from.z, from.w);
       toAttribute.setXYZW(index, to.x, to.y, to.z, to.w);
       motion.setXYZW(index, pawn.state === 'moving' ? 1 : 0, pawn.state === 'working' ? 1 : 0, pawn.shooting?.stance ? 7 : pawn.state === 'recreating' ? pawn.recreation.task?.activity==='horseshoes'?4:5 : pawn.state === 'sleeping'||pawn.state==='resting'||medicallyStopped(pawn) ? 1 : pawn.state === 'eating' ? dining?.seatId !== null && dining ? 3 : 2 : 0, pawn.id * 1.7);
-      scratchColor.setHex(PAWN_COLORS[index % PAWN_COLORS.length]);
+      scratchColor.setHex(isColonist(pawn)?PAWN_COLORS[index % PAWN_COLORS.length]:0xb74736);
       if(pawn.state==='dead')scratchColor.setHex(0x73756c);
       tint.setXYZ(index, scratchColor.r, scratchColor.g, scratchColor.b);
       equipment.setX(index,gears.has(pawn.id)?1:0);

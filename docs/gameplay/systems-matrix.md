@@ -1,5 +1,7 @@
 # Matrice des systèmes et critères de réalisation
 
+V58 : sous-parties SYS/TEST-035/098..107/111..117 et UI-007..011 enrichies par la première menace autonome, contrôle/hostilité séparés, collision, permissions et fuite. G3 reste partiel : une sentinelle statique ne valide ni mêlée, ni tactique de groupe, ni raid. [État et limites](implementation-status.md).
+
 V57 : SYS/TEST-099..107 et 111..117 enrichis par la conséquence temporaire du projectile, les coûts variables pendant une arête et la continuité GPU. Aucun domaine fermé ; [contrat et limites](../development/stagger.md).
 
 V56 : sous-parties SYS/TEST-085/099..107/111..112 et UI-009/010 désormais utilisées par une commande de tir visible, avec XP, phases, vol, impact et reprise. Pouvoir d’arrêt ajouté en V57 ; factions/adversaires, réactions et UI complète restent ouverts. Aucun domaine G3 complet ; [état exact](implementation-status.md).

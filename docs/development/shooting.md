@@ -18,7 +18,7 @@ L'émission emploie les règles déjà séparées de ligne/couvert/précision et
 
 `skills.shooting` suit le contrat commun niveau/passion/milli-XP, fatigue d'apprentissage et oubli. La précision lit réellement le niveau, la Vue et la Manipulation. Les nouvelles personnes reçoivent les profils de scénario 8/5/3 et passions 1/0/0, sans prétendre générer les biographies Core.
 
-Une émission contre un personnage non à terre donne une base de 20 XP par seconde Core du cycle, soit **38 XP avant passion** pour le revolver. Aucun gain pendant trajet/préparation annulée ; un impact réussi n'est pas requis. Les 170 XP du taux hostile ne sont pas utilisés sans système d'hostilité. Le piquet de loisirs ne produit pas encore d'XP Tir : cette interaction reste explicitement ouverte.
+Une émission contre un personnage non à terre donne une base de 20 XP par seconde Core du cycle, soit **38 XP avant passion** pour le revolver. Aucun gain pendant trajet/préparation annulée ; un impact réussi n'est pas requis. V58 ajoute l’appartenance explicite : 170 XP/s de cycle sur une cible hostile non à terre (323 XP avant passion pour le revolver). Le piquet de loisirs ne produit pas encore d'XP Tir : cette interaction reste explicitement ouverte.
 
 ## Persistance et présentation
 
@@ -30,6 +30,6 @@ Les traces confirmées sont retenues brièvement afin de montrer aussi une balle
 
 ## Périmètre encore incomplet
 
-Pas de factions/ennemis, tir autonome, réaction civile, collision hostile, mêlée, armure, objets endommagés ni dépouille transportable. Le [ralentissement temporaire du pouvoir d’arrêt](stagger.md) est ajouté en V57. Jauge graphique de visée/récupération, son et effets d’impact restent absents. Le premier affrontement doit encore intégrer les réactions et les permissions/collisions hostiles. Portraits encore schématiques, vêtements et inventaire personnel absents.
+V58 ajoute deux affiliations fixes, une sentinelle qui tire, la fuite civile et les collisions hostiles. Mêlée, armure, objets endommagés et dépouille transportable restent absents. Le [ralentissement temporaire du pouvoir d’arrêt](stagger.md) est ajouté en V57. Jauge graphique de visée/récupération, son et effets d’impact restent absents. La sentinelle reste statique et le tir automatique des colons mobilisés reste absent. Portraits encore schématiques, vêtements et inventaire personnel absents.
 
-Le pilote civil conserve ses bilans et vérifie l'absence de tirs spontanés entre colons ; le parcours compagnon de tir utilise une scène contrôlée explicitement alliée. Il ne représente pas le comportement moyen consistant à attaquer ses propres colons. La menace naturelle rejoindra le pilote lorsque des adversaires existeront.
+Le pilote civil conserve ses bilans et vérifie l'absence de tirs spontanés entre colons ; le parcours compagnon de tir utilise une scène contrôlée explicitement alliée. Il ne représente pas le comportement moyen consistant à attaquer ses propres colons. V58 ajoute un pilote compagnon de rencontre : blessure ennemie réelle, défense dirigée, secours, médicaments et suivi du rétablissement.

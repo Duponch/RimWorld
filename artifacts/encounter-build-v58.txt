@@ -1,0 +1,24 @@
+
+> lisiere@0.1.0 build
+> tsc --noEmit && vite build
+
+vite v8.3.0 building client environment for production...
+transforming...
+✓ 279 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/navigation.html                           0.51 kB │ gzip:   0.33 kB
+dist/index.html                                0.69 kB │ gzip:   0.40 kB
+dist/assets/simulation.worker-CTQdssvp.js    362.34 kB
+dist/assets/navigation-Be_IfcT4.css            1.61 kB │ gzip:   0.79 kB
+dist/assets/game-AcbwhtzD.css                 17.74 kB │ gzip:   4.87 kB
+dist/assets/navigation-Dy6iHTbk.js            18.29 kB │ gzip:   7.29 kB
+dist/assets/sim-DWcLptxZ.js                   82.11 kB │ gzip:  27.43 kB
+dist/assets/game-CbPL1iWA.js               1,107.46 kB │ gzip: 311.72 kB
+
+✓ built in 982ms
+[plugin builtin:vite-reporter]
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.

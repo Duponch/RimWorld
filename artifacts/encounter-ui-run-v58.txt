@@ -1,0 +1,8 @@
+
+Running 1 test using 1 worker
+
+(node:21576) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 tests\integration\encounter.spec.ts:24:1 › native encounter UI: opt-in creation, ownership, reaction policy, hostile shots, rescue/care and saved continuation at 1×/6× (21.3s)
+
+  1 passed (23.1s)

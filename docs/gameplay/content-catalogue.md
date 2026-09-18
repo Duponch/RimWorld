@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+V58 ajoute un **profil humain de scénario**, la sentinelle hors-la-loi (même corps adulte, revolver normal, santé commune), et les appartenances colony/outlaws à relations fixes. Aucun nouvel ItemId, armure ou catalogue de factions. Nouvelle colonie Rencontre armée : revolver initial équipé par Ada et un revolver supplémentaire sur la sentinelle ; aucun ajout lors de la migration. [Contrat](../development/encounters.md).
+
 V56 rend le **revolver déjà obtenu** utilisable : tir dirigé, préparation/récupération, précision et XP Tir, balle GPU et impact Gunshot. Aucun nouvel objet ni munition. Normal au départ, sept qualités conservées ; acquisition/fabrication des autres qualités, autres armes, vêtements et armures restent absents. [Contrat de tir](../development/shooting.md), [équipement physique](../development/equipment.md).
 
 V54–V55 ont ajouté lésion Gunshot et vol persistant, maintenant déclenchés par le joueur. Les contacts avec le décor ne le détruisent pas ; le pouvoir d’arrêt du revolver est intégré en V57 pour les adultes naturels. Dépouilles transportables et autres profils de ralentissement restent ouverts. Le remplissage nul des paquets garde son incertitude Core documentée. Fusil/couteau du départ de référence, recettes militaires et vaste catalogue restent à réaliser.

@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 57 as const;
+export const SCHEMA_VERSION = 58 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
@@ -63,6 +63,9 @@ export interface Job extends Cell {
   escrow: Stock;
 }
 export interface Pawn extends Cell {
+  faction?:import('./affiliation.ts').FactionId;
+  hostilityResponse?:'ignore';
+  flee?:import('./threats.ts').FleeState;
   shooting?:import('./shooting-state.ts').ShootingState;
   stagger?:import('./stagger.ts').StaggerState;
   draft?:import('./drafting-rules.ts').DraftState;
@@ -154,6 +157,7 @@ export type AreaAction = 'build-roof' | 'remove-roof' | 'ignore-roof' | 'mine' |
 export interface StorageSettings { filters?: StorageFilters; priority?: number; capacity?: number }
 export interface AreaCommand extends StorageSettings { type: 'area'; action: AreaAction; from: Cell; to: Cell }
 export type Command =
+  | {type:'hostility-response';pawnId:number;response:'flee'|'ignore'}
   | import('./shooting-state.ts').ShootingCommand
   | import('./drafting-rules.ts').DraftCommand
   | import('./equipment-rules.ts').EquipmentCommand

@@ -33,3 +33,5 @@ La première mesure a montré que les allocations de rapports pour chaque plante
 | 100 | 2,3644 → 0,8929 ms | 1,0856 ms | 1,2667 ms | 1,4343 ms |
 
 Une passe avant/après, pas une garantie de budget en combat réel. Pas de test UI ni de longue colonie rejoué pour ces modules non branchés : aucun affichage, commande, schéma ou horloge n'est modifié. L'intégration des attaques devra ajouter le parcours visible, les phases persistantes et la charge mixte prévue dans la ROADMAP.
+
+V58 : `combat-shot-batch` réutilise la capture de tir au sein du seul appel synchrone `advanceWorldCombat`. Les impacts médicaux y modifient personnes et objets mobiles, jamais terrain, plantes, cadres ou bâtiments. Après chaque impact, comparer les piles au sol à remplissage positif (ID, cellule, remplissage) ; un changement invalide la capture, une arme déposée sans couvert ne le fait pas. Cibles mobiles et places d’arrêt sont toujours recapturées après impact ; nouvelle capture complète au tick suivant. Les futurs dégâts d’objet devront étendre cette invalidation.

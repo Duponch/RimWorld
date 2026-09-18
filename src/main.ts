@@ -1,3 +1,4 @@
+import { isColonist,activeThreat } from './sim/affiliation';
 import { ShootingControls } from './ui/shooting-controls';
 const shootingControls=new ShootingControls();
 import { createDraftControls,updateDraftControls,toggleDraft,draftLabel } from './ui/drafting-controls';
@@ -141,7 +142,8 @@ function selectPawn(id: number) {
 function selectPawns(gesture:SelectionGesture,focus=false) {
   if(!snapshot||replacingWorld)return;
   shootingControls.cancel();
-  selection.apply(gesture,new Set(snapshot.pawns.map(p=>p.id)));
+  const singleEnemy=gesture.ids.length===1&&!gesture.additive&&snapshot.pawns.some(p=>p.id===gesture.ids[0]&&!isColonist(p));
+  selection.apply(gesture,new Set(snapshot.pawns.filter(p=>singleEnemy||isColonist(p)).map(p=>p.id)));
   selectedPawn=selection.single;selectedCell=undefined;
   renderer?.setSelectedPawns(selection.ids);
   setPanel(null);
@@ -201,6 +203,10 @@ function rebuildInspector() {
     for(const id of selection.ids) {
       const button=document.createElement('button');button.dataset.groupPawn=String(id);button.onclick=()=>selectPawn(id);el('group-members').append(button);
     }
+  } else if(selectedPawn!==undefined&&snapshot?.pawns.some(p=>p.id===selectedPawn&&!isColonist(p))) {
+    panel.innerHTML='<div class="panel-heading"><h2 id="selected-name"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><p id="selected-action"></p><p>Hors-la-loi · hostile à la colonie. Sentinelle armée, sans poursuite ni mêlée.</p>';
+    createEquipmentInspection(panel,()=>{const pawn=snapshot?.pawns.find(p=>p.id===selectedPawn);return snapshot&&pawn?{world:snapshot,pawn}:undefined;},()=>{});
+    createHealthInspection(panel);
   } else if (selectedPawn !== undefined) {
     panel.innerHTML = `<div class="panel-heading"><h2 id="selected-name"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><p id="selected-action"></p><div class="needs">${(['hunger', 'rest', 'comfort', 'mood'] as const).map((need, index) => `<label>${['Nourriture', 'Repos', 'Confort', 'Humeur'][index]} <span id="selected-${need}"></span></label><meter id="${need}-meter" min="0" max="100" low="25" optimum="100"></meter>`).join('')}</div>${recreationInspection()}<p id="selected-memories" class="muted"></p><button class="secondary-action" id="manage-work">Gérer le travail</button>`;
     el('manage-work').onclick = () => setPanel('work');
@@ -240,11 +246,13 @@ function rebuildInspector() {
     const zone = snapshot && growingZoneAt(snapshot, selectedCell.z * snapshot.width + selectedCell.x);
     if (zone) panel.append(growingControls(zone, command => void attempt(async () => { await client.command(command); rebuildInspector(); renderState(); })));
   } else panel.replaceChildren();
-  if(selection.ids.size){createDraftControls(panel,()=>snapshot?.pawns.filter(p=>selection.ids.has(p.id))??[],c=>void attempt(async()=>{await client.command(c);renderState();}));shootingControls.create(panel,()=>snapshot?.pawns.filter(p=>selection.ids.has(p.id))??[],()=>renderState());}
+  if(selection.ids.size&&snapshot?.pawns.some(p=>selection.ids.has(p.id)&&isColonist(p))){createDraftControls(panel,()=>snapshot?.pawns.filter(p=>selection.ids.has(p.id))??[],c=>void attempt(async()=>{await client.command(c);renderState();}));shootingControls.create(panel,()=>snapshot?.pawns.filter(p=>selection.ids.has(p.id))??[],()=>renderState());}
   const close = document.getElementById('inspect-close');
   if (close) close.onclick = clearSelection;
 }
 function actionLabel(pawn: Pawn) {
+  if(pawn.flee)return pawn.path.length||pawn.moveCooldown>0?'Fuit une menace':'Reste à couvert après la fuite';
+  if(!isColonist(pawn)&&activeThreat(pawn))return pawn.shooting?.stance?.phase==='aim'?'Sentinelle · vise':pawn.shooting?'Sentinelle · récupération après tir':'Sentinelle · surveille les alentours';
   if(pawn.draft)return draftLabel(pawn);
   if(pawn.shooting?.stance?.phase==='cooldown')return 'Récupération après tir';
   if(pawn.equipmentTask)return pawn.equipmentTask.action==='equip'?'Va équiper son arme':'Dépose son arme';
@@ -264,14 +272,14 @@ function actionLabel(pawn: Pawn) {
   return job ? `${stateLabels[pawn.state]} · ${jobLabels[job.kind].toLocaleLowerCase('fr')}` : stateLabels[pawn.state];
 }
 function rebuildPawns(world: World) {
-  el('colonists').replaceChildren(...world.pawns.map((pawn, index) => {
+  el('colonists').replaceChildren(...world.pawns.filter(isColonist).map((pawn, index) => {
     const button = document.createElement('button');
     button.className = 'colonist'; button.dataset.pawn = String(pawn.id);
     button.innerHTML = `<span class="portrait portrait-${index % 3}"><span class="portrait-head"></span><span class="portrait-body"></span><span class="pawn-symbol"></span></span><strong></strong><span class="pawn-mood"><i></i></span>`;
     button.onclick = event => selectPawns({ids:[pawn.id],additive:event.shiftKey,toggle:event.shiftKey},!event.shiftKey);
     return button;
   }));
-  el('work-rows').replaceChildren(...world.pawns.map(pawn => {
+  el('work-rows').replaceChildren(...world.pawns.filter(isColonist).map(pawn => {
     const row = document.createElement('tr'); row.dataset.worker = String(pawn.id);
     const name = document.createElement('th'); name.scope = 'row'; name.textContent = pawn.name; row.append(name);
     for (const work of ['patient','doctor','bedrest', 'gather', 'build', 'haul', 'grow', 'cook', 'craft', 'mine'] as WorkType[]) {
@@ -298,7 +306,7 @@ function renderState() {
   const carried = world.piles.filter(pile => pile.owner.type === 'pawn').reduce((sum, pile) => sum + pile.quantity, 0);
   const delivered = world.piles.filter(pile => pile.owner.type === 'job').reduce((sum, pile) => sum + pile.quantity, 0);
   el('material-status').textContent = `${carried} portées · ${delivered} au chantier`;
-  el('population').textContent = String(world.pawns.filter(p=>p.state!=='dead').length); el('map-size').textContent = `${world.width} × ${world.height}`;
+  el('population').textContent = String(world.pawns.filter(p=>isColonist(p)&&p.state!=='dead').length); el('map-size').textContent = `${world.width} × ${world.height}`;
   el('outdoor-temperature').textContent = `Extérieur : ${outdoorTemperature(world.tick).toFixed(1)} °C`;
   el('day').textContent = `Jour ${1 + Math.floor(world.tick / TICKS_PER_DAY)}`;
   const hour = 24 * (world.tick % TICKS_PER_DAY) / TICKS_PER_DAY;
@@ -308,10 +316,10 @@ function renderState() {
     const active = Number(button.dataset.speed) === currentSpeed;
     button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active));
   }
-  const signature = JSON.stringify(world.pawns.map(pawn => [pawn.id, pawn.name]));
+  const signature = JSON.stringify(world.pawns.filter(isColonist).map(pawn => [pawn.id, pawn.name]));
   if (signature !== pawnSignature) { pawnSignature = signature; rebuildPawns(world); }
   const equipment=equipmentProjection(world);
-  for (const pawn of world.pawns) {
+  for (const pawn of world.pawns.filter(isColonist)) {
     const button = document.querySelector<HTMLButtonElement>(`[data-pawn="${pawn.id}"]`)!;
     button.classList.toggle('selected', selection.ids.has(pawn.id));button.dataset.drafted=String(!!pawn.draft);
     button.setAttribute('aria-pressed', String(selection.ids.has(pawn.id)));
@@ -334,6 +342,7 @@ function renderState() {
   } else if (selectedPawn !== undefined) {
     const pawn = world.pawns.find(item => item.id === selectedPawn);
     if (!pawn) clearSelection();
+    else if(!isColonist(pawn)){el('selected-name').textContent=pawn.name;el('selected-action').textContent=actionLabel(pawn);updateEquipmentInspection(el('inspector'),world,pawn);updateHealthInspection(el('inspector'),pawn);}
     else {
       el('selected-name').textContent = pawn.name; el('selected-action').textContent = pawn.draft||pawn.equipmentTask||pawn.need||pawn.feed||pawn.tend||pawn.rescue||pawn.state==='dead'||pawn.state==='downed' ? actionLabel(pawn) : `${actionLabel(pawn)} · ${queryPawnStatus(world, pawn).reason}`;
       updateEquipmentInspection(el('inspector'),world,pawn);updateSkillsInspection(el('inspector'),pawn);updateHealthInspection(el('inspector'),pawn);
@@ -390,9 +399,11 @@ function renderState() {
     item.append(time, document.createTextNode(entry.message)); return item;
   }));
   if (!entries.length) el('journal-items').textContent = 'Trois survivants. Une nouvelle histoire.';
-  const living=world.pawns.filter(p=>p.state!=='dead');
+  const living=world.pawns.filter(p=>isColonist(p)&&p.state!=='dead');
   const alerts: string[] = [];
-  const downed=living.filter(p=>p.state==='downed').length,bleeding=living.filter(p=>p.health&&medicalBleed(p.health)>=.1).length,deaths=world.pawns.length-living.length;
+  const enemy=world.pawns.find(p=>!isColonist(p)&&activeThreat(p));
+  const threatButton=el<HTMLButtonElement>('inspect-threat');threatButton.hidden=!enemy;if(enemy){threatButton.textContent='Menace armée · voir';threatButton.onclick=()=>selectPawn(enemy.id);}
+  const downed=living.filter(p=>p.state==='downed').length,bleeding=living.filter(p=>p.health&&medicalBleed(p.health)>=.1).length,deaths=world.pawns.filter(isColonist).length-living.length;
   if(downed)alerts.push(`${downed} colon(s) à terre`);
   if(bleeding)alerts.push(`${bleeding} colon(s) saignent`);
   if(deaths)alerts.push(`${deaths} colon(s) décédé(s)`);
@@ -404,7 +415,7 @@ function renderState() {
   if (world.jobs.some(job => constructionRecipe(job).ingredients.length > 0) && world.pawns.every(pawn => pawn.priorities.haul === 0&&pawn.priorities.build === 0)) alerts.push('Construction/transport désactivés : chantiers non approvisionnés');
   const interrupted=world.pawns.filter(pawn=>pawn.interruptedCargo).length;
   if(interrupted)alerts.push(`${interrupted} cargaison(s) conservée(s) : fin de déplacement ou sol proche à libérer`);
-  const idle = world.pawns.filter(pawn => pawn.state === 'idle'&&!pawn.draft&&!pawn.interruptedCargo).length;
+  const idle = world.pawns.filter(pawn => isColonist(pawn)&&pawn.state === 'idle'&&!pawn.draft&&!pawn.flee&&!pawn.interruptedCargo).length;
   if (idle) alerts.push(`${idle} colon(s) disponible(s)`);
   el('alerts').replaceChildren(...alerts.map(text => { const item = document.createElement('p'); item.textContent = text; return item; }));
   const beds = world.structures.filter(structure => structure.kind === 'bed'&&!structure.medical).length;
@@ -444,7 +455,7 @@ async function createWorld() {
   try {
     const previous = await client.save(); if (!previous) throw new Error('Impossible de préserver la colonie actuelle.');
     localStorage.setItem(PREVIOUS_KEY, previous);
-    await client.init(seed, size);
+    await client.init(seed, size,el<HTMLSelectElement>('world-scenario').value as 'camp'|'sentry');
     await renderer?.preparePresentation();
     clearSelection(); setPanel(null); el<HTMLDialogElement>('new-world-dialog').close(); notify(`Nouvelle colonie · ${size} × ${size} · graine ${seed}`);
   } catch (error) {

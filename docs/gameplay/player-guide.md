@@ -1,5 +1,15 @@
 # Guide joueur
 
+## Rencontre armée (V58)
+
+Dans **Menu → Nouvelle colonie**, choisissez **Rencontre armée**, sur une carte de 64 × 64 minimum. Ada commence équipée ; une sentinelle rouge attend à distance. Préparez lits médicaux, médecin et médicaments avant l’approche. « Menace armée · voir » centre la caméra sur elle. Elle tire sur les colons visibles à portée : les blessures, le saignement et le risque de décès sont réels.
+
+Mobilisez un colon équipé puis utilisez **Tirer sur une cible** et cliquez la sentinelle. Après le combat, démobilisez les survivants pour leur permettre de manger, se reposer et soigner. Les blessés à terre sont transportés physiquement vers un lit accessible. L’ennemi ne devient pas un colon ni un patient civil ; capture et prisonniers restent à venir.
+
+**Affectations → Réaction hostile** propose Fuir (défaut) et Ignorer. Un civil éveillé sans ordre imposé fuit une menace visible à moins de huit cases, cherche un refuge puis attend avant de reprendre ses activités. Un ordre direct ou la mobilisation prévaut. Les portes fermées protègent du passage hostile ; une porte ouverte, même interdite à vos colons, peut laisser passer l’ennemi.
+
+**Limites importantes :** cette sentinelle reste sur place, sans poursuite ni mêlée. Le tir sur un adversaire debout adjacent est refusé ; le combat rapproché sera la prochaine base à compléter. Tir automatique des colons mobilisés, réaction Attaquer, raids, armures et diplomatie ne sont pas livrés. Le camp paisible reste le scénario par défaut.
+
 ## Commander un tir
 
 Équipez un colon du revolver, sélectionnez-le et **Mobiliser/R**, puis **Tirer sur une cible**. Cliquez le personnage visé sur la carte ; Échap ou clic droit annule le ciblage. Les personnages présents sont encore des alliés : cette commande peut réellement les blesser. Aucun ennemi n’est encore généré.
@@ -159,7 +169,7 @@ Ouvrir Travail pour régler Collecte, Construction, Transport, Culture et Cuisin
 
 Un transporteur réserve une quantité de pile et de la place à destination, se déplace jusqu'à la source, prélève, porte et dépose. Sa cargaison est visible. Deux colons peuvent se partager une pile sans promettre les mêmes unités. La première livraison réelle transforme le plan en cadre. Un constructeur finit seulement quand tous les matériaux sont livrés et que rien ne gêne l’empreinte. Plans et cadres laissent passer, avec un ralentissement à l’entrée dans un cadre. Les piles gênantes sont portées ailleurs et les plantes réellement coupées ; un colon immobile ou une place de repas réservée fait attendre le chantier. Une interruption conserve la progression et les matériaux déjà déposés ; une cargaison abandonnée devient une pile au sol.
 
-Les chemins contournent eau, terrain rocheux et murs. Tables, lits et feux se traversent avec un ralentissement d’entrée ; le colon choisit une case libre pour travailler ou attendre. Le lit reste utilisable pour le sommeil réservé. Passer directement entre deux tables/lits/feux/tabourets ne répète pas le supplément. Le déplacement sur table, lit ou tabouret adapte aussi sa hauteur visuelle. Les colons civils se traversent sans déplacer ceux qui restent sur place ; l'utilisation d'un lit ou d'un poste reste réservée. Inspecter un chantier indique notamment ses livraisons et ce qu'il attend. Les règles de blocage liées aux ennemis et au combat restent à développer.
+Les chemins contournent eau, terrain rocheux et murs. Tables, lits et feux se traversent avec un ralentissement d’entrée ; le colon choisit une case libre pour travailler ou attendre. Le lit reste utilisable pour le sommeil réservé. Passer directement entre deux tables/lits/feux/tabourets ne répète pas le supplément. Le déplacement sur table, lit ou tabouret adapte aussi sa hauteur visuelle. Les colons civils se traversent sans déplacer ceux qui restent sur place ; l'utilisation d'un lit ou d'un poste reste réservée. Inspecter un chantier indique notamment ses livraisons et ce qu'il attend. V58 ajoute le blocage des corps hostiles debout et les permissions de porte ; la navigation tactique complète reste à développer.
 
 Les colons se déplacent dans huit directions. Une diagonale mesure √2 cases et prend proportionnellement plus de temps ; elle ne coupe pas les coins solides. Ils font face au trajet puis à leur travail. Le rendu utilise un petit tampon temporel pour conserver une marche régulière entre les messages du worker. Un retard exceptionnel peut encore arrêter brièvement l’affichage au dernier état connu.
 
@@ -241,7 +251,7 @@ Avant de créer une nouvelle colonie, le jeu conserve aussi l'état courant dans
 
 ## Limites et suite
 
-Pas encore d'autres cultures, autres postes/recettes de cuisine, chaîne du froid, autres minerais que l’acier et les machines compactées, autres familles de loisirs, animaux, armes, combat, médecine complète, relations, traits, recherche, commerce, câbles/batteries/interrupteurs électriques, toit naturel, santé thermique, incendie, météo dynamique, carte du monde ou storyteller. Les coûts de sols et autres profils de déplacement, les réserves à plusieurs cases partageant une politique, les autres familles sélectionnables, les fournisseurs supplémentaires de travail lié sur une case et les tournées logistiques restent à développer. Les modèles sont provisoires ; la congestion entre agents actifs et la calibration des besoins restent ouvertes. La faim ne cause pas encore de malnutrition ni de décès.
+Pas encore d'autres cultures, autres postes/recettes de cuisine, chaîne du froid, autres minerais que l’acier et les machines compactées, autres familles de loisirs, animaux, autres armes, combat complet, médecine complète, relations, traits, recherche, commerce, câbles/batteries/interrupteurs électriques, toit naturel, santé thermique, incendie, météo dynamique, carte du monde ou storyteller. Les coûts de sols et autres profils de déplacement, les réserves à plusieurs cases partageant une politique, les autres familles sélectionnables, les fournisseurs supplémentaires de travail lié sur une case et les tournées logistiques restent à développer. Les modèles sont provisoires ; la congestion entre agents actifs et la calibration des besoins restent ouvertes. La faim ne cause pas encore de malnutrition ni de décès.
 
 La suite est suivie dans [le plan de développement](../ROADMAP.md). Les détails de la référence et les futures interactions sont dans [la matrice des systèmes](systems-matrix.md).
 
@@ -362,4 +372,4 @@ Les mineurs préparent leurs coups plus lentement dans le noir. Les colons march
 
 Une blessure peut ralentir déplacements, travaux et ingestion. Un colon à terre cesse ses actions et conserve sa cargaison si le sol empêche le dépôt. Il reste dans son lit s’il l’utilisait déjà ; sinon un sauveteur peut l’y porter. Les blessures non permanentes guérissent progressivement, avec avantage à la posture allongée et au lit réel ; la famine bloque cette guérison. Les cicatrices et parties perdues persistent. **Traitements à sec ou avec médicament et alimentation assistée sont disponibles** selon les politiques décrites plus haut. Ramper vers un lit reste absent.
 
-Un colon décédé reste visible et inspectable sur place, sans agir. Transport des dépouilles, enterrement et décomposition seront ajoutés. La santé thermique, la malnutrition, les maladies et les blessures de combat restent également à développer.
+Un colon décédé reste visible et inspectable sur place, sans agir. Transport des dépouilles, enterrement et décomposition seront ajoutés. La santé thermique, la malnutrition, les maladies et les autres producteurs de blessures restent à développer ; les balles de revolver causent déjà de vraies blessures.

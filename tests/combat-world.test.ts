@@ -1,3 +1,4 @@
+import { combatShotBatch } from '../src/sim/combat-shot-batch';
 import { expect,test } from 'vitest';
 import { captureWorldShotGrid } from '../src/sim/combat-world';
 import { clearShotSegment,findShotLine } from '../src/sim/combat-space';
@@ -17,7 +18,7 @@ import { revolverProfile } from '../src/sim/ranged-statistics';
 import { shotAim } from '../src/sim/combat-report';
 import { damageUnarmoredPawnWithBullet } from '../src/sim/bullet-damage';
 import { healthRandom } from '../src/sim/health';
-import { medicalCamp } from './scenarios/health';
+import { medicalCamp,controlledInjury } from './scenarios/health';
 import { rescueCamp } from './scenarios/rescue';
 
 function building(w:World,kind:StructureKind,x:number,z:number,orientation:Orientation=0):Structure {
@@ -228,4 +229,17 @@ test('actual mining, chopping and construction refresh cover without changing sa
   expect(w.piles.reduce((n,p)=>n+(p.item==='steel'?p.quantity:0),0)).toBe(40);
   expect(w.piles.reduce((n,p)=>n+(p.item==='wood'?p.quantity:0),0)).toBe(12);
   expect(initial.blocksSight(11,11)).toBe(true);expect(initial.coverAt(13,11)?.fill).toBe(.25);
+});
+
+
+test('combat transaction reuses fixed cover after injury but refreshes real dropped/moved cover; next batch recaptures terrain',()=>{
+  const w=miningCamp();building(w,'stool',11,12);
+  const batch=combatShotBatch(w),first=batch.read();
+  controlledInjury(w,w.pawns[0],'left-arm',1000);batch.afterImpact();expect(batch.read()).toBe(first);
+  const chunk={id:w.nextId++,kind:'chunk' as const,item:'granite-chunk' as const,quantity:1,owner:{type:'ground' as const,x:11,z:12}};w.piles.push(chunk);
+  batch.afterImpact();const dropped=batch.read();expect(dropped).not.toBe(first);expect(dropped.coverAt(11,12)?.fill).toBe(.5);expect(first.coverAt(11,12)?.fill).toBe(.2);
+  chunk.owner.x=12;batch.afterImpact();const moved=batch.read();expect(moved.coverAt(11,12)?.fill).toBe(.2);expect(moved.coverAt(12,12)?.fill).toBe(.5);
+  w.piles=w.piles.filter(p=>p!==chunk);batch.afterImpact();expect(batch.read().coverAt(12,12)).toBeUndefined();
+  w.tiles[12*w.width+12]={terrain:'rock',stone:'granite'};
+  expect(combatShotBatch(w).read().blocksSight(12,12)).toBe(true);
 });

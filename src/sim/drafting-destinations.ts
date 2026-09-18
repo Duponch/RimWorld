@@ -23,7 +23,8 @@ export function draftDestination(world:World,pawn:Pawn,requested:Cell,blocked:Ui
   for(const d of OFFSETS){if(d.x*d.x+d.z*d.z>2.9**2)break;const c={x:requested.x+d.x,z:requested.z+d.z};if(context.standable(c)){root=c;break;}}
   if(!root)return null;
   const services=reservedServiceCells(world,pawn.id),bodies=new Set(world.pawns.filter(p=>p!==pawn&&p.state!=='dead').map(p=>p.z*world.width+p.x));
-  const reach=candidateAccess(world,origin,blocked,CIVIL_TRANSIT_BLOCKERS);
+  const originActor={...origin,id:pawn.id};
+  const reach=candidateAccess(world,originActor,blocked,CIVIL_TRANSIT_BLOCKERS);
   for(const d of OFFSETS){
     const target={x:root.x+d.x,z:root.z+d.z},index=target.z*world.width+target.x;
     if(!context.standable(target)||blocked[index]||context.claimed.has(index)||services.has(index)||bodies.has(index)||!reach.has(index))continue;

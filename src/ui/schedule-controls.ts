@@ -1,3 +1,4 @@
+import { isColonist } from '../sim/affiliation';
 import { hourOfDay, type ScheduleAssignment, type ScheduleCommand } from '../sim/schedule';
 import type { World } from '../sim/types';
 
@@ -76,10 +77,10 @@ export function createScheduleControls(root: HTMLElement, send: (command: Schedu
   function update(next: World) {
     world = next;
     if (root.hidden) return;
-    const signature = JSON.stringify(next.pawns.map(p => [p.id, p.name]));
+    const signature = JSON.stringify(next.pawns.filter(isColonist).map(p => [p.id, p.name]));
     if (signature !== identity) {
       cancel(); identity = signature; rows.clear(); hour = -1;
-      tbody.replaceChildren(...next.pawns.map(pawn => {
+      tbody.replaceChildren(...next.pawns.filter(isColonist).map(pawn => {
         const element = document.createElement('tr'), name = document.createElement('th'); name.scope = 'row'; name.textContent = pawn.name; element.append(name);
         const cells = Array.from({length: 24}, (_, h) => {
           const td = document.createElement('td'), button = document.createElement('button');
@@ -95,7 +96,7 @@ export function createScheduleControls(root: HTMLElement, send: (command: Schedu
         element.append(td); rows.set(pawn.id, {element, cells, signature: ''}); return element;
       }));
     }
-    for (const pawn of next.pawns) {
+    for (const pawn of next.pawns.filter(isColonist)) {
       const row = rows.get(pawn.id)!, signature = pawn.schedule.join(',');
       if (row.signature === signature) continue;
       row.signature = signature;

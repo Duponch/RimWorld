@@ -128,9 +128,12 @@ export function gameLayout(): string {
       <p>Molette : zoom · glisser le bouton droit : tourner · bouton central ou flèches : déplacer la caméra. La coupe des murs sert à voir les intérieurs ; leurs obstacles restent en place.</p>
       <p class="muted">Inspectez un chantier pour comprendre son attente, ou une réserve pour modifier ses filtres. Horaires permet de régler les plages de travail et de sommeil. Un piquet de fers à cheval offre une autre famille de loisirs que l’observation du ciel. La santé et les pièces restent à développer. Les onglets grisés indiquent les domaines actuellement indisponibles.</p>
     </dialog>
+    <button id="inspect-threat" class="panel" style="position:fixed;right:16px;top:90px;z-index:3" hidden>Menace armée · voir</button>
     <dialog id="new-world-dialog" class="help-dialog"><form id="new-world-form"><button type="button" class="close" id="new-world-close" aria-label="Fermer la création">×</button><h2>Nouvelle colonie</h2>
       <label class="field">Graine<input id="world-seed" inputmode="numeric" type="number" min="0" max="4294967295" value="42" required></label>
       <label class="field">Taille de la carte<select id="world-size">${[32, ...MAP_SIZE_PRESETS].map(size => `<option value="${size}"${size === DEFAULT_MAP_SIZE ? ' selected' : ''}>${size} × ${size} · ${mapSizeLabels[size]} · ${(size * size).toLocaleString('fr-FR')} cases</option>`).join('')}</select></label>
+      <label class="field">Scénario<select id="world-scenario"><option value="camp">Camp paisible</option><option value="sentry">Rencontre armée · carte 64 minimum</option></select></label>
+      <p>Rencontre armée : Ada équipée, une sentinelle hostile à distance du camp. Préparez vos soins avant l’approche. Tirs uniquement ; poursuite et mêlée à venir.</p>
       <p>La même graine et la même taille produisent le même terrain. La partie actuelle restera accessible avec « Colonie précédente ».</p>
       <p id="new-world-error" role="alert" hidden></p>
       <button type="submit" class="primary-action">Créer la colonie</button>

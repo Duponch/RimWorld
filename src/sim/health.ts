@@ -18,7 +18,7 @@ export function reconcilePawnHealth(world:World,pawn:Pawn,body=pawnBody(pawn)):v
   if(!pawn.health)return;
   const status=medicalStatus(pawn.health,body);
   if(status!=='mobile') {
-    delete pawn.draft;delete pawn.shooting;
+    delete pawn.draft;delete pawn.shooting;delete pawn.flee;
     if(pawn.state!==status) {
       const wasSleeping=pawn.state==='sleeping';
       const bed=pawn.need?.kind==='sleep'&&pawn.need.phase==='sleep'&&pawn.need.bedId!==null?pawn.need:null;

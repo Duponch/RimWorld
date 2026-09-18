@@ -1,3 +1,4 @@
+import { activeThreat,hostileTo } from './affiliation.ts';
 import { cancelShooting } from './shooting-state.ts';
 import { AUTO_UNDRAFT_TICKS,DRAFT_QUEUE_LIMIT,sameCell,type DraftCommand } from './drafting-rules.ts';
 import { draftDestination,draftDestinationContext } from './drafting-destinations.ts';
@@ -21,7 +22,7 @@ function announce(world:World,pawn:Pawn,reason:string):void {
 
 /** The logical cell already denotes the end of an active edge. Keep the load on
  * its GPU pose until that edge finishes; never drop it ahead of its carrier. */
-function interruptDraftWork(world:World,pawn:Pawn):void {
+export function interruptDraftWork(world:World,pawn:Pawn):void {
   const travelling=!!pawn.motion&&pawn.motion.end>world.tick;
   const carrying=travelling&&(world.piles.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id)||world.packed.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id));
   if(!carrying){interruptWork(world,pawn);return;}
@@ -41,7 +42,7 @@ export function applyDraftCommand(world:World,command:DraftCommand):CommandResul
     if(typeof command.enabled!=='boolean')return refuse('État de mobilisation invalide.');
     if(command.enabled&&selected.some(medicallyStopped))return refuse('Un colon à terre ou décédé ne peut pas être mobilisé.');
     for(const pawn of selected)if(!!pawn.draft!==command.enabled){
-      if(command.enabled){interruptDraftWork(world,pawn);pawn.draft={lastActiveTick:world.tick,target:null,queue:[]};pawn.planCooldown=0;}
+      if(command.enabled){delete pawn.flee;interruptDraftWork(world,pawn);pawn.draft={lastActiveTick:world.tick,target:null,queue:[]};pawn.planCooldown=0;}
       else endDraft(world,pawn);
     }
     return {ok:true};
@@ -99,6 +100,7 @@ export function processDraft(world:World,pawn:Pawn,getBlocked:NavigationGrid,bud
   }
   if(leaveTransitCell(world,pawn,getBlocked,budget,getLight)){draft.lastActiveTick=world.tick;return;}
   pawn.state='idle';pawn.path=[];
-  // No hostiles exist yet. Combat must supply its active-threat condition here.
+  if(world.pawns.some(p=>hostileTo(pawn,p)&&activeThreat(p))){draft.lastActiveTick=world.tick;return;}
+  // A scenario threat prevents automatic demobilization; no raid AI is implied.
   if(world.tick-draft.lastActiveTick>=AUTO_UNDRAFT_TICKS){endDraft(world,pawn);announce(world,pawn,'démobilisation après une longue attente sans menace.');}
 }

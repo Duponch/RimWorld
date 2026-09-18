@@ -1,0 +1,164 @@
+{
+  "date": "2026-09-18T22:04:00.989Z",
+  "hostileTargets": true,
+  "variant": "Hostile sentries return fire; half the civilian workers begin near a sentry and flee. Other workers mine/chop. Quiet twin still has hostile AI.",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "os": "win32 10.0.26200",
+  "protocol": "250², 3/30/100 actors; one third shoots commanded hostile sentries, one third returns fire, half the remaining civilians flee and the others mine/chop. 240 ticks per case, first 20 excluded from mixed/quiet/encoding percentiles; active-combat includes initial ticks. Independent quiet twin without shot orders, alternating run order. Real health/cadence/XP/PRNG, retarget every 60 ticks, no healing reset. Worker/render excluded. Single pass, timings include JIT/GC and are not a frame guarantee.",
+  "results": [
+    {
+      "actors": 3,
+      "pairs": 1,
+      "movingTargets": false,
+      "hostileTargets": true,
+      "slowedPawns": 1,
+      "retimedEdges": 0,
+      "accepted": 4,
+      "refused": 0,
+      "emissions": 25,
+      "impacts": 6,
+      "commandsMs": {
+        "count": 4,
+        "p50": 2.6257000000000517,
+        "p95": 7.086800000000039,
+        "p99": 7.086800000000039,
+        "max": 7.086800000000039
+      },
+      "mixedTickMs": {
+        "count": 220,
+        "p50": 0.4028000000000702,
+        "p95": 5.723799999999983,
+        "p99": 8.13519999999994,
+        "max": 23.811300000000074
+      },
+      "quietTickMs": {
+        "count": 220,
+        "p50": 1.9597000000001117,
+        "p95": 4.905099999999948,
+        "p99": 7.394900000000007,
+        "max": 9.827099999999973
+      },
+      "activeCombatTickMs": {
+        "count": 193,
+        "p50": 2.044700000000148,
+        "p95": 8.084600000000023,
+        "p99": 23.811300000000074,
+        "max": 47.05090000000007
+      },
+      "encodeMs": {
+        "count": 220,
+        "p50": 2.0422000000000935,
+        "p95": 2.810600000000022,
+        "p99": 3.395100000000184,
+        "max": 5.057500000000118
+      },
+      "dead": 0,
+      "downed": 1,
+      "mixedResourcesRemoved": 0,
+      "quietResourcesRemoved": 0
+    },
+    {
+      "actors": 30,
+      "pairs": 10,
+      "movingTargets": false,
+      "hostileTargets": true,
+      "slowedPawns": 21,
+      "retimedEdges": 12,
+      "accepted": 32,
+      "refused": 8,
+      "emissions": 220,
+      "impacts": 95,
+      "commandsMs": {
+        "count": 40,
+        "p50": 2.101300000000265,
+        "p95": 3.2530000000001564,
+        "p99": 3.4588000000003376,
+        "max": 3.4588000000003376
+      },
+      "mixedTickMs": {
+        "count": 220,
+        "p50": 4.141799999999421,
+        "p95": 13.455399999999827,
+        "p99": 21.91489999999976,
+        "max": 29.91270000000077
+      },
+      "quietTickMs": {
+        "count": 220,
+        "p50": 2.0796000000000276,
+        "p95": 8.178099999999176,
+        "p99": 20.279999999999745,
+        "max": 22.461500000000342
+      },
+      "activeCombatTickMs": {
+        "count": 240,
+        "p50": 4.234699999999975,
+        "p95": 13.924300000000585,
+        "p99": 29.91270000000077,
+        "max": 106.61740000000009
+      },
+      "encodeMs": {
+        "count": 220,
+        "p50": 3.855000000000473,
+        "p95": 4.894199999999728,
+        "p99": 5.451999999999771,
+        "max": 6.9780000000000655
+      },
+      "dead": 6,
+      "downed": 9,
+      "mixedResourcesRemoved": 0,
+      "quietResourcesRemoved": 0
+    },
+    {
+      "actors": 100,
+      "pairs": 33,
+      "movingTargets": false,
+      "hostileTargets": true,
+      "slowedPawns": 72,
+      "retimedEdges": 45,
+      "accepted": 107,
+      "refused": 25,
+      "emissions": 748,
+      "impacts": 336,
+      "commandsMs": {
+        "count": 132,
+        "p50": 2.119300000000294,
+        "p95": 2.7255999999997584,
+        "p99": 4.2475000000004,
+        "max": 7.406600000000253
+      },
+      "mixedTickMs": {
+        "count": 220,
+        "p50": 10.440199999999095,
+        "p95": 23.919200000000274,
+        "p99": 38.344199999999546,
+        "max": 56.538799999998446
+      },
+      "quietTickMs": {
+        "count": 220,
+        "p50": 6.934799999999086,
+        "p95": 20.327899999998408,
+        "p99": 33.96860000000015,
+        "max": 36.35499999999956
+      },
+      "activeCombatTickMs": {
+        "count": 240,
+        "p50": 10.484800000000178,
+        "p95": 26.483799999999974,
+        "p99": 117.82129999999961,
+        "max": 207.9408999999996
+      },
+      "encodeMs": {
+        "count": 220,
+        "p50": 3.8544999999994616,
+        "p95": 4.739999999999782,
+        "p99": 4.999499999999898,
+        "max": 5.409599999999045
+      },
+      "dead": 21,
+      "downed": 32,
+      "mixedResourcesRemoved": 0,
+      "quietResourcesRemoved": 0
+    }
+  ]
+}

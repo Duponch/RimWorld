@@ -50,7 +50,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 57 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 58 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)
@@ -304,3 +304,12 @@
 ## Pouvoir d’arrêt V57
 - Lire docs/development/stagger.md et sa recherche. Ralentissement distinct des blessures et postures de tir : adulte naturel, 95 ticks Core, facteur 0,17 avec paiement minimal de l’arête/450 Core. Renouveler la durée sans addition ni facteur empilé.
 - Ne pas retimer le passé : fenêtres persistées sur l’arête, morceaux linéaires seulement en présentation. Lumière/anatomie/terrain restent la base capturée ; patient porté partage toutes les fenêtres. V56 strictement validée avant V57, sans impact inventé. Autres corps, factions/réactions et armures restent ouverts.
+
+
+## Première rencontre V58
+- Lire docs/development/encounters.md et sa recherche. Propriétaire et relation distincts ; champ absent = colonie historique. Sentinelle statique optionnelle, jamais un raid implicite. Conserver les limites (mêlée, poursuite, Attaquer, réveil défensif et autonomie NPC incomplète).
+- Profil hostile commun à accès progressif, route et suivi, extrémités d’arêtes protégées. Porte de colonie fermée infranchissable au hostile, ouverte accessible même interdite ; les corps bloquent la fermeture sans renouveler le contact amical.
+- Fuite conserve cargaison et arête active ; refuge avec score de pièce/distance, attente persistée. Le tir utilise le même résolveur et 170 XP/s de cycle sur hostile, 20 sur non-hostile. Minimum 1,421 pour la cible hostile debout, pas interdiction universelle à cause d’un tiers adjacent.
+- V57 strictement validée avant migration ; aucun scénario injecté au chargement. Exclure adversaires des commandes/portraits/gestion/soins civils. Les captures de combat ne survivent pas à une décision avec mutation. Pilote de rencontre complémentaire au camp, sans injection de blessures.
+
+- Captures V58 : lire combat-world.md et encounters.md. `combat-shot-batch` ne vit que dans `advanceWorldCombat`, où les impacts ne modifient pas le décor fixe. Vérifier les couvertures mobiles après chaque impact et recapturer cibles/places ; tout futur dommage d’objet exige extension de l’invalidation. Topologie de refuge revérifiée par masque complet, jamais par tick seul.

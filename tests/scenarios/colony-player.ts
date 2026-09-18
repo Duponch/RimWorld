@@ -1,3 +1,4 @@
+export { encounterDecisions } from './encounter-player.ts';
 import { powerDecisions } from './power-player.ts';
 import { componentDecisions } from './components-player.ts';
 import { coolingDecisions } from './cooling-player.ts';

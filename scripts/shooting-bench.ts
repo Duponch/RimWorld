@@ -1,3 +1,4 @@
+import { encounterLoad } from '../tests/scenarios/encounter.ts';
 import { cpus,platform,release } from 'node:os';
 import { performance } from 'node:perf_hooks';
 import { writeFileSync } from 'node:fs';
@@ -8,10 +9,10 @@ import { SnapshotEncoder } from '../src/bridge/snapshots.ts';
 import type { World } from '../src/sim/types.ts';
 
 const stats=(a:number[])=>{const s=[...a].sort((a,b)=>a-b);return {count:s.length,p50:s[Math.ceil(s.length*.5)-1],p95:s[Math.ceil(s.length*.95)-1],p99:s[Math.ceil(s.length*.99)-1],max:s.at(-1)};};
-const proofVersion=process.env.VALIDATION_VERSION??'v57',movingTargets=process.env.MOVING_TARGETS==='1';
+const proofVersion=process.env.VALIDATION_VERSION??'v57',movingTargets=process.env.MOVING_TARGETS==='1',hostileTargets=process.env.HOSTILE_TARGETS==='1';
 const began=performance.now(),results=[];
 for(const count of [3,30,100]) {
-  const {world:w,pairs}=shootingLoad(count,movingTargets),commands:number[]=[],initialResources=w.resources.length;
+  const {world:w,pairs}=(hostileTargets?encounterLoad(count):shootingLoad(count,movingTargets)),commands:number[]=[],initialResources=w.resources.length;
   const quiet=structuredClone(w),mixedMs:number[]=[],quietMs:number[]=[],encodedMs:number[]=[],activeMs:number[]=[];
   const encoder=new SnapshotEncoder();encoder.encode(w,0,6);let accepted=0,refused=0,impacts=0,emissions=new Set<number>(),slowed=new Set<number>(),retimed=new Set<string>();
   for(let tick=0;tick<240;tick++) {
@@ -26,7 +27,7 @@ for(const count of [3,30,100]) {
     if(performance.now()-began>90000)throw Error('Shooting audit exceeded 90s');
   }
   for(const world of [w,quiet]){const errors=validateWorld(world);if(errors.length)throw Error(errors.join('; '));}
-  results.push({actors:count,pairs:pairs.length,movingTargets,slowedPawns:slowed.size,retimedEdges:retimed.size,accepted,refused,emissions:emissions.size,impacts,commandsMs:stats(commands),mixedTickMs:stats(mixedMs),quietTickMs:stats(quietMs),activeCombatTickMs:stats(activeMs),encodeMs:stats(encodedMs),dead:w.pawns.filter(p=>p.state==='dead').length,downed:w.pawns.filter(p=>p.state==='downed').length,mixedResourcesRemoved:initialResources-w.resources.length,quietResourcesRemoved:initialResources-quiet.resources.length});
+  results.push({actors:count,pairs:pairs.length,movingTargets,hostileTargets,slowedPawns:slowed.size,retimedEdges:retimed.size,accepted,refused,emissions:emissions.size,impacts,commandsMs:stats(commands),mixedTickMs:stats(mixedMs),quietTickMs:stats(quietMs),activeCombatTickMs:stats(activeMs),encodeMs:stats(encodedMs),dead:w.pawns.filter(p=>p.state==='dead').length,downed:w.pawns.filter(p=>p.state==='downed').length,mixedResourcesRemoved:initialResources-w.resources.length,quietResourcesRemoved:initialResources-quiet.resources.length});
 }
-const report={date:new Date().toISOString(),cpu:cpus()[0]?.model,node:process.version,os:`${platform()} ${release()}`,protocol:'250², 3/30/100 actors; one third shoots commanded friendly targets, one third remains mobilized (MOVING_TARGETS=1: sixteen queued four-cell legs), rest mines/chops/hauls. 240 ticks per case, first 20 excluded from mixed/quiet/encoding percentiles; active-combat includes initial ticks. Independent quiet twin without shot orders, alternating run order. Real health/cadence/XP/PRNG, retarget every 60 ticks, no healing reset. Worker/render excluded. Single pass, timings include JIT/GC and are not a frame guarantee.',results};
+const report={date:new Date().toISOString(),hostileTargets,variant:hostileTargets?'Hostile sentries return fire; half the civilian workers begin near a sentry and flee. Other workers mine/chop. Quiet twin still has hostile AI.':'Friendly-fire baseline',cpu:cpus()[0]?.model,node:process.version,os:`${platform()} ${release()}`,protocol:(hostileTargets?'250², 3/30/100 actors; one third shoots commanded hostile sentries, one third returns fire, half the remaining civilians flee and the others mine/chop. ':'250², 3/30/100 actors; one third shoots commanded friendly targets, one third remains mobilized (MOVING_TARGETS=1: sixteen queued four-cell legs), rest mines/chops/hauls. ')+'240 ticks per case, first 20 excluded from mixed/quiet/encoding percentiles; active-combat includes initial ticks. Independent quiet twin without shot orders, alternating run order. Real health/cadence/XP/PRNG, retarget every 60 ticks, no healing reset. Worker/render excluded. Single pass, timings include JIT/GC and are not a frame guarantee.',results};
 writeFileSync(`artifacts/shooting-cpu-${proofVersion}.json`,JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report));

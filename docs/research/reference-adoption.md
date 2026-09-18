@@ -1,5 +1,7 @@
 # Adoption du référentiel utilisateur
 
+V58 — chap. 17/20/21 relus directement dans l’original HTML ; SYS/TEST-035, 098..107, 111..117, UI-007..011 : **adopter** appartenance distincte, permissions, collision hostile, réponse Fuir/Ignorer et tirs anatomiques ; **adapter** refuge déterministe, extrémités 3D et sentinelle de scénario ; **différer** mêlée, poursuite, réaction Attaquer, diplomatie et raids. [Recherche fraîche](encounter-reference.md). Aucun SYS global fermé.
+
 V57 — chapitres 16/19/20/21 relus (chronologie, impacts, coûts dynamiques), SYS/TEST-099..107 et 111..117, UI-009/010 : **adopter** ralentissement temporaire et continuation ; **adapter** trajectoire 3D par morceaux sans changer le passé ; **différer** autres corps, hostilité, réactions et armures. [Sources et bornes corrigées](stagger-reference.md). Aucun statut de famille du corpus déclaré validé globalement.
 
 V56 — chapitres 13/17–20, SYS/TEST-085/099..107/111..112, UI-009/010 : [tir dirigé revérifié](shooting-reference.md), [contrat](../development/shooting.md). Adopter cycle et XP/conséquence distincts ; adapter fractions Core, ordre simultané et poses 3D ; différer hostilité, réactions, armures et jauges ; pouvoir d’arrêt repris en V57. Les entrées V53–V55 suivantes conservent la décision de leur lot ; leurs anciennes absences de commande/XP/rendu sont remplacées par cet état V56.

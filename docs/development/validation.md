@@ -1,6 +1,17 @@
-# Validation courante — V57
+# Validation courante — V58
 
-## Ralentissement après impact V57
+## Rencontre armée et fuite V58
+
+Livraison finalisée le 19 septembre 2026. [Contrat](encounters.md), [sources et adaptations](../research/encounter-reference.md), [preuves détaillées](../history/validation-encounter-v58.md). Sentinelle optionnelle, affiliation/permissions/collisions, fuite civile, vrai tir blessant puis secours et soins ; sauvegarde V58 avec migration V57 stricte. Aucun raid ni mêlée annoncé.
+
+Passe complète avant revue finale : **262/262**, puis **41/41 ciblés** après les ajouts de continuation et l’optimisation. Build réussi. Le pilote civil reste couvert par la passe complète ; compagnon de rencontre sur 6 200 ticks, sans blessure injectée. Vraie UI native : création, permissions, réactions, tir à 1×/6×, soins, rechargement pendant portage et fuite chargée ; 21,3 s, aucune erreur navigateur ni saut de fuite observé. La longue UI civile de trois jours n’a pas été répétée (dernière preuve V56).
+
+Audit de combat 250², 3/30/100 acteurs, réellement hostiles : réutilisation du décor de tir après impacts compatibles, topologie du refuge réutilisée mais revérifiée. Simulation p95 à cent acteurs **33,1 → 23,9 ms**, pointes et coûts d’encodage conservés dans les preuves. Ce résultat ne garantit pas 6× à cent acteurs. Mesures natives finales et garde de récolte détaillées dans le rapport lié.
+
+G0 en consolidation, G1/G2 partiels, G3 premières boucles de conflit ; G4/G5 ouverts. Prochaine étape : mêlée élémentaire, puis riposte et poursuite. Estimation globale inchangée, environ 20 % (15–25 %). Les lots historiques ci-dessous ne décrivent pas tous le périmètre courant.
+
+
+## Historique — ralentissement après impact V57
 
 18 septembre 2026. [Contrat](stagger.md), [recherche fraîche](../research/stagger-reference.md), [preuves complètes et limites](../history/validation-stagger-v57.md). Le revolver ralentit l’adulte dès l’impact, même au milieu d’un pas ; renouvellement, expiration, portage d’un blessé et sauvegarde gardent la continuité. La montée/descente des meubles utilise aussi la distance originale, sans saut vertical. Adversaires et réactions restent à venir.
 

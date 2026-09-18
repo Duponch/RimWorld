@@ -1,3 +1,4 @@
+import { isColonist } from './affiliation.ts';
 import { lyingPatient,patientClaimed,bedsideAccess } from './care-access.ts';
 export { lyingPatient } from './care-access.ts';
 import { medicalTendQuality,medicalTendSpeed,treatmentTarget,treatmentTargets,treatmentBatch,urgentTreatment,type TendTask } from './care-rules.ts';
@@ -28,7 +29,7 @@ export function tendingReason(world:World,doctor:Pawn,patient:Pawn|undefined,acc
   return medicalWorkRefusal(doctor)??(!accepted&&doctor.priorities.doctor===0?'Médecin est désactivé.'
     :doctor.interruptedCargo?'La cargaison doit être déposée avant les soins.'
     :!accepted&&(doctor.collapsePending||world.restRules==='legacy'&&doctor.rest===0)?'Ce colon doit récupérer de son épuisement.'
-    :!patient?'Patient introuvable.'
+    :!patient||!isColonist(patient)?'Patient de la colonie introuvable.'
     :patient===doctor&&(world.schemaVersion<49||!doctor.selfTend)?'Les auto-soins sont désactivés dans Santé.'
     :patient!==doctor&&!lyingPatient(patient)||carrierOf(world,patient.id)?'Le patient doit être installé dans un lit.'
     :!treatmentTarget(patient)?'Aucune plaie autorisée ne nécessite un traitement.'

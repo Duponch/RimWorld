@@ -1,3 +1,4 @@
+import { isColonist } from '../sim/affiliation';
 import { equipmentProjection,equipmentDescription } from '../render/character-equipment';
 import { ITEM_DEFINITIONS } from '../sim/items';
 import type { Pawn,World,Command } from '../sim/types';
@@ -12,8 +13,8 @@ export function createEquipmentInspection(parent:HTMLElement,current:()=>{world:
 export function updateEquipmentInspection(parent:HTMLElement,world:World,pawn:Pawn):void {
   const primary=equipmentProjection(world).get(pawn.id),cargo=world.piles.find(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
   parent.querySelector('#equipment-primary')!.textContent=equipmentDescription(primary,pawn);
-  const drop=parent.querySelector<HTMLButtonElement>('#drop-equipment')!;drop.hidden=!primary;drop.disabled=!!pawn.equipmentDropPending||pawn.state==='dead'||pawn.state==='downed';
+  const drop=parent.querySelector<HTMLButtonElement>('#drop-equipment')!;drop.hidden=!primary||!isColonist(pawn);drop.disabled=!!pawn.equipmentDropPending||pawn.state==='dead'||pawn.state==='downed';
   parent.querySelector('#equipment-cargo')!.textContent=cargo?`Cargaison de travail : ${cargo.quantity} ${ITEM_DEFINITIONS[cargo.item].label}`:pawn.rescue?.phase==='carry'?'Transport : personne secourue':world.packed.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id)?'Cargaison : meuble entier':'Aucune cargaison';
   parent.querySelector('#equipment-memory')!.textContent=pawn.droppedWeaponId!==undefined?'Récupérera son arme perdue lorsque ses besoins et engagements le permettront.':'';
-  parent.querySelector<HTMLButtonElement>('#forget-equipment')!.hidden=pawn.droppedWeaponId===undefined;
+  parent.querySelector<HTMLButtonElement>('#forget-equipment')!.hidden=!isColonist(pawn)||pawn.droppedWeaponId===undefined;
 }

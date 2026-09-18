@@ -1,3 +1,4 @@
+import { addActorObstacles } from './combat-navigation.ts';
 import { doorCorners } from './door-rules.ts';
 import type { Cell, World } from './types.ts';
 import type { CandidateAccess } from './navigation-types.ts';
@@ -9,7 +10,7 @@ import { navigationCosts } from './furniture-travel.ts';
  * assigning any unweighted route or distance to the simulation. */
 export function candidateAccess(world:World,start:Cell,blocked:Uint8Array,occupied:ReadonlySet<number>):CandidateAccess {
   const width=world.width,height=world.height,size=width*height,origin=start.z*width+start.x;
-  const unavailable=blocked.slice();for(const index of occupied)unavailable[index]=1;
+  const unavailable=blocked.slice();for(const index of occupied)unavailable[index]=1;addActorObstacles(world,start,unavailable);
   const {costs,repeaters,stops,floors}=navigationCosts(world);
   const corners=doorCorners(world);
   const connected=new Uint8Array(size),queue=new Int32Array(size);let head=0,tail=1;

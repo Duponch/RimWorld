@@ -1,3 +1,4 @@
+import { isColonist } from './affiliation.ts';
 import { feedingReason } from './feeding-rules.ts';
 import { feedingProposal } from './feeding.ts';
 import { tendingReason,tendingProposal,lyingPatient } from './tending.ts';
@@ -75,6 +76,7 @@ function preflight(world:World,pawn:Pawn,job:Job,queue=false):string|undefined {
 }
 /** Called only for a menu query in the worker, not on render frames/snapshots. */
 export function queryOrderOptions(world:World,pawnId:number,cell:Cell,queue=false):OrderOption[] {
+  if(world.pawns.some(p=>p.id===pawnId&&!isColonist(p)))return [];
   const pawn=world.pawns.find(p=>p.id===pawnId);if(!pawn)return [];
   const jobs=world.jobs.filter(j=>footprintCells(j).some(c=>c.x===cell.x&&c.z===cell.z));
   const job=jobs.find(j=>!isRoofJob(j))??jobs[0],pile=groundPile(world,cell),options:OrderOption[]=[];

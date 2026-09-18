@@ -50,7 +50,7 @@ test('impact changes only future movement, refreshes without stacking and carrie
   const copy=deserializeWorld(serializeWorld(w));for(let i=0;i<25;i++){stepWorld(w);stepWorld(copy);expect(copy).toEqual(w);expect(validateWorld(w)).toEqual([]);}
   expect(p.stagger).toBeUndefined();
   const historical=equipmentCamp(1) as any;startTravel(historical,historical.pawns[0],{x:4,z:5});historical.schemaVersion=56;
-  expect(deserializeWorld(JSON.stringify(historical))).toEqual({...historical,schemaVersion:57});
+  expect(deserializeWorld(JSON.stringify(historical))).toEqual({...historical,schemaVersion:58});
   historical.pawns[0].stagger={sinceCore:w.tick*10,untilCore:w.tick*10+95};expect(()=>deserializeWorld(JSON.stringify(historical))).toThrow(/version 56/);
   const bad=structuredClone(saved) as any;bad.pawns[0].motion.stagger[0].end+=.01;expect(validateWorld(bad).length).toBeGreaterThan(0);
   const early=structuredClone(saved) as any;early.schemaVersion=56;delete early.pawns[0].stagger;expect(()=>deserializeWorld(JSON.stringify(early))).toThrow(/version 56/);

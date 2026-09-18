@@ -98,3 +98,5 @@ L’audit V22 conserve la capacité typée mais reporte son calcul après le rej
 ## Extension V28 : sol brut et fragments
 
 Le [minage](mining.md) révèle un sol brut à coût continu de 0,2 tick local. Les fragments ajoutent un coût d’objet de 4,2 ticks avec non-répétition, sont traversables et exclus des arrêts ordinaires. Le maximum sol/objet s’applique ; le coût du sol n’est jamais supprimé par les répétiteurs. `navigationCosts` capture aussi ces minimums pour la recherche pondérée. La hauteur de présentation reste indépendante de ces délais. Contact de minage sur huit voisins, transit corporel toujours sans coupe de coins solides : voir [vérification](../research/mining-reference.md).
+
+V58 : le transit allié reste partagé ; les ennemis debout et les extrémités de leurs arêtes deviennent des obstacles dans l’accès progressif, la route pondérée et le suivi. Une personne à terre peut se relever sous un passant : l’arête déjà engagée reste intacte et sauvegardable. Fuite et cargaison utilisent la même trajectoire GPU. Voir [rencontres](encounters.md).

@@ -1,3 +1,4 @@
+import { isColonist } from './affiliation.ts';
 import { lyingPatient,patientClaimed } from './care-access.ts';
 import { medicalWorkRefusal } from './health-rules.ts';
 import { freshMissing } from './injury-state.ts';
@@ -16,7 +17,7 @@ export function feedingReason(world:World,doctor:Pawn,patient:Pawn|undefined,acc
   return medicalWorkRefusal(doctor)??(!accepted&&doctor.priorities.doctor===0?'Médecin est désactivé.'
     :doctor.interruptedCargo?'La cargaison doit être déposée avant de nourrir un patient.'
     :!accepted&&(doctor.collapsePending||world.restRules==='legacy'&&doctor.rest===0)?'Ce colon doit récupérer de son épuisement.'
-    :!patient||patient===doctor?'Choisissez un autre patient.'
+    :!patient||!isColonist(patient)||patient===doctor?'Choisissez un autre patient.'
     :!needsAssistedFeeding(patient)||carrierOf(world,patient.id)?'Le patient doit avoir besoin de repos médical et être installé au lit.'
     :!accepted&&patient.hunger>FEED_HUNGER?'Ce patient n’a pas encore faim.'
     :patientClaimed(world,patient.id,doctor)?'Ce patient est déjà réservé par un médecin.':undefined);
