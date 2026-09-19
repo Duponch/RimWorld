@@ -1,10 +1,15 @@
 # Guide joueur
 
+## Dormir sous le feu (V62)
+
+Un impact proche peut réveiller un dormeur, même si la balle manque. L’audition et les murs/portes fermées comptent ; une porte ouverte laisse passer le signal. Le colon réagit ensuite selon **Fuir / Attaquer / Ignorer**, si une menace est visible à sa portée de réaction. Sa sortie du lit reste physique.
+
+Le bruit retarde le prochain sommeil volontaire ; un coup reçu couché retarde aussi le retour au repos médical. Un patient couché mais éveillé ne se lève pas au seul bruit, et un blessé à terre ne devient pas mobile par un réveil. Mobiliser un survivant endormi reste possible. Le journal indique le réveil ; cela ne soigne ni ne restaure le repos. [Règles et limites](../development/disturbance.md).
 ## Tir libre et réaction au danger (V60)
 
 Un colon mobilisé tire automatiquement sur les ennemis visibles à portée lorsqu’il tient sa position. **Tirer à volonté** dans l’inspection permet de suspendre ou réautoriser ce comportement ; déplacer le colon garde priorité. Un ordre **Tirer sur une cible** reste possible même avec le tir libre désactivé. Couper le tir libre interrompt la préparation en cours ; un ordre explicite recommence sa visée. La récupération après un coup n’est jamais supprimée. Pendant celle-ci, un nouvel ordre civil est encore refusé : redonnez-le une fois la récupération terminée. Au contact, le colon peut toujours se défendre en mêlée.
 
-Dans **Affectations → Réaction hostile**, ou l’inspection d’un civil, choisissez **Fuir**, **Attaquer** ou **Ignorer**. Attaquer engage les menaces proches : avec le revolver, depuis la position actuelle et dans 66 % de sa portée ; sans arme, le colon peut approcher une menace dans huit cases. Les ordres de travail imposés restent prioritaires. Sommeil et repos médical ne sont pas encore interrompus par cette défense. [Règles et limites](../development/automatic-combat.md).
+Dans **Affectations → Réaction hostile**, ou l’inspection d’un civil, choisissez **Fuir**, **Attaquer** ou **Ignorer**. Attaquer engage les menaces proches : avec le revolver, depuis la position actuelle et dans 66 % de sa portée ; sans arme, le colon peut approcher une menace dans huit cases. Les ordres de travail imposés restent prioritaires. La seule présence d’un hostile ne réveille pas automatiquement un dormeur ; les impacts et dommages suivent les règles V62 ci-dessus. [Règles et limites](../development/automatic-combat.md).
 
 ## Attaquer au corps à corps (V59)
 

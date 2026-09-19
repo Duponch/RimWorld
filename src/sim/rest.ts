@@ -1,3 +1,4 @@
+import { fallingAsleepBlocked } from './disturbance-state.ts';
 import { carrierOf } from './rescue-state.ts';
 import { TICKS_PER_DAY, type Pawn, type World } from './types.ts';
 import { BUILDING_MATERIALS } from './building-materials.ts';
@@ -28,7 +29,7 @@ export function updateRest(world: World, pawn: Pawn): void {
     pawn.restZeroTicks=0;pawn.collapsePending=false;
     if(pawn.moveCooldown>0){delete pawn.medicalSleep;return;}
     if(pawn.medicalSleep&&pawn.rest>=100)delete pawn.medicalSleep;
-    else if(!pawn.medicalSleep&&pawn.rest<75&&pawn.hunger>0)pawn.medicalSleep=true;
+    else if(!pawn.medicalSleep&&pawn.rest<75&&pawn.hunger>0&&!fallingAsleepBlocked(world,pawn))pawn.medicalSleep=true;
     const need=pawn.need,bed=pawn.moveCooldown===0&&need?.kind==='sleep'&&need.phase==='sleep'&&need.bedId!==null?world.structures.find(s=>s.id===need.bedId&&s.kind==='bed'):undefined;
     if(pawn.medicalSleep)pawn.rest=Math.min(100,pawn.rest+(bed?BED_REST_PER_TICK*(bed.material?BUILDING_MATERIALS[bed.material].restFactor:1):GROUND_REST_PER_TICK));
     else pawn.rest=Math.max(0,pawn.rest-(world.restRules==='legacy'?LEGACY_REST_PER_TICK:REST_PER_TICK*restFallFactor(pawn.rest)));

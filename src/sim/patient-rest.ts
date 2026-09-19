@@ -1,3 +1,4 @@
+import { lyingBlocked } from './disturbance-state.ts';
 import { treatmentTarget,healingInjury,urgentTreatment } from './care-rules.ts';
 import { medicalWorkRefusal } from './health-rules.ts';
 import { rescueBedAvailable } from './medical-beds.ts';
@@ -12,6 +13,7 @@ export function patientWork(p:Pawn):'patient'|'bedrest'|undefined {
   if((healingInjury(p)||treatmentTarget(p))&&p.priorities.bedrest>0)return 'bedrest';
 }
 export function patientProposal(world:World,pawn:Pawn,reach:Reachability):{work:'patient'|'bedrest';bedId:number;path:Cell[]}|undefined {
+  if(lyingBlocked(world,pawn))return;
   let work=patientWork(pawn);if(!work)return;
   if(work==='patient'&&!urgentTreatment(pawn)&&!world.pawns.some(p=>p!==pawn&&p.priorities.doctor>0&&!medicalWorkRefusal(p)&&p.state!=='sleeping'&&p.state!=='resting'&&!p.medicalSleep&&!(p.need?.kind==='sleep'&&p.need.phase==='sleep')&&routeToCell(world,p,reach)!==null)){
     if(pawn.priorities.bedrest===0)return;work='bedrest';

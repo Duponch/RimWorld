@@ -1,3 +1,4 @@
+import { disturbanceEvents } from './disturbance.ts';
 import { advanceMelee } from './melee.ts';
 import { blockedCells } from './pathfinding.ts';
 import { advanceWorldProjectiles } from './projectile-system.ts';
@@ -9,13 +10,14 @@ import type { World } from './types.ts';
  * substep. Movable targets/standability expire at impact; fixed cover is checked by the
  * transaction owner. All captures expire at the end of this tick. */
 export function advanceWorldCombat(world:World):void {
+  const disturbance=disturbanceEvents(world);
   const shooters=world.pawns.filter(p=>p.shooting||p.melee).sort((a,b)=>a.id-b.id);
-  if(!shooters.length){advanceWorldProjectiles(world);return;}
+  if(!shooters.length){advanceWorldProjectiles(world,undefined,undefined,disturbance);return;}
   const batch=combatShotBatch(world);
   let queries=shootingQueries(world,batch.read);
   let physical:Uint8Array|undefined;const contactGrid=()=>physical??=blockedCells(world,true);
   advanceWorldProjectiles(world,core=>{let changed=false;for(const pawn of shooters){
-    if(advanceMelee(world,pawn,core,contactGrid,queries)){changed=true;batch.afterImpact();queries=shootingQueries(world,batch.read);}
+    if(advanceMelee(world,pawn,core,contactGrid,queries,disturbance)){changed=true;batch.afterImpact();queries=shootingQueries(world,batch.read);}
     advanceShooter(world,pawn,core,queries);
-  }return changed;},()=>{batch.afterImpact();queries=shootingQueries(world,batch.read);});
+  }return changed;},()=>{batch.afterImpact();queries=shootingQueries(world,batch.read);},disturbance);
 }

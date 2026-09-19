@@ -1,3 +1,4 @@
+import { sleepBlocked } from './disturbance-state.ts';
 import { TICKS_PER_DAY, type CommandResult, type Pawn, type World } from './types.ts';
 
 export const SCHEDULE_ASSIGNMENTS = ['anything', 'work', 'sleep', 'recreation'] as const;
@@ -32,6 +33,7 @@ export function applyScheduleCommand(world: World, command: ScheduleCommand): Co
 }
 
 export function wantsSleep(world: World, pawn: Pawn): boolean {
+  if(sleepBlocked(world,pawn))return false;
   const assignment = assignmentAt(world, pawn);
   if (assignment === 'work' || (world.restRules === 'adult' && pawn.hunger <= 0)) return false;
   return assignment === 'sleep' ? pawn.rest < 75 : world.restRules === 'legacy' ? pawn.rest <= 30 : pawn.rest < 30;

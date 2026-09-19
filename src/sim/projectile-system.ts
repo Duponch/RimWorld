@@ -1,3 +1,4 @@
+import { disturbanceEvents,isLying } from './disturbance.ts';
 import { advanceBulletFlight,type BulletFlight } from './bullet-flight.ts';
 import { captureProjectileBatch } from './projectile-batch.ts';
 import { validWorldProjectile } from './projectile-save.ts';
@@ -23,7 +24,7 @@ export function registerWorldProjectile(world:World,flight:BulletFlight,quality:
 /** Run after doors/environment, before civilian actions. Core substep FIRST,
  * then persistent ID: a closer/lower-ID impact may change the next projectile's
  * admissible targets. Never finish each projectile's whole flight in sequence. */
-export function advanceWorldProjectiles(world:World,beforeCore?:(core:number)=>boolean|void,afterImpact?:()=>void):void {
+export function advanceWorldProjectiles(world:World,beforeCore?:(core:number)=>boolean|void,afterImpact?:()=>void,disturbance=disturbanceEvents(world)):void {
   if(!world.projectiles&&!beforeCore)return;
   const end=world.tick*CORE_TICKS_PER_LOCAL,start=end-CORE_TICKS_PER_LOCAL;
   if(world.projectiles)world.projectiles=world.projectiles.filter(p=>!p.arrival||p.advancedAtCore>start);
@@ -42,9 +43,12 @@ export function advanceWorldProjectiles(world:World,beforeCore?:(core:number)=>b
     const a=next.arrival;if(!a)continue;
     const pawn=a.targetKey?.startsWith('pawn:')?world.pawns.find(pawn=>`pawn:${pawn.id}`===a.targetKey):undefined;
     p.arrival={...a,effect:a.kind==='exit'?'exit':pawn?'pawn':a.targetKey?'unsupported-object':'ground'};
+    const wasLying=!!pawn&&isLying(pawn);
+    if(a.kind!=='exit'&&disturbance.impact({x:Math.floor(a.point.x),z:Math.floor(a.point.z)},core)){targets=undefined;scenes.clear();afterImpact?.();}
     if(pawn) {
       damageUnarmoredPawnWithBullet(world,pawn,{damage:revolverProfile(p.quality).damage});
       applyBulletStagger(world,pawn,core,revolverProfile(p.quality).stoppingPower);
+      disturbance.damage(pawn,core,wasLying);
       // A fall can change posture, release a carried patient and drop objects.
       // Do not reuse a capture across the medical reconciliation.
       targets=undefined;scenes.clear();afterImpact?.();

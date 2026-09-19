@@ -1,5 +1,6 @@
 # Approche autonome et positions de tir — V61
 
+V62 complète ce contrat par les [réveils après impacts et dommages](disturbance.md). Sommeil, repos médical, incapacité et deux échéances sont distincts ; les interruptions générales des autres emplois restent partielles. Les absences mentionnées dans les bilans anciens ci-dessous sont historiques.
 [Recherche fraîche et limites](../research/pursuit-reference.md). Dans une nouvelle **Rencontre armée**, l'adversaire rejoint un poste depuis lequel il peut tirer sur une cible humaine visible ; désarmé, il rejoint le contact. Ce mandat individuel ne déclenche aucun raid ni spawn. Les anciennes sentinelles sans mandat restent fixes.
 
 ## Propriété et phases
@@ -30,4 +31,4 @@ Le bridge publie les changements de cible/poste comme phases discrètes, sans co
 
 `pursuit.spec.ts` observe les attributs GPU dans les vraies frames à 1×/6×, marche/orientation/absence de pose de tir en marche, vol visible, retraite commandée par l'UI et chargement en cours de trajet. `PURSUIT=1 VALIDATION_VERSION=v61` réutilise les bancs CPU et navigateur de tir avec 3/30/100 acteurs et activités mixtes. [Résultats et limites de mesure](../history/validation-pursuit-v61.md).
 
-Pas de raids, retraite/groupes, poursuite des objectifs invisibles, armures, nouveaux objets, réveils défensifs ni autonomie complète du NPC. La partie civile paisible conserve ses boucles antérieures. Aucun jalon G0–G5 clos.
+Pas de raids, retraite/groupes, poursuite des objectifs invisibles, armures, nouveaux objets ni autonomie complète du NPC. La partie civile paisible conserve ses boucles antérieures. Aucun jalon G0–G5 clos.

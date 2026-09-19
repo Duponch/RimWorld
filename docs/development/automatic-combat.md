@@ -1,5 +1,6 @@
 # Acquisition automatique et réponse civile — V60
 
+V62 complète ce contrat par les [réveils après impacts et dommages](disturbance.md). Sommeil, repos médical, incapacité et deux échéances sont distincts ; les interruptions générales des autres emplois restent partielles. Les absences mentionnées dans les bilans anciens ci-dessous sont historiques.
 V61 ajoute le [mandat mobile ennemi](pursuit.md), séparé du tir libre des colons et de la réaction civile. Les descriptions du profil fixe ci-dessous concernent les sentinelles historiques.
 
 [Recherche, valeurs et limites](../research/automatic-combat-reference.md). Les mobilisés tirent à volonté par défaut, depuis leur poste, sur une menace hostile active et atteignable au tir. Le bouton de l’inspection suspend le tir automatique ; les ordres explicites restent disponibles. Couper le tir libre interrompt aussi leur visée, puis l’ordre conservé reprend une préparation entière ; adaptation au tick de commande local, sans réduire la récupération. Au contact, la défense en mêlée reste active même avec tir libre désactivé. Une destination/file de déplacement garde priorité ; aucune préparation pendant une arête capturée.
@@ -22,7 +23,7 @@ Mouvement, arrêt, changement de cible, démobilisation et réglage conservent l
 
 Les scénarios regroupent déclenchement/portée, ligne/alliés, scores/cône/mémoire, ordres/mouvement, interruption chargée, cycles civils, sauvegarde et refus stricts. Le compagnon de colonie rencontre utilise désormais l’autorisation de tir automatique pour défendre puis secourir, sans injecter de dommage. UI réelle à 1×/6×, charge mixte et garde de présentation ont leurs preuves dans [validation](validation.md).
 
-Restent poursuite/positions autonomes, réveil défensif, armes/armures complètes, groupe/raid et conséquences sociales. Les limites de V59 sur soins, maladies et dépouilles ne sont pas effacées par l’acquisition d’une cible.
+Approche/postes individuels sont livrés en V61, réveils défensifs en V62. Restent armes/armures complètes, groupe/raid, réactions générales aux dégâts et conséquences sociales. Les limites de V59 sur soins, maladies et dépouilles ne sont pas effacées par l’acquisition d’une cible.
 
 Limite d’ordres héritée de V56/V59 : un nouvel ordre civil donné pendant la récupération d’un tir/coup est refusé avec motif, sans mutation. Il faut le redonner après récupération ; sa mise en attente immédiate n’est pas encore reproduite. Un ordre civil accepté pendant la visée annule en revanche l’attaque automatique. Les ordres déjà acceptés restent prioritaires. Ne pas confondre cette limite avec une suppression du cooldown.
 

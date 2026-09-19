@@ -1,5 +1,6 @@
 # Catalogue de contenu : couverture connue
 
+V62 ajoute les **réactions aux impacts** au contenu humain existant ; aucun nouvel objet, arme, vêtement, type de bruit audible ou faction. [Contrat](../development/disturbance.md).
 V61 change le **mandat du combattant des nouvelles rencontres** : approche, poste de tir et mêlée sans arme. Aucun nouvel ItemId, raid, armure ou faction. Le profil historique de sentinelle est préservé au chargement. [Contrat](../development/pursuit.md).
 
 V60 ne crée aucun objet : elle rend les acteurs/revolver actuels utilisables par le tir automatique et la réaction civile Attaquer. Aucun inventaire personnel, vêtement, armure ou nouvelle arme implicitement livré. [Contrat](../development/automatic-combat.md).

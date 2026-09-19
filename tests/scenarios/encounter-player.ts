@@ -22,7 +22,7 @@ export function encounterDecisions(world:World):Decision[] {
   }
   if(!world.pawns.some(p=>isColonist(p)&&p.state==='downed'))return [];
   const grid=captureWorldShotGrid(world);
-  for(const p of world.pawns.filter(p=>isColonist(p)&&activeThreat(p)&&equippedWeapon(world,p)&&!p.shooting&&!p.melee)) {
+  for(const p of world.pawns.filter(p=>isColonist(p)&&(activeThreat(p)||p.state==='sleeping'&&!p.draft)&&equippedWeapon(world,p)&&!p.shooting&&!p.melee)) {
     const adjacent=threats.find(t=>meleeContact(world,p,t));
     if(adjacent&&p.draft)return [{reason:'La menace est au contact : frapper plutôt que tenter un tir impossible.',command:{type:'melee',pawnIds:[p.id],targetId:adjacent.id}}];
     const target=threats.filter(t=>distanceSquared(p,t)>=4&&findShotLine(grid,p,{cell:t,leans:true},25.9).ok).sort((a,b)=>distanceSquared(p,a)-distanceSquared(p,b)||a.id-b.id)[0];if(!target)continue;

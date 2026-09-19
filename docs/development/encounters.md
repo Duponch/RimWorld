@@ -1,5 +1,6 @@
 # Rencontre armée et réponses civiles — V58
 
+V62 complète ce contrat par les [réveils après impacts et dommages](disturbance.md). Sommeil, repos médical, incapacité et deux échéances sont distincts ; les interruptions générales des autres emplois restent partielles. Les absences mentionnées dans les bilans anciens ci-dessous sont historiques.
 État courant V61 : [approche et postes de tir](pursuit.md) dans les **nouvelles** rencontres. La sentinelle des anciennes sauvegardes garde son mandat fixe. Les descriptions V58/V60 ci-dessous sont historiques ; raids et autonomie complète restent absents.
 
 Mise à jour V60 : [tir automatique des colons et Attaquer civil](automatic-combat.md) ajoutés. V59 : la sentinelle possède maintenant une riposte au contact via le [contrat de mêlée](melee.md). Elle reste sans poursuite autonome ; les descriptions V58 ci-dessous concernent le lot initial.
@@ -28,6 +29,6 @@ Pas de nouveau calcul de trajet par frame, ni de squelette CPU. Recherche de ref
 
 ## Partiel à compléter
 
-Cette livraison est une sentinelle statique de scénario. Poursuite ennemie, réveil défensif, détection/réaction à tout dommage, gestion de faim autonome du NPC, récupération de son arme, capture, suicide/fin des raids, destruction des objets, factions neutres et diplomatie ne sont pas livrés. Un adversaire désarmé reste une personne hostile ; les actions non livrées ne sont pas remplacées par des téléportations ou des dégâts abstraits. La faim reste sans malnutrition, comme pour les colons actuels.
+La sentinelle historique est fixe ; les nouvelles rencontres utilisent l’approche V61 et les réveils V62. Détection/réaction à tout dommage, gestion de faim autonome du NPC, récupération de son arme, capture, suicide/fin des raids, destruction des objets, factions neutres et diplomatie ne sont pas livrés. Un adversaire désarmé reste une personne hostile ; les actions non livrées ne sont pas remplacées par des téléportations ou des dégâts abstraits. La faim reste sans malnutrition, comme pour les colons actuels.
 
 Audit V58 : captures de tir réutilisées seulement dans la transaction de combat, avec contrôle des couvertures mobiles après impact ; topologie du refuge conservée par propriétaire et entièrement revérifiée à chaque lecture. Aucun changement de règle ni cache fondé sur le seul tick. À cent acteurs, coût CPU p95 observé de 33,1 à 23,9 ms, encore au-dessus du budget d’un tick à 6×. [Mesures et limites](../history/validation-encounter-v58.md).

@@ -1,3 +1,4 @@
+import { disturbanceEvents,isLying } from './disturbance.ts';
 import { automaticPermission,automaticTarget } from './automatic-combat-state.ts';
 import type { shootingQueries } from './shooting.ts';
 import { activeThreat,hostileTo,isColonist } from './affiliation.ts';
@@ -60,7 +61,7 @@ export function startSentryMelee(world:World,pawn:Pawn):boolean {
   pawn.melee={order:{targetId:target.id,startedDowned:false},strike:pawn.melee?.strike??null};return true;
 }
 /** One Core substep. Return true when medical/ground captures have expired. */
-export function advanceMelee(world:World,pawn:Pawn,core:number,contactGrid:()=>Uint8Array,queries:ReturnType<typeof shootingQueries>):boolean {
+export function advanceMelee(world:World,pawn:Pawn,core:number,contactGrid:()=>Uint8Array,queries:ReturnType<typeof shootingQueries>,disturbance=disturbanceEvents(world)):boolean {
   const m=pawn.melee;if(!m)return false;
   if(medicallyStopped(pawn)){delete pawn.melee;return false;}
   if(m.strike&&core>=m.strike.untilCore)m.strike=null;
@@ -75,7 +76,7 @@ export function advanceMelee(world:World,pawn:Pawn,core:number,contactGrid:()=>U
   // attacker to swing before reaching its own interaction cell.
   const randomState={rng:world.rng},random=()=>healthRandom(randomState);
   const tool=chooseMeleeTool(meleeTools(world,pawn,()=>queries.body(pawn)),random);if(!tool){cancelMelee(pawn);return false;}
-  const immobile=['downed','resting','sleeping'].includes(target.state);
+  const immobile=isLying(target);
   if(!immobile)learnSkill(pawn.skills.melee,200*(tool.cooldownCore/60)*XP_SCALE);
   const attacker=queries.body(pawn).capacities,defender=queries.body(target).capacities;
   const hit=immobile||random()<meleeHitChance(pawn.skills.melee.level,attacker.sight,attacker.manipulation);
@@ -92,7 +93,7 @@ export function advanceMelee(world:World,pawn:Pawn,core:number,contactGrid:()=>U
     target.health=impact.record;stun=impact.stun;
   }
   world.rng=randomState.rng;
-  if(outcome==='hit')reconcilePawnHealth(world,target);
+  if(outcome==='hit'){reconcilePawnHealth(world,target);disturbance.damage(target,core,immobile);}
   applyBulletStagger(world,target,core,1);if(stun)applyMeleeStun(world,target,core);
   // Being attacked in melee interrupts ranged aiming, including a miss/dodge.
   if(target.shooting?.stance?.phase==='aim')cancelShooting(target);

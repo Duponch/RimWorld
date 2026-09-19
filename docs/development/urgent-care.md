@@ -1,5 +1,6 @@
 # Priorité médicale aux décisions — V50
 
+V62 complète ce contrat par les [réveils après impacts et dommages](disturbance.md). Sommeil, repos médical, incapacité et deux échéances sont distincts ; les interruptions générales des autres emplois restent partielles. Les absences mentionnées dans les bilans anciens ci-dessous sont historiques.
 17 septembre 2026. [Recherche et correction de portée](../research/urgent-care-reference.md), [auto-soins](self-tending.md), [soins communs](tending.md), [validation](validation.md).
 
 ## Règles jouables
@@ -22,6 +23,6 @@ Un échec d'accès conserve le service précédent et laisse considérer les can
 
 ## Ce que ce lot ne clôture pas
 
-La formulation V49 « préemption médicale générale à implémenter » était trop large : les sources ne décrivent pas une interruption universelle. Expiration des autres tâches et réévaluation après dégâts restent un chantier lié aux futurs comportements/combat. Médicaments ajoutés en [V51](medicines.md). Maladies, chirurgie, mobilisation, factions et hôpitaux spécialisés restent absents. Les sources connues ne garantissent pas une parité de tous les arbitrages de RimWorld.
+La formulation V49 « préemption médicale générale à implémenter » était trop large : les sources ne décrivent pas une interruption universelle. Expiration des autres tâches et réévaluation après dégâts restent un chantier lié aux futurs comportements/combat. Médicaments ajoutés en [V51](medicines.md). Mobilisation et premières hostilités sont livrées depuis ; maladies, chirurgie, diplomatie et hôpitaux spécialisés restent absents. Les sources connues ne garantissent pas une parité de tous les arbitrages de RimWorld.
 
 Cinq scénarios croisés couvrent seuil/priorités, une plaie puis vrai repas, revue au lit, accès/budget, continuation/migration, politiques/incapacité et cent acteurs. Le parcours UI manipule Travail/Santé, laisse la décision automatique se produire, sauvegarde pendant le geste puis observe soin et ingestion sur les attributs GPU réels. Les audits partagent les bancs médicaux existants ; le pilote civil et la clinique de cinq jours restent complémentaires.

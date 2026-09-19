@@ -78,7 +78,7 @@ test('mobile opponents reserve different posts and obey a closed colonial doorwa
 
 test('strict V60 migration, invalid mandates/references/routes/deadlines and same-state randomized continuation',()=>{
   const old=encounterCamp();const saved=JSON.parse(serializeWorld(old));saved.schemaVersion=60;
-  const migrated=deserializeWorld(JSON.stringify(saved));expect(migrated.schemaVersion).toBe(61);expect(migrated.pawns[3].tactics).toBeUndefined();
+  const migrated=deserializeWorld(JSON.stringify(saved));expect(migrated.schemaVersion).toBe(62);expect(migrated.pawns[3].tactics).toBeUndefined();
   saved.pawns[3].tactics=newTactics();expect(()=>deserializeWorld(JSON.stringify(saved))).toThrow('version 60');
   const w=pursuitCamp();run(w,2);
   for(const mutate of [

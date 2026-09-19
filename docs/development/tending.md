@@ -1,5 +1,6 @@
 # Traitement et repos médical — V47
 
+V62 complète ce contrat par les [réveils après impacts et dommages](disturbance.md). Sommeil, repos médical, incapacité et deux échéances sont distincts ; les interruptions générales des autres emplois restent partielles. Les absences mentionnées dans les bilans anciens ci-dessous sont historiques.
 17 septembre 2026. [Recherche fraîche et incertitudes](../research/tending-reference.md), [santé](health.md), [secours](rescue.md), [compétences](skills.md), [validation](validation.md). Corpus chapitre 15 SYS/TEST-094 et 096 ; chapitres 8/9 pour priorités et réservations. Le socle V47 décrit les traitements à sec ; [V51](medicines.md) l’étend avec produits et cinq plafonds, sans livrer l’hôpital complet.
 
 ## Chaîne jouable
@@ -34,6 +35,6 @@ La sauvegarde rejette futurs champs dans les anciens schémas, conflits d'activi
 
 ## Limites maintenues
 
-Auto-soins ordinaires ajoutés en [V49](self-tending.md). Médicaments ajoutés en [V51](medicines.md). Ordres de repos forcé, files médicales, chirurgie, infections/maladies, immunité, hôpital spécialisé et propreté restent à développer. V50 ajoute la [branche urgente et la revue au lit](urgent-care.md). Les recherches ne justifient pas une interruption universelle des travaux ; leurs expirations et réactions aux dégâts restent à développer. Les menaces/factions, prisonniers, animaux et restrictions thermiques seront branchés sur leurs systèmes ; aucune parité exhaustive n'est annoncée.
+Auto-soins ordinaires ajoutés en [V49](self-tending.md). Médicaments ajoutés en [V51](medicines.md). Ordres de repos forcé, files médicales, chirurgie, infections/maladies, immunité, hôpital spécialisé et propreté restent à développer. V50 ajoute la [branche urgente et la revue au lit](urgent-care.md). Les recherches ne justifient pas une interruption universelle des travaux ; leurs expirations et réactions aux dégâts restent à développer. Les premières hostilités sont livrées ; diplomatie, prisonniers, animaux et restrictions thermiques seront branchés sur leurs systèmes ; aucune parité exhaustive n'est annoncée.
 
 Les cinq scénarios profonds de `care.test.ts` croisent statistiques/résultats, repos/sommeil, réservations, accès, interruptions, mort, amputations, migration, snapshots et reprise. Le parcours UI observe les gestes, l'inspection, les attributs GPU et le rechargement pendant traitement. Le pilote de colonie enregistre état médical et XP sans injecter de blessure dans son camp sûr. Les audits 2/30/100 personnes mesurent CPU et navigateur séparément.

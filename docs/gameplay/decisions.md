@@ -1,5 +1,6 @@
 # Choix et écarts de gameplay
 
+V62 : connexion acoustique par espaces/portes ouvertes à la place du plafond Core de quinze régions, et interruption directe du repos mobile après violence. Deux adaptations explicites, sans prétention de parité de tout le gestionnaire de jobs. [Motifs, sources et limites](../research/disturbance-reference.md).
 V61 — Compatibilité des rencontres : `Pawn.tactics` est créé seulement dans une nouvelle Rencontre armée. Les anciennes sauvegardes gardent le comportement fixe ; aucune nouvelle menace inventée au chargement. Approche de cibles visibles, postes et délais locaux sont explicités dans le [contrat](../development/pursuit.md) et la [recherche](../research/pursuit-reference.md). Ce mandat individuel ne remplace pas le futur contrôle de raid.
 
 V60 : [tir automatique et réaction civile](../research/automatic-combat-reference.md). Décision au tick local plutôt qu’à chaque quatrième tick Core, cône sur neuf rayons de grille, tri stable avant tirage ; cooldowns et conservation physiques inchangés. Réveil défensif et réception d’un nouvel ordre civil pendant récupération restent incomplets. Rayon civil exact 0,66 adopté après contradiction avec le résumé approximatif du wiki.

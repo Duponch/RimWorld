@@ -1,5 +1,6 @@
 # Adoption du référentiel utilisateur
 
+V62 — chapitres 8/9/14/15/19/20 et SYS-035/044/079/089..091/094/096/110..112 relus : adopter besoin/posture/capacité distincts et conservation ; adapter propagation du signal et instant de réveil ; différer interruption générale, autres bruits, pensées et groupes. [Recherche fraîche et limites des sources](disturbance-reference.md).
 V61 — chapitres 17/20/21, SYS/TEST-113..117 relus : adopter accès/route/suivi distincts, couvert et obstacles mobiles ; adapter mandat visible, grille/temps/réservations et migration ; différer stratégie de groupe, défense d’objectif et raids. [Confrontation fraîche, versions et incertitudes](pursuit-reference.md). Aucun domaine complet validé par ce seul lot.
 
 V60 — chapitres 16–21, SYS/TEST-035, 098..107, 110..112, UI-009/010 relus dans les originaux HTML/XLSX : **adopter** tir libre à l’arrêt, trois réactions civiles, priorité des ordres et cible pondérée ; **adapter** cadence locale, cône sur grille et approche physique ; **différer** réveil défensif, autres armes, poursuite/postes ennemis et raids. [Recherche fraîche](automatic-combat-reference.md). Aucun domaine global déclaré conforme ou terminé.

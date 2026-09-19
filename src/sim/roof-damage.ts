@@ -1,3 +1,4 @@
+import { disturbanceEvents,isLying } from './disturbance.ts';
 import { BODY_COVERAGE,BODY_PARTS,HUMAN_BODY } from './body-definition.ts';
 import { HP_UNIT,PART_INJURY_RULES } from './injury-rules.ts';
 import { createMedicalRecord,partMissing,remainingPartHealth } from './injury-state.ts';
@@ -7,6 +8,7 @@ import type { World } from './types.ts';
 /** Constructed roof only. Thin-roof Crush targets top/outside parts; it is not
  * Blunt's internal-hit worker and not mountain-roof destruction. */
 export function damageFromRoofCollapse(world:World,cells:ReadonlySet<number>):void {
+  const disturbance=disturbanceEvents(world);
   for(const pawn of world.pawns) {
     if(pawn.state==='dead'||!cells.has(pawn.z*world.width+pawn.x))continue;
     const health=pawn.health??createMedicalRecord(world.tick);
@@ -21,6 +23,8 @@ export function damageFromRoofCollapse(world:World,cells:ReadonlySet<number>):vo
       if(healthRandom(world)>=chance)amount=Math.max(0,hp-HP_UNIT);
     }
     const traits=PART_INJURY_RULES[part.id];
+    const wasLying=isLying(pawn);
     injurePawn(world,pawn,part.id,traits.solid?'crack':traits.skin?'cut':'crush',amount);
+    if(amount>0)disturbance.damage(pawn,world.tick*10,wasLying);
   }
 }

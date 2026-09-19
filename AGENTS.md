@@ -307,7 +307,7 @@
 
 
 ## Première rencontre V58
-- Lire docs/development/encounters.md et sa recherche. Propriétaire et relation distincts ; champ absent = colonie historique. Sentinelle statique optionnelle, jamais un raid implicite. Les suites V59/V60/V61 livrent mêlée, Attaquer et approche du nouveau scénario ; réveil défensif et autonomie NPC complète restent ouverts.
+- Lire docs/development/encounters.md et sa recherche. Propriétaire et relation distincts ; champ absent = colonie historique. Sentinelle statique optionnelle, jamais un raid implicite. Les suites V59/V60/V61 livrent mêlée, Attaquer et approche du nouveau scénario ; V62 ajoute le réveil défensif ; autonomie NPC complète reste ouverte.
 - Profil hostile commun à accès progressif, route et suivi, extrémités d’arêtes protégées. Porte de colonie fermée infranchissable au hostile, ouverte accessible même interdite ; les corps bloquent la fermeture sans renouveler le contact amical.
 - Fuite conserve cargaison et arête active ; refuge avec score de pièce/distance, attente persistée. Le tir utilise le même résolveur et 170 XP/s de cycle sur hostile, 20 sur non-hostile. Minimum 1,421 pour la cible hostile debout, pas interdiction universelle à cause d’un tiers adjacent.
 - V57 strictement validée avant migration ; aucun scénario injecté au chargement. Exclure adversaires des commandes/portraits/gestion/soins civils. Les captures de combat ne survivent pas à une décision avec mutation. Pilote de rencontre complémentaire au camp, sans injection de blessures.
@@ -332,5 +332,12 @@
 
 - Lire `docs/development/pursuit.md` et sa recherche. Mandat NPC optionnel, cible/poste/échéance Core persistants. Nouveau scénario mobile ; absence de mandat = sentinelle historique fixe, migration V60 stricte et neutre.
 - Classement des postes, visibilité, accès progressif puis route pondérée unique. Réservations de postes distinctes du transit ; revalider chaque pas, conserver arêtes et récupérations. Aucun cache de décision entre mutations/acteurs/ticks.
-- Ne pas confondre approche visible et raid/stratégie collective. Réveil défensif, cibles invisibles, destruction de portes, retraite et besoins autonomes NPC restent ouverts. Les corrections officielles de juin sont postérieures au miroir de mai : conserver les incertitudes.
+- Ne pas confondre approche visible et raid/stratégie collective. V62 ajoute le réveil défensif ; cibles invisibles, destruction de portes, retraite et besoins autonomes NPC restent ouverts. Les corrections officielles de juin sont postérieures au miroir de mai : conserver les incertitudes.
 - Le pilote de rencontre réaffecte un survivant si le médecin est indisponible. Exiger secours et traitements achevés ; préserver les échecs et leurs diagnostics. Les audits incluent les pointes initiales de planification.
+
+
+## Réveils défensifs V62
+- Lire `docs/development/disturbance.md` et sa recherche. Bruit d’impact à l’arrivée, rayon strict 12 × audition ; Harm NPC alliés endormis, rayon 18. Portes fermées et masses isolent, portes ouvertes connectent les espaces. Adaptation explicite par espaces, pas reproduction des quinze régions Core.
+- Deux délais persistés : bruit → sommeil volontaire 1 000 Core ; violence reçue couché → coucher volontaire/entrée en sommeil 400 Core. Repos médical éveillé distinct du sommeil ; morts/à-terre/portés ne se lèvent pas. Effondrement involontaire conservé.
+- V61 strictement validée avant migration neutre V62. Réveil conserve lit attribué, file, arête, récupération et cargaison ; il libère seulement le service actuel. Ancrer santé avant posture et renouveler les captures combat après un réveil même sans blessure.
+- Capture acoustique possédée par la transaction, invalidable aux futurs dommages d’objets. Aucun parcours par image. Préemption générale des autres jobs, autres bruits, pensées et réveils de groupe restent ouverts ; ne pas généraliser l’interruption de repos à tous les travaux.

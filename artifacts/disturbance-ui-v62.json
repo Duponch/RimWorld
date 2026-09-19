@@ -1,0 +1,27 @@
+{
+  "date": "2026-09-19T01:13:46.685Z",
+  "backend": "native WebGPU",
+  "reports": [
+    {
+      "speed": 1,
+      "awakeTick": 3009,
+      "deadline": {
+        "sleepUntilCore": 31044,
+        "lieUntilCore": 0
+      },
+      "sleepFrames": 186,
+      "escapeFrames": 13
+    },
+    {
+      "speed": 6,
+      "awakeTick": 3014,
+      "deadline": {
+        "sleepUntilCore": 31044,
+        "lieUntilCore": 0
+      },
+      "sleepFrames": 54,
+      "escapeFrames": 9
+    }
+  ],
+  "errors": []
+}

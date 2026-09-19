@@ -1,0 +1,84 @@
+tmp/v62-tests.log
+
+> lisiere@0.1.0 test
+> vitest run
+
+
+ RUN  v5.0.0 E:/Code/RimWorld
+
+
+ Test Files  69 passed (69)
+      Tests  291 passed (291)
+   Start at  03:02:44
+   Duration  130.95s (tests 92%, import 7%, transform 2%)
+
+
+
+tmp/v62-final-targeted.log
+
+ RUN  v5.0.0 E:/Code/RimWorld
+
+
+ Test Files  4 passed (4)
+      Tests  22 passed (22)
+   Start at  03:10:46
+   Duration  5.96s (tests 63%, transform 24%, import 13%)
+
+
+
+tmp/v62-build-final.log
+
+> lisiere@0.1.0 build
+> tsc --noEmit && vite build
+
+vite v8.3.0 building client environment for production...
+transforming...
+✓ 297 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/navigation.html                           0.51 kB │ gzip:   0.33 kB
+dist/index.html                                0.69 kB │ gzip:   0.40 kB
+dist/assets/simulation.worker-DoqzlEzX.js    389.50 kB
+dist/assets/navigation-Be_IfcT4.css            1.61 kB │ gzip:   0.79 kB
+dist/assets/game-AcbwhtzD.css                 17.74 kB │ gzip:   4.87 kB
+dist/assets/navigation-Dfk1zeSO.js            18.29 kB │ gzip:   7.29 kB
+dist/assets/sim-B5IQgz5N.js                   83.03 kB │ gzip:  27.75 kB
+dist/assets/game-BDww6wwP.js               1,110.47 kB │ gzip: 312.57 kB
+
+✓ built in 527ms
+[plugin builtin:vite-reporter] 
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+
+tmp/v62-native.log
+
+Running 1 test using 1 worker
+
+(node:20416) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 tests\integration\shooting-load.spec.ts:21:1 › native mixed shooting load: 3/30/100 actors, 250², worker/scene/frames and GPU capacity growth (39.3s)
+
+  1 passed (40.7s)
+
+
+Garde finale de presentation
+
+> lisiere@0.1.0 test:presentation
+> node scripts/check-presentation.mjs
+
+{"action":"mine","frames":{"count":7802,"p50":5.900000000001455,"p95":6.400000000001455,"p99":6.599999999998545,"max":17.5},"jumpCount":0,"solidOccupancyCount":0}
+{"action":"chop","frames":{"count":7755,"p50":6,"p95":6.5,"p99":6.600000000000364,"max":17.5},"jumpCount":0,"solidOccupancyCount":0}
+
+
+UI finale
+
+Running 1 test using 1 worker
+
+(node:21260) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 tests\integration\disturbance.spec.ts:13:1 › native night attack at 1×/6×: real impact, sleeping GPU pose, physical wake/escape and saved deadline (6.3s)
+
+  1 passed (7.6s)

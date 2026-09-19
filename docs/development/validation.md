@@ -1,4 +1,11 @@
-# Validation courante — V61
+# Validation courante — V62
+
+
+## Réveils défensifs V62
+
+291/291 globaux puis 22/22 ciblés finaux ; build et UI native 1×/6× réussis. Le pilote de rencontre inclut une réserve endormie mobilisée avant secours et soins réels sur une journée. [Preuves complètes, limites et adaptations](../history/validation-disturbance-v62.md).
+
+Charge mixte 3/30/100 : cent acteurs CPU tous ticks p95 38,21 / p99 49,53 / max 59,00 ms, images p95 12,2 / p99 23,6 / max 121,3 ms. Sources gelées pendant la mesure, aucun pipeline supplémentaire. Ne pas garantir 6× soutenu. Vêtements/protection ensuite ; les sections suivantes conservent les résultats historiques.
 
 ## Approche ennemie et postes de tir V61
 

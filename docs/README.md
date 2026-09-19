@@ -1,5 +1,6 @@
 # Documentation de Lisière
 
+V62 : [réveils défensifs](development/disturbance.md), [recherche et divergences](research/disturbance-reference.md), [preuves](history/validation-disturbance-v62.md). Impacts audibles, repos médical distinct et délais sauvegardés ; pas une interruption universelle des travaux.
 V61 : [approche ennemie et postes de tir](development/pursuit.md), [recherche et adaptations](research/pursuit-reference.md), [preuves](history/validation-pursuit-v61.md). Les nouvelles rencontres ont un adversaire mobile ; les anciennes sauvegardes conservent leur sentinelle fixe. Les mentions d’absence des lots précédents sont historiques.
 
 V60 : [tir automatique et réaction civile Attaquer](development/automatic-combat.md), [sources revérifiées](research/automatic-combat-reference.md), [preuves](history/validation-automatic-combat-v60.md). Les colons mobilisés défendent leur poste ; les civils disposent des trois réactions. Poursuite ennemie et positions tactiques restent ouvertes. Les entrées V59 et antérieures ci-dessous décrivent leur livraison historique.
