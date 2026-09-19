@@ -36,7 +36,7 @@ test('native medical load: 2/30/100 actors, exact carried poses and stable pipel
       if(feeding||medicine){for(const p of initial.pawns)if(p.need?.kind==='sleep'){p.need.target.x+=100;p.need.target.z+=100;}for(const p of initial.piles)if(p.owner.type==='ground'){p.owner.x+=100;p.owner.z+=100;}}
       expect(validateWorld(initial)).toEqual([]);
       await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
-      await page.goto('/?e2e&size=250');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
+      await page.goto('/?scenario=camp&e2e&size=250');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
       await page.evaluate(()=>new Promise<void>(resolve=>{let n=90;const f=()=>{if(!--n)resolve();else requestAnimationFrame(f);};requestAnimationFrame(f);}));
       const profiler=process.env.MEDICAL_PROFILE?await page.context().newCDPSession(page):undefined;
       if(profiler){await profiler.send('Profiler.enable');await profiler.send('Profiler.start');}

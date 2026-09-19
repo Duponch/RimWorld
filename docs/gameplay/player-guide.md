@@ -1,5 +1,13 @@
 # Guide joueur
 
+## Choisir son départ
+
+**Trois survivants** est le nouveau départ proposé : forêt tempérée, trois personnes en chemise, 300 bois, 450 acier, 30 composants, 50 repas emballés, 30 médicaments, un revolver et un gilet. Les réserves sont de vraies piles près de l’arrivée. **Vêtements complexes** et **Climatisation** sont déjà connus : préparez couchages, stockage, nourriture renouvelable et protection selon votre site. La taille standard reste **250 × 250**. La caméra rejoint votre point d’arrivée.
+
+Dans **Menu → Nouvelle colonie**, choisissez la graine, la taille et le scénario. **Camp pédagogique** conserve l’ancien départ et les deux recherches à effectuer ; **Rencontre armée** est un exercice de combat, à partir de 64 × 64. Le menu rappelle l’origine de la partie, quand elle est connue. Les sauvegardes historiques ne gagnent ni objets ni technologies. « Colonie précédente » permet de retrouver la partie remplacée.
+
+Ce départ s’inspire de Crashlanded avec le contenu disponible : autres armes, argent, animal domestique, capsules, tenues complètes et difficulté du narrateur original manquent encore. Un seul profil tempéré est proposé ; les formats compacts servent aux essais. [Contrat et différences](../development/scenario-start.md).
+
 **Chasser et cuisiner V79 :** équipez un civil d'un revolver, activez **Chasse** dans **Travail**, puis cochez **Chasser** sur un lièvre dans **Faune**. Il approche, tire et achève au contact une proie à terre si nécessaire. Le corps reste physique et peut pourrir. Une réserve avec le filtre **Dépouilles animales** permet son rangement, même si le chasseur n'est pas affecté à Transport. Vous pouvez annuler la désignation ; les balles déjà tirées continuent leur trajet.
 
 Dans **Architecte → Production**, posez gratuitement un **Emplacement de boucherie**, puis ajoutez sa facture. Un colon affecté à **Cuisine** y apporte une dépouille fraîche, travaille et obtient viande et cuir. Les blessures et parties manquantes diminuent le rendement ; le poste ne restitue que70% du rendement du cuisinier. La viande peut entrer dans un repas simple au feu de camp avec combustible. Mangeable crue, elle donne une pensée négative ; le cuir est stockable mais sa fabrication reste à venir. **Biographie** présente Cuisine ; la température ralentit ou arrête la pourriture sans rajeunir le produit. Une ancienne partie conserve ses régimes/filtres et Chasse désactivée : activez explicitement ceux dont vous avez besoin. Si un corps est bloqué par un meuble ou une pile, le chasseur peut le prendre directement pour le ranger. Hors chasse ou après abandon, il faut encore dégager sa cellule pour permettre le transport ordinaire. [Règles et limites](../development/hunting.md).

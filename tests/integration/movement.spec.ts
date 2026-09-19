@@ -13,7 +13,7 @@ test('civil crossing in the real worker: shared cell, save/reload, three exclusi
     const fixture=civilCrossingFixture(),old=JSON.parse(serializeWorld(fixture));(old.schemaVersion=13,withoutPawnSkills(old));for(const a of old.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete old.deconstructed;delete old.packed;for(const pawn of old.pawns){delete pawn.orders;delete pawn.recreation;}
     const migrated=deserializeWorld(JSON.stringify(old));expect(migrated).toEqual(fixture);
     await page.addInitScript(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:JSON.stringify(old)});
-    await page.goto('/?size=16&e2e');await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();
+    await page.goto('/?scenario=camp&size=16&e2e');await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();
     await expectWorld(page,migrated);expect(await page.evaluate(()=>window.__lisiere.backend)).toBe('WebGPU');
     await page.keyboard.press('Escape');await page.locator('[data-speed="1"]').click();
     await page.waitForFunction(()=>{
@@ -51,7 +51,7 @@ test('GPU travel preserves speed, corners and work-facing through real worker sn
   try {
     await page.route('**/src/main.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:probe+await response.text()});});
     await page.addInitScript(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:serializeWorld(fixture)});
-    await page.goto('/?size=32&e2e');await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();
+    await page.goto('/?scenario=camp&size=32&e2e');await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();
     await page.evaluate(()=>{(window as any).__travel.active=true;});
     await page.locator('[data-speed="6"]').click();
     await page.waitForFunction(()=>window.__lisiere.world.jobs.length===0,undefined,{timeout:45000,polling:100});
@@ -87,7 +87,7 @@ test('loaded furniture crossing shares GPU heights, preserves speed within each 
   try {
     await page.route('**/src/main.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:probe+await response.text()});});
     await page.addInitScript(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:serializeWorld(fixture)});
-    await page.goto('/?size=16&e2e');await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,fixture);
+    await page.goto('/?scenario=camp&size=16&e2e');await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,fixture);
     expect(await page.evaluate(()=>window.__lisiere.backend)).toBe('WebGPU');await page.keyboard.press('Escape');
     await page.locator(`[data-pawn="${fixture.pawns[0]!.id}"]`).click();
     await page.evaluate(()=>{(window as any).__furniture.active=true;});await page.locator('[data-speed="1"]').click();

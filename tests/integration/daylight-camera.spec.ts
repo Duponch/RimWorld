@@ -19,7 +19,7 @@ test('vue iso/perspective : sélection, rectangle, pause, reprise et ciel restau
     fixture.pawns.forEach((p, i) => Object.assign(p, { x: 13 + i, z: 15, hunger: 100, rest: 100 }));
     fixture.resources.push({ id: fixture.nextId++, kind: 'tree', x: 18, z: 14, amount: 12 });
     await page.addInitScript(({ key, value }) => localStorage.setItem(key, value), { key: saveKey, value: serializeWorld(fixture) });
-    await page.goto('/?e2e&size=32&seed=42'); await expect(page.locator('#loading')).toHaveCount(0);
+    await page.goto('/?scenario=camp&e2e&size=32&seed=42'); await expect(page.locator('#loading')).toHaveCount(0);
     await page.locator('[data-speed="0"]').click(); await panel(page, 'menu'); await page.locator('#load').click(); await expectWorld(page, fixture);
     await expect.poll(async () => (await probe()).sample.daylight).toBe(1);
     const initial = await probe();

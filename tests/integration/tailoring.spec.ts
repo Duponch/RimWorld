@@ -19,7 +19,7 @@ test('natural-cotton checkpoint: real architect, bill, interruption, saved unfin
     const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);
     await page.route('**/src/main.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:probe+await response.text()});});
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
-    await page.goto('/?e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
+    await page.goto('/?scenario=camp&e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
     await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
     await perform(page,{reason:'Confectionner le tissu récolté par cette colonie.',command:{type:'priority',pawnId:p.id,work:'craft',value:1}},{value:0});
     await perform(page,{reason:'Poser un emplacement gratuit.',command:{type:'designate',kind:'crafting-spot',x:8,z:10}},{value:0});

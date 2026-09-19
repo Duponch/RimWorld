@@ -15,7 +15,7 @@ try {
     const response=await route.fetch();
     await route.fulfill({response,body:`window.__farmBench={view:null};const farmFrame=ColonyRenderer.prototype.frame;ColonyRenderer.prototype.frame=function(now){const b=window.__farmBench;b.view=this;const start=performance.now();const result=farmFrame.call(this,now);if(b.active){const row={time:now,cpu:performance.now()-start,calls:this.stats.drawCalls,triangles:this.stats.triangles};if(b.transition.length<30)b.transition.push(row);else if(b.warm>0)b.warm--;else {b.frames.push(row);if(b.frames.length>=300&&now-b.frames[0].time>=6000){b.active=false;b.done({frames:b.frames,transition:b.transition});}}}return result;};\n`+await response.text()});
   });
-  await page.goto('http://127.0.0.1:5173/?e2e&seed=42');await page.locator('#loading').waitFor({state:'detached'});await page.locator('[data-speed="0"]').click();
+  await page.goto('http://127.0.0.1:5173/?scenario=camp&e2e&seed=42');await page.locator('#loading').waitFor({state:'detached'});await page.locator('[data-speed="0"]').click();
   report.adapter=await page.evaluate(()=>{const i=window.__farmBench.view.renderer.getContext().getConfiguration().device.adapterInfo;return {vendor:i.vendor,architecture:i.architecture,description:i.description};});
   await page.evaluate(()=>{
     const b=window.__farmBench,v=b.view,w=structuredClone(v.world);

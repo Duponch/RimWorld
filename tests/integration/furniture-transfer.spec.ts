@@ -12,7 +12,7 @@ test('le joueur réinstalle un lit tourné, reprend son portage sauvegardé puis
  try {
   const fixture=deconstructionCamp();fixture.tick=2000;const bed=fixtureBuilding(fixture,'bed',14,16,1),pin=fixtureBuilding(fixture,'horseshoes',18,13);fixture.pawns[0]!.bedId=bed.id;const initial=woodAccount(fixture);
   await page.addInitScript(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:serializeWorld(fixture)});
-  await page.goto('/?size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,fixture);
+  await page.goto('/?scenario=camp&size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,fixture);
   const rotation={value:0};await perform(page,{reason:'Déplacer le lit existant.',command:{type:'install',structureId:bed.id,x:23,z:19,orientation:3}},rotation);
   await cell(page,bed.x,bed.z);await page.locator('#cell-cancel').click();await expect.poll(async()=>(await world(page)).jobs.length).toBe(0);
   await perform(page,{reason:'Reprendre le déplacement après annulation sur la source.',command:{type:'install',structureId:bed.id,x:23,z:19,orientation:3}},rotation);

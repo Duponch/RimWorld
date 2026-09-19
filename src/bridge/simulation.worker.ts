@@ -1,15 +1,10 @@
 /// <reference lib="webworker" />
-import { enableWildlife } from '../sim/wildlife';
-import { enableHeatwaves } from '../sim/heatwave';
-import { initializeCampTraits } from '../sim/traits';
-import { enableRaids } from '../sim/raids';
-import { enableArrivals } from '../sim/arrivals';
-import { setupEncounter } from '../sim/encounter-scenario';
+import { createScenarioWorld } from '../sim/new-game';
 import { MotionRecorder } from './motion-tracks';
 import { FixedClock } from './fixed-clock';
 import { PresentationChanges } from './presentation-changes';
 import { queryOrderOptions } from '../sim/player-orders';
-import { applyCommand, createWorld, deserializeWorld, serializeWorld, stepWorld } from '../sim/index';
+import { applyCommand, deserializeWorld, serializeWorld, stepWorld } from '../sim/index';
 import type { World } from '../sim/types';
 import type { Request, Response } from './protocol';
 import { MAP_SIZE_PRESETS } from '../sim/map-config';
@@ -35,9 +30,7 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
     let data: string | undefined;
     if (request.type === 'init') {
       if (request.size !== 32 && !(MAP_SIZE_PRESETS as readonly number[]).includes(request.size)) throw new Error('Taille de carte invalide.');
-      if(request.scenario!==undefined&&!['camp','sentry'].includes(request.scenario))throw new Error('Scénario invalide.');
-      const created=createWorld(request.seed, request.size, request.size);
-      if(request.scenario==='sentry')setupEncounter(created);else {initializeCampTraits(created);enableArrivals(created);enableRaids(created);enableHeatwaves(created);enableWildlife(created);}
+      const created=createScenarioWorld(request.seed, request.size, request.scenario);
       world=created;
       motion.reset();
       clock.reset(performance.now());

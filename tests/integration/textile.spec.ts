@@ -11,7 +11,7 @@ test('cotton UI 1×/6×: crop choice, sowing, cloth filter, physical harvest/car
     const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);
     const initial=createWorld(42,32,32);initial.resources=[];initial.piles=[];initial.tiles=initial.tiles.map(()=>({terrain:'grass'}));initial.pawns.forEach(p=>{p.hunger=100;p.rest=100;p.priorities.grow=1;p.priorities.haul=2;});refreshStock(initial);
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
-    await page.goto('/?size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);
+    await page.goto('/?scenario=camp&size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);
     await tool(page,'growing');await dragRectangle(page,{x:18,z:16},{x:20,z:17});
     // Exercise the same driver as the multi-day journey: a working widget alone
     // did not catch the missing growing-policy branch in that driver in V76.

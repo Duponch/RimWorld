@@ -12,7 +12,7 @@ test('Horaires : peindre, annuler, clavier, copier, reprendre et réveiller phys
     const fixture=createWorld(42,32,32);fixture.tiles=fixture.tiles.map(()=>({terrain:'grass'}));fixture.resources=[];
     fixture.pawns.forEach((p,i)=>{p.x=13+i*3;p.z=13;p.rest=60;p.priorities={hunt:0,research:0, patient:0,bedrest:0,doctor:0,craft:2,mine:2,gather:0,build:0,haul:0,grow:0,cook:0};fixture.structures.push({id:fixture.nextId++,kind:'bed',x:p.x,z:p.z,orientation:0,footprint:'standard'});p.bedId=fixture.structures.at(-1)!.id;});
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(fixture)});
-    await page.goto('/?size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
+    await page.goto('/?scenario=camp&size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
     await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,fixture);
     await page.keyboard.press('F2');await expect(page.locator('#schedule-panel')).toBeVisible();
     await expect(page.locator('[data-schedule-hour]')).toHaveCount(72);await expect(page.locator('[data-schedule-brush="recreation"]')).toBeEnabled();

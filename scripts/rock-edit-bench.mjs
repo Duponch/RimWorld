@@ -13,7 +13,7 @@ try {
   page.on('pageerror',e=>report.errors.push(e.message));
   page.on('console',m=>{if(m.type()==='error'||/GPUValidationError|invalid pipeline/i.test(m.text()))report.errors.push(m.text());});
   await page.route('**/src/main.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:`window.__rockView=null;const rockFrame=ColonyRenderer.prototype.frame;ColonyRenderer.prototype.frame=function(t){window.__rockView=this;return rockFrame.call(this,t);};\n`+await response.text()});});
-  await page.goto('http://127.0.0.1:5173/?e2e&size=250&seed=42');await page.waitForFunction(()=>window.__rockView?.world);
+  await page.goto('http://127.0.0.1:5173/?scenario=camp&e2e&size=250&seed=42');await page.waitForFunction(()=>window.__rockView?.world);
   await page.locator('[data-speed="0"]').click();
   if(legacy)await page.evaluate(()=>{const v=window.__rockView,w=structuredClone(v.world);for(const t of w.tiles)delete t.stone;for(const r of w.resources)delete r.stone;v.setWorld(w,false,0);});
   report.adapter=await page.evaluate(()=>{const i=window.__rockView.renderer.getContext().getConfiguration().device.adapterInfo;return {vendor:i.vendor,architecture:i.architecture,description:i.description};});

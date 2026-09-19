@@ -57,7 +57,7 @@ async function capture(name) {
 const world = async () => JSON.parse(await page.evaluate(() => JSON.stringify(window.__lisiere.world)));
 
 try {
-  await page.goto('http://127.0.0.1:5173/?e2e&seed=42&size=250');
+  await page.goto('http://127.0.0.1:5173/?scenario=camp&e2e&seed=42&size=250');
   await page.waitForFunction(() => !!window.__lisiere && !!window.__poseProbe, undefined, { timeout: 30_000 });
   await page.getByRole('button', { name: 'Pause', exact: true }).click();
   await expect(page.locator('#pause-banner')).toBeVisible();

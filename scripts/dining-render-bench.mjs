@@ -59,7 +59,7 @@ try {
   page.on('console', message => { if (message.type()==='error' || /GPUValidationError|invalid pipeline|device.*lost/i.test(message.text())) report.errors.push(message.text()); });
   await page.route('**/src/main.ts*', async route => { const response=await route.fetch(); await route.fulfill({ response, body:instrumentation+await response.text() }); });
   await page.addInitScript(value => localStorage.setItem('lisiere.save.v1', value), fixture);
-  await page.goto('http://127.0.0.1:5173/?e2e&size=250&seed=42');
+  await page.goto('http://127.0.0.1:5173/?scenario=camp&e2e&size=250&seed=42');
   await page.waitForFunction(() => !!window.__lisiere && !!window.__diningBench.view);
   await page.locator('[data-speed="0"]').click();
   await page.locator('[data-panel="menu"]').click(); await page.locator('#load').click();

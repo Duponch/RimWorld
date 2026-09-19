@@ -11,7 +11,7 @@ test('real heatwave camp: warning, insulation/health inspection, physical shelte
   try{
     const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
-    await page.goto('/?e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
+    await page.goto('/?scenario=camp&e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
     await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
     await expect(page.locator('#heatwave-letter')).toContainText('Canicule');await expect(page.locator('#enable-heatwaves')).toBeHidden();
     await page.locator('#heatwave-letter').click();await expect(page.locator('#heatwave-dialog')).toContainText('refroidisseur passif');await page.getByRole('button',{name:'Fermer',exact:true}).click();

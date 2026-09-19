@@ -20,7 +20,7 @@ test('player opts into self-treatment, leaves the bed, keeps facing, cancels and
     await page.route('**/src/main.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:probe+await response.text()});});
     const initial=selfTendingCamp(),p=initial.pawns[0]!,bed=fixtureBuilding(initial,'bed',p.x,p.z);p.bedId=bed.id;p.need={kind:'sleep',phase:'sleep',bedId:bed.id,target:{x:p.x,z:p.z}};p.state='sleeping';p.priorities.doctor=0;
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
-    await page.goto('/?size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
+    await page.goto('/?scenario=camp&size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
     await page.locator(`[data-pawn="${p.id}"]`).click();await expect(page.locator('#self-tend-policy')).not.toBeChecked();await page.locator('#self-tend-policy').check();
     await expect.poll(async()=>(await world(page)).pawns[0]!.selfTend).toBe(true);await expect(page.locator('[data-health="self-tend-hint"]')).toContainText('désactivé');
     await perform(page,{reason:'Activer Médecin pour les auto-soins.',command:{type:'priority',pawnId:p.id,work:'doctor',value:1}},{value:0});

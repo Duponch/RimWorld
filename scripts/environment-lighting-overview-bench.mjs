@@ -16,7 +16,7 @@ try{for(const enabled of [false,true]){
   await page.route('**/src/main.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:`const oldFrame=ColonyRenderer.prototype.frame;ColonyRenderer.prototype.frame=function(...args){window.__lightView=this;return oldFrame.apply(this,args);};\n`+await response.text()});});
   if(!enabled)await page.route('**/src/render/EnvironmentLighting.ts*',async route=>{const response=await route.fetch(),body=await response.text(),needle='if (this.configured.has(material))';if(!body.includes(needle))throw new Error('Control hook missing');await route.fulfill({response,body:body.replace(needle,'return; '+needle)});});
   await page.addInitScript(data=>localStorage.setItem('lisiere.save.v1',data),serializeWorld(w));
-  await page.goto('http://127.0.0.1:5173/?size=32&e2e');await page.waitForFunction(()=>window.__lisiere);
+  await page.goto('http://127.0.0.1:5173/?scenario=camp&size=32&e2e');await page.waitForFunction(()=>window.__lisiere);
   await page.locator('[data-speed="0"]').click();await page.locator('[data-panel="menu"]').click();await page.locator('#load').click();
   await page.waitForFunction(()=>window.__lightView.world?.width===250&&!window.__lightView.preparing);await page.keyboard.press('Escape');
   await page.evaluate(()=>{const v=window.__lightView;v.rig.orthographic.zoom=v.rig.controls.minZoom*1.5;v.rig.orthographic.updateProjectionMatrix();});

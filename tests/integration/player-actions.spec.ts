@@ -7,7 +7,7 @@ test('pilote : cadre une ressource masquée par Architecte avant de donner son o
   const browser=await playwright.chromium.launch({channel:'chromium',args:[]});
   const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);
   try {
-    await page.goto('/?e2e&seed=42');await expect(page.locator('#loading')).toHaveCount(0);
+    await page.goto('/?scenario=camp&e2e&seed=42');await expect(page.locator('#loading')).toHaveCount(0);
     await page.locator('[data-speed="0"]').click();await tool(page,'harvest');
     const target=await page.evaluate(()=>{
       const w=window.__lisiere.world,bounds=document.querySelector('#viewport canvas')!.getBoundingClientRect();

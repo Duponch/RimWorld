@@ -1,0 +1,37 @@
+{
+  "backend": "WebGPU",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "initial": {
+    "resources": 3751,
+    "scenario": {
+      "id": "survivors",
+      "revision": 1,
+      "landing": {
+        "x": 124,
+        "z": 124
+      }
+    }
+  },
+  "samples": [
+    {
+      "speed": 1,
+      "ticks": 103,
+      "p95": 12,
+      "p99": 12.099999999998545,
+      "max": 108,
+      "frames": 1328
+    },
+    {
+      "speed": 6,
+      "ticks": 621,
+      "p95": 12.10000000000582,
+      "p99": 12.10000000000582,
+      "max": 102,
+      "frames": 1258
+    }
+  ],
+  "errors": []
+}

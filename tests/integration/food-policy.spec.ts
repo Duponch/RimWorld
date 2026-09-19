@@ -13,7 +13,7 @@ test('Affectations : régime partagé, copie, refus de suppression, faim, migrat
     fixture.pawns.forEach((p,i)=>{p.x=12+i*3;p.z=13;p.hunger=19;p.rest=100;p.priorities={hunt:0,research:0, patient:0,bedrest:0,doctor:0,craft:2,mine:2,gather:0,build:0,haul:0,grow:0,cook:0};});
     addGroundMaterial(fixture,'food',8,{x:15,z:16},'survival-meal');
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(fixture)});
-    await page.goto('/?size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
+    await page.goto('/?scenario=camp&size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
     await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,fixture);
     await page.keyboard.press('F3');await expect(page.locator('#assign-panel')).toBeVisible();
     const assign=(id:number)=>page.locator(`[data-food-policy-pawn="${id}"]`);

@@ -21,7 +21,7 @@ test('electricity: build and fuel through UI, visible lamp, lost supply and exac
     initial.roofing={cursor:0,constructed:[15*32+20,16*32+20,17*32+20],build:[],remove:[]};
     const total=woodAccount(initial);expect(validateWorld(initial)).toEqual([]);
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
-    await page.goto('/?size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);
+    await page.goto('/?scenario=camp&size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);
     await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);
     const start=await page.evaluate(()=>(window as any).powerProbe.pipelines as number);
     await tool(page,'table');await page.keyboard.press('e');await tool(page,'wood-generator');await cell(page,16,16);

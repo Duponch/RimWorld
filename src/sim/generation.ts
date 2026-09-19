@@ -7,6 +7,7 @@ import { emptySpoilage } from './food-preservation.ts';
 import type { ResourceKind, Terrain, World } from './types.ts';
 import { addGroundMaterial } from './materials.ts';
 import { MAX_MAP_SIZE, MIN_MAP_SIZE, validMapDimension } from './map-config.ts';
+import { temperateVegetation,type GenerationProfile } from './generation-profile.ts';
 
 /** Coordinate-based randomness: adding a presentation sample cannot shift later terrain rolls. */
 function sample(seed: number, x: number, z: number, layer: number): number {
@@ -33,8 +34,9 @@ function field(seed: number, x: number, z: number, scale: number, layer: number)
 const clamp = (value: number, min: number, max: number): number => Math.max(min, Math.min(max, value));
 const isClearing = (x: number, z: number, cx: number, cz: number): boolean => Math.abs(x - cx) <= 3 && Math.abs(z - cz) <= 3;
 
-/** One connected channel, joining two opposite borders without cutting the starting clearing. */
-function riverMask(seed: number, width: number, height: number): Uint8Array {
+/** One connected channel joining opposite borders. Only the legacy camp profile
+ * reserves a central clearing; natural scenario placement must follow the river. */
+function riverMask(seed: number, width: number, height: number, natural=false): Uint8Array {
   const mask = new Uint8Array(width * height);
   // A narrow rectangular fixture uses its short axis for the channel's width.
   const vertical = width === height ? sample(seed, 0, 0, 40) < 0.5 : width < height;
@@ -42,8 +44,8 @@ function riverMask(seed: number, width: number, height: number): Uint8Array {
   const center = Math.floor(across / 2);
   const lowSpace = center - 3; const highSpace = across - center - 4;
   const high = highSpace > 0 && sample(seed, 0, 0, 41) > 0.5;
-  const span = high ? highSpace : lowSpace;
-  const start = high ? center + 4 : 0;
+  const span = natural ? across : high ? highSpace : lowSpace;
+  const start = natural ? 0 : high ? center + 4 : 0;
   const maxRadius = Math.min(2, Math.floor((span - 1) / 5));
   const low = start + maxRadius; const highBound = start + span - 1 - maxRadius;
   let previous = -1;
@@ -137,11 +139,12 @@ function connectStartingValley(terrain: Terrain[], width: number, height: number
 }
 
 /**
- * Temperate valley prototype. Height/moisture/density are construction fields only;
+ * Temperate valley profiles. Height/moisture/density are construction fields only;
  * the resulting tiles and resources, not a regenerated seed, remain save authority.
  */
-export function generateWorld(seed: number, width: number, height: number): World {
+export function generateWorld(seed: number, width: number, height: number, profile?:GenerationProfile): World {
   if (!Number.isInteger(seed) || !Number.isFinite(seed)) throw new Error('Seed must be a finite integer.');
+  if(profile!==undefined&&profile!=='temperate-survivors-v1')throw new Error('Unknown generation profile.');
   if (![width, height].every(validMapDimension)) {
     throw new Error(`World dimensions must be integers between ${MIN_MAP_SIZE} and ${MAX_MAP_SIZE}.`);
   }
@@ -152,7 +155,7 @@ export function generateWorld(seed: number, width: number, height: number): Worl
   const terrain: Terrain[] = new Array(width * height);
   const moisture = new Float64Array(terrain.length); const forest = new Float64Array(terrain.length);
   const rockCandidates: { index: number; relief: number }[] = [];
-  const water = riverMask(world.seed, width, height);
+  const water = riverMask(world.seed, width, height,profile!==undefined);
   const scale = clamp(Math.min(width, height) * 0.55, 8, 26);
   for (let z = 0; z < height; z++) {
     for (let x = 0; x < width; x++) {
@@ -161,10 +164,10 @@ export function generateWorld(seed: number, width: number, height: number): Worl
       moisture[index] = wetness;
       forest[index] = field(world.seed, x + 47, z + 193, scale * 0.8, 20);
       const distance = Math.max(Math.abs(x - cx), Math.abs(z - cz));
-      const campValley = clamp((8 - distance) / 5, 0, 1) * 0.22;
+      const campValley = profile ? 0 : clamp((8 - distance) / 5, 0, 1) * 0.22;
       const relief = field(world.seed, x + 263, z + 71, scale, 1) - campValley;
       const bank = neighbors(index, width, height).some(next => next >= 0 && water[next]);
-      terrain[index] = water[index] ? 'water' : isClearing(x, z, cx, cz) ? 'grass'
+      terrain[index] = water[index] ? 'water' : (!profile&&isClearing(x, z, cx, cz)) ? 'grass'
         : !bank && relief > 0.64 ? 'rock' : bank || wetness < 0.38 ? 'soil' : 'grass';
       if (terrain[index] === 'rock') rockCandidates.push({ index, relief });
     }
@@ -179,7 +182,7 @@ export function generateWorld(seed: number, width: number, height: number): Worl
       terrain[index] = moisture[index]! < 0.38 ? 'soil' : 'grass';
     }
   }
-  connectStartingValley(terrain, width, height, cz * width + cx);
+  if(!profile)connectStartingValley(terrain, width, height, cz * width + cx);
   removeRockSpeckles(terrain, width, height);
   const stoneAt = geologicalField(world.seed);
   world.tiles = terrain.map((value, index) => value === 'rock'
@@ -189,19 +192,23 @@ export function generateWorld(seed: number, width: number, height: number): Worl
   for (let z = 0; z < height; z++) {
     for (let x = 0; x < width; x++) {
       const index = z * width + x; const ground = terrain[index]!;
-      if (isClearing(x, z, cx, cz) || ground === 'water' || ground === 'rock') continue;
+      if ((!profile&&isClearing(x, z, cx, cz)) || ground === 'water' || ground === 'rock') continue;
       const rockyEdge = neighbors(index, width, height).some(next => next >= 0 && terrain[next] === 'rock');
       const density = forest[index]!; const wetness = moisture[index]!;
-      const treeChance = (0.025 + density * density * 0.52) * (ground === 'soil' ? 0.58 : 1);
+      const natural=profile?temperateVegetation(density,wetness,ground):undefined;
+      const treeChance = natural?.treeChance??(0.025 + density * density * 0.52) * (ground === 'soil' ? 0.58 : 1);
       // Berries favor open woodland; scattered rocks belong mainly to massif margins.
-      const berryChance = 0.025 + wetness * 0.04 + (1 - Math.abs(density - 0.48) * 2) * 0.025;
+      const berryChance = natural?.berryChance??0.025 + wetness * 0.04 + (1 - Math.abs(density - 0.48) * 2) * 0.025;
       const rockChance = rockyEdge ? 0.32 : ground === 'soil' ? 0.018 : 0.005;
       const roll = sample(world.seed, x, z, 60);
       const kind: ResourceKind | null = roll < rockChance ? 'rock' : roll < rockChance + treeChance ? 'tree'
         : roll < rockChance + treeChance + berryChance ? 'berries' : null;
-      if (kind) world.resources.push({ id: world.nextId++, x, z, kind, ...(kind === 'rock' ? { stone: stoneAt(x, z) } : {}), amount: kind === 'berries' ? 10 : 7 + Math.floor(sample(world.seed, x, z, 61) * 7) });
+      if (kind) world.resources.push({ id: world.nextId++, x, z, kind, ...(kind === 'rock' ? { stone: stoneAt(x, z) } : {}), ...(profile&&kind==='berries'?{growth:.15+sample(world.seed,x,z,62)*.85,growthTick:0}:{}), amount: kind === 'berries' ? 10 : 7 + Math.floor(sample(world.seed, x, z, 61) * 7) });
     }
   }
+  // The natural profile is landscape only. Its scenario factory owns people,
+  // possessions and admissible arrival placement without rewriting this terrain.
+  if(profile)return world;
   for (const [offset, name] of ['Ada', 'Noé', 'Mina'].entries()) {
     world.pawns.push(startingPawn(world.nextId++,name,cx+offset-1,cz,offset,50+sample(world.seed,offset,0,101)*10));
   }

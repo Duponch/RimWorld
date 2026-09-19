@@ -26,7 +26,7 @@ test('native tactical UI: R, group button, physical queued movement, saved trave
     p.haul={sourcePileId:cargo.id,carryPileId:cargo.id,quantity:7,phase:'deliver',pickupCell:{x:2,z:4},destination:{type:'stockpile',stockpileId:zone.id}};p.orders.active='haul';p.state='moving';p.x=2;p.z=4;expect(startTravel(initial,p,{x:3,z:5})).toBe(true);expect(validateWorld(initial)).toEqual([]);
 
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
-    await page.goto('/?e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
+    await page.goto('/?scenario=camp&e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
     await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
     await page.locator(`[data-pawn="${p.id}"]`).click();await page.keyboard.press('r');await expect(page.locator('#toggle-draft')).toHaveText('Démobiliser · R');expect((await world(page)).piles.find(i=>i.id===cargo.id)!.owner.type).toBe('pawn');await expect(page.locator(`[data-pawn="${p.id}"]`)).toHaveAttribute('data-drafted','true');
     const rotation={value:0};

@@ -14,7 +14,7 @@ test('exhausted carrier sleeps, reloads, and another colon frees its cargo throu
     const initial=carrierWithHelper(),p=initial.pawns[0]!,helper=initial.pawns[1]!,wood=woodAccount(initial);
     const held=initial.piles.find(q=>q.owner.type==='pawn')!,source=initial.piles.find(q=>q.owner.type==='ground'&&q.owner.x===2&&q.owner.z===3)!;
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
-    await page.goto('/?size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);
+    await page.goto('/?scenario=camp&size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);
     await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);
     await page.locator('[data-speed="1"]').click();await expect.poll(async()=>(await world(page)).pawns[0]!.interruptedCargo).toBe(true);
     await page.locator('[data-speed="0"]').click();const sleeping=await world(page);expect(sleeping.pawns[0]!.state).toBe('sleeping');expect(sleeping.pawns[0]!.orders).toEqual({active:null,queue:[]});

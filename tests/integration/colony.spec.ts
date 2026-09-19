@@ -1,3 +1,4 @@
+import { createScenarioWorld } from '../../src/sim/new-game';
 import { expect, test, type Page } from '@playwright/test';
 import { createWorld } from '../../src/sim/engine';
 import { deserializeWorld, serializeWorld } from '../../src/sim/serialization';
@@ -248,7 +249,7 @@ test('rectangles 250² : aperçu, interruptions, rotation, politiques préservé
     const errors = observeErrors(page);
     const diagnostics: string[] = [];
     page.on('console', message => { if (message.text().includes('Lisière renderer diagnostics')) diagnostics.push(message.text()); });
-    await page.goto('/?e2e&seed=42&size=250');
+    await page.goto('/?scenario=camp&e2e&seed=42&size=250');
     await page.waitForFunction(() => !!window.__lisiere);
     await page.getByRole('button', { name: 'Pause', exact: true }).click();
     await expect(page.locator('#pause-banner')).toBeVisible();
@@ -337,7 +338,7 @@ test('nouvelle colonie : défaut 250, tailles 128/200/250 et retour exact à une
   const page = await context.newPage();
   try {
     const errors = observeErrors(page);
-    await page.goto('/?e2e');
+    await page.goto('/?scenario=camp&e2e');
     await page.waitForFunction(() => !!window.__lisiere);
     await expect(page.locator('#map-size')).toHaveText('250 × 250');
     await startPaused(page);
@@ -354,7 +355,7 @@ test('nouvelle colonie : défaut 250, tailles 128/200/250 et retour exact à une
       await page.locator('#world-size').selectOption(String(size));
       await page.locator('#new-world-form button[type="submit"]').click();
       await expect(page.locator('#new-world-dialog')).not.toBeVisible();
-      await expectWorld(page, createWorld(seed, size, size));
+      await expectWorld(page, createScenarioWorld(seed, size, 'camp'));
       await expect(page.locator('#map-size')).toHaveText(`${size} × ${size}`);
       await expect(page.locator('#pause-banner')).toBeVisible();
       if (size === 250) {
@@ -362,7 +363,7 @@ test('nouvelle colonie : défaut 250, tailles 128/200/250 et retour exact à une
         await panel(page, 'menu'); await page.locator('#save').click();
         await expect(page.getByRole('status')).toContainText('sauvegardée');
         await page.locator('#load').click();
-        await expectWorld(page, createWorld(seed, size, size));
+        await expectWorld(page, createScenarioWorld(seed, size, 'camp'));
       }
       await panel(page, 'menu');
       await expect(page.locator('#restore-previous')).toBeEnabled();

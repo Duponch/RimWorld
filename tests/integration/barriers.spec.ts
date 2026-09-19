@@ -18,7 +18,7 @@ test('native barrier UI: direct strike, stop/load, home area and physical repair
   const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page),reports=[];
   try{
     await page.route('**/src/main.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:probe+await response.text()});});
-    await page.goto('/?e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
+    await page.goto('/?scenario=camp&e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
     await panel(page,'menu');await page.locator('#save').click();await page.keyboard.press('Escape');
     for(const speed of [1,6]){
       const initial=deconstructionCamp(),p=initial.pawns[0]!,s=fixtureBuilding(initial,'wall',p.x+4,p.z);

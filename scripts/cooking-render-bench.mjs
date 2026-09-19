@@ -33,7 +33,7 @@ try {
       if(kind==='stool'&&!applyCommand(initial,{type:'stockpile',x:cell.x,z:cell.z,enabled:true,filters:{wood:false,food:true},priority:2}).ok)throw new Error('Invalid surface stockpile');
     }
     await page.addInitScript(data=>localStorage.setItem('lisiere.save.v1',data),serializeWorld(initial));
-    await page.goto('http://127.0.0.1:5173/?e2e&seed=42');await page.waitForFunction(()=>!!window.__cookingBench.view?.world);
+    await page.goto('http://127.0.0.1:5173/?scenario=camp&e2e&seed=42');await page.waitForFunction(()=>!!window.__cookingBench.view?.world);
     await page.locator('[data-speed="0"]').click();await page.locator('[data-panel="menu"]').click();await page.locator('#load').click();
     await page.waitForFunction(n=>window.__lisiere.world.pawns.length===n&&window.__lisiere.world.structures.some(s=>s.kind==='campfire'),count);
     await page.keyboard.press('Escape');await page.locator('#view-home').click();

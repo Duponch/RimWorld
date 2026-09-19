@@ -13,7 +13,7 @@ test('la priorité de chantier traverse coupe, dégagement, livraison et finitio
     fixture.resources.push({id:fixture.nextId++,kind:'tree',amount:12,x:18,z:14});
     for(const x of [18,22])expect(applyCommand(fixture,{type:'designate',kind:'bed',x,z:14}).ok).toBe(true);
     await page.addInitScript(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:serializeWorld(fixture)});
-    await page.goto('/?size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,fixture);
+    await page.goto('/?scenario=camp&size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,fixture);
     const rotation={value:0};await perform(page,{reason:'Achever ce lit en priorité.',command:{type:'order-job',pawnId:pawn.id,jobId:fixture.jobs[0]!.id,queue:false}},rotation);
     await expect(page.locator('#selected-orders')).toContainText('Priorité case 18, 14');await expect(page.locator('#clear-orders')).toBeEnabled();
     await page.locator('#clear-orders').click();await expect.poll(async()=>(await world(page)).pawns[0]!.priorityWork).toBeUndefined();
@@ -38,7 +38,7 @@ test('dégager un semis puis cuisiner par les menus, réserver ingrédients et p
     expect(applyCommand(fixture,{type:'area',action:'growing',from:{x:18,z:15},to:{x:18,z:15}}).ok).toBe(true);stepWorld(fixture,10);const sow=fixture.jobs.find(j=>j.kind==='sow')!;expect(sow).toBeDefined();
     const bill=newCookingBill(fixture.nextId++);bill.target=2;bill.destination='drop';const station={id:fixture.nextId++,kind:'campfire' as const,x:16,z:12,orientation:0 as const,footprint:'standard' as const,bills:[bill],fuel:{ticks:6000,burned:0,autoRefuel:false}};fixture.structures.push(station);pawn.priorities.cook=1;pawn.priorities.grow=1;
     await page.addInitScript(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:serializeWorld(fixture)});
-    await page.goto('/?size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,fixture);
+    await page.goto('/?scenario=camp&size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,fixture);
     const rotation={value:0};
     await perform(page,{reason:'Libérer le semis sans métier Transport.',command:{type:'order-haul',pawnId:pawn.id,target:{type:'clear-sow',jobId:sow.id},queue:false}},rotation);
     await perform(page,{reason:'Préparer un repas après le dégagement.',command:{type:'order-cook',pawnId:pawn.id,structureId:station.id,queue:true}},rotation);
@@ -67,7 +67,7 @@ test('dégager une plante puis ravitailler un feu sans automatisme, reprendre la
     const fire={id:fixture.nextId++,kind:'campfire' as const,x:16,z:12,orientation:0 as const,footprint:'standard' as const,bills:[],fuel:{ticks:9000,burned:0,autoRefuel:false}};fixture.structures.push(fire);
     addGroundMaterial(fixture,'wood',5,{x:13,z:16},'wood');
     await page.addInitScript(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:serializeWorld(fixture)});
-    await page.goto('/?size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,fixture);
+    await page.goto('/?scenario=camp&size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,fixture);
     const rotation={value:0};
     await perform(page,{reason:'Couper la plante sur le futur mur.',command:{type:'order-job',pawnId:pawn.id,jobId:job.id,queue:false}},rotation);
     await perform(page,{reason:'Ravitailler ensuite le feu, automatisme désactivé.',command:{type:'order-haul',pawnId:pawn.id,target:{type:'fuel',structureId:fire.id},queue:true}},rotation);
@@ -97,7 +97,7 @@ test('sélection de groupe, deux projections, menu et file de travail par la vra
     for(const x of [12,17,21]){fixture.resources.push({id:fixture.nextId++,kind:'tree',amount:12,x,z:12});expect(applyCommand(fixture,{type:'designate',kind:'chop',x,z:12}).ok).toBe(true);}
     refreshStock(fixture);
     await page.addInitScript(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:serializeWorld(fixture)});
-    await page.goto('/?size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,fixture);
+    await page.goto('/?scenario=camp&size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,fixture);
     const ids=fixture.pawns.map(p=>p.id);
     await page.locator(`[data-pawn="${ids[0]}"]`).click();
     await page.locator(`[data-pawn="${ids[1]}"]`).click({modifiers:['Shift']});
@@ -151,7 +151,7 @@ test('livrer un chantier puis ranger une pile via les menus, file réservée, re
     expect(applyCommand(fixture,{type:'stockpile',x:16,z:18,enabled:true,filters:{wood:false,food:true},priority:2,capacity:20}).ok).toBe(true);
     addGroundMaterial(fixture,'wood',5,{x:13,z:16},'wood');addGroundMaterial(fixture,'food',10,{x:14,z:16},'rice');const rice=fixture.piles.find(p=>p.item==='rice')!;
     await page.addInitScript(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:serializeWorld(fixture)});
-    await page.goto('/?size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,fixture);
+    await page.goto('/?scenario=camp&size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,fixture);
     const rotation={value:0};
     await perform(page,{reason:'Approvisionner le mur.',command:{type:'order-haul',pawnId:pawn.id,target:{type:'job',jobId:fixture.jobs[0]!.id},queue:false}},rotation);
     await perform(page,{reason:'Ranger ensuite le riz.',command:{type:'order-haul',pawnId:pawn.id,target:{type:'pile',pileId:rice.id},queue:true}},rotation);

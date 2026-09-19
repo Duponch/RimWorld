@@ -1,4 +1,6 @@
-# Validation courante — V79
+# Validation courante — V80
+
+V80 : [départ Trois survivants, migrations, première installation et calibration](../history/validation-scenario-v80.md). Les campagnes initiales et leurs corrections restent distinguées des passes finales.
 
 V79 : [chasse, corps, boucherie, cuisine et charge mixte](../history/validation-hunting-v79.md). Les preuves précisent scénario contrôlé, colonie sur plusieurs jours et mesures ; les anciennes notes restent historiques.
 
@@ -130,7 +132,7 @@ Dernière revue : **23/23 scénarios ciblés passent en 5,11 s** après correcti
 
 ## Bilan de retour en mode jour — 18 septembre
 
-Le lot de code V55 est déjà publié dans `37a6791`. Cette reprise consolide l'[inventaire courant](../gameplay/implementation-status.md), corrige les absences périmées dans l'index/catalogue et reprend les [estimations dans ROADMAP](../ROADMAP.md#estimation-davancement--revue-du-19-septembre-2026-v79). Recherche renouvelée sur les [interruptions de préparation et la récupération](../research/combat-preparation.md#préparation-et-récupération--relecture-du-18-septembre), sans ajout de commande ni changement de règle livré. Le retour en mode jour suspend l'automatisation de nuit ; prochain lot visible défini dans ROADMAP.
+Le lot de code V55 est déjà publié dans `37a6791`. Cette reprise consolide l'[inventaire courant](../gameplay/implementation-status.md), corrige les absences périmées dans l'index/catalogue et reprend les [estimations dans ROADMAP](../ROADMAP.md#estimation-davancement). Recherche renouvelée sur les [interruptions de préparation et la récupération](../research/combat-preparation.md#préparation-et-récupération--relecture-du-18-septembre), sans ajout de commande ni changement de règle livré. Le retour en mode jour suspend l'automatisation de nuit ; prochain lot visible défini dans ROADMAP.
 
 Vérifications adaptées : liens/ancres, identifiants de domaines, empreintes des trois originaux et `git diff --check`. Aucun code, état de sauvegarde ou rendu changé ; les suites de simulation/UI et les mesures V55 ci-dessous ne sont pas annoncées comme rejouées pour ce bilan documentaire. Les estimations sont un jugement de planification, pas une nouvelle preuve de couverture ou de performance.
 

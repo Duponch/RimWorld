@@ -18,7 +18,7 @@ test('inspecter les cinq roches, sauvegarder leurs identités et reprendre une c
     fixture.resources.push({ id: fixture.nextId++, x: 12, z: 14, kind: 'rock', amount: 9, stone: 'granite' });
     expect(validateWorld(fixture)).toEqual([]);
     await page.addInitScript(({ key, saved }) => localStorage.setItem(key, saved), { key: saveKey, saved: serializeWorld(fixture) });
-    await page.goto('/?e2e'); await expect(page.locator('#loading')).toHaveCount(0);
+    await page.goto('/?scenario=camp&e2e'); await expect(page.locator('#loading')).toHaveCount(0);
     await page.locator('[data-speed="0"]').click(); await expect(page.locator('#pause-banner')).toBeVisible();
     await panel(page, 'menu'); await page.locator('#load').click(); await expectWorld(page, fixture); await page.keyboard.press('Escape');
     await revealCells(page, cells);

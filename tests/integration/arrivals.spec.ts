@@ -13,7 +13,7 @@ test('arrival UI at 1x/6x: real worker, letter, postpone/save, edge entry and fo
     const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);
     page.setDefaultTimeout(15000);
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
-    await page.goto('/?e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
+    await page.goto('/?scenario=camp&e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
     await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
     await page.locator(`[data-speed="${speed}"]`).click();await expect(page.locator('#arrival-letter')).toBeVisible();await page.locator('#arrival-letter').focus();
     const focusTick=(await world(page)).tick;await page.waitForFunction(t=>window.__lisiere.tick>=t+5,focusTick);await expect(page.locator('#arrival-letter')).toBeFocused();await page.locator('[data-speed="0"]').click();

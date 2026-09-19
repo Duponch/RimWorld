@@ -25,7 +25,7 @@ test('native ordinary-camp raid: letter, rally, visible combat, saved continuati
   expect(validateWorld(initial)).toEqual([]);
   const browser=await playwright.chromium.launch({channel:'chromium',args:[]}),reports=[];
   try{const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);page.setDefaultTimeout(15000);
-    await page.goto('/?e2e&size=250');await expect(page.locator('[data-speed="0"]')).toBeVisible({timeout:15000});await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
+    await page.goto('/?scenario=camp&e2e&size=250');await expect(page.locator('[data-speed="0"]')).toBeVisible({timeout:15000});await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
     await panel(page,'menu');await page.locator('#save').click();await page.keyboard.press('Escape');
     for(const speed of [1,6]){
       await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
@@ -56,7 +56,7 @@ test('native retirement: saved edge finishes and GPU body/cargo/selection counts
   try{const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);page.setDefaultTimeout(15000);
     await page.route('**/src/main.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:await response.text()+`\nconst raidFrame=ColonyRenderer.prototype.frame;ColonyRenderer.prototype.frame=function(...args){const r=raidFrame.apply(this,args);if(!this.preparing)window.__raidView=this;return r;};`});});
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
-    await page.goto('/?e2e&size=32');await expect(page.locator('[data-speed="0"]')).toBeVisible({timeout:15000});await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
+    await page.goto('/?scenario=camp&e2e&size=32');await expect(page.locator('[data-speed="0"]')).toBeVisible({timeout:15000});await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
     await page.locator('#raid-letter').click();await expect(page.locator('#raid-dialog')).toContainText('Retraite');await page.locator('#locate-raid').click();await page.locator('[data-speed="1"]').click();
     await page.waitForFunction(id=>{const w=window.__lisiere.world,p=w.pawns.find((p:any)=>p.id===id);return (p?.motion?.end??0)>w.tick;},enemy.id);await page.locator('[data-speed="0"]').click();const walking=await world(page);expect(walking.pawns.some(p=>p.id===enemy.id)).toBe(true);
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,walking);await page.keyboard.press('Escape');await page.locator('[data-speed="6"]').click();

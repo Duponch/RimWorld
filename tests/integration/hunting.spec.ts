@@ -34,7 +34,7 @@ test('native hunting chain: live prey, physical corpse and save, butchery, usefu
       };}
     },process.env.HUNTING_PIPELINE_TRACE==='1');
     await page.route('**/src/main.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:probe+await response.text()});});
-    await page.goto('/?e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await pause(page);
+    await page.goto('/?scenario=camp&e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await pause(page);
     for(const speed of (process.env.HUNTING_UI_SPEEDS==='6'?[6]:[1,6])) {
       const initial=huntingCamp(),hunter=initial.pawns[0]!,cook=initial.pawns[1]!,animal=initial.wildlife!.animals[0]!;
       initial.stockpiles=[];cook.hunger=22;

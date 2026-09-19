@@ -1,3 +1,4 @@
+import { SCENARIOS, DEFAULT_SCENARIO } from '../sim/scenario-definitions';
 import type { JobKind } from '../sim/types';
 import { scheduleLayout } from './schedule-controls';
 import { foodPolicyLayout } from './food-policy-controls';
@@ -112,7 +113,7 @@ export function gameLayout(): string {
       <div id="journal-items"></div>
     </section>
     <section id="menu-panel" class="management-panel menu-panel panel" aria-label="Menu du jeu" hidden>
-      <div class="panel-heading"><h2>Lisière</h2><button data-close-panel aria-label="Fermer Menu">×</button></div>
+      <div class="panel-heading"><h2>Lisière</h2><button data-close-panel aria-label="Fermer Menu">×</button></div><p id="scenario-current" class="muted"></p>
       <button id="save">Sauvegarder</button><button id="load">Recharger</button><button id="new-colony">Nouvelle colonie</button>
       <button id="restore-previous" disabled>Colonie précédente</button><button id="show-diagnostics">Afficher les diagnostics</button>
       <p class="muted">Sauvegarde locale à ce navigateur.</p>
@@ -136,7 +137,7 @@ export function gameLayout(): string {
       <p>Abattage, récolte, réserves et annulation : cliquer ou maintenir le bouton gauche pour tracer un rectangle. Les cases retenues sont surlignées. Relâcher applique ; Échap ou clic droit annule le tracé.</p>
       <p><b>Espace</b> : pause · <b>1 / 2 / 3</b> : vitesse · <b>Tab</b> : Architecte · <b>F1</b> : Travail · <b>F2</b> : Horaires · <b>Échap</b> : annuler le tracé, puis fermer · <b>Ctrl+S</b> : sauvegarder.</p>
       <p>Molette : zoom · glisser le bouton droit : tourner · bouton central ou flèches : déplacer la caméra. La coupe des murs sert à voir les intérieurs ; leurs obstacles restent en place.</p>
-      <p class="muted">Inspectez un chantier pour comprendre son attente, ou une réserve pour modifier ses filtres. Horaires permet de régler les plages de travail et de sommeil. Un piquet de fers à cheval offre une autre famille de loisirs que l’observation du ciel. La santé et les pièces restent à développer. Les onglets grisés indiquent les domaines actuellement indisponibles.</p>
+      <p class="muted">Inspectez un chantier pour comprendre son attente, ou une réserve pour modifier ses filtres. Horaires permet de régler les plages de travail et de sommeil. Un piquet de fers à cheval offre une autre famille de loisirs que l’observation du ciel. Les blessures, les soins, les pièces et les températures sont déjà actifs ; les maladies et les saisons restent à développer. Les onglets grisés indiquent les domaines actuellement indisponibles.</p>
     </dialog>
     <button id="enable-heatwaves" class="panel" style="position:fixed;right:16px;top:212px;z-index:3">Activer les canicules du camp</button>
     <button id="enable-raids" class="panel" style="position:fixed;right:16px;top:172px;z-index:3">Activer les raids du camp</button>
@@ -145,9 +146,9 @@ export function gameLayout(): string {
     <dialog id="new-world-dialog" class="help-dialog"><form id="new-world-form"><button type="button" class="close" id="new-world-close" aria-label="Fermer la création">×</button><h2>Nouvelle colonie</h2>
       <label class="field">Graine<input id="world-seed" inputmode="numeric" type="number" min="0" max="4294967295" value="42" required></label>
       <label class="field">Taille de la carte<select id="world-size">${[32, ...MAP_SIZE_PRESETS].map(size => `<option value="${size}"${size === DEFAULT_MAP_SIZE ? ' selected' : ''}>${size} × ${size} · ${mapSizeLabels[size]} · ${(size * size).toLocaleString('fr-FR')} cases</option>`).join('')}</select></label>
-      <label class="field">Scénario<select id="world-scenario"><option value="camp">Camp paisible</option><option value="sentry">Rencontre armée · carte 64 minimum</option></select></label>
-      <p>Rencontre armée : Ada équipée, une sentinelle hostile à distance du camp. Préparez vos soins avant l’approche. L’adversaire peut approcher, tirer et combattre au contact.</p>
-      <p>La même graine et la même taille produisent le même terrain. La partie actuelle restera accessible avec « Colonie précédente ».</p>
+      <label class="field">Scénario<select id="world-scenario">${Object.entries(SCENARIOS).map(([id,s])=>`<option value="${id}"${id===DEFAULT_SCENARIO?' selected':''}>${s.label}</option>`).join('')}</select></label>
+      <p id="scenario-description">${SCENARIOS[DEFAULT_SCENARIO].description}</p>
+      <p>Un scénario, sa graine et sa taille reproduisent le même départ. Le site proposé est une vallée tempérée ; les autres biomes ne sont pas encore sélectionnables. La partie actuelle restera accessible avec « Colonie précédente ».</p>
       <p id="new-world-error" role="alert" hidden></p>
       <button type="submit" class="primary-action">Créer la colonie</button>
     </form></dialog>

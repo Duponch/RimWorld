@@ -20,7 +20,7 @@ test('atelier couvert : lire l’obscurité, construire un vrai feu, produire et
     addGroundMaterial(initial,'wood',20,{x:15,z:13});addGroundMaterial(initial,'chunk',1,{x:13,z:14},'granite-chunk');
     reconcileTemperature(initial);for(const r of initial.thermal!.regions)r.temperature=5;
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
-    await page.goto('/?size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);
+    await page.goto('/?scenario=camp&size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);
     await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
     await revealCells(page,[{x:11,z:11},{x:17,z:17}]);await cell(page,12,14);
     await expect(page.locator('#room-description')).toContainText('Production : 80 %');
@@ -68,7 +68,7 @@ test('lumière visible : nuit, extinction, toit masqué, occlusion et deux proje
     night.roofing!.constructed=night.roofing!.constructed.map(i=>i+330);
     const fire=fixtureFire(night,16,14);fire.fuel!.ticks=0;
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(night)});
-    await page.goto('/?size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
+    await page.goto('/?scenario=camp&size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
     const load=async(w:World)=>{
       await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(w)});
       await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,w);await page.keyboard.press('Escape');

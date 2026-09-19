@@ -13,7 +13,7 @@ test('pièces : inspection, porte ouverte, brèche exécutée et rechargement da
     const w = roomCamp(), p = w.pawns[0]!; p.priorities.gather = 1;
     w.resources.push({ id: w.nextId++, kind: 'tree', x: 12, z: 15, amount: 12 });
     await page.addInitScript(({ key, data }) => localStorage.setItem(key, data), { key: saveKey, data: serializeWorld(w) });
-    await page.goto('/?size=32&e2e'); await expect(page.locator('#loading')).toHaveCount(0);
+    await page.goto('/?scenario=camp&size=32&e2e'); await expect(page.locator('#loading')).toHaveCount(0);
     await page.locator('[data-speed="0"]').click(); await panel(page, 'menu');
     await page.locator('#load').click(); await expectWorld(page, w); await expect(page.locator('.game-shell')).not.toHaveJSProperty('inert', true);
     await page.keyboard.press('Escape'); await revealCells(page, [{ x: 13, z: 13 }, { x: 15, z: 15 }]);

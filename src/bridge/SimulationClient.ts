@@ -52,7 +52,7 @@ export class SimulationClient {
     });
   }
 
-  init(seed: number, size = DEFAULT_MAP_SIZE,scenario:import('../sim/encounter-scenario').ScenarioId='camp') { return this.request({ type: 'init', seed, size,scenario }); }
+  init(seed: number, size = DEFAULT_MAP_SIZE,scenario:import('../sim/scenario-definitions').ScenarioId='survivors') { return this.request({ type: 'init', seed, size,scenario }); }
   command(command: Command) { return this.request({ type: 'command', command }); }
   async orderOptions(pawnId:number,x:number,z:number,queue=false):Promise<import('../sim/player-orders').OrderOption[]> {
     return JSON.parse((await this.request({type:'order-options',pawnId,x,z,queue}))!);

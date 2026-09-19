@@ -7,7 +7,7 @@ import { captureStandability } from './furniture-travel.ts';
 import { distanceSquared } from './affiliation.ts';
 import type { World } from './types.ts';
 
-export type ScenarioId='camp'|'sentry';
+export type { ScenarioId } from './scenario-definitions.ts';
 /** New-world setup only. Never inject actors or equipment when loading a save. */
 export function setupEncounter(world:World):void {
   if(world.tick!==0||world.width<64||world.height<64)throw new Error('La rencontre armée exige une nouvelle carte d’au moins 64 × 64.');

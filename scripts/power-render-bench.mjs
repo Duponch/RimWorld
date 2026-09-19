@@ -25,7 +25,7 @@ try {for(const [count,electrical] of [[3,true],[100,false],[100,true]]) {
   for(let i=0;i<(electrical?count:0);i++){const x=150+i%10*4,z=150+Math.floor(i/10)*4;fixturePower(w,'wood-generator',x,z);fixturePower(w,'standing-lamp',x+2,z);}
   reconcilePower(w);for(const s of w.structures)if(s.power)s.power.on=true;
   await page.addInitScript(data=>localStorage.setItem('lisiere.save.v1',data),serializeWorld(w));
-  await page.goto('http://127.0.0.1:5173/?size=32&e2e');await page.waitForFunction(()=>window.__lisiere);
+  await page.goto('http://127.0.0.1:5173/?scenario=camp&size=32&e2e');await page.waitForFunction(()=>window.__lisiere);
   await page.locator('[data-speed="0"]').click();await page.locator('[data-panel="menu"]').click();await page.locator('#load').click();
   await page.waitForFunction(()=>window.__miningBench.view.world?.width===250&&!window.__miningBench.view.preparing);await page.keyboard.press('Escape');
   const frames=n=>page.evaluate(n=>new Promise(resolve=>{function f(){if(!--n)resolve();else requestAnimationFrame(f);}requestAnimationFrame(f);}),n);

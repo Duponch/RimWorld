@@ -11,7 +11,7 @@ test('miner, reprendre la roche endommagée et ranger son fragment par les comma
   try {
     const fixture=miningCamp(),target={x:13,z:14},index=target.z*32+target.x;fixture.tiles[index]={terrain:'rock',stone:'granite'};fixture.rng=1;fixture.tiles[11*32+12]={terrain:'rock',stone:'granite',ore:'steel'};fixture.tiles[11*32+14]={terrain:'rock',stone:'slate',ore:'machinery'};
     await page.addInitScript(({key,saved})=>localStorage.setItem(key,saved),{key:saveKey,saved:serializeWorld(fixture)});
-    await page.goto('/?e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
+    await page.goto('/?scenario=camp&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
     await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,fixture);await page.keyboard.press('Escape');
     await expect(page.locator('#fps-counter')).toBeVisible();
     await panel(page,'work');await page.locator('select[data-work="mine"]').selectOption('1');

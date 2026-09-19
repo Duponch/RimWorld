@@ -1,10 +1,10 @@
 # Documentation de Lisière
 
-État courant : **V79, 19 septembre 2026**. [Chasse civile](development/hunting.md), [dépouilles physiques](development/corpses.md) et [boucherie](development/butchery.md) relient enfin lièvre vivant → viande/cuir → repas. [Recherche](research/hunting-reference.md), [preuves](history/validation-hunting-v79.md). [Estimations par système](ROADMAP.md#estimation-davancement--revue-du-19-septembre-2026-v79). Le [départ de partie cohérent](research/scenario-start-reference.md) est préparé, pas encore équilibré ni livré.
+État courant : **V80, 20 septembre 2026**. [Trois survivants](development/scenario-start.md) propose un départ explicite avec dotation physique, technologies connues et implantation naturelle ; sa calibration reste partielle. [Preuves V80](history/validation-scenario-v80.md), [estimations par système](ROADMAP.md#estimation-davancement). La [filière animale V79](development/hunting.md) relie chasse, dépouille, boucherie et repas ; ses [preuves](history/validation-hunting-v79.md) restent distinctes.
 
 Dernières boucles de colonie : [conservation froide V75](development/cold-store.md), [canicule V74](development/heatwave.md), [recherche et tailleur V73](development/research.md). Les étapes proches 4 et 5 sont livrées dans leurs périmètres annoncés ; arbre de recherche, saisons et environnement complet restent ouverts. [Inventaire consolidé](gameplay/implementation-status.md).
 
-La [revue de progression](research/progression-review-2026-09-19.md) explique la réorientation vers des situations de colonie complètes. [ROADMAP](ROADMAP.md) conserve seule l’ordre des prochains travaux et les estimations. Mode jour, automatisation nocturne en pause.
+La [revue de progression](research/progression-review-2026-09-19.md) explique la réorientation vers des situations de colonie complètes. [ROADMAP](ROADMAP.md) conserve seule l’ordre des prochains travaux et les estimations. Mode nuit renouvelé le 20 septembre ; sous-étapes indépendantes déléguées et intégration centrale.
 
 Les bilans de versions sont dans les contrats et [l’index de validation](development/validation.md) ; ils ne remplacent pas l’état fonctionnel actuel.
 
@@ -59,7 +59,7 @@ Les bilans de versions sont dans les contrats et [l’index de validation](devel
 | Cuisine et combustible | [Factures, ingrédients, feu](development/cooking.md) | [Recettes et ravitaillement](research/cooking-reference.md), [ordres de cuisine/semis](research/cooking-orders-reference.md), [dégagement/recharge](research/context-services-reference.md) |
 | Plantes et cultures | [Coton et tissu V71](development/textiles.md), [Agriculture](development/farming.md), [croissance thermique V39](development/plant-temperature.md), [rochers et plantes](development/rocks-and-plants.md) | [Agriculture](research/farming-reference.md), [croissance sauvage](research/plant-growth.md) |
 | Toits construits | [Couverture, supports, zones et sauvegarde](development/roofing.md) | [Vérification Core](research/roofing-reference.md) |
-| Carte et environnement | [Génération](development/world-generation.md), [dimensions](development/world-generation.md#contrat-et-sauvegarde), [jour/nuit](development/daylight-camera.md) | [Espace 3D](research/spatial-design.md), [audit environnement](research/environment-review.md) |
+| Carte et environnement | [Génération](development/world-generation.md), [dimensions](development/world-generation.md#contrat-commun-et-sauvegarde), [jour/nuit](development/daylight-camera.md) | [Espace 3D](research/spatial-design.md), [audit environnement](research/environment-review.md) |
 | Synchronisation visuelle | [Horloge, phases et HUD](development/presentation-timing.md) | [Vérification et diagnostic](research/presentation-timing-reference.md) |
 | Rendu et personnages | [Cycle des ressources GPU](development/render-lifecycle.md), [équipement/portraits prévus](development/character-presentation.md) | [Choix GPU](research/rendering-and-performance.md), [observation visuelle](research/visual-reference.md) |
 | Navigation et circulation | [Mouvement et réservations livrés](development/spatial-motion-storage.md), [mobilier V22](development/furniture-travel.md) | [Mobilier Core](research/furniture-travel-reference.md), [passage civil](research/civil-traffic-reference.md), [laboratoire GPU séparé](research/gpu-navigation.md) |

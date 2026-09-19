@@ -22,7 +22,7 @@ try {
     await route.fulfill({response,body:instrument+await response.text()});
   });
   await page.addInitScript(data=>localStorage.setItem('lisiere.save.v1',data),serializeWorld(initial));
-  await page.goto('http://127.0.0.1:5173/?e2e');await page.locator('#loading').waitFor({state:'detached'});
+  await page.goto('http://127.0.0.1:5173/?scenario=camp&e2e');await page.locator('#loading').waitFor({state:'detached'});
   await page.locator('[data-speed="0"]').click();await page.locator('[data-panel="menu"]').click();await page.locator('#load').click();await page.keyboard.press('Escape');await page.locator('#view-home').click();
   report.adapter=await page.evaluate(()=>{const i=window.__orderBench.view.renderer.getContext().getConfiguration().device.adapterInfo;return {vendor:i.vendor,architecture:i.architecture,device:i.device,description:i.description};});
   for(const view of ['local','overview'])for(const selected of [0,1,100,0]) {

@@ -1,6 +1,8 @@
 # Matrice des systèmes et critères de réalisation
 
-[Estimations courantes par système](../ROADMAP.md#estimation-davancement--revue-du-19-septembre-2026-v79), distinctes des critères d'acceptation et des anciennes notes datées ci-dessous.
+V80 ajoute un départ identifiable avec stocks/technologies et paysage calibré ; aucun jalon G0–G5 n'est clos par ce scénario. Les critères mondiaux, catalogue et difficulté restent distincts. [Contrat](../development/scenario-start.md).
+
+[Estimations courantes par système](../ROADMAP.md#estimation-davancement), distinctes des critères d'acceptation et des anciennes notes datées ci-dessous.
 
 V77 étend S13/S17/S18 : anatomie quadrupède, tirs manuels, lésions, fuite, incapacité/mort inspectables et rig GPU. V76 conserve alimentation/broutage et sommeil physiques. V78 ajoute la mêlée interespèces et la riposte locale. V79 relie chasse civile, dépouilles transportables, boucherie, viande/cuir et repas. Élevage et autres espèces restent absents. Ce sous-ensemble ne clôt aucun jalon G0–G5. [Contrat](../development/animal-combat.md), [état détaillé](implementation-status.md).
 

@@ -19,7 +19,7 @@ test('player orders feeding, sees physical food and synchronized bedside poses, 
     await page.route('**/src/main.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:probe+await response.text()});});
     const initial=feedingCamp(),doctor=initial.pawns[0]!,patient=initial.pawns[1]!;doctor.priorities.doctor=0;
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
-    await page.goto('/?size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
+    await page.goto('/?scenario=camp&size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
     await perform(page,{reason:'Activer le médecin.',command:{type:'priority',pawnId:doctor.id,work:'doctor',value:1}},{value:0});
     await perform(page,{reason:'Nourrir le blessé au lit.',command:{type:'order-feed',pawnId:doctor.id,patientId:patient.id,queue:false}},{value:0});
     await page.locator('[data-speed="1"]').click();await expect.poll(async()=>(await world(page)).pawns[0]!.feed?.phase).toBe('feed');await page.locator('[data-speed="0"]').click();

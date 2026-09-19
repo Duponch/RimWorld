@@ -1,3 +1,4 @@
+import { DEFAULT_SCENARIO, SCENARIOS, type ScenarioId } from './sim/scenario-definitions';
 import { corpseStage } from './sim/corpses';
 import { updateWildlifePanel } from './ui/wildlife-panel';
 import { createHeatwaveUI } from './ui/heatwave';
@@ -337,6 +338,7 @@ function renderState() {
   const carried = world.piles.filter(pile => pile.owner.type === 'pawn').reduce((sum, pile) => sum + pile.quantity, 0);
   const delivered = world.piles.filter(pile => pile.owner.type === 'job').reduce((sum, pile) => sum + pile.quantity, 0);
   el('material-status').textContent = `${carried} portées · ${delivered} au chantier`;
+  el('scenario-current').textContent=world.scenario?SCENARIOS[world.scenario.id].label:'Partie historique · départ non renseigné';
   el('population').textContent = String(world.pawns.filter(p=>isColonist(p)&&p.state!=='dead').length); el('map-size').textContent = `${world.width} × ${world.height}`;
   el('outdoor-temperature').textContent = `Extérieur : ${outdoorTemperature(world).toFixed(1)} °C`;
   el('day').textContent = `Jour ${1 + Math.floor(world.tick / TICKS_PER_DAY)}`;
@@ -500,9 +502,18 @@ async function createWorld() {
   const submit = el('new-world-form').querySelector<HTMLButtonElement>('[type="submit"]')!; submit.disabled = true;
   try {
     const previous = await client.save(); if (!previous) throw new Error('Impossible de préserver la colonie actuelle.');
+    const olderBackup=localStorage.getItem(PREVIOUS_KEY);
     localStorage.setItem(PREVIOUS_KEY, previous);
-    await client.init(seed, size,el<HTMLSelectElement>('world-scenario').value as 'camp'|'sentry');
+    try {
+      await client.init(seed, size,el<HTMLSelectElement>('world-scenario').value as ScenarioId);
+    } catch(error) {
+      // A rejected creation must preserve both the active world and the older
+      // recovery slot. Keep the new backup if only graphical preparation fails.
+      if(olderBackup===null)localStorage.removeItem(PREVIOUS_KEY);else localStorage.setItem(PREVIOUS_KEY,olderBackup);
+      throw error;
+    }
     await renderer?.preparePresentation();
+    if(snapshot?.pawns[0])renderer?.focusPawn(snapshot.pawns[0].id);
     clearSelection(); setPanel(null); el<HTMLDialogElement>('new-world-dialog').close(); notify(`Nouvelle colonie · ${size} × ${size} · graine ${seed}`);
   } catch (error) {
     el('new-world-error').textContent = error instanceof Error ? error.message : String(error);
@@ -520,6 +531,11 @@ el('save').onclick = () => { void attempt(save); }; el('load').onclick = () => {
 el('restore-previous').onclick = () => { void attempt(() => load(PREVIOUS_KEY)); };
 el('help-open').onclick = () => { renderer?.cancelDesignation(); el<HTMLDialogElement>('help').showModal(); };
 el('new-colony').onclick = () => { renderer?.cancelDesignation(); el<HTMLDialogElement>('new-world-dialog').showModal(); };
+function updateScenarioDescription():void {
+  const id=el<HTMLSelectElement>('world-scenario').value as ScenarioId;
+  el('scenario-description').textContent=SCENARIOS[id].description;
+}
+el('world-scenario').onchange=updateScenarioDescription;
 el('new-world-close').onclick = () => el<HTMLDialogElement>('new-world-dialog').close();
 el('new-world-form').onsubmit = event => { event.preventDefault(); void attempt(createWorld); };
 el('show-diagnostics').onclick = () => { const hidden = !el('metrics').hidden; el('metrics').hidden = hidden; el('show-diagnostics').textContent = hidden ? 'Afficher les diagnostics' : 'Masquer les diagnostics'; };
@@ -565,8 +581,13 @@ client.onSnapshot = (world, cost, speed, replaced, motion) => {
 async function start() {
   try {
     const params = new URLSearchParams(location.search), seedText = params.get('seed'), requestedSize = Number(params.get('size'));
-    const seed = seedText && /^\d{1,10}$/.test(seedText) ? Number(seedText) >>> 0 : 42;
-    await client.init(seed, [32, ...MAP_SIZE_PRESETS].includes(requestedSize) ? requestedSize : DEFAULT_MAP_SIZE);
+    const seed = seedText===null?42:Number(seedText);
+    if(seedText!==null&&(!/^\d{1,10}$/.test(seedText)||!Number.isInteger(seed)||seed<0||seed>4294967295))throw new Error('Graine invalide dans cette adresse.');
+    const scenario=params.get('scenario')??DEFAULT_SCENARIO;
+    if(!['camp','sentry','survivors'].includes(scenario))throw new Error('Scénario inconnu dans cette adresse.');
+    el<HTMLSelectElement>('world-scenario').value=scenario;
+    updateScenarioDescription();
+    await client.init(seed, [32, ...MAP_SIZE_PRESETS].includes(requestedSize) ? requestedSize : DEFAULT_MAP_SIZE,scenario as ScenarioId);
     renderer = await ColonyRenderer.create(el('viewport'), pickCell);
     renderer.onSelection=gesture=>{if(shootingControls.active){const targetId=gesture.ids[0];if(targetId!==undefined){const type=shootingControls.mode!;shootingControls.cancel();void attempt(async()=>{await client.command({type,pawnIds:[...selection.ids],targetId});renderState();});}return;}selectPawns(gesture);};
     renderer.onInteractionCancel=()=>orderMenu.close();

@@ -11,7 +11,7 @@ test('natural camp: pause/reload research, 1x/6x unlock, construct tailor, craft
   try{
     const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
-    await page.goto('/?e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
+    await page.goto('/?scenario=camp&e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
     await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
     await panel(page,'research');await expect(page.locator('[data-research-status]')).toContainText('En cours');
     await page.locator('[data-research-pause]').click();await expect.poll(async()=>(await world(page)).research?.project).toBeNull();

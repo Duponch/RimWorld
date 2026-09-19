@@ -15,7 +15,7 @@ test('atelier mixte : choix du matériau, trois cases tournées, chantier long r
     const fixture=deconstructionCamp();fixture.tick=2000;
     addGroundMaterial(fixture,'steel',75,{x:12,z:16},'steel');addGroundMaterial(fixture,'steel',30,{x:12,z:17},'steel');
     await page.addInitScript(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:serializeWorld(fixture)});
-    await page.goto('/?size=32&e2e');await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,fixture);
+    await page.goto('/?scenario=camp&size=32&e2e');await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,fixture);
     await tool(page,'stonecutter');await expect(page.locator('#tool-instruction')).toContainText('75 Bois + 30 Acier');
     await page.locator('#construction-material').selectOption('steel');await expect(page.locator('#tool-instruction')).toContainText('105 Acier');
     await revealCells(page,[{x:17,z:16}]);await page.locator('#viewport canvas').focus();
@@ -52,7 +52,7 @@ test('chantier par interface : plan sur une pile, dégagement porté, cadre, sau
     addGroundMaterial(fixture,'wood',5,{x:12,z:16},'wood');addGroundMaterial(fixture,'food',23,{x:16,z:14},'rice');refreshStock(fixture);
     const old=JSON.parse(serializeWorld(fixture));(old.schemaVersion=15,withoutPawnSkills(old));for(const a of old.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete old.deconstructed;delete old.packed;for(const pawn of old.pawns)delete pawn.orders;
     await page.addInitScript(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:JSON.stringify(old)});
-    await page.goto('/?size=32&e2e');await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();
+    await page.goto('/?scenario=camp&size=32&e2e');await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();
     await expect.poll(async()=>(await world(page)).schemaVersion).toBe(SCHEMA_VERSION);
     await tool(page,'wall');await cell(page,16,14);await page.keyboard.press('Escape');await cell(page,16,14);
     await expect(page.locator('#cell-job')).toContainText('Plan');
@@ -92,7 +92,7 @@ test('meubles et réserves : conserver les piles sur table et tabouret, retirer 
     addGroundMaterial(fixture,'wood',28,{x:12,z:16},'wood');addGroundMaterial(fixture,'steel',25,{x:12,z:17},'steel');addGroundMaterial(fixture,'food',10,{x:17,z:14},'rice');addGroundMaterial(fixture,'food',6,{x:19,z:14},'berries');
     const ids=fixture.piles.filter(p=>p.kind==='food').map(p=>p.id);
     await page.addInitScript(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:serializeWorld(fixture)});
-    await page.goto('/?size=32&e2e');await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,fixture);
+    await page.goto('/?scenario=camp&size=32&e2e');await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,fixture);
     for(const x of [17,19]){await tool(page,'stockpile');await cell(page,x,14);}
     await tool(page,'bed');await expect(page.locator('#tool-instruction')).toContainText('45 Bois');
     await tool(page,'table');await cell(page,17,14);await tool(page,'stool');await page.locator('#construction-material').selectOption('steel');

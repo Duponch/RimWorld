@@ -73,7 +73,7 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
   const harvests=new Map<string,number>(), meals=new Map<string,number>(), sleepers=new Set<number>(), cooked=new Set<string>();const recreationActivities=new Set<string>(),clearedSites=new Set<string>();let finalReport:unknown,waitingFor=0;let morning:ReturnType<typeof colonySummary>|undefined;
   try {
     // No injected fixture, inventory, clocks or simulation speed outside the UI.
-    await page.goto('/?e2e&seed=42');await expect(page.locator('#loading')).toHaveCount(0);
+    await page.goto('/?scenario=camp&e2e&seed=42');await expect(page.locator('#loading')).toHaveCount(0);
     await page.locator('[data-speed="0"]').click();await expect(page.locator('#pause-banner')).toBeVisible();
     const initial=await world(page);expect(initial.wildlife?.animals).toHaveLength(12);expect(initial.width).toBe(250);expect(initial.stock).toEqual({wood:12,food:18});
     expect(initial.foodRules).toBe('adult');
@@ -183,7 +183,7 @@ test('checkpoint journey: continue the ordinary player, food ledger and third-ni
   try {
     const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data});
-    await page.goto('/?e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
+    await page.goto('/?scenario=camp&e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
     await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);
     const eventKey=(e:World['events'][number])=>`${e.tick}:${e.type}:${e.message}`,seen=new Set(initial.events.map(eventKey));
     let consumed=0,harvested=0,cooked=0;
@@ -222,7 +222,7 @@ test('checkpoint maintenance: finish accepted work through the real UI after ord
   try {
     const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page),decisions:PlayerLog=[];
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data});
-    await page.goto('/?e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
+    await page.goto('/?scenario=camp&e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
     await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
     const morning=await finishMaintenance(page,initial,woodAccount(initial),decisions,{value:0});
     const final=await world(page),summary=colonySummary(final);

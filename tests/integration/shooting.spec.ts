@@ -21,7 +21,7 @@ test('native UI: explicit target, cancel, saved aim, visible GPU flight/pose and
     await page.addInitScript(()=>{(window as any).__pipelines=0;for(const key of ['createRenderPipeline','createRenderPipelineAsync'] as const){const original=GPUDevice.prototype[key];(GPUDevice.prototype as any)[key]=function(...args:any[]){(window as any).__pipelines++;return (original as any).apply(this,args);};}});
     await page.route('**/src/main.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:probe+await response.text()});});
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
-    await page.goto('/?e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
+    await page.goto('/?scenario=camp&e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
     for(const speed of [1,6]) {
       await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
       await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');

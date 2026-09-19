@@ -21,7 +21,7 @@ test('player priorities decide urgent self-care at bed review; one real treatmen
     const initial=urgentBedCamp(),p=initial.pawns[0]!;delete p.selfTend;p.priorities.doctor=2;p.priorities.patient=1;p.hunger=25;
     addMaterial(initial,'food',10,{type:'ground',x:p.x+2,z:p.z},'survival-meal');refreshStock(initial);
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
-    await page.goto('/?size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
+    await page.goto('/?scenario=camp&size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
     await page.locator(`[data-pawn="${p.id}"]`).click();await page.locator('#self-tend-policy').check();
     await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).tick).toBeGreaterThan(initial.tick+30);await page.locator('[data-speed="0"]').click();
     const waiting=await world(page);expect(waiting.pawns[0]!.tend).toBeUndefined();expect(waiting.pawns[0]!.skills.medicine.xp).toBe(0);expect(waiting.pawns[0]!.state).toBe('resting');

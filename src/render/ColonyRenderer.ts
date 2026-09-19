@@ -230,7 +230,7 @@ export class ColonyRenderer {
     const previousWorld = this.world;
     // Worker deltas keep immutable terrain/resources references stable. A changed
     // collection is inspected once; ordinary pawn snapshots do not scan the map.
-    const newMap = !previousWorld||previousWorld.seed!==world.seed||previousWorld.width!==world.width||previousWorld.height!==world.height;
+    const newMap = !previousWorld||previousWorld.seed!==world.seed||previousWorld.width!==world.width||previousWorld.height!==world.height||previousWorld.scenario?.id!==world.scenario?.id||previousWorld.scenario?.revision!==world.scenario?.revision;
     const groundChanged = !sameTerrainSurface(previousWorld,world);
     if (newMap) this.cancelDesignation();
     // The worker epoch distinguishes a checkpoint from an ordinary delta even
@@ -247,7 +247,7 @@ export class ColonyRenderer {
     if (newMap) {
       this.boxes.clear();
       const extent = Math.min(WORLD_SCALE.cameraSpan, Math.max(world.width, world.height));
-      this.rig.configureMap(world.width, world.height);
+      this.rig.configureMap(world.width, world.height, world.scenario?.landing);
       this.daylight.configureShadow(extent);
       this.resize();
     }

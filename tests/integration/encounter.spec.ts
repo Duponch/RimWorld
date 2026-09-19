@@ -27,7 +27,7 @@ test('native encounter UI: opt-in creation, ownership, reaction policy, hostile 
   page.setDefaultTimeout(15000);
   try {
     await page.route('**/src/main.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:probe+await response.text()});});
-    await page.goto('/?e2e&size=64');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
+    await page.goto('/?scenario=camp&e2e&size=64');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
     await panel(page,'menu');await page.locator('#new-colony').click();await page.locator('#world-size').selectOption('64');await page.locator('#world-scenario').selectOption('sentry');await page.locator('#new-world-form [type="submit"]').click();
     await expect(page.locator('#new-world-dialog')).not.toBeVisible();await expect.poll(async()=>(await world(page)).pawns.length).toBe(4);
     const created=await world(page);expect(validateWorld(created)).toEqual([]);expect(created.pawns.filter(p=>p.faction==='outlaws')).toHaveLength(1);

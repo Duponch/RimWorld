@@ -51,7 +51,7 @@ try {
   for(const pawn of initial.pawns)for(let i=0;i<medicalWounds;i++)controlledInjury(initial,pawn,i%2?'left-arm':'right-leg',100,'cut');
   if(drafting){const ids=initial.pawns.filter((_,i)=>i%2===0).map(p=>p.id);for(const c of [{type:'draft',pawnIds:ids,enabled:true},{type:'draft-move',pawnIds:ids,target:{x:140,z:140},queue:false},{type:'draft-move',pawnIds:ids,target:{x:109,z:142},queue:true}]){const result=applyCommand(initial,c);if(!result.ok)throw Error(result.reason);}}
   await page.addInitScript(saved=>localStorage.setItem('lisiere.save.v1',saved),serializeWorld(initial));
-  await page.goto('http://127.0.0.1:5173/?e2e&size=250&seed=42');await page.waitForFunction(()=>window.__miningBench.view?.world);
+  await page.goto('http://127.0.0.1:5173/?scenario=camp&e2e&size=250&seed=42');await page.waitForFunction(()=>window.__miningBench.view?.world);
   await page.locator('[data-speed="0"]').click();await page.locator('[data-panel="menu"]').click();await page.locator('#load').click();await page.keyboard.press('Escape');
   await page.waitForFunction(({n,workshops,stonecutting})=>{const w=window.__miningBench.view.world;if(stonecutting)return w.tick===0&&w.pawns.length===n&&w.structures.filter(s=>s.kind==='stonecutter').length===n;return w.tick===2000&&w.pawns.length===n&&w.jobs.filter(j=>j.kind===(workshops?'stonecutter':'mine')).length===(workshops?1:4)*n;},{n:count,workshops,stonecutting});
   await page.waitForFunction(()=>!document.querySelector('.game-shell').inert);

@@ -15,7 +15,7 @@ test('le joueur désigne un rectangle, annule un meuble, priorise la déconstruc
     fixture.resources.push({id:fixture.nextId++,kind:'tree',x:12,z:16,amount:12});
     const initialWood=woodAccount(fixture);
     await page.addInitScript(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:serializeWorld(fixture)});
-    await page.goto('/?size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);
+    await page.goto('/?scenario=camp&size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);
     await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,fixture);
     const rotation={value:0};
     await perform(page,{reason:'Retirer plusieurs ouvrages du camp.',command:{type:'area',action:'deconstruct',from:{x:18,z:14},to:{x:22,z:18}}},rotation);

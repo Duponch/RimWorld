@@ -20,7 +20,7 @@ test('real equipment UI: contact before ownership, GPU hip attachment, saved app
     await page.route('**/src/main.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:probe+await response.text()});});
     const initial=equipmentCamp(1),p=initial.pawns[0]!,gun=initial.piles[0]!;
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
-    await page.goto('/?e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
+    await page.goto('/?scenario=camp&e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
     await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
     await perform(page,{reason:'Équiper l’arme au sol.',command:{type:'order-equipment',pawnId:p.id,itemId:gun.id,action:'equip',queue:false}},{value:0});
     const walking=await world(page);expect(walking.piles[0]!.owner.type).toBe('ground');

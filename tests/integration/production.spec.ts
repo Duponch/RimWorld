@@ -20,7 +20,7 @@ test('taille et construction par interface : Artisanat, vingt blocs rangés puis
     p.x=15;p.z=13;p.priorities.craft=0;s.x=15;s.z=14;
     addGroundMaterial(initial,'chunk',1,{x:21,z:13},'marble-chunk');addGroundMaterial(initial,'chunk',1,{x:19,z:13},'granite-chunk');
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
-    await page.goto('/?size=32&seed=42&e2e');await expect(page.locator('#loading')).toHaveCount(0);
+    await page.goto('/?scenario=camp&size=32&seed=42&e2e');await expect(page.locator('#loading')).toHaveCount(0);
     await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);
     await panel(page,'work');await page.locator(`select[data-owner="${p.id}"][data-work="craft"]`).selectOption('1');
     await perform(page,{reason:'Ranger les blocs',command:{type:'stockpile',x:17,z:17,enabled:true,filters:{wood:false,food:false,blocks:true},capacity:75}},{value:0});
@@ -64,7 +64,7 @@ test('cuisine par interface : construction, facture, ingrédients portés, repri
     initial.pawns.forEach(p=>{p.hunger=100;p.rest=100;p.priorities={hunt:0,research:0, patient:0,bedrest:0,doctor:0,craft:2,mine:2,gather:0,build:1,haul:1,grow:0,cook:0};});
     addGroundMaterial(initial,'wood',50,{x:14,z:17},'wood');addGroundMaterial(initial,'food',7,{x:21,z:13},'berries');addGroundMaterial(initial,'food',23,{x:21,z:15},'rice');refreshStock(initial);
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
-    await page.goto('/?size=32&seed=42&e2e');await expect(page.locator('#loading')).toHaveCount(0);
+    await page.goto('/?scenario=camp&size=32&seed=42&e2e');await expect(page.locator('#loading')).toHaveCount(0);
     await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);
     await tool(page,'campfire');await cell(page,15,14);
     await page.keyboard.press('Escape');await page.locator('[data-speed="6"]').click();
@@ -134,7 +134,7 @@ test('conservation dans le worker : migration V10, inspection de fraîcheur, exp
     addGroundMaterial(initial,'food',10,{x:17,z:16},'berries');refreshStock(initial);
     const old=withoutPostV10Fields(JSON.parse(serializeWorld(initial)));(old.schemaVersion=10,withoutPawnSkills(old));for(const a of old.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete old.deconstructed;delete old.packed;
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:JSON.stringify(old)});
-    await page.goto('/?size=32&seed=42&e2e');await expect(page.locator('#loading')).toHaveCount(0);
+    await page.goto('/?scenario=camp&size=32&seed=42&e2e');await expect(page.locator('#loading')).toHaveCount(0);
     await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();
     await expect.poll(async()=>(await world(page)).schemaVersion).toBe(SCHEMA_VERSION);
     expect(await world(page)).toEqual(deserializeWorld(JSON.stringify(old)));await page.keyboard.press('Escape');await cell(page,17,16);

@@ -61,7 +61,7 @@ const originalTraceAdvance=advanceSimulation;advanceSimulation=now=>{const at=pe
  page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
  await page.route('**/src/main.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:probe+await response.text()+`\nconst originalSync=client.onSnapshot;client.onSnapshot=(...args)=>{window.__sync.stepMs=args[1];return originalSync(...args);};`});});
  await page.addInitScript(data=>localStorage.setItem('lisiere.save.v1',data),serializeWorld(w));
- await page.goto('http://127.0.0.1:5173/?e2e&size=250');await page.waitForFunction(()=>!!window.__lisiere);
+ await page.goto('http://127.0.0.1:5173/?scenario=camp&e2e&size=250');await page.waitForFunction(()=>!!window.__lisiere);
  await page.locator('[data-speed="0"]').click();await page.locator('[data-panel="menu"]').click();await page.locator('#load').click();await page.keyboard.press('Escape');
  await page.waitForFunction(()=>!document.querySelector('.game-shell').inert);
  await page.evaluate(()=>{window.__sync.active=true;});await page.locator('[data-speed="'+initialSpeed+'"]').click();

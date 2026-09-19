@@ -1,5 +1,7 @@
 # Choix et écarts de gameplay
 
+V80 : Trois survivants est un scénario propre inspiré de Crashlanded, avec possessions disponibles et deux technologies industrielles acquises. Il conserve une vallée tempérée, trois profils écrits, une seule espèce et des incidents calibrés localement. Armes manquantes, argent, animal domestique, matériel dispersé, capsules et difficulté du narrateur Core ne sont pas remplacés silencieusement. L'ancien camp pédagogique garde sa recherche à débloquer. Les notes datées ci-dessous décrivent leur version ; l'[inventaire courant](implementation-status.md) prévaut. [Sources et écarts](../research/scenario-start-reference.md).
+
 V76 : première espèce animale adulte, population de départ fixe et errance locale bornée ; besoin nutritionnel calibré sur le wiki arrondi malgré un ancien XML divergent. Choix alimentaire par accès pondéré, sommeil animal distinct des restrictions humaines, déplacements euclidiens et corps graphique interprété en 3D. Santé, fuite, chasse et dépouilles restent la tranche prioritaire suivante ; la faune n'est pas déclarée complète. [Sources et périmètre](../research/wildlife-reference.md).
 
 V75 : base électrique connue du scénario mais Climatisation à rechercher ; contrôle thermique continu dans les ticks locaux ; destruction refusée si la restitution complète ne peut être déposée ; hypothermie active mais gelures localisées différées. Ce sont des adaptations/limites explicites, pas une parité générale. [Sources et motifs](../research/cold-store-reference.md).

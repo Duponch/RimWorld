@@ -16,7 +16,7 @@ test('culture par interface : champ, semis GPU, inspection, politiques, maturitÃ
     initial.pawns.forEach(p=>{p.hunger=100;p.rest=100;p.priorities.haul=0;});
     addGroundMaterial(initial,'wood',25,{x:18,z:16});refreshStock(initial);
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
-    await page.goto('/?size=32&seed=42&e2e');await expect(page.locator('#loading')).toHaveCount(0);
+    await page.goto('/?scenario=camp&size=32&seed=42&e2e');await expect(page.locator('#loading')).toHaveCount(0);
     await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();
     await expectWorld(page,initial);
     await tool(page,'growing');await dragRectangle(page,{x:18,z:16},{x:20,z:17});
@@ -64,7 +64,7 @@ test('cold room: UI explains stopped plants, no sowing, built fire restores grow
     for(const region of initial.thermal!.regions)region.cells=region.cells.map(i=>i+12*32+12);
     addGroundMaterial(initial,'wood',30,{x:18,z:17});refreshStock(initial);initial.pawns[0]!.priorities.build=1;
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
-    await page.goto('/?size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);
+    await page.goto('/?scenario=camp&size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);
     await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);
     await tool(page,'growing');await dragRectangle(page,{x:16,z:16},{x:17,z:16});
     await tool(page,'select');await cell(page,16,16);

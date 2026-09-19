@@ -18,7 +18,7 @@ test('toits : zone tracée, pose physique, affichage, retrait et reprise par le 
     });
     const initial=roomCamp();
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
-    await page.goto('/?size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);
+    await page.goto('/?scenario=camp&size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);
     await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);
     await page.keyboard.press('Escape');await tool(page,'build-roof');
     await revealCells(page,[{x:10,z:10},{x:20,z:20}]);await dragRectangle(page,{x:10,z:10},{x:20,z:20});

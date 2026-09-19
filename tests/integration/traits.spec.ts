@@ -19,7 +19,7 @@ test('personality in real UI: new camp, comparable physical work, thoughts, sche
     });refreshStock(initial);
     const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);page.setDefaultTimeout(15000);
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
-    await page.goto('/?e2e&size=32');await expect(page.locator('[data-speed="0"]')).toBeVisible();await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
+    await page.goto('/?scenario=camp&e2e&size=32');await expect(page.locator('[data-speed="0"]')).toBeVisible();await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
     const generated=await world(page);expect(generated.pawns.map(p=>p.traits)).toEqual([['optimist','fast-learner'],['steadfast','slow-learner'],['pessimist','nervous']]);
     await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
     const [fast,slow]=initial.pawns;

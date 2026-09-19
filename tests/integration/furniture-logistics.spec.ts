@@ -15,7 +15,7 @@ test('ranger un meuble par le menu contextuel, reprendre sa cargaison, puis le r
     const pin=fixtureBuilding(fixture,'horseshoes',14,16);
     const initial=woodAccount(fixture),rotation={value:0},storage={x:24,z:19};
     await page.addInitScript(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:serializeWorld(fixture)});
-    await page.goto('/?size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,fixture);
+    await page.goto('/?scenario=camp&size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,fixture);
     await page.keyboard.press('Escape');await revealCells(page,[bed]);await cell(page,14,16);await expect(page.locator('#cell-install')).toHaveCount(0);
     await cell(page,14,16);await expect(page.locator('#cell-install')).toBeVisible();
     await perform(page,{reason:'Installer le paquet, pas le piquet sur la même case.',command:{type:'install',structureId:bed.id,x:19,z:16,orientation:0}},rotation);

@@ -16,7 +16,7 @@ try {
     const response = await route.fetch();
     await route.fulfill({ response, body:`window.__overview={view:null,frames:[],active:false,total:0};const originalFrame=ColonyRenderer.prototype.frame;ColonyRenderer.prototype.frame=function(now){const b=window.__overview;b.view=this;const t=performance.now();const result=originalFrame.call(this,now);b.total++;if(b.warm>0){b.warm--;if(!b.warm){b.active=true;b.frames=[];}}else if(b.active){b.frames.push({time:now,cpu:performance.now()-t,calls:this.stats.drawCalls,triangles:this.stats.triangles});if(b.frames.length>=300&&now-b.frames[0].time>=8000){b.active=false;b.complete(b.frames);}}return result;};\n`+await response.text() });
   });
-  await page.goto('http://127.0.0.1:5173/?e2e&size=250&seed=42');
+  await page.goto('http://127.0.0.1:5173/?scenario=camp&e2e&size=250&seed=42');
   await page.waitForFunction(()=>!!window.__overview.view?.world);
   await page.locator('[data-speed="0"]').click();
   report.adapter = await page.evaluate(()=>{const c=window.__overview.view.renderer.getContext(),i=c.getConfiguration().device.adapterInfo;return {vendor:i.vendor,architecture:i.architecture,device:i.device,description:i.description};});

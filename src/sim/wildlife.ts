@@ -12,15 +12,26 @@ const contact=(a:Cell,b:Cell)=>Math.abs(a.x-b.x)+Math.abs(a.z-b.z)<=1;
 const neighbours=(c:Cell):Cell[]=>[{x:c.x,z:c.z},{x:c.x-1,z:c.z},{x:c.x+1,z:c.z},{x:c.x,z:c.z-1},{x:c.x,z:c.z+1}];
 
 /** Only new camps or explicit opt-in. No wildlife is invented during migration. */
-export function enableWildlife(world:World,count=Math.min(12,Math.max(3,Math.floor(world.width*world.height/5000)))):void {
+export function enableWildlife(world:World,count=Math.min(12,Math.max(3,Math.floor(world.width*world.height/5000))),distribution?:'natural'):void {
   if(world.wildlife)return;
+  if(distribution!==undefined&&distribution!=='natural')throw new Error('Invalid wildlife distribution.');
   if(!Number.isSafeInteger(count)||count<0||count>MAX_WILDLIFE||!Number.isSafeInteger(world.nextId+count))throw new Error('Invalid wildlife population.');
   const s=world.wildlife={profile:'temperate-hares-v1' as const,rng:(world.seed^0x784caf31)>>>0||1,animals:[] as WildAnimal[],eatenPlants:0,eatenNutrition:0,eatenItems:0};
-  const nav=animalNavigation(world),plants=world.resources.filter(isPlant).sort((a,b)=>Math.hypot(a.x-world.width/2,a.z-world.height/2)-Math.hypot(b.x-world.width/2,b.z-world.height/2));
+  const nav=animalNavigation(world),plants=world.resources.filter(isPlant);
+  if(!distribution)plants.sort((a,b)=>Math.hypot(a.x-world.width/2,a.z-world.height/2)-Math.hypot(b.x-world.width/2,b.z-world.height/2));
+  const occupied=distribution?new Set([
+    ...world.pawns.map(p=>p.z*world.width+p.x),
+    ...world.piles.flatMap(p=>p.owner.type==='ground'?[p.owner.z*world.width+p.owner.x]:[]),
+    ...world.packed.flatMap(p=>p.owner.type==='ground'?[p.owner.z*world.width+p.owner.x]:[]),
+  ]):undefined;
   const used=new Set<number>();
   for(let n=0;n<count&&plants.length;n++) {
-    const offset=n===0?0:Math.floor(wildlifeRandom(s)*plants.length);
-    const place=plants.slice(offset).concat(plants.slice(0,offset)).flatMap(neighbours).find(c=>nav.free(c)&&!used.has(c.z*world.width+c.x));if(!place)break;
+    const offset=n===0&&!distribution?0:Math.floor(wildlifeRandom(s)*plants.length);
+    const places=plants.slice(offset).concat(plants.slice(0,offset)).flatMap(neighbours);
+    const admissible=(c:Cell)=>nav.free(c)&&!used.has(c.z*world.width+c.x)&&!occupied?.has(c.z*world.width+c.x);
+    // Disperse the available species where habitat permits; a crowded small
+    // fixture can fall back to any admissible unoccupied location.
+    const place=distribution?places.find(c=>admissible(c)&&s.animals.every(a=>(a.x-c.x)**2+(a.z-c.z)**2>=36))??places.find(admissible):places.find(admissible);if(!place)break;
     used.add(place.z*world.width+place.x);
     s.animals.push({id:world.nextId++,species:'hare',sex:wildlifeRandom(s)<.5?'female':'male',x:place.x,z:place.z,food:HARE.nutrition*(.5+.4*wildlifeRandom(s)),rest:.9+.1*wildlifeRandom(s),state:'idle',path:[],nextDecision:world.tick+1+n%60});
   }

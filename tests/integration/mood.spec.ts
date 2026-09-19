@@ -15,7 +15,7 @@ test('mood causes at 1x/6x: real ingestion, remembered meal, physical clothing r
     addMaterial(initial,'food',20,{type:'ground',x:p.x+2,z:p.z},'rice');
     const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
-    await page.goto('/?e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
+    await page.goto('/?scenario=camp&e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
     await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');await page.locator(`[data-pawn="${p.id}"]`).click();if(await page.locator('#mood-inspection').getAttribute('open')===null)await page.locator('#mood-inspection summary').click();
     await expect(page.locator('#mood-target')).toContainText('cible 45 %');await expect(page.locator('[data-thought="tattered-apparel"]')).toBeVisible();
     await page.locator(`[data-speed="${speed}"]`).click();await expect.poll(async()=>{const s=(await world(page)).pawns[0]!;return s.need?.kind==='eat'&&s.need.phase==='ingest';},{intervals:[100]}).toBe(true);await page.locator('[data-speed="0"]').click();

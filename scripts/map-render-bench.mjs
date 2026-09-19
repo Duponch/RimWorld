@@ -91,7 +91,7 @@ try {
     });
     const start = performance.now();
     console.log(`Starting ${label} ${size}`);
-    await page.goto(`${base}/?e2e&seed=42&size=${size}`);
+    await page.goto(`${base}/?scenario=camp&e2e&seed=42&size=${size}`);
     await page.waitForFunction(() => !!window.__lisiere && !!window.__mapBench?.view, undefined, { timeout: 120000 });
     const readyMs = performance.now()-start;
     console.log(`Ready ${size} in ${readyMs.toFixed(1)} ms`);

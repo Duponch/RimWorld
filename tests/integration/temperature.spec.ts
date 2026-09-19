@@ -22,7 +22,7 @@ test('passive cooling: visible construction, temperature, manual refill and exac
     });
     const initial=passiveCoolingFixture(),total=woodAccount(initial);
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
-    await page.goto('/?size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);
+    await page.goto('/?scenario=camp&size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);
     await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);
     expect(await page.evaluate(()=>window.__lisiere.backend)).toBe('WebGPU');
     const pipelineStart=await page.evaluate(()=>{const p=(window as any).coolingProbe;p.record=true;return p.pipelines as number;});

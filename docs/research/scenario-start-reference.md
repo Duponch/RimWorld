@@ -1,39 +1,61 @@
-# Début de partie cohérent — préparation du 19 septembre 2026
+# Départ cohérent — référence et décisions V80
 
-Objectif utilisateur durable : transformer les systèmes isolés en une vraie nouvelle partie, avec scénario, personnages, possessions, conditions de départ, biome, ressources et pression calibrés ensemble. Ce document est une préparation ; le calendrier reste exclusivement dans [ROADMAP](../ROADMAP.md). Il ne remplace pas le générateur courant ni ne déclare sa difficulté fidèle à RimWorld.
+Recherche renouvelée le **20 septembre 2026**, après la filière chasse–boucherie V79. Objectif : une nouvelle partie dont scénario, personnes, dotation, technologies, paysage et pression forment un ensemble explicable. Le [contrat de scénario](../development/scenario-start.md) porte les choix locaux ; [ROADMAP](../ROADMAP.md) reste le calendrier. Une référence vérifiée ne constitue ni une implémentation ni une preuve d'équilibrage.
 
-Corpus à adopter : chapitres 6/7 (génération), 11/12 (ressources et écologie), 13 (personnes) et 24 (incidents), SYS-016..019,084/085,121..125,132..135. **Adopter** scénario et site distincts, placements admissibles et distribution contrôlée ; **adapter** moteur et métrique 3D ; **différer** choix de planète complète et catalogue de tous les départs ; **vérifier** densités, budgets et difficulté sur plusieurs parties comparables.
+## Corpus et niveau de preuve
 
-## Référence de départ
+Les originaux sont abordés via [reference-adoption](reference-adoption.md). Chapitres 5–7 : taille/génération ; 11 : production/recherche ; 12 : alimentation/faune ; 13 : personnes ; 24 : narrateur/incidents.
 
-[Scenario system](https://rimworldwiki.com/wiki/Scenario_system), relu, et [Scenarios_Classic.xml historique](https://github.com/RimWorld-zh/RimWorld-Core/blob/85954e64ea75334f51e33e27a4128809191e430e/Core/Defs/Scenarios/Scenarios_Classic.xml) se recoupent sur Crashlanded : trois survivants choisis parmi huit, arrivée en capsules, profil technologique « New Arrivals », animal de compagnie et possessions séparées du terrain.
+| Entrées | Décision |
+| --- | --- |
+| SYS-016/017 | Adopter graine/version, séparation terrain–scénario et contraintes spatiales ; adapter l'algorithme 3D. |
+| SYS-018/019 | Rivière locale partielle ; monde, côtes, grottes et ruines différés. Ne pas assimiler le contenu Odyssey au Core. |
+| SYS-084/085 | Traits compatibles et compétences utiles ; huit candidats, biographies et génération complète différés. |
+| SYS-121..125 | Prédateurs, revanche, dressage, enclos et reproduction distincts. Ces lignes ne spécifient pas un budget de faune sauvage. |
+| SYS-132..135 | Séparer scénario, calendrier, composition et lettre ; narrateur selon richesse/population/adaptation différé. |
 
-Les quantités de référence indiquées sont 800 argent, 50 repas de survie emballés, 30 médicaments industriels, 30 composants ; 450 acier et 300 bois proches du point d'arrivée. Armes : fusil à verrou, revolver, couteau en plasteel ; armures de départ et vêtements s'ajoutent. Des ressources dispersées ailleurs sont une autre catégorie : trois débris de vaisseau, 720 acier et sept repas. Le XML ancien confirme ces nombres, mais ne suffit pas à figer tous les matériaux, qualités et règles du patch actuel. Une partie de ces objets et l'animal domestique n'existent pas encore dans Lisière.
+Sources confrontées : présentation officielle, wiki communautaire relu et classes Core épinglées au [commit du 20 mai 2026](https://github.com/Chillu1/RimWorldDecompiled/tree/2d508035082e7cb0c8e29e230d26bda6e546928f). Le [correctif officiel 1.6.4850](https://ludeon.com/blog/2026/06/update-1-6-4850-released/) est postérieur : ce miroir ne certifie pas les branches actuelles. Le [XML historique de scénario](https://github.com/RimWorld-zh/RimWorld-Core/blob/85954e64ea75334f51e33e27a4128809191e430e/Core/Defs/Scenarios/Scenarios_Classic.xml), daté de septembre 2018, corrobore les quantités, sans remplacer les Defs de la version actuelle. Copies de travail dans `tmp/scenario-start-reference`, sans dépendance du jeu.
 
-**Point de conception important :** New Arrivals connaît déjà notamment vêtements complexes, mobilier complexe, électricité et climatisation. Nos déblocages pédagogiques actuels ne constituent donc pas un départ Crashlanded identique. Il faudra soit livrer ce profil avec ses technologies initiales, soit nommer et documenter un scénario propre à Lisière, sans mélanger silencieusement les avantages de plusieurs départs.
+## Crashlanded Core et décisions locales
 
-Les [repas emballés](https://rimworldwiki.com/wiki/Packaged_survival_meal) ne pourrissent pas, mais se détériorent dehors. Les remplacer par des repas simples périssables n'est pas un échange neutre. L'objectif consiste à préserver les marges de survie et les choix initiaux, pas à copier seulement une liste de quantités.
+Le [scénario décrit actuellement](https://rimworldwiki.com/wiki/Scenario_system) sélectionne trois personnes parmi huit, arrivant en capsules avec un animal lié et un profil industriel New Arrivals. Maladie de cryptosommeil possible, biographies et habillement dépendent de la génération. Le [site officiel](https://rimworldgame.com/) confirme le trio de survivants et le rôle du narrateur, pas chaque quantité.
 
-## Taille, végétation, minerais et animaux
+| Catégorie | Référence recoupée wiki/XML |
+| --- | --- |
+| Provisions | 800 argent, 50 repas emballés, 30 médicaments industriels, 30 composants. |
+| Matériaux proches | 450 acier, 300 bois. |
+| Matériel distant | 720 acier, 7 repas, 3 débris de vaisseau. |
+| Combat | Fusil à verrou, revolver, couteau en plasteel, qualité normale ; gilet/pantalon pare-balles et casque en plasteel. |
+| Personnes | Vêtements en synthétoffe et animal domestique, en plus des armures. |
 
-[World generation](https://rimworldwiki.com/wiki/World_generation) confirme les tailles normales 200², 225², 250², 275² et les grandes 300²/325². **250², soit 62 500 cellules**, est déjà le défaut jouable de Lisière ; aucune multiplication arbitraire de surface n'est justifiée par cette recherche. La lisibilité 3D, la distance de déplacement et la densité peuvent donner une impression différente à taille identique. Comparer ces paramètres avant d'agrandir ; une extension exige un intérêt ludique et des mesures simulation/worker/rendu avec le contenu cible.
+New Arrivals connaît déjà refroidissement passif, taille de pierre, vêtements/mobilier complexes, électricité, climatisation et pâte nutritive. **Nos deux recherches disponibles sont acquises dans le nouveau départ** ; conserver leurs verrous uniquement pour imposer une démonstration serait une divergence supplémentaire. Le camp pédagogique reste un autre scénario.
 
-La [forêt tempérée](https://rimworldwiki.com/wiki/Temperate_forest) mélange clairières fertiles, herbes, arbustes et arbres feuillus ; ce n'est pas une grille uniformément remplie de grands conifères. Ses coefficients publiés de plantes et d'animaux ne sont **pas des nombres d'arbres ou de lièvres**. Ne pas transformer directement une densité végétale en probabilité de poser un arbre sur chaque case.
+Décision V80 : **Trois survivants**, scénario propre, reprend le stock proche compatible, trois chemises en tissu portées, un revolver et un gilet au sol. Stock distant, argent, armes/armures absentes, synthétoffe, animal domestique, capsules et cryptosommeil ne sont pas remplacés silencieusement. La réserve totale et la défense diffèrent : ce n'est pas un Crashlanded identique.
 
-Les classes [Core datées du 20 mai 2026](https://github.com/Chillu1/RimWorldDecompiled/tree/2d508035082e7cb0c8e29e230d26bda6e546928f), téléchargées de nouveau (`WildAnimalSpawner`, `WildPlantSpawner`, `GenStep_Animals`, `GenStep_Plants`, `GenStep_ScatterLumpsMineable`, `BiomeDef`), distinguent :
+Les [repas emballés](https://rimworldwiki.com/wiki/Packaged_survival_meal) ne pourrissent pas mais se détériorent exposés. Des repas simples ne constituent pas un remplacement neutre. L'autonomie doit être mesurée avec notre ingestion et les convives réels : l'approximation de huit jours du wiki n'est pas une garantie universelle.
 
-- Animaux : budget écologique pondéré, proportionnel à la surface et au coefficient du site, filtré par saison/température et conditions ; espèces, poids écologiques et tailles de groupes distincts. Le nombre d'individus varie selon la composition, pas seulement la taille de carte.
-- Plantes : fertilité, habitat, concurrence, espèce, maturité aléatoire et densité locale. Les arbres ne sont qu'un sous-ensemble de la population végétale.
-- Minerais : amas dans la roche admissible, fréquences pondérées, tailles d'amas et espacement. Ni saupoudrage uniforme d'objets ni stock garanti identique autour du camp.
+## Placement et taille
 
-Ces sources cadrent les contraintes, mais ne fournissent pas ici de comptage certifié du nombre d'arbres/minerais/animaux d'une carte actuelle. Aucun objectif numérique de densité n'est inventé. Les copies locales `tmp/scenario-start-reference` ne sont pas des dépendances du jeu.
+[GenStep_FindPlayerStartSpot](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/RimWorld/GenStep_FindPlayerStartSpot.cs) et [CellFinderLoose](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/Verse/CellFinderLoose.cs) recherchent un point plutôt central, praticable, ouvert, relié au bord et hors emplacements réservés, puis élargissent la recherche. Le paysage détermine ce point, pas une clairière carrée et trois ressources imposées. Notre validation peut refuser un départ invalide sans recopier les replis approximatifs du miroir.
 
-## Lot de conception à intégrer après la filière alimentaire
+`ScenPart_StartingThing_Defined`, `ScenPart_PlayerPawnsArriveMethod` et [ScenPart_ScatterThings](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/RimWorld/ScenPart_ScatterThings.cs) séparent possessions, dispersion proche et distante. Les objets sont physiques ; les capsules les interdisent initialement. Lisière les rend disponibles immédiatement faute de ce système, sur des cellules accessibles et compatibles, sans stock abstrait ni réserve construite. Aucun rayon exact de dispersion du patch courant n'est certifié ici.
 
-Recommandation : consacrer un lot visible au **départ de survie cohérent** avant d'étendre massivement le catalogue. La chasse et la conservation donnent précisément les leviers nécessaires pour calibrer ce départ. Le contenu manquant du scénario doit être livré ou explicitement substitué avec un scénario nommé ; aucune migration ne doit régénérer une ancienne carte.
+[World generation](https://rimworldwiki.com/wiki/World_generation) répertorie 200²/225², 250²/275², 300²/325² et les très grandes 350²/400². **250² = 62 500 cellules** est déjà notre défaut ; le lot n'exige aucune extension des bornes locales 8..250. La note précédente omettait les deux dernières tailles : correction documentaire, pas besoin de les implémenter. Densité, caméra et distances perçues en 3D sont distinctes de la surface logique.
 
-Le profil versionné devrait fixer scénario, population, dotation, technologies et état initial indépendamment de la seed du terrain. La génération devrait décrire biome, relief, sols, climat, végétation, géologie et écologie, puis valider les conditions de pose. Le camp n'exige pas nécessairement une solution gratuite à tous ses problèmes : contrôler l'accessibilité et éviter les impasses accidentelles sans supprimer la difficulté choisie.
+## Tempéré, végétation et faune
 
-Critères d'acceptation proposés : plusieurs seeds documentées, possessions exactement comptées, point d'arrivée admissible, accès raisonnable aux premières boucles, composition visuelle crédible, progression jouée sur plusieurs jours et budgets mesurés. Observer temps jusqu'à l'abri, autonomie alimentaire, distances de collecte, pénuries, blessures et coût de défense. Comparer à une référence choisie explicitement (version Core, biome, taille, narrateur et difficulté). Une colonie survivante seule ne prouve pas un équilibrage similaire.
+La [forêt tempérée](https://rimworldwiki.com/wiki/Temperate_forest) associe arbres feuillus, clairières, herbes et buissons. Coefficients publiés : plantes 0,65, faune 3,7. Chêne/peuplier ont chacun une pondération de 0,5, contre 5 pour l'herbe et 2 pour les herbes hautes ; baies/healroot chacun 0,05. Ce ne sont **ni des probabilités brutes de pose par cellule ni des comptages**. Les variantes d'extensions sont exclues de cette comparaison Core.
 
-Les mécanismes absents — saisons, maladies, prédateurs, richesse/narrateur adaptatif, notamment — empêchent encore de promettre une difficulté globale équivalente. Il faut maintenir cette différence tout en donnant au prototype un départ complet, explicable et plaisant à tester.
+[WildPlantSpawner](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/RimWorld/WildPlantSpawner.cs) combine densité du biome, facteur du site/conditions, fertilité et capacité locale, avec plafond d'une plante/cellule. Habitat, concurrence et regroupements interviennent dans le choix d'espèce. Les arbres ne sont qu'une fraction : couvrir 65 % de la carte d'arbres serait une mauvaise transposition.
+
+[WildAnimalSpawner](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/RimWorld/WildAnimalSpawner.cs) utilise `surface × densité effective / 10000`. La densité effective dépend notamment des espèces admissibles à la saison/température et des conditions ; chaque individu consomme son `ecoSystemWeight`, les groupes ont leurs tailles. À 250² au facteur neutre, 3,7 donne **23,125 unités de poids écologique**, pas 23 individus. Poids actuel du lièvre/composition non certifiés ici ; remplir tout ce budget de lièvres donnerait une fausse équivalence alimentaire.
+
+V80 retient une vallée locale, une végétation moins uniformément arborée et des mesures multigraines des arbres/baies/minerais, surfaces et distances. Le plafond de **12 lièvres sur 250²** est une calibration explicite de notre espèce unique, avec poses admissibles ; il ne découle pas d'un compte Core. Espèces d'arbres, diversité animale, migrations et climat saisonnier restent incomplets. Aucun nombre universel d'arbres/minerais par carte n'est revendiqué.
+
+## Difficulté et premiers jours
+
+Le [narrateur officiel](https://rimworldgame.com/) module les événements ; scénario et difficulté sont d'autres choix. La [table des difficultés](https://rimworldwiki.com/wiki/AI_Storytellers) donne pour Community Builder menace 30 %, humeur +10, récolte/minage/recherche 120 % ; Adventure Story utilise 60 %, +5 et 100 %. La difficulté ne se résume pas au délai du premier raid. Les libellés du jeu recommandent Community Builder aux débutants du genre ; le [Quickstart communautaire](https://rimworldwiki.com/wiki/Quickstart_Guides) recommande Cassandra/Strive to Survive : recommandations différentes, pas règle unique.
+
+Notre départ conserve une **pression prototype annoncée**, sans nom Community Builder, bonus de difficulté inventé ni points de raid selon richesse. Saisons, maladies, prédateurs, catalogues et narrateur absents empêchent la parité globale. Site tempéré et dotation suffisante rendent les systèmes abordables, sans prouver une difficulté équivalente.
+
+Le pilote doit obtenir couchages, abri, rangement et source renouvelable engagée par les commandes ; relever consommations, distances, dépenses, production et santé. Avec 50 repas/300 bois, faim ou abattage immédiats ne sont pas des exigences du départ. Chasse/agriculture peuvent être anticipées sans retirer artificiellement la dotation. Mesurer plusieurs graines, conserver les checkpoints, comparer progression et coûts. Une survie isolée ou un laboratoire ne certifie pas l'équilibrage d'une nouvelle partie.

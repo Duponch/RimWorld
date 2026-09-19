@@ -13,7 +13,7 @@ test('skills: player chooses a builder, sees physical learning, pauses and reloa
     const p=initial.pawns[0]!;p.x=10;p.z=10;p.hunger=100;p.rest=100;p.recreation.level=100;p.schedule.fill('anything');
     addGroundMaterial(initial,'wood',45,{x:9,z:10},'wood');refreshStock(initial);
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
-    await page.goto('/?size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);
+    await page.goto('/?scenario=camp&size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);
     await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);
     await panel(page,'work');const control=page.locator(`[data-owner="${p.id}"][data-work="build"]`);await expect(control).toHaveAttribute('title',/Construction 10\/20/);
     await control.selectOption('1');await tool(page,'bed');await cell(page,11,10);

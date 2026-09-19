@@ -11,7 +11,7 @@ test('native UI: hold/allow fire, civilian Attack from Assign/inspector, actual 
   page.setDefaultTimeout(15000);
   try {
     await page.route('**/src/main.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:`const autoFrame=ColonyRenderer.prototype.frame;ColonyRenderer.prototype.frame=function(...args){window.__automaticView=this;return autoFrame.apply(this,args);};\n`+await response.text()});});
-    await page.goto('/?e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#save').click();await page.keyboard.press('Escape');
+    await page.goto('/?scenario=camp&e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#save').click();await page.keyboard.press('Escape');
     for(const speed of [1,6]) {
       const initial=automaticCamp(),p=initial.pawns[0];
       if(speed===6)applyCommand(initial,{type:'draft',pawnIds:[p.id],enabled:false});

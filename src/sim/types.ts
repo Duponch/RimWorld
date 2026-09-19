@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 79 as const;
+export const SCHEMA_VERSION = 80 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
@@ -132,6 +132,7 @@ export interface Pawn extends Cell {
 }
 export interface WorldEvent { tick: number; type: 'job' | 'need' | 'command'; message: string }
 export interface World {
+  scenario?:import('./scenario-definitions.ts').ScenarioStamp;
   hunting?:{targets:number[];completed:number};
   butchery?:{completed:number;meat:number;leather:number};
   wildlife?:import('./wildlife-state.ts').WildlifeState;

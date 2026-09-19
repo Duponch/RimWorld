@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+**V80 — départ de partie explicite :** Trois survivants, dotation physique, chemises portées, deux connaissances initiales, point d’arrivée accessible choisi sur le terrain naturel et provenance persistée. L’ancien camp pédagogique et la rencontre restent sélectionnables. Densités arbres/buissons et croissance initiale sont distinctes ; aucun lièvre volontairement placé sur le buisson du camp. **Encore partiels :** calibrage des premières journées, biome unique, profils fixes des personnes, budget animal d’une seule espèce et calendrier d’incidents adapté. **Absents :** choix de planète/biome, sélection parmi huit personnes, argent, arsenal initial complet, animal domestique, capsules et stocks dispersés de Crashlanded. [Contrat](../development/scenario-start.md).
+
 **V79 — filière alimentaire animale :** lièvres sauvages avec besoins/santé/combat, désignation de chasse civile au revolver, achèvement éventuel, dépouille conservant identité/anatomie/fraîcheur, rangement filtré et poste de boucherie gratuit. Viande/cuir réellement produits selon lésions, Cuisine et rendement du poste ; viande ingérée crue ou cuisinée. **Encore absents :** autres espèces, renouvellement écologique, herbe vivante, apprivoisement, élevage, reproduction, table de boucherie, usage artisanal du cuir, ingestion directe des corps et gestion des cadavres humains. Sol encombré : le chasseur peut récupérer le corps au contact et le ranger ; sinon il attend une place sur sa cellule, sans perte ni déplacement artificiel. Transport ordinaire ne récupère pas encore directement ce corps retenu. [Contrats et adaptations](../development/hunting.md).
 
 **V75 :** [garde-manger froid](../development/cold-store.md) construit/recherché, face froide/chaude, thermostat, puissance variable, aliments rangés et conservés, reprise de pourriture après panne. Hypothermie réelle avec capacités/refuge/secours et décès ; gelures localisées absentes. Deux projets distincts, migration V74 neutre. Réseau local adapté, pas de câbles/batteries ni saisons complètes.
@@ -28,7 +30,7 @@
 
 **V65 :** [première crise mentale jouable](../development/mental-break.md), errance triste avec conservation des cargaisons, vrai sommeil/repas, refus des ordres et mémoire de récupération. Distribution des crises incomplète ; ne clôture pas Psychologie.
 
-État relu le **19 septembre 2026, schéma V79**. Cet inventaire décrit le code livré ; la [matrice](systems-matrix.md) décrit la cible et [ROADMAP](../ROADMAP.md) conserve le calendrier et les estimations. Le [catalogue](content-catalogue.md) distingue les objets obtenables des définitions ; les 95 familles CAT ne sont pas un inventaire individuel exhaustif.
+État relu le **20 septembre 2026, schéma V80**. Cet inventaire décrit le code livré ; la [matrice](systems-matrix.md) décrit la cible et [ROADMAP](../ROADMAP.md) conserve le calendrier et les estimations. Le [catalogue](content-catalogue.md) distingue les objets obtenables des définitions ; les 95 familles CAT ne sont pas un inventaire individuel exhaustif.
 
 **V64 :** [humeur progressive et pensées consultables](../development/mood.md), premières causes de besoins/douleur/habillement et mémoires de repas. Attentes fixes ; V65 ajoute une première crise, V70 les premières opinions ; liens familiaux et amoureux absents.
 

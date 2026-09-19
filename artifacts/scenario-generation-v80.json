@@ -1,0 +1,4509 @@
+{
+  "date": "2026-09-19T22:54:43.459Z",
+  "purpose": "V80 natural survivors profile audit; not a simulation/render performance audit or RimWorld density parity proof",
+  "legacyComparison": [
+    {
+      "seed": 42,
+      "baseIdentical": true,
+      "wildlifeIdentical": true,
+      "normalization": "schemaVersion only replaced with 0; full JSON authority otherwise compared",
+      "expectedGenerationSha256": "085e832f3a9a61b60d2758322ea4154a9b4c91e0d72f60603846838458f01c97",
+      "expectedGenerationThenWildlifeSha256": "a603471043d6cf8fb92c0ca66cd24c1d57468d79fd2dba5d9800b344c5894e10"
+    },
+    {
+      "seed": 93,
+      "baseIdentical": true,
+      "wildlifeIdentical": true,
+      "normalization": "schemaVersion only replaced with 0; full JSON authority otherwise compared",
+      "expectedGenerationSha256": "e632ebc09c24d467a64cdea84704a81d627d69473b6dbfc13973ba683fc25b55",
+      "expectedGenerationThenWildlifeSha256": "7bb9fbce2bf47a9ae84f7e3b9eef09b7694793bc59e0c9557f07b836f269b491"
+    },
+    {
+      "seed": 2048,
+      "baseIdentical": true,
+      "wildlifeIdentical": true,
+      "normalization": "schemaVersion only replaced with 0; full JSON authority otherwise compared",
+      "expectedGenerationSha256": "82975ad600c06357096a547dd2c62276c71e09261f9eb5fd9db4a6eef22b46ce",
+      "expectedGenerationThenWildlifeSha256": "fa310054d8abc3d57980dcfadde9948d34e09dacab94cfd969ba78d1a41be990"
+    },
+    {
+      "seed": 81733,
+      "baseIdentical": true,
+      "wildlifeIdentical": true,
+      "normalization": "schemaVersion only replaced with 0; full JSON authority otherwise compared",
+      "expectedGenerationSha256": "7acb0db68d814dd8d641fea2597133ba2f8356d8170c0ee561e00206ee79dda2",
+      "expectedGenerationThenWildlifeSha256": "848068f9a51c423164fe54a0dbf4e4d50a92571c1f2b4855c7af77589e1ae44e"
+    },
+    {
+      "seed": 0,
+      "baseIdentical": true,
+      "wildlifeIdentical": true,
+      "normalization": "schemaVersion only replaced with 0; full JSON authority otherwise compared",
+      "expectedGenerationSha256": "bbafd9b25813ec2c5e7d4c623116084c9c493f2457e232a44925cd9f02a88c0b",
+      "expectedGenerationThenWildlifeSha256": "5e9ecc1bcc112b751b4f06646305e15545ad6526156db2404db56d518501776e"
+    }
+  ],
+  "baselineCommit": "6acc10dceafd72df28309cf1a2949c3343f06d0c",
+  "sourceHashes": {
+    "generation": "bbce7cd1a618b77f155e9402117cb27bfbeaebe8e1898ef2c85b19a751cd3136",
+    "generation-profile": "2bf08d38c3788a09552ce32fe3e6266a18e4342042816147cd8d3b6ab384167e",
+    "ore": "6d77934c04210d3843eeb3b1239b4696e2f7ed9d0e7e3accbc6c451d653c0eaa",
+    "geology": "93f2d3025964271255fccd9a2eb4fed64ecfc7d4d41f4bf1b80e0d2ba0c14f5e",
+    "wildlife": "6c1b552674319a5aa41d4b251ab53513e3e92aee77e59a9ed643d31a9d4b062f",
+    "starting-pawns": "1f5b9b375ba0403dcc24f21bfd771af6a6ac8f88c1efacf0cf2d50db2527032c",
+    "new-game": "cce4625b140d772a43e0ec5578ad714d19cc8a5b7ecdda41102e7edea986cfeb"
+  },
+  "hardware": {
+    "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+    "logicalCpus": 12,
+    "memoryGiB": 15.955,
+    "node": "v24.11.1",
+    "platform": "win32"
+  },
+  "method": {
+    "seeds": [
+      42,
+      93,
+      2048,
+      81733,
+      0
+    ],
+    "dimensions": [
+      250,
+      250
+    ],
+    "bootstrap": "createScenarioWorld survivors: natural landscape, supplies and admissible landing, traits, arrivals, raids, heatwaves, natural wildlife; full factory timed separately after one landscape generation",
+    "distance": "Cardinal shortest steps on current land; connectivity equivalent to 8-neighbor paths with strict blocked diagonal corners. Resource access same component; mining exposed cardinal contacts only, conservative (diagonal mining also exists).",
+    "local": "Euclidean radii around chosen landing, accessible component only; berry yield accounts for current maturity, before stochastic rounding.",
+    "timing": "One measured creation per seed, ordered; full repeat equality outside timer. Five samples, no robust percentile claims. No simulation/UI/native load requested. Final short generator audit ran while a separate colony pilot was active; diagnostic timings, not an isolated performance benchmark.",
+    "density": "Tree neighbor distance ≤sqrt(2) guarantees crown overlap at current radius .8–1.12; not projected screen coverage."
+  },
+  "results": [
+    {
+      "seed": 42,
+      "dimensions": [
+        250,
+        250
+      ],
+      "generationMs": 37.018,
+      "scenarioCreationMs": 69.121,
+      "valid": true,
+      "reproduced": true,
+      "worldHash": "29a4d06a5c138f285149a2fdc9b95e4375ebb1fa4eca9a567a6eb75be9eefade",
+      "terrain": {
+        "grass": 39328,
+        "soil": 13208,
+        "water": 1344,
+        "rock": 8620
+      },
+      "terrainPercent": {
+        "grass": 62.925,
+        "soil": 21.133,
+        "water": 2.15,
+        "rock": 13.792
+      },
+      "fertility": {
+        "grass1": 39328,
+        "soil07": 13208,
+        "other0": 9964
+      },
+      "resources": {
+        "tree": 2530,
+        "berries": 216,
+        "rock": 1005
+      },
+      "resourceUnits": {
+        "tree": 25244,
+        "berries": 2160,
+        "rock": 10102
+      },
+      "accessibleResources": {
+        "tree": 1406,
+        "berries": 116,
+        "rock": 376
+      },
+      "accessibleResourceUnits": {
+        "tree": 14065,
+        "berries": 1160,
+        "rock": 3782
+      },
+      "matureBerries": 0,
+      "harvestableBerries": 86,
+      "initialHarvestableBerryUnitsExpected": 652.259,
+      "resourcePositionProblems": {
+        "overlaps": 0,
+        "onBlockedTerrain": 0
+      },
+      "accessibility": {
+        "campLand": 26619,
+        "totalLand": 52536,
+        "campShareOfLand": 0.507,
+        "components": [
+          26619,
+          25835,
+          49,
+          3,
+          3,
+          3,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "campInLargest": true,
+        "connectedBorders": {
+          "north": true,
+          "south": true,
+          "west": true,
+          "east": false
+        }
+      },
+      "local": [
+        {
+          "radius": 12,
+          "accessibleLand": 441,
+          "resources": {
+            "tree": 14,
+            "rock": 4,
+            "berries": 3
+          },
+          "woodUnits": 153,
+          "potentialBerryUnitsAtFullMaturity": 30,
+          "harvestableBerryUnitsExpected": 5.576,
+          "currentBerryNutritionExpected": 0.279,
+          "emptyArableCells": 420
+        },
+        {
+          "radius": 20,
+          "accessibleLand": 1010,
+          "resources": {
+            "tree": 43,
+            "rock": 10,
+            "berries": 5
+          },
+          "woodUnits": 420,
+          "potentialBerryUnitsAtFullMaturity": 50,
+          "harvestableBerryUnitsExpected": 5.576,
+          "currentBerryNutritionExpected": 0.279,
+          "emptyArableCells": 952
+        },
+        {
+          "radius": 40,
+          "accessibleLand": 3234,
+          "resources": {
+            "tree": 182,
+            "rock": 28,
+            "berries": 17
+          },
+          "woodUnits": 1783,
+          "potentialBerryUnitsAtFullMaturity": 170,
+          "harvestableBerryUnitsExpected": 42.451,
+          "currentBerryNutritionExpected": 2.123,
+          "emptyArableCells": 3007
+        }
+      ],
+      "ore": [
+        {
+          "kind": "steel",
+          "cells": 587,
+          "clusters": [
+            30,
+            30,
+            31,
+            31,
+            32,
+            32,
+            33,
+            34,
+            35,
+            35,
+            37,
+            37,
+            37,
+            38,
+            38,
+            38,
+            39
+          ],
+          "initiallyExposedToCampCardinal": 63,
+          "nearestInitialMiningContactCardinalSteps": 74,
+          "potentialUnits": 23480
+        },
+        {
+          "kind": "machinery",
+          "cells": 83,
+          "clusters": [
+            3,
+            4,
+            4,
+            4,
+            4,
+            4,
+            4,
+            5,
+            5,
+            5,
+            5,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6
+          ],
+          "initiallyExposedToCampCardinal": 7,
+          "nearestInitialMiningContactCardinalSteps": 82,
+          "potentialUnits": 166
+        }
+      ],
+      "stones": {
+        "limestone": 5210,
+        "slate": 3410
+      },
+      "visualDensity": {
+        "treesPer100Land": 4.816,
+        "treesWithOtherTreeWithinSqrt2": 955,
+        "adjacentTreeFraction": 0.377,
+        "chunk16TreeFractionP50": 0.035,
+        "chunk16TreeFractionP95": 0.082,
+        "chunk16TreeFractionMax": 0.117
+      },
+      "animals": {
+        "count": 12,
+        "reachable": 8,
+        "within20": 1,
+        "positions": [
+          {
+            "id": 3778,
+            "sex": "female",
+            "x": 42,
+            "z": 83,
+            "distanceToCenter": 91.679,
+            "reachable": true,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3779,
+            "sex": "male",
+            "x": 90,
+            "z": 4,
+            "distanceToCenter": 124.724,
+            "reachable": false,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3780,
+            "sex": "male",
+            "x": 95,
+            "z": 69,
+            "distanceToCenter": 62.177,
+            "reachable": true,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3781,
+            "sex": "male",
+            "x": 31,
+            "z": 0,
+            "distanceToCenter": 155,
+            "reachable": true,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3782,
+            "sex": "female",
+            "x": 7,
+            "z": 179,
+            "distanceToCenter": 129.283,
+            "reachable": true,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3783,
+            "sex": "male",
+            "x": 46,
+            "z": 202,
+            "distanceToCenter": 110.309,
+            "reachable": true,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3784,
+            "sex": "female",
+            "x": 116,
+            "z": 104,
+            "distanceToCenter": 21.541,
+            "reachable": true,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3785,
+            "sex": "male",
+            "x": 230,
+            "z": 27,
+            "distanceToCenter": 143.684,
+            "reachable": false,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3786,
+            "sex": "female",
+            "x": 123,
+            "z": 122,
+            "distanceToCenter": 2.236,
+            "reachable": true,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3787,
+            "sex": "male",
+            "x": 35,
+            "z": 179,
+            "distanceToCenter": 104.623,
+            "reachable": true,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3788,
+            "sex": "female",
+            "x": 244,
+            "z": 9,
+            "distanceToCenter": 166.208,
+            "reachable": false,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3789,
+            "sex": "female",
+            "x": 167,
+            "z": 77,
+            "distanceToCenter": 63.702,
+            "reachable": false,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          }
+        ]
+      },
+      "starting": {
+        "center": {
+          "x": 124,
+          "z": 124
+        },
+        "pawns": [
+          {
+            "id": 3752,
+            "name": "Ada",
+            "x": 124,
+            "z": 124,
+            "hunger": 90,
+            "rest": 90,
+            "traits": [
+              "optimist",
+              "fast-learner"
+            ],
+            "skills": {
+              "cooking": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 1
+              },
+              "melee": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "shooting": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 1
+              },
+              "construction": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 1
+              },
+              "medicine": {
+                "level": 6,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 1
+              },
+              "lastResetTick": -1,
+              "intellectual": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 1
+              }
+            }
+          },
+          {
+            "id": 3754,
+            "name": "Noé",
+            "x": 124,
+            "z": 123,
+            "hunger": 85,
+            "rest": 87,
+            "traits": [
+              "steadfast",
+              "slow-learner"
+            ],
+            "skills": {
+              "cooking": {
+                "level": 4,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "melee": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "shooting": {
+                "level": 5,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "construction": {
+                "level": 10,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 2
+              },
+              "medicine": {
+                "level": 3,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "lastResetTick": -1,
+              "intellectual": {
+                "level": 3,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              }
+            }
+          },
+          {
+            "id": 3756,
+            "name": "Mina",
+            "x": 125,
+            "z": 124,
+            "hunger": 80,
+            "rest": 84,
+            "traits": [
+              "pessimist",
+              "nervous"
+            ],
+            "skills": {
+              "cooking": {
+                "level": 6,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "melee": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "shooting": {
+                "level": 3,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "construction": {
+                "level": 4,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "medicine": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 2
+              },
+              "lastResetTick": -1,
+              "intellectual": {
+                "level": 6,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              }
+            }
+          }
+        ],
+        "items": {
+          "cloth-shirt": 3,
+          "wood": 300,
+          "steel": 450,
+          "component": 30,
+          "survival-meal": 50,
+          "medicine": 30,
+          "revolver": 1,
+          "flak-vest": 1
+        },
+        "groundPiles": 23,
+        "worn": 3,
+        "equipped": 0,
+        "research": {
+          "project": null,
+          "points": 600000000,
+          "completedAt": 0,
+          "airConditioning": {
+            "points": 500000000,
+            "completedAt": 0
+          }
+        },
+        "arrivalsDay": 1.506,
+        "raidDay": 3.767,
+        "heatwaveDay": 6.25
+      }
+    },
+    {
+      "seed": 93,
+      "dimensions": [
+        250,
+        250
+      ],
+      "generationMs": 28.082,
+      "scenarioCreationMs": 39.24,
+      "valid": true,
+      "reproduced": true,
+      "worldHash": "4de98ac775cd003695e83fd710489024cb92f80babff06411e4fb30a0ecf6eb0",
+      "terrain": {
+        "soil": 15343,
+        "grass": 33252,
+        "water": 1364,
+        "rock": 12541
+      },
+      "terrainPercent": {
+        "soil": 24.549,
+        "grass": 53.203,
+        "water": 2.182,
+        "rock": 20.066
+      },
+      "fertility": {
+        "grass1": 33252,
+        "soil07": 15343,
+        "other0": 13905
+      },
+      "resources": {
+        "tree": 2297,
+        "rock": 1169,
+        "berries": 203
+      },
+      "resourceUnits": {
+        "tree": 23064,
+        "rock": 11586,
+        "berries": 2030
+      },
+      "accessibleResources": {
+        "tree": 1273,
+        "rock": 558,
+        "berries": 100
+      },
+      "accessibleResourceUnits": {
+        "tree": 12848,
+        "rock": 5523,
+        "berries": 1000
+      },
+      "matureBerries": 0,
+      "harvestableBerries": 84,
+      "initialHarvestableBerryUnitsExpected": 627.085,
+      "resourcePositionProblems": {
+        "overlaps": 0,
+        "onBlockedTerrain": 0
+      },
+      "accessibility": {
+        "campLand": 25876,
+        "totalLand": 48595,
+        "campShareOfLand": 0.532,
+        "components": [
+          25876,
+          22540,
+          26,
+          20,
+          12,
+          10,
+          7,
+          7,
+          6,
+          4,
+          3,
+          3,
+          3,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "campInLargest": true,
+        "connectedBorders": {
+          "north": true,
+          "south": true,
+          "west": false,
+          "east": true
+        }
+      },
+      "local": [
+        {
+          "radius": 12,
+          "accessibleLand": 209,
+          "resources": {
+            "rock": 17,
+            "tree": 7
+          },
+          "woodUnits": 63,
+          "potentialBerryUnitsAtFullMaturity": 0,
+          "harvestableBerryUnitsExpected": 0,
+          "currentBerryNutritionExpected": 0,
+          "emptyArableCells": 185
+        },
+        {
+          "radius": 20,
+          "accessibleLand": 629,
+          "resources": {
+            "berries": 1,
+            "rock": 32,
+            "tree": 31
+          },
+          "woodUnits": 325,
+          "potentialBerryUnitsAtFullMaturity": 10,
+          "harvestableBerryUnitsExpected": 0,
+          "currentBerryNutritionExpected": 0,
+          "emptyArableCells": 565
+        },
+        {
+          "radius": 40,
+          "accessibleLand": 2849,
+          "resources": {
+            "rock": 77,
+            "tree": 165,
+            "berries": 13
+          },
+          "woodUnits": 1681,
+          "potentialBerryUnitsAtFullMaturity": 130,
+          "harvestableBerryUnitsExpected": 28.691,
+          "currentBerryNutritionExpected": 1.435,
+          "emptyArableCells": 2594
+        }
+      ],
+      "ore": [
+        {
+          "kind": "steel",
+          "cells": 871,
+          "clusters": [
+            30,
+            30,
+            31,
+            32,
+            32,
+            32,
+            33,
+            33,
+            33,
+            33,
+            34,
+            34,
+            35,
+            35,
+            36,
+            36,
+            36,
+            37,
+            37,
+            37,
+            38,
+            39,
+            39,
+            39,
+            40
+          ],
+          "initiallyExposedToCampCardinal": 119,
+          "nearestInitialMiningContactCardinalSteps": 38,
+          "potentialUnits": 34840
+        },
+        {
+          "kind": "machinery",
+          "cells": 119,
+          "clusters": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            4,
+            4,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6
+          ],
+          "initiallyExposedToCampCardinal": 26,
+          "nearestInitialMiningContactCardinalSteps": 17,
+          "potentialUnits": 238
+        }
+      ],
+      "stones": {
+        "limestone": 4195,
+        "slate": 8346
+      },
+      "visualDensity": {
+        "treesPer100Land": 4.727,
+        "treesWithOtherTreeWithinSqrt2": 831,
+        "adjacentTreeFraction": 0.362,
+        "chunk16TreeFractionP50": 0.035,
+        "chunk16TreeFractionP95": 0.082,
+        "chunk16TreeFractionMax": 0.12
+      },
+      "animals": {
+        "count": 12,
+        "reachable": 6,
+        "within20": 0,
+        "positions": [
+          {
+            "id": 3696,
+            "sex": "male",
+            "x": 160,
+            "z": 93,
+            "distanceToCenter": 43.139,
+            "reachable": true,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3697,
+            "sex": "male",
+            "x": 183,
+            "z": 174,
+            "distanceToCenter": 72.863,
+            "reachable": true,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3698,
+            "sex": "female",
+            "x": 132,
+            "z": 148,
+            "distanceToCenter": 24.083,
+            "reachable": true,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3699,
+            "sex": "male",
+            "x": 227,
+            "z": 201,
+            "distanceToCenter": 123.847,
+            "reachable": true,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3700,
+            "sex": "female",
+            "x": 66,
+            "z": 83,
+            "distanceToCenter": 76.007,
+            "reachable": false,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3701,
+            "sex": "male",
+            "x": 212,
+            "z": 102,
+            "distanceToCenter": 84.9,
+            "reachable": true,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3702,
+            "sex": "female",
+            "x": 57,
+            "z": 204,
+            "distanceToCenter": 108.301,
+            "reachable": false,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3703,
+            "sex": "female",
+            "x": 145,
+            "z": 82,
+            "distanceToCenter": 44.598,
+            "reachable": true,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3704,
+            "sex": "male",
+            "x": 72,
+            "z": 186,
+            "distanceToCenter": 84.9,
+            "reachable": false,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3705,
+            "sex": "female",
+            "x": 25,
+            "z": 240,
+            "distanceToCenter": 156.464,
+            "reachable": false,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3706,
+            "sex": "male",
+            "x": 141,
+            "z": 248,
+            "distanceToCenter": 124.487,
+            "reachable": false,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3707,
+            "sex": "female",
+            "x": 84,
+            "z": 174,
+            "distanceToCenter": 67.941,
+            "reachable": false,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          }
+        ]
+      },
+      "starting": {
+        "center": {
+          "x": 130,
+          "z": 124
+        },
+        "pawns": [
+          {
+            "id": 3670,
+            "name": "Ada",
+            "x": 130,
+            "z": 124,
+            "hunger": 90,
+            "rest": 90,
+            "traits": [
+              "optimist",
+              "fast-learner"
+            ],
+            "skills": {
+              "cooking": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 1
+              },
+              "melee": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "shooting": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 1
+              },
+              "construction": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 1
+              },
+              "medicine": {
+                "level": 6,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 1
+              },
+              "lastResetTick": -1,
+              "intellectual": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 1
+              }
+            }
+          },
+          {
+            "id": 3672,
+            "name": "Noé",
+            "x": 131,
+            "z": 124,
+            "hunger": 85,
+            "rest": 87,
+            "traits": [
+              "steadfast",
+              "slow-learner"
+            ],
+            "skills": {
+              "cooking": {
+                "level": 4,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "melee": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "shooting": {
+                "level": 5,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "construction": {
+                "level": 10,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 2
+              },
+              "medicine": {
+                "level": 3,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "lastResetTick": -1,
+              "intellectual": {
+                "level": 3,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              }
+            }
+          },
+          {
+            "id": 3674,
+            "name": "Mina",
+            "x": 130,
+            "z": 125,
+            "hunger": 80,
+            "rest": 84,
+            "traits": [
+              "pessimist",
+              "nervous"
+            ],
+            "skills": {
+              "cooking": {
+                "level": 6,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "melee": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "shooting": {
+                "level": 3,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "construction": {
+                "level": 4,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "medicine": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 2
+              },
+              "lastResetTick": -1,
+              "intellectual": {
+                "level": 6,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              }
+            }
+          }
+        ],
+        "items": {
+          "cloth-shirt": 3,
+          "wood": 300,
+          "steel": 450,
+          "component": 30,
+          "survival-meal": 50,
+          "medicine": 30,
+          "revolver": 1,
+          "flak-vest": 1
+        },
+        "groundPiles": 23,
+        "worn": 3,
+        "equipped": 0,
+        "research": {
+          "project": null,
+          "points": 600000000,
+          "completedAt": 0,
+          "airConditioning": {
+            "points": 500000000,
+            "completedAt": 0
+          }
+        },
+        "arrivalsDay": 1.506,
+        "raidDay": 3.768,
+        "heatwaveDay": 6.257
+      }
+    },
+    {
+      "seed": 2048,
+      "dimensions": [
+        250,
+        250
+      ],
+      "generationMs": 44.718,
+      "scenarioCreationMs": 55.466,
+      "valid": true,
+      "reproduced": true,
+      "worldHash": "b01153804e153016047d7fd3594c033d38e44c3a10528b18e683a80aaab00945",
+      "terrain": {
+        "grass": 37466,
+        "rock": 12417,
+        "soil": 11267,
+        "water": 1350
+      },
+      "terrainPercent": {
+        "grass": 59.946,
+        "rock": 19.867,
+        "soil": 18.027,
+        "water": 2.16
+      },
+      "fertility": {
+        "grass1": 37466,
+        "soil07": 11267,
+        "other0": 13767
+      },
+      "resources": {
+        "tree": 2249,
+        "rock": 1078,
+        "berries": 193
+      },
+      "resourceUnits": {
+        "tree": 22542,
+        "rock": 10760,
+        "berries": 1930
+      },
+      "accessibleResources": {
+        "tree": 1278,
+        "rock": 536,
+        "berries": 94
+      },
+      "accessibleResourceUnits": {
+        "tree": 12822,
+        "rock": 5364,
+        "berries": 940
+      },
+      "matureBerries": 0,
+      "harvestableBerries": 76,
+      "initialHarvestableBerryUnitsExpected": 560.896,
+      "resourcePositionProblems": {
+        "overlaps": 0,
+        "onBlockedTerrain": 0
+      },
+      "accessibility": {
+        "campLand": 25399,
+        "totalLand": 48733,
+        "campShareOfLand": 0.521,
+        "components": [
+          25399,
+          23183,
+          19,
+          17,
+          10,
+          10,
+          7,
+          6,
+          4,
+          4,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "campInLargest": true,
+        "connectedBorders": {
+          "north": true,
+          "south": true,
+          "west": false,
+          "east": true
+        }
+      },
+      "local": [
+        {
+          "radius": 12,
+          "accessibleLand": 359,
+          "resources": {
+            "berries": 3,
+            "rock": 8,
+            "tree": 16
+          },
+          "woodUnits": 165,
+          "potentialBerryUnitsAtFullMaturity": 30,
+          "harvestableBerryUnitsExpected": 12.316,
+          "currentBerryNutritionExpected": 0.616,
+          "emptyArableCells": 332
+        },
+        {
+          "radius": 20,
+          "accessibleLand": 979,
+          "resources": {
+            "berries": 9,
+            "rock": 20,
+            "tree": 49
+          },
+          "woodUnits": 487,
+          "potentialBerryUnitsAtFullMaturity": 90,
+          "harvestableBerryUnitsExpected": 18.24,
+          "currentBerryNutritionExpected": 0.912,
+          "emptyArableCells": 901
+        },
+        {
+          "radius": 40,
+          "accessibleLand": 3749,
+          "resources": {
+            "rock": 80,
+            "tree": 193,
+            "berries": 20
+          },
+          "woodUnits": 1935,
+          "potentialBerryUnitsAtFullMaturity": 200,
+          "harvestableBerryUnitsExpected": 71.926,
+          "currentBerryNutritionExpected": 3.596,
+          "emptyArableCells": 3456
+        }
+      ],
+      "ore": [
+        {
+          "kind": "steel",
+          "cells": 838,
+          "clusters": [
+            30,
+            31,
+            31,
+            31,
+            32,
+            32,
+            32,
+            33,
+            34,
+            34,
+            34,
+            34,
+            35,
+            35,
+            35,
+            35,
+            36,
+            38,
+            39,
+            39,
+            39,
+            39,
+            40,
+            40
+          ],
+          "initiallyExposedToCampCardinal": 105,
+          "nearestInitialMiningContactCardinalSteps": 27,
+          "potentialUnits": 33520
+        },
+        {
+          "kind": "machinery",
+          "cells": 107,
+          "clusters": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            4,
+            4,
+            4,
+            4,
+            4,
+            4,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            6,
+            6,
+            6
+          ],
+          "initiallyExposedToCampCardinal": 27,
+          "nearestInitialMiningContactCardinalSteps": 53,
+          "potentialUnits": 214
+        }
+      ],
+      "stones": {
+        "marble": 5540,
+        "granite": 6877
+      },
+      "visualDensity": {
+        "treesPer100Land": 4.615,
+        "treesWithOtherTreeWithinSqrt2": 774,
+        "adjacentTreeFraction": 0.344,
+        "chunk16TreeFractionP50": 0.035,
+        "chunk16TreeFractionP95": 0.078,
+        "chunk16TreeFractionMax": 0.119
+      },
+      "animals": {
+        "count": 12,
+        "reachable": 8,
+        "within20": 1,
+        "positions": [
+          {
+            "id": 3547,
+            "sex": "male",
+            "x": 245,
+            "z": 118,
+            "distanceToCenter": 121.149,
+            "reachable": true,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3548,
+            "sex": "female",
+            "x": 231,
+            "z": 167,
+            "distanceToCenter": 115.317,
+            "reachable": true,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3549,
+            "sex": "male",
+            "x": 123,
+            "z": 127,
+            "distanceToCenter": 3.162,
+            "reachable": true,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3550,
+            "sex": "female",
+            "x": 53,
+            "z": 137,
+            "distanceToCenter": 72.18,
+            "reachable": false,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3551,
+            "sex": "male",
+            "x": 12,
+            "z": 141,
+            "distanceToCenter": 113.283,
+            "reachable": false,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3552,
+            "sex": "female",
+            "x": 216,
+            "z": 111,
+            "distanceToCenter": 92.914,
+            "reachable": true,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3553,
+            "sex": "male",
+            "x": 132,
+            "z": 67,
+            "distanceToCenter": 57.559,
+            "reachable": true,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3554,
+            "sex": "female",
+            "x": 231,
+            "z": 89,
+            "distanceToCenter": 112.579,
+            "reachable": true,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3555,
+            "sex": "female",
+            "x": 20,
+            "z": 168,
+            "distanceToCenter": 112.925,
+            "reachable": false,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3556,
+            "sex": "female",
+            "x": 49,
+            "z": 217,
+            "distanceToCenter": 119.474,
+            "reachable": false,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3557,
+            "sex": "female",
+            "x": 175,
+            "z": 129,
+            "distanceToCenter": 51.245,
+            "reachable": true,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3558,
+            "sex": "male",
+            "x": 224,
+            "z": 105,
+            "distanceToCenter": 101.789,
+            "reachable": true,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          }
+        ]
+      },
+      "starting": {
+        "center": {
+          "x": 124,
+          "z": 124
+        },
+        "pawns": [
+          {
+            "id": 3521,
+            "name": "Ada",
+            "x": 124,
+            "z": 124,
+            "hunger": 90,
+            "rest": 90,
+            "traits": [
+              "optimist",
+              "fast-learner"
+            ],
+            "skills": {
+              "cooking": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 1
+              },
+              "melee": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "shooting": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 1
+              },
+              "construction": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 1
+              },
+              "medicine": {
+                "level": 6,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 1
+              },
+              "lastResetTick": -1,
+              "intellectual": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 1
+              }
+            }
+          },
+          {
+            "id": 3523,
+            "name": "Noé",
+            "x": 124,
+            "z": 123,
+            "hunger": 85,
+            "rest": 87,
+            "traits": [
+              "steadfast",
+              "slow-learner"
+            ],
+            "skills": {
+              "cooking": {
+                "level": 4,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "melee": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "shooting": {
+                "level": 5,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "construction": {
+                "level": 10,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 2
+              },
+              "medicine": {
+                "level": 3,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "lastResetTick": -1,
+              "intellectual": {
+                "level": 3,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              }
+            }
+          },
+          {
+            "id": 3525,
+            "name": "Mina",
+            "x": 125,
+            "z": 124,
+            "hunger": 80,
+            "rest": 84,
+            "traits": [
+              "pessimist",
+              "nervous"
+            ],
+            "skills": {
+              "cooking": {
+                "level": 6,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "melee": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "shooting": {
+                "level": 3,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "construction": {
+                "level": 4,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "medicine": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 2
+              },
+              "lastResetTick": -1,
+              "intellectual": {
+                "level": 6,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              }
+            }
+          }
+        ],
+        "items": {
+          "cloth-shirt": 3,
+          "wood": 300,
+          "steel": 450,
+          "component": 30,
+          "survival-meal": 50,
+          "medicine": 30,
+          "revolver": 1,
+          "flak-vest": 1
+        },
+        "groundPiles": 23,
+        "worn": 3,
+        "equipped": 0,
+        "research": {
+          "project": null,
+          "points": 600000000,
+          "completedAt": 0,
+          "airConditioning": {
+            "points": 500000000,
+            "completedAt": 0
+          }
+        },
+        "arrivalsDay": 1.569,
+        "raidDay": 3.83,
+        "heatwaveDay": 6.381
+      }
+    },
+    {
+      "seed": 81733,
+      "dimensions": [
+        250,
+        250
+      ],
+      "generationMs": 39.089,
+      "scenarioCreationMs": 43.384,
+      "valid": true,
+      "reproduced": true,
+      "worldHash": "d55ef26ed5c60ae4cc95dcc14363a3047270874e5f1347ffb98c63f90231b54a",
+      "terrain": {
+        "grass": 36612,
+        "rock": 10492,
+        "soil": 14049,
+        "water": 1347
+      },
+      "terrainPercent": {
+        "grass": 58.579,
+        "rock": 16.787,
+        "soil": 22.478,
+        "water": 2.155
+      },
+      "fertility": {
+        "grass1": 36612,
+        "soil07": 14049,
+        "other0": 11839
+      },
+      "resources": {
+        "tree": 2306,
+        "berries": 205,
+        "rock": 1156
+      },
+      "resourceUnits": {
+        "tree": 23138,
+        "berries": 2050,
+        "rock": 11489
+      },
+      "accessibleResources": {
+        "tree": 1302,
+        "berries": 105,
+        "rock": 619
+      },
+      "accessibleResourceUnits": {
+        "tree": 13019,
+        "berries": 1050,
+        "rock": 6156
+      },
+      "matureBerries": 0,
+      "harvestableBerries": 88,
+      "initialHarvestableBerryUnitsExpected": 669.161,
+      "resourcePositionProblems": {
+        "overlaps": 0,
+        "onBlockedTerrain": 0
+      },
+      "accessibility": {
+        "campLand": 26721,
+        "totalLand": 50661,
+        "campShareOfLand": 0.527,
+        "components": [
+          26721,
+          23626,
+          144,
+          52,
+          21,
+          16,
+          15,
+          8,
+          5,
+          3,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "campInLargest": true,
+        "connectedBorders": {
+          "north": true,
+          "south": true,
+          "west": true,
+          "east": false
+        }
+      },
+      "local": [
+        {
+          "radius": 12,
+          "accessibleLand": 441,
+          "resources": {
+            "tree": 27,
+            "rock": 1,
+            "berries": 2
+          },
+          "woodUnits": 261,
+          "potentialBerryUnitsAtFullMaturity": 20,
+          "harvestableBerryUnitsExpected": 16.568,
+          "currentBerryNutritionExpected": 0.828,
+          "emptyArableCells": 411
+        },
+        {
+          "radius": 20,
+          "accessibleLand": 1205,
+          "resources": {
+            "tree": 65,
+            "berries": 7,
+            "rock": 16
+          },
+          "woodUnits": 633,
+          "potentialBerryUnitsAtFullMaturity": 70,
+          "harvestableBerryUnitsExpected": 30.651,
+          "currentBerryNutritionExpected": 1.533,
+          "emptyArableCells": 1117
+        },
+        {
+          "radius": 40,
+          "accessibleLand": 3865,
+          "resources": {
+            "tree": 205,
+            "rock": 93,
+            "berries": 14
+          },
+          "woodUnits": 2050,
+          "potentialBerryUnitsAtFullMaturity": 140,
+          "harvestableBerryUnitsExpected": 54.555,
+          "currentBerryNutritionExpected": 2.728,
+          "emptyArableCells": 3553
+        }
+      ],
+      "ore": [
+        {
+          "kind": "steel",
+          "cells": 697,
+          "clusters": [
+            30,
+            31,
+            31,
+            31,
+            32,
+            34,
+            34,
+            34,
+            35,
+            35,
+            35,
+            35,
+            36,
+            36,
+            36,
+            37,
+            38,
+            38,
+            39,
+            40
+          ],
+          "initiallyExposedToCampCardinal": 85,
+          "nearestInitialMiningContactCardinalSteps": 105,
+          "potentialUnits": 27880
+        },
+        {
+          "kind": "machinery",
+          "cells": 96,
+          "clusters": [
+            3,
+            3,
+            3,
+            3,
+            4,
+            4,
+            4,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6
+          ],
+          "initiallyExposedToCampCardinal": 19,
+          "nearestInitialMiningContactCardinalSteps": 17,
+          "potentialUnits": 192
+        }
+      ],
+      "stones": {
+        "sandstone": 4813,
+        "granite": 3816,
+        "limestone": 1863
+      },
+      "visualDensity": {
+        "treesPer100Land": 4.552,
+        "treesWithOtherTreeWithinSqrt2": 807,
+        "adjacentTreeFraction": 0.35,
+        "chunk16TreeFractionP50": 0.035,
+        "chunk16TreeFractionP95": 0.078,
+        "chunk16TreeFractionMax": 0.133
+      },
+      "animals": {
+        "count": 12,
+        "reachable": 8,
+        "within20": 0,
+        "positions": [
+          {
+            "id": 3694,
+            "sex": "female",
+            "x": 234,
+            "z": 135,
+            "distanceToCenter": 110.549,
+            "reachable": false,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3695,
+            "sex": "female",
+            "x": 192,
+            "z": 65,
+            "distanceToCenter": 90.028,
+            "reachable": false,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3696,
+            "sex": "female",
+            "x": 68,
+            "z": 65,
+            "distanceToCenter": 81.345,
+            "reachable": true,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3697,
+            "sex": "male",
+            "x": 165,
+            "z": 11,
+            "distanceToCenter": 120.208,
+            "reachable": false,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3698,
+            "sex": "male",
+            "x": 111,
+            "z": 74,
+            "distanceToCenter": 51.662,
+            "reachable": true,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3699,
+            "sex": "female",
+            "x": 54,
+            "z": 89,
+            "distanceToCenter": 78.262,
+            "reachable": true,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3700,
+            "sex": "female",
+            "x": 3,
+            "z": 83,
+            "distanceToCenter": 127.758,
+            "reachable": true,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3701,
+            "sex": "male",
+            "x": 50,
+            "z": 155,
+            "distanceToCenter": 80.231,
+            "reachable": true,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3702,
+            "sex": "male",
+            "x": 207,
+            "z": 186,
+            "distanceToCenter": 103.6,
+            "reachable": false,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3703,
+            "sex": "male",
+            "x": 43,
+            "z": 184,
+            "distanceToCenter": 100.802,
+            "reachable": true,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3704,
+            "sex": "female",
+            "x": 116,
+            "z": 156,
+            "distanceToCenter": 32.985,
+            "reachable": true,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3705,
+            "sex": "male",
+            "x": 121,
+            "z": 25,
+            "distanceToCenter": 99.045,
+            "reachable": true,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          }
+        ]
+      },
+      "starting": {
+        "center": {
+          "x": 124,
+          "z": 124
+        },
+        "pawns": [
+          {
+            "id": 3668,
+            "name": "Ada",
+            "x": 124,
+            "z": 124,
+            "hunger": 90,
+            "rest": 90,
+            "traits": [
+              "optimist",
+              "fast-learner"
+            ],
+            "skills": {
+              "cooking": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 1
+              },
+              "melee": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "shooting": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 1
+              },
+              "construction": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 1
+              },
+              "medicine": {
+                "level": 6,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 1
+              },
+              "lastResetTick": -1,
+              "intellectual": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 1
+              }
+            }
+          },
+          {
+            "id": 3670,
+            "name": "Noé",
+            "x": 124,
+            "z": 123,
+            "hunger": 85,
+            "rest": 87,
+            "traits": [
+              "steadfast",
+              "slow-learner"
+            ],
+            "skills": {
+              "cooking": {
+                "level": 4,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "melee": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "shooting": {
+                "level": 5,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "construction": {
+                "level": 10,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 2
+              },
+              "medicine": {
+                "level": 3,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "lastResetTick": -1,
+              "intellectual": {
+                "level": 3,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              }
+            }
+          },
+          {
+            "id": 3672,
+            "name": "Mina",
+            "x": 125,
+            "z": 124,
+            "hunger": 80,
+            "rest": 84,
+            "traits": [
+              "pessimist",
+              "nervous"
+            ],
+            "skills": {
+              "cooking": {
+                "level": 6,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "melee": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "shooting": {
+                "level": 3,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "construction": {
+                "level": 4,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "medicine": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 2
+              },
+              "lastResetTick": -1,
+              "intellectual": {
+                "level": 6,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              }
+            }
+          }
+        ],
+        "items": {
+          "cloth-shirt": 3,
+          "wood": 300,
+          "steel": 450,
+          "component": 30,
+          "survival-meal": 50,
+          "medicine": 30,
+          "revolver": 1,
+          "flak-vest": 1
+        },
+        "groundPiles": 23,
+        "worn": 3,
+        "equipped": 0,
+        "research": {
+          "project": null,
+          "points": 600000000,
+          "completedAt": 0,
+          "airConditioning": {
+            "points": 500000000,
+            "completedAt": 0
+          }
+        },
+        "arrivalsDay": 1.923,
+        "raidDay": 3.662,
+        "heatwaveDay": 6.603
+      }
+    },
+    {
+      "seed": 0,
+      "dimensions": [
+        250,
+        250
+      ],
+      "generationMs": 26.823,
+      "scenarioCreationMs": 42.181,
+      "valid": true,
+      "reproduced": true,
+      "worldHash": "ffbc71a498bc3030b6ead49f8776eca1a7385d3eaf204cfa46bd4319af577a63",
+      "terrain": {
+        "soil": 14019,
+        "grass": 36362,
+        "rock": 10909,
+        "water": 1210
+      },
+      "terrainPercent": {
+        "soil": 22.43,
+        "grass": 58.179,
+        "rock": 17.454,
+        "water": 1.936
+      },
+      "fertility": {
+        "grass1": 36362,
+        "soil07": 14019,
+        "other0": 12119
+      },
+      "resources": {
+        "tree": 2652,
+        "rock": 1041,
+        "berries": 205
+      },
+      "resourceUnits": {
+        "tree": 26582,
+        "rock": 10326,
+        "berries": 2050
+      },
+      "accessibleResources": {
+        "tree": 1360,
+        "berries": 109,
+        "rock": 518
+      },
+      "accessibleResourceUnits": {
+        "tree": 13603,
+        "berries": 1090,
+        "rock": 5198
+      },
+      "matureBerries": 0,
+      "harvestableBerries": 81,
+      "initialHarvestableBerryUnitsExpected": 613.184,
+      "resourcePositionProblems": {
+        "overlaps": 0,
+        "onBlockedTerrain": 0
+      },
+      "accessibility": {
+        "campLand": 25989,
+        "totalLand": 50381,
+        "campShareOfLand": 0.516,
+        "components": [
+          25989,
+          24260,
+          47,
+          23,
+          13,
+          5,
+          4,
+          3,
+          3,
+          3,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "campInLargest": true,
+        "connectedBorders": {
+          "north": true,
+          "south": true,
+          "west": false,
+          "east": true
+        }
+      },
+      "local": [
+        {
+          "radius": 12,
+          "accessibleLand": 93,
+          "resources": {
+            "rock": 6,
+            "tree": 5
+          },
+          "woodUnits": 48,
+          "potentialBerryUnitsAtFullMaturity": 0,
+          "harvestableBerryUnitsExpected": 0,
+          "currentBerryNutritionExpected": 0,
+          "emptyArableCells": 82
+        },
+        {
+          "radius": 20,
+          "accessibleLand": 281,
+          "resources": {
+            "tree": 10,
+            "rock": 14
+          },
+          "woodUnits": 101,
+          "potentialBerryUnitsAtFullMaturity": 0,
+          "harvestableBerryUnitsExpected": 0,
+          "currentBerryNutritionExpected": 0,
+          "emptyArableCells": 257
+        },
+        {
+          "radius": 40,
+          "accessibleLand": 1667,
+          "resources": {
+            "tree": 74,
+            "rock": 54,
+            "berries": 7
+          },
+          "woodUnits": 746,
+          "potentialBerryUnitsAtFullMaturity": 70,
+          "harvestableBerryUnitsExpected": 14.059,
+          "currentBerryNutritionExpected": 0.703,
+          "emptyArableCells": 1532
+        }
+      ],
+      "ore": [
+        {
+          "kind": "steel",
+          "cells": 733,
+          "clusters": [
+            30,
+            30,
+            30,
+            31,
+            31,
+            31,
+            32,
+            32,
+            32,
+            33,
+            33,
+            36,
+            36,
+            38,
+            39,
+            39,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "initiallyExposedToCampCardinal": 90,
+          "nearestInitialMiningContactCardinalSteps": 66,
+          "potentialUnits": 29320
+        },
+        {
+          "kind": "machinery",
+          "cells": 89,
+          "clusters": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            4,
+            4,
+            4,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            6,
+            6,
+            6
+          ],
+          "initiallyExposedToCampCardinal": 28,
+          "nearestInitialMiningContactCardinalSteps": 85,
+          "potentialUnits": 178
+        }
+      ],
+      "stones": {
+        "marble": 4857,
+        "sandstone": 6052
+      },
+      "visualDensity": {
+        "treesPer100Land": 5.264,
+        "treesWithOtherTreeWithinSqrt2": 1071,
+        "adjacentTreeFraction": 0.404,
+        "chunk16TreeFractionP50": 0.039,
+        "chunk16TreeFractionP95": 0.098,
+        "chunk16TreeFractionMax": 0.119
+      },
+      "animals": {
+        "count": 12,
+        "reachable": 6,
+        "within20": 0,
+        "positions": [
+          {
+            "id": 3925,
+            "sex": "male",
+            "x": 224,
+            "z": 89,
+            "distanceToCenter": 101.514,
+            "reachable": true,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3926,
+            "sex": "male",
+            "x": 245,
+            "z": 232,
+            "distanceToCenter": 160.59,
+            "reachable": true,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3927,
+            "sex": "male",
+            "x": 8,
+            "z": 245,
+            "distanceToCenter": 171.84,
+            "reachable": false,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3928,
+            "sex": "male",
+            "x": 202,
+            "z": 186,
+            "distanceToCenter": 97.837,
+            "reachable": true,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3929,
+            "sex": "female",
+            "x": 116,
+            "z": 230,
+            "distanceToCenter": 108.665,
+            "reachable": true,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3930,
+            "sex": "female",
+            "x": 140,
+            "z": 30,
+            "distanceToCenter": 92.779,
+            "reachable": false,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3931,
+            "sex": "female",
+            "x": 38,
+            "z": 3,
+            "distanceToCenter": 149.201,
+            "reachable": false,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3932,
+            "sex": "male",
+            "x": 146,
+            "z": 181,
+            "distanceToCenter": 61.685,
+            "reachable": true,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3933,
+            "sex": "female",
+            "x": 56,
+            "z": 94,
+            "distanceToCenter": 77.253,
+            "reachable": false,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3934,
+            "sex": "male",
+            "x": 66,
+            "z": 88,
+            "distanceToCenter": 70.711,
+            "reachable": false,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3935,
+            "sex": "male",
+            "x": 167,
+            "z": 73,
+            "distanceToCenter": 62.626,
+            "reachable": true,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          },
+          {
+            "id": 3936,
+            "sex": "female",
+            "x": 100,
+            "z": 126,
+            "distanceToCenter": 28.284,
+            "reachable": false,
+            "onPlant": true,
+            "overlapsPawn": false,
+            "overlapsGroundPile": false
+          }
+        ]
+      },
+      "starting": {
+        "center": {
+          "x": 128,
+          "z": 122
+        },
+        "pawns": [
+          {
+            "id": 3899,
+            "name": "Ada",
+            "x": 128,
+            "z": 122,
+            "hunger": 90,
+            "rest": 90,
+            "traits": [
+              "optimist",
+              "fast-learner"
+            ],
+            "skills": {
+              "cooking": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 1
+              },
+              "melee": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "shooting": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 1
+              },
+              "construction": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 1
+              },
+              "medicine": {
+                "level": 6,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 1
+              },
+              "lastResetTick": -1,
+              "intellectual": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 1
+              }
+            }
+          },
+          {
+            "id": 3901,
+            "name": "Noé",
+            "x": 128,
+            "z": 121,
+            "hunger": 85,
+            "rest": 87,
+            "traits": [
+              "steadfast",
+              "slow-learner"
+            ],
+            "skills": {
+              "cooking": {
+                "level": 4,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "melee": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "shooting": {
+                "level": 5,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "construction": {
+                "level": 10,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 2
+              },
+              "medicine": {
+                "level": 3,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "lastResetTick": -1,
+              "intellectual": {
+                "level": 3,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              }
+            }
+          },
+          {
+            "id": 3903,
+            "name": "Mina",
+            "x": 129,
+            "z": 122,
+            "hunger": 80,
+            "rest": 84,
+            "traits": [
+              "pessimist",
+              "nervous"
+            ],
+            "skills": {
+              "cooking": {
+                "level": 6,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "melee": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "shooting": {
+                "level": 3,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "construction": {
+                "level": 4,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              },
+              "medicine": {
+                "level": 8,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 2
+              },
+              "lastResetTick": -1,
+              "intellectual": {
+                "level": 6,
+                "xp": 0,
+                "dailyXp": 0,
+                "passion": 0
+              }
+            }
+          }
+        ],
+        "items": {
+          "cloth-shirt": 3,
+          "wood": 300,
+          "steel": 450,
+          "component": 30,
+          "survival-meal": 50,
+          "medicine": 30,
+          "revolver": 1,
+          "flak-vest": 1
+        },
+        "groundPiles": 23,
+        "worn": 3,
+        "equipped": 0,
+        "research": {
+          "project": null,
+          "points": 600000000,
+          "completedAt": 0,
+          "airConditioning": {
+            "points": 500000000,
+            "completedAt": 0
+          }
+        },
+        "arrivalsDay": 1.504,
+        "raidDay": 3.766,
+        "heatwaveDay": 6.253
+      }
+    }
+  ],
+  "legacyBaseline": {
+    "commit": "6acc10dceafd72df28309cf1a2949c3343f06d0c",
+    "date": "2026-09-19T22:41:12.858Z",
+    "sourceHashes": {
+      "generation": "f904f073f20aaef2c6ef94d364090c3406e8189c6a81d1149624890d9b4b2850",
+      "ore": "6d77934c04210d3843eeb3b1239b4696e2f7ed9d0e7e3accbc6c451d653c0eaa",
+      "geology": "93f2d3025964271255fccd9a2eb4fed64ecfc7d4d41f4bf1b80e0d2ba0c14f5e",
+      "wildlife": "1d3a7f9c8f68e0d7cd20808afb4ca46f9347488314dc1b09f647a63346523d4b",
+      "starting-pawns": "1f5b9b375ba0403dcc24f21bfd771af6a6ac8f88c1efacf0cf2d50db2527032c"
+    },
+    "results": [
+      {
+        "seed": 42,
+        "generationMs": 85.719,
+        "bootstrapMs": 16.811,
+        "resources": {
+          "berries": 3366,
+          "tree": 8024,
+          "rock": 1021
+        },
+        "matureBerries": 3366,
+        "terrain": {
+          "grass": 39676,
+          "rock": 8437,
+          "soil": 13157,
+          "water": 1230
+        },
+        "visualDensity": {
+          "treesPer100Land": 15.187,
+          "treesWithOtherTreeWithinSqrt2": 6093,
+          "adjacentTreeFraction": 0.759,
+          "chunk16TreeFractionP50": 0.125,
+          "chunk16TreeFractionP95": 0.266,
+          "chunk16TreeFractionMax": 0.325
+        },
+        "animals": {
+          "count": 12,
+          "reachable": 10,
+          "within20": 1,
+          "positions": [
+            {
+              "id": 12425,
+              "sex": "female",
+              "x": 127,
+              "z": 123,
+              "distanceToCenter": 2.828,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 12426,
+              "sex": "female",
+              "x": 4,
+              "z": 82,
+              "distanceToCenter": 128.413,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 12427,
+              "sex": "female",
+              "x": 66,
+              "z": 114,
+              "distanceToCenter": 60.017,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 12428,
+              "sex": "female",
+              "x": 24,
+              "z": 114,
+              "distanceToCenter": 101.597,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 12429,
+              "sex": "male",
+              "x": 183,
+              "z": 99,
+              "distanceToCenter": 63.561,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 12430,
+              "sex": "male",
+              "x": 165,
+              "z": 99,
+              "distanceToCenter": 47.707,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 12431,
+              "sex": "female",
+              "x": 80,
+              "z": 122,
+              "distanceToCenter": 45.1,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 12432,
+              "sex": "female",
+              "x": 230,
+              "z": 108,
+              "distanceToCenter": 106.367,
+              "reachable": false,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 12433,
+              "sex": "male",
+              "x": 53,
+              "z": 20,
+              "distanceToCenter": 127.315,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 12434,
+              "sex": "male",
+              "x": 140,
+              "z": 208,
+              "distanceToCenter": 84.345,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 12435,
+              "sex": "female",
+              "x": 243,
+              "z": 246,
+              "distanceToCenter": 169.012,
+              "reachable": false,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 12436,
+              "sex": "female",
+              "x": 121,
+              "z": 183,
+              "distanceToCenter": 58.138,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            }
+          ]
+        },
+        "local": [
+          {
+            "radius": 12,
+            "accessibleLand": 441,
+            "resources": {
+              "tree": 45,
+              "rock": 3,
+              "berries": 27
+            },
+            "woodUnits": 467,
+            "berryUnits": 270,
+            "berryNutrition": 13.5,
+            "threeColonistNutritionDaysIgnoringGatherAndWaste": 2.813,
+            "emptyArableCells": 366
+          },
+          {
+            "radius": 20,
+            "accessibleLand": 1257,
+            "resources": {
+              "berries": 77,
+              "tree": 189,
+              "rock": 9
+            },
+            "woodUnits": 1890,
+            "berryUnits": 770,
+            "berryNutrition": 38.5,
+            "threeColonistNutritionDaysIgnoringGatherAndWaste": 8.021,
+            "emptyArableCells": 982
+          },
+          {
+            "radius": 40,
+            "accessibleLand": 5025,
+            "resources": {
+              "berries": 292,
+              "tree": 853,
+              "rock": 44
+            },
+            "woodUnits": 8515,
+            "berryUnits": 2920,
+            "berryNutrition": 146,
+            "threeColonistNutritionDaysIgnoringGatherAndWaste": 30.417,
+            "emptyArableCells": 3836
+          }
+        ],
+        "accessibility": {
+          "campLand": 40299,
+          "totalLand": 52833,
+          "campShareOfLand": 0.763,
+          "components": [
+            40299,
+            8275,
+            4178,
+            49,
+            3,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "campInLargest": true,
+          "connectedBorders": {
+            "north": true,
+            "south": true,
+            "west": true,
+            "east": false
+          }
+        },
+        "ore": [
+          {
+            "kind": "steel",
+            "cells": 553,
+            "clusters": [
+              30,
+              30,
+              30,
+              31,
+              32,
+              33,
+              34,
+              34,
+              35,
+              37,
+              37,
+              37,
+              38,
+              38,
+              38,
+              39
+            ],
+            "initiallyExposedToCampCardinal": 143,
+            "nearestInitialMiningContactCardinalSteps": 73,
+            "potentialUnits": 22120
+          },
+          {
+            "kind": "machinery",
+            "cells": 78,
+            "clusters": [
+              4,
+              4,
+              4,
+              4,
+              4,
+              4,
+              4,
+              5,
+              5,
+              5,
+              5,
+              6,
+              6,
+              6,
+              6,
+              6
+            ],
+            "initiallyExposedToCampCardinal": 25,
+            "nearestInitialMiningContactCardinalSteps": 55,
+            "potentialUnits": 156
+          }
+        ]
+      },
+      {
+        "seed": 93,
+        "generationMs": 94.536,
+        "bootstrapMs": 7.829,
+        "resources": {
+          "tree": 7301,
+          "berries": 3224,
+          "rock": 1157
+        },
+        "matureBerries": 3224,
+        "terrain": {
+          "soil": 15319,
+          "grass": 33474,
+          "water": 1265,
+          "rock": 12442
+        },
+        "visualDensity": {
+          "treesPer100Land": 14.963,
+          "treesWithOtherTreeWithinSqrt2": 5420,
+          "adjacentTreeFraction": 0.742,
+          "chunk16TreeFractionP50": 0.109,
+          "chunk16TreeFractionP95": 0.254,
+          "chunk16TreeFractionMax": 0.313
+        },
+        "animals": {
+          "count": 12,
+          "reachable": 6,
+          "within20": 1,
+          "positions": [
+            {
+              "id": 11696,
+              "sex": "female",
+              "x": 127,
+              "z": 123,
+              "distanceToCenter": 2.828,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 11697,
+              "sex": "male",
+              "x": 218,
+              "z": 92,
+              "distanceToCenter": 98.681,
+              "reachable": false,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 11698,
+              "sex": "male",
+              "x": 85,
+              "z": 182,
+              "distanceToCenter": 69.635,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 11699,
+              "sex": "male",
+              "x": 66,
+              "z": 97,
+              "distanceToCenter": 65.307,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 11700,
+              "sex": "female",
+              "x": 169,
+              "z": 140,
+              "distanceToCenter": 46.487,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 11701,
+              "sex": "female",
+              "x": 247,
+              "z": 54,
+              "distanceToCenter": 141.156,
+              "reachable": false,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 11702,
+              "sex": "male",
+              "x": 120,
+              "z": 101,
+              "distanceToCenter": 24.515,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 11703,
+              "sex": "female",
+              "x": 187,
+              "z": 8,
+              "distanceToCenter": 132.412,
+              "reachable": false,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 11704,
+              "sex": "male",
+              "x": 220,
+              "z": 19,
+              "distanceToCenter": 142.341,
+              "reachable": false,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 11705,
+              "sex": "male",
+              "x": 243,
+              "z": 135,
+              "distanceToCenter": 118.423,
+              "reachable": false,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 11706,
+              "sex": "male",
+              "x": 209,
+              "z": 71,
+              "distanceToCenter": 99.86,
+              "reachable": false,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 11707,
+              "sex": "male",
+              "x": 138,
+              "z": 163,
+              "distanceToCenter": 40.162,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            }
+          ]
+        },
+        "local": [
+          {
+            "radius": 12,
+            "accessibleLand": 320,
+            "resources": {
+              "berries": 25,
+              "rock": 14,
+              "tree": 17
+            },
+            "woodUnits": 161,
+            "berryUnits": 250,
+            "berryNutrition": 12.5,
+            "threeColonistNutritionDaysIgnoringGatherAndWaste": 2.604,
+            "emptyArableCells": 264
+          },
+          {
+            "radius": 20,
+            "accessibleLand": 861,
+            "resources": {
+              "tree": 72,
+              "rock": 37,
+              "berries": 53
+            },
+            "woodUnits": 729,
+            "berryUnits": 530,
+            "berryNutrition": 26.5,
+            "threeColonistNutritionDaysIgnoringGatherAndWaste": 5.521,
+            "emptyArableCells": 699
+          },
+          {
+            "radius": 40,
+            "accessibleLand": 3975,
+            "resources": {
+              "tree": 649,
+              "berries": 252,
+              "rock": 97
+            },
+            "woodUnits": 6586,
+            "berryUnits": 2520,
+            "berryNutrition": 126,
+            "threeColonistNutritionDaysIgnoringGatherAndWaste": 26.25,
+            "emptyArableCells": 2977
+          }
+        ],
+        "accessibility": {
+          "campLand": 36220,
+          "totalLand": 48793,
+          "campShareOfLand": 0.742,
+          "components": [
+            36220,
+            12462,
+            26,
+            20,
+            13,
+            12,
+            7,
+            3,
+            3,
+            3,
+            3,
+            3,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            1,
+            1,
+            1,
+            1
+          ],
+          "campInLargest": true,
+          "connectedBorders": {
+            "north": true,
+            "south": true,
+            "west": true,
+            "east": false
+          }
+        },
+        "ore": [
+          {
+            "kind": "steel",
+            "cells": 847,
+            "clusters": [
+              30,
+              31,
+              32,
+              32,
+              33,
+              33,
+              33,
+              33,
+              33,
+              33,
+              34,
+              35,
+              36,
+              36,
+              37,
+              37,
+              37,
+              38,
+              38,
+              39,
+              39,
+              39,
+              39,
+              40
+            ],
+            "initiallyExposedToCampCardinal": 176,
+            "nearestInitialMiningContactCardinalSteps": 14,
+            "potentialUnits": 33880
+          },
+          {
+            "kind": "machinery",
+            "cells": 113,
+            "clusters": [
+              3,
+              3,
+              3,
+              3,
+              3,
+              4,
+              4,
+              4,
+              5,
+              5,
+              5,
+              5,
+              5,
+              5,
+              5,
+              5,
+              5,
+              5,
+              6,
+              6,
+              6,
+              6,
+              6,
+              6
+            ],
+            "initiallyExposedToCampCardinal": 56,
+            "nearestInitialMiningContactCardinalSteps": 18,
+            "potentialUnits": 226
+          }
+        ]
+      },
+      {
+        "seed": 2048,
+        "generationMs": 43.196,
+        "bootstrapMs": 7.594,
+        "resources": {
+          "berries": 3158,
+          "tree": 7252,
+          "rock": 1096
+        },
+        "matureBerries": 3158,
+        "terrain": {
+          "grass": 37378,
+          "rock": 12010,
+          "soil": 11883,
+          "water": 1229
+        },
+        "visualDensity": {
+          "treesPer100Land": 14.722,
+          "treesWithOtherTreeWithinSqrt2": 5334,
+          "adjacentTreeFraction": 0.736,
+          "chunk16TreeFractionP50": 0.105,
+          "chunk16TreeFractionP95": 0.227,
+          "chunk16TreeFractionMax": 0.332
+        },
+        "animals": {
+          "count": 12,
+          "reachable": 10,
+          "within20": 1,
+          "positions": [
+            {
+              "id": 11520,
+              "sex": "female",
+              "x": 127,
+              "z": 123,
+              "distanceToCenter": 2.828,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 11521,
+              "sex": "male",
+              "x": 245,
+              "z": 51,
+              "distanceToCenter": 140.982,
+              "reachable": false,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 11522,
+              "sex": "male",
+              "x": 60,
+              "z": 15,
+              "distanceToCenter": 127.769,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 11523,
+              "sex": "male",
+              "x": 53,
+              "z": 18,
+              "distanceToCenter": 128.969,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 11524,
+              "sex": "male",
+              "x": 136,
+              "z": 16,
+              "distanceToCenter": 109.554,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 11525,
+              "sex": "female",
+              "x": 57,
+              "z": 107,
+              "distanceToCenter": 70.342,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 11526,
+              "sex": "female",
+              "x": 227,
+              "z": 42,
+              "distanceToCenter": 131.503,
+              "reachable": false,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 11527,
+              "sex": "female",
+              "x": 184,
+              "z": 201,
+              "distanceToCenter": 96.213,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 11528,
+              "sex": "male",
+              "x": 184,
+              "z": 247,
+              "distanceToCenter": 135.518,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 11529,
+              "sex": "male",
+              "x": 22,
+              "z": 147,
+              "distanceToCenter": 105.323,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 11530,
+              "sex": "male",
+              "x": 44,
+              "z": 27,
+              "distanceToCenter": 127.142,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 11531,
+              "sex": "female",
+              "x": 180,
+              "z": 16,
+              "distanceToCenter": 122.09,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            }
+          ]
+        },
+        "local": [
+          {
+            "radius": 12,
+            "accessibleLand": 441,
+            "resources": {
+              "rock": 5,
+              "berries": 23,
+              "tree": 41
+            },
+            "woodUnits": 409,
+            "berryUnits": 230,
+            "berryNutrition": 11.5,
+            "threeColonistNutritionDaysIgnoringGatherAndWaste": 2.396,
+            "emptyArableCells": 372
+          },
+          {
+            "radius": 20,
+            "accessibleLand": 1257,
+            "resources": {
+              "berries": 68,
+              "tree": 184,
+              "rock": 22
+            },
+            "woodUnits": 1793,
+            "berryUnits": 680,
+            "berryNutrition": 34,
+            "threeColonistNutritionDaysIgnoringGatherAndWaste": 7.083,
+            "emptyArableCells": 983
+          },
+          {
+            "radius": 40,
+            "accessibleLand": 4722,
+            "resources": {
+              "berries": 269,
+              "tree": 712,
+              "rock": 99
+            },
+            "woodUnits": 7040,
+            "berryUnits": 2690,
+            "berryNutrition": 134.5,
+            "threeColonistNutritionDaysIgnoringGatherAndWaste": 28.021,
+            "emptyArableCells": 3642
+          }
+        ],
+        "accessibility": {
+          "campLand": 37292,
+          "totalLand": 49261,
+          "campShareOfLand": 0.757,
+          "components": [
+            37292,
+            11600,
+            139,
+            19,
+            12,
+            12,
+            10,
+            10,
+            10,
+            10,
+            7,
+            6,
+            5,
+            4,
+            4,
+            4,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "campInLargest": true,
+          "connectedBorders": {
+            "north": true,
+            "south": true,
+            "west": true,
+            "east": false
+          }
+        },
+        "ore": [
+          {
+            "kind": "steel",
+            "cells": 840,
+            "clusters": [
+              30,
+              31,
+              31,
+              32,
+              32,
+              32,
+              32,
+              33,
+              34,
+              34,
+              34,
+              35,
+              35,
+              35,
+              35,
+              35,
+              36,
+              38,
+              39,
+              39,
+              39,
+              39,
+              40,
+              40
+            ],
+            "initiallyExposedToCampCardinal": 151,
+            "nearestInitialMiningContactCardinalSteps": 27,
+            "potentialUnits": 33600
+          },
+          {
+            "kind": "machinery",
+            "cells": 108,
+            "clusters": [
+              3,
+              3,
+              3,
+              3,
+              3,
+              4,
+              4,
+              4,
+              4,
+              4,
+              5,
+              5,
+              5,
+              5,
+              5,
+              5,
+              5,
+              5,
+              5,
+              5,
+              5,
+              6,
+              6,
+              6
+            ],
+            "initiallyExposedToCampCardinal": 53,
+            "nearestInitialMiningContactCardinalSteps": 38,
+            "potentialUnits": 216
+          }
+        ]
+      },
+      {
+        "seed": 81733,
+        "generationMs": 40.797,
+        "bootstrapMs": 8.425,
+        "resources": {
+          "tree": 7083,
+          "berries": 3273,
+          "rock": 1174
+        },
+        "matureBerries": 3273,
+        "terrain": {
+          "grass": 36258,
+          "soil": 14531,
+          "water": 1238,
+          "rock": 10473
+        },
+        "visualDensity": {
+          "treesPer100Land": 13.946,
+          "treesWithOtherTreeWithinSqrt2": 5135,
+          "adjacentTreeFraction": 0.725,
+          "chunk16TreeFractionP50": 0.102,
+          "chunk16TreeFractionP95": 0.23,
+          "chunk16TreeFractionMax": 0.348
+        },
+        "animals": {
+          "count": 12,
+          "reachable": 10,
+          "within20": 1,
+          "positions": [
+            {
+              "id": 11544,
+              "sex": "male",
+              "x": 127,
+              "z": 123,
+              "distanceToCenter": 2.828,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 11545,
+              "sex": "female",
+              "x": 183,
+              "z": 191,
+              "distanceToCenter": 87.864,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 11546,
+              "sex": "female",
+              "x": 38,
+              "z": 243,
+              "distanceToCenter": 146.605,
+              "reachable": false,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 11547,
+              "sex": "female",
+              "x": 36,
+              "z": 116,
+              "distanceToCenter": 89.454,
+              "reachable": false,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 11548,
+              "sex": "female",
+              "x": 125,
+              "z": 34,
+              "distanceToCenter": 91,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 11549,
+              "sex": "female",
+              "x": 77,
+              "z": 225,
+              "distanceToCenter": 110.923,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 11550,
+              "sex": "female",
+              "x": 190,
+              "z": 77,
+              "distanceToCenter": 80.802,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 11551,
+              "sex": "male",
+              "x": 123,
+              "z": 153,
+              "distanceToCenter": 28.071,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 11552,
+              "sex": "male",
+              "x": 173,
+              "z": 210,
+              "distanceToCenter": 97.617,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 11553,
+              "sex": "male",
+              "x": 190,
+              "z": 101,
+              "distanceToCenter": 69.289,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 11554,
+              "sex": "male",
+              "x": 177,
+              "z": 95,
+              "distanceToCenter": 60.033,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 11555,
+              "sex": "female",
+              "x": 201,
+              "z": 113,
+              "distanceToCenter": 76.942,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            }
+          ]
+        },
+        "local": [
+          {
+            "radius": 12,
+            "accessibleLand": 441,
+            "resources": {
+              "tree": 74,
+              "berries": 31,
+              "rock": 1
+            },
+            "woodUnits": 735,
+            "berryUnits": 310,
+            "berryNutrition": 15.5,
+            "threeColonistNutritionDaysIgnoringGatherAndWaste": 3.229,
+            "emptyArableCells": 335
+          },
+          {
+            "radius": 20,
+            "accessibleLand": 1222,
+            "resources": {
+              "tree": 195,
+              "berries": 87,
+              "rock": 15
+            },
+            "woodUnits": 1963,
+            "berryUnits": 870,
+            "berryNutrition": 43.5,
+            "threeColonistNutritionDaysIgnoringGatherAndWaste": 9.063,
+            "emptyArableCells": 925
+          },
+          {
+            "radius": 40,
+            "accessibleLand": 4426,
+            "resources": {
+              "berries": 289,
+              "tree": 699,
+              "rock": 119
+            },
+            "woodUnits": 6995,
+            "berryUnits": 2890,
+            "berryNutrition": 144.5,
+            "threeColonistNutritionDaysIgnoringGatherAndWaste": 30.104,
+            "emptyArableCells": 3319
+          }
+        ],
+        "accessibility": {
+          "campLand": 37861,
+          "totalLand": 50789,
+          "campShareOfLand": 0.745,
+          "components": [
+            37861,
+            12748,
+            52,
+            21,
+            16,
+            15,
+            10,
+            8,
+            8,
+            4,
+            4,
+            3,
+            3,
+            3,
+            3,
+            3,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "campInLargest": true,
+          "connectedBorders": {
+            "north": true,
+            "south": true,
+            "west": false,
+            "east": true
+          }
+        },
+        "ore": [
+          {
+            "kind": "steel",
+            "cells": 696,
+            "clusters": [
+              30,
+              31,
+              31,
+              31,
+              32,
+              34,
+              34,
+              34,
+              35,
+              35,
+              35,
+              35,
+              36,
+              36,
+              36,
+              37,
+              37,
+              38,
+              39,
+              40
+            ],
+            "initiallyExposedToCampCardinal": 151,
+            "nearestInitialMiningContactCardinalSteps": 36,
+            "potentialUnits": 27840
+          },
+          {
+            "kind": "machinery",
+            "cells": 95,
+            "clusters": [
+              3,
+              3,
+              3,
+              3,
+              4,
+              4,
+              4,
+              5,
+              5,
+              5,
+              5,
+              5,
+              5,
+              5,
+              6,
+              6,
+              6,
+              6,
+              6,
+              6
+            ],
+            "initiallyExposedToCampCardinal": 46,
+            "nearestInitialMiningContactCardinalSteps": 19,
+            "potentialUnits": 190
+          }
+        ]
+      },
+      {
+        "seed": 0,
+        "generationMs": 66.793,
+        "bootstrapMs": 10.117,
+        "resources": {
+          "berries": 3185,
+          "tree": 8197,
+          "rock": 1032
+        },
+        "matureBerries": 3185,
+        "terrain": {
+          "soil": 14324,
+          "grass": 35994,
+          "rock": 11042,
+          "water": 1140
+        },
+        "visualDensity": {
+          "treesPer100Land": 16.29,
+          "treesWithOtherTreeWithinSqrt2": 6435,
+          "adjacentTreeFraction": 0.785,
+          "chunk16TreeFractionP50": 0.125,
+          "chunk16TreeFractionP95": 0.269,
+          "chunk16TreeFractionMax": 0.369
+        },
+        "animals": {
+          "count": 12,
+          "reachable": 9,
+          "within20": 1,
+          "positions": [
+            {
+              "id": 12428,
+              "sex": "female",
+              "x": 127,
+              "z": 123,
+              "distanceToCenter": 2.828,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 12429,
+              "sex": "male",
+              "x": 98,
+              "z": 114,
+              "distanceToCenter": 29.155,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 12430,
+              "sex": "male",
+              "x": 42,
+              "z": 52,
+              "distanceToCenter": 110.535,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 12431,
+              "sex": "male",
+              "x": 169,
+              "z": 188,
+              "distanceToCenter": 76.844,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 12432,
+              "sex": "male",
+              "x": 157,
+              "z": 216,
+              "distanceToCenter": 96.462,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 12433,
+              "sex": "female",
+              "x": 224,
+              "z": 127,
+              "distanceToCenter": 99.02,
+              "reachable": false,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 12434,
+              "sex": "female",
+              "x": 31,
+              "z": 170,
+              "distanceToCenter": 104.216,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 12435,
+              "sex": "male",
+              "x": 89,
+              "z": 136,
+              "distanceToCenter": 37.643,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 12436,
+              "sex": "female",
+              "x": 111,
+              "z": 18,
+              "distanceToCenter": 107.912,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 12437,
+              "sex": "female",
+              "x": 227,
+              "z": 1,
+              "distanceToCenter": 160.562,
+              "reachable": false,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 12438,
+              "sex": "female",
+              "x": 210,
+              "z": 55,
+              "distanceToCenter": 110.114,
+              "reachable": false,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            },
+            {
+              "id": 12439,
+              "sex": "female",
+              "x": 42,
+              "z": 197,
+              "distanceToCenter": 109.877,
+              "reachable": true,
+              "onPlant": true,
+              "overlapsPawn": false,
+              "overlapsGroundPile": false
+            }
+          ]
+        },
+        "local": [
+          {
+            "radius": 12,
+            "accessibleLand": 335,
+            "resources": {
+              "rock": 15,
+              "tree": 44,
+              "berries": 16
+            },
+            "woodUnits": 452,
+            "berryUnits": 160,
+            "berryNutrition": 8,
+            "threeColonistNutritionDaysIgnoringGatherAndWaste": 1.667,
+            "emptyArableCells": 260
+          },
+          {
+            "radius": 20,
+            "accessibleLand": 777,
+            "resources": {
+              "rock": 34,
+              "tree": 99,
+              "berries": 45
+            },
+            "woodUnits": 1008,
+            "berryUnits": 450,
+            "berryNutrition": 22.5,
+            "threeColonistNutritionDaysIgnoringGatherAndWaste": 4.688,
+            "emptyArableCells": 599
+          },
+          {
+            "radius": 40,
+            "accessibleLand": 3834,
+            "resources": {
+              "berries": 238,
+              "tree": 679,
+              "rock": 104
+            },
+            "woodUnits": 6876,
+            "berryUnits": 2380,
+            "berryNutrition": 119,
+            "threeColonistNutritionDaysIgnoringGatherAndWaste": 24.792,
+            "emptyArableCells": 2813
+          }
+        ],
+        "accessibility": {
+          "campLand": 37719,
+          "totalLand": 50318,
+          "campShareOfLand": 0.75,
+          "components": [
+            37719,
+            11904,
+            553,
+            47,
+            35,
+            23,
+            7,
+            6,
+            5,
+            4,
+            4,
+            3,
+            2,
+            2,
+            1,
+            1,
+            1,
+            1
+          ],
+          "campInLargest": true,
+          "connectedBorders": {
+            "north": true,
+            "south": true,
+            "west": true,
+            "east": false
+          }
+        },
+        "ore": [
+          {
+            "kind": "steel",
+            "cells": 778,
+            "clusters": [
+              30,
+              30,
+              31,
+              31,
+              32,
+              32,
+              32,
+              33,
+              33,
+              33,
+              34,
+              36,
+              36,
+              38,
+              38,
+              39,
+              40,
+              40,
+              40,
+              40,
+              40,
+              40
+            ],
+            "initiallyExposedToCampCardinal": 176,
+            "nearestInitialMiningContactCardinalSteps": 8,
+            "potentialUnits": 31120
+          },
+          {
+            "kind": "machinery",
+            "cells": 93,
+            "clusters": [
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              4,
+              4,
+              4,
+              5,
+              5,
+              5,
+              5,
+              5,
+              5,
+              6,
+              6,
+              6,
+              6
+            ],
+            "initiallyExposedToCampCardinal": 43,
+            "nearestInitialMiningContactCardinalSteps": 28,
+            "potentialUnits": 186
+          }
+        ]
+      }
+    ]
+  }
+}

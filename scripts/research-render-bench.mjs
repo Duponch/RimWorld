@@ -30,7 +30,7 @@ try{for(const count of [3,30,100]){
   await page.addInitScript(installGpuCallProbe,false);
   await page.route('**/src/main.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:prefix+await response.text()+suffix});});
   await page.addInitScript(data=>localStorage.setItem('lisiere.save.v1',data),serializeWorld(makeLoad(count)));
-  await page.goto('http://127.0.0.1:5173/?e2e&size=250');await page.waitForFunction(()=>window.__miningBench.view?.world);
+  await page.goto('http://127.0.0.1:5173/?scenario=camp&e2e&size=250');await page.waitForFunction(()=>window.__miningBench.view?.world);
   await page.locator('[data-speed="0"]').click();await page.locator('[data-panel="menu"]').click();await page.locator('#load').click();await page.keyboard.press('Escape');
   await page.waitForFunction(n=>window.__miningBench.view.world.tick===n.startTick&&window.__miningBench.view.world.pawns.length===n.count&&!document.querySelector('.game-shell').inert,{count,startTick});
   await page.evaluate(()=>new Promise(resolve=>{let n=90;function frame(){if(!--n)resolve();else requestAnimationFrame(frame);}requestAnimationFrame(frame);}));

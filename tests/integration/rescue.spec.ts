@@ -18,7 +18,7 @@ test('player assigns a medical bed, orders rescue, observes a carried GPU body a
     const initial=rescueCamp(),actor=initial.pawns[0]!,patient=initial.pawns[1]!,bed=initial.structures[0]!;
     delete bed.medical;actor.priorities.doctor=0;
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
-    await page.goto('/?size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
+    await page.goto('/?scenario=camp&size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
     await revealCells(page,[bed]);await cell(page,bed.x,bed.z);await page.locator('#bed-medical').check();await expect.poll(async()=>(await world(page)).structures[0]!.medical).toBe(true);await expect(page.locator('#bed-owner')).toBeDisabled();
     await expect.poll(()=>page.evaluate(()=>{const c=(window as any).__rescueView.boxes.batches.get('furniture').colorBuffer;return c.getZ(1)>c.getX(1);})).toBe(true);
     await perform(page,{reason:'Activer un vrai secouriste.',command:{type:'priority',pawnId:actor.id,work:'doctor',value:1}},{value:0});

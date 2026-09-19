@@ -15,7 +15,7 @@ try {
     const response = await route.fetch();
     await route.fulfill({ response, body: `window.__cameraProbe={frames:[],previous:0};const beforeCameraFrame=ColonyRenderer.prototype.frame,beforePrepare=ColonyRenderer.prototype.preparePresentation;ColonyRenderer.prototype.preparePresentation=async function(){const t=performance.now();await beforePrepare.call(this);window.__cameraProbe.preparationMs=performance.now()-t;};ColonyRenderer.prototype.frame=function(now){const b=window.__cameraProbe;b.view=this;const t=performance.now(),r=beforeCameraFrame.call(this,now);if(b.active){b.frames.push({interval:now-b.previous,cpu:performance.now()-t});if(b.frames.length===60){b.active=false;b.resolve(b.frames);}}b.previous=now;return r;};\n` + await response.text() });
   });
-  await page.goto('http://127.0.0.1:5173/?e2e&size=250&seed=42');
+  await page.goto('http://127.0.0.1:5173/?scenario=camp&e2e&size=250&seed=42');
   await page.locator('#loading').waitFor({ state: 'detached' }); await page.locator('[data-speed="0"]').click();
   Object.assign(report, await page.evaluate(() => { const b = window.__cameraProbe, i = b.view.renderer.getContext().getConfiguration().device.adapterInfo; return { preparationMs: b.preparationMs, adapter: { vendor: i.vendor, architecture: i.architecture } }; }));
   for (const name of ['first-overview', 'first-perspective', 'perspective-local', 'return-iso']) {

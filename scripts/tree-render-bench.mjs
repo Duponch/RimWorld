@@ -33,7 +33,7 @@ try {
  page.on('pageerror',e=>report.errors.push(e.message)); page.on('console',m=>{if(m.type()==='error'||/GPUValidationError|invalid pipeline/i.test(m.text()))report.errors.push(m.text());});
  await page.route('**/src/main.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:probe+await response.text()});});
  await page.addInitScript(value=>localStorage.setItem('lisiere.save.v1',value),serializeWorld(fixture));
- await page.goto('http://127.0.0.1:5173/?e2e&size=250&seed=42');
+ await page.goto('http://127.0.0.1:5173/?scenario=camp&e2e&size=250&seed=42');
  await page.waitForFunction(()=>!!window.__treeBench.view && !!window.__lisiere);
  await page.locator('[data-speed="0"]').click(); await page.locator('[data-panel="menu"]').click(); await page.locator('#load').click();
  report.backend=await page.evaluate(()=>window.__lisiere.backend);

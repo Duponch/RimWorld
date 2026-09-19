@@ -1,5 +1,9 @@
 # Travail sur Lisière
 
+## Nouvelle partie V80
+- Lire `docs/development/scenario-start.md` et sa recherche. `createScenarioWorld` est l'usine applicative ; `createWorld` garde le camp historique des fixtures. Défaut Trois survivants, stocks physiques et connaissances initiales sans XP ; ne pas confondre ce départ avec Crashlanded complet. Génération naturelle distincte, arrivée sur composante reliée au bord, aucune ressource effacée pour les stocks.
+- Provenance facultative et migration V79 strictement neutre : aucun monde ancien régénéré/réapprovisionné. Les fixtures UI historiques demandent explicitement `scenario=camp`, jamais un comportement caché lié à `e2e`. Le compagnon `survivor-player` développe ce départ depuis sa vraie dotation ; aucune urgence alimentaire inventée en retirant ses rations. Le profil ne certifie pas une difficulté Core.
+
 ## Filière animale V79 et départ cohérent
 - Lire `docs/development/hunting.md`, `corpses.md`, `butchery.md` et la recherche chasse. Chasse civile au revolver, réserve exclusive, récupération avant transport, `forHunting` autorise le rangement même sans Transport. Le corps conserve identité/anatomie/âge, attend sa chute et une place physique ; aucune téléportation si sol encombré. Boucherie transactionnelle viande/cuir, Cuisine et XP de finition ; rendement .70 du poste, pas vitesse .70. V78 strictement validée avant migration neutre et priorité Chasse 0.
 - Validation groupée, pilote commun adapté aux nouveaux clics ; audit mixte `HUNTING=1 WILDLIFE=1`, mesures CPU/natives successives. Ajouter les preuves à l'historique V79 sans réécrire celles des versions antérieures.
@@ -121,7 +125,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 79 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 80 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)

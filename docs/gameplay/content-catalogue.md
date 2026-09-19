@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+**V80 :** aucun nouvel objet. Le catalogue disponible compose le scénario Trois survivants : 300 bois, 450 acier, 30 composants, 50 repas emballés, 30 médicaments, 1 revolver, 1 gilet et 3 chemises portées. Vêtements complexes et Climatisation acquis au départ ; camp pédagogique séparé. Les objets manquants de Crashlanded ne sont ni substitués ni déclarés livrés. [Scénarios](../development/scenario-start.md).
+
 **V79 :** trois ItemId obtenables : `hare-corpse` (dépouille entière, pile1, anatomie et âge), `hare-meat` (viande crue, pile75, nutrition0,05/unité, deux jours thermiques), `light-leather` (cuir léger, pile75, stockage textile, aucune recette de cuir livrée). Bâtiment `butcher-spot` (1×1 gratuit/instantané), recette `butcher-creature` (450 Core avant facteurs, Cuisine, rendement poste70%). Repas simple accepte maintenant cette viande comme ingrédient filtrable. Rendements variables, pas attribution fixe de31/16. [Contrats](../development/hunting.md). Les notes de versions précédentes ci-dessous restent historiques.
 
 **V78 :** même catalogue, aucun nouvel ItemId ; dents/tête du lièvre servent la mêlée réelle et la riposte. Aucune viande/cuir ni recette de boucherie. [Contrat](../development/animal-melee.md).

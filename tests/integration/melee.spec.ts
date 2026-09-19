@@ -16,7 +16,7 @@ test('native UI: choose melee, approach, GPU strike, wounds and exact save/load 
   page.setDefaultTimeout(15000);
   try {
     await page.route('**/src/main.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:probe+await response.text()});});
-    await page.goto('/?e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
+    await page.goto('/?scenario=camp&e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
     await panel(page,'menu');await page.locator('#save').click();await page.keyboard.press('Escape');
     for(const speed of [1,6]){
       const initial=meleeCamp(),actor=initial.pawns[0],target=initial.pawns[3];

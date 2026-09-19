@@ -22,7 +22,7 @@ try {
  page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error'||/GPUValidationError|invalid pipeline/i.test(m.text()))errors.push(m.text());});
  await page.route('**/src/main.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:probe+await response.text()});});
  await page.addInitScript(data=>localStorage.setItem('lisiere.save.v1',data),serializeWorld(roofTraffic(100)));
- await page.goto('http://127.0.0.1:5173/?size=32&e2e');await page.waitForFunction(()=>window.__lisiere);
+ await page.goto('http://127.0.0.1:5173/?scenario=camp&size=32&e2e');await page.waitForFunction(()=>window.__lisiere);
  await page.locator('[data-speed="0"]').click();await page.locator('[data-panel="menu"]').click();await page.locator('#load').click();
  await page.waitForFunction(()=>window.__miningBench.view.world?.width===250&&!window.__miningBench.view.preparing);await page.keyboard.press('Escape');
  await page.locator('#roof-toggle').click();await page.mouse.move(900,350);await page.mouse.wheel(0,900);

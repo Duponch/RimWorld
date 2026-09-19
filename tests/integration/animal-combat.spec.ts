@@ -18,7 +18,7 @@ test('native fauna targeting, real injury/flight, continuous GPU travel and save
     await page.addInitScript(()=>{(window as any).__animalPipelines=0;for(const key of ['createRenderPipeline','createRenderPipelineAsync'] as const){const fn=GPUDevice.prototype[key];(GPUDevice.prototype as any)[key]=function(...args:any[]){(window as any).__animalPipelines++;return (fn as any).apply(this,args);};}});
     await page.route('**/src/main.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:probe+await response.text()});});
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
-    await page.goto('/?e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await pause(page);
+    await page.goto('/?scenario=camp&e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await pause(page);
     for(const speed of [1,6]){
       await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
       await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);
@@ -63,7 +63,7 @@ test('native animal melee command, visible retaliation, colonist injury and stri
     await page.addInitScript(()=>{(window as any).__animalPipelines=0;for(const key of ['createRenderPipeline','createRenderPipelineAsync'] as const){const fn=GPUDevice.prototype[key];(GPUDevice.prototype as any)[key]=function(...args:any[]){(window as any).__animalPipelines++;return (fn as any).apply(this,args);};}});
     await page.route('**/src/main.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:probe+await response.text()});});
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
-    await page.goto('/?e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await pause(page);
+    await page.goto('/?scenario=camp&e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await pause(page);
     for(const speed of [1,6]){
       await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
       await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);

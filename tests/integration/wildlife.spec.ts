@@ -8,7 +8,7 @@ test('ordinary camp wildlife, GPU presentation, grazing and exact UI save/reload
   const browser=await playwright.chromium.launch({channel:'chromium',args:[]});
   try {
     const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);
-    await page.goto('/?e2e&size=64');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
+    await page.goto('/?scenario=camp&e2e&size=64');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
     const initial=await world(page);expect(initial.wildlife?.animals.length).toBe(3);expect(validateWorld(initial)).toEqual([]);
     await panel(page,'wildlife');await expect(page.locator('[data-animal]')).toHaveCount(3);await expect(page.locator('[data-fauna-enable]')).toBeHidden();
     await page.locator('[data-animal] button').first().click();await page.locator('[data-speed="1"]').click();

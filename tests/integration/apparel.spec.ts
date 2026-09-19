@@ -21,7 +21,7 @@ test('physical clothing UI at 1x and 6x: floor, dressing, layered GPU attachment
     await page.route('**/src/main.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:probe+await response.text()});});
     const initial=apparelCamp(1),p=initial.pawns[0]!,vest=initial.piles[0]!,shirt=initial.piles[1]!;
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
-    await page.goto('/?e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
+    await page.goto('/?scenario=camp&e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
     await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
     for(const garment of [vest,shirt]){
       await perform(page,{reason:'Enfiler le vêtement au sol.',command:{type:'order-equipment',pawnId:p.id,itemId:garment.id,action:'wear',queue:false}},{value:0});

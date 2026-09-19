@@ -1,3 +1,4 @@
+import { validScenario } from './scenario-save.ts';
 import { validCorpseShape,validateCorpses } from './corpse-save.ts';
 import { validHuntingTask,validateHunting } from './hunting-save.ts';
 import { validateWildlife } from './wildlife-save.ts';
@@ -88,7 +89,7 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validateWorld(input: unknown): string[] {
   return validateSchema(input, SCHEMA_VERSION);
 }
-function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79): string[] {
+function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(input)) return ['World must be an object.'];
@@ -99,6 +100,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
   if (!integer(input.tick, 0) || !integer(input.nextId, 1)) errors.push('Invalid tick or nextId.');
   if (!integer(input.logisticsCursor, 0)) errors.push('Invalid logistics search cursor.');
   if (!validMapDimension(input.width) || !validMapDimension(input.height)) return [...errors, 'Invalid dimensions.'];
+  if(!validScenario(input.scenario,version,input.width,input.height))errors.push('Invalid scenario provenance for schema.');
   const size = input.width * input.height;
   const arrays = ['tiles', 'pawns', 'resources', 'structures', 'jobs', 'piles', 'stockpiles', 'events'] as const;
   if (arrays.some(key => !Array.isArray(input[key]))) return [...errors, 'Missing world arrays.'];
@@ -589,6 +591,7 @@ export function deserializeWorld(serialized: string): World {
   if(record(input)&&input.schemaVersion===76){const errors=validateSchema(input,76);if(errors.length)throw new Error('Invalid version 76 save: '+errors.join(' '));input.schemaVersion=77;}
   if(record(input)&&input.schemaVersion===77){const errors=validateSchema(input,77);if(errors.length)throw new Error('Invalid version 77 save: '+errors.join(' '));input.schemaVersion=78;}
   if(record(input)&&input.schemaVersion===78){const errors=validateSchema(input,78);if(errors.length)throw new Error('Invalid version 78 save: '+errors.join(' '));input.schemaVersion=79;for(const p of (input as unknown as World).pawns)p.priorities.hunt=0;}
+  if(record(input)&&input.schemaVersion===79){const errors=validateSchema(input,79);if(errors.length)throw new Error('Invalid version 79 save: '+errors.join(' '));input.schemaVersion=80;}
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`); return input as World;
 }
 /** Deterministic diagnostic fingerprint, not a cryptographic digest. */

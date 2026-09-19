@@ -21,7 +21,7 @@ test('roof accident and prone cargo remain synchronized; loaded Gunshot wounds r
   try{
     await page.route('**/src/main.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:probe+await response.text()});});
     const initial=roofAccidentCamp();await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
-    await page.goto('/?size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
+    await page.goto('/?scenario=camp&size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
     await perform(page,{reason:'Retirer le dernier appui sous le toit pour exercer un véritable accident.',command:{type:'designate',kind:'deconstruct',x:14,z:16}},{value:0});
     await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).roofing!.constructed.length).toBe(0);await page.locator('[data-speed="0"]').click();
     const accident=await world(page);expect(accident.pawns.every(p=>!!p.health)).toBe(true);expect(validateWorld(accident)).toEqual([]);

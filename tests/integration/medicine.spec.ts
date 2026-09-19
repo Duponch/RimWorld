@@ -19,7 +19,7 @@ test('patient chooses medicine ceiling; doctor collects, carries, cancels withou
     await page.route('**/src/main.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:probe+await response.text()});});
     const initial=medicineCamp(),doctor=initial.pawns[0]!,patient=initial.pawns[1]!;doctor.priorities.doctor=0;patient.medicalCare='dry';initial.piles[0]!.owner={type:'ground',x:20,z:4};
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
-    await page.goto('/?size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
+    await page.goto('/?scenario=camp&size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
     await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).pawns[1]!.state).toBe('resting');await page.locator('[data-speed="0"]').click();
     await page.locator(`[data-pawn="${patient.id}"]`).click();await expect(page.locator('#medical-policy option')).toHaveCount(5);await page.locator('#medical-policy').selectOption('industrial');
     await perform(page,{reason:'Activer les soins.',command:{type:'priority',pawnId:doctor.id,work:'doctor',value:1}},{value:0});

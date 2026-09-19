@@ -56,10 +56,10 @@ export class CameraRig {
     this.controls.update(); this.controls.enableDamping = damping;
   }
 
-  configureMap(width: number, height: number): void {
+  configureMap(width: number, height: number, landing?:{x:number;z:number}): void {
     this.controls.enableDamping = false; this.controls.update();
     this.diagonal = Math.hypot(width, height);
-    this.controls.target.set((width - 1) / 2, 0, (height - 1) / 2);
+    this.controls.target.set(landing?.x??(width - 1) / 2, 0, landing?.z??(height - 1) / 2);
     this.offset.set(0.85, 2, 0.9).normalize();
     const distance = this.mode === 'orthographic' ? this.diagonal + 2 * WORLD_SCALE.treeMaxHeight : halfHeight / slope;
     this.camera.position.copy(this.controls.target).addScaledVector(this.offset, distance);

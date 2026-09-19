@@ -16,7 +16,7 @@ test('porte : construction, ouverture physique, maintien/interdiction, sauvegard
     w.resources.push({id:w.nextId++,kind:'tree',amount:12,x:21,z:16});
     addGroundMaterial(w,'blocks',25,{x:13,z:15},'granite-blocks');
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(w)});
-    await page.goto('/?size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
+    await page.goto('/?scenario=camp&size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
     await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,w);
     await tool(page,'door');await expect(page.locator('#construction-material option')).toHaveCount(7);
     await page.locator('#construction-material').selectOption('granite-blocks');await expect(page.locator('#tool-instruction')).toContainText('25 Blocs de granite');

@@ -26,7 +26,7 @@ try {for(const enabled of [false,true]) {
   if(!enabled)await page.route('**/src/render/EnvironmentLighting.ts*',async route=>{const response=await route.fetch(),body=await response.text(),needle='if (this.configured.has(material))';if(!body.includes(needle))throw new Error('Control hook missing');await route.fulfill({response,body:body.replace(needle,'return; '+needle)});});
   const w=stonecuttingLoad(100);for(const p of w.pawns)fixtureFire(w,p.x+3,p.z+3);
   await page.addInitScript(data=>localStorage.setItem('lisiere.save.v1',data),serializeWorld(w));
-  await page.goto('http://127.0.0.1:5173/?size=32&e2e');await page.waitForFunction(()=>window.__lisiere);
+  await page.goto('http://127.0.0.1:5173/?scenario=camp&size=32&e2e');await page.waitForFunction(()=>window.__lisiere);
   await page.locator('[data-speed="0"]').click();await page.locator('[data-panel="menu"]').click();await page.locator('#load').click();
   await page.waitForFunction(()=>window.__miningBench.view.world?.width===250&&!window.__miningBench.view.preparing);await page.keyboard.press('Escape');
   const waitFrames=n=>page.evaluate(n=>new Promise(resolve=>{function f(){if(!--n)resolve();else requestAnimationFrame(f);}requestAnimationFrame(f);}),n);

@@ -101,7 +101,7 @@ export async function dragRectangle(page: Page, from: { x: number; z: number }, 
 }
 
 export async function startPaused(page: Page) {
-  await page.goto('/?size=32&seed=42&e2e');
+  await page.goto('/?scenario=camp&size=32&seed=42&e2e');
   await expect(page.locator('#loading')).toHaveCount(0);
   await expect(page.locator('#viewport canvas')).toBeVisible();
   await page.getByRole('button', { name: 'Pause', exact: true }).click();
