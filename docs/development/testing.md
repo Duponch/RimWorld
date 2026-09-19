@@ -152,6 +152,8 @@ Le pilote de gestes cadre les cellules par de vrais mouvements de molette et vé
 
 ## Pilote de colonie
 
+**Revue de progression du 19 septembre :** les parcours existants démontrent les résultats de leur camp, pas la diversité des décisions ni l’intérêt d’une partie. Avec les prochaines boucles, adapter la politique à une population variable, puis à un incident et à ses suites, par les commandes publiques. Conserver un témoin paisible et des branches rares contrôlées ; distinguer déclenchement naturel, événement forcé de test et fixture synthétique. Cette évolution est prévue, pas déjà implémentée. Une revue du jeu lancé accompagne les livraisons ; les tests ne mesurent pas automatiquement le plaisir de jouer. Voir la [revue stratégique](../research/progression-review-2026-09-19.md).
+
 `tests/scenarios/colony-player.ts` est la politique commune du joueur : elle lit le monde et produit des commandes motivées, sans le modifier directement. Elle développe réserves, trois lits, table/tabourets, murs, riz et feu, maintient une facture et collecte les ingrédients nécessaires même si les rations initiales couvrent encore la faim. La [recherche de progression](../research/colony-progression.md) distingue ce pilote d’une mesure empirique des joueurs de RimWorld.
 
 - `colony-player.test.ts` joue cinq jours sur trois graines 250², dont la graine 42 prolongée à huit jours. Celle-ci décide toutes les quatre heures comme le navigateur, les autres toutes les heures. Contrôler matière, ingestions, sommeil par colon, camp, cultures, repas et reprise quotidienne.

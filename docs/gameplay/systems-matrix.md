@@ -1,5 +1,7 @@
 # Matrice des systèmes et critères de réalisation
 
+**Revue du 19 septembre :** G0–G5 conservent leur périmètre ; les premières boucles de population/incidents G4 ne nécessitent pas la clôture de G3. [Priorité canonique](../ROADMAP.md), [motif de la réorientation](../research/progression-review-2026-09-19.md). Les entrées de versions ci-dessous sont historiques ; l’état livré est consolidé dans [l’inventaire](implementation-status.md).
+
 V65 : SYS/TEST-082 partiellement servis par l’errance triste, ses interruptions, perte de contrôle direct, besoins et récupération. S14 reste partiel : autres crises, traits, opinions et relations absents. [Contrat](../development/mental-break.md).
 
 V64 : S14 progresse avec des pensées de situation et souvenirs consultables, une cible et une jauge progressive. Crises, traits et relations restent ouverts ; [contrat](../development/mood.md).

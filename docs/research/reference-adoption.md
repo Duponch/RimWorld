@@ -1,5 +1,7 @@
 # Adoption du référentiel utilisateur
 
+Revue stratégique du 19 septembre : chapitre 24 et SYS-132..135 relus avec chapitre 23, SYS-084..087 et SYS-148. Adopter admissibilité, conséquences et continuation ; adapter l’ordre de développement en ouvrant population/incidents avant le catalogue social complet. Aucun système supplémentaire validé ; [sources, limites et décision](progression-review-2026-09-19.md), ordre exclusif dans ROADMAP.
+
 V65 — chapitre 14, **SYS-082 / TEST-082**, besoins SYS-076..081 et contrats physiques 8/9 : adopter remplacement réel des activités et perte du contrôle direct ; adapter navigation/temps/présentation 3D ; différer catalogue de crises, traits et relations. Relecture des régimes, priorités de sommeil, gel des pensées et récupérations : [sources et contradictions](mental-break-reference.md), [contrat](../development/mental-break.md). Aucun SYS global clos.
 
 V64 — chapitre 14, SYS/TEST-081 et producteurs SYS-076/078/079/080/090/096 : adopter situation/mémoire distinctes, causes et gel selon éveil ; adapter cadence et attentes fixes ; différer SYS-082/084/086..088 (crises, traits, relations). Relecture effective des entrées : UI-017/018/028 concernent soins/captures/opérations et ne sont pas des IDs de pensée. [Confrontation datée](mood-reference.md), [contrat](../development/mood.md).

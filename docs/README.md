@@ -1,55 +1,10 @@
 # Documentation de Lisière
 
-V65 : [errance triste réelle](development/mental-break.md), [sources et contradictions](research/mental-break-reference.md), [preuves](history/validation-mental-break-v65.md). Interruption physique, besoins critiques, récupération et catharsis ; autres crises et personnalités restent ouvertes.
+État courant : **V65, 19 septembre 2026**. Le camp, les premiers combats, soins, vêtements, pensées et l’errance triste sont jouables dans leurs périmètres ; la partie ordinaire ne possède encore ni incidents ni croissance de population. [Inventaire consolidé](gameplay/implementation-status.md), [dernières preuves](history/validation-mental-break-v65.md).
 
-V64 : [humeur progressive et pensées](development/mood.md), [sources et corrections](research/mood-reference.md), [preuves](history/validation-mood-v64.md). Causes consultables des situations présentes ; psychologie et catalogue encore partiels.
+La [revue de progression](research/progression-review-2026-09-19.md) explique la réorientation vers des situations de colonie complètes. [ROADMAP](ROADMAP.md) conserve seule l’ordre des prochains travaux et les estimations. Mode jour, automatisation nocturne en pause.
 
-V63 : [vêtements physiques et protection](development/armor.md), [sources revérifiées](research/apparel-reference.md), [preuves](history/validation-apparel-v63.md). Chemise/gilet obtenables, habillage/retrait, armure anatomique et apparence carte/portrait ; reste un système partiel.
-
-V62 : [réveils défensifs](development/disturbance.md), [recherche et divergences](research/disturbance-reference.md), [preuves](history/validation-disturbance-v62.md). Impacts audibles, repos médical distinct et délais sauvegardés ; pas une interruption universelle des travaux.
-V61 : [approche ennemie et postes de tir](development/pursuit.md), [recherche et adaptations](research/pursuit-reference.md), [preuves](history/validation-pursuit-v61.md). Les nouvelles rencontres ont un adversaire mobile ; les anciennes sauvegardes conservent leur sentinelle fixe. Les mentions d’absence des lots précédents sont historiques.
-
-V60 : [tir automatique et réaction civile Attaquer](development/automatic-combat.md), [sources revérifiées](research/automatic-combat-reference.md), [preuves](history/validation-automatic-combat-v60.md). Les colons mobilisés défendent leur poste ; les civils disposent des trois réactions. Poursuite ennemie et positions tactiques restent ouvertes. Les entrées V59 et antérieures ci-dessous décrivent leur livraison historique.
-
-V59 : [mêlée jouable](development/melee.md), [règles et incertitudes](research/melee-reference.md), [preuves](history/validation-melee-v59.md). Approche, frappes naturelles/arme, toucher/esquive, blessures, étourdissement et riposte au contact de la sentinelle ; poursuite autonome et tir automatique restent ouverts.
-
-V58 : [rencontre armée et fuite](development/encounters.md), [sources et adaptations explicites](research/encounter-reference.md), [preuves](history/validation-encounter-v58.md). Sentinelle de scénario, pas un raid ; mêlée et poursuite à compléter. Les anciennes entrées ci-dessous décrivent leur lot, l’[inventaire](gameplay/implementation-status.md) donne l’état consolidé.
-
-V57 : [ralentissement des impacts](development/stagger.md), [sources et interprétation 3D](research/stagger-reference.md), [validation](history/validation-stagger-v57.md). Le trajet en cours ralentit sans saut puis retrouve sa vitesse ; sauvegarde et portage médical conservent la trajectoire. Premier adversaire toujours à venir.
-
-Bilan courant consolidé le 18 septembre : [jouable, partiel et absent](gameplay/implementation-status.md), [estimation globale et par domaine](ROADMAP.md#estimation-de-charge--18-septembre-2026). Les lots techniques ne comptent pas comme de nouvelles commandes jouables.
-
-V56 : [premier tir commandé et visible](development/shooting.md). Revolver équipé, cible explicite, préparation interruptible, récupération persistante, compétence Tir/XP, projectile GPU et conséquence anatomique. [Sources revérifiées](research/shooting-reference.md), [preuves et charge](development/validation.md). Le pouvoir d’arrêt est ajouté en V57 ; adversaires, réactions civiles, mêlée et armures restent à intégrer.
-
-Ce parcours branche les [vols V55](development/projectiles.md), [impacts V54](development/bullet-impact.md), [ligne/couvert](development/combat-queries.md), [captures du décor](development/combat-world.md) et [mobilisation V53](development/drafting.md). Le socle testé est désormais utilisé par une commande joueur ; la rencontre V58 branche la première menace ; aucun raid n’est implicitement livré.
-
-Transport sous V52 : [comparaison ordonnée des ressources](development/presentation-timing.md#coût-de-recherche-des-deltas-sous-v52), mêmes états et règles, coût d’encodage réduit. Garde native minage/abattage verte après modification ; [preuves et limites de charge](development/validation.md). La mobilisation est ajoutée en V53.
-
-V52 : [premier équipement physique](development/equipment.md), [règles revérifiées](research/equipment-reference.md). Revolver au sol, accès/échange/dépôt, propriété distincte de la cargaison et attache GPU. Mobilisation ajoutée V53 et tir dirigé V56 ; vêtements et inventaire restent ouverts.
-
-V51 : [médicaments et cinq plafonds de soins](development/medicines.md), [sources et subtilités vérifiées](research/medicines-reference.md). Prélèvement, portage, doses par opération et soins groupés ; trente doses industrielles sur les nouveaux sites. Acquisition complète et maladies restent ouvertes.
-
-V50 : [priorités médicales urgentes](development/urgent-care.md), [recherche et correction de portée](research/urgent-care-reference.md). Branche avant les besoins aux décisions admissibles, revue au lit et réévaluation après une plaie auto-traitée ; aucune préemption universelle des tâches engagées.
-
-V49 : [auto-soins ordinaires](development/self-tending.md), [vérification des règles](research/self-tending-reference.md). Option Santé désactivée au départ, métier Médecin, qualité de base ×0,7 et traitement physique sans lit obligatoire. Décisions urgentes ajoutées V50 ; médicaments ajoutés en V51.
-
-V48 : [alimentation assistée au lit](development/feeding.md), [sources recoupées et seuil adulte](research/feeding-reference.md). Médecin prend et porte la portion selon le régime du patient ; nutrition seulement au terme du repas. Médicaments ajoutés en V51 ; auto-soins ordinaires ajoutés en V49.
-
-V47 : [traitements sans médicament, repos médical et Médecine](development/tending.md), [règles revérifiées](research/tending-reference.md). Les médicaments sont ajoutés en V51 ; auto-soins ordinaires ajoutés en V49 ; alimentation assistée ajoutée en V48.
-
-V46 : [secours physiques et lits médicaux](development/rescue.md). Médecin, clic droit, portage GPU et reprise en cours de transport ; traitements ajoutés en V47, alimentation assistée ajoutée en V48.
-
-V44 : [interruptions et cargaisons conservées](development/interrupted-cargo.md), [relecture de l’épuisement et du dépôt](research/interrupted-cargo-reference.md).
-
-V45 : [santé active](development/health.md), [recherche des transitions et accidents](research/health-reference.md). Anatomie, lésions, incapacités, décès et effets physiques intégrés ; secours ajoutés en V46, traitements sans médicament en V47 ; première arme V52 et tir dirigé V56, combat contre une menace encore absent. [Référence des secours et préparation des traitements](research/care-preparation.md).
-
-V43 : [première compétence et apprentissage](development/skills.md), [recherche et réorientation des priorités](research/skills-reference.md).
-
-V42 : [générateur à bois, raccordement et lampe](development/power.md), [vérification RimWorld](research/power-reference.md).
-
-V41 : [composants industriels](development/components.md), [vérification RimWorld](research/components-reference.md).
-
-La référence est RimWorld de base, transposé en 3D. Une description de RimWorld, une intention du projet et une fonctionnalité livrée sont trois informations distinctes. Ce dossier les sépare ; les extensions viennent après G5.
+Les bilans de versions sont dans les contrats et [l’index de validation](development/validation.md) ; ils ne remplacent pas l’état fonctionnel actuel.
 
 ## Trouver la bonne information
 
@@ -78,6 +33,10 @@ La référence est RimWorld de base, transposé en 3D. Une description de RimWor
 
 | Domaine | Contrat du projet | Recherche et cible |
 |---|---|---|
+| Humeur et crises | [Humeur V64](development/mood.md), [errance triste V65](development/mental-break.md) | [Pensées](research/mood-reference.md), [crises et contradictions](research/mental-break-reference.md) |
+| Habillement | [Vêtements et protection V63](development/armor.md) | [Règles revérifiées](research/apparel-reference.md) |
+| Combat | [Tir](development/shooting.md), [mêlée](development/melee.md), [acquisition](development/automatic-combat.md), [approche](development/pursuit.md), [réveils](development/disturbance.md) | [Préparation et limites](research/combat-preparation.md), [rencontre](development/encounters.md) |
+| Santé et équipement | [Santé](development/health.md), [secours](development/rescue.md), [traitements](development/tending.md), [alimentation assistée](development/feeding.md), [médicaments](development/medicines.md), [équipement](development/equipment.md) | [Compétences](development/skills.md), [recherche santé](research/health-reference.md) |
 | Électricité | [Génération et lampes V42](development/power.md) | [Sources et limites](research/power-reference.md) |
 | Refroidissement passif | [Construction, recharge et air V40](development/passive-cooling.md) | [Sources et limites](research/passive-cooling-reference.md) |
 | Température et conservation | [Air local et âges V38](development/temperature.md), [conservation](development/food-preservation.md) | [Vérifications Core](research/temperature-reference.md) |
