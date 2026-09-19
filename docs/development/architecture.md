@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+V61 : `tactics-state.ts` porte le mandat persistant ; `tactics.ts` décide et `tactical-positions.ts` classe les postes avec accès puis une route unique. Les résolveurs de tir/mêlée, santé, navigation et poses GPU restent communs. [Contrat et migration](pursuit.md).
+
 V60 : [acquisition automatique](automatic-combat.md), séparée en décision, score, état et validation. Elle réutilise les producteurs tir/mêlée ; aucun nouvel état graphique ou moteur physique parallèle. Autorisation de tir et réaction civile sont des phases discrètes du bridge ; cible récente/cycle civil sont persistés pour une continuation identique.
 
 V59 : [mêlée](melee.md) séparée en statistiques/outils, espace, impact anatomique, état/validation et orchestration. Tir, mêlée et projectiles partagent les sous-pas Core. Les évaluations anatomiques et personnes portées sont capturées à la demande pendant la transaction, puis invalidées après chaque tentative de mêlée ou impact de projectile, jamais conservées entre ticks. `stun` ajoute des intervalles immobiles à la même arête ; aucun second moteur de déplacement ni rig CPU.

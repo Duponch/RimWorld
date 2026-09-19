@@ -16,6 +16,7 @@ export function meleePlaces(world:World,pawn:Pawn,target:Pawn,claimed:ReadonlySe
   const occupied=new Set<number>();
   for(const p of world.pawns)if(p!==pawn&&p.state!=='dead'&&p.state!=='downed'){
     occupied.add(p.z*world.width+p.x);if(p.motion&&p.motion.end>world.tick)occupied.add(p.motion.from.z*world.width+p.motion.from.x);
+    if(p.tactics?.post)occupied.add(p.tactics.post.z*world.width+p.tactics.post.x);
     if(p.melee?.order&&p.path.length){const c=p.path.at(-1)!;occupied.add(c.z*world.width+c.x);}
   }
   for(let z=target.z-1;z<=target.z+1;z++)for(let x=target.x-1;x<=target.x+1;x++) {

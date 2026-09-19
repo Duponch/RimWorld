@@ -1,3 +1,4 @@
+import { resetTactics } from './tactics-state.ts';
 import type { Reachability } from './pathfinding.ts';
 import { interruptWork,retryInterruptedCargo } from './interrupted-cargo.ts';
 import { urgentMedicalTask } from './urgent-care.ts';
@@ -108,7 +109,7 @@ export function collapseFromExhaustion(world:World,pawn:Pawn,context:NeedContext
   if ((world.restRules === 'legacy' ? pawn.rest === 0 : pawn.collapsePending) && pawn.need?.kind !== 'sleep') {
     // Involuntary collapse is a hard interruption, unlike a player cancelling
     // an order. A fired bullet keeps its independent world lifetime.
-    delete pawn.shooting;delete pawn.flee;delete pawn.melee;
+    delete pawn.shooting;delete pawn.flee;delete pawn.melee;resetTactics(pawn);
     interruptWork(world,pawn);
     if(pawn.draft){pawn.draft.target=null;pawn.draft.queue=[];}
     pawn.need = { kind: 'sleep', phase: 'sleep', bedId: null, target: { x: pawn.x, z: pawn.z } };

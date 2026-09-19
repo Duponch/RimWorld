@@ -1,0 +1,31 @@
+{
+  "date": "2026-09-19T00:41:51.301Z",
+  "backend": "native WebGPU",
+  "reports": [
+    {
+      "speed": 1,
+      "saveTick": 3013,
+      "firstShotTick": 3063,
+      "samples": 890,
+      "walkingFrames": 754,
+      "visibleShotSamples": 76,
+      "post": {
+        "x": 35,
+        "z": 16
+      }
+    },
+    {
+      "speed": 6,
+      "saveTick": 3015,
+      "firstShotTick": 3072,
+      "samples": 176,
+      "walkingFrames": 124,
+      "visibleShotSamples": 25,
+      "post": {
+        "x": 35,
+        "z": 16
+      }
+    }
+  ],
+  "errors": []
+}

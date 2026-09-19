@@ -1,0 +1,26 @@
+{
+  "date": "2026-09-19T00:38:57.862Z",
+  "backend": "native WebGPU",
+  "reports": [
+    {
+      "speed": 1,
+      "injuries": 1
+    },
+    {
+      "speed": 6,
+      "patient": "downed",
+      "enemy": "downed",
+      "medicineXp": 350000,
+      "carrySavedAt": 3241
+    }
+  ],
+  "presentation": {
+    "frames": 2562,
+    "flights": 169,
+    "hostileAimPoses": 542,
+    "fleeFrames": 461,
+    "cargoFleeFrames": 114,
+    "fleeJumps": []
+  },
+  "errors": []
+}

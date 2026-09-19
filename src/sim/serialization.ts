@@ -1,3 +1,4 @@
+import { validTacticsShape,validateTactics } from './tactics-save.ts';
 import { validAttackMemory } from './automatic-combat-save.ts';
 import { validAffiliationShape,validateAffiliations } from './affiliation-save.ts';
 import { validStagger } from './stagger.ts';
@@ -72,7 +73,7 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validateWorld(input: unknown): string[] {
   return validateSchema(input, SCHEMA_VERSION);
 }
-function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60): string[] {
+function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(input)) return ['World must be an object.'];
@@ -99,6 +100,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
       if (ids.has(item.id)) errors.push('Duplicate entity ID.'); ids.add(item.id);
       if (integer(input.nextId, 1) && item.id >= input.nextId) errors.push('nextId must exceed all entity IDs.');
       if (key === 'pawns') {
+        if(!validTacticsShape(item.tactics,version,input as unknown as World))errors.push('Invalid tactics shape for schema.');
         if(!validAffiliationShape(item,version,input as unknown as World))errors.push('Invalid affiliation or flee shape for schema.');
         if(version>=46?!integer((item.priorities as Record<string,unknown>)?.doctor,0,4):(item.priorities as Record<string,unknown>)?.doctor!==undefined)errors.push('Invalid medical work priority for schema.');
         for(const key of ['patient','bedrest'])if(version>=47?!integer((item.priorities as Record<string,unknown>)?.[key],0,4):(item.priorities as Record<string,unknown>)?.[key]!==undefined)errors.push('Invalid patient priority for schema.');
@@ -240,6 +242,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
   errors.push(...validateProjectiles(world,version,ids));
   if(version>=56)errors.push(...validateShooting(world));
   if(version>=59)errors.push(...validateMelee(world));
+  if(version>=61)errors.push(...validateTactics(world));
   if(version>=58)errors.push(...validateAffiliations(world));
   errors.push(...validateFurniture(world,version,ids));
   if(!errors.length)errors.push(...validatePower(world,version));
@@ -288,7 +291,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
     const owned = world.piles.filter(pile => pile.owner.type === 'pawn' && pile.owner.pawnId === pawn.id);
     if (owned.length > 1 || (owned.length === 1 && !(version>=51&&pawn.tend?.medicine&&pawn.tend.phase!=='pickup') && !(version>=48&&pawn.feed&&pawn.feed.phase!=='pickup') && !(version>=44&&pawn.interruptedCargo) && !(version >= 10 && pawn.cooking) && pawn.haul?.phase !== 'deliver' && (legacyV2 || pawn.need?.kind !== 'eat' || pawn.need.phase === 'pickup'))) errors.push('Carried ownership mismatch.');
     if (pawn.jobId !== null || pawn.haul !== null || version>=52&&pawn.equipmentTask || version>=48&&pawn.feed || version>=47&&pawn.tend || version>=46&&pawn.rescue || version >= 10 && pawn.cooking) { if (!['moving', 'working'].includes(pawn.state)) errors.push('Assigned pawn has incompatible state.'); }
-    else if (!(version>=59&&pawn.melee)&&!(version>=58&&pawn.flee) && !(version>=53&&pawn.draft) && !(version>=15&&pawn.recreation.task) && (legacyV2 || pawn.need === null) && (pawn.path.length || ['moving', 'working'].includes(pawn.state)) && !(version>=22&&pawn.transitExit&&pawn.state!=='working')) errors.push('Unassigned pawn has path or work state.');
+    else if (!(version>=61&&pawn.tactics)&&!(version>=59&&pawn.melee)&&!(version>=58&&pawn.flee) && !(version>=53&&pawn.draft) && !(version>=15&&pawn.recreation.task) && (legacyV2 || pawn.need === null) && (pawn.path.length || ['moving', 'working'].includes(pawn.state)) && !(version>=22&&pawn.transitExit&&pawn.state!=='working')) errors.push('Unassigned pawn has path or work state.');
     if (!legacyV2) {
       if (pawn.bedId !== null) {
         if (![...world.structures,...(world.packed??[]).map(p=>p.building)].some(bed => bed.kind === 'bed' && !bed.medical && bed.id === pawn.bedId) || bedOwners.has(pawn.bedId)) errors.push('Invalid or duplicate bed ownership.');
@@ -530,6 +533,7 @@ export function deserializeWorld(serialized: string): World {
   if(record(input)&&input.schemaVersion===57){const errors=validateSchema(input,57);if(errors.length)throw new Error('Invalid version 57 save: '+errors.join(' '));input.schemaVersion=58;}
   if(record(input)&&input.schemaVersion===58){const errors=validateSchema(input,58);if(errors.length)throw new Error('Invalid version 58 save: '+errors.join(' '));for(const p of (input as unknown as World).pawns)p.skills.melee={level:8,xp:0,dailyXp:0,passion:0};input.schemaVersion=59;}
   if(record(input)&&input.schemaVersion===59){const errors=validateSchema(input,59);if(errors.length)throw new Error('Invalid version 59 save: '+errors.join(' '));input.schemaVersion=60;}
+  if(record(input)&&input.schemaVersion===60){const errors=validateSchema(input,60);if(errors.length)throw new Error('Invalid version 60 save: '+errors.join(' '));input.schemaVersion=61;}
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`); return input as World;
 }
 /** Deterministic diagnostic fingerprint, not a cryptographic digest. */

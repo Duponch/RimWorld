@@ -1,3 +1,4 @@
+import { newTactics } from './tactics-state.ts';
 import { startingPawn } from './starting-pawns.ts';
 import { newWeaponState } from './equipment-rules.ts';
 import { blockedCells } from './pathfinding.ts';
@@ -20,10 +21,10 @@ export function setupEncounter(world:World):void {
   candidates.sort((a,b)=>distanceSquared(leader,a)-distanceSquared(leader,b)||a.z-b.z||a.x-b.x);
   const site=candidates.find(c=>reach.has(c.z*world.width+c.x));
   if(!site)throw new Error('Aucun emplacement accessible pour la sentinelle sur cette graine.');
-  const enemy=startingPawn(world.nextId++,'Sentinelle',site.x,site.z,0,55);enemy.faction='outlaws';
+  const enemy=startingPawn(world.nextId++,'Sentinelle',site.x,site.z,0,55);enemy.faction='outlaws';enemy.tactics=newTactics();
   world.pawns.push(enemy);
   world.piles.push({id:world.nextId++,kind:'weapon',item:'revolver',quantity:1,owner:{type:'equipment',pawnId:enemy.id},weapon:newWeaponState()});
   const weapon=world.piles.find(p=>p.item==='revolver'&&p.owner.type==='ground');
   if(weapon)weapon.owner={type:'equipment',pawnId:leader.id};
-  world.events.push({tick:0,type:'command',message:`Rencontre armée : une sentinelle hostile tient la case ${site.x}, ${site.z}. ${leader.name} commence avec le revolver. Préparez soins et couchages avant de vous approcher. La sentinelle tire à portée, sans poursuite ni mêlée pour le moment.`});
+  world.events.push({tick:0,type:'command',message:`Rencontre armée : hostile en ${site.x}, ${site.z}. ${leader.name} porte le revolver. Préparez soins et couchages : l’adversaire approche les cibles visibles, cherche une position de tir et riposte au contact.`});
 }

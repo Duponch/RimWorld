@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+V61 change le **mandat du combattant des nouvelles rencontres** : approche, poste de tir et mêlée sans arme. Aucun nouvel ItemId, raid, armure ou faction. Le profil historique de sentinelle est préservé au chargement. [Contrat](../development/pursuit.md).
+
 V60 ne crée aucun objet : elle rend les acteurs/revolver actuels utilisables par le tir automatique et la réaction civile Attaquer. Aucun inventaire personnel, vêtement, armure ou nouvelle arme implicitement livré. [Contrat](../development/automatic-combat.md).
 
 V59 active les outils humains naturels (poings, tête, dents) et les trois coups de mêlée du revolver existant. Nouvelle lésion Morsure, capacité d’étourdissement et compétence Mêlée ; aucun nouvel ItemId. Les qualités définies du revolver modifient ses dégâts de mêlée. Autres armes, armures, outils de terrain et infections restent absents. [Contrat](../development/melee.md).

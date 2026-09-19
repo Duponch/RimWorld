@@ -1,5 +1,7 @@
 # Combat rapproché — V59
 
+V61 autorise l’approche en mêlée du NPC muni du [mandat tactique](pursuit.md). Les anciennes sentinelles restent fixes ; le mobilisé en défense automatique ne poursuit toujours pas.
+
 [Recherche et incertitudes](../research/melee-reference.md). Le joueur mobilise un ou plusieurs colons, choisit **Attaquer au corps à corps**, puis clique un personnage. L'ordre est atomique pour le groupe : places accessibles distinctes avant acceptation, trajet réel puis frappe. Il peut viser un allié explicitement ; la sélection ordinaire n'attaque jamais.
 
 ## Simulation

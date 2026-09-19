@@ -50,7 +50,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 58 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 61 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)
@@ -307,7 +307,7 @@
 
 
 ## Première rencontre V58
-- Lire docs/development/encounters.md et sa recherche. Propriétaire et relation distincts ; champ absent = colonie historique. Sentinelle statique optionnelle, jamais un raid implicite. Conserver les limites (mêlée, poursuite, Attaquer, réveil défensif et autonomie NPC incomplète).
+- Lire docs/development/encounters.md et sa recherche. Propriétaire et relation distincts ; champ absent = colonie historique. Sentinelle statique optionnelle, jamais un raid implicite. Les suites V59/V60/V61 livrent mêlée, Attaquer et approche du nouveau scénario ; réveil défensif et autonomie NPC complète restent ouverts.
 - Profil hostile commun à accès progressif, route et suivi, extrémités d’arêtes protégées. Porte de colonie fermée infranchissable au hostile, ouverte accessible même interdite ; les corps bloquent la fermeture sans renouveler le contact amical.
 - Fuite conserve cargaison et arête active ; refuge avec score de pièce/distance, attente persistée. Le tir utilise le même résolveur et 170 XP/s de cycle sur hostile, 20 sur non-hostile. Minimum 1,421 pour la cible hostile debout, pas interdiction universelle à cause d’un tiers adjacent.
 - V57 strictement validée avant migration ; aucun scénario injecté au chargement. Exclure adversaires des commandes/portraits/gestion/soins civils. Les captures de combat ne survivent pas à une décision avec mutation. Pilote de rencontre complémentaire au camp, sans injection de blessures.
@@ -319,7 +319,7 @@
 - Lire `docs/development/melee.md` et sa recherche : contact diagonal distinct du transit, outils naturels/revolver, toucher puis esquive, récupération conservée après annulation. Ne pas réduire les coups à une vie globale ni faire dépendre les dégâts de l’animation.
 - V58 validée strictement avant Mêlée neutre ; nouvelles formes melee/stun/stuns et morsure interdites auparavant. Arrêt au milieu d’une arête sans saut, propagation commune corps/cargo/patient/sélection. Durée du stun calibrée à 45 ticks Core, divergence documentée.
 - Les capacités et portages capturés par shootingQueries ne survivent qu’à la transaction synchrone ; renouveler après chaque impact, avant le combattant/projectile suivant. Aucune réutilisation entre ticks ou après mutation médicale.
-- La sentinelle riposte au contact sans poursuite autonome. Tir automatique/réaction Attaquer et tactique générale restent ouverts ; maintenir le bilan exact.
+- La sentinelle historique riposte au contact sans poursuite. V60 ajoute tir automatique/réaction Attaquer ; V61 ajoute le mandat mobile du nouveau scénario. La tactique générale reste ouverte ; maintenir le bilan exact.
 
 ## Acquisition automatique V60
 
@@ -327,3 +327,10 @@
 - État automatique distinct des ordres explicites ; couper la permission annule la visée automatique, réamorce celle d’un ordre explicite conservé, jamais la récupération. Les refus d’ordres civils pendant récupération restent une limite documentée. Cargaison et arête engagées restent physiques.
 - V59 strictement validée avant migration neutre V60. Origine de l’ordre, compteur/expiration et dernière attaque réelle sont sauvegardés ; aucun passé ni cible inventés. Les politiques sont des phases discrètes du bridge.
 - Capture tactique bornée à portée +3 pour l’acquisition (penchement/couverture/cône inclus), fermeture hors fenêtre, identités de couverture inchangées. Renouveler après interruption ; aucun cache de monde par tick ou entre acteurs. Grille de contact paresseuse seulement à proximité ; ne pas modifier le classement ou le PRNG pour gagner du temps.
+
+## Approche ennemie V61
+
+- Lire `docs/development/pursuit.md` et sa recherche. Mandat NPC optionnel, cible/poste/échéance Core persistants. Nouveau scénario mobile ; absence de mandat = sentinelle historique fixe, migration V60 stricte et neutre.
+- Classement des postes, visibilité, accès progressif puis route pondérée unique. Réservations de postes distinctes du transit ; revalider chaque pas, conserver arêtes et récupérations. Aucun cache de décision entre mutations/acteurs/ticks.
+- Ne pas confondre approche visible et raid/stratégie collective. Réveil défensif, cibles invisibles, destruction de portes, retraite et besoins autonomes NPC restent ouverts. Les corrections officielles de juin sont postérieures au miroir de mai : conserver les incertitudes.
+- Le pilote de rencontre réaffecte un survivant si le médecin est indisponible. Exiger secours et traitements achevés ; préserver les échecs et leurs diagnostics. Les audits incluent les pointes initiales de planification.

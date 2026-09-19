@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+V61 : [approche ennemie et postes de tir](development/pursuit.md), [recherche et adaptations](research/pursuit-reference.md), [preuves](history/validation-pursuit-v61.md). Les nouvelles rencontres ont un adversaire mobile ; les anciennes sauvegardes conservent leur sentinelle fixe. Les mentions d’absence des lots précédents sont historiques.
+
 V60 : [tir automatique et réaction civile Attaquer](development/automatic-combat.md), [sources revérifiées](research/automatic-combat-reference.md), [preuves](history/validation-automatic-combat-v60.md). Les colons mobilisés défendent leur poste ; les civils disposent des trois réactions. Poursuite ennemie et positions tactiques restent ouvertes. Les entrées V59 et antérieures ci-dessous décrivent leur livraison historique.
 
 V59 : [mêlée jouable](development/melee.md), [règles et incertitudes](research/melee-reference.md), [preuves](history/validation-melee-v59.md). Approche, frappes naturelles/arme, toucher/esquive, blessures, étourdissement et riposte au contact de la sentinelle ; poursuite autonome et tir automatique restent ouverts.

@@ -3,6 +3,7 @@ import { cancelAutomaticCombat } from './automatic-combat-state.ts';
 import { isColonist } from './affiliation.ts';
 import { applyMeleeCommand,processMelee } from './melee.ts';
 import { isStunned } from './stun.ts';
+import { processTactics } from './tactics.ts';
 import { considerFlee,processFlee,processSentry,threatQueries } from './threats.ts';
 import { retryInterruptedCargo } from './interrupted-cargo.ts';
 import { applyDraftCommand,processDraft } from './drafting.ts';
@@ -397,13 +398,14 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if(pawn.state==='downed'||carrierOf(world,pawn.id)||isStunned(pawn,world.tick*10))continue;
       if(hasAdversary){considerAutomaticCombat(world,pawn,budget);considerFlee(world,pawn,getThreats());}
       if(pawn.need?.kind==='eat' && pawn.need.dining && !validDiningPlace(world,pawn.need.dining)) {pawn.need.phase='choose-spot';pawn.need.dining=null;pawn.need.progress=0;delete pawn.need.workRemainder;pawn.path=[];pawn.state='moving';}
-      if (pawn.moveCooldown > 0) { if(pawn.draft)pawn.draft.lastActiveTick=world.tick; pawn.state = pawn.melee || pawn.flee || pawn.draft || pawn.jobId !== null || pawn.equipmentTask || pawn.feed || pawn.tend || pawn.rescue || pawn.haul || pawn.need || pawn.cooking || pawn.recreation.task ? 'moving' : 'idle'; continue; }
+      if (pawn.moveCooldown > 0) { if(pawn.draft)pawn.draft.lastActiveTick=world.tick; pawn.state = pawn.tactics || pawn.melee || pawn.flee || pawn.draft || pawn.jobId !== null || pawn.equipmentTask || pawn.feed || pawn.tend || pawn.rescue || pawn.haul || pawn.need || pawn.cooking || pawn.recreation.task ? 'moving' : 'idle'; continue; }
       const needsContext = {
         search: (goals?: ReadonlySet<number>) => search(world, pawn, getBlocked(), occupied, budget, goals),
         move: (target: Cell, exact: boolean) => moveToward(world, pawn, target, true, getBlocked, budget, exact, getLight),
         release: () => releaseWork(world, pawn),
         event: (message: string) => event(world, 'need', message),
       };
+      if(pawn.tactics){if(!processDraftSleep(world,pawn,needsContext))processTactics(world,pawn,getBlocked,budget,getLight);continue;}
       if(pawn.melee){if(!processDraftSleep(world,pawn,needsContext)&&pawn.melee)processMelee(world,pawn,getBlocked,budget,getLight);continue;}
       if(!isColonist(pawn)){if(!processDraftSleep(world,pawn,needsContext))processSentry(world,pawn,getThreats());continue;}
       if(pawn.flee){if(!processDraftSleep(world,pawn,needsContext)&&pawn.flee)processFlee(world,pawn,getThreats(),getBlocked,budget,getLight);continue;}

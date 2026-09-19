@@ -1,5 +1,7 @@
 # Acquisition automatique et réponse civile — V60
 
+V61 ajoute le [mandat mobile ennemi](pursuit.md), séparé du tir libre des colons et de la réaction civile. Les descriptions du profil fixe ci-dessous concernent les sentinelles historiques.
+
 [Recherche, valeurs et limites](../research/automatic-combat-reference.md). Les mobilisés tirent à volonté par défaut, depuis leur poste, sur une menace hostile active et atteignable au tir. Le bouton de l’inspection suspend le tir automatique ; les ordres explicites restent disponibles. Couper le tir libre interrompt aussi leur visée, puis l’ordre conservé reprend une préparation entière ; adaptation au tick de commande local, sans réduire la récupération. Au contact, la défense en mêlée reste active même avec tir libre désactivé. Une destination/file de déplacement garde priorité ; aucune préparation pendant une arête capturée.
 
 ## Politique civile et action physique

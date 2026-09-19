@@ -10,17 +10,17 @@ Dans **Affectations → Réaction hostile**, ou l’inspection d’un civil, cho
 
 Mobilisez le colon, choisissez **Attaquer au corps à corps**, puis cliquez le personnage ciblé. Le colon rejoint une place accessible et frappe avec ses outils naturels ou son arme. L’ordre peut viser explicitement un allié. Arrêter, déplacer ou démobiliser interrompt l’attaque, mais conserve la récupération entre deux coups. Une cible nouvellement à terre termine l’engagement.
 
-La sentinelle riposte au contact. Les coups peuvent blesser, ralentir ou étourdir ; vue, manipulation, mouvement et compétence Mêlée comptent. Démobilisez les survivants pour leur rendre l’accès aux besoins et soins. Armures, autres armes, infections et poursuite autonome restent à venir.
+La sentinelle riposte au contact. Les coups peuvent blesser, ralentir ou étourdir ; vue, manipulation, mouvement et compétence Mêlée comptent. Démobilisez les survivants pour leur rendre l’accès aux besoins et soins. Armures, autres armes et infections restent à venir. Les nouveaux adversaires disposent de l’approche autonome décrite ci-dessous.
 
 ## Rencontre armée (V58)
 
-Dans **Menu → Nouvelle colonie**, choisissez **Rencontre armée**, sur une carte de 64 × 64 minimum. Ada commence équipée ; une sentinelle rouge attend à distance. Préparez lits médicaux, médecin et médicaments avant l’approche. « Menace armée · voir » centre la caméra sur elle. Elle tire sur les colons visibles à portée : les blessures, le saignement et le risque de décès sont réels.
+Dans **Menu → Nouvelle colonie**, choisissez **Rencontre armée**, sur une carte de 64 × 64 minimum. Ada commence équipée ; un combattant rouge part à distance. Il peut approcher dès qu’il voit une cible, se placer à portée avec du couvert, puis tirer ; sans arme il rejoint le contact. Préparez lits médicaux, médecin et médicaments avant l’approche. « Menace armée · voir » centre la caméra sur elle. Elle tire sur les colons visibles à portée : les blessures, le saignement et le risque de décès sont réels.
 
 Mobilisez un colon équipé puis utilisez **Tirer sur une cible** et cliquez la sentinelle. Après le combat, démobilisez les survivants pour leur permettre de manger, se reposer et soigner. Les blessés à terre sont transportés physiquement vers un lit accessible. L’ennemi ne devient pas un colon ni un patient civil ; capture et prisonniers restent à venir.
 
 **Affectations → Réaction hostile** propose Fuir (défaut), Attaquer et Ignorer. Un civil éveillé sans ordre imposé fuit une menace visible à moins de huit cases, cherche un refuge puis attend avant de reprendre ses activités. Un ordre direct ou la mobilisation prévaut. Les portes fermées protègent du passage hostile ; une porte ouverte, même interdite à vos colons, peut laisser passer l’ennemi.
 
-**Limites importantes :** cette sentinelle reste sur place, sans poursuite autonome. Elle riposte au contact en V59. Le tir sur un adversaire debout adjacent est refusé ; utilisez la mêlée. Raids, poursuite de la sentinelle, armures et diplomatie ne sont pas livrés. Le camp paisible reste le scénario par défaut.
+**Limites importantes :** les sauvegardes créées avant V61 gardent leur sentinelle fixe ; son mandat est indiqué dans l’inspection. Le nouvel adversaire recherche des cibles visibles et des postes individuels, sans raid, poursuite omnisciente, attaque de porte ni tactique de groupe. Le tir sur un adversaire debout adjacent est refusé ; utilisez la mêlée. Armures et diplomatie restent absentes. Le camp paisible reste le scénario par défaut. [Détails V61](../development/pursuit.md).
 
 ## Commander un tir
 

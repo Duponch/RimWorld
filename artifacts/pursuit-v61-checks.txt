@@ -1,0 +1,14 @@
+2026-09-19 — V61 pursuit / firing positions, main after 7e62106
+Simulation: 285/285, 68 files, 133.87 s (vitest); final strict ownership checks 20/20, 4.82 s.
+Build: PASS, 294 modules. Existing >500 kB chunk warning preserved.
+Native pursuit first: PASS 19.0 s, 1x/6x.
+Native grouped: encounter PASS 19.0 s; pursuit FAIL 32.6 s (transient route polling after retreat); load PASS 39.7 s.
+Native pursuit final: PASS 16.5 s; command destination acknowledged, movement observed in GPU frames; failed checkpoint now retained.
+CPU: PURSUIT=1 VALIDATION_VERSION=v61, 3/30/100, includes initial twenty ticks and all-tick p95/p99/max.
+Native: AMD RDNA-1; Ryzen 5 3600; Windows build 26200; viewport 1440x1000; no browser/GPU pipeline errors in final reports.
+Medical pilot first mobile case: FAIL (injured doctor unavailable; victim bled out while a capable reserve stayed idle).
+Medical pilot corrected: same seed, same real shots; player assigns surviving reserve as doctor; physical rescue, tending and one-day survival PASS.
+No long civil UI replay (V60 just passed); multi-map simulation and encounter pilot rerun.
+Details and limits: docs/history/validation-pursuit-v61.md
+Presentation guard: PASS, mine/chop 45s each; 0 starvation/jumps/solid occupancy; 44 speed commands max 15.5ms, frames max 17.5ms.
+Documentation integrity: PASS, originals preserved.

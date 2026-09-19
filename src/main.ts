@@ -204,8 +204,9 @@ function rebuildInspector() {
       const button=document.createElement('button');button.dataset.groupPawn=String(id);button.onclick=()=>selectPawn(id);el('group-members').append(button);
     }
   } else if(selectedPawn!==undefined&&snapshot?.pawns.some(p=>p.id===selectedPawn&&!isColonist(p))) {
-    panel.innerHTML='<div class="panel-heading"><h2 id="selected-name"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><p id="selected-action"></p><p>Hors-la-loi · hostile à la colonie. Sentinelle armée, sans poursuite ni mêlée.</p>';
+    panel.innerHTML='<div class="panel-heading"><h2 id="selected-name"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><p id="selected-action"></p><p>Hors-la-loi · hostile à la colonie. Tir et mêlée.</p><p id="enemy-mandate"></p>';
     createEquipmentInspection(panel,()=>{const pawn=snapshot?.pawns.find(p=>p.id===selectedPawn);return snapshot&&pawn?{world:snapshot,pawn}:undefined;},()=>{});
+    el('enemy-mandate').textContent=snapshot.pawns.find(p=>p.id===selectedPawn)?.tactics?'Mandat : approche autonome des cibles visibles.':'Mandat historique : sentinelle fixe.';
     createHealthInspection(panel);
   } else if (selectedPawn !== undefined) {
     panel.innerHTML = `<div class="panel-heading"><h2 id="selected-name"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><p id="selected-action"></p><div class="needs">${(['hunger', 'rest', 'comfort', 'mood'] as const).map((need, index) => `<label>${['Nourriture', 'Repos', 'Confort', 'Humeur'][index]} <span id="selected-${need}"></span></label><meter id="${need}-meter" min="0" max="100" low="25" optimum="100"></meter>`).join('')}</div>${recreationInspection()}<p id="selected-memories" class="muted"></p><button class="secondary-action" id="manage-work">Gérer le travail</button>`;
@@ -254,7 +255,8 @@ function actionLabel(pawn: Pawn) {
   if(pawn.flee)return pawn.path.length||pawn.moveCooldown>0?'Fuit une menace':'Reste à couvert après la fuite';
   if(pawn.stun)return 'Étourdi';
   if(pawn.melee)return pawn.melee.strike?'Mêlée · récupération':pawn.path.length?'Mêlée · approche':'Mêlée · au contact';
-  if(!isColonist(pawn)&&activeThreat(pawn))return pawn.shooting?.stance?.phase==='aim'?'Sentinelle · vise':pawn.shooting?'Sentinelle · récupération après tir':'Sentinelle · surveille les alentours';
+  if(pawn.tactics&&activeThreat(pawn)&&pawn.state==='moving')return 'Hors-la-loi · rejoint sa position de combat';
+  if(!isColonist(pawn)&&activeThreat(pawn))return pawn.shooting?.stance?.phase==='aim'?'Hors-la-loi · vise':pawn.shooting?'Hors-la-loi · récupération après tir':'Hors-la-loi · surveille les alentours';
   if(pawn.draft)return draftLabel(pawn);
   if(pawn.shooting)return pawn.shooting.stance?.phase==='cooldown'?'Récupération après tir':pawn.shooting.stance?.phase==='aim'?'Riposte · vise':'Riposte · rejoint sa position';
   if(pawn.equipmentTask)return pawn.equipmentTask.action==='equip'?'Va équiper son arme':'Dépose son arme';

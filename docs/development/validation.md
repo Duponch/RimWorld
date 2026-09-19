@@ -1,6 +1,14 @@
-# Validation courante — V60
+# Validation courante — V61
 
-## Tir automatique et réaction Attaquer V60
+## Approche ennemie et postes de tir V61
+
+19 septembre 2026. [Contrat](pursuit.md), [recherche fraîche](../research/pursuit-reference.md), [preuves détaillées et échecs conservés](../history/validation-pursuit-v61.md). Nouveaux adversaires mobiles, migration V60 neutre, postes physiques et même combat anatomique.
+
+285/285 tests globaux puis 20/20 ciblés, build réussi. UI native de poursuite à 1×/6×, rencontre avec secours/soins et charge 3/30/100 réussies ; l’observation du repli exige maintenant destination acquittée et translation GPU mémorisée. Le pilote réaffecte un médecin survivant quand le médecin initial est blessé, sans effacer l’issue médicale pour faire passer le test.
+
+Cent acteurs : CPU tous ticks p95 38,72 / p99 47,54 / max 68,47 ms ; images natives p95 12,1 / p99 23 / max 116,2 ms. Pas de garantie 6× soutenu ni de fluidité parfaite. Garde finale minage/abattage réussie, sans attente/saut ni retrait anticipé, 44 changements de vitesse sous 15.5 ms. Aucun jalon G0–G5 clos ; réveils défensifs et réactions aux dommages ensuite. Les sections suivantes sont historiques.
+
+## Historique — tir automatique et réaction Attaquer V60
 
 19 septembre 2026. [Contrat](automatic-combat.md), [sources revérifiées](../research/automatic-combat-reference.md), [preuves détaillées](../history/validation-automatic-combat-v60.md). Défense du poste mobilisé, permission de tir et réponse civile physique ; schéma 60, validation V59 avant migration neutre.
 

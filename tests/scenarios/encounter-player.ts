@@ -10,7 +10,16 @@ import type { Decision } from './colony-player.ts';
  * Bounded encounter policy, not a general tactical oracle or a damage injector. */
 export function encounterDecisions(world:World):Decision[] {
   const threats=world.pawns.filter(p=>!isColonist(p)&&activeThreat(p));
-  if(!threats.length){const ids=world.pawns.filter(p=>isColonist(p)&&p.draft).map(p=>p.id);return ids.length?[{reason:'Menace neutralisée : rendre leur autonomie aux survivants.',command:{type:'draft',pawnIds:ids,enabled:false}}]:[];}
+  if(!threats.length){
+    const ids=world.pawns.filter(p=>isColonist(p)&&p.draft).map(p=>p.id);
+    if(ids.length)return [{reason:'Menace neutralisée : rendre leur autonomie aux survivants.',command:{type:'draft',pawnIds:ids,enabled:false}}];
+    const available=world.pawns.filter(p=>isColonist(p)&&activeThreat(p)&&p.state!=='resting'&&p.need?.kind!=='sleep');
+    if(world.pawns.some(p=>isColonist(p)&&p.state==='downed')&&!available.some(p=>p.priorities.doctor>0)) {
+      const reserve=available.sort((a,b)=>b.skills.medicine.level-a.skills.medicine.level||a.id-b.id)[0];
+      if(reserve)return [{reason:'Le médecin est lui-même indisponible : affecter un survivant aux secours.',command:{type:'priority',pawnId:reserve.id,work:'doctor',value:1}}];
+    }
+    return [];
+  }
   if(!world.pawns.some(p=>isColonist(p)&&p.state==='downed'))return [];
   const grid=captureWorldShotGrid(world);
   for(const p of world.pawns.filter(p=>isColonist(p)&&activeThreat(p)&&equippedWeapon(world,p)&&!p.shooting&&!p.melee)) {

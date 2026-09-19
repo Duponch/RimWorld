@@ -14,6 +14,7 @@ OFFSETS.sort((a,b)=>a.x*a.x+a.z*a.z-b.x*b.x-b.z*b.z||a.z-b.z||a.x-b.x);
 export function draftDestinationContext(world:World,except:ReadonlySet<number>=new Set()) {
   const standable=captureStandability(world),claimed=new Set<number>();
   for(const pawn of world.pawns)if(pawn.draft?.target&&!except.has(pawn.id))claimed.add(pawn.draft.target.z*world.width+pawn.draft.target.x);
+  for(const pawn of world.pawns)if(pawn.tactics?.post&&!except.has(pawn.id))claimed.add(pawn.tactics.post.z*world.width+pawn.tactics.post.x);
   return {standable,claimed};
 }
 export function draftDestination(world:World,pawn:Pawn,requested:Cell,blocked:Uint8Array,context:ReturnType<typeof draftDestinationContext>,origin:Cell=pawn,withRoute=true):{target:Cell;path:Cell[]}|null {

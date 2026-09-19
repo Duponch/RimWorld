@@ -105,7 +105,7 @@ export function processMelee(world:World,pawn:Pawn,getBlocked:NavigationGrid,bud
   if(!target||!canFight(world,pawn)){cancelMelee(pawn);pawn.path=[];return;}
   if(m.strike||pawn.shooting?.stance?.phase==='cooldown'||isStunned(pawn,world.tick*10)){pawn.path=[];pawn.state='idle';return;}
   if(meleeContact(world,pawn,target,getBlocked())){pawn.path=[];pawn.state='idle';return;}
-  if(!isColonist(pawn)||m.order?.auto==='draft'){cancelMelee(pawn);return;}
+  if(!isColonist(pawn)&&!pawn.tactics||m.order?.auto==='draft'){cancelMelee(pawn);return;}
   const blocked=getBlocked(),end=pawn.path.at(-1),next=pawn.path[0];
   if(!next||!end||!meleeContact(world,end,target,blocked)||!canStep(world,pawn,next,blocked,new Set())) {
     if(!budget.remaining||pawn.planCooldown)return;

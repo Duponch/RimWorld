@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 60 as const;
+export const SCHEMA_VERSION = 61 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
@@ -66,6 +66,7 @@ export interface Pawn extends Cell {
   faction?:import('./affiliation.ts').FactionId;
   hostilityResponse?:'ignore'|'attack';
   lastAttack?:import('./automatic-combat-state.ts').AttackMemory;
+  tactics?:import('./tactics-state.ts').TacticsState;
   flee?:import('./threats.ts').FleeState;
   melee?:import('./melee-state.ts').MeleeState;
   stun?:import('./stun.ts').StunState;
