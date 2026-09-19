@@ -8,7 +8,7 @@ Précédente boucle environnementale : [conservation froide V75](development/col
 
 ## Priorité actuelle
 
-**Mode jour.** L’automatisation nocturne reste en pause. Une livraison cohérente, validation adaptée, commit/push explicatif, puis retour utilisateur.
+**Mode nuit, renouvelé par l’utilisateur le 20 septembre 2026 après V79.** Enchaîner les livraisons cohérentes sans relance : validation adaptée, documentation, commit/push explicatif puis lot suivant. Les sous-agents traitent les sous-étapes indépendantes avec intégration centrale ; mesures de performance et longs pilotes restent successifs. Arrêter cette autonomie à une instruction d’arrêt ou de retour au mode jour.
 
 **Cadence révisée après V76 :** une livraison vise une boucle jouable complète avec plusieurs sous-étapes internes, sans relance entre elles. V77/V78 ont établi les prérequis animaux ; V79 regroupe chasse, dépouille, boucherie et emploi alimentaire. Les lots suivants conservent ce regroupement ; une dépendance majeure peut justifier une tranche visible plus petite, avec motif explicite. Recherche, développement et validation suivent la [procédure regroupée](development/testing.md#procédure-courante-de-livraison). Aucun délai d'une heure, gain de vitesse garanti ou suppression de contrôle requis n'est déduit de ce regroupement. Priorités G0–G5 inchangées.
 
