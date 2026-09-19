@@ -12,7 +12,7 @@ import type { Command, World } from '../src/sim/types';
 
 function camp():World {
   const w=createWorld(42,32,32);w.tick=2000;w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.resources=[];w.jobs=[];w.structures=[];w.piles=[];w.stockpiles=[];w.pawns=w.pawns.slice(0,1);
-  const p=w.pawns[0]!;Object.assign(p,{x:8,z:10,hunger:100,rest:100});p.schedule.fill('anything');p.priorities={research:0, patient:0,bedrest:0,doctor:0,craft:2,mine:2,build:1,haul:0,grow:0,gather:0,cook:1};refreshStock(w);return w;
+  const p=w.pawns[0]!;Object.assign(p,{x:8,z:10,hunger:100,rest:100});p.schedule.fill('anything');p.priorities={hunt:0,research:0, patient:0,bedrest:0,doctor:0,craft:2,mine:2,build:1,haul:0,grow:0,gather:0,cook:1};refreshStock(w);return w;
 }
 function command(w:World,c:Command){expect(applyCommand(w,c)).toMatchObject({ok:true});expect(validateWorld(w)).toEqual([]);}
 function tick(w:World){stepWorld(w);expect(validateWorld(w),`tick ${w.tick}`).toEqual([]);}
@@ -79,5 +79,5 @@ test('priority decisions share budgets, disappear on lost access or timeout with
     const invalid=structuredClone(raw);invalid.pawns[0].priorityWork=priority;expect(()=>deserializeWorld(JSON.stringify(invalid))).toThrow(/priority work/);
   }
   ((raw.schemaVersion=22,withoutResearch(raw)),withoutPawnSkills(raw));for(const a of raw.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete raw.deconstructed;delete raw.packed;expect(()=>deserializeWorld(JSON.stringify(raw))).toThrow(/version 22/);delete raw.pawns[0].priorityWork;
-  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated).toEqual(withMigratedSkills({...raw,pawns:raw.pawns.map((p:any)=>({...p,priorities: {research:0, patient:0,bedrest:0,doctor:0,craft:2,...p.priorities,mine:2}})),schemaVersion:SCHEMA_VERSION,packed:[],deconstructed:{count:0,lostWood:0,fuelTicks:0}}));expect(migrated.pawns[0]!.priorityWork).toBeUndefined();
+  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated).toEqual(withMigratedSkills({...raw,pawns:raw.pawns.map((p:any)=>({...p,priorities: {hunt:0,research:0, patient:0,bedrest:0,doctor:0,craft:2,...p.priorities,mine:2}})),schemaVersion:SCHEMA_VERSION,packed:[],deconstructed:{count:0,lostWood:0,fuelTicks:0}}));expect(migrated.pawns[0]!.priorityWork).toBeUndefined();
 });

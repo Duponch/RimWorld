@@ -1,3 +1,4 @@
+import { corpseFresh } from './corpses.ts';
 import { stationRecipe, stationWork, taskRecipe, type ProductionIngredient } from './production-recipes.ts';
 import { candidateAccess } from './candidate-access.ts';
 import { billWanted, cookingPlaceFree, cookingSpot, ingredientPlaceFree } from './cooking-bills.ts';
@@ -26,7 +27,7 @@ export function planCookingOrder(world:World,pawn:Pawn,stationId:number,access?:
   if(!routeToCell(world,spot,reach))return no('Aucun accès à la place de cuisine.');
   const plan=planCooking(world,pawn,reach,budget,{stationId,forced});
   if(!plan)return no(station.kind!=='campfire'||station.fuel?.ticks?'Aucune recette réalisable : ingrédients autorisés dans le rayon, accès ou dépôt insuffisants.':'Aucun bois disponible et accessible pour rallumer le feu.');
-  return {label:plan.refuel?'Ravitailler avant de cuisiner':station.kind==='tailor-bench'?'Confectionner un vêtement':station.kind==='crafting-spot'?'Confectionner une tenue tribale':station.kind==='stonecutter'?'Tailler des blocs de pierre':'Cuisiner un repas simple',order:plan.refuel??{cooking:plan.task!},path:plan.path};
+  return {label:plan.refuel?'Ravitailler avant de cuisiner':station.kind==='butcher-spot'?'Dépecer une créature':station.kind==='tailor-bench'?'Confectionner un vêtement':station.kind==='crafting-spot'?'Confectionner une tenue tribale':station.kind==='stonecutter'?'Tailler des blocs de pierre':'Cuisiner un repas simple',order:plan.refuel??{cooking:plan.task!},path:plan.path};
 }
 
 /** Waiting recipes reserve real ingredients, the work spot and typed staging. */
@@ -42,6 +43,7 @@ export function queuedCookingReason(world:World,order:CookingOrder):string|undef
     const pile=view.piles.find(p=>p.id===i.pileId);
     const bound=pile?.unfinished?.billId===bill.id;
     const required=(sources.get(i.pileId)??0)+i.quantity;sources.set(i.pileId,required);
+    if(pile?.item==='hare-corpse'&&!corpseFresh(pile,world.tick))return 'Dépouille pourrie, impropre à la boucherie.';
     if(pile?.unfinished&&(pile.unfinished.authorId!==author?.id||pile.unfinished.billId!==undefined&&!bound))return 'Ouvrage réservé à un autre auteur ou une autre facture.';
     if(!(bound||bill.filters[pile?.unfinished?'cloth':i.item])||!pile||pile.item!==i.item||pile.owner.type!=='ground'||pile.quantity-reservedSource(view,pile.id)<required)return 'Ingrédient réservé disparu ou devenu insuffisant.';
     if(!bound&&(pile.owner.x-station.x)**2+(pile.owner.z-station.z)**2>bill.radius**2)return 'Ingrédient sorti du rayon de la facture.';

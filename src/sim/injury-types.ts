@@ -22,7 +22,7 @@ export interface MedicalRecord {
   /** Whole-body heat exposure, billionths of severity; absent means none. */
   heatstroke?:number;
   hypothermia?:number;
-  death?:{tick:number;cause:'blood-loss'|'vital-failure'|'trauma'|'heatstroke'|'hypothermia'|'downed'};
+  death?:{tick:number;cause:'execution'|'blood-loss'|'vital-failure'|'trauma'|'heatstroke'|'hypothermia'|'downed'};
 }
 export interface MedicalContext {
   /** Stable phase in [0,59], supplied by the owning actor. */

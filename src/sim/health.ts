@@ -38,7 +38,7 @@ export function reconcilePawnHealth(world:World,pawn:Pawn,body=pawnBody(pawn)):v
     pawn.need=null;delete pawn.medicalSleep;pawn.state='idle';pawn.planCooldown=0;pawn.needCooldown=0;
     announce(world,`${pawn.name} peut de nouveau se relever.`);
   }
-  if(body.capacities.manipulation===0&&(pawn.research||pawn.equipmentTask||pawn.jobId!==null||pawn.feed||pawn.tend||pawn.rescue||pawn.haul||pawn.cooking||pawn.orders.active!==null||pawn.orders.queue.length||pawn.priorityWork))interruptWork(world,pawn);
+  if(body.capacities.manipulation===0&&(pawn.hunting||pawn.research||pawn.equipmentTask||pawn.jobId!==null||pawn.feed||pawn.tend||pawn.rescue||pawn.haul||pawn.cooking||pawn.orders.active!==null||pawn.orders.queue.length||pawn.priorityWork))interruptWork(world,pawn);
   if(body.capacities.manipulation===0)delete pawn.shooting;
   dropIncapacitatedEquipment(world,pawn);
 }

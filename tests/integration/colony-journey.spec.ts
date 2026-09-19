@@ -1,3 +1,4 @@
+import { wildlifePopulationAccount } from '../scenarios/hunting-player';
 import { expect, test, type Page } from '@playwright/test';
 import { readFile, writeFile } from 'node:fs/promises';
 import { perform } from './player-actions';
@@ -129,9 +130,9 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
         expect(summary.apparel.filter(i=>i.owner.type==='apparel'),context).toHaveLength(5);
         expect(summary.medicines,context).toEqual({total:30,stored:30,policies:['industrial','industrial','industrial','industrial']});
         expect(summary.roofing,context).toEqual({constructed:28,planned:28,removal:0});expect(current.stock.food,context).toBeGreaterThan(0);expect(sleepers.size,context).toBe(4);expect(current.arrivals?.accepted,context).toBe(1);expect(current.pawns,context).toHaveLength(4);
-        expect(current.wildlife?.animals).toHaveLength(12);expect(current.wildlife!.eatenNutrition).toBeGreaterThan(0);
+        expect(wildlifePopulationAccount(current)).toBe(12);expect(current.wildlife!.eatenNutrition).toBeGreaterThan(0);
         expect(meals.size,context).toBeGreaterThanOrEqual(18);expect(foodAccount(current)+(current.wildlife?.eatenItems??0)+9*cooked.size+[...meals.values()].reduce((a,b)=>a+b,0),context).toBe(initialFood+[...harvests.values()].reduce((a,b)=>a+b,0));
-        expect(current.piles.filter(p=>p.kind==='food').every(p=>['berries','survival-meal','rice','simple-meal'].includes(p.item))).toBe(true);
+        expect(current.piles.filter(p=>p.kind==='food').every(p=>['berries','survival-meal','rice','simple-meal','hare-meat'].includes(p.item))).toBe(true);
         expect(cooked.size,context).toBeGreaterThanOrEqual(6);
         expect(current.pawns.some(p=>p.skills.construction.xp>1000000),context).toBe(true);
         expect(decisions.filter(d=>{const c=d.command as {type:string;policyId?:number};return c.type==='food-policy-assign'&&c.policyId===3;}).length,context).toBeGreaterThanOrEqual(3);
@@ -194,7 +195,7 @@ test('checkpoint journey: continue the ordinary player, food ledger and third-ni
       }
       expect(foodAccount(w)+consumed+9*cooked+(w.wildlife?.eatenItems??0)-(initial.wildlife?.eatenItems??0)).toBe(foodAccount(initial)+harvested);
       expect(w.pawns.every(p=>p.hunger>0&&p.rest>0&&p.state!=='dead'&&p.state!=='downed')).toBe(true);
-      expect(w.wildlife?.animals).toHaveLength(12);
+      expect(wildlifePopulationAccount(w)).toBe(12);
     };
     for(let target=initial.tick+1000;target<=Math.max(initial.tick+1000,18000+initial.tick%1000);target+=1000){
       const current=await world(page);for(const d of playerDecisions(current)){await perform(page,d,rotation);decisions.push({tick:current.tick,...d});}

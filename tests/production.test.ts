@@ -1,3 +1,4 @@
+import { cookingSpeed } from '../src/sim/cooking-statistics';
 import { withoutPawnSkills, withMigratedSkills } from './scenarios/legacy-skills';
 import { withoutV37LightWork } from './scenarios/legacy-light-work';
 import { withoutPostV10Fields } from './scenarios/legacy-save';
@@ -16,7 +17,7 @@ import { initialRecreation } from '../src/sim/recreation-rules';
 
 function camp():World {
   const w=createWorld(42,16,16);w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.resources=[];w.piles=[];
-  w.pawns.forEach((p,i)=>Object.assign(p,{x:2+i*2,z:2,hunger:100,rest:100,priorities: {research:0, patient:0,bedrest:0,doctor:0,craft:2,mine:2,gather:0,build:1,haul:1,grow:0, cook: 0 }}));
+  w.pawns.forEach((p,i)=>Object.assign(p,{x:2+i*2,z:2,hunger:100,rest:100,priorities: {hunt:0,research:0, patient:0,bedrest:0,doctor:0,craft:2,mine:2,gather:0,build:1,haul:1,grow:0, cook: 0 }}));
   addGroundMaterial(w,'wood',50,{x:2,z:4},'wood');addGroundMaterial(w,'food',40,{x:3,z:6},'survival-meal');refreshStock(w);
   return w;
 }
@@ -117,7 +118,7 @@ test('cuisine physique : mélange, interruption, sauvegarde du travail, deux rep
   Object.assign(visitor,{x:8,z:7,rest:0,restZeroTicks:101,collapsePending:true,motion:undefined,moveCooldown:0});
   expect(validateWorld(collapse)).toEqual([]);stepWorld(collapse);
   expect(visitor).toMatchObject({state:'sleeping',need:{kind:'sleep',bedId:null}});
-  expect(collapse.pawns[0]!.cooking!.progress-pawn.cooking!.progress).toBe(4000);expect(validateWorld(collapse)).toEqual([]);
+  expect(collapse.pawns[0]!.cooking!.progress-pawn.cooking!.progress).toBe(Math.round(4000*cookingSpeed(pawn)));expect(validateWorld(collapse)).toEqual([]);
   const collapseResume=deserializeWorld(serializeWorld(collapse));stepWorld(collapse,45);stepWorld(collapseResume,45);expect(collapseResume).toEqual(collapse);
   const stolen=structuredClone(w);stolen.pawns[1]!.cooking=structuredClone(pawn.cooking);stolen.pawns[1]!.priorities.cook=1;
   expect(()=>deserializeWorld(JSON.stringify(stolen))).toThrow(/duplicate|reservation|ownership/i);

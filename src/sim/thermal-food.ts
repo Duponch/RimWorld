@@ -6,7 +6,7 @@ import type { ThermalLayout } from './thermal-topology.ts';
 /** Checkpoint the old rate before adopting temperature at the actual new owner.
  * Warm piles keep their anchors: no age mutations or geometry rebuild per tick. */
 export function updateFoodTemperatures(world:World,layout?:ThermalLayout):void {
-  if(!world.piles.some(p=>p.rot))return;
+  if(!world.piles.some(p=>p.rot)&&!world.wildlife?.animals.some(a=>a.corpseRot))return;
   const view=new TemperatureView(world,layout),pawns=new Map(world.pawns.map(p=>[p.id,p])),jobs=new Map(world.jobs.map(j=>[j.id,j]));
   for(const pile of world.piles)if(pile.rot) {
     const o=pile.owner,cell=o.type==='ground'?o:o.type==='pawn'||o.type==='equipment'||o.type==='apparel'?pawns.get(o.pawnId):jobs.get(o.jobId);
@@ -14,5 +14,11 @@ export function updateFoodTemperatures(world:World,layout?:ThermalLayout):void {
     const rate=rotRateAtTemperature(view.at(world,cell));
     if(rate===(pile.rot.rate??1))continue;
     pile.rot={progress:rotAge(pile,world.tick),atTick:world.tick,...rate!==1?{rate}:{}};
+  }
+  // Retained bodies have the same thermal timeline as already transferable
+  // corpses, including commands changing a room between simulation ticks.
+  for(const a of world.wildlife?.animals??[])if(a.corpseRot){
+    const rot=a.corpseRot,rate=rotRateAtTemperature(view.at(world,a));
+    if(rate!==(rot.rate??1))a.corpseRot={progress:rot.progress+(world.tick-rot.atTick)*(rot.rate??1),atTick:world.tick,...rate!==1?{rate}:{}};
   }
 }

@@ -10,11 +10,11 @@ export interface ConstructionRecipe { ingredients:readonly ConstructionCost[]; w
 type ConstructionObject={kind:JobKind;material?:ConstructionMaterial};
 // Core base work before the stuff factor, in Core ticks. Absence of material
 // deliberately keeps the V1–V29 historical recipe on existing objects.
-const costs:Record<StructureKind,number>={cooler:90,'research-bench':75,'tailor-bench':75,'crafting-spot':0,'wood-generator':100,'standing-lamp':20,'passive-cooler':50,door:25,stonecutter:75,wall:5,bed:45,table:28,stool:25,campfire:20,horseshoes:10};
-const work:Record<StructureKind,number>={cooler:1600,'research-bench':2800,'tailor-bench':2000,'crafting-spot':0,'wood-generator':2500,'standing-lamp':300,'passive-cooler':200,door:850,stonecutter:2000,wall:135,bed:800,table:750,stool:450,campfire:200,horseshoes:100};
+const costs:Record<StructureKind,number>={'butcher-spot':0,cooler:90,'research-bench':75,'tailor-bench':75,'crafting-spot':0,'wood-generator':100,'standing-lamp':20,'passive-cooler':50,door:25,stonecutter:75,wall:5,bed:45,table:28,stool:25,campfire:20,horseshoes:10};
+const work:Record<StructureKind,number>={'butcher-spot':0,cooler:1600,'research-bench':2800,'tailor-bench':2000,'crafting-spot':0,'wood-generator':2500,'standing-lamp':300,'passive-cooler':200,door:850,stonecutter:2000,wall:135,bed:800,table:750,stool:450,campfire:200,horseshoes:100};
 const recipes=new Map<string,ConstructionRecipe>();
 for(const kind of Object.keys(JOB_DURATION) as JobKind[]) {
-  if(kind==='crafting-spot'){recipes.set('crafting-spot:legacy',Object.freeze({ingredients:[],work:0,coreWork:0}));continue;}
+  if(kind==='crafting-spot'||kind==='butcher-spot'){recipes.set(`${kind}:legacy`,Object.freeze({ingredients:[],work:0,coreWork:0}));continue;}
   if(kind==='cooler'||kind==='wood-generator'||kind==='standing-lamp') {
     const ingredients:readonly ConstructionCost[]=kind==='cooler'?[{item:'steel',quantity:90},{item:'component',quantity:3}]:kind==='wood-generator'?[{item:'steel',quantity:100},{item:'component',quantity:2}]:[{item:'steel',quantity:20}];
     recipes.set(`${kind}:steel`,Object.freeze({ingredients:Object.freeze(ingredients.map(c=>Object.freeze(c))),work:work[kind]/10,coreWork:work[kind]}));continue;

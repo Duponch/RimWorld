@@ -1,5 +1,7 @@
 # Santé animale et tirs V77
 
+**Extension V79 :** [chasse civile](hunting.md), [corps transportables](corpses.md), [boucherie/viande/cuir](butchery.md) complètent ce contrat. Les mentions de leur absence ci-dessous décrivent le périmètre historique V76–V78 ; élevage, autres espèces et corps humains restent absents.
+
 **Complément V78 :** [mêlée interespèces et riposte locale](animal-melee.md). Les anciennes limites de contact V77 sont levées dans ce périmètre ; filière alimentaire et corps transportables restent absents.
 
 [Recherche fraîche](../research/animal-combat-reference.md), [faune et besoins](wildlife.md), [santé commune](health.md), [preuves](../history/validation-animal-combat-v77.md).
@@ -8,7 +10,7 @@
 
 Le joueur sélectionne un colon mobilisé avec un revolver, ouvre **Faune**, puis **Tirer** sur un lièvre à portée. Le worker revalide toute la sélection, la ligne de tir et l'arme. Visée, projectile, précision selon taille/posture, couverture et récupération sont les mécanismes existants. Les colons regardent la cible animale. La liste montre mobilité, douleur, débit de sang, blessures localisées et parties perdues ; les animaux à terre/morts ont une pose couchée, la mort une teinte distincte.
 
-Un impact peut tuer immédiatement, laisser un animal incapable ou le faire fuir avec une blessure ; le sang et la guérison continuent ensuite. Les besoins s'arrêtent à la mort. La victime reste identifiée à sa position, sans devenir une pile générique ni donner de viande à distance. Elle protège encore sa cellule contre la finition d’un chantier et maintient une porte ouverte si elle tombe sur son passage. Le transport des dépouilles étant absent, ces obstacles locaux ne peuvent pas encore être dégagés : limite concrète de cette tranche, à lever dans la prochaine filière.
+Un impact peut tuer immédiatement, laisser un animal incapable ou le faire fuir avec une blessure ; le sang et la guérison continuent ensuite. Les besoins s'arrêtent à la mort. La victime reste identifiée à sa position, sans devenir une pile générique ni donner de viande à distance. Elle protège encore sa cellule contre la finition d’un chantier et maintient une porte ouverte si elle tombe sur son passage. V79 permet de convertir puis transporter cette dépouille après sa chute ; sur un sol encombré, le chasseur peut la récupérer directement, sinon elle attend que sa cellule soit dégagée. Voir le [contrat des corps](corpses.md).
 
 **Découpage décidé :** anatomie, capture de cibles et impacts étaient exclusivement humains. Leur généralisation constitue une dépendance majeure à la chaîne complète. V77 est une tranche visible de tir/survie animale, pas la livraison de la chasse alimentaire. Riposte de mêlée ajoutée V78 ; prochaine boucle canonique : chasse automatique, dépouille physique, boucherie, viande puis repas. Pas d'ajout d'espèces avant cette boucle.
 
@@ -32,4 +34,4 @@ Un mesh résident pour les lièvres, même géométrie et graphe TSL ; état/tei
 
 ## Limites explicitement ouvertes
 
-Chasse automatique et métier Chasse, achèvement au contact, manhunter d'autres espèces, prédation, dépouille transportable, décomposition et boucherie restent absents. Pas de viande/cuir, soins vétérinaires, maladies, faim létale, climat corporel animal, apprivoisement, élevage, départ de carte ou renouvellement écologique. Les parties amputées restent présentes sur le modèle low poly, comme la limite actuelle du modèle humain. Les calendriers/coefficients de fuite sont adaptés, pas certifiés identiques à Core.
+V79 ajoute Chasse, achèvement au contact, dépouille transportable, décomposition, boucherie et viande/cuir. Restent absents : manhunter d'autres espèces, prédation, soins vétérinaires, maladies, faim létale, climat corporel animal, apprivoisement, élevage, départ de carte et renouvellement écologique. Les parties amputées restent présentes sur le modèle low poly, comme la limite actuelle du modèle humain. Les calendriers/coefficients de fuite sont adaptés, pas certifiés identiques à Core.

@@ -1,3 +1,4 @@
+import { withoutHunting,withMigratedHunting } from './scenarios/legacy-skills';
 import { expect,test } from 'vitest';
 import { applyCommand,stepWorld,validateWorld,serializeWorld,deserializeWorld } from '../src/sim/index';
 import { animalCombatCamp } from './scenarios/animal-combat';
@@ -69,8 +70,8 @@ test('stun and stagger keep a captured diagonal continuous and block attacks whi
 });
 
 test('V77 validation precedes neutral migration; corrupt ownership, timers and tools are refused',()=>{
-  const w=camp(),a=w.wildlife!.animals[0]!,p=w.pawns[0]!,old=structuredClone(w) as any;old.schemaVersion=77;
-  expect(deserializeWorld(JSON.stringify(old))).toEqual(w);
+  const w=camp(),a=w.wildlife!.animals[0]!,p=w.pawns[0]!,old=structuredClone(w) as any;old.schemaVersion=77;withoutHunting(old);
+  expect(deserializeWorld(JSON.stringify(old))).toEqual(withMigratedHunting(w));
   old.wildlife.animals[0].threat={targetId:p.id,harmedAtCore:w.tick*10};expect(()=>deserializeWorld(JSON.stringify(old))).toThrow();
   applyCommand(w,{type:'melee',pawnIds:[p.id],targetId:a.id});
   const legacyOrder=structuredClone(w) as any;legacyOrder.schemaVersion=77;expect(()=>deserializeWorld(JSON.stringify(legacyOrder))).toThrow();

@@ -55,6 +55,8 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
       await revealCells(page,[c.target]);const point=await page.evaluate(t=>window.__lisiere.projectCell(t.x,t.z),c.target),bounds=(await page.locator('#viewport canvas').boundingBox())!;
       if(c.queue)await page.keyboard.down('Shift');await page.mouse.click(bounds.x+point.x,bounds.y+point.y,{button:'right'});if(c.queue)await page.keyboard.up('Shift');
     }
+  } else if(c.type==='hunt') {
+    await panel(page,'wildlife');await page.locator(`[data-animal-hunt="${c.animalId}"]`).setChecked(c.enabled);
   } else if((c.type==='shoot'||c.type==='melee'&&!c.structure)&&(await world(page)).wildlife?.animals.some(a=>a.id===c.targetId)) {
     await page.keyboard.press('Escape');
     for(const [i,id] of c.pawnIds.entries())await page.locator(`[data-pawn="${id}"]`).click({modifiers:i?['Shift']:[]});
@@ -110,7 +112,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
   } else if(c.type==='designate' && c.kind !== 'sow' && c.kind !== 'install') {
     if(c.kind==='repair')throw Error('Repair uses the home area');await tool(page,c.kind);
     if(['door','wall','bed','table','stool','horseshoes','stonecutter','research-bench','tailor-bench'].includes(c.kind))await page.locator('#construction-material').selectOption(c.material??'wood');
-    if(c.kind==='cooler'||c.kind==='bed'||c.kind==='table'||c.kind==='campfire'||c.kind==='crafting-spot'||c.kind==='stonecutter'||c.kind==='research-bench'||c.kind==='tailor-bench') {
+    if(c.kind==='cooler'||c.kind==='bed'||c.kind==='table'||c.kind==='campfire'||(c.kind==='butcher-spot'||c.kind==='crafting-spot')||c.kind==='stonecutter'||c.kind==='research-bench'||c.kind==='tailor-bench') {
       while(rotation.value!==(c.orientation??0)){await page.keyboard.press('e');rotation.value=(rotation.value+1)%4;}
     }
     await revealCells(page,[c]);
@@ -128,6 +130,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
   try { await page.waitForFunction(c=>{
     const w=window.__lisiere.world;
     if(c.type==='growing-policy'){const z=w.growingZones.find(z=>z.id===c.zoneId);return !!z&&(!c.plant||z.plant===c.plant)&&z.allowSow===c.allowSow&&z.allowCut===c.allowCut;}
+    if(c.type==='hunt')return !!w.hunting?.targets.includes(c.animalId)===c.enabled;
     if(c.type==='melee')return c.pawnIds.every(id=>w.pawns.find(p=>p.id===id)?.melee?.order?.targetId===c.targetId);
     if(c.type==='shoot')return c.pawnIds.every(id=>w.pawns.find(p=>p.id===id)?.shooting?.order?.targetId===c.targetId);
     if(c.type==='draft')return c.pawnIds.every(id=>!!w.pawns.find(p=>p.id===id)?.draft===c.enabled);
@@ -158,7 +161,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
       return w.growingZones.length>0;
     }
     if(c.type==='stockpile')return w.stockpiles.some(s=>s.x===c.x&&s.z===c.z);
-    if(c.type==='designate'&&c.kind==='crafting-spot')return w.structures.some(s=>s.kind===c.kind&&s.x===c.x&&s.z===c.z);
+    if(c.type==='designate'&&(c.kind==='butcher-spot'||c.kind==='crafting-spot'))return w.structures.some(s=>s.kind===c.kind&&s.x===c.x&&s.z===c.z);
     return c.type==='designate' && w.jobs.some(j=>j.x===c.x&&j.z===c.z&&j.kind===c.kind&&(!c.material||j.material===c.material));
   },c,{polling:100,timeout:5000});
   } catch(error) {
@@ -169,6 +172,6 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
 }
 
 async function storageSettings(page:Page,c:import('../../src/sim/types').StorageSettings):Promise<void>{
-    await page.locator('#stockpile-textile').setChecked(c.filters!.textile??false);await page.locator('#stockpile-unfinished').setChecked(c.filters!.unfinished??false);await page.locator('#stockpile-apparel').setChecked(c.filters!.apparel??false);await page.locator('#stockpile-weapon').setChecked(c.filters!.weapon??false);await page.locator('#stockpile-medicine').setChecked(c.filters!.medicine??false);await page.locator('#stockpile-component').setChecked(c.filters!.component??false);await page.locator('#stockpile-blocks').setChecked(c.filters!.blocks??false);await page.locator('#stockpile-steel').setChecked(c.filters!.steel??false);await page.locator('#stockpile-chunk').setChecked(c.filters!.chunk??false);await page.locator('#stockpile-wood').setChecked(c.filters!.wood);await page.locator('#stockpile-food').setChecked(c.filters!.food);await page.locator('#stockpile-furniture').setChecked(c.filters!.furniture??false);
+    await page.locator('#stockpile-corpse').setChecked(c.filters!.corpse??false);await page.locator('#stockpile-textile').setChecked(c.filters!.textile??false);await page.locator('#stockpile-unfinished').setChecked(c.filters!.unfinished??false);await page.locator('#stockpile-apparel').setChecked(c.filters!.apparel??false);await page.locator('#stockpile-weapon').setChecked(c.filters!.weapon??false);await page.locator('#stockpile-medicine').setChecked(c.filters!.medicine??false);await page.locator('#stockpile-component').setChecked(c.filters!.component??false);await page.locator('#stockpile-blocks').setChecked(c.filters!.blocks??false);await page.locator('#stockpile-steel').setChecked(c.filters!.steel??false);await page.locator('#stockpile-chunk').setChecked(c.filters!.chunk??false);await page.locator('#stockpile-wood').setChecked(c.filters!.wood);await page.locator('#stockpile-food').setChecked(c.filters!.food);await page.locator('#stockpile-furniture').setChecked(c.filters!.furniture??false);
     await page.locator('#stockpile-priority').selectOption(String(c.priority??2));await page.locator('#stockpile-capacity').fill(String(c.capacity??75));
 }

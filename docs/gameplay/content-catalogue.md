@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+**V79 :** trois ItemId obtenables : `hare-corpse` (dépouille entière, pile1, anatomie et âge), `hare-meat` (viande crue, pile75, nutrition0,05/unité, deux jours thermiques), `light-leather` (cuir léger, pile75, stockage textile, aucune recette de cuir livrée). Bâtiment `butcher-spot` (1×1 gratuit/instantané), recette `butcher-creature` (450 Core avant facteurs, Cuisine, rendement poste70%). Repas simple accepte maintenant cette viande comme ingrédient filtrable. Rendements variables, pas attribution fixe de31/16. [Contrats](../development/hunting.md). Les notes de versions précédentes ci-dessous restent historiques.
+
 **V78 :** même catalogue, aucun nouvel ItemId ; dents/tête du lièvre servent la mêlée réelle et la riposte. Aucune viande/cuir ni recette de boucherie. [Contrat](../development/animal-melee.md).
 
 **V77 :** même espèce adulte `hare`, désormais 28 parties médicales et ciblage balistique de taille 0,2. Le corps mort garde son identité ; aucun nouvel ItemId, viande, cuir ou dépouille transportable. [Contrat](../development/animal-combat.md).

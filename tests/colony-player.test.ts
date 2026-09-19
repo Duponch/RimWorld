@@ -1,13 +1,15 @@
 import { enableWildlife } from '../src/sim/wildlife';
+import { wildlifePopulationAccount } from './scenarios/hunting-player';
 import { writeFileSync } from 'node:fs';
 import { enableArrivals } from '../src/sim/arrivals';
-import { expect, test } from 'vitest';
+import { expect, test, onTestFailed } from 'vitest';
 import { createWorld, applyCommand, stepWorld, validateWorld, serializeWorld, deserializeWorld } from '../src/sim/index';
 import { playerArrivalDecisions,playerArrivalComplete,playerDecisions, playerFocusDecisions, colonySummary, woodAccount, foodAccount } from './scenarios/colony-player';
 
 test.each([42,93,2048])('joueur ordinaire : cinq à huit jours, graine %i, camp construit, stocks entretenus et reprise exacte', (seed) => {
   const version=process.env.VALIDATION_VERSION??'v74';
     let world = createWorld(seed, 250, 250);
+    onTestFailed(()=>writeFileSync(`tmp/colony-failed-${version}-${seed}.json`,JSON.stringify(world)));
     if(seed===42)enableArrivals(world);
     if(seed===93)enableWildlife(world);
     const population=seed===42?4:3;
@@ -45,9 +47,9 @@ test.each([42,93,2048])('joueur ordinaire : cinq à huit jours, graine %i, camp 
         expect(foodAccount(world)+consumed+9*cooked+(world.wildlife?.eatenItems??0),context).toBe(initialFood+produced);
         expect(world.pawns.every(p=>p.hunger>0 && p.rest>0),context).toBe(true);
         expect(world.pawns.every(p=>p.state!=='dead'&&p.state!=='downed'&&!p.health?.injuries.length&&!p.health?.missing.length),context).toBe(true);
-        // An ordinary player does not attack its own settlers to manufacture a
-        // combat milestone. The companion UI scenario explicitly tests that order.
-        expect(colonySummary(world).combat,context).toEqual({shooters:0,flights:0,impacts:0});
+        // Hunting may fire, but the ordinary player never targets its settlers.
+        expect(world.pawns.every(p=>!p.shooting?.order||p.shooting.order.hunt===true),context).toBe(true);
+        expect((world.projectiles??[]).every(p=>p.flight.intendedKey?.startsWith('animal:')&&p.arrival?.effect!=='pawn'),context).toBe(true);
       }
       if (world.tick % 6000 === 0) {
         if(process.env.COLONY_PROGRESS==='1')console.info(`Colony ${seed}: day ${world.tick/6000}, ${world.jobs.length} pending jobs`);
@@ -103,6 +105,13 @@ test.each([42,93,2048])('joueur ordinaire : cinq à huit jours, graine %i, camp 
     expect(world.restRules).toBe('adult');expect(world.pawns.map(p=>p.schedule.filter(s=>s==='sleep').length)).toEqual(Array(population).fill(8));
     expect(world.pawns).toHaveLength(population);expect(meals.size).toBe(population);expect(sleep.size).toBe(population);
     if(seed===42)expect(world.arrivals?.accepted).toBe(1);
+    if(seed===93){
+      const hunted=colonySummary(world).hunting;
+      expect(hunted,context).toMatchObject({spots:1,completed:1,butchered:1,designated:0,corpses:0});
+      expect(hunted.meatProduced,context).toBeGreaterThan(0);expect(hunted.leatherProduced,context).toBeGreaterThan(0);
+      expect(world.piles.filter(p=>p.item==='light-leather').reduce((n,p)=>n+p.quantity,0),context).toBe(hunted.leatherProduced);
+      expect(wildlifePopulationAccount(world),context).toBe(12);
+    }
     expect(world.pawns[2]!.schedule[5]).toBe('anything');expect(world.pawns[2]!.schedule[21]).toBe('sleep');
 // This is a correctness journey with deep checkpoints, not a tick-time budget.
 // Keep a wall-clock ceiling while separate profiling measures simulation costs.

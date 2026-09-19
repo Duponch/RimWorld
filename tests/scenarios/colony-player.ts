@@ -1,3 +1,4 @@
+import { huntingDecisions } from './hunting-player.ts';
 import { textileDecisions } from './textile-player.ts';
 import { opinionOf } from '../../src/sim/social-state.ts';
 import { breakThresholds,globalLearningFactor } from '../../src/sim/traits.ts';
@@ -34,6 +35,7 @@ function environmentSummary(world:World) {
   const env=cache.read(world);
   const temperatures=new TemperatureView(world),plants=world.resources.filter(r=>r.kind==='rice'||r.kind==='berries');
   return {
+    hunting:{completed:world.hunting?.completed??0,designated:world.hunting?.targets.length??0,butchered:world.butchery?.completed??0,meatProduced:world.butchery?.meat??0,leatherProduced:world.butchery?.leather??0,corpses:world.piles.filter(p=>p.kind==='corpse').length,spots:world.structures.filter(s=>s.kind==='butcher-spot').length},
     wildlife:world.wildlife?{population:world.wildlife.animals.length,injured:world.wildlife.animals.filter(a=>!!a.health).length,downed:world.wildlife.animals.filter(a=>a.state==='downed').length,dead:world.wildlife.animals.filter(a=>a.state==='dead').length,eatenPlants:world.wildlife.eatenPlants,eatenNutrition:world.wildlife.eatenNutrition,eatenItems:world.wildlife.eatenItems,feeding:world.wildlife.animals.filter(a=>a.state==='eating').length,sleeping:world.wildlife.animals.filter(a=>a.state==='sleeping').length}:undefined,
     plantClimate:{slowed:plants.filter(p=>plantTemperatureFactor(temperatures.at(world,p))<1).length,thermalAnchors:plants.filter(p=>p.growthThermalFactor!==undefined).length},
     thermal:{outdoors:outdoorTemperature(world.tick),retainedCells:(world.thermal?.regions??[]).reduce((n,r)=>n+r.cells.length,0),temperatures:(world.thermal?.regions??[]).map(r=>r.temperature)},
@@ -74,7 +76,7 @@ export function playerDecisions(world: World): Decision[] {
   const colonists=world.pawns.filter(p=>isColonist(p)&&p.state!=='dead');
   if(world.raids?.active||world.raids?.last&&colonists.some(p=>p.draft))return raidDefenseDecisions(world);
   const cx = Math.floor(world.width / 2), cz = Math.floor(world.height / 2);
-  const out: Decision[] = [...coolingDecisions(world),...powerDecisions(world),...textileDecisions(world)];
+  const out: Decision[] = [...coolingDecisions(world),...powerDecisions(world),...textileDecisions(world),...huntingDecisions(world)];
   for(const s of world.structures)if((s.kind==='wall'||s.kind==='door')&&!world.home?.includes(s.z*world.width+s.x))out.push({reason:'Inclure les ouvrages du camp dans le foyer entretenu.',command:{type:'area',action:'home',from:{x:s.x,z:s.z},to:{x:s.x,z:s.z}}});
   if(world.arrivals?.pending)out.push({reason:'Accueillir une quatrième personne ; différer la croissance suivante pour stabiliser le camp.',command:{type:'answer-arrival',offerId:world.arrivals.pending.id,accept:colonists.length<4}});
   const gun=world.piles.find(p=>p.kind==='weapon'&&p.owner.type==='ground'),armed=world.piles.some(p=>p.owner.type==='equipment');
@@ -167,16 +169,16 @@ export function playerDecisions(world: World): Decision[] {
       if(canDesignate(world,command).ok){out.push({reason:'Préparer un atelier de taille avec le bois du camp et l’acier extrait.',command});break;}
     }
   }
-  const outstandingWood = [...world.jobs, ...out.flatMap(d => d.command.type === 'designate' ? [{...d.command,material:d.command.kind in STRUCTURE_DEFINITIONS?d.command.material??'wood' as const:undefined}] : [])].reduce((n,j) => n + requiredMaterial(j,'wood'), 0);
+  const outstandingWood = [...world.jobs, ...out.flatMap(d => d.command.type === 'designate' ? [{...d.command,material:d.command.kind==='butcher-spot'||d.command.kind==='crafting-spot'?undefined:d.command.kind in STRUCTURE_DEFINITIONS?d.command.material??'wood' as const:undefined}] : [])].reduce((n,j) => n + requiredMaterial(j,'wood'), 0);
   // New plans can overlap trees: their builder will clear the footprint. Do not
   // queue a second gathering order there in the same batch of player commands.
   const newlyPlanned=new Set(out.flatMap(d=>d.command.type==='designate'?footprintCells(d.command).map(c=>c.z*world.width+c.x):[]));
   const nearby = [...world.resources].filter(r => Math.abs(r.x-cx) + Math.abs(r.z-cz) <= 28).sort((a,b) => Math.abs(a.x-cx)+Math.abs(a.z-cz)-(Math.abs(b.x-cx)+Math.abs(b.z-cz)) || a.id-b.id);
   const prepared=world.piles.filter(p=>p.item==='simple-meal').reduce((n,p)=>n+p.quantity,0);
-  const ingredients=world.piles.filter(p=>p.item==='rice'||p.item==='berries').reduce((n,p)=>n+p.quantity,0);
+  const ingredients=world.piles.filter(p=>p.item==='rice'||p.item==='berries'||p.item==='hare-meat').reduce((n,p)=>n+p.quantity,0);
   // Preserve travel rations once cooking provides a buffer; lift the restriction
   // if that buffer runs out. This is a player decision, never a hunger override.
-  const nutritionWithoutRations=world.piles.reduce((n,p)=>n+(p.item==='simple-meal' ? p.quantity*.9 : p.item==='berries'||p.item==='rice' ? p.quantity*.05 : 0),0);
+  const nutritionWithoutRations=world.piles.reduce((n,p)=>n+(p.item==='simple-meal' ? p.quantity*.9 : p.item==='berries'||p.item==='rice'||p.item==='hare-meat' ? p.quantity*.05 : 0),0);
   const reserveRations=prepared>=colonists.length*2;
   for(const pawn of colonists) {
     const policyId=reserveRations?3:nutritionWithoutRations<colonists.length*.8?1:pawn.foodPolicyId;
@@ -232,8 +234,10 @@ export function woodAccount(world: World): number {
 }
 export function foodAccount(world: World): number {
   // Produced units remain accounted for even after spoilage; this is a ledger,
-  // not the edible stock used by the player's decisions.
-  return world.piles.filter(p=>p.kind==='food').reduce((n,p)=>n+p.quantity,0) + spoiledUnits(world);
+  // not the edible stock used by the player's decisions. Subtract the separate
+  // animal-to-food producer so existing balances compare initial food + harvest;
+  // this does not remove losses, consumption or the 10-to-1 recipe transform.
+  return world.piles.filter(p=>p.kind==='food').reduce((n,p)=>n+p.quantity,0) + spoiledUnits(world) - (world.butchery?.meat??0);
 }
 
 /** A first look around the landing site, then return before building the camp. */

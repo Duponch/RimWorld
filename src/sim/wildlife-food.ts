@@ -2,11 +2,14 @@ import type { Cell,Resource,World } from './types.ts';
 import type { WildAnimal } from './wildlife-state.ts';
 import { HARE } from './wildlife-state.ts';
 import { isPlant,plantGrowth } from './plants.ts';
-import { ITEM_DEFINITIONS } from './items.ts';
+import { ITEM_DEFINITIONS,type ItemId } from './items.ts';
 import { reservedSource } from './materials.ts';
 
 export interface AnimalFood extends Cell { id:number;kind:'plant'|'pile';quantity:number }
 const plantNutrition={berries:.35,rice:.18,cotton:.2} as const;
+// Herbivory is an explicit content profile. New nutritious items do not silently
+// become animal food; prepared meals remain admissible under the existing rule.
+const hareFoods:ReadonlySet<ItemId>=new Set(['berries','rice','simple-meal','survival-meal','legacy-portion']);
 function unclaimedPlant(world:World,r:Resource,except:number):boolean {
   return !world.wildlife?.animals.some(a=>a.id!==except&&a.meal?.kind==='plant'&&a.meal.id===r.id)
     &&!world.jobs.some(j=>j.reservedBy!==null&&j.x===r.x&&j.z===r.z&&['harvest','cut','sow'].includes(j.kind));
@@ -14,7 +17,7 @@ function unclaimedPlant(world:World,r:Resource,except:number):boolean {
 export function animalFoods(world:World,a:WildAnimal):AnimalFood[] {
   const result:AnimalFood[]=[];
   for(const r of world.resources)if(isPlant(r)&&plantGrowth(world,r)>=.1&&unclaimedPlant(world,r,a.id))result.push({id:r.id,kind:'plant',x:r.x,z:r.z,quantity:1});
-  for(const p of world.piles)if(p.kind==='food'&&p.owner.type==='ground') {
+  for(const p of world.piles)if(p.kind==='food'&&hareFoods.has(p.item)&&p.owner.type==='ground') {
     const available=p.quantity-reservedSource(world,p.id,a.id),nutrition=ITEM_DEFINITIONS[p.item].nutrition/100;
     if(available>0&&nutrition>0)result.push({id:p.id,kind:'pile',x:p.owner.x,z:p.owner.z,quantity:Math.min(available,Math.max(1,Math.ceil((HARE.nutrition-a.food)/nutrition)))});
   }
@@ -27,7 +30,7 @@ export function animalMealTarget(world:World,a:WildAnimal):Cell|undefined {
     return r&&isPlant(r)&&plantGrowth(world,r)>=.1&&unclaimedPlant(world,r,a.id)?r:undefined;
   }
   const p=world.piles.find(p=>p.id===meal.id);
-  return p?.kind==='food'&&p.owner.type==='ground'&&p.quantity-reservedSource(world,p.id,a.id)>=meal.quantity?p.owner:undefined;
+  return p?.kind==='food'&&hareFoods.has(p.item)&&p.owner.type==='ground'&&p.quantity-reservedSource(world,p.id,a.id)>=meal.quantity?p.owner:undefined;
 }
 /** Called only after physical contact and the complete ingestion interval. */
 export function finishAnimalMeal(world:World,a:WildAnimal):void {

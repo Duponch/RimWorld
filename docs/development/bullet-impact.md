@@ -12,7 +12,7 @@ Le résultat contient la partie choisie, le marqueur de préservation, les couch
 
 `bullet-damage.ts` est l'adaptateur World : vérifier l'entrée et l'appartenance, mettre la santé à l'heure si nécessaire, résoudre sur copie avec PRNG local, engager dossier/usure/PRNG ensemble, puis réconcilier état, tâches, arête engagée, cargaison et arme. Aucun calcul par image. Un refus de capacité du résolveur ne modifie ni le dossier actuel ni le PRNG World ; l'évolution médicale précédant l'impact reste une étape temporelle distincte.
 
-Profil borné : protection naturelle nulle, chemise/gilet via le [résolveur V63](armor.md), aucun implant, facteur entrant 1 et réglage Core ordinaire de mort instantanée 100 %. Armure après sélection exacte et avant propagation, jamais reroulée sur les couches du même impact. Pas de changement de worker lors de la conversion en contondant. Ralentissement V57, réactions V58–V62, vols/tirs V55–V56 sont livrés ; dépouilles comme objets, dégâts aux objets et infections restent absents.
+Profil borné : protection naturelle nulle, chemise/gilet via le [résolveur V63](armor.md), aucun implant, facteur entrant 1 et réglage Core ordinaire de mort instantanée 100 %. Armure après sélection exacte et avant propagation, jamais reroulée sur les couches du même impact. Pas de changement de worker lors de la conversion en contondant. Ralentissement V57, réactions V58–V62, vols/tirs V55–V56 sont livrés ; dépouilles humaines comme objets et infections restent absentes. V67 traite les dégâts aux murs/portes et V79 ajoute les dépouilles animales ; les autres objets destructibles restent ouverts.
 
 ## Persistance et soins
 

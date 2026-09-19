@@ -40,7 +40,7 @@ const sameOwner = (a: MaterialOwner, b: MaterialOwner): boolean => a.type === b.
       : a.type === 'job' && b.type === 'job' && a.jobId === b.jobId);
 
 export function materialCanFit(world: World, kind: MaterialKind, quantity: number, owner: MaterialOwner, item: ItemId = legacyItem(kind)): boolean {
-  if((kind==='weapon'||kind==='apparel')&&owner.type==='job')return false;
+  if((kind==='corpse'||kind==='weapon'||kind==='apparel')&&owner.type==='job')return false;
   if(owner.type==='apparel'&&(kind!=='apparel'||quantity!==1||!isApparelItem(item)||world.piles.some(p=>p.owner.type==='apparel'&&p.owner.pawnId===owner.pawnId&&!apparelCompatible(APPAREL[p.item as keyof typeof APPAREL].coverage,APPAREL[item].coverage))))return false;
   if(owner.type==='equipment'&&(kind!=='weapon'||quantity!==1||world.piles.some(p=>p.owner.type==='equipment'&&p.owner.pawnId===owner.pawnId)))return false;
   if (owner.type === 'ground' && quantity > groundCapacity(world, owner, item)) return false;
@@ -52,6 +52,7 @@ export function materialCanFit(world: World, kind: MaterialKind, quantity: numbe
 }
 
 export function addMaterial(world: World, kind: MaterialKind, quantity: number, owner: MaterialOwner, item: ItemId = legacyItem(kind)): void {
+  if(kind==='corpse')throw new Error('A corpse requires an existing dead animal identity.');
   if (!Number.isSafeInteger(quantity) || quantity < 0 || quantity > MAX_STACK * 32768) throw new Error('Material quantity exceeds supported range.');
   if (!Object.hasOwn(ITEM_DEFINITIONS, item) || ITEM_DEFINITIONS[item].kind !== kind) throw new Error('Unknown or incompatible item.');
   const limit = ITEM_DEFINITIONS[item].stackLimit;
@@ -85,6 +86,7 @@ export function addGroundMaterial(world: World, kind: MaterialKind, quantity: nu
 }
 /** Move the existing stack, merging only when possible. No allocation or identity budget needed. */
 export function transferPile(world:World,pile:MaterialPile,owner:MaterialOwner):boolean {
+  if(pile.kind==='corpse'&&owner.type!=='ground'&&owner.type!=='pawn')return false;
   const carrier=pile.owner.type==='pawn'?pile.owner.pawnId:undefined;
   if(owner.type==='ground'&&groundCapacity(world,owner,pile.item,carrier)<pile.quantity)return false;
   const target=world.piles.find(p=>p!==pile&&p.item===pile.item&&sameOwner(p.owner,owner)&&p.quantity+pile.quantity<=ITEM_DEFINITIONS[pile.item].stackLimit);
@@ -96,6 +98,7 @@ export function reservedSource(world: World, pileId: number, exceptPawn?: number
   for(const a of world.wildlife?.animals??[])if(a.id!==exceptPawn&&a.meal?.kind==='pile'&&a.meal.id===pileId)quantity+=a.meal.quantity;
   for (const pawn of world.pawns) {
     if (pawn.id !== exceptPawn) {
+      if(pawn.hunting?.animalId===pileId)quantity++;
       if((pawn.equipmentTask?.action==='equip'||pawn.equipmentTask?.action==='wear')&&pawn.equipmentTask.itemId===pileId)quantity++;
       for(const i of pawn.cooking?.ingredients??[])if(i.pileId===pileId&&i.stage!=='held')quantity+=i.quantity;
       if(pawn.tend?.phase==='pickup'&&pawn.tend.medicine?.sourcePileId===pileId)quantity+=pawn.tend.medicine.quantity;

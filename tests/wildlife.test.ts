@@ -1,3 +1,4 @@
+import { withoutHunting } from './scenarios/legacy-skills';
 import { expect,test } from 'vitest';
 import { createWorld,applyCommand,serializeWorld,deserializeWorld,validateWorld,stepWorld } from '../src/sim/index';
 import { enableWildlife,advanceWildlife,reconcileWildlife } from '../src/sim/wildlife';
@@ -67,7 +68,7 @@ test('shared food reservations, source removal and sleep have physical, persiste
 });
 
 test('strict V75 migration, rejected corrupted identities/tasks/edges and ordinary camp activation',()=>{
-  const w=createWorld(93,64,64),old=structuredClone(w) as unknown as {schemaVersion:number};old.schemaVersion=75;
+  const w=createWorld(93,64,64),old=structuredClone(w) as unknown as {schemaVersion:number};old.schemaVersion=75;withoutHunting(old);
   const migrated=deserializeWorld(JSON.stringify(old));expect(migrated.wildlife).toBeUndefined();expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);
   expect(applyCommand(migrated,{type:'enable-wildlife'}).ok).toBe(true);const count=migrated.wildlife!.animals.length;expect(count).toBeGreaterThan(0);const before=serializeWorld(migrated);applyCommand(migrated,{type:'enable-wildlife'});expect(serializeWorld(migrated)).toBe(before);
   const legacy=structuredClone(migrated) as unknown as {schemaVersion:number};legacy.schemaVersion=75;expect(()=>deserializeWorld(JSON.stringify(legacy))).toThrow('Invalid version 75');

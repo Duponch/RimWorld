@@ -15,16 +15,16 @@ export function validBillSettings(value:unknown,recipe:ProductionRecipe='simple-
   if(!value||typeof value!=='object')return false;
   const v=value as BillSettings;
   return ['times','until','forever'].includes(v.mode)&&Number.isSafeInteger(v.target)&&v.target>=0&&v.target<=9999
-    &&typeof v.suspended==='boolean'&&!!v.filters&&PRODUCTION_RECIPES[recipe].inputs.every(i=>typeof v.filters[i]==='boolean')
+    &&typeof v.suspended==='boolean'&&!!v.filters&&PRODUCTION_RECIPES[recipe].inputs.every(i=>typeof v.filters[i]==='boolean'||i==='hare-meat'&&v.filters[i]===undefined)
     &&Number.isFinite(v.radius)&&v.radius>=0&&v.radius<=999&&['stockpile','drop'].includes(v.destination);
 }
 /** Reference resource counter includes stored items and current task cargo.
  * Loose meals outside storage do not satisfy a target-count bill. */
 export function countedMeals(world:World):number {return countedProducts(world);}
 export function countedProducts(world:World,bill?:CookingBill):number {
-  const products=new Set(bill?.recipe==='shirt'?['cloth-shirt']:bill?.recipe==='tribalwear'?['cloth-tribalwear']:bill?.recipe==='stone-blocks'?PRODUCTION_RECIPES['stone-blocks'].inputs.map(i=>blockFor(i as StoneIngredient)):['simple-meal']);
+  const products=new Set(bill?.recipe==='butcher-creature'?['hare-meat']:bill?.recipe==='shirt'?['cloth-shirt']:bill?.recipe==='tribalwear'?['cloth-tribalwear']:bill?.recipe==='stone-blocks'?PRODUCTION_RECIPES['stone-blocks'].inputs.map(i=>blockFor(i as StoneIngredient)):['simple-meal']);
   const stored=new Set(world.stockpiles.map(z=>z.z*world.width+z.x));
-  return world.piles.reduce((n,p)=>n+(products.has(p.item)&&(p.owner.type==='pawn'||p.owner.type==='ground'&&stored.has(p.owner.z*world.width+p.owner.x))?p.quantity:0),0);
+  return world.piles.reduce((n,p)=>n+(products.has(p.item)&&(p.owner.type==='pawn'&&bill?.recipe!=='butcher-creature'||p.owner.type==='ground'&&stored.has(p.owner.z*world.width+p.owner.x))?p.quantity:0),0);
 }
 export function billWanted(world:World,bill:CookingBill):boolean {
   return !bill.suspended&&(bill.mode==='forever'||bill.mode==='times'&&bill.target>0||bill.mode==='until'&&countedProducts(world,bill)<bill.target);

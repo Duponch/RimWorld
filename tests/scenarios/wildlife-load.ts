@@ -1,3 +1,4 @@
+import { addMaterial } from '../../src/sim/materials.ts';
 import { applyCommand } from '../../src/sim/engine.ts';
 import { animalNavigation } from '../../src/sim/wildlife-navigation.ts';
 import { damageAnimalWithBullet } from '../../src/sim/wildlife-health.ts';
@@ -26,6 +27,21 @@ export function meleeWildlifeLoad(count:number){
     if(!cell)throw new Error('No adjacent animal duel position');
     Object.assign(a,cell,{food:.2,rest:1,path:[],nextDecision:w.tick+100});delete a.motion;delete a.meal;
     if(!applyCommand(w,{type:'draft',pawnIds:[p.id],enabled:true}).ok||!applyCommand(w,{type:'melee',pawnIds:[p.id],targetId:a.id}).ok)throw new Error('Animal duel rejected');
+  }
+  return w;
+}
+
+/** Hunters replace one miner in six, keeping the other activity workloads intact. */
+export function huntingWildlifeLoad(count:number){
+  const w=wildlifeLoad(count),nav=animalNavigation(w);
+  for(let i=1;i<count;i+=6){
+    const p=w.pawns[i]!,a=w.wildlife!.animals[i]!;
+    const cell=[[-3,0],[3,0],[0,-3],[0,3],[-1,0],[1,0]].map(([dx,dz])=>({x:p.x+dx!,z:p.z+dz!})).find(c=>nav.free(c));
+    if(!cell)throw Error('No hunting prey position');
+    Object.assign(a,cell,{food:.2,rest:1,path:[],nextDecision:w.tick+100});delete a.motion;delete a.meal;
+    p.priorities.hunt=1;p.priorities.mine=0;p.priorities.gather=0;p.skills.shooting.level=12;
+    addMaterial(w,'weapon',1,{type:'equipment',pawnId:p.id},'revolver');
+    if(!applyCommand(w,{type:'hunt',animalId:a.id,enabled:true}).ok)throw Error('Hunt rejected');
   }
   return w;
 }

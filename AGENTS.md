@@ -1,8 +1,14 @@
 # Travail sur Lisière
 
+## Filière animale V79 et départ cohérent
+- Lire `docs/development/hunting.md`, `corpses.md`, `butchery.md` et la recherche chasse. Chasse civile au revolver, réserve exclusive, récupération avant transport, `forHunting` autorise le rangement même sans Transport. Le corps conserve identité/anatomie/âge, attend sa chute et une place physique ; aucune téléportation si sol encombré. Boucherie transactionnelle viande/cuir, Cuisine et XP de finition ; rendement .70 du poste, pas vitesse .70. V78 strictement validée avant migration neutre et priorité Chasse 0.
+- Validation groupée, pilote commun adapté aux nouveaux clics ; audit mixte `HUNTING=1 WILDLIFE=1`, mesures CPU/natives successives. Ajouter les preuves à l'historique V79 sans réécrire celles des versions antérieures.
+- Objectif utilisateur persistant : une nouvelle partie cohérente avec scénario, possessions/technologies, spawn et distributions de biome, végétation, minerais, animaux et difficulté conçus ensemble. `docs/research/scenario-start-reference.md` prépare ce chantier ; ROADMAP seule le programme. 250² est déjà une taille standard, ne pas agrandir arbitrairement. Le camp actuel sans technologie n'est pas le Crashlanded original.
+- L'utilisateur autorise et demande désormais les sous-agents pour plusieurs sous-étapes indépendantes d'une boucle, avec fichiers attribués et intégration centrale. Mode jour conservé ; ne pas réactiver l'automatisation nocturne.
+
 ## Mêlée animale V78
-- Lire `docs/development/animal-melee.md` et sa recherche. Coup partagé entre espèces, menace récente 400 Core / distance² ≤9 et riposte d'un coup avec échéance 200 Core, récupération indépendante 120 Core. Manhunter, chasse et hostilité civile généralisée distincts. Tronc du lièvre 16 PV pour l'étourdissement, pas la constante humaine 40.
-- V77 strictement validée avant migration neutre ; menace/travail/frappe/stun distincts, aucune activité après incapacité. Approche locale bornée, arêtes ralenties/arrêtées et rig résident commun. Audit mixte `ANIMAL_MELEE=1 WILDLIFE=1`, avec un mineur sur six engagé et les autres ateliers maintenus. Estimations par système dans ROADMAP ; chasse → dépouille → viande → repas reste prioritaire, sans approfondir encore le contact.
+- Lire `docs/development/animal-melee.md` et sa recherche. Coup partagé entre espèces, menace récente 400 Core / distance² ≤9 et riposte d'un coup avec échéance 200 Core, récupération indépendante 120 Core. Manhunter et hostilité civile généralisée distincts ; chasse civile ajoutée V79. Tronc du lièvre 16 PV pour l'étourdissement, pas la constante humaine 40.
+- V77 strictement validée avant migration neutre ; menace/travail/frappe/stun distincts, aucune activité après incapacité. Approche locale bornée, arêtes ralenties/arrêtées et rig résident commun. Audit mixte `ANIMAL_MELEE=1 WILDLIFE=1`, avec un mineur sur six engagé et les autres ateliers maintenus. Estimations par système dans ROADMAP ; chasse → dépouille → viande → repas livrée V79 ; prochain lot dans ROADMAP.
 
 ## Cadence de livraison (19 septembre, après V76)
 - Livrer une boucle jouable cohérente regroupant ses sous-étapes ; ne pas demander de relance entre ses briques internes. Mode jour : retour après la boucle validée et publiée, sans activer le mode nuit. Une dépendance majeure peut justifier une tranche visible plus petite ; expliquer ce choix.
@@ -11,11 +17,11 @@
 
 ## Santé animale et tirs V77
 - Lire `docs/development/animal-combat.md` et sa recherche. Modèles humains/lièvres partagés, 28 parties quadrupèdes, HP arrondis au plafond, échelle 0,4 ; pas de jauge globale ni membres humains substitués. Incapacité violente et chute par hémorragie sont distinctes. Dossier médical absent tant que sain ; profil animal interdit sur un colon. V76 strictement validée avant migration neutre.
-- Cibles `animal:` distinctes, overlay mobile renouvelé entre impacts, taille 0,2 et tir manuel via Faune. Fuite/repas partagent le budget de navigation ; chute conserve l'arête capturée, fractions de ralentissement communes au bridge/GPU. Pas de nouveau graphe TSL par blessure. Mêlée interespèces livrée V78 ; chasse automatique, dépouilles physiques, boucherie et viande restent prioritaires selon ROADMAP.
+- Cibles `animal:` distinctes, overlay mobile renouvelé entre impacts, taille 0,2 et tir manuel via Faune. Fuite/repas partagent le budget de navigation ; chute conserve l'arête capturée, fractions de ralentissement communes au bridge/GPU. Pas de nouveau graphe TSL par blessure. Mêlée interespèces livrée V78 ; chasse automatique, dépouilles physiques, boucherie et viande ajoutées V79.
 - `animal-combat.spec.ts` utilise le pilote UI commun et attend la pause acquittée avant comparaison exacte. Audit mixte `ANIMAL_COMBAT=1 WILDLIFE=1 VALIDATION_VERSION=v77` dans les bancs recherche ; moitié des animaux blessés, pas cent tireurs simultanés. Mesures CPU/natives et longs pilotes successifs.
 
 ## Faune V76
-- Lire `docs/development/wildlife.md` et sa recherche. Animaux distincts des colons, PRNG privé, ingestion au contact et broutage de croissance réelle. Une seule espèce adulte ; V77 ajoute santé, tirs et fuite. Riposte de mêlée ajoutée V78 ; chasse automatique et dépouilles transportables restent absents et prioritaires selon ROADMAP. Aucune donnée humaine inventée. V75 strictement validée avant migration neutre ; introduction explicite dans les anciennes parties.
+- Lire `docs/development/wildlife.md` et sa recherche. Animaux distincts des colons, PRNG privé, ingestion au contact et broutage de croissance réelle. Une seule espèce adulte ; V77 ajoute santé, tirs et fuite. Riposte de mêlée ajoutée V78 ; chasse automatique et dépouilles transportables ajoutées V79. Aucune donnée humaine inventée. V75 strictement validée avant migration neutre ; introduction explicite dans les anciennes parties.
 - Partager réservations de piles, obstacles/coins, protection des chantiers et maintien des portes ; ne pas ouvrir les portes pour un animal sauvage. Arêtes/historique/clock confirmée communs, rig TSL résident préchauffé. Mesures mixtes `WILDLIFE=1`, CPU et rendu successifs. Le pilote de colonie compte les aliments consommés par les animaux séparément. Le pilote UI exécute aussi le choix de culture ; utiliser `COLONY_JOURNEY_CHECKPOINT` pour reprendre son état réel avant le troisième jour. Geler les sources, y compris les commentaires, pendant une exécution native pour éviter le HMR.
 
 ## Conservation froide V75
@@ -115,7 +121,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 78 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 79 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)

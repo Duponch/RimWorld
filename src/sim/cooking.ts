@@ -1,3 +1,6 @@
+import { corpseFresh } from './corpses.ts';
+import { finishButchery } from './butchery.ts';
+import { cookingSpeed,butcherySpeed,completedCookingSkill } from './cooking-statistics.ts';
 import { beginUnfinished } from './unfinished.ts';
 import { craftingQuality,craftingSkill } from './crafting-quality.ts';
 import { learnSkill } from './skills.ts';
@@ -29,7 +32,7 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   const recipe=PRODUCTION_RECIPES[taskRecipe(task)];
   for(const entry of task.ingredients) {
     const pile=world.piles.find(p=>p.id===entry.pileId);
-    if(!pile||pile.item!==entry.item||pile.quantity<entry.quantity||entry.stage!=='held'&&reservedSource(world,pile.id)>pile.quantity){context.release();return;}
+    if(!pile||pile.item==='hare-corpse'&&!corpseFresh(pile,world.tick)||pile.item!==entry.item||pile.quantity<entry.quantity||entry.stage!=='held'&&reservedSource(world,pile.id)>pile.quantity){context.release();return;}
   }
   const held=task.ingredients.find(i=>i.stage==='held');
   if(held) {
@@ -55,12 +58,19 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   const unfinished=isTailoring(task.recipe)?beginUnfinished(world,pawn):null;
   if(isTailoring(task.recipe)&&!unfinished)return;
   if(unfinished){pawn.skills.crafting??={...craftingSkill(pawn)};if(unfinished.unfinished!.progress<total)learnSkill(pawn.skills.crafting,1000,pawn);task.progress=unfinished.unfinished!.progress;}
-  task.progress=Math.min(total,task.progress+Math.round(context.workRate(station,pawn)*PRODUCTION_WORK_SCALE));
+  const culinary=taskWork(task)==='cook';
+  if(task.progress<total){
+    if(culinary){if(!Number.isSafeInteger((task.workTicks??0)+1)||((task.workTicks??0)+1)>Math.floor(Number.MAX_SAFE_INTEGER/1000))return;task.workTicks=(task.workTicks??0)+1;}
+    const speed=task.recipe==='butcher-creature'?butcherySpeed(pawn):culinary?cookingSpeed(pawn):1;
+    task.progress=Math.min(total,task.progress+Math.round(context.workRate(station,pawn)*speed*PRODUCTION_WORK_SCALE));
+  }
   if(unfinished)unfinished.unfinished!.progress=task.progress;
   if(task.progress<total)return;
+  if(task.recipe==='butcher-creature'){finishButchery(world,pawn,bill,context);return;}
   const used=new Map<number,number>();for(const i of task.ingredients)used.set(i.pileId,(used.get(i.pileId)??0)+i.quantity);
   const freed=[...used].filter(([id,n])=>world.piles.find(p=>p.id===id)?.quantity===n).length;
   if(world.piles.length-freed+1>32768||!Number.isSafeInteger(world.nextId+1))return;
+  const meat=task.ingredients.filter(i=>i.item==='hare-meat').reduce((n,i)=>n+i.quantity,0);
   const rice=task.ingredients.filter(i=>i.item==='rice').reduce((n,i)=>n+i.quantity,0),item=recipeProduct(taskRecipe(task),task.ingredients);
   if(isTailoring(task.recipe)&&!Number.isSafeInteger((world.tailoring?.completed??0)+1))return;
   const random={rng:world.rng},apparel=isTailoring(task.recipe)?{...newApparelState(task.recipe==='shirt'?'cloth-shirt':'cloth-tribalwear'),quality:craftingQuality(craftingSkill(pawn).level,()=>healthRandom(random))}:undefined;
@@ -69,7 +79,7 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   world.piles=world.piles.filter(p=>p.quantity>0);
   const id=world.nextId++;world.piles.push({id,item,kind:ITEM_DEFINITIONS[item].kind,quantity:recipe.outputUnits,owner:{type:'pawn',pawnId:pawn.id},...freshRot(item,world.tick),...apparel?{apparel}:{}});
   if(apparel){world.rng=random.rng;(world.tailoring??={completed:0,cancelled:0,lostCloth:0}).completed++;}
-  task.ingredients=[];task.productId=id;task.phase='output';task.progress=0;pawn.planCooldown=0;
+  task.ingredients=[];task.productId=id;task.phase='output';task.progress=0;if(culinary)pawn.skills.cooking=completedCookingSkill(pawn,task.workTicks??0);delete task.workTicks;pawn.planCooldown=0;
   if(bill.mode==='times')bill.target=Math.max(0,bill.target-1);
-  context.event(isTailoring(task.recipe)?`${pawn.name} a fabriqué : ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:task.recipe==='stone-blocks'?`${pawn.name} a taillé 20 ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:`${pawn.name} a cuisiné 1 repas simple (${10-rice} baies, ${rice} riz).`);
+  context.event(isTailoring(task.recipe)?`${pawn.name} a fabriqué : ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:task.recipe==='stone-blocks'?`${pawn.name} a taillé 20 ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:`${pawn.name} a cuisiné 1 repas simple (${10-rice-meat} baies, ${rice} riz${meat?`, ${meat} viande`:''}).`);
 }

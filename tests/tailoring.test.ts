@@ -13,7 +13,7 @@ function camp(count=1):World {
   const w=createWorld(42,16,16);w.resources=[];w.piles=[];w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.pawns=w.pawns.slice(0,count);w.tick=2000;
   for(const [i,p] of w.pawns.entries()){
     Object.assign(p,{x:4+i,z:4,hunger:100,rest:100});p.schedule.fill('work');
-    p.priorities={research:0,patient:0,bedrest:0,doctor:0,gather:0,build:0,mine:0,grow:0,haul:0,cook:0,craft:i?0:1};
+    p.priorities={hunt:0,research:0,patient:0,bedrest:0,doctor:0,gather:0,build:0,mine:0,grow:0,haul:0,cook:0,craft:i?0:1};
     p.skills.crafting={level:8,xp:0,dailyXp:0,passion:1};
   }
   refreshStock(w);return w;

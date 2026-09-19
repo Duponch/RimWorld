@@ -8,7 +8,7 @@ import type { World } from './types.ts';
 export function expireFood(world: World): void {
   let expired: Set<number> | undefined;
   let losses: ReturnType<typeof emptySpoilage> | undefined;
-  for (const pile of world.piles) if (isPerishable(pile.item) && ticksUntilRot(pile, world.tick) <= 0) {
+  for (const pile of world.piles) if (pile.item!=='hare-corpse' && isPerishable(pile.item) && ticksUntilRot(pile, world.tick) <= 0) {
     (expired ??= new Set()).add(pile.id);
     losses??=emptySpoilage();losses[pile.item]=(losses[pile.item]??0)+pile.quantity;
   }
@@ -30,11 +30,11 @@ export function expireFood(world: World): void {
     // or pretending that an incomplete recipe can resume its work progress.
     if (c) {
       c.ingredients = c.ingredients.filter(i => i.stage === 'held' && !expired.has(i.pileId));
-      c.phase = 'interrupted'; c.progress = 0; c.productId = null; c.storageId = null;
+      c.phase = 'interrupted'; c.progress = 0; delete c.workTicks; c.productId = null; c.storageId = null;
       pawn.path = []; pawn.state = pawn.moveCooldown > 0 ? 'moving' : 'working';
     }
   }
-  for (const item of ['berries', 'rice', 'simple-meal','herbal-medicine'] as const) if (losses![item]) {
+  for (const item of ['berries', 'rice', 'simple-meal','herbal-medicine','hare-meat'] as const) if (losses![item]) {
     world.spoiled[item]=(world.spoiled[item]??0)+losses![item]!;
     world.events.push({ tick: world.tick, type: 'need', message: `${losses![item]} ${ITEM_DEFINITIONS[item].label} ont pourri.` });
   }

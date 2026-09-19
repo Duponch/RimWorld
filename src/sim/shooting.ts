@@ -1,3 +1,4 @@
+import { huntingPermission } from './hunting-state.ts';
 import { combatTarget,combatTargetKey,combatTargetSize,hostileTarget,isAnimalTarget } from './combat-target.ts';
 import { automaticPermission,automaticTarget } from './automatic-combat-state.ts';
 import { cancelMelee } from './melee-state.ts';
@@ -29,7 +30,7 @@ export function shootingQueries(world:World,readGrid=()=>captureWorldShotGrid(wo
 }
 type Queries=ReturnType<typeof shootingQueries>;
 export function shotPlan(world:World,pawn:Pawn,targetId:number,queries:Queries,automatic=pawn.shooting?.order?.auto?.kind) {
-  if(!pawn.draft&&isColonist(pawn)&&automatic!=='response'||automatic&&!automaticPermission(pawn,automatic)||medicallyStopped(pawn)||pawn.state==='sleeping'||pawn.need&&automatic!=='response'||pawn.collapsePending||queries.carried(pawn.id))return {reason:'Le tireur doit être mobilisé, éveillé et capable de tirer.'} as const;
+  if(!pawn.draft&&isColonist(pawn)&&automatic!=='response'&&!huntingPermission(world,pawn,targetId)||automatic&&!automaticPermission(pawn,automatic)||medicallyStopped(pawn)||pawn.state==='sleeping'||pawn.need&&automatic!=='response'||pawn.collapsePending||queries.carried(pawn.id))return {reason:'Le tireur doit être mobilisé, éveillé et capable de tirer.'} as const;
   if(!queries.stands()(pawn))return {reason:'Le colon doit terminer le franchissement avant de viser.'} as const;
   const weapon=equippedWeapon(world,pawn);
   if(!weapon?.weapon||weapon.item!=='revolver'||pawn.equipmentDropPending||queries.body(pawn).capacities.manipulation<=0)return {reason:'Aucun revolver utilisable en main.'} as const;
@@ -71,7 +72,7 @@ export function applyShootingCommand(world:World,command:ShootingCommand):Comman
 export function advanceShooter(world:World,pawn:Pawn,core:number,queries:Queries):void {
   const shot=pawn.shooting;if(!shot)return;
   if(medicallyStopped(pawn)||queries.body(pawn).capacities.manipulation===0){delete pawn.shooting;return;}
-  if(shot.order){const a=shot.order.auto;if(a?(!automaticPermission(pawn,a.kind)||!automaticTarget(world,pawn,shot.order.targetId)||a.kind==='draft'&&pawn.draft?.holdFire||a.kind==='response'&&world.tick>=a.until):!pawn.draft&&isColonist(pawn))cancelShooting(pawn);}
+  if(shot.order){const a=shot.order.auto;if(shot.order.hunt?!huntingPermission(world,pawn,shot.order.targetId):a?(!automaticPermission(pawn,a.kind)||!automaticTarget(world,pawn,shot.order.targetId)||a.kind==='draft'&&pawn.draft?.holdFire||a.kind==='response'&&world.tick>=a.until):!pawn.draft&&isColonist(pawn))cancelShooting(pawn);}
   if(shot.order) {
     const target=combatTarget(world,shot.order!.targetId);
     if(!target||target.state==='dead'||!shot.order.startedDowned&&target.state==='downed'||!isColonist(pawn)&&(!hostileTarget(pawn,target)||isAnimalTarget(target)||!assaultTarget(pawn,target)))cancelShooting(pawn);

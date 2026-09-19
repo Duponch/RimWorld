@@ -1,3 +1,4 @@
+import { cancelHunting } from './hunting-state.ts';
 import { cancelAutomaticCombat } from './automatic-combat-state.ts';
 import { releaseRescue } from './rescue-state.ts';
 import { updatePawnHealth } from './health.ts';
@@ -53,7 +54,7 @@ export function planCommandDrops(world:World,command:Command):DropPlan|null {
   for(const pawn of world.pawns)if((pawn.jobId!==null&&jobs.has(pawn.jobId))||(pawn.haul&&(jobs.has(constructionHaulId(pawn.haul.destination)??-1)||pawn.haul.destination.type==='stockpile'&&zones.has(pawn.haul.destination.stockpileId))))pawns.add(pawn.id);
   if(command.type==='designate'&&command.kind==='deconstruct'||command.type==='area'&&command.action==='deconstruct'){
     const selection=command.type==='area'?queryArea(world,command):null;const cells=selection?.ok?new Set(selection.cells):null;
-    const spots=new Set(world.structures.filter(s=>s.kind==='crafting-spot'&&(cells?cells.has(s.z*world.width+s.x):command.type==='designate'&&same(s,command))).map(s=>s.id));
+    const spots=new Set(world.structures.filter(s=>(s.kind==='crafting-spot'||s.kind==='butcher-spot')&&(cells?cells.has(s.z*world.width+s.x):command.type==='designate'&&same(s,command))).map(s=>s.id));
     for(const p of world.pawns)if(p.cooking&&spots.has(p.cooking.stationId))pawns.add(p.id);
   }
   const result:DropPlan=new Map();
@@ -91,7 +92,7 @@ export function releaseWork(world:World,pawn:Pawn,plan?:DropPlan):boolean {
 /** Release task/service claims independently of ownership. Only involuntary or tactical
  * interruption may use this while an object is still carried. */
 export function releaseAssignments(world:World,pawn:Pawn):void {
-  cancelAutomaticCombat(pawn);
+  cancelAutomaticCombat(pawn);cancelHunting(pawn);
   if(pawn.need?.kind==='sleep'&&pawn.need.medical&&pawn.health&&!pawn.health.death&&pawn.health.tick<world.tick)updatePawnHealth(world,pawn);
   delete pawn.heatRefuge;delete pawn.research;releaseRescue(world,pawn);delete pawn.tend;delete pawn.feed;delete pawn.medicalSleep;delete pawn.equipmentTask;
   const job=world.jobs.find(j=>j.id===pawn.jobId);

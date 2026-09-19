@@ -69,7 +69,7 @@ test('builders: physical work, distinct speeds, no training in travel/clearance,
 test('skills persistence: strict V42 migration, invalid records, deep actor state and worker snapshots',()=>{
   const {w}=site(),old=JSON.parse(serializeWorld(w));(old.schemaVersion=42,withoutResearch(old));withoutCare(old);for(const p of old.pawns)delete p.priorities.doctor;
   for(const p of old.pawns)delete p.skills;
-  const migrated=deserializeWorld(JSON.stringify(old));expect(migrated.pawns[0]!.skills).toEqual(initialSkills(8,0));
+  const migrated=deserializeWorld(JSON.stringify(old));const expectedSkills=initialSkills(8,0);delete expectedSkills.cooking;expect(migrated.pawns[0]!.skills).toEqual(expectedSkills);
   expect(migrated.jobs).toEqual(w.jobs);expect(migrated.piles).toEqual(w.piles);expect(migrated.rng).toBe(w.rng);
   const late=structuredClone(old);late.tick=5900;delete late.pawns[0].priorityWork;
   const midnight=deserializeWorld(JSON.stringify(late)),person=midnight.pawns[0]!;

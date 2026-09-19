@@ -1,6 +1,8 @@
 # Faune autonome — contrat V76
 
-**V77 complète ce contrat :** anatomie, impacts de projectiles, saignement/guérison, fuite sonore et après blessure, incapacité/mort et inspection. Le périmètre V76 ci-dessous décrit le socle ; ses anciennes exclusions médicales sont remplacées par le [contrat courant](animal-combat.md). V78 ajoute la [mêlée interespèces](animal-melee.md). Chasse automatique et filière des dépouilles restent absentes.
+**Extension V79 :** [chasse civile](hunting.md), [corps transportables](corpses.md), [boucherie/viande/cuir](butchery.md) complètent ce contrat. Les mentions de leur absence ci-dessous décrivent le périmètre historique V76–V78 ; élevage, autres espèces et corps humains restent absents.
+
+**V77 complète ce contrat :** anatomie, impacts de projectiles, saignement/guérison, fuite sonore et après blessure, incapacité/mort et inspection. Le périmètre V76 ci-dessous décrit le socle ; ses anciennes exclusions médicales sont remplacées par le [contrat courant](animal-combat.md). V78 ajoute la [mêlée interespèces](animal-melee.md). V79 relie la [chasse civile](hunting.md) à la filière des dépouilles et à la boucherie.
 
 Décision visible : repérer les lièvres dans **Faune**, constater leur alimentation et protéger les cultures/aliments par une enceinte dont les portes restent fermées. Arrêt du lot : présence obtenable dans un camp neuf, marche/broutage/ingestion/sommeil réels, sauvegarde exacte, rendu GPU et charge mesurée. Anatomie animale/chasse/dépouilles constituent le prochain lot ; pas de chasse simulée en supprimant une décoration.
 

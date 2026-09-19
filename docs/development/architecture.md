@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+V79 : `hunting` utilise planner/balistique communs, `corpses` convertit atomiquement identité animale en pile indivisible, `butchery` prévalide viande/cuir/XP/PRNG avant publication. `forHunting` maintient la provenance du rangement sans inventer d'ordre forcé. Corps et produits utilisent les lots graphiques résidents ; `pile-parts` extrait la présentation des objets, `hare-shape` partage vivant/mort. Les plans transparents de curseur/zone utilisent `forceSinglePass` : une surface plane ne nécessite pas les deux passes de faces de Three, et ce choix évite deux variantes GPU tardives après rechargement. [Chasse](hunting.md), [corps](corpses.md), [production](butchery.md).
+
 V78 : `living-melee.ts` partage le coup et les conséquences entre espèces ; `wildlife-melee.ts` possède mémoire/riposte et approche locale bornée. Un seul noyau de lésions, pas de doublon humain/animal. `combat-system.ts` ordonne les acteurs par ID au même sous-pas Core. [Contrat](animal-melee.md).
 
 V77 : modèles anatomiques immuables humain/lièvre consommés par le même noyau médical. Adaptateurs `wildlife-health`, `wildlife-flight`, `wildlife-noise` séparés ; cibles `animal:<id>` dans l’overlay mobile des projectiles. La présentation réutilise les fractions de trajet ralenti. Migration V76 stricte et neutre ; pas de nouveau moteur de santé parallèle. [Contrat](animal-combat.md).

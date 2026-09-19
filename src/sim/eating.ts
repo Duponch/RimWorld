@@ -54,7 +54,7 @@ export function processEating(world: World, pawn: Pawn, context: NeedContext): v
     world.piles.splice(world.piles.indexOf(pile), 1);
     pawn.hunger = Math.min(100, pawn.hunger + nutritionOf(pile));
     const atTable = adjacentTable(world, pawn) !== null;
-    rememberMeal(world, pawn, atTable, pile.item === 'rice');
+    rememberMeal(world, pawn, atTable, pile.item === 'rice'||pile.item==='hare-meat');
     pawn.need = null; pawn.state = 'idle'; pawn.planCooldown = 0; pawn.needCooldown = 0;
     context.event(`${pawn.name} a mangé une portion (${task.quantity} × ${ITEM_DEFINITIONS[pile.item].label}) ${atTable ? 'à table' : 'sans table'}.`);
   }

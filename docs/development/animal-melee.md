@@ -1,5 +1,7 @@
 # Mêlée interespèces — V78
 
+**Extension V79 :** [chasse civile](hunting.md), [corps transportables](corpses.md), [boucherie/viande/cuir](butchery.md) complètent ce contrat. Les mentions de leur absence ci-dessous décrivent le périmètre historique V76–V78 ; élevage, autres espèces et corps humains restent absents.
+
 Décision du joueur : mobiliser un colon puis **Faune → Attaquer au contact**. Le colon approche réellement, frappe avec ses outils naturels ou son revolver ; un lièvre agressé peut mordre et blesser le colon. Les soins humains existants restent le moyen de traiter ces blessures. Le tir dirigé V77 reste disponible.
 
 Cette livraison termine la dépendance de réaction au contact, auparavant limitée aux personnes. Elle ne livre pas la chasse alimentaire : aucun métier Chasse, aucune dépouille transportable, viande ou boucherie. Le prochain lot canonique relie ces éléments, sans ajouter une autre espèce ni poursuivre les raffinements médicaux par inertie. [Recherche fraîche et limites](../research/animal-melee-reference.md), [preuves](../history/validation-animal-melee-v78.md).

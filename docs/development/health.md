@@ -1,6 +1,6 @@
 # Santé active V45
 
-V77 ajoute [la santé animale](animal-combat.md) via le même noyau médical et un adaptateur distinct de `Pawn`. Les soins vétérinaires et les dépouilles transportables restent absents.
+V77 ajoute [la santé animale](animal-combat.md) via le même noyau médical et un adaptateur distinct de `Pawn`. Les soins vétérinaires restent absents ; V79 ajoute les [dépouilles animales transportables](corpses.md). Les dépouilles humaines restent un système distinct non livré.
 
 V74 ajoute le [coup de chaleur](heatwave.md), distinct des lésions anatomiques : exposition, effets sur capacités, refuge, incapacité/mort et récupération au frais. La recherche active est explicitement incluse dans les tâches interdites après incapacité. Combat présent depuis V56–V68 ; les mentions de lots antérieurs ci-dessous décrivent leur portée historique.
 

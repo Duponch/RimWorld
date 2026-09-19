@@ -6,7 +6,7 @@ import type { ItemId } from './items.ts';
 import type { Cell, HaulDestination, World } from './types.ts';
 
 /** Clearing is part of the grower's work, even with ordinary hauling disabled. */
-export const haulingWork = (destination: HaulDestination) => destination.type==='job'&&destination.forConstruction || destination.type==='aside'&&destination.forConstruction ? 'build' : destination.type === 'aside' ? destination.constructionId===undefined?'grow':'haul' : destination.type==='fuel'&&destination.forCooking ? 'cook' : 'haul';
+export const haulingWork = (destination: HaulDestination) => destination.type==='stockpile'&&destination.forHunting ? 'hunt' : destination.type==='job'&&destination.forConstruction || destination.type==='aside'&&destination.forConstruction ? 'build' : destination.type === 'aside' ? destination.constructionId===undefined?'grow':'haul' : destination.type==='fuel'&&destination.forCooking ? 'cook' : 'haul';
 const same = (a: Cell, b: Cell) => a.x === b.x && a.z === b.z;
 export function asideCapacity(world: World, cell: Cell, item: ItemId, exceptPawn?: number): number {
   if (!inBounds(world, cell.x, cell.z) || ['water', 'rock'].includes(world.tiles[cellIndex(world, cell.x, cell.z)]!.terrain)

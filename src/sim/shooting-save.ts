@@ -1,3 +1,4 @@
+import { huntingPermission } from './hunting-state.ts';
 import { combatTarget } from './combat-target.ts';
 import { validAutomaticAttack,automaticPost,automaticOwnership } from './automatic-combat-save.ts';
 import { isColonist,hostileTo } from './affiliation.ts';
@@ -10,7 +11,7 @@ const keys=(v:Record<string,unknown>,allowed:string[])=>Object.keys(v).every(k=>
 export function validShootingShape(value:unknown,version:number,tick:number):boolean {
   if(value===undefined)return true;
   if(version<56||!record(value)||!keys(value,['order','stance'])||value.order===null&&value.stance===null)return false;
-  if(value.order!==null&&(!record(value.order)||!keys(value.order,['targetId','weaponId','startedDowned',...(version>=60?['auto']:[])])||!integer(value.order.targetId,1)||!integer(value.order.weaponId,1)||typeof value.order.startedDowned!=='boolean'||!validAutomaticAttack(value.order.auto,version,tick)))return false;
+  if(value.order!==null&&(!record(value.order)||!keys(value.order,['targetId','weaponId','startedDowned',...(version>=60?['auto']:[]),...(version>=79?['hunt']:[])])||!integer(value.order.targetId,1)||!integer(value.order.weaponId,1)||typeof value.order.startedDowned!=='boolean'||!validAutomaticAttack(value.order.auto,version,tick)||value.order.hunt!==undefined&&(value.order.hunt!==true||value.order.auto!==undefined||value.order.startedDowned!==false)))return false;
   const s=value.stance;if(s===null)return value.order!==null;
   if(!record(s)||!keys(s,['phase','startedAtCore','endsAtCore',...(s.phase==='aim'?['targetStartedDowned']:[])])||!integer(s.startedAtCore,0,tick*10)||!integer(s.endsAtCore,tick*10+1))return false;
   return s.phase==='aim'?value.order!==null&&typeof s.targetStartedDowned==='boolean'&&s.endsAtCore-s.startedAtCore===18:s.phase==='cooldown'&&s.endsAtCore-s.startedAtCore===96;
@@ -20,8 +21,8 @@ export function validateShooting(world:World):string[] {
   for(const p of world.pawns)if(p.shooting) {
     const {order,stance}=p.shooting;
     if(order?.auto&&(order.startedDowned||stance?.phase==='aim'&&stance.targetStartedDowned||order.auto.kind==='draft'&&p.draft?.holdFire||order.auto.kind==='response'&&order.auto.remaining===0&&stance?.phase!=='cooldown'))errors.push('Invalid automatic shooting phase.');
-    if(p.state==='dead'||p.state==='downed'||p.jobId!==null||p.haul||p.cooking||p.equipmentTask||p.tend||p.feed||p.rescue||p.need||p.recreation.task||p.orders.active!==null||p.orders.queue.length||p.priorityWork)errors.push('Shooting conflicts with another activity.');
-    if(order&&((order.auto?!automaticOwnership(world,p,order.targetId,order.auto.kind):(isColonist(p)?!p.draft:!world.pawns.some(t=>t.id===order.targetId&&hostileTo(p,t))))||(!order.auto&&p.draft?.target)||order.auto?.kind==='draft'&&!automaticPost(p)||p.draft?.queue.length||p.path.length||(!combatTarget(world,order.targetId)||order.targetId===p.id)||equippedWeapon(world,p)?.id!==order.weaponId))errors.push('Invalid shooting order ownership.');
+    if(p.state==='dead'||p.state==='downed'||p.jobId!==null||p.haul||p.cooking||p.equipmentTask||p.tend||p.feed||p.rescue||p.need||p.recreation.task||p.orders.active!==null||(p.priorityWork||p.orders.queue.length)&&!(world.schemaVersion>=79&&(!order||order.hunt)))errors.push('Shooting conflicts with another activity.');
+    if(order&&((order.hunt?!huntingPermission(world,p,order.targetId):order.auto?!automaticOwnership(world,p,order.targetId,order.auto.kind):(isColonist(p)?!p.draft:!world.pawns.some(t=>t.id===order.targetId&&hostileTo(p,t))))||(!order.auto&&p.draft?.target)||order.auto?.kind==='draft'&&!automaticPost(p)||p.draft?.queue.length||p.path.length||(!combatTarget(world,order.targetId)||order.targetId===p.id)||equippedWeapon(world,p)?.id!==order.weaponId))errors.push('Invalid shooting order ownership.');
     if(stance&&(p.motion?.end??0)>world.tick)errors.push('Shooting stance during a captured edge.');
     if(!stance&&!p.melee?.strike&&!p.stun&&(!order||!p.motion||(p.motion.end<=world.tick)))errors.push('Shooting wait without active travel.');
   }

@@ -30,7 +30,7 @@ export function threatQueries(world:World) {
 type Context=ReturnType<typeof threatQueries>;
 /** Forced civilian jobs and drafted control take precedence over default flee. */
 export function considerFlee(world:World,pawn:Pawn,context:Context):void {
-  if(!isColonist(pawn)||pawn.draft||pawn.hostilityResponse!==undefined||pawn.shooting||pawn.melee||pawn.flee||pawn.need?.kind==='sleep'||pawn.orders.active!==null||pawn.orders.queue.length||pawn.priorityWork||pawn.equipmentTask)return;
+  if(!isColonist(pawn)||pawn.draft||pawn.hostilityResponse!==undefined||pawn.shooting&&!pawn.hunting||pawn.melee||pawn.flee||pawn.need?.kind==='sleep'||pawn.orders.active!==null||pawn.orders.queue.length||pawn.priorityWork||pawn.equipmentTask)return;
   if(!context.nearby(pawn).length)return;
   interruptDraftWork(world,pawn);
   pawn.flee={target:{x:pawn.x,z:pawn.z},until:0};pawn.path=[];pawn.planCooldown=0;
@@ -64,6 +64,9 @@ function planEscape(world:World,pawn:Pawn,hostiles:Pawn[],blocked:Uint8Array):Ce
 export function processFlee(world:World,pawn:Pawn,context:Context,getBlocked:NavigationGrid,budget:SearchBudget,getLight:LightReader):void {
   const flee=pawn.flee!;
   if(pawn.hostilityResponse!==undefined||pawn.draft){delete pawn.flee;pawn.path=[];return;}
+  // The decision may interrupt a civilian hunt immediately, but its emitted
+  // shot still owns recovery before a new physical edge can start.
+  if(pawn.shooting?.stance?.phase==='cooldown'){pawn.state='idle';return;}
   if(!flee.until&&!pawn.path.length) {
     if(!budget.remaining||pawn.planCooldown)return;
     budget.remaining--;const threats=context.hostiles(pawn);

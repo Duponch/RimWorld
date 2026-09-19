@@ -26,7 +26,7 @@ export function processRecreation(world: World, pawn: Pawn, context: NeedContext
     }
     return true;
   }
-  if (world.tick<500 || pawn.research || pawn.need || pawn.jobId!==null || pawn.haul || pawn.cooking || pawn.needCooldown>0 || pawn.hunger<=20
+  if (world.tick<500 || pawn.hunting || pawn.research || pawn.need || pawn.jobId!==null || pawn.haul || pawn.cooking || pawn.needCooldown>0 || pawn.hunger<=20
     || assignment==='work' || assignment==='sleep'&&!afterWork || joy.level >= (assignment==='anything'?35:95)) return false;
   const choices: {activity: RecreationActivity; weight: number}[] = [];
   for(const activity of ['skygaze','horseshoes'] as const) {

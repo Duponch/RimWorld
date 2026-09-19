@@ -9,7 +9,7 @@ import { processRecreation } from '../src/sim/recreation';
 
 const fixture=()=>{
   const w=createWorld(42,32,32);w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.resources=[];w.piles=[];w.jobs=[];w.structures=[];
-  w.pawns.forEach((p,i)=>{Object.assign(p,{x:8+i*2,z:14,hunger:100,rest:100,priorities: {research:0, patient:0,bedrest:0,doctor:0,craft:2,mine:2,gather:0,build:0,haul:0,grow:0,cook:0}});p.schedule.fill('recreation');p.recreation=initialRecreation(10);});
+  w.pawns.forEach((p,i)=>{Object.assign(p,{x:8+i*2,z:14,hunger:100,rest:100,priorities: {hunt:0,research:0, patient:0,bedrest:0,doctor:0,craft:2,mine:2,gather:0,build:0,haul:0,grow:0,cook:0}});p.schedule.fill('recreation');p.recreation=initialRecreation(10);});
   refreshStock(w);return w;
 };
 

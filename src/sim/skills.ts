@@ -7,18 +7,19 @@ import { constructionRecipe } from './construction-materials.ts';
 export const XP_SCALE = 1000;
 export interface SkillRecord { level:number; xp:number; dailyXp:number; passion:0|1|2 }
 /** Add a skill only when its producer and consumer are implemented. */
-export interface PawnSkills { intellectual?:SkillRecord; crafting?:SkillRecord; social?:SkillRecord; construction:SkillRecord; medicine:SkillRecord; shooting:SkillRecord; melee:SkillRecord; lastResetTick:number }
+export interface PawnSkills { cooking?:SkillRecord; intellectual?:SkillRecord; crafting?:SkillRecord; social?:SkillRecord; construction:SkillRecord; medicine:SkillRecord; shooting:SkillRecord; melee:SkillRecord; lastResetTick:number }
 export const xpRequired = (level:number):number => (level <= 9 ? 1000*(level+1) : 10000+2000*(Math.min(level,19)-9))*XP_SCALE;
 export const learningFactor = (skill:SkillRecord,pawn?:Pick<Pawn,'traits'>):number => (pawn?globalLearningFactor(pawn):1)* [0.35,1,1.5][skill.passion]!*(skill.dailyXp>4000*XP_SCALE ? .2 : 1);
 export const constructionSpeed = (pawn:Pawn):number => (3000+875*pawn.skills.construction.level)/10000;
 const decay = [100,200,400,600,1000,1800,2800,4000,6000,8000,12000];
 
 export function initialSkills(level=8,passion:0|1|2=0,lastResetTick=-1):PawnSkills {
-  return {melee:{level:8,xp:0,dailyXp:0,passion:0},shooting:{level:8,xp:0,dailyXp:0,passion:0},construction:{level,xp:0,dailyXp:0,passion},medicine:{level:8,xp:0,dailyXp:0,passion:0},lastResetTick};
+  return {cooking:{level:8,xp:0,dailyXp:0,passion:0},melee:{level:8,xp:0,dailyXp:0,passion:0},shooting:{level:8,xp:0,dailyXp:0,passion:0},construction:{level,xp:0,dailyXp:0,passion},medicine:{level:8,xp:0,dailyXp:0,passion:0},lastResetTick};
 }
 /** Scenario choices, not a random biography generator or Core distribution. */
 export function startingSkills(index:number):PawnSkills {
   const skills=initialSkills([8,10,4][index%3]!,([1,2,0] as const)[index%3]!);
+  skills.cooking!.level=[8,4,6][index%3]!;skills.cooking!.passion=([1,0,0] as const)[index%3]!;
   skills.intellectual={level:[8,3,6][index%3]!,xp:0,dailyXp:0,passion:([1,0,0] as const)[index%3]!};skills.medicine.level=[6,3,8][index%3]!;skills.medicine.passion=([1,0,2] as const)[index%3]!;skills.shooting.level=[8,5,3][index%3]!;skills.shooting.passion=([1,0,0] as const)[index%3]!;return skills;
 }
 export function learnSkill(skill:SkillRecord,baseUnits:number,pawn?:Pick<Pawn,'traits'>):void {
@@ -38,9 +39,9 @@ export function tickSkills(world:World,pawn:Pawn):void {
   if((world.tick%20+pawn.id%20)%20!==0)return;
   const skills=pawn.skills;
   if(world.tick%TICKS_PER_DAY<TICKS_PER_DAY/24&&(skills.lastResetTick<0||world.tick-skills.lastResetTick>=TICKS_PER_DAY/2)) {
-    skills.lastResetTick=world.tick;skills.construction.dailyXp=0;skills.medicine.dailyXp=0;skills.shooting.dailyXp=0;skills.melee.dailyXp=0;if(skills.social)skills.social.dailyXp=0;if(skills.crafting)skills.crafting.dailyXp=0;if(skills.intellectual)skills.intellectual.dailyXp=0;
+    skills.lastResetTick=world.tick;skills.construction.dailyXp=0;skills.medicine.dailyXp=0;skills.shooting.dailyXp=0;skills.melee.dailyXp=0;if(skills.social)skills.social.dailyXp=0;if(skills.crafting)skills.crafting.dailyXp=0;if(skills.intellectual)skills.intellectual.dailyXp=0;if(skills.cooking)skills.cooking.dailyXp=0;
   }
-  for(const skill of [skills.construction,skills.medicine,skills.shooting,skills.melee,...skills.social?[skills.social]:[],...skills.crafting?[skills.crafting]:[],...skills.intellectual?[skills.intellectual]:[]]){const loss=decay[skill.level-10];if(loss)learnSkill(skill,-loss);}
+  for(const skill of [skills.construction,skills.medicine,skills.shooting,skills.melee,...skills.social?[skills.social]:[],...skills.crafting?[skills.crafting]:[],...skills.intellectual?[skills.intellectual]:[],...skills.cooking?[skills.cooking]:[]]){const loss=decay[skill.level-10];if(loss)learnSkill(skill,-loss);}
 }
 export function usesConstructionSkill(job:Job):boolean {
   return !job.clearance&&(isConstruction(job)||job.kind==='deconstruct'||job.kind==='uninstall'||job.kind==='install'||job.kind==='build-roof'||job.kind==='remove-roof');

@@ -1,0 +1,66 @@
+{
+  "before": {
+    "stepWorldSampleMs": 21922.51,
+    "inclusiveSampleMs": {
+      "candidateAccess": 3796.41,
+      "navigationCosts": 1762.71,
+      "huntingPosition": 3226.98,
+      "captureWorldShotGrid": 1438.39,
+      "processHunting": 5309.17,
+      "captureWorldProjectileTargets": 489.77
+    }
+  },
+  "after": {
+    "stepWorldSampleMs": 20841.0,
+    "inclusiveSampleMs": {
+      "candidateAccess": 3993.9,
+      "navigationCosts": 1951.54,
+      "huntingPosition": 2010.63,
+      "captureWorldShotGrid": 663.11,
+      "processHunting": 4108.12,
+      "captureWorldProjectileTargets": 513.28
+    }
+  },
+  "runs": {
+    "before": {
+      "date": "2026-09-19T22:15:59.929Z",
+      "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+      "node": "v24.11.1",
+      "actors": 100,
+      "ticks": 650,
+      "elapsedMs": 22622.5332,
+      "p50": 32.461599999998725,
+      "p95": 63.940599999999904,
+      "p99": 83.56670000000031,
+      "max": 104.55659999999989,
+      "hunted": 12,
+      "corpses": 12,
+      "animals": 88,
+      "garments": 33,
+      "research": 89638420,
+      "worldHash": "029620146f358158a41e497f05cd27c54c0db01a5415a8f44e94b0978e77f043",
+      "errors": []
+    },
+    "after": {
+      "date": "2026-09-19T22:20:02.833Z",
+      "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+      "node": "v24.11.1",
+      "actors": 100,
+      "ticks": 650,
+      "elapsedMs": 21528.801600000003,
+      "p50": 29.84270000000106,
+      "p95": 61.3451,
+      "p99": 75.928100000001,
+      "max": 106.44410000000062,
+      "hunted": 12,
+      "corpses": 12,
+      "animals": 88,
+      "garments": 33,
+      "research": 89638420,
+      "worldHash": "029620146f358158a41e497f05cd27c54c0db01a5415a8f44e94b0978e77f043",
+      "errors": []
+    }
+  },
+  "exactFinalWorldHashEqual": true,
+  "limits": "One instrumented run before and one after, same 100-actor hunting workload. Timings include sampling overhead and do not establish a general performance gain. Source/profile captures do not survive a synchronous decision."
+}

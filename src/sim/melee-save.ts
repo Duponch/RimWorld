@@ -30,7 +30,7 @@ export function validateMelee(world:World):string[] {
       const s=world.structures.find(s=>s.id===m.strike!.targetId),c=m.strike.structure;
       if(s&&(s.kind!=='wall'&&s.kind!=='door'&&s.kind!=='cooler'||s.x!==c.x||s.z!==c.z)||[world.pawns,world.jobs,world.piles,world.resources].some(items=>items.some(item=>item.id===m.strike!.targetId))||world.packed.some(p=>p.building.id===m.strike!.targetId))errors.push('Barrier recovery conflicts with a live entity.');
     }
-    if(m.strike&&(!m.strike.structure&&!world.pawns.some(t=>t.id===m.strike!.targetId&&t.id!==p.id)&&!world.raids?.departed.some(d=>d.pawnId===m.strike!.targetId)&&!(world.schemaVersion>=78&&world.wildlife?.animals.some(a=>a.id===m.strike!.targetId))||(p.motion?.end??0)>world.tick||p.shooting?.stance?.phase==='aim'))errors.push('Invalid melee recovery.');
+    if(m.strike&&(!m.strike.structure&&!world.pawns.some(t=>t.id===m.strike!.targetId&&t.id!==p.id)&&!world.raids?.departed.some(d=>d.pawnId===m.strike!.targetId)&&!(world.schemaVersion>=78&&world.wildlife?.animals.some(a=>a.id===m.strike!.targetId))&&!(world.schemaVersion>=79&&world.piles.some(p=>p.corpse?.animalId===m.strike!.targetId))||(p.motion?.end??0)>world.tick||p.shooting?.stance?.phase==='aim'))errors.push('Invalid melee recovery.');
   }
   return errors;
 }

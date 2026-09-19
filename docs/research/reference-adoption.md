@@ -1,5 +1,7 @@
 # Adoption du référentiel utilisateur
 
+V79 — chapitres10–12,13/15,20/21 ; SYS/TEST-062..064,077/078,121..125 : chaîne chasse/corps/produits adoptée, horloge/accès/conservation/3D adaptés, autres espèces/élevage différés. [Recherche multi-source](hunting-reference.md). Génération/départ : chapitres6/7,11/12,13,24 ; SYS-016..019,084/085,121..125,132..135 : [préparation du scénario](scenario-start-reference.md), sans changement du départ livré.
+
 V78 — chapitres 11/12, 13–15 et 20/21 ; SYS/TEST-089..091,096,098..112,121..125 : contact/anatomie/conséquences adoptés, approche locale/horloge/3D adaptées, chasse alimentaire et élevage différés. [Confrontation fraîche multi-source](animal-melee-reference.md).
 
 V75 — [Conservation froide](cold-store-reference.md) : chapitres 10/14/15/22 et scène E du chapitre 32 ; SYS/TEST-023–025 (air/toit/porte), 077 (nourriture), 126 (température), 127 (énergie), 128 (combustible). **Adopter** manipulation/chaîne énergétique, consigne, deux faces, vieillissement local ; **adapter** intégration continue et bases électriques connues du scénario ; **différer** gelures/saisons/réseau complet ; **vérifier** constantes contre wiki et classes Core datées. Le miroir de mai 2026 précède le correctif officiel de juin ; aucune parité du patch courant déclarée.

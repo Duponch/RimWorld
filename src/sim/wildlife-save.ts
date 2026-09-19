@@ -1,3 +1,4 @@
+import { validCorpseRot } from './corpse-save.ts';
 import { validMeleeShape,validStunShape } from './melee-save.ts';
 import { validateMedicalRecord } from './injury-validation.ts';
 import { medicalStatus } from './injury-state.ts';
@@ -20,11 +21,12 @@ export function validateWildlife(w:World,version:number,ids:Set<number>):string[
   let navigation:ReturnType<typeof animalNavigation>|undefined;
   const cell=(c:unknown):c is {x:number;z:number}=>object(c)&&keys(c,['x','z'])&&int(c.x,0,w.width-1)&&int(c.z,0,w.height-1);
   for(const a of s.animals) {
-    if(!object(a)||!keys(a,['id','species','sex','x','z','food','rest','state','path','motion','nextDecision','meal',...(version>=77?['health','flee','stagger','sleepUntilCore']:[]),...(version>=78?['threat','retaliation','strike','stun']:[])])||!int(a.id,1,w.nextId-1)||!int(a.x,0,w.width-1)||!int(a.z,0,w.height-1)||a.species!=='hare'||!['female','male'].includes(a.sex)||!finite(a.food,0,HARE.nutrition)||!finite(a.rest,0,1)||!['idle','moving','eating','sleeping','hungry',...(version>=77?['downed','dead']:[])].includes(a.state)||!int(a.nextDecision,0,w.tick+100)||!Array.isArray(a.path)||a.path.length>w.width*w.height||!a.path.every(cell)){errors.push('Invalid wild animal.');continue;}
+    if(!object(a)||!keys(a,['id','species','sex','x','z','food','rest','state','path','motion','nextDecision','meal',...(version>=77?['health','flee','stagger','sleepUntilCore']:[]),...(version>=78?['threat','retaliation','strike','stun']:[]),...(version>=79?['corpseRot']:[])])||!int(a.id,1,w.nextId-1)||!int(a.x,0,w.width-1)||!int(a.z,0,w.height-1)||a.species!=='hare'||!['female','male'].includes(a.sex)||!finite(a.food,0,HARE.nutrition)||!finite(a.rest,0,1)||!['idle','moving','eating','sleeping','hungry',...(version>=77?['downed','dead']:[])].includes(a.state)||!int(a.nextDecision,0,w.tick+100)||!Array.isArray(a.path)||a.path.length>w.width*w.height||!a.path.every(cell)){errors.push('Invalid wild animal.');continue;}
+    if(a.corpseRot!==undefined&&(version<79||a.state!=='dead'||!a.health?.death||!validCorpseRot(a.corpseRot,w.tick,a.health.death.tick)))errors.push('Invalid retained animal corpse age.');
     if(ids.has(a.id))errors.push('Duplicate wildlife identity.');ids.add(a.id);
     if(['water','rock'].includes(w.tiles[a.z*w.width+a.x]!.terrain)||w.structures.some(s=>(s.kind==='wall'||s.kind==='cooler')&&s.x===a.x&&s.z===a.z))errors.push('Wildlife inside solid terrain.');
     if(a.health!==undefined){
-      if(validateMedicalRecord(a.health,true,true,false,false,true)){errors.push('Invalid animal medical record.');continue;}
+      if(validateMedicalRecord(a.health,true,true,false,false,true,version>=79)){errors.push('Invalid animal medical record.');continue;}
       if(a.health.death?a.health.tick>w.tick:a.health.tick!==w.tick)errors.push('Invalid animal medical clock.');
       const status=medicalStatus(a.health);if(status==='mobile'?a.state==='dead'||a.state==='downed':a.state!==status)errors.push('Invalid animal medical state.');
     } else if(a.state==='dead'||a.state==='downed')errors.push('Animal stopped without health record.');

@@ -9,10 +9,12 @@ export function validatePreservation(world: World, version: number): string[] {
     if (world.spoiled !== undefined || world.piles.some(p => p.rot !== undefined)) errors.push('Legacy save contains food preservation fields.');
     return errors;
   }
-  if (!record(world.spoiled) || Object.keys(world.spoiled).length !== (world.spoiled['herbal-medicine']===undefined?3:4)
+  if (!record(world.spoiled) || Object.keys(world.spoiled).length !== (3+(world.spoiled['herbal-medicine']===undefined?0:1)+(world.spoiled['hare-meat']===undefined?0:1))
     || world.spoiled['herbal-medicine']!==undefined&&(version<51||!Number.isSafeInteger(world.spoiled['herbal-medicine'])||world.spoiled['herbal-medicine']<0)
+    || world.spoiled['hare-meat']!==undefined&&(version<79||!Number.isSafeInteger(world.spoiled['hare-meat'])||world.spoiled['hare-meat']<0)
     || (['berries','rice','simple-meal'] as const).some(key => !Number.isSafeInteger(world.spoiled[key]) || world.spoiled[key] < 0)) errors.push('Invalid cumulative food spoilage.');
   for (const pile of world.piles) {
+    if(pile.item==='hare-corpse')continue; // Full persistent-corpse contract validates its age separately.
     if (!isPerishable(pile.item)) { if (pile.rot !== undefined) errors.push('Unexpected food age.'); continue; }
     const rot = pile.rot;
     if (!record(rot) || Object.keys(rot).length !== (rot.rate===undefined?2:3) || rot.rate!==undefined&&(version<38||typeof rot.rate!=='number'||!Number.isFinite(rot.rate)||rot.rate<0||rot.rate>=1) || !Number.isSafeInteger(rot.atTick) || rot.atTick < 0 || rot.atTick > world.tick

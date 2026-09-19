@@ -1,6 +1,6 @@
 # Validation — mêlée animale V78
 
-19 septembre 2026. [Contrat](../development/animal-melee.md), [recherche fraîche](../research/animal-melee-reference.md), [estimations révisées par système](../ROADMAP.md#estimation-davancement--revue-du-19-septembre-2026-v78). Mêlée commandée, riposte locale et morsures réelles disponibles via Faune. Chasse automatique, dépouille transportable, boucherie et viande **non livrées** ; pas de nouvelle espèce ou nouvel ItemId.
+19 septembre 2026. [Contrat](../development/animal-melee.md), [recherche fraîche](../research/animal-melee-reference.md), [estimations révisées par système](../ROADMAP.md#estimation-davancement--revue-du-19-septembre-2026-v79). Mêlée commandée, riposte locale et morsures réelles disponibles via Faune. Chasse automatique, dépouille transportable, boucherie et viande **non livrées** ; pas de nouvelle espèce ou nouvel ItemId.
 
 ## Vérifications regroupées
 

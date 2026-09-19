@@ -9,7 +9,7 @@ export function doorTraffic(count:number):World {
   const w=deconstructionCamp(count,250);w.tick=2000;
   w.pawns.forEach((p,i)=>{
     const x=10+(i%10)*22,z=10+Math.floor(i/10)*22;
-    p.x=x-3;p.z=z;p.priorities={research:0, patient:0,bedrest:0,doctor:0,mine:0,craft:0,gather:2,build:1,haul:2,grow:0,cook:0};
+    p.x=x-3;p.z=z;p.priorities={hunt:0,research:0, patient:0,bedrest:0,doctor:0,mine:0,craft:0,gather:2,build:1,haul:2,grow:0,cook:0};
     for(let dx=0;dx<=4;dx++)for(let dz=-2;dz<=2;dz++)if((dx===0||dx===4||Math.abs(dz)===2)&&!(dx===0&&dz===0))fixtureBuilding(w,'wall',x+dx,z+dz);
     addGroundMaterial(w,'wood',25,{x:x-3,z:z-1},'wood');
     w.resources.push({id:w.nextId++,kind:'tree',x:x+2,z,amount:12});

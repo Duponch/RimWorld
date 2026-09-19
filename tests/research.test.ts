@@ -1,3 +1,4 @@
+import { withoutHunting } from './scenarios/legacy-skills';
 import { expect,test } from 'vitest';
 import { readFileSync,writeFileSync } from 'node:fs';
 import { applyCommand,createWorld,stepWorld,serializeWorld,deserializeWorld,validateWorld,footprintCells } from '../src/sim/index';
@@ -36,7 +37,7 @@ test('bench geometry, material costs and researched gating apply to every orient
   expect(constructionRecipe({kind:'research-bench',material:'steel'}).ingredients).toEqual([{item:'steel',quantity:100}]);
   expect(constructionRecipe({kind:'tailor-bench',material:'wood'}).ingredients).toEqual([{item:'wood',quantity:75}]);
   for(const orientation of [0,1,2,3] as const){const s={...bench(w),orientation};w.structures=[];const cells=footprintCells(s);expect(cells).toHaveLength(6);for(let z=6;z<=10;z++)for(let x=6;x<=10;x++)expect(footprintContains(s,{x,z})).toBe(cells.some(c=>c.x===x&&c.z===z));}
-  const old=JSON.parse(serializeWorld(w));old.schemaVersion=72;for(const p of old.pawns){delete p.priorities.research;delete p.skills.intellectual;}
+  const old=JSON.parse(serializeWorld(w));old.schemaVersion=72;withoutHunting(old);for(const p of old.pawns){delete p.priorities.research;delete p.skills.intellectual;}
   const migrated=deserializeWorld(JSON.stringify(old));expect(migrated.research).toBeUndefined();expect(migrated.pawns[0]!.skills.intellectual).toBeUndefined();expect(migrated.pawns[0]!.priorities.research).toBe(3);
   for(const mutation of [(s:any)=>s.research={project:null,points:0},(s:any)=>s.pawns[0].priorities.research=1,(s:any)=>s.pawns[0].skills.intellectual={level:8,xp:0,dailyXp:0,passion:0}]){const bad=structuredClone(old);mutation(bad);expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(/version 72/);}
   for(const state of [{project:null,points:CLOTHING_RESEARCH_COST},{project:'complex-clothing',points:-1},{project:null,points:1,completedAt:0},{project:'unknown',points:0}]){const bad=JSON.parse(serializeWorld(w));bad.research=state;expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();}

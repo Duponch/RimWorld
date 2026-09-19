@@ -196,7 +196,7 @@ export class PawnLayer {
       const job=pawn.state==='working'?world.jobs.find(j=>j.id===pawn.jobId):undefined;
       const garment=pawn.equipmentTask?.action==='wear'?world.piles.find(p=>p.id===pawn.equipmentTask!.itemId):undefined;
       const dressing=garment?.owner.type==='ground'?garment.owner:undefined;
-      const work = pawn.state==='working' ? (job?constructionWorkTarget(world,job):dressing) ?? (pawn.research ? world.structures.find(s=>s.id===pawn.research!.stationId) : pawn.cooking ? pawn.cooking.actionCell : pawn.haul?.serviceProgress ? world.structures.find(s=>pawn.haul?.destination.type==='fuel'&&s.id===pawn.haul.destination.structureId) : pawn.haul?.pickupCell) : undefined;
+      const work = pawn.state==='working' ? (job?constructionWorkTarget(world,job):dressing) ?? (pawn.hunting?.phase==='finish' ? world.wildlife?.animals.find(a=>a.id===pawn.hunting!.animalId) : pawn.research ? world.structures.find(s=>s.id===pawn.research!.stationId) : pawn.cooking ? pawn.cooking.actionCell : pawn.haul?.serviceProgress ? world.structures.find(s=>pawn.haul?.destination.type==='fuel'&&s.id===pawn.haul.destination.structureId) : pawn.haul?.pickupCell) : undefined;
       if(work) {yaw=Math.atan2(work.x-pawn.x,work.z-pawn.z);from.w=yaw;}
       const game=pawn.state==='recreating'&&pawn.recreation.task?.activity==='horseshoes'?world.structures.find(s=>s.id===pawn.recreation.task!.buildingId):undefined;
       if(game){yaw=Math.atan2(game.x-pawn.x,game.z-pawn.z);from.w=yaw;}
@@ -218,7 +218,7 @@ export class PawnLayer {
       equipment.setXYZ(index,gears.has(pawn.id)?1:0,look.tribal?2:look.shirt?1:0,look.vest?1:0);
       const load = carried.get(pawn.id);
       const packed=world.packed?.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
-      cargo.setXY(index, pawn.rescue?.phase==='carry'?-1:packed?4:load ? load.kind==='unfinished'?25:load.kind==='textile'?24:load.kind==='apparel'?(load.item==='cloth-tribalwear'?26:load.item==='cloth-shirt'?22:23):load.kind==='weapon'?21:load.kind==='medicine' ? (load.item==='herbal-medicine'?18:load.item==='medicine'?19:20) : load.kind === 'component' ? 17 : load.kind === 'blocks' ? blockCargoKind(load.item) : load.kind === 'steel' ? 11 : load.kind === 'chunk' ? chunkCargoKind(load.item) : load.kind === 'wood' ? 1 : load.item === 'survival-meal' ? 3 : 2 : 0, packed||load?.kind==='unfinished'||load?.kind==='weapon'||load?.kind==='apparel'?1:load ? Math.min(1, load.quantity / CARRY_CAPACITY) : 0);
+      cargo.setXY(index, pawn.rescue?.phase==='carry'?-1:packed?4:load ? load.kind==='corpse'?27:load.item==='light-leather'?28:load.item==='hare-meat'?29:load.kind==='unfinished'?25:load.kind==='textile'?24:load.kind==='apparel'?(load.item==='cloth-tribalwear'?26:load.item==='cloth-shirt'?22:23):load.kind==='weapon'?21:load.kind==='medicine' ? (load.item==='herbal-medicine'?18:load.item==='medicine'?19:20) : load.kind === 'component' ? 17 : load.kind === 'blocks' ? blockCargoKind(load.item) : load.kind === 'steel' ? 11 : load.kind === 'chunk' ? chunkCargoKind(load.item) : load.kind === 'wood' ? 1 : load.item === 'survival-meal' ? 3 : 2 : 0, packed||load?.kind==='corpse'||load?.kind==='unfinished'||load?.kind==='weapon'||load?.kind==='apparel'?1:load ? Math.min(1, load.quantity / CARRY_CAPACITY) : 0);
     });
     for (const id of this.visuals.keys()) if (!present.has(id)){this.visuals.delete(id);this.targetPoses.delete(id);}
     for (const attr of [fromAttribute, toAttribute, motion, tint, cargo, equipment]) attr.needsUpdate = true;

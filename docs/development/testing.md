@@ -1,5 +1,7 @@
 # Stratégie de validation
 
+V79 : la campagne regroupe `hunting.test`, `corpses.test` et `butchery.test` avec les contrats de cuisine, migrations et pilote commun. La chasse part d'une proie saine et d'une arme ; seules les fixtures de frontières injectent une blessure. La vraie UI exécute `perform()` pour chasse, filtre de dépouilles, emplacement et factures, puis observe portage/sauvegarde/production/repas à 1×/6×. `HUNTING=1 WILDLIFE=1 VALIDATION_VERSION=v79` ajoute un chasseur par six acteurs aux bancs mixtes ; conserver les ateliers des autres personnes et les percentiles/pics. [Preuves](../history/validation-hunting-v79.md).
+
 V78 : `animal-melee.test.ts` regroupe contact/riposte sur 24 graines, reprise, anatomie, portée/vue/délai, expiration pendant arête et mutations de projection médicale. Le pilote UI commun traite clic **Faune → Attaquer au contact** et son acquittement. `ANIMAL_MELEE=1 WILDLIFE=1 VALIDATION_VERSION=v78` étend les bancs mixtes existants : un mineur sur six combat, les autres conservent leurs ateliers. Mesures et longs pilotes successifs ; [preuves et limites](../history/validation-animal-melee-v78.md).
 
 ## Procédure courante de livraison

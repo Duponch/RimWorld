@@ -25,7 +25,7 @@ export function billControls(station:Structure,send:(command:Command)=>void):HTM
       for(const [v,text] of choices){const o=document.createElement('option');o.value=v;o.textContent=text;field.append(o);}field.value=value;
       row.append(label,field);fields.set(key,field);return row;
     };
-    form.append(select('mode','Répéter',[['times','Faire X fois'],['until','Jusqu’à X en réserve'],['forever','Sans limite']],bill.mode),input('target',bill.recipe==='stone-blocks'?'X : opérations / blocs en réserve':'Quantité','number',String(bill.target)),input('suspended','Suspendre','checkbox',bill.suspended));
+    form.append(select('mode','Répéter',[['times','Faire X fois'],['until','Jusqu’à X en réserve'],['forever','Sans limite']],bill.mode),input('target',bill.recipe==='butcher-creature'?'X : dépouilles / viande en réserve':bill.recipe==='stone-blocks'?'X : opérations / blocs en réserve':'Quantité','number',String(bill.target)),input('suspended','Suspendre','checkbox',bill.suspended));
     const details=document.createElement('details'),summary=document.createElement('summary');summary.textContent='Ingrédients et livraison';details.append(summary);
     details.append(...PRODUCTION_RECIPES[bill.recipe].inputs.map(i=>input(i,ITEM_DEFINITIONS[i].label,'checkbox',bill.filters[i]??false)),input('radius','Rayon depuis le poste','number',String(bill.radius)),select('destination','Produit',[['stockpile','Meilleure réserve'],['drop','Déposer au sol']],bill.destination));form.append(details);
     form.addEventListener('input',()=>{form.dataset.dirty='true';});
@@ -44,7 +44,7 @@ export function billControls(station:Structure,send:(command:Command)=>void):HTM
 export function updateBillControls(root:ParentNode,station:Structure,world:World):void {
   for(const bill of station.bills??[]) {
     const form=root.querySelector<HTMLElement>(`[data-bill="${bill.id}"]`);if(!form)continue;
-    form.querySelector('[data-bill-status]')!.textContent=`${PRODUCTION_RECIPES[bill.recipe].label} · ${bill.suspended?'suspendue':bill.mode==='times'?`${bill.target} restant(s)`:bill.mode==='until'?`${countedProducts(world,bill)} / ${bill.target} stocké(s)/porté(s)`:'sans limite'}`;
+    form.querySelector('[data-bill-status]')!.textContent=`${PRODUCTION_RECIPES[bill.recipe].label} · ${bill.suspended?'suspendue':bill.mode==='times'?`${bill.target} restant(s)`:bill.mode==='until'?`${countedProducts(world,bill)} / ${bill.target} ${bill.recipe==='butcher-creature'?'viande(s) stockée(s)':'stocké(s)/porté(s)'}`:'sans limite'}`;
     form.querySelector('[data-bill-reason]')!.textContent=queryCookingBillStatus(world,station,bill).reason;
     if(!form.dataset.dirty)(form.querySelector('[data-field="target"]') as HTMLInputElement).value=String(bill.target);
   }

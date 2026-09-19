@@ -1,3 +1,4 @@
+import { withoutHunting } from './scenarios/legacy-skills';
 import { expect,test } from 'vitest';
 import { applyCommand,createWorld,stepWorld,serializeWorld,deserializeWorld,validateWorld } from '../src/sim/index';
 import { HEAT_UNIT,heatStage,heatModifiers,nextHeatSeverity,comfortableTemperature,apparelInsulation } from '../src/sim/heat-rules';
@@ -34,7 +35,7 @@ test('heat thresholds, dead band, quality and whole-body consequences remain dis
 });
 
 test('heatwave envelope, independent calendar, strict migration and exact continuation across onset/end',()=>{
-  const w=createWorld(42,16,16);w.pawns=[];const old=JSON.parse(serializeWorld(w));old.schemaVersion=73;expect(deserializeWorld(JSON.stringify(old)).heatwaves).toBeUndefined();
+  const w=createWorld(42,16,16);w.pawns=[];const old=JSON.parse(serializeWorld(w));old.schemaVersion=73;withoutHunting(old);expect(deserializeWorld(JSON.stringify(old)).heatwaves).toBeUndefined();
   const oldBad=structuredClone(old);oldBad.heatwaves={};expect(()=>deserializeWorld(JSON.stringify(oldBad))).toThrow(/version 73/);
   const rng=w.rng;enableHeatwaves(w);expect(w.rng).toBe(rng);const s=w.heatwaves!;expect(s.nextAt).toBeGreaterThanOrEqual(36000);expect(s.nextAt).toBeLessThan(42000);
   w.tick=s.nextAt-1;stepWorld(w);const a=s.active!;expect(a.end-a.start).toBeGreaterThanOrEqual(9000);expect(heatwaveOffset(a.start,s)).toBe(0);expect(heatwaveOffset(a.start+600,s)).toBe(8.5);expect(heatwaveOffset(a.start+1200,s)).toBe(17);expect(heatwaveOffset(a.end-600,s)).toBe(8.5);expect(heatwaveOffset(a.end,s)).toBe(0);

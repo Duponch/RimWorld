@@ -1,3 +1,4 @@
+import { withoutHunting,withMigratedHunting } from './scenarios/legacy-skills';
 import { expect,test } from 'vitest';
 import { applyCommand,stepWorld,validateWorld,serializeWorld,deserializeWorld } from '../src/sim/index';
 import { HARE_MODEL,HUMAN_MODEL } from '../src/sim/body-model';
@@ -55,7 +56,8 @@ test('violent downing and later blood loss are distinct, death is irreversible a
   advanceAnimalHealth(w,a);expect(a.state).toBe('downed');expect(a.health.death).toBeUndefined();
   damageAnimalWithBullet(w,a,{part:'heart',damage:7});expect(a.state).toBe('dead');
   const dead=structuredClone(a),piles=structuredClone(w.piles),rng=w.rng;stepWorld(w,50);expect(a.food).toBe(dead.food);expect(a.health).toEqual(dead.health);
-  expect(a.meal).toBeUndefined();expect(a.path).toEqual([]);expect(w.piles).toEqual(piles);
+  expect(a.meal).toBeUndefined();expect(a.path).toEqual([]);expect(w.piles.filter(p=>p.kind!=='corpse')).toEqual(piles);
+  expect(w.piles.filter(p=>p.corpse)).toHaveLength(1);expect(w.piles.find(p=>p.id===a.id)?.corpse).toMatchObject({animalId:a.id,health:dead.health});expect(w.wildlife!.animals).not.toContain(a);
   const before=structuredClone(w);expect(()=>damageAnimalWithBullet(w,a,{part:'left-hand',damage:1})).toThrow();expect(w).toEqual(before);expect(rng).toBeGreaterThan(0);
 });
 
@@ -93,8 +95,8 @@ test('flight negotiates an enclosure, captured diagonal remains continuous after
 });
 
 test('V76 migration is neutral and corruption cannot cross species, clocks, phases or projectile schemas',()=>{
-  const w=animalCombatCamp(),a=w.wildlife!.animals[0]!,legacy=structuredClone(w) as any;legacy.schemaVersion=76;
-  const migrated=deserializeWorld(JSON.stringify(legacy));expect(migrated).toEqual(w);expect(migrated.wildlife!.animals[0]!.health).toBeUndefined();
+  const w=animalCombatCamp(),a=w.wildlife!.animals[0]!,legacy=structuredClone(w) as any;legacy.schemaVersion=76;withoutHunting(legacy);
+  const migrated=deserializeWorld(JSON.stringify(legacy));expect(migrated).toEqual(withMigratedHunting(w));expect(migrated.wildlife!.animals[0]!.health).toBeUndefined();
   legacy.wildlife.animals[0].health=record();expect(()=>deserializeWorld(JSON.stringify(legacy))).toThrow();
   damageAnimalWithBullet(w,a,{part:'tail',damage:1});expect(validateWorld(w)).toEqual([]);
   for(const mutate of [(s:any)=>s.wildlife.animals[0].health.body='human',(s:any)=>s.wildlife.animals[0].health.injuries[0].part='left-hand',(s:any)=>s.wildlife.animals[0].health.tick++,

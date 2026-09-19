@@ -1,10 +1,10 @@
 import type { ItemId } from './items.ts';
 import { TICKS_PER_DAY, type MaterialPile, type World } from './types.ts';
 
-export const ROT_DAYS = Object.freeze({ berries: 14, rice: 40, 'simple-meal': 4, 'herbal-medicine':150 } as const);
+export const ROT_DAYS = Object.freeze({ berries: 14, rice: 40, 'simple-meal': 4, 'herbal-medicine':150, 'hare-meat':2, 'hare-corpse':2.5 } as const);
 export type PerishableItem = keyof typeof ROT_DAYS;
 export interface RotState { progress: number; atTick: number; rate?:number }
-export type SpoiledFood = Record<Exclude<PerishableItem,'herbal-medicine'>, number>&{'herbal-medicine'?:number};
+export type SpoiledFood = Record<Exclude<PerishableItem,'herbal-medicine'|'hare-meat'|'hare-corpse'>, number>&{'herbal-medicine'?:number;'hare-meat'?:number};
 export const emptySpoilage = (): SpoiledFood => ({ berries: 0, rice: 0, 'simple-meal': 0 });
 export const isPerishable = (item: ItemId): item is PerishableItem => Object.hasOwn(ROT_DAYS, item);
 export const rotRateAtTemperature = (temperature: number): number => Math.max(0, Math.min(1, temperature / 10));
@@ -30,5 +30,5 @@ export function mergeRot(target: MaterialPile, quantity: number, incomingAge: nu
   target.rot = { progress: (rotAge(target, tick) * target.quantity + incomingAge * quantity) / (target.quantity + quantity), atTick: tick,...target.rot?.rate!==undefined?{rate:target.rot.rate}:{} };
 }
 export function spoiledUnits(world: World): number {
-  return world.spoiled.berries + world.spoiled.rice + world.spoiled['simple-meal'];
+  return world.spoiled.berries + world.spoiled.rice + world.spoiled['simple-meal']+(world.spoiled['hare-meat']??0);
 }

@@ -1,3 +1,4 @@
+import { withoutHunting } from './scenarios/legacy-skills';
 import { expect,test } from 'vitest';
 import { writeFileSync } from 'node:fs';
 import { applyCommand,stepWorld,serializeWorld,deserializeWorld,validateWorld,createWorld } from '../src/sim/index';
@@ -55,7 +56,7 @@ test('research switching, construction gating, invalid commands, migration and s
   const {w:active,s}=fixture();for(const target of [NaN,Infinity,-274,1001]){const before=serializeWorld(active);expect(applyCommand(active,{type:'cooler-target',structureId:s.id,target}).ok).toBe(false);expect(serializeWorld(active)).toBe(before);}
   command(active,{type:'cooler-target',structureId:s.id,target:-5});stepWorld(active,40);const copy=deserializeWorld(serializeWorld(active));stepWorld(active,100);stepWorld(copy,100);expect(copy).toEqual(active);
   for(const corrupt of [(w:World)=>delete w.structures.find(s=>s.kind==='cooler')!.cooler,(w:World)=>w.structures.find(s=>s.kind==='cooler')!.cooler!.target=Infinity,(w:World)=>delete w.research!.airConditioning]){const bad=structuredClone(active);corrupt(bad);expect(validateWorld(bad).length).toBeGreaterThan(0);}
-  const old=JSON.parse(serializeWorld(createWorld(42,16,16)));old.schemaVersion=74;expect(deserializeWorld(JSON.stringify(old)).research).toBeUndefined();
+  const old=JSON.parse(serializeWorld(createWorld(42,16,16)));old.schemaVersion=74;withoutHunting(old);expect(deserializeWorld(JSON.stringify(old)).research).toBeUndefined();
   for(const corrupt of [(w:any)=>w.research={project:null,points:0,airConditioning:{points:0}},(w:any)=>w.pawns[0].health={tick:0,nextInjuryId:1,injuries:[],missing:[],bloodLoss:0,hypothermia:1},(w:any)=>w.structures[0]={id:w.nextId++,kind:'bed',x:0,z:0,orientation:0,footprint:'standard',cooler:{target:21,high:false}}]){const bad=structuredClone(old);corrupt(bad);expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(/version 74/);}
 });
 

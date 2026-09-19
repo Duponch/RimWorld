@@ -1,3 +1,5 @@
+import { validCorpseShape,validateCorpses } from './corpse-save.ts';
+import { validHuntingTask,validateHunting } from './hunting-save.ts';
 import { validateWildlife } from './wildlife-save.ts';
 import { validateHeat } from './heat-save.ts';
 import { validateResearch } from './research-save.ts';
@@ -86,7 +88,7 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validateWorld(input: unknown): string[] {
   return validateSchema(input, SCHEMA_VERSION);
 }
-function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78): string[] {
+function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(input)) return ['World must be an object.'];
@@ -114,6 +116,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
       if (integer(input.nextId, 1) && item.id >= input.nextId) errors.push('nextId must exceed all entity IDs.');
       if (key === 'pawns') {
         if(!validDisturbance(item.disturbance,version,input.tick as number))errors.push('Invalid disturbance for schema.');
+        if(!validHuntingTask(item.hunting,version,input.tick as number))errors.push('Invalid hunting task for schema.');
         if(!validTacticsShape(item.tactics,version,input as unknown as World))errors.push('Invalid tactics shape for schema.');
         if(!validAffiliationShape(item,version,input as unknown as World))errors.push('Invalid affiliation or flee shape for schema.');
         if(version>=46?!integer((item.priorities as Record<string,unknown>)?.doctor,0,4):(item.priorities as Record<string,unknown>)?.doctor!==undefined)errors.push('Invalid medical work priority for schema.');
@@ -183,6 +186,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
           }
         } else if (item.comfort !== undefined || item.memories !== undefined || (record(item.need) && item.need.dining !== undefined)) errors.push('Legacy save contains version 4 fields.');
         if (haul !== null) {
+          if(record(haul)&&record(haul.destination)&&haul.destination.forHunting!==undefined&&!(version>=79&&haul.destination.type==='stockpile'&&haul.destination.forHunting===true))errors.push('Invalid hunting haul provenance.');
           if (record(haul) && haul.pickupCell!==undefined && (version<6 || haul.phase!=='deliver' || !record(haul.pickupCell) || !coord(haul.pickupCell))) errors.push('Invalid pickup facing cell.');
           if (!record(haul) || !integer(haul.sourcePileId, 1) || !integer(haul.quantity, 1, CARRY_CAPACITY) || !oneOf(haul.phase, ['pickup', 'deliver'])
             || !(haul.carryPileId === null || integer(haul.carryPileId, 1)) || !record(haul.destination)
@@ -197,7 +201,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
         }
       } else if (key === 'structures' || key === 'jobs') {
         if(item.medical!==undefined&&(version<46||key!=='structures'||item.kind!=='bed'||item.medical!==true))errors.push('Invalid medical bed role.');
-        if (!oneOf(item.kind, key === 'structures' ? (version < 4 ? ['wall', 'bed'] : ['wall', 'bed', 'table', 'stool', ...(version>=10?['campfire']:[]), ...(version>=15?['horseshoes']:[]), ...(version>=31?['stonecutter']:[]), ...(version>=34?['door']:[]), ...(version>=40?['passive-cooler']:[]),...(version>=42?['wood-generator','standing-lamp']:[]),...(version>=75?['cooler']:[]),...(version>=73?['research-bench','tailor-bench']:[]),...(version>=72?['crafting-spot']:[])]) : (version < 4 ? ['chop', 'harvest', 'wall', 'bed'] : [...(version>=35?['build-roof','remove-roof']:[]), ...(version>=28?['mine']:[]), ...(version>=25?['install','uninstall']:[]), ...(version>=75?['cooler']:[]),...(version>=73?['research-bench','tailor-bench']:[]),...(version>=67?['repair']:[]), ...(version>=24?['deconstruct']:[]), 'chop', 'harvest', ...(version >= 7 ? ['cut'] : []), ...(version >= 8 ? ['sow'] : []), 'wall', 'bed', 'table', 'stool', ...(version>=10?['campfire']:[]), ...(version>=15?['horseshoes']:[]), ...(version>=31?['stonecutter']:[]), ...(version>=34?['door']:[]), ...(version>=40?['passive-cooler']:[]),...(version>=42?['wood-generator','standing-lamp']:[])])) || !integer(item.orientation, 0, 3)
+        if (!oneOf(item.kind, key === 'structures' ? (version < 4 ? ['wall', 'bed'] : ['wall', 'bed', 'table', 'stool', ...(version>=10?['campfire']:[]), ...(version>=15?['horseshoes']:[]), ...(version>=31?['stonecutter']:[]), ...(version>=34?['door']:[]), ...(version>=40?['passive-cooler']:[]),...(version>=42?['wood-generator','standing-lamp']:[]),...(version>=75?['cooler']:[]),...(version>=73?['research-bench','tailor-bench']:[]),...(version>=72?['crafting-spot']:[]),...(version>=79?['butcher-spot']:[])]) : (version < 4 ? ['chop', 'harvest', 'wall', 'bed'] : [...(version>=35?['build-roof','remove-roof']:[]), ...(version>=28?['mine']:[]), ...(version>=25?['install','uninstall']:[]), ...(version>=75?['cooler']:[]),...(version>=73?['research-bench','tailor-bench']:[]),...(version>=67?['repair']:[]), ...(version>=24?['deconstruct']:[]), 'chop', 'harvest', ...(version >= 7 ? ['cut'] : []), ...(version >= 8 ? ['sow'] : []), 'wall', 'bed', 'table', 'stool', ...(version>=10?['campfire']:[]), ...(version>=15?['horseshoes']:[]), ...(version>=31?['stonecutter']:[]), ...(version>=34?['door']:[]), ...(version>=40?['passive-cooler']:[]),...(version>=42?['wood-generator','standing-lamp']:[])])) || !integer(item.orientation, 0, 3)
           || !oneOf(item.footprint, ['standard', 'legacy-single']) || (item.footprint === 'legacy-single' && item.kind !== 'bed' && !(version>=24&&item.kind==='deconstruct'||version>=25&&['install','uninstall'].includes(String(item.kind))))) errors.push('Invalid structure definition or footprint.');
         if (key==='structures' && isFueledBuilding(item.kind)) {
           const f=item.fuel;
@@ -205,10 +209,12 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
         } else if(item.fuel!==undefined)errors.push('Unexpected fuel state.');
         if (key === 'jobs' && (!oneOf(item.status, ['pending', 'active']) || !(item.reservedBy === null || integer(item.reservedBy, 1)) || !stock(item.escrow) || !integer(item.progress, 0, version>=31?Number.MAX_SAFE_INTEGER:119))) errors.push('Invalid job.');
       } else if (key === 'piles') {
+        if(!validCorpseShape(item,version))errors.push('Invalid corpse metadata for schema.');
+        if(version<79&&['hare-corpse','hare-meat','light-leather'].includes(String(item.item)))errors.push('Future animal product in older save.');
         if(!validUnfinishedShape(item,version))errors.push('Invalid unfinished item.');
         if(!validApparelShape(item,version))errors.push('Invalid apparel state for schema.');
         if(!validWeaponShape(item,version))errors.push('Invalid weapon state for schema.');
-        if (!oneOf(item.kind, ['wood', 'food', ...(version>=28?['chunk']:[]), ...(version>=29?['steel']:[]), ...(version>=32?['blocks']:[]), ...(version>=41?['component']:[]), ...(version>=51?['medicine']:[]), ...(version>=52?['weapon']:[]), ...(version>=63?['apparel']:[]), ...(version>=71?['textile']:[]), ...(version>=72?['unfinished']:[])]) || !integer(item.quantity, 1, MAX_STACK) || !record(item.owner)) errors.push('Invalid material pile.');
+        if (!oneOf(item.kind, ['wood', 'food', ...(version>=28?['chunk']:[]), ...(version>=29?['steel']:[]), ...(version>=32?['blocks']:[]), ...(version>=41?['component']:[]), ...(version>=51?['medicine']:[]), ...(version>=52?['weapon']:[]), ...(version>=63?['apparel']:[]), ...(version>=71?['textile']:[]), ...(version>=72?['unfinished']:[]),...(version>=79?['corpse']:[])]) || !integer(item.quantity, 1, MAX_STACK) || !record(item.owner)) errors.push('Invalid material pile.');
         else {
           if (version >= 5) {
             if (typeof item.item !== 'string' || !Object.hasOwn(ITEM_DEFINITIONS, item.item)) errors.push('Unknown item definition.');
@@ -223,7 +229,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
             : (owner.type === 'pawn'||version>=52&&owner.type==='equipment'||version>=63&&owner.type==='apparel') ? !integer(owner.pawnId, 1) || Object.keys(owner).some(key => !['type', 'pawnId'].includes(key))
               : owner.type === 'job' ? !integer(owner.jobId, 1) || Object.keys(owner).some(key => !['type', 'jobId'].includes(key)) : true) errors.push('Invalid material owner.');
         }
-      } else if (!record(item.filters) || typeof item.filters.wood !== 'boolean' || typeof item.filters.food !== 'boolean' || item.filters.unfinished!==undefined&&(version<72||typeof item.filters.unfinished!=='boolean') || item.filters.textile!==undefined&&(version<71||typeof item.filters.textile!=='boolean') || item.filters.apparel!==undefined&&(version<63||typeof item.filters.apparel!=='boolean') || item.filters.weapon!==undefined&&(version<52||typeof item.filters.weapon!=='boolean') || item.filters.medicine!==undefined&&(version<51||typeof item.filters.medicine!=='boolean') || item.filters.component!==undefined&&(version<41||typeof item.filters.component!=='boolean') || item.filters.blocks!==undefined&&(version<32||typeof item.filters.blocks!=='boolean') || item.filters.steel!==undefined&&(version<29||typeof item.filters.steel!=='boolean') || item.filters.chunk!==undefined&&(version<28||typeof item.filters.chunk!=='boolean') || item.filters.furniture!==undefined&&(version<26||typeof item.filters.furniture!=='boolean')
+      } else if (!record(item.filters) || typeof item.filters.wood !== 'boolean' || typeof item.filters.food !== 'boolean' || item.filters.corpse!==undefined&&(version<79||typeof item.filters.corpse!=='boolean') || item.filters.unfinished!==undefined&&(version<72||typeof item.filters.unfinished!=='boolean') || item.filters.textile!==undefined&&(version<71||typeof item.filters.textile!=='boolean') || item.filters.apparel!==undefined&&(version<63||typeof item.filters.apparel!=='boolean') || item.filters.weapon!==undefined&&(version<52||typeof item.filters.weapon!=='boolean') || item.filters.medicine!==undefined&&(version<51||typeof item.filters.medicine!=='boolean') || item.filters.component!==undefined&&(version<41||typeof item.filters.component!=='boolean') || item.filters.blocks!==undefined&&(version<32||typeof item.filters.blocks!=='boolean') || item.filters.steel!==undefined&&(version<29||typeof item.filters.steel!=='boolean') || item.filters.chunk!==undefined&&(version<28||typeof item.filters.chunk!=='boolean') || item.filters.furniture!==undefined&&(version<26||typeof item.filters.furniture!=='boolean')
         || !integer(item.priority, 1, 4) || !integer(item.capacity, 1, MAX_STACK)) errors.push('Invalid storage policy.');
     }
   }
@@ -262,6 +268,8 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
   if(version>=47)errors.push(...validateCare(world));
   errors.push(...validateHeat(world,version));
   errors.push(...validateWildlife(world,version,ids));
+  if(errors.length)return errors;
+  errors.push(...validateCorpses(world,version),...validateHunting(world,version));
   errors.push(...validateResearch(world,version));
   errors.push(...validateUnfinished(world,version));
   if(version>=63)errors.push(...validateApparel(world));
@@ -319,7 +327,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
     const owned = world.piles.filter(pile => pile.owner.type === 'pawn' && pile.owner.pawnId === pawn.id);
     if (owned.length > 1 || (owned.length === 1 && !(version>=51&&pawn.tend?.medicine&&pawn.tend.phase!=='pickup') && !(version>=48&&pawn.feed&&pawn.feed.phase!=='pickup') && !(version>=44&&pawn.interruptedCargo) && !(version >= 10 && pawn.cooking) && pawn.haul?.phase !== 'deliver' && (legacyV2 || pawn.need?.kind !== 'eat' || pawn.need.phase === 'pickup'))) errors.push('Carried ownership mismatch.');
     if (version>=73&&pawn.research || pawn.jobId !== null || pawn.haul !== null || version>=52&&pawn.equipmentTask || version>=48&&pawn.feed || version>=47&&pawn.tend || version>=46&&pawn.rescue || version >= 10 && pawn.cooking) { if (!['moving', 'working'].includes(pawn.state)) errors.push('Assigned pawn has incompatible state.'); }
-    else if (!(version>=74&&pawn.heatRefuge)&&!(version>=68&&pawn.raid)&&!(version>=65&&pawn.mental?.crisis)&&!(version>=61&&pawn.tactics)&&!(version>=59&&pawn.melee)&&!(version>=58&&pawn.flee) && !(version>=53&&pawn.draft) && !(version>=15&&pawn.recreation.task) && (legacyV2 || pawn.need === null) && (pawn.path.length || ['moving', 'working'].includes(pawn.state)) && !(version>=22&&pawn.transitExit&&pawn.state!=='working')) errors.push('Unassigned pawn has path or work state.');
+    else if (!(version>=79&&pawn.hunting)&&!(version>=74&&pawn.heatRefuge)&&!(version>=68&&pawn.raid)&&!(version>=65&&pawn.mental?.crisis)&&!(version>=61&&pawn.tactics)&&!(version>=59&&pawn.melee)&&!(version>=58&&pawn.flee) && !(version>=53&&pawn.draft) && !(version>=15&&pawn.recreation.task) && (legacyV2 || pawn.need === null) && (pawn.path.length || ['moving', 'working'].includes(pawn.state)) && !(version>=22&&pawn.transitExit&&pawn.state!=='working')) errors.push('Unassigned pawn has path or work state.');
     if (!legacyV2) {
       if (pawn.bedId !== null) {
         if (![...world.structures,...(world.packed??[]).map(p=>p.building)].some(bed => bed.kind === 'bed' && !bed.medical && bed.id === pawn.bedId) || bedOwners.has(pawn.bedId)) errors.push('Invalid or duplicate bed ownership.');
@@ -367,6 +375,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
       if (pawn.priorities[haulingWork(haul.destination)] === 0 && !(version>=18&&pawn.orders.active==='haul')) errors.push('Pawn hauling with disabled work.');
       if (haul.sourcePileId >= world.nextId) errors.push('Invalid source identity.');
       const pile = pileById.get(haul.phase === 'pickup' ? haul.sourcePileId : haul.carryPileId!);
+      if(haul.destination.type==='stockpile'&&haul.destination.forHunting&&(pile?.kind!=='corpse'||haul.quantity!==1||haul.whole))errors.push('Hunting can only haul one corpse.');
       if (haul.phase === 'pickup') {
         if (haul.carryPileId !== null || !pile || pile.owner.type !== 'ground' || reservedSource(world, pile.id) > pile.quantity) errors.push('Invalid source quantity reservation.');
       } else if (!pile || pile.owner.type !== 'pawn' || pile.owner.pawnId !== pawn.id || pile.quantity !== haul.quantity || owned[0]?.id !== haul.carryPileId) errors.push('Invalid carried quantity.');
@@ -543,7 +552,7 @@ export function deserializeWorld(serialized: string): World {
   if(record(input)&&input.schemaVersion===39){const errors=validateSchema(input,39);if(errors.length)throw new Error('Invalid version 39 save: '+errors.join(' '));input.schemaVersion=40;}
   if(record(input)&&input.schemaVersion===40){const errors=validateSchema(input,40);if(errors.length)throw new Error('Invalid version 40 save: '+errors.join(' '));input.schemaVersion=41;}
   if(record(input)&&input.schemaVersion===41){const errors=validateSchema(input,41);if(errors.length)throw new Error('Invalid version 41 save: '+errors.join(' '));input.schemaVersion=42;}
-  if(record(input)&&input.schemaVersion===42){const errors=validateSchema(input,42);if(errors.length)throw new Error('Invalid version 42 save: '+errors.join(' '));const w=input as unknown as World;for(const p of w.pawns){p.skills=initialSkills(8,0);delete (p.skills as Partial<typeof p.skills>).medicine;delete (p.skills as Partial<typeof p.skills>).shooting;delete (p.skills as Partial<typeof p.skills>).melee;}input.schemaVersion=43;}
+  if(record(input)&&input.schemaVersion===42){const errors=validateSchema(input,42);if(errors.length)throw new Error('Invalid version 42 save: '+errors.join(' '));const w=input as unknown as World;for(const p of w.pawns){p.skills=initialSkills(8,0);delete (p.skills as Partial<typeof p.skills>).medicine;delete (p.skills as Partial<typeof p.skills>).shooting;delete (p.skills as Partial<typeof p.skills>).melee;delete p.skills.cooking;}input.schemaVersion=43;}
   if(record(input)&&input.schemaVersion===43){const errors=validateSchema(input,43);if(errors.length)throw new Error('Invalid version 43 save: '+errors.join(' '));input.schemaVersion=44;}
   if(record(input)&&input.schemaVersion===44){const errors=validateSchema(input,44);if(errors.length)throw new Error('Invalid version 44 save: '+errors.join(' '));input.schemaVersion=45;}
   if(record(input)&&input.schemaVersion===45){const errors=validateSchema(input,45);if(errors.length)throw new Error('Invalid version 45 save: '+errors.join(' '));for(const p of (input as unknown as World).pawns)p.priorities.doctor=1;input.schemaVersion=46;}
@@ -579,6 +588,7 @@ export function deserializeWorld(serialized: string): World {
   if(record(input)&&input.schemaVersion===75){const errors=validateSchema(input,75);if(errors.length)throw new Error('Invalid version 75 save: '+errors.join(' '));input.schemaVersion=76;}
   if(record(input)&&input.schemaVersion===76){const errors=validateSchema(input,76);if(errors.length)throw new Error('Invalid version 76 save: '+errors.join(' '));input.schemaVersion=77;}
   if(record(input)&&input.schemaVersion===77){const errors=validateSchema(input,77);if(errors.length)throw new Error('Invalid version 77 save: '+errors.join(' '));input.schemaVersion=78;}
+  if(record(input)&&input.schemaVersion===78){const errors=validateSchema(input,78);if(errors.length)throw new Error('Invalid version 78 save: '+errors.join(' '));input.schemaVersion=79;for(const p of (input as unknown as World).pawns)p.priorities.hunt=0;}
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`); return input as World;
 }
 /** Deterministic diagnostic fingerprint, not a cryptographic digest. */

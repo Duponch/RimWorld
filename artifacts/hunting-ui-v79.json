@@ -1,0 +1,33 @@
+{
+  "date": "2026-09-19T22:11:37.853Z",
+  "backend": "WebGPU",
+  "reports": [
+    {
+      "speed": 1,
+      "start": 2059,
+      "corpseCarried": 2108,
+      "finished": 2383,
+      "meat": 18,
+      "leather": 10,
+      "mealsIngested": 1,
+      "frames": 8268,
+      "intervals": 15322,
+      "maxJump": 0.366427319739455
+    },
+    {
+      "speed": 6,
+      "start": 2059,
+      "corpseCarried": 2108,
+      "finished": 2442,
+      "meat": 18,
+      "leather": 10,
+      "mealsIngested": 1,
+      "frames": 2087,
+      "intervals": 3060,
+      "maxJump": 0.0860000820161595
+    }
+  ],
+  "errors": [],
+  "requestFailures": [],
+  "consoleFailures": []
+}

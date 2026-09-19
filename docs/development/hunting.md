@@ -1,0 +1,25 @@
+# Chasse civile — V79
+
+Contrat de la boucle désignation → approche/tir → achèvement éventuel → dépouille → rangement. [Recherche datée](../research/hunting-reference.md), [corps physiques](corpses.md), [boucherie](butchery.md). Corpus : chapitres 10–12, 13/15 et 20/21 ; SYS/TEST-062..064,077/078,121..125. Navigation, horloge et représentation 3D adaptées ; interactions et propriété adoptées.
+
+Le joueur coche **Chasser** dans Faune. Un civil affecté à Chasse, valide et muni du revolver disponible peut réserver exclusivement cette cible. Aucun minimum de Tir n'est inventé. La planification partage priorités, besoins, budget de navigation, réservations et interruptions avec les autres travaux. Désactiver Chasse libère l'engagement ; annuler la désignation ne rappelle jamais une balle déjà partie.
+
+La chasse ne rend pas un civil insensible aux menaces humaines. **Fuir** interrompt l'approche ou la visée et libère la chasse ; une balle déjà émise termine son trajet et sa récupération précède le nouveau déplacement. **Attaquer** remplace la chasse seulement lorsqu'une cible humaine admissible est trouvée, après une éventuelle récupération en cours. **Ignorer** conserve le travail. Les ordres directs déjà acceptés gardent leurs exceptions ordinaires ; ces règles ne transforment pas la chasse en mobilisation.
+
+Le chasseur cherche une position accessible avec ligne de tir à au plus 95 % de sa portée (minimum 1,42 cellule), sans score de couvert. Tir, visée, récupération, précision, XP et impacts utilisent le noyau balistique existant. Un essai d'approche/tir expire après strictement 500 ticks locaux, soit 5 000 Core ; la désignation peut ensuite être réessayée. La proie garde ses besoins, fuite et blessures réelles. La capture spatiale est bornée au tireur, à la proie et au rayon avec marge tactique de trois cellules ; elle peut être partagée avec l’entrée en visée dans cette seule décision synchrone. Le budget et l’ordre de recherche restent inchangés, sans cache persistant.
+
+Un lièvre à terre est rejoint puis achevé après 18 ticks de travail au contact. Le travail attend la fin de son arête de chute capturée : sa cellule d’arrivée logique ne suffit pas à autoriser un contact visuel à distance. La petite entaille d'exécution au cou est distincte d'un coup ordinaire et ne crée aucune amputation artificielle. Une guérison permettant de se relever ramène à l'approche. La récupération d'une arme reste due même lorsque la balle a déjà tué la cible : le transport ne débute qu'après elle. Les interruptions de besoins réutilisent notre cadence civile, adaptation explicitée dans la recherche.
+
+Un repas accessible et le sommeil volontaire peuvent libérer la chasse aux décisions civiles, en conservant sa désignation et les conséquences physiques déjà engagées. Un loisir attend la fin de la chasse : il ne peut pas créer une activité concurrente. Le [contrat des horaires](schedules.md) consigne cette exception au coucher après finition du travail ordinaire. Les tests d'interruption contrôlent visée, récupération, faim, sommeil, loisirs et réactions humaines, ainsi que la continuation exacte après sauvegarde.
+
+La conversion du corps attend la fin de sa chute et un emplacement de sol admissible. La cible reste réservée pendant la récupération. Une réserve acceptant les dépouilles reçoit le corps physiquement ; à défaut il reste au sol. La destination `forHunting` conserve la provenance du transport : Transport peut être désactivé, Chasse doit rester activé. Une dépouille déjà correctement rangée ne provoque pas un aller-retour sur sa propre case. Le bilan de chasse compte une issue constatée, pas une quantité de viande.
+
+Schéma V79 : validation V78 complète puis priorité Chasse désactivée sur les anciennes personnes. Aucune désignation, compétence Cuisine ou production passée inventée. Nouveau camp : Chasse activée, compétences Cuisine initiales explicites ; anciennes personnes sans cette compétence utilisent le niveau zéro jusqu'au premier apprentissage réel. Les anciens filtres et régimes ne deviennent pas automatiquement permissifs à la viande ou aux corps.
+
+Les marqueurs de Faune, causes d'activité, facture et inspection des dépouilles sont visibles. Orientation du travail, translation et portage restent dans les attributs GPU partagés ; aucune recompilation de graphe lors d'un décès, changement de produit ou nouvelle blessure. Les formes de lièvre vivant et mort partagent leur définition procédurale.
+
+## Limites conservées
+
+Une seule espèce, une seule arme à distance, pas de dressage, élevage, renouvellement écologique, prédation ni gestion des corps humains. Le cuir est obtenu et stockable ; aucune recette de cuir n'est encore proposée. Le poste gratuit a un rendement inférieur à la future table de boucherie. Une dépouille bloquée par une pile reste visible sur place : la limitation d'une pile par case est assumée, sans téléportation ni disparition.
+
+Les parties anatomiques manquantes modifient santé et rendement mais ne sont pas encore retirées de la silhouette procédurale du lièvre vivant ou mort. Les teintes fraîche/pourrie/desséchée emploient les attributs existants.

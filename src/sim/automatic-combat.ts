@@ -19,7 +19,10 @@ import type { Pawn,World } from './types.ts';
 /** Called by the simulation, never by rendering. Existing direct orders win.
  * Idle drafted pawns stay at their post; civilian melee may approach a threat. */
 export function considerAutomaticCombat(world:World,p:Pawn,budget:SearchBudget):void {
-  if(!isColonist(p)||medicallyStopped(p)||p.collapsePending||p.need?.kind==='sleep'||p.state==='sleeping'||p.stun||carrierOf(world,p.id)||p.melee||p.shooting?.order||p.shooting?.stance)return;
+  // A hunting aim is ordinary civilian work, not a forced combat order.
+  // Its replacement is committed only after a valid human threat is found;
+  // any post-shot recovery must finish before this new attack can begin.
+  if(!isColonist(p)||medicallyStopped(p)||p.collapsePending||p.need?.kind==='sleep'||p.state==='sleeping'||p.stun||carrierOf(world,p.id)||p.melee||p.shooting?.stance?.phase==='cooldown'||p.shooting&&!p.hunting)return;
   const kind=p.draft?'draft':'response';
   if(kind==='draft') {
     if(p.moveCooldown||p.path.length||p.draft!.queue.length||p.draft!.target&&distanceSquared(p,p.draft!.target)>0)return;

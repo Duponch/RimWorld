@@ -14,7 +14,7 @@ export function withMigratedSkills<T extends {tick:number;pawns:unknown[]}>(worl
   for(const p of expected.pawns as {medicalCare?:unknown}[])delete p.medicalCare;
   withoutMedicineItems(expected);
   withoutSocial(expected);
-  for(const p of expected.pawns as {priorities:{research?:number}}[])p.priorities.research=3;
+  for(const p of expected.pawns as {priorities:{research?:number;hunt?:number}}[]){p.priorities.research=3;p.priorities.hunt=0;}
   return expected;
 }
 
@@ -62,12 +62,32 @@ function withoutSocial(world:unknown):void {
 
 /** Authentic pre-V73 fixture, not a production sanitizer. */
 export function withoutResearch<T>(world:T):T {
+  withoutHunting(world);
   const w=world as {research?:unknown;pawns:{research?:unknown;priorities:{research?:number};skills?:{intellectual?:unknown}}[]};
   delete w.research;for(const p of w.pawns){delete p.research;delete p.priorities.research;if(p.skills)delete p.skills.intellectual;}return world;
 }
 /** Independent neutral additive migration expectation. */
 export function withMigratedResearch<T>(world:T):T {
   const copy=withoutResearch(structuredClone(world));
-  for(const p of (copy as {pawns:{priorities:{research?:number}}[]}).pawns)p.priorities.research=3;
+  for(const p of (copy as {pawns:{priorities:{research?:number;hunt?:number}}[]}).pawns){p.priorities.research=3;p.priorities.hunt=0;}
+  return copy;
+}
+
+/** Construct an authentic pre-V79 fixture, never repair a production save. */
+export function withoutHunting<T>(world:T):T {
+  const w=world as any;delete w.hunting;delete w.butchery;
+  if(w.spoiled)delete w.spoiled['hare-meat'];
+  for(const policy of w.foodPolicies??[])policy.allowed=policy.allowed.filter((id:string)=>id!=='hare-meat');
+  const task=(c:any)=>{if(c)delete c.workTicks;};
+  const bills=(s:any)=>{for(const b of s.bills??[]){delete b.filters['hare-meat'];delete b.filters['hare-corpse'];}};
+  for(const s of w.structures??[])bills(s);for(const p of w.packed??[])bills(p.building);
+  for(const a of w.wildlife?.animals??[])delete a.corpseRot;
+  for(const p of w.pawns){delete p.hunting;delete p.priorities.hunt;if(p.skills)delete p.skills.cooking;task(p.cooking);for(const o of p.orders?.queue??[])if(typeof o==='object')task(o.cooking);}
+  return world;
+}
+/** Migration enables no hunt, invents no Cooking practice and leaves policies. */
+export function withMigratedHunting<T>(world:T):T {
+  const copy=withoutHunting(structuredClone(world));
+  for(const p of (copy as any).pawns)p.priorities.hunt=0;
   return copy;
 }

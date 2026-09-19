@@ -1,3 +1,4 @@
+import { corpseParts } from './corpse-presentation';
 import * as THREE from 'three/webgpu';
 import { PAWN_MODEL_SCALE } from '../world/scale';
 import { ITEM_DEFINITIONS } from '../sim/items';
@@ -108,6 +109,9 @@ export function cargoGeometry(): THREE.InstancedBufferGeometry {
   part([.48,.10,.50],[0,0,0],25,0xd8c8a2);part([.12,.08,.12],[.15,.09,-.13],25,0x5d716e);
   BLOCK_ITEMS.forEach((item,i)=>{part([.27,.17,.36],[-.145,0,0],12+i,ITEM_DEFINITIONS[item].color);part([.27,.17,.36],[.145,0,0],12+i,ITEM_DEFINITIONS[item].color);});
   CHUNK_ITEMS.forEach((item,i)=>{part([.52,.34,.42],[0,0,0],5+i,ITEM_DEFINITIONS[item].color);part([.22,.2,.27],[.18,-.05,-.12],5+i,ITEM_DEFINITIONS[item].color);});
+  for(const p of corpseParts(0,0))part([p.sx!,p.sy!,p.sz!],[p.x,p.y-.16,p.z],27,p.color!);
+  part([.52,.07,.35],[0,0,0],28,ITEM_DEFINITIONS['light-leather'].color);
+  part([.38,.18,.32],[0,0,0],29,ITEM_DEFINITIONS['hare-meat'].color);
   const vertices = new THREE.InterleavedBuffer(new Float32Array(data), 10);
   const geometry = new THREE.InstancedBufferGeometry();
   geometry.setAttribute('position', new THREE.InterleavedBufferAttribute(vertices, 3, 0));
