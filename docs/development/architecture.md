@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+V70 : `social-state.ts`, `social.ts`, `social-save.ts` séparent opinions, échanges et validation. État sparse par personne, PRNG indépendant, compatibilité dérivée, capture locale des obstacles construite à la demande sans grille mondiale. Passage déterministe après activités, sans interruption ni réservation nouvelle ; inspection hors frame GPU. [Contrat](social.md).
+
 V69 : `traits.ts` sépare identifiants/définitions gelées, validation et facteurs purs. Traits facultatifs sur Pawn et offre d’accueil, copies distinctes ; bootstrap du nouveau camp explicite. Aucun nouvel index spatial, PRNG, passage par frame ni donnée dérivée persistée. Consommateurs communs humeur/crises/quatre compétences, UI dédiée `traits-inspection.ts`. [Contrat](traits.md).
 
 V68 : `raid-state`, `raid-space`, `raids`, `raid-behavior` et `raid-save` séparent calendrier/groupe, requêtes stratégiques, transitions, actions et persistance. Aucun BFS hypothétique transmis comme mouvement ; les contrôleurs de combat communs gardent impacts/arêtes. Retraits après l’itération des acteurs, registre des objets exportés et migration neutre. [Contrat](raids.md).

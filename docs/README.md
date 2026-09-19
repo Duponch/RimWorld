@@ -1,6 +1,6 @@
 # Documentation de Lisière
 
-État courant : **V69, 19 septembre 2026**. [Six traits actifs](development/traits.md) : humeur, seuils personnels et apprentissage, inspection et offre d’accueil. Migration sans personnalité inventée. Interactions/opinions encore absentes. Premier raid dans le camp ordinaire, approche et brèches physiques, retraite et bilan ; les victimes restent sur carte. Accueil, ouvrages et soins existants prolongent cette boucle. Calendrier/composition provisoires, gestion complète des corps et narrateur absents. [Inventaire consolidé](gameplay/implementation-status.md), [dernières preuves](history/validation-traits-v69.md).
+État courant : **V70, 19 septembre 2026**. [Bavardage et discussions approfondies](development/social.md) en partie ordinaire : opinions dirigées, compétence Social active, inspection et continuation stricte. Les [six traits](development/traits.md), accueil, raid, ouvrages et soins existants restent jouables. Première tranche de l’étape 3 achevée ; filière utile et recherche ensuite. Romance, bagarres/deuil, narrateur et catalogue complet restent absents. [Inventaire consolidé](gameplay/implementation-status.md), [dernières preuves](history/validation-social-v70.md).
 
 La [revue de progression](research/progression-review-2026-09-19.md) explique la réorientation vers des situations de colonie complètes. [ROADMAP](ROADMAP.md) conserve seule l’ordre des prochains travaux et les estimations. Mode jour, automatisation nocturne en pause.
 

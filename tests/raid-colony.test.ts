@@ -8,7 +8,7 @@ import { isColonist } from '../src/sim/affiliation';
 import { playerArrivalDecisions,playerArrivalComplete,playerDecisions,colonySummary,woodAccount } from './scenarios/colony-player';
 
 test('ordinary player builds, welcomes, faces a naturally scheduled raid, demobilizes and maintains the same camp for five days',()=>{
-  const version=process.env.VALIDATION_VERSION??'v69';
+  const version=process.env.VALIDATION_VERSION??'v70';
   const w=createWorld(42,250,250);initializeCampTraits(w);enableArrivals(w);enableRaids(w);
   for(const d of playerArrivalDecisions(w))expect(applyCommand(w,d.command)).toMatchObject({ok:true});
   for(let i=0;i<120&&!playerArrivalComplete(w);i++)stepWorld(w);
@@ -27,5 +27,6 @@ test('ordinary player builds, welcomes, faces a naturally scheduled raid, demobi
   const summary=colonySummary(w);writeFileSync(`artifacts/raid-colony-${version}.json`,JSON.stringify({began,ended,injured,treated,postMeal,postWork,raid:w.raids,decisions,checkpoints,summary},null,2));
   expect(began).toBeGreaterThanOrEqual(21000);expect(began).toBeLessThan(24000);expect(ended).toBeGreaterThan(began);expect(w.raids!.active).toBeUndefined();expect(w.arrivals!.accepted).toBe(1);
   expect(w.pawns.filter(isColonist)).toHaveLength(4);expect(w.pawns.filter(isColonist).every(p=>p.traits?.length===2)).toBe(true);expect(w.pawns.filter(p=>p.traits?.includes('nervous')).every(p=>p.schedule[20]==='recreation')).toBe(true);expect(w.pawns.filter(isColonist).every(p=>p.state!=='dead'&&p.state!=='downed'&&!p.draft)).toBe(true);
+  expect(w.pawns.filter(isColonist).some(p=>p.social?.memories.length)).toBe(true);expect(w.pawns.filter(isColonist).some(p=>(p.skills.social?.xp??0)>0)).toBe(true);
   expect(postMeal&&postWork).toBe(true);if(injured)expect(treated).toBe(true);expect(w.structures.filter(s=>s.kind==='bed')).toHaveLength(4);expect(w.stock.food).toBeGreaterThan(0);
 },180000);

@@ -1,3 +1,4 @@
+import { advanceSocial } from './social.ts';
 import { reconcileRepairs,advanceRepair } from './repairs.ts';
 import { advanceRaids,enableRaids,exitRaider } from './raids.ts';
 import { processRaider } from './raid-behavior.ts';
@@ -497,6 +498,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     }
     if(world.raids)for(const pawn of [...world.pawns])if(pawn.raid?.exiting)exitRaider(world,pawn);
     advanceRaids(world);
+    advanceSocial(world);
     if(world.roofing)reconcileRoofJobs(world,roofs);
     reconcileOrders(world);
     refreshStock(world);

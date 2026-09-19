@@ -1,3 +1,4 @@
+import { opinionOf } from '../../src/sim/social-state.ts';
 import { breakThresholds,globalLearningFactor } from '../../src/sim/traits.ts';
 import { learningFactor } from '../../src/sim/skills.ts';
 import { isColonist } from '../../src/sim/affiliation.ts';
@@ -207,6 +208,7 @@ export function colonySummary(world: World) {
     medicalBeds:world.structures.filter(s=>s.kind==='bed'&&s.medical).length,
     medicines:{total:world.piles.reduce((n,p)=>n+(p.kind==='medicine'?p.quantity:0),0),stored:world.piles.reduce((n,p)=>n+(p.kind==='medicine'&&p.owner.type==='ground'&&world.stockpiles.some(s=>s.filters.medicine&&p.owner.type==='ground'&&s.x===p.owner.x&&s.z===p.owner.z)?p.quantity:0),0),policies:world.pawns.map(p=>p.medicalCare??'dry')},
     health:world.pawns.map(p=>({id:p.id,state:p.state,rescue:p.rescue??null,tend:p.tend??null,feed:p.feed??null,hunger:p.hunger,medicalRest:p.need?.kind==='sleep'?p.need.medical??null:null,treated:p.health?.injuries.filter(i=>i.tended!==undefined).length??0,medicineXp:p.skills.medicine.xp,bedUse:p.need?.kind==='sleep'?p.need.bedId:null,injuries:p.health?.injuries.length??0,gunshots:p.health?.injuries.filter(i=>i.kind==='gunshot').length??0,missing:p.health?.missing.length??0,bloodLoss:p.health?.bloodLoss??0})),
+    social:world.pawns.map(p=>({id:p.id,skill:p.skills.social??null,last:p.social?.last??null,opinions:world.pawns.filter(q=>q!==p).map(q=>({id:q.id,value:opinionOf(p,q.id,world.tick)}))})),
     personality:world.pawns.map(p=>({id:p.id,traits:p.traits??[],learning:globalLearningFactor(p),breakThresholds:breakThresholds(p)})),
     skills:world.pawns.map(p=>({id:p.id,...structuredClone(p.skills)})),
     combat:{shooters:world.pawns.filter(p=>p.shooting?.order).length,flights:world.projectiles?.filter(p=>!p.arrival).length??0,impacts:world.projectiles?.filter(p=>p.arrival?.effect==='pawn').length??0},

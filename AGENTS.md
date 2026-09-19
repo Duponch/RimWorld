@@ -1,7 +1,10 @@
 # Travail sur Lisière
 
+## Social V70
+- Lire `docs/development/social.md` et sa recherche. Échanges passifs sans annuler le travail, opinions dirigées et compétence Social sparse ; bavardage cumulatif sans rajeunissement, discussions décroissantes après quatorze jours, expiration à vingt. Impact de l’autre personne capturé avant XP. PRNG social indépendant persisté, vue locale sans lean, souvenirs nettoyés même sur corps retenus. V69 strictement validée avant migration neutre. Insultes/bagarres, romance/deuil et profils sociaux complets absents ; étape 4 prioritaire selon ROADMAP.
+
 ## Personnalité V69
-- Lire `docs/development/traits.md` et sa recherche. Six traits seulement, trois familles exclusives ; effet d’humeur distinct des seuils et de l’apprentissage. Mineur modifié puis majeur ×4/7 et extrême /7 ; pas trois offsets indépendants. Gains positifs des quatre compétences actifs, oubli inchangé. Profils neufs seulement au bootstrap du camp, traits annoncés dans les nouvelles offres puis copiés à l’entrée. Valider V68 avant migration neutre, personnes/offres existantes inchangées. Interactions/opinions restent la prochaine tranche de l’étape 3.
+- Lire `docs/development/traits.md` et sa recherche. Six traits seulement, trois familles exclusives ; effet d’humeur distinct des seuils et de l’apprentissage. Mineur modifié puis majeur ×4/7 et extrême /7 ; pas trois offsets indépendants. Gains positifs des cinq compétences actifs, oubli inchangé. Profils neufs seulement au bootstrap du camp, traits annoncés dans les nouvelles offres puis copiés à l’entrée. Valider V68 avant migration neutre, personnes/offres existantes inchangées. Premiers échanges/opinions ajoutés V70 ; suite canonique dans ROADMAP.
 
 ## Raids V68
 - Lire `docs/development/raids.md` et la recherche liée. Calendrier privé, groupe et registre des sorties persistants ; migration V67 strictement neutre. Ne jamais parcourir le graphe hypothétique des brèches : seule la navigation réelle engage une arête. Victimes retenues, pertes cumulées, retrait au bord après mouvement/récupération ; objets portés exportés une seule fois. Échéance/composition provisoires, narrateur et corps transportables absents.
@@ -73,7 +76,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 69 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 70 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)

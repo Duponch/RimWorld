@@ -78,7 +78,7 @@ test('strict neutral migration, conflicts/duplicates/unknowns, mutable copies an
   for(const traits of [null,[],['optimist','pessimist'],['steadfast','nervous'],['fast-learner','slow-learner'],['optimist','optimist'],['__proto__'],['constructor'],['sanguine'],['optimist',42]]){const bad=structuredClone(w) as any;bad.pawns[0].traits=traits;expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(/traits/);}
   expect(validTraits(['optimist','steadfast','fast-learner'],69)).toBe(true);
   const old=structuredClone(w) as any;old.schemaVersion=68;for(const p of old.pawns)delete p.traits;
-  const migrated=deserializeWorld(JSON.stringify(old));expect(migrated).toEqual({...old,schemaVersion:69});expect(migrated.pawns.every(p=>p.traits===undefined)).toBe(true);
+  const migrated=deserializeWorld(JSON.stringify(old));expect(migrated).toEqual({...old,schemaVersion:70});expect(migrated.pawns.every(p=>p.traits===undefined)).toBe(true);
   old.pawns[0].traits=['optimist'];expect(()=>deserializeWorld(JSON.stringify(old))).toThrow(/version 68/);delete old.pawns[0].traits;old.pawns[0].skills.construction.dailyXp=23000000;expect(()=>deserializeWorld(JSON.stringify(old))).toThrow(/version 68/);
   const enc=new SnapshotEncoder(),dec=new SnapshotDecoder();dec.adopt(structuredClone(enc.encode(w,0,1)));stepWorld(w,10);const result=dec.adopt(structuredClone(enc.encode(w,0,6)));expect(result.status).toBe('applied');if(result.status==='applied')expect(result.world.pawns).toEqual(w.pawns);replay(w,50);
 });

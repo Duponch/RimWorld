@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+V70 ajoute **deux interactions obtenables** — bavardage et discussion approfondie —, leurs souvenirs dirigés et la compétence Social avec apprentissage/impact. Aucun nouvel ItemId. Le catalogue social demeure partiel ; pas de romance, insultes/bagarres ou deuil. [Contrat](../development/social.md).
+
 V69 ajoute **six traits de personnage**, aucun ItemId : Optimiste, Pessimiste, Résolu, Nerveux, Apprentissage rapide, Apprentissage lent. Deux par profil de départ/arrivant neuf ; les personnes et offres migrées restent neutres. Ce sous-ensemble ne représente ni le catalogue complet ni la distribution Core. [Effets obtenables](../development/traits.md).
 
 V68 ajoute le profil de **raid du camp** : un assaillant sans arme au premier groupe, puis deux dont un porteur de revolver. Chemises et revolver utilisent les objets physiques existants ; aucun nouvel ItemId. Calendrier/composition limités et provisoires ; ces deux profils ne représentent pas le catalogue des factions Core. Objets portés exportés avec leur identité lors d’une sortie réelle. [Contrat](../development/raids.md).

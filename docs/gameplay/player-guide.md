@@ -1,5 +1,11 @@
 # Guide joueur
 
+## Faire connaissance
+
+Les colons éveillés peuvent bavarder ou avoir une discussion approfondie en travaillant ou en se croisant à six cases au plus, avec vue dégagée. Rapprocher les postes favorise les rencontres ; dormir, être à terre ou combattre empêche ces échanges ordinaires. Sélectionnez un colon puis **Social · opinions** : dernier échange, opinion de chaque personne dans les deux sens, causes et vieillissement des souvenirs. Les deux personnes peuvent réagir différemment ; la compétence Social progresse chez celle qui engage l’échange.
+
+Le bavardage s’accumule jusqu’à +10 d’opinion affichée puis décroît ; une discussion laisse un souvenir de vingt jours, atténué à la fin. Aucun bonus direct d’humeur pour ces deux échanges. Insultes, disputes, couples, famille et deuil restent à venir. [Règles détaillées](../development/social.md).
+
 ## Personnalité des colons
 
 Sélectionnez un colon, puis ouvrez **Biographie · compétences**. Les six premiers traits indiquent leur effet réel : Optimiste/Pessimiste déplacent la cible d’humeur de +6/−6 ; Résolu/Nerveux déplacent le seuil de risque ; Apprentissage rapide/lent modifie les gains d’expérience à 175 %/25 % avant passion et saturation. Un apprenti rapide ne travaille pas instantanément plus vite : son niveau évolue plus vite en pratiquant.

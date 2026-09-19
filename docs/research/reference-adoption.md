@@ -1,5 +1,7 @@
 # Adoption du référentiel utilisateur
 
+V70 — chapitre 14, **SYS/TEST-086/087/088**, chapitre 13 SYS/TEST-085 : adopter opinions dirigées, échange conditionné par présence/vue/capacités et apprentissage ; adapter cadence, PRNG, âge neutre, présentation 3D ; différer deuil, parenté/romance, hostilité personnelle et autres contenus. [Recherche neuve et désaccords](social-reference.md), [contrat](../development/social.md). Aucun domaine global clos.
+
 V69 — chapitres 13/14 ; **SYS/TEST-084 et 085** : adopter exclusions/effets et apprentissage distinct de la vitesse, adapter profils composés et calculs purs ; différer autres traits, biographies et distribution. SYS/TEST-086..088 relus mais ouverts. [Recherche fraîche et correction des seuils personnels](traits-reference.md).
 
 V68 — chapitres 17/20/21/23/24 ; SYS/TEST-110/111/117/132..135 : **adopter** arrivée atomique, notification distincte, combats physiques, conséquences et reprise ; **adapter** calendrier/composition, recherche de brèche et sortie sans vol/enlèvement ; **différer** budget richesse/adaptation SYS-133, autres groupes et devenir complet des corps. [Confrontation multi-source fraîche](raid-reference.md).

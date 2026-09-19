@@ -4,7 +4,7 @@ Première tranche de l’étape 3 : six traits ont des effets dans le camp ordin
 
 ## Périmètre et critère d’arrêt
 
-Décision du joueur : consulter le profil avant un accueil, choisir qui former et prévoir les loisirs d’une personne plus sensible. Invariants : un caractère ne crée ni XP, ni bonheur immédiat, ni ressources ; les facteurs sont communs à la simulation et à l’inspection, persistés seulement sous forme d’identifiants. Livrer leur effet sur les producteurs actuels, la reprise et la boucle de colonie ; arrêter ce lot avant d’étendre le catalogue. Interactions/opinions sont le prochain lot de l’étape 3.
+Décision du joueur : consulter le profil avant un accueil, choisir qui former et prévoir les loisirs d’une personne plus sensible. Invariants : un caractère ne crée ni XP, ni bonheur immédiat, ni ressources ; les facteurs sont communs à la simulation et à l’inspection, persistés seulement sous forme d’identifiants. Livrer leur effet sur les producteurs actuels, la reprise et la boucle de colonie ; arrêter ce lot avant d’étendre le catalogue. Les premières interactions/opinions sont ajoutées en [V70](social.md).
 
 | Trait | Effet effectivement consommé |
 |---|---|

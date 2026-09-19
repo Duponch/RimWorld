@@ -13,6 +13,7 @@ export function withMigratedSkills<T extends {tick:number;pawns:unknown[]}>(worl
   for(const p of expected.pawns as {priorities:{doctor?:number;patient?:number;bedrest?:number}}[])Object.assign(p.priorities,{doctor:1,patient:1,bedrest:3});
   for(const p of expected.pawns as {medicalCare?:unknown}[])delete p.medicalCare;
   withoutMedicineItems(expected);
+  withoutSocial(expected);
   return expected;
 }
 
@@ -36,6 +37,7 @@ export function withoutCare<T>(world:T):T {
 
 /** Only authentic pre-V56 fixtures; never apply to the serializer's input in production. */
 export function withoutShootingSkills<T>(world:T):T {
+  withoutSocial(world);
   for(const p of (world as {pawns:{skills?:{shooting?:unknown;melee?:unknown}}[]}).pawns)if(p.skills){delete p.skills.shooting;delete p.skills.melee;}
   return world;
 }
@@ -49,4 +51,9 @@ export function withMigratedShootingSkills<T>(world:T):T {
 function withoutMedicineItems(world:unknown):void {
   const w=world as {piles?:{kind:string}[]};
   if(w.piles)w.piles=w.piles.filter(p=>p.kind!=='medicine'&&p.kind!=='weapon'&&p.kind!=='apparel');
+}
+
+/** Pre-V70 fixture builders strip social history; production validation stays strict. */
+function withoutSocial(world:unknown):void {
+  for(const p of (world as {pawns:{social?:unknown;skills?:{social?:unknown}}[]}).pawns){delete p.social;if(p.skills)delete p.skills.social;}
 }

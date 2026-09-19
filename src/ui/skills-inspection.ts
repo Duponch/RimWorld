@@ -6,7 +6,7 @@ import type { Pawn } from '../sim/types.ts';
 const passions=['Sans passion','Passion 🔥','Passion brûlante 🔥🔥'];
 export function createSkillsInspection(panel:HTMLElement):void {
   const details=document.createElement('details');details.className='skills-inspection';
-  details.innerHTML='<summary>Biographie · compétences</summary><p data-skill="construction"></p><progress data-skill-xp max="1"></progress><p data-skill-description class="muted"></p><p data-skill="medicine"></p><progress data-medicine-xp max="1"></progress><p data-medicine-description class="muted"></p><p data-skill="shooting"></p><progress data-shooting-xp max="1"></progress><p data-skill="melee"></p><progress data-melee-xp max="1"></progress><p class="muted">Les autres compétences, les interactions sociales et l’histoire personnelle restent à développer.</p>';
+  details.innerHTML='<summary>Biographie · compétences</summary><p data-skill="construction"></p><progress data-skill-xp max="1"></progress><p data-skill-description class="muted"></p><p data-skill="medicine"></p><progress data-medicine-xp max="1"></progress><p data-medicine-description class="muted"></p><p data-skill="shooting"></p><progress data-shooting-xp max="1"></progress><p data-skill="melee"></p><progress data-melee-xp max="1"></progress><p class="muted">Social et opinions : voir l’inspection Social. Autres compétences et histoire personnelle à développer.</p>';
   createTraitsInspection(details);panel.append(details);
 }
 export function updateSkillsInspection(panel:HTMLElement,pawn:Pawn):void {

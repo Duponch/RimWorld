@@ -1,0 +1,39 @@
+{
+  "date": "2026-09-19T12:59:04.060Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "os": "win32 10.0.26200",
+  "protocol": "Social pass only, not a game/frame benchmark. 250², 3/30/100 awake stationary civilians in a 10x10 cluster; 6000 local ticks, first 60 excluded. No sleep/combat, no injected memories. Full local validation after run. Skill tick outside timed interval. Separate mixed simulation/native audit remains required.",
+  "results": [
+    {
+      "count": 3,
+      "samples": 5940,
+      "p50": 0.0013999999999896318,
+      "p95": 0.0033000000000242835,
+      "p99": 0.009799999999984266,
+      "max": 0.6825000000000045,
+      "memories": 12,
+      "initiators": 3
+    },
+    {
+      "count": 30,
+      "samples": 5940,
+      "p50": 0.008600000000001273,
+      "p95": 0.016200000000026193,
+      "p99": 0.03750000000002274,
+      "max": 0.6192999999999529,
+      "memories": 366,
+      "initiators": 30
+    },
+    {
+      "count": 100,
+      "samples": 5940,
+      "p50": 0.0301000000000613,
+      "p95": 0.07319999999992888,
+      "p99": 0.10370000000000346,
+      "max": 1.2507000000000517,
+      "memories": 1498,
+      "initiators": 100
+    }
+  ]
+}

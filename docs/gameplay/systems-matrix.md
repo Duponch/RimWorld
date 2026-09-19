@@ -1,6 +1,8 @@
 # Matrice des systèmes et critères de réalisation
 
-État V69 : SYS/TEST-084 et 085 partiellement servis par six traits à effets actifs, exclusivités, inspection et continuation. Les domaines S14 et Personnes restent partiels ; SYS/TEST-086..088 (opinions, interactions, deuil) ouverts. [Contrat](../development/traits.md). Les notes datées suivantes décrivent les étapes historiques ; l’inventaire courant prime.
+État V70 : SYS/TEST-086/087 partiellement servis par deux échanges passifs, opinions dirigées inspectables, proximité/état et continuation. SYS/TEST-085 ajoute Social avec gain/impact ; SYS/TEST-088 conserve les IDs après décès mais deuil absent. S13/S14/S19 et G3 demeurent partiels. [Contrat](../development/social.md).
+
+État V69 : SYS/TEST-084 et 085 partiellement servis par six traits à effets actifs, exclusivités, inspection et continuation. Les domaines S14 et Personnes restent partiels ; V70 sert partiellement SYS/TEST-086/087 (opinions/interactions) ; deuil SYS/TEST-088 ouvert. [Contrat](../development/traits.md). Les notes datées suivantes décrivent les étapes historiques ; l’inventaire courant prime.
 
 État V68 : S15/S17 disposent d’un premier raid jouable dans la colonie ordinaire, avec approche, brèche, issue et reprise. S13 gère les victimes coloniales ; S19 capture et devenir complet des corps restent ouverts. Cette tranche ne clôt aucun domaine. Prochain ordre canonique : [ROADMAP](../ROADMAP.md).
 
@@ -11,7 +13,7 @@ V66 : chapitres 23/24, SYS/TEST-132..135 partiellement servis par un calendrier 
 
 **Revue du 19 septembre :** G0–G5 conservent leur périmètre ; les premières boucles de population/incidents G4 ne nécessitent pas la clôture de G3. [Priorité canonique](../ROADMAP.md), [motif de la réorientation](../research/progression-review-2026-09-19.md). Les entrées de versions ci-dessous sont historiques ; l’état livré est consolidé dans [l’inventaire](implementation-status.md).
 
-V65 : SYS/TEST-082 partiellement servis par l’errance triste, ses interruptions, perte de contrôle direct, besoins et récupération. S14 reste partiel : six traits ajoutés V69 ; autres crises, opinions et relations absents. [Contrat](../development/mental-break.md).
+V65 : SYS/TEST-082 partiellement servis par l’errance triste, ses interruptions, perte de contrôle direct, besoins et récupération. S14 reste partiel : six traits ajoutés V69 ; autres crises et liens familiaux/amoureux absents, premières opinions V70. [Contrat](../development/mental-break.md).
 
 V64 : S14 progresse avec des pensées de situation et souvenirs consultables, une cible et une jauge progressive. Crises, traits et relations restent ouverts ; [contrat](../development/mood.md).
 
@@ -37,7 +39,7 @@ S13 : [santé active V45](../development/health.md), blessures localisées, capa
 
 V44 consolide S04/S07 : sommeil forcé avec cargaison indéposable, engagements libérés, conservation et récupération après dégagement. Les transitions médicales de S13 sont ajoutées en V45 ; [contrat](../development/interrupted-cargo.md).
 
-V43 commence les différences humaines par Construction et son apprentissage ; V47 ajoute Médecine. V56/V59 ajoutent Tir/Mêlée, V69 six traits ; huit compétences, autres traits et santé complète restent ouverts. [Priorité et limites](../research/skills-reference.md).
+V43 commence les différences humaines par Construction et son apprentissage ; V47 ajoute Médecine. V56/V59 ajoutent Tir/Mêlée, V69 six traits ; sept compétences, autres traits et santé complète restent ouverts. [Priorité et limites](../research/skills-reference.md).
 
 V42 enrichit SYS/TEST-127/128 et CAT-047 avec [générateur, carburant et lampes](../development/power.md). Connexions directes et réseaux de générateurs présents ; conduits, interrupteurs, batteries et incidents restent ouverts. Aucun jalon G0–G5 clôturé.
 

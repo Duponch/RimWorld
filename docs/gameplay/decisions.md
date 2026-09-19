@@ -1,5 +1,7 @@
 # Choix et écarts de gameplay
 
+V70 : deux échanges positifs Core, aucun effet d’humeur artificiel ; distribution sociale volontairement incomplète sans insultes/bagarres/romance. Compatibilité fixe par paire avec contribution d’âge neutre, compétence Social absente = débutant sans passé, PRNG indépendant. Présentation par inspection/journal, sans bulle 3D. Confiance numérique limitée par les définitions anciennes confrontées ; [sources et choix](../research/social-reference.md).
+
 V69 : six traits Core à consommateurs existants, profils composés explicitement pour les nouvelles personnes ; pas de distribution aléatoire prétendue conforme. Seuils proportionnels, humeur progressive et gains ordinaires distincts ; ancienne personne/offre neutre à la migration. Les interactions sociales sont le prochain lot, pas implicitement livrées. [Recherche](../research/traits-reference.md).
 
 V68 : calendrier 3,5–4 puis 6–8 jours, effectif 1 puis 2, profils limités ; première adaptation de pression, pas le narrateur Core. Accès libre privilégié, brèche choisie par graphe stratégique puis coups réels ; départ si tous les colons sont incapables au lieu de vol/enlèvement. Pas de disparition des victimes ni de téléportation de retrait. [Sources et limites](../research/raid-reference.md).

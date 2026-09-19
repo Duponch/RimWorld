@@ -1,4 +1,4 @@
-const proofVersion=process.env.VALIDATION_VERSION??'v69';
+const proofVersion=process.env.VALIDATION_VERSION??'v70';
 import { expect,test } from '@playwright/test';
 import { readFileSync,writeFileSync } from 'node:fs';
 import { deserializeWorld,serializeWorld,validateWorld } from '../../src/sim/serialization';

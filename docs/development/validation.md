@@ -1,4 +1,6 @@
-# Validation courante — V68
+# Validation courante — V70
+
+V70 — premières interactions et opinions : [preuves et limites](../history/validation-social-v70.md).
 
 V69 — traits actifs, contrôles regroupés et pilote de colonie entretenu : [preuves, mesures et limites](../history/validation-traits-v69.md).
 

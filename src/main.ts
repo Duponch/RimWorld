@@ -1,3 +1,4 @@
+import { createSocialInspection,updateSocialInspection } from './ui/social-inspection';
 import { createRaidUI } from './ui/raids';
 import { barrierHp,barrierMaxHp,isBarrier } from './sim/barriers';
 import { createArrivalUI } from './ui/arrivals';
@@ -219,6 +220,7 @@ function rebuildInspector() {
   } else if (selectedPawn !== undefined) {
     panel.innerHTML = `<div class="panel-heading"><h2 id="selected-name"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><p id="selected-action"></p><div class="needs">${(['hunger', 'rest', 'comfort', 'mood'] as const).map((need, index) => `<label>${['Nourriture', 'Repos', 'Confort', 'Humeur'][index]} <span id="selected-${need}"></span></label><meter id="${need}-meter" min="0" max="100" low="25" optimum="100"></meter>`).join('')}</div>${recreationInspection()}<button class="secondary-action" id="manage-work">Gérer le travail</button>`;
     createMoodInspection(panel);
+    createSocialInspection(panel,renderState);
     el('manage-work').onclick = () => setPanel('work');
     const orders=document.createElement('p');orders.id='selected-orders';panel.append(orders);
     const cancel=document.createElement('button');cancel.id='clear-orders';cancel.textContent='Annuler les ordres directs';
@@ -369,6 +371,7 @@ function renderState() {
       el('selected-orders').textContent=`${pawn.orders.active!==null?'Travail imposé · ':''}${pawn.orders.queue.length} ordre(s) en file${pawn.priorityWork?` · Priorité case ${pawn.priorityWork.cell.x}, ${pawn.priorityWork.cell.z}`:''}`;
       el<HTMLButtonElement>('clear-orders').disabled=pawn.orders.active===null&&!pawn.orders.queue.length&&!pawn.priorityWork;
       updateMoodInspection(el('inspector'),world,pawn);
+      updateSocialInspection(el('inspector'),world,pawn);
       for (const need of ['hunger', 'rest', 'comfort', 'mood'] as const) { el(`selected-${need}`).textContent = pawn.state==='dead'?'—':`${Math.round(pawn[need])} %`; el<HTMLMeterElement>(`${need}-meter`).value = pawn.state==='dead'?0:pawn[need]; }
     }
   } else if (selectedCell) {

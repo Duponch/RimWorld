@@ -1,5 +1,7 @@
 # Compétences — Construction, Médecine, Tir et Mêlée
 
+V70 : [Social](social.md) devient la cinquième compétence active. Champ facultatif : absence = débutant 0/sans passion, création au premier apprentissage ; gain 4/10 XP de base lors d’un vrai échange initié, impact consommé par les opinions, passion/apprentissage/oubli communs. Les sept autres compétences restent absentes. Les descriptions historiques des premiers producteurs ci-dessous conservent leur portée de version.
+
 V69 : les [traits d’apprentissage](traits.md) multiplient les gains ordinaires des quatre compétences par 1,75 ou 0,25, avant arrondi final aux milli-XP ; ils ne changent pas l’oubli, la saturation ni directement la vitesse d’exécution. Les bornes journalières de validation V69 sont les bornes conservatrices historiques ×1,75, sans changer les validateurs historiques.
 
 V59 ajoute Mêlée avec producteurs/consommateurs réels ; apprentissage même après raté/esquive contre une cible mobile, toucher/esquive dépendants des capacités. La borne journalière de validation est spécifique à cette compétence (80 000 XP) pour permettre ses passions et saturation. [Contrat](melee.md).
