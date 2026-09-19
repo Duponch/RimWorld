@@ -199,7 +199,7 @@ export class PawnLayer {
       if(game){yaw=Math.atan2(game.x-pawn.x,game.z-pawn.z);from.w=yaw;}
       const melee=pawn.melee?.strike;
       const shotTarget=pawn.shooting?.stance?pawn.shooting.order?.targetId??(pawn.shooting.stance.phase==='cooldown'?pawn.lastAttack?.targetId:undefined):undefined;
-      const aim=melee?world.pawns.find(p=>p.id===melee.targetId):shotTarget?world.pawns.find(p=>p.id===shotTarget):undefined;
+      const aim=melee?(melee.structure??world.pawns.find(p=>p.id===melee.targetId)):shotTarget?world.pawns.find(p=>p.id===shotTarget):undefined;
       if(aim){yaw=Math.atan2(aim.x-pawn.x,aim.z-pawn.z);from.w=yaw;}
       const to = new THREE.Vector4(px, py, pz, yaw);
       if (!previous) from.copy(to);

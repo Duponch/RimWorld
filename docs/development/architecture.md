@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+V67 : `barriers.ts` engage les dommages/retraits/pertes, `repairs.ts` gère le foyer et le travail, `barrier-save.ts` valide les nouveaux états sparse. Les captures de combat locales vérifient le remplacement de `structures` pour les tirs, projectiles, contacts et sons ; la chute du toit suit le retrait sans réécrire son PRNG. Marqueurs et cellules de foyer réutilisent les lots graphiques. [Contrat](barriers.md).
+
 V66 : calendrier/PRNG privé et données dans `arrival-state.ts`, producteur/acceptation dans `arrivals.ts`, capture ponctuelle d’accès dans `arrival-entry.ts`, validation dans `arrival-save.ts`. UI de lettre séparée ; nouveaux acteurs dans les structures et lots existants. [Contrat](arrivals.md).
 
 

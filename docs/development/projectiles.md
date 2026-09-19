@@ -1,5 +1,7 @@
 # Émission, vol et persistance — V55
 
+V67 consomme les interceptions de mur/porte en dégâts réels ; `barrier` est un effet sauvegardé. Le propriétaire du lot renouvelle la capture fixe dès le retrait d’un ouvrage, y compris entre deux sous-pas Core. Autres objets non endommagés : [contrat](barriers.md).
+
 18 septembre 2026. [Recherche de vol](../research/projectiles-reference.md). V55 branche les projectiles dans `stepWorld`, sauvegardes et snapshots. **V56 ajoute le producteur, la commande et la présentation : [contrat du tir](shooting.md).** Adversaires, réactions, protections et dommages au décor restent ouverts ; le noyau V54 reste l’oracle de règles.
 
 ## Contrat World V55
@@ -36,7 +38,7 @@ L'appelant possède le PRNG local et engage son état avec le résultat. Un refu
 
 Recouvrement : un autre objet plein de couche logique supérieure ou égale doit recouvrir **chaque cellule** de l'empreinte. La porte ouverte garde son remplissage/couche pour cette seule règle. Une plante basse peut donc être recouverte par une porte ouverte ; la présence dans la même case ne rend pas automatiquement personne/pile inatteignable. Couches de définition et hauteurs 3D restent distinctes. Les relations d'ordre testées sont plante basse < porte < bâtiment/arbre < objet < adulte ; les réserves de provenance figurent dans la recherche.
 
-Les petits cailloux décoratifs sont exclus. Les paquets gardent leur profil nul antérieur, avec confirmation du XML contemporain encore ouverte. Le Pawn décédé cesse d'être une cible vivante ; **aucun objet de dépouille n'est inventé**. Sa projection en objet et ses dégâts restent absents, tout comme les dégâts aux autres objets. Ne pas annoncer une résolution complète du décor ou des morts.
+Les petits cailloux décoratifs sont exclus. Les paquets gardent leur profil nul antérieur, avec confirmation du XML contemporain encore ouverte. Le Pawn décédé cesse d'être une cible vivante ; **aucun objet de dépouille n'est inventé**. Sa projection en objet et ses dégâts restent absents, tout comme les dégâts aux objets hors murs/portes V67. Ne pas annoncer une résolution complète du décor ou des morts.
 
 Stockage : colonnes numériques, listes d'incidence par cellule et objets immuables matérialisés à la demande. Les plages par catégorie sont contiguës ; leur ordre d'identifiants est vérifié pendant la capture. Recherche binaire si ordonné, index d'identité créé au premier besoin sinon. Aucun tri de World, ni hypothèse d'identifiants 32 bits. Ordre de candidats stable par catégorie puis identifiant, adaptation assumée de l'ordre d'enregistrement non persisté de Core. Coordonnées, tableaux de candidats et vues exposés sont immuables ; aucun accès ne touche au PRNG.
 

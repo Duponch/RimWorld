@@ -1,5 +1,7 @@
 # Choix et écarts de gameplay
 
+V67 : foyer peint manuellement (extension automatique différée), réparation cardinale conforme à nos places de travail 3D, XP regroupée au tick local pour éviter un biais d'arrondi. Ouvrages historiques non typés : résistance bois explicite. Pas de ressources rendues par un mur/une porte détruit ; ne pas généraliser une restitution de 25 % à tout bâtiment. [Sources, incertitudes et limites](../research/barriers-reference.md).
+
 V66 : choix d’accueil avec délai d’un jour et refus distinct de l’expiration. Fréquence, plafond du producteur et profils personnels explicitement provisoires ; arrivée physique sans fonds ni lit offert. Migration neutre et activation volontaire des anciens camps. [Recherche et adaptations](../research/arrival-reference.md), [contrat](../development/arrivals.md).
 
 V65 : première crise seulement, repli des intensités supérieures vers le contenu mineur disponible ; distribution incomplète annoncée. Échéances locales, marche 3D euclidienne, conservation des cargaisons sous saturation et catharsis après incapacité selon la branche de code datée malgré une contradiction du wiki. [Recherche et décisions](../research/mental-break-reference.md).

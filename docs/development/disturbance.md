@@ -16,10 +16,12 @@ Le patient couché éveillé conserve son service au bruit seul. S'il dormait, i
 
 Les producteurs projectile, mêlée réussie et toiture construite transmettent la notification de violence, distincte de l'ajout clinique d'une blessure. Le signal acoustique de projectile précède son dommage. Une cible mobile déjà réveillée par ce son conserve la preuve qu'elle était couchée avant l'impact. Les caches de posture/tir sont renouvelés après un réveil, **y compris après un raté au sol**. Récupération du tireur, état du projectile et PRNG anatomique ne sont pas réinitialisés.
 
-`impact-sound.ts` capture les espaces une fois à la demande dans la transaction de combat. Le cache dérivé vérifie le masque complet lors d'une nouvelle lecture ; aucune confiance dans l'identité d'un tableau ou le seul tick. Les portes ouvertes sont recapturées. La fermeture locale ne survit pas à un changement de géométrie/porte ni au tick. Aucun parcours par frame et aucune recherche de route par dormeur. Si de futurs impacts détruisent les bâtiments, il faudra invalider cette capture avant le projectile suivant.
+`impact-sound.ts` capture les espaces une fois à la demande dans la transaction de combat. Le cache dérivé vérifie le masque complet lors d'une nouvelle lecture ; aucune confiance dans l'identité d'un tableau ou le seul tick. Les portes ouvertes sont recapturées. La fermeture locale ne survit pas à un changement de géométrie/porte ni au tick. Aucun parcours par frame et aucune recherche de route par dormeur. La destruction V67 renouvelle cette capture avant le signal suivant.
+
+V67 : une destruction de mur/porte invalide aussi la connexion acoustique pendant le même intervalle de combat ; le bruit suivant utilise la brèche réelle. [Contrat](barriers.md).
 
 ## Limites
 
-La réaction aux dégâts **des autres emplois** n'est pas un système complet d'override Core. Ordres forcés, soins en cours, cargaisons, cooldowns et incapacités conservent leurs règles antérieures. Différés : surprises/interruptions particulières d'autres armes, cris/construction/pas, souvenirs, groupe de raid, objectifs cachés, besoins NPC complets, armures et audio. Ce lot ne clôt aucun jalon G0–G5.
+La réaction aux dégâts **des autres emplois** n'est pas un système complet d'override Core. Ordres forcés, soins en cours, cargaisons, cooldowns et incapacités conservent leurs règles antérieures. Différés : surprises/interruptions particulières d'autres armes, cris/construction/pas, souvenirs, groupe de raid, objectifs cachés, besoins NPC complets, autres armures et audio. Ce lot ne clôt aucun jalon G0–G5.
 
 Tests : arrivées réelles, bruit et audition, portes/contournement, patient éveillé, trois politiques civiles, conservation des cargaisons/files, mêlée réelle, incapacité, continuation et migration ; UI native à 1×/6× et charge mixte commune. [Preuves et limites](../history/validation-disturbance-v62.md).

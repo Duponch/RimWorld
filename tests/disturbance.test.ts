@@ -1,4 +1,5 @@
 import { SCHEMA_VERSION } from '../src/sim/types';
+import { damageBarrier } from '../src/sim/barriers';
 import { expect,test } from 'vitest';
 import { stepWorld,applyCommand,serializeWorld,deserializeWorld,validateWorld } from '../src/sim/index';
 import { disturbanceEvents } from '../src/sim/disturbance';
@@ -42,6 +43,12 @@ test('noise uses hearing, strict radius, connected air and current doors, not a 
   Object.assign(door.door,{open:true,from:1,holdOpen:true});disturbanceEvents(w).impact({x:8,z:8},w.tick*10);
   expect(outside.need).toBeNull();expect(boundary.need?.kind).toBe('sleep');expect(deaf.disturbance).toBeUndefined();
   expect(validateWorld(w)).toEqual([]);resume(w,10);
+  // A single combat transaction can destroy the closed door between noises.
+  Object.assign(door.door,{open:false,from:0,holdOpen:false});sleep(outside);
+  const batch=disturbanceEvents(w);batch.impact({x:8,z:8},w.tick*10-1);
+  expect(outside.state).toBe('sleeping');damageBarrier(w,door,104);
+  batch.impact({x:8,z:8},w.tick*10);expect(outside.need).toBeNull();
+  expect(validateWorld(w)).toEqual([]);
 });
 
 test('awake medical rest ignores noise; the shared damage signal leaves the bed without curing injury and delays lying down only',()=>{

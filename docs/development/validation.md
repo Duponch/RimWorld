@@ -1,4 +1,6 @@
-# Validation courante — V66
+# Validation courante — V67
+
+V67 : [validation des ouvrages et réparations](../history/validation-barriers-v67.md), coups physiques, dégâts, destruction, foyer, entretien, migrations et charge. L'étape 2 reste ouverte ; les preuves de V66 ci-dessous sont historiques.
 
 V66 : [validation de l’accueil](../history/validation-arrivals-v66.md), premières décisions de population dans le camp ordinaire, migration neutre, pilote adapté et audit de l’ajout d’un acteur. Les sections suivantes sont des preuves historiques.
 

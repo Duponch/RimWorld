@@ -10,7 +10,7 @@ const identity=(v:unknown)=>v===null||typeof v==='string'&&(/^(pawn|structure|fr
 const samePoint=(a:{x:number;z:number},b:unknown)=>record(b)&&keys(b,['x','z'])&&b.x===a.x&&b.z===a.z;
 
 /** Unknown JSON is rejected before touching references or calling the resolver. */
-export function validWorldProjectile(value:unknown,world:Pick<World,'width'|'height'|'tick'>):value is WorldProjectile {
+export function validWorldProjectile(value:unknown,world:Pick<World,'width'|'height'|'tick'>,version=67):value is WorldProjectile {
   if(!record(value)||!keys(value,['id','quality','emittedAtCore','advancedAtCore','flight','relations','arrival']))return false;
   const end=world.tick*CORE_TICKS_PER_LOCAL;
   if(!Number.isSafeInteger(end)||!integer(value.id,1)||!integer(value.emittedAtCore,0,end)||!integer(value.advancedAtCore,value.emittedAtCore,end))return false;
@@ -30,7 +30,7 @@ export function validWorldProjectile(value:unknown,world:Pick<World,'width'|'hei
     const a=value.arrival;if(!record(a)||!keys(a,['kind','targetKey','point','coreTick','effect'])||!integer(a.coreTick,1,total)||a.coreTick!==elapsed||!identity(a.targetKey)||!samePoint(bulletPosition(p.flight),a.point)||p.advancedAtCore<=(world.tick-1)*CORE_TICKS_PER_LOCAL)return false;
     if(a.kind==='exit')return a.effect==='exit'&&a.targetKey===null&&p.flight.remainingCoreTicks===total-elapsed+1;
     if(a.kind!=='impact'||p.flight.remainingCoreTicks!==total-elapsed)return false;
-    return a.targetKey===null?a.effect==='ground':String(a.targetKey).startsWith('pawn:')?a.effect==='pawn':a.effect==='unsupported-object';
+    return a.targetKey===null?a.effect==='ground':String(a.targetKey).startsWith('pawn:')?a.effect==='pawn':a.effect==='unsupported-object'||version>=67&&String(a.targetKey).startsWith('structure:')&&a.effect==='barrier';
   } catch {return false;}
 }
 
@@ -39,7 +39,7 @@ export function validateProjectiles(world:World,version:number,ids:Set<number>):
   if(version<55||!Array.isArray(value)||!value.length||value.length>world.width*world.height)return ['Invalid projectile collection for schema.'];
   const errors:string[]=[];let previous=0;
   for(const p of value) {
-    if(!validWorldProjectile(p,world)){errors.push('Invalid persistent projectile.');continue;}
+    if(!validWorldProjectile(p,world,version)){errors.push('Invalid persistent projectile.');continue;}
     if(ids.has(p.id)||p.id<=previous||p.id>=world.nextId)errors.push('Invalid projectile identity/order.');
     ids.add(p.id);previous=p.id;
   }

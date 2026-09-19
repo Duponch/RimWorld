@@ -1,5 +1,7 @@
 # Adoption du référentiel utilisateur
 
+V67 — chapitres 10, 20, 22 et 24 ; SYS/TEST-057 : adopter validité de cible, contact, réservation et libération après destruction ; SYS/TEST-058 : conserver la restitution de déconstruction distincte. Adapter au foyer trié et à nos jobs physiques, différer auto-expansion/nettoyage/feu et les autres bâtiments. SYS-132..135 reste ouvert : les ouvrages seuls ne livrent pas l'incident hostile. [Confrontation du 19 septembre](barriers-reference.md).
+
 V66 — chapitres 23/24, **SYS/TEST-132..135**, personnes/besoins 13/14 : adopter offre, échéance, choix, arrivée et continuation ; adapter cadence explicite et profils limités, différer narrateur général et SYS-148 capture/recrutement. Les chemins historiques automatique et quête acceptée sont distingués par la [recherche fraîche](arrival-reference.md). [Contrat](../development/arrivals.md). Aucun SYS global clos.
 
 

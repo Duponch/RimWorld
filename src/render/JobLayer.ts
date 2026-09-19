@@ -14,6 +14,7 @@ export function buildJobMarkers(world: World, group: THREE.Group, cutaway: boole
     for (const job of world.jobs.filter(j=>!isRoofJob(j))) {
       const cells = footprintCells(job), last = cells[cells.length - 1]!;
       for (const cell of cells) orders.push({ x: cell.x, y: 0.032, z: cell.z, color: job.status === 'active' ? 0xe7c17a : 0x99cfc3 });
+      if(job.kind==='repair')continue;
       if(job.kind==='mine') {for(const ry of [-Math.PI/4,Math.PI/4])frames.push({x:job.x,z:job.z,y:3.65,sx:.6,sy:.035,sz:.08,ry,color:0xeac27d});continue;}
       if (job.kind === 'chop' || job.kind === 'harvest' || job.kind === 'cut' || job.kind === 'sow') continue;
       if(job.kind==='deconstruct'||job.kind==='uninstall') {

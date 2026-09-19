@@ -19,6 +19,6 @@ export class ShootingControls {
     if(!enabled)this.cancel();button.hidden=!enabled;button.setAttribute('aria-pressed',String(this.mode==='shoot'));
     button.textContent=this.mode==='shoot'?'Annuler le ciblage':'Tirer sur une cible';
     const melee=parent.querySelector<HTMLButtonElement>('#target-melee')!;melee.hidden=!enabled;melee.setAttribute('aria-pressed',String(this.mode==='melee'));melee.textContent=this.mode==='melee'?'Annuler le ciblage':'Attaquer au corps à corps';
-    parent.querySelector('#shoot-help')!.textContent=this.active?`Cliquez un personnage, allié compris. ${this.mode==='melee'?'Le colon approche puis frappe au contact. ':''}Échap ou clic droit : annuler.`:enabled?'Tir ou mêlée dirigés. Les coups de mêlée emploient les outils naturels et l’arme équipée. Arrêter conserve la récupération obligatoire.':'';
+    parent.querySelector('#shoot-help')!.textContent=this.active?`Cliquez un personnage, allié compris${this.mode==='melee'?', ou un mur / une porte':''}. ${this.mode==='melee'?'Le colon approche puis frappe au contact. ':''}Échap ou clic droit : annuler.`:enabled?'Tir ou mêlée dirigés. Les coups de mêlée emploient les outils naturels et l’arme équipée. Arrêter conserve la récupération obligatoire.':'';
   }
 }

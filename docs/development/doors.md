@@ -1,5 +1,7 @@
 # Portes manuelles — V34
 
+V67 ajoute [PV, destruction et réparation](barriers.md) aux portes manuelles. Une porte détruite devient une ouverture pour transit/tir/son/pièces/thermique ; une porte simplement ouverte conserve son rôle de seuil.
+
 [Recherche et décisions](../research/doors-reference.md). Corpus : chapitres 5/10/21, SYS-020..024 et SYS-113..117. Une porte modifie accès et temps de passage ; son animation ne décide jamais du trajet.
 
 ## Construction et passage
@@ -26,4 +28,4 @@ Responsabilités séparées : `door-rules`, `doors`, `door-save`, `DoorLayer`, c
 
 ## Limites explicites
 
-Remplacement direct d'un mur, portes automatiques, sons, HP/réparation/incendie restent absents. V58 distingue la colonie des hors-la-loi : un hostile ne peut ouvrir une porte fermée, mais franchit une porte déjà ouverte même interdite. Propriétaires neutres et diplomatie restent absents. Les pièces et toits construits disposent désormais de leurs contrats distincts ; V38 ajoute les [échanges thermiques](temperature.md). Une porte ouverte échange plus rapidement, sans devenir une brèche dans le graphe des pièces. L'orientation couvre les axes des voisins présents ; les départages de clôtures et configurations complexes de portes restent à compléter. Aucune équivalence binaire ou conformité numérique complète revendiquée.
+Remplacement direct d'un mur, portes automatiques, sons et incendie restent absents. V58 distingue la colonie des hors-la-loi : un hostile ne peut ouvrir une porte fermée, mais franchit une porte déjà ouverte même interdite. Propriétaires neutres et diplomatie restent absents. Les pièces et toits construits disposent désormais de leurs contrats distincts ; V38 ajoute les [échanges thermiques](temperature.md). Une porte ouverte échange plus rapidement, sans devenir une brèche dans le graphe des pièces. L'orientation couvre les axes des voisins présents ; les départages de clôtures et configurations complexes de portes restent à compléter. Aucune équivalence binaire ou conformité numérique complète revendiquée.

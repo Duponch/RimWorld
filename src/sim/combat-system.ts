@@ -17,7 +17,7 @@ export function advanceWorldCombat(world:World):void {
   let queries=shootingQueries(world,batch.read);
   let physical:Uint8Array|undefined;const contactGrid=()=>physical??=blockedCells(world,true);
   advanceWorldProjectiles(world,core=>{let changed=false;for(const pawn of shooters){
-    if(advanceMelee(world,pawn,core,contactGrid,queries,disturbance)){changed=true;batch.afterImpact();queries=shootingQueries(world,batch.read);}
+    if(advanceMelee(world,pawn,core,contactGrid,queries,disturbance)){changed=true;physical=undefined;batch.afterImpact();queries=shootingQueries(world,batch.read);}
     advanceShooter(world,pawn,core,queries);
-  }return changed;},()=>{batch.afterImpact();queries=shootingQueries(world,batch.read);},disturbance);
+  }return changed;},()=>{physical=undefined;batch.afterImpact();queries=shootingQueries(world,batch.read);},disturbance);
 }

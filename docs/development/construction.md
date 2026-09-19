@@ -1,5 +1,7 @@
 # Chantiers — contrat V24
 
+V67 ajoute les PV/réparations des murs et portes et le foyer manuel ; les autres bâtiments restent hors de ce contrat. Voir [ouvrages et entretien](barriers.md).
+
 V37 module finition et défrichage par la [lumière du travailleur](light-work.md), avec fractions persistantes. Le dégagement garde sa progression distincte ; la livraison ne gagne aucun travail de finition.
 
 Référence : corpus chap. 10, SYS-056/TEST-056, SYS-005/020..022/051/053/054 et [recherche renouvelée](../research/construction-reference.md). Ce contrat remplace le blocage immédiat des plans de murs/tables et le refus systématique des plantes/piles. Les [écarts](../gameplay/decisions.md) ne sont pas des comportements implicites du jeu commercial.
@@ -64,7 +66,7 @@ V20 est d’abord validée selon ses interdictions de superposition de zones. Le
 
 Cinq scénarios approfondis couvrent transferts typés et fraîcheur, sauvegarde/annulation en cargaison, plante sur empreinte tournée, priorités, transporteur sans Construction, plans/cadres franchis, durée d'arête, coins protégés, repas réservé et migration stricte. L'oracle spatial indépendant comprend des cadres ; le pilote ordinaire doit terminer son camp et conserver ses bilans. L'UI courte exerce phases et reprise dans le vrai worker ; la partie longue suit trois jours par commandes réelles. Les [preuves courantes](validation.md) distinguent chaque passage et les audits.
 
-Pas de nouveaux objets : états enrichis du mobilier existant. V22 livre le [transit et l’arrêt du mobilier présent](furniture-travel.md). Déplacement des personnes gênantes, support du sol, compétences/qualité/échecs, réparation et remplacement restent ouverts ; minage livré en V28. V23 permet de maintenir un ordre de Construction sur sa cellule pour enchaîner les sous-travaux admissibles ; [règles de priorité et limites](player-orders.md). Ne pas annoncer Construction terminée.
+Pas de nouveaux objets : états enrichis du mobilier existant. V22 livre le [transit et l’arrêt du mobilier présent](furniture-travel.md). Déplacement des personnes gênantes, support du sol, qualité/échecs, réparation des autres bâtiments et remplacement restent ouverts ; minage livré en V28. V23 permet de maintenir un ordre de Construction sur sa cellule pour enchaîner les sous-travaux admissibles ; [règles de priorité et limites](player-orders.md). Ne pas annoncer Construction terminée.
 
 ## Commandes contextuelles V19
 
@@ -72,4 +74,4 @@ V19 corrige aussi la création des produits sur un plan de mur : le contrôle de
 
 ## Déconstruction V24
 
-Le [contrat de retrait](deconstruction.md) complète les six bâtiments actuels : ordre au contact, réservations, récupération au sol et annulation. La [réinstallation](furniture-transfer.md) V25–V26 et le [minage](mining.md) V28 ont leurs contrats distincts ; réparation et construction en pierre restent absentes. V30 calibre les nouveaux murs/lits et ajoute bois/acier : [matériaux et compatibilité historique](construction-materials.md). Les anciens ouvrages gardent leurs coûts et durées, y compris lors du remboursement.
+Le [contrat de retrait](deconstruction.md) complète les six bâtiments actuels : ordre au contact, réservations, récupération au sol et annulation. La [réinstallation](furniture-transfer.md) V25–V26 et le [minage](mining.md) V28 ont leurs contrats distincts ; la réparation des murs/portes est livrée en V67 et la construction en pierre en V33. V30 calibre les nouveaux murs/lits et ajoute bois/acier : [matériaux et compatibilité historique](construction-materials.md). Les anciens ouvrages gardent leurs coûts et durées, y compris lors du remboursement.

@@ -1,3 +1,4 @@
+import { damageBarrier,isBarrier } from './barriers.ts';
 import { disturbanceEvents,isLying } from './disturbance.ts';
 import { advanceBulletFlight,type BulletFlight } from './bullet-flight.ts';
 import { captureProjectileBatch } from './projectile-batch.ts';
@@ -35,16 +36,21 @@ export function advanceWorldProjectiles(world:World,beforeCore?:(core:number)=>b
   const scene=(p:WorldProjectile)=>{
     let s=scenes.get(p);if(!s){batch??=captureProjectileBatch(world);targets??=batch.refresh(world);s=targets(new Set(p.relations.friendlyPawnIds),p.relations.friendlyFireFactor);scenes.set(p,s);}return s;
   };
-  for(let core=start+1;core<=end;core++) {if(beforeCore?.(core)){targets=undefined;scenes.clear();}for(const p of world.projectiles??[]) {
+  for(let core=start+1;core<=end;core++) {const structures=world.structures;if(beforeCore?.(core)){if(structures!==world.structures)batch=undefined;targets=undefined;scenes.clear();}for(const p of world.projectiles??[]) {
     if(p.arrival||p.advancedAtCore>=core)continue;
     if(p.advancedAtCore!==core-1)throw new Error('Stale projectile clock');
     const randomState={rng:world.rng},next=advanceBulletFlight(p.flight,scene(p),()=>healthRandom(randomState),1);
     p.flight=next.flight;p.advancedAtCore=core;world.rng=randomState.rng;
     const a=next.arrival;if(!a)continue;
     const pawn=a.targetKey?.startsWith('pawn:')?world.pawns.find(pawn=>`pawn:${pawn.id}`===a.targetKey):undefined;
-    p.arrival={...a,effect:a.kind==='exit'?'exit':pawn?'pawn':a.targetKey?'unsupported-object':'ground'};
+    const barrier=a.targetKey?.startsWith('structure:')?world.structures.find(s=>`structure:${s.id}`===a.targetKey&&isBarrier(s)):undefined;
+    p.arrival={...a,effect:a.kind==='exit'?'exit':pawn?'pawn':barrier?'barrier':a.targetKey?'unsupported-object':'ground'};
     const wasLying=!!pawn&&isLying(pawn);
     if(a.kind!=='exit'&&disturbance.impact({x:Math.floor(a.point.x),z:Math.floor(a.point.z)},core)){targets=undefined;scenes.clear();afterImpact?.();}
+    if(barrier){
+      const structures=world.structures;damageBarrier(world,barrier,revolverProfile(p.quality).damage);
+      if(world.structures!==structures)batch=undefined;targets=undefined;scenes.clear();afterImpact?.();
+    }
     if(pawn) {
       const impact=damageUnarmoredPawnWithBullet(world,pawn,{damage:revolverProfile(p.quality).damage},revolverProfile(p.quality).armorPenetration);
       applyBulletStagger(world,pawn,core,revolverProfile(p.quality).stoppingPower);

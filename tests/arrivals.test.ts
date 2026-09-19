@@ -1,3 +1,4 @@
+import { SCHEMA_VERSION } from '../src/sim/types';
 import { expect,test } from 'vitest';
 import { createWorld,applyCommand,stepWorld } from '../src/sim/engine';
 import { deserializeWorld,serializeWorld,validateWorld,hashWorld } from '../src/sim/serialization';
@@ -71,7 +72,7 @@ test('calendar cannot generate impossible or unlimited arrivals and does no per-
 });
 test('V65 migration is neutral, invalid old/current letters and memories fail before adoption',()=>{
   const legacy=JSON.parse(serializeWorld(createWorld()));legacy.schemaVersion=65;
-  const migrated=deserializeWorld(JSON.stringify(legacy));expect(migrated.schemaVersion).toBe(66);expect(migrated.arrivals).toBeUndefined();expect(migrated).toEqual({...legacy,schemaVersion:66});
+  const migrated=deserializeWorld(JSON.stringify(legacy));expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);expect(migrated.arrivals).toBeUndefined();expect(migrated).toEqual({...legacy,schemaVersion:SCHEMA_VERSION});
   const good=offer();
   for(const mutate of [(x:any)=>x.schemaVersion=65,(x:any)=>x.arrivals.pending.profile=3,(x:any)=>x.arrivals.accepted++, (x:any)=>x.arrivals.pending.expiresAt=x.tick,(x:any)=>x.arrivals.pending.name='<'.repeat(49),(x:any)=>x.arrivals.rng=0,(x:any)=>x.pawns[0].deniedJoining=[x.tick]]) {
     const bad=JSON.parse(serializeWorld(good));mutate(bad);expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();

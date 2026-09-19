@@ -66,6 +66,7 @@ export function playerFocusDecisions(world:World):Decision[] {
 export function playerDecisions(world: World): Decision[] {
   const cx = Math.floor(world.width / 2), cz = Math.floor(world.height / 2);
   const out: Decision[] = [...coolingDecisions(world),...powerDecisions(world)];
+  for(const s of world.structures)if((s.kind==='wall'||s.kind==='door')&&!world.home?.includes(s.z*world.width+s.x))out.push({reason:'Inclure les ouvrages du camp dans le foyer entretenu.',command:{type:'area',action:'home',from:{x:s.x,z:s.z},to:{x:s.x,z:s.z}}});
   if(world.arrivals?.pending)out.push({reason:'Accueillir une quatrième personne ; différer la croissance suivante pour stabiliser le camp.',command:{type:'answer-arrival',offerId:world.arrivals.pending.id,accept:world.pawns.length<4}});
   const gun=world.piles.find(p=>p.kind==='weapon'&&p.owner.type==='ground'),armed=world.piles.some(p=>p.owner.type==='equipment');
   const recruit=world.pawns[2];
@@ -188,7 +189,7 @@ export function colonySummary(world: World) {
   const fields=new Set(world.growingZones.flatMap(z=>z.cells));
   const occupied=new Map<number,number>();
   for(const p of world.pawns){const cell=p.z*world.width+p.x;occupied.set(cell,(occupied.get(cell)??0)+1);}
-  return { tick: world.tick, foodPolicies: world.pawns.map(p=>p.foodPolicyId), restRules: world.restRules, scheduledSleepHours: world.pawns.map(p=>p.schedule.filter(s=>s==='sleep').length), spoiled: { ...world.spoiled }, crops: world.resources.filter(r=>r.kind==='rice').length, growingCells:fields.size,
+  return { barriers:{destroyed:world.destroyed??null,damaged:world.structures.filter(s=>s.damage).map(s=>({id:s.id,damage:s.damage})),homeCells:world.home?.length??0},tick: world.tick, foodPolicies: world.pawns.map(p=>p.foodPolicyId), restRules: world.restRules, scheduledSleepHours: world.pawns.map(p=>p.schedule.filter(s=>s==='sleep').length), spoiled: { ...world.spoiled }, crops: world.resources.filter(r=>r.kind==='rice').length, growingCells:fields.size,
     power:world.structures.filter(s=>s.power).map(s=>({kind:s.kind,on:s.power!.on,parent:s.power!.parentId,fuel:s.fuel?.ticks??null})),
     mining:{componentsInBuildings:world.structures.reduce((n,s)=>n+requiredMaterial(s,'component'),0),components:world.piles.reduce((n,p)=>n+(p.item==='component'?p.quantity:0),0),componentsStored:world.piles.reduce((n,p)=>n+(p.item==='component'&&p.owner.type==='ground'&&world.stockpiles.some(s=>s.filters.component&&p.owner.type==='ground'&&s.x===p.owner.x&&s.z===p.owner.z)?p.quantity:0),0),blocks:world.piles.reduce((n,p)=>n+(p.kind==='blocks'?p.quantity:0),0),blocksStored:world.piles.reduce((n,p)=>n+(p.kind==='blocks'&&p.owner.type==='ground'&&world.stockpiles.some(s=>s.filters.blocks&&p.owner.type==='ground'&&s.x===p.owner.x&&s.z===p.owner.z)?p.quantity:0),0),steelInBuildings:world.structures.reduce((n,s)=>n+requiredMaterial(s,'steel'),0),steel:world.piles.reduce((n,p)=>n+(p.item==='steel'?p.quantity:0),0),steelStored:world.piles.reduce((n,p)=>n+(p.item==='steel'&&p.owner.type==='ground'&&world.stockpiles.some(s=>s.filters.steel&&p.owner.type==='ground'&&s.x===p.owner.x&&s.z===p.owner.z)?p.quantity:0),0),cells:world.tiles.filter(t=>t.terrain==='rough-stone').length,chunks:world.piles.filter(p=>p.kind==='chunk').length,stored:world.piles.filter(p=>p.kind==='chunk'&&p.owner.type==='ground'&&world.stockpiles.some(s=>s.filters.chunk&&p.owner.type==='ground'&&s.x===p.owner.x&&s.z===p.owner.z)).length},
     mood:world.pawns.map(p=>{const thoughts=moodThoughts(world,p);return {id:p.id,level:p.mood,target:moodTarget(thoughts),frozen:moodFrozen(p),crisis:p.mental?.crisis??null,exposure:p.mental?.below??[0,0,0],causes:thoughts.map(t=>({id:t.id,offset:t.offset,expiresAt:t.expiresAt}))};}),
@@ -214,7 +215,7 @@ export function colonySummary(world: World) {
 }
 
 export function woodAccount(world: World): number {
-  return (world.packed??[]).reduce((n,p)=>n+requiredMaterial(p.building,'wood'),0) + world.deconstructed.lostWood + world.deconstructed.fuelTicks/600 + world.piles.filter(p=>p.kind==='wood').reduce((n,p)=>n+p.quantity,0) + world.resources.filter(r=>r.kind==='tree').reduce((n,r)=>n+r.amount,0) + world.structures.reduce((n,s)=>n+(s.fuel ? ((s.fuel?.ticks??0)+(s.fuel?.burned??0))/600 : requiredMaterial(s,'wood')),0);
+  return (world.packed??[]).reduce((n,p)=>n+requiredMaterial(p.building,'wood'),0) + world.deconstructed.lostWood + (world.destroyed?.lost.wood??0) + world.deconstructed.fuelTicks/600 + world.piles.filter(p=>p.kind==='wood').reduce((n,p)=>n+p.quantity,0) + world.resources.filter(r=>r.kind==='tree').reduce((n,r)=>n+r.amount,0) + world.structures.reduce((n,s)=>n+(s.fuel ? ((s.fuel?.ticks??0)+(s.fuel?.burned??0))/600 : requiredMaterial(s,'wood')),0);
 }
 export function foodAccount(world: World): number {
   // Produced units remain accounted for even after spoilage; this is a ledger,

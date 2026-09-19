@@ -1,5 +1,7 @@
 # Combat rapproché — V59
 
+V67 ajoute les cibles murs/portes aux ordres de mêlée, avec approche, coup garanti sans XP contre objet immobile et récupération orientée conservée après disparition. [Contrat distinct](barriers.md).
+
 V61 autorise l’approche en mêlée du NPC muni du [mandat tactique](pursuit.md). Les anciennes sentinelles restent fixes ; le mobilisé en défense automatique ne poursuit toujours pas.
 
 [Recherche et incertitudes](../research/melee-reference.md). Le joueur mobilise un ou plusieurs colons, choisit **Attaquer au corps à corps**, puis clique un personnage. L'ordre est atomique pour le groupe : places accessibles distinctes avant acceptation, trajet réel puis frappe. Il peut viser un allié explicitement ; la sélection ordinaire n'attaque jamais.
@@ -30,4 +32,4 @@ Une place de combat est distincte des réservations civiles ; les combattants de
 
 ## Limites
 
-V60 livre tir automatique et réaction Attaquer ; V61 poursuite visible et postes de tir ; V63 chemise/gilet protecteurs. Restent terrains offensifs, autres armures/vêtements et armes, attaque d’objets, infections, prisonniers et raids. La mêlée est utilisable avec le contenu actuel ; cela ne termine ni Combat ni G3.
+V60 livre tir automatique et réaction Attaquer ; V61 poursuite visible et postes de tir ; V63 chemise/gilet protecteurs. Restent terrains offensifs, autres armures/vêtements et armes, attaque d’objets autres que murs/portes, infections, prisonniers et raids. La mêlée est utilisable avec le contenu actuel ; cela ne termine ni Combat ni G3.

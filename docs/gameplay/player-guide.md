@@ -1,5 +1,15 @@
 # Guide joueur
 
+## Endommager et réparer un mur ou une porte (V67)
+
+Mobilisez un colon, utilisez **Attaquer au corps à corps**, puis cliquez sur un mur ou une porte. Il rejoint le contact et frappe à sa cadence ; **Arrêter** interrompt l'ordre en conservant la récupération du coup. Les balles interceptées par ces ouvrages les endommagent aussi. L'inspection affiche les PV actuels et maximaux, qui dépendent du matériau.
+
+À zéro PV, l'ouvrage disparaît et ouvre le passage ; un toit privé de support peut s'effondrer et blesser une personne. Un mur/une porte détruit ne rend aucun matériau. Pour récupérer une partie des matériaux, utilisez la déconstruction habituelle.
+
+Dans **Architecte → Zones → Foyer**, peignez les ouvrages à entretenir. Un colon non mobilisé affecté à **Construction** rejoint un ouvrage endommagé et le répare sans matière. Une désignation de déconstruction prime sur cette réparation. **Retirer foyer** arrête son entretien ; les PV déjà restaurés restent acquis. Le foyer ne s'étend pas encore automatiquement autour des constructions et ne fournit pas encore nettoyage ou extinction des incendies.
+
+Seuls murs et portes sont concernés. L'ennemi de Rencontre armée ne cherche pas encore à ouvrir une brèche ; aucun raid nouveau dans la colonie ordinaire n'est livré par cette étape.
+
 ## Accueillir une nouvelle personne (V66)
 
 Dans un nouveau camp paisible, une première demande peut arriver entre un jour et demi et deux jours de simulation. Cliquez sur sa lettre à droite : vous pouvez **accueillir**, **refuser** ou **décider plus tard**. La demande dure une journée ; la fenêtre ne met pas le jeu en pause. Sans réponse, le voyageur poursuit sa route.

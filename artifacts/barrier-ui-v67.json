@@ -1,0 +1,22 @@
+{
+  "reports": [
+    {
+      "speed": 1,
+      "damage": 9,
+      "ticks": 50,
+      "constructionXp": 8850
+    },
+    {
+      "speed": 6,
+      "damage": 19,
+      "ticks": 84,
+      "constructionXp": 16200
+    }
+  ],
+  "poses": {
+    "strikes": 853,
+    "repairs": 536,
+    "misfacing": 0
+  },
+  "errors": []
+}

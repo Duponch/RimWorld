@@ -38,6 +38,7 @@ export const growingZoneAt = (world: World, cell: number): GrowingZone | undefin
 export function jobDuration(world: World, job: Job): number {
   if(job.kind==='mine'&&job.pickTicks!==undefined)return job.pickTicks/10;
   if(job.furniture)return furnitureDuration(world,job);
+  if(job.kind==='repair')return job.repair?.warmed?20:80;
   if(job.kind==='deconstruct')return deconstructionDuration(job);
   if(job.material!==undefined)return constructionRecipe(job).work;
   return (job.kind === 'harvest' || job.kind === 'cut') && resourceCells(world).get(index(world, job))?.kind === 'rice' ? 20 : JOB_DURATION[job.kind];

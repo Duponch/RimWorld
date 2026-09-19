@@ -11,8 +11,8 @@ export const MATERIAL_DEFINITIONS = Object.freeze({
   wood: Object.freeze({ id: 'wood', label: 'Bois', unit: 'unit', stackLimit: MAX_STACK }),
   food: Object.freeze({ id: 'food', label: 'Nourriture', unit: 'portion', stackLimit: MAX_STACK, chairSearchRadius: 32, tableDesired: true }),
 });
-export const JOB_DURATION: Readonly<Record<JobKind, number>> = Object.freeze({ 'wood-generator':250, 'standing-lamp':30, 'passive-cooler':20, 'build-roof':4, 'remove-roof':4, door:60, stonecutter:200, mine:10, uninstall:12, install:1, deconstruct: 1, chop: 100, harvest: 60, cut: 60, sow: 17, horseshoes: 7, campfire: 20, wall: 70, bed: 120, table: 53, stool: 32 });
-export const JOB_WOOD_COST: Readonly<Record<JobKind, number>> = Object.freeze({ 'wood-generator':0, 'standing-lamp':0, 'passive-cooler':50, 'build-roof':0, 'remove-roof':0, door:25, stonecutter:0, mine:0, uninstall:0, install:0, deconstruct: 0, chop: 0, harvest: 0, cut: 0, sow: 0, horseshoes: 10, campfire: 20, wall: 5, bed: 8, table: 28, stool: 25 });
+export const JOB_DURATION: Readonly<Record<JobKind, number>> = Object.freeze({ repair:80, 'wood-generator':250, 'standing-lamp':30, 'passive-cooler':20, 'build-roof':4, 'remove-roof':4, door:60, stonecutter:200, mine:10, uninstall:12, install:1, deconstruct: 1, chop: 100, harvest: 60, cut: 60, sow: 17, horseshoes: 7, campfire: 20, wall: 70, bed: 120, table: 53, stool: 32 });
+export const JOB_WOOD_COST: Readonly<Record<JobKind, number>> = Object.freeze({ repair:0, 'wood-generator':0, 'standing-lamp':0, 'passive-cooler':50, 'build-roof':0, 'remove-roof':0, door:25, stonecutter:0, mine:0, uninstall:0, install:0, deconstruct: 0, chop: 0, harvest: 0, cut: 0, sow: 0, horseshoes: 10, campfire: 20, wall: 5, bed: 8, table: 28, stool: 25 });
 export const STRUCTURE_DEFINITIONS = Object.freeze({
   'wood-generator': Object.freeze({id:'wood-generator',width:2,depth:2,blocksMovement:false}),
   'standing-lamp': Object.freeze({id:'standing-lamp',width:1,depth:1,blocksMovement:false}),

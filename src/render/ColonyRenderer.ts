@@ -261,9 +261,9 @@ export class ColonyRenderer {
     if (structureKey !== this.structureKey || newMap) { this.structureKey = structureKey; this.buildStructures(world); }
     // Quantize presentation of progression to avoid rebuilding static meshes for
     // every work tick. Saved simulation progress remains exact and authoritative.
-    const jobKey = world.jobs.map((j) => `${j.id}:${j.kind}:${j.material}:${j.x}:${j.z}:${j.orientation}:${j.footprint}:${j.status}:${j.construction}:${j.escrow.wood}:${j.kind === 'mine' || j.kind === 'chop' || j.kind === 'harvest' || j.kind === 'cut' || j.kind === 'sow' || j.kind === 'deconstruct' ? 0 : Math.floor(j.progress / jobDuration(world,j) * 20)}`).join('|');
+    const jobKey = world.jobs.map((j) => `${j.id}:${j.kind}:${j.material}:${j.x}:${j.z}:${j.orientation}:${j.footprint}:${j.status}:${j.construction}:${j.escrow.wood}:${j.kind === 'mine' || j.kind === 'chop' || j.kind === 'harvest' || j.kind === 'cut' || j.kind === 'sow' || j.kind === 'deconstruct' || j.kind==='repair' ? 0 : Math.floor(j.progress / jobDuration(world,j) * 20)}`).join('|');
     if (jobKey !== this.jobKey || newMap) { this.jobKey = jobKey; this.buildJobs(world); }
-    const storageKey = world.stockpiles.map((s) => `${s.id}:${s.x}:${s.z}:${s.priority}:${s.filters.wood}:${s.filters.food}`).join('|');
+    const storageKey = `${world.home?.join(',')??''};`+world.stockpiles.map((s) => `${s.id}:${s.x}:${s.z}:${s.priority}:${s.filters.wood}:${s.filters.food}`).join('|');
     if (storageKey !== this.storageKey || newMap) { this.storageKey = storageKey; this.buildStorage(world); }
     if (newMap || previousWorld?.resources !== world.resources || Math.floor((previousWorld?.tick ?? -1) / 25) !== Math.floor(world.tick / 25)) this.crops.update(world, newMap);
     this.growing.update(world, newMap);
@@ -280,7 +280,9 @@ export class ColonyRenderer {
 
   setTool(tool: string): void {
     if (tool !== this.tool) this.cancelDesignation();
+    const homeBefore=this.tool==='home'||this.tool==='remove-home';
     this.tool = tool;
+    if(this.world&&(homeBefore||tool==='home'||tool==='remove-home'))this.buildStorage(this.world);
     if (tool === 'bed' || tool === 'table') this.keys.delete('q');
     const color = tool === 'cancel' ? 0xe6876a : tool === 'select' ? 0xf9ebae : 0x9dd9ca;
     (this.hover.material as THREE.MeshBasicNodeMaterial).color.setHex(color);
@@ -422,6 +424,7 @@ export class ColonyRenderer {
 
   private buildStorage(world: World): void {
     const cells: Placement[] = [], borders: Placement[] = [];
+    if(this.tool==='home'||this.tool==='remove-home')for(const i of world.home??[])cells.push({x:i%world.width,z:Math.floor(i/world.width),y:.04,color:0x779ee6});
     for (const storage of world.stockpiles) {
       const color = !storage.filters.wood && !storage.filters.food ? 0x9b8980
         : storage.filters.wood && storage.filters.food ? 0x9ac6aa : storage.filters.wood ? 0xc1a373 : 0xc89080;

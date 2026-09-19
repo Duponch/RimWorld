@@ -1,3 +1,4 @@
+import { barrierHp,barrierMaxHp,isBarrier } from './sim/barriers';
 import { createArrivalUI } from './ui/arrivals';
 import { createMoodInspection,updateMoodInspection } from './ui/mood-inspection';
 import { isColonist,activeThreat } from './sim/affiliation';
@@ -49,7 +50,7 @@ import { gameLayout, storageSettings, toolDefinitions } from './ui/layout';
 import type { ArchitectCategory, Panel, Tool } from './ui/layout';
 
 import { recreationInspection, updateRecreationInspection } from './ui/recreation-inspection';
-const jobLabels: Record<JobKind, string> = { 'wood-generator':'Construction du générateur à bois', 'standing-lamp':'Construction de la lampe', 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'Pose de toit', 'remove-roof':'Retrait de toit', door:'Construction de la porte', stonecutter:'Construction de la table de taille', mine:'Minage', uninstall:'Désinstallation',install:'Réinstallation', deconstruct: 'Déconstruction', chop: 'Abattage', harvest: 'Récolte', cut: 'Coupe de plante', sow: 'Semis de riz', wall: 'Construction du mur', bed: 'Construction du lit', table: 'Construction de la table', stool: 'Construction du tabouret', horseshoes: 'Construction du piquet de fers à cheval', campfire: 'Construction du feu de camp' };
+const jobLabels: Record<JobKind, string> = { repair:'Réparation', 'wood-generator':'Construction du générateur à bois', 'standing-lamp':'Construction de la lampe', 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'Pose de toit', 'remove-roof':'Retrait de toit', door:'Construction de la porte', stonecutter:'Construction de la table de taille', mine:'Minage', uninstall:'Désinstallation',install:'Réinstallation', deconstruct: 'Déconstruction', chop: 'Abattage', harvest: 'Récolte', cut: 'Coupe de plante', sow: 'Semis de riz', wall: 'Construction du mur', bed: 'Construction du lit', table: 'Construction de la table', stool: 'Construction du tabouret', horseshoes: 'Construction du piquet de fers à cheval', campfire: 'Construction du feu de camp' };
 const stateLabels: Record<Pawn['state'], string> = { resting:'Au lit pour soins', downed:'À terre', dead:'Décédé', idle: 'Disponible', moving: 'En chemin', working: 'Au travail', sleeping: 'Se repose', hungry: 'Cherche à manger', eating: 'Mange', recreating: 'Se divertit' };
 const terrainLabels = { 'rough-stone':'Sol rocheux brut', grass: 'Prairie', soil: 'Terre fertile', water: 'Eau infranchissable', rock: 'Massif rocheux infranchissable' };
 const resourceLabels = { tree: 'Arbre', berries: 'Buisson de baies', rock: 'Pierre au sol', rice: 'Plant de riz' };
@@ -155,12 +156,15 @@ function selectPawns(gesture:SelectionGesture,focus=false) {
 }
 function pickCell(x: number, z: number) {
   if (!snapshot || replacingWorld) return;
-  if(shootingControls.active){shootingControls.cancel();renderState();return;}
+  if(shootingControls.active){
+    const target=shootingControls.mode==='melee'?snapshot.structures.find(s=>(s.kind==='wall'||s.kind==='door')&&s.x===x&&s.z===z):undefined;
+    shootingControls.cancel();if(target)void attempt(async()=>{await client.command({type:'melee',pawnIds:[...selection.ids],targetId:target.id,structure:true});renderState();});else renderState();return;
+  }
   if (currentTool !== 'select') {
     const tool = currentTool;
     void attempt(() => {
       if(tool==='install'){if(installationId===undefined)throw new Error('Sélectionnez un meuble à installer.');return client.command({type:'install',structureId:installationId,x,z,orientation:furnitureObject(snapshot!,installationId)?.kind==='standing-lamp'?0:placementOrientation}).then(()=>{applyTool('select');setPanel(null);});}
-      if (isRoofArea(tool) || tool === 'haul-chunks' || tool === 'growing' || tool === 'remove-growing') return client.command({type:'area',action:tool,from:{x,z},to:{x,z}});
+      if (tool==='home'||tool==='remove-home'||isRoofArea(tool) || tool === 'haul-chunks' || tool === 'growing' || tool === 'remove-growing') return client.command({type:'area',action:tool,from:{x,z},to:{x,z}});
       if (tool === 'stockpile') return client.command({ type: 'stockpile', x, z, enabled: true, ...readStorageSettings('stockpile') });
       if (tool === 'remove-stockpile') return client.command({ type: 'stockpile', x, z, enabled: false });
       return client.command(tool === 'cancel' ? { type: 'cancel', x, z } : { type: 'designate', kind: tool as JobKind, orientation: tool==='wood-generator'||tool==='standing-lamp'||tool==='door'||tool==='passive-cooler'?0:placementOrientation, x, z, ...(constructionUI.material(tool) ? {material:constructionUI.material(tool)} : {}) });
@@ -176,7 +180,7 @@ function designateArea(action: AreaAction, from: Cell, to: Cell) {
   void attempt(async () => {
     const response = await client.command({ type: 'area', action, from, to, ...(action === 'stockpile' ? readStorageSettings('stockpile') : {}) });
     const result = JSON.parse(response!) as { affected: number; skipped: number };
-    const label = isRoofArea(action) ? 'case(s) de zone de toiture modifiée(s)' : action === 'growing' ? 'case(s) de culture créée(s)' : action === 'remove-growing' ? 'case(s) de culture retirée(s)' : action === 'cancel' ? 'ordre(s) annulé(s)' : action === 'remove-stockpile' ? 'case(s) de réserve retirée(s)' : action === 'stockpile' ? 'case(s) de réserve créée(s)' : 'ordre(s) de collecte créé(s)';
+    const label = action==='home'||action==='remove-home'?'case(s) de foyer modifiée(s)':isRoofArea(action) ? 'case(s) de zone de toiture modifiée(s)' : action === 'growing' ? 'case(s) de culture créée(s)' : action === 'remove-growing' ? 'case(s) de culture retirée(s)' : action === 'cancel' ? 'ordre(s) annulé(s)' : action === 'remove-stockpile' ? 'case(s) de réserve retirée(s)' : action === 'stockpile' ? 'case(s) de réserve créée(s)' : 'ordre(s) de collecte créé(s)';
     notify(`${result.affected} ${label}${result.skipped ? ` · ${result.skipped} case(s) ignorée(s)` : ''}.`);
   });
 }
@@ -382,6 +386,7 @@ function renderState() {
       el('cell-title').textContent = packed?'Meuble emballé · '+({'wood-generator':'générateur à bois','standing-lamp':'lampe sur pied','passive-cooler':'refroidisseur passif',door:'porte',bed:'lit',table:'table',stool:'tabouret',horseshoes:'piquet',wall:'mur',campfire:'feu',stonecutter:'table de taille'})[packed.building.kind]:structure ? ({ 'wood-generator':'Générateur à bois','standing-lamp':'Lampe sur pied','passive-cooler':'Refroidisseur passif',door:'Porte', stonecutter:'Table de taille de pierre', wall: 'Mur', bed: 'Lit', table: 'Table', stool: 'Tabouret', horseshoes: 'Piquet de fers à cheval', campfire: 'Feu de camp' })[structure.kind] : resource ? resourceLabels[resource.kind] : terrainLabels[world.tiles[z * world.width + x].terrain];
       el('cell-description').textContent = `Case ${x}, ${z}${resource ? isPlant(resource) ? plantInspection(world,resource) : ` · ${resource.amount} unités à récolter` : ''}${structure ? ` · ${structureFootprintLabel(structure)} cases` : ''}`;
       if(growingZoneAt(world,z*world.width+x))el('cell-description').textContent+=growingTemperatureInspection(world,selectedCell);
+      if(structure&&isBarrier(structure))el('cell-description').textContent+=` · Résistance : ${barrierHp(structure)}/${barrierMaxHp(structure)} PV · ${world.home?.includes(z*world.width+x)?'Zone de foyer':'Hors zone de foyer (réparation désactivée)'}`;
       const building = packed?.building ?? structure;
       if (building && building.kind !== 'campfire' && building.kind !== 'passive-cooler') el('cell-title').textContent += ` · ${ITEM_DEFINITIONS[building.material ?? 'wood'].label}${building.material === undefined ? ' (ancien)' : ''}`;
       const rock = rockInspection(world.tiles[z * world.width + x]!, resource);
@@ -396,8 +401,8 @@ function renderState() {
       if(structure?.kind==='horseshoes')el('cell-description').textContent += ` · Dextérité · ${world.pawns.filter(p=>p.recreation.task?.buildingId===structure.id).length}/3 joueurs · places à 5 cases, ligne de vue dégagée.`;
       if(structure?.fuel)updateFireControls(el('inspector'),structure);
       if(structure&&stationRecipe(structure))updateBillControls(el('inspector'),structure,world);
-      el('cell-deconstruct').hidden=!structure||!!job;
-      el('cell-cancel').hidden=!job;
+      el('cell-deconstruct').hidden=!structure||!!job&&job.kind!=='repair';
+      el('cell-cancel').hidden=!job||job.kind==='repair';
       el('cell-storage').hidden = !storage;
       updateBedControls(el('inspector'),world,structure);
       if (storage) el('cell-storage-quantity').textContent = `Réserve · ${packed?1:piles.reduce((sum, pile) => sum + pile.quantity, 0)} / ${storage.capacity} unités`;

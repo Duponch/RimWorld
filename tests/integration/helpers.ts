@@ -39,9 +39,9 @@ export async function panel(page: Page, name: 'architect' | 'work' | 'schedule' 
   await expect(page.locator(`#${name}-panel`)).toBeVisible();
 }
 
-export async function tool(page: Page, name: 'wood-generator'|'standing-lamp'|'passive-cooler'|'build-roof'|'remove-roof'|'ignore-roof'|'door' | 'stonecutter' | 'mine' | 'haul-chunks' | 'uninstall' | 'deconstruct' | 'select' | 'chop' | 'harvest' | 'cut' | 'cancel' | 'wall' | 'bed' | 'table' | 'horseshoes' | 'stool' | 'campfire' | 'stockpile' | 'remove-stockpile' | 'growing' | 'remove-growing') {
+export async function tool(page: Page, name: 'home'|'remove-home'|'wood-generator'|'standing-lamp'|'passive-cooler'|'build-roof'|'remove-roof'|'ignore-roof'|'door' | 'stonecutter' | 'mine' | 'haul-chunks' | 'uninstall' | 'deconstruct' | 'select' | 'chop' | 'harvest' | 'cut' | 'cancel' | 'wall' | 'bed' | 'table' | 'horseshoes' | 'stool' | 'campfire' | 'stockpile' | 'remove-stockpile' | 'growing' | 'remove-growing') {
   await panel(page, 'architect');
-  const category = name === 'wood-generator' ? 'power' : name === 'standing-lamp' ? 'furniture' : name === 'stonecutter' ? 'production' : name === 'horseshoes' ? 'recreation' : name === 'campfire' || name === 'passive-cooler' ? 'temperature' : name === 'door' || name === 'wall' ? 'structure' : name === 'bed' || name === 'table' || name === 'stool' ? 'furniture' : name === 'build-roof' || name === 'remove-roof' || name === 'ignore-roof' || name === 'stockpile' || name === 'remove-stockpile' || name === 'growing' || name === 'remove-growing' ? 'zones' : 'orders';
+  const category = name === 'wood-generator' ? 'power' : name === 'standing-lamp' ? 'furniture' : name === 'stonecutter' ? 'production' : name === 'horseshoes' ? 'recreation' : name === 'campfire' || name === 'passive-cooler' ? 'temperature' : name === 'door' || name === 'wall' ? 'structure' : name === 'bed' || name === 'table' || name === 'stool' ? 'furniture' : name==='home'||name==='remove-home'||name === 'build-roof' || name === 'remove-roof' || name === 'ignore-roof' || name === 'stockpile' || name === 'remove-stockpile' || name === 'growing' || name === 'remove-growing' ? 'zones' : 'orders';
   await page.locator(`[data-category="${category}"]`).click();
   await page.locator(`[data-tool="${name}"]`).click();
 }

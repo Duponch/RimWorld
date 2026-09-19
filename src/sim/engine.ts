@@ -1,3 +1,4 @@
+import { reconcileRepairs,advanceRepair } from './repairs.ts';
 import { advanceArrivals,applyArrival } from './arrivals.ts';
 import { updateMentalBreak,processSadWander } from './mental-break.ts';
 import { expireMealMemories } from './mood.ts';
@@ -81,7 +82,7 @@ import type { AreaCommand, Cell, Command, CommandResult, DesignateCommand, Job, 
 export { JOB_DURATION, JOB_WOOD_COST } from './definitions.ts';
 
 const PATH_SEARCHES_PER_TICK = 8;
-const JOB_LABEL: Readonly<Record<JobKind, string>> = { 'wood-generator':'construction de générateur à bois', 'standing-lamp':'construction de lampe sur pied', 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'pose de toit', 'remove-roof':'retrait de toit', door:'construction de porte', stonecutter:'construction de table de taille de pierre', mine:'minage', uninstall:'désinstallation', install:'réinstallation', deconstruct: 'déconstruction', chop: 'abattage', harvest: 'récolte', cut: 'coupe de plante', sow: 'semis de riz', horseshoes: 'construction de piquet de fers à cheval', campfire: 'construction de feu de camp', wall: 'construction de mur', bed: 'construction de lit', table: 'construction de table', stool: 'construction de tabouret' };
+const JOB_LABEL: Readonly<Record<JobKind, string>> = { repair:'réparer', 'wood-generator':'construction de générateur à bois', 'standing-lamp':'construction de lampe sur pied', 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'pose de toit', 'remove-roof':'retrait de toit', door:'construction de porte', stonecutter:'construction de table de taille de pierre', mine:'minage', uninstall:'désinstallation', install:'réinstallation', deconstruct: 'déconstruction', chop: 'abattage', harvest: 'récolte', cut: 'coupe de plante', sow: 'semis de riz', horseshoes: 'construction de piquet de fers à cheval', campfire: 'construction de feu de camp', wall: 'construction de mur', bed: 'construction de lit', table: 'construction de table', stool: 'construction de tabouret' };
 const sameCell = (a: Cell, b: Cell): boolean => a.x === b.x && a.z === b.z;
 const refusal = (code: RefusalCode, reason: string): CommandResult => ({ ok: false, code, reason });
 function event(world: World, type: 'job' | 'need' | 'command', message: string): void {
@@ -104,7 +105,7 @@ function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandR
   const creates = command.action === 'mine' || command.action === 'deconstruct' || command.action === 'chop' || command.action === 'harvest' || command.action === 'cut' || command.action === 'stockpile' || command.action === 'growing';
   if (creates && !Number.isSafeInteger(world.nextId + selection.cells.length)) return refusal('invalid-command', 'Limite des identités atteinte.');
   let affected = selection.cells.length;
-  if (isRoofArea(command.action)) { designateRoofArea(world, selection.cells, command.action); } else if (command.action === 'deconstruct') {
+  if(command.action==='home'||command.action==='remove-home'){const cells=new Set(world.home);for(const i of selection.cells)if(command.action==='home')cells.add(i);else cells.delete(i);world.home=[...cells].sort((a,b)=>a-b);if(!world.home.length)delete world.home;} else if (isRoofArea(command.action)) { designateRoofArea(world, selection.cells, command.action); } else if (command.action === 'deconstruct') {
     const selected = new Set(selection.cells);
     const targets = world.structures.filter(s => footprintCells(s).some(c => selected.has(cellIndex(world,c.x,c.z))));
     for (const target of targets) designateDeconstruction(world,target);
@@ -149,7 +150,7 @@ function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandR
     }
   }
   wakePlanners(world); refreshStock(world);
-  event(world, 'command', `Rectangle : ${affected} ${command.action === 'cancel' ? 'ordre(s) annulé(s)' : command.action === 'remove-stockpile' ? 'case(s) de réserve retirée(s)' : command.action === 'stockpile' ? 'case(s) de réserve créée(s)' : command.action==='deconstruct' ? 'ordre(s) de déconstruction créé(s)' : isRoofArea(command.action) ? 'case(s) de toiture désignée(s)' : 'ordre(s) de collecte créé(s)'}.`);
+  event(world, 'command', `Rectangle : ${affected} ${command.action === 'cancel' ? 'ordre(s) annulé(s)' : command.action === 'remove-stockpile' ? 'case(s) de réserve retirée(s)' : command.action === 'stockpile' ? 'case(s) de réserve créée(s)' : command.action==='home'||command.action==='remove-home'?'case(s) de foyer modifiée(s)':command.action==='deconstruct' ? 'ordre(s) de déconstruction créé(s)' : isRoofArea(command.action) ? 'case(s) de toiture désignée(s)' : 'ordre(s) de collecte créé(s)'}.`);
   return { ok: true, affected, skipped: selection.skipped };
 }
 
@@ -165,7 +166,7 @@ export function canDesignate(world: World, command: DesignateCommand): CommandRe
   if(command.kind==='uninstall'&&!minifiable(target!.kind))return refusal('incompatible-resource','Ce bâtiment ne peut pas être désinstallé.');
   const cells = footprintCells(target??command);
   if (cells.some(cell => !inBounds(world, cell.x, cell.z))) return refusal('out-of-bounds', 'Empreinte hors de la carte.');
-  if (world.jobs.some(job => !isRoofJob(job) && footprintCells(job).some(cell => cells.some(target => sameCell(cell, target))))) return refusal('occupied', 'Un ordre existe déjà dans cette empreinte.');
+  if (world.jobs.some(job => !isRoofJob(job) && !(command.kind==='deconstruct'&&job.kind==='repair') && footprintCells(job).some(cell => cells.some(target => sameCell(cell, target))))) return refusal('occupied', 'Un ordre existe déjà dans cette empreinte.');
   if(command.kind==='deconstruct'||command.kind==='uninstall')return {ok:true};
   if(command.kind==='mine')return world.tiles[cellIndex(world,command.x,command.z)]!.terrain==='rock'?{ok:true}:refusal('incompatible-resource','Désigner un massif rocheux à miner.');
   const resource = world.resources.find(candidate => sameCell(candidate, command));
@@ -186,11 +187,13 @@ export function canDesignate(world: World, command: DesignateCommand): CommandRe
 export function applyCommand(world: World, command: Command): CommandResult {
   const result=applyCommandInternal(world,command);
   if(result.ok){
+    reconcileRepairs(world);
     if(command.type.startsWith('order-')&&'pawnId' in command){const actor=world.pawns.find(p=>p.id===command.pawnId);if(actor)delete actor.flee;}
     reconcileRescues(world);reconcilePatientRest(world);reconcileTending(world);reconcileFeeding(world);reconcileEquipmentTasks(world);for(const pawn of world.pawns)reconcileWeaponMemory(world,pawn);reconcileOrders(world);const thermal=reconcileTemperature(world);updateFoodTemperatures(world,thermal);updatePlantTemperatures(world,thermal);}
   return result;
 }
 function applyCommandInternal(world: World, command: Command): CommandResult {
+  if(command?.type==='designate'&&command.kind==='repair')return refusal('invalid-command','Utilisez la zone de foyer pour activer les réparations.');
   if (!command || typeof command !== 'object') return refusal('invalid-command', 'Commande invalide.');
   if(command.type==='enable-arrivals'||command.type==='answer-arrival')return applyArrival(world,command);
   const actors='pawnIds' in command&&Array.isArray(command.pawnIds)?command.pawnIds:'pawnId' in command&&command.pawnId!==null?[command.pawnId]:[];
@@ -303,6 +306,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   if (command.type === 'cancel') {
     const existing = world.jobs.find(job => footprintCells(job).some(cell => sameCell(cell, command)))??furnitureIntentAt(world,command);
     if (!existing) return refusal('missing-target', 'Aucun ordre à annuler ici.');
+    if(existing.kind==='repair')return refusal('invalid-command','Retirez la zone de foyer pour suspendre cet entretien automatique.');
     if(isRoofJob(existing)){designateRoofArea(world,[cellIndex(world,command.x,command.z)],'ignore-roof');wakePlanners(world);return {ok:true};}
     for (const pawn of world.pawns) if (pawn.jobId === existing.id || (pawn.haul && constructionHaulId(pawn.haul.destination) === existing.id)) releaseWork(world, pawn,drops);
     world.jobs.splice(world.jobs.indexOf(existing), 1);
@@ -368,7 +372,9 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     updatePlantTemperatures(world,thermal);
     burnFuel(world);
     updateDoors(world);
+    const structuresBeforeCombat=world.structures;
     advanceWorldCombat(world);
+    reconcileRepairs(world);
     expireStaggers(world);
     scheduleGrowing(world);
     scheduleRoofs(world);reconcileRescues(world);reconcilePatientRest(world);reconcileTending(world);reconcileFeeding(world);reconcileEquipmentTasks(world);for(const pawn of world.pawns)reconcileWeaponMemory(world,pawn);
@@ -386,7 +392,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     const getEnvironment=()=>environment??=getEnvironmentCache().read(world,getLight());
     const getThreats=()=>threatQueries(world);
     const hasAdversary=world.pawns.some(p=>!isColonist(p));
-    let thermalDirty=false;
+    let thermalDirty=structuresBeforeCombat!==world.structures;
     const invalidateEnvironment=()=>{environment=undefined;light=undefined;thermalDirty=true;};
     const getRoofs = () => roofs ??= new RoofContext(world);
     const getBlocked: NavigationGrid = () => blocked ??= blockedCells(world);
@@ -462,6 +468,11 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
             releaseWork(world,pawn);wakePlanners(world);
           }
         } else moveToward(world,pawn,constructionWorkTarget(world,job),false,getBlocked,budget,false,getLight);
+        continue;
+      }
+      if(job.kind==='repair'){
+        if(adjacent(pawn,job)&&!sameCell(pawn,job)){if(advanceRepair(world,pawn,job,getLight().speedAt(pawn),body)){releaseWork(world,pawn);world.jobs=world.jobs.filter(j=>j!==job);event(world,'job',`${pawn.name} a réparé l’ouvrage.`);}}
+        else moveToward(world,pawn,job,false,getBlocked,budget,false,getLight);
         continue;
       }
       if(job.kind==='sow'&&packedAt(world,job)){releaseWork(world,pawn);continue;}

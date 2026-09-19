@@ -2,13 +2,13 @@ import { captureWorldShotGrid } from './combat-world.ts';
 import { itemShotFill } from './combat-content.ts';
 import type { World } from './types.ts';
 
-/** Owned ONLY by one synchronous advanceWorldCombat transaction. Its medical
- * impacts can move/drop piles, but cannot mutate terrain, plants, frames or
- * buildings. New object damage must invalidate those fixed layers too.
+/** Owned ONLY by one synchronous advanceWorldCombat transaction. Medical
+ * impacts can move/drop piles; barrier destruction replaces structures and
+ * invalidates the fixed layer. Terrain, plants and frames cannot change here.
  * A weapon drop has no cover; a dropped/carried chunk must refresh the grid. */
 export function combatShotBatch(world:World) {
   let grid:ReturnType<typeof captureWorldShotGrid>|undefined;
-  let signature:number[]=[];
+  let signature:number[]=[];let structures=world.structures;
   const groundCover=()=>{
     const values:number[]=[];
     for(const p of world.piles)if(p.owner.type==='ground') {
@@ -19,6 +19,7 @@ export function combatShotBatch(world:World) {
   };
   return {
     read:()=>{
+      if(structures!==world.structures){grid=undefined;structures=world.structures;}
       if(!grid){grid=captureWorldShotGrid(world);signature=groundCover();}
       return grid;
     },

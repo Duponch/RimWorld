@@ -1,3 +1,4 @@
+import { isBarrier,damageBarrier } from './barriers.ts';
 import { apparelProtection } from './apparel-protection.ts';
 import { disturbanceEvents,isLying } from './disturbance.ts';
 import { automaticPermission,automaticTarget } from './automatic-combat-state.ts';
@@ -32,8 +33,9 @@ function canFight(world:World,pawn:Pawn,carried=(id:number)=>!!carrierOf(world,i
 export function applyMeleeCommand(world:World,command:MeleeCommand):CommandResult {
   const refuse=(reason:string):CommandResult=>({ok:false,code:'invalid-command',reason});
   if(!Array.isArray(command.pawnIds)||!command.pawnIds.length||command.pawnIds.some(id=>!Number.isSafeInteger(id))||new Set(command.pawnIds).size!==command.pawnIds.length||!Number.isSafeInteger(command.targetId))return refuse('Ordre de mêlée invalide.');
-  const target=world.pawns.find(p=>p.id===command.targetId);
-  if(!target||target.state==='dead'||carrierOf(world,target.id))return refuse('Cible humaine indisponible.');
+  if(command.structure!==undefined&&command.structure!==true)return refuse('Type de cible invalide.');
+  const target=command.structure?world.structures.find(s=>s.id===command.targetId&&isBarrier(s)):world.pawns.find(p=>p.id===command.targetId&&p.state!=='dead'&&!carrierOf(world,p.id));
+  if(!target)return refuse(command.structure?'Mur ou porte indisponible.':'Cible humaine indisponible.');
   const plans:{pawn:Pawn;path:Pawn['path']}[]=[],claimed=new Set<number>(),blocked=blockedCells(world);
   for(const id of [...command.pawnIds].sort((a,b)=>a-b)) {
     const pawn=world.pawns.find(p=>p.id===id);
@@ -44,7 +46,7 @@ export function applyMeleeCommand(world:World,command:MeleeCommand):CommandResul
   }
   for(const {pawn,path} of plans) {
     const strike=pawn.melee?.strike??null;cancelShooting(pawn);interruptDraftWork(world,pawn);
-    pawn.melee={order:{targetId:target.id,startedDowned:target.state==='downed'},strike};
+    pawn.melee={order:{targetId:target.id,startedDowned:'state' in target&&target.state==='downed',...(command.structure?{structure:true as const}:{})},strike};
     pawn.draft!.target=null;pawn.draft!.queue=[];pawn.draft!.lastActiveTick=world.tick;
     pawn.path=strike||pawn.shooting?.stance?.phase==='cooldown'?[]:path;pawn.state=pawn.path.length||pawn.moveCooldown?'moving':'idle';pawn.planCooldown=0;
   }
@@ -67,6 +69,19 @@ export function advanceMelee(world:World,pawn:Pawn,core:number,contactGrid:()=>U
   if(medicallyStopped(pawn)){delete pawn.melee;return false;}
   if(m.strike&&core>=m.strike.untilCore)m.strike=null;
   if(!canFight(world,pawn,queries.carried)||(m.order?.auto?(!automaticPermission(pawn,m.order.auto)||!automaticTarget(world,pawn,m.order.targetId)):isColonist(pawn)&&!pawn.draft))cancelMelee(pawn);
+  if(m.order?.structure){
+    const target=world.structures.find(s=>s.id===m.order!.targetId&&isBarrier(s));
+    if(!target){cancelMelee(pawn);pawn.path=[];return false;}
+    if(m.strike||isStunned(pawn,core)||pawn.shooting?.stance?.phase==='cooldown'||(pawn.motion?.end??0)>core/10||!meleeContact(world,pawn,target,contactGrid()))return false;
+    const state={rng:world.rng},random=()=>healthRandom(state),tool=chooseMeleeTool(meleeTools(world,pawn,()=>queries.body(pawn)),random);
+    if(!tool){cancelMelee(pawn);return false;}
+    const raw=Math.max(1,tool.damage*(.8+random()*.4)),floor=Math.floor(raw),damage=floor+(random()<raw-floor?1:0);
+    if(!damageBarrier(world,target,damage,state.rng))return false;
+    if(medicallyStopped(pawn))return true;
+    pawn.melee={order:world.structures.includes(target)?m.order:null,strike:{targetId:target.id,structure:{x:target.x,z:target.z},atCore:core,untilCore:core+tool.cooldownCore,tool:tool.id,outcome:'hit'}};
+    pawn.path=[];if(!medicallyStopped(pawn))pawn.state='idle';
+    return true;
+  }
   const target=targetFor(world,pawn,queries.carried);
   if(m.order&&!target){cancelMelee(pawn);pawn.path=[];}
   if(!pawn.melee)return false;
@@ -105,7 +120,7 @@ export function advanceMelee(world:World,pawn:Pawn,core:number,contactGrid:()=>U
   return true;
 }
 export function processMelee(world:World,pawn:Pawn,getBlocked:NavigationGrid,budget:SearchBudget,getLight:LightReader):void {
-  const m=pawn.melee!,target=targetFor(world,pawn);if(pawn.draft)pawn.draft.lastActiveTick=world.tick;
+  const m=pawn.melee!,target=m.order?.structure?world.structures.find(s=>s.id===m.order!.targetId&&isBarrier(s)):targetFor(world,pawn);if(pawn.draft)pawn.draft.lastActiveTick=world.tick;
   if(!target||!canFight(world,pawn)){cancelMelee(pawn);pawn.path=[];return;}
   if(m.strike||pawn.shooting?.stance?.phase==='cooldown'||isStunned(pawn,world.tick*10)){pawn.path=[];pawn.state='idle';return;}
   if(meleeContact(world,pawn,target,getBlocked())){pawn.path=[];pawn.state='idle';return;}

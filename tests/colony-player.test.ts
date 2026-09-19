@@ -94,6 +94,7 @@ test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp const
     expect([...sleep.values()].every(n=>n>4000),context).toBe(true);
     expect(colonySummary(world).plantClimate,context).toEqual({slowed:0,thermalAnchors:0});
     expect(colonySummary(world).apparel.filter(i=>i.owner.type==='apparel'),context).toHaveLength(population+1);
+    expect(world.structures.filter(s=>s.kind==='wall'||s.kind==='door').every(s=>world.home?.includes(s.z*world.width+s.x)),context).toBe(true);
     expect(world.restRules).toBe('adult');expect(world.pawns.map(p=>p.schedule.filter(s=>s==='sleep').length)).toEqual(Array(population).fill(8));
     expect(world.pawns).toHaveLength(population);expect(meals.size).toBe(population);expect(sleep.size).toBe(population);
     if(seed===42)expect(world.arrivals?.accepted).toBe(1);

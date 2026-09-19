@@ -24,8 +24,11 @@ function wake(world:World,p:Pawn):boolean {
  * A wake invalidates the caller's shot/posture capture even on a ground miss. */
 export function disturbanceEvents(world:World) {
   let audible:ReturnType<typeof impactSoundSpace>|undefined;
+  let structures=world.structures;
   const noise=(source:Cell,radius:number,core:number,harmed?:Pawn):boolean=>{
     if(world.schemaVersion<62)return false;
+    // Another impact in this same Core interval may have opened an enclosure.
+    if(structures!==world.structures){structures=world.structures;audible=undefined;}
     let changed=false;
     for(const p of world.pawns){
       if(medicallyStopped(p)||carrierOf(world,p.id)||harmed&&(isColonist(p)||factionOf(p)!==factionOf(harmed)||!asleep(p)))continue;

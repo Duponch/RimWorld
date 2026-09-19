@@ -1,6 +1,6 @@
 # Documentation de Lisière
 
-État courant : **V66, 19 septembre 2026**. Le camp ordinaire reçoit désormais des demandes d’accueil ; une acceptation ajoute une personne réelle à nourrir, loger et affecter. Combat, soins, vêtements, pensées et errance triste restent jouables dans leurs périmètres. Le narrateur complet et les raids en cours de partie restent absents. [Inventaire consolidé](gameplay/implementation-status.md), [dernières preuves](history/validation-arrivals-v66.md).
+État courant : **V67, 19 septembre 2026**. Dégâts/destruction des murs et portes, zone de foyer manuelle et réparation physique complètent le camp existant. Les demandes d’accueil V66 restent le premier incident ordinaire ; le raid et ses suites sont encore à livrer. [Inventaire consolidé](gameplay/implementation-status.md), [dernières preuves](history/validation-barriers-v67.md).
 
 La [revue de progression](research/progression-review-2026-09-19.md) explique la réorientation vers des situations de colonie complètes. [ROADMAP](ROADMAP.md) conserve seule l’ordre des prochains travaux et les estimations. Mode jour, automatisation nocturne en pause.
 
@@ -33,6 +33,7 @@ Les bilans de versions sont dans les contrats et [l’index de validation](devel
 
 | Domaine | Contrat du projet | Recherche et cible |
 |---|---|---|
+| Murs/portes endommagés, foyer et réparation | [Ouvrages V67](development/barriers.md) | [Règles et adaptations](research/barriers-reference.md) |
 | Population et premier incident | [Accueil V66](development/arrivals.md) | [Arrivée volontaire et limites](research/arrival-reference.md) |
 | Humeur et crises | [Humeur V64](development/mood.md), [errance triste V65](development/mental-break.md) | [Pensées](research/mood-reference.md), [crises et contradictions](research/mental-break-reference.md) |
 | Habillement | [Vêtements et protection V63](development/armor.md) | [Règles revérifiées](research/apparel-reference.md) |

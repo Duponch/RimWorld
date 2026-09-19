@@ -57,7 +57,7 @@ test('a newly inserted obstruction and disappeared target are observed; exits an
   const shot=launch(w,{x:5,z:10},{x:25,z:10},null);stepWorld(w);
   const wall=fixtureBuilding(w,'wall',16,10); // changed between captures, not on the firing path initially
   const copy=deserializeWorld(serializeWorld(w));for(let i=0;i<4&&!shot.arrival;i++){stepWorld(w);stepWorld(copy);}
-  expect(copy).toEqual(w);expect(shot.arrival).toMatchObject({effect:'unsupported-object',targetKey:`structure:${wall.id}`});expect(w.structures.find(s=>s.id===wall.id)).toEqual(wall);expect(validateWorld(w)).toEqual([]);
+  expect(copy).toEqual(w);expect(shot.arrival).toMatchObject({effect:'barrier',targetKey:`structure:${wall.id}`});expect(w.structures.find(s=>s.id===wall.id)?.damage).toBe(12);expect(validateWorld(w)).toEqual([]);
   const out=camp();out.pawns[1].z=15;const exit=launch(out,{x:30,z:10},{x:34,z:10},null);stepWorld(out);
   expect(exit.arrival).toMatchObject({kind:'exit',effect:'exit',targetKey:null});expect(exit.arrival!.point.x).toBeLessThan(out.width);expect(validateWorld(out)).toEqual([]);
   const vanished=camp(),lost=launch(vanished);vanished.pawns.pop();for(let i=0;i<4;i++)stepWorld(vanished);

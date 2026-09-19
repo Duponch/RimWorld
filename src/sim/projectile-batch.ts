@@ -4,9 +4,9 @@ import type { ProjectileScene,ProjectileTarget } from './projectile-rules.ts';
 import type { World,Cell } from './types.ts';
 
 /** Local to a synchronous projectile batch ONLY. Medical reconciliation can
- * mutate people, piles and packages, never terrain/plants/frames/buildings.
- * Refresh the movable overlay after each impact; rebuild everything on the next
- * tick. Object damage will require an explicit static invalidation here. */
+ * mutate people, piles and packages. The caller discards this entire capture
+ * when barrier destruction replaces structures; otherwise refresh the movable
+ * overlay after each impact. Terrain/plants/frames cannot change in this batch. */
 export function captureProjectileBatch(world:World) {
   const fixed=captureWorldProjectileTargets({...world,pawns:[],piles:[],packed:[]});
   const {width,height}=world;

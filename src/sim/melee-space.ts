@@ -11,7 +11,7 @@ export function meleeContact(world:World,a:Cell,b:Cell,blocked=blockedCells(worl
   const free=(x:number,z:number)=>!blocked[z*world.width+x]&&!world.structures.some(s=>s.kind==='door'&&s.x===x&&s.z===z);
   return free(a.x,b.z)||free(b.x,a.z);
 }
-export function meleePlaces(world:World,pawn:Pawn,target:Pawn,claimed:ReadonlySet<number>=new Set()):Cell[] {
+export function meleePlaces(world:World,pawn:Pawn,target:Cell,claimed:ReadonlySet<number>=new Set()):Cell[] {
   const stands=captureStandability(world),reserved=reservedServiceCells(world,pawn.id),physical=blockedCells(world,true),cells:Cell[]=[];
   const occupied=new Set<number>();
   for(const p of world.pawns)if(p!==pawn&&p.state!=='dead'&&p.state!=='downed'){

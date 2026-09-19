@@ -1,6 +1,6 @@
 # Lisière
 
-V66 : **une population qui évolue pendant la partie**. Une demande d’accueil propose un choix et un délai ; le nouveau colon entre réellement sur la carte et doit être nourri, logé et affecté. Premier calendrier provisoire, sans narrateur complet ni raids dans le camp ordinaire. Les rencontres armées, soins, vêtements, pensées et première crise sont déjà jouables dans leurs périmètres. [Guide](docs/gameplay/player-guide.md), [état courant](docs/gameplay/implementation-status.md), [validation](docs/history/validation-arrivals-v66.md).
+V67 : **murs et portes peuvent être endommagés, détruits et réparés**. Les colons mobilisés frappent les ouvrages au contact ; les constructeurs entretiennent ceux de la zone de foyer. Les demandes d’accueil V66, besoins, production, soins et rencontres armées restent jouables. Cette dépendance de la menace en colonie ne livre pas encore le raid dans une partie ordinaire. [Guide](docs/gameplay/player-guide.md), [état courant](docs/gameplay/implementation-status.md), [validation](docs/history/validation-barriers-v67.md).
 
 Jeu de colonie en 3D low poly pour navigateur, avec RimWorld de base comme référence fonctionnelle. G0 est en consolidation, G1/G2 sont partiels et G3 possède ses premières fondations humaines : récolte, transport, stockage, construction, minage avec fragments transportables, déconstruction et déplacement du mobilier d’un camp, repas et sommeil physiques, culture de riz, feu ravitaillé et cuisine sur factures. Le [bilan fonctionnel](docs/gameplay/implementation-status.md) distingue les systèmes présents, partiels et absents.
 
@@ -15,7 +15,7 @@ npm run dev
 
 Ouvrir [le jeu local](http://127.0.0.1:5173). Three.js utilise WebGPU si disponible, sinon WebGL 2 ; le backend apparaît dans Menu → Diagnostics. Le compteur FPS reste visible. La carte par défaut est 250×250, graine 42 ; Menu permet de créer une colonie ou de reprendre une sauvegarde. Paramètres de diagnostic : `/?seed=123&size=250`.
 
-Le [guide joueur](docs/gameplay/player-guide.md) décrit les contrôles et règles. Sauvegardes au schéma **66** : les anciennes versions sont validées puis migrées sans agrandir la carte ni inventer d’objets ou d’historique. Les anciens camps restent sans calendrier d’accueil jusqu’à son activation explicite. Les contrats spécialisés et l’[inventaire courant](docs/gameplay/implementation-status.md) distinguent les boucles livrées des catalogues et systèmes encore absents.
+Le [guide joueur](docs/gameplay/player-guide.md) décrit les contrôles et règles. Sauvegardes au schéma **67** : les anciennes versions sont validées puis migrées sans agrandir la carte ni inventer d’objets ou d’historique. Les anciens camps restent sans calendrier d’accueil jusqu’à son activation explicite. Les contrats spécialisés et l’[inventaire courant](docs/gameplay/implementation-status.md) distinguent les boucles livrées des catalogues et systèmes encore absents.
 
 ## Développer et vérifier
 
