@@ -15,7 +15,7 @@ export const recreationKind = (activity: RecreationActivity): RecreationKind => 
 export const initialRecreation = (level = 55): RecreationNeed => ({level, tolerance: {solitary: 0, dexterity: 0}, bored: {solitary: false, dexterity: false}, task: null});
 
 export function updateRecreation(pawn: Pawn,body?:import('./body-capacities.ts').BodyAssessment): void {
-  if (pawn.state === 'sleeping'||pawn.state==='dead'||pawn.medicalSleep||pawn.health&&(body??pawnBody(pawn)).capacities.consciousness<.3) return;
+  if (pawn.mental?.crisis||pawn.state === 'sleeping'||pawn.state==='dead'||pawn.medicalSleep||pawn.health&&(body??pawnBody(pawn)).capacities.consciousness<.3) return;
   const joy = pawn.recreation;
   for (const kind of RECREATION_KINDS) {
     joy.tolerance[kind] = Math.max(0, joy.tolerance[kind] - TOLERANCE_FALL);

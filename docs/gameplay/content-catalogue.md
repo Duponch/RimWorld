@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+V65 ajoute un **comportement** — errance triste — et la mémoire Catharsis, aucun nouvel objet. Cinq occurrences datées peuvent contribuer à la pensée agrégée. Un seul type de crise disponible ; aucun catalogue complet de personnalités, crises ou relations. [Contrat](../development/mental-break.md).
+
 V63 ajoute deux instances obtenables : **cloth-shirt**, chemise en tissu (100 PV, peau) ; **flak-vest**, gilet pare-balles (200 PV, intermédiaire). Trois chemises et un gilet normaux au sol dans un nouveau départ ; couches, manipulation et armure actifs, fabrication et autres qualités non obtenables. [Contrat et limites](../development/armor.md).
 
 V62 ajoute les **réactions aux impacts** au contenu humain existant ; aucun nouvel objet, arme, vêtement, type de bruit audible ou faction. [Contrat](../development/disturbance.md).

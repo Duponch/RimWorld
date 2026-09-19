@@ -1,3 +1,4 @@
+import { finishMentalBreak } from './mental-state.ts';
 import { resetTactics } from './tactics-state.ts';
 import { carrierOf } from './rescue-state.ts';
 import { dropIncapacitatedEquipment } from './equipment-state.ts';
@@ -19,6 +20,7 @@ export function reconcilePawnHealth(world:World,pawn:Pawn,body=pawnBody(pawn)):v
   if(!pawn.health)return;
   const status=medicalStatus(pawn.health,body);
   if(status!=='mobile') {
+    finishMentalBreak(world,pawn,status!=='dead');
     delete pawn.draft;delete pawn.shooting;delete pawn.flee;delete pawn.melee;resetTactics(pawn);delete pawn.stun;
     if(pawn.state!==status) {
       const wasSleeping=pawn.state==='sleeping';

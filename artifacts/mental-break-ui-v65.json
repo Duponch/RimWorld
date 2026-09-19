@@ -1,0 +1,29 @@
+{
+  "date": "2026-09-19T08:43:11.866Z",
+  "proof": [
+    {
+      "speed": 1,
+      "entryTick": 3013,
+      "walkingTick": 3020,
+      "recoveredTick": 3176,
+      "walkSpeed": 0.5,
+      "bed": 183,
+      "catharsis": [
+        21175
+      ],
+      "errors": []
+    },
+    {
+      "speed": 6,
+      "entryTick": 3021,
+      "walkingTick": 3048,
+      "recoveredTick": 3179,
+      "walkSpeed": 0.5,
+      "bed": 183,
+      "catharsis": [
+        21175
+      ],
+      "errors": []
+    }
+  ]
+}

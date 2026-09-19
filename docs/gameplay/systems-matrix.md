@@ -1,5 +1,7 @@
 # Matrice des systèmes et critères de réalisation
 
+V65 : SYS/TEST-082 partiellement servis par l’errance triste, ses interruptions, perte de contrôle direct, besoins et récupération. S14 reste partiel : autres crises, traits, opinions et relations absents. [Contrat](../development/mental-break.md).
+
 V64 : S14 progresse avec des pensées de situation et souvenirs consultables, une cible et une jauge progressive. Crises, traits et relations restent ouverts ; [contrat](../development/mood.md).
 
 V63 : SYS/TEST-055, UI-014/015, CAT-034..037 et GAP-007 partiellement servis par chemise/gilet physiques, protection anatomique et apparence partagée. Tenues automatiques, inventaire, textiles et catalogue complet restent ouverts ; aucun jalon clos. [Contrat](../development/armor.md).

@@ -1,5 +1,7 @@
 # Sol, trajets et présentation distante
 
+V65 : l’errance triste capture un facteur de marche lent sur les nouvelles arêtes. La borne de sauvegarde V65 est 0,128 × (4,6−0,12)/4,6 ÷ 2 (environ 0,06233), pour faible mobilité, obscurité, gilet et demi-vitesse. Revue rétroactive : V63/V64 acceptent désormais la borne vêtue sans division par deux, oubliée à l’ajout du gilet ; les états/arêtes restent inchangés. Le délai maximal V65 est borné à 78 ticks (diagonale au minimum de vitesse, surcoût et stun), et la durée exacte reste recalculée. La fin de crise ne retime pas l’arête engagée. [Contrat](mental-break.md).
+
 V57 : le [pouvoir d’arrêt](stagger.md) ajoute un taux temporaire vivant aux arêtes engagées, distinct de leur base capturée (lumière/anatomie/terrain). Fenêtres persistées et morceaux de présentation conservent exactement la distance passée ; le trajet normal garde sa voie directe. La navigation reste indépendante de ces morceaux.
 
 V37 ajoute le [facteur lumineux capturé à l’origine de chaque arête](light-work.md). Les délais du terrain/mobilier restent additionnels ; les durées neutres de ce document décrivent un facteur 1. Le classement des routes reste neutre, pas une ETA sous lumière variable.

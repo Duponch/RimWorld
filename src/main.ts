@@ -256,6 +256,7 @@ function rebuildInspector() {
   if (close) close.onclick = clearSelection;
 }
 function actionLabel(pawn: Pawn) {
+  if(pawn.mental?.crisis)return queryPawnStatus(snapshot!,pawn).reason;
   if(pawn.flee)return pawn.path.length||pawn.moveCooldown>0?'Fuit une menace':'Reste à couvert après la fuite';
   if(pawn.stun)return 'Étourdi';
   if(pawn.melee)return pawn.melee.strike?'Mêlée · récupération':pawn.path.length?'Mêlée · approche':'Mêlée · au contact';
@@ -335,7 +336,7 @@ function renderState() {
     const look=apparelAppearance(apparel.get(pawn.id));button.dataset.apparel=look.signature;button.title+=` · ${look.description}`;
     (button.querySelector('.portrait-body') as HTMLElement).style.background=look.color!==undefined?`#${look.color.toString(16)}`:'';
     (button.querySelector('.portrait-vest') as HTMLElement).hidden=!look.vest;
-    button.querySelector('.pawn-symbol')!.textContent = pawn.state==='dead'?'†':pawn.state==='downed'?'!':pawn.state === 'sleeping' ? 'Z' : pawn.state === 'hungry' ? '!' : '';
+    button.querySelector('.pawn-symbol')!.textContent = pawn.state==='dead'?'†':pawn.state==='downed'?'!':pawn.mental?.crisis?'↝':pawn.state === 'sleeping' ? 'Z' : pawn.state === 'hungry' ? '!' : '';
     (button.querySelector('i') as HTMLElement).style.width = `${pawn.state==='dead'?0:pawn.mood}%`;
     const row = document.querySelector<HTMLElement>(`[data-worker="${pawn.id}"]`)!;
     updateWorkSkills(row,pawn);
@@ -412,6 +413,7 @@ function renderState() {
   if (!entries.length) el('journal-items').textContent = 'Trois survivants. Une nouvelle histoire.';
   const living=world.pawns.filter(p=>isColonist(p)&&p.state!=='dead');
   const alerts: string[] = [];
+  const crises=living.filter(p=>p.mental?.crisis).length;if(crises)alerts.push(`${crises} colon(s) en errance triste`);
   const enemy=world.pawns.find(p=>!isColonist(p)&&activeThreat(p));
   const threatButton=el<HTMLButtonElement>('inspect-threat');threatButton.hidden=!enemy;if(enemy){threatButton.textContent='Menace armée · voir';threatButton.onclick=()=>selectPawn(enemy.id);}
   const downed=living.filter(p=>p.state==='downed').length,bleeding=living.filter(p=>p.health&&medicalBleed(p.health)>=.1).length,deaths=world.pawns.filter(isColonist).length-living.length;
@@ -426,7 +428,7 @@ function renderState() {
   if (world.jobs.some(job => constructionRecipe(job).ingredients.length > 0) && world.pawns.every(pawn => pawn.priorities.haul === 0&&pawn.priorities.build === 0)) alerts.push('Construction/transport désactivés : chantiers non approvisionnés');
   const interrupted=world.pawns.filter(pawn=>pawn.interruptedCargo).length;
   if(interrupted)alerts.push(`${interrupted} cargaison(s) conservée(s) : fin de déplacement ou sol proche à libérer`);
-  const idle = world.pawns.filter(pawn => isColonist(pawn)&&pawn.state === 'idle'&&!pawn.draft&&!pawn.flee&&!pawn.interruptedCargo).length;
+  const idle = world.pawns.filter(pawn => isColonist(pawn)&&pawn.state === 'idle'&&!pawn.draft&&!pawn.flee&&!pawn.mental?.crisis&&!pawn.interruptedCargo).length;
   if (idle) alerts.push(`${idle} colon(s) disponible(s)`);
   el('alerts').replaceChildren(...alerts.map(text => { const item = document.createElement('p'); item.textContent = text; return item; }));
   const beds = world.structures.filter(structure => structure.kind === 'bed'&&!structure.medical).length;

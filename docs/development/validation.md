@@ -1,5 +1,7 @@
 # Validation courante — V64
 
+V65 : [validation de l’errance triste](../history/validation-mental-break-v65.md), scénarios profonds, UI 1×/6×, parcours de colonie et audits mixtes. Les échecs et corrections du lot sont conservés dans cette preuve.
+
 ## Humeur progressive et pensées V64
 
 Causes consultables, cible et jauge distinctes, progression +12/−8 points par heure, sommeil/inconscience, douleur et vêtements réellement portés. [Preuves et limites](../history/validation-mood-v64.md), [contrat](mood.md), [recherche fraîche](../research/mood-reference.md).

@@ -26,7 +26,7 @@ export const validAllowedFood = (v: unknown): v is FoodItemId[] => Array.isArray
 export function foodAllowed(world: World, pawn: Pawn, item: ItemId): boolean {
   return allowedFood(world, pawn).includes(item as FoodItemId);
 }
-export const allowedFood = (world: World, pawn: Pawn): readonly FoodItemId[] => world.foodPolicies.find(policy => policy.id === pawn.foodPolicyId)?.allowed ?? [];
+export const allowedFood = (world: World, pawn: Pawn): readonly FoodItemId[] => pawn.mental?.crisis ? FOOD_ITEMS : world.foodPolicies.find(policy => policy.id === pawn.foodPolicyId)?.allowed ?? [];
 
 /** Policy IDs have their own namespace: migrations never renumber entities. */
 export function applyFoodPolicyCommand(world: World, command: FoodPolicyCommand): CommandResult {

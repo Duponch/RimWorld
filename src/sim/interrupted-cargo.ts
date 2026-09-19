@@ -32,7 +32,7 @@ export function retryInterruptedCargo(world:World,pawn:Pawn):void {
 export function validateInterruptedCargo(world:World):string[] {
   const errors:string[]=[];
   for(const pawn of world.pawns)if(pawn.interruptedCargo) {
-    const tactical=world.schemaVersion>=53&&!!pawn.draft||world.schemaVersion>=58&&!!pawn.flee;
+    const tactical=world.schemaVersion>=65&&!!pawn.mental?.crisis||world.schemaVersion>=53&&!!pawn.draft||world.schemaVersion>=58&&!!pawn.flee;
     const owners=world.piles.filter(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id).length
       +world.packed.filter(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id).length;
     if(owners!==1||pawn.jobId!==null||pawn.feed||pawn.tend||pawn.rescue||pawn.haul||pawn.cooking||pawn.recreation.task||pawn.orders.active!==null||pawn.orders.queue.length||pawn.priorityWork

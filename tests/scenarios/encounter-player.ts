@@ -13,7 +13,7 @@ export function encounterDecisions(world:World):Decision[] {
   if(!threats.length){
     const ids=world.pawns.filter(p=>isColonist(p)&&p.draft).map(p=>p.id);
     if(ids.length)return [{reason:'Menace neutralisée : rendre leur autonomie aux survivants.',command:{type:'draft',pawnIds:ids,enabled:false}}];
-    const available=world.pawns.filter(p=>isColonist(p)&&activeThreat(p)&&p.state!=='resting'&&p.need?.kind!=='sleep');
+    const available=world.pawns.filter(p=>isColonist(p)&&!p.mental?.crisis&&activeThreat(p)&&p.state!=='resting'&&p.need?.kind!=='sleep');
     if(world.pawns.some(p=>isColonist(p)&&p.state==='downed')&&!available.some(p=>p.priorities.doctor>0)) {
       const reserve=available.sort((a,b)=>b.skills.medicine.level-a.skills.medicine.level||a.id-b.id)[0];
       if(reserve)return [{reason:'Le médecin est lui-même indisponible : affecter un survivant aux secours.',command:{type:'priority',pawnId:reserve.id,work:'doctor',value:1}}];
@@ -22,7 +22,7 @@ export function encounterDecisions(world:World):Decision[] {
   }
   if(!world.pawns.some(p=>isColonist(p)&&p.state==='downed'))return [];
   const grid=captureWorldShotGrid(world);
-  for(const p of world.pawns.filter(p=>isColonist(p)&&(activeThreat(p)||p.state==='sleeping'&&!p.draft)&&equippedWeapon(world,p)&&!p.shooting&&!p.melee)) {
+  for(const p of world.pawns.filter(p=>isColonist(p)&&!p.mental?.crisis&&(activeThreat(p)||p.state==='sleeping'&&!p.draft)&&equippedWeapon(world,p)&&!p.shooting&&!p.melee)) {
     const adjacent=threats.find(t=>meleeContact(world,p,t));
     if(adjacent&&p.draft)return [{reason:'La menace est au contact : frapper plutôt que tenter un tir impossible.',command:{type:'melee',pawnIds:[p.id],targetId:adjacent.id}}];
     const target=threats.filter(t=>distanceSquared(p,t)>=4&&findShotLine(grid,p,{cell:t,leans:true},25.9).ok).sort((a,b)=>distanceSquared(p,a)-distanceSquared(p,b)||a.id-b.id)[0];if(!target)continue;

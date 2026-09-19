@@ -1,5 +1,7 @@
 # Partie représentative et regard critique sur la collecte
 
+V65 : les décisions de vêtements/équipement et la réserve de combat ne sélectionnent plus un colon en crise. Le bilan relève humeur, exposition et errance. La fixture UI de crise charge explicitement une exposition antérieure, tandis que le parcours de colonie reste un départ ordinaire sans crise injectée ; ne pas confondre les deux preuves.
+
 V63 : après le revolver, le pilote fait enfiler physiquement les trois chemises et le gilet initial à la recrue armée ; besoins et engagements sont respectés. Il exige quatre instances portées à la fin, sans injection dans le parcours. Le délai et le ralentissement peuvent déplacer le calendrier du camp, mais ses bilans et travaux restent exigés.
 
 Revue V60 : le parcours UI a atteint trois jours sans aucun fragment naturel malgré plusieurs excavations. Le pilote ne doit pas supposer un produit à chaque case : lorsqu’un atelier manque de fragments et de blocs, il entretient désormais quatre désignations minières proches, au lieu d’une seule par visite espacée. Rendements et PRNG du jeu inchangés ; conservation, production de blocs et construction du mur restent exigées. Voir [preuve et diagnostic](../history/validation-automatic-combat-v60.md).

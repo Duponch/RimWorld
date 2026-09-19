@@ -1,5 +1,7 @@
 # Régimes alimentaires — V13
 
+V65 : exception explicite pendant l’errance triste, les régimes ne limitent pas la recherche alimentaire. Ce n’est pas une exception générale de famine ; l’ingestion reste physique. [Contrat et sources](mental-break.md).
+
 14 septembre 2026. [Recherche et limites de fidélité](../research/food-policies-reference.md), corpus chap. 8/9/14, SYS-077 et TEST-077. Cette tranche de G1 concerne les autorisations alimentaires ; inventaire personnel, vêtements et autres politiques ne sont pas implicitement livrés.
 
 ## Comportement

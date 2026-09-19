@@ -32,6 +32,7 @@ export function queryJobStatus(world: World, job: Job): JobDiagnostic {
   return { code: enabled ? 'ready' : 'waiting-worker', reason: enabled ? 'Prêt ; attend un colon disponible et un accès.' : 'Travail désactivé pour tous les colons.', delivered, required };
 }
 export function queryPawnStatus(world: World, pawn: Pawn): { code: string; reason: string } {
+  if(pawn.mental?.crisis)return {code:'mental-break',reason:'Errance triste : ne travaille plus et refuse les ordres. Cherche encore nourriture et sommeil en cas de besoin extrême.'};
   if(pawn.shooting)return {code:'shooting',reason:pawn.shooting.stance?.phase==='cooldown'?'Récupère après son tir.':pawn.shooting.order?.auto?.kind==='response'?'Riposte civile à une menace proche.':'Vise une cible depuis sa position.'};
   if(pawn.melee)return {code:'melee',reason:pawn.melee.strike?'Récupère après sa frappe.':'Rejoint ou frappe sa cible au contact.'};
   if(pawn.equipmentTask)return {code:'equipment',reason:({equip:'Rejoint son arme avant de l’équiper.',drop:'Dépose son arme au sol.',wear:pawn.state==='working'?'Enfile son vêtement.':'Rejoint le vêtement au sol.',remove:'Retire son vêtement avant de le déposer.'})[pawn.equipmentTask.action]};

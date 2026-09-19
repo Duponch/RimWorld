@@ -34,6 +34,7 @@ export function applyScheduleCommand(world: World, command: ScheduleCommand): Co
 
 export function wantsSleep(world: World, pawn: Pawn): boolean {
   if(sleepBlocked(world,pawn))return false;
+  if(pawn.mental?.crisis)return pawn.rest<=15&&pawn.hunger>0&&assignmentAt(world,pawn)!=='work';
   const assignment = assignmentAt(world, pawn);
   if (assignment === 'work' || (world.restRules === 'adult' && pawn.hunger <= 0)) return false;
   return assignment === 'sleep' ? pawn.rest < 75 : world.restRules === 'legacy' ? pawn.rest <= 30 : pawn.rest < 30;

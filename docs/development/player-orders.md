@@ -1,5 +1,7 @@
 # Sélection et commandes directes — V23
 
+V65 : une crise d’errance triste annule les engagements en cours et refuse les ordres directs ; le menu explique le refus et la commande le revalide. Zones/politiques/horaires restent configurables. [Contrat](mental-break.md).
+
 V53 ajoute un [mode tactique et sa file distincte](drafting.md). Mobiliser libère la file/priorité civile ; démobiliser rend le choix autonome. Les commandes civiles directes demandent encore de démobiliser explicitement.
 
 V52 ajoute l’ordre d’équiper au clic droit et le dépôt depuis Équipement. La file spécifique d’équipement est refusée explicitement ; les travaux ordinaires ajoutés derrière cet ordre conservent leurs réservations. [Contrat](equipment.md).

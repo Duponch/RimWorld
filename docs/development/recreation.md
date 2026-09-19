@@ -1,5 +1,7 @@
 # Loisirs — contrat V15
 
+V65 : niveau et lassitude restent gelés pendant la crise d’errance triste, dont le début libère la place de loisir. L’humeur continue selon les règles V64. [Contrat](mental-break.md).
+
 [Sources, version et écarts](../research/recreation-reference.md) : corpus chapitre 14, SYS-080/TEST-080, STAT-060/061, CAT-050. Le système livré couvre deux activités et leurs interactions ; le catalogue et les attentes complètes restent partiels.
 
 ## État et transitions

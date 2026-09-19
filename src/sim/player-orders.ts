@@ -79,6 +79,7 @@ function preflight(world:World,pawn:Pawn,job:Job,queue=false):string|undefined {
 export function queryOrderOptions(world:World,pawnId:number,cell:Cell,queue=false):OrderOption[] {
   if(world.pawns.some(p=>p.id===pawnId&&!isColonist(p)))return [];
   const pawn=world.pawns.find(p=>p.id===pawnId);if(!pawn)return [];
+  if(pawn.mental?.crisis)return [{jobId:0,label:'Errance triste',enabled:false,reason:'Ce colon ne peut pas obéir pendant sa crise.'}];
   const jobs=world.jobs.filter(j=>footprintCells(j).some(c=>c.x===cell.x&&c.z===cell.z));
   const job=jobs.find(j=>!isRoofJob(j))??jobs[0],pile=groundPile(world,cell),options:OrderOption[]=[];
   for(const target of jobs) {

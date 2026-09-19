@@ -1,5 +1,7 @@
 # Adoption du référentiel utilisateur
 
+V65 — chapitre 14, **SYS-082 / TEST-082**, besoins SYS-076..081 et contrats physiques 8/9 : adopter remplacement réel des activités et perte du contrôle direct ; adapter navigation/temps/présentation 3D ; différer catalogue de crises, traits et relations. Relecture des régimes, priorités de sommeil, gel des pensées et récupérations : [sources et contradictions](mental-break-reference.md), [contrat](../development/mental-break.md). Aucun SYS global clos.
+
 V64 — chapitre 14, SYS/TEST-081 et producteurs SYS-076/078/079/080/090/096 : adopter situation/mémoire distinctes, causes et gel selon éveil ; adapter cadence et attentes fixes ; différer SYS-082/084/086..088 (crises, traits, relations). Relecture effective des entrées : UI-017/018/028 concernent soins/captures/opérations et ne sont pas des IDs de pensée. [Confrontation datée](mood-reference.md), [contrat](../development/mood.md).
 
 V63 — chapitres 2/8/13/20/29, SYS/TEST-055, UI-014/015, CAT-034..037 et GAP-007 : adopter propriété distincte, couches/parties et manipulation physique ; adapter scénario de fournitures, temps local et représentation GPU ; différer inventaire, tenues automatiques et filière textile. [Contrat](../development/armor.md), [confrontation officielle/wiki/classes](apparel-reference.md). Deux contenus protecteurs et portraits cohérents ne closent pas GAP-007 ni le domaine.

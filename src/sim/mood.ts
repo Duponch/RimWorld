@@ -39,6 +39,8 @@ export function moodThoughts(world:World,pawn:Pawn):readonly MoodThought[] {
   for(const pile of world.piles)if(pile.owner.type==='apparel'&&pile.owner.pawnId===pawn.id)condition=Math.min(condition,pile.apparel!.hitPoints/APPAREL[pile.item as keyof typeof APPAREL].hitPoints);
   if(condition<.5)thoughts.push(apparel[condition<.2?1:0]!);
   for(const m of pawn.memories)if(m.expiresAt>world.tick)thoughts.push({id:m.kind,label:memoryLabels[m.kind],offset:memoryOffsets[m.kind],kind:'memory',description:'Souvenir du dernier repas concerné ; une nouvelle occurrence renouvelle sa durée sans cumul.',expiresAt:m.expiresAt});
+  const catharsis=pawn.mental?.catharsis.filter(t=>t>world.tick)??[];
+  if(catharsis.length)thoughts.push({id:'catharsis',label:`Catharsis ×${catharsis.length}`,offset:40*(1-.75**catharsis.length)/.25,kind:'memory',description:'Soulagement après crise ; chaque occurrence dure trois jours, au plus cinq, effet décroissant.',expiresAt:catharsis[0]});
   return thoughts;
 }
 export function moodTarget(thoughts:readonly MoodThought[]):number {

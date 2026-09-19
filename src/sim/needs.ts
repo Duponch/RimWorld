@@ -57,7 +57,7 @@ export function processNeeds(world: World, pawn: Pawn, context: NeedContext): bo
   }
 
   // Sleep only ends for hunger if a physically reachable portion can be reserved.
-  const wantsFood = pawn.hunger <= (pawn.need?.kind === 'sleep' ? 12.5 : 30);
+  const wantsFood = pawn.hunger <= (pawn.mental?.crisis?5:pawn.need?.kind === 'sleep' ? 12.5 : 30);
   let reach: Reachability | null | undefined;
   if (pawn.need?.kind !== 'eat' && wantsFood && canPlan && (world.restRules === 'adult' || pawn.rest > (pawn.need?.kind === 'sleep' ? 5 : 0))) {
     // Its old haul will be released atomically if this replacement is selected.

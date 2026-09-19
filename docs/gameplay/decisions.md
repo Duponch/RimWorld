@@ -1,5 +1,7 @@
 # Choix et écarts de gameplay
 
+V65 : première crise seulement, repli des intensités supérieures vers le contenu mineur disponible ; distribution incomplète annoncée. Échéances locales, marche 3D euclidienne, conservation des cargaisons sous saturation et catharsis après incapacité selon la branche de code datée malgré une contradiction du wiki. [Recherche et décisions](../research/mental-break-reference.md).
+
 V62 : connexion acoustique par espaces/portes ouvertes à la place du plafond Core de quinze régions, et interruption directe du repos mobile après violence. Deux adaptations explicites, sans prétention de parité de tout le gestionnaire de jobs. [Motifs, sources et limites](../research/disturbance-reference.md).
 V61 — Compatibilité des rencontres : `Pawn.tactics` est créé seulement dans une nouvelle Rencontre armée. Les anciennes sauvegardes gardent le comportement fixe ; aucune nouvelle menace inventée au chargement. Approche de cibles visibles, postes et délais locaux sont explicités dans le [contrat](../development/pursuit.md) et la [recherche](../research/pursuit-reference.md). Ce mandat individuel ne remplace pas le futur contrôle de raid.
 

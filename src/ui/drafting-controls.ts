@@ -18,8 +18,8 @@ export function updateDraftControls(parent:HTMLElement,pawns:Pawn[]):void {
   parent.querySelector<HTMLElement>('#inspector-hostility-label')!.hidden=pawns.length!==1||!!pawns[0].draft;
   if(pawns.length===1)parent.querySelector<HTMLSelectElement>('#inspector-hostility')!.value=pawns[0].hostilityResponse??'flee';
   const all=pawns.length>0&&pawns.every(p=>p.draft);
-  toggle.textContent=all?'Démobiliser · R':'Mobiliser · R';toggle.setAttribute('aria-pressed',String(all));toggle.disabled=!all&&pawns.some(p=>p.state==='dead'||p.state==='downed');
+  toggle.textContent=all?'Démobiliser · R':'Mobiliser · R';toggle.setAttribute('aria-pressed',String(all));toggle.disabled=!all&&pawns.some(p=>p.state==='dead'||p.state==='downed'||!!p.mental?.crisis);
   parent.querySelector<HTMLButtonElement>('#stop-draft')!.hidden=!all;
   const fire=parent.querySelector<HTMLButtonElement>('#fire-at-will')!;fire.hidden=!all;fire.setAttribute('aria-pressed',String(all&&pawns.every(p=>!p.draft!.holdFire)));fire.textContent=pawns.some(p=>p.draft?.holdFire)?'Tirer à volonté : désactivé / mixte':'Tirer à volonté : activé';
-  parent.querySelector('#draft-help')!.textContent=all?`Clic droit : déplacement. Maj : ajouter à la file. ${pawns.reduce((n,p)=>n+(p.draft?.queue.length??0),0)} déplacement(s) en attente. Les besoins continuent. Tir automatique à l’arrêt ; Tirer/Mêlée désignent une cible précise.`:pawns.some(p=>p.draft)?'Sélection mixte : mobiliser tout le groupe pour un déplacement commun.':'';
+  parent.querySelector('#draft-help')!.textContent=pawns.some(p=>p.mental?.crisis)?'Errance triste : les ordres directs sont indisponibles jusqu’à récupération.':all?`Clic droit : déplacement. Maj : ajouter à la file. ${pawns.reduce((n,p)=>n+(p.draft?.queue.length??0),0)} déplacement(s) en attente. Les besoins continuent. Tir automatique à l’arrêt ; Tirer/Mêlée désignent une cible précise.`:pawns.some(p=>p.draft)?'Sélection mixte : mobiliser tout le groupe pour un déplacement commun.':'';
 }

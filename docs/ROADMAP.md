@@ -1,5 +1,7 @@
 # Plan de développement
 
+V65 — [errance triste](development/mental-break.md) : comportement autonome, travaux/ordres interrompus, objets conservés, besoins critiques, récupération et catharsis. Un seul contenu de crise ; traits et relations restent ouverts. [Validation](history/validation-mental-break-v65.md).
+
 V64 — [humeur et pensées explicables](development/mood.md) : cible causale, évolution progressive, gel selon éveil, mémoire de repas et vêtements usés. Crises, traits, attentes selon richesse et relations restent ouverts.
 
 V63 — [vêtements physiques et protection corporelle](development/armor.md) : chemise/gilet obtenables, habillage/retrait, couches et armure anatomique, apparence GPU/portrait. Prolonge combat et soins ; aucun jalon G0–G5 clos.
@@ -10,7 +12,7 @@ Le parcours assemble les requêtes ligne/couvert, profils du revolver, impacts V
 
 ## Priorité actuelle
 
-**Mode nuit renouvelé le 19 septembre à la demande utilisateur, pendant V60.** Terminer et publier le lot engagé, puis enchaîner les prochaines étapes depuis main sans attendre de relance, jusqu’à retour au mode jour ou arrêt explicite. Garder un commit/push par lot cohérent et une notification aux livraisons significatives.
+**Mode jour demandé le 19 septembre, pendant V65.** Finir et publier le lot engagé sur main, puis attendre la relance utilisateur avant la prochaine étape. Automatisation nocturne mise en pause. Un commit/push explicatif par lot cohérent.
 
 **Point de validation V62 :** 291/291 globaux, 22/22 ciblés finaux, UI sommeil → impact → réveil/sortie à 1×/6× et charge mixte 3/30/100. À cent acteurs CPU p95 38,21 ms, images p95 12,2 ms, pic 121,3 ms ; pas de garantie 6×. [Preuves V62](history/validation-disturbance-v62.md).
 
@@ -20,7 +22,7 @@ Le parcours assemble les requêtes ligne/couvert, profils du revolver, impacts V
 
 Le parcours UI civil de trois jours passe également, avec production et stocks de pierre puis maintenance achevée après sommeil normal. Le pilote entretient maintenant une petite zone minière quand les fragments manquent ; ses échecs antérieurs restent documentés. V61 ajoute ensuite l’approche visible, après relecture des chapitres 17/20/21 et des correctifs officiels postérieurs au miroir. Les limites de parité restent explicitement consignées.
 
-**Prochaine livraison visée : première crise mentale avec comportement réel.** Vérifier une crise non violente de base (errance triste comme candidate), ses conditions/probabilités, durée et récupération avant de fixer le contenu. Elle doit interrompre/libérer les travaux et conserver les cargaisons, modifier les commandes admissibles et se sauvegarder pendant son déroulement ; pas une simple icône ou un seuil de déclenchement instantané. Puis traits/personnalités et interactions sociales selon leurs producteurs. Le catalogue de pensées et les attentes selon richesse restent partiels ; textile et électricité détaillée restent différés.
+**Prochaine livraison visée : premiers traits de personnalité utiles.** Rechercher un petit ensemble de traits Core avec effets réels sur humeur et seuil de crise, conflits/génération et inspection. Réutiliser les producteurs existants ; aucune étiquette sans conséquence. Puis premières opinions/interactions sociales selon dépendances. Le catalogue de crises/pensées, attentes selon richesse, textile et électricité détaillée restent partiels ou différés.
 
 **V64 livrée :** causes, progression, sommeil, continuation/migration, UI 1×/6× et maintenance du camp vérifiés ; [preuves et limites](history/validation-mood-v64.md).
 

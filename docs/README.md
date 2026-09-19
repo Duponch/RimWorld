@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+V65 : [errance triste réelle](development/mental-break.md), [sources et contradictions](research/mental-break-reference.md), [preuves](history/validation-mental-break-v65.md). Interruption physique, besoins critiques, récupération et catharsis ; autres crises et personnalités restent ouvertes.
+
 V64 : [humeur progressive et pensées](development/mood.md), [sources et corrections](research/mood-reference.md), [preuves](history/validation-mood-v64.md). Causes consultables des situations présentes ; psychologie et catalogue encore partiels.
 
 V63 : [vêtements physiques et protection](development/armor.md), [sources revérifiées](research/apparel-reference.md), [preuves](history/validation-apparel-v63.md). Chemise/gilet obtenables, habillage/retrait, armure anatomique et apparence carte/portrait ; reste un système partiel.

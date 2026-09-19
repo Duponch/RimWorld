@@ -1,5 +1,7 @@
 # Horaires et sommeil — contrat V12
 
+V65 : pendant l’errance triste, plafond volontaire de repos à 15 %, mais Travail empêche encore le coucher ; l’effondrement reste involontaire. Le sommeil termine cette crise et conserve le lit. [Contrat](mental-break.md).
+
 V62 complète ce contrat par les [réveils après impacts et dommages](disturbance.md). Sommeil, repos médical, incapacité et deux échéances sont distincts ; les interruptions générales des autres emplois restent partielles. Les absences mentionnées dans les bilans anciens ci-dessous sont historiques.
 Les [sources et décisions](../research/schedules-reference.md) distinguent règles adoptées, cadence adaptée et inconnues. Cette tranche ajoute des intentions horaires aux besoins existants ; V15 la complète par des [loisirs physiques](recreation.md).
 

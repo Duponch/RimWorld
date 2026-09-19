@@ -1,7 +1,10 @@
 # Travail sur Lisière
 
+## Crise mentale V65
+- Lire `docs/development/mental-break.md` et sa recherche. État sparse persisté, exposition probabiliste et cooldown éveillé ; sommeil/incapacité distincts du décès. Interruption conserve arête/cargaison, réserve libérée et aucune commande individuelle pendant crise. Repas ≤5 %, repos ≤15 % hors Travail ; catharsis datée, groupe décroissant de cinq. V64 strictement validée avant migration neutre ; borne de vitesse V65 abaissée pour blessure + errance. Le catalogue ne contient qu’une crise ; ne pas annoncer toute la psychologie.
+
 ## Humeur V64
-- Lire `docs/development/mood.md` et la recherche liée. Cible dérivée et humeur persistée distinctes ; sommeil/inconscience gèlent la jauge, pas tout état à terre. Causes partagées simulation/inspection ; souvenirs expirés nettoyés même après décès. V63 strictement validée avant migration neutre. Attentes fixes annoncées ; crises, traits et relations restent absents.
+- Lire `docs/development/mood.md` et la recherche liée. Cible dérivée et humeur persistée distinctes ; sommeil/inconscience gèlent la jauge, pas tout état à terre. Causes partagées simulation/inspection ; souvenirs expirés nettoyés même après décès. V63 strictement validée avant migration neutre. Attentes fixes annoncées ; V65 ajoute l’errance triste ; autres crises, traits et relations restent absents.
 
 ## Habillement physique V63
 - Lire `docs/development/armor.md` et `docs/research/apparel-reference.md`. V63 branche les vêtements physiques, propriétaire `apparel`, compatibilité anatomique et transaction PRNG/usure/blessures. Préserver les temps d’habillage, le dépôt avant remplacement, l’identité sol/porté et les attributs GPU partagés carte/portrait. V62 strictement validée avant migration sans objet inventé. Usure quotidienne, politiques et fabrication textile restent absentes.
@@ -56,7 +59,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 64 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 65 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)

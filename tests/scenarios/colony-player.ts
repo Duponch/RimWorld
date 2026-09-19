@@ -71,7 +71,7 @@ export function playerDecisions(world: World): Decision[] {
   if(armed){
     const used=new Set<number>();
     for(const pawn of world.pawns){
-      if(pawn.equipmentTask||pawn.orders.active!==null||pawn.need||pawn.hunger<50||pawn.rest<40)continue;
+      if(pawn.mental?.crisis||pawn.equipmentTask||pawn.orders.active!==null||pawn.need||pawn.hunger<50||pawn.rest<40)continue;
       const worn=world.piles.filter(i=>i.owner.type==='apparel'&&i.owner.pawnId===pawn.id);
       const wanted=pawn===recruit&&!worn.some(i=>i.item==='flak-vest')?'flak-vest':!worn.some(i=>i.item==='cloth-shirt')?'cloth-shirt':undefined;
       const garment=world.piles.find(i=>i.item===wanted&&i.owner.type==='ground'&&!used.has(i.id)&&queryOrderOptions(world,pawn.id,i.owner).some(o=>o.equipmentItemId===i.id&&o.enabled));
@@ -189,7 +189,7 @@ export function colonySummary(world: World) {
   return { tick: world.tick, foodPolicies: world.pawns.map(p=>p.foodPolicyId), restRules: world.restRules, scheduledSleepHours: world.pawns.map(p=>p.schedule.filter(s=>s==='sleep').length), spoiled: { ...world.spoiled }, crops: world.resources.filter(r=>r.kind==='rice').length, growingCells:fields.size,
     power:world.structures.filter(s=>s.power).map(s=>({kind:s.kind,on:s.power!.on,parent:s.power!.parentId,fuel:s.fuel?.ticks??null})),
     mining:{componentsInBuildings:world.structures.reduce((n,s)=>n+requiredMaterial(s,'component'),0),components:world.piles.reduce((n,p)=>n+(p.item==='component'?p.quantity:0),0),componentsStored:world.piles.reduce((n,p)=>n+(p.item==='component'&&p.owner.type==='ground'&&world.stockpiles.some(s=>s.filters.component&&p.owner.type==='ground'&&s.x===p.owner.x&&s.z===p.owner.z)?p.quantity:0),0),blocks:world.piles.reduce((n,p)=>n+(p.kind==='blocks'?p.quantity:0),0),blocksStored:world.piles.reduce((n,p)=>n+(p.kind==='blocks'&&p.owner.type==='ground'&&world.stockpiles.some(s=>s.filters.blocks&&p.owner.type==='ground'&&s.x===p.owner.x&&s.z===p.owner.z)?p.quantity:0),0),steelInBuildings:world.structures.reduce((n,s)=>n+requiredMaterial(s,'steel'),0),steel:world.piles.reduce((n,p)=>n+(p.item==='steel'?p.quantity:0),0),steelStored:world.piles.reduce((n,p)=>n+(p.item==='steel'&&p.owner.type==='ground'&&world.stockpiles.some(s=>s.filters.steel&&p.owner.type==='ground'&&s.x===p.owner.x&&s.z===p.owner.z)?p.quantity:0),0),cells:world.tiles.filter(t=>t.terrain==='rough-stone').length,chunks:world.piles.filter(p=>p.kind==='chunk').length,stored:world.piles.filter(p=>p.kind==='chunk'&&p.owner.type==='ground'&&world.stockpiles.some(s=>s.filters.chunk&&p.owner.type==='ground'&&s.x===p.owner.x&&s.z===p.owner.z)).length},
-    mood:world.pawns.map(p=>{const thoughts=moodThoughts(world,p);return {id:p.id,level:p.mood,target:moodTarget(thoughts),frozen:moodFrozen(p),causes:thoughts.map(t=>({id:t.id,offset:t.offset,expiresAt:t.expiresAt}))};}),
+    mood:world.pawns.map(p=>{const thoughts=moodThoughts(world,p);return {id:p.id,level:p.mood,target:moodTarget(thoughts),frozen:moodFrozen(p),crisis:p.mental?.crisis??null,exposure:p.mental?.below??[0,0,0],causes:thoughts.map(t=>({id:t.id,offset:t.offset,expiresAt:t.expiresAt}))};}),
     recreation:world.pawns.map(p=>({level:p.recreation.level,tolerance:{...p.recreation.tolerance},bored:{...p.recreation.bored}})),
     apparel:world.piles.filter(p=>p.kind==='apparel').map(p=>({id:p.id,item:p.item,owner:p.owner,apparel:p.apparel})),
     equipment:world.piles.filter(p=>p.kind==='weapon').map(p=>({id:p.id,item:p.item,owner:p.owner,weapon:p.weapon})),

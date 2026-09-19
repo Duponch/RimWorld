@@ -1,5 +1,7 @@
 # Interruption et cargaison conservée — V44 à V53
 
+V65 : l’errance triste réutilise la conservation involontaire, mais autorise la marche avec la cargaison retenue, comme les déplacements tactiques. Le dépôt et les réservations gardent les mêmes contraintes. [Contrat](mental-break.md).
+
 [Référence et écarts](../research/interrupted-cargo-reference.md). L'épuisement ne peut plus laisser un colon travailler parce que son objet ne trouve pas de dépôt. Cette tranche sécurise les interactions existantes avant les blessures ; les incapacités médicales sont ajoutées en V45. La [mobilisation V53](drafting.md) réutilise cette conservation en autorisant un déplacement tactique avec cargaison indéposable.
 
 ## Transition physique

@@ -21,7 +21,8 @@ export function startTravel(world:World,pawn:Pawn,next:Cell,getLight?:LightReade
   let start = pawn.motion && pawn.motion.end >= world.tick-1 ? pawn.motion.end : world.tick;
   const door=doorAt(world,next);if(door)start=Math.max(start,door.door!.changedAt+(1-door.door!.from)*importDoorDuration(door));
   const terrainDelay=furnitureDelay(world,pawn,next);
-  const speedFactor=(getLight?.()??new LightEnvironmentCache().read(world)).speedAt(pawn)*pawnBody(pawn).capacities.moving*apparelMoveFactor(world,pawn);
+  let speedFactor=(getLight?.()??new LightEnvironmentCache().read(world)).speedAt(pawn)*pawnBody(pawn).capacities.moving*apparelMoveFactor(world,pawn);
+  if(pawn.mental?.crisis&&!pawn.need)speedFactor=Math.min(speedFactor/2,TRAVEL_TICKS/5);
   const duration = TRAVEL_TICKS * edgeLength(pawn,next)/speedFactor+terrainDelay;
   const motion:TravelSegment={from:{x:pawn.x,z:pawn.z},to:{x:next.x,z:next.z},start,end:start+duration,...terrainDelay?{terrainDelay}:{},...speedFactor!==1?{speedFactor}:{}};
   if(pawn.motion?.stagger||pawn.stagger) {
