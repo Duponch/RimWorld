@@ -1,3 +1,4 @@
+import { isCrop } from '../sim/plants';
 import { ProjectileLayer } from './ProjectileLayer';
 import { EnvironmentLighting } from './EnvironmentLighting';
 import { PresentationQueue } from './PresentationQueue';
@@ -408,7 +409,7 @@ export class ColonyRenderer {
   }
 
   private updateResources(world: World, newMap: boolean): void {
-    const natural = world.resources.filter(r => r.kind !== 'rice');
+    const natural = world.resources.filter(r => !isCrop(r));
     if (!newMap && natural.length === this.naturalResources.length && natural.every((r, i) => {
       const old = this.naturalResources[i]!;
       return r === old || (r.id === old.id && r.kind === old.kind && r.x === old.x && r.z === old.z && r.amount === old.amount && r.growth === old.growth && r.growthTick === old.growthTick);
@@ -491,6 +492,9 @@ export class ColonyRenderer {
             logs.push({ x, z: lz, y, sx: WORLD_SCALE.pileWidth, sy: 0.12, sz: 0.12, color: row % 2 ? 0x9d794d : 0x896841 });
             ends.push({ x: x + WORLD_SCALE.pileWidth / 2 + 0.003, z: lz, y, sx: 0.012, sy: 0.095, sz: 0.095 });
           }
+        } else if(bundle.kind==='textile'){
+          food.push({x:bundle.x,z,y:height/2,sx:.55,sy:height,sz:.4,color:ITEM_DEFINITIONS.cloth.color});
+          food.push({x:bundle.x,z,y:height+.012,sx:.08,sy:.025,sz:.42,color:0x8a846a});
         } else if(bundle.kind==='apparel'){
           for(const p of foldedApparel(bundle.item as ApparelItem))food.push({x:x+p.center[0]!,y:.07+p.center[1]!,z:z+p.center[2]!,sx:p.size[0]!,sy:p.size[1]!,sz:p.size[2]!,color:p.color});
         } else if(bundle.kind==='weapon'){

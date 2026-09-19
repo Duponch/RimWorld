@@ -1,6 +1,6 @@
 # Documentation de Lisière
 
-État courant : **V70, 19 septembre 2026**. [Bavardage et discussions approfondies](development/social.md) en partie ordinaire : opinions dirigées, compétence Social active, inspection et continuation stricte. Les [six traits](development/traits.md), accueil, raid, ouvrages et soins existants restent jouables. Première tranche de l’étape 3 achevée ; filière utile et recherche ensuite. Romance, bagarres/deuil, narrateur et catalogue complet restent absents. [Inventaire consolidé](gameplay/implementation-status.md), [dernières preuves](history/validation-social-v70.md).
+État courant : **V71, 19 septembre 2026**. [Coton et tissu](development/textiles.md) : choix de culture, récolte et rangement physiques, présentation instanciée et migration stricte. Première matière de l’étape 4, **confection et recherche encore absentes**. Social V70, traits, accueil et raid restent jouables. [Inventaire consolidé](gameplay/implementation-status.md), [dernières preuves](history/validation-textile-v71.md).
 
 La [revue de progression](research/progression-review-2026-09-19.md) explique la réorientation vers des situations de colonie complètes. [ROADMAP](ROADMAP.md) conserve seule l’ordre des prochains travaux et les estimations. Mode jour, automatisation nocturne en pause.
 
@@ -51,7 +51,7 @@ Les bilans de versions sont dans les contrats et [l’index de validation](devel
 | Loisirs | [Activités, lassitude et migration](development/recreation.md) | [Vérification Core](research/recreation-reference.md) |
 | Conservation des aliments | [Âge, transferts et expiration](development/food-preservation.md) | [Fraîcheur et référence Core](research/food-preservation-reference.md) |
 | Cuisine et combustible | [Factures, ingrédients, feu](development/cooking.md) | [Recettes et ravitaillement](research/cooking-reference.md), [ordres de cuisine/semis](research/cooking-orders-reference.md), [dégagement/recharge](research/context-services-reference.md) |
-| Plantes et cultures | [Agriculture](development/farming.md), [croissance thermique V39](development/plant-temperature.md), [rochers et plantes](development/rocks-and-plants.md) | [Agriculture](research/farming-reference.md), [croissance sauvage](research/plant-growth.md) |
+| Plantes et cultures | [Coton et tissu V71](development/textiles.md), [Agriculture](development/farming.md), [croissance thermique V39](development/plant-temperature.md), [rochers et plantes](development/rocks-and-plants.md) | [Agriculture](research/farming-reference.md), [croissance sauvage](research/plant-growth.md) |
 | Toits construits | [Couverture, supports, zones et sauvegarde](development/roofing.md) | [Vérification Core](research/roofing-reference.md) |
 | Carte et environnement | [Génération](development/world-generation.md), [dimensions](development/world-generation.md#contrat-et-sauvegarde), [jour/nuit](development/daylight-camera.md) | [Espace 3D](research/spatial-design.md), [audit environnement](research/environment-review.md) |
 | Synchronisation visuelle | [Horloge, phases et HUD](development/presentation-timing.md) | [Vérification et diagnostic](research/presentation-timing-reference.md) |

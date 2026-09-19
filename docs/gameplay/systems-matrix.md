@@ -1,5 +1,8 @@
 # Matrice des systèmes et critères de réalisation
 
+État V71 : S09 comprend désormais riz/coton et tissu physique. L’étape 4 demeure partielle : sa matière première est obtenable, confection/qualité/ouvrages inachevés et recherche restent à livrer. [Contrat](../development/textiles.md) ; ordre précis maintenu uniquement dans [ROADMAP](../ROADMAP.md).
+
+
 État V70 : SYS/TEST-086/087 partiellement servis par deux échanges passifs, opinions dirigées inspectables, proximité/état et continuation. SYS/TEST-085 ajoute Social avec gain/impact ; SYS/TEST-088 conserve les IDs après décès mais deuil absent. S13/S14/S19 et G3 demeurent partiels. [Contrat](../development/social.md).
 
 État V69 : SYS/TEST-084 et 085 partiellement servis par six traits à effets actifs, exclusivités, inspection et continuation. Les domaines S14 et Personnes restent partiels ; V70 sert partiellement SYS/TEST-086/087 (opinions/interactions) ; deuil SYS/TEST-088 ouvert. [Contrat](../development/traits.md). Les notes datées suivantes décrivent les étapes historiques ; l’inventaire courant prime.

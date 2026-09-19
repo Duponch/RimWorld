@@ -8,7 +8,7 @@ export const STRUCTURE_SHOT_FILL:Readonly<Record<StructureKind,number>>=Object.f
   'passive-cooler':.4,stool:.2,campfire:.2,'standing-lamp':.2,horseshoes:0,
 });
 export const RESOURCE_SHOT_FILL:Readonly<Record<ResourceKind,number>>=Object.freeze({
-  tree:.25,berries:.2,rice:0,
+  tree:.25,berries:.2,rice:0,cotton:0,
   // These small decorative pebbles are not the haulable Core chunks. Their
   // replacement by actual chunks is deferred; don't create invisible cover.
   rock:0,

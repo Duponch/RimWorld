@@ -1,8 +1,8 @@
 # Plan de développement
 
-État : **19 septembre 2026, après V70**. ROADMAP est l’unique calendrier G0–G5. G0 en consolidation, G1/G2/G3 partiels, G4 engagé par l’accueil, G5 absent ; aucun jalon complet. Les numéros de schéma ne mesurent pas l’avancement du jeu. [Inventaire réel](gameplay/implementation-status.md), [preuves](development/validation.md), [index](README.md).
+État : **19 septembre 2026, après V71**. ROADMAP est l’unique calendrier G0–G5. G0 en consolidation, G1/G2/G3 partiels, G4 engagé par l’accueil, G5 absent ; aucun jalon complet. Les numéros de schéma ne mesurent pas l’avancement du jeu. [Inventaire réel](gameplay/implementation-status.md), [preuves](development/validation.md), [index](README.md).
 
-Dernière fonctionnalité publiée : [premiers échanges et opinions V70](development/social.md), apprentissage social et inspection. Les situations ordinaires produisent des souvenirs persistants dans les deux sens ; [preuves](history/validation-social-v70.md). V69/V70 satisfont le périmètre proche de l’étape 3, sans terminer la psychologie. Accueil V66 et menace V68 restent livrés.
+Dernière fonctionnalité publiée : [coton et tissu V71](development/textiles.md), du semis au stockage, avec choix de culture. L’étape 4 reste ouverte : aucun équipement n’est encore fabriqué. [Preuves](history/validation-textile-v71.md). V69/V70 satisfont la tranche proche de l’étape 3 ; accueil V66 et menace V68 restent livrés.
 
 ## Priorité actuelle
 
@@ -10,7 +10,7 @@ Dernière fonctionnalité publiée : [premiers échanges et opinions V70](develo
 
 La [revue de progression du 19 septembre](research/progression-review-2026-09-19.md) remplace l’ordre « terminer pensées/traits/relations, puis ouvrir les incidents ». Les interactions physiques, cas limites, migrations et budgets restent exigés. Nous avançons maintenant par changements vécus dans la colonie, en traversant G1–G4 selon leurs dépendances. Les jalons sont des domaines de couverture, pas des portes obligeant à finir tout G3 avant G4.
 
-**Prochaine livraison visée : étape 4, objectif de production utile.** Choisir une filière d’équipement dont les matières sont obtenables, avec atelier, facture, fabrication physique, produit et usage ; puis première recherche reliée à un déblocage Core réel. Revérifier les prérequis avant de choisir : aucune recherche artificielle sur les recettes de départ. Critère d’arrêt : le joueur fabrique et utilise un objet utile, puis peut poursuivre un déblocage réel. L’étape 3 s’arrête ici pour éviter d’étendre par inertie tous les échanges, l’amour ou les biographies ; leurs limites restent dans l’inventaire.
+**Prochaine livraison visée : poursuivre l’étape 4, coton → tenue tribale → recherche Vêtements complexes.** V71 rend le tissu cultivable/stockable. Prochain résultat visible : emplacement d’artisanat gratuit, facture de tenue tribale, soixante tissus physiquement rassemblés, ouvrage inachevé conservé lors des interruptions, qualité/compétence pertinente, vêtement produit puis porté. Revoir les sources préparées dans [la recherche textile](research/textile-reference.md) avant cette intégration. La tenue tribale ne demande pas de recherche ; ensuite Vêtements complexes doit ouvrir le véritable établi manuel et la chemise. Aucun élargissement aux autres textiles, tout le catalogue ou tout l’arbre technologique avant cette boucle. Critère d’arrêt de l’étape 4 : fabriquer et utiliser un équipement puis poursuivre ce déblocage réel.
 
 | Ordre de priorité | Résultat que le joueur doit pouvoir constater | Limite de périmètre |
 |---|---|---|
@@ -106,7 +106,7 @@ Objectif d'une partie, tonalité fictionnelle, contraintes de verticalité, tail
 
 ## Estimation de charge — 18 septembre 2026
 
-Descriptions factuelles corrigées le 19 septembre après V70 ; fourchettes de charge conservées comme hypothèses historiques, sans nouvelle mesure de vélocité ni date de fin réengagée. La revue stratégique ne transforme pas ces pourcentages en mesures objectives.
+Descriptions factuelles corrigées le 19 septembre après V71 ; fourchettes de charge conservées comme hypothèses historiques, sans nouvelle mesure de vélocité ni date de fin réengagée. La revue stratégique ne transforme pas ces pourcentages en mesures objectives.
 
 **Environ 20 % du travail total, fourchette 15–25 %**, pour une reproduction substantielle du jeu de base en 3D, avec contenu, intégration, corrections et finition. C'est un jugement de planification du co-lead, pas une mesure objective, un pourcentage de code, de fidélité certifiée ou d'objets disponibles. Les domaines ont des poids différents et partagent des dépendances : ne pas faire la moyenne des lignes ci-dessous. La borne basse reste plausible tant que combat et narration ne produisent pas de partie complète. G0–G3 partiels, G4 engagé par accueil et raid, G5 absent ; aucun jalon clos.
 
@@ -118,7 +118,7 @@ Descriptions factuelles corrigées le 19 septembre après V70 ; fourchettes de c
 | Génération, végétation, biomes et climat | 20–35 % | Site local déterministe et premières filières ; nombreuses espèces, biomes, saisons, météo et toits naturels absents. |
 | Anatomie, santé et soins | 35–50 % | Blessures/capacités/secours/soins intégrés ; maladies, infections, immunité, chirurgie, prothèses et dépouilles restent importantes. |
 | Compétences, traits et identité | 15–25 % | Construction, Médecine, Tir et Mêlée actifs ; six traits actifs V69 ; huit autres compétences, biographies, autres traits et effets croisés absents. |
-| Équipement, vêtements et inventaire | 10–20 % | Revolver, chemise et gilet physiques avec protection ; inventaire personnel, autres équipements, tenues automatiques, textile, masse et grand catalogue absents. |
+| Équipement, vêtements et inventaire | 10–20 % | Revolver, chemise et gilet physiques avec protection ; inventaire personnel, autres équipements, tenues automatiques, confection textile, masse et grand catalogue absents. |
 | Combat | 5–15 % | Tir, santé, pouvoir d’arrêt et sentinelle de scénario désormais jouables ; Fuir/Attaquer/Ignorer et collisions intégrés. Mêlée V59, tir automatique/Attaquer V60 et approche ennemie visible V61 livrés ; protection corporelle V63 et réveils V62 présents ; murs/portes destructibles V67 et raid ordinaire V68 ; tactique collective complète et dépouilles transportables absentes. |
 | Humeur et relations | 5–10 % | Humeur causale, premières pensées/mémoires, errance triste, six traits et deux échanges/opinions V70 ; autres crises, attentes variables, romance/parenté/deuil et psychologie complète absents. Estimation large inchangée pour cette tranche limitée. |
 | Production, recherche et contenu | 10–20 % | Deux filières de production ; ateliers, nombreuses recettes, économie matérielle et recherche absents. Ce n'est pas un ratio d'objets : aucun catalogue exhaustif vérifié. |

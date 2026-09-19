@@ -1,0 +1,22 @@
+{
+  "date": "2026-09-19T13:30:16.984Z",
+  "maturity": "UI boundary fixture; natural growth separately tested",
+  "proof": [
+    {
+      "speed": 1,
+      "sownAt": 67,
+      "cargoAt": 128,
+      "storedAt": 174,
+      "cloth": 60,
+      "errors": []
+    },
+    {
+      "speed": 6,
+      "sownAt": 68,
+      "cargoAt": 128,
+      "storedAt": 175,
+      "cloth": 60,
+      "errors": []
+    }
+  ]
+}

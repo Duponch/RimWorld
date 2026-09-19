@@ -1,5 +1,8 @@
 # Adoption du référentiel utilisateur
 
+V71 — chapitres 11/12, **SYS/TEST-062..064 et 070..072, UI-021/025** relus : adopter distinction plante/produit, croissance favorable, récolte et conservation ; adapter horloge/3D, différer confection et recherche. [Vérification multi-source du coton et de la future filière](textile-reference.md), [contrat livré](../development/textiles.md). Les 14,77 jours du wiki ne sont pas une durée garantie sous notre soleil ; désaccord de coût de passage 10/14 conservé.
+
+
 V70 — chapitre 14, **SYS/TEST-086/087/088**, chapitre 13 SYS/TEST-085 : adopter opinions dirigées, échange conditionné par présence/vue/capacités et apprentissage ; adapter cadence, PRNG, âge neutre, présentation 3D ; différer deuil, parenté/romance, hostilité personnelle et autres contenus. [Recherche neuve et désaccords](social-reference.md), [contrat](../development/social.md). Aucun domaine global clos.
 
 V69 — chapitres 13/14 ; **SYS/TEST-084 et 085** : adopter exclusions/effets et apprentissage distinct de la vitesse, adapter profils composés et calculs purs ; différer autres traits, biographies et distribution. SYS/TEST-086..088 relus mais ouverts. [Recherche fraîche et correction des seuils personnels](traits-reference.md).

@@ -95,6 +95,8 @@ export function cargoGeometry(): THREE.InstancedBufferGeometry {
   part([0.12,0.46,0.48],[0,0,0],4,0x6f634e);
   part([0.38, 0.16, 0.26], [0, 0, 0], 3, 0xc7b96b);
   part([0.09, 0.17, 0.27], [0, 0, 0], 3, 0x86804e);
+  part([.5,.22,.32],[0,0,0],24,ITEM_DEFINITIONS.cloth.color);
+  part([.07,.24,.34],[0,0,0],24,0x8a846a);
   part([.55,.2,.3],[0,0,0],11,ITEM_DEFINITIONS.steel.color);
   part([.48,.26,.4],[0,0,0],17,ITEM_DEFINITIONS.component.color);
   part([.2,.07,.26],[0,.16,0],17,0x637d77);

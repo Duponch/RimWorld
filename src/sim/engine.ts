@@ -1,3 +1,4 @@
+import { harvestProductLabel } from './plants.ts';
 import { advanceSocial } from './social.ts';
 import { reconcileRepairs,advanceRepair } from './repairs.ts';
 import { advanceRaids,enableRaids,exitRaider } from './raids.ts';
@@ -85,7 +86,7 @@ import type { AreaCommand, Cell, Command, CommandResult, DesignateCommand, Job, 
 export { JOB_DURATION, JOB_WOOD_COST } from './definitions.ts';
 
 const PATH_SEARCHES_PER_TICK = 8;
-const JOB_LABEL: Readonly<Record<JobKind, string>> = { repair:'réparer', 'wood-generator':'construction de générateur à bois', 'standing-lamp':'construction de lampe sur pied', 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'pose de toit', 'remove-roof':'retrait de toit', door:'construction de porte', stonecutter:'construction de table de taille de pierre', mine:'minage', uninstall:'désinstallation', install:'réinstallation', deconstruct: 'déconstruction', chop: 'abattage', harvest: 'récolte', cut: 'coupe de plante', sow: 'semis de riz', horseshoes: 'construction de piquet de fers à cheval', campfire: 'construction de feu de camp', wall: 'construction de mur', bed: 'construction de lit', table: 'construction de table', stool: 'construction de tabouret' };
+const JOB_LABEL: Readonly<Record<JobKind, string>> = { repair:'réparer', 'wood-generator':'construction de générateur à bois', 'standing-lamp':'construction de lampe sur pied', 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'pose de toit', 'remove-roof':'retrait de toit', door:'construction de porte', stonecutter:'construction de table de taille de pierre', mine:'minage', uninstall:'désinstallation', install:'réinstallation', deconstruct: 'déconstruction', chop: 'abattage', harvest: 'récolte', cut: 'coupe de plante', sow: 'semis', horseshoes: 'construction de piquet de fers à cheval', campfire: 'construction de feu de camp', wall: 'construction de mur', bed: 'construction de lit', table: 'construction de table', stool: 'construction de tabouret' };
 const sameCell = (a: Cell, b: Cell): boolean => a.x === b.x && a.z === b.z;
 const refusal = (code: RefusalCode, reason: string): CommandResult => ({ ok: false, code, reason });
 function event(world: World, type: 'job' | 'need' | 'command', message: string): void {
@@ -252,9 +253,9 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   }
   if (command.type === 'growing-policy') {
     const zone = world.growingZones.find(z => z.id === command.zoneId);
-    if (!zone || typeof command.allowSow !== 'boolean' || typeof command.allowCut !== 'boolean') return refusal('invalid-command', 'Zone ou réglages de culture invalides.');
+    if (!zone || typeof command.allowSow !== 'boolean' || typeof command.allowCut !== 'boolean' || command.plant!==undefined&&!['rice','cotton'].includes(command.plant)) return refusal('invalid-command', 'Zone ou réglages de culture invalides.');
     cancelGrowingJobs(world, new Set([zone.id]),drops);
-    world.growingZones = world.growingZones.map(z => z === zone ? {...z, allowSow: command.allowSow, allowCut: command.allowCut} : z);
+    world.growingZones = world.growingZones.map(z => z === zone ? {...z, plant:command.plant??z.plant, allowSow: command.allowSow, allowCut: command.allowCut} : z);
     wakePlanners(world); return {ok:true};
   }
   if (command.type === 'assign-bed') {
@@ -342,7 +343,7 @@ function completeJob(world: World, pawn: Pawn, job: Job): void {
     if (job.kind === 'harvest' && !harvestable(world, resource)) { releaseWork(world, pawn); return; }
     const quantity=gatherResource(world,resource,job.kind);
     if(quantity===null){job.progress=jobDuration(world,job)-1;delete job.workRemainder;releaseWork(world,pawn);return;}
-    if(job.kind!=='chop'&&quantity>0)event(world,'job',`${pawn.name} a récolté ${quantity} ${resource.kind==='rice'?'riz':'baies'}.`);
+    if(job.kind!=='chop'&&quantity>0)event(world,'job',`${pawn.name} a récolté ${quantity} ${harvestProductLabel(resource)}.`);
   } else if (isRoofJob(job)) {
     finishRoofJob(world,job);
   } else if (job.kind === 'deconstruct') {
@@ -469,7 +470,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
           pawn.path=[];pawn.state='working';advanceWork(job.clearance,getLight().speedAt(pawn)*physicalWorkFactor(pawn,'plant',body));
           if(job.clearance.progress>=clearingDuration(plant)) {
             const quantity=gatherResource(world,plant,plant.kind==='tree'?'chop':'cut');
-            if(quantity!==null)event(world,'job',`${pawn.name} a dégagé le chantier${plant.kind!=='tree'&&quantity>0?` et a récolté ${quantity} ${plant.kind==='rice'?'riz':'baies'}`:''}.`);
+            if(quantity!==null)event(world,'job',`${pawn.name} a dégagé le chantier${plant.kind!=='tree'&&quantity>0?` et a récolté ${quantity} ${harvestProductLabel(plant)}`:''}.`);
             releaseWork(world,pawn);wakePlanners(world);
           }
         } else moveToward(world,pawn,constructionWorkTarget(world,job),false,getBlocked,budget,false,getLight);

@@ -3,10 +3,13 @@ import { isRoofed, roofIndex } from './roof-rules.ts';
 import { growingLightIntegral } from './environment.ts';
 
 export const PLANT_DEFINITIONS = Object.freeze({
+  cotton: { label: 'Coton', growDays: 8, minFertility: .7, sensitivity: 1, afterHarvest: 0, yield: 10 },
   berries: { label: 'Buisson de baies', growDays: 6, minFertility: .5, sensitivity: .5, afterHarvest: .3, yield: 10 },
   rice: { label: 'Riz', growDays: 3, minFertility: .7, sensitivity: 1, afterHarvest: 0, yield: 6 },
 });
-export const isPlant = (plant: Resource): plant is Resource & { kind: keyof typeof PLANT_DEFINITIONS } => plant.kind === 'berries' || plant.kind === 'rice';
+export const isPlant = (plant: Resource): plant is Resource & { kind: keyof typeof PLANT_DEFINITIONS } => plant.kind === 'berries' || plant.kind === 'rice' || plant.kind === 'cotton';
+export const isCrop = (plant: Pick<Resource,'kind'>): plant is Pick<Resource,'kind'>&{kind:'rice'|'cotton'} => plant.kind === 'rice' || plant.kind === 'cotton';
+export const harvestProductLabel = (plant:Resource):string => plant.kind==='cotton'?'tissu':plant.kind==='rice'?'riz':'baies';
 
 export const BERRY_GROW_DAYS = 6;
 export const HARVEST_MIN_GROWTH = .65;

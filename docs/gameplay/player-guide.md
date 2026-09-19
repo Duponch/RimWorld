@@ -272,15 +272,17 @@ Une récolte mûre donne dix baies dans les nouvelles colonies. Le buisson reste
 
 Architecte → Ordres → **Couper les buissons** libère leur case en supprimant la plante. La coupe récupère les baies déjà récoltables ; un buisson immature ne donne rien. Les piles produites restent au sol et peuvent demander un transport avant construction. La récolte et la coupe exigent toujours un colon au contact et du travail.
 
-## Cultiver du riz
+## Cultiver du riz ou du coton
 
 Dans **Architecte → Zones → Zone de culture**, tracez un champ. Activez **Culture** dans le tableau Travail. Les colons dégagent les plantes qui gênent, sèment sans consommer de graines, puis récoltent automatiquement le riz mûr. Il pousse plus lentement sur terre nue que sur prairie, s’arrête la nuit et donne six unités par plant mûr. Comptez environ sept jours par cycle sur prairie dans le climat fixe actuel, davantage sur terre : prévoyez des repas ou de la cueillette pendant l’attente.
+
+Inspectez une cellule du champ pour choisir **Riz** ou **Coton**, puis cliquez **Appliquer les réglages de culture**. Le coton produit directement dix tissus par plant mûr. Il met environ dix-neuf jours dans notre site actuel, davantage sur terre : ne remplacez pas tout votre potager. Les tissus ne se mangent pas ; activez **Textiles** dans les réserves pour les ranger (75 par pile). Ils ne pourrissent pas. La confection n’est pas encore disponible. Changer le choix conserve les plants présents : autoriser leur coupe permet de les remplacer physiquement ; la désactiver les protège.
 
 Inspectez une cellule du champ pour autoriser les semis et la coupe des plantes indésirables. Désactiver les semis conserve la récolte du riz mûr. Retirer la zone conserve les plants déjà semés. Un ordre manuel Récolter fonctionne au-dessus de 65 % de croissance, avec un rendement réduit. Couper les plantes libère leur case.
 
 Prévoyez plusieurs cellules de réserve alimentaire : baies, repas et riz sont des objets différents qui ne partagent pas une même pile au sol. Le cultivateur déplace les piles gênantes hors du champ avant de semer, même sans réserve et avec Transport désactivé. Si aucun sol de dépôt n’est disponible, il attend. Plusieurs trajets peuvent être nécessaires. Ces objets pourront ensuite être transportés vers vos réserves.
 
-Les colons peuvent manger le riz cru : 0,05 nutrition par unité, avec un souvenir −7 humeur pendant un jour. Le feu peut transformer dix unités de riz et/ou de baies en un repas simple. Les denrées peuvent pourrir ; les intoxications ne sont pas encore disponibles. Seul le riz est cultivable ; les arbres, sols et buissons génériques ne constituent toujours pas un catalogue complet des espèces et biomes.
+Les colons peuvent manger le riz cru : 0,05 nutrition par unité, avec un souvenir −7 humeur pendant un jour. Le feu peut transformer dix unités de riz et/ou de baies en un repas simple. Les denrées peuvent pourrir ; les intoxications ne sont pas encore disponibles. Le riz et le coton sont cultivables ; les arbres, sols et buissons génériques ne constituent toujours pas un catalogue complet des espèces et biomes.
 
 ## Préparer des repas au feu
 
@@ -328,7 +330,7 @@ Avant de créer une nouvelle colonie, le jeu conserve aussi l'état courant dans
 
 ## Limites et suite
 
-Pas encore d'autres cultures, autres postes/recettes de cuisine, chaîne du froid, autres minerais que l’acier et les machines compactées, autres familles de loisirs, animaux, autres armes, combat complet, médecine complète, relations, autres traits, recherche, commerce, câbles/batteries/interrupteurs électriques, toit naturel, santé thermique, incendie, météo dynamique, carte du monde ou storyteller. Les coûts de sols et autres profils de déplacement, les réserves à plusieurs cases partageant une politique, les autres familles sélectionnables, les fournisseurs supplémentaires de travail lié sur une case et les tournées logistiques restent à développer. Les modèles sont provisoires ; la congestion entre agents actifs et la calibration des besoins restent ouvertes. La faim ne cause pas encore de malnutrition ni de décès.
+Pas encore d’autres cultures que riz/coton, confection textile, ouvrages inachevés, autres postes/recettes de cuisine, chaîne du froid, autres minerais que l’acier et les machines compactées, autres familles de loisirs, animaux, autres armes, combat complet, médecine complète, relations familiales/amoureuses, autres interactions sociales et traits, recherche, commerce, câbles/batteries/interrupteurs électriques, toit naturel, santé thermique, incendie, météo dynamique, carte du monde ou storyteller. Les coûts de sols et autres profils de déplacement, les réserves à plusieurs cases partageant une politique, les autres familles sélectionnables, les fournisseurs supplémentaires de travail lié sur une case et les tournées logistiques restent à développer. Les modèles sont provisoires ; la congestion entre agents actifs et la calibration des besoins restent ouvertes. La faim ne cause pas encore de malnutrition ni de décès.
 
 La suite est suivie dans [le plan de développement](../ROADMAP.md). Les détails de la référence et les futures interactions sont dans [la matrice des systèmes](systems-matrix.md).
 
@@ -418,7 +420,7 @@ Dans **Architecte → Zones**, tracer **Construire un toit**. Les bâtisseurs re
 
 **Retirer un toit** commande son retrait et empêche sa repose automatique. **Ignorer le toit** efface les zones sans enlever la couverture. Le bouton **Toits : masqués/visibles** change seulement la vue. L’inspection indique les cases couvertes, indépendamment de ce bouton.
 
-Le riz et les baies ne poussent plus sans soleil sous un toit ; les colons cherchent ailleurs pour regarder le ciel. Les pièces ont une température locale et les ateliers tiennent compte de leur milieu. Les dégâts thermiques sur les plantes restent à développer avant les contenus froids/chauds. Retirer un support peut faire tomber la couverture et blesser les colons dessous. Les dégâts aux objets et les gravats restent absents. Les toits naturels des montagnes ne sont pas présents.
+Le riz, le coton et les baies ne poussent plus sans soleil sous un toit ; les colons cherchent ailleurs pour regarder le ciel. Les pièces ont une température locale et les ateliers tiennent compte de leur milieu. Les dégâts thermiques sur les plantes restent à développer avant les contenus froids/chauds. Retirer un support peut faire tomber la couverture et blesser les colons dessous. Les dégâts aux objets et les gravats restent absents. Les toits naturels des montagnes ne sont pas présents.
 
 ## Éclairer les ateliers
 

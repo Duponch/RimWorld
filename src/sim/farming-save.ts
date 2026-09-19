@@ -23,7 +23,7 @@ export function validateFarming(input: Record<string, unknown>, size: number, id
     const zone = value as Record<string, unknown>;
     if (!int(zone.id, 1, (input.nextId as number) - 1) || ids.has(zone.id)) errors.push('Invalid or duplicate growing zone ID.');
     else { ids.add(zone.id); zoneIds.add(zone.id); }
-    if (zone.plant !== 'rice' || typeof zone.allowSow !== 'boolean' || typeof zone.allowCut !== 'boolean' || !Array.isArray(zone.cells) || !zone.cells.length || zone.cells.length > size) { errors.push('Invalid growing policy or cells.'); continue; }
+    if (!(zone.plant === 'rice' || Number(input.schemaVersion)>=71&&zone.plant==='cotton') || typeof zone.allowSow !== 'boolean' || typeof zone.allowCut !== 'boolean' || !Array.isArray(zone.cells) || !zone.cells.length || zone.cells.length > size) { errors.push('Invalid growing policy or cells.'); continue; }
     let previous = -1;
     for (const cell of zone.cells) {
       if (!int(cell, 0, size - 1) || cell <= previous || occupied.has(cell)) errors.push('Unordered, overlapping or invalid growing cell.');

@@ -1,3 +1,4 @@
+import { writeFileSync } from 'node:fs';
 import { enableArrivals } from '../src/sim/arrivals';
 import { expect, test } from 'vitest';
 import { createWorld, applyCommand, stepWorld, validateWorld, serializeWorld, deserializeWorld } from '../src/sim/index';
@@ -61,6 +62,8 @@ test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp const
         world=deserializeWorld(saved);
       }
     }
+    writeFileSync(`tmp/colony-final-v71-${seed}.json`,serializeWorld(world));
+    writeFileSync(`artifacts/colony-v71-${seed}.json`,JSON.stringify({seed,report,final:colonySummary(world)},null,2));
     const context=JSON.stringify({seed,report,meals:[...meals],sleep:[...sleep]});
     expect(report[0]!.structures,context).toMatchObject({bed:3,table:1,stool:3});
     expect(report[4]!.structures,context).toEqual({'wood-generator':1,'standing-lamp':1,'passive-cooler':0,bed:population,table:1,stool:3,wall:7,campfire:1,horseshoes:1,stonecutter:1,door:1});
@@ -89,7 +92,7 @@ test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp const
       expect(validateWorld(followup),context).toEqual([]);
     }
     expect(world.pawns.some(p=>p.skills.construction.xp>1000000),context).toBe(true);
-    expect(world.growingZones,context).toHaveLength(1); expect(world.resources.filter(r=>r.kind==='rice').length,context).toBeGreaterThan(5); expect(world.stock.food,context).toBeGreaterThan(0);
+    expect(world.growingZones,context).toHaveLength(2);expect(colonySummary(world).textile,context).toMatchObject({fields:1,plants:6,cloth:0}); expect(world.resources.filter(r=>r.kind==='rice').length,context).toBeGreaterThan(5); expect(world.stock.food,context).toBeGreaterThan(0);
     expect([...meals.values()].every(n=>n>=10),context).toBe(true);
     expect([...sleep.values()].every(n=>n>4000),context).toBe(true);
     expect(colonySummary(world).plantClimate,context).toEqual({slowed:0,thermalAnchors:0});

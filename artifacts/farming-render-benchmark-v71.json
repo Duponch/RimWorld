@@ -1,0 +1,139 @@
+{
+  "date": "2026-09-19T13:31:56.336Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "protocol": "250² seed 42, 1440×1000, hardware WebGPU, paused. Same cleared field and camera: 0/1000/0 plants. CROP_VARIANT=mixed alternates cotton and rice; otherwise rice only. 30 transition + 90 warm frames, then >=300 frames and 6 s. CPU submission is not GPU time. Synthetic presentation fixture, no gameplay throughput claim.",
+  "phases": [
+    {
+      "count": 0,
+      "variant": "mixed",
+      "pipelines": [],
+      "setWorldMs": 5.600000001490116,
+      "frameMs": {
+        "n": 1429,
+        "mean": 4.198740377886635,
+        "p95": 4.299999999999272,
+        "max": 8.5
+      },
+      "cpuMs": {
+        "n": 1430,
+        "mean": 3.0234265732598473,
+        "p95": 4.199999999254942,
+        "max": 7.300000000745058
+      },
+      "calls": {
+        "n": 1430,
+        "mean": 124,
+        "p95": 124,
+        "max": 124
+      },
+      "triangles": {
+        "n": 1430,
+        "mean": 169201,
+        "p95": 169201,
+        "max": 169201
+      },
+      "transitionFrameMs": {
+        "n": 29,
+        "mean": 5.889655172413799,
+        "p95": 4.199999999999818,
+        "max": 54.19999999999982
+      },
+      "transitionCpuMs": {
+        "n": 30,
+        "mean": 3.016666666045785,
+        "p95": 3.599999997764826,
+        "max": 5.300000000745058
+      }
+    },
+    {
+      "count": 1000,
+      "variant": "mixed",
+      "pipelines": [],
+      "setWorldMs": 6.100000001490116,
+      "frameMs": {
+        "n": 1440,
+        "mean": 4.166666666666667,
+        "p95": 4.299999999999272,
+        "max": 4.399999999999636
+      },
+      "cpuMs": {
+        "n": 1441,
+        "mean": 2.893129770845009,
+        "p95": 3.800000000745058,
+        "max": 6.299999997019768
+      },
+      "calls": {
+        "n": 1441,
+        "mean": 126,
+        "p95": 126,
+        "max": 126
+      },
+      "triangles": {
+        "n": 1441,
+        "mean": 190201,
+        "p95": 190201,
+        "max": 190201
+      },
+      "transitionFrameMs": {
+        "n": 29,
+        "mean": 5.893103448275912,
+        "p95": 4.300000000001091,
+        "max": 54.30000000000109
+      },
+      "transitionCpuMs": {
+        "n": 30,
+        "mean": 2.739999999726812,
+        "p95": 3.199999999254942,
+        "max": 3.300000000745058
+      }
+    },
+    {
+      "count": 0,
+      "variant": "mixed",
+      "pipelines": [],
+      "setWorldMs": 6,
+      "frameMs": {
+        "n": 1433,
+        "mean": 4.1870202372644805,
+        "p95": 4.299999999999272,
+        "max": 8.5
+      },
+      "cpuMs": {
+        "n": 1434,
+        "mean": 3.188563458852709,
+        "p95": 4.300000000745058,
+        "max": 7.399999998509884
+      },
+      "calls": {
+        "n": 1434,
+        "mean": 124,
+        "p95": 124,
+        "max": 124
+      },
+      "triangles": {
+        "n": 1434,
+        "mean": 169201,
+        "p95": 169201,
+        "max": 169201
+      },
+      "transitionFrameMs": {
+        "n": 29,
+        "mean": 6.4655172413793105,
+        "p95": 4.400000000001455,
+        "max": 70.79999999999927
+      },
+      "transitionCpuMs": {
+        "n": 30,
+        "mean": 2.740000000099341,
+        "p95": 4,
+        "max": 4.200000002980232
+      }
+    }
+  ],
+  "errors": [],
+  "adapter": {
+    "vendor": "amd",
+    "architecture": "rdna-1",
+    "description": ""
+  }
+}

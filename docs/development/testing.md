@@ -1,5 +1,8 @@
 # Stratégie de validation
 
+V71 : `textile.test.ts` groupe croissance naturelle longue, rendement transactionnel/sol saturé, changement d’espèce pendant semis, logistique/reprise, migrations et lots résidents. `integration/textile.spec.ts` joue choix de culture, semis, filtre, récolte/portage/rechargement/rangement à 1×/6×. Le pilote commun ajoute six cotonniers après le potager ; les parcours de cinq à huit jours n’en prouvent pas la récolte. Le banc de rendu agricole accepte `CROP_VARIANT=mixed` et `VALIDATION_VERSION=v71`, sans écraser sa preuve historique. Les longs pilotes puis mesures natives se lancent successivement.
+
+
 V70 : `tests/social.test.ts` couvre espace/admissibilité, impact dirigé et XP, vieillissement/cumul, intention, reprise et corruption. `tests/integration/social.spec.ts` observe deux bâtisseurs en vraie UI native à 1×/6× avec sauvegarde ; intention initiale contrôlée annoncée. Le pilote de cinq jours exige aussi opinions/XP spontanées dans la colonie ; aucun souvenir injecté. Audit mixte et mesures sociales dédiées, [preuves](../history/validation-social-v70.md).
 
 V69 : `traits.test.ts` regroupe cinq scénarios profonds couvrant calculs, frontières, crise réelle à 40, apprentissage sur les producteurs physiques, migrations et offre. Le pilote `raid-colony.test.ts` active les profils du camp, enrichit les décisions d’horaires et les bilans ; `VALIDATION_VERSION=v69` conserve ses preuves séparées. `traits.spec.ts` exerce inspection, horaires, construction comparée, arrivée et reprise à 1×/6×. Les bancs existants CPU/natif acceptent `TRAITS=1`, sans créer une nouvelle famille de bancs. [Preuves](../history/validation-traits-v69.md).

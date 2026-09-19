@@ -1,3 +1,4 @@
+import { isCrop } from '../sim/plants';
 import { stoneColor } from './stone-palette';
 import * as THREE from 'three/webgpu';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -51,11 +52,11 @@ export class OverviewLayer {
       }
     }
     // Unknown additions need resized resident batches. Ordinary deletion changes one matrix.
-    if(!reset && world.resources.some(r=>r.kind!=='rice' && (!this.slots.has(r.id)||this.slots.get(r.id)!.kind!==r.kind))) {this.update(world,true);return;}
+    if(!reset && world.resources.some(r=>!isCrop(r) && (!this.slots.has(r.id)||this.slots.get(r.id)!.kind!==r.kind))) {this.update(world,true);return;}
     let boundsChanged=reset; const dirty=new Set<ResourceKind>();
-    const counts={tree:0,berries:0,rock:0},alive=new Set<number>();
+    const counts={tree:0,berries:0,rock:0,rice:0,cotton:0},alive=new Set<number>();
     for(const r of world.resources) {
-      if(r.kind==='rice')continue;
+      if(isCrop(r))continue;
       alive.add(r.id);const signature=`${r.kind}:${r.x}:${r.z}:${r.stone ?? ""}`,previous=this.slots.get(r.id);
       const slot=reset?counts[r.kind]++:previous!.slot;
       if(!reset&&previous?.signature===signature)continue;

@@ -1,5 +1,10 @@
 # Travail sur Lisière
 
+## Culture textile V71
+- Lire `docs/development/textiles.md` et `docs/research/textile-reference.md`. Coton produit `cloth`/`textile`, jamais nourriture ; changement d’espèce conserve les plants et annule les travaux liés avec dépôt conservatif. Commande sans espèce la conserve. Filtre absent = refus ; V70 validée strictement avant migration neutre V71.
+- `CropLayer` garde deux lots résidents préchauffés et des attributs statiques explicitement actualisés. Pas de reconstruction de forêt ni d’envoi de matrices au repos. Confection, ouvrages inachevés, qualité Artisanat et recherche restent absents ; prochaine tranche de ROADMAP, sans recherche fictive pour la tenue tribale.
+
+
 ## Social V70
 - Lire `docs/development/social.md` et sa recherche. Échanges passifs sans annuler le travail, opinions dirigées et compétence Social sparse ; bavardage cumulatif sans rajeunissement, discussions décroissantes après quatorze jours, expiration à vingt. Impact de l’autre personne capturé avant XP. PRNG social indépendant persisté, vue locale sans lean, souvenirs nettoyés même sur corps retenus. V69 strictement validée avant migration neutre. Insultes/bagarres, romance/deuil et profils sociaux complets absents ; étape 4 prioritaire selon ROADMAP.
 
@@ -76,7 +81,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 70 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 71 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)

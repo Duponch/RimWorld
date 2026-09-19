@@ -1,5 +1,8 @@
 # Lisière
 
+V71 : choisir **Coton** dans l’inspection d’un champ, récolter du tissu et le ranger dans une réserve **Textiles**. La confection et la recherche restent les prochains objectifs de l’étape 4. [Contrat et limites](docs/development/textiles.md).
+
+
 V70 : **les colons font connaissance pendant leurs activités**. Bavardage et discussions approfondies créent des opinions dirigées avec souvenirs, apprentissage Social et inspection. [Contrat](docs/development/social.md). Six traits, accueil et premier raid sont déjà jouables ; psychologie, équipements, production et environnement restent partiels. Prochaine priorité : filière utile et véritable déblocage de recherche. [Guide](docs/gameplay/player-guide.md), [état courant](docs/gameplay/implementation-status.md), [validation](docs/history/validation-social-v70.md).
 
 Jeu de colonie en 3D low poly pour navigateur, avec RimWorld de base comme référence fonctionnelle. G0 est en consolidation, G1/G2 sont partiels et G3 possède ses premières fondations humaines : récolte, transport, stockage, construction, minage avec fragments transportables, déconstruction et déplacement du mobilier d’un camp, repas et sommeil physiques, culture de riz, feu ravitaillé et cuisine sur factures. Le [bilan fonctionnel](docs/gameplay/implementation-status.md) distingue les systèmes présents, partiels et absents.

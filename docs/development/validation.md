@@ -1,4 +1,7 @@
-# Validation courante — V70
+# Validation courante — V71
+
+V71 — [preuves de la culture textile](../history/validation-textile-v71.md). Confection/recherche non livrées ; distinguer le scénario naturel de dix-huit jours et plus des fixtures de maturité UI et de charge.
+
 
 V70 — premières interactions et opinions : [preuves et limites](../history/validation-social-v70.md).
 

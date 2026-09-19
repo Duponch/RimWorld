@@ -2,7 +2,7 @@ import { furnitureDuration } from './furniture-rules.ts';
 import { constructionRecipe } from './construction-materials.ts';
 import { deconstructionDuration } from './deconstruction-rules.ts';
 import { footprintCells, JOB_DURATION, STRUCTURE_DEFINITIONS } from './definitions.ts';
-import { isPlant, plantGrowth, PLANT_DEFINITIONS, sowingTemperatureAllowed } from './plants.ts';
+import { isCrop, isPlant, plantGrowth, PLANT_DEFINITIONS, sowingTemperatureAllowed } from './plants.ts';
 import { TemperatureView, outdoorTemperature } from './temperature.ts';
 import { releaseWork, type DropPlan } from './work-release.ts';
 import type { GrowingZone, Job, JobKind, Resource, World } from './types.ts';
@@ -41,7 +41,7 @@ export function jobDuration(world: World, job: Job): number {
   if(job.kind==='repair')return job.repair?.warmed?20:80;
   if(job.kind==='deconstruct')return deconstructionDuration(job);
   if(job.material!==undefined)return constructionRecipe(job).work;
-  return (job.kind === 'harvest' || job.kind === 'cut') && resourceCells(world).get(index(world, job))?.kind === 'rice' ? 20 : JOB_DURATION[job.kind];
+  return (job.kind === 'harvest' || job.kind === 'cut') && isCrop(resourceCells(world).get(index(world, job))??{kind:'rock'}) ? 20 : JOB_DURATION[job.kind];
 }
 interface Context { resources: Map<number, Resource>; fixed: Set<number>; temperatures:TemperatureView }
 function context(world: World): Context {
@@ -131,5 +131,6 @@ export function scheduleGrowing(world: World): void {
   }
 }
 export function finishSowing(world: World, job: Job): void {
-  world.resources = [...world.resources, { id: world.nextId++, kind: 'rice', x: job.x, z: job.z, amount: PLANT_DEFINITIONS.rice.yield, growth: .0001, growthTick: world.tick }];
+  const kind=world.growingZones.find(z=>z.id===job.growingZoneId)!.plant;
+  world.resources = [...world.resources, { id: world.nextId++, kind, x: job.x, z: job.z, amount: PLANT_DEFINITIONS[kind].yield, growth: .0001, growthTick: world.tick }];
 }

@@ -4,8 +4,7 @@ import { plantGrowth } from '../sim/plants';
 import type { World } from '../sim/types';
 
 /** Dedicated resident instancing: sowing never rebuilds forest/rock geometry. */
-export class CropLayer {
-  readonly group = new THREE.Group();
+class CropBatch {
   private mesh: THREE.InstancedMesh;
   private readonly geometry: THREE.BufferGeometry;
   private readonly slots = new Map<number, number>();
@@ -15,8 +14,11 @@ export class CropLayer {
   private readonly color = new THREE.Color();
   private readonly green = new THREE.Color(0x80a24a);
   private readonly ripe = new THREE.Color(0xcfb665);
-  constructor(private readonly material: THREE.Material) {
-    const shoots = [-.22, 0, .22].map((x, i) => new THREE.ConeGeometry(.11, .8, 3).translate(x, .4, (i % 2) * .22 - .1));
+  constructor(private readonly group:THREE.Group,private readonly kind:'rice'|'cotton',private readonly material: THREE.Material) {
+    const shoots = [-.22, 0, .22].map((x, i) => kind==='rice'
+      ?new THREE.ConeGeometry(.11, .8, 3).translate(x, .4, (i % 2) * .22 - .1)
+      :new THREE.OctahedronGeometry(.22).scale(1,1.25,1).translate(x, .36+(i%2)*.15, (i%2)*.26-.13));
+    if(kind==='cotton')this.ripe.setHex(0xf0ead7);
     this.geometry = mergeGeometries(shoots)!;
     this.geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(this.geometry.getAttribute('position').count * 3).fill(1), 3));
     shoots.forEach(g => g.dispose());
@@ -27,9 +29,9 @@ export class CropLayer {
     // A runtime-sized storage array keeps the same shader when capacity grows.
     // Three's small uniform-matrix path otherwise specializes it to each size.
     mesh.instanceMatrix = new THREE.StorageInstancedBufferAttribute(capacity, 16);
-    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage); mesh.count = 0;
+    mesh.instanceMatrix.setUsage(THREE.StaticDrawUsage); mesh.count = 0;
     // Allocate colors before pipeline warmup, including maps with no crops yet.
-    mesh.setColorAt(0, this.green); mesh.receiveShadow = true;
+    mesh.setColorAt(0, this.green); mesh.instanceColor!.setUsage(THREE.StaticDrawUsage); mesh.receiveShadow = true;
     return mesh;
   }
   prepareForCompile(): () => void {
@@ -38,7 +40,7 @@ export class CropLayer {
   }
   update(world: World, reset: boolean): void {
     if (reset) { this.slots.clear(); this.free.length = 0; this.used = 0; this.mesh.count = 0; }
-    const crops = world.resources.filter(r => r.kind === 'rice'), alive = new Set(crops.map(r => r.id));
+    const crops = world.resources.filter(r => r.kind === this.kind), alive = new Set(crops.map(r => r.id));
     for (const [id, slot] of this.slots) if (!alive.has(id)) {
       this.transform.scale.setScalar(0); this.transform.updateMatrix(); this.mesh.setMatrixAt(slot, this.transform.matrix);
       this.slots.delete(id); this.free.push(slot);
@@ -72,4 +74,15 @@ export class CropLayer {
     this.mesh.computeBoundingSphere();
   }
   dispose(): void { this.mesh.dispose(); this.geometry.dispose(); }
+}
+
+/** One resident batch per shape, prewarmed even empty. CPU work only on snapshots;
+ * separate meshes preserve the rice geometry and its existing triangle count. */
+export class CropLayer {
+  readonly group=new THREE.Group();
+  private readonly batches:CropBatch[];
+  constructor(material:THREE.Material){this.batches=[new CropBatch(this.group,'rice',material),new CropBatch(this.group,'cotton',material)];}
+  prepareForCompile():()=>void {const restore=this.batches.map(b=>b.prepareForCompile());return()=>restore.forEach(f=>f());}
+  update(world:World,reset:boolean):void {for(const batch of this.batches)batch.update(world,reset);}
+  dispose():void {for(const batch of this.batches)batch.dispose();}
 }
