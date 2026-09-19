@@ -1,5 +1,7 @@
 # Inventaire, équipement et apparence des colons
 
+V63 : [vêtements physiques](armor.md), projection `character-apparel` partagée carte/portrait. L’attribut instancié `aEquipment` contient trois composantes sans nouveau buffer ; gilet dans le rig, chemise dans sa teinte, objets pliés dans les lots sol/cargaison existants. Habillage, retrait et destruction suivent le propriétaire présenté.
+
 V59 : frappe orientée vers la cible et étourdissement stationnaire dans les attributs du rig GPU existant. La frappe part du sous-tick confirmé, sur l’horloge commune ; un segment immobile gèle aussi le pas des jambes. Le corps, la cargaison, le blessé porté et l’anneau gardent la même trajectoire fractionnée. Pas de nouveau lot par personnage, pas de squelette CPU. [Contrat](melee.md).
 
 V56 ajoute orientation vers la cible, bras et arme levés dans le rig GPU existant, avec [projectiles instanciés](shooting.md) sur la même horloge. Les modèles restent procéduraux ; jauges, audio, effets et portraits 3D définitifs restent ouverts.
@@ -18,7 +20,7 @@ V47 réutilise la pose allongée pour le repos médical et le geste de travail o
 
 V46 ajoute une pose portée calculée en TSL : corps du patient, sa cargaison éventuelle et son anneau partagent les attributs de trajectoire du sauveteur. La principale est ajoutée V52 ; les amputations visuelles restent absentes ; [contrat](rescue.md).
 
-Décision du 13 septembre 2026, à la demande utilisateur. **Contrat cible, pas fonctionnalité livrée.** Le prototype possède une cargaison temporaire de travail/repas, éventuellement conservée après interruption V44, et une arme principale V52. Les portraits CSS ne représentent pas encore des vêtements réels.
+Décision du 13 septembre 2026, à la demande utilisateur. **Contrat cible, pas fonctionnalité livrée.** Le prototype possède une cargaison temporaire de travail/repas, éventuellement conservée après interruption V44, et une arme principale V52. V63 étend cette base aux vêtements réels dans les portraits CSS.
 
 ## Ce que prévoit le corpus
 
@@ -34,7 +36,7 @@ Un objet appartient à un seul lieu : sol, inventaire personnel, équipement, v�
 
 Équiper/enfiler exige accès et transfert, contrôle des incompatibilités, puis traitement explicite de l'ancienne arme ou des vêtements incompatibles. Annuler ou perdre la cible ne duplique ni ne supprime l'objet. Les vêtements couvrent des groupes anatomiques et occupent des couches ; plusieurs pièces compatibles peuvent coexister. Les politiques de tenue, l'usure, les matériaux et la qualité doivent agir sur leurs règles propres, pas seulement sur leur couleur.
 
-Le propriétaire d’arme est sauvegardé en V52 ; inventaire et vêtements exigeront une autre migration. L'onglet d'inspection distinguera inventaire, équipement, vêtements et cargaison. Un simple champ cosmétique ajouté au modèle ne constituera pas la livraison de l'inventaire.
+Le propriétaire d’arme est sauvegardé en V52 ; V63 ajoute les vêtements ; inventaire personnel exigera une autre migration. L'onglet d'inspection distinguera inventaire, équipement, vêtements et cargaison. Un simple champ cosmétique ajouté au modèle ne constituera pas la livraison de l'inventaire.
 
 ## Projection 3D et portraits
 
@@ -48,6 +50,6 @@ Les portraits utiliseront un atlas ou des rendus hors écran conservés, invalid
 
 G0 : prolonger le contrat de propriété avec l'inventaire ; G3 : équipement, anatomie, protections et représentation correspondante ; G5 : contenu et finitions. Cela reste dans le calendrier [ROADMAP](../ROADMAP.md).
 
-Enrichir les scénarios existants avec échange d'arme, vêtements compatibles/incompatibles, cible disparue, interruption, pleine capacité et reprise sauvegardée. Côté présentation, vérifier la même identité/tenue dans la carte et les portraits après changement puis chargement, y compris couvre-chef masquant les cheveux. Auditer un lot de changements simultanés sur une foule, en séparant projection CPU, uploads et rendu. Les validations d’arme seule sont exécutées en V52 ; celles des vêtements et portraits définitifs restent futures.
+Enrichir les scénarios existants avec échange d'arme, vêtements compatibles/incompatibles, cible disparue, interruption, pleine capacité et reprise sauvegardée. Côté présentation, vérifier la même identité/tenue dans la carte et les portraits après changement puis chargement, y compris couvre-chef masquant les cheveux. Auditer un lot de changements simultanés sur une foule, en séparant projection CPU, uploads et rendu. Les validations d’arme seule sont exécutées en V52 ; V63 ajoute celles des chemises/gilets ; portraits définitifs encore futurs.
 
 V60 : pendant la récupération d’un tir automatique, l’ordre peut déjà être retiré. Le rendu utilise alors la dernière cible réellement attaquée, persistée, pour restaurer l’orientation après chargement. Contrôle des attributs GPU dans le parcours natif ; aucun déplacement ou dégât déduit de cette orientation.

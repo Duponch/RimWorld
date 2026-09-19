@@ -1,6 +1,6 @@
 import { BODY_PARTS, HUMAN_BODY, bodyPartExists, type BodyGroup, type BodyPartId } from './body-definition.ts';
 
-/** Pure impact boundary, not an inventory or a claim that apparel is playable.
+/** Pure impact boundary; inventory and transactions belong to its World adapter.
  * Compile profiles once; pass actual instances in their stable wearing order.
  * Provenance and integration requirements: development/armor.md. */
 export const APPAREL_LAYERS = ['skin', 'middle', 'shell', 'belt', 'headgear', 'eyes'] as const;
@@ -69,7 +69,7 @@ function validateCoverage(c: ApparelCoverage): void {
  * piece destroyed by wear protects this impact using its captured rating. Apply
  * wear and anatomy together with the caller's local PRNG only after success.
  * Body armor is last. A zero rating still consumes its reference armor draw.
- * This module is not wired into World until physical apparel ownership exists. */
+ * The World adapter captures worn instances and commits the resulting wear. */
 export function resolveArmor(hit: ArmorHit, pieces: readonly ArmorPiece[], bodyArmor: ArmorRatings, random: () => number): ArmorResult {
   if (!hit || !finite(hit.amount) || !finite(hit.penetration) || !bodyPartExists(hit.part) || BODY_PARTS[hit.part].conceptual
     || hit.category !== null && !categories.includes(hit.category)) throw new RangeError('Invalid armor hit');

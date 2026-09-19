@@ -1,0 +1,22 @@
+{
+  "date": "2026-09-19T02:15:32.979Z",
+  "backend": "native WebGPU",
+  "evidence": [
+    {
+      "speed": 1,
+      "frames": 2366,
+      "dressing": 641,
+      "removal": 503,
+      "finalTick": 3118,
+      "errors": []
+    },
+    {
+      "speed": 6,
+      "frames": 731,
+      "dressing": 107,
+      "removal": 84,
+      "finalTick": 3140,
+      "errors": []
+    }
+  ]
+}

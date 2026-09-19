@@ -2,6 +2,7 @@ import { isColonist,activeThreat } from './sim/affiliation';
 import { ShootingControls } from './ui/shooting-controls';
 const shootingControls=new ShootingControls();
 import { createDraftControls,updateDraftControls,toggleDraft,draftLabel } from './ui/drafting-controls';
+import { apparelProjection,apparelAppearance } from './render/character-apparel';
 import { createEquipmentInspection,updateEquipmentInspection } from './ui/equipment-inspection';
 import { equipmentProjection,equipmentDescription } from './render/character-equipment';
 import { bedControls,updateBedControls } from './ui/bed-controls.ts';
@@ -186,7 +187,7 @@ function readStorageSettings(prefix: string) {
   const capacity = Number(el<HTMLInputElement>(`${prefix}-capacity`).value);
   if (!Number.isInteger(capacity) || capacity < 1 || capacity > MAX_STACK) throw new Error(`La capacité doit être un entier entre 1 et ${MAX_STACK}.`);
   return {
-    filters: { weapon:el<HTMLInputElement>(`${prefix}-weapon`).checked, medicine:el<HTMLInputElement>(`${prefix}-medicine`).checked, component: el<HTMLInputElement>(`${prefix}-component`).checked, blocks: el<HTMLInputElement>(`${prefix}-blocks`).checked, steel: el<HTMLInputElement>(`${prefix}-steel`).checked, chunk: el<HTMLInputElement>(`${prefix}-chunk`).checked, wood: el<HTMLInputElement>(`${prefix}-wood`).checked, food: el<HTMLInputElement>(`${prefix}-food`).checked, furniture: el<HTMLInputElement>(`${prefix}-furniture`).checked },
+    filters: { apparel:el<HTMLInputElement>(`${prefix}-apparel`).checked, weapon:el<HTMLInputElement>(`${prefix}-weapon`).checked, medicine:el<HTMLInputElement>(`${prefix}-medicine`).checked, component: el<HTMLInputElement>(`${prefix}-component`).checked, blocks: el<HTMLInputElement>(`${prefix}-blocks`).checked, steel: el<HTMLInputElement>(`${prefix}-steel`).checked, chunk: el<HTMLInputElement>(`${prefix}-chunk`).checked, wood: el<HTMLInputElement>(`${prefix}-wood`).checked, food: el<HTMLInputElement>(`${prefix}-food`).checked, furniture: el<HTMLInputElement>(`${prefix}-furniture`).checked },
     priority: Number(el<HTMLSelectElement>(`${prefix}-priority`).value), capacity,
   };
 }
@@ -224,6 +225,7 @@ function rebuildInspector() {
       el<HTMLInputElement>('selected-stockpile-food').checked = storage.filters.food;
       el<HTMLInputElement>('selected-stockpile-furniture').checked = storage.filters.furniture??false;
       el<HTMLInputElement>('selected-stockpile-blocks').checked = storage.filters.blocks??false;
+      el<HTMLInputElement>('selected-stockpile-apparel').checked=storage.filters.apparel??false;
       el<HTMLInputElement>('selected-stockpile-weapon').checked=storage.filters.weapon??false;
       el<HTMLInputElement>('selected-stockpile-medicine').checked=storage.filters.medicine??false;
       el<HTMLInputElement>('selected-stockpile-component').checked = storage.filters.component??false;
@@ -259,7 +261,7 @@ function actionLabel(pawn: Pawn) {
   if(!isColonist(pawn)&&activeThreat(pawn))return pawn.shooting?.stance?.phase==='aim'?'Hors-la-loi · vise':pawn.shooting?'Hors-la-loi · récupération après tir':'Hors-la-loi · surveille les alentours';
   if(pawn.draft)return draftLabel(pawn);
   if(pawn.shooting)return pawn.shooting.stance?.phase==='cooldown'?'Récupération après tir':pawn.shooting.stance?.phase==='aim'?'Riposte · vise':'Riposte · rejoint sa position';
-  if(pawn.equipmentTask)return pawn.equipmentTask.action==='equip'?'Va équiper son arme':'Dépose son arme';
+  if(pawn.equipmentTask)return ({equip:'Va équiper son arme',drop:'Dépose son arme',wear:pawn.state==='working'?'Enfile un vêtement':'Va chercher un vêtement',remove:'Retire un vêtement'})[pawn.equipmentTask.action];
   if(pawn.feed||pawn.tend||pawn.state==='resting'||pawn.rescue||carrierOf(snapshot!,pawn.id))return queryPawnStatus(snapshot!,pawn).reason;
   if(pawn.state==='downed'||pawn.state==='dead')return stateLabels[pawn.state];
   if(pawn.interruptedCargo)return pawn.state==='sleeping'?'Se repose · cargaison à déposer':'Cargaison à déposer · sol proche encombré';
@@ -279,7 +281,7 @@ function rebuildPawns(world: World) {
   el('colonists').replaceChildren(...world.pawns.filter(isColonist).map((pawn, index) => {
     const button = document.createElement('button');
     button.className = 'colonist'; button.dataset.pawn = String(pawn.id);
-    button.innerHTML = `<span class="portrait portrait-${index % 3}"><span class="portrait-head"></span><span class="portrait-body"></span><span class="pawn-symbol"></span></span><strong></strong><span class="pawn-mood"><i></i></span>`;
+    button.innerHTML = `<span class="portrait portrait-${index % 3}"><span class="portrait-head"></span><span class="portrait-body"></span><span class="portrait-vest"></span><span class="pawn-symbol"></span></span><strong></strong><span class="pawn-mood"><i></i></span>`;
     button.onclick = event => selectPawns({ids:[pawn.id],additive:event.shiftKey,toggle:event.shiftKey},!event.shiftKey);
     return button;
   }));
@@ -322,12 +324,15 @@ function renderState() {
   }
   const signature = JSON.stringify(world.pawns.filter(isColonist).map(pawn => [pawn.id, pawn.name]));
   if (signature !== pawnSignature) { pawnSignature = signature; rebuildPawns(world); }
-  const equipment=equipmentProjection(world);
+  const equipment=equipmentProjection(world),apparel=apparelProjection(world);
   for (const pawn of world.pawns.filter(isColonist)) {
     const button = document.querySelector<HTMLButtonElement>(`[data-pawn="${pawn.id}"]`)!;
     button.classList.toggle('selected', selection.ids.has(pawn.id));button.dataset.drafted=String(!!pawn.draft);
     button.setAttribute('aria-pressed', String(selection.ids.has(pawn.id)));
     button.querySelector('strong')!.textContent = pawn.name; button.title = `${pawn.name} · ${actionLabel(pawn)} · ${equipmentDescription(equipment.get(pawn.id),pawn)}`;button.dataset.equipment=equipment.get(pawn.id)?.item??'';
+    const look=apparelAppearance(apparel.get(pawn.id));button.dataset.apparel=look.signature;button.title+=` · ${look.description}`;
+    (button.querySelector('.portrait-body') as HTMLElement).style.background=look.color!==undefined?`#${look.color.toString(16)}`:'';
+    (button.querySelector('.portrait-vest') as HTMLElement).hidden=!look.vest;
     button.querySelector('.pawn-symbol')!.textContent = pawn.state==='dead'?'†':pawn.state==='downed'?'!':pawn.state === 'sleeping' ? 'Z' : pawn.state === 'hungry' ? '!' : '';
     (button.querySelector('i') as HTMLElement).style.width = `${pawn.state==='dead'?0:pawn.mood}%`;
     const row = document.querySelector<HTMLElement>(`[data-worker="${pawn.id}"]`)!;
@@ -377,8 +382,8 @@ function renderState() {
       if (building && building.kind !== 'campfire' && building.kind !== 'passive-cooler') el('cell-title').textContent += ` · ${ITEM_DEFINITIONS[building.material ?? 'wood'].label}${building.material === undefined ? ' (ancien)' : ''}`;
       const rock = rockInspection(world.tiles[z * world.width + x]!, resource);
       if (!packed && !structure && rock) { el('cell-title').textContent = rock.title; el('cell-description').textContent = `Case ${x}, ${z} · ${rock.description}`; }
-      const weapon=piles.find(p=>p.kind==='weapon'),permission=el<HTMLButtonElement>('weapon-permission');permission.hidden=!weapon;
-      if(weapon){permission.textContent=weapon.weapon?.forbidden?'Autoriser cette arme':'Interdire cette arme';permission.onclick=()=>void attempt(()=>client.command({type:'weapon-permission',itemId:weapon.id,allowed:!!weapon.weapon?.forbidden}));}
+      const weapon=piles.find(p=>p.kind==='weapon'||p.kind==='apparel'),permission=el<HTMLButtonElement>('weapon-permission');permission.hidden=!weapon;
+      if(weapon){const forbidden=!!(weapon.weapon??weapon.apparel)?.forbidden;permission.textContent=forbidden?'Autoriser cet objet':'Interdire cet objet';permission.onclick=()=>void attempt(()=>client.command({type:weapon.kind==='apparel'?'apparel-permission':'weapon-permission',itemId:weapon.id,allowed:forbidden}));}
       el('cell-materials').textContent = piles.length ? `Au sol : ${piles.map(pile => `${pile.quantity} ${ITEM_DEFINITIONS[pile.item].label}${pile.kind==='food'?` · ${foodFreshnessLabel(pile,world.tick)}`:''}`).join(' · ')}` : '';
       el('cell-job').textContent = job ? `${job.construction==='blueprint'?'Plan · ':job.construction==='frame'?'Cadre · ':''}${jobLabels[job.kind]} · ${queryJobStatus(world, job).reason ?? 'En cours'}${constructionDeliveryLabel(world,job) ? ` · Livré : ${constructionDeliveryLabel(world,job)}` : ''}` : 'Aucun ordre sur cette case.';
       if(structure?.kind==='bed')el('cell-description').textContent += ` · Efficacité du repos : ${structure.material?.endsWith('-blocks')?90:100} %`;

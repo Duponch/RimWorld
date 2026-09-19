@@ -1,3 +1,4 @@
+import { SCHEMA_VERSION } from '../src/sim/types';
 import { expect,test } from 'vitest';
 import { stepWorld,applyCommand,serializeWorld,deserializeWorld,validateWorld } from '../src/sim/index';
 import { disturbanceEvents } from '../src/sim/disturbance';
@@ -81,7 +82,7 @@ test('downed patients never stand from noise or hits; harm wakes only sleeping N
   expect(npc.need).toBeNull();expect(colonist.state).toBe('sleeping');expect(downed.state).toBe('downed');expect(downed.need).toEqual(before);
   disturbanceEvents(w).impact(downed,w.tick*10);expect(downed.state).toBe('downed');expect(downed.need).toEqual(before);resume(w,10);
   const old=medicalCamp(),saved=JSON.parse(serializeWorld(old));saved.schemaVersion=61;
-  const loaded=deserializeWorld(JSON.stringify(saved));expect(loaded.schemaVersion).toBe(62);expect(loaded.pawns[0].disturbance).toBeUndefined();
+  const loaded=deserializeWorld(JSON.stringify(saved));expect(loaded.schemaVersion).toBe(SCHEMA_VERSION);expect(loaded.pawns[0].disturbance).toBeUndefined();
   saved.pawns[0].disturbance={sleepUntilCore:0,lieUntilCore:0};expect(()=>deserializeWorld(JSON.stringify(saved))).toThrow('version 61');
   for(const value of [[],{},null,{sleepUntilCore:-1,lieUntilCore:0},{sleepUntilCore:0,lieUntilCore:old.tick*10+401},{sleepUntilCore:0,lieUntilCore:0,extra:true}]){
     const bad=JSON.parse(serializeWorld(old));bad.pawns[0].disturbance=value;expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();

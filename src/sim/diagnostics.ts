@@ -34,7 +34,7 @@ export function queryJobStatus(world: World, job: Job): JobDiagnostic {
 export function queryPawnStatus(world: World, pawn: Pawn): { code: string; reason: string } {
   if(pawn.shooting)return {code:'shooting',reason:pawn.shooting.stance?.phase==='cooldown'?'Récupère après son tir.':pawn.shooting.order?.auto?.kind==='response'?'Riposte civile à une menace proche.':'Vise une cible depuis sa position.'};
   if(pawn.melee)return {code:'melee',reason:pawn.melee.strike?'Récupère après sa frappe.':'Rejoint ou frappe sa cible au contact.'};
-  if(pawn.equipmentTask)return {code:'equipment',reason:pawn.equipmentTask.action==='equip'?'Rejoint son arme avant de l’équiper.':'Dépose son arme au sol.'};
+  if(pawn.equipmentTask)return {code:'equipment',reason:({equip:'Rejoint son arme avant de l’équiper.',drop:'Dépose son arme au sol.',wear:pawn.state==='working'?'Enfile son vêtement.':'Rejoint le vêtement au sol.',remove:'Retire son vêtement avant de le déposer.'})[pawn.equipmentTask.action]};
   const carrier=carrierOf(world,pawn.id);
   if(carrier)return {code:'carried-patient',reason:`Transporté par ${carrier.name} vers un lit.`};
   if(pawn.feed)return {code:'feed',reason:`${pawn.feed.phase==='pickup'?'Prélève une portion pour':pawn.feed.phase==='deliver'?'Apporte une portion à':'Nourrit'} ${world.pawns.find(p=>p.id===pawn.feed!.patientId)?.name??'un patient'}.`};

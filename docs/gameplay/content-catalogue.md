@@ -1,6 +1,6 @@
 # Catalogue de contenu : couverture connue
 
-Préparation de l’habillement sous V62 : le [noyau d’armure](../development/armor.md) ne crée aucun ItemId. Chemise et gilet sont des contenus envisagés dans la recherche, pas des objets définis ou obtenables.
+V63 ajoute deux instances obtenables : **cloth-shirt**, chemise en tissu (100 PV, peau) ; **flak-vest**, gilet pare-balles (200 PV, intermédiaire). Trois chemises et un gilet normaux au sol dans un nouveau départ ; couches, manipulation et armure actifs, fabrication et autres qualités non obtenables. [Contrat et limites](../development/armor.md).
 
 V62 ajoute les **réactions aux impacts** au contenu humain existant ; aucun nouvel objet, arme, vêtement, type de bruit audible ou faction. [Contrat](../development/disturbance.md).
 V61 change le **mandat du combattant des nouvelles rencontres** : approche, poste de tir et mêlée sans arme. Aucun nouvel ItemId, raid, armure ou faction. Le profil historique de sentinelle est préservé au chargement. [Contrat](../development/pursuit.md).
@@ -88,7 +88,7 @@ Le contenu restant comprend notamment métaux et pierres, composants avancés et
 
 Chaque ajout doit avoir un identifiant stable, famille CAT, source/version et champs confirmés, règles réellement disponibles, variantes encore absentes, référence de test et représentation. Les noms traduits ne servent jamais d'identifiants de sauvegarde.
 
-L'inventaire des personnes, leurs vêtements et les portraits ont un [contrat distinct](../development/character-presentation.md), partiellement livré pour la principale V52 ; inventaire personnel, vêtements et portraits habillés restent prévus.
+L'inventaire des personnes, leurs vêtements et les portraits ont un [contrat distinct](../development/character-presentation.md), partiellement livré pour la principale V52 puis chemise/gilet V63 ; inventaire personnel, autres vêtements et portraits définitifs restent prévus.
 
 
 V9 enrichit les interactions des objets existants : bois et aliments peuvent être déplacés hors des cultures ; baies, riz et rations ont un classement alimentaire neutre vérifié. Aucun nouvel objet ni fragment de roche collectable n’est ajouté par cette tranche. Voir [sources et limites](../research/food-clearing-reference.md).

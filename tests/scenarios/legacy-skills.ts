@@ -48,5 +48,5 @@ export function withMigratedShootingSkills<T>(world:T):T {
 
 function withoutMedicineItems(world:unknown):void {
   const w=world as {piles?:{kind:string}[]};
-  if(w.piles)w.piles=w.piles.filter(p=>p.kind!=='medicine'&&p.kind!=='weapon');
+  if(w.piles)w.piles=w.piles.filter(p=>p.kind!=='medicine'&&p.kind!=='weapon'&&p.kind!=='apparel');
 }

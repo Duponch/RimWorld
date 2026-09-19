@@ -1,5 +1,9 @@
 # Stratégie de validation
 
+V63 enrichit les frontières d’équipement/impact avec six scénarios profonds : habillage sauvegardé, couches/remplacement interrompu, sol saturé/incapacité, migration stricte, protection balistique/couverture exacte et mêlée/toit. UI 1×/6× vérifie ownership, phases et attributs GPU/portrait sur la même scène. Le pilote de camp équipe ses colons par commandes et exige quatre vêtements conservés. Les bancs mixtes existants acceptent `APPAREL=1` (chemises de tous les acteurs, gilet d’un acteur sur deux) ; source gelée pendant mesure, résultats séparés du pilote long. Les contrôles d’armure isolés ne remplacent pas ces parcours.
+
+Les entrées de versions antérieures ci-dessous conservent les contrats et contextes de leurs validations.
+
 Protection isolée sous V62 : `tests/armor.test.ts` regroupe couverture/compatibilité, seuils/distribution, ordre/usure/conversion, arrondis et corruption. Aucun parcours UI n’est exigé avant présence d’un consommateur ; son intégration physique déclenchera les scénarios et audits décrits dans [le contrat](armor.md).
 
 V62 : six scénarios profonds de réveil, vrais producteurs projectile/mêlée, acoustique/portes/audition, médical/ordres/cargo et migrations. L’UI observe le passage de la pose endormie à la sortie physique du lit à 1×/6×. Le compagnon de rencontre sait mobiliser une réserve endormie avant secours et médicaments sur une journée. Audit mixte commun 3/30/100 ; [preuves](../history/validation-disturbance-v62.md).
@@ -275,3 +279,9 @@ Le diagnostic `HARVEST_TRACE=1` du banc de récolte horodate séparément public
 ## Conditions matérielles concurrentes
 
 Avant de conclure à une régression de performance, relever les programmes lourds concurrents avec une courte mesure d’activité, sans les arrêter. Si la machine est occupée, conserver les mesures comme telles et distinguer le contrat fonctionnel, l’échec de garde et l’attribution de la cause. Ne pas assouplir le tampon ni les seuils pour obtenir une passe verte. V56 conserve les premières attentes de minage et le succès séparé d’abattage ; la reprise V56 sans autre jeu 3D passe sur minage/abattage ; les résultats précédents restent conservés et ne sont pas attribués rétrospectivement à une cause unique.
+
+
+
+
+
+Reprise ciblée d’une maintenance réelle : `COLONY_MAINTENANCE_CHECKPOINT=chemin` puis Playwright `colony-journey.spec.ts --grep "checkpoint maintenance"`. Charge une sauvegarde enregistrée par la vraie UI et réutilise la phase de maintenance du pilote complet. Les stocks/travaux doivent finir après sommeil normal dans le même budget, sans injection ; ce succès ne vaut pas une passe globale du parcours. V63 déplace la vérification du rangement de l’acier à cette phase, en conservant quantité totale à minuit et rangement final obligatoire.

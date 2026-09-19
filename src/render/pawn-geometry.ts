@@ -3,6 +3,8 @@ import { PAWN_MODEL_SCALE } from '../world/scale';
 import { ITEM_DEFINITIONS } from '../sim/items';
 import { CHUNK_ITEMS } from './chunk-presentation';
 import { BLOCK_ITEMS } from './block-presentation';
+import { foldedApparel } from './character-apparel';
+import { APPAREL } from '../sim/apparel-rules';
 import { REVOLVER_PARTS } from './weapon-shape';
 
 /** Eight rigid bones, authored entirely in code. Each vertex has one bone influence.
@@ -38,11 +40,13 @@ export function pawnGeometry(): THREE.InstancedBufferGeometry {
     addPart([0.145, 0.12, 0.23], [side * 0.105, 0.11, 0.03], calf, [side * 0.105, 0.61, 0], 0x443e37);
     addPart([0.035, 0.035, 0.014], [side * 0.07, 1.2, 0.157], 1, [0, 1.04, 0], 0x433e39);
   }
+  addPart([.37,.34,.26],[0,.85,0],0,[0,.61,0],APPAREL['flak-vest'].color,-2);
+  addPart([.12,.18,.025],[0,.86,.145],0,[0,.61,0],0x404c44,-2);
   for(const part of REVOLVER_PARTS)addPart(part.size.map(n=>n/PAWN_MODEL_SCALE),
     [.205+part.center[2]/PAWN_MODEL_SCALE,.68+part.center[0]/PAWN_MODEL_SCALE,part.center[1]/PAWN_MODEL_SCALE],0,[0,.61,0],part.color,-1);
   const geometry = new THREE.InstancedBufferGeometry();
   // WebGPU guarantees only eight vertex-buffer slots. Keeping authored attributes
-  // interleaved leaves room for the five independent per-instance attributes.
+  // interleaved leaves room for the seven independent per-instance attributes.
   const vertexData = new Float32Array(bones.length * 14);
   for (let i = 0; i < bones.length; i++) {
     vertexData.set(positions.slice(i * 3, i * 3 + 3), i * 14);
@@ -96,6 +100,7 @@ export function cargoGeometry(): THREE.InstancedBufferGeometry {
   part([.2,.07,.26],[0,.16,0],17,0x637d77);
   (['herbal-medicine','medicine','glitterworld-medicine'] as const).forEach((item,i)=>{part([.38,.25,.3],[0,0,0],18+i,ITEM_DEFINITIONS[item].color);part([.2,.03,.065],[0,.14,0],18+i,0xf0eee0);part([.065,.03,.2],[0,.14,0],18+i,0xf0eee0);});
   for(const p of REVOLVER_PARTS)part([...p.size],[...p.center],21,p.color);
+  (['cloth-shirt','flak-vest'] as const).forEach((item,i)=>{for(const p of foldedApparel(item))part(p.size,p.center,22+i,p.color);});
   BLOCK_ITEMS.forEach((item,i)=>{part([.27,.17,.36],[-.145,0,0],12+i,ITEM_DEFINITIONS[item].color);part([.27,.17,.36],[.145,0,0],12+i,ITEM_DEFINITIONS[item].color);});
   CHUNK_ITEMS.forEach((item,i)=>{part([.52,.34,.42],[0,0,0],5+i,ITEM_DEFINITIONS[item].color);part([.22,.2,.27],[.18,-.05,-.12],5+i,ITEM_DEFINITIONS[item].color);});
   const vertices = new THREE.InterleavedBuffer(new Float32Array(data), 10);

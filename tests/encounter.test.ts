@@ -1,3 +1,4 @@
+import { SCHEMA_VERSION } from '../src/sim/types';
 import { newTactics } from '../src/sim/tactics-state';
 import { encounterDecisions } from './scenarios/colony-player';
 import type { Command } from '../src/sim/types';
@@ -100,7 +101,7 @@ test('one collision contract for queries and following: enemies, moving endpoint
 
 test('new encounter is reproducible, opt-in and separated from strict V57 migration',()=>{
   const w=createWorld(42,64,64),same=createWorld(42,64,64);setupEncounter(w);setupEncounter(same);expect(w).toEqual(same);expect(validateWorld(w)).toEqual([]);expect(w.pawns.filter(isColonist)).toHaveLength(3);
-  const legacy=structuredClone(createWorld()) as any;legacy.schemaVersion=57;const skills=legacy.pawns.map((p:any)=>structuredClone(p.skills));for(const p of legacy.pawns)delete p.skills.melee;const migrated=deserializeWorld(JSON.stringify(legacy));expect(migrated).toEqual({...legacy,schemaVersion:62,pawns:legacy.pawns.map((p:any,i:number)=>({...p,skills:skills[i]}))});
+  const legacy=structuredClone(createWorld()) as any;legacy.schemaVersion=57;legacy.piles=legacy.piles.filter((p:any)=>p.kind!=='apparel');const skills=legacy.pawns.map((p:any)=>structuredClone(p.skills));for(const p of legacy.pawns)delete p.skills.melee;const migrated=deserializeWorld(JSON.stringify(legacy));expect(migrated).toEqual({...legacy,schemaVersion:SCHEMA_VERSION,pawns:legacy.pawns.map((p:any,i:number)=>({...p,skills:skills[i]}))});
   legacy.pawns[0].faction='outlaws';expect(()=>deserializeWorld(JSON.stringify(legacy))).toThrow(/version 57/);
   for(const bad of [null,{}, {target:{x:1,z:1},until:-1},{target:{x:1,z:1},until:w.tick+999}]){const invalid=structuredClone(w);(invalid.pawns[0] as any).flee=bad;expect(validateWorld(invalid).length).toBeGreaterThan(0);}
 });

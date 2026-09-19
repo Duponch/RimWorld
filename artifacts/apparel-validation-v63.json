@@ -1,0 +1,36 @@
+{
+  "date": "2026-09-19",
+  "schema": 63,
+  "global": {
+    "passed": 294,
+    "total": 303,
+    "failures": "Historical test fixtures: current-version constants and later apparel injected into old schemas. Production validation unchanged."
+  },
+  "fixtureRecheck": {
+    "passed": 46,
+    "total": 46
+  },
+  "finalFocused": {
+    "passed": 38,
+    "total": 38
+  },
+  "build": "TypeScript and Vite pass; existing >500kB chunk warning",
+  "uiApparel": {
+    "speeds": [
+      1,
+      6
+    ],
+    "seconds": 33.4,
+    "errors": []
+  },
+  "coreColony": "Three seeds, three in-game days, passed within global run",
+  "uiColony": "Three-day pass reached tick 18078, failed midnight storage timing; exact checkpoint recovered via real UI to tick 21092. Not a full rerun.",
+  "nativeLoad": "3/30/100; artifacts/shooting-native-v63.json",
+  "presentationGuard": "2 x 45s; no starvation/jump/premature removals; 44 controls <=15.4ms",
+  "docs": "226 documents, 2426 local links, originals byte-identical",
+  "limits": [
+    "No claim of complete coverage or full RimWorld parity",
+    "100 actors exceed 6x simulation tick budget",
+    "Automatic outfits, textiles, daily deterioration, full apparel content and personal inventory absent"
+  ]
+}

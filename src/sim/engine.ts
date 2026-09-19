@@ -199,7 +199,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   if(command.type==='draft'||command.type==='draft-move'||command.type==='draft-stop'||command.type==='fire-at-will')return applyDraftCommand(world,command);
   if(typeof command.type==='string'&&command.type.startsWith('order-')&&'pawnId' in command&&world.pawns.find(p=>p.id===command.pawnId)?.draft)return refusal('invalid-command','Démobilisez ce colon avant un ordre civil.');
   if(command.type==='clear-orders'&&world.pawns.find(p=>p.id===command.pawnId)?.draft)return applyDraftCommand(world,{type:'draft-stop',pawnIds:[command.pawnId]});
-  if(command.type==='order-equipment'||command.type==='weapon-permission'||command.type==='forget-weapon')return applyEquipment(world,command);
+  if(command.type==='order-equipment'||command.type==='weapon-permission'||command.type==='apparel-permission'||command.type==='forget-weapon')return applyEquipment(world,command);
   if(command.type==='order-feed')return applyFeeding(world,command);
   if(command.type==='order-tend')return applyTending(world,command);
   if(command.type==='self-tend-policy'){

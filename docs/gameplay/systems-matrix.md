@@ -1,5 +1,7 @@
 # Matrice des systèmes et critères de réalisation
 
+V63 : SYS/TEST-055, UI-014/015, CAT-034..037 et GAP-007 partiellement servis par chemise/gilet physiques, protection anatomique et apparence partagée. Tenues automatiques, inventaire, textiles et catalogue complet restent ouverts ; aucun jalon clos. [Contrat](../development/armor.md).
+
 V60 : acquisition automatique à l’arrêt, réaction civile Attaquer et priorité des ordres enrichissent S02/S15. Ces sous-parties ne clôturent ni Combat ni G3 ; [contrat](../development/automatic-combat.md), [inventaire courant](implementation-status.md).
 
 V59 : sous-parties Combat/Santé/Compétences/Navigation utilisées par la mêlée actuelle, avec ordre réel, contact, outils, XP, lésions et sauvegarde. Aucun SYS complet ni jalon fermé ; [état consolidé](implementation-status.md) et [contrat](../development/melee.md). Les bilans numérotés ci-dessous sont historiques.

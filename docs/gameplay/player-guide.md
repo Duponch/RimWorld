@@ -2,6 +2,14 @@
 
 Habillement : encore indisponible. Les couleurs actuelles des personnages ne procurent aucune protection ; le calcul d’armure en préparation ne change pas les combats de cette version.
 
+## Habiller et protéger un colon (V63)
+
+Une nouvelle colonie reçoit trois chemises en tissu et un gilet pare-balles au sol. Sélectionnez un colon, puis clic droit sur le vêtement et **Porter**. Il rejoint l’objet et prend le temps de l’enfiler ; la chemise et le gilet peuvent se superposer. Une ancienne pièce incompatible est déposée pendant l’attente. Dans l’inspection **Équipement**, **Retirer** lance aussi une action temporisée ; le vêtement déposé est interdit jusqu’à autorisation.
+
+Le gilet protège le torse/cou, pas les épaules ni les bras ; il ralentit légèrement la marche. La chemise couvre davantage de parties mais protège peu. Un impact peut être dévié, atténué ou traverser ; il use les pièces touchées, jusqu’à destruction. La tenue est visible sur le corps et le portrait. Le filtre **Vêtements** des réserves autorise leur transport. Les anciennes sauvegardes ne reçoivent pas de fournitures supplémentaires.
+
+Fabrication, tenues automatiques, isolation de santé, usure quotidienne et autres vêtements sont encore absents. [Détails et limites](../development/armor.md).
+
 ## Dormir sous le feu (V62)
 
 Un impact proche peut réveiller un dormeur, même si la balle manque. L’audition et les murs/portes fermées comptent ; une porte ouverte laisse passer le signal. Le colon réagit ensuite selon **Fuir / Attaquer / Ignorer**, si une menace est visible à sa portée de réaction. Sa sortie du lit reste physique.
@@ -50,7 +58,7 @@ Les nouvelles cartes possèdent un revolver près des réserves initiales. Séle
 
 Une chute hors lit, la perte de manipulation ou le décès fait tomber l'arme. Une chute dans un lit déjà utilisé la conserve. Si le sol est saturé, le colon garde l'arme désactivée jusqu'à un dépôt possible. Après rétablissement, il peut rejoindre sa propre arme mémorisée ; le bouton **Ne pas récupérer l'arme perdue** annule cette intention. Cette récupération attend les besoins et travaux engagés et ignore l'interdiction de sa propre arme.
 
-Le revolver permet désormais le tir dirigé décrit plus haut, avec blessures et prise en charge médicale. La file d'équipement, les autres armes, vêtements et inventaires personnels restent à venir ; la cargaison de travail n'est pas un inventaire. L'arme procédurale est portée à la hanche puis levée vers la cible ; les modèles restent provisoires.
+Le revolver permet désormais le tir dirigé décrit plus haut, avec blessures et prise en charge médicale. La file d'équipement, les autres armes et inventaires personnels restent à venir ; vêtements V63 décrits plus haut ; la cargaison de travail n'est pas un inventaire. L'arme procédurale est portée à la hanche puis levée vers la cible ; les modèles restent provisoires.
 
 
 **Médicaments :** les nouvelles colonies disposent de trente doses industrielles. Dans Santé, choisissez le plafond du patient : aucun soin, à sec, plantes, industriel ou meilleur disponible. Le médecin rejoint une pile autorisée, prélève, porte puis travaille ; une dose peut traiter plusieurs plaies. Sans produit accessible, il soigne à sec si autorisé. Activez **Médicaments** dans une réserve pour les ranger. Les anciens sites ne reçoivent pas de stock au chargement. Culture et fabrication médicales restent absentes. [Règles et limites](../development/medicines.md).
@@ -274,7 +282,7 @@ Pas encore d'autres cultures, autres postes/recettes de cuisine, chaîne du froi
 
 La suite est suivie dans [le plan de développement](../ROADMAP.md). Les détails de la référence et les futures interactions sont dans [la matrice des systèmes](systems-matrix.md).
 
-Les équipements, vêtements et portraits associés restent prévus. Les modèles sont provisoires ; les sols, roches, plantes et biomes génériques ne constituent pas un catalogue complet. Consultez l’[inventaire des systèmes](implementation-status.md), le [catalogue](content-catalogue.md) et les [écarts assumés](decisions.md).
+Revolver, chemise et gilet ont une première présentation partagée carte/portrait ; le reste du catalogue et les portraits définitifs restent prévus. Les modèles sont provisoires ; les sols, roches, plantes et biomes génériques ne constituent pas un catalogue complet. Consultez l’[inventaire des systèmes](implementation-status.md), le [catalogue](content-catalogue.md) et les [écarts assumés](decisions.md).
 
 ## Prendre le temps de se divertir
 

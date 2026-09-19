@@ -213,5 +213,7 @@ export function generateWorld(seed: number, width: number, height: number): Worl
   addGroundMaterial(world, 'food', 18, { x: cx + 1, z: cz + 1 }, 'survival-meal');
   addGroundMaterial(world,'medicine',30,{x:cx+2,z:cz+1},'medicine');
   addGroundMaterial(world,'weapon',1,{x:cx+3,z:cz+1},'revolver');
+  addGroundMaterial(world,'apparel',3,{x:cx-2,z:cz+2},'cloth-shirt');
+  addGroundMaterial(world,'apparel',1,{x:cx+2,z:cz+2},'flak-vest');
   return world;
 }

@@ -4,6 +4,8 @@ V61 autorise l’approche en mêlée du NPC muni du [mandat tactique](pursuit.md
 
 [Recherche et incertitudes](../research/melee-reference.md). Le joueur mobilise un ou plusieurs colons, choisit **Attaquer au corps à corps**, puis clique un personnage. L'ordre est atomique pour le groupe : places accessibles distinctes avant acceptation, trajet réel puis frappe. Il peut viser un allié explicitement ; la sélection ordinaire n'attaque jamais.
 
+V63 applique la protection à la partie exacte avant les effets du worker : Poke choisit son organe avant armure ; une morsure atténuée devient contondante sans relancer Blunt. Usure et anatomie partagent la transaction. [Contrat](armor.md).
+
 ## Simulation
 
 `melee-space` définit le contact et les places ; `melee-statistics` les outils, le toucher et l'esquive ; `melee-impact` les lésions résolues ; `melee` orchestre approche, sous-pas, expérience et fin d'engagement. Le contrôleur de combat partage l'horloge Core des projectiles et renouvelle ses captures après un impact de mêlée. Aucun DOM, Three, horloge réelle ou tirage caché.
@@ -28,4 +30,4 @@ Une place de combat est distincte des réservations civiles ; les combattants de
 
 ## Limites
 
-Tir automatique des colons mobilisés, réaction civile Attaquer, poursuite autonome/positions tactiques, terrains offensifs, armures/vêtements, autres armes, attaque d'objets, infections, prisonniers et raids restent ouverts. La mêlée est utilisable avec le contenu actuel ; cela ne termine ni Combat ni G3.
+V60 livre tir automatique et réaction Attaquer ; V61 poursuite visible et postes de tir ; V63 chemise/gilet protecteurs. Restent terrains offensifs, autres armures/vêtements et armes, attaque d’objets, infections, prisonniers et raids. La mêlée est utilisable avec le contenu actuel ; cela ne termine ni Combat ni G3.

@@ -1,11 +1,11 @@
 import { BODY_COVERAGE,BODY_INDEX,BODY_PARTS,HUMAN_BODY,bodyPartExists,type BodyPart,type BodyPartId } from './body-definition.ts';
-import { HP_UNIT } from './injury-rules.ts';
+import type { ImpactProtection } from './apparel-protection.ts';
+import { HP_UNIT,PART_INJURY_RULES } from './injury-rules.ts';
 import { addResolvedInjuryBatch,partMissing,remainingPartHealth,type ResolvedInjury } from './injury-state.ts';
 import type { MedicalRandom,MedicalRecord } from './injury-types.ts';
 
-/** Natural adult, no apparel/implant armor, neutral incoming damage, ordinary
- * Core instant-kill setting (100%). This boundary must change before protection
- * content or difficulty overrides arrive; it is not a generic armor resolver. */
+/** Natural adult hit input. Optional protection resolves once after exact part
+ * selection; ordinary Core instant-kill setting, no implants/difficulty overrides. */
 export interface UnarmoredBullet {
   /** Damage in HP from the projectile, not milli-HP or a pawn's global health. */
   damage:number;
@@ -44,25 +44,28 @@ export function selectBulletPart(record:MedicalRecord,random:MedicalRandom,heigh
 
 /** Owned copy plus explicit draw source: no World, clock, render or hidden RNG.
  * Resolve first, then commit the returned record and caller PRNG together. */
-export function resolveUnarmoredBullet(record:MedicalRecord,hit:UnarmoredBullet,random:MedicalRandom):BulletImpactResult {
+export function resolveUnarmoredBullet(record:MedicalRecord,hit:UnarmoredBullet,random:MedicalRandom,protect?:ImpactProtection):BulletImpactResult {
   validateUnarmoredBullet(hit);
   const next:MedicalRecord={...record,injuries:record.injuries.map(i=>({...i,...(i.scar?{scar:{...i.scar}}:{})})),missing:record.missing.map(m=>({...m})),...(record.death?{death:{...record.death}}:{})};
   const result:BulletImpactResult={record:next,selected:null,preserved:false,layers:[]};
   if(record.death||!hit.damage||hit.part&&partMissing(record,hit.part))return result;
   const part=hit.part??selectBulletPart(next,random,hit.height,hit.depth);result.selected=part;
   if(!part)return result;
-  let severity=hit.damage*HP_UNIT;
+  const guarded=protect?.(part,hit.damage),damage=guarded?.amount??hit.damage;
+  if(!damage)return result;
+  const kind=(id:BodyPartId)=>!guarded?.converted?'gunshot' as const:PART_INJURY_RULES[id].solid?'crack' as const:PART_INJURY_RULES[id].skin?'bruise' as const:'crush' as const;
+  let severity=damage*HP_UNIT;
   const definition=BODY_PARTS[part],hp=remainingPartHealth(next,part);
   if(definition.depth==='outside'&&part!=='torso'&&severity>=hp) {
     const destructionChance=Math.min(1,(severity-hp)/(definition.hp*HP_UNIT*.7));
     if(draw(random)>=destructionChance){severity=Math.max(0,hp-HP_UNIT);result.preserved=true;}
   }
-  const layers:ResolvedInjury[]=[{part,kind:'gunshot',severity}];
+  const layers:ResolvedInjury[]=[{part,kind:kind(part),severity}];
   if(definition.depth==='inside')for(let parent=definition.parent;parent!==null;parent=BODY_PARTS[parent].parent) {
     const outer=BODY_PARTS[parent];
     // Reference propagation repeats damage, not an excess remainder. No second
     // armor or outside-preservation roll for these duplicated layers.
-    if(remainingPartHealth(next,parent)>0&&BODY_COVERAGE[BODY_INDEX[parent]]>0)layers.push({part:parent,kind:'gunshot',severity:Math.max(HP_UNIT,severity)});
+    if(remainingPartHealth(next,parent)>0&&BODY_COVERAGE[BODY_INDEX[parent]]>0)layers.push({part:parent,kind:kind(parent),severity:Math.max(HP_UNIT,severity)});
     if(outer.depth==='outside')break;
   }
   addResolvedInjuryBatch(next,layers,()=>draw(random));

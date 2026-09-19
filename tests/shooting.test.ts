@@ -1,3 +1,4 @@
+import { SCHEMA_VERSION } from '../src/sim/types';
 import { expect,test } from 'vitest';
 import { applyCommand,stepWorld,serializeWorld,deserializeWorld,validateWorld } from '../src/sim/index';
 import { firingCamp } from './scenarios/shooting';
@@ -64,7 +65,7 @@ test('atomic refusals, lost line, captured edge, target falls and shooter incapa
 test('V55 migration is strict; current phase shape and skill cannot conceal invalid ownership or timing',()=>{
   const w=firingCamp(),legacy=structuredClone(w) as any;legacy.schemaVersion=55;
   for(const p of legacy.pawns){delete p.skills.shooting;delete p.skills.melee;}
-  const migrated=deserializeWorld(JSON.stringify(legacy));expect(migrated.schemaVersion).toBe(62);expect(migrated.pawns[0].skills.shooting).toEqual({level:8,xp:0,dailyXp:0,passion:0});
+  const migrated=deserializeWorld(JSON.stringify(legacy));expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);expect(migrated.pawns[0].skills.shooting).toEqual({level:8,xp:0,dailyXp:0,passion:0});
   legacy.pawns[0].shooting={order:null,stance:null};expect(()=>deserializeWorld(JSON.stringify(legacy))).toThrow(/version 55/);
   fire(w);const mutations=[(s:any)=>s.pawns[0].shooting.stance.endsAtCore++, (s:any)=>s.pawns[0].shooting.order.weaponId++, (s:any)=>s.pawns[0].shooting.order=null,(s:any)=>s.pawns[0].skills.shooting.level=21,(s:any)=>s.pawns[0].shooting.stance.invented=true];
   for(const mutate of mutations){const invalid=structuredClone(w);mutate(invalid);expect(validateWorld(invalid).length).toBeGreaterThan(0);expect(()=>deserializeWorld(JSON.stringify(invalid))).toThrow();}

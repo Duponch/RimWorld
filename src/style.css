@@ -30,3 +30,6 @@
 
 [data-pawn][data-drafted="true"] { border-bottom: 3px solid #d5b477; }
 #toggle-draft[aria-pressed="true"] { background: #655433; }
+
+.portrait-vest { position:absolute; width:19px; height:19px; bottom:0; left:50%; transform:translateX(-50%); background:#626d65; border:2px solid #404c44; border-radius:2px 2px 0 0; }
+.portrait-vest[hidden] { display:none; }

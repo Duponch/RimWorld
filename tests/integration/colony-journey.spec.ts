@@ -1,10 +1,12 @@
 import { expect, test, type Page } from '@playwright/test';
-import { writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { perform } from './player-actions';
 import { playerArrivalDecisions,playerArrivalComplete,playerDecisions, playerFocusDecisions, colonySummary, woodAccount, foodAccount } from '../scenarios/colony-player';
+import { deserializeWorld } from '../../src/sim/serialization';
+import type { World } from '../../src/sim/types';
 import { validateWorld } from '../../src/sim/index';
 import { isBlockMaterial } from '../../src/sim/building-materials';
-import { world, observeErrors, panel, expectWorld } from './helpers';
+import { world, observeErrors, panel, expectWorld, saveKey } from './helpers';
 
 // Full tracing recorded ~500 MB during a stalled run. Keep compact checkpoints
 // and an explicit final screenshot here; the short journeys retain full traces.
@@ -26,6 +28,36 @@ async function waitForTick(page:Page,tick:number):Promise<void> {
   } finally {clearTimeout(timer);}
 }
 
+
+
+type PlayerLog={tick:number;reason:string;command:unknown}[];
+async function finishMaintenance(page:Page,current:World,initialWood:number,decisions:PlayerLog,rotation:{value:number}) {
+  const summary=colonySummary(current);let morning:ReturnType<typeof colonySummary>|undefined;
+  // A fragment produced since the previous observation must first be
+  // designated. Follow the ordinary night's sleep, transport and crafting
+  // through the UI; do not demand an empty maintenance queue at midnight.
+  const maintenance=current.jobs.filter(j=>j.growingZoneId===undefined).map(j=>j.id);
+  if(summary.mining.chunks>summary.mining.stored||maintenance.length||summary.mining.steelStored<summary.mining.steel) {
+    const haul=playerDecisions(current).filter(d=>d.command.type==='area'&&d.command.action==='haul-chunks');
+    // Previously designated or already carried chunks need no duplicate command.
+    for(const d of haul){await perform(page,d,rotation);decisions.push({tick:current.tick,...d});}
+    const planned=await world(page);expect(validateWorld(planned)).toEqual([]);
+    for(const p of planned.piles)if(p.kind==='chunk'&&p.owner.type==='ground'&&!planned.stockpiles.some(s=>s.filters.chunk&&p.owner.type==='ground'&&s.x===p.owner.x&&s.z===p.owner.z))expect(p.haulRequested,'Every outstanding ground chunk is designated').toBe(true);
+    await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,planned);
+    for(let interval=1;interval<=3;interval++) {
+      await page.locator('[data-speed="6"]').click();await waitForTick(page,planned.tick+interval*1000);
+      await page.locator('[data-speed="0"]').click();await expect(page.locator('#pause-banner')).toBeVisible();
+      const next=await world(page);expect(validateWorld(next)).toEqual([]);expect(woodAccount(next)).toBe(initialWood);
+      morning=colonySummary(next);
+      if(!next.jobs.some(j=>maintenance.includes(j.id))&&morning.mining.steelStored===50&&morning.mining.stored===morning.mining.chunks&&(summary.mining.blocks!==15||summary.mining.chunks===0||morning.mining.blocksStored===35))break;
+    }
+    const finished=await world(page);expect(finished.jobs.filter(j=>maintenance.includes(j.id)),'Accepted maintenance must finish after the normal night').toEqual([]);
+    expect(morning!.mining.stored,'Existing fragments must be stored or consumed after waking').toBe(morning!.mining.chunks);
+    expect(morning!.mining.steelStored,'All extracted steel must reach storage after waking').toBe(50);
+    if(summary.mining.blocks===15&&summary.mining.chunks>0)expect(morning!.mining.blocksStored,'The existing fragment must yield the next physical batch').toBe(35);
+  }
+  return morning;
+}
 
 test('partie de trois jours : un joueur équipe son camp et entretient ses stocks par la vraie interface', async ({playwright},testInfo)=>{
   test.setTimeout(480000);
@@ -76,7 +108,7 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
         await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,current);
       }
       if(hour===72) {
-        expect(summary.mining.cells,context).toBeGreaterThanOrEqual(6);expect(summary.mining.steelStored,context).toBe(50);expect(summary.mining.steelInBuildings,context).toBe(150);expect(summary.mining.stored,context).toBeLessThanOrEqual(summary.mining.chunks);
+        expect(summary.mining.cells,context).toBeGreaterThanOrEqual(6);expect(summary.mining.steel,context).toBe(50);expect(summary.mining.steelInBuildings,context).toBe(150);expect(summary.mining.stored,context).toBeLessThanOrEqual(summary.mining.chunks);
         // The player checks only every four hours, unlike the hourly core pilot.
         // One complete batch minus the new wall is sufficient on day 3; a second
         // batch needs another random chunk. Prove the deficit has a real next action.
@@ -88,6 +120,7 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
         // area, then require these exact jobs to finish after ordinary sleep below.
         expect(current.jobs.filter(j=>j.kind==='mine').length,context).toBeLessThanOrEqual(4);
         expect(summary.mining.componentsInBuildings,context).toBe(2);expect(summary.mining.componentsStored,context).toBe(4);expect(summary.power.filter(s=>s.on),context).toHaveLength(2);
+        expect(summary.apparel.filter(i=>i.owner.type==='apparel'),context).toHaveLength(4);
         expect(summary.medicines,context).toEqual({total:30,stored:30,policies:['industrial','industrial','industrial']});
         expect(summary.roofing,context).toEqual({constructed:28,planned:28,removal:0});expect(current.stock.food,context).toBeGreaterThan(0);expect(sleepers.size,context).toBe(3);
         expect(meals.size,context).toBeGreaterThanOrEqual(18);expect(foodAccount(current)+9*cooked.size+[...meals.values()].reduce((a,b)=>a+b,0),context).toBe(initialFood+[...harvests.values()].reduce((a,b)=>a+b,0));
@@ -104,28 +137,7 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
           const planned=await world(page);expect(planned.jobs.filter(j=>j.kind==='mine')).toHaveLength(1);expect(validateWorld(planned)).toEqual([]);
           await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,planned);
         }
-        // A fragment produced since the previous observation must first be
-        // designated. Follow the ordinary night's sleep, transport and crafting
-        // through the UI; do not demand an empty maintenance queue at midnight.
-        const maintenance=current.jobs.filter(j=>j.growingZoneId===undefined).map(j=>j.id);
-        if(summary.mining.chunks>summary.mining.stored||maintenance.length) {
-          const haul=playerDecisions(current).filter(d=>d.command.type==='area'&&d.command.action==='haul-chunks');
-          // Previously designated or already carried chunks need no duplicate command.
-          for(const d of haul){await perform(page,d,rotation);decisions.push({tick:current.tick,...d});}
-          const planned=await world(page);expect(validateWorld(planned)).toEqual([]);
-          for(const p of planned.piles)if(p.kind==='chunk'&&p.owner.type==='ground'&&!planned.stockpiles.some(s=>s.filters.chunk&&p.owner.type==='ground'&&s.x===p.owner.x&&s.z===p.owner.z))expect(p.haulRequested,'Every outstanding ground chunk is designated').toBe(true);
-          await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,planned);
-          for(let interval=1;interval<=3;interval++) {
-            await page.locator('[data-speed="6"]').click();await waitForTick(page,planned.tick+interval*1000);
-            await page.locator('[data-speed="0"]').click();await expect(page.locator('#pause-banner')).toBeVisible();
-            const next=await world(page);expect(validateWorld(next)).toEqual([]);expect(woodAccount(next)).toBe(initialWood);
-            morning=colonySummary(next);
-            if(!next.jobs.some(j=>maintenance.includes(j.id))&&morning.mining.stored===morning.mining.chunks&&(summary.mining.blocks!==15||summary.mining.chunks===0||morning.mining.blocksStored===35))break;
-          }
-          const finished=await world(page);expect(finished.jobs.filter(j=>maintenance.includes(j.id)),'Accepted maintenance must finish after the normal night').toEqual([]);
-          expect(morning!.mining.stored,'Existing fragments must be stored or consumed after waking').toBe(morning!.mining.chunks);
-          if(summary.mining.blocks===15&&summary.mining.chunks>0)expect(morning!.mining.blocksStored,'The existing fragment must yield the next physical batch').toBe(35);
-        }
+        morning=await finishMaintenance(page,await world(page),initialWood,decisions,rotation);
         finalReport={morning,clearedSites:clearedSites.size,recreationActivities:[...recreationActivities],cooked:cooked.size,backend:await page.evaluate(()=>window.__lisiere.backend),days,meals:meals.size,sleepers:sleepers.size,woodConserved:true,foodReconciled:true,decisions,errors};
         break;
       }
@@ -151,4 +163,27 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
     try {await Promise.race([browser.close(),new Promise<void>(resolve=>{timer=setTimeout(resolve,5000);})]);}
     finally {clearTimeout(timer);}
   }
+});
+
+// Opt-in replay of a real failed journey. Never generate resources, fast-forward
+// simulation off-screen, or relax the normal maintenance completion assertions.
+test('checkpoint maintenance: finish accepted work through the real UI after ordinary sleep',async({playwright})=>{
+  test.skip(!process.env.COLONY_MAINTENANCE_CHECKPOINT,'Set a recorded journey checkpoint to reproduce its continuation.');
+  test.setTimeout(120000);
+  const data=await readFile(process.env.COLONY_MAINTENANCE_CHECKPOINT!,'utf8'),initial=deserializeWorld(data);
+  const browser=await playwright.chromium.launch({channel:'chromium',args:[]});
+  try {
+    const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page),decisions:PlayerLog=[];
+    await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data});
+    await page.goto('/?e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
+    await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
+    const morning=await finishMaintenance(page,initial,woodAccount(initial),decisions,{value:0});
+    const final=await world(page),summary=colonySummary(final);
+    expect(summary.apparel.filter(i=>i.owner.type==='apparel')).toHaveLength(4);
+    expect(summary.structures).toEqual(colonySummary(initial).structures);
+    expect(summary.mining.steelStored).toBe(50);expect(summary.mining.steelInBuildings).toBe(150);
+    await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,final);
+    expect(errors).toEqual([]);
+    await writeFile('artifacts/apparel-colony-recovery-v63.json',JSON.stringify({date:new Date().toISOString(),initialTick:initial.tick,finalTick:final.tick,morning,decisions,woodConserved:true,errors},null,2));
+  } finally {await browser.close();}
 });

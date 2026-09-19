@@ -1,0 +1,211 @@
+{
+  "apparel": true,
+  "melee": false,
+  "date": "2026-09-19T01:59:12.614Z",
+  "hostileTargets": false,
+  "variant": "Mobile visible-threat pursuit and firing positions, drafted autofire, civilian responses and mixed work; enemies start 35 cells from defenders.",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "os": "win32 10.0.26200",
+  "protocol": "250², 3/30/100 actors, mobile enemies initially 35 cells from defenders; shared path budget and real combat plus civilian work. 240 ticks per case, first 20 excluded from mixed/quiet/encoding percentiles; active-combat includes initial ticks. Independent twin, alternating run order (AUTOMATIC: identical initial autonomous decisions; other modes: no extra shot orders). Real health/cadence/XP/PRNG, retarget every 60 ticks only outside AUTOMATIC, no healing reset. Worker/render excluded. Single pass, timings include JIT/GC and are not a frame guarantee.",
+  "results": [
+    {
+      "pursuit": true,
+      "automatic": true,
+      "actors": 3,
+      "pairs": 1,
+      "movingTargets": false,
+      "hostileTargets": false,
+      "slowedPawns": 1,
+      "retimedEdges": 3,
+      "accepted": 0,
+      "refused": 0,
+      "emissions": 25,
+      "impacts": 5,
+      "commandsMs": {
+        "count": 0
+      },
+      "allTickMs": {
+        "count": 240,
+        "p50": 1.8032000000000608,
+        "p95": 6.728900000000067,
+        "p99": 12.184199999999919,
+        "max": 28.803999999999974
+      },
+      "initialTickMs": {
+        "count": 20,
+        "p50": 1.3337999999999965,
+        "p95": 4.369300000000067,
+        "p99": 28.803999999999974,
+        "max": 28.803999999999974
+      },
+      "mixedTickMs": {
+        "count": 220,
+        "p50": 1.8976000000000113,
+        "p95": 6.728900000000067,
+        "p99": 12.137300000000096,
+        "max": 15.107700000000023
+      },
+      "quietTickMs": {
+        "count": 220,
+        "p50": 2.1862999999998465,
+        "p95": 8.299699999999916,
+        "p99": 13.337800000000016,
+        "max": 25.909400000000005
+      },
+      "activeCombatTickMs": {
+        "count": 127,
+        "p50": 2.154899999999998,
+        "p95": 7.444600000000037,
+        "p99": 12.184199999999919,
+        "max": 15.107700000000023
+      },
+      "encodeMs": {
+        "count": 220,
+        "p50": 1.7066000000002077,
+        "p95": 3.3367000000000644,
+        "p99": 4.185899999999947,
+        "max": 7.408000000000129
+      },
+      "apparelRemaining": 5,
+      "apparelDamaged": 1,
+      "dead": 0,
+      "downed": 1,
+      "mixedExcavatedTiles": 0,
+      "mixedResourcesRemoved": 0,
+      "quietResourcesRemoved": 0
+    },
+    {
+      "pursuit": true,
+      "automatic": true,
+      "actors": 30,
+      "pairs": 10,
+      "movingTargets": false,
+      "hostileTargets": false,
+      "slowedPawns": 10,
+      "retimedEdges": 34,
+      "accepted": 0,
+      "refused": 0,
+      "emissions": 195,
+      "impacts": 58,
+      "commandsMs": {
+        "count": 0
+      },
+      "allTickMs": {
+        "count": 240,
+        "p50": 7.550099999999475,
+        "p95": 16.53310000000056,
+        "p99": 31.045000000000073,
+        "max": 37.67990000000009
+      },
+      "initialTickMs": {
+        "count": 20,
+        "p50": 3.1914999999999054,
+        "p95": 33.83809999999994,
+        "p99": 37.67990000000009,
+        "max": 37.67990000000009
+      },
+      "mixedTickMs": {
+        "count": 220,
+        "p50": 7.579800000000432,
+        "p95": 15.462500000000546,
+        "p99": 20.763300000000072,
+        "max": 26.267499999999927
+      },
+      "quietTickMs": {
+        "count": 220,
+        "p50": 8.143000000000029,
+        "p95": 17.730499999999665,
+        "p99": 22.49479999999994,
+        "max": 26.337899999999536
+      },
+      "activeCombatTickMs": {
+        "count": 223,
+        "p50": 7.579800000000432,
+        "p95": 15.462500000000546,
+        "p99": 20.763300000000072,
+        "max": 26.267499999999927
+      },
+      "encodeMs": {
+        "count": 220,
+        "p50": 3.375799999999799,
+        "p95": 4.057600000000093,
+        "p99": 4.869399999999587,
+        "max": 5.276100000000042
+      },
+      "apparelRemaining": 45,
+      "apparelDamaged": 17,
+      "dead": 0,
+      "downed": 7,
+      "mixedExcavatedTiles": 5,
+      "mixedResourcesRemoved": 0,
+      "quietResourcesRemoved": 0
+    },
+    {
+      "pursuit": true,
+      "automatic": true,
+      "actors": 100,
+      "pairs": 33,
+      "movingTargets": false,
+      "hostileTargets": false,
+      "slowedPawns": 25,
+      "retimedEdges": 70,
+      "accepted": 0,
+      "refused": 0,
+      "emissions": 371,
+      "impacts": 119,
+      "commandsMs": {
+        "count": 0
+      },
+      "allTickMs": {
+        "count": 240,
+        "p50": 20.941600000001927,
+        "p95": 43.27479999999923,
+        "p99": 54.788800000000265,
+        "max": 70.51130000000012
+      },
+      "initialTickMs": {
+        "count": 20,
+        "p50": 31.523300000000745,
+        "p95": 53.65380000000005,
+        "p99": 54.36729999999989,
+        "max": 54.36729999999989
+      },
+      "mixedTickMs": {
+        "count": 220,
+        "p50": 20.744700000001103,
+        "p95": 42.38770000000113,
+        "p99": 54.788800000000265,
+        "max": 70.51130000000012
+      },
+      "quietTickMs": {
+        "count": 220,
+        "p50": 22.233099999999467,
+        "p95": 43.87379999999757,
+        "p99": 56.11449999999968,
+        "max": 66.34069999999883
+      },
+      "activeCombatTickMs": {
+        "count": 223,
+        "p50": 20.550600000000486,
+        "p95": 42.38770000000113,
+        "p99": 54.788800000000265,
+        "max": 70.51130000000012
+      },
+      "encodeMs": {
+        "count": 220,
+        "p50": 3.665899999999965,
+        "p95": 4.068599999998696,
+        "p99": 4.60149999999885,
+        "max": 5.368800000000192
+      },
+      "apparelRemaining": 150,
+      "apparelDamaged": 40,
+      "dead": 2,
+      "downed": 17,
+      "mixedExcavatedTiles": 14,
+      "mixedResourcesRemoved": 0,
+      "quietResourcesRemoved": 0
+    }
+  ]
+}

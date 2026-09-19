@@ -25,11 +25,12 @@ import { canReach, destinationCell } from './work-planner.ts';
 import type { Cell, CommandResult, HaulTask, Job, Pawn, World } from './types.ts';
 
 import { equipmentOrderReason } from './equipment.ts';
-import { equippedWeapon,weaponLabel } from './equipment-rules.ts';
+import { apparelLabel } from './apparel-rules.ts';
+import { equippedWeapon,weaponLabel,type EquipmentAction } from './equipment-rules.ts';
 
 export interface PlayerOrders { active: number | 'equipment' | 'haul' | 'cook' | 'feed' | 'tend' | 'rescue' | null; queue: import('./order-types.ts').QueuedOrder[] }
 export type OrderCommand = { type:'order-cook';pawnId:number;structureId:number;queue:boolean } | { type: 'order-job'; pawnId: number; jobId: number; queue: boolean } | { type:'order-haul';pawnId:number;target:HaulOrderTarget;queue:boolean } | { type: 'clear-orders'; pawnId: number };
-export interface OrderOption { jobId: number; equipmentItemId?:number; equipmentAction?:'equip'|'drop'; cookStationId?:number; rescuePatientId?:number; tendPatientId?:number; feedPatientId?:number; haulTarget?:HaulOrderTarget; label: string; enabled: boolean; reason?: string }
+export interface OrderOption { jobId: number; equipmentItemId?:number; equipmentAction?:EquipmentAction; cookStationId?:number; rescuePatientId?:number; tendPatientId?:number; feedPatientId?:number; haulTarget?:HaulOrderTarget; label: string; enabled: boolean; reason?: string }
 export const MAX_QUEUED_ORDERS = 32;
 const labels: Record<Job['kind'], string> = { 'wood-generator':'construire le générateur à bois', 'standing-lamp':'construire la lampe', 'passive-cooler':'Construire le refroidisseur passif', 'build-roof':'Poser le toit', 'remove-roof':'Retirer le toit', door:'Construire la porte', stonecutter:'Construire la table de taille', mine:'Miner', uninstall:'Désinstaller',install:'Réinstaller', deconstruct:'Déconstruire', chop:'Abattre',harvest:'Récolter',cut:'Couper',sow:'Semer du riz',wall:'Construire le mur',bed:'Construire le lit',table:'Construire la table',stool:'Construire le tabouret',campfire:'Construire le feu',horseshoes:'Construire le piquet' };
 const fail = (reason: string): CommandResult => ({ok:false,code:'invalid-command',reason});
@@ -91,6 +92,11 @@ export function queryOrderOptions(world:World,pawnId:number,cell:Cell,queue=fals
     const reason=queue?'La file d’équipement n’est pas encore disponible.':equipmentOrderReason(world,pawn,weapon,action)
       ??(action==='equip'&&routeToJob(world,cell,reachableCells(world,pawn,blockedCells(world),new Set()),true)===null?'Aucun accès praticable à cette arme.':undefined);
     options.push({jobId:0,equipmentItemId:weapon.id,equipmentAction:action,label:`${action==='equip'?'Équiper':'Déposer'} ${weaponLabel(weapon)}`,enabled:!reason,...reason?{reason}:{}});
+  }
+  if(pile?.kind==='apparel'){
+    const reason=queue?'La file d’équipement n’est pas encore disponible.':equipmentOrderReason(world,pawn,pile,'wear')
+      ??(routeToJob(world,cell,reachableCells(world,pawn,blockedCells(world),new Set()),true)===null?'Aucun accès praticable à ce vêtement.':undefined);
+    options.push({jobId:0,equipmentItemId:pile.id,equipmentAction:'wear',label:`Porter ${apparelLabel(pile)}`,enabled:!reason,...reason?{reason}:{}});
   }
   const targets:HaulOrderTarget[]=[];
   if(job&&isConstruction(job)) {

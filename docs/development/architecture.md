@@ -1,6 +1,6 @@
 # Architecture et décisions
 
-Protection en préparation sous V62 : `armor.ts` conserve couverture compilée, jet par pièce et usure dans une transaction pure. Aucun consommateur World ni nouvelle persistance ; branchement de l’habillement en cours. [Frontière et intégration requise](armor.md).
+V63 : `apparel-rules` définit les deux contenus, `apparel` leur manipulation via l’enveloppe de tâche d’équipement, `apparel-save` valide, `apparel-protection` engage la transaction du noyau pur `armor`. Propriété séparée et projection commune carte/portraits. [Contrat](armor.md).
 
 V62 : `disturbance-state.ts` sépare échéances de sommeil et de posture ; `disturbance.ts` traite les événements physiques, `impact-sound.ts` capture la connexion des espaces. Le combat renouvelle ses cibles après un réveil même sans blessure. [Contrat](disturbance.md).
 V61 : `tactics-state.ts` porte le mandat persistant ; `tactics.ts` décide et `tactical-positions.ts` classe les postes avec accès puis une route unique. Les résolveurs de tir/mêlée, santé, navigation et poses GPU restent communs. [Contrat et migration](pursuit.md).

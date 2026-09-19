@@ -1,3 +1,4 @@
+import { apparelProjection,apparelAppearance } from './character-apparel';
 import { isColonist } from '../sim/affiliation';
 import { pawnGeometry,cargoGeometry } from './pawn-geometry';
 import { equipmentProjection } from './character-equipment';
@@ -52,7 +53,7 @@ export class PawnLayer {
     geometry.setAttribute('aTo', new THREE.InstancedBufferAttribute(new Float32Array(count * 4), 4));
     geometry.setAttribute('aMotion', new THREE.InstancedBufferAttribute(new Float32Array(count * 4), 4));
     geometry.setAttribute('aTint', new THREE.InstancedBufferAttribute(new Float32Array(count * 3), 3));
-    geometry.setAttribute('aEquipment',new THREE.InstancedBufferAttribute(new Float32Array(count),1));
+    geometry.setAttribute('aEquipment',new THREE.InstancedBufferAttribute(new Float32Array(count*3),3));
     geometry.setAttribute('aCargo', new THREE.InstancedBufferAttribute(new Float32Array(count * 2), 2));
     for (const name of ['aFrom', 'aTo', 'aMotion', 'aTint', 'aCargo', 'aTravel', 'aEquipment']) (geometry.getAttribute(name) as THREE.InstancedBufferAttribute).setUsage(THREE.DynamicDrawUsage);
     const mat = material(0xffffff);
@@ -99,8 +100,9 @@ export class PawnLayer {
         const x=animated.x.toVar(),y=animated.y.toVar(),z=animated.z.toVar();
         animated.assign(vec3(float(.65).sub(y),z.add(.19+.95/PAWN_MODEL_SCALE),x.add(.3)));
       });
-      If(motion.z.equal(7).and(attribute('dye','float').lessThan(0)),()=>{animated.assign(vec3(positionLocal.x.sub(.205).add(.23),positionLocal.z.add(1.01),positionLocal.y.sub(.68).add(.4)));});
-      If(attribute('dye','float').lessThan(0).and(attribute('aEquipment','float').lessThan(.5)),()=>{animated.assign(vec3(0));});
+      If(motion.z.equal(7).and(attribute('dye','float').equal(-1)),()=>{animated.assign(vec3(positionLocal.x.sub(.205).add(.23),positionLocal.z.add(1.01),positionLocal.y.sub(.68).add(.4)));});
+      If(attribute('dye','float').equal(-1).and(attribute('aEquipment','vec3').x.lessThan(.5)),()=>{animated.assign(vec3(0));});
+      If(attribute('dye','float').equal(-2).and(attribute('aEquipment','vec3').z.lessThan(.5)),()=>{animated.assign(vec3(0));});
       const cy = cos(pose.w), sy = sin(pose.w);
       return vec3(animated.x.mul(cy).add(animated.z.mul(sy)), animated.y, animated.z.mul(cy).sub(animated.x.mul(sy))).mul(PAWN_MODEL_SCALE).add(pose.xyz);
     })();
@@ -152,7 +154,7 @@ export class PawnLayer {
     const motion = geometry.getAttribute('aMotion') as THREE.InstancedBufferAttribute;
     const tint = geometry.getAttribute('aTint') as THREE.InstancedBufferAttribute;
     const cargo = geometry.getAttribute('aCargo') as THREE.InstancedBufferAttribute;
-    const equipment=geometry.getAttribute('aEquipment') as THREE.InstancedBufferAttribute,gears=equipmentProjection(world);
+    const equipment=geometry.getAttribute('aEquipment') as THREE.InstancedBufferAttribute,gears=equipmentProjection(world),apparel=apparelProjection(world);
     const carried = new Map<number, World['piles'][number]>();
     for (const pile of world.piles) if (pile.owner.type === 'pawn') carried.set(pile.owner.pawnId, pile);
     const present = new Set<number>();
@@ -187,7 +189,9 @@ export class PawnLayer {
         yaw = from.w + Math.atan2(Math.sin(target - from.w), Math.cos(target - from.w));
       }
       const job=pawn.state==='working'?world.jobs.find(j=>j.id===pawn.jobId):undefined;
-      const work = pawn.state==='working' ? (job?constructionWorkTarget(world,job):undefined) ?? (pawn.cooking ? pawn.cooking.actionCell : pawn.haul?.serviceProgress ? world.structures.find(s=>pawn.haul?.destination.type==='fuel'&&s.id===pawn.haul.destination.structureId) : pawn.haul?.pickupCell) : undefined;
+      const garment=pawn.equipmentTask?.action==='wear'?world.piles.find(p=>p.id===pawn.equipmentTask!.itemId):undefined;
+      const dressing=garment?.owner.type==='ground'?garment.owner:undefined;
+      const work = pawn.state==='working' ? (job?constructionWorkTarget(world,job):dressing) ?? (pawn.cooking ? pawn.cooking.actionCell : pawn.haul?.serviceProgress ? world.structures.find(s=>pawn.haul?.destination.type==='fuel'&&s.id===pawn.haul.destination.structureId) : pawn.haul?.pickupCell) : undefined;
       if(work) {yaw=Math.atan2(work.x-pawn.x,work.z-pawn.z);from.w=yaw;}
       const game=pawn.state==='recreating'&&pawn.recreation.task?.activity==='horseshoes'?world.structures.find(s=>s.id===pawn.recreation.task!.buildingId):undefined;
       if(game){yaw=Math.atan2(game.x-pawn.x,game.z-pawn.z);from.w=yaw;}
@@ -202,13 +206,14 @@ export class PawnLayer {
       fromAttribute.setXYZW(index, from.x, from.y, from.z, from.w);
       toAttribute.setXYZW(index, to.x, to.y, to.z, to.w);
       motion.setXYZW(index, pawn.state === 'moving'&&!pawn.stun ? 1 : 0, pawn.state === 'working'&&!pawn.stun ? 1 : 0, pawn.stun&&!medicallyStopped(pawn) ? 9 : pawn.melee?.strike ? 8 : pawn.shooting?.stance ? 7 : pawn.state === 'recreating' ? pawn.recreation.task?.activity==='horseshoes'?4:5 : pawn.state === 'sleeping'||pawn.state==='resting'||medicallyStopped(pawn) ? 1 : pawn.state === 'eating' ? dining?.seatId !== null && dining ? 3 : 2 : 0, pawn.melee?.strike ? pawn.melee.strike.atCore/100-Math.floor(world.tick/1024)*1024/10 : pawn.id * 1.7);
-      scratchColor.setHex(isColonist(pawn)?PAWN_COLORS[index % PAWN_COLORS.length]:0xb74736);
+      const look=apparelAppearance(apparel.get(pawn.id));
+      scratchColor.setHex(look.color??(isColonist(pawn)?PAWN_COLORS[index % PAWN_COLORS.length]:0xb74736));
       if(pawn.state==='dead')scratchColor.setHex(0x73756c);
       tint.setXYZ(index, scratchColor.r, scratchColor.g, scratchColor.b);
-      equipment.setX(index,gears.has(pawn.id)?1:0);
+      equipment.setXYZ(index,gears.has(pawn.id)?1:0,look.shirt?1:0,look.vest?1:0);
       const load = carried.get(pawn.id);
       const packed=world.packed?.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
-      cargo.setXY(index, pawn.rescue?.phase==='carry'?-1:packed?4:load ? load.kind==='weapon'?21:load.kind==='medicine' ? (load.item==='herbal-medicine'?18:load.item==='medicine'?19:20) : load.kind === 'component' ? 17 : load.kind === 'blocks' ? blockCargoKind(load.item) : load.kind === 'steel' ? 11 : load.kind === 'chunk' ? chunkCargoKind(load.item) : load.kind === 'wood' ? 1 : load.item === 'survival-meal' ? 3 : 2 : 0, packed||load?.kind==='weapon'?1:load ? Math.min(1, load.quantity / CARRY_CAPACITY) : 0);
+      cargo.setXY(index, pawn.rescue?.phase==='carry'?-1:packed?4:load ? load.kind==='apparel'?(load.item==='cloth-shirt'?22:23):load.kind==='weapon'?21:load.kind==='medicine' ? (load.item==='herbal-medicine'?18:load.item==='medicine'?19:20) : load.kind === 'component' ? 17 : load.kind === 'blocks' ? blockCargoKind(load.item) : load.kind === 'steel' ? 11 : load.kind === 'chunk' ? chunkCargoKind(load.item) : load.kind === 'wood' ? 1 : load.item === 'survival-meal' ? 3 : 2 : 0, packed||load?.kind==='weapon'||load?.kind==='apparel'?1:load ? Math.min(1, load.quantity / CARRY_CAPACITY) : 0);
     });
     for (const id of this.visuals.keys()) if (!present.has(id)) this.visuals.delete(id);
     for (const attr of [fromAttribute, toAttribute, motion, tint, cargo, equipment]) attr.needsUpdate = true;

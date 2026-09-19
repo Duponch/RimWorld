@@ -1,3 +1,4 @@
+import { apparelProtection } from './apparel-protection.ts';
 import { disturbanceEvents,isLying } from './disturbance.ts';
 import { automaticPermission,automaticTarget } from './automatic-combat-state.ts';
 import type { shootingQueries } from './shooting.ts';
@@ -84,16 +85,18 @@ export function advanceMelee(world:World,pawn:Pawn,core:number,contactGrid:()=>U
   const outcome=!hit?'miss':dodge?'dodge':'hit';
   // The recovery exists before reconciliation, so a reaction cannot skip it.
   m.strike={targetId:target.id,atCore:core,untilCore:core+tool.cooldownCore,tool:tool.id,outcome};pawn.path=[];pawn.state='idle';
-  let stun=false;
+  let stun=false,injured=false;
   if(outcome==='hit') {
     const damage=Math.max(1,tool.damage*(.8+random()*.4));
     // Advance health first using the same stream before the anatomical transaction.
     world.rng=randomState.rng;if(target.health&&target.health.tick<world.tick)updatePawnHealth(world,target);randomState.rng=world.rng;
-    const impact=resolveUnarmoredMelee(target.health??createMedicalRecord(world.tick),{damage,kind:tool.kind},random);
+    const protection=apparelProtection(world,target,tool.kind==='bite'?'sharp':'blunt',tool.penetration,random);
+    const impact=resolveUnarmoredMelee(target.health??createMedicalRecord(world.tick),{damage,kind:tool.kind},random,protection.protect);
+    protection.commit();injured=impact.layers.length>0;
     target.health=impact.record;stun=impact.stun;
   }
   world.rng=randomState.rng;
-  if(outcome==='hit'){reconcilePawnHealth(world,target);disturbance.damage(target,core,immobile);}
+  if(outcome==='hit'){reconcilePawnHealth(world,target);if(injured)disturbance.damage(target,core,immobile);}
   applyBulletStagger(world,target,core,1);if(stun)applyMeleeStun(world,target,core);
   // Being attacked in melee interrupts ranged aiming, including a miss/dodge.
   if(target.shooting?.stance?.phase==='aim')cancelShooting(target);

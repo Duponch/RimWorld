@@ -19,9 +19,9 @@ export function processHaul(world: World, pawn: Pawn, move: (target: Cell, allow
     const source = world.piles.find(item => item.id === task.sourcePileId);
     if (!source || source.owner.type !== 'ground' || source.quantity < task.quantity) { releaseWork(world, pawn); return; }
     if (!nearby(pawn, source.owner)) { move(source.owner, true); return; }
-    if (source.kind!=='weapon'&&(!Number.isSafeInteger(world.nextId + 1) || (source.quantity > task.quantity && world.piles.length >= 32768))) { releaseWork(world, pawn); return; }
+    if (source.kind!=='weapon'&&source.kind!=='apparel'&&(!Number.isSafeInteger(world.nextId + 1) || (source.quantity > task.quantity && world.piles.length >= 32768))) { releaseWork(world, pawn); return; }
     task.pickupCell={x:source.owner.x,z:source.owner.z};
-    if(source.kind==='weapon'){
+    if(source.kind==='weapon'||source.kind==='apparel'){
       source.owner={type:'pawn',pawnId:pawn.id};task.carryPileId=source.id;task.phase='deliver';pawn.path=[];pawn.planCooldown=0;pawn.state='working';return;
     }
     source.quantity -= task.quantity;

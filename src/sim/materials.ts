@@ -1,3 +1,5 @@
+import { newApparelState,isApparelItem,APPAREL } from './apparel-rules.ts';
+import { apparelCompatible } from './armor.ts';
 import { groundCapacity, planGroundPlacement } from './ground-placement.ts';
 import { newWeaponState } from './equipment-rules.ts';
 import { freshRot, mergeRot, rotAge } from './food-preservation.ts';
@@ -11,7 +13,7 @@ import type { Cell, HaulDestination, MaterialKind, MaterialOwner, MaterialPile, 
 export function pileCell(world: World, pile: MaterialPile): Cell | null {
   const owner = pile.owner;
   if (owner.type === 'ground') return { x: owner.x, z: owner.z };
-  if (owner.type === 'pawn'||owner.type==='equipment') return world.pawns.find(pawn => pawn.id === owner.pawnId) ?? null;
+  if (owner.type === 'pawn'||owner.type==='equipment'||owner.type==='apparel') return world.pawns.find(pawn => pawn.id === owner.pawnId) ?? null;
   return world.jobs.find(job => job.id === owner.jobId) ?? null;
 }
 export function deliveredStock(world: World, jobId: number): Stock {
@@ -34,11 +36,12 @@ export function refreshStock(world: World): void {
 }
 const sameOwner = (a: MaterialOwner, b: MaterialOwner): boolean => a.type === b.type
   && (a.type === 'ground' && b.type === 'ground' ? a.x === b.x && a.z === b.z
-    : (a.type==='pawn'||a.type==='equipment')&&(b.type==='pawn'||b.type==='equipment') ? a.pawnId === b.pawnId
+    : (a.type==='pawn'||a.type==='equipment'||a.type==='apparel')&&(b.type==='pawn'||b.type==='equipment'||b.type==='apparel') ? a.pawnId === b.pawnId
       : a.type === 'job' && b.type === 'job' && a.jobId === b.jobId);
 
 export function materialCanFit(world: World, kind: MaterialKind, quantity: number, owner: MaterialOwner, item: ItemId = legacyItem(kind)): boolean {
-  if(kind==='weapon'&&owner.type==='job')return false;
+  if((kind==='weapon'||kind==='apparel')&&owner.type==='job')return false;
+  if(owner.type==='apparel'&&(kind!=='apparel'||quantity!==1||!isApparelItem(item)||world.piles.some(p=>p.owner.type==='apparel'&&p.owner.pawnId===owner.pawnId&&!apparelCompatible(APPAREL[p.item as keyof typeof APPAREL].coverage,APPAREL[item].coverage))))return false;
   if(owner.type==='equipment'&&(kind!=='weapon'||quantity!==1||world.piles.some(p=>p.owner.type==='equipment'&&p.owner.pawnId===owner.pawnId)))return false;
   if (owner.type === 'ground' && quantity > groundCapacity(world, owner, item)) return false;
   const limit = ITEM_DEFINITIONS[item].stackLimit;
@@ -56,7 +59,7 @@ export function addMaterial(world: World, kind: MaterialKind, quantity: number, 
   if (owner.type === 'ground' && (['water', 'rock'].includes(world.tiles[owner.z * world.width + owner.x]!.terrain)
     || world.structures.some(item => item.kind === 'wall' && item.x === owner.x && item.z === owner.z)
     || world.schemaVersion<16&&world.jobs.some(item => item.kind === 'wall' && item.x === owner.x && item.z === owner.z))) throw new Error('Material destination is impassable.');
-  if ((owner.type === 'pawn'||owner.type==='equipment') && !world.pawns.some(pawn => pawn.id === owner.pawnId)) throw new Error('Material carrier does not exist.');
+  if ((owner.type === 'pawn'||owner.type==='equipment'||owner.type==='apparel') && !world.pawns.some(pawn => pawn.id === owner.pawnId)) throw new Error('Material carrier does not exist.');
   if (owner.type === 'job' && !world.jobs.some(job => job.id === owner.jobId)) throw new Error('Material construction does not exist.');
   if (!materialCanFit(world, kind, quantity, owner, item)) throw new Error('Material pile limit exceeded.');
   for (const pile of world.piles) {
@@ -68,7 +71,7 @@ export function addMaterial(world: World, kind: MaterialKind, quantity: number, 
   }
   while (quantity > 0) {
     const moved = Math.min(limit, quantity);
-    world.piles.push({ id: world.nextId++, kind, item, quantity: moved, owner: { ...owner }, ...freshRot(item, world.tick),...kind==='weapon'?{weapon:newWeaponState()}:{}});
+    world.piles.push({ id: world.nextId++, kind, item, quantity: moved, owner: { ...owner }, ...freshRot(item, world.tick),...kind==='weapon'?{weapon:newWeaponState()}:kind==='apparel'&&isApparelItem(item)?{apparel:newApparelState(item)}:{}});
     quantity -= moved;
   }
   refreshStock(world);
@@ -92,7 +95,7 @@ export function reservedSource(world: World, pileId: number, exceptPawn?: number
   let quantity = 0;
   for (const pawn of world.pawns) {
     if (pawn.id !== exceptPawn) {
-      if(pawn.equipmentTask?.action==='equip'&&pawn.equipmentTask.itemId===pileId)quantity++;
+      if((pawn.equipmentTask?.action==='equip'||pawn.equipmentTask?.action==='wear')&&pawn.equipmentTask.itemId===pileId)quantity++;
       for(const i of pawn.cooking?.ingredients??[])if(i.pileId===pileId&&i.stage!=='held')quantity+=i.quantity;
       if(pawn.tend?.phase==='pickup'&&pawn.tend.medicine?.sourcePileId===pileId)quantity+=pawn.tend.medicine.quantity;
       if(pawn.feed?.phase==='pickup'&&pawn.feed.sourcePileId===pileId)quantity+=pawn.feed.quantity;

@@ -46,9 +46,9 @@ export function advanceWorldProjectiles(world:World,beforeCore?:(core:number)=>b
     const wasLying=!!pawn&&isLying(pawn);
     if(a.kind!=='exit'&&disturbance.impact({x:Math.floor(a.point.x),z:Math.floor(a.point.z)},core)){targets=undefined;scenes.clear();afterImpact?.();}
     if(pawn) {
-      damageUnarmoredPawnWithBullet(world,pawn,{damage:revolverProfile(p.quality).damage});
+      const impact=damageUnarmoredPawnWithBullet(world,pawn,{damage:revolverProfile(p.quality).damage},revolverProfile(p.quality).armorPenetration);
       applyBulletStagger(world,pawn,core,revolverProfile(p.quality).stoppingPower);
-      disturbance.damage(pawn,core,wasLying);
+      if(impact?.layers.some(l=>l.severity>0))disturbance.damage(pawn,core,wasLying);
       // A fall can change posture, release a carried patient and drop objects.
       // Do not reuse a capture across the medical reconciliation.
       targets=undefined;scenes.clear();afterImpact?.();

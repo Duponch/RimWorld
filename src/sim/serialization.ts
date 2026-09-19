@@ -1,3 +1,4 @@
+import { validApparelShape,validateApparel } from './apparel-save.ts';
 import { validDisturbance } from './disturbance-state.ts';
 import { validTacticsShape,validateTactics } from './tactics-save.ts';
 import { validAttackMemory } from './automatic-combat-save.ts';
@@ -74,7 +75,7 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validateWorld(input: unknown): string[] {
   return validateSchema(input, SCHEMA_VERSION);
 }
-function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62): string[] {
+function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(input)) return ['World must be an object.'];
@@ -192,8 +193,9 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
         } else if(item.fuel!==undefined)errors.push('Unexpected fuel state.');
         if (key === 'jobs' && (!oneOf(item.status, ['pending', 'active']) || !(item.reservedBy === null || integer(item.reservedBy, 1)) || !stock(item.escrow) || !integer(item.progress, 0, version>=31?Number.MAX_SAFE_INTEGER:119))) errors.push('Invalid job.');
       } else if (key === 'piles') {
+        if(!validApparelShape(item,version))errors.push('Invalid apparel state for schema.');
         if(!validWeaponShape(item,version))errors.push('Invalid weapon state for schema.');
-        if (!oneOf(item.kind, ['wood', 'food', ...(version>=28?['chunk']:[]), ...(version>=29?['steel']:[]), ...(version>=32?['blocks']:[]), ...(version>=41?['component']:[]), ...(version>=51?['medicine']:[]), ...(version>=52?['weapon']:[])]) || !integer(item.quantity, 1, MAX_STACK) || !record(item.owner)) errors.push('Invalid material pile.');
+        if (!oneOf(item.kind, ['wood', 'food', ...(version>=28?['chunk']:[]), ...(version>=29?['steel']:[]), ...(version>=32?['blocks']:[]), ...(version>=41?['component']:[]), ...(version>=51?['medicine']:[]), ...(version>=52?['weapon']:[]), ...(version>=63?['apparel']:[])]) || !integer(item.quantity, 1, MAX_STACK) || !record(item.owner)) errors.push('Invalid material pile.');
         else {
           if (version >= 5) {
             if (typeof item.item !== 'string' || !Object.hasOwn(ITEM_DEFINITIONS, item.item)) errors.push('Unknown item definition.');
@@ -205,10 +207,10 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
           } else if (item.item !== undefined) errors.push('Legacy save contains version 5 item.');
           const owner = item.owner;
           if (owner.type === 'ground' ? !coord(owner) || Object.keys(owner).some(key => !['type', 'x', 'z'].includes(key))
-            : (owner.type === 'pawn'||version>=52&&owner.type==='equipment') ? !integer(owner.pawnId, 1) || Object.keys(owner).some(key => !['type', 'pawnId'].includes(key))
+            : (owner.type === 'pawn'||version>=52&&owner.type==='equipment'||version>=63&&owner.type==='apparel') ? !integer(owner.pawnId, 1) || Object.keys(owner).some(key => !['type', 'pawnId'].includes(key))
               : owner.type === 'job' ? !integer(owner.jobId, 1) || Object.keys(owner).some(key => !['type', 'jobId'].includes(key)) : true) errors.push('Invalid material owner.');
         }
-      } else if (!record(item.filters) || typeof item.filters.wood !== 'boolean' || typeof item.filters.food !== 'boolean' || item.filters.weapon!==undefined&&(version<52||typeof item.filters.weapon!=='boolean') || item.filters.medicine!==undefined&&(version<51||typeof item.filters.medicine!=='boolean') || item.filters.component!==undefined&&(version<41||typeof item.filters.component!=='boolean') || item.filters.blocks!==undefined&&(version<32||typeof item.filters.blocks!=='boolean') || item.filters.steel!==undefined&&(version<29||typeof item.filters.steel!=='boolean') || item.filters.chunk!==undefined&&(version<28||typeof item.filters.chunk!=='boolean') || item.filters.furniture!==undefined&&(version<26||typeof item.filters.furniture!=='boolean')
+      } else if (!record(item.filters) || typeof item.filters.wood !== 'boolean' || typeof item.filters.food !== 'boolean' || item.filters.apparel!==undefined&&(version<63||typeof item.filters.apparel!=='boolean') || item.filters.weapon!==undefined&&(version<52||typeof item.filters.weapon!=='boolean') || item.filters.medicine!==undefined&&(version<51||typeof item.filters.medicine!=='boolean') || item.filters.component!==undefined&&(version<41||typeof item.filters.component!=='boolean') || item.filters.blocks!==undefined&&(version<32||typeof item.filters.blocks!=='boolean') || item.filters.steel!==undefined&&(version<29||typeof item.filters.steel!=='boolean') || item.filters.chunk!==undefined&&(version<28||typeof item.filters.chunk!=='boolean') || item.filters.furniture!==undefined&&(version<26||typeof item.filters.furniture!=='boolean')
         || !integer(item.priority, 1, 4) || !integer(item.capacity, 1, MAX_STACK)) errors.push('Invalid storage policy.');
     }
   }
@@ -239,6 +241,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
   if(version>=46)errors.push(...validateRescues(world));
   if(version>=48)errors.push(...validateFeeding(world));
   if(version>=47)errors.push(...validateCare(world));
+  if(version>=63)errors.push(...validateApparel(world));
   if(version>=52)errors.push(...validateEquipment(world));
   if(version>=53)errors.push(...validateDrafting(world));
   errors.push(...validateProjectiles(world,version,ids));
@@ -388,7 +391,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
       if (version>=21&&!groundOccupancyAllows(world,owner) || isImpassable(owner) || structureCells.get(cellKey(owner))?.kind === 'wall' || version<16&&jobCells.get(cellKey(owner))?.kind === 'wall') errors.push('Pile on impassable cell.');
       if(pile.kind==='wood'||pile.kind==='food')available[pile.kind] += pile.quantity;
     } else if (owner.type === 'pawn') { if (!pawnById.has(owner.pawnId)) errors.push('Pile references missing carrier.'); if(pile.kind==='wood'||pile.kind==='food')available[pile.kind] += pile.quantity; }
-    else if(owner.type==='equipment'){if(!pawnById.has(owner.pawnId))errors.push('Missing equipment owner.');}
+    else if(owner.type==='equipment'||owner.type==='apparel'){if(!pawnById.has(owner.pawnId))errors.push('Missing equipment owner.');}
     else if (!jobById.has(owner.jobId)) errors.push('Pile references missing construction.');
   }
   if (world.stock.wood !== available.wood || world.stock.food !== available.food) errors.push('Derived stock differs from physical piles.');
@@ -537,6 +540,7 @@ export function deserializeWorld(serialized: string): World {
   if(record(input)&&input.schemaVersion===59){const errors=validateSchema(input,59);if(errors.length)throw new Error('Invalid version 59 save: '+errors.join(' '));input.schemaVersion=60;}
   if(record(input)&&input.schemaVersion===60){const errors=validateSchema(input,60);if(errors.length)throw new Error('Invalid version 60 save: '+errors.join(' '));input.schemaVersion=61;}
   if(record(input)&&input.schemaVersion===61){const errors=validateSchema(input,61);if(errors.length)throw new Error('Invalid version 61 save: '+errors.join(' '));input.schemaVersion=62;}
+  if(record(input)&&input.schemaVersion===62){const errors=validateSchema(input,62);if(errors.length)throw new Error('Invalid version 62 save: '+errors.join(' '));input.schemaVersion=63;}
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`); return input as World;
 }
 /** Deterministic diagnostic fingerprint, not a cryptographic digest. */

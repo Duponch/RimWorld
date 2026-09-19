@@ -1,7 +1,14 @@
-# Validation courante — V62
+# Validation courante — V63
 
-Préparation de l’habillement sous V62 : [preuves du noyau de protection](../history/validation-armor-boundary.md). Contrôles ciblés seulement ; aucune nouvelle validation UI ou charge intégrée, aucun vêtement jouable annoncé.
+## Vêtements physiques et protection anatomique
 
+Chemises/gilets, commandes physiques, couches, protection et usure aux impacts, sauvegarde stricte et rendu commun carte/portrait. [Preuves complètes et échecs conservés](../history/validation-apparel-v63.md), [contrat](armor.md), [règles confrontées](../research/apparel-reference.md).
+
+Passe globale : 294/303, neuf fixtures historiques corrigées puis 46/46 sur leurs fichiers ; revue finale 38/38 ciblés. Trois graines du pilote cœur passées. UI native 1×/6× et build final réussis. Le pilote UI de trois jours a atteint minuit puis échoué sur une attente prématurée de rangement ; diagnostic et continuation du checkpoint par la vraie UI réussis, tous les stocks requis rangés après sommeil. Il ne s’agit pas d’une nouvelle passe monolithique entièrement verte. Garde minage/abattage finale réussie, sans attente/saut/retrait anticipé ; mesures et détails dans les preuves.
+
+Charge mixte 3/30/100 avec armures et impacts effectifs : cent acteurs, CPU tick p95 43,27 / p99 54,79 / max 70,51 ms ; image p95 12,1 / p99 22,7 / max 128,2 ms. Aucun nouveau pipeline. CPU encore au-delà du budget 6× ; ne pas attribuer l’écart avec V62 au seul coût d’armure (survivants/PRNG/activités différents). G0 consolidation, G1/G2 partiels, G3 humain partiel, G4/G5 ouverts.
+
+Le noyau préparatoire V62 est historique : [preuves du noyau](../history/validation-armor-boundary.md). Les sections suivantes conservent les résultats de leurs livraisons, pas l’état courant de tous les systèmes.
 
 ## Réveils défensifs V62
 
