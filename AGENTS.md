@@ -1,5 +1,8 @@
 # Travail sur Lisière
 
+## Raids V68
+- Lire `docs/development/raids.md` et la recherche liée. Calendrier privé, groupe et registre des sorties persistants ; migration V67 strictement neutre. Ne jamais parcourir le graphe hypothétique des brèches : seule la navigation réelle engage une arête. Victimes retenues, pertes cumulées, retrait au bord après mouvement/récupération ; objets portés exportés une seule fois. Échéance/composition provisoires, narrateur et corps transportables absents.
+
 ## Ouvrages et réparations V67
 - Lire `docs/development/barriers.md` et sa recherche. Murs/portes seulement : PV par matériau, dégâts sparse, frappe et projectile, pertes sans remboursement distinctes de la déconstruction. Le retrait remplace `structures` et invalide les captures de tir, projectile, contact et son même au sein du tick Core ; la chute du toit peut arrêter le frappeur et avancer le PRNG. Ne recréer ni son attaque ni l'ancien PRNG ensuite.
 - Foyer manuel trié, recherche binaire, réparation Construction gratuite au contact (80 puis 20 Core, vitesse ×1,7), réservations/files communes. Déconstruction prioritaire ; sortie du foyer libère le travail, pas les PV acquis. V66 strictement validée avant migration neutre. Incident hostile, attaque autonome de barrières, autres dégâts d'objets et extension automatique du foyer restent absents ; l'étape 2 n'est pas terminée.
@@ -67,7 +70,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 67 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 68 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)

@@ -1,3 +1,4 @@
+import { createRaidUI } from './ui/raids';
 import { barrierHp,barrierMaxHp,isBarrier } from './sim/barriers';
 import { createArrivalUI } from './ui/arrivals';
 import { createMoodInspection,updateMoodInspection } from './ui/mood-inspection';
@@ -439,8 +440,9 @@ function renderState() {
   el('status-alerts').replaceChildren(...alerts.map(text => { const item = document.createElement('p'); item.textContent = text; return item; }));
   const beds = world.structures.filter(structure => structure.kind === 'bed'&&!structure.medical).length;
   if (beds < living.length) { const item = document.createElement('p'); item.dataset.alert = 'beds'; item.textContent = `${living.length - beds} couchage(s) manquant(s)`; el('status-alerts').append(item); }
-  arrivalUI.update(world);
+  arrivalUI.update(world);raidUI.update(world);
 }
+const raidUI=createRaidUI(command=>client.command(command),id=>renderer?.focusPawn(id));
 const arrivalUI=createArrivalUI(command=>client.command(command));
 function syncStorageButtons() {
   document.querySelector<HTMLElement>('.game-shell')!.inert=replacingWorld;

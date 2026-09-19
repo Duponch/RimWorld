@@ -1,4 +1,5 @@
 import { validateBarriers } from './barrier-save.ts';
+import { validateRaids } from './raid-save.ts';
 import { validateArrivals } from './arrival-save.ts';
 import { validateMental } from './mental-save.ts';
 import { validApparelShape,validateApparel } from './apparel-save.ts';
@@ -78,7 +79,7 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validateWorld(input: unknown): string[] {
   return validateSchema(input, SCHEMA_VERSION);
 }
-function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67): string[] {
+function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(input)) return ['World must be an object.'];
@@ -240,6 +241,8 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
   if(!errors.length)errors.push(...validatePlayerOrders(input as unknown as World,version));
   if (errors.length) return errors;
   const world = input as unknown as World;
+  errors.push(...validateRaids(world,version,ids));
+  if(errors.length)return errors;
   errors.push(...validateArrivals(world,version));
   errors.push(...validateMental(world,version));
   if(version>=44)errors.push(...validateInterruptedCargo(world));
@@ -302,7 +305,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
     const owned = world.piles.filter(pile => pile.owner.type === 'pawn' && pile.owner.pawnId === pawn.id);
     if (owned.length > 1 || (owned.length === 1 && !(version>=51&&pawn.tend?.medicine&&pawn.tend.phase!=='pickup') && !(version>=48&&pawn.feed&&pawn.feed.phase!=='pickup') && !(version>=44&&pawn.interruptedCargo) && !(version >= 10 && pawn.cooking) && pawn.haul?.phase !== 'deliver' && (legacyV2 || pawn.need?.kind !== 'eat' || pawn.need.phase === 'pickup'))) errors.push('Carried ownership mismatch.');
     if (pawn.jobId !== null || pawn.haul !== null || version>=52&&pawn.equipmentTask || version>=48&&pawn.feed || version>=47&&pawn.tend || version>=46&&pawn.rescue || version >= 10 && pawn.cooking) { if (!['moving', 'working'].includes(pawn.state)) errors.push('Assigned pawn has incompatible state.'); }
-    else if (!(version>=65&&pawn.mental?.crisis)&&!(version>=61&&pawn.tactics)&&!(version>=59&&pawn.melee)&&!(version>=58&&pawn.flee) && !(version>=53&&pawn.draft) && !(version>=15&&pawn.recreation.task) && (legacyV2 || pawn.need === null) && (pawn.path.length || ['moving', 'working'].includes(pawn.state)) && !(version>=22&&pawn.transitExit&&pawn.state!=='working')) errors.push('Unassigned pawn has path or work state.');
+    else if (!(version>=68&&pawn.raid)&&!(version>=65&&pawn.mental?.crisis)&&!(version>=61&&pawn.tactics)&&!(version>=59&&pawn.melee)&&!(version>=58&&pawn.flee) && !(version>=53&&pawn.draft) && !(version>=15&&pawn.recreation.task) && (legacyV2 || pawn.need === null) && (pawn.path.length || ['moving', 'working'].includes(pawn.state)) && !(version>=22&&pawn.transitExit&&pawn.state!=='working')) errors.push('Unassigned pawn has path or work state.');
     if (!legacyV2) {
       if (pawn.bedId !== null) {
         if (![...world.structures,...(world.packed??[]).map(p=>p.building)].some(bed => bed.kind === 'bed' && !bed.medical && bed.id === pawn.bedId) || bedOwners.has(pawn.bedId)) errors.push('Invalid or duplicate bed ownership.');
@@ -551,6 +554,7 @@ export function deserializeWorld(serialized: string): World {
   if(record(input)&&input.schemaVersion===64){const errors=validateSchema(input,64);if(errors.length)throw new Error('Invalid version 64 save: '+errors.join(' '));input.schemaVersion=65;}
   if(record(input)&&input.schemaVersion===65){const errors=validateSchema(input,65);if(errors.length)throw new Error('Invalid version 65 save: '+errors.join(' '));input.schemaVersion=66;}
   if(record(input)&&input.schemaVersion===66){const errors=validateSchema(input,66);if(errors.length)throw new Error('Invalid version 66 save: '+errors.join(' '));input.schemaVersion=67;}
+  if(record(input)&&input.schemaVersion===67){const errors=validateSchema(input,67);if(errors.length)throw new Error('Invalid version 67 save: '+errors.join(' '));input.schemaVersion=68;}
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`); return input as World;
 }
 /** Deterministic diagnostic fingerprint, not a cryptographic digest. */

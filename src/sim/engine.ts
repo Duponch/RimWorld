@@ -1,4 +1,6 @@
 import { reconcileRepairs,advanceRepair } from './repairs.ts';
+import { advanceRaids,enableRaids,exitRaider } from './raids.ts';
+import { processRaider } from './raid-behavior.ts';
 import { advanceArrivals,applyArrival } from './arrivals.ts';
 import { updateMentalBreak,processSadWander } from './mental-break.ts';
 import { expireMealMemories } from './mood.ts';
@@ -195,6 +197,7 @@ export function applyCommand(world: World, command: Command): CommandResult {
 function applyCommandInternal(world: World, command: Command): CommandResult {
   if(command?.type==='designate'&&command.kind==='repair')return refusal('invalid-command','Utilisez la zone de foyer pour activer les réparations.');
   if (!command || typeof command !== 'object') return refusal('invalid-command', 'Commande invalide.');
+  if(command.type==='enable-raids'){enableRaids(world);return {ok:true};}
   if(command.type==='enable-arrivals'||command.type==='answer-arrival')return applyArrival(world,command);
   const actors='pawnIds' in command&&Array.isArray(command.pawnIds)?command.pawnIds:'pawnId' in command&&command.pawnId!==null?[command.pawnId]:[];
   if(actors.some(id=>{const p=world.pawns.find(p=>p.id===id);return p&&!isColonist(p);}))return refusal('invalid-command','Cette personne ne fait pas partie de la colonie.');
@@ -411,7 +414,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if(pawn.state==='downed'||carrierOf(world,pawn.id)||isStunned(pawn,world.tick*10))continue;
       if(hasAdversary&&!pawn.mental?.crisis){considerAutomaticCombat(world,pawn,budget);considerFlee(world,pawn,getThreats());}
       if(pawn.need?.kind==='eat' && pawn.need.dining && !validDiningPlace(world,pawn.need.dining)) {pawn.need.phase='choose-spot';pawn.need.dining=null;pawn.need.progress=0;delete pawn.need.workRemainder;pawn.path=[];pawn.state='moving';}
-      if (pawn.moveCooldown > 0) { if(pawn.draft)pawn.draft.lastActiveTick=world.tick; pawn.state = pawn.mental?.crisis || pawn.tactics || pawn.melee || pawn.flee || pawn.draft || pawn.jobId !== null || pawn.equipmentTask || pawn.feed || pawn.tend || pawn.rescue || pawn.haul || pawn.need || pawn.cooking || pawn.recreation.task ? 'moving' : 'idle'; continue; }
+      if (pawn.moveCooldown > 0) { if(pawn.draft)pawn.draft.lastActiveTick=world.tick; pawn.state = pawn.mental?.crisis || pawn.raid || pawn.tactics || pawn.melee || pawn.flee || pawn.draft || pawn.jobId !== null || pawn.equipmentTask || pawn.feed || pawn.tend || pawn.rescue || pawn.haul || pawn.need || pawn.cooking || pawn.recreation.task ? 'moving' : 'idle'; continue; }
       const needsContext = {
         search: (goals?: ReadonlySet<number>) => search(world, pawn, getBlocked(), occupied, budget, goals),
         move: (target: Cell, exact: boolean) => moveToward(world, pawn, target, true, getBlocked, budget, exact, getLight),
@@ -419,6 +422,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
         event: (message: string) => event(world, 'need', message),
       };
       if(pawn.mental?.crisis){processSadWander(world,pawn,needsContext,()=>searchCandidates(world,pawn,getBlocked(),occupied,budget));continue;}
+      if(pawn.raid){if(!processDraftSleep(world,pawn,needsContext))processRaider(world,pawn,getBlocked,budget,getLight);continue;}
       if(pawn.tactics){if(!processDraftSleep(world,pawn,needsContext))processTactics(world,pawn,getBlocked,budget,getLight);continue;}
       if(pawn.melee){if(!processDraftSleep(world,pawn,needsContext)&&pawn.melee)processMelee(world,pawn,getBlocked,budget,getLight);continue;}
       if(!isColonist(pawn)){if(!processDraftSleep(world,pawn,needsContext))processSentry(world,pawn,getThreats());continue;}
@@ -491,6 +495,8 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
         if (job.progress >= jobDuration(world, job)) {completeJob(world, pawn, job);blocked=undefined;roofs=undefined;invalidateEnvironment();}
       } else moveToward(world, pawn, job, false, getBlocked, budget,false,getLight);
     }
+    if(world.raids)for(const pawn of [...world.pawns])if(pawn.raid?.exiting)exitRaider(world,pawn);
+    advanceRaids(world);
     if(world.roofing)reconcileRoofJobs(world,roofs);
     reconcileOrders(world);
     refreshStock(world);

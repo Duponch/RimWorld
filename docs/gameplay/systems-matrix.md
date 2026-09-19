@@ -1,5 +1,7 @@
 # Matrice des systèmes et critères de réalisation
 
+État V68 : S15/S17 disposent d’un premier raid jouable dans la colonie ordinaire, avec approche, brèche, issue et reprise. S13 gère les victimes coloniales ; S19 capture et devenir complet des corps restent ouverts. Cette tranche ne clôt aucun domaine. Prochain ordre canonique : [ROADMAP](../ROADMAP.md).
+
 V67 : chapitres 10/20/22, SYS/TEST-057 réparation et SYS/TEST-058 distinction de déconstruction partiellement servis pour murs/portes. G2/G3 progressent avec une brèche physique et son entretien ; SYS-132..135 reste une dépendance de l'incident hostile à venir. Aucun jalon clos. [Contrat](../development/barriers.md).
 
 V66 : chapitres 23/24, SYS/TEST-132..135 partiellement servis par un calendrier persistant et la demande d’accueil volontaire ; population variable reliée aux besoins/travaux/objets. Ni narrateur complet, ni recrutement de prisonniers SYS-148, ni jalon clos. [Contrat](../development/arrivals.md).

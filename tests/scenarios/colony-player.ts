@@ -1,3 +1,5 @@
+import { isColonist } from '../../src/sim/affiliation.ts';
+import { raidDefenseDecisions } from './raid-player.ts';
 import { moodThoughts,moodTarget,moodFrozen } from '../../src/sim/mood.ts';
 export { encounterDecisions } from './encounter-player.ts';
 import { powerDecisions } from './power-player.ts';
@@ -64,15 +66,17 @@ export function playerFocusDecisions(world:World):Decision[] {
  * Both the fast simulation and the real UI journey execute these intentions.
  */
 export function playerDecisions(world: World): Decision[] {
+  const colonists=world.pawns.filter(p=>isColonist(p)&&p.state!=='dead');
+  if(world.raids?.active||world.raids?.last&&colonists.some(p=>p.draft))return raidDefenseDecisions(world);
   const cx = Math.floor(world.width / 2), cz = Math.floor(world.height / 2);
   const out: Decision[] = [...coolingDecisions(world),...powerDecisions(world)];
   for(const s of world.structures)if((s.kind==='wall'||s.kind==='door')&&!world.home?.includes(s.z*world.width+s.x))out.push({reason:'Inclure les ouvrages du camp dans le foyer entretenu.',command:{type:'area',action:'home',from:{x:s.x,z:s.z},to:{x:s.x,z:s.z}}});
-  if(world.arrivals?.pending)out.push({reason:'Accueillir une quatrième personne ; différer la croissance suivante pour stabiliser le camp.',command:{type:'answer-arrival',offerId:world.arrivals.pending.id,accept:world.pawns.length<4}});
+  if(world.arrivals?.pending)out.push({reason:'Accueillir une quatrième personne ; différer la croissance suivante pour stabiliser le camp.',command:{type:'answer-arrival',offerId:world.arrivals.pending.id,accept:colonists.length<4}});
   const gun=world.piles.find(p=>p.kind==='weapon'&&p.owner.type==='ground'),armed=world.piles.some(p=>p.owner.type==='equipment');
-  const recruit=world.pawns[2];
+  const recruit=colonists[2];
   if(armed){
     const used=new Set<number>();
-    for(const pawn of world.pawns){
+    for(const pawn of colonists){
       if(pawn.mental?.crisis||pawn.equipmentTask||pawn.orders.active!==null||pawn.need||pawn.hunger<50||pawn.rest<40)continue;
       const worn=world.piles.filter(i=>i.owner.type==='apparel'&&i.owner.pawnId===pawn.id);
       const wanted=pawn===recruit&&!worn.some(i=>i.item==='flak-vest')?'flak-vest':!worn.some(i=>i.item==='cloth-shirt')?'cloth-shirt':undefined;
@@ -89,20 +93,20 @@ export function playerDecisions(world: World): Decision[] {
   // Ordinary player choice: the cook's night is shifted one hour earlier.
   // Keep eight intended sleep hours; actual rest still depends on bed and needs.
   if (world.structures.filter(s => s.kind === 'bed').length >= 3) {
-    const cook = world.pawns[2];
+    const cook = colonists[2];
     if (cook) for (const [hour, assignment] of [[5, 'anything'], [21, 'sleep']] as const) if (cook.schedule[hour] !== assignment)
       out.push({reason: 'Décaler le sommeil de la cuisinière pour préparer le matin.', command: {type: 'schedule-paint', pawnId: cook.id, hours: [hour], assignment}});
   }
   const priorities = [{ craft:3, mine:2, gather: 1, build: 3, haul: 2, grow: 2, cook:3 }, { craft:2, mine:2, gather: 3, build: 1, haul: 2, grow: 3, cook:3 }, { craft:3, mine:3, gather: 2, build: 3, haul: 2, grow: 2, cook:1 }] as const;
-  const builder=world.pawns.reduce((best,p)=>!best||p.skills.construction.level>best.skills.construction.level?p:best,world.pawns[0]);
-  world.pawns.forEach((pawn, i) => {
+  const builder=colonists.reduce((best,p)=>!best||p.skills.construction.level>best.skills.construction.level?p:best,colonists[0]);
+  colonists.forEach((pawn, i) => {
     for (const work of ['gather', 'build', 'haul', 'grow','cook','craft','mine'] as const) if (pawn.priorities[work] !== (work==='build'?(pawn===builder?1:3):priorities[i % 3]![work])) {
       out.push({ reason: 'Affecter le meilleur bâtisseur selon sa compétence et répartir les autres travaux.', command: { type: 'priority', pawnId: pawn.id, work, value: work==='build'?(pawn===builder?1:3):priorities[i % 3]![work] } });
     }
   });
   const plans: DesignateCommand[] = [
     ...[[-3, 2], [0, 2], [3, 2]].map(([x, z]) => ({ type: 'designate' as const, kind: 'bed' as const, x: cx + x!, z: cz + z!, orientation: 0 as const })),
-    ...world.pawns.slice(3).map((_,i)=>({type:'designate' as const,kind:'bed' as const,x:cx-3+(i%3)*3,z:cz+6+Math.floor(i/3)*3,orientation:0 as const})),
+    ...colonists.slice(3).map((_,i)=>({type:'designate' as const,kind:'bed' as const,x:cx-3+(i%3)*3,z:cz+6+Math.floor(i/3)*3,orientation:0 as const})),
     { type: 'designate', kind: 'table', x: cx, z: cz - 2, orientation: 1 },
     { type:'designate',kind:'horseshoes',x:cx+2,z:cz-3 },
     { type:'designate',kind:'campfire',x:cx-1,z:cz-1,orientation:0 },
@@ -140,14 +144,14 @@ export function playerDecisions(world: World): Decision[] {
   for(const fire of world.structures.filter(s=>s.kind==='campfire')) {
     const bill=fire.bills?.[0];
     if(!bill)out.push({reason:'Installer une première recette de repas simple au feu de camp.',command:{type:'bill-add',structureId:fire.id}});
-    else if(bill.mode!=='until'||bill.target!==world.pawns.length*2)out.push({reason:'Maintenir environ deux repas préparés par colon en réserve.',command:{type:'bill-update',structureId:fire.id,billId:bill.id,settings:{...bill,mode:'until',target:world.pawns.length*2}}});
+    else if(bill.mode!=='until'||bill.target!==colonists.length*2)out.push({reason:'Maintenir environ deux repas préparés par colon en réserve.',command:{type:'bill-update',structureId:fire.id,billId:bill.id,settings:{...bill,mode:'until',target:colonists.length*2}}});
     else if(!world.piles.some(p=>p.item==='simple-meal')) {
-      const cook=world.pawns.find(p=>p.priorities.cook>0&&p.hunger>35&&p.rest>35&&!p.cooking&&!p.haul&&!p.need&&p.jobId===null&&p.orders.active===null&&!p.orders.queue.length&&!p.priorityWork&&planCookingOrder(world,p,fire.id).order);
+      const cook=colonists.find(p=>p.priorities.cook>0&&p.hunger>35&&p.rest>35&&!p.cooking&&!p.haul&&!p.need&&p.jobId===null&&p.orders.active===null&&!p.orders.queue.length&&!p.priorityWork&&planCookingOrder(world,p,fire.id).order);
       if(cook)out.push({reason:'Prioriser un repas quand la réserve de repas préparés est vide.',command:{type:'order-cook',pawnId:cook.id,structureId:fire.id,queue:false}});
     }
   }
   if (!world.growingZones.length && world.structures.filter(s => s.kind === 'bed').length === 3) out.push({reason:'Semer un premier potager près du camp, tout en continuant à cueillir pendant sa croissance.',command:{type:'area',action:'growing',from:{x:cx-2,z:cz+5},to:{x:cx+2,z:cz+7}}});
-  for(const pawn of world.pawns)if(pawn.schedule[19]!=='recreation'||pawn.schedule[20]!=='recreation')out.push({reason:'Réserver une plage de loisirs du soir, sans remplacer le repos nocturne.',command:{type:'schedule-paint',pawnId:pawn.id,hours:[19,20],assignment:'recreation'}});
+  for(const pawn of colonists)if(pawn.schedule[19]!=='recreation'||pawn.schedule[20]!=='recreation')out.push({reason:'Réserver une plage de loisirs du soir, sans remplacer le repos nocturne.',command:{type:'schedule-paint',pawnId:pawn.id,hours:[19,20],assignment:'recreation'}});
   // Prepare the workshop after the first actual steel extraction, without
   // granting material or replacing the camp's food/bed priorities.
   if(world.tick>=6000&&world.piles.some(p=>p.item==='steel'&&p.quantity>=30)&&!world.structures.some(s=>s.kind==='stonecutter')&&!world.jobs.some(j=>j.kind==='stonecutter')&&!world.packed.some(p=>p.building.kind==='stonecutter')) {
@@ -166,13 +170,13 @@ export function playerDecisions(world: World): Decision[] {
   // Preserve travel rations once cooking provides a buffer; lift the restriction
   // if that buffer runs out. This is a player decision, never a hunger override.
   const nutritionWithoutRations=world.piles.reduce((n,p)=>n+(p.item==='simple-meal' ? p.quantity*.9 : p.item==='berries'||p.item==='rice' ? p.quantity*.05 : 0),0);
-  const reserveRations=prepared>=world.pawns.length*2;
-  for(const pawn of world.pawns) {
-    const policyId=reserveRations?3:nutritionWithoutRations<world.pawns.length*.8?1:pawn.foodPolicyId;
+  const reserveRations=prepared>=colonists.length*2;
+  for(const pawn of colonists) {
+    const policyId=reserveRations?3:nutritionWithoutRations<colonists.length*.8?1:pawn.foodPolicyId;
     if(pawn.foodPolicyId!==policyId)out.push({reason:policyId===3?'Conserver les rations de voyage tant que la cuisine assure les repas.':'Autoriser les rations de secours lorsque la réserve fraîche baisse.',command:{type:'food-policy-assign',pawnId:pawn.id,policyId}});
   }
-  const cookingDemand=world.structures.some(s=>s.kind==='campfire')?Math.max(0,(world.pawns.length*2-prepared)*10-ingredients):0;
-  for (const [kind, required] of [['tree', Math.max(40, outstandingWood + 20) - world.stock.wood], ['berries', Math.max(cookingDemand,(world.pawns.length * 1.6 - availableNutrition(world)) * (world.foodRules === 'legacy' ? 100 / 35 : 20))]] as const) {
+  const cookingDemand=world.structures.some(s=>s.kind==='campfire')?Math.max(0,(colonists.length*2-prepared)*10-ingredients):0;
+  for (const [kind, required] of [['tree', Math.max(40, outstandingWood + 20) - world.stock.wood], ['berries', Math.max(cookingDemand,(colonists.length * 1.6 - availableNutrition(world)) * (world.foodRules === 'legacy' ? 100 / 35 : 20))]] as const) {
     const action = kind === 'tree' ? 'chop' : 'harvest';
     let planned = nearby.filter(r => r.kind === kind && world.jobs.some(j => j.x === r.x && j.z === r.z)).reduce((n,r) => n+r.amount,0);
     for (const resource of nearby) {

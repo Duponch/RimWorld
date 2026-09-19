@@ -1,4 +1,6 @@
-# Validation courante — V67
+# Validation courante — V68
+
+V68 : [validation du premier raid ordinaire](../history/validation-raids-v68.md), calendrier, entrée physique, approche/brèche, défense, retraite et objets exportés ; continuation stricte et pilote de cinq jours dans le même camp. Bilan et limitations distincts du narrateur complet. Les versions suivantes sont historiques.
 
 V67 : [validation des ouvrages et réparations](../history/validation-barriers-v67.md), coups physiques, dégâts, destruction, foyer, entretien, migrations et charge. L'étape 2 reste ouverte ; les preuves de V66 ci-dessous sont historiques.
 

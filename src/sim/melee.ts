@@ -3,7 +3,7 @@ import { apparelProtection } from './apparel-protection.ts';
 import { disturbanceEvents,isLying } from './disturbance.ts';
 import { automaticPermission,automaticTarget } from './automatic-combat-state.ts';
 import type { shootingQueries } from './shooting.ts';
-import { activeThreat,hostileTo,isColonist } from './affiliation.ts';
+import { assaultTarget,hostileTo,isColonist } from './affiliation.ts';
 import { cancelShooting } from './shooting-state.ts';
 import { cancelMelee,type MeleeCommand } from './melee-state.ts';
 import { interruptDraftWork } from './drafting.ts';
@@ -55,10 +55,10 @@ export function applyMeleeCommand(world:World,command:MeleeCommand):CommandResul
 /** Fixed sentry only: counter an adjacent enemy, no implicit raid pursuit. */
 export function startSentryMelee(world:World,pawn:Pawn):boolean {
   if(isColonist(pawn)||!canFight(world,pawn))return false;
-  const nearby=world.pawns.filter(p=>hostileTo(pawn,p)&&activeThreat(p)&&Math.abs(p.x-pawn.x)<=1&&Math.abs(p.z-pawn.z)<=1);
+  const nearby=world.pawns.filter(p=>hostileTo(pawn,p)&&assaultTarget(pawn,p)&&Math.abs(p.x-pawn.x)<=1&&Math.abs(p.z-pawn.z)<=1);
   if(!nearby.length)return false;
   const blocked=blockedCells(world,true);
-  const target=nearby.filter(p=>hostileTo(pawn,p)&&activeThreat(p)&&meleeContact(world,pawn,p,blocked)).sort((a,b)=>a.id-b.id)[0];
+  const target=nearby.filter(p=>hostileTo(pawn,p)&&assaultTarget(pawn,p)&&meleeContact(world,pawn,p,blocked)).sort((a,b)=>a.id-b.id)[0];
   if(!target)return false;
   cancelShooting(pawn);pawn.path=[];
   pawn.melee={order:{targetId:target.id,startedDowned:false},strike:pawn.melee?.strike??null};return true;
@@ -124,7 +124,7 @@ export function processMelee(world:World,pawn:Pawn,getBlocked:NavigationGrid,bud
   if(!target||!canFight(world,pawn)){cancelMelee(pawn);pawn.path=[];return;}
   if(m.strike||pawn.shooting?.stance?.phase==='cooldown'||isStunned(pawn,world.tick*10)){pawn.path=[];pawn.state='idle';return;}
   if(meleeContact(world,pawn,target,getBlocked())){pawn.path=[];pawn.state='idle';return;}
-  if(!isColonist(pawn)&&!pawn.tactics||m.order?.auto==='draft'){cancelMelee(pawn);return;}
+  if(!isColonist(pawn)&&!pawn.tactics&&!pawn.raid||m.order?.auto==='draft'){cancelMelee(pawn);return;}
   const blocked=getBlocked(),end=pawn.path.at(-1),next=pawn.path[0];
   if(!next||!end||!meleeContact(world,end,target,blocked)||!canStep(world,pawn,next,blocked,new Set())) {
     if(!budget.remaining||pawn.planCooldown)return;

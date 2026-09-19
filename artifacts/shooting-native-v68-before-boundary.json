@@ -1,0 +1,270 @@
+{
+  "raidOverlay": "First raid spawns during capture at the real border; adds one actor to the base count. Entry and long approach, not a 100-raider assault.",
+  "arrivalFixture": null,
+  "mentalBreaks": false,
+  "apparel": true,
+  "date": "2026-09-19T11:48:56.470Z",
+  "melee": true,
+  "hostileTargets": false,
+  "variant": "Barrier destruction, independent repair targets and mining/chopping; initial low HP is a controlled load, no reset.",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "protocol": "250², 3/30/100 actors; one third attacks weakened barriers, one third repairs separate damaged barriers in home, remainder mines/chops. No reset. Native WebGPU, real worker at 6× for 240 ticks, generated forest 250² with cleared shooting lanes; roles follow the selected variant (MOVING_TARGETS=1 only for moving-pawn variants). Outside AUTOMATIC, actual shot commands accepted before fixture load; health, XP and all decisions evolve in worker. 90 warmup frames before measurement. Scene time is included in frame time; callback excludes IPC decoding. No claim of perfect frame pacing.",
+  "results": [
+    {
+      "raids": {
+        "profile": "camp-raids-v1",
+        "rng": 2085814264,
+        "nextCheck": null,
+        "serial": 1,
+        "completed": 0,
+        "departed": [],
+        "active": {
+          "id": 1,
+          "startedAt": 2001,
+          "deadline": 5657,
+          "lossPermille": 546,
+          "members": [
+            12455
+          ],
+          "lost": [],
+          "phase": "assault"
+        }
+      },
+      "actualActors": 4,
+      "barriers": true,
+      "destroyed": 1,
+      "repairJobs": 0,
+      "remainingDamage": 0,
+      "arrivalAccepted": 0,
+      "finalActors": 4,
+      "mentalActors": 0,
+      "pursuit": false,
+      "automatic": true,
+      "actors": 3,
+      "pairs": 1,
+      "movingTargets": false,
+      "hostileTargets": false,
+      "slowedPawns": 0,
+      "retimedEdges": 0,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1"
+      },
+      "framesMs": {
+        "count": 693,
+        "p50": 4.200000000000728,
+        "p95": 12.5,
+        "p99": 12.799999999999272,
+        "max": 37.5
+      },
+      "frameCpuMs": {
+        "count": 694,
+        "p50": 5.100000001490116,
+        "p95": 8.900000000372529,
+        "p99": 11.099999999627471,
+        "max": 25.90000000037253
+      },
+      "sceneMs": {
+        "count": 27,
+        "p50": 2.300000000745058,
+        "p95": 9.599999999627471,
+        "p99": 16.700000001117587,
+        "max": 16.700000001117587
+      },
+      "snapshotCallbackMs": {
+        "count": 188,
+        "p50": 0,
+        "p95": 2.099999999627471,
+        "p99": 6,
+        "max": 6.599999999627471
+      },
+      "drawCalls": {
+        "count": 694,
+        "p50": 164,
+        "p95": 170,
+        "p99": 171,
+        "max": 171
+      },
+      "meleePoses": 42,
+      "visibleFlightSamples": 0,
+      "capacity": 32,
+      "apparelRemaining": 6,
+      "apparelDamaged": 0,
+      "gunshotPatients": 0,
+      "pipelines": [],
+      "errors": []
+    },
+    {
+      "raids": {
+        "profile": "camp-raids-v1",
+        "rng": 2085814264,
+        "nextCheck": null,
+        "serial": 1,
+        "completed": 0,
+        "departed": [],
+        "active": {
+          "id": 1,
+          "startedAt": 2001,
+          "deadline": 5657,
+          "lossPermille": 546,
+          "members": [
+            12720
+          ],
+          "lost": [],
+          "phase": "assault"
+        }
+      },
+      "actualActors": 31,
+      "barriers": true,
+      "destroyed": 10,
+      "repairJobs": 0,
+      "remainingDamage": 0,
+      "arrivalAccepted": 0,
+      "finalActors": 31,
+      "mentalActors": 0,
+      "pursuit": false,
+      "automatic": true,
+      "actors": 30,
+      "pairs": 10,
+      "movingTargets": false,
+      "hostileTargets": false,
+      "slowedPawns": 0,
+      "retimedEdges": 0,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1"
+      },
+      "framesMs": {
+        "count": 703,
+        "p50": 4.200000000000728,
+        "p95": 12.5,
+        "p99": 16.699999999999818,
+        "max": 33.29999999999927
+      },
+      "frameCpuMs": {
+        "count": 704,
+        "p50": 4.900000000372529,
+        "p95": 7.700000001117587,
+        "p99": 10.5,
+        "max": 19.40000000037253
+      },
+      "sceneMs": {
+        "count": 40,
+        "p50": 2.599999999627471,
+        "p95": 6.400000000372529,
+        "p99": 13.400000000372529,
+        "max": 13.400000000372529
+      },
+      "snapshotCallbackMs": {
+        "count": 192,
+        "p50": 0,
+        "p95": 2.700000001117587,
+        "p99": 5.5,
+        "max": 5.799999998882413
+      },
+      "drawCalls": {
+        "count": 704,
+        "p50": 170,
+        "p95": 173,
+        "p99": 174,
+        "max": 174
+      },
+      "meleePoses": 579,
+      "visibleFlightSamples": 0,
+      "capacity": 32,
+      "apparelRemaining": 46,
+      "apparelDamaged": 0,
+      "gunshotPatients": 0,
+      "pipelines": [],
+      "errors": []
+    },
+    {
+      "raids": {
+        "profile": "camp-raids-v1",
+        "rng": 2085814264,
+        "nextCheck": null,
+        "serial": 1,
+        "completed": 0,
+        "departed": [],
+        "active": {
+          "id": 1,
+          "startedAt": 2001,
+          "deadline": 5657,
+          "lossPermille": 546,
+          "members": [
+            13407
+          ],
+          "lost": [],
+          "phase": "assault"
+        }
+      },
+      "actualActors": 101,
+      "barriers": true,
+      "destroyed": 33,
+      "repairJobs": 0,
+      "remainingDamage": 0,
+      "arrivalAccepted": 0,
+      "finalActors": 101,
+      "mentalActors": 0,
+      "pursuit": false,
+      "automatic": true,
+      "actors": 100,
+      "pairs": 33,
+      "movingTargets": false,
+      "hostileTargets": false,
+      "slowedPawns": 0,
+      "retimedEdges": 0,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1"
+      },
+      "framesMs": {
+        "count": 520,
+        "p50": 8.299999999999272,
+        "p95": 25,
+        "p99": 53.899999999999636,
+        "max": 87.60000000000036
+      },
+      "frameCpuMs": {
+        "count": 521,
+        "p50": 4.900000000372529,
+        "p95": 12.400000000372529,
+        "p99": 20.5,
+        "max": 26.299999998882413
+      },
+      "sceneMs": {
+        "count": 57,
+        "p50": 4.300000000745058,
+        "p95": 12.400000000372529,
+        "p99": 14.5,
+        "max": 14.5
+      },
+      "snapshotCallbackMs": {
+        "count": 184,
+        "p50": 0.09999999962747097,
+        "p95": 12.399999998509884,
+        "p99": 17.90000000037253,
+        "max": 22.90000000037253
+      },
+      "drawCalls": {
+        "count": 521,
+        "p50": 170,
+        "p95": 173,
+        "p99": 174,
+        "max": 174
+      },
+      "meleePoses": 1686,
+      "visibleFlightSamples": 0,
+      "capacity": 32,
+      "apparelRemaining": 151,
+      "apparelDamaged": 0,
+      "gunshotPatients": 0,
+      "pipelines": [],
+      "errors": []
+    }
+  ]
+}

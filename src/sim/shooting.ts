@@ -1,7 +1,7 @@
 import { automaticPermission,automaticTarget } from './automatic-combat-state.ts';
 import { cancelMelee } from './melee-state.ts';
 import { isStunned } from './stun.ts';
-import { activeThreat,hostileTo,isColonist,distanceSquared } from './affiliation.ts';
+import { assaultTarget,hostileTo,isColonist,distanceSquared } from './affiliation.ts';
 import type { CommandResult,Pawn,World } from './types.ts';
 import type { ShootingCommand } from './shooting-state.ts';
 import { cancelShooting } from './shooting-state.ts';
@@ -73,7 +73,7 @@ export function advanceShooter(world:World,pawn:Pawn,core:number,queries:Queries
   if(shot.order){const a=shot.order.auto;if(a?(!automaticPermission(pawn,a.kind)||!automaticTarget(world,pawn,shot.order.targetId)||a.kind==='draft'&&pawn.draft?.holdFire||a.kind==='response'&&world.tick>=a.until):!pawn.draft&&isColonist(pawn))cancelShooting(pawn);}
   if(shot.order) {
     const target=world.pawns.find(p=>p.id===shot.order!.targetId);
-    if(!target||target.state==='dead'||!shot.order.startedDowned&&target.state==='downed'||!isColonist(pawn)&&(!activeThreat(target)||!hostileTo(pawn,target)))cancelShooting(pawn);
+    if(!target||target.state==='dead'||!shot.order.startedDowned&&target.state==='downed'||!isColonist(pawn)&&(!assaultTarget(pawn,target)||!hostileTo(pawn,target)))cancelShooting(pawn);
     if(!pawn.shooting)return;
   }
   if(pawn.draft)pawn.draft.lastActiveTick=world.tick;
@@ -102,7 +102,7 @@ export function advanceShooter(world:World,pawn:Pawn,core:number,queries:Queries
 }
 
 export function startAutonomousShot(world:World,pawn:Pawn,target:Pawn,queries:Queries):boolean {
-  if(isColonist(pawn)||!hostileTo(pawn,target)||!activeThreat(target)||pawn.shooting)return false;
+  if(isColonist(pawn)||!hostileTo(pawn,target)||!assaultTarget(pawn,target)||pawn.shooting)return false;
   const plan=shotPlan(world,pawn,target.id,queries);if('reason' in plan)return false;
   pawn.path=[];pawn.shooting={order:{targetId:target.id,weaponId:plan.weapon.id,startedDowned:false},stance:null};
   startAim(world,pawn,world.tick*CORE_TICKS_PER_LOCAL,queries);return !!pawn.shooting;

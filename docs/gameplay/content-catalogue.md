@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+V68 ajoute le profil de **raid du camp** : un assaillant sans arme au premier groupe, puis deux dont un porteur de revolver. Chemises et revolver utilisent les objets physiques existants ; aucun nouvel ItemId. Calendrier/composition limités et provisoires ; ces deux profils ne représentent pas le catalogue des factions Core. Objets portés exportés avec leur identité lors d’une sortie réelle. [Contrat](../development/raids.md).
+
 V67 enrichit les **murs et portes existants**, sans nouvel ItemId : PV selon les sept matériaux, dommages persistants, destruction sans remboursement et réparation. Les anciens ouvrages non typés emploient le profil de résistance du bois sans réécrire leur recette historique. Les autres bâtiments, plantes et objets ne reçoivent pas implicitement ces règles. La zone de foyer est une commande, pas un objet. [Contrat](../development/barriers.md).
 
 V66 ajoute un **incident obtenable en partie ordinaire** : demande d’accueil volontaire. Douze prénoms, trois profils des quatre compétences déjà actives et une chemise normale portée constituent le profil déclaré de l’arrivant. Aucun nouvel ItemId ; la chemise existante devient aussi un apport extérieur. Pensée « Accueil refusé », −3 sur six jours, cinq occurrences décroissantes. Biographies, traits et génération complète restent absents. [Contrat](../development/arrivals.md).

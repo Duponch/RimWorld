@@ -1,5 +1,11 @@
 # Guide joueur
 
+## Défendre le camp
+
+Dans une nouvelle partie ordinaire, un premier assaillant arrive entre 3,5 et 4 jours. Cliquez sur la lettre **Raid**, puis **Voir les assaillants**. Mobilisez les défenseurs depuis leurs portraits et placez-les ; leurs tirs libres et la mêlée existante restent disponibles. Des murs fermés peuvent être frappés puis détruits. Le calendrier et les groupes limités sont provisoires ; les raids suivants surviennent 6 à 8 jours après une issue. Il n’y a pas encore de pause automatique à l’alerte.
+
+Après **Assaut terminé**, démobilisez, contrôlez Santé, soignez les blessés et entretenez les murs/portes dans la zone de foyer. Les fuyards doivent atteindre le bord. Un ennemi à terre peut mourir ou se relever ; les corps restent visibles, sans capture ni sépulture pour le moment. Le bilan est celui de la fin de l’assaut. Dans une ancienne sauvegarde, **Activer les raids du camp** démarre ce calendrier sans changer la carte. [Contrat et limites](../development/raids.md).
+
 ## Endommager et réparer un mur ou une porte (V67)
 
 Mobilisez un colon, utilisez **Attaquer au corps à corps**, puis cliquez sur un mur ou une porte. Il rejoint le contact et frappe à sa cadence ; **Arrêter** interrompt l'ordre en conservant la récupération du coup. Les balles interceptées par ces ouvrages les endommagent aussi. L'inspection affiche les PV actuels et maximaux, qui dépendent du matériau.
@@ -8,7 +14,7 @@ Mobilisez un colon, utilisez **Attaquer au corps à corps**, puis cliquez sur un
 
 Dans **Architecte → Zones → Foyer**, peignez les ouvrages à entretenir. Un colon non mobilisé affecté à **Construction** rejoint un ouvrage endommagé et le répare sans matière. Une désignation de déconstruction prime sur cette réparation. **Retirer foyer** arrête son entretien ; les PV déjà restaurés restent acquis. Le foyer ne s'étend pas encore automatiquement autour des constructions et ne fournit pas encore nettoyage ou extinction des incendies.
 
-Seuls murs et portes sont concernés. L'ennemi de Rencontre armée ne cherche pas encore à ouvrir une brèche ; aucun raid nouveau dans la colonie ordinaire n'est livré par cette étape.
+Seuls murs et portes sont concernés. La Rencontre armée garde son mandat local ; les assaillants du raid ordinaire V68 peuvent chercher une brèche.
 
 ## Accueillir une nouvelle personne (V66)
 
@@ -16,7 +22,7 @@ Dans un nouveau camp paisible, une première demande peut arriver entre un jour 
 
 Une acceptation fait entrer le colon par une bordure accessible, avec sa chemise. Il apparaît dans les portraits et les tableaux de gestion. Prévoyez un lit, davantage de repas et ses priorités de travail ; il utilise les mêmes règles que les autres colons. Sa meilleure compétence est annoncée avant le choix. Si aucune entrée n’est libre, la demande reste ouverte jusqu’à son échéance.
 
-Refuser donne aux colons hors crise une pensée de −3 pendant six jours ; les refus répétés se cumulent avec un effet décroissant, limité à cinq. L’expiration sans réponse ne donne pas cette pensée. Sur une ancienne partie, cliquez sur **Activer les demandes d’accueil** pour commencer le calendrier sans recréer la carte. La cadence ultérieure de quatre à huit jours et les profils limités sont provisoires ; ce système ne comprend pas encore raids, visiteurs ou narrateur complet. [Règles et limites](../development/arrivals.md).
+Refuser donne aux colons hors crise une pensée de −3 pendant six jours ; les refus répétés se cumulent avec un effet décroissant, limité à cinq. L’expiration sans réponse ne donne pas cette pensée. Sur une ancienne partie, cliquez sur **Activer les demandes d’accueil** pour commencer le calendrier sans recréer la carte. La cadence ultérieure de quatre à huit jours et les profils limités sont provisoires ; l’accueil ne comprend pas les visiteurs ni le narrateur complet ; les raids sont un calendrier distinct depuis V68. [Règles et limites](../development/arrivals.md).
 
 
 ## Errance triste (V65)

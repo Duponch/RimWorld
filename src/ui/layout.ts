@@ -130,6 +130,7 @@ export function gameLayout(): string {
       <p>Molette : zoom · glisser le bouton droit : tourner · bouton central ou flèches : déplacer la caméra. La coupe des murs sert à voir les intérieurs ; leurs obstacles restent en place.</p>
       <p class="muted">Inspectez un chantier pour comprendre son attente, ou une réserve pour modifier ses filtres. Horaires permet de régler les plages de travail et de sommeil. Un piquet de fers à cheval offre une autre famille de loisirs que l’observation du ciel. La santé et les pièces restent à développer. Les onglets grisés indiquent les domaines actuellement indisponibles.</p>
     </dialog>
+    <button id="enable-raids" class="panel" style="position:fixed;right:16px;top:172px;z-index:3">Activer les raids du camp</button>
     <button id="enable-arrivals" class="panel" style="position:fixed;right:16px;top:132px;z-index:3">Activer les demandes d’accueil</button>
     <button id="inspect-threat" class="panel" style="position:fixed;right:16px;top:90px;z-index:3" hidden>Menace armée · voir</button>
     <dialog id="new-world-dialog" class="help-dialog"><form id="new-world-form"><button type="button" class="close" id="new-world-close" aria-label="Fermer la création">×</button><h2>Nouvelle colonie</h2>

@@ -12,18 +12,23 @@ export function meleeContact(world:World,a:Cell,b:Cell,blocked=blockedCells(worl
   return free(a.x,b.z)||free(b.x,a.z);
 }
 export function meleePlaces(world:World,pawn:Pawn,target:Cell,claimed:ReadonlySet<number>=new Set()):Cell[] {
-  const stands=captureStandability(world),reserved=reservedServiceCells(world,pawn.id),physical=blockedCells(world,true),cells:Cell[]=[];
+  return captureMeleePlaces(world,pawn,claimed)(target);
+}
+/** One synchronous decision only: invalid after any world/actor mutation. */
+export function captureMeleePlaces(world:World,pawn:Pawn,claimed:ReadonlySet<number>=new Set()):(target:Cell)=>Cell[] {
+  const stands=captureStandability(world),reserved=reservedServiceCells(world,pawn.id),physical=blockedCells(world,true);
   const occupied=new Set<number>();
   for(const p of world.pawns)if(p!==pawn&&p.state!=='dead'&&p.state!=='downed'){
     occupied.add(p.z*world.width+p.x);if(p.motion&&p.motion.end>world.tick)occupied.add(p.motion.from.z*world.width+p.motion.from.x);
     if(p.tactics?.post)occupied.add(p.tactics.post.z*world.width+p.tactics.post.x);
     if(p.melee?.order&&p.path.length){const c=p.path.at(-1)!;occupied.add(c.z*world.width+c.x);}
   }
+  return target=>{const cells:Cell[]=[];
   for(let z=target.z-1;z<=target.z+1;z++)for(let x=target.x-1;x<=target.x+1;x++) {
     const c={x,z},i=z*world.width+x;
     if((x!==target.x||z!==target.z)&&inBounds(world,x,z)&&stands(c)&&!occupied.has(i)&&!reserved.has(i)&&!claimed.has(i)&&meleeContact(world,c,target,physical))cells.push(c);
   }
-  return cells;
+  return cells;};
 }
 export function meleeRoute(world:World,pawn:Pawn,places:Cell[],blocked:Uint8Array):Cell[]|null {
   if(!places.length)return null;

@@ -1,4 +1,5 @@
 /// <reference lib="webworker" />
+import { enableRaids } from '../sim/raids';
 import { enableArrivals } from '../sim/arrivals';
 import { setupEncounter } from '../sim/encounter-scenario';
 import { MotionRecorder } from './motion-tracks';
@@ -33,7 +34,7 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
       if (request.size !== 32 && !(MAP_SIZE_PRESETS as readonly number[]).includes(request.size)) throw new Error('Taille de carte invalide.');
       if(request.scenario!==undefined&&!['camp','sentry'].includes(request.scenario))throw new Error('Scénario invalide.');
       const created=createWorld(request.seed, request.size, request.size);
-      if(request.scenario==='sentry')setupEncounter(created);else enableArrivals(created);
+      if(request.scenario==='sentry')setupEncounter(created);else {enableArrivals(created);enableRaids(created);}
       world=created;
       motion.reset();
       clock.reset(performance.now());

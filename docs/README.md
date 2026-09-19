@@ -1,6 +1,6 @@
 # Documentation de Lisière
 
-État courant : **V67, 19 septembre 2026**. Dégâts/destruction des murs et portes, zone de foyer manuelle et réparation physique complètent le camp existant. Les demandes d’accueil V66 restent le premier incident ordinaire ; le raid et ses suites sont encore à livrer. [Inventaire consolidé](gameplay/implementation-status.md), [dernières preuves](history/validation-barriers-v67.md).
+État courant : **V68, 19 septembre 2026**. Premier raid dans le camp ordinaire, approche et brèches physiques, retraite et bilan ; les victimes restent sur carte. Accueil, ouvrages et soins existants prolongent cette boucle. Calendrier/composition provisoires, gestion complète des corps et narrateur absents. [Inventaire consolidé](gameplay/implementation-status.md), [dernières preuves](history/validation-raids-v68.md).
 
 La [revue de progression](research/progression-review-2026-09-19.md) explique la réorientation vers des situations de colonie complètes. [ROADMAP](ROADMAP.md) conserve seule l’ordre des prochains travaux et les estimations. Mode jour, automatisation nocturne en pause.
 

@@ -24,13 +24,13 @@ export function validateMelee(world:World):string[] {
     if(m.order?.auto&&m.order.startedDowned)errors.push('Automatic melee cannot start on a downed target.');
     if(['dead','downed','sleeping','eating','working','resting','recreating'].includes(p.state)||p.need||p.jobId!==null||p.haul||p.cooking||p.rescue||p.tend||p.feed||p.equipmentTask||p.flee||p.recreation.task||p.orders.active!==null||p.orders.queue.length||p.priorityWork)errors.push('Melee conflicts with another activity.');
     if(m.order&&!m.order.structure&&(!world.pawns.some(t=>t.id===m.order!.targetId&&t.id!==p.id&&(isColonist(p)||hostileTo(p,t)))||(m.order.auto?!automaticOwnership(world,p,m.order.targetId,m.order.auto):isColonist(p)&&!p.draft)||p.shooting?.order||(!m.order.auto&&p.draft?.target)||m.order.auto==='draft'&&!automaticPost(p)||p.draft?.queue.length))errors.push('Invalid melee order ownership.');
-    if(m.order?.structure&&(!isColonist(p)||!p.draft||p.shooting?.order||p.draft.target||p.draft.queue.length||!world.structures.some(s=>s.id===m.order!.targetId&&(s.kind==='wall'||s.kind==='door'))))errors.push('Invalid barrier melee order.');
+    if(m.order?.structure&&(!(isColonist(p)?!!p.draft:!!p.raid)||p.shooting?.order||p.draft?.target||p.draft?.queue.length||!world.structures.some(s=>s.id===m.order!.targetId&&(s.kind==='wall'||s.kind==='door'))))errors.push('Invalid barrier melee order.');
     if(m.strike?.structure&&(m.strike.structure.x>=world.width||m.strike.structure.z>=world.height||m.strike.targetId>=world.nextId))errors.push('Invalid barrier recovery position.');
     if(m.strike?.structure){
       const s=world.structures.find(s=>s.id===m.strike!.targetId),c=m.strike.structure;
       if(s&&(s.kind!=='wall'&&s.kind!=='door'||s.x!==c.x||s.z!==c.z)||[world.pawns,world.jobs,world.piles,world.resources].some(items=>items.some(item=>item.id===m.strike!.targetId))||world.packed.some(p=>p.building.id===m.strike!.targetId))errors.push('Barrier recovery conflicts with a live entity.');
     }
-    if(m.strike&&(!m.strike.structure&&!world.pawns.some(t=>t.id===m.strike!.targetId&&t.id!==p.id)||(p.motion?.end??0)>world.tick||p.shooting?.stance?.phase==='aim'))errors.push('Invalid melee recovery.');
+    if(m.strike&&(!m.strike.structure&&!world.pawns.some(t=>t.id===m.strike!.targetId&&t.id!==p.id)&&!world.raids?.departed.some(d=>d.pawnId===m.strike!.targetId)||(p.motion?.end??0)>world.tick||p.shooting?.stance?.phase==='aim'))errors.push('Invalid melee recovery.');
   }
   return errors;
 }

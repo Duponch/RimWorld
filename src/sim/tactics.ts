@@ -1,4 +1,4 @@
-import { activeThreat,distanceSquared,hostileTo } from './affiliation.ts';
+import { assaultTarget,distanceSquared,hostileTo } from './affiliation.ts';
 import { automaticShotScore,chooseAutomaticTarget } from './automatic-targets.ts';
 import { candidateAccess } from './candidate-access.ts';
 import { clearShotSegment,findShotLine } from './combat-space.ts';
@@ -25,7 +25,7 @@ function clearEngagement(p:Pawn):void {cancelShooting(p);cancelMelee(p);p.path=[
 /** Visible human threats only. Group orders, unseen colony targets and raids
  * will have their own controller; do not turn this scenario into an omniscient AI. */
 function acquire(world:World,p:Pawn,range:number,blocked:Uint8Array):Pawn|undefined {
-  const candidates=world.pawns.filter(q=>hostileTo(p,q)&&activeThreat(q)&&distanceSquared(p,q)<=56**2).sort((a,b)=>distanceSquared(p,a)-distanceSquared(p,b)||a.id-b.id);
+  const candidates=world.pawns.filter(q=>hostileTo(p,q)&&assaultTarget(p,q)&&distanceSquared(p,q)<=56**2).sort((a,b)=>distanceSquared(p,a)-distanceSquared(p,b)||a.id-b.id);
   if(!candidates.length)return;
   const margin=59,queries=shootingQueries(world,()=>captureWorldShotGrid(world,{minX:p.x-margin,minZ:p.z-margin,maxX:p.x+margin,maxZ:p.z+margin}));
   const visible=candidates.filter(q=>!queries.carried(q.id)&&clearShotSegment(queries.grid(),p,q));
@@ -47,7 +47,7 @@ function reviewAt(world:World,melee=false):number {
  * their shared systems; this controller only chooses intent and a physical post. */
 export function processTactics(world:World,p:Pawn,getBlocked:NavigationGrid,budget:SearchBudget,getLight:LightReader):void {
   const t=p.tactics!;
-  let target=world.pawns.find(q=>q.id===t.targetId&&hostileTo(p,q)&&activeThreat(q));
+  let target=world.pawns.find(q=>q.id===t.targetId&&hostileTo(p,q)&&assaultTarget(p,q));
   if(t.targetId!==null&&(!target||distanceSquared(p,target)>65**2))clearEngagement(p);
   if(startSentryMelee(world,p)) {
     const id=p.melee!.order!.targetId;

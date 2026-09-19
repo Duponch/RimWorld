@@ -1,0 +1,10 @@
+{
+  "date": "2026-09-19",
+  "test": "ordinary-camp raid native, second combined run",
+  "stage": "initial page load, before any game action",
+  "error": "Failed to load resource: net::ERR_NO_BUFFER_SPACE",
+  "resource": "/src/ui/bed-controls.ts",
+  "effect": "Module failed to load, no game controls; original test waited until 150-second timeout",
+  "diagnosis": "Chromium network resource failure; following retirement and 3/30/100 native tests succeeded",
+  "testCorrection": "Wait for visible pause control explicitly and limit actions to 15 seconds; no silent retry or weakened gameplay assertion"
+}

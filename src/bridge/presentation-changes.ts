@@ -10,7 +10,7 @@ export class PresentationChanges {
     const signature=JSON.stringify([
       world.seed,world.width,world.height,world.events.at(-1),
       world.projectiles?.map(p=>[p.id,p.emittedAtCore,p.arrival]),
-      world.pawns.map(p=>[p.id,p.state,p.mental?.crisis?.kind,p.mental?.crisis?.target,p.jobId,p.faction,p.hostilityResponse,p.draft?.holdFire,p.tactics?.targetId,p.tactics?.post,p.flee,p.melee,p.stun,p.shooting,p.stagger,!!p.draft,p.draft?.target,p.draft?.queue,p.equipmentTask?.itemId,p.equipmentTask?.action,p.equipmentDropPending,p.rescue,p.tend?.patientId,p.tend?.phase,p.feed?.patientId,p.feed?.phase,p.medicalSleep,p.interruptedCargo,p.need?.phase,p.need?.kind==='sleep'?p.need.bedId:undefined,
+      world.pawns.map(p=>[p.id,p.state,p.raid?.exiting,p.mental?.crisis?.kind,p.mental?.crisis?.target,p.jobId,p.faction,p.hostilityResponse,p.draft?.holdFire,p.tactics?.targetId,p.tactics?.post,p.flee,p.melee,p.stun,p.shooting,p.stagger,!!p.draft,p.draft?.target,p.draft?.queue,p.equipmentTask?.itemId,p.equipmentTask?.action,p.equipmentDropPending,p.rescue,p.tend?.patientId,p.tend?.phase,p.feed?.patientId,p.feed?.phase,p.medicalSleep,p.interruptedCargo,p.need?.phase,p.need?.kind==='sleep'?p.need.bedId:undefined,
         p.haul?.phase,p.haul?.carryPileId,p.cooking?.phase,p.cooking?.productId,
         p.recreation.task?.activity,p.recreation.task?.buildingId]),
       world.piles.map(p=>[p.id,p.item,p.quantity,p.owner]),

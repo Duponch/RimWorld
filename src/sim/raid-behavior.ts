@@ -1,0 +1,38 @@
+import { isBarrier } from './barriers.ts';
+import { startTravel } from './movement.ts';
+import { canStep } from './pathfinding.ts';
+import { processMelee } from './melee.ts';
+import { cancelMelee } from './melee-state.ts';
+import { cancelShooting } from './shooting-state.ts';
+import { newTactics } from './tactics-state.ts';
+import { processTactics } from './tactics.ts';
+import { raidRoute } from './raid-space.ts';
+import type { Pawn,World } from './types.ts';
+import type { NavigationGrid,SearchBudget } from './work-planner.ts';
+import type { LightReader } from './light-environment.ts';
+
+const EMPTY:ReadonlySet<number>=new Set();
+export function processRaider(w:World,p:Pawn,getBlocked:NavigationGrid,budget:SearchBudget,getLight:LightReader):void {
+  const r=p.raid!;
+  if(p.melee?.strike||p.shooting?.stance?.phase==='cooldown'){p.state='idle';return;}
+  if(p.melee?.order?.structure){if(w.structures.some(s=>s.id===p.melee!.order!.targetId&&isBarrier(s))){processMelee(w,p,getBlocked,budget,getLight);return;}cancelMelee(p);p.path=[];r.goal=null;}
+  let searched=false;
+  if(!r.exiting){
+    // Probe at bounded intervals without throwing away an unseen strategic route.
+    if(p.tactics||!p.planCooldown&&budget.remaining){
+      const route=p.tactics?[]:p.path;p.tactics??=newTactics();processTactics(w,p,getBlocked,budget,getLight);searched=true;
+      if(p.tactics.targetId!==null){r.goal=null;return;}
+      delete p.tactics;p.path=route;
+    }
+  }else{cancelShooting(p);cancelMelee(p);delete p.tactics;}
+  if(!p.path.length){
+    if(!budget.remaining||p.planCooldown&&!searched){p.state='idle';return;}
+    budget.remaining--;p.planCooldown=20;
+    const route=raidRoute(w,p,r.exiting,getBlocked());if(!route){p.state='idle';r.goal=null;return;}
+    p.path=route.path;r.goal=route.goal;
+    if(route.barrier){p.melee={order:{targetId:route.barrier.id,startedDowned:false,structure:true},strike:null};r.goal=null;processMelee(w,p,getBlocked,budget,getLight);return;}
+  }
+  const next=p.path[0];if(!next){p.state='idle';return;}
+  if(!canStep(w,p,next,getBlocked(),EMPTY)){p.path=[];r.goal=null;p.planCooldown=0;p.state='idle';return;}
+  p.state='moving';if(startTravel(w,p,next,getLight))p.path.shift();
+}

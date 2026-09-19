@@ -1,0 +1,288 @@
+{
+  "raidOverlay": "First raid spawns during capture at the real border; adds one actor to the base count. Includes entry and long approach, not a 100-raider assault.",
+  "mentalBreaks": false,
+  "apparel": true,
+  "melee": true,
+  "date": "2026-09-19T11:42:59.709Z",
+  "hostileTargets": false,
+  "variant": "Barrier destruction, independent repair targets and mining/chopping; initial low HP is a controlled load, no reset.",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "os": "win32 10.0.26200",
+  "protocol": "250², 3/30/100 actors; one third attacks weakened barriers, one third repairs separate damaged barriers in home, remainder mines/chops. No reset. 240 ticks per case, first 20 excluded from mixed/quiet/encoding percentiles; active-combat includes initial ticks. Independent twin, alternating run order (AUTOMATIC: identical initial autonomous decisions; other modes: no extra shot orders). Real health/cadence/XP/PRNG, retarget every 60 ticks only outside AUTOMATIC, no healing reset. Worker/render excluded. Single pass, timings include JIT/GC and are not a frame guarantee.",
+  "results": [
+    {
+      "raids": {
+        "profile": "camp-raids-v1",
+        "rng": 2085814264,
+        "nextCheck": null,
+        "serial": 1,
+        "completed": 0,
+        "departed": [],
+        "active": {
+          "id": 1,
+          "startedAt": 2001,
+          "deadline": 5657,
+          "lossPermille": 546,
+          "members": [
+            12455
+          ],
+          "lost": [],
+          "phase": "assault"
+        }
+      },
+      "actualActors": 4,
+      "barriers": true,
+      "destroyed": 1,
+      "repairJobs": 0,
+      "remainingDamage": 0,
+      "mentalActors": 0,
+      "pursuit": false,
+      "automatic": true,
+      "actors": 3,
+      "pairs": 1,
+      "movingTargets": false,
+      "hostileTargets": false,
+      "slowedPawns": 0,
+      "retimedEdges": 0,
+      "accepted": 0,
+      "refused": 0,
+      "emissions": 0,
+      "impacts": 0,
+      "commandsMs": {
+        "count": 0
+      },
+      "allTickMs": {
+        "count": 240,
+        "p50": 1.1675000000000182,
+        "p95": 4.1491000000000895,
+        "p99": 10.129300000000057,
+        "max": 39.217199999999934
+      },
+      "initialTickMs": {
+        "count": 20,
+        "p50": 1.2701999999999316,
+        "p95": 34.36540000000002,
+        "p99": 39.217199999999934,
+        "max": 39.217199999999934
+      },
+      "mixedTickMs": {
+        "count": 220,
+        "p50": 1.1545999999998457,
+        "p95": 3.5157999999998992,
+        "p99": 4.867799999999988,
+        "max": 7.783299999999599
+      },
+      "quietTickMs": {
+        "count": 220,
+        "p50": 1.785899999999856,
+        "p95": 5.686200000000099,
+        "p99": 8.409599999999955,
+        "max": 10.400099999999838
+      },
+      "activeCombatTickMs": {
+        "count": 17,
+        "p50": 1.2701999999999316,
+        "p95": 39.217199999999934,
+        "p99": 39.217199999999934,
+        "max": 39.217199999999934
+      },
+      "encodeMs": {
+        "count": 220,
+        "p50": 2.2417999999997846,
+        "p95": 3.7129999999999654,
+        "p99": 5.393299999999954,
+        "max": 7.590599999999995
+      },
+      "apparelRemaining": 6,
+      "apparelDamaged": 0,
+      "dead": 0,
+      "downed": 0,
+      "mixedExcavatedTiles": 1,
+      "mixedResourcesRemoved": 0,
+      "quietResourcesRemoved": 0
+    },
+    {
+      "raids": {
+        "profile": "camp-raids-v1",
+        "rng": 2085814264,
+        "nextCheck": null,
+        "serial": 1,
+        "completed": 0,
+        "departed": [],
+        "active": {
+          "id": 1,
+          "startedAt": 2001,
+          "deadline": 5657,
+          "lossPermille": 546,
+          "members": [
+            12720
+          ],
+          "lost": [],
+          "phase": "assault"
+        }
+      },
+      "actualActors": 31,
+      "barriers": true,
+      "destroyed": 10,
+      "repairJobs": 0,
+      "remainingDamage": 0,
+      "mentalActors": 0,
+      "pursuit": false,
+      "automatic": true,
+      "actors": 30,
+      "pairs": 10,
+      "movingTargets": false,
+      "hostileTargets": false,
+      "slowedPawns": 0,
+      "retimedEdges": 0,
+      "accepted": 0,
+      "refused": 0,
+      "emissions": 0,
+      "impacts": 0,
+      "commandsMs": {
+        "count": 0
+      },
+      "allTickMs": {
+        "count": 240,
+        "p50": 1.9699000000000524,
+        "p95": 9.307399999999689,
+        "p99": 18.9061999999999,
+        "max": 58.49649999999974
+      },
+      "initialTickMs": {
+        "count": 20,
+        "p50": 3.1734999999998763,
+        "p95": 28.509599999999864,
+        "p99": 58.49649999999974,
+        "max": 58.49649999999974
+      },
+      "mixedTickMs": {
+        "count": 220,
+        "p50": 1.865799999999581,
+        "p95": 4.093699999999899,
+        "p99": 13.81500000000051,
+        "max": 17.812199999999393
+      },
+      "quietTickMs": {
+        "count": 220,
+        "p50": 2.1981000000000677,
+        "p95": 4.826200000000426,
+        "p99": 16.739599999999882,
+        "max": 19.867699999999786
+      },
+      "activeCombatTickMs": {
+        "count": 29,
+        "p50": 2.777599999999893,
+        "p95": 28.509599999999864,
+        "p99": 58.49649999999974,
+        "max": 58.49649999999974
+      },
+      "encodeMs": {
+        "count": 220,
+        "p50": 2.281300000000101,
+        "p95": 3.6675999999997657,
+        "p99": 4.912800000000061,
+        "max": 7.845499999999447
+      },
+      "apparelRemaining": 46,
+      "apparelDamaged": 0,
+      "dead": 0,
+      "downed": 0,
+      "mixedExcavatedTiles": 10,
+      "mixedResourcesRemoved": 0,
+      "quietResourcesRemoved": 0
+    },
+    {
+      "raids": {
+        "profile": "camp-raids-v1",
+        "rng": 2085814264,
+        "nextCheck": null,
+        "serial": 1,
+        "completed": 0,
+        "departed": [],
+        "active": {
+          "id": 1,
+          "startedAt": 2001,
+          "deadline": 5657,
+          "lossPermille": 546,
+          "members": [
+            13407
+          ],
+          "lost": [],
+          "phase": "assault"
+        }
+      },
+      "actualActors": 101,
+      "barriers": true,
+      "destroyed": 33,
+      "repairJobs": 0,
+      "remainingDamage": 0,
+      "mentalActors": 0,
+      "pursuit": false,
+      "automatic": true,
+      "actors": 100,
+      "pairs": 33,
+      "movingTargets": false,
+      "hostileTargets": false,
+      "slowedPawns": 0,
+      "retimedEdges": 0,
+      "accepted": 0,
+      "refused": 0,
+      "emissions": 0,
+      "impacts": 0,
+      "commandsMs": {
+        "count": 0
+      },
+      "allTickMs": {
+        "count": 240,
+        "p50": 4.588400000000547,
+        "p95": 21.07209999999941,
+        "p99": 42.40490000000045,
+        "max": 146.1939999999995
+      },
+      "initialTickMs": {
+        "count": 20,
+        "p50": 16.54410000000007,
+        "p95": 81.94270000000051,
+        "p99": 146.1939999999995,
+        "max": 146.1939999999995
+      },
+      "mixedTickMs": {
+        "count": 220,
+        "p50": 4.428899999999885,
+        "p95": 13.61030000000028,
+        "p99": 23.972999999999956,
+        "max": 27.339600000001155
+      },
+      "quietTickMs": {
+        "count": 220,
+        "p50": 4.432400000000598,
+        "p95": 12.824899999999616,
+        "p99": 30.405899999999747,
+        "max": 39.055599999999686
+      },
+      "activeCombatTickMs": {
+        "count": 78,
+        "p50": 6.180200000000696,
+        "p95": 38.619400000000496,
+        "p99": 146.1939999999995,
+        "max": 146.1939999999995
+      },
+      "encodeMs": {
+        "count": 220,
+        "p50": 2.5086000000010245,
+        "p95": 3.5029000000013184,
+        "p99": 4.203899999999521,
+        "max": 4.423800000000483
+      },
+      "apparelRemaining": 151,
+      "apparelDamaged": 0,
+      "dead": 0,
+      "downed": 0,
+      "mixedExcavatedTiles": 34,
+      "mixedResourcesRemoved": 0,
+      "quietResourcesRemoved": 0
+    }
+  ]
+}
