@@ -77,12 +77,12 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     await panel(page,'work');await page.locator(`select[data-owner="${c.pawnId}"][data-work="${c.work}"]`).selectOption(String(c.value));
   } else if(c.type==='stockpile') {
     await tool(page,'stockpile');
-    await page.locator('#stockpile-textile').setChecked(c.filters!.textile??false);await page.locator('#stockpile-unfinished').setChecked(c.filters!.unfinished??false);await page.locator('#stockpile-apparel').setChecked(c.filters!.apparel??false);await page.locator('#stockpile-weapon').setChecked(c.filters!.weapon??false);await page.locator('#stockpile-medicine').setChecked(c.filters!.medicine??false);await page.locator('#stockpile-component').setChecked(c.filters!.component??false);await page.locator('#stockpile-blocks').setChecked(c.filters!.blocks??false);await page.locator('#stockpile-steel').setChecked(c.filters!.steel??false);await page.locator('#stockpile-chunk').setChecked(c.filters!.chunk??false);await page.locator('#stockpile-wood').setChecked(c.filters!.wood);await page.locator('#stockpile-food').setChecked(c.filters!.food);await page.locator('#stockpile-furniture').setChecked(c.filters!.furniture??false);
-    await page.locator('#stockpile-priority').selectOption(String(c.priority??2));await page.locator('#stockpile-capacity').fill(String(c.capacity??75));
+    await storageSettings(page,c);
     await revealCells(page,[c]);
     await cell(page,c.x,c.z);
   } else if(c.type==='area') {
     await tool(page,c.action);
+    if(c.action==='stockpile'&&c.filters)await storageSettings(page,c);
     await revealCells(page,[c.from,c.to]);
     await dragRectangle(page,c.from,c.to);
   } else if(c.type==='install') {
@@ -97,7 +97,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
   } else if(c.type==='designate' && c.kind !== 'sow' && c.kind !== 'install') {
     if(c.kind==='repair')throw Error('Repair uses the home area');await tool(page,c.kind);
     if(['door','wall','bed','table','stool','horseshoes','stonecutter','research-bench','tailor-bench'].includes(c.kind))await page.locator('#construction-material').selectOption(c.material??'wood');
-    if(c.kind==='bed'||c.kind==='table'||c.kind==='campfire'||c.kind==='crafting-spot'||c.kind==='stonecutter'||c.kind==='research-bench'||c.kind==='tailor-bench') {
+    if(c.kind==='cooler'||c.kind==='bed'||c.kind==='table'||c.kind==='campfire'||c.kind==='crafting-spot'||c.kind==='stonecutter'||c.kind==='research-bench'||c.kind==='tailor-bench') {
       while(rotation.value!==(c.orientation??0)){await page.keyboard.press('e');rotation.value=(rotation.value+1)%4;}
     }
     await revealCells(page,[c]);
@@ -135,6 +135,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     if(c.type==='bill-add')return !!w.structures.find(s=>s.id===c.structureId)?.bills?.length;
     if(c.type==='bill-update') {const b=w.structures.find(s=>s.id===c.structureId)?.bills?.find(b=>b.id===c.billId);return !!b&&b.mode===c.settings.mode&&b.target===c.settings.target&&b.suspended===c.settings.suspended;}
     if(c.type==='area') {
+      if(c.action==='stockpile'){for(let z=Math.min(c.from.z,c.to.z);z<=Math.max(c.from.z,c.to.z);z++)for(let x=Math.min(c.from.x,c.to.x);x<=Math.max(c.from.x,c.to.x);x++){const s=w.stockpiles.find(s=>s.x===x&&s.z===z);if(!s||c.filters&&Object.entries(s.filters).some(([k,v])=>!!v!==!!c.filters![k as keyof typeof c.filters]))return false;}return true;}
       if(c.action==='deconstruct')return w.jobs.some(j=>j.kind==='deconstruct');
       if(c.action==='haul-chunks')return w.piles.some(p=>p.kind==='chunk'&&p.haulRequested&&p.owner.type==='ground'&&p.owner.x>=Math.min(c.from.x,c.to.x)&&p.owner.x<=Math.max(c.from.x,c.to.x)&&p.owner.z>=Math.min(c.from.z,c.to.z)&&p.owner.z<=Math.max(c.from.z,c.to.z));
       if(c.action==='mine')return w.jobs.some(j=>j.kind==='mine'&&j.x>=Math.min(c.from.x,c.to.x)&&j.x<=Math.max(c.from.x,c.to.x)&&j.z>=Math.min(c.from.z,c.to.z)&&j.z<=Math.max(c.from.z,c.to.z));
@@ -149,4 +150,9 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     await page.screenshot({path:'artifacts/player-action-failure.png'});
     throw new Error(`Player command did not produce its expected result: ${JSON.stringify({command:c,diagnostic})}; ${String(error)}`);
   }
+}
+
+async function storageSettings(page:Page,c:import('../../src/sim/types').StorageSettings):Promise<void>{
+    await page.locator('#stockpile-textile').setChecked(c.filters!.textile??false);await page.locator('#stockpile-unfinished').setChecked(c.filters!.unfinished??false);await page.locator('#stockpile-apparel').setChecked(c.filters!.apparel??false);await page.locator('#stockpile-weapon').setChecked(c.filters!.weapon??false);await page.locator('#stockpile-medicine').setChecked(c.filters!.medicine??false);await page.locator('#stockpile-component').setChecked(c.filters!.component??false);await page.locator('#stockpile-blocks').setChecked(c.filters!.blocks??false);await page.locator('#stockpile-steel').setChecked(c.filters!.steel??false);await page.locator('#stockpile-chunk').setChecked(c.filters!.chunk??false);await page.locator('#stockpile-wood').setChecked(c.filters!.wood);await page.locator('#stockpile-food').setChecked(c.filters!.food);await page.locator('#stockpile-furniture').setChecked(c.filters!.furniture??false);
+    await page.locator('#stockpile-priority').selectOption(String(c.priority??2));await page.locator('#stockpile-capacity').fill(String(c.capacity??75));
 }

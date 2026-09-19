@@ -1,3 +1,5 @@
+import { coolerFaces } from '../sim/cooler';
+import type { Orientation } from '../sim/types';
 import { Group } from 'three/webgpu';
 import { clearThrow, horseshoeCells, standableRecreationCell } from '../sim/recreation-space';
 import type { Cell, World } from '../sim/types';
@@ -7,6 +9,10 @@ import type { BoxBatches } from './BoxBatches';
 export class RecreationHints {
   readonly group = new Group();
   constructor(private readonly batches: BoxBatches) {}
+  cooler(cell:Cell,orientation:Orientation):void {
+    this.group.visible=true;const {cold,hot}=coolerFaces({...cell,orientation});
+    this.batches.set(this.group,'recreation-places',[{...cold,y:.045,sx:.8,sy:.02,sz:.8,color:0x55b6ec},{...hot,y:.045,sx:.8,sy:.02,sz:.8,color:0xed7050}],'overlay',false);
+  }
   update(world: World | undefined | null, pin?: Cell): void {
     this.group.visible=!!world&&!!pin;
     if(!world||!pin)return;

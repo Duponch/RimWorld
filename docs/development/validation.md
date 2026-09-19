@@ -1,4 +1,6 @@
-# Validation courante — V74
+# Validation courante — V75
+
+V75 — [conservation froide, alimentation et hypothermie](../history/validation-cold-store-v75.md). Construction et recherche réellement obtenues, thermostat UI, panne, âges et charge mixte ; limites et échecs conservés.
 
 V74 — [canicule, protection, refuge et secours](../history/validation-heatwave-v74.md). Scénarios, vraie UI, expédition de huit jours et audits séparés, avec périmètres et limites déclarés.
 

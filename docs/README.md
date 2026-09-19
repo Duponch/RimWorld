@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+V75 : [climatiseur et conservation froide](development/cold-store.md), deuxième projet de recherche, consommation électrique variable et hypothermie. [Sources et adaptations](research/cold-store-reference.md), [preuves](history/validation-cold-store-v75.md). L’étape proche 5 apporte désormais chaleur et conservation ; saisons et environnement complet restent ouverts.
+
 État courant : **V74, 19 septembre 2026**. [Canicule et protection thermique](development/heatwave.md) : incident persistant, air réel, isolation portée, coup de chaleur, refuge et secours. Étape proche 5 engagée, saisons non livrées. [Dernières preuves](history/validation-heatwave-v74.md).
 
 V73 : [Recherche et tailleur](development/research.md) : projet collectif, Intellect, bureau physique, déblocage de l’atelier et chemise fabriquée/portée. L’étape proche 4 est livrée dans ce périmètre limité ; social, traits, accueil et raid restent jouables. [Inventaire consolidé](gameplay/implementation-status.md), [preuves V73](history/validation-research-v73.md).
@@ -38,6 +40,7 @@ Les bilans de versions sont dans les contrats et [l’index de validation](devel
 | Murs/portes endommagés, foyer et réparation | [Ouvrages V67](development/barriers.md) | [Règles et adaptations](research/barriers-reference.md) |
 | Population et premier incident | [Accueil V66](development/arrivals.md) | [Arrivée volontaire et limites](research/arrival-reference.md) |
 | Humeur et crises | [Humeur V64](development/mood.md), [errance triste V65](development/mental-break.md) | [Pensées](research/mood-reference.md), [crises et contradictions](research/mental-break-reference.md) |
+| Conservation froide et hypothermie | [Contrat V75](development/cold-store.md) | [Recherche datée](research/cold-store-reference.md) |
 | Recherche et déblocages | [Recherche V73](development/research.md) | [Sources et incertitudes](research/research-reference.md) |
 | Confection et progression | [Tenue tribale V72](development/tailoring.md) | [Sources et écarts](research/tailoring-reference.md) |
 | Habillement | [Vêtements et protection V63](development/armor.md) | [Règles revérifiées](research/apparel-reference.md) |

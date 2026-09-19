@@ -43,7 +43,7 @@ export function cookingPlaceFree(world:World,cell:Cell):boolean {
   return (world.schemaVersion<22||canStandAt(world,cell))&&cell.x>=0&&cell.z>=0&&cell.x<world.width&&cell.z<world.height
     &&!['water','rock'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain)
     &&!world.resources.some(r=>r.x===cell.x&&r.z===cell.z)
-    &&![...world.jobs,...world.structures].some(s=>(s.kind==='wall'||s.kind==='table')&&footprintCells(s).some(c=>c.x===cell.x&&c.z===cell.z));
+    &&![...world.jobs,...world.structures].some(s=>(s.kind==='wall'||s.kind==='cooler'||s.kind==='table')&&footprintCells(s).some(c=>c.x===cell.x&&c.z===cell.z));
 }
 
 /** Chunk staging may use an Item workbench surface, but never the worker's cell. */

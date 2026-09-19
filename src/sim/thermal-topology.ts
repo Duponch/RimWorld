@@ -16,7 +16,7 @@ export class ThermalTopologyCache {
   read(world:World):ThermalLayout {
     const roofs=new Set(world.roofing?.constructed??[]),doors=world.structures.filter(s=>s.kind==='door');
     const key=[world.width,world.height,...roofs,'doors',...doors.map(s=>s.id+'@'+s.x+':'+s.z)].join(',');
-    const buildings=new Map(world.structures.filter(s=>s.kind==='wall'||s.kind==='door').map(s=>[s.z*world.width+s.x,s.kind==='wall'?1:2]));
+    const buildings=new Map(world.structures.filter(s=>s.kind==='wall'||s.kind==='cooler'||s.kind==='door').map(s=>[s.z*world.width+s.x,s.kind==='door'?2:1]));
     const kind=(i:number)=>buildings.get(i)??(world.tiles[i]!.terrain==='rock'?1:0);
     if(this.layout&&key===this.key&&[...this.checks].every(([i,k])=>kind(i)===k))return this.layout;
     const checks=new Map<number,number>();

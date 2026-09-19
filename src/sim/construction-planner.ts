@@ -34,7 +34,7 @@ export function constructionCandidates(world:World,pawn:Pawn,blocked:Uint8Array,
       const candidate=planFurnitureTransport(world,pawn,obstacle.pack,blocked,reach,budget,job);if(candidate)result.push(candidate);
     } else if(job.kind==='install'&&Number.isFinite(constructionHaulPriority(pawn))&&furnitureReady(world,job,pawn)&&canReach(world,job,reach,false)&&canReach(world,furnitureWorkTarget(world,job),reach,false)) {
       result.push({...base,priority:constructionHaulPriority(pawn),target:furnitureWorkTarget(world,job),job});
-    } else if(job.construction==='frame'&&pawn.priorities.build>0&&constructionSupplied(world,job)&&constructionSiteFree(world,job,pawn.id,obstacle)&&canReach(world,job,reach,false)) {
+    } else if(job.construction==='frame'&&(job.kind!=='cooler'||pawn.skills.construction.level>=5)&&pawn.priorities.build>0&&constructionSupplied(world,job)&&constructionSiteFree(world,job,pawn.id,obstacle)&&canReach(world,job,reach,false)) {
       result.push({...base,priority:pawn.priorities.build,target:job,job});
     }
   }

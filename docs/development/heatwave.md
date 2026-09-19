@@ -24,6 +24,6 @@ L’isolation portée modifie la plage confortable ; qualité oui, PV non. Tenue
 
 ## Limites et arrêt du lot
 
-L’étape proche 5 est **engagée**, pas terminée. La canicule donne une pression réelle avec une réponse obtenable ; elle ne livre pas saisons, maladies générales, hypothermie, mortalité des cultures, autres météos, choix de site ou chaîne du froid. La progression suivante doit changer les décisions du joueur, pas ajouter par inertie tous les raffinements du coup de chaleur. Revoir l’ordre dans ROADMAP après cette première tranche.
+L’étape proche 5 est **engagée**, pas terminée. La canicule donne une pression réelle avec une réponse obtenable ; elle ne livre pas saisons, maladies générales, mortalité des cultures, autres météos ou choix de site. V75 ajoute séparément hypothermie et chaîne du froid ; gelures localisées restent absentes. La progression suivante doit changer les décisions du joueur, pas ajouter par inertie tous les raffinements du coup de chaleur. Revoir l’ordre dans ROADMAP après cette première tranche.
 
 Contrôles : six scénarios regroupés (seuils/isolation, calendrier/migration, incapacité/récupération, refuge/accès/ordres/reprise, secours, expédition), UI depuis un vrai checkpoint et charge mixte 3/30/100. Le camp d’expédition utilise des provisions initiales déclarées, construit/ravitaille son abri par commandes et traverse huit jours sans injection ultérieure. Il complète les pilotes naturels ; il ne prouve pas une colonie autosuffisante face à tous les climats.

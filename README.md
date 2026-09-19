@@ -1,5 +1,7 @@
 # Lisière
 
+V75 : **premier garde-manger réfrigéré obtenable**. Recherche Climatisation, appareil orientable, thermostat, rejet de chaleur et coupure réelle ; le froid conserve les provisions mais peut provoquer une hypothermie. [Règles et limites](docs/development/cold-store.md). Mode jour ; le jeu reste un prototype partiel.
+
 V74 : **première canicule dans le camp**. Préparer un refuge couvert, ravitailler le refroidisseur et choisir les vêtements protège des coups de chaleur ; exposition, incapacité et récupération utilisent la santé réelle. [Jouer et connaître les limites](docs/development/heatwave.md). L’étape 5 est engagée ; saisons et hiver restent absents.
 
 V73 : rechercher **Vêtements complexes** au bureau, construire l’établi manuel de tailleur, confectionner une chemise avec **45 tissus** puis la porter. La tenue tribale reste initiale. L’étape proche 4 a sa boucle complète ; arbre technologique et catalogue restent partiels. [Contrat et limites](docs/development/research.md).

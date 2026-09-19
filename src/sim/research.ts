@@ -12,15 +12,20 @@ import type { Cell,CommandResult,Pawn,Structure,World } from './types.ts';
 
 export const RESEARCH_SCALE=1_000_000;
 export const CLOTHING_RESEARCH_COST=600*RESEARCH_SCALE;
-export interface ResearchState {project:'complex-clothing'|null;points:number;completedAt?:number}
+export type ResearchProject='complex-clothing'|'air-conditioning';
+export interface ResearchProgress {points:number;completedAt?:number}
+export interface ResearchState extends ResearchProgress {project:ResearchProject|null;airConditioning?:ResearchProgress}
+export const AIR_CONDITIONING_COST=500*RESEARCH_SCALE;
+export const airConditioningUnlocked=(w:World):boolean=>w.research?.airConditioning?.completedAt!==undefined;
+export const projectProgress=(s:ResearchState,project:ResearchProject):ResearchProgress=>project==='complex-clothing'?s:(s.airConditioning??={points:0});
 export interface ResearchTask {stationId:number;spot:Cell;worked:number}
 export const clothingUnlocked=(world:World):boolean=>world.research?.completedAt!==undefined;
 export const intellectualSkill=(pawn:Pawn):SkillRecord=>pawn.skills.intellectual??{level:0,xp:0,dailyXp:0,passion:0};
 export const researchWanted=(world:World,pawn:Pawn):boolean=>!!world.research?.project&&pawn.priorities.research>0;
 export function selectResearch(world:World,project:unknown):CommandResult {
-  if(project!==null&&project!=='complex-clothing')return {ok:false,code:'invalid-command',reason:'Projet inconnu.'};
-  if(project&&clothingUnlocked(world))return {ok:false,code:'invalid-command',reason:'Cette recherche est déjà terminée.'};
-  world.research??={project:null,points:0};world.research.project=project;
+  if(project!==null&&project!=='complex-clothing'&&project!=='air-conditioning')return {ok:false,code:'invalid-command',reason:'Projet inconnu.'};
+  if(project&&(project==='complex-clothing'?clothingUnlocked(world):airConditioningUnlocked(world)))return {ok:false,code:'invalid-command',reason:'Cette recherche est déjà terminée.'};
+  world.research??={project:null,points:0};world.research.project=project;if(project)projectProgress(world.research,project);
   for(const pawn of world.pawns){if(pawn.research)releaseAssignments(world,pawn);pawn.planCooldown=0;}
   return {ok:true};
 }
@@ -47,10 +52,10 @@ export function processResearch(world:World,pawn:Pawn,move:(target:Cell,exact:bo
   if(medicalWorkRefusal(pawn)||!station||!researchWanted(world,pawn)||deconstructionReserved(world,station.id,pawn.id)||!canStandAt(world,task.spot)){releaseAssignments(world,pawn);return;}
   if(pawn.x!==task.spot.x||pawn.z!==task.spot.z){move(task.spot,true);return;}
   pawn.path=[];pawn.state='working';
-  const state=world.research!;state.points=Math.min(CLOTHING_RESEARCH_COST,state.points+rate(station));
+  const state=world.research!,project=state.project!,progress=projectProgress(state,project),cost=project==='complex-clothing'?CLOTHING_RESEARCH_COST:AIR_CONDITIONING_COST;progress.points=Math.min(cost,progress.points+rate(station));
   pawn.skills.intellectual??={...intellectualSkill(pawn)};learnSkill(pawn.skills.intellectual,1000,pawn);task.worked++;
-  if(state.points===CLOTHING_RESEARCH_COST){state.project=null;state.completedAt=world.tick;
+  if(progress.points===cost){state.project=null;progress.completedAt=world.tick;
     for(const p of world.pawns)if(p.research)releaseAssignments(world,p);
-    event('Recherche achevée : Vêtements complexes. Établi de tailleur et chemise débloqués.');
+    event(project==='complex-clothing'?'Recherche achevée : Vêtements complexes. Établi de tailleur et chemise débloqués.':'Recherche achevée : Climatisation. Climatiseur électrique débloqué.');
   }else if(task.worked>=400)releaseAssignments(world,pawn);
 }

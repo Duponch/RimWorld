@@ -23,6 +23,7 @@ export const toolDefinitions: { id: Tool; icon: string; title: string; hint: str
   { id: 'bed', icon: '▰', title: 'Lit', hint: 'empreinte 1 × 2 · Q / E pour tourner', key: 'L', category: 'furniture' },
   { id: 'table', icon: '▤', title: 'Table', hint: '1 × 2 · placer des tabourets contre le bord · Q / E pour tourner', key: '', category: 'furniture' },
   { id: 'horseshoes', icon: '∩', title: 'Fers à cheval', hint: '3 joueurs maximum · places de lancer à 5 cases avec vue dégagée', key: '', category: 'recreation' },
+  {id:'cooler',icon:'❄',title:'Climatiseur',hint:'Faces bleue froide / rouge chaude · Construction 5 · Climatisation requise · Q/E : tourner',key:'',category:'temperature'},
   {id:'wood-generator',icon:'ϟ',title:'Générateur à bois',hint:'2 × 2 · 1 000 W · réservoir vide à remplir · 22 bois/jour',key:'',category:'power'},
   {id:'standing-lamp',icon:'☀',title:'Lampe sur pied',hint:'30 W · raccordement à un générateur proche · n’éclaire que si alimentée',key:'',category:'furniture'},
   { id: 'passive-cooler', icon: '❄', title: 'Refroidisseur passif', hint: 'combustible initial inclus · seuil de 17 °C · 10 bois/jour', key: '', category: 'temperature' },

@@ -56,7 +56,7 @@ export function bestPowerParent(topology:PowerTopology,lamp:Cell):number|null {
 export function connectedPowerGroups(world:World,topology:PowerTopology):Structure[][] {
   const byId=new Map(world.structures.map(s=>[s.id,s]));
   const groups=new Map(topology.groups.map(ids=>[ids[0]!,ids.map(id=>byId.get(id)!)]));
-  for(const s of world.structures)if(s.kind==='standing-lamp'&&s.power?.parentId!=null) {
+  for(const s of world.structures)if(s.kind!=='wood-generator'&&s.power?.parentId!=null) {
     const net=topology.netOf.get(s.power.parentId);if(net!==undefined)groups.get(net)!.push(s);
   }
   return [...groups.values()];

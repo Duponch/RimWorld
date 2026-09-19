@@ -1,5 +1,7 @@
 # Choix et écarts de gameplay
 
+V75 : base électrique connue du scénario mais Climatisation à rechercher ; contrôle thermique continu dans les ticks locaux ; destruction refusée si la restitution complète ne peut être déposée ; hypothermie active mais gelures localisées différées. Ce sont des adaptations/limites explicites, pas une parité générale. [Sources et motifs](../research/cold-store-reference.md).
+
 V74 : première canicule plutôt qu’un hiver privé de règles de gel. +17 °C et exposition confrontés aux sources ; première occurrence 6–7 jours et suivantes 30–40 jours après fin sont une cadence de scénario. Refuge par distance/accessibilité et ordres prioritaires ; sélection thermique complète des lits, froid et autres météos différés. [Sources, incertitudes et décisions](../research/heatwave-reference.md).
 
 V73 : un seul projet de recherche, Vêtements complexes. Notre camp personnalisé commence sans ce savoir, contrairement au Crashlanded classique ; difficulté/écart technologique neutres, Intellect historique absent =0, propreté intérieure neutre, malus extérieur provisoire. La tenue tribale reste initiale. [Détails et sources contradictoires](../research/research-reference.md).

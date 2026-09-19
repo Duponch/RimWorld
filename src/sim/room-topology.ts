@@ -52,7 +52,7 @@ export class RoomTopologyCache {
     // Current walls and doors have a 1x1 logical footprint. Plans, frames,
     // furniture, water, piles and people do not enclose air spaces.
     for (const building of world.structures) {
-      if (building.kind === 'wall') mask[building.z * width + building.x] = 1;
+      if (building.kind === 'wall'||building.kind==='cooler') mask[building.z * width + building.x] = 1;
       else if (building.kind === 'door') mask[building.z * width + building.x] = 2;
     }
     let changed = resized;

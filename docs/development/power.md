@@ -1,5 +1,7 @@
 # Première électricité — V42
 
+V75 ajoute le [climatiseur](cold-store.md), consommateur orientable solide de 20/200 W. `powerDemand` partage la demande variable entre réconciliation, délestage et inspection. Il ne transmet pas le courant ; les règles de réseau local restent celles ci-dessous. Recherche Climatisation nécessaire, bases électriques connues du scénario.
+
 [Sources, provenance et adaptations](../research/power-reference.md). G2 reste ouvert : cette tranche livre génération au bois et lampes raccordées directement. Elle réutilise construction, composants, transport, température et lumière ; elle ne livre pas encore les conduits.
 
 ## Appareils et interactions
@@ -17,7 +19,7 @@ Déconstruction : restitution 50 acier + 1 composant pour le générateur, 10 ac
 
 ## Raccordement et puissance
 
-`power-topology.ts` construit les composantes cardinales des empreintes de générateurs : deux appareils qui se touchent par un angle restent séparés. Les lampes ne transmettent pas. Recherche automatique dans le carré de six cases autour de la lampe, sur toutes les cases des transmetteurs ; classement par distance au carré entre ancres, ordre spatial stable pour les égalités. Les murs ne bloquent pas le raccordement. Une connexion valide reste attachée, même si une source plus proche apparaît ou si le générateur se vide.
+`power-topology.ts` construit les composantes cardinales des empreintes de générateurs : deux appareils qui se touchent par un angle restent séparés. Les lampes et climatiseurs ne transmettent pas. Recherche automatique dans le carré de six cases autour du consommateur, sur toutes les cases des transmetteurs ; classement par distance au carré entre ancres, ordre spatial stable pour les égalités. Les murs ne bloquent pas le raccordement. Une connexion valide reste attachée, même si une source plus proche apparaît ou si le générateur se vide.
 
 `power.ts` réconcilie les parents et distribue la puissance. Démarrage progressif et délestage aléatoires, sans batterie : 33 lampes de 30 W peuvent rester allumées sur 1 000 W, la 34e attend. Dix frontières de temps Core par tick local évitent d’aliaser les périodes non divisibles par dix. Une panne de carburant cesse immédiatement de produire ; les consommateurs se délestent progressivement. Le PRNG et les états `on` sont persistants ; les réseaux et index sont dérivés.
 
@@ -37,6 +39,6 @@ Trois scénarios profonds dans `power.test.ts` : construction et transport, tout
 
 Le parcours natif `power.spec.ts` exerce vrais boutons, construction, lumière, déconstruction et rechargement. `power-render-bench.mjs` mesure 3/100 mineurs avec autant de générateurs/lampes, puis des changements simultanés du champ. [Résultats mesurés](validation.md), sans promesse de couverture exhaustive.
 
-Conduits, interrupteurs physiques, batteries, appareils frigorifiques, autres producteurs, recherche, seuils de compétence, qualité/HP/dégâts, incidents électriques et réglages avancés de lumière restent absents. Les bâtiments sont disponibles dans le départ unique ; cela ne simule pas leurs prérequis de recherche/Construction 4.
+Conduits, interrupteurs physiques, batteries, autres producteurs, arbre électrique, qualité/HP/dégâts des générateurs/lampes, incidents électriques et réglages avancés de lumière restent absents. Générateur et lampe restent disponibles au départ, sans leur prérequis Construction 4 ; le climatiseur V75 exige sa recherche et Construction 5.
 
 V43 : la vitesse de Construction et les gains d’expérience s’appliquent à ces chantiers ; le prérequis Core Construction 4 n’est pas encore imposé. [Contrat](skills.md).

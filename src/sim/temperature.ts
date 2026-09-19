@@ -1,3 +1,4 @@
+import { advanceCoolers } from './cooler.ts';
 import { heatwaveOffset } from './heatwave.ts';
 import { applyThermalSources } from './thermal-sources.ts';
 import { TICKS_PER_DAY, type Cell, type World } from './types.ts';
@@ -39,7 +40,7 @@ export class TemperatureView {
 /** Ten Core ticks per local step. Deterministic mean wall exchange, thin roofs
  * and door conductance; no weather, thick roofs or radiation physics implied. */
 export function advanceTemperature(world:World,layout:ThermalLayout):void {
-  const regions=world.thermal?.regions;if(!regions?.length)return;
+  const regions=world.thermal?.regions;if(!regions?.length){advanceCoolers(world,layout,outdoorTemperature(world));return;}
   const outside=outdoorTemperature(world),previous=regions.map(r=>r.temperature);
   const air=(id:number)=>id>=0?previous[id]!:outside;
   for(let id=0;id<regions.length;id++) {
@@ -66,4 +67,5 @@ export function advanceTemperature(world:World,layout:ThermalLayout):void {
     r.temperature=Math.max(-273.15,Math.min(1000,temperature+change));
   }
   applyThermalSources(world,layout);
+  advanceCoolers(world,layout,outside);
 }

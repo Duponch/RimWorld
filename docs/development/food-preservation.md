@@ -1,5 +1,7 @@
 # Conservation des aliments — contrat V11–V38
 
+V75 : le [climatiseur](cold-store.md) fournit désormais un froid obtenable par recherche/construction/alimentation, testé avec rangement physique puis coupure. Le taux local existant gèle les âges, sans rajeunir les stocks ; les anciennes fixtures synthétiques restent distinctes de ce parcours joueur.
+
 V51 étend le même âge/taux thermique aux [plantes médicinales](medicines.md) (150 jours) ; `spoiled["herbal-medicine"]` facultatif comptabilise leur perte sans entrer dans `spoiledUnits`, bilan **alimentaire**. Réservation/portage médical interrompus avant résultat si la dose expire. Les deux autres médicaments ne pourrissent pas.
 
 V48 : les portions d’[alimentation assistée](feeding.md) partagent réservations quantitatives, copie d’âge au prélèvement, température du médecin porteur, expiration avant action et cargaison interrompue. Un repas pourri ne nourrit jamais le patient.
@@ -32,6 +34,6 @@ Trois scénarios profonds regroupent transports/fusions/ingestion au seuil, inte
 
 Le passage normal est linéaire dans les piles, sans allocation d’âge par tick. Les réconciliations n’arrivent qu’aux expirations. Mesurer aussi une expiration groupée avant de remplacer cette boucle par une file d’échéances : les fusions, suppressions et températures futures imposeraient des invalidations supplémentaires.
 
-V38 utilise les températures des pièces, leur couverture et le chauffage du feu. Froid artificiel constructible, saisons/météo, dégâts d’exposition et intoxication restent absents. Les scénarios froids synthétiques valident les transferts et les seuils ; ils ne livrent pas un congélateur.
+V38 utilise les températures des pièces, leur couverture et le chauffage du feu. Le froid artificiel constructible et l’hypothermie sont ajoutés en V75, le coup de chaleur en V74. Saisons, autres météos, gelures et intoxication restent absents. Les scénarios synthétiques de transferts restent distincts du parcours de congélateur V75.
 
 V44 : si un effondrement de fatigue interrompt ensuite cette attente de recette, il libère aussi le poste et conserve l’unique objet via `interruptedCargo`. Ce chemin involontaire est distinct de la recette rendue invalide par expiration. L’aliment retenu continue de vieillir ; sa pourriture efface le marqueur sans interrompre le sommeil. [Contrat](interrupted-cargo.md).

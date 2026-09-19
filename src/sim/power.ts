@@ -1,5 +1,5 @@
 import { PowerTopologyCache, bestPowerParent, validPowerParent, connectedPowerGroups } from './power-topology.ts';
-import { powerWatts } from './power-rules.ts';
+import { powerWatts,powerDemand } from './power-rules.ts';
 import type { World, Structure } from './types.ts';
 
 const owners=new WeakMap<World,PowerTopologyCache>();
@@ -8,7 +8,7 @@ function cache(world:World):PowerTopologyCache {let c=owners.get(world);if(!c){c
 export function reconcilePower(world:World):void {
   if(!world.structures.some(s=>s.power))return;
   const topology=cache(world).read(world);
-  for(const s of world.structures)if(s.kind==='standing-lamp'&&s.power) {
+  for(const s of world.structures)if(s.kind!=='wood-generator'&&s.power) {
     const p=s.power;
     if(p.parentId===null||!validPowerParent(topology,s,p.parentId)) {
       const parent=bestPowerParent(topology,s);
@@ -41,7 +41,7 @@ export function advancePower(world:World):void {
         const waiting=parts.filter(s=>!s.power!.on&&(s.kind!=='wood-generator'||!!s.fuel?.ticks));
         if(!waiting.length||coreTick%Math.max(30,Math.floor(200/waiting.length)))continue;
         for(let n=0;n<Math.max(1,roundEven(waiting.length*.05));n++) {
-          const s=randomPart(world,waiting),cost=s.kind==='wood-generator'?-1000:30;
+          const s=randomPart(world,waiting),cost=s.kind==='wood-generator'?-1000:powerDemand(s);
           if(!s.power!.on&&balance>=cost){s.power!.on=true;balance-=cost;}
         }
       } else if(coreTick%20===0) {

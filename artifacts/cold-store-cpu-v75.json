@@ -1,0 +1,98 @@
+{
+  "date": "2026-09-19T17:37:41.780Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "os": "win32 10.0.26200",
+  "node": "v24.11.1",
+  "protocol": "1/6/20 powered cold rooms and rice stores; one fifth of actors start at 34% hypothermia and physically seek warmth; Natural 250² map, 3/30/100 actors with physical apparel. One third research at physical benches; others gather/craft tribalwear or mine/chop. 650 ticks, 100 separate warmup ticks, encoding every five ticks. Single pass, CPU only; no 6× guarantee.",
+  "coldStore": true,
+  "heatwave": false,
+  "rows": [
+    {
+      "actors": 3,
+      "tickMs": {
+        "n": 650,
+        "p50": 1.3976999999999862,
+        "p95": 3.5190999999999804,
+        "p99": 6.926199999999881,
+        "max": 32.92959999999994
+      },
+      "steadyTickMs": {
+        "n": 630,
+        "p50": 1.3976999999999862,
+        "p95": 3.259800000000041,
+        "p99": 6.283899999999903,
+        "max": 15.366599999999835
+      },
+      "snapshotMs": {
+        "n": 130,
+        "p50": 3.0960000000000036,
+        "p95": 5.0875999999998385,
+        "p99": 8.136899999999969,
+        "max": 8.712299999999686
+      },
+      "completed": 1,
+      "research": 1816995,
+      "exposed": 0,
+      "coolers": 1,
+      "mined": 4
+    },
+    {
+      "actors": 30,
+      "tickMs": {
+        "n": 650,
+        "p50": 3.1828000000004977,
+        "p95": 10.401900000000296,
+        "p99": 21.55560000000014,
+        "max": 36.9077999999995
+      },
+      "steadyTickMs": {
+        "n": 630,
+        "p50": 3.1109999999998763,
+        "p95": 9.770399999999881,
+        "p99": 15.789700000000266,
+        "max": 36.9077999999995
+      },
+      "snapshotMs": {
+        "n": 130,
+        "p50": 2.9192000000002736,
+        "p95": 4.720000000000255,
+        "p99": 6.604900000000271,
+        "max": 16.457100000000537
+      },
+      "completed": 8,
+      "research": 25149717,
+      "exposed": 0,
+      "coolers": 6,
+      "mined": 40
+    },
+    {
+      "actors": 100,
+      "tickMs": {
+        "n": 650,
+        "p50": 12.060499999999593,
+        "p95": 30.308100000000195,
+        "p99": 43.33050000000003,
+        "max": 56.402100000001155
+      },
+      "steadyTickMs": {
+        "n": 630,
+        "p50": 11.94340000000011,
+        "p95": 24.6854000000003,
+        "p99": 34.8234999999986,
+        "max": 56.402100000001155
+      },
+      "snapshotMs": {
+        "n": 130,
+        "p50": 3.5640999999995984,
+        "p95": 5.2806000000000495,
+        "p99": 6.98909999999978,
+        "max": 11.628500000000713
+      },
+      "completed": 27,
+      "research": 83414690,
+      "exposed": 2,
+      "coolers": 20,
+      "mined": 132
+    }
+  ]
+}

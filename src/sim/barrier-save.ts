@@ -8,7 +8,7 @@ export function validateBarriers(world:World,version:number):string[] {
   const errors:string[]=[],size=world.width*world.height;
   if(world.home!==undefined&&(version<67||!Array.isArray(world.home)||!world.home.length||world.home.length>size||!world.home.every((i,n)=>integer(i,0,size-1)&&(n===0||i>world.home![n-1]!))))errors.push('Invalid home area.');
   const ledger:unknown=world.destroyed;
-  if(ledger!==undefined&&(version<67||!object(ledger)||Object.keys(ledger).some(k=>!['count','lost'].includes(k))||!integer(ledger.count,1)||!object(ledger.lost)||!Object.keys(ledger.lost).length||Object.entries(ledger.lost).some(([k,v])=>!CONSTRUCTION_MATERIALS.includes(k as never)||!integer(v,1))))errors.push('Invalid destroyed building ledger.');
+  if(ledger!==undefined&&(version<67||!object(ledger)||Object.keys(ledger).some(k=>!['count','lost'].includes(k))||!integer(ledger.count,1)||!object(ledger.lost)||!Object.keys(ledger.lost).length||Object.entries(ledger.lost).some(([k,v])=>!(CONSTRUCTION_MATERIALS.includes(k as never)||version>=75&&k==='component')||!integer(v,1))))errors.push('Invalid destroyed building ledger.');
   for(const s of [...world.structures,...(world.packed??[]).map(p=>p.building)])if(s.damage!==undefined&&(version<67||!isBarrier(s)||!integer(s.damage,1,barrierMaxHp(s)-1)))errors.push('Invalid barrier damage.');
   for(const j of world.jobs){
     const r:unknown=j.repair;

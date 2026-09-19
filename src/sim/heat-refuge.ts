@@ -8,11 +8,11 @@ import type { ThermalLayout } from './thermal-topology.ts';
 import type { Cell,Pawn,World } from './types.ts';
 
 export interface HeatRefuge {target:Cell;until:number}
-/** Serious heat injury overrides ordinary work. Direct orders, combat and mental
+/** Serious thermal exposure overrides ordinary work. Direct orders, combat and mental
  * states are handled first by the caller. Civil transit remains shared. */
 export function processHeatRefuge(w:World,p:Pawn,context:NeedContext,layout:ThermalLayout):boolean {
   const active=p.heatRefuge;
-  if(!active&&(p.health?.heatstroke??0)<HEAT_SERIOUS||p.orders.active!==null)return false;
+  if(!active&&Math.max(p.health?.heatstroke??0,p.health?.hypothermia??0)<HEAT_SERIOUS||p.orders.active!==null)return false;
   const view=new TemperatureView(w,layout),range=comfortableTemperature(w,p);
   const comfortable=(c:Cell)=>{const t=view.at(w,c);return t>=range.min&&t<=range.max;};
   if(active){

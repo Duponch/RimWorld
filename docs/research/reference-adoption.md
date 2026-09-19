@@ -1,5 +1,7 @@
 # Adoption du référentiel utilisateur
 
+V75 — [Conservation froide](cold-store-reference.md) : chapitres 10/14/15/22 et scène E du chapitre 32 ; SYS/TEST-023–025 (air/toit/porte), 077 (nourriture), 126 (température), 127 (énergie), 128 (combustible). **Adopter** manipulation/chaîne énergétique, consigne, deux faces, vieillissement local ; **adapter** intégration continue et bases électriques connues du scénario ; **différer** gelures/saisons/réseau complet ; **vérifier** constantes contre wiki et classes Core datées. Le miroir de mai 2026 précède le correctif officiel de juin ; aucune parité du patch courant déclarée.
+
 V74 — chapitres 7/14/15/22/24 relus ; SYS/TEST-091,096,126,128,131 : adopter conséquences médicales et température commune, adapter calendrier et recherche spatiale de refuge, différer autres climats. La provenance Odyssey de 131 ne certifie pas Core ; [nouvelle confrontation datée](heatwave-reference.md) documente seuils, qualité, durée, secours et limites.
 
 V73 — chapitre 11 relu, SYS/TEST-062..066 et 068 : adopter travail, objet inachevé et recherche collective avec vrai déblocage ; adapter horloge, scénario initial et présentation 3D ; différer 067/069, arbre/catalogues complets et postes avancés. Les coûts du bureau/tailleur, 600 points, Intellect et 45 tissus de la chemise ont été confrontés aux [sources nouvelles et limites de versions](research-reference.md). Aucune famille entière n’est déclarée complète.

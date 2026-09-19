@@ -5,6 +5,7 @@ import type { World } from './types.ts';
 export function validateConstructionMaterials(world:World,version:number):string[] {
   const errors:string[]=[];
   for(const entity of [...world.jobs,...world.structures,...(world.packed??[]).map(p=>p.building)]) {
+    if(entity.kind==='cooler'&&(version<75||entity.material!=='steel'||entity.footprint!=='standard'))errors.push('Cooler requires V75 and steel.');
     if(entity.kind==='passive-cooler'&&(version<40||entity.material!=='wood'||entity.orientation!==0))errors.push('Passive cooler requires V40, wood and fixed orientation.');
     if(entity.kind==='door'&&(version<34||entity.material===undefined))errors.push('Door requires V34 and an explicit material.');
     if((entity.kind==='research-bench'||entity.kind==='tailor-bench')&&(version<73||entity.material===undefined))errors.push('Research and tailoring benches require V73 and explicit materials.');

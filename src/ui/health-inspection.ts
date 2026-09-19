@@ -28,7 +28,7 @@ export function updateHealthInspection(panel:HTMLElement,pawn:Pawn,world?:World)
   const details=panel.querySelector('#health-inspection');if(!details)return;
   const health=pawn.health,c=pawnBody(pawn).capacities;
   const range=world&&comfortableTemperature(world,pawn),stage=heatStage(health?.heatstroke);
-  details.querySelector('[data-health="thermal"]')!.textContent=(range?`Air ${new TemperatureView(world!).at(world!,pawn).toFixed(1)} °C · Confort ${range.min.toFixed(1)} à ${range.max.toFixed(1)} °C. `:'')+(stage?`Coup de chaleur ${HEAT_LABELS[stage]} : ${(100*health!.heatstroke!/HEAT_UNIT).toFixed(1)} %. `:'')+(pawn.heatRefuge?'Cherche ou attend dans un refuge thermique.':'');
+  details.querySelector('[data-health="thermal"]')!.textContent=(range?`Air ${new TemperatureView(world!).at(world!,pawn).toFixed(1)} °C · Confort ${range.min.toFixed(1)} à ${range.max.toFixed(1)} °C. `:'')+(stage?`Coup de chaleur ${HEAT_LABELS[stage]} : ${(100*health!.heatstroke!/HEAT_UNIT).toFixed(1)} %. `:'')+(heatStage(health?.hypothermia)?`Hypothermie ${HEAT_LABELS[heatStage(health?.hypothermia)]} : ${(100*health!.hypothermia!/HEAT_UNIT).toFixed(1)} %. `:'')+(pawn.heatRefuge?'Cherche ou attend dans un refuge thermique.':'');
   details.querySelector('[data-health="stagger"]')!.textContent=pawn.stagger?'Ralenti temporairement par un impact de balle.':'';
   const policy=details.querySelector<HTMLSelectElement>('#medical-policy');if(policy){policy.value=medicalCare(pawn);policy.disabled=pawn.state==='dead';}
   const self=details.querySelector<HTMLInputElement>('#self-tend-policy');if(self){self.checked=!!pawn.selfTend;self.disabled=pawn.state==='dead';}

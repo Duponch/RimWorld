@@ -42,3 +42,6 @@
 #social-opinions{padding-left:18px}#social-opinions li{margin:8px 0}#social-opinions p{margin:3px 0;color:#c2c7b6}
 
 [data-apparel*="cloth-tribalwear"] .portrait-body {border-radius:35% 12% 0 0;clip-path:polygon(22% 0,63% 0,100% 100%,0 100%);}
+
+.cooler-buttons { display: flex; gap: 4px; }
+.cooler-buttons button { flex: 1; padding: 6px 2px; min-width: 0; }

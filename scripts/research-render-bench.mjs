@@ -1,3 +1,4 @@
+import { coldStoreLoad } from '../tests/scenarios/cold-store-load.ts';
 import { heatwaveLoad } from '../tests/scenarios/heatwave-load.ts';
 import { researchLoad } from '../tests/scenarios/research-load.ts';
 import { serializeWorld,validateWorld } from '../src/sim/serialization.ts';
@@ -17,8 +18,8 @@ if(b.active){b.frames.push({interval:b.previous===null?null:args[0]-b.previous,c
 const suffix=`
 const tailoringSnapshot=client.onSnapshot;client.onSnapshot=(...args)=>{const b=window.__miningBench,t=performance.now();try{return tailoringSnapshot(...args);}finally{if(b.active){b.workers.push(args[1]);b.snapshots.push(performance.now()-t);}}};
 `;
-const hot=process.env.HEATWAVE==='1',makeLoad=hot?heatwaveLoad:researchLoad,version=process.env.VALIDATION_VERSION??(hot?'v74':'v73'),label=hot?'heatwave':'research',startTick=hot?4000:2000;
-const report={date:new Date().toISOString(),cpu:os.cpus()[0].model,viewport:{width:1440,height:1000},protocol:(hot?'Heatwave plateau 17°C offset, tick 4000–4650; half shirt-wearing actors start at 34% heatstroke, other half tribalwear; ':'')+'Native Chromium WebGPU; natural 250², physical apparel on 3/30/100 actors. One third research at physical benches; others gather/craft tribalwear or mine/chop. Real worker at requested 6× for 650 ticks, 90 warmup frames, one run each; no full World export during timing. Worker samples are published batch step averages, not an independent per-tick percentile.',heatwave:hot,rows:[]};
+const cold=process.env.COLD_STORE==='1',hot=!cold&&process.env.HEATWAVE==='1',makeLoad=cold?coldStoreLoad:hot?heatwaveLoad:researchLoad,version=process.env.VALIDATION_VERSION??(cold?'v75':hot?'v74':'v73'),label=cold?'cold-store':hot?'heatwave':'research',startTick=hot?4000:2000;
+const report={date:new Date().toISOString(),cpu:os.cpus()[0].model,viewport:{width:1440,height:1000},protocol:(cold?'1/6/20 powered cold rooms and rice stores; one fifth of actors start at 34% hypothermia and physically seek warmth; ':'')+(hot?'Heatwave plateau 17°C offset, tick 4000–4650; half shirt-wearing actors start at 34% heatstroke, other half tribalwear; ':'')+'Native Chromium WebGPU; natural 250², physical apparel on 3/30/100 actors. One third research at physical benches; others gather/craft tribalwear or mine/chop. Real worker at requested 6× for 650 ticks, 90 warmup frames, one run each; no full World export during timing. Worker samples are published batch step averages, not an independent per-tick percentile.',coldStore:cold,heatwave:hot,rows:[]};
 const browser=await chromium.launch({channel:'chromium',args:[]});
 try{for(const count of [3,30,100]){
   const page=await browser.newPage({viewport:report.viewport}),errors=[];
@@ -35,9 +36,9 @@ try{for(const count of [3,30,100]){
   const start=performance.now();await page.locator('[data-speed="6"]').click();
   await page.waitForFunction(end=>window.__miningBench.view.world.tick>=end,startTick+650,{timeout:90000,polling:250});await page.locator('[data-speed="0"]').click();const elapsed=performance.now()-start;
   const data=await page.evaluate(()=>{const b=window.__miningBench;b.active=false;return {frames:b.frames,workers:b.workers,snapshots:b.snapshots,pipelines:b.pipelines,stable:b.initial===b.view.pawns.pawnMesh.geometry,world:JSON.stringify(b.view.world)};});
-  const w=JSON.parse(data.world),invalid=validateWorld(w),row={actors:count,adapter,elapsedMs:elapsed,simulatedTicks:w.tick-startTick,completed:w.tailoring?.completed??0,research:w.research?.points,exposed:w.pawns.filter(p=>p.health?.heatstroke).length,frameMs:stats(data.frames.flatMap(f=>f.interval===null?[]:[f.interval])),frameCpuMs:stats(data.frames.map(f=>f.cpu)),workerBatchStepMs:stats(data.workers),snapshotAdoptionMs:stats(data.snapshots),drawCalls:stats(data.frames.map(f=>f.calls)),pipelines:data.pipelines,stable:data.stable,errors,invalid};report.rows.push(row);
+  const w=JSON.parse(data.world),invalid=validateWorld(w),row={actors:count,adapter,elapsedMs:elapsed,simulatedTicks:w.tick-startTick,completed:w.tailoring?.completed??0,research:w.research?.points,exposed:w.pawns.filter(p=>p.health?.heatstroke||p.health?.hypothermia).length,coolers:w.structures.filter(s=>s.kind==='cooler').length,frameMs:stats(data.frames.flatMap(f=>f.interval===null?[]:[f.interval])),frameCpuMs:stats(data.frames.map(f=>f.cpu)),workerBatchStepMs:stats(data.workers),snapshotAdoptionMs:stats(data.snapshots),drawCalls:stats(data.frames.map(f=>f.calls)),pipelines:data.pipelines,stable:data.stable,errors,invalid};report.rows.push(row);
   await page.screenshot({path:`artifacts/${label}-load-${version}-${count}.png`});await page.close();
-  if(!w.research?.points||errors.length||invalid.length||data.pipelines.length||!data.stable||!hot&&(w.tailoring?.completed??0)!==Array.from({length:count},(_,i)=>i).filter(i=>i%2===0&&i%3!==0).length)throw Error(JSON.stringify(row));
+  if(!w.research?.points||errors.length||invalid.length||data.pipelines.length||!data.stable||!hot&&!cold&&(w.tailoring?.completed??0)!==Array.from({length:count},(_,i)=>i).filter(i=>i%2===0&&i%3!==0).length)throw Error(JSON.stringify(row));
 }}
 catch(error){report.error=String(error);throw error;}
 finally{await browser.close();await writeFile(`artifacts/${label}-render-${version}.json`,JSON.stringify(report,null,2));}

@@ -19,14 +19,14 @@ export function buildJobMarkers(world: World, group: THREE.Group, cutaway: boole
       if (job.kind === 'chop' || job.kind === 'harvest' || job.kind === 'cut' || job.kind === 'sow') continue;
       if(job.kind==='deconstruct'||job.kind==='uninstall') {
         const targetKind=(job.deconstruction??job.furniture)!.kind;
-        const y=((targetKind==='research-bench'||targetKind==='tailor-bench'||targetKind==='stonecutter')?WORLD_SCALE.stonecutterHeight:targetKind==='wall'?wallHeight:targetKind==='table'?WORLD_SCALE.tableHeight:targetKind==='horseshoes'?WORLD_SCALE.horseshoeHeight:targetKind==='stool'?WORLD_SCALE.stoolHeight:WORLD_SCALE.bedSurfaceHeight)+.06;
+        const y=((targetKind==='research-bench'||targetKind==='tailor-bench'||targetKind==='stonecutter')?WORLD_SCALE.stonecutterHeight:(targetKind==='wall'||targetKind==='cooler')?wallHeight:targetKind==='table'?WORLD_SCALE.tableHeight:targetKind==='horseshoes'?WORLD_SCALE.horseshoeHeight:targetKind==='stool'?WORLD_SCALE.stoolHeight:WORLD_SCALE.bedSurfaceHeight)+.06;
         for(const cell of cells)for(const ry of [-Math.PI/4,Math.PI/4])frames.push({x:cell.x,z:cell.z,y,sx:.85,sy:.05,sz:.08,ry,color:job.kind==='uninstall'?0xd9b66c:0xd77855});
         continue;
       }
       const kind=job.furniture?.kind??job.kind;
       const x=cells.reduce((n,c)=>n+c.x,0)/cells.length,z=cells.reduce((n,c)=>n+c.z,0)/cells.length,ry=job.orientation*Math.PI/2;
-      const height = (kind==='research-bench'||kind==='tailor-bench'||kind==='stonecutter')?WORLD_SCALE.stonecutterHeight:kind === 'horseshoes' ? WORLD_SCALE.horseshoeHeight : kind === 'wall' ? wallHeight : kind === 'table' ? WORLD_SCALE.tableHeight : kind === 'stool' ? WORLD_SCALE.stoolHeight : WORLD_SCALE.bedSurfaceHeight;
-      const width = (kind==='research-bench'||kind==='tailor-bench'||kind==='stonecutter')?WORLD_SCALE.stonecutterWidth:kind === 'horseshoes' ? 0.12 : kind === 'wall' ? 0.92 : kind === 'table' ? WORLD_SCALE.tableWidth : kind === 'stool' ? WORLD_SCALE.stoolWidth : WORLD_SCALE.bedWidth;
+      const height = (kind==='research-bench'||kind==='tailor-bench'||kind==='stonecutter')?WORLD_SCALE.stonecutterHeight:kind === 'horseshoes' ? WORLD_SCALE.horseshoeHeight : (kind === 'wall'||kind==='cooler') ? wallHeight : kind === 'table' ? WORLD_SCALE.tableHeight : kind === 'stool' ? WORLD_SCALE.stoolHeight : WORLD_SCALE.bedSurfaceHeight;
+      const width = (kind==='research-bench'||kind==='tailor-bench'||kind==='stonecutter')?WORLD_SCALE.stonecutterWidth:kind === 'horseshoes' ? 0.12 : (kind === 'wall'||kind==='cooler') ? 0.92 : kind === 'table' ? WORLD_SCALE.tableWidth : kind === 'stool' ? WORLD_SCALE.stoolWidth : WORLD_SCALE.bedWidth;
       const length = kind==='research-bench'?1.8:(kind==='tailor-bench'||kind==='stonecutter')?WORLD_SCALE.stonecutterDepth:kind === 'horseshoes' ? 0.12 : kind === 'table' ? WORLD_SCALE.tableLength : kind === 'stool' ? WORLD_SCALE.stoolWidth : kind === 'bed' && job.footprint !== 'legacy-single' ? WORLD_SCALE.bedLength : 0.92;
       blueprints.push({ x, z, y: height / 2, sx: width, sy: height, sz: length, ry });
       if (job.construction === 'frame') {

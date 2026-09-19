@@ -1,6 +1,8 @@
 # Matrice des systèmes et critères de réalisation
 
-V74 : S11/S13/S16 reçoivent canicule, isolation et santé thermique chaude avec refuge/secours. Aucun de ces domaines n’est complet ; froid, saisons, météos, incendies et réfrigération restent ouverts. [Contrat](../development/heatwave.md).
+V75 : S10/S12/S13/S16 reçoivent conservation froide obtenable, appareil/recherche et hypothermie. Deux situations de l’étape proche 5 sont jouables ; gelures, saisons, environnement et arbre technologique complets restent ouverts. [Contrat](../development/cold-store.md).
+
+V74 : S11/S13/S16 reçoivent canicule, isolation et santé thermique chaude avec refuge/secours. Aucun de ces domaines n’est complet ; saisons, autres météos, incendies et gelures restent ouverts ; froid/réfrigération ajoutés V75. [Contrat](../development/heatwave.md).
 
 État V73 : S20 relie désormais une recherche collective physique à une chemise fabriquée et portée, après la culture de coton S09. L’étape proche 4 est livrée dans ce périmètre ; S20 reste partiel (un projet, catalogue limité). [Contrat](../development/research.md) ; calendrier uniquement dans [ROADMAP](../ROADMAP.md).
 
@@ -50,7 +52,7 @@ V42 enrichit SYS/TEST-127/128 et CAT-047 avec [générateur, carburant et lampes
 
 V41 : CAT-006 partiel et SYS-061 enrichi par les [composants industriels](../development/components.md), extraits/rangés dans la chaîne commune ; autres acquisitions et usages électriques ouverts.
 
-V40 : S10/S12 intègrent le [refroidisseur passif](../development/passive-cooling.md), sa construction et son combustible. Réfrigération électrique, réseau complet et confort thermique général restent ouverts ; réseau local V42 et exposition chaude V74 ajoutés depuis ; G2 n’est pas déclaré complet.
+V40 : S10/S12 intègrent le [refroidisseur passif](../development/passive-cooling.md), sa construction et son combustible. Réseau complet et confort thermique général restent ouverts ; réseau local V42, exposition chaude V74 et réfrigération/hypothermie V75 ajoutés depuis ; G2 n’est pas déclaré complet.
 
 V39 : températures de croissance et de semis intégrées à S09, avec conservation du passé et inspection ; maladies/mortalité restent ouvertes. [Contrat](../development/plant-temperature.md).
 
@@ -127,7 +129,7 @@ Première partie livrée avant la clôture de G0 : [repas et couchages physiques
 
 La colonie est autonome plusieurs jours grâce à la croissance agricole, aux récoltes renouvelables, aux recettes et aux aliments réellement accessibles, transportés puis ingérés. Les couchages sont réservés et rejoints ; les horaires orientent les activités sans satisfaire directement les besoins. Les premiers effets de traits et compétences sont mesurables.
 
-Le joueur peut provoquer une pénurie, comprendre sa cause et la corriger. Distance, ingrédients, seuil de production, interruption et expiration simple des aliments ont des conséquences vérifiables. Les unités temporelles et de nutrition sont décidées explicitement avant calibration ; les constantes du corpus ne sont pas injectées telles quelles dans les ticks du prototype. Refroidissement passif et premiers effets des pièces livrés pendant G2 ; appareils réfrigérants et effets psychologiques restent ouverts.
+Le joueur peut provoquer une pénurie, comprendre sa cause et la corriger. Distance, ingrédients, seuil de production, interruption et expiration simple des aliments ont des conséquences vérifiables. Les unités temporelles et de nutrition sont décidées explicitement avant calibration ; les constantes du corpus ne sont pas injectées telles quelles dans les ticks du prototype. Refroidissement passif et premiers effets des pièces livrés pendant G2 ; climatiseur V75 livré, autres appareils et pensées thermiques restent ouverts.
 
 ### G2 — Habitat et environnement
 
