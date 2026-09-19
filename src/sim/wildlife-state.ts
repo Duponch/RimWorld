@@ -11,6 +11,10 @@ export interface WildAnimal extends Cell {
   health?:MedicalRecord;
   flee?:{danger:Cell;until:number};
   stagger?:StaggerState;
+  stun?:import('./stun.ts').StunState;
+  threat?:{targetId:number;harmedAtCore:number};
+  retaliation?:{targetId:number;untilCore:number};
+  strike?:NonNullable<import('./melee-state.ts').MeleeState['strike']>;
   sleepUntilCore?:number;
   path:Cell[]; motion?:TravelSegment; nextDecision:number;
   meal?:{kind:'plant'|'pile';id:number;quantity:number;progress:number};

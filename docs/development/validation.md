@@ -1,4 +1,6 @@
-# Validation courante — V77
+# Validation courante — V78
+
+V78 : [mêlée/riposte animale, reprise et charge](../history/validation-animal-melee-v78.md). Les résultats datés ci-dessous restent historiques ; ils ne remplacent pas ce bilan.
 
 V77 : [anatomie animale, tirs, fuite, reprise et charge](../history/validation-animal-combat-v77.md). Les mêmes contrats médicaux restent actifs chez les humains ; chasse automatique et filière de viande non livrées.
 
@@ -92,7 +94,7 @@ Passe complète avant revue finale : **262/262**, puis **41/41 ciblés** après 
 
 Audit de combat 250², 3/30/100 acteurs, réellement hostiles : réutilisation du décor de tir après impacts compatibles, topologie du refuge réutilisée mais revérifiée. Simulation p95 à cent acteurs **33,1 → 23,9 ms**, pointes et coûts d’encodage conservés dans les preuves. Ce résultat ne garantit pas 6× à cent acteurs. Mesures natives finales et garde de récolte détaillées dans le rapport lié.
 
-G0 en consolidation, G1/G2 partiels, G3 premières boucles de conflit ; G4/G5 ouverts. Prochaine étape : mêlée élémentaire, puis riposte et poursuite. Estimation globale inchangée, environ 20 % (15–25 %). Les lots historiques ci-dessous ne décrivent pas tous le périmètre courant.
+État historique V58 : G0 en consolidation, G1/G2 partiels, G3 premières boucles de conflit ; G4/G5 ouverts. La mêlée et les suites sont depuis livrées ; état et estimations courantes uniquement dans [ROADMAP](../ROADMAP.md). Les lots historiques ci-dessous ne décrivent pas tous le périmètre courant.
 
 
 ## Historique — ralentissement après impact V57
@@ -126,7 +128,7 @@ Dernière revue : **23/23 scénarios ciblés passent en 5,11 s** après correcti
 
 ## Bilan de retour en mode jour — 18 septembre
 
-Le lot de code V55 est déjà publié dans `37a6791`. Cette reprise consolide l'[inventaire courant](../gameplay/implementation-status.md), corrige les absences périmées dans l'index/catalogue et reprend les [estimations dans ROADMAP](../ROADMAP.md#estimation-de-charge--18-septembre-2026). Recherche renouvelée sur les [interruptions de préparation et la récupération](../research/combat-preparation.md#préparation-et-récupération--relecture-du-18-septembre), sans ajout de commande ni changement de règle livré. Le retour en mode jour suspend l'automatisation de nuit ; prochain lot visible défini dans ROADMAP.
+Le lot de code V55 est déjà publié dans `37a6791`. Cette reprise consolide l'[inventaire courant](../gameplay/implementation-status.md), corrige les absences périmées dans l'index/catalogue et reprend les [estimations dans ROADMAP](../ROADMAP.md#estimation-davancement--revue-du-19-septembre-2026-v78). Recherche renouvelée sur les [interruptions de préparation et la récupération](../research/combat-preparation.md#préparation-et-récupération--relecture-du-18-septembre), sans ajout de commande ni changement de règle livré. Le retour en mode jour suspend l'automatisation de nuit ; prochain lot visible défini dans ROADMAP.
 
 Vérifications adaptées : liens/ancres, identifiants de domaines, empreintes des trois originaux et `git diff --check`. Aucun code, état de sauvegarde ou rendu changé ; les suites de simulation/UI et les mesures V55 ci-dessous ne sont pas annoncées comme rejouées pour ce bilan documentaire. Les estimations sont un jugement de planification, pas une nouvelle preuve de couverture ou de performance.
 

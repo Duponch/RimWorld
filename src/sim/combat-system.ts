@@ -1,3 +1,5 @@
+import { advanceAnimalMelee } from './wildlife-melee.ts';
+import { isAnimalTarget } from './combat-target.ts';
 import { disturbanceEvents } from './disturbance.ts';
 import { advanceMelee } from './melee.ts';
 import { blockedCells } from './pathfinding.ts';
@@ -11,13 +13,14 @@ import type { World } from './types.ts';
  * transaction owner. All captures expire at the end of this tick. */
 export function advanceWorldCombat(world:World):void {
   const disturbance=disturbanceEvents(world);
-  const shooters=world.pawns.filter(p=>p.shooting||p.melee).sort((a,b)=>a.id-b.id);
+  const people=world.pawns.filter(p=>p.shooting||p.melee),targets=new Set(people.map(p=>p.melee?.order?.targetId));
+  const shooters=[...people,...(world.wildlife?.animals.filter(a=>a.threat||a.strike||a.retaliation||a.stun||targets.has(a.id))??[])].sort((a,b)=>a.id-b.id);
   if(!shooters.length){advanceWorldProjectiles(world,undefined,undefined,disturbance);return;}
   const batch=combatShotBatch(world);
   let queries=shootingQueries(world,batch.read);
   let physical:Uint8Array|undefined;const contactGrid=()=>physical??=blockedCells(world,true);
   advanceWorldProjectiles(world,core=>{let changed=false;for(const pawn of shooters){
-    if(advanceMelee(world,pawn,core,contactGrid,queries,disturbance)){changed=true;physical=undefined;batch.afterImpact();queries=shootingQueries(world,batch.read);}
-    advanceShooter(world,pawn,core,queries);
+    if(isAnimalTarget(pawn)?advanceAnimalMelee(world,pawn,core,contactGrid,queries.grid,disturbance):advanceMelee(world,pawn,core,contactGrid,queries,disturbance)){changed=true;physical=undefined;batch.afterImpact();queries=shootingQueries(world,batch.read);}
+    if(!isAnimalTarget(pawn))advanceShooter(world,pawn,core,queries);
   }return changed;},()=>{physical=undefined;batch.afterImpact();queries=shootingQueries(world,batch.read);},disturbance);
 }

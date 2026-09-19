@@ -1,6 +1,7 @@
 import { coldModifiers } from './cold-rules.ts';
 import { HEAT_UNIT,heatModifiers } from './heat-rules.ts';
-import { assessBody,type BodyAssessment } from './body-capacities.ts';
+import type { BodyAssessment } from './body-capacities.ts';
+import { projectedMedicalBody } from './medical-assessment-cache.ts';
 import type { BodyPartId } from './body-definition.ts';
 import { medicalModel,modelHasPart } from './body-model.ts';
 import { BLOOD_UNIT,HP_UNIT,PAIN_UNIT,FRESH_MISSING_TICKS,INJURY_RULES,injuryPartRules,bloodConsciousness,coagulationAge,isWithinPart,scarChance,type InjuryKind,type ScarPain } from './injury-rules.ts';
@@ -46,7 +47,7 @@ export function medicalBleedUnits(record:MedicalRecord):number {
 }
 export function assessMedical(record:MedicalRecord):BodyAssessment {
   const heat=heatModifiers(record.heatstroke),cold=coldModifiers(record.hypothermia),blood=bloodConsciousness(record.bloodLoss);
-  return assessBody({damage:record.injuries.map(i=>({part:i.part,loss:i.severity/HP_UNIT})),missing:record.missing.map(m=>m.part),pain:medicalPain(record),consciousnessOffset:(blood.consciousnessOffset??0)+heat.consciousnessOffset+cold.consciousnessOffset,consciousnessMax:Math.min(blood.consciousnessMax??Infinity,heat.consciousnessMax,cold.consciousnessMax),movingOffset:heat.movingOffset+cold.movingOffset,manipulationOffset:cold.manipulationOffset},medicalModel(record));
+  return projectedMedicalBody(record,{damage:record.injuries.map(i=>({part:i.part,loss:i.severity/HP_UNIT})),missing:record.missing.map(m=>m.part),pain:medicalPain(record),consciousnessOffset:(blood.consciousnessOffset??0)+heat.consciousnessOffset+cold.consciousnessOffset,consciousnessMax:Math.min(blood.consciousnessMax??Infinity,heat.consciousnessMax,cold.consciousnessMax),movingOffset:heat.movingOffset+cold.movingOffset,manipulationOffset:cold.manipulationOffset},medicalModel(record));
 }
 export function medicalStatus(record:MedicalRecord,body=assessMedical(record)):'mobile'|'downed'|'dead' {
   return record.death?'dead':body.painShock||!body.canBeAwake||!body.movingCapable?'downed':'mobile';

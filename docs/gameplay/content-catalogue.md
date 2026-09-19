@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+**V78 :** même catalogue, aucun nouvel ItemId ; dents/tête du lièvre servent la mêlée réelle et la riposte. Aucune viande/cuir ni recette de boucherie. [Contrat](../development/animal-melee.md).
+
 **V77 :** même espèce adulte `hare`, désormais 28 parties médicales et ciblage balistique de taille 0,2. Le corps mort garde son identité ; aucun nouvel ItemId, viande, cuir ou dépouille transportable. [Contrat](../development/animal-combat.md).
 
 **V76 :** espèce vivante `hare`, profil adulte femelle/mâle, représentation procédurale quadrupède animée sur GPU. Aucun nouvel ItemId, viande, cuir ou cadavre disponible ; plantes et aliments existants seulement. Le sexe n’active pas la reproduction. [Périmètre](../development/wildlife.md).

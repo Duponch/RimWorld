@@ -9,7 +9,7 @@ export class PresentationChanges {
   capture(world:World):boolean {
     const signature=JSON.stringify([
       world.seed,world.width,world.height,world.events.at(-1),
-      world.wildlife?.animals.map(a=>[a.id,a.state,a.meal?.id,a.flee,a.stagger,a.health?.nextInjuryId]),world.wildlife?.eatenNutrition,
+      world.wildlife?.animals.map(a=>[a.id,a.state,a.meal?.id,a.flee,a.stagger,a.stun,a.threat,a.strike,a.health?.nextInjuryId]),world.wildlife?.eatenNutrition,
       world.projectiles?.map(p=>[p.id,p.emittedAtCore,p.arrival]),
       world.pawns.map(p=>[p.id,p.state,p.raid?.exiting,p.mental?.crisis?.kind,p.mental?.crisis?.target,p.jobId,p.faction,p.hostilityResponse,p.draft?.holdFire,p.tactics?.targetId,p.tactics?.post,p.flee,p.melee,p.stun,p.shooting,p.stagger,!!p.draft,p.draft?.target,p.draft?.queue,p.equipmentTask?.itemId,p.equipmentTask?.action,p.equipmentDropPending,p.rescue,p.tend?.patientId,p.tend?.phase,p.feed?.patientId,p.feed?.phase,p.medicalSleep,p.interruptedCargo,p.need?.phase,p.need?.kind==='sleep'?p.need.bedId:undefined,
         p.research?.stationId,p.haul?.phase,p.haul?.carryPileId,p.cooking?.phase,p.cooking?.productId,

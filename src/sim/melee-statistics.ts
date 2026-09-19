@@ -33,6 +33,9 @@ export function meleeTools(world:World,pawn:Pawn,body=()=>pawnBody(pawn)):MeleeT
     const damage=9*[.8,.9,1,1.1,1.2,1.45,1.65][WEAPON_QUALITIES.indexOf(weapon.weapon.quality)]!;
     add('grip',damage,'blunt');add('barrel',damage,'blunt');add('barrel-poke',damage,'poke');
   }
+  return rankMeleeTools(tools);
+}
+export function rankMeleeTools(tools:readonly MeleeTool[]):MeleeTool[] {
   const highest=Math.max(...tools.map(t=>t.weight));
   const category=(t:MeleeTool)=>t.weight>=highest*.95?'best':t.weight<highest*.25?'worst':'mid';
   const counts={best:0,mid:0,worst:0};for(const t of tools)counts[category(t)]++;

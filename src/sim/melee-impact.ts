@@ -1,6 +1,7 @@
-import { BODY_COVERAGE,BODY_INDEX,BODY_PARTS,HUMAN_BODY,bodyPartExists,type BodyPartId } from './body-definition.ts';
+import type { BodyPartId } from './body-definition.ts';
+import { medicalModel,modelHasPart } from './body-model.ts';
 import type { ImpactProtection } from './apparel-protection.ts';
-import { HP_UNIT,PART_INJURY_RULES,isWithinPart,type InjuryKind } from './injury-rules.ts';
+import { HP_UNIT,injuryPartRules,isWithinPart,type InjuryKind } from './injury-rules.ts';
 import { addResolvedInjuryBatch,partMissing,remainingPartHealth,type ResolvedInjury } from './injury-state.ts';
 import type { MedicalRecord } from './injury-types.ts';
 import { curve,type MeleeDamage } from './melee-statistics.ts';
@@ -10,7 +11,8 @@ export interface MeleeImpactResult {record:MedicalRecord;selected:BodyPartId|nul
 /** Unarmored natural adult. Independent resolution, explicit random stream;
  * actor, XP, cadence and attack commands belong to the combat controller. */
 export function resolveUnarmoredMelee(record:MedicalRecord,hit:MeleeImpact,random:()=>number,protect?:ImpactProtection):MeleeImpactResult {
-  if(!Number.isFinite(hit.damage)||hit.damage<0||hit.damage>1000000||!['blunt','poke','bite'].includes(hit.kind)||hit.part!==undefined&&(!bodyPartExists(hit.part)||BODY_PARTS[hit.part].conceptual||BODY_PARTS[hit.part].depth!=='outside'))throw new RangeError('Invalid melee impact');
+  const model=medicalModel(record),{parts:HUMAN_BODY,byId:BODY_PARTS,index:BODY_INDEX,coverage:BODY_COVERAGE}=model,PART_INJURY_RULES=injuryPartRules(model);
+  if(!Number.isFinite(hit.damage)||hit.damage<0||hit.damage>1000000||!['blunt','poke','bite'].includes(hit.kind)||hit.part!==undefined&&(!modelHasPart(model,hit.part)||BODY_PARTS[hit.part].conceptual||BODY_PARTS[hit.part].depth!=='outside'))throw new RangeError('Invalid melee impact');
   const next=structuredClone(record),result:MeleeImpactResult={record:next,selected:null,layers:[],stun:false};
   if(record.death||!hit.damage||hit.part&&partMissing(record,hit.part))return result;
   const draw=()=>{const n=random();if(!Number.isFinite(n)||n<0||n>=1)throw new RangeError('Invalid impact random');return n;};
@@ -20,7 +22,7 @@ export function resolveUnarmoredMelee(record:MedicalRecord,hit:MeleeImpact,rando
     let roll=draw()*total;for(const p of candidates){roll-=BODY_COVERAGE[BODY_INDEX[p.id]];if(roll<0)return p.id;}return candidates.at(-1)!.id;
   };
   let part=hit.part??select(id=>BODY_PARTS[id].depth==='outside');if(!part)return result;
-  if(hit.kind==='poke'&&draw()<.4)part=select(id=>BODY_PARTS[id].depth==='inside'&&isWithinPart(id,part!))??part;
+  if(hit.kind==='poke'&&draw()<.4)part=select(id=>BODY_PARTS[id].depth==='inside'&&isWithinPart(id,part!,model))??part;
   result.selected=part;
   const guarded=protect?.(part,hit.damage),amount=guarded?.amount??hit.damage;if(!amount)return result;
   const kind=(id:BodyPartId):InjuryKind=>PART_INJURY_RULES[id].solid?'crack':hit.kind==='bite'&&!guarded?.converted?'bite':PART_INJURY_RULES[id].skin?'bruise':'crush';
@@ -45,8 +47,8 @@ export function resolveUnarmoredMelee(record:MedicalRecord,hit:MeleeImpact,rando
       if(bone)add(bone,amount*(converted+.2+draw()*.15));
     }
     if(!next.death) {
-      const head=isWithinPart(part,'neck');
-      if(part==='torso'||head)result.stun=draw()<curve(amount/40,head?[[.04,.2],[.5,1]]:[[.4,0],[.9,.15]]);
+      const head=isWithinPart(part,'neck',model);
+      if(part==='torso'||head)result.stun=draw()<curve(amount/BODY_PARTS.torso.hp,head?[[.04,.2],[.5,1]]:[[.4,0],[.9,.15]]);
     }
   } else {
     const damage=preserve(part,amount,hit.kind==='bite'?0:.4,hit.kind==='bite'?.1:1);

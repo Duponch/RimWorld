@@ -1,5 +1,7 @@
 # Santé animale et tirs V77
 
+**Complément V78 :** [mêlée interespèces et riposte locale](animal-melee.md). Les anciennes limites de contact V77 sont levées dans ce périmètre ; filière alimentaire et corps transportables restent absents.
+
 [Recherche fraîche](../research/animal-combat-reference.md), [faune et besoins](wildlife.md), [santé commune](health.md), [preuves](../history/validation-animal-combat-v77.md).
 
 ## Boucle visible et frontière
@@ -8,7 +10,7 @@ Le joueur sélectionne un colon mobilisé avec un revolver, ouvre **Faune**, pui
 
 Un impact peut tuer immédiatement, laisser un animal incapable ou le faire fuir avec une blessure ; le sang et la guérison continuent ensuite. Les besoins s'arrêtent à la mort. La victime reste identifiée à sa position, sans devenir une pile générique ni donner de viande à distance. Elle protège encore sa cellule contre la finition d’un chantier et maintient une porte ouverte si elle tombe sur son passage. Le transport des dépouilles étant absent, ces obstacles locaux ne peuvent pas encore être dégagés : limite concrète de cette tranche, à lever dans la prochaine filière.
 
-**Découpage décidé :** anatomie, capture de cibles et impacts étaient exclusivement humains. Leur généralisation constitue une dépendance majeure à la chaîne complète. V77 est une tranche visible de tir/survie animale, pas la livraison de la chasse alimentaire. Prochaine boucle canonique : riposte de mêlée, chasse automatique, dépouille physique, boucherie, viande puis repas. Pas d'ajout d'espèces avant cette boucle.
+**Découpage décidé :** anatomie, capture de cibles et impacts étaient exclusivement humains. Leur généralisation constitue une dépendance majeure à la chaîne complète. V77 est une tranche visible de tir/survie animale, pas la livraison de la chasse alimentaire. Riposte de mêlée ajoutée V78 ; prochaine boucle canonique : chasse automatique, dépouille physique, boucherie, viande puis repas. Pas d'ajout d'espèces avant cette boucle.
 
 ## Modèles et transactions
 
@@ -30,4 +32,4 @@ Un mesh résident pour les lièvres, même géométrie et graphe TSL ; état/tei
 
 ## Limites explicitement ouvertes
 
-Chasse automatique et métier Chasse, achèvement au contact, riposte animale de mêlée, manhunter d'autres espèces, prédation, dépouille transportable, décomposition et boucherie restent absents. Pas de viande/cuir, soins vétérinaires, maladies, faim létale, climat corporel animal, apprivoisement, élevage, départ de carte ou renouvellement écologique. Les parties amputées restent présentes sur le modèle low poly, comme la limite actuelle du modèle humain. Les calendriers/coefficients de fuite sont adaptés, pas certifiés identiques à Core.
+Chasse automatique et métier Chasse, achèvement au contact, manhunter d'autres espèces, prédation, dépouille transportable, décomposition et boucherie restent absents. Pas de viande/cuir, soins vétérinaires, maladies, faim létale, climat corporel animal, apprivoisement, élevage, départ de carte ou renouvellement écologique. Les parties amputées restent présentes sur le modèle low poly, comme la limite actuelle du modèle humain. Les calendriers/coefficients de fuite sont adaptés, pas certifiés identiques à Core.

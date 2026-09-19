@@ -1,5 +1,7 @@
 # Combat rapproché — V59
 
+V78 étend les ordres aux animaux sauvages via Faune et partage le coup dans `living-melee.ts` ; [contact et riposte interespèces](animal-melee.md). Les règles humaines ci-dessous restent actives.
+
 V67 ajoute les cibles murs/portes aux ordres de mêlée, avec approche, coup garanti sans XP contre objet immobile et récupération orientée conservée après disparition. [Contrat distinct](barriers.md).
 
 V61 autorise l’approche en mêlée du NPC muni du [mandat tactique](pursuit.md). Les anciennes sentinelles restent fixes ; le mobilisé en défense automatique ne poursuit toujours pas.

@@ -1,0 +1,36 @@
+{
+  "date": "2026-09-19T20:59:37.120Z",
+  "reports": [
+    {
+      "speed": 1,
+      "tick": 3001,
+      "animalState": "idle",
+      "colonistInjuries": [
+        {
+          "id": 1,
+          "part": "right-leg",
+          "kind": "bite",
+          "severity": 3320,
+          "bornAt": 3001
+        }
+      ],
+      "frames": 124
+    },
+    {
+      "speed": 6,
+      "tick": 3004,
+      "animalState": "idle",
+      "colonistInjuries": [
+        {
+          "id": 1,
+          "part": "right-leg",
+          "kind": "bite",
+          "severity": 3240,
+          "bornAt": 3001
+        }
+      ],
+      "frames": 80
+    }
+  ],
+  "errors": []
+}

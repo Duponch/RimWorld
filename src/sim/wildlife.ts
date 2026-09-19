@@ -1,3 +1,6 @@
+import { moveAnimalMelee } from './wildlife-melee.ts';
+import { captureWorldShotGrid } from './combat-world.ts';
+import { blockedCells } from './pathfinding.ts';
 import { advanceAnimalHealth,animalBody } from './wildlife-health.ts';
 import { animalEscape } from './wildlife-flight.ts';
 import { animalFoods,animalMealTarget,finishAnimalMeal } from './wildlife-food.ts';
@@ -30,6 +33,8 @@ export function advanceWildlife(world:World):void {
   reconcileWildlife(world);
   let nav:ReturnType<typeof animalNavigation>|undefined,searches=0;
   const getNav=()=>nav??=animalNavigation(world);
+  let physical:Uint8Array|undefined,shot:ReturnType<typeof captureWorldShotGrid>|undefined;
+  const getPhysical=()=>physical??=blockedCells(world,true),getShot=()=>shot??=captureWorldShotGrid(world);
   const hour=Math.floor(world.tick%6000/250),night=hour<7||hour>=22;
   // Rotate priority; at most one potentially map-wide search per tick.
   for(let i=0;i<s.animals.length;i++) {
@@ -41,6 +46,8 @@ export function advanceWildlife(world:World):void {
     a.rest=Math.max(0,Math.min(1,a.rest+(a.state==='sleeping'?.0003809524*.8:-.00015833333*(a.rest<.01?.6:a.rest<.14?.3:a.rest<.28?.7:1))));
     if(a.flee&&world.tick>=a.flee.until){delete a.flee;a.path=[];if(!a.motion||a.motion.end<=world.tick)a.state='idle';}
     if(a.state==='downed'||a.motion&&a.motion.end>world.tick)continue;
+    if(moveAnimalMelee(world,a,getNav,getPhysical,getShot))continue;
+    if(a.stun)continue;
     if(a.flee){
       if(world.tick>=a.flee.until){delete a.flee;a.path=[];a.state='idle';}
       else {

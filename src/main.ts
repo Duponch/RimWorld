@@ -107,7 +107,7 @@ function setCategory(category: ArchitectCategory) {
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-category]')) button.classList.toggle('active', button.dataset.category === category);
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-tool-category]')) button.hidden = button.dataset.toolCategory !== category;
 }
-function renderWildlife(world:World){updateWildlifePanel(el('wildlife-content'),world,id=>renderer?.focusPawn(id),()=>void attempt(async()=>{await client.command({type:'enable-wildlife'});renderState();}),[...selection.ids],id=>void attempt(async()=>{await client.command({type:'shoot',pawnIds:[...selection.ids],targetId:id});renderState();}));}
+function renderWildlife(world:World){updateWildlifePanel(el('wildlife-content'),world,id=>renderer?.focusPawn(id),()=>void attempt(async()=>{await client.command({type:'enable-wildlife'});renderState();}),[...selection.ids],id=>void attempt(async()=>{await client.command({type:'shoot',pawnIds:[...selection.ids],targetId:id});renderState();}),id=>void attempt(async()=>{await client.command({type:'melee',pawnIds:[...selection.ids],targetId:id});renderState();}));}
 function setPanel(panel: Panel) {
   orderMenu.close();
   currentPanel = panel;

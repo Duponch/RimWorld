@@ -1,6 +1,6 @@
 # Documentation de Lisière
 
-État courant : **V77, 19 septembre 2026**. [Santé animale et tirs](development/animal-combat.md) : cible animale réelle, blessures localisées, fuite, incapacité et mort inspectables. Chasse automatique et filière dépouille → viande → repas restent à livrer. [Sources](research/animal-combat-reference.md), [preuves](history/validation-animal-combat-v77.md).
+État courant : **V78, 19 septembre 2026**. [Mêlée interespèces](development/animal-melee.md) : attaque au contact dans Faune, riposte physique du lièvre, morsures soignables et reprise stricte. Chasse automatique et filière dépouille → viande → repas restent à livrer. [Sources](research/animal-melee-reference.md), [preuves](history/validation-animal-melee-v78.md). [Estimations par système](ROADMAP.md#estimation-davancement--revue-du-19-septembre-2026-v78).
 
 Dernières boucles de colonie : [conservation froide V75](development/cold-store.md), [canicule V74](development/heatwave.md), [recherche et tailleur V73](development/research.md). Les étapes proches 4 et 5 sont livrées dans leurs périmètres annoncés ; arbre de recherche, saisons et environnement complet restent ouverts. [Inventaire consolidé](gameplay/implementation-status.md).
 

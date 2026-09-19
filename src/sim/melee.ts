@@ -1,6 +1,7 @@
+import { combatTarget,isAnimalTarget,type LivingTarget } from './combat-target.ts';
+import { strikeLivingTarget } from './living-melee.ts';
 import { isBarrier,damageBarrier } from './barriers.ts';
-import { apparelProtection } from './apparel-protection.ts';
-import { disturbanceEvents,isLying } from './disturbance.ts';
+import { disturbanceEvents } from './disturbance.ts';
 import { automaticPermission,automaticTarget } from './automatic-combat-state.ts';
 import type { shootingQueries } from './shooting.ts';
 import { assaultTarget,hostileTo,isColonist } from './affiliation.ts';
@@ -9,23 +10,20 @@ import { cancelMelee,type MeleeCommand } from './melee-state.ts';
 import { interruptDraftWork } from './drafting.ts';
 import { carrierOf } from './rescue-state.ts';
 import { medicallyStopped } from './health-rules.ts';
-import { healthRandom,reconcilePawnHealth,updatePawnHealth } from './health.ts';
-import { createMedicalRecord } from './injury-state.ts';
-import { chooseMeleeTool,meleeTools,meleeHitChance,meleeDodgeChance } from './melee-statistics.ts';
-import { resolveUnarmoredMelee } from './melee-impact.ts';
+import { healthRandom } from './health.ts';
+import { chooseMeleeTool,meleeTools } from './melee-statistics.ts';
 import { meleeContact,meleePlaces,meleeRoute } from './melee-space.ts';
-import { applyBulletStagger } from './stagger.ts';
-import { applyMeleeStun,isStunned } from './stun.ts';
+import { isStunned } from './stun.ts';
 import { blockedCells,canStep } from './pathfinding.ts';
 import { startTravel } from './movement.ts';
-import { learnSkill,XP_SCALE } from './skills.ts';
 import type { LightReader } from './light-environment.ts';
 import type { NavigationGrid,SearchBudget } from './work-planner.ts';
 import type { CommandResult,Pawn,World } from './types.ts';
 
-function targetFor(world:World,pawn:Pawn,carried=(id:number)=>!!carrierOf(world,id)):Pawn|undefined {
+function targetFor(world:World,pawn:Pawn,carried=(id:number)=>!!carrierOf(world,id)):LivingTarget|undefined {
   const order=pawn.melee?.order;
-  return order?world.pawns.find(p=>p.id===order.targetId&&p.state!=='dead'&&(order.startedDowned||p.state!=='downed')&&!carried(p.id)):undefined;
+  const p=order?combatTarget(world,order.targetId):undefined;
+  return p&&p.state!=='dead'&&(order!.startedDowned||p.state!=='downed')&&(!isAnimalTarget(p)?!carried(p.id):world.schemaVersion>=78)?p:undefined;
 }
 function canFight(world:World,pawn:Pawn,carried=(id:number)=>!!carrierOf(world,id)):boolean {
   return !medicallyStopped(pawn)&&pawn.state!=='sleeping'&&!pawn.need&&!pawn.collapsePending&&!carried(pawn.id);
@@ -34,8 +32,8 @@ export function applyMeleeCommand(world:World,command:MeleeCommand):CommandResul
   const refuse=(reason:string):CommandResult=>({ok:false,code:'invalid-command',reason});
   if(!Array.isArray(command.pawnIds)||!command.pawnIds.length||command.pawnIds.some(id=>!Number.isSafeInteger(id))||new Set(command.pawnIds).size!==command.pawnIds.length||!Number.isSafeInteger(command.targetId))return refuse('Ordre de mêlée invalide.');
   if(command.structure!==undefined&&command.structure!==true)return refuse('Type de cible invalide.');
-  const target=command.structure?world.structures.find(s=>s.id===command.targetId&&isBarrier(s)):world.pawns.find(p=>p.id===command.targetId&&p.state!=='dead'&&!carrierOf(world,p.id));
-  if(!target)return refuse(command.structure?'Mur ou porte indisponible.':'Cible humaine indisponible.');
+  const target=command.structure?world.structures.find(s=>s.id===command.targetId&&isBarrier(s)):combatTarget(world,command.targetId);
+  if(!target||'state' in target&&(target.state==='dead'||!isAnimalTarget(target)&&!!carrierOf(world,target.id)))return refuse(command.structure?'Mur ou porte indisponible.':'Cible vivante indisponible.');
   const plans:{pawn:Pawn;path:Pawn['path']}[]=[],claimed=new Set<number>(),blocked=blockedCells(world);
   for(const id of [...command.pawnIds].sort((a,b)=>a-b)) {
     const pawn=world.pawns.find(p=>p.id===id);
@@ -92,30 +90,7 @@ export function advanceMelee(world:World,pawn:Pawn,core:number,contactGrid:()=>U
   // attacker to swing before reaching its own interaction cell.
   const randomState={rng:world.rng},random=()=>healthRandom(randomState);
   const tool=chooseMeleeTool(meleeTools(world,pawn,()=>queries.body(pawn)),random);if(!tool){cancelMelee(pawn);return false;}
-  const immobile=isLying(target);
-  if(!immobile)learnSkill(pawn.skills.melee,200*(tool.cooldownCore/60)*XP_SCALE,pawn);
-  const attacker=queries.body(pawn).capacities,defender=queries.body(target).capacities;
-  const hit=immobile||random()<meleeHitChance(pawn.skills.melee.level,attacker.sight,attacker.manipulation);
-  const dodge=hit&&!immobile&&!target.shooting?.stance&&random()<meleeDodgeChance(target.skills.melee.level,defender.moving,defender.sight);
-  const outcome=!hit?'miss':dodge?'dodge':'hit';
-  // The recovery exists before reconciliation, so a reaction cannot skip it.
-  m.strike={targetId:target.id,atCore:core,untilCore:core+tool.cooldownCore,tool:tool.id,outcome};pawn.path=[];pawn.state='idle';
-  let stun=false,injured=false;
-  if(outcome==='hit') {
-    const damage=Math.max(1,tool.damage*(.8+random()*.4));
-    // Advance health first using the same stream before the anatomical transaction.
-    world.rng=randomState.rng;if(target.health&&target.health.tick<world.tick)updatePawnHealth(world,target);randomState.rng=world.rng;
-    const protection=apparelProtection(world,target,tool.kind==='bite'?'sharp':'blunt',tool.penetration,random);
-    const impact=resolveUnarmoredMelee(target.health??createMedicalRecord(world.tick),{damage,kind:tool.kind},random,protection.protect);
-    protection.commit();injured=impact.layers.length>0;
-    target.health=impact.record;stun=impact.stun;
-  }
-  world.rng=randomState.rng;
-  if(outcome==='hit'){reconcilePawnHealth(world,target);if(injured)disturbance.damage(target,core,immobile);}
-  applyBulletStagger(world,target,core,1);if(stun)applyMeleeStun(world,target,core);
-  // Being attacked in melee interrupts ranged aiming, including a miss/dodge.
-  if(target.shooting?.stance?.phase==='aim')cancelShooting(target);
-  pawn.lastAttack={targetId:target.id,atCore:core};
+  strikeLivingTarget(world,pawn,target,tool,core,randomState,disturbance);
   if(m.order?.auto==='draft'||!targetFor(world,pawn))cancelMelee(pawn);
   return true;
 }

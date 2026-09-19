@@ -1,5 +1,7 @@
 # Stratégie de validation
 
+V78 : `animal-melee.test.ts` regroupe contact/riposte sur 24 graines, reprise, anatomie, portée/vue/délai, expiration pendant arête et mutations de projection médicale. Le pilote UI commun traite clic **Faune → Attaquer au contact** et son acquittement. `ANIMAL_MELEE=1 WILDLIFE=1 VALIDATION_VERSION=v78` étend les bancs mixtes existants : un mineur sur six combat, les autres conservent leurs ateliers. Mesures et longs pilotes successifs ; [preuves et limites](../history/validation-animal-melee-v78.md).
+
 ## Procédure courante de livraison
 
 Adoptée après V76 pour réduire les reprises et les relances, sans réduire les contrats de qualité. L'unité de livraison est une **boucle jouable**, composée de plusieurs sous-étapes internes. Les contrôles suivent les risques et les dépendances ; un lot plus gros ne signifie pas un unique test à la toute fin.
