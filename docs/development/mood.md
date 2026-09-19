@@ -1,5 +1,7 @@
 # Humeur et pensées explicables — V64
 
+V69 : [Optimiste/Pessimiste](traits.md) ajoutent une pensée de situation +6/−6 à la cible ; sommeil/jauge/règles de mémoire inchangés. Résolu/Nerveux influencent seulement les seuils de crise ; aucune pénalité directe d’humeur.
+
 L’humeur actuelle est une valeur sauvegardée qui converge vers une cible dérivée des pensées. Le joueur consulte les causes, leurs valeurs et l’échéance des souvenirs dans **Pensées et humeur**, dans l’inspection du colon. Ce lot remplace la moyenne instantanée faim/repos, sans annoncer un catalogue complet de crises ou de relations. V65 ajoute [l’errance triste et la catharsis](mental-break.md). [Sources et écarts](../research/mood-reference.md), [preuves](../history/validation-mood-v64.md).
 
 ## Règles présentes
@@ -30,4 +32,4 @@ V63 est strictement validée avant passage V64. Aucune nouvelle cause, mémoire,
 
 ## Limites assumées
 
-Ce sont les premières causes explicables, pas le catalogue des pensées. Attentes selon richesse, difficulté configurable, traits, passions au travail, beauté/intérieur/pièces, sommeil au sol, nudité, qualité des repas avancés, deuil, opinions, interactions sociales, autres crises et inspirations restent absents. La nudité attend une couverture vestimentaire réellement représentée (pantalons encore cosmétiques). Famine sans progression de malnutrition conserve seulement le premier stade d’effet. Les règles générales de cumul social ne sont pas remplacées par le renouvellement simple des deux souvenirs présents.
+Ce sont les premières causes explicables, pas le catalogue des pensées. Attentes selon richesse, difficulté configurable, autres traits (Optimiste/Pessimiste actifs V69), passions au travail, beauté/intérieur/pièces, sommeil au sol, nudité, qualité des repas avancés, deuil, opinions, interactions sociales, autres crises et inspirations restent absents. La nudité attend une couverture vestimentaire réellement représentée (pantalons encore cosmétiques). Famine sans progression de malnutrition conserve seulement le premier stade d’effet. Les règles générales de cumul social ne sont pas remplacées par le renouvellement simple des deux souvenirs présents.

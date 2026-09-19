@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 68 as const;
+export const SCHEMA_VERSION = 69 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
@@ -65,6 +65,7 @@ export interface Job extends Cell {
 }
 export interface Pawn extends Cell {
   raid?:import('./raid-state.ts').RaiderState;
+  traits?: import('./traits.ts').TraitId[];
   mental?: import('./mental-state.ts').MentalState;
   faction?:import('./affiliation.ts').FactionId;
   hostilityResponse?:'ignore'|'attack';

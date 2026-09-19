@@ -90,7 +90,7 @@ export function processTending(world:World,doctor:Pawn,context:NeedContext,light
   if(task.progress<task.duration)return;
   const item=task.medicine?.item,batch=treatmentBatch(treatmentTargets(patient),!!item);if(!batch.length){releaseTending(world,doctor);return;}
   // XP is awarded at a completed treatment before its quality stat is queried.
-  learnSkill(doctor.skills.medicine,tendXp(item));
+  learnSkill(doctor.skills.medicine,tendXp(item),doctor);
   const quality=medicalTendQuality(doctor);
   for(const target of batch)if(target.injuryId!==undefined)tendInjury(patient.health!,target.injuryId,tendQuality(quality,healthRandom(world),doctor===patient,item));
   else tendMissingPart(patient.health!,target.part);

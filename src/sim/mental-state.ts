@@ -8,7 +8,6 @@ export interface MentalState {
   catharsis:number[];
   crisis?:{kind:'sad-wander';age:number;target:Cell|null;waitUntil:number};
 }
-export const BREAK_THRESHOLDS=[35,20,5] as const;
 export const BREAK_MTB_DAYS=[4,.8,.5] as const;
 export const CATHARSIS_DURATION=18000;
 export const hasMentalBreak=(pawn:Pawn):boolean=>!!pawn.mental?.crisis;

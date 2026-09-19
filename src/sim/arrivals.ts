@@ -1,3 +1,4 @@
+import { startingTraits } from './traits.ts';
 import { ARRIVAL_NAMES,arrivalRandom,type ArrivalCommand } from './arrival-state.ts';
 import { arrivalEntry } from './arrival-entry.ts';
 import { isColonist } from './affiliation.ts';
@@ -21,7 +22,7 @@ export function advanceArrivals(world:World):void {
   if(s.pending||world.pawns.filter(p=>isColonist(p)&&p.state!=='dead').length>=12||!arrivalEntry(world,s.rng))return;
   const profile=Math.floor(arrivalRandom(s)*3) as 0|1|2;
   const name=ARRIVAL_NAMES[Math.floor(arrivalRandom(s)*ARRIVAL_NAMES.length)]!;
-  s.pending={id:++s.serial,openedAt:world.tick,expiresAt:world.tick+TICKS_PER_DAY,name,profile};
+  s.pending={id:++s.serial,openedAt:world.tick,expiresAt:world.tick+TICKS_PER_DAY,name,profile,traits:startingTraits(profile)};
   log(world,`${name} demande à rejoindre la colonie. Répondez dans la journée.`);
 }
 export function applyArrival(world:World,command:ArrivalCommand):CommandResult {
@@ -40,6 +41,7 @@ export function applyArrival(world:World,command:ArrivalCommand):CommandResult {
   if(world.pawns.length>=world.width*world.height||world.piles.length>=32768||world.nextId>Number.MAX_SAFE_INTEGER-2)return refuse('La carte ne peut plus accueillir cette personne.');
   const entry=arrivalEntry(world,s!.rng);if(!entry)return refuse('Aucune entrée libre et accessible depuis la colonie. La demande reste ouverte.');
   const pawn=startingPawn(world.nextId,o.name,entry.x,entry.z,o.profile,55);
+  if(o.traits)pawn.traits=[...o.traits];
   pawn.hunger=75;pawn.rest=80;pawn.foodPolicyId=world.foodPolicies[0]!.id;
   // Clothing crosses the map boundary with its owner; it is an external input,
   // not a withdrawal from colony stock or a textile-production recipe.

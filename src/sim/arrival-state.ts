@@ -1,6 +1,6 @@
 /** A first incident producer, not the complete storyteller. Its private stream
  * prevents repeated UI inspection from consuming terrain/combat randomness. */
-export interface ArrivalOffer { id:number; openedAt:number; expiresAt:number; name:string; profile:0|1|2 }
+export interface ArrivalOffer { traits?:import('./traits.ts').TraitId[]; id:number; openedAt:number; expiresAt:number; name:string; profile:0|1|2 }
 export interface ArrivalState {
   profile:'camp-arrivals-v1'; rng:number; nextCheck:number; serial:number;
   accepted:number; declined:number; expired:number; pending?:ArrivalOffer;

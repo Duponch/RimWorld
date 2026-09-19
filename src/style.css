@@ -25,6 +25,8 @@
 
 .work-skill{display:block;font-size:.7rem;white-space:nowrap;color:var(--text-muted,#c4c4ac)}
 .skills-inspection{margin-top:.6rem;max-height:13rem;overflow:auto}
+.skills-inspection > summary{position:sticky;top:0;background:#192324;z-index:1;padding:3px 0}
+.skills-inspection [data-traits]{padding-left:20px;font-size:12px;line-height:1.5}
 .skills-inspection progress{width:100%}
 #health-inspection > label{display:block;margin:6px 0;font-size:11px;line-height:1.5}#health-inspection > small{display:block;color:#efce8c;line-height:1.5}
 

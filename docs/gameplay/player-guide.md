@@ -1,5 +1,13 @@
 # Guide joueur
 
+## Personnalité des colons
+
+Sélectionnez un colon, puis ouvrez **Biographie · compétences**. Les six premiers traits indiquent leur effet réel : Optimiste/Pessimiste déplacent la cible d’humeur de +6/−6 ; Résolu/Nerveux déplacent le seuil de risque ; Apprentissage rapide/lent modifie les gains d’expérience à 175 %/25 % avant passion et saturation. Un apprenti rapide ne travaille pas instantanément plus vite : son niveau évolue plus vite en pratiquant.
+
+**Pensées et humeur** affiche les causes et les trois seuils personnels. Prévoyez des loisirs pour une personne plus sensible et tenez compte de l’apprentissage pour former vos spécialistes. Les priorités restent dans Travail, les plages dans Horaires. Les demandes d’accueil annoncent les traits avant votre choix.
+
+Les nouveaux camps ont trois profils composés : Ada Optimiste/Apprentissage rapide, Noé Résolu/Apprentissage lent, Mina Pessimiste/Nerveux. Les anciens colons et les offres déjà ouvertes restent neutres après chargement ; les nouvelles offres peuvent présenter des traits. Les rencontres armées conservent leurs anciens profils. Opinions, conversations, relations et autres traits sont encore à développer. [Règles détaillées](../development/traits.md).
+
 ## Défendre le camp
 
 Dans une nouvelle partie ordinaire, un premier assaillant arrive entre 3,5 et 4 jours. Cliquez sur la lettre **Raid**, puis **Voir les assaillants**. Mobilisez les défenseurs depuis leurs portraits et placez-les ; leurs tirs libres et la mêlée existante restent disponibles. Des murs fermés peuvent être frappés puis détruits. Le calendrier et les groupes limités sont provisoires ; les raids suivants surviennent 6 à 8 jours après une issue. Il n’y a pas encore de pause automatique à l’alerte.
@@ -35,7 +43,7 @@ Il cherche à manger à 5 % de nourriture, même sous un régime restrictif, et 
 
 Dans l’inspection d’un colon, ouvrez **Pensées et humeur** : vous voyez sa valeur actuelle, sa cible et ce qui la compose. La faim, la fatigue, le confort, les loisirs, la douleur et les vêtements usés produisent des causes temporaires liées à la situation. Manger sans table ou du riz cru laisse un souvenir pendant un jour ; bien manger ensuite ne l’efface pas immédiatement.
 
-La cible change avec la situation, mais la jauge évolue progressivement : au plus +12 ou −8 points par heure. Le sommeil et l’inconscience gèlent la jauge ; être à terre tout en restant conscient ne la gèle pas. Retirer réellement une pièce abîmée enlève sa pénalité, sans faire sauter instantanément l’humeur. Les attentes sont encore celles d’un camp à profil fixe, indépendantes de sa richesse. Errance triste ajoutée en V65 ; autres crises, relations, traits et pensées restent à développer. [Règles et limites](../development/mood.md).
+La cible change avec la situation, mais la jauge évolue progressivement : au plus +12 ou −8 points par heure. Le sommeil et l’inconscience gèlent la jauge ; être à terre tout en restant conscient ne la gèle pas. Retirer réellement une pièce abîmée enlève sa pénalité, sans faire sauter instantanément l’humeur. Les attentes sont encore celles d’un camp à profil fixe, indépendantes de sa richesse. Errance triste ajoutée en V65 ; six traits V69 sont actifs ; autres crises, relations et pensées restent à développer. [Règles et limites](../development/mood.md).
 
 
 ## Habiller et protéger un colon (V63)
@@ -286,7 +294,7 @@ Une valeur de nourriture élevée signifie que le colon est rassasié. À 30 ou 
 
 Sous 30 de repos en plage Libre, ou sous 75 en plage Sommeil, le colon termine son travail engagé puis rejoint son lit accessible ou s’attribue un lit libre. Une plage Travail empêche le départ volontaire au lit et réveille un dormeur ayant au moins 20 de repos. La réservation est exclusive et le sommeil commence une fois arrivé ; le personnage est allongé sur le matelas dans son orientation réelle. Inspecter un lit permet de modifier son propriétaire. Sans couchage utilisable, il dort au sol ; l'épuisement peut aussi interrompre le trajet. Il se réveille une fois reposé à 100, ou pour une faim critique si une portion accessible existe. Il doit se lever pour manger seul ; un médecin peut nourrir un patient couché selon les règles V48. Un lit voisin ne donne aucun bonus. Le confort augmente progressivement pendant l’utilisation du lit ou d’un tabouret, jusqu’au plafond du meuble, puis baisse en dehors de son utilisation. L’humeur évolue vers une cible expliquée par les premières pensées V64 ; V65 ajoute l’errance triste. Relations, autres crises et pensées restent partielles ou absentes.
 
-Les personnages provisoires possèdent des animations de marche, travail, ingestion debout/assise et sommeil calculées sur le GPU. Le profil adulte consomme au rythme de base de 1,6 nutrition/jour, réduit sous les seuils de faim ; traits absents, capacités physiques et blessures intégrées V45. Voir [les aliments](../development/food-items.md) et le [catalogue de contenu](content-catalogue.md).
+Les personnages provisoires possèdent des animations de marche, travail, ingestion debout/assise et sommeil calculées sur le GPU. Le profil adulte consomme au rythme de base de 1,6 nutrition/jour, réduit sous les seuils de faim ; traits alimentaires absents, capacités physiques et blessures intégrées V45. Voir [les aliments](../development/food-items.md) et le [catalogue de contenu](content-catalogue.md).
 
 Les colons choisissent les aliments accessibles en tenant compte du goût et de la distance. Des baies fraîches proches peuvent être préférées à une ration de survie ; le riz cru est moins apprécié, mais reste consommé lorsque les alternatives sont trop loin ou inaccessibles. Un aliment qui va pourrir dans moins d’une demi-journée bénéficie d’une préférence supplémentaire, tout en tenant compte du trajet. Les autorisations du régime sont appliquées avant ces préférences, y compris si la faim devient critique.
 
@@ -314,7 +322,7 @@ Avant de créer une nouvelle colonie, le jeu conserve aussi l'état courant dans
 
 ## Limites et suite
 
-Pas encore d'autres cultures, autres postes/recettes de cuisine, chaîne du froid, autres minerais que l’acier et les machines compactées, autres familles de loisirs, animaux, autres armes, combat complet, médecine complète, relations, traits, recherche, commerce, câbles/batteries/interrupteurs électriques, toit naturel, santé thermique, incendie, météo dynamique, carte du monde ou storyteller. Les coûts de sols et autres profils de déplacement, les réserves à plusieurs cases partageant une politique, les autres familles sélectionnables, les fournisseurs supplémentaires de travail lié sur une case et les tournées logistiques restent à développer. Les modèles sont provisoires ; la congestion entre agents actifs et la calibration des besoins restent ouvertes. La faim ne cause pas encore de malnutrition ni de décès.
+Pas encore d'autres cultures, autres postes/recettes de cuisine, chaîne du froid, autres minerais que l’acier et les machines compactées, autres familles de loisirs, animaux, autres armes, combat complet, médecine complète, relations, autres traits, recherche, commerce, câbles/batteries/interrupteurs électriques, toit naturel, santé thermique, incendie, météo dynamique, carte du monde ou storyteller. Les coûts de sols et autres profils de déplacement, les réserves à plusieurs cases partageant une politique, les autres familles sélectionnables, les fournisseurs supplémentaires de travail lié sur une case et les tournées logistiques restent à développer. Les modèles sont provisoires ; la congestion entre agents actifs et la calibration des besoins restent ouvertes. La faim ne cause pas encore de malnutrition ni de décès.
 
 La suite est suivie dans [le plan de développement](../ROADMAP.md). Les détails de la référence et les futures interactions sont dans [la matrice des systèmes](systems-matrix.md).
 

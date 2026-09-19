@@ -1,3 +1,5 @@
+import { breakThresholds,globalLearningFactor } from '../../src/sim/traits.ts';
+import { learningFactor } from '../../src/sim/skills.ts';
 import { isColonist } from '../../src/sim/affiliation.ts';
 import { raidDefenseDecisions } from './raid-player.ts';
 import { moodThoughts,moodTarget,moodFrozen } from '../../src/sim/mood.ts';
@@ -97,11 +99,13 @@ export function playerDecisions(world: World): Decision[] {
     if (cook) for (const [hour, assignment] of [[5, 'anything'], [21, 'sleep']] as const) if (cook.schedule[hour] !== assignment)
       out.push({reason: 'Décaler le sommeil de la cuisinière pour préparer le matin.', command: {type: 'schedule-paint', pawnId: cook.id, hours: [hour], assignment}});
   }
+  // Visible personality informs a normal preventive choice, never a need injection.
+  for(const p of colonists)if(p.traits?.includes('nervous')&&p.schedule[20]!=='recreation')out.push({reason:'Prévoir une heure de loisirs avant la nuit pour le colon nerveux.',command:{type:'schedule-paint',pawnId:p.id,hours:[20],assignment:'recreation'}});
   const priorities = [{ craft:3, mine:2, gather: 1, build: 3, haul: 2, grow: 2, cook:3 }, { craft:2, mine:2, gather: 3, build: 1, haul: 2, grow: 3, cook:3 }, { craft:3, mine:3, gather: 2, build: 3, haul: 2, grow: 2, cook:1 }] as const;
-  const builder=colonists.reduce((best,p)=>!best||p.skills.construction.level>best.skills.construction.level?p:best,colonists[0]);
+  const builder=colonists.reduce((best,p)=>!best||(p.skills.construction.level>best.skills.construction.level||p.skills.construction.level===best.skills.construction.level&&learningFactor(p.skills.construction,p)>learningFactor(best.skills.construction,best))?p:best,colonists[0]);
   colonists.forEach((pawn, i) => {
     for (const work of ['gather', 'build', 'haul', 'grow','cook','craft','mine'] as const) if (pawn.priorities[work] !== (work==='build'?(pawn===builder?1:3):priorities[i % 3]![work])) {
-      out.push({ reason: 'Affecter le meilleur bâtisseur selon sa compétence et répartir les autres travaux.', command: { type: 'priority', pawnId: pawn.id, work, value: work==='build'?(pawn===builder?1:3):priorities[i % 3]![work] } });
+      out.push({ reason: 'Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux.', command: { type: 'priority', pawnId: pawn.id, work, value: work==='build'?(pawn===builder?1:3):priorities[i % 3]![work] } });
     }
   });
   const plans: DesignateCommand[] = [
@@ -203,6 +207,7 @@ export function colonySummary(world: World) {
     medicalBeds:world.structures.filter(s=>s.kind==='bed'&&s.medical).length,
     medicines:{total:world.piles.reduce((n,p)=>n+(p.kind==='medicine'?p.quantity:0),0),stored:world.piles.reduce((n,p)=>n+(p.kind==='medicine'&&p.owner.type==='ground'&&world.stockpiles.some(s=>s.filters.medicine&&p.owner.type==='ground'&&s.x===p.owner.x&&s.z===p.owner.z)?p.quantity:0),0),policies:world.pawns.map(p=>p.medicalCare??'dry')},
     health:world.pawns.map(p=>({id:p.id,state:p.state,rescue:p.rescue??null,tend:p.tend??null,feed:p.feed??null,hunger:p.hunger,medicalRest:p.need?.kind==='sleep'?p.need.medical??null:null,treated:p.health?.injuries.filter(i=>i.tended!==undefined).length??0,medicineXp:p.skills.medicine.xp,bedUse:p.need?.kind==='sleep'?p.need.bedId:null,injuries:p.health?.injuries.length??0,gunshots:p.health?.injuries.filter(i=>i.kind==='gunshot').length??0,missing:p.health?.missing.length??0,bloodLoss:p.health?.bloodLoss??0})),
+    personality:world.pawns.map(p=>({id:p.id,traits:p.traits??[],learning:globalLearningFactor(p),breakThresholds:breakThresholds(p)})),
     skills:world.pawns.map(p=>({id:p.id,...structuredClone(p.skills)})),
     combat:{shooters:world.pawns.filter(p=>p.shooting?.order).length,flights:world.projectiles?.filter(p=>!p.arrival).length??0,impacts:world.projectiles?.filter(p=>p.arrival?.effect==='pawn').length??0},
     interruptedCargo:world.pawns.filter(p=>p.interruptedCargo).map(p=>({id:p.id,state:p.state,pile:world.piles.find(q=>q.owner.type==='pawn'&&q.owner.pawnId===p.id)?.id??null,furniture:world.packed.find(q=>q.owner.type==='pawn'&&q.owner.pawnId===p.id)?.building.id??null})),

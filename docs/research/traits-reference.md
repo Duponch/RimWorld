@@ -1,0 +1,21 @@
+# Traits Core — vérification du 19 septembre 2026
+
+Corpus relu directement : chapitres **13/14**, **SYS/TEST-084 et 085** (contraintes et effets, compétence distincte de la capacité). SYS/TEST-086..088 (opinions dirigées, interactions et mort sociale) relus pour délimiter la suite ; ils ne deviennent pas livrés avec les traits.
+
+## Sources confrontées
+
+- Le [site officiel](https://rimworldgame.com/) confirme le rôle des personnalités et situations individuelles dans la colonie, mais ne donne pas ces coefficients. Le [correctif officiel 1.6.4850](https://ludeon.com/blog/2026/06/update-1-6-4850-released/) est postérieur au miroir ci-dessous : sa consultation ne certifie pas les classes de la version commerciale actuelle.
+- [Traits](https://rimworldwiki.com/wiki/Traits), consulté ce jour : Optimist/Pessimist modifient l’humeur de +6/−6 ; Steadfast/Nervous modifient le seuil mineur de −9/+8 points. Les degrés d’une même famille s’excluent. Les effets de certitude idéologique sont hors cible Core. Ces coefficients sont retenus avec une confiance moyenne, faute d’exécutable et de définitions de la version actuelle confrontés directement.
+- [Global Learning Factor](https://rimworldwiki.com/wiki/Global_Learning_Factor) : base 100 %, offsets +75 % pour Fast learner, −75 % pour Slow learner, soit 175 %/25 % dans notre profil. La passion multiplie ce facteur ; elle n’est pas remplacée. Aucun bonus direct de vitesse de travail. Gènes, implants et apprentissage direct par objets restent hors périmètre.
+- [SkillRecord.cs](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/RimWorld/SkillRecord.cs), re-téléchargé : gains positifs ordinaires multipliés par passion, GlobalLearningFactor puis saturation quotidienne ; gains directs et oubli empruntent des branches distinctes. Les producteurs locaux sont tous ordinaires. Conservation des milli-XP/arrondis déjà documentés.
+- [Mental Break Threshold](https://rimworldwiki.com/wiki/Mental_break_threshold) recoupé avec [MentalBreaker.cs](https://github.com/Chillu1/RimWorldDecompiled/blob/2d508035082e7cb0c8e29e230d26bda6e546928f/Verse.AI/MentalBreaker.cs), re-téléchargé : mineur = statistique modifiée, majeur = mineur ×4/7, extrême = mineur /7. Le code emploie un flottant approché pour 4/7 ; notre calcul rationnel est explicite. Les inégalités sont strictes, l’exposition et le tirage restent nécessaires.
+
+Le miroir est daté du 20 mai 2026, assembly déclaré 1.6.9438.38202 ; ce n’est pas une certification des correctifs ultérieurs. Le fichier `Traits.xml` trouvé dans un autre dépôt était un modèle de modding, pas les définitions du jeu : **écarté**. Deux téléchargements ont d’abord visé des classes inexistantes dans RimWorld ; le chemin Verse.AI correct a été utilisé pour MentalBreaker. Aucun code ni asset propriétaire n’est intégré au projet.
+
+## Relecture rétroactive et décisions
+
+Le 35/20/5 neutre de V65 reste exact pour notre profil sans trait. Il ne peut pas devenir trois constantes universelles ni trois offsets identiques : Résolu donne 26/14,857…/3,714… et Nerveux 43/24,571…/6,142…. Simulation et inspection lisent le même calcul. Le raccourci « aucune exposition au-dessus de 35 » est corrigé : un colon nerveux à 40 peut être exposé. L’humeur naturelle modifie la cible, sans sauter la jauge ni supprimer le gel du sommeil.
+
+**Adopter** effets, exclusions et distinction personnalité/compétence ; **adapter** six identifiants, profils de départ explicitement composés, dérivation sans cache et horloge locale ; **différer** distribution Core, génération biographique, autres traits et comportements sociaux. Les trois profils locaux ne prétendent pas reproduire les probabilités du générateur d’origine. Aucun trait ajouté rétroactivement à une personne ou une offre existante lors de la migration.
+
+La recherche exploratoire [Social](https://rimworldwiki.com/wiki/Social) et [Thoughts](https://rimworldwiki.com/wiki/Thoughts) confirme des effets dirigés et des souvenirs distincts ; elle expose aussi une divergence de cumul pour Insulted. Ne pas coder cette valeur depuis une seule table : nouvelle confrontation nécessaire au prochain lot. Pas d’interaction sociale annoncée livrée ici.

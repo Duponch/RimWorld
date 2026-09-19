@@ -1,4 +1,5 @@
-import { BREAK_MTB_DAYS,BREAK_THRESHOLDS,finishMentalBreak,mentalState } from './mental-state.ts';
+import { BREAK_MTB_DAYS,finishMentalBreak,mentalState } from './mental-state.ts';
+import { breakThresholds,minorBreakThreshold } from './traits.ts';
 import { moodFrozen,moodThoughts } from './mood.ts';
 import { healthRandom } from './health.ts';
 import { interruptDraftWork } from './drafting.ts';
@@ -49,9 +50,10 @@ export function updateMentalBreak(world:World,pawn:Pawn):void {
     }
     return;
   }
-  if((world.tick+pawn.id)%15!==0||!m&&pawn.mood>=35)return;
+  if((world.tick+pawn.id)%15!==0||!m&&pawn.mood>=minorBreakThreshold(pawn))return;
   m=mentalState(pawn);
-  for(let i=0;i<3;i++)m.below[i]=pawn.mood<BREAK_THRESHOLDS[i]! ? Math.min(2100,m.below[i]!+150):0;
+  const thresholds=breakThresholds(pawn);
+  for(let i=0;i<3;i++)m.below[i]=pawn.mood<thresholds[i]! ? Math.min(2100,m.below[i]!+150):0;
   if(m.cooldown||pawn.state==='downed'||moodFrozen(pawn))return;
   const level=m.below[2]>2000?2:m.below[1]>2000?1:m.below[0]>2000?0:-1;
   if(level>=0&&healthRandom(world)<150/(BREAK_MTB_DAYS[Math.max(0,level)]!*60000))startSadWander(world,pawn);

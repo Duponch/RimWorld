@@ -1,0 +1,156 @@
+{
+  "date": "2026-09-19T12:27:23.410Z",
+  "controlledWorkAndCalendar": true,
+  "proof": [
+    {
+      "speed": 1,
+      "generated": [
+        {
+          "name": "Ada",
+          "traits": [
+            "optimist",
+            "fast-learner"
+          ]
+        },
+        {
+          "name": "Noé",
+          "traits": [
+            "steadfast",
+            "slow-learner"
+          ]
+        },
+        {
+          "name": "Mina",
+          "traits": [
+            "pessimist",
+            "nervous"
+          ]
+        }
+      ],
+      "workingTick": 3016,
+      "builtTick": 3066,
+      "finalTick": 3068,
+      "skillXp": [
+        245000,
+        35000
+      ],
+      "schedule": [
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "recreation",
+        "work",
+        "work",
+        "work"
+      ],
+      "offer": {
+        "id": 1,
+        "openedAt": 3067,
+        "expiresAt": 9067,
+        "name": "Jules",
+        "profile": 2,
+        "traits": [
+          "pessimist",
+          "nervous"
+        ]
+      },
+      "joined": [
+        "pessimist",
+        "nervous"
+      ],
+      "errors": []
+    },
+    {
+      "speed": 6,
+      "generated": [
+        {
+          "name": "Ada",
+          "traits": [
+            "optimist",
+            "fast-learner"
+          ]
+        },
+        {
+          "name": "Noé",
+          "traits": [
+            "steadfast",
+            "slow-learner"
+          ]
+        },
+        {
+          "name": "Mina",
+          "traits": [
+            "pessimist",
+            "nervous"
+          ]
+        }
+      ],
+      "workingTick": 3024,
+      "builtTick": 3081,
+      "finalTick": 3096,
+      "skillXp": [
+        245000,
+        35000
+      ],
+      "schedule": [
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "recreation",
+        "work",
+        "work",
+        "work"
+      ],
+      "offer": {
+        "id": 1,
+        "openedAt": 3082,
+        "expiresAt": 9082,
+        "name": "Jules",
+        "profile": 2,
+        "traits": [
+          "pessimist",
+          "nervous"
+        ]
+      },
+      "joined": [
+        "pessimist",
+        "nervous"
+      ],
+      "errors": []
+    }
+  ]
+}

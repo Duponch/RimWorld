@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+V69 : `traits.ts` sépare identifiants/définitions gelées, validation et facteurs purs. Traits facultatifs sur Pawn et offre d’accueil, copies distinctes ; bootstrap du nouveau camp explicite. Aucun nouvel index spatial, PRNG, passage par frame ni donnée dérivée persistée. Consommateurs communs humeur/crises/quatre compétences, UI dédiée `traits-inspection.ts`. [Contrat](traits.md).
+
 V68 : `raid-state`, `raid-space`, `raids`, `raid-behavior` et `raid-save` séparent calendrier/groupe, requêtes stratégiques, transitions, actions et persistance. Aucun BFS hypothétique transmis comme mouvement ; les contrôleurs de combat communs gardent impacts/arêtes. Retraits après l’itération des acteurs, registre des objets exportés et migration neutre. [Contrat](raids.md).
 
 V67 : `barriers.ts` engage les dommages/retraits/pertes, `repairs.ts` gère le foyer et le travail, `barrier-save.ts` valide les nouveaux états sparse. Les captures de combat locales vérifient le remplacement de `structures` pour les tirs, projectiles, contacts et sons ; la chute du toit suit le retrait sans réécrire son PRNG. Marqueurs et cellules de foyer réutilisent les lots graphiques. [Contrat](barriers.md).

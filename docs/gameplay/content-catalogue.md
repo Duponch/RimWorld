@@ -1,10 +1,12 @@
 # Catalogue de contenu : couverture connue
 
+V69 ajoute **six traits de personnage**, aucun ItemId : Optimiste, Pessimiste, Résolu, Nerveux, Apprentissage rapide, Apprentissage lent. Deux par profil de départ/arrivant neuf ; les personnes et offres migrées restent neutres. Ce sous-ensemble ne représente ni le catalogue complet ni la distribution Core. [Effets obtenables](../development/traits.md).
+
 V68 ajoute le profil de **raid du camp** : un assaillant sans arme au premier groupe, puis deux dont un porteur de revolver. Chemises et revolver utilisent les objets physiques existants ; aucun nouvel ItemId. Calendrier/composition limités et provisoires ; ces deux profils ne représentent pas le catalogue des factions Core. Objets portés exportés avec leur identité lors d’une sortie réelle. [Contrat](../development/raids.md).
 
 V67 enrichit les **murs et portes existants**, sans nouvel ItemId : PV selon les sept matériaux, dommages persistants, destruction sans remboursement et réparation. Les anciens ouvrages non typés emploient le profil de résistance du bois sans réécrire leur recette historique. Les autres bâtiments, plantes et objets ne reçoivent pas implicitement ces règles. La zone de foyer est une commande, pas un objet. [Contrat](../development/barriers.md).
 
-V66 ajoute un **incident obtenable en partie ordinaire** : demande d’accueil volontaire. Douze prénoms, trois profils des quatre compétences déjà actives et une chemise normale portée constituent le profil déclaré de l’arrivant. Aucun nouvel ItemId ; la chemise existante devient aussi un apport extérieur. Pensée « Accueil refusé », −3 sur six jours, cinq occurrences décroissantes. Biographies, traits et génération complète restent absents. [Contrat](../development/arrivals.md).
+V66 ajoute un **incident obtenable en partie ordinaire** : demande d’accueil volontaire. Douze prénoms, trois profils des quatre compétences déjà actives et une chemise normale portée constituent le profil déclaré de l’arrivant. Aucun nouvel ItemId ; la chemise existante devient aussi un apport extérieur. Pensée « Accueil refusé », −3 sur six jours, cinq occurrences décroissantes. V69 ajoute six traits aux nouveaux profils ; biographies et génération complète restent absentes. [Contrat](../development/arrivals.md).
 
 
 V65 ajoute un **comportement** — errance triste — et la mémoire Catharsis, aucun nouvel objet. Cinq occurrences datées peuvent contribuer à la pensée agrégée. Un seul type de crise disponible ; aucun catalogue complet de personnalités, crises ou relations. [Contrat](../development/mental-break.md).

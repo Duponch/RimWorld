@@ -1,0 +1,5079 @@
+{
+  "began": 22600,
+  "ended": 23080,
+  "injured": false,
+  "treated": false,
+  "postMeal": true,
+  "postWork": true,
+  "raid": {
+    "profile": "camp-raids-v1",
+    "rng": 1443900398,
+    "nextCheck": 63114,
+    "serial": 1,
+    "completed": 1,
+    "departed": [],
+    "last": {
+      "id": 1,
+      "tick": 23080,
+      "reason": "defended",
+      "killed": 0,
+      "downed": 1,
+      "escaped": 0
+    }
+  },
+  "decisions": [
+    {
+      "tick": 20,
+      "reason": "Équiper le revolver initial avant de reprendre les travaux du camp."
+    },
+    {
+      "tick": 20,
+      "reason": "Conserver les médicaments près des couchages, dans deux piles dédiées."
+    },
+    {
+      "tick": 20,
+      "reason": "Conserver les médicaments près des couchages, dans deux piles dédiées."
+    },
+    {
+      "tick": 20,
+      "reason": "Prévoir une heure de loisirs avant la nuit pour le colon nerveux."
+    },
+    {
+      "tick": 20,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux."
+    },
+    {
+      "tick": 20,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux."
+    },
+    {
+      "tick": 20,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux."
+    },
+    {
+      "tick": 20,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux."
+    },
+    {
+      "tick": 20,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux."
+    },
+    {
+      "tick": 20,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux."
+    },
+    {
+      "tick": 20,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux."
+    },
+    {
+      "tick": 20,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux."
+    },
+    {
+      "tick": 20,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux."
+    },
+    {
+      "tick": 20,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux."
+    },
+    {
+      "tick": 20,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux."
+    },
+    {
+      "tick": 20,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux."
+    },
+    {
+      "tick": 20,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux."
+    },
+    {
+      "tick": 20,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux."
+    },
+    {
+      "tick": 20,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux."
+    },
+    {
+      "tick": 20,
+      "reason": "Aménager progressivement le camp sans fermer son passage central."
+    },
+    {
+      "tick": 20,
+      "reason": "Aménager progressivement le camp sans fermer son passage central."
+    },
+    {
+      "tick": 20,
+      "reason": "Aménager progressivement le camp sans fermer son passage central."
+    },
+    {
+      "tick": 20,
+      "reason": "Séparer le bois et les aliments près du camp."
+    },
+    {
+      "tick": 20,
+      "reason": "Séparer le bois et les aliments près du camp."
+    },
+    {
+      "tick": 20,
+      "reason": "Séparer le bois et les aliments près du camp."
+    },
+    {
+      "tick": 20,
+      "reason": "Séparer le bois et les aliments près du camp."
+    },
+    {
+      "tick": 20,
+      "reason": "Séparer le bois et les aliments près du camp."
+    },
+    {
+      "tick": 20,
+      "reason": "Séparer le bois et les aliments près du camp."
+    },
+    {
+      "tick": 20,
+      "reason": "Séparer le bois et les aliments près du camp."
+    },
+    {
+      "tick": 20,
+      "reason": "Séparer le bois et les aliments près du camp."
+    },
+    {
+      "tick": 20,
+      "reason": "Réserver une plage de loisirs du soir, sans remplacer le repos nocturne."
+    },
+    {
+      "tick": 20,
+      "reason": "Réserver une plage de loisirs du soir, sans remplacer le repos nocturne."
+    },
+    {
+      "tick": 20,
+      "reason": "Réserver une plage de loisirs du soir, sans remplacer le repos nocturne."
+    },
+    {
+      "tick": 20,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 20,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 20,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 20,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 20,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 20,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 20,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 20,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 20,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 20,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 20,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 20,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 20,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 270,
+      "reason": "Enfiler les vêtements du camp, avec gilet de protection pour la recrue armée."
+    },
+    {
+      "tick": 270,
+      "reason": "Enfiler les vêtements du camp, avec gilet de protection pour la recrue armée."
+    },
+    {
+      "tick": 270,
+      "reason": "Enfiler les vêtements du camp, avec gilet de protection pour la recrue armée."
+    },
+    {
+      "tick": 270,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 270,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 270,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 270,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 520,
+      "reason": "Enfiler les vêtements du camp, avec gilet de protection pour la recrue armée."
+    },
+    {
+      "tick": 520,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 520,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 770,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 770,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 2270,
+      "reason": "Décaler le sommeil de la cuisinière pour préparer le matin."
+    },
+    {
+      "tick": 2270,
+      "reason": "Décaler le sommeil de la cuisinière pour préparer le matin."
+    },
+    {
+      "tick": 2270,
+      "reason": "Aménager progressivement le camp sans fermer son passage central."
+    },
+    {
+      "tick": 2270,
+      "reason": "Aménager progressivement le camp sans fermer son passage central."
+    },
+    {
+      "tick": 2270,
+      "reason": "Aménager progressivement le camp sans fermer son passage central."
+    },
+    {
+      "tick": 2270,
+      "reason": "Aménager progressivement le camp sans fermer son passage central."
+    },
+    {
+      "tick": 2270,
+      "reason": "Aménager progressivement le camp sans fermer son passage central."
+    },
+    {
+      "tick": 2270,
+      "reason": "Aménager progressivement le camp sans fermer son passage central."
+    },
+    {
+      "tick": 2270,
+      "reason": "Semer un premier potager près du camp, tout en continuant à cueillir pendant sa croissance."
+    },
+    {
+      "tick": 2270,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 2270,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 2270,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 2270,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 2520,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 2520,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 2520,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 2520,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 2520,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 2520,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 2770,
+      "reason": "Installer une première recette de repas simple au feu de camp."
+    },
+    {
+      "tick": 2770,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 2770,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 2770,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 2770,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 2770,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 3020,
+      "reason": "Maintenir environ deux repas préparés par colon en réserve."
+    },
+    {
+      "tick": 3270,
+      "reason": "Aménager progressivement le camp sans fermer son passage central."
+    },
+    {
+      "tick": 3270,
+      "reason": "Aménager progressivement le camp sans fermer son passage central."
+    },
+    {
+      "tick": 3270,
+      "reason": "Aménager progressivement le camp sans fermer son passage central."
+    },
+    {
+      "tick": 3270,
+      "reason": "Aménager progressivement le camp sans fermer son passage central."
+    },
+    {
+      "tick": 3270,
+      "reason": "Aménager progressivement le camp sans fermer son passage central."
+    },
+    {
+      "tick": 3270,
+      "reason": "Aménager progressivement le camp sans fermer son passage central."
+    },
+    {
+      "tick": 3270,
+      "reason": "Aménager progressivement le camp sans fermer son passage central."
+    },
+    {
+      "tick": 3270,
+      "reason": "Garder une petite réserve alimentaire sur le tabouret près du feu."
+    },
+    {
+      "tick": 3520,
+      "reason": "Inclure les ouvrages du camp dans le foyer entretenu."
+    },
+    {
+      "tick": 3520,
+      "reason": "Inclure les ouvrages du camp dans le foyer entretenu."
+    },
+    {
+      "tick": 3520,
+      "reason": "Inclure les ouvrages du camp dans le foyer entretenu."
+    },
+    {
+      "tick": 3520,
+      "reason": "Inclure les ouvrages du camp dans le foyer entretenu."
+    },
+    {
+      "tick": 3520,
+      "reason": "Inclure les ouvrages du camp dans le foyer entretenu."
+    },
+    {
+      "tick": 3520,
+      "reason": "Inclure les ouvrages du camp dans le foyer entretenu."
+    },
+    {
+      "tick": 3520,
+      "reason": "Inclure les ouvrages du camp dans le foyer entretenu."
+    },
+    {
+      "tick": 4270,
+      "reason": "Conserver les rations de voyage tant que la cuisine assure les repas."
+    },
+    {
+      "tick": 4270,
+      "reason": "Conserver les rations de voyage tant que la cuisine assure les repas."
+    },
+    {
+      "tick": 4270,
+      "reason": "Conserver les rations de voyage tant que la cuisine assure les repas."
+    },
+    {
+      "tick": 4770,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 5020,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 5020,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 6020,
+      "reason": "Ouvrir le passage du camp après la première journée."
+    },
+    {
+      "tick": 6020,
+      "reason": "Préparer une réserve pour les meubles retirés."
+    },
+    {
+      "tick": 6020,
+      "reason": "Retirer le jeu pour réorganiser le camp."
+    },
+    {
+      "tick": 6020,
+      "reason": "Aménager progressivement le camp sans fermer son passage central."
+    },
+    {
+      "tick": 6020,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 6020,
+      "reason": "Ouvrir quelques cases du massif proche pour préparer la pierre."
+    },
+    {
+      "tick": 6020,
+      "reason": "Ouvrir quelques cases du massif proche pour préparer la pierre."
+    },
+    {
+      "tick": 6020,
+      "reason": "Ouvrir quelques cases du massif proche pour préparer la pierre."
+    },
+    {
+      "tick": 6020,
+      "reason": "Ouvrir quelques cases du massif proche pour préparer la pierre."
+    },
+    {
+      "tick": 6020,
+      "reason": "Réserver des cases aux fragments, sans les mélanger aux aliments."
+    },
+    {
+      "tick": 6020,
+      "reason": "Réserver des cases aux fragments, sans les mélanger aux aliments."
+    },
+    {
+      "tick": 6020,
+      "reason": "Réserver des cases aux fragments, sans les mélanger aux aliments."
+    },
+    {
+      "tick": 6020,
+      "reason": "Réserver des cases aux fragments, sans les mélanger aux aliments."
+    },
+    {
+      "tick": 6020,
+      "reason": "Couvrir l’espace de repas après avoir construit ses supports."
+    },
+    {
+      "tick": 7270,
+      "reason": "Réinstaller le piquet après son rangement en réserve."
+    },
+    {
+      "tick": 7270,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 7270,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 7270,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 7520,
+      "reason": "Inclure les ouvrages du camp dans le foyer entretenu."
+    },
+    {
+      "tick": 7520,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 7770,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 7770,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 8020,
+      "reason": "Extraire une réserve d’acier pour les futurs ateliers."
+    },
+    {
+      "tick": 8020,
+      "reason": "Extraire une réserve d’acier pour les futurs ateliers."
+    },
+    {
+      "tick": 8020,
+      "reason": "Ranger l’acier extrait dans des cases libres près du camp."
+    },
+    {
+      "tick": 8020,
+      "reason": "Ranger l’acier extrait dans des cases libres près du camp."
+    },
+    {
+      "tick": 8020,
+      "reason": "Désigner les fragments extraits pour leur transport."
+    },
+    {
+      "tick": 8020,
+      "reason": "Désigner les fragments extraits pour leur transport."
+    },
+    {
+      "tick": 8520,
+      "reason": "Préparer un atelier de taille avec le bois du camp et l’acier extrait."
+    },
+    {
+      "tick": 8520,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 8520,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 8520,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 8520,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 8770,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 8770,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 8770,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 8770,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 9020,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 9020,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 9270,
+      "reason": "Accueillir une quatrième personne ; différer la croissance suivante pour stabiliser le camp."
+    },
+    {
+      "tick": 9270,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 9520,
+      "reason": "Prévoir une heure de loisirs avant la nuit pour le colon nerveux."
+    },
+    {
+      "tick": 9520,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux."
+    },
+    {
+      "tick": 9520,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux."
+    },
+    {
+      "tick": 9520,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux."
+    },
+    {
+      "tick": 9520,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux."
+    },
+    {
+      "tick": 9520,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux."
+    },
+    {
+      "tick": 9520,
+      "reason": "Aménager progressivement le camp sans fermer son passage central."
+    },
+    {
+      "tick": 9520,
+      "reason": "Maintenir environ deux repas préparés par colon en réserve."
+    },
+    {
+      "tick": 9520,
+      "reason": "Réserver une plage de loisirs du soir, sans remplacer le repos nocturne."
+    },
+    {
+      "tick": 9520,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 9520,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 9520,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 9520,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 9520,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 9520,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 9770,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 9770,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 9770,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 10020,
+      "reason": "Construire une alimentation au bois à l’extérieur du camp."
+    },
+    {
+      "tick": 10020,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 10020,
+      "reason": "Extraire une réserve d’acier pour les futurs ateliers."
+    },
+    {
+      "tick": 10020,
+      "reason": "Extraire une réserve d’acier pour les futurs ateliers."
+    },
+    {
+      "tick": 10020,
+      "reason": "Extraire une réserve d’acier pour les futurs ateliers."
+    },
+    {
+      "tick": 10020,
+      "reason": "Extraire six composants pour préparer les appareils électriques."
+    },
+    {
+      "tick": 10020,
+      "reason": "Extraire six composants pour préparer les appareils électriques."
+    },
+    {
+      "tick": 10020,
+      "reason": "Extraire six composants pour préparer les appareils électriques."
+    },
+    {
+      "tick": 10020,
+      "reason": "Ranger séparément les composants extraits."
+    },
+    {
+      "tick": 10020,
+      "reason": "Tailler les premiers blocs du camp."
+    },
+    {
+      "tick": 10020,
+      "reason": "Ranger les blocs taillés près des autres matériaux."
+    },
+    {
+      "tick": 10270,
+      "reason": "Ranger séparément les composants extraits."
+    },
+    {
+      "tick": 10270,
+      "reason": "Maintenir vingt blocs de pierre disponibles."
+    },
+    {
+      "tick": 10520,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 10770,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 11270,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 13270,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 13520,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 13520,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 14020,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 14270,
+      "reason": "Désigner les fragments extraits pour leur transport."
+    },
+    {
+      "tick": 14520,
+      "reason": "Prolonger le premier abri avec cinq blocs taillés sur place."
+    },
+    {
+      "tick": 14770,
+      "reason": "Conserver les rations de voyage tant que la cuisine assure les repas."
+    },
+    {
+      "tick": 15020,
+      "reason": "Inclure les ouvrages du camp dans le foyer entretenu."
+    },
+    {
+      "tick": 15020,
+      "reason": "Désigner les fragments extraits pour leur transport."
+    },
+    {
+      "tick": 15520,
+      "reason": "Éclairer le camp couvert avec une lampe raccordée au générateur."
+    },
+    {
+      "tick": 16020,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 16270,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 16520,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 16770,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 19270,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 19520,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 19520,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 19520,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 21770,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 22270,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 22270,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 22270,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 22600,
+      "reason": "Une attaque arrive : mobiliser les personnes valides et défendre le camp."
+    },
+    {
+      "tick": 23080,
+      "reason": "Assaut terminé : démobiliser pour soigner et reprendre les travaux."
+    },
+    {
+      "tick": 25270,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 25520,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 25520,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 25520,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 26020,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    },
+    {
+      "tick": 28020,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 28270,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 28270,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 28270,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie."
+    },
+    {
+      "tick": 28770,
+      "reason": "Prévoir le bois des chantiers et une petite marge."
+    }
+  ],
+  "checkpoints": [
+    {
+      "barriers": {
+        "destroyed": null,
+        "damaged": [],
+        "homeCells": 7
+      },
+      "tick": 6000,
+      "foodPolicies": [
+        3,
+        3,
+        3
+      ],
+      "restRules": "adult",
+      "scheduledSleepHours": [
+        8,
+        8,
+        8
+      ],
+      "spoiled": {
+        "berries": 0,
+        "rice": 0,
+        "simple-meal": 0
+      },
+      "crops": 15,
+      "growingCells": 15,
+      "power": [],
+      "mining": {
+        "componentsInBuildings": 0,
+        "components": 0,
+        "componentsStored": 0,
+        "blocks": 0,
+        "blocksStored": 0,
+        "steelInBuildings": 0,
+        "steel": 0,
+        "steelStored": 0,
+        "cells": 0,
+        "chunks": 0,
+        "stored": 0
+      },
+      "mood": [
+        {
+          "id": 12409,
+          "level": 72,
+          "target": 81,
+          "frozen": true,
+          "crisis": null,
+          "exposure": [
+            0,
+            0,
+            0
+          ],
+          "causes": [
+            {
+              "id": "camp-expectations",
+              "offset": 30
+            },
+            {
+              "id": "trait-optimist",
+              "offset": 6
+            },
+            {
+              "id": "quite-comfortable",
+              "offset": 6
+            },
+            {
+              "id": "recreation-full",
+              "offset": 10
+            },
+            {
+              "id": "ate-without-table",
+              "offset": -3,
+              "expiresAt": 8321
+            }
+          ]
+        },
+        {
+          "id": 12410,
+          "level": 69,
+          "target": 75,
+          "frozen": true,
+          "crisis": null,
+          "exposure": [
+            0,
+            0,
+            0
+          ],
+          "causes": [
+            {
+              "id": "camp-expectations",
+              "offset": 30
+            },
+            {
+              "id": "quite-comfortable",
+              "offset": 6
+            },
+            {
+              "id": "recreation-full",
+              "offset": 10
+            },
+            {
+              "id": "ate-without-table",
+              "offset": -3,
+              "expiresAt": 8121
+            }
+          ]
+        },
+        {
+          "id": 12411,
+          "level": 60,
+          "target": 69,
+          "frozen": true,
+          "crisis": null,
+          "exposure": [
+            0,
+            0,
+            0
+          ],
+          "causes": [
+            {
+              "id": "camp-expectations",
+              "offset": 30
+            },
+            {
+              "id": "trait-pessimist",
+              "offset": -6
+            },
+            {
+              "id": "quite-comfortable",
+              "offset": 6
+            },
+            {
+              "id": "recreation-full",
+              "offset": 10
+            },
+            {
+              "id": "ate-without-table",
+              "offset": -3,
+              "expiresAt": 7939
+            }
+          ]
+        }
+      ],
+      "recreation": [
+        {
+          "level": 95.61942129463785,
+          "tolerance": {
+            "solitary": 23.943536446993388,
+            "dexterity": 18.096172377484734
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          }
+        },
+        {
+          "level": 95.62999999999776,
+          "tolerance": {
+            "solitary": 19.398536446993216,
+            "dexterity": 17.789003887164267
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          }
+        },
+        {
+          "level": 97.70999999999883,
+          "tolerance": {
+            "solitary": 0,
+            "dexterity": 43.683204690188255
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          }
+        }
+      ],
+      "apparel": [
+        {
+          "id": 12421,
+          "item": "cloth-shirt",
+          "owner": {
+            "type": "apparel",
+            "pawnId": 12409
+          },
+          "apparel": {
+            "quality": "normal",
+            "hitPoints": 100
+          }
+        },
+        {
+          "id": 12422,
+          "item": "cloth-shirt",
+          "owner": {
+            "type": "apparel",
+            "pawnId": 12410
+          },
+          "apparel": {
+            "quality": "normal",
+            "hitPoints": 100
+          }
+        },
+        {
+          "id": 12423,
+          "item": "cloth-shirt",
+          "owner": {
+            "type": "apparel",
+            "pawnId": 12411
+          },
+          "apparel": {
+            "quality": "normal",
+            "hitPoints": 100
+          }
+        },
+        {
+          "id": 12424,
+          "item": "flak-vest",
+          "owner": {
+            "type": "apparel",
+            "pawnId": 12411
+          },
+          "apparel": {
+            "quality": "normal",
+            "hitPoints": 200
+          }
+        }
+      ],
+      "equipment": [
+        {
+          "id": 12420,
+          "item": "revolver",
+          "owner": {
+            "type": "equipment",
+            "pawnId": 12411
+          },
+          "weapon": {
+            "quality": "normal",
+            "hitPoints": 100
+          }
+        }
+      ],
+      "medicalBeds": 0,
+      "medicines": {
+        "total": 30,
+        "stored": 30,
+        "policies": [
+          "industrial",
+          "industrial",
+          "industrial"
+        ]
+      },
+      "health": [
+        {
+          "id": 12409,
+          "state": "sleeping",
+          "rescue": null,
+          "tend": null,
+          "feed": null,
+          "hunger": 73.62666666666254,
+          "medicalRest": null,
+          "treated": 0,
+          "medicineXp": 0,
+          "bedUse": 12501,
+          "injuries": 0,
+          "gunshots": 0,
+          "missing": 0,
+          "bloodLoss": 0
+        },
+        {
+          "id": 12410,
+          "state": "sleeping",
+          "rescue": null,
+          "tend": null,
+          "feed": null,
+          "hunger": 68.77333333332845,
+          "medicalRest": null,
+          "treated": 0,
+          "medicineXp": 0,
+          "bedUse": 12492,
+          "injuries": 0,
+          "gunshots": 0,
+          "missing": 0,
+          "bloodLoss": 0
+        },
+        {
+          "id": 12411,
+          "state": "sleeping",
+          "rescue": null,
+          "tend": null,
+          "feed": null,
+          "hunger": 63.06666666666115,
+          "medicalRest": null,
+          "treated": 0,
+          "medicineXp": 0,
+          "bedUse": 12512,
+          "injuries": 0,
+          "gunshots": 0,
+          "missing": 0,
+          "bloodLoss": 0
+        }
+      ],
+      "personality": [
+        {
+          "id": 12409,
+          "traits": [
+            "optimist",
+            "fast-learner"
+          ],
+          "learning": 1.75,
+          "breakThresholds": [
+            35,
+            20,
+            5
+          ]
+        },
+        {
+          "id": 12410,
+          "traits": [
+            "steadfast",
+            "slow-learner"
+          ],
+          "learning": 0.25,
+          "breakThresholds": [
+            26,
+            14.857142857142858,
+            3.7142857142857144
+          ]
+        },
+        {
+          "id": 12411,
+          "traits": [
+            "pessimist",
+            "nervous"
+          ],
+          "learning": 1,
+          "breakThresholds": [
+            43,
+            24.571428571428573,
+            6.142857142857143
+          ]
+        }
+      ],
+      "skills": [
+        {
+          "id": 12409,
+          "melee": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "shooting": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "construction": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "medicine": {
+            "level": 6,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "lastResetTick": 11
+        },
+        {
+          "id": 12410,
+          "melee": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "shooting": {
+            "level": 5,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "construction": {
+            "level": 10,
+            "xp": 319874,
+            "dailyXp": 319874,
+            "passion": 2
+          },
+          "medicine": {
+            "level": 3,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "lastResetTick": 10
+        },
+        {
+          "id": 12411,
+          "melee": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "shooting": {
+            "level": 3,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "construction": {
+            "level": 4,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "medicine": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 2
+          },
+          "lastResetTick": 9
+        }
+      ],
+      "combat": {
+        "shooters": 0,
+        "flights": 0,
+        "impacts": 0
+      },
+      "interruptedCargo": [],
+      "furnitureTransit": 0,
+      "furnitureExits": 0,
+      "roofing": {
+        "constructed": 0,
+        "planned": 0,
+        "removal": 0
+      },
+      "plantClimate": {
+        "slowed": 0,
+        "thermalAnchors": 0
+      },
+      "thermal": {
+        "outdoors": 18.01954495904449,
+        "retainedCells": 0,
+        "temperatures": []
+      },
+      "workplaces": [
+        {
+          "id": 12571,
+          "kind": "campfire",
+          "role": "none",
+          "light": 0.5,
+          "lighting": 1,
+          "outdoors": 0.8,
+          "roomRole": 1,
+          "station": 0.5,
+          "total": 0.4
+        }
+      ],
+      "lighting": [
+        {
+          "id": 12409,
+          "cellLight": 0.5,
+          "cellFactor": 1,
+          "moving": false,
+          "travelFactor": 1
+        },
+        {
+          "id": 12410,
+          "cellLight": 0.5,
+          "cellFactor": 1,
+          "moving": false,
+          "travelFactor": 1
+        },
+        {
+          "id": 12411,
+          "cellLight": 0.5,
+          "cellFactor": 1,
+          "moving": false,
+          "travelFactor": 0.9739130434782608
+        }
+      ],
+      "sharedPawnCells": 0,
+      "playerOrders": [
+        {
+          "active": null,
+          "queued": 0,
+          "priority": null
+        },
+        {
+          "active": null,
+          "queued": 0,
+          "priority": null
+        },
+        {
+          "active": null,
+          "queued": 0,
+          "priority": null
+        }
+      ],
+      "obstructedGrowingCells": 0,
+      "clearing": 0,
+      "construction": {
+        "blueprints": 0,
+        "frames": 0,
+        "clearingPlants": 0,
+        "clearingPiles": 0
+      },
+      "structures": {
+        "wood-generator": 0,
+        "standing-lamp": 0,
+        "passive-cooler": 0,
+        "bed": 3,
+        "table": 1,
+        "stool": 3,
+        "wall": 7,
+        "campfire": 1,
+        "horseshoes": 1,
+        "stonecutter": 0,
+        "door": 0
+      },
+      "preparedMeals": 6,
+      "stock": {
+        "wood": 41,
+        "food": 21
+      },
+      "pending": 0,
+      "minimumFood": 63.06666666666115,
+      "minimumRest": 54.7247619047626
+    },
+    {
+      "barriers": {
+        "destroyed": null,
+        "damaged": [],
+        "homeCells": 8
+      },
+      "tick": 12000,
+      "foodPolicies": [
+        3,
+        3,
+        3,
+        1
+      ],
+      "restRules": "adult",
+      "scheduledSleepHours": [
+        8,
+        8,
+        8,
+        8
+      ],
+      "spoiled": {
+        "berries": 0,
+        "rice": 0,
+        "simple-meal": 0
+      },
+      "crops": 15,
+      "growingCells": 15,
+      "power": [],
+      "mining": {
+        "componentsInBuildings": 0,
+        "components": 4,
+        "componentsStored": 0,
+        "blocks": 0,
+        "blocksStored": 0,
+        "steelInBuildings": 30,
+        "steel": 50,
+        "steelStored": 0,
+        "cells": 8,
+        "chunks": 2,
+        "stored": 2
+      },
+      "mood": [
+        {
+          "id": 12409,
+          "level": 73,
+          "target": 79,
+          "frozen": true,
+          "crisis": null,
+          "exposure": [
+            0,
+            0,
+            0
+          ],
+          "causes": [
+            {
+              "id": "camp-expectations",
+              "offset": 30
+            },
+            {
+              "id": "trait-optimist",
+              "offset": 6
+            },
+            {
+              "id": "quite-comfortable",
+              "offset": 6
+            },
+            {
+              "id": "recreation-high",
+              "offset": 5
+            }
+          ]
+        },
+        {
+          "id": 12410,
+          "level": 72,
+          "target": 78,
+          "frozen": true,
+          "crisis": null,
+          "exposure": [
+            0,
+            0,
+            0
+          ],
+          "causes": [
+            {
+              "id": "camp-expectations",
+              "offset": 30
+            },
+            {
+              "id": "quite-comfortable",
+              "offset": 6
+            },
+            {
+              "id": "recreation-full",
+              "offset": 10
+            }
+          ]
+        },
+        {
+          "id": 12411,
+          "level": 58.5920000000001,
+          "target": 67,
+          "frozen": true,
+          "crisis": null,
+          "exposure": [
+            0,
+            0,
+            0
+          ],
+          "causes": [
+            {
+              "id": "camp-expectations",
+              "offset": 30
+            },
+            {
+              "id": "trait-pessimist",
+              "offset": -6
+            },
+            {
+              "id": "quite-comfortable",
+              "offset": 6
+            },
+            {
+              "id": "recreation-high",
+              "offset": 5
+            }
+          ]
+        },
+        {
+          "id": 12936,
+          "level": 66,
+          "target": 72,
+          "frozen": true,
+          "crisis": null,
+          "exposure": [
+            0,
+            0,
+            0
+          ],
+          "causes": [
+            {
+              "id": "camp-expectations",
+              "offset": 30
+            },
+            {
+              "id": "trait-pessimist",
+              "offset": -6
+            },
+            {
+              "id": "quite-comfortable",
+              "offset": 6
+            },
+            {
+              "id": "recreation-full",
+              "offset": 10
+            }
+          ]
+        }
+      ],
+      "recreation": [
+        {
+          "level": 76.86231267965063,
+          "tolerance": {
+            "solitary": 10.53353644699288,
+            "dexterity": 20.30105177775181
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          }
+        },
+        {
+          "level": 99.47999999999973,
+          "tolerance": {
+            "solitary": 6.369536446992722,
+            "dexterity": 33.02850388717477
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          }
+        },
+        {
+          "level": 72.85744419756226,
+          "tolerance": {
+            "solitary": 11.407838728426343,
+            "dexterity": 30.33020469018775
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          }
+        },
+        {
+          "level": 90.85343930103721,
+          "tolerance": {
+            "solitary": 0,
+            "dexterity": 33.31923554567237
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          }
+        }
+      ],
+      "apparel": [
+        {
+          "id": 12421,
+          "item": "cloth-shirt",
+          "owner": {
+            "type": "apparel",
+            "pawnId": 12409
+          },
+          "apparel": {
+            "quality": "normal",
+            "hitPoints": 100
+          }
+        },
+        {
+          "id": 12422,
+          "item": "cloth-shirt",
+          "owner": {
+            "type": "apparel",
+            "pawnId": 12410
+          },
+          "apparel": {
+            "quality": "normal",
+            "hitPoints": 100
+          }
+        },
+        {
+          "id": 12423,
+          "item": "cloth-shirt",
+          "owner": {
+            "type": "apparel",
+            "pawnId": 12411
+          },
+          "apparel": {
+            "quality": "normal",
+            "hitPoints": 100
+          }
+        },
+        {
+          "id": 12424,
+          "item": "flak-vest",
+          "owner": {
+            "type": "apparel",
+            "pawnId": 12411
+          },
+          "apparel": {
+            "quality": "normal",
+            "hitPoints": 200
+          }
+        },
+        {
+          "id": 12937,
+          "item": "cloth-shirt",
+          "owner": {
+            "type": "apparel",
+            "pawnId": 12936
+          },
+          "apparel": {
+            "quality": "normal",
+            "hitPoints": 100
+          }
+        }
+      ],
+      "equipment": [
+        {
+          "id": 12420,
+          "item": "revolver",
+          "owner": {
+            "type": "equipment",
+            "pawnId": 12411
+          },
+          "weapon": {
+            "quality": "normal",
+            "hitPoints": 100
+          }
+        }
+      ],
+      "medicalBeds": 0,
+      "medicines": {
+        "total": 30,
+        "stored": 30,
+        "policies": [
+          "industrial",
+          "industrial",
+          "industrial",
+          "industrial"
+        ]
+      },
+      "health": [
+        {
+          "id": 12409,
+          "state": "sleeping",
+          "rescue": null,
+          "tend": null,
+          "feed": null,
+          "hunger": 62.826666666661175,
+          "medicalRest": null,
+          "treated": 0,
+          "medicineXp": 0,
+          "bedUse": 12501,
+          "injuries": 0,
+          "gunshots": 0,
+          "missing": 0,
+          "bloodLoss": 0
+        },
+        {
+          "id": 12410,
+          "state": "sleeping",
+          "rescue": null,
+          "tend": null,
+          "feed": null,
+          "hunger": 56.746666666661845,
+          "medicalRest": null,
+          "treated": 0,
+          "medicineXp": 0,
+          "bedUse": 12492,
+          "injuries": 0,
+          "gunshots": 0,
+          "missing": 0,
+          "bloodLoss": 0
+        },
+        {
+          "id": 12411,
+          "state": "sleeping",
+          "rescue": null,
+          "tend": null,
+          "feed": null,
+          "hunger": 46.373333333329654,
+          "medicalRest": null,
+          "treated": 0,
+          "medicineXp": 0,
+          "bedUse": 12512,
+          "injuries": 0,
+          "gunshots": 0,
+          "missing": 0,
+          "bloodLoss": 0
+        },
+        {
+          "id": 12936,
+          "state": "sleeping",
+          "rescue": null,
+          "tend": null,
+          "feed": null,
+          "hunger": 74.07999999999595,
+          "medicalRest": null,
+          "treated": 0,
+          "medicineXp": 0,
+          "bedUse": 12968,
+          "injuries": 0,
+          "gunshots": 0,
+          "missing": 0,
+          "bloodLoss": 0
+        }
+      ],
+      "personality": [
+        {
+          "id": 12409,
+          "traits": [
+            "optimist",
+            "fast-learner"
+          ],
+          "learning": 1.75,
+          "breakThresholds": [
+            35,
+            20,
+            5
+          ]
+        },
+        {
+          "id": 12410,
+          "traits": [
+            "steadfast",
+            "slow-learner"
+          ],
+          "learning": 0.25,
+          "breakThresholds": [
+            26,
+            14.857142857142858,
+            3.7142857142857144
+          ]
+        },
+        {
+          "id": 12411,
+          "traits": [
+            "pessimist",
+            "nervous"
+          ],
+          "learning": 1,
+          "breakThresholds": [
+            43,
+            24.571428571428573,
+            6.142857142857143
+          ]
+        },
+        {
+          "id": 12936,
+          "traits": [
+            "pessimist",
+            "nervous"
+          ],
+          "learning": 1,
+          "breakThresholds": [
+            43,
+            24.571428571428573,
+            6.142857142857143
+          ]
+        }
+      ],
+      "skills": [
+        {
+          "id": 12409,
+          "melee": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "shooting": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "construction": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "medicine": {
+            "level": 6,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "lastResetTick": 6011
+        },
+        {
+          "id": 12410,
+          "melee": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "shooting": {
+            "level": 5,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "construction": {
+            "level": 10,
+            "xp": 501862,
+            "dailyXp": 181988,
+            "passion": 2
+          },
+          "medicine": {
+            "level": 3,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "lastResetTick": 6010
+        },
+        {
+          "id": 12411,
+          "melee": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "shooting": {
+            "level": 3,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "construction": {
+            "level": 4,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "medicine": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 2
+          },
+          "lastResetTick": 6009
+        },
+        {
+          "id": 12936,
+          "melee": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "shooting": {
+            "level": 3,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "construction": {
+            "level": 4,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "medicine": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 2
+          },
+          "lastResetTick": -1
+        }
+      ],
+      "combat": {
+        "shooters": 0,
+        "flights": 0,
+        "impacts": 0
+      },
+      "interruptedCargo": [],
+      "furnitureTransit": 0,
+      "furnitureExits": 0,
+      "roofing": {
+        "constructed": 28,
+        "planned": 28,
+        "removal": 0
+      },
+      "plantClimate": {
+        "slowed": 0,
+        "thermalAnchors": 0
+      },
+      "thermal": {
+        "outdoors": 18.01954495904449,
+        "retainedCells": 1,
+        "temperatures": [
+          18.01954495904449
+        ]
+      },
+      "workplaces": [
+        {
+          "id": 12571,
+          "kind": "campfire",
+          "role": "none",
+          "light": 0.5,
+          "lighting": 1,
+          "outdoors": 0.8,
+          "roomRole": 1,
+          "station": 0.5,
+          "total": 0.4
+        },
+        {
+          "id": 12964,
+          "kind": "stonecutter",
+          "role": "none",
+          "light": 0.3952941298484802,
+          "lighting": 1,
+          "outdoors": 0.8,
+          "roomRole": 1,
+          "station": 1,
+          "total": 0.8
+        }
+      ],
+      "lighting": [
+        {
+          "id": 12409,
+          "cellLight": 0.5,
+          "cellFactor": 1,
+          "moving": false,
+          "travelFactor": 1
+        },
+        {
+          "id": 12410,
+          "cellLight": 0.5,
+          "cellFactor": 1,
+          "moving": false,
+          "travelFactor": 1
+        },
+        {
+          "id": 12411,
+          "cellLight": 0.5,
+          "cellFactor": 1,
+          "moving": false,
+          "travelFactor": 0.9739130434782608
+        },
+        {
+          "id": 12936,
+          "cellLight": 0.26823529601097107,
+          "cellFactor": 0.9788235306739808,
+          "moving": false,
+          "travelFactor": 1
+        }
+      ],
+      "sharedPawnCells": 0,
+      "playerOrders": [
+        {
+          "active": null,
+          "queued": 0,
+          "priority": null
+        },
+        {
+          "active": null,
+          "queued": 0,
+          "priority": null
+        },
+        {
+          "active": null,
+          "queued": 0,
+          "priority": null
+        },
+        {
+          "active": null,
+          "queued": 0,
+          "priority": null
+        }
+      ],
+      "obstructedGrowingCells": 0,
+      "clearing": 0,
+      "construction": {
+        "blueprints": 0,
+        "frames": 1,
+        "clearingPlants": 0,
+        "clearingPiles": 0
+      },
+      "structures": {
+        "wood-generator": 0,
+        "standing-lamp": 0,
+        "passive-cooler": 0,
+        "bed": 4,
+        "table": 1,
+        "stool": 3,
+        "wall": 6,
+        "campfire": 1,
+        "horseshoes": 1,
+        "stonecutter": 1,
+        "door": 1
+      },
+      "preparedMeals": 5,
+      "stock": {
+        "wood": 137,
+        "food": 40
+      },
+      "pending": 6,
+      "minimumFood": 46.373333333329654,
+      "minimumRest": 47.586904761905544
+    },
+    {
+      "barriers": {
+        "destroyed": null,
+        "damaged": [],
+        "homeCells": 9
+      },
+      "tick": 18000,
+      "foodPolicies": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "restRules": "adult",
+      "scheduledSleepHours": [
+        8,
+        8,
+        8,
+        8
+      ],
+      "spoiled": {
+        "berries": 0,
+        "rice": 0,
+        "simple-meal": 0
+      },
+      "crops": 15,
+      "growingCells": 15,
+      "power": [
+        {
+          "kind": "wood-generator",
+          "on": true,
+          "parent": null,
+          "fuel": 12580
+        },
+        {
+          "kind": "standing-lamp",
+          "on": true,
+          "parent": 13067,
+          "fuel": null
+        }
+      ],
+      "mining": {
+        "componentsInBuildings": 2,
+        "components": 4,
+        "componentsStored": 4,
+        "blocks": 35,
+        "blocksStored": 35,
+        "steelInBuildings": 150,
+        "steel": 50,
+        "steelStored": 50,
+        "cells": 12,
+        "chunks": 0,
+        "stored": 0
+      },
+      "mood": [
+        {
+          "id": 12409,
+          "level": 78,
+          "target": 84,
+          "frozen": true,
+          "crisis": null,
+          "exposure": [
+            0,
+            0,
+            0
+          ],
+          "causes": [
+            {
+              "id": "camp-expectations",
+              "offset": 30
+            },
+            {
+              "id": "trait-optimist",
+              "offset": 6
+            },
+            {
+              "id": "quite-comfortable",
+              "offset": 6
+            },
+            {
+              "id": "recreation-full",
+              "offset": 10
+            }
+          ]
+        },
+        {
+          "id": 12410,
+          "level": 72,
+          "target": 78,
+          "frozen": true,
+          "crisis": null,
+          "exposure": [
+            0,
+            0,
+            0
+          ],
+          "causes": [
+            {
+              "id": "camp-expectations",
+              "offset": 30
+            },
+            {
+              "id": "quite-comfortable",
+              "offset": 6
+            },
+            {
+              "id": "recreation-full",
+              "offset": 10
+            }
+          ]
+        },
+        {
+          "id": 12411,
+          "level": 65.99200000000019,
+          "target": 72,
+          "frozen": true,
+          "crisis": null,
+          "exposure": [
+            0,
+            0,
+            0
+          ],
+          "causes": [
+            {
+              "id": "camp-expectations",
+              "offset": 30
+            },
+            {
+              "id": "trait-pessimist",
+              "offset": -6
+            },
+            {
+              "id": "quite-comfortable",
+              "offset": 6
+            },
+            {
+              "id": "recreation-full",
+              "offset": 10
+            }
+          ]
+        },
+        {
+          "id": 12936,
+          "level": 66,
+          "target": 72,
+          "frozen": true,
+          "crisis": null,
+          "exposure": [
+            0,
+            0,
+            0
+          ],
+          "causes": [
+            {
+              "id": "camp-expectations",
+              "offset": 30
+            },
+            {
+              "id": "trait-pessimist",
+              "offset": -6
+            },
+            {
+              "id": "quite-comfortable",
+              "offset": 6
+            },
+            {
+              "id": "recreation-full",
+              "offset": 10
+            }
+          ]
+        }
+      ],
+      "recreation": [
+        {
+          "level": 97.32999999999863,
+          "tolerance": {
+            "solitary": 29.354061970884917,
+            "dexterity": 13.806023012087808
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          }
+        },
+        {
+          "level": 94.78999999999733,
+          "tolerance": {
+            "solitary": 20.192000000011483,
+            "dexterity": 20.392503887174293
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          }
+        },
+        {
+          "level": 90.25338878570415,
+          "tolerance": {
+            "solitary": 34.290702710717824,
+            "dexterity": 17.823204690187275
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          }
+        },
+        {
+          "level": 95.48999999999769,
+          "tolerance": {
+            "solitary": 21.41000000001188,
+            "dexterity": 19.972235545671865
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          }
+        }
+      ],
+      "apparel": [
+        {
+          "id": 12421,
+          "item": "cloth-shirt",
+          "owner": {
+            "type": "apparel",
+            "pawnId": 12409
+          },
+          "apparel": {
+            "quality": "normal",
+            "hitPoints": 100
+          }
+        },
+        {
+          "id": 12422,
+          "item": "cloth-shirt",
+          "owner": {
+            "type": "apparel",
+            "pawnId": 12410
+          },
+          "apparel": {
+            "quality": "normal",
+            "hitPoints": 100
+          }
+        },
+        {
+          "id": 12423,
+          "item": "cloth-shirt",
+          "owner": {
+            "type": "apparel",
+            "pawnId": 12411
+          },
+          "apparel": {
+            "quality": "normal",
+            "hitPoints": 100
+          }
+        },
+        {
+          "id": 12424,
+          "item": "flak-vest",
+          "owner": {
+            "type": "apparel",
+            "pawnId": 12411
+          },
+          "apparel": {
+            "quality": "normal",
+            "hitPoints": 200
+          }
+        },
+        {
+          "id": 12937,
+          "item": "cloth-shirt",
+          "owner": {
+            "type": "apparel",
+            "pawnId": 12936
+          },
+          "apparel": {
+            "quality": "normal",
+            "hitPoints": 100
+          }
+        }
+      ],
+      "equipment": [
+        {
+          "id": 12420,
+          "item": "revolver",
+          "owner": {
+            "type": "equipment",
+            "pawnId": 12411
+          },
+          "weapon": {
+            "quality": "normal",
+            "hitPoints": 100
+          }
+        }
+      ],
+      "medicalBeds": 0,
+      "medicines": {
+        "total": 30,
+        "stored": 30,
+        "policies": [
+          "industrial",
+          "industrial",
+          "industrial",
+          "industrial"
+        ]
+      },
+      "health": [
+        {
+          "id": 12409,
+          "state": "sleeping",
+          "rescue": null,
+          "tend": null,
+          "feed": null,
+          "hunger": 54.15999999999546,
+          "medicalRest": null,
+          "treated": 0,
+          "medicineXp": 0,
+          "bedUse": 12501,
+          "injuries": 0,
+          "gunshots": 0,
+          "missing": 0,
+          "bloodLoss": 0
+        },
+        {
+          "id": 12410,
+          "state": "sleeping",
+          "rescue": null,
+          "tend": null,
+          "feed": null,
+          "hunger": 49.35999999999599,
+          "medicalRest": null,
+          "treated": 0,
+          "medicineXp": 0,
+          "bedUse": 12492,
+          "injuries": 0,
+          "gunshots": 0,
+          "missing": 0,
+          "bloodLoss": 0
+        },
+        {
+          "id": 12411,
+          "state": "sleeping",
+          "rescue": null,
+          "tend": null,
+          "feed": null,
+          "hunger": 45.41333333332976,
+          "medicalRest": null,
+          "treated": 0,
+          "medicineXp": 0,
+          "bedUse": 12512,
+          "injuries": 0,
+          "gunshots": 0,
+          "missing": 0,
+          "bloodLoss": 0
+        },
+        {
+          "id": 12936,
+          "state": "sleeping",
+          "rescue": null,
+          "tend": null,
+          "feed": null,
+          "hunger": 61.173333333328024,
+          "medicalRest": null,
+          "treated": 0,
+          "medicineXp": 0,
+          "bedUse": 12968,
+          "injuries": 0,
+          "gunshots": 0,
+          "missing": 0,
+          "bloodLoss": 0
+        }
+      ],
+      "personality": [
+        {
+          "id": 12409,
+          "traits": [
+            "optimist",
+            "fast-learner"
+          ],
+          "learning": 1.75,
+          "breakThresholds": [
+            35,
+            20,
+            5
+          ]
+        },
+        {
+          "id": 12410,
+          "traits": [
+            "steadfast",
+            "slow-learner"
+          ],
+          "learning": 0.25,
+          "breakThresholds": [
+            26,
+            14.857142857142858,
+            3.7142857142857144
+          ]
+        },
+        {
+          "id": 12411,
+          "traits": [
+            "pessimist",
+            "nervous"
+          ],
+          "learning": 1,
+          "breakThresholds": [
+            43,
+            24.571428571428573,
+            6.142857142857143
+          ]
+        },
+        {
+          "id": 12936,
+          "traits": [
+            "pessimist",
+            "nervous"
+          ],
+          "learning": 1,
+          "breakThresholds": [
+            43,
+            24.571428571428573,
+            6.142857142857143
+          ]
+        }
+      ],
+      "skills": [
+        {
+          "id": 12409,
+          "melee": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "shooting": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "construction": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "medicine": {
+            "level": 6,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "lastResetTick": 12011
+        },
+        {
+          "id": 12410,
+          "melee": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "shooting": {
+            "level": 5,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "construction": {
+            "level": 10,
+            "xp": 772022,
+            "dailyXp": 270160,
+            "passion": 2
+          },
+          "medicine": {
+            "level": 3,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "lastResetTick": 12010
+        },
+        {
+          "id": 12411,
+          "melee": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "shooting": {
+            "level": 3,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "construction": {
+            "level": 4,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "medicine": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 2
+          },
+          "lastResetTick": 12009
+        },
+        {
+          "id": 12936,
+          "melee": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "shooting": {
+            "level": 3,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "construction": {
+            "level": 4,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "medicine": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 2
+          },
+          "lastResetTick": 12004
+        }
+      ],
+      "combat": {
+        "shooters": 0,
+        "flights": 0,
+        "impacts": 0
+      },
+      "interruptedCargo": [],
+      "furnitureTransit": 0,
+      "furnitureExits": 0,
+      "roofing": {
+        "constructed": 28,
+        "planned": 28,
+        "removal": 0
+      },
+      "plantClimate": {
+        "slowed": 0,
+        "thermalAnchors": 0
+      },
+      "thermal": {
+        "outdoors": 18.01954495904449,
+        "retainedCells": 1,
+        "temperatures": [
+          18.01954495904449
+        ]
+      },
+      "workplaces": [
+        {
+          "id": 12571,
+          "kind": "campfire",
+          "role": "none",
+          "light": 0.5,
+          "lighting": 1,
+          "outdoors": 0.8,
+          "roomRole": 1,
+          "station": 0.5,
+          "total": 0.4
+        },
+        {
+          "id": 12964,
+          "kind": "stonecutter",
+          "role": "none",
+          "light": 0.5,
+          "lighting": 1,
+          "outdoors": 0.8,
+          "roomRole": 1,
+          "station": 1,
+          "total": 0.8
+        }
+      ],
+      "lighting": [
+        {
+          "id": 12409,
+          "cellLight": 0.5,
+          "cellFactor": 1,
+          "moving": false,
+          "travelFactor": 1
+        },
+        {
+          "id": 12410,
+          "cellLight": 0.5,
+          "cellFactor": 1,
+          "moving": false,
+          "travelFactor": 1
+        },
+        {
+          "id": 12411,
+          "cellLight": 0.5,
+          "cellFactor": 1,
+          "moving": false,
+          "travelFactor": 0.9739130434782608
+        },
+        {
+          "id": 12936,
+          "cellLight": 0.409411758184433,
+          "cellFactor": 1,
+          "moving": false,
+          "travelFactor": 1
+        }
+      ],
+      "sharedPawnCells": 0,
+      "playerOrders": [
+        {
+          "active": null,
+          "queued": 0,
+          "priority": null
+        },
+        {
+          "active": null,
+          "queued": 0,
+          "priority": null
+        },
+        {
+          "active": null,
+          "queued": 0,
+          "priority": null
+        },
+        {
+          "active": null,
+          "queued": 0,
+          "priority": null
+        }
+      ],
+      "obstructedGrowingCells": 0,
+      "clearing": 0,
+      "construction": {
+        "blueprints": 0,
+        "frames": 0,
+        "clearingPlants": 0,
+        "clearingPiles": 0
+      },
+      "structures": {
+        "wood-generator": 1,
+        "standing-lamp": 1,
+        "passive-cooler": 0,
+        "bed": 4,
+        "table": 1,
+        "stool": 3,
+        "wall": 7,
+        "campfire": 1,
+        "horseshoes": 1,
+        "stonecutter": 1,
+        "door": 1
+      },
+      "preparedMeals": 8,
+      "stock": {
+        "wood": 96,
+        "food": 23
+      },
+      "pending": 0,
+      "minimumFood": 45.41333333332976,
+      "minimumRest": 47.53845238095316
+    },
+    {
+      "barriers": {
+        "destroyed": null,
+        "damaged": [],
+        "homeCells": 9
+      },
+      "tick": 24000,
+      "foodPolicies": [
+        3,
+        3,
+        3,
+        3,
+        1
+      ],
+      "restRules": "adult",
+      "scheduledSleepHours": [
+        8,
+        8,
+        8,
+        8,
+        8
+      ],
+      "spoiled": {
+        "berries": 0,
+        "rice": 0,
+        "simple-meal": 0
+      },
+      "crops": 15,
+      "growingCells": 15,
+      "power": [
+        {
+          "kind": "wood-generator",
+          "on": true,
+          "parent": null,
+          "fuel": 17380
+        },
+        {
+          "kind": "standing-lamp",
+          "on": true,
+          "parent": 13067,
+          "fuel": null
+        }
+      ],
+      "mining": {
+        "componentsInBuildings": 2,
+        "components": 4,
+        "componentsStored": 4,
+        "blocks": 35,
+        "blocksStored": 35,
+        "steelInBuildings": 150,
+        "steel": 50,
+        "steelStored": 50,
+        "cells": 12,
+        "chunks": 0,
+        "stored": 0
+      },
+      "mood": [
+        {
+          "id": 12409,
+          "level": 78,
+          "target": 84,
+          "frozen": true,
+          "crisis": null,
+          "exposure": [
+            0,
+            0,
+            0
+          ],
+          "causes": [
+            {
+              "id": "camp-expectations",
+              "offset": 30
+            },
+            {
+              "id": "trait-optimist",
+              "offset": 6
+            },
+            {
+              "id": "quite-comfortable",
+              "offset": 6
+            },
+            {
+              "id": "recreation-full",
+              "offset": 10
+            }
+          ]
+        },
+        {
+          "id": 12410,
+          "level": 72,
+          "target": 78,
+          "frozen": true,
+          "crisis": null,
+          "exposure": [
+            0,
+            0,
+            0
+          ],
+          "causes": [
+            {
+              "id": "camp-expectations",
+              "offset": 30
+            },
+            {
+              "id": "quite-comfortable",
+              "offset": 6
+            },
+            {
+              "id": "recreation-full",
+              "offset": 10
+            }
+          ]
+        },
+        {
+          "id": 12411,
+          "level": 60.46400000000017,
+          "target": 67,
+          "frozen": true,
+          "crisis": null,
+          "exposure": [
+            0,
+            0,
+            0
+          ],
+          "causes": [
+            {
+              "id": "camp-expectations",
+              "offset": 30
+            },
+            {
+              "id": "trait-pessimist",
+              "offset": -6
+            },
+            {
+              "id": "quite-comfortable",
+              "offset": 6
+            },
+            {
+              "id": "recreation-high",
+              "offset": 5
+            }
+          ]
+        },
+        {
+          "id": 12936,
+          "level": 66,
+          "target": 72,
+          "frozen": true,
+          "crisis": null,
+          "exposure": [
+            0,
+            0,
+            0
+          ],
+          "causes": [
+            {
+              "id": "camp-expectations",
+              "offset": 30
+            },
+            {
+              "id": "trait-pessimist",
+              "offset": -6
+            },
+            {
+              "id": "quite-comfortable",
+              "offset": 6
+            },
+            {
+              "id": "recreation-full",
+              "offset": 10
+            }
+          ]
+        },
+        {
+          "id": 13144,
+          "level": 52.38400000000304,
+          "target": 42,
+          "frozen": true,
+          "crisis": null,
+          "exposure": [
+            0,
+            0,
+            0
+          ],
+          "causes": [
+            {
+              "id": "camp-expectations",
+              "offset": 30
+            },
+            {
+              "id": "extreme-pain",
+              "offset": -20
+            }
+          ]
+        }
+      ],
+      "recreation": [
+        {
+          "level": 99.29999999999964,
+          "tolerance": {
+            "solitary": 16.604061970884434,
+            "dexterity": 27.764523012098678
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          }
+        },
+        {
+          "level": 98.34999999999916,
+          "tolerance": {
+            "solitary": 7.19600000001099,
+            "dexterity": 35.30750388718769
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          }
+        },
+        {
+          "level": 78.03811311152973,
+          "tolerance": {
+            "solitary": 21.56170271071734,
+            "dexterity": 23.180275501985673
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          }
+        },
+        {
+          "level": 98.73999999999936,
+          "tolerance": {
+            "solitary": 32.155500000023295,
+            "dexterity": 11.048735545673257
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          }
+        },
+        {
+          "level": 46.37000000000172,
+          "tolerance": {
+            "solitary": 0,
+            "dexterity": 0
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          }
+        }
+      ],
+      "apparel": [
+        {
+          "id": 12421,
+          "item": "cloth-shirt",
+          "owner": {
+            "type": "apparel",
+            "pawnId": 12409
+          },
+          "apparel": {
+            "quality": "normal",
+            "hitPoints": 100
+          }
+        },
+        {
+          "id": 12422,
+          "item": "cloth-shirt",
+          "owner": {
+            "type": "apparel",
+            "pawnId": 12410
+          },
+          "apparel": {
+            "quality": "normal",
+            "hitPoints": 100
+          }
+        },
+        {
+          "id": 12423,
+          "item": "cloth-shirt",
+          "owner": {
+            "type": "apparel",
+            "pawnId": 12411
+          },
+          "apparel": {
+            "quality": "normal",
+            "hitPoints": 100
+          }
+        },
+        {
+          "id": 12424,
+          "item": "flak-vest",
+          "owner": {
+            "type": "apparel",
+            "pawnId": 12411
+          },
+          "apparel": {
+            "quality": "normal",
+            "hitPoints": 200
+          }
+        },
+        {
+          "id": 12937,
+          "item": "cloth-shirt",
+          "owner": {
+            "type": "apparel",
+            "pawnId": 12936
+          },
+          "apparel": {
+            "quality": "normal",
+            "hitPoints": 100
+          }
+        },
+        {
+          "id": 13145,
+          "item": "cloth-shirt",
+          "owner": {
+            "type": "apparel",
+            "pawnId": 13144
+          },
+          "apparel": {
+            "quality": "normal",
+            "hitPoints": 93
+          }
+        }
+      ],
+      "equipment": [
+        {
+          "id": 12420,
+          "item": "revolver",
+          "owner": {
+            "type": "equipment",
+            "pawnId": 12411
+          },
+          "weapon": {
+            "quality": "normal",
+            "hitPoints": 100
+          }
+        }
+      ],
+      "medicalBeds": 0,
+      "medicines": {
+        "total": 30,
+        "stored": 30,
+        "policies": [
+          "industrial",
+          "industrial",
+          "industrial",
+          "industrial",
+          "industrial"
+        ]
+      },
+      "health": [
+        {
+          "id": 12409,
+          "state": "sleeping",
+          "rescue": null,
+          "tend": null,
+          "feed": null,
+          "hunger": 47.519999999996195,
+          "medicalRest": null,
+          "treated": 0,
+          "medicineXp": 0,
+          "bedUse": 12501,
+          "injuries": 0,
+          "gunshots": 0,
+          "missing": 0,
+          "bloodLoss": 0
+        },
+        {
+          "id": 12410,
+          "state": "sleeping",
+          "rescue": null,
+          "tend": null,
+          "feed": null,
+          "hunger": 48.239999999996115,
+          "medicalRest": null,
+          "treated": 0,
+          "medicineXp": 0,
+          "bedUse": 12492,
+          "injuries": 0,
+          "gunshots": 0,
+          "missing": 0,
+          "bloodLoss": 0
+        },
+        {
+          "id": 12411,
+          "state": "sleeping",
+          "rescue": null,
+          "tend": null,
+          "feed": null,
+          "hunger": 40.506666666663634,
+          "medicalRest": null,
+          "treated": 0,
+          "medicineXp": 0,
+          "bedUse": 12512,
+          "injuries": 0,
+          "gunshots": 0,
+          "missing": 0,
+          "bloodLoss": 0
+        },
+        {
+          "id": 12936,
+          "state": "sleeping",
+          "rescue": null,
+          "tend": null,
+          "feed": null,
+          "hunger": 50.39999999999588,
+          "medicalRest": null,
+          "treated": 0,
+          "medicineXp": 0,
+          "bedUse": 12968,
+          "injuries": 0,
+          "gunshots": 0,
+          "missing": 0,
+          "bloodLoss": 0
+        },
+        {
+          "id": 13144,
+          "state": "downed",
+          "rescue": null,
+          "tend": null,
+          "feed": null,
+          "hunger": 52.66666666666386,
+          "medicalRest": null,
+          "treated": 0,
+          "medicineXp": 0,
+          "bedUse": null,
+          "injuries": 7,
+          "gunshots": 4,
+          "missing": 0,
+          "bloodLoss": 285568560
+        }
+      ],
+      "personality": [
+        {
+          "id": 12409,
+          "traits": [
+            "optimist",
+            "fast-learner"
+          ],
+          "learning": 1.75,
+          "breakThresholds": [
+            35,
+            20,
+            5
+          ]
+        },
+        {
+          "id": 12410,
+          "traits": [
+            "steadfast",
+            "slow-learner"
+          ],
+          "learning": 0.25,
+          "breakThresholds": [
+            26,
+            14.857142857142858,
+            3.7142857142857144
+          ]
+        },
+        {
+          "id": 12411,
+          "traits": [
+            "pessimist",
+            "nervous"
+          ],
+          "learning": 1,
+          "breakThresholds": [
+            43,
+            24.571428571428573,
+            6.142857142857143
+          ]
+        },
+        {
+          "id": 12936,
+          "traits": [
+            "pessimist",
+            "nervous"
+          ],
+          "learning": 1,
+          "breakThresholds": [
+            43,
+            24.571428571428573,
+            6.142857142857143
+          ]
+        },
+        {
+          "id": 13144,
+          "traits": [],
+          "learning": 1,
+          "breakThresholds": [
+            35,
+            20,
+            5
+          ]
+        }
+      ],
+      "skills": [
+        {
+          "id": 12409,
+          "melee": {
+            "level": 8,
+            "xp": 245000,
+            "dailyXp": 245000,
+            "passion": 0
+          },
+          "shooting": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "construction": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "medicine": {
+            "level": 6,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "lastResetTick": 18011
+        },
+        {
+          "id": 12410,
+          "melee": {
+            "level": 8,
+            "xp": 35000,
+            "dailyXp": 35000,
+            "passion": 0
+          },
+          "shooting": {
+            "level": 5,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "construction": {
+            "level": 10,
+            "xp": 742022,
+            "dailyXp": -30000,
+            "passion": 2
+          },
+          "medicine": {
+            "level": 3,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "lastResetTick": 18010
+        },
+        {
+          "id": 12411,
+          "melee": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "shooting": {
+            "level": 3,
+            "xp": 1243550,
+            "dailyXp": 1243550,
+            "passion": 0
+          },
+          "construction": {
+            "level": 4,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "medicine": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 2
+          },
+          "lastResetTick": 18009
+        },
+        {
+          "id": 12936,
+          "melee": {
+            "level": 8,
+            "xp": 140000,
+            "dailyXp": 140000,
+            "passion": 0
+          },
+          "shooting": {
+            "level": 3,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "construction": {
+            "level": 4,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "medicine": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 2
+          },
+          "lastResetTick": 18004
+        },
+        {
+          "id": 13144,
+          "melee": {
+            "level": 4,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "shooting": {
+            "level": 4,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "construction": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "medicine": {
+            "level": 6,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "lastResetTick": -1
+        }
+      ],
+      "combat": {
+        "shooters": 0,
+        "flights": 0,
+        "impacts": 0
+      },
+      "interruptedCargo": [],
+      "furnitureTransit": 0,
+      "furnitureExits": 0,
+      "roofing": {
+        "constructed": 28,
+        "planned": 28,
+        "removal": 0
+      },
+      "plantClimate": {
+        "slowed": 0,
+        "thermalAnchors": 0
+      },
+      "thermal": {
+        "outdoors": 18.01954495904449,
+        "retainedCells": 1,
+        "temperatures": [
+          18.01954495904449
+        ]
+      },
+      "workplaces": [
+        {
+          "id": 12571,
+          "kind": "campfire",
+          "role": "none",
+          "light": 0.5,
+          "lighting": 1,
+          "outdoors": 0.8,
+          "roomRole": 1,
+          "station": 0.5,
+          "total": 0.4
+        },
+        {
+          "id": 12964,
+          "kind": "stonecutter",
+          "role": "none",
+          "light": 0.5,
+          "lighting": 1,
+          "outdoors": 0.8,
+          "roomRole": 1,
+          "station": 1,
+          "total": 0.8
+        }
+      ],
+      "lighting": [
+        {
+          "id": 12409,
+          "cellLight": 0.5,
+          "cellFactor": 1,
+          "moving": false,
+          "travelFactor": 1
+        },
+        {
+          "id": 12410,
+          "cellLight": 0.5,
+          "cellFactor": 1,
+          "moving": false,
+          "travelFactor": 1
+        },
+        {
+          "id": 12411,
+          "cellLight": 0.5,
+          "cellFactor": 1,
+          "moving": false,
+          "travelFactor": 0.9739130434782608
+        },
+        {
+          "id": 12936,
+          "cellLight": 0.409411758184433,
+          "cellFactor": 1,
+          "moving": false,
+          "travelFactor": 1
+        },
+        {
+          "id": 13144,
+          "cellLight": 0.5,
+          "cellFactor": 1,
+          "moving": false,
+          "travelFactor": 0.55
+        }
+      ],
+      "sharedPawnCells": 0,
+      "playerOrders": [
+        {
+          "active": null,
+          "queued": 0,
+          "priority": null
+        },
+        {
+          "active": null,
+          "queued": 0,
+          "priority": null
+        },
+        {
+          "active": null,
+          "queued": 0,
+          "priority": null
+        },
+        {
+          "active": null,
+          "queued": 0,
+          "priority": null
+        },
+        {
+          "active": null,
+          "queued": 0,
+          "priority": null
+        }
+      ],
+      "obstructedGrowingCells": 0,
+      "clearing": 0,
+      "construction": {
+        "blueprints": 0,
+        "frames": 0,
+        "clearingPlants": 0,
+        "clearingPiles": 0
+      },
+      "structures": {
+        "wood-generator": 1,
+        "standing-lamp": 1,
+        "passive-cooler": 0,
+        "bed": 4,
+        "table": 1,
+        "stool": 3,
+        "wall": 7,
+        "campfire": 1,
+        "horseshoes": 1,
+        "stonecutter": 1,
+        "door": 1
+      },
+      "preparedMeals": 7,
+      "stock": {
+        "wood": 56,
+        "food": 32
+      },
+      "pending": 0,
+      "minimumFood": 40.506666666663634,
+      "minimumRest": 45.505238095238866
+    },
+    {
+      "barriers": {
+        "destroyed": null,
+        "damaged": [],
+        "homeCells": 9
+      },
+      "tick": 30000,
+      "foodPolicies": [
+        3,
+        3,
+        3,
+        3,
+        1
+      ],
+      "restRules": "adult",
+      "scheduledSleepHours": [
+        8,
+        8,
+        8,
+        8,
+        8
+      ],
+      "spoiled": {
+        "berries": 0,
+        "rice": 0,
+        "simple-meal": 0
+      },
+      "crops": 15,
+      "growingCells": 15,
+      "power": [
+        {
+          "kind": "wood-generator",
+          "on": true,
+          "parent": null,
+          "fuel": 16180
+        },
+        {
+          "kind": "standing-lamp",
+          "on": true,
+          "parent": 13067,
+          "fuel": null
+        }
+      ],
+      "mining": {
+        "componentsInBuildings": 2,
+        "components": 4,
+        "componentsStored": 4,
+        "blocks": 35,
+        "blocksStored": 35,
+        "steelInBuildings": 150,
+        "steel": 50,
+        "steelStored": 50,
+        "cells": 12,
+        "chunks": 0,
+        "stored": 0
+      },
+      "mood": [
+        {
+          "id": 12409,
+          "level": 78,
+          "target": 84,
+          "frozen": true,
+          "crisis": null,
+          "exposure": [
+            0,
+            0,
+            0
+          ],
+          "causes": [
+            {
+              "id": "camp-expectations",
+              "offset": 30
+            },
+            {
+              "id": "trait-optimist",
+              "offset": 6
+            },
+            {
+              "id": "quite-comfortable",
+              "offset": 6
+            },
+            {
+              "id": "recreation-full",
+              "offset": 10
+            }
+          ]
+        },
+        {
+          "id": 12410,
+          "level": 72,
+          "target": 78,
+          "frozen": true,
+          "crisis": null,
+          "exposure": [
+            0,
+            0,
+            0
+          ],
+          "causes": [
+            {
+              "id": "camp-expectations",
+              "offset": 30
+            },
+            {
+              "id": "quite-comfortable",
+              "offset": 6
+            },
+            {
+              "id": "recreation-full",
+              "offset": 10
+            }
+          ]
+        },
+        {
+          "id": 12411,
+          "level": 66,
+          "target": 72,
+          "frozen": true,
+          "crisis": null,
+          "exposure": [
+            0,
+            0,
+            0
+          ],
+          "causes": [
+            {
+              "id": "camp-expectations",
+              "offset": 30
+            },
+            {
+              "id": "trait-pessimist",
+              "offset": -6
+            },
+            {
+              "id": "quite-comfortable",
+              "offset": 6
+            },
+            {
+              "id": "recreation-full",
+              "offset": 10
+            }
+          ]
+        },
+        {
+          "id": 12936,
+          "level": 66,
+          "target": 72,
+          "frozen": true,
+          "crisis": null,
+          "exposure": [
+            0,
+            0,
+            0
+          ],
+          "causes": [
+            {
+              "id": "camp-expectations",
+              "offset": 30
+            },
+            {
+              "id": "trait-pessimist",
+              "offset": -6
+            },
+            {
+              "id": "quite-comfortable",
+              "offset": 6
+            },
+            {
+              "id": "recreation-full",
+              "offset": 10
+            }
+          ]
+        },
+        {
+          "id": 13144,
+          "level": 52.38400000000304,
+          "target": 32,
+          "frozen": true,
+          "crisis": null,
+          "exposure": [
+            0,
+            0,
+            0
+          ],
+          "causes": []
+        }
+      ],
+      "recreation": [
+        {
+          "level": 95.39999999999765,
+          "tolerance": {
+            "solitary": 26.923061970895716,
+            "dexterity": 15.086523012098198
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          }
+        },
+        {
+          "level": 96.14999999999803,
+          "tolerance": {
+            "solitary": 0,
+            "dexterity": 45.72750388719873
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          }
+        },
+        {
+          "level": 98.65779902953683,
+          "tolerance": {
+            "solitary": 8.85070271071686,
+            "dexterity": 47.460571348701876
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          }
+        },
+        {
+          "level": 94.9199999999974,
+          "tolerance": {
+            "solitary": 19.294500000022808,
+            "dexterity": 21.711235545684765
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          }
+        },
+        {
+          "level": 46.37000000000172,
+          "tolerance": {
+            "solitary": 0,
+            "dexterity": 0
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          }
+        }
+      ],
+      "apparel": [
+        {
+          "id": 12421,
+          "item": "cloth-shirt",
+          "owner": {
+            "type": "apparel",
+            "pawnId": 12409
+          },
+          "apparel": {
+            "quality": "normal",
+            "hitPoints": 100
+          }
+        },
+        {
+          "id": 12422,
+          "item": "cloth-shirt",
+          "owner": {
+            "type": "apparel",
+            "pawnId": 12410
+          },
+          "apparel": {
+            "quality": "normal",
+            "hitPoints": 100
+          }
+        },
+        {
+          "id": 12423,
+          "item": "cloth-shirt",
+          "owner": {
+            "type": "apparel",
+            "pawnId": 12411
+          },
+          "apparel": {
+            "quality": "normal",
+            "hitPoints": 100
+          }
+        },
+        {
+          "id": 12424,
+          "item": "flak-vest",
+          "owner": {
+            "type": "apparel",
+            "pawnId": 12411
+          },
+          "apparel": {
+            "quality": "normal",
+            "hitPoints": 200
+          }
+        },
+        {
+          "id": 12937,
+          "item": "cloth-shirt",
+          "owner": {
+            "type": "apparel",
+            "pawnId": 12936
+          },
+          "apparel": {
+            "quality": "normal",
+            "hitPoints": 100
+          }
+        },
+        {
+          "id": 13145,
+          "item": "cloth-shirt",
+          "owner": {
+            "type": "apparel",
+            "pawnId": 13144
+          },
+          "apparel": {
+            "quality": "normal",
+            "hitPoints": 93
+          }
+        }
+      ],
+      "equipment": [
+        {
+          "id": 12420,
+          "item": "revolver",
+          "owner": {
+            "type": "equipment",
+            "pawnId": 12411
+          },
+          "weapon": {
+            "quality": "normal",
+            "hitPoints": 100
+          }
+        }
+      ],
+      "medicalBeds": 0,
+      "medicines": {
+        "total": 30,
+        "stored": 30,
+        "policies": [
+          "industrial",
+          "industrial",
+          "industrial",
+          "industrial",
+          "industrial"
+        ]
+      },
+      "health": [
+        {
+          "id": 12409,
+          "state": "sleeping",
+          "rescue": null,
+          "tend": null,
+          "feed": null,
+          "hunger": 49.06666666666269,
+          "medicalRest": null,
+          "treated": 0,
+          "medicineXp": 0,
+          "bedUse": 12501,
+          "injuries": 0,
+          "gunshots": 0,
+          "missing": 0,
+          "bloodLoss": 0
+        },
+        {
+          "id": 12410,
+          "state": "sleeping",
+          "rescue": null,
+          "tend": null,
+          "feed": null,
+          "hunger": 52.55999999999564,
+          "medicalRest": null,
+          "treated": 0,
+          "medicineXp": 0,
+          "bedUse": 12492,
+          "injuries": 0,
+          "gunshots": 0,
+          "missing": 0,
+          "bloodLoss": 0
+        },
+        {
+          "id": 12411,
+          "state": "sleeping",
+          "rescue": null,
+          "tend": null,
+          "feed": null,
+          "hunger": 41.06666666666357,
+          "medicalRest": null,
+          "treated": 0,
+          "medicineXp": 0,
+          "bedUse": 12512,
+          "injuries": 0,
+          "gunshots": 0,
+          "missing": 0,
+          "bloodLoss": 0
+        },
+        {
+          "id": 12936,
+          "state": "sleeping",
+          "rescue": null,
+          "tend": null,
+          "feed": null,
+          "hunger": 47.78666666666283,
+          "medicalRest": null,
+          "treated": 0,
+          "medicineXp": 0,
+          "bedUse": 12968,
+          "injuries": 0,
+          "gunshots": 0,
+          "missing": 0,
+          "bloodLoss": 0
+        },
+        {
+          "id": 13144,
+          "state": "dead",
+          "rescue": null,
+          "tend": null,
+          "feed": null,
+          "hunger": 51.30666666666401,
+          "medicalRest": null,
+          "treated": 0,
+          "medicineXp": 0,
+          "bedUse": null,
+          "injuries": 7,
+          "gunshots": 4,
+          "missing": 0,
+          "bloodLoss": 300000000
+        }
+      ],
+      "personality": [
+        {
+          "id": 12409,
+          "traits": [
+            "optimist",
+            "fast-learner"
+          ],
+          "learning": 1.75,
+          "breakThresholds": [
+            35,
+            20,
+            5
+          ]
+        },
+        {
+          "id": 12410,
+          "traits": [
+            "steadfast",
+            "slow-learner"
+          ],
+          "learning": 0.25,
+          "breakThresholds": [
+            26,
+            14.857142857142858,
+            3.7142857142857144
+          ]
+        },
+        {
+          "id": 12411,
+          "traits": [
+            "pessimist",
+            "nervous"
+          ],
+          "learning": 1,
+          "breakThresholds": [
+            43,
+            24.571428571428573,
+            6.142857142857143
+          ]
+        },
+        {
+          "id": 12936,
+          "traits": [
+            "pessimist",
+            "nervous"
+          ],
+          "learning": 1,
+          "breakThresholds": [
+            43,
+            24.571428571428573,
+            6.142857142857143
+          ]
+        },
+        {
+          "id": 13144,
+          "traits": [],
+          "learning": 1,
+          "breakThresholds": [
+            35,
+            20,
+            5
+          ]
+        }
+      ],
+      "skills": [
+        {
+          "id": 12409,
+          "melee": {
+            "level": 8,
+            "xp": 245000,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "shooting": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "construction": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "medicine": {
+            "level": 6,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "lastResetTick": 24011
+        },
+        {
+          "id": 12410,
+          "melee": {
+            "level": 8,
+            "xp": 35000,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "shooting": {
+            "level": 5,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "construction": {
+            "level": 10,
+            "xp": 712022,
+            "dailyXp": -30000,
+            "passion": 2
+          },
+          "medicine": {
+            "level": 3,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "lastResetTick": 24010
+        },
+        {
+          "id": 12411,
+          "melee": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "shooting": {
+            "level": 3,
+            "xp": 1243550,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "construction": {
+            "level": 4,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "medicine": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 2
+          },
+          "lastResetTick": 24009
+        },
+        {
+          "id": 12936,
+          "melee": {
+            "level": 8,
+            "xp": 140000,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "shooting": {
+            "level": 3,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "construction": {
+            "level": 4,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "medicine": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 2
+          },
+          "lastResetTick": 24004
+        },
+        {
+          "id": 13144,
+          "melee": {
+            "level": 4,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "shooting": {
+            "level": 4,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "construction": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "medicine": {
+            "level": 6,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "lastResetTick": 24016
+        }
+      ],
+      "combat": {
+        "shooters": 0,
+        "flights": 0,
+        "impacts": 0
+      },
+      "interruptedCargo": [],
+      "furnitureTransit": 0,
+      "furnitureExits": 0,
+      "roofing": {
+        "constructed": 28,
+        "planned": 28,
+        "removal": 0
+      },
+      "plantClimate": {
+        "slowed": 0,
+        "thermalAnchors": 0
+      },
+      "thermal": {
+        "outdoors": 18.01954495904449,
+        "retainedCells": 1,
+        "temperatures": [
+          18.01954495904449
+        ]
+      },
+      "workplaces": [
+        {
+          "id": 12571,
+          "kind": "campfire",
+          "role": "none",
+          "light": 0.5,
+          "lighting": 1,
+          "outdoors": 0.8,
+          "roomRole": 1,
+          "station": 0.5,
+          "total": 0.4
+        },
+        {
+          "id": 12964,
+          "kind": "stonecutter",
+          "role": "none",
+          "light": 0.5,
+          "lighting": 1,
+          "outdoors": 0.8,
+          "roomRole": 1,
+          "station": 1,
+          "total": 0.8
+        }
+      ],
+      "lighting": [
+        {
+          "id": 12409,
+          "cellLight": 0.5,
+          "cellFactor": 1,
+          "moving": false,
+          "travelFactor": 1
+        },
+        {
+          "id": 12410,
+          "cellLight": 0.5,
+          "cellFactor": 1,
+          "moving": false,
+          "travelFactor": 1
+        },
+        {
+          "id": 12411,
+          "cellLight": 0.5,
+          "cellFactor": 1,
+          "moving": false,
+          "travelFactor": 0.9739130434782608
+        },
+        {
+          "id": 12936,
+          "cellLight": 0.409411758184433,
+          "cellFactor": 1,
+          "moving": false,
+          "travelFactor": 1
+        },
+        {
+          "id": 13144,
+          "cellLight": 0.5,
+          "cellFactor": 1,
+          "moving": false,
+          "travelFactor": 0.55
+        }
+      ],
+      "sharedPawnCells": 0,
+      "playerOrders": [
+        {
+          "active": null,
+          "queued": 0,
+          "priority": null
+        },
+        {
+          "active": null,
+          "queued": 0,
+          "priority": null
+        },
+        {
+          "active": null,
+          "queued": 0,
+          "priority": null
+        },
+        {
+          "active": null,
+          "queued": 0,
+          "priority": null
+        },
+        {
+          "active": null,
+          "queued": 0,
+          "priority": null
+        }
+      ],
+      "obstructedGrowingCells": 0,
+      "clearing": 0,
+      "construction": {
+        "blueprints": 0,
+        "frames": 0,
+        "clearingPlants": 0,
+        "clearingPiles": 0
+      },
+      "structures": {
+        "wood-generator": 1,
+        "standing-lamp": 1,
+        "passive-cooler": 0,
+        "bed": 4,
+        "table": 1,
+        "stool": 3,
+        "wall": 7,
+        "campfire": 1,
+        "horseshoes": 1,
+        "stonecutter": 1,
+        "door": 1
+      },
+      "preparedMeals": 8,
+      "stock": {
+        "wood": 46,
+        "food": 23
+      },
+      "pending": 0,
+      "minimumFood": 41.06666666666357,
+      "minimumRest": 48.96059523809599
+    }
+  ],
+  "summary": {
+    "barriers": {
+      "destroyed": null,
+      "damaged": [],
+      "homeCells": 9
+    },
+    "tick": 30020,
+    "foodPolicies": [
+      3,
+      3,
+      3,
+      3,
+      1
+    ],
+    "restRules": "adult",
+    "scheduledSleepHours": [
+      8,
+      8,
+      8,
+      8,
+      8
+    ],
+    "spoiled": {
+      "berries": 0,
+      "rice": 0,
+      "simple-meal": 0
+    },
+    "crops": 15,
+    "growingCells": 15,
+    "power": [
+      {
+        "kind": "wood-generator",
+        "on": true,
+        "parent": null,
+        "fuel": 16136
+      },
+      {
+        "kind": "standing-lamp",
+        "on": true,
+        "parent": 13067,
+        "fuel": null
+      }
+    ],
+    "mining": {
+      "componentsInBuildings": 2,
+      "components": 4,
+      "componentsStored": 4,
+      "blocks": 35,
+      "blocksStored": 35,
+      "steelInBuildings": 150,
+      "steel": 50,
+      "steelStored": 50,
+      "cells": 12,
+      "chunks": 0,
+      "stored": 0
+    },
+    "mood": [
+      {
+        "id": 12409,
+        "level": 78,
+        "target": 84,
+        "frozen": true,
+        "crisis": null,
+        "exposure": [
+          0,
+          0,
+          0
+        ],
+        "causes": [
+          {
+            "id": "camp-expectations",
+            "offset": 30
+          },
+          {
+            "id": "trait-optimist",
+            "offset": 6
+          },
+          {
+            "id": "quite-comfortable",
+            "offset": 6
+          },
+          {
+            "id": "recreation-full",
+            "offset": 10
+          }
+        ]
+      },
+      {
+        "id": 12410,
+        "level": 72,
+        "target": 78,
+        "frozen": true,
+        "crisis": null,
+        "exposure": [
+          0,
+          0,
+          0
+        ],
+        "causes": [
+          {
+            "id": "camp-expectations",
+            "offset": 30
+          },
+          {
+            "id": "quite-comfortable",
+            "offset": 6
+          },
+          {
+            "id": "recreation-full",
+            "offset": 10
+          }
+        ]
+      },
+      {
+        "id": 12411,
+        "level": 66,
+        "target": 72,
+        "frozen": true,
+        "crisis": null,
+        "exposure": [
+          0,
+          0,
+          0
+        ],
+        "causes": [
+          {
+            "id": "camp-expectations",
+            "offset": 30
+          },
+          {
+            "id": "trait-pessimist",
+            "offset": -6
+          },
+          {
+            "id": "quite-comfortable",
+            "offset": 6
+          },
+          {
+            "id": "recreation-full",
+            "offset": 10
+          }
+        ]
+      },
+      {
+        "id": 12936,
+        "level": 66,
+        "target": 72,
+        "frozen": true,
+        "crisis": null,
+        "exposure": [
+          0,
+          0,
+          0
+        ],
+        "causes": [
+          {
+            "id": "camp-expectations",
+            "offset": 30
+          },
+          {
+            "id": "trait-pessimist",
+            "offset": -6
+          },
+          {
+            "id": "quite-comfortable",
+            "offset": 6
+          },
+          {
+            "id": "recreation-full",
+            "offset": 10
+          }
+        ]
+      },
+      {
+        "id": 13144,
+        "level": 52.38400000000304,
+        "target": 32,
+        "frozen": true,
+        "crisis": null,
+        "exposure": [
+          0,
+          0,
+          0
+        ],
+        "causes": []
+      }
+    ],
+    "recreation": [
+      {
+        "level": 95.39999999999765,
+        "tolerance": {
+          "solitary": 26.923061970895716,
+          "dexterity": 15.086523012098198
+        },
+        "bored": {
+          "solitary": false,
+          "dexterity": false
+        }
+      },
+      {
+        "level": 96.14999999999803,
+        "tolerance": {
+          "solitary": 0,
+          "dexterity": 45.72750388719873
+        },
+        "bored": {
+          "solitary": false,
+          "dexterity": false
+        }
+      },
+      {
+        "level": 98.65779902953683,
+        "tolerance": {
+          "solitary": 8.85070271071686,
+          "dexterity": 47.460571348701876
+        },
+        "bored": {
+          "solitary": false,
+          "dexterity": false
+        }
+      },
+      {
+        "level": 94.9199999999974,
+        "tolerance": {
+          "solitary": 19.294500000022808,
+          "dexterity": 21.711235545684765
+        },
+        "bored": {
+          "solitary": false,
+          "dexterity": false
+        }
+      },
+      {
+        "level": 46.37000000000172,
+        "tolerance": {
+          "solitary": 0,
+          "dexterity": 0
+        },
+        "bored": {
+          "solitary": false,
+          "dexterity": false
+        }
+      }
+    ],
+    "apparel": [
+      {
+        "id": 12421,
+        "item": "cloth-shirt",
+        "owner": {
+          "type": "apparel",
+          "pawnId": 12409
+        },
+        "apparel": {
+          "quality": "normal",
+          "hitPoints": 100
+        }
+      },
+      {
+        "id": 12422,
+        "item": "cloth-shirt",
+        "owner": {
+          "type": "apparel",
+          "pawnId": 12410
+        },
+        "apparel": {
+          "quality": "normal",
+          "hitPoints": 100
+        }
+      },
+      {
+        "id": 12423,
+        "item": "cloth-shirt",
+        "owner": {
+          "type": "apparel",
+          "pawnId": 12411
+        },
+        "apparel": {
+          "quality": "normal",
+          "hitPoints": 100
+        }
+      },
+      {
+        "id": 12424,
+        "item": "flak-vest",
+        "owner": {
+          "type": "apparel",
+          "pawnId": 12411
+        },
+        "apparel": {
+          "quality": "normal",
+          "hitPoints": 200
+        }
+      },
+      {
+        "id": 12937,
+        "item": "cloth-shirt",
+        "owner": {
+          "type": "apparel",
+          "pawnId": 12936
+        },
+        "apparel": {
+          "quality": "normal",
+          "hitPoints": 100
+        }
+      },
+      {
+        "id": 13145,
+        "item": "cloth-shirt",
+        "owner": {
+          "type": "apparel",
+          "pawnId": 13144
+        },
+        "apparel": {
+          "quality": "normal",
+          "hitPoints": 93
+        }
+      }
+    ],
+    "equipment": [
+      {
+        "id": 12420,
+        "item": "revolver",
+        "owner": {
+          "type": "equipment",
+          "pawnId": 12411
+        },
+        "weapon": {
+          "quality": "normal",
+          "hitPoints": 100
+        }
+      }
+    ],
+    "medicalBeds": 0,
+    "medicines": {
+      "total": 30,
+      "stored": 30,
+      "policies": [
+        "industrial",
+        "industrial",
+        "industrial",
+        "industrial",
+        "industrial"
+      ]
+    },
+    "health": [
+      {
+        "id": 12409,
+        "state": "sleeping",
+        "rescue": null,
+        "tend": null,
+        "feed": null,
+        "hunger": 48.533333333329416,
+        "medicalRest": null,
+        "treated": 0,
+        "medicineXp": 0,
+        "bedUse": 12501,
+        "injuries": 0,
+        "gunshots": 0,
+        "missing": 0,
+        "bloodLoss": 0
+      },
+      {
+        "id": 12410,
+        "state": "sleeping",
+        "rescue": null,
+        "tend": null,
+        "feed": null,
+        "hunger": 52.026666666662365,
+        "medicalRest": null,
+        "treated": 0,
+        "medicineXp": 0,
+        "bedUse": 12492,
+        "injuries": 0,
+        "gunshots": 0,
+        "missing": 0,
+        "bloodLoss": 0
+      },
+      {
+        "id": 12411,
+        "state": "sleeping",
+        "rescue": null,
+        "tend": null,
+        "feed": null,
+        "hunger": 40.5333333333303,
+        "medicalRest": null,
+        "treated": 0,
+        "medicineXp": 0,
+        "bedUse": 12512,
+        "injuries": 0,
+        "gunshots": 0,
+        "missing": 0,
+        "bloodLoss": 0
+      },
+      {
+        "id": 12936,
+        "state": "sleeping",
+        "rescue": null,
+        "tend": null,
+        "feed": null,
+        "hunger": 47.25333333332956,
+        "medicalRest": null,
+        "treated": 0,
+        "medicineXp": 0,
+        "bedUse": 12968,
+        "injuries": 0,
+        "gunshots": 0,
+        "missing": 0,
+        "bloodLoss": 0
+      },
+      {
+        "id": 13144,
+        "state": "dead",
+        "rescue": null,
+        "tend": null,
+        "feed": null,
+        "hunger": 51.30666666666401,
+        "medicalRest": null,
+        "treated": 0,
+        "medicineXp": 0,
+        "bedUse": null,
+        "injuries": 7,
+        "gunshots": 4,
+        "missing": 0,
+        "bloodLoss": 300000000
+      }
+    ],
+    "personality": [
+      {
+        "id": 12409,
+        "traits": [
+          "optimist",
+          "fast-learner"
+        ],
+        "learning": 1.75,
+        "breakThresholds": [
+          35,
+          20,
+          5
+        ]
+      },
+      {
+        "id": 12410,
+        "traits": [
+          "steadfast",
+          "slow-learner"
+        ],
+        "learning": 0.25,
+        "breakThresholds": [
+          26,
+          14.857142857142858,
+          3.7142857142857144
+        ]
+      },
+      {
+        "id": 12411,
+        "traits": [
+          "pessimist",
+          "nervous"
+        ],
+        "learning": 1,
+        "breakThresholds": [
+          43,
+          24.571428571428573,
+          6.142857142857143
+        ]
+      },
+      {
+        "id": 12936,
+        "traits": [
+          "pessimist",
+          "nervous"
+        ],
+        "learning": 1,
+        "breakThresholds": [
+          43,
+          24.571428571428573,
+          6.142857142857143
+        ]
+      },
+      {
+        "id": 13144,
+        "traits": [],
+        "learning": 1,
+        "breakThresholds": [
+          35,
+          20,
+          5
+        ]
+      }
+    ],
+    "skills": [
+      {
+        "id": 12409,
+        "melee": {
+          "level": 8,
+          "xp": 245000,
+          "dailyXp": 0,
+          "passion": 0
+        },
+        "shooting": {
+          "level": 8,
+          "xp": 0,
+          "dailyXp": 0,
+          "passion": 1
+        },
+        "construction": {
+          "level": 8,
+          "xp": 0,
+          "dailyXp": 0,
+          "passion": 1
+        },
+        "medicine": {
+          "level": 6,
+          "xp": 0,
+          "dailyXp": 0,
+          "passion": 1
+        },
+        "lastResetTick": 30011
+      },
+      {
+        "id": 12410,
+        "melee": {
+          "level": 8,
+          "xp": 35000,
+          "dailyXp": 0,
+          "passion": 0
+        },
+        "shooting": {
+          "level": 5,
+          "xp": 0,
+          "dailyXp": 0,
+          "passion": 0
+        },
+        "construction": {
+          "level": 10,
+          "xp": 711922,
+          "dailyXp": -100,
+          "passion": 2
+        },
+        "medicine": {
+          "level": 3,
+          "xp": 0,
+          "dailyXp": 0,
+          "passion": 0
+        },
+        "lastResetTick": 30010
+      },
+      {
+        "id": 12411,
+        "melee": {
+          "level": 8,
+          "xp": 0,
+          "dailyXp": 0,
+          "passion": 0
+        },
+        "shooting": {
+          "level": 3,
+          "xp": 1243550,
+          "dailyXp": 0,
+          "passion": 0
+        },
+        "construction": {
+          "level": 4,
+          "xp": 0,
+          "dailyXp": 0,
+          "passion": 0
+        },
+        "medicine": {
+          "level": 8,
+          "xp": 0,
+          "dailyXp": 0,
+          "passion": 2
+        },
+        "lastResetTick": 30009
+      },
+      {
+        "id": 12936,
+        "melee": {
+          "level": 8,
+          "xp": 140000,
+          "dailyXp": 0,
+          "passion": 0
+        },
+        "shooting": {
+          "level": 3,
+          "xp": 0,
+          "dailyXp": 0,
+          "passion": 0
+        },
+        "construction": {
+          "level": 4,
+          "xp": 0,
+          "dailyXp": 0,
+          "passion": 0
+        },
+        "medicine": {
+          "level": 8,
+          "xp": 0,
+          "dailyXp": 0,
+          "passion": 2
+        },
+        "lastResetTick": 30004
+      },
+      {
+        "id": 13144,
+        "melee": {
+          "level": 4,
+          "xp": 0,
+          "dailyXp": 0,
+          "passion": 0
+        },
+        "shooting": {
+          "level": 4,
+          "xp": 0,
+          "dailyXp": 0,
+          "passion": 1
+        },
+        "construction": {
+          "level": 8,
+          "xp": 0,
+          "dailyXp": 0,
+          "passion": 1
+        },
+        "medicine": {
+          "level": 6,
+          "xp": 0,
+          "dailyXp": 0,
+          "passion": 1
+        },
+        "lastResetTick": 24016
+      }
+    ],
+    "combat": {
+      "shooters": 0,
+      "flights": 0,
+      "impacts": 0
+    },
+    "interruptedCargo": [],
+    "furnitureTransit": 0,
+    "furnitureExits": 0,
+    "roofing": {
+      "constructed": 28,
+      "planned": 28,
+      "removal": 0
+    },
+    "plantClimate": {
+      "slowed": 0,
+      "thermalAnchors": 0
+    },
+    "thermal": {
+      "outdoors": 17.887553745705507,
+      "retainedCells": 1,
+      "temperatures": [
+        17.887553745705507
+      ]
+    },
+    "workplaces": [
+      {
+        "id": 12571,
+        "kind": "campfire",
+        "role": "none",
+        "light": 0.5,
+        "lighting": 1,
+        "outdoors": 0.8,
+        "roomRole": 1,
+        "station": 0.5,
+        "total": 0.4
+      },
+      {
+        "id": 12964,
+        "kind": "stonecutter",
+        "role": "none",
+        "light": 0.5,
+        "lighting": 1,
+        "outdoors": 0.8,
+        "roomRole": 1,
+        "station": 1,
+        "total": 0.8
+      }
+    ],
+    "lighting": [
+      {
+        "id": 12409,
+        "cellLight": 0.5,
+        "cellFactor": 1,
+        "moving": false,
+        "travelFactor": 1
+      },
+      {
+        "id": 12410,
+        "cellLight": 0.5,
+        "cellFactor": 1,
+        "moving": false,
+        "travelFactor": 1
+      },
+      {
+        "id": 12411,
+        "cellLight": 0.5,
+        "cellFactor": 1,
+        "moving": false,
+        "travelFactor": 0.9739130434782608
+      },
+      {
+        "id": 12936,
+        "cellLight": 0.409411758184433,
+        "cellFactor": 1,
+        "moving": false,
+        "travelFactor": 1
+      },
+      {
+        "id": 13144,
+        "cellLight": 0.5,
+        "cellFactor": 1,
+        "moving": false,
+        "travelFactor": 0.55
+      }
+    ],
+    "sharedPawnCells": 0,
+    "playerOrders": [
+      {
+        "active": null,
+        "queued": 0,
+        "priority": null
+      },
+      {
+        "active": null,
+        "queued": 0,
+        "priority": null
+      },
+      {
+        "active": null,
+        "queued": 0,
+        "priority": null
+      },
+      {
+        "active": null,
+        "queued": 0,
+        "priority": null
+      },
+      {
+        "active": null,
+        "queued": 0,
+        "priority": null
+      }
+    ],
+    "obstructedGrowingCells": 0,
+    "clearing": 0,
+    "construction": {
+      "blueprints": 0,
+      "frames": 0,
+      "clearingPlants": 0,
+      "clearingPiles": 0
+    },
+    "structures": {
+      "wood-generator": 1,
+      "standing-lamp": 1,
+      "passive-cooler": 0,
+      "bed": 4,
+      "table": 1,
+      "stool": 3,
+      "wall": 7,
+      "campfire": 1,
+      "horseshoes": 1,
+      "stonecutter": 1,
+      "door": 1
+    },
+    "preparedMeals": 8,
+    "stock": {
+      "wood": 46,
+      "food": 23
+    },
+    "pending": 0,
+    "minimumFood": 40.5333333333303,
+    "minimumRest": 49.72250000000075
+  }
+}

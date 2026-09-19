@@ -94,7 +94,7 @@ export function advanceShooter(world:World,pawn:Pawn,core:number,queries:Queries
   const emission=emitRevolverBullet({grid:queries.grid(),line,origin:{x:pawn.x+.5,z:pawn.z+.5},launcherKey:`pawn:${pawn.id}`,equipmentKey:`pile:${weapon.id}`,target:{key:`pawn:${target.id}`,cell:target,full:false,canBenefitFromCover:true},aim,cover,profile,canHitOtherPawns:true,preventFriendlyFire:false,coverAnchor:key=>queries.targets().anchor(key)},()=>healthRandom(random));
   registerWorldProjectile(world,emission.flight,profile.quality,{friendlyPawnIds:world.pawns.filter(p=>!hostileTo(pawn,p)).map(p=>p.id),friendlyFireFactor:.4},random.rng,core);
   // Same projectile rules; only the documented hostile learning rate differs.
-  if(target.state!=='downed')learnSkill(pawn.skills.shooting,(hostileTo(pawn,target)?170:20)*rangedTimings(profile).learningCycleSeconds*XP_SCALE);
+  if(target.state!=='downed')learnSkill(pawn.skills.shooting,(hostileTo(pawn,target)?170:20)*rangedTimings(profile).learningCycleSeconds*XP_SCALE,pawn);
   pawn.lastAttack={targetId:target.id,atCore:core};
   if(shot.order.auto?.kind==='response')shot.order.auto.remaining--;
   if(shot.order.auto?.kind==='draft')shot.order=null;

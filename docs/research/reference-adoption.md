@@ -1,5 +1,7 @@
 # Adoption du référentiel utilisateur
 
+V69 — chapitres 13/14 ; **SYS/TEST-084 et 085** : adopter exclusions/effets et apprentissage distinct de la vitesse, adapter profils composés et calculs purs ; différer autres traits, biographies et distribution. SYS/TEST-086..088 relus mais ouverts. [Recherche fraîche et correction des seuils personnels](traits-reference.md).
+
 V68 — chapitres 17/20/21/23/24 ; SYS/TEST-110/111/117/132..135 : **adopter** arrivée atomique, notification distincte, combats physiques, conséquences et reprise ; **adapter** calendrier/composition, recherche de brèche et sortie sans vol/enlèvement ; **différer** budget richesse/adaptation SYS-133, autres groupes et devenir complet des corps. [Confrontation multi-source fraîche](raid-reference.md).
 
 V67 — chapitres 10, 20, 22 et 24 ; SYS/TEST-057 : adopter validité de cible, contact, réservation et libération après destruction ; SYS/TEST-058 : conserver la restitution de déconstruction distincte. Adapter au foyer trié et à nos jobs physiques, différer auto-expansion/nettoyage/feu et les autres bâtiments. SYS-132..135 reste ouvert : les ouvrages seuls ne livrent pas l'incident hostile. [Confrontation du 19 septembre](barriers-reference.md).

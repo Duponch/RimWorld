@@ -1,5 +1,7 @@
 # Choix et écarts de gameplay
 
+V69 : six traits Core à consommateurs existants, profils composés explicitement pour les nouvelles personnes ; pas de distribution aléatoire prétendue conforme. Seuils proportionnels, humeur progressive et gains ordinaires distincts ; ancienne personne/offre neutre à la migration. Les interactions sociales sont le prochain lot, pas implicitement livrées. [Recherche](../research/traits-reference.md).
+
 V68 : calendrier 3,5–4 puis 6–8 jours, effectif 1 puis 2, profils limités ; première adaptation de pression, pas le narrateur Core. Accès libre privilégié, brèche choisie par graphe stratégique puis coups réels ; départ si tous les colons sont incapables au lieu de vol/enlèvement. Pas de disparition des victimes ni de téléportation de retrait. [Sources et limites](../research/raid-reference.md).
 
 V67 : foyer peint manuellement (extension automatique différée), réparation cardinale conforme à nos places de travail 3D, XP regroupée au tick local pour éviter un biais d'arrondi. Ouvrages historiques non typés : résistance bois explicite. Pas de ressources rendues par un mur/une porte détruit ; ne pas généraliser une restitution de 25 % à tout bâtiment. [Sources, incertitudes et limites](../research/barriers-reference.md).

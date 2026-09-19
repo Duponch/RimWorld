@@ -4,7 +4,7 @@ Première crise réellement jouée : un colon cesse ses activités, abandonne se
 
 ## Déclenchement et conséquences
 
-Trois expositions indépendantes sous humeur **strictement inférieure à 35/20/5** sont échantillonnées tous les 150 ticks Core (15 locaux). Au-delà de 2 000 Core, un tirage a lieu suivant le niveau éligible le plus intense : MTB 4/0,8/0,5 jours. Ce sont des probabilités, jamais un déclenchement instantané au seuil. Les compteurs sont saturés à 2 100 car seul le franchissement intervient. Aucun nouveau déclenchement pendant sommeil, incapacité ou crise ; cooldown après récupération de 15 000 Core **éveillés**. La jauge réelle, pas sa cible, détermine l’exposition.
+Trois expositions indépendantes sous humeur **strictement inférieure aux seuils personnels** (neutre 35/20/5 ; V69 Résolu 26/14,857…/3,714… et Nerveux 43/24,571…/6,142…, voir [traits](traits.md)) sont échantillonnées tous les 150 ticks Core (15 locaux). Au-delà de 2 000 Core, un tirage a lieu suivant le niveau éligible le plus intense : MTB 4/0,8/0,5 jours. Ce sont des probabilités, jamais un déclenchement instantané au seuil. Les compteurs sont saturés à 2 100 car seul le franchissement intervient. Aucun nouveau déclenchement pendant sommeil, incapacité ou crise ; cooldown après récupération de 15 000 Core **éveillés**. La jauge réelle, pas sa cible, détermine l’exposition.
 
 Le catalogue actuel contient seulement l’errance triste, mineure. Un niveau supérieur se replie sur ce contenu disponible : **distribution volontairement incomplète**, ni rage ni errance psychotique inventées. Le journal choisit une cause négative importante pondérée, pas nécessairement l’événement le plus récent.
 
@@ -28,4 +28,4 @@ Catharsis : +40, trois jours, jusqu’à cinq souvenirs datés ; groupe avec mul
 
 Navigation : un accès progressif synchrone pour les candidats, puis une route pondérée vers le seul choix ; budget partagé avec les autres colons. Aucun parcours par frame ni cache survivant à une mutation. Mouvement utilise les poses GPU existantes ; `PresentationChanges` observe début/fin et cible. Pas de squelette CPU, nouveau draw call ou nouvelle géométrie par crise. Les coûts réels de simulation/worker/images et leurs limites restent dans les preuves.
 
-À compléter : traits influant les seuils, autres crises et leur distribution, facteurs de difficulté, attentes selon richesse, relations, arrestation, comportements NPC et pensées de ces événements. G0–G5 restent ouverts.
+À compléter : autres traits, autres crises et leur distribution, facteurs de difficulté, attentes selon richesse, relations, arrestation, comportements NPC et pensées de ces événements. G0–G5 restent ouverts.

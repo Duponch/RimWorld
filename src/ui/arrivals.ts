@@ -1,5 +1,6 @@
 import type { Command,World } from '../sim/types';
 import { TICKS_PER_DAY } from '../sim/types';
+import { traitSummary } from './traits-inspection';
 import { startingSkills } from '../sim/skills';
 
 /** Existing right-hand alerts host the letter; modal content uses textContent
@@ -29,7 +30,7 @@ export function createArrivalUI(send:(command:Command)=>Promise<unknown>):{updat
     title.textContent=`${offer.name} souhaite rejoindre la colonie`;
     const skills=startingSkills(offer.profile),labels={construction:'Construction',medicine:'Médecine',shooting:'Tir',melee:'Mêlée'};
     const best=(Object.keys(labels) as (keyof typeof labels)[]).sort((a,b)=>skills[b].level-skills[a].level)[0]!;
-    body.textContent=`Ce voyageur cherche un nouveau foyer. Meilleure compétence : ${labels[best]} ${skills[best].level}. En l’accueillant, prévoyez sa nourriture, son couchage et son travail. Un refus attristera les colons pendant six jours.`;
+    body.textContent=`Ce voyageur cherche un nouveau foyer. Meilleure compétence : ${labels[best]} ${skills[best].level}. Traits : ${traitSummary(offer)}. En l’accueillant, prévoyez sa nourriture, son couchage et son travail. Un refus attristera les colons pendant six jours.`;
     remaining.textContent=`Temps restant : ${Math.ceil((offer.expiresAt-world.tick)*24/TICKS_PER_DAY)} h. Vous pouvez différer votre réponse ; sans réponse, la demande expire.`;
   }};
 }

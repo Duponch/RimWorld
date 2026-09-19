@@ -93,7 +93,7 @@ export function advanceMelee(world:World,pawn:Pawn,core:number,contactGrid:()=>U
   const randomState={rng:world.rng},random=()=>healthRandom(randomState);
   const tool=chooseMeleeTool(meleeTools(world,pawn,()=>queries.body(pawn)),random);if(!tool){cancelMelee(pawn);return false;}
   const immobile=isLying(target);
-  if(!immobile)learnSkill(pawn.skills.melee,200*(tool.cooldownCore/60)*XP_SCALE);
+  if(!immobile)learnSkill(pawn.skills.melee,200*(tool.cooldownCore/60)*XP_SCALE,pawn);
   const attacker=queries.body(pawn).capacities,defender=queries.body(target).capacities;
   const hit=immobile||random()<meleeHitChance(pawn.skills.melee.level,attacker.sight,attacker.manipulation);
   const dodge=hit&&!immobile&&!target.shooting?.stance&&random()<meleeDodgeChance(target.skills.melee.level,defender.moving,defender.sight);

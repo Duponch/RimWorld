@@ -36,9 +36,9 @@ export function advanceRepair(world:World,pawn:Pawn,job:Job,light:number,body:Bo
     const threshold=job.repair!.warmed?20:80;
     if(job.progress>=threshold){
       setWorkUnits(job,(job.progress-threshold)*WORK_FRACTIONS+(job.workRemainder??0));job.repair!.warmed=true;
-      if(--s.damage===0){learnSkill(pawn.skills.construction,50*(core+1));delete s.damage;return true;}
+      if(--s.damage===0){learnSkill(pawn.skills.construction,50*(core+1),pawn);delete s.damage;return true;}
     }
   }
-  learnSkill(pawn.skills.construction,500);
+  learnSkill(pawn.skills.construction,500,pawn);
   return false;
 }

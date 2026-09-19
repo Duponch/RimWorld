@@ -1,11 +1,14 @@
 # Travail sur Lisière
 
+## Personnalité V69
+- Lire `docs/development/traits.md` et sa recherche. Six traits seulement, trois familles exclusives ; effet d’humeur distinct des seuils et de l’apprentissage. Mineur modifié puis majeur ×4/7 et extrême /7 ; pas trois offsets indépendants. Gains positifs des quatre compétences actifs, oubli inchangé. Profils neufs seulement au bootstrap du camp, traits annoncés dans les nouvelles offres puis copiés à l’entrée. Valider V68 avant migration neutre, personnes/offres existantes inchangées. Interactions/opinions restent la prochaine tranche de l’étape 3.
+
 ## Raids V68
 - Lire `docs/development/raids.md` et la recherche liée. Calendrier privé, groupe et registre des sorties persistants ; migration V67 strictement neutre. Ne jamais parcourir le graphe hypothétique des brèches : seule la navigation réelle engage une arête. Victimes retenues, pertes cumulées, retrait au bord après mouvement/récupération ; objets portés exportés une seule fois. Échéance/composition provisoires, narrateur et corps transportables absents.
 
 ## Ouvrages et réparations V67
 - Lire `docs/development/barriers.md` et sa recherche. Murs/portes seulement : PV par matériau, dégâts sparse, frappe et projectile, pertes sans remboursement distinctes de la déconstruction. Le retrait remplace `structures` et invalide les captures de tir, projectile, contact et son même au sein du tick Core ; la chute du toit peut arrêter le frappeur et avancer le PRNG. Ne recréer ni son attaque ni l'ancien PRNG ensuite.
-- Foyer manuel trié, recherche binaire, réparation Construction gratuite au contact (80 puis 20 Core, vitesse ×1,7), réservations/files communes. Déconstruction prioritaire ; sortie du foyer libère le travail, pas les PV acquis. V66 strictement validée avant migration neutre. Incident hostile, attaque autonome de barrières, autres dégâts d'objets et extension automatique du foyer restent absents ; l'étape 2 n'est pas terminée.
+- Foyer manuel trié, recherche binaire, réparation Construction gratuite au contact (80 puis 20 Core, vitesse ×1,7), réservations/files communes. Déconstruction prioritaire ; sortie du foyer libère le travail, pas les PV acquis. V66 strictement validée avant migration neutre. V68 ajoute incident hostile et brèches autonomes ; autres dégâts d’objets, extension automatique du foyer et gestion complète des victimes restent absents.
 
 ## Accueil V66
 - Lire `docs/development/arrivals.md` et la recherche liée. Calendrier sparse à PRNG privé, offre sans acteur sur carte, délai strict d’un jour ; acceptation atomique à une bordure accessible, avec identité et chemise extérieure. Refus explicite : pensée six jours, cinq occurrences décroissantes ; expiration sans cette pensée. Migration V65 neutre, activation explicite sur ancienne partie. Le profil de cadence/personne est provisoire, pas un narrateur complet. Le pilote adapte lits, repas et affectations à la population. Journal borné à 80 événements. `PawnLayer` conserve meshes/matériaux en cas de variation de population ; `pawn-buffers.ts` agrandit les géométries avec poses partagées et comptes actifs exacts. Ne pas reconstruire les graphes TSL à chaque arrivant.
@@ -15,7 +18,7 @@
 - Lire `docs/development/mental-break.md` et sa recherche. État sparse persisté, exposition probabiliste et cooldown éveillé ; sommeil/incapacité distincts du décès. Interruption conserve arête/cargaison, réserve libérée et aucune commande individuelle pendant crise. Repas ≤5 %, repos ≤15 % hors Travail ; catharsis datée, groupe décroissant de cinq. V64 strictement validée avant migration neutre ; borne de vitesse V65 abaissée pour blessure + errance. Le catalogue ne contient qu’une crise ; ne pas annoncer toute la psychologie.
 
 ## Humeur V64
-- Lire `docs/development/mood.md` et la recherche liée. Cible dérivée et humeur persistée distinctes ; sommeil/inconscience gèlent la jauge, pas tout état à terre. Causes partagées simulation/inspection ; souvenirs expirés nettoyés même après décès. V63 strictement validée avant migration neutre. Attentes fixes annoncées ; V65 ajoute l’errance triste ; autres crises, traits et relations restent absents.
+- Lire `docs/development/mood.md` et la recherche liée. Cible dérivée et humeur persistée distinctes ; sommeil/inconscience gèlent la jauge, pas tout état à terre. Causes partagées simulation/inspection ; souvenirs expirés nettoyés même après décès. V63 strictement validée avant migration neutre. Attentes fixes annoncées ; V65 ajoute l’errance triste ; six traits actifs V69 ; autres crises et relations restent absents.
 
 ## Habillement physique V63
 - Lire `docs/development/armor.md` et `docs/research/apparel-reference.md`. V63 branche les vêtements physiques, propriétaire `apparel`, compatibilité anatomique et transaction PRNG/usure/blessures. Préserver les temps d’habillage, le dépôt avant remplacement, l’identité sol/porté et les attributs GPU partagés carte/portrait. V62 strictement validée avant migration sans objet inventé. Usure quotidienne, politiques et fabrication textile restent absentes.
@@ -70,7 +73,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 68 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 69 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)
