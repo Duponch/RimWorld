@@ -12,6 +12,12 @@ declare global {
 // Transport one JSON string: tracing every tile as a remote object can dominate large maps.
 export const serializedWorld = (page: Page): Promise<string> => page.evaluate(() => JSON.stringify(window.__lisiere.world));
 export const world = async (page: Page): Promise<World> => JSON.parse(await serializedWorld(page)) as World;
+/** Pause is an ordered worker command. A click alone does not prove that the
+ * final snapshot is adopted; never capture a save oracle before this returns. */
+export async function pause(page: Page): Promise<void> {
+  const button=page.locator('[data-speed="0"]');
+  await button.click();await expect(button).toHaveAttribute('aria-pressed','true');
+}
 export async function expectWorld(page: Page, expected: World) {
   // The pre-load snapshot can already equal expected: wait for replacement and
   // presentation to finish before comparing, otherwise the assertion is vacuous.

@@ -34,7 +34,7 @@ function environmentSummary(world:World) {
   const env=cache.read(world);
   const temperatures=new TemperatureView(world),plants=world.resources.filter(r=>r.kind==='rice'||r.kind==='berries');
   return {
-    wildlife:world.wildlife?{population:world.wildlife.animals.length,eatenPlants:world.wildlife.eatenPlants,eatenNutrition:world.wildlife.eatenNutrition,eatenItems:world.wildlife.eatenItems,feeding:world.wildlife.animals.filter(a=>a.state==='eating').length,sleeping:world.wildlife.animals.filter(a=>a.state==='sleeping').length}:undefined,
+    wildlife:world.wildlife?{population:world.wildlife.animals.length,injured:world.wildlife.animals.filter(a=>!!a.health).length,downed:world.wildlife.animals.filter(a=>a.state==='downed').length,dead:world.wildlife.animals.filter(a=>a.state==='dead').length,eatenPlants:world.wildlife.eatenPlants,eatenNutrition:world.wildlife.eatenNutrition,eatenItems:world.wildlife.eatenItems,feeding:world.wildlife.animals.filter(a=>a.state==='eating').length,sleeping:world.wildlife.animals.filter(a=>a.state==='sleeping').length}:undefined,
     plantClimate:{slowed:plants.filter(p=>plantTemperatureFactor(temperatures.at(world,p))<1).length,thermalAnchors:plants.filter(p=>p.growthThermalFactor!==undefined).length},
     thermal:{outdoors:outdoorTemperature(world.tick),retainedCells:(world.thermal?.regions??[]).reduce((n,r)=>n+r.cells.length,0),temperatures:(world.thermal?.regions??[]).map(r=>r.temperature)},
     workplaces:world.structures.filter(s=>s.kind==='campfire'||s.kind==='stonecutter').map(s=>({id:s.id,kind:s.kind,role:env.room(s)?.role,...env.production(s,cookingSpot(s))})),

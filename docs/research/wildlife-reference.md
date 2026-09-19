@@ -1,5 +1,7 @@
 # Première faune — vérification du 19 septembre 2026
 
+Complément V77 : [vérification anatomie, tirs et fuite](animal-combat-reference.md). Les exclusions de combat ci-dessous datent du lot V76 ; le tir dirigé et la santé animale sont désormais intégrés, sans annoncer la chasse ni la riposte de mêlée.
+
 Corpus relu : chapitre 12 « Agriculture, alimentation et animaux », début du chapitre 13 et classeur SYS/TEST-121..125 (prédation, vengeance, dressage, enclos, reproduction), services alimentaires SYS-076..078. Adopter les besoins, le régime et le contact physique ; différer explicitement les cinq systèmes animaux complets. La ligne S18 de la matrice ne devient pas « terminée » avec une espèce.
 
 ## Sources et limites

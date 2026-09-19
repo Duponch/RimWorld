@@ -1,6 +1,6 @@
 # Lisière
 
-Jeu de colonie en 3D low poly pour navigateur, avec RimWorld de base comme référence fonctionnelle. **Version courante : V76**, première faune autonome : des lièvres se déplacent, broutent, mangent et dorment ; l'onglet Faune permet de les repérer. Santé animale, chasse et boucherie restent la prochaine tranche, sans être implicitement livrées. [Contrat et limites](docs/development/wildlife.md).
+Jeu de colonie en 3D low poly pour navigateur, avec RimWorld de base comme référence fonctionnelle. **Version courante : V77**, tirs dirigés sur les lièvres, santé anatomique, fuite, incapacité et mort. L’onglet Faune expose leurs blessures ; alimentation/broutage et sommeil restent actifs. Chasse automatique, dépouilles transportables et boucherie restent à livrer. [Contrat et limites](docs/development/animal-combat.md).
 
 Le camp dispose déjà de récolte, minage, transport, construction, agriculture/cuisine, besoins physiques, premiers soins/combats/raids, accueil et premières interactions sociales. La filière coton → vêtement et deux recherches utiles sont jouables ; canicule et garde-manger réfrigéré créent des contraintes environnementales. Les catalogues et systèmes restent partiels : consulter l'[inventaire consolidé](docs/gameplay/implementation-status.md) et le [guide joueur](docs/gameplay/player-guide.md).
 
@@ -17,7 +17,7 @@ npm run dev
 
 Ouvrir [le jeu local](http://127.0.0.1:5173). Three.js utilise WebGPU si disponible, sinon WebGL 2 ; le backend apparaît dans Menu → Diagnostics. Le compteur FPS reste visible. La carte par défaut est 250×250, graine 42 ; Menu permet de créer une colonie ou de reprendre une sauvegarde. Paramètres de diagnostic : `/?seed=123&size=250`.
 
-Le [guide joueur](docs/gameplay/player-guide.md) décrit les contrôles et règles. Sauvegardes au schéma **76** : les anciennes versions sont validées puis migrées sans agrandir la carte ni inventer d’objets ou d’historique. Les anciens camps restent sans nouveaux calendriers ni faune jusqu’à leur activation explicite. Les contrats spécialisés et l’[inventaire courant](docs/gameplay/implementation-status.md) distinguent les boucles livrées des catalogues et systèmes encore absents.
+Le [guide joueur](docs/gameplay/player-guide.md) décrit les contrôles et règles. Sauvegardes au schéma **77** : les anciennes versions sont validées puis migrées sans agrandir la carte ni inventer d’objets ou d’historique. Les anciens camps restent sans nouveaux calendriers ni faune jusqu’à leur activation explicite. Les contrats spécialisés et l’[inventaire courant](docs/gameplay/implementation-status.md) distinguent les boucles livrées des catalogues et systèmes encore absents.
 
 ## Développer et vérifier
 

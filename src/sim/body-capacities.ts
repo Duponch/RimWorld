@@ -1,4 +1,5 @@
-import { BODY_INDEX, BODY_PARENTS, HUMAN_BODY, type BodyPartId } from './body-definition.ts';
+import type { BodyPartId } from './body-definition.ts';
+import { HUMAN_MODEL,type BodyModel } from './body-model.ts';
 
 /** Input projected from health conditions, not a saved global health bar.
  * Pain is supplied by injury/disease rules; this module never invents its cause. */
@@ -38,7 +39,8 @@ function nearestEven(value:number):number {
   return fraction===.5 ? lower+(lower%2) : Math.round(value);
 }
 /** Allocate only while assessing changed health, never during movement frames. */
-export function bodyEfficiencies(input:BodyAssessmentInput):Float64Array {
+export function bodyEfficiencies(input:BodyAssessmentInput,model=HUMAN_MODEL):Float64Array {
+  const {parts:HUMAN_BODY,index:BODY_INDEX,parents:BODY_PARENTS}=model;
   const loss=new Float64Array(HUMAN_BODY.length),missing=new Uint8Array(HUMAN_BODY.length),efficiency=new Float64Array(HUMAN_BODY.length);
   for(const damage of input.damage)loss[BODY_INDEX[damage.part]]!+=damage.loss;
   for(const id of input.missing)missing[BODY_INDEX[id]]=1;
@@ -54,32 +56,37 @@ export function bodyEfficiencies(input:BodyAssessmentInput):Float64Array {
   return efficiency;
 }
 
-function calculate(input:BodyAssessmentInput):BodyAssessment {
-  const efficiency=bodyEfficiencies(input),part=(id:BodyPartId)=>efficiency[BODY_INDEX[id]]!;
+function calculate(input:BodyAssessmentInput,model=HUMAN_MODEL):BodyAssessment {
+  const efficiency=bodyEfficiencies(input,model),part=(id:BodyPartId)=>efficiency[model.index[id]]!;
+  const human=model.kind==='human';
   const pair=(a:BodyPartId,b:BodyPartId)=>(part(a)+part(b))/2;
   const bestPair=(a:BodyPartId,b:BodyPartId)=>.75*Math.max(part(a),part(b))+.25*Math.min(part(a),part(b));
   const round=capacityRounded;
   const bloodPumping=round(part('heart'));
   const bloodFiltration=round(pair('left-kidney','right-kidney')*part('liver'));
-  const breathing=round(pair('left-lung','right-lung')*part('neck')*pair('ribcage','sternum'));
+  const breathing=round(pair('left-lung','right-lung')*part('neck')*(human?pair('ribcage','sternum'):1));
   const digestion=round(pair('stomach','liver'));
   const painOffset=Math.min(.4,Math.max(0,(input.pain-.1)*(.4/.9)));
   const naturalConsciousness=(part('brain')-(painOffset>=.01?painOffset:0))*(.8+.2*bloodPumping)*(.8+.2*breathing)*(.9+.1*bloodFiltration);
   const consciousness=round(Math.min(input.consciousnessMax??Infinity,naturalConsciousness+(input.consciousnessOffset??0)));
   const canBeAwake=consciousness>=.3;
   let arms=0,legs=0,functionalLegs=0;
-  for(const side of ['left','right'] as const) {
+  if(human)for(const side of ['left','right'] as const) {
     const fingers=(['pinky','ring-finger','middle-finger','index-finger','thumb'] as const).reduce((sum,id)=>sum+part(`${side}-${id}`),0)/5;
     arms+=part(`${side}-arm`)*part(`${side}-shoulder`)*part(`${side}-clavicle`)*part(`${side}-humerus`)*part(`${side}-radius`)*part(`${side}-hand`)*(.2+.8*fingers);
     const toes=(['little-toe','fourth-toe','middle-toe','second-toe','big-toe'] as const).reduce((sum,id)=>sum+part(`${side}-${id}`),0)/5;
     const leg=part(`${side}-leg`)*part(`${side}-femur`)*part(`${side}-tibia`)*part(`${side}-foot`)*(.6+.4*toes);
     legs+=leg;if(leg>0)functionalLegs++;
   }
-  const moving=canBeAwake&&functionalLegs>=1?round(legs/2*part('pelvis')*part('spine')*(.8+.2*breathing)*(.8+.2*bloodPumping)*Math.min(1,consciousness)+(input.movingOffset??0)):0;
+  if(!human) {
+    arms=part('jaw')*2;
+    for(const side of ['left','right'] as const)for(const end of ['front','rear'] as const){const leg=part(`${side}-${end}-leg`)*part(`${side}-${end}-paw`);legs+=leg;if(leg>0)functionalLegs++;}
+  }
+  const moving=canBeAwake&&functionalLegs>=(human?1:2)?round(legs/(human?2:4)*(human?part('pelvis'):1)*part('spine')*(.8+.2*breathing)*(.8+.2*bloodPumping)*Math.min(1,consciousness)+(input.movingOffset??0)):0;
   const capacities=Object.freeze({consciousness,moving,manipulation:canBeAwake?round(arms/2*consciousness+(input.manipulationOffset??0)):0,
     sight:round(bestPair('left-eye','right-eye')),hearing:round(bestPair('left-ear','right-ear')),
-    talking:canBeAwake?round(part('jaw')*part('neck')*part('tongue')*consciousness):0,
-    eating:canBeAwake?round(Math.max(.1,part('jaw')*part('neck')*(.5+.5*part('tongue'))*consciousness)):0,
+    talking:human&&canBeAwake?round(part('jaw')*part('neck')*part('tongue')*consciousness):0,
+    eating:canBeAwake?round(Math.max(.1,(human?part('jaw'):1)*part('neck')*(human?(.5+.5*part('tongue')):1)*consciousness)):0,
     breathing,bloodPumping,bloodFiltration,digestion});
   return Object.freeze({capacities,canBeAwake,movingCapable:moving>.15,painShock:input.pain>=.8,
     vitalFailure:part('torso')<=.0001||[consciousness,breathing,bloodPumping,bloodFiltration,digestion].some(value=>value<=0)});
@@ -87,6 +94,6 @@ function calculate(input:BodyAssessmentInput):BodyAssessment {
 export const HEALTHY_BODY:BodyAssessment=calculate(HEALTHY_BODY_INPUT);
 /** Caller supplies a current health projection. No cache keyed solely by pawn ID
  * or tick: in-place injury changes must be visible within the same tick. */
-export function assessBody(input:BodyAssessmentInput=HEALTHY_BODY_INPUT):BodyAssessment {
-  return input.damage.length===0&&input.missing.length===0&&input.pain===0&&!input.manipulationOffset&&!input.movingOffset&&!input.consciousnessOffset&&(input.consciousnessMax??1)>=1?HEALTHY_BODY:calculate(input);
+export function assessBody(input:BodyAssessmentInput=HEALTHY_BODY_INPUT,model:BodyModel=HUMAN_MODEL):BodyAssessment {
+  return model.kind==='human'&&input.damage.length===0&&input.missing.length===0&&input.pain===0&&!input.manipulationOffset&&!input.movingOffset&&!input.consciousnessOffset&&(input.consciousnessMax??1)>=1?HEALTHY_BODY:calculate(input,model);
 }

@@ -1,3 +1,4 @@
+import { medicalModel } from './body-model.ts';
 import { BLOOD_UNIT,HEAL_INTERVAL,MEDICAL_INTERVAL,bloodStage } from './injury-rules.ts';
 import { medicalBleedUnits,reconcileMedicalDeath,rollScarPain } from './injury-state.ts';
 import type { Injury,MedicalContext,MedicalRandom,MedicalRecord } from './injury-types.ts';
@@ -34,11 +35,11 @@ export function advanceMedical(record:MedicalRecord,ticks:number,context:Medical
     }
     if(record.tick%HEAL_INTERVAL!==context.phase||context.starving)continue;
     let eligible=record.injuries.filter(i=>i.scar?.pain===undefined);
-    if(eligible.length)heal(record,chosen(eligible,random),context.posture==='standing'?80:context.posture==='ground'?120:160,random);
+    if(eligible.length)heal(record,chosen(eligible,random),Math.round((context.posture==='standing'?80:context.posture==='ground'?120:160)*medicalModel(record).healthScale),random);
     eligible=record.injuries.filter(i=>i.tended!==undefined&&i.scar?.pain===undefined);
     if(eligible.length) {
       const injury=chosen(eligible,random);
-      heal(record,injury,40+Math.round(Math.min(1000,injury.tended!)*.08),random);
+      heal(record,injury,Math.round((40+Math.min(1000,injury.tended!)*.08)*medicalModel(record).healthScale),random);
     }
   }
 }

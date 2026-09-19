@@ -1,4 +1,5 @@
-import { BODY_PARTS,HUMAN_BODY,type BodyPartId } from './body-definition.ts';
+import type { BodyPartId } from './body-definition.ts';
+import { HUMAN_MODEL,HARE_MODEL,type BodyModel } from './body-model.ts';
 
 /** Adult natural body only. These are injury properties, not weapon/armor rules.
  * Provenance and unresolved version differences: docs/research/injuries-reference.md. */
@@ -21,15 +22,18 @@ export const INJURY_RULES=Object.freeze({
   gunshot:Object.freeze({label:'Blessure par balle',painUnits:10,bleedUnits:18,scar:true,merge:false}),
 });
 const bone=(id:BodyPartId)=>['ribcage','sternum','pelvis','spine','skull','nose','jaw'].includes(id)||/-(clavicle|humerus|radius|femur|tibia)$/.test(id);
-export const PART_INJURY_RULES=Object.freeze(Object.fromEntries(HUMAN_BODY.map(part=>{
+function partRules(model:BodyModel){return Object.freeze(Object.fromEntries(model.parts.map(part=>{
   const solid=bone(part.id),eye=part.id.endsWith('-eye');
   const skin=part.depth==='outside'&&!eye&&!['jaw','tongue','waist'].includes(part.id);
   return [part.id,Object.freeze({solid,skin,bleed:solid?0:part.id==='heart'?5:part.id==='neck'?4:part.id==='head'?2:1,
     delicate:eye||part.id==='brain',scarFactor:part.id==='brain'?9999999:eye?15:part.id==='spine'?6:solid?0:1})];
-})) as Record<BodyPartId,Readonly<{solid:boolean;skin:boolean;bleed:number;delicate:boolean;scarFactor:number}>>);
+})) as Record<BodyPartId,Readonly<{solid:boolean;skin:boolean;bleed:number;delicate:boolean;scarFactor:number}>>);}
+export const PART_INJURY_RULES=partRules(HUMAN_MODEL);
+const HARE_INJURY_RULES=partRules(HARE_MODEL);
+export const injuryPartRules=(model:BodyModel)=>model.kind==='hare'?HARE_INJURY_RULES:PART_INJURY_RULES;
 
-export function isWithinPart(candidate:BodyPartId,ancestor:BodyPartId):boolean {
-  for(let id:BodyPartId|null=candidate;id!==null;id=BODY_PARTS[id].parent)if(id===ancestor)return true;
+export function isWithinPart(candidate:BodyPartId,ancestor:BodyPartId,model=HUMAN_MODEL):boolean {
+  for(let id:BodyPartId|null=candidate;id!==null;id=model.byId[id].parent)if(id===ancestor)return true;
   return false;
 }
 export function coagulationAge(severity:number):number {
@@ -37,8 +41,8 @@ export function coagulationAge(severity:number):number {
   const core=90000*Math.max(0,Math.min(1,(severity/HP_UNIT-1)/29)),floor=Math.floor(core);
   return (90000+(core-floor===.5?floor+floor%2:Math.round(core)))/10;
 }
-export function scarChance(part:BodyPartId,kind:InjuryKind,severity:number):number {
-  const rules=PART_INJURY_RULES[part];
+export function scarChance(part:BodyPartId,kind:InjuryKind,severity:number,model=HUMAN_MODEL):number {
+  const rules=injuryPartRules(model)[part];
   return INJURY_RULES[kind].scar?Math.min(1,.02*rules.scarFactor*(rules.delicate?1:Math.max(0,Math.min(1,(severity/HP_UNIT-4)/10)))):0;
 }
 export function bloodConsciousness(loss:number):{consciousnessOffset:number;consciousnessMax?:number} {

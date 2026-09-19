@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+V77 : modèles anatomiques immuables humain/lièvre consommés par le même noyau médical. Adaptateurs `wildlife-health`, `wildlife-flight`, `wildlife-noise` séparés ; cibles `animal:<id>` dans l’overlay mobile des projectiles. La présentation réutilise les fractions de trajet ralenti. Migration V76 stricte et neutre ; pas de nouveau moteur de santé parallèle. [Contrat](animal-combat.md).
+
 V76 : acteur `WildAnimal` séparé du `Pawn` humain, dans `World.wildlife` sparse. Besoins/repas/navigation/validation répartis entre cinq modules ; navigation, réservations quantitatives, portes et protections de chantier communes. Présentation instanciée TSL résidente, historique de mouvement et clock confirmée partagés avec les colons. Migration V75 stricte et neutre. [Contrat](wildlife.md).
 
 V75 : `cooler.ts` possède faces/consigne/intégration, `cooler-salvage.ts` prévalide le bilan multi-matière avant destruction ; `cold-rules.ts` sépare l’exposition froide dans la boucle médicale commune. Schéma 75, deux progrès de recherche indépendants. `cooler-adjust` traite chaque clic relatif sur l’état autoritaire du worker, sans lire une valeur UI retardée. Géométrie et indications partagent les lots existants. [Contrat](cold-store.md).

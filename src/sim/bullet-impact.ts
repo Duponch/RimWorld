@@ -1,6 +1,7 @@
-import { BODY_COVERAGE,BODY_INDEX,BODY_PARTS,HUMAN_BODY,bodyPartExists,type BodyPart,type BodyPartId } from './body-definition.ts';
+import type { BodyPart,BodyPartId } from './body-definition.ts';
+import { HUMAN_MODEL,medicalModel,modelHasPart } from './body-model.ts';
 import type { ImpactProtection } from './apparel-protection.ts';
-import { HP_UNIT,PART_INJURY_RULES } from './injury-rules.ts';
+import { HP_UNIT,injuryPartRules } from './injury-rules.ts';
 import { addResolvedInjuryBatch,partMissing,remainingPartHealth,type ResolvedInjury } from './injury-state.ts';
 import type { MedicalRandom,MedicalRecord } from './injury-types.ts';
 
@@ -20,10 +21,11 @@ export interface BulletImpactResult {
   /** Resolved layers in application order, including layers destroyed later. */
   layers:readonly ResolvedInjury[];
 }
-export function validateUnarmoredBullet(hit:UnarmoredBullet):void {
+export function validateUnarmoredBullet(hit:UnarmoredBullet,model=HUMAN_MODEL):void {
+  const BODY_PARTS=model.byId;
   // Bound the producer to an integer milli-HP envelope before allocating/RNG.
   if(!Number.isFinite(hit.damage)||hit.damage<0||!Number.isSafeInteger(hit.damage*HP_UNIT)||hit.damage>1000000||
-    hit.part!==undefined&&(!bodyPartExists(hit.part)||BODY_PARTS[hit.part].conceptual)||
+    hit.part!==undefined&&(!modelHasPart(model,hit.part)||BODY_PARTS[hit.part].conceptual)||
     hit.height!==undefined&&!['top','middle','bottom'].includes(hit.height)||hit.depth!==undefined&&!['inside','outside'].includes(hit.depth))throw new Error('Invalid unarmored bullet');
 }
 const draw=(random:MedicalRandom):number=>{const n=random();if(!Number.isFinite(n)||n<0||n>=1)throw new Error('Invalid impact random draw');return n;};
@@ -32,6 +34,7 @@ const draw=(random:MedicalRandom):number=>{const n=random();if(!Number.isFinite(
  * Height falls back to all heights when empty; depth remains constrained.
  * Current natural body has no Bullet-specific weight override. */
 export function selectBulletPart(record:MedicalRecord,random:MedicalRandom,height?:BodyPart['height'],depth?:BodyPart['depth']):BodyPartId|null {
+  const {parts:HUMAN_BODY,byId:BODY_PARTS,index:BODY_INDEX,coverage:BODY_COVERAGE}=medicalModel(record);
   const candidates=HUMAN_BODY.filter((p,i)=>!p.conceptual&&BODY_COVERAGE[i]>0&&(!depth||p.depth===depth)&&!partMissing(record,p.id));
   const sameHeight=height?candidates.filter(p=>p.height===height):candidates;
   const eligible=sameHeight.length?sameHeight:candidates;
@@ -45,7 +48,9 @@ export function selectBulletPart(record:MedicalRecord,random:MedicalRandom,heigh
 /** Owned copy plus explicit draw source: no World, clock, render or hidden RNG.
  * Resolve first, then commit the returned record and caller PRNG together. */
 export function resolveUnarmoredBullet(record:MedicalRecord,hit:UnarmoredBullet,random:MedicalRandom,protect?:ImpactProtection):BulletImpactResult {
-  validateUnarmoredBullet(hit);
+  const model=medicalModel(record),{byId:BODY_PARTS,index:BODY_INDEX,coverage:BODY_COVERAGE}=model;
+  const PART_INJURY_RULES=injuryPartRules(model);
+  validateUnarmoredBullet(hit,model);
   const next:MedicalRecord={...record,injuries:record.injuries.map(i=>({...i,...(i.scar?{scar:{...i.scar}}:{})})),missing:record.missing.map(m=>({...m})),...(record.death?{death:{...record.death}}:{})};
   const result:BulletImpactResult={record:next,selected:null,preserved:false,layers:[]};
   if(record.death||!hit.damage||hit.part&&partMissing(record,hit.part))return result;

@@ -1,11 +1,17 @@
 import type { Cell } from './types.ts';
 import type { TravelSegment } from './travel-timing.ts';
+import type { MedicalRecord } from './injury-types.ts';
+import type { StaggerState } from './stagger.ts';
 
 export interface WildAnimal extends Cell {
   id:number; species:'hare'; sex:'female'|'male';
   /** Nutrition units, distinct from a human's percentage gauge. */
   food:number; rest:number;
-  state:'idle'|'moving'|'eating'|'sleeping'|'hungry';
+  state:'idle'|'moving'|'eating'|'sleeping'|'hungry'|'downed'|'dead';
+  health?:MedicalRecord;
+  flee?:{danger:Cell;until:number};
+  stagger?:StaggerState;
+  sleepUntilCore?:number;
   path:Cell[]; motion?:TravelSegment; nextDecision:number;
   meal?:{kind:'plant'|'pile';id:number;quantity:number;progress:number};
 }

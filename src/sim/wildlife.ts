@@ -1,3 +1,5 @@
+import { advanceAnimalHealth,animalBody } from './wildlife-health.ts';
+import { animalEscape } from './wildlife-flight.ts';
 import { animalFoods,animalMealTarget,finishAnimalMeal } from './wildlife-food.ts';
 import { animalNavigation,moveAnimal } from './wildlife-navigation.ts';
 import { HARE,MAX_WILDLIFE,wildlifeRandom,type WildAnimal } from './wildlife-state.ts';
@@ -32,11 +34,25 @@ export function advanceWildlife(world:World):void {
   // Rotate priority; at most one potentially map-wide search per tick.
   for(let i=0;i<s.animals.length;i++) {
     const a=s.animals[(world.tick+i)%s.animals.length]!;
+    advanceAnimalHealth(world,a);
+    if(a.state==='dead')continue;
+    const body=animalBody(a);
     a.food=Math.max(0,a.food-HARE.foodPerDay/6000*(a.food<HARE.nutrition*.18?.25:a.food<HARE.nutrition*.36?.5:1));
     a.rest=Math.max(0,Math.min(1,a.rest+(a.state==='sleeping'?.0003809524*.8:-.00015833333*(a.rest<.01?.6:a.rest<.14?.3:a.rest<.28?.7:1))));
-    if(a.motion&&a.motion.end>world.tick)continue;
+    if(a.flee&&world.tick>=a.flee.until){delete a.flee;a.path=[];if(!a.motion||a.motion.end<=world.tick)a.state='idle';}
+    if(a.state==='downed'||a.motion&&a.motion.end>world.tick)continue;
+    if(a.flee){
+      if(world.tick>=a.flee.until){delete a.flee;a.path=[];a.state='idle';}
+      else {
+        if(a.path.length){moveAnimal(world,a,getNav().step,body.capacities.moving);if(!a.path.length)delete a.flee;continue;}
+        if(a.nextDecision>world.tick||searches>=1)continue;
+        searches++;const path=animalEscape(world,a,getNav());
+        if(path){a.path=path;moveAnimal(world,a,getNav().step,body.capacities.moving);}
+        a.nextDecision=world.tick+20;continue;
+      }
+    }
     if(a.state==='sleeping') {
-      if(a.rest<1&&getNav().free(a))continue;
+      if(a.rest<1&&!a.sleepUntilCore&&getNav().free(a))continue;
       a.state='idle';a.nextDecision=world.tick+1;
     }
     if(a.meal) {
@@ -44,12 +60,12 @@ export function advanceWildlife(world:World):void {
       if(contact(a,target)&&getNav().free(a)) {
         a.path=[];
         if(a.state!=='eating'){a.state='eating';a.meal.progress=0;}
-        else if(++a.meal.progress>=HARE.ingestTicks){finishAnimalMeal(world,a);nav=undefined;}
+        else if((a.meal.progress+=Math.max(.15,(.05+.95*body.capacities.eating)*(.7+.3*body.capacities.manipulation)))>=HARE.ingestTicks){finishAnimalMeal(world,a);nav=undefined;}
         continue;
       }
       if(!a.path.length){delete a.meal;a.state='idle';a.nextDecision=world.tick;}
     }
-    if(a.path.length){moveAnimal(world,a,getNav().step);continue;}
+    if(a.path.length){moveAnimal(world,a,getNav().step,body.capacities.moving);continue;}
     if(a.nextDecision>world.tick)continue;
     const n=getNav();
     if(a.food<HARE.nutrition*.45&&searches<1) {
@@ -61,11 +77,11 @@ export function advanceWildlife(world:World):void {
       }
       a.nextDecision=world.tick+100;a.state='hungry';
     } else if(a.food<HARE.nutrition*.45)continue;
-    if((a.rest<.3||night&&a.rest<.75)&&n.free(a)) {a.state='sleeping';continue;}
+    if((a.rest<.3||night&&a.rest<.75)&&!a.sleepUntilCore&&n.free(a)) {a.state='sleeping';continue;}
     // Bounded neighbouring moves avoid full-map wandering floods. No random
     // walk through walls/closed doors; diagonal length stays Euclidean.
     const choices=[[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,-1],[-1,1],[1,1]].map(([x,z])=>({x:a.x+x!,z:a.z+z!})).filter(c=>n.free(c)&&n.step(a,c));
-    if(choices.length){a.path=[choices[Math.floor(wildlifeRandom(s)*choices.length)]!];moveAnimal(world,a,n.step);}
+    if(choices.length){a.path=[choices[Math.floor(wildlifeRandom(s)*choices.length)]!];moveAnimal(world,a,n.step,body.capacities.moving);}
     a.nextDecision=Math.max(a.nextDecision,world.tick+12+Math.floor(wildlifeRandom(s)*13));
   }
 }

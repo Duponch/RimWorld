@@ -1,0 +1,105 @@
+{
+  "date": "2026-09-19T19:46:23.809Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "os": "win32 10.0.26200",
+  "node": "v24.11.1",
+  "protocol": "Half of the hares have real tail gunshot injuries, blood loss and an initial bounded escape; no animal melee or corpse transport. Same number of wild hares as colonists, half start hungry, one third tired; vegetation and piles consumed physically. Natural 250² map, 3/30/100 actors with physical apparel. One third research at physical benches; others gather/craft tribalwear or mine/chop. 650 ticks, 100 separate warmup ticks, encoding every five ticks. Single pass, CPU only; no 6× guarantee.",
+  "wildlife": true,
+  "coldStore": false,
+  "heatwave": false,
+  "rows": [
+    {
+      "actors": 3,
+      "animals": 3,
+      "animalNutrition": 0.18039750000000004,
+      "tickMs": {
+        "n": 650,
+        "p50": 1.1415999999999258,
+        "p95": 2.294200000000046,
+        "p99": 3.9442999999998847,
+        "max": 17.546499999999924
+      },
+      "steadyTickMs": {
+        "n": 630,
+        "p50": 1.1306999999999334,
+        "p95": 2.0242000000000644,
+        "p99": 2.893000000000029,
+        "max": 7.7357999999999265
+      },
+      "snapshotMs": {
+        "n": 130,
+        "p50": 2.1691000000000713,
+        "p95": 4.045900000000074,
+        "p99": 5.905499999999847,
+        "max": 8.427500000000009
+      },
+      "completed": 1,
+      "research": 2635687,
+      "exposed": 0,
+      "coolers": 0,
+      "mined": 4
+    },
+    {
+      "actors": 30,
+      "animals": 30,
+      "animalNutrition": 2.707920000000001,
+      "tickMs": {
+        "n": 650,
+        "p50": 1.8024999999997817,
+        "p95": 10.774800000000141,
+        "p99": 19.733200000000124,
+        "max": 30.730000000000018
+      },
+      "steadyTickMs": {
+        "n": 630,
+        "p50": 1.775000000000091,
+        "p95": 8.372800000000097,
+        "p99": 16.28819999999996,
+        "max": 23.10089999999991
+      },
+      "snapshotMs": {
+        "n": 130,
+        "p50": 2.3319000000001324,
+        "p95": 4.389999999999418,
+        "p99": 9.04320000000007,
+        "max": 11.58770000000004
+      },
+      "completed": 10,
+      "research": 26753685,
+      "exposed": 0,
+      "coolers": 0,
+      "mined": 40
+    },
+    {
+      "actors": 100,
+      "animals": 100,
+      "animalNutrition": 9.045870000000004,
+      "tickMs": {
+        "n": 650,
+        "p50": 6.9386000000013155,
+        "p95": 27.64090000000033,
+        "p99": 37.175999999999476,
+        "max": 48.57799999999952
+      },
+      "steadyTickMs": {
+        "n": 630,
+        "p50": 6.562200000000303,
+        "p95": 27.64090000000033,
+        "p99": 37.175999999999476,
+        "max": 48.57799999999952
+      },
+      "snapshotMs": {
+        "n": 130,
+        "p50": 2.6414999999997235,
+        "p95": 5.923600000000079,
+        "p99": 8.675699999999779,
+        "max": 10.203099999998813
+      },
+      "completed": 33,
+      "research": 90503059,
+      "exposed": 0,
+      "coolers": 0,
+      "mined": 132
+    }
+  ]
+}

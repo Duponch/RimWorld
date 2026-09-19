@@ -8,7 +8,7 @@ import type { World,Cell } from './types.ts';
  * when barrier destruction replaces structures; otherwise refresh the movable
  * overlay after each impact. Terrain/plants/frames cannot change in this batch. */
 export function captureProjectileBatch(world:World) {
-  const fixed=captureWorldProjectileTargets({...world,pawns:[],piles:[],packed:[]});
+  const fixed=captureWorldProjectileTargets({...world,pawns:[],piles:[],packed:[],wildlife:undefined});
   const {width,height}=world;
   const neutral=fixed.scene(new Set(),1),inside=(c:Cell)=>Number.isInteger(c.x)&&Number.isInteger(c.z)&&c.x>=0&&c.z>=0&&c.x<width&&c.z<height;
   return {
@@ -26,12 +26,13 @@ export function captureProjectileBatch(world:World) {
       for(const p of current.packed)if(p.owner.type==='ground')add({key:`packed:${p.building.id}`,cell:p.owner,kind:'object',fill:0,covered:false,openDoor:false},SHOT_LAYER.item);
       const carried=new Set(current.pawns.filter(p=>p.rescue?.phase==='carry').map(p=>p.rescue!.patientId));
       for(const p of current.pawns)if(p.state!=='dead'&&!p.health?.death&&!carried.has(p.id))add({key:`pawn:${p.id}`,cell:{x:p.x,z:p.z},kind:'pawn',fill:0,covered:false,openDoor:false,standing:!['sleeping','resting','downed'].includes(p.state),bodySize:1,friendly:false},SHOT_LAYER.pawn);
-      const rank=(key:string)=>key.startsWith('pile:')?0:key.startsWith('packed:')?1:2;
+      if(current.schemaVersion>=77)for(const a of current.wildlife?.animals??[])if(a.state!=='dead')add({key:`animal:${a.id}`,cell:a,kind:'pawn',fill:0,covered:false,openDoor:false,standing:!['sleeping','downed'].includes(a.state),bodySize:.2,friendly:false},SHOT_LAYER.pawn);
+      const rank=(key:string)=>key.startsWith('pile:')?0:key.startsWith('packed:')?1:key.startsWith('pawn:')?2:3;
       for(const list of cells.values())list.sort((a,b)=>rank(a.key)-rank(b.key)||Number(a.key.slice(a.key.indexOf(':')+1))-Number(b.key.slice(b.key.indexOf(':')+1)));
       return (friends,factor)=>{
         if(!Number.isFinite(factor)||factor<0||factor>1)throw new RangeError('Invalid friendly fire factor');
         const relation=new Set(friends),related=new Map<string,ProjectileTarget>(),cachedCells=new Map<number,readonly ProjectileTarget[]>();
-        const relate=(p:ProjectileTarget)=>{if(p.kind!=='pawn'||!relation.has(Number(p.key.slice(5))))return p;let copy=related.get(p.key);if(!copy){copy=Object.freeze({...p,friendly:true});related.set(p.key,copy);}return copy;};
+        const relate=(p:ProjectileTarget)=>{if(p.kind!=='pawn'||!p.key.startsWith('pawn:')||!relation.has(Number(p.key.slice(5))))return p;let copy=related.get(p.key);if(!copy){copy=Object.freeze({...p,friendly:true});related.set(p.key,copy);}return copy;};
         return Object.freeze({width,height,friendlyFireFactor:factor,
           target(key:string){const p=targets.get(key);return p?relate(p):neutral.target(key);},
           at(cell:Cell){if(!inside(cell))return [];const index=cell.z*width+cell.x;let list=cachedCells.get(index);if(!list){list=Object.freeze([...neutral.at(cell),...(cells.get(index)??[]).map(relate)]);cachedCells.set(index,list);}return list;},

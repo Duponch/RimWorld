@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+**V77 :** même espèce adulte `hare`, désormais 28 parties médicales et ciblage balistique de taille 0,2. Le corps mort garde son identité ; aucun nouvel ItemId, viande, cuir ou dépouille transportable. [Contrat](../development/animal-combat.md).
+
 **V76 :** espèce vivante `hare`, profil adulte femelle/mâle, représentation procédurale quadrupède animée sur GPU. Aucun nouvel ItemId, viande, cuir ou cadavre disponible ; plantes et aliments existants seulement. Le sexe n’active pas la reproduction. [Périmètre](../development/wildlife.md).
 
 **V75 :** bâtiment `cooler`, empreinte solide 1×1 orientable, 90 acier/3 composants/160 ticks neutres/Construction 5, 100 PV, 20/200 W, déconstruction 50 %, destruction 25 %, non minifiable ; projet `air-conditioning` 500 points ; état médical `hypothermia`. Aucun nouvel ItemId : acier/composants/aliments conservés. Recherche et acquisition réelles, autres appareils thermiques/gelures/recettes toujours absents. [Contrat](../development/cold-store.md).

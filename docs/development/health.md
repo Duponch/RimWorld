@@ -1,5 +1,7 @@
 # Santé active V45
 
+V77 ajoute [la santé animale](animal-combat.md) via le même noyau médical et un adaptateur distinct de `Pawn`. Les soins vétérinaires et les dépouilles transportables restent absents.
+
 V74 ajoute le [coup de chaleur](heatwave.md), distinct des lésions anatomiques : exposition, effets sur capacités, refuge, incapacité/mort et récupération au frais. La recherche active est explicitement incluse dans les tâches interdites après incapacité. Combat présent depuis V56–V68 ; les mentions de lots antérieurs ci-dessous décrivent leur portée historique.
 
 16 septembre 2026. [Recherche recoupée](../research/health-reference.md), [anatomie](body.md), [lésions](injuries.md), [validation](validation.md). Corpus : chapitre 15, SYS/TEST-089..091, 094, 096..097 ; chapitres 5/21 pour les toits. Le socle médical est maintenant intégré ; secours et soins sont ajoutés par V46–V51, dont les [médicaments](medicines.md) ; combat, maladies et chirurgie restent ouverts.

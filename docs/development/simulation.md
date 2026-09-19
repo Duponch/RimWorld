@@ -1,5 +1,7 @@
 # Noyau de simulation — contrat courant
 
+V77 : le noyau médical partage les modèles immuables humain/lièvre ; les propriétaires et intentions animales restent distincts. Tirs et overlay de projectiles incluent les animaux, avec arêtes/ralentissements communs ; [contrat courant](animal-combat.md).
+
 Schéma courant **74** : [canicule, exposition et refuge](heatwave.md). Validation stricte V73 avant migration neutre, puis opt-in de calendrier pour les anciennes parties. Les paragraphes versionnés suivants retracent les contrats historiques, pas un autre état courant.
 
 V73 ajoute [recherche au poste, compétence Intellect et couture débloquée](research.md), séparées dans `research.ts`/`research-save.ts`. Progression en micro-points, postes/services exclusifs et contributions de plusieurs chercheurs ; gestion physique des besoins/interruptions. Le combustible pour une facture culinaire n’est plus annulé en boucle par la faim.

@@ -155,7 +155,7 @@ Chapitres 3/6/7/12/29 et SYS-012/016..022/028/070..075/131/172..177 : [audit ren
 | G2 habitat/environnement, S10–S12/S16 | SYS-023..025/028/126..131 | Scène E : pièces, portes, réseaux, chauffage et feu ; blessures G3. |
 | G3 personnes, S13–S14/S19 | SYS-081..097/148..150 ; UI-017..018/028 | Soins interrompus, capacités, pensées et opinions dirigées. Recrutement/factions G4. |
 | G3 combat, S15 | SYS-035..036/098..112/118..120 ; UI-007..011 ; TEST-182..188/190..191/193 | Scène B, branches du modèle choisi et distributions ; aucun coefficient adopté par défaut. |
-| G3 faune, S18 | SYS-121..125 ; services partagés besoins/santé | V76 : adopter repas/repos physiques, adapter présentation/errance ; corps animal, prédation/riposte/chasse et élevage différés. [Vérification renouvelée](wildlife-reference.md), charge avec animaux réels. |
+| G3 faune, S18 | SYS-121..125 ; services partagés besoins/santé | V77 : besoins physiques, corps animal et tirs adoptés ; présentation/errance/fuite adaptées ; prédation/riposte/chasse et élevage différés. [Santé animale](animal-combat-reference.md). [Vérification renouvelée](wildlife-reference.md), charge avec animaux réels. |
 | G4 progression, S17/S20/S21 | SYS-013/062..069/132..137/145..147 ; UI-032..033 ; TEST-194 | Incident admissible, récompense unique, recette/recherche persistante, commerce atomique. |
 | G5 monde/objectifs, S22–S23 | SYS-011..015/136..144 ; UI-029..031 ; CAT-052 | Scène D : propriété entre cartes et caravane. L'objectif final original reste à concevoir. |
 | Après G5, S24 | SYS-029..030/151..171 | Modules choisis ultérieurement. TEST-195 concerne un croisement de DLC ; TEST-196 une régression de pont d'un correctif, à qualifier séparément. |

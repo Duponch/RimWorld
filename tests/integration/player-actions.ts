@@ -55,6 +55,10 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
       await revealCells(page,[c.target]);const point=await page.evaluate(t=>window.__lisiere.projectCell(t.x,t.z),c.target),bounds=(await page.locator('#viewport canvas').boundingBox())!;
       if(c.queue)await page.keyboard.down('Shift');await page.mouse.click(bounds.x+point.x,bounds.y+point.y,{button:'right'});if(c.queue)await page.keyboard.up('Shift');
     }
+  } else if(c.type==='shoot'&&(await world(page)).wildlife?.animals.some(a=>a.id===c.targetId)) {
+    await page.keyboard.press('Escape');
+    for(const [i,id] of c.pawnIds.entries())await page.locator(`[data-pawn="${id}"]`).click({modifiers:i?['Shift']:[]});
+    await panel(page,'wildlife');await page.locator(`[data-animal-shoot="${c.targetId}"]`).click();
   } else if(c.type==='order-equipment'||c.type==='order-feed'||c.type==='order-tend'||c.type==='order-rescue'||c.type==='order-job'||c.type==='order-haul'||c.type==='order-cook') {
     await page.keyboard.press('Escape');await page.locator(`[data-pawn="${c.pawnId}"]`).click();
     if(c.type==='order-equipment'&&c.action==='remove'){if(await page.locator('#equipment-details').getAttribute('open')===null)await page.locator('#equipment-details summary').click();await page.locator(`[data-remove-apparel="${c.itemId}"]`).click();return;}
@@ -124,6 +128,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
   try { await page.waitForFunction(c=>{
     const w=window.__lisiere.world;
     if(c.type==='growing-policy'){const z=w.growingZones.find(z=>z.id===c.zoneId);return !!z&&(!c.plant||z.plant===c.plant)&&z.allowSow===c.allowSow&&z.allowCut===c.allowCut;}
+    if(c.type==='shoot')return c.pawnIds.every(id=>w.pawns.find(p=>p.id===id)?.shooting?.order?.targetId===c.targetId);
     if(c.type==='draft')return c.pawnIds.every(id=>!!w.pawns.find(p=>p.id===id)?.draft===c.enabled);
     if(c.type==='draft-stop')return c.pawnIds.every(id=>w.pawns.find(p=>p.id===id)?.draft?.target===null);
     if(c.type==='draft-move')return c.pawnIds.every(id=>{const d=w.pawns.find(p=>p.id===id)?.draft;return c.queue?!!d?.queue.length:!!d?.target;});

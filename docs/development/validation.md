@@ -1,4 +1,6 @@
-# Validation courante — V75
+# Validation courante — V77
+
+V77 : [anatomie animale, tirs, fuite, reprise et charge](../history/validation-animal-combat-v77.md). Les mêmes contrats médicaux restent actifs chez les humains ; chasse automatique et filière de viande non livrées.
 
 Après V76 : amélioration de cadence, sans gameplay supplémentaire. Le contrôle court textile utilise le pilote UI commun ; typage/docs et parcours 1×/6× réussis en 42,1 s. [Méthode et portée](testing.md#procédure-courante-de-livraison), [preuve](../../artifacts/textile-ui-workflow-v76.json).
 

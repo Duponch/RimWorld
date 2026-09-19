@@ -1,3 +1,5 @@
+import { damageAnimalWithBullet } from './wildlife-health.ts';
+import { animalImpactNoise } from './wildlife-noise.ts';
 import { damageBarrier,isBarrier } from './barriers.ts';
 import { disturbanceEvents,isLying } from './disturbance.ts';
 import { advanceBulletFlight,type BulletFlight } from './bullet-flight.ts';
@@ -43,10 +45,17 @@ export function advanceWorldProjectiles(world:World,beforeCore?:(core:number)=>b
     p.flight=next.flight;p.advancedAtCore=core;world.rng=randomState.rng;
     const a=next.arrival;if(!a)continue;
     const pawn=a.targetKey?.startsWith('pawn:')?world.pawns.find(pawn=>`pawn:${pawn.id}`===a.targetKey):undefined;
+    const animal=a.targetKey?.startsWith('animal:')?world.wildlife?.animals.find(a=>`animal:${a.id}`===next.arrival?.targetKey):undefined;
     const barrier=a.targetKey?.startsWith('structure:')?world.structures.find(s=>`structure:${s.id}`===a.targetKey&&isBarrier(s)):undefined;
-    p.arrival={...a,effect:a.kind==='exit'?'exit':pawn?'pawn':barrier?'barrier':a.targetKey?'unsupported-object':'ground'};
+    p.arrival={...a,effect:a.kind==='exit'?'exit':pawn?'pawn':animal?'animal':barrier?'barrier':a.targetKey?'unsupported-object':'ground'};
     const wasLying=!!pawn&&isLying(pawn);
     if(a.kind!=='exit'&&disturbance.impact({x:Math.floor(a.point.x),z:Math.floor(a.point.z)},core)){targets=undefined;scenes.clear();afterImpact?.();}
+    if(a.kind!=='exit'&&animalImpactNoise(world,{x:Math.floor(a.point.x),z:Math.floor(a.point.z)},p.flight.launcherKey,core)){targets=undefined;scenes.clear();afterImpact?.();}
+    if(animal){
+      const launcher=world.pawns.find(pawn=>`pawn:${pawn.id}`===p.flight.launcherKey);
+      damageAnimalWithBullet(world,animal,{damage:revolverProfile(p.quality).damage},core,launcher);
+      targets=undefined;scenes.clear();afterImpact?.();
+    }
     if(barrier){
       const structures=world.structures;damageBarrier(world,barrier,revolverProfile(p.quality).damage);
       if(world.structures!==structures)batch=undefined;targets=undefined;scenes.clear();afterImpact?.();

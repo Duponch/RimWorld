@@ -1,5 +1,7 @@
 # Socle anatomique sous V43
 
+V77 ajoute le modèle quadrupède du lièvre dans `body-model.ts` et le contexte d’espèce au noyau des lésions/capacités. Les 64 parties humaines et leur comportement restent distincts des 28 parties animales. [Contrat actif](animal-combat.md).
+
 **Actif en V45.** Le socle initial V43 décrivait anatomie et capacités sans gameplay médical. Le [module des lésions](injuries.md) et la [santé intégrée V45](health.md) possèdent désormais les dossiers de Pawn, leurs transitions et consommateurs. [Recherche anatomique](../research/body-reference.md).
 
 ## Frontière du modèle

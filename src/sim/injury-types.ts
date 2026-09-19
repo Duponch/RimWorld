@@ -13,6 +13,8 @@ export interface Injury {
 }
 export interface MissingPart {part:BodyPartId;bornAt:number;tended?:true}
 export interface MedicalRecord {
+  /** Absent is the historical human profile. Animal ownership is validated. */
+  body?:'hare';
   tick:number; nextInjuryId:number;
   injuries:Injury[]; missing:MissingPart[];
   /** BLOOD_UNIT = all blood lost; integral, not a percent. */
@@ -20,7 +22,7 @@ export interface MedicalRecord {
   /** Whole-body heat exposure, billionths of severity; absent means none. */
   heatstroke?:number;
   hypothermia?:number;
-  death?:{tick:number;cause:'blood-loss'|'vital-failure'|'trauma'|'heatstroke'|'hypothermia'};
+  death?:{tick:number;cause:'blood-loss'|'vital-failure'|'trauma'|'heatstroke'|'hypothermia'|'downed'};
 }
 export interface MedicalContext {
   /** Stable phase in [0,59], supplied by the owning actor. */

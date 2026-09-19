@@ -9,6 +9,7 @@ import { constructionSiteFree } from '../src/sim/construction-rules';
 import { newDoorState } from '../src/sim/door-rules';
 import { updateDoors } from '../src/sim/doors';
 import { MotionRecorder } from '../src/bridge/motion-tracks';
+import { SCHEMA_VERSION } from '../src/sim/types';
 import type { World } from '../src/sim/types';
 
 function fixture(){const w=createWorld(42,16,16);w.resources=[];w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.structures=[];w.jobs=[];w.piles=[];refreshStock(w);w.resources.push({id:w.nextId++,kind:'berries',x:3,z:3,amount:10,growth:1,growthTick:0});enableWildlife(w,1);const a=w.wildlife!.animals[0]!;a.x=1;a.z=1;a.food=.02;a.rest=1;return w;}
@@ -67,7 +68,7 @@ test('shared food reservations, source removal and sleep have physical, persiste
 
 test('strict V75 migration, rejected corrupted identities/tasks/edges and ordinary camp activation',()=>{
   const w=createWorld(93,64,64),old=structuredClone(w) as unknown as {schemaVersion:number};old.schemaVersion=75;
-  const migrated=deserializeWorld(JSON.stringify(old));expect(migrated.wildlife).toBeUndefined();expect(migrated.schemaVersion).toBe(76);
+  const migrated=deserializeWorld(JSON.stringify(old));expect(migrated.wildlife).toBeUndefined();expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);
   expect(applyCommand(migrated,{type:'enable-wildlife'}).ok).toBe(true);const count=migrated.wildlife!.animals.length;expect(count).toBeGreaterThan(0);const before=serializeWorld(migrated);applyCommand(migrated,{type:'enable-wildlife'});expect(serializeWorld(migrated)).toBe(before);
   const legacy=structuredClone(migrated) as unknown as {schemaVersion:number};legacy.schemaVersion=75;expect(()=>deserializeWorld(JSON.stringify(legacy))).toThrow('Invalid version 75');
   for(const mutate of [(w:World)=>{w.wildlife!.animals[0]!.id=w.pawns[0]!.id;},(w:World)=>{w.wildlife!.animals[0]!.food=1;},(w:World)=>{w.wildlife!.animals[0]!.meal={id:999999,kind:'plant',quantity:1,progress:5};},(w:World)=>{w.wildlife!.animals[0]!.path=[{x:60,z:60}];}]){const bad=structuredClone(migrated);mutate(bad);expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();}
