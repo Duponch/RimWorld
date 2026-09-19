@@ -1,0 +1,168 @@
+{
+  "date": "2026-09-19T16:20:51.861Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "protocol": "Heatwave plateau 17°C offset, tick 4000–4650; half shirt-wearing actors start at 34% heatstroke, other half tribalwear; Native Chromium WebGPU; natural 250², physical apparel on 3/30/100 actors. One third research at physical benches; others gather/craft tribalwear or mine/chop. Real worker at requested 6× for 650 ticks, 90 warmup frames, one run each; no full World export during timing. Worker samples are published batch step averages, not an independent per-tick percentile.",
+  "heatwave": true,
+  "rows": [
+    {
+      "actors": 3,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "description": ""
+      },
+      "elapsedMs": 11405.175599999999,
+      "simulatedTicks": 668,
+      "completed": 0,
+      "research": 1169600,
+      "exposed": 2,
+      "frameMs": {
+        "n": 1328,
+        "p50": 8.299999999999272,
+        "p95": 20.700000000000728,
+        "p99": 29.299999999999272,
+        "max": 50.100000000000364
+      },
+      "frameCpuMs": {
+        "n": 1329,
+        "p50": 5.200000002980232,
+        "p95": 14.300000000745058,
+        "p99": 23.399999998509884,
+        "max": 41.30000000074506
+      },
+      "workerBatchStepMs": {
+        "n": 507,
+        "p50": 1.699999999254942,
+        "p95": 4.300000000745058,
+        "p99": 7.900000002235174,
+        "max": 39.69999999925494
+      },
+      "snapshotAdoptionMs": {
+        "n": 507,
+        "p50": 0,
+        "p95": 1.1000000014901161,
+        "p99": 14,
+        "max": 21.199999999254942
+      },
+      "drawCalls": {
+        "n": 1329,
+        "p50": 168,
+        "p95": 171,
+        "p99": 172,
+        "max": 173
+      },
+      "pipelines": [],
+      "stable": true,
+      "errors": [],
+      "invalid": []
+    },
+    {
+      "actors": 30,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "description": ""
+      },
+      "elapsedMs": 11695.542500000003,
+      "simulatedTicks": 673,
+      "completed": 0,
+      "research": 15549832,
+      "exposed": 15,
+      "frameMs": {
+        "n": 956,
+        "p50": 8.400000000000546,
+        "p95": 29.200000000000728,
+        "p99": 45.899999999999636,
+        "max": 58.5
+      },
+      "frameCpuMs": {
+        "n": 957,
+        "p50": 6,
+        "p95": 21.899999998509884,
+        "p99": 29.599999997764826,
+        "max": 43.30000000074506
+      },
+      "workerBatchStepMs": {
+        "n": 554,
+        "p50": 3.099999999627471,
+        "p95": 12.800000000745058,
+        "p99": 21.699999999254942,
+        "max": 51
+      },
+      "snapshotAdoptionMs": {
+        "n": 554,
+        "p50": 0,
+        "p95": 4.100000001490116,
+        "p99": 14.5,
+        "max": 18.299999997019768
+      },
+      "drawCalls": {
+        "n": 957,
+        "p50": 180,
+        "p95": 183,
+        "p99": 183,
+        "max": 184
+      },
+      "pipelines": [],
+      "stable": true,
+      "errors": [],
+      "invalid": []
+    },
+    {
+      "actors": 100,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "description": ""
+      },
+      "elapsedMs": 12890.4142,
+      "simulatedTicks": 672,
+      "completed": 0,
+      "research": 52740188,
+      "exposed": 50,
+      "frameMs": {
+        "n": 822,
+        "p50": 12.5,
+        "p95": 41.600000000000364,
+        "p99": 54.100000000000364,
+        "max": 58.399999999999636
+      },
+      "frameCpuMs": {
+        "n": 823,
+        "p50": 6,
+        "p95": 25.900000002235174,
+        "p99": 32.69999999925494,
+        "max": 41.80000000074506
+      },
+      "workerBatchStepMs": {
+        "n": 482,
+        "p50": 10.650000000372529,
+        "p95": 31.91428571407284,
+        "p99": 37.09999999962747,
+        "max": 70.19999999925494
+      },
+      "snapshotAdoptionMs": {
+        "n": 482,
+        "p50": 0,
+        "p95": 11.399999998509884,
+        "p99": 15.300000000745058,
+        "max": 20.600000001490116
+      },
+      "drawCalls": {
+        "n": 823,
+        "p50": 190,
+        "p95": 193,
+        "p99": 193,
+        "max": 194
+      },
+      "pipelines": [],
+      "stable": true,
+      "errors": [],
+      "invalid": []
+    }
+  ]
+}

@@ -53,6 +53,7 @@ export function queryPawnStatus(world: World, pawn: Pawn): { code: string; reaso
     const task=pawn.recreation.task, activity=task.activity==='horseshoes'?'jouer aux fers à cheval':'observer le ciel';
     return {code:'recreation',reason:task.phase==='travel'?`Rejoint une place pour ${activity}.`:`Prend le temps de ${activity} (${Math.round(pawn.recreation.level)} %).`};
   }
+  if(pawn.heatRefuge)return {code:'thermal-refuge',reason:pawn.state==='moving'?'Rejoint un refuge contre la chaleur.':'Attend au frais pour récupérer du coup de chaleur.'};
   if(pawn.research)return {code:'research',reason:pawn.state==='working'?'Recherche Vêtements complexes au bureau.':'Rejoint son bureau de recherche.'};
   if(pawn.cooking) {
     const task=pawn.cooking,recipe=PRODUCTION_RECIPES[taskRecipe(task)];

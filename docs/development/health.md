@@ -1,12 +1,14 @@
 # Santé active V45
 
+V74 ajoute le [coup de chaleur](heatwave.md), distinct des lésions anatomiques : exposition, effets sur capacités, refuge, incapacité/mort et récupération au frais. La recherche active est explicitement incluse dans les tâches interdites après incapacité. Combat présent depuis V56–V68 ; les mentions de lots antérieurs ci-dessous décrivent leur portée historique.
+
 16 septembre 2026. [Recherche recoupée](../research/health-reference.md), [anatomie](body.md), [lésions](injuries.md), [validation](validation.md). Corpus : chapitre 15, SYS/TEST-089..091, 094, 096..097 ; chapitres 5/21 pour les toits. Le socle médical est maintenant intégré ; secours et soins sont ajoutés par V46–V51, dont les [médicaments](medicines.md) ; combat, maladies et chirurgie restent ouverts.
 
 ## Propriété et transitions
 
 V54 ajoute un [producteur d'impact Bullet](bullet-impact.md), avec Gunshot versionné et résolution sur copie avant engagement. Il est exercé par les scénarios et la clinique UI, sans déclenchement par une commande de tir pour l'instant. Les accidents de toiture gardent leur producteur et leur règle de dommage distincts.
 
-`Pawn.health?` possède un dossier sparse, absent chez un colon jamais blessé. L'arbre naturel adulte est partagé et immuable. `health.ts` fait avancer le dossier sur l'horloge du monde, avec le PRNG sauvegardé et une phase par identité. Les capacités sont dérivées par `health-rules.ts`, sans sauvegarder un deuxième état anatomique ni calculer un squelette à chaque image. Le rendu ne modifie pas le dossier. Les placeholders gardent encore leur silhouette entière malgré une partie perdue ; amputations et accessoires visuels sont une limite de présentation connue.
+`Pawn.health?` possède un dossier sparse, absent chez un colon sans antécédent médical (blessure ou exposition thermique). L'arbre naturel adulte est partagé et immuable. `health.ts` fait avancer le dossier sur l'horloge du monde, avec le PRNG sauvegardé et une phase par identité. Les capacités sont dérivées par `health-rules.ts`, sans sauvegarder un deuxième état anatomique ni calculer un squelette à chaque image. Le rendu ne modifie pas le dossier. Les placeholders gardent encore leur silhouette entière malgré une partie perdue ; amputations et accessoires visuels sont une limite de présentation connue.
 
 Une incapacité interrompt immédiatement travail, ingestion, loisirs, priorité maintenue et file d'ordres. Leurs réservations sont libérées. Les objets restent conservés par le [contrat des cargaisons interrompues](interrupted-cargo.md), y compris si tout le sol proche est occupé. Une réaffectation de lit ou une libération de tâche ne remet pas un blessé debout. Manipulation nulle interdit aussi le travail, sans empêcher par principe les besoins autonomes encore possibles.
 

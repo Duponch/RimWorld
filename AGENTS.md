@@ -1,5 +1,8 @@
 # Travail sur Lisière
 
+## Canicule V74
+- Lire `docs/development/heatwave.md` et `docs/research/heatwave-reference.md`. Offset partagé, calendrier privé, isolation distincte de l’armure ; exposition entière tous les six ticks locaux, seuils stricts et intervalle neutre. V73 strictement validée avant migration sans chaleur/calendrier inventés. Refuges physiques et cargaisons conservées ; ordres/crises/combat prioritaires. Froid, saisons, dangers complets des lits et narrateur restent partiels/absents. Audits mixtes via `HEATWAVE=1` dans les bancs recherche ; mesures et longs pilotes successifs.
+
 ## Recherche V73
 - Lire `docs/development/research.md` et `docs/research/research-reference.md`. Projet collectif en micro-points, bureau et service exclusifs, Intellect sur travail réel ; suspendre conserve l’acquis. V72 validée strictement avant priorité Recherche 3 sans compétence/projet inventés.
 - Tailleur/chemise ne sont disponibles qu’après le projet ; tenue tribale initiale. Confection commune, chemise 45 tissus/270 ticks neutres, inachevés par recette. Bureau 3×2 et tailleur 3×1 dans les lots résidents. Coefficients et scénario initial explicitement documentés ; ne pas généraliser un projet à un arbre complet. La faim ne doit pas interrompre en boucle le combustible d’une facture culinaire.
@@ -89,7 +92,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 73 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 74 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)

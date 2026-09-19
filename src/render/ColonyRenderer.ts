@@ -1,4 +1,4 @@
-import { isCrop } from '../sim/plants';
+import { NaturalResourcePresentation } from './NaturalResourcePresentation';
 import { ProjectileLayer } from './ProjectileLayer';
 import { EnvironmentLighting } from './EnvironmentLighting';
 import { PresentationQueue } from './PresentationQueue';
@@ -102,7 +102,7 @@ export class ColonyRenderer {
   private readonly boxes = new BoxBatches(this.environmentLighting.configure);
   private readonly recreationHints = new RecreationHints(this.boxes);
   private readonly resources = new ResourceLayer(this.resourceGroup, this.staticMaterial);
-  private naturalResources: World['resources'] = [];
+  private readonly naturalPresentation = new NaturalResourcePresentation();
   private readonly crops = new CropLayer(this.staticMaterial);
   private readonly growing = new GrowingZoneLayer(this.boxes);
   private readonly rocks = new RockLayer(this.staticMaterial);
@@ -252,8 +252,7 @@ export class ColonyRenderer {
       this.daylight.configureShadow(extent);
       this.resize();
     }
-    if (previousWorld?.resources !== world.resources || newMap) this.updateResources(world, newMap);
-    else if (Math.floor(previousWorld.tick / 25) !== Math.floor(world.tick / 25)) this.resources.updateGrowth(world);
+    if (previousWorld?.resources !== world.resources || newMap || Math.floor(previousWorld.tick / 25) !== Math.floor(world.tick / 25)) this.updateResources(world, newMap);
     const packageKey=(world.packed??[]).filter(p=>p.owner.type==='ground').map(p=>`${p.building.id}:${p.building.material}:${p.owner.type==='ground'?`${p.owner.x}:${p.owner.z}`:''}`).join('|');
     this.roofs.update(world,this.boxes,newMap);
     this.doors.update(world,this.wallCutaway,resetPoses);
@@ -409,13 +408,7 @@ export class ColonyRenderer {
   }
 
   private updateResources(world: World, newMap: boolean): void {
-    const natural = world.resources.filter(r => !isCrop(r));
-    if (!newMap && natural.length === this.naturalResources.length && natural.every((r, i) => {
-      const old = this.naturalResources[i]!;
-      return r === old || (r.id === old.id && r.kind === old.kind && r.x === old.x && r.z === old.z && r.amount === old.amount && r.growth === old.growth && r.growthTick === old.growthTick);
-    })) return;
-    this.naturalResources = natural;
-    const view = {...world, resources: natural};
+    const view=this.naturalPresentation.read(world,newMap);if(!view)return;
     this.resources.update(view, newMap); this.overview.update(view,newMap);
   }
 

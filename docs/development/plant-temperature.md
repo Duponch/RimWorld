@@ -1,5 +1,7 @@
 # Croissance et semis sous température locale — V39
 
+V74 inclut la canicule dans l’air extérieur et les échanges des pièces, donc dans ces facteurs ; le coton V71 utilise le même profil thermique. Pas de taux de chaleur indépendant des plantes et de la santé. La mortalité au gel reste absente.
+
 [Recherche renouvelée](../research/plant-temperature-reference.md), [agriculture](farming.md), [air local](temperature.md), [preuves](validation.md). Ce lot complète le riz et les buissons déjà présents, sans nouveau biome ni appareil thermique.
 
 ## Règles présentes

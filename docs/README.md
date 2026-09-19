@@ -1,6 +1,8 @@
 # Documentation de Lisière
 
-État courant : **V73, 19 septembre 2026**. [Recherche et tailleur](development/research.md) : projet collectif, Intellect, bureau physique, déblocage de l’atelier et chemise fabriquée/portée. L’étape proche 4 est livrée dans ce périmètre limité ; social, traits, accueil et raid restent jouables. [Inventaire consolidé](gameplay/implementation-status.md), [dernières preuves](history/validation-research-v73.md).
+État courant : **V74, 19 septembre 2026**. [Canicule et protection thermique](development/heatwave.md) : incident persistant, air réel, isolation portée, coup de chaleur, refuge et secours. Étape proche 5 engagée, saisons non livrées. [Dernières preuves](history/validation-heatwave-v74.md).
+
+V73 : [Recherche et tailleur](development/research.md) : projet collectif, Intellect, bureau physique, déblocage de l’atelier et chemise fabriquée/portée. L’étape proche 4 est livrée dans ce périmètre limité ; social, traits, accueil et raid restent jouables. [Inventaire consolidé](gameplay/implementation-status.md), [preuves V73](history/validation-research-v73.md).
 
 La [revue de progression](research/progression-review-2026-09-19.md) explique la réorientation vers des situations de colonie complètes. [ROADMAP](ROADMAP.md) conserve seule l’ordre des prochains travaux et les estimations. Mode jour, automatisation nocturne en pause.
 
@@ -42,6 +44,7 @@ Les bilans de versions sont dans les contrats et [l’index de validation](devel
 | Combat | [Tir](development/shooting.md), [mêlée](development/melee.md), [acquisition](development/automatic-combat.md), [approche](development/pursuit.md), [réveils](development/disturbance.md) | [Préparation et limites](research/combat-preparation.md), [rencontre](development/encounters.md) |
 | Santé et équipement | [Santé](development/health.md), [secours](development/rescue.md), [traitements](development/tending.md), [alimentation assistée](development/feeding.md), [médicaments](development/medicines.md), [équipement](development/equipment.md) | [Compétences](development/skills.md), [recherche santé](research/health-reference.md) |
 | Électricité | [Génération et lampes V42](development/power.md) | [Sources et limites](research/power-reference.md) |
+| Canicule et santé thermique | [Incident, isolation, refuge V74](development/heatwave.md) | [Sources et divergences](research/heatwave-reference.md) |
 | Refroidissement passif | [Construction, recharge et air V40](development/passive-cooling.md) | [Sources et limites](research/passive-cooling-reference.md) |
 | Température et conservation | [Air local et âges V38](development/temperature.md), [conservation](development/food-preservation.md) | [Vérifications Core](research/temperature-reference.md) |
 | Lumière, travail et marche | [Travaux/marche V37](development/light-work.md), [ateliers V36](development/work-environment.md), [rendu 3D](development/environment-lighting.md) | [Travaux et marche Core](research/light-work-reference.md), [ateliers Core](research/work-environment-reference.md), [interprétation visuelle](research/environment-lighting-reference.md) |

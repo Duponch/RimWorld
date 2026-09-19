@@ -1,5 +1,7 @@
 # Adoption du référentiel utilisateur
 
+V74 — chapitres 7/14/15/22/24 relus ; SYS/TEST-091,096,126,128,131 : adopter conséquences médicales et température commune, adapter calendrier et recherche spatiale de refuge, différer autres climats. La provenance Odyssey de 131 ne certifie pas Core ; [nouvelle confrontation datée](heatwave-reference.md) documente seuils, qualité, durée, secours et limites.
+
 V73 — chapitre 11 relu, SYS/TEST-062..066 et 068 : adopter travail, objet inachevé et recherche collective avec vrai déblocage ; adapter horloge, scénario initial et présentation 3D ; différer 067/069, arbre/catalogues complets et postes avancés. Les coûts du bureau/tailleur, 600 points, Intellect et 45 tissus de la chemise ont été confrontés aux [sources nouvelles et limites de versions](research-reference.md). Aucune famille entière n’est déclarée complète.
 
 V72 — chapitre 11, SYS/TEST-062..066 : adopter matières physiques, facture, ouvrage/auteur et qualité ; adapter horloge/stockage/rig ; différer recherche et catalogue étendu. [Confrontation fraîche](tailoring-reference.md), [contrat](../development/tailoring.md). La mention d’inachevés différés dans les décisions historiques V10/V32 reste liée à ces recettes sans inachevé.

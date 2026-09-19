@@ -10,6 +10,7 @@ export interface BodyAssessmentInput {
    * before its rounding and before capacities that consume consciousness. */
   readonly consciousnessOffset?:number;
   readonly consciousnessMax?:number;
+  readonly movingOffset?:number;
 }
 export interface BodyCapacities {
   readonly consciousness:number; readonly moving:number; readonly manipulation:number;
@@ -73,7 +74,7 @@ function calculate(input:BodyAssessmentInput):BodyAssessment {
     const leg=part(`${side}-leg`)*part(`${side}-femur`)*part(`${side}-tibia`)*part(`${side}-foot`)*(.6+.4*toes);
     legs+=leg;if(leg>0)functionalLegs++;
   }
-  const moving=canBeAwake&&functionalLegs>=1?round(legs/2*part('pelvis')*part('spine')*(.8+.2*breathing)*(.8+.2*bloodPumping)*Math.min(1,consciousness)):0;
+  const moving=canBeAwake&&functionalLegs>=1?round(legs/2*part('pelvis')*part('spine')*(.8+.2*breathing)*(.8+.2*bloodPumping)*Math.min(1,consciousness)+(input.movingOffset??0)):0;
   const capacities=Object.freeze({consciousness,moving,manipulation:canBeAwake?round(arms/2*consciousness):0,
     sight:round(bestPair('left-eye','right-eye')),hearing:round(bestPair('left-ear','right-ear')),
     talking:canBeAwake?round(part('jaw')*part('neck')*part('tongue')*consciousness):0,
@@ -86,5 +87,5 @@ export const HEALTHY_BODY:BodyAssessment=calculate(HEALTHY_BODY_INPUT);
 /** Caller supplies a current health projection. No cache keyed solely by pawn ID
  * or tick: in-place injury changes must be visible within the same tick. */
 export function assessBody(input:BodyAssessmentInput=HEALTHY_BODY_INPUT):BodyAssessment {
-  return input.damage.length===0&&input.missing.length===0&&input.pain===0&&!input.consciousnessOffset&&(input.consciousnessMax??1)>=1?HEALTHY_BODY:calculate(input);
+  return input.damage.length===0&&input.missing.length===0&&input.pain===0&&!input.movingOffset&&!input.consciousnessOffset&&(input.consciousnessMax??1)>=1?HEALTHY_BODY:calculate(input);
 }

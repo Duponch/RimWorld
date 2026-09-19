@@ -1,3 +1,4 @@
+import { apparelInsulation } from '../sim/heat-rules';
 import { wornApparel,apparelLabel,apparelDefinition,armorPiece } from '../sim/apparel-rules';
 import { isColonist } from '../sim/affiliation';
 import { equipmentProjection,equipmentDescription } from '../render/character-equipment';
@@ -24,8 +25,8 @@ export function updateEquipmentInspection(parent:HTMLElement,world:World,pawn:Pa
   if(clothing.dataset.signature!==signature){
     clothing.dataset.signature=signature;clothing.replaceChildren();
     if(!pieces.length)clothing.textContent='Aucun vêtement équipé';
-    for(const piece of pieces){const row=document.createElement('p'),button=document.createElement('button'),ratings=armorPiece(piece).ratings;
-      row.textContent=`${apparelLabel(piece)} · ${piece.apparel!.hitPoints}/${apparelDefinition(piece).hitPoints} PV · tranchant ${Math.round(ratings.sharp*100)} %, contondant ${Math.round(ratings.blunt*100)} % `;
+    for(const piece of pieces){const insulation=apparelInsulation(piece),row=document.createElement('p'),button=document.createElement('button'),ratings=armorPiece(piece).ratings;
+      row.textContent=`${apparelLabel(piece)} · ${piece.apparel!.hitPoints}/${apparelDefinition(piece).hitPoints} PV · tranchant ${Math.round(ratings.sharp*100)} %, contondant ${Math.round(ratings.blunt*100)} % · froid −${insulation.cold.toFixed(1)} °C, chaleur +${insulation.heat.toFixed(1)} °C `;
       button.textContent='Retirer';button.dataset.removeApparel=String(piece.id);button.disabled=pawn.state==='dead'||pawn.state==='downed';button.hidden=!isColonist(pawn);row.append(button);clothing.append(row);
     }
   }

@@ -1,8 +1,8 @@
 # Plan de développement
 
-État : **19 septembre 2026, après V73**. ROADMAP est l’unique calendrier G0–G5. G0 en consolidation, G1/G2/G3 partiels, G4 engagé par l’accueil, G5 absent ; aucun jalon complet. Les numéros de schéma ne mesurent pas l’avancement du jeu. [Inventaire réel](gameplay/implementation-status.md), [preuves](development/validation.md), [index](README.md).
+État : **19 septembre 2026, après V74**. ROADMAP est l’unique calendrier G0–G5. G0 en consolidation, G1/G2/G3 partiels, G4 engagé par l’accueil, G5 absent ; aucun jalon complet. Les numéros de schéma ne mesurent pas l’avancement du jeu. [Inventaire réel](gameplay/implementation-status.md), [preuves](development/validation.md), [index](README.md).
 
-Dernière fonctionnalité publiée : [recherche et tailleur V73](development/research.md), projet collectif puis chemise confectionnée et portée dans le camp. L’étape proche 4 est satisfaite par cette boucle, sans terminer l’arbre technologique ni le catalogue. [Preuves](history/validation-research-v73.md). Accueil, menace et première différenciation des personnes restent livrés dans leurs périmètres annoncés.
+Dernière fonctionnalité publiée : [canicule V74](development/heatwave.md), protection vestimentaire et refuge refroidi face à une exposition réelle. [Preuves](history/validation-heatwave-v74.md). La recherche et le tailleur V73 donnent toujours un projet collectif puis une chemise confectionnée et portée dans le camp. L’étape proche 4 est satisfaite par cette boucle, sans terminer l’arbre technologique ni le catalogue. [Preuves](history/validation-research-v73.md). Accueil, menace et première différenciation des personnes restent livrés dans leurs périmètres annoncés.
 
 ## Priorité actuelle
 
@@ -10,7 +10,9 @@ Dernière fonctionnalité publiée : [recherche et tailleur V73](development/res
 
 La [revue de progression du 19 septembre](research/progression-review-2026-09-19.md) remplace l’ordre « terminer pensées/traits/relations, puis ouvrir les incidents ». Les interactions physiques, cas limites, migrations et budgets restent exigés. Nous avançons maintenant par changements vécus dans la colonie, en traversant G1–G4 selon leurs dépendances. Les jalons sont des domaines de couverture, pas des portes obligeant à finir tout G3 avant G4.
 
-**Prochaine livraison visée : première pression environnementale de l’étape 5.** Rechercher et cadrer une variation saisonnière du site et la réponse physique du camp, en traitant ensemble croissance, réserves et effets thermiques indispensables. Décision attendue : anticiper les jours défavorables au lieu de produire toujours dans un été stable. Vérifier les seuils de croissance/mortalité et besoins de protection avant introduction ; ne pas livrer un froid seulement cosmétique ni dérouler toutes les météos et infrastructures électriques. Critère du prochain lot à fixer après confrontation des règles, avec une conséquence et un moyen d’action obtenable. Le générateur et le refroidisseur passif existants restent réutilisables ; la réfrigération électrique n’est pas automatiquement le premier chantier.
+**Première tranche de l’étape 5 livrée : canicule V74.** Le cadrage a retenu une chaleur temporaire, avec tenue tribale et refuge passif déjà obtenables, plutôt qu’un hiver incomplet. Calendrier, température, croissance et santé ont des conséquences réelles ; le camp traverse l’événement par commandes et secours. L’étape 5 reste ouverte.
+
+**Prochain lot visé : première conservation au froid obtenable.** Rechercher le climatiseur électrique Core, sa face froide/chaude, température cible, demande électrique et réponse aux coupures. Décision nouvelle : investir bois/acier/composants et énergie pour protéger des provisions périssables. Réutiliser générateur, air local et âges existants ; ne pas terminer câbles, batteries ou tous les appareils avant cette boucle. Critère d’arrêt : un petit garde-manger construit, alimenté puis privé d’énergie conserve/reprend réellement les âges, avec chaleur rejetée, perte de nourriture possible et reprise exacte. Coûts/recherche/placement à vérifier avant code. Saisons et froid corporel viendront avec mortalité végétale, protection et chauffage ; aucune saison seulement cosmétique.
 
 | Ordre de priorité | Résultat que le joueur doit pouvoir constater | Limite de périmètre |
 |---|---|---|
@@ -18,7 +20,7 @@ La [revue de progression du 19 septembre](research/progression-review-2026-09-19
 | 2 — Menace et conséquences dans le camp, première boucle V68 livrée (G2/G3/G4) | Alerte en cours de partie, préparation/défense, issue de la menace, blessés soignés et reprise ou perte réelle. | Examiner camp fermé, dégâts/réparation nécessaires et gestion des victimes ; découper en livraisons visibles si nécessaire. Ni ennemi figé à une porte ni disparition sans conséquence. Pas toutes les factions/stratégies ni un narrateur complet. |
 | 3 — Personnes distinctes : première tranche V69/V70 livrée (G1/G3) | Des différences de caractère et premières interactions/opinions changent les affectations ou l’humeur, avec causes inspectables. | Petit ensemble de traits/interactions Core réellement actifs ; ne pas enchaîner tout le catalogue de psychologie avant la progression matérielle. |
 | 4 — Premier objectif de production, tranche V71–V73 livrée (G1/G4) | Une filière obtenable permet de fabriquer un équipement utile ; première recherche reliée à un vrai déblocage admissible. | Vérifier les déblocages d’origine : ne pas inventer de recherche pour une recette de départ. Matière → atelier → travail → produit → usage, sans terminer l’arbre technologique ni tous les ateliers. |
-| 5 — Pressions environnementales (G2) | Les conditions du site obligent à prévoir aliments, protection ou réserve ; climat et risques ont des effets réels. | Saisons/météo, risques et chaîne du froid selon dépendances. L’électricité utile revient avec son besoin concret ; interrupteurs/conduits ne deviennent pas un préalable à toute la colonie. |
+| 5 — Pressions environnementales : première canicule V74 livrée (G2) | Les conditions du site obligent à prévoir aliments, protection ou réserve ; climat et risques ont des effets réels. | Saisons/météo, risques et chaîne du froid selon dépendances. L’électricité utile revient avec son besoin concret ; interrupteurs/conduits ne deviennent pas un préalable à toute la colonie. |
 
 Les animaux, la chasse, le commerce, les prisonniers, les nombreuses familles de contenu, le monde et les objectifs longs restent dans G1–G5 et l’inventaire. Cet ordre proche n’est pas une suppression de ces systèmes. Après les trois premières livraisons cohérentes, réexaminer la progression visible et l’ordre suivant ; les lignes ci-dessus ne sont pas une promesse d’un commit chacune.
 
@@ -88,6 +90,8 @@ La scène D du corpus guide les transferts : une personne ou pile garde son iden
 
 ## Chantiers transversaux
 
+Audit V74 : les ancres de croissance thermique n’invalident plus les lots forestiers sans changement visible. À 100 acteurs sous canicule, image p95 41,6→33,3 ms ; pics jusqu’à 66,6 ms sur le cas 30 acteurs. Poursuivre snapshots/scène/végétation, sans garantie 6×. [Mesures et limites](history/validation-heatwave-v74.md).
+
 Audit V66 : cinq compilations GPU à l’arrivée supprimées en conservant les lots de personnages. Croissance 3→4/30→31/100→101 vérifiée ; les pointes à cent acteurs restent ouvertes (CPU p95 40,28 ms, image p95 20,80 / max 125 ms). Maintenir l’audit de captures/scène/rendu avec les futures menaces ; aucun budget 6× global validé. Les exports de diagnostic du banc sont désormais hors mesure. [Preuves](history/validation-arrivals-v66.md).
 
 Audit V48 : à cent acteurs en clinique, les pointes d’image restent observables pour alimentation et traitements déjà présents. Suivre séparément coût des transferts/scène/HUD et rendu lors du prochain audit mixte ; zéro compilation GPU ne suffit pas à prouver l’absence de saccades. [Mesures et limites V48](history/validation-feeding-v48.md).
@@ -106,7 +110,7 @@ Objectif d'une partie, tonalité fictionnelle, contraintes de verticalité, tail
 
 ## Estimation de charge — 18 septembre 2026
 
-Descriptions factuelles corrigées le 19 septembre après V73 ; fourchettes de charge conservées comme hypothèses historiques, sans nouvelle mesure de vélocité ni date de fin réengagée. La revue stratégique ne transforme pas ces pourcentages en mesures objectives.
+Descriptions factuelles corrigées le 19 septembre après V74 ; fourchettes de charge conservées comme hypothèses historiques, sans nouvelle mesure de vélocité ni date de fin réengagée. La revue stratégique ne transforme pas ces pourcentages en mesures objectives.
 
 **Environ 20 % du travail total, fourchette 15–25 %**, pour une reproduction substantielle du jeu de base en 3D, avec contenu, intégration, corrections et finition. C'est un jugement de planification du co-lead, pas une mesure objective, un pourcentage de code, de fidélité certifiée ou d'objets disponibles. Les domaines ont des poids différents et partagent des dépendances : ne pas faire la moyenne des lignes ci-dessous. La borne basse reste plausible tant que combat et narration ne produisent pas de partie complète. G0–G3 partiels, G4 engagé par accueil et raid, G5 absent ; aucun jalon clos.
 
@@ -115,13 +119,13 @@ Descriptions factuelles corrigées le 19 septembre après V73 ; fourchettes de c
 | Socle simulation, navigation, persistance et commandes | 60–70 % | Contrats et migrations actifs ; profils hostiles, multi-cartes, journal complet et comportement sous charge à poursuivre. Navigation GPU encore expérimentale. |
 | Survie quotidienne, besoins et travail | 50–65 % | Boucles physiques utilisables ; variété alimentaire/agricole, métiers, interruptions et besoins à compléter. |
 | Construction, logistique et habitat | 40–55 % | Matériaux, plans/cadres, transport, pièces/toits, lumière/température présents ; catalogue, réparations hors murs/portes, sols, risques et électricité complète manquants. |
-| Génération, végétation, biomes et climat | 20–35 % | Site local déterministe et premières filières ; nombreuses espèces, biomes, saisons, météo et toits naturels absents. |
+| Génération, végétation, biomes et climat | 20–35 % | Site local déterministe et premières filières ; canicule et exposition V74 ; nombreuses espèces, biomes, saisons, autres météos et toits naturels absents. |
 | Anatomie, santé et soins | 35–50 % | Blessures/capacités/secours/soins intégrés ; maladies, infections, immunité, chirurgie, prothèses et dépouilles restent importantes. |
-| Compétences, traits et identité | 15–25 % | Construction, Médecine, Tir et Mêlée actifs ; six traits actifs V69 ; huit autres compétences, biographies, autres traits et effets croisés absents. |
-| Équipement, vêtements et inventaire | 10–20 % | Revolver, chemise et gilet physiques avec protection ; inventaire personnel, autres équipements, tenues automatiques, confection textile, masse et grand catalogue absents. |
+| Compétences, traits et identité | 15–25 % | Construction, Médecine, Tir et Mêlée actifs ; six traits actifs V69 ; Artisanat, Social et Intellect également actifs ; autres compétences, biographies, traits et effets croisés restent partiels/absents. |
+| Équipement, vêtements et inventaire | 10–20 % | Revolver, chemise et gilet physiques avec protection ; inventaire personnel, autres équipements, tenues automatiques, masse et grand catalogue absents. Tenue tribale et chemise fabricables V72/V73, isolation active V74. |
 | Combat | 5–15 % | Tir, santé, pouvoir d’arrêt et sentinelle de scénario désormais jouables ; Fuir/Attaquer/Ignorer et collisions intégrés. Mêlée V59, tir automatique/Attaquer V60 et approche ennemie visible V61 livrés ; protection corporelle V63 et réveils V62 présents ; murs/portes destructibles V67 et raid ordinaire V68 ; tactique collective complète et dépouilles transportables absentes. |
 | Humeur et relations | 5–10 % | Humeur causale, premières pensées/mémoires, errance triste, six traits et deux échanges/opinions V70 ; autres crises, attentes variables, romance/parenté/deuil et psychologie complète absents. Estimation large inchangée pour cette tranche limitée. |
-| Production, recherche et contenu | 10–20 % | Deux filières de production ; ateliers, nombreuses recettes, économie matérielle et recherche absents. Ce n'est pas un ratio d'objets : aucun catalogue exhaustif vérifié. |
+| Production, recherche et contenu | 10–20 % | Repas, blocs et filière coton→vêtement ; recherche Vêtements complexes au poste V73. Nombreux ateliers/recettes et arbre complet absents. Ce n'est pas un ratio d'objets : aucun catalogue exhaustif vérifié. |
 | Animaux et élevage | 0–5 % | Aucun animal jouable ; le socle spatial/médical est réutilisable, ses règles animales ne sont pas développées. |
 | Narration, factions, commerce, monde et objectifs | 0–5 % | Accueil V66 et raid limité V68 ; narrateur complet, diplomatie, marché, planète, caravane ou fin de partie absents. |
 | Rendu, interface, audio et finition | 30–45 % | Scène 3D GPU, caméras, UI du camp et FPS présents ; tenue partagée carte/portrait V63 ; assets définitifs, portraits finaux, effets, audio, accessibilité et UI des systèmes absents restent à réaliser. |

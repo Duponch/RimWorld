@@ -100,7 +100,7 @@ export function growingJobValid(world: World, job: Job, shared?:Context): boolea
 export function scheduleGrowing(world: World): void {
   // Discard stale sowing/preparation intents before a planner can accept one.
   // Accepted work keeps its own interruption contract, including queued orders.
-  if((!sowingTemperatureAllowed(outdoorTemperature(world.tick))||world.thermal?.regions.some(r=>!sowingTemperatureAllowed(r.temperature)))
+  if((!sowingTemperatureAllowed(outdoorTemperature(world))||world.thermal?.regions.some(r=>!sowingTemperatureAllowed(r.temperature)))
     &&world.jobs.some(j=>j.growingZoneId!==undefined&&j.reservedBy===null)) {
     const ctx=context(world);
     const allowed=(j:Job)=>j.growingZoneId===undefined||j.reservedBy!==null||growingJobValid(world,j,ctx);

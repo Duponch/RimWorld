@@ -21,7 +21,7 @@ export function updatePlantTemperatures(world:World,layout:ThermalLayout):void {
     binding={source:world.resources,layout,groups};bindings.set(world,binding);
   }
   for(const [region,group] of binding.groups) {
-    const factor=plantTemperatureFactor(region<0?outdoorTemperature(world.tick):world.thermal!.regions[region]!.temperature);
+    const factor=plantTemperatureFactor(region<0?outdoorTemperature(world):world.thermal!.regions[region]!.temperature);
     if(factor===group.factor)continue;
     for(const plant of group.plants)if((plant.growthThermalFactor??1)!==factor) {
       // Settle past light at its saved factor before adopting the next interval.

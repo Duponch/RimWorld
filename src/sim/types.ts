@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 73 as const;
+export const SCHEMA_VERSION = 74 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
@@ -64,6 +64,7 @@ export interface Job extends Cell {
   escrow: Stock;
 }
 export interface Pawn extends Cell {
+  heatRefuge?:import('./heat-refuge.ts').HeatRefuge;
   research?:import('./research.ts').ResearchTask;
   social?:import('./social-state.ts').SocialState;
   raid?:import('./raid-state.ts').RaiderState;
@@ -130,6 +131,7 @@ export interface Pawn extends Cell {
 }
 export interface WorldEvent { tick: number; type: 'job' | 'need' | 'command'; message: string }
 export interface World {
+  heatwaves?:import('./heatwave.ts').HeatwaveCalendar;
   research?:import('./research.ts').ResearchState;
   raids?:import('./raid-state.ts').RaidCalendar;
   home?:number[];
@@ -206,6 +208,7 @@ export type Command =
   | { type: 'assign-bed'; bedId: number; pawnId: number | null }
   | ({ type: 'cancel' } & Cell)
   | ({ type: 'stockpile'; enabled: boolean; filters?: StorageFilters; priority?: number; capacity?: number } & Cell)
+  | {type:'enable-heatwaves'}
   | {type:'research-project';project:'complex-clothing'|null}
   | { type: 'priority'; pawnId: number; work: WorkType; value: number };
 export type RefusalCode = 'invalid-command' | 'out-of-bounds' | 'occupied' | 'incompatible-resource' | 'missing-target' | 'invalid-priority' | 'invalid-storage';

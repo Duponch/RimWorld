@@ -3,6 +3,7 @@ import * as THREE from 'three/webgpu';
 import { BoxBatches } from '../src/render/BoxBatches';
 import { BoxMesh } from '../src/render/BoxMesh';
 import { ResourceLayer } from '../src/render/ResourceLayer';
+import { NaturalResourcePresentation } from '../src/render/NaturalResourcePresentation';
 import { OverviewLayer } from '../src/render/OverviewLayer';
 import { PawnLayer } from '../src/render/PawnLayer';
 import { startingPawn } from '../src/sim/starting-pawns';
@@ -10,6 +11,25 @@ import { DoorLayer } from '../src/render/DoorLayer';
 import { newDoorState } from '../src/sim/door-rules';
 import { clearGroup } from '../src/render/primitives';
 import { createWorld, addGroundMaterial, applyCommand, stepWorld, serializeWorld, deserializeWorld } from '../src/sim/index';
+
+test('thermal growth anchors do not invalidate forest geometry; ripening, depletion and stone identity still do',()=>{
+  const w=createWorld(42,32,32);w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.tick=2000;w.resources=[
+    {id:1,kind:'tree',x:4,z:4,amount:12},{id:2,kind:'berries',x:5,z:4,amount:10,growth:.64,growthTick:w.tick,growthThermalFactor:0},
+    {id:3,kind:'rock',x:6,z:4,amount:10,stone:'granite'},
+  ];
+  const state=new NaturalResourcePresentation(),group=new THREE.Group(),mat=new THREE.MeshStandardNodeMaterial(),layer=new ResourceLayer(group,mat);
+  layer.update(state.read(w,true)!,true);const meshes=group.children.flatMap(g=>g.children) as THREE.Mesh[],buffers=meshes.map(m=>m.geometry),versions=buffers.map(b=>b.index!.version);
+  for(let i=0;i<100;i++){w.tick++;const b=w.resources[1]!;b.growthTick=w.tick;b.amount=9;expect(state.read(w)).toBeUndefined();}
+  expect(buffers.map(b=>b.index!.version)).toEqual(versions);
+  w.resources[1]!.growth=.65;expect(state.read(w)).toBeUndefined();w.resources[1]!.growth=.65001;
+  layer.update(state.read(w)!,false);expect(meshes.map(m=>m.geometry)).toEqual(buffers);expect(buffers.some((b,i)=>b.index!.version>versions[i]!)).toBe(true);
+  w.resources[1]!.growth=.3;expect(state.read(w)).toBeDefined();
+  w.resources[1]!.growth=.64;w.resources[1]!.growthThermalFactor=1;w.resources[1]!.growthTick=w.tick;expect(state.read(w)).toBeUndefined();
+  w.tick+=1000;expect(state.read(w)).toBeDefined(); // maturation without a resource-array change
+  const saved=[...w.resources];w.resources=w.resources.slice(1);expect(state.read(w)).toBeDefined();w.resources=saved;expect(state.read(w)).toBeDefined();
+  w.resources[2]!.stone='marble';expect(state.read(w)).toBeDefined();w.resources[0]!.x++;expect(state.read(w)).toBeDefined();expect(state.read(w)).toBeUndefined();expect(state.read(w,true)).toBeDefined();
+  layer.clear();mat.dispose();
+});
 
 test('population growth retains GPU meshes/materials and shared poses through capacity changes and removal',()=>{
   const w=createWorld(),layer=new PawnLayer();layer.update(w,1,true);

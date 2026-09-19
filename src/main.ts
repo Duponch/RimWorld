@@ -1,3 +1,4 @@
+import { createHeatwaveUI } from './ui/heatwave';
 import { updateResearchPanel } from './ui/research-panel';
 import { updateUnfinishedInspection } from './ui/unfinished-inspection';
 import { createSocialInspection,updateSocialInspection } from './ui/social-inspection';
@@ -330,7 +331,7 @@ function renderState() {
   const delivered = world.piles.filter(pile => pile.owner.type === 'job').reduce((sum, pile) => sum + pile.quantity, 0);
   el('material-status').textContent = `${carried} portées · ${delivered} au chantier`;
   el('population').textContent = String(world.pawns.filter(p=>isColonist(p)&&p.state!=='dead').length); el('map-size').textContent = `${world.width} × ${world.height}`;
-  el('outdoor-temperature').textContent = `Extérieur : ${outdoorTemperature(world.tick).toFixed(1)} °C`;
+  el('outdoor-temperature').textContent = `Extérieur : ${outdoorTemperature(world).toFixed(1)} °C`;
   el('day').textContent = `Jour ${1 + Math.floor(world.tick / TICKS_PER_DAY)}`;
   const hour = 24 * (world.tick % TICKS_PER_DAY) / TICKS_PER_DAY;
   el('clock').textContent = `${String(Math.floor(hour)).padStart(2, '0')}:${String(Math.floor((hour % 1) * 60)).padStart(2, '0')}`;
@@ -368,10 +369,10 @@ function renderState() {
   } else if (selectedPawn !== undefined) {
     const pawn = world.pawns.find(item => item.id === selectedPawn);
     if (!pawn) clearSelection();
-    else if(!isColonist(pawn)){el('selected-name').textContent=pawn.name;el('selected-action').textContent=actionLabel(pawn);updateEquipmentInspection(el('inspector'),world,pawn);updateHealthInspection(el('inspector'),pawn);}
+    else if(!isColonist(pawn)){el('selected-name').textContent=pawn.name;el('selected-action').textContent=actionLabel(pawn);updateEquipmentInspection(el('inspector'),world,pawn);updateHealthInspection(el('inspector'),pawn,world);}
     else {
       el('selected-name').textContent = pawn.name; el('selected-action').textContent = pawn.draft||pawn.equipmentTask||pawn.need||pawn.feed||pawn.tend||pawn.rescue||pawn.state==='dead'||pawn.state==='downed' ? actionLabel(pawn) : `${actionLabel(pawn)} · ${queryPawnStatus(world, pawn).reason}`;
-      updateEquipmentInspection(el('inspector'),world,pawn);updateSkillsInspection(el('inspector'),pawn);updateHealthInspection(el('inspector'),pawn);
+      updateEquipmentInspection(el('inspector'),world,pawn);updateSkillsInspection(el('inspector'),pawn);updateHealthInspection(el('inspector'),pawn,world);
       updateRecreationInspection(el('inspector'),pawn);
       roomInspection.update(el('inspector'), world, pawn);
       el('selected-orders').textContent=`${pawn.orders.active!==null?'Travail imposé · ':''}${pawn.orders.queue.length} ordre(s) en file${pawn.priorityWork?` · Priorité case ${pawn.priorityWork.cell.x}, ${pawn.priorityWork.cell.z}`:''}`;
@@ -451,8 +452,9 @@ function renderState() {
   el('status-alerts').replaceChildren(...alerts.map(text => { const item = document.createElement('p'); item.textContent = text; return item; }));
   const beds = world.structures.filter(structure => structure.kind === 'bed'&&!structure.medical).length;
   if (beds < living.length) { const item = document.createElement('p'); item.dataset.alert = 'beds'; item.textContent = `${living.length - beds} couchage(s) manquant(s)`; el('status-alerts').append(item); }
-  arrivalUI.update(world);raidUI.update(world);
+  arrivalUI.update(world);raidUI.update(world);heatwaveUI.update(world);
 }
+const heatwaveUI=createHeatwaveUI(command=>client.command(command));
 const raidUI=createRaidUI(command=>client.command(command),id=>renderer?.focusPawn(id));
 const arrivalUI=createArrivalUI(command=>client.command(command));
 function syncStorageButtons() {

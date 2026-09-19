@@ -1,0 +1,15 @@
+{
+  "date": "2026-09-19T16:27:49.983Z",
+  "start": 39205,
+  "end": 39421,
+  "patient": 49,
+  "before": 40321141,
+  "after": {
+    "tick": 39421,
+    "nextInjuryId": 1,
+    "injuries": [],
+    "missing": [],
+    "bloodLoss": 0
+  },
+  "errors": []
+}

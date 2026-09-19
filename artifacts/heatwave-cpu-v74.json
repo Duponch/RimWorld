@@ -1,0 +1,94 @@
+{
+  "date": "2026-09-19T16:13:43.649Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "os": "win32 10.0.26200",
+  "node": "v24.11.1",
+  "protocol": "Heatwave plateau 17°C offset, tick 4000–4650; half shirt-wearing actors start at 34% heatstroke, other half tribalwear; Natural 250² map, 3/30/100 actors with physical apparel. One third research at physical benches; others gather/craft tribalwear or mine/chop. 650 ticks, 100 separate warmup ticks, encoding every five ticks. Single pass, CPU only; no 6× guarantee.",
+  "heatwave": true,
+  "rows": [
+    {
+      "actors": 3,
+      "tickMs": {
+        "n": 650,
+        "p50": 0.8178000000000338,
+        "p95": 1.6682000000000698,
+        "p99": 3.2445999999999913,
+        "max": 16.239399999999932
+      },
+      "steadyTickMs": {
+        "n": 630,
+        "p50": 0.8138000000001284,
+        "p95": 1.5810999999998785,
+        "p99": 3.0413999999998396,
+        "max": 6.039300000000139
+      },
+      "snapshotMs": {
+        "n": 130,
+        "p50": 2.826899999999796,
+        "p95": 4.355299999999943,
+        "p99": 7.322900000000118,
+        "max": 7.837099999999964
+      },
+      "completed": 0,
+      "research": 1169600,
+      "exposed": 2,
+      "mined": 4
+    },
+    {
+      "actors": 30,
+      "tickMs": {
+        "n": 650,
+        "p50": 1.5856000000003405,
+        "p95": 6.086899999999787,
+        "p99": 11.901699999999892,
+        "max": 18.26850000000013
+      },
+      "steadyTickMs": {
+        "n": 630,
+        "p50": 1.5610999999998967,
+        "p95": 5.802499999999782,
+        "p99": 9.940900000000056,
+        "max": 12.510399999999663
+      },
+      "snapshotMs": {
+        "n": 130,
+        "p50": 3.4099999999998545,
+        "p95": 4.890699999999924,
+        "p99": 5.451500000000124,
+        "max": 7.09940000000006
+      },
+      "completed": 0,
+      "research": 15213572,
+      "exposed": 15,
+      "mined": 40
+    },
+    {
+      "actors": 100,
+      "tickMs": {
+        "n": 650,
+        "p50": 5.586999999999534,
+        "p95": 17.585399999999936,
+        "p99": 24.855399999999463,
+        "max": 38.70859999999993
+      },
+      "steadyTickMs": {
+        "n": 630,
+        "p50": 5.433600000000297,
+        "p95": 16.753600000000006,
+        "p99": 23.748599999999897,
+        "max": 38.70859999999993
+      },
+      "snapshotMs": {
+        "n": 130,
+        "p50": 3.630599999999504,
+        "p95": 6.982500000000073,
+        "p99": 9.3708000000006,
+        "max": 10.647899999999936
+      },
+      "completed": 0,
+      "research": 51646612,
+      "exposed": 50,
+      "mined": 132
+    }
+  ]
+}

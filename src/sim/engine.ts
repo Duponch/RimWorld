@@ -1,3 +1,6 @@
+import { enableHeatwaves,advanceHeatwaves } from './heatwave.ts';
+import { advanceHeatExposure } from './heat-exposure.ts';
+import { processHeatRefuge } from './heat-refuge.ts';
 import { selectResearch,processResearch,researchRate,clothingUnlocked } from './research.ts';
 import { tailoringTemperatureFactor } from './crafting-quality.ts';
 import { detachMissingBills,cancelUnfinished } from './unfinished.ts';
@@ -206,6 +209,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   if(command?.type==='designate'&&command.kind==='repair')return refusal('invalid-command','Utilisez la zone de foyer pour activer les réparations.');
   if (!command || typeof command !== 'object') return refusal('invalid-command', 'Commande invalide.');
   if(command.type==='cancel-unfinished')return cancelUnfinished(world,command.itemId);
+  if(command.type==='enable-heatwaves'){enableHeatwaves(world);return {ok:true};}
   if(command.type==='enable-raids'){enableRaids(world);return {ok:true};}
   if(command.type==='enable-arrivals'||command.type==='answer-arrival')return applyArrival(world,command);
   const actors='pawnIds' in command&&Array.isArray(command.pawnIds)?command.pawnIds:'pawnId' in command&&command.pawnId!==null?[command.pawnId]:[];
@@ -379,7 +383,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
   let thermal=reconcileTemperature(world);updateFoodTemperatures(world,thermal);updatePlantTemperatures(world,thermal);
   for (let step = 0; step < ticks; step++) {
     world.tick++;
-    advanceArrivals(world);
+    advanceArrivals(world);advanceHeatwaves(world);
     advancePower(world);
     expireFood(world);
     advanceTemperature(world,thermal);
@@ -415,6 +419,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     for (let offset = 0; offset < world.pawns.length; offset++) {
       const pawn = world.pawns[((world.tick - 1) + offset) % world.pawns.length]!;
       pawn.moveCooldown = Math.max(0, (pawn.motion?.end ?? world.tick) - world.tick); if (pawn.planCooldown > 0) pawn.planCooldown--;
+      advanceHeatExposure(world,pawn,()=>new TemperatureView(world,thermal).at(world,pawn));
       const body=updatePawnHealth(world,pawn);
       if(pawn.equipmentDropPending)dropIncapacitatedEquipment(world,pawn,true);
       if(pawn.state==='dead'){expireMealMemories(world,pawn);updateMentalBreak(world,pawn);continue;}
@@ -425,7 +430,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if(pawn.state==='downed'||carrierOf(world,pawn.id)||isStunned(pawn,world.tick*10))continue;
       if(hasAdversary&&!pawn.mental?.crisis){considerAutomaticCombat(world,pawn,budget);considerFlee(world,pawn,getThreats());}
       if(pawn.need?.kind==='eat' && pawn.need.dining && !validDiningPlace(world,pawn.need.dining)) {pawn.need.phase='choose-spot';pawn.need.dining=null;pawn.need.progress=0;delete pawn.need.workRemainder;pawn.path=[];pawn.state='moving';}
-      if (pawn.moveCooldown > 0) { if(pawn.draft)pawn.draft.lastActiveTick=world.tick; pawn.state = pawn.mental?.crisis || pawn.raid || pawn.tactics || pawn.melee || pawn.flee || pawn.draft || pawn.research || pawn.jobId !== null || pawn.equipmentTask || pawn.feed || pawn.tend || pawn.rescue || pawn.haul || pawn.need || pawn.cooking || pawn.recreation.task ? 'moving' : 'idle'; continue; }
+      if (pawn.moveCooldown > 0) { if(pawn.draft)pawn.draft.lastActiveTick=world.tick; pawn.state = pawn.mental?.crisis || pawn.raid || pawn.tactics || pawn.melee || pawn.flee || pawn.draft || pawn.heatRefuge || pawn.research || pawn.jobId !== null || pawn.equipmentTask || pawn.feed || pawn.tend || pawn.rescue || pawn.haul || pawn.need || pawn.cooking || pawn.recreation.task ? 'moving' : 'idle'; continue; }
       const needsContext = {
         search: (goals?: ReadonlySet<number>) => search(world, pawn, getBlocked(), occupied, budget, goals),
         move: (target: Cell, exact: boolean) => moveToward(world, pawn, target, true, getBlocked, budget, exact, getLight),
@@ -446,6 +451,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if(pawn.equipmentTask){processEquipment(world,pawn,needsContext);continue;}
       if (advanceOrders(world,pawn,getBlocked,budget)) continue;
       if (!pawn.feed&&!pawn.tend&&!pawn.rescue&&advancePriorityWork(world,pawn,getBlocked,budget)) continue;
+      if(processHeatRefuge(world,pawn,needsContext,thermal))continue;
       if (planUrgentCare(world,pawn,()=>searchCandidates(world,pawn,getBlocked(),occupied,budget))) continue;
       if (processNeeds(world, pawn, needsContext) || !pawn.feed&&!pawn.tend&&!pawn.rescue&&pawn.orders.active===null&&processRecreation(world, pawn, needsContext)) continue;
       if(pawn.planCooldown===0&&recoverDroppedWeapon(world,pawn,()=>searchCandidates(world,pawn,getBlocked(),occupied,budget)))continue;

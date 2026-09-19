@@ -83,7 +83,7 @@ export function playerDecisions(world: World): Decision[] {
     for(const pawn of colonists){
       if(pawn.mental?.crisis||pawn.equipmentTask||pawn.orders.active!==null||pawn.need||pawn.hunger<50||pawn.rest<40)continue;
       const worn=world.piles.filter(i=>i.owner.type==='apparel'&&i.owner.pawnId===pawn.id);
-      const wanted=pawn===recruit&&!worn.some(i=>i.item==='flak-vest')?'flak-vest':!worn.some(i=>i.item==='cloth-shirt')?'cloth-shirt':undefined;
+      const wanted=pawn===recruit&&!worn.some(i=>i.item==='flak-vest')?'flak-vest':!worn.some(i=>i.item==='cloth-shirt'||i.item==='cloth-tribalwear')?'cloth-shirt':undefined;
       const garment=world.piles.find(i=>i.item===wanted&&i.owner.type==='ground'&&!used.has(i.id)&&queryOrderOptions(world,pawn.id,i.owner).some(o=>o.equipmentItemId===i.id&&o.enabled));
       if(garment){used.add(garment.id);out.push({reason:'Enfiler les vêtements du camp, avec gilet de protection pour la recrue armée.',command:{type:'order-equipment',pawnId:pawn.id,itemId:garment.id,action:'wear',queue:false}});}
     }

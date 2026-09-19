@@ -1,10 +1,11 @@
+import { heatwaveOffset } from './heatwave.ts';
 import { applyThermalSources } from './thermal-sources.ts';
 import { TICKS_PER_DAY, type Cell, type World } from './types.ts';
 import { ThermalTopologyCache, type ThermalLayout } from './thermal-topology.ts';
 
 export interface ThermalRegion {cells:number[];temperature:number}
 export interface ThermalState {regions:ThermalRegion[]}
-export const outdoorTemperature=(tick:number):number=>21+7*Math.cos(2*Math.PI*(tick%TICKS_PER_DAY/TICKS_PER_DAY+.32));
+export function outdoorTemperature(input:number|Pick<World,'tick'|'heatwaves'>):number {const tick=typeof input==='number'?input:input.tick;return 21+7*Math.cos(2*Math.PI*(tick%TICKS_PER_DAY/TICKS_PER_DAY+.32))+heatwaveOffset(tick,typeof input==='number'?undefined:input.heatwaves);}
 const contexts=new WeakMap<World,ThermalTopologyCache>();
 export function thermalLayout(world:World):ThermalLayout {
   let cache=contexts.get(world);if(!cache){cache=new ThermalTopologyCache();contexts.set(world,cache);}return cache.read(world);
@@ -18,7 +19,7 @@ export function reconcileTemperature(world:World,layout=thermalLayout(world)):Th
   if(old.length===layout.rooms.length&&old.every((r,i)=>sameCells(r.cells,layout.rooms[i]!.cells)))return layout;
   if(!layout.rooms.length){delete world.thermal;return layout;}
   const previous=new Map<number,number>();for(const r of old)for(const i of r.cells)previous.set(i,r.temperature);
-  const outside=outdoorTemperature(world.tick);
+  const outside=outdoorTemperature(world);
   world.thermal={regions:layout.rooms.map(r=>({cells:r.cells,temperature:r.cells.reduce((sum,i)=>sum+(previous.get(i)??outside),0)/r.cells.length}))};
   return layout;
 }
@@ -29,7 +30,7 @@ export class TemperatureView {
   private regions:ThermalRegion[];
   readonly outside:number;
   constructor(world:World,layout?:ThermalLayout) {
-    this.outside=outdoorTemperature(world.tick);this.layout=layout;this.regions=world.thermal?.regions??[];
+    this.outside=outdoorTemperature(world);this.layout=layout;this.regions=world.thermal?.regions??[];
     if(!layout){this.temperatures=new Map();for(const r of this.regions)for(const i of r.cells)this.temperatures.set(i,r.temperature);}
   }
   at(world:Pick<World,'width'>,cell:Cell):number {const i=cell.z*world.width+cell.x;return this.layout?this.regions[this.layout.indices[i]!]?.temperature??this.outside:this.temperatures!.get(i)??this.outside;}
@@ -39,7 +40,7 @@ export class TemperatureView {
  * and door conductance; no weather, thick roofs or radiation physics implied. */
 export function advanceTemperature(world:World,layout:ThermalLayout):void {
   const regions=world.thermal?.regions;if(!regions?.length)return;
-  const outside=outdoorTemperature(world.tick),previous=regions.map(r=>r.temperature);
+  const outside=outdoorTemperature(world),previous=regions.map(r=>r.temperature);
   const air=(id:number)=>id>=0?previous[id]!:outside;
   for(let id=0;id<regions.length;id++) {
     const r=regions[id]!,shape=layout.rooms[id]!,difference=outside-r.temperature;

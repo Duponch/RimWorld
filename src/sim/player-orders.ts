@@ -34,7 +34,7 @@ export interface OrderOption { jobId: number; equipmentItemId?:number; equipment
 export const MAX_QUEUED_ORDERS = 32;
 const labels: Record<Job['kind'], string> = { 'research-bench':'Bureau de recherche','tailor-bench':'Établi de tailleur', 'crafting-spot':'Placer l’artisanat', repair:'réparer', 'wood-generator':'construire le générateur à bois', 'standing-lamp':'construire la lampe', 'passive-cooler':'Construire le refroidisseur passif', 'build-roof':'Poser le toit', 'remove-roof':'Retirer le toit', door:'Construire la porte', stonecutter:'Construire la table de taille', mine:'Miner', uninstall:'Désinstaller',install:'Réinstaller', deconstruct:'Déconstruire', chop:'Abattre',harvest:'Récolter',cut:'Couper',sow:'Semer',wall:'Construire le mur',bed:'Construire le lit',table:'Construire la table',stool:'Construire le tabouret',campfire:'Construire le feu',horseshoes:'Construire le piquet' };
 const fail = (reason: string): CommandResult => ({ok:false,code:'invalid-command',reason});
-const busy = (pawn: Pawn) => pawn.jobId !== null || !!(pawn.research || pawn.equipmentTask || pawn.feed || pawn.tend || pawn.rescue || pawn.haul || pawn.cooking || pawn.need || pawn.recreation.task);
+const busy = (pawn: Pawn) => pawn.jobId !== null || !!(pawn.heatRefuge || pawn.research || pawn.equipmentTask || pawn.feed || pawn.tend || pawn.rescue || pawn.haul || pawn.cooking || pawn.need || pawn.recreation.task);
 const clearingPlant=(world:World,job:Job)=>!isConstruction(job)?undefined:job.clearance?world.resources.find(r=>r.id===job.clearance!.resourceId):constructionObstruction(world,job).plant;
 const orderLabel=(world:World,job:Job)=>clearingPlant(world,job)?'Couper la plante qui gêne le chantier':labels[job.kind];
 

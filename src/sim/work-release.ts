@@ -93,7 +93,7 @@ export function releaseWork(world:World,pawn:Pawn,plan?:DropPlan):boolean {
 export function releaseAssignments(world:World,pawn:Pawn):void {
   cancelAutomaticCombat(pawn);
   if(pawn.need?.kind==='sleep'&&pawn.need.medical&&pawn.health&&!pawn.health.death&&pawn.health.tick<world.tick)updatePawnHealth(world,pawn);
-  delete pawn.research;releaseRescue(world,pawn);delete pawn.tend;delete pawn.feed;delete pawn.medicalSleep;delete pawn.equipmentTask;
+  delete pawn.heatRefuge;delete pawn.research;releaseRescue(world,pawn);delete pawn.tend;delete pawn.feed;delete pawn.medicalSleep;delete pawn.equipmentTask;
   const job=world.jobs.find(j=>j.id===pawn.jobId);
   if(job?.reservedBy===pawn.id){delete job.installationWork;delete job.clearance;delete job.pickTicks;job.reservedBy=null;job.status='pending';if(job.repair)delete job.repair.warmed;if(job.kind==='repair'||job.furniture||job.kind==='mine'||job.kind==='sow'||job.kind==='deconstruct'||isRoofJob(job))resetWork(job);}
   delete pawn.transitExit;

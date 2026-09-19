@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+**V74 :** condition `camp-heat-v1` (canicule), effet médical `heatstroke`, isolation des vêtements déjà présents : tissu normal tribal 9,9/9,9 °C, chemise 4,68/1,8 °C, gilet 1/0 °C (froid/chaleur), modulée par qualité. Aucun nouvel objet ni biome ; armure contre les dégâts de chaleur distincte de l’isolation. [Contrat](../development/heatwave.md).
+
 **V73 :** `research-bench` (3×2, 75 bois/acier/cinq pierres +25 acier, matériau agrégé), projet `complex-clothing` (600 points), `tailor-bench` (3×1, 75 bois/acier, nécessite le projet), recette `shirt` (45 tissus → une `cloth-shirt`, 2 700 unités de travail Core avant facteurs), `unfinished-shirt` (auteur/progression/45 tissus conservés, pile 1). Les deux meubles se déplacent entiers ; le tailleur propose aussi la tenue tribale. Aucun autre textile, projet ou recette implicite. [Contrat](../development/research.md), [sources](../research/research-reference.md).
 
 V72 ajoute **crafting-spot** (bâtiment de 1×1 gratuit/instantané), **unfinished-tribalwear** (objet indivisible avec auteur, travail et 60 tissus incorporés) et **cloth-tribalwear** (vêtement peau torse/jambes, 100 PV, neuf ticks d’habillage). La tenue se fabrique sans recherche, six qualités obtenables par Artisanat ; l’inachevé se range avec son propre filtre. Chemise fabricable au tailleur V73 ; gilet non fabricable. [Contrat](../development/tailoring.md), [sources](../research/tailoring-reference.md).

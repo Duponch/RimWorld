@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+V74 : `heatwave.ts` possède le calendrier/RNG indépendant ; `heat-rules.ts` sépare isolation et armure ; `heat-exposure.ts` applique les stades médicaux ; `heat-refuge.ts` emploie la navigation civile ; `heat-save.ts` valide leurs états sparse. `NaturalResourcePresentation` sépare aussi l’invalidation de géométrie forestière des ancres de croissance thermique. Aucun nouveau shader ou calcul médical par image. [Contrat](heatwave.md).
+
 V73 : `research.ts`/`research-save.ts` portent projet collectif et sessions physiques ; `research-panel.ts` expose commandes et état. Le tailleur réutilise la confection par recettes et inachevés typés ; ses pièces procédurales et celles du bureau rejoignent le lot mobilier résident. Aucun moteur de production parallèle, nouveau squelette CPU ou cache par image. [Contrat](research.md).
 
 V72 : `unfinished.ts` possède matière/progression/auteur et annulation transactionnelle ; `tailoring-plan.ts` sélectionne la reprise, `crafting-quality.ts` isole qualité/XP/thermique, `crafting-spot.ts` traite le marquage instantané. Les factures et transports restent communs. Présentation dans les lots résidents et attribut d’équipement existant ; V71 strictement validée avant migration neutre. [Contrat](tailoring.md).

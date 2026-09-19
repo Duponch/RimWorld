@@ -1,5 +1,7 @@
 # Refroidissement passif — V40
 
+V74 utilise cet appareil dans la [boucle de canicule](heatwave.md), avec exposition réelle et secours au frais. Les validations V40 ci-dessous restent historiques ; la nouvelle preuve traverse un événement naturel du calendrier.
+
 [Recherche et décisions](../research/passive-cooling-reference.md), [température](temperature.md), [ravitaillement](cooking.md), [construction](construction-materials.md), [preuves](validation.md).
 
 ## Contrat joueur
@@ -24,4 +26,4 @@ Schéma **40** pour la nouvelle définition. V39 est strictement validée avant 
 
 Deux scénarios de simulation couvrent construction, volume/seuil, dehors, combustion jusqu’à cinq jours, reprise de chantier/service, interruption, ordre forcé, déconstruction sans duplication, matériaux/versions invalides et absence de gain alimentaire. Le pilote de colonie sait proposer un appareil pour une petite pièce chaude ; il n’en construit pas dans le camp ouvert et conserve les bilans du bois, y compris combustible retiré.
 
-Le parcours natif part d’une pièce chaude synthétique et construit par l’UI ; température visible, absence de recettes, recharge manuelle depuis une seconde fixture initialement vide et rechargement exact sont contrôlés. L’audit CPU utilise 3/30/100 transporteurs réellement actifs. Ces scènes ne prouvent ni le confort thermique des colons ni la chaîne du froid électrique, encore absents ; les budgets et pointes sont dans les preuves courantes.
+Le parcours natif part d’une pièce chaude synthétique et construit par l’UI ; température visible, absence de recettes, recharge manuelle depuis une seconde fixture initialement vide et rechargement exact sont contrôlés. L’audit CPU utilise 3/30/100 transporteurs réellement actifs. Ces scènes V40 ne prouvaient ni le confort thermique des colons ni la chaîne du froid électrique ; exposition et refuge sont ajoutés en V74, réfrigération toujours absente ; les budgets et pointes sont dans les preuves courantes.

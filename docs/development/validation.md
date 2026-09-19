@@ -1,4 +1,6 @@
-# Validation courante — V73
+# Validation courante — V74
+
+V74 — [canicule, protection, refuge et secours](../history/validation-heatwave-v74.md). Scénarios, vraie UI, expédition de huit jours et audits séparés, avec périmètres et limites déclarés.
 
 V73 — [preuves de recherche et tailleur](../history/validation-research-v73.md). Projet depuis zéro dans le camp naturel, chemise réellement confectionnée et portée, reprise UI et charge mixte ; limites de référence et échecs diagnostiqués conservés.
 

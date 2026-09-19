@@ -8,9 +8,10 @@ const integer=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>Number.
 const keys=(v:Record<string,unknown>,allowed:readonly string[])=>Object.keys(v).every(k=>allowed.includes(k));
 /** Strict isolated record validator. World ownership/migration is not implemented
  * by this function and must precede accepting a medical Pawn field. */
-export function validateMedicalRecord(value:unknown,allowGunshot=true,allowBite=true):string|null {
+export function validateMedicalRecord(value:unknown,allowGunshot=true,allowBite=true,allowHeat=true):string|null {
   const fail='Invalid medical record';
-  if(!object(value)||!keys(value,['tick','nextInjuryId','injuries','missing','bloodLoss','death'])||!integer(value.tick)||!integer(value.nextInjuryId,1)||!integer(value.bloodLoss,0,BLOOD_UNIT)||!Array.isArray(value.injuries)||!Array.isArray(value.missing))return fail;
+  if(!object(value)||!keys(value,['tick','nextInjuryId','injuries','missing','bloodLoss','death',...(allowHeat?['heatstroke']:[])])||!integer(value.tick)||!integer(value.nextInjuryId,1)||!integer(value.bloodLoss,0,BLOOD_UNIT)||!Array.isArray(value.injuries)||!Array.isArray(value.missing))return fail;
+  if(value.heatstroke!==undefined&&(!allowHeat||!integer(value.heatstroke,1,1_000_000_000)))return fail;
   const ids=new Set<number>();let total=0;
   for(const i of value.injuries) {
     if(!object(i)||!keys(i,['id','part','kind','severity','bornAt','scar','tended'])||!integer(i.id,1,value.nextInjuryId-1)||ids.has(i.id)||
@@ -29,8 +30,8 @@ export function validateMedicalRecord(value:unknown,allowGunshot=true,allowBite=
     if(record.missing.some((other,j)=>j!==index&&(isWithinPart(m.part,other.part)||isWithinPart(other.part,m.part)))||record.injuries.some(i=>isWithinPart(i.part,m.part)))return fail;
   }
   for(const i of record.injuries)if(i.part!=='torso'&&remainingPartHealth(record,i.part)===0)return fail;
-  if(value.death!==undefined&&(!object(value.death)||!keys(value.death,['tick','cause'])||value.death.tick!==record.tick||!['blood-loss','vital-failure','trauma'].includes(value.death.cause as string)))return fail;
-  const living={...createMedicalRecord(record.tick),injuries:record.injuries,missing:record.missing,bloodLoss:record.bloodLoss};
+  if(value.death!==undefined&&(!object(value.death)||!keys(value.death,['tick','cause'])||value.death.tick!==record.tick||!['blood-loss','vital-failure','trauma',...(allowHeat?['heatstroke']:[])].includes(value.death.cause as string)))return fail;
+  const living={...createMedicalRecord(record.tick),injuries:record.injuries,missing:record.missing,bloodLoss:record.bloodLoss,...record.heatstroke?{heatstroke:record.heatstroke}:{}};
   reconcileMedicalDeath(living);
   if(!!living.death!==!!record.death||living.death?.cause!==record.death?.cause)return fail;
   return null;

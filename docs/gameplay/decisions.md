@@ -1,5 +1,7 @@
 # Choix et écarts de gameplay
 
+V74 : première canicule plutôt qu’un hiver privé de règles de gel. +17 °C et exposition confrontés aux sources ; première occurrence 6–7 jours et suivantes 30–40 jours après fin sont une cadence de scénario. Refuge par distance/accessibilité et ordres prioritaires ; sélection thermique complète des lits, froid et autres météos différés. [Sources, incertitudes et décisions](../research/heatwave-reference.md).
+
 V73 : un seul projet de recherche, Vêtements complexes. Notre camp personnalisé commence sans ce savoir, contrairement au Crashlanded classique ; difficulté/écart technologique neutres, Intellect historique absent =0, propreté intérieure neutre, malus extérieur provisoire. La tenue tribale reste initiale. [Détails et sources contradictoires](../research/research-reference.md).
 
 V72 : tenue tribale sans recherche, tissu seul, capacité de portage locale dix, profil Artisanat absent neutre 0, reprise liée par auteur, réglage de comptage équipé différé. Seuil thermique 9 °C du code daté adopté malgré le 10 °C écrit au wiki ; pénalité seulement branchée au nouveau poste. Géométrie de tenue interprétée en 3D sur le rig GPU. [Règles et écarts](../development/tailoring.md), [sources](../research/tailoring-reference.md).

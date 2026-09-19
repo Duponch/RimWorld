@@ -1,5 +1,7 @@
 # Matrice des systèmes et critères de réalisation
 
+V74 : S11/S13/S16 reçoivent canicule, isolation et santé thermique chaude avec refuge/secours. Aucun de ces domaines n’est complet ; froid, saisons, météos, incendies et réfrigération restent ouverts. [Contrat](../development/heatwave.md).
+
 État V73 : S20 relie désormais une recherche collective physique à une chemise fabriquée et portée, après la culture de coton S09. L’étape proche 4 est livrée dans ce périmètre ; S20 reste partiel (un projet, catalogue limité). [Contrat](../development/research.md) ; calendrier uniquement dans [ROADMAP](../ROADMAP.md).
 
 
@@ -48,7 +50,7 @@ V42 enrichit SYS/TEST-127/128 et CAT-047 avec [générateur, carburant et lampes
 
 V41 : CAT-006 partiel et SYS-061 enrichi par les [composants industriels](../development/components.md), extraits/rangés dans la chaîne commune ; autres acquisitions et usages électriques ouverts.
 
-V40 : S10/S12 intègrent le [refroidisseur passif](../development/passive-cooling.md), sa construction et son combustible. Réfrigération électrique, réseau et santé/confort thermiques restent ouverts ; G2 n’est pas déclaré complet.
+V40 : S10/S12 intègrent le [refroidisseur passif](../development/passive-cooling.md), sa construction et son combustible. Réfrigération électrique, réseau complet et confort thermique général restent ouverts ; réseau local V42 et exposition chaude V74 ajoutés depuis ; G2 n’est pas déclaré complet.
 
 V39 : températures de croissance et de semis intégrées à S09, avec conservation du passé et inspection ; maladies/mortalité restent ouvertes. [Contrat](../development/plant-temperature.md).
 

@@ -1,10 +1,12 @@
 # Noyau de simulation — contrat courant
 
+Schéma courant **74** : [canicule, exposition et refuge](heatwave.md). Validation stricte V73 avant migration neutre, puis opt-in de calendrier pour les anciennes parties. Les paragraphes versionnés suivants retracent les contrats historiques, pas un autre état courant.
+
 V73 ajoute [recherche au poste, compétence Intellect et couture débloquée](research.md), séparées dans `research.ts`/`research-save.ts`. Progression en micro-points, postes/services exclusifs et contributions de plusieurs chercheurs ; gestion physique des besoins/interruptions. Le combustible pour une facture culinaire n’est plus annulé en boucle par la faim.
 
-V72 ajoute la [confection physique](tailoring.md), les objets inachevés persistants et la première fabrication d’équipement. Schéma courant 73 ; V72 validée avant migration additive de la priorité Recherche, sans passé inventé. Les valeurs historiques ci-dessous restent attachées aux contrats de leurs versions.
+V72 ajoute la [confection physique](tailoring.md), les objets inachevés persistants et la première fabrication d’équipement. Schéma de cette tranche : 73 ; V72 validée avant migration additive de la priorité Recherche, sans passé inventé. Les valeurs historiques ci-dessous restent attachées aux contrats de leurs versions.
 
-Schéma courant **57** : [ralentissement après impact](stagger.md), après [tir dirigé V56](shooting.md). V56 strictement validée avant migration sans effet inventé ; fenêtres sur les arêtes persistées, présentation dérivée. Aucun hostile encore livré. Les étapes ci-dessous restent l’historique des contrats de migration.
+Schéma historique **57** : [ralentissement après impact](stagger.md), après [tir dirigé V56](shooting.md). V56 strictement validée avant migration sans effet inventé ; fenêtres sur les arêtes persistées, présentation dérivée. Aucun hostile encore livré. Les étapes ci-dessous restent l’historique des contrats de migration.
 
 V51 : [médicaments](medicines.md), V50 strictement validée avant migration sans injection ; plafond du patient, dose réservée/portée, résultat groupé après travail. Âge médicinal distinct du bilan alimentaire et expiration avant actions. Nouveau stock seulement à la génération.
 

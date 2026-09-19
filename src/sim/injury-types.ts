@@ -17,7 +17,9 @@ export interface MedicalRecord {
   injuries:Injury[]; missing:MissingPart[];
   /** BLOOD_UNIT = all blood lost; integral, not a percent. */
   bloodLoss:number;
-  death?:{tick:number;cause:'blood-loss'|'vital-failure'|'trauma'};
+  /** Whole-body heat exposure, billionths of severity; absent means none. */
+  heatstroke?:number;
+  death?:{tick:number;cause:'blood-loss'|'vital-failure'|'trauma'|'heatstroke'};
 }
 export interface MedicalContext {
   /** Stable phase in [0,59], supplied by the owning actor. */

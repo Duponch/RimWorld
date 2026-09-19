@@ -1,3 +1,4 @@
+import { HEAT_UNIT,heatModifiers } from './heat-rules.ts';
 import { assessBody,type BodyAssessment } from './body-capacities.ts';
 import { BODY_PARTS,bodyPartExists,type BodyPartId } from './body-definition.ts';
 import { BLOOD_UNIT,HP_UNIT,PAIN_UNIT,FRESH_MISSING_TICKS,INJURY_RULES,PART_INJURY_RULES,bloodConsciousness,coagulationAge,isWithinPart,scarChance,type InjuryKind,type ScarPain } from './injury-rules.ts';
@@ -26,7 +27,7 @@ function injuryBleedUnits(record:MedicalRecord,injury:Injury):number {
 }
 export function medicalPain(record:MedicalRecord):number {
   if(record.death)return 0;
-  let pain=0;
+  let pain=heatModifiers(record.heatstroke).pain*PAIN_UNIT;
   for(const i of record.injuries)pain+=i.severity*(i.scar?.pain!==undefined?5*i.scar.pain:INJURY_RULES[i.kind].painUnits);
   for(const m of record.missing)if(freshMissing(record,m))pain+=BODY_PARTS[m.part].hp*10000;
   return Math.min(1,pain/PAIN_UNIT);
@@ -42,14 +43,15 @@ export function medicalBleedUnits(record:MedicalRecord):number {
   return rate;
 }
 export function assessMedical(record:MedicalRecord):BodyAssessment {
-  return assessBody({damage:record.injuries.map(i=>({part:i.part,loss:i.severity/HP_UNIT})),missing:record.missing.map(m=>m.part),pain:medicalPain(record),...bloodConsciousness(record.bloodLoss)});
+  const heat=heatModifiers(record.heatstroke),blood=bloodConsciousness(record.bloodLoss);
+  return assessBody({damage:record.injuries.map(i=>({part:i.part,loss:i.severity/HP_UNIT})),missing:record.missing.map(m=>m.part),pain:medicalPain(record),consciousnessOffset:(blood.consciousnessOffset??0)+heat.consciousnessOffset,consciousnessMax:Math.min(blood.consciousnessMax??Infinity,heat.consciousnessMax),movingOffset:heat.movingOffset});
 }
 export function medicalStatus(record:MedicalRecord,body=assessMedical(record)):'mobile'|'downed'|'dead' {
   return record.death?'dead':body.painShock||!body.canBeAwake||!body.movingCapable?'downed':'mobile';
 }
 export function reconcileMedicalDeath(record:MedicalRecord):void {
   if(record.death)return;
-  const cause=record.bloodLoss>=BLOOD_UNIT?'blood-loss':assessMedical(record).vitalFailure?'vital-failure':record.injuries.reduce((n,i)=>n+i.severity,0)>=150*HP_UNIT?'trauma':null;
+  const cause=(record.heatstroke??0)>=HEAT_UNIT?'heatstroke':record.bloodLoss>=BLOOD_UNIT?'blood-loss':assessMedical(record).vitalFailure?'vital-failure':record.injuries.reduce((n,i)=>n+i.severity,0)>=150*HP_UNIT?'trauma':null;
   if(cause)record.death={tick:record.tick,cause};
 }
 export function rollScarPain(random:MedicalRandom):ScarPain {const n=random();return n<.5?0:n<.7?1:n<.9?3:6;}
