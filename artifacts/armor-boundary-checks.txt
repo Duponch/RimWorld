@@ -1,0 +1,41 @@
+Validation du noyau de protection isolé sous V62 — 19 septembre 2026
+Base 540bbad ; aucun gameplay d’habillement livré.
+
+
+ RUN  v5.0.0 E:/Code/RimWorld
+
+
+ Test Files  4 passed (4)
+      Tests  26 passed (26)
+   Start at  03:28:50
+   Duration  3.81s (tests 60%, transform 30%, import 10%)
+
+  Transform  transforming modules took 2.00s · 30% of tracked time, re-done on every run
+             persist transforms across runs with fsModuleCache: true
+             learn more: https://vitest.dev/guide/improving-performance#caching-between-reruns
+
+
+
+> lisiere@0.1.0 build
+> tsc --noEmit && vite build
+
+vite v8.3.0 building client environment for production...
+transforming...
+✓ 297 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/navigation.html                           0.51 kB │ gzip:   0.33 kB
+dist/index.html                                0.69 kB │ gzip:   0.40 kB
+dist/assets/simulation.worker-DoqzlEzX.js    389.50 kB
+dist/assets/navigation-Be_IfcT4.css            1.61 kB │ gzip:   0.79 kB
+dist/assets/game-AcbwhtzD.css                 17.74 kB │ gzip:   4.87 kB
+dist/assets/navigation-Dfk1zeSO.js            18.29 kB │ gzip:   7.29 kB
+dist/assets/sim-B5IQgz5N.js                   83.03 kB │ gzip:  27.75 kB
+dist/assets/game-BDww6wwP.js               1,110.47 kB │ gzip: 312.57 kB
+
+✓ built in 539ms
+[plugin builtin:vite-reporter] 
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.

@@ -1,5 +1,7 @@
 # Validation courante — V62
 
+Préparation de l’habillement sous V62 : [preuves du noyau de protection](../history/validation-armor-boundary.md). Contrôles ciblés seulement ; aucune nouvelle validation UI ou charge intégrée, aucun vêtement jouable annoncé.
+
 
 ## Réveils défensifs V62
 

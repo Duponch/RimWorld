@@ -1,5 +1,7 @@
 # Stratégie de validation
 
+Protection isolée sous V62 : `tests/armor.test.ts` regroupe couverture/compatibilité, seuils/distribution, ordre/usure/conversion, arrondis et corruption. Aucun parcours UI n’est exigé avant présence d’un consommateur ; son intégration physique déclenchera les scénarios et audits décrits dans [le contrat](armor.md).
+
 V62 : six scénarios profonds de réveil, vrais producteurs projectile/mêlée, acoustique/portes/audition, médical/ordres/cargo et migrations. L’UI observe le passage de la pose endormie à la sortie physique du lit à 1×/6×. Le compagnon de rencontre sait mobiliser une réserve endormie avant secours et médicaments sur une journée. Audit mixte commun 3/30/100 ; [preuves](../history/validation-disturbance-v62.md).
 V61 : six scénarios profonds dans `pursuit.test.ts`, compagnon de rencontre fixe/mobile avec secours réellement terminés, UI `pursuit.spec.ts` à 1×/6× et audit `PURSUIT=1` sur les bancs de tir existants. Les CPU conservent désormais aussi les vingt premiers ticks et le maximum sur tous les ticks : le démarrage des recherches ne doit pas disparaître derrière une phase de chauffe. [Preuves et échec du pilote diagnostiqué](../history/validation-pursuit-v61.md).
 

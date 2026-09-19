@@ -1,5 +1,8 @@
 # Travail sur Lisière
 
+## Habillement en préparation sous V62
+- Lire `docs/development/armor.md` et `docs/research/apparel-reference.md`. `armor.ts` est un noyau isolé testé, sans consommateur World ni vêtement obtenu : ne pas le déclarer jouable. Couverture par parties anatomiques, pas seulement noms de groupes ; une pièce multicouche s'applique une fois, statistique d'armure initiale conservée après conversion, usure avant mitigation. L'intégration doit engager PRNG local, usure et anatomie ensemble, puis vérifier manipulation physique, sauvegarde, carte/portrait et charge. ROADMAP conserve la prochaine livraison précise.
+
 ## Intentions persistantes
 
 - Référence : RimWorld de base d'abord, extensions ensuite. Garder ses boucles et interactions par défaut ; documenter chaque simplification et divergence.

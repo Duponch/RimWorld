@@ -1,5 +1,7 @@
 # Guide joueur
 
+Habillement : encore indisponible. Les couleurs actuelles des personnages ne procurent aucune protection ; le calcul d’armure en préparation ne change pas les combats de cette version.
+
 ## Dormir sous le feu (V62)
 
 Un impact proche peut réveiller un dormeur, même si la balle manque. L’audition et les murs/portes fermées comptent ; une porte ouverte laisse passer le signal. Le colon réagit ensuite selon **Fuir / Attaquer / Ignorer**, si une menace est visible à sa portée de réaction. Sa sortie du lit reste physique.

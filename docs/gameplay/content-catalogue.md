@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+Préparation de l’habillement sous V62 : le [noyau d’armure](../development/armor.md) ne crée aucun ItemId. Chemise et gilet sont des contenus envisagés dans la recherche, pas des objets définis ou obtenables.
+
 V62 ajoute les **réactions aux impacts** au contenu humain existant ; aucun nouvel objet, arme, vêtement, type de bruit audible ou faction. [Contrat](../development/disturbance.md).
 V61 change le **mandat du combattant des nouvelles rencontres** : approche, poste de tir et mêlée sans arme. Aucun nouvel ItemId, raid, armure ou faction. Le profil historique de sentinelle est préservé au chargement. [Contrat](../development/pursuit.md).
 
