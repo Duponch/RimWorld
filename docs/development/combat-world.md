@@ -10,6 +10,12 @@ Une capture sert à un lot synchrone de requêtes tant que le monde ne change pa
 
 Capture en O(cases + objets/empreintes), lecture ponctuelle en O(1). Un tableau de slots référence des colonnes numériques privées ; les identifiants restent en Float64 pour préserver les entiers sûrs au-delà de 32 bits. Coefficients en Float64 sans arrondi de définition. Les objets de rapport et leurs clés ne sont créés que sur consultation, puis partagés par empreinte. Les massifs utilisent une sentinelle spatiale et des clés par case. Une capture par colon referait inutilement le même travail : la future intégration doit partager par lot sans mutation.
 
+## Acquisition locale V60
+
+`captureWorldShotGrid(world, bounds)` restreint le remplissage à une fenêtre globale inclusive. Hors fenêtre, la visibilité est fermée et aucun couvert n’est fourni ; dimensions et clés restent celles du monde. L’acquisition automatique borne toutes ses consultations à portée +3 : origines penchées, voisins du couvert et neuf rayons de risque compris. Aucun projectile n’emploie cette fenêtre ; les vols gardent leur capture complète.
+
+Les empreintes dont l’origine est extérieure sont toujours parcourues. Une capture reste immuable et doit être recréée après interruption/dépôt. Les contrôles comparent les valeurs locales à la capture complète pour les familles et orientations présentes. La grille physique de contact n’est construite que pour un adversaire adjacent. [Mesures et limites](../history/validation-automatic-combat-v60.md).
+
 ## Sens des données
 
 Remplissage brut, obstruction de vue et probabilité de couvert sont différents. Le candidat de plus grand remplissage gagne par case ; égalité résolue par identifiant persistant. Une porte ouverte domine donc un fragment sur sa case mais fournit zéro blocage. Son animation, interdiction et maintien ouvert n'affectent pas cette règle.

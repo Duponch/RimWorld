@@ -1,6 +1,6 @@
 # Rencontre armée et réponses civiles — V58
 
-Mise à jour V59 : la sentinelle possède maintenant une riposte au contact via le [contrat de mêlée](melee.md). Elle reste sans poursuite autonome ; les descriptions V58 ci-dessous concernent le lot initial.
+Mise à jour V60 : [tir automatique des colons et Attaquer civil](automatic-combat.md) ajoutés. V59 : la sentinelle possède maintenant une riposte au contact via le [contrat de mêlée](melee.md). Elle reste sans poursuite autonome ; les descriptions V58 ci-dessous concernent le lot initial.
 
 [Référence vérifiée et écarts](../research/encounter-reference.md). Une nouvelle colonie peut choisir Camp paisible (défaut inchangé) ou Rencontre armée, à partir de 64². Trois colons, leur camp et leurs ressources restent les mêmes ; Ada commence avec le revolver de départ déjà équipé. Une sentinelle équipée d’un second revolver normal est placée sur un emplacement accessible, à plus de 27 cases de tous les colons. Aucun spawn pendant une partie ou son chargement. Création et choix du site reproductibles ; échec sans remplacer le monde précédent.
 
@@ -26,6 +26,6 @@ Pas de nouveau calcul de trajet par frame, ni de squelette CPU. Recherche de ref
 
 ## Partiel à compléter
 
-Cette livraison est une sentinelle statique de scénario. Mêlée, poursuite, tir automatique des colons mobilisés, réaction Attaquer, réveil défensif, détection/réaction à tout dommage, gestion de faim autonome du NPC, récupération de son arme, capture, suicide/fin des raids, destruction des objets, factions neutres et diplomatie ne sont pas livrés. Un adversaire désarmé reste une personne hostile ; les actions non livrées ne sont pas remplacées par des téléportations ou des dégâts abstraits. La faim reste sans malnutrition, comme pour les colons actuels.
+Cette livraison est une sentinelle statique de scénario. Poursuite ennemie, réveil défensif, détection/réaction à tout dommage, gestion de faim autonome du NPC, récupération de son arme, capture, suicide/fin des raids, destruction des objets, factions neutres et diplomatie ne sont pas livrés. Un adversaire désarmé reste une personne hostile ; les actions non livrées ne sont pas remplacées par des téléportations ou des dégâts abstraits. La faim reste sans malnutrition, comme pour les colons actuels.
 
 Audit V58 : captures de tir réutilisées seulement dans la transaction de combat, avec contrôle des couvertures mobiles après impact ; topologie du refuge conservée par propriétaire et entièrement revérifiée à chaque lecture. Aucun changement de règle ni cache fondé sur le seul tick. À cent acteurs, coût CPU p95 observé de 33,1 à 23,9 ms, encore au-dessus du budget d’un tick à 6×. [Mesures et limites](../history/validation-encounter-v58.md).

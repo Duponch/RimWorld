@@ -1,3 +1,4 @@
+import { automaticPermission,automaticTarget } from './automatic-combat-state.ts';
 import { cancelMelee } from './melee-state.ts';
 import { isStunned } from './stun.ts';
 import { activeThreat,hostileTo,isColonist,distanceSquared } from './affiliation.ts';
@@ -26,8 +27,8 @@ export function shootingQueries(world:World,readGrid=()=>captureWorldShotGrid(wo
   return {body,carried:(id:number)=>(carried??=new Set(world.pawns.filter(p=>p.rescue?.phase==='carry').map(p=>p.rescue!.patientId))).has(id),grid:()=>grid??=readGrid(),targets:()=>targets??=captureWorldProjectileTargets(world),stands:()=>stand??=captureStandability(world)};
 }
 type Queries=ReturnType<typeof shootingQueries>;
-export function shotPlan(world:World,pawn:Pawn,targetId:number,queries:Queries) {
-  if(!pawn.draft&&isColonist(pawn)||medicallyStopped(pawn)||pawn.state==='sleeping'||pawn.need||pawn.collapsePending||queries.carried(pawn.id))return {reason:'Le tireur doit être mobilisé, éveillé et capable de tirer.'} as const;
+export function shotPlan(world:World,pawn:Pawn,targetId:number,queries:Queries,automatic=pawn.shooting?.order?.auto?.kind) {
+  if(!pawn.draft&&isColonist(pawn)&&automatic!=='response'||automatic&&!automaticPermission(pawn,automatic)||medicallyStopped(pawn)||pawn.state==='sleeping'||pawn.need&&automatic!=='response'||pawn.collapsePending||queries.carried(pawn.id))return {reason:'Le tireur doit être mobilisé, éveillé et capable de tirer.'} as const;
   if(!queries.stands()(pawn))return {reason:'Le colon doit terminer le franchissement avant de viser.'} as const;
   const weapon=equippedWeapon(world,pawn);
   if(!weapon?.weapon||weapon.item!=='revolver'||pawn.equipmentDropPending||queries.body(pawn).capacities.manipulation<=0)return {reason:'Aucun revolver utilisable en main.'} as const;
@@ -51,7 +52,7 @@ export function applyShootingCommand(world:World,command:ShootingCommand):Comman
   if(!Array.isArray(command.pawnIds)||!command.pawnIds.length||command.pawnIds.some(id=>!Number.isSafeInteger(id))||new Set(command.pawnIds).size!==command.pawnIds.length||!Number.isSafeInteger(command.targetId))return reject('Ordre de tir invalide.');
   const queries=shootingQueries(world),plans=[];
   for(const id of [...command.pawnIds].sort((a,b)=>a-b)) {
-    const pawn=world.pawns.find(p=>p.id===id);if(!pawn)return reject('Tireur introuvable.');
+    const pawn=world.pawns.find(p=>p.id===id);if(!pawn||!pawn.draft)return reject('Mobilisez le tireur.');
     const plan=shotPlan(world,pawn,command.targetId,queries);if('reason' in plan)return reject(`${pawn.name} : ${plan.reason}`);
     plans.push({pawn,plan});
   }
@@ -69,7 +70,7 @@ export function applyShootingCommand(world:World,command:ShootingCommand):Comman
 export function advanceShooter(world:World,pawn:Pawn,core:number,queries:Queries):void {
   const shot=pawn.shooting;if(!shot)return;
   if(medicallyStopped(pawn)||queries.body(pawn).capacities.manipulation===0){delete pawn.shooting;return;}
-  if(shot.order&&!pawn.draft&&isColonist(pawn))cancelShooting(pawn);
+  if(shot.order){const a=shot.order.auto;if(a?(!automaticPermission(pawn,a.kind)||!automaticTarget(world,pawn,shot.order.targetId)||a.kind==='draft'&&pawn.draft?.holdFire||a.kind==='response'&&world.tick>=a.until):!pawn.draft&&isColonist(pawn))cancelShooting(pawn);}
   if(shot.order) {
     const target=world.pawns.find(p=>p.id===shot.order!.targetId);
     if(!target||target.state==='dead'||!shot.order.startedDowned&&target.state==='downed'||!isColonist(pawn)&&(!activeThreat(target)||!hostileTo(pawn,target)))cancelShooting(pawn);
@@ -78,7 +79,7 @@ export function advanceShooter(world:World,pawn:Pawn,core:number,queries:Queries
   if(pawn.draft)pawn.draft.lastActiveTick=world.tick;
   if(shot.stance?.phase==='cooldown') {
     if(core<shot.stance.endsAtCore)return;
-    shot.stance=null;if(!shot.order){delete pawn.shooting;return;}
+    shot.stance=null;if(shot.order?.auto?.kind==='response'&&shot.order.auto.remaining===0)shot.order=null;if(!shot.order){delete pawn.shooting;return;}
   }
   if(isStunned(pawn,core)||pawn.melee?.strike)return;
   if(!shot.stance){startAim(world,pawn,core,queries);return;}
@@ -94,6 +95,9 @@ export function advanceShooter(world:World,pawn:Pawn,core:number,queries:Queries
   registerWorldProjectile(world,emission.flight,profile.quality,{friendlyPawnIds:world.pawns.filter(p=>!hostileTo(pawn,p)).map(p=>p.id),friendlyFireFactor:.4},random.rng,core);
   // Same projectile rules; only the documented hostile learning rate differs.
   if(target.state!=='downed')learnSkill(pawn.skills.shooting,(hostileTo(pawn,target)?170:20)*rangedTimings(profile).learningCycleSeconds*XP_SCALE);
+  pawn.lastAttack={targetId:target.id,atCore:core};
+  if(shot.order.auto?.kind==='response')shot.order.auto.remaining--;
+  if(shot.order.auto?.kind==='draft')shot.order=null;
   shot.stance={phase:'cooldown',startedAtCore:core,endsAtCore:core+profile.cooldownCoreTicks};
 }
 

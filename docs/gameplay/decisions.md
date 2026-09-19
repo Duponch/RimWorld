@@ -1,5 +1,7 @@
 # Choix et écarts de gameplay
 
+V60 : [tir automatique et réaction civile](../research/automatic-combat-reference.md). Décision au tick local plutôt qu’à chaque quatrième tick Core, cône sur neuf rayons de grille, tri stable avant tirage ; cooldowns et conservation physiques inchangés. Réveil défensif et réception d’un nouvel ordre civil pendant récupération restent incomplets. Rayon civil exact 0,66 adopté après contradiction avec le résumé approximatif du wiki.
+
 V59 : le contact diagonal permet un flanc dégagé, distinct du déplacement 3D. Arrêt de stun à fraction conservée sur l’arête ; poses GPU artistiques. Durée 45 ticks Core provisoire face aux sources contradictoires, et milli-PV comme les autres lésions. Terrain offensif, surprise, armure et catalogue complet restent absents. [Décisions et références](../research/melee-reference.md).
 
 V57 — [pouvoir d’arrêt](../development/stagger.md) : adopter durée, seuil adulte, renouvellement et paiement minimal Core ; adapter l’intégration au trajet 3D continu. La base anatomique/lumineuse reste capturée au départ, le ralentissement s’applique immédiatement au sous-pas d’impact. La fin de l’arête après incapacité reste notre choix V45 ; aucun ennemi ni réaction civile implicite. [Recherche](../research/stagger-reference.md).

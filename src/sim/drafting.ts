@@ -1,6 +1,7 @@
 import { cancelMelee } from './melee-state.ts';
 import { activeThreat,hostileTo } from './affiliation.ts';
 import { cancelShooting } from './shooting-state.ts';
+import { advanceShooter,shootingQueries } from './shooting.ts';
 import { AUTO_UNDRAFT_TICKS,DRAFT_QUEUE_LIMIT,sameCell,type DraftCommand } from './drafting-rules.ts';
 import { draftDestination,draftDestinationContext } from './drafting-destinations.ts';
 import { clearQueuedOrders } from './player-orders.ts';
@@ -49,8 +50,23 @@ export function applyDraftCommand(world:World,command:DraftCommand):CommandResul
     return {ok:true};
   }
   if(selected.some(p=>!p.draft||medicallyStopped(p)))return refuse('Mobilisez d’abord tous les colons sélectionnés.');
+  if(command.type==='fire-at-will') {
+    if(typeof command.enabled!=='boolean')return refuse('Réglage de tir invalide.');
+    for(const pawn of selected){
+      if(command.enabled)delete pawn.draft!.holdFire;
+      else {
+        pawn.draft!.holdFire=true;
+        if(pawn.shooting?.order?.auto?.kind==='draft')cancelShooting(pawn);
+        else if(pawn.shooting?.stance?.phase==='aim') {
+          // Soft cancellation resets the warmup, but an explicit attack survives.
+          pawn.shooting.stance=null;advanceShooter(world,pawn,world.tick*10,shootingQueries(world));
+        }
+      }
+    }
+    return {ok:true};
+  }
   if(command.type==='draft-stop') {
-    for(const pawn of selected){cancelShooting(pawn);cancelMelee(pawn);interruptDraftWork(world,pawn);pawn.draft={lastActiveTick:world.tick,target:null,queue:[]};pawn.planCooldown=0;}
+    for(const pawn of selected){cancelShooting(pawn);cancelMelee(pawn);interruptDraftWork(world,pawn);pawn.draft={lastActiveTick:world.tick,target:null,queue:[],...pawn.draft?.holdFire?{holdFire:true}:{}};pawn.planCooldown=0;}
     return {ok:true};
   }
   if(!command.target||!Number.isInteger(command.target.x)||!Number.isInteger(command.target.z)||typeof command.queue!=='boolean')return refuse('Destination tactique invalide.');

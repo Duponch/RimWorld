@@ -73,7 +73,7 @@ function exchange(world:World,pawn:Pawn,pile:MaterialPile):boolean {
   const drop=old?nearbyGround(view,pawn).find(c=>groundCapacity(view,c,old.item,pawn.id)>=1):undefined;
   if(old&&!drop)return false;
   if(old){old.owner={type:'ground',...drop!};delete old.weapon!.forbidden;}
-  pile.owner={type:'equipment',pawnId:pawn.id};delete pile.weapon!.forbidden;delete pawn.droppedWeaponId;return true;
+  pile.owner={type:'equipment',pawnId:pawn.id};if(pawn.draft)delete pawn.draft.holdFire;delete pile.weapon!.forbidden;delete pawn.droppedWeaponId;return true;
 }
 export function processEquipment(world:World,pawn:Pawn,context:NeedContext):void {
   const task=pawn.equipmentTask;if(!task)return;

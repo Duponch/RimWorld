@@ -1,0 +1,404 @@
+=== autofire-v60-targeted.log ===
+
+ RUN  v5.0.0 E:/Code/RimWorld
+
+ ✓ tests/encounter.test.ts > autonomous sentry fires with real anatomy, hostile XP, captured relations and exact phase continuation 497ms
+ ✓ tests/encounter.test.ts > affiliation does not grant player control, colony services or friendly targets; direct refusals remain atomic 17ms
+ ✓ tests/encounter.test.ts > civilian flees from visible proximity, preserves a moving load, continues after save and returns to work eligibility 752ms
+ ✓ tests/encounter.test.ts > visibility, forced work and ignore suppress automatic fleeing; room refuge is preferred to open ground 14ms
+ ✓ tests/encounter.test.ts > one collision contract for queries and following: enemies, moving endpoints, diagonals and door permission 21ms
+ × tests/encounter.test.ts > new encounter is reproducible, opt-in and separated from strict V57 migration 108ms
+   → expected { Object (schemaVersion, packed, ...) } to deeply equal { Object (schemaVersion, packed, ...) }
+ ✓ tests/encounter.test.ts > player encounter → downed ally → directed defense → physical rescue and medicine, then one day of recovery 1586ms
+ ✓ tests/melee.test.ts > adult hit/dodge curves, weighted tools and natural fallback after loss of hands 18ms
+ ✓ tests/melee.test.ts > blunt excess and inner bone split differ from poke; source record remains immutable and injuries remain valid 6ms
+ ✓ tests/melee.test.ts > real approach → reciprocal melee → wounds, exact recovery, phase saves and incapacitation 262ms
+ ✓ tests/melee.test.ts > orders are atomic; contact corners differ from walking; stop, undraft and retarget preserve recovery 14ms
+ ✓ tests/melee.test.ts > stun holds a moving pawn at its exact fraction, resumes continuously and saves the whole piecewise edge 30ms
+ ✓ tests/melee.test.ts > stun and stagger share an edge without changing prior distances: independent small-step timing oracle 55ms
+ × tests/melee.test.ts > V58 migration adds neutral melee skill only; old schemas reject new states and new injury kinds 13ms
+   → Invalid version 58 save: Invalid draft state for schema.
+ ✓ tests/melee.test.ts > thirty actors mix real melee, ranged retaliation, flight and excavation without resetting health 1964ms
+ ✓ tests/shooting.test.ts > command → preparation → real emission → medical impact, precise Core cadence and replay of every phase 342ms
+ ✓ tests/shooting.test.ts > cancel aim spends no RNG/XP; stop, retarget, undraft and movement cannot erase cooldown 29ms
+ ✓ tests/shooting.test.ts > atomic refusals, lost line, captured edge, target falls and shooter incapacity 24ms
+ × tests/shooting.test.ts > V55 migration is strict; current phase shape and skill cannot conceal invalid ownership or timing 14ms
+   → expected 60 to be 59 // Object.is equality
+ ✓ tests/shooting.test.ts > fractional cadence, fall between cycles and an emitted bullet outlive interruption independently 61ms
+ ✓ tests/drafting.test.ts > mobilisation stops civil reservations, wakes sleepers, preserves captured diagonals, queues and resumes civilian work 104ms
+ ✓ tests/drafting.test.ts > group destinations are distinct and atomic, transit stays shared and queued targets reserve on activation 58ms
+ ✓ tests/drafting.test.ts > saturated ground retains cargo through tactical movement, interruption and undraft without duplicating a resource 60ms
+ ✓ tests/drafting.test.ts > a transported patient is released on the captured edge; incapacitation cancels draft but manipulation alone does not 28ms
+ ✓ tests/drafting.test.ts > needs persist, exhaustion physically sleeps, idle auto-undraft is saved, and blocked routes release intentions 44ms
+ ✓ tests/drafting.test.ts > V53 strict migration, malformed mode rejection, continuation and discrete bridge phases 26ms
+ ✓ tests/drafting.test.ts > door waiting, diagonal distance and furniture crossing use the shared physical movement contract 32ms
+ ✓ tests/drafting.test.ts > meal, medicine and whole furniture keep distinct identity and content during a full-floor tactical interruption 63ms
+ ✓ tests/automatic-combat.test.ts > drafted autofire, hold-fire during aim and recovery, direct order and redraft defaults 68ms
+ ✓ tests/automatic-combat.test.ts > automatic attacks yield to captured/queued movement, then retain the held position and exact continuation 181ms
+ × tests/automatic-combat.test.ts > civilian armed response respects its exact radius, two-shot cycles, policy and physical cargo interruption 10ms
+   → Cannot read properties of undefined (reading 'owner')
+ ✓ tests/automatic-combat.test.ts > unarmed civilians approach within eight cells, while hold-fire drafted pawns retaliate only at contact 39ms
+ ✓ tests/automatic-combat.test.ts > visibility/hostility/forced work filter before scoring; cover, recent target and friendly cone influence selection 5ms
+ ✓ tests/automatic-combat.test.ts > V59 validation precedes neutral migration; automatic ownership, counters and remembered tick are strict 10ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/automatic-combat.test.ts > civilian armed response respects its exact radius, two-shot cycles, policy and physical cargo interruption
+TypeError: Cannot read properties of undefined (reading 'owner')
+ ❯ tests/automatic-combat.test.ts:39:93
+     37|   enemy.x=23;const cargo=addMaterial(w,'wood',7,{type:'pawn',pawnId:p.…
+     38|   startTravel(w,p,{x:7,z:10});considerAutomaticCombat(w,p,{remaining:4…
+     39|   expect(p.shooting?.order?.auto).toMatchObject({kind:'response',remai…
+       |                                                                                             ^
+     40|   let zero=false;for(let i=0;i<36;i++){stepWorld(w);expect(validateWor…
+     41|   expect(zero).toBe(true);const copy=deserializeWorld(serializeWorld(w…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  tests/encounter.test.ts > new encounter is reproducible, opt-in and separated from strict V57 migration
+AssertionError: expected { Object (schemaVersion, packed, ...) } to deeply equal { Object (schemaVersion, packed, ...) }
+
+- Expected
++ Received
+
+@@ -1655,11 +1655,11 @@
+        "z": 18,
+      },
+    ],
+    "restRules": "adult",
+    "rng": 42,
+-   "schemaVersion": 59,
++   "schemaVersion": 60,
+    "seed": 42,
+    "spoiled": {
+      "berries": 0,
+      "rice": 0,
+      "simple-meal": 0,
+
+ ❯ tests/encounter.test.ts:102:267
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  tests/melee.test.ts > V58 migration adds neutral melee skill only; old schemas reject new states and new injury kinds
+Error: Invalid version 58 save: Invalid draft state for schema.
+ ❯ deserializeWorld src/sim/serialization.ts:531:108
+
+ ❯ tests/melee.test.ts:93:14
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  tests/shooting.test.ts > V55 migration is strict; current phase shape and skill cannot conceal invalid ownership or timing
+AssertionError: expected 60 to be 59 // Object.is equality
+
+- Expected
++ Received
+
+- 59
++ 60
+
+ ❯ tests/shooting.test.ts:67:90
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  4 failed | 1 passed (5)
+      Tests  4 failed | 30 passed (34)
+   Start at  01:17:12
+   Duration  10.78s (tests 66%, transform 17%, import 16%)
+
+    Isolate  5 workers spawned · ~156ms startup each (spawn + environment, per file)
+             at least ~626ms faster with isolate: false — reuses workers across files instead of one per file
+
+
+=== autofire-v60-targeted-fixed.log ===
+
+ RUN  v5.0.0 E:/Code/RimWorld
+
+
+ Test Files  6 passed (6)
+      Tests  38 passed (38)
+   Start at  01:18:38
+   Duration  12.45s (tests 66%, import 18%, transform 16%)
+
+    Isolate  6 workers spawned · ~171ms startup each (spawn + environment, per file)
+             at least ~854ms faster with isolate: false — reuses workers across files instead of one per file
+
+
+=== autofire-v60-suite.log ===
+
+> lisiere@0.1.0 test
+> vitest run --maxWorkers=1
+
+
+ RUN  v5.0.0 E:/Code/RimWorld
+
+
+ Test Files  67 passed (67)
+      Tests  278 passed (278)
+   Start at  01:21:02
+   Duration  307.08s (tests 92%, import 7%, transform 1%)
+
+    Isolate  67 workers spawned · ~160ms startup each (spawn + environment, per file)
+             at least ~10.59s faster with isolate: false — reuses workers across files instead of one per file
+
+
+=== autofire-v60-final-tests.log ===
+
+> lisiere@0.1.0 test
+> vitest run tests/automatic-combat.test.ts tests/combat-world.test.ts tests/shooting.test.ts tests/melee.test.ts tests/encounter.test.ts --maxWorkers=1
+
+
+ RUN  v5.0.0 E:/Code/RimWorld
+
+
+ Test Files  5 passed (5)
+      Tests  36 passed (36)
+   Start at  01:36:04
+   Duration  10.81s (tests 66%, transform 17%, import 16%)
+
+    Isolate  5 workers spawned · ~163ms startup each (spawn + environment, per file)
+             at least ~650ms faster with isolate: false — reuses workers across files instead of one per file
+
+
+=== autofire-v60-save-final.log ===
+
+> lisiere@0.1.0 test
+> vitest run tests/automatic-combat.test.ts tests/shooting.test.ts tests/melee.test.ts --maxWorkers=1
+
+
+ RUN  v5.0.0 E:/Code/RimWorld
+
+
+ Test Files  3 passed (3)
+      Tests  19 passed (19)
+   Start at  01:39:23
+   Duration  6.26s (tests 57%, transform 26%, import 16%)
+
+
+=== autofire-v60-native-final.log ===
+
+Running 2 tests using 1 worker
+
+(node:18220) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 tests\integration\automatic-combat.spec.ts:8:1 › native UI: hold/allow fire, civilian Attack from Assign/inspector, actual wounds and exact continuation at 1x/6x (11.8s)
+  ok 2 tests\integration\shooting-load.spec.ts:19:1 › native mixed shooting load: 3/30/100 actors, 250², worker/scene/frames and GPU capacity growth (47.8s)
+
+  2 passed (1.0m)
+
+=== autofire-v60-final-build.log ===
+
+> lisiere@0.1.0 build
+> tsc --noEmit && vite build
+
+vite v8.3.0 building client environment for production...
+transforming...
+✓ 290 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/navigation.html                           0.51 kB │ gzip:   0.33 kB
+dist/index.html                                0.69 kB │ gzip:   0.40 kB
+dist/assets/simulation.worker-DI3-3pS1.js    380.78 kB
+dist/assets/navigation-Be_IfcT4.css            1.61 kB │ gzip:   0.79 kB
+dist/assets/game-AcbwhtzD.css                 17.74 kB │ gzip:   4.87 kB
+dist/assets/navigation-Bv9L6CFd.js            18.29 kB │ gzip:   7.29 kB
+dist/assets/sim-C43W-wfH.js                   82.93 kB │ gzip:  27.70 kB
+dist/assets/game-CCpPQ3TO.js               1,110.11 kB │ gzip: 312.43 kB
+
+✓ built in 631ms
+[plugin builtin:vite-reporter]
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+=== Final presentation ===
+> lisiere@0.1.0 test:presentation
+> node scripts/check-presentation.mjs
+
+{"action":"mine","frames":{"count":9948,"p50":4.19999999999709,"p95":8.300000000001091,"p99":8.400000000001455,"max":25},"jumpCount":0,"solidOccupancyCount":0}
+{"action":"chop","frames":{"count":10102,"p50":4.199999999998909,"p95":8.299999999999272,"p99":8.400000000001455,"max":25},"jumpCount":0,"solidOccupancyCount":0}
+
+=== Orientation GPU: failure reproduced before correction ===
+
+Running 1 test using 1 worker
+
+(node:29612) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  1 tests\integration\automatic-combat.spec.ts:8:1 › native UI: hold/allow fire, civilian Attack from Assign/inspector, actual wounds and exact continuation at 1x/6x (9.0s)
+
+
+  1) tests\integration\automatic-combat.spec.ts:8:1 › native UI: hold/allow fire, civilian Attack from Assign/inspector, actual wounds and exact continuation at 1x/6x
+
+    Error: expect(received).toBeCloseTo(expected, precision)
+
+    Expected: 0
+    Received: -0.8090169840977831
+
+    Expected precision:    5
+    Expected difference: < 0.000005
+    Received difference:   0.8090169840977831
+
+      30 |       expect(fought.pawns[0].shooting?.stance?.phase).toBe('cooldown');
+      31 |       const heading=await page.evaluate(()=>{const v=(window as any).__automaticView;return v.pawns.pawnMesh.geometry.getAttribute('aTo').getW(0);});
+    > 32 |       expect(Math.sin(heading-Math.atan2(fought.pawns[3].x-fought.pawns[0].x,fought.pawns[3].z-fought.pawns[0].z))).toBeCloseTo(0,5);
+         |                                                                                                                     ^
+      33 |       if(speed===6){await page.locator('#inspector-hostility').selectOption('ignore');await panel(page,'assign');await expect(page.getByLabel(`Réaction hostile de ${p.name}`,{exact:true})).toHaveValue('ignore');await page.keyboard.press('Escape');}
+      34 |       else {await page.locator('#fire-at-will').click();await expect(page.locator('#fire-at-will')).toHaveAttribute('aria-pressed','false');}
+      35 |       reports.push({speed,tick:fought.tick,actor:fought.pawns[0],target:fought.pawns[3]});
+        at E:\Code\RimWorld\tests\integration\automatic-combat.spec.ts:32:117
+
+    Error Context: test-results\automatic-combat-native-UI-4b80d-exact-continuation-at-1x-6x\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\automatic-combat-native-UI-4b80d-exact-continuation-at-1x-6x\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\automatic-combat-native-UI-4b80d-exact-continuation-at-1x-6x\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    tests\integration\automatic-combat.spec.ts:8:1 › native UI: hold/allow fire, civilian Attack from Assign/inspector, actual wounds and exact continuation at 1x/6x
+
+=== Pilot and acquisition after maintenance strategy ===
+
+> lisiere@0.1.0 test
+> vitest run tests/automatic-combat.test.ts tests/colony-player.test.ts --maxWorkers=1
+
+
+ RUN  v5.0.0 E:/Code/RimWorld
+
+
+ Test Files  2 passed (2)
+      Tests  7 passed (7)
+   Start at  01:52:47
+   Duration  136.93s (tests 99%, transform 1%)
+
+
+=== Native commands pass; maintenance assertion failure retained ===
+
+Running 2 tests using 1 worker
+
+(node:29940) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 tests\integration\automatic-combat.spec.ts:8:1 › native UI: hold/allow fire, civilian Attack from Assign/inspector, actual wounds and exact continuation at 1x/6x (10.9s)
+(node:9104) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  2 tests\integration\colony-journey.spec.ts:30:1 › partie de trois jours : un joueur équipe son camp et entretient ses stocks par la vraie interface (6.5m)
+
+
+  1) tests\integration\colony-journey.spec.ts:30:1 › partie de trois jours : un joueur équipe son camp et entretient ses stocks par la vraie interface
+
+    Error: {"tick":18094,"foodPolicies":[3,3,3],"restRules":"adult","scheduledSleepHours":[8,8,8],"spoiled":{"berries":0,"rice":0,"simple-meal":0},"crops":15,"growingCells":15,"power":[{"kind":"wood-generator","on":true,"parent":null,"fuel":12184},{"kind":"standing-lamp","on":true,"parent":12996,"fuel":null}],"mining":{"componentsInBuildings":2,"components":4,"componentsStored":4,"blocks":35,"blocksStored":35,"steelInBuildings":150,"steel":50,"steelStored":50,"cells":18,"chunks":1,"stored":0},"recreation":[{"level":99.68999999999984,"tolerance":{"solitary":29.352536446993593,"dexterity":27.64923822930472},"bored":{"solitary":false,"dexterity":false}},{"level":97.80899363787735,"tolerance":{"solitary":43.081849751798366,"dexterity":0},"bored":{"solitary":false,"dexterity":false}},{"level":84.16821910649287,"tolerance":{"solitary":28.42233403518615,"dexterity":6.344008384055421},"bored":{"solitary":false,"dexterity":false}}],"equipment":[{"id":12420,"item":"revolver","owner":{"type":"equipment","pawnId":12411},"weapon":{"quality":"normal","hitPoints":100}}],"medicalBeds":0,"medicines":{"total":30,"stored":30,"policies":["industrial","industrial","industrial"]},"health":[{"id":12409,"state":"sleeping","rescue":null,"tend":null,"feed":null,"hunger":50.8266666666625,"medicalRest":null,"treated":0,"medicineXp":0,"bedUse":12492,"injuries":0,"gunshots":0,"missing":0,"bloodLoss":0},{"id":12410,"state":"sleeping","rescue":null,"tend":null,"feed":null,"hunger":53.893333333328826,"medicalRest":null,"treated":0,"medicineXp":0,"bedUse":12488,"injuries":0,"gunshots":0,"missing":0,"bloodLoss":0},{"id":12411,"state":"sleeping","rescue":null,"tend":null,"feed":null,"hunger":41.013333333330245,"medicalRest":null,"treated":0,"medicineXp":0,"bedUse":12462,"injuries":0,"gunshots":0,"missing":0,"bloodLoss":0}],"skills":[{"id":12409,"melee":{"level":8,"xp":0,"dailyXp":0,"passion":0},"shooting":{"level":8,"xp":0,"dailyXp":0,"passion":1},"construction":{"level":8,"xp":0,"dailyXp":0,"passion":1},"medicine":{"level":6,"xp":0,"dailyXp":0,"passion":1},"lastResetTick":18011},{"id":12410,"melee":{"level":8,"xp":0,"dailyXp":0,"passion":0},"shooting":{"level":5,"xp":0,"dailyXp":0,"passion":0},"construction":{"level":10,"xp":3175750,"dailyXp":-500,"passion":2},"medicine":{"level":3,"xp":0,"dailyXp":0,"passion":0},"lastResetTick":18010},{"id":12411,"melee":{"level":8,"xp":0,"dailyXp":0,"passion":0},"shooting":{"level":3,"xp":0,"dailyXp":0,"passion":0},"construction":{"level":4,"xp":0,"dailyXp":0,"passion":0},"medicine":{"level":8,"xp":0,"dailyXp":0,"passion":2},"lastResetTick":18009}],"combat":{"shooters":0,"flights":0,"impacts":0},"interruptedCargo":[],"furnitureTransit":0,"furnitureExits":0,"roofing":{"constructed":28,"planned":28,"removal":0},"plantClimate":{"slowed":0,"thermalAnchors":0},"thermal":{"outdoors":17.411503149782806,"retainedCells":1,"temperatures":[17.411503149782806]},"workplaces":[{"id":12537,"kind":"campfire","role":"none","light":0.5,"lighting":1,"outdoors":0.8,"roomRole":1,"station":0.5,"total":0.4},{"id":12918,"kind":"stonecutter","role":"none","light":0.5,"lighting":1,"outdoors":0.8,"roomRole":1,"station":1,"total":0.8}],"lighting":[{"id":12409,"cellLight":0.5,"cellFactor":1,"moving":false,"travelFactor":1},{"id":12410,"cellLight":0.5,"cellFactor":1,"moving":false,"travelFactor":1},{"id":12411,"cellLight":0.5,"cellFactor":1,"moving":false,"travelFactor":1}],"sharedPawnCells":0,"playerOrders":[{"active":null,"queued":0,"priority":null},{"active":null,"queued":0,"priority":null},{"active":null,"queued":0,"priority":null}],"obstructedGrowingCells":0,"clearing":0,"construction":{"blueprints":0,"frames":0,"clearingPlants":0,"clearingPiles":0},"structures":{"wood-generator":1,"standing-lamp":1,"passive-cooler":0,"bed":3,"table":1,"stool":3,"wall":7,"campfire":1,"horseshoes":1,"stonecutter":1,"door":1},"preparedMeals":4,"stock":{"wood":43,"food":19},"pending":4,"minimumFood":41.013333333330245,"minimumRest":55.75011904761976}
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  -  1
+    + Received  + 32
+
+    - Array []
+    + Array [
+    +   Object {
+    +     "escrow": Object {
+    +       "food": 0,
+    +       "wood": 0,
+    +     },
+    +     "footprint": "standard",
+    +     "id": 13012,
+    +     "kind": "mine",
+    +     "orientation": 0,
+    +     "progress": 0,
+    +     "reservedBy": null,
+    +     "status": "pending",
+    +     "x": 152,
+    +     "z": 161,
+    +   },
+    +   Object {
+    +     "escrow": Object {
+    +       "food": 0,
+    +       "wood": 0,
+    +     },
+    +     "footprint": "standard",
+    +     "id": 13013,
+    +     "kind": "mine",
+    +     "orientation": 0,
+    +     "progress": 0,
+    +     "reservedBy": null,
+    +     "status": "pending",
+    +     "x": 151,
+    +     "z": 162,
+    +   },
+    + ]
+
+      84 |         expect(current.structures.filter(s=>s.kind==='wall'&&isBlockMaterial(s.material)),context).toHaveLength(1);
+      85 |         expect(current.deconstructed.count,context).toBe(1);expect(current.structures.find(s=>s.kind==='horseshoes')?.x,context).toBe(Math.floor(current.width/2)+4);expect(current.packed,context).toEqual([]);
+    > 86 |         expect(summary.structures,context).toEqual({'wood-generator':1,'standing-lamp':1,'passive-cooler':0,bed:3,table:1,stool:3,wall:7,campfire:1,horseshoes:1,stonecutter:1,door:1});expect(current.jobs.filter(j=>j.growingZoneId===undefined&&!['chop','harvest'].includes(j.kind)),context).toEqual([]);expect(current.resources.filter(r=>r.kind==='rice').length,context).toBeGreaterThan(5);
+         |                                                                                                                                                                                                                                                                                                   ^
+      87 |         expect(summary.mining.componentsInBuildings,context).toBe(2);expect(summary.mining.componentsStored,context).toBe(4);expect(summary.power.filter(s=>s.on),context).toHaveLength(2);
+      88 |         expect(summary.medicines,context).toEqual({total:30,stored:30,policies:['industrial','industrial','industrial']});
+      89 |         expect(summary.roofing,context).toEqual({constructed:28,planned:28,removal:0});expect(current.stock.food,context).toBeGreaterThan(0);expect(sleepers.size,context).toBe(3);
+        at E:\Code\RimWorld\tests\integration\colony-journey.spec.ts:86:291
+
+    Error Context: test-results\colony-journey-partie-de-t-625fe-ocks-par-la-vraie-interface\error-context.md
+
+  Slow test file: tests\integration\colony-journey.spec.ts (6.5m)
+  Consider running tests from slow files in parallel. See: https://playwright.dev/docs/test-parallel
+  1 failed
+    tests\integration\colony-journey.spec.ts:30:1 › partie de trois jours : un joueur équipe son camp et entretient ses stocks par la vraie interface
+  1 passed (6.7m)
+
+=== Final acquisition and strict melee save validation ===
+
+> lisiere@0.1.0 test
+> vitest run tests/automatic-combat.test.ts tests/melee.test.ts --maxWorkers=1
+
+
+ RUN  v5.0.0 E:/Code/RimWorld
+
+
+ Test Files  2 passed (2)
+      Tests  14 passed (14)
+   Start at  02:03:29
+   Duration  4.68s (tests 56%, transform 30%, import 13%)
+
+
+=== Final build ===
+
+> lisiere@0.1.0 build
+> tsc --noEmit && vite build
+
+vite v8.3.0 building client environment for production...
+transforming...
+✓ 290 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/navigation.html                           0.51 kB │ gzip:   0.33 kB
+dist/index.html                                0.69 kB │ gzip:   0.40 kB
+dist/assets/simulation.worker-CqK69BSz.js    380.83 kB
+dist/assets/navigation-Be_IfcT4.css            1.61 kB │ gzip:   0.79 kB
+dist/assets/game-AcbwhtzD.css                 17.74 kB │ gzip:   4.87 kB
+dist/assets/navigation-Bv9L6CFd.js            18.29 kB │ gzip:   7.29 kB
+dist/assets/sim-C43W-wfH.js                   82.93 kB │ gzip:  27.70 kB
+dist/assets/game-LsNEp8Uu.js               1,110.18 kB │ gzip: 312.45 kB
+
+✓ built in 577ms
+[plugin builtin:vite-reporter]
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+=== Complete native colony journey after maintenance correction ===
+
+Running 1 test using 1 worker
+
+(node:29760) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 tests\integration\colony-journey.spec.ts:30:1 › partie de trois jours : un joueur équipe son camp et entretient ses stocks par la vraie interface (7.2m)
+
+  Slow test file: tests\integration\colony-journey.spec.ts (7.2m)
+  Consider running tests from slow files in parallel. See: https://playwright.dev/docs/test-parallel
+  1 passed (7.2m)

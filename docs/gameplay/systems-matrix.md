@@ -1,5 +1,7 @@
 # Matrice des systèmes et critères de réalisation
 
+V60 : acquisition automatique à l’arrêt, réaction civile Attaquer et priorité des ordres enrichissent S02/S15. Ces sous-parties ne clôturent ni Combat ni G3 ; [contrat](../development/automatic-combat.md), [inventaire courant](implementation-status.md).
+
 V59 : sous-parties Combat/Santé/Compétences/Navigation utilisées par la mêlée actuelle, avec ordre réel, contact, outils, XP, lésions et sauvegarde. Aucun SYS complet ni jalon fermé ; [état consolidé](implementation-status.md) et [contrat](../development/melee.md). Les bilans numérotés ci-dessous sont historiques.
 
 V58 : sous-parties SYS/TEST-035/098..107/111..117 et UI-007..011 enrichies par la première menace autonome, contrôle/hostilité séparés, collision, permissions et fuite. G3 reste partiel : une sentinelle statique ne valide ni mêlée, ni tactique de groupe, ni raid. [État et limites](implementation-status.md).

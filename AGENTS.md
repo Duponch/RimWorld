@@ -320,3 +320,10 @@
 - V58 validée strictement avant Mêlée neutre ; nouvelles formes melee/stun/stuns et morsure interdites auparavant. Arrêt au milieu d’une arête sans saut, propagation commune corps/cargo/patient/sélection. Durée du stun calibrée à 45 ticks Core, divergence documentée.
 - Les capacités et portages capturés par shootingQueries ne survivent qu’à la transaction synchrone ; renouveler après chaque impact, avant le combattant/projectile suivant. Aucune réutilisation entre ticks ou après mutation médicale.
 - La sentinelle riposte au contact sans poursuite autonome. Tir automatique/réaction Attaquer et tactique générale restent ouverts ; maintenir le bilan exact.
+
+## Acquisition automatique V60
+
+- Lire `docs/development/automatic-combat.md` et sa recherche. Mobilisé immobile : tir libre par défaut, déplacement/file prioritaires, défense en mêlée même tir libre désactivé. Civil Attaquer : rayon 8 sans arme ou 0,66 de portée borné 2–20 ; deux tirs puis réévaluation, sans mobilisation cachée.
+- État automatique distinct des ordres explicites ; couper la permission annule la visée automatique, réamorce celle d’un ordre explicite conservé, jamais la récupération. Les refus d’ordres civils pendant récupération restent une limite documentée. Cargaison et arête engagées restent physiques.
+- V59 strictement validée avant migration neutre V60. Origine de l’ordre, compteur/expiration et dernière attaque réelle sont sauvegardés ; aucun passé ni cible inventés. Les politiques sont des phases discrètes du bridge.
+- Capture tactique bornée à portée +3 pour l’acquisition (penchement/couverture/cône inclus), fermeture hors fenêtre, identités de couverture inchangées. Renouveler après interruption ; aucun cache de monde par tick ou entre acteurs. Grille de contact paresseuse seulement à proximité ; ne pas modifier le classement ou le PRNG pour gagner du temps.

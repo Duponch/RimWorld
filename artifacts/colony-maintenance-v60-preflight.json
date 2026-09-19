@@ -1,0 +1,100 @@
+[
+  {
+    "tick": 19094,
+    "mining": {
+      "componentsInBuildings": 2,
+      "components": 4,
+      "componentsStored": 4,
+      "blocks": 35,
+      "blocksStored": 35,
+      "steelInBuildings": 150,
+      "steel": 50,
+      "steelStored": 50,
+      "cells": 18,
+      "chunks": 1,
+      "stored": 0
+    },
+    "pending": [
+      {
+        "id": 13012,
+        "kind": "mine",
+        "x": 152,
+        "z": 161,
+        "orientation": 0,
+        "footprint": "standard",
+        "status": "active",
+        "reservedBy": 12410,
+        "progress": 0,
+        "escrow": {
+          "wood": 0,
+          "food": 0
+        },
+        "pickTicks": 100
+      },
+      {
+        "id": 13013,
+        "kind": "mine",
+        "x": 151,
+        "z": 162,
+        "orientation": 0,
+        "footprint": "standard",
+        "status": "active",
+        "reservedBy": 12409,
+        "progress": 0,
+        "escrow": {
+          "wood": 0,
+          "food": 0
+        },
+        "pickTicks": 100
+      },
+      {
+        "id": 13033,
+        "kind": "harvest",
+        "x": 116,
+        "z": 130,
+        "orientation": 0,
+        "footprint": "standard",
+        "status": "active",
+        "reservedBy": 12411,
+        "progress": 60,
+        "escrow": {
+          "wood": 0,
+          "food": 0
+        },
+        "workRemainder": 7864
+      },
+      {
+        "id": 13034,
+        "kind": "harvest",
+        "x": 129,
+        "z": 135,
+        "orientation": 0,
+        "footprint": "standard",
+        "status": "active",
+        "reservedBy": 12409,
+        "progress": 60,
+        "escrow": {
+          "wood": 0,
+          "food": 0
+        }
+      }
+    ]
+  },
+  {
+    "tick": 20094,
+    "mining": {
+      "componentsInBuildings": 2,
+      "components": 4,
+      "componentsStored": 4,
+      "blocks": 35,
+      "blocksStored": 35,
+      "steelInBuildings": 150,
+      "steel": 50,
+      "steelStored": 50,
+      "cells": 20,
+      "chunks": 1,
+      "stored": 1
+    },
+    "pending": []
+  }
+]

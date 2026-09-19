@@ -1,5 +1,7 @@
 # Partie représentative et regard critique sur la collecte
 
+Revue V60 : le parcours UI a atteint trois jours sans aucun fragment naturel malgré plusieurs excavations. Le pilote ne doit pas supposer un produit à chaque case : lorsqu’un atelier manque de fragments et de blocs, il entretient désormais quatre désignations minières proches, au lieu d’une seule par visite espacée. Rendements et PRNG du jeu inchangés ; conservation, production de blocs et construction du mur restent exigées. Voir [preuve et diagnostic](../history/validation-automatic-combat-v60.md).
+
 Relecture du 13 septembre 2026. Corpus : chapitres 9/10 (travail et propriété), 14 (besoins), 30 (invalidation et séparation de présentation), 32 (scénarios). Contrats SYS-041..061 et SYS-076..080 ; UI-013/019..026. Le test applique ces domaines à nos fonctionnalités présentes, pas à une colonie complète de RimWorld.
 
 ## Ce qu'un début de partie implique

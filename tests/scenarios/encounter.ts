@@ -13,6 +13,7 @@ export function encounterCamp():World {
   w.pawns.push(enemy);
   for(const p of [w.pawns[0],enemy]){p.skills.shooting.passion=1;addMaterial(w,'weapon',1,{type:'equipment',pawnId:p.id},'revolver');}
   applyCommand(w,{type:'draft',pawnIds:[w.pawns[0].id],enabled:true});
+  applyCommand(w,{type:'fire-at-will',pawnIds:[w.pawns[0].id],enabled:false});
   return w;
 }
 

@@ -1,3 +1,4 @@
+import { cancelAutomaticCombat } from './automatic-combat-state.ts';
 import { releaseRescue } from './rescue-state.ts';
 import { updatePawnHealth } from './health.ts';
 import { isRoofJob } from './roof-rules.ts';
@@ -85,6 +86,7 @@ export function releaseWork(world:World,pawn:Pawn,plan?:DropPlan):boolean {
 /** Release task/service claims independently of ownership. Only involuntary or tactical
  * interruption may use this while an object is still carried. */
 export function releaseAssignments(world:World,pawn:Pawn):void {
+  cancelAutomaticCombat(pawn);
   if(pawn.need?.kind==='sleep'&&pawn.need.medical&&pawn.health&&!pawn.health.death&&pawn.health.tick<world.tick)updatePawnHealth(world,pawn);
   releaseRescue(world,pawn);delete pawn.tend;delete pawn.feed;delete pawn.medicalSleep;delete pawn.equipmentTask;
   const job=world.jobs.find(j=>j.id===pawn.jobId);

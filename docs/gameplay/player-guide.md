@@ -1,5 +1,11 @@
 # Guide joueur
 
+## Tir libre et réaction au danger (V60)
+
+Un colon mobilisé tire automatiquement sur les ennemis visibles à portée lorsqu’il tient sa position. **Tirer à volonté** dans l’inspection permet de suspendre ou réautoriser ce comportement ; déplacer le colon garde priorité. Un ordre **Tirer sur une cible** reste possible même avec le tir libre désactivé. Couper le tir libre interrompt la préparation en cours ; un ordre explicite recommence sa visée. La récupération après un coup n’est jamais supprimée. Pendant celle-ci, un nouvel ordre civil est encore refusé : redonnez-le une fois la récupération terminée. Au contact, le colon peut toujours se défendre en mêlée.
+
+Dans **Affectations → Réaction hostile**, ou l’inspection d’un civil, choisissez **Fuir**, **Attaquer** ou **Ignorer**. Attaquer engage les menaces proches : avec le revolver, depuis la position actuelle et dans 66 % de sa portée ; sans arme, le colon peut approcher une menace dans huit cases. Les ordres de travail imposés restent prioritaires. Sommeil et repos médical ne sont pas encore interrompus par cette défense. [Règles et limites](../development/automatic-combat.md).
+
 ## Attaquer au corps à corps (V59)
 
 Mobilisez le colon, choisissez **Attaquer au corps à corps**, puis cliquez le personnage ciblé. Le colon rejoint une place accessible et frappe avec ses outils naturels ou son arme. L’ordre peut viser explicitement un allié. Arrêter, déplacer ou démobiliser interrompt l’attaque, mais conserve la récupération entre deux coups. Une cible nouvellement à terre termine l’engagement.
@@ -12,9 +18,9 @@ Dans **Menu → Nouvelle colonie**, choisissez **Rencontre armée**, sur une car
 
 Mobilisez un colon équipé puis utilisez **Tirer sur une cible** et cliquez la sentinelle. Après le combat, démobilisez les survivants pour leur permettre de manger, se reposer et soigner. Les blessés à terre sont transportés physiquement vers un lit accessible. L’ennemi ne devient pas un colon ni un patient civil ; capture et prisonniers restent à venir.
 
-**Affectations → Réaction hostile** propose Fuir (défaut) et Ignorer. Un civil éveillé sans ordre imposé fuit une menace visible à moins de huit cases, cherche un refuge puis attend avant de reprendre ses activités. Un ordre direct ou la mobilisation prévaut. Les portes fermées protègent du passage hostile ; une porte ouverte, même interdite à vos colons, peut laisser passer l’ennemi.
+**Affectations → Réaction hostile** propose Fuir (défaut), Attaquer et Ignorer. Un civil éveillé sans ordre imposé fuit une menace visible à moins de huit cases, cherche un refuge puis attend avant de reprendre ses activités. Un ordre direct ou la mobilisation prévaut. Les portes fermées protègent du passage hostile ; une porte ouverte, même interdite à vos colons, peut laisser passer l’ennemi.
 
-**Limites importantes :** cette sentinelle reste sur place, sans poursuite autonome. Elle riposte au contact en V59. Le tir sur un adversaire debout adjacent est refusé ; utilisez la mêlée. Tir automatique des colons mobilisés, réaction Attaquer, raids, armures et diplomatie ne sont pas livrés. Le camp paisible reste le scénario par défaut.
+**Limites importantes :** cette sentinelle reste sur place, sans poursuite autonome. Elle riposte au contact en V59. Le tir sur un adversaire debout adjacent est refusé ; utilisez la mêlée. Raids, poursuite de la sentinelle, armures et diplomatie ne sont pas livrés. Le camp paisible reste le scénario par défaut.
 
 ## Commander un tir
 
@@ -22,14 +28,14 @@ Mobilisez un colon équipé puis utilisez **Tirer sur une cible** et cliquez la 
 
 Le colon termine son pas en cours, vise, tire puis récupère avant de recommencer. Un déplacement ou **Arrêter l’ordre** interrompt la visée ; après une balle partie, la récupération reste obligatoire même en changeant d’ordre ou en démobilisant. Une cible devenue inaccessible, morte ou nouvellement à terre arrête la suite. La balle poursuit son trajet indépendamment du tireur ; couvert, précision, capacités et Tir déterminent le résultat. L’expérience vient du tir admissible, pas seulement d’un coup au but. La compétence est consultable dans Biographie · compétences.
 
-Après un accident, démobilisez les personnes concernées et utilisez Patient/Médecin, un lit médical et les soins déjà disponibles. Le revolver ralentit temporairement un adulte touché, même pendant un pas : la marche reprend ensuite sans saut. Un nouvel impact renouvelle la durée sans cumuler les pénalités. Santé affiche cet effet séparément des blessures. Les ennemis, réactions automatiques, armures et mêlée restent absents. [Périmètre exact](../development/shooting.md).
+Après un accident, démobilisez les personnes concernées et utilisez Patient/Médecin, un lit médical et les soins déjà disponibles. Le revolver ralentit temporairement un adulte touché, même pendant un pas : la marche reprend ensuite sans saut. Un nouvel impact renouvelle la durée sans cumuler les pénalités. Santé affiche cet effet séparément des blessures. La sentinelle, les réactions automatiques et la mêlée décrites plus haut utilisent ce même combat ; les armures restent absentes. [Périmètre exact](../development/shooting.md).
 
 
 ## Commander les déplacements
 
 Sélectionnez un ou plusieurs colons, puis **Mobiliser** ou **R**. Un clic droit au sol les déplace ; **Maj + clic droit** ajoute un déplacement à la file. Le bouton **Arrêter l’ordre** annule la destination et la file, sans téléportation. **Démobiliser/R** rend leur autonomie aux colons. R sans colon sélectionné conserve le raccourci Récolter.
 
-Les mobilisés ne vont pas travailler, manger ou chercher un lit seuls. Leurs besoins et leur santé continuent : un épuisement peut les faire dormir au sol. Une longue attente sans menace les démobilise automatiquement. Les objets portés sont déposés ; si le sol est saturé, le colon conserve sa cargaison jusqu’à une place libre. Le tir dirigé du revolver est décrit ci-dessus ; adversaires et combat automatique restent absents.
+Les mobilisés ne vont pas travailler, manger ou chercher un lit seuls. Leurs besoins et leur santé continuent : un épuisement peut les faire dormir au sol. Une longue attente sans menace les démobilise automatiquement. Les objets portés sont déposés ; si le sol est saturé, le colon conserve sa cargaison jusqu’à une place libre. Le tir dirigé du revolver est décrit ci-dessus ; la défense automatique du poste et la sentinelle sont décrites plus haut.
 
 ## Équiper le revolver
 

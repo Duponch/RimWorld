@@ -49,3 +49,5 @@ Les portraits utiliseront un atlas ou des rendus hors écran conservés, invalid
 G0 : prolonger le contrat de propriété avec l'inventaire ; G3 : équipement, anatomie, protections et représentation correspondante ; G5 : contenu et finitions. Cela reste dans le calendrier [ROADMAP](../ROADMAP.md).
 
 Enrichir les scénarios existants avec échange d'arme, vêtements compatibles/incompatibles, cible disparue, interruption, pleine capacité et reprise sauvegardée. Côté présentation, vérifier la même identité/tenue dans la carte et les portraits après changement puis chargement, y compris couvre-chef masquant les cheveux. Auditer un lot de changements simultanés sur une foule, en séparant projection CPU, uploads et rendu. Les validations d’arme seule sont exécutées en V52 ; celles des vêtements et portraits définitifs restent futures.
+
+V60 : pendant la récupération d’un tir automatique, l’ordre peut déjà être retiré. Le rendu utilise alors la dernière cible réellement attaquée, persistée, pour restaurer l’orientation après chargement. Contrôle des attributs GPU dans le parcours natif ; aucun déplacement ou dégât déduit de cette orientation.

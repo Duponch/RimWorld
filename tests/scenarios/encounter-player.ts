@@ -15,10 +15,11 @@ export function encounterDecisions(world:World):Decision[] {
   const grid=captureWorldShotGrid(world);
   for(const p of world.pawns.filter(p=>isColonist(p)&&activeThreat(p)&&equippedWeapon(world,p)&&!p.shooting&&!p.melee)) {
     const adjacent=threats.find(t=>meleeContact(world,p,t));
-    if(adjacent&&p.draft)return [{reason:'La menace est au contact : frapper plut�t que tenter un tir impossible.',command:{type:'melee',pawnIds:[p.id],targetId:adjacent.id}}];
+    if(adjacent&&p.draft)return [{reason:'La menace est au contact : frapper plutôt que tenter un tir impossible.',command:{type:'melee',pawnIds:[p.id],targetId:adjacent.id}}];
     const target=threats.filter(t=>distanceSquared(p,t)>=4&&findShotLine(grid,p,{cell:t,leans:true},25.9).ok).sort((a,b)=>distanceSquared(p,a)-distanceSquared(p,b)||a.id-b.id)[0];if(!target)continue;
     if(!p.draft)return [{reason:'Mobiliser la réserve armée pour protéger le blessé.',command:{type:'draft',pawnIds:[p.id],enabled:true}}];
-    return [{reason:'Viser la menace avant le secours du blessé.',command:{type:'shoot',pawnIds:[p.id],targetId:target.id}}];
+    if(p.draft.holdFire)return [{reason:'Autoriser la défense automatique avant le secours du blessé.',command:{type:'fire-at-will',pawnIds:[p.id],enabled:true}}];
+    return []; // Hold position: the combat controller selects a visible hostile.
   }
   return [];
 }

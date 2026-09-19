@@ -89,7 +89,7 @@ test('stun and stagger share an edge without changing prior distances: independe
 });
 
 test('V58 migration adds neutral melee skill only; old schemas reject new states and new injury kinds',()=>{
-  const w=meleeCamp(),old=JSON.parse(serializeWorld(w));old.schemaVersion=58;for(const p of old.pawns)delete p.skills.melee;
+  const w=meleeCamp(),old=JSON.parse(serializeWorld(w));old.schemaVersion=58;for(const p of old.pawns){delete p.skills.melee;if(p.draft)delete p.draft.holdFire;}
   const next=deserializeWorld(JSON.stringify(old));expect(next.pawns[0].skills.melee).toEqual({level:8,xp:0,dailyXp:0,passion:0});expect(next.tick).toBe(old.tick);
   old.pawns[0].stun={sinceCore:old.tick*10,untilCore:old.tick*10+45};expect(()=>deserializeWorld(JSON.stringify(old))).toThrow('version 58');
   const bad=JSON.parse(serializeWorld(w));bad.pawns[0].melee={order:null,strike:null};expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();

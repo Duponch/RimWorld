@@ -1,6 +1,18 @@
-# Validation courante — V59
+# Validation courante — V60
 
-## Mêlée et étourdissement V59
+## Tir automatique et réaction Attaquer V60
+
+19 septembre 2026. [Contrat](automatic-combat.md), [sources revérifiées](../research/automatic-combat-reference.md), [preuves détaillées](../history/validation-automatic-combat-v60.md). Défense du poste mobilisé, permission de tir et réponse civile physique ; schéma 60, validation V59 avant migration neutre.
+
+278/278 tests de simulation, puis 36/36 sur les contrats optimisés, 19/19 après revue stricte des phases, 7/7 incluant le pilote civil sur trois cartes et 14/14 après le dernier refus de forme malformée. Build réussi. UI native commandes et charge : 2/2, à 1×/6× et 3/30/100 acteurs ; reprise des commandes avec orientation GPU réussie (10,9 s). Long parcours civil final réussi (7,2 min) : camp construit au jour 3, réserves réelles et maintenance achevée au matin. Les deux premiers échecs du pilote et leurs corrections sont conservés dans les preuves, sans modification du rendement minier. Aucune erreur navigateur finale ou compilation GPU pendant la mesure de charge.
+
+Captures locales d’acquisition : CPU mixte à cent acteurs p99 **247,04 → 71,86 ms**, max **261,82 → 87,62 ms**, p95 autour de **30 ms** inchangé. WebGPU natif : images p95 **24,9 ms**, maximum **129,2 ms**. Ces valeurs ne garantissent pas cent acteurs à 6× ; [conditions, tous percentiles, limites et contrôles de présentation](../history/validation-automatic-combat-v60.md).
+
+Garde minage/abattage finale réussie : aucune attente après amorçage ni saut, 44 commandes de vitesse sous 38.8 ms, images max 25 ms.
+
+G0 en consolidation, G1/G2 partiels, G3 premières boucles ; G4/G5 ouverts. Prochain lot : poursuite et positions de tir de la menace. Estimation globale inchangée environ 20 % (15–25 %). Les sections suivantes sont historiques.
+
+## Historique — mêlée et étourdissement V59
 
 19 septembre 2026. [Contrat](melee.md), [sources et incertitudes](../research/melee-reference.md), [preuves, échecs et mesures](../history/validation-melee-v59.md). Approche commandée, outils naturels et revolver, toucher/esquive, Mêlée/XP, lésions soignables, riposte locale et étourdissement intégré à la même trajectoire. Schéma 59, V58 strictement validée avant migration ; durée d’étourdissement explicitement provisoire.
 

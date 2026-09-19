@@ -77,7 +77,7 @@ export function createFoodPolicyControls(root: HTMLElement, send: (command: Food
         const row=document.createElement('tr'),th=document.createElement('th');th.scope='row';th.textContent=p.name;row.append(th);
         const td=document.createElement('td'),select=document.createElement('select');select.dataset.foodPolicyPawn=String(p.id);select.setAttribute('aria-label',`Régime alimentaire de ${p.name}`);
         select.onchange=()=>{void commit({type:'food-policy-assign',pawnId:p.id,policyId:Number(select.value)});};td.append(select);row.append(td);
-        const reactionCell=document.createElement('td'),response=document.createElement('select');response.setAttribute('aria-label',`Réaction hostile de ${p.name}`);response.innerHTML='<option value="flee">Fuir</option><option value="ignore">Ignorer</option>';response.onchange=()=>void commit({type:'hostility-response',pawnId:p.id,response:response.value as 'flee'|'ignore'});reactionCell.append(response);row.append(reactionCell);
+        const reactionCell=document.createElement('td'),response=document.createElement('select');response.setAttribute('aria-label',`Réaction hostile de ${p.name}`);response.innerHTML='<option value="flee">Fuir</option><option value="attack">Attaquer</option><option value="ignore">Ignorer</option>';response.onchange=()=>void commit({type:'hostility-response',pawnId:p.id,response:response.value as 'flee'|'ignore'|'attack'});reactionCell.append(response);row.append(reactionCell);
         const status=document.createElement('td');status.className='policy-status';row.append(status);rows.set(p.id,{select,response,status});return row;
       }));
     }

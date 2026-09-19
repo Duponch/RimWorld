@@ -12,7 +12,9 @@ export function miningDecisions(world:World):Decision[] {
   const mined=world.tiles.filter(t=>t.terrain==='rough-stone').length;
   const pending=world.jobs.filter(j=>j.kind==='mine').length;
   const missingChunk=world.structures.some(s=>s.kind==='stonecutter')&&world.piles.reduce((n,p)=>n+(p.kind==='blocks'?p.quantity:0),0)<20&&!world.piles.some(p=>p.kind==='chunk'&&p.item!=='legacy-chunk');
-  const targetCount=missingChunk?Math.max(4,mined+1):4;
+  // Keep a small area pending: the player checks only every few hours and
+  // natural stone is not guaranteed to yield a chunk on each excavation.
+  const targetCount=missingChunk?Math.max(4,mined+4):4;
   if(mined+pending<targetCount) {
     const targets=world.tiles.flatMap((t,i)=>t.terrain==='rock'&&!t.ore?[{x:i%world.width,z:Math.floor(i/world.width)}]:[])
       .sort((a,b)=>Math.hypot(a.x-cx,a.z-cz)-Math.hypot(b.x-cx,b.z-cz));

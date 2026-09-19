@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+V60 ne crée aucun objet : elle rend les acteurs/revolver actuels utilisables par le tir automatique et la réaction civile Attaquer. Aucun inventaire personnel, vêtement, armure ou nouvelle arme implicitement livré. [Contrat](../development/automatic-combat.md).
+
 V59 active les outils humains naturels (poings, tête, dents) et les trois coups de mêlée du revolver existant. Nouvelle lésion Morsure, capacité d’étourdissement et compétence Mêlée ; aucun nouvel ItemId. Les qualités définies du revolver modifient ses dégâts de mêlée. Autres armes, armures, outils de terrain et infections restent absents. [Contrat](../development/melee.md).
 
 V58 ajoute un **profil humain de scénario**, la sentinelle hors-la-loi (même corps adulte, revolver normal, santé commune), et les appartenances colony/outlaws à relations fixes. Aucun nouvel ItemId, armure ou catalogue de factions. Nouvelle colonie Rencontre armée : revolver initial équipé par Ada et un revolver supplémentaire sur la sentinelle ; aucun ajout lors de la migration. [Contrat](../development/encounters.md).

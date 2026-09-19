@@ -4,6 +4,7 @@ import { footprintCells } from './definitions.ts';
 import type { Cell,World } from './types.ts';
 
 export interface WorldShotGrid extends ShotGrid { readonly capturedAt:number }
+export interface ShotCaptureBounds { minX:number;minZ:number;maxX:number;maxZ:number }
 const NATURAL_ROCK=0xffffffff;
 const SOURCE_PREFIX=['','structure','frame','resource','pile','structure'] as const;
 
@@ -12,13 +13,16 @@ const SOURCE_PREFIX=['','structure','frame','resource','pile','structure'] as co
  * mining. No frame work, global cache, retained World or PRNG consumption.
  * Capture O(cells + objects/footprints), each subsequent point lookup O(1).
  * Cover records/keys are created on lookup, not for every plant on the map. */
-export function captureWorldShotGrid(world:World):WorldShotGrid {
+export function captureWorldShotGrid(world:World,bounds?:ShotCaptureBounds):WorldShotGrid {
   const {width,height}=world,slots=new Uint32Array(width*height);
+  const minX=Math.max(0,bounds?.minX??0),minZ=Math.max(0,bounds?.minZ??0),maxX=Math.min(width-1,bounds?.maxX??width-1),maxZ=Math.min(height-1,bounds?.maxZ??height-1);
   const capacity=world.structures.length+world.jobs.length+world.resources.length+world.piles.length+1;
   const ids=new Float64Array(capacity),fills=new Float64Array(capacity),sources=new Uint8Array(capacity);
   const records=new Map<number,ShotCover>();let count=0;
-  const valid=(x:number,z:number)=>Number.isInteger(x)&&Number.isInteger(z)&&x>=0&&z>=0&&x<width&&z<height;
-  for(let i=0;i<slots.length;i++)if(world.tiles[i].terrain==='rock')slots[i]=NATURAL_ROCK;
+  // A bounded capture fails closed outside its window; dimensions stay global
+  // so ray coordinates and persistent cover keys remain identical.
+  const valid=(x:number,z:number)=>Number.isInteger(x)&&Number.isInteger(z)&&x>=minX&&z>=minZ&&x<=maxX&&z<=maxZ;
+  for(let z=minZ;z<=maxZ;z++)for(let x=minX;x<=maxX;x++){const i=z*width+x;if(world.tiles[i].terrain==='rock')slots[i]=NATURAL_ROCK;}
   const append=(id:number,fill:number,source:number)=>{
     const slot=++count;ids[slot]=id;fills[slot]=fill;sources[slot]=source;return slot;
   };
@@ -35,8 +39,8 @@ export function captureWorldShotGrid(world:World):WorldShotGrid {
   };
   for(const s of world.structures)footprint(s.id,STRUCTURE_SHOT_FILL[s.kind],s.kind==='door'&&s.door?.open?5:1,footprintCells(s));
   for(const j of world.jobs)if(j.construction==='frame')footprint(j.id,FRAME_SHOT_FILL,2,footprintCells(j));
-  for(const r of world.resources)if(RESOURCE_SHOT_FILL[r.kind]>0)put(r.x,r.z,append(r.id,RESOURCE_SHOT_FILL[r.kind],3));
-  for(const p of world.piles)if(p.owner.type==='ground'&&itemShotFill(p.item)>0)put(p.owner.x,p.owner.z,append(p.id,itemShotFill(p.item),4));
+  for(const r of world.resources)if(valid(r.x,r.z)&&RESOURCE_SHOT_FILL[r.kind]>0)put(r.x,r.z,append(r.id,RESOURCE_SHOT_FILL[r.kind],3));
+  for(const p of world.piles)if(p.owner.type==='ground'&&valid(p.owner.x,p.owner.z)&&itemShotFill(p.item)>0)put(p.owner.x,p.owner.z,append(p.id,itemShotFill(p.item),4));
   return Object.freeze({width,height,capturedAt:world.tick,
     blocksSight(x:number,z:number):boolean {
       if(!valid(x,z))return true;

@@ -31,6 +31,15 @@ test('real content separates sight, navigation and cover over every furniture fo
   const cases:Array<[StructureKind,number,number]>=[['wall',1,.75],['door',1,.75],['wood-generator',1,.75],['stonecutter',.5,.5],['bed',.4,.4],['table',.4,.4],['passive-cooler',.4,.4],['stool',.2,.2],['campfire',.2,.2],['standing-lamp',.2,.2],['horseshoes',0,0]];
   for(const [kind,fill,chance] of cases)for(const orientation of [0,1,2,3] as const) {
     const w=miningCamp(),s=building(w,kind,12,12,orientation),before=JSON.stringify(w),grid=captureWorldShotGrid(w);
+    // A local acquisition window must preserve every material/door/footprint
+    // result, including an object whose origin lies just outside the window.
+    for(const minX of [0,12,13]){
+      const local=captureWorldShotGrid(w,{minX,minZ:10,maxX:17,maxZ:16});
+      for(let z=10;z<=16;z++)for(let x=minX;x<=17;x++){
+        expect(local.coverAt(x,z)).toEqual(grid.coverAt(x,z));expect(local.blocksSight(x,z)).toBe(grid.blocksSight(x,z));
+      }
+      expect(local.blocksSight(18,12)).toBe(true);expect(local.coverAt(18,12)).toBeUndefined();
+    }
     for(const c of footprintCells(s)) {
       const cover=grid.coverAt(c.x,c.z);
       expect(cover?.fill??0,`${kind}/${orientation}`).toBe(fill);

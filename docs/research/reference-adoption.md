@@ -1,5 +1,7 @@
 # Adoption du référentiel utilisateur
 
+V60 — chapitres 16–21, SYS/TEST-035, 098..107, 110..112, UI-009/010 relus dans les originaux HTML/XLSX : **adopter** tir libre à l’arrêt, trois réactions civiles, priorité des ordres et cible pondérée ; **adapter** cadence locale, cône sur grille et approche physique ; **différer** réveil défensif, autres armes, poursuite/postes ennemis et raids. [Recherche fraîche](automatic-combat-reference.md). Aucun domaine global déclaré conforme ou terminé.
+
 V59 — chap. 13–15/20–21, SYS/TEST-085/089..091/098..112/113..117, UI-009/010 : adopter outils naturels/arme, contact, toucher puis esquive, conséquences anatomiques ; adapter horloge/poses GPU et arrêt continu en 3D ; différer catalogue militaire, terrain offensif, surprise, armure et tactique générale. [Recherche fraîche et désaccords de sources](melee-reference.md). Durée du stun calibrée, pas certifiée.
 
 V58 — chap. 17/20/21 relus directement dans l’original HTML ; SYS/TEST-035, 098..107, 111..117, UI-007..011 : **adopter** appartenance distincte, permissions, collision hostile, réponse Fuir/Ignorer et tirs anatomiques ; **adapter** refuge déterministe, extrémités 3D et sentinelle de scénario ; **différer** mêlée, poursuite, réaction Attaquer, diplomatie et raids. [Recherche fraîche](encounter-reference.md). Aucun SYS global fermé.

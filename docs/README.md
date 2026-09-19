@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+V60 : [tir automatique et réaction civile Attaquer](development/automatic-combat.md), [sources revérifiées](research/automatic-combat-reference.md), [preuves](history/validation-automatic-combat-v60.md). Les colons mobilisés défendent leur poste ; les civils disposent des trois réactions. Poursuite ennemie et positions tactiques restent ouvertes. Les entrées V59 et antérieures ci-dessous décrivent leur livraison historique.
+
 V59 : [mêlée jouable](development/melee.md), [règles et incertitudes](research/melee-reference.md), [preuves](history/validation-melee-v59.md). Approche, frappes naturelles/arme, toucher/esquive, blessures, étourdissement et riposte au contact de la sentinelle ; poursuite autonome et tir automatique restent ouverts.
 
 V58 : [rencontre armée et fuite](development/encounters.md), [sources et adaptations explicites](research/encounter-reference.md), [preuves](history/validation-encounter-v58.md). Sentinelle de scénario, pas un raid ; mêlée et poursuite à compléter. Les anciennes entrées ci-dessous décrivent leur lot, l’[inventaire](gameplay/implementation-status.md) donne l’état consolidé.

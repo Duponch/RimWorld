@@ -6,7 +6,7 @@ export function validDraftShape(value:unknown,version:number,world:{width:number
   if(version<53||!value||typeof value!=='object'||Array.isArray(value))return false;
   const d=value as Record<string,unknown>;
   const cell=(v:unknown)=>{if(!v||typeof v!=='object'||Array.isArray(v))return false;const c=v as {x:number;z:number};return Number.isInteger(c.x)&&Number.isInteger(c.z)&&c.x>=0&&c.z>=0&&c.x<world.width&&c.z<world.height;};
-  return Object.keys(d).every(k=>['lastActiveTick','target','queue'].includes(k))&&Number.isSafeInteger(d.lastActiveTick)&&Number(d.lastActiveTick)>=0&&Number(d.lastActiveTick)<=world.tick&&(d.target===null||cell(d.target))&&Array.isArray(d.queue)&&d.queue.length<=DRAFT_QUEUE_LIMIT&&d.queue.every(cell);
+  return Object.keys(d).every(k=>['lastActiveTick','target','queue',...(version>=60?['holdFire']:[])].includes(k))&&(d.holdFire===undefined||d.holdFire===true)&&Number.isSafeInteger(d.lastActiveTick)&&Number(d.lastActiveTick)>=0&&Number(d.lastActiveTick)<=world.tick&&(d.target===null||cell(d.target))&&Array.isArray(d.queue)&&d.queue.length<=DRAFT_QUEUE_LIMIT&&d.queue.every(cell);
 }
 export function validateDrafting(world:World):string[] {
   const errors:string[]=[],claims=new Set<number>();

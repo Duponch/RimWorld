@@ -1,0 +1,535 @@
+{
+  "reports": [
+    {
+      "speed": 1,
+      "tick": 3034,
+      "actor": {
+        "skills": {
+          "melee": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "shooting": {
+            "level": 8,
+            "xp": 969000,
+            "dailyXp": 969000,
+            "passion": 1
+          },
+          "construction": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "medicine": {
+            "level": 6,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "lastResetTick": -1
+        },
+        "recreation": {
+          "level": 99.65999999999983,
+          "tolerance": {
+            "solitary": 0,
+            "dexterity": 0
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          },
+          "task": null
+        },
+        "foodPolicyId": 1,
+        "schedule": [
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work"
+        ],
+        "restZeroTicks": 0,
+        "collapsePending": false,
+        "id": 178,
+        "name": "Bâtisseur 1",
+        "x": 6,
+        "z": 10,
+        "hunger": 99.09333333333319,
+        "rest": 99.46166666666667,
+        "mood": 100,
+        "comfort": 49.45600000000006,
+        "memories": [],
+        "orders": {
+          "active": null,
+          "queue": []
+        },
+        "jobId": null,
+        "haul": null,
+        "cooking": null,
+        "need": null,
+        "bedId": null,
+        "needCooldown": 11,
+        "state": "idle",
+        "priorities": {
+          "patient": 0,
+          "bedrest": 0,
+          "doctor": 0,
+          "craft": 0,
+          "mine": 0,
+          "build": 0,
+          "haul": 0,
+          "gather": 0,
+          "grow": 0,
+          "cook": 0
+        },
+        "path": [],
+        "moveCooldown": 0,
+        "planCooldown": 11,
+        "draft": {
+          "lastActiveTick": 3034,
+          "target": null,
+          "queue": []
+        },
+        "lastAttack": {
+          "targetId": 182,
+          "atCore": 30268
+        },
+        "shooting": {
+          "order": null,
+          "stance": {
+            "phase": "cooldown",
+            "startedAtCore": 30268,
+            "endsAtCore": 30364
+          }
+        }
+      },
+      "target": {
+        "medicalCare": "industrial",
+        "skills": {
+          "melee": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "shooting": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "construction": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "medicine": {
+            "level": 6,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "lastResetTick": -1
+        },
+        "recreation": {
+          "level": 99.65999999999983,
+          "tolerance": {
+            "solitary": 0,
+            "dexterity": 0
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          },
+          "task": null
+        },
+        "foodPolicyId": 1,
+        "schedule": [
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work"
+        ],
+        "restZeroTicks": 0,
+        "collapsePending": false,
+        "id": 182,
+        "name": "Sentinelle",
+        "x": 16,
+        "z": 10,
+        "hunger": 89.09333333333319,
+        "rest": 89.46166666666667,
+        "mood": 99,
+        "comfort": 49.45600000000006,
+        "memories": [],
+        "orders": {
+          "active": null,
+          "queue": []
+        },
+        "jobId": null,
+        "haul": null,
+        "cooking": null,
+        "need": null,
+        "bedId": null,
+        "needCooldown": 0,
+        "state": "idle",
+        "priorities": {
+          "patient": 1,
+          "bedrest": 3,
+          "doctor": 1,
+          "mine": 2,
+          "gather": 2,
+          "build": 2,
+          "haul": 3,
+          "grow": 2,
+          "cook": 2,
+          "craft": 2
+        },
+        "path": [],
+        "moveCooldown": 0,
+        "planCooldown": 0,
+        "faction": "outlaws",
+        "health": {
+          "tick": 3034,
+          "nextInjuryId": 3,
+          "injuries": [
+            {
+              "id": 1,
+              "part": "liver",
+              "kind": "gunshot",
+              "severity": 12000,
+              "bornAt": 3029
+            },
+            {
+              "id": 2,
+              "part": "torso",
+              "kind": "gunshot",
+              "severity": 12000,
+              "bornAt": 3029
+            }
+          ],
+          "missing": [],
+          "bloodLoss": 432000
+        },
+        "stagger": {
+          "sinceCore": 30287,
+          "untilCore": 30382
+        }
+      }
+    },
+    {
+      "speed": 6,
+      "tick": 3035,
+      "actor": {
+        "skills": {
+          "melee": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "shooting": {
+            "level": 8,
+            "xp": 969000,
+            "dailyXp": 969000,
+            "passion": 1
+          },
+          "construction": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "medicine": {
+            "level": 6,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "lastResetTick": -1
+        },
+        "recreation": {
+          "level": 99.64999999999982,
+          "tolerance": {
+            "solitary": 0,
+            "dexterity": 0
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          },
+          "task": null
+        },
+        "foodPolicyId": 1,
+        "schedule": [
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work"
+        ],
+        "restZeroTicks": 0,
+        "collapsePending": false,
+        "id": 178,
+        "name": "Bâtisseur 1",
+        "x": 6,
+        "z": 10,
+        "hunger": 99.06666666666652,
+        "rest": 99.44583333333334,
+        "mood": 100,
+        "comfort": 49.44000000000006,
+        "memories": [],
+        "orders": {
+          "active": null,
+          "queue": []
+        },
+        "jobId": null,
+        "haul": null,
+        "cooking": null,
+        "need": null,
+        "bedId": null,
+        "needCooldown": 9,
+        "state": "idle",
+        "priorities": {
+          "patient": 0,
+          "bedrest": 0,
+          "doctor": 0,
+          "craft": 0,
+          "mine": 0,
+          "build": 0,
+          "haul": 0,
+          "gather": 0,
+          "grow": 0,
+          "cook": 0
+        },
+        "path": [],
+        "moveCooldown": 0,
+        "planCooldown": 9,
+        "hostilityResponse": "attack",
+        "lastAttack": {
+          "targetId": 182,
+          "atCore": 30258
+        },
+        "shooting": {
+          "order": {
+            "targetId": 182,
+            "weaponId": 183,
+            "startedDowned": false,
+            "auto": {
+              "kind": "response",
+              "remaining": 1,
+              "until": 3224
+            }
+          },
+          "stance": {
+            "phase": "cooldown",
+            "startedAtCore": 30258,
+            "endsAtCore": 30354
+          }
+        }
+      },
+      "target": {
+        "medicalCare": "industrial",
+        "skills": {
+          "melee": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "shooting": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "construction": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "medicine": {
+            "level": 6,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "lastResetTick": -1
+        },
+        "recreation": {
+          "level": 99.64999999999982,
+          "tolerance": {
+            "solitary": 0,
+            "dexterity": 0
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          },
+          "task": null
+        },
+        "foodPolicyId": 1,
+        "schedule": [
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work",
+          "work"
+        ],
+        "restZeroTicks": 0,
+        "collapsePending": false,
+        "id": 182,
+        "name": "Sentinelle",
+        "x": 16,
+        "z": 10,
+        "hunger": 89.06666666666652,
+        "rest": 89.44583333333334,
+        "mood": 99,
+        "comfort": 49.44000000000006,
+        "memories": [],
+        "orders": {
+          "active": null,
+          "queue": []
+        },
+        "jobId": null,
+        "haul": null,
+        "cooking": null,
+        "need": null,
+        "bedId": null,
+        "needCooldown": 0,
+        "state": "idle",
+        "priorities": {
+          "patient": 1,
+          "bedrest": 3,
+          "doctor": 1,
+          "mine": 2,
+          "gather": 2,
+          "build": 2,
+          "haul": 3,
+          "grow": 2,
+          "cook": 2,
+          "craft": 2
+        },
+        "path": [],
+        "moveCooldown": 0,
+        "planCooldown": 0,
+        "faction": "outlaws",
+        "health": {
+          "tick": 3035,
+          "nextInjuryId": 4,
+          "injuries": [
+            {
+              "id": 1,
+              "part": "stomach",
+              "kind": "gunshot",
+              "severity": 12000,
+              "bornAt": 3017
+            },
+            {
+              "id": 2,
+              "part": "torso",
+              "kind": "gunshot",
+              "severity": 12000,
+              "bornAt": 3017
+            },
+            {
+              "id": 3,
+              "part": "right-leg",
+              "kind": "gunshot",
+              "severity": 12000,
+              "bornAt": 3028
+            }
+          ],
+          "missing": [],
+          "bloodLoss": 1512000
+        },
+        "stagger": {
+          "sinceCore": 30276,
+          "untilCore": 30371
+        }
+      }
+    }
+  ],
+  "errors": []
+}

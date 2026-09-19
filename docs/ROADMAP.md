@@ -1,6 +1,6 @@
 # Plan de développement
 
-V59 — [mêlée de base](development/melee.md) : ordre avec approche, outils naturels/revolver, toucher/esquive, cadence, blessures et étourdissement ; sentinelle capable de riposter au contact. Combat encore partiel ; aucun jalon G0–G5 déclaré clos.
+V60 — [tir automatique et réaction Attaquer](development/automatic-combat.md) : défense du poste, acquisition pondérée, trois politiques civiles et interruption physique ; prolonge la mêlée V59. Combat encore partiel ; aucun jalon G0–G5 déclaré clos.
 
 Le parcours assemble les requêtes ligne/couvert, profils du revolver, impacts V54 et vols V55. Le lot V56 vérifie les ordres, la continuation et la présentation à 1×/6×, puis la charge mixte 3/30/100 acteurs. Les pointes à forte charge restent dans les preuves ; traiter leurs causes observées avant d’augmenter la densité du premier affrontement.
 
@@ -8,11 +8,13 @@ Le parcours assemble les requêtes ligne/couvert, profils du revolver, impacts V
 
 ## Priorité actuelle
 
-**Mode jour rétabli le 18 septembre à la demande utilisateur.** La reprise automatique de nuit est suspendue ; terminer un lot cohérent, commit/push et bilan, puis attendre la prochaine instruction. V59 termine le lot de mêlée engagé ; aucune reprise nocturne implicite.
+**Mode nuit renouvelé le 19 septembre à la demande utilisateur, pendant V60.** Terminer et publier le lot engagé, puis enchaîner les prochaines étapes depuis main sans attendre de relance, jusqu’à retour au mode jour ou arrêt explicite. Garder un commit/push par lot cohérent et une notification aux livraisons significatives.
 
-**Point de validation avant densification :** la garde V59 conserve une attente de 16,5 ms en abattage sous charge système non isolée ; minage et commandes passent. Reprendre sur machine disponible et profiler l’encodage si nécessaire, sans assouplir les seuils. [Preuves](history/validation-melee-v59.md).
+**Point de validation V60 :** la garde minage/abattage passe avant et après le lot, sans attente après amorçage ni saut. L’échec V59 reste dans ses preuves historiques. Acquisition optimisée à cent acteurs, mais p95 CPU ~30 ms et pointes natives conservées : profiler encore avant de densifier les combats. [Preuves V60](history/validation-automatic-combat-v60.md).
 
-**Prochaine livraison visée : tir automatique des mobilisés et réaction civile Attaquer, puis poursuite et positions tactiques.** La sentinelle V58 donne une première menace jouable, mais reste statique. V59 ferme le contact avec approche commandée, coups anatomiques et riposte locale de la sentinelle. Compléter maintenant acquisition/riposte des colons, avant l’IA de poursuite/positions de tir. Retraite et raids restent distincts. Réveils/interruptions civiles, récupération d’arme et besoins autonomes du NPC sont aussi explicitement ouverts. Continuer le parcours menace → blessure → secours/soins → retour au camp et la charge mixte ; ne pas confondre sentinelle et raid/narrateur. [Limites et sources V58](development/encounters.md).
+Le parcours UI civil de trois jours passe également, avec production et stocks de pierre puis maintenance achevée après sommeil normal. Le pilote entretient maintenant une petite zone minière quand les fragments manquent ; ses échecs antérieurs restent documentés. La préparation de la poursuite a commencé par une relecture des chapitres 17/20/21 et des correctifs officiels postérieurs au miroir ; aucune poursuite n’est encore livrée par V60.
+
+**Prochaine livraison visée : poursuite et positions de tir autonomes de la menace.** La sentinelle V58 donne une première menace jouable, mais reste statique. V59 ferme le contact avec approche commandée, coups anatomiques et riposte locale de la sentinelle. V60 livre acquisition/riposte des colons ; poursuivre maintenant l’IA de poursuite/positions de tir. Retraite et raids restent distincts. Réveils/interruptions civiles, récupération d’arme et besoins autonomes du NPC sont aussi explicitement ouverts. Continuer le parcours menace → blessure → secours/soins → retour au camp et la charge mixte ; ne pas confondre sentinelle et raid/narrateur. [Limites et sources V58](development/encounters.md).
 
 **Cadence de livraison :** les extractions techniques restent utiles à l'intérieur d'un lot, mais le prochain bilan de développement doit privilégier une action visible. Regrouper scénario métier, continuation et contrôle UI à 1×/6× ; mesurer la charge mixte une fois le parcours intégré. Ne pas rejouer les suites de simulation pour une correction documentaire. Aucune réduction des contrats physiques ou des vérifications de règles n'est déduite de cette organisation.
 
@@ -120,7 +122,7 @@ Objectif d'une partie, tonalité fictionnelle, contraintes de verticalité, tail
 | Anatomie, santé et soins | 35–50 % | Blessures/capacités/secours/soins intégrés ; maladies, infections, immunité, chirurgie, prothèses et dépouilles restent importantes. |
 | Compétences, traits et identité | 15–25 % | Construction, Médecine et Tir actifs ; neuf autres compétences, biographies, traits et effets croisés absents. |
 | Équipement, vêtements et inventaire | 10–20 % | Une principale physique ; inventaire personnel, vêtements, armures, masse et grand catalogue absents. |
-| Combat | 5–15 % | Tir, santé, pouvoir d’arrêt et sentinelle de scénario désormais jouables ; Fuir/Ignorer et collisions intégrés. Mêlée, poursuite, armures, riposte complète et raids encore absents. |
+| Combat | 5–15 % | Tir, santé, pouvoir d’arrêt et sentinelle de scénario désormais jouables ; Fuir/Attaquer/Ignorer et collisions intégrés. Mêlée V59, tir automatique et Attaquer V60 livrés ; poursuite ennemie, armures, réveil défensif et raids restent absents. |
 | Humeur et relations | 5–10 % | Quelques besoins/souvenirs ; pensées complètes, crises, personnalités et réseau social absents. |
 | Production, recherche et contenu | 10–20 % | Deux filières de production ; ateliers, nombreuses recettes, économie matérielle et recherche absents. Ce n'est pas un ratio d'objets : aucun catalogue exhaustif vérifié. |
 | Animaux et élevage | 0–5 % | Aucun animal jouable ; le socle spatial/médical est réutilisable, ses règles animales ne sont pas développées. |
