@@ -7,7 +7,7 @@ export class MotionRecorder {
   private readonly tracks=new Map<number,PresentationSegment[]>();
   reset():void {this.tracks.clear();}
   capture(world:World):void {
-    for(const pawn of world.pawns) {
+    for(const pawn of [...world.pawns,...world.wildlife?.animals??[]]) {
       let track=this.tracks.get(pawn.id);if(!track){track=[];this.tracks.set(pawn.id,track);}
       const motion=pawn.motion;
       const last=track.at(-1),edgeStart=last?.edgeStart??last?.start;

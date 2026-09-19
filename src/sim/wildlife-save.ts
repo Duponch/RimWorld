@@ -1,0 +1,44 @@
+import type { World } from './types.ts';
+import { HARE,MAX_WILDLIFE } from './wildlife-state.ts';
+import { animalMealTarget } from './wildlife-food.ts';
+import { animalNavigation } from './wildlife-navigation.ts';
+import { ITEM_DEFINITIONS } from './items.ts';
+const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
+const int=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;
+const finite=(v:unknown,min:number,max:number)=>typeof v==='number'&&Number.isFinite(v)&&v>=min&&v<=max;
+const keys=(v:object,allowed:string[])=>Object.keys(v).every(k=>allowed.includes(k));
+export function validateWildlife(w:World,version:number,ids:Set<number>):string[] {
+  const s=w.wildlife;if(s===undefined)return [];
+  const errors:string[]=[];
+  if(version<76||!object(s)||!keys(s,['profile','rng','animals','eatenPlants','eatenNutrition','eatenItems'])||s.profile!=='temperate-hares-v1'||!int(s.rng,1,0xffffffff)||!Array.isArray(s.animals)||s.animals.length>MAX_WILDLIFE||!int(s.eatenPlants)||!int(s.eatenItems)||!finite(s.eatenNutrition,0,Number.MAX_SAFE_INTEGER))return ['Invalid wildlife state.'];
+  if(s.animals.some(a=>!object(a)))return ['Invalid wild animal.'];
+  let navigation:ReturnType<typeof animalNavigation>|undefined;
+  const cell=(c:unknown):c is {x:number;z:number}=>object(c)&&keys(c,['x','z'])&&int(c.x,0,w.width-1)&&int(c.z,0,w.height-1);
+  for(const a of s.animals) {
+    if(!object(a)||!keys(a,['id','species','sex','x','z','food','rest','state','path','motion','nextDecision','meal'])||!int(a.id,1,w.nextId-1)||!int(a.x,0,w.width-1)||!int(a.z,0,w.height-1)||a.species!=='hare'||!['female','male'].includes(a.sex)||!finite(a.food,0,HARE.nutrition)||!finite(a.rest,0,1)||!['idle','moving','eating','sleeping','hungry'].includes(a.state)||!int(a.nextDecision,0,w.tick+100)||!Array.isArray(a.path)||a.path.length>w.width*w.height||!a.path.every(cell)){errors.push('Invalid wild animal.');continue;}
+    if(ids.has(a.id))errors.push('Duplicate wildlife identity.');ids.add(a.id);
+    if(['water','rock'].includes(w.tiles[a.z*w.width+a.x]!.terrain)||w.structures.some(s=>(s.kind==='wall'||s.kind==='cooler')&&s.x===a.x&&s.z===a.z))errors.push('Wildlife inside solid terrain.');
+    const m=a.motion;
+    if(m!==undefined) {
+      if(!object(m)||!keys(m,['from','to','start','end','speedFactor','terrainDelay'])||!cell(m.from)||!cell(m.to)||!finite(m.start,0,w.tick)||!finite(m.end,0,w.tick+100)||m.end<=m.start||Math.max(Math.abs(m.from.x-m.to.x),Math.abs(m.from.z-m.to.z))!==1||m.to.x!==a.x||m.to.z!==a.z||![3,.6].includes(m.speedFactor!)||!finite(m.terrainDelay,0,50)||Math.abs(m.end-m.start-(Math.hypot(m.to.x-m.from.x,m.to.z-m.from.z)*3/m.speedFactor!+m.terrainDelay!))>1e-7)errors.push('Invalid wildlife motion.');
+      else if(m.end>w.tick){
+        if(a.state!=='moving')errors.push('Active wildlife edge without movement.');
+        navigation??=animalNavigation(w);
+        if(!navigation.step(m.from,m.to))errors.push('Wildlife edge crosses a solid obstacle.');
+      }
+    }
+    let previous={x:a.x,z:a.z};for(const c of a.path){if(Math.max(Math.abs(c.x-previous.x),Math.abs(c.z-previous.z))!==1)errors.push('Disconnected wildlife path.');previous=c;}
+    if(a.meal!==undefined) {
+      const m=a.meal;
+      if(!object(m)||!keys(m,['kind','id','quantity','progress'])||!['plant','pile'].includes(m.kind)||!int(m.id,1,w.nextId-1)||!int(m.quantity,1,75)||m.kind==='plant'&&m.quantity!==1||!int(m.progress,0,HARE.ingestTicks-1)||!['moving','eating'].includes(a.state)){errors.push('Invalid wildlife meal.');continue;}
+      const target=animalMealTarget(w,a);
+      if(a.state==='moving'&&m.progress!==0)errors.push('Animal chewed during travel.');
+      const pile=m.kind==='pile'?w.piles.find(p=>p.id===m.id):undefined;
+      if(pile&&m.quantity>Math.max(1,Math.ceil(HARE.nutrition/(ITEM_DEFINITIONS[pile.item].nutrition/100))))errors.push('Oversized wildlife meal.');
+      if(!target)errors.push('Missing or overreserved wildlife food.');
+      else if(a.state==='eating'&&(a.path.length||Math.abs(a.x-target.x)+Math.abs(a.z-target.z)>1))errors.push('Remote animal ingestion.');
+    } else if(a.state==='eating')errors.push('Animal eating without food.');
+    if(a.state==='sleeping'&&a.path.length)errors.push('Sleeping animal with route.');
+  }
+  return errors;
+}

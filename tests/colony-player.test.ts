@@ -1,14 +1,15 @@
+import { enableWildlife } from '../src/sim/wildlife';
 import { writeFileSync } from 'node:fs';
 import { enableArrivals } from '../src/sim/arrivals';
 import { expect, test } from 'vitest';
 import { createWorld, applyCommand, stepWorld, validateWorld, serializeWorld, deserializeWorld } from '../src/sim/index';
 import { playerArrivalDecisions,playerArrivalComplete,playerDecisions, playerFocusDecisions, colonySummary, woodAccount, foodAccount } from './scenarios/colony-player';
 
-test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp construit, stocks entretenus et reprise exacte', () => {
+test.each([42,93,2048])('joueur ordinaire : cinq à huit jours, graine %i, camp construit, stocks entretenus et reprise exacte', (seed) => {
   const version=process.env.VALIDATION_VERSION??'v74';
-  for (const seed of [42, 93, 2048]) {
     let world = createWorld(seed, 250, 250);
     if(seed===42)enableArrivals(world);
+    if(seed===93)enableWildlife(world);
     const population=seed===42?4:3;
     for(const decision of playerArrivalDecisions(world))expect(applyCommand(world,decision.command)).toMatchObject({ok:true});
     for(let i=0;i<120&&!playerArrivalComplete(world);i++)stepWorld(world);
@@ -41,7 +42,7 @@ test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp const
         expect(world.piles.filter(p=>p.kind==='weapon')).toHaveLength(1);expect(world.piles.find(p=>p.id===initialWeapon.id)?.weapon).toEqual(initialWeapon.weapon);
         if(t>=250)expect(world.piles.find(p=>p.id===initialWeapon.id)?.owner.type).toBe('equipment');
         expect(validateWorld(world),context).toEqual([]);expect(woodAccount(world),context).toBe(initialWood);
-        expect(foodAccount(world)+consumed+9*cooked,context).toBe(initialFood+produced);
+        expect(foodAccount(world)+consumed+9*cooked+(world.wildlife?.eatenItems??0),context).toBe(initialFood+produced);
         expect(world.pawns.every(p=>p.hunger>0 && p.rest>0),context).toBe(true);
         expect(world.pawns.every(p=>p.state!=='dead'&&p.state!=='downed'&&!p.health?.injuries.length&&!p.health?.missing.length),context).toBe(true);
         // An ordinary player does not attack its own settlers to manufacture a
@@ -103,7 +104,6 @@ test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp const
     expect(world.pawns).toHaveLength(population);expect(meals.size).toBe(population);expect(sleep.size).toBe(population);
     if(seed===42)expect(world.arrivals?.accepted).toBe(1);
     expect(world.pawns[2]!.schedule[5]).toBe('anything');expect(world.pawns[2]!.schedule[21]).toBe('sleep');
-  }
 // This is a correctness journey with deep checkpoints, not a tick-time budget.
 // Keep a wall-clock ceiling while separate profiling measures simulation costs.
-}, 300000);
+}, 240000);

@@ -1,0 +1,3617 @@
+{
+  "complete": false,
+  "waitingFor": 13040,
+  "days": [
+    {
+      "textile": {
+        "plants": 0,
+        "fields": 0,
+        "cloth": 0
+      },
+      "barriers": {
+        "destroyed": null,
+        "damaged": [],
+        "homeCells": 7
+      },
+      "tick": 6101,
+      "foodPolicies": [
+        1,
+        1,
+        1
+      ],
+      "restRules": "adult",
+      "scheduledSleepHours": [
+        8,
+        8,
+        8
+      ],
+      "spoiled": {
+        "berries": 0,
+        "rice": 0,
+        "simple-meal": 0
+      },
+      "crops": 15,
+      "growingCells": 15,
+      "power": [],
+      "mining": {
+        "componentsInBuildings": 0,
+        "components": 0,
+        "componentsStored": 0,
+        "blocks": 0,
+        "blocksStored": 0,
+        "steelInBuildings": 0,
+        "steel": 0,
+        "steelStored": 0,
+        "cells": 0,
+        "chunks": 0,
+        "stored": 0
+      },
+      "mood": [
+        {
+          "id": 12409,
+          "level": 72,
+          "target": 81,
+          "frozen": true,
+          "crisis": null,
+          "exposure": [
+            0,
+            0,
+            0
+          ],
+          "causes": [
+            {
+              "id": "camp-expectations",
+              "offset": 30
+            },
+            {
+              "id": "trait-optimist",
+              "offset": 6
+            },
+            {
+              "id": "quite-comfortable",
+              "offset": 6
+            },
+            {
+              "id": "recreation-full",
+              "offset": 10
+            },
+            {
+              "id": "ate-without-table",
+              "offset": -3,
+              "expiresAt": 8324
+            }
+          ]
+        },
+        {
+          "id": 12410,
+          "level": 66,
+          "target": 75,
+          "frozen": true,
+          "crisis": null,
+          "exposure": [
+            0,
+            0,
+            0
+          ],
+          "causes": [
+            {
+              "id": "camp-expectations",
+              "offset": 30
+            },
+            {
+              "id": "quite-comfortable",
+              "offset": 6
+            },
+            {
+              "id": "recreation-full",
+              "offset": 10
+            },
+            {
+              "id": "ate-without-table",
+              "offset": -3,
+              "expiresAt": 8120
+            }
+          ]
+        },
+        {
+          "id": 12411,
+          "level": 63,
+          "target": 69,
+          "frozen": true,
+          "crisis": null,
+          "exposure": [
+            0,
+            0,
+            0
+          ],
+          "causes": [
+            {
+              "id": "camp-expectations",
+              "offset": 30
+            },
+            {
+              "id": "trait-pessimist",
+              "offset": -6
+            },
+            {
+              "id": "quite-comfortable",
+              "offset": 6
+            },
+            {
+              "id": "recreation-full",
+              "offset": 10
+            },
+            {
+              "id": "ate-without-table",
+              "offset": -3,
+              "expiresAt": 7947
+            }
+          ]
+        }
+      ],
+      "recreation": [
+        {
+          "level": 95.86999999999789,
+          "tolerance": {
+            "solitary": 1.9517682401041185,
+            "dexterity": 38.12227581916651
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          }
+        },
+        {
+          "level": 96.00663128439025,
+          "tolerance": {
+            "solitary": 0,
+            "dexterity": 43.1673506690048
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          }
+        },
+        {
+          "level": 97.10999999999852,
+          "tolerance": {
+            "solitary": 19.73153644699323,
+            "dexterity": 17.888168243203534
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          }
+        }
+      ],
+      "apparel": [
+        {
+          "id": 12421,
+          "item": "cloth-shirt",
+          "owner": {
+            "type": "apparel",
+            "pawnId": 12409
+          },
+          "apparel": {
+            "quality": "normal",
+            "hitPoints": 100
+          }
+        },
+        {
+          "id": 12422,
+          "item": "cloth-shirt",
+          "owner": {
+            "type": "apparel",
+            "pawnId": 12410
+          },
+          "apparel": {
+            "quality": "normal",
+            "hitPoints": 100
+          }
+        },
+        {
+          "id": 12423,
+          "item": "cloth-shirt",
+          "owner": {
+            "type": "apparel",
+            "pawnId": 12411
+          },
+          "apparel": {
+            "quality": "normal",
+            "hitPoints": 100
+          }
+        },
+        {
+          "id": 12424,
+          "item": "flak-vest",
+          "owner": {
+            "type": "apparel",
+            "pawnId": 12411
+          },
+          "apparel": {
+            "quality": "normal",
+            "hitPoints": 200
+          }
+        }
+      ],
+      "equipment": [
+        {
+          "id": 12420,
+          "item": "revolver",
+          "owner": {
+            "type": "equipment",
+            "pawnId": 12411
+          },
+          "weapon": {
+            "quality": "normal",
+            "hitPoints": 100
+          }
+        }
+      ],
+      "medicalBeds": 0,
+      "medicines": {
+        "total": 30,
+        "stored": 30,
+        "policies": [
+          "industrial",
+          "industrial",
+          "industrial"
+        ]
+      },
+      "health": [
+        {
+          "id": 12409,
+          "state": "sleeping",
+          "rescue": null,
+          "tend": null,
+          "feed": null,
+          "hunger": 71.0133333333288,
+          "medicalRest": null,
+          "treated": 0,
+          "medicineXp": 0,
+          "bedUse": 12504,
+          "injuries": 0,
+          "gunshots": 0,
+          "missing": 0,
+          "bloodLoss": 0
+        },
+        {
+          "id": 12410,
+          "state": "sleeping",
+          "rescue": null,
+          "tend": null,
+          "feed": null,
+          "hunger": 65.19999999999456,
+          "medicalRest": null,
+          "treated": 0,
+          "medicineXp": 0,
+          "bedUse": 12508,
+          "injuries": 0,
+          "gunshots": 0,
+          "missing": 0,
+          "bloodLoss": 0
+        },
+        {
+          "id": 12411,
+          "state": "sleeping",
+          "rescue": null,
+          "tend": null,
+          "feed": null,
+          "hunger": 60.90666666666139,
+          "medicalRest": null,
+          "treated": 0,
+          "medicineXp": 0,
+          "bedUse": 12478,
+          "injuries": 0,
+          "gunshots": 0,
+          "missing": 0,
+          "bloodLoss": 0
+        }
+      ],
+      "social": [
+        {
+          "id": 12409,
+          "skill": {
+            "level": 0,
+            "xp": 26950,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "last": {
+            "otherId": 12410,
+            "kind": "chitchat",
+            "tick": 5381,
+            "initiated": true
+          },
+          "opinions": [
+            {
+              "id": 12410,
+              "value": 16
+            },
+            {
+              "id": 12411,
+              "value": 15
+            }
+          ]
+        },
+        {
+          "id": 12410,
+          "skill": {
+            "level": 0,
+            "xp": 1050,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "last": {
+            "otherId": 12409,
+            "kind": "chitchat",
+            "tick": 5381,
+            "initiated": false
+          },
+          "opinions": [
+            {
+              "id": 12409,
+              "value": 16
+            },
+            {
+              "id": 12411,
+              "value": 3
+            }
+          ]
+        },
+        {
+          "id": 12411,
+          "skill": {
+            "level": 0,
+            "xp": 12600,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "last": {
+            "otherId": 12409,
+            "kind": "chitchat",
+            "tick": 5248,
+            "initiated": false
+          },
+          "opinions": [
+            {
+              "id": 12409,
+              "value": 15
+            },
+            {
+              "id": 12410,
+              "value": 3
+            }
+          ]
+        }
+      ],
+      "personality": [
+        {
+          "id": 12409,
+          "traits": [
+            "optimist",
+            "fast-learner"
+          ],
+          "learning": 1.75,
+          "breakThresholds": [
+            35,
+            20,
+            5
+          ]
+        },
+        {
+          "id": 12410,
+          "traits": [
+            "steadfast",
+            "slow-learner"
+          ],
+          "learning": 0.25,
+          "breakThresholds": [
+            26,
+            14.857142857142858,
+            3.7142857142857144
+          ]
+        },
+        {
+          "id": 12411,
+          "traits": [
+            "pessimist",
+            "nervous"
+          ],
+          "learning": 1,
+          "breakThresholds": [
+            43,
+            24.571428571428573,
+            6.142857142857143
+          ]
+        }
+      ],
+      "skills": [
+        {
+          "id": 12409,
+          "melee": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "shooting": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "construction": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "medicine": {
+            "level": 6,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "lastResetTick": 6011,
+          "intellectual": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "social": {
+            "level": 0,
+            "xp": 26950,
+            "dailyXp": 0,
+            "passion": 0
+          }
+        },
+        {
+          "id": 12410,
+          "melee": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "shooting": {
+            "level": 5,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "construction": {
+            "level": 10,
+            "xp": 319374,
+            "dailyXp": -500,
+            "passion": 2
+          },
+          "medicine": {
+            "level": 3,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "lastResetTick": 6010,
+          "intellectual": {
+            "level": 3,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "social": {
+            "level": 0,
+            "xp": 1050,
+            "dailyXp": 0,
+            "passion": 0
+          }
+        },
+        {
+          "id": 12411,
+          "melee": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "shooting": {
+            "level": 3,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "construction": {
+            "level": 4,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "medicine": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 2
+          },
+          "lastResetTick": 6009,
+          "intellectual": {
+            "level": 6,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "social": {
+            "level": 0,
+            "xp": 12600,
+            "dailyXp": 0,
+            "passion": 0
+          }
+        }
+      ],
+      "combat": {
+        "shooters": 0,
+        "flights": 0,
+        "impacts": 0
+      },
+      "interruptedCargo": [],
+      "furnitureTransit": 0,
+      "furnitureExits": 0,
+      "roofing": {
+        "constructed": 0,
+        "planned": 0,
+        "removal": 0
+      },
+      "wildlife": {
+        "population": 12,
+        "eatenPlants": 0,
+        "eatenNutrition": 1.7479542568141992,
+        "eatenItems": 0,
+        "feeding": 0,
+        "sleeping": 12
+      },
+      "plantClimate": {
+        "slowed": 0,
+        "thermalAnchors": 0
+      },
+      "thermal": {
+        "outdoors": 17.367542776304198,
+        "retainedCells": 0,
+        "temperatures": []
+      },
+      "workplaces": [
+        {
+          "id": 12549,
+          "kind": "campfire",
+          "role": "none",
+          "light": 0.5,
+          "lighting": 1,
+          "outdoors": 0.8,
+          "roomRole": 1,
+          "station": 0.5,
+          "total": 0.4
+        }
+      ],
+      "lighting": [
+        {
+          "id": 12409,
+          "cellLight": 0.5,
+          "cellFactor": 1,
+          "moving": false,
+          "travelFactor": 1
+        },
+        {
+          "id": 12410,
+          "cellLight": 0.5,
+          "cellFactor": 1,
+          "moving": false,
+          "travelFactor": 1
+        },
+        {
+          "id": 12411,
+          "cellLight": 0.5,
+          "cellFactor": 1,
+          "moving": false,
+          "travelFactor": 0.9739130434782608
+        }
+      ],
+      "sharedPawnCells": 0,
+      "playerOrders": [
+        {
+          "active": null,
+          "queued": 0,
+          "priority": null
+        },
+        {
+          "active": null,
+          "queued": 0,
+          "priority": null
+        },
+        {
+          "active": null,
+          "queued": 0,
+          "priority": null
+        }
+      ],
+      "obstructedGrowingCells": 0,
+      "clearing": 0,
+      "construction": {
+        "blueprints": 0,
+        "frames": 0,
+        "clearingPlants": 0,
+        "clearingPiles": 0
+      },
+      "structures": {
+        "wood-generator": 0,
+        "standing-lamp": 0,
+        "passive-cooler": 0,
+        "bed": 3,
+        "table": 1,
+        "stool": 3,
+        "wall": 7,
+        "campfire": 1,
+        "horseshoes": 1,
+        "stonecutter": 0,
+        "door": 0
+      },
+      "preparedMeals": 6,
+      "stock": {
+        "wood": 41,
+        "food": 21
+      },
+      "pending": 0,
+      "minimumFood": 60.90666666666139,
+      "minimumRest": 60.25666666666733
+    },
+    {
+      "textile": {
+        "plants": 0,
+        "fields": 0,
+        "cloth": 0
+      },
+      "barriers": {
+        "destroyed": null,
+        "damaged": [],
+        "homeCells": 8
+      },
+      "tick": 12077,
+      "foodPolicies": [
+        3,
+        3,
+        3,
+        1
+      ],
+      "restRules": "adult",
+      "scheduledSleepHours": [
+        8,
+        8,
+        8,
+        8
+      ],
+      "spoiled": {
+        "berries": 0,
+        "rice": 0,
+        "simple-meal": 0
+      },
+      "crops": 15,
+      "growingCells": 15,
+      "power": [],
+      "mining": {
+        "componentsInBuildings": 0,
+        "components": 2,
+        "componentsStored": 0,
+        "blocks": 15,
+        "blocksStored": 0,
+        "steelInBuildings": 30,
+        "steel": 50,
+        "steelStored": 0,
+        "cells": 7,
+        "chunks": 0,
+        "stored": 0
+      },
+      "mood": [
+        {
+          "id": 12409,
+          "level": 73,
+          "target": 79,
+          "frozen": true,
+          "crisis": null,
+          "exposure": [
+            0,
+            0,
+            0
+          ],
+          "causes": [
+            {
+              "id": "camp-expectations",
+              "offset": 30
+            },
+            {
+              "id": "trait-optimist",
+              "offset": 6
+            },
+            {
+              "id": "quite-comfortable",
+              "offset": 6
+            },
+            {
+              "id": "recreation-high",
+              "offset": 5
+            }
+          ]
+        },
+        {
+          "id": 12410,
+          "level": 66,
+          "target": 72,
+          "frozen": true,
+          "crisis": null,
+          "exposure": [
+            0,
+            0,
+            0
+          ],
+          "causes": [
+            {
+              "id": "camp-expectations",
+              "offset": 30
+            },
+            {
+              "id": "recreation-full",
+              "offset": 10
+            }
+          ]
+        },
+        {
+          "id": 12411,
+          "level": 66,
+          "target": 72,
+          "frozen": true,
+          "crisis": null,
+          "exposure": [
+            0,
+            0,
+            0
+          ],
+          "causes": [
+            {
+              "id": "camp-expectations",
+              "offset": 30
+            },
+            {
+              "id": "trait-pessimist",
+              "offset": -6
+            },
+            {
+              "id": "quite-comfortable",
+              "offset": 6
+            },
+            {
+              "id": "recreation-full",
+              "offset": 10
+            }
+          ]
+        },
+        {
+          "id": 12886,
+          "level": 61,
+          "target": 67,
+          "frozen": true,
+          "crisis": null,
+          "exposure": [
+            0,
+            0,
+            0
+          ],
+          "causes": [
+            {
+              "id": "camp-expectations",
+              "offset": 30
+            },
+            {
+              "id": "trait-pessimist",
+              "offset": -6
+            },
+            {
+              "id": "quite-comfortable",
+              "offset": 6
+            },
+            {
+              "id": "recreation-high",
+              "offset": 5
+            }
+          ]
+        }
+      ],
+      "recreation": [
+        {
+          "level": 78.8956713125248,
+          "tolerance": {
+            "solitary": 0,
+            "dexterity": 36.17796217231885
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          }
+        },
+        {
+          "level": 93.36999999999661,
+          "tolerance": {
+            "solitary": 24.002189665156177,
+            "dexterity": 28.920350669004257
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          }
+        },
+        {
+          "level": 97.73999999999884,
+          "tolerance": {
+            "solitary": 33.48003644700396,
+            "dexterity": 4.382168243203022
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          }
+        },
+        {
+          "level": 82.56005607230098,
+          "tolerance": {
+            "solitary": 29.77853644699361,
+            "dexterity": 0
+          },
+          "bored": {
+            "solitary": false,
+            "dexterity": false
+          }
+        }
+      ],
+      "apparel": [
+        {
+          "id": 12421,
+          "item": "cloth-shirt",
+          "owner": {
+            "type": "apparel",
+            "pawnId": 12409
+          },
+          "apparel": {
+            "quality": "normal",
+            "hitPoints": 100
+          }
+        },
+        {
+          "id": 12422,
+          "item": "cloth-shirt",
+          "owner": {
+            "type": "apparel",
+            "pawnId": 12410
+          },
+          "apparel": {
+            "quality": "normal",
+            "hitPoints": 100
+          }
+        },
+        {
+          "id": 12423,
+          "item": "cloth-shirt",
+          "owner": {
+            "type": "apparel",
+            "pawnId": 12411
+          },
+          "apparel": {
+            "quality": "normal",
+            "hitPoints": 100
+          }
+        },
+        {
+          "id": 12424,
+          "item": "flak-vest",
+          "owner": {
+            "type": "apparel",
+            "pawnId": 12411
+          },
+          "apparel": {
+            "quality": "normal",
+            "hitPoints": 200
+          }
+        },
+        {
+          "id": 12887,
+          "item": "cloth-shirt",
+          "owner": {
+            "type": "apparel",
+            "pawnId": 12886
+          },
+          "apparel": {
+            "quality": "normal",
+            "hitPoints": 100
+          }
+        }
+      ],
+      "equipment": [
+        {
+          "id": 12420,
+          "item": "revolver",
+          "owner": {
+            "type": "equipment",
+            "pawnId": 12411
+          },
+          "weapon": {
+            "quality": "normal",
+            "hitPoints": 100
+          }
+        }
+      ],
+      "medicalBeds": 0,
+      "medicines": {
+        "total": 30,
+        "stored": 30,
+        "policies": [
+          "industrial",
+          "industrial",
+          "industrial",
+          "industrial"
+        ]
+      },
+      "health": [
+        {
+          "id": 12409,
+          "state": "sleeping",
+          "rescue": null,
+          "tend": null,
+          "feed": null,
+          "hunger": 58.93333333332827,
+          "medicalRest": null,
+          "treated": 0,
+          "medicineXp": 0,
+          "bedUse": 12504,
+          "injuries": 0,
+          "gunshots": 0,
+          "missing": 0,
+          "bloodLoss": 0
+        },
+        {
+          "id": 12410,
+          "state": "sleeping",
+          "rescue": null,
+          "tend": null,
+          "feed": null,
+          "hunger": 52.453333333328985,
+          "medicalRest": null,
+          "treated": 0,
+          "medicineXp": 0,
+          "bedUse": 12508,
+          "injuries": 0,
+          "gunshots": 0,
+          "missing": 0,
+          "bloodLoss": 0
+        },
+        {
+          "id": 12411,
+          "state": "sleeping",
+          "rescue": null,
+          "tend": null,
+          "feed": null,
+          "hunger": 46.71999999999628,
+          "medicalRest": null,
+          "treated": 0,
+          "medicineXp": 0,
+          "bedUse": 12478,
+          "injuries": 0,
+          "gunshots": 0,
+          "missing": 0,
+          "bloodLoss": 0
+        },
+        {
+          "id": 12886,
+          "state": "sleeping",
+          "rescue": null,
+          "tend": null,
+          "feed": null,
+          "hunger": 70.63999999999541,
+          "medicalRest": null,
+          "treated": 0,
+          "medicineXp": 0,
+          "bedUse": 12964,
+          "injuries": 0,
+          "gunshots": 0,
+          "missing": 0,
+          "bloodLoss": 0
+        }
+      ],
+      "social": [
+        {
+          "id": 12409,
+          "skill": {
+            "level": 0,
+            "xp": 44100,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "last": {
+            "otherId": 12886,
+            "kind": "chitchat",
+            "tick": 11444,
+            "initiated": false
+          },
+          "opinions": [
+            {
+              "id": 12410,
+              "value": 16
+            },
+            {
+              "id": 12411,
+              "value": 36
+            },
+            {
+              "id": 12886,
+              "value": 35
+            }
+          ]
+        },
+        {
+          "id": 12410,
+          "skill": {
+            "level": 0,
+            "xp": 2450,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "last": {
+            "otherId": 12411,
+            "kind": "chitchat",
+            "tick": 11390,
+            "initiated": true
+          },
+          "opinions": [
+            {
+              "id": 12409,
+              "value": 16
+            },
+            {
+              "id": 12411,
+              "value": 3
+            },
+            {
+              "id": 12886,
+              "value": 0
+            }
+          ]
+        },
+        {
+          "id": 12411,
+          "skill": {
+            "level": 0,
+            "xp": 18900,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "last": {
+            "otherId": 12410,
+            "kind": "chitchat",
+            "tick": 11390,
+            "initiated": false
+          },
+          "opinions": [
+            {
+              "id": 12409,
+              "value": 36
+            },
+            {
+              "id": 12410,
+              "value": 3
+            },
+            {
+              "id": 12886,
+              "value": 0
+            }
+          ]
+        },
+        {
+          "id": 12886,
+          "skill": {
+            "level": 0,
+            "xp": 9800,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "last": {
+            "otherId": 12409,
+            "kind": "chitchat",
+            "tick": 11444,
+            "initiated": true
+          },
+          "opinions": [
+            {
+              "id": 12409,
+              "value": 35
+            },
+            {
+              "id": 12410,
+              "value": 0
+            },
+            {
+              "id": 12411,
+              "value": 0
+            }
+          ]
+        }
+      ],
+      "personality": [
+        {
+          "id": 12409,
+          "traits": [
+            "optimist",
+            "fast-learner"
+          ],
+          "learning": 1.75,
+          "breakThresholds": [
+            35,
+            20,
+            5
+          ]
+        },
+        {
+          "id": 12410,
+          "traits": [
+            "steadfast",
+            "slow-learner"
+          ],
+          "learning": 0.25,
+          "breakThresholds": [
+            26,
+            14.857142857142858,
+            3.7142857142857144
+          ]
+        },
+        {
+          "id": 12411,
+          "traits": [
+            "pessimist",
+            "nervous"
+          ],
+          "learning": 1,
+          "breakThresholds": [
+            43,
+            24.571428571428573,
+            6.142857142857143
+          ]
+        },
+        {
+          "id": 12886,
+          "traits": [
+            "pessimist",
+            "nervous"
+          ],
+          "learning": 1,
+          "breakThresholds": [
+            43,
+            24.571428571428573,
+            6.142857142857143
+          ]
+        }
+      ],
+      "skills": [
+        {
+          "id": 12409,
+          "melee": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "shooting": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "construction": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "medicine": {
+            "level": 6,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "lastResetTick": 12011,
+          "intellectual": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 1
+          },
+          "social": {
+            "level": 0,
+            "xp": 44100,
+            "dailyXp": 0,
+            "passion": 0
+          }
+        },
+        {
+          "id": 12410,
+          "melee": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "shooting": {
+            "level": 5,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "construction": {
+            "level": 10,
+            "xp": 577440,
+            "dailyXp": -400,
+            "passion": 2
+          },
+          "medicine": {
+            "level": 3,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "lastResetTick": 12010,
+          "intellectual": {
+            "level": 3,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "social": {
+            "level": 0,
+            "xp": 2450,
+            "dailyXp": 0,
+            "passion": 0
+          }
+        },
+        {
+          "id": 12411,
+          "melee": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "shooting": {
+            "level": 3,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "construction": {
+            "level": 4,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "medicine": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 2
+          },
+          "lastResetTick": 12009,
+          "intellectual": {
+            "level": 6,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "social": {
+            "level": 0,
+            "xp": 18900,
+            "dailyXp": 0,
+            "passion": 0
+          }
+        },
+        {
+          "id": 12886,
+          "melee": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "shooting": {
+            "level": 3,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "construction": {
+            "level": 4,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "medicine": {
+            "level": 8,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 2
+          },
+          "lastResetTick": 12014,
+          "intellectual": {
+            "level": 6,
+            "xp": 0,
+            "dailyXp": 0,
+            "passion": 0
+          },
+          "social": {
+            "level": 0,
+            "xp": 9800,
+            "dailyXp": 0,
+            "passion": 0
+          }
+        }
+      ],
+      "combat": {
+        "shooters": 0,
+        "flights": 0,
+        "impacts": 0
+      },
+      "interruptedCargo": [],
+      "furnitureTransit": 0,
+      "furnitureExits": 0,
+      "roofing": {
+        "constructed": 28,
+        "planned": 28,
+        "removal": 0
+      },
+      "wildlife": {
+        "population": 12,
+        "eatenPlants": 0,
+        "eatenNutrition": 4.351879256814394,
+        "eatenItems": 0,
+        "feeding": 0,
+        "sleeping": 12
+      },
+      "plantClimate": {
+        "slowed": 0,
+        "thermalAnchors": 0
+      },
+      "thermal": {
+        "outdoors": 17.519062133790378,
+        "retainedCells": 1,
+        "temperatures": [
+          17.519062133790378
+        ]
+      },
+      "workplaces": [
+        {
+          "id": 12549,
+          "kind": "campfire",
+          "role": "none",
+          "light": 0.5,
+          "lighting": 1,
+          "outdoors": 0.8,
+          "roomRole": 1,
+          "station": 0.5,
+          "total": 0.4
+        },
+        {
+          "id": 12918,
+          "kind": "stonecutter",
+          "role": "none",
+          "light": 0.3952941298484802,
+          "lighting": 1,
+          "outdoors": 0.8,
+          "roomRole": 1,
+          "station": 1,
+          "total": 0.8
+        }
+      ],
+      "lighting": [
+        {
+          "id": 12409,
+          "cellLight": 0.5,
+          "cellFactor": 1,
+          "moving": false,
+          "travelFactor": 1
+        },
+        {
+          "id": 12410,
+          "cellLight": 0.5,
+          "cellFactor": 1,
+          "moving": false,
+          "travelFactor": 1
+        },
+        {
+          "id": 12411,
+          "cellLight": 0.5,
+          "cellFactor": 1,
+          "moving": false,
+          "travelFactor": 0.9739130434782608
+        },
+        {
+          "id": 12886,
+          "cellLight": 0.26823529601097107,
+          "cellFactor": 0.9788235306739808,
+          "moving": false,
+          "travelFactor": 1
+        }
+      ],
+      "sharedPawnCells": 0,
+      "playerOrders": [
+        {
+          "active": null,
+          "queued": 0,
+          "priority": null
+        },
+        {
+          "active": null,
+          "queued": 0,
+          "priority": null
+        },
+        {
+          "active": null,
+          "queued": 0,
+          "priority": null
+        },
+        {
+          "active": null,
+          "queued": 0,
+          "priority": null
+        }
+      ],
+      "obstructedGrowingCells": 0,
+      "clearing": 0,
+      "construction": {
+        "blueprints": 0,
+        "frames": 1,
+        "clearingPlants": 0,
+        "clearingPiles": 0
+      },
+      "structures": {
+        "wood-generator": 0,
+        "standing-lamp": 0,
+        "passive-cooler": 0,
+        "bed": 4,
+        "table": 1,
+        "stool": 3,
+        "wall": 7,
+        "campfire": 1,
+        "horseshoes": 1,
+        "stonecutter": 1,
+        "door": 1
+      },
+      "preparedMeals": 5,
+      "stock": {
+        "wood": 37,
+        "food": 36
+      },
+      "pending": 9,
+      "minimumFood": 46.71999999999628,
+      "minimumRest": 32.77177380952496
+    }
+  ],
+  "decisions": [
+    {
+      "tick": 68,
+      "reason": "Équiper le revolver initial avant de reprendre les travaux du camp.",
+      "command": {
+        "type": "order-equipment",
+        "pawnId": 12411,
+        "itemId": 12420,
+        "action": "equip",
+        "queue": false
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Conserver les médicaments près des couchages, dans deux piles dédiées.",
+      "command": {
+        "type": "stockpile",
+        "x": 124,
+        "z": 129,
+        "enabled": true,
+        "filters": {
+          "wood": false,
+          "food": false,
+          "medicine": true
+        },
+        "priority": 2,
+        "capacity": 25
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Conserver les médicaments près des couchages, dans deux piles dédiées.",
+      "command": {
+        "type": "stockpile",
+        "x": 126,
+        "z": 129,
+        "enabled": true,
+        "filters": {
+          "wood": false,
+          "food": false,
+          "medicine": true
+        },
+        "priority": 2,
+        "capacity": 25
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Prévoir une heure de loisirs avant la nuit pour le colon nerveux.",
+      "command": {
+        "type": "schedule-paint",
+        "pawnId": 12411,
+        "hours": [
+          20
+        ],
+        "assignment": "recreation"
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux.",
+      "command": {
+        "type": "priority",
+        "pawnId": 12409,
+        "work": "gather",
+        "value": 1
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux.",
+      "command": {
+        "type": "priority",
+        "pawnId": 12409,
+        "work": "build",
+        "value": 3
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux.",
+      "command": {
+        "type": "priority",
+        "pawnId": 12409,
+        "work": "haul",
+        "value": 2
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux.",
+      "command": {
+        "type": "priority",
+        "pawnId": 12409,
+        "work": "cook",
+        "value": 3
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux.",
+      "command": {
+        "type": "priority",
+        "pawnId": 12409,
+        "work": "craft",
+        "value": 3
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux.",
+      "command": {
+        "type": "priority",
+        "pawnId": 12410,
+        "work": "gather",
+        "value": 3
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux.",
+      "command": {
+        "type": "priority",
+        "pawnId": 12410,
+        "work": "build",
+        "value": 1
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux.",
+      "command": {
+        "type": "priority",
+        "pawnId": 12410,
+        "work": "haul",
+        "value": 2
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux.",
+      "command": {
+        "type": "priority",
+        "pawnId": 12410,
+        "work": "grow",
+        "value": 3
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux.",
+      "command": {
+        "type": "priority",
+        "pawnId": 12410,
+        "work": "cook",
+        "value": 3
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux.",
+      "command": {
+        "type": "priority",
+        "pawnId": 12411,
+        "work": "build",
+        "value": 3
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux.",
+      "command": {
+        "type": "priority",
+        "pawnId": 12411,
+        "work": "haul",
+        "value": 2
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux.",
+      "command": {
+        "type": "priority",
+        "pawnId": 12411,
+        "work": "cook",
+        "value": 1
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux.",
+      "command": {
+        "type": "priority",
+        "pawnId": 12411,
+        "work": "craft",
+        "value": 3
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux.",
+      "command": {
+        "type": "priority",
+        "pawnId": 12411,
+        "work": "mine",
+        "value": 3
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Aménager progressivement le camp sans fermer son passage central.",
+      "command": {
+        "type": "designate",
+        "kind": "bed",
+        "x": 122,
+        "z": 127,
+        "orientation": 0
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Aménager progressivement le camp sans fermer son passage central.",
+      "command": {
+        "type": "designate",
+        "kind": "bed",
+        "x": 125,
+        "z": 127,
+        "orientation": 0
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Aménager progressivement le camp sans fermer son passage central.",
+      "command": {
+        "type": "designate",
+        "kind": "bed",
+        "x": 128,
+        "z": 127,
+        "orientation": 0
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Séparer le bois et les aliments près du camp.",
+      "command": {
+        "type": "stockpile",
+        "x": 123,
+        "z": 125,
+        "enabled": true,
+        "filters": {
+          "wood": true,
+          "food": false
+        },
+        "priority": 2,
+        "capacity": 75
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Séparer le bois et les aliments près du camp.",
+      "command": {
+        "type": "stockpile",
+        "x": 123,
+        "z": 126,
+        "enabled": true,
+        "filters": {
+          "wood": true,
+          "food": false
+        },
+        "priority": 2,
+        "capacity": 75
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Séparer le bois et les aliments près du camp.",
+      "command": {
+        "type": "stockpile",
+        "x": 127,
+        "z": 126,
+        "enabled": true,
+        "filters": {
+          "wood": false,
+          "food": true
+        },
+        "priority": 2,
+        "capacity": 75
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Séparer le bois et les aliments près du camp.",
+      "command": {
+        "type": "stockpile",
+        "x": 127,
+        "z": 125,
+        "enabled": true,
+        "filters": {
+          "wood": false,
+          "food": true
+        },
+        "priority": 2,
+        "capacity": 75
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Séparer le bois et les aliments près du camp.",
+      "command": {
+        "type": "stockpile",
+        "x": 127,
+        "z": 124,
+        "enabled": true,
+        "filters": {
+          "wood": false,
+          "food": true
+        },
+        "priority": 2,
+        "capacity": 75
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Séparer le bois et les aliments près du camp.",
+      "command": {
+        "type": "stockpile",
+        "x": 124,
+        "z": 126,
+        "enabled": true,
+        "filters": {
+          "wood": false,
+          "food": true
+        },
+        "priority": 2,
+        "capacity": 75
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Séparer le bois et les aliments près du camp.",
+      "command": {
+        "type": "stockpile",
+        "x": 125,
+        "z": 126,
+        "enabled": true,
+        "filters": {
+          "wood": false,
+          "food": true
+        },
+        "priority": 2,
+        "capacity": 75
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Séparer le bois et les aliments près du camp.",
+      "command": {
+        "type": "stockpile",
+        "x": 126,
+        "z": 126,
+        "enabled": true,
+        "filters": {
+          "wood": false,
+          "food": true
+        },
+        "priority": 2,
+        "capacity": 75
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Réserver une plage de loisirs du soir, sans remplacer le repos nocturne.",
+      "command": {
+        "type": "schedule-paint",
+        "pawnId": 12409,
+        "hours": [
+          19,
+          20
+        ],
+        "assignment": "recreation"
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Réserver une plage de loisirs du soir, sans remplacer le repos nocturne.",
+      "command": {
+        "type": "schedule-paint",
+        "pawnId": 12410,
+        "hours": [
+          19,
+          20
+        ],
+        "assignment": "recreation"
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Réserver une plage de loisirs du soir, sans remplacer le repos nocturne.",
+      "command": {
+        "type": "schedule-paint",
+        "pawnId": 12411,
+        "hours": [
+          19,
+          20
+        ],
+        "assignment": "recreation"
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 123,
+        "z": 123
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 124,
+        "z": 120
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 129,
+        "z": 123
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 130,
+        "z": 126
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 124,
+        "z": 130
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 125,
+        "z": 118
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 119,
+        "z": 124
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 131,
+        "z": 124
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 120,
+        "z": 127
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 126,
+        "z": 118
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 121,
+        "z": 129
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 120,
+        "z": 121
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 133,
+        "z": 126
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Prioriser les premiers lots de bois pour installer le camp.",
+      "command": {
+        "type": "order-job",
+        "pawnId": 12409,
+        "jobId": 12450,
+        "queue": false
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Prioriser les premiers lots de bois pour installer le camp.",
+      "command": {
+        "type": "order-job",
+        "pawnId": 12409,
+        "jobId": 12458,
+        "queue": true
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Dégager le couchage prioritaire.",
+      "command": {
+        "type": "order-job",
+        "pawnId": 12410,
+        "jobId": 12439,
+        "queue": false
+      }
+    },
+    {
+      "tick": 68,
+      "reason": "Ranger les rations après la livraison.",
+      "command": {
+        "type": "order-haul",
+        "pawnId": 12410,
+        "target": {
+          "type": "pile",
+          "pileId": 12417
+        },
+        "queue": true
+      }
+    },
+    {
+      "tick": 1104,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 118,
+        "z": 127
+      }
+    },
+    {
+      "tick": 1104,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 122,
+        "z": 131
+      }
+    },
+    {
+      "tick": 1104,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 128,
+        "z": 131
+      }
+    },
+    {
+      "tick": 1104,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 123,
+        "z": 117
+      }
+    },
+    {
+      "tick": 1104,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 120,
+        "z": 120
+      }
+    },
+    {
+      "tick": 2080,
+      "reason": "Enfiler les vêtements du camp, avec gilet de protection pour la recrue armée.",
+      "command": {
+        "type": "order-equipment",
+        "pawnId": 12411,
+        "itemId": 12424,
+        "action": "wear",
+        "queue": false
+      }
+    },
+    {
+      "tick": 2080,
+      "reason": "Décaler le sommeil de la cuisinière pour préparer le matin.",
+      "command": {
+        "type": "schedule-paint",
+        "pawnId": 12411,
+        "hours": [
+          5
+        ],
+        "assignment": "anything"
+      }
+    },
+    {
+      "tick": 2080,
+      "reason": "Décaler le sommeil de la cuisinière pour préparer le matin.",
+      "command": {
+        "type": "schedule-paint",
+        "pawnId": 12411,
+        "hours": [
+          21
+        ],
+        "assignment": "sleep"
+      }
+    },
+    {
+      "tick": 2080,
+      "reason": "Aménager progressivement le camp sans fermer son passage central.",
+      "command": {
+        "type": "designate",
+        "kind": "table",
+        "x": 125,
+        "z": 123,
+        "orientation": 1
+      }
+    },
+    {
+      "tick": 2080,
+      "reason": "Aménager progressivement le camp sans fermer son passage central.",
+      "command": {
+        "type": "designate",
+        "kind": "horseshoes",
+        "x": 127,
+        "z": 122
+      }
+    },
+    {
+      "tick": 2080,
+      "reason": "Aménager progressivement le camp sans fermer son passage central.",
+      "command": {
+        "type": "designate",
+        "kind": "campfire",
+        "x": 124,
+        "z": 124,
+        "orientation": 0
+      }
+    },
+    {
+      "tick": 2080,
+      "reason": "Aménager progressivement le camp sans fermer son passage central.",
+      "command": {
+        "type": "designate",
+        "kind": "stool",
+        "x": 125,
+        "z": 122
+      }
+    },
+    {
+      "tick": 2080,
+      "reason": "Aménager progressivement le camp sans fermer son passage central.",
+      "command": {
+        "type": "designate",
+        "kind": "stool",
+        "x": 126,
+        "z": 122
+      }
+    },
+    {
+      "tick": 2080,
+      "reason": "Aménager progressivement le camp sans fermer son passage central.",
+      "command": {
+        "type": "designate",
+        "kind": "stool",
+        "x": 125,
+        "z": 124
+      }
+    },
+    {
+      "tick": 2080,
+      "reason": "Semer un premier potager près du camp, tout en continuant à cueillir pendant sa croissance.",
+      "command": {
+        "type": "area",
+        "action": "growing",
+        "from": {
+          "x": 123,
+          "z": 130
+        },
+        "to": {
+          "x": 127,
+          "z": 132
+        }
+      }
+    },
+    {
+      "tick": 2080,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 118,
+        "z": 122
+      }
+    },
+    {
+      "tick": 2080,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 122,
+        "z": 117
+      }
+    },
+    {
+      "tick": 2080,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 120,
+        "z": 119
+      }
+    },
+    {
+      "tick": 2080,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 136,
+        "z": 125
+      }
+    },
+    {
+      "tick": 2080,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 115,
+        "z": 126
+      }
+    },
+    {
+      "tick": 2080,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 135,
+        "z": 126
+      }
+    },
+    {
+      "tick": 2080,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 118,
+        "z": 129
+      }
+    },
+    {
+      "tick": 3054,
+      "reason": "Enfiler les vêtements du camp, avec gilet de protection pour la recrue armée.",
+      "command": {
+        "type": "order-equipment",
+        "pawnId": 12409,
+        "itemId": 12421,
+        "action": "wear",
+        "queue": false
+      }
+    },
+    {
+      "tick": 3054,
+      "reason": "Enfiler les vêtements du camp, avec gilet de protection pour la recrue armée.",
+      "command": {
+        "type": "order-equipment",
+        "pawnId": 12410,
+        "itemId": 12422,
+        "action": "wear",
+        "queue": false
+      }
+    },
+    {
+      "tick": 3054,
+      "reason": "Enfiler les vêtements du camp, avec gilet de protection pour la recrue armée.",
+      "command": {
+        "type": "order-equipment",
+        "pawnId": 12411,
+        "itemId": 12423,
+        "action": "wear",
+        "queue": false
+      }
+    },
+    {
+      "tick": 3054,
+      "reason": "Aménager progressivement le camp sans fermer son passage central.",
+      "command": {
+        "type": "designate",
+        "kind": "wall",
+        "x": 122,
+        "z": 122
+      }
+    },
+    {
+      "tick": 3054,
+      "reason": "Aménager progressivement le camp sans fermer son passage central.",
+      "command": {
+        "type": "designate",
+        "kind": "wall",
+        "x": 122,
+        "z": 123
+      }
+    },
+    {
+      "tick": 3054,
+      "reason": "Aménager progressivement le camp sans fermer son passage central.",
+      "command": {
+        "type": "designate",
+        "kind": "wall",
+        "x": 122,
+        "z": 124
+      }
+    },
+    {
+      "tick": 3054,
+      "reason": "Aménager progressivement le camp sans fermer son passage central.",
+      "command": {
+        "type": "designate",
+        "kind": "wall",
+        "x": 128,
+        "z": 122
+      }
+    },
+    {
+      "tick": 3054,
+      "reason": "Aménager progressivement le camp sans fermer son passage central.",
+      "command": {
+        "type": "designate",
+        "kind": "wall",
+        "x": 128,
+        "z": 123
+      }
+    },
+    {
+      "tick": 3054,
+      "reason": "Aménager progressivement le camp sans fermer son passage central.",
+      "command": {
+        "type": "designate",
+        "kind": "wall",
+        "x": 128,
+        "z": 124
+      }
+    },
+    {
+      "tick": 3054,
+      "reason": "Aménager progressivement le camp sans fermer son passage central.",
+      "command": {
+        "type": "designate",
+        "kind": "wall",
+        "x": 129,
+        "z": 124
+      }
+    },
+    {
+      "tick": 3054,
+      "reason": "Garder une petite réserve alimentaire sur le tabouret près du feu.",
+      "command": {
+        "type": "stockpile",
+        "x": 125,
+        "z": 124,
+        "enabled": true,
+        "filters": {
+          "wood": false,
+          "food": true
+        },
+        "priority": 2,
+        "capacity": 75
+      }
+    },
+    {
+      "tick": 3054,
+      "reason": "Installer une première recette de repas simple au feu de camp.",
+      "command": {
+        "type": "bill-add",
+        "structureId": 12549
+      }
+    },
+    {
+      "tick": 3054,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 128,
+        "z": 133
+      }
+    },
+    {
+      "tick": 3054,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 121,
+        "z": 117
+      }
+    },
+    {
+      "tick": 3054,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 119,
+        "z": 119
+      }
+    },
+    {
+      "tick": 3054,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 117,
+        "z": 121
+      }
+    },
+    {
+      "tick": 3054,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie.",
+      "command": {
+        "type": "designate",
+        "kind": "harvest",
+        "x": 127,
+        "z": 123
+      }
+    },
+    {
+      "tick": 3054,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie.",
+      "command": {
+        "type": "designate",
+        "kind": "harvest",
+        "x": 129,
+        "z": 127
+      }
+    },
+    {
+      "tick": 3054,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie.",
+      "command": {
+        "type": "designate",
+        "kind": "harvest",
+        "x": 129,
+        "z": 128
+      }
+    },
+    {
+      "tick": 3054,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie.",
+      "command": {
+        "type": "designate",
+        "kind": "harvest",
+        "x": 120,
+        "z": 122
+      }
+    },
+    {
+      "tick": 3054,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie.",
+      "command": {
+        "type": "designate",
+        "kind": "harvest",
+        "x": 124,
+        "z": 116
+      }
+    },
+    {
+      "tick": 4090,
+      "reason": "Inclure les ouvrages du camp dans le foyer entretenu.",
+      "command": {
+        "type": "area",
+        "action": "home",
+        "from": {
+          "x": 122,
+          "z": 124
+        },
+        "to": {
+          "x": 122,
+          "z": 124
+        }
+      }
+    },
+    {
+      "tick": 4090,
+      "reason": "Inclure les ouvrages du camp dans le foyer entretenu.",
+      "command": {
+        "type": "area",
+        "action": "home",
+        "from": {
+          "x": 122,
+          "z": 123
+        },
+        "to": {
+          "x": 122,
+          "z": 123
+        }
+      }
+    },
+    {
+      "tick": 4090,
+      "reason": "Inclure les ouvrages du camp dans le foyer entretenu.",
+      "command": {
+        "type": "area",
+        "action": "home",
+        "from": {
+          "x": 122,
+          "z": 122
+        },
+        "to": {
+          "x": 122,
+          "z": 122
+        }
+      }
+    },
+    {
+      "tick": 4090,
+      "reason": "Inclure les ouvrages du camp dans le foyer entretenu.",
+      "command": {
+        "type": "area",
+        "action": "home",
+        "from": {
+          "x": 128,
+          "z": 122
+        },
+        "to": {
+          "x": 128,
+          "z": 122
+        }
+      }
+    },
+    {
+      "tick": 4090,
+      "reason": "Inclure les ouvrages du camp dans le foyer entretenu.",
+      "command": {
+        "type": "area",
+        "action": "home",
+        "from": {
+          "x": 128,
+          "z": 123
+        },
+        "to": {
+          "x": 128,
+          "z": 123
+        }
+      }
+    },
+    {
+      "tick": 4090,
+      "reason": "Inclure les ouvrages du camp dans le foyer entretenu.",
+      "command": {
+        "type": "area",
+        "action": "home",
+        "from": {
+          "x": 128,
+          "z": 124
+        },
+        "to": {
+          "x": 128,
+          "z": 124
+        }
+      }
+    },
+    {
+      "tick": 4090,
+      "reason": "Inclure les ouvrages du camp dans le foyer entretenu.",
+      "command": {
+        "type": "area",
+        "action": "home",
+        "from": {
+          "x": 129,
+          "z": 124
+        },
+        "to": {
+          "x": 129,
+          "z": 124
+        }
+      }
+    },
+    {
+      "tick": 4090,
+      "reason": "Maintenir environ deux repas préparés par colon en réserve.",
+      "command": {
+        "type": "bill-update",
+        "structureId": 12549,
+        "billId": 12616,
+        "settings": {
+          "id": 12616,
+          "recipe": "simple-meal",
+          "mode": "until",
+          "target": 6,
+          "suspended": false,
+          "filters": {
+            "rice": true,
+            "berries": true
+          },
+          "radius": 999,
+          "destination": "stockpile"
+        }
+      }
+    },
+    {
+      "tick": 4090,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 136,
+        "z": 124
+      }
+    },
+    {
+      "tick": 4090,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 132,
+        "z": 130
+      }
+    },
+    {
+      "tick": 5067,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie.",
+      "command": {
+        "type": "designate",
+        "kind": "harvest",
+        "x": 128,
+        "z": 118
+      }
+    },
+    {
+      "tick": 5067,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie.",
+      "command": {
+        "type": "designate",
+        "kind": "harvest",
+        "x": 135,
+        "z": 125
+      }
+    },
+    {
+      "tick": 5067,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie.",
+      "command": {
+        "type": "designate",
+        "kind": "harvest",
+        "x": 117,
+        "z": 127
+      }
+    },
+    {
+      "tick": 6101,
+      "reason": "Ouvrir le passage du camp après la première journée.",
+      "command": {
+        "type": "designate",
+        "kind": "deconstruct",
+        "x": 129,
+        "z": 124
+      }
+    },
+    {
+      "tick": 6101,
+      "reason": "Préparer une réserve pour les meubles retirés.",
+      "command": {
+        "type": "stockpile",
+        "x": 129,
+        "z": 125,
+        "enabled": true,
+        "filters": {
+          "wood": false,
+          "food": false,
+          "furniture": true
+        },
+        "priority": 2,
+        "capacity": 1
+      }
+    },
+    {
+      "tick": 6101,
+      "reason": "Retirer le jeu pour réorganiser le camp.",
+      "command": {
+        "type": "designate",
+        "kind": "uninstall",
+        "x": 127,
+        "z": 122
+      }
+    },
+    {
+      "tick": 6101,
+      "reason": "Aménager progressivement le camp sans fermer son passage central.",
+      "command": {
+        "type": "designate",
+        "kind": "door",
+        "material": "wood",
+        "x": 122,
+        "z": 125,
+        "orientation": 0
+      }
+    },
+    {
+      "tick": 6101,
+      "reason": "Conserver les rations de voyage tant que la cuisine assure les repas.",
+      "command": {
+        "type": "food-policy-assign",
+        "pawnId": 12409,
+        "policyId": 3
+      }
+    },
+    {
+      "tick": 6101,
+      "reason": "Conserver les rations de voyage tant que la cuisine assure les repas.",
+      "command": {
+        "type": "food-policy-assign",
+        "pawnId": 12410,
+        "policyId": 3
+      }
+    },
+    {
+      "tick": 6101,
+      "reason": "Conserver les rations de voyage tant que la cuisine assure les repas.",
+      "command": {
+        "type": "food-policy-assign",
+        "pawnId": 12411,
+        "policyId": 3
+      }
+    },
+    {
+      "tick": 6101,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 126,
+        "z": 113
+      }
+    },
+    {
+      "tick": 6101,
+      "reason": "Ouvrir quelques cases du massif proche pour préparer la pierre.",
+      "command": {
+        "type": "designate",
+        "kind": "mine",
+        "x": 150,
+        "z": 160
+      }
+    },
+    {
+      "tick": 6101,
+      "reason": "Ouvrir quelques cases du massif proche pour préparer la pierre.",
+      "command": {
+        "type": "designate",
+        "kind": "mine",
+        "x": 149,
+        "z": 161
+      }
+    },
+    {
+      "tick": 6101,
+      "reason": "Ouvrir quelques cases du massif proche pour préparer la pierre.",
+      "command": {
+        "type": "designate",
+        "kind": "mine",
+        "x": 151,
+        "z": 160
+      }
+    },
+    {
+      "tick": 6101,
+      "reason": "Ouvrir quelques cases du massif proche pour préparer la pierre.",
+      "command": {
+        "type": "designate",
+        "kind": "mine",
+        "x": 149,
+        "z": 162
+      }
+    },
+    {
+      "tick": 6101,
+      "reason": "Réserver des cases aux fragments, sans les mélanger aux aliments.",
+      "command": {
+        "type": "stockpile",
+        "x": 130,
+        "z": 124,
+        "enabled": true,
+        "filters": {
+          "wood": false,
+          "food": false,
+          "chunk": true
+        },
+        "capacity": 1
+      }
+    },
+    {
+      "tick": 6101,
+      "reason": "Réserver des cases aux fragments, sans les mélanger aux aliments.",
+      "command": {
+        "type": "stockpile",
+        "x": 130,
+        "z": 125,
+        "enabled": true,
+        "filters": {
+          "wood": false,
+          "food": false,
+          "chunk": true
+        },
+        "capacity": 1
+      }
+    },
+    {
+      "tick": 6101,
+      "reason": "Réserver des cases aux fragments, sans les mélanger aux aliments.",
+      "command": {
+        "type": "stockpile",
+        "x": 130,
+        "z": 126,
+        "enabled": true,
+        "filters": {
+          "wood": false,
+          "food": false,
+          "chunk": true
+        },
+        "capacity": 1
+      }
+    },
+    {
+      "tick": 6101,
+      "reason": "Réserver des cases aux fragments, sans les mélanger aux aliments.",
+      "command": {
+        "type": "stockpile",
+        "x": 130,
+        "z": 127,
+        "enabled": true,
+        "filters": {
+          "wood": false,
+          "food": false,
+          "chunk": true
+        },
+        "capacity": 1
+      }
+    },
+    {
+      "tick": 6101,
+      "reason": "Couvrir l’espace de repas après avoir construit ses supports.",
+      "command": {
+        "type": "area",
+        "action": "build-roof",
+        "from": {
+          "x": 122,
+          "z": 122
+        },
+        "to": {
+          "x": 128,
+          "z": 125
+        }
+      }
+    },
+    {
+      "tick": 8091,
+      "reason": "Inclure les ouvrages du camp dans le foyer entretenu.",
+      "command": {
+        "type": "area",
+        "action": "home",
+        "from": {
+          "x": 122,
+          "z": 125
+        },
+        "to": {
+          "x": 122,
+          "z": 125
+        }
+      }
+    },
+    {
+      "tick": 8091,
+      "reason": "Réinstaller le piquet après son rangement en réserve.",
+      "command": {
+        "type": "install",
+        "structureId": 12562,
+        "x": 129,
+        "z": 122,
+        "orientation": 0
+      }
+    },
+    {
+      "tick": 8091,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 120,
+        "z": 117
+      }
+    },
+    {
+      "tick": 8091,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 118,
+        "z": 119
+      }
+    },
+    {
+      "tick": 8091,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie.",
+      "command": {
+        "type": "designate",
+        "kind": "harvest",
+        "x": 124,
+        "z": 115
+      }
+    },
+    {
+      "tick": 8091,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie.",
+      "command": {
+        "type": "designate",
+        "kind": "harvest",
+        "x": 122,
+        "z": 133
+      }
+    },
+    {
+      "tick": 8091,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie.",
+      "command": {
+        "type": "designate",
+        "kind": "harvest",
+        "x": 113,
+        "z": 125
+      }
+    },
+    {
+      "tick": 8091,
+      "reason": "Extraire une réserve d’acier pour les futurs ateliers.",
+      "command": {
+        "type": "designate",
+        "kind": "mine",
+        "x": 165,
+        "z": 159
+      }
+    },
+    {
+      "tick": 8091,
+      "reason": "Extraire une réserve d’acier pour les futurs ateliers.",
+      "command": {
+        "type": "designate",
+        "kind": "mine",
+        "x": 162,
+        "z": 163
+      }
+    },
+    {
+      "tick": 8091,
+      "reason": "Ranger l’acier extrait dans des cases libres près du camp.",
+      "command": {
+        "type": "stockpile",
+        "x": 130,
+        "z": 128,
+        "enabled": true,
+        "filters": {
+          "wood": false,
+          "food": false,
+          "steel": true
+        },
+        "capacity": 75
+      }
+    },
+    {
+      "tick": 8091,
+      "reason": "Ranger l’acier extrait dans des cases libres près du camp.",
+      "command": {
+        "type": "stockpile",
+        "x": 131,
+        "z": 128,
+        "enabled": true,
+        "filters": {
+          "wood": false,
+          "food": false,
+          "steel": true
+        },
+        "capacity": 75
+      }
+    },
+    {
+      "tick": 8091,
+      "reason": "Désigner les fragments extraits pour leur transport.",
+      "command": {
+        "type": "area",
+        "action": "haul-chunks",
+        "from": {
+          "type": "ground",
+          "x": 150,
+          "z": 160
+        },
+        "to": {
+          "type": "ground",
+          "x": 150,
+          "z": 160
+        }
+      }
+    },
+    {
+      "tick": 9058,
+      "reason": "Accueillir une quatrième personne ; différer la croissance suivante pour stabiliser le camp.",
+      "command": {
+        "type": "answer-arrival",
+        "offerId": 1,
+        "accept": true
+      }
+    },
+    {
+      "tick": 9058,
+      "reason": "Préparer un atelier de taille avec le bois du camp et l’acier extrait.",
+      "command": {
+        "type": "designate",
+        "kind": "stonecutter",
+        "material": "wood",
+        "x": 119,
+        "z": 121,
+        "orientation": 0
+      }
+    },
+    {
+      "tick": 9058,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 115,
+        "z": 122
+      }
+    },
+    {
+      "tick": 9058,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 137,
+        "z": 124
+      }
+    },
+    {
+      "tick": 9058,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 112,
+        "z": 125
+      }
+    },
+    {
+      "tick": 9058,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 113,
+        "z": 126
+      }
+    },
+    {
+      "tick": 9058,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 137,
+        "z": 126
+      }
+    },
+    {
+      "tick": 10082,
+      "reason": "Construire une alimentation au bois à l’extérieur du camp.",
+      "command": {
+        "type": "designate",
+        "kind": "wood-generator",
+        "x": 131,
+        "z": 121,
+        "material": "steel",
+        "orientation": 0
+      }
+    },
+    {
+      "tick": 10082,
+      "reason": "Prévoir une heure de loisirs avant la nuit pour le colon nerveux.",
+      "command": {
+        "type": "schedule-paint",
+        "pawnId": 12886,
+        "hours": [
+          20
+        ],
+        "assignment": "recreation"
+      }
+    },
+    {
+      "tick": 10082,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux.",
+      "command": {
+        "type": "priority",
+        "pawnId": 12886,
+        "work": "gather",
+        "value": 1
+      }
+    },
+    {
+      "tick": 10082,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux.",
+      "command": {
+        "type": "priority",
+        "pawnId": 12886,
+        "work": "build",
+        "value": 3
+      }
+    },
+    {
+      "tick": 10082,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux.",
+      "command": {
+        "type": "priority",
+        "pawnId": 12886,
+        "work": "haul",
+        "value": 2
+      }
+    },
+    {
+      "tick": 10082,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux.",
+      "command": {
+        "type": "priority",
+        "pawnId": 12886,
+        "work": "cook",
+        "value": 3
+      }
+    },
+    {
+      "tick": 10082,
+      "reason": "Affecter le meilleur bâtisseur selon sa compétence, départager par apprentissage et répartir les autres travaux.",
+      "command": {
+        "type": "priority",
+        "pawnId": 12886,
+        "work": "craft",
+        "value": 3
+      }
+    },
+    {
+      "tick": 10082,
+      "reason": "Aménager progressivement le camp sans fermer son passage central.",
+      "command": {
+        "type": "designate",
+        "kind": "bed",
+        "x": 122,
+        "z": 131,
+        "orientation": 0
+      }
+    },
+    {
+      "tick": 10082,
+      "reason": "Maintenir environ deux repas préparés par colon en réserve.",
+      "command": {
+        "type": "bill-update",
+        "structureId": 12549,
+        "billId": 12616,
+        "settings": {
+          "id": 12616,
+          "recipe": "simple-meal",
+          "mode": "until",
+          "target": 8,
+          "suspended": false,
+          "filters": {
+            "rice": true,
+            "berries": true
+          },
+          "radius": 999,
+          "destination": "stockpile"
+        }
+      }
+    },
+    {
+      "tick": 10082,
+      "reason": "Réserver une plage de loisirs du soir, sans remplacer le repos nocturne.",
+      "command": {
+        "type": "schedule-paint",
+        "pawnId": 12886,
+        "hours": [
+          19,
+          20
+        ],
+        "assignment": "recreation"
+      }
+    },
+    {
+      "tick": 10082,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 132,
+        "z": 131
+      }
+    },
+    {
+      "tick": 10082,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 124,
+        "z": 112
+      }
+    },
+    {
+      "tick": 10082,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 119,
+        "z": 117
+      }
+    },
+    {
+      "tick": 10082,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 137,
+        "z": 123
+      }
+    },
+    {
+      "tick": 10082,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie.",
+      "command": {
+        "type": "designate",
+        "kind": "harvest",
+        "x": 114,
+        "z": 126
+      }
+    },
+    {
+      "tick": 10082,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie.",
+      "command": {
+        "type": "designate",
+        "kind": "harvest",
+        "x": 118,
+        "z": 130
+      }
+    },
+    {
+      "tick": 10082,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie.",
+      "command": {
+        "type": "designate",
+        "kind": "harvest",
+        "x": 114,
+        "z": 123
+      }
+    },
+    {
+      "tick": 10082,
+      "reason": "Extraire une réserve d’acier pour les futurs ateliers.",
+      "command": {
+        "type": "designate",
+        "kind": "mine",
+        "x": 165,
+        "z": 160
+      }
+    },
+    {
+      "tick": 10082,
+      "reason": "Extraire une réserve d’acier pour les futurs ateliers.",
+      "command": {
+        "type": "designate",
+        "kind": "mine",
+        "x": 166,
+        "z": 159
+      }
+    },
+    {
+      "tick": 10082,
+      "reason": "Extraire une réserve d’acier pour les futurs ateliers.",
+      "command": {
+        "type": "designate",
+        "kind": "mine",
+        "x": 167,
+        "z": 158
+      }
+    },
+    {
+      "tick": 10082,
+      "reason": "Extraire six composants pour préparer les appareils électriques.",
+      "command": {
+        "type": "designate",
+        "kind": "mine",
+        "x": 125,
+        "z": 181
+      }
+    },
+    {
+      "tick": 10082,
+      "reason": "Extraire six composants pour préparer les appareils électriques.",
+      "command": {
+        "type": "designate",
+        "kind": "mine",
+        "x": 124,
+        "z": 182
+      }
+    },
+    {
+      "tick": 10082,
+      "reason": "Extraire six composants pour préparer les appareils électriques.",
+      "command": {
+        "type": "designate",
+        "kind": "mine",
+        "x": 124,
+        "z": 183
+      }
+    },
+    {
+      "tick": 10082,
+      "reason": "Ranger séparément les composants extraits.",
+      "command": {
+        "type": "stockpile",
+        "x": 132,
+        "z": 128,
+        "enabled": true,
+        "filters": {
+          "wood": false,
+          "food": false,
+          "component": true
+        },
+        "capacity": 50
+      }
+    },
+    {
+      "tick": 10082,
+      "reason": "Tailler les premiers blocs du camp.",
+      "command": {
+        "type": "bill-add",
+        "structureId": 12918
+      }
+    },
+    {
+      "tick": 10082,
+      "reason": "Ranger les blocs taillés près des autres matériaux.",
+      "command": {
+        "type": "stockpile",
+        "x": 132,
+        "z": 128,
+        "enabled": true,
+        "filters": {
+          "wood": false,
+          "food": false,
+          "blocks": true
+        },
+        "capacity": 75
+      }
+    },
+    {
+      "tick": 11048,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 111,
+        "z": 125
+      }
+    },
+    {
+      "tick": 11048,
+      "reason": "Prévoir le bois des chantiers et une petite marge.",
+      "command": {
+        "type": "designate",
+        "kind": "chop",
+        "x": 136,
+        "z": 128
+      }
+    },
+    {
+      "tick": 11048,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie.",
+      "command": {
+        "type": "designate",
+        "kind": "harvest",
+        "x": 131,
+        "z": 132
+      }
+    },
+    {
+      "tick": 11048,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie.",
+      "command": {
+        "type": "designate",
+        "kind": "harvest",
+        "x": 127,
+        "z": 113
+      }
+    },
+    {
+      "tick": 11048,
+      "reason": "Renouveler la réserve alimentaire avant la pénurie.",
+      "command": {
+        "type": "designate",
+        "kind": "harvest",
+        "x": 138,
+        "z": 126
+      }
+    },
+    {
+      "tick": 11048,
+      "reason": "Prolonger le premier abri avec cinq blocs taillés sur place.",
+      "command": {
+        "type": "designate",
+        "kind": "wall",
+        "material": "limestone-blocks",
+        "x": 121,
+        "z": 122
+      }
+    },
+    {
+      "tick": 11048,
+      "reason": "Maintenir vingt blocs de pierre disponibles.",
+      "command": {
+        "type": "bill-update",
+        "structureId": 12918,
+        "billId": 12940,
+        "settings": {
+          "id": 12940,
+          "recipe": "stone-blocks",
+          "mode": "until",
+          "target": 20,
+          "suspended": false,
+          "filters": {
+            "granite-chunk": true,
+            "limestone-chunk": true,
+            "marble-chunk": true,
+            "sandstone-chunk": true,
+            "slate-chunk": true
+          },
+          "radius": 999,
+          "destination": "stockpile"
+        }
+      }
+    },
+    {
+      "tick": 11048,
+      "reason": "Ranger les blocs taillés près des autres matériaux.",
+      "command": {
+        "type": "stockpile",
+        "x": 129,
+        "z": 129,
+        "enabled": true,
+        "filters": {
+          "wood": false,
+          "food": false,
+          "blocks": true
+        },
+        "capacity": 75
+      }
+    },
+    {
+      "tick": 12077,
+      "reason": "Préparer six cotonniers après le potager, pour confectionner une tenue.",
+      "command": {
+        "type": "area",
+        "action": "growing",
+        "from": {
+          "x": 132,
+          "z": 130
+        },
+        "to": {
+          "x": 134,
+          "z": 131
+        }
+      }
+    },
+    {
+      "tick": 12077,
+      "reason": "Inclure les ouvrages du camp dans le foyer entretenu.",
+      "command": {
+        "type": "area",
+        "action": "home",
+        "from": {
+          "x": 121,
+          "z": 122
+        },
+        "to": {
+          "x": 121,
+          "z": 122
+        }
+      }
+    }
+  ],
+  "meals": [
+    [
+      "1947:Mina a mangé une portion (1 × Repas de survie) sans table.",
+      1
+    ],
+    [
+      "2120:Noé a mangé une portion (1 × Repas de survie) sans table.",
+      1
+    ],
+    [
+      "2324:Ada a mangé une portion (1 × Repas de survie) sans table.",
+      1
+    ],
+    [
+      "4635:Mina a mangé une portion (1 × Repas simple) à table.",
+      1
+    ],
+    [
+      "4796:Noé a mangé une portion (1 × Repas simple) à table.",
+      1
+    ],
+    [
+      "5014:Ada a mangé une portion (1 × Repas simple) à table.",
+      1
+    ],
+    [
+      "7322:Mina a mangé une portion (1 × Repas simple) à table.",
+      1
+    ],
+    [
+      "7596:Noé a mangé une portion (1 × Repas simple) à table.",
+      1
+    ],
+    [
+      "7830:Ada a mangé une portion (1 × Repas simple) à table.",
+      1
+    ],
+    [
+      "10079:Mina a mangé une portion (1 × Repas simple) à table.",
+      1
+    ],
+    [
+      "10294:Noé a mangé une portion (1 × Repas simple) à table.",
+      1
+    ],
+    [
+      "10537:Ada a mangé une portion (1 × Repas simple) à table.",
+      1
+    ],
+    [
+      "10976:Jules a mangé une portion (1 × Repas simple) à table.",
+      1
+    ]
+  ],
+  "errors": []
+}

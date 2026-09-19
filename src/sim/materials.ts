@@ -93,6 +93,7 @@ export function transferPile(world:World,pile:MaterialPile,owner:MaterialOwner):
 }
 export function reservedSource(world: World, pileId: number, exceptPawn?: number): number {
   let quantity = 0;
+  for(const a of world.wildlife?.animals??[])if(a.id!==exceptPawn&&a.meal?.kind==='pile'&&a.meal.id===pileId)quantity+=a.meal.quantity;
   for (const pawn of world.pawns) {
     if (pawn.id !== exceptPawn) {
       if((pawn.equipmentTask?.action==='equip'||pawn.equipmentTask?.action==='wear')&&pawn.equipmentTask.itemId===pileId)quantity++;

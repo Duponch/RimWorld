@@ -43,6 +43,9 @@ export function constructionObstruction(world: World, job: Job):ConstructionObst
 export function constructionSiteFree(world: World, job: Job, workerId?: number, obstacle=constructionObstruction(world,job)): boolean {
   if(obstacle.plant||obstacle.pile||obstacle.pack)return false;
   const cells=footprintCells(job);
+  if(world.wildlife?.animals.some(a=>cells.some(c=>{
+    const m=a.motion;return a.x===c.x&&a.z===c.z||!!m&&m.end>world.tick&&c.x>=Math.min(m.from.x,m.to.x)&&c.x<=Math.max(m.from.x,m.to.x)&&c.z>=Math.min(m.from.z,m.to.z)&&c.z<=Math.max(m.from.z,m.to.z);
+  })))return false;
   return !world.pawns.some(p=>p.id!==workerId&&cells.some(c=>{
     const edge=p.motion;
     const service=serviceCell(p);

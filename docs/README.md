@@ -1,10 +1,8 @@
 # Documentation de Lisière
 
-V75 : [climatiseur et conservation froide](development/cold-store.md), deuxième projet de recherche, consommation électrique variable et hypothermie. [Sources et adaptations](research/cold-store-reference.md), [preuves](history/validation-cold-store-v75.md). L’étape proche 5 apporte désormais chaleur et conservation ; saisons et environnement complet restent ouverts.
+État courant : **V76, 19 septembre 2026**. [Première faune autonome](development/wildlife.md) : lièvres visibles, repas/broutage, sommeil et onglet Faune ; chasse et anatomie animale encore absentes. [Sources](research/wildlife-reference.md), [preuves](history/validation-wildlife-v76.md).
 
-État courant : **V74, 19 septembre 2026**. [Canicule et protection thermique](development/heatwave.md) : incident persistant, air réel, isolation portée, coup de chaleur, refuge et secours. Étape proche 5 engagée, saisons non livrées. [Dernières preuves](history/validation-heatwave-v74.md).
-
-V73 : [Recherche et tailleur](development/research.md) : projet collectif, Intellect, bureau physique, déblocage de l’atelier et chemise fabriquée/portée. L’étape proche 4 est livrée dans ce périmètre limité ; social, traits, accueil et raid restent jouables. [Inventaire consolidé](gameplay/implementation-status.md), [preuves V73](history/validation-research-v73.md).
+Dernières boucles de colonie : [conservation froide V75](development/cold-store.md), [canicule V74](development/heatwave.md), [recherche et tailleur V73](development/research.md). Les étapes proches 4 et 5 sont livrées dans leurs périmètres annoncés ; arbre de recherche, saisons et environnement complet restent ouverts. [Inventaire consolidé](gameplay/implementation-status.md).
 
 La [revue de progression](research/progression-review-2026-09-19.md) explique la réorientation vers des situations de colonie complètes. [ROADMAP](ROADMAP.md) conserve seule l’ordre des prochains travaux et les estimations. Mode jour, automatisation nocturne en pause.
 

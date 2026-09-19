@@ -1,4 +1,6 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+import { isDeepStrictEqual } from 'node:util';
+import { writeFile } from 'node:fs/promises';
 import type { World } from '../../src/sim/types';
 
 declare global {
@@ -15,10 +17,21 @@ export async function expectWorld(page: Page, expected: World) {
   // presentation to finish before comparing, otherwise the assertion is vacuous.
   await expect(page.locator('.game-shell')).toHaveJSProperty('inert',false);
   const serialized = JSON.stringify(expected);
-  // Exact comparison, with no expensive recursive matcher/tracing over thousands of tile objects.
-  await expect.poll(async () => await serializedWorld(page) === serialized, {
-    message: `État exact : graine ${expected.seed}, carte ${expected.width}×${expected.height}, tick ${expected.tick}, ${expected.jobs.length} ordre(s)`,
-  }).toBe(true);
+  // Preserve all values and array order. Object insertion order can differ
+  // between a sparse delta and a checkpoint; it is not simulation state.
+  let actual = serialized;
+  try {
+    await expect.poll(async () => {
+      actual = await serializedWorld(page);
+      return actual === serialized || isDeepStrictEqual(JSON.parse(actual), expected);
+    }, {message: `État exact : graine ${expected.seed}, carte ${expected.width}×${expected.height}, tick ${expected.tick}, ${expected.jobs.length} ordre(s)`}).toBe(true);
+    if(actual!==serialized)await test.info().attach('save-object-key-order',{contentType:'application/json',body:JSON.stringify({tick:expected.tick,semanticEquality:true})});
+  } catch(error) {
+    const path=test.info().outputPath('save-mismatch.json');
+    await writeFile(path,JSON.stringify({expected,actual:JSON.parse(actual),notice:await page.locator('#notice').textContent()}));
+    await test.info().attach('save-mismatch',{contentType:'application/json',path});
+    throw error;
+  }
 }
 export const saveKey = 'lisiere.save.v1';
 
@@ -31,7 +44,7 @@ export function observeErrors(page: Page): string[] {
   return errors;
 }
 
-export async function panel(page: Page, name: 'research' | 'architect' | 'work' | 'schedule' | 'assign' | 'menu') {
+export async function panel(page: Page, name: 'wildlife' | 'research' | 'architect' | 'work' | 'schedule' | 'assign' | 'menu') {
     // Snapshot adoption precedes GPU preparation and the closing of old panels.
     // Wait for the same interactive state a player needs, not just visibility.
     await expect(page.locator('.game-shell')).toHaveJSProperty('inert', false);

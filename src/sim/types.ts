@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 75 as const;
+export const SCHEMA_VERSION = 76 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
@@ -131,6 +131,7 @@ export interface Pawn extends Cell {
 }
 export interface WorldEvent { tick: number; type: 'job' | 'need' | 'command'; message: string }
 export interface World {
+  wildlife?:import('./wildlife-state.ts').WildlifeState;
   heatwaves?:import('./heatwave.ts').HeatwaveCalendar;
   research?:import('./research.ts').ResearchState;
   raids?:import('./raid-state.ts').RaidCalendar;
@@ -177,6 +178,7 @@ export type AreaAction = 'home' | 'remove-home' | 'build-roof' | 'remove-roof' |
 export interface StorageSettings { filters?: StorageFilters; priority?: number; capacity?: number }
 export interface AreaCommand extends StorageSettings { type: 'area'; action: AreaAction; from: Cell; to: Cell }
 export type Command =
+  | {type:'enable-wildlife'}
   | {type:'cancel-unfinished';itemId:number}
   | {type:'enable-raids'}
   | import('./arrival-state.ts').ArrivalCommand

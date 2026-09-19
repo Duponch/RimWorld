@@ -1,3 +1,4 @@
+import { WildlifeLayer } from './WildlifeLayer';
 import { NaturalResourcePresentation } from './NaturalResourcePresentation';
 import { ProjectileLayer } from './ProjectileLayer';
 import { EnvironmentLighting } from './EnvironmentLighting';
@@ -63,6 +64,7 @@ export class ColonyRenderer {
   private received:{world:World;speed:number;tracks?:PawnTrack[]}|undefined;
   private hasTracks = false;
   private readonly projectiles = new ProjectileLayer();
+  private readonly wildlife = new WildlifeLayer(this.environmentLighting.configure);
   private readonly pawns = new PawnLayer(this.environmentLighting.configure);
   readonly backend: string;
   private readonly renderer: THREE.WebGPURenderer;
@@ -169,7 +171,7 @@ export class ColonyRenderer {
     renderer.domElement.tabIndex = 0;
     host.appendChild(renderer.domElement);
     this.daylight = new DayNightLayer(this.scene);
-    this.scene.add(this.projectiles.mesh,this.roofs.surface,this.roofs.areas,this.doors.group,this.crops.group, this.growing.group, this.overview.group, this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup, this.pawns.group);
+    this.scene.add(this.wildlife.mesh,this.projectiles.mesh,this.roofs.surface,this.roofs.areas,this.doors.group,this.crops.group, this.growing.group, this.overview.group, this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup, this.pawns.group);
     this.rig = new CameraRig(renderer.domElement);
     const hoverMat = new THREE.MeshBasicNodeMaterial({ color: 0xf9ebae, transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide });
     this.hover = new THREE.Mesh(new THREE.PlaneGeometry(0.96, 0.96), hoverMat);
@@ -275,6 +277,7 @@ export class ColonyRenderer {
     this.timeTo = world.tick / TICKS_PER_SECOND;
     this.pawns.blend.value = resetPoses ? 1 : 0;
     this.pawns.update(world, resetPoses ? 1 : oldBlend, resetPoses);
+    this.wildlife.update(world,this.hasTracks?this.timeline:undefined);
     this.updateHover();
   }
 
@@ -334,6 +337,7 @@ export class ColonyRenderer {
     this.preparing = true;
     const culling = new Map<THREE.Object3D, boolean>();
     const distant = this.overview.group.visible;
+    const restoreWildlife=this.wildlife.prepare();
     const restoreRoofs=this.roofs.prepare();
     const restoreDoors=this.doors.prepareForCompile();
     const restoreCrops = this.crops.prepareForCompile();
@@ -349,7 +353,7 @@ export class ColonyRenderer {
       await this.renderer.compileAsync(this.scene, this.rig.perspective);
       await prepareShadowPipelines(this.renderer,this.scene,this.rig.orthographic,this.boxes);
     } finally {
-      restoreRoofs();restoreDoors();restoreCrops();
+      restoreWildlife();restoreRoofs();restoreDoors();restoreCrops();
       for (const [object, value] of culling) object.frustumCulled = value;
       this.overview.group.visible = distant; this.terrainGroup.visible = this.resourceGroup.visible = !distant;
       this.rocks.setDistant(distant); this.preparing = false;
@@ -365,7 +369,7 @@ export class ColonyRenderer {
   }
 
   focusPawn(id: number): void {
-    const pawn = this.world?.pawns.find((item) => item.id === id);
+    const pawn = this.world?.pawns.find((item) => item.id === id)??this.world?.wildlife?.animals.find(a=>a.id===id);
     if (!pawn) return;
     const offset = this.camera.position.clone().sub(this.controls.target);
     this.controls.target.set(pawn.x, 0, pawn.z);
@@ -534,6 +538,7 @@ export class ColonyRenderer {
     this.pawns.blend.value = this.snapshotDuration > 0 ? Math.min(1, Math.max(0, (performance.now() - this.snapshotAt) / this.snapshotDuration)) : 1;
     this.pawns.time.value = THREE.MathUtils.lerp(this.timeFrom, this.timeTo, this.pawns.blend.value);
     if(this.hasTracks && this.world) {this.pawns.time.value=(this.timeline.tick/TICKS_PER_SECOND)%(2*Math.PI);this.pawns.updateTravel(this.world,this.timeline);}
+    if(this.world)this.wildlife.update(this.world,this.hasTracks?this.timeline:undefined);
     if (!this.areaDrag && !this.selectionInput.active) { this.moveCamera(dt); this.controls.update(); }
     if (this.world) {
       const x = THREE.MathUtils.clamp(this.controls.target.x, 0, this.world.width - 1);
@@ -752,6 +757,7 @@ export class ColonyRenderer {
     this.crops.dispose();
     this.resources.clear();
     this.doors.dispose();this.projectiles.dispose();
+    this.wildlife.mesh.geometry.dispose();(this.wildlife.mesh.material as THREE.Material).dispose();
     for (const group of [this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup, this.pawns.group]) clearGroup(group);
     this.pileChunks.clear();
     this.staticMaterial.dispose();

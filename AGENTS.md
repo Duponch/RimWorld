@@ -1,5 +1,9 @@
 # Travail sur Lisière
 
+## Faune V76
+- Lire `docs/development/wildlife.md` et sa recherche. Animaux distincts des colons, PRNG privé, ingestion au contact et broutage de croissance réelle. Une seule espèce adulte ; santé/riposte/fuite/chasse/cadavres restent absents et prioritaires selon ROADMAP. Aucune donnée humaine inventée. V75 strictement validée avant migration neutre ; introduction explicite dans les anciennes parties.
+- Partager réservations de piles, obstacles/coins, protection des chantiers et maintien des portes ; ne pas ouvrir les portes pour un animal sauvage. Arêtes/historique/clock confirmée communs, rig TSL résident préchauffé. Mesures mixtes `WILDLIFE=1`, CPU et rendu successifs. Le pilote de colonie compte les aliments consommés par les animaux séparément. Le pilote UI exécute aussi le choix de culture ; utiliser `COLONY_JOURNEY_CHECKPOINT` pour reprendre son état réel avant le troisième jour. Geler les sources, y compris les commentaires, pendant une exécution native pour éviter le HMR.
+
 ## Conservation froide V75
 - Lire `docs/development/cold-store.md` et `docs/research/cold-store-reference.md`. Climatiseur solide à deux faces, 90 acier/3 composants, finition Construction 5, recherche Climatisation 500 points distincte des vêtements. Chauffage rejeté, 20/200 W et alimentation réelle partagés ; aucune conservation fictive ni remise à zéro des âges.
 - `cooler-adjust` applique les incréments au worker pour conserver les clics rapides. Déconstruction moitié ; destruction quart prévalidée avant dernier dommage/RNG, pertes nettes. Aucun support de toit ni paquet.
@@ -97,7 +101,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 75 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 76 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)

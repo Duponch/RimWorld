@@ -1,3 +1,4 @@
+import { updateWildlifePanel } from './ui/wildlife-panel';
 import { createHeatwaveUI } from './ui/heatwave';
 import { updateResearchPanel } from './ui/research-panel';
 import { updateUnfinishedInspection } from './ui/unfinished-inspection';
@@ -106,11 +107,13 @@ function setCategory(category: ArchitectCategory) {
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-category]')) button.classList.toggle('active', button.dataset.category === category);
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-tool-category]')) button.hidden = button.dataset.toolCategory !== category;
 }
+function renderWildlife(world:World){updateWildlifePanel(el('wildlife-content'),world,id=>renderer?.focusPawn(id),()=>void attempt(async()=>{await client.command({type:'enable-wildlife'});renderState();}));}
 function setPanel(panel: Panel) {
   orderMenu.close();
   currentPanel = panel;
   scheduleUI.cancel();
-  for (const name of ['architect', 'work', 'schedule', 'assign', 'history', 'menu', 'research'] as const) el(`${name}-panel`).hidden = panel !== name;
+  for (const name of ['architect', 'work', 'schedule', 'assign', 'history', 'menu', 'research', 'wildlife'] as const) el(`${name}-panel`).hidden = panel !== name;
+  if(panel==='wildlife'&&snapshot)renderWildlife(snapshot);
   if (panel === 'schedule' && snapshot) scheduleUI.update(snapshot);
   if (panel === 'assign' && snapshot) foodPolicyUI.update(snapshot);
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-panel]:not(:disabled)')) {
@@ -319,6 +322,7 @@ function rebuildPawns(world: World) {
 function renderState() {
   if (!snapshot) return;
   const world = snapshot;
+  if(currentPanel==='wildlife')renderWildlife(world);
   updateResearchPanel(el('research-content'),world,c=>void attempt(()=>client.command(c)));
   scheduleUI.update(world);
   foodPolicyUI.update(world);

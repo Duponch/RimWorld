@@ -61,7 +61,9 @@ async function finishMaintenance(page:Page,current:World,initialWood:number,deci
 }
 
 test('partie de trois jours : un joueur équipe son camp et entretient ses stocks par la vraie interface', async ({playwright},testInfo)=>{
-  test.setTimeout(480000);
+  // Per-hour progress remains bounded by waitForTick. Leave room for native
+  // GPU preparation, three days, and the final night's physical maintenance.
+  test.setTimeout(600000);
   // Hardware WebGPU; the dedicated boundary journey still covers software fallback.
   const browser=await playwright.chromium.launch({channel:'chromium',args:[]});
   const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}});
@@ -72,7 +74,7 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
     // No injected fixture, inventory, clocks or simulation speed outside the UI.
     await page.goto('/?e2e&seed=42');await expect(page.locator('#loading')).toHaveCount(0);
     await page.locator('[data-speed="0"]').click();await expect(page.locator('#pause-banner')).toBeVisible();
-    const initial=await world(page);expect(initial.width).toBe(250);expect(initial.stock).toEqual({wood:12,food:18});
+    const initial=await world(page);expect(initial.wildlife?.animals).toHaveLength(12);expect(initial.width).toBe(250);expect(initial.stock).toEqual({wood:12,food:18});
     expect(initial.foodRules).toBe('adult');
     expect(initial.piles.filter(p=>p.kind==='food').map(p=>[p.item,p.quantity])).toEqual([['survival-meal',10],['survival-meal',8]]);
     await expect(page.locator('#food-items [data-item="survival-meal"] strong')).toHaveText('18');
@@ -127,7 +129,8 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
         expect(summary.apparel.filter(i=>i.owner.type==='apparel'),context).toHaveLength(5);
         expect(summary.medicines,context).toEqual({total:30,stored:30,policies:['industrial','industrial','industrial','industrial']});
         expect(summary.roofing,context).toEqual({constructed:28,planned:28,removal:0});expect(current.stock.food,context).toBeGreaterThan(0);expect(sleepers.size,context).toBe(4);expect(current.arrivals?.accepted,context).toBe(1);expect(current.pawns,context).toHaveLength(4);
-        expect(meals.size,context).toBeGreaterThanOrEqual(18);expect(foodAccount(current)+9*cooked.size+[...meals.values()].reduce((a,b)=>a+b,0),context).toBe(initialFood+[...harvests.values()].reduce((a,b)=>a+b,0));
+        expect(current.wildlife?.animals).toHaveLength(12);expect(current.wildlife!.eatenNutrition).toBeGreaterThan(0);
+        expect(meals.size,context).toBeGreaterThanOrEqual(18);expect(foodAccount(current)+(current.wildlife?.eatenItems??0)+9*cooked.size+[...meals.values()].reduce((a,b)=>a+b,0),context).toBe(initialFood+[...harvests.values()].reduce((a,b)=>a+b,0));
         expect(current.piles.filter(p=>p.kind==='food').every(p=>['berries','survival-meal','rice','simple-meal'].includes(p.item))).toBe(true);
         expect(cooked.size,context).toBeGreaterThanOrEqual(6);
         expect(current.pawns.some(p=>p.skills.construction.xp>1000000),context).toBe(true);
@@ -153,12 +156,12 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
         await perform(page,decision,rotation);decisions.push({tick:current.tick,...decision});
       }
     }
-    await page.keyboard.press('Escape');await page.screenshot({path:'artifacts/colony-three-days.png'});
+    await page.keyboard.press('Escape');await page.screenshot({path:`artifacts/colony-three-days-${process.env.VALIDATION_VERSION??'v66'}.png`});
     expect(errors).toEqual([]);
     await testInfo.attach('colony-journey',{contentType:'application/json',body:JSON.stringify(finalReport)});
   } finally {
     // Persist compact evidence even with the line reporter or a frozen browser.
-    await writeFile('artifacts/colony-last-journey.json',JSON.stringify(finalReport??{complete:false,waitingFor,days,decisions,meals:[...meals],errors},null,2));
+    await writeFile(`artifacts/colony-journey-${process.env.VALIDATION_VERSION??'v66'}.json`,JSON.stringify(finalReport??{complete:false,waitingFor,days,decisions,meals:[...meals],errors},null,2));
     const checkpoint=[...testInfo.attachments].reverse().find(a=>a.name.startsWith('hourly-world-'));
     if(checkpoint?.body)await writeFile('tmp/colony-last-checkpoint.json',checkpoint.body);
     if(!finalReport)await testInfo.attach('colony-journey-incomplete',{contentType:'application/json',body:JSON.stringify({days,decisions,meals:[...meals],errors})});
@@ -171,6 +174,45 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
 
 // Opt-in replay of a real failed journey. Never generate resources, fast-forward
 // simulation off-screen, or relax the normal maintenance completion assertions.
+test('checkpoint journey: continue the ordinary player, food ledger and third-night maintenance',async({playwright})=>{
+  test.skip(!process.env.COLONY_JOURNEY_CHECKPOINT,'Set the real interrupted journey checkpoint.');
+  test.setTimeout(240000);
+  const data=await readFile(process.env.COLONY_JOURNEY_CHECKPOINT!,'utf8'),initial=deserializeWorld(data),rotation={value:0},decisions:PlayerLog=[];
+  const browser=await playwright.chromium.launch({channel:'chromium',args:[]});
+  try {
+    const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);
+    await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data});
+    await page.goto('/?e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
+    await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);
+    const eventKey=(e:World['events'][number])=>`${e.tick}:${e.type}:${e.message}`,seen=new Set(initial.events.map(eventKey));
+    let consumed=0,harvested=0,cooked=0;
+    const check=(w:World)=>{
+      expect(validateWorld(w)).toEqual([]);expect(woodAccount(w)).toBe(woodAccount(initial));
+      for(const e of w.events)if(!seen.has(eventKey(e))){
+        seen.add(eventKey(e));const harvest=e.message.match(/a récolté (\d+) (?:baies|riz)/),meal=e.message.match(/a mangé une portion \((\d+) /);
+        if(harvest)harvested+=Number(harvest[1]);if(meal)consumed+=Number(meal[1]);if(e.message.includes('a cuisiné 1 repas simple'))cooked++;
+      }
+      expect(foodAccount(w)+consumed+9*cooked+(w.wildlife?.eatenItems??0)-(initial.wildlife?.eatenItems??0)).toBe(foodAccount(initial)+harvested);
+      expect(w.pawns.every(p=>p.hunger>0&&p.rest>0&&p.state!=='dead'&&p.state!=='downed')).toBe(true);
+      expect(w.wildlife?.animals).toHaveLength(12);
+    };
+    for(let target=initial.tick+1000;target<=Math.max(initial.tick+1000,18000+initial.tick%1000);target+=1000){
+      const current=await world(page);for(const d of playerDecisions(current)){await perform(page,d,rotation);decisions.push({tick:current.tick,...d});}
+      await page.locator('[data-speed="6"]').click();await waitForTick(page,target);
+      await page.locator('[data-speed="0"]').click();await expect(page.locator('[data-speed="0"]')).toHaveAttribute('aria-pressed','true');check(await world(page));
+    }
+    const third=await world(page),summary=colonySummary(third);
+    expect(summary.structures).toEqual({'wood-generator':1,'standing-lamp':1,'passive-cooler':0,bed:4,table:1,stool:3,wall:7,campfire:1,horseshoes:1,stonecutter:1,door:1});
+    expect(summary.roofing).toEqual({constructed:28,planned:28,removal:0});expect(summary.mining.steel).toBe(50);expect(summary.mining.steelInBuildings).toBe(150);
+    expect(summary.medicines).toEqual({total:30,stored:30,policies:Array(4).fill('industrial')});expect(summary.apparel.filter(i=>i.owner.type==='apparel')).toHaveLength(5);
+    expect(third.growingZones.find(z=>z.plant==='cotton')?.cells).toHaveLength(6);expect(third.arrivals?.accepted).toBe(1);
+    const morning=await finishMaintenance(page,third,woodAccount(initial),decisions,rotation),final=await world(page);check(final);
+    expect(final.wildlife!.eatenNutrition).toBeGreaterThan(initial.wildlife!.eatenNutrition);
+    await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,final);expect(errors).toEqual([]);
+    await writeFile(`artifacts/colony-continuation-${process.env.VALIDATION_VERSION??'v76'}.json`,JSON.stringify({date:new Date().toISOString(),initialTick:initial.tick,finalTick:final.tick,summary,morning,final:colonySummary(final),ledger:{consumed,harvested,cooked,foodReconciled:true,woodConserved:true},decisions,errors},null,2));
+  } finally {await browser.close();}
+});
+
 test('checkpoint maintenance: finish accepted work through the real UI after ordinary sleep',async({playwright})=>{
   test.skip(!process.env.COLONY_MAINTENANCE_CHECKPOINT,'Set a recorded journey checkpoint to reproduce its continuation.');
   test.setTimeout(120000);

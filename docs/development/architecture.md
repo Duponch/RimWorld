@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+V76 : acteur `WildAnimal` séparé du `Pawn` humain, dans `World.wildlife` sparse. Besoins/repas/navigation/validation répartis entre cinq modules ; navigation, réservations quantitatives, portes et protections de chantier communes. Présentation instanciée TSL résidente, historique de mouvement et clock confirmée partagés avec les colons. Migration V75 stricte et neutre. [Contrat](wildlife.md).
+
 V75 : `cooler.ts` possède faces/consigne/intégration, `cooler-salvage.ts` prévalide le bilan multi-matière avant destruction ; `cold-rules.ts` sépare l’exposition froide dans la boucle médicale commune. Schéma 75, deux progrès de recherche indépendants. `cooler-adjust` traite chaque clic relatif sur l’état autoritaire du worker, sans lire une valeur UI retardée. Géométrie et indications partagent les lots existants. [Contrat](cold-store.md).
 
 V74 : `heatwave.ts` possède le calendrier/RNG indépendant ; `heat-rules.ts` sépare isolation et armure ; `heat-exposure.ts` applique les stades médicaux ; `heat-refuge.ts` emploie la navigation civile ; `heat-save.ts` valide leurs états sparse. `NaturalResourcePresentation` sépare aussi l’invalidation de géométrie forestière des ancres de croissance thermique. Aucun nouveau shader ou calcul médical par image. [Contrat](heatwave.md).

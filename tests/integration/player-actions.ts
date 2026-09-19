@@ -68,6 +68,15 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     await page.mouse.click(bounds.x+point.x,bounds.y+point.y,{button:'right'});
     await page.locator(c.type==='order-equipment'?`[data-order-equipment="${c.itemId}"]`:c.type==='order-feed'?`[data-order-feed="${c.patientId}"]`:c.type==='order-tend'?`[data-order-tend="${c.patientId}"]`:c.type==='order-rescue'?`[data-order-rescue="${c.patientId}"]`:c.type==='order-cook'?`[data-order-cook="${c.structureId}"]`:c.type==='order-job'?`[data-order-job="${c.jobId}"]:not([data-order-haul])`:`[data-order-haul="${c.target.type}"]`).click();
     if(c.queue)await page.keyboard.up('Shift');
+  } else if(c.type==='growing-policy') {
+    const w=await world(page),zone=w.growingZones.find(z=>z.id===c.zoneId);
+    if(!zone?.cells.length)throw new Error('Zone de culture absente.');
+    const target={x:zone.cells[0]!%w.width,z:Math.floor(zone.cells[0]!/w.width)};
+    await tool(page,'select');await page.keyboard.press('Escape');await revealCells(page,[target]);
+    for(let i=0;i<=w.pawns.length;i++){await cell(page,target.x,target.z);if(await page.locator('#growing-plant').isVisible())break;}
+    if(c.plant)await page.locator('#growing-plant').selectOption(c.plant);
+    await page.locator('#growing-allowSow').setChecked(c.allowSow);await page.locator('#growing-allowCut').setChecked(c.allowCut);
+    await page.getByRole('button',{name:'Appliquer les réglages de culture'}).click();
   } else if(c.type==='food-policy-assign') {
     await panel(page,'assign'); await page.locator(`[data-food-policy-pawn="${c.pawnId}"]`).selectOption(String(c.policyId));
   } else if(c.type==='schedule-paint') {
@@ -114,6 +123,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
   } else throw new Error(`Player UI action not supported: ${c.type}`);
   try { await page.waitForFunction(c=>{
     const w=window.__lisiere.world;
+    if(c.type==='growing-policy'){const z=w.growingZones.find(z=>z.id===c.zoneId);return !!z&&(!c.plant||z.plant===c.plant)&&z.allowSow===c.allowSow&&z.allowCut===c.allowCut;}
     if(c.type==='draft')return c.pawnIds.every(id=>!!w.pawns.find(p=>p.id===id)?.draft===c.enabled);
     if(c.type==='draft-stop')return c.pawnIds.every(id=>w.pawns.find(p=>p.id===id)?.draft?.target===null);
     if(c.type==='draft-move')return c.pawnIds.every(id=>{const d=w.pawns.find(p=>p.id===id)?.draft;return c.queue?!!d?.queue.length:!!d?.target;});

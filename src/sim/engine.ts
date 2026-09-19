@@ -1,3 +1,4 @@
+import { advanceWildlife,enableWildlife,reconcileWildlife } from './wildlife.ts';
 import { enableHeatwaves,advanceHeatwaves } from './heatwave.ts';
 import { advanceHeatExposure } from './heat-exposure.ts';
 import { processHeatRefuge } from './heat-refuge.ts';
@@ -203,6 +204,7 @@ export function canDesignate(world: World, command: DesignateCommand): CommandRe
 export function applyCommand(world: World, command: Command): CommandResult {
   const result=applyCommandInternal(world,command);
   if(result.ok){
+    reconcileWildlife(world);
     detachMissingBills(world);reconcileRepairs(world);
     if(command.type.startsWith('order-')&&'pawnId' in command){const actor=world.pawns.find(p=>p.id===command.pawnId);if(actor)delete actor.flee;}
     reconcileRescues(world);reconcilePatientRest(world);reconcileTending(world);reconcileFeeding(world);reconcileEquipmentTasks(world);for(const pawn of world.pawns)reconcileWeaponMemory(world,pawn);reconcileOrders(world);const thermal=reconcileTemperature(world);updateFoodTemperatures(world,thermal);updatePlantTemperatures(world,thermal);}
@@ -212,6 +214,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   if(command?.type==='designate'&&command.kind==='repair')return refusal('invalid-command','Utilisez la zone de foyer pour activer les réparations.');
   if (!command || typeof command !== 'object') return refusal('invalid-command', 'Commande invalide.');
   if(command.type==='cancel-unfinished')return cancelUnfinished(world,command.itemId);
+  if(command.type==='enable-wildlife'){enableWildlife(world);return {ok:true};}
   if(command.type==='enable-heatwaves'){enableHeatwaves(world);return {ok:true};}
   if(command.type==='enable-raids'){enableRaids(world);return {ok:true};}
   if(command.type==='enable-arrivals'||command.type==='answer-arrival')return applyArrival(world,command);
@@ -394,6 +397,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     advanceTemperature(world,thermal);
     updatePlantTemperatures(world,thermal);
     burnFuel(world);
+    advanceWildlife(world);
     updateDoors(world);
     const structuresBeforeCombat=world.structures;
     advanceWorldCombat(world);
@@ -522,7 +526,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     advanceRaids(world);
     advanceSocial(world);
     if(world.roofing)reconcileRoofJobs(world,roofs);
-    reconcileOrders(world);
+    reconcileOrders(world);reconcileWildlife(world);
     refreshStock(world);
     reconcilePower(world);
     if(thermalDirty)thermal=reconcileTemperature(world);

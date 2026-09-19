@@ -1,0 +1,20 @@
+{
+  "date": "2026-09-19T18:34:02.199Z",
+  "checkpointTick": 12107,
+  "index": 45624,
+  "sourceKeys": [
+    "terrain",
+    "stone",
+    "ore",
+    "miningDamage"
+  ],
+  "snapshotKeys": [
+    "terrain",
+    "stone",
+    "miningDamage",
+    "ore"
+  ],
+  "exactJson": false,
+  "equalState": true,
+  "diagnosis": "Snapshot tile delta reconstructs miningDamage before ore; authoritative tile appended miningDamage after ore. No state value differs."
+}
