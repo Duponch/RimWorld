@@ -81,7 +81,7 @@ V13 adopte les autorisations avant sélection et maintient les repas engagés. L
 
 ## Loisirs V15
 
-Deux activités livrent accès, satisfaction et lassitude sans fermer le catalogue. Profil de camp à attentes extrêmement basses jusqu’au système de richesse ; sélection locale de lieu pour le ciel, sans régions/conditions de pièce/météo. Intégration au tick local, migration à 55 sans passé inventé. [Sources et décisions détaillées](../research/recreation-reference.md), [contrat](../development/recreation.md). L’humeur demeure un agrégat provisoire.
+Deux activités livrent accès, satisfaction et lassitude sans fermer le catalogue. Profil de camp à attentes extrêmement basses jusqu’au système de richesse ; sélection locale de lieu pour le ciel, sans régions/conditions de pièce/météo. Intégration au tick local, migration à 55 sans passé inventé. [Sources et décisions détaillées](../research/recreation-reference.md), [contrat](../development/recreation.md). V64 remplace l’agrégat par une [humeur progressive à causes consultables](../development/mood.md), tout en conservant l’hypothèse explicite d’attentes fixes.
 
 ## Maintien sur la cellule V23
 

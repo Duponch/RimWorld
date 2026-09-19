@@ -1,5 +1,7 @@
 # Stratégie de validation
 
+V64 : quatre scénarios profonds `mood.test.ts` confrontent besoins, douleur anatomique, vêtements, progression/gel, souvenirs, migration/rejeu et snapshots. Le pilote cœur vérifie la borne de variation à chaque tick sur cinq à huit jours et expose causes/cible dans ses bilans. `mood.spec.ts` observe ingestion et retrait réels à 1×/6× avec sauvegarde en cours ; les bancs mixtes existants mesurent le coût ajouté sans nouveau benchmark redondant. [Preuves](../history/validation-mood-v64.md).
+
 V63 enrichit les frontières d’équipement/impact avec six scénarios profonds : habillage sauvegardé, couches/remplacement interrompu, sol saturé/incapacité, migration stricte, protection balistique/couverture exacte et mêlée/toit. UI 1×/6× vérifie ownership, phases et attributs GPU/portrait sur la même scène. Le pilote de camp équipe ses colons par commandes et exige quatre vêtements conservés. Les bancs mixtes existants acceptent `APPAREL=1` (chemises de tous les acteurs, gilet d’un acteur sur deux) ; source gelée pendant mesure, résultats séparés du pilote long. Les contrôles d’armure isolés ne remplacent pas ces parcours.
 
 Les entrées de versions antérieures ci-dessous conservent les contrats et contextes de leurs validations.

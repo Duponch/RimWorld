@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+V64 : `mood.ts` sépare situations dérivées, souvenirs existants et jauge persistée. Évaluation commune simulation/inspection, capacité déjà calculée au tick, pas de mutation depuis le HUD ni de traitement par frame. `mood-inspection.ts` possède la liste de causes ; [contrat](mood.md).
+
 V63 : `apparel-rules` définit les deux contenus, `apparel` leur manipulation via l’enveloppe de tâche d’équipement, `apparel-save` valide, `apparel-protection` engage la transaction du noyau pur `armor`. Propriété séparée et projection commune carte/portraits. [Contrat](armor.md).
 
 V62 : `disturbance-state.ts` sépare échéances de sommeil et de posture ; `disturbance.ts` traite les événements physiques, `impact-sound.ts` capture la connexion des espaces. Le combat renouvelle ses cibles après un réveil même sans blessure. [Contrat](disturbance.md).

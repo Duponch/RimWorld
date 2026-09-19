@@ -1,0 +1,61 @@
+{
+  "schema": 64,
+  "date": "2026-09-19",
+  "baselineCommit": "cbe39066f480f67bc3e655c92f6c4ebae3e13bb7",
+  "global": {
+    "passed": 306,
+    "total": 307,
+    "remainingFailure": "New sleep fixture retained Work schedule; corrected to Sleep, no game rule changed"
+  },
+  "finalTargeted": {
+    "passed": 22,
+    "total": 22
+  },
+  "extendedBoundaryTests": {
+    "passed": 4,
+    "total": 4
+  },
+  "corePilot": {
+    "seeds": [
+      42,
+      93,
+      2048
+    ],
+    "days": [
+      8,
+      5,
+      5
+    ],
+    "passed": true
+  },
+  "nativeUi": {
+    "speeds": [
+      1,
+      6
+    ],
+    "passed": true,
+    "seconds": 25.6,
+    "artifact": "mood-ui-v64.json"
+  },
+  "campContinuation": {
+    "sourceSchema": 63,
+    "fromTick": 18078,
+    "toTick": 21091,
+    "passed": true,
+    "seconds": 58.3,
+    "artifact": "colony-maintenance-v64.json",
+    "fullThreeDayUiRerun": false
+  },
+  "build": "passed; known bundle warning >500 kB",
+  "docs": "229 documents, 2455 local links; three originals byte-identical",
+  "perf": [
+    "shooting-cpu-v64.json",
+    "shooting-native-v64.json"
+  ],
+  "limitations": [
+    "Fixed extremely-low expectations",
+    "Partial thought catalogue; no mental breaks or traits/relations",
+    "CPU budget exceeded at 100 actors at 6x; native spikes retained"
+  ],
+  "plan": "G0 consolidation; G1/G2 partial; G3 first mood causes; G4/G5 open"
+}

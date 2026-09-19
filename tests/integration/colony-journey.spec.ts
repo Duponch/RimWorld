@@ -184,6 +184,6 @@ test('checkpoint maintenance: finish accepted work through the real UI after ord
     expect(summary.mining.steelStored).toBe(50);expect(summary.mining.steelInBuildings).toBe(150);
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,final);
     expect(errors).toEqual([]);
-    await writeFile('artifacts/apparel-colony-recovery-v63.json',JSON.stringify({date:new Date().toISOString(),initialTick:initial.tick,finalTick:final.tick,morning,decisions,woodConserved:true,errors},null,2));
+    await writeFile(`artifacts/colony-maintenance-${process.env.VALIDATION_VERSION??'v64'}.json`,JSON.stringify({date:new Date().toISOString(),initialTick:initial.tick,finalTick:final.tick,morning,decisions,woodConserved:true,errors},null,2));
   } finally {await browser.close();}
 });

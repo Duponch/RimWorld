@@ -1,0 +1,75 @@
+{
+  "date": "2026-09-19T02:37:00.307Z",
+  "proof": [
+    {
+      "speed": 1,
+      "initialTick": 3000,
+      "finalTick": 3101,
+      "initialMood": 50,
+      "eatingMood": 49.776000000000025,
+      "fedMood": 48.1760000000002,
+      "finalMood": 47.88800000000033,
+      "thoughts": [
+        {
+          "id": "camp-expectations",
+          "label": "Attentes extrêmement basses",
+          "offset": 30,
+          "description": "Profil fixe de ce camp, partagé avec les loisirs ; ne varie pas encore avec la richesse.",
+          "kind": "situation"
+        },
+        {
+          "id": "ate-without-table",
+          "label": "Mangé sans table",
+          "offset": -3,
+          "kind": "memory",
+          "description": "Souvenir du dernier repas concerné ; une nouvelle occurrence renouvelle sa durée sans cumul.",
+          "expiresAt": 9056
+        },
+        {
+          "id": "ate-raw-food",
+          "label": "Mangé cru",
+          "offset": -7,
+          "kind": "memory",
+          "description": "Souvenir du dernier repas concerné ; une nouvelle occurrence renouvelle sa durée sans cumul.",
+          "expiresAt": 9056
+        }
+      ],
+      "errors": []
+    },
+    {
+      "speed": 6,
+      "initialTick": 3000,
+      "finalTick": 3130,
+      "initialMood": 50,
+      "eatingMood": 49.71200000000003,
+      "fedMood": 47.952000000000226,
+      "finalMood": 48.728000000000065,
+      "thoughts": [
+        {
+          "id": "camp-expectations",
+          "label": "Attentes extrêmement basses",
+          "offset": 30,
+          "description": "Profil fixe de ce camp, partagé avec les loisirs ; ne varie pas encore avec la richesse.",
+          "kind": "situation"
+        },
+        {
+          "id": "ate-without-table",
+          "label": "Mangé sans table",
+          "offset": -3,
+          "kind": "memory",
+          "description": "Souvenir du dernier repas concerné ; une nouvelle occurrence renouvelle sa durée sans cumul.",
+          "expiresAt": 9056
+        },
+        {
+          "id": "ate-raw-food",
+          "label": "Mangé cru",
+          "offset": -7,
+          "kind": "memory",
+          "description": "Souvenir du dernier repas concerné ; une nouvelle occurrence renouvelle sa durée sans cumul.",
+          "expiresAt": 9056
+        }
+      ],
+      "errors": []
+    }
+  ]
+}

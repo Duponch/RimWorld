@@ -12,7 +12,7 @@ Libre démarre sous 35, Loisirs sous 95. La tranche Sommeil ne cherche un loisir
 
 L'activité dure au plus 400 ticks effectifs et gagne nominalement 0,144 point/tick, pondéré par `1 - tolérance/100`. La satisfaction est plafonnée avant de calculer les 0,65 point de lassitude par point réellement gagné. Le franchissement strict de 50 marque la famille comme lassante ; seul le passage strict sous 30 efface ce drapeau. Entre ces bornes, le drapeau sauvegardé fait autorité. La lassitude perd 18/6 000 par tick éveillé dans le profil provisoire de camp.
 
-La baisse ordinaire est 60/6 000 point/tick, facteur 0,7 de 15 à moins de 30, 0,4 de 1 à moins de 15, et 1 sous 1. Aucune baisse en sommeil ou pendant l'activité effective. L'intégration se fait au tick local ; les durées/arrondis ne prétendent pas reproduire les intervalles du moteur Core. La satisfaction apporte −20/−10/−5/0/+5/+10 selon les seuils 1/15/30/70/85 à l'agrégat d'humeur encore provisoire.
+La baisse ordinaire est 60/6 000 point/tick, facteur 0,7 de 15 à moins de 30, 0,4 de 1 à moins de 15, et 1 sous 1. Aucune baisse en sommeil ou pendant l'activité effective. L'intégration se fait au tick local ; les durées/arrondis ne prétendent pas reproduire les intervalles du moteur Core. La satisfaction apporte −20/−10/−5/0/+5/+10 selon les seuils 1/15/30/70/85 à la cible d’[humeur progressive V64](mood.md).
 
 ## Places et propriétés
 

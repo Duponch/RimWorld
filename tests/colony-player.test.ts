@@ -24,7 +24,9 @@ test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp const
       if(t===0)for(const decision of playerFocusDecisions(world))expect(applyCommand(world,decision.command)).toMatchObject({ok:true});
       const ingesting = world.pawns.filter(p=>p.need?.kind==='eat' && p.need.phase==='ingest' && p.need.progress===49).map(p=>({id:p.id,quantity:p.need?.kind==='eat'?p.need.quantity:0}));
 
+      const moods=world.pawns.map(p=>p.mood);
       stepWorld(world);
+      for(const [i,p] of world.pawns.entries())if(p.mood-moods[i]!>.04800001||p.mood-moods[i]!<-.03200001)throw new Error(`Mood discontinuity: seed ${seed}, tick ${world.tick}, pawn ${p.id}`);
       for (const event of world.events) if (event.tick === world.tick) { const match = event.message.match(/a récolté (\d+) (?:baies|riz)/); if (match) produced += Number(match[1]);if(event.message.includes('a cuisiné 1 repas simple'))cooked++; }
       for (const {id,quantity} of ingesting) if(world.events.some(e=>e.tick===world.tick&&e.message.startsWith(`${world.pawns.find(p=>p.id===id)!.name} a mangé`))) { meals.set(id, meals.get(id)!+1); consumed += quantity; }
       for (const pawn of world.pawns) if (pawn.state==='sleeping' && pawn.need?.kind==='sleep' && pawn.need.bedId!==null) sleep.set(pawn.id,sleep.get(pawn.id)!+1);

@@ -1,6 +1,11 @@
 # Guide joueur
 
-Habillement : encore indisponible. Les couleurs actuelles des personnages ne procurent aucune protection ; le calcul d’armure en préparation ne change pas les combats de cette version.
+## Comprendre l’humeur (V64)
+
+Dans l’inspection d’un colon, ouvrez **Pensées et humeur** : vous voyez sa valeur actuelle, sa cible et ce qui la compose. La faim, la fatigue, le confort, les loisirs, la douleur et les vêtements usés produisent des causes temporaires liées à la situation. Manger sans table ou du riz cru laisse un souvenir pendant un jour ; bien manger ensuite ne l’efface pas immédiatement.
+
+La cible change avec la situation, mais la jauge évolue progressivement : au plus +12 ou −8 points par heure. Le sommeil et l’inconscience gèlent la jauge ; être à terre tout en restant conscient ne la gèle pas. Retirer réellement une pièce abîmée enlève sa pénalité, sans faire sauter instantanément l’humeur. Les attentes sont encore celles d’un camp à profil fixe, indépendantes de sa richesse. Crises mentales, relations, traits et autres pensées restent à développer. [Règles et limites](../development/mood.md).
+
 
 ## Habiller et protéger un colon (V63)
 

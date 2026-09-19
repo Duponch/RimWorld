@@ -1,3 +1,4 @@
+import { expireMealMemories } from './mood.ts';
 import { considerAutomaticCombat } from './automatic-combat.ts';
 import { cancelAutomaticCombat } from './automatic-combat-state.ts';
 import { isColonist } from './affiliation.ts';
@@ -391,7 +392,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       pawn.moveCooldown = Math.max(0, (pawn.motion?.end ?? world.tick) - world.tick); if (pawn.planCooldown > 0) pawn.planCooldown--;
       const body=updatePawnHealth(world,pawn);
       if(pawn.equipmentDropPending)dropIncapacitatedEquipment(world,pawn,true);
-      if(pawn.state==='dead')continue;
+      if(pawn.state==='dead'){expireMealMemories(world,pawn);continue;}
       tickSkills(world,pawn);
       updateNeeds(world, pawn,body);
       if(pawn.stun&&pawn.stun.untilCore<=world.tick*10)delete pawn.stun;

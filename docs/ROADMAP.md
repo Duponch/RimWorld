@@ -1,5 +1,7 @@
 # Plan de développement
 
+V64 — [humeur et pensées explicables](development/mood.md) : cible causale, évolution progressive, gel selon éveil, mémoire de repas et vêtements usés. Crises, traits, attentes selon richesse et relations restent ouverts.
+
 V63 — [vêtements physiques et protection corporelle](development/armor.md) : chemise/gilet obtenables, habillage/retrait, couches et armure anatomique, apparence GPU/portrait. Prolonge combat et soins ; aucun jalon G0–G5 clos.
 
 Le parcours assemble les requêtes ligne/couvert, profils du revolver, impacts V54 et vols V55. Le lot V56 vérifie les ordres, la continuation et la présentation à 1×/6×, puis la charge mixte 3/30/100 acteurs. Les pointes à forte charge restent dans les preuves ; traiter leurs causes observées avant d’augmenter la densité du premier affrontement.
@@ -18,7 +20,9 @@ Le parcours assemble les requêtes ligne/couvert, profils du revolver, impacts V
 
 Le parcours UI civil de trois jours passe également, avec production et stocks de pierre puis maintenance achevée après sommeil normal. Le pilote entretient maintenant une petite zone minière quand les fragments manquent ; ses échecs antérieurs restent documentés. V61 ajoute ensuite l’approche visible, après relecture des chapitres 17/20/21 et des correctifs officiels postérieurs au miroir. Les limites de parité restent explicitement consignées.
 
-**Prochaine livraison visée : premières pensées explicables.** Revoir le calcul d’humeur actuel et brancher les causes déjà vécues (douleur, faim/fatigue, repas sans table et confort d’habillement pertinent) avec consultation des causes, durée/mémoire quand le jeu de référence l’exige et sauvegarde. Ne pas introduire une nouvelle jauge abstraite ni annoncer relations/crises complètes ; vérifier attentes, courbes et cumul avant de choisir le périmètre exact. Puis relations/personnalités selon leurs producteurs. Fabrication textile, politiques et usure quotidienne restent identifiées à compléter ; l’électricité détaillée reste différée.
+**Prochaine livraison visée : première crise mentale avec comportement réel.** Vérifier une crise non violente de base (errance triste comme candidate), ses conditions/probabilités, durée et récupération avant de fixer le contenu. Elle doit interrompre/libérer les travaux et conserver les cargaisons, modifier les commandes admissibles et se sauvegarder pendant son déroulement ; pas une simple icône ou un seuil de déclenchement instantané. Puis traits/personnalités et interactions sociales selon leurs producteurs. Le catalogue de pensées et les attentes selon richesse restent partiels ; textile et électricité détaillée restent différés.
+
+**V64 livrée :** causes, progression, sommeil, continuation/migration, UI 1×/6× et maintenance du camp vérifiés ; [preuves et limites](history/validation-mood-v64.md).
 
 **V63 livrée :** manipulations, sol saturé, migration, impacts et UI 1×/6× vérifiés ; pilote, reprise de maintenance après sommeil et audits documentés dans les [preuves](history/validation-apparel-v63.md). Les limites d’habillement restent dans le [contrat](development/armor.md).
 

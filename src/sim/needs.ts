@@ -101,7 +101,7 @@ export function updateNeeds(world: World, pawn: Pawn,body?:import('./body-capaci
   updateRest(world, pawn);
   updateRecreation(pawn,body);
   if (pawn.needCooldown > 0) pawn.needCooldown--;
-  updateWellbeing(world, pawn);
+  updateWellbeing(world, pawn,body);
 }
 
 export function collapseFromExhaustion(world:World,pawn:Pawn,context:NeedContext):void {

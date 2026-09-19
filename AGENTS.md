@@ -1,5 +1,8 @@
 # Travail sur Lisière
 
+## Humeur V64
+- Lire `docs/development/mood.md` et la recherche liée. Cible dérivée et humeur persistée distinctes ; sommeil/inconscience gèlent la jauge, pas tout état à terre. Causes partagées simulation/inspection ; souvenirs expirés nettoyés même après décès. V63 strictement validée avant migration neutre. Attentes fixes annoncées ; crises, traits et relations restent absents.
+
 ## Habillement physique V63
 - Lire `docs/development/armor.md` et `docs/research/apparel-reference.md`. V63 branche les vêtements physiques, propriétaire `apparel`, compatibilité anatomique et transaction PRNG/usure/blessures. Préserver les temps d’habillage, le dépôt avant remplacement, l’identité sol/porté et les attributs GPU partagés carte/portrait. V62 strictement validée avant migration sans objet inventé. Usure quotidienne, politiques et fabrication textile restent absentes.
 
@@ -53,7 +56,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 63 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 64 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)

@@ -1,3 +1,4 @@
+import { createMoodInspection,updateMoodInspection } from './ui/mood-inspection';
 import { isColonist,activeThreat } from './sim/affiliation';
 import { ShootingControls } from './ui/shooting-controls';
 const shootingControls=new ShootingControls();
@@ -210,7 +211,8 @@ function rebuildInspector() {
     el('enemy-mandate').textContent=snapshot.pawns.find(p=>p.id===selectedPawn)?.tactics?'Mandat : approche autonome des cibles visibles.':'Mandat historique : sentinelle fixe.';
     createHealthInspection(panel);
   } else if (selectedPawn !== undefined) {
-    panel.innerHTML = `<div class="panel-heading"><h2 id="selected-name"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><p id="selected-action"></p><div class="needs">${(['hunger', 'rest', 'comfort', 'mood'] as const).map((need, index) => `<label>${['Nourriture', 'Repos', 'Confort', 'Humeur'][index]} <span id="selected-${need}"></span></label><meter id="${need}-meter" min="0" max="100" low="25" optimum="100"></meter>`).join('')}</div>${recreationInspection()}<p id="selected-memories" class="muted"></p><button class="secondary-action" id="manage-work">Gérer le travail</button>`;
+    panel.innerHTML = `<div class="panel-heading"><h2 id="selected-name"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><p id="selected-action"></p><div class="needs">${(['hunger', 'rest', 'comfort', 'mood'] as const).map((need, index) => `<label>${['Nourriture', 'Repos', 'Confort', 'Humeur'][index]} <span id="selected-${need}"></span></label><meter id="${need}-meter" min="0" max="100" low="25" optimum="100"></meter>`).join('')}</div>${recreationInspection()}<button class="secondary-action" id="manage-work">Gérer le travail</button>`;
+    createMoodInspection(panel);
     el('manage-work').onclick = () => setPanel('work');
     const orders=document.createElement('p');orders.id='selected-orders';panel.append(orders);
     const cancel=document.createElement('button');cancel.id='clear-orders';cancel.textContent='Annuler les ordres directs';
@@ -359,7 +361,7 @@ function renderState() {
       roomInspection.update(el('inspector'), world, pawn);
       el('selected-orders').textContent=`${pawn.orders.active!==null?'Travail imposé · ':''}${pawn.orders.queue.length} ordre(s) en file${pawn.priorityWork?` · Priorité case ${pawn.priorityWork.cell.x}, ${pawn.priorityWork.cell.z}`:''}`;
       el<HTMLButtonElement>('clear-orders').disabled=pawn.orders.active===null&&!pawn.orders.queue.length&&!pawn.priorityWork;
-      el('selected-memories').textContent = pawn.memories.map(memory => `${memory.kind === 'ate-raw-food' ? 'Mangé cru : −7' : 'Mangé sans table : −3'} humeur · encore ${Math.ceil((memory.expiresAt - world.tick) / (TICKS_PER_DAY / 24))} h`).join(' · ');
+      updateMoodInspection(el('inspector'),world,pawn);
       for (const need of ['hunger', 'rest', 'comfort', 'mood'] as const) { el(`selected-${need}`).textContent = pawn.state==='dead'?'—':`${Math.round(pawn[need])} %`; el<HTMLMeterElement>(`${need}-meter`).value = pawn.state==='dead'?0:pawn[need]; }
     }
   } else if (selectedCell) {

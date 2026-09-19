@@ -30,7 +30,7 @@ Lisière exprime le travail en ticks de sa journée de 6 000 ticks, contre 60 00
 
 ## Deux effets différents du repas
 
-Le souvenir « mangé sans table » vaut −3 d'humeur, dure une journée et ne s'empile pas. Les exceptions Ascète et certains préceptes ne s'appliquent pas tant que ces systèmes ne sont pas présents.[^8] Dans Lisière, le souvenir n'apparaît qu'à l'ingestion terminée. Un nouveau repas sans table renouvelle son échéance ; un repas ultérieur avec table ne supprime pas le souvenir précédent. La jauge d'humeur globale reste une agrégation transitoire, donc ce premier souvenir ne clôt pas le domaine humeur.
+Le souvenir « mangé sans table » vaut −3 d'humeur, dure une journée et ne s'empile pas. Les exceptions Ascète et certains préceptes ne s'appliquent pas tant que ces systèmes ne sont pas présents.[^8] Dans Lisière, le souvenir n'apparaît qu'à l'ingestion terminée. Un nouveau repas sans table renouvelle son échéance ; un repas ultérieur avec table ne supprime pas le souvenir précédent. Depuis V64, la jauge converge vers une cible expliquée ; ce premier souvenir ne clôt toujours pas le domaine humeur. Voir la [recherche renouvelée](mood-reference.md).
 
 Le confort est une réserve qui tend vers un plafond. Un tabouret normal fournit un plafond de 50 %, un lit normal 75 %. Être réellement en train d'utiliser le meuble est nécessaire. Les indications consultées donnent une montée de 60 points par heure et une baisse de 4 points par heure, avec seuils d'humeur à 10/60/70/80/90 %.[^9] Le code de besoin confirme une approche bornée du niveau instantané, avec paramètres de hausse/baisse portés par les définitions.[^10][^11]
 

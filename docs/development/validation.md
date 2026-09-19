@@ -1,4 +1,12 @@
-# Validation courante — V63
+# Validation courante — V64
+
+## Humeur progressive et pensées V64
+
+Causes consultables, cible et jauge distinctes, progression +12/−8 points par heure, sommeil/inconscience, douleur et vêtements réellement portés. [Preuves et limites](../history/validation-mood-v64.md), [contrat](mood.md), [recherche fraîche](../research/mood-reference.md).
+
+Passe globale 306/307 : seule la nouvelle fixture de sommeil conservait un horaire Travail et réveillait normalement le colon ; correction de l’horaire, puis 22/22 ciblés et 4/4 après extension des seuils. Pilote cœur trois graines sur cinq à huit jours, UI native 1×/6× et build réussis. Reprise réelle du checkpoint du camp V63 sous V64, ticks 18078 → 21091 : sommeil puis maintenance achevée, cinquante acier et le fragment restant rangés, quatre vêtements conservés. La longue UI complète de trois jours n’a pas été rejouée pour ce lot.
+
+Audits mixtes successifs 3/30/100 : à cent acteurs, tick CPU p95 43,56 / p99 56,57 / max 71,50 ms ; images natives p95 12 / p99 23,6 / max 131,9 ms. Aucun nouveau pipeline ; simulation encore au-delà du budget 6×. G0 consolidation, G1/G2 partiels, premières pensées de G3 ; crises, traits et relations restent absents, G4/G5 ouverts. Les sections suivantes conservent les preuves historiques.
 
 ## Vêtements physiques et protection anatomique
 

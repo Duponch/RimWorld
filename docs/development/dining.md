@@ -23,7 +23,7 @@ Sans siège, le repli choisit la case libre la plus proche dans un rayon de quat
 
 Le confort n'est ni un bonus de proximité ni une récupération instantanée : pendant l'utilisation réelle, il tend vers 50 pour le tabouret normal ou 75 pour le lit normal. Montée de 60 points/heure, baisse de 4 points/heure, conversion à 6 000 ticks/jour. La cadence continue, la qualité normale implicite et le coefficient de baisse à confirmer sont répertoriés dans la recherche. Les accessoires, qualités et profils ne sont pas simulés.
 
-Le souvenir `ate-without-table` expire après 6 000 ticks. Il vaut −3, se renouvelle sans se cumuler et ne disparaît pas parce que le repas suivant était à table. Une interruption avant la consommation ne le crée pas. Les niveaux de confort fournissent un modificateur séparé. L'humeur complète reste absente : son agrégation actuelle faim/repos + ces effets n'est pas la dynamique d'humeur de RimWorld.
+Le souvenir `ate-without-table` expire après 6 000 ticks. Il vaut −3, se renouvelle sans se cumuler et ne disparaît pas parce que le repas suivant était à table. Une interruption avant la consommation ne le crée pas. Les niveaux de confort fournissent un modificateur séparé. V64 branche ces effets sur une cible expliquée et une humeur progressive ; le catalogue reste partiel. Voir [humeur](mood.md).
 
 ## Sauvegardes
 

@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+V64 : [humeur progressive et pensées](development/mood.md), [sources et corrections](research/mood-reference.md), [preuves](history/validation-mood-v64.md). Causes consultables des situations présentes ; psychologie et catalogue encore partiels.
+
 V63 : [vêtements physiques et protection](development/armor.md), [sources revérifiées](research/apparel-reference.md), [preuves](history/validation-apparel-v63.md). Chemise/gilet obtenables, habillage/retrait, armure anatomique et apparence carte/portrait ; reste un système partiel.
 
 V62 : [réveils défensifs](development/disturbance.md), [recherche et divergences](research/disturbance-reference.md), [preuves](history/validation-disturbance-v62.md). Impacts audibles, repos médical distinct et délais sauvegardés ; pas une interruption universelle des travaux.

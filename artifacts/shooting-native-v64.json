@@ -1,0 +1,186 @@
+{
+  "apparel": true,
+  "date": "2026-09-19T02:40:22.421Z",
+  "melee": false,
+  "hostileTargets": false,
+  "variant": "Mobile visible-threat pursuit and firing positions, drafted autofire, civilian responses and mixed work; enemies start 35 cells from defenders.",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "protocol": "250², 3/30/100 actors, mobile enemies initially 35 cells from defenders; shared path budget and real combat plus civilian work. Native WebGPU, real worker at 6× for 240 ticks, generated forest 250² with cleared shooting lanes; one third shoots, one third targets (MOVING_TARGETS=1: sixteen queued four-cell legs), remainder mines/chops/hauls. Outside AUTOMATIC, actual shot commands accepted before fixture load; health, XP and all decisions evolve in worker. 90 warmup frames before measurement. Scene time is included in frame time; callback excludes IPC decoding. No claim of perfect frame pacing.",
+  "results": [
+    {
+      "pursuit": true,
+      "automatic": true,
+      "actors": 3,
+      "pairs": 1,
+      "movingTargets": false,
+      "hostileTargets": false,
+      "slowedPawns": 1,
+      "retimedEdges": 3,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1"
+      },
+      "framesMs": {
+        "count": 749,
+        "p50": 5.899999999999636,
+        "p95": 6.100000000000364,
+        "p99": 6.699999999998909,
+        "max": 86.09999999999854
+      },
+      "frameCpuMs": {
+        "count": 750,
+        "p50": 3.7999999970197678,
+        "p95": 5.5,
+        "p99": 6.5999999940395355,
+        "max": 12.399999998509884
+      },
+      "sceneMs": {
+        "count": 97,
+        "p50": 0.8000000044703484,
+        "p95": 3,
+        "p99": 8.699999995529652,
+        "max": 8.699999995529652
+      },
+      "snapshotCallbackMs": {
+        "count": 228,
+        "p50": 0,
+        "p95": 0.10000000149011612,
+        "p99": 1.8000000044703484,
+        "max": 2.2000000029802322
+      },
+      "drawCalls": {
+        "count": 750,
+        "p50": 164,
+        "p95": 168,
+        "p99": 168,
+        "max": 168
+      },
+      "meleePoses": 0,
+      "visibleFlightSamples": 301,
+      "capacity": 32,
+      "apparelRemaining": 5,
+      "apparelDamaged": 1,
+      "gunshotPatients": 1,
+      "pipelines": [],
+      "errors": []
+    },
+    {
+      "pursuit": true,
+      "automatic": true,
+      "actors": 30,
+      "pairs": 10,
+      "movingTargets": false,
+      "hostileTargets": false,
+      "slowedPawns": 11,
+      "retimedEdges": 34,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1"
+      },
+      "framesMs": {
+        "count": 717,
+        "p50": 5.899999999999636,
+        "p95": 11.5,
+        "p99": 12.099999999999454,
+        "max": 104.39999999999964
+      },
+      "frameCpuMs": {
+        "count": 718,
+        "p50": 4.399999998509884,
+        "p95": 7,
+        "p99": 8.799999997019768,
+        "max": 11.800000004470348
+      },
+      "sceneMs": {
+        "count": 236,
+        "p50": 1.3000000044703484,
+        "p95": 3.2999999970197678,
+        "p99": 7,
+        "max": 8.100000001490116
+      },
+      "snapshotCallbackMs": {
+        "count": 249,
+        "p50": 0.10000000149011612,
+        "p95": 0.20000000298023224,
+        "p99": 4.399999998509884,
+        "max": 7.200000002980232
+      },
+      "drawCalls": {
+        "count": 718,
+        "p50": 167,
+        "p95": 170,
+        "p99": 171,
+        "max": 171
+      },
+      "meleePoses": 0,
+      "visibleFlightSamples": 2107,
+      "capacity": 128,
+      "apparelRemaining": 45,
+      "apparelDamaged": 17,
+      "gunshotPatients": 11,
+      "pipelines": [],
+      "errors": []
+    },
+    {
+      "pursuit": true,
+      "automatic": true,
+      "actors": 100,
+      "pairs": 33,
+      "movingTargets": false,
+      "hostileTargets": false,
+      "slowedPawns": 25,
+      "retimedEdges": 72,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1"
+      },
+      "framesMs": {
+        "count": 959,
+        "p50": 6,
+        "p95": 12,
+        "p99": 23.599999999998545,
+        "max": 131.89999999999964
+      },
+      "frameCpuMs": {
+        "count": 960,
+        "p50": 4.399999998509884,
+        "p95": 7.700000002980232,
+        "p99": 11.199999995529652,
+        "max": 16
+      },
+      "sceneMs": {
+        "count": 251,
+        "p50": 2.399999998509884,
+        "p95": 6.200000002980232,
+        "p99": 8.699999995529652,
+        "max": 12.099999994039536
+      },
+      "snapshotCallbackMs": {
+        "count": 267,
+        "p50": 0.10000000149011612,
+        "p95": 6.199999995529652,
+        "p99": 8.100000001490116,
+        "max": 9.199999995529652
+      },
+      "drawCalls": {
+        "count": 960,
+        "p50": 167,
+        "p95": 170,
+        "p99": 171,
+        "max": 171
+      },
+      "meleePoses": 763,
+      "visibleFlightSamples": 5018,
+      "capacity": 256,
+      "apparelRemaining": 150,
+      "apparelDamaged": 40,
+      "gunshotPatients": 22,
+      "pipelines": [],
+      "errors": []
+    }
+  ]
+}

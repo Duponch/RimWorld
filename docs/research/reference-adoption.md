@@ -1,5 +1,7 @@
 # Adoption du référentiel utilisateur
 
+V64 — chapitre 14, SYS/TEST-081 et producteurs SYS-076/078/079/080/090/096 : adopter situation/mémoire distinctes, causes et gel selon éveil ; adapter cadence et attentes fixes ; différer SYS-082/084/086..088 (crises, traits, relations). Relecture effective des entrées : UI-017/018/028 concernent soins/captures/opérations et ne sont pas des IDs de pensée. [Confrontation datée](mood-reference.md), [contrat](../development/mood.md).
+
 V63 — chapitres 2/8/13/20/29, SYS/TEST-055, UI-014/015, CAT-034..037 et GAP-007 : adopter propriété distincte, couches/parties et manipulation physique ; adapter scénario de fournitures, temps local et représentation GPU ; différer inventaire, tenues automatiques et filière textile. [Contrat](../development/armor.md), [confrontation officielle/wiki/classes](apparel-reference.md). Deux contenus protecteurs et portraits cohérents ne closent pas GAP-007 ni le domaine.
 
 V62 — chapitres 8/9/14/15/19/20 et SYS-035/044/079/089..091/094/096/110..112 relus : adopter besoin/posture/capacité distincts et conservation ; adapter propagation du signal et instant de réveil ; différer interruption générale, autres bruits, pensées et groupes. [Recherche fraîche et limites des sources](disturbance-reference.md).
