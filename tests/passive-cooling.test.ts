@@ -1,3 +1,4 @@
+import { withoutResearch,withMigratedResearch } from './scenarios/legacy-skills';
 import { withoutPawnSkills, withMigratedSkills } from './scenarios/legacy-skills';
 import { expect,test } from 'vitest';
 import { passiveCoolingFixture,fixtureCooler } from './scenarios/passive-cooling';
@@ -76,7 +77,7 @@ test('threshold, volume, continuous idle fuel, outside, concurrent sources and s
   for(const mutate of [(v:World)=>v.schemaVersion=39 as World['schemaVersion'],(v:World)=>{delete v.structures.at(-1)!.material;},(v:World)=>v.structures.at(-1)!.orientation=1,(v:World)=>v.structures.at(-1)!.fuel!.ticks=PASSIVE_COOLER_CAPACITY+1,(v:World)=>v.structures.at(-1)!.bills=[]]) {
     const bad=JSON.parse(valid);mutate(bad);expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();
   }
-  const old=passiveCoolingFixture(),legacy=JSON.parse(serializeWorld(old));(legacy.schemaVersion=39,withoutPawnSkills(legacy));expect(deserializeWorld(JSON.stringify(legacy))).toEqual(withMigratedSkills(old));
+  const old=passiveCoolingFixture(),legacy=JSON.parse(serializeWorld(old));((legacy.schemaVersion=39,withoutResearch(legacy)),withoutPawnSkills(legacy));expect(deserializeWorld(JSON.stringify(legacy))).toEqual(withMigratedSkills(old));
   const choices=coolingDecisions(old);expect(choices).toHaveLength(1);expect(applyCommand(old,choices[0]!.command).ok).toBe(true);expect(coolingDecisions(old)).toEqual([]);
   expect(coolingDecisions(outside)).toEqual([]);
   for(const material of [undefined,'steel','granite-blocks'] as const)expect(applyCommand(old,{type:'designate',kind:'passive-cooler',material,x:16,z:16}).ok).toBe(false);

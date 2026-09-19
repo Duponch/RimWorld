@@ -1,3 +1,4 @@
+import { withoutResearch,withMigratedResearch } from './scenarios/legacy-skills';
 import { withoutPawnSkills, withMigratedSkills } from './scenarios/legacy-skills';
 import { FixedClock } from '../src/bridge/fixed-clock';
 import { withoutPostV10Fields } from './scenarios/legacy-save';
@@ -204,7 +205,7 @@ test('floor stacks enforce identity, reserved destination type, migration and at
   addGroundMaterial(w,'wood',75,zone);
   expect(w.piles.some(p=>p.owner.type==='ground'&&p.owner.x===zone.x&&p.owner.z===zone.z)).toBe(false);
   w.pawns[0]!.haul=null;
-  const old=JSON.parse(serializeWorld(w));(old.schemaVersion=5,withoutPawnSkills(old));for(const a of old.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete old.deconstructed;delete old.packed;withoutPostV10Fields(old);for(const p of old.pawns){delete p.cooking;delete p.priorities.cook;}old.piles[1].owner={...old.piles[0].owner};
+  const old=JSON.parse(serializeWorld(w));((old.schemaVersion=5,withoutResearch(old)),withoutPawnSkills(old));for(const a of old.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete old.deconstructed;delete old.packed;withoutPostV10Fields(old);for(const p of old.pawns){delete p.cooking;delete p.priorities.cook;}old.piles[1].owner={...old.piles[0].owner};
   const migrated=deserializeWorld(JSON.stringify(old));
   expect(migrated.piles.map(p=>[p.id,p.item,p.quantity])).toEqual(w.piles.map(p=>[p.id,p.item,p.quantity]));expect(validateWorld(migrated)).toEqual([]);
   const impossible=JSON.parse(JSON.stringify(old));(impossible.schemaVersion=6,withoutPawnSkills(impossible));for(const a of impossible.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete impossible.deconstructed;delete impossible.packed;expect(()=>deserializeWorld(JSON.stringify(impossible))).toThrow(/floor cell/);

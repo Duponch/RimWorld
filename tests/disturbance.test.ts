@@ -1,3 +1,4 @@
+import { withoutResearch,withMigratedResearch } from './scenarios/legacy-skills';
 import { SCHEMA_VERSION } from '../src/sim/types';
 import { damageBarrier } from '../src/sim/barriers';
 import { expect,test } from 'vitest';
@@ -88,7 +89,7 @@ test('downed patients never stand from noise or hits; harm wakes only sleeping N
   disturbanceEvents(w).damage(source,w.tick*10,true);
   expect(npc.need).toBeNull();expect(colonist.state).toBe('sleeping');expect(downed.state).toBe('downed');expect(downed.need).toEqual(before);
   disturbanceEvents(w).impact(downed,w.tick*10);expect(downed.state).toBe('downed');expect(downed.need).toEqual(before);resume(w,10);
-  const old=medicalCamp(),saved=JSON.parse(serializeWorld(old));saved.schemaVersion=61;
+  const old=medicalCamp(),saved=JSON.parse(serializeWorld(old));(saved.schemaVersion=61,withoutResearch(saved));
   const loaded=deserializeWorld(JSON.stringify(saved));expect(loaded.schemaVersion).toBe(SCHEMA_VERSION);expect(loaded.pawns[0].disturbance).toBeUndefined();
   saved.pawns[0].disturbance={sleepUntilCore:0,lieUntilCore:0};expect(()=>deserializeWorld(JSON.stringify(saved))).toThrow('version 61');
   for(const value of [[],{},null,{sleepUntilCore:-1,lieUntilCore:0},{sleepUntilCore:0,lieUntilCore:old.tick*10+401},{sleepUntilCore:0,lieUntilCore:0,extra:true}]){

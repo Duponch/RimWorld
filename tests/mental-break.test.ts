@@ -1,3 +1,4 @@
+import { withoutResearch,withMigratedResearch } from './scenarios/legacy-skills';
 import { expect,test } from 'vitest';
 import { applyCommand,stepWorld } from '../src/sim/engine';
 import { deserializeWorld,serializeWorld,validateWorld } from '../src/sim/serialization';
@@ -74,7 +75,7 @@ test('duration, early sleep/downing, death and five diminishing catharses keep d
 });
 
 test('strict V64 migration introduces no past exposure, corruption is rejected, continuation spans mid-wander and recovery',()=>{
-  const old=camp();(old as any).schemaVersion=64;expect(deserializeWorld(JSON.stringify(old))).toEqual({...old,schemaVersion:SCHEMA_VERSION});
+  const old=camp();((old as any).schemaVersion=64,withoutResearch(old));expect(deserializeWorld(JSON.stringify(old))).toEqual(withMigratedResearch({...old,schemaVersion:SCHEMA_VERSION}));
   const legacy=structuredClone(old);mentalState(legacy.pawns[0]!);expect(()=>deserializeWorld(JSON.stringify(legacy))).toThrow(/version 64/);
   const w=camp(),p=w.pawns[0]!;startSadWander(w,p);stepWorld(w,10);valid(w);
   for(const mutate of [(v:any)=>v.pawns[0].mental.below=[0,150,0],(v:any)=>v.pawns[0].mental.crisis.age=60000,(v:any)=>v.pawns[0].mental.catharsis=[v.tick],(v:any)=>v.pawns[0].mental.crisis.target={x:-1,z:0},(v:any)=>v.pawns[0].mental.crisis=true]){const v=structuredClone(w);mutate(v);expect(()=>deserializeWorld(JSON.stringify(v))).toThrow();}
@@ -103,7 +104,7 @@ test('wounded slow wander preserves captured speed after recovery and survives s
   const w=camp(),p=w.pawns[0]!;w.tick=6000;controlledInjury(w,p,'left-leg',19000);controlledInjury(w,p,'right-leg',23500);addMaterial(w,'apparel',1,{type:'apparel',pawnId:p.id},'flak-vest');
   // The same clothed, injured night-time edge was valid gameplay in V63/V64.
   expect(startTravel(w,p,{x:p.x+1,z:p.z+1})).toBe(true);p.state='moving';p.draft={lastActiveTick:w.tick,target:{x:p.x,z:p.z},queue:[]};
-  const legacy=structuredClone(w);(legacy as any).schemaVersion=64;expect(deserializeWorld(JSON.stringify(legacy)).pawns[0]!.motion).toEqual(p.motion);
+  const legacy=structuredClone(w);((legacy as any).schemaVersion=64,withoutResearch(legacy));expect(deserializeWorld(JSON.stringify(legacy)).pawns[0]!.motion).toEqual(p.motion);
   stepWorld(w,Math.ceil(p.motion!.end)-w.tick);startSadWander(w,p);expect(startTravel(w,p,{x:p.x+1,z:p.z+1})).toBe(true);p.state='moving';expect(p.moveCooldown).toBeGreaterThan(49.5);
   expect(p.motion!.speedFactor).toBeLessThan(.128);valid(w);
   const edge=structuredClone(p.motion);finishMentalBreak(w,p);expect(p.motion).toEqual(edge);valid(w);

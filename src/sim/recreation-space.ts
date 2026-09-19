@@ -20,7 +20,7 @@ export function recreationSpace(world: World, resourceTargets?: readonly Cell[])
   for(const job of world.jobs)index.objects.add(job.z*world.width+job.x);
   for(const s of [...world.structures,...world.jobs]) {
     if(!('status' in s)&&(s.kind==='wall'||s.kind==='door'&&!s.door!.open))index.walls.add(s.z*world.width+s.x);
-    if(s.kind==='wall'||s.kind==='table'||world.schemaVersion>=22&&(!('status' in s)&&(s.kind==='passive-cooler'||s.kind==='bed'||s.kind==='campfire'||s.kind==='stonecutter')||'construction' in s&&s.construction==='frame'))for(const c of footprintCells(s))index.solids.add(c.z*world.width+c.x);
+    if(s.kind==='wall'||s.kind==='table'||world.schemaVersion>=22&&(!('status' in s)&&(s.kind==='passive-cooler'||s.kind==='bed'||s.kind==='campfire'||s.kind==='stonecutter'||s.kind==='research-bench'||s.kind==='tailor-bench')||'construction' in s&&s.construction==='frame'))for(const c of footprintCells(s))index.solids.add(c.z*world.width+c.x);
   }
   // Match the direct standability check: chunks permit transit, not stopping.
   if(world.schemaVersion>=28)for(const p of world.piles)if(p.kind==='chunk'&&p.owner.type==='ground')index.solids.add(p.owner.z*world.width+p.owner.x);

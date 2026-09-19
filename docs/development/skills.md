@@ -1,8 +1,10 @@
 # Compétences — Construction, Médecine, Tir et Mêlée
 
-V72 active **Artisanat pour la confection**, XP pendant le travail et qualité au résultat, pas vitesse proportionnelle au niveau ni XP de taille de pierre. Profil absent = 0/sans passion jusqu’au premier travail ; ce défaut local ne vaut pas biographie Core. [Contrat, distribution et limites](tailoring.md). Les compétences actives sont Construction, Médecine, Tir, Mêlée, Social et cette première utilisation d’Artisanat.
+V73 active **Intellect**, septième compétence : vitesse de recherche et XP pendant le travail au bureau, profils neufs 8/3/6, historique absent neutre 0. Passion/traits/saturation/oubli communs ; [contrat](research.md). Les cinq autres compétences Core restent à brancher.
 
-V70 : [Social](social.md) devient la cinquième compétence active. Champ facultatif : absence = débutant 0/sans passion, création au premier apprentissage ; gain 4/10 XP de base lors d’un vrai échange initié, impact consommé par les opinions, passion/apprentissage/oubli communs. Les sept autres compétences restent absentes. Les descriptions historiques des premiers producteurs ci-dessous conservent leur portée de version.
+V72 active **Artisanat pour la confection**, XP pendant le travail et qualité au résultat, pas vitesse proportionnelle au niveau ni XP de taille de pierre. Profil absent = 0/sans passion jusqu’au premier travail ; ce défaut local ne vaut pas biographie Core. [Contrat, distribution et limites](tailoring.md). Les compétences actives sont Construction, Médecine, Tir, Mêlée, Social, Artisanat et Intellect V73.
+
+V70 : [Social](social.md) devient la cinquième compétence active. Champ facultatif : absence = débutant 0/sans passion, création au premier apprentissage ; gain 4/10 XP de base lors d’un vrai échange initié, impact consommé par les opinions, passion/apprentissage/oubli communs. Artisanat V72 et Intellect V73 prolongent depuis ce premier lot social. Les descriptions historiques des premiers producteurs ci-dessous conservent leur portée de version.
 
 V69 : les [traits d’apprentissage](traits.md) multiplient les gains ordinaires des quatre compétences par 1,75 ou 0,25, avant arrondi final aux milli-XP ; ils ne changent pas l’oubli, la saturation ni directement la vitesse d’exécution. Les bornes journalières de validation V69 sont les bornes conservatrices historiques ×1,75, sans changer les validateurs historiques.
 

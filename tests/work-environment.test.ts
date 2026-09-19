@@ -1,3 +1,4 @@
+import { withoutResearch,withMigratedResearch } from './scenarios/legacy-skills';
 import { withoutPawnSkills } from './scenarios/legacy-skills';
 import { expect,test } from 'vitest';
 import { WorkEnvironmentCache,lightWorkFactor } from '../src/sim/work-environment';
@@ -69,7 +70,7 @@ test('ateliers : toit distinct de pièce, rôle et lumière au colon ; progressi
   addGroundMaterial(w,'chunk',1,{x:3,z:4},'granite-chunk');s.bills=[newCookingBill(w.nextId++,'stone-blocks')];
   for(let i=0;i<100&&!p.cooking?.progress;i++)stepWorld(w);
   expect(p.cooking?.phase).toBe('work');expect(p.cooking!.progress).toBe(10000);expect(validateWorld(w)).toEqual([]);
-  const raw=JSON.parse(serializeWorld(w));(raw.schemaVersion=35,withoutPawnSkills(raw));delete raw.thermal;raw.pawns[0].cooking.progress=100;
+  const raw=JSON.parse(serializeWorld(w));((raw.schemaVersion=35,withoutResearch(raw)),withoutPawnSkills(raw));delete raw.thermal;raw.pawns[0].cooking.progress=100;
   const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated.pawns[0]!.cooking!.progress).toBe(productionWorkTotal('stone-blocks')/2);
   raw.pawns[0].cooking.progress=200.5;expect(()=>deserializeWorld(JSON.stringify(raw))).toThrow(/version 35/);
   const bad=JSON.parse(serializeWorld(w));bad.pawns[0].cooking.progress=1.1;expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();

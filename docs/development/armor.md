@@ -1,5 +1,7 @@
 # Vêtements physiques et protection corporelle — V63
 
+V73 rend la **chemise en tissu fabricable** après Vêtements complexes, au tailleur manuel (45 tissus). Elle réutilise les propriétés et couches ci-dessous, avec qualité de confection. Le gilet reste non fabricable. [Filière et limites](research.md).
+
 V72 étend ce contrat avec la **tenue tribale en tissu** : torse/jambes, couche peau, 100 PV, neuf ticks pour enfiler/retirer ; protection normale tranchante 7,2 %, chaleur 3,6 %, contondante 0. Incompatible avec chemise, compatible avec gilet. Fabrication et six qualités réellement obtenables : [confection](tailoring.md). Chemise/gilet conservent leur acquisition antérieure, leur fabrication restant absente.
 
 Chemise en tissu et gilet pare-balles : acquisition au sol dans les nouvelles colonies, habillage et retrait physiques, couches compatibles, protection anatomique, usure aux impacts et projection commune carte/portrait. [Recherche renouvelée](../research/apparel-reference.md), [preuves V63](../history/validation-apparel-v63.md), [priorité canonique](../ROADMAP.md). Le noyau a été préparé sous V62 ; seule V63 le branche au gameplay.

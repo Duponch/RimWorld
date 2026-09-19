@@ -87,11 +87,14 @@ export function processNeeds(world: World, pawn: Pawn, context: NeedContext): bo
   if (processSleeping(world, pawn, context, canPlan)) return true;
   if (pawn.hunger <= 20) {
     const job = world.jobs.find(candidate => candidate.id === pawn.jobId);
-    if ((job && job.kind !== 'harvest') || pawn.haul) if (!context.release()) return true;
+    // Fuel carried for a cooking bill is part of food preparation. Cancelling it
+    // here lets the planner select it again forever ahead of harvesting.
+    const cookingFuel = pawn.haul?.destination.type === 'fuel' && pawn.haul.destination.forCooking;
+    if ((job && job.kind !== 'harvest') || pawn.haul && !cookingFuel) if (!context.release()) return true;
     // Cooking may still provide food for others even under a restrictive diet.
     // Its processor can wait for a navigation budget while keeping its product;
     // do not overwrite the active task's state during that wait.
-    if (pawn.jobId === null && pawn.haul === null && !pawn.cooking && !pawn.feed&&!pawn.tend && !pawn.rescue) pawn.state = 'hungry';
+    if (pawn.jobId === null && pawn.haul === null && !pawn.research && !pawn.cooking && !pawn.feed&&!pawn.tend && !pawn.rescue) pawn.state = 'hungry';
   } else if (pawn.state === 'hungry') pawn.state = 'idle';
   return false;
 }

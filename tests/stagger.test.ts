@@ -1,3 +1,4 @@
+import { withoutResearch,withMigratedResearch } from './scenarios/legacy-skills';
 import { SCHEMA_VERSION } from '../src/sim/types';
 import { expect,test } from 'vitest';
 import { applyCommand,stepWorld,serializeWorld,deserializeWorld,validateWorld } from '../src/sim/index';
@@ -50,8 +51,8 @@ test('impact changes only future movement, refreshes without stacking and carrie
   for(let t=old.start;t<=p.motion!.end;t+=.1){timeline.tick=t;const s=timeline.segment(p.id)!;const f=(s.fromFraction??0)+Math.max(0,Math.min(1,(t-s.start)/(s.end-s.start)))*((s.toFraction??1)-(s.fromFraction??0));expect(f).toBeCloseTo(fraction(p.motion!,t),9);}
   const copy=deserializeWorld(serializeWorld(w));for(let i=0;i<25;i++){stepWorld(w);stepWorld(copy);expect(copy).toEqual(w);expect(validateWorld(w)).toEqual([]);}
   expect(p.stagger).toBeUndefined();
-  const historical=equipmentCamp(1) as any;startTravel(historical,historical.pawns[0],{x:4,z:5});historical.schemaVersion=56;const skills=structuredClone(historical.pawns[0].skills);delete historical.pawns[0].skills.melee;
-  expect(deserializeWorld(JSON.stringify(historical))).toEqual({...historical,schemaVersion:SCHEMA_VERSION,pawns:historical.pawns.map((p:any)=>({...p,skills}))});
+  const historical=equipmentCamp(1) as any;startTravel(historical,historical.pawns[0],{x:4,z:5});historical.schemaVersion=56;withoutResearch(historical);const skills=structuredClone(historical.pawns[0].skills);delete historical.pawns[0].skills.melee;
+  expect(deserializeWorld(JSON.stringify(historical))).toEqual(withMigratedResearch({...historical,schemaVersion:SCHEMA_VERSION,pawns:historical.pawns.map((p:any)=>({...p,skills}))}));
   historical.pawns[0].stagger={sinceCore:w.tick*10,untilCore:w.tick*10+95};expect(()=>deserializeWorld(JSON.stringify(historical))).toThrow(/version 56/);
   const bad=structuredClone(saved) as any;bad.pawns[0].motion.stagger[0].end+=.01;expect(validateWorld(bad).length).toBeGreaterThan(0);
   const early=structuredClone(saved) as any;early.schemaVersion=56;delete early.pawns[0].stagger;expect(()=>deserializeWorld(JSON.stringify(early))).toThrow(/version 56/);

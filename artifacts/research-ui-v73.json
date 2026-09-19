@@ -1,0 +1,25 @@
+{
+  "date": "2026-09-19T15:33:15.486Z",
+  "startTick": 214220,
+  "endTick": 217955,
+  "research": {
+    "project": null,
+    "points": 600000000,
+    "completedAt": 214309
+  },
+  "shirt": {
+    "id": 941,
+    "item": "cloth-shirt",
+    "kind": "apparel",
+    "quantity": 1,
+    "owner": {
+      "type": "apparel",
+      "pawnId": 49
+    },
+    "apparel": {
+      "quality": "awful",
+      "hitPoints": 100
+    }
+  },
+  "errors": []
+}

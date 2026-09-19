@@ -1,6 +1,6 @@
 # Documentation de Lisière
 
-État courant : **V72, 19 septembre 2026**. [Confection physique](development/tailoring.md) : coton → tissu → tenue tribale → habillage, ouvrage inachevé conservé, auteur et qualité. L’étape 4 reste ouverte pour **la recherche Vêtements complexes et son déblocage réel**. Social, traits, accueil et raid restent jouables. [Inventaire consolidé](gameplay/implementation-status.md), [dernières preuves](history/validation-tailoring-v72.md).
+État courant : **V73, 19 septembre 2026**. [Recherche et tailleur](development/research.md) : projet collectif, Intellect, bureau physique, déblocage de l’atelier et chemise fabriquée/portée. L’étape proche 4 est livrée dans ce périmètre limité ; social, traits, accueil et raid restent jouables. [Inventaire consolidé](gameplay/implementation-status.md), [dernières preuves](history/validation-research-v73.md).
 
 La [revue de progression](research/progression-review-2026-09-19.md) explique la réorientation vers des situations de colonie complètes. [ROADMAP](ROADMAP.md) conserve seule l’ordre des prochains travaux et les estimations. Mode jour, automatisation nocturne en pause.
 
@@ -36,6 +36,7 @@ Les bilans de versions sont dans les contrats et [l’index de validation](devel
 | Murs/portes endommagés, foyer et réparation | [Ouvrages V67](development/barriers.md) | [Règles et adaptations](research/barriers-reference.md) |
 | Population et premier incident | [Accueil V66](development/arrivals.md) | [Arrivée volontaire et limites](research/arrival-reference.md) |
 | Humeur et crises | [Humeur V64](development/mood.md), [errance triste V65](development/mental-break.md) | [Pensées](research/mood-reference.md), [crises et contradictions](research/mental-break-reference.md) |
+| Recherche et déblocages | [Recherche V73](development/research.md) | [Sources et incertitudes](research/research-reference.md) |
 | Confection et progression | [Tenue tribale V72](development/tailoring.md) | [Sources et écarts](research/tailoring-reference.md) |
 | Habillement | [Vêtements et protection V63](development/armor.md) | [Règles revérifiées](research/apparel-reference.md) |
 | Combat | [Tir](development/shooting.md), [mêlée](development/melee.md), [acquisition](development/automatic-combat.md), [approche](development/pursuit.md), [réveils](development/disturbance.md) | [Préparation et limites](research/combat-preparation.md), [rencontre](development/encounters.md) |

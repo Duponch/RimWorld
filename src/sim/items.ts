@@ -4,6 +4,7 @@ import type { MaterialKind, MaterialPile, Pawn, World } from './types.ts';
  * rules are tracked in docs/development/food-items.md. Nutrition uses integer
  * hundredths here; the actor's 0..100 meter represents one nutrition unit. */
 export const ITEM_DEFINITIONS = Object.freeze({
+  'unfinished-shirt':Object.freeze({label:'Chemise inachevée',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0xd8c8a2}),
   'unfinished-tribalwear':Object.freeze({label:'Tenue tribale inachevée',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0xd8c8a2}),
   'cloth-tribalwear':Object.freeze({label:'Tenue tribale en tissu',kind:'apparel',stackLimit:1,nutrition:0,maxIngest:0,color:0xd8c8a2}),
   cloth: Object.freeze({label:'Tissu',kind:'textile',stackLimit:75,nutrition:0,maxIngest:0,color:0xe4ddc8}),

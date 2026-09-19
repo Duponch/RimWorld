@@ -1,8 +1,12 @@
 # Travail sur Lisière
 
+## Recherche V73
+- Lire `docs/development/research.md` et `docs/research/research-reference.md`. Projet collectif en micro-points, bureau et service exclusifs, Intellect sur travail réel ; suspendre conserve l’acquis. V72 validée strictement avant priorité Recherche 3 sans compétence/projet inventés.
+- Tailleur/chemise ne sont disponibles qu’après le projet ; tenue tribale initiale. Confection commune, chemise 45 tissus/270 ticks neutres, inachevés par recette. Bureau 3×2 et tailleur 3×1 dans les lots résidents. Coefficients et scénario initial explicitement documentés ; ne pas généraliser un projet à un arbre complet. La faim ne doit pas interrompre en boucle le combustible d’une facture culinaire.
+
 ## Confection V72
 - Lire `docs/development/tailoring.md` et `docs/research/tailoring-reference.md`. Emplacement gratuit instantané, 60 tissus rassemblés, ouvrage physique avec auteur/progression/piles incorporées. Transport conserve son identité ; interruption ne remet pas le travail à zéro. Facture liée attend son auteur et contourne les nouveaux filtres/rayon ; reprise non liée les respecte. Annulation 75 % par pile, sol/identités/bilan/PRNG prévalidés.
-- XP Artisanat sur travail réel, qualité transactionnelle à la fin ; aucune XP/qualité ajoutée aux blocs. Profil absent neutre 0, pas de biographie inventée à la migration. V71 strictement validée avant V72 ; recherches et autres recettes textiles restent absentes. Tenue portée/portrait/cargaison partagent la projection GPU ; aucune compilation ajoutée par vêtement.
+- XP Artisanat sur travail réel, qualité transactionnelle à la fin ; aucune XP/qualité ajoutée aux blocs. Profil absent neutre 0, pas de biographie inventée à la migration. V71 strictement validée avant V72 ; V73 ajoute recherche et chemise ; autres recettes restent absentes. Tenue portée/portrait/cargaison partagent la projection GPU ; aucune compilation ajoutée par vêtement.
 
 ## Culture textile V71
 - Lire `docs/development/textiles.md` et `docs/research/textile-reference.md`. Coton produit `cloth`/`textile`, jamais nourriture ; changement d’espèce conserve les plants et annule les travaux liés avec dépôt conservatif. Commande sans espèce la conserve. Filtre absent = refus ; V70 validée strictement avant migration neutre V71.
@@ -85,7 +89,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 72 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 73 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)

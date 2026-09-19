@@ -1,3 +1,4 @@
+import { withoutResearch,withMigratedResearch } from './scenarios/legacy-skills';
 import { withoutShootingSkills,withMigratedShootingSkills } from './scenarios/legacy-skills';
 import { SCHEMA_VERSION } from '../src/sim/types';
 import { expect,test } from 'vitest';
@@ -79,7 +80,7 @@ test('shared doctors and sources cannot double reserve; malformed phases and V47
     const bad=structuredClone(w);(bad.pawns[0]!.feed as unknown as Record<string,unknown>).phase=phase;
     expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();
   }
-  replay(w,2);const old=feedingCamp();old.schemaVersion=47 as World['schemaVersion'];withoutShootingSkills(old);const migrated=deserializeWorld(JSON.stringify(old));expect(migrated).toEqual(withMigratedShootingSkills({...old,schemaVersion:SCHEMA_VERSION}));
+  replay(w,2);const old=feedingCamp();(old.schemaVersion=47 as World['schemaVersion'],withoutResearch(old));withoutShootingSkills(old);const migrated=deserializeWorld(JSON.stringify(old));expect(migrated).toEqual(withMigratedShootingSkills({...old,schemaVersion:SCHEMA_VERSION}));
 });
 
 test('raw food conserves a partial serving; involuntary cancellation can retain undroppable cargo without a stale patient claim',()=>{

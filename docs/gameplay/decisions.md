@@ -1,5 +1,7 @@
 # Choix et écarts de gameplay
 
+V73 : un seul projet de recherche, Vêtements complexes. Notre camp personnalisé commence sans ce savoir, contrairement au Crashlanded classique ; difficulté/écart technologique neutres, Intellect historique absent =0, propreté intérieure neutre, malus extérieur provisoire. La tenue tribale reste initiale. [Détails et sources contradictoires](../research/research-reference.md).
+
 V72 : tenue tribale sans recherche, tissu seul, capacité de portage locale dix, profil Artisanat absent neutre 0, reprise liée par auteur, réglage de comptage équipé différé. Seuil thermique 9 °C du code daté adopté malgré le 10 °C écrit au wiki ; pénalité seulement branchée au nouveau poste. Géométrie de tenue interprétée en 3D sur le rig GPU. [Règles et écarts](../development/tailoring.md), [sources](../research/tailoring-reference.md).
 
 V70 : deux échanges positifs Core, aucun effet d’humeur artificiel ; distribution sociale volontairement incomplète sans insultes/bagarres/romance. Compatibilité fixe par paire avec contribution d’âge neutre, compétence Social absente = débutant sans passé, PRNG indépendant. Présentation par inspection/journal, sans bulle 3D. Confiance numérique limitée par les définitions anciennes confrontées ; [sources et choix](../research/social-reference.md).

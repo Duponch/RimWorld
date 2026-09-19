@@ -1,3 +1,4 @@
+import { withoutResearch,withMigratedResearch } from './scenarios/legacy-skills';
 import { withoutPawnSkills, withMigratedSkills } from './scenarios/legacy-skills';
 import { expect, test } from 'vitest';
 import { createWorld, stepWorld, validateWorld, serializeWorld, deserializeWorld, applyCommand, refreshStock } from '../src/sim/index';
@@ -62,7 +63,7 @@ test('opposite loaded trips cross furniture, cancel in transit without teleport 
     if(w.pawns.every(p=>!p.haul)&&w.tick>100)break;
   }
   expect(onTable.size).toBe(2);expect(interrupted).toBe(true);expect(w.piles.find(p=>p.item==='wood')?.owner).toEqual({type:'ground',x:2,z:8});expect(w.piles.find(p=>p.item==='rice')?.owner).toEqual({type:'ground',x:13,z:8});
-  const original=furnitureTrafficFixture(),raw=JSON.parse(serializeWorld(original));(raw.schemaVersion=21,withoutPawnSkills(raw));for(const a of raw.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete raw.deconstructed;delete raw.packed;
+  const original=furnitureTrafficFixture(),raw=JSON.parse(serializeWorld(original));((raw.schemaVersion=21,withoutResearch(raw)),withoutPawnSkills(raw));for(const a of raw.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete raw.deconstructed;delete raw.packed;
   expect(deserializeWorld(JSON.stringify(raw))).toEqual(withMigratedSkills(original));
   const invalid=JSON.parse(serializeWorld(original));invalid.pawns[0].x=7;invalid.pawns[0].z=8;invalid.pawns[0].path=[];(invalid.schemaVersion=21,withoutPawnSkills(invalid));for(const a of invalid.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete invalid.deconstructed;delete invalid.packed;
   expect(()=>deserializeWorld(JSON.stringify(invalid))).toThrow(/version 21/);
@@ -80,7 +81,7 @@ test('opposite loaded trips cross furniture, cancel in transit without teleport 
       actor.need={kind:'eat',phase:'ingest',sourcePileId:portion.id,carryPileId:portion.id,quantity:1,progress:12,dining:{target:{x:8,z:8},seatId:null,tableId:null}};actor.state='eating';
     }else if(service==='ground-sleep'){actor.need={kind:'sleep',phase:'sleep',bedId:null,target:{x:8,z:8}};actor.state='sleeping';}
     else{actor.motion={from:{x:7,z:8},to:{x:8,z:8},start:0,end:3};actor.moveCooldown=3;}
-    refreshStock(old);const raw=structuredClone(old) as any;(raw.schemaVersion=21,withoutPawnSkills(raw));for(const a of raw.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete raw.deconstructed;delete raw.packed;
+    refreshStock(old);const raw=structuredClone(old) as any;((raw.schemaVersion=21,withoutResearch(raw)),withoutPawnSkills(raw));for(const a of raw.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete raw.deconstructed;delete raw.packed;
     const loaded=deserializeWorld(JSON.stringify(raw));expect(loaded.tick).toBe(old.tick);expect(loaded.rng).toBe(old.rng);expect(loaded.piles).toEqual(raw.piles);expect(loaded.pawns[0]!.motion).toEqual(actor.motion);
     if(service==='meal')expect(loaded.pawns[0]!.need).toMatchObject({kind:'eat',phase:'choose-spot',progress:0,dining:null});
     if(service==='ground-sleep')expect(loaded.pawns[0]!.need).toBeNull();

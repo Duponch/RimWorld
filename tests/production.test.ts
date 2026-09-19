@@ -16,7 +16,7 @@ import { initialRecreation } from '../src/sim/recreation-rules';
 
 function camp():World {
   const w=createWorld(42,16,16);w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.resources=[];w.piles=[];
-  w.pawns.forEach((p,i)=>Object.assign(p,{x:2+i*2,z:2,hunger:100,rest:100,priorities: { patient:0,bedrest:0,doctor:0,craft:2,mine:2,gather:0,build:1,haul:1,grow:0, cook: 0 }}));
+  w.pawns.forEach((p,i)=>Object.assign(p,{x:2+i*2,z:2,hunger:100,rest:100,priorities: {research:0, patient:0,bedrest:0,doctor:0,craft:2,mine:2,gather:0,build:1,haul:1,grow:0, cook: 0 }}));
   addGroundMaterial(w,'wood',50,{x:2,z:4},'wood');addGroundMaterial(w,'food',40,{x:3,z:6},'survival-meal');refreshStock(w);
   return w;
 }
@@ -24,6 +24,18 @@ function until(w:World,predicate:()=>boolean,max=1000):void {
   for(let i=0;i<max&&!predicate();i++){stepWorld(w);expect(validateWorld(w),`tick ${w.tick}`).toEqual([]);}
   expect(predicate(),`condition at tick ${w.tick}`).toBe(true);
 }
+
+test('hungry cook completes the bill fuel trip, resumes its cargo and eats the physically cooked meal',()=>{
+  const w=camp();w.tick=2000;w.pawns=w.pawns.slice(0,1);const p=w.pawns[0]!;
+  p.hunger=19;p.priorities.build=p.priorities.haul=0;p.priorities.cook=1;p.foodPolicyId=2;p.schedule.fill('work');
+  w.piles=w.piles.filter(i=>i.kind!=='food');addGroundMaterial(w,'food',20,{x:6,z:6},'rice');
+  const fire={id:w.nextId++,kind:'campfire' as const,x:8,z:8,orientation:0 as const,footprint:'standard' as const,fuel:{ticks:0,burned:0,autoRefuel:true},bills:[]};w.structures.push(fire);
+  expect(applyCommand(w,{type:'bill-add',structureId:fire.id}).ok).toBe(true);const material=woodAccount(w);
+  until(w,()=>p.haul?.phase==='deliver'&&p.haul.destination.type==='fuel');
+  const copy=deserializeWorld(serializeWorld(w));stepWorld(copy,100);stepWorld(w,100);expect(copy).toEqual(w);
+  until(w,()=>p.hunger>50);expect(fire.fuel.burned).toBeGreaterThan(0);expect(woodAccount(w)).toBe(material);
+  expect(w.piles.some(i=>i.owner.type==='pawn')).toBe(false);expect(validateWorld(w)).toEqual([]);
+});
 
 test('feu construit, deux jours de combustion, ravitaillement concurrent et interruption conservent le bois',()=>{
   const w=camp(),initial=woodAccount(w);

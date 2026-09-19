@@ -1,3 +1,4 @@
+import { withoutResearch,withMigratedResearch } from './scenarios/legacy-skills';
 import { withoutPawnSkills, withMigratedSkills } from './scenarios/legacy-skills';
 import { expect, test } from 'vitest';
 import { applyCommand, stepWorld, serializeWorld, deserializeWorld, validateWorld, addGroundMaterial, refreshStock } from '../src/sim/index';
@@ -20,7 +21,7 @@ function zone(w:World,x:number,z:number,priority=2) {
 }
 
 test('whole parcels reserve exclusive sources and floor slots, queue through player commands and resume without copying their identities',()=>{
-  const w=deconstructionCamp(2),p=w.pawns[0]!,other=w.pawns[1]!;p.priorities={ patient:0,bedrest:0,doctor:0,craft:2,mine:2,build:0,haul:1,gather:0,grow:0,cook:0};other.priorities.build=0;
+  const w=deconstructionCamp(2),p=w.pawns[0]!,other=w.pawns[1]!;p.priorities={research:0, patient:0,bedrest:0,doctor:0,craft:2,mine:2,build:0,haul:1,gather:0,grow:0,cook:0};other.priorities.build=0;
   const a=parcel(w,'bed',14,16),b=parcel(w,'stool',16,16),one=zone(w,24,16),two=zone(w,25,16),initial=woodAccount(w);p.bedId=a.building.id;
   expect(applyCommand(w,{type:'order-haul',pawnId:p.id,target:{type:'furniture',structureId:a.building.id},queue:false}).ok).toBe(true);
   expect(applyCommand(w,{type:'order-haul',pawnId:p.id,target:{type:'furniture',structureId:b.building.id},queue:true}).ok).toBe(true);
@@ -61,7 +62,7 @@ test('builders and growers clear whole objects before finishing while a table ke
 
 test('a hauler alone can reinstall the same bed; accepted work survives disabled priority and V25 migration rejects future fields',()=>{
   const w=deconstructionCamp(),p=w.pawns[0]!,bed=fixtureBuilding(w,'bed',14,16);p.bedId=bed.id;p.priorities.build=0;p.priorities.haul=1;
-  const legacy=JSON.parse(serializeWorld(w));(legacy.schemaVersion=25,withoutPawnSkills(legacy));for(const a of legacy.pawns){delete a.priorities.mine;delete a.priorities.craft;}expect(deserializeWorld(JSON.stringify(legacy))).toEqual(withMigratedSkills(w));
+  const legacy=JSON.parse(serializeWorld(w));((legacy.schemaVersion=25,withoutResearch(legacy)),withoutPawnSkills(legacy));for(const a of legacy.pawns){delete a.priorities.mine;delete a.priorities.craft;}expect(deserializeWorld(JSON.stringify(legacy))).toEqual(withMigratedSkills(w));
   legacy.stockpiles=[{id:legacy.nextId++,x:20,z:20,priority:2,capacity:1,filters:{wood:false,food:false,furniture:true}}];expect(()=>deserializeWorld(JSON.stringify(legacy))).toThrow();
   expect(applyCommand(w,{type:'install',structureId:bed.id,x:24,z:20,orientation:1}).ok).toBe(true);const job=w.jobs[0]!;
   expect(queryOrderOptions(w,p.id,job)[0]!.enabled).toBe(true);expect(applyCommand(w,{type:'order-job',pawnId:p.id,jobId:job.id,queue:false}).ok).toBe(true);expect(job.installationWork).toBe('haul');

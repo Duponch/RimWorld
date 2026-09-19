@@ -6,7 +6,7 @@ import { WORLD_SCALE } from '../world/scale';
 export function furnitureSurfaces(world:World):ReadonlyMap<number,number> {
   const result=new Map<number,number>();
   for(const s of world.structures) {
-    const y=s.kind==='stonecutter'?WORLD_SCALE.stonecutterHeight:s.kind==='table'?WORLD_SCALE.tableHeight:s.kind==='bed'?WORLD_SCALE.bedSurfaceHeight:s.kind==='stool'?WORLD_SCALE.stoolHeight:0;
+    const y=(s.kind==='stonecutter'||s.kind==='research-bench'||s.kind==='tailor-bench')?WORLD_SCALE.stonecutterHeight:s.kind==='table'?WORLD_SCALE.tableHeight:s.kind==='bed'?WORLD_SCALE.bedSurfaceHeight:s.kind==='stool'?WORLD_SCALE.stoolHeight:0;
     if(y)for(const c of footprintCells(s))result.set(c.z*world.width+c.x,y);
   }
   return result;

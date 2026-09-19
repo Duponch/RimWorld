@@ -1,5 +1,7 @@
 # Lumière et environnement des ateliers — V36
 
+V73 ajoute les rôles du **bureau simple** (score Laboratoire 54) et du **tailleur** (Atelier 27). En cas d’égalité de scores, Laboratoire précède les rôles existants. Les facteurs de recherche sont séparés de ceux de fabrication : [recherche](research.md). Le tailleur emploie les facteurs Atelier/extérieurs et sa base 0,5, avec la pénalité thermique de confection.
+
 15 septembre 2026. [Recherche fraîche](../research/work-environment-reference.md), [preuves](validation.md). La topologie V34 et les toits V35 deviennent des entrées réelles de la production. Aucun nouvel objet n’est ajouté.
 
 ## Lumière logique

@@ -1,6 +1,10 @@
 # Guide joueur
 
-**Confection V72 :** Architecte → Production → **Emplacement d’artisanat**. Pose gratuite immédiate ; Q/E oriente la place devant le poste. Activez **Artisanat** dans Travail, inspectez le poste et ajoutez une facture de tenue tribale : 60 tissus, aucune recherche. Le colon rassemble et travaille physiquement ; une interruption laisse un ouvrage que seul son auteur reprend. Une réserve acceptant **Ouvrages inachevés** peut le ranger. Inspecter cet objet permet d’annuler et récupérer environ 75 % du tissu. Le produit possède une qualité liée au niveau Artisanat, visible dans Biographie ; sélectionner un colon puis clic droit sur la tenue → **Porter**. Elle remplace une chemise incompatible, reste compatible avec un gilet, apparaît sur la carte et le portrait. « Jusqu’à X » exclut les vêtements déjà équipés. Recherche et autres recettes de couture restent absentes. [Détails](../development/tailoring.md).
+**Recherche V73 :** dans Architecte → Production, construisez un **Bureau de recherche simple** (3×2, 75 matériaux +25 acier). Dans **Recherche**, lancez Vêtements complexes ; dans **Travail**, activez Recherche, et consultez Intellect dans Biographie. Les colons doivent rejoindre un bureau libre ; plusieurs bureaux partagent les 600 points. Suspendre ou sauvegarder conserve la progression. Un tabouret sur la place de travail apporte son confort.
+
+Une fois terminé, construisez un **Établi de tailleur** (3×1, 75 bois ou acier), laissez sa cellule devant libre et ajoutez une facture de **chemise** : 45 tissus, Artisanat, véritable ouvrage inachevé puis vêtement à porter. L’atelier propose aussi la tenue tribale, toujours initiale au poste gratuit. C’est notre scénario de progression ; le Crashlanded classique connaît déjà cette technologie. Un seul projet est disponible. [Contrat, coefficients provisoires et limites](../development/research.md).
+
+**Confection V72 :** Architecte → Production → **Emplacement d’artisanat**. Pose gratuite immédiate ; Q/E oriente la place devant le poste. Activez **Artisanat** dans Travail, inspectez le poste et ajoutez une facture de tenue tribale : 60 tissus, aucune recherche. Le colon rassemble et travaille physiquement ; une interruption laisse un ouvrage que seul son auteur reprend. Une réserve acceptant **Ouvrages inachevés** peut le ranger. Inspecter cet objet permet d’annuler et récupérer environ 75 % du tissu. Le produit possède une qualité liée au niveau Artisanat, visible dans Biographie ; sélectionner un colon puis clic droit sur la tenue → **Porter**. Elle remplace une chemise incompatible, reste compatible avec un gilet, apparaît sur la carte et le portrait. « Jusqu’à X » exclut les vêtements déjà équipés. La recherche V73 permet aussi de fabriquer une chemise ; les autres recettes restent absentes. [Détails](../development/tailoring.md).
 
 ## Faire connaissance
 
@@ -87,7 +91,7 @@ Mobilisez un colon équipé puis utilisez **Tirer sur une cible** et cliquez la 
 
 **Affectations → Réaction hostile** propose Fuir (défaut), Attaquer et Ignorer. Un civil éveillé sans ordre imposé fuit une menace visible à moins de huit cases, cherche un refuge puis attend avant de reprendre ses activités. Un ordre direct ou la mobilisation prévaut. Les portes fermées protègent du passage hostile ; une porte ouverte, même interdite à vos colons, peut laisser passer l’ennemi.
 
-**Limites importantes :** les sauvegardes créées avant V61 gardent leur sentinelle fixe ; son mandat est indiqué dans l’inspection. Le nouvel adversaire recherche des cibles visibles et des postes individuels, sans raid, poursuite omnisciente, attaque de porte ni tactique de groupe. Le tir sur un adversaire debout adjacent est refusé ; utilisez la mêlée. Armures et diplomatie restent absentes. Le camp paisible reste le scénario par défaut. [Détails V61](../development/pursuit.md).
+**Limites importantes :** les sauvegardes créées avant V61 gardent leur sentinelle fixe ; son mandat est indiqué dans l’inspection. Le nouvel adversaire recherche des cibles visibles et des postes individuels, sans raid, poursuite omnisciente, attaque de porte ni tactique de groupe. Le tir sur un adversaire debout adjacent est refusé ; utilisez la mêlée. Chemise/gilet protègent désormais les parties couvertes ; armures supplémentaires et diplomatie restent absentes. Le camp paisible reste le scénario par défaut. [Détails V61](../development/pursuit.md).
 
 ## Commander un tir
 
@@ -332,7 +336,7 @@ Avant de créer une nouvelle colonie, le jeu conserve aussi l'état courant dans
 
 ## Limites et suite
 
-Pas encore d’autres cultures que riz/coton, autres recettes textiles que la tenue tribale en tissu, autres postes/recettes de cuisine, chaîne du froid, autres minerais que l’acier et les machines compactées, autres familles de loisirs, animaux, autres armes, combat complet, médecine complète, relations familiales/amoureuses, autres interactions sociales et traits, recherche, commerce, câbles/batteries/interrupteurs électriques, toit naturel, santé thermique, incendie, météo dynamique, carte du monde ou storyteller. Les coûts de sols et autres profils de déplacement, les réserves à plusieurs cases partageant une politique, les autres familles sélectionnables, les fournisseurs supplémentaires de travail lié sur une case et les tournées logistiques restent à développer. Les modèles sont provisoires ; la congestion entre agents actifs et la calibration des besoins restent ouvertes. La faim ne cause pas encore de malnutrition ni de décès.
+Pas encore d’autres cultures que riz/coton, autres recettes textiles que tenue tribale et chemise en tissu, autres postes/recettes de cuisine, chaîne du froid, autres minerais que l’acier et les machines compactées, autres familles de loisirs, animaux, autres armes, combat complet, médecine complète, relations familiales/amoureuses, autres interactions sociales et traits, arbre de recherche complet, commerce, câbles/batteries/interrupteurs électriques, toit naturel, santé thermique, incendie, météo dynamique, carte du monde ou storyteller. Les coûts de sols et autres profils de déplacement, les réserves à plusieurs cases partageant une politique, les autres familles sélectionnables, les fournisseurs supplémentaires de travail lié sur une case et les tournées logistiques restent à développer. Les modèles sont provisoires ; la congestion entre agents actifs et la calibration des besoins restent ouvertes. La faim ne cause pas encore de malnutrition ni de décès.
 
 La suite est suivie dans [le plan de développement](../ROADMAP.md). Les détails de la référence et les futures interactions sont dans [la matrice des systèmes](systems-matrix.md).
 
@@ -384,7 +388,7 @@ L’acier est extractible, stockable et utilisable pour les constructions à mat
 
 **Architecte → Production → Table de taille de pierre** : choisir Bois (75 bois + 30 acier) ou Acier (105 acier), puis tourner l’emprise 3×1 avec Q/E. Tous les matériaux doivent être livrés avant la finition. Le plateau garde les piles compatibles, mais retire les zones sous son empreinte. Les colons peuvent le franchir, sans s’y arrêter pour une autre activité.
 
-L’inspection permet de désinstaller ou réinstaller l’atelier comme un meuble entier, ou de le déconstruire pour récupérer environ la moitié des matériaux. **La fabrication de blocs est disponible** : activer Artisanat dans Travail puis ajouter une facture dans l’inspection de l’atelier. La recherche reste absente ; les facteurs de lumière et de pièce sont décrits ci-dessous.
+L’inspection permet de désinstaller ou réinstaller l’atelier comme un meuble entier, ou de le déconstruire pour récupérer environ la moitié des matériaux. **La fabrication de blocs est disponible** : activer Artisanat dans Travail puis ajouter une facture dans l’inspection de l’atelier. La taille de pierre reste disponible sans recherche dans ce scénario ; les facteurs de lumière et de pièce sont décrits ci-dessous.
 
 ## Tailler et ranger les blocs
 
@@ -392,7 +396,7 @@ La facture générale propose cinq filtres de roche, un rayon, la suspension, la
 
 **Faire X fois** compte les fragments taillés ; **Jusqu'à X** compte les blocs stockés ou portés. Attention : cette facture générale compte tous les blocs, même lorsque ses ingrédients sont filtrés sur une seule pierre. Cocher **Blocs de pierre** dans une réserve pour accueillir les produits ; un manque de place conserve la cargaison ou conduit à un dépôt au sol. Une livraison peut remplir plusieurs piles successives.
 
-Clic droit sur le poste avec un colon sélectionné : prioriser la taille ; Maj ajoute en file. Désinstaller/réinstaller l'atelier conserve ses factures. Un atelier déjà réservé attend avant d'être déplacé. Les blocs servent aux constructions décrites ci-dessous ; la lumière et la pièce influencent désormais la vitesse ; compétences et recherche restent à venir.
+Clic droit sur le poste avec un colon sélectionné : prioriser la taille ; Maj ajoute en file. Désinstaller/réinstaller l'atelier conserve ses factures. Un atelier déjà réservé attend avant d'être déplacé. Les blocs servent aux constructions décrites ci-dessous ; la lumière et la pièce influencent désormais la vitesse ; la compétence Artisanat ne modifie pas la vitesse de taille. La recherche actuelle débloque seulement la couture.
 
 ## Construire avec la pierre
 

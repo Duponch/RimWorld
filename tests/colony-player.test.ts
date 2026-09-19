@@ -5,7 +5,7 @@ import { createWorld, applyCommand, stepWorld, validateWorld, serializeWorld, de
 import { playerArrivalDecisions,playerArrivalComplete,playerDecisions, playerFocusDecisions, colonySummary, woodAccount, foodAccount } from './scenarios/colony-player';
 
 test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp construit, stocks entretenus et reprise exacte', () => {
-  const version=process.env.VALIDATION_VERSION??'v72';
+  const version=process.env.VALIDATION_VERSION??'v73';
   for (const seed of [42, 93, 2048]) {
     let world = createWorld(seed, 250, 250);
     if(seed===42)enableArrivals(world);

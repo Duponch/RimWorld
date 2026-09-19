@@ -1,3 +1,4 @@
+import { withoutResearch,withMigratedResearch } from './scenarios/legacy-skills';
 import { expect,test } from 'vitest';
 import { applyCommand,stepWorld,serializeWorld,deserializeWorld,validateWorld } from '../src/sim/index';
 import { barrierHp,barrierMaxHp,damageBarrier } from '../src/sim/barriers';
@@ -70,8 +71,8 @@ test('home membership and object ownership enforce refusal, queued repair releas
 });
 
 test('V66 migration remains neutral; new fields are strict and live/malformed continuations rejected',()=>{
-  const w=deconstructionCamp(),old=JSON.parse(serializeWorld(w));old.schemaVersion=66;
-  expect(deserializeWorld(JSON.stringify(old))).toEqual(w);
+  const w=deconstructionCamp(),old=JSON.parse(serializeWorld(w));(old.schemaVersion=66,withoutResearch(old));
+  expect(deserializeWorld(JSON.stringify(old))).toEqual(withMigratedResearch(w));
   for(const field of [{home:[1]},{destroyed:{count:1,lost:{wood:5}}}])expect(()=>deserializeWorld(JSON.stringify({...old,...field}))).toThrow();
   const s:Structure=fixtureBuilding(w,'wall',20,16);s.damage=4;home(w,s);
   for(const mutate of [(v:World)=>v.home=[1,1],(v:World)=>v.home=[-1],(v:World)=>v.structures[0]!.damage=195,(v:World)=>v.structures[0]!.damage=.5,(v:World)=>v.jobs[0]!.repair!.structureId=9999,(v:World)=>v.destroyed={count:1,lost:{wood:-5}}]){const v=structuredClone(w);mutate(v);expect(()=>deserializeWorld(JSON.stringify(v))).toThrow();}

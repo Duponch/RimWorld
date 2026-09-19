@@ -22,7 +22,7 @@ export function validBillSettings(value:unknown,recipe:ProductionRecipe='simple-
  * Loose meals outside storage do not satisfy a target-count bill. */
 export function countedMeals(world:World):number {return countedProducts(world);}
 export function countedProducts(world:World,bill?:CookingBill):number {
-  const products=new Set(bill?.recipe==='tribalwear'?['cloth-tribalwear']:bill?.recipe==='stone-blocks'?PRODUCTION_RECIPES['stone-blocks'].inputs.map(i=>blockFor(i as StoneIngredient)):['simple-meal']);
+  const products=new Set(bill?.recipe==='shirt'?['cloth-shirt']:bill?.recipe==='tribalwear'?['cloth-tribalwear']:bill?.recipe==='stone-blocks'?PRODUCTION_RECIPES['stone-blocks'].inputs.map(i=>blockFor(i as StoneIngredient)):['simple-meal']);
   const stored=new Set(world.stockpiles.map(z=>z.z*world.width+z.x));
   return world.piles.reduce((n,p)=>n+(products.has(p.item)&&(p.owner.type==='pawn'||p.owner.type==='ground'&&stored.has(p.owner.z*world.width+p.owner.x))?p.quantity:0),0);
 }
@@ -34,6 +34,7 @@ export function cookingSpot(station:Structure):Cell {
   return {x:station.x+dx!,z:station.z+dz!};
 }
 export function cookingCellReserved(world:World,cell:Cell):boolean {
+  if(world.pawns.some(p=>p.research&&p.research.spot.x===cell.x&&p.research.spot.z===cell.z))return true;
   for(const p of world.pawns)for(const order of p.orders?.queue??[])if(isCookingOrder(order)&&(order.cooking.spot.x===cell.x&&order.cooking.spot.z===cell.z||order.cooking.ingredients.some(i=>i.stage!=='placed'&&i.cell.x===cell.x&&i.cell.z===cell.z)))return true;
   return world.pawns.some(p=>p.cooking&&(p.cooking.spot.x===cell.x&&p.cooking.spot.z===cell.z
     ||p.cooking.ingredients.some(i=>i.stage!=='placed'&&i.cell.x===cell.x&&i.cell.z===cell.z)));

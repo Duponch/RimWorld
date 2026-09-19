@@ -1,3 +1,4 @@
+import { withoutResearch,withMigratedResearch } from './scenarios/legacy-skills';
 import { SCHEMA_VERSION } from '../src/sim/types';
 import { withoutPawnSkills } from './scenarios/legacy-skills';
 import { expect, test } from 'vitest';
@@ -27,7 +28,7 @@ test('roof support requires a connected 6.9-radius path, separated from areas, a
   expect(new RoofContext(w).supported(16*32+16)).toBe(true);
   expect(new RoofContext(w).supported(16*32+17)).toBe(false);
   expect(validateWorld(w)).toEqual([]);
-  const legacy=structuredClone(w) as unknown as Record<string,unknown>;(legacy.schemaVersion=34,withoutPawnSkills(legacy));
+  const legacy=structuredClone(w) as unknown as Record<string,unknown>;((legacy.schemaVersion=34,withoutResearch(legacy)),withoutPawnSkills(legacy));
   expect(()=>deserializeWorld(JSON.stringify(legacy))).toThrow(/version 34/);
   delete legacy.roofing;const migrated=deserializeWorld(JSON.stringify(legacy));
   expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);expect(migrated.roofing).toBeUndefined();

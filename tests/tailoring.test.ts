@@ -1,3 +1,4 @@
+import { withoutResearch,withMigratedResearch } from './scenarios/legacy-skills';
 import { expect,test } from 'vitest';
 import { applyCommand,createWorld,stepWorld,serializeWorld,deserializeWorld,validateWorld } from '../src/sim/index';
 import { addGroundMaterial,refreshStock } from '../src/sim/materials';
@@ -12,7 +13,7 @@ function camp(count=1):World {
   const w=createWorld(42,16,16);w.resources=[];w.piles=[];w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.pawns=w.pawns.slice(0,count);w.tick=2000;
   for(const [i,p] of w.pawns.entries()){
     Object.assign(p,{x:4+i,z:4,hunger:100,rest:100});p.schedule.fill('work');
-    p.priorities={patient:0,bedrest:0,doctor:0,gather:0,build:0,mine:0,grow:0,haul:0,cook:0,craft:i?0:1};
+    p.priorities={research:0,patient:0,bedrest:0,doctor:0,gather:0,build:0,mine:0,grow:0,haul:0,cook:0,craft:i?0:1};
     p.skills.crafting={level:8,xp:0,dailyXp:0,passion:1};
   }
   refreshStock(w);return w;
@@ -62,7 +63,7 @@ test('unfinished identity survives removal of the spot, hauling, new bill adopti
 });
 
 test('strict V71 migration and V72 continuation reject future fields, corrupt work and mismatched authors',()=>{
-  const w=camp();delete w.pawns[0]!.skills.crafting;const old=JSON.parse(serializeWorld(w));old.schemaVersion=71;expect(deserializeWorld(JSON.stringify(old))).toEqual(w);
+  const w=camp();delete w.pawns[0]!.skills.crafting;const old=JSON.parse(serializeWorld(w));(old.schemaVersion=71,withoutResearch(old));expect(deserializeWorld(JSON.stringify(old))).toEqual(withMigratedResearch(w));
   for(const mutate of [(s:World)=>{s.tailoring={completed:0,cancelled:0,lostCloth:0};},(s:World)=>{s.pawns[0]!.skills.crafting={level:1,xp:0,dailyXp:0,passion:0};},(s:World)=>{s.structures.push({id:s.nextId++,kind:'crafting-spot',x:8,z:8,orientation:0,footprint:'standard',bills:[]});}]){
     const bad=structuredClone(old);mutate(bad);expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();
   }

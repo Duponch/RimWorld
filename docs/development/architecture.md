@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+V73 : `research.ts`/`research-save.ts` portent projet collectif et sessions physiques ; `research-panel.ts` expose commandes et état. Le tailleur réutilise la confection par recettes et inachevés typés ; ses pièces procédurales et celles du bureau rejoignent le lot mobilier résident. Aucun moteur de production parallèle, nouveau squelette CPU ou cache par image. [Contrat](research.md).
+
 V72 : `unfinished.ts` possède matière/progression/auteur et annulation transactionnelle ; `tailoring-plan.ts` sélectionne la reprise, `crafting-quality.ts` isole qualité/XP/thermique, `crafting-spot.ts` traite le marquage instantané. Les factures et transports restent communs. Présentation dans les lots résidents et attribut d’équipement existant ; V71 strictement validée avant migration neutre. [Contrat](tailoring.md).
 
 V71 : [coton et tissu](textiles.md) étendent les définitions agricoles et la catégorie de matériaux, sans confondre récolte et nourriture. Deux formes de cultures partagent le gestionnaire de lots résidents ; croissance O(1), transports et bridge communs. V70 strictement validée puis migrée sans ajout de contenu.

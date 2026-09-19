@@ -1,6 +1,6 @@
 # Coton et tissu — V71
 
-Première tranche de l’étape 4. **Livré : culture → récolte → transport → stockage. La confection est maintenant livrée en [V72](tailoring.md), recherche encore absente.** [Sources fraîches et choix de filière](../research/textile-reference.md), [agriculture partagée](farming.md).
+Première tranche de l’étape 4. **Livré : culture → récolte → transport → stockage. La confection est maintenant livrée en [V72](tailoring.md), recherche et chemise ajoutées en [V73](research.md).** [Sources fraîches et choix de filière](../research/textile-reference.md), [agriculture partagée](farming.md).
 
 Décision nouvelle : réserver une petite partie du camp à un matériau non alimentaire, sans sacrifier le potager. Invariant : changer la culture ne transforme aucun plant ni aucune pile ; le tissu n’apparaît qu’à la récolte physique. Critère d’arrêt du lot : semer du coton par l’interface, obtenir/ranger son produit, sauvegarder et reprendre ces transitions. Les autres espèces, maladies et toute la couture restent hors de cette tranche ; l’étape 4 globale reste ouverte.
 

@@ -1,3 +1,4 @@
+import { withoutResearch,withMigratedResearch } from './scenarios/legacy-skills';
 import { describe,expect,test } from 'vitest';
 import { injurePawn } from '../src/sim/health';
 import { newDoorState } from '../src/sim/door-rules';
@@ -52,7 +53,7 @@ describe('physical social interactions and directed memories',()=>{
     const playing=deserializeWorld(serializeWorld(w)),copy=deserializeWorld(serializeWorld(w));stepWorld(playing,200);stepWorld(copy,200);expect(copy).toEqual(playing);expect(validateWorld(copy)).toEqual([]);
   });
   test('strict old migration, unknown/self/duplicate/expired/corrupt memories rejected and references survive a retained death',()=>{
-    const w=medicalCamp(2),legacy=JSON.parse(serializeWorld(w));legacy.schemaVersion=69;expect(deserializeWorld(JSON.stringify(legacy))).toEqual(w);
+    const w=medicalCamp(2),legacy=JSON.parse(serializeWorld(w));(legacy.schemaVersion=69,withoutResearch(legacy));expect(deserializeWorld(JSON.stringify(legacy))).toEqual(withMigratedResearch(w));
     const a=w.pawns[0]!,b=w.pawns[1]!;expect(exchangeSocial(w,a,b,'deep-talk')).toBe(true);const saved=serializeWorld(w);expect(deserializeWorld(saved)).toEqual(w);
     for(const mutate of [
       (v:any)=>v.pawns[0].social.rng=0,(v:any)=>v.pawns[0].social.extra=1,(v:any)=>v.pawns[0].social.last.otherId=v.pawns[0].id,

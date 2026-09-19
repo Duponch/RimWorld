@@ -1,3 +1,4 @@
+import { withoutResearch,withMigratedResearch } from './scenarios/legacy-skills';
 import { withoutShootingSkills,withMigratedShootingSkills } from './scenarios/legacy-skills';
 import { expect,test } from 'vitest';
 import { registerWorldProjectile,advanceWorldProjectiles } from '../src/sim/projectile-system';
@@ -65,7 +66,7 @@ test('a newly inserted obstruction and disappeared target are observed; exits an
 });
 
 test('registration is atomic; launch data is owned; V54 is validated before migration; corrupt flight envelopes are rejected',()=>{
-  const w=camp(),legacy=structuredClone(w) as unknown as Record<string,unknown>;legacy.schemaVersion=54;withoutShootingSkills(legacy);
+  const w=camp(),legacy=structuredClone(w) as unknown as Record<string,unknown>;(legacy.schemaVersion=54,withoutResearch(legacy));withoutShootingSkills(legacy);
   expect(deserializeWorld(JSON.stringify(legacy))).toEqual(withMigratedShootingSkills({...legacy,schemaVersion:SCHEMA_VERSION}));
   const before=serializeWorld(w),next=w.nextId;
   expect(()=>launch(w,{x:-1,z:10})).toThrow();expect(serializeWorld(w)).toBe(before);expect(w.nextId).toBe(next);

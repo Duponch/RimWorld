@@ -1,5 +1,5 @@
 import { ITEM_DEFINITIONS } from '../sim/items';
-import { PRODUCTION_RECIPES, stationRecipe } from '../sim/production-recipes';
+import { PRODUCTION_RECIPES, stationRecipes } from '../sim/production-recipes';
 import { countedProducts } from '../sim/cooking-bills';
 import { queryCookingBillStatus } from '../sim/cooking-diagnostics';
 import type { BillSettings } from '../sim/cooking-types';
@@ -8,7 +8,7 @@ import type { Command, Structure, World } from '../sim/types';
 export function billControls(station:Structure,send:(command:Command)=>void):HTMLElement {
   const root=document.createElement('section');root.className='bill-controls';
   const title=document.createElement('h3');title.textContent='Factures';root.append(title);
-  const add=document.createElement('button');add.id='add-cooking-bill';add.textContent=`Ajouter : ${PRODUCTION_RECIPES[stationRecipe(station)!].label.toLowerCase()}`;add.onclick=()=>send({type:'bill-add',structureId:station.id});root.append(add);
+  for(const [index,recipe] of stationRecipes(station).entries()){const add=document.createElement('button');add.id=index===0?'add-cooking-bill':`add-bill-${recipe}`;add.textContent=`Ajouter : ${PRODUCTION_RECIPES[recipe].label.toLowerCase()}`;add.onclick=()=>send({type:'bill-add',structureId:station.id,recipe});root.append(add);}
   for(const bill of station.bills??[]) {
     const form=document.createElement('div');form.className='bill';form.dataset.bill=String(bill.id);
     const status=document.createElement('p');status.dataset.billStatus=String(bill.id);form.append(status);

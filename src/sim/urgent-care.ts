@@ -26,7 +26,7 @@ export function urgentMedicalTask(pawn:Pawn):boolean {
  * access check never releases the current bed or consumes a resource. */
 export function planUrgentCare(world:World,pawn:Pawn,search:()=>Reachability|null):boolean {
   if(world.schemaVersion<50||pawn.orders.active!==null||pawn.interruptedCargo||pawn.collapsePending
-    ||world.restRules==='legacy'&&pawn.rest===0||pawn.jobId!==null||pawn.haul||pawn.cooking||pawn.feed||pawn.tend||pawn.rescue||pawn.recreation.task)return false;
+    ||world.restRules==='legacy'&&pawn.rest===0||pawn.jobId!==null||pawn.haul||pawn.research||pawn.cooking||pawn.feed||pawn.tend||pawn.rescue||pawn.recreation.task)return false;
   if(pawn.need&&(pawn.need.kind!=='sleep'||pawn.need.phase!=='sleep'||!medicalBedReview(world,pawn)))return false;
   if(!pawn.need&&pawn.planCooldown>0)return false;
   const patient=urgentWorkEnabled(pawn,'patient')&&urgentTreatment(pawn);

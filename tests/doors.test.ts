@@ -1,3 +1,4 @@
+import { withoutResearch,withMigratedResearch } from './scenarios/legacy-skills';
 import { withoutPawnSkills, withMigratedSkills } from './scenarios/legacy-skills';
 import { expect, test } from 'vitest';
 import { applyCommand, stepWorld } from '../src/sim/engine';
@@ -97,7 +98,7 @@ test('a sleeping colonist crosses a real closed corridor door; navigation, solid
   const pin={x:14,z:16},thrower={x:19,z:16};expect(clearThrow(open,pin,thrower)).toBe(false);expect(clearThrow(open,pin,thrower,recreationSpace(open))).toBe(false);
   open.structures[0]!.door!.open=true;expect(clearThrow(open,pin,thrower)).toBe(true);expect(clearThrow(open,pin,thrower,recreationSpace(open))).toBe(true);
   const path=routeToCell(open,{x:16,z:15},reachableCells(open,{x:15,z:16},blockedCells(open),new Set()));expect(path?.length).toBe(2);
-  const legacy=deconstructionCamp();const old=JSON.parse(serializeWorld(legacy));(old.schemaVersion=33,withoutPawnSkills(old));expect(deserializeWorld(JSON.stringify(old))).toEqual(withMigratedSkills(legacy));
+  const legacy=deconstructionCamp();const old=JSON.parse(serializeWorld(legacy));((old.schemaVersion=33,withoutResearch(old)),withoutPawnSkills(old));expect(deserializeWorld(JSON.stringify(old))).toEqual(withMigratedSkills(legacy));
   const future=JSON.parse(saved);(future.schemaVersion=33,withoutPawnSkills(future));expect(()=>deserializeWorld(JSON.stringify(future))).toThrow(/version 33/);
   for(const data of [null,[],{}, {...s.door,closeAt:Infinity},{...s.door,changedAt:w.tick+1},{...s.door,lastTouch:w.tick+1}]){const bad=JSON.parse(saved);bad.structures.find((s:Structure)=>s.kind==='door').door=data;expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();}
 });

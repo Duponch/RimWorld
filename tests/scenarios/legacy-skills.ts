@@ -14,6 +14,7 @@ export function withMigratedSkills<T extends {tick:number;pawns:unknown[]}>(worl
   for(const p of expected.pawns as {medicalCare?:unknown}[])delete p.medicalCare;
   withoutMedicineItems(expected);
   withoutSocial(expected);
+  for(const p of expected.pawns as {priorities:{research?:number}}[])p.priorities.research=3;
   return expected;
 }
 
@@ -45,7 +46,7 @@ export function withoutShootingSkills<T>(world:T):T {
 export function withMigratedShootingSkills<T>(world:T):T {
   const copy=structuredClone(world);
   for(const p of (copy as {pawns:{skills:{shooting?:unknown;melee?:unknown}}[]}).pawns){p.skills.shooting={level:8,xp:0,dailyXp:0,passion:0};p.skills.melee={level:8,xp:0,dailyXp:0,passion:0};}
-  return copy;
+  return withMigratedResearch(copy);
 }
 
 function withoutMedicineItems(world:unknown):void {
@@ -55,5 +56,18 @@ function withoutMedicineItems(world:unknown):void {
 
 /** Pre-V70 fixture builders strip social history; production validation stays strict. */
 function withoutSocial(world:unknown):void {
+  withoutResearch(world);
   for(const p of (world as {pawns:{social?:unknown;skills?:{social?:unknown}}[]}).pawns){delete p.social;if(p.skills)delete p.skills.social;}
+}
+
+/** Authentic pre-V73 fixture, not a production sanitizer. */
+export function withoutResearch<T>(world:T):T {
+  const w=world as {research?:unknown;pawns:{research?:unknown;priorities:{research?:number};skills?:{intellectual?:unknown}}[]};
+  delete w.research;for(const p of w.pawns){delete p.research;delete p.priorities.research;if(p.skills)delete p.skills.intellectual;}return world;
+}
+/** Independent neutral additive migration expectation. */
+export function withMigratedResearch<T>(world:T):T {
+  const copy=withoutResearch(structuredClone(world));
+  for(const p of (copy as {pawns:{priorities:{research?:number}}[]}).pawns)p.priorities.research=3;
+  return copy;
 }

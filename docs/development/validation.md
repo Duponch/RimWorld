@@ -1,6 +1,8 @@
-# Validation courante — V72
+# Validation courante — V73
 
-V72 — [preuves de confection physique](../history/validation-tailoring-v72.md), parcours naturel jusqu’au vêtement porté, UI et charge mixte. Recherche toujours absente. Les entrées ci-dessous conservent les preuves historiques.
+V73 — [preuves de recherche et tailleur](../history/validation-research-v73.md). Projet depuis zéro dans le camp naturel, chemise réellement confectionnée et portée, reprise UI et charge mixte ; limites de référence et échecs diagnostiqués conservés.
+
+V72 — [preuves de confection physique](../history/validation-tailoring-v72.md), parcours naturel jusqu’au vêtement porté, UI et charge mixte. Recherche livrée ensuite en V73. Les entrées ci-dessous conservent les preuves historiques.
 
 V71 — [preuves de la culture textile](../history/validation-textile-v71.md). Confection/recherche non livrées ; distinguer le scénario naturel de dix-huit jours et plus des fixtures de maturité UI et de charge.
 

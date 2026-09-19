@@ -1,3 +1,4 @@
+import { withoutResearch,withMigratedResearch } from './scenarios/legacy-skills';
 import { expect,test } from 'vitest';
 import * as THREE from 'three/webgpu';
 import { createWorld,applyCommand,stepWorld,serializeWorld,deserializeWorld,validateWorld } from '../src/sim/index';
@@ -12,7 +13,7 @@ import type { World,Resource } from '../src/sim/types';
 
 function camp():World {
   const w=createWorld(42,16,16);w.resources=[];w.piles=[];w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.pawns=w.pawns.slice(0,1);
-  const p=w.pawns[0]!;Object.assign(p,{x:5,z:5,hunger:100,rest:100});p.priorities={patient:0,bedrest:0,doctor:0,gather:0,build:0,mine:0,grow:1,haul:2,cook:0,craft:0};refreshStock(w);return w;
+  const p=w.pawns[0]!;Object.assign(p,{x:5,z:5,hunger:100,rest:100});p.priorities={research:0,patient:0,bedrest:0,doctor:0,gather:0,build:0,mine:0,grow:1,haul:2,cook:0,craft:0};refreshStock(w);return w;
 }
 function command(w:World,c:Parameters<typeof applyCommand>[1]):void {expect(applyCommand(w,c)).toMatchObject({ok:true});}
 function until(w:World,done:()=>boolean,limit=1000):void {for(let i=0;i<limit&&!done();i++)stepWorld(w);expect(done(),`tick ${w.tick}`).toBe(true);expect(validateWorld(w)).toEqual([]);}
@@ -32,11 +33,11 @@ test('ordinary grower builds, grows, stores and replants cotton, then crafts and
     if(w.tick%6000===0){expect(validateWorld(w)).toEqual([]);days.push({day:w.tick/6000,food:w.stock.food,cloth:cloth(w),hunger:p.hunger,rest:p.rest,plants:w.resources.length});}
     if(cloth(w)===60&&w.piles.some(i=>i.item==='cloth'&&i.quantity===60&&i.owner.type==='ground'&&i.owner.x===12&&i.owner.z===8)&&w.resources.filter(r=>r.kind==='cotton'&&!initialIds.has(r.id)).length===6)break;
   }
-  writeFileSync('artifacts/cotton-colony-v72.json',JSON.stringify({firstHarvest,endTick:w.tick,days,slept,ate,cloth:cloth(w),plants:w.resources.filter(r=>r.kind==='cotton').length,structures:w.structures.map(s=>s.kind)},null,2));
+  writeFileSync('artifacts/cotton-colony-v73.json',JSON.stringify({firstHarvest,endTick:w.tick,days,slept,ate,cloth:cloth(w),plants:w.resources.filter(r=>r.kind==='cotton').length,structures:w.structures.map(s=>s.kind)},null,2));
   expect(firstHarvest).toBeGreaterThan(16*6000);expect(firstHarvest).toBeLessThan(20*6000);expect(cloth(w)).toBe(60);expect(initialIds.size).toBe(6);
   expect(w.resources.filter(r=>r.kind==='cotton'&&!initialIds.has(r.id))).toHaveLength(6);expect(w.piles.some(i=>i.item==='cloth'&&i.quantity===60&&i.owner.type==='ground'&&i.owner.x===12&&i.owner.z===8)).toBe(true);
   expect(slept&&ate).toBe(true);expect(p.state).not.toBe('dead');expect(w.structures).toHaveLength(4);expect(validateWorld(w)).toEqual([]);
-  writeFileSync('artifacts/tailoring-cotton-checkpoint-v72.json',serializeWorld(w));
+  writeFileSync('artifacts/tailoring-cotton-checkpoint-v73.json',serializeWorld(w));
   command(w,{type:'priority',pawnId:p.id,work:'craft',value:1});
   command(w,{type:'designate',kind:'crafting-spot',x:8,z:10});const spot=w.structures.find(s=>s.kind==='crafting-spot')!;
   command(w,{type:'bill-add',structureId:spot.id});
@@ -44,7 +45,7 @@ test('ordinary grower builds, grows, stores and replants cotton, then crafts and
   const garment=w.piles.find(i=>i.item==='cloth-tribalwear')!;
   command(w,{type:'order-equipment',pawnId:p.id,itemId:garment.id,action:'wear',queue:false});until(w,()=>garment.owner.type==='apparel',1000);
   expect(w.tailoring?.completed).toBe(1);expect(cloth(w)).toBe(0);expect(garment.apparel!.hitPoints).toBe(100);
-  writeFileSync('artifacts/tailoring-colony-v72.json',JSON.stringify({firstHarvest,endTick:w.tick,days,slept,ate,garment,tailoring:w.tailoring,crafting:p.skills.crafting},null,2));
+  writeFileSync('artifacts/tailoring-colony-v73.json',JSON.stringify({firstHarvest,endTick:w.tick,days,slept,ate,garment,tailoring:w.tailoring,crafting:p.skills.crafting},null,2));
 },30000);
 
 test('cotton growth uses species, fertility, light and saved thermal intervals; harvest transaction refuses a full floor',()=>{
@@ -88,7 +89,7 @@ test('switching an active sow is physical; mature cotton yields cloth, hauling s
 
 test('V70 is strictly validated before a neutral migration; new plants/items/filters cannot hide in an old save',()=>{
   const w=camp();command(w,{type:'area',action:'growing',from:{x:6,z:5},to:{x:6,z:5}});command(w,{type:'stockpile',enabled:true,x:10,z:8});
-  const old=JSON.parse(serializeWorld(w));old.schemaVersion=70;expect(deserializeWorld(JSON.stringify(old))).toEqual(w);
+  const old=JSON.parse(serializeWorld(w));(old.schemaVersion=70,withoutResearch(old));expect(deserializeWorld(JSON.stringify(old))).toEqual(withMigratedResearch(w));
   for(const mutate of [
     (s:World)=>{s.growingZones[0]!.plant='cotton';},
     (s:World)=>{s.resources.push({id:s.nextId++,kind:'cotton',x:7,z:7,amount:10});},

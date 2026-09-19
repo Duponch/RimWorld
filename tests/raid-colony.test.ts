@@ -8,7 +8,7 @@ import { isColonist } from '../src/sim/affiliation';
 import { playerArrivalDecisions,playerArrivalComplete,playerDecisions,colonySummary,woodAccount } from './scenarios/colony-player';
 
 test('ordinary player builds, welcomes, faces a naturally scheduled raid, demobilizes and maintains the same camp for five days',()=>{
-  const version=process.env.VALIDATION_VERSION??'v72';
+  const version=process.env.VALIDATION_VERSION??'v73';
   const w=createWorld(42,250,250);initializeCampTraits(w);enableArrivals(w);enableRaids(w);
   for(const d of playerArrivalDecisions(w))expect(applyCommand(w,d.command)).toMatchObject({ok:true});
   for(let i=0;i<120&&!playerArrivalComplete(w);i++)stepWorld(w);

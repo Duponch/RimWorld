@@ -1,5 +1,7 @@
 # Adoption du référentiel utilisateur
 
+V73 — chapitre 11 relu, SYS/TEST-062..066 et 068 : adopter travail, objet inachevé et recherche collective avec vrai déblocage ; adapter horloge, scénario initial et présentation 3D ; différer 067/069, arbre/catalogues complets et postes avancés. Les coûts du bureau/tailleur, 600 points, Intellect et 45 tissus de la chemise ont été confrontés aux [sources nouvelles et limites de versions](research-reference.md). Aucune famille entière n’est déclarée complète.
+
 V72 — chapitre 11, SYS/TEST-062..066 : adopter matières physiques, facture, ouvrage/auteur et qualité ; adapter horloge/stockage/rig ; différer recherche et catalogue étendu. [Confrontation fraîche](tailoring-reference.md), [contrat](../development/tailoring.md). La mention d’inachevés différés dans les décisions historiques V10/V32 reste liée à ces recettes sans inachevé.
 
 V71 — chapitres 11/12, **SYS/TEST-062..064 et 070..072, UI-021/025** relus : adopter distinction plante/produit, croissance favorable, récolte et conservation ; adapter horloge/3D, différer confection et recherche. [Vérification multi-source du coton et de la future filière](textile-reference.md), [contrat livré](../development/textiles.md). Les 14,77 jours du wiki ne sont pas une durée garantie sous notre soleil ; désaccord de coût de passage 10/14 conservé.

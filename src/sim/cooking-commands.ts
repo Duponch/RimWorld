@@ -1,4 +1,4 @@
-import { PRODUCTION_RECIPES, stationRecipe } from './production-recipes.ts';
+import { PRODUCTION_RECIPES, stationAccepts, stationRecipe } from './production-recipes.ts';
 import { isCookingOrder } from './order-types.ts';
 import { newCookingBill, validBillSettings } from './cooking-bills.ts';
 import { releaseWork, type DropPlan } from './work-release.ts';
@@ -10,7 +10,8 @@ export function applyBillCommand(world:World,command:BillCommand,drops:DropPlan)
   if(!station?.bills)return {ok:false,code:'missing-target',reason:'Poste de production introuvable.'};
   if(command.type==='bill-add') {
     if(station.bills.length>=64||!Number.isSafeInteger(world.nextId+1))return {ok:false,code:'invalid-command',reason:'Limite de factures atteinte.'};
-    station.bills.push(newCookingBill(world.nextId++,stationRecipe(station)!));return {ok:true};
+    const recipe=command.recipe??stationRecipe(station)!;if(!stationAccepts(station,recipe))return {ok:false,code:'invalid-command',reason:'Recette indisponible sur ce poste.'};
+    station.bills.push(newCookingBill(world.nextId++,recipe));return {ok:true};
   }
   const index=station.bills.findIndex(b=>b.id===command.billId),bill=station.bills[index];
   if(!bill)return {ok:false,code:'missing-target',reason:'Facture introuvable.'};

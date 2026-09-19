@@ -1,3 +1,4 @@
+import { withoutResearch,withMigratedResearch } from './scenarios/legacy-skills';
 import { SCHEMA_VERSION } from '../src/sim/types';
 import { expect,test } from 'vitest';
 import { applyCommand,stepWorld,serializeWorld,deserializeWorld,validateWorld } from '../src/sim/index';
@@ -81,7 +82,7 @@ test('visibility/hostility/forced work filter before scoring; cover, recent targ
 });
 
 test('V59 validation precedes neutral migration; automatic ownership, counters and remembered tick are strict',()=>{
-  const w=camp(),p=w.pawns[0];const old=JSON.parse(serializeWorld(w));old.schemaVersion=59;delete old.pawns[0].draft.holdFire;
+  const w=camp(),p=w.pawns[0];const old=JSON.parse(serializeWorld(w));(old.schemaVersion=59,withoutResearch(old));delete old.pawns[0].draft.holdFire;
   const migrated=deserializeWorld(JSON.stringify(old));expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);expect(migrated.pawns[0].lastAttack).toBeUndefined();
   old.pawns[0].draft.holdFire=true;expect(()=>deserializeWorld(JSON.stringify(old))).toThrow('version 59');
   fire(w,true);run(w,1);const saved=JSON.parse(serializeWorld(w));saved.pawns[0].shooting.order.auto={kind:'response',remaining:3,until:w.tick+200};expect(()=>deserializeWorld(JSON.stringify(saved))).toThrow();

@@ -1,6 +1,6 @@
 # Lisière
 
-V72 : cultiver du coton, rassembler **60 tissus** sur un **emplacement d’artisanat**, confectionner une tenue tribale puis la porter. Ouvrage inachevé, auteur, qualité et XP conservés ; recherche encore à venir. [Contrat et limites](docs/development/tailoring.md).
+V73 : rechercher **Vêtements complexes** au bureau, construire l’établi manuel de tailleur, confectionner une chemise avec **45 tissus** puis la porter. La tenue tribale reste initiale. L’étape proche 4 a sa boucle complète ; arbre technologique et catalogue restent partiels. [Contrat et limites](docs/development/research.md).
 
 
 V70 : **les colons font connaissance pendant leurs activités**. Bavardage et discussions approfondies créent des opinions dirigées avec souvenirs, apprentissage Social et inspection. [Contrat](docs/development/social.md). Six traits, accueil et premier raid sont déjà jouables ; psychologie, équipements, production et environnement restent partiels. Prochaine priorité : filière utile et véritable déblocage de recherche. [Guide](docs/gameplay/player-guide.md), [état courant](docs/gameplay/implementation-status.md), [validation](docs/history/validation-social-v70.md).

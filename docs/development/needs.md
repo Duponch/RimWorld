@@ -1,5 +1,7 @@
 # Repas et couchages physiques — origine V3, état courant V18
 
+Correction V73 : sous faim critique, le portage de combustible choisi par une facture de cuisine reste une préparation alimentaire admissible. L’annuler avant chaque trajet faisait réélire indéfiniment la même recharge et bloquait aussi les récoltes. Les réservations, quantités, régimes et besoins physiques sont conservés ; `production.test.ts` vérifie livraison, reprise, cuisson puis ingestion.
+
 V47 ajoute le [repos médical volontaire](tending.md) : rejoindre un lit ne donne rien à distance ; posture allongée, sommeil réel et faim restent distincts. Le choix médical est aussi disponible au coucher d’un blessé ; les colons sains conservent le sommeil ordinaire.
 
 V46 exclut les lits médicaux du sommeil ordinaire et introduit leur utilisation physique après un [secours](rescue.md). Posture médicale, sommeil, propriétaire et réservation restent distincts.

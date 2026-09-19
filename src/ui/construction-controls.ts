@@ -4,7 +4,7 @@ import { ITEM_DEFINITIONS } from '../sim/items';
 import { footprintCells } from '../sim/definitions';
 import type { Job, JobKind, Structure, World } from '../sim/types';
 
-const stuffable = new Set<string>(['door','wall', 'bed', 'table', 'stool', 'horseshoes', 'stonecutter']);
+const stuffable = new Set<string>(['research-bench','tailor-bench','door','wall', 'bed', 'table', 'stool', 'horseshoes', 'stonecutter']);
 export const placementMaterial = (tool:string, material:ConstructionMaterial):ConstructionMaterial|undefined =>
   tool==='wood-generator'||tool==='standing-lamp'?'steel':stuffable.has(tool) ? validConstructionMaterial(tool,material)?material:'wood' : tool === 'campfire' || tool === 'passive-cooler' ? 'wood' : undefined;
 

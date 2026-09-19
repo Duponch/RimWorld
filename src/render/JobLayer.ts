@@ -12,22 +12,22 @@ export function buildJobMarkers(world: World, group: THREE.Group, cutaway: boole
     const wallHeight = cutaway ? WORLD_SCALE.wallCutawayHeight : WORLD_SCALE.wallHeight;
     const orders: Placement[] = [], blueprints: Placement[] = [], frames: Placement[] = [], progress: Placement[] = [];
     for (const job of world.jobs.filter(j=>!isRoofJob(j))) {
-      const cells = footprintCells(job), last = cells[cells.length - 1]!;
+      const cells = footprintCells(job);
       for (const cell of cells) orders.push({ x: cell.x, y: 0.032, z: cell.z, color: job.status === 'active' ? 0xe7c17a : 0x99cfc3 });
       if(job.kind==='repair')continue;
       if(job.kind==='mine') {for(const ry of [-Math.PI/4,Math.PI/4])frames.push({x:job.x,z:job.z,y:3.65,sx:.6,sy:.035,sz:.08,ry,color:0xeac27d});continue;}
       if (job.kind === 'chop' || job.kind === 'harvest' || job.kind === 'cut' || job.kind === 'sow') continue;
       if(job.kind==='deconstruct'||job.kind==='uninstall') {
         const targetKind=(job.deconstruction??job.furniture)!.kind;
-        const y=(targetKind==='stonecutter'?WORLD_SCALE.stonecutterHeight:targetKind==='wall'?wallHeight:targetKind==='table'?WORLD_SCALE.tableHeight:targetKind==='horseshoes'?WORLD_SCALE.horseshoeHeight:targetKind==='stool'?WORLD_SCALE.stoolHeight:WORLD_SCALE.bedSurfaceHeight)+.06;
+        const y=((targetKind==='research-bench'||targetKind==='tailor-bench'||targetKind==='stonecutter')?WORLD_SCALE.stonecutterHeight:targetKind==='wall'?wallHeight:targetKind==='table'?WORLD_SCALE.tableHeight:targetKind==='horseshoes'?WORLD_SCALE.horseshoeHeight:targetKind==='stool'?WORLD_SCALE.stoolHeight:WORLD_SCALE.bedSurfaceHeight)+.06;
         for(const cell of cells)for(const ry of [-Math.PI/4,Math.PI/4])frames.push({x:cell.x,z:cell.z,y,sx:.85,sy:.05,sz:.08,ry,color:job.kind==='uninstall'?0xd9b66c:0xd77855});
         continue;
       }
       const kind=job.furniture?.kind??job.kind;
-      const x = kind==='stonecutter'?job.x:(job.x + last.x) / 2, z = kind==='stonecutter'?job.z:(job.z + last.z) / 2, ry = job.orientation * Math.PI / 2;
-      const height = kind==='stonecutter'?WORLD_SCALE.stonecutterHeight:kind === 'horseshoes' ? WORLD_SCALE.horseshoeHeight : kind === 'wall' ? wallHeight : kind === 'table' ? WORLD_SCALE.tableHeight : kind === 'stool' ? WORLD_SCALE.stoolHeight : WORLD_SCALE.bedSurfaceHeight;
-      const width = kind==='stonecutter'?WORLD_SCALE.stonecutterWidth:kind === 'horseshoes' ? 0.12 : kind === 'wall' ? 0.92 : kind === 'table' ? WORLD_SCALE.tableWidth : kind === 'stool' ? WORLD_SCALE.stoolWidth : WORLD_SCALE.bedWidth;
-      const length = kind==='stonecutter'?WORLD_SCALE.stonecutterDepth:kind === 'horseshoes' ? 0.12 : kind === 'table' ? WORLD_SCALE.tableLength : kind === 'stool' ? WORLD_SCALE.stoolWidth : kind === 'bed' && job.footprint !== 'legacy-single' ? WORLD_SCALE.bedLength : 0.92;
+      const x=cells.reduce((n,c)=>n+c.x,0)/cells.length,z=cells.reduce((n,c)=>n+c.z,0)/cells.length,ry=job.orientation*Math.PI/2;
+      const height = (kind==='research-bench'||kind==='tailor-bench'||kind==='stonecutter')?WORLD_SCALE.stonecutterHeight:kind === 'horseshoes' ? WORLD_SCALE.horseshoeHeight : kind === 'wall' ? wallHeight : kind === 'table' ? WORLD_SCALE.tableHeight : kind === 'stool' ? WORLD_SCALE.stoolHeight : WORLD_SCALE.bedSurfaceHeight;
+      const width = (kind==='research-bench'||kind==='tailor-bench'||kind==='stonecutter')?WORLD_SCALE.stonecutterWidth:kind === 'horseshoes' ? 0.12 : kind === 'wall' ? 0.92 : kind === 'table' ? WORLD_SCALE.tableWidth : kind === 'stool' ? WORLD_SCALE.stoolWidth : WORLD_SCALE.bedWidth;
+      const length = kind==='research-bench'?1.8:(kind==='tailor-bench'||kind==='stonecutter')?WORLD_SCALE.stonecutterDepth:kind === 'horseshoes' ? 0.12 : kind === 'table' ? WORLD_SCALE.tableLength : kind === 'stool' ? WORLD_SCALE.stoolWidth : kind === 'bed' && job.footprint !== 'legacy-single' ? WORLD_SCALE.bedLength : 0.92;
       blueprints.push({ x, z, y: height / 2, sx: width, sy: height, sz: length, ry });
       if (job.construction === 'frame') {
         // Four low corner posts distinguish a supplied frame from a bare plan.

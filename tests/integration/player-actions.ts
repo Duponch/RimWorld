@@ -96,8 +96,8 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     await revealCells(page,[c]);await cell(page,c.x,c.z);
   } else if(c.type==='designate' && c.kind !== 'sow' && c.kind !== 'install') {
     if(c.kind==='repair')throw Error('Repair uses the home area');await tool(page,c.kind);
-    if(['door','wall','bed','table','stool','horseshoes','stonecutter'].includes(c.kind))await page.locator('#construction-material').selectOption(c.material??'wood');
-    if(c.kind==='bed'||c.kind==='table'||c.kind==='campfire'||c.kind==='crafting-spot'||c.kind==='stonecutter') {
+    if(['door','wall','bed','table','stool','horseshoes','stonecutter','research-bench','tailor-bench'].includes(c.kind))await page.locator('#construction-material').selectOption(c.material??'wood');
+    if(c.kind==='bed'||c.kind==='table'||c.kind==='campfire'||c.kind==='crafting-spot'||c.kind==='stonecutter'||c.kind==='research-bench'||c.kind==='tailor-bench') {
       while(rotation.value!==(c.orientation??0)){await page.keyboard.press('e');rotation.value=(rotation.value+1)%4;}
     }
     await revealCells(page,[c]);

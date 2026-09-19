@@ -1,3 +1,4 @@
+import { withoutResearch,withMigratedResearch } from './scenarios/legacy-skills';
 import { withoutPawnSkills } from './scenarios/legacy-skills';
 import { expect,test } from 'vitest';
 import { createWorld,applyCommand,stepWorld,validateWorld,serializeWorld,deserializeWorld } from '../src/sim/index';
@@ -86,7 +87,7 @@ test('coups et arêtes : durée capturée, diagonales exactes, délais additifs,
   const copy=deserializeWorld(serializeWorld(w));tick(w);tick(copy);expect(copy).toEqual(w);expect(w.tiles[331]!.miningDamage).toBe(160);expect(job.pickTicks).toBe(125);
   // The next two dark strokes take 25 ticks total, not two rounded 13-tick waits.
   tick(w,25);expect(w.tiles[331]!.miningDamage).toBe(320);
-  const old=JSON.parse(serializeWorld(w));(old.schemaVersion=36,withoutPawnSkills(old));old.jobs[0].progress=4;delete old.jobs[0].workRemainder;delete old.jobs[0].pickTicks;
+  const old=JSON.parse(serializeWorld(w));((old.schemaVersion=36,withoutResearch(old)),withoutPawnSkills(old));old.jobs[0].progress=4;delete old.jobs[0].workRemainder;delete old.jobs[0].pickTicks;
   const migrated=deserializeWorld(JSON.stringify(old));expect(migrated.jobs[0]).toMatchObject({progress:4,pickTicks:100});
   tick(migrated,6);expect(migrated.tiles[331]!.miningDamage).toBe(400);
   // Historically valid pending progress must also migrate without erasure.

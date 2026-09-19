@@ -1,3 +1,4 @@
+import { withoutResearch,withMigratedResearch } from './scenarios/legacy-skills';
 import { withoutShootingSkills,withMigratedShootingSkills } from './scenarios/legacy-skills';
 import { SCHEMA_VERSION } from '../src/sim/types';
 import { expect,test } from 'vitest';
@@ -71,7 +72,7 @@ test('schema 52 strictly separates ownership, metadata, old saves and snapshot c
   invalid(a=>{a.piles.push({...structuredClone(a.piles[0]!),id:a.nextId++});});invalid(a=>{a.pawns[0]!.equipmentTask={itemId:a.piles[0]!.id,action:'drop',progress:3};});
   invalid(a=>{a.piles[0]!.owner={type:'equipment',pawnId:999999};});invalid(a=>{(a as any).schemaVersion=51;});
   invalid(a=>{expect(applyCommand(a,{type:'designate',kind:'wall',x:20,z:20}).ok).toBe(true);a.piles[0]!.owner={type:'job',jobId:a.jobs.at(-1)!.id};});
-  const old=equipmentCamp();old.piles=[];(old as any).schemaVersion=51;withoutShootingSkills(old);expect(deserializeWorld(JSON.stringify(old))).toEqual(withMigratedShootingSkills({...old,schemaVersion:SCHEMA_VERSION}));
+  const old=equipmentCamp();old.piles=[];((old as any).schemaVersion=51,withoutResearch(old));withoutShootingSkills(old);expect(deserializeWorld(JSON.stringify(old))).toEqual(withMigratedShootingSkills({...old,schemaVersion:SCHEMA_VERSION}));
   (old.pawns[0] as any).equipmentDropPending=true;expect(()=>deserializeWorld(JSON.stringify(old))).toThrow(/version 51/);
 });
 

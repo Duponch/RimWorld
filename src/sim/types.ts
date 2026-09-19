@@ -1,14 +1,14 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 72 as const;
+export const SCHEMA_VERSION = 73 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
 export type Terrain = 'grass' | 'soil' | 'water' | 'rock' | 'rough-stone';
 export type ResourceKind = 'tree' | 'berries' | 'rock' | 'rice' | 'cotton';
 export type MaterialKind = 'wood' | 'food' | 'chunk' | 'steel' | 'blocks' | 'component' | 'medicine' | 'weapon' | 'apparel' | 'textile' | 'unfinished';
-export type StructureKind = 'crafting-spot' | 'wood-generator' | 'standing-lamp' | 'passive-cooler' | 'door' | 'wall' | 'bed' | 'table' | 'stool' | 'campfire' | 'horseshoes' | 'stonecutter';
+export type StructureKind = 'research-bench' | 'tailor-bench' | 'crafting-spot' | 'wood-generator' | 'standing-lamp' | 'passive-cooler' | 'door' | 'wall' | 'bed' | 'table' | 'stool' | 'campfire' | 'horseshoes' | 'stonecutter';
 export type JobKind = 'repair' | 'build-roof' | 'remove-roof' | 'mine' | 'chop' | 'harvest' | 'cut' | 'sow' | 'deconstruct' | 'uninstall' | 'install' | StructureKind;
-export type WorkType = 'patient' | 'bedrest' | 'doctor' | 'mine' | 'gather' | 'build' | 'haul' | 'grow' | 'cook' | 'craft';
+export type WorkType = 'research' | 'patient' | 'bedrest' | 'doctor' | 'mine' | 'gather' | 'build' | 'haul' | 'grow' | 'cook' | 'craft';
 export type Orientation = 0 | 1 | 2 | 3;
 export type Footprint = 'standard' | 'legacy-single';
 export type PawnState = 'idle' | 'moving' | 'working' | 'sleeping' | 'hungry' | 'eating' | 'recreating' | 'resting' | 'downed' | 'dead';
@@ -64,6 +64,7 @@ export interface Job extends Cell {
   escrow: Stock;
 }
 export interface Pawn extends Cell {
+  research?:import('./research.ts').ResearchTask;
   social?:import('./social-state.ts').SocialState;
   raid?:import('./raid-state.ts').RaiderState;
   traits?: import('./traits.ts').TraitId[];
@@ -129,6 +130,7 @@ export interface Pawn extends Cell {
 }
 export interface WorldEvent { tick: number; type: 'job' | 'need' | 'command'; message: string }
 export interface World {
+  research?:import('./research.ts').ResearchState;
   raids?:import('./raid-state.ts').RaidCalendar;
   home?:number[];
   destroyed?:import('./barriers.ts').DestructionLedger;
@@ -193,7 +195,7 @@ export type Command =
   | import('./player-orders.ts').OrderCommand
   | import('./food-policy.ts').FoodPolicyCommand
   | import('./schedule.ts').ScheduleCommand
-  | { type: 'bill-add'; structureId: number }
+  | { type: 'bill-add';recipe?:import('./production-recipes.ts').ProductionRecipe; structureId: number }
   | { type: 'bill-update'; structureId: number; billId: number; settings: import('./cooking-types.ts').BillSettings }
   | { type: 'bill-remove'; structureId: number; billId: number }
   | { type: 'bill-move'; structureId: number; billId: number; direction: -1 | 1 }
@@ -204,6 +206,7 @@ export type Command =
   | { type: 'assign-bed'; bedId: number; pawnId: number | null }
   | ({ type: 'cancel' } & Cell)
   | ({ type: 'stockpile'; enabled: boolean; filters?: StorageFilters; priority?: number; capacity?: number } & Cell)
+  | {type:'research-project';project:'complex-clothing'|null}
   | { type: 'priority'; pawnId: number; work: WorkType; value: number };
 export type RefusalCode = 'invalid-command' | 'out-of-bounds' | 'occupied' | 'incompatible-resource' | 'missing-target' | 'invalid-priority' | 'invalid-storage';
 export interface CommandResult { ok: boolean; reason?: string; code?: RefusalCode; affected?: number; skipped?: number }

@@ -1,3 +1,4 @@
+import { withoutResearch,withMigratedResearch } from './scenarios/legacy-skills';
 import { withoutShootingSkills,withMigratedShootingSkills } from './scenarios/legacy-skills';
 import { startTravel } from '../src/sim/movement';
 import { expect,test } from 'vitest';
@@ -83,7 +84,7 @@ test('needs persist, exhaustion physically sleeps, idle auto-undraft is saved, a
 });
 
 test('V53 strict migration, malformed mode rejection, continuation and discrete bridge phases',()=>{
-  const w=equipmentCamp(1),old=structuredClone(w);(old as any).schemaVersion=52;withoutShootingSkills(old);expect(deserializeWorld(JSON.stringify(old))).toEqual(withMigratedShootingSkills(w));
+  const w=equipmentCamp(1),old=structuredClone(w);((old as any).schemaVersion=52,withoutResearch(old));withoutShootingSkills(old);expect(deserializeWorld(JSON.stringify(old))).toEqual(withMigratedShootingSkills(w));
   (old.pawns[0] as any).draft={lastActiveTick:old.tick,target:null,queue:[]};expect(()=>deserializeWorld(JSON.stringify(old))).toThrow(/version 52/);
   draft(w);move(w,{x:15,z:14});stepWorld(w);valid(w);
   const observer=new PresentationChanges();expect(observer.capture(w)).toBe(true);const enc=new SnapshotEncoder(),dec=new SnapshotDecoder();dec.adopt(enc.encode(w,0,1));

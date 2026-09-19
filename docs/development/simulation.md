@@ -1,6 +1,8 @@
 # Noyau de simulation — contrat courant
 
-V72 ajoute la [confection physique](tailoring.md), les objets inachevés persistants et la première fabrication d’équipement. Schéma courant 72 ; V71 validée avant migration neutre. Les valeurs historiques ci-dessous restent attachées aux contrats de leurs versions.
+V73 ajoute [recherche au poste, compétence Intellect et couture débloquée](research.md), séparées dans `research.ts`/`research-save.ts`. Progression en micro-points, postes/services exclusifs et contributions de plusieurs chercheurs ; gestion physique des besoins/interruptions. Le combustible pour une facture culinaire n’est plus annulé en boucle par la faim.
+
+V72 ajoute la [confection physique](tailoring.md), les objets inachevés persistants et la première fabrication d’équipement. Schéma courant 73 ; V72 validée avant migration additive de la priorité Recherche, sans passé inventé. Les valeurs historiques ci-dessous restent attachées aux contrats de leurs versions.
 
 Schéma courant **57** : [ralentissement après impact](stagger.md), après [tir dirigé V56](shooting.md). V56 strictement validée avant migration sans effet inventé ; fenêtres sur les arêtes persistées, présentation dérivée. Aucun hostile encore livré. Les étapes ci-dessous restent l’historique des contrats de migration.
 

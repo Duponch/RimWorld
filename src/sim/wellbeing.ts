@@ -12,6 +12,7 @@ export function updateWellbeing(world: World, pawn: Pawn,body?:BodyAssessment): 
   let ceiling = 0;
   if (pawn.state === 'sleeping' && need?.kind === 'sleep' && need.bedId !== null && world.structures.some(item => item.id === need.bedId && item.kind === 'bed' && item.x === pawn.x && item.z === pawn.z)) ceiling = 75;
   if (pawn.state === 'eating' && need?.kind === 'eat' && need.dining?.seatId !== null && need.dining && world.structures.some(item => item.id === need.dining!.seatId && item.kind === 'stool' && item.x === pawn.x && item.z === pawn.z)) ceiling = 50;
+  if(pawn.research && pawn.state==='working' && pawn.x===pawn.research.spot.x && pawn.z===pawn.research.spot.z && world.structures.some(s=>s.kind==='stool'&&s.x===pawn.x&&s.z===pawn.z))ceiling=50;
   const perHour = pawn.comfort < ceiling ? 60 : -4;
   pawn.comfort = pawn.comfort < ceiling ? Math.min(ceiling, pawn.comfort + perHour * 24 / TICKS_PER_DAY)
     : Math.max(ceiling, pawn.comfort + perHour * 24 / TICKS_PER_DAY);

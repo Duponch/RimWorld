@@ -1,3 +1,4 @@
+import { withoutResearch,withMigratedResearch } from './scenarios/legacy-skills';
 import { SCHEMA_VERSION } from '../src/sim/types';
 import { withoutPawnSkills, withMigratedSkills } from './scenarios/legacy-skills';
 import { passiveCoolingFixture } from './scenarios/passive-cooling';
@@ -93,7 +94,7 @@ test('transmitter connectivity, square connector range, retention, gradual short
 });
 
 test('V41 migrates without devices; malformed electrical ownership, recipes and fuel never load',()=>{
-  const old=JSON.parse(serializeWorld(miningCamp()));(old.schemaVersion=41,withoutPawnSkills(old));
+  const old=JSON.parse(serializeWorld(miningCamp()));((old.schemaVersion=41,withoutResearch(old)),withoutPawnSkills(old));
   expect(deserializeWorld(JSON.stringify(old))).toEqual(withMigratedSkills({...old,schemaVersion:SCHEMA_VERSION}));
   const w=miningCamp(),g=fixturePower(w,'wood-generator',16,16),l=fixturePower(w,'standing-lamp',20,16);reconcilePower(w);
   expect(validateWorld(w)).toEqual([]);

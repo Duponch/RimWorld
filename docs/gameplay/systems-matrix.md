@@ -1,6 +1,6 @@
 # Matrice des systèmes et critères de réalisation
 
-État V72 : S09 fournit le tissu cultivé ; S20 comprend une première confection avec ouvrage/auteur/qualité et S12 la tenue tribale portée. L’étape 4 demeure partielle : recherche Vêtements complexes, atelier et chemise débloqués restent à livrer. [Contrat](../development/tailoring.md) ; ordre précis maintenu uniquement dans [ROADMAP](../ROADMAP.md).
+État V73 : S20 relie désormais une recherche collective physique à une chemise fabriquée et portée, après la culture de coton S09. L’étape proche 4 est livrée dans ce périmètre ; S20 reste partiel (un projet, catalogue limité). [Contrat](../development/research.md) ; calendrier uniquement dans [ROADMAP](../ROADMAP.md).
 
 
 État V70 : SYS/TEST-086/087 partiellement servis par deux échanges passifs, opinions dirigées inspectables, proximité/état et continuation. SYS/TEST-085 ajoute Social avec gain/impact ; SYS/TEST-088 conserve les IDs après décès mais deuil absent. S13/S14/S19 et G3 demeurent partiels. [Contrat](../development/social.md).
