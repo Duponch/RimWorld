@@ -1,4 +1,7 @@
-# Validation courante — V64
+# Validation courante — V66
+
+V66 : [validation de l’accueil](../history/validation-arrivals-v66.md), premières décisions de population dans le camp ordinaire, migration neutre, pilote adapté et audit de l’ajout d’un acteur. Les sections suivantes sont des preuves historiques.
+
 
 V65 : [validation de l’errance triste](../history/validation-mental-break-v65.md), scénarios profonds, UI 1×/6×, parcours de colonie et audits mixtes. Les échecs et corrections du lot sont conservés dans cette preuve.
 

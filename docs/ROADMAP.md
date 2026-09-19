@@ -1,20 +1,20 @@
 # Plan de développement
 
-État : **19 septembre 2026, après V65**. ROADMAP est l’unique calendrier G0–G5. G0 en consolidation, G1/G2/G3 partiels, G4/G5 principalement absents ; aucun jalon complet. Les numéros de schéma ne mesurent pas l’avancement du jeu. [Inventaire réel](gameplay/implementation-status.md), [preuves](development/validation.md), [index](README.md).
+État : **19 septembre 2026, après V66**. ROADMAP est l’unique calendrier G0–G5. G0 en consolidation, G1/G2/G3 partiels, G4 engagé par l’accueil, G5 absent ; aucun jalon complet. Les numéros de schéma ne mesurent pas l’avancement du jeu. [Inventaire réel](gameplay/implementation-status.md), [preuves](development/validation.md), [index](README.md).
 
-Dernière fonctionnalité publiée : [errance triste V65](development/mental-break.md), après humeur, vêtements et premières rencontres armées. [Validation et limites V65](history/validation-mental-break-v65.md). Le camp ordinaire reste sans incidents ni croissance de population.
+Dernière fonctionnalité publiée : [demandes d’accueil V66](development/arrivals.md), premier incident de population dans le camp ordinaire. Lettre, délai, choix, entrée physique et conséquences sur besoins/logement/travail ; profil de fréquence provisoire. [Validation et limites V66](history/validation-arrivals-v66.md). Aucun narrateur complet ni raid en cours de partie.
 
 ## Priorité actuelle
 
-**Mode jour.** L’automatisation nocturne reste en pause. Une livraison cohérente, validation adaptée, commit/push explicatif, puis retour utilisateur. Cette revue ne livre aucune mécanique nouvelle.
+**Mode jour.** L’automatisation nocturne reste en pause. Une livraison cohérente, validation adaptée, commit/push explicatif, puis retour utilisateur.
 
 La [revue de progression du 19 septembre](research/progression-review-2026-09-19.md) remplace l’ordre « terminer pensées/traits/relations, puis ouvrir les incidents ». Les interactions physiques, cas limites, migrations et budgets restent exigés. Nous avançons maintenant par changements vécus dans la colonie, en traversant G1–G4 selon leurs dépendances. Les jalons sont des domaines de couverture, pas des portes obligeant à finir tout G3 avant G4.
 
-**Prochaine livraison visée : une arrivée de colon pendant la partie.** Un événement Core d’arrivée volontaire est le candidat retenu pour brancher population, notification, logement, nourriture et travail. Avant code : vérifier précisément choix/délai/refus, génération et admissibilité selon version, puis documenter les branches retenues et différées. Les sources anciennes et actuelles divergent sur l’adhésion automatique. Aucun nouveau colon ajouté seulement au démarrage ni clic de diagnostic ne suffit à cette livraison.
+**Prochaine livraison visée : une menace et ses conséquences dans le camp ordinaire.** V66 a livré la première ligne de population ci-dessous, dans son périmètre explicite. Vérifier les incidents hostiles Core et leurs issues avant code. La boucle doit fonctionner sur un camp fermé et se terminer par des conséquences réelles ; dégâts aux ouvrages, accès et devenir des victimes sont des dépendances à examiner ensemble, sans ouvrir tout le catalogue de factions. La scène de rencontre actuelle seule ne suffit pas.
 
 | Ordre de priorité | Résultat que le joueur doit pouvoir constater | Limite de périmètre |
 |---|---|---|
-| 1 — Population qui évolue (G0/G1/G3/G4) | Un arrivant entre réellement sur la carte, rejoint les interfaces et politiques pertinentes, consomme et travaille ; le joueur adapte couchage, production et affectations. | Compétences déjà actives réutilisées ; générer un profil cohérent sans prétendre livrer biographies/traits complets. Calendrier persistant avec premier incident réel, sans moteur de quêtes général. |
+| 1 — Population qui évolue, première tranche V66 livrée (G0/G1/G3/G4) | Un arrivant entre réellement sur la carte, rejoint les interfaces et politiques pertinentes, consomme et travaille ; le joueur adapte couchage, production et affectations. | Compétences déjà actives réutilisées ; générer un profil cohérent sans prétendre livrer biographies/traits complets. Calendrier persistant avec premier incident réel, sans moteur de quêtes général. |
 | 2 — Menace et conséquences dans le camp (G2/G3/G4) | Alerte en cours de partie, préparation/défense, issue de la menace, blessés soignés et reprise ou perte réelle. | Examiner camp fermé, dégâts/réparation nécessaires et gestion des victimes ; découper en livraisons visibles si nécessaire. Ni ennemi figé à une porte ni disparition sans conséquence. Pas toutes les factions/stratégies ni un narrateur complet. |
 | 3 — Personnes distinctes dans les situations vécues (G1/G3) | Des différences de caractère et premières interactions/opinions changent les affectations ou l’humeur, avec causes inspectables. | Petit ensemble de traits/interactions Core réellement actifs ; ne pas enchaîner tout le catalogue de psychologie avant la progression matérielle. |
 | 4 — Premier objectif de production (G1/G4) | Une filière obtenable permet de fabriquer un équipement utile ; première recherche reliée à un vrai déblocage admissible. | Vérifier les déblocages d’origine : ne pas inventer de recherche pour une recette de départ. Matière → atelier → travail → produit → usage, sans terminer l’arbre technologique ni tous les ateliers. |
@@ -24,7 +24,7 @@ Les animaux, la chasse, le commerce, les prisonniers, les nombreuses familles de
 
 Avant chaque lot, écrire : décision nouvelle du joueur, invariant indispensable, comportements nécessaires à la boucle, extensions différées et critère d’arrêt. Toute dépendance dépassant ce périmètre déclenche une revue ; ne pas terminer par inertie le domaine voisin. Les corrections de stabilité importantes peuvent interrompre cette priorité, avec leur motif explicite.
 
-**Acceptation d’une livraison visible :** chemin accessible dans une partie ordinaire, conséquence expliquée, manipulation physique, sauvegarde/reprise pendant les transitions et scénario de colonie adapté. Les branches rares ont aussi des fixtures contrôlées. Le prochain pilote doit adapter sa politique à la population, puis aux incidents, au lieu de seulement reconstruire le même camp plus longtemps.
+**Acceptation d’une livraison visible :** chemin accessible dans une partie ordinaire, conséquence expliquée, manipulation physique, sauvegarde/reprise pendant les transitions et scénario de colonie adapté. Les branches rares ont aussi des fixtures contrôlées. Le pilote adapte désormais sa politique à l’accueil d’une quatrième personne ; étendre ensuite ses décisions à la menace et à ses suites, au lieu de seulement reconstruire le même camp plus longtemps.
 
 ## Contrats de progression
 
@@ -87,6 +87,8 @@ La scène D du corpus guide les transferts : une personne ou pile garde son iden
 **Acceptation :** partie longue, reprise après versions, tests multi-cartes, budgets de performance sur appareils choisis, documentation de toutes les mécaniques livrées.
 
 ## Chantiers transversaux
+
+Audit V66 : cinq compilations GPU à l’arrivée supprimées en conservant les lots de personnages. Croissance 3→4/30→31/100→101 vérifiée ; les pointes à cent acteurs restent ouvertes (CPU p95 40,28 ms, image p95 20,80 / max 125 ms). Maintenir l’audit de captures/scène/rendu avec les futures menaces ; aucun budget 6× global validé. Les exports de diagnostic du banc sont désormais hors mesure. [Preuves](history/validation-arrivals-v66.md).
 
 Audit V48 : à cent acteurs en clinique, les pointes d’image restent observables pour alimentation et traitements déjà présents. Suivre séparément coût des transferts/scène/HUD et rendu lors du prochain audit mixte ; zéro compilation GPU ne suffit pas à prouver l’absence de saccades. [Mesures et limites V48](history/validation-feeding-v48.md).
 

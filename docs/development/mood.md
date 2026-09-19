@@ -14,6 +14,7 @@ Base neutre 32 ; le profil de camp à attentes extrêmement basses apporte +30. 
 | Loisirs | Sous 1/15/30 % : −20/−10/−5 ; à partir de 70/85 % : +5/+10. |
 | Douleur anatomique | Sous 0,0001 : aucune ; sous 15/40/80 % : −5/−10/−15 ; à partir de 80 % : −20. |
 | Vêtement usé | Le plus faible ratio porté : strictement sous 50 % PV = −3 ; strictement sous 20 % = −5. Une seule pensée, jamais une pénalité par pièce. |
+| Accueil refusé V66 | −3 pendant six jours, cinq occurrences décroissantes ×0,75 ; refus explicite seulement, [conditions](arrivals.md). |
 | Catharsis V65 | +40 pendant trois jours, au plus cinq occurrences avec multiplicateurs 1, 0,75, 0,75²… ; [conditions](mental-break.md). |
 | Repas sans table / cru | Souvenirs −3 / −7 pendant un jour ; occurrence renouvelée sans cumul. Un bon repas n’efface pas l’ancien souvenir. |
 

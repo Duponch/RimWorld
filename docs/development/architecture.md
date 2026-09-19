@@ -1,5 +1,8 @@
 # Architecture et décisions
 
+V66 : calendrier/PRNG privé et données dans `arrival-state.ts`, producteur/acceptation dans `arrivals.ts`, capture ponctuelle d’accès dans `arrival-entry.ts`, validation dans `arrival-save.ts`. UI de lettre séparée ; nouveaux acteurs dans les structures et lots existants. [Contrat](arrivals.md).
+
+
 V65 : `mental-state.ts` porte les données sparse, `mental-break.ts` orchestre interruption/errance/besoins, `mental-save.ts` valide leur cohérence. Navigation partagée bornée et rendu GPU existant ; âge et PRNG persistés. [Contrat](mental-break.md).
 
 V64 : `mood.ts` sépare situations dérivées, souvenirs existants et jauge persistée. Évaluation commune simulation/inspection, capacité déjà calculée au tick, pas de mutation depuis le HUD ni de traitement par frame. `mood-inspection.ts` possède la liste de causes ; [contrat](mood.md).

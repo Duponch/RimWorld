@@ -1,5 +1,7 @@
 # Choix et écarts de gameplay
 
+V66 : choix d’accueil avec délai d’un jour et refus distinct de l’expiration. Fréquence, plafond du producteur et profils personnels explicitement provisoires ; arrivée physique sans fonds ni lit offert. Migration neutre et activation volontaire des anciens camps. [Recherche et adaptations](../research/arrival-reference.md), [contrat](../development/arrivals.md).
+
 V65 : première crise seulement, repli des intensités supérieures vers le contenu mineur disponible ; distribution incomplète annoncée. Échéances locales, marche 3D euclidienne, conservation des cargaisons sous saturation et catharsis après incapacité selon la branche de code datée malgré une contradiction du wiki. [Recherche et décisions](../research/mental-break-reference.md).
 
 V62 : connexion acoustique par espaces/portes ouvertes à la place du plafond Core de quinze régions, et interruption directe du repos mobile après violence. Deux adaptations explicites, sans prétention de parité de tout le gestionnaire de jobs. [Motifs, sources et limites](../research/disturbance-reference.md).

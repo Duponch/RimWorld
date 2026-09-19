@@ -1,5 +1,14 @@
 # Guide joueur
 
+## Accueillir une nouvelle personne (V66)
+
+Dans un nouveau camp paisible, une première demande peut arriver entre un jour et demi et deux jours de simulation. Cliquez sur sa lettre à droite : vous pouvez **accueillir**, **refuser** ou **décider plus tard**. La demande dure une journée ; la fenêtre ne met pas le jeu en pause. Sans réponse, le voyageur poursuit sa route.
+
+Une acceptation fait entrer le colon par une bordure accessible, avec sa chemise. Il apparaît dans les portraits et les tableaux de gestion. Prévoyez un lit, davantage de repas et ses priorités de travail ; il utilise les mêmes règles que les autres colons. Sa meilleure compétence est annoncée avant le choix. Si aucune entrée n’est libre, la demande reste ouverte jusqu’à son échéance.
+
+Refuser donne aux colons hors crise une pensée de −3 pendant six jours ; les refus répétés se cumulent avec un effet décroissant, limité à cinq. L’expiration sans réponse ne donne pas cette pensée. Sur une ancienne partie, cliquez sur **Activer les demandes d’accueil** pour commencer le calendrier sans recréer la carte. La cadence ultérieure de quatre à huit jours et les profils limités sont provisoires ; ce système ne comprend pas encore raids, visiteurs ou narrateur complet. [Règles et limites](../development/arrivals.md).
+
+
 ## Errance triste (V65)
 
 Une humeur durablement sous 35, 20 ou 5 % augmente le risque de crise ; franchir un seuil ne la déclenche pas immédiatement. Le colon en errance triste cesse ses travaux, libère ses engagements et marche lentement. Le symbole ↝, une alerte et son inspection expliquent son indisponibilité. Impossible de le mobiliser ou de lui imposer un travail pendant la crise. Ses objets portés sont déposés réellement ; si le sol est encombré, ils restent conservés.
@@ -116,7 +125,7 @@ Pour les premiers jours :
 
 Il n’y a encore ni victoire ni événement hostile. Les règles suivantes décrivent le jeu présent ; les paramètres provisoires et systèmes manquants restent explicités.
 
-Les colons peuvent se croiser dans un passage étroit et passer par la case d’un colon occupé ou endormi. Le lit, la place de repas ou le poste reste réservé à son utilisateur : traverser la case ne permet pas de l’utiliser. Les corps peuvent encore se superposer visuellement en 3D ; les portraits permettent de sélectionner chacun.
+Les colons peuvent se croiser dans un passage étroit et passer par la case d’un colon occupé ou endormi. Le lit, la place de repas ou le poste reste réservé à son utilisateur : traverser la case ne permet pas de l’utiliser. Les corps peuvent encore se superposer visuellement en 3D ; les portraits permettent de sélectionner chacun. Des clics successifs au même endroit parcourent les personnes superposées puis l’objet au sol ; cela permet notamment d’inspecter un feu ou un meuble masqué par un colon.
 
 ## Se repérer dans l’interface
 

@@ -1,5 +1,8 @@
 # Catalogue de contenu : couverture connue
 
+V66 ajoute un **incident obtenable en partie ordinaire** : demande d’accueil volontaire. Douze prénoms, trois profils des quatre compétences déjà actives et une chemise normale portée constituent le profil déclaré de l’arrivant. Aucun nouvel ItemId ; la chemise existante devient aussi un apport extérieur. Pensée « Accueil refusé », −3 sur six jours, cinq occurrences décroissantes. Biographies, traits et génération complète restent absents. [Contrat](../development/arrivals.md).
+
+
 V65 ajoute un **comportement** — errance triste — et la mémoire Catharsis, aucun nouvel objet. Cinq occurrences datées peuvent contribuer à la pensée agrégée. Un seul type de crise disponible ; aucun catalogue complet de personnalités, crises ou relations. [Contrat](../development/mental-break.md).
 
 V63 ajoute deux instances obtenables : **cloth-shirt**, chemise en tissu (100 PV, peau) ; **flak-vest**, gilet pare-balles (200 PV, intermédiaire). Trois chemises et un gilet normaux au sol dans un nouveau départ ; couches, manipulation et armure actifs, fabrication et autres qualités non obtenables. [Contrat et limites](../development/armor.md).

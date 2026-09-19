@@ -43,6 +43,8 @@ export async function editBill(page:Page,id:number,settings:BillSettings):Promis
 
 export async function perform(page: Page, decision: Decision, rotation: { value: number }): Promise<void> {
   const c=decision.command;
+  if(c.type==='answer-arrival'){await page.locator('#arrival-letter').click();await page.locator(c.accept?'#accept-arrival':'#reject-arrival').click();await expect(page.locator('#arrival-dialog')).not.toBeVisible();await expect(page.locator('#arrival-letter')).toHaveCount(0);return;}
+  if(c.type==='enable-arrivals'){await page.locator('#enable-arrivals').click();await expect(page.locator('#enable-arrivals')).toBeHidden();return;}
   if(c.type==='draft'||c.type==='draft-move'||c.type==='draft-stop') {
     await page.keyboard.press('Escape');
     for(const [i,id] of c.pawnIds.entries())await page.locator(`[data-pawn="${id}"]`).click({modifiers:i?['Shift']:[]});
@@ -101,8 +103,11 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     await revealCells(page,[c]);
     await cell(page,c.x,c.z);
   } else if(c.type==='bill-add'||c.type==='bill-update') {
-    const station=(await world(page)).structures.find(s=>s.id===c.structureId)!;
-    await page.keyboard.press('Escape');await revealCells(page,[station]);await cell(page,station.x,station.z);
+    const w=await world(page),station=w.structures.find(s=>s.id===c.structureId)!;
+    await page.keyboard.press('Escape');await revealCells(page,[station]);
+    // As for furniture installation, an overlapping pawn can be selected first.
+    // Cycle the real pointer selection until the station is inspected.
+    for(let i=0;i<=w.pawns.length;i++){await cell(page,station.x,station.z);if(await page.locator('#add-cooking-bill').isVisible())break;}
     await expect(page.locator('#add-cooking-bill')).toBeVisible();
     if(c.type==='bill-add')await page.locator('#add-cooking-bill').click();
     else await editBill(page,c.billId,c.settings);

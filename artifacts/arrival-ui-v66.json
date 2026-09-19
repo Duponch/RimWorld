@@ -1,0 +1,36 @@
+{
+  "date": "2026-09-19T10:02:48.637Z",
+  "controlledCalendar": true,
+  "proof": [
+    {
+      "speed": 1,
+      "pendingTick": 14,
+      "joinedTick": 14,
+      "newcomer": {
+        "id": 182,
+        "x": 0,
+        "z": 31
+      },
+      "walkingTick": 15,
+      "refusal": true,
+      "expiration": true,
+      "formerCampActivation": true,
+      "errors": []
+    },
+    {
+      "speed": 6,
+      "pendingTick": 22,
+      "joinedTick": 22,
+      "newcomer": {
+        "id": 182,
+        "x": 0,
+        "z": 31
+      },
+      "walkingTick": 26,
+      "refusal": true,
+      "expiration": true,
+      "formerCampActivation": true,
+      "errors": []
+    }
+  ]
+}

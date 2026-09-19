@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 65 as const;
+export const SCHEMA_VERSION = 66 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
@@ -106,6 +106,7 @@ export interface Pawn extends Cell {
   mood: number;
   comfort: number;
   memories: Memory[];
+  deniedJoining?:number[];
   jobId: number | null;
   haul: HaulTask | null;
   cooking: import('./cooking-types.ts').CookingTask | null;
@@ -124,6 +125,7 @@ export interface Pawn extends Cell {
 }
 export interface WorldEvent { tick: number; type: 'job' | 'need' | 'command'; message: string }
 export interface World {
+  arrivals?:import('./arrival-state.ts').ArrivalState;
   projectiles?:import('./projectile-state.ts').WorldProjectile[];
   roofing?: import('./roof-rules.ts').RoofingState;
   thermal?: import('./temperature.ts').ThermalState;
@@ -163,6 +165,7 @@ export type AreaAction = 'build-roof' | 'remove-roof' | 'ignore-roof' | 'mine' |
 export interface StorageSettings { filters?: StorageFilters; priority?: number; capacity?: number }
 export interface AreaCommand extends StorageSettings { type: 'area'; action: AreaAction; from: Cell; to: Cell }
 export type Command =
+  | import('./arrival-state.ts').ArrivalCommand
   | {type:'hostility-response';pawnId:number;response:'flee'|'ignore'|'attack'}
   | import('./melee-state.ts').MeleeCommand
   | import('./shooting-state.ts').ShootingCommand

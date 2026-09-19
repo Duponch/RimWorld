@@ -39,6 +39,8 @@ export function moodThoughts(world:World,pawn:Pawn):readonly MoodThought[] {
   for(const pile of world.piles)if(pile.owner.type==='apparel'&&pile.owner.pawnId===pawn.id)condition=Math.min(condition,pile.apparel!.hitPoints/APPAREL[pile.item as keyof typeof APPAREL].hitPoints);
   if(condition<.5)thoughts.push(apparel[condition<.2?1:0]!);
   for(const m of pawn.memories)if(m.expiresAt>world.tick)thoughts.push({id:m.kind,label:memoryLabels[m.kind],offset:memoryOffsets[m.kind],kind:'memory',description:'Souvenir du dernier repas concerné ; une nouvelle occurrence renouvelle sa durée sans cumul.',expiresAt:m.expiresAt});
+  const denied=pawn.deniedJoining?.filter(t=>t>world.tick)??[];
+  if(denied.length)thoughts.push({id:'denied-joining',label:`Accueil refusé ×${denied.length}`,offset:-3*(1-.75**denied.length)/.25,kind:'memory',description:'Une demande d’accueil refusée ; six jours, au plus cinq souvenirs à effet décroissant.',expiresAt:denied[0]});
   const catharsis=pawn.mental?.catharsis.filter(t=>t>world.tick)??[];
   if(catharsis.length)thoughts.push({id:'catharsis',label:`Catharsis ×${catharsis.length}`,offset:40*(1-.75**catharsis.length)/.25,kind:'memory',description:'Soulagement après crise ; chaque occurrence dure trois jours, au plus cinq, effet décroissant.',expiresAt:catharsis[0]});
   return thoughts;
@@ -58,5 +60,6 @@ export function updateMood(world:World,pawn:Pawn,body?:BodyAssessment):void {
   pawn.mood=target>pawn.mood?Math.min(target,pawn.mood+amount):Math.max(target,pawn.mood-amount);
 }
 export function expireMealMemories(world:World,pawn:Pawn):void {
+  if(pawn.deniedJoining?.some(t=>t<=world.tick)){pawn.deniedJoining=pawn.deniedJoining.filter(t=>t>world.tick);if(!pawn.deniedJoining.length)delete pawn.deniedJoining;}
   if(pawn.memories.some(m=>m.expiresAt<=world.tick))pawn.memories=pawn.memories.filter(m=>m.expiresAt>world.tick);
 }

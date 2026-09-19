@@ -66,6 +66,7 @@ export function playerFocusDecisions(world:World):Decision[] {
 export function playerDecisions(world: World): Decision[] {
   const cx = Math.floor(world.width / 2), cz = Math.floor(world.height / 2);
   const out: Decision[] = [...coolingDecisions(world),...powerDecisions(world)];
+  if(world.arrivals?.pending)out.push({reason:'Accueillir une quatrième personne ; différer la croissance suivante pour stabiliser le camp.',command:{type:'answer-arrival',offerId:world.arrivals.pending.id,accept:world.pawns.length<4}});
   const gun=world.piles.find(p=>p.kind==='weapon'&&p.owner.type==='ground'),armed=world.piles.some(p=>p.owner.type==='equipment');
   const recruit=world.pawns[2];
   if(armed){
@@ -100,6 +101,7 @@ export function playerDecisions(world: World): Decision[] {
   });
   const plans: DesignateCommand[] = [
     ...[[-3, 2], [0, 2], [3, 2]].map(([x, z]) => ({ type: 'designate' as const, kind: 'bed' as const, x: cx + x!, z: cz + z!, orientation: 0 as const })),
+    ...world.pawns.slice(3).map((_,i)=>({type:'designate' as const,kind:'bed' as const,x:cx-3+(i%3)*3,z:cz+6+Math.floor(i/3)*3,orientation:0 as const})),
     { type: 'designate', kind: 'table', x: cx, z: cz - 2, orientation: 1 },
     { type:'designate',kind:'horseshoes',x:cx+2,z:cz-3 },
     { type:'designate',kind:'campfire',x:cx-1,z:cz-1,orientation:0 },

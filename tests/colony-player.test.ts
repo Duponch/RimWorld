@@ -1,3 +1,4 @@
+import { enableArrivals } from '../src/sim/arrivals';
 import { expect, test } from 'vitest';
 import { createWorld, applyCommand, stepWorld, validateWorld, serializeWorld, deserializeWorld } from '../src/sim/index';
 import { playerArrivalDecisions,playerArrivalComplete,playerDecisions, playerFocusDecisions, colonySummary, woodAccount, foodAccount } from './scenarios/colony-player';
@@ -5,6 +6,8 @@ import { playerArrivalDecisions,playerArrivalComplete,playerDecisions, playerFoc
 test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp construit, stocks entretenus et reprise exacte', () => {
   for (const seed of [42, 93, 2048]) {
     let world = createWorld(seed, 250, 250);
+    if(seed===42)enableArrivals(world);
+    const population=seed===42?4:3;
     for(const decision of playerArrivalDecisions(world))expect(applyCommand(world,decision.command)).toMatchObject({ok:true});
     for(let i=0;i<120&&!playerArrivalComplete(world);i++)stepWorld(world);
     expect(playerArrivalComplete(world)).toBe(true);expect(validateWorld(world)).toEqual([]);
@@ -28,8 +31,8 @@ test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp const
       stepWorld(world);
       for(const [i,p] of world.pawns.entries())if(p.mood-moods[i]!>.04800001||p.mood-moods[i]!<-.03200001)throw new Error(`Mood discontinuity: seed ${seed}, tick ${world.tick}, pawn ${p.id}`);
       for (const event of world.events) if (event.tick === world.tick) { const match = event.message.match(/a récolté (\d+) (?:baies|riz)/); if (match) produced += Number(match[1]);if(event.message.includes('a cuisiné 1 repas simple'))cooked++; }
-      for (const {id,quantity} of ingesting) if(world.events.some(e=>e.tick===world.tick&&e.message.startsWith(`${world.pawns.find(p=>p.id===id)!.name} a mangé`))) { meals.set(id, meals.get(id)!+1); consumed += quantity; }
-      for (const pawn of world.pawns) if (pawn.state==='sleeping' && pawn.need?.kind==='sleep' && pawn.need.bedId!==null) sleep.set(pawn.id,sleep.get(pawn.id)!+1);
+      for (const {id,quantity} of ingesting) if(world.events.some(e=>e.tick===world.tick&&e.message.startsWith(`${world.pawns.find(p=>p.id===id)!.name} a mangé`))) { meals.set(id, (meals.get(id)??0)+1); consumed += quantity; }
+      for (const pawn of world.pawns) if (pawn.state==='sleeping' && pawn.need?.kind==='sleep' && pawn.need.bedId!==null) sleep.set(pawn.id,(sleep.get(pawn.id)??0)+1);
       for(const pawn of world.pawns)if(pawn.state==='recreating'&&pawn.recreation.task){recreationKinds.add(pawn.recreation.task.activity);recreationPawns.add(pawn.id);}
       if (t % 50 === 0) {
         const context=JSON.stringify({seed,...colonySummary(world)});
@@ -60,9 +63,9 @@ test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp const
     }
     const context=JSON.stringify({seed,report,meals:[...meals],sleep:[...sleep]});
     expect(report[0]!.structures,context).toMatchObject({bed:3,table:1,stool:3});
-    expect(report[4]!.structures,context).toEqual({'wood-generator':1,'standing-lamp':1,'passive-cooler':0,bed:3,table:1,stool:3,wall:7,campfire:1,horseshoes:1,stonecutter:1,door:1});
+    expect(report[4]!.structures,context).toEqual({'wood-generator':1,'standing-lamp':1,'passive-cooler':0,bed:population,table:1,stool:3,wall:7,campfire:1,horseshoes:1,stonecutter:1,door:1});
     expect(report[4]!.roofing,context).toEqual({constructed:28,planned:28,removal:0});
-    expect([...recreationKinds].sort(),context).toEqual(['horseshoes','skygaze']);expect(recreationPawns.size,context).toBe(3);
+    expect([...recreationKinds].sort(),context).toEqual(['horseshoes','skygaze']);expect(recreationPawns.size,context).toBe(population);
     expect(cooked,context).toBeGreaterThanOrEqual(12);
     expect(rationAssignments,context).toBeGreaterThanOrEqual(3);
     expect(world.tiles.filter(t=>t.terrain==='rough-stone').length,context).toBeGreaterThanOrEqual(6);
@@ -71,7 +74,7 @@ test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp const
     expect(colonySummary(world).mining.steel,context).toBe(50);expect(colonySummary(world).mining.steelStored,context).toBe(50);expect(colonySummary(world).mining.steelInBuildings,context).toBe(150);expect(colonySummary(world).structures.stonecutter,context).toBe(1);
     expect(colonySummary(world).mining.componentsInBuildings,context).toBe(2);
     expect(colonySummary(world).power.filter(s=>s.on),context).toHaveLength(2);
-    expect(colonySummary(world).medicines,context).toEqual({total:30,stored:30,policies:['industrial','industrial','industrial']});
+    expect(colonySummary(world).medicines,context).toEqual({total:30,stored:30,policies:Array(population).fill('industrial')});
     expect(colonySummary(world).mining.stored,context).toBe(colonySummary(world).mining.chunks);
     expect(world.deconstructed.count,context).toBe(1);
     expect(world.structures.find(s=>s.kind==='horseshoes')?.x,context).toBe(Math.floor(world.width/2)+4);expect(world.packed,context).toEqual([]);
@@ -90,8 +93,10 @@ test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp const
     expect([...meals.values()].every(n=>n>=10),context).toBe(true);
     expect([...sleep.values()].every(n=>n>4000),context).toBe(true);
     expect(colonySummary(world).plantClimate,context).toEqual({slowed:0,thermalAnchors:0});
-    expect(colonySummary(world).apparel.filter(i=>i.owner.type==='apparel'),context).toHaveLength(4);
-    expect(world.restRules).toBe('adult');expect(world.pawns.map(p=>p.schedule.filter(s=>s==='sleep').length)).toEqual([8,8,8]);
+    expect(colonySummary(world).apparel.filter(i=>i.owner.type==='apparel'),context).toHaveLength(population+1);
+    expect(world.restRules).toBe('adult');expect(world.pawns.map(p=>p.schedule.filter(s=>s==='sleep').length)).toEqual(Array(population).fill(8));
+    expect(world.pawns).toHaveLength(population);expect(meals.size).toBe(population);expect(sleep.size).toBe(population);
+    if(seed===42)expect(world.arrivals?.accepted).toBe(1);
     expect(world.pawns[2]!.schedule[5]).toBe('anything');expect(world.pawns[2]!.schedule[21]).toBe('sleep');
   }
 // This is a correctness journey with deep checkpoints, not a tick-time budget.

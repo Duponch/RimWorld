@@ -1,5 +1,7 @@
 # Inventaire, équipement et apparence des colons
 
+V66 : arrivants intégrés aux mêmes lots. Corps, cargaison et sélection conservent leurs meshes et matériaux quand la population change ; `pawn-buffers.ts` agrandit ensemble les géométries en préservant le partage des trajectoires. Seul `instanceCount` suit le nombre présent ; une réduction ne reconstruit pas les shaders. Zéro pipeline nouveau mesuré à 3→4, 30→31 et 100→101, sans garantie de cadence constante. [Preuves](../history/validation-arrivals-v66.md).
+
 V63 : [vêtements physiques](armor.md), projection `character-apparel` partagée carte/portrait. L’attribut instancié `aEquipment` contient trois composantes sans nouveau buffer ; gilet dans le rig, chemise dans sa teinte, objets pliés dans les lots sol/cargaison existants. Habillage, retrait et destruction suivent le propriétaire présenté.
 
 V59 : frappe orientée vers la cible et étourdissement stationnaire dans les attributs du rig GPU existant. La frappe part du sous-tick confirmé, sur l’horloge commune ; un segment immobile gèle aussi le pas des jambes. Le corps, la cargaison, le blessé porté et l’anneau gardent la même trajectoire fractionnée. Pas de nouveau lot par personnage, pas de squelette CPU. [Contrat](melee.md).

@@ -1,5 +1,8 @@
 # Matrice des systèmes et critères de réalisation
 
+V66 : chapitres 23/24, SYS/TEST-132..135 partiellement servis par un calendrier persistant et la demande d’accueil volontaire ; population variable reliée aux besoins/travaux/objets. Ni narrateur complet, ni recrutement de prisonniers SYS-148, ni jalon clos. [Contrat](../development/arrivals.md).
+
+
 **Revue du 19 septembre :** G0–G5 conservent leur périmètre ; les premières boucles de population/incidents G4 ne nécessitent pas la clôture de G3. [Priorité canonique](../ROADMAP.md), [motif de la réorientation](../research/progression-review-2026-09-19.md). Les entrées de versions ci-dessous sont historiques ; l’état livré est consolidé dans [l’inventaire](implementation-status.md).
 
 V65 : SYS/TEST-082 partiellement servis par l’errance triste, ses interruptions, perte de contrôle direct, besoins et récupération. S14 reste partiel : autres crises, traits, opinions et relations absents. [Contrat](../development/mental-break.md).

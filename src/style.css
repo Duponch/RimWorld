@@ -33,3 +33,4 @@
 
 .portrait-vest { position:absolute; width:19px; height:19px; bottom:0; left:50%; transform:translateX(-50%); background:#626d65; border:2px solid #404c44; border-radius:2px 2px 0 0; }
 .portrait-vest[hidden] { display:none; }
+.alerts .arrival-letter{pointer-events:auto;display:block;margin:6px 0 6px auto;padding:9px 12px;max-width:260px;color:#fff0c5;border-color:#ac9c6a;background:#293b32}#arrival-dialog button{margin:8px 8px 0 0}#arrival-dialog [role=alert]{color:#efae9d}

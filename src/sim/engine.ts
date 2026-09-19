@@ -1,3 +1,4 @@
+import { advanceArrivals,applyArrival } from './arrivals.ts';
 import { updateMentalBreak,processSadWander } from './mental-break.ts';
 import { expireMealMemories } from './mood.ts';
 import { considerAutomaticCombat } from './automatic-combat.ts';
@@ -191,6 +192,7 @@ export function applyCommand(world: World, command: Command): CommandResult {
 }
 function applyCommandInternal(world: World, command: Command): CommandResult {
   if (!command || typeof command !== 'object') return refusal('invalid-command', 'Commande invalide.');
+  if(command.type==='enable-arrivals'||command.type==='answer-arrival')return applyArrival(world,command);
   const actors='pawnIds' in command&&Array.isArray(command.pawnIds)?command.pawnIds:'pawnId' in command&&command.pawnId!==null?[command.pawnId]:[];
   if(actors.some(id=>{const p=world.pawns.find(p=>p.id===id);return p&&!isColonist(p);}))return refusal('invalid-command','Cette personne ne fait pas partie de la colonie.');
   if((typeof command.type==='string'&&command.type.startsWith('order-')||['draft','draft-move','draft-stop','fire-at-will','clear-orders','shoot','melee'].includes(command.type))&&actors.some(id=>world.pawns.find(p=>p.id===id)?.mental?.crisis))return refusal('invalid-command','Ce colon est en errance triste et ne peut pas obéir.');
@@ -359,6 +361,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
   let thermal=reconcileTemperature(world);updateFoodTemperatures(world,thermal);updatePlantTemperatures(world,thermal);
   for (let step = 0; step < ticks; step++) {
     world.tick++;
+    advanceArrivals(world);
     advancePower(world);
     expireFood(world);
     advanceTemperature(world,thermal);

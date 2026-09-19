@@ -1,4 +1,5 @@
 import { apparelProjection,apparelAppearance } from './character-apparel';
+import { growPawnBuffers } from './pawn-buffers';
 import { isColonist } from '../sim/affiliation';
 import { pawnGeometry,cargoGeometry } from './pawn-geometry';
 import { equipmentProjection } from './character-equipment';
@@ -147,7 +148,8 @@ export class PawnLayer {
     this.travelKeys.clear();this.travelSurfaces=furnitureSurfaces(world);
     const indices=new Map(world.pawns.map((p,i)=>[p.id,i]));
     this.rescuePairs=world.pawns.flatMap((p,i)=>p.rescue?.phase==='carry'&&indices.has(p.rescue.patientId)?[[i,indices.get(p.rescue.patientId)!] as const]:[]);
-    if (!this.pawnMesh || (this.pawnMesh.geometry.getAttribute('aFrom')?.count ?? 0) !== world.pawns.length) this.createPawnMesh(world.pawns.length);
+    if (!this.pawnMesh) this.createPawnMesh(Math.max(1,world.pawns.length));
+    else if(this.pawnMesh.geometry.getAttribute('aFrom').count<world.pawns.length)growPawnBuffers([this.pawnMesh,this.cargoMesh!,this.selectionMesh!],world.pawns.length);
     const geometry = this.pawnMesh!.geometry as THREE.InstancedBufferGeometry;
     const fromAttribute = geometry.getAttribute('aFrom') as THREE.InstancedBufferAttribute;
     const toAttribute = geometry.getAttribute('aTo') as THREE.InstancedBufferAttribute;
@@ -215,7 +217,7 @@ export class PawnLayer {
       const packed=world.packed?.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
       cargo.setXY(index, pawn.rescue?.phase==='carry'?-1:packed?4:load ? load.kind==='apparel'?(load.item==='cloth-shirt'?22:23):load.kind==='weapon'?21:load.kind==='medicine' ? (load.item==='herbal-medicine'?18:load.item==='medicine'?19:20) : load.kind === 'component' ? 17 : load.kind === 'blocks' ? blockCargoKind(load.item) : load.kind === 'steel' ? 11 : load.kind === 'chunk' ? chunkCargoKind(load.item) : load.kind === 'wood' ? 1 : load.item === 'survival-meal' ? 3 : 2 : 0, packed||load?.kind==='weapon'||load?.kind==='apparel'?1:load ? Math.min(1, load.quantity / CARRY_CAPACITY) : 0);
     });
-    for (const id of this.visuals.keys()) if (!present.has(id)) this.visuals.delete(id);
+    for (const id of this.visuals.keys()) if (!present.has(id)){this.visuals.delete(id);this.targetPoses.delete(id);}
     for (const attr of [fromAttribute, toAttribute, motion, tint, cargo, equipment]) attr.needsUpdate = true;
     geometry.instanceCount = world.pawns.length;
     (this.cargoMesh!.geometry as THREE.InstancedBufferGeometry).instanceCount = world.pawns.length;

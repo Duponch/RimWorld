@@ -1,5 +1,8 @@
 # Adoption du référentiel utilisateur
 
+V66 — chapitres 23/24, **SYS/TEST-132..135**, personnes/besoins 13/14 : adopter offre, échéance, choix, arrivée et continuation ; adapter cadence explicite et profils limités, différer narrateur général et SYS-148 capture/recrutement. Les chemins historiques automatique et quête acceptée sont distingués par la [recherche fraîche](arrival-reference.md). [Contrat](../development/arrivals.md). Aucun SYS global clos.
+
+
 Revue stratégique du 19 septembre : chapitre 24 et SYS-132..135 relus avec chapitre 23, SYS-084..087 et SYS-148. Adopter admissibilité, conséquences et continuation ; adapter l’ordre de développement en ouvrant population/incidents avant le catalogue social complet. Aucun système supplémentaire validé ; [sources, limites et décision](progression-review-2026-09-19.md), ordre exclusif dans ROADMAP.
 
 V65 — chapitre 14, **SYS-082 / TEST-082**, besoins SYS-076..081 et contrats physiques 8/9 : adopter remplacement réel des activités et perte du contrôle direct ; adapter navigation/temps/présentation 3D ; différer catalogue de crises, traits et relations. Relecture des régimes, priorités de sommeil, gel des pensées et récupérations : [sources et contradictions](mental-break-reference.md), [contrat](../development/mental-break.md). Aucun SYS global clos.

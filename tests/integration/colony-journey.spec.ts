@@ -6,6 +6,7 @@ import { deserializeWorld } from '../../src/sim/serialization';
 import type { World } from '../../src/sim/types';
 import { validateWorld } from '../../src/sim/index';
 import { isBlockMaterial } from '../../src/sim/building-materials';
+import { apparelMoveFactor } from '../../src/sim/apparel-rules';
 import { world, observeErrors, panel, expectWorld, saveKey } from './helpers';
 
 // Full tracing recorded ~500 MB during a stalled run. Keep compact checkpoints
@@ -94,7 +95,10 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
       for(const t of summary.thermal.temperatures){expect(t).toBeGreaterThanOrEqual(14);expect(t).toBeLessThanOrEqual(28);}
       for(const light of summary.lighting) {
         expect(light.cellFactor).toBeCloseTo(.8+.2*Math.min(1,light.cellLight/.3),8);
-        expect(light.travelFactor).toBeGreaterThanOrEqual(.8);expect(light.travelFactor).toBeLessThanOrEqual(1);
+        // This healthy camp equips but never removes its vest. The captured
+        // edge combines light and apparel; 0.8 alone predates physical clothing.
+        const apparel=apparelMoveFactor(current,current.pawns.find(p=>p.id===light.id)!);
+        expect(light.travelFactor).toBeGreaterThanOrEqual(.8*apparel);expect(light.travelFactor).toBeLessThanOrEqual(1);
       }
       expect(current.pawns.every(p=>p.hunger>0&&p.rest>0),context).toBe(true);
       for(const e of current.events)if(e.type==='need'&&e.message.includes('a mangé une portion'))meals.set(`${e.tick}:${e.message}`,Number(e.message.match(/portion \((\d+) /)?.[1] ?? 0));
@@ -115,14 +119,14 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
         expect([15,35],context).toContain(summary.mining.blocks);expect(summary.mining.blocksStored,context).toBe(summary.mining.blocks);
         expect(current.structures.filter(s=>s.kind==='wall'&&isBlockMaterial(s.material)),context).toHaveLength(1);
         expect(current.deconstructed.count,context).toBe(1);expect(current.structures.find(s=>s.kind==='horseshoes')?.x,context).toBe(Math.floor(current.width/2)+4);expect(current.packed,context).toEqual([]);
-        expect(summary.structures,context).toEqual({'wood-generator':1,'standing-lamp':1,'passive-cooler':0,bed:3,table:1,stool:3,wall:7,campfire:1,horseshoes:1,stonecutter:1,door:1});expect(current.jobs.filter(j=>j.growingZoneId===undefined&&!['chop','harvest','mine'].includes(j.kind)),context).toEqual([]);expect(current.resources.filter(r=>r.kind==='rice').length,context).toBeGreaterThan(5);
+        expect(summary.structures,context).toEqual({'wood-generator':1,'standing-lamp':1,'passive-cooler':0,bed:4,table:1,stool:3,wall:7,campfire:1,horseshoes:1,stonecutter:1,door:1});expect(current.jobs.filter(j=>j.growingZoneId===undefined&&!['chop','harvest','mine'].includes(j.kind)),context).toEqual([]);expect(current.resources.filter(r=>r.kind==='rice').length,context).toBeGreaterThan(5);
         // Mining is a replenishment order like woodcutting. Bound the outstanding
         // area, then require these exact jobs to finish after ordinary sleep below.
         expect(current.jobs.filter(j=>j.kind==='mine').length,context).toBeLessThanOrEqual(4);
         expect(summary.mining.componentsInBuildings,context).toBe(2);expect(summary.mining.componentsStored,context).toBe(4);expect(summary.power.filter(s=>s.on),context).toHaveLength(2);
-        expect(summary.apparel.filter(i=>i.owner.type==='apparel'),context).toHaveLength(4);
-        expect(summary.medicines,context).toEqual({total:30,stored:30,policies:['industrial','industrial','industrial']});
-        expect(summary.roofing,context).toEqual({constructed:28,planned:28,removal:0});expect(current.stock.food,context).toBeGreaterThan(0);expect(sleepers.size,context).toBe(3);
+        expect(summary.apparel.filter(i=>i.owner.type==='apparel'),context).toHaveLength(5);
+        expect(summary.medicines,context).toEqual({total:30,stored:30,policies:['industrial','industrial','industrial','industrial']});
+        expect(summary.roofing,context).toEqual({constructed:28,planned:28,removal:0});expect(current.stock.food,context).toBeGreaterThan(0);expect(sleepers.size,context).toBe(4);expect(current.arrivals?.accepted,context).toBe(1);expect(current.pawns,context).toHaveLength(4);
         expect(meals.size,context).toBeGreaterThanOrEqual(18);expect(foodAccount(current)+9*cooked.size+[...meals.values()].reduce((a,b)=>a+b,0),context).toBe(initialFood+[...harvests.values()].reduce((a,b)=>a+b,0));
         expect(current.piles.filter(p=>p.kind==='food').every(p=>['berries','survival-meal','rice','simple-meal'].includes(p.item))).toBe(true);
         expect(cooked.size,context).toBeGreaterThanOrEqual(6);
@@ -184,6 +188,6 @@ test('checkpoint maintenance: finish accepted work through the real UI after ord
     expect(summary.mining.steelStored).toBe(50);expect(summary.mining.steelInBuildings).toBe(150);
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,final);
     expect(errors).toEqual([]);
-    await writeFile(`artifacts/colony-maintenance-${process.env.VALIDATION_VERSION??'v64'}.json`,JSON.stringify({date:new Date().toISOString(),initialTick:initial.tick,finalTick:final.tick,morning,decisions,woodConserved:true,errors},null,2));
+    await writeFile(`artifacts/colony-maintenance-${process.env.VALIDATION_VERSION??'v66'}.json`,JSON.stringify({date:new Date().toISOString(),initialTick:initial.tick,finalTick:final.tick,morning,decisions,woodConserved:true,errors},null,2));
   } finally {await browser.close();}
 });
