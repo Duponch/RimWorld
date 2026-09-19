@@ -1,5 +1,7 @@
 # Choix et écarts de gameplay
 
+V72 : tenue tribale sans recherche, tissu seul, capacité de portage locale dix, profil Artisanat absent neutre 0, reprise liée par auteur, réglage de comptage équipé différé. Seuil thermique 9 °C du code daté adopté malgré le 10 °C écrit au wiki ; pénalité seulement branchée au nouveau poste. Géométrie de tenue interprétée en 3D sur le rig GPU. [Règles et écarts](../development/tailoring.md), [sources](../research/tailoring-reference.md).
+
 V70 : deux échanges positifs Core, aucun effet d’humeur artificiel ; distribution sociale volontairement incomplète sans insultes/bagarres/romance. Compatibilité fixe par paire avec contribution d’âge neutre, compétence Social absente = débutant sans passé, PRNG indépendant. Présentation par inspection/journal, sans bulle 3D. Confiance numérique limitée par les définitions anciennes confrontées ; [sources et choix](../research/social-reference.md).
 
 V69 : six traits Core à consommateurs existants, profils composés explicitement pour les nouvelles personnes ; pas de distribution aléatoire prétendue conforme. Seuils proportionnels, humeur progressive et gains ordinaires distincts ; ancienne personne/offre neutre à la migration. Les interactions sociales sont le prochain lot, pas implicitement livrées. [Recherche](../research/traits-reference.md).

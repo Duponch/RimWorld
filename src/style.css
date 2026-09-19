@@ -40,3 +40,5 @@
 #social-inspection{margin-top:.6rem;max-height:13rem;overflow:auto;font-size:12px}
 #social-inspection summary{position:sticky;top:0;background:#192324;z-index:1;padding:3px 0}
 #social-opinions{padding-left:18px}#social-opinions li{margin:8px 0}#social-opinions p{margin:3px 0;color:#c2c7b6}
+
+[data-apparel*="cloth-tribalwear"] .portrait-body {border-radius:35% 12% 0 0;clip-path:polygon(22% 0,63% 0,100% 100%,0 100%);}

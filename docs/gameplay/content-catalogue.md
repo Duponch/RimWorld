@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+V72 ajoute **crafting-spot** (bâtiment de 1×1 gratuit/instantané), **unfinished-tribalwear** (objet indivisible avec auteur, travail et 60 tissus incorporés) et **cloth-tribalwear** (vêtement peau torse/jambes, 100 PV, neuf ticks d’habillage). La tenue se fabrique sans recherche, six qualités obtenables par Artisanat ; l’inachevé se range avec son propre filtre. Chemises/gilets restent non fabricables. [Contrat](../development/tailoring.md), [sources](../research/tailoring-reference.md).
+
 V71 ajoute **une plante cultivable `cotton`** et **un ItemId `cloth`**, catégorie `textile`. Le coton mûr produit dix tissus, pile 75, non alimentaire et non périssable. Sélection de culture, récolte, transport et filtre Textiles obtenables en partie ; aucun vêtement fabriqué ni recherche livrés par cet ajout. [Contrat](../development/textiles.md), [sources](../research/textile-reference.md).
 
 

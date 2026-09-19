@@ -1,3 +1,4 @@
+import { validUnfinishedShape,validateUnfinished } from './unfinished.ts';
 import { validateSocial } from './social-save.ts';
 import { validateBarriers } from './barrier-save.ts';
 import { validateRaids } from './raid-save.ts';
@@ -81,7 +82,7 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validateWorld(input: unknown): string[] {
   return validateSchema(input, SCHEMA_VERSION);
 }
-function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71): string[] {
+function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(input)) return ['World must be an object.'];
@@ -192,7 +193,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
         }
       } else if (key === 'structures' || key === 'jobs') {
         if(item.medical!==undefined&&(version<46||key!=='structures'||item.kind!=='bed'||item.medical!==true))errors.push('Invalid medical bed role.');
-        if (!oneOf(item.kind, key === 'structures' ? (version < 4 ? ['wall', 'bed'] : ['wall', 'bed', 'table', 'stool', ...(version>=10?['campfire']:[]), ...(version>=15?['horseshoes']:[]), ...(version>=31?['stonecutter']:[]), ...(version>=34?['door']:[]), ...(version>=40?['passive-cooler']:[]),...(version>=42?['wood-generator','standing-lamp']:[])]) : (version < 4 ? ['chop', 'harvest', 'wall', 'bed'] : [...(version>=35?['build-roof','remove-roof']:[]), ...(version>=28?['mine']:[]), ...(version>=25?['install','uninstall']:[]), ...(version>=67?['repair']:[]), ...(version>=24?['deconstruct']:[]), 'chop', 'harvest', ...(version >= 7 ? ['cut'] : []), ...(version >= 8 ? ['sow'] : []), 'wall', 'bed', 'table', 'stool', ...(version>=10?['campfire']:[]), ...(version>=15?['horseshoes']:[]), ...(version>=31?['stonecutter']:[]), ...(version>=34?['door']:[]), ...(version>=40?['passive-cooler']:[]),...(version>=42?['wood-generator','standing-lamp']:[])])) || !integer(item.orientation, 0, 3)
+        if (!oneOf(item.kind, key === 'structures' ? (version < 4 ? ['wall', 'bed'] : ['wall', 'bed', 'table', 'stool', ...(version>=10?['campfire']:[]), ...(version>=15?['horseshoes']:[]), ...(version>=31?['stonecutter']:[]), ...(version>=34?['door']:[]), ...(version>=40?['passive-cooler']:[]),...(version>=42?['wood-generator','standing-lamp']:[]),...(version>=72?['crafting-spot']:[])]) : (version < 4 ? ['chop', 'harvest', 'wall', 'bed'] : [...(version>=35?['build-roof','remove-roof']:[]), ...(version>=28?['mine']:[]), ...(version>=25?['install','uninstall']:[]), ...(version>=67?['repair']:[]), ...(version>=24?['deconstruct']:[]), 'chop', 'harvest', ...(version >= 7 ? ['cut'] : []), ...(version >= 8 ? ['sow'] : []), 'wall', 'bed', 'table', 'stool', ...(version>=10?['campfire']:[]), ...(version>=15?['horseshoes']:[]), ...(version>=31?['stonecutter']:[]), ...(version>=34?['door']:[]), ...(version>=40?['passive-cooler']:[]),...(version>=42?['wood-generator','standing-lamp']:[])])) || !integer(item.orientation, 0, 3)
           || !oneOf(item.footprint, ['standard', 'legacy-single']) || (item.footprint === 'legacy-single' && item.kind !== 'bed' && !(version>=24&&item.kind==='deconstruct'||version>=25&&['install','uninstall'].includes(String(item.kind))))) errors.push('Invalid structure definition or footprint.');
         if (key==='structures' && isFueledBuilding(item.kind)) {
           const f=item.fuel;
@@ -200,9 +201,10 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
         } else if(item.fuel!==undefined)errors.push('Unexpected fuel state.');
         if (key === 'jobs' && (!oneOf(item.status, ['pending', 'active']) || !(item.reservedBy === null || integer(item.reservedBy, 1)) || !stock(item.escrow) || !integer(item.progress, 0, version>=31?Number.MAX_SAFE_INTEGER:119))) errors.push('Invalid job.');
       } else if (key === 'piles') {
+        if(!validUnfinishedShape(item,version))errors.push('Invalid unfinished item.');
         if(!validApparelShape(item,version))errors.push('Invalid apparel state for schema.');
         if(!validWeaponShape(item,version))errors.push('Invalid weapon state for schema.');
-        if (!oneOf(item.kind, ['wood', 'food', ...(version>=28?['chunk']:[]), ...(version>=29?['steel']:[]), ...(version>=32?['blocks']:[]), ...(version>=41?['component']:[]), ...(version>=51?['medicine']:[]), ...(version>=52?['weapon']:[]), ...(version>=63?['apparel']:[]), ...(version>=71?['textile']:[])]) || !integer(item.quantity, 1, MAX_STACK) || !record(item.owner)) errors.push('Invalid material pile.');
+        if (!oneOf(item.kind, ['wood', 'food', ...(version>=28?['chunk']:[]), ...(version>=29?['steel']:[]), ...(version>=32?['blocks']:[]), ...(version>=41?['component']:[]), ...(version>=51?['medicine']:[]), ...(version>=52?['weapon']:[]), ...(version>=63?['apparel']:[]), ...(version>=71?['textile']:[]), ...(version>=72?['unfinished']:[])]) || !integer(item.quantity, 1, MAX_STACK) || !record(item.owner)) errors.push('Invalid material pile.');
         else {
           if (version >= 5) {
             if (typeof item.item !== 'string' || !Object.hasOwn(ITEM_DEFINITIONS, item.item)) errors.push('Unknown item definition.');
@@ -217,7 +219,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
             : (owner.type === 'pawn'||version>=52&&owner.type==='equipment'||version>=63&&owner.type==='apparel') ? !integer(owner.pawnId, 1) || Object.keys(owner).some(key => !['type', 'pawnId'].includes(key))
               : owner.type === 'job' ? !integer(owner.jobId, 1) || Object.keys(owner).some(key => !['type', 'jobId'].includes(key)) : true) errors.push('Invalid material owner.');
         }
-      } else if (!record(item.filters) || typeof item.filters.wood !== 'boolean' || typeof item.filters.food !== 'boolean' || item.filters.textile!==undefined&&(version<71||typeof item.filters.textile!=='boolean') || item.filters.apparel!==undefined&&(version<63||typeof item.filters.apparel!=='boolean') || item.filters.weapon!==undefined&&(version<52||typeof item.filters.weapon!=='boolean') || item.filters.medicine!==undefined&&(version<51||typeof item.filters.medicine!=='boolean') || item.filters.component!==undefined&&(version<41||typeof item.filters.component!=='boolean') || item.filters.blocks!==undefined&&(version<32||typeof item.filters.blocks!=='boolean') || item.filters.steel!==undefined&&(version<29||typeof item.filters.steel!=='boolean') || item.filters.chunk!==undefined&&(version<28||typeof item.filters.chunk!=='boolean') || item.filters.furniture!==undefined&&(version<26||typeof item.filters.furniture!=='boolean')
+      } else if (!record(item.filters) || typeof item.filters.wood !== 'boolean' || typeof item.filters.food !== 'boolean' || item.filters.unfinished!==undefined&&(version<72||typeof item.filters.unfinished!=='boolean') || item.filters.textile!==undefined&&(version<71||typeof item.filters.textile!=='boolean') || item.filters.apparel!==undefined&&(version<63||typeof item.filters.apparel!=='boolean') || item.filters.weapon!==undefined&&(version<52||typeof item.filters.weapon!=='boolean') || item.filters.medicine!==undefined&&(version<51||typeof item.filters.medicine!=='boolean') || item.filters.component!==undefined&&(version<41||typeof item.filters.component!=='boolean') || item.filters.blocks!==undefined&&(version<32||typeof item.filters.blocks!=='boolean') || item.filters.steel!==undefined&&(version<29||typeof item.filters.steel!=='boolean') || item.filters.chunk!==undefined&&(version<28||typeof item.filters.chunk!=='boolean') || item.filters.furniture!==undefined&&(version<26||typeof item.filters.furniture!=='boolean')
         || !integer(item.priority, 1, 4) || !integer(item.capacity, 1, MAX_STACK)) errors.push('Invalid storage policy.');
     }
   }
@@ -254,6 +256,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
   if(version>=46)errors.push(...validateRescues(world));
   if(version>=48)errors.push(...validateFeeding(world));
   if(version>=47)errors.push(...validateCare(world));
+  errors.push(...validateUnfinished(world,version));
   if(version>=63)errors.push(...validateApparel(world));
   if(version>=52)errors.push(...validateEquipment(world));
   if(version>=53)errors.push(...validateDrafting(world));
@@ -562,6 +565,7 @@ export function deserializeWorld(serialized: string): World {
   if(record(input)&&input.schemaVersion===68){const errors=validateSchema(input,68);if(errors.length)throw new Error('Invalid version 68 save: '+errors.join(' '));input.schemaVersion=69;}
   if(record(input)&&input.schemaVersion===69){const errors=validateSchema(input,69);if(errors.length)throw new Error('Invalid version 69 save: '+errors.join(' '));input.schemaVersion=70;}
   if(record(input)&&input.schemaVersion===70){const errors=validateSchema(input,70);if(errors.length)throw new Error('Invalid version 70 save: '+errors.join(' '));input.schemaVersion=71;}
+  if(record(input)&&input.schemaVersion===71){const errors=validateSchema(input,71);if(errors.length)throw new Error('Invalid version 71 save: '+errors.join(' '));input.schemaVersion=72;}
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`); return input as World;
 }
 /** Deterministic diagnostic fingerprint, not a cryptographic digest. */

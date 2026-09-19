@@ -24,7 +24,7 @@ export class WorkEnvironment extends LightEnvironment {
     const room=this.room(station),light=this.lightAt(worker),lighting=lightWorkFactor(light);
     const outdoors=room?.psychologicallyOutdoors ? .8 : 1;
     const roomRole=station.kind==='stonecutter'&&room&&!room.psychologicallyOutdoors&&room.role!=='workshop' ? .8 : 1;
-    const base=station.kind==='campfire' ? .5 : 1;
+    const base=station.kind==='campfire'||station.kind==='crafting-spot' ? .5 : 1;
     return {light,lighting,outdoors,roomRole,station:base,total:lighting*outdoors*roomRole*base};
   }
 }

@@ -18,7 +18,7 @@ function command(w:World,c:Parameters<typeof applyCommand>[1]):void {expect(appl
 function until(w:World,done:()=>boolean,limit=1000):void {for(let i=0;i<limit&&!done();i++)stepWorld(w);expect(done(),`tick ${w.tick}`).toBe(true);expect(validateWorld(w)).toEqual([]);}
 const cloth=(w:World)=>w.piles.reduce((n,p)=>n+(p.item==='cloth'?p.quantity:0),0);
 
-test('ordinary grower builds a small camp then grows, harvests, stores and replants six cotton plants over real simulated days',()=>{
+test('ordinary grower builds, grows, stores and replants cotton, then crafts and wears its first garment over real simulated days',()=>{
   const w=camp(),p=w.pawns[0]!;p.priorities.build=1;addGroundMaterial(w,'wood',140,{x:2,z:5});addGroundMaterial(w,'food',50,{x:2,z:7},'survival-meal');
   for(const [kind,x,z] of [['bed',3,3],['table',3,8],['stool',4,8],['horseshoes',6,3]] as const)command(w,{type:'designate',kind,material:'wood',x,z});
   command(w,{type:'area',action:'growing',from:{x:8,z:5},to:{x:10,z:6}});
@@ -32,10 +32,19 @@ test('ordinary grower builds a small camp then grows, harvests, stores and repla
     if(w.tick%6000===0){expect(validateWorld(w)).toEqual([]);days.push({day:w.tick/6000,food:w.stock.food,cloth:cloth(w),hunger:p.hunger,rest:p.rest,plants:w.resources.length});}
     if(cloth(w)===60&&w.piles.some(i=>i.item==='cloth'&&i.quantity===60&&i.owner.type==='ground'&&i.owner.x===12&&i.owner.z===8)&&w.resources.filter(r=>r.kind==='cotton'&&!initialIds.has(r.id)).length===6)break;
   }
-  writeFileSync('artifacts/cotton-colony-v71.json',JSON.stringify({firstHarvest,endTick:w.tick,days,slept,ate,cloth:cloth(w),plants:w.resources.filter(r=>r.kind==='cotton').length,structures:w.structures.map(s=>s.kind)},null,2));
+  writeFileSync('artifacts/cotton-colony-v72.json',JSON.stringify({firstHarvest,endTick:w.tick,days,slept,ate,cloth:cloth(w),plants:w.resources.filter(r=>r.kind==='cotton').length,structures:w.structures.map(s=>s.kind)},null,2));
   expect(firstHarvest).toBeGreaterThan(16*6000);expect(firstHarvest).toBeLessThan(20*6000);expect(cloth(w)).toBe(60);expect(initialIds.size).toBe(6);
   expect(w.resources.filter(r=>r.kind==='cotton'&&!initialIds.has(r.id))).toHaveLength(6);expect(w.piles.some(i=>i.item==='cloth'&&i.quantity===60&&i.owner.type==='ground'&&i.owner.x===12&&i.owner.z===8)).toBe(true);
   expect(slept&&ate).toBe(true);expect(p.state).not.toBe('dead');expect(w.structures).toHaveLength(4);expect(validateWorld(w)).toEqual([]);
+  writeFileSync('artifacts/tailoring-cotton-checkpoint-v72.json',serializeWorld(w));
+  command(w,{type:'priority',pawnId:p.id,work:'craft',value:1});
+  command(w,{type:'designate',kind:'crafting-spot',x:8,z:10});const spot=w.structures.find(s=>s.kind==='crafting-spot')!;
+  command(w,{type:'bill-add',structureId:spot.id});
+  until(w,()=>w.piles.some(i=>i.item==='cloth-tribalwear'&&i.owner.type==='ground'),6000);
+  const garment=w.piles.find(i=>i.item==='cloth-tribalwear')!;
+  command(w,{type:'order-equipment',pawnId:p.id,itemId:garment.id,action:'wear',queue:false});until(w,()=>garment.owner.type==='apparel',1000);
+  expect(w.tailoring?.completed).toBe(1);expect(cloth(w)).toBe(0);expect(garment.apparel!.hitPoints).toBe(100);
+  writeFileSync('artifacts/tailoring-colony-v72.json',JSON.stringify({firstHarvest,endTick:w.tick,days,slept,ate,garment,tailoring:w.tailoring,crafting:p.skills.crafting},null,2));
 },30000);
 
 test('cotton growth uses species, fertility, light and saved thermal intervals; harvest transaction refuses a full floor',()=>{

@@ -35,6 +35,7 @@ export function pawnGeometry(): THREE.InstancedBufferGeometry {
     const arm = side < 0 ? 2 : 3, leg = side < 0 ? 4 : 5, calf = side < 0 ? 6 : 7;
     addPart([0.12, 0.28, 0.15], [side * 0.23, 0.85, 0], arm, [side * 0.23, 1.01, 0], 0xffffff, 1);
     addPart([0.115, 0.12, 0.14], [side * 0.23, 0.65, 0], arm, [side * 0.23, 1.01, 0], 0xe2b899);
+    addPart([.20,.28,.255],[side*.105,.49,0],leg,[side*.105,.61,0],APPAREL['cloth-tribalwear'].color,-3);
     addPart([0.135, 0.21, 0.17], [side * 0.105, 0.505, 0], leg, [side * 0.105, 0.61, 0], 0x495052);
     addPart([0.13, 0.235, 0.16], [side * 0.105, 0.2825, 0], calf, [side * 0.105, 0.61, 0], 0x495052);
     addPart([0.145, 0.12, 0.23], [side * 0.105, 0.11, 0.03], calf, [side * 0.105, 0.61, 0], 0x443e37);
@@ -103,6 +104,8 @@ export function cargoGeometry(): THREE.InstancedBufferGeometry {
   (['herbal-medicine','medicine','glitterworld-medicine'] as const).forEach((item,i)=>{part([.38,.25,.3],[0,0,0],18+i,ITEM_DEFINITIONS[item].color);part([.2,.03,.065],[0,.14,0],18+i,0xf0eee0);part([.065,.03,.2],[0,.14,0],18+i,0xf0eee0);});
   for(const p of REVOLVER_PARTS)part([...p.size],[...p.center],21,p.color);
   (['cloth-shirt','flak-vest'] as const).forEach((item,i)=>{for(const p of foldedApparel(item))part(p.size,p.center,22+i,p.color);});
+  for(const p of foldedApparel('cloth-tribalwear'))part(p.size,p.center,26,p.color);
+  part([.48,.10,.50],[0,0,0],25,0xd8c8a2);part([.12,.08,.12],[.15,.09,-.13],25,0x5d716e);
   BLOCK_ITEMS.forEach((item,i)=>{part([.27,.17,.36],[-.145,0,0],12+i,ITEM_DEFINITIONS[item].color);part([.27,.17,.36],[.145,0,0],12+i,ITEM_DEFINITIONS[item].color);});
   CHUNK_ITEMS.forEach((item,i)=>{part([.52,.34,.42],[0,0,0],5+i,ITEM_DEFINITIONS[item].color);part([.22,.2,.27],[.18,-.05,-.12],5+i,ITEM_DEFINITIONS[item].color);});
   const vertices = new THREE.InterleavedBuffer(new Float32Array(data), 10);

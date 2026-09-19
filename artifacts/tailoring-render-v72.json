@@ -1,0 +1,161 @@
+{
+  "date": "2026-09-19T14:14:07.162Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "protocol": "Native Chromium WebGPU; natural 250², worn tribalwear on 3/30/100 actors. Half gather/craft one garment, half mine/chop. Real worker at requested 6× through tick 2650, 90 warmup frames, one run each; no full World export during timing. Worker samples are published batch step averages, not an independent per-tick percentile.",
+  "rows": [
+    {
+      "actors": 3,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "description": ""
+      },
+      "elapsedMs": 11219.5707,
+      "simulatedTicks": 664,
+      "completed": 2,
+      "frameMs": {
+        "n": 2642,
+        "p50": 4.199999999998909,
+        "p95": 4.300000000000182,
+        "p99": 8.399999999999636,
+        "max": 20.899999999999636
+      },
+      "frameCpuMs": {
+        "n": 2643,
+        "p50": 3.300000000745058,
+        "p95": 4.600000001490116,
+        "p99": 5.400000002235174,
+        "max": 20.100000001490116
+      },
+      "workerBatchStepMs": {
+        "n": 532,
+        "p50": 0.9500000011175871,
+        "p95": 2.849999999627471,
+        "p99": 5.5,
+        "max": 24.399999998509884
+      },
+      "snapshotAdoptionMs": {
+        "n": 532,
+        "p50": 0,
+        "p95": 0.19999999925494194,
+        "p99": 1.5,
+        "max": 2.599999997764826
+      },
+      "drawCalls": {
+        "n": 2643,
+        "p50": 144,
+        "p95": 170,
+        "p99": 171,
+        "max": 174
+      },
+      "pipelines": [],
+      "stable": true,
+      "errors": [],
+      "invalid": []
+    },
+    {
+      "actors": 30,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "description": ""
+      },
+      "elapsedMs": 11312.2379,
+      "simulatedTicks": 651,
+      "completed": 15,
+      "frameMs": {
+        "n": 2372,
+        "p50": 4.199999999998909,
+        "p95": 8.399999999999636,
+        "p99": 12.600000000000364,
+        "max": 45.899999999999636
+      },
+      "frameCpuMs": {
+        "n": 2373,
+        "p50": 3.5,
+        "p95": 6.5,
+        "p99": 11.800000000745058,
+        "max": 33.900000002235174
+      },
+      "workerBatchStepMs": {
+        "n": 540,
+        "p50": 1.2499999981373549,
+        "p95": 13.200000000496706,
+        "p99": 19.800000000745058,
+        "max": 93.89999999850988
+      },
+      "snapshotAdoptionMs": {
+        "n": 540,
+        "p50": 0,
+        "p95": 1.2999999970197678,
+        "p99": 2.899999998509884,
+        "max": 5.5
+      },
+      "drawCalls": {
+        "n": 2373,
+        "p50": 157,
+        "p95": 178,
+        "p99": 181,
+        "max": 183
+      },
+      "pipelines": [],
+      "stable": true,
+      "errors": [],
+      "invalid": []
+    },
+    {
+      "actors": 100,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "description": ""
+      },
+      "elapsedMs": 11808.920299999998,
+      "simulatedTicks": 652,
+      "completed": 50,
+      "frameMs": {
+        "n": 1719,
+        "p50": 4.200000000000728,
+        "p95": 16.700000000000728,
+        "p99": 25,
+        "max": 33.29999999999927
+      },
+      "frameCpuMs": {
+        "n": 1720,
+        "p50": 4.199999999254942,
+        "p95": 12.899999998509884,
+        "p99": 17.399999998509884,
+        "max": 24.100000001490116
+      },
+      "workerBatchStepMs": {
+        "n": 593,
+        "p50": 6.75,
+        "p95": 21.649999998509884,
+        "p99": 25.200000001117587,
+        "max": 44.900000002235174
+      },
+      "snapshotAdoptionMs": {
+        "n": 593,
+        "p50": 0,
+        "p95": 0.20000000298023224,
+        "p99": 9.300000000745058,
+        "max": 12
+      },
+      "drawCalls": {
+        "n": 1720,
+        "p50": 166,
+        "p95": 188,
+        "p99": 189,
+        "max": 190
+      },
+      "pipelines": [],
+      "stable": true,
+      "errors": [],
+      "invalid": []
+    }
+  ]
+}

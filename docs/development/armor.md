@@ -1,5 +1,7 @@
 # Vêtements physiques et protection corporelle — V63
 
+V72 étend ce contrat avec la **tenue tribale en tissu** : torse/jambes, couche peau, 100 PV, neuf ticks pour enfiler/retirer ; protection normale tranchante 7,2 %, chaleur 3,6 %, contondante 0. Incompatible avec chemise, compatible avec gilet. Fabrication et six qualités réellement obtenables : [confection](tailoring.md). Chemise/gilet conservent leur acquisition antérieure, leur fabrication restant absente.
+
 Chemise en tissu et gilet pare-balles : acquisition au sol dans les nouvelles colonies, habillage et retrait physiques, couches compatibles, protection anatomique, usure aux impacts et projection commune carte/portrait. [Recherche renouvelée](../research/apparel-reference.md), [preuves V63](../history/validation-apparel-v63.md), [priorité canonique](../ROADMAP.md). Le noyau a été préparé sous V62 ; seule V63 le branche au gameplay.
 
 ## Objets et manipulation
@@ -34,4 +36,4 @@ V62 est validée strictement avant passage V63, sans inventer vêtement ni tâch
 
 `character-apparel.ts` projette une fois le snapshot pour le corps GPU et les portraits CSS. Chemise = couleur des manches/torse ; gilet = volume rigide sur le torse, animé avec sa pose. L’attribut d’équipement existant devient vec3 (arme, chemise, gilet), sans nouveau buffer par instance ni nouveau draw call de personnage. Objet plié au sol/cargaison et pièce portée changent au temps de scène, sans retrait anticipé. Le vêtement cosmétique de base n’a toujours aucune protection.
 
-Encore absents : autres vêtements/matières, couvre-chefs, fabrication textile/armure, politiques automatiques et marquage forcé face à ces politiques, déshabillage d’autrui, rangement automatique après retrait, souillure, usure quotidienne, isolation appliquée à la santé, inventaire personnel, masse et portraits 3D définitifs. Les objets présents sont obtenables et protecteurs ; ces limites empêchent de clore le système d’habillement ou GAP-007.
+Encore absents : autres vêtements/matières, couvre-chefs, autres fabrications textiles/armures que la tenue tribale, politiques automatiques et marquage forcé face à ces politiques, déshabillage d’autrui, rangement automatique après retrait, souillure, usure quotidienne, isolation appliquée à la santé, inventaire personnel, masse et portraits 3D définitifs. Les objets présents sont obtenables et protecteurs ; ces limites empêchent de clore le système d’habillement ou GAP-007.

@@ -1,8 +1,12 @@
 # Travail sur Lisière
 
+## Confection V72
+- Lire `docs/development/tailoring.md` et `docs/research/tailoring-reference.md`. Emplacement gratuit instantané, 60 tissus rassemblés, ouvrage physique avec auteur/progression/piles incorporées. Transport conserve son identité ; interruption ne remet pas le travail à zéro. Facture liée attend son auteur et contourne les nouveaux filtres/rayon ; reprise non liée les respecte. Annulation 75 % par pile, sol/identités/bilan/PRNG prévalidés.
+- XP Artisanat sur travail réel, qualité transactionnelle à la fin ; aucune XP/qualité ajoutée aux blocs. Profil absent neutre 0, pas de biographie inventée à la migration. V71 strictement validée avant V72 ; recherches et autres recettes textiles restent absentes. Tenue portée/portrait/cargaison partagent la projection GPU ; aucune compilation ajoutée par vêtement.
+
 ## Culture textile V71
 - Lire `docs/development/textiles.md` et `docs/research/textile-reference.md`. Coton produit `cloth`/`textile`, jamais nourriture ; changement d’espèce conserve les plants et annule les travaux liés avec dépôt conservatif. Commande sans espèce la conserve. Filtre absent = refus ; V70 validée strictement avant migration neutre V71.
-- `CropLayer` garde deux lots résidents préchauffés et des attributs statiques explicitement actualisés. Pas de reconstruction de forêt ni d’envoi de matrices au repos. Confection, ouvrages inachevés, qualité Artisanat et recherche restent absents ; prochaine tranche de ROADMAP, sans recherche fictive pour la tenue tribale.
+- `CropLayer` garde deux lots résidents préchauffés et des attributs statiques explicitement actualisés. Pas de reconstruction de forêt ni d’envoi de matrices au repos. V72 ajoute confection, ouvrages et qualité Artisanat ; recherche selon ROADMAP, sans verrou fictif pour la tenue tribale.
 
 
 ## Social V70
@@ -81,7 +85,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 71 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 72 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)

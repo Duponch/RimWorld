@@ -27,6 +27,7 @@ export function queryCookingBillStatus(world:World,station:Structure,bill:Cookin
     const wood=world.piles.some(p=>p.item==='wood'&&p.owner.type==='ground'&&p.quantity>reservedSource(world,p.id));
     return {code:wood?'waiting-fuel':'missing-fuel',reason:wood?'Feu éteint ; attend un ravitaillement et un accès au bois.':'Feu éteint ; aucun bois au sol non réservé.'};
   }
+  const u=world.piles.find(p=>p.unfinished?.billId===bill.id);if(u)return {code:'unfinished',reason:`Ouvrage commencé : attend ${world.pawns.find(p=>p.id===u.unfinished!.authorId)?.name??'son auteur'} ; ${Math.floor(u.unfinished!.progress/1800000*100)} % conservés.`};
   let available=0;
   for(const pile of world.piles)if(admittedIngredient(bill,pile.item)&&pile.owner.type==='ground'
     &&(pile.owner.x-station.x)**2+(pile.owner.z-station.z)**2<=bill.radius**2)available+=Math.max(0,pile.quantity-reservedSource(world,pile.id));

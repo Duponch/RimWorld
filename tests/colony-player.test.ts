@@ -5,6 +5,7 @@ import { createWorld, applyCommand, stepWorld, validateWorld, serializeWorld, de
 import { playerArrivalDecisions,playerArrivalComplete,playerDecisions, playerFocusDecisions, colonySummary, woodAccount, foodAccount } from './scenarios/colony-player';
 
 test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp construit, stocks entretenus et reprise exacte', () => {
+  const version=process.env.VALIDATION_VERSION??'v72';
   for (const seed of [42, 93, 2048]) {
     let world = createWorld(seed, 250, 250);
     if(seed===42)enableArrivals(world);
@@ -62,8 +63,8 @@ test('joueur ordinaire : cinq à huit jours, trois cartes naturelles, camp const
         world=deserializeWorld(saved);
       }
     }
-    writeFileSync(`tmp/colony-final-v71-${seed}.json`,serializeWorld(world));
-    writeFileSync(`artifacts/colony-v71-${seed}.json`,JSON.stringify({seed,report,final:colonySummary(world)},null,2));
+    writeFileSync(`tmp/colony-final-${version}-${seed}.json`,serializeWorld(world));
+    writeFileSync(`artifacts/colony-${version}-${seed}.json`,JSON.stringify({seed,report,final:colonySummary(world)},null,2));
     const context=JSON.stringify({seed,report,meals:[...meals],sleep:[...sleep]});
     expect(report[0]!.structures,context).toMatchObject({bed:3,table:1,stool:3});
     expect(report[4]!.structures,context).toEqual({'wood-generator':1,'standing-lamp':1,'passive-cooler':0,bed:population,table:1,stool:3,wall:7,campfire:1,horseshoes:1,stonecutter:1,door:1});

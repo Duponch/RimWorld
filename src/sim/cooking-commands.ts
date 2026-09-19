@@ -7,7 +7,7 @@ import type { Command, CommandResult, World } from './types.ts';
 type BillCommand=Extract<Command,{type:'bill-add'|'bill-update'|'bill-remove'|'bill-move'}>;
 export function applyBillCommand(world:World,command:BillCommand,drops:DropPlan):CommandResult {
   const station=world.structures.find(s=>s.id===command.structureId&&stationRecipe(s)!==null);
-  if(!station?.bills)return {ok:false,code:'missing-target',reason:'Poste de cuisine introuvable.'};
+  if(!station?.bills)return {ok:false,code:'missing-target',reason:'Poste de production introuvable.'};
   if(command.type==='bill-add') {
     if(station.bills.length>=64||!Number.isSafeInteger(world.nextId+1))return {ok:false,code:'invalid-command',reason:'Limite de factures atteinte.'};
     station.bills.push(newCookingBill(world.nextId++,stationRecipe(station)!));return {ok:true};

@@ -7,7 +7,7 @@ const record=(x:unknown):x is Record<string,unknown>=>!!x&&typeof x==='object'&&
 export function validApparelShape(p:Record<string,unknown>,version:number):boolean {
   if(p.kind!=='apparel')return p.apparel===undefined;
   const a=p.apparel;
-  return version>=63&&typeof p.item==='string'&&Object.hasOwn(APPAREL,p.item)&&record(a)&&Object.keys(a).every(k=>['quality','hitPoints','forbidden'].includes(k))
+  return version>=63&&(version>=72||p.item!=='cloth-tribalwear')&&typeof p.item==='string'&&Object.hasOwn(APPAREL,p.item)&&record(a)&&Object.keys(a).every(k=>['quality','hitPoints','forbidden'].includes(k))
     &&typeof a.quality==='string'&&(WEAPON_QUALITIES as readonly string[]).includes(a.quality)
     &&typeof a.hitPoints==='number'&&Number.isInteger(a.hitPoints)&&a.hitPoints>0&&a.hitPoints<=APPAREL[p.item as keyof typeof APPAREL].hitPoints
     &&(a.forbidden===undefined||a.forbidden===true)&&p.quantity===1&&record(p.owner)&&['ground','pawn','apparel'].includes(String(p.owner.type));

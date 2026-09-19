@@ -51,6 +51,11 @@ export function planCommandDrops(world:World,command:Command):DropPlan|null {
     for(const pawn of world.pawns)if(pawn.need?.kind==='sleep'&&(pawn.bedId===command.bedId||pawn.id===command.pawnId))pawns.add(pawn.id);
   }
   for(const pawn of world.pawns)if((pawn.jobId!==null&&jobs.has(pawn.jobId))||(pawn.haul&&(jobs.has(constructionHaulId(pawn.haul.destination)??-1)||pawn.haul.destination.type==='stockpile'&&zones.has(pawn.haul.destination.stockpileId))))pawns.add(pawn.id);
+  if(command.type==='designate'&&command.kind==='deconstruct'||command.type==='area'&&command.action==='deconstruct'){
+    const selection=command.type==='area'?queryArea(world,command):null;const cells=selection?.ok?new Set(selection.cells):null;
+    const spots=new Set(world.structures.filter(s=>s.kind==='crafting-spot'&&(cells?cells.has(s.z*world.width+s.x):command.type==='designate'&&same(s,command))).map(s=>s.id));
+    for(const p of world.pawns)if(p.cooking&&spots.has(p.cooking.stationId))pawns.add(p.id);
+  }
   const result:DropPlan=new Map();
   if(!jobs.size&&!pawns.size)return result;
   const shadow={...world,packed:world.packed?.map(p=>({...p,owner:{...p.owner}})),piles:world.piles.map(p=>({...p,owner:{...p.owner}}))};

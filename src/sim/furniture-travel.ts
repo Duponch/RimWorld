@@ -6,6 +6,7 @@ import type { Cell, StructureKind, World } from './types.ts';
 /** Current Core wiki path costs, converted by the local day/tick ratio (10).
  * Repeat suppression is shared by all qualifying furniture, not by instance. */
 export const FURNITURE_TRAVEL:Readonly<Record<StructureKind,Readonly<{delay:number;stand:boolean;repeat:boolean}>>>=Object.freeze({
+  'crafting-spot':{delay:0,stand:true,repeat:false},
   'wood-generator':{delay:5,stand:false,repeat:true},
   'standing-lamp':{delay:1.4,stand:false,repeat:false},
   'passive-cooler':{delay:3,stand:false,repeat:true},

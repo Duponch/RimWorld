@@ -1,3 +1,8 @@
+import { beginUnfinished } from './unfinished.ts';
+import { craftingQuality,craftingSkill } from './crafting-quality.ts';
+import { learnSkill } from './skills.ts';
+import { healthRandom } from './health.ts';
+import { newApparelState } from './apparel-rules.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
 import { PRODUCTION_RECIPES, PRODUCTION_WORK_SCALE, productionWorkTotal, recipeProduct, taskRecipe, taskWork } from './production-recipes.ts';
 import { processProductionOutput, type ProductionContext } from './production-output.ts';
@@ -47,17 +52,24 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   task.actionCell={x:station.x,z:station.z};
   const total=productionWorkTotal(taskRecipe(task));
   task.phase='work';pawn.state='working';pawn.path=[];
+  const unfinished=task.recipe==='tribalwear'?beginUnfinished(world,pawn):null;
+  if(task.recipe==='tribalwear'&&!unfinished)return;
+  if(unfinished){pawn.skills.crafting??={...craftingSkill(pawn)};if(unfinished.unfinished!.progress<total)learnSkill(pawn.skills.crafting,1000,pawn);task.progress=unfinished.unfinished!.progress;}
   task.progress=Math.min(total,task.progress+Math.round(context.workRate(station,pawn)*PRODUCTION_WORK_SCALE));
+  if(unfinished)unfinished.unfinished!.progress=task.progress;
   if(task.progress<total)return;
   const used=new Map<number,number>();for(const i of task.ingredients)used.set(i.pileId,(used.get(i.pileId)??0)+i.quantity);
   const freed=[...used].filter(([id,n])=>world.piles.find(p=>p.id===id)?.quantity===n).length;
   if(world.piles.length-freed+1>32768||!Number.isSafeInteger(world.nextId+1))return;
   const rice=task.ingredients.filter(i=>i.item==='rice').reduce((n,i)=>n+i.quantity,0),item=recipeProduct(taskRecipe(task),task.ingredients);
+  if(task.recipe==='tribalwear'&&!Number.isSafeInteger((world.tailoring?.completed??0)+1))return;
+  const random={rng:world.rng},apparel=task.recipe==='tribalwear'?{...newApparelState('cloth-tribalwear'),quality:craftingQuality(craftingSkill(pawn).level,()=>healthRandom(random))}:undefined;
   // All preconditions succeeded. Consume once, create once, then store physically.
   for(const [id,quantity] of used)world.piles.find(p=>p.id===id)!.quantity-=quantity;
   world.piles=world.piles.filter(p=>p.quantity>0);
-  const id=world.nextId++;world.piles.push({id,item,kind:ITEM_DEFINITIONS[item].kind,quantity:recipe.outputUnits,owner:{type:'pawn',pawnId:pawn.id},...freshRot(item,world.tick)});
+  const id=world.nextId++;world.piles.push({id,item,kind:ITEM_DEFINITIONS[item].kind,quantity:recipe.outputUnits,owner:{type:'pawn',pawnId:pawn.id},...freshRot(item,world.tick),...apparel?{apparel}:{}});
+  if(apparel){world.rng=random.rng;(world.tailoring??={completed:0,cancelled:0,lostCloth:0}).completed++;}
   task.ingredients=[];task.productId=id;task.phase='output';task.progress=0;pawn.planCooldown=0;
   if(bill.mode==='times')bill.target=Math.max(0,bill.target-1);
-  context.event(task.recipe==='stone-blocks'?`${pawn.name} a taillé 20 ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:`${pawn.name} a cuisiné 1 repas simple (${10-rice} baies, ${rice} riz).`);
+  context.event(task.recipe==='tribalwear'?`${pawn.name} a fabriqué une tenue tribale en tissu.`:task.recipe==='stone-blocks'?`${pawn.name} a taillé 20 ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:`${pawn.name} a cuisiné 1 repas simple (${10-rice} baies, ${rice} riz).`);
 }

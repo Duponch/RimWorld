@@ -1,3 +1,5 @@
+import { planUnfinished } from './tailoring-plan.ts';
+import { CARRY_CAPACITY } from './definitions.ts';
 import { PRODUCTION_RECIPES, admittedIngredient, stationRecipe, stationWork, type ProductionIngredient } from './production-recipes.ts';
 import { reservedServiceCells } from './service-reservations.ts';
 import { billWanted, cookingPlaceFree, cookingSpot, ingredientPlaceFree } from './cooking-bills.ts';
@@ -44,6 +46,7 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
         }
         break;
       }
+      const resumed=planUnfinished(world,pawn,station,bill,reachable,budget);if(resumed.plan)return resumed.plan;if(resumed.handled)continue;
       const ingredients:CookingIngredient[]=[],planned=new Map<string,{item:ProductionIngredient;quantity:number}>();
       let missing:number=PRODUCTION_RECIPES[bill.recipe].units;
       const sources=world.piles.filter(p=>admittedIngredient(bill,p.item)&&p.owner.type==='ground'&&distance(p.owner,station)<=bill.radius**2)
@@ -65,13 +68,13 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
           return (!reserved||reserved.item===pile.item)&&groundCapacity(world,c,pile.item)-(reserved?.quantity??0)>=quantity;
         });
         if(!cell)continue;
-        ingredients.push({pileId:pile.id,item:pile.item as ProductionIngredient,quantity,stage:already?'placed':'source',cell:{x:cell.x,z:cell.z}});
+        for(let left=quantity;left>0;){const part=already?left:Math.min(left,CARRY_CAPACITY);ingredients.push({pileId:pile.id,item:pile.item as ProductionIngredient,quantity:part,stage:already?'placed':'source',cell:{x:cell.x,z:cell.z}});left-=part;}
         if(!already){const key=`${cell.x}:${cell.z}`;planned.set(key,{item:pile.item as ProductionIngredient,quantity:(planned.get(key)?.quantity??0)+quantity});}
         missing-=quantity;if(!missing)break;
       }
       if(missing)continue; // Try the next bill if its filters admit other ingredients.
       const source=ingredients.find(i=>i.stage==='source'),target=source?world.piles.find(p=>p.id===source.pileId)!.owner as Cell:spot;
-      return {station,priority:pawn.priorities[stationWork(station)],target,path:source?routeToJob(world,target,reachable,true)!:toSpot,task:{...(bill.recipe==='stone-blocks'?{recipe:'stone-blocks' as const}:{}),stationId:station.id,billId:bill.id,spot,actionCell:{x:target.x,z:target.z},phase:'gather',ingredients,progress:0,productId:null,storageId:null}};
+      return {station,priority:pawn.priorities[stationWork(station)],target,path:source?routeToJob(world,target,reachable,true)!:toSpot,task:{...(bill.recipe!=='simple-meal'?{recipe:bill.recipe}:{}),stationId:station.id,billId:bill.id,spot,actionCell:{x:target.x,z:target.z},phase:'gather',ingredients,progress:0,productId:null,storageId:null}};
     }
   }
   return null;

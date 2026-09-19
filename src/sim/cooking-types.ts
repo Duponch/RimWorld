@@ -22,7 +22,7 @@ export interface CookingIngredient {
 }
 /** Historical serialized envelope shared by meal and material production. */
 export interface CookingTask {
-  recipe?:'stone-blocks';
+  recipe?:'stone-blocks'|'tribalwear';
   stationId:number;
   billId:number;
   spot:Cell;

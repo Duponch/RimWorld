@@ -56,8 +56,9 @@ export function queryPawnStatus(world: World, pawn: Pawn): { code: string; reaso
   if(pawn.cooking) {
     const task=pawn.cooking,recipe=PRODUCTION_RECIPES[taskRecipe(task)];
     if(task.phase==='interrupted')return {code:'cooking-interrupted',reason:'Ingrédient perdu ; attend une case libre pour déposer la cargaison restante.'};
-    if(task.phase==='work')return {code:'cooking',reason:`${task.recipe==='stone-blocks'?'Taille des blocs de pierre':'Prépare un repas simple'} (${Math.floor(task.progress/productionWorkTotal(taskRecipe(task))*100)} %).`};
+    if(task.phase==='work')return {code:'cooking',reason:`${task.recipe==='tribalwear'?'Confectionne une tenue tribale':task.recipe==='stone-blocks'?'Taille des blocs de pierre':'Prépare un repas simple'} (${Math.floor(task.progress/productionWorkTotal(taskRecipe(task))*100)} %).`};
     if(task.phase==='output')return {code:'cooking-output',reason:task.storageId===null?'Porte le produit fabriqué vers un dépôt au sol.':'Porte le produit fabriqué vers sa réserve.'};
+    if(task.ingredients.some(i=>i.item==='unfinished-tribalwear'))return {code:'gathering-ingredients',reason:'Reprend son ouvrage inachevé au poste.'};
     const placed=task.ingredients.filter(i=>i.stage==='placed').reduce((n,i)=>n+i.quantity,0);
     return {code:'gathering-ingredients',reason:placed===recipe.units?'Ingrédients rassemblés ; rejoint sa place au poste.':`Rassemble les ingrédients (${placed}/${recipe.units} déposés au poste).`};
   }

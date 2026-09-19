@@ -4,9 +4,10 @@ import { partMissing } from './injury-state.ts';
 import type { ItemId } from './items.ts';
 import type { MaterialPile, Pawn, World } from './types.ts';
 
-/** Deliberately two obtainable profiles, not the future textile catalogue.
- * Fixed cloth is part of the shirt identity; flak is a manufactured composite. */
+/** Three obtainable profiles, not the future textile catalogue.
+ * Fixed cloth is part of each textile garment identity; flak is a manufactured composite. */
 export const APPAREL = Object.freeze({
+  'cloth-tribalwear': Object.freeze({label:'Tenue tribale en tissu',hitPoints:100,equipTicks:9,color:0xd8c8a2,coverage:apparelCoverage(['skin'],['torso','legs']),ratings:Object.freeze({sharp:.072,blunt:0,heat:.036}),moveOffset:0}),
   'cloth-shirt': Object.freeze({label:'Chemise en tissu',hitPoints:100,equipTicks:9,color:0xd8c8a2,coverage:apparelCoverage(['skin'],['torso','neck','shoulders','arms']),ratings:Object.freeze({sharp:.072,blunt:0,heat:.036}),moveOffset:0}),
   'flak-vest': Object.freeze({label:'Gilet pare-balles',hitPoints:200,equipTicks:30,color:0x626d65,coverage:apparelCoverage(['middle'],['torso','neck']),ratings:Object.freeze({sharp:1,blunt:.36,heat:.27}),moveOffset:-.12}),
 });

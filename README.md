@@ -1,6 +1,6 @@
 # Lisière
 
-V71 : choisir **Coton** dans l’inspection d’un champ, récolter du tissu et le ranger dans une réserve **Textiles**. La confection et la recherche restent les prochains objectifs de l’étape 4. [Contrat et limites](docs/development/textiles.md).
+V72 : cultiver du coton, rassembler **60 tissus** sur un **emplacement d’artisanat**, confectionner une tenue tribale puis la porter. Ouvrage inachevé, auteur, qualité et XP conservés ; recherche encore à venir. [Contrat et limites](docs/development/tailoring.md).
 
 
 V70 : **les colons font connaissance pendant leurs activités**. Bavardage et discussions approfondies créent des opinions dirigées avec souvenirs, apprentissage Social et inspection. [Contrat](docs/development/social.md). Six traits, accueil et premier raid sont déjà jouables ; psychologie, équipements, production et environnement restent partiels. Prochaine priorité : filière utile et véritable déblocage de recherche. [Guide](docs/gameplay/player-guide.md), [état courant](docs/gameplay/implementation-status.md), [validation](docs/history/validation-social-v70.md).

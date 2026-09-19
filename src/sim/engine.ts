@@ -1,3 +1,6 @@
+import { tailoringTemperatureFactor } from './crafting-quality.ts';
+import { detachMissingBills,cancelUnfinished } from './unfinished.ts';
+import { placeCraftingSpot,removeCraftingSpot } from './crafting-spot.ts';
 import { harvestProductLabel } from './plants.ts';
 import { advanceSocial } from './social.ts';
 import { reconcileRepairs,advanceRepair } from './repairs.ts';
@@ -59,7 +62,7 @@ import { processCooking } from './cooking.ts';
 import { WorkEnvironmentCache, type WorkEnvironment } from './work-environment.ts';
 import type { LightEnvironment } from './light-environment.ts';
 import { advanceWork } from './work-progress.ts';
-import { reconcileTemperature, advanceTemperature } from './temperature.ts';
+import { TemperatureView, reconcileTemperature, advanceTemperature } from './temperature.ts';
 import { updatePlantTemperatures } from './thermal-plants.ts';
 import { updateFoodTemperatures } from './thermal-food.ts';
 import { applyBillCommand } from './cooking-commands.ts';
@@ -86,7 +89,7 @@ import type { AreaCommand, Cell, Command, CommandResult, DesignateCommand, Job, 
 export { JOB_DURATION, JOB_WOOD_COST } from './definitions.ts';
 
 const PATH_SEARCHES_PER_TICK = 8;
-const JOB_LABEL: Readonly<Record<JobKind, string>> = { repair:'réparer', 'wood-generator':'construction de générateur à bois', 'standing-lamp':'construction de lampe sur pied', 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'pose de toit', 'remove-roof':'retrait de toit', door:'construction de porte', stonecutter:'construction de table de taille de pierre', mine:'minage', uninstall:'désinstallation', install:'réinstallation', deconstruct: 'déconstruction', chop: 'abattage', harvest: 'récolte', cut: 'coupe de plante', sow: 'semis', horseshoes: 'construction de piquet de fers à cheval', campfire: 'construction de feu de camp', wall: 'construction de mur', bed: 'construction de lit', table: 'construction de table', stool: 'construction de tabouret' };
+const JOB_LABEL: Readonly<Record<JobKind, string>> = { 'crafting-spot':'emplacement d’artisanat', repair:'réparer', 'wood-generator':'construction de générateur à bois', 'standing-lamp':'construction de lampe sur pied', 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'pose de toit', 'remove-roof':'retrait de toit', door:'construction de porte', stonecutter:'construction de table de taille de pierre', mine:'minage', uninstall:'désinstallation', install:'réinstallation', deconstruct: 'déconstruction', chop: 'abattage', harvest: 'récolte', cut: 'coupe de plante', sow: 'semis', horseshoes: 'construction de piquet de fers à cheval', campfire: 'construction de feu de camp', wall: 'construction de mur', bed: 'construction de lit', table: 'construction de table', stool: 'construction de tabouret' };
 const sameCell = (a: Cell, b: Cell): boolean => a.x === b.x && a.z === b.z;
 const refusal = (code: RefusalCode, reason: string): CommandResult => ({ ok: false, code, reason });
 function event(world: World, type: 'job' | 'need' | 'command', message: string): void {
@@ -112,7 +115,7 @@ function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandR
   if(command.action==='home'||command.action==='remove-home'){const cells=new Set(world.home);for(const i of selection.cells)if(command.action==='home')cells.add(i);else cells.delete(i);world.home=[...cells].sort((a,b)=>a-b);if(!world.home.length)delete world.home;} else if (isRoofArea(command.action)) { designateRoofArea(world, selection.cells, command.action); } else if (command.action === 'deconstruct') {
     const selected = new Set(selection.cells);
     const targets = world.structures.filter(s => footprintCells(s).some(c => selected.has(cellIndex(world,c.x,c.z))));
-    for (const target of targets) designateDeconstruction(world,target);
+    for (const target of targets)if(target.kind==='crafting-spot')removeCraftingSpot(world,target,drops);else designateDeconstruction(world,target);
     affected = targets.length;
   } else if(command.action==='haul-chunks') {
     const selected=new Set(selection.cells);for(const p of world.piles)if(p.kind==='chunk'&&p.owner.type==='ground'&&selected.has(cellIndex(world,p.owner.x,p.owner.z)))p.haulRequested=true;
@@ -160,7 +163,7 @@ function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandR
 
 /** Pure shared rule used by preview and command execution. */
 export function canDesignate(world: World, command: DesignateCommand): CommandResult {
-  if (!command || !['wood-generator','standing-lamp','passive-cooler','door','stonecutter', 'mine', 'uninstall', 'deconstruct', 'chop', 'harvest', 'cut', 'wall', 'bed', 'table', 'stool', 'campfire', 'horseshoes'].includes(command.kind)) return refusal('invalid-command', 'Type de travail inconnu.');
+  if (!command || !['crafting-spot','wood-generator','standing-lamp','passive-cooler','door','stonecutter', 'mine', 'uninstall', 'deconstruct', 'chop', 'harvest', 'cut', 'wall', 'bed', 'table', 'stool', 'campfire', 'horseshoes'].includes(command.kind)) return refusal('invalid-command', 'Type de travail inconnu.');
   if((command.kind==='door'||command.kind==='passive-cooler'||isElectrical(command.kind))&&command.orientation!==undefined&&command.orientation!==0)return refusal('invalid-command','Ce bâtiment ne se tourne pas manuellement.');
   if (command.orientation !== undefined && (!Number.isInteger(command.orientation) || command.orientation < 0 || command.orientation > 3)) return refusal('invalid-command', 'Orientation invalide.');
   if(!validConstructionMaterial(command.kind,command.material))return refusal('invalid-command','Matériau incompatible avec cette construction.');
@@ -173,6 +176,7 @@ export function canDesignate(world: World, command: DesignateCommand): CommandRe
   if (world.jobs.some(job => !isRoofJob(job) && !(command.kind==='deconstruct'&&job.kind==='repair') && footprintCells(job).some(cell => cells.some(target => sameCell(cell, target))))) return refusal('occupied', 'Un ordre existe déjà dans cette empreinte.');
   if(command.kind==='deconstruct'||command.kind==='uninstall')return {ok:true};
   if(command.kind==='mine')return world.tiles[cellIndex(world,command.x,command.z)]!.terrain==='rock'?{ok:true}:refusal('incompatible-resource','Désigner un massif rocheux à miner.');
+  if(command.kind==='crafting-spot'&&world.resources.some(r=>sameCell(r,command)))return refusal('occupied','Dégager la plante avant de placer cet emplacement.');
   const resource = world.resources.find(candidate => sameCell(candidate, command));
   if (command.kind === 'chop' || command.kind === 'harvest' || command.kind === 'cut') {
     return resource && (command.kind === 'chop' ? resource.kind === 'tree' : isPlant(resource)) && (command.kind !== 'harvest' || harvestable(world, resource)) ? { ok: true } : refusal('incompatible-resource', 'Ressource incompatible.');
@@ -191,7 +195,7 @@ export function canDesignate(world: World, command: DesignateCommand): CommandRe
 export function applyCommand(world: World, command: Command): CommandResult {
   const result=applyCommandInternal(world,command);
   if(result.ok){
-    reconcileRepairs(world);
+    detachMissingBills(world);reconcileRepairs(world);
     if(command.type.startsWith('order-')&&'pawnId' in command){const actor=world.pawns.find(p=>p.id===command.pawnId);if(actor)delete actor.flee;}
     reconcileRescues(world);reconcilePatientRest(world);reconcileTending(world);reconcileFeeding(world);reconcileEquipmentTasks(world);for(const pawn of world.pawns)reconcileWeaponMemory(world,pawn);reconcileOrders(world);const thermal=reconcileTemperature(world);updateFoodTemperatures(world,thermal);updatePlantTemperatures(world,thermal);}
   return result;
@@ -199,6 +203,7 @@ export function applyCommand(world: World, command: Command): CommandResult {
 function applyCommandInternal(world: World, command: Command): CommandResult {
   if(command?.type==='designate'&&command.kind==='repair')return refusal('invalid-command','Utilisez la zone de foyer pour activer les réparations.');
   if (!command || typeof command !== 'object') return refusal('invalid-command', 'Commande invalide.');
+  if(command.type==='cancel-unfinished')return cancelUnfinished(world,command.itemId);
   if(command.type==='enable-raids'){enableRaids(world);return {ok:true};}
   if(command.type==='enable-arrivals'||command.type==='answer-arrival')return applyArrival(world,command);
   const actors='pawnIds' in command&&Array.isArray(command.pawnIds)?command.pawnIds:'pawnId' in command&&command.pawnId!==null?[command.pawnId]:[];
@@ -328,9 +333,10 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   }
   if(command.kind==='deconstruct') {
     if(!Number.isSafeInteger(world.nextId+1))return refusal('invalid-command','Limite des identités atteinte.');
-    designateDeconstruction(world,deconstructionAt(world,command)!);
+    const target=deconstructionAt(world,command)!;if(target.kind==='crafting-spot')removeCraftingSpot(world,target,drops);else designateDeconstruction(world,target);
     wakePlanners(world);event(world,'command','Bâtiment désigné pour déconstruction.');return {ok:true};
   }
+  if(command.kind==='crafting-spot'){const r=placeCraftingSpot(world,command,drops);if(r.ok)wakePlanners(world);return r;}
   removeZonesForPlan(world,command,drops);
   world.jobs.push({ id: world.nextId++, kind: command.kind, ...(isConstruction(command)?{construction:'blueprint' as const,material:command.material??'wood' as const}:{}), x: command.x, z: command.z, orientation: command.orientation ?? 0, footprint: 'standard', status: 'pending', reservedBy: null, progress: 0, escrow: { wood: 0, food: 0 } });
   refreshStock(world); wakePlanners(world); event(world, 'command', `Nouvel ordre : ${JOB_LABEL[command.kind]} (${command.x}, ${command.z}).`); return { ok: true };
@@ -379,7 +385,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     updateDoors(world);
     const structuresBeforeCombat=world.structures;
     advanceWorldCombat(world);
-    reconcileRepairs(world);
+    detachMissingBills(world);reconcileRepairs(world);
     expireStaggers(world);
     scheduleGrowing(world);
     scheduleRoofs(world);reconcileRescues(world);reconcilePatientRest(world);reconcileTending(world);reconcileFeeding(world);reconcileEquipmentTasks(world);for(const pawn of world.pawns)reconcileWeaponMemory(world,pawn);
@@ -446,7 +452,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if(pawn.rescue){processRescue(world,pawn,needsContext);continue;}
       if (pawn.haul) { const refueling=pawn.haul.destination.type==='fuel';processHaul(world, pawn, (target, allow) => moveToward(world, pawn, target, allow, getBlocked, budget,false,getLight), () => {wakePlanners(world);if(refueling)invalidateEnvironment();});continue; }
       if(pawn.cooking) {processCooking(world,pawn,{
-        workRate:(station,worker)=>getEnvironment().production(station,worker).total*physicalWorkFactor(pawn,pawn.cooking?.recipe==='stone-blocks'?'craft':'cook',body),
+        workRate:(station,worker)=>getEnvironment().production(station,worker).total*(station.kind==='crafting-spot'?tailoringTemperatureFactor(new TemperatureView(world,thermal).at(world,station)):1)*physicalWorkFactor(pawn,pawn.cooking?.recipe?'craft':'cook',body),
         candidates:()=>searchCandidates(world,pawn,getBlocked(),occupied,budget),
         search:goals=>search(world,pawn,getBlocked(),occupied,budget,goals),
         move:(target,exact)=>moveToward(world,pawn,target,true,getBlocked,budget,exact,getLight),

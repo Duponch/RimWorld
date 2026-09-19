@@ -492,6 +492,8 @@ export class ColonyRenderer {
             logs.push({ x, z: lz, y, sx: WORLD_SCALE.pileWidth, sy: 0.12, sz: 0.12, color: row % 2 ? 0x9d794d : 0x896841 });
             ends.push({ x: x + WORLD_SCALE.pileWidth / 2 + 0.003, z: lz, y, sx: 0.012, sy: 0.095, sz: 0.095 });
           }
+        } else if(bundle.kind==='unfinished'){
+          food.push({x,z,y:.08,sx:.48,sy:.12,sz:.50,color:0xd8c8a2},{x:x+.15,z:z-.13,y:.17,sx:.12,sy:.08,sz:.12,color:0x5d716e});
         } else if(bundle.kind==='textile'){
           food.push({x:bundle.x,z,y:height/2,sx:.55,sy:height,sz:.4,color:ITEM_DEFINITIONS.cloth.color});
           food.push({x:bundle.x,z,y:height+.012,sx:.08,sy:.025,sz:.42,color:0x8a846a});
@@ -699,7 +701,7 @@ export class ColonyRenderer {
     const minX=Math.min(...cells.map(c=>c.x)),maxX=Math.max(...cells.map(c=>c.x)),minZ=Math.min(...cells.map(c=>c.z)),maxZ=Math.max(...cells.map(c=>c.z));
     this.hover.scale.set(maxX-minX+1, maxZ-minZ+1, 1);
     this.hover.position.set((minX+maxX)/2, this.world.tiles[cell.z * this.world.width + cell.x]?.terrain === 'water' ? WORLD_SCALE.waterSurface + 0.04 : 0.055, (minZ+maxZ)/2);
-    const validity = this.tool==='install'&&this.furniturePlacement?installCommand(this.world,{type:'install',structureId:this.furniturePlacement.id,...cell,orientation:this.furniturePlacement.kind==='standing-lamp'?0:this.placementRotation},true):this.tool === 'wood-generator'||this.tool === 'standing-lamp'||this.tool === 'passive-cooler'||this.tool === 'door'||this.tool === 'stonecutter'||this.tool === 'mine'||this.tool === 'uninstall'||this.tool === 'wall' || this.tool === 'bed' || this.tool === 'table' || this.tool === 'stool' || this.tool === 'campfire' || this.tool === 'horseshoes' || this.tool === 'chop' || this.tool === 'harvest' || this.tool === 'cut'
+    const validity = this.tool==='install'&&this.furniturePlacement?installCommand(this.world,{type:'install',structureId:this.furniturePlacement.id,...cell,orientation:this.furniturePlacement.kind==='standing-lamp'?0:this.placementRotation},true):this.tool === 'crafting-spot'||this.tool === 'wood-generator'||this.tool === 'standing-lamp'||this.tool === 'passive-cooler'||this.tool === 'door'||this.tool === 'stonecutter'||this.tool === 'mine'||this.tool === 'uninstall'||this.tool === 'wall' || this.tool === 'bed' || this.tool === 'table' || this.tool === 'stool' || this.tool === 'campfire' || this.tool === 'horseshoes' || this.tool === 'chop' || this.tool === 'harvest' || this.tool === 'cut'
       ? canDesignate(this.world, { type: 'designate', kind: this.tool, ...cell, ...(this.tool==='wood-generator'||this.tool==='standing-lamp'?{material:'steel' as const}:this.tool==='passive-cooler'?{material:'wood' as const}:{}), orientation: this.tool==='wood-generator'||this.tool==='standing-lamp'||this.tool==='door'||this.tool==='passive-cooler'?0:this.placementRotation }) : undefined;
     const color = validity?.ok === false ? 0xe46f58 : this.tool === 'cancel' || this.tool === 'remove-stockpile' ? 0xe6876a : this.tool === 'select' ? 0xf9ebae : 0x9dd9ca;
     (this.hover.material as THREE.MeshBasicNodeMaterial).color.setHex(color);
@@ -721,7 +723,7 @@ export class ColonyRenderer {
     if (event.target instanceof HTMLElement && (event.target.matches('input, textarea, select') || event.target.isContentEditable)) return;
     const key = event.key.toLowerCase();
     // Q/E rotate a bed in Architecte. Outside placement, Q retains AZERTY pan.
-    if ((this.tool === 'install' || this.tool === 'bed' || this.tool === 'table' || this.tool === 'campfire' || this.tool === 'stonecutter') && (key === 'q' || key === 'e')) return;
+    if ((this.tool === 'install' || this.tool === 'bed' || this.tool === 'table' || this.tool === 'campfire' || this.tool === 'stonecutter' || this.tool === 'crafting-spot') && (key === 'q' || key === 'e')) return;
     if (['arrowleft', 'arrowright', 'arrowup', 'arrowdown', 'q', 'a', 'd', 'z', 'w', 's'].includes(key)) {
       this.keys.add(key); if (key.startsWith('arrow')) event.preventDefault();
     }

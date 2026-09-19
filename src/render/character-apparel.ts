@@ -10,8 +10,8 @@ export function apparelProjection(world:World):ReadonlyMap<number,readonly Mater
   return result;
 }
 export function apparelAppearance(pieces:readonly MaterialPile[]=[]) {
-  const shirt=pieces.some(p=>p.item==='cloth-shirt'),vest=pieces.some(p=>p.item==='flak-vest');
-  return {shirt,vest,color:shirt?APPAREL['cloth-shirt'].color:undefined,signature:pieces.map(p=>p.item).sort().join(' '),description:pieces.map(apparelLabel).join(', ')||'Aucun vêtement équipé'};
+  const shirt=pieces.some(p=>p.item==='cloth-shirt'),tribal=pieces.some(p=>p.item==='cloth-tribalwear'),vest=pieces.some(p=>p.item==='flak-vest');
+  return {shirt,tribal,vest,color:tribal?APPAREL['cloth-tribalwear'].color:shirt?APPAREL['cloth-shirt'].color:undefined,signature:pieces.map(p=>p.item).sort().join(' '),description:pieces.map(apparelLabel).join(', ')||'Aucun vêtement équipé'};
 }
 /** Folded ground/cargo meshes share dimensions and colors, in world units. */
 export function foldedApparel(item:ApparelItem) {

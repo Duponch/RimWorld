@@ -1,5 +1,7 @@
 # Production de blocs — V32
 
+V72 partage le transport et l’enveloppe de production avec la [confection](tailoring.md). La taille conserve sa propre règle : **aucun ouvrage inachevé, aucune qualité et aucun gain Artisanat** ajoutés implicitement aux blocs.
+
 [Recherche précise](../research/stonecutting-reference.md), [objet atelier](stonecutter.md), [chaîne de cuisine](cooking.md), [logistique](material-logistics.md), [transferts de meubles](furniture-transfer.md).
 
 ## Chaîne jouable

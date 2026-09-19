@@ -1,8 +1,8 @@
 # Plan de développement
 
-État : **19 septembre 2026, après V71**. ROADMAP est l’unique calendrier G0–G5. G0 en consolidation, G1/G2/G3 partiels, G4 engagé par l’accueil, G5 absent ; aucun jalon complet. Les numéros de schéma ne mesurent pas l’avancement du jeu. [Inventaire réel](gameplay/implementation-status.md), [preuves](development/validation.md), [index](README.md).
+État : **19 septembre 2026, après V72**. ROADMAP est l’unique calendrier G0–G5. G0 en consolidation, G1/G2/G3 partiels, G4 engagé par l’accueil, G5 absent ; aucun jalon complet. Les numéros de schéma ne mesurent pas l’avancement du jeu. [Inventaire réel](gameplay/implementation-status.md), [preuves](development/validation.md), [index](README.md).
 
-Dernière fonctionnalité publiée : [coton et tissu V71](development/textiles.md), du semis au stockage, avec choix de culture. L’étape 4 reste ouverte : aucun équipement n’est encore fabriqué. [Preuves](history/validation-textile-v71.md). V69/V70 satisfont la tranche proche de l’étape 3 ; accueil V66 et menace V68 restent livrés.
+Dernière fonctionnalité publiée : [confection physique V72](development/tailoring.md), de la récolte de coton à la tenue portée. L’étape 4 reste ouverte pour la première recherche et son déblocage. [Preuves](history/validation-tailoring-v72.md). V69/V70 satisfont la tranche proche de l’étape 3 ; accueil V66 et menace V68 restent livrés.
 
 ## Priorité actuelle
 
@@ -10,7 +10,7 @@ Dernière fonctionnalité publiée : [coton et tissu V71](development/textiles.m
 
 La [revue de progression du 19 septembre](research/progression-review-2026-09-19.md) remplace l’ordre « terminer pensées/traits/relations, puis ouvrir les incidents ». Les interactions physiques, cas limites, migrations et budgets restent exigés. Nous avançons maintenant par changements vécus dans la colonie, en traversant G1–G4 selon leurs dépendances. Les jalons sont des domaines de couverture, pas des portes obligeant à finir tout G3 avant G4.
 
-**Prochaine livraison visée : poursuivre l’étape 4, coton → tenue tribale → recherche Vêtements complexes.** V71 rend le tissu cultivable/stockable. Prochain résultat visible : emplacement d’artisanat gratuit, facture de tenue tribale, soixante tissus physiquement rassemblés, ouvrage inachevé conservé lors des interruptions, qualité/compétence pertinente, vêtement produit puis porté. Revoir les sources préparées dans [la recherche textile](research/textile-reference.md) avant cette intégration. La tenue tribale ne demande pas de recherche ; ensuite Vêtements complexes doit ouvrir le véritable établi manuel et la chemise. Aucun élargissement aux autres textiles, tout le catalogue ou tout l’arbre technologique avant cette boucle. Critère d’arrêt de l’étape 4 : fabriquer et utiliser un équipement puis poursuivre ce déblocage réel.
+**Prochaine livraison visée : terminer l’étape 4 avec une recherche utile.** Coton → tissu → tenue tribale → port est livré. Prochain résultat visible : recherche **Vêtements complexes**, véritable établi manuel de tailleur et chemise fabricable. Vérifier à nouveau coût, vitesse, poste de recherche, persistance, atelier et recette ; ne pas inventer un verrou pour la tenue tribale qui reste initiale. Réutiliser la confection physique V72, ses inachevés et sa qualité. Limiter le catalogue et l’arbre technologique à ce déblocage avant les pressions environnementales de l’étape 5. Critère d’arrêt : produire puis porter la chemise débloquée par une recherche achevée dans la même colonie.
 
 | Ordre de priorité | Résultat que le joueur doit pouvoir constater | Limite de périmètre |
 |---|---|---|
@@ -106,7 +106,7 @@ Objectif d'une partie, tonalité fictionnelle, contraintes de verticalité, tail
 
 ## Estimation de charge — 18 septembre 2026
 
-Descriptions factuelles corrigées le 19 septembre après V71 ; fourchettes de charge conservées comme hypothèses historiques, sans nouvelle mesure de vélocité ni date de fin réengagée. La revue stratégique ne transforme pas ces pourcentages en mesures objectives.
+Descriptions factuelles corrigées le 19 septembre après V72 ; fourchettes de charge conservées comme hypothèses historiques, sans nouvelle mesure de vélocité ni date de fin réengagée. La revue stratégique ne transforme pas ces pourcentages en mesures objectives.
 
 **Environ 20 % du travail total, fourchette 15–25 %**, pour une reproduction substantielle du jeu de base en 3D, avec contenu, intégration, corrections et finition. C'est un jugement de planification du co-lead, pas une mesure objective, un pourcentage de code, de fidélité certifiée ou d'objets disponibles. Les domaines ont des poids différents et partagent des dépendances : ne pas faire la moyenne des lignes ci-dessous. La borne basse reste plausible tant que combat et narration ne produisent pas de partie complète. G0–G3 partiels, G4 engagé par accueil et raid, G5 absent ; aucun jalon clos.
 

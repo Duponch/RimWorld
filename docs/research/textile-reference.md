@@ -1,5 +1,7 @@
 # Filière textile : vérification du 19 septembre 2026
 
+Suite intégrée en V72 : [confection, inachevés et qualité](tailoring-reference.md). La préparation de la fin de ce document décrit le périmètre non livré au moment de V71, pas l’état courant.
+
 Corpus relu : HTML chapitres **11/12**, classeur **SYS/TEST-062..064 et 070..072**, **UI-021/025**. Adopter espèce, produit, travail physique, croissance favorable et conservation ; adapter grille/horloge/rendu ; différer confection, qualité et recherche jusqu’à leur intégration visible. Aucun statut du corpus ne vaut validation locale.
 
 ## Sources et décisions V71

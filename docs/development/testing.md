@@ -1,5 +1,7 @@
 # Stratégie de validation
 
+V72 : `tailoring.test.ts` regroupe matière/interruptions/auteur/file/qualité/migration ; le parcours naturel de `textile.test.ts` continue jusqu’au vêtement porté et fournit le checkpoint UI. `tailoring.spec.ts` exerce poste, facture, interruption, sauvegarde, reprise 1×/6×, habillage et attributs GPU/portrait. `tailoring-bench.ts` et `tailoring-render-bench.mjs` mesurent successivement 3/30/100 acteurs, moitié confection/moitié minage-abattage. [Preuves et limites](../history/validation-tailoring-v72.md).
+
 V71 : `textile.test.ts` groupe croissance naturelle longue, rendement transactionnel/sol saturé, changement d’espèce pendant semis, logistique/reprise, migrations et lots résidents. `integration/textile.spec.ts` joue choix de culture, semis, filtre, récolte/portage/rechargement/rangement à 1×/6×. Le pilote commun ajoute six cotonniers après le potager ; les parcours de cinq à huit jours n’en prouvent pas la récolte. Le banc de rendu agricole accepte `CROP_VARIANT=mixed` et `VALIDATION_VERSION=v71`, sans écraser sa preuve historique. Les longs pilotes puis mesures natives se lancent successivement.
 
 

@@ -1,5 +1,7 @@
 # Inventaire, équipement et apparence des colons
 
+V72 : la tenue tribale fabriquée réutilise la projection commune carte/portrait. `aEquipment.y` distingue absence/chemise/tenue ; pans de tissu sur les os rigides GPU, bras découverts, cargaisons inachevé/tenue dans le lot partagé. Aucun objet de squelette CPU ajouté. [Contrat](tailoring.md).
+
 V66 : arrivants intégrés aux mêmes lots. Corps, cargaison et sélection conservent leurs meshes et matériaux quand la population change ; `pawn-buffers.ts` agrandit ensemble les géométries en préservant le partage des trajectoires. Seul `instanceCount` suit le nombre présent ; une réduction ne reconstruit pas les shaders. Zéro pipeline nouveau mesuré à 3→4, 30→31 et 100→101, sans garantie de cadence constante. [Preuves](../history/validation-arrivals-v66.md).
 
 V63 : [vêtements physiques](armor.md), projection `character-apparel` partagée carte/portrait. L’attribut instancié `aEquipment` contient trois composantes sans nouveau buffer ; gilet dans le rig, chemise dans sa teinte, objets pliés dans les lots sol/cargaison existants. Habillage, retrait et destruction suivent le propriétaire présenté.

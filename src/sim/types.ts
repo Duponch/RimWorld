@@ -1,12 +1,12 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 71 as const;
+export const SCHEMA_VERSION = 72 as const;
 export const TICKS_PER_SECOND = 10;
 export const TICKS_PER_DAY = 6000;
 
 export type Terrain = 'grass' | 'soil' | 'water' | 'rock' | 'rough-stone';
 export type ResourceKind = 'tree' | 'berries' | 'rock' | 'rice' | 'cotton';
-export type MaterialKind = 'wood' | 'food' | 'chunk' | 'steel' | 'blocks' | 'component' | 'medicine' | 'weapon' | 'apparel' | 'textile';
-export type StructureKind = 'wood-generator' | 'standing-lamp' | 'passive-cooler' | 'door' | 'wall' | 'bed' | 'table' | 'stool' | 'campfire' | 'horseshoes' | 'stonecutter';
+export type MaterialKind = 'wood' | 'food' | 'chunk' | 'steel' | 'blocks' | 'component' | 'medicine' | 'weapon' | 'apparel' | 'textile' | 'unfinished';
+export type StructureKind = 'crafting-spot' | 'wood-generator' | 'standing-lamp' | 'passive-cooler' | 'door' | 'wall' | 'bed' | 'table' | 'stool' | 'campfire' | 'horseshoes' | 'stonecutter';
 export type JobKind = 'repair' | 'build-roof' | 'remove-roof' | 'mine' | 'chop' | 'harvest' | 'cut' | 'sow' | 'deconstruct' | 'uninstall' | 'install' | StructureKind;
 export type WorkType = 'patient' | 'bedrest' | 'doctor' | 'mine' | 'gather' | 'build' | 'haul' | 'grow' | 'cook' | 'craft';
 export type Orientation = 0 | 1 | 2 | 3;
@@ -18,8 +18,8 @@ export interface Resource extends Cell { id: number; kind: ResourceKind; amount:
 export interface Structure extends Cell { damage?:number; medical?:true; power?:import('./power-rules.ts').PowerState; door?:import('./door-rules.ts').DoorState; material?:import('./construction-materials.ts').ConstructionMaterial; bills?: import('./cooking-types.ts').CookingBill[]; fuel?: import('./fuel.ts').FuelState; id: number; kind: StructureKind; orientation: Orientation; footprint: Footprint }
 export interface Stock { wood: number; food: number }
 export type MaterialOwner = ({ type: 'ground' } & Cell) | { type: 'pawn'; pawnId: number } | {type:'equipment';pawnId:number} | {type:'apparel';pawnId:number} | { type: 'job'; jobId: number };
-export interface MaterialPile { apparel?:import('./apparel-rules.ts').ApparelState; weapon?:import('./equipment-rules.ts').WeaponState; haulRequested?: true; id: number; kind: MaterialKind; item: ItemId; quantity: number; owner: MaterialOwner; rot?: import('./food-preservation.ts').RotState }
-export type StorageFilters = { wood:boolean; food:boolean; textile?:boolean; chunk?:boolean; steel?:boolean; component?:boolean; medicine?:boolean; weapon?:boolean; apparel?:boolean; blocks?:boolean; furniture?:boolean };
+export interface MaterialPile { unfinished?:import('./unfinished.ts').UnfinishedState; apparel?:import('./apparel-rules.ts').ApparelState; weapon?:import('./equipment-rules.ts').WeaponState; haulRequested?: true; id: number; kind: MaterialKind; item: ItemId; quantity: number; owner: MaterialOwner; rot?: import('./food-preservation.ts').RotState }
+export type StorageFilters = { wood:boolean; food:boolean; unfinished?:boolean; textile?:boolean; chunk?:boolean; steel?:boolean; component?:boolean; medicine?:boolean; weapon?:boolean; apparel?:boolean; blocks?:boolean; furniture?:boolean };
 export interface StockpileCell extends Cell { id: number; filters: StorageFilters; priority: number; capacity: number }
 export interface GrowingZone { id: number; cells: number[]; plant: 'rice' | 'cotton'; allowSow: boolean; allowCut: boolean }
 export type HaulDestination = { type: 'fuel'; structureId: number; forced?: boolean; forCooking?: boolean } | { type: 'stockpile'; stockpileId: number } | { type: 'job'; jobId: number; forConstruction?: boolean } | ({ type: 'aside'; growingZoneId?: number; sowCell?: Cell; constructionId?: number; forConstruction?: boolean } & Cell);
@@ -137,6 +137,7 @@ export interface World {
   roofing?: import('./roof-rules.ts').RoofingState;
   thermal?: import('./temperature.ts').ThermalState;
   packed: import('./furniture-rules.ts').PackedFurniture[];
+  tailoring?:import('./unfinished.ts').TailoringLedger;
   deconstructed: import('./deconstruction-rules.ts').DeconstructionLedger;
   foodPolicies: import('./food-policy.ts').FoodPolicy[];
   nextFoodPolicyId: number;
@@ -172,6 +173,7 @@ export type AreaAction = 'home' | 'remove-home' | 'build-roof' | 'remove-roof' |
 export interface StorageSettings { filters?: StorageFilters; priority?: number; capacity?: number }
 export interface AreaCommand extends StorageSettings { type: 'area'; action: AreaAction; from: Cell; to: Cell }
 export type Command =
+  | {type:'cancel-unfinished';itemId:number}
   | {type:'enable-raids'}
   | import('./arrival-state.ts').ArrivalCommand
   | {type:'hostility-response';pawnId:number;response:'flee'|'ignore'|'attack'}

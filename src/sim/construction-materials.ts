@@ -10,10 +10,11 @@ export interface ConstructionRecipe { ingredients:readonly ConstructionCost[]; w
 type ConstructionObject={kind:JobKind;material?:ConstructionMaterial};
 // Core base work before the stuff factor, in Core ticks. Absence of material
 // deliberately keeps the V1–V29 historical recipe on existing objects.
-const costs:Record<StructureKind,number>={'wood-generator':100,'standing-lamp':20,'passive-cooler':50,door:25,stonecutter:75,wall:5,bed:45,table:28,stool:25,campfire:20,horseshoes:10};
-const work:Record<StructureKind,number>={'wood-generator':2500,'standing-lamp':300,'passive-cooler':200,door:850,stonecutter:2000,wall:135,bed:800,table:750,stool:450,campfire:200,horseshoes:100};
+const costs:Record<StructureKind,number>={'crafting-spot':0,'wood-generator':100,'standing-lamp':20,'passive-cooler':50,door:25,stonecutter:75,wall:5,bed:45,table:28,stool:25,campfire:20,horseshoes:10};
+const work:Record<StructureKind,number>={'crafting-spot':0,'wood-generator':2500,'standing-lamp':300,'passive-cooler':200,door:850,stonecutter:2000,wall:135,bed:800,table:750,stool:450,campfire:200,horseshoes:100};
 const recipes=new Map<string,ConstructionRecipe>();
 for(const kind of Object.keys(JOB_DURATION) as JobKind[]) {
+  if(kind==='crafting-spot'){recipes.set('crafting-spot:legacy',Object.freeze({ingredients:[],work:0,coreWork:0}));continue;}
   if(kind==='wood-generator'||kind==='standing-lamp') {
     const ingredients:readonly ConstructionCost[]=kind==='wood-generator'?[{item:'steel',quantity:100},{item:'component',quantity:2}]:[{item:'steel',quantity:20}];
     recipes.set(`${kind}:steel`,Object.freeze({ingredients:Object.freeze(ingredients.map(c=>Object.freeze(c))),work:work[kind]/10,coreWork:work[kind]}));continue;
@@ -31,6 +32,7 @@ for(const kind of Object.keys(JOB_DURATION) as JobKind[]) {
   }
 }
 export function validConstructionMaterial(kind:unknown,material:unknown,version=42):boolean {
+  if(kind==='crafting-spot')return material===undefined;
   if(kind==='wood-generator'||kind==='standing-lamp')return version>=42&&material==='steel';
   if(kind==='passive-cooler')return version>=40&&material==='wood';
   return material===undefined||typeof kind==='string'&&typeof material==='string'&&(CONSTRUCTION_MATERIALS as readonly string[]).includes(material)&&(version>=33||!isBlockMaterial(material))&&recipes.has(`${kind}:${material}`);

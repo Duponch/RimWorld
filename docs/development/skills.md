@@ -1,5 +1,7 @@
 # Compétences — Construction, Médecine, Tir et Mêlée
 
+V72 active **Artisanat pour la confection**, XP pendant le travail et qualité au résultat, pas vitesse proportionnelle au niveau ni XP de taille de pierre. Profil absent = 0/sans passion jusqu’au premier travail ; ce défaut local ne vaut pas biographie Core. [Contrat, distribution et limites](tailoring.md). Les compétences actives sont Construction, Médecine, Tir, Mêlée, Social et cette première utilisation d’Artisanat.
+
 V70 : [Social](social.md) devient la cinquième compétence active. Champ facultatif : absence = débutant 0/sans passion, création au premier apprentissage ; gain 4/10 XP de base lors d’un vrai échange initié, impact consommé par les opinions, passion/apprentissage/oubli communs. Les sept autres compétences restent absentes. Les descriptions historiques des premiers producteurs ci-dessous conservent leur portée de version.
 
 V69 : les [traits d’apprentissage](traits.md) multiplient les gains ordinaires des quatre compétences par 1,75 ou 0,25, avant arrondi final aux milli-XP ; ils ne changent pas l’oubli, la saturation ni directement la vitesse d’exécution. Les bornes journalières de validation V69 sont les bornes conservatrices historiques ×1,75, sans changer les validateurs historiques.
@@ -14,7 +16,7 @@ Médecine utilise les mêmes règles de milli-XP, passion, saturation, oubli et 
 
 ## État et temps
 
-`Pawn.skills` contient Construction, Médecine et Tir : niveau 0–20, expérience et bilan quotidien en milli-XP, passion 0/1/2, plus la dernière remise à zéro. Aucune horloge réelle, tirage aléatoire ou cache dérivé n'affecte l'apprentissage. Trois profils de Construction : Ada 8/passion, Noé 10/passion brûlante, Mina 4/sans passion. Ces choix ne reproduisent pas la génération de biographies Core ; les neuf autres compétences ne reçoivent pas de nombres fictifs. Médecine utilise Ada 6/passion, Noé 3/sans passion, Mina 8/passion brûlante ; vitesse, qualité et XP s’appliquent aux traitements réels du [contrat V47](tending.md). Les profils et règles de Tir sont dans le [contrat V56](shooting.md).
+`Pawn.skills` contient Construction, Médecine, Tir, Mêlée et les profils facultatifs Social/Artisanat : niveau 0–20, expérience et bilan quotidien en milli-XP, passion 0/1/2, plus la dernière remise à zéro. Aucune horloge réelle, tirage aléatoire ou cache dérivé n'affecte l'apprentissage. Trois profils de Construction : Ada 8/passion, Noé 10/passion brûlante, Mina 4/sans passion. Ces choix ne reproduisent pas la génération de biographies Core ; les compétences non actives ne reçoivent pas de nombres fictifs. Médecine utilise Ada 6/passion, Noé 3/sans passion, Mina 8/passion brûlante ; vitesse, qualité et XP s’appliquent aux traitements réels du [contrat V47](tending.md). Les profils et règles de Tir sont dans le [contrat V56](shooting.md).
 
 Seuil vers le niveau suivant : 1 000–10 000 XP entre niveaux 0–9, puis 12 000–30 000 entre 10–19. Au niveau 20, réserve plafonnée à 29 999 XP. L'oubli permet une dette jusqu'à −1 000 XP avant la perte d'un niveau. Il se produit tous les vingt ticks locaux, déphasé par ID, pour les niveaux 10–20 : 0,1 / 0,2 / 0,4 / 0,6 / 1 / 1,8 / 2,8 / 4 / 6 / 8 / 12 XP par intervalle. Aucun oubli aux niveaux inférieurs.
 
@@ -26,7 +28,7 @@ Vitesse Construction = `0,30 + 0,0875 × niveau`, multipliée séparément par l
 
 Les quantités, réservations, propriétaires et trajets restent ceux des contrats existants. Le compte d'XP ne dépend pas du travail produit : un débutant lent travaille plus longtemps pour un ouvrage, et peut donc en retirer davantage d'expérience. L'annulation n'efface pas l'apprentissage réellement effectué.
 
-**Durées encore calibrées** : les recettes locales conservent leurs unités documentées, y compris les anciens ouvrages ; le facteur d'exécution Core ×1,7 est déjà absorbé dans certains travaux (toiture, déconstruction et désinstallation), mais pas uniformément dans le catalogue historique. La vitesse relative est livrée, pas une parité des durées absolues. Échecs de construction, niveaux requis, qualité, autres traits, autres compétences et humeur liée à la passion restent à intégrer. Ne pas les déduire de l'affichage d'un niveau. Les facteurs physiques de Construction sont intégrés en [V45](health.md).
+**Durées encore calibrées** : les recettes locales conservent leurs unités documentées, y compris les anciens ouvrages ; le facteur d'exécution Core ×1,7 est déjà absorbé dans certains travaux (toiture, déconstruction et désinstallation), mais pas uniformément dans le catalogue historique. La vitesse relative est livrée, pas une parité des durées absolues. Échecs de construction, niveaux requis, qualité de construction (confection V72 distincte), autres traits, autres compétences et humeur liée à la passion restent à intégrer. Ne pas les déduire de l'affichage d'un niveau. Les facteurs physiques de Construction sont intégrés en [V45](health.md).
 
 ## Sauvegarde et interface
 

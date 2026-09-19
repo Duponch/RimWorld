@@ -22,7 +22,7 @@ export function validBillSettings(value:unknown,recipe:ProductionRecipe='simple-
  * Loose meals outside storage do not satisfy a target-count bill. */
 export function countedMeals(world:World):number {return countedProducts(world);}
 export function countedProducts(world:World,bill?:CookingBill):number {
-  const products=new Set(bill?.recipe==='stone-blocks'?PRODUCTION_RECIPES['stone-blocks'].inputs.map(i=>blockFor(i as StoneIngredient)):['simple-meal']);
+  const products=new Set(bill?.recipe==='tribalwear'?['cloth-tribalwear']:bill?.recipe==='stone-blocks'?PRODUCTION_RECIPES['stone-blocks'].inputs.map(i=>blockFor(i as StoneIngredient)):['simple-meal']);
   const stored=new Set(world.stockpiles.map(z=>z.z*world.width+z.x));
   return world.piles.reduce((n,p)=>n+(products.has(p.item)&&(p.owner.type==='pawn'||p.owner.type==='ground'&&stored.has(p.owner.z*world.width+p.owner.x))?p.quantity:0),0);
 }

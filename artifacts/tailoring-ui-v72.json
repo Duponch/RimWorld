@@ -1,0 +1,23 @@
+{
+  "date": "2026-09-19T14:09:58.257Z",
+  "source": "Natural cotton core checkpoint; all production/interrupt/wear actions through real UI",
+  "startTick": 111824,
+  "endTick": 112522,
+  "garment": {
+    "id": 186,
+    "item": "cloth-tribalwear",
+    "kind": "apparel",
+    "quantity": 1,
+    "owner": {
+      "type": "apparel",
+      "pawnId": 49
+    },
+    "apparel": {
+      "quality": "poor",
+      "hitPoints": 100
+    }
+  },
+  "frames": 4173,
+  "cargoFrames": 308,
+  "errors": []
+}

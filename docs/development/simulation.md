@@ -1,5 +1,7 @@
 # Noyau de simulation — contrat courant
 
+V72 ajoute la [confection physique](tailoring.md), les objets inachevés persistants et la première fabrication d’équipement. Schéma courant 72 ; V71 validée avant migration neutre. Les valeurs historiques ci-dessous restent attachées aux contrats de leurs versions.
+
 Schéma courant **57** : [ralentissement après impact](stagger.md), après [tir dirigé V56](shooting.md). V56 strictement validée avant migration sans effet inventé ; fenêtres sur les arêtes persistées, présentation dérivée. Aucun hostile encore livré. Les étapes ci-dessous restent l’historique des contrats de migration.
 
 V51 : [médicaments](medicines.md), V50 strictement validée avant migration sans injection ; plafond du patient, dose réservée/portée, résultat groupé après travail. Âge médicinal distinct du bilan alimentaire et expiration avant actions. Nouveau stock seulement à la génération.

@@ -26,7 +26,7 @@ export function planCookingOrder(world:World,pawn:Pawn,stationId:number,access?:
   if(!routeToCell(world,spot,reach))return no('Aucun accès à la place de cuisine.');
   const plan=planCooking(world,pawn,reach,budget,{stationId,forced});
   if(!plan)return no(station.kind!=='campfire'||station.fuel?.ticks?'Aucune recette réalisable : ingrédients autorisés dans le rayon, accès ou dépôt insuffisants.':'Aucun bois disponible et accessible pour rallumer le feu.');
-  return {label:plan.refuel?'Ravitailler avant de cuisiner':station.kind==='stonecutter'?'Tailler des blocs de pierre':'Cuisiner un repas simple',order:plan.refuel??{cooking:plan.task!},path:plan.path};
+  return {label:plan.refuel?'Ravitailler avant de cuisiner':station.kind==='crafting-spot'?'Confectionner une tenue tribale':station.kind==='stonecutter'?'Tailler des blocs de pierre':'Cuisiner un repas simple',order:plan.refuel??{cooking:plan.task!},path:plan.path};
 }
 
 /** Waiting recipes reserve real ingredients, the work spot and typed staging. */
@@ -36,11 +36,15 @@ export function queuedCookingReason(world:World,order:CookingOrder):string|undef
   if(station.kind==='campfire'&&!station.fuel?.ticks)return 'Le feu est éteint.';
   const spot=cookingSpot(station);
   if(spot.x!==c.spot.x||spot.z!==c.spot.z||!cookingPlaceFree(view,spot)||fuelStationReserved(view,station.id)||reservedServiceCells(view).has(cellIndex(view,spot.x,spot.z)))return 'Poste ou place de cuisine indisponible.';
-  const incoming=new Map<number,{item:ProductionIngredient;quantity:number}>();
+  const incoming=new Map<number,{item:ProductionIngredient;quantity:number}>(),sources=new Map<number,number>();
+  const author=world.pawns.find(p=>p.orders.queue.includes(order));
   for(const i of c.ingredients) {
     const pile=view.piles.find(p=>p.id===i.pileId);
-    if(!bill.filters[i.item]||!pile||pile.item!==i.item||pile.owner.type!=='ground'||pile.quantity-reservedSource(view,pile.id)<i.quantity)return 'Ingrédient réservé disparu ou devenu insuffisant.';
-    if((pile.owner.x-station.x)**2+(pile.owner.z-station.z)**2>bill.radius**2)return 'Ingrédient sorti du rayon de la facture.';
+    const bound=pile?.unfinished?.billId===bill.id;
+    const required=(sources.get(i.pileId)??0)+i.quantity;sources.set(i.pileId,required);
+    if(pile?.unfinished&&(pile.unfinished.authorId!==author?.id||pile.unfinished.billId!==undefined&&!bound))return 'Ouvrage réservé à un autre auteur ou une autre facture.';
+    if(!(bound||bill.filters[pile?.unfinished?'cloth':i.item])||!pile||pile.item!==i.item||pile.owner.type!=='ground'||pile.quantity-reservedSource(view,pile.id)<required)return 'Ingrédient réservé disparu ou devenu insuffisant.';
+    if(!bound&&(pile.owner.x-station.x)**2+(pile.owner.z-station.z)**2>bill.radius**2)return 'Ingrédient sorti du rayon de la facture.';
     if(Math.abs(i.cell.x-spot.x)+Math.abs(i.cell.z-spot.z)>1||!ingredientPlaceFree(view,i.cell,spot,taskRecipe(c)))return 'Dépôt des ingrédients inaccessible.';
     if(i.stage==='placed') {if(pile.owner.x!==i.cell.x||pile.owner.z!==i.cell.z)return 'Ingrédient déjà posé déplacé.';}
     else {
