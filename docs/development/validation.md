@@ -1,5 +1,7 @@
 # Validation courante — V75
 
+Après V76 : amélioration de cadence, sans gameplay supplémentaire. Le contrôle court textile utilise le pilote UI commun ; typage/docs et parcours 1×/6× réussis en 42,1 s. [Méthode et portée](testing.md#procédure-courante-de-livraison), [preuve](../../artifacts/textile-ui-workflow-v76.json).
+
 V76 : [faune, sauvegardes, parcours de colonie et charge](../history/validation-wildlife-v76.md). Les preuves distinguent scénarios contrôlés, partie UI ordinaire, pilote long et mesures natives ; aucune promesse de santé/chasse animale ou de fluidité exhaustive.
 
 V75 — [conservation froide, alimentation et hypothermie](../history/validation-cold-store-v75.md). Construction et recherche réellement obtenues, thermostat UI, panne, âges et charge mixte ; limites et échecs conservés.

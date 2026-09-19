@@ -3,6 +3,7 @@ import { writeFileSync } from 'node:fs';
 import { createWorld,serializeWorld,validateWorld } from '../../src/sim/index';
 import { refreshStock } from '../../src/sim/materials';
 import { observeErrors,world,panel,tool,cell,dragRectangle,expectWorld,saveKey } from './helpers';
+import { perform } from './player-actions';
 
 test('cotton UI 1×/6×: crop choice, sowing, cloth filter, physical harvest/cargo/storage and save/load',async({playwright})=>{
   test.setTimeout(100000);const browser=await playwright.chromium.launch({channel:'chromium',args:[]}),proof=[];
@@ -11,8 +12,10 @@ test('cotton UI 1×/6×: crop choice, sowing, cloth filter, physical harvest/car
     const initial=createWorld(42,32,32);initial.resources=[];initial.piles=[];initial.tiles=initial.tiles.map(()=>({terrain:'grass'}));initial.pawns.forEach(p=>{p.hunger=100;p.rest=100;p.priorities.grow=1;p.priorities.haul=2;});refreshStock(initial);
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
     await page.goto('/?size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);
-    await tool(page,'growing');await dragRectangle(page,{x:18,z:16},{x:20,z:17});await tool(page,'select');await cell(page,18,16);
-    await page.locator('#growing-plant').selectOption('cotton');await page.getByRole('button',{name:'Appliquer les réglages de culture'}).click();
+    await tool(page,'growing');await dragRectangle(page,{x:18,z:16},{x:20,z:17});
+    // Exercise the same driver as the multi-day journey: a working widget alone
+    // did not catch the missing growing-policy branch in that driver in V76.
+    await perform(page,{reason:'Choisir le coton par le pilote commun.',command:{type:'growing-policy',zoneId:(await world(page)).growingZones[0]!.id,plant:'cotton',allowSow:true,allowCut:true}},{value:0});
     await expect.poll(async()=>(await world(page)).growingZones[0]?.plant).toBe('cotton');
     await tool(page,'stockpile');await page.locator('#stockpile-wood').uncheck();await page.locator('#stockpile-food').uncheck();await page.locator('#stockpile-textile').check();await cell(page,23,16);await tool(page,'select');
     await page.locator(`[data-speed="${speed}"]`).click();
@@ -33,5 +36,5 @@ test('cotton UI 1×/6×: crop choice, sowing, cloth filter, physical harvest/car
     const end=await world(page);expect(validateWorld(end)).toEqual([]);expect(end.stock.food).toBe(0);await expect(page.locator('#cloth')).toHaveText('60');await expect(page.locator('#fps-counter')).toBeVisible();
     await cell(page,23,16);await expect(page.locator('#cell-materials')).toContainText('Tissu');await expect(page.locator('#selected-stockpile-textile')).toBeChecked();
     await page.screenshot({path:`artifacts/cloth-v71-${speed}x.png`});expect(errors).toEqual([]);proof.push({speed,sownAt:saved.tick,cargoAt:carried.tick,storedAt:end.tick,cloth:60,errors});await page.close();
-  }}finally{await browser.close();}writeFileSync('artifacts/textile-ui-v71.json',JSON.stringify({date:new Date().toISOString(),maturity:'UI boundary fixture; natural growth separately tested',proof},null,2));
+  }}finally{await browser.close();}writeFileSync(`artifacts/textile-ui-${process.env.VALIDATION_VERSION??'v71'}.json`,JSON.stringify({date:new Date().toISOString(),driver:'Shared colony player, including growing-policy',maturity:'UI boundary fixture; natural growth separately tested',proof},null,2));
 });

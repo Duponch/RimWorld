@@ -1,0 +1,23 @@
+{
+  "date": "2026-09-19T19:00:41.009Z",
+  "driver": "Shared colony player, including growing-policy",
+  "maturity": "UI boundary fixture; natural growth separately tested",
+  "proof": [
+    {
+      "speed": 1,
+      "sownAt": 67,
+      "cargoAt": 128,
+      "storedAt": 174,
+      "cloth": 60,
+      "errors": []
+    },
+    {
+      "speed": 6,
+      "sownAt": 68,
+      "cargoAt": 129,
+      "storedAt": 174,
+      "cloth": 60,
+      "errors": []
+    }
+  ]
+}
