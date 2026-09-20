@@ -142,15 +142,19 @@ function connectStartingValley(terrain: Terrain[], width: number, height: number
  * Temperate valley profiles. Height/moisture/density are construction fields only;
  * the resulting tiles and resources, not a regenerated seed, remain save authority.
  */
-export function generateWorld(seed: number, width: number, height: number, profile?:GenerationProfile): World {
+export function emptyLandscape(seed: number, width: number, height: number): World {
   if (!Number.isInteger(seed) || !Number.isFinite(seed)) throw new Error('Seed must be a finite integer.');
-  if(profile!==undefined&&profile!=='temperate-survivors-v1'&&profile!=='temperate-crashlanded-v1')throw new Error('Unknown generation profile.');
   if (![width, height].every(validMapDimension)) {
     throw new Error(`World dimensions must be integers between ${MIN_MAP_SIZE} and ${MAX_MAP_SIZE}.`);
   }
-  const world: World = { schemaVersion: SCHEMA_VERSION, packed:[],deconstructed: { count: 0, lostWood: 0, fuelTicks: 0 }, foodPolicies: initialFoodPolicies(), nextFoodPolicyId: 5, restRules: 'adult', spoiled: emptySpoilage(), foodRules: 'adult', seed: seed >>> 0, rng: (seed >>> 0) || 0x9e3779b9,
+  return { schemaVersion: SCHEMA_VERSION, packed:[],deconstructed: { count: 0, lostWood: 0, fuelTicks: 0 }, foodPolicies: initialFoodPolicies(), nextFoodPolicyId: 5, restRules: 'adult', spoiled: emptySpoilage(), foodRules: 'adult', seed: seed >>> 0, rng: (seed >>> 0) || 0x9e3779b9,
     tick: 0, width, height, tiles: [], pawns: [], resources: [], structures: [], jobs: [],
     piles: [], stockpiles: [], growingZones: [], growingCursor: 0, environment: 'temperate-equinox-v1', stock: { wood: 0, food: 0 }, events: [], nextId: 1, logisticsCursor: 0 };
+}
+
+export function generateWorld(seed: number, width: number, height: number, profile?:GenerationProfile): World {
+  if(profile!==undefined&&profile!=='temperate-survivors-v1'&&profile!=='temperate-crashlanded-v1')throw new Error('Unknown generation profile.');
+  const world = emptyLandscape(seed,width,height);
   const cx = Math.floor(width / 2); const cz = Math.floor(height / 2);
   const terrain: Terrain[] = new Array(width * height);
   const moisture = new Float64Array(terrain.length); const forest = new Float64Array(terrain.length);

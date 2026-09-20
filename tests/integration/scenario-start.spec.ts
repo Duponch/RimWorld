@@ -1,10 +1,14 @@
 import { test, expect, type Page } from '@playwright/test';
 import { readFileSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { gunzipSync } from 'node:zlib';
 import { createScenarioWorld } from '../../src/sim/new-game';
+import { STONE_LABELS } from '../../src/sim/geology';
+import { resolveSite, type SiteOptions } from '../../src/sim/site';
 import { survivorDecisions } from '../scenarios/survivor-player';
 import { deserializeWorld, serializeWorld, validateWorld } from '../../src/sim/serialization';
-import { world, pause, panel, expectWorld, observeErrors } from './helpers';
-import { perform } from './player-actions';
+import { world, pause, panel, cell, settledCells, expectWorld, observeErrors } from './helpers';
+import { perform, revealCells } from './player-actions';
 
 const manualKey = 'lisiere.save.v1';
 const previousKey = 'lisiere.previous.v1';
@@ -70,7 +74,7 @@ async function metricWindow(page: Page, speed: number) {
   return { speed, targetTicksPerSecond, actualTicksPerSecond, ...sample };
 }
 
-test('native V82: cold menus, explicit adventure profile, first physical decisions and recoverable loading', async ({ playwright }) => {
+test('native V83: chosen site, fertile land, first physical decisions and unchanged historical landscapes', async ({ playwright }) => {
   test.setTimeout(360000);
   // Native launch deliberately omits the generic software WebGPU arguments.
   // All served sources must stay frozen for this entire grouped run.
@@ -79,11 +83,23 @@ test('native V82: cold menus, explicit adventure profile, first physical decisio
   const allErrors: string[] = [];
   const samples: Awaited<ReturnType<typeof metricWindow>>[] = [];
   const checkpoints: Record<string, unknown> = {};
+  const chosenSite: SiteOptions = { hilliness: 'large-hills' };
+  const stonesFor = (seed: number) => resolveSite(seed, chosenSite).stones.map(stone => STONE_LABELS[stone]).join(', ');
   const historicalData = readFileSync(new URL('../../artifacts/heatwave-checkpoint-v81.json', import.meta.url), 'utf8');
   const historicalInput = JSON.parse(historicalData);
   expect(historicalInput.schemaVersion).toBe(81);
   const historicalExpected = deserializeWorld(historicalData);
   expect(historicalExpected.gameProfile).toBeUndefined();
+  // Unmodified published V82 native checkpoint, source tmp/scenario-native-v82.json,
+  // tick 1145. Gzip only changes storage; this hash verifies the original bytes.
+  const previousLandscapeData = gunzipSync(readFileSync(new URL('../fixtures/scenario-v82.json.gz', import.meta.url))).toString('utf8');
+  const previousLandscapeSha256 = 'f9fcb0bb4caa6696c958aac876c90be89f8bda64b31d79ad402ba9e00ce15af6';
+  expect(createHash('sha256').update(previousLandscapeData).digest('hex')).toBe(previousLandscapeSha256);
+  const previousLandscapeInput = JSON.parse(previousLandscapeData);
+  expect(previousLandscapeInput.schemaVersion).toBe(82);
+  expect(previousLandscapeInput.scenario).toMatchObject({ id: 'crashlanded', revision: 1 });
+  const previousLandscapeExpected = deserializeWorld(previousLandscapeData);
+  expect(previousLandscapeExpected.site).toBeUndefined();
 
   try {
     let page = await context.newPage();
@@ -105,7 +121,7 @@ test('native V82: cold menus, explicit adventure profile, first physical decisio
     for (const name of ['Tutoriel', 'Options', 'Mods', 'Crédits']) await expect(front(page).getByRole('button', { name: new RegExp(`^${name}`) })).toBeDisabled();
     await expect(menuButton(page, 'Reprendre la colonie')).toHaveCount(0);
     expect(await page.evaluate(key => localStorage.getItem(key), manualKey)).toBeNull();
-    await page.screenshot({ path: 'artifacts/scenario-home-v82.png' });
+    await page.screenshot({ path: 'artifacts/scenario-home-v83.png' });
 
     await menuButton(page, 'Nouvelle partie').click();
     await expect(page.locator('#front-title')).toHaveText('Choisir un scénario');
@@ -125,9 +141,26 @@ test('native V82: cold menus, explicit adventure profile, first physical decisio
     await menuButton(page, 'Suivant').click();
     await expect(front(page).getByRole('alert')).toContainText('mode de sauvegarde');
     await reloadable.check();
-    await page.screenshot({ path: 'artifacts/scenario-story-v82.png' });
+    await page.screenshot({ path: 'artifacts/scenario-story-v83.png' });
     await menuButton(page, 'Suivant').click();
-    await page.locator('#front-seed').fill('42');
+    const smallHills = front(page).getByRole('radio', { name: 'Petites collines', exact: true });
+    const largeHills = front(page).getByRole('radio', { name: 'Grandes collines', exact: true });
+    await expect(smallHills).toBeChecked();
+    await expect(front(page).locator('.front-site-default')).toContainText('pas un site imposé par RimWorld');
+    await front(page).getByRole('radio', { name: 'Plat', exact: true }).check();
+    await expect(page.locator('#front-site-relief')).toHaveText('Plat');
+    await largeHills.check();
+    await expect(page.locator('#front-site-relief')).toHaveText('Grandes collines');
+    await page.locator('#front-random-seed').click();
+    const randomSeed = await page.locator('#front-seed').inputValue();
+    expect(randomSeed).toMatch(/^\d+$/);
+    expect(Number(randomSeed)).toBeLessThanOrEqual(0xffffffff);
+    await expect(page.locator('#front-site-stones')).toHaveText(stonesFor(Number(randomSeed)));
+    for (const seed of [0, 0xffffffff, 42]) {
+      await page.locator('#front-seed').fill(String(seed));
+      await expect(page.locator('#front-site-stones')).toHaveText(stonesFor(seed));
+      await expect(largeHills).toBeChecked();
+    }
     await menuButton(page, 'Retour').click();
     await expect(difficulty).toBeChecked();
     await expect(reloadable).toBeChecked();
@@ -136,6 +169,9 @@ test('native V82: cold menus, explicit adventure profile, first physical decisio
     await expect(difficulty).toBeChecked();
     await menuButton(page, 'Suivant').click();
     await expect(page.locator('#front-seed')).toHaveValue('42');
+    await expect(largeHills).toBeChecked();
+    await expect(page.locator('#front-site-stones')).toHaveText(stonesFor(42));
+    await page.screenshot({ path: 'artifacts/scenario-site-v83.png' });
 
     await page.setViewportSize({ width: 480, height: 800 });
     await page.locator('#front-title').focus();
@@ -145,13 +181,20 @@ test('native V82: cold menus, explicit adventure profile, first physical decisio
     await expect(menuButton(page, 'Démarrer')).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(page.locator('#front-seed')).toBeFocused();
+    await largeHills.focus();
+    await page.keyboard.press('ArrowUp');
+    await expect(smallHills).toBeChecked();
+    await expect(page.locator('#front-site-relief')).toHaveText('Petites collines');
+    await page.keyboard.press('ArrowDown');
+    await expect(largeHills).toBeChecked();
     expect(await page.evaluate(() => {
       const menu = document.querySelector('.front-menu')!;
       const body = menu.querySelector('.front-content')!;
       return menu.scrollWidth <= menu.clientWidth && body.scrollWidth <= body.clientWidth;
     })).toBe(true);
-    await page.screenshot({ path: 'artifacts/scenario-config-narrow-v82.png' });
+    await page.screenshot({ path: 'artifacts/scenario-config-narrow-v83.png' });
     await page.locator('#front-seed').fill('4294967296');
+    await expect(page.locator('#front-site-stones')).toHaveText('Saisissez une graine valide.');
     await menuButton(page, 'Démarrer').click();
     await expect(front(page).getByRole('alert')).toContainText('4 294 967 295');
     expect(await page.evaluate(() => window.__lisiere.world)).toBeUndefined();
@@ -161,12 +204,16 @@ test('native V82: cold menus, explicit adventure profile, first physical decisio
     const creationStarted = Date.now();
     await menuButton(page, 'Démarrer').dblclick();
     await expect(front(page)).toBeHidden({ timeout: 45000 });
-    await expectWorld(page, createScenarioWorld(42, 250, 'crashlanded'));
+    await expectWorld(page, createScenarioWorld(42, 250, 'crashlanded', chosenSite));
     const initial = await world(page);
-    checkpoints.creation = { milliseconds: Date.now() - creationStarted, tick: initial.tick, scenario: initial.scenario, gameProfile: initial.gameProfile };
+    checkpoints.creation = { milliseconds: Date.now() - creationStarted, tick: initial.tick, scenario: initial.scenario, gameProfile: initial.gameProfile, site: initial.site };
     expect(initial.tick).toBe(0);
     expect(initial.scenario?.id).toBe('crashlanded');
     expect(initial.gameProfile?.difficulty).toBe('adventure-story');
+    expect(initial.site).toEqual(resolveSite(42, chosenSite));
+    expect(initial.scenario?.revision).toBe(2);
+    expect(initial.tiles.some(tile => tile.terrain === 'water')).toBe(false);
+    for (const id of ['enable-arrivals', 'enable-raids', 'enable-heatwaves']) await expect(page.locator(`#${id}`)).toBeHidden();
     await expect(page.locator('#clock')).toHaveText('06:00');
     await expect(page.locator('[data-speed="0"]')).toHaveAttribute('aria-pressed', 'true');
     // A second successful init would overwrite this slot with the first world.
@@ -174,6 +221,26 @@ test('native V82: cold menus, explicit adventure profile, first physical decisio
     await panel(page, 'research');
     await expect(page.locator('[data-air-status]')).toContainText('Acquise au départ');
     await expect(page.locator('[data-research-status]')).toContainText('Acquise au départ');
+
+    // Read a naturally generated rich-soil tile by real camera/pointer actions.
+    // No fixture clears plants or substitutes terrain to satisfy inspection.
+    await page.keyboard.press('Escape');
+    const occupied = new Set([
+      ...[...initial.resources, ...initial.pawns, ...(initial.wildlife?.animals ?? [])].map(entity => entity.z * initial.width + entity.x),
+      ...initial.piles.flatMap(pile => pile.owner.type === 'ground' ? [pile.owner.z * initial.width + pile.owner.x] : []),
+    ]);
+    const richLand = initial.tiles.flatMap((tile, index) => tile.terrain === 'rich-soil' && !occupied.has(index) ? [{ x: index % initial.width, z: Math.floor(index / initial.width) }] : [])
+      .sort((a, b) => (a.x - initial.scenario!.landing.x) ** 2 + (a.z - initial.scenario!.landing.z) ** 2 - (b.x - initial.scenario!.landing.x) ** 2 - (b.z - initial.scenario!.landing.z) ** 2)[0];
+    expect(richLand, 'This chosen site should expose a real rich-soil patch for the player.').toBeDefined();
+    await revealCells(page, [richLand!]);
+    await cell(page, richLand!.x, richLand!.z);
+    await expect(page.locator('#cell-title')).toHaveText('Terre riche');
+    await expect(page.locator('#cell-description')).toContainText('Fertilité : 140 %');
+    await expect(page.locator('#cell-description')).toContainText('Terrain cultivable');
+    expect(await world(page)).toEqual(initial);
+    checkpoints.richSoil = { ...richLand, description: await page.locator('#cell-description').textContent() };
+    await page.screenshot({ path: 'artifacts/scenario-rich-soil-v83.png' });
+    await page.keyboard.press('Escape');
 
     const rotation = { value: 0 };
     const decisions = survivorDecisions(initial);
@@ -189,7 +256,7 @@ test('native V82: cold menus, explicit adventure profile, first physical decisio
     expect(established.growingZones.reduce((sum, zone) => sum + zone.cells.length, 0)).toBe(20);
     expect(established.pawns).toHaveLength(3);
     checkpoints.firstDecisions = { commands: decisions.length, tick: established.tick, beds: 3, field: 20, stock: established.stock };
-    writeFileSync('tmp/scenario-established-v82.json', serializeWorld(established));
+    writeFileSync('tmp/scenario-established-v83.json', serializeWorld(established));
     await panel(page, 'menu');
     await page.locator('#save').click();
     await expect.poll(async () => JSON.parse(await page.evaluate(key => localStorage.getItem(key), manualKey) ?? 'null')).toEqual(established);
@@ -210,8 +277,8 @@ test('native V82: cold menus, explicit adventure profile, first physical decisio
     await pause(page);
     const finalWorld = await world(page);
     expect(validateWorld(finalWorld)).toEqual([]);
-    await page.screenshot({ path: 'artifacts/scenario-start-v82.png' });
-    writeFileSync('tmp/scenario-native-v82.json', serializeWorld(finalWorld));
+    await page.screenshot({ path: 'artifacts/scenario-start-v83.png' });
+    writeFileSync('tmp/scenario-native-v83.json', serializeWorld(finalWorld));
     const backend = await page.evaluate(() => window.__lisiere.backend);
     const userAgent = await page.evaluate(() => navigator.userAgent);
 
@@ -236,7 +303,8 @@ test('native V82: cold menus, explicit adventure profile, first physical decisio
     await expect(front(page)).toBeHidden({ timeout: 45000 });
     await expectWorld(page, finalWorld);
     expect((await world(page)).gameProfile).toEqual(finalWorld.gameProfile);
-    checkpoints.coldCurrent = { scenario: (await world(page)).scenario, tick: finalWorld.tick };
+    expect((await world(page)).site).toEqual(finalWorld.site);
+    checkpoints.coldCurrent = { scenario: (await world(page)).scenario, site: finalWorld.site, tick: finalWorld.tick };
 
     // Controlled input fixtures: rejection preserves world and recovery bytes.
     await returnHome(page);
@@ -257,6 +325,77 @@ test('native V82: cold menus, explicit adventure profile, first physical decisio
       await menuButton(page, 'Retour').click();
     }
     await page.evaluate(({ key, data }) => localStorage.setItem(key, data), { key: manualKey, data: serializeWorld(finalWorld) });
+
+    // Reuse this renderer with the same seed/size/scenario, changing only site.
+    // First pan away through real controls so a missing reset cannot pass by
+    // coincidence when both landings happen to be near the map centre.
+    const flatSite: SiteOptions = { hilliness: 'flat' };
+    const flatExpected = createScenarioWorld(42, 250, 'crashlanded', flatSite);
+    const flatLanding = flatExpected.scenario!.landing;
+    const landingView = () => page.evaluate(landing => {
+      const bounds = document.querySelector('#viewport canvas')!.getBoundingClientRect();
+      const point = window.__lisiere.projectCell(landing.x, landing.z);
+      return { ...point, width: bounds.width, height: bounds.height,
+        visible: point.x > 20 && point.y > 20 && point.x < bounds.width - 20 && point.y < bounds.height - 20
+          && document.elementFromPoint(bounds.x + point.x, bounds.y + point.y)?.tagName === 'CANVAS' };
+    }, flatLanding);
+    await menuButton(page, 'Reprendre la colonie').click();
+    await expect(front(page)).toBeHidden();
+    const canvas = await page.locator('#viewport canvas').boundingBox();
+    expect(canvas).not.toBeNull();
+    for (let attempt = 0; attempt < 3 && (await landingView()).visible; attempt++) {
+      await page.mouse.move(canvas!.x + canvas!.width * .75, canvas!.y + canvas!.height * .45);
+      await page.mouse.down({ button: 'middle' });
+      await page.mouse.move(canvas!.x + canvas!.width * .2, canvas!.y + canvas!.height * .45, { steps: 12 });
+      await page.mouse.up({ button: 'middle' });
+      await settledCells(page, [flatLanding]);
+    }
+    const beforeRecreation = await landingView();
+    expect(beforeRecreation.visible, 'The old view must be away from the next landing before recreation.').toBe(false);
+    expect(await world(page)).toEqual(finalWorld);
+    await returnHome(page);
+    await menuButton(page, 'Nouvelle partie').click();
+    await menuButton(page, 'Suivant').click();
+    await front(page).getByRole('radio', { name: 'Récit d’aventure', exact: true }).check();
+    await front(page).getByRole('radio', { name: 'Rechargeable à tout moment', exact: true }).check();
+    await menuButton(page, 'Suivant').click();
+    await page.locator('#front-seed').fill('42');
+    await front(page).getByRole('radio', { name: 'Plat', exact: true }).check();
+    await menuButton(page, 'Démarrer').click();
+    await expect(front(page)).toBeHidden({ timeout: 45000 });
+    await expectWorld(page, flatExpected);
+    const recreated = await world(page);
+    expect(recreated.site).toEqual(resolveSite(42, flatSite));
+    expect(recreated.tiles).not.toEqual(initial.tiles);
+    await settledCells(page, [flatLanding]);
+    const afterRecreation = await landingView();
+    expect(afterRecreation.visible, 'A different relief must recenter the existing renderer on its actual landing.').toBe(true);
+    expect(await page.evaluate(key => localStorage.getItem(key), manualKey)).toBe(serializeWorld(finalWorld));
+    expect(JSON.parse(await page.evaluate(key => localStorage.getItem(key), previousKey) ?? 'null')).toEqual(finalWorld);
+    checkpoints.sameSeedNewSite = { seed: recreated.seed, site: recreated.site, landing: flatLanding, tick: recreated.tick, beforeRecreation, afterRecreation };
+    await page.screenshot({ path: 'artifacts/scenario-recreated-site-v83.png' });
+    allErrors.push(...errors);
+    await page.close();
+
+    // A real V82 generated landscape must retain its river, geology and agenda.
+    page = await context.newPage(); errors = observeErrors(page);
+    await coldHome(page);
+    await page.evaluate(({ key, data }) => localStorage.setItem(key, data), { key: previousKey, data: previousLandscapeData });
+    await chooseSave(page, previousKey);
+    await expect(front(page)).toBeHidden({ timeout: 45000 });
+    await expectWorld(page, previousLandscapeExpected);
+    const previousLandscape = await world(page);
+    expect(previousLandscape.site).toBeUndefined();
+    expect(previousLandscape.tiles).toEqual(previousLandscapeInput.tiles);
+    expect(previousLandscape.resources).toEqual(previousLandscapeInput.resources);
+    expect(previousLandscape.scenario).toEqual(previousLandscapeInput.scenario);
+    expect(previousLandscape.gameProfile).toEqual(previousLandscapeInput.gameProfile);
+    expect(previousLandscape.tick).toBe(previousLandscapeInput.tick);
+    for (const id of ['enable-arrivals', 'enable-raids', 'enable-heatwaves']) await expect(page.locator(`#${id}`)).toBeHidden();
+    expect(await page.evaluate(key => localStorage.getItem(key), previousKey)).toBe(previousLandscapeData);
+    expect(await page.evaluate(key => localStorage.getItem(key), manualKey)).toBe(serializeWorld(finalWorld));
+    checkpoints.coldPreviousLandscape = { source: 'tests/fixtures/scenario-v82.json.gz', sourceVersion: 82, sourceSha256: previousLandscapeSha256, loadedVersion: previousLandscape.schemaVersion, tick: previousLandscape.tick, site: null };
+    await page.screenshot({ path: 'artifacts/scenario-historical-v82-landscape-v83.png' });
     allErrors.push(...errors);
     await page.close();
 
@@ -272,15 +411,21 @@ test('native V82: cold menus, explicit adventure profile, first physical decisio
     expect(oldWorld.gameProfile).toBeUndefined();
     expect(oldWorld.tick).toBe(historicalInput.tick);
     expect(oldWorld.width).toBe(16);
+    expect(oldWorld.arrivals).toBeUndefined();
+    expect(oldWorld.raids).toBeUndefined();
+    expect(oldWorld.heatwaves?.profile).toBe('camp-heat-v1');
+    await expect(page.locator('#enable-arrivals')).toBeVisible();
+    await expect(page.locator('#enable-raids')).toBeVisible();
+    await expect(page.locator('#enable-heatwaves')).toBeHidden();
     expect(await page.evaluate(key => localStorage.getItem(key), previousKey)).toBe(historicalData);
     expect(await page.evaluate(key => localStorage.getItem(key), manualKey)).toBe(serializeWorld(finalWorld));
-    await page.screenshot({ path: 'artifacts/scenario-historical-v82.png' });
+    await page.screenshot({ path: 'artifacts/scenario-historical-v83.png' });
     checkpoints.coldHistorical = { source: 'artifacts/heatwave-checkpoint-v81.json', sourceVersion: 81, loadedVersion: oldWorld.schemaVersion, tick: oldWorld.tick, width: oldWorld.width };
     allErrors.push(...errors);
     expect(allErrors).toEqual([]);
-    writeFileSync('artifacts/scenario-ui-v82.json', JSON.stringify({ backend, userAgent, viewport, samples, checkpoints, errors: allErrors }, null, 2));
+    writeFileSync('artifacts/scenario-ui-v83.json', JSON.stringify({ backend, userAgent, viewport, samples, checkpoints, errors: allErrors }, null, 2));
   } catch (error) {
-    const failureTag = `scenario-ui-v82-failed-${Date.now()}`;
+    const failureTag = `scenario-ui-v83-failed-${Date.now()}`;
     const active = context.pages().at(-1);
     if (active && !active.isClosed()) {
       await active.screenshot({ path: `artifacts/${failureTag}.png` }).catch(() => {});

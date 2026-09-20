@@ -1,0 +1,15 @@
+# Sols et première récolte — vérification V83
+
+20 septembre 2026. Référence primaire lue sans écriture : RimWorld Core **1.6.4871 rev590**, Defs des terrains naturels et du riz, classes Plant/PlantUtility/GenCelestial. Assembly SHA-256 `5cf1b5be399d5b1c9c56ca72c9d35b4ecf307feacf5859d04ac5a1aa5926356a`. Aucun XML ni code propriétaire reproduit. Corpus chapitre 12, SYS/TEST-070..072 et 075, chapitre 14 pour les besoins, via [adoption](reference-adoption.md).
+
+Les terrains Soil, SoilRich et Gravel ont respectivement une fertilité de **1 / 1,4 / 0,7**, un coût de marche de **deux ticks Core** et une propreté de **−1**. Adopter ces valeurs pour les nouveaux sites. `grass` demeure notre terre ordinaire ; les nouveaux `rich-soil` et `gravel` sont distincts. L'ancien `soil` reste à 0,7 et garde son coût historique pour ne pas recalibrer silencieusement les anciennes parties. Sur un nouveau site, terre ordinaire, terre riche et gravier ajoutent 0,2 tick local ; recherche de chemin et arête physique consultent le même contrat.
+
+Le riz demande trois jours biologiques, six unités par récolte, une fertilité minimale de 0,7 et une sensibilité de 100 %. Le [wiki Rice plant](https://rimworldwiki.com/wiki/Rice_plant), consulté le 20 septembre, révision affichée 181593, confirme ces coefficients mais son tableau de jours calendaires n'est pas un oracle à toute latitude/date. Les classes locales confirment repos avant 25 % et après 80 % de la journée et interpolation lumineuse entre seuil et optimum. À 45°/équinoxe, la correction céleste de 23,25° et la normalisation à 0,7 correspondent au profil déjà intégré. Aucune accélération lumineuse ou biologique n'est justifiée. Core actualise par TickLong ; notre intégration continue, latitude et climat fixes restent des adaptations.
+
+## Diagnostic rétroactif du pilote V82
+
+Au tick 48 000, les vingt plants étaient tous sur `soil` à **0,7**, semés entre les ticks 68 et 433, sans toit ni pénalité thermique. L'intégrale quotidienne vaut 2 572,1919701 ticks favorables sur 6 000. Elle explique exactement les **79,168–79,987 %** observés. À conditions inchangées, la maturité serait atteinte à **J10,0027–10,0703** : projection, pas récolte jouée. Les preuves V82 restent inchangées.
+
+Le pilote cherchait aussi `growth===0` pour détecter une récolte ; le plant récolté est supprimé et le nouveau semis commence à 0,0001. V83 remplace cet indicateur incorrect par les quantités réellement récoltées et incorporées aux repas. Les checkpoints conservent ce bilan. Le parcours dure douze jours pour observer cette transition naturelle ; aucune ressource, croissance ou attaque n'est forcée pour tenir ce délai.
+
+Vingt cases ne prouvent pas l'autonomie de trois personnes : sur sol à 0,7, elles donnent environ 120 riz par dix jours avant pertes, soit douze repas simples, très loin d'une consommation nominale de trois adultes sur cette période. Le guide distingue premier potager et exploitation durable. [Génération du site](../development/world-generation.md), [règles agricoles](../development/farming.md), [preuves V83](../history/validation-site-v83.md).

@@ -72,9 +72,10 @@ export class ResourceLayer {
         if (resource.kind === 'tree') {
           const height = WORLD_SCALE.treeMinHeight + n * (WORLD_SCALE.treeMaxHeight - WORLD_SCALE.treeMinHeight);
           const radius = 0.8 + n * 0.32;
+          const broadleaf=world.site!==undefined;
           trunks.push({ x, y: height * 0.25, z, sx: 1.1, sy: height * 0.5, sz: 1.1, ry: turn });
-          crowns.push({ x, y: height * 0.57, z, sx: radius, sy: height * 0.35, sz: radius, ry: turn, color: n > 0.65 ? 0x657d56 : 0x526e50 });
-          upperCrowns.push({ x, y: height * 0.83, z, sx: radius * 0.72, sy: height * 0.34, sz: radius * 0.72, ry: turn + 0.3, color: n > 0.65 ? 0x81925b : 0x688557 });
+          crowns.push({ x, y: height * (broadleaf?.62:.57), z, sx: radius, sy: height * (broadleaf?.21:.35), sz: radius, ry: turn, color: n > 0.65 ? 0x657d56 : 0x526e50 });
+          upperCrowns.push({ x, y: height * .83, z, sx: radius * .72, sy: height * (broadleaf?.14:.34), sz: radius * .72, ry: turn + .3, color: n > .65 ? 0x81925b : 0x688557 });
         } else if (resource.kind === 'rock') {
           rocks.push({ x: x - 0.1, y: 0.3, z, sx: 0.46 + n * 0.14, sy: 0.35 + n * 0.15, sz: 0.43, ry: turn, color: resource.stone ? stoneColor(resource.stone) : 0x92998d });
           rocks.push({ x: x + 0.3, y: 0.15, z: z + 0.2, sx: 0.25, sy: 0.24, sz: 0.25, ry: -turn, color: resource.stone ? stoneColor(resource.stone) : 0xa8ad9c });
@@ -95,7 +96,7 @@ export class ResourceLayer {
         { geometry: new THREE.IcosahedronGeometry(1, 0), items: bushes },
         { geometry: new THREE.IcosahedronGeometry(0.055, 0), items: berries },
       ], this.staticMaterial);
-      const canopy = mergedInstances(group, [{ geometry: new THREE.ConeGeometry(1, 1, 6), items: [...crowns, ...upperCrowns] }], this.staticMaterial);
+      const canopy = mergedInstances(group, [{ geometry: world.site?new THREE.IcosahedronGeometry(1,0):new THREE.ConeGeometry(1, 1, 6), items: [...crowns, ...upperCrowns] }], this.staticMaterial);
       if (canopy) { canopy.name = 'tree-canopy'; canopy.visible = this.foliageVisible; }
       retainResources(group, new Set(chunk.flatMap(r => r.kind === 'berries' && harvestable(world,r) ? [r.id,-r.id] : [r.id])));
       this.chunks.set(key, { signature, group, identities: new Map(chunk.map(r => [r.id, `${r.kind}:${r.x}:${r.z}:${r.stone ?? ""}`])) });

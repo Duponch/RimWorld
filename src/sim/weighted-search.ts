@@ -1,6 +1,7 @@
 import { PathFrontier } from './PathFrontier.ts';
 import { CARDINAL_COST, DIAGONAL_COST } from './movement.ts';
 import type { DistanceField } from './navigation-types.ts';
+import { EMPTY_NAVIGATION_COSTS,type NavigationCostLookup } from './navigation-costs.ts';
 
 const DIRECTIONS = [[0,-1],[1,0],[0,1],[-1,0],[1,-1],[1,1],[-1,1],[-1,-1]] as const;
 
@@ -15,16 +16,16 @@ export class WeightedSearch {
   private readonly height:number;
   private readonly unavailable:Uint8Array;
   private finished=false;
-  private readonly extraCosts:ReadonlyMap<number,number>|undefined;
+  private readonly extraCosts:NavigationCostLookup|undefined;
   private readonly repeaters:ReadonlySet<number>;
-  private readonly floors:ReadonlyMap<number,number>;
+  private readonly floors:NavigationCostLookup;
   private readonly corners:ReadonlySet<number>;
-  constructor(width:number, height:number, start:number, unavailable:Uint8Array, extraCosts?:ReadonlyMap<number,number>,repeaters:ReadonlySet<number>=new Set(),floors:ReadonlyMap<number,number>=new Map(),corners:ReadonlySet<number>=new Set()) {
+  constructor(width:number, height:number, start:number, unavailable:Uint8Array, extraCosts?:NavigationCostLookup,repeaters:ReadonlySet<number>=new Set(),floors:NavigationCostLookup=EMPTY_NAVIGATION_COSTS,corners:ReadonlySet<number>=new Set()) {
     this.extraCosts=extraCosts;this.repeaters=repeaters;this.floors=floors;this.corners=corners;
     this.width=width;this.height=height;this.unavailable=unavailable;
     const size=width*height,parents=new Int32Array(size).fill(-2),costs=new Float64Array(size).fill(Infinity);
     this.settled=new Uint8Array(size);this.field={parents,costs,start,visited:0,unreachedGroups:0,settled:this.settled};
-    let maximum=0;for(const extra of extraCosts?.values()??[])maximum=Math.max(maximum,extra);
+    const maximum=extraCosts?.maximum??0;
     this.frontier=new PathFrontier(costs,DIAGONAL_COST+maximum);costs[start]=0;parents[start]=-1;this.frontier.push(start);this.pending=this.frontier.pop();
   }
   advance(goals?:ReadonlySet<number>,allGroups?:readonly ReadonlySet<number>[]):DistanceField {

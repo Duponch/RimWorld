@@ -1,0 +1,2441 @@
+{
+  "protocol": "V83 site-local generation only; 30 seeds per relief, one sample each, ordered flat/small/large. Timings include initial JIT costs; they do not establish simulation/render guarantees or the full Core generator distribution.",
+  "environment": {
+    "node": "v24.11.1",
+    "platform": "win32",
+    "release": "10.0.26200",
+    "cpu": "AMD Ryzen 5 3600 6-Core Processor              "
+  },
+  "rows": [
+    {
+      "seed": 0,
+      "hilliness": "flat",
+      "size": 250,
+      "generationMs": 339.2,
+      "terrain": {
+        "grass": 49098,
+        "gravel": 4941,
+        "rough-stone": 4372,
+        "rock": 2207,
+        "rich-soil": 1882
+      },
+      "ore": {
+        "steel": 382,
+        "machinery": 34
+      },
+      "oreBudget": 25,
+      "exposedOre": 90,
+      "resources": {
+        "tree": 3379,
+        "berries": 172
+      },
+      "chunks": 1412,
+      "chunksWithCardinalNeighbor": 1410,
+      "berriesHarvestable": 114,
+      "berriesFullyGrown": 65
+    },
+    {
+      "seed": 1,
+      "hilliness": "flat",
+      "size": 250,
+      "generationMs": 332.39,
+      "terrain": {
+        "rough-stone": 5027,
+        "gravel": 5687,
+        "grass": 48248,
+        "rich-soil": 1853,
+        "rock": 1685
+      },
+      "ore": {
+        "machinery": 59,
+        "steel": 319
+      },
+      "oreBudget": 25,
+      "exposedOre": 97,
+      "resources": {
+        "tree": 3296,
+        "berries": 161
+      },
+      "chunks": 1656,
+      "chunksWithCardinalNeighbor": 1651,
+      "berriesHarvestable": 97,
+      "berriesFullyGrown": 50
+    },
+    {
+      "seed": 7,
+      "hilliness": "flat",
+      "size": 250,
+      "generationMs": 319.57,
+      "terrain": {
+        "grass": 45549,
+        "gravel": 5536,
+        "rough-stone": 5149,
+        "rock": 2927,
+        "rich-soil": 3339
+      },
+      "ore": {
+        "steel": 276,
+        "machinery": 41
+      },
+      "oreBudget": 25,
+      "exposedOre": 83,
+      "resources": {
+        "tree": 3325,
+        "berries": 162
+      },
+      "chunks": 1438,
+      "chunksWithCardinalNeighbor": 1431,
+      "berriesHarvestable": 90,
+      "berriesFullyGrown": 54
+    },
+    {
+      "seed": 19,
+      "hilliness": "flat",
+      "size": 250,
+      "generationMs": 348.81,
+      "terrain": {
+        "grass": 50711,
+        "rich-soil": 1257,
+        "gravel": 5601,
+        "rough-stone": 3574,
+        "rock": 1357
+      },
+      "ore": {
+        "machinery": 63,
+        "steel": 38
+      },
+      "oreBudget": 25,
+      "exposedOre": 20,
+      "resources": {
+        "tree": 3423,
+        "berries": 163
+      },
+      "chunks": 1762,
+      "chunksWithCardinalNeighbor": 1759,
+      "berriesHarvestable": 98,
+      "berriesFullyGrown": 61
+    },
+    {
+      "seed": 42,
+      "hilliness": "flat",
+      "size": 250,
+      "generationMs": 335.72,
+      "terrain": {
+        "rough-stone": 4730,
+        "gravel": 4317,
+        "grass": 46510,
+        "rock": 3638,
+        "rich-soil": 3305
+      },
+      "ore": {
+        "steel": 332,
+        "machinery": 54
+      },
+      "oreBudget": 25,
+      "exposedOre": 93,
+      "resources": {
+        "tree": 3272,
+        "berries": 159
+      },
+      "chunks": 1728,
+      "chunksWithCardinalNeighbor": 1721,
+      "berriesHarvestable": 101,
+      "berriesFullyGrown": 57
+    },
+    {
+      "seed": 65,
+      "hilliness": "flat",
+      "size": 250,
+      "generationMs": 288.65,
+      "terrain": {
+        "grass": 46418,
+        "rich-soil": 3458,
+        "gravel": 4900,
+        "rough-stone": 4504,
+        "rock": 3220
+      },
+      "ore": {
+        "machinery": 61,
+        "steel": 307
+      },
+      "oreBudget": 25,
+      "exposedOre": 66,
+      "resources": {
+        "tree": 3390,
+        "berries": 183
+      },
+      "chunks": 1512,
+      "chunksWithCardinalNeighbor": 1507,
+      "berriesHarvestable": 101,
+      "berriesFullyGrown": 59
+    },
+    {
+      "seed": 75,
+      "hilliness": "flat",
+      "size": 250,
+      "generationMs": 315.26,
+      "terrain": {
+        "grass": 46129,
+        "rich-soil": 809,
+        "gravel": 5911,
+        "rough-stone": 5615,
+        "rock": 4036
+      },
+      "ore": {
+        "machinery": 41,
+        "steel": 284
+      },
+      "oreBudget": 25,
+      "exposedOre": 68,
+      "resources": {
+        "tree": 3175,
+        "berries": 128
+      },
+      "chunks": 1509,
+      "chunksWithCardinalNeighbor": 1501,
+      "berriesHarvestable": 89,
+      "berriesFullyGrown": 53
+    },
+    {
+      "seed": 85,
+      "hilliness": "flat",
+      "size": 250,
+      "generationMs": 339.18,
+      "terrain": {
+        "grass": 47408,
+        "gravel": 5016,
+        "rough-stone": 4630,
+        "rock": 3072,
+        "rich-soil": 2374
+      },
+      "ore": {
+        "steel": 267,
+        "machinery": 54
+      },
+      "oreBudget": 25,
+      "exposedOre": 36,
+      "resources": {
+        "tree": 3388,
+        "berries": 162
+      },
+      "chunks": 1788,
+      "chunksWithCardinalNeighbor": 1782,
+      "berriesHarvestable": 97,
+      "berriesFullyGrown": 69
+    },
+    {
+      "seed": 114,
+      "hilliness": "flat",
+      "size": 250,
+      "generationMs": 332.62,
+      "terrain": {
+        "gravel": 4287,
+        "grass": 47993,
+        "rough-stone": 3733,
+        "rich-soil": 3128,
+        "rock": 3359
+      },
+      "ore": {
+        "steel": 443,
+        "machinery": 34
+      },
+      "oreBudget": 25,
+      "exposedOre": 62,
+      "resources": {
+        "tree": 3348,
+        "berries": 158
+      },
+      "chunks": 1691,
+      "chunksWithCardinalNeighbor": 1687,
+      "berriesHarvestable": 98,
+      "berriesFullyGrown": 60
+    },
+    {
+      "seed": 271,
+      "hilliness": "flat",
+      "size": 250,
+      "generationMs": 304.26,
+      "terrain": {
+        "grass": 50858,
+        "gravel": 4166,
+        "rich-soil": 2182,
+        "rough-stone": 3410,
+        "rock": 1884
+      },
+      "ore": {
+        "machinery": 49,
+        "steel": 316
+      },
+      "oreBudget": 25,
+      "exposedOre": 65,
+      "resources": {
+        "tree": 3573,
+        "berries": 190
+      },
+      "chunks": 1626,
+      "chunksWithCardinalNeighbor": 1624,
+      "berriesHarvestable": 99,
+      "berriesFullyGrown": 53
+    },
+    {
+      "seed": 409,
+      "hilliness": "flat",
+      "size": 250,
+      "generationMs": 381.63,
+      "terrain": {
+        "rough-stone": 4905,
+        "rock": 3071,
+        "gravel": 5817,
+        "grass": 46231,
+        "rich-soil": 2476
+      },
+      "ore": {
+        "steel": 320,
+        "machinery": 41
+      },
+      "oreBudget": 25,
+      "exposedOre": 57,
+      "resources": {
+        "tree": 3281,
+        "berries": 174
+      },
+      "chunks": 1461,
+      "chunksWithCardinalNeighbor": 1460,
+      "berriesHarvestable": 121,
+      "berriesFullyGrown": 66
+    },
+    {
+      "seed": 503,
+      "hilliness": "flat",
+      "size": 250,
+      "generationMs": 342.76,
+      "terrain": {
+        "grass": 49564,
+        "gravel": 4658,
+        "rough-stone": 3683,
+        "rock": 2401,
+        "rich-soil": 2194
+      },
+      "ore": {
+        "machinery": 32,
+        "steel": 351
+      },
+      "oreBudget": 25,
+      "exposedOre": 69,
+      "resources": {
+        "tree": 3323,
+        "berries": 169
+      },
+      "chunks": 1644,
+      "chunksWithCardinalNeighbor": 1643,
+      "berriesHarvestable": 102,
+      "berriesFullyGrown": 49
+    },
+    {
+      "seed": 661,
+      "hilliness": "flat",
+      "size": 250,
+      "generationMs": 309.24,
+      "terrain": {
+        "grass": 47504,
+        "gravel": 5165,
+        "rough-stone": 3775,
+        "rock": 3057,
+        "rich-soil": 2999
+      },
+      "ore": {
+        "machinery": 65,
+        "steel": 291
+      },
+      "oreBudget": 25,
+      "exposedOre": 58,
+      "resources": {
+        "tree": 3197,
+        "berries": 173
+      },
+      "chunks": 1616,
+      "chunksWithCardinalNeighbor": 1611,
+      "berriesHarvestable": 118,
+      "berriesFullyGrown": 67
+    },
+    {
+      "seed": 809,
+      "hilliness": "flat",
+      "size": 250,
+      "generationMs": 338.88,
+      "terrain": {
+        "grass": 48623,
+        "gravel": 4803,
+        "rough-stone": 4511,
+        "rock": 2210,
+        "rich-soil": 2353
+      },
+      "ore": {
+        "steel": 456,
+        "machinery": 29
+      },
+      "oreBudget": 25,
+      "exposedOre": 106,
+      "resources": {
+        "berries": 178,
+        "tree": 3391
+      },
+      "chunks": 1721,
+      "chunksWithCardinalNeighbor": 1720,
+      "berriesHarvestable": 110,
+      "berriesFullyGrown": 61
+    },
+    {
+      "seed": 997,
+      "hilliness": "flat",
+      "size": 250,
+      "generationMs": 378.29,
+      "terrain": {
+        "grass": 47003,
+        "gravel": 5381,
+        "rough-stone": 4715,
+        "rock": 2047,
+        "rich-soil": 3354
+      },
+      "ore": {
+        "machinery": 53,
+        "steel": 374
+      },
+      "oreBudget": 25,
+      "exposedOre": 100,
+      "resources": {
+        "tree": 3479,
+        "berries": 195
+      },
+      "chunks": 1710,
+      "chunksWithCardinalNeighbor": 1709,
+      "berriesHarvestable": 116,
+      "berriesFullyGrown": 61
+    },
+    {
+      "seed": 1234,
+      "hilliness": "flat",
+      "size": 250,
+      "generationMs": 365.95,
+      "terrain": {
+        "gravel": 4851,
+        "grass": 49793,
+        "rough-stone": 3937,
+        "rock": 1543,
+        "rich-soil": 2376
+      },
+      "ore": {
+        "steel": 477,
+        "machinery": 45
+      },
+      "oreBudget": 25,
+      "exposedOre": 128,
+      "resources": {
+        "tree": 3475,
+        "berries": 169
+      },
+      "chunks": 1613,
+      "chunksWithCardinalNeighbor": 1611,
+      "berriesHarvestable": 108,
+      "berriesFullyGrown": 67
+    },
+    {
+      "seed": 1907,
+      "hilliness": "flat",
+      "size": 250,
+      "generationMs": 375.13,
+      "terrain": {
+        "grass": 47861,
+        "gravel": 5676,
+        "rough-stone": 4564,
+        "rich-soil": 1727,
+        "rock": 2672
+      },
+      "ore": {
+        "machinery": 48,
+        "steel": 365
+      },
+      "oreBudget": 25,
+      "exposedOre": 96,
+      "resources": {
+        "tree": 3225,
+        "berries": 131
+      },
+      "chunks": 1519,
+      "chunksWithCardinalNeighbor": 1515,
+      "berriesHarvestable": 77,
+      "berriesFullyGrown": 43
+    },
+    {
+      "seed": 2026,
+      "hilliness": "flat",
+      "size": 250,
+      "generationMs": 330.43,
+      "terrain": {
+        "grass": 48522,
+        "gravel": 5009,
+        "rough-stone": 4362,
+        "rock": 2763,
+        "rich-soil": 1844
+      },
+      "ore": {
+        "steel": 381,
+        "machinery": 30
+      },
+      "oreBudget": 25,
+      "exposedOre": 62,
+      "resources": {
+        "tree": 3417,
+        "berries": 189
+      },
+      "chunks": 1626,
+      "chunksWithCardinalNeighbor": 1622,
+      "berriesHarvestable": 125,
+      "berriesFullyGrown": 62
+    },
+    {
+      "seed": 4093,
+      "hilliness": "flat",
+      "size": 250,
+      "generationMs": 308.63,
+      "terrain": {
+        "grass": 49120,
+        "gravel": 4856,
+        "rough-stone": 3206,
+        "rock": 2482,
+        "rich-soil": 2836
+      },
+      "ore": {
+        "steel": 354,
+        "machinery": 39
+      },
+      "oreBudget": 25,
+      "exposedOre": 81,
+      "resources": {
+        "tree": 3338,
+        "berries": 170
+      },
+      "chunks": 1634,
+      "chunksWithCardinalNeighbor": 1631,
+      "berriesHarvestable": 108,
+      "berriesFullyGrown": 70
+    },
+    {
+      "seed": 8191,
+      "hilliness": "flat",
+      "size": 250,
+      "generationMs": 262.49,
+      "terrain": {
+        "grass": 48231,
+        "gravel": 4639,
+        "rough-stone": 3940,
+        "rock": 2525,
+        "rich-soil": 3165
+      },
+      "ore": {
+        "steel": 382,
+        "machinery": 26
+      },
+      "oreBudget": 25,
+      "exposedOre": 76,
+      "resources": {
+        "berries": 192,
+        "tree": 3287
+      },
+      "chunks": 1481,
+      "chunksWithCardinalNeighbor": 1478,
+      "berriesHarvestable": 132,
+      "berriesFullyGrown": 77
+    },
+    {
+      "seed": 16381,
+      "hilliness": "flat",
+      "size": 250,
+      "generationMs": 307.71,
+      "terrain": {
+        "grass": 51764,
+        "gravel": 4292,
+        "rough-stone": 3150,
+        "rich-soil": 1418,
+        "rock": 1876
+      },
+      "ore": {
+        "steel": 583,
+        "machinery": 17
+      },
+      "oreBudget": 25,
+      "exposedOre": 103,
+      "resources": {
+        "tree": 3533,
+        "berries": 201
+      },
+      "chunks": 1709,
+      "chunksWithCardinalNeighbor": 1706,
+      "berriesHarvestable": 112,
+      "berriesFullyGrown": 60
+    },
+    {
+      "seed": 32749,
+      "hilliness": "flat",
+      "size": 250,
+      "generationMs": 323.03,
+      "terrain": {
+        "grass": 51724,
+        "gravel": 3970,
+        "rough-stone": 2612,
+        "rock": 1924,
+        "rich-soil": 2270
+      },
+      "ore": {
+        "machinery": 40,
+        "steel": 502
+      },
+      "oreBudget": 25,
+      "exposedOre": 127,
+      "resources": {
+        "tree": 3456,
+        "berries": 168
+      },
+      "chunks": 1918,
+      "chunksWithCardinalNeighbor": 1917,
+      "berriesHarvestable": 91,
+      "berriesFullyGrown": 49
+    },
+    {
+      "seed": 65521,
+      "hilliness": "flat",
+      "size": 250,
+      "generationMs": 279.81,
+      "terrain": {
+        "rock": 2079,
+        "rough-stone": 3304,
+        "gravel": 4607,
+        "grass": 50021,
+        "rich-soil": 2489
+      },
+      "ore": {
+        "steel": 396,
+        "machinery": 42
+      },
+      "oreBudget": 25,
+      "exposedOre": 88,
+      "resources": {
+        "tree": 3383,
+        "berries": 169
+      },
+      "chunks": 1936,
+      "chunksWithCardinalNeighbor": 1928,
+      "berriesHarvestable": 104,
+      "berriesFullyGrown": 53
+    },
+    {
+      "seed": 123456,
+      "hilliness": "flat",
+      "size": 250,
+      "generationMs": 282.1,
+      "terrain": {
+        "grass": 49186,
+        "gravel": 5904,
+        "rough-stone": 4401,
+        "rich-soil": 1599,
+        "rock": 1410
+      },
+      "ore": {
+        "machinery": 30,
+        "steel": 391
+      },
+      "oreBudget": 25,
+      "exposedOre": 122,
+      "resources": {
+        "tree": 3355,
+        "berries": 183
+      },
+      "chunks": 1653,
+      "chunksWithCardinalNeighbor": 1649,
+      "berriesHarvestable": 105,
+      "berriesFullyGrown": 58
+    },
+    {
+      "seed": 271828,
+      "hilliness": "flat",
+      "size": 250,
+      "generationMs": 269.83,
+      "terrain": {
+        "grass": 49281,
+        "gravel": 4648,
+        "rich-soil": 2094,
+        "rough-stone": 3514,
+        "rock": 2963
+      },
+      "ore": {
+        "steel": 376,
+        "machinery": 43
+      },
+      "oreBudget": 25,
+      "exposedOre": 85,
+      "resources": {
+        "tree": 3336,
+        "berries": 194
+      },
+      "chunks": 1769,
+      "chunksWithCardinalNeighbor": 1765,
+      "berriesHarvestable": 127,
+      "berriesFullyGrown": 83
+    },
+    {
+      "seed": 314159,
+      "hilliness": "flat",
+      "size": 250,
+      "generationMs": 266.65,
+      "terrain": {
+        "grass": 48363,
+        "gravel": 4785,
+        "rough-stone": 4378,
+        "rich-soil": 1456,
+        "rock": 3518
+      },
+      "ore": {
+        "steel": 501,
+        "machinery": 31
+      },
+      "oreBudget": 25,
+      "exposedOre": 71,
+      "resources": {
+        "tree": 3351,
+        "berries": 143
+      },
+      "chunks": 1705,
+      "chunksWithCardinalNeighbor": 1700,
+      "berriesHarvestable": 100,
+      "berriesFullyGrown": 56
+    },
+    {
+      "seed": 1000003,
+      "hilliness": "flat",
+      "size": 250,
+      "generationMs": 256.78,
+      "terrain": {
+        "grass": 46758,
+        "gravel": 4381,
+        "rough-stone": 5755,
+        "rock": 2949,
+        "rich-soil": 2657
+      },
+      "ore": {
+        "machinery": 56,
+        "steel": 259
+      },
+      "oreBudget": 25,
+      "exposedOre": 38,
+      "resources": {
+        "tree": 3300,
+        "berries": 167
+      },
+      "chunks": 1447,
+      "chunksWithCardinalNeighbor": 1447,
+      "berriesHarvestable": 103,
+      "berriesFullyGrown": 55
+    },
+    {
+      "seed": 2147483647,
+      "hilliness": "flat",
+      "size": 250,
+      "generationMs": 253.83,
+      "terrain": {
+        "rock": 3637,
+        "rough-stone": 3921,
+        "gravel": 5146,
+        "grass": 48558,
+        "rich-soil": 1238
+      },
+      "ore": {
+        "machinery": 51,
+        "steel": 319
+      },
+      "oreBudget": 25,
+      "exposedOre": 55,
+      "resources": {
+        "tree": 3326,
+        "berries": 168
+      },
+      "chunks": 1429,
+      "chunksWithCardinalNeighbor": 1424,
+      "berriesHarvestable": 102,
+      "berriesFullyGrown": 56
+    },
+    {
+      "seed": 4294967294,
+      "hilliness": "flat",
+      "size": 250,
+      "generationMs": 341.41,
+      "terrain": {
+        "rich-soil": 1931,
+        "grass": 50162,
+        "gravel": 4107,
+        "rough-stone": 3864,
+        "rock": 2436
+      },
+      "ore": {
+        "steel": 559,
+        "machinery": 32
+      },
+      "oreBudget": 25,
+      "exposedOre": 86,
+      "resources": {
+        "tree": 3383,
+        "berries": 184
+      },
+      "chunks": 1542,
+      "chunksWithCardinalNeighbor": 1541,
+      "berriesHarvestable": 130,
+      "berriesFullyGrown": 76
+    },
+    {
+      "seed": 4294967295,
+      "hilliness": "flat",
+      "size": 250,
+      "generationMs": 411,
+      "terrain": {
+        "grass": 46679,
+        "gravel": 5498,
+        "rough-stone": 5869,
+        "rock": 1587,
+        "rich-soil": 2867
+      },
+      "ore": {
+        "steel": 466,
+        "machinery": 37
+      },
+      "oreBudget": 25,
+      "exposedOre": 138,
+      "resources": {
+        "tree": 3288,
+        "berries": 180
+      },
+      "chunks": 1740,
+      "chunksWithCardinalNeighbor": 1732,
+      "berriesHarvestable": 102,
+      "berriesFullyGrown": 61
+    },
+    {
+      "seed": 0,
+      "hilliness": "small-hills",
+      "size": 250,
+      "generationMs": 314.25,
+      "terrain": {
+        "grass": 43218,
+        "gravel": 5526,
+        "rough-stone": 6244,
+        "rock": 5993,
+        "rich-soil": 1519
+      },
+      "ore": {
+        "machinery": 74,
+        "steel": 749
+      },
+      "oreBudget": 50,
+      "exposedOre": 148,
+      "resources": {
+        "tree": 3046,
+        "berries": 145
+      },
+      "chunks": 1217,
+      "chunksWithCardinalNeighbor": 1212,
+      "berriesHarvestable": 92,
+      "berriesFullyGrown": 54
+    },
+    {
+      "seed": 1,
+      "hilliness": "small-hills",
+      "size": 250,
+      "generationMs": 326.47,
+      "terrain": {
+        "rock": 5754,
+        "rough-stone": 7349,
+        "gravel": 5654,
+        "grass": 42364,
+        "rich-soil": 1379
+      },
+      "ore": {
+        "steel": 786,
+        "machinery": 87
+      },
+      "oreBudget": 50,
+      "exposedOre": 169,
+      "resources": {
+        "tree": 2905,
+        "berries": 147
+      },
+      "chunks": 1347,
+      "chunksWithCardinalNeighbor": 1338,
+      "berriesHarvestable": 87,
+      "berriesFullyGrown": 42
+    },
+    {
+      "seed": 7,
+      "hilliness": "small-hills",
+      "size": 250,
+      "generationMs": 319.31,
+      "terrain": {
+        "grass": 39801,
+        "gravel": 5259,
+        "rough-stone": 7195,
+        "rock": 7167,
+        "rich-soil": 3078
+      },
+      "ore": {
+        "steel": 559,
+        "machinery": 107
+      },
+      "oreBudget": 50,
+      "exposedOre": 94,
+      "resources": {
+        "tree": 2908,
+        "berries": 138
+      },
+      "chunks": 1215,
+      "chunksWithCardinalNeighbor": 1210,
+      "berriesHarvestable": 75,
+      "berriesFullyGrown": 46
+    },
+    {
+      "seed": 19,
+      "hilliness": "small-hills",
+      "size": 250,
+      "generationMs": 378.91,
+      "terrain": {
+        "grass": 43248,
+        "rich-soil": 1108,
+        "gravel": 6735,
+        "rough-stone": 7215,
+        "rock": 4194
+      },
+      "ore": {
+        "machinery": 113,
+        "steel": 418
+      },
+      "oreBudget": 50,
+      "exposedOre": 94,
+      "resources": {
+        "tree": 2976,
+        "berries": 147
+      },
+      "chunks": 1518,
+      "chunksWithCardinalNeighbor": 1516,
+      "berriesHarvestable": 91,
+      "berriesFullyGrown": 55
+    },
+    {
+      "seed": 42,
+      "hilliness": "small-hills",
+      "size": 250,
+      "generationMs": 329.3,
+      "terrain": {
+        "rock": 7717,
+        "rough-stone": 5607,
+        "gravel": 4652,
+        "grass": 41628,
+        "rich-soil": 2896
+      },
+      "ore": {
+        "machinery": 97,
+        "steel": 710
+      },
+      "oreBudget": 50,
+      "exposedOre": 108,
+      "resources": {
+        "tree": 2914,
+        "berries": 145
+      },
+      "chunks": 1510,
+      "chunksWithCardinalNeighbor": 1507,
+      "berriesHarvestable": 95,
+      "berriesFullyGrown": 52
+    },
+    {
+      "seed": 65,
+      "hilliness": "small-hills",
+      "size": 250,
+      "generationMs": 283.89,
+      "terrain": {
+        "grass": 40679,
+        "gravel": 5352,
+        "rich-soil": 3111,
+        "rough-stone": 6322,
+        "rock": 7036
+      },
+      "ore": {
+        "steel": 717,
+        "machinery": 89
+      },
+      "oreBudget": 50,
+      "exposedOre": 129,
+      "resources": {
+        "tree": 3023,
+        "berries": 172
+      },
+      "chunks": 1312,
+      "chunksWithCardinalNeighbor": 1306,
+      "berriesHarvestable": 92,
+      "berriesFullyGrown": 54
+    },
+    {
+      "seed": 75,
+      "hilliness": "small-hills",
+      "size": 250,
+      "generationMs": 309.68,
+      "terrain": {
+        "grass": 38690,
+        "rich-soil": 668,
+        "gravel": 6661,
+        "rough-stone": 7701,
+        "rock": 8780
+      },
+      "ore": {
+        "steel": 699,
+        "machinery": 79
+      },
+      "oreBudget": 50,
+      "exposedOre": 136,
+      "resources": {
+        "tree": 2710,
+        "berries": 112
+      },
+      "chunks": 1221,
+      "chunksWithCardinalNeighbor": 1219,
+      "berriesHarvestable": 78,
+      "berriesFullyGrown": 43
+    },
+    {
+      "seed": 85,
+      "hilliness": "small-hills",
+      "size": 250,
+      "generationMs": 285.19,
+      "terrain": {
+        "grass": 41612,
+        "gravel": 5294,
+        "rough-stone": 6533,
+        "rock": 6967,
+        "rich-soil": 2094
+      },
+      "ore": {
+        "steel": 594,
+        "machinery": 100
+      },
+      "oreBudget": 50,
+      "exposedOre": 88,
+      "resources": {
+        "tree": 2953,
+        "berries": 137
+      },
+      "chunks": 1555,
+      "chunksWithCardinalNeighbor": 1549,
+      "berriesHarvestable": 82,
+      "berriesFullyGrown": 55
+    },
+    {
+      "seed": 114,
+      "hilliness": "small-hills",
+      "size": 250,
+      "generationMs": 272.81,
+      "terrain": {
+        "rough-stone": 5483,
+        "gravel": 5345,
+        "grass": 42321,
+        "rock": 6586,
+        "rich-soil": 2765
+      },
+      "ore": {
+        "machinery": 67,
+        "steel": 830
+      },
+      "oreBudget": 50,
+      "exposedOre": 128,
+      "resources": {
+        "tree": 2985,
+        "berries": 133
+      },
+      "chunks": 1467,
+      "chunksWithCardinalNeighbor": 1466,
+      "berriesHarvestable": 86,
+      "berriesFullyGrown": 54
+    },
+    {
+      "seed": 271,
+      "hilliness": "small-hills",
+      "size": 250,
+      "generationMs": 261.22,
+      "terrain": {
+        "grass": 43783,
+        "gravel": 6663,
+        "rough-stone": 5470,
+        "rich-soil": 1862,
+        "rock": 4722
+      },
+      "ore": {
+        "steel": 670,
+        "machinery": 89
+      },
+      "oreBudget": 50,
+      "exposedOre": 130,
+      "resources": {
+        "tree": 3186,
+        "berries": 171
+      },
+      "chunks": 1298,
+      "chunksWithCardinalNeighbor": 1296,
+      "berriesHarvestable": 89,
+      "berriesFullyGrown": 49
+    },
+    {
+      "seed": 409,
+      "hilliness": "small-hills",
+      "size": 250,
+      "generationMs": 343.56,
+      "terrain": {
+        "rock": 7105,
+        "rough-stone": 7567,
+        "gravel": 5366,
+        "grass": 40143,
+        "rich-soil": 2319
+      },
+      "ore": {
+        "machinery": 99,
+        "steel": 600
+      },
+      "oreBudget": 50,
+      "exposedOre": 108,
+      "resources": {
+        "tree": 2898,
+        "berries": 152
+      },
+      "chunks": 1277,
+      "chunksWithCardinalNeighbor": 1274,
+      "berriesHarvestable": 104,
+      "berriesFullyGrown": 56
+    },
+    {
+      "seed": 503,
+      "hilliness": "small-hills",
+      "size": 250,
+      "generationMs": 334.86,
+      "terrain": {
+        "gravel": 6205,
+        "rough-stone": 5921,
+        "grass": 42790,
+        "rock": 5583,
+        "rich-soil": 2001
+      },
+      "ore": {
+        "steel": 689,
+        "machinery": 47
+      },
+      "oreBudget": 50,
+      "exposedOre": 119,
+      "resources": {
+        "tree": 2950,
+        "berries": 155
+      },
+      "chunks": 1371,
+      "chunksWithCardinalNeighbor": 1369,
+      "berriesHarvestable": 96,
+      "berriesFullyGrown": 46
+    },
+    {
+      "seed": 661,
+      "hilliness": "small-hills",
+      "size": 250,
+      "generationMs": 326.37,
+      "terrain": {
+        "gravel": 5799,
+        "rough-stone": 6835,
+        "grass": 41107,
+        "rock": 6088,
+        "rich-soil": 2671
+      },
+      "ore": {
+        "machinery": 113,
+        "steel": 554
+      },
+      "oreBudget": 50,
+      "exposedOre": 87,
+      "resources": {
+        "tree": 2854,
+        "berries": 142
+      },
+      "chunks": 1212,
+      "chunksWithCardinalNeighbor": 1208,
+      "berriesHarvestable": 103,
+      "berriesFullyGrown": 56
+    },
+    {
+      "seed": 809,
+      "hilliness": "small-hills",
+      "size": 250,
+      "generationMs": 522.12,
+      "terrain": {
+        "grass": 42314,
+        "gravel": 5704,
+        "rough-stone": 6146,
+        "rock": 6111,
+        "rich-soil": 2225
+      },
+      "ore": {
+        "steel": 889,
+        "machinery": 75
+      },
+      "oreBudget": 50,
+      "exposedOre": 163,
+      "resources": {
+        "berries": 169,
+        "tree": 3020
+      },
+      "chunks": 1467,
+      "chunksWithCardinalNeighbor": 1465,
+      "berriesHarvestable": 103,
+      "berriesFullyGrown": 56
+    },
+    {
+      "seed": 997,
+      "hilliness": "small-hills",
+      "size": 250,
+      "generationMs": 368.67,
+      "terrain": {
+        "grass": 39910,
+        "gravel": 6697,
+        "rough-stone": 7036,
+        "rock": 6007,
+        "rich-soil": 2850
+      },
+      "ore": {
+        "steel": 610,
+        "machinery": 106
+      },
+      "oreBudget": 50,
+      "exposedOre": 111,
+      "resources": {
+        "tree": 2965,
+        "berries": 165
+      },
+      "chunks": 1350,
+      "chunksWithCardinalNeighbor": 1350,
+      "berriesHarvestable": 101,
+      "berriesFullyGrown": 53
+    },
+    {
+      "seed": 1234,
+      "hilliness": "small-hills",
+      "size": 250,
+      "generationMs": 321.28,
+      "terrain": {
+        "rough-stone": 6393,
+        "gravel": 6790,
+        "rock": 4810,
+        "grass": 42427,
+        "rich-soil": 2080
+      },
+      "ore": {
+        "steel": 841,
+        "machinery": 92
+      },
+      "oreBudget": 50,
+      "exposedOre": 183,
+      "resources": {
+        "tree": 3068,
+        "berries": 160
+      },
+      "chunks": 1333,
+      "chunksWithCardinalNeighbor": 1329,
+      "berriesHarvestable": 102,
+      "berriesFullyGrown": 64
+    },
+    {
+      "seed": 1907,
+      "hilliness": "small-hills",
+      "size": 250,
+      "generationMs": 292.98,
+      "terrain": {
+        "grass": 41696,
+        "gravel": 5506,
+        "rough-stone": 7207,
+        "rock": 6547,
+        "rich-soil": 1544
+      },
+      "ore": {
+        "steel": 753,
+        "machinery": 101
+      },
+      "oreBudget": 50,
+      "exposedOre": 128,
+      "resources": {
+        "tree": 2828,
+        "berries": 105
+      },
+      "chunks": 1287,
+      "chunksWithCardinalNeighbor": 1284,
+      "berriesHarvestable": 56,
+      "berriesFullyGrown": 34
+    },
+    {
+      "seed": 2026,
+      "hilliness": "small-hills",
+      "size": 250,
+      "generationMs": 306.57,
+      "terrain": {
+        "grass": 41785,
+        "gravel": 6027,
+        "rough-stone": 6463,
+        "rock": 6412,
+        "rich-soil": 1813
+      },
+      "ore": {
+        "steel": 805,
+        "machinery": 70
+      },
+      "oreBudget": 50,
+      "exposedOre": 125,
+      "resources": {
+        "tree": 3007,
+        "berries": 160
+      },
+      "chunks": 1327,
+      "chunksWithCardinalNeighbor": 1320,
+      "berriesHarvestable": 105,
+      "berriesFullyGrown": 53
+    },
+    {
+      "seed": 4093,
+      "hilliness": "small-hills",
+      "size": 250,
+      "generationMs": 301.5,
+      "terrain": {
+        "grass": 42420,
+        "gravel": 6082,
+        "rough-stone": 6366,
+        "rock": 5177,
+        "rich-soil": 2455
+      },
+      "ore": {
+        "steel": 840,
+        "machinery": 76
+      },
+      "oreBudget": 50,
+      "exposedOre": 108,
+      "resources": {
+        "tree": 2906,
+        "berries": 136
+      },
+      "chunks": 1385,
+      "chunksWithCardinalNeighbor": 1382,
+      "berriesHarvestable": 83,
+      "berriesFullyGrown": 55
+    },
+    {
+      "seed": 8191,
+      "hilliness": "small-hills",
+      "size": 250,
+      "generationMs": 303.51,
+      "terrain": {
+        "grass": 42083,
+        "gravel": 5965,
+        "rough-stone": 6099,
+        "rock": 5847,
+        "rich-soil": 2506
+      },
+      "ore": {
+        "steel": 692,
+        "machinery": 76
+      },
+      "oreBudget": 50,
+      "exposedOre": 78,
+      "resources": {
+        "berries": 167,
+        "tree": 2927
+      },
+      "chunks": 1250,
+      "chunksWithCardinalNeighbor": 1248,
+      "berriesHarvestable": 110,
+      "berriesFullyGrown": 66
+    },
+    {
+      "seed": 16381,
+      "hilliness": "small-hills",
+      "size": 250,
+      "generationMs": 331.65,
+      "terrain": {
+        "grass": 45444,
+        "gravel": 5842,
+        "rough-stone": 5537,
+        "rock": 4532,
+        "rich-soil": 1145
+      },
+      "ore": {
+        "steel": 891,
+        "machinery": 72
+      },
+      "oreBudget": 50,
+      "exposedOre": 157,
+      "resources": {
+        "tree": 3155,
+        "berries": 185
+      },
+      "chunks": 1512,
+      "chunksWithCardinalNeighbor": 1508,
+      "berriesHarvestable": 105,
+      "berriesFullyGrown": 53
+    },
+    {
+      "seed": 32749,
+      "hilliness": "small-hills",
+      "size": 250,
+      "generationMs": 376.82,
+      "terrain": {
+        "grass": 45976,
+        "gravel": 5241,
+        "rough-stone": 5002,
+        "rock": 4131,
+        "rich-soil": 2150
+      },
+      "ore": {
+        "machinery": 81,
+        "steel": 774
+      },
+      "oreBudget": 50,
+      "exposedOre": 167,
+      "resources": {
+        "tree": 3089,
+        "berries": 170
+      },
+      "chunks": 1672,
+      "chunksWithCardinalNeighbor": 1668,
+      "berriesHarvestable": 93,
+      "berriesFullyGrown": 50
+    },
+    {
+      "seed": 65521,
+      "hilliness": "small-hills",
+      "size": 250,
+      "generationMs": 402.71,
+      "terrain": {
+        "rock": 4811,
+        "rough-stone": 5866,
+        "gravel": 5783,
+        "grass": 43814,
+        "rich-soil": 2226
+      },
+      "ore": {
+        "machinery": 90,
+        "steel": 729
+      },
+      "oreBudget": 50,
+      "exposedOre": 105,
+      "resources": {
+        "tree": 3020,
+        "berries": 148
+      },
+      "chunks": 1660,
+      "chunksWithCardinalNeighbor": 1655,
+      "berriesHarvestable": 93,
+      "berriesFullyGrown": 46
+    },
+    {
+      "seed": 123456,
+      "hilliness": "small-hills",
+      "size": 250,
+      "generationMs": 388.16,
+      "terrain": {
+        "grass": 41485,
+        "gravel": 6926,
+        "rough-stone": 7470,
+        "rock": 5135,
+        "rich-soil": 1484
+      },
+      "ore": {
+        "machinery": 86,
+        "steel": 710
+      },
+      "oreBudget": 50,
+      "exposedOre": 184,
+      "resources": {
+        "tree": 2908,
+        "berries": 161
+      },
+      "chunks": 1375,
+      "chunksWithCardinalNeighbor": 1372,
+      "berriesHarvestable": 96,
+      "berriesFullyGrown": 56
+    },
+    {
+      "seed": 271828,
+      "hilliness": "small-hills",
+      "size": 250,
+      "generationMs": 424.94,
+      "terrain": {
+        "grass": 42157,
+        "gravel": 6635,
+        "rough-stone": 6045,
+        "rich-soil": 1700,
+        "rock": 5963
+      },
+      "ore": {
+        "machinery": 112,
+        "steel": 628
+      },
+      "oreBudget": 50,
+      "exposedOre": 103,
+      "resources": {
+        "tree": 2957,
+        "berries": 169
+      },
+      "chunks": 1488,
+      "chunksWithCardinalNeighbor": 1481,
+      "berriesHarvestable": 106,
+      "berriesFullyGrown": 71
+    },
+    {
+      "seed": 314159,
+      "hilliness": "small-hills",
+      "size": 250,
+      "generationMs": 347.56,
+      "terrain": {
+        "grass": 41357,
+        "gravel": 6439,
+        "rough-stone": 6044,
+        "rock": 7410,
+        "rich-soil": 1250
+      },
+      "ore": {
+        "steel": 952,
+        "machinery": 67
+      },
+      "oreBudget": 50,
+      "exposedOre": 129,
+      "resources": {
+        "tree": 2978,
+        "berries": 130
+      },
+      "chunks": 1485,
+      "chunksWithCardinalNeighbor": 1483,
+      "berriesHarvestable": 92,
+      "berriesFullyGrown": 52
+    },
+    {
+      "seed": 1000003,
+      "hilliness": "small-hills",
+      "size": 250,
+      "generationMs": 301.69,
+      "terrain": {
+        "grass": 41500,
+        "gravel": 4871,
+        "rough-stone": 5700,
+        "rock": 7991,
+        "rich-soil": 2438
+      },
+      "ore": {
+        "machinery": 99,
+        "steel": 708
+      },
+      "oreBudget": 50,
+      "exposedOre": 125,
+      "resources": {
+        "tree": 3002,
+        "berries": 150
+      },
+      "chunks": 1297,
+      "chunksWithCardinalNeighbor": 1295,
+      "berriesHarvestable": 91,
+      "berriesFullyGrown": 52
+    },
+    {
+      "seed": 2147483647,
+      "hilliness": "small-hills",
+      "size": 250,
+      "generationMs": 326.46,
+      "terrain": {
+        "rock": 7003,
+        "rough-stone": 6381,
+        "gravel": 5794,
+        "grass": 42262,
+        "rich-soil": 1060
+      },
+      "ore": {
+        "machinery": 105,
+        "steel": 657
+      },
+      "oreBudget": 50,
+      "exposedOre": 88,
+      "resources": {
+        "tree": 2909,
+        "berries": 150
+      },
+      "chunks": 1215,
+      "chunksWithCardinalNeighbor": 1211,
+      "berriesHarvestable": 88,
+      "berriesFullyGrown": 53
+    },
+    {
+      "seed": 4294967294,
+      "hilliness": "small-hills",
+      "size": 250,
+      "generationMs": 345.33,
+      "terrain": {
+        "rich-soil": 1824,
+        "gravel": 5808,
+        "grass": 43854,
+        "rough-stone": 5333,
+        "rock": 5681
+      },
+      "ore": {
+        "machinery": 86,
+        "steel": 805
+      },
+      "oreBudget": 50,
+      "exposedOre": 111,
+      "resources": {
+        "tree": 3044,
+        "berries": 167
+      },
+      "chunks": 1368,
+      "chunksWithCardinalNeighbor": 1365,
+      "berriesHarvestable": 121,
+      "berriesFullyGrown": 70
+    },
+    {
+      "seed": 4294967295,
+      "hilliness": "small-hills",
+      "size": 250,
+      "generationMs": 317.64,
+      "terrain": {
+        "grass": 39224,
+        "gravel": 6776,
+        "rough-stone": 7326,
+        "rock": 6551,
+        "rich-soil": 2623
+      },
+      "ore": {
+        "steel": 787,
+        "machinery": 91
+      },
+      "oreBudget": 50,
+      "exposedOre": 190,
+      "resources": {
+        "tree": 2874,
+        "berries": 155
+      },
+      "chunks": 1493,
+      "chunksWithCardinalNeighbor": 1484,
+      "berriesHarvestable": 84,
+      "berriesFullyGrown": 52
+    },
+    {
+      "seed": 0,
+      "hilliness": "large-hills",
+      "size": 250,
+      "generationMs": 325.22,
+      "terrain": {
+        "grass": 37826,
+        "gravel": 5603,
+        "rough-stone": 6995,
+        "rock": 10897,
+        "rich-soil": 1179
+      },
+      "ore": {
+        "steel": 1148,
+        "machinery": 107
+      },
+      "oreBudget": 69,
+      "exposedOre": 198,
+      "resources": {
+        "tree": 2670,
+        "berries": 134
+      },
+      "chunks": 1008,
+      "chunksWithCardinalNeighbor": 1004,
+      "berriesHarvestable": 87,
+      "berriesFullyGrown": 49
+    },
+    {
+      "seed": 1,
+      "hilliness": "large-hills",
+      "size": 250,
+      "generationMs": 295.19,
+      "terrain": {
+        "rock": 11567,
+        "rough-stone": 7312,
+        "gravel": 6174,
+        "grass": 36486,
+        "rich-soil": 961
+      },
+      "ore": {
+        "steel": 1113,
+        "machinery": 109
+      },
+      "oreBudget": 69,
+      "exposedOre": 147,
+      "resources": {
+        "tree": 2522,
+        "berries": 127
+      },
+      "chunks": 1082,
+      "chunksWithCardinalNeighbor": 1076,
+      "berriesHarvestable": 76,
+      "berriesFullyGrown": 38
+    },
+    {
+      "seed": 7,
+      "hilliness": "large-hills",
+      "size": 250,
+      "generationMs": 314.12,
+      "terrain": {
+        "grass": 34665,
+        "gravel": 5333,
+        "rough-stone": 7028,
+        "rock": 12730,
+        "rich-soil": 2744
+      },
+      "ore": {
+        "steel": 932,
+        "machinery": 126
+      },
+      "oreBudget": 69,
+      "exposedOre": 149,
+      "resources": {
+        "tree": 2553,
+        "berries": 130
+      },
+      "chunks": 1069,
+      "chunksWithCardinalNeighbor": 1062,
+      "berriesHarvestable": 68,
+      "berriesFullyGrown": 43
+    },
+    {
+      "seed": 19,
+      "hilliness": "large-hills",
+      "size": 250,
+      "generationMs": 297.65,
+      "terrain": {
+        "grass": 36528,
+        "rich-soil": 936,
+        "gravel": 6736,
+        "rough-stone": 8782,
+        "rock": 9518
+      },
+      "ore": {
+        "machinery": 150,
+        "steel": 753
+      },
+      "oreBudget": 69,
+      "exposedOre": 132,
+      "resources": {
+        "tree": 2566,
+        "berries": 122
+      },
+      "chunks": 1248,
+      "chunksWithCardinalNeighbor": 1241,
+      "berriesHarvestable": 72,
+      "berriesFullyGrown": 43
+    },
+    {
+      "seed": 42,
+      "hilliness": "large-hills",
+      "size": 250,
+      "generationMs": 318.75,
+      "terrain": {
+        "rock": 12070,
+        "rough-stone": 6026,
+        "gravel": 5518,
+        "grass": 36218,
+        "rich-soil": 2668
+      },
+      "ore": {
+        "steel": 957,
+        "machinery": 141
+      },
+      "oreBudget": 69,
+      "exposedOre": 140,
+      "resources": {
+        "tree": 2604,
+        "berries": 137
+      },
+      "chunks": 1235,
+      "chunksWithCardinalNeighbor": 1232,
+      "berriesHarvestable": 85,
+      "berriesFullyGrown": 49
+    },
+    {
+      "seed": 65,
+      "hilliness": "large-hills",
+      "size": 250,
+      "generationMs": 395.61,
+      "terrain": {
+        "grass": 34629,
+        "gravel": 6361,
+        "rough-stone": 6906,
+        "rich-soil": 2655,
+        "rock": 11949
+      },
+      "ore": {
+        "steel": 1119,
+        "machinery": 124
+      },
+      "oreBudget": 69,
+      "exposedOre": 195,
+      "resources": {
+        "tree": 2654,
+        "berries": 154
+      },
+      "chunks": 1038,
+      "chunksWithCardinalNeighbor": 1034,
+      "berriesHarvestable": 82,
+      "berriesFullyGrown": 48
+    },
+    {
+      "seed": 75,
+      "hilliness": "large-hills",
+      "size": 250,
+      "generationMs": 375.77,
+      "terrain": {
+        "grass": 32594,
+        "rich-soil": 521,
+        "gravel": 6109,
+        "rough-stone": 8628,
+        "rock": 14648
+      },
+      "ore": {
+        "steel": 1019,
+        "machinery": 120
+      },
+      "oreBudget": 69,
+      "exposedOre": 117,
+      "resources": {
+        "tree": 2304,
+        "berries": 91
+      },
+      "chunks": 985,
+      "chunksWithCardinalNeighbor": 980,
+      "berriesHarvestable": 63,
+      "berriesFullyGrown": 35
+    },
+    {
+      "seed": 85,
+      "hilliness": "large-hills",
+      "size": 250,
+      "generationMs": 340.24,
+      "terrain": {
+        "grass": 36023,
+        "gravel": 5882,
+        "rough-stone": 7052,
+        "rock": 11854,
+        "rich-soil": 1689
+      },
+      "ore": {
+        "steel": 802,
+        "machinery": 134
+      },
+      "oreBudget": 69,
+      "exposedOre": 92,
+      "resources": {
+        "tree": 2589,
+        "berries": 117
+      },
+      "chunks": 1268,
+      "chunksWithCardinalNeighbor": 1260,
+      "berriesHarvestable": 66,
+      "berriesFullyGrown": 45
+    },
+    {
+      "seed": 114,
+      "hilliness": "large-hills",
+      "size": 250,
+      "generationMs": 383.37,
+      "terrain": {
+        "rock": 10709,
+        "rough-stone": 6822,
+        "gravel": 6307,
+        "grass": 36269,
+        "rich-soil": 2393
+      },
+      "ore": {
+        "steel": 1190,
+        "machinery": 100
+      },
+      "oreBudget": 69,
+      "exposedOre": 130,
+      "resources": {
+        "tree": 2634,
+        "berries": 127
+      },
+      "chunks": 1202,
+      "chunksWithCardinalNeighbor": 1201,
+      "berriesHarvestable": 84,
+      "berriesFullyGrown": 53
+    },
+    {
+      "seed": 271,
+      "hilliness": "large-hills",
+      "size": 250,
+      "generationMs": 316.37,
+      "terrain": {
+        "grass": 36722,
+        "gravel": 7325,
+        "rough-stone": 8256,
+        "rich-soil": 1471,
+        "rock": 8726
+      },
+      "ore": {
+        "steel": 1019,
+        "machinery": 109
+      },
+      "oreBudget": 69,
+      "exposedOre": 142,
+      "resources": {
+        "tree": 2738,
+        "berries": 140
+      },
+      "chunks": 1034,
+      "chunksWithCardinalNeighbor": 1029,
+      "berriesHarvestable": 75,
+      "berriesFullyGrown": 41
+    },
+    {
+      "seed": 409,
+      "hilliness": "large-hills",
+      "size": 250,
+      "generationMs": 277.88,
+      "terrain": {
+        "rock": 12805,
+        "rough-stone": 7342,
+        "gravel": 5778,
+        "grass": 34468,
+        "rich-soil": 2107
+      },
+      "ore": {
+        "machinery": 135,
+        "steel": 945
+      },
+      "oreBudget": 69,
+      "exposedOre": 130,
+      "resources": {
+        "tree": 2560,
+        "berries": 135
+      },
+      "chunks": 1091,
+      "chunksWithCardinalNeighbor": 1088,
+      "berriesHarvestable": 94,
+      "berriesFullyGrown": 51
+    },
+    {
+      "seed": 503,
+      "hilliness": "large-hills",
+      "size": 250,
+      "generationMs": 307.82,
+      "terrain": {
+        "rough-stone": 7865,
+        "rock": 9983,
+        "gravel": 6715,
+        "grass": 36091,
+        "rich-soil": 1846
+      },
+      "ore": {
+        "machinery": 90,
+        "steel": 981
+      },
+      "oreBudget": 69,
+      "exposedOre": 142,
+      "resources": {
+        "tree": 2508,
+        "berries": 139
+      },
+      "chunks": 1150,
+      "chunksWithCardinalNeighbor": 1145,
+      "berriesHarvestable": 88,
+      "berriesFullyGrown": 47
+    },
+    {
+      "seed": 661,
+      "hilliness": "large-hills",
+      "size": 250,
+      "generationMs": 352.14,
+      "terrain": {
+        "rough-stone": 7793,
+        "gravel": 7219,
+        "grass": 33973,
+        "rock": 11042,
+        "rich-soil": 2473
+      },
+      "ore": {
+        "machinery": 130,
+        "steel": 969
+      },
+      "oreBudget": 69,
+      "exposedOre": 92,
+      "resources": {
+        "tree": 2439,
+        "berries": 125
+      },
+      "chunks": 907,
+      "chunksWithCardinalNeighbor": 900,
+      "berriesHarvestable": 92,
+      "berriesFullyGrown": 46
+    },
+    {
+      "seed": 809,
+      "hilliness": "large-hills",
+      "size": 250,
+      "generationMs": 330.04,
+      "terrain": {
+        "grass": 36313,
+        "gravel": 6040,
+        "rough-stone": 7394,
+        "rock": 10680,
+        "rich-soil": 2073
+      },
+      "ore": {
+        "steel": 1202,
+        "machinery": 112
+      },
+      "oreBudget": 69,
+      "exposedOre": 102,
+      "resources": {
+        "berries": 148,
+        "tree": 2671
+      },
+      "chunks": 1271,
+      "chunksWithCardinalNeighbor": 1266,
+      "berriesHarvestable": 92,
+      "berriesFullyGrown": 49
+    },
+    {
+      "seed": 997,
+      "hilliness": "large-hills",
+      "size": 250,
+      "generationMs": 373.71,
+      "terrain": {
+        "grass": 33495,
+        "gravel": 6801,
+        "rough-stone": 8676,
+        "rock": 11187,
+        "rich-soil": 2341
+      },
+      "ore": {
+        "steel": 827,
+        "machinery": 152
+      },
+      "oreBudget": 69,
+      "exposedOre": 113,
+      "resources": {
+        "tree": 2496,
+        "berries": 128
+      },
+      "chunks": 1123,
+      "chunksWithCardinalNeighbor": 1123,
+      "berriesHarvestable": 75,
+      "berriesFullyGrown": 39
+    },
+    {
+      "seed": 1234,
+      "hilliness": "large-hills",
+      "size": 250,
+      "generationMs": 363.82,
+      "terrain": {
+        "rock": 9509,
+        "rough-stone": 8615,
+        "gravel": 6792,
+        "grass": 35920,
+        "rich-soil": 1664
+      },
+      "ore": {
+        "steel": 1079,
+        "machinery": 133
+      },
+      "oreBudget": 69,
+      "exposedOre": 147,
+      "resources": {
+        "tree": 2615,
+        "berries": 136
+      },
+      "chunks": 1065,
+      "chunksWithCardinalNeighbor": 1063,
+      "berriesHarvestable": 83,
+      "berriesFullyGrown": 54
+    },
+    {
+      "seed": 1907,
+      "hilliness": "large-hills",
+      "size": 250,
+      "generationMs": 328.67,
+      "terrain": {
+        "grass": 36283,
+        "gravel": 5436,
+        "rough-stone": 7356,
+        "rock": 12008,
+        "rich-soil": 1417
+      },
+      "ore": {
+        "steel": 1070,
+        "machinery": 122
+      },
+      "oreBudget": 69,
+      "exposedOre": 117,
+      "resources": {
+        "tree": 2464,
+        "berries": 93
+      },
+      "chunks": 1125,
+      "chunksWithCardinalNeighbor": 1122,
+      "berriesHarvestable": 50,
+      "berriesFullyGrown": 28
+    },
+    {
+      "seed": 2026,
+      "hilliness": "large-hills",
+      "size": 250,
+      "generationMs": 318.18,
+      "terrain": {
+        "grass": 35492,
+        "gravel": 6245,
+        "rough-stone": 7677,
+        "rock": 11384,
+        "rich-soil": 1702
+      },
+      "ore": {
+        "steel": 1155,
+        "machinery": 100
+      },
+      "oreBudget": 69,
+      "exposedOre": 180,
+      "resources": {
+        "tree": 2617,
+        "berries": 127
+      },
+      "chunks": 1182,
+      "chunksWithCardinalNeighbor": 1178,
+      "berriesHarvestable": 81,
+      "berriesFullyGrown": 42
+    },
+    {
+      "seed": 4093,
+      "hilliness": "large-hills",
+      "size": 250,
+      "generationMs": 302.51,
+      "terrain": {
+        "gravel": 6732,
+        "rough-stone": 8052,
+        "grass": 35849,
+        "rock": 9730,
+        "rich-soil": 2137
+      },
+      "ore": {
+        "steel": 1251,
+        "machinery": 86
+      },
+      "oreBudget": 69,
+      "exposedOre": 190,
+      "resources": {
+        "tree": 2457,
+        "berries": 116
+      },
+      "chunks": 1145,
+      "chunksWithCardinalNeighbor": 1137,
+      "berriesHarvestable": 73,
+      "berriesFullyGrown": 49
+    },
+    {
+      "seed": 8191,
+      "hilliness": "large-hills",
+      "size": 250,
+      "generationMs": 324.12,
+      "terrain": {
+        "grass": 36494,
+        "gravel": 5828,
+        "rough-stone": 7695,
+        "rock": 10347,
+        "rich-soil": 2136
+      },
+      "ore": {
+        "steel": 895,
+        "machinery": 132
+      },
+      "oreBudget": 69,
+      "exposedOre": 169,
+      "resources": {
+        "tree": 2576,
+        "berries": 147
+      },
+      "chunks": 1080,
+      "chunksWithCardinalNeighbor": 1076,
+      "berriesHarvestable": 98,
+      "berriesFullyGrown": 58
+    },
+    {
+      "seed": 16381,
+      "hilliness": "large-hills",
+      "size": 250,
+      "generationMs": 360.8,
+      "terrain": {
+        "gravel": 6645,
+        "rough-stone": 7474,
+        "rock": 8579,
+        "grass": 38801,
+        "rich-soil": 1001
+      },
+      "ore": {
+        "machinery": 107,
+        "steel": 1145
+      },
+      "oreBudget": 69,
+      "exposedOre": 211,
+      "resources": {
+        "tree": 2770,
+        "berries": 159
+      },
+      "chunks": 1244,
+      "chunksWithCardinalNeighbor": 1242,
+      "berriesHarvestable": 89,
+      "berriesFullyGrown": 49
+    },
+    {
+      "seed": 32749,
+      "hilliness": "large-hills",
+      "size": 250,
+      "generationMs": 308.82,
+      "terrain": {
+        "gravel": 6448,
+        "grass": 39576,
+        "rough-stone": 6555,
+        "rock": 7934,
+        "rich-soil": 1987
+      },
+      "ore": {
+        "steel": 1092,
+        "machinery": 102
+      },
+      "oreBudget": 69,
+      "exposedOre": 147,
+      "resources": {
+        "tree": 2712,
+        "berries": 146
+      },
+      "chunks": 1301,
+      "chunksWithCardinalNeighbor": 1298,
+      "berriesHarvestable": 82,
+      "berriesFullyGrown": 46
+    },
+    {
+      "seed": 65521,
+      "hilliness": "large-hills",
+      "size": 250,
+      "generationMs": 300.37,
+      "terrain": {
+        "rock": 9323,
+        "rough-stone": 7249,
+        "gravel": 7343,
+        "grass": 36926,
+        "rich-soil": 1659
+      },
+      "ore": {
+        "machinery": 126,
+        "steel": 995
+      },
+      "oreBudget": 69,
+      "exposedOre": 122,
+      "resources": {
+        "tree": 2585,
+        "berries": 133
+      },
+      "chunks": 1315,
+      "chunksWithCardinalNeighbor": 1310,
+      "berriesHarvestable": 85,
+      "berriesFullyGrown": 44
+    },
+    {
+      "seed": 123456,
+      "hilliness": "large-hills",
+      "size": 250,
+      "generationMs": 296.65,
+      "terrain": {
+        "grass": 35487,
+        "gravel": 6043,
+        "rough-stone": 8767,
+        "rock": 10922,
+        "rich-soil": 1281
+      },
+      "ore": {
+        "steel": 959,
+        "machinery": 122
+      },
+      "oreBudget": 69,
+      "exposedOre": 180,
+      "resources": {
+        "tree": 2518,
+        "berries": 128
+      },
+      "chunks": 1124,
+      "chunksWithCardinalNeighbor": 1118,
+      "berriesHarvestable": 72,
+      "berriesFullyGrown": 39
+    },
+    {
+      "seed": 271828,
+      "hilliness": "large-hills",
+      "size": 250,
+      "generationMs": 305.72,
+      "terrain": {
+        "grass": 35878,
+        "gravel": 6628,
+        "rough-stone": 8517,
+        "rock": 10264,
+        "rich-soil": 1213
+      },
+      "ore": {
+        "machinery": 139,
+        "steel": 999
+      },
+      "oreBudget": 69,
+      "exposedOre": 156,
+      "resources": {
+        "tree": 2542,
+        "berries": 151
+      },
+      "chunks": 1271,
+      "chunksWithCardinalNeighbor": 1267,
+      "berriesHarvestable": 92,
+      "berriesFullyGrown": 66
+    },
+    {
+      "seed": 314159,
+      "hilliness": "large-hills",
+      "size": 250,
+      "generationMs": 343.07,
+      "terrain": {
+        "grass": 33801,
+        "gravel": 7683,
+        "rough-stone": 8149,
+        "rock": 11942,
+        "rich-soil": 925
+      },
+      "ore": {
+        "steel": 1300,
+        "machinery": 92
+      },
+      "oreBudget": 69,
+      "exposedOre": 147,
+      "resources": {
+        "tree": 2555,
+        "berries": 119
+      },
+      "chunks": 1191,
+      "chunksWithCardinalNeighbor": 1186,
+      "berriesHarvestable": 80,
+      "berriesFullyGrown": 49
+    },
+    {
+      "seed": 1000003,
+      "hilliness": "large-hills",
+      "size": 250,
+      "generationMs": 300.99,
+      "terrain": {
+        "grass": 35665,
+        "gravel": 5957,
+        "rough-stone": 6252,
+        "rock": 12416,
+        "rich-soil": 2210
+      },
+      "ore": {
+        "machinery": 143,
+        "steel": 907
+      },
+      "oreBudget": 69,
+      "exposedOre": 82,
+      "resources": {
+        "tree": 2594,
+        "berries": 138
+      },
+      "chunks": 1063,
+      "chunksWithCardinalNeighbor": 1060,
+      "berriesHarvestable": 85,
+      "berriesFullyGrown": 53
+    },
+    {
+      "seed": 2147483647,
+      "hilliness": "large-hills",
+      "size": 250,
+      "generationMs": 326.45,
+      "terrain": {
+        "rock": 11918,
+        "rough-stone": 7384,
+        "gravel": 5823,
+        "grass": 36463,
+        "rich-soil": 912
+      },
+      "ore": {
+        "machinery": 156,
+        "steel": 841
+      },
+      "oreBudget": 69,
+      "exposedOre": 167,
+      "resources": {
+        "tree": 2544,
+        "berries": 134
+      },
+      "chunks": 987,
+      "chunksWithCardinalNeighbor": 983,
+      "berriesHarvestable": 75,
+      "berriesFullyGrown": 39
+    },
+    {
+      "seed": 4294967294,
+      "hilliness": "large-hills",
+      "size": 250,
+      "generationMs": 324.73,
+      "terrain": {
+        "rich-soil": 1676,
+        "gravel": 6673,
+        "rough-stone": 7114,
+        "grass": 37201,
+        "rock": 9836
+      },
+      "ore": {
+        "steel": 1040,
+        "machinery": 131
+      },
+      "oreBudget": 69,
+      "exposedOre": 121,
+      "resources": {
+        "tree": 2674,
+        "berries": 132
+      },
+      "chunks": 1210,
+      "chunksWithCardinalNeighbor": 1208,
+      "berriesHarvestable": 95,
+      "berriesFullyGrown": 54
+    },
+    {
+      "seed": 4294967295,
+      "hilliness": "large-hills",
+      "size": 250,
+      "generationMs": 287.06,
+      "terrain": {
+        "gravel": 7568,
+        "rough-stone": 8755,
+        "rock": 12044,
+        "grass": 31762,
+        "rich-soil": 2371
+      },
+      "ore": {
+        "steel": 1036,
+        "machinery": 115
+      },
+      "oreBudget": 69,
+      "exposedOre": 153,
+      "resources": {
+        "tree": 2395,
+        "berries": 129
+      },
+      "chunks": 1217,
+      "chunksWithCardinalNeighbor": 1211,
+      "berriesHarvestable": 66,
+      "berriesFullyGrown": 41
+    }
+  ]
+}

@@ -1,7 +1,14 @@
 import { doorWait } from './door-rules.ts';
 import { footprintCells, footprintContains } from './definitions.ts';
 import { frameAt, frameCosts, FRAME_TRAVEL_DELAY } from './construction-costs.ts';
+import { overlayNavigationCosts,type NavigationCostLookup } from './navigation-costs.ts';
 import type { Cell, StructureKind, World } from './types.ts';
+
+/** Core natural floors cost two Core ticks. Historical grass/soil stay neutral. */
+export function terrainTravelDelay(world:World,index:number):number {
+  const terrain=world.tiles[index]?.terrain;
+  return terrain==='rough-stone'||terrain==='rich-soil'||terrain==='gravel'||world.site&&terrain==='grass'?.2:0;
+}
 
 /** Current Core wiki path costs, converted by the local day/tick ratio (10).
  * Repeat suppression is shared by all qualifying furniture, not by instance. */
@@ -50,10 +57,10 @@ export function furnitureDelay(world:World,from:Cell,to:Cell):number {
     if(p.owner.x===from.x&&p.owner.z===from.z)previousRepeats=true;
   }
   const materialDelay=world.piles.some(p=>(world.schemaVersion>=29&&p.kind==='steel'||world.schemaVersion>=32&&p.kind==='blocks'||world.schemaVersion>=41&&p.kind==='component')&&p.owner.type==='ground'&&p.owner.x===to.x&&p.owner.z===to.z)?1.4:0;
-  return Math.max(repeats&&previousRepeats?0:objectDelay,materialDelay,world.tiles[to.z*world.width+to.x]?.terrain==='rough-stone'?.2:0);
+  return Math.max(repeats&&previousRepeats?0:objectDelay,materialDelay,terrainTravelDelay(world,to.z*world.width+to.x));
 }
 /** Captured once per synchronous search. No shared mutation or cross-tick cache. */
-export function navigationCosts(world:World):{costs:ReadonlyMap<number,number>|undefined;repeaters:ReadonlySet<number>;stops:ReadonlySet<number>;floors:ReadonlyMap<number,number>} {
+export function navigationCosts(world:World):{costs:NavigationCostLookup|undefined;repeaters:ReadonlySet<number>;stops:ReadonlySet<number>;floors:NavigationCostLookup} {
   const costs=new Map(frameCosts(world)),repeaters=new Set<number>(),stops=new Set<number>();
   if(world.schemaVersion>=22) {
     for(const s of world.structures)for(const c of footprintCells(s)) {
@@ -64,11 +71,16 @@ export function navigationCosts(world:World):{costs:ReadonlyMap<number,number>|u
     for(const j of world.jobs)if(j.construction==='frame')for(const c of footprintCells(j))stops.add(c.z*world.width+c.x);
   }
   const floors=new Map<number,number>();
+  // A single captured byte per cell replaces two mostly dense Maps on a site.
+  // Objects remain sparse; both lookups retain the same terrain floor.
+  const terrain=new Uint8Array(world.tiles.length);let terrainMaximum=0;
   if(world.schemaVersion>=28) {
     for(const p of world.piles)if(p.kind==='chunk'&&p.owner.type==='ground'){const i=p.owner.z*world.width+p.owner.x;costs.set(i,Math.max(costs.get(i)??0,1400));repeaters.add(i);stops.add(i);}
-    for(let i=0;i<world.tiles.length;i++)if(world.tiles[i]!.terrain==='rough-stone'){floors.set(i,67);costs.set(i,Math.max(costs.get(i)??0,67));}
+    for(let i=0;i<world.tiles.length;i++)if(terrainTravelDelay(world,i)){terrain[i]=67;terrainMaximum=67;}
   }
   if(world.schemaVersion>=29)for(const p of world.piles)if((p.kind==='steel'||world.schemaVersion>=32&&p.kind==='blocks'||world.schemaVersion>=41&&p.kind==='component')&&p.owner.type==='ground'){const i=p.owner.z*world.width+p.owner.x;floors.set(i,Math.max(floors.get(i)??0,467));costs.set(i,Math.max(costs.get(i)??0,467));}
-  for(const s of world.structures)if(s.kind==='door') {const i=s.z*world.width+s.x;repeaters.delete(i);costs.set(i,(costs.get(i)??0)+Math.round(doorWait(s,world.tick)/3*1000));}
-  return {costs:costs.size?costs:undefined,repeaters,stops,floors};
+  // Door wait is added after the terrain/object/material maximum, not compared
+  // with it. Preserve present zero entries for fully open doors on bare floors.
+  for(const s of world.structures)if(s.kind==='door') {const i=s.z*world.width+s.x;repeaters.delete(i);costs.set(i,Math.max(costs.get(i)??0,terrain[i]??0)+Math.round(doorWait(s,world.tick)/3*1000));}
+  return {costs:costs.size||terrainMaximum?overlayNavigationCosts(terrain,terrainMaximum,costs):undefined,repeaters,stops,floors:overlayNavigationCosts(terrain,terrainMaximum,floors)};
 }

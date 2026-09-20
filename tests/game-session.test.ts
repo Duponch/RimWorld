@@ -22,7 +22,7 @@ test('refused replacement restores prior recovery and active world; accepted wor
   expect(f.data.get(PREVIOUS_KEY)).toBe('older');expect(f.data.get(SAVE_KEY)).toBe('manual');expect(f.prepare).not.toHaveBeenCalled();expect(f.session.busy).toBe(false);
   f.prepare.mockRejectedValueOnce(new Error('GPU unavailable'));
   await expect(f.session.create(42,250,'crashlanded')).rejects.toThrow('GPU unavailable');
-  expect(f.client.init).toHaveBeenLastCalledWith(42,250,'crashlanded',true);
+  expect(f.client.init).toHaveBeenLastCalledWith(42,250,'crashlanded',true,undefined);
   expect(f.session.hasWorld).toBe(true);expect(f.data.get(PREVIOUS_KEY)).toBe('active');expect(f.data.get(SAVE_KEY)).toBe('manual');
 });
 test('unavailable storage prevents destructive replacement; concurrent operations are rejected until preparation ends',async()=>{

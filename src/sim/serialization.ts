@@ -1,3 +1,4 @@
+import { validSite } from './site.ts';
 import { validScenario } from './scenario-save.ts';
 import { validGameProfile,validateGameProfile } from './game-profile-save.ts';
 import { validCorpseShape,validateCorpses } from './corpse-save.ts';
@@ -90,7 +91,7 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validateWorld(input: unknown): string[] {
   return validateSchema(input, SCHEMA_VERSION);
 }
-function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82): string[] {
+function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(input)) return ['World must be an object.'];
@@ -103,11 +104,12 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
   if (!validMapDimension(input.width) || !validMapDimension(input.height)) return [...errors, 'Invalid dimensions.'];
   if(!validScenario(input.scenario,version,input.width,input.height))errors.push('Invalid scenario provenance for schema.');
   if(!validGameProfile(input.gameProfile,version,input.scenario))errors.push('Invalid game profile for schema.');
+  if(!validSite(input.site,version,input.scenario as World['scenario']))errors.push('Invalid local site provenance for schema.');
   const size = input.width * input.height;
   const arrays = ['tiles', 'pawns', 'resources', 'structures', 'jobs', 'piles', 'stockpiles', 'events'] as const;
   if (arrays.some(key => !Array.isArray(input[key]))) return [...errors, 'Missing world arrays.'];
   const tiles = input.tiles as unknown[];
-  if (tiles.length !== size || tiles.some(tile => !record(tile) || !oneOf(tile.terrain, ['grass', 'soil', 'water', 'rock', ...(version>=28?['rough-stone']:[])]) || !validStoneIdentity(tile.stone, tile.terrain, version))) errors.push('Invalid terrain grid.');
+  if (tiles.length !== size || tiles.some(tile => !record(tile) || !oneOf(tile.terrain, ['grass', 'soil', 'water', 'rock', ...(version>=28?['rough-stone']:[]), ...(version>=83?['rich-soil','gravel']:[])]) || !validStoneIdentity(tile.stone, tile.terrain, version))) errors.push('Invalid terrain grid.');
   if (!stock(input.stock)) errors.push('Invalid derived stock.');
   const coord = (item: Record<string, unknown>): boolean => integer(item.x, 0, (input.width as number) - 1) && integer(item.z, 0, (input.height as number) - 1);
   const ids = new Set<number>();
@@ -597,6 +599,7 @@ export function deserializeWorld(serialized: string): World {
   if(record(input)&&input.schemaVersion===79){const errors=validateSchema(input,79);if(errors.length)throw new Error('Invalid version 79 save: '+errors.join(' '));input.schemaVersion=80;}
   if(record(input)&&input.schemaVersion===80){const errors=validateSchema(input,80);if(errors.length)throw new Error('Invalid version 80 save: '+errors.join(' '));input.schemaVersion=81;}
   if(record(input)&&input.schemaVersion===81){const errors=validateSchema(input,81);if(errors.length)throw new Error('Invalid version 81 save: '+errors.join(' '));input.schemaVersion=82;}
+  if(record(input)&&input.schemaVersion===82){const errors=validateSchema(input,82);if(errors.length)throw new Error('Invalid version 82 save: '+errors.join(' '));input.schemaVersion=83;}
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`); return input as World;
 }
 /** Deterministic diagnostic fingerprint, not a cryptographic digest. */

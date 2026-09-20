@@ -20,7 +20,7 @@ export function createArrivalUI(send:(command:Command)=>Promise<unknown>):{updat
   accept.onclick=()=>void answer(true);reject.onclick=()=>void answer(false);
   enable.onclick=()=>{if(enabling)return;enabling=true;enable.disabled=true;void send({type:'enable-arrivals'}).catch(e=>{enable.title=e instanceof Error?e.message:String(e);}).finally(()=>{enabling=false;enable.disabled=false;});};
   return {update(world){
-    current=world;enable.hidden=!!world.arrivals;enable.disabled=enabling;
+    current=world;enable.hidden=!!world.gameProfile||!!world.arrivals;enable.disabled=enabling;
     const offer=world.arrivals?.pending;
     if(!offer){letter.remove();if(dialog.open)dialog.close();return;}
     if(dialog.open&&shown!==offer.id)dialog.close();

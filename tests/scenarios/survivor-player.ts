@@ -5,6 +5,7 @@ import { footprintCells } from '../../src/sim/definitions.ts';
 import { availableNutrition, type ItemId } from '../../src/sim/items.ts';
 import { blockedCells } from '../../src/sim/pathfinding.ts';
 import { harvestable, plantGrowth } from '../../src/sim/plants.ts';
+import { isGrowingTerrain } from '../../src/sim/soil.ts';
 import type { Cell, DesignateCommand, World, WorkType } from '../../src/sim/types.ts';
 import type { Decision } from './colony-player.ts';
 
@@ -41,7 +42,7 @@ export function survivorPlan(w:World):ReturnType<typeof plan> {
     const p=plan(a),land=cells(rect(a.x,a.z,13,10));
     if(land.some(c=>!seen[c.z*w.width+c.x]||rocks.has(c.z*w.width+c.x)))continue;
     if(cells(p.storage).some(c=>occupied.has(c.z*w.width+c.x)||ground.has(c.z*w.width+c.x)))continue;
-    if(cells(p.field).some(c=>!['grass','soil'].includes(w.tiles[c.z*w.width+c.x]!.terrain)))continue;
+    if(cells(p.field).some(c=>!isGrowingTerrain(w.tiles[c.z*w.width+c.x]!.terrain)))continue;
     if([...p.beds.flatMap(c=>[c,at(c,0,1)]),p.fire,at(p.fire,0,-1),p.table,at(p.table,0,1),...p.seats,p.pin].some(c=>occupied.has(c.z*w.width+c.x)))continue;
     return p;
   }

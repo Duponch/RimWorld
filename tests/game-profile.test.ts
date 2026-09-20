@@ -12,7 +12,7 @@ import { CASSANDRA_ACTIVE_TICKS,CASSANDRA_CYCLE_START,CASSANDRA_CYCLE_TICKS,CASS
 import { atMapEdge } from '../src/sim/raid-space';
 import { deconstructionCamp } from './scenarios/deconstruction';
 
-function stock(world:World) {return world.piles.map(p=>[p.item,p.quantity,p.owner]);}
+function stock(world:World) {const totals:Record<string,number>={};for(const p of world.piles)if(p.kind!=='chunk')totals[p.item]=(totals[p.item]??0)+p.quantity;return totals;}
 function raidFixture() {
   const world=deconstructionCamp();
   world.scenario={id:'crashlanded',revision:1,landing:{x:16,z:16}};
@@ -23,7 +23,8 @@ test('explicit Crashlanded adaptation has physical supplies, mature wild food an
   for(const seed of [42,93,2048]) {
     const world=createScenarioWorld(seed,250,'crashlanded'),legacy=createScenarioWorld(seed,250,'survivors');
     expect(world.tick).toBe(0);expect(world.scenario!.id).toBe('crashlanded');expect(world.gameProfile).toEqual(crashlandedProfile());
-    expect(stock(world)).toEqual(stock(legacy));expect(world.research).toEqual(legacy.research);expect(world.tiles).toEqual(legacy.tiles);
+    expect(stock(world)).toEqual(stock(legacy));expect(world.research).toEqual(legacy.research);
+    expect(world.site?.hilliness).toBe('small-hills');expect(legacy.site).toBeUndefined();
     expect(world.pawns).toHaveLength(3);expect(world.arrivals).toBeUndefined();expect(world.heatwaves).toBeUndefined();
     expect(world.raids!.nextCheck).toBe(INTRO_RAID_TICK);expect(legacy.arrivals).toBeDefined();expect(legacy.heatwaves).toBeDefined();
     expect(legacy.gameProfile).toBeUndefined();expect(legacy.resources.filter(r=>r.kind==='berries').every(r=>r.growth!<1)).toBe(true);
@@ -50,7 +51,10 @@ test('adventure difficulty changes colonist mood target and delayed infection ac
   // Controlled boundary at the second roll: .525 with Adventure versus .7
   // historically, for a 12-HP wound tended at zero quality, room factor 1.
   let seed=1;while(true){const rng={rng:seed};const roll=healthRandom(rng);if(roll>.525&&roll<.7)break;seed++;}
-  const specimens=[structuredClone(world),structuredClone(legacy),structuredClone(world)];
+  // Immunity luck is keyed by actor identity: terrain generation now consumes
+  // different IDs. Compare physiology with the same actor, changing only profile.
+  const specimens=[structuredClone(world),structuredClone(legacy),structuredClone(legacy)];
+  specimens[2]!.gameProfile=crashlandedProfile();
   for(const [index,sample] of specimens.entries()) {
     sample.tick=1500;sample.rng=seed;const pawn=sample.pawns[0]!;
     if(index===2)pawn.faction='outlaws';

@@ -1,5 +1,7 @@
 # Transit et arrêt sur le mobilier — V22
 
+V83 : les sols naturels du nouveau site coûtent deux ticks Core (0,2local). Le terrain capturé dans un tableau compact et les objets en tables clairsemées fournissent les mêmes coûts totaux et planchers ; l’attente d’une porte s’ajoute après leur maximum. L’échelle animale multiplie les unités entières déjà arrondies, sans copie de table. Les anciennes terres gardent leurs coûts ; aucune capture n’est partagée entre décisions. [Preuves](../history/validation-site-v83.md).
+
 V42 : générateur 2×2 traversable, arrêt exclu et délai 5 ticks ; lampe 1×1, arrêt exclu et délai 1,4. Seul le générateur participe à la non-répétition du mobilier qualifiant. Le service de combustible utilise une face accessible de toute l’empreinte, comme la recherche du trajet. [Contrat et réserves](power.md).
 
 V40 : le refroidisseur passif utilise le profil traversable sans arrêt, supplément 3 ticks locaux et non-répétition commune. Une case, pas de surface de pile ni de toit porteur ; [contrat](passive-cooling.md).

@@ -5,6 +5,7 @@ import { footprintCells, JOB_DURATION, STRUCTURE_DEFINITIONS } from './definitio
 import { isCrop, isPlant, plantGrowth, PLANT_DEFINITIONS, sowingTemperatureAllowed } from './plants.ts';
 import { TemperatureView, outdoorTemperature } from './temperature.ts';
 import { releaseWork, type DropPlan } from './work-release.ts';
+import { isGrowingTerrain } from './soil.ts';
 import type { GrowingZone, Job, JobKind, Resource, World } from './types.ts';
 
 export const FARM_SCAN_INTERVAL = 10;
@@ -62,7 +63,7 @@ function intention(world: World, zone: GrowingZone, cell: number, ctx: Context, 
   if(!committed&&!sowingTemperatureAllowed(ctx.temperatures.at(world,{x:cell%world.width,z:Math.floor(cell/world.width)})))return null;
   if (plant) return zone.allowCut && plant.kind !== 'rock' ? { kind: plant.kind === 'tree' ? 'chop' : 'cut', cell } : null;
   // A sowing intention stays pending while its floor items are hauled aside.
-  if (!['grass', 'soil'].includes(world.tiles[cell]!.terrain)) return null;
+  if (!isGrowingTerrain(world.tiles[cell]!.terrain)) return null;
   const x = cell % world.width, z = Math.floor(cell / world.width);
   for (const [dx, dz] of [[0, -1], [1, 0], [0, 1], [-1, 0]]) {
     const nx = x + dx!, nz = z + dz!;

@@ -1,0 +1,316 @@
+{
+  "protocol": "Sequential paired CPU navigation microbenchmark; 5 warmups, alternating before/after order, exact complete-field costs and parents verified before samples. Animal row measures integer scaling on the same obstacle mask, not animal behavior or frame rate. No mutation, simulation advancement, worker or rendering.",
+  "environment": {
+    "node": "v24.11.1",
+    "platform": "win32",
+    "release": "10.0.26200",
+    "cpu": "AMD Ryzen 5 3600 6-Core Processor              "
+  },
+  "baselineArchiveSha256": "44a135bd6f58d5c7c9402eba21c9f2f3cba7d6ed8251ef1e2b3724bcb7b971ce",
+  "sourceHashes": {
+    "furniture-travel.ts": {
+      "before": "2e9ad56956028f2039259424baf3368eac645ddffc659566ad60dc72ae39e06c",
+      "after": "3fec0e9cca667dda141d95eb85fe5860fe3fe798b1e15cf97da833da530b312c"
+    },
+    "weighted-search.ts": {
+      "before": "14dae396fb38dfa374e1fde00536b73cb803685b8dcf1abfb8b9a6f08b118bc3",
+      "after": "451d8a684c90481b841e84a00c7069c25db84c0893370a1bcbc85da5bfdd1fce"
+    },
+    "wildlife-navigation.ts": {
+      "before": "b3aa19b953750c3e5c767020720cc99103741e568ca033eb8837c5180abeb239",
+      "after": "902ec7700f03484723669f9dbaf0743952491eecf661461265e89d086fa0ef36"
+    }
+  },
+  "compactLookupSha256": "25cfab5dbdc4f7d322d3eb48407a8e11616cb2aa2af4bb35cbff8807fb8d2906",
+  "worlds": [
+    {
+      "label": "site-start-250-42",
+      "sha256": "7749eccd62282d22eaeebdf68b3d34500e3f280a90c6fed4a3472f5ffd026b92",
+      "size": [
+        250,
+        250
+      ],
+      "tick": 0,
+      "pawns": 3,
+      "piles": 1533
+    },
+    {
+      "label": "legacy-camp-250-42",
+      "sha256": "f047d016e8a1b9e63dec6e209fa56642d407098cf9ccfe70fd7f01bf94dfbaa8",
+      "size": [
+        250,
+        250
+      ],
+      "tick": 0,
+      "pawns": 3,
+      "piles": 10
+    }
+  ],
+  "rows": [
+    {
+      "world": "site-start-250-42",
+      "tick": 0,
+      "phase": "capture",
+      "version": "before",
+      "samples": 10,
+      "medianMs": 36.237,
+      "p95Ms": 42.301,
+      "maxMs": 42.301,
+      "rawMs": [
+        32.429,
+        31.896,
+        36.237,
+        36.702,
+        20.334,
+        33.012,
+        30.255,
+        42.301,
+        39.316,
+        37.671
+      ]
+    },
+    {
+      "world": "site-start-250-42",
+      "tick": 0,
+      "phase": "capture",
+      "version": "after",
+      "samples": 10,
+      "medianMs": 1.74,
+      "p95Ms": 2.291,
+      "maxMs": 2.291,
+      "rawMs": [
+        1.359,
+        0.657,
+        2.287,
+        1.096,
+        2.291,
+        1.74,
+        1.859,
+        2.11,
+        0.802,
+        0.676
+      ]
+    },
+    {
+      "world": "site-start-250-42",
+      "tick": 0,
+      "phase": "capture-and-human-search",
+      "version": "before",
+      "samples": 10,
+      "medianMs": 47.815,
+      "p95Ms": 63.609,
+      "maxMs": 63.609,
+      "rawMs": [
+        63.609,
+        35.85,
+        46.345,
+        23.161,
+        21.55,
+        55.181,
+        42.903,
+        50.882,
+        52.29,
+        47.815
+      ]
+    },
+    {
+      "world": "site-start-250-42",
+      "tick": 0,
+      "phase": "capture-and-human-search",
+      "version": "after",
+      "samples": 10,
+      "medianMs": 21.002,
+      "p95Ms": 34.185,
+      "maxMs": 34.185,
+      "rawMs": [
+        34.185,
+        17.565,
+        21.002,
+        7.233,
+        2.614,
+        20.047,
+        17.268,
+        24.251,
+        24.447,
+        25.797
+      ]
+    },
+    {
+      "world": "site-start-250-42",
+      "tick": 0,
+      "phase": "capture-and-animal-scaled-search",
+      "version": "before",
+      "samples": 10,
+      "medianMs": 56.711,
+      "p95Ms": 89.496,
+      "maxMs": 89.496,
+      "rawMs": [
+        67.803,
+        51.42,
+        53.693,
+        48.655,
+        32.573,
+        53.626,
+        89.496,
+        56.711,
+        60.515,
+        73.155
+      ]
+    },
+    {
+      "world": "site-start-250-42",
+      "tick": 0,
+      "phase": "capture-and-animal-scaled-search",
+      "version": "after",
+      "samples": 10,
+      "medianMs": 21.188,
+      "p95Ms": 26.787,
+      "maxMs": 26.787,
+      "rawMs": [
+        24.583,
+        16.582,
+        21.157,
+        5.619,
+        2.204,
+        21.188,
+        26.787,
+        20.948,
+        24.892,
+        26.325
+      ]
+    },
+    {
+      "world": "legacy-camp-250-42",
+      "tick": 0,
+      "phase": "capture",
+      "version": "before",
+      "samples": 10,
+      "medianMs": 0.593,
+      "p95Ms": 1.745,
+      "maxMs": 1.745,
+      "rawMs": [
+        0.593,
+        0.721,
+        0.486,
+        0.371,
+        1.185,
+        0.451,
+        0.361,
+        0.971,
+        0.407,
+        1.745
+      ]
+    },
+    {
+      "world": "legacy-camp-250-42",
+      "tick": 0,
+      "phase": "capture",
+      "version": "after",
+      "samples": 10,
+      "medianMs": 0.57,
+      "p95Ms": 1.029,
+      "maxMs": 1.029,
+      "rawMs": [
+        0.482,
+        0.519,
+        0.42,
+        0.381,
+        0.973,
+        0.57,
+        0.428,
+        1.029,
+        0.638,
+        0.772
+      ]
+    },
+    {
+      "world": "legacy-camp-250-42",
+      "tick": 0,
+      "phase": "capture-and-human-search",
+      "version": "before",
+      "samples": 10,
+      "medianMs": 8.103,
+      "p95Ms": 9.364,
+      "maxMs": 9.364,
+      "rawMs": [
+        3.46,
+        8.103,
+        2.505,
+        7.403,
+        3.626,
+        2.776,
+        8.449,
+        9.364,
+        8.201,
+        9.061
+      ]
+    },
+    {
+      "world": "legacy-camp-250-42",
+      "tick": 0,
+      "phase": "capture-and-human-search",
+      "version": "after",
+      "samples": 10,
+      "medianMs": 8.414,
+      "p95Ms": 10.603,
+      "maxMs": 10.603,
+      "rawMs": [
+        3.567,
+        8.577,
+        2.411,
+        5.026,
+        3.703,
+        2.609,
+        9.043,
+        10.603,
+        8.423,
+        8.414
+      ]
+    },
+    {
+      "world": "legacy-camp-250-42",
+      "tick": 0,
+      "phase": "capture-and-animal-scaled-search",
+      "version": "before",
+      "samples": 10,
+      "medianMs": 7.831,
+      "p95Ms": 10.821,
+      "maxMs": 10.821,
+      "rawMs": [
+        2.884,
+        9.457,
+        2.578,
+        4.39,
+        4.141,
+        2.753,
+        8.925,
+        10.813,
+        7.831,
+        10.821
+      ]
+    },
+    {
+      "world": "legacy-camp-250-42",
+      "tick": 0,
+      "phase": "capture-and-animal-scaled-search",
+      "version": "after",
+      "samples": 10,
+      "medianMs": 8.126,
+      "p95Ms": 12.349,
+      "maxMs": 12.349,
+      "rawMs": [
+        2.72,
+        9.695,
+        2.791,
+        4.144,
+        2.955,
+        2.986,
+        10.482,
+        12.349,
+        8.453,
+        8.126
+      ]
+    }
+  ],
+  "checksum": 3214160
+}

@@ -3,6 +3,7 @@ import { blockedCells,canStep,routeToCell,hasReachableCell } from './pathfinding
 import { captureStandability,navigationCosts,furnitureDelay } from './furniture-travel.ts';
 import { doorCorners,doorOpenness } from './door-rules.ts';
 import { WeightedSearch } from './weighted-search.ts';
+import { scaleNavigationCosts } from './navigation-costs.ts';
 import { HARE,type WildAnimal } from './wildlife-state.ts';
 import type { Cell,World } from './types.ts';
 const empty:ReadonlySet<number>=new Set();
@@ -17,8 +18,7 @@ export function animalNavigation(world:World) {
     const n=navigationCosts(world);
     // Food travel uses the species' pace. Convert common furniture costs from
     // human base-3 units into hare base-1 units; no human movement capacity.
-    const scale=(m:ReadonlyMap<number,number>|undefined)=>m?new Map([...m].map(([i,v])=>[i,v*3])):undefined;
-    const reach=new WeightedSearch(world.width,world.height,a.z*world.width+a.x,blocked,scale(n.costs),n.repeaters,scale(n.floors),corners).finish(indices);
+    const reach=new WeightedSearch(world.width,world.height,a.z*world.width+a.x,blocked,scaleNavigationCosts(n.costs,3),n.repeaters,scaleNavigationCosts(n.floors,3),corners).finish(indices);
     const target=cells.filter(c=>hasReachableCell(reach,c.z*world.width+c.x)).sort((a,b)=>reach.costs[a.z*world.width+a.x]!-reach.costs[b.z*world.width+b.x]!)[0];
     return target?routeToCell(world,target,reach)??undefined:undefined;
   }};

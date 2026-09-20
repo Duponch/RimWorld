@@ -1,0 +1,23 @@
+
+ RUN  v5.0.0 E:/Code/RimWorld
+
+stdout | tests/crashlanded-colony.test.ts > Atterrissage : douze jours naturels, première récolte cuisinée et défense puis reprise, graine 42
+Survivants 42: day 1, 24 structures, 0 jobs
+Survivants 42: day 2, 24 structures, 0 jobs
+Survivants 42: day 3, 24 structures, 0 jobs
+Survivants 42: day 4, 24 structures, 0 jobs
+Survivants 42: day 5, 24 structures, 0 jobs
+Survivants 42: day 6, 24 structures, 0 jobs
+Survivants 42: day 7, 24 structures, 0 jobs
+Survivants 42: day 8, 24 structures, 0 jobs
+Survivants 42: day 9, 24 structures, 0 jobs
+Survivants 42: day 10, 24 structures, 0 jobs
+Survivants 42: day 11, 24 structures, 0 jobs
+Survivants 42: day 12, 24 structures, 0 jobs
+
+ ✓ tests/crashlanded-colony.test.ts > Atterrissage : douze jours naturels, première récolte cuisinée et défense puis reprise, graine 42 293118ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  12:30:28
+   Duration  296.61s (tests 99%, transform 1%)

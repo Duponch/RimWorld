@@ -1,5 +1,7 @@
 # Agriculture — riz V8, coton V71
 
+V83 : `soilFertility` partage les fertilités terre ordinaire (`grass`) 1, terre riche 1,4, gravier 0,7 et terre pauvre historique (`soil`) 0,7. Les quatre terrains autorisent les cultures actuelles ; espace, présence de piles et température gardent leurs contrôles. Nouveaux types refusés avant le schéma83, aucune ancienne case transformée. [Sources et diagnostic du riz V82](../research/site-soils-reference.md).
+
 V39 : [croissance et semis sous température locale](plant-temperature.md). Le site quotidien 14–28 °C reste favorable ; le froid et la chaleur des volumes conservés modifient réellement la croissance. Les nouveaux semis attendent une température admissible. Mortalité et saisons restent absentes.
 
 État courant : 19 septembre 2026. [Coton et tissu V71](textiles.md) ajoutent le choix d’espèce et une récolte non alimentaire, sans livrer la confection. Tranche G1 ; [recherche et limites de fidélité](../research/farming-reference.md). L'agriculture n'est pas un domaine terminé.

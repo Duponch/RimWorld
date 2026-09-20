@@ -166,7 +166,7 @@ Les noms de grilles restent des **candidats de correspondance**, pas une réimpl
 
 Source : [mesure existante sur cinq graines 250²](../../artifacts/scenario-generation-v80.json), sans nouveau parcours ni nouvelle mesure de performance pendant cette recherche.
 
-| Domaine | Lisière actuel | Écart / conséquence |
+| Domaine | Lisière V80 mesurée | Écart / conséquence |
 |---|---|---|
 | Taille | 250² | Conforme au défaut constaté ; aucun argument pour agrandir maintenant. |
 | Contexte | Un profil tempéré de vallée ; rivière toujours présente | Pas le choix aléatoire de tuile Core. La rivière coupe durablement le terrain faute d'eau traversable/ponts. |
@@ -183,6 +183,18 @@ Source : [mesure existante sur cinq graines 250²](../../artifacts/scenario-gene
 Le nombre total ne suffit pas : un arbre 3D haut, une baie immature, un filon inaccessible ou de la terre stérile changent les décisions du joueur. Les couronnes visibles, la surface franchissable et la nourriture effectivement récoltable doivent être examinées séparément.
 
 ## Décisions recommandées et protocole suivant
+
+### Application V83, recherche renouvelée le 20 septembre
+
+L'assembly installé a été rehaché : même SHA-256 et `Version.txt` 1.6.4871 rev590. Les classes locales `GenStep_ElevationFertility`, `GenStep_RocksFromGrid`, `GenStep_ScatterLumpsMineable`, `GenStep_Scatterer`, `GenStep_RockChunks`, `GenStep_Plants`, `MapGenUtility` et `WildPlantSpawner`, ainsi que les Defs actuelles de biome, minerais et sols, ont été relues. Les annonces [Alpha 17](https://ludeon.com/blog/2017/05/alpha-17-on-the-road-released/), [cartes 1.6 et Odyssey](https://ludeon.com/blog/2025/06/announcing-odyssey-and-update-1-6/) et [montagnes historiques](https://ludeon.com/blog/2013/07/big-big-mountains/) ont été reconsultées : elles établissent intention et chronologie, sans devenir des tables de coefficients du correctif courant.
+
+Décision : site local forêt tempérée, trois reliefs paramétrés, sans rivière ni mares ; terre riche/gravier/sol pierreux distincts ; budget de minerais commun pondéré ; fragments physiques groupés ; végétation projetée sur le catalogue effectivement disponible. L'[implémentation](../development/world-generation.md#site-local-v83) précise les différences et les paramètres. Cela corrige des écarts certains sans prétendre proposer un globe, un biome complet ou une moyenne du jeu original. Les autres menus et le catalogue naturel restent distincts.
+
+**Diagnostic avant validation :** un premier bruit à gradients 2D non normalisés donnait trop de variance (quinze cartes initiales, grandes collines environ 24–30 % de roche). Une nouvelle inspection locale de `Verse.Noise.Utils` et `Verse.Noise.Perlin` confirme des directions unitaires tridimensionnelles, des octaves non normalisées, persistance 0,5, lacunarité 2 et facteur de gradient 2,12. Le noyau V83 utilise désormais des directions sphériques calculées indépendamment, projetées sur le plan horizontal ; aucune table propriétaire copiée. Ce changement vise la cause du défaut, sans inventer un quota de roche ni déplacer les seuils de la référence. Le hash, les directions et les déformations de Lisière restent propres au projet : l'identité statistique du générateur Core n'est toujours pas démontrée. Le premier relevé ne valide pas le correctif ; la campagne de trente graines par relief est consignée dans les [preuves V83](../history/validation-site-v83.md).
+
+Les pièces de recherche nouvelles sont conservées sous `tmp/map-calibration-reference/*-v83-local.cs`, hors publication. Absence de minerais rares : leurs tirages sont consommés, pas redistribués à l'acier/machines. Absence de plantes basses : leur poids n'augmente ni le nombre d'arbres ni le nombre de baies. Pas de faux herbage fonctionnel. Les rendements d'arbres et la saturation végétale restent des simplifications annoncées.
+
+### Suite des décisions de calibration
 
 1. **Conserver le défaut 250² et expliciter le contexte.** Les menus du futur départ doivent distinguer ce qui fonctionne, ce qui est désactivé et le preset réellement généré. Ne pas proposer un choix de biome/relief dont le moteur ignore ensuite la valeur. Un monde incomplet ne justifie pas d'inventer une distribution « joueur moyen ».
 2. **Corriger les écarts établis avant les quotas.** Croissance initiale bornée après tirage, classification des sols, présence d'eau gouvernée par le site et distinction peu profonde/profonde. Le passage d'une rivière affecte navigation, vitesse et construction : le traiter comme une boucle fonctionnelle, pas une couleur de terrain.

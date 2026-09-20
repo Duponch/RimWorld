@@ -41,7 +41,10 @@ export class OverviewLayer {
         const count=world.resources.filter(r=>r.kind===kind).length;
         const paint=(g:THREE.BufferGeometry,color:number)=>{const c=new THREE.Color(color),data=new Float32Array(g.getAttribute('position').count*3);for(let i=0;i<data.length;i+=3)data.set([c.r,c.g,c.b],i);g.setAttribute('color',new THREE.BufferAttribute(data,3));return g;};
         const trunk=kind==='tree'?paint(new THREE.CylinderGeometry(.1,.16,.5,4).translate(0,-.25,0),0x70573e):null;
-        const crown=kind==='tree'?paint(new THREE.ConeGeometry(1,.8,4).translate(0,.1,0),0x5f7c52):null;
+        const crown=kind==='tree'?paint((world.site?new THREE.IcosahedronGeometry(1,0).scale(1,.4,1):new THREE.ConeGeometry(1,.8,4)).translate(0,.1,0),0x5f7c52):null;
+        // PolyhedronGeometry is unindexed; the cylinder/cone use indices.
+        // Identity indices keep its flat normals and the trunk-only draw range.
+        if(crown&&!crown.index)crown.setIndex(Array.from({length:crown.getAttribute('position').count},(_,i)=>i));
         const geometry=trunk&&crown?mergeGeometries([trunk,crown],false)!:paint(new THREE.OctahedronGeometry(1),0xffffff);
         if(trunk){geometry.userData.trunkIndices=trunk.index!.count;trunk.dispose();crown!.dispose();}
         // Three r186 uploads DynamicDrawUsage attributes on every render even

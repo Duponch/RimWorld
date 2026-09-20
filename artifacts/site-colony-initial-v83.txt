@@ -1,0 +1,41 @@
+
+ RUN  v5.0.0 E:/Code/RimWorld
+
+stdout | tests/crashlanded-colony.test.ts > Atterrissage : douze jours naturels, première récolte cuisinée et défense puis reprise, graine 42
+Survivants 42: day 1, 24 structures, 0 jobs
+Survivants 42: day 2, 24 structures, 0 jobs
+Survivants 42: day 3, 24 structures, 0 jobs
+Survivants 42: day 4, 24 structures, 0 jobs
+Survivants 42: day 5, 24 structures, 0 jobs
+Survivants 42: day 6, 24 structures, 0 jobs
+Survivants 42: day 7, 24 structures, 0 jobs
+Survivants 42: day 8, 24 structures, 0 jobs
+Survivants 42: day 9, 24 structures, 0 jobs
+Survivants 42: day 10, 24 structures, 0 jobs
+Survivants 42: day 11, 24 structures, 0 jobs
+Survivants 42: day 12, 24 structures, 0 jobs
+
+ × tests/crashlanded-colony.test.ts > Atterrissage : douze jours naturels, première récolte cuisinée et défense puis reprise, graine 42 349569ms
+   → Test timed out in 240000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/crashlanded-colony.test.ts > Atterrissage : douze jours naturels, première récolte cuisinée et défense puis reprise, graine 42
+Error: Test timed out in 240000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/crashlanded-colony.test.ts:20:39
+     18| const resumed:Checkpoint|undefined=checkpointFile?JSON.parse(readFileS…
+     19|
+     20| test.each(resumed?[resumed.seed]:[42])('Atterrissage : douze jours nat…
+       |                                       ^
+     21|   const version=process.env.VALIDATION_VERSION??'v83';
+     22|   let w:World=resumed?deserializeWorld(resumed.world):createScenarioWo…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  12:08:42
+   Duration  352.66s (tests 99%, transform 1%)

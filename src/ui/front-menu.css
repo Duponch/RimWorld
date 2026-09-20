@@ -100,6 +100,22 @@
 .front-summary dt { margin-bottom: 3px; font-size: 11px; }
 .front-summary dd { font-size: 15px; }
 .front-summary dd span { display: block; margin-top: 2px; font-size: 10px; color: #c3b998; }
+.front-relief-options { display: grid; gap: 8px; min-width: 0; border: 0; margin: 22px 0 12px; padding: 0; }
+.front-relief-options legend { margin-bottom: 10px; padding: 0; color: #d6d6c1; font-size: 13px; }
+.front-relief { display: flex; align-items: center; gap: 13px; border: 1px solid var(--front-line); padding: 11px 13px; cursor: pointer; }
+.front-relief:has(input:checked) { border-color: #ceb985; background: #d4c29211; }
+.front-relief:has(input:focus-visible) { outline: 2px solid #eed5a6; outline-offset: 3px; }
+.front-relief:hover:not(:has(input:disabled)) { background: #c4d5bc0b; }
+.front-relief:has(input:disabled) { cursor: wait; opacity: .65; }
+.front-relief strong { display: block; font-size: 13px; font-weight: 500; color: #e5ddc7; }
+.front-relief > span > span { display: block; margin-top: 2px; font-size: 11px; color: var(--front-muted); }
+.front-site-controls > .front-site-default { font-size: 11px; }
+.front-summary .front-map-facts { margin-top: 16px; }
+.front-summary .front-map-facts > div { padding: 8px 0; align-items: baseline; }
+.front-summary .front-map-facts dd { font-size: 13px; overflow-wrap: anywhere; }
+.front-summary .front-start-summary { border-top: 1px solid var(--front-line); padding-top: 7px; }
+.front-summary .front-start-summary > div { padding: 9px 0; border: 0; }
+.front-summary .front-start-summary dd { font-size: 13px; }
 .front-feedback { flex: none; }
 .front-menu .front-error, .front-menu .front-status { margin: 0 32px 17px; padding: 12px 15px; font-size: 13px; line-height: 1.45; }
 .front-error { border: 1px solid #bb806576; background: #552e232e; color: #ffd0b7; overflow-wrap: anywhere; }

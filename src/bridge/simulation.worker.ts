@@ -30,7 +30,7 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
     let data: string | undefined;
     if (request.type === 'init') {
       if (request.size !== 32 && !(MAP_SIZE_PRESETS as readonly number[]).includes(request.size)) throw new Error('Taille de carte invalide.');
-      const created=createScenarioWorld(request.seed, request.size, request.scenario);
+      const created=createScenarioWorld(request.seed, request.size, request.scenario,request.site);
       world=created;
       if(request.paused)speed=0;
       motion.reset();

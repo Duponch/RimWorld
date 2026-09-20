@@ -1,6 +1,6 @@
 # Documentation de Lisière
 
-État courant : **V82, 20 septembre 2026**. [Infections et soins prolongés](development/infections.md) relient risque après blessure, immunité, traitements physiques répétés et récupération ; [preuves V81](history/validation-infections-v81.md). [Trois survivants](development/scenario-start.md) propose un départ explicite avec dotation physique, technologies connues et implantation naturelle ; sa calibration reste partielle. [Preuves V80](history/validation-scenario-v80.md), [estimations par système](ROADMAP.md#estimation-davancement). La [filière animale V79](development/hunting.md) relie chasse, dépouille, boucherie et repas ; ses [preuves](history/validation-hunting-v79.md) restent distinctes.
+État courant : **V83 validée, 20 septembre 2026**. [Infections et soins prolongés](development/infections.md) relient risque après blessure, immunité, traitements physiques répétés et récupération ; [preuves V81](history/validation-infections-v81.md). [Trois survivants](development/scenario-start.md) propose un départ explicite avec dotation physique, technologies connues et implantation naturelle ; sa calibration reste partielle. [Preuves V80](history/validation-scenario-v80.md), [estimations par système](ROADMAP.md#estimation-davancement). La [filière animale V79](development/hunting.md) relie chasse, dépouille, boucherie et repas ; ses [preuves](history/validation-hunting-v79.md) restent distinctes.
 
 **Réorientation du 20 septembre :** [référence de partie Core vérifiée](research/core-reference-baseline.md), [rythme et difficulté](research/colony-pacing-reference.md), [cartes et ressources](research/map-calibration-reference.md), [parties réellement observées](research/colony-observation-reference.md). Installation 1.6.4871 lue sans modification et captures utilisateur ; Atterrissage forcé / Cassandra / Récit d'aventure retenus pour la cible. [Menus demandés](development/new-game-menus.md) intégrés avec profil partiel, [preuve et bilan du diagnostic](history/reference-audit-2026-09-20.md). La recherche seule ne changeait pas V81 ; la [boucle V82](history/validation-new-game-v82.md) applique maintenant les corrections vérifiées.
 
@@ -9,6 +9,8 @@ Dernières boucles de colonie : [conservation froide V75](development/cold-store
 La [revue de progression](research/progression-review-2026-09-19.md) explique la réorientation vers des situations de colonie complètes. [ROADMAP](ROADMAP.md) conserve seule l’ordre des prochains travaux et les estimations. Mode jour demandé le 20 septembre ; sous-étapes indépendantes déléguées et intégration centrale.
 
 Les bilans de versions sont dans les contrats et [l’index de validation](development/validation.md) ; ils ne remplacent pas l’état fonctionnel actuel.
+
+V83 relie le [site local](development/world-generation.md) au relief choisi, aux sols fertiles et aux ressources physiques. [Recherche et première récolte](research/site-soils-reference.md), [preuves V83](history/validation-site-v83.md). Le lot suivant vise la progression élémentaire de la colonie selon ROADMAP.
 
 V82 ajoute un véritable accueil et chargement à froid, un départ explicite à 06 h et une journée de 16 min 40 s. [Contrat des menus](development/new-game-menus.md). Le catalogue, la carte et le narrateur restent partiels.
 

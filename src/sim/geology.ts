@@ -32,8 +32,7 @@ export function siteStones(seed: number): StoneKind[] {
 }
 /** Competing smooth fields form geological regions, independent of mountain silhouettes.
  * The returned function is generation-only; save files contain the resulting identities. */
-export function geologicalField(seed: number): (x: number, z: number) => StoneKind {
-  const stones = siteStones(seed);
+export function geologicalField(seed: number, stones: readonly StoneKind[] = siteStones(seed)): (x: number, z: number) => StoneKind {
   return (x, z) => {
     let best = -Infinity, selected = stones[0]!;
     for (const stone of stones) {

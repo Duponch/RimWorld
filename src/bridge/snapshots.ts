@@ -124,7 +124,7 @@ export class SnapshotDecoder {
         const touched = new Set<number>();
         for (const [index, terrain, stone, miningDamage, ore] of message.tiles) {
           if (!Number.isInteger(index) || index < 0 || index >= tiles.length || touched.has(index)
-            || !['grass', 'soil', 'water', 'rock', ...(message.world.schemaVersion>=28?['rough-stone']:[])].includes(terrain) || !validOre({terrain,ore},message.world.schemaVersion) || !validMiningDamage({terrain,stone,miningDamage,ore},message.world.schemaVersion) || !validStoneIdentity(stone, terrain, message.world.schemaVersion)) return resync('Delta de terrain invalide.');
+            || !['grass', 'soil', 'water', 'rock', ...(message.world.schemaVersion>=28?['rough-stone']:[]), ...(message.world.schemaVersion>=83?['rich-soil','gravel']:[])].includes(terrain) || !validOre({terrain,ore},message.world.schemaVersion) || !validMiningDamage({terrain,stone,miningDamage,ore},message.world.schemaVersion) || !validStoneIdentity(stone, terrain, message.world.schemaVersion)) return resync('Delta de terrain invalide.');
           touched.add(index);
         }
         tiles = tiles.slice();

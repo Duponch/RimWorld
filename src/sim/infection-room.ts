@@ -1,4 +1,5 @@
 import { RoomTopologyCache } from './room-topology.ts';
+import { isGrowingTerrain } from './soil.ts';
 import type { Cell,World } from './types.ts';
 
 const caches=new WeakMap<World,RoomTopologyCache>();
@@ -15,10 +16,10 @@ export function infectionRoomFactor(world:World,cell:Cell):number {
   let cleanliness=0;
   for(let head=0;head<queue.length;head++) {
     const i=queue[head]!,x=i%world.width,z=Math.floor(i/world.width);
-    // Soil (including grassy soil) is -1; exposed rock and ordinary water
+    // Ordinary/rich soil and gravel are -1; exposed rock and ordinary water
     // have no cleanliness offset in the retained natural-terrain definitions.
     const terrain=world.tiles[i]!.terrain;
-    cleanliness+=terrain==='grass'||terrain==='soil'?-1:0;
+    cleanliness+=isGrowingTerrain(terrain)?-1:0;
     for(const c of [{x:x-1,z},{x:x+1,z},{x,z:z-1},{x,z:z+1}]) {
       const index=c.z*world.width+c.x,neighbor=topology.at(c.x,c.z);
       if(neighbor?.kind==='space'&&neighbor.id===room.id&&!seen.has(index)){seen.add(index);queue.push(index);}

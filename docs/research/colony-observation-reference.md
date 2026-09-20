@@ -119,6 +119,12 @@ La [présentation officielle](https://rimworldgame.com/) décrit justement des s
 
 Ces observations justifient une comparaison mieux contrôlée. Elles ne justifient ni un multiplicateur global de vitesse, ni une densité de ressources, ni un calendrier nouveau inventé pour faire ressembler une capture isolée.
 
+## Étendue réelle des anciennes parties locales
+
+Recontrôle du 20 septembre : **88 fichiers hors nouveau témoin**, mais seulement **deux mondes**. Les 87 états avancés appartiennent au tutoriel Phoebe/Easy, Core seul, version 1.6.4633 rev1261, entre J5,038 et J210,096. Deux retours en arrière apparaissent dans l’ordre des fichiers. Le dernier état compte **12 humains de la colonie et 101 animaux domestiques de douze espèces**, fabrication, forage profond, plusieurs producteurs électriques et stocks alimentaires abondants. Le fichier restant, Cassandra/Easy en 1.4.3641, est un début au tick 100.
+
+Ces données suffisent déjà pour examiner production, agrandissement, soins et défenses sur une longue durée. Elles ne constituent ni 87 parties indépendantes ni le profil Cassandra/Récit d’aventure retenu. Les comparaisons entre états doivent garder versions et branches ; un acteur absent d’une carte peut être ailleurs et ne doit pas être compté mort par défaut. Tous les en-têtes indiquent seulement Core. Aucun fichier personnel brut ni nom de colonie n’est publié.
+
 ## Ce qu'une collecte de sauvegardes peut établir
 
 Question utilisateur du 20 septembre 2026 : des sauvegardes d'amis ou de joueurs publics permettraient-elles de reconstituer précisément et exhaustivement les parties ? **Elles fournissent des observations précieuses, mais pas un historique complet.** Vérification complémentaire en lecture seule du même assembly local **1.6.4871 rev590** que l'enquête initiale : `History`, `Archive`, `HistoryAutoRecorder`, `PlayLog`, `BattleLog`, `Pawn_RecordsTracker`, `StoryState`, `Storyteller`, `IncidentQueue` et définitions `HistoryAutoRecording`/`RecordDefs`. Ces limites ne sont pas présumées identiques dans toutes les versions ou avec des mods.

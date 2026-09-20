@@ -2,6 +2,7 @@ import { TICKS_PER_DAY, type Resource, type World } from './types.ts';
 import { isRoofed, roofIndex } from './roof-rules.ts';
 import { calendarTick } from './calendar.ts';
 import { growingLightIntegral } from './environment.ts';
+import { soilFertility } from './soil.ts';
 
 export const PLANT_DEFINITIONS = Object.freeze({
   cotton: { label: 'Coton', growDays: 8, minFertility: .7, sensitivity: 1, afterHarvest: 0, yield: 10 },
@@ -28,7 +29,7 @@ export function plantGrowthRate(light: number, temperature: number, fertility: n
 }
 export const plantFertility = (world: World, plant: Resource): number => {
   const terrain = world.tiles[plant.z * world.width + plant.x]!.terrain;
-  return terrain === 'grass' ? 1 : terrain === 'soil' ? .7 : 0;
+  return soilFertility(terrain);
 };
 export const plantResting = (tick: number): boolean => {
   const day = tick % TICKS_PER_DAY / TICKS_PER_DAY;

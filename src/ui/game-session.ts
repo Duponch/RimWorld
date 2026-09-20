@@ -1,11 +1,12 @@
 import { SCENARIOS, isScenarioId, type ScenarioId } from '../sim/scenario-definitions';
 import { calendarTick } from '../sim/calendar';
 import { TICKS_PER_DAY } from '../sim/types';
+import { HILLINESS_LABELS,type SiteOptions } from '../sim/site';
 
 export const SAVE_KEY = 'lisiere.save.v1';
 export const PREVIOUS_KEY = 'lisiere.previous.v1';
 interface SessionClient {
-  init(seed: number, size: number, scenario: ScenarioId, paused?: boolean): Promise<unknown>;
+  init(seed: number, size: number, scenario: ScenarioId, paused?: boolean,site?:SiteOptions): Promise<unknown>;
   load(data: string): Promise<unknown>;
   save(): Promise<string | undefined>;
 }
@@ -33,7 +34,9 @@ export class GameSession {
         if (value && Number.isSafeInteger(value.tick) && value.tick >= 0 && Number.isInteger(value.width) && Number.isInteger(value.height)) {
           const id: unknown = value.scenario?.id;
           const scenario = isScenarioId(id) ? SCENARIOS[id].label : 'Partie historique';
-          detail = `${scenario} · jour ${1 + Math.floor(calendarTick(value) / TICKS_PER_DAY)} · ${value.width} × ${value.height} · format ${Number.isInteger(value.schemaVersion) ? value.schemaVersion : "ancien"}`;
+          const relief=value.site?.hilliness;
+          const site=typeof relief==='string'&&Object.hasOwn(HILLINESS_LABELS,relief)?` · ${HILLINESS_LABELS[relief as SiteOptions['hilliness']]}`:'';
+          detail = `${scenario}${site} · jour ${1 + Math.floor(calendarTick(value) / TICKS_PER_DAY)} · ${value.width} × ${value.height} · format ${Number.isInteger(value.schemaVersion) ? value.schemaVersion : "ancien"}`;
         }
       } catch { /* Keep the slot visible; only the simulation validates it. */ }
       result.push({ key: key!, label: label!, detail });
@@ -82,8 +85,8 @@ export class GameSession {
     await this.prepare();
   }
 
-  create(seed: number, size: number, scenario: ScenarioId): Promise<void> {
-    return this.exclusive(() => this.replace(() => this.client.init(seed, size, scenario, true)));
+  create(seed: number, size: number, scenario: ScenarioId,site?:SiteOptions): Promise<void> {
+    return this.exclusive(() => this.replace(() => this.client.init(seed, size, scenario, true,site)));
   }
 
   load(key: string): Promise<void> {

@@ -1,4 +1,6 @@
-# Validation courante — V82
+# Validation courante — V83
+
+V83 : [site local, agriculture, ressources et première récolte](../history/validation-site-v83.md). Campagnes de contrats, douze jours naturels, UI et charges successives réussies ; limites de performance conservées. Les preuves antérieures restent historiques.
 
 Enquête du 20 septembre : [audit de référence Core et diagnostic du parcours suspendu](../history/reference-audit-2026-09-20.md), sans changement du gameplay V81. Cette enquête précède les corrections et menus intégrés dans [V82](../history/validation-new-game-v82.md), validée dans son périmètre.
 

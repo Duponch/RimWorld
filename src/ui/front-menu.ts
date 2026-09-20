@@ -1,9 +1,12 @@
 import { DEFAULT_MAP_SIZE } from '../sim/map-config';
+import type { SiteOptions } from '../sim/site';
+import { createSiteConfiguration, parseSiteSeed, randomSiteSeed } from './front-site';
 import './front-menu.css';
 
 export interface FrontMenuDraft {
   seed: number;
   size: number;
+  site: SiteOptions;
 }
 
 export interface FrontMenuSave {
@@ -113,6 +116,7 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
   let previousFocus: HTMLElement | null = null;
   let enabledBeforeBusy: Control[] = [];
   let seed = '';
+  let site: SiteOptions = { hilliness: 'small-hills' };
   let difficultyChosen = false;
   let reloadChosen = false;
   let selectedSave: string | undefined;
@@ -216,7 +220,7 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
         <button type="button" class="front-scenario-selected" aria-pressed="true"><strong>Atterrissage forcé</strong><span>Trois personnes pour bâtir une colonie.</span><span class="front-tag">Adaptation partielle</span></button>
       </div>
       <article class="front-card front-scenario-detail"><p class="front-kicker">LE DÉPART CLASSIQUE</p><h2>Atterrissage forcé</h2>
-        <p>Trois survivants arrivent dans une vallée inconnue. Vos provisions vous laissent le temps de choisir un abri, de vous installer et de préparer les prochaines récoltes.</p>
+        <p>Trois survivants arrivent dans un territoire inconnu. Vos provisions vous laissent le temps de choisir un abri, de vous installer et de préparer les prochaines récoltes.</p>
         <h3>Vos provisions</h3><dl class="front-supplies">
           <div><dt>Bois</dt><dd>300</dd></div><div><dt>Acier</dt><dd>450</dd></div><div><dt>Composants</dt><dd>30</dd></div>
           <div><dt>Rations de survie</dt><dd>50</dd></div><div><dt>Médicaments</dt><dd>30</dd></div><div><dt>Revolver et gilet</dt><dd>1 de chaque</dd></div>
@@ -282,50 +286,24 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
     });
   }
 
-  function readSeed(): number | undefined {
-    if (!/^\d+$/.test(seed.trim())) return undefined;
-    const value = Number(seed);
-    return Number.isSafeInteger(value) && value >= 0 && value <= 0xffffffff ? value : undefined;
-  }
-
-  function randomizeSeed(): void {
-    seed = String(crypto.getRandomValues(new Uint32Array(1))[0]);
-  }
-
   function renderConfiguration(): void {
-    content.innerHTML = `<div class="front-split front-configuration">
-      <section class="front-card"><p class="front-kicker">CARTE LOCALE</p><h2>Une vallée tempérée</h2>
-        <p>Le départ utilise pour l’instant un seul paysage : une vallée boisée avec une rivière. La planète et le choix du site viendront ensuite.</p>
-        <label class="front-seed-label" for="front-seed">Graine de la carte</label><div class="front-seed-row"><input id="front-seed" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" aria-describedby="front-seed-help"><button id="front-random-seed" type="button">Aléatoire</button></div>
-        <p id="front-seed-help" class="front-small">Un entier entre 0 et 4 294 967 295. Une même graine reproduit le même départ pour cette version.</p>
-        <dl class="front-map-facts"><div><dt>Taille</dt><dd>${DEFAULT_MAP_SIZE} × ${DEFAULT_MAP_SIZE} cases</dd></div><div><dt>Milieu</dt><dd>Forêt tempérée · profil local partiel</dd></div><div><dt>Équipe</dt><dd>3 personnes · profils fixes</dd></div></dl>
-        <p class="front-small">La sélection parmi huit candidats et leurs biographies ne sont pas encore disponibles.</p>
-      </section><section class="front-card front-summary"><p class="front-kicker">VOTRE COLONIE</p><h2>Prêts à vous installer</h2>
-        <dl><div><dt>Scénario</dt><dd>Atterrissage forcé <span>Adaptation partielle</span></dd></div><div><dt>Narrateur</dt><dd>Cassandra Classique <span>Introduction partielle</span></dd></div><div><dt>Difficulté</dt><dd>Récit d’aventure</dd></div><div><dt>Sauvegardes</dt><dd>Rechargeable à tout moment</dd></div></dl>
-        <p class="front-small">Vous commencez avec trois personnes, vos provisions et aucun bâtiment. La carte s’ouvre en pause pour vous laisser examiner les lieux.</p>
-      </section></div>`;
-    const input = find<HTMLInputElement>('#front-seed');
-    input.value = seed;
-    input.addEventListener('input', () => { seed = input.value; input.removeAttribute('aria-invalid'); clearError(); });
-    find<HTMLButtonElement>('#front-random-seed').addEventListener('click', () => {
-      try {
-        randomizeSeed();
-        input.value = seed;
-        input.removeAttribute('aria-invalid');
-        clearError();
-      } catch {
-        showError('La génération aléatoire est indisponible. Vous pouvez saisir une graine.');
-      }
+    const configuration = createSiteConfiguration({
+      seed, site,
+      onSeed: next => { seed = next; clearError(); },
+      onSite: next => { site = next; clearError(); },
+      onError: showError,
     });
+    content.append(configuration.element);
+    const input = configuration.seedInput;
     addNavigation(() => navigate('story'), 'Démarrer', () => {
-      const parsed = readSeed();
+      const parsed = parseSiteSeed(seed);
       if (parsed === undefined) {
         showError('La graine doit être un entier compris entre 0 et 4 294 967 295.');
         input.setAttribute('aria-invalid', 'true');
         input.focus();
         return;
       }
-      void run(() => options.onStart({ seed: parsed, size: DEFAULT_MAP_SIZE }), 'Génération de la carte et préparation de la colonie…');
+      void run(() => options.onStart({ seed: parsed, size: DEFAULT_MAP_SIZE, site: { ...site } }), 'Génération de la carte et préparation de la colonie…');
     });
   }
 
@@ -386,7 +364,8 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
     difficultyChosen = false;
     reloadChosen = false;
     seed = '';
-    try { randomizeSeed(); } catch { /* Manual entry remains available. */ }
+    site = { hilliness: 'small-hills' };
+    try { seed = randomSiteSeed(); } catch { /* Manual entry remains available. */ }
     navigate('scenario');
   }
 

@@ -8,7 +8,7 @@ export function createHeatwaveUI(send:(c:Command)=>Promise<unknown>):{update:(w:
   button.onclick=()=>dialog.showModal();const enable=document.getElementById('enable-heatwaves') as HTMLButtonElement;
   enable.title='Calendrier de scénario : première canicule dans 6 à 7 jours ; aucune exposition passée ajoutée.';
   let busy=false;enable.onclick=()=>{if(busy)return;busy=true;enable.disabled=true;void send({type:'enable-heatwaves'}).catch(e=>enable.title=String(e)).finally(()=>{busy=false;enable.disabled=false;});};
-  return {update(w){enable.hidden=!!w.heatwaves;enable.disabled=busy;
+  return {update(w){enable.hidden=!!w.gameProfile||!!w.heatwaves;enable.disabled=busy;
     const suffering=w.pawns.filter(p=>p.state!=='dead'&&heatStage(p.health?.heatstroke)>0),active=w.heatwaves?.active;
     if(!active&&!suffering.length){button.remove();return;}
     button.textContent=active?`Canicule · +${heatwaveOffset(w.tick,w.heatwaves).toFixed(1)} °C`:`Coup de chaleur : ${suffering.length} personne(s)`;

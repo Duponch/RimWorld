@@ -128,7 +128,7 @@ describe('seeded temperate valley generation', () => {
         }
         for (const target of world.resources.slice(-3)) expect(routeToJob(world, target, reachable), context).not.toBeNull();
         // Compare local agreement to the independent-noise baseline with the SAME terrain shares.
-        const counts = { grass: 0, soil: 0, rock: 0, water: 0, 'rough-stone':0 }; let same = 0; let pairs = 0;
+        const counts = { grass: 0, soil: 0, rock: 0, water: 0, 'rough-stone':0, 'rich-soil':0, gravel:0 }; let same = 0; let pairs = 0;
         world.tiles.forEach((tile, index) => {
           counts[tile.terrain]++;
           for (const next of neighbors(world, index)) if (next > index) { pairs++; if (world.tiles[next]!.terrain === tile.terrain) same++; }

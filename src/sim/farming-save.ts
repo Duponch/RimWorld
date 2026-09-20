@@ -1,5 +1,6 @@
 import { legacyPlantGrowth } from './plants.ts';
-import type { World } from './types.ts';
+import { isGrowingTerrain } from './soil.ts';
+import type { Terrain,World } from './types.ts';
 
 export function initializeFarming(world: World): void {
   // Settle the old lighting contract once, without aging existing bushes again.
@@ -30,7 +31,7 @@ export function validateFarming(input: Record<string, unknown>, size: number, id
       else {
         occupied.add(cell);
         const tile = (input.tiles as {terrain:string}[])[cell];
-        if (!tile || !['grass','soil'].includes(tile.terrain)) errors.push('Growing zone on incompatible terrain.');
+        if (!tile || !isGrowingTerrain(tile.terrain as Terrain)) errors.push('Growing zone on incompatible terrain.');
       }
       previous = cell as number;
     }

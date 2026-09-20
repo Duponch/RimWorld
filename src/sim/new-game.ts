@@ -3,6 +3,8 @@ import { enableCassandraRaids } from './cassandra-raids.ts';
 import { crashlandedProfile } from './game-profile.ts';
 import { setupEncounter } from './encounter-scenario.ts';
 import { generateWorld } from './generation.ts';
+import { generateSiteWorld } from './site-generation.ts';
+import { resolveSite,type SiteOptions } from './site.ts';
 import { nearbyGround } from './ground-placement.ts';
 import { enableHeatwaves } from './heatwave.ts';
 import { ITEM_DEFINITIONS,type ItemId } from './items.ts';
@@ -47,7 +49,7 @@ function largestComponent(world:World):number[] {
 /** Find room in the largest border-connected component for real people and
  * every stock stack, without clearing terrain. Failure never publishes a world. */
 function landingSite(world:World):{landing:Cell;cells:Cell[]} {
-  const resources=new Set(world.resources.map(r=>r.z*world.width+r.x)),cx=(world.width-1)/2,cz=(world.height-1)/2;
+  const resources=new Set([...world.resources.map(r=>r.z*world.width+r.x),...world.piles.filter(p=>p.owner.type==='ground').map(p=>p.owner.type==='ground'?p.owner.z*world.width+p.owner.x:-1)]),cx=(world.width-1)/2,cz=(world.height-1)/2;
   const distance=(i:number)=>(i%world.width-cx)**2+(Math.floor(i/world.width)-cz)**2;
   const candidates=largestComponent(world).filter(i=>!resources.has(i)).sort((a,b)=>distance(a)-distance(b)||a-b);
   for(const index of candidates) {
@@ -79,12 +81,15 @@ function survivalStart(world:World):Cell {
 
 /** The only application factory. Loading an existing save must not call this
  * function: scenario population, supplies and technologies are creation-only. */
-export function createScenarioWorld(seed:number,size:number,id:ScenarioId=DEFAULT_SCENARIO):World {
+export function createScenarioWorld(seed:number,size:number,id:ScenarioId=DEFAULT_SCENARIO,siteOptions?:SiteOptions):World {
   if(!isScenarioId(id))throw new Error('Scénario inconnu.');
   if(!Number.isInteger(seed)||seed<0||seed>0xffffffff)throw new Error('La graine doit être un entier de 0 à 4 294 967 295.');
   if(!validMapDimension(size)||size<SCENARIOS[id].minSize)throw new Error('Taille de carte incompatible avec ce scénario.');
+  if(siteOptions!==undefined&&id!=='crashlanded')throw new Error('Ce scénario ne permet pas de choisir un site.');
   const natural=id==='survivors'||id==='crashlanded';
-  const world=natural?generateWorld(seed,size,size,id==='crashlanded'?'temperate-crashlanded-v1':'temperate-survivors-v1'):generateWorld(seed,size,size);
+  const site=id==='crashlanded'?resolveSite(seed,siteOptions):undefined;
+  const world=site?generateSiteWorld(seed,size,size,site):natural?generateWorld(seed,size,size,'temperate-survivors-v1'):generateWorld(seed,size,size);
+  if(site)world.site=site;
   const landing=natural?survivalStart(world):{x:Math.floor(size/2),z:Math.floor(size/2)};
   if(id==='sentry')setupEncounter(world);
   else {
@@ -93,6 +98,6 @@ export function createScenarioWorld(seed:number,size:number,id:ScenarioId=DEFAUL
     else {enableArrivals(world);enableRaids(world);enableHeatwaves(world);}
     if(natural)enableWildlife(world,undefined,'natural');else enableWildlife(world);
   }
-  world.scenario={id,revision:SCENARIO_REVISION,landing};
+  world.scenario={id,revision:site?2:SCENARIO_REVISION,landing};
   return world;
 }

@@ -9,7 +9,7 @@ import { survivorDecisions, survivorInitialAreas, survivorPlan, survivorSummary 
 import type { Command, World } from '../src/sim/types.ts';
 
 type Summary=ReturnType<typeof survivorSummary>;
-interface Ledger {consumed:number;harvested:number;cooked:number;meals:Record<number,number>;sleep:Record<number,number>}
+interface Ledger {consumed:number;harvested:number;cooked:number;riceHarvested:number;riceCooked:number;riceMeals:number;meals:Record<number,number>;sleep:Record<number,number>}
 interface Checkpoint {
   seed:number;world:string;initial:{wood:number;food:number;steel:number;component:number};ledger:Ledger;
   milestones:Record<string,number>;journal:{tick:number;reason:string;command:Command}[];observations:Summary[];
@@ -17,11 +17,13 @@ interface Checkpoint {
 const checkpointFile=process.env.CRASHLANDED_CHECKPOINT;
 const resumed:Checkpoint|undefined=checkpointFile?JSON.parse(readFileSync(checkpointFile,'utf8')):undefined;
 
-test.each(resumed?[resumed.seed]:[42])('Atterrissage : huit jours naturels, nourriture et défense puis reprise, graine %i',seed=>{
-  const version=process.env.VALIDATION_VERSION??'v82';
+test.each(resumed?[resumed.seed]:[42])('Atterrissage : douze jours naturels, première récolte cuisinée et défense puis reprise, graine %i',seed=>{
+  const version=process.env.VALIDATION_VERSION??'v83';
   let w:World=resumed?deserializeWorld(resumed.world):createScenarioWorld(seed,250,'crashlanded');
   const initial=resumed?.initial??{wood:woodAccount(w),food:foodAccount(w),steel:450,component:30};
-  const ledger:Ledger=resumed?.ledger??{consumed:0,harvested:0,cooked:0,meals:Object.fromEntries(w.pawns.map(p=>[p.id,0])),sleep:Object.fromEntries(w.pawns.map(p=>[p.id,0]))};
+  // V82 checkpoints precede the first rice harvest. Later V83 checkpoints carry
+  // the ingredient ledger so continuation cannot confuse berries with crops.
+  const ledger:Ledger={riceHarvested:0,riceCooked:0,riceMeals:0,...resumed?.ledger??{consumed:0,harvested:0,cooked:0,meals:Object.fromEntries(w.pawns.map(p=>[p.id,0])),sleep:Object.fromEntries(w.pawns.map(p=>[p.id,0]))}};
   const milestones:Record<string,number>=resumed?.milestones??{},journal:Checkpoint['journal']=resumed?.journal??[],observations:Summary[]=resumed?.observations??[];
   const checkpoint=():Checkpoint=>({seed,world:serializeWorld(w),initial,ledger,milestones,journal,observations});
   const failureFile=`tmp/crashlanded-failed-${version}-${seed}.json`;
@@ -38,10 +40,10 @@ test.each(resumed?[resumed.seed]:[42])('Atterrissage : huit jours naturels, nour
     record('threeBeds',s.beds===3);record('shelter',s.shelteredBeds===3&&s.walls===15&&s.doors===1);
     record('stockMoved',s.stored.steel>0&&s.stored.component>0);record('materialsStored',s.stored.steel===450&&s.stored.component===30);
     record('medicineStored',s.stored.medicine===30);record('riceGrowing',s.crops.length>=15&&s.crops.some(c=>c.growth>0));
-    record('everyoneAte',Object.values(ledger.meals).every(n=>n>0));record('everyoneSleptInBed',Object.values(ledger.sleep).every(n=>n>0));record('firstCookedMeal',ledger.cooked>0);record('firstRaid',!!w.raids?.active);record('raidOver',!!w.raids?.last);record('riceHarvested',w.resources.some(r=>r.kind==='rice'&&r.growth===0&&r.growthTick!>18000));
+    record('everyoneAte',Object.values(ledger.meals).every(n=>n>0));record('everyoneSleptInBed',Object.values(ledger.sleep).every(n=>n>0));record('firstCookedMeal',ledger.cooked>0);record('firstRaid',!!w.raids?.active);record('raidOver',!!w.raids?.last);
     return s;
   };
-  while(w.tick<48000) {
+  while(w.tick<72000) {
     if(w.tick%250===0 || w.raids?.active && w.tick%20===0) {
       for(const d of crashlandedDecisions(w)){expect(applyCommand(w,d.command),JSON.stringify({seed,tick:w.tick,decision:d})).toMatchObject({ok:true});journal.push({tick:w.tick,...d});}
       observe();
@@ -50,8 +52,12 @@ test.each(resumed?[resumed.seed]:[42])('Atterrissage : huit jours naturels, nour
     for(const e of w.events)if(e.tick===w.tick) {
       const eaten=e.message.match(/a mangé une portion \((\d+) ×/);
       if(eaten){ledger.consumed+=Number(eaten[1]);const pawn=w.pawns.find(p=>e.message.startsWith(`${p.name} a mangé`));if(pawn)ledger.meals[pawn.id]=(ledger.meals[pawn.id]??0)+1;}
-      const harvest=e.message.match(/a récolté (\d+) (?:baies|riz)/);if(harvest)ledger.harvested+=Number(harvest[1]);
-      if(e.message.includes('a cuisiné 1 repas simple'))ledger.cooked++;
+      const harvest=e.message.match(/a récolté (\d+) (baies|riz)/);if(harvest){ledger.harvested+=Number(harvest[1]);if(harvest[2]==='riz'){ledger.riceHarvested+=Number(harvest[1]);record('riceHarvested',true);}}
+      if(e.message.includes('a cuisiné 1 repas simple')){
+        ledger.cooked++;
+        const rice=Number(e.message.match(/, (\d+) riz/)?.[1]??0);
+        if(rice>0){ledger.riceCooked+=rice;ledger.riceMeals++;record('firstCropMeal',true);}
+      }
     }
     for(const p of w.pawns)if(p.state==='sleeping'&&p.need?.kind==='sleep'&&p.need.bedId!==null)ledger.sleep[p.id]=(ledger.sleep[p.id]??0)+1;
     if(w.tick%6000===0) {
@@ -72,10 +78,16 @@ test.each(resumed?[resumed.seed]:[42])('Atterrissage : huit jours naturels, nour
   expect(final.food.nutrition,context).toBeGreaterThan(0);expect(milestones.stockMoved,context).toBeGreaterThan(0);
   expect(milestones.riceGrowing,context).toBeGreaterThan(0);expect(milestones.shelter,context).toBeGreaterThan(0);
   expect(milestones.firstCookedMeal,context).toBeGreaterThan(0);
+  expect(ledger.riceHarvested,context).toBeGreaterThan(0);expect(ledger.riceMeals,context).toBeGreaterThan(0);
+  expect(ledger.riceCooked,context).toBeGreaterThan(0);expect(ledger.riceCooked,context).toBeLessThanOrEqual(ledger.riceHarvested);
+  expect(milestones.firstCropMeal,context).toBeGreaterThan(milestones.riceHarvested!);
   expect(milestones.firstRaid,context).toBe(32400);expect(milestones.raidOver,context).toBeGreaterThan(32400);
   expect(w.raids?.active,context).toBeUndefined();expect(w.raids?.last?.reason,context).not.toBe('colony-down');
   expect(w.pawns.filter(isColonist).every(p=>!p.draft),context).toBe(true);
   // Crops and raids use their actual calendar, not a J7 deadline. Initial meals are not
   // confiscated to manufacture scarcity; the report distinguishes stored,
   // harvested and cooked food instead of claiming a closed economy already.
-},240000);
+// Twelve days plus a save/100-tick replay each day exceed the former eight-day
+// watchdog on the reference machine. Runtime is reported separately, not a
+// simulation throughput assertion; retain every business/continuation check.
+},480000);

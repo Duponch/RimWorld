@@ -1,14 +1,14 @@
-# Nouvelle partie — Atterrissage forcé partiel V82 et profils historiques
+# Nouvelle partie — Atterrissage forcé partiel V83 et profils historiques
 
-**V82**, le 20 septembre 2026. La [référence locale Core](../research/core-reference-baseline.md) et le [contrat des menus](new-game-menus.md) gouvernent le nouveau départ. Les [preuves V80](../history/validation-scenario-v80.md) restent celles de Trois survivants : elles ne valident pas rétroactivement le nouveau profil. La [recherche de scénario](../research/scenario-start-reference.md) conserve sources, versions et écarts. [ROADMAP](../ROADMAP.md) reste l'unique calendrier.
+**V83**, le 20 septembre 2026. La [référence locale Core](../research/core-reference-baseline.md) et le [contrat des menus](new-game-menus.md) gouvernent le nouveau départ. Les [preuves V80](../history/validation-scenario-v80.md) restent celles de Trois survivants : elles ne valident pas rétroactivement le nouveau profil. La [recherche de scénario](../research/scenario-start-reference.md) conserve sources, versions et écarts. [ROADMAP](../ROADMAP.md) reste l'unique calendrier.
 
 Le nouveau parcours propose **Atterrissage forcé, Cassandra Classique partielle, Récit d'aventure et Rechargeable**. Les choix de difficulté et de sauvegarde sont requis, malgré leur unique possibilité active. L'interface annonce l'adaptation partielle et sa dotation réelle ; elle ne promet ni tous les objets Core ni le narrateur complet.
 
 ## Profils séparés
 
-**Atterrissage forcé**, nouvel identifiant `crashlanded` révision 1, reçoit un `gameProfile` révision 1 distinct : `cassandra-partial`, `adventure-story`, `reloadable`. **Trois survivants** conserve l'identifiant `survivors`, sa provenance et ses règles historiques. Le **camp pédagogique** et la **sentinelle** restent des scénarios de diagnostic accessibles explicitement aux parcours qui en dépendent. Le nouveau menu ne les présente pas comme des variantes Core livrées. Un scénario ne se déduit jamais d'une sauvegarde historique ou de la présence d'objets.
+**Atterrissage forcé**, nouvel identifiant `crashlanded` révision 2 (révision 1 conservée pour les départs V82), reçoit un `gameProfile` révision 1 distinct : `cassandra-partial`, `adventure-story`, `reloadable`. **Trois survivants** conserve l'identifiant `survivors`, sa provenance et ses règles historiques. Le **camp pédagogique** et la **sentinelle** restent des scénarios de diagnostic accessibles explicitement aux parcours qui en dépendent. Le nouveau menu ne les présente pas comme des variantes Core livrées. Un scénario ne se déduit jamais d'une sauvegarde historique ou de la présence d'objets.
 
-Le choix visible annonce trois adultes aux profils locaux fixes, vallée tempérée, provisions, technologies connues et limites de narration. Le menu public crée une carte **250²**. La graine numérique est proposée aléatoirement hors simulation puis transmise explicitement à l'usine déterministe ; elle reste éditable et relançable. Ce n'est pas une graine de planète Core. Formats compacts et anciens scénarios restent des outils de diagnostic. Monde, biomes complets, huit candidats, biographies et difficulté détaillée ne sont pas présentés comme disponibles.
+Le choix visible annonce trois adultes aux profils locaux fixes, forêt tempérée et relief local choisi, provisions, technologies connues et limites de narration. Le menu public crée une carte **250²**. La graine numérique est proposée aléatoirement hors simulation puis transmise explicitement à l'usine déterministe ; elle reste éditable et relançable. Ce n'est pas une graine de planète Core. Formats compacts et anciens scénarios restent des outils de diagnostic. Monde, biomes complets, huit candidats, biographies et difficulté détaillée ne sont pas présentés comme disponibles.
 
 ## Dotation et technologies
 
@@ -39,9 +39,9 @@ Le profil sépare terrain et pose du scénario. Il conserve les conventions de [
 
 Choisir après génération un point dans une composante praticable reliée au bord. Personnes et dotation exigent des cellules admissibles/accessibles et assez d'espace, avec obstacles/coins communs. En cas d'impossibilité, échec explicable avant publication ; aucun passage creusé silencieusement au chargement. La garantie ne rend pas toutes les poches accessibles et ne place pas chaque ressource près du camp.
 
-Vallée locale avec rivière, sols et géologie. Densités d'arbres/baies calibrées sur plusieurs graines ; densité Core de plantes ≠ probabilité d'arbre. Végétation moins uniforme pour rendre navigation et installation lisibles, sans annoncer chênes/peupliers/écosystème complets. Plafond de départ **12 lièvres sur 250²**, poses admissibles nécessaires ; ce n'est pas un budget Core multiespèce ni une garantie sur toute dimension.
+V83 : forêt tempérée sans rivière, relief Plat/Petites collines/Grandes collines, deux ou trois pierres liées à la graine et provenance `site` persistée. Terre ordinaire, riche, gravier et pierre brute ont des propriétés distinctes ; fragments physiques, filons et végétation sont décrits dans le [contrat de génération](world-generation.md). Les anciens profils conservent leur vallée avec rivière. Ni essences complètes ni écosystème Core équivalent ne sont annoncés. Plafond de départ **12 lièvres sur 250²**, poses admissibles nécessaires ; ce n'est pas un budget Core multiespèce ni une garantie sur toute dimension.
 
-Seul le nouveau générateur `temperate-crashlanded-v1` corrige l'âge initial des **baies** : tirage uniforme 0,15–1,5 borné à 1, permettant des buissons déjà mûrs. Le profil Survivants garde son tirage 0,15–1. Positions, densités et roches ne sont pas recalibrées dans cette tranche ; aucun arbre ne reçoit un faux système d'âge. La croissance après création garde ses règles biologiques et sa lumière réellement disponible, sans objectif de récolte imposé à J7.
+V83 conserve pour les **baies** le tirage de maturité corrigé en V82, uniforme 0,15–1,5 borné à1 ; le profil Survivants historique garde0,15–1. Les positions et densités suivent maintenant les passes du site, avec les adaptations documentées ; aucun arbre ne reçoit un faux système d'âge. La croissance après création garde ses règles biologiques et sa lumière réellement disponible, sans objectif de récolte imposé à J7.
 
 Génération unique, sans entretien par frame. Mesurer arbres/baies/minerais, sols, roche, accès, distances et temps sur plusieurs graines ; distinguer simulation/navigation/rendu. Le camp historique n'est pas réétalonné parce que le défaut UI change.
 
@@ -49,7 +49,9 @@ Génération unique, sans entretien par frame. Mesurer arbres/baies/minerais, so
 
 Scénario/version constituent une provenance, pas une commande rejouée au chargement. Conserver carte, objets, personnes, technologies, calendriers et RNG réellement obtenus. **V81 est strictement validée avant migration V82 neutre** : aucun `gameProfile`, décalage civil, stock, technologie, animal ou calendrier ajouté. Les champs V82 injectés dans V81 sont refusés. Le nouveau profil nécessite une création explicite ; `crashlanded` sans son profil appliqué, ou un profil Core greffé sur `survivors`, est invalide.
 
-La commande worker transporte le choix. Même graine, dimensions, générateur et profil reproduisent le départ. Recharger ne redonne jamais les provisions. Ne pas confondre flux aléatoires du terrain/personnes/faune/incidents avec l'aléa visuel.
+V82 est strictement validée avant migration V83 neutre : aucune carte régénérée, aucun `site` déduit, aucune nouvelle fertilité injectée. Le site est obligatoire pour la révision 2 de Crashlanded et interdit sur les autres provenances. Le nouveau placement exclut les fragments physiques existants. Correction rétroactive V82 : le sommeil des lièvres consulte désormais la même heure civile que les colons, y compris sur une partie V82 chargée ; les délais physiologiques restent écoulés.
+
+La commande worker transporte le choix et le relief. Même graine, dimensions, générateur et profil reproduisent le départ. Recharger ne redonne jamais les provisions. Ne pas confondre flux aléatoires du terrain/personnes/faune/incidents avec l'aléa visuel.
 
 ## Pression et acceptation
 
@@ -57,7 +59,7 @@ Le nouveau profil applique les effets présents de Récit d'aventure : **+5 à l
 
 La [cadence de raids](raids.md) propose une occasion introductive à J5,4, puis des fenêtres à J11 + 10,6 × n  : 4,6 jours actifs, 6 de repos, 1–2 occasions espacées d'au moins 1,9 jour. Les occasions impossibles ou occupées sont consommées ; la fin d'un groupe ne déplace pas les fenêtres. Après J20, les occasions restent limitées aux raids de composition locale : sélection complète et budget de 40 points non livrés. Visiteurs, petite menace introductive, Misc, maladies et factions restent absents. Accueil fixe et canicule garantie du camp ne sont pas activés sur `crashlanded`, et leurs commandes d'activation y sont refusées. Les autres scénarios gardent leurs calendriers historiques.
 
-Campagne ciblée ; la validation intégrée V82 demeure en cours :
+Campagne intégrée décrite dans les [preuves V83](../history/validation-site-v83.md) :
 
 - Plusieurs graines 250² et formats compacts : pose admissible, aides artificielles absentes, bilan exact, personnes/technologies et reproductibilité.
 - Sauvegarde/reprise : anciennes parties inchangées, scénario confirmé, aucune seconde dotation, continuation identique.

@@ -1,0 +1,156 @@
+{
+  "backend": "WebGPU",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "samples": [
+    {
+      "speed": 1,
+      "targetTicksPerSecond": 6,
+      "actualTicksPerSecond": 5.959889940698654,
+      "milliseconds": 10067.300000000745,
+      "ticks": 60,
+      "frames": 1057,
+      "p95": 12.60000000000582,
+      "p99": 16.700000000004366,
+      "max": 20.900000000001455
+    },
+    {
+      "speed": 6,
+      "targetTicksPerSecond": 36,
+      "actualTicksPerSecond": 36.019051399087125,
+      "milliseconds": 10078,
+      "ticks": 363,
+      "frames": 899,
+      "p95": 16.700000000004366,
+      "p99": 20.900000000001455,
+      "max": 25.200000000004366
+    }
+  ],
+  "checkpoints": {
+    "creation": {
+      "milliseconds": 6867,
+      "tick": 0,
+      "scenario": {
+        "id": "crashlanded",
+        "revision": 2,
+        "landing": {
+          "x": 124,
+          "z": 124
+        }
+      },
+      "gameProfile": {
+        "revision": 1,
+        "storyteller": "cassandra-partial",
+        "difficulty": "adventure-story",
+        "saveMode": "reloadable"
+      },
+      "site": {
+        "revision": 1,
+        "biome": "temperate-forest",
+        "hilliness": "large-hills",
+        "river": "none",
+        "stones": [
+          "slate",
+          "limestone"
+        ]
+      }
+    },
+    "richSoil": {
+      "x": 104,
+      "z": 154,
+      "description": "Case 104, 154 · Sol : Terre riche · Fertilité : 140 % · Terrain cultivable"
+    },
+    "firstDecisions": {
+      "commands": 5,
+      "tick": 663,
+      "beds": 3,
+      "field": 20,
+      "stock": {
+        "wood": 219,
+        "food": 50
+      }
+    },
+    "coldCurrent": {
+      "scenario": {
+        "id": "crashlanded",
+        "revision": 2,
+        "landing": {
+          "x": 124,
+          "z": 124
+        }
+      },
+      "site": {
+        "revision": 1,
+        "biome": "temperate-forest",
+        "hilliness": "large-hills",
+        "river": "none",
+        "stones": [
+          "slate",
+          "limestone"
+        ]
+      },
+      "tick": 1118
+    },
+    "invalid": {
+      "rejected": true,
+      "tickPreserved": 1118,
+      "message": "Cette sauvegarde est illisible ou incompatible avec cette version. La colonie actuelle et vos sauvegardes sont conservées."
+    },
+    "future": {
+      "rejected": true,
+      "tickPreserved": 1118,
+      "message": "Cette sauvegarde est illisible ou incompatible avec cette version. La colonie actuelle et vos sauvegardes sont conservées."
+    },
+    "sameSeedNewSite": {
+      "seed": 42,
+      "site": {
+        "revision": 1,
+        "biome": "temperate-forest",
+        "hilliness": "flat",
+        "river": "none",
+        "stones": [
+          "slate",
+          "limestone"
+        ]
+      },
+      "landing": {
+        "x": 124,
+        "z": 124
+      },
+      "tick": 0,
+      "beforeRecreation": {
+        "x": -74.24437010813891,
+        "y": 429.1269303124401,
+        "width": 1440,
+        "height": 1000,
+        "visible": false
+      },
+      "afterRecreation": {
+        "x": 720.0000000000005,
+        "y": 499.99999999999494,
+        "width": 1440,
+        "height": 1000,
+        "visible": true
+      }
+    },
+    "coldPreviousLandscape": {
+      "source": "tests/fixtures/scenario-v82.json.gz",
+      "sourceVersion": 82,
+      "sourceSha256": "f9fcb0bb4caa6696c958aac876c90be89f8bda64b31d79ad402ba9e00ce15af6",
+      "loadedVersion": 83,
+      "tick": 1145,
+      "site": null
+    },
+    "coldHistorical": {
+      "source": "artifacts/heatwave-checkpoint-v81.json",
+      "sourceVersion": 81,
+      "loadedVersion": 83,
+      "tick": 39205,
+      "width": 16
+    }
+  },
+  "errors": []
+}

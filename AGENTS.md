@@ -1,5 +1,10 @@
 # Travail sur Lisière
 
+## Site V83 et cadence de progression
+- Lire `docs/development/world-generation.md`, `docs/research/map-calibration-reference.md` et `site-soils-reference.md`. Nouveau Crashlanded révision 2 : site tempéré explicite, trois reliefs, sans rivière ; fragments physiques et budget commun de minerais. Les absents ne sont pas remplacés par davantage de ressources utiles. V82 strictement validée avant migration neutre, aucune carte historique régénérée.
+- `soil` historique garde 70 %, nouveaux sols ordinaire/riche/gravier : 100/140/70 %. Aucun changement arbitraire de lumière ou durée pour récolter à J7. Le pilote prouve la récolte par ses produits et les repas par leurs ingrédients ; vingt cases ne démontrent pas une autonomie alimentaire.
+- Instruction utilisateur du 20 septembre : terminer ce lot de départ, puis privilégier les boucles élémentaires encore absentes ou trop partielles avec plusieurs capacités jouables par livraison. Recherches indépendantes en parallèle, intégration centrale et campagnes regroupées ; pas une suite de petits commits de menus. Core sans extensions ni mods dans le périmètre actuel. ROADMAP contient seule les priorités.
+
 ## Création et rythme V82
 - Lire `docs/development/new-game-menus.md`, `scenario-start.md` et leurs recherches. Démarrage normal à l’accueil ; `?e2e` seul garde ce parcours. Seuls les liens explicites `scenario=camp/survivors/sentry` ouvrent directement un diagnostic historique. Le menu public appelle `crashlanded`, provenance distincte et adaptation partielle visible.
 - Six ticks locaux/s, toujours 6 000 ticks/jour et dix Core/local. `calendarTick` ajoute 06 h seulement au nouveau profil ; échéances, vieillissement et sauvegardes restent en ticks écoulés. Conversion commune corps/cargaison/faune/frappes ; aucune durée `/10` en secondes réintroduite.

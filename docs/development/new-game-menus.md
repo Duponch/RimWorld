@@ -1,17 +1,18 @@
-# Accueil et création de partie — V82 et parcours cible
+# Accueil et création de partie — V83 et parcours cible
 
-**V82, le 20 septembre 2026.** L'accueil, les premiers choix, la configuration locale et les chargements courant/historique sont validés par le parcours natif ; voir les [preuves V82](../history/validation-new-game-v82.md). Le scénario et Cassandra sont explicitement partiels. Le parcours mondial complet ci-dessous reste une cible. [ROADMAP](../ROADMAP.md) conserve seule le calendrier ; le [contrat du départ](scenario-start.md) et l'[inventaire fonctionnel](../gameplay/implementation-status.md) distinguent contenu présent et absent.
+**V83, validée le 20 septembre 2026.** La configuration locale ajoute le choix du relief et la fiche du site effectivement transmis à la génération. Les [preuves V82](../history/validation-new-game-v82.md) établissent l'accueil et les chargements de la tranche précédente ; elles ne valident pas cette nouvelle génération. Le scénario et Cassandra sont explicitement partiels. Le parcours mondial complet ci-dessous reste une cible. [ROADMAP](../ROADMAP.md) conserve seule le calendrier ; le [contrat du départ](scenario-start.md) et l'[inventaire fonctionnel](../gameplay/implementation-status.md) distinguent contenu présent et absent.
 
-## Périmètre livré
+## Périmètre actuel
 
-| Partie | Comportement V82 et limite |
+| Partie | Comportement et limite |
 |---|---|
 | Accueil | Nouvelle partie et Charger actifs ; Tutoriel, Options, Mods et Crédits visibles/grisés. Reprendre apparaît quand une colonie existe. Aucune colonie générée au démarrage froid. |
 | Scénario | Atterrissage forcé seul choix actif, fiche « adaptation partielle » et fournitures réellement présentes. Les autres scénarios et l'éditeur sont indisponibles. |
 | Histoire | Cassandra présélectionnée et décrite comme partielle ; difficulté et mode restent vides jusqu'au choix explicite de Récit d'aventure et Rechargeable. Autres possibilités grisées. |
-| Préparer le départ | Graine numérique aléatoire et modifiable, bouton Aléatoire, carte 250², vallée tempérée avec rivière et trois profils fixes. Les pages planète/site/huit candidats ne sont pas simulées par des contrôles décoratifs. |
+| Préparer le départ | Graine numérique aléatoire et modifiable, bouton Aléatoire, carte 250². Site local en forêt tempérée, sans rivière ; choix effectif Plat / Petites collines / Grandes collines et deux ou trois roches dérivées de la graine. Trois personnes aux profils fixes. Les pages planète/huit candidats ne sont pas simulées par des contrôles décoratifs. |
 | Création/chargement | Opération exclusive, publication après acceptation worker, colonie ouverte en pause ; sauvegarde manuelle et colonie précédente restent deux emplacements distincts. Une erreur de format ne remplace pas la colonie active. |
-| Profil appliqué | Nouveau `crashlanded` et `gameProfile` révision 1 ; migration V81 neutre, anciennes provenances inchangées. Cible d'humeur +5, infection différée ×0,75 coloniale, tir ami 0,40 ; autres domaines de difficulté encore absents. |
+| Profil appliqué | Nouveau `crashlanded` révision 2 avec `site` révision 1 et `gameProfile` révision 1 ; les parties antérieures conservent cartes et provenances. Cible d'humeur +5, infection différée ×0,75 coloniale, tir ami 0,40 ; autres domaines de difficulté encore absents. |
+| Alertes de calendrier | Les boutons d’activation accueil/raids/canicules historiques restent cachés avec `gameProfile`, comme les refus du moteur. Ils restent proposés sur une ancienne partie non profilée dépourvue du calendrier concerné. |
 | Temps/événements | Débit nominal 6 ticks/s, jour de 16 min 40 s ; nouveau départ à 06 h civiles pour un temps écoulé nul. Raid introductif à J5,4 et fenêtres majeures ; accueil fixe/canicule garantie désactivés. Après J20, raids seuls et budget local partiel. |
 
 Les sections suivantes conservent les contrats de navigation, erreurs, accessibilité et extension du parcours. Contrôles du cycle complet, chargements historiques, clavier, présentation et mesures sont regroupés dans les preuves du lot. Les étapes monde/site/personnes complètes demeurent explicitement hors de cette tranche.
@@ -91,11 +92,23 @@ La structure cible continue par **monde → site → personnes → départ**, se
 
 Si une première livraison utilise encore la configuration locale existante, cette étape est nommée et expliquée comme telle ; elle ne prend pas la forme d'un faux globe interactif ou de huit candidats décoratifs. L'absence d'une page cible reste documentée. Les paramètres disponibles doivent tout de même être effectivement appliqués au départ.
 
+### Configuration locale V83
+
+La page **Préparer le départ** garde deux colonnes : graine et choix du relief à gauche, renseignements du site et récapitulatif de la colonie à droite. Les trois reliefs sont des boutons radio réellement reliés à la génération. **Petites collines** est la proposition initiale de Lisière, annoncée comme telle, et non un site prétendument imposé par RimWorld. Le jeu original fait choisir une tuile de monde valide, avec un choix aléatoire distinct ; notre carte locale ne simule pas ce globe.
+
+Le milieu reste **Forêt tempérée**, la carte **250×250** et l'hydrographie **Sans rivière**. Ce sont les limites visibles du départ pris en charge, pas des valeurs universelles de RimWorld. Il n'existe pas de contrôle actif pour changer de biome, inventer une rivière ou modifier une densité sans contrat de génération. Les massifs, filons et sols sont produits par le profil réellement sélectionné ; aucun quota de ressources n'est promis dans la fiche.
+
+Les deux ou trois **roches locales** sont calculées par le même `resolveSite(seed, options)` que l'usine de monde. Changer la graine actualise leur liste immédiatement, tout en conservant le relief choisi. Une graine invalide remplace ce renseignement par une invitation à corriger la saisie ; elle ne laisse pas croire que l'ancienne liste correspond à la valeur invalide. Retour conserve graine, relief, difficulté et mode. Recommencer explicitement une nouvelle création réinitialise ces choix et propose une nouvelle graine.
+
+Le lancement transmet `{seed, size, site: {hilliness}}` ; la simulation résout et persiste la provenance du site. Ce contexte reste une propriété de la colonie créée : charger une carte V82 ne lui applique ni le relief du formulaire, ni les nouveaux sols, ni une nouvelle géologie. La validation native V83 reprend un véritable checkpoint V82 compressé, en plus du camp V81 déjà utilisé, pour contrôler cette frontière sans fabriquer une ancienne version par simple changement de numéro.
+
+Référence : [enquête sur la génération](../research/map-calibration-reference.md), corpus HTML chapitres 5–7 et entrées `SYS-016` à `SYS-019`, `TEST-016` à `TEST-019`, `UI-005` via [reference-adoption](../research/reference-adoption.md). La cohérence monde/site et l'information utile au choix sont adoptées ; globe, rivières, grottes et ruines complètes restent différés selon ROADMAP. Les sources historiques de génération sont distinguées des classes locales 1.6.4871 et des observations individuelles.
+
 ## Retour, annulation et opérations asynchrones
 
 Le parcours de création possède un **brouillon distinct de la partie active et des sauvegardes**. Retour préserve les valeurs de ce brouillon. Revenir à l'accueil puis abandonner la création ne modifie aucune colonie. Une nouvelle création recommencée explicitement reçoit un nouveau brouillon ; conserver un brouillon volontairement doit être visible, pas implicite.
 
-Un changement de graine ou de monde invalide les choix qui en dépendent, notamment un site ancien. Cette invalidation est expliquée et ciblée ; elle ne conserve pas un site inexistant ni ne relance arbitrairement un candidat en parcourant les pages.
+Un changement de graine ou de monde invalide les choix qui en dépendent, notamment une tuile de monde ancienne quand le globe sera disponible. Dans la configuration locale V83, il recalcule les roches sans remettre le relief à zéro. Cette invalidation est expliquée et ciblée ; elle ne conserve pas un site inexistant ni ne relance arbitrairement un candidat en parcourant les pages.
 
 La génération expose un état occupé, désactive le double lancement et produit un résultat unique. Une erreur conserve les choix éditables et la partie précédente. Un résultat arrivé après abandon ou après le lancement d'une opération plus récente ne remplace rien. L'annulation n'a pas à interrompre un calcul dans une instruction particulière, mais elle doit empêcher sa publication tardive.
 
@@ -127,7 +140,7 @@ Au chargement réussi, afficher la colonie en pause afin que le joueur puisse s'
 ## Critères d'acceptation de la tranche en cours
 
 1. Démarrage froid : accueil utilisable, sans colonie qui avance ou remplace une sauvegarde ; Nouvelle partie et Charger ont de vraies destinations ; états vides et options grisées sont cohérents.
-2. Parcours réel au clic et au clavier : scénario → narrateur → configuration effectivement disponible → départ ; choix obligatoires, Retour, abandon et double clic. Le profil affiché correspond à celui reçu par la simulation.
+2. Parcours réel au clic et au clavier : scénario → narrateur → configuration effectivement disponible → départ ; choix obligatoires, relief non présélectionné, roches actualisées avec la graine, Retour, abandon et double clic. Le profil et le site affichés correspondent à ceux reçus par la simulation.
 3. Création réussie et génération refusée : ressources exactes du profil, provenance conservée, sauvegarde antérieure récupérable ; résultat tardif ignoré après abandon. Aucun monde créé deux fois.
 4. Chargement depuis accueil et depuis une partie : données actuelles et anciennes prises en charge, exactitude de la continuation, refus d'une donnée invalide/future, sauvegarde et récupération toujours distinctes. Pas de seconde dotation.
 5. Contrôle natif de la présentation et des états occupés, viewport étroit, focus et annonces d'erreur. Mesures ciblées démarrage/génération/préparation ; aucune suite de simulation complète relancée seulement pour un changement de couleur de menu.

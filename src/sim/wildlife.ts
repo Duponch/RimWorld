@@ -7,6 +7,7 @@ import { animalFoods,animalMealTarget,finishAnimalMeal } from './wildlife-food.t
 import { animalNavigation,moveAnimal } from './wildlife-navigation.ts';
 import { HARE,MAX_WILDLIFE,wildlifeRandom,type WildAnimal } from './wildlife-state.ts';
 import { isPlant } from './plants.ts';
+import { calendarTick } from './calendar.ts';
 import type { Cell,World } from './types.ts';
 const contact=(a:Cell,b:Cell)=>Math.abs(a.x-b.x)+Math.abs(a.z-b.z)<=1;
 const neighbours=(c:Cell):Cell[]=>[{x:c.x,z:c.z},{x:c.x-1,z:c.z},{x:c.x+1,z:c.z},{x:c.x,z:c.z-1},{x:c.x,z:c.z+1}];
@@ -46,7 +47,7 @@ export function advanceWildlife(world:World):void {
   const getNav=()=>nav??=animalNavigation(world);
   let physical:Uint8Array|undefined,shot:ReturnType<typeof captureWorldShotGrid>|undefined;
   const getPhysical=()=>physical??=blockedCells(world,true),getShot=()=>shot??=captureWorldShotGrid(world);
-  const hour=Math.floor(world.tick%6000/250),night=hour<7||hour>=22;
+  const hour=Math.floor(calendarTick(world)%6000/250),night=hour<7||hour>=22;
   // Rotate priority; at most one potentially map-wide search per tick.
   for(let i=0;i<s.animals.length;i++) {
     const a=s.animals[(world.tick+i)%s.animals.length]!;
