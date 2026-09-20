@@ -4,6 +4,8 @@ import { validDisturbance } from './disturbance-state.ts';
 import { validWeaponShape } from './equipment-save.ts';
 import { isPerishable,ROT_DAYS,rotAge } from './food-preservation.ts';
 import { validateMedicalRecord } from './injury-validation.ts';
+import { validFoodContamination } from './food-poisoning-save.ts';
+import { validFilthFeet } from './filth-save.ts';
 import { medicalStatus } from './injury-state.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
 import { validSkills } from './skills-save.ts';
@@ -33,6 +35,7 @@ function validAgenda(value:unknown,kind:VisitorKind,w:World):boolean {
     &&value.pending.every((t,i,array)=>integer(t,Math.max(start,w.tick+1),end)&&t%VISITOR_INTERVAL===0&&(!i||t-Number(array[i-1])>=rule.spacing));
 }
 function validArchivedPawn(value:unknown,w:World,tick:number):boolean {
+  if(object(value)&&value.filthFeet!==undefined){if(w.schemaVersion<89||!validFilthFeet(value.filthFeet))return false;const copy={...value};delete copy.filthFeet;value=copy;}
   if(!object(value)||!keys(value,['id','name','x','z','visitor','faction','medicalCare','skills','recreation','foodPolicyId','schedule','restZeroTicks','collapsePending','hunger','rest','mood','comfort','memories','orders','jobId','haul','cooking','need','bedId','needCooldown','state','priorities','path','moveCooldown','planCooldown','health','lastAttack','disturbance']))return false;
   if(!integer(value.id,1,w.nextId-1)||typeof value.name!=='string'||!value.name.trim()||value.name.length>48||!integer(value.x,0,w.width-1)||!integer(value.z,0,w.height-1)||!edge(value as unknown as Cell,w)
     ||value.faction!=='outlanders'||value.medicalCare!=='industrial'||value.state!=='idle'||!validVisitorShape(value,88,w)||!object(value.visitor)||value.visitor.phase!=='leaving'||value.visitor.goal!==null
@@ -40,19 +43,19 @@ function validArchivedPawn(value:unknown,w:World,tick:number):boolean {
     ||!Array.isArray(value.schedule)||value.schedule.length!==24||!value.schedule.every(v=>['anything','work','sleep','recreation'].includes(String(v)))
     ||!object(value.orders)||Object.keys(value.orders).length!==2||value.orders.active!==null||!Array.isArray(value.orders.queue)||value.orders.queue.length!==0
     ||!['jobId','haul','cooking','need','bedId'].every(k=>value[k]===null)||!Array.isArray(value.path)||value.path.length!==0||value.moveCooldown!==0||!integer(value.needCooldown,0)||!integer(value.planCooldown,0)
-    ||!object(value.priorities)||Object.keys(value.priorities).length!==15||!Object.keys(value.priorities).every(k=>['firefight','warden','basic','hunt','research','patient','bedrest','doctor','mine','gather','build','haul','grow','cook','craft'].includes(k))||!Object.values(value.priorities).every(v=>v===0))return false;
+    ||!object(value.priorities)||Object.keys(value.priorities).length!==(w.schemaVersion>=89&&value.priorities.clean!==undefined?16:15)||!Object.keys(value.priorities).every(k=>[...(w.schemaVersion>=89?['clean']:[]),'firefight','warden','basic','hunt','research','patient','bedrest','doctor','mine','gather','build','haul','grow','cook','craft'].includes(k))||!Object.values(value.priorities).every(v=>v===0))return false;
   const r=value.recreation;
   if(!object(r)||!keys(r,['level','tolerance','bored','task'])||!range(r.level,0,100)||r.task!==null||!object(r.tolerance)||!object(r.bored))return false;
   const tolerance=r.tolerance,bored=r.bored;
   if(Object.keys(tolerance).length!==2||Object.keys(bored).length!==2||!['solitary','dexterity'].every(k=>range(tolerance[k],0,100)&&typeof bored[k]==='boolean'))return false;
   if(!Array.isArray(value.memories)||value.memories.length>2||new Set(value.memories.map(m=>object(m)?m.kind:null)).size!==value.memories.length||!value.memories.every(m=>object(m)&&Object.keys(m).length===2&&['ate-without-table','ate-raw-food'].includes(String(m.kind))&&integer(m.expiresAt,tick+1,tick+TICKS_PER_DAY)))return false;
-  if(value.health!==undefined&&(validateMedicalRecord(value.health)!==null||!object(value.health)||!integer(value.health.tick,0,tick)||medicalStatus(value.health as unknown as NonNullable<World['pawns'][number]['health']>)!=='mobile'))return false;
+  if(value.health!==undefined&&(validateMedicalRecord(value.health,true,true,true,true,false,false,true,true,true,true,w.schemaVersion>=89)!==null||!object(value.health)||!integer(value.health.tick,0,tick)||medicalStatus(value.health as unknown as NonNullable<World['pawns'][number]['health']>)!=='mobile'))return false;
   if(!validDisturbance(value.disturbance,88,tick))return false;
   const a=value.lastAttack;if(a!==undefined&&(!object(a)||Object.keys(a).length!==2||!integer(a.targetId,1,w.nextId-1)||a.targetId===value.id||!integer(a.atCore,0,tick*10)))return false;
   return true;
 }
 function validExportedPile(value:unknown,pawnId:number,tick:number,w:World):value is MaterialPile {
-  if(!object(value)||!keys(value,['id','kind','item','quantity','owner','rot','apparel','weapon','damage'])||!integer(value.id,1,w.nextId-1)||typeof value.item!=='string'||!Object.hasOwn(ITEM_DEFINITIONS,value.item)||!object(value.owner)||Object.keys(value.owner).length!==2||!['inventory','apparel','equipment'].includes(String(value.owner.type))||value.owner.pawnId!==pawnId)return false;
+  if(!object(value)||!keys(value,['id','kind','item','quantity','owner','rot','apparel','weapon','damage',...(w.schemaVersion>=89?['foodPoison']:[])])||!integer(value.id,1,w.nextId-1)||typeof value.item!=='string'||!Object.hasOwn(ITEM_DEFINITIONS,value.item)||!validFoodContamination(value.foodPoison,value.item as keyof typeof ITEM_DEFINITIONS,w.schemaVersion>=89)||!object(value.owner)||Object.keys(value.owner).length!==2||!['inventory','apparel','equipment'].includes(String(value.owner.type))||value.owner.pawnId!==pawnId)return false;
   const def=ITEM_DEFINITIONS[value.item as keyof typeof ITEM_DEFINITIONS];
   if(value.kind!==def.kind||!integer(value.quantity,1,def.stackLimit)||!validApparelShape(value,88)||!validWeaponShape(value,88)||value.owner.type==='apparel'&&value.kind!=='apparel'||value.owner.type==='equipment'&&value.kind!=='weapon')return false;
   if(value.damage!==undefined&&(value.apparel!==undefined||value.weapon!==undefined||!integer(value.damage,1,pileMaxHp(value as unknown as MaterialPile)-1)))return false;

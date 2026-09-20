@@ -9,6 +9,7 @@ import { reconcileRoofSupport } from './roofing.ts';
 import { reconcilePower } from './power.ts';
 import { detachMissingBills } from './unfinished.ts';
 import { ensureFireState } from './fire-rules.ts';
+import { destroyHumanCorpse } from './human-corpses.ts';
 import { pileDamage,pileMaxHp,resourceMaxHp,structureMaxHp } from './thing-damage-rules.ts';
 import type { MaterialPile,Pawn,Resource,Structure,World } from './types.ts';
 export { pileDamage,pileMaxHp,resourceMaxHp,structureMaxHp,copyThingDamage,mergeThingDamage } from './thing-damage-rules.ts';
@@ -56,6 +57,14 @@ export function damagePile(world:World,pile:MaterialPile,amount:number):boolean 
   const max=pileMaxHp(pile);if(!max||!positive(amount)||!world.piles.includes(pile))return false;
   const damage=pileDamage(pile)+amount;
   if(damage<max){if(pile.apparel)pile.apparel.hitPoints=max-damage;else if(pile.weapon)pile.weapon.hitPoints=max-damage;else pile.damage=damage;return true;}
+  if(pile.humanCorpse){
+    if(!destroyHumanCorpse(world,pile))return false;
+    for(const p of world.pawns){
+      if(referencesPile(p,pile.id))interruptWork(world,p);
+      if(p.interruptedCargo&&!world.piles.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id)&&!world.packed.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id))delete p.interruptedCargo;
+    }
+    refreshStock(world);return true;
+  }
   const state=ensureFireState(world),loss=state.ledger.items[pile.item]??0;if(!addSafe(loss,pile.quantity))return false;
   // Retire the source before releasing consumers; releasing must not drop a burnt pile back onto the ground.
   world.piles=world.piles.filter(p=>p!==pile);

@@ -30,8 +30,8 @@ export function plantGrowthRate(light: number, temperature: number, fertility: n
   return clamp((light - .51) / .49) * heat * (.5 + fertility * .5);
 }
 export const plantFertility = (world: World, plant: Resource): number => {
-  const terrain = world.tiles[plant.z * world.width + plant.x]!.terrain;
-  return soilFertility(terrain);
+  const tile = world.tiles[plant.z * world.width + plant.x]!;
+  return tile.floor?0:soilFertility(tile.terrain);
 };
 export const plantResting = (tick: number): boolean => {
   const day = tick % TICKS_PER_DAY / TICKS_PER_DAY;

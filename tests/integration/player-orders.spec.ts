@@ -9,7 +9,7 @@ test('la priorité de chantier traverse coupe, dégagement, livraison et finitio
   const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);
   try {
     const fixture=createWorld(42,32,32);fixture.tick=2000;fixture.tiles=fixture.tiles.map(()=>({terrain:'grass'}));fixture.resources=[];fixture.piles=[];fixture.jobs=[];fixture.structures=[];fixture.stockpiles=[];fixture.pawns=fixture.pawns.slice(0,1);
-    const pawn=fixture.pawns[0]!;Object.assign(pawn,{x:12,z:16,hunger:100,rest:100});pawn.schedule.fill('anything');pawn.priorities={firefight:0,warden:0,basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,craft:2,mine:2,haul:0,build:1,gather:0,grow:0,cook:0};
+    const pawn=fixture.pawns[0]!;Object.assign(pawn,{x:12,z:16,hunger:100,rest:100});pawn.schedule.fill('anything');pawn.priorities={clean:0,firefight:0,warden:0,basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,craft:2,mine:2,haul:0,build:1,gather:0,grow:0,cook:0};
     fixture.resources.push({id:fixture.nextId++,kind:'tree',amount:12,x:18,z:14});
     for(const x of [18,22])expect(applyCommand(fixture,{type:'designate',kind:'bed',x,z:14}).ok).toBe(true);
     await page.addInitScript(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:serializeWorld(fixture)});
@@ -33,7 +33,7 @@ test('dégager un semis puis cuisiner par les menus, réserver ingrédients et p
   const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);
   try {
     const fixture=createWorld(42,32,32);fixture.tick=2000;fixture.tiles=fixture.tiles.map(()=>({terrain:'grass'}));fixture.resources=[];fixture.piles=[];fixture.jobs=[];fixture.structures=[];fixture.stockpiles=[];fixture.pawns=fixture.pawns.slice(0,1);
-    const pawn=fixture.pawns[0]!;Object.assign(pawn,{x:12,z:16,hunger:100,rest:100});pawn.schedule.fill('anything');pawn.priorities={firefight:0,warden:0,basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,craft:2,mine:2,haul:0,build:0,gather:0,grow:0,cook:0};
+    const pawn=fixture.pawns[0]!;Object.assign(pawn,{x:12,z:16,hunger:100,rest:100});pawn.schedule.fill('anything');pawn.priorities={clean:0,firefight:0,warden:0,basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,craft:2,mine:2,haul:0,build:0,gather:0,grow:0,cook:0};
     addGroundMaterial(fixture,'wood',10,{x:18,z:15},'wood');addGroundMaterial(fixture,'food',16,{x:13,z:15},'rice');addGroundMaterial(fixture,'food',4,{x:14,z:15},'berries');
     expect(applyCommand(fixture,{type:'area',action:'growing',from:{x:18,z:15},to:{x:18,z:15}}).ok).toBe(true);stepWorld(fixture,10);const sow=fixture.jobs.find(j=>j.kind==='sow')!;expect(sow).toBeDefined();
     const bill=newCookingBill(fixture.nextId++);bill.target=2;bill.destination='drop';const station={id:fixture.nextId++,kind:'campfire' as const,x:16,z:12,orientation:0 as const,footprint:'standard' as const,bills:[bill],fuel:{ticks:6000,burned:0,autoRefuel:false}};fixture.structures.push(station);pawn.priorities.cook=1;pawn.priorities.grow=1;
@@ -61,7 +61,7 @@ test('dégager une plante puis ravitailler un feu sans automatisme, reprendre la
   const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);
   try {
     const fixture=createWorld(42,32,32);fixture.tick=2000;fixture.tiles=fixture.tiles.map(()=>({terrain:'grass'}));fixture.resources=[];fixture.piles=[];fixture.jobs=[];fixture.structures=[];fixture.stockpiles=[];fixture.pawns=fixture.pawns.slice(0,1);
-    const pawn=fixture.pawns[0]!;Object.assign(pawn,{x:12,z:16,hunger:100,rest:100});pawn.schedule.fill('anything');pawn.priorities={firefight:0,warden:0,basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,craft:2,mine:2,haul:1,build:1,gather:0,grow:0,cook:0};
+    const pawn=fixture.pawns[0]!;Object.assign(pawn,{x:12,z:16,hunger:100,rest:100});pawn.schedule.fill('anything');pawn.priorities={clean:0,firefight:0,warden:0,basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,craft:2,mine:2,haul:1,build:1,gather:0,grow:0,cook:0};
     fixture.resources.push({id:fixture.nextId++,kind:'tree',amount:12,x:18,z:14});
     expect(applyCommand(fixture,{type:'designate',kind:'wall',x:18,z:14}).ok).toBe(true);const job=fixture.jobs[0]!;
     const fire={id:fixture.nextId++,kind:'campfire' as const,x:16,z:12,orientation:0 as const,footprint:'standard' as const,bills:[],fuel:{ticks:9000,burned:0,autoRefuel:false}};fixture.structures.push(fire);
@@ -93,7 +93,7 @@ test('sélection de groupe, deux projections, menu et file de travail par la vra
   const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);
   try {
     const fixture=createWorld(42,32,32);fixture.tick=2000;fixture.tiles=fixture.tiles.map(()=>({terrain:'grass'}));fixture.resources=[];fixture.piles=[];fixture.jobs=[];fixture.structures=[];
-    fixture.pawns.forEach((p,i)=>{Object.assign(p,{x:12+i*3,z:16,hunger:100,rest:100});p.schedule.fill('anything');p.priorities={firefight:0,warden:0,basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,craft:2,mine:2,gather:i===0?1:0,build:0,haul:0,grow:0,cook:0};});
+    fixture.pawns.forEach((p,i)=>{Object.assign(p,{x:12+i*3,z:16,hunger:100,rest:100});p.schedule.fill('anything');p.priorities={clean:0,firefight:0,warden:0,basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,craft:2,mine:2,gather:i===0?1:0,build:0,haul:0,grow:0,cook:0};});
     for(const x of [12,17,21]){fixture.resources.push({id:fixture.nextId++,kind:'tree',amount:12,x,z:12});expect(applyCommand(fixture,{type:'designate',kind:'chop',x,z:12}).ok).toBe(true);}
     refreshStock(fixture);
     await page.addInitScript(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:serializeWorld(fixture)});
@@ -146,7 +146,7 @@ test('livrer un chantier puis ranger une pile via les menus, file réservée, re
   const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);
   try {
     const fixture=createWorld(42,32,32);fixture.tick=2000;fixture.tiles=fixture.tiles.map(()=>({terrain:'grass'}));fixture.resources=[];fixture.piles=[];fixture.jobs=[];fixture.structures=[];fixture.stockpiles=[];fixture.pawns=fixture.pawns.slice(0,1);
-    const pawn=fixture.pawns[0]!;Object.assign(pawn,{x:12,z:16,hunger:100,rest:100});pawn.schedule.fill('anything');pawn.priorities={firefight:0,warden:0,basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,craft:2,mine:2,haul:1,build:0,gather:0,grow:0,cook:0};
+    const pawn=fixture.pawns[0]!;Object.assign(pawn,{x:12,z:16,hunger:100,rest:100});pawn.schedule.fill('anything');pawn.priorities={clean:0,firefight:0,warden:0,basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,craft:2,mine:2,haul:1,build:0,gather:0,grow:0,cook:0};
     expect(applyCommand(fixture,{type:'designate',kind:'wall',x:18,z:14}).ok).toBe(true);
     expect(applyCommand(fixture,{type:'stockpile',x:16,z:18,enabled:true,filters:{wood:false,food:true},priority:2,capacity:20}).ok).toBe(true);
     addGroundMaterial(fixture,'wood',5,{x:13,z:16},'wood');addGroundMaterial(fixture,'food',10,{x:14,z:16},'rice');const rice=fixture.piles.find(p=>p.item==='rice')!;

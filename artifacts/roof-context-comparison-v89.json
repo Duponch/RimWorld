@@ -1,0 +1,113 @@
+{
+  "protocol": "roof-context-v89",
+  "baselineCommit": "f06dd61",
+  "change": "Lazy allocation of roof support mask and traversal buffer; identical simulation rules",
+  "method": "600 successive local ticks from the frozen published V88 colony; fresh process for each run; alternating base/candidate then candidate/base; no native or long pilot at the same time",
+  "runs": [
+    {
+      "windows": [
+        {
+          "phase": "measurement",
+          "start": 51038874270,
+          "end": 51039765898
+        }
+      ],
+      "source": "base",
+      "label": "base-3",
+      "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+      "node": "v24.11.1",
+      "start": 956959,
+      "end": 957559,
+      "actors": 40,
+      "living": 4,
+      "animals": 11,
+      "initial": "7b5e5911bf86cccdbc7ba4b32ed067ebc1a165ff9ee319521814b9b0f6d57da2",
+      "final": "6075d04b31d998b63571035d7b69afd840c711e989d1873800f0bb01ae06b006",
+      "errors": [],
+      "total": 890.301900000003,
+      "p50": 1.1411000000000513,
+      "p95": 2.3671999999999116,
+      "p99": 4.274900000000002,
+      "max": 54.17139999999995
+    },
+    {
+      "windows": [
+        {
+          "phase": "measurement",
+          "start": 51040751647,
+          "end": 51041575291
+        }
+      ],
+      "source": "candidate",
+      "label": "candidate-2",
+      "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+      "node": "v24.11.1",
+      "start": 956959,
+      "end": 957559,
+      "actors": 40,
+      "living": 4,
+      "animals": 11,
+      "initial": "7b5e5911bf86cccdbc7ba4b32ed067ebc1a165ff9ee319521814b9b0f6d57da2",
+      "final": "6075d04b31d998b63571035d7b69afd840c711e989d1873800f0bb01ae06b006",
+      "errors": [],
+      "total": 822.3455999999975,
+      "p50": 1.0635999999999513,
+      "p95": 2.2841999999999416,
+      "p99": 4.19500000000005,
+      "max": 52.83230000000003
+    },
+    {
+      "windows": [
+        {
+          "phase": "measurement",
+          "start": 51042600314,
+          "end": 51043436221
+        }
+      ],
+      "source": "candidate",
+      "label": "candidate-3",
+      "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+      "node": "v24.11.1",
+      "start": 956959,
+      "end": 957559,
+      "actors": 40,
+      "living": 4,
+      "animals": 11,
+      "initial": "7b5e5911bf86cccdbc7ba4b32ed067ebc1a165ff9ee319521814b9b0f6d57da2",
+      "final": "6075d04b31d998b63571035d7b69afd840c711e989d1873800f0bb01ae06b006",
+      "errors": [],
+      "total": 834.6058999999985,
+      "p50": 1.0830000000000837,
+      "p95": 2.344600000000014,
+      "p99": 4.121399999999994,
+      "max": 53.674400000000105
+    },
+    {
+      "windows": [
+        {
+          "phase": "measurement",
+          "start": 51044377729,
+          "end": 51045264542
+        }
+      ],
+      "source": "base",
+      "label": "base-4",
+      "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+      "node": "v24.11.1",
+      "start": 956959,
+      "end": 957559,
+      "actors": 40,
+      "living": 4,
+      "animals": 11,
+      "initial": "7b5e5911bf86cccdbc7ba4b32ed067ebc1a165ff9ee319521814b9b0f6d57da2",
+      "final": "6075d04b31d998b63571035d7b69afd840c711e989d1873800f0bb01ae06b006",
+      "errors": [],
+      "total": 885.4685999999982,
+      "p50": 1.1387999999999465,
+      "p95": 2.2769000000000688,
+      "p99": 4.132900000000063,
+      "max": 53.451599999999985
+    }
+  ],
+  "limits": "Short isolated CPU comparison; not a browser speed guarantee. Earlier runs during development were noisy and retained in tmp."
+}

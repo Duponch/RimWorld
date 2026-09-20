@@ -3,6 +3,8 @@ import type { Command, World } from '../sim/types';
 
 type ProjectCard = { id: ResearchProject; prefix: string; title: string; cost: number; detail: string; progress: (w: World) => ResearchProgress | undefined };
 const projects: readonly ProjectCard[] = [
+  {id:'stonecutting',prefix:'stonecutting',title:'Taille de pierre',cost:300,detail:'Débloque les dallages en pierre. Quatre blocs par case ; Construction 3.',progress:w=>w.research?.stonecutting},
+  {id:'smithing',prefix:'smithing',title:'Forge',cost:700,detail:'Débloque le dallage en acier. Sept aciers par case ; Construction 3.',progress:w=>w.research?.smithing},
   {id:'batteries', prefix:'battery', title:'Batteries', cost:400, detail:'Stocker le surplus du réseau pour alimenter les appareils après le coucher du soleil. Batterie : 70 acier + 2 composants.', progress:w=>w.research?.batteries},
   {id:'solar-power', prefix:'solar', title:'Panneaux solaires', cost:600, detail:'Produire jusqu’à 1 700 W selon la lumière naturelle et la surface sans toit. Panneau : 100 acier + 3 composants ; Construction 6.', progress:w=>w.research?.solarPower},
   {id:'air-conditioning', prefix:'air', title:'Climatisation', cost:500, detail:'Débloque le climatiseur (90 acier + 3 composants).', progress:w=>w.research?.airConditioning},
@@ -32,7 +34,7 @@ export function updateResearchPanel(root: HTMLElement, world: World, send: (comm
   }
   root.querySelector<HTMLButtonElement>('[data-research-pause]')!.disabled=!world.research?.project;
   root.querySelector('[data-research-help]')!.textContent=projects.every(p=>researchUnlocked(world,p.id))
-    ? 'Les quatre projets disponibles sont acquis. Les autres technologies restent à développer.'
+    ? 'Les six projets disponibles sont acquis. Les autres technologies restent à développer.'
     : 'Construisez un bureau de recherche simple dans Architecte → Production, puis affectez un colon dans Travail. Plusieurs bureaux contribuent au même projet. Batteries et panneaux solaires sont deux recherches indépendantes ; les bases de l’électricité sont disponibles dans ce scénario.';
   const workers=world.pawns.filter(p=>p.research).map(p=>`${p.name} · Intellect ${intellectualSkill(p).level} · ${p.state==='working'?'au bureau':'en chemin'}`);
   root.querySelector('[data-research-workers]')!.textContent=workers.join(' ; ')||`${world.structures.filter(s=>s.kind==='research-bench').length} bureau(x) construit(s) · aucun chercheur au travail.`;

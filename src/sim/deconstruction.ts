@@ -4,6 +4,7 @@ import { ITEM_DEFINITIONS, type ItemId } from './items.ts';
 import { deconstructionAvailable, deconstructionTarget } from './deconstruction-rules.ts';
 import { groundPile, groundCapacity, planGroundPlacement } from './ground-placement.ts';
 import { addMaterial } from './materials.ts';
+import { planGraveRelease,commitGraveRelease } from './burial.ts';
 import type { Job, Pawn, World } from './types.ts';
 
 /** Preview the random rounding without changing authoritative RNG. Only a
@@ -16,6 +17,10 @@ export function finishDeconstruction(world: World, pawn: Pawn, job: Job): boolea
   // The preview owns piles and escrow: planning several ingredient refunds must
   // neither mutate live stacks nor promise one ground cell to incompatible items.
   const view = { ...world, structures, jobs: jobs.map(j => ({ ...j, escrow: { ...j.escrow } })), piles: world.piles.map(p => ({ ...p, owner: { ...p.owner } })) };
+  const graveRelease=planGraveRelease(view,structure);if(!graveRelease)return false;
+  // Occupy the preview cell before planning any other restitution. The same
+  // body identity will be moved there only after all preflights succeed.
+  if(graveRelease.corpseId!==null)view.piles.find(p=>p.id===graveRelease.corpseId)!.owner={type:'ground',...graveRelease.cell!};
   const refunds: { item: ItemId; quantity: number; cell: { x:number; z:number } }[] = [];
   let rng = world.rng, lostWood = 0, lostSteel = 0, lostComponents=0;
   const lostBlocks:Partial<Record<BlockMaterial,number>>={...world.deconstructed.lostBlocks};
@@ -42,6 +47,7 @@ export function finishDeconstruction(world: World, pawn: Pawn, job: Job): boolea
   const fuelTicks = structure.fuel ? structure.fuel.ticks + structure.fuel.burned : 0;
   const ledger = world.deconstructed;
   if (![(ledger.lostComponents??0)+lostComponents, ledger.count + 1, ledger.lostWood + lostWood, (ledger.lostSteel ?? 0) + lostSteel, ledger.fuelTicks + fuelTicks,...Object.values(lostBlocks)].every(Number.isSafeInteger)) return false;
+  if(!commitGraveRelease(world,structure,graveRelease))return false;
   world.structures = structures; world.jobs = jobs; world.rng = rng;
   for (const d of refunds) addMaterial(world, ITEM_DEFINITIONS[d.item].kind, d.quantity, { type: 'ground', ...d.cell }, d.item);
   ledger.count++; ledger.lostWood += lostWood; ledger.fuelTicks += fuelTicks;

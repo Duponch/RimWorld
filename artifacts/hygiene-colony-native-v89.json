@@ -1,0 +1,14 @@
+{
+  "version": 89,
+  "controlled": false,
+  "source": "tests/fixtures/colony-v89.json.gz",
+  "sha256": "fb4d5e4ff02fd0d9d70bf0ede30dff0991e4556d31a8b2738ae67eee6c555458",
+  "initialTick": 969414,
+  "status": "passed",
+  "finalTick": 969475,
+  "continuedTicks": 61,
+  "colonists": 4,
+  "floors": 9,
+  "cleaned": 12,
+  "errors": []
+}

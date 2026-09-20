@@ -3,6 +3,8 @@ import { consumeCookingFuel } from './fuel.ts';
 import { applyCookingHeat } from './thermal-sources.ts';
 import { corpseFresh } from './corpses.ts';
 import { finishButchery } from './butchery.ts';
+import { foodPoisonFromRecipe } from './food-poisoning.ts';
+import { roomCleanliness } from './filth.ts';
 import { cookingSpeed,butcherySpeed,completedCookingSkill } from './cooking-statistics.ts';
 import { beginUnfinished } from './unfinished.ts';
 import { craftingQuality,craftingSkill } from './crafting-quality.ts';
@@ -80,11 +82,13 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   const potato=task.ingredients.filter(i=>i.item==='potato').reduce((n,i)=>n+i.quantity,0),corn=task.ingredients.filter(i=>i.item==='corn').reduce((n,i)=>n+i.quantity,0);
   if(isTailoring(task.recipe)&&!Number.isSafeInteger((world.tailoring?.completed??0)+1))return;
   const random={rng:world.rng},apparel=isTailoring(task.recipe)?{...newApparelState(task.recipe==='shirt'?'cloth-shirt':'cloth-tribalwear'),quality:craftingQuality(craftingSkill(pawn).level,()=>healthRandom(random))}:undefined;
+  const foodPoison=world.schemaVersion>=89&&culinary?foodPoisonFromRecipe(roomCleanliness(world,pawn),(pawn.skills.cooking?.level??0),()=>healthRandom(random)):undefined;
   // All preconditions succeeded. Consume once, create once, then store physically.
   for(const [id,quantity] of used)world.piles.find(p=>p.id===id)!.quantity-=quantity;
   world.piles=world.piles.filter(p=>p.quantity>0);
-  const id=world.nextId++;world.piles.push({id,item,kind:ITEM_DEFINITIONS[item].kind,quantity:recipe.outputUnits,owner:{type:'pawn',pawnId:pawn.id},...freshRot(item,world.tick),...apparel?{apparel}:{}});
-  if(apparel){world.rng=random.rng;(world.tailoring??={completed:0,cancelled:0,lostCloth:0}).completed++;}
+  const id=world.nextId++;world.piles.push({id,item,kind:ITEM_DEFINITIONS[item].kind,quantity:recipe.outputUnits,owner:{type:'pawn',pawnId:pawn.id},...freshRot(item,world.tick),...(foodPoison?{foodPoison}:{}),...apparel?{apparel}:{}});
+  world.rng=random.rng;
+  if(apparel){(world.tailoring??={completed:0,cancelled:0,lostCloth:0}).completed++;}
   task.ingredients=[];task.productId=id;task.phase='output';task.progress=0;if(culinary)pawn.skills.cooking=completedCookingSkill(pawn,task.workTicks??0);delete task.workTicks;pawn.planCooldown=0;
   if(bill.mode==='times')bill.target=Math.max(0,bill.target-1);
   context.event(isTailoring(task.recipe)?`${pawn.name} a fabriqué : ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:task.recipe==='stone-blocks'?`${pawn.name} a taillé 20 ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:`${pawn.name} a cuisiné 1 repas simple (${10-rice-meat-potato-corn} baies, ${rice} riz${meat?`, ${meat} viande`:''}${potato?`, ${potato} pommes de terre`:''}${corn?`, ${corn} maïs`:''}).`);

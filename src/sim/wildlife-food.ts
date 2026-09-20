@@ -1,4 +1,5 @@
 import type { Cell,Resource,World } from './types.ts';
+import { ingestFoodRisk } from './food-hygiene.ts';
 import type { WildAnimal } from './wildlife-state.ts';
 import { HARE } from './wildlife-state.ts';
 import { isPlant,plantGrowth } from './plants.ts';
@@ -35,7 +36,7 @@ export function animalMealTarget(world:World,a:WildAnimal):Cell|undefined {
 }
 /** Called only after physical contact and the complete ingestion interval. */
 export function finishAnimalMeal(world:World,a:WildAnimal):void {
-  const s=world.wildlife!,m=a.meal!;let nutrition=0;
+  const s=world.wildlife!,m=a.meal!,ingested=m.kind==='pile'?world.piles.find(p=>p.id===m.id):undefined;let nutrition=0;
   if(m.kind==='plant') {
     const r=world.resources.find(r=>r.id===m.id)!;if(!isPlant(r))return;
     const growth=plantGrowth(world,r),perPlant=plantNutrition[r.kind];nutrition=Math.min(HARE.nutrition-a.food,growth*perPlant);
@@ -50,4 +51,5 @@ export function finishAnimalMeal(world:World,a:WildAnimal):void {
   }
   a.food=Math.min(HARE.nutrition,a.food+nutrition);s.eatenNutrition+=nutrition;
   delete a.meal;a.state='idle';a.nextDecision=world.tick;
+  if(ingested)ingestFoodRisk(world,a,ingested,false);
 }

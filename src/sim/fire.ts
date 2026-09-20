@@ -10,6 +10,8 @@ import { batteryWattDays,drainBatteryWattDays } from './power-battery.ts';
 import { attachFireChance,ensureFireState,fireRandom,fireRound,fireDamage,fireSpreadInterval,firePosition,groundFire,FIRE_COMPLEX_CORE,FIRE_MIN_SIZE,FIRE_MAX_SIZE,FIRE_PULSE_CORE,type FireRecord } from './fire-rules.ts';
 import type { Cell,World } from './types.ts';
 import type { ThermalLayout } from './thermal-topology.ts';
+import { burnFloor } from './flooring.ts';
+import { addFilth } from './filth.ts';
 export { fireDanger,fireNavigationPenalty,isBurning } from './fire-rules.ts';
 
 const NEAR:readonly (readonly [number,number])[]=[[0,-1],[1,0],[0,1],[-1,0],[1,-1],[1,1],[-1,1],[-1,-1]];
@@ -19,7 +21,7 @@ const same=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
 /** Damage/interruption can drop an existing item without replacing its array. */
 function watchOwners(w:World,ids:Set<number>):()=>boolean {
   if(!ids.size)return ()=>false;
-  const piles=w.piles.filter(p=>p.owner.type!=='ground'&&p.owner.type!=='job'&&ids.has(p.owner.pawnId)).map(item=>({item,owner:item.owner}));
+  const piles=w.piles.filter(p=>p.owner.type!=='ground'&&p.owner.type!=='job'&&p.owner.type!=='grave'&&ids.has(p.owner.pawnId)).map(item=>({item,owner:item.owner}));
   const packs=w.packed.filter(p=>p.owner.type==='pawn'&&ids.has(p.owner.pawnId)).map(item=>({item,owner:item.owner}));
   const pileCount=w.piles.length,packCount=w.packed.length;
   return ()=>w.piles.length!==pileCount||w.packed.length!==packCount||piles.some(p=>p.item.owner!==p.owner)||packs.some(p=>p.item.owner!==p.owner);
@@ -75,12 +77,15 @@ function heat(w:World,c:Cell,amount:number,layout:ThermalLayout):void {
   const id=layout.indices[c.z*w.width+c.x]??-1;if(id<0)return;const room=w.thermal?.regions[id];if(room)room.temperature=Math.min(1000,room.temperature+amount/room.cells.length);
 }
 function applyDamage(w:World,target:FireTarget,amount:number,core:number):void {
+  const cells=target.kind==='structure'?footprintCells(target.value):target.kind==='resource'?[{x:target.value.x,z:target.value.z}]:target.value.owner.type==='ground'?[{x:target.value.owner.x,z:target.value.owner.z}]:[];
   if(target.kind==='resource')damageResource(w,target.value,amount);
   else if(target.kind==='pile')damagePile(w,target.value,amount);
   else {
     const s=target.value,state=ensureFireState(w);damageStructure(w,s,fireRound(amount*Math.max(.05,structureFlammability(s)),()=>fireRandom(state)));
     if(s.kind==='battery'&&w.structures.includes(s)&&!state.batteryWicks.some(w=>w.structureId===s.id)&&fireRandom(state)<.05&&!!s.battery&&batteryWattDays(s.battery)>500)state.batteryWicks.push({structureId:s.id,endCore:core+70+Math.floor(fireRandom(state)*80)});
   }
+  const destroyed=target.kind==='resource'?!w.resources.includes(target.value):target.kind==='pile'?!w.piles.includes(target.value):!w.structures.includes(target.value)&&!w.packed.some(p=>p.building===target.value);
+  if(destroyed)for(const cell of cells)addFilth(w,cell,'ash');
 }
 /** Small Flame blast for lightning and the battery's verified burning fuse.
  * No bomb, blast wave, wall-breaking radius expansion or general explosion API. */
@@ -121,6 +126,7 @@ export function advanceFires(w:World,weather:{rainRate:number},initialLayout:The
   for(const f of [...state.items])while(state.items.includes(f)&&f.nextPulseCore<=now){
     const core=f.nextPulseCore;f.nextPulseCore+=FIRE_PULSE_CORE;f.complexCore+=FIRE_PULSE_CORE;if(f.size>1)f.spreadCore+=FIRE_PULSE_CORE;
     const pos=firePosition(w,f);if(!pos){removeFire(w,f);break;}f.x=pos.x;f.z=pos.z;
+    if(groundFire(f)&&core-f.bornCore>=7500&&view().floorFuel(pos)>0)burnFloor(w,pos);
     if(f.size>1&&f.spreadCore>=fireSpreadInterval(f.size)){
       f.spreadCore=0;const near=fireRandom(state)<.8,offsets=near?NEAR:FAR,[dx,dz]=offsets[Math.floor(fireRandom(state)*offsets.length)]!,to={x:pos.x+dx,z:pos.z+dz};
       if(view().inside(to)&&fireRandom(state)<view().chance(to)){

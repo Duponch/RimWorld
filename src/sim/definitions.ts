@@ -11,9 +11,10 @@ export const MATERIAL_DEFINITIONS = Object.freeze({
   wood: Object.freeze({ id: 'wood', label: 'Bois', unit: 'unit', stackLimit: MAX_STACK }),
   food: Object.freeze({ id: 'food', label: 'Nourriture', unit: 'portion', stackLimit: MAX_STACK, chairSearchRadius: 32, tableDesired: true }),
 });
-export const JOB_DURATION: Readonly<Record<JobKind, number>> = Object.freeze({ heater:100, 'wind-turbine':330, flick:15, 'power-conduit':3.5, 'power-switch':20, battery:80, 'solar-generator':250, 'fueled-stove':200, 'electric-stove':200, 'butcher-table':200, 'butcher-spot':0, cooler:160, 'research-bench':280,'tailor-bench':200,'crafting-spot':0, repair:80, 'wood-generator':250, 'standing-lamp':30, 'passive-cooler':20, 'build-roof':4, 'remove-roof':4, door:60, stonecutter:200, mine:10, uninstall:12, install:1, deconstruct: 1, chop: 100, harvest: 60, cut: 60, sow: 17, horseshoes: 7, campfire: 20, wall: 70, bed: 120, table: 53, stool: 32 });
-export const JOB_WOOD_COST: Readonly<Record<JobKind, number>> = Object.freeze({ heater:0, 'wind-turbine':0, flick:0, 'power-conduit':0, 'power-switch':0, battery:0, 'solar-generator':0, 'fueled-stove':0, 'electric-stove':0, 'butcher-table':95, 'butcher-spot':0, cooler:0, 'research-bench':0,'tailor-bench':0,'crafting-spot':0, repair:0, 'wood-generator':0, 'standing-lamp':0, 'passive-cooler':50, 'build-roof':0, 'remove-roof':0, door:25, stonecutter:0, mine:0, uninstall:0, install:0, deconstruct: 0, chop: 0, harvest: 0, cut: 0, sow: 0, horseshoes: 10, campfire: 20, wall: 5, bed: 8, table: 28, stool: 25 });
+export const JOB_DURATION: Readonly<Record<JobKind, number>> = Object.freeze({ grave:80, 'lay-floor':1, 'remove-floor':1, heater:100, 'wind-turbine':330, flick:15, 'power-conduit':3.5, 'power-switch':20, battery:80, 'solar-generator':250, 'fueled-stove':200, 'electric-stove':200, 'butcher-table':200, 'butcher-spot':0, cooler:160, 'research-bench':280,'tailor-bench':200,'crafting-spot':0, repair:80, 'wood-generator':250, 'standing-lamp':30, 'passive-cooler':20, 'build-roof':4, 'remove-roof':4, door:60, stonecutter:200, mine:10, uninstall:12, install:1, deconstruct: 1, chop: 100, harvest: 60, cut: 60, sow: 17, horseshoes: 7, campfire: 20, wall: 70, bed: 120, table: 53, stool: 32 });
+export const JOB_WOOD_COST: Readonly<Record<JobKind, number>> = Object.freeze({ grave:0, 'lay-floor':0, 'remove-floor':0, heater:0, 'wind-turbine':0, flick:0, 'power-conduit':0, 'power-switch':0, battery:0, 'solar-generator':0, 'fueled-stove':0, 'electric-stove':0, 'butcher-table':95, 'butcher-spot':0, cooler:0, 'research-bench':0,'tailor-bench':0,'crafting-spot':0, repair:0, 'wood-generator':0, 'standing-lamp':0, 'passive-cooler':50, 'build-roof':0, 'remove-roof':0, door:25, stonecutter:0, mine:0, uninstall:0, install:0, deconstruct: 0, chop: 0, harvest: 0, cut: 0, sow: 0, horseshoes: 10, campfire: 20, wall: 5, bed: 8, table: 28, stool: 25 });
 export const STRUCTURE_DEFINITIONS = Object.freeze({
+  grave:Object.freeze({id:'grave',width:1,depth:2,blocksMovement:false}),
   heater:Object.freeze({id:'heater',width:1,depth:1,blocksMovement:false}),
   'wind-turbine':Object.freeze({id:'wind-turbine',width:7,depth:2,blocksMovement:false}),
   'power-conduit':Object.freeze({id:'power-conduit',width:1,depth:1,blocksMovement:false}),
@@ -61,7 +62,7 @@ export function footprintContains(entity: FootprintEntity, cell: Cell): boolean 
     const d=FOOTPRINT_DIRECTIONS[((entity.orientation??0)+1)%4]!;
     return dx===d[0]&&dz===d[1]||dx===-d[0]&&dz===-d[1];
   }
-  if((kind!=='bed'&&kind!=='table'&&kind!=='battery')||entity.footprint==='legacy-single')return false;
+  if((kind!=='bed'&&kind!=='table'&&kind!=='battery'&&kind!=='grave')||entity.footprint==='legacy-single')return false;
   const direction=FOOTPRINT_DIRECTIONS[entity.orientation??0]!;
   return dx===direction[0]&&dz===direction[1];
 }
@@ -76,7 +77,7 @@ export function footprintCells(entity: FootprintEntity): Cell[] {
     const d=FOOTPRINT_DIRECTIONS[((entity.orientation??0)+1)%4]!;
     return [...cells,{x:entity.x-d[0],z:entity.z-d[1]},{x:entity.x+d[0],z:entity.z+d[1]}];
   }
-  if ((kind !== 'bed' && kind !== 'table' && kind !== 'battery') || entity.footprint === 'legacy-single') return cells;
+  if ((kind !== 'bed' && kind !== 'table' && kind !== 'battery' && kind !== 'grave') || entity.footprint === 'legacy-single') return cells;
   const direction = FOOTPRINT_DIRECTIONS[entity.orientation ?? 0]!;
   cells.push({ x: entity.x + direction[0]!, z: entity.z + direction[1]! });
   return cells;

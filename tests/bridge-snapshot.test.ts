@@ -9,6 +9,17 @@ import { PresentationQueue } from '../src/render/PresentationQueue';
 import { PawnLayer } from '../src/render/PawnLayer';
 import { miningCamp } from './scenarios/mining';
 
+test('floor placement, burning and removal cross worker deltas without mutating older frames',()=>{
+  const source=createWorld(42,32,32),encoder=new SnapshotEncoder(),decoder=new SnapshotDecoder(),index=100;
+  source.tiles[index]={terrain:'soil'};
+  const send=()=>{const m=structuredClone(encoder.encode(source,.2,6));const r=decoder.adopt(m);expect(r.status).toBe('applied');if(r.status!=='applied')throw Error('snapshot');expect(r.world).toEqual(source);return r.world;};
+  const initial=send();source.tiles[index]!.floor='wood-planks';const built=send();
+  expect(initial.tiles[index]!.floor).toBeUndefined();source.tiles[index]!.floor='burned-wood';send();expect(built.tiles[index]!.floor).toBe('wood-planks');
+  delete source.tiles[index]!.floor;const message=structuredClone(encoder.encode(source,.2,6));expect(message.kind).toBe('delta');
+  if(message.kind!=='delta')throw Error('delta');const invalid=structuredClone(message);invalid.tiles![0]![5]='bogus' as never;expect(decoder.adopt(invalid).status).toBe('resync');
+  const result=decoder.adopt(message);expect(result.status).toBe('applied');if(result.status==='applied')expect(result.world).toEqual(source);
+});
+
 test('snapshots preserve exact state and previous frames through harvest, patches, replacement and recovery', () => {
   const encoder = new SnapshotEncoder(); const decoder = new SnapshotDecoder();
   let source = createWorld(42, 32, 32);

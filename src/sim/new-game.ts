@@ -13,7 +13,7 @@ import { validMapDimension } from './map-config.ts';
 import { addMaterial } from './materials.ts';
 import { blockedCells } from './pathfinding.ts';
 import { enableRaids } from './raids.ts';
-import { AIR_CONDITIONING_COST,CLOTHING_RESEARCH_COST } from './research.ts';
+import { AIR_CONDITIONING_COST,CLOTHING_RESEARCH_COST,STONECUTTING_RESEARCH_COST } from './research.ts';
 import { DEFAULT_SCENARIO,isScenarioId,SCENARIOS,SCENARIO_REVISION,type ScenarioId } from './scenario-definitions.ts';
 import { startingPawn } from './starting-pawns.ts';
 import { initializeCampTraits } from './traits.ts';
@@ -98,11 +98,11 @@ export function createScenarioWorld(seed:number,size:number,id:ScenarioId=DEFAUL
   if(id==='sentry')setupEncounter(world);
   else {
     initializeCampTraits(world);
-    if(id==='crashlanded'){world.gameProfile=crashlandedProfile();enableCassandraRaids(world);}
+    if(id==='crashlanded'){world.gameProfile=crashlandedProfile();world.research!.stonecutting={points:STONECUTTING_RESEARCH_COST,completedAt:0};enableCassandraRaids(world);}
     else {enableArrivals(world);enableRaids(world);enableHeatwaves(world);}
     if(natural)enableWildlife(world,undefined,'natural');else enableWildlife(world);
   }
-  world.scenario={id,revision:site?3:SCENARIO_REVISION,landing};
+  world.scenario={id,revision:site?4:SCENARIO_REVISION,landing};
   if(natural)adoptEnvironment(world);
   if(id==='crashlanded')enableVisitors(world,true);
   return world;

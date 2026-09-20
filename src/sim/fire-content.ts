@@ -1,6 +1,7 @@
 import { footprintCells } from './definitions.ts';
 import { structureFlammability,pileFlammability,resourceFlammability } from './thing-damage-rules.ts';
 import { firePosition } from './fire-rules.ts';
+import { FLOOR_DEFINITIONS } from './flooring.ts';
 import type { Cell,MaterialPile,Resource,Structure,World } from './types.ts';
 export type FireTarget={kind:'structure';value:Structure}|{kind:'pile';value:MaterialPile}|{kind:'resource';value:Resource};
 const index=(world:World,c:Cell)=>c.z*world.width+c.x;
@@ -31,7 +32,8 @@ export class FireContent {
     if(!this.inside(c)||this.world.fires?.items.some(f=>firePosition(this.world,f)?.x===c.x&&firePosition(this.world,f)?.z===c.z))return 0;
     return this.fuel(c);
   }
-  fuel(c:Cell):number{return this.targets(c).reduce((max,t)=>Math.max(max,targetFlammability(t)),0);}
+  floorFuel(c:Cell):number {const floor=this.inside(c)&&!this.solids.has(index(this.world,c))&&this.world.tiles[index(this.world,c)]!.floor;return floor?FLOOR_DEFINITIONS[floor].flammability:0;}
+  fuel(c:Cell):number{return this.targets(c).reduce((max,t)=>Math.max(max,targetFlammability(t)),this.floorFuel(c));}
   line(a:Cell,b:Cell):boolean {
     // Short exact grid traversal. Target may itself be a burning solid.
     let x=a.x,z=a.z;const dx=Math.abs(b.x-x),dz=Math.abs(b.z-z),sx=Math.sign(b.x-x),sz=Math.sign(b.z-z);let err=dx-dz;

@@ -1,4 +1,5 @@
 import { copyPileCondition } from './pile-condition.ts';
+import { ingestFoodRisk } from './food-hygiene.ts';
 import { physicalEatingFactor } from './health-rules.ts';
 import { advanceWork } from './work-progress.ts';
 import { nutritionOf, ITEM_DEFINITIONS, rawFoodThought } from './items.ts';
@@ -57,5 +58,6 @@ export function processEating(world: World, pawn: Pawn, context: NeedContext): v
     rememberMeal(world, pawn, atTable, rawFoodThought(pile.item));
     pawn.need = null; pawn.state = 'idle'; pawn.planCooldown = 0; pawn.needCooldown = 0;
     context.event(`${pawn.name} a mangé une portion (${task.quantity} × ${ITEM_DEFINITIONS[pile.item].label}) ${atTable ? 'à table' : 'sans table'}.`);
+    ingestFoodRisk(world,pawn,pile);
   }
 }

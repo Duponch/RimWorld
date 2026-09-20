@@ -38,6 +38,7 @@ function zoneCells(world: World) {
 }
 export const growingZoneAt = (world: World, cell: number): GrowingZone | undefined => zoneCells(world).byCell.get(cell);
 export function jobDuration(world: World, job: Job): number {
+  if(job.kind==='lay-floor'||job.kind==='remove-floor'||job.kind==='grave')return constructionRecipe(job).work;
   if(job.kind==='mine'&&job.pickTicks!==undefined)return job.pickTicks/10;
   if(job.furniture)return furnitureDuration(world,job);
   if(job.kind==='repair')return job.repair?.warmed?20:80;
@@ -59,7 +60,7 @@ function context(world: World, queriedCells?:readonly number[]): Context {
   };
 }
 function intention(world: World, zone: GrowingZone, cell: number, ctx: Context, committed=false): { kind: JobKind; cell: number } | null {
-  if (ctx.fixed.has(cell)) return null;
+  if (ctx.fixed.has(cell)||world.tiles[cell]!.floor) return null;
   const plant = ctx.resources.get(cell);
   if (plant?.kind === zone.plant || (!zone.allowSow && zone.allowCut && plant && isPlant(plant))) {
     return plantGrowth(world, plant) >= 1 ? { kind: 'harvest', cell } : null;

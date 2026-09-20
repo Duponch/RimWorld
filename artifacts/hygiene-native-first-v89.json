@@ -1,0 +1,13 @@
+{
+  "version": 89,
+  "controlled": true,
+  "start": 3000,
+  "final": 3872,
+  "corpseId": 185,
+  "graveId": 212,
+  "cleaned": 1,
+  "floors": 5,
+  "cleanlinessBefore": -2,
+  "cleanlinessAfter": -0.3333333333333333,
+  "errors": []
+}

@@ -174,7 +174,7 @@ test('strict fire/HP migration rejects old burns and malformed phases or duplica
   expect(validateFires(w,86)).not.toEqual([]);
   const record={tick:0,nextInjuryId:2,injuries:[{id:1,part:'torso',kind:'burn',severity:1000,bornAt:0}],missing:[],bloodLoss:0};
   expect(validateMedicalRecord(record,true,true,true,true,false,false,true,true,false)).not.toBeNull();expect(validateMedicalRecord(record,true,true,true,true,false,false,true,true,true)).toBeNull();
-  const old=fireCamp() as unknown as Record<string,unknown>;old.schemaVersion=86;for(const p of (old as unknown as World).pawns)delete (p.priorities as Partial<typeof p.priorities>).firefight;
+  const old=fireCamp() as unknown as Record<string,unknown>;old.schemaVersion=86;for(const p of (old as unknown as World).pawns)delete (p.priorities as Partial<typeof p.priorities>).clean;for(const p of (old as unknown as World).pawns)delete (p.priorities as Partial<typeof p.priorities>).firefight;
   const loaded=deserializeWorld(JSON.stringify(old));expect(loaded.fires).toBeUndefined();expect(loaded.pawns[0]!.priorities.firefight).toBe(1);
   const capped=fireCamp(),id=woodFire(capped,{x:10,z:10});addGroundMaterial(capped,'wood',10,{x:12,z:10},'wood');
   capped.fires!.ledger.ignitions=Number.MAX_SAFE_INTEGER;capped.fires!.ledger.extinguished=Number.MAX_SAFE_INTEGER-1;

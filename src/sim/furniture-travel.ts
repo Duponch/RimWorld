@@ -3,17 +3,20 @@ import { doorWait } from './door-rules.ts';
 import { footprintCells, footprintContains } from './definitions.ts';
 import { frameAt, frameCosts, FRAME_TRAVEL_DELAY } from './construction-costs.ts';
 import { overlayNavigationCosts,type NavigationCostLookup } from './navigation-costs.ts';
+import { FLOOR_DEFINITIONS } from './flooring.ts';
 import type { Cell, StructureKind, World } from './types.ts';
 
 /** Core natural floors cost two Core ticks. Historical grass/soil stay neutral. */
 export function terrainTravelDelay(world:World,index:number):number {
-  const terrain=world.tiles[index]?.terrain;
+  const tile=world.tiles[index],terrain=tile?.terrain;
+  if(tile?.floor)return FLOOR_DEFINITIONS[tile.floor].pathCost/10;
   return terrain==='rough-stone'||terrain==='rich-soil'||terrain==='gravel'||world.site&&terrain==='grass'?.2:0;
 }
 
 /** Current Core wiki path costs, converted by the local day/tick ratio (10).
  * Repeat suppression is shared by all qualifying furniture, not by instance. */
 export const FURNITURE_TRAVEL:Readonly<Record<StructureKind,Readonly<{delay:number;stand:boolean;repeat:boolean}>>>=Object.freeze({
+  grave:{delay:0,stand:true,repeat:false},
   heater:{delay:3,stand:false,repeat:true},
   'wind-turbine':{delay:5,stand:false,repeat:true},
   'power-conduit':{delay:0,stand:true,repeat:false},
@@ -41,14 +44,14 @@ export function canStandAt(world:World,cell:Cell):boolean {
   if(!Number.isInteger(cell.x)||!Number.isInteger(cell.z)||cell.x<0||cell.z<0||cell.x>=world.width||cell.z>=world.height||['rock','water'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain))return false;
   for(const s of world.structures)if(footprintContains(s,cell)&&(world.schemaVersion<22?s.kind==='wall'||s.kind==='table':!FURNITURE_TRAVEL[s.kind].stand))return false;
   if(world.schemaVersion>=28&&world.piles.some(p=>p.kind==='chunk'&&p.owner.type==='ground'&&p.owner.x===cell.x&&p.owner.z===cell.z))return false;
-  return !world.jobs.some(j=>(world.schemaVersion<16&&(j.kind==='wall'||j.kind==='table')||world.schemaVersion>=22&&j.construction==='frame'&&j.kind!=='power-conduit')&&footprintContains(j,cell));
+  return !world.jobs.some(j=>(world.schemaVersion<16&&(j.kind==='wall'||j.kind==='table')||world.schemaVersion>=22&&j.construction==='frame'&&j.kind!=='power-conduit'&&j.kind!=='lay-floor')&&footprintContains(j,cell));
 }
 /** For a batch of point queries in one read-only decision. Discard before any
  * world mutation; this is not a shared navigation or cross-actor cache. */
 export function captureStandability(world:World):(cell:Cell)=>boolean {
   const denied=new Set<number>(),add=(s:Parameters<typeof footprintCells>[0])=>{for(const c of footprintCells(s))denied.add(c.z*world.width+c.x);};
   for(const s of world.structures)if(world.schemaVersion<22?s.kind==='wall'||s.kind==='table':!FURNITURE_TRAVEL[s.kind].stand)add(s);
-  for(const j of world.jobs)if(world.schemaVersion<16&&(j.kind==='wall'||j.kind==='table')||world.schemaVersion>=22&&j.construction==='frame'&&j.kind!=='power-conduit')add(j);
+  for(const j of world.jobs)if(world.schemaVersion<16&&(j.kind==='wall'||j.kind==='table')||world.schemaVersion>=22&&j.construction==='frame'&&j.kind!=='power-conduit'&&j.kind!=='lay-floor')add(j);
   if(world.schemaVersion>=28)for(const p of world.piles)if(p.kind==='chunk'&&p.owner.type==='ground')denied.add(p.owner.z*world.width+p.owner.x);
   return cell=>Number.isInteger(cell.x)&&Number.isInteger(cell.z)&&cell.x>=0&&cell.z>=0&&cell.x<world.width&&cell.z<world.height
     &&!['rock','water'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain)&&!denied.has(cell.z*world.width+cell.x);
@@ -78,7 +81,7 @@ export function navigationCosts(world:World):{costs:NavigationCostLookup|undefin
       if(p.delay)costs.set(i,Math.round(p.delay/3*1000));
       if(p.repeat)repeaters.add(i);if(!p.stand)stops.add(i);
     }
-    for(const j of world.jobs)if(j.construction==='frame'&&j.kind!=='power-conduit')for(const c of footprintCells(j))stops.add(c.z*world.width+c.x);
+    for(const j of world.jobs)if(j.construction==='frame'&&j.kind!=='power-conduit'&&j.kind!=='lay-floor')for(const c of footprintCells(j))stops.add(c.z*world.width+c.x);
   }
   const floors=new Map<number,number>();
   // A single captured byte per cell replaces two mostly dense Maps on a site.
@@ -86,7 +89,7 @@ export function navigationCosts(world:World):{costs:NavigationCostLookup|undefin
   const terrain=new Uint8Array(world.tiles.length);let terrainMaximum=0;
   if(world.schemaVersion>=28) {
     for(const p of world.piles)if(p.kind==='chunk'&&p.owner.type==='ground'){const i=p.owner.z*world.width+p.owner.x;costs.set(i,Math.max(costs.get(i)??0,1400));repeaters.add(i);stops.add(i);}
-    for(let i=0;i<world.tiles.length;i++)if(terrainTravelDelay(world,i)){terrain[i]=67;terrainMaximum=67;}
+    for(let i=0;i<world.tiles.length;i++){const cost=Math.round(terrainTravelDelay(world,i)/3*1000);if(cost){terrain[i]=cost;terrainMaximum=Math.max(terrainMaximum,cost);}}
   }
   if(world.schemaVersion>=29)for(const p of world.piles)if((p.kind==='steel'||world.schemaVersion>=32&&p.kind==='blocks'||world.schemaVersion>=41&&p.kind==='component')&&p.owner.type==='ground'){const i=p.owner.z*world.width+p.owner.x;floors.set(i,Math.max(floors.get(i)??0,467));costs.set(i,Math.max(costs.get(i)??0,467));}
   // Door wait is added after the terrain/object/material maximum, not compared

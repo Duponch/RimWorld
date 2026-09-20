@@ -12,6 +12,7 @@ import { advanceRaids } from '../src/sim/raids';
 import { validateRaids } from '../src/sim/raid-save';
 import { CASSANDRA_ACTIVE_TICKS,CASSANDRA_CYCLE_START,CASSANDRA_CYCLE_TICKS,CASSANDRA_MIN_SPACING,INTRO_RAID_TICK,consumeCassandraOpportunity,enableCassandraRaids,validCassandraAgenda } from '../src/sim/cassandra-raids';
 import { atMapEdge } from '../src/sim/raid-space';
+import { STONECUTTING_RESEARCH_COST } from '../src/sim/research';
 import { deconstructionCamp } from './scenarios/deconstruction';
 
 function stock(world:World) {const totals:Record<string,number>={};for(const p of world.piles)if(p.kind!=='chunk')totals[p.item]=(totals[p.item]??0)+p.quantity;return totals;}
@@ -25,7 +26,8 @@ test('explicit Crashlanded adaptation has physical supplies, mature wild food an
   for(const seed of [42,93,2048]) {
     const world=createScenarioWorld(seed,250,'crashlanded'),legacy=createScenarioWorld(seed,250,'survivors');
     expect(world.tick).toBe(0);expect(world.scenario!.id).toBe('crashlanded');expect(world.gameProfile).toEqual(crashlandedProfile());
-    expect(stock(world)).toEqual(stock(legacy));expect(world.research).toEqual(legacy.research);
+    expect(stock(world)).toEqual({...stock(legacy),silver:800,'bolt-action-rifle':1,'plasteel-knife':1});
+    expect(world.research).toEqual({...legacy.research,stonecutting:{points:STONECUTTING_RESEARCH_COST,completedAt:0}});
     expect(world.site?.hilliness).toBe('small-hills');expect(legacy.site).toBeUndefined();
     expect(world.pawns).toHaveLength(3);expect(world.arrivals).toBeUndefined();expect(world.heatwaves).toBeUndefined();
     expect(world.raids!.nextCheck).toBe(INTRO_RAID_TICK);expect(legacy.arrivals).toBeDefined();expect(legacy.heatwaves).toBeDefined();
@@ -139,7 +141,10 @@ test('Cassandra next opportunity follows its exact anchored window, including ga
 
 test('V81 migration is strictly neutral and rejects future profile/calendar injection; malformed current choices cannot enter a session',()=>{
   const world=createScenarioWorld(42,32,'survivors');stepWorld(world,35);
-  const old=withoutFoodCrops({...structuredClone(world),schemaVersion:81}),restored=deserializeWorld(JSON.stringify(old));
+  const old=withoutFoodCrops({...structuredClone(world),schemaVersion:81});
+  delete old.climate;delete old.weather;delete old.fires;delete old.wind;
+  for(const plant of old.resources)delete plant.plantLife;
+  const restored=deserializeWorld(JSON.stringify(old));
   expect(restored).toEqual(withMigratedBasic({...old,schemaVersion:SCHEMA_VERSION}));expect(restored.gameProfile).toBeUndefined();
   for(const mutate of [(w:any)=>w.gameProfile=crashlandedProfile(),(w:any)=>w.scenario.id='crashlanded',(w:any)=>w.raids.profile='cassandra-raids-v1',(w:any)=>w.pawns[0].priorities.basic=3]) {
     const bad=structuredClone(old);mutate(bad);expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(/version 81/);

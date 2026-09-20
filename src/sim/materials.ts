@@ -1,3 +1,5 @@
+import { pawnContentsLocation } from './human-corpses.ts';
+import { mergePileContamination } from './pile-condition.ts';
 import { isColonist } from './affiliation.ts';
 import { mergeThingDamage } from './thing-damage-rules.ts';
 import { newApparelState,isApparelItem,APPAREL } from './apparel-rules.ts';
@@ -15,7 +17,8 @@ import type { Cell, HaulDestination, MaterialKind, MaterialOwner, MaterialPile, 
 export function pileCell(world: World, pile: MaterialPile): Cell | null {
   const owner = pile.owner;
   if (owner.type === 'ground') return { x: owner.x, z: owner.z };
-  if (owner.type === 'pawn'||owner.type==='equipment'||owner.type==='apparel'||owner.type==='inventory') return world.pawns.find(pawn => pawn.id === owner.pawnId) ?? null;
+  if (owner.type === 'pawn'||owner.type==='equipment'||owner.type==='apparel'||owner.type==='inventory'){const pawn=world.pawns.find(pawn=>pawn.id===owner.pawnId);return pawn?pawnContentsLocation(world,pawn)?.cell??null:null;}
+  if(owner.type==='grave')return null;
   return world.jobs.find(job => job.id === owner.jobId) ?? null;
 }
 export function deliveredStock(world: World, jobId: number): Stock {
@@ -69,7 +72,7 @@ export function addMaterial(world: World, kind: MaterialKind, quantity: number, 
     if (!quantity) break;
     if (pile.item !== item || !sameOwner(pile.owner, owner)) continue;
     const moved = Math.min(limit - pile.quantity, quantity);
-    mergeThingDamage(pile,moved);mergeRot(pile, moved, 0, world.tick);
+    mergePileContamination(pile,moved);mergeThingDamage(pile,moved);mergeRot(pile, moved, 0, world.tick);
     pile.quantity += moved; quantity -= moved;
   }
   while (quantity > 0) {
@@ -92,7 +95,7 @@ export function transferPile(world:World,pile:MaterialPile,owner:MaterialOwner):
   const carrier=pile.owner.type==='pawn'?pile.owner.pawnId:undefined;
   if(owner.type==='ground'&&groundCapacity(world,owner,pile.item,carrier)<pile.quantity)return false;
   const target=world.piles.find(p=>p!==pile&&p.item===pile.item&&sameOwner(p.owner,owner)&&p.quantity+pile.quantity<=ITEM_DEFINITIONS[pile.item].stackLimit);
-  if(target){mergeThingDamage(target,pile.quantity,pile.damage);mergeRot(target,pile.quantity,rotAge(pile,world.tick),world.tick);target.quantity+=pile.quantity;world.piles.splice(world.piles.indexOf(pile),1);}else pile.owner={...owner};
+  if(target){mergePileContamination(target,pile.quantity,pile.foodPoison);mergeThingDamage(target,pile.quantity,pile.damage);mergeRot(target,pile.quantity,rotAge(pile,world.tick),world.tick);target.quantity+=pile.quantity;world.piles.splice(world.piles.indexOf(pile),1);}else pile.owner={...owner};
   refreshStock(world);return true;
 }
 export function reservedSource(world: World, pileId: number, exceptPawn?: number): number {
@@ -100,6 +103,7 @@ export function reservedSource(world: World, pileId: number, exceptPawn?: number
   for(const a of world.wildlife?.animals??[])if(a.id!==exceptPawn&&a.meal?.kind==='pile'&&a.meal.id===pileId)quantity+=a.meal.quantity;
   for (const pawn of world.pawns) {
     if (pawn.id !== exceptPawn) {
+      if(pawn.burial?.phase==='pickup'&&pawn.burial.corpseId===pileId)quantity++;
       if(pawn.hunting?.animalId===pileId)quantity++;
       if((pawn.equipmentTask?.action==='equip'||pawn.equipmentTask?.action==='wear')&&pawn.equipmentTask.itemId===pileId)quantity++;
       for(const i of pawn.cooking?.ingredients??[])if(i.pileId===pileId&&i.stage!=='held')quantity+=i.quantity;
@@ -136,4 +140,4 @@ export function groundQuantity(world: World, cell: Cell): number {
 }
 
 /** Colony HUD excludes possessions of neutral or hostile people. */
-export function colonyPile(world:World,pile:MaterialPile):boolean {const o=pile.owner;return o.type==='ground'||o.type!=='job'&&world.pawns.some(p=>p.id===o.pawnId&&isColonist(p));}
+export function colonyPile(world:World,pile:MaterialPile):boolean {const o=pile.owner;return o.type==='ground'||o.type!=='job'&&o.type!=='grave'&&world.pawns.some(p=>p.id===o.pawnId&&isColonist(p));}

@@ -15,7 +15,7 @@ import { TICKS_PER_DAY,type Command,type Resource,type World } from '../src/sim/
 function field():World {
   const w=createWorld(42,16,16);w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.resources=[];w.piles=[];w.structures=[];w.jobs=[];
   w.pawns=w.pawns.slice(0,1);const p=w.pawns[0]!;Object.assign(p,{x:5,z:5,hunger:100,rest:100,foodPolicyId:4});
-  p.priorities={firefight:0,warden:0,basic:3,hunt:0,research:0,patient:0,bedrest:0,doctor:0,gather:0,build:0,mine:0,grow:1,haul:2,cook:0,craft:0};refreshStock(w);return w;
+  p.priorities={clean:0,firefight:0,warden:0,basic:3,hunt:0,research:0,patient:0,bedrest:0,doctor:0,gather:0,build:0,mine:0,grow:1,haul:2,cook:0,craft:0};refreshStock(w);return w;
 }
 const command=(w:World,c:Command)=>expect(applyCommand(w,c)).toMatchObject({ok:true});
 function until(w:World,done:()=>boolean,limit=1800):void {
@@ -100,7 +100,7 @@ test('new ingredients cook under their bill filters, raw food requires pickup an
 
 test('V83 cannot hide future crop data; valid historical policies stay exact and four resident shapes never mutate the world',()=>{
   const w=field();command(w,{type:'area',action:'growing',from:{x:7,z:7},to:{x:7,z:7}});
-  const old=JSON.parse(serializeWorld(w));old.schemaVersion=83;for(const p of old.pawns){delete p.priorities.basic;delete p.priorities.warden;delete p.priorities.firefight;}
+  const old=JSON.parse(serializeWorld(w));old.schemaVersion=83;for(const p of old.pawns)delete p.priorities.clean;for(const p of old.pawns){delete p.priorities.basic;delete p.priorities.warden;delete p.priorities.firefight;}
   for(const policy of old.foodPolicies)policy.allowed=policy.allowed.filter((id:string)=>id!=='potato'&&id!=='corn');
   const migrated=deserializeWorld(JSON.stringify(old));expect(migrated.foodPolicies).toEqual(old.foodPolicies);expect(migrated.spoiled).toEqual(old.spoiled);
   expect(migrated.resources).toEqual(old.resources);expect(migrated.rng).toBe(old.rng);expect(migrated.growingZones).toEqual(old.growingZones);

@@ -1,0 +1,12 @@
+{
+  "protocol": "hygiene-v89",
+  "origin": "Project-owned Lisiere colony, continued from published V88, never a personal RimWorld save",
+  "schemaVersion": 89,
+  "tick": 969414,
+  "source": "tests/fixtures/colony-v88.json.gz",
+  "sourceSha256": "7b5e5911bf86cccdbc7ba4b32ed067ebc1a165ff9ee319521814b9b0f6d57da2",
+  "fixture": "tests/fixtures/colony-v89.json.gz",
+  "sha256": "fb4d5e4ff02fd0d9d70bf0ede30dff0991e4556d31a8b2738ae67eee6c555458",
+  "report": "artifacts/hygiene-colony-v89.json",
+  "resumedAt": 966000
+}

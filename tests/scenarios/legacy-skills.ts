@@ -14,7 +14,7 @@ export function withMigratedSkills<T extends {tick:number;pawns:unknown[]}>(worl
   for(const p of expected.pawns as {medicalCare?:unknown}[])delete p.medicalCare;
   withoutMedicineItems(expected);
   withoutSocial(expected);
-  for(const p of expected.pawns as {priorities:{firefight?:number;warden?:number;basic?:number;research?:number;hunt?:number}}[]){p.priorities.firefight=1;p.priorities.warden=3;p.priorities.basic=3;p.priorities.research=3;p.priorities.hunt=0;}
+  for(const p of expected.pawns as {priorities:{clean?:number;firefight?:number;warden?:number;basic?:number;research?:number;hunt?:number}}[]){p.priorities.clean=3;p.priorities.firefight=1;p.priorities.warden=3;p.priorities.basic=3;p.priorities.research=3;p.priorities.hunt=0;}
   return expected;
 }
 
@@ -69,7 +69,7 @@ export function withoutResearch<T>(world:T):T {
 /** Independent neutral additive migration expectation. */
 export function withMigratedResearch<T>(world:T):T {
   const copy=withoutResearch(structuredClone(world));
-  for(const p of (copy as {pawns:{priorities:{firefight?:number;warden?:number;basic?:number;research?:number;hunt?:number}}[]}).pawns){p.priorities.firefight=1;p.priorities.warden=3;p.priorities.basic=3;p.priorities.research=3;p.priorities.hunt=0;}
+  for(const p of (copy as {pawns:{priorities:{clean?:number;firefight?:number;warden?:number;basic?:number;research?:number;hunt?:number}}[]}).pawns){p.priorities.clean=3;p.priorities.firefight=1;p.priorities.warden=3;p.priorities.basic=3;p.priorities.research=3;p.priorities.hunt=0;}
   return copy;
 }
 
@@ -96,14 +96,18 @@ export function withMigratedHunting<T>(world:T):T {
 /** Independent V85 expectation: no sanitizer or production migration call. */
 export function withMigratedBasic<T>(world:T):T {
   const copy=structuredClone(world);
-  for(const p of (copy as {pawns:{priorities:{firefight?:number;warden?:number;basic?:number}}[]}).pawns){p.priorities.firefight=1;p.priorities.warden=3;p.priorities.basic=3;}
+  for(const p of (copy as {pawns:{priorities:{clean?:number;firefight?:number;warden?:number;basic?:number}}[]}).pawns){p.priorities.clean=3;p.priorities.firefight=1;p.priorities.warden=3;p.priorities.basic=3;}
   return copy;
 }
 
 /** Pre-V84 fixture shape only. Production migration never broadens food filters. */
 export function withoutFoodCrops<T>(world:T):T {
   const w=world as any;
-  for(const p of w.pawns){delete p.priorities.basic;delete p.priorities.warden;delete p.priorities.firefight;}
+  delete w.filth;
+  // Pre-V84 storage did not have V88 silver filters or its 500-unit ceiling.
+  for(const s of w.stockpiles??[]){delete s.filters.silver;s.capacity=Math.min(s.capacity,75);}
+  for(const tile of w.tiles??[])delete tile.floor;
+  for(const p of w.pawns){delete p.filthFeet;delete p.cleaning;delete p.priorities.clean;delete p.priorities.basic;delete p.priorities.warden;delete p.priorities.firefight;}
   for(const policy of w.foodPolicies??[])policy.allowed=policy.allowed.filter((id:string)=>id!=='potato'&&id!=='corn');
   for(const s of [...w.structures??[],...(w.packed??[]).map((p:any)=>p.building)])for(const b of s.bills??[]){delete b.filters.potato;delete b.filters.corn;}
   if(w.spoiled){delete w.spoiled.potato;delete w.spoiled.corn;}

@@ -1,3 +1,4 @@
+import { isBuildableFloor } from '../../src/sim/flooring';
 import { expect, type Page } from '@playwright/test';
 import type { Decision } from '../scenarios/colony-player';
 import type { BillSettings } from '../../src/sim/cooking-types';
@@ -119,7 +120,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     for(const hour of c.hours) await page.locator(`[data-schedule-pawn="${c.pawnId}"][data-schedule-hour="${hour}"]`).click();
   } else if(c.type==='research-project') {
     await panel(page,'research');
-    const prefix=c.project==='batteries'?'battery':c.project==='solar-power'?'solar':c.project==='air-conditioning'?'air':'research';
+    const prefix=c.project==='stonecutting'?'stonecutting':c.project==='smithing'?'smithing':c.project==='batteries'?'battery':c.project==='solar-power'?'solar':c.project==='air-conditioning'?'air':'research';
     await page.locator(c.project===null?'[data-research-pause]':`[data-${prefix}-start]`).click();
   } else if(c.type==='power-flick') {
     const w=await world(page),s=w.structures.find(s=>s.id===c.structureId)!;
@@ -141,6 +142,18 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     await page.keyboard.press('Escape');await page.locator(`[data-pawn="${c.pawnId}"]`).click();await revealCells(page,[fire]);
     const point=await page.evaluate(f=>window.__lisiere.projectCell(f.x,f.z),fire),bounds=(await page.locator('#viewport canvas').boundingBox())!;
     await page.mouse.click(bounds.x+point.x,bounds.y+point.y,{button:'right'});await page.locator(`[data-order-fire="${c.fireId}"]`).click();
+  } else if(c.type==='clean-room') {
+    const w=await world(page);await page.keyboard.press('Escape');await revealCells(page,[c]);
+    for(let i=0;i<=w.pawns.length;i++){await cell(page,c.x,c.z);if(await page.locator('#clean-room').isVisible())break;}
+    await page.locator('#cleaning-worker').selectOption(String(c.pawnId));await page.locator('#clean-room').click();
+  } else if(c.type==='grave-policy'||c.type==='assign-grave') {
+    const w=await world(page),grave=w.structures.find(s=>s.id===c.graveId);if(!grave)throw new Error('Grave absent.');
+    await page.keyboard.press('Escape');await revealCells(page,[grave]);
+    for(let i=0;i<=w.pawns.length;i++){await cell(page,grave.x,grave.z);if(await page.locator('#grave-assignment').isVisible())break;}
+    if(c.type==='assign-grave')await page.locator('#grave-assignment').selectOption(c.pawnId===null?'':String(c.pawnId));
+    else {await page.locator('[data-grave-filter="colonists"]').setChecked(c.colonists);await page.locator('[data-grave-filter="strangers"]').setChecked(c.strangers);}
+  } else if(c.type==='order-bury') {
+    await inspectPerson(page,c.bodyPawnId);await page.locator('#burial-carrier').selectOption(String(c.pawnId));await page.locator('#burial-target').selectOption(c.graveId===undefined?'':String(c.graveId));await page.locator('#bury-body').click();
   } else if(c.type==='priority') {
     await panel(page,'work');await page.locator(`select[data-owner="${c.pawnId}"][data-work="${c.work}"]`).selectOption(String(c.value));
   } else if(c.type==='stockpile') {
@@ -149,7 +162,8 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     await revealCells(page,[c]);
     await cell(page,c.x,c.z);
   } else if(c.type==='area') {
-    await tool(page,c.action);
+    if(c.action==='lay-floor'&&!isBuildableFloor(c.floor))throw new Error('Floor tool requires an explicit floor.');
+    await tool(page,c.action==='lay-floor'?c.floor as import('../../src/sim/flooring').BuildableFloorKind:c.action);
     if(c.action==='stockpile'&&c.filters)await storageSettings(page,c);
     await revealCells(page,[c.from,c.to]);
     await dragRectangle(page,c.from,c.to);
@@ -169,9 +183,11 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     for(let i=0;i<=w.pawns.length;i++){await cell(page,target.x,target.z);if(await page.locator(button).isVisible())break;}
     await page.locator(button).click();
   } else if(c.type==='designate' && c.kind !== 'flick' && c.kind !== 'sow' && c.kind !== 'install') {
-    if(c.kind==='repair')throw Error('Repair uses the home area');await tool(page,c.kind);
+    if(c.kind==='repair')throw Error('Repair uses the home area');
+    if(c.kind==='lay-floor'&&!isBuildableFloor(c.floor))throw new Error('Floor tool requires an explicit floor.');
+    await tool(page,c.kind==='lay-floor'?c.floor as import('../../src/sim/flooring').BuildableFloorKind:c.kind);
     if(['door','wall','bed','table','stool','horseshoes','stonecutter','research-bench','tailor-bench'].includes(c.kind))await page.locator('#construction-material').selectOption(c.material??'wood');
-    if(c.kind==='wind-turbine'||c.kind==='battery'||c.kind==='fueled-stove'||c.kind==='electric-stove'||c.kind==='butcher-table'||c.kind==='cooler'||c.kind==='bed'||c.kind==='table'||c.kind==='campfire'||(c.kind==='butcher-spot'||c.kind==='crafting-spot')||c.kind==='stonecutter'||c.kind==='research-bench'||c.kind==='tailor-bench') {
+    if(c.kind==='grave'||c.kind==='wind-turbine'||c.kind==='battery'||c.kind==='fueled-stove'||c.kind==='electric-stove'||c.kind==='butcher-table'||c.kind==='cooler'||c.kind==='bed'||c.kind==='table'||c.kind==='campfire'||(c.kind==='butcher-spot'||c.kind==='crafting-spot')||c.kind==='stonecutter'||c.kind==='research-bench'||c.kind==='tailor-bench') {
       while(rotation.value!==(c.orientation??0)){await page.keyboard.press('e');rotation.value=(rotation.value+1)%4;}
     }
     await revealCells(page,[c]);
@@ -218,10 +234,16 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     if(c.type==='heater-adjust')return w.structures.find(s=>s.id===c.structureId)?.heater?.target===heaterTarget;
     if(c.type==='wind-auto-cut')return w.structures.find(s=>s.id===c.structureId)?.wind?.autoCut===c.enabled;
     if(c.type==='order-extinguish')return w.pawns.find(p=>p.id===c.pawnId)?.firefighting?.fireId===c.fireId;
+    if(c.type==='clean-room')return !!w.pawns.find(p=>p.id===c.pawnId)?.cleaning;
+    if(c.type==='order-bury')return w.pawns.find(p=>p.id===c.pawnId)?.burial?.bodyPawnId===c.bodyPawnId;
+    if(c.type==='assign-grave')return (w.structures.find(s=>s.id===c.graveId)?.grave?.assignedPawnId??null)===c.pawnId;
+    if(c.type==='grave-policy'){const g=w.structures.find(s=>s.id===c.graveId)?.grave;return g?.colonists===c.colonists&&g.strangers===c.strangers;}
     if(c.type==='priority')return w.pawns.find(p=>p.id===c.pawnId)?.priorities[c.work]===c.value;
     if(c.type==='bill-add')return !!w.structures.find(s=>s.id===c.structureId)?.bills?.length;
     if(c.type==='bill-update') {const b=w.structures.find(s=>s.id===c.structureId)?.bills?.find(b=>b.id===c.billId);return !!b&&b.mode===c.settings.mode&&b.target===c.settings.target&&b.suspended===c.settings.suspended;}
     if(c.type==='area') {
+      if(c.action==='home'||c.action==='remove-home'){for(let z=Math.min(c.from.z,c.to.z);z<=Math.max(c.from.z,c.to.z);z++)for(let x=Math.min(c.from.x,c.to.x);x<=Math.max(c.from.x,c.to.x);x++)if(!!w.home?.includes(z*w.width+x)!==(c.action==='home'))return false;return true;}
+      if(c.action==='lay-floor'||c.action==='remove-floor'){for(let z=Math.min(c.from.z,c.to.z);z<=Math.max(c.from.z,c.to.z);z++)for(let x=Math.min(c.from.x,c.to.x);x<=Math.max(c.from.x,c.to.x);x++)if(!w.jobs.some(j=>j.kind===c.action&&j.x===x&&j.z===z&&(c.action!=='lay-floor'||j.floor===c.floor)))return false;return true;}
       if(c.action==='build-roof'||c.action==='remove-roof'||c.action==='ignore-roof') {
         for(let z=Math.min(c.from.z,c.to.z);z<=Math.max(c.from.z,c.to.z);z++)for(let x=Math.min(c.from.x,c.to.x);x<=Math.max(c.from.x,c.to.x);x++) {
           const index=z*w.width+x,build=w.roofing?.build.includes(index)??false,remove=w.roofing?.remove.includes(index)??false;

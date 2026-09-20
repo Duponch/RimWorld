@@ -1,0 +1,46 @@
+{
+  "protocol": "hygiene-v89",
+  "status": "failed-before-player-plan-repair",
+  "tick": 969470,
+  "assertion": "AssertionError [ERR_ASSERTION]: All four real colonists must survive this continuation.",
+  "validation": [],
+  "people": [
+    {
+      "id": 4570,
+      "name": "Ada",
+      "state": "idle",
+      "x": 135,
+      "z": 122
+    },
+    {
+      "id": 4572,
+      "name": "Noé",
+      "state": "dead",
+      "x": 115,
+      "z": 103,
+      "death": {
+        "tick": 968778,
+        "cause": "hypothermia"
+      },
+      "hypothermia": 1000000000
+    },
+    {
+      "id": 4574,
+      "name": "Mina",
+      "state": "idle",
+      "x": 120,
+      "z": 102
+    },
+    {
+      "id": 12906,
+      "name": "Assaillant 9.2",
+      "state": "idle",
+      "x": 136,
+      "z": 134
+    }
+  ],
+  "cause": "Kitchen wall (117,103) blocked the existing freezer doorway (116,103), trapping Noe in cold; player plan defect.",
+  "repair": "Resume actual day 161; deconstruct accessible adjacent wall (117,104), then obstruction, ordinary rescue; no state editing.",
+  "resumeTick": 966000,
+  "finalReport": "artifacts/hygiene-colony-v89.json"
+}

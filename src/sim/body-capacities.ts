@@ -14,6 +14,14 @@ export interface BodyAssessmentInput {
   readonly movingOffset?:number;
   readonly manipulationOffset?:number;
   readonly breathingOffset?:number;
+  /** Applied after each capacity's offsets and before its maximum/rounding.
+   * Dependent capacities read that result, rather than an unmodified parent. */
+  readonly consciousnessFactor?:number;
+  readonly movingFactor?:number;
+  readonly manipulationFactor?:number;
+  readonly bloodFiltrationFactor?:number;
+  readonly eatingFactor?:number;
+  readonly talkingFactor?:number;
 }
 export interface BodyCapacities {
   readonly consciousness:number; readonly moving:number; readonly manipulation:number;
@@ -64,12 +72,12 @@ function calculate(input:BodyAssessmentInput,model=HUMAN_MODEL):BodyAssessment {
   const bestPair=(a:BodyPartId,b:BodyPartId)=>.75*Math.max(part(a),part(b))+.25*Math.min(part(a),part(b));
   const round=capacityRounded;
   const bloodPumping=round(part('heart'));
-  const bloodFiltration=round(pair('left-kidney','right-kidney')*part('liver'));
+  const bloodFiltration=round(pair('left-kidney','right-kidney')*part('liver')*(input.bloodFiltrationFactor??1));
   const breathing=round(pair('left-lung','right-lung')*part('neck')*(human?pair('ribcage','sternum'):1)+(input.breathingOffset??0));
   const digestion=round(pair('stomach','liver'));
   const painOffset=Math.min(.4,Math.max(0,(input.pain-.1)*(.4/.9)));
   const naturalConsciousness=(part('brain')-(painOffset>=.01?painOffset:0))*(.8+.2*bloodPumping)*(.8+.2*breathing)*(.9+.1*bloodFiltration);
-  const consciousness=round(Math.min(input.consciousnessMax??Infinity,naturalConsciousness+(input.consciousnessOffset??0)));
+  const consciousness=round(Math.min(input.consciousnessMax??Infinity,(naturalConsciousness+(input.consciousnessOffset??0))*(input.consciousnessFactor??1)));
   const canBeAwake=consciousness>=.3;
   let arms=0,legs=0,functionalLegs=0;
   if(human)for(const side of ['left','right'] as const) {
@@ -83,11 +91,11 @@ function calculate(input:BodyAssessmentInput,model=HUMAN_MODEL):BodyAssessment {
     arms=part('jaw')*2;
     for(const side of ['left','right'] as const)for(const end of ['front','rear'] as const){const leg=part(`${side}-${end}-leg`)*part(`${side}-${end}-paw`);legs+=leg;if(leg>0)functionalLegs++;}
   }
-  const moving=canBeAwake&&functionalLegs>=(human?1:2)?round(legs/(human?2:4)*(human?part('pelvis'):1)*part('spine')*(.8+.2*breathing)*(.8+.2*bloodPumping)*Math.min(1,consciousness)+(input.movingOffset??0)):0;
-  const capacities=Object.freeze({consciousness,moving,manipulation:canBeAwake?round(arms/2*consciousness+(input.manipulationOffset??0)):0,
+  const moving=canBeAwake&&functionalLegs>=(human?1:2)?round((legs/(human?2:4)*(human?part('pelvis'):1)*part('spine')*(.8+.2*breathing)*(.8+.2*bloodPumping)*Math.min(1,consciousness)+(input.movingOffset??0))*(input.movingFactor??1)):0;
+  const capacities=Object.freeze({consciousness,moving,manipulation:canBeAwake?round((arms/2*consciousness+(input.manipulationOffset??0))*(input.manipulationFactor??1)):0,
     sight:round(bestPair('left-eye','right-eye')),hearing:round(bestPair('left-ear','right-ear')),
-    talking:human&&canBeAwake?round(part('jaw')*part('neck')*part('tongue')*consciousness):0,
-    eating:canBeAwake?round(Math.max(.1,(human?part('jaw'):1)*part('neck')*(human?(.5+.5*part('tongue')):1)*consciousness)):0,
+    talking:human&&canBeAwake?round(part('jaw')*part('neck')*part('tongue')*consciousness*(input.talkingFactor??1)):0,
+    eating:canBeAwake?round(Math.max(.1,(human?part('jaw'):1)*part('neck')*(human?(.5+.5*part('tongue')):1)*consciousness*(input.eatingFactor??1))):0,
     breathing,bloodPumping,bloodFiltration,digestion});
   return Object.freeze({capacities,canBeAwake,movingCapable:moving>.15,painShock:input.pain>=.8,
     vitalFailure:part('torso')<=.0001||[consciousness,breathing,bloodPumping,bloodFiltration,digestion].some(value=>value<=0)});
@@ -96,5 +104,5 @@ export const HEALTHY_BODY:BodyAssessment=calculate(HEALTHY_BODY_INPUT);
 /** Caller supplies a current health projection. No cache keyed solely by pawn ID
  * or tick: in-place injury changes must be visible within the same tick. */
 export function assessBody(input:BodyAssessmentInput=HEALTHY_BODY_INPUT,model:BodyModel=HUMAN_MODEL):BodyAssessment {
-  return model.kind==='human'&&input.damage.length===0&&input.missing.length===0&&input.pain===0&&!input.manipulationOffset&&!input.movingOffset&&!input.breathingOffset&&!input.consciousnessOffset&&(input.consciousnessMax??1)>=1?HEALTHY_BODY:calculate(input,model);
+  return model.kind==='human'&&input.damage.length===0&&input.missing.length===0&&input.pain===0&&!input.manipulationOffset&&!input.movingOffset&&!input.breathingOffset&&!input.consciousnessOffset&&(input.consciousnessMax??1)>=1&&(input.consciousnessFactor??1)===1&&(input.movingFactor??1)===1&&(input.manipulationFactor??1)===1&&(input.bloodFiltrationFactor??1)===1&&(input.eatingFactor??1)===1&&(input.talkingFactor??1)===1?HEALTHY_BODY:calculate(input,model);
 }

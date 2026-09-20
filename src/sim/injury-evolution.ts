@@ -4,6 +4,7 @@ import { medicalBleedUnits,reconcileMedicalDeath,rollScarPain } from './injury-s
 import type { Injury,MedicalContext,MedicalRandom,MedicalRecord } from './injury-types.ts';
 import { advanceInfections,advanceInfectionImmunity } from './infection-evolution.ts';
 import { advanceMalnutrition } from './malnutrition.ts';
+import { advanceFoodPoisoning } from './food-poisoning.ts';
 
 function heal(record:MedicalRecord,injury:Injury,amount:number,random:MedicalRandom):void {
   injury.severity-=amount;
@@ -29,10 +30,15 @@ export function advanceMedical(record:MedicalRecord,ticks:number,context:Medical
   const pending=record.injuries.filter(i=>i.infection&&i.infection.dueCore<=(record.tick+ticks)*10).length;
   if(pending&&!Number.isSafeInteger((record.infections?.nextId??1)+pending))throw new Error('Infection identities exhausted');
   if((record.infections?.cases.length||pending)&&!Number.isSafeInteger((record.tick+ticks)*10))throw new Error('Infection clock exhausted');
-  if(!record.injuries.length&&!record.missing.length&&!record.bloodLoss&&!record.infections?.cases.length&&!record.infections?.immunity&&!(context.malnutritionRate&&(context.starving||record.malnutrition))){record.tick+=ticks;return;}
+  if(!record.injuries.length&&!record.missing.length&&!record.bloodLoss&&!record.infections?.cases.length&&!record.infections?.immunity&&!record.foodPoisoning&&!(context.malnutritionRate&&(context.starving||record.malnutrition))){record.tick+=ticks;return;}
   const end=record.tick+ticks;
   while(record.tick<end) {
     record.tick++;
+    if(record.foodPoisoning){
+      const previous=record.foodPoisoning.severity;
+      if(!advanceFoodPoisoning(record.foodPoisoning,record.tick,context.phase))delete record.foodPoisoning;
+      if(previous!==(record.foodPoisoning?.severity??0)){reconcileMedicalDeath(record);if(record.death)return;}
+    }
     if(context.malnutritionRate&&(context.starving||record.malnutrition)) {
       advanceMalnutrition(record,context.starving,context.malnutritionRate,context.phase);
       reconcileMedicalDeath(record);if(record.death)return;

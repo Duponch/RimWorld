@@ -11,7 +11,7 @@ import { routeCost, blockedCells, interactionGoals, reachableCells, routeToJob, 
 
 test('logistics proves only competitive access, retains ties and skips an inaccessible higher-priority reserve',()=>{
   const setup=()=>{
-    const w=deconstructionCamp(1,64),p=w.pawns[0]!;p.x=10;p.z=10;p.priorities={firefight:0,warden:0,basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,mine:0,craft:0,gather:0,build:0,haul:1,grow:0,cook:0};
+    const w=deconstructionCamp(1,64),p=w.pawns[0]!;p.x=10;p.z=10;p.priorities={clean:0,firefight:0,warden:0,basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,mine:0,craft:0,gather:0,build:0,haul:1,grow:0,cook:0};
     addGroundMaterial(w,'wood',20,{x:11,z:10},'wood');
     for(const [x,z] of [[12,10],[11,11],[55,55]])expect(applyCommand(w,{type:'stockpile',x:x!,z:z!,enabled:true,filters:{wood:true,food:false},capacity:75,priority:3}).ok).toBe(true);
     return {w,p};

@@ -1,4 +1,5 @@
 import { foodWorkstationParts } from './food-workstation-parts';
+import { graveParts } from './grave-parts';
 import { electricalParts } from './electrical-parts';
 import { passiveCoolerParts } from './passive-cooler-parts';
 import { doorParts } from './door-parts';
@@ -61,7 +62,7 @@ export function buildFurniture(world: World, group: THREE.Group, cutaway: boolea
     const fires=campfireParts(world);
     batches.set(group,'campfire-flames',fires.flames,'border',false);
     batches.set(group, 'furniture', [
-      ...foodWorkstationParts(world), ...electricalParts(world,cutaway), ...passiveCoolerParts(world), ...doorParts(world,cutaway), ...fires.base, ...recreationParts(world), ...stonecutterParts(world), ...craftingSpotParts(world), ...researchTailorParts(world),
+      ...graveParts(world), ...foodWorkstationParts(world), ...electricalParts(world,cutaway), ...passiveCoolerParts(world), ...doorParts(world,cutaway), ...fires.base, ...recreationParts(world), ...stonecutterParts(world), ...craftingSpotParts(world), ...researchTailorParts(world),
       ...parcels,
       ...woodParts.map(p => ({ ...p, color: p.color ?? 0xa38559 })),
       ...walls.map(p => ({ ...p, sx: 0.96, sy: wallHeight - 0.09, sz: 0.96, color: p.color ?? 0xa6916e })),

@@ -1,3 +1,6 @@
+import { HygieneLayer } from './HygieneLayer';
+import { pawnBodyLocation } from '../sim/human-corpses';
+import type { BuildableFloorKind } from '../sim/flooring';
 import { WindLayer } from './WindLayer';
 import { pileParts,type PileBundle } from './pile-parts';
 import { corpseStage } from '../sim/corpses';
@@ -62,6 +65,8 @@ export class ColonyRenderer {
   private readonly presentation = new PresentationQueue();
   private received:{world:World;speed:number;tracks?:PawnTrack[]}|undefined;
   private hasTracks = false;
+  private readonly hygiene = new HygieneLayer();
+  private selectedFloor:BuildableFloorKind|undefined;
   private readonly fires = new FireLayer();
   private readonly wind = new WindLayer(this.environmentLighting.configure);
   private readonly projectiles = new ProjectileLayer();
@@ -172,7 +177,7 @@ export class ColonyRenderer {
     renderer.domElement.tabIndex = 0;
     host.appendChild(renderer.domElement);
     this.daylight = new DayNightLayer(this.scene);
-    this.scene.add(this.wind.group,this.wildlife.mesh,this.wildlife.flames,this.fires.mesh,this.projectiles.mesh,this.roofs.surface,this.roofs.areas,this.doors.group,this.crops.group, this.growing.group, this.overview.group, this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup, this.pawns.group);
+    this.scene.add(this.hygiene.group,this.wind.group,this.wildlife.mesh,this.wildlife.flames,this.fires.mesh,this.projectiles.mesh,this.roofs.surface,this.roofs.areas,this.doors.group,this.crops.group, this.growing.group, this.overview.group, this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup, this.pawns.group);
     this.rig = new CameraRig(renderer.domElement);
     const hoverMat = new THREE.MeshBasicNodeMaterial({ color: 0xf9ebae, transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide, forceSinglePass:true });
     // A zero-thickness cursor has no front/back transparency ordering.
@@ -259,16 +264,17 @@ export class ColonyRenderer {
       this.daylight.configureShadow(extent);
       this.resize();
     }
+    this.hygiene.update(world,this.boxes,newMap);
     if (previousWorld?.resources !== world.resources || newMap || Math.floor(previousWorld.tick / 25) !== Math.floor(world.tick / 25)) this.updateResources(world, newMap);
     const packageKey=(world.packed??[]).filter(p=>p.owner.type==='ground').map(p=>`${p.building.id}:${p.building.material}:${p.owner.type==='ground'?`${p.owner.x}:${p.owner.z}`:''}`).join('|');
     this.roofs.update(world,this.boxes,newMap);
     this.doors.update(world,this.wallCutaway,resetPoses);
     const doorAxes=doorOrientations(world);
-    const structureKey = [...doorAxes].join(':') + packageKey + world.structures.map((s) => `${s.id}:${s.kind}:${s.material}:${s.x}:${s.z}:${s.orientation}:${s.footprint}:${s.medical}:${s.power?.on}:${s.power?.parentId}:${s.power?.switchOn}:${s.fuel?s.fuel.ticks>0:''}`).join('|');
+    const structureKey = [...doorAxes].join(':') + packageKey + world.structures.map((s) => `${s.id}:${s.kind}:${s.material}:${s.x}:${s.z}:${s.orientation}:${s.footprint}:${s.medical}:${s.grave?.corpseId}:${s.power?.on}:${s.power?.parentId}:${s.power?.switchOn}:${s.fuel?s.fuel.ticks>0:''}`).join('|');
     if (structureKey !== this.structureKey || newMap) { this.structureKey = structureKey; this.buildStructures(world); }
     // Quantize presentation of progression to avoid rebuilding static meshes for
     // every work tick. Saved simulation progress remains exact and authoritative.
-    const jobKey = world.jobs.map((j) => `${j.id}:${j.kind}:${j.material}:${j.x}:${j.z}:${j.orientation}:${j.footprint}:${j.status}:${j.construction}:${j.escrow.wood}:${j.kind === 'mine' || j.kind === 'chop' || j.kind === 'harvest' || j.kind === 'cut' || j.kind === 'sow' || j.kind === 'deconstruct' || j.kind==='repair' ? 0 : Math.floor(j.progress / jobDuration(world,j) * 20)}`).join('|');
+    const jobKey = world.jobs.map((j) => `${j.id}:${j.kind}:${j.floor}:${j.material}:${j.x}:${j.z}:${j.orientation}:${j.footprint}:${j.status}:${j.construction}:${j.escrow.wood}:${j.kind === 'mine' || j.kind === 'chop' || j.kind === 'harvest' || j.kind === 'cut' || j.kind === 'sow' || j.kind === 'deconstruct' || j.kind==='repair' ? 0 : Math.floor(j.progress / jobDuration(world,j) * 20)}`).join('|');
     if (jobKey !== this.jobKey || newMap) { this.jobKey = jobKey; this.buildJobs(world); }
     const storageKey = `${world.home?.join(',')??''};`+world.stockpiles.map((s) => `${s.id}:${s.x}:${s.z}:${s.priority}:${s.filters.wood}:${s.filters.food}`).join('|');
     if (storageKey !== this.storageKey || newMap) { this.storageKey = storageKey; this.buildStorage(world); }
@@ -284,6 +290,10 @@ export class ColonyRenderer {
     this.pawns.update(world, resetPoses ? 1 : oldBlend, resetPoses);
     this.wildlife.update(world,this.hasTracks?this.timeline:undefined);
     this.updateHover();
+  }
+
+  setFloorSelection(floor:BuildableFloorKind|undefined):void {
+    if(floor!==this.selectedFloor)this.cancelDesignation();this.selectedFloor=floor;
   }
 
   setTool(tool: string): void {
@@ -381,7 +391,8 @@ export class ColonyRenderer {
     const pawn = this.world?.pawns.find((item) => item.id === id)??this.world?.wildlife?.animals.find(a=>a.id===id);
     if (!pawn) return;
     const offset = this.camera.position.clone().sub(this.controls.target);
-    this.controls.target.set(pawn.x, 0, pawn.z);
+    const physical='body' in pawn&&this.world?pawnBodyLocation(this.world,pawn):pawn;if(!physical)return;
+    this.controls.target.set(physical.x, 0, physical.z);
     this.camera.position.copy(this.controls.target).add(offset);
     this.controls.update();
   }
@@ -392,8 +403,12 @@ export class ColonyRenderer {
    * same confirmed edge as the GPU. Canopies don't prevent selecting a colon. */
   screenPawns():ScreenPawn[] {
     const rect=this.renderer.domElement.getBoundingClientRect(),result:ScreenPawn[]=[];
+    // The carried body uses the carrier's GPU pose and edge times. Its own
+    // final walking segment is historical and must not drive its hit proxy.
+    const bodyCarriers=new Map((this.world?.piles??[]).flatMap(p=>p.humanCorpse&&p.owner.type==='pawn'?[[p.humanCorpse.pawnId,p.owner.pawnId] as const]:[]));
     for(const [id,visual] of this.pawns.visuals) {
-      const segment=this.hasTracks?this.timeline.segment(id):undefined;
+      if(visual.to.y< -100)continue;
+      const segment=this.hasTracks?this.timeline.segment(bodyCarriers.get(id)??id):undefined;
       const alpha=segment?THREE.MathUtils.clamp((this.timeline.tick-segment.start)/(segment.end-segment.start),0,1):this.pawns.blend.value;
       const position=new THREE.Vector3().lerpVectors(visual.from,visual.to,alpha);
       const distance=segment?THREE.MathUtils.lerp(segment.fromFraction??0,segment.toFraction??1,alpha):alpha;
@@ -460,6 +475,7 @@ export class ColonyRenderer {
     const jobById = new Map(world.jobs.map(job => [job.id, job]));
     const cells = new Map<string, PileBundle>();
     for (const pile of world.piles) {
+      if(pile.humanCorpse||pile.owner.type==='grave')continue;
       if (pile.owner.type === 'pawn'||pile.owner.type==='equipment'||pile.owner.type==='apparel'||pile.owner.type==='inventory') continue;
       const job = pile.owner.type === 'job' ? jobById.get(pile.owner.jobId) : undefined;
       if (pile.owner.type === 'job' && !job) continue;
@@ -619,7 +635,7 @@ export class ColonyRenderer {
     if (signature === this.areaSignature) return;
     this.areaSignature = signature;
     this.areaIndex ??= buildAreaIndex(world);
-    const result = queryArea(world, { type: 'area', action: drag.action, from: drag.from, to: cell }, this.areaIndex);
+    const result = queryArea(world, { type: 'area', action: drag.action, from: drag.from, to: cell, ...(drag.action==='lay-floor'?{floor:this.selectedFloor}:{}) }, this.areaIndex);
     if (!result.ok) return;
     const { bounds, cells, skipped } = result;
     const width = bounds.maxX - bounds.minX + 1, height = bounds.maxZ - bounds.minZ + 1;
@@ -664,11 +680,11 @@ export class ColonyRenderer {
     if(cell&&(this.tool==='cooler'||cooler))this.recreationHints.cooler(cell,cooler?.orientation??this.placementRotation);
     this.hover.visible = !!cell;
     if (!cell || !this.world) return;
-    const cells = footprintCells({ ...cell, kind: this.tool==='install'&&this.furniturePlacement?this.furniturePlacement.kind:this.tool === 'heater' || this.tool === 'wind-turbine' || this.tool === 'solar-generator' || this.tool === 'battery' || this.tool === 'wood-generator' || this.tool === 'research-bench' || this.tool === 'tailor-bench' || this.tool === 'fueled-stove' || this.tool === 'electric-stove' || this.tool === 'butcher-table' || this.tool === 'stonecutter' || this.tool === 'bed' || this.tool === 'table' || this.tool === 'stool' ? this.tool : 'wall', orientation: this.placementRotation });
+    const cells = footprintCells({ ...cell, kind: this.tool==='install'&&this.furniturePlacement?this.furniturePlacement.kind:this.tool === 'grave' || this.tool === 'heater' || this.tool === 'wind-turbine' || this.tool === 'solar-generator' || this.tool === 'battery' || this.tool === 'wood-generator' || this.tool === 'research-bench' || this.tool === 'tailor-bench' || this.tool === 'fueled-stove' || this.tool === 'electric-stove' || this.tool === 'butcher-table' || this.tool === 'stonecutter' || this.tool === 'bed' || this.tool === 'table' || this.tool === 'stool' ? this.tool : 'wall', orientation: this.placementRotation });
     const minX=Math.min(...cells.map(c=>c.x)),maxX=Math.max(...cells.map(c=>c.x)),minZ=Math.min(...cells.map(c=>c.z)),maxZ=Math.max(...cells.map(c=>c.z));
     this.hover.scale.set(maxX-minX+1, maxZ-minZ+1, 1);
     this.hover.position.set((minX+maxX)/2, this.world.tiles[cell.z * this.world.width + cell.x]?.terrain === 'water' ? WORLD_SCALE.waterSurface + 0.04 : 0.055, (minZ+maxZ)/2);
-    const validity = this.tool==='install'&&this.furniturePlacement?installCommand(this.world,{type:'install',structureId:this.furniturePlacement.id,...cell,orientation:this.furniturePlacement.kind==='standing-lamp'?0:this.placementRotation},true):this.tool === 'heater' || this.tool === 'wind-turbine' || this.tool === 'solar-generator' || this.tool === 'battery' || this.tool === 'power-conduit' || this.tool === 'power-switch' || this.tool === 'cooler' || this.tool === 'research-bench' || this.tool === 'tailor-bench' || this.tool === 'fueled-stove' || this.tool === 'electric-stove' || this.tool === 'butcher-table' || this.tool === 'butcher-spot' || this.tool === 'crafting-spot'||this.tool === 'wood-generator'||this.tool === 'standing-lamp'||this.tool === 'passive-cooler'||this.tool === 'door' || this.tool === 'stonecutter'||this.tool === 'mine'||this.tool === 'uninstall'||this.tool === 'wall' || this.tool === 'bed' || this.tool === 'table' || this.tool === 'stool' || this.tool === 'campfire' || this.tool === 'horseshoes' || this.tool === 'chop' || this.tool === 'harvest' || this.tool === 'cut'
+    const validity = this.tool==='lay-floor'||this.tool==='remove-floor'?canDesignate(this.world,{type:'designate',kind:this.tool,...cell,...this.tool==='lay-floor'?{floor:this.selectedFloor}:{}}):this.tool==='install'&&this.furniturePlacement?installCommand(this.world,{type:'install',structureId:this.furniturePlacement.id,...cell,orientation:this.furniturePlacement.kind==='standing-lamp'?0:this.placementRotation},true):this.tool === 'grave' || this.tool === 'heater' || this.tool === 'wind-turbine' || this.tool === 'solar-generator' || this.tool === 'battery' || this.tool === 'power-conduit' || this.tool === 'power-switch' || this.tool === 'cooler' || this.tool === 'research-bench' || this.tool === 'tailor-bench' || this.tool === 'fueled-stove' || this.tool === 'electric-stove' || this.tool === 'butcher-table' || this.tool === 'butcher-spot' || this.tool === 'crafting-spot'||this.tool === 'wood-generator'||this.tool === 'standing-lamp'||this.tool === 'passive-cooler'||this.tool === 'door' || this.tool === 'stonecutter'||this.tool === 'mine'||this.tool === 'uninstall'||this.tool === 'wall' || this.tool === 'bed' || this.tool === 'table' || this.tool === 'stool' || this.tool === 'campfire' || this.tool === 'horseshoes' || this.tool === 'chop' || this.tool === 'harvest' || this.tool === 'cut'
       ? canDesignate(this.world, { type: 'designate', kind: this.tool, ...cell, ...(this.tool==='heater'||this.tool==='wind-turbine'||this.tool==='solar-generator'||this.tool==='battery'||this.tool==='power-conduit'||this.tool==='power-switch'||this.tool==='cooler'||this.tool==='fueled-stove'||this.tool==='electric-stove'||this.tool==='wood-generator'||this.tool==='standing-lamp'?{material:'steel' as const}:this.tool==='passive-cooler'||this.tool==='butcher-table'?{material:'wood' as const}:{}), orientation: this.tool==='solar-generator'||this.tool==='power-conduit'||this.tool==='power-switch'||this.tool==='wood-generator'||this.tool==='standing-lamp'||this.tool==='door'||this.tool==='passive-cooler'?0:this.placementRotation }) : undefined;
     const color = validity?.ok === false ? 0xe46f58 : this.tool === 'cancel' || this.tool === 'remove-stockpile' ? 0xe6876a : this.tool === 'select' ? 0xf9ebae : 0x9dd9ca;
     (this.hover.material as THREE.MeshBasicNodeMaterial).color.setHex(color);
@@ -691,7 +707,7 @@ export class ColonyRenderer {
     if (event.target instanceof HTMLElement && (event.target.matches('input, textarea, select') || event.target.isContentEditable)) return;
     const key = event.key.toLowerCase();
     // Q/E rotate a bed in Architecte. Outside placement, Q retains AZERTY pan.
-    if ((this.tool === 'cooler' || this.tool === 'install' || this.tool === 'bed' || this.tool === 'table' || this.tool === 'campfire' || this.tool === 'research-bench' || this.tool === 'tailor-bench' || this.tool === 'fueled-stove' || this.tool === 'electric-stove' || this.tool === 'butcher-table' || this.tool === 'stonecutter' || this.tool === 'butcher-spot' || this.tool === 'crafting-spot') && (key === 'q' || key === 'e')) return;
+    if ((this.tool === 'grave' || this.tool === 'cooler' || this.tool === 'install' || this.tool === 'bed' || this.tool === 'table' || this.tool === 'campfire' || this.tool === 'research-bench' || this.tool === 'tailor-bench' || this.tool === 'fueled-stove' || this.tool === 'electric-stove' || this.tool === 'butcher-table' || this.tool === 'stonecutter' || this.tool === 'butcher-spot' || this.tool === 'crafting-spot') && (key === 'q' || key === 'e')) return;
     if (['arrowleft', 'arrowright', 'arrowup', 'arrowdown', 'q', 'a', 'd', 'z', 'w', 's'].includes(key)) {
       this.keys.add(key); if (key.startsWith('arrow')) event.preventDefault();
     }

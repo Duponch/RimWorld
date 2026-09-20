@@ -3,7 +3,7 @@ import type { ResourceKind,StructureKind } from './types.ts';
 
 /** Logical fill, not model height, navigation or the final cover probability.
  * Sources, version limits and decorative-stone decision: combat-world-reference. */
-export const STRUCTURE_SHOT_FILL:Readonly<Record<StructureKind,number>>=Object.freeze({heater:.4,'wind-turbine':.5,
+export const STRUCTURE_SHOT_FILL:Readonly<Record<StructureKind,number>>=Object.freeze({grave:0,heater:.4,'wind-turbine':.5,
   'power-conduit':0,'power-switch':0,battery:.4,'solar-generator':.5,
   'fueled-stove':.5,'electric-stove':.5,'butcher-table':.5,
   'butcher-spot':0,

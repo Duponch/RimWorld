@@ -1,0 +1,45 @@
+import { footprintCells } from './definitions.ts';
+import { FLOOR_DEFINITIONS } from './flooring.ts';
+import { FILTH_DEFINITIONS } from './filth-rules.ts';
+import { isGrowingTerrain } from './soil.ts';
+import { RoomTopologyCache,type RoomTopology } from './room-topology.ts';
+import { isRoofed } from './roof-rules.ts';
+import type { Cell,World } from './types.ts';
+
+const caches=new WeakMap<World,RoomTopologyCache>();
+const neighbors=(c:Cell):Cell[]=>[{x:c.x-1,z:c.z},{x:c.x+1,z:c.z},{x:c.x,z:c.z-1},{x:c.x,z:c.z+1}];
+export interface CleanlinessRoom {id:number;cells:ReadonlySet<number>;adjacent:ReadonlySet<number>;covered:number;cleanliness:number;doorway:boolean}
+/** One synchronous read. Rooms are computed only when requested; outdoors is
+ * rejected before any flood or object aggregation. Never retain across mutation. */
+export class CleanlinessCapture {
+  readonly world:World;readonly topology:RoomTopology;
+  private rooms=new Map<number,CleanlinessRoom>();
+  constructor(world:World,topology:RoomTopology){this.world=world;this.topology=topology;}
+  room(cell:Cell):CleanlinessRoom|null {
+    const w=this.world,space=this.topology.at(cell.x,cell.z);
+    // A doorway or exterior may have a Room, but no ProperRoom stat map.
+    if(!space||space.kind!=='space'||space.touchesMapEdge)return null;
+    const doorway=false,index=cell.z*w.width+cell.x,id=space.id,cached=this.rooms.get(id);if(cached)return cached;
+    const cells=new Set<number>([index]),adjacent=new Set<number>(),queue=[index];let total=0,covered=0;
+    for(let head=0;head<queue.length;head++){
+      const i=queue[head]!,c={x:i%w.width,z:Math.floor(i/w.width)},tile=w.tiles[i]!;
+      total+=tile.floor?FLOOR_DEFINITIONS[tile.floor].cleanliness:isGrowingTerrain(tile.terrain)?-1:0;
+      if(isRoofed(w,i))covered++;
+      for(const next of neighbors(c)){
+        const n=next.z*w.width+next.x,r=this.topology.at(next.x,next.z);if(!r)continue;
+        if(!doorway&&r.kind==='space'&&r.id===id){if(!cells.has(n)){cells.add(n);queue.push(n);}}
+        else adjacent.add(n);
+      }
+    }
+    // Region lists include boundary objects, not every object across an open
+    // adjacent room. The only nonzero adjacent surface in this slice is a door.
+    const contains=(i:number)=>cells.has(i)||adjacent.has(i)&&this.topology.at(i%w.width,Math.floor(i/w.width))?.kind==='doorway';
+    for(const f of w.filth?.items??[])if(contains(f.z*w.width+f.x))total+=FILTH_DEFINITIONS[f.kind].cleanliness;
+    for(const s of w.structures){const value=s.kind==='butcher-table'?-15:s.kind==='stonecutter'?-5:0;if(value&&footprintCells(s).some(c=>contains(c.z*w.width+c.x)))total+=value;}
+    const result={id,cells,adjacent,covered,cleanliness:total/cells.size,doorway};this.rooms.set(id,result);return result;
+  }
+}
+export function captureCleanliness(w:World):CleanlinessCapture {
+  let cache=caches.get(w);if(!cache){cache=new RoomTopologyCache();caches.set(w,cache);}return new CleanlinessCapture(w,cache.read(w));
+}
+export const roomCleanliness=(w:World,c:Cell,capture=captureCleanliness(w)):number|null=>capture.room(c)?.cleanliness??null;

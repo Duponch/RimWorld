@@ -1,4 +1,5 @@
 import { MALNUTRITION_UNIT,malnutritionModifiers } from './malnutrition.ts';
+import { foodPoisoningModifiers } from './food-poisoning.ts';
 import { coldModifiers } from './cold-rules.ts';
 import { HEAT_UNIT,heatModifiers } from './heat-rules.ts';
 import type { BodyAssessment } from './body-capacities.ts';
@@ -36,7 +37,7 @@ export function medicalPain(record:MedicalRecord):number {
   let pain=(heatModifiers(record.heatstroke).pain+coldModifiers(record.hypothermia).pain)*PAIN_UNIT;
   for(const i of record.injuries)pain+=i.severity*(i.scar?.pain!==undefined?5*i.scar.pain:INJURY_RULES[i.kind].painUnits);
   for(const m of record.missing)if(freshMissing(record,m))pain+=medicalModel(record).byId[m.part].hp*10000;
-  return Math.min(1,pain/PAIN_UNIT/medicalModel(record).healthScale+infectionModifiers(record).pain);
+  return Math.min(1,pain/PAIN_UNIT/medicalModel(record).healthScale+infectionModifiers(record).pain+foodPoisoningModifiers(record.foodPoisoning).painOffset);
 }
 export function medicalBleed(record:MedicalRecord):number {
   return medicalBleedUnits(record)*1000/BLOOD_UNIT;
@@ -50,7 +51,8 @@ export function medicalBleedUnits(record:MedicalRecord):number {
 }
 export function assessMedical(record:MedicalRecord):BodyAssessment {
   const heat=heatModifiers(record.heatstroke),cold=coldModifiers(record.hypothermia),blood=bloodConsciousness(record.bloodLoss),infection=infectionModifiers(record),malnutrition=malnutritionModifiers(record.malnutrition);
-  return projectedMedicalBody(record,{damage:record.injuries.map(i=>({part:i.part,loss:i.severity/HP_UNIT})),missing:record.missing.map(m=>m.part),pain:medicalPain(record),consciousnessOffset:(blood.consciousnessOffset??0)+heat.consciousnessOffset+cold.consciousnessOffset+infection.consciousnessOffset+malnutrition.consciousnessOffset,consciousnessMax:Math.min(blood.consciousnessMax??Infinity,heat.consciousnessMax,cold.consciousnessMax,infection.consciousnessMax,malnutrition.consciousnessMax),movingOffset:heat.movingOffset+cold.movingOffset,manipulationOffset:cold.manipulationOffset,breathingOffset:infection.breathingOffset},medicalModel(record));
+  const {painOffset:_foodPain,...foodFactors}=foodPoisoningModifiers(record.foodPoisoning);
+  return projectedMedicalBody(record,{damage:record.injuries.map(i=>({part:i.part,loss:i.severity/HP_UNIT})),missing:record.missing.map(m=>m.part),pain:medicalPain(record),consciousnessOffset:(blood.consciousnessOffset??0)+heat.consciousnessOffset+cold.consciousnessOffset+infection.consciousnessOffset+malnutrition.consciousnessOffset,consciousnessMax:Math.min(blood.consciousnessMax??Infinity,heat.consciousnessMax,cold.consciousnessMax,infection.consciousnessMax,malnutrition.consciousnessMax),movingOffset:heat.movingOffset+cold.movingOffset,manipulationOffset:cold.manipulationOffset,breathingOffset:infection.breathingOffset,...foodFactors},medicalModel(record));
 }
 export function medicalStatus(record:MedicalRecord,body=assessMedical(record)):'mobile'|'downed'|'dead' {
   return record.death?'dead':body.painShock||!body.canBeAwake||!body.movingCapable?'downed':'mobile';

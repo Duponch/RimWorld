@@ -57,3 +57,7 @@
 
 #prisoner-inspection{padding:8px 0;border-bottom:1px solid var(--line)}#prisoner-inspection label{display:flex;flex-direction:column;gap:5px;margin:10px 0;font-size:12px}#prisoner-inspection select{max-width:100%;background:#233332;border:1px solid var(--line);color:inherit;padding:6px}#prisoner-resistance-progress{width:100%;height:7px;accent-color:#d0ac74}.work-social{display:block;font-size:.7rem;white-space:nowrap;color:var(--text-muted,#c4c4ac)}
 #cell-bed > label { display: block; margin-top: 0.4rem; }
+.burial-controls,.hygiene-controls { border-top:1px solid #596459; margin-top:.65rem; padding-top:.55rem; }
+.burial-controls h3 { margin:.15rem 0 .45rem; font-size:1rem; }
+.burial-controls label,.hygiene-controls label { display:block; margin:.4rem 0; }
+.burial-controls select,.hygiene-controls select { max-width:100%; }

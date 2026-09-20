@@ -44,7 +44,7 @@ export function tickSkills(world:World,pawn:Pawn):void {
   for(const skill of [skills.construction,skills.medicine,skills.shooting,skills.melee,...skills.social?[skills.social]:[],...skills.crafting?[skills.crafting]:[],...skills.intellectual?[skills.intellectual]:[],...skills.cooking?[skills.cooking]:[]]){const loss=decay[skill.level-10];if(loss)learnSkill(skill,-loss);}
 }
 export function usesConstructionSkill(job:Job):boolean {
-  return !job.clearance&&(isConstruction(job)||job.kind==='deconstruct'||job.kind==='uninstall'||job.kind==='install'||job.kind==='build-roof'||job.kind==='remove-roof');
+  return !job.clearance&&(isConstruction(job)||job.kind==='remove-floor'||job.kind==='deconstruct'||job.kind==='uninstall'||job.kind==='install'||job.kind==='build-roof'||job.kind==='remove-roof');
 }
 /** Called only at the physically reached, executable work phase. */
 export function constructionWorkRate(pawn:Pawn,job:Job,light:number,body?:import('./body-capacities.ts').BodyAssessment):number {
@@ -54,6 +54,6 @@ export function constructionWorkRate(pawn:Pawn,job:Job,light:number,body?:import
     const recipe=job.kind==='deconstruct'&&job.deconstruction ? constructionRecipe(job.deconstruction) : constructionRecipe(job);
     if(recipe.ingredients.length>0)learnSkill(pawn.skills.construction,2500,pawn);
   }
-  return light*constructionSpeed(pawn)*physicalWorkFactor(pawn,'build',body);
+  return light*constructionSpeed(pawn)*physicalWorkFactor(pawn,'build',body)*(job.kind==='remove-floor'?1.7:1);
 }
 import { physicalWorkFactor } from './health-rules.ts';

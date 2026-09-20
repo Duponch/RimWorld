@@ -1,3 +1,4 @@
+import { foodPoisoningStage } from '../sim/food-poisoning';
 import type { World } from '../sim/types';
 import { medicalPain,medicalBleed } from '../sim/injury-state';
 import { animalBody } from '../sim/wildlife-health';
@@ -5,7 +6,7 @@ import { HARE_MODEL } from '../sim/body-model';
 const labels={idle:'Se repose',moving:'Se déplace',eating:'Mange',sleeping:'Dort',hungry:'Cherche à manger',downed:'À terre',dead:'Mort'};
 export function updateWildlifePanel(root:HTMLElement,world:World,focus:(id:number)=>void,enable:()=>void,selected:readonly number[]=[],shoot?:(id:number)=>void,melee?:(id:number)=>void,hunt?:(id:number,enabled:boolean)=>void):void {
   if(!root.querySelector('[data-fauna-list]')) {
-    root.innerHTML='<p>Lièvres sauvages · herbivores. Les portes fermées les arrêtent. Les blessures affectent leurs capacités ; les impacts peuvent les faire fuir.</p><p class="muted">Mobilisez un colon, puis choisissez Tirer (avec un revolver) ou Attaquer au contact. Un lièvre agressé au contact peut riposter brièvement. Cochez Chasser pour un colon civil affecté à Chasse et muni d’un revolver. Une réserve acceptant les dépouilles permet leur rangement ; un emplacement de boucherie et sa facture produisent viande et cuir.</p><button data-fauna-enable>Introduire la faune dans cette ancienne partie</button><div data-fauna-list></div>';
+    root.innerHTML='<p>Lièvres sauvages · herbivores. Les portes fermées les arrêtent. Les blessures affectent leurs capacités ; les impacts peuvent les faire fuir.</p><p class="muted">Mobilisez un colon, puis choisissez Tirer (avec une arme à feu) ou Attaquer au contact. Un lièvre agressé au contact peut riposter brièvement. Cochez Chasser pour un colon civil affecté à Chasse et muni d’une arme à feu. Une réserve acceptant les dépouilles permet leur rangement ; un emplacement de boucherie et sa facture produisent viande et cuir.</p><button data-fauna-enable>Introduire la faune dans cette ancienne partie</button><div data-fauna-list></div>';
     root.querySelector<HTMLButtonElement>('[data-fauna-enable]')!.onclick=enable;
   }
   root.querySelector<HTMLButtonElement>('[data-fauna-enable]')!.hidden=world.wildlife!==undefined;
@@ -32,6 +33,6 @@ export function updateWildlifePanel(root:HTMLElement,world:World,focus:(id:numbe
     const health=a.health;
     const injuries=health?[...health.injuries.map(i=>`${HARE_MODEL.byId[i.part].label} : blessure ${(i.severity/1000).toFixed(1)} PV${i.scar?.pain!==undefined?' (cicatrice)':''}`),...health.missing.map(m=>`${HARE_MODEL.byId[m.part].label} : perdu`)].join(' ; '):'';
     const summary=!health?'Aucune blessure.':health.death?'Mort · lésions conservées':`Mobilité ${Math.round(animalBody(a).capacities.moving*100)} % · Douleur ${Math.round(medicalPain(health)*100)} % · Saignement ${(medicalBleed(health)*100).toFixed(1)} %/jour`;
-    list.querySelector(`[data-animal-health="${a.id}"]`)!.textContent=summary+(injuries?` · ${injuries}`:'');
+    list.querySelector(`[data-animal-health="${a.id}"]`)!.textContent=summary+(health?.foodPoisoning?` · Intoxication alimentaire : ${{none:'fin de récupération',initial:'phase initiale',major:'phase majeure',recovering:'récupération'}[foodPoisoningStage(health.foodPoisoning)]}${health.foodPoisoning.vomit?' · Vomit':''}`:'')+(injuries?` · ${injuries}`:'');
   }
 }

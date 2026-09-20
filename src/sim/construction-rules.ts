@@ -5,7 +5,7 @@ import { footprintCells, STRUCTURE_DEFINITIONS } from './definitions.ts';
 import type { Cell, HaulDestination, Job, MaterialPile, Pawn, Resource, World } from './types.ts';
 import { serviceCell } from './service-reservations.ts';
 
-export const isConstruction = (job: Pick<Job,'kind'>): boolean => job.kind==='install'||job.kind in STRUCTURE_DEFINITIONS;
+export const isConstruction = (job: Pick<Job,'kind'>): boolean => job.kind==='install'||job.kind==='lay-floor'||job.kind in STRUCTURE_DEFINITIONS;
 export const containsCell = (job: Job, cell: Cell): boolean => footprintCells(job).some(c=>c.x===cell.x&&c.z===cell.z);
 /** Old saves are validated with the old solid-plan contract before migration. */
 export const jobBlocksTransit = (world: World, job: Job): boolean => world.schemaVersion<16&&(job.kind==='wall'||job.kind==='table');
@@ -47,7 +47,7 @@ export function constructionSiteFree(world: World, job: Job, workerId?: number, 
   if(world.wildlife?.animals.some(a=>cells.some(c=>{
     const m=a.motion;return a.x===c.x&&a.z===c.z||!!m&&m.end>world.tick&&c.x>=Math.min(m.from.x,m.to.x)&&c.x<=Math.max(m.from.x,m.to.x)&&c.z>=Math.min(m.from.z,m.to.z)&&c.z<=Math.max(m.from.z,m.to.z);
   })))return false;
-  return !world.pawns.some(p=>p.id!==workerId&&cells.some(c=>{
+  return !world.pawns.some(p=>p.id!==workerId&&!(p.state==='dead'&&(p.body?.pileId!==undefined||p.body?.lostAt!==undefined))&&cells.some(c=>{
     const edge=p.motion;
     const service=serviceCell(p);
     return p.x===c.x&&p.z===c.z || service?.x===c.x&&service.z===c.z || !!edge&&edge.end>world.tick&&c.x>=Math.min(edge.from.x,edge.to.x)&&c.x<=Math.max(edge.from.x,edge.to.x)&&c.z>=Math.min(edge.from.z,edge.to.z)&&c.z<=Math.max(edge.from.z,edge.to.z);

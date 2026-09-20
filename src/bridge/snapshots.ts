@@ -1,3 +1,4 @@
+import { isFloorKind } from '../sim/flooring.ts';
 import { validPlantLife } from '../sim/plant-life-save.ts';
 import { resourceMaxHp } from '../sim/thing-damage-rules.ts';
 import { validPlantThermalFactor } from '../sim/thermal-plants.ts';
@@ -11,7 +12,7 @@ interface ResourceChanges { removed: number[]; upserted: Resource[]; order?: num
 interface SnapshotHeader { motion?:import('./motion-tracks.ts').PawnTrack[]; type: 'snapshot'; epoch: number; revision: number; stepMs: number; speed: number }
 export type SnapshotMessage = SnapshotHeader & (
   | { kind: 'checkpoint'; world: World }
-  | { kind: 'delta'; baseRevision: number; world: DynamicWorld; tiles?: Array<[number, Terrain, Tile['stone']?, Tile['miningDamage']?, Tile['ore']?]>; resources?: ResourceChanges }
+  | { kind: 'delta'; baseRevision: number; world: DynamicWorld; tiles?: Array<[number, Terrain, Tile['stone']?, Tile['miningDamage']?, Tile['ore']?, Tile['floor']?]>; resources?: ResourceChanges }
 );
 
 const equalResource = (a: Resource, b: Resource): boolean => a.id === b.id && a.kind === b.kind
@@ -31,6 +32,7 @@ export class SnapshotEncoder {
   private terrain: Terrain[] = [];
   private damage: Tile['miningDamage'][] = [];
   private ores: Tile['ore'][] = [];
+  private floors: Tile['floor'][] = [];
   private stones: Tile['stone'][] = [];
   private resources = new Map<number, Resource>();
   private orderedResources: Resource[] = [];
@@ -44,18 +46,18 @@ export class SnapshotEncoder {
     if (replacement || checkpoint) {
       this.source = world; this.width = world.width; this.height = world.height;
       this.terrain = world.tiles.map(tile => tile.terrain);
-      this.stones = world.tiles.map(tile => tile.stone);this.damage=world.tiles.map(t=>t.miningDamage);this.ores=world.tiles.map(t=>t.ore);
+      this.stones = world.tiles.map(tile => tile.stone);this.damage=world.tiles.map(t=>t.miningDamage);this.ores=world.tiles.map(t=>t.ore);this.floors=world.tiles.map(t=>t.floor);
       this.orderedResources = world.resources.map(copyResource);
       this.resources = new Map(this.orderedResources.map(resource => [resource.id, resource]));
       return { ...header, kind: 'checkpoint', world };
     }
 
-    const tiles: Array<[number, Terrain, Tile['stone']?, Tile['miningDamage']?, Tile['ore']?]> = [];
+    const tiles: Array<[number, Terrain, Tile['stone']?, Tile['miningDamage']?, Tile['ore']?, Tile['floor']?]> = [];
     for (let index = 0; index < world.tiles.length; index++) {
-      const {terrain,stone,miningDamage:damage,ore}=world.tiles[index]!;
-      if (this.terrain[index] !== terrain || this.stones[index] !== stone || this.damage[index]!==damage || this.ores[index]!==ore) {
-        tiles.push(ore!==undefined?[index,terrain,stone,damage,ore]:damage!==undefined?[index,terrain,stone,damage]:stone === undefined ? [index, terrain] : [index, terrain, stone]);
-        this.terrain[index] = terrain; this.stones[index] = stone;this.damage[index]=damage;this.ores[index]=ore;
+      const {terrain,stone,miningDamage:damage,ore,floor}=world.tiles[index]!;
+      if (this.terrain[index] !== terrain || this.stones[index] !== stone || this.damage[index]!==damage || this.ores[index]!==ore || this.floors[index]!==floor) {
+        tiles.push(floor!==undefined?[index,terrain,stone,damage,ore,floor]:ore!==undefined?[index,terrain,stone,damage,ore]:damage!==undefined?[index,terrain,stone,damage]:stone === undefined ? [index, terrain] : [index, terrain, stone]);
+        this.terrain[index] = terrain; this.stones[index] = stone;this.damage[index]=damage;this.ores[index]=ore;this.floors[index]=floor;
       }
     }
     const upserted: Resource[] = [];
@@ -128,13 +130,13 @@ export class SnapshotDecoder {
       let tiles = previous.tiles;
       if (message.tiles?.length) {
         const touched = new Set<number>();
-        for (const [index, terrain, stone, miningDamage, ore] of message.tiles) {
+        for (const [index, terrain, stone, miningDamage, ore, floor] of message.tiles) {
           if (!Number.isInteger(index) || index < 0 || index >= tiles.length || touched.has(index)
-            || !['grass', 'soil', 'water', 'rock', ...(message.world.schemaVersion>=28?['rough-stone']:[]), ...(message.world.schemaVersion>=83?['rich-soil','gravel']:[])].includes(terrain) || !validOre({terrain,ore},message.world.schemaVersion) || !validMiningDamage({terrain,stone,miningDamage,ore},message.world.schemaVersion) || !validStoneIdentity(stone, terrain, message.world.schemaVersion)) return resync('Delta de terrain invalide.');
+            || !['grass', 'soil', 'water', 'rock', ...(message.world.schemaVersion>=28?['rough-stone']:[]), ...(message.world.schemaVersion>=83?['rich-soil','gravel']:[])].includes(terrain) || floor!==undefined&&(message.world.schemaVersion<89||!isFloorKind(floor)||terrain==='water'||terrain==='rock') || !validOre({terrain,ore},message.world.schemaVersion) || !validMiningDamage({terrain,stone,miningDamage,ore},message.world.schemaVersion) || !validStoneIdentity(stone, terrain, message.world.schemaVersion)) return resync('Delta de terrain invalide.');
           touched.add(index);
         }
         tiles = tiles.slice();
-        for (const [index, terrain, stone, miningDamage, ore] of message.tiles) tiles[index] = {terrain,...stone===undefined?{}:{stone},...miningDamage===undefined?{}:{miningDamage},...ore===undefined?{}:{ore}};
+        for (const [index, terrain, stone, miningDamage, ore, floor] of message.tiles) tiles[index] = {terrain,...stone===undefined?{}:{stone},...miningDamage===undefined?{}:{miningDamage},...ore===undefined?{}:{ore},...floor===undefined?{}:{floor}};
       }
       let resources = previous.resources;
       if (message.resources) {

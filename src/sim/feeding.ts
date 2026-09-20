@@ -1,6 +1,7 @@
 import { bedsideAccess } from './care-access.ts';
 import { FEED_TICKS,feedingReason,feedingPlaceValid,feedingWork,type FeedTask } from './feeding-rules.ts';
 import { copyPileCondition } from './pile-condition.ts';
+import { ingestFoodRisk } from './food-hygiene.ts';
 import { selectFood } from './food-selection.ts';
 import { mealQuantity,nutritionOf,ITEM_DEFINITIONS,rawFoodThought } from './items.ts';
 import { reservedSource } from './materials.ts';
@@ -71,4 +72,5 @@ export function processFeeding(world:World,doctor:Pawn,context:NeedContext):void
   rememberMeal(world,p,true,rawFoodThought(food.item));
   context.event(`${p.name} a mangé une portion (${t.quantity} × ${ITEM_DEFINITIONS[food.item].label}) au lit, avec l’aide de ${doctor.name}.`);
   releaseWork(world,doctor);
+  ingestFoodRisk(world,p,food);
 }

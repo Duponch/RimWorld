@@ -16,11 +16,11 @@ export function validCorpseShape(p:Record<string,unknown>,version:number):boolea
   return version>=79&&p.item==='hare-corpse'&&p.quantity===1&&object(p.owner)&&['ground','pawn'].includes(String(p.owner.type))&&object(c)
     &&Object.keys(c).every(k=>['animalId','species','sex','health','facing'].includes(k))&&c.animalId===p.id&&c.species==='hare'&&['female','male'].includes(String(c.sex))
     &&(c.facing===undefined||typeof c.facing==='number'&&Number.isFinite(c.facing)&&Math.abs(c.facing)<=Math.PI)
-    &&validateMedicalRecord(c.health,true,true,false,false,true,version>=79,version>=81,version>=84,version>=87,version>=88)===null&&object(c.health)&&object(c.health.death);
+    &&validateMedicalRecord(c.health,true,true,false,false,true,version>=79,version>=81,version>=84,version>=87,version>=88,version>=89)===null&&object(c.health)&&object(c.health.death);
 }
 export function validateCorpses(w:World,version:number):string[] {
   const errors:string[]=[];
-  for(const p of w.piles)if(p.kind==='corpse') {
+  for(const p of w.piles)if(p.kind==='corpse'&&p.item!=='human-corpse') {
     if(!validCorpseShape(p as unknown as Record<string,unknown>,version)){errors.push('Invalid corpse state.');continue;}
     const c=p.corpse!;
     if(!validCorpseRot(p.rot,w.tick,c.health.death!.tick)||c.health.tick>w.tick||Array.isArray(w.wildlife?.animals)&&w.wildlife.animals.some(a=>a?.id===c.animalId))errors.push('Invalid corpse age, clock or duplicated animal.');

@@ -1,5 +1,8 @@
 import { processBurningAnimal } from './firefighting-animals.ts';
 import { malnutritionModifiers } from './malnutrition.ts';
+import { processAnimalVomiting } from './food-hygiene.ts';
+import { bleedFilth } from './filth.ts';
+import { medicalBleed } from './injury-state.ts';
 import { moveAnimalMelee } from './wildlife-melee.ts';
 import { captureWorldShotGrid } from './combat-world.ts';
 import { blockedCells } from './pathfinding.ts';
@@ -55,10 +58,12 @@ export function advanceWildlife(world:World):void {
     const a=s.animals[(world.tick+i)%s.animals.length]!;
     advanceAnimalHealth(world,a);
     if(a.state==='dead')continue;
+    if(a.health)bleedFilth(world,a,medicalBleed(a.health),a.state==='downed'||a.state==='sleeping',.4);
     const body=animalBody(a);
     a.food=Math.max(0,a.food-HARE.foodPerDay/6000*malnutritionModifiers(a.health?.malnutrition).hungerFactor*(a.food<HARE.nutrition*.18?.25:a.food<HARE.nutrition*.36?.5:1));
     a.rest=Math.max(0,Math.min(1,a.rest+(a.state==='sleeping'?.0003809524*.8:-.00015833333*(a.rest<.01?.6:a.rest<.14?.3:a.rest<.28?.7:1))));
     if(a.flee&&world.tick>=a.flee.until){delete a.flee;a.path=[];if(!a.motion||a.motion.end<=world.tick)a.state='idle';}
+    if(processAnimalVomiting(world,a))continue;
     if(a.state==='downed'||a.motion&&a.motion.end>world.tick)continue;
     if(a.burning&&processBurningAnimal(world,a,{free:c=>getNav().free(c),route:goals=>{if(searches>=1)return null;searches++;return getNav().route(a,goals);},move:()=>{moveAnimal(world,a,getNav().step,body.capacities.moving);}}))continue;
     if(moveAnimalMelee(world,a,getNav,getPhysical,getShot))continue;

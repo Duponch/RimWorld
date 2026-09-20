@@ -18,35 +18,45 @@ export class RoofContext {
   readonly roof: Set<number>;
   readonly build: Set<number>;
   readonly remove: Set<number>;
-  readonly holders: Uint8Array;
-  private readonly seen: Uint32Array;
+  private supportCells?:Uint8Array;
+  private seen?:Uint32Array;
   private readonly queue = new Int32Array(225);
   private stamp = 0;
   private readonly width: number;
   private readonly height: number;
+  private readonly world:World;
   constructor(world: World) {
+    this.world=world;
     this.width = world.width; this.height = world.height;
     this.roof = new Set(world.roofing?.constructed); this.build = new Set(world.roofing?.build); this.remove = new Set(world.roofing?.remove);
-    this.holders = new Uint8Array(world.tiles.length); this.seen = new Uint32Array(world.tiles.length);
-    for (let i = 0; i < world.tiles.length; i++) if (world.tiles[i]!.terrain === 'rock') this.holders[i] = 1;
-    for (const s of world.structures) if (s.kind === 'wall' || s.kind === 'door') this.holders[roofIndex(world, s)] = 1;
+  }
+  /** Most roof intentions already cover finished cells. Capture supports only
+   * if this synchronous decision actually asks a support question. As before,
+   * callers must discard the context before any world mutation. */
+  get holders():Uint8Array {
+    if(this.supportCells)return this.supportCells;
+    const world=this.world,cells=this.supportCells=new Uint8Array(world.tiles.length);
+    for(let i=0;i<world.tiles.length;i++)if(world.tiles[i]!.terrain==='rock')cells[i]=1;
+    for(const s of world.structures)if(s.kind==='wall'||s.kind==='door')cells[roofIndex(world,s)]=1;
+    return cells;
   }
   /** Core's 6.9-radius flood through roof cells, with the root assumed roofed.
    * A nearby support behind an unroofed gap is not sufficient. */
   supported(root: number, assumeRoof = false): boolean {
+    const holders=this.holders,seen=this.seen??=new Uint32Array(this.width*this.height);
     const width = this.width, height = this.height, rx = root % width, rz = Math.floor(root / width);
     const stamp = ++this.stamp; let head = 0, tail = 1;
-    this.queue[0] = root; this.seen[root] = stamp;
+    this.queue[0] = root; seen[root] = stamp;
     while (head < tail) {
       const at = this.queue[head++]!, x = at % width, z = Math.floor(at / width);
-      if (this.holders[at]) return true;
+      if (holders[at]) return true;
       for (let direction = 0; direction < 4; direction++) {
         const nx = x + (direction === 0 ? -1 : direction === 1 ? 1 : 0), nz = z + (direction === 2 ? -1 : direction === 3 ? 1 : 0);
         if (nx < 0 || nz < 0 || nx >= width || nz >= height || (nx-rx)**2 + (nz-rz)**2 > 6.9**2) continue;
         const index = nz * width + nx;
-        if (this.holders[index]) return true;
-        if (this.seen[index] !== stamp && (this.roof.has(index) || assumeRoof && !this.remove.has(index))) {
-          this.seen[index] = stamp; this.queue[tail++] = index;
+        if (holders[index]) return true;
+        if (seen[index] !== stamp && (this.roof.has(index) || assumeRoof && !this.remove.has(index))) {
+          seen[index] = stamp; this.queue[tail++] = index;
         }
       }
     }

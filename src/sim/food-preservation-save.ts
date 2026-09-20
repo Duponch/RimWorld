@@ -15,7 +15,7 @@ export function validatePreservation(world: World, version: number): string[] {
     || (['potato','corn'] as const).some(key=>world.spoiled[key]!==undefined&&(version<84||!Number.isSafeInteger(world.spoiled[key])||world.spoiled[key]!<0))
     || (['berries','rice','simple-meal'] as const).some(key => !Number.isSafeInteger(world.spoiled[key]) || world.spoiled[key] < 0)) errors.push('Invalid cumulative food spoilage.');
   for (const pile of world.piles) {
-    if(pile.item==='hare-corpse')continue; // Full persistent-corpse contract validates its age separately.
+    if(pile.item==='hare-corpse'||pile.item==='human-corpse')continue; // Full persistent-corpse contract validates its age separately.
     if (!isPerishable(pile.item)) { if (pile.rot !== undefined) errors.push('Unexpected food age.'); continue; }
     const rot = pile.rot;
     if (!record(rot) || Object.keys(rot).length !== (rot.rate===undefined?2:3) || rot.rate!==undefined&&(version<38||typeof rot.rate!=='number'||!Number.isFinite(rot.rate)||rot.rate<0||rot.rate>=1) || !Number.isSafeInteger(rot.atTick) || rot.atTick < 0 || rot.atTick > world.tick
