@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+V82 : `front-menu` possède le brouillon et les écrans ; `game-session` sérialise création/chargement/sauvegarde et préserve les deux emplacements locaux. Le worker peut valider un chargement à froid ; le rendu est créé après acceptation d’un monde et une erreur graphique conserve sa récupération. `game-profile` distingue choix appliqués et provenance historique ; `cassandra-raids` possède un PRNG d’agenda séparé des groupes d’assaillants. `calendarTick` ajoute la phase civile initiale uniquement aux horaires, soleil, température et croissance lumineuse ; les échéances restent en ticks écoulés. `clock-rate` centralise secondes/local/Core pour bridge et poses. Six ticks locaux/s ; une journée reste 6 000 ticks, aucun état ancien réécrit par cette correction de débit. [Création](new-game-menus.md), [profil](scenario-start.md).
+
 V81 : `infection-rules/state/evolution/save` séparent coefficients, exposition/soins, progression et validation. Le dossier médical commun conserve risques de plaies, cas localisés et immunité ; adaptateurs humains/lièvres fournissent besoins et posture réelle. `infection-room` consulte la topologie uniquement au soin d’une plaie ; `infection-inspection` projette l’état sans modifier le monde. V80 validée avant migration neutre. [Contrat](infections.md).
 
 V80 : `new-game.ts` devient l’usine atomique du worker pour les trois scénarios. `scenario-definitions` contient identités/révision et libellés ; `scenario-save` valide leur provenance facultative. Le générateur naturel est distinct du camp historique et ne dépose aucune dotation. Le placement choisit le terrain existant et applique les stocks physiques avant publication ; le chargement n’appelle jamais cette usine. V79 est strictement validée avant migration neutre. La caméra peut recevoir le point d’arrivée ; les snapshots transportent la provenance avec l’état dynamique. [Contrat](scenario-start.md).
@@ -109,7 +111,7 @@ Obtenir une simulation de colonie déterministe, observable et indépendante de 
 
 ```mermaid
 flowchart LR
-  UI[Interface et commandes] -->|Messages ordonnés avec identifiant| Worker[Worker : horloge 10 Hz]
+  UI[Interface et commandes] -->|Messages ordonnés avec identifiant| Worker[Worker : horloge 6 Hz depuis V82]
   Worker --> Sim[Simulation pure TypeScript]
   Sim -->|World sérialisable| Worker
   Worker -->|Snapshots périodiques, phases et acquittements| UI

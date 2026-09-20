@@ -5,6 +5,7 @@ import { resolveUnarmoredBullet } from '../src/sim/bullet-impact';
 import { serializeWorld,deserializeWorld,validateWorld } from '../src/sim/serialization';
 import { stepWorld } from '../src/sim/engine';
 import { SnapshotEncoder,SnapshotDecoder } from '../src/bridge/snapshots';
+import { SCHEMA_VERSION } from '../src/sim/types';
 
 function infected(){
   const w=medicalCamp(1),p=w.pawns[0]!;
@@ -20,7 +21,7 @@ function infected(){
 test('V80 validates before neutral migration; no risk or immunity invented on old wounds',()=>{
   const old:any=medicalCamp(1);controlledInjury(old,old.pawns[0],'torso',9000,'gunshot');old.schemaVersion=80;
   const original=structuredClone(old),restored=deserializeWorld(JSON.stringify(old));
-  expect(restored).toEqual({...original,schemaVersion:81});expect(restored.pawns[0]!.health!.infections).toBeUndefined();
+  expect(restored).toEqual({...original,schemaVersion:SCHEMA_VERSION});expect(restored.pawns[0]!.health!.infections).toBeUndefined();
   for(const mutate of [(w:any)=>w.pawns[0].health.infections={nextId:2,immunity:0,cases:[]},
     (w:any)=>w.pawns[0].health.injuries[0].infection={dueCore:w.tick*10+15000,roomFactor:1000},
     (w:any)=>w.pawns[0].health.bloodLoss=-1]){

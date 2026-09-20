@@ -1,4 +1,5 @@
 import { apparelProjection,apparelAppearance } from './character-apparel';
+import { coreTimeSeconds,localTimeSeconds } from '../bridge/clock-rate';
 import { growPawnBuffers } from './pawn-buffers';
 import { isColonist } from '../sim/affiliation';
 import { pawnGeometry,cargoGeometry } from './pawn-geometry';
@@ -210,7 +211,7 @@ export class PawnLayer {
       this.visuals.set(pawn.id, { from, to });
       fromAttribute.setXYZW(index, from.x, from.y, from.z, from.w);
       toAttribute.setXYZW(index, to.x, to.y, to.z, to.w);
-      motion.setXYZW(index, pawn.state === 'moving'&&!pawn.stun ? 1 : 0, pawn.state === 'working'&&!pawn.stun ? 1 : 0, pawn.stun&&!medicallyStopped(pawn) ? 9 : pawn.melee?.strike ? 8 : pawn.shooting?.stance ? 7 : pawn.state === 'recreating' ? pawn.recreation.task?.activity==='horseshoes'?4:5 : pawn.state === 'sleeping'||pawn.state==='resting'||medicallyStopped(pawn) ? 1 : pawn.state === 'eating' ? dining?.seatId !== null && dining ? 3 : 2 : 0, pawn.melee?.strike ? pawn.melee.strike.atCore/100-Math.floor(world.tick/1024)*1024/10 : pawn.id * 1.7);
+      motion.setXYZW(index, pawn.state === 'moving'&&!pawn.stun ? 1 : 0, pawn.state === 'working'&&!pawn.stun ? 1 : 0, pawn.stun&&!medicallyStopped(pawn) ? 9 : pawn.melee?.strike ? 8 : pawn.shooting?.stance ? 7 : pawn.state === 'recreating' ? pawn.recreation.task?.activity==='horseshoes'?4:5 : pawn.state === 'sleeping'||pawn.state==='resting'||medicallyStopped(pawn) ? 1 : pawn.state === 'eating' ? dining?.seatId !== null && dining ? 3 : 2 : 0, pawn.melee?.strike ? coreTimeSeconds(pawn.melee.strike.atCore,Math.floor(world.tick/1024)*1024) : pawn.id * 1.7);
       const look=apparelAppearance(apparel.get(pawn.id));
       scratchColor.setHex(look.color??(isColonist(pawn)?PAWN_COLORS[index % PAWN_COLORS.length]:0xb74736));
       if(pawn.state==='dead')scratchColor.setHex(0x73756c);
@@ -234,7 +235,7 @@ export class PawnLayer {
     const geometry=this.pawnMesh.geometry;
     const from=geometry.getAttribute('aFrom') as THREE.InstancedBufferAttribute,to=geometry.getAttribute('aTo') as THREE.InstancedBufferAttribute,times=geometry.getAttribute('aTravel') as THREE.InstancedBufferAttribute,motion=geometry.getAttribute('aMotion') as THREE.InstancedBufferAttribute;
     const origin=Math.floor(timeline.tick/1024)*1024;
-    this.travelTime.value=(timeline.tick-origin)/10;
+    this.travelTime.value=localTimeSeconds(timeline.tick,origin);
     let dirty=false;
     world.pawns.forEach((pawn,i)=>{
       const segment=timeline.segment(pawn.id);
@@ -251,7 +252,7 @@ export class PawnLayer {
         // edge, not a fresh first/last third for every change of pace.
         visual.from.set(lerp(segment.from.x,segment.to.x,a),y0,lerp(segment.from.z,segment.to.z,a),yaw);
         visual.to.set(lerp(segment.from.x,segment.to.x,b),y1,lerp(segment.from.z,segment.to.z,b),yaw);
-        times.setXYZW(i,(segment.start-origin)/10,(segment.end-origin)/10,a,b);
+        times.setXYZW(i,localTimeSeconds(segment.start,origin),localTimeSeconds(segment.end,origin),a,b);
         motion.setX(i,!medicallyStopped(pawn)&&active && a!==b && timeline.tick>=segment.start?1:0);motion.setY(i,0);motion.setZ(i,medicallyStopped(pawn)?1:0);
       } else {
         visual.to.copy(this.targetPoses.get(pawn.id)!);visual.from.copy(visual.to);times.setXYZW(i,0,0,0,1);
@@ -259,7 +260,7 @@ export class PawnLayer {
         const dining=pawn.need?.kind==='eat'?pawn.need.dining:null;
         motion.setZ(i,pawn.stun&&!medicallyStopped(pawn)?9:pawn.melee?.strike?8:pawn.shooting?.stance?7:pawn.state==='recreating'?pawn.recreation.task?.activity==='horseshoes'?4:5:pawn.state==='sleeping'||pawn.state==='resting'||medicallyStopped(pawn)?1:pawn.state==='eating'?dining&&dining.seatId!==null?3:2:0);
       }
-      if(pawn.melee?.strike)motion.setW(i,pawn.melee.strike.atCore/100-origin/10);
+      if(pawn.melee?.strike)motion.setW(i,coreTimeSeconds(pawn.melee.strike.atCore,origin));
       if(!active&&pawn.state==='moving'&&pawn.path[0]&&doorAt(world,pawn.path[0])) {const target=pawn.path[0];visual.from.w=visual.to.w=Math.atan2(target.x-pawn.x,target.z-pawn.z);}
       from.setXYZW(i,visual.from.x,visual.from.y,visual.from.z,visual.from.w);to.setXYZW(i,visual.to.x,visual.to.y,visual.to.z,visual.to.w);
     });

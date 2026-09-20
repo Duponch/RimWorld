@@ -9,7 +9,8 @@ interface HarvestPhase {
  * A freeze, overshoot, unchanged rate or non-finite sample is never a response. */
 export function visibleSpeedResponse(delta:number,dt:number,previousSpeed:number,speed:number):boolean {
   if(!Number.isFinite(delta)||!Number.isFinite(dt)||dt<=0||previousSpeed===speed)return false;
-  const rate=delta/dt*100,low=Math.min(previousSpeed,speed),high=Math.max(previousSpeed,speed);
+  // Independent reference rate: 6000 local ticks per 1000-second Core day.
+  const rate=delta/dt*1000/6,low=Math.min(previousSpeed,speed),high=Math.max(previousSpeed,speed);
   return rate>=low-1e-6&&rate<=high+1e-6&&(rate-previousSpeed)*Math.sign(speed-previousSpeed)>1e-6;
 }
 

@@ -34,7 +34,7 @@ Corpus : chapitres 2/4/5/9/10/21/30/32, SYS-005/020..022/041..061/113..117. G0 r
 
 ## État et horloge
 
-`src/sim` n’importe ni DOM ni Three, ne lit ni horloge réelle ni `Math.random`. Son World contient les données de continuation ; le même noyau tourne en worker, Vitest et Node. Une journée compte 6 000 ticks, l’horloge locale 10 ticks/seconde. Vitesse et retard réel appartiennent au [bridge](architecture.md), pas aux effets métier.
+`src/sim` n’importe ni DOM ni Three, ne lit ni horloge réelle ni `Math.random`. Son World contient les données de continuation ; le même noyau tourne en worker, Vitest et Node. Une journée compte 6 000 ticks, l’horloge locale six ticks/seconde depuis V82 : 1 000 secondes, soit 16 min 40 s par journée à vitesse normale. Un tick local représente toujours dix ticks Core. La phase civile de six heures du nouveau profil ne vieillit aucun objet et ne décale pas les échéances écoulées. Vitesse et retard réel appartiennent au [bridge](architecture.md), pas aux effets métier.
 
 Les ressources, piles, propriétaires, tâches, besoins, trajets, événements, générateur pseudo-aléatoire et curseurs sont sérialisés. Les caches transitoires et l’historique de présentation ne sont pas autoritaires. Le renderer observe sans modifier le World.
 

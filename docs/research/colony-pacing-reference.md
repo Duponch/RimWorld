@@ -1,6 +1,6 @@
 # Rythme réel d'une colonie Core : narrateurs, difficulté et incidents
 
-Recherche du **20 septembre 2026**, en mode jour. L'utilisateur a demandé de suspendre les ajustements et pilotes de première semaine pour comprendre le déroulement de RimWorld avant de modifier Lisière. La [préparation de première semaine](first-week-reference.md) reste une préparation suspendue ; ses propositions de calendrier ne sont pas une cible validée. **Aucun changement de gameplay ni test exécuté dans cette recherche.**
+Recherche du **20 septembre 2026**, en mode jour. L'utilisateur a demandé de suspendre les ajustements et pilotes de première semaine pour comprendre le déroulement de RimWorld avant de modifier Lisière. La [préparation de première semaine](first-week-reference.md) reste une préparation suspendue ; ses propositions de calendrier ne sont pas une cible validée. **Cette enquête seule n'a livré aucun gameplay.** La tranche V82 autorisée ensuite est validée dans son périmètre ; son adoption partielle est séparée du relevé Core à la fin de ce document.
 
 ## Référence et portée des preuves
 
@@ -125,7 +125,7 @@ Le relevé suivant résout les champs absents avec `DifficultyDef`, puis les aff
 | `predatorsHuntHumanlikes`, `allowExtremeWeatherIncidents` | Vrais | Ni protection générale contre les prédateurs, ni suppression des incidents météo explicitement filtrés. |
 | `colonistMoodOffset` | +5 | Offset de cible d'humeur, pas guérison instantanée ni modification des seuils de crise. |
 | `cropYieldFactor`, `mineYieldFactor`, `butcherYieldFactor`, `researchSpeedFactor` | Tous 1 | Rendements agricoles/miniers/boucherie et recherche inchangés ; ne pas modifier la durée de croissance du riz pour accélérer le départ. |
-| `playerPawnInfectionChanceFactor` | 0,75 | Facteur de risque de blessure infectée des personnes de la faction du joueur ; ne pas réduire la progression d'une infection déjà contractée ni appliquer implicitement ce facteur à tout animal sauvage. |
+| `playerPawnInfectionChanceFactor` | 0,75 | Multiplicateur du **second tirage différé** d'une plaie chez la faction du joueur ; ni premier tirage d'exposition, ni progression d'une infection acquise, ni effet implicite sur tout animal sauvage. |
 | `foodPoisonChanceFactor` | 0,75 | Risque d'intoxication alimentaire, distinct de la pourriture et de la nutrition. |
 | `diseaseIntervalFactor` | 1,5 | Intervalle multiplié, donc fréquence théorique des occasions divisée par 1,5. En forêt tempérée : MTB 75 jours par composant humain/animal, après le début du composant Cassandra ; ce n'est pas une date promise. |
 | `manhunterChanceOnDamageFactor` | 1 | Pas de réduction de la réaction enragée ; ne pas confondre celle-ci avec notre seule riposte physique locale du lièvre. |
@@ -141,9 +141,11 @@ Le relevé suivant résout les champs absents avec `DifficultyDef`, puis les aff
 | `allowTraps`, `allowTurrets`, `allowMortars`, `classicMortars` | Vrai ; vrai ; vrai ; faux | Constructions autorisées par difficulté ; absence actuelle d'une construction ne devient pas un interdit de ce profil. |
 | `adultAgingRate`, `unwaveringPrisoners` | 1 ; vrai | Vieillissement adulte et option de prisonniers déterminés ; appliquer seulement dans leurs domaines et conditions d'extension, sans inventer un système livré. |
 
+**Précision rétroactive du 20 septembre, lors de V82 :** la position du facteur infectieux a été vérifiée directement dans `Verse.HediffComp_Infecter` de l'assembly local 1.6.4871 dont l'empreinte figure ci-dessus. Le composant expose d'abord la nouvelle plaie, puis applique la difficulté à son échéance, après les facteurs de gravité et de soin/pièce, sous la condition `Faction.OfPlayer`. La formule précédemment nommée « risque d'infection » était incomplète sur ce placement ; elle ne doit pas conduire à réduire les deux tirages. Le multiplicateur animal 0,1 reste, lui, placé au premier tirage.
+
 Les champs liés à des contenus d'extension sont relevés séparément pour ne pas les importer dans le périmètre Core : ressources minières nomades 0,5 ; infestations de déchets 0,5 ; pêche 1 ; croissance des enfants 4 ; bébés toujours sains faux ; exclusion des enfants faux ; enfants assaillants faux ; renfort de conversion à faible population 3 ; fractions Anomaly inactif/actif 0,08/0,30 ; efficacité d'étude 1. Leur présence dans une classe partagée n'active pas l'extension correspondante. Les options nouvelles doivent conserver cette séparation.
 
-Pour le prochain lot, les raccordements immédiatement applicables sont donc au minimum **cible d'humeur +5 et risque d'infection du joueur ×0,75**, en plus de la sélection persistante du profil. Les facteurs de rendement/recherche restent 1 ; le narrateur et les autres paramètres exigent leurs contrats propres. Ne pas annoncer le profil entièrement reproduit uniquement parce que son nom et les 60 % de menace apparaissent au menu.
+V82 applique **cible d'humeur +5 et second tirage d'infection du joueur ×0,75**, en plus de la sélection persistante du profil. Les facteurs de rendement/recherche restent 1 ; le narrateur et les autres paramètres gardent leurs limites décrites ci-dessous. Le nom du profil ne suffit pas à reproduire la difficulté : le facteur de menace de 60 % ne peut notamment pas être appliqué sans budget de menace.
 
 ## Richesse, personnes et adaptation : comment la puissance se construit
 
@@ -166,11 +168,11 @@ Une mise à terre **due à une violence externe** diminue l'adaptation selon la 
 
 Le désir module la sélection des incidents augmentant la population et leurs poids, avec décalages selon la difficulté d'acquisition. Un plancher subsiste (0,05 en général, 0,2 pour le RandomMain de Randy) : **onze ou douze colons ne créent pas une interdiction absolue d'arrivants**. Prisonniers, caravanes et autres états ont des contributions propres ; ni un compte brut de personnes sur la seule carte ni notre seuil actuel de douze ne reproduisent ce contrat.
 
-## Écarts de Lisière et propositions avant toute implémentation
+## Diagnostic V81 et corrections proposées lors de l'enquête
 
-Relecture de `arrivals.ts`, `raids.ts`, `raid-state.ts`, `heatwave.ts` et du bootstrap V80. Les interactions physiques existantes restent utiles ; la divergence principale porte sur **la production des situations**, encore pilotée par trois profils de camp indépendants.
+Audit initial V81 de `arrivals.ts`, `raids.ts`, `raid-state.ts`, `heatwave.ts` et du bootstrap V80. Les interactions physiques existantes restent utiles ; la divergence principale portait sur **la production des situations**, pilotée par trois profils de camp indépendants. Le tableau conserve le diagnostic de départ ; l'état effectivement adopté en V82 est précisé ensuite.
 
-| Écart actuel | Correction proposée, à décider et implémenter ultérieurement |
+| Écart constaté en V81 | Cible de correction issue de l'enquête |
 | --- | --- |
 | Aucun choix réel de narrateur/difficulté ; scénario et incident souvent confondus. | Séparer ces réglages persistants. Reproduire Cassandra présélectionnée et le choix explicite de difficulté ; conserver le camp pédagogique comme scénario nommé. Ne pas importer les réglages d'une sauvegarde utilisateur. |
 | Premier raid garanti 3,5–4 jours, un adversaire sans arme. | Pour une cible classique, adopter l'introduction vérifiée, y compris la petite menace préalable et le budget de 40 points ; déclarer les prolongements militaires/capture manquants. Le nom Cassandra ne doit pas couvrir seulement une nouvelle constante de date. |
@@ -181,6 +183,17 @@ Relecture de `arrivals.ts`, `raids.ts`, `raid-state.ts`, `heatwave.ts` et du boo
 | Catalogue très réduit d'incidents. | Documenter les candidats absents et leurs effets sur la distribution. Réduire Misc à arrivée+canicule puis normaliser leurs poids concentrerait artificiellement toute la fréquence sur ces deux événements. Ne pas prétendre reproduire le rythme complet tant que cette réduction n'est pas traitée explicitement. |
 | Parcours exigeant toutes les situations en sept jours. | Séparer introduction déterminée, résultats conditionnels et contrôles d'une distribution. Observer absence, coexistence, échec d'admissibilité et reprise ; ne pas forcer chaque graine à vivre une canicule, un accueil et une infection. |
 
-Le prochain lot devrait fixer un **contrat de référence nommé et vérifiable** avant sa campagne : menus, profil, horloge d'introduction, règles de tirage, objets et contenus réellement disponibles. Une réduction temporaire du catalogue peut être annoncée, mais ni les moyennes du wiki ni un scénario de test agréable ne doivent inventer un nouveau déroulement présenté comme RimWorld.
+## Adoption V82
 
-Les huit captures utilisateur ont depuis confirmé la présentation et les libellés des premiers menus ; voir le [contrat cible](../development/new-game-menus.md). Points encore ouverts : échantillons de parties Core sans tutoriel/mods avec configuration connue ; distribution complète des compositions militaires et leur comportement après défaite ; poids de tous les incidents selon état réel de la carte. Ces réserves n'annulent pas les paramètres et branches directement relevés dans 1.6.4871. Elles bornent ce qui pourra honnêtement être annoncé conforme.
+Le [contrat de départ](../development/scenario-start.md) et les [menus](../development/new-game-menus.md) nomment maintenant ce qui est réellement appliqué. `crashlanded` est une nouvelle provenance, sans renommer les anciennes parties Survivants. Son profil révision 1 conserve Cassandra partielle, Récit d'aventure et Rechargeable ; la création exige les deux derniers choix, Cassandra étant présélectionnée.
+
+- **Temps :** six ticks locaux/s, 6 000 par jour, soit 16 min 40 s nominales à 1× ; dix ticks Core restent un tick local. Tick écoulé 0 et heure civile 06 h sont distincts. Lumière, croissance, horaires et température quotidienne reçoivent le même décalage ; les échéances restent écoulées.
+- **Difficulté :** +5 à la cible d'humeur coloniale ; ×0,75 au second tirage d'infection des personnes de la faction du joueur ; tir ami 0,40 déjà présent. Pas de modification des rendements/croissance/recherche pour accélérer une démonstration. Intoxication alimentaire, richesse/adaptation et budget de menace demeurent absents.
+- **Occasions de raid :** J5,4 introductif, puis fenêtres à J11 + 10,6 × n, actives 4,6 jours/repos 6 jours, 1–2 occasions et espacement 1,9 jour minimum. Agenda privé persisté, distinct du RNG des groupes ; aucune replanification à la fin d'un assaut. Une occasion impossible ou un groupe encore actif consomme la date sans report.
+- **Adaptations restantes :** au plus un groupe actif ; premier groupe effectivement créé sans arme, suivants deux personnes dont une avec revolver. Aucun calcul fictif des 40 points ou du multiplicateur 0,60. Après J20, **les occasions restent des raids seuls** ; variété et pondération des grandes menaces ne sont pas livrées.
+- **Absences assumées :** visiteurs, petite menace introductive, Misc, maladies incidentes et événements de factions. L'accueil fixe et la canicule garantie du camp ne sont pas activés sur ce profil ; aucune renormalisation de Misc vers seulement ces deux contenus. Le climat thermique ordinaire et les infections après plaie restent actifs.
+- **Migration :** validation stricte de V81, puis version 82 sans profil, calendrier, état médical, stock ou phase civile inventés. Les profils historiques gardent leurs règles et échéances ; seul le débit réel nominal commun est corrigé.
+
+Ces choix constituent une boucle partielle contrôlable, pas une parité du narrateur, du profil de difficulté ou du scénario Core. Une réduction temporaire du catalogue est annoncée ; ni les moyennes du wiki ni un scénario de test agréable ne peuvent certifier le déroulement complet.
+
+Les dix-sept captures utilisateur et le témoin `Reference-Core-4871` ont depuis confirmé le parcours de création et un départ sans tutoriel/mods sous le profil choisi. Le témoin est au tick 283 : il ne constitue pas une campagne ordinaire prolongée. Points encore ouverts : trajectoires comparables sur plusieurs mondes ; distribution complète des compositions militaires et leur comportement après défaite ; poids de tous les incidents selon état réel de la carte. Ces réserves n'annulent pas les paramètres et branches directement relevés dans 1.6.4871. Elles bornent ce qui pourra honnêtement être annoncé conforme.

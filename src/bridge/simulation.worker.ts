@@ -32,7 +32,16 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
       if (request.size !== 32 && !(MAP_SIZE_PRESETS as readonly number[]).includes(request.size)) throw new Error('Taille de carte invalide.');
       const created=createScenarioWorld(request.seed, request.size, request.scenario);
       world=created;
+      if(request.paused)speed=0;
       motion.reset();
+      clock.reset(performance.now());
+    } else if (request.type === 'load') {
+      // A cold load needs no temporary colony. Validate completely before the
+      // publication, preserving an existing world and clock on refusal.
+      let restored: World;
+      try { restored = deserializeWorld(request.data); }
+      catch { throw new Error('Cette sauvegarde est illisible ou incompatible avec cette version. La colonie actuelle et vos sauvegardes sont conservées.'); }
+      world = restored; speed = 0; motion.reset();
       clock.reset(performance.now());
     } else if (request.type === 'speed') {
       if (![0, 1, 3, 6].includes(request.speed)) throw new Error('Vitesse invalide.');
@@ -48,10 +57,6 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
         if (result.affected !== undefined) data = JSON.stringify({ affected: result.affected, skipped: result.skipped });
       } else if (request.type === 'save') {
         data = serializeWorld(world);
-      } else if (request.type === 'load') {
-        const restored = deserializeWorld(request.data);
-        world = restored; motion.reset();
-        clock.reset(performance.now());
       }
     }
     if(request.type!=='order-options')publish(request.type === 'resync');
@@ -61,7 +66,7 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
   }
 };
 
-// Fixed 10 Hz gameplay clock. Wall-clock time never enters the simulation core.
+// Fixed gameplay clock. Wall-clock time never enters the simulation core.
 function advanceSimulation(now:number):void {
   if(!world){clock.reset(now);return;}
   const ticks=clock.advance(now,speed);

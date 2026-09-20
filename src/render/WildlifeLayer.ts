@@ -1,4 +1,5 @@
 import * as THREE from 'three/webgpu';
+import { coreTimeSeconds,localTimeSeconds } from '../bridge/clock-rate';
 import { Fn,If,attribute,cos,sin,float,positionLocal,vec3,uniform,mix,min } from 'three/tsl';
 import { hareGeometry } from './hare-geometry';
 import { material } from './primitives';
@@ -38,7 +39,7 @@ export class WildlifeLayer {
   update(world:World,timeline:MotionTimeline|undefined):void {
     if(this.source!==world){this.source=world;this.keys.clear();this.surfaces=furnitureSurfaces(world);}
     const tick=timeline?.tick??world.tick,origin=Math.floor(tick/1024)*1024;
-    this.travelTime.value=(tick-origin)/10;this.time.value=(tick/10)%(2*Math.PI);
+    this.travelTime.value=localTimeSeconds(tick,origin);this.time.value=localTimeSeconds(tick)%(2*Math.PI);
     const g=this.mesh.geometry as THREE.InstancedBufferGeometry,from=g.getAttribute('aFrom') as THREE.InstancedBufferAttribute,to=g.getAttribute('aTo') as THREE.InstancedBufferAttribute,times=g.getAttribute('aTravel') as THREE.InstancedBufferAttribute,state=g.getAttribute('aAnimal') as THREE.InstancedBufferAttribute;
     const animals=world.wildlife?.animals??[];g.instanceCount=animals.length;let dirty=false;
     animals.forEach((a,i)=>{
@@ -52,8 +53,8 @@ export class WildlifeLayer {
       if(!traveling&&(a.strike||a.threat)){const target=world.pawns.find(p=>p.id===(a.strike?.targetId??a.threat?.targetId));if(target&&(target.x!==a.x||target.z!==a.z))yaw=Math.atan2(target.x-a.x,target.z-a.z);}
       const fa=traveling&&'fromFraction' in edge?Number(edge.fromFraction??0):0,fb=traveling&&'toFraction' in edge?Number(edge.toFraction??1):1,lerp=THREE.MathUtils.lerp;
       from.setXYZW(i,lerp(f.x,t.x,fa),this.surfaces.get(f.z*world.width+f.x)??0,lerp(f.z,t.z,fa),yaw);to.setXYZW(i,lerp(f.x,t.x,fb),this.surfaces.get(t.z*world.width+t.x)??0,lerp(f.z,t.z,fb),yaw);
-      times.setXYZW(i,traveling?(edge.start-origin)/10:0,traveling?(edge.end-origin)/10:0,fa,fb);
-      state.setXYZW(i,active&&!fallen&&!a.stun&&(!edge||!('fromFraction' in edge)||!('toFraction' in edge)||edge.fromFraction!==edge.toFraction)?1:0,!traveling&&a.strike&&!a.stun?2:!traveling&&a.state==='eating'?1:0,a.state==='dead'?2:fallen||!traveling&&a.state==='sleeping'?1:0,a.strike?a.strike.atCore/100-origin/10:a.id%30);
+      times.setXYZW(i,traveling?localTimeSeconds(edge.start,origin):0,traveling?localTimeSeconds(edge.end,origin):0,fa,fb);
+      state.setXYZW(i,active&&!fallen&&!a.stun&&(!edge||!('fromFraction' in edge)||!('toFraction' in edge)||edge.fromFraction!==edge.toFraction)?1:0,!traveling&&a.strike&&!a.stun?2:!traveling&&a.state==='eating'?1:0,a.state==='dead'?2:fallen||!traveling&&a.state==='sleeping'?1:0,a.strike?coreTimeSeconds(a.strike.atCore,origin):a.id%30);
     });
     if(dirty)for(const a of [from,to,times,state])a.needsUpdate=true;
   }

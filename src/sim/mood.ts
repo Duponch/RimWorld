@@ -1,4 +1,5 @@
 import { TRAITS } from './traits.ts';
+import { colonistMoodOffset } from './game-profile.ts';
 import { APPAREL } from './apparel-rules.ts';
 import { pawnBody } from './health-rules.ts';
 import { medicalPain } from './injury-state.ts';
@@ -35,6 +36,8 @@ export const comfortMood=(value:number):number=>comforts[comfortStage(value)]?.o
 export function moodThoughts(world:World,pawn:Pawn):readonly MoodThought[] {
   if(pawn.state==='dead')return [];
   const thoughts:MoodThought[]=[camp];
+  const difficultyMood=colonistMoodOffset(world,pawn);
+  if(difficultyMood)thoughts.push(situation('difficulty-mood','Récit d’aventure',difficultyMood,'Bonus d’humeur du niveau d’aventure choisi.'));
   for(const id of pawn.traits??[]){const trait=TRAITS[id];if(trait.mood)thoughts.push({id:`trait-${id}`,label:trait.label,offset:trait.mood,kind:'situation',description:trait.description});}
   for(const t of [hunger[hungerStage(pawn.hunger)],fatigue[restStage(pawn.rest)],comforts[comfortStage(pawn.comfort)],leisure[joyStage(pawn.recreation.level)],pains[painStage(pawn.health?medicalPain(pawn.health):0)]])if(t)thoughts.push(t);
   let condition=1;

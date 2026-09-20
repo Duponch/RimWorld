@@ -8,6 +8,7 @@ export function validScenario(value:unknown,version:number,width:number,height:n
   if(value===undefined)return true;
   if(version<80||!record(value)||Object.keys(value).length!==3||!Object.keys(value).every(k=>['id','revision','landing'].includes(k))||!isScenarioId(value.id)||value.revision!==SCENARIO_REVISION||!record(value.landing))return false;
   if(width<SCENARIOS[value.id].minSize||height<SCENARIOS[value.id].minSize)return false;
+  if(value.id==='crashlanded'&&version<82)return false;
   const landing=value.landing;
   return Object.keys(landing).length===2&&Object.keys(landing).every(k=>k==='x'||k==='z')&&coordinate(landing.x,width)&&coordinate(landing.z,height);
 }

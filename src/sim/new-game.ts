@@ -1,4 +1,6 @@
 import { enableArrivals } from './arrivals.ts';
+import { enableCassandraRaids } from './cassandra-raids.ts';
+import { crashlandedProfile } from './game-profile.ts';
 import { setupEncounter } from './encounter-scenario.ts';
 import { generateWorld } from './generation.ts';
 import { nearbyGround } from './ground-placement.ts';
@@ -81,12 +83,15 @@ export function createScenarioWorld(seed:number,size:number,id:ScenarioId=DEFAUL
   if(!isScenarioId(id))throw new Error('Scénario inconnu.');
   if(!Number.isInteger(seed)||seed<0||seed>0xffffffff)throw new Error('La graine doit être un entier de 0 à 4 294 967 295.');
   if(!validMapDimension(size)||size<SCENARIOS[id].minSize)throw new Error('Taille de carte incompatible avec ce scénario.');
-  const world=id==='survivors'?generateWorld(seed,size,size,'temperate-survivors-v1'):generateWorld(seed,size,size);
-  const landing=id==='survivors'?survivalStart(world):{x:Math.floor(size/2),z:Math.floor(size/2)};
+  const natural=id==='survivors'||id==='crashlanded';
+  const world=natural?generateWorld(seed,size,size,id==='crashlanded'?'temperate-crashlanded-v1':'temperate-survivors-v1'):generateWorld(seed,size,size);
+  const landing=natural?survivalStart(world):{x:Math.floor(size/2),z:Math.floor(size/2)};
   if(id==='sentry')setupEncounter(world);
   else {
-    initializeCampTraits(world);enableArrivals(world);enableRaids(world);enableHeatwaves(world);
-    if(id==='survivors')enableWildlife(world,undefined,'natural');else enableWildlife(world);
+    initializeCampTraits(world);
+    if(id==='crashlanded'){world.gameProfile=crashlandedProfile();enableCassandraRaids(world);}
+    else {enableArrivals(world);enableRaids(world);enableHeatwaves(world);}
+    if(natural)enableWildlife(world,undefined,'natural');else enableWildlife(world);
   }
   world.scenario={id,revision:SCENARIO_REVISION,landing};
   return world;

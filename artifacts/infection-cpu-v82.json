@@ -1,0 +1,123 @@
+{
+  "date": "2026-09-20T09:15:23.683Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "os": "win32 10.0.26200",
+  "node": "v24.11.1",
+  "protocol": "Controlled infection in one miner per six, in a physical medical bed, one researcher per six also enabled as doctor, five industrial doses per patient; other workshops preserved. Natural 250² map, 3/30/100 actors with physical apparel. One third research at physical benches; others gather/craft tribalwear or mine/chop. 650 ticks, 100 separate warmup ticks, encoding every five ticks. Single pass, CPU only; no 6× guarantee.",
+  "wildlife": false,
+  "coldStore": false,
+  "heatwave": false,
+  "rows": [
+    {
+      "actors": 3,
+      "infected": 1,
+      "treatedInfections": 1,
+      "animals": 0,
+      "animalNutrition": 0,
+      "hunted": 0,
+      "corpses": 0,
+      "animalDead": 0,
+      "colonistInjured": 0,
+      "tickMs": {
+        "n": 650,
+        "p50": 0.389699999999948,
+        "p95": 0.8600000000000136,
+        "p99": 2.1562999999999874,
+        "max": 9.374500000000012
+      },
+      "steadyTickMs": {
+        "n": 630,
+        "p50": 0.39010000000007494,
+        "p95": 0.7981999999999516,
+        "p99": 1.7914999999999281,
+        "max": 7.759999999999991
+      },
+      "snapshotMs": {
+        "n": 130,
+        "p50": 0.9009000000000924,
+        "p95": 1.6643999999998869,
+        "p99": 4.626599999999939,
+        "max": 5.207600000000184
+      },
+      "completed": 1,
+      "research": 2134447,
+      "exposed": 0,
+      "coolers": 0,
+      "mined": 0
+    },
+    {
+      "actors": 30,
+      "infected": 5,
+      "treatedInfections": 5,
+      "animals": 0,
+      "animalNutrition": 0,
+      "hunted": 0,
+      "corpses": 0,
+      "animalDead": 0,
+      "colonistInjured": 0,
+      "tickMs": {
+        "n": 650,
+        "p50": 1.3088999999999942,
+        "p95": 6.668399999999792,
+        "p99": 13.287199999999984,
+        "max": 30.411200000000008
+      },
+      "steadyTickMs": {
+        "n": 630,
+        "p50": 1.292399999999816,
+        "p95": 6.020899999999983,
+        "p99": 10.61030000000028,
+        "max": 16.389400000000023
+      },
+      "snapshotMs": {
+        "n": 130,
+        "p50": 2.3148999999998523,
+        "p95": 3.7955000000001746,
+        "p99": 4.643299999999726,
+        "max": 5.328500000000076
+      },
+      "completed": 10,
+      "research": 23612581,
+      "exposed": 0,
+      "coolers": 0,
+      "mined": 40
+    },
+    {
+      "actors": 100,
+      "infected": 17,
+      "treatedInfections": 17,
+      "animals": 0,
+      "animalNutrition": 0,
+      "hunted": 0,
+      "corpses": 0,
+      "animalDead": 0,
+      "colonistInjured": 0,
+      "tickMs": {
+        "n": 650,
+        "p50": 4.615699999999379,
+        "p95": 18.3108000000002,
+        "p99": 25.263700000000426,
+        "max": 37.65249999999969
+      },
+      "steadyTickMs": {
+        "n": 630,
+        "p50": 4.550699999999779,
+        "p95": 16.3738000000003,
+        "p99": 22.755199999999604,
+        "max": 27.027100000000246
+      },
+      "snapshotMs": {
+        "n": 130,
+        "p50": 2.4953999999997905,
+        "p95": 6.136199999999917,
+        "p99": 9.007299999999304,
+        "max": 9.074799999999414
+      },
+      "completed": 33,
+      "research": 82115643,
+      "exposed": 0,
+      "coolers": 0,
+      "mined": 132
+    }
+  ]
+}

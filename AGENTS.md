@@ -1,8 +1,14 @@
 # Travail sur Lisière
 
+## Création et rythme V82
+- Lire `docs/development/new-game-menus.md`, `scenario-start.md` et leurs recherches. Démarrage normal à l’accueil ; `?e2e` seul garde ce parcours. Seuls les liens explicites `scenario=camp/survivors/sentry` ouvrent directement un diagnostic historique. Le menu public appelle `crashlanded`, provenance distincte et adaptation partielle visible.
+- Six ticks locaux/s, toujours 6 000 ticks/jour et dix Core/local. `calendarTick` ajoute 06 h seulement au nouveau profil ; échéances, vieillissement et sauvegardes restent en ticks écoulés. Conversion commune corps/cargaison/faune/frappes ; aucune durée `/10` en secondes réintroduite.
+- `game-session` préserve sauvegarde manuelle et récupération, charge à froid sans monde factice, valide avant remplacement ; préparation graphique échouée conserve le monde accepté. V81 strictement validée avant migration neutre, sans dotation ni nouvelle horloge civile.
+- Cassandra partielle : intro J5,4 et fenêtres indépendantes des fins de raid ; variété, budget/richesse/adaptation restent absents. Aucun accueil fixe/canicule garantie sur ce nouveau profil. Humeur +5 et facteur infectieux .75 au second tirage des plaies des colons ; progression de maladie inchangée. Le pilote partagé copie x/z, jamais le kind d’une ressource dans une désignation.
+
 ## Référence de partie et menus (20 septembre 2026, mode jour)
 - Lire `docs/research/core-reference-baseline.md` et ses enquêtes rythme/cartes/observations avant de recalibrer le départ. L'utilisateur demande les preuves avant les changements, et non tous les systèmes démontrés en sept jours. RimWorld local 1.6.4871, Defs/classes et sauvegardes se consultent en lecture seule ; sources de versions plus anciennes et tutoriel restent identifiés. Aucun XML propriétaire, code décompilé ou sauvegarde personnelle brute à publier.
-- Profil choisi explicitement par l'utilisateur : Atterrissage forcé, Cassandra Classique, Récit d'aventure, Core sans extensions. Ce choix ne constitue pas une difficulté présélectionnée dans RimWorld. Menus : Nouvelle partie et Charger actifs, Options seulement si fonctionnelles ; autres boutons/scénarios/difficultés visibles et grisés. Lire `docs/development/new-game-menus.md`, contrat cible non livré. Ne pas renommer Trois survivants pour prétendre livrer la dotation ou la difficulté complètes.
+- Profil choisi explicitement par l'utilisateur : Atterrissage forcé, Cassandra Classique, Récit d'aventure, Core sans extensions. Ce choix ne constitue pas une difficulté présélectionnée dans RimWorld. Menus : Nouvelle partie et Charger actifs, Options seulement si fonctionnelles ; autres boutons/scénarios/difficultés visibles et grisés. Lire `docs/development/new-game-menus.md`, contrat du parcours, partiel en V82. Ne pas renommer Trois survivants pour prétendre livrer la dotation ou la difficulté complètes.
 - Distinguer défaut, choix requis, tirage aléatoire, règle conditionnelle et observation de partie. Demander une vérification précise dans le jeu pour une inconnue que les sources ne permettent pas de résoudre. Conserver les anciennes cartes et leurs calendriers à la migration. ROADMAP programme seule les corrections ; ne pas accélérer croissance/événements pour satisfaire un test à J7.
 
 ## Infection V81
@@ -135,7 +141,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 81 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 82 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)

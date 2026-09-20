@@ -1,4 +1,8 @@
-import { DEFAULT_SCENARIO, SCENARIOS, type ScenarioId } from './sim/scenario-definitions';
+import { calendarTick } from './sim/calendar';
+import { GameSession, SAVE_KEY, PREVIOUS_KEY } from './ui/game-session';
+import { createFrontMenu } from './ui/front-menu';
+import type { PawnTrack } from './bridge/motion-tracks';
+import { SCENARIOS, type ScenarioId } from './sim/scenario-definitions';
 import { INFECTION_UNIT,infectionStage } from './sim/infection-rules';
 import { corpseStage } from './sim/corpses';
 import { updateWildlifePanel } from './ui/wildlife-panel';
@@ -64,8 +68,8 @@ const jobLabels: Record<JobKind, string> = { 'butcher-spot':'Emplacement de bouc
 const stateLabels: Record<Pawn['state'], string> = { resting:'Au lit pour soins', downed:'À terre', dead:'Décédé', idle: 'Disponible', moving: 'En chemin', working: 'Au travail', sleeping: 'Se repose', hungry: 'Cherche à manger', eating: 'Mange', recreating: 'Se divertit' };
 const terrainLabels = { 'rough-stone':'Sol rocheux brut', grass: 'Prairie', soil: 'Terre fertile', water: 'Eau infranchissable', rock: 'Massif rocheux infranchissable' };
 const resourceLabels = { tree: 'Arbre', berries: 'Buisson de baies', rock: 'Pierre au sol', rice: 'Plant de riz', cotton: 'Cotonnier' };
-const SAVE_KEY = 'lisiere.save.v1';
-const PREVIOUS_KEY = 'lisiere.previous.v1';
+const params = new URLSearchParams(location.search);
+const diagnosticStart = params.has('scenario');
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = gameLayout();
 const el = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const client = new SimulationClient();
@@ -86,6 +90,54 @@ const selection=new PawnSelection();
 const roomInspection = new RoomInspection();
 const orderMenu=new OrderMenu(client,notify);
 const snapshotHud=new SnapshotHud(()=>renderState());
+let latestMotion: PawnTrack[] | undefined;
+let menuResumeSpeed: number | undefined;
+let menuTransition: Promise<unknown> = Promise.resolve();
+const shell = document.querySelector<HTMLElement>('.game-shell')!;
+const session = new GameSession(client, () => localStorage, prepareWorld);
+const frontHost = document.createElement('div'); document.querySelector('#app')!.append(frontHost);
+// The measured counter remains visible over both the colony and the menu.
+document.querySelector('#app')!.append(el('fps-counter'));
+const frontMenu = createFrontMenu(frontHost, {
+  getSaves: () => session.saves(),
+  onStart: async draft => replaceColony(() => session.create(draft.seed, draft.size, 'crashlanded')),
+  onLoad: async key => replaceColony(() => session.load(key)),
+  onResume: async () => {
+    await prepareWorld(); frontMenu.hide(); syncStorageButtons();
+    const speed = menuResumeSpeed ?? 0; menuResumeSpeed = undefined;
+    await changeSpeed(speed);
+  },
+});
+async function pauseForMenu(): Promise<void> {
+  renderer?.cancelDesignation(); orderMenu.close();
+  await menuTransition;
+  if (snapshot && menuResumeSpeed === undefined) {
+    const speed = currentSpeed;
+    await client.setSpeed(0); menuResumeSpeed = speed;
+  }
+}
+async function openFront(page: 'home' | 'create' | 'load'): Promise<void> {
+  if (session.busy || replacingWorld) return;
+  await pauseForMenu();
+  frontMenu.setHasGame(session.hasWorld);
+  if (page === 'create') frontMenu.showCreation();
+  else if (page === 'load') frontMenu.showLoad();
+  else frontMenu.showHome(session.hasWorld);
+  setPanel(null); syncStorageButtons();
+}
+async function switchPanel(panel: Panel): Promise<void> {
+  if (panel === 'menu') await pauseForMenu();
+  setPanel(panel);
+}
+async function replaceColony(action: () => Promise<void>): Promise<void> {
+  replacingWorld = true; syncStorageButtons();
+  try {
+    await action(); menuResumeSpeed = undefined;
+    clearSelection(); setPanel(null); frontMenu.hide();
+    if (snapshot?.pawns[0]) renderer?.focusPawn(snapshot.pawns[0].id);
+  } finally { replacingWorld = false; syncStorageButtons(); }
+}
+
 
 function notify(message: string, error = false) {
   el('notice').textContent = message;
@@ -112,8 +164,15 @@ function setCategory(category: ArchitectCategory) {
 }
 function renderWildlife(world:World){updateWildlifePanel(el('wildlife-content'),world,id=>renderer?.focusPawn(id),()=>void attempt(async()=>{await client.command({type:'enable-wildlife'});renderState();}),[...selection.ids],id=>void attempt(async()=>{await client.command({type:'shoot',pawnIds:[...selection.ids],targetId:id});renderState();}),id=>void attempt(async()=>{await client.command({type:'melee',pawnIds:[...selection.ids],targetId:id});renderState();}),(id,enabled)=>void attempt(async()=>{await client.command({type:'hunt',animalId:id,enabled});renderState();}));}
 function setPanel(panel: Panel) {
+  // Every exit path (tabs, map, portraits and shortcuts) releases this pause.
+  if (currentPanel === 'menu' && panel !== 'menu' && menuResumeSpeed !== undefined && !replacingWorld && !frontMenu.isOpen()) {
+    const speed = menuResumeSpeed; menuResumeSpeed = undefined;
+    menuTransition = client.setSpeed(speed);
+    void attempt(() => menuTransition);
+  }
   orderMenu.close();
   currentPanel = panel;
+  syncStorageButtons();
   scheduleUI.cancel();
   for (const name of ['architect', 'work', 'schedule', 'assign', 'history', 'menu', 'research', 'wildlife'] as const) el(`${name}-panel`).hidden = panel !== name;
   if(panel==='wildlife'&&snapshot)renderWildlife(snapshot);
@@ -156,7 +215,7 @@ function selectPawn(id: number) {
   selectPawns({ids:[id],additive:false,toggle:false},true);
 }
 function selectPawns(gesture:SelectionGesture,focus=false) {
-  if(!snapshot||replacingWorld)return;
+  if(!snapshot||replacingWorld||frontMenu.isOpen())return;
   shootingControls.cancel();
   const singleEnemy=gesture.ids.length===1&&!gesture.additive&&snapshot.pawns.some(p=>p.id===gesture.ids[0]&&!isColonist(p));
   selection.apply(gesture,new Set(snapshot.pawns.filter(p=>singleEnemy||isColonist(p)).map(p=>p.id)));
@@ -167,7 +226,7 @@ function selectPawns(gesture:SelectionGesture,focus=false) {
   rebuildInspector(); renderState();
 }
 function pickCell(x: number, z: number) {
-  if (!snapshot || replacingWorld) return;
+  if (!snapshot || replacingWorld || frontMenu.isOpen()) return;
   if(shootingControls.active){
     const target=shootingControls.mode==='melee'?snapshot.structures.find(s=>(s.kind==='wall'||s.kind==='door')&&s.x===x&&s.z===z):undefined;
     shootingControls.cancel();if(target)void attempt(async()=>{await client.command({type:'melee',pawnIds:[...selection.ids],targetId:target.id,structure:true});renderState();});else renderState();return;
@@ -188,7 +247,7 @@ function pickCell(x: number, z: number) {
   setPanel(null); rebuildInspector(); renderState();
 }
 function designateArea(action: AreaAction, from: Cell, to: Cell) {
-  if (!snapshot || replacingWorld) return;
+  if (!snapshot || replacingWorld || frontMenu.isOpen()) return;
   void attempt(async () => {
     const response = await client.command({ type: 'area', action, from, to, ...(action === 'stockpile' ? readStorageSettings('stockpile') : {}) });
     const result = JSON.parse(response!) as { affected: number; skipped: number };
@@ -342,8 +401,8 @@ function renderState() {
   el('scenario-current').textContent=world.scenario?SCENARIOS[world.scenario.id].label:'Partie historique · départ non renseigné';
   el('population').textContent = String(world.pawns.filter(p=>isColonist(p)&&p.state!=='dead').length); el('map-size').textContent = `${world.width} × ${world.height}`;
   el('outdoor-temperature').textContent = `Extérieur : ${outdoorTemperature(world).toFixed(1)} °C`;
-  el('day').textContent = `Jour ${1 + Math.floor(world.tick / TICKS_PER_DAY)}`;
-  const hour = 24 * (world.tick % TICKS_PER_DAY) / TICKS_PER_DAY;
+  el('day').textContent = `Jour ${1 + Math.floor(calendarTick(world) / TICKS_PER_DAY)}`;
+  const hour = 24 * (calendarTick(world) % TICKS_PER_DAY) / TICKS_PER_DAY;
   el('clock').textContent = `${String(Math.floor(hour)).padStart(2, '0')}:${String(Math.floor((hour % 1) * 60)).padStart(2, '0')}`;
   el('pause-banner').hidden = currentSpeed !== 0;
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-speed]')) {
@@ -475,67 +534,49 @@ const heatwaveUI=createHeatwaveUI(command=>client.command(command));
 const raidUI=createRaidUI(command=>client.command(command),id=>renderer?.focusPawn(id));
 const arrivalUI=createArrivalUI(command=>client.command(command));
 function syncStorageButtons() {
-  document.querySelector<HTMLElement>('.game-shell')!.inert=replacingWorld;
-  for(const button of document.querySelectorAll<HTMLButtonElement>('[data-speed]'))button.disabled=replacingWorld;
+  shell.inert = replacingWorld || frontMenu.isOpen() || !snapshot;
+  for(const button of document.querySelectorAll<HTMLButtonElement>('[data-speed]'))button.disabled=replacingWorld||currentPanel==='menu';
   for (const [id, key] of [['load', SAVE_KEY], ['restore-previous', PREVIOUS_KEY]]) {
-    try { el<HTMLButtonElement>(id).disabled = replacingWorld || savingWorld || !localStorage.getItem(key); } catch { el<HTMLButtonElement>(id).disabled = true; }
+    try { el<HTMLButtonElement>(id).disabled = replacingWorld || session.busy || !localStorage.getItem(key!); } catch { el<HTMLButtonElement>(id).disabled = true; }
   }
-  el<HTMLButtonElement>('save').disabled=replacingWorld||savingWorld;
+  el<HTMLButtonElement>('save').disabled=replacingWorld||session.busy||!snapshot;
 }
-let savingWorld=false;
 async function save() {
-  if(replacingWorld||savingWorld)return;
-  savingWorld=true;syncStorageButtons();notify('Sauvegarde en cours…');
-  try {
-    const data = await client.save(); if (!data) throw new Error('Sauvegarde vide.');
-    localStorage.setItem(SAVE_KEY, data);notify('Colonie sauvegardée dans ce navigateur.');
-  } finally {savingWorld=false;syncStorageButtons();}
+  if (session.busy || replacingWorld) return;
+  const saving = session.save(); syncStorageButtons();
+  try { await saving; notify('Colonie sauvegardée dans ce navigateur.'); }
+  finally { syncStorageButtons(); }
 }
 async function load(key = SAVE_KEY) {
-  if (replacingWorld||savingWorld) return;
-  const data = localStorage.getItem(key); if (!data) throw new Error('Aucune sauvegarde locale.');
-  replacingWorld = true; syncStorageButtons(); notify('Chargement et préparation de la colonie…');
-  try { await client.load(data); await renderer?.preparePresentation(); clearSelection(); setPanel(null); notify(key === PREVIOUS_KEY ? 'Colonie précédente restaurée.' : 'Dernière sauvegarde rechargée.'); }
-  finally { replacingWorld = false; syncStorageButtons(); }
+  if (session.busy || replacingWorld) return;
+  await replaceColony(() => session.load(key));
+  notify(key === PREVIOUS_KEY ? 'Colonie précédente restaurée en pause.' : 'Sauvegarde rechargée en pause.');
 }
+// Explicit scenario URLs retain the historical diagnostic creation dialog.
 async function createWorld() {
-  if (replacingWorld) return;
-  el('new-world-error').hidden = true;
-  const seed = Number(el<HTMLInputElement>('world-seed').value), size = Number(el<HTMLSelectElement>('world-size').value);
-  if (!Number.isInteger(seed) || seed < 0 || seed > 4294967295 || ![32, ...MAP_SIZE_PRESETS].includes(size)) throw new Error('Graine ou taille de carte invalide.');
-  replacingWorld = true; syncStorageButtons();
-  const submit = el('new-world-form').querySelector<HTMLButtonElement>('[type="submit"]')!; submit.disabled = true;
+  if (session.busy || replacingWorld) return;
+  const seed=Number(el<HTMLInputElement>('world-seed').value), size=Number(el<HTMLSelectElement>('world-size').value);
+  const scenario=el<HTMLSelectElement>('world-scenario').value as ScenarioId;
+  el('new-world-error').hidden=true;
   try {
-    const previous = await client.save(); if (!previous) throw new Error('Impossible de préserver la colonie actuelle.');
-    const olderBackup=localStorage.getItem(PREVIOUS_KEY);
-    localStorage.setItem(PREVIOUS_KEY, previous);
-    try {
-      await client.init(seed, size,el<HTMLSelectElement>('world-scenario').value as ScenarioId);
-    } catch(error) {
-      // A rejected creation must preserve both the active world and the older
-      // recovery slot. Keep the new backup if only graphical preparation fails.
-      if(olderBackup===null)localStorage.removeItem(PREVIOUS_KEY);else localStorage.setItem(PREVIOUS_KEY,olderBackup);
-      throw error;
-    }
-    await renderer?.preparePresentation();
-    if(snapshot?.pawns[0])renderer?.focusPawn(snapshot.pawns[0].id);
-    clearSelection(); setPanel(null); el<HTMLDialogElement>('new-world-dialog').close(); notify(`Nouvelle colonie · ${size} × ${size} · graine ${seed}`);
+    await replaceColony(() => session.create(seed,size,scenario));
+    el<HTMLDialogElement>('new-world-dialog').close();
   } catch (error) {
-    el('new-world-error').textContent = error instanceof Error ? error.message : String(error);
-    el('new-world-error').hidden = false;
-    throw error;
-  } finally { replacingWorld = false; submit.disabled = false; syncStorageButtons(); }
+    el('new-world-error').textContent=error instanceof Error ? error.message : String(error);
+    el('new-world-error').hidden=false;
+  }
 }
-async function changeSpeed(speed: number) { if (speed > 0) lastSpeed = speed; await client.setSpeed(speed); }
+async function changeSpeed(speed: number) { if (currentPanel==='menu') return; if (speed > 0) lastSpeed = speed; await client.setSpeed(speed); }
 for (const button of document.querySelectorAll<HTMLButtonElement>('[data-tool]')) button.onclick = () => setTool(button.dataset.tool as Tool);
 for (const button of document.querySelectorAll<HTMLButtonElement>('[data-category]')) button.onclick = () => { setCategory(button.dataset.category as ArchitectCategory); applyTool('select'); };
-for (const button of document.querySelectorAll<HTMLButtonElement>('[data-panel]:not(:disabled)')) button.onclick = () => { const panel = button.dataset.panel as Panel; setPanel(currentPanel === panel ? null : panel); };
-for (const button of document.querySelectorAll<HTMLButtonElement>('[data-close-panel]')) button.onclick = () => setPanel(null);
+for (const button of document.querySelectorAll<HTMLButtonElement>('[data-panel]:not(:disabled)')) button.onclick = () => { const panel = button.dataset.panel as Panel; void attempt(() => switchPanel(currentPanel === panel ? null : panel)); };
+for (const button of document.querySelectorAll<HTMLButtonElement>('[data-close-panel]')) button.onclick = () => { void attempt(() => switchPanel(null)); };
 for (const button of document.querySelectorAll<HTMLButtonElement>('[data-speed]')) button.onclick = () => { void attempt(() => changeSpeed(Number(button.dataset.speed))); };
 el('save').onclick = () => { void attempt(save); }; el('load').onclick = () => { void attempt(() => load()); };
 el('restore-previous').onclick = () => { void attempt(() => load(PREVIOUS_KEY)); };
 el('help-open').onclick = () => { renderer?.cancelDesignation(); el<HTMLDialogElement>('help').showModal(); };
-el('new-colony').onclick = () => { renderer?.cancelDesignation(); el<HTMLDialogElement>('new-world-dialog').showModal(); };
+el('new-colony').onclick = () => { if (diagnosticStart) el<HTMLDialogElement>('new-world-dialog').showModal(); else void attempt(() => openFront('create')); };
+el('return-home').onclick = () => { void attempt(async () => { await save(); await openFront('home'); }); };
 function updateScenarioDescription():void {
   const id=el<HTMLSelectElement>('world-scenario').value as ScenarioId;
   el('scenario-description').textContent=SCENARIOS[id].description;
@@ -557,13 +598,13 @@ el('camera-mode').onclick = () => {
 el('rotate-building').onclick = () => rotatePlacement();
 syncStorageButtons(); setCategory(currentCategory); applyTool('select');
 document.addEventListener('keydown', event => {
-  if(event.defaultPrevented)return;
+  if(event.defaultPrevented || frontMenu.isOpen() || !snapshot || replacingWorld)return;
   if (document.querySelector('dialog[open]')) return;
   if (event.target instanceof HTMLElement && (event.target.matches('input, select, textarea') || event.target.isContentEditable)) return;
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') { event.preventDefault(); void attempt(save); return; }
   if (event.ctrlKey || event.metaKey || event.altKey) return;
   if (event.code === 'Space') { event.preventDefault(); void attempt(() => changeSpeed(currentSpeed === 0 ? lastSpeed : 0)); return; }
-  if (event.key === 'Escape') { event.preventDefault(); if(shootingControls.active){shootingControls.cancel();renderState();return;} if (orderMenu.close() || renderer?.cancelDesignation()) return; setPanel(null); clearSelection(); return; }
+  if (event.key === 'Escape') { event.preventDefault(); if(shootingControls.active){shootingControls.cancel();renderState();return;} if (orderMenu.close() || renderer?.cancelDesignation()) return; void attempt(() => switchPanel(null)); clearSelection(); return; }
   if (event.key === 'Tab' || event.key === 'F1' || event.key === 'F2' || event.key === 'F3') { event.preventDefault(); const panel = event.key === 'Tab' ? 'architect' : event.key === 'F1' ? 'work' : event.key === 'F2' ? 'schedule' : 'assign'; setPanel(currentPanel === panel ? null : panel); return; }
   const speeds: Record<string, number> = { '1': 1, '2': 3, '3': 6 };
   if (event.key in speeds) { void attempt(() => changeSpeed(speeds[event.key])); return; }
@@ -576,46 +617,50 @@ document.addEventListener('keydown', event => {
 client.onError = message => notify(message, true);
 client.onSnapshot = (world, cost, speed, replaced, motion) => {
   const speedChanged=currentSpeed!==speed;
-  snapshot=world;stepMs=cost;currentSpeed=speed;
+  snapshot=world;stepMs=cost;currentSpeed=speed;latestMotion=motion;session.hasWorld=true;frontMenu.setHasGame(true);
   const changed=replaced||[...selection.ids].some(id=>!world.pawns.some(p=>p.id===id));
   if(changed){selection.clear();selectedPawn=undefined;selectedCell=undefined;orderMenu.close();rebuildInspector();}
   renderer?.setWorld(world,replaced,speed,motion);
   if(changed)renderer?.setSelectedPawns(selection.ids);
   snapshotHud.request(changed||speedChanged);
 };
-async function start() {
-  try {
-    const params = new URLSearchParams(location.search), seedText = params.get('seed'), requestedSize = Number(params.get('size'));
-    const seed = seedText===null?42:Number(seedText);
-    if(seedText!==null&&(!/^\d{1,10}$/.test(seedText)||!Number.isInteger(seed)||seed<0||seed>4294967295))throw new Error('Graine invalide dans cette adresse.');
-    const scenario=params.get('scenario')??DEFAULT_SCENARIO;
-    if(!['camp','sentry','survivors'].includes(scenario))throw new Error('Scénario inconnu dans cette adresse.');
-    el<HTMLSelectElement>('world-scenario').value=scenario;
-    updateScenarioDescription();
-    await client.init(seed, [32, ...MAP_SIZE_PRESETS].includes(requestedSize) ? requestedSize : DEFAULT_MAP_SIZE,scenario as ScenarioId);
+async function prepareWorld(): Promise<void> {
+  if (!snapshot) throw new Error('Aucune colonie à afficher.');
+  shell.hidden=false;
+  await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+  if (!renderer) {
     renderer = await ColonyRenderer.create(el('viewport'), pickCell);
     renderer.onSelection=gesture=>{if(shootingControls.active){const targetId=gesture.ids[0];if(targetId!==undefined){const type=shootingControls.mode!;shootingControls.cancel();void attempt(async()=>{await client.command({type,pawnIds:[...selection.ids],targetId});renderState();});}return;}selectPawns(gesture);};
     renderer.onInteractionCancel=()=>orderMenu.close();
-    renderer.onContext=(cell,x,y,queue)=>{if(shootingControls.active){shootingControls.cancel();renderState();return;}if(!snapshot||replacingWorld)return;const selected=snapshot.pawns.filter(p=>selection.ids.has(p.id));if(selected.some(p=>p.draft)){orderMenu.close();void attempt(()=>client.command({type:'draft-move',pawnIds:selected.map(p=>p.id),target:cell,queue}));}else void orderMenu.open(snapshot,selection.ids,cell,x,y,queue);};
+    renderer.onContext=(cell,x,y,queue)=>{if(shootingControls.active){shootingControls.cancel();renderState();return;}if(!snapshot||replacingWorld||frontMenu.isOpen())return;const selected=snapshot.pawns.filter(p=>selection.ids.has(p.id));if(selected.some(p=>p.draft)){orderMenu.close();void attempt(()=>client.command({type:'draft-move',pawnIds:selected.map(p=>p.id),target:cell,queue}));}else void orderMenu.open(snapshot,selection.ids,cell,x,y,queue);};
     renderer.onArea = designateArea;
     renderer.onAreaPreview = info => {
       el('area-feedback').hidden = !info;
       if (info) el('area-feedback').textContent = `${info.width} × ${info.height} · ${info.eligible} case(s) retenue(s) · ${info.skipped} ignorée(s) — Relâcher pour appliquer · Échap pour annuler`;
     };
-    if (snapshot) renderer.setWorld(snapshot);
-    await renderer.preparePresentation();
-    el('loading').remove();
-    if (import.meta.env.DEV && params.has('e2e')) Object.defineProperty(window, '__lisiere', { value: {
-      get world() { return structuredClone(snapshot); }, get tick() { return snapshot?.tick ?? 0; }, get backend() { return renderer?.backend; },
-      projectCell: (x: number, z: number) => renderer!.projectCell(x, z),
-    } });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    const heading = document.createElement('h2'), paragraph = document.createElement('p');
-    heading.textContent = 'Le démarrage a rencontré un problème.';
-    paragraph.textContent = `${message} Essayez un navigateur récent avec l’accélération graphique activée.`;
-    el('loading').replaceChildren(heading, paragraph); console.error(error);
   }
+  renderer.setWorld(snapshot, true, currentSpeed, latestMotion);
+  await renderer.preparePresentation();
+  el('loading')?.remove(); renderState();
+}
+async function start() {
+  if (import.meta.env.DEV && params.has('e2e')) Object.defineProperty(window, '__lisiere', { value: {
+    get world() { return structuredClone(snapshot); }, get tick() { return snapshot?.tick ?? 0; }, get backend() { return renderer?.backend; },
+    projectCell: (x: number,z: number) => renderer!.projectCell(x,z),
+  } });
+  shell.hidden=true; frontMenu.showHome(false); syncStorageButtons();
+  if (!diagnosticStart) return;
+  frontMenu.setBusy(true, 'Préparation du scénario de diagnostic…');
+  try {
+    const seedText=params.get('seed'), seed=seedText===null?42:Number(seedText), size=Number(params.get('size'));
+    if(seedText!==null&&(!/^\d{1,10}$/.test(seedText)||!Number.isInteger(seed)||seed<0||seed>4294967295))throw new Error('Graine invalide dans cette adresse.');
+    const scenario=params.get('scenario')!;
+    if(!Object.hasOwn(SCENARIOS,scenario))throw new Error('Scénario inconnu dans cette adresse.');
+    el<HTMLSelectElement>('world-scenario').value=scenario; updateScenarioDescription();
+    await replaceColony(() => session.create(seed,[32,...MAP_SIZE_PRESETS].includes(size)?size:DEFAULT_MAP_SIZE,scenario as ScenarioId));
+    await changeSpeed(1);
+  } catch(error) { frontMenu.showError(error instanceof Error?error.message:String(error)); }
+  finally { frontMenu.setBusy(false); syncStorageButtons(); }
 }
 const metricsInterval = setInterval(() => {
   if (!renderer) return;

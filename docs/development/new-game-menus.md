@@ -1,6 +1,20 @@
-# Accueil et création de partie — contrat cible
+# Accueil et création de partie — V82 et parcours cible
 
-**Cible définie le 20 septembre 2026, NON LIVRÉE.** Ce document précise le parcours demandé par l'utilisateur ; il n'annonce ni des menus déjà fonctionnels, ni un scénario Core complet, ni une difficulté déjà appliquée. [ROADMAP](../ROADMAP.md) reste l'unique calendrier. Le [départ Trois survivants V80](scenario-start.md) et l'[inventaire fonctionnel](../gameplay/implementation-status.md) décrivent l'existant.
+**V82, le 20 septembre 2026.** L'accueil, les premiers choix, la configuration locale et les chargements courant/historique sont validés par le parcours natif ; voir les [preuves V82](../history/validation-new-game-v82.md). Le scénario et Cassandra sont explicitement partiels. Le parcours mondial complet ci-dessous reste une cible. [ROADMAP](../ROADMAP.md) conserve seule le calendrier ; le [contrat du départ](scenario-start.md) et l'[inventaire fonctionnel](../gameplay/implementation-status.md) distinguent contenu présent et absent.
+
+## Périmètre livré
+
+| Partie | Comportement V82 et limite |
+|---|---|
+| Accueil | Nouvelle partie et Charger actifs ; Tutoriel, Options, Mods et Crédits visibles/grisés. Reprendre apparaît quand une colonie existe. Aucune colonie générée au démarrage froid. |
+| Scénario | Atterrissage forcé seul choix actif, fiche « adaptation partielle » et fournitures réellement présentes. Les autres scénarios et l'éditeur sont indisponibles. |
+| Histoire | Cassandra présélectionnée et décrite comme partielle ; difficulté et mode restent vides jusqu'au choix explicite de Récit d'aventure et Rechargeable. Autres possibilités grisées. |
+| Préparer le départ | Graine numérique aléatoire et modifiable, bouton Aléatoire, carte 250², vallée tempérée avec rivière et trois profils fixes. Les pages planète/site/huit candidats ne sont pas simulées par des contrôles décoratifs. |
+| Création/chargement | Opération exclusive, publication après acceptation worker, colonie ouverte en pause ; sauvegarde manuelle et colonie précédente restent deux emplacements distincts. Une erreur de format ne remplace pas la colonie active. |
+| Profil appliqué | Nouveau `crashlanded` et `gameProfile` révision 1 ; migration V81 neutre, anciennes provenances inchangées. Cible d'humeur +5, infection différée ×0,75 coloniale, tir ami 0,40 ; autres domaines de difficulté encore absents. |
+| Temps/événements | Débit nominal 6 ticks/s, jour de 16 min 40 s ; nouveau départ à 06 h civiles pour un temps écoulé nul. Raid introductif à J5,4 et fenêtres majeures ; accueil fixe/canicule garantie désactivés. Après J20, raids seuls et budget local partiel. |
+
+Les sections suivantes conservent les contrats de navigation, erreurs, accessibilité et extension du parcours. Contrôles du cycle complet, chargements historiques, clavier, présentation et mesures sont regroupés dans les preuves du lot. Les étapes monde/site/personnes complètes demeurent explicitement hors de cette tranche.
 
 ## Référence et choix retenus
 
@@ -59,7 +73,7 @@ La page conserve trois choix séparés : qui produit les incidents, quels param�
 - Difficulté et mode commencent sans sélection, comme la création normale observée ; le joueur confirme les deux choix. Suivant explique précisément le choix manquant au lieu d'ignorer le clic.
 - Infobulles lisibles au survol **et au clavier**. Elles expliquent le sens du réglage ; elles ne certifient pas des systèmes encore absents.
 
-L'étiquette Récit d'aventure ne peut pas recouvrir les calendriers provisoires de V81 sans distinction. Les paramètres des mécaniques présentes doivent être reliés au profil réellement appliqué ; les pans de difficulté encore absents sont annoncés une fois clairement dans la fiche. Même exigence pour Cassandra : nom, réglage d'introduction et budget d'incidents sont des états distincts, pas un simple changement d'illustration.
+L'étiquette Récit d'aventure ne recouvre pas les calendriers provisoires de V81 : le nouveau profil applique les coefficients des mécaniques présentes et son agenda propre. Les pans de difficulté encore absents sont annoncés une fois clairement dans la fiche. Cassandra reçoit l'introduction à J5,4 et les fenêtres majeures à partir de J11 ; le budget/composition et la sélection complète restent partiels. Après J20 les occasions ne produisent encore que des raids, sans équivalence de pondération Core. Les groupes historiques demeurent disponibles uniquement dans leurs anciennes parties/scénarios de diagnostic.
 
 Retour conserve les choix de cette création. Il ne remet pas secrètement les personnes ou l'aléatoire à zéro.
 
@@ -110,7 +124,7 @@ Au chargement réussi, afficher la colonie en pause afin que le joueur puisse s'
 - Mise en page défilante adaptée aux petites fenêtres et au zoom ; Retour/Suivant demeurent atteignables. Une grande illustration ne masque ni la description ni les choix.
 - Texte de sauvegarde et noms issus des données affichés comme texte. Messages de chargement/échec annoncés sans avalanche de notifications par image.
 
-## Critères d'acceptation du lot qui l'implémentera
+## Critères d'acceptation de la tranche en cours
 
 1. Démarrage froid : accueil utilisable, sans colonie qui avance ou remplace une sauvegarde ; Nouvelle partie et Charger ont de vraies destinations ; états vides et options grisées sont cohérents.
 2. Parcours réel au clic et au clavier : scénario → narrateur → configuration effectivement disponible → départ ; choix obligatoires, Retour, abandon et double clic. Le profil affiché correspond à celui reçu par la simulation.

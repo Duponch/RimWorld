@@ -144,7 +144,7 @@ function connectStartingValley(terrain: Terrain[], width: number, height: number
  */
 export function generateWorld(seed: number, width: number, height: number, profile?:GenerationProfile): World {
   if (!Number.isInteger(seed) || !Number.isFinite(seed)) throw new Error('Seed must be a finite integer.');
-  if(profile!==undefined&&profile!=='temperate-survivors-v1')throw new Error('Unknown generation profile.');
+  if(profile!==undefined&&profile!=='temperate-survivors-v1'&&profile!=='temperate-crashlanded-v1')throw new Error('Unknown generation profile.');
   if (![width, height].every(validMapDimension)) {
     throw new Error(`World dimensions must be integers between ${MIN_MAP_SIZE} and ${MAX_MAP_SIZE}.`);
   }
@@ -203,7 +203,7 @@ export function generateWorld(seed: number, width: number, height: number, profi
       const roll = sample(world.seed, x, z, 60);
       const kind: ResourceKind | null = roll < rockChance ? 'rock' : roll < rockChance + treeChance ? 'tree'
         : roll < rockChance + treeChance + berryChance ? 'berries' : null;
-      if (kind) world.resources.push({ id: world.nextId++, x, z, kind, ...(kind === 'rock' ? { stone: stoneAt(x, z) } : {}), ...(profile&&kind==='berries'?{growth:.15+sample(world.seed,x,z,62)*.85,growthTick:0}:{}), amount: kind === 'berries' ? 10 : 7 + Math.floor(sample(world.seed, x, z, 61) * 7) });
+      if (kind) world.resources.push({ id: world.nextId++, x, z, kind, ...(kind === 'rock' ? { stone: stoneAt(x, z) } : {}), ...(profile&&kind==='berries'?{growth:Math.min(1,.15+sample(world.seed,x,z,62)*(profile==='temperate-crashlanded-v1'?1.35:.85)),growthTick:0}:{}), amount: kind === 'berries' ? 10 : 7 + Math.floor(sample(world.seed, x, z, 61) * 7) });
     }
   }
   // The natural profile is landscape only. Its scenario factory owns people,

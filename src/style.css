@@ -45,3 +45,5 @@
 
 .cooler-buttons { display: flex; gap: 4px; }
 .cooler-buttons button { flex: 1; padding: 6px 2px; min-width: 0; }
+
+#fps-counter{position:fixed;z-index:1000;pointer-events:none}

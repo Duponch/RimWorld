@@ -12,10 +12,10 @@ export function updateResearchPanel(root:HTMLElement,world:World,send:(c:Command
   const air=world.research?.airConditioning,airDone=airConditioningUnlocked(world),airActive=world.research?.project==='air-conditioning';
   root.querySelector('[data-research-help]')!.textContent=done&&airDone?'Les deux projets disponibles sont acquis. Leur équipement est accessible dans Architecte ; les autres technologies restent à développer.':'Construisez un bureau de recherche simple dans Architecte → Production, puis affectez un colon dans Travail. Plusieurs bureaux contribuent au même projet. La tenue tribale est disponible sans recherche.';
   root.querySelector<HTMLProgressElement>('[data-air-progress]')!.value=(air?.points??0)/RESEARCH_SCALE;
-  root.querySelector('[data-air-status]')!.textContent=`${airDone?(world.scenario?.id==='survivors'&&air?.completedAt===0?'Acquise au départ':'Terminée'):airActive?'En cours':'En attente'} · ${((air?.points??0)/RESEARCH_SCALE).toFixed(1)} / 500 points`;
+  root.querySelector('[data-air-status]')!.textContent=`${airDone?((world.scenario?.id==='survivors'||world.scenario?.id==='crashlanded')&&air?.completedAt===0?'Acquise au départ':'Terminée'):airActive?'En cours':'En attente'} · ${((air?.points??0)/RESEARCH_SCALE).toFixed(1)} / 500 points`;
   root.querySelector<HTMLButtonElement>('[data-air-start]')!.disabled=airDone||airActive;
   root.querySelector<HTMLProgressElement>('[data-research-progress]')!.value=points;
-  root.querySelector('[data-research-status]')!.textContent=`${done?(world.scenario?.id==='survivors'&&world.research?.completedAt===0?'Acquise au départ':'Terminée'):active?'En cours':'En attente'} · ${points.toFixed(1)} / 600 points`;
+  root.querySelector('[data-research-status]')!.textContent=`${done?((world.scenario?.id==='survivors'||world.scenario?.id==='crashlanded')&&world.research?.completedAt===0?'Acquise au départ':'Terminée'):active?'En cours':'En attente'} · ${points.toFixed(1)} / 600 points`;
   root.querySelector<HTMLButtonElement>('[data-research-start]')!.disabled=done||active;
   root.querySelector<HTMLButtonElement>('[data-research-pause]')!.disabled=!world.research?.project;
   const workers=world.pawns.filter(p=>p.research).map(p=>`${p.name} · Intellect ${intellectualSkill(p).level} · ${p.state==='working'?'au bureau':'en chemin'}`);

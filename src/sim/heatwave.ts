@@ -4,6 +4,7 @@ const random=(s:HeatwaveCalendar)=>{let n=s.rng;n^=n<<13;n^=n>>>17;n^=n<<5;s.rng
 const log=(w:World,message:string)=>{w.events.push({tick:w.tick,type:'need',message});if(w.events.length>80)w.events.splice(0,w.events.length-80);};
 /** Scenario cadence, explicitly not the Core storyteller's random event selection. */
 export function enableHeatwaves(w:World):void {
+  if(w.gameProfile)throw new Error('Historical heatwaves are unavailable for the selected storyteller.');
   if(w.heatwaves)return;
   const s=w.heatwaves={profile:'camp-heat-v1' as const,rng:((w.seed^0x4ea774)>>>0)||1,nextAt:0,serial:0};
   s.nextAt=w.tick+Math.floor((6+random(s))*TICKS_PER_DAY);

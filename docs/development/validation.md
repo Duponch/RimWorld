@@ -1,6 +1,6 @@
-# Validation courante — V81
+# Validation courante — V82
 
-Enquête du 20 septembre : [audit de référence Core et diagnostic du parcours suspendu](../history/reference-audit-2026-09-20.md), sans changement du gameplay V81. Les menus demandés et les corrections déduites restent à implémenter.
+Enquête du 20 septembre : [audit de référence Core et diagnostic du parcours suspendu](../history/reference-audit-2026-09-20.md), sans changement du gameplay V81. Cette enquête précède les corrections et menus intégrés dans [V82](../history/validation-new-game-v82.md), validée dans son périmètre.
 
 V81 : [infection, soins répétés, migration et issue médicale](../history/validation-infections-v81.md). Les scénarios cliniques contrôlés, acquisition naturelle du pilote et continuations UI sont distingués ; aucune validation d’un catalogue médical complet.
 

@@ -1,3 +1,4 @@
+import { calendarTick } from '../sim/calendar';
 import { isColonist } from '../sim/affiliation';
 import { hourOfDay, type ScheduleAssignment, type ScheduleCommand } from '../sim/schedule';
 import type { World } from '../sim/types';
@@ -106,7 +107,7 @@ export function createScheduleControls(root: HTMLElement, send: (command: Schedu
         button.setAttribute('aria-label', `${pawn.name}, ${h} h : ${labels[assignment]}`); button.title = `${h} h – ${h + 1} h : ${labels[assignment]}`;
       });
     }
-    const nextHour = hourOfDay(next.tick);
+    const nextHour = hourOfDay(calendarTick(next));
     if (hour !== nextHour) {
       root.querySelectorAll('.current-hour').forEach(c => c.classList.remove('current-hour'));
       root.querySelectorAll(`[data-clock-hour="${nextHour}"], [data-schedule-hour="${nextHour}"]`).forEach(c => c.classList.add('current-hour')); hour = nextHour;

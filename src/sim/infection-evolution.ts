@@ -7,7 +7,7 @@ import { INFECTION_INITIAL,INFECTION_INTERVAL,INFECTION_UNIT,infectionAcquisitio
 export function advanceInfections(record:MedicalRecord,context:MedicalContext,random:MedicalRandom):void {
   for(const injury of record.injuries) {
     if(!injury.infection||injury.infection.dueCore>record.tick*10)continue;
-    const factor=infectionAcquisitionFactor(injury),allowed=infectionContractAllowed(record,injury.part);
+    const factor=infectionAcquisitionFactor(injury)*(context.infectionChanceFactor??1),allowed=infectionContractAllowed(record,injury.part);
     // Even rejection closes the original exposure. Healed wounds disappear
     // with their clocks; an acquired condition no longer depends on its wound.
     delete injury.infection;

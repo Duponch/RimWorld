@@ -1,4 +1,5 @@
 import { finishMentalBreak } from './mental-state.ts';
+import { playerInfectionFactor } from './game-profile.ts';
 import { resetTactics } from './tactics-state.ts';
 import { carrierOf } from './rescue-state.ts';
 import { dropIncapacitatedEquipment } from './equipment-state.ts';
@@ -51,7 +52,7 @@ export function updatePawnHealth(world:World,pawn:Pawn):BodyAssessment|undefined
     const bed=resting&&need?.kind==='sleep'&&need.phase==='sleep'&&need.bedId!==null&&world.structures.some(s=>s.id===need.bedId&&s.kind==='bed');
     const nextInfection=record.infections?.nextId??1;
     const sky=pawn.moveCooldown===0&&pawn.state==='recreating'&&pawn.recreation.task?.activity==='skygaze'&&pawn.recreation.task.phase==='active';
-    advanceMedical(record,world.tick-record.tick,{phase:pawn.id%60,posture:bed?'bed':resting?'ground':'standing',starving:pawn.hunger<=0,
+    advanceMedical(record,world.tick-record.tick,{phase:pawn.id%60,posture:bed?'bed':resting?'ground':'standing',starving:pawn.hunger<=0,infectionChanceFactor:playerInfectionFactor(world,pawn),
       hunger:pawn.hunger,rest:pawn.rest,restingBonus:!!bed||resting&&pawn.state!=='downed'||sky,infectionSeed:(world.seed^Math.imul(pawn.id,0x9e3779b1))>>>0},()=>healthRandom(world));
     for(const infection of record.infections?.cases??[])if(infection.id>=nextInfection)announce(world,`${pawn.name} souffre d’une infection : consultez Santé et organisez des soins réguliers.`);
   }

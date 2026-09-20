@@ -36,6 +36,7 @@ import type { Placement } from './primitives';
 import type { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import type { World, Orientation, AreaAction, Cell } from '../sim/types';
 import { TICKS_PER_SECOND } from '../sim/types';
+import { calendarTick } from '../sim/calendar';
 import { footprintCells } from '../sim/definitions';
 import { canDesignate } from '../sim/engine';
 import { buildAreaIndex, isAreaAction, queryArea } from '../sim/designation';
@@ -198,7 +199,8 @@ export class ColonyRenderer {
     renderer.domElement.addEventListener('lostpointercapture', this.onPointerCancel);
     renderer.domElement.addEventListener('contextmenu', this.onContextMenu);
     window.addEventListener('keydown', this.onKeyDown);
-    window.addEventListener('keyup', this.onKeyUp);
+    // Menus stop bubbling keyboard events; release keys held before opening one.
+    window.addEventListener('keyup', this.onKeyUp, true);
     window.addEventListener('blur', this.onBlur);
     document.addEventListener('visibilitychange', this.onVisibility);
     this.resizeObserver = new ResizeObserver(() => this.resize());
@@ -345,7 +347,7 @@ export class ColonyRenderer {
       this.overview.group.visible = this.terrainGroup.visible = this.resourceGroup.visible = true;
       this.rocks.setDistant(false); this.rocks.mesh.visible = true;
       this.scene.traverse(object => { culling.set(object, object.frustumCulled); object.frustumCulled = false; });
-      this.daylight.update(this.world?.tick ?? 0, this.controls.target);
+      this.daylight.update(this.world ? calendarTick(this.world) : 0, this.controls.target);
       await this.renderer.compileAsync(this.scene, this.rig.orthographic);
       await this.renderer.compileAsync(this.scene, this.rig.perspective);
       await prepareShadowPipelines(this.renderer,this.scene,this.rig.orthographic,this.boxes);
@@ -504,7 +506,7 @@ export class ColonyRenderer {
     // restores the sky; pausing cannot continue an independent wall-clock sun.
     const skyTick = this.hasTracks ? this.timeline.tick : THREE.MathUtils.lerp(this.timeFrom, this.timeTo, this.pawns.blend.value) * TICKS_PER_SECOND;
     this.doors.tick.value=skyTick;this.projectiles.present(skyTick);
-    this.daylight.update(skyTick, this.controls.target);
+    this.daylight.update(this.world?calendarTick(this.world,skyTick):skyTick, this.controls.target);
     const cellPixels=this.rig.pixelsPerCell(this.host.clientHeight);
     const distant=this.overview.group.visible ? cellPixels<9 : cellPixels<7;
     this.overview.group.visible=distant;this.terrainGroup.visible=!distant;this.resourceGroup.visible=!distant;
@@ -523,7 +525,7 @@ export class ColonyRenderer {
     // The hidden management tables can contain hundreds of people. Avoid a
     // document-wide modal query every frame when there is no keyboard motion.
     if (!this.keys.size) return;
-    if (document.querySelector('dialog[open]')) { this.keys.clear(); return; }
+    if (this.host.closest('[inert]') || document.querySelector('dialog[open]')) { this.keys.clear(); return; }
     let horizontal = 0, vertical = 0;
     if (this.keys.has('arrowleft') || this.keys.has('q') || this.keys.has('a')) horizontal--;
     if (this.keys.has('arrowright') || this.keys.has('d')) horizontal++;
@@ -672,6 +674,7 @@ export class ColonyRenderer {
   };
   private onContextMenu = (event: Event): void => { event.preventDefault(); };
   private onKeyDown = (event: KeyboardEvent): void => {
+    if (this.host.closest('[inert]')) { this.keys.clear(); return; }
     if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey || document.querySelector('dialog[open]')) return;
     if (event.target instanceof HTMLElement && (event.target.matches('input, textarea, select') || event.target.isContentEditable)) return;
     const key = event.key.toLowerCase();
@@ -701,7 +704,7 @@ export class ColonyRenderer {
     canvas.removeEventListener('lostpointercapture', this.onPointerCancel);
     canvas.removeEventListener('contextmenu', this.onContextMenu);
     window.removeEventListener('keydown', this.onKeyDown);
-    window.removeEventListener('keyup', this.onKeyUp);
+    window.removeEventListener('keyup', this.onKeyUp, true);
     window.removeEventListener('blur', this.onBlur);
     document.removeEventListener('visibilitychange', this.onVisibility);
     this.boxes.dispose();

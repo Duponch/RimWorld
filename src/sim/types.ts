@@ -1,6 +1,6 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 81 as const;
-export const TICKS_PER_SECOND = 10;
+export const SCHEMA_VERSION = 82 as const;
+export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
 export type Terrain = 'grass' | 'soil' | 'water' | 'rock' | 'rough-stone';
@@ -132,6 +132,7 @@ export interface Pawn extends Cell {
 }
 export interface WorldEvent { tick: number; type: 'job' | 'need' | 'command'; message: string }
 export interface World {
+  gameProfile?:import('./game-profile.ts').GameProfile;
   scenario?:import('./scenario-definitions.ts').ScenarioStamp;
   hunting?:{targets:number[];completed:number};
   butchery?:{completed:number;meat:number;leather:number};

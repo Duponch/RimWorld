@@ -116,13 +116,13 @@ test('civil crossing preserves beds, opposing cargo, every edge and exact contin
 test('confirmed rate changes integrate only their own wall-clock intervals, even between delayed frames',()=>{
   const timeline=new MotionTimeline();timeline.adopt(0,1,[],0,true);
   timeline.adopt(10000,1,[],0);timeline.advance(0);
-  expect(timeline.advance(16)).toBeCloseTo(.16);
+  expect(timeline.advance(16)).toBeCloseTo(.096);
   timeline.adopt(10000,6,[],20);timeline.adopt(10000,1,[],70);
-  expect(timeline.advance(100)).toBeCloseTo(3.5); // 20 ms at 1x, 50 at 6x, 30 at 1x.
+  expect(timeline.advance(100)).toBeCloseTo(2.1); // 20 ms at 1x, 50 at 6x, 30 at 1x: 6 local ticks/s.
   timeline.adopt(10000,3,[],110);
-  expect(timeline.advance(108)).toBeCloseTo(3.58); // RAF can precede delivery's timestamp.
-  expect(timeline.advance(124)).toBeCloseTo(4.02);
-  expect(timeline.advance(140)).toBeCloseTo(4.5);
+  expect(timeline.advance(108)).toBeCloseTo(2.148); // RAF can precede delivery's timestamp.
+  expect(timeline.advance(124)).toBeCloseTo(2.412);
+  expect(timeline.advance(140)).toBeCloseTo(2.7);
 });
 
 test('buffered motion is linear across jitter, duplicate messages, turns, pause and replacement',()=>{
@@ -130,32 +130,32 @@ test('buffered motion is linear across jitter, duplicate messages, turns, pause 
   const timeline=new MotionTimeline();timeline.adopt(0,1,[{id:1,segments}],0,true);
   const arrivals=new Map([[180,2],[400,4],[580,6],[600,6],[700,6]]);
   let previous={x:0,z:0},distance=0;
-  for(let ms=10;ms<=1000;ms+=10) {
+  for(let ms=10;ms<=1400;ms+=10) {
     if(arrivals.has(ms))timeline.adopt(arrivals.get(ms)!,1,[{id:1,segments}],ms);
     timeline.advance(ms);const segment=timeline.segment(1)!;
     const t=Math.min(1,Math.max(0,(timeline.tick-segment.start)/(segment.end-segment.start)));
     const position={x:segment.from.x+(segment.to.x-segment.from.x)*t,z:segment.from.z+(segment.to.z-segment.from.z)*t};
     const delta=Math.hypot(position.x-previous.x,position.z-previous.z);
-    if(ms>400)expect(delta,`frame ${ms}`).toBeCloseTo(1/30,8);else expect(delta).toBe(0);
+    if(ms>400)expect(delta,`frame ${ms}`).toBeCloseTo(1/50,8);else expect(delta).toBe(0);
     // A turn must pass through (1,0), never cut diagonally from (0,0) to (1,1).
     expect(position.z===0||position.x===1).toBe(true);distance+=delta;previous=position;
   }
   expect(distance).toBeCloseTo(2,8);
-  timeline.adopt(6,0,[],1000);expect(timeline.advance(2000)).toBe(6);
-  timeline.adopt(100,1,[],2100,true);expect(timeline.advance(2200)).toBe(100);expect(timeline.segment(1)).toBeUndefined();
+  timeline.adopt(6,0,[],1400);expect(timeline.advance(2400)).toBe(6);
+  timeline.adopt(100,1,[],2500,true);expect(timeline.advance(2600)).toBe(100);expect(timeline.segment(1)).toBeUndefined();
   // A worker message can run before RAF while performance.now() is already
   // later than that frame's timestamp. Only rendered timestamps pace playback.
   // Active worker batches every 50 ms, plus 10–20 ms delivery jitter.
   const jitter=new MotionTimeline();jitter.adopt(0,6,[],0,true);
   const delayed=new Map<number,number>();
-  for(let ms=50;ms<=1200;ms+=50)delayed.set(ms+(ms/50%2?10:20),ms*.06);
-  for(let ms=10;ms<=1200;ms+=10){if(delayed.has(ms))jitter.adopt(delayed.get(ms)!,6,[],ms);expect(jitter.advance(ms)).toBeCloseTo(Math.max(0,ms-120)*.06,9);}
+  for(let ms=50;ms<=1200;ms+=50)delayed.set(ms+(ms/50%2?10:20),Math.floor(ms*.036));
+  for(let ms=10;ms<=1200;ms+=10){if(delayed.has(ms))jitter.adopt(delayed.get(ms)!,6,[],ms);expect(jitter.advance(ms)).toBeCloseTo(Math.max(0,ms-160)*.036,9);}
   const interleaved=new MotionTimeline();interleaved.adopt(0,6,[],0,true);
   interleaved.adopt(100,6,[],420);interleaved.advance(430);
   const first=interleaved.tick;
   interleaved.adopt(101,6,[],452);interleaved.advance(450);
-  expect(interleaved.tick-first).toBeCloseTo(1.2,9);
-  interleaved.advance(470);expect(interleaved.tick-first).toBeCloseTo(2.4,9);
+  expect(interleaved.tick-first).toBeCloseTo(.72,9);
+  interleaved.advance(470);expect(interleaved.tick-first).toBeCloseTo(1.44,9);
   // Integrate the requested rate independently. Speed controls must affect the
   // NEXT frame, without waiting for old-rate history or resetting position.
   for(const period of [100,1000]) {
@@ -163,19 +163,19 @@ test('buffered motion is linear across jitter, duplicate messages, turns, pause 
     let gameMs=0,speed=1,expected=0;
     for(let ms=10;ms<=30000;ms+=10) {
       gameMs+=speed*10;
-      if(ms>400)expected+=speed*.1;
-      if(ms>400&&ms%period===0)speed=[1,6,3][ms/period%3]!;
-      if(ms%50===0)changes.adopt(Math.floor(gameMs/100),speed,[],ms);
+      if(ms>700)expected+=speed*.06;
+      if(ms>700&&ms%period===0)speed=[1,6,3][ms/period%3]!;
+      if(ms%50===0)changes.adopt(Math.floor(gameMs*6/1000),speed,[],ms);
       expect(changes.advance(ms),`speed ${speed} at ${ms}, controls every ${period}`).toBeCloseTo(expected,7);
     }
-    const confirmed=Math.floor(gameMs/100);changes.adopt(confirmed,0,[],30000);
+    const confirmed=Math.floor(gameMs*6/1000);changes.adopt(confirmed,0,[],30000);
     expect(changes.advance(31000)).toBe(confirmed);expect(changes.advance(32000)).toBe(confirmed);
-    // A drained pause refills once, at the requested rate, not for a fixed 400 ms.
+    // A drained pause refills once, at the requested rate, not a fixed wall time.
     changes.adopt(confirmed,6,[],32000);changes.advance(32010);expect(changes.tick).toBe(confirmed);
     changes.adopt(confirmed+4,6,[],32070);changes.advance(32070);expect(changes.tick).toBe(confirmed);
-    expect(changes.advance(32080)).toBeCloseTo(confirmed+.6,8);
+    expect(changes.advance(32080)).toBeCloseTo(confirmed+.36,8);
     changes.adopt(confirmed+4,0,[],32080);changes.adopt(confirmed+4,1,[],32080);
-    expect(changes.advance(32090)).toBeCloseTo(confirmed+.7,8); // resume before drain: no refill
+    expect(changes.advance(32090)).toBeCloseTo(confirmed+.42,8); // resume before drain: no refill
     expect(changes.advance(40000)).toBe(confirmed+4); // starvation never predicts
   }
   // Frequent controls must not discard partial ticks in the worker. The oracle
@@ -183,12 +183,12 @@ test('buffered motion is linear across jitter, duplicate messages, turns, pause 
   const clock=new FixedClock();clock.reset(0);let integral=0,ticks=0,speed=1;
   for(let i=1;i<=1000;i++) {
     integral+=7*speed;ticks+=clock.advance(i*7,speed);
-    expect(ticks).toBe(Math.floor(integral/100));
+    expect(ticks).toBe(Math.floor(integral*6/1000));
     speed=[0,1,3,6][i%4]!;expect(clock.advance(i*7,speed)).toBe(0);
   }
-  clock.reset(100);expect(clock.advance(0,6)).toBe(0);expect(clock.advance(100000,6)).toBe(15);
+  clock.reset(100);expect(clock.advance(0,6)).toBe(0);expect(clock.advance(100000,6)).toBe(9);
   expect(clock.advance(100000,6)).toBe(0);clock.reset(100000);
-  expect(clock.advance(100050,1)).toBe(0);expect(clock.advance(100100,1)).toBe(1);
+  expect(clock.advance(100050,1)).toBe(0);expect(clock.advance(100100,1)).toBe(0);expect(clock.advance(100167,1)).toBe(1);
 
 });
 

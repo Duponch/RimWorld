@@ -8,6 +8,7 @@ import { TICKS_PER_DAY,type World,type CommandResult } from './types.ts';
 
 const log=(w:World,message:string)=>{w.events.push({tick:w.tick,type:'command',message});if(w.events.length>80)w.events.splice(0,w.events.length-80);};
 export function enableArrivals(world:World):void {
+  if(world.gameProfile)throw new Error('Historical arrivals are unavailable for the selected storyteller.');
   if(world.arrivals)return;
   const s=world.arrivals={profile:'camp-arrivals-v1' as const,rng:((world.seed^0xa7719e31)>>>0)||1,nextCheck:0,serial:0,accepted:0,declined:0,expired:0};
   s.nextCheck=world.tick+Math.floor(TICKS_PER_DAY*(1.5+arrivalRandom(s)*.5));
@@ -27,7 +28,7 @@ export function advanceArrivals(world:World):void {
 }
 export function applyArrival(world:World,command:ArrivalCommand):CommandResult {
   const refuse=(reason:string):CommandResult=>({ok:false,code:'invalid-command',reason});
-  if(command.type==='enable-arrivals') {enableArrivals(world);return {ok:true};}
+  if(command.type==='enable-arrivals') {if(world.gameProfile)return refuse('Le calendrier d’accueil historique n’est pas disponible avec ce narrateur.');enableArrivals(world);return {ok:true};}
   const s=world.arrivals,o=s?.pending;
   if(!o||!Number.isSafeInteger(command.offerId)||command.offerId!==o.id||typeof command.accept!=='boolean'||world.tick>=o.expiresAt)return refuse('Cette demande n’est plus disponible.');
   if(!command.accept) {

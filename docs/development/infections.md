@@ -1,4 +1,4 @@
-# Infection après plaie, immunité et soins renouvelés — V81
+# Infection après plaie, immunité et soins renouvelés — V81, profil V82
 
 20 septembre 2026. [Recherche et divergences](../research/infection-reference.md), [santé](health.md), [soins](tending.md), [médicaments](medicines.md), [santé animale](animal-combat.md). Corpus chapitres8/9/15/23/32, SYS/TEST-089 à094 et096. Validation ciblée locale ci-dessous ; les preuves de boucle complète et de performance relèvent de la validation de livraison.
 
@@ -6,13 +6,15 @@
 
 Une nouvelle plaie admissible peut s'infecter après un délai. La gravité progresse, tandis que l'immunité se développe suivant les capacités, la faim, le repos et la posture réels. Le joueur organise les soins renouvelés, un lit accessible, les médicaments physiques et l'alimentation. L'immunité complète lance la convalescence ; elle ne fait pas disparaître instantanément la maladie. Une infection trop avancée peut rendre incapable puis tuer.
 
-Le noyau s'applique aux humains et aux lièvres. Les lièvres sauvages ont le facteur d'acquisition0,1 du code de référence ; **aucun soin vétérinaire n'est livré**. La maladie locale ne se propage pas automatiquement entre voisins. Autres maladies, épidémies, parasites, scaria, chirurgie/amputation volontaire, prothèses, hôpital spécialisé et profils d'âge/gènes demeurent distincts.
+Le noyau s'applique aux humains et aux lièvres. Les lièvres sauvages ont le facteur 0,1 du code de référence sur le premier tirage d'exposition ; **aucun soin vétérinaire n'est livré**. La maladie locale ne se propage pas automatiquement entre voisins. Autres maladies, épidémies, parasites, scaria, chirurgie/amputation volontaire, prothèses, hôpital spécialisé et profils d'âge/gènes demeurent distincts.
 
 ## Risque d'une plaie et acquisition
 
 Seule la création d'une nouvelle lésion lance la première décision : morsure30 %, coupure/balle/écrasement15 %, sous les exclusions anatomiques et de permanence. Une lésion fusionnée ne rejoue pas ce tirage. Les risques anciens absents restent absents, notamment après migration. Une candidature positive conserve un délai entier de15 000 à45 000 Core et un facteur de pièce initial1000.
 
-À échéance, les règles relisent gravité actuelle, soin éventuel, qualité et facteur de pièce capturé. Les courbes datées et leurs divergences avec le wiki sont consignées dans la recherche. La difficulté est explicitement neutre ×1. Une candidature n'est évaluée qu'une fois, au premier tick local atteignant son échéance Core. Guérir complètement la plaie ou perdre sa partie retire ce risque. Une maladie déjà créée demeure après fermeture de la plaie ; perdre sa partie la retire.
+À échéance, les règles relisent gravité actuelle, soin éventuel, qualité et facteur de pièce capturé. Les courbes datées et leurs divergences avec le wiki sont consignées dans la recherche. La difficulté reste neutre ×1 pour les profils historiques. **V82 : Récit d'aventure multiplie ce second tirage par 0,75 pour les personnes de la faction du joueur seulement.** Ennemis et lièvres sauvages restent à ×1. La lecture directe de `Verse.HediffComp_Infecter` dans l'assembly local 1.6.4871, le 20 septembre, a confirmé cette position du facteur : ni premier tirage d'exposition, ni délai, ni progression d'une maladie acquise ne sont réduits. Provenance et empreinte : [base Core](../research/core-reference-baseline.md).
+
+Une candidature n'est évaluée qu'une fois, au premier tick local atteignant son échéance Core. Guérir complètement la plaie ou perdre sa partie retire ce risque. Une maladie déjà créée demeure après fermeture de la plaie ; perdre sa partie la retire.
 
 Un deuxième cas sur la même partie est interdit. L'immunité partagée empêche également une nouvelle acquisition à partir de59,94 % selon la garde de la classe retenue. Les conditions distinctes conservent identité et ordre d'apparition.
 
@@ -57,6 +59,8 @@ Ce calcul reste **limité aux terrains**. Les contributions de fragments, atelie
 - `care-rules`, `tending`, `patient-rest`, `infection-room` : décision du soin, transaction de dose/XP, repos et capture de pièce. `TendTask` n'ajoute pas une seconde cible persistante contradictoire : le travail choisit le prochain traitement admissible au résultat.
 
 V80 est strictement validée avant migration V81, sans maladie, immunité, délai, dose ou passé inventé. Les nouveaux champs sont rejetés dans une sauvegarde V80. Identités, parties, dates, intervalles, qualité, bornes et règles d'exclusivité doivent être cohérents avec leur dossier/propriétaire. Recharger ne relance ni candidat, ni délai, ni chance de maladie.
+
+V81 est à son tour validée avant migration V82, sans ajout de profil de difficulté. Les anciens dossiers continuent donc avec leur coefficient historique et leurs échéances intactes. Le débit nominal global devient six ticks locaux par seconde réelle ; les unités médicales demeurent dix ticks Core par tick local. L'arrivée civile à 6 h du nouveau profil ne fait pas vieillir une plaie de six heures : soins et infections utilisent toujours le temps écoulé.
 
 ## Contrôles ciblés
 

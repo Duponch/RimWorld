@@ -1,0 +1,91 @@
+{
+  "backend": "WebGPU",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "samples": [
+    {
+      "speed": 1,
+      "targetTicksPerSecond": 6,
+      "actualTicksPerSecond": 5.971813042439574,
+      "milliseconds": 10047.200000000186,
+      "ticks": 60,
+      "frames": 1641,
+      "p95": 8.400000000001455,
+      "p99": 12.5,
+      "max": 12.599999999998545
+    },
+    {
+      "speed": 6,
+      "targetTicksPerSecond": 36,
+      "actualTicksPerSecond": 36.02742861692359,
+      "milliseconds": 10047.900000000373,
+      "ticks": 362,
+      "frames": 1665,
+      "p95": 8.400000000001455,
+      "p99": 12.5,
+      "max": 12.69999999999709
+    }
+  ],
+  "checkpoints": {
+    "creation": {
+      "milliseconds": 4258,
+      "tick": 0,
+      "scenario": {
+        "id": "crashlanded",
+        "revision": 1,
+        "landing": {
+          "x": 124,
+          "z": 124
+        }
+      },
+      "gameProfile": {
+        "revision": 1,
+        "storyteller": "cassandra-partial",
+        "difficulty": "adventure-story",
+        "saveMode": "reloadable"
+      }
+    },
+    "firstDecisions": {
+      "commands": 5,
+      "tick": 704,
+      "beds": 3,
+      "field": 20,
+      "stock": {
+        "wood": 196,
+        "food": 50
+      }
+    },
+    "coldCurrent": {
+      "scenario": {
+        "id": "crashlanded",
+        "revision": 1,
+        "landing": {
+          "x": 124,
+          "z": 124
+        }
+      },
+      "tick": 1145
+    },
+    "invalid": {
+      "rejected": true,
+      "tickPreserved": 1145,
+      "message": "Cette sauvegarde est illisible ou incompatible avec cette version. La colonie actuelle et vos sauvegardes sont conservées."
+    },
+    "future": {
+      "rejected": true,
+      "tickPreserved": 1145,
+      "message": "Cette sauvegarde est illisible ou incompatible avec cette version. La colonie actuelle et vos sauvegardes sont conservées."
+    },
+    "coldHistorical": {
+      "source": "artifacts/heatwave-checkpoint-v81.json",
+      "sourceVersion": 81,
+      "loadedVersion": 82,
+      "tick": 39205,
+      "width": 16
+    }
+  },
+  "errors": []
+}

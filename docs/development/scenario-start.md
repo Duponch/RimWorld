@@ -1,14 +1,14 @@
-# Nouvelle partie — Trois survivants V80
+# Nouvelle partie — Atterrissage forcé partiel V82 et profils historiques
 
-Contrat V80 du 20 septembre 2026. [Preuves de création, sauvegarde, UI et trois jours sur trois graines](../history/validation-scenario-v80.md). La [recherche](../research/scenario-start-reference.md) conserve sources, versions et écarts. [ROADMAP](../ROADMAP.md) reste l'unique calendrier.
+**V82**, le 20 septembre 2026. La [référence locale Core](../research/core-reference-baseline.md) et le [contrat des menus](new-game-menus.md) gouvernent le nouveau départ. Les [preuves V80](../history/validation-scenario-v80.md) restent celles de Trois survivants : elles ne valident pas rétroactivement le nouveau profil. La [recherche de scénario](../research/scenario-start-reference.md) conserve sources, versions et écarts. [ROADMAP](../ROADMAP.md) reste l'unique calendrier.
 
-**État après enquête du 20 septembre :** ce contrat décrit toujours le gameplay V81. La cible utilisateur devient Atterrissage forcé / Cassandra / Récit d'aventure avec des [menus dédiés](new-game-menus.md), encore non livrés. La [référence locale 1.6.4871](../research/core-reference-baseline.md) confirme désormais l'heure initiale locale de 6 h et révèle l'écart de débit réel (16 min 40 par jour Core contre 10 min ici), ainsi que les écarts de génération et de cadence. Aucun de ces points n'est corrigé par un changement de nom ou de documentation.
+Le nouveau parcours propose **Atterrissage forcé, Cassandra Classique partielle, Récit d'aventure et Rechargeable**. Les choix de difficulté et de sauvegarde sont requis, malgré leur unique possibilité active. L'interface annonce l'adaptation partielle et sa dotation réelle ; elle ne promet ni tous les objets Core ni le narrateur complet.
 
 ## Profils séparés
 
-**Trois survivants**, profil version 1, devient le choix normal de nouvelle partie. Départ original inspiré de Crashlanded Core, adapté au catalogue jouable. Le **camp pédagogique** historique demeure sélectionnable pour ses parcours guidés et recherches ; la **sentinelle** reste un contrôle distinct. Un scénario ne se déduit jamais d'une sauvegarde historique ou de la présence d'objets.
+**Atterrissage forcé**, nouvel identifiant `crashlanded` révision 1, reçoit un `gameProfile` révision 1 distinct : `cassandra-partial`, `adventure-story`, `reloadable`. **Trois survivants** conserve l'identifiant `survivors`, sa provenance et ses règles historiques. Le **camp pédagogique** et la **sentinelle** restent des scénarios de diagnostic accessibles explicitement aux parcours qui en dépendent. Le nouveau menu ne les présente pas comme des variantes Core livrées. Un scénario ne se déduit jamais d'une sauvegarde historique ou de la présence d'objets.
 
-Le choix visible annonce trois adultes, vallée tempérée, provisions, technologies connues et pression provisoire. Tailles jouables 200²/250², 250² par défaut, séparées des diagnostics compacts. Monde, biomes complets, huit candidats, biographies et difficulté détaillée ne sont pas présentés comme disponibles.
+Le choix visible annonce trois adultes aux profils locaux fixes, vallée tempérée, provisions, technologies connues et limites de narration. Le menu public crée une carte **250²**. La graine numérique est proposée aléatoirement hors simulation puis transmise explicitement à l'usine déterministe ; elle reste éditable et relançable. Ce n'est pas une graine de planète Core. Formats compacts et anciens scénarios restent des outils de diagnostic. Monde, biomes complets, huit candidats, biographies et difficulté détaillée ne sont pas présentés comme disponibles.
 
 ## Dotation et technologies
 
@@ -25,7 +25,9 @@ Le choix visible annonce trois adultes, vallée tempérée, provisions, technolo
 | Habillement | 3 chemises en tissu, une portée/personne ; aucune copie au sol. |
 | Recherche | Vêtements complexes et Climatisation connus au tick 0 ; aucune XP/travail fictifs. |
 
-Quantités totales par objet, pas par pile. Respecter limites de pile, compatibilité et une pile/cellule, sans effacer une ressource pour faire une place. Personnes, vêtements et piles ont des identités/propriétés cohérentes ; l'inventaire participe aux bilans habituels. Aucun lit, réserve, chantier ou repas consommé créé pour le joueur. Départ après arrivée, sans capsule ni cryptosommeil simulés. L’horloge conserve `tick = 0`, soit 00:00 dans notre cycle ; c'est un écart avec les 6 h locales vérifiées depuis dans Core 1.6.4871. Aucun décalage global de saison/latitude/heure n’est ajouté dans V80/V81.
+Quantités totales par objet, pas par pile. Respecter limites de pile, compatibilité et une pile/cellule, sans effacer une ressource pour faire une place. Personnes, vêtements et piles ont des identités/propriétés cohérentes ; l'inventaire participe aux bilans habituels. Aucun lit, réserve, chantier ou repas consommé créé pour le joueur. Départ après arrivée, sans capsule ni cryptosommeil simulés. La dotation disponible reste celle du profil Survivants ; V82 ne substitue aucun objet manquant.
+
+Le nouveau profil commence au **tick écoulé 0, heure civile 06:00**. `calendarTick` applique le même décalage à la lumière, la croissance végétale, les horaires et la température quotidienne. Les échéances médicales, mouvements, conservation et incidents restent exprimés en temps écoulé. Les anciennes parties gardent leur phase civile antérieure ; latitude 45°, équinoxe et température de vallée restent des simplifications. Le débit nominal commun passe à **six ticks locaux/s**, 6 000 ticks/jour, soit 16 min 40 s par jour à 1×. Cela corrige le débit réel sans convertir les dates persistées ; dix ticks Core restent un tick local.
 
 Les deux projets acquis suivent ce sous-ensemble industriel Core. La fenêtre Recherche peut donc n'avoir aucun projet restant : l'expliquer, sans verrou fictif. Le camp pédagogique conserve son cycle complet. Ajouter ultérieurement un projet ne signifie pas qu'il est déjà connu.
 
@@ -39,19 +41,23 @@ Choisir après génération un point dans une composante praticable reliée au b
 
 Vallée locale avec rivière, sols et géologie. Densités d'arbres/baies calibrées sur plusieurs graines ; densité Core de plantes ≠ probabilité d'arbre. Végétation moins uniforme pour rendre navigation et installation lisibles, sans annoncer chênes/peupliers/écosystème complets. Plafond de départ **12 lièvres sur 250²**, poses admissibles nécessaires ; ce n'est pas un budget Core multiespèce ni une garantie sur toute dimension.
 
+Seul le nouveau générateur `temperate-crashlanded-v1` corrige l'âge initial des **baies** : tirage uniforme 0,15–1,5 borné à 1, permettant des buissons déjà mûrs. Le profil Survivants garde son tirage 0,15–1. Positions, densités et roches ne sont pas recalibrées dans cette tranche ; aucun arbre ne reçoit un faux système d'âge. La croissance après création garde ses règles biologiques et sa lumière réellement disponible, sans objectif de récolte imposé à J7.
+
 Génération unique, sans entretien par frame. Mesurer arbres/baies/minerais, sols, roche, accès, distances et temps sur plusieurs graines ; distinguer simulation/navigation/rendu. Le camp historique n'est pas réétalonné parce que le défaut UI change.
 
 ## Persistance et continuation
 
-Scénario/version constituent une provenance, pas une commande rejouée au chargement. Conserver carte, objets, personnes, technologies, calendriers et RNG réellement obtenus. Valider strictement l'ancien schéma avant migration ; ne pas inventer stocks, technologies, animaux ou identité de départ. Les anciennes parties continuent ; Survivants nécessite une création explicite.
+Scénario/version constituent une provenance, pas une commande rejouée au chargement. Conserver carte, objets, personnes, technologies, calendriers et RNG réellement obtenus. **V81 est strictement validée avant migration V82 neutre** : aucun `gameProfile`, décalage civil, stock, technologie, animal ou calendrier ajouté. Les champs V82 injectés dans V81 sont refusés. Le nouveau profil nécessite une création explicite ; `crashlanded` sans son profil appliqué, ou un profil Core greffé sur `survivors`, est invalide.
 
 La commande worker transporte le choix. Même graine, dimensions, générateur et profil reproduisent le départ. Recharger ne redonne jamais les provisions. Ne pas confondre flux aléatoires du terrain/personnes/faune/incidents avec l'aléa visuel.
 
 ## Pression et acceptation
 
-Calendriers d'arrivées, raids et climat : réglage prototype explicite. Pas d'étiquette de difficulté Core ; richesse/adaptation, saisons, maladies, prédateurs et autres contraintes restent incomplets. Ne pas simuler une équivalence en changeant discrètement besoins/rendements/statistiques.
+Le nouveau profil applique les effets présents de Récit d'aventure : **+5 à la cible d'humeur des colons**, **×0,75 au second tirage différé d'infection de la faction du joueur**, tir ami 0,40 déjà utilisé. Les rendements agricoles/miniers/boucherie et la vitesse de recherche restent inchangés, comme les facteurs 1 du profil relevé. Intoxication alimentaire, richesse/adaptation et calcul de budget restent absents : l'étiquette ne certifie pas une difficulté globale équivalente.
 
-Campagne ciblée, résultats détaillés dans la preuve :
+La [cadence de raids](raids.md) propose une occasion introductive à J5,4, puis des fenêtres à J11 + 10,6 × n  : 4,6 jours actifs, 6 de repos, 1–2 occasions espacées d'au moins 1,9 jour. Les occasions impossibles ou occupées sont consommées ; la fin d'un groupe ne déplace pas les fenêtres. Après J20, les occasions restent limitées aux raids de composition locale : sélection complète et budget de 40 points non livrés. Visiteurs, petite menace introductive, Misc, maladies et factions restent absents. Accueil fixe et canicule garantie du camp ne sont pas activés sur `crashlanded`, et leurs commandes d'activation y sont refusées. Les autres scénarios gardent leurs calendriers historiques.
+
+Campagne ciblée ; la validation intégrée V82 demeure en cours :
 
 - Plusieurs graines 250² et formats compacts : pose admissible, aides artificielles absentes, bilan exact, personnes/technologies et reproductibilité.
 - Sauvegarde/reprise : anciennes parties inchangées, scénario confirmé, aucune seconde dotation, continuation identique.

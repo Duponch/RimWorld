@@ -1,12 +1,12 @@
 # Référence de partie Core — 20 septembre 2026
 
-Cette enquête remplace l'objectif « tout observer dans la première semaine ». La cible est le déroulement de RimWorld, avec ses choix initiaux, son contexte et ses variations. Les règles relevées ici ne constituent pas une nouvelle version jouable de Lisière. [ROADMAP](../ROADMAP.md) programme seule les corrections ; [état livré](../gameplay/implementation-status.md).
+Cette enquête remplace l'objectif « tout observer dans la première semaine ». La cible est le déroulement de RimWorld, avec ses choix initiaux, son contexte et ses variations. **V82 :** une première tranche applique les menus, un profil de partie distinct, le débit temporel, l'arrivée à 6 h et une partie des règles de narration/difficulté relevées ici. La recherche complète ne devient pas pour autant du gameplay livré. [ROADMAP](../ROADMAP.md) programme seule les corrections ; [état livré](../gameplay/implementation-status.md).
 
 ## Profil retenu par l'utilisateur
 
 **Atterrissage forcé, Cassandra Classique, Récit d'aventure**, jeu de base sans extension active. Le 20 septembre, l'utilisateur a fourni huit premières captures de RimWorld 1.6.4871 et demandé que seul ce scénario et cette difficulté soient actifs dans les premiers menus ; les autres choix restent visibles et grisés. Nouvelle partie et Charger sont actifs, Options seulement pour des réglages réellement disponibles. [Contrat cible des menus](../development/new-game-menus.md).
 
-Récit d'aventure est désormais **un choix explicite de périmètre**, pas un prétendu réglage par défaut de RimWorld ni une estimation de ce qu'utiliserait un « joueur moyen ». Cassandra est préselectionnée par le jeu ; aucune difficulté ni mode de sauvegarde n'est préselectionné dans la création normale. Les captures confirment les boutons radio vides. Le profil rechargeable sera notre première possibilité ; le mode Engagement reste distinct et indisponible tant qu'il n'existe pas.
+Récit d'aventure est **un choix explicite de périmètre**, pas un prétendu réglage par défaut de RimWorld ni une estimation de ce qu'utiliserait un « joueur moyen ». Cassandra est préselectionnée par le jeu ; aucune difficulté ni mode de sauvegarde n'est préselectionné dans la création normale. Les captures confirment les boutons radio vides. V82 reprend ces choix requis, avec Rechargeable comme seule possibilité initiale ; le mode Engagement reste distinct et indisponible.
 
 ## Sources et hiérarchie de preuve
 
@@ -20,15 +20,15 @@ Inspection locale de classes avec ILSpyCmd **8.2.0.7535**, outil temporaire hors
 
 ## Création : défaut, choix et aléatoire
 
-| Élément | Comportement vérifié dans 1.6.4871 Core | Lisière V81 |
+| Élément | Comportement vérifié dans 1.6.4871 Core | Lisière V82 |
 |---|---|---|
-| Scénario | Premier scénario défini : Crashlanded / Atterrissage forcé. | Trois survivants, adaptation nommée avec matériel manquant. |
-| Narrateur | Cassandra préselectionnée ; difficulté et mode de sauvegarde à choisir. | Calendriers distincts d'accueil, raid et canicule, sans narrateur unifié. |
-| Monde | Graine textuelle aléatoire ; couverture 30 %, pluie/température/population normales sans DLC. | Graine numérique 42 par défaut, carte locale sans monde. |
+| Scénario | Premier scénario défini : Crashlanded / Atterrissage forcé. | Nouveau `crashlanded`, explicitement partiel ; anciens Trois survivants inchangés. |
+| Narrateur | Cassandra préselectionnée ; difficulté et mode de sauvegarde à choisir. | Cassandra partielle : introduction et fenêtres de raids ; difficulté Récit d'aventure et mode Rechargeable à confirmer. |
+| Monde | Graine textuelle aléatoire ; couverture 30 %, pluie/température/population normales sans DLC. | Graine numérique aléatoire et éditable, carte locale sans monde ; ce n'est pas la graine planétaire Core. |
 | Site | Proposition aléatoire sous contraintes ; le joueur peut choisir un autre site. Ni relief montagneux ni rivière systématique. | Vallée tempérée avec rivière systématique, sans choix de relief. |
-| Taille | 250×250 par défaut ; menus 200, 225, 250, 275, 300, 325. Avertissement au-delà de 280. | 250×250 par défaut ; tailles plus restreintes. |
+| Taille | 250×250 par défaut ; menus 200, 225, 250, 275, 300, 325. Avertissement au-delà de 280. | 250×250 dans le nouveau menu ; formats compacts réservés aux parcours de diagnostic. |
 | Personnes | Trois personnes parmi huit candidats ; possibilité de relancer un candidat. Génération sous contraintes et couverture de métiers, pas huit tirages de nombres indépendants. | Trois profils locaux ; choix de candidats/biographies incomplet. |
-| Début du calendrier | Heure locale 6 h ; saison initiale selon site, ou choix explicite. Temps écoulé depuis le début distinct de la date absolue. | Tick 0 confondu avec minuit, lumière fixe à 45° et équinoxe. |
+| Début du calendrier | Heure locale 6 h ; saison initiale selon site, ou choix explicite. Temps écoulé depuis le début distinct de la date absolue. | Nouveau profil : tick écoulé 0, heure locale 6 h, décalage commun lumière/croissance/horaires/température. Latitude 45° et équinoxe restent fixes. |
 
 Classes lues : `Page_SelectScenario`, `ScenarioLister`, `Scenario.GetConfigPages`, `Page_CreateWorldParams`, `GameInitData`, `Page_ConfigureStartingPawns`, `ScenPart_ConfigPage_ConfigureStartingPawns`, `StartingPawnUtility`, `GenTicks`; narrateur/site détaillés dans leurs enquêtes. Le flux normal est scénario → narrateur/difficulté/sauvegarde → monde → site → personnes ; les pages propres aux extensions ne sont pas ajoutées à Core.
 
@@ -40,7 +40,7 @@ Les paramètres de développement rapide ne sont pas les valeurs du menu normal.
 
 Le tag de recherche initial `ClassicStart` de la faction industrielle confirme : mobilier complexe, refroidissement passif, taille de pierre, vêtements complexes, électricité, pâte nutritive et climatisation. Les connaissances de départ ne donnent pas d'XP fictive. Le détail des vêtements/candidats exige les producteurs correspondants ; une dotation XML seule ne décrit pas toutes les possessions générées.
 
-La V80 reprend seulement les éléments annoncés dans son [contrat](../development/scenario-start.md). **Renommer ce profil ne livre pas les éléments manquants.** Les anciennes sauvegardes gardent leur provenance et leur matériel ; aucune correction de scénario ne doit régénérer ou réapprovisionner une colonie existante.
+V80 et la première adaptation V82 reprennent seulement les éléments annoncés dans le [contrat de scénario](../development/scenario-start.md). V82 crée une provenance distincte avec des règles appliquées ; **elle ne livre pas les objets manquants par un changement de nom**. Les anciennes sauvegardes gardent leur provenance et leur matériel ; aucune correction de scénario ne régénère ou réapprovisionne une colonie existante.
 
 ## Temps réel et temps de partie
 
@@ -48,7 +48,17 @@ Constantes locales 1.6.4871 : 60 ticks Core/s réelle à vitesse normale, 60 000
 
 Lisière V81 : 6 000 ticks locaux/jour et dix ticks/s, soit **10 minutes par jour**. Les règles emploient souvent dix ticks Core pour un tick local : les proportions en jours peuvent être justes tout en avançant **5/3 fois trop vite en temps réel**. C'est un écart démontré, pas une préférence de joueur.
 
-Correction à prévoir sous contrat : conserver une conversion explicite Core↔local ; séparer date locale/temps écoulé ; synchroniser worker, interpolation, attaques et animations. Changer seulement `TICKS_PER_SECOND` laisserait notamment les conversions actuelles `/100` et `/10` des poses de combat incohérentes. Ni cette enquête ni un réglage cosmétique de l'horloge n'ont corrigé ce point.
+**Correction V82 :** 6 000 ticks locaux/jour, **six ticks locaux/s réelle**, soit 16 min 40 s nominales par jour. Dix ticks Core restent un tick local ; worker, interpolation et poses de combat utilisent les mêmes conversions vers les secondes. Les vitesses demandées sont 1×/3×/6×, sans garantie de débit sur toute charge. Le débit réel change aussi pour une ancienne sauvegarde, mais ses ticks, dates médicales et calendriers persistés ne sont pas convertis ni rejoués.
+
+Le nouveau profil arrive à **06:00 au tick écoulé 0**. `calendarTick` ajoute un quart de journée seulement pour ses usages civils : lumière, intégrale de croissance, horaires et température quotidienne. Les échéances d'incidents, soins, conservation et mouvements gardent le temps écoulé. Les anciennes parties sans `gameProfile` gardent leur phase de minuit. Saison, latitude et date planétaire complètes restent absentes.
+
+## Règles appliquées dans la tranche V82
+
+`gameProfile` révision 1 persiste Cassandra partielle, Récit d'aventure et Rechargeable. V81 est validée avant migration neutre : ni profil, ni décalage civil, ni nouveau calendrier ne sont ajoutés à une partie existante. Le nouveau scénario garde la dotation disponible, mais fait tirer la croissance initiale des baies entre 0,15 et 1,5, bornée à 1 : certaines sont déjà mûres, sans accélérer leur croissance ultérieure.
+
+Effets de difficulté présents : cible d'humeur des colons **+5** ; multiplicateur **0,75 au second tirage d'infection différée**, réservé à la faction du joueur ; facteur d'interception de tir ami **0,40**, déjà utilisé auparavant. La lecture directe de `HediffComp_Infecter` dans l'assembly local a confirmé l'emplacement du facteur d'infection : le premier tirage d'exposition ne change pas. Intoxication alimentaire, richesse/adaptation et budget de menace ne sont pas inventés pour remplir les autres champs de difficulté.
+
+Cassandra partielle propose le raid introductif à J5,4 puis des fenêtres majeures à J11 + 10,6 × n, avec 4,6 jours actifs, six de repos, une ou deux occasions espacées d'au moins 1,9 jour. Une impossibilité ou un groupe encore actif consomme l'occasion ; la fin du raid ne redéfinit pas le calendrier. **Après J20, cette tranche ne choisit encore que des raids** : composition locale fixe, sans prétendre reproduire les poids Core, les 40 points introductifs ni une difficulté globale équivalente. Visiteurs, petite menace introductive, Misc, maladies incidentes et événements de factions demeurent absents. L'accueil fixe et la canicule garantie du camp sont désactivés sur ce profil ; aucune redistribution de Misc vers ces deux seuls contenus.
 
 ## Rythme, paysage et progression observée
 

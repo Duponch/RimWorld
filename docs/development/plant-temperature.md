@@ -18,7 +18,7 @@ L’inspection distingue croissance totale, repos, manque de lumière et réduct
 
 `thermal-plants.ts` groupe les plantes par région thermique. L’index dérivé appartient au World et dépend du tableau de ressources et de la disposition thermique vérifiée. Les producteurs remplacent le tableau, les checkpoints peuvent modifier une plante en place. Un facteur inchangé ne parcourt pas les plantes de son groupe ; une forêt dans le profil tempéré conserve ses ancres et l’intégrale lumineuse O(1). Une température non optimale changeante visite les plantes du groupe concerné et augmente les deltas : ce coût est mesuré, pas déclaré nul.
 
-Au début du traitement, les taux sont réconciliés. Chaque tick intègre l’ancien intervalle, puis adopte le nouveau milieu avant les décisions agricoles ; une modification de pièce/toit ou un nouveau plant réconcilie les groupes après les actions. Les toitures continuent de checkpointter leur ancien éclairage avant modification. Aucune intégration thermique dans les frames ni dépendance à la caméra. Les différences de cadence avec les ticks rares de RimWorld sont une adaptation assumée à notre horloge de 10 Hz.
+Au début du traitement, les taux sont réconciliés. Chaque tick intègre l’ancien intervalle, puis adopte le nouveau milieu avant les décisions agricoles ; une modification de pièce/toit ou un nouveau plant réconcilie les groupes après les actions. Les toitures continuent de checkpointter leur ancien éclairage avant modification. Aucune intégration thermique dans les frames ni dépendance à la caméra. Les différences de cadence avec les ticks rares de RimWorld sont une adaptation assumée à notre horloge de 6 Hz depuis V82.
 
 ## Sauvegardes et protocoles
 

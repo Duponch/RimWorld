@@ -142,7 +142,7 @@ test('buffered scene preserves arrival, work, excavation, tree removal and cargo
   source.resources.push({id:source.nextId++,x:15,z:11,kind:'tree',amount:12});expect(applyCommand(source,{type:'designate',kind:'chop',x:15,z:11}).ok).toBe(true);
   const initial=source.tick,encoder=new SnapshotEncoder(),changes=new PresentationChanges(),motion=new MotionRecorder();
   const packets:Array<{at:number;message:SnapshotMessage}>=[];
-  const publish=()=>{changes.capture(source);motion.capture(source);packets.push({at:(source.tick-initial)*100/6+30,message:structuredClone({...encoder.encode(source,0,6),motion:motion.snapshot()})});};
+  const publish=()=>{changes.capture(source);motion.capture(source);packets.push({at:(source.tick-initial)*1000/36+30,message:structuredClone({...encoder.encode(source,0,6),motion:motion.snapshot()})});};
   publish();
   for(let i=0;i<500;i++) {
     const previousState=pawn.state,previousJobs=source.jobs.length;stepWorld(source);motion.capture(source);
@@ -155,7 +155,7 @@ test('buffered scene preserves arrival, work, excavation, tree removal and cargo
   expect(packets.length).toBeLessThan(110); // no publication for each movement/work tick
   const timeline=new MotionTimeline(),queue=new PresentationQueue(),decoder=new SnapshotDecoder(),layer=new PawnLayer();
   let world:World|undefined,index=0,previousPosition:{x:number;z:number}|undefined;const worked=new Set<number>();
-  for(let now=0;now<=9000;now+=5) {
+  for(let now=0;now<=15000;now+=5) {
     while(packets[index]&&packets[index]!.at<=now) {
       const message=packets[index++]!.message,result=decoder.adopt(message);if(result.status!=='applied')throw Error(result.status);
       timeline.adopt(result.world.tick,6,message.motion!,now,result.replaced);

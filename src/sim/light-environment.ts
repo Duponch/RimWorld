@@ -1,4 +1,5 @@
 import { naturalLight } from './environment.ts';
+import { calendarTick } from './calendar.ts';
 import { LocalLightCache } from './local-light.ts';
 import { RoomTopologyCache, type RoomTopology } from './room-topology.ts';
 import type { Cell, World } from './types.ts';
@@ -29,6 +30,6 @@ export class LightEnvironmentCache {
   readonly localLight=new LocalLightCache();
   read(world:World):LightEnvironment {
     const topology=this.topology.read(world);
-    return new LightEnvironment(topology,new Set(world.roofing?.constructed??[]),this.localLight.read(world,topology),naturalLight(world.tick));
+    return new LightEnvironment(topology,new Set(world.roofing?.constructed??[]),this.localLight.read(world,topology),naturalLight(calendarTick(world)));
   }
 }

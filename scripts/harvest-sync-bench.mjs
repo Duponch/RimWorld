@@ -22,18 +22,18 @@ if(!b.active)return result;
 if(method!=='frame'){b.snapshots.push({method,ms:performance.now()-start,tick:args[0].tick,play:this.timeline.tick,at:start});
 if((method==='applyWorld'||!ColonyRenderer.prototype.applyWorld)&&old&&old.jobs.length>args[0].jobs.length)b.removals.push({tick:args[0].tick,play:this.timeline.tick,removed:old.jobs.length-args[0].jobs.length});return result;}
 const now=args[0],dt=b.previous===null?0:now-b.previous;b.previous=now;
-const control=b.controls.at(-1);if(control&&b.lastPlay!==null&&dt>0){const delta=this.timeline.tick-b.lastPlay;if(control.delay===null&&visibleSpeedResponse(delta,dt,control.previousSpeed,control.speed))control.delay=performance.now()-control.at;if(control.fullRateDelay===null&&Math.abs(delta/dt-control.speed*.01)<.00001)control.fullRateDelay=performance.now()-control.at;}b.lastPlay=this.timeline.tick;
+const control=b.controls.at(-1);if(control&&b.lastPlay!==null&&dt>0){const delta=this.timeline.tick-b.lastPlay;if(control.delay===null&&visibleSpeedResponse(delta,dt,control.previousSpeed,control.speed))control.delay=performance.now()-control.at;if(control.fullRateDelay===null&&Math.abs(delta/dt-control.speed*.006)<.00001)control.fullRateDelay=performance.now()-control.at;}b.lastPlay=this.timeline.tick;
 b.frames.push({at:now,speed:this.received?.speed,dt,cpu:performance.now()-start,lag:(this.received?.world.tick??this.world.tick)-this.timeline.tick,tick:this.world.tick,play:this.timeline.tick});
 const g=this.pawns.pawnMesh?.geometry;if(!g)return result;
 const f=g.getAttribute('aFrom'),t=g.getAttribute('aTo'),travel=g.getAttribute('aTravel'),motion=g.getAttribute('aMotion');
 this.world.pawns.forEach((p,i)=>{const duration=travel.getY(i)-travel.getX(i),a=duration>0?Math.min(1,Math.max(0,(this.pawns.travelTime.value-travel.getX(i))/duration)):this.pawns.blend.value;
 const x=f.getX(i)+(t.getX(i)-f.getX(i))*a,z=f.getZ(i)+(t.getZ(i)-f.getZ(i))*a,prev=b.poses.get(p.id),distance=prev?Math.hypot(x-prev.x,z-prev.z):0;
 if(this.world.tiles[Math.round(z)*this.world.width+Math.round(x)]?.terrain==='rock'&&Math.hypot(x-Math.round(x),z-Math.round(z))<.35)b.solidOccupancy.push({tick:this.world.tick,play:this.timeline.tick,pawn:p.id,x,z});
-if(prev&&dt>0&&dt<100&&distance>dt*.021+.02)b.jumps.push({at:now,tick:this.world.tick,play:this.timeline.tick,distance,dt,pawn:p.id,state:p.state,from:[prev.x,prev.z],to:[x,z]});
+if(prev&&dt>0&&dt<100&&distance>dt*.013+.02)b.jumps.push({at:now,tick:this.world.tick,play:this.timeline.tick,distance,dt,pawn:p.id,state:p.state,from:[prev.x,prev.z],to:[x,z]});
 const track=this.timeline.tracks.get(p.id);if(track?.length&&track[0].start>this.timeline.tick)b.gaps.push({tick:this.world.tick,play:this.timeline.tick,first:track[0].start});
 b.poses.set(p.id,{x,z});});return result;};}
 `;
-const report={date:new Date().toISOString(),cpu:os.cpus()[0].model,seconds,switches,initialSpeed,speedCycle,viewport:{width:1440,height:1000},protocol:'Native Chromium WebGPU, seed 42 / 250² / 3 colonists, rectangular designations, actual worker at initialSpeed; switches=true uses speedCycle every 2 seconds. Frame pose read from shared GPU inputs; no full-world serialization in frames. 21 cells/s jump bound includes neutral 6x travel (20 cells/s).',phases:[]};
+const report={date:new Date().toISOString(),cpu:os.cpus()[0].model,seconds,switches,initialSpeed,speedCycle,viewport:{width:1440,height:1000},protocol:'Native Chromium WebGPU, seed 42 / 250² / 3 colonists, rectangular designations, actual worker at initialSpeed; switches=true uses speedCycle every 2 seconds. Frame pose read from shared GPU inputs; no full-world serialization in frames. Runtime clock: 6 local ticks/s at 1x. 13 cells/s jump bound includes neutral 6x travel (12 cells/s).',phases:[]};
 const browser=await chromium.launch({channel:'chromium',args:[]});
 try{for(const action of (process.env.HARVEST_ACTIONS??'mine,chop').split(',')){
  const w=createWorld(42,250,250);w.tick=2000;
@@ -76,8 +76,9 @@ const originalTraceAdvance=advanceSimulation;advanceSimulation=now=>{const at=pe
  Object.assign(phase,trace);
  if(process.env.HARVEST_RECOVERY==='1'){
   await page.locator('[data-speed="6"]').click();
-  // Deliberately stall this isolated page, outside all timed performance data.
-  await page.evaluate(()=>{const end=performance.now()+1600;while(performance.now()<end){}});
+  // Exceed the 64-tick history at 36 ticks/s. This isolated page stall is outside
+  // all timed performance data, and the independent tick assertion stays below.
+  await page.evaluate(()=>{const end=performance.now()+2500;while(performance.now()<end){}});
   await page.waitForFunction(()=>{const v=window.__sync.view;return v.received.world.tick-v.timeline.tick<=64&&v.world.tick<=v.timeline.tick;},undefined,{timeout:3000});
   await page.locator('[data-speed="0"]').click();
   phase.recovery=await page.evaluate(()=>{const v=window.__sync.view;return {latest:v.received.world.tick,display:v.world.tick,play:v.timeline.tick,queued:v.presentation.size};});

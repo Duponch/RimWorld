@@ -1,3 +1,4 @@
+import { isColonist } from '../../src/sim/affiliation.ts';
 import { canDesignate, queryArea } from '../../src/sim/index.ts';
 import { requiredMaterial } from '../../src/sim/construction-materials.ts';
 import { footprintCells } from '../../src/sim/definitions.ts';
@@ -23,7 +24,7 @@ function plan(a:Cell) {
  * initial search only reads terrain/plants/stock: no cleared tutorial square,
  * hidden state or world mutation is supplied by this player policy. */
 export function survivorPlan(w:World):ReturnType<typeof plan> {
-  if(w.scenario?.id!=='survivors')throw Error('The survivor player requires the real Survivants scenario.');
+  if(w.scenario?.id!=='survivors'&&w.scenario?.id!=='crashlanded')throw Error('The survivor player requires the real Survivants scenario.');
   const bed=[...w.jobs,...w.structures].filter(s=>s.kind==='bed').sort((a,b)=>a.z-b.z||a.x-b.x)[0];
   if(bed)return plan({x:bed.x-1,z:bed.z-1});
   const start=w.scenario.landing,blocked=blockedCells(w),seen=new Uint8Array(blocked.length),queue=[start.z*w.width+start.x];seen[queue[0]!]=1;
@@ -50,9 +51,9 @@ export function survivorPlan(w:World):ReturnType<typeof plan> {
 /** Shared by the fast journey and the browser player. Five initial commands
  * establish plans, a real empty stockyard and a garden without clock/need edits. */
 export function survivorDecisions(w:World):Decision[] {
-  const p=survivorPlan(w),out:Decision[]=[];
+  const p=survivorPlan(w),out:Decision[]=[],colonists=w.pawns.filter(isColonist);
   const designate=(kind:DesignateCommand['kind'],cell:Cell,reason:string)=>{
-    const command:DesignateCommand={type:'designate',kind,...cell,...['bed','wall','door','campfire','table','stool','horseshoes'].includes(kind)?{material:'wood' as const,orientation:0 as const}:{}};
+    const command:DesignateCommand={type:'designate',kind,x:cell.x,z:cell.z,...['bed','wall','door','campfire','table','stool','horseshoes'].includes(kind)?{material:'wood' as const,orientation:0 as const}:{}};
     if(canDesignate(w,command).ok)out.push({reason,command});
   };
   if(!w.stockpiles.length)out.push({reason:'Tracer une réserve assez grande pour les provisions réelles, sur un sol libre.',command:{type:'area',action:'stockpile',...p.storage,filters:{wood:true,food:true,steel:true,component:true,medicine:true,weapon:true,apparel:true},priority:2,capacity:75}});
@@ -61,9 +62,9 @@ export function survivorDecisions(w:World):Decision[] {
   // The paused UI can execute the first bounded batch before the longer policy.
   if(!w.jobs.some(j=>j.kind==='bed')&&!w.structures.some(s=>s.kind==='bed'))return out;
 
-  const builder=w.pawns.reduce((best,pawn)=>pawn.skills.construction.level>best.skills.construction.level?pawn:best,w.pawns[0]!);
-  const cook=w.pawns.reduce((best,pawn)=>(pawn.skills.cooking?.level??0)>(best.skills.cooking?.level??0)?pawn:best,w.pawns[0]!);
-  for(const pawn of w.pawns)for(const [work,value] of Object.entries({build:pawn===builder?1:3,cook:pawn===cook?1:3,grow:pawn!==builder&&pawn!==cook?1:3,haul:2,gather:2}) as [WorkType,number][])if(pawn.priorities[work]!==value)out.push({reason:'Répartir construction, cuisine et potager selon les compétences visibles.',command:{type:'priority',pawnId:pawn.id,work,value}});
+  const builder=colonists.reduce((best,pawn)=>pawn.skills.construction.level>best.skills.construction.level?pawn:best,colonists[0]!);
+  const cook=colonists.reduce((best,pawn)=>(pawn.skills.cooking?.level??0)>(best.skills.cooking?.level??0)?pawn:best,colonists[0]!);
+  for(const pawn of colonists)for(const [work,value] of Object.entries({build:pawn===builder?1:3,cook:pawn===cook?1:3,grow:pawn!==builder&&pawn!==cook?1:3,haul:2,gather:2}) as [WorkType,number][])if(pawn.priorities[work]!==value)out.push({reason:'Répartir construction, cuisine et potager selon les compétences visibles.',command:{type:'priority',pawnId:pawn.id,work,value}});
   if(w.structures.filter(s=>s.kind==='bed').length<3)return out;
 
   for(const c of cells(p.room))if(c.x===p.room.from.x||c.x===p.room.to.x||c.z===p.room.from.z||c.z===p.room.to.z)designate(c.x===p.door.x&&c.z===p.door.z?'door':'wall',c,'Fermer le petit dortoir en gardant une porte accessible.');

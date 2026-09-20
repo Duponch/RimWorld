@@ -1,3 +1,4 @@
+import { calendarTick } from './calendar.ts';
 import { sleepBlocked } from './disturbance-state.ts';
 import { TICKS_PER_DAY, type CommandResult, type Pawn, type World } from './types.ts';
 
@@ -8,7 +9,7 @@ export type ScheduleCommand =
   | { type: 'schedule-replace'; pawnId: number; assignments: ScheduleAssignment[] };
 
 export const hourOfDay = (tick: number): number => Math.floor((tick % TICKS_PER_DAY) * 24 / TICKS_PER_DAY);
-export const assignmentAt = (world: World, pawn: Pawn): ScheduleAssignment => pawn.schedule[hourOfDay(world.tick)]!;
+export const assignmentAt = (world: World, pawn: Pawn): ScheduleAssignment => pawn.schedule[hourOfDay(calendarTick(world))]!;
 export const defaultSchedule = (): ScheduleAssignment[] => Array.from({length: 24}, (_, h) => h >= 6 && h < 22 ? 'anything' : 'sleep');
 export const validAssignment = (v: unknown): v is ScheduleAssignment => typeof v === 'string' && SCHEDULE_ASSIGNMENTS.includes(v as ScheduleAssignment);
 export const validSchedule = (v: unknown): v is ScheduleAssignment[] => Array.isArray(v) && v.length === 24 && Array.from(v).every(validAssignment);

@@ -20,7 +20,7 @@ Les [ordres directs V17](player-orders.md) retardent les besoins ordinaires pend
 
 ## Paramètres et domaines associés
 
-Le temps reste à 10 Hz et 6 000 ticks/jour. La faim adulte baisse de 160/6 000 points/tick, pondérés par catégorie ; l'ancien profil alimentaire conserve 0,015. Quantité ingérée, aliments et sélection sont décrits dans [aliments](food-items.md). La nourriture reste physique pendant les 50 ticks d'ingestion.
+Le temps reste à 6 Hz depuis V82 et 6 000 ticks/jour. La faim adulte baisse de 160/6 000 points/tick, pondérés par catégorie ; l'ancien profil alimentaire conserve 0,015. Quantité ingérée, aliments et sélection sont décrits dans [aliments](food-items.md). La nourriture reste physique pendant les 50 ticks d'ingestion.
 
 Le [contrat Horaires V12](schedules.md) définit désormais le départ au lit, les réveils, la baisse de repos adulte par catégorie, l'épuisement différé et la migration historique. Il remplace les anciens coefficients de fatigue et le verrou de cinq points pour les nouvelles parties. Le lit normal récupère 100 points en 10,5 h ; le sol à 80 %. L'intégration et la cadence des interruptions restent adaptées à notre moteur.
 

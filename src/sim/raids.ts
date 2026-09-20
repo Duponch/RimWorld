@@ -1,4 +1,5 @@
 import { isColonist } from './affiliation.ts';
+import { consumeCassandraOpportunity } from './cassandra-raids.ts';
 import { raidEntries,atMapEdge } from './raid-space.ts';
 import { raidRandom } from './raid-state.ts';
 import { startingPawn } from './starting-pawns.ts';
@@ -16,6 +17,7 @@ export function stopRaidEngagement(p:Pawn):void {cancelShooting(p);cancelMelee(p
 /** Calendar and group outcomes, once per tick. Pawn controllers own movement. */
 export function advanceRaids(w:World):void {
   const s=w.raids;if(!s)return;
+  const cassandra=s.profile==='cassandra-raids-v1',opportunity=cassandra&&consumeCassandraOpportunity(w,s);
   const a=s.active;
   if(a){
     const members=w.pawns.filter(p=>a.members.includes(p.id));
@@ -27,13 +29,13 @@ export function advanceRaids(w:World):void {
     if(!members.some(p=>p.state!=='dead'&&p.state!=='downed')){
       s.last={id:a.id,tick:w.tick,reason:a.reason==='colony-down'?'colony-down':s.departed.some(d=>a.members.includes(d.pawnId))?'withdrawn':'defended',killed:members.filter(p=>p.state==='dead').length,downed:members.filter(p=>p.state==='downed').length,escaped:a.members.length-members.length};
       for(const p of members){p.raid!.exiting=true;stopRaidEngagement(p);}
-      s.completed++;delete s.active;s.nextCheck=w.tick+Math.floor(TICKS_PER_DAY*(6+raidRandom(s)*2));log(w,'Assaut terminé. Vérifiez les blessés, les stocks et les ouvrages endommagés.');
+      s.completed++;delete s.active;s.nextCheck=cassandra?s.cassandra!.pending[0]!:w.tick+Math.floor(TICKS_PER_DAY*(6+raidRandom(s)*2));log(w,'Assaut terminé. Vérifiez les blessés, les stocks et les ouvrages endommagés.');
     }
     return;
   }
-  if(s.nextCheck===null||w.tick<s.nextCheck)return;
+  if(cassandra?!opportunity||!w.pawns.some(p=>isColonist(p)&&p.state!=='dead'):s.nextCheck===null||w.tick<s.nextCheck)return;
   const count=s.serial===0?1:2,sites=raidEntries(w,s.rng,count);
-  if(!sites||s.serial>=Number.MAX_SAFE_INTEGER||w.nextId>Number.MAX_SAFE_INTEGER-count*3||w.pawns.length+count>w.width*w.height||w.piles.length+count*2>32768||s.departed.length+count>w.width*w.height){s.nextCheck=w.tick+TICKS_PER_DAY/4;return;}
+  if(!sites||s.serial>=Number.MAX_SAFE_INTEGER||w.nextId>Number.MAX_SAFE_INTEGER-count*3||w.pawns.length+count>w.width*w.height||w.piles.length+count*2>32768||s.departed.length+count>w.width*w.height){if(!cassandra)s.nextCheck=w.tick+TICKS_PER_DAY/4;return;}
   const id=s.serial+1,generated:Pawn[]=[],piles:World['piles']=[];let next=w.nextId;
   for(let i=0;i<count;i++){
     const p=startingPawn(next++,`Assaillant ${id}.${i+1}`,sites[i]!.x,sites[i]!.z,0,55);p.faction='outlaws';p.raid={group:id,exiting:false,goal:null};p.skills.shooting.level=4;p.skills.melee.level=4;p.foodPolicyId=w.foodPolicies[0]!.id;

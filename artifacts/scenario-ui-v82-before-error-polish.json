@@ -1,0 +1,91 @@
+{
+  "backend": "WebGPU",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "samples": [
+    {
+      "speed": 1,
+      "targetTicksPerSecond": 6,
+      "actualTicksPerSecond": 5.962851435556593,
+      "milliseconds": 10062.299999999814,
+      "ticks": 60,
+      "frames": 1497,
+      "p95": 8.69999999999709,
+      "p99": 12.599999999998545,
+      "max": 16.69999999999709
+    },
+    {
+      "speed": 6,
+      "targetTicksPerSecond": 36,
+      "actualTicksPerSecond": 35.94664448471591,
+      "milliseconds": 10098.299999999814,
+      "ticks": 363,
+      "frames": 1197,
+      "p95": 12.80000000000291,
+      "p99": 16.80000000000291,
+      "max": 24.799999999995634
+    }
+  ],
+  "checkpoints": {
+    "creation": {
+      "milliseconds": 4205,
+      "tick": 0,
+      "scenario": {
+        "id": "crashlanded",
+        "revision": 1,
+        "landing": {
+          "x": 124,
+          "z": 124
+        }
+      },
+      "gameProfile": {
+        "revision": 1,
+        "storyteller": "cassandra-partial",
+        "difficulty": "adventure-story",
+        "saveMode": "reloadable"
+      }
+    },
+    "firstDecisions": {
+      "commands": 5,
+      "tick": 729,
+      "beds": 3,
+      "field": 20,
+      "stock": {
+        "wood": 196,
+        "food": 50
+      }
+    },
+    "coldCurrent": {
+      "scenario": {
+        "id": "crashlanded",
+        "revision": 1,
+        "landing": {
+          "x": 124,
+          "z": 124
+        }
+      },
+      "tick": 1178
+    },
+    "invalid": {
+      "rejected": true,
+      "tickPreserved": 1178,
+      "message": "Expected property name or '}' in JSON at position 1 (line 1 column 2)"
+    },
+    "future": {
+      "rejected": true,
+      "tickPreserved": 1178,
+      "message": "Invalid save: Unsupported schema version; migrate older saves through deserializeWorld."
+    },
+    "coldHistorical": {
+      "source": "artifacts/heatwave-checkpoint-v81.json",
+      "sourceVersion": 81,
+      "loadedVersion": 82,
+      "tick": 39205,
+      "width": 16
+    }
+  },
+  "errors": []
+}

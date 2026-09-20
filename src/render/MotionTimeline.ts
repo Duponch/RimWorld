@@ -1,4 +1,5 @@
 import type { PawnTrack } from '../bridge/motion-tracks';
+import { LOCAL_TICKS_PER_SECOND } from '../bridge/clock-rate';
 import type { PresentationSegment as TravelSegment } from '../sim/travel-timing';
 
 export const MOTION_BUFFER_TICKS = 4;
@@ -17,20 +18,20 @@ export class MotionTimeline {
   private ready=Infinity;
   private buffering=true;
   adopt(tick:number,speed:number,tracks:PawnTrack[],now:number,reset=false):void {
-    if(reset){this.tick=tick;this.latest=tick;this.previous=now;this.ready=Infinity;this.buffering=true;this.tracks.clear();this.speed=speed;this.rate=speed*10;this.frameRate=this.rate;this.rateChanges.length=0;}
+    if(reset){this.tick=tick;this.latest=tick;this.previous=now;this.ready=Infinity;this.buffering=true;this.tracks.clear();this.speed=speed;this.rate=speed*LOCAL_TICKS_PER_SECOND;this.frameRate=this.rate;this.rateChanges.length=0;}
     // Only RAF advances the playhead. A delivery timestamp can be later than
     // the next frame timestamp; changing rate here never consumes that time.
     if(speed!==this.speed) {
       if(speed>0){
         if(this.rate===0){this.buffering=true;this.ready=Infinity;}
-        this.rate=speed*10;
+        this.rate=speed*LOCAL_TICKS_PER_SECOND;
         this.rateChanges.push({at:now,rate:this.rate});
       }
       this.speed=speed;
     }
     this.latest=Math.max(this.latest,tick);
     // Buffer once at start/fully drained resume, in simulation ticks rather
-    // than wall time. At 6x this needs ~67 ms, not another fixed 400 ms.
+    // than wall time. At 6x this needs ~111 ms; positive rate changes do not refill.
     if(this.buffering&&(this.latest-this.tick>=MOTION_BUFFER_TICKS||speed===0&&this.latest>this.tick)) {
       this.buffering=false;this.ready=now;
     }

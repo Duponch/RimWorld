@@ -37,6 +37,8 @@ export interface MedicalContext {
   /** Actual rest, not merely incapacitated on the ground or travelling to bed. */
   restingBonus?:boolean;
   infectionSeed?:number;
+  /** Difficulty applies to the owning player faction at acquisition time. */
+  infectionChanceFactor?:number;
 }
 /** Caller owns and persists its deterministic PRNG; never Math.random. */
 export type MedicalRandom=()=>number;
