@@ -1,14 +1,16 @@
-# Agriculture — riz V8, coton V71
+# Agriculture — riz, coton, pommes de terre et maïs
+
+V84 ajoute les [cultures alimentaires](food-crops.md) avec leurs durées biologiques, rendements, sensibilité au sol, produits et conservation propres. Leurs semis/récoltes utilisent la même chaîne physique. La durée biologique ne correspond pas à autant de jours calendaires : nuits et contraintes du site restent actives.
 
 V83 : `soilFertility` partage les fertilités terre ordinaire (`grass`) 1, terre riche 1,4, gravier 0,7 et terre pauvre historique (`soil`) 0,7. Les quatre terrains autorisent les cultures actuelles ; espace, présence de piles et température gardent leurs contrôles. Nouveaux types refusés avant le schéma83, aucune ancienne case transformée. [Sources et diagnostic du riz V82](../research/site-soils-reference.md).
 
 V39 : [croissance et semis sous température locale](plant-temperature.md). Le site quotidien 14–28 °C reste favorable ; le froid et la chaleur des volumes conservés modifient réellement la croissance. Les nouveaux semis attendent une température admissible. Mortalité et saisons restent absentes.
 
-État courant : 19 septembre 2026. [Coton et tissu V71](textiles.md) ajoutent le choix d’espèce et une récolte non alimentaire, sans livrer la confection. Tranche G1 ; [recherche et limites de fidélité](../research/farming-reference.md). L'agriculture n'est pas un domaine terminé.
+État courant : 20 septembre 2026. [Coton et tissu V71](textiles.md) ajoutent le choix d’espèce et une récolte non alimentaire ; la confection suit son contrat V72. Tranche G1 ; [recherche et limites de fidélité](../research/farming-reference.md). L'agriculture n'est pas un domaine terminé.
 
 ## Contrat livré
 
-Architecte → Zones permet de tracer un champ de riz, de sélectionner le coton dans son inspection, de retirer ses cellules et d'inspecter ses réglages. Semis et coupe des plantes indésirables sont indépendants. Le travail **Culture**, priorité 0–4, produit des intentions ordinaires, réservées et rejointes par les colons. Pas de graines consommées. Les arbres de la cellule et les arbres adjacents empêchant le semis sont coupés si la politique l'autorise. Les autres plantes peuvent être coupées. La récolte automatique attend 100 % ; l'ordre manuel Récolter reste possible strictement au-dessus de 65 %.
+Architecte → Zones permet de tracer un champ de riz, de choisir riz/coton/pommes de terre/maïs dans son inspection, de retirer ses cellules et d'inspecter ses réglages. Semis et coupe des plantes indésirables sont indépendants. Le travail **Culture**, priorité 0–4, produit des intentions ordinaires, réservées et rejointes par les colons. Pas de graines consommées. Les arbres de la cellule et les arbres adjacents empêchant le semis sont coupés si la politique l'autorise. Les autres plantes peuvent être coupées. La récolte automatique attend 100 % ; l'ordre manuel Récolter reste possible strictement au-dessus de 65 %.
 
 Le semis demande 17 ticks de notre horloge, puis crée un plant à croissance 0,0001. Une interruption abandonne son travail partiel ; aucun plant ne pousse pendant un semis inachevé. La représentation du semis est un marqueur de travail, pas un plant provisoire. Récolter du riz demande 20 ticks à vitesse de travail neutre et détruit le plant, avec 6 unités physiques à maturité. Le champ peut ensuite être ressemé. Le coton partage ces durées de semis/récolte, produit dix tissus mûrs et disparaît avant un nouveau semis. Les baies continuent à repousser sur leur buisson.
 

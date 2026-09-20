@@ -1,7 +1,7 @@
 import type { ProductionIngredient, ProductionRecipe } from './production-recipes.ts';
 import type { Cell } from './types.ts';
 
-export type RawIngredient = 'rice' | 'berries' | 'hare-meat';
+export type RawIngredient = 'rice' | 'berries' | 'hare-meat' | 'potato' | 'corn';
 export interface CookingBill {
   id:number;
   recipe:ProductionRecipe;

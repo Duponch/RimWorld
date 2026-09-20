@@ -14,8 +14,8 @@ const rect=(x:number,z:number,width:number,height:number):Rectangle=>({from:{x,z
 const inRect=(c:Cell,r:Rectangle)=>c.x>=r.from.x&&c.x<=r.to.x&&c.z>=r.from.z&&c.z<=r.to.z;
 const cells=(r:Rectangle):Cell[]=>Array.from({length:(r.to.x-r.from.x+1)*(r.to.z-r.from.z+1)},(_,i)=>({x:r.from.x+i%(r.to.x-r.from.x+1),z:r.from.z+Math.floor(i/(r.to.x-r.from.x+1))}));
 const at=(a:Cell,x:number,z:number):Cell=>({x:a.x+x,z:a.z+z});
-function plan(a:Cell) {
-  return {anchor:a,room:rect(a.x,a.z,5,5),storage:rect(a.x+7,a.z,6,4),field:rect(a.x+7,a.z+6,5,4),beds:[1,2,3].map(x=>at(a,x,1)),door:at(a,2,4),fire:at(a,5,4),table:at(a,6,1),seats:[at(a,5,1),at(a,5,2)],pin:at(a,5,6)};
+function plan(a:Cell, sustainable=false) {
+  return {anchor:a,room:rect(a.x,a.z,5,5),storage:rect(a.x+7,a.z,6,4),field:sustainable?rect(a.x+7,a.z+8,10,8):rect(a.x+7,a.z+6,5,4),beds:[1,2,3].map(x=>at(a,x,sustainable?2:1)),door:at(a,2,4),fire:sustainable?at(a,8,5):at(a,5,4),table:at(a,6,1),seats:[at(a,5,1),at(a,5,2)],pin:at(a,5,6)};
 }
 
 /** The leftmost bed on the first row is a visible plan anchor after save/load.
@@ -24,10 +24,18 @@ function plan(a:Cell) {
  * The
  * initial search only reads terrain/plants/stock: no cleared tutorial square,
  * hidden state or world mutation is supplied by this player policy. */
-export function survivorPlan(w:World):ReturnType<typeof plan> {
+export function survivorPlan(w:World,sustainable=false):ReturnType<typeof plan> {
   if(w.scenario?.id!=='survivors'&&w.scenario?.id!=='crashlanded')throw Error('The survivor player requires the real Survivants scenario.');
+  if(sustainable){
+    // Turn heads towards the south aisle without moving the two-cell footprint.
+    // Keep the footprint anchor while an inherited bed is physically packed.
+    const beds=[...w.jobs,...w.structures,...w.packed.map(p=>p.building)].filter(s=>s.kind==='bed')
+      .map(b=>{const footprint=footprintCells(b);return {x:Math.min(...footprint.map(c=>c.x)),z:Math.min(...footprint.map(c=>c.z))};})
+      .sort((a,b)=>a.z-b.z||a.x-b.x);
+    if(beds[0])return plan({x:beds[0].x-1,z:beds[0].z-1},true);
+  }
   const bed=[...w.jobs,...w.structures].filter(s=>s.kind==='bed').sort((a,b)=>a.z-b.z||a.x-b.x)[0];
-  if(bed)return plan({x:bed.x-1,z:bed.z-1});
+  if(bed)return plan({x:bed.x-1,z:bed.z-1},sustainable);
   const start=w.scenario.landing,blocked=blockedCells(w),seen=new Uint8Array(blocked.length),queue=[start.z*w.width+start.x];seen[queue[0]!]=1;
   for(let i=0;i<queue.length;i++) {
     const n=queue[i]!,x=n%w.width,z=Math.floor(n/w.width);
@@ -36,14 +44,14 @@ export function survivorPlan(w:World):ReturnType<typeof plan> {
   const occupied=new Set(w.resources.map(r=>r.z*w.width+r.x));
   const rocks=new Set(w.resources.filter(r=>r.kind==='rock').map(r=>r.z*w.width+r.x));
   const ground=new Set(w.piles.flatMap(p=>p.owner.type==='ground'?[p.owner.z*w.width+p.owner.x]:[]));
-  const candidates=queue.map(i=>({x:i%w.width,z:Math.floor(i/w.width)})).filter(c=>Math.abs(c.x-start.x)<=32&&Math.abs(c.z-start.z)<=32&&c.x>0&&c.z>0&&c.x+13<w.width&&c.z+10<w.height)
+  const candidates=queue.map(i=>({x:i%w.width,z:Math.floor(i/w.width)})).filter(c=>Math.abs(c.x-start.x)<=32&&Math.abs(c.z-start.z)<=32&&c.x>0&&c.z>(sustainable?1:0)&&c.x+(sustainable?18:13)<w.width&&c.z+(sustainable?16:10)<w.height)
     .sort((a,b)=>(a.x+2-start.x)**2+(a.z+2-start.z)**2-((b.x+2-start.x)**2+(b.z+2-start.z)**2)||a.z-b.z||a.x-b.x);
   for(const a of candidates) {
-    const p=plan(a),land=cells(rect(a.x,a.z,13,10));
+    const p=plan(a,sustainable),land=cells(rect(a.x,a.z-Number(sustainable),sustainable?18:13,sustainable?17:10));
     if(land.some(c=>!seen[c.z*w.width+c.x]||rocks.has(c.z*w.width+c.x)))continue;
     if(cells(p.storage).some(c=>occupied.has(c.z*w.width+c.x)||ground.has(c.z*w.width+c.x)))continue;
     if(cells(p.field).some(c=>!isGrowingTerrain(w.tiles[c.z*w.width+c.x]!.terrain)))continue;
-    if([...p.beds.flatMap(c=>[c,at(c,0,1)]),p.fire,at(p.fire,0,-1),p.table,at(p.table,0,1),...p.seats,p.pin].some(c=>occupied.has(c.z*w.width+c.x)))continue;
+    if([...p.beds.flatMap(c=>[c,at(c,0,sustainable?-1:1)]),p.fire,at(p.fire,0,-1),p.table,at(p.table,0,1),...p.seats,p.pin,...sustainable?[at(a,7,5),at(a,9,5),at(a,10,5),at(a,11,5),at(a,12,5),at(a,11,4)]:[]].some(c=>occupied.has(c.z*w.width+c.x)))continue;
     return p;
   }
   throw Error(`No ordinary camp layout found near landing ${JSON.stringify(start)} on seed ${w.seed}`);
@@ -51,14 +59,15 @@ export function survivorPlan(w:World):ReturnType<typeof plan> {
 
 /** Shared by the fast journey and the browser player. Five initial commands
  * establish plans, a real empty stockyard and a garden without clock/need edits. */
-export function survivorDecisions(w:World):Decision[] {
-  const p=survivorPlan(w),out:Decision[]=[],colonists=w.pawns.filter(isColonist);
+export function survivorDecisions(w:World,sustainable=false):Decision[] {
+  const p=survivorPlan(w,sustainable),out:Decision[]=[],colonists=w.pawns.filter(isColonist);
   const designate=(kind:DesignateCommand['kind'],cell:Cell,reason:string)=>{
-    const command:DesignateCommand={type:'designate',kind,x:cell.x,z:cell.z,...['bed','wall','door','campfire','table','stool','horseshoes'].includes(kind)?{material:'wood' as const,orientation:0 as const}:{}};
+    const command:DesignateCommand={type:'designate',kind,x:cell.x,z:cell.z,...['bed','wall','door','campfire','table','stool','horseshoes'].includes(kind)?{material:'wood' as const,orientation:sustainable&&kind==='bed'?2 as const:0 as const}:kind==='fueled-stove'?{material:'steel' as const,orientation:0 as const}:{}};
     if(canDesignate(w,command).ok)out.push({reason,command});
   };
   if(!w.stockpiles.length)out.push({reason:'Tracer une réserve assez grande pour les provisions réelles, sur un sol libre.',command:{type:'area',action:'stockpile',...p.storage,filters:{wood:true,food:true,steel:true,component:true,medicine:true,weapon:true,apparel:true},priority:2,capacity:75}});
-  for(const c of p.beds)designate('bed',c,'Installer trois couchages près de l’arrivée naturelle.');
+  if(!sustainable||!w.jobs.some(j=>j.furniture?.kind==='bed')&&!w.packed.some(p=>p.building.kind==='bed'))
+    for(const c of p.beds)designate('bed',c,sustainable?'Installer trois couchages avec un chevet accessible depuis l’allée.':'Installer trois couchages près de l’arrivée naturelle.');
   if(!w.growingZones.length)out.push({reason:'Préparer un potager pendant que les rations initiales donnent de la marge.',command:{type:'area',action:'growing',...p.field}});
   // The paused UI can execute the first bounded batch before the longer policy.
   if(!w.jobs.some(j=>j.kind==='bed')&&!w.structures.some(s=>s.kind==='bed'))return out;
@@ -69,7 +78,7 @@ export function survivorDecisions(w:World):Decision[] {
   if(w.structures.filter(s=>s.kind==='bed').length<3)return out;
 
   for(const c of cells(p.room))if(c.x===p.room.from.x||c.x===p.room.to.x||c.z===p.room.from.z||c.z===p.room.to.z)designate(c.x===p.door.x&&c.z===p.door.z?'door':'wall',c,'Fermer le petit dortoir en gardant une porte accessible.');
-  designate('campfire',p.fire,'Préparer des repas à partir des premières récoltes.');
+  designate(sustainable?'fueled-stove':'campfire',p.fire,'Préparer des repas à partir des premières récoltes.');
   designate('horseshoes',p.pin,'Ajouter un loisir construit près du camp.');
   if(w.structures.filter(s=>s.kind==='wall'&&inRect(s,p.room)).length===15&&w.structures.some(s=>s.kind==='door'&&inRect(s,p.room))) {
     const roofs=new Set(w.roofing?.build);
@@ -80,23 +89,23 @@ export function survivorDecisions(w:World):Decision[] {
   }
   // Replenishment follows real planned expenses; the 300 initial wood is kept.
   const wood=w.piles.filter(q=>q.item==='wood').reduce((n,q)=>n+q.quantity,0);
-  if(wood<80&&!w.jobs.some(j=>j.kind==='chop')) {
+  if(wood<(sustainable?160:80)&&!w.jobs.some(j=>j.kind==='chop')) {
     const trees=w.resources.filter(r=>r.kind==='tree'&&Math.hypot(r.x-p.anchor.x,r.z-p.anchor.z)<=25).sort((a,b)=>Math.hypot(a.x-p.anchor.x,a.z-p.anchor.z)-Math.hypot(b.x-p.anchor.x,b.z-p.anchor.z)||a.id-b.id);
     for(const r of trees.slice(0,6))designate('chop',r,'Reconstituer le bois dépensé dans le camp et son combustible.');
   }
-  const fire=w.structures.find(s=>s.kind==='campfire'&&s.x===p.fire.x&&s.z===p.fire.z);
-  if(fire&&!fire.bills?.length)out.push({reason:'Maintenir trois repas simples, sans gaspiller les ingrédients.',command:{type:'bill-add',structureId:fire.id,recipe:'simple-meal'}});
-  const bill=fire?.bills?.[0];
-  if(fire&&bill&&(bill.mode!=='until'||bill.target!==3))out.push({reason:'Cuisiner de petites quantités pendant la croissance du potager.',command:{type:'bill-update',structureId:fire.id,billId:bill.id,settings:{mode:'until',target:3,suspended:false,filters:{rice:true,berries:true,'hare-meat':true},radius:35,destination:'stockpile'}}});
-  if(fire&&!w.jobs.some(j=>j.kind==='harvest')&&w.piles.filter(q=>q.item==='berries'||q.item==='rice').reduce((n,q)=>n+q.quantity,0)<20) {
+  const fire=w.structures.find(s=>s.kind===(sustainable?'fueled-stove':'campfire')&&s.x===p.fire.x&&s.z===p.fire.z);
+  if(fire&&!fire.bills?.length)out.push({reason:sustainable?'Préparer une petite réserve de repas cuisinés.':'Maintenir trois repas simples, sans gaspiller les ingrédients.',command:{type:'bill-add',structureId:fire.id,recipe:'simple-meal'}});
+  const bill=fire?.bills?.[0],mealTarget=sustainable?9:3;
+  if(fire&&bill&&(bill.mode!=='until'||bill.target!==mealTarget))out.push({reason:'Cuisiner de petites quantités pendant la croissance du potager.',command:{type:'bill-update',structureId:fire.id,billId:bill.id,settings:{mode:'until',target:mealTarget,suspended:false,filters:{rice:true,berries:true,'hare-meat':true,...sustainable?{potato:true,corn:true}:{}},radius:35,destination:'stockpile'}}});
+  if(fire&&!w.jobs.some(j=>j.kind==='harvest')&&w.piles.filter(q=>q.item==='berries'||q.item==='rice'||sustainable&&(q.item==='potato'||q.item==='corn')).reduce((n,q)=>n+q.quantity,0)<(sustainable?60:20)) {
     const berries=w.resources.filter(r=>r.kind==='berries'&&harvestable(w,r)&&Math.hypot(r.x-p.anchor.x,r.z-p.anchor.z)<35).sort((a,b)=>Math.hypot(a.x-p.anchor.x,a.z-p.anchor.z)-Math.hypot(b.x-p.anchor.x,b.z-p.anchor.z)||a.id-b.id);
-    for(const r of berries.slice(0,2))designate('harvest',r,'Cueillir de quoi cuisiner pendant la croissance du potager.');
+    for(const r of berries.slice(0,sustainable?4:2))designate('harvest',r,'Cueillir de quoi cuisiner pendant la croissance du potager.');
   }
   return out;
 }
 
 export function survivorSummary(w:World) {
-  const p=survivorPlan(w),storage=new Set(w.stockpiles.map(s=>s.z*w.width+s.x)),roof=new Set(w.roofing?.constructed);
+  const p=survivorPlan(w,w.scenario?.id==='crashlanded'),storage=new Set(w.stockpiles.map(s=>s.z*w.width+s.x)),roof=new Set(w.roofing?.constructed);
   const amount=(item:ItemId,stored=false)=>w.piles.reduce((n,q)=>n+(q.item===item&&(!stored||q.owner.type==='ground'&&storage.has(q.owner.z*w.width+q.owner.x))?q.quantity:0),0);
   const metal=(item:'steel'|'component')=>amount(item)+w.structures.reduce((n,s)=>n+requiredMaterial(s,item),0)+w.packed.reduce((n,s)=>n+requiredMaterial(s.building,item),0)+(w.destroyed?.lost[item]??0)+(item==='steel'?w.deconstructed.lostSteel??0:w.deconstructed.lostComponents??0);
   return {tick:w.tick,scenario:w.scenario,anchor:p.anchor,beds:w.structures.filter(s=>s.kind==='bed').length,shelteredBeds:w.structures.filter(s=>s.kind==='bed'&&footprintCells(s).every(c=>roof.has(c.z*w.width+c.x))).length,walls:w.structures.filter(s=>s.kind==='wall'&&inRect(s,p.room)).length,doors:w.structures.filter(s=>s.kind==='door'&&inRect(s,p.room)).length,roofs:roof.size,

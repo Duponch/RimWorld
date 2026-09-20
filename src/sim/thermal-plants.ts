@@ -1,4 +1,5 @@
 import { isPlant, plantGrowth, plantTemperatureFactor } from './plants.ts';
+import { isCropKindInVersion } from './crops.ts';
 import { outdoorTemperature } from './temperature.ts';
 import type { ThermalLayout } from './thermal-topology.ts';
 import type { Resource, World } from './types.ts';
@@ -34,7 +35,7 @@ export function updatePlantTemperatures(world:World,layout:ThermalLayout):void {
 
 export function validPlantThermalFactor(resource:{kind?:unknown;growth?:unknown;growthTick?:unknown;growthThermalFactor?:unknown},version:number):boolean {
   const factor=resource.growthThermalFactor;
-  return factor===undefined || version>=39&&(resource.kind==='rice'||resource.kind==='berries'||version>=71&&resource.kind==='cotton')
+  return factor===undefined || version>=39&&(resource.kind==='berries'||isCropKindInVersion(resource.kind,version))
     &&typeof factor==='number'&&Number.isFinite(factor)&&factor>=0&&factor<=1
     &&typeof resource.growth==='number'&&Number.isFinite(resource.growth)&&resource.growth>=0&&resource.growth<=1
     &&typeof resource.growthTick==='number'&&Number.isSafeInteger(resource.growthTick)&&resource.growthTick>=0;

@@ -32,7 +32,7 @@ export interface PlayerOrders { active: number | 'equipment' | 'haul' | 'cook' |
 export type OrderCommand = { type:'order-cook';pawnId:number;structureId:number;queue:boolean } | { type: 'order-job'; pawnId: number; jobId: number; queue: boolean } | { type:'order-haul';pawnId:number;target:HaulOrderTarget;queue:boolean } | { type: 'clear-orders'; pawnId: number };
 export interface OrderOption { jobId: number; equipmentItemId?:number; equipmentAction?:EquipmentAction; cookStationId?:number; rescuePatientId?:number; tendPatientId?:number; feedPatientId?:number; haulTarget?:HaulOrderTarget; label: string; enabled: boolean; reason?: string }
 export const MAX_QUEUED_ORDERS = 32;
-const labels: Record<Job['kind'], string> = { 'butcher-spot':'boucherie', cooler:'Construire le climatiseur', 'research-bench':'Bureau de recherche','tailor-bench':'Établi de tailleur', 'crafting-spot':'Placer l’artisanat', repair:'réparer', 'wood-generator':'construire le générateur à bois', 'standing-lamp':'construire la lampe', 'passive-cooler':'Construire le refroidisseur passif', 'build-roof':'Poser le toit', 'remove-roof':'Retirer le toit', door:'Construire la porte', stonecutter:'Construire la table de taille', mine:'Miner', uninstall:'Désinstaller',install:'Réinstaller', deconstruct:'Déconstruire', chop:'Abattre',harvest:'Récolter',cut:'Couper',sow:'Semer',wall:'Construire le mur',bed:'Construire le lit',table:'Construire la table',stool:'Construire le tabouret',campfire:'Construire le feu',horseshoes:'Construire le piquet' };
+const labels: Record<Job['kind'], string> = { 'fueled-stove':'Construire la cuisinière à bois', 'electric-stove':'Construire la cuisinière électrique', 'butcher-table':'Construire la table de boucherie', 'butcher-spot':'boucherie', cooler:'Construire le climatiseur', 'research-bench':'Bureau de recherche','tailor-bench':'Établi de tailleur', 'crafting-spot':'Placer l’artisanat', repair:'réparer', 'wood-generator':'construire le générateur à bois', 'standing-lamp':'construire la lampe', 'passive-cooler':'Construire le refroidisseur passif', 'build-roof':'Poser le toit', 'remove-roof':'Retirer le toit', door:'Construire la porte', stonecutter:'Construire la table de taille', mine:'Miner', uninstall:'Désinstaller',install:'Réinstaller', deconstruct:'Déconstruire', chop:'Abattre',harvest:'Récolter',cut:'Couper',sow:'Semer',wall:'Construire le mur',bed:'Construire le lit',table:'Construire la table',stool:'Construire le tabouret',campfire:'Construire le feu',horseshoes:'Construire le piquet' };
 const fail = (reason: string): CommandResult => ({ok:false,code:'invalid-command',reason});
 const busy = (pawn: Pawn) => pawn.jobId !== null || !!(pawn.hunting || pawn.heatRefuge || pawn.research || pawn.equipmentTask || pawn.feed || pawn.tend || pawn.rescue || pawn.haul || pawn.cooking || pawn.need || pawn.recreation.task);
 const clearingPlant=(world:World,job:Job)=>!isConstruction(job)?undefined:job.clearance?world.resources.find(r=>r.id===job.clearance!.resourceId):constructionObstruction(world,job).plant;
@@ -53,6 +53,7 @@ export function orderReadiness(world: World, pawn: Pawn, job: Job, accepted=fals
     const plant=clearingPlant(world,job);
     if((!accepted||job.clearance)&&plant&&plant.kind!=='rock')return;
     if(job.clearance)return 'La plante à dégager a disparu.';
+    if(job.kind==='electric-stove'&&pawn.skills.construction.level<4)return 'Construction 4 nécessaire pour finir cette cuisinière.';
     if(job.kind==='cooler'&&pawn.skills.construction.level<5)return 'Construction 5 nécessaire pour finir ce climatiseur.';
     if (!constructionSupplied(world,job)) return 'Approvisionnement nécessaire ; choisissez Livrer les matériaux.';
     if (!constructionSiteFree(world,job,pawn.id)) return 'Chantier gêné ; dégagez les piles ou attendez le passage des colons.';
@@ -110,7 +111,7 @@ export function queryOrderOptions(world:World,pawnId:number,cell:Cell,queue=fals
   const pack=packedAt(world,cell);if(pack)targets.push({type:'furniture',structureId:pack.building.id});
   if(pile)targets.push({type:'pile',pileId:pile.id});
   const fire=world.structures.find(s=>(stationRecipe(s)!==null||s.kind==='passive-cooler')&&footprintCells(s).some(c=>c.x===cell.x&&c.z===cell.z));
-  if(fire&&(fire.kind==='campfire'||fire.kind==='passive-cooler'))targets.push({type:'fuel',structureId:fire.id});
+  if(fire&&(fire.kind==='campfire'||fire.kind==='fueled-stove'||fire.kind==='passive-cooler'))targets.push({type:'fuel',structureId:fire.id});
   for(const target of targets) {
     const view=orderView(world,pawn,queue),proposal=planHaulOrder(view,view.pawns.find(p=>p.id===pawn.id)!,target);
     const reason=exhausted(world,pawn)??proposal.reason;

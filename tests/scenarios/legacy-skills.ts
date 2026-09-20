@@ -75,6 +75,7 @@ export function withMigratedResearch<T>(world:T):T {
 
 /** Construct an authentic pre-V79 fixture, never repair a production save. */
 export function withoutHunting<T>(world:T):T {
+  withoutFoodCrops(world);
   const w=world as any;delete w.hunting;delete w.butchery;
   if(w.spoiled)delete w.spoiled['hare-meat'];
   for(const policy of w.foodPolicies??[])policy.allowed=policy.allowed.filter((id:string)=>id!=='hare-meat');
@@ -90,4 +91,13 @@ export function withMigratedHunting<T>(world:T):T {
   const copy=withoutHunting(structuredClone(world));
   for(const p of (copy as any).pawns)p.priorities.hunt=0;
   return copy;
+}
+
+/** Pre-V84 fixture shape only. Production migration never broadens food filters. */
+export function withoutFoodCrops<T>(world:T):T {
+  const w=world as any;
+  for(const policy of w.foodPolicies??[])policy.allowed=policy.allowed.filter((id:string)=>id!=='potato'&&id!=='corn');
+  for(const s of [...w.structures??[],...(w.packed??[]).map((p:any)=>p.building)])for(const b of s.bills??[]){delete b.filters.potato;delete b.filters.corn;}
+  if(w.spoiled){delete w.spoiled.potato;delete w.spoiled.corn;}
+  return world;
 }

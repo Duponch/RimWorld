@@ -1,3 +1,4 @@
+import { butcherStationEfficiency } from './food-workstations.ts';
 import { corpseFresh,corpseYield } from './corpses.ts';
 import { butcheryEfficiency,completedCookingSkill,roundYield } from './cooking-statistics.ts';
 import { freshRot } from './food-preservation.ts';
@@ -15,7 +16,8 @@ export function finishButchery(world:World,pawn:Pawn,bill:CookingBill,context:Pr
   const task=pawn.cooking!,corpse=world.piles.find(p=>p.id===task.ingredients[0]?.pileId);
   if(!corpse||!corpseFresh(corpse,world.tick)||corpse.owner.type!=='ground')return false;
   const skill=completedCookingSkill(pawn,task.workTicks??0),worker={...pawn,skills:{...pawn.skills,cooking:skill}};
-  const raw=corpseYield(corpse),factor=butcheryEfficiency(worker)*.7,random={rng:world.rng};
+  const station=world.structures.find(s=>s.id===task.stationId);if(!station)return false;
+  const raw=corpseYield(corpse),factor=butcheryEfficiency(worker)*butcherStationEfficiency(station),random={rng:world.rng};
   const meat=roundYield(raw.meat*factor,()=>healthRandom(random)),leather=roundYield(raw.leather*factor,()=>healthRandom(random));
   const products:readonly {item:ItemId;quantity:number}[]=[{item:'hare-meat',quantity:meat},{item:'light-leather',quantity:leather}].filter(p=>p.quantity>0) as {item:ItemId;quantity:number}[];
   const ledger=world.butchery??{completed:0,meat:0,leather:0};

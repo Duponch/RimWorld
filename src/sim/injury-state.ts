@@ -1,3 +1,4 @@
+import { MALNUTRITION_UNIT,malnutritionModifiers } from './malnutrition.ts';
 import { coldModifiers } from './cold-rules.ts';
 import { HEAT_UNIT,heatModifiers } from './heat-rules.ts';
 import type { BodyAssessment } from './body-capacities.ts';
@@ -48,15 +49,15 @@ export function medicalBleedUnits(record:MedicalRecord):number {
   return Math.round(rate/medicalModel(record).healthScale);
 }
 export function assessMedical(record:MedicalRecord):BodyAssessment {
-  const heat=heatModifiers(record.heatstroke),cold=coldModifiers(record.hypothermia),blood=bloodConsciousness(record.bloodLoss),infection=infectionModifiers(record);
-  return projectedMedicalBody(record,{damage:record.injuries.map(i=>({part:i.part,loss:i.severity/HP_UNIT})),missing:record.missing.map(m=>m.part),pain:medicalPain(record),consciousnessOffset:(blood.consciousnessOffset??0)+heat.consciousnessOffset+cold.consciousnessOffset+infection.consciousnessOffset,consciousnessMax:Math.min(blood.consciousnessMax??Infinity,heat.consciousnessMax,cold.consciousnessMax,infection.consciousnessMax),movingOffset:heat.movingOffset+cold.movingOffset,manipulationOffset:cold.manipulationOffset,breathingOffset:infection.breathingOffset},medicalModel(record));
+  const heat=heatModifiers(record.heatstroke),cold=coldModifiers(record.hypothermia),blood=bloodConsciousness(record.bloodLoss),infection=infectionModifiers(record),malnutrition=malnutritionModifiers(record.malnutrition);
+  return projectedMedicalBody(record,{damage:record.injuries.map(i=>({part:i.part,loss:i.severity/HP_UNIT})),missing:record.missing.map(m=>m.part),pain:medicalPain(record),consciousnessOffset:(blood.consciousnessOffset??0)+heat.consciousnessOffset+cold.consciousnessOffset+infection.consciousnessOffset+malnutrition.consciousnessOffset,consciousnessMax:Math.min(blood.consciousnessMax??Infinity,heat.consciousnessMax,cold.consciousnessMax,infection.consciousnessMax,malnutrition.consciousnessMax),movingOffset:heat.movingOffset+cold.movingOffset,manipulationOffset:cold.manipulationOffset,breathingOffset:infection.breathingOffset},medicalModel(record));
 }
 export function medicalStatus(record:MedicalRecord,body=assessMedical(record)):'mobile'|'downed'|'dead' {
   return record.death?'dead':body.painShock||!body.canBeAwake||!body.movingCapable?'downed':'mobile';
 }
 export function reconcileMedicalDeath(record:MedicalRecord):void {
   if(record.death)return;
-  const cause=(record.heatstroke??0)>=HEAT_UNIT?'heatstroke':(record.hypothermia??0)>=HEAT_UNIT?'hypothermia':record.bloodLoss>=BLOOD_UNIT?'blood-loss':record.infections?.cases.some(c=>c.severity>=INFECTION_UNIT)?'infection':assessMedical(record).vitalFailure?'vital-failure':record.injuries.reduce((n,i)=>n+i.severity,0)>=150*HP_UNIT*medicalModel(record).healthScale?'trauma':null;
+  const cause=(record.malnutrition??0)>=MALNUTRITION_UNIT?'malnutrition':(record.heatstroke??0)>=HEAT_UNIT?'heatstroke':(record.hypothermia??0)>=HEAT_UNIT?'hypothermia':record.bloodLoss>=BLOOD_UNIT?'blood-loss':record.infections?.cases.some(c=>c.severity>=INFECTION_UNIT)?'infection':assessMedical(record).vitalFailure?'vital-failure':record.injuries.reduce((n,i)=>n+i.severity,0)>=150*HP_UNIT*medicalModel(record).healthScale?'trauma':null;
   if(cause)record.death={tick:record.tick,cause};
 }
 export function rollScarPain(random:MedicalRandom):ScarPain {const n=random();return n<.5?0:n<.7?1:n<.9?3:6;}

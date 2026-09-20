@@ -12,7 +12,7 @@ export function damageFromRoofCollapse(world:World,cells:ReadonlySet<number>):vo
   const disturbance=disturbanceEvents(world);
   for(const pawn of world.pawns) {
     if(pawn.state==='dead'||!cells.has(pawn.z*world.width+pawn.x))continue;
-    if(pawn.health&&pawn.health.tick<world.tick)updatePawnHealth(world,pawn);
+    if(!pawn.health||pawn.health.tick<world.tick)updatePawnHealth(world,pawn);
     if(pawn.health?.death)continue;
     const health=structuredClone(pawn.health??createMedicalRecord(world.tick)),randomState={rng:world.rng};
     const parts=HUMAN_BODY.flatMap((part,index)=>part.height==='top'&&part.depth==='outside'&&!part.conceptual&&!partMissing(health,part.id)&&BODY_COVERAGE[index]!>0?[{part,weight:BODY_COVERAGE[index]!}]:[]);

@@ -1,10 +1,11 @@
+import { isStove } from './food-workstations.ts';
 import { footprintCells } from './definitions.ts';
 import { LightEnvironment, LightEnvironmentCache, lightSpeedFactor } from './light-environment.ts';
 import { type RoomSpace } from './room-topology.ts';
 import type { Cell, Structure, World } from './types.ts';
 
-export type WorkRoomRole='laboratory'|'none'|'bedroom'|'barracks'|'workshop'|'dining'|'recreation';
-export const ROOM_ROLE_LABEL:Record<WorkRoomRole,string>={laboratory:'Laboratoire',none:'Sans spécialisation',bedroom:'Chambre',barracks:'Dortoir',workshop:'Atelier',dining:'Salle à manger',recreation:'Salle de loisirs'};
+export type WorkRoomRole='laboratory'|'none'|'bedroom'|'barracks'|'workshop'|'kitchen'|'dining'|'recreation';
+export const ROOM_ROLE_LABEL:Record<WorkRoomRole,string>={laboratory:'Laboratoire',none:'Sans spécialisation',bedroom:'Chambre',barracks:'Dortoir',workshop:'Atelier',kitchen:'Cuisine',dining:'Salle à manger',recreation:'Salle de loisirs'};
 export interface WorkRoom {
   readonly space:RoomSpace;readonly covered:number;readonly psychologicallyOutdoors:boolean;readonly role:WorkRoomRole;
 }
@@ -23,7 +24,8 @@ export class WorkEnvironment extends LightEnvironment {
   production(station:Structure,worker:Cell):ProductionFactors {
     const room=this.room(station),light=this.lightAt(worker),lighting=lightWorkFactor(light);
     const outdoors=room?.psychologicallyOutdoors ? .8 : 1;
-    const roomRole=(station.kind==='stonecutter'||station.kind==='tailor-bench')&&room&&!room.psychologicallyOutdoors&&room.role!=='workshop' ? .8 : 1;
+    const requiredRole=isStove(station.kind)?'kitchen':station.kind==='stonecutter'||station.kind==='tailor-bench'?'workshop':undefined;
+    const roomRole=requiredRole&&room&&!room.psychologicallyOutdoors&&room.role!==requiredRole ? .8 : 1;
     const base=station.kind==='campfire'||station.kind==='crafting-spot'||station.kind==='tailor-bench' ? .5 : 1;
     return {light,lighting,outdoors,roomRole,station:base,total:lighting*outdoors*roomRole*base};
   }
@@ -38,13 +40,13 @@ export class WorkEnvironmentCache {
   readLight(world:World):LightEnvironment {return this.light.read(world);}
   read(world:World,light=this.readLight(world)):WorkEnvironment {
     const {topology,roofs}=light;
-    const covered=new Map<number,number>(),scores=new Map<number,{beds:number;laboratory:number;workshop:number;dining:number;recreation:number}>();
+    const covered=new Map<number,number>(),scores=new Map<number,{beds:number;laboratory:number;workshop:number;kitchen:number;dining:number;recreation:number}>();
     for(const index of roofs){const room=topology.at(index%world.width,Math.floor(index/world.width));if(room?.kind==='space')covered.set(room.id,(covered.get(room.id)??0)+1);}
     for(const s of world.structures) {
-      if(!['research-bench','tailor-bench','bed','stonecutter','table','horseshoes'].includes(s.kind))continue;
+      if(!['research-bench','tailor-bench','bed','stonecutter','table','horseshoes','fueled-stove','electric-stove'].includes(s.kind))continue;
       const ids=new Set<number>();for(const cell of footprintCells(s)){const r=topology.at(cell.x,cell.z);if(r?.kind==='space')ids.add(r.id);}
-      for(const id of ids){let v=scores.get(id);if(!v){v={beds:0,laboratory:0,workshop:0,dining:0,recreation:0};scores.set(id,v);}
-        if(s.kind==='bed')v.beds++;else if(s.kind==='research-bench')v.laboratory+=54;else if(s.kind==='stonecutter'||s.kind==='tailor-bench')v.workshop+=27;else if(s.kind==='table')v.dining+=12;else v.recreation+=7;}
+      for(const id of ids){let v=scores.get(id);if(!v){v={beds:0,laboratory:0,workshop:0,kitchen:0,dining:0,recreation:0};scores.set(id,v);}
+        if(s.kind==='bed')v.beds++;else if(s.kind==='research-bench')v.laboratory+=54;else if(s.kind==='stonecutter'||s.kind==='tailor-bench')v.workshop+=27;else if(isStove(s.kind))v.kitchen+=28;else if(s.kind==='table')v.dining+=12;else v.recreation+=7;}
     }
     const rooms=new Map<number,WorkRoom>();
     for(const space of topology.allSpaces()) {
@@ -53,8 +55,8 @@ export class WorkEnvironmentCache {
       const score=scores.get(space.id);let role:WorkRoomRole='none';
       if(!space.touchesMapEdge&&score) {
         // Current beds are single, civilian and adults have no love clusters.
-        const values={laboratory:score.laboratory,bedroom:score.beds===1?100000:0,dining:score.dining,recreation:score.recreation,workshop:score.workshop,barracks:score.beds>1?score.beds*100100:0};
-        let best=0;for(const candidate of ['laboratory','bedroom','dining','recreation','workshop','barracks'] as const)if(values[candidate]>best){best=values[candidate];role=candidate;}
+        const values={laboratory:score.laboratory,bedroom:score.beds===1?100000:0,dining:score.dining,recreation:score.recreation,workshop:score.workshop,kitchen:score.kitchen,barracks:score.beds>1?score.beds*100100:0};
+        let best=0;for(const candidate of ['laboratory','bedroom','dining','recreation','workshop','barracks','kitchen'] as const)if(values[candidate]>best){best=values[candidate];role=candidate;}
       }
       rooms.set(space.id,{space,covered:count,psychologicallyOutdoors,role});
     }

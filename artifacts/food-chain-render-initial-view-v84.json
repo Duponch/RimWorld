@@ -1,0 +1,584 @@
+{
+  "date": "2026-09-20T11:44:56.059Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "protocol": "Controlled V84 load on the existing natural 250² research map. Groups of six: two researchers, one cook, one grower, one butcher, one miner. Incomplete final groups keep those roles in order. Dedicated cleared work patches, prebuilt stoves alternating wood/electric, real fueled generators, butcher tables, supplied raw potatoes/corn and two supplied fresh hare corpses per butcher; four mature plants per grower, then ordinary harvesting and resowing. Growers start with 19% malnutrition and a positive food need, so recovery is measured without accelerating crops. Butchers start hungry and allow meals only. Same number of wild hares as colonists, half hungry and one third tired. These prepared inputs and medical states are synthetic load fixtures, not naturally earned colony progress or a self-sufficient economy. Native Chromium WebGPU, real worker at requested 6× for 650 ticks, 90 warmup frames, one run each; no full World export during timing. Worker samples are published batch step averages, not an independent per-tick percentile.",
+  "foodChain": true,
+  "wildlife": true,
+  "coldStore": false,
+  "heatwave": false,
+  "rows": [
+    {
+      "actors": 3,
+      "foodChain": {
+        "stoves": [
+          {
+            "kind": "fueled-stove",
+            "id": 12457,
+            "completed": 4,
+            "powered": false,
+            "fuelBurned": 2432
+          }
+        ],
+        "butcherTables": 0,
+        "butchered": 0,
+        "meatProduced": 0,
+        "food": {
+          "potato": 22,
+          "corn": 44,
+          "meals": 4,
+          "meat": 0
+        },
+        "crops": [
+          {
+            "kind": "potato",
+            "originalRemaining": 0,
+            "resown": 2
+          },
+          {
+            "kind": "corn",
+            "originalRemaining": 0,
+            "resown": 2
+          }
+        ],
+        "growers": [
+          {
+            "id": 12427,
+            "malnutrition": 141691212,
+            "food": 73.63999999999588
+          }
+        ],
+        "butcherFood": []
+      },
+      "foodErrors": [],
+      "infected": 0,
+      "treatedInfections": 0,
+      "animals": 3,
+      "animalNutrition": 0.18039750000000004,
+      "hunted": 0,
+      "corpses": 0,
+      "animalDead": 0,
+      "colonistInjured": 0,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "description": ""
+      },
+      "elapsedMs": 18559.5792,
+      "simulatedTicks": 659,
+      "completed": 0,
+      "research": 2673280,
+      "exposed": 0,
+      "coolers": 0,
+      "frameMs": {
+        "n": 3519,
+        "p50": 4.200000000000728,
+        "p95": 8.400000000001455,
+        "p99": 8.5,
+        "max": 33.30000000000109
+      },
+      "frameCpuMs": {
+        "n": 3520,
+        "p50": 4.599999999627471,
+        "p95": 6.599999999627471,
+        "p99": 7.899999998509884,
+        "max": 30.5
+      },
+      "workerBatchStepMs": {
+        "n": 667,
+        "p50": 2.099999999627471,
+        "p95": 4.900000000372529,
+        "p99": 9.800000000745058,
+        "max": 36.40000000037253
+      },
+      "snapshotAdoptionMs": {
+        "n": 667,
+        "p50": 0,
+        "p95": 0.8000000007450581,
+        "p99": 2.5,
+        "max": 3.400000000372529
+      },
+      "drawCalls": {
+        "n": 3520,
+        "p50": 118,
+        "p95": 146,
+        "p99": 149,
+        "max": 149
+      },
+      "pipelines": [],
+      "stable": true,
+      "errors": [],
+      "invalid": []
+    },
+    {
+      "actors": 30,
+      "foodChain": {
+        "stoves": [
+          {
+            "kind": "fueled-stove",
+            "id": 12721,
+            "completed": 4,
+            "powered": false,
+            "fuelBurned": 2432
+          },
+          {
+            "kind": "electric-stove",
+            "id": 12735,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "fueled-stove",
+            "id": 12750,
+            "completed": 4,
+            "powered": false,
+            "fuelBurned": 2448
+          },
+          {
+            "kind": "electric-stove",
+            "id": 12764,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "fueled-stove",
+            "id": 12779,
+            "completed": 4,
+            "powered": false,
+            "fuelBurned": 2432
+          }
+        ],
+        "butcherTables": 5,
+        "butchered": 10,
+        "meatProduced": 311,
+        "food": {
+          "potato": 110,
+          "corn": 220,
+          "meals": 15,
+          "meat": 311
+        },
+        "crops": [
+          {
+            "kind": "potato",
+            "originalRemaining": 0,
+            "resown": 10
+          },
+          {
+            "kind": "corn",
+            "originalRemaining": 0,
+            "resown": 10
+          }
+        ],
+        "growers": [
+          {
+            "id": 12427,
+            "malnutrition": 140593285,
+            "food": 73.47999999999585
+          },
+          {
+            "id": 12433,
+            "malnutrition": 141551292,
+            "food": 73.47999999999585
+          },
+          {
+            "id": 12439,
+            "malnutrition": 135624140,
+            "food": 73.47999999999585
+          },
+          {
+            "id": 12445,
+            "malnutrition": 142351608,
+            "food": 73.47999999999585
+          },
+          {
+            "id": 12451,
+            "malnutrition": 133882356,
+            "food": 73.47999999999585
+          }
+        ],
+        "butcherFood": [
+          89.83999999999841,
+          85.83999999999779,
+          88.39999999999819,
+          90.82666666666523,
+          86.02666666666448
+        ]
+      },
+      "foodErrors": [],
+      "infected": 0,
+      "treatedInfections": 0,
+      "animals": 30,
+      "animalNutrition": 2.707545000000001,
+      "hunted": 0,
+      "corpses": 0,
+      "animalDead": 0,
+      "colonistInjured": 0,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "description": ""
+      },
+      "elapsedMs": 18762.3733,
+      "simulatedTicks": 663,
+      "completed": 0,
+      "research": 27522253,
+      "exposed": 0,
+      "coolers": 0,
+      "frameMs": {
+        "n": 2795,
+        "p50": 4.299999999999272,
+        "p95": 12.5,
+        "p99": 20.799999999999272,
+        "max": 41.69999999999891
+      },
+      "frameCpuMs": {
+        "n": 2796,
+        "p50": 5.299999998882413,
+        "p95": 9.199999999254942,
+        "p99": 15.300000000745058,
+        "max": 40.70000000111759
+      },
+      "workerBatchStepMs": {
+        "n": 674,
+        "p50": 5.900000000372529,
+        "p95": 20.13333333345751,
+        "p99": 34.5,
+        "max": 55.90000000037253
+      },
+      "snapshotAdoptionMs": {
+        "n": 674,
+        "p50": 0,
+        "p95": 2.700000001117587,
+        "p99": 4.599999999627471,
+        "max": 6.900000000372529
+      },
+      "drawCalls": {
+        "n": 2796,
+        "p50": 137,
+        "p95": 169,
+        "p99": 171,
+        "max": 171
+      },
+      "pipelines": [],
+      "stable": true,
+      "errors": [],
+      "invalid": []
+    },
+    {
+      "actors": 100,
+      "foodChain": {
+        "stoves": [
+          {
+            "kind": "fueled-stove",
+            "id": 13410,
+            "completed": 4,
+            "powered": false,
+            "fuelBurned": 2432
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13424,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "fueled-stove",
+            "id": 13439,
+            "completed": 4,
+            "powered": false,
+            "fuelBurned": 2816
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13453,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "fueled-stove",
+            "id": 13468,
+            "completed": 4,
+            "powered": false,
+            "fuelBurned": 2432
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13482,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "fueled-stove",
+            "id": 13497,
+            "completed": 4,
+            "powered": false,
+            "fuelBurned": 2768
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13511,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "fueled-stove",
+            "id": 13526,
+            "completed": 4,
+            "powered": false,
+            "fuelBurned": 2432
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13540,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "fueled-stove",
+            "id": 13555,
+            "completed": 4,
+            "powered": false,
+            "fuelBurned": 2432
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13569,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "fueled-stove",
+            "id": 13584,
+            "completed": 4,
+            "powered": false,
+            "fuelBurned": 2432
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13598,
+            "completed": 2,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "fueled-stove",
+            "id": 13613,
+            "completed": 4,
+            "powered": false,
+            "fuelBurned": 2432
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13627,
+            "completed": 3,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "fueled-stove",
+            "id": 13642,
+            "completed": 4,
+            "powered": false,
+            "fuelBurned": 2432
+          }
+        ],
+        "butcherTables": 16,
+        "butchered": 32,
+        "meatProduced": 994,
+        "food": {
+          "potato": 374,
+          "corn": 778,
+          "meals": 49,
+          "meat": 994
+        },
+        "crops": [
+          {
+            "kind": "potato",
+            "originalRemaining": 0,
+            "resown": 34
+          },
+          {
+            "kind": "corn",
+            "originalRemaining": 0,
+            "resown": 34
+          }
+        ],
+        "growers": [
+          {
+            "id": 12427,
+            "malnutrition": 141691212,
+            "food": 73.55999999999587
+          },
+          {
+            "id": 12433,
+            "malnutrition": 141551292,
+            "food": 73.55999999999587
+          },
+          {
+            "id": 12439,
+            "malnutrition": 135624140,
+            "food": 73.55999999999587
+          },
+          {
+            "id": 12445,
+            "malnutrition": 142351608,
+            "food": 73.55999999999587
+          },
+          {
+            "id": 12451,
+            "malnutrition": 133882356,
+            "food": 73.55999999999587
+          },
+          {
+            "id": 12457,
+            "malnutrition": 146364320,
+            "food": 73.55999999999587
+          },
+          {
+            "id": 12463,
+            "malnutrition": 133453884,
+            "food": 73.55999999999587
+          },
+          {
+            "id": 12469,
+            "malnutrition": 140646432,
+            "food": 73.55999999999587
+          },
+          {
+            "id": 12475,
+            "malnutrition": 135976844,
+            "food": 73.55999999999587
+          },
+          {
+            "id": 12481,
+            "malnutrition": 139922544,
+            "food": 73.55999999999587
+          },
+          {
+            "id": 12487,
+            "malnutrition": 150061376,
+            "food": 73.55999999999587
+          },
+          {
+            "id": 12493,
+            "malnutrition": 133786172,
+            "food": 73.55999999999587
+          },
+          {
+            "id": 12499,
+            "malnutrition": 134387960,
+            "food": 73.55999999999587
+          },
+          {
+            "id": 12505,
+            "malnutrition": 141276424,
+            "food": 73.55999999999587
+          },
+          {
+            "id": 12511,
+            "malnutrition": 133444820,
+            "food": 73.55999999999587
+          },
+          {
+            "id": 12517,
+            "malnutrition": 147391764,
+            "food": 73.55999999999587
+          },
+          {
+            "id": 12523,
+            "malnutrition": 130943596,
+            "food": 73.55999999999587
+          }
+        ],
+        "butcherFood": [
+          86.07999999999782,
+          89.03999999999829,
+          90.93333333333192,
+          92.53333333333217,
+          86.07999999999782,
+          89.59999999999837,
+          88.82666666666492,
+          90.47999999999851,
+          88.9333333333316,
+          88.55999999999821,
+          87.25333333333134,
+          90.55999999999852,
+          87.41333333333137,
+          89.35999999999834,
+          91.30666666666531,
+          89.41333333333168
+        ]
+      },
+      "foodErrors": [],
+      "infected": 0,
+      "treatedInfections": 0,
+      "animals": 100,
+      "animalNutrition": 9.029415,
+      "hunted": 0,
+      "corpses": 0,
+      "animalDead": 0,
+      "colonistInjured": 0,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "description": ""
+      },
+      "elapsedMs": 22467.3995,
+      "simulatedTicks": 661,
+      "completed": 0,
+      "research": 90411165,
+      "exposed": 0,
+      "coolers": 0,
+      "frameMs": {
+        "n": 2163,
+        "p50": 8.30000000000291,
+        "p95": 25,
+        "p99": 37.5,
+        "max": 54.20000000000073
+      },
+      "frameCpuMs": {
+        "n": 2164,
+        "p50": 6.5,
+        "p95": 15.799999998882413,
+        "p99": 29.699999999254942,
+        "max": 49.09999999962747
+      },
+      "workerBatchStepMs": {
+        "n": 638,
+        "p50": 22.800000000745058,
+        "p95": 51.5,
+        "p99": 71,
+        "max": 90.8999999994412
+      },
+      "snapshotAdoptionMs": {
+        "n": 638,
+        "p50": 0.09999999962747097,
+        "p95": 11.5,
+        "p99": 15.400000000372529,
+        "max": 23.09999999962747
+      },
+      "drawCalls": {
+        "n": 2164,
+        "p50": 158,
+        "p95": 186,
+        "p99": 187,
+        "max": 187
+      },
+      "pipelines": [],
+      "stable": true,
+      "errors": [],
+      "invalid": []
+    }
+  ]
+}

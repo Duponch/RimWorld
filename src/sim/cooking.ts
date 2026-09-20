@@ -1,3 +1,6 @@
+import { foodStationUsable } from './food-workstations.ts';
+import { consumeCookingFuel } from './fuel.ts';
+import { applyCookingHeat } from './thermal-sources.ts';
 import { corpseFresh } from './corpses.ts';
 import { finishButchery } from './butchery.ts';
 import { cookingSpeed,butcherySpeed,completedCookingSkill } from './cooking-statistics.ts';
@@ -27,7 +30,7 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   const task=pawn.cooking!;
   if(task.phase==='interrupted'){context.release();return;}
   const station=world.structures.find(s=>s.id===task.stationId),bill=station?.bills?.find(b=>b.id===task.billId);
-  if(!station||!bill||bill.suspended||pawn.priorities[taskWork(task)]===0&&pawn.orders.active!=='cook'||(task.phase!=='output'&&station.kind==='campfire'&&!station.fuel?.ticks)) {context.release();return;}
+  if(!station||!bill||bill.suspended||pawn.priorities[taskWork(task)]===0&&pawn.orders.active!=='cook'||(task.phase!=='output'&&!foodStationUsable(station))) {context.release();return;}
   if(task.phase==='output'){processProductionOutput(world,pawn,context,bill.destination);return;}
   const recipe=PRODUCTION_RECIPES[taskRecipe(task)];
   for(const entry of task.ingredients) {
@@ -62,7 +65,8 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   if(task.progress<total){
     if(culinary){if(!Number.isSafeInteger((task.workTicks??0)+1)||((task.workTicks??0)+1)>Math.floor(Number.MAX_SAFE_INTEGER/1000))return;task.workTicks=(task.workTicks??0)+1;}
     const speed=task.recipe==='butcher-creature'?butcherySpeed(pawn):culinary?cookingSpeed(pawn):1;
-    task.progress=Math.min(total,task.progress+Math.round(context.workRate(station,pawn)*speed*PRODUCTION_WORK_SCALE));
+    const fraction=consumeCookingFuel(station);applyCookingHeat(world,station,fraction);
+    task.progress=Math.min(total,task.progress+Math.round(context.workRate(station,pawn)*speed*PRODUCTION_WORK_SCALE*fraction));
   }
   if(unfinished)unfinished.unfinished!.progress=task.progress;
   if(task.progress<total)return;
@@ -72,6 +76,7 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   if(world.piles.length-freed+1>32768||!Number.isSafeInteger(world.nextId+1))return;
   const meat=task.ingredients.filter(i=>i.item==='hare-meat').reduce((n,i)=>n+i.quantity,0);
   const rice=task.ingredients.filter(i=>i.item==='rice').reduce((n,i)=>n+i.quantity,0),item=recipeProduct(taskRecipe(task),task.ingredients);
+  const potato=task.ingredients.filter(i=>i.item==='potato').reduce((n,i)=>n+i.quantity,0),corn=task.ingredients.filter(i=>i.item==='corn').reduce((n,i)=>n+i.quantity,0);
   if(isTailoring(task.recipe)&&!Number.isSafeInteger((world.tailoring?.completed??0)+1))return;
   const random={rng:world.rng},apparel=isTailoring(task.recipe)?{...newApparelState(task.recipe==='shirt'?'cloth-shirt':'cloth-tribalwear'),quality:craftingQuality(craftingSkill(pawn).level,()=>healthRandom(random))}:undefined;
   // All preconditions succeeded. Consume once, create once, then store physically.
@@ -81,5 +86,5 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   if(apparel){world.rng=random.rng;(world.tailoring??={completed:0,cancelled:0,lostCloth:0}).completed++;}
   task.ingredients=[];task.productId=id;task.phase='output';task.progress=0;if(culinary)pawn.skills.cooking=completedCookingSkill(pawn,task.workTicks??0);delete task.workTicks;pawn.planCooldown=0;
   if(bill.mode==='times')bill.target=Math.max(0,bill.target-1);
-  context.event(isTailoring(task.recipe)?`${pawn.name} a fabriqué : ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:task.recipe==='stone-blocks'?`${pawn.name} a taillé 20 ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:`${pawn.name} a cuisiné 1 repas simple (${10-rice-meat} baies, ${rice} riz${meat?`, ${meat} viande`:''}).`);
+  context.event(isTailoring(task.recipe)?`${pawn.name} a fabriqué : ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:task.recipe==='stone-blocks'?`${pawn.name} a taillé 20 ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:`${pawn.name} a cuisiné 1 repas simple (${10-rice-meat-potato-corn} baies, ${rice} riz${meat?`, ${meat} viande`:''}${potato?`, ${potato} pommes de terre`:''}${corn?`, ${corn} maïs`:''}).`);
 }

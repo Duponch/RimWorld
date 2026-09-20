@@ -1,0 +1,507 @@
+{
+  "date": "2026-09-20T11:41:44.499Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "os": "win32 10.0.26200",
+  "node": "v24.11.1",
+  "protocol": "Controlled V84 load on the existing natural 250² research map. Groups of six: two researchers, one cook, one grower, one butcher, one miner. Incomplete final groups keep those roles in order. Dedicated cleared work patches, prebuilt stoves alternating wood/electric, real fueled generators, butcher tables, supplied raw potatoes/corn and two supplied fresh hare corpses per butcher; four mature plants per grower, then ordinary harvesting and resowing. Growers start with 19% malnutrition and a positive food need, so recovery is measured without accelerating crops. Butchers start hungry and allow meals only. Same number of wild hares as colonists, half hungry and one third tired. These prepared inputs and medical states are synthetic load fixtures, not naturally earned colony progress or a self-sufficient economy. 650 ticks, 100 separate warmup ticks, encoding every five ticks. Single pass, CPU only; no 6× guarantee.",
+  "foodChain": true,
+  "wildlife": true,
+  "coldStore": false,
+  "heatwave": false,
+  "rows": [
+    {
+      "actors": 3,
+      "foodChain": {
+        "stoves": [
+          {
+            "kind": "fueled-stove",
+            "id": 12457,
+            "completed": 4,
+            "powered": false,
+            "fuelBurned": 2432
+          }
+        ],
+        "butcherTables": 0,
+        "butchered": 0,
+        "meatProduced": 0,
+        "food": {
+          "potato": 22,
+          "corn": 44,
+          "meals": 4,
+          "meat": 0
+        },
+        "crops": [
+          {
+            "kind": "potato",
+            "originalRemaining": 0,
+            "resown": 2
+          },
+          {
+            "kind": "corn",
+            "originalRemaining": 0,
+            "resown": 2
+          }
+        ],
+        "growers": [
+          {
+            "id": 12427,
+            "malnutrition": 141691212,
+            "food": 73.99999999999594
+          }
+        ],
+        "butcherFood": []
+      },
+      "infected": 0,
+      "treatedInfections": 0,
+      "animals": 3,
+      "animalNutrition": 0.18039750000000004,
+      "hunted": 0,
+      "corpses": 0,
+      "animalDead": 0,
+      "colonistInjured": 0,
+      "tickMs": {
+        "n": 650,
+        "p50": 0.9157000000000153,
+        "p95": 2.830500000000029,
+        "p99": 4.661299999999983,
+        "max": 15.842300000000023
+      },
+      "steadyTickMs": {
+        "n": 630,
+        "p50": 0.9105999999999312,
+        "p95": 2.713399999999865,
+        "p99": 4.300499999999829,
+        "max": 6.44159999999988
+      },
+      "snapshotMs": {
+        "n": 130,
+        "p50": 2.276100000000042,
+        "p95": 4.216199999999844,
+        "p99": 6.063300000000027,
+        "max": 6.716699999999946
+      },
+      "completed": 0,
+      "research": 2635687,
+      "exposed": 0,
+      "coolers": 0,
+      "mined": 0
+    },
+    {
+      "actors": 30,
+      "foodChain": {
+        "stoves": [
+          {
+            "kind": "fueled-stove",
+            "id": 12721,
+            "completed": 4,
+            "powered": false,
+            "fuelBurned": 2432
+          },
+          {
+            "kind": "electric-stove",
+            "id": 12735,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "fueled-stove",
+            "id": 12750,
+            "completed": 4,
+            "powered": false,
+            "fuelBurned": 2448
+          },
+          {
+            "kind": "electric-stove",
+            "id": 12764,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "fueled-stove",
+            "id": 12779,
+            "completed": 4,
+            "powered": false,
+            "fuelBurned": 2432
+          }
+        ],
+        "butcherTables": 5,
+        "butchered": 10,
+        "meatProduced": 311,
+        "food": {
+          "potato": 110,
+          "corn": 220,
+          "meals": 15,
+          "meat": 311
+        },
+        "crops": [
+          {
+            "kind": "potato",
+            "originalRemaining": 0,
+            "resown": 10
+          },
+          {
+            "kind": "corn",
+            "originalRemaining": 0,
+            "resown": 10
+          }
+        ],
+        "growers": [
+          {
+            "id": 12427,
+            "malnutrition": 141691212,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12433,
+            "malnutrition": 142652399,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12439,
+            "malnutrition": 136859955,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12445,
+            "malnutrition": 142351608,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12451,
+            "malnutrition": 135157757,
+            "food": 73.99999999999594
+          }
+        ],
+        "butcherFood": [
+          90.18666666666513,
+          86.18666666666451,
+          88.74666666666491,
+          91.17333333333195,
+          86.3733333333312
+        ]
+      },
+      "infected": 0,
+      "treatedInfections": 0,
+      "animals": 30,
+      "animalNutrition": 2.707545000000001,
+      "hunted": 0,
+      "corpses": 0,
+      "animalDead": 0,
+      "colonistInjured": 0,
+      "tickMs": {
+        "n": 650,
+        "p50": 3.274999999999636,
+        "p95": 14.198300000000017,
+        "p99": 24.742899999999736,
+        "max": 33.57860000000028
+      },
+      "steadyTickMs": {
+        "n": 630,
+        "p50": 3.2237999999997555,
+        "p95": 12.4683,
+        "p99": 20.620600000000195,
+        "max": 28.148099999999886
+      },
+      "snapshotMs": {
+        "n": 130,
+        "p50": 3.7597999999998137,
+        "p95": 6.415099999999711,
+        "p99": 9.548099999999977,
+        "max": 9.773899999999685
+      },
+      "completed": 0,
+      "research": 26979243,
+      "exposed": 0,
+      "coolers": 0,
+      "mined": 40
+    },
+    {
+      "actors": 100,
+      "foodChain": {
+        "stoves": [
+          {
+            "kind": "fueled-stove",
+            "id": 13410,
+            "completed": 4,
+            "powered": false,
+            "fuelBurned": 2432
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13424,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "fueled-stove",
+            "id": 13439,
+            "completed": 4,
+            "powered": false,
+            "fuelBurned": 2816
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13453,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "fueled-stove",
+            "id": 13468,
+            "completed": 4,
+            "powered": false,
+            "fuelBurned": 2432
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13482,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "fueled-stove",
+            "id": 13497,
+            "completed": 4,
+            "powered": false,
+            "fuelBurned": 2768
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13511,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "fueled-stove",
+            "id": 13526,
+            "completed": 4,
+            "powered": false,
+            "fuelBurned": 2432
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13540,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "fueled-stove",
+            "id": 13555,
+            "completed": 4,
+            "powered": false,
+            "fuelBurned": 2432
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13569,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "fueled-stove",
+            "id": 13584,
+            "completed": 3,
+            "powered": false,
+            "fuelBurned": 2272
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13598,
+            "completed": 2,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "fueled-stove",
+            "id": 13613,
+            "completed": 4,
+            "powered": false,
+            "fuelBurned": 2432
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13627,
+            "completed": 3,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "fueled-stove",
+            "id": 13642,
+            "completed": 4,
+            "powered": false,
+            "fuelBurned": 2432
+          }
+        ],
+        "butcherTables": 16,
+        "butchered": 32,
+        "meatProduced": 994,
+        "food": {
+          "potato": 374,
+          "corn": 788,
+          "meals": 48,
+          "meat": 994
+        },
+        "crops": [
+          {
+            "kind": "potato",
+            "originalRemaining": 0,
+            "resown": 34
+          },
+          {
+            "kind": "corn",
+            "originalRemaining": 0,
+            "resown": 34
+          }
+        ],
+        "growers": [
+          {
+            "id": 12427,
+            "malnutrition": 141691212,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12433,
+            "malnutrition": 142652399,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12439,
+            "malnutrition": 136859955,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12445,
+            "malnutrition": 142351608,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12451,
+            "malnutrition": 135157757,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12457,
+            "malnutrition": 146364320,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12463,
+            "malnutrition": 134739023,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12469,
+            "malnutrition": 141768104,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12475,
+            "malnutrition": 135976844,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12481,
+            "malnutrition": 141060668,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12487,
+            "malnutrition": 150061376,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12493,
+            "malnutrition": 135063759,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12499,
+            "malnutrition": 135651870,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12505,
+            "malnutrition": 141276424,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12511,
+            "malnutrition": 134730165,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12517,
+            "malnutrition": 147391764,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12523,
+            "malnutrition": 132285787,
+            "food": 73.99999999999594
+          }
+        ],
+        "butcherFood": [
+          86.3733333333312,
+          89.33333333333167,
+          91.2266666666653,
+          92.82666666666555,
+          86.3733333333312,
+          89.89333333333175,
+          89.1199999999983,
+          90.77333333333189,
+          89.22666666666498,
+          88.85333333333159,
+          87.54666666666472,
+          90.8533333333319,
+          87.70666666666474,
+          89.65333333333172,
+          91.59999999999869,
+          89.70666666666506
+        ]
+      },
+      "infected": 0,
+      "treatedInfections": 0,
+      "animals": 100,
+      "animalNutrition": 9.029415,
+      "hunted": 0,
+      "corpses": 0,
+      "animalDead": 0,
+      "colonistInjured": 0,
+      "tickMs": {
+        "n": 650,
+        "p50": 17.782500000001164,
+        "p95": 44.12950000000092,
+        "p99": 68.12850000000071,
+        "max": 113.84339999999975
+      },
+      "steadyTickMs": {
+        "n": 630,
+        "p50": 17.586999999999534,
+        "p95": 38.75909999999931,
+        "p99": 68.12850000000071,
+        "max": 113.84339999999975
+      },
+      "snapshotMs": {
+        "n": 130,
+        "p50": 4.070599999999104,
+        "p95": 7.547499999998763,
+        "p99": 11.397999999999229,
+        "max": 11.947299999999814
+      },
+      "completed": 0,
+      "research": 88848967,
+      "exposed": 0,
+      "coolers": 0,
+      "mined": 132
+    }
+  ]
+}

@@ -35,7 +35,7 @@ export function strikeLivingTarget(w:World,attacker:LivingTarget,target:LivingTa
   if(outcome==='hit'){
     const damage=Math.max(1,tool.damage*(.8+random()*.4));
     w.rng=randomState.rng;
-    if(animal)advanceAnimalHealth(w,target);else if(target.health&&target.health.tick<w.tick)updatePawnHealth(w,target);
+    if(animal)advanceAnimalHealth(w,target);else if(!target.health||target.health.tick<w.tick)updatePawnHealth(w,target);
     randomState.rng=w.rng;
     const protection=animal?undefined:apparelProtection(w,target,tool.kind==='bite'?'sharp':'blunt',tool.penetration,random);
     const record=target.health??{...createMedicalRecord(w.tick),...(animal?{body:'hare' as const}:{})};

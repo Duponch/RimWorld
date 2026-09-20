@@ -9,7 +9,7 @@ import type { Cell, MaterialPile, Pawn, World } from './types.ts';
  * -82 optimality; survival packs have a -5 definition offset. The +12 bonus
  * for imminent spoilage is applied to physical piles; traits remain open. */
 const FOOD_OFFSETS: Readonly<Partial<Record<ItemId, number>>> = {
-  wood: -Infinity, 'simple-meal': 16, berries: 0, rice: -82, 'hare-meat': -82, 'survival-meal': -5, 'legacy-portion': 0,
+  wood: -Infinity, 'simple-meal': 16, berries: 0, rice: -82, potato: -82, corn: -82, 'hare-meat': -82, 'survival-meal': -5, 'legacy-portion': 0,
 };
 export function foodScore(item: ItemId, distance: number): number {
   return (FOOD_OFFSETS[item] ?? -Infinity) - distance;

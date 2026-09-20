@@ -1,13 +1,14 @@
+import { isFoodWorkstation } from './food-workstations.ts';
 import { groundOccupancyAllows } from './occupancy.ts';
 import { PRODUCTION_RECIPES, blockFor, type ProductionRecipe, type StoneIngredient } from './production-recipes.ts';
 import { canStandAt } from './furniture-travel.ts';
-import { footprintCells } from './definitions.ts';
+import { footprintCells, footprintContains } from './definitions.ts';
 import { isCookingOrder } from './order-types.ts';
 import type { CookingBill, BillSettings } from './cooking-types.ts';
 import type { Cell, Structure, World } from './types.ts';
 
 export const COOK_TICKS=60; // 300 reference work / 10 local ticks × campfire factor 2.
-export const INGREDIENT_UNITS=10; // 0.5 nutrition, for the two currently supported raw foods.
+export const INGREDIENT_UNITS=10; // 0.5 nutrition for the supported raw ingredients.
 export function newCookingBill(id:number,recipe:ProductionRecipe='simple-meal'):CookingBill {
   return {id,recipe,mode:'times',target:1,suspended:false,filters:Object.fromEntries(PRODUCTION_RECIPES[recipe].inputs.map(i=>[i,true])),radius:999,destination:'stockpile'};
 }
@@ -15,7 +16,7 @@ export function validBillSettings(value:unknown,recipe:ProductionRecipe='simple-
   if(!value||typeof value!=='object')return false;
   const v=value as BillSettings;
   return ['times','until','forever'].includes(v.mode)&&Number.isSafeInteger(v.target)&&v.target>=0&&v.target<=9999
-    &&typeof v.suspended==='boolean'&&!!v.filters&&PRODUCTION_RECIPES[recipe].inputs.every(i=>typeof v.filters[i]==='boolean'||i==='hare-meat'&&v.filters[i]===undefined)
+    &&typeof v.suspended==='boolean'&&!!v.filters&&PRODUCTION_RECIPES[recipe].inputs.every(i=>typeof v.filters[i]==='boolean'||['hare-meat','potato','corn'].includes(i)&&v.filters[i]===undefined)
     &&Number.isFinite(v.radius)&&v.radius>=0&&v.radius<=999&&['stockpile','drop'].includes(v.destination);
 }
 /** Reference resource counter includes stored items and current task cargo.
@@ -46,8 +47,14 @@ export function cookingPlaceFree(world:World,cell:Cell):boolean {
     &&![...world.jobs,...world.structures].some(s=>(s.kind==='wall'||s.kind==='cooler'||s.kind==='table')&&footprintCells(s).some(c=>c.x===cell.x&&c.z===cell.z));
 }
 
-/** Chunk staging may use an Item workbench surface, but never the worker's cell. */
-export function ingredientPlaceFree(world:World,cell:Cell,spot:Cell,recipe:ProductionRecipe):boolean {
+export const ingredientWithinReach=(cell:Cell,spot:Cell,station?:Structure):boolean=>station&&isFoodWorkstation(station.kind)?footprintContains(station,cell):Math.abs(cell.x-spot.x)+Math.abs(cell.z-spot.z)<=1;
+/** New food benches stage on their three physical surface cells. Historical
+ * stations keep their existing adjacent staging and continuation unchanged. */
+export function ingredientPlaceFree(world:World,cell:Cell,spot:Cell,recipe:ProductionRecipe,station?:Structure):boolean {
+  if(station&&isFoodWorkstation(station.kind))return ingredientWithinReach(cell,spot,station)
+    &&cell.x>=0&&cell.z>=0&&cell.x<world.width&&cell.z<world.height
+    &&!['water','rock'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain)
+    &&!world.resources.some(r=>r.x===cell.x&&r.z===cell.z)&&groundOccupancyAllows(world,cell);
   if(recipe==='simple-meal')return cookingPlaceFree(world,cell);
   return (cell.x!==spot.x||cell.z!==spot.z)&&Math.abs(cell.x-spot.x)+Math.abs(cell.z-spot.z)<=1
     &&cell.x>=0&&cell.z>=0&&cell.x<world.width&&cell.z<world.height

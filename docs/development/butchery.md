@@ -1,5 +1,7 @@
 # Boucherie physique et Cuisine — V79
 
+V84 ajoute la [table de boucherie construite](food-workstations.md), trois cases et 95 bois : rendement de poste 100 %, mêmes 450 ticks Core de préparation. L'emplacement gratuit conserve ses 70 %. La propreté d'objet, les salissures et l'intoxication ne sont pas encore actives.
+
 Le lot relie une dépouille réelle à la viande, au cuir puis au repas simple. La [recherche fraîche](../research/hunting-reference.md) reprend les contrats SYS-062..064 et SYS-121..125 du corpus, les pages actuelles de statistiques, le miroir Core daté et les écarts de version. Ce premier contenu n'implémente ni élevage ni catalogue animal complet.
 
 ## Poste, ingrédients et conservation

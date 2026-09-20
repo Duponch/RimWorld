@@ -1,3 +1,4 @@
+import { malnutritionStage } from './malnutrition.ts';
 import { TRAITS } from './traits.ts';
 import { colonistMoodOffset } from './game-profile.ts';
 import { APPAREL } from './apparel-rules.ts';
@@ -13,7 +14,8 @@ export interface MoodThought {
   readonly kind:'situation'|'memory';readonly description:string;readonly expiresAt?:number;
 }
 const situation=(id:string,label:string,offset:number,description:string):MoodThought=>Object.freeze({id,label,offset,description,kind:'situation'});
-const hunger=[situation('hungry','Faim',-6,'Nutrition sous 24 %.'),situation('ravenous','Très faim',-12,'Nutrition sous 12 %.'),situation('starving','Affamé',-20,'Nutrition épuisée. Les stades médicaux de malnutrition ne sont pas encore simulés.')];
+const hunger=[situation('hungry','Faim',-6,'Nutrition sous 24 %.'),situation('ravenous','Très faim',-12,'Nutrition sous 12 %.'),situation('starving','Affamé',-20,'Nutrition épuisée.')];
+const starvation=['Malnutrition débutante','Malnutrition légère','Malnutrition modérée','Famine sévère','Famine extrême'].map((label,index)=>situation(`starvation-${index}`,label,-20-index*6,'Nutrition épuisée et malnutrition progressive.'));
 const fatigue=[situation('drowsy','Somnolent',-6,'Repos sous 28 %.'),situation('tired','Très fatigué',-12,'Repos sous 14 %.'),situation('exhausted','Épuisé',-18,'Repos sous 1 %.')];
 const comforts=[situation('uncomfortable','Inconfortable',-3,'Confort sous 10 %.'),situation('comfortable','Confortable',4,'Confort d’au moins 60 %.'),situation('quite-comfortable','Très confortable',6,'Confort d’au moins 70 %.'),situation('extremely-comfortable','Extrêmement confortable',8,'Confort d’au moins 80 %.'),situation('luxurious','Confort luxueux',10,'Confort d’au moins 90 %.')];
 const leisure=[situation('recreation-starved','Privé de loisirs',-20,'Loisirs sous 1 %.'),situation('recreation-deprived','Manque important de loisirs',-10,'Loisirs sous 15 %.'),situation('recreation-low','Manque de loisirs',-5,'Loisirs sous 30 %.'),situation('recreation-high','Loisirs satisfaisants',5,'Loisirs d’au moins 70 %.'),situation('recreation-full','Loisirs pleinement satisfaits',10,'Loisirs d’au moins 85 %.')];
@@ -39,7 +41,7 @@ export function moodThoughts(world:World,pawn:Pawn):readonly MoodThought[] {
   const difficultyMood=colonistMoodOffset(world,pawn);
   if(difficultyMood)thoughts.push(situation('difficulty-mood','Récit d’aventure',difficultyMood,'Bonus d’humeur du niveau d’aventure choisi.'));
   for(const id of pawn.traits??[]){const trait=TRAITS[id];if(trait.mood)thoughts.push({id:`trait-${id}`,label:trait.label,offset:trait.mood,kind:'situation',description:trait.description});}
-  for(const t of [hunger[hungerStage(pawn.hunger)],fatigue[restStage(pawn.rest)],comforts[comfortStage(pawn.comfort)],leisure[joyStage(pawn.recreation.level)],pains[painStage(pawn.health?medicalPain(pawn.health):0)]])if(t)thoughts.push(t);
+  for(const t of [pawn.hunger<=0?starvation[Math.max(0,malnutritionStage(pawn.health?.malnutrition)-1)]:hunger[hungerStage(pawn.hunger)],fatigue[restStage(pawn.rest)],comforts[comfortStage(pawn.comfort)],leisure[joyStage(pawn.recreation.level)],pains[painStage(pawn.health?medicalPain(pawn.health):0)]])if(t)thoughts.push(t);
   let condition=1;
   for(const pile of world.piles)if(pile.owner.type==='apparel'&&pile.owner.pawnId===pawn.id)condition=Math.min(condition,pile.apparel!.hitPoints/APPAREL[pile.item as keyof typeof APPAREL].hitPoints);
   if(condition<.5)thoughts.push(apparel[condition<.2?1:0]!);

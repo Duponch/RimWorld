@@ -12,5 +12,9 @@ export function fireControls(fire: Structure, send: (command: Command) => void):
 }
 export function updateFireControls(root: ParentNode, fire: Structure): void {
   const label=root.querySelector('#fire-fuel');
+  if(label&&fire.fuel&&fire.kind==='fueled-stove'){
+    label.textContent=`${fire.fuel.ticks?'Alimentée':'Vide'} · ${(fire.fuel.ticks/WOOD_BURN_TICKS).toFixed(1)} / ${fuelLimit(fire.kind)/WOOD_BURN_TICKS} bois · 160 bois/jour de préparation · aucune consommation au repos`;
+    return;
+  }
   if(label&&fire.fuel)label.textContent=`${fire.kind==='passive-cooler'||fire.kind==='wood-generator'?(fire.fuel.ticks?'Alimenté':'Vide'):(fire.fuel.ticks?'Allumé':'Éteint')} · ${(fire.fuel.ticks/WOOD_BURN_TICKS).toFixed(1)} / ${fuelLimit(fire.kind)/WOOD_BURN_TICKS} bois · ${fire.kind==='wood-generator'?22:10} bois/jour${fire.kind==='passive-cooler'?' · refroidit au-dessus de 17 °C, ne réfrigère pas les aliments':''}`;
 }

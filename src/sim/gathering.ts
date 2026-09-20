@@ -1,6 +1,7 @@
 import { planGroundPlacement } from './ground-placement.ts';
 import { addGroundMaterial } from './materials.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
+import { cropProduct } from './crops.ts';
 import { isCrop, AFTER_HARVEST_GROWTH, harvestable, harvestRoll } from './plants.ts';
 import type { Resource, World } from './types.ts';
 
@@ -10,7 +11,7 @@ export function gatherResource(world: World, resource: Resource, kind:'chop'|'ha
   if(kind==='harvest'&&!harvestable(world,resource))return null;
   const roll=kind==='chop'?{quantity:resource.amount,rng:world.rng}:harvestRoll(world,resource);
   if(roll.quantity>0) {
-    const item=kind==='chop'?'wood':resource.kind==='cotton'?'cloth':resource.kind==='rice'?'rice':world.foodRules==='legacy'?'legacy-portion':'berries';
+    const item=kind==='chop'?'wood':isCrop(resource)?cropProduct(resource.kind):world.foodRules==='legacy'?'legacy-portion':'berries';
     const placements=planGroundPlacement(world,roll.quantity,resource,item);
     if(!placements||world.piles.length+placements.length>32768||!Number.isSafeInteger(world.nextId+placements.length))return null;
     addGroundMaterial(world,ITEM_DEFINITIONS[item].kind,roll.quantity,resource,item);

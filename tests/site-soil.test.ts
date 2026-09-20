@@ -1,3 +1,4 @@
+import { withoutFoodCrops } from './scenarios/legacy-skills';
 import { expect,test } from 'vitest';
 import { applyCommand,createWorld,deserializeWorld,serializeWorld,stepWorld,validateWorld } from '../src/sim/index.ts';
 import { refreshStock } from '../src/sim/materials.ts';
@@ -31,7 +32,7 @@ test('site soils support physical sowing and harvest, distinct growth, strict ol
   expect(validateWorld(w)).toEqual([]);
   const a=deserializeWorld(duringSow),b=deserializeWorld(duringSow);stepWorld(a,100);stepWorld(b,100);
   expect(serializeWorld(a)).toBe(serializeWorld(b));
-  const old=JSON.parse(duringSow);old.schemaVersion=82;
+  const old=withoutFoodCrops(JSON.parse(duringSow));old.schemaVersion=82;
   expect(()=>deserializeWorld(JSON.stringify(old))).toThrow(/terrain/i);
 
   // A controlled common sowing instant isolates fertility from travel time.

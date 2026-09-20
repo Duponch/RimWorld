@@ -32,11 +32,11 @@ export class RoomInspection {
     if(properties&&properties.role!=='none')text+=` ${ROOM_ROLE_LABEL[properties.role]}.`;
     text+=` Lumière : ${Math.round(environment.lightAt(cell)*100)} %.`;
     text+=` Vitesse de travail et de marche : ${Math.round(environment.speedAt(cell)*100)} % (effet de la lumière sur cette case).`;
-    const station=world.structures.find(s=>(s.kind==='stonecutter'||s.kind==='campfire')&&footprintCells(s).some(c=>c.x===cell.x&&c.z===cell.z));
+    const station=world.structures.find(s=>(s.kind==='stonecutter'||s.kind==='campfire'||s.kind==='fueled-stove'||s.kind==='electric-stove'||s.kind==='butcher-table')&&footprintCells(s).some(c=>c.x===cell.x&&c.z===cell.z));
     if(station){const f=environment.production(station,cookingSpot(station));
       text+=` Production : ${Math.round(f.total*100)} % · lumière à la place ${Math.round(f.light*100)} %`;
       if(f.outdoors<1)text+=' · extérieur ×80 %';
-      if(f.roomRole<1)text+=' · hors atelier ×80 %';
+      if(f.roomRole<1)text+=station.kind==='fueled-stove'||station.kind==='electric-stove'?' · hors cuisine ×80 %':' · hors atelier ×80 %';
       if(f.station<1)text+=' · feu ×50 %';
       if(f.lighting<1)text+=` · obscurité ×${Math.round(f.lighting*100)} %`;
       text+='.';

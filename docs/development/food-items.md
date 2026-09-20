@@ -8,6 +8,9 @@ Corpus : chapitres 4/10/11/14, CAT-005/011/015, SYS-076..078, TEST-076..078, CON
 |---|---:|---:|---:|
 | Baies | 0,05 | 75 | 75 |
 | Riz cru | 0,05 | 75 | 75 |
+| Pomme de terre | 0,05 | 75 | 75 |
+| Maïs | 0,05 | 75 | 75 |
+| Viande de lièvre | 0,05 | 75 | 75 |
 | Repas de survie | 0,9 | 10 | 1 |
 | Repas simple | 0,9 | 10 | 1 |
 | Portion historique | 0,35 | 75 | 1 |
@@ -36,7 +39,7 @@ Les schémas V1–V4 sont validés avant migration. `foodRules: legacy` conserve
 
 Le [schéma courant](simulation.md#sauvegardes) valide les étapes antérieures avant migration. Identité d’objet inconnue, catégorie incohérente, capacité dépassée, quantité d’ingestion invalide ou engagements contradictoires provoquent un refus. Le worker n’adopte jamais une sauvegarde invalide.
 
-La première [recette de cuisine](cooking.md) transforme dix baies/riz en un repas simple. Les [régimes V13](food-policies.md) filtrent les nouvelles portions avant classement. Intoxications, filtres de provenance, traits, compétences, repas personnel de secours et collecte de plusieurs piles pour un seul repas restent absents. Le classement présent couvre seulement les aliments et le profil ci-dessus.
+La [recette de cuisine](cooking.md) transforme dix unités admises de baies, riz, viande de lièvre, pommes de terre ou maïs en un repas simple. Les [cultures V84](food-crops.md) utilisent les mêmes portions, pensées d'aliment cru et régimes ; un filtre absent dans une ancienne politique reste un refus. Les [régimes V13](food-policies.md) filtrent les nouvelles portions avant classement. Intoxications, filtres de provenance, préférences individuelles complètes, repas personnel de secours et collecte de plusieurs piles pour un seul repas restent absents. Le classement présent couvre seulement les aliments et le profil ci-dessus.
 
 ## Validation
 

@@ -1,9 +1,31 @@
 import * as THREE from 'three/webgpu';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { plantGrowth } from '../sim/plants';
+import { CROP_KINDS, type CropKind } from '../sim/crops';
 import type { World } from '../sim/types';
 
 /** Dedicated resident instancing: sowing never rebuilds forest/rock geometry. */
+function cropGeometry(kind:CropKind):THREE.BufferGeometry {
+  let parts:THREE.BufferGeometry[];
+  if(kind==='corn') {
+    const stalk=new THREE.CylinderGeometry(.045,.065,1.5,5).translate(0,.75,0);
+    const leaves=[-.25,.25].map((x,i)=>new THREE.ConeGeometry(.16,.7,3).rotateZ(x<0?-.7:.7).translate(x,.68+i*.34,0));
+    const tassel=new THREE.ConeGeometry(.1,.28,4).translate(0,1.64,0);
+    parts=[stalk,...leaves,tassel];
+  } else if(kind==='potato') {
+    parts=[[-.2,.1],[.2,.1],[0,-.2],[0,.25]].map(([x,z],i)=>new THREE.OctahedronGeometry(.25).scale(1,.6,1).translate(x!,.18+(i%2)*.11,z!));
+  } else {
+    // Keep both existing silhouettes and their triangle counts unchanged.
+    parts=[-.22,0,.22].map((x,i)=>kind==='rice'
+      ?new THREE.ConeGeometry(.11,.8,3).translate(x,.4,(i%2)*.22-.1)
+      :new THREE.OctahedronGeometry(.22).scale(1,1.25,1).translate(x,.36+(i%2)*.15,(i%2)*.26-.13));
+  }
+  const geometry=mergeGeometries(parts);
+  parts.forEach(g=>g.dispose());
+  if(!geometry)throw new Error(`Could not assemble crop geometry: ${kind}`);
+  return geometry;
+}
+
 class CropBatch {
   private mesh: THREE.InstancedMesh;
   private readonly geometry: THREE.BufferGeometry;
@@ -14,14 +36,11 @@ class CropBatch {
   private readonly color = new THREE.Color();
   private readonly green = new THREE.Color(0x80a24a);
   private readonly ripe = new THREE.Color(0xcfb665);
-  constructor(private readonly group:THREE.Group,private readonly kind:'rice'|'cotton',private readonly material: THREE.Material) {
-    const shoots = [-.22, 0, .22].map((x, i) => kind==='rice'
-      ?new THREE.ConeGeometry(.11, .8, 3).translate(x, .4, (i % 2) * .22 - .1)
-      :new THREE.OctahedronGeometry(.22).scale(1,1.25,1).translate(x, .36+(i%2)*.15, (i%2)*.26-.13));
+  constructor(private readonly group:THREE.Group,private readonly kind:CropKind,private readonly material: THREE.Material) {
     if(kind==='cotton')this.ripe.setHex(0xf0ead7);
-    this.geometry = mergeGeometries(shoots)!;
+    if(kind==='potato')this.ripe.setHex(0x83964a);
+    this.geometry = cropGeometry(kind);
     this.geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(this.geometry.getAttribute('position').count * 3).fill(1), 3));
-    shoots.forEach(g => g.dispose());
     this.mesh = this.createMesh(128); this.group.add(this.mesh);
   }
   private createMesh(capacity: number): THREE.InstancedMesh {
@@ -81,7 +100,7 @@ class CropBatch {
 export class CropLayer {
   readonly group=new THREE.Group();
   private readonly batches:CropBatch[];
-  constructor(material:THREE.Material){this.batches=[new CropBatch(this.group,'rice',material),new CropBatch(this.group,'cotton',material)];}
+  constructor(material:THREE.Material){this.batches=CROP_KINDS.map(kind=>new CropBatch(this.group,kind,material));}
   prepareForCompile():()=>void {const restore=this.batches.map(b=>b.prepareForCompile());return()=>restore.forEach(f=>f());}
   update(world:World,reset:boolean):void {for(const batch of this.batches)batch.update(world,reset);}
   dispose():void {for(const batch of this.batches)batch.dispose();}

@@ -10,7 +10,7 @@ Voir la [recherche fraîcheur](../research/food-preservation-reference.md) pour 
 
 ## État et transitions
 
-`food-preservation.ts` définit les durées : baies 14 jours, riz 40 jours, repas simple 4 jours. `pile.rot = { progress, atTick }` conserve l’âge thermique au dernier point d’ancrage. V38 ajoute un taux local sauvegardé, nul au gel, linéaire de 0 à 10 °C et plafonné à 1 ; son absence conserve le taux historique 1. Voir le [contrat thermique](temperature.md). Les rations de survie, portions historiques et bois n’ont pas ce champ. Le calcul est indépendant de la lumière rendue, de la vitesse choisie et des FPS.
+`food-preservation.ts` définit les durées : baies 14 jours, riz 40 jours, pommes de terre 30 jours, maïs 60 jours, repas simple 4 jours. Les [cultures V84](food-crops.md) conservent les mêmes transferts et pertes thermiques. `pile.rot = { progress, atTick }` conserve l’âge thermique au dernier point d’ancrage. V38 ajoute un taux local sauvegardé, nul au gel, linéaire de 0 à 10 °C et plafonné à 1 ; son absence conserve le taux historique 1. Voir le [contrat thermique](temperature.md). Les rations de survie, portions historiques et bois n’ont pas ce champ. Le calcul est indépendant de la lumière rendue, de la vitesse choisie et des FPS.
 
 Une récolte démarre fraîche. Séparer une pile copie son âge ; changer de propriétaire le conserve. Fusionner additionne les âges pondérés par les quantités réellement transférées avant de modifier la quantité cible. Cuire consomme les ingrédients vivants et crée un nouveau repas frais. Aucun transport, annulation, dépôt ou rechargement ne réinitialise une denrée existante.
 

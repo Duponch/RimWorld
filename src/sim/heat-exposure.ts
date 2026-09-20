@@ -11,7 +11,7 @@ export function advanceHeatExposure(w:World,p:Pawn,temperature:()=>number):void 
   const air=temperature(),range=comfortableTemperature(w,p),before=p.health?.heatstroke??0,after=nextHeatSeverity(before,air,range.max);
   const coldBefore=p.health?.hypothermia??0,coldAfter=nextColdSeverity(coldBefore,air,range.min);
   if(after===before&&coldAfter===coldBefore)return;
-  if(p.health&&p.health.tick<w.tick)updatePawnHealth(w,p);
+  if(!p.health||p.health.tick<w.tick)updatePawnHealth(w,p);
   if(p.health?.death)return;
   p.health??=createMedicalRecord(w.tick);
   if(after)p.health.heatstroke=after;else delete p.health.heatstroke;

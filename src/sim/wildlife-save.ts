@@ -26,7 +26,7 @@ export function validateWildlife(w:World,version:number,ids:Set<number>):string[
     if(ids.has(a.id))errors.push('Duplicate wildlife identity.');ids.add(a.id);
     if(['water','rock'].includes(w.tiles[a.z*w.width+a.x]!.terrain)||w.structures.some(s=>(s.kind==='wall'||s.kind==='cooler')&&s.x===a.x&&s.z===a.z))errors.push('Wildlife inside solid terrain.');
     if(a.health!==undefined){
-      if(validateMedicalRecord(a.health,true,true,false,false,true,version>=79,version>=81)){errors.push('Invalid animal medical record.');continue;}
+      if(validateMedicalRecord(a.health,true,true,false,false,true,version>=79,version>=81,version>=84)){errors.push('Invalid animal medical record.');continue;}
       if(a.health.death?a.health.tick>w.tick:a.health.tick!==w.tick)errors.push('Invalid animal medical clock.');
       const status=medicalStatus(a.health);if(status==='mobile'?a.state==='dead'||a.state==='downed':a.state!==status)errors.push('Invalid animal medical state.');
     } else if(a.state==='dead'||a.state==='downed')errors.push('Animal stopped without health record.');

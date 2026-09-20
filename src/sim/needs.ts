@@ -1,3 +1,4 @@
+import { malnutritionModifiers } from './malnutrition.ts';
 import { resetTactics } from './tactics-state.ts';
 import type { Reachability } from './pathfinding.ts';
 import { interruptWork,retryInterruptedCargo } from './interrupted-cargo.ts';
@@ -100,7 +101,7 @@ export function processNeeds(world: World, pawn: Pawn, context: NeedContext): bo
 }
 
 export function updateNeeds(world: World, pawn: Pawn,body?:import('./body-capacities.ts').BodyAssessment): void {
-  pawn.hunger = Math.max(0, pawn.hunger - (world.foodRules === 'legacy' ? 0.015 : HUNGER_PER_TICK * adultHungerFactor(pawn.hunger)));
+  pawn.hunger = Math.max(0, pawn.hunger - (world.foodRules === 'legacy' ? 0.015 : HUNGER_PER_TICK * adultHungerFactor(pawn.hunger)) * malnutritionModifiers(pawn.health?.malnutrition).hungerFactor);
   updateRest(world, pawn);
   updateRecreation(pawn,body);
   if (pawn.needCooldown > 0) pawn.needCooldown--;

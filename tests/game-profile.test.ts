@@ -1,3 +1,4 @@
+import { withoutFoodCrops } from './scenarios/legacy-skills';
 import { expect,test } from 'vitest';
 import { applyCommand,stepWorld } from '../src/sim/engine';
 import { createScenarioWorld } from '../src/sim/new-game';
@@ -109,7 +110,7 @@ test('Cassandra opportunities use fixed windows, survive saves and skip impossib
 
 test('V81 migration is strictly neutral and rejects future profile/calendar injection; malformed current choices cannot enter a session',()=>{
   const world=createScenarioWorld(42,32,'survivors');stepWorld(world,35);
-  const old={...structuredClone(world),schemaVersion:81},restored=deserializeWorld(JSON.stringify(old));
+  const old=withoutFoodCrops({...structuredClone(world),schemaVersion:81}),restored=deserializeWorld(JSON.stringify(old));
   expect(restored).toEqual({...old,schemaVersion:SCHEMA_VERSION});expect(restored.gameProfile).toBeUndefined();
   for(const mutate of [(w:any)=>w.gameProfile=crashlandedProfile(),(w:any)=>w.scenario.id='crashlanded',(w:any)=>w.raids.profile='cassandra-raids-v1']) {
     const bad=structuredClone(old);mutate(bad);expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(/version 81/);

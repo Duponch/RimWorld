@@ -9,14 +9,15 @@ export function validateFoodPolicies(world: World, version: number): string[] {
   if (!Array.isArray(world.foodPolicies) || world.foodPolicies.length < 1 || world.foodPolicies.length > MAX_FOOD_POLICIES) return [...errors, 'Invalid food policies.'];
   for (const p of world.foodPolicies) {
     if (!p || typeof p !== 'object' || !Number.isSafeInteger(p.id) || p.id < 1 || p.id >= world.nextFoodPolicyId || ids.has(p.id)
-      || !validPolicyName(p.name) || !validAllowedFood(p.allowed) || version<79&&p.allowed.includes('hare-meat')) {errors.push('Invalid food policy.');continue;}
+      || !validPolicyName(p.name) || !validAllowedFood(p.allowed) || version<79&&p.allowed.includes('hare-meat')
+      || version<84&&(p.allowed.includes('potato')||p.allowed.includes('corn'))) {errors.push('Invalid food policy.');continue;}
     ids.add(p.id);
   }
   if (world.pawns.some(p => !ids.has(p.foodPolicyId))) errors.push('Pawn food policy missing.');
   return errors;
 }
 export function initializeFoodPolicies(world: World): void {
-  (world as unknown as {schemaVersion:number}).schemaVersion = 13; world.foodPolicies = initialFoodPolicies(false); world.nextFoodPolicyId = 5;
+  (world as unknown as {schemaVersion:number}).schemaVersion = 13; world.foodPolicies = initialFoodPolicies(false,false); world.nextFoodPolicyId = 5;
   for (const pawn of world.pawns) pawn.foodPolicyId = 1;
   // Preserve all existing jobs, piles, routes, need/food profiles and entity IDs.
 }

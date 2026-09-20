@@ -1,3 +1,4 @@
+import { MALNUTRITION_UNIT,MALNUTRITION_LABELS,malnutritionStage } from '../sim/malnutrition';
 import { comfortableTemperature,HEAT_UNIT,HEAT_LABELS,heatStage } from '../sim/heat-rules';
 import { TemperatureView } from '../sim/temperature';
 import { BODY_PARTS } from '../sim/body-definition';
@@ -11,7 +12,7 @@ import { createInfectionInspection,updateInfectionInspection } from './infection
 export function createHealthInspection(panel:HTMLElement,selected?:()=>Pawn|undefined,send?:(c:Command)=>void):void {
   const details=document.createElement('details');details.id='health-inspection';details.open=true;
   const summary=document.createElement('summary');summary.textContent='Santé';details.append(summary);
-  for(const name of ['status','capacities','thermal','stagger','injuries']) {
+  for(const name of ['status','capacities','malnutrition','thermal','stagger','injuries']) {
     const p=document.createElement('p');p.dataset.health=name;details.append(p);
     if(name==='capacities')createInfectionInspection(details);
   }
@@ -32,6 +33,7 @@ export function updateHealthInspection(panel:HTMLElement,pawn:Pawn,world?:World)
   const details=panel.querySelector('#health-inspection');if(!details)return;
   const health=pawn.health,c=pawnBody(pawn).capacities;
   updateInfectionInspection(details,health);
+  details.querySelector('[data-health="malnutrition"]')!.textContent=health?.malnutrition?`Malnutrition ${MALNUTRITION_LABELS[malnutritionStage(health.malnutrition)]} : ${(health.malnutrition/MALNUTRITION_UNIT*100).toFixed(1)} %. ${pawn.state==='dead'?'':pawn.hunger<=0?'S’aggrave sans nourriture.':'Récupère progressivement après le repas.'}`:'';
   const range=world&&comfortableTemperature(world,pawn),stage=heatStage(health?.heatstroke);
   details.querySelector('[data-health="thermal"]')!.textContent=(range?`Air ${new TemperatureView(world!).at(world!,pawn).toFixed(1)} °C · Confort ${range.min.toFixed(1)} à ${range.max.toFixed(1)} °C. `:'')+(stage?`Coup de chaleur ${HEAT_LABELS[stage]} : ${(100*health!.heatstroke!/HEAT_UNIT).toFixed(1)} %. `:'')+(heatStage(health?.hypothermia)?`Hypothermie ${HEAT_LABELS[heatStage(health?.hypothermia)]} : ${(100*health!.hypothermia!/HEAT_UNIT).toFixed(1)} %. `:'')+(pawn.heatRefuge?'Cherche ou attend dans un refuge thermique.':'');
   details.querySelector('[data-health="stagger"]')!.textContent=pawn.stagger?'Ralenti temporairement par un impact de balle.':'';

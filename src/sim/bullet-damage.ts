@@ -12,7 +12,7 @@ export function damageUnarmoredPawnWithBullet(world:World,pawn:Pawn,hit:Unarmore
   if(world.schemaVersion<54)throw new Error('Bullet impact requires schema 54');
   if(!world.pawns.includes(pawn))throw new Error('Impact target is not in this world');
   if(pawn.state==='dead'||!hit.damage)return null;
-  if(pawn.health&&pawn.health.tick<world.tick)updatePawnHealth(world,pawn);
+  if(!pawn.health||pawn.health.tick<world.tick)updatePawnHealth(world,pawn);
   if(pawn.health?.death)return null;
   const randomState={rng:world.rng};
   // The local PRNG is committed with the record; a failed resolver cannot

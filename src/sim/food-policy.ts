@@ -12,8 +12,8 @@ export type FoodPolicyCommand =
   | {type: 'food-policy-delete'; policyId: number}
   | {type: 'food-policy-assign'; pawnId: number; policyId: number};
 
-export function initialFoodPolicies(includeMeat=true): FoodPolicy[] {
-  const items=includeMeat?FOOD_ITEMS:FOOD_ITEMS.filter(id=>id!=='hare-meat');
+export function initialFoodPolicies(includeMeat=true,includeFoodCrops=true): FoodPolicy[] {
+  const items=FOOD_ITEMS.filter(id=>(includeMeat||id!=='hare-meat')&&(includeFoodCrops||id!=='potato'&&id!=='corn'));
   return [
     {id: 1, name: 'Sans restriction', allowed: [...items]},
     {id: 2, name: 'Repas uniquement', allowed: ['simple-meal', 'survival-meal', 'legacy-portion']},

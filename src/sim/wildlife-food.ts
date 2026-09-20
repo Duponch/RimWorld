@@ -6,10 +6,10 @@ import { ITEM_DEFINITIONS,type ItemId } from './items.ts';
 import { reservedSource } from './materials.ts';
 
 export interface AnimalFood extends Cell { id:number;kind:'plant'|'pile';quantity:number }
-const plantNutrition={berries:.35,rice:.18,cotton:.2} as const;
+const plantNutrition={berries:.35,rice:.18,potato:.25,corn:.4,cotton:.2} as const;
 // Herbivory is an explicit content profile. New nutritious items do not silently
 // become animal food; prepared meals remain admissible under the existing rule.
-const hareFoods:ReadonlySet<ItemId>=new Set(['berries','rice','simple-meal','survival-meal','legacy-portion']);
+const hareFoods:ReadonlySet<ItemId>=new Set(['berries','rice','potato','corn','simple-meal','survival-meal','legacy-portion']);
 function unclaimedPlant(world:World,r:Resource,except:number):boolean {
   return !world.wildlife?.animals.some(a=>a.id!==except&&a.meal?.kind==='plant'&&a.meal.id===r.id)
     &&!world.jobs.some(j=>j.reservedBy!==null&&j.x===r.x&&j.z===r.z&&['harvest','cut','sow'].includes(j.kind));

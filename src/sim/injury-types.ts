@@ -25,14 +25,18 @@ export interface MedicalRecord {
   /** Whole-body heat exposure, billionths of severity; absent means none. */
   heatstroke?:number;
   hypothermia?:number;
+  /** V84: hunger damage independent of wounds, billionths of severity. */
+  malnutrition?:number;
   infections?:InfectionState;
-  death?:{tick:number;cause:'execution'|'blood-loss'|'vital-failure'|'trauma'|'heatstroke'|'hypothermia'|'downed'|'infection'};
+  death?:{tick:number;cause:'execution'|'blood-loss'|'vital-failure'|'trauma'|'heatstroke'|'hypothermia'|'downed'|'infection'|'malnutrition'};
 }
 export interface MedicalContext {
   /** Stable phase in [0,59], supplied by the owning actor. */
   phase:number;
   posture:'standing'|'ground'|'bed';
   starving:boolean;
+  /** Omitted by old isolated medical callers: no hunger condition invented. */
+  malnutritionRate?:number;
   hunger?:number; rest?:number;
   /** Actual rest, not merely incapacitated on the ground or travelling to bed. */
   restingBonus?:boolean;

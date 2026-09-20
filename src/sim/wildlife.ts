@@ -1,3 +1,4 @@
+import { malnutritionModifiers } from './malnutrition.ts';
 import { moveAnimalMelee } from './wildlife-melee.ts';
 import { captureWorldShotGrid } from './combat-world.ts';
 import { blockedCells } from './pathfinding.ts';
@@ -54,7 +55,7 @@ export function advanceWildlife(world:World):void {
     advanceAnimalHealth(world,a);
     if(a.state==='dead')continue;
     const body=animalBody(a);
-    a.food=Math.max(0,a.food-HARE.foodPerDay/6000*(a.food<HARE.nutrition*.18?.25:a.food<HARE.nutrition*.36?.5:1));
+    a.food=Math.max(0,a.food-HARE.foodPerDay/6000*malnutritionModifiers(a.health?.malnutrition).hungerFactor*(a.food<HARE.nutrition*.18?.25:a.food<HARE.nutrition*.36?.5:1));
     a.rest=Math.max(0,Math.min(1,a.rest+(a.state==='sleeping'?.0003809524*.8:-.00015833333*(a.rest<.01?.6:a.rest<.14?.3:a.rest<.28?.7:1))));
     if(a.flee&&world.tick>=a.flee.until){delete a.flee;a.path=[];if(!a.motion||a.motion.end<=world.tick)a.state='idle';}
     if(a.state==='downed'||a.motion&&a.motion.end>world.tick)continue;

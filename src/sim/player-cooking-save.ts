@@ -13,7 +13,7 @@ export function validCookingOrder(value:unknown,world:World):boolean {
     ||!integer(c.stationId,1)||!integer(c.billId,1)||!cell(c.spot)||!cell(c.actionCell)||c.phase!=='gather'||c.progress!==0||c.productId!==null||c.storageId!==null||!Array.isArray(c.ingredients)||c.ingredients.length<1||c.ingredients.length>recipe.units)return false;
   const ids=new Set<number>();let total=0;
   for(const i of c.ingredients) {
-    if(!record(i)||!integer(i.pileId,1)||!integer(i.quantity,1,recipe.units)||!(recipe.inputs.includes(i.item as ProductionIngredient)&&(world.schemaVersion>=79||i.item!=='hare-meat'&&i.item!=='hare-corpse')||isTailoring(c.recipe)&&c.ingredients.length===1&&i.item===unfinishedItem(c.recipe)&&i.quantity===1)||!['source','placed'].includes(String(i.stage))||!cell(i.cell)||!isTailoring(c.recipe)&&ids.has(Number(i.pileId))||Object.keys(i).some(k=>!['pileId','item','quantity','stage','cell'].includes(k)))return false;
+    if(!record(i)||!integer(i.pileId,1)||!integer(i.quantity,1,recipe.units)||!(recipe.inputs.includes(i.item as ProductionIngredient)&&(world.schemaVersion>=79||i.item!=='hare-meat'&&i.item!=='hare-corpse')&&(world.schemaVersion>=84||i.item!=='potato'&&i.item!=='corn')||isTailoring(c.recipe)&&c.ingredients.length===1&&i.item===unfinishedItem(c.recipe)&&i.quantity===1)||!['source','placed'].includes(String(i.stage))||!cell(i.cell)||!isTailoring(c.recipe)&&ids.has(Number(i.pileId))||Object.keys(i).some(k=>!['pileId','item','quantity','stage','cell'].includes(k)))return false;
     ids.add(Number(i.pileId));total+=Number(i.quantity);
   }
   return total===(isTailoring(c.recipe)&&c.ingredients.length===1&&c.ingredients[0].item===unfinishedItem(c.recipe)?1:recipe.units);

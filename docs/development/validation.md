@@ -1,4 +1,6 @@
-# Validation courante — V83
+# Validation courante — V84
+
+V84 : [filière alimentaire, malnutrition et progression](../history/validation-food-v84.md). 91 contrôles regroupés, parcours complet de 24 jours, UI fonctionnelle et restauration native de la colonie finale réussis. Mesures CPU/native successives avec cadrage complet ; 6× non tenu à cent colons et cent lièvres. Build, typage et documentation vérifiés. Les résultats historiques sont conservés.
 
 V83 : [site local, agriculture, ressources et première récolte](../history/validation-site-v83.md). Campagnes de contrats, douze jours naturels, UI et charges successives réussies ; limites de performance conservées. Les preuves antérieures restent historiques.
 

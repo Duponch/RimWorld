@@ -1,0 +1,1066 @@
+{
+  "first": 37500,
+  "end": 51939,
+  "calendar": {
+    "profile": "camp-heat-v1",
+    "rng": 189373424,
+    "nextAt": 233984,
+    "serial": 1,
+    "lastEnd": 51339
+  },
+  "peak": 45,
+  "exposure": 0.242881082,
+  "ate": true,
+  "slept": true,
+  "wood": 450,
+  "coolers": [
+    {
+      "material": "wood",
+      "fuel": {
+        "ticks": 9700,
+        "burned": 50300,
+        "autoRefuel": true
+      },
+      "id": 192,
+      "kind": "passive-cooler",
+      "x": 3,
+      "z": 3,
+      "orientation": 0,
+      "footprint": "standard"
+    }
+  ],
+  "samples": [
+    {
+      "tick": 1,
+      "outside": 18.01291386575876,
+      "health": [
+        {
+          "id": 49,
+          "state": "moving",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "moving",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 1001,
+      "outside": 14.023940419455293,
+      "health": [
+        {
+          "id": 49,
+          "state": "idle",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "moving",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 2001,
+      "outside": 17.01102655369653,
+      "air": [
+        15.688713792472356,
+        16.349318749914627
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "idle",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "idle",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 3001,
+      "outside": 23.98708613424124,
+      "air": [
+        17,
+        20.500857672917405
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "idle",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "idle",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 4001,
+      "outside": 27.976059580544707,
+      "air": [
+        17,
+        22.499520352645735
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "idle",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "idle",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 5001,
+      "outside": 24.988973446303472,
+      "air": [
+        17,
+        21.002850179728334
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "sleeping",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "sleeping",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 6001,
+      "outside": 18.01291386575876,
+      "air": [
+        17,
+        17.507517327082596
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "sleeping",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "sleeping",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 7001,
+      "outside": 14.023940419455293,
+      "air": [
+        14.777810479081737,
+        14.401189823772112
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "idle",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "idle",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 8001,
+      "outside": 17.01102655369653,
+      "air": [
+        15.630113011773359,
+        16.319993922208706
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "idle",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "idle",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 9001,
+      "outside": 23.98708613424124,
+      "air": [
+        17,
+        20.500857672917405
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "idle",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "eating",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 10001,
+      "outside": 27.976059580544707,
+      "air": [
+        17,
+        22.499520352645735
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "idle",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "idle",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 11001,
+      "outside": 24.988973446303472,
+      "air": [
+        17,
+        21.002850179728334
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "sleeping",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "sleeping",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 12001,
+      "outside": 18.01291386575876,
+      "air": [
+        17,
+        17.507517327082596
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "sleeping",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "sleeping",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 13001,
+      "outside": 14.023940419455293,
+      "air": [
+        14.701533745248625,
+        14.36301964837606
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "recreating",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "recreating",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 14001,
+      "outside": 17.01102655369653,
+      "air": [
+        15.626038535346416,
+        16.317954984880792
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "idle",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "idle",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 15001,
+      "outside": 23.98708613424124,
+      "air": [
+        17,
+        20.500857672917405
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "idle",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "idle",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 16001,
+      "outside": 27.976059580544707,
+      "air": [
+        17,
+        22.499520352645735
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "idle",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "idle",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 17001,
+      "outside": 24.988973446303472,
+      "air": [
+        17,
+        21.002850179728334
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "idle",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "moving",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 18001,
+      "outside": 18.01291386575876,
+      "air": [
+        17,
+        17.507517327082596
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "sleeping",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "sleeping",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 19001,
+      "outside": 14.023940419455293,
+      "air": [
+        14.59252163020884,
+        14.308468131258568
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "idle",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "idle",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 20001,
+      "outside": 17.01102655369653,
+      "air": [
+        15.620215432145013,
+        16.315041004963494
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "idle",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "idle",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 21001,
+      "outside": 23.98708613424124,
+      "air": [
+        17,
+        20.500857672917405
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "idle",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "idle",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 22001,
+      "outside": 27.976059580544707,
+      "air": [
+        17,
+        22.499520352645735
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "idle",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "idle",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 23001,
+      "outside": 24.988973446303472,
+      "air": [
+        17,
+        21.002850179728334
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "idle",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "idle",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 24001,
+      "outside": 18.01291386575876,
+      "air": [
+        17,
+        17.507517327082596
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "sleeping",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "sleeping",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 25001,
+      "outside": 14.023940419455293,
+      "air": [
+        14.802486378180564,
+        14.413538063521317
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "sleeping",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "sleeping",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 26001,
+      "outside": 17.01102655369653,
+      "air": [
+        15.620044680655127,
+        16.31495555801276
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "idle",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "recreating",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 27001,
+      "outside": 23.98708613424124,
+      "air": [
+        17,
+        20.500857672917405
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "idle",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "idle",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 28001,
+      "outside": 27.976059580544707,
+      "air": [
+        17,
+        22.499520352645735
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "idle",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "idle",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 29001,
+      "outside": 24.988973446303472,
+      "air": [
+        17,
+        21.002850179728334
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "idle",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "idle",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 30001,
+      "outside": 18.01291386575876,
+      "air": [
+        17,
+        17.507517327082596
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "sleeping",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "sleeping",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 31001,
+      "outside": 14.023940419455293,
+      "air": [
+        14.802486378180564,
+        14.413538063521317
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "sleeping",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "sleeping",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 32001,
+      "outside": 17.01102655369653,
+      "air": [
+        15.629421266330242,
+        16.31964776101949
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "idle",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "idle",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 33001,
+      "outside": 23.98708613424124,
+      "air": [
+        17,
+        20.500857672917405
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "idle",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "idle",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 34001,
+      "outside": 27.976059580544707,
+      "air": [
+        17,
+        22.499520352645735
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "idle",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "idle",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 35001,
+      "outside": 24.988973446303472,
+      "air": [
+        17,
+        21.002850179728334
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "idle",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "recreating",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 36001,
+      "outside": 18.01291386575876,
+      "air": [
+        17,
+        17.507517327082596
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "sleeping",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "sleeping",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 37001,
+      "outside": 14.023940419455293,
+      "air": [
+        14.802486378180564,
+        14.413538063521317
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "sleeping",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "sleeping",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 38001,
+      "outside": 24.10852655369653,
+      "air": [
+        17,
+        20.561705015584167
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "idle",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "idle",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 39001,
+      "outside": 40.98708613424124,
+      "air": [
+        17,
+        29.018654547917404
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "idle",
+          "heat": 27375000
+        },
+        {
+          "id": 50,
+          "state": "idle",
+          "heat": 27000000
+        }
+      ]
+    },
+    {
+      "tick": 40001,
+      "outside": 44.97605958054471,
+      "air": [
+        17,
+        31.017317227645734
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "eating",
+          "heat": 108207702
+        },
+        {
+          "id": 50,
+          "state": "eating",
+          "heat": 108241679
+        }
+      ]
+    },
+    {
+      "tick": 41001,
+      "outside": 41.988973446303476,
+      "air": [
+        17,
+        29.520647054728336
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "idle",
+          "heat": 194856051
+        },
+        {
+          "id": 50,
+          "state": "idle",
+          "heat": 35987141
+        }
+      ]
+    },
+    {
+      "tick": 42001,
+      "outside": 35.01291386575876,
+      "air": [
+        17,
+        26.025314202082598
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "sleeping",
+          "heat": 14310138
+        },
+        {
+          "id": 50,
+          "state": "sleeping",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 43001,
+      "outside": 31.023940419455293,
+      "air": [
+        17,
+        24.026651522354264
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "sleeping",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "sleeping",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 44001,
+      "outside": 34.01102655369653,
+      "air": [
+        17,
+        25.52332169527167
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "idle",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "idle",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 45001,
+      "outside": 40.98708613424124,
+      "air": [
+        17,
+        29.018654547917404
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "idle",
+          "heat": 43875000
+        },
+        {
+          "id": 50,
+          "state": "idle",
+          "heat": 43500000
+        }
+      ]
+    },
+    {
+      "tick": 46001,
+      "outside": 44.97605958054471,
+      "air": [
+        17,
+        31.017317227645734
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "idle",
+          "heat": 124707702
+        },
+        {
+          "id": 50,
+          "state": "eating",
+          "heat": 124741679
+        }
+      ]
+    },
+    {
+      "tick": 47001,
+      "outside": 41.988973446303476,
+      "air": [
+        17,
+        29.520647054728336
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "idle",
+          "heat": 44330387
+        },
+        {
+          "id": 50,
+          "state": "idle",
+          "heat": 211357819
+        }
+      ]
+    },
+    {
+      "tick": 48001,
+      "outside": 35.01291386575876,
+      "air": [
+        17,
+        26.025314202082598
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "sleeping",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "sleeping",
+          "heat": 14897106
+        }
+      ]
+    },
+    {
+      "tick": 49001,
+      "outside": 31.023940419455293,
+      "air": [
+        17,
+        24.026651522354264
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "sleeping",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "sleeping",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 50001,
+      "outside": 34.01102655369653,
+      "air": [
+        17,
+        25.52332169527167
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "idle",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "idle",
+          "heat": 0
+        }
+      ]
+    },
+    {
+      "tick": 51001,
+      "outside": 28.775419467574572,
+      "air": [
+        17,
+        22.900037126042402
+      ],
+      "health": [
+        {
+          "id": 49,
+          "state": "idle",
+          "heat": 0
+        },
+        {
+          "id": 50,
+          "state": "idle",
+          "heat": 0
+        }
+      ]
+    }
+  ]
+}

@@ -5,7 +5,7 @@ import type { World } from '../sim/types';
 export function updateFoodStocks(container: HTMLElement, world: World): void {
   const counts = new Map<ItemId, number>();
   for (const pile of world.piles) if (pile.kind === 'food' && pile.owner.type !== 'job') counts.set(pile.item, (counts.get(pile.item) ?? 0) + pile.quantity);
-  for (const id of ['berries', 'rice', 'simple-meal', 'survival-meal', 'legacy-portion'] as const) {
+  for (const id of ['berries', 'rice', 'potato', 'corn', 'hare-meat', 'simple-meal', 'survival-meal', 'legacy-portion'] as const) {
     let row = container.querySelector<HTMLElement>(`[data-item="${id}"]`);
     if (!row) {
       row = document.createElement('div'); row.className = 'resource'; row.dataset.item = id;

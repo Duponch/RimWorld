@@ -28,6 +28,7 @@ export function queryJobStatus(world: World, job: Job): JobDiagnostic {
     const shipping = reservedDestination(world, { type: 'job', jobId: job.id });
     return { code: shipping ? 'delivering' : 'missing-materials', reason: shipping ? `Livraison en cours : ${costs.map(c=>`${deliveredMaterial(world,job,c.item)}/${c.quantity} ${ITEM_DEFINITIONS[c.item].label}`).join(" + ")}.` : `Attend ${costs.filter(c=>deliveredMaterial(world,job,c.item)<c.quantity).map(c=>`${c.quantity-deliveredMaterial(world,job,c.item)} ${ITEM_DEFINITIONS[c.item].label}`).join(" + ")} ; vérifier Construction/Transport et l’accès.`, delivered, required };
   }
+  if(job.kind==='electric-stove'&&!world.pawns.some(p=>p.priorities.build>0&&p.skills.construction.level>=4))return {code:'waiting-worker',reason:'Construction 4 nécessaire pour terminer la cuisinière électrique.',delivered,required};
   if(job.kind==='cooler'&&!world.pawns.some(p=>p.priorities.build>0&&p.skills.construction.level>=5))return {code:'waiting-worker',reason:'Construction 5 nécessaire pour terminer le climatiseur.',delivered,required};
   const enabled = world.pawns.some(pawn => job.kind==='install'?pawn.priorities.build>0||pawn.priorities.haul>0:pawn.priorities[workType(job)]>0);
   return { code: enabled ? 'ready' : 'waiting-worker', reason: enabled ? 'Prêt ; attend un colon disponible et un accès.' : 'Travail désactivé pour tous les colons.', delivered, required };

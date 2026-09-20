@@ -1,0 +1,64 @@
+{
+  "protocol": "v84-bedside-checkpoint-diagnostic",
+  "sourceReportSha256": "6fd98555dfed6b268855a0c3fa644d93ac7c97400aad6736dd136380b4102f47",
+  "sourceWorldTick": 132000,
+  "source": "checkpoint J22 du parcours initial arrêté",
+  "finalTick": 144000,
+  "runtimeMs": 48898.388,
+  "bedReinstalls": [
+    {
+      "tick": 132000,
+      "reason": "Retourner ce lit sur sa même emprise pour ouvrir le chevet sur l’allée, sans ajouter de couchage.",
+      "command": {
+        "type": "install",
+        "structureId": 4766,
+        "x": 124,
+        "z": 123,
+        "orientation": 2
+      }
+    },
+    {
+      "tick": 132250,
+      "reason": "Retourner ce lit sur sa même emprise pour ouvrir le chevet sur l’allée, sans ajouter de couchage.",
+      "command": {
+        "type": "install",
+        "structureId": 4773,
+        "x": 125,
+        "z": 123,
+        "orientation": 2
+      }
+    },
+    {
+      "tick": 132500,
+      "reason": "Retourner ce lit sur sa même emprise pour ouvrir le chevet sur l’allée, sans ajouter de couchage.",
+      "command": {
+        "type": "install",
+        "structureId": 4779,
+        "x": 126,
+        "z": 123,
+        "orientation": 2
+      }
+    }
+  ],
+  "finalFood": {
+    "survival": 19,
+    "simple": 8,
+    "rice": 386,
+    "berries": 0,
+    "nutrition": 56.4
+  },
+  "finalRaw": {
+    "rice": 386,
+    "potato": 256,
+    "corn": 0,
+    "berries": 0,
+    "meat": 0
+  },
+  "nonRationIngestionsLastWeek": {
+    "4570": 14,
+    "4572": 14,
+    "4574": 14
+  },
+  "result": "passed",
+  "scope": "Diagnostic depuis J22. La livraison exige également le rejeu intégral distinct depuis zéro."
+}

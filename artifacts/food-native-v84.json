@@ -1,0 +1,82 @@
+{
+  "version": 84,
+  "controlled": true,
+  "care": [
+    {
+      "speed": 1,
+      "tick": 3085,
+      "hunger": 89.78666666666669,
+      "severity": 817771662,
+      "food": 7
+    },
+    {
+      "speed": 6,
+      "tick": 3109,
+      "hunger": 88.7626666666668,
+      "severity": 815181108,
+      "food": 7
+    }
+  ],
+  "stations": {
+    "tick": 4753,
+    "structures": [
+      {
+        "kind": "fueled-stove",
+        "orientation": 1,
+        "fuel": {
+          "ticks": 10784,
+          "burned": 1216,
+          "autoRefuel": true
+        }
+      },
+      {
+        "kind": "electric-stove",
+        "orientation": 1,
+        "power": {
+          "on": false,
+          "parentId": null
+        }
+      },
+      {
+        "kind": "butcher-table",
+        "orientation": 1
+      }
+    ],
+    "plants": [
+      {
+        "kind": "potato",
+        "growth": 0.0001
+      },
+      {
+        "kind": "potato",
+        "growth": 0.0001
+      },
+      {
+        "kind": "potato",
+        "growth": 0.0001
+      },
+      {
+        "kind": "potato",
+        "growth": 0.0001
+      },
+      {
+        "kind": "corn",
+        "growth": 0.0001
+      },
+      {
+        "kind": "corn",
+        "growth": 0.0001
+      },
+      {
+        "kind": "corn",
+        "growth": 0.0001
+      },
+      {
+        "kind": "corn",
+        "growth": 0.0001
+      }
+    ],
+    "producedMeals": 2
+  },
+  "errors": []
+}

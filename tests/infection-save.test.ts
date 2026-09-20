@@ -1,3 +1,4 @@
+import { withoutFoodCrops } from './scenarios/legacy-skills';
 import { expect,test } from 'vitest';
 import { medicalCamp,controlledInjury } from './scenarios/health';
 import { createMedicalRecord } from '../src/sim/injury-state';
@@ -19,7 +20,7 @@ function infected(){
 }
 
 test('V80 validates before neutral migration; no risk or immunity invented on old wounds',()=>{
-  const old:any=medicalCamp(1);controlledInjury(old,old.pawns[0],'torso',9000,'gunshot');old.schemaVersion=80;
+  const old:any=withoutFoodCrops(medicalCamp(1));controlledInjury(old,old.pawns[0],'torso',9000,'gunshot');old.schemaVersion=80;
   const original=structuredClone(old),restored=deserializeWorld(JSON.stringify(old));
   expect(restored).toEqual({...original,schemaVersion:SCHEMA_VERSION});expect(restored.pawns[0]!.health!.infections).toBeUndefined();
   for(const mutate of [(w:any)=>w.pawns[0].health.infections={nextId:2,immunity:0,cases:[]},

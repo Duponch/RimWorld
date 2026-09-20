@@ -1,3 +1,4 @@
+import { foodStationUsable, usesCookingFuel } from './food-workstations.ts';
 import { corpseFresh } from './corpses.ts';
 import { productionWorkTotal, PRODUCTION_RECIPES, admittedIngredient, stationWork } from './production-recipes.ts';
 import { reservedServiceCells } from './service-reservations.ts';
@@ -23,10 +24,11 @@ export function queryCookingBillStatus(world:World,station:Structure,bill:Cookin
   if(!world.pawns.some(p=>p.priorities[stationWork(station)]>0))return {code:'waiting-worker',reason:'Métier désactivé pour tous les colons dans Travail.'};
   const spot=cookingSpot(station);
   if(!cookingPlaceFree(world,spot))return {code:'blocked-workplace',reason:'La place de travail devant le poste est obstruée.'};
-  if(station.kind==='campfire'&&!station.fuel?.ticks) {
-    if(!station.fuel?.autoRefuel)return {code:'refuel-disabled',reason:'Feu éteint ; ravitaillement automatique désactivé.'};
+  if(station.kind==='electric-stove'&&!foodStationUsable(station))return {code:'no-power',reason:'Cuisinière sans alimentation électrique :350 W nécessaires.'};
+  if(usesCookingFuel(station.kind)&&!station.fuel?.ticks) {
+    if(!station.fuel?.autoRefuel)return {code:'refuel-disabled',reason:'Poste sans combustible ; ravitaillement automatique désactivé.'};
     const wood=world.piles.some(p=>p.item==='wood'&&p.owner.type==='ground'&&p.quantity>reservedSource(world,p.id));
-    return {code:wood?'waiting-fuel':'missing-fuel',reason:wood?'Feu éteint ; attend un ravitaillement et un accès au bois.':'Feu éteint ; aucun bois au sol non réservé.'};
+    return {code:wood?'waiting-fuel':'missing-fuel',reason:wood?'Poste sans combustible ; attend un ravitaillement et un accès au bois.':'Poste sans combustible ; aucun bois au sol non réservé.'};
   }
   const u=world.piles.find(p=>p.unfinished?.billId===bill.id);if(u)return {code:'unfinished',reason:`Ouvrage commencé : attend ${world.pawns.find(p=>p.id===u.unfinished!.authorId)?.name??'son auteur'} ; ${Math.floor(u.unfinished!.progress/productionWorkTotal(u.unfinished!.recipe)*100)} % conservés.`};
   let available=0;

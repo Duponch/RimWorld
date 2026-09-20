@@ -3,15 +3,18 @@ import { isRoofed, roofIndex } from './roof-rules.ts';
 import { calendarTick } from './calendar.ts';
 import { growingLightIntegral } from './environment.ts';
 import { soilFertility } from './soil.ts';
+import { isCropKind, type CropKind } from './crops.ts';
 
 export const PLANT_DEFINITIONS = Object.freeze({
   cotton: { label: 'Coton', growDays: 8, minFertility: .7, sensitivity: 1, afterHarvest: 0, yield: 10 },
   berries: { label: 'Buisson de baies', growDays: 6, minFertility: .5, sensitivity: .5, afterHarvest: .3, yield: 10 },
   rice: { label: 'Riz', growDays: 3, minFertility: .7, sensitivity: 1, afterHarvest: 0, yield: 6 },
+  potato: { label: 'Pommes de terre', growDays: 5.8, minFertility: .7, sensitivity: .4, afterHarvest: 0, yield: 11 },
+  corn: { label: 'Maïs', growDays: 11.3, minFertility: .7, sensitivity: 1, afterHarvest: 0, yield: 22 },
 });
-export const isPlant = (plant: Resource): plant is Resource & { kind: keyof typeof PLANT_DEFINITIONS } => plant.kind === 'berries' || plant.kind === 'rice' || plant.kind === 'cotton';
-export const isCrop = (plant: Pick<Resource,'kind'>): plant is Pick<Resource,'kind'>&{kind:'rice'|'cotton'} => plant.kind === 'rice' || plant.kind === 'cotton';
-export const harvestProductLabel = (plant:Resource):string => plant.kind==='cotton'?'tissu':plant.kind==='rice'?'riz':'baies';
+export const isPlant = (plant: Resource): plant is Resource & { kind: keyof typeof PLANT_DEFINITIONS } => plant.kind === 'berries' || isCropKind(plant.kind);
+export const isCrop = (plant: Pick<Resource,'kind'>): plant is Pick<Resource,'kind'>&{kind:CropKind} => isCropKind(plant.kind);
+export const harvestProductLabel = (plant:Resource):string => plant.kind==='cotton'?'tissu':plant.kind==='rice'?'riz':plant.kind==='potato'?'pommes de terre':plant.kind==='corn'?'maïs':'baies';
 
 export const BERRY_GROW_DAYS = 6;
 export const HARVEST_MIN_GROWTH = .65;
@@ -21,7 +24,7 @@ const clamp = (n: number): number => Math.max(0, Math.min(1, n));
 export const plantTemperatureFactor = (temperature:number):number => temperature < 6 ? clamp(temperature / 6) : temperature > 42 ? clamp((58 - temperature) / 16) : 1;
 export const sowingTemperatureAllowed = (temperature:number):boolean => temperature > 0 && temperature < 58;
 
-/** Factors for the two current species; other climates/species stay explicit. */
+/** Historical berry calculation; current species use their own sensitivity below. */
 export function plantGrowthRate(light: number, temperature: number, fertility: number, resting = false): number {
   if (resting || fertility < .5) return 0;
   const heat = plantTemperatureFactor(temperature);

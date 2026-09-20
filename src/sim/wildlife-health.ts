@@ -8,6 +8,7 @@ import { mergeSlowIntervals,travelEnd } from './travel-timing.ts';
 import type { WildAnimal } from './wildlife-state.ts';
 import { HARE } from './wildlife-state.ts';
 import type { Cell,World } from './types.ts';
+import { malnutritionRate } from './malnutrition.ts';
 
 const HEALTHY_HARE=assessBody(HEALTHY_BODY_INPUT,HARE_MODEL);
 export const animalBody=(a:WildAnimal)=>a.health?assessMedical(a.health):HEALTHY_HARE;
@@ -22,11 +23,12 @@ export function reconcileAnimalHealth(w:World,a:WildAnimal):void {
   } else if(a.state==='downed'){a.state='idle';a.nextDecision=w.tick;}
 }
 export function advanceAnimalHealth(w:World,a:WildAnimal):void {
+  if(w.schemaVersion>=84&&a.food<=0&&a.state!=='dead')a.health??={...createMedicalRecord(Math.max(0,w.tick-1)),body:'hare'};
   if(a.stagger&&a.stagger.untilCore<=w.tick*10)delete a.stagger;
   if(a.sleepUntilCore!==undefined&&a.sleepUntilCore<=w.tick*10)delete a.sleepUntilCore;
   if(!a.health||a.health.death)return;
   const lying=(!a.motion||a.motion.end<=w.tick)&&['sleeping','downed'].includes(a.state);
-  advanceMedical(a.health,w.tick-a.health.tick,{phase:a.id%60,posture:lying?'ground':'standing',starving:a.food<=0,
+  advanceMedical(a.health,w.tick-a.health.tick,{phase:a.id%60,posture:lying?'ground':'standing',starving:a.food<=0,malnutritionRate:w.schemaVersion>=84?malnutritionRate(a.id):undefined,
     hunger:a.food/HARE.nutrition*100,rest:a.rest*100,restingBonus:lying&&a.state==='sleeping',infectionSeed:(w.seed^Math.imul(a.id,0x9e3779b1))>>>0},()=>healthRandom(w));
   reconcileAnimalHealth(w,a);
 }

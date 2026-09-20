@@ -1,6 +1,8 @@
 # Lisière
 
-Jeu de colonie en 3D low poly pour navigateur, avec RimWorld de base comme référence fonctionnelle. **Version courante : V82**, accueil, création guidée et chargement réel. Atterrissage forcé / Cassandra / Récit d’aventure sont proposés dans une adaptation explicitement partielle ; journée de 16 min 40 s et arrivée à 06 h. Infections, immunité et soins physiques V81 restent jouables. Le départ **Trois survivants V80** propose une vraie dotation sur terrain naturel ; chasse, dépouilles et boucherie V79 restent jouables. [Règles médicales et limites](docs/development/infections.md).
+Jeu de colonie en 3D low poly pour navigateur, avec RimWorld de base comme référence fonctionnelle. **Version courante : V84**, filière alimentaire durable : pommes de terre et maïs, cuisinières à bois/électrique, table de boucherie et malnutrition avec récupération par alimentation physique. Un vrai départ a été joué pendant 24 jours, avec deux récoltes sur les mêmes 80 cases de riz, diversification, soins après combat et sept jours sans consommer les rations initiales. [Preuves et limites](docs/history/validation-food-v84.md).
+
+L’accueil, la création guidée et le chargement sont jouables. Atterrissage forcé / Cassandra / Récit d’aventure restent une adaptation partielle : forêt tempérée locale, trois reliefs, dotation et technologies explicites, journée de 16 min 40 s nominales et arrivée à 06 h. Les anciennes cartes et leurs calendriers sont préservés.
 
 Le camp dispose déjà de récolte, minage, transport, construction, agriculture/cuisine, besoins physiques, premiers soins/combats/raids, accueil et premières interactions sociales. La filière coton → vêtement et deux recherches utiles sont jouables ; canicule et garde-manger réfrigéré créent des contraintes environnementales. Les catalogues et systèmes restent partiels : consulter l'[inventaire consolidé](docs/gameplay/implementation-status.md) et le [guide joueur](docs/gameplay/player-guide.md).
 
@@ -17,7 +19,7 @@ npm run dev
 
 Ouvrir [le jeu local](http://127.0.0.1:5173). Three.js utilise WebGPU si disponible, sinon WebGL 2 ; le backend apparaît dans Menu → Diagnostics. Le compteur FPS reste visible. L’accueil propose Nouvelle partie et Charger. La configuration locale active est 250×250, avec graine aléatoire éditable ; les autres choix sont grisés. Paramètres de diagnostic historique explicites : `/?scenario=camp&seed=123&size=250`.
 
-Le [guide joueur](docs/gameplay/player-guide.md) décrit les contrôles et règles. Sauvegardes au schéma **82** : les anciennes versions sont validées puis migrées sans agrandir la carte ni inventer d’objets ou d’historique. Les anciens camps restent sans nouveaux calendriers ni faune jusqu’à leur activation explicite. Les contrats spécialisés et l’[inventaire courant](docs/gameplay/implementation-status.md) distinguent les boucles livrées des catalogues et systèmes encore absents.
+Le [guide joueur](docs/gameplay/player-guide.md) décrit les contrôles et règles. Sauvegardes au schéma **84** : les anciennes versions sont validées puis migrées sans agrandir la carte ni inventer d’objets ou d’historique. Les anciens camps restent sans nouveaux calendriers ni faune jusqu’à leur activation explicite. Les contrats spécialisés et l’[inventaire courant](docs/gameplay/implementation-status.md) distinguent les boucles livrées des catalogues et systèmes encore absents.
 
 ## Développer et vérifier
 

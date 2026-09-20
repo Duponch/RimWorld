@@ -1,6 +1,7 @@
+import { foodStationUsable, usesCookingFuel } from './food-workstations.ts';
 import { corpseFresh } from './corpses.ts';
 import { planUnfinished } from './tailoring-plan.ts';
-import { CARRY_CAPACITY } from './definitions.ts';
+import { CARRY_CAPACITY, footprintCells } from './definitions.ts';
 import { PRODUCTION_RECIPES, admittedIngredient, stationRecipe, stationWork, type ProductionIngredient } from './production-recipes.ts';
 import { reservedServiceCells } from './service-reservations.ts';
 import { billWanted, cookingPlaceFree, cookingSpot, ingredientPlaceFree } from './cooking-bills.ts';
@@ -18,7 +19,7 @@ export function hasCookingWork(world:World,pawn:Pawn):boolean {
   return productionPriority(world,pawn)<5;
 }
 export function availableCookingStations(world:World,pawn:Pawn):Structure[] {
-  return world.structures.filter(s=>stationRecipe(s)&&pawn.priorities[stationWork(s)]>0&&s.bills?.some(b=>billWanted(world,b))
+  return world.structures.filter(s=>stationRecipe(s)&&(s.kind!=='electric-stove'||foodStationUsable(s))&&pawn.priorities[stationWork(s)]>0&&s.bills?.some(b=>billWanted(world,b))
     &&!fuelStationReserved(world,s.id,pawn.id));
 }
 /** Select without mutation. The ordinary planner compares this proposal with
@@ -35,7 +36,7 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
     for(const bill of station.bills!) {
       if(!billWanted(world,bill))continue;
       // The reference bill worker refuels an empty usable station before cooking.
-      if(station.kind==='campfire'&&!station.fuel?.ticks) {
+      if(usesCookingFuel(station.kind)&&!station.fuel?.ticks) {
         const capacity=fuelCapacity(world,station.id,undefined,options?.forced);if(!capacity)break;
         const wood=world.piles.filter(p=>p.item==='wood'&&p.owner.type==='ground'&&p.quantity>reservedSource(world,p.id))
           .sort((a,b)=>distance(a.owner as Cell,station)-distance(b.owner as Cell,station)||a.id-b.id);
@@ -56,8 +57,8 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
       // Avoid six full resource/footprint scans per empty bill, especially after
       // simultaneous spoilage. Keep earlier route/blocker diagnostics unchanged.
       if(!sources.length)continue;
-      const cells=[station,spot,{x:spot.x-1,z:spot.z},{x:spot.x+1,z:spot.z},{x:spot.x,z:spot.z-1},{x:spot.x,z:spot.z+1}]
-        .filter((c,i,a)=>a.findIndex(t=>same(t,c))===i&&ingredientPlaceFree(world,c,spot,bill.recipe));
+      const cells=[station,spot,{x:spot.x-1,z:spot.z},{x:spot.x+1,z:spot.z},{x:spot.x,z:spot.z-1},{x:spot.x,z:spot.z+1},...footprintCells(station)]
+        .filter((c,i,a)=>a.findIndex(t=>same(t,c))===i&&ingredientPlaceFree(world,c,spot,bill.recipe,station));
       for(const pile of sources) {
         if(budget.pairs--<=0){budget.pairs=0;return null;}
         const quantity=Math.min(missing,pile.quantity-reservedSource(world,pile.id));

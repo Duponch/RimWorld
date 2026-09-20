@@ -1,5 +1,7 @@
 # Repas et couchages physiques — origine V3, état courant V18
 
+V84 ajoute la [malnutrition progressive](malnutrition.md) chez les humains et les lièvres : à nourriture nulle, altération de la conscience puis incapacité et décès. Manger réellement inverse la progression sans guérison instantanée ; les règles de repas, régimes et alimentation assistée restent physiques.
+
 Correction V73 : sous faim critique, le portage de combustible choisi par une facture de cuisine reste une préparation alimentaire admissible. L’annuler avant chaque trajet faisait réélire indéfiniment la même recharge et bloquait aussi les récoltes. Les réservations, quantités, régimes et besoins physiques sont conservés ; `production.test.ts` vérifie livraison, reprise, cuisson puis ingestion.
 
 V47 ajoute le [repos médical volontaire](tending.md) : rejoindre un lit ne donne rien à distance ; posture allongée, sommeil réel et faim restent distincts. Le choix médical est aussi disponible au coucher d’un blessé ; les colons sains conservent le sommeil ordinaire.
@@ -24,7 +26,7 @@ Le temps reste à 6 Hz depuis V82 et 6 000 ticks/jour. La faim adulte baisse de 
 
 Le [contrat Horaires V12](schedules.md) définit désormais le départ au lit, les réveils, la baisse de repos adulte par catégorie, l'épuisement différé et la migration historique. Il remplace les anciens coefficients de fatigue et le verrou de cinq points pour les nouvelles parties. Le lit normal récupère 100 points en 10,5 h ; le sol à 80 %. L'intégration et la cadence des interruptions restent adaptées à notre moteur.
 
-Tables, confort et souvenirs : [repas à table](dining.md). Cuisine : [feu et factures](cooking.md). Fraîcheur et pourriture : [conservation](food-preservation.md). Les régimes partagés et [deux familles de loisirs](recreation.md) sont livrés ; les autres activités, les préférences contextuelles complètes, la malnutrition et les maladies restent absentes ; cette chaîne ne clôt pas tout le domaine survie.
+Tables, confort et souvenirs : [repas à table](dining.md). Cuisine : [feu et factures](cooking.md), [cuisinières V84](food-workstations.md). Fraîcheur et pourriture : [conservation](food-preservation.md). Les régimes partagés et [deux familles de loisirs](recreation.md) sont livrés ; les autres activités et les préférences contextuelles complètes restent partielles. Les infections de plaies V81 et la malnutrition V84 ne couvrent pas toutes les maladies.
 
 ## Persistance et limites de ressources
 
