@@ -88,6 +88,16 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
   } else if(c.type==='schedule-paint') {
     await panel(page,'schedule'); await page.locator(`[data-schedule-brush="${c.assignment}"]`).click();
     for(const hour of c.hours) await page.locator(`[data-schedule-pawn="${c.pawnId}"][data-schedule-hour="${hour}"]`).click();
+  } else if(c.type==='research-project') {
+    await panel(page,'research');
+    const prefix=c.project==='batteries'?'battery':c.project==='solar-power'?'solar':c.project==='air-conditioning'?'air':'research';
+    await page.locator(c.project===null?'[data-research-pause]':`[data-${prefix}-start]`).click();
+  } else if(c.type==='power-flick') {
+    const w=await world(page),s=w.structures.find(s=>s.id===c.structureId)!;
+    if((w.jobs.find(j=>j.flick?.structureId===s.id)?.flick?.on??(s.power?.switchOn!==false))===c.on)return;
+    await page.keyboard.press('Escape');await revealCells(page,[s]);
+    for(let i=0;i<=w.pawns.length;i++){await cell(page,s.x,s.z);if(await page.locator(`[data-power-id="${s.id}"]`).isVisible())break;}
+    await page.locator(`[data-power-id="${s.id}"] [data-power-flick]`).click();
   } else if(c.type==='priority') {
     await panel(page,'work');await page.locator(`select[data-owner="${c.pawnId}"][data-work="${c.work}"]`).selectOption(String(c.value));
   } else if(c.type==='stockpile') {
@@ -109,10 +119,16 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     await page.locator('#cell-install').click({timeout:5000});rotation.value=(object??pack!.building).orientation;
     while(rotation.value!==c.orientation){await page.keyboard.press('e');rotation.value=(rotation.value+1)%4;}
     await revealCells(page,[c]);await cell(page,c.x,c.z);
-  } else if(c.type==='designate' && c.kind !== 'sow' && c.kind !== 'install') {
+  } else if(c.type==='designate' && (c.kind==='deconstruct'||c.kind==='uninstall') && c.targetId!==undefined) {
+    const w=await world(page),target=w.structures.find(s=>s.id===c.targetId)!;
+    await page.keyboard.press('Escape');await revealCells(page,[target]);
+    const button=target.kind==='power-conduit'?`[data-power-id="${target.id}"] [data-power-remove]`:c.kind==='uninstall'?'#cell-uninstall':'#cell-deconstruct';
+    for(let i=0;i<=w.pawns.length;i++){await cell(page,target.x,target.z);if(await page.locator(button).isVisible())break;}
+    await page.locator(button).click();
+  } else if(c.type==='designate' && c.kind !== 'flick' && c.kind !== 'sow' && c.kind !== 'install') {
     if(c.kind==='repair')throw Error('Repair uses the home area');await tool(page,c.kind);
     if(['door','wall','bed','table','stool','horseshoes','stonecutter','research-bench','tailor-bench'].includes(c.kind))await page.locator('#construction-material').selectOption(c.material??'wood');
-    if(c.kind==='fueled-stove'||c.kind==='electric-stove'||c.kind==='butcher-table'||c.kind==='cooler'||c.kind==='bed'||c.kind==='table'||c.kind==='campfire'||(c.kind==='butcher-spot'||c.kind==='crafting-spot')||c.kind==='stonecutter'||c.kind==='research-bench'||c.kind==='tailor-bench') {
+    if(c.kind==='battery'||c.kind==='fueled-stove'||c.kind==='electric-stove'||c.kind==='butcher-table'||c.kind==='cooler'||c.kind==='bed'||c.kind==='table'||c.kind==='campfire'||(c.kind==='butcher-spot'||c.kind==='crafting-spot')||c.kind==='stonecutter'||c.kind==='research-bench'||c.kind==='tailor-bench') {
       while(rotation.value!==(c.orientation??0)){await page.keyboard.press('e');rotation.value=(rotation.value+1)%4;}
     }
     await revealCells(page,[c]);
@@ -150,10 +166,19 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     }
     if(c.type==='food-policy-assign')return w.pawns.find(p=>p.id===c.pawnId)?.foodPolicyId===c.policyId;
     if(c.type==='schedule-paint')return c.hours.every(h=>w.pawns.find(p=>p.id===c.pawnId)?.schedule[h]===c.assignment);
+    if(c.type==='research-project')return w.research?.project===c.project;
+    if(c.type==='power-flick'){const s=w.structures.find(s=>s.id===c.structureId);return !!s&&(w.jobs.find(j=>j.flick?.structureId===s.id)?.flick?.on??(s.power?.switchOn!==false))===c.on;}
     if(c.type==='priority')return w.pawns.find(p=>p.id===c.pawnId)?.priorities[c.work]===c.value;
     if(c.type==='bill-add')return !!w.structures.find(s=>s.id===c.structureId)?.bills?.length;
     if(c.type==='bill-update') {const b=w.structures.find(s=>s.id===c.structureId)?.bills?.find(b=>b.id===c.billId);return !!b&&b.mode===c.settings.mode&&b.target===c.settings.target&&b.suspended===c.settings.suspended;}
     if(c.type==='area') {
+      if(c.action==='build-roof'||c.action==='remove-roof'||c.action==='ignore-roof') {
+        for(let z=Math.min(c.from.z,c.to.z);z<=Math.max(c.from.z,c.to.z);z++)for(let x=Math.min(c.from.x,c.to.x);x<=Math.max(c.from.x,c.to.x);x++) {
+          const index=z*w.width+x,build=w.roofing?.build.includes(index)??false,remove=w.roofing?.remove.includes(index)??false;
+          if(c.action==='build-roof'?!build||remove:c.action==='remove-roof'?!remove||build:build||remove)return false;
+        }
+        return true;
+      }
       if(c.action==='stockpile'){for(let z=Math.min(c.from.z,c.to.z);z<=Math.max(c.from.z,c.to.z);z++)for(let x=Math.min(c.from.x,c.to.x);x<=Math.max(c.from.x,c.to.x);x++){const s=w.stockpiles.find(s=>s.x===x&&s.z===z);if(!s||c.filters&&Object.entries(s.filters).some(([k,v])=>!!v!==!!c.filters![k as keyof typeof c.filters]))return false;}return true;}
       if(c.action==='deconstruct')return w.jobs.some(j=>j.kind==='deconstruct');
       if(c.action==='haul-chunks')return w.piles.some(p=>p.kind==='chunk'&&p.haulRequested&&p.owner.type==='ground'&&p.owner.x>=Math.min(c.from.x,c.to.x)&&p.owner.x<=Math.max(c.from.x,c.to.x)&&p.owner.z>=Math.min(c.from.z,c.to.z)&&p.owner.z<=Math.max(c.from.z,c.to.z));
@@ -162,7 +187,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     }
     if(c.type==='stockpile')return w.stockpiles.some(s=>s.x===c.x&&s.z===c.z);
     if(c.type==='designate'&&(c.kind==='butcher-spot'||c.kind==='crafting-spot'))return w.structures.some(s=>s.kind===c.kind&&s.x===c.x&&s.z===c.z);
-    return c.type==='designate' && w.jobs.some(j=>j.x===c.x&&j.z===c.z&&j.kind===c.kind&&(!c.material||j.material===c.material));
+    return c.type==='designate' && w.jobs.some(j=>j.x===c.x&&j.z===c.z&&j.kind===c.kind&&(!c.material||j.material===c.material)&&(!c.targetId||(j.deconstruction??j.furniture)?.structureId===c.targetId));
   },c,{polling:100,timeout:5000});
   } catch(error) {
     const diagnostic=await page.evaluate(()=>({tick:window.__lisiere.tick,notice:document.querySelector('#notice')?.textContent,stockpiles:window.__lisiere.world.stockpiles,events:window.__lisiere.world.events.slice(-5),tool:document.querySelector('[data-tool].active')?.getAttribute('data-tool')}));

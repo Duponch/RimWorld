@@ -10,7 +10,7 @@ test('Affectations : régime partagé, copie, refus de suppression, faim, migrat
   const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);page.setDefaultTimeout(10000);
   try {
     const fixture=createWorld(42,32,32);fixture.tiles=fixture.tiles.map(()=>({terrain:'grass'}));fixture.resources=[];fixture.piles=[];fixture.stock={wood:0,food:0};
-    fixture.pawns.forEach((p,i)=>{p.x=12+i*3;p.z=13;p.hunger=19;p.rest=100;p.priorities={hunt:0,research:0, patient:0,bedrest:0,doctor:0,craft:2,mine:2,gather:0,build:0,haul:0,grow:0,cook:0};});
+    fixture.pawns.forEach((p,i)=>{p.x=12+i*3;p.z=13;p.hunger=19;p.rest=100;p.priorities={basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,craft:2,mine:2,gather:0,build:0,haul:0,grow:0,cook:0};});
     addGroundMaterial(fixture,'food',8,{x:15,z:16},'survival-meal');
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(fixture)});
     await page.goto('/?scenario=camp&size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();

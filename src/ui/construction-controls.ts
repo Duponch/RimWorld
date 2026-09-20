@@ -6,7 +6,7 @@ import type { Job, JobKind, Structure, World } from '../sim/types';
 
 const stuffable = new Set<string>(['research-bench','tailor-bench','door','wall', 'bed', 'table', 'stool', 'horseshoes', 'stonecutter']);
 export const placementMaterial = (tool:string, material:ConstructionMaterial):ConstructionMaterial|undefined =>
-  tool==='fueled-stove'||tool==='electric-stove'||tool==='cooler'||tool==='wood-generator'||tool==='standing-lamp'?'steel':stuffable.has(tool) ? validConstructionMaterial(tool,material)?material:'wood' : tool === 'butcher-table' || tool === 'campfire' || tool === 'passive-cooler' ? 'wood' : undefined;
+  tool==='power-conduit'||tool==='power-switch'||tool==='battery'||tool==='solar-generator'||tool==='fueled-stove'||tool==='electric-stove'||tool==='cooler'||tool==='wood-generator'||tool==='standing-lamp'?'steel':stuffable.has(tool) ? validConstructionMaterial(tool,material)?material:'wood' : tool === 'butcher-table' || tool === 'campfire' || tool === 'passive-cooler' ? 'wood' : undefined;
 
 export function constructionControls(onChange:()=>void) {
   const control = document.getElementById('construction-material-controls')!;

@@ -1,0 +1,20 @@
+{
+  "version": 85,
+  "controlledConstruction": true,
+  "nightCheckpoint": "same built colony, civil clock advanced explicitly; not a simulated full day",
+  "day": {
+    "tick": 2183,
+    "stored": 48.29891666666666,
+    "lostCableId": 209,
+    "pipelinesBefore": 30,
+    "pipelinesAfter": 31
+  },
+  "night": {
+    "tick": 5872,
+    "solarWatts": 0,
+    "lampOn": true,
+    "storedBefore": 48.29891666666666,
+    "storedAfter": 47.87891666666667
+  },
+  "errors": []
+}

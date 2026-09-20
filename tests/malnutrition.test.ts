@@ -15,7 +15,8 @@ import { addMaterial,refreshStock } from '../src/sim/materials';
 import { moodThoughts } from '../src/sim/mood';
 import { medicalCamp } from './scenarios/health';
 import { fixtureBuilding } from './scenarios/deconstruction';
-import type { World } from '../src/sim/types';
+import { SCHEMA_VERSION,type World } from '../src/sim/types';
+import { withMigratedBasic } from './scenarios/legacy-skills';
 
 const random=()=>{throw new Error('Malnutrition must not draw mutable randomness');};
 function valid(w:World){expect(validateWorld(w)).toEqual([]);}
@@ -79,7 +80,8 @@ test('severe hunger uses physical bedside feeding, frees incapacity and conserve
 
 test('genuine V83 save migrates neutrally; new disease and invalid severity cannot hide in old schemas',()=>{
   const old=JSON.parse(gunzipSync(readFileSync('tests/fixtures/scenario-v83.json.gz')).toString()),migrated=deserializeWorld(JSON.stringify(old));
-  expect(migrated).toEqual({...old,schemaVersion:84});valid(migrated);
+  expect(old.schemaVersion).toBe(83);expect(old.pawns.every((p:any)=>p.priorities.basic===undefined)).toBe(true);
+  expect(migrated).toEqual(withMigratedBasic({...old,schemaVersion:SCHEMA_VERSION}));valid(migrated);
   for(const severity of [0,-1,.5,1000000001]){const c=structuredClone(migrated);c.pawns[0]!.health={...createMedicalRecord(c.tick),malnutrition:severity};expect(validateWorld(c).length).toBeGreaterThan(0);}
   const forged=structuredClone(old);forged.pawns[0].health={...createMedicalRecord(old.tick),malnutrition:1};expect(()=>deserializeWorld(JSON.stringify(forged))).toThrow(/version 83/);
   replay(migrated,3);

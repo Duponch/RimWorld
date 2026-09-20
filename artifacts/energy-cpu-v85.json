@@ -1,0 +1,1338 @@
+{
+  "date": "2026-09-20T13:28:50.948Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "os": "win32 10.0.26200",
+  "node": "v24.11.1",
+  "protocol": "Synthetic V85 load on a natural 250² map, retaining the V84 groups of six (two researchers, cook, grower, butcher, miner) and equally many wild hares. Every supplied stove is electric. Each work patch gains a prebuilt 4×4 solar panel, a battery starting at 120Wd, a fueled wood generator, a physical switch initially open with an ordinary close job, and cardinal conduits to a closed 3×3 cold store containing supplied rice. Growers also perform Basic work. Crops, corpses, material stocks, completed prerequisite research and battery charge are prepared inputs, not earned colony progress. Daylight charging and physical switching are measured; the separate natural colony journey proves nighttime drain, mining, research and construction. No wind, fire or weather fidelity is implied. 650 ticks, 100 separate warmup ticks, encoding every five ticks. Single pass, CPU only; no 6× guarantee.",
+  "energy": true,
+  "foodChain": true,
+  "wildlife": true,
+  "coldStore": false,
+  "heatwave": false,
+  "rows": [
+    {
+      "actors": 3,
+      "foodChain": {
+        "stoves": [
+          {
+            "kind": "electric-stove",
+            "id": 12457,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          }
+        ],
+        "butcherTables": 0,
+        "butchered": 0,
+        "meatProduced": 0,
+        "food": {
+          "potato": 22,
+          "corn": 44,
+          "meals": 4,
+          "meat": 0
+        },
+        "crops": [
+          {
+            "kind": "potato",
+            "originalRemaining": 0,
+            "resown": 2
+          },
+          {
+            "kind": "corn",
+            "originalRemaining": 0,
+            "resown": 2
+          }
+        ],
+        "growers": [
+          {
+            "id": 12427,
+            "malnutrition": 141691212,
+            "food": 73.99999999999594
+          }
+        ],
+        "butcherFood": []
+      },
+      "energy": {
+        "food": {
+          "stoves": [
+            {
+              "kind": "electric-stove",
+              "id": 12457,
+              "completed": 4,
+              "powered": true,
+              "fuelBurned": 0
+            }
+          ],
+          "butcherTables": 0,
+          "butchered": 0,
+          "meatProduced": 0,
+          "food": {
+            "potato": 22,
+            "corn": 44,
+            "meals": 4,
+            "meat": 0
+          },
+          "crops": [
+            {
+              "kind": "potato",
+              "originalRemaining": 0,
+              "resown": 2
+            },
+            {
+              "kind": "corn",
+              "originalRemaining": 0,
+              "resown": 2
+            }
+          ],
+          "growers": [
+            {
+              "id": 12427,
+              "malnutrition": 141691212,
+              "food": 73.99999999999594
+            }
+          ],
+          "butcherFood": []
+        },
+        "batteries": [
+          {
+            "id": 12471,
+            "storedWd": 236.32366666666667
+          }
+        ],
+        "solar": [
+          {
+            "id": 12470,
+            "watts": 1700
+          }
+        ],
+        "switches": [
+          {
+            "id": 12472,
+            "on": true,
+            "pending": false
+          }
+        ],
+        "conduits": 7,
+        "coolers": [
+          {
+            "id": 12482,
+            "powered": true,
+            "temperature": -5
+          }
+        ]
+      },
+      "infected": 0,
+      "treatedInfections": 0,
+      "animals": 3,
+      "animalNutrition": 0.18039750000000004,
+      "hunted": 0,
+      "corpses": 0,
+      "animalDead": 0,
+      "colonistInjured": 0,
+      "tickMs": {
+        "n": 650,
+        "p50": 1.3617999999999029,
+        "p95": 3.379899999999907,
+        "p99": 5.649900000000116,
+        "max": 11.842799999999897
+      },
+      "steadyTickMs": {
+        "n": 630,
+        "p50": 1.3589999999999236,
+        "p95": 3.369999999999891,
+        "p99": 4.971000000000004,
+        "max": 10.677699999999959
+      },
+      "snapshotMs": {
+        "n": 130,
+        "p50": 1.7175000000002,
+        "p95": 3.3793000000000575,
+        "p99": 4.963799999999992,
+        "max": 9.91210000000001
+      },
+      "completed": 0,
+      "research": 2635687,
+      "exposed": 0,
+      "coolers": 1,
+      "mined": 0
+    },
+    {
+      "actors": 30,
+      "foodChain": {
+        "stoves": [
+          {
+            "kind": "electric-stove",
+            "id": 12721,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "electric-stove",
+            "id": 12735,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "electric-stove",
+            "id": 12750,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "electric-stove",
+            "id": 12764,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "electric-stove",
+            "id": 12779,
+            "completed": 3,
+            "powered": true,
+            "fuelBurned": 0
+          }
+        ],
+        "butcherTables": 5,
+        "butchered": 10,
+        "meatProduced": 311,
+        "food": {
+          "potato": 110,
+          "corn": 230,
+          "meals": 14,
+          "meat": 311
+        },
+        "crops": [
+          {
+            "kind": "potato",
+            "originalRemaining": 0,
+            "resown": 10
+          },
+          {
+            "kind": "corn",
+            "originalRemaining": 0,
+            "resown": 10
+          }
+        ],
+        "growers": [
+          {
+            "id": 12427,
+            "malnutrition": 141691212,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12433,
+            "malnutrition": 142652399,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12439,
+            "malnutrition": 136859955,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12445,
+            "malnutrition": 142351608,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12451,
+            "malnutrition": 135157757,
+            "food": 73.99999999999594
+          }
+        ],
+        "butcherFood": [
+          92.85333333333222,
+          90.95999999999859,
+          91.46666666666533,
+          89.62666666666505,
+          92.3199999999988
+        ]
+      },
+      "energy": {
+        "food": {
+          "stoves": [
+            {
+              "kind": "electric-stove",
+              "id": 12721,
+              "completed": 4,
+              "powered": true,
+              "fuelBurned": 0
+            },
+            {
+              "kind": "electric-stove",
+              "id": 12735,
+              "completed": 4,
+              "powered": true,
+              "fuelBurned": 0
+            },
+            {
+              "kind": "electric-stove",
+              "id": 12750,
+              "completed": 4,
+              "powered": true,
+              "fuelBurned": 0
+            },
+            {
+              "kind": "electric-stove",
+              "id": 12764,
+              "completed": 4,
+              "powered": true,
+              "fuelBurned": 0
+            },
+            {
+              "kind": "electric-stove",
+              "id": 12779,
+              "completed": 3,
+              "powered": true,
+              "fuelBurned": 0
+            }
+          ],
+          "butcherTables": 5,
+          "butchered": 10,
+          "meatProduced": 311,
+          "food": {
+            "potato": 110,
+            "corn": 230,
+            "meals": 14,
+            "meat": 311
+          },
+          "crops": [
+            {
+              "kind": "potato",
+              "originalRemaining": 0,
+              "resown": 10
+            },
+            {
+              "kind": "corn",
+              "originalRemaining": 0,
+              "resown": 10
+            }
+          ],
+          "growers": [
+            {
+              "id": 12427,
+              "malnutrition": 141691212,
+              "food": 73.99999999999594
+            },
+            {
+              "id": 12433,
+              "malnutrition": 142652399,
+              "food": 73.99999999999594
+            },
+            {
+              "id": 12439,
+              "malnutrition": 136859955,
+              "food": 73.99999999999594
+            },
+            {
+              "id": 12445,
+              "malnutrition": 142351608,
+              "food": 73.99999999999594
+            },
+            {
+              "id": 12451,
+              "malnutrition": 135157757,
+              "food": 73.99999999999594
+            }
+          ],
+          "butcherFood": [
+            92.85333333333222,
+            90.95999999999859,
+            91.46666666666533,
+            89.62666666666505,
+            92.3199999999988
+          ]
+        },
+        "batteries": [
+          {
+            "id": 12824,
+            "storedWd": 236.24033333333333
+          },
+          {
+            "id": 12852,
+            "storedWd": 236.157
+          },
+          {
+            "id": 12881,
+            "storedWd": 236.32366666666667
+          },
+          {
+            "id": 12909,
+            "storedWd": 236.57366666666667
+          },
+          {
+            "id": 12938,
+            "storedWd": 236.57366666666667
+          }
+        ],
+        "solar": [
+          {
+            "id": 12823,
+            "watts": 1700
+          },
+          {
+            "id": 12851,
+            "watts": 1700
+          },
+          {
+            "id": 12880,
+            "watts": 1700
+          },
+          {
+            "id": 12908,
+            "watts": 1700
+          },
+          {
+            "id": 12937,
+            "watts": 1700
+          }
+        ],
+        "switches": [
+          {
+            "id": 12825,
+            "on": true,
+            "pending": false
+          },
+          {
+            "id": 12853,
+            "on": true,
+            "pending": false
+          },
+          {
+            "id": 12882,
+            "on": true,
+            "pending": false
+          },
+          {
+            "id": 12910,
+            "on": true,
+            "pending": false
+          },
+          {
+            "id": 12939,
+            "on": true,
+            "pending": false
+          }
+        ],
+        "conduits": 35,
+        "coolers": [
+          {
+            "id": 12835,
+            "powered": true,
+            "temperature": -5
+          },
+          {
+            "id": 12863,
+            "powered": true,
+            "temperature": -5
+          },
+          {
+            "id": 12892,
+            "powered": true,
+            "temperature": -5
+          },
+          {
+            "id": 12920,
+            "powered": true,
+            "temperature": -5
+          },
+          {
+            "id": 12949,
+            "powered": true,
+            "temperature": -5
+          }
+        ]
+      },
+      "infected": 0,
+      "treatedInfections": 0,
+      "animals": 30,
+      "animalNutrition": 2.707545000000001,
+      "hunted": 0,
+      "corpses": 0,
+      "animalDead": 0,
+      "colonistInjured": 0,
+      "tickMs": {
+        "n": 650,
+        "p50": 6.708099999999831,
+        "p95": 20.172599999999875,
+        "p99": 28.9675000000002,
+        "max": 60.05649999999969
+      },
+      "steadyTickMs": {
+        "n": 630,
+        "p50": 6.598100000000159,
+        "p95": 17.224300000000767,
+        "p99": 26.346599999999853,
+        "max": 33.83820000000014
+      },
+      "snapshotMs": {
+        "n": 130,
+        "p50": 4.124700000000303,
+        "p95": 7.826700000000528,
+        "p99": 10.94250000000011,
+        "max": 11.457800000000134
+      },
+      "completed": 0,
+      "research": 26987597,
+      "exposed": 0,
+      "coolers": 5,
+      "mined": 40
+    },
+    {
+      "actors": 100,
+      "foodChain": {
+        "stoves": [
+          {
+            "kind": "electric-stove",
+            "id": 13410,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13424,
+            "completed": 2,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13439,
+            "completed": 2,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13453,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13468,
+            "completed": 2,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13482,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13497,
+            "completed": 2,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13511,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13526,
+            "completed": 2,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13540,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13555,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13569,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13584,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13598,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13613,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13627,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13642,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          }
+        ],
+        "butcherTables": 16,
+        "butchered": 32,
+        "meatProduced": 993,
+        "food": {
+          "potato": 374,
+          "corn": 848,
+          "meals": 42,
+          "meat": 993
+        },
+        "crops": [
+          {
+            "kind": "potato",
+            "originalRemaining": 0,
+            "resown": 34
+          },
+          {
+            "kind": "corn",
+            "originalRemaining": 0,
+            "resown": 29
+          }
+        ],
+        "growers": [
+          {
+            "id": 12427,
+            "malnutrition": 141691212,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12433,
+            "malnutrition": 142652399,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12439,
+            "malnutrition": 136859955,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12445,
+            "malnutrition": 142351608,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12451,
+            "malnutrition": 135157757,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12457,
+            "malnutrition": 146364320,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12463,
+            "malnutrition": 134739023,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12469,
+            "malnutrition": 141768104,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12475,
+            "malnutrition": 135976844,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12481,
+            "malnutrition": 141060668,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12487,
+            "malnutrition": 150061376,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12493,
+            "malnutrition": 135063759,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12499,
+            "malnutrition": 135651870,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12505,
+            "malnutrition": 141276424,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12511,
+            "malnutrition": 134730165,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12517,
+            "malnutrition": 147391764,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12523,
+            "malnutrition": 132285787,
+            "food": 73.99999999999594
+          }
+        ],
+        "butcherFood": [
+          91.17333333333195,
+          90.07999999999845,
+          89.46666666666502,
+          92.37333333333214,
+          90.2133333333318,
+          88.90666666666493,
+          90.42666666666517,
+          93.89333333333238,
+          87.81333333333143,
+          89.62666666666505,
+          91.17333333333195,
+          93.30666666666562,
+          94.66666666666583,
+          93.33333333333229,
+          87.89333333333144,
+          89.81333333333174
+        ]
+      },
+      "energy": {
+        "food": {
+          "stoves": [
+            {
+              "kind": "electric-stove",
+              "id": 13410,
+              "completed": 4,
+              "powered": true,
+              "fuelBurned": 0
+            },
+            {
+              "kind": "electric-stove",
+              "id": 13424,
+              "completed": 2,
+              "powered": true,
+              "fuelBurned": 0
+            },
+            {
+              "kind": "electric-stove",
+              "id": 13439,
+              "completed": 2,
+              "powered": true,
+              "fuelBurned": 0
+            },
+            {
+              "kind": "electric-stove",
+              "id": 13453,
+              "completed": 4,
+              "powered": true,
+              "fuelBurned": 0
+            },
+            {
+              "kind": "electric-stove",
+              "id": 13468,
+              "completed": 2,
+              "powered": true,
+              "fuelBurned": 0
+            },
+            {
+              "kind": "electric-stove",
+              "id": 13482,
+              "completed": 4,
+              "powered": true,
+              "fuelBurned": 0
+            },
+            {
+              "kind": "electric-stove",
+              "id": 13497,
+              "completed": 2,
+              "powered": true,
+              "fuelBurned": 0
+            },
+            {
+              "kind": "electric-stove",
+              "id": 13511,
+              "completed": 4,
+              "powered": true,
+              "fuelBurned": 0
+            },
+            {
+              "kind": "electric-stove",
+              "id": 13526,
+              "completed": 2,
+              "powered": true,
+              "fuelBurned": 0
+            },
+            {
+              "kind": "electric-stove",
+              "id": 13540,
+              "completed": 4,
+              "powered": true,
+              "fuelBurned": 0
+            },
+            {
+              "kind": "electric-stove",
+              "id": 13555,
+              "completed": 4,
+              "powered": true,
+              "fuelBurned": 0
+            },
+            {
+              "kind": "electric-stove",
+              "id": 13569,
+              "completed": 4,
+              "powered": true,
+              "fuelBurned": 0
+            },
+            {
+              "kind": "electric-stove",
+              "id": 13584,
+              "completed": 4,
+              "powered": true,
+              "fuelBurned": 0
+            },
+            {
+              "kind": "electric-stove",
+              "id": 13598,
+              "completed": 4,
+              "powered": true,
+              "fuelBurned": 0
+            },
+            {
+              "kind": "electric-stove",
+              "id": 13613,
+              "completed": 4,
+              "powered": true,
+              "fuelBurned": 0
+            },
+            {
+              "kind": "electric-stove",
+              "id": 13627,
+              "completed": 4,
+              "powered": true,
+              "fuelBurned": 0
+            },
+            {
+              "kind": "electric-stove",
+              "id": 13642,
+              "completed": 4,
+              "powered": true,
+              "fuelBurned": 0
+            }
+          ],
+          "butcherTables": 16,
+          "butchered": 32,
+          "meatProduced": 993,
+          "food": {
+            "potato": 374,
+            "corn": 848,
+            "meals": 42,
+            "meat": 993
+          },
+          "crops": [
+            {
+              "kind": "potato",
+              "originalRemaining": 0,
+              "resown": 34
+            },
+            {
+              "kind": "corn",
+              "originalRemaining": 0,
+              "resown": 29
+            }
+          ],
+          "growers": [
+            {
+              "id": 12427,
+              "malnutrition": 141691212,
+              "food": 73.99999999999594
+            },
+            {
+              "id": 12433,
+              "malnutrition": 142652399,
+              "food": 73.99999999999594
+            },
+            {
+              "id": 12439,
+              "malnutrition": 136859955,
+              "food": 73.99999999999594
+            },
+            {
+              "id": 12445,
+              "malnutrition": 142351608,
+              "food": 73.99999999999594
+            },
+            {
+              "id": 12451,
+              "malnutrition": 135157757,
+              "food": 73.99999999999594
+            },
+            {
+              "id": 12457,
+              "malnutrition": 146364320,
+              "food": 73.99999999999594
+            },
+            {
+              "id": 12463,
+              "malnutrition": 134739023,
+              "food": 73.99999999999594
+            },
+            {
+              "id": 12469,
+              "malnutrition": 141768104,
+              "food": 73.99999999999594
+            },
+            {
+              "id": 12475,
+              "malnutrition": 135976844,
+              "food": 73.99999999999594
+            },
+            {
+              "id": 12481,
+              "malnutrition": 141060668,
+              "food": 73.99999999999594
+            },
+            {
+              "id": 12487,
+              "malnutrition": 150061376,
+              "food": 73.99999999999594
+            },
+            {
+              "id": 12493,
+              "malnutrition": 135063759,
+              "food": 73.99999999999594
+            },
+            {
+              "id": 12499,
+              "malnutrition": 135651870,
+              "food": 73.99999999999594
+            },
+            {
+              "id": 12505,
+              "malnutrition": 141276424,
+              "food": 73.99999999999594
+            },
+            {
+              "id": 12511,
+              "malnutrition": 134730165,
+              "food": 73.99999999999594
+            },
+            {
+              "id": 12517,
+              "malnutrition": 147391764,
+              "food": 73.99999999999594
+            },
+            {
+              "id": 12523,
+              "malnutrition": 132285787,
+              "food": 73.99999999999594
+            }
+          ],
+          "butcherFood": [
+            91.17333333333195,
+            90.07999999999845,
+            89.46666666666502,
+            92.37333333333214,
+            90.2133333333318,
+            88.90666666666493,
+            90.42666666666517,
+            93.89333333333238,
+            87.81333333333143,
+            89.62666666666505,
+            91.17333333333195,
+            93.30666666666562,
+            94.66666666666583,
+            93.33333333333229,
+            87.89333333333144,
+            89.81333333333174
+          ]
+        },
+        "batteries": [
+          {
+            "id": 13753,
+            "storedWd": 236.57366666666667
+          },
+          {
+            "id": 13781,
+            "storedWd": 236.24033333333333
+          },
+          {
+            "id": 13810,
+            "storedWd": 236.24033333333333
+          },
+          {
+            "id": 13838,
+            "storedWd": 236.407
+          },
+          {
+            "id": 13867,
+            "storedWd": 236.32366666666667
+          },
+          {
+            "id": 13895,
+            "storedWd": 235.99033333333333
+          },
+          {
+            "id": 13924,
+            "storedWd": 236.24033333333333
+          },
+          {
+            "id": 13952,
+            "storedWd": 236.157
+          },
+          {
+            "id": 13981,
+            "storedWd": 236.07366666666667
+          },
+          {
+            "id": 14009,
+            "storedWd": 235.99033333333333
+          },
+          {
+            "id": 14038,
+            "storedWd": 235.74033333333333
+          },
+          {
+            "id": 14066,
+            "storedWd": 235.657
+          },
+          {
+            "id": 14095,
+            "storedWd": 235.15991666666667
+          },
+          {
+            "id": 14123,
+            "storedWd": 235.10575
+          },
+          {
+            "id": 14152,
+            "storedWd": 235.10575
+          },
+          {
+            "id": 14180,
+            "storedWd": 235.05158333333333
+          },
+          {
+            "id": 14209,
+            "storedWd": 234.99741666666668
+          }
+        ],
+        "solar": [
+          {
+            "id": 13752,
+            "watts": 1700
+          },
+          {
+            "id": 13780,
+            "watts": 1700
+          },
+          {
+            "id": 13809,
+            "watts": 1700
+          },
+          {
+            "id": 13837,
+            "watts": 1700
+          },
+          {
+            "id": 13866,
+            "watts": 1700
+          },
+          {
+            "id": 13894,
+            "watts": 1700
+          },
+          {
+            "id": 13923,
+            "watts": 1700
+          },
+          {
+            "id": 13951,
+            "watts": 1700
+          },
+          {
+            "id": 13980,
+            "watts": 1700
+          },
+          {
+            "id": 14008,
+            "watts": 1700
+          },
+          {
+            "id": 14037,
+            "watts": 1700
+          },
+          {
+            "id": 14065,
+            "watts": 1700
+          },
+          {
+            "id": 14094,
+            "watts": 1700
+          },
+          {
+            "id": 14122,
+            "watts": 1700
+          },
+          {
+            "id": 14151,
+            "watts": 1700
+          },
+          {
+            "id": 14179,
+            "watts": 1700
+          },
+          {
+            "id": 14208,
+            "watts": 1700
+          }
+        ],
+        "switches": [
+          {
+            "id": 13754,
+            "on": true,
+            "pending": false
+          },
+          {
+            "id": 13782,
+            "on": true,
+            "pending": false
+          },
+          {
+            "id": 13811,
+            "on": true,
+            "pending": false
+          },
+          {
+            "id": 13839,
+            "on": true,
+            "pending": false
+          },
+          {
+            "id": 13868,
+            "on": true,
+            "pending": false
+          },
+          {
+            "id": 13896,
+            "on": true,
+            "pending": false
+          },
+          {
+            "id": 13925,
+            "on": true,
+            "pending": false
+          },
+          {
+            "id": 13953,
+            "on": true,
+            "pending": false
+          },
+          {
+            "id": 13982,
+            "on": true,
+            "pending": false
+          },
+          {
+            "id": 14010,
+            "on": true,
+            "pending": false
+          },
+          {
+            "id": 14039,
+            "on": true,
+            "pending": false
+          },
+          {
+            "id": 14067,
+            "on": true,
+            "pending": false
+          },
+          {
+            "id": 14096,
+            "on": true,
+            "pending": false
+          },
+          {
+            "id": 14124,
+            "on": true,
+            "pending": false
+          },
+          {
+            "id": 14153,
+            "on": true,
+            "pending": false
+          },
+          {
+            "id": 14181,
+            "on": true,
+            "pending": false
+          },
+          {
+            "id": 14210,
+            "on": true,
+            "pending": false
+          }
+        ],
+        "conduits": 119,
+        "coolers": [
+          {
+            "id": 13764,
+            "powered": true,
+            "temperature": -5
+          },
+          {
+            "id": 13792,
+            "powered": true,
+            "temperature": -5
+          },
+          {
+            "id": 13821,
+            "powered": true,
+            "temperature": -5
+          },
+          {
+            "id": 13849,
+            "powered": true,
+            "temperature": -5
+          },
+          {
+            "id": 13878,
+            "powered": true,
+            "temperature": -5
+          },
+          {
+            "id": 13906,
+            "powered": true,
+            "temperature": -5
+          },
+          {
+            "id": 13935,
+            "powered": true,
+            "temperature": -5
+          },
+          {
+            "id": 13963,
+            "powered": true,
+            "temperature": -5
+          },
+          {
+            "id": 13992,
+            "powered": true,
+            "temperature": -5
+          },
+          {
+            "id": 14020,
+            "powered": true,
+            "temperature": -5
+          },
+          {
+            "id": 14049,
+            "powered": true,
+            "temperature": -5
+          },
+          {
+            "id": 14077,
+            "powered": true,
+            "temperature": -5
+          },
+          {
+            "id": 14106,
+            "powered": true,
+            "temperature": -5
+          },
+          {
+            "id": 14134,
+            "powered": true,
+            "temperature": -5
+          },
+          {
+            "id": 14163,
+            "powered": true,
+            "temperature": -5
+          },
+          {
+            "id": 14191,
+            "powered": true,
+            "temperature": -5
+          },
+          {
+            "id": 14220,
+            "powered": true,
+            "temperature": -5
+          }
+        ]
+      },
+      "infected": 0,
+      "treatedInfections": 0,
+      "animals": 100,
+      "animalNutrition": 9.029415,
+      "hunted": 0,
+      "corpses": 0,
+      "animalDead": 0,
+      "colonistInjured": 0,
+      "tickMs": {
+        "n": 650,
+        "p50": 25.803799999997864,
+        "p95": 56.78059999999823,
+        "p99": 79.59049999999843,
+        "max": 127.70179999999891
+      },
+      "steadyTickMs": {
+        "n": 630,
+        "p50": 25.295200000000477,
+        "p95": 54.40810000000056,
+        "p99": 77.20869999999923,
+        "max": 127.70179999999891
+      },
+      "snapshotMs": {
+        "n": 130,
+        "p50": 4.064399999999296,
+        "p95": 7.854600000000573,
+        "p99": 12.946900000000824,
+        "max": 13.052700000000186
+      },
+      "completed": 0,
+      "research": 88945038,
+      "exposed": 0,
+      "coolers": 17,
+      "mined": 132
+    }
+  ]
+}

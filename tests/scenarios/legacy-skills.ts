@@ -14,7 +14,7 @@ export function withMigratedSkills<T extends {tick:number;pawns:unknown[]}>(worl
   for(const p of expected.pawns as {medicalCare?:unknown}[])delete p.medicalCare;
   withoutMedicineItems(expected);
   withoutSocial(expected);
-  for(const p of expected.pawns as {priorities:{research?:number;hunt?:number}}[]){p.priorities.research=3;p.priorities.hunt=0;}
+  for(const p of expected.pawns as {priorities:{basic?:number;research?:number;hunt?:number}}[]){p.priorities.basic=3;p.priorities.research=3;p.priorities.hunt=0;}
   return expected;
 }
 
@@ -69,7 +69,7 @@ export function withoutResearch<T>(world:T):T {
 /** Independent neutral additive migration expectation. */
 export function withMigratedResearch<T>(world:T):T {
   const copy=withoutResearch(structuredClone(world));
-  for(const p of (copy as {pawns:{priorities:{research?:number;hunt?:number}}[]}).pawns){p.priorities.research=3;p.priorities.hunt=0;}
+  for(const p of (copy as {pawns:{priorities:{basic?:number;research?:number;hunt?:number}}[]}).pawns){p.priorities.basic=3;p.priorities.research=3;p.priorities.hunt=0;}
   return copy;
 }
 
@@ -90,12 +90,20 @@ export function withoutHunting<T>(world:T):T {
 export function withMigratedHunting<T>(world:T):T {
   const copy=withoutHunting(structuredClone(world));
   for(const p of (copy as any).pawns)p.priorities.hunt=0;
+  return withMigratedBasic(copy);
+}
+
+/** Independent V85 expectation: no sanitizer or production migration call. */
+export function withMigratedBasic<T>(world:T):T {
+  const copy=structuredClone(world);
+  for(const p of (copy as {pawns:{priorities:{basic?:number}}[]}).pawns)p.priorities.basic=3;
   return copy;
 }
 
 /** Pre-V84 fixture shape only. Production migration never broadens food filters. */
 export function withoutFoodCrops<T>(world:T):T {
   const w=world as any;
+  for(const p of w.pawns)delete p.priorities.basic;
   for(const policy of w.foodPolicies??[])policy.allowed=policy.allowed.filter((id:string)=>id!=='potato'&&id!=='corn');
   for(const s of [...w.structures??[],...(w.packed??[]).map((p:any)=>p.building)])for(const b of s.bills??[]){delete b.filters.potato;delete b.filters.corn;}
   if(w.spoiled){delete w.spoiled.potato;delete w.spoiled.corn;}

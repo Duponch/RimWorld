@@ -1,23 +1,39 @@
-import { airConditioningUnlocked,clothingUnlocked,RESEARCH_SCALE,intellectualSkill } from '../sim/research';
-import type { Command,World } from '../sim/types';
+import { intellectualSkill, RESEARCH_SCALE, researchUnlocked, type ResearchProject, type ResearchProgress } from '../sim/research';
+import type { Command, World } from '../sim/types';
 
-export function updateResearchPanel(root:HTMLElement,world:World,send:(c:Command)=>void):void {
-  if(!root.querySelector('[data-research-status]')){
-    root.innerHTML='<h3>Climatisation</h3><p>500 points · Débloque le climatiseur (90 acier + 3 composants). Les bases de l’électricité sont connues dans ce scénario.</p><progress data-air-progress max="500" aria-label="Progression Climatisation"></progress><p data-air-status></p><button data-air-start>Rechercher Climatisation</button><h3>Vêtements complexes</h3><p>600 points · Débloque l’établi manuel de tailleur et la chemise en tissu.</p><progress data-research-progress max="600" aria-label="Progression Vêtements complexes"></progress><p data-research-status></p><button data-research-start>Rechercher Vêtements complexes</button><button data-research-pause>Suspendre la recherche</button><p data-research-workers></p><p class="muted" data-research-help>Construisez un bureau de recherche simple dans Architecte → Production, puis affectez un colon dans Travail. Plusieurs bureaux permettent de contribuer au même projet. La tenue tribale reste disponible sans recherche.</p>';
-    root.querySelector<HTMLButtonElement>('[data-air-start]')!.onclick=()=>send({type:'research-project',project:'air-conditioning'});
-    root.querySelector<HTMLButtonElement>('[data-research-start]')!.onclick=()=>send({type:'research-project',project:'complex-clothing'});
-    root.querySelector<HTMLButtonElement>('[data-research-pause]')!.onclick=()=>send({type:'research-project',project:null});
+type ProjectCard = { id: ResearchProject; prefix: string; title: string; cost: number; detail: string; progress: (w: World) => ResearchProgress | undefined };
+const projects: readonly ProjectCard[] = [
+  {id:'batteries', prefix:'battery', title:'Batteries', cost:400, detail:'Stocker le surplus du réseau pour alimenter les appareils après le coucher du soleil. Batterie : 70 acier + 2 composants.', progress:w=>w.research?.batteries},
+  {id:'solar-power', prefix:'solar', title:'Panneaux solaires', cost:600, detail:'Produire jusqu’à 1 700 W selon la lumière naturelle et la surface sans toit. Panneau : 100 acier + 3 composants ; Construction 6.', progress:w=>w.research?.solarPower},
+  {id:'air-conditioning', prefix:'air', title:'Climatisation', cost:500, detail:'Débloque le climatiseur (90 acier + 3 composants).', progress:w=>w.research?.airConditioning},
+  {id:'complex-clothing', prefix:'research', title:'Vêtements complexes', cost:600, detail:'Débloque l’établi manuel de tailleur et la chemise en tissu.', progress:w=>w.research},
+];
+
+export function updateResearchPanel(root: HTMLElement, world: World, send: (command: Command) => void): void {
+  if (!root.querySelector('[data-research-status]')) {
+    const cards = document.createElement('div'); cards.className='research-cards';
+    for (const project of projects) {
+      const card=document.createElement('section'); card.className='research-card';
+      card.innerHTML=`<h3>${project.title}</h3><p>${project.cost} points · ${project.detail}</p><progress data-${project.prefix}-progress max="${project.cost}" aria-label="Progression ${project.title}"></progress><p data-${project.prefix}-status></p><button data-${project.prefix}-start>Rechercher ${project.title}</button>`;
+      card.querySelector('button')!.onclick=()=>send({type:'research-project', project:project.id}); cards.append(card);
+    }
+    root.append(cards);
+    const pause=document.createElement('button'); pause.dataset.researchPause=''; pause.textContent='Suspendre la recherche'; pause.onclick=()=>send({type:'research-project',project:null});
+    const workers=document.createElement('p'); workers.dataset.researchWorkers='';
+    const help=document.createElement('p'); help.dataset.researchHelp=''; help.className='muted';
+    root.append(pause,workers,help);
   }
-  const done=clothingUnlocked(world),active=world.research?.project==='complex-clothing',points=(world.research?.points??0)/RESEARCH_SCALE;
-  const air=world.research?.airConditioning,airDone=airConditioningUnlocked(world),airActive=world.research?.project==='air-conditioning';
-  root.querySelector('[data-research-help]')!.textContent=done&&airDone?'Les deux projets disponibles sont acquis. Leur équipement est accessible dans Architecte ; les autres technologies restent à développer.':'Construisez un bureau de recherche simple dans Architecte → Production, puis affectez un colon dans Travail. Plusieurs bureaux contribuent au même projet. La tenue tribale est disponible sans recherche.';
-  root.querySelector<HTMLProgressElement>('[data-air-progress]')!.value=(air?.points??0)/RESEARCH_SCALE;
-  root.querySelector('[data-air-status]')!.textContent=`${airDone?((world.scenario?.id==='survivors'||world.scenario?.id==='crashlanded')&&air?.completedAt===0?'Acquise au départ':'Terminée'):airActive?'En cours':'En attente'} · ${((air?.points??0)/RESEARCH_SCALE).toFixed(1)} / 500 points`;
-  root.querySelector<HTMLButtonElement>('[data-air-start]')!.disabled=airDone||airActive;
-  root.querySelector<HTMLProgressElement>('[data-research-progress]')!.value=points;
-  root.querySelector('[data-research-status]')!.textContent=`${done?((world.scenario?.id==='survivors'||world.scenario?.id==='crashlanded')&&world.research?.completedAt===0?'Acquise au départ':'Terminée'):active?'En cours':'En attente'} · ${points.toFixed(1)} / 600 points`;
-  root.querySelector<HTMLButtonElement>('[data-research-start]')!.disabled=done||active;
+  for (const project of projects) {
+    const done=researchUnlocked(world,project.id),active=world.research?.project===project.id,progress=project.progress(world),points=(progress?.points??0)/RESEARCH_SCALE;
+    root.querySelector<HTMLProgressElement>(`[data-${project.prefix}-progress]`)!.value=points;
+    const initial=done && progress?.completedAt===0 && (world.scenario?.id==='survivors'||world.scenario?.id==='crashlanded');
+    root.querySelector(`[data-${project.prefix}-status]`)!.textContent=`${done?initial?'Acquise au départ':'Terminée':active?'En cours':'En attente'} · ${points.toFixed(1)} / ${project.cost} points`;
+    root.querySelector<HTMLButtonElement>(`[data-${project.prefix}-start]`)!.disabled=done||active;
+  }
   root.querySelector<HTMLButtonElement>('[data-research-pause]')!.disabled=!world.research?.project;
+  root.querySelector('[data-research-help]')!.textContent=projects.every(p=>researchUnlocked(world,p.id))
+    ? 'Les quatre projets disponibles sont acquis. Les autres technologies restent à développer.'
+    : 'Construisez un bureau de recherche simple dans Architecte → Production, puis affectez un colon dans Travail. Plusieurs bureaux contribuent au même projet. Batteries et panneaux solaires sont deux recherches indépendantes ; les bases de l’électricité sont disponibles dans ce scénario.';
   const workers=world.pawns.filter(p=>p.research).map(p=>`${p.name} · Intellect ${intellectualSkill(p).level} · ${p.state==='working'?'au bureau':'en chemin'}`);
   root.querySelector('[data-research-workers]')!.textContent=workers.join(' ; ')||`${world.structures.filter(s=>s.kind==='research-bench').length} bureau(x) construit(s) · aucun chercheur au travail.`;
 }

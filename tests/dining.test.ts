@@ -10,7 +10,7 @@ function fixture(count = 1, size = 64): World {
   w.foodRules = 'legacy';
   w.tiles = w.tiles.map(() => ({ terrain: 'grass' })); w.resources = []; w.piles = []; w.stockpiles = [];
   w.pawns = w.pawns.slice(0, count);
-  w.pawns.forEach((p, i) => { p.x = 2; p.z = 2 + i * 2; p.hunger = 20; p.rest = 100; p.comfort = 10; p.priorities = {hunt:0,research:0, patient:0,bedrest:0,doctor:0,craft:2,mine:2, gather: 0, build: 0, haul: 0, grow: 0 , cook: 0 }; });
+  w.pawns.forEach((p, i) => { p.x = 2; p.z = 2 + i * 2; p.hunger = 20; p.rest = 100; p.comfort = 10; p.priorities = {basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,craft:2,mine:2, gather: 0, build: 0, haul: 0, grow: 0 , cook: 0 }; });
   refreshStock(w); return w;
 }
 function furniture(w: World, kind: StructureKind, x: number, z: number, orientation: 0 | 1 | 2 | 3 = 0): number {
@@ -114,7 +114,7 @@ test('seat search uses the pickup position and food radius, cardinal adjacency a
 
 test('wood must be delivered before furniture construction; comfort approaches a ceiling and meal memory expires without stacking', () => {
   const w = fixture(1, 32); const p = w.pawns[0]!;
-  p.hunger = 100; p.priorities = {hunt:0,research:0, patient:0,bedrest:0,doctor:0,craft:2,mine:2, gather: 0, build: 1, haul: 1, grow: 0 , cook: 0 };
+  p.hunger = 100; p.priorities = {basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,craft:2,mine:2, gather: 0, build: 1, haul: 1, grow: 0 , cook: 0 };
   addGroundMaterial(w, 'wood', 60, { x: 1, z: 4 });
   expect(applyCommand(w, { type: 'designate', kind: 'table', x: 8, z: 6, orientation: 1 })).toEqual({ ok: true });
   expect(applyCommand(w, { type: 'designate', kind: 'stool', x: 8, z: 5 })).toEqual({ ok: true });

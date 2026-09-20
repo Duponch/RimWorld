@@ -6,7 +6,7 @@ import type { Cell, Job, Pawn, Structure, World } from './types.ts';
 
 export interface FurnitureTarget { structureId: number; kind: Structure['kind'] }
 export interface PackedFurniture { building: Structure; owner: ({type:'ground'} & Cell) | {type:'pawn';pawnId:number} }
-export const minifiable = (kind: string): boolean => ['fueled-stove','electric-stove','butcher-table','research-bench','tailor-bench','bed','table','stool','horseshoes','stonecutter','standing-lamp'].includes(kind);
+export const minifiable = (kind: string): boolean => ['battery','fueled-stove','electric-stove','butcher-table','research-bench','tailor-bench','bed','table','stool','horseshoes','stonecutter','standing-lamp'].includes(kind);
 export const packedAt = (world:World, cell:Cell) => world.packed?.find(p=>p.owner.type==='ground'&&p.owner.x===cell.x&&p.owner.z===cell.z);
 export const furnitureObject = (world:World,id:number) => world.structures.find(s=>s.id===id)??world.packed?.find(p=>p.building.id===id)?.building;
 export function furnitureWorkTarget(world:World,job:Job):Cell & {kind?:Job['kind']} {

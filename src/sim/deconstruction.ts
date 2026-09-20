@@ -20,8 +20,8 @@ export function finishDeconstruction(world: World, pawn: Pawn, job: Job): boolea
   let rng = world.rng, lostWood = 0, lostSteel = 0, lostComponents=0;
   const lostBlocks:Partial<Record<BlockMaterial,number>>={...world.deconstructed.lostBlocks};
   for (const cost of structure.kind === 'campfire' || structure.kind === 'passive-cooler' ? [] : constructionRecipe(structure).ingredients) {
-    let quantity = Math.floor(cost.quantity / 2);
-    if (cost.quantity % 2) {
+    let quantity = structure.kind==='power-conduit'?0:Math.floor(cost.quantity / 2);
+    if (structure.kind!=='power-conduit'&&cost.quantity % 2) {
       rng ^= rng << 13; rng ^= rng >>> 17; rng ^= rng << 5; rng >>>= 0;
       if (rng / 0x100000000 < .5) quantity++;
     }

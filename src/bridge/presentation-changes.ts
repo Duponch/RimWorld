@@ -15,7 +15,7 @@ export class PresentationChanges {
         p.hunting?.animalId,p.hunting?.phase,p.research?.stationId,p.haul?.phase,p.haul?.carryPileId,p.cooking?.phase,p.cooking?.productId,
         p.recreation.task?.activity,p.recreation.task?.buildingId]),
       world.piles.map(p=>[p.id,p.item,p.quantity,p.owner]),
-      world.structures.map(s=>[s.id,s.x,s.z,s.medical,s.fuel? s.fuel.ticks>0:undefined,s.door?.changedAt,s.door?.open,s.power?.on,s.power?.parentId]),
+      world.structures.map(s=>[s.id,s.x,s.z,s.medical,s.fuel? s.fuel.ticks>0:undefined,s.door?.changedAt,s.door?.open,s.power?.on,s.power?.parentId,s.power?.switchOn]),
       (world.packed??[]).map(p=>[p.building.id,p.owner]),
       world.roofing?.constructed,
     ]);

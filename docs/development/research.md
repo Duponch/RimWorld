@@ -1,6 +1,8 @@
-# Recherche et déblocages physiques — V73/V75
+# Recherche et déblocages physiques — V73/V75/V85
 
-Le joueur choisit **Vêtements complexes** ou **Climatisation** dans Recherche, construit un bureau et affecte Recherche dans Travail. Les colons rejoignent une cellule devant un poste réservé. Plusieurs bureaux contribuent au même projet ; aucune progression pendant le trajet, le sommeil ou une autre activité. [Sources et écarts](../research/research-reference.md).
+Le joueur choisit **Vêtements complexes**, **Climatisation**, **Batteries** ou **Panneaux solaires** dans Recherche, construit un bureau et affecte Recherche dans Travail. Les colons rejoignent une cellule devant un poste réservé. Plusieurs bureaux contribuent au même projet ; aucune progression pendant le trajet, le sommeil ou une autre activité. [Sources et écarts](../research/research-reference.md).
+
+V85 ajoute les deux projets énergétiques indépendants : 400 points pour Batteries, 600 pour Panneaux solaires. Les champs `batteries` et `solarPower` conservent chacun points/date ; changer de projet ne perd aucun acquis. Ni l'un ni l'autre n'est octroyé à la migration V84. Les bases électriques connues restent une adaptation des scénarios actuels, pas un arbre complet. [Énergie](power.md).
 
 ## Contrat
 

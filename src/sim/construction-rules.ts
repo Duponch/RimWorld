@@ -1,3 +1,4 @@
+import { conduitKeepsPlant } from './power-construction.ts';
 import { furnitureWorkTarget } from './furniture-rules.ts';
 import { clearsGroundItems } from './occupancy.ts';
 import { footprintCells, STRUCTURE_DEFINITIONS } from './definitions.ts';
@@ -26,14 +27,14 @@ export function constructionObstructions(world:World):ReadonlyMap<number,Constru
     }
   }
   if(!sites.size)return result;
-  for(const resource of world.resources)for(const id of sites.get(resource.z*world.width+resource.x)??[])result.get(id)!.plant??=resource;
+  for(const resource of world.resources)for(const id of sites.get(resource.z*world.width+resource.x)??[])if(!conduitKeepsPlant(world.jobs.find(j=>j.id===id)!.kind,resource.kind))result.get(id)!.plant??=resource;
   for(const pile of world.piles)if(pile.owner.type==='ground')for(const id of sites.get(pile.owner.z*world.width+pile.owner.x)??[])if(clearItems.has(id))result.get(id)!.pile??=pile;
   for(const pack of world.packed??[])if(pack.owner.type==='ground')for(const id of sites.get(pack.owner.z*world.width+pack.owner.x)??[])if(clearItems.has(id)&&world.jobs.find(j=>j.id===id)?.furniture?.structureId!==pack.building.id)result.get(id)!.pack??=pack;
   return result;
 }
 export function constructionObstruction(world: World, job: Job):ConstructionObstruction {
   const cells=new Set(footprintCells(job).map(c=>c.z*world.width+c.x));
-  const plant=world.resources.find(r=>cells.has(r.z*world.width+r.x));
+  const plant=world.resources.find(r=>cells.has(r.z*world.width+r.x)&&!conduitKeepsPlant(job.kind,r.kind));
   const pile=clearsGroundItems(world,job.furniture?.kind??job.kind)?world.piles.find(p=>p.owner.type==='ground'&&cells.has(p.owner.z*world.width+p.owner.x)):undefined;
   const pack=(job.kind==='sow'||clearsGroundItems(world,job.furniture?.kind??job.kind))?world.packed?.find(p=>p.owner.type==='ground'&&cells.has(p.owner.z*world.width+p.owner.x)&&p.building.id!==job.furniture?.structureId):undefined;
   return {plant,pile,pack};

@@ -10,6 +10,7 @@ import { survivorDecisions,survivorInitialAreas } from './scenarios/survivor-pla
 import { furnitureDelay,navigationCosts,terrainTravelDelay } from '../src/sim/furniture-travel';
 import { HILLINESS,resolveSite } from '../src/sim/site';
 import { SCHEMA_VERSION } from '../src/sim/types';
+import { withMigratedBasic } from './scenarios/legacy-skills';
 
 test.each(HILLINESS)('shared player can place its first physical camp on the chosen %s site',hilliness=>{
   const world=createScenarioWorld(42,250,'crashlanded',{hilliness});
@@ -25,7 +26,7 @@ test('real V82 snapshot migrates without inventing a site, terrain, clock or new
   const historical=JSON.parse(gunzipSync(readFileSync(new URL('./fixtures/scenario-v82.json.gz',import.meta.url))).toString());
   expect(historical.schemaVersion).toBe(82);expect(historical.scenario.revision).toBe(1);
   const migrated=deserializeWorld(JSON.stringify(historical));
-  expect(migrated).toEqual({...historical,schemaVersion:SCHEMA_VERSION});expect(migrated.site).toBeUndefined();
+  expect(migrated).toEqual(withMigratedBasic({...historical,schemaVersion:SCHEMA_VERSION}));expect(migrated.site).toBeUndefined();
   for(const mutate of [(w:any)=>w.site=resolveSite(w.seed),(w:any)=>w.scenario.revision=2,(w:any)=>w.tiles[0]={terrain:'rich-soil'},(w:any)=>w.tiles[0]={terrain:'gravel'}]) {
     const bad=structuredClone(historical);mutate(bad);expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(/version 82/);
   }

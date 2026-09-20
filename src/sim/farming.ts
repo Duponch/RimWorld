@@ -49,7 +49,7 @@ function context(world: World): Context {
   return {
     resources: resourceCells(world),
     temperatures: new TemperatureView(world),
-    fixed: new Set([...world.structures, ...world.jobs.filter(j => j.kind==='install'||j.kind in STRUCTURE_DEFINITIONS)].flatMap(s => footprintCells(s).map(c => index(world, c)))),
+    fixed: new Set([...world.structures.filter(s=>s.kind!=='power-conduit'), ...world.jobs.filter(j => j.kind==='install'||j.kind!=='power-conduit'&&j.kind in STRUCTURE_DEFINITIONS)].flatMap(s => footprintCells(s).map(c => index(world, c)))),
   };
 }
 function intention(world: World, zone: GrowingZone, cell: number, ctx: Context, committed=false): { kind: JobKind; cell: number } | null {

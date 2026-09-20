@@ -29,7 +29,7 @@ export function fuelStationReserved(world: World, id: number, exceptPawn?: numbe
 }
 export function fuelCapacity(world: World, id: number, exceptPawn?: number, forced=false): number {
   const fire=refuelable(world,id);
-  if (!fire?.fuel || !forced&&!fire.fuel.autoRefuel || fuelStationReserved(world,id,exceptPawn)) return 0;
+  if (!fire?.fuel || !forced&&(fire.power?.switchOn===false||world.jobs.some(j=>j.flick?.structureId===id)) || !forced&&!fire.fuel.autoRefuel || fuelStationReserved(world,id,exceptPawn)) return 0;
   // Whole wood units only: never silently discard a fractional refill overflow.
   return Math.max(0,Math.floor((fuelLimit(fire.kind)-fire.fuel.ticks)/WOOD_BURN_TICKS)-reservedDestination(world,{type:'fuel',structureId:id},exceptPawn));
 }
@@ -37,7 +37,7 @@ export function wantsFuel(world: World, fire: Structure): boolean {
   return isFueledBuilding(fire.kind) && !!fire.fuel?.autoRefuel && fire.fuel.ticks <= fuelLimit(fire.kind)*AUTO_REFUEL_THRESHOLD && fuelCapacity(world,fire.id)>0;
 }
 export function burnFuel(world: World): void {
-  for (const fire of world.structures) if (isFueledBuilding(fire.kind) && fire.kind!=='fueled-stove' && fire.fuel && fire.fuel.ticks>0) {
+  for (const fire of world.structures) if (isFueledBuilding(fire.kind) && fire.kind!=='fueled-stove' && fire.fuel && fire.fuel.ticks>0 && fire.power?.switchOn!==false) {
     const f=fire.fuel;let amount=1;
     if(fire.kind==='wood-generator'){const total=(f.burnRemainder??0)+11;amount=Math.floor(total/5);f.burnRemainder=total%5;}
     amount=Math.min(amount,f.ticks);f.ticks-=amount;f.burned+=amount;

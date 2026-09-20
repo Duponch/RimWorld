@@ -66,7 +66,7 @@ test('cotton colony mines and builds its research chain, researches from zero, m
   command(w,{type:'designate',kind:'campfire',material:'wood',x:1,z:6});until(w,()=>w.structures.some(s=>s.kind==='campfire'),10000);
   const fire=w.structures.find(s=>s.kind==='campfire')!;command(w,{type:'bill-add',structureId:fire.id});command(w,{type:'bill-update',structureId:fire.id,billId:fire.bills![0]!.id,settings:{...fire.bills![0]!,mode:'until',target:3}});
   let slept=false,ate=false;until(w,()=>{slept ||= p.state==='sleeping';ate ||= p.state==='eating';return (w.research?.points??0)>=598*RESEARCH_SCALE;},120000);
-  writeFileSync('artifacts/research-checkpoint-v74.json',serializeWorld(w));
+  writeFileSync(`artifacts/research-checkpoint-v${w.schemaVersion}.json`,serializeWorld(w));
   until(w,()=>w.research?.completedAt!==undefined);const done=w.research!.completedAt!;expect(w.events.filter(e=>e.message.startsWith('Recherche achevée'))).toHaveLength(1);
   command(w,{type:'designate',kind:'tailor-bench',material:'wood',x:8,z:12});until(w,()=>w.structures.some(s=>s.kind==='tailor-bench'),30000);
   const tailor=w.structures.find(s=>s.kind==='tailor-bench')!;command(w,{type:'bill-add',structureId:tailor.id,recipe:'shirt'});
@@ -75,5 +75,5 @@ test('cotton colony mines and builds its research chain, researches from zero, m
   until(w,()=>w.piles.some(i=>i.item==='cloth-shirt'&&i.owner.type==='ground'),15000);const shirt=w.piles.find(i=>i.item==='cloth-shirt')!;
   command(w,{type:'order-equipment',pawnId:p.id,itemId:shirt.id,action:'wear',queue:false});until(w,()=>shirt.owner.type==='apparel',1500);
   expect(w.piles.filter(i=>i.item==='cloth').reduce((n,i)=>n+i.quantity,0)).toBe(15);expect(slept&&ate).toBe(true);expect(w.research!.completedAt).toBe(done);expect(p.skills.intellectual!.xp).toBeGreaterThan(0);
-  writeFileSync('artifacts/research-colony-v74.json',JSON.stringify({start,end:w.tick,research:w.research,skills:p.skills,shirt,slept,ate,buildings:w.structures.map(s=>s.kind),stock:w.stock},null,2));
+  writeFileSync(`artifacts/research-colony-v${w.schemaVersion}.json`,JSON.stringify({start,end:w.tick,research:w.research,skills:p.skills,shirt,slept,ate,buildings:w.structures.map(s=>s.kind),stock:w.stock},null,2));
 },30000);

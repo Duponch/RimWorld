@@ -1,4 +1,6 @@
-# Validation courante — V84
+# Validation courante — V85
+
+V85 : [réseau construit, batteries, solaire et commutation physique](../history/validation-energy-v85.md), validée dans son périmètre. Contrats et migrations regroupés réussis ; UI native ciblée **1/1 en 52,1 s** avec vraie construction, toiture, commutation et retrait d'un câble sous mur. Le pilote naturel est une **reprise depuis 144 250 jusqu'à 253 280 ticks, J42,21, en 550,14 s**, avec 104 repas dont 11 électriques, gel, nuit sur batterie, coupures et continuations exactes ; ce n'est pas une nouvelle passe monolithique. Charge native `ENERGY=1` à 3/30/100 : image p95 **12,4 / 29,2 / 16,7 ms**, aucune erreur ni compilation tardive pendant les mesures. À cent colons, débit d'environ **3,76× pour 6× demandé**. Charges différentes des lots précédents : aucun gain comparatif déduit. Typage et build passent ; le bilan canonique conserve protocole, corrections et limites.
 
 V84 : [filière alimentaire, malnutrition et progression](../history/validation-food-v84.md). 91 contrôles regroupés, parcours complet de 24 jours, UI fonctionnelle et restauration native de la colonie finale réussis. Mesures CPU/native successives avec cadrage complet ; 6× non tenu à cent colons et cent lièvres. Build, typage et documentation vérifiés. Les résultats historiques sont conservés.
 

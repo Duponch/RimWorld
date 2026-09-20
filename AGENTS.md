@@ -1,5 +1,12 @@
 # Travail sur Lisière
 
+## Habitat et énergie V85
+- Lire `docs/development/power.md` et les recherches réseau/batterie/solaire. Conduits construits, superposition distincte des édifices, interrupteur cardinal, charge entière en 1/120000 Wd ; aucune batterie gratuite ni énergie à la migration. Déconstruction du conduit : aucune restitution. Refuser deux transmetteurs superposés dans les deux sens ; retrait explicite avant remplacement.
+- La commande marche/arrêt réserve un travail physique de Tâches élémentaires, sans XP. Intention, interrupteur réel, alimentation et ravitaillement restent distincts ; interrompre le geste réinitialise sa courte attente, conserve les cargaisons et invalide la lumière après achèvement. Le conduit ne masque ni mur ni délai de cadre selon l'ordre des tableaux.
+- Batteries 400 et solaire 600 : recherches indépendantes. Solaire 4×4, Construction 6, lumière naturelle et cases sans toit ; aucune moyenne de vent inventée pour ajouter l'éolien. Incendies, pannes et réparations générales des appareils restent distincts et absents. V84 strictement validée puis basic 3, pas de ressources ni connexions nouvelles.
+- `energy-player` poursuit le vrai checkpoint Lisière V84 J24 : extraction, recherche, cuisine/froid, nuit et coupures. La partie historique personnelle sert de repère, pas d'échéancier imposé. Banc `ENERGY=1 VALIDATION_VERSION=v85`, CPU/natif/pilote long successifs ; toutes les sources servies gelées pendant UI native. Mode jour : livrer le lot validé puis rendre la main.
+- Reprise validée jusqu'à J42,21, explicitement depuis checkpoint, pas une nouvelle passe monolithique. Suivre les fichiers datés pour diagnostiquer la progression : stdout Vitest peut rester bufferé alors que le pilote avance. Conserver les preuves historiques V74/V75 ; les producteurs courants suffixent leur schéma. À cent personnes/lièvres, CPU p95 56,78 ms et débit natif ≈3,76× pour 6× demandé ; aucun jalon global clos.
+
 ## Filière alimentaire V84
 - Lire `docs/development/food-crops.md`, `food-workstations.md`, `malnutrition.md` et leurs recherches. Pommes de terre/maïs gardent les temps biologiques, sols, produits et âges propres ; aucune récolte forcée à J7. Cuisinières et table construites en 3×1, matières/carburant/courant/services physiques ; table bois 95 unités et 1400 Core, rendement 1 contre 0,7 au poste gratuit. Cuisinière bois : 160 bois/jour de préparation, rien au repos ; électrique 350 W. Hygiène/intoxication restent une chaîne distincte absente.
 - V83 strictement validée avant migration neutre ; nouvelles ressources/postes/malnutrition refusés dans les schémas anciens. Filtres absents restent des refus. La malnutrition humaine/lièvre progresse à faim nulle et récupère après ingestion, avec incapacité/décès physiologiques ; aucune guérison instantanée ni médicament fictif. Faire avancer le dossier avant une première lésion/exposition pour ne pas sauter une pulsation ; réconcilier le courant avant les files après retrait du générateur.
@@ -152,7 +159,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 84 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 85 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)
