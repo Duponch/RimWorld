@@ -1,5 +1,7 @@
 # Première pression climatique — V74
 
+**Référence du 20 septembre :** le [Core 1.6.4871 inspecté](../research/colony-pacing-reference.md) sélectionne les canicules parmi les incidents admissibles, sans rendez-vous garanti à la première semaine. Le calendrier prototype ci-dessous reste livré ; sa future intégration au narrateur ne doit pas être confondue avec les effets thermiques déjà présents.
+
 [Recherche et écarts](../research/heatwave-reference.md), [température](temperature.md), [habillement](armor.md), [santé](health.md), [preuves](../history/validation-heatwave-v74.md).
 
 ## Boucle livrée

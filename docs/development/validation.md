@@ -1,5 +1,7 @@
 # Validation courante — V81
 
+Enquête du 20 septembre : [audit de référence Core et diagnostic du parcours suspendu](../history/reference-audit-2026-09-20.md), sans changement du gameplay V81. Les menus demandés et les corrections déduites restent à implémenter.
+
 V81 : [infection, soins répétés, migration et issue médicale](../history/validation-infections-v81.md). Les scénarios cliniques contrôlés, acquisition naturelle du pilote et continuations UI sont distingués ; aucune validation d’un catalogue médical complet.
 
 V80 : [départ Trois survivants, migrations, première installation et calibration](../history/validation-scenario-v80.md). Les campagnes initiales et leurs corrections restent distinguées des passes finales.

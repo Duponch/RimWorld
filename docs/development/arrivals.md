@@ -1,5 +1,7 @@
 # Demandes d’accueil — V66
 
+**Référence du 20 septembre :** dans le [Core 1.6.4871 inspecté](../research/colony-pacing-reference.md), les occasions d’accueil dépendent des incidents admissibles et de l’adaptation de population. La pendule locale décrite ici reste une adaptation provisoire, pas une arrivée garantie du scénario Atterrissage forcé.
+
 V69 : une nouvelle offre enregistre aussi les [traits du profil](traits.md) et les annonce avant acceptation. L’entrée copie ces identifiants sur la personne. Une offre migrée sans traits reste neutre, sans réinterprétation rétroactive de son numéro de profil ; aucun tirage supplémentaire ni changement de cadence.
 
 Le nouveau camp paisible reçoit des demandes pendant la partie. Une lettre dans les alertes propose accueillir, refuser ou décider plus tard ; le temps de simulation continue si le jeu n’est pas en pause. [Référence et adaptations](../research/arrival-reference.md).

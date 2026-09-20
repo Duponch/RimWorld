@@ -1,5 +1,7 @@
 # Premier raid du camp — V68
 
+**Référence du 20 septembre :** la [lecture Core 1.6.4871](../research/colony-pacing-reference.md) distingue introduction classique à 5,4 jours écoulés, fenêtres du narrateur et budget contextuel. Le calendrier provisoire décrit ici reste celui du jeu livré ; il ne représente pas encore Cassandra / Récit d’aventure.
+
 Le joueur doit défendre **la colonie qu’il construit**, puis rendre leur autonomie aux survivants. [Référence confrontée](../research/raid-reference.md), [preuves](../history/validation-raids-v68.md). Corpus chapitres 17/20/21/23/24, SYS/TEST-110/111/117/132..135 ; budget de narrateur SYS-133 différé.
 
 ## Calendrier et groupe

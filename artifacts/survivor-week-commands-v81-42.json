@@ -1,0 +1,714 @@
+{
+  "seed": 42,
+  "initialTick": 0,
+  "finalTick": 626,
+  "journal": [
+    {
+      "tick": 0,
+      "reason": "Tracer une réserve assez grande pour les provisions réelles, sur un sol libre.",
+      "command": {
+        "type": "area",
+        "action": "stockpile",
+        "from": {
+          "x": 122,
+          "z": 129
+        },
+        "to": {
+          "x": 127,
+          "z": 132
+        },
+        "filters": {
+          "wood": true,
+          "food": true,
+          "steel": true,
+          "component": true,
+          "medicine": true,
+          "weapon": true,
+          "apparel": true
+        },
+        "priority": 2,
+        "capacity": 75
+      }
+    },
+    {
+      "tick": 0,
+      "reason": "Installer trois couchages près de l’arrivée naturelle.",
+      "command": {
+        "type": "designate",
+        "kind": "bed",
+        "x": 116,
+        "z": 130,
+        "material": "wood",
+        "orientation": 0
+      }
+    },
+    {
+      "tick": 0,
+      "reason": "Installer trois couchages près de l’arrivée naturelle.",
+      "command": {
+        "type": "designate",
+        "kind": "bed",
+        "x": 117,
+        "z": 130,
+        "material": "wood",
+        "orientation": 0
+      }
+    },
+    {
+      "tick": 0,
+      "reason": "Installer trois couchages près de l’arrivée naturelle.",
+      "command": {
+        "type": "designate",
+        "kind": "bed",
+        "x": 118,
+        "z": 130,
+        "material": "wood",
+        "orientation": 0
+      }
+    },
+    {
+      "tick": 0,
+      "reason": "Préparer un potager pendant que les rations initiales donnent de la marge.",
+      "command": {
+        "type": "area",
+        "action": "growing",
+        "from": {
+          "x": 122,
+          "z": 135
+        },
+        "to": {
+          "x": 126,
+          "z": 138
+        }
+      }
+    },
+    {
+      "tick": 0,
+      "reason": "Répartir construction, cuisine et potager selon les compétences visibles.",
+      "command": {
+        "type": "priority",
+        "pawnId": 3752,
+        "work": "build",
+        "value": 3
+      }
+    },
+    {
+      "tick": 0,
+      "reason": "Répartir construction, cuisine et potager selon les compétences visibles.",
+      "command": {
+        "type": "priority",
+        "pawnId": 3752,
+        "work": "cook",
+        "value": 1
+      }
+    },
+    {
+      "tick": 0,
+      "reason": "Répartir construction, cuisine et potager selon les compétences visibles.",
+      "command": {
+        "type": "priority",
+        "pawnId": 3752,
+        "work": "grow",
+        "value": 3
+      }
+    },
+    {
+      "tick": 0,
+      "reason": "Répartir construction, cuisine et potager selon les compétences visibles.",
+      "command": {
+        "type": "priority",
+        "pawnId": 3752,
+        "work": "haul",
+        "value": 2
+      }
+    },
+    {
+      "tick": 0,
+      "reason": "Répartir construction, cuisine et potager selon les compétences visibles.",
+      "command": {
+        "type": "priority",
+        "pawnId": 3754,
+        "work": "build",
+        "value": 1
+      }
+    },
+    {
+      "tick": 0,
+      "reason": "Répartir construction, cuisine et potager selon les compétences visibles.",
+      "command": {
+        "type": "priority",
+        "pawnId": 3754,
+        "work": "cook",
+        "value": 3
+      }
+    },
+    {
+      "tick": 0,
+      "reason": "Répartir construction, cuisine et potager selon les compétences visibles.",
+      "command": {
+        "type": "priority",
+        "pawnId": 3754,
+        "work": "grow",
+        "value": 3
+      }
+    },
+    {
+      "tick": 0,
+      "reason": "Répartir construction, cuisine et potager selon les compétences visibles.",
+      "command": {
+        "type": "priority",
+        "pawnId": 3754,
+        "work": "haul",
+        "value": 2
+      }
+    },
+    {
+      "tick": 0,
+      "reason": "Répartir construction, cuisine et potager selon les compétences visibles.",
+      "command": {
+        "type": "priority",
+        "pawnId": 3756,
+        "work": "build",
+        "value": 3
+      }
+    },
+    {
+      "tick": 0,
+      "reason": "Répartir construction, cuisine et potager selon les compétences visibles.",
+      "command": {
+        "type": "priority",
+        "pawnId": 3756,
+        "work": "cook",
+        "value": 3
+      }
+    },
+    {
+      "tick": 0,
+      "reason": "Répartir construction, cuisine et potager selon les compétences visibles.",
+      "command": {
+        "type": "priority",
+        "pawnId": 3756,
+        "work": "grow",
+        "value": 1
+      }
+    },
+    {
+      "tick": 0,
+      "reason": "Répartir construction, cuisine et potager selon les compétences visibles.",
+      "command": {
+        "type": "priority",
+        "pawnId": 3756,
+        "work": "haul",
+        "value": 2
+      }
+    },
+    {
+      "tick": 0,
+      "reason": "Étendre le petit potager pour préparer la relève des rations.",
+      "command": {
+        "type": "area",
+        "action": "growing",
+        "from": {
+          "x": 122,
+          "z": 135
+        },
+        "to": {
+          "x": 131,
+          "z": 140
+        }
+      }
+    },
+    {
+      "tick": 0,
+      "reason": "Garder deux heures de loisirs avant le sommeil.",
+      "command": {
+        "type": "schedule-paint",
+        "pawnId": 3752,
+        "hours": [
+          19,
+          20
+        ],
+        "assignment": "recreation"
+      }
+    },
+    {
+      "tick": 0,
+      "reason": "Garder deux heures de loisirs avant le sommeil.",
+      "command": {
+        "type": "schedule-paint",
+        "pawnId": 3754,
+        "hours": [
+          19,
+          20
+        ],
+        "assignment": "recreation"
+      }
+    },
+    {
+      "tick": 0,
+      "reason": "Garder deux heures de loisirs avant le sommeil.",
+      "command": {
+        "type": "schedule-paint",
+        "pawnId": 3756,
+        "hours": [
+          19,
+          20
+        ],
+        "assignment": "recreation"
+      }
+    },
+    {
+      "tick": 0,
+      "reason": "Permettre aux blessés de recevoir les soins et de récupérer au lit.",
+      "command": {
+        "type": "priority",
+        "pawnId": 3752,
+        "work": "bedrest",
+        "value": 1
+      }
+    },
+    {
+      "tick": 0,
+      "reason": "Désigner le meilleur médecin et conserver des remplaçants en cas de blessure.",
+      "command": {
+        "type": "priority",
+        "pawnId": 3752,
+        "work": "doctor",
+        "value": 2
+      }
+    },
+    {
+      "tick": 0,
+      "reason": "Permettre aux blessés de recevoir les soins et de récupérer au lit.",
+      "command": {
+        "type": "priority",
+        "pawnId": 3754,
+        "work": "bedrest",
+        "value": 1
+      }
+    },
+    {
+      "tick": 0,
+      "reason": "Désigner le meilleur médecin et conserver des remplaçants en cas de blessure.",
+      "command": {
+        "type": "priority",
+        "pawnId": 3754,
+        "work": "doctor",
+        "value": 3
+      }
+    },
+    {
+      "tick": 0,
+      "reason": "Permettre aux blessés de recevoir les soins et de récupérer au lit.",
+      "command": {
+        "type": "priority",
+        "pawnId": 3756,
+        "work": "bedrest",
+        "value": 1
+      }
+    },
+    {
+      "tick": 0,
+      "reason": "Confier le revolver initial au meilleur tireur, par un équipement physique.",
+      "command": {
+        "type": "order-equipment",
+        "pawnId": 3752,
+        "itemId": 3776,
+        "action": "equip",
+        "queue": false
+      }
+    },
+    {
+      "tick": 557,
+      "reason": "Protéger le tireur avec le gilet réellement apporté au débarquement.",
+      "command": {
+        "type": "order-equipment",
+        "pawnId": 3752,
+        "itemId": 3777,
+        "action": "wear",
+        "queue": false
+      }
+    },
+    {
+      "tick": 626,
+      "reason": "Fermer le petit dortoir en gardant une porte accessible.",
+      "command": {
+        "type": "designate",
+        "kind": "wall",
+        "x": 115,
+        "z": 129,
+        "material": "wood",
+        "orientation": 0
+      }
+    },
+    {
+      "tick": 626,
+      "reason": "Fermer le petit dortoir en gardant une porte accessible.",
+      "command": {
+        "type": "designate",
+        "kind": "wall",
+        "x": 116,
+        "z": 129,
+        "material": "wood",
+        "orientation": 0
+      }
+    },
+    {
+      "tick": 626,
+      "reason": "Fermer le petit dortoir en gardant une porte accessible.",
+      "command": {
+        "type": "designate",
+        "kind": "wall",
+        "x": 117,
+        "z": 129,
+        "material": "wood",
+        "orientation": 0
+      }
+    },
+    {
+      "tick": 626,
+      "reason": "Fermer le petit dortoir en gardant une porte accessible.",
+      "command": {
+        "type": "designate",
+        "kind": "wall",
+        "x": 118,
+        "z": 129,
+        "material": "wood",
+        "orientation": 0
+      }
+    },
+    {
+      "tick": 626,
+      "reason": "Fermer le petit dortoir en gardant une porte accessible.",
+      "command": {
+        "type": "designate",
+        "kind": "wall",
+        "x": 119,
+        "z": 129,
+        "material": "wood",
+        "orientation": 0
+      }
+    },
+    {
+      "tick": 626,
+      "reason": "Fermer le petit dortoir en gardant une porte accessible.",
+      "command": {
+        "type": "designate",
+        "kind": "wall",
+        "x": 115,
+        "z": 130,
+        "material": "wood",
+        "orientation": 0
+      }
+    },
+    {
+      "tick": 626,
+      "reason": "Fermer le petit dortoir en gardant une porte accessible.",
+      "command": {
+        "type": "designate",
+        "kind": "wall",
+        "x": 119,
+        "z": 130,
+        "material": "wood",
+        "orientation": 0
+      }
+    },
+    {
+      "tick": 626,
+      "reason": "Fermer le petit dortoir en gardant une porte accessible.",
+      "command": {
+        "type": "designate",
+        "kind": "wall",
+        "x": 115,
+        "z": 131,
+        "material": "wood",
+        "orientation": 0
+      }
+    },
+    {
+      "tick": 626,
+      "reason": "Fermer le petit dortoir en gardant une porte accessible.",
+      "command": {
+        "type": "designate",
+        "kind": "wall",
+        "x": 119,
+        "z": 131,
+        "material": "wood",
+        "orientation": 0
+      }
+    },
+    {
+      "tick": 626,
+      "reason": "Fermer le petit dortoir en gardant une porte accessible.",
+      "command": {
+        "type": "designate",
+        "kind": "wall",
+        "x": 115,
+        "z": 132,
+        "material": "wood",
+        "orientation": 0
+      }
+    },
+    {
+      "tick": 626,
+      "reason": "Fermer le petit dortoir en gardant une porte accessible.",
+      "command": {
+        "type": "designate",
+        "kind": "wall",
+        "x": 119,
+        "z": 132,
+        "material": "wood",
+        "orientation": 0
+      }
+    },
+    {
+      "tick": 626,
+      "reason": "Fermer le petit dortoir en gardant une porte accessible.",
+      "command": {
+        "type": "designate",
+        "kind": "wall",
+        "x": 115,
+        "z": 133,
+        "material": "wood",
+        "orientation": 0
+      }
+    },
+    {
+      "tick": 626,
+      "reason": "Fermer le petit dortoir en gardant une porte accessible.",
+      "command": {
+        "type": "designate",
+        "kind": "wall",
+        "x": 116,
+        "z": 133,
+        "material": "wood",
+        "orientation": 0
+      }
+    },
+    {
+      "tick": 626,
+      "reason": "Fermer le petit dortoir en gardant une porte accessible.",
+      "command": {
+        "type": "designate",
+        "kind": "door",
+        "x": 117,
+        "z": 133,
+        "material": "wood",
+        "orientation": 0
+      }
+    },
+    {
+      "tick": 626,
+      "reason": "Fermer le petit dortoir en gardant une porte accessible.",
+      "command": {
+        "type": "designate",
+        "kind": "wall",
+        "x": 118,
+        "z": 133,
+        "material": "wood",
+        "orientation": 0
+      }
+    },
+    {
+      "tick": 626,
+      "reason": "Fermer le petit dortoir en gardant une porte accessible.",
+      "command": {
+        "type": "designate",
+        "kind": "wall",
+        "x": 119,
+        "z": 133,
+        "material": "wood",
+        "orientation": 0
+      }
+    },
+    {
+      "tick": 626,
+      "reason": "Préparer des repas à partir des premières récoltes.",
+      "command": {
+        "type": "designate",
+        "kind": "campfire",
+        "x": 120,
+        "z": 133,
+        "material": "wood",
+        "orientation": 0
+      }
+    },
+    {
+      "tick": 626,
+      "reason": "Ajouter un loisir construit près du camp.",
+      "command": {
+        "type": "designate",
+        "kind": "horseshoes",
+        "x": 120,
+        "z": 135,
+        "material": "wood",
+        "orientation": 0
+      }
+    }
+  ],
+  "summary": {
+    "tick": 626,
+    "scenario": {
+      "id": "survivors",
+      "revision": 1,
+      "landing": {
+        "x": 124,
+        "z": 124
+      }
+    },
+    "anchor": {
+      "x": 115,
+      "z": 129
+    },
+    "beds": 3,
+    "shelteredBeds": 0,
+    "walls": 0,
+    "doors": 0,
+    "roofs": 0,
+    "stockCells": 24,
+    "stored": {
+      "wood": 0,
+      "steel": 10,
+      "component": 0,
+      "medicine": 25,
+      "survival-meal": 10,
+      "simple-meal": 0
+    },
+    "materials": {
+      "steel": 450,
+      "component": 30
+    },
+    "food": {
+      "survival": 50,
+      "simple": 0,
+      "rice": 0,
+      "berries": 0,
+      "nutrition": 45
+    },
+    "crops": [
+      {
+        "id": 3865,
+        "growth": 0.0001
+      },
+      {
+        "id": 3867,
+        "growth": 0.0001
+      },
+      {
+        "id": 3869,
+        "growth": 0.0001
+      },
+      {
+        "id": 3870,
+        "growth": 0.0001
+      },
+      {
+        "id": 3872,
+        "growth": 0.0001
+      },
+      {
+        "id": 3874,
+        "growth": 0.0001
+      },
+      {
+        "id": 3875,
+        "growth": 0.0001
+      },
+      {
+        "id": 3877,
+        "growth": 0.0001
+      },
+      {
+        "id": 3879,
+        "growth": 0.0001
+      },
+      {
+        "id": 3881,
+        "growth": 0.0001
+      },
+      {
+        "id": 3883,
+        "growth": 0.0001
+      },
+      {
+        "id": 3884,
+        "growth": 0.0001
+      },
+      {
+        "id": 3886,
+        "growth": 0.0001
+      },
+      {
+        "id": 3889,
+        "growth": 0.0001
+      },
+      {
+        "id": 3892,
+        "growth": 0.0001
+      }
+    ],
+    "growingCells": 43,
+    "pending": 38,
+    "pawns": [
+      {
+        "id": 3752,
+        "name": "Ada",
+        "state": "idle",
+        "hunger": 73.30666666666406,
+        "rest": 80.08833333333345,
+        "mood": 68,
+        "bed": null
+      },
+      {
+        "id": 3754,
+        "name": "Noé",
+        "state": "moving",
+        "hunger": 68.30666666666406,
+        "rest": 77.08833333333345,
+        "mood": 62,
+        "bed": null
+      },
+      {
+        "id": 3756,
+        "name": "Mina",
+        "state": "working",
+        "hunger": 63.30666666666425,
+        "rest": 74.08833333333345,
+        "mood": 59.968000000002206,
+        "bed": null
+      }
+    ],
+    "wildlife": 12,
+    "arrivals": null,
+    "raid": null
+  },
+  "weapon": {
+    "id": 3776,
+    "kind": "weapon",
+    "item": "revolver",
+    "quantity": 1,
+    "owner": {
+      "type": "equipment",
+      "pawnId": 3752
+    },
+    "weapon": {
+      "quality": "normal",
+      "hitPoints": 100
+    }
+  },
+  "armor": {
+    "id": 3777,
+    "kind": "apparel",
+    "item": "flak-vest",
+    "quantity": 1,
+    "owner": {
+      "type": "apparel",
+      "pawnId": 3752
+    },
+    "apparel": {
+      "quality": "normal",
+      "hitPoints": 200
+    }
+  },
+  "errors": []
+}

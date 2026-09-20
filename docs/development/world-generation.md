@@ -1,5 +1,7 @@
 # Génération des cartes — profils tempérés
 
+**Calibration relue le 20 septembre :** la [comparaison Core 1.6.4871](../research/map-calibration-reference.md) confirme 250², mais identifie les écarts de contexte de site, eau, sols, maturité sauvage et budget de minerais. Les règles ci-dessous décrivent le générateur livré, pas une génération Core déjà équivalente. Les anciennes cartes restent conservées.
+
 Contrat courant V80, relu le 20 septembre 2026. Le paysage est généré dans `src/sim/generation.ts`. Le point d'entrée de l'application est désormais `createScenarioWorld` dans `new-game.ts` : il sépare le paysage du choix de scénario, du site d'arrivée et des possessions. `createWorld` et `generateWorld` sans profil conservent le camp historique pour les anciennes fixtures et le scénario de laboratoire.
 
 ## Contrat commun et sauvegarde

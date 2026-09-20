@@ -1,0 +1,188 @@
+{
+  "format_version": 1,
+  "source_sha256": "cb5fcd3513ab2d0ee5f4c2c711121d9f832ab320da004edcce3b20dc2a723ef1",
+  "source_bytes": 7765905,
+  "game_version": "1.6.4871 rev591",
+  "active_packages": {
+    "count": 1,
+    "core_only": true
+  },
+  "elapsed_ticks": 283,
+  "scenario": {
+    "def": null,
+    "part_classes": {
+      "ScenPart_ConfigPage_ConfigureStartingPawns": 1,
+      "ScenPart_ForcedHediff": 1,
+      "ScenPart_GameStartDialog": 1,
+      "ScenPart_PlayerPawnsArriveMethod": 1,
+      "ScenPart_ScatterThingsAnywhere": 3,
+      "ScenPart_ScatterThingsNearPlayerStart": 2,
+      "ScenPart_StartingAnimal": 1,
+      "ScenPart_StartingThing_Defined": 10
+    },
+    "identity": "unknown_without_separate_definition_comparison"
+  },
+  "storyteller": "Cassandra",
+  "difficulty": "Medium",
+  "definitions": {
+    "xml_file_count": 550,
+    "manifest_sha256": "8fed6508f0ec1bff76746478a6482959ea16022bd13bd0dd248304d66fb787f7"
+  },
+  "limits": [
+    "Short-hash labels are candidates, not a complete runtime Def allocation.",
+    "Dynamic stone terrain names are included; other generated Defs may be missing.",
+    "The verified Core 1.6.4871 steel/squirrel-meat collision is adjusted only for that version.",
+    "Compressed grids include hidden cells; ore is not necessarily visible or accessible.",
+    "Direct counts include spawned map objects, not container contents or off-map pawns.",
+    "Animal counts include tame and wild animals; no faction or personal identity is emitted.",
+    "No world river graph or cave mutator decoding: these properties remain unknown.",
+    "A single snapshot cannot establish generation distributions or progression rates."
+  ],
+  "maps": [
+    {
+      "dimensions": [
+        250,
+        250
+      ],
+      "area": 62500,
+      "site": {
+        "status": "decoded_tile",
+        "biome_candidate": "BorealForest",
+        "biome_hash": 6343,
+        "hilliness": "large-hills",
+        "world_rivers": "unknown",
+        "caves": "unknown"
+      },
+      "terrain": {
+        "status": "candidate_names",
+        "cell_count": 62500,
+        "empty_cells": 0,
+        "cells_by_def_candidate": {
+          "AncientConcrete": 12,
+          "AncientTile": 43,
+          "FlagstoneGranite": 124,
+          "FlagstoneLimestone": 23,
+          "FlagstoneMarble": 87,
+          "FlagstoneSandstone": 14,
+          "FlagstoneSlate": 114,
+          "Gravel": 2645,
+          "Marble_Rough": 6600,
+          "Marsh": 6829,
+          "MossyTerrain": 15166,
+          "Sandstone_Rough": 2145,
+          "Slate_Rough": 7882,
+          "Soil": 17843,
+          "SoilRich": 903,
+          "TileGranite": 154,
+          "TileLimestone": 422,
+          "TileSandstone": 67,
+          "TileSlate": 157,
+          "WaterShallow": 1270
+        },
+        "unresolved_hashes": {}
+      },
+      "roofs": {
+        "status": "candidate_names",
+        "cell_count": 62500,
+        "empty_cells": 50893,
+        "cells_by_def_candidate": {
+          "RoofConstructed": 229,
+          "RoofRockThick": 7333,
+          "RoofRockThin": 4045
+        },
+        "unresolved_hashes": {}
+      },
+      "compressed_things": {
+        "status": "candidate_names",
+        "cell_count": 62500,
+        "empty_cells": 49248,
+        "cells_by_def_candidate": {
+          "ChunkMarble": 442,
+          "ChunkSandstone": 392,
+          "ChunkSlagSteel": 3,
+          "ChunkSlate": 304,
+          "Marble": 4250,
+          "MineableComponentsIndustrial": 151,
+          "MineableGold": 7,
+          "MineableJade": 4,
+          "MineableSilver": 44,
+          "MineableSteel": 920,
+          "MineableUranium": 10,
+          "Sandstone": 1463,
+          "Slate": 5262
+        },
+        "unresolved_hashes": {}
+      },
+      "candidate_counts": {
+        "natural_rock_cells": 10975,
+        "ore_cells_by_def": {
+          "MineableComponentsIndustrial": 151,
+          "MineableGold": 7,
+          "MineableJade": 4,
+          "MineableSilver": 44,
+          "MineableSteel": 920,
+          "MineableUranium": 10
+        },
+        "loose_chunk_cells_by_def": {
+          "ChunkMarble": 442,
+          "ChunkSandstone": 392,
+          "ChunkSlagSteel": 3,
+          "ChunkSlate": 304
+        },
+        "running_water_cells": 0
+      },
+      "direct_counts": {
+        "plants_by_def": {
+          "Bryolux": 6,
+          "Glowstool": 4,
+          "Plant_Berry": 76,
+          "Plant_Brambles": 677,
+          "Plant_Bush": 1250,
+          "Plant_Grass": 4078,
+          "Plant_HealrootWild": 75,
+          "Plant_Moss": 1811,
+          "Plant_Timbershroom": 5,
+          "Plant_TreeBirch": 701,
+          "Plant_TreePine": 2014,
+          "Plant_TreePoplar": 572
+        },
+        "plant_total": 11269,
+        "tree_total_by_name_prefix": 3287,
+        "berry_growth": {
+          "count": 76,
+          "unknown": 0,
+          "ge_065": 49,
+          "ge_1": 32
+        },
+        "spawned_pawns_by_def": {
+          "Cougar": 1,
+          "Hare": 5,
+          "Horse": 7,
+          "Human": 3,
+          "Megaspider": 1,
+          "Muffalo": 5,
+          "Rat": 4,
+          "Spelopede": 2,
+          "Squirrel": 4,
+          "Turkey": 2,
+          "Wolf_Arctic": 1,
+          "Wolf_Timber": 2
+        },
+        "spawned_animals_by_def": {
+          "Cougar": 1,
+          "Hare": 5,
+          "Horse": 7,
+          "Megaspider": 1,
+          "Muffalo": 5,
+          "Rat": 4,
+          "Spelopede": 2,
+          "Squirrel": 4,
+          "Turkey": 2,
+          "Wolf_Arctic": 1,
+          "Wolf_Timber": 2
+        },
+        "pawns_with_unclassified_race": 0
+      }
+    }
+  ]
+}

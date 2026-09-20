@@ -2,11 +2,23 @@
 
 ## Choisir son départ
 
+Le jeu livré reste **V81**. Le futur accueil avec **Nouvelle partie / Charger**, **Atterrissage forcé** et **Récit d'aventure** a été demandé ; il n'est pas encore disponible. Les choix ci-dessous décrivent le prototype actuel. Sa cadence et sa carte sont en cours de recalibration sur la [référence Core vérifiée](../research/core-reference-baseline.md).
+
 **Trois survivants** est le nouveau départ proposé : forêt tempérée, trois personnes en chemise, 300 bois, 450 acier, 30 composants, 50 repas emballés, 30 médicaments, un revolver et un gilet. Les réserves sont de vraies piles près de l’arrivée. **Vêtements complexes** et **Climatisation** sont déjà connus : préparez couchages, stockage, nourriture renouvelable et protection selon votre site. La taille standard reste **250 × 250**. La caméra rejoint votre point d’arrivée.
 
 Dans **Menu → Nouvelle colonie**, choisissez la graine, la taille et le scénario. **Camp pédagogique** conserve l’ancien départ et les deux recherches à effectuer ; **Rencontre armée** est un exercice de combat, à partir de 64 × 64. Le menu rappelle l’origine de la partie, quand elle est connue. Les sauvegardes historiques ne gagnent ni objets ni technologies. « Colonie précédente » permet de retrouver la partie remplacée.
 
 Ce départ s’inspire de Crashlanded avec le contenu disponible : autres armes, argent, animal domestique, capsules, tenues complètes et difficulté du narrateur original manquent encore. Un seul profil tempéré est proposé ; les formats compacts servent aux essais. [Contrat et différences](../development/scenario-start.md).
+
+## Développer le camp actuel
+
+Posez d’abord trois lits, une réserve accessible et un potager. Répartissez Construction, Culture, Cuisine et Transport dans **Travail**, puis fermez et couvrez le dortoir. Les 50 repas emballés donnent du temps : gardez-les pendant que la production s’installe. Un petit champ de vingt cases est un démarrage, pas une réserve durable pour trois adultes. Dans notre lumière tempérée, le riz demande environ sept jours de croissance sur l’herbe fertile, davantage sur la terre : cueillez des baies mûres ou chassez pour compléter l’attente.
+
+Construisez un feu, autorisez les ingrédients disponibles et utilisez une facture **Jusqu’à six repas simples**. Ce stock court limite le gaspillage sans réfrigération. Observez les produits réellement livrés : une plante semée ou une facture créée ne nourrit encore personne. À distance comparable, un repas simple est préféré à une ration ; une ration plus proche peut rester le choix du colon.
+
+Confiez le revolver au meilleur tireur et faites-lui porter le gilet avant l’alerte. Le premier raid du profil actuel arrive vers le quatrième jour : mobilisez, choisissez des positions accessibles, puis démobilisez après la menace pour permettre les secours, les soins et la reprise. Réservez un médecin valide et surveillez les traitements dans **Santé**, y compris après la fermeture d’une plaie. Une infection n’est pas systématique.
+
+Préparez aussi un **refroidisseur passif** dans le dortoir fermé et couvert, avec du bois accessible pour les recharges : la première canicule peut commencer entre six et sept jours écoulés. Contrôlez la température réelle des lits. Cet appareil protège du chaud mais ne réfrigère pas les aliments. Accepter une arrivée demande un couchage et davantage de nourriture ; refuser a un effet sur l’humeur. Ces conseils concernent notre profil provisoire, pas une difficulté RimWorld certifiée.
 
 **Chasser et cuisiner V79 :** équipez un civil d'un revolver, activez **Chasse** dans **Travail**, puis cochez **Chasser** sur un lièvre dans **Faune**. Il approche, tire et achève au contact une proie à terre si nécessaire. Le corps reste physique et peut pourrir. Une réserve avec le filtre **Dépouilles animales** permet son rangement, même si le chasseur n'est pas affecté à Transport. Vous pouvez annuler la désignation ; les balles déjà tirées continuent leur trajet.
 

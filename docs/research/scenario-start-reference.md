@@ -1,5 +1,7 @@
 # Départ cohérent — référence et décisions V80
 
+**Complément du 20 septembre, après V81 :** la [nouvelle enquête](core-reference-baseline.md) dispose maintenant des Defs/classes de l'installation **1.6.4871**, de captures fournies par l'utilisateur et de sauvegardes datées. Elle confirme les quantités de départ ci-dessous et distingue enfin les réglages initiaux des choix du joueur. Atterrissage forcé / Cassandra / Récit d'aventure constituent désormais la cible choisie ; les décisions V80 décrites ici restent celles du prototype livré, sans changement rétroactif des parties. Les anciennes limitations de version ci-dessous concernent cette enquête V80, pas les points revérifiés explicitement dans le complément.
+
 Recherche renouvelée le **20 septembre 2026**, après la filière chasse–boucherie V79. Objectif : une nouvelle partie dont scénario, personnes, dotation, technologies, paysage et pression forment un ensemble explicable. Le [contrat de scénario](../development/scenario-start.md) porte les choix locaux ; [ROADMAP](../ROADMAP.md) reste le calendrier. Une référence vérifiée ne constitue ni une implémentation ni une preuve d'équilibrage.
 
 ## Corpus et niveau de preuve

@@ -1,5 +1,7 @@
 # Noyau de simulation — contrat courant
 
+**Écart de rythme identifié le 20 septembre :** les dix ticks locaux par seconde et 6 000 ticks par jour décrits ici donnent actuellement dix minutes par jour à 1×. La référence Core 1.6.4871 vérifiée donne seize minutes quarante ; heure locale initiale 6 h, distincte du temps écoulé. Cette correction transversale worker/rendu/persistance reste à réaliser, voir la [base de référence](../research/core-reference-baseline.md).
+
 V77 : le noyau médical partage les modèles immuables humain/lièvre ; les propriétaires et intentions animales restent distincts. Tirs et overlay de projectiles incluent les animaux, avec arêtes/ralentissements communs ; [contrat courant](animal-combat.md).
 
 Schéma courant **81** : [infection de plaie et immunité](infections.md). Validation stricte V80 avant migration neutre, sans exposition ni maladie ajoutée aux anciennes plaies. Les paragraphes versionnés suivants retracent les contrats historiques, pas un autre état courant.
