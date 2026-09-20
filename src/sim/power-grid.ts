@@ -2,8 +2,8 @@ import type { Structure } from './types.ts';
 
 /** Nominal roles do not depend on production, fuel or stored energy. */
 export const isPowerConduit=(kind:unknown):boolean=>kind==='power-conduit';
-export const isPowerTransmitter=(kind:unknown):boolean=>kind==='wood-generator'||kind==='solar-generator'||kind==='battery'||kind==='power-conduit'||kind==='power-switch';
-export const isPowerConnector=(kind:unknown):boolean=>kind==='standing-lamp'||kind==='cooler'||kind==='electric-stove';
+export const isPowerTransmitter=(kind:unknown):boolean=>kind==='wood-generator'||kind==='solar-generator'||kind==='wind-turbine'||kind==='battery'||kind==='power-conduit'||kind==='power-switch';
+export const isPowerConnector=(kind:unknown):boolean=>kind==='standing-lamp'||kind==='cooler'||kind==='heater'||kind==='electric-stove';
 
 /** A stopped generator remains a wire. Only the physical switch opens the grid;
  * its requested state lives in a job and cannot affect this query. */

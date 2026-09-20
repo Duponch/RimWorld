@@ -1,3 +1,4 @@
+import { attachedFireMesh } from './FireLayer';
 import * as THREE from 'three/webgpu';
 import { coreTimeSeconds,localTimeSeconds } from '../bridge/clock-rate';
 import { Fn,If,attribute,cos,sin,float,positionLocal,vec3,uniform,mix,min } from 'three/tsl';
@@ -13,6 +14,7 @@ import { furnitureSurfaces } from './furniture-motion';
  * and segment boundaries; continuous translation and the rig run on the GPU. */
 export class WildlifeLayer {
   readonly mesh:THREE.Mesh;
+  readonly flames:THREE.Mesh;
   readonly travelTime=uniform(0);readonly blend=uniform(1);private time=uniform(0);
   private keys=new Map<number,string>();private source:World|undefined;
   private surfaces:ReadonlyMap<number,number>=new Map();
@@ -33,14 +35,22 @@ export class WildlifeLayer {
       const cy=cos(pose.w),sy=sin(pose.w);
       return vec3(q.x.mul(cy).add(q.z.mul(sy)),q.y,q.z.mul(cy).sub(q.x.mul(sy))).add(pose.xyz);
     })();
-    this.mesh=new THREE.Mesh(hareGeometry(MAX_WILDLIFE),mat);this.mesh.name='Wild hares — GPU rig';this.mesh.frustumCulled=false;this.mesh.castShadow=true;this.mesh.receiveShadow=true;
+    this.mesh=new THREE.Mesh(hareGeometry(MAX_WILDLIFE),mat);this.mesh.name='Wild hares — GPU rig';this.mesh.frustumCulled=false;this.mesh.castShadow=true;this.mesh.receiveShadow=true;this.flames=attachedFireMesh(this.mesh.geometry,this,.6);
   }
   prepare():()=>void {const g=this.mesh.geometry as THREE.InstancedBufferGeometry,n=g.instanceCount;g.instanceCount=Math.max(1,n);return ()=>{g.instanceCount=n;};}
   update(world:World,timeline:MotionTimeline|undefined):void {
-    if(this.source!==world){this.source=world;this.keys.clear();this.surfaces=furnitureSurfaces(world);}
+    const changed=this.source!==world;
+    if(changed){this.source=world;this.keys.clear();this.surfaces=furnitureSurfaces(world);}
     const tick=timeline?.tick??world.tick,origin=Math.floor(tick/1024)*1024;
     this.travelTime.value=localTimeSeconds(tick,origin);this.time.value=localTimeSeconds(tick)%(2*Math.PI);
     const g=this.mesh.geometry as THREE.InstancedBufferGeometry,from=g.getAttribute('aFrom') as THREE.InstancedBufferAttribute,to=g.getAttribute('aTo') as THREE.InstancedBufferAttribute,times=g.getAttribute('aTravel') as THREE.InstancedBufferAttribute,state=g.getAttribute('aAnimal') as THREE.InstancedBufferAttribute;
+    if(changed){
+    const fireSize=this.mesh.geometry.getAttribute('aFire') as THREE.InstancedBufferAttribute;
+    const burning=new Map((world.fires?.items??[]).filter(f=>f.attachedAnimalId!==undefined).map(f=>[f.attachedAnimalId!,f.size]));
+    const animals=world.wildlife?.animals??[];
+    animals.forEach((a,i)=>fireSize.setX(i,burning.has(a.id)?Math.max(.5,burning.get(a.id)!):0));if(!animals.length)fireSize.setX(0,0);fireSize.needsUpdate=true;
+    (this.flames.geometry as THREE.InstancedBufferGeometry).instanceCount=Math.max(1,animals.length);
+    }
     const animals=world.wildlife?.animals??[];g.instanceCount=animals.length;let dirty=false;
     animals.forEach((a,i)=>{
       const edge=timeline?.segment(a.id)??a.motion,active=!!edge&&tick>=edge.start&&tick<edge.end;

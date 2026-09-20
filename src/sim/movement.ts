@@ -1,4 +1,5 @@
 import { apparelMoveFactor } from './apparel-rules.ts';
+import { weatherMoveFactor } from './weather-exposure.ts';
 import { isStunned } from './stun.ts';
 import { actorStepAllowed } from './combat-navigation.ts';
 import { syncPatient,carrierOf } from './rescue-state.ts';
@@ -21,7 +22,7 @@ export function startTravel(world:World,pawn:Pawn,next:Cell,getLight?:LightReade
   let start = pawn.motion && pawn.motion.end >= world.tick-1 ? pawn.motion.end : world.tick;
   const door=doorAt(world,next);if(door)start=Math.max(start,door.door!.changedAt+(1-door.door!.from)*importDoorDuration(door));
   const terrainDelay=furnitureDelay(world,pawn,next);
-  let speedFactor=(getLight?.()??new LightEnvironmentCache().read(world)).speedAt(pawn)*pawnBody(pawn).capacities.moving*apparelMoveFactor(world,pawn);
+  let speedFactor=(getLight?.()??new LightEnvironmentCache().read(world)).speedAt(pawn)*pawnBody(pawn).capacities.moving*apparelMoveFactor(world,pawn)*weatherMoveFactor(world,pawn);
   if(world.schemaVersion>=86){if(pawn.prisoner)speedFactor*=.35;if(pawn.rescue?.phase==='carry')speedFactor*=.6;}
   if(pawn.mental?.crisis&&!pawn.need)speedFactor=Math.min(speedFactor/2,TRAVEL_TICKS/5);
   const duration = TRAVEL_TICKS * edgeLength(pawn,next)/speedFactor+terrainDelay;

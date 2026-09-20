@@ -1,3 +1,5 @@
+import { validPlantLife } from '../sim/plant-life-save.ts';
+import { resourceMaxHp } from '../sim/thing-damage-rules.ts';
 import { validPlantThermalFactor } from '../sim/thermal-plants.ts';
 import { validOre } from '../sim/ore.ts';
 import { validMiningDamage } from '../sim/mining-rules.ts';
@@ -13,7 +15,11 @@ export type SnapshotMessage = SnapshotHeader & (
 );
 
 const equalResource = (a: Resource, b: Resource): boolean => a.id === b.id && a.kind === b.kind
-  && a.x === b.x && a.z === b.z && a.amount === b.amount && a.growth === b.growth && a.growthTick === b.growthTick && a.growthThermalFactor === b.growthThermalFactor && a.stone === b.stone;
+  && a.x === b.x && a.z === b.z && a.amount === b.amount && a.growth === b.growth && a.growthTick === b.growthTick && a.growthThermalFactor === b.growthThermalFactor && a.stone === b.stone && a.damage === b.damage
+  && a.plantLife?.since === b.plantLife?.since && a.plantLife?.bornAt === b.plantLife?.bornAt
+  && a.plantLife?.age === b.plantLife?.age && a.plantLife?.darkTicks === b.plantLife?.darkTicks
+  && a.plantLife?.leaflessAt === b.plantLife?.leaflessAt && a.plantLife?.nextCheck === b.plantLife?.nextCheck;
+const copyResource=(r:Resource):Resource=>({...r,...r.plantLife?{plantLife:{...r.plantLife}}:{}});
 
 /** Transport cache only: never mutates the simulation or contributes to a saved game. */
 export class SnapshotEncoder {
@@ -39,7 +45,7 @@ export class SnapshotEncoder {
       this.source = world; this.width = world.width; this.height = world.height;
       this.terrain = world.tiles.map(tile => tile.terrain);
       this.stones = world.tiles.map(tile => tile.stone);this.damage=world.tiles.map(t=>t.miningDamage);this.ores=world.tiles.map(t=>t.ore);
-      this.orderedResources = world.resources.map(resource => ({ ...resource }));
+      this.orderedResources = world.resources.map(copyResource);
       this.resources = new Map(this.orderedResources.map(resource => [resource.id, resource]));
       return { ...header, kind: 'checkpoint', world };
     }
@@ -64,7 +70,7 @@ export class SnapshotEncoder {
       const previous = sameSlot ? ordered : this.resources.get(resource.id);
       let cached = previous;
       if (!previous || !equalResource(previous, resource)) {
-        const copy = { ...resource }; upserted.push(copy);
+        const copy = copyResource(resource); upserted.push(copy);
         if (sameSlot) this.orderedResources[index] = copy;
         cached = copy;
       }
@@ -140,6 +146,7 @@ export class SnapshotDecoder {
           touched.add(id);
         }
         for (const resource of upserted) {
+          if(!validPlantLife(resource,message.world.schemaVersion,message.world)||resource.damage!==undefined&&(message.world.schemaVersion<87||!Number.isSafeInteger(resource.damage)||resource.damage<1||resource.damage>=resourceMaxHp(resource)))return resync('État végétal invalide.');
           if (!validPlantThermalFactor(resource,message.world.schemaVersion)) return resync('Facteur thermique végétal invalide.');
           if (!validStoneIdentity(resource.stone, resource.kind, message.world.schemaVersion)) return resync('Identité géologique invalide.');
           if (touched.has(resource.id)) return resync('Ressource modifiée plusieurs fois.');

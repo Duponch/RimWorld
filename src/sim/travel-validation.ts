@@ -5,6 +5,8 @@ import { blockedCells, canStep, cellIndex } from './pathfinding.ts';
  * V86's slowest actor is a prisoner, never also a carrier. Once neutral travel
  * exceeds 45 ticks the stagger floor no longer lengthens it; stun adds ≤4.5. */
 export const MIN_PAWN_SPEED_V86=.128*((4.6-.12)/4.6)/2*.35;
+export const MIN_PAWN_SPEED_V87=MIN_PAWN_SPEED_V86*.8;
+export const MAX_PAWN_DELAY_V87=Math.ceil(3*Math.SQRT2/MIN_PAWN_SPEED_V87+5+4.5);
 export const MAX_PAWN_DELAY_V86=Math.ceil(3*Math.SQRT2/MIN_PAWN_SPEED_V86+5+4.5);
 
 /** A diagonal passes over the common corner of four cells. Construction cannot

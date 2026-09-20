@@ -1,0 +1,36 @@
+{
+  "version": 87,
+  "controlled": false,
+  "source": "tmp/environment-final-v87.json",
+  "sha256": "cec15fc400b8cdf47a24bcacb7ff331b6bdaaec369bf81a184a822d3c819347c",
+  "initialTick": 816438,
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "status": "passed",
+  "stage": "continuation",
+  "backend": "WebGPU",
+  "finalTick": 816578,
+  "date": "1 avrimai 5502 · Printemps",
+  "weather": {
+    "revision": 1,
+    "originTick": 457698,
+    "lastCoreTick": 8165780,
+    "rng": 1828870106,
+    "current": "clear",
+    "previous": "clear",
+    "ageCore": 33098,
+    "durationCore": 77318,
+    "fireWatchCore": 8165568,
+    "largeFire": false,
+    "lightningCount": 17,
+    "lastLightning": {
+      "x": 21,
+      "z": 241,
+      "coreTick": 4748858
+    }
+  },
+  "fires": 0,
+  "errors": []
+}

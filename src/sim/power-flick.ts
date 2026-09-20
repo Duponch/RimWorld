@@ -2,7 +2,7 @@ import { releaseAssignments,releaseWork,planCommandDrops } from './work-release.
 import { reconcilePower } from './power.ts';
 import type { CommandResult,Job,Structure,World } from './types.ts';
 
-export const canFlickPower=(s:Structure):boolean=>['wood-generator','standing-lamp','cooler','electric-stove','power-switch'].includes(s.kind)&&!!s.power;
+export const canFlickPower=(s:Structure):boolean=>['heater','wood-generator','standing-lamp','cooler','electric-stove','power-switch'].includes(s.kind)&&!!s.power;
 export const actualPowerSwitch=(s:Structure):boolean=>s.power?.switchOn!==false;
 
 /** A command queues work. It never switches a circuit from a distance. */

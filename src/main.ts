@@ -1,3 +1,7 @@
+import { climateDateLabel,climateControls } from './ui/climate-inspection';
+import { WEATHER } from './sim/weather-definitions';
+import { perceivedWeather } from './sim/weather';
+import { firePosition } from './sim/fire-rules';
 import { calendarTick } from './sim/calendar';
 import { GameSession, SAVE_KEY, PREVIOUS_KEY } from './ui/game-session';
 import { createFrontMenu } from './ui/front-menu';
@@ -69,7 +73,7 @@ import { gameLayout, storageSettings, toolDefinitions } from './ui/layout';
 import type { ArchitectCategory, Panel, Tool } from './ui/layout';
 
 import { recreationInspection, updateRecreationInspection } from './ui/recreation-inspection';
-const jobLabels: Record<JobKind, string> = { flick:'Actionner un interrupteur', 'power-conduit':'Construction du câble', 'power-switch':'Construction de l’interrupteur', battery:'Construction de la batterie', 'solar-generator':'Construction du générateur solaire', 'fueled-stove':'Cuisinière à bois','electric-stove':'Cuisinière électrique','butcher-table':'Table de boucherie', 'butcher-spot':'Emplacement de boucherie', cooler:'Climatiseur', 'research-bench':'Bureau de recherche','tailor-bench':'Établi de tailleur', 'crafting-spot':'Emplacement d’artisanat', repair:'Réparation', 'wood-generator':'Construction du générateur à bois', 'standing-lamp':'Construction de la lampe', 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'Pose de toit', 'remove-roof':'Retrait de toit', door:'Construction de la porte', stonecutter:'Construction de la table de taille', mine:'Minage', uninstall:'Désinstallation',install:'Réinstallation', deconstruct: 'Déconstruction', chop: 'Abattage', harvest: 'Récolte', cut: 'Coupe de plante', sow: 'Semis', wall: 'Construction du mur', bed: 'Construction du lit', table: 'Construction de la table', stool: 'Construction du tabouret', horseshoes: 'Construction du piquet de fers à cheval', campfire: 'Construction du feu de camp' };
+const jobLabels: Record<JobKind, string> = { heater:'Radiateur','wind-turbine':'Éolienne',flick:'Actionner un interrupteur', 'power-conduit':'Construction du câble', 'power-switch':'Construction de l’interrupteur', battery:'Construction de la batterie', 'solar-generator':'Construction du générateur solaire', 'fueled-stove':'Cuisinière à bois','electric-stove':'Cuisinière électrique','butcher-table':'Table de boucherie', 'butcher-spot':'Emplacement de boucherie', cooler:'Climatiseur', 'research-bench':'Bureau de recherche','tailor-bench':'Établi de tailleur', 'crafting-spot':'Emplacement d’artisanat', repair:'Réparation', 'wood-generator':'Construction du générateur à bois', 'standing-lamp':'Construction de la lampe', 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'Pose de toit', 'remove-roof':'Retrait de toit', door:'Construction de la porte', stonecutter:'Construction de la table de taille', mine:'Minage', uninstall:'Désinstallation',install:'Réinstallation', deconstruct: 'Déconstruction', chop: 'Abattage', harvest: 'Récolte', cut: 'Coupe de plante', sow: 'Semis', wall: 'Construction du mur', bed: 'Construction du lit', table: 'Construction de la table', stool: 'Construction du tabouret', horseshoes: 'Construction du piquet de fers à cheval', campfire: 'Construction du feu de camp' };
 const stateLabels: Record<Pawn['state'], string> = { resting:'Au lit pour soins', downed:'À terre', dead:'Décédé', idle: 'Disponible', moving: 'En chemin', working: 'Au travail', sleeping: 'Se repose', hungry: 'Cherche à manger', eating: 'Mange', recreating: 'Se divertit' };
 const resourceLabels = { potato:'Plant de pommes de terre',corn:'Plant de maïs', tree: 'Arbre', berries: 'Buisson de baies', rock: 'Pierre au sol', rice: 'Plant de riz', cotton: 'Cotonnier' };
 const params = new URLSearchParams(location.search);
@@ -206,7 +210,7 @@ function applyTool(tool: Tool) {
     button.setAttribute('aria-pressed', String(active));
   }
   el('tool-instruction').textContent = constructionUI.update(tool, toolDefinitions.find(item => item.id === tool)?.hint??'Choisissez le nouvel emplacement du meuble. Q/E : rotation. Échap : annuler.');
-  el('placement-controls').hidden = tool !== 'battery' && tool !== 'fueled-stove' && tool !== 'electric-stove' && tool !== 'butcher-table' && tool !== 'install' && tool !== 'bed' && tool !== 'table' && tool !== 'campfire' && tool !== 'stonecutter' && tool !== 'butcher-spot' && tool !== 'crafting-spot' && tool !== 'research-bench' && tool !== 'tailor-bench' && tool !== 'cooler';
+  el('placement-controls').hidden = tool !== 'wind-turbine' && tool !== 'battery' && tool !== 'fueled-stove' && tool !== 'electric-stove' && tool !== 'butcher-table' && tool !== 'install' && tool !== 'bed' && tool !== 'table' && tool !== 'campfire' && tool !== 'stonecutter' && tool !== 'butcher-spot' && tool !== 'crafting-spot' && tool !== 'research-bench' && tool !== 'tailor-bench' && tool !== 'cooler';
   el('storage-options').hidden = tool !== 'stockpile';
 }
 function setTool(tool: Tool) {
@@ -345,6 +349,8 @@ function rebuildInspector() {
   if (close) close.onclick = clearSelection;
 }
 function actionLabel(pawn: Pawn) {
+  if(pawn.burning)return pawn.burning.phase==='panic'?'En feu · panique':'Éteint les flammes sur lui';
+  if(pawn.firefighting)return pawn.firefighting.phase==='approach'?'Rejoint un incendie':'Éteint un incendie';
   if(pawn.prisoner)return queryPawnStatus(snapshot!,pawn).reason;
   if(pawn.mental?.crisis)return queryPawnStatus(snapshot!,pawn).reason;
   if(pawn.flee)return pawn.path.length||pawn.moveCooldown>0?'Fuit une menace':'Reste à couvert après la fuite';
@@ -381,10 +387,10 @@ function rebuildPawns(world: World) {
   el('work-rows').replaceChildren(...world.pawns.filter(isColonist).map(pawn => {
     const row = document.createElement('tr'); row.dataset.worker = String(pawn.id);
     const name = document.createElement('th'); name.scope = 'row'; name.textContent = pawn.name; row.append(name);
-    for (const work of ['patient','doctor','bedrest','basic','warden','hunt', 'gather', 'build', 'haul', 'grow', 'cook', 'craft', 'mine', 'research'] as WorkType[]) {
+    for (const work of ['firefight','patient','doctor','bedrest','basic','warden','hunt', 'gather', 'build', 'haul', 'grow', 'cook', 'craft', 'mine', 'research'] as WorkType[]) {
       const cell = document.createElement('td'), select = document.createElement('select');
       select.dataset.work = work; select.dataset.owner = String(pawn.id);
-      select.setAttribute('aria-label', `Priorité ${{ warden:'Geôlier',basic:'Tâches élémentaires',hunt:'Chasse',research:'recherche',patient:'patient',bedrest:'repos au lit',doctor:'médecin', mine:'minage', gather: 'collecte', build: 'construction', haul: 'transport', grow: 'culture', cook: 'cuisine', craft:'artisanat' }[work]} ${pawn.name}`);
+      select.setAttribute('aria-label', `Priorité ${{ firefight:'Incendie',warden:'Geôlier',basic:'Tâches élémentaires',hunt:'Chasse',research:'recherche',patient:'patient',bedrest:'repos au lit',doctor:'médecin', mine:'minage', gather: 'collecte', build: 'construction', haul: 'transport', grow: 'culture', cook: 'cuisine', craft:'artisanat' }[work]} ${pawn.name}`);
       for (let value = 0; value <= 4; value++) { const option = document.createElement('option'); option.value = String(value); option.textContent = String(value); select.append(option); }
       select.onchange = () => { void attempt(async () => { try { await client.command({ type: 'priority', pawnId: pawn.id, work, value: Number(select.value) }); } finally { renderState(); } }); };
       cell.append(select); row.append(cell);
@@ -411,7 +417,10 @@ function renderState() {
   el('scenario-current').textContent=(world.scenario?SCENARIOS[world.scenario.id].label:'Partie historique · départ non renseigné')+(world.site?` · Forêt tempérée · ${HILLINESS_LABELS[world.site.hilliness]}`:'');
   el('population').textContent = String(world.pawns.filter(p=>isColonist(p)&&p.state!=='dead').length); el('map-size').textContent = `${world.width} × ${world.height}`;
   el('outdoor-temperature').textContent = `Extérieur : ${outdoorTemperature(world).toFixed(1)} °C`;
-  el('day').textContent = `Jour ${1 + Math.floor(calendarTick(world) / TICKS_PER_DAY)}`;
+  el('day').textContent = climateDateLabel(world);
+  el('weather').textContent=world.weather?WEATHER[perceivedWeather(world)].label:'';
+  const climateKey=world.climate?`${world.climate.adoptedAt}:${Math.floor(world.tick/TICKS_PER_DAY)}`:'historical';
+  const climateRoot=el('climate-options');if(climateRoot.dataset.key!==climateKey){climateRoot.dataset.key=climateKey;climateRoot.replaceChildren(climateControls(world,c=>void attempt(()=>client.command(c))));}
   const hour = 24 * (calendarTick(world) % TICKS_PER_DAY) / TICKS_PER_DAY;
   el('clock').textContent = `${String(Math.floor(hour)).padStart(2, '0')}:${String(Math.floor((hour % 1) * 60)).padStart(2, '0')}`;
   el('pause-banner').hidden = currentSpeed !== 0;
@@ -451,7 +460,7 @@ function renderState() {
     else if(pawn.prisoner){el('selected-name').textContent=pawn.name;el('selected-action').textContent=actionLabel(pawn);updatePrisonerInspection(el('inspector'),world,pawn);}
     else if(!isColonist(pawn)){el('selected-name').textContent=pawn.name;el('selected-action').textContent=actionLabel(pawn);updateEquipmentInspection(el('inspector'),world,pawn);updateHealthInspection(el('inspector'),pawn,world);}
     else {
-      el('selected-name').textContent = pawn.name; el('selected-action').textContent = pawn.draft||pawn.equipmentTask||pawn.need||pawn.feed||pawn.tend||pawn.rescue||pawn.state==='dead'||pawn.state==='downed' ? actionLabel(pawn) : `${actionLabel(pawn)} · ${queryPawnStatus(world, pawn).reason}`;
+      el('selected-name').textContent = pawn.name; el('selected-action').textContent = pawn.burning||pawn.firefighting||pawn.draft||pawn.equipmentTask||pawn.need||pawn.feed||pawn.tend||pawn.rescue||pawn.state==='dead'||pawn.state==='downed' ? actionLabel(pawn) : `${actionLabel(pawn)} · ${queryPawnStatus(world, pawn).reason}`;
       updateEquipmentInspection(el('inspector'),world,pawn);updateSkillsInspection(el('inspector'),pawn);updateHealthInspection(el('inspector'),pawn,world);
       updateRecreationInspection(el('inspector'),pawn);
       roomInspection.update(el('inspector'), world, pawn);
@@ -521,6 +530,7 @@ function renderState() {
   const alerts: string[] = [];
   const crises=living.filter(p=>p.mental?.crisis).length;if(crises)alerts.push(`${crises} colon(s) en errance triste`);
   const enemy=world.pawns.find(p=>!isColonist(p)&&!p.prisoner&&activeThreat(p));
+  const fires=world.fires?.items??[],fireAlert=el<HTMLButtonElement>('inspect-fire');fireAlert.hidden=!fires.length;fireAlert.textContent=`Incendie · ${fires.length} foyer${fires.length>1?'s':''} · voir`;fireAlert.onclick=()=>{const cell=firePosition(world,fires[0]!);if(cell){applyTool('select');pickCell(cell.x,cell.z);renderer?.focusCell(cell);}};
   const threatButton=el<HTMLButtonElement>('inspect-threat');threatButton.hidden=!enemy;if(enemy){threatButton.textContent='Menace armée · voir';threatButton.onclick=()=>selectPawn(enemy.id);}
   const downed=living.filter(p=>p.state==='downed').length,bleeding=living.filter(p=>p.health&&medicalBleed(p.health)>=.1).length,deaths=world.pawns.filter(isColonist).length-living.length;
   const starving=living.filter(p=>(p.health?.malnutrition??0)>0).length;if(starving)alerts.push(`${starving} colon(s) en malnutrition`);
@@ -630,7 +640,7 @@ document.addEventListener('keydown', event => {
   if(event.key.toLowerCase()==='r'&&selection.ids.size){event.preventDefault();if(!event.repeat)toggleDraft(snapshot?.pawns.filter(p=>selection.ids.has(p.id)&&isColonist(p)&&!p.prisoner)??[],c=>void attempt(async()=>{await client.command(c);renderState();}));return;}
   const shortcuts: Record<string, Tool> = { m:'mine', c: 'chop', r: 'harvest', b: 'wall', l: 'bed', x: 'cancel' };
   const key = event.key.toLowerCase(); if (key in shortcuts) setTool(shortcuts[key]);
-  else if ((currentTool === 'battery' || currentTool === 'fueled-stove' || currentTool === 'electric-stove' || currentTool === 'butcher-table' || currentTool === 'install' || currentTool === 'bed' || currentTool === 'table' || currentTool === 'campfire' || currentTool === 'stonecutter' || currentTool === 'butcher-spot' || currentTool === 'crafting-spot' || currentTool === 'research-bench' || currentTool === 'tailor-bench' || currentTool === 'cooler') && (key === 'q' || key === 'e')) { event.preventDefault(); rotatePlacement(key === 'q' ? -1 : 1); }
+  else if ((currentTool === 'battery' || currentTool === 'fueled-stove' || currentTool === 'electric-stove' || currentTool === 'butcher-table' || currentTool === 'install' || currentTool === 'bed' || currentTool === 'table' || currentTool === 'campfire' || currentTool === 'stonecutter' || currentTool === 'butcher-spot' || currentTool === 'crafting-spot' || currentTool === 'research-bench' || currentTool === 'tailor-bench' || currentTool === 'cooler' || currentTool === 'wind-turbine') && (key === 'q' || key === 'e')) { event.preventDefault(); rotatePlacement(key === 'q' ? -1 : 1); }
   else if (key === 's') { event.preventDefault(); setTool('stockpile'); }
 });
 client.onError = message => notify(message, true);

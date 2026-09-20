@@ -16,6 +16,7 @@ import { AIR_CONDITIONING_COST,CLOTHING_RESEARCH_COST } from './research.ts';
 import { DEFAULT_SCENARIO,isScenarioId,SCENARIOS,SCENARIO_REVISION,type ScenarioId } from './scenario-definitions.ts';
 import { startingPawn } from './starting-pawns.ts';
 import { initializeCampTraits } from './traits.ts';
+import { adoptEnvironment } from './environment-step.ts';
 import type { Cell,World } from './types.ts';
 import { enableWildlife } from './wildlife.ts';
 
@@ -99,5 +100,6 @@ export function createScenarioWorld(seed:number,size:number,id:ScenarioId=DEFAUL
     if(natural)enableWildlife(world,undefined,'natural');else enableWildlife(world);
   }
   world.scenario={id,revision:site?2:SCENARIO_REVISION,landing};
+  if(natural)adoptEnvironment(world);
   return world;
 }

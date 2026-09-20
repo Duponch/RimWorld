@@ -1,4 +1,5 @@
 import { huntingPermission } from './hunting-state.ts';
+import { weatherShotFactor } from './weather-exposure.ts';
 import { friendlyFireFactor } from './game-profile.ts';
 import { combatTarget,combatTargetKey,combatTargetSize,hostileTarget,isAnimalTarget } from './combat-target.ts';
 import { automaticPermission,automaticTarget } from './automatic-combat-state.ts';
@@ -92,7 +93,7 @@ export function advanceShooter(world:World,pawn:Pawn,core:number,queries:Queries
   if(core<shot.stance.endsAtCore)return;
   const {target,weapon,profile,line}=plan,standing=!['sleeping','resting','downed'].includes(target.state),body=queries.body(pawn).capacities;
   const cover=shotCover(queries.grid(),pawn,target,combatTargetKey(target));
-  const aim=shotAim({distance:line.distance,pawnAccuracy:shootingAccuracy(pawn.skills.shooting.level,body.sight,body.manipulation).perCell,weaponAccuracy:profile.accuracy,targetSize:combatTargetSize(target),standing,weather:1,blindSmoke:false},cover.passChance);
+  const aim=shotAim({distance:line.distance,pawnAccuracy:shootingAccuracy(pawn.skills.shooting.level,body.sight,body.manipulation).perCell,weaponAccuracy:profile.accuracy,targetSize:combatTargetSize(target),standing,weather:weatherShotFactor(world,pawn,target),blindSmoke:false},cover.passChance);
   const random={rng:world.rng};
   const emission=emitRevolverBullet({grid:queries.grid(),line,origin:{x:pawn.x+.5,z:pawn.z+.5},launcherKey:`pawn:${pawn.id}`,equipmentKey:`pile:${weapon.id}`,target:{key:combatTargetKey(target),cell:target,full:false,canBenefitFromCover:true},aim,cover,profile,canHitOtherPawns:true,preventFriendlyFire:false,coverAnchor:key=>queries.targets().anchor(key)},()=>healthRandom(random));
   registerWorldProjectile(world,emission.flight,profile.quality,{friendlyPawnIds:world.pawns.filter(p=>!hostileTo(pawn,p)).map(p=>p.id),friendlyFireFactor:friendlyFireFactor(world)},random.rng,core);

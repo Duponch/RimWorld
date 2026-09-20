@@ -45,7 +45,7 @@ export function validateRaids(w:World,version:number,ids:Set<number>):string[] {
   for(const p of w.pawns){const r:unknown=p.raid;if(r===undefined)continue;
     if(!object(r)||!keys(r,['group','exiting','goal'])||!integer(r.group,1,s.serial)||typeof r.exiting!=='boolean'||r.goal!==null&&!cell(r.goal)||p.faction!=='outlaws'||(r.group===s.active?.id?!s.active?.members.includes(p.id)||(p.prisoner?!r.exiting||r.goal!==null:r.exiting!==(s.active.phase==='withdraw')):!r.exiting)){errors.push('Invalid raider mandate.');continue;}
     if(p.prisoner&&(!r.exiting||r.goal!==null))errors.push('Captive retains a raid navigation mandate.');
-    if(!p.prisoner&&p.path.length&&!p.melee&&!p.tactics&&!p.need&&(!r.goal||p.path.at(-1)!.x!==(r.goal as {x:number}).x||p.path.at(-1)!.z!==(r.goal as {z:number}).z))errors.push('Raid route misses its goal.');
+    if(!(version>=87&&p.burning)&&!p.prisoner&&p.path.length&&!p.melee&&!p.tactics&&!p.need&&(!r.goal||p.path.at(-1)!.x!==(r.goal as {x:number}).x||p.path.at(-1)!.z!==(r.goal as {z:number}).z))errors.push('Raid route misses its goal.');
     if(r.exiting&&(p.tactics?.targetId!=null||p.shooting?.order||p.melee?.order&&!p.melee.order.structure))errors.push('Retreating raider retains a human target.');
   }
   return errors;

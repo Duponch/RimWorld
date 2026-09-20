@@ -24,6 +24,8 @@ export const toolDefinitions: { id: Tool; icon: string; title: string; hint: str
   { id: 'bed', icon: '▰', title: 'Lit', hint: 'empreinte 1 × 2 · Q / E pour tourner', key: 'L', category: 'furniture' },
   { id: 'table', icon: '▤', title: 'Table', hint: '1 × 2 · placer des tabourets contre le bord · Q / E pour tourner', key: '', category: 'furniture' },
   { id: 'horseshoes', icon: '∩', title: 'Fers à cheval', hint: '3 joueurs maximum · places de lancer à 5 cases avec vue dégagée', key: '', category: 'recreation' },
+  {id:'heater',icon:'♨',title:'Radiateur',hint:'50 acier, 1 composant · Construction 5 · 175 W · thermostat',key:'',category:'temperature'},
+  {id:'wind-turbine',icon:'✣',title:'Éolienne',hint:'7 × 2 · 100 acier, 2 composants · Construction 4 · couloir de vent dégagé · Q / E pour tourner',key:'',category:'power'},
   {id:'cooler',icon:'❄',title:'Climatiseur',hint:'Faces bleue froide / rouge chaude · Construction 5 · Climatisation requise · Q/E : tourner',key:'',category:'temperature'},
   {id:'wood-generator',icon:'ϟ',title:'Générateur à bois',hint:'2 × 2 · 1 000 W · réservoir vide à remplir · 22 bois/jour',key:'',category:'power'},
   {id:'power-conduit',icon:'━',title:'Câble électrique',hint:'1 acier par case · raccorde les bâtiments · peut passer sous un mur · aucun remboursement à la déconstruction',key:'',category:'power'},
@@ -109,7 +111,7 @@ export function gameLayout(): string {
     <section id="work-panel" class="management-panel work-panel panel" aria-label="Travail" hidden>
       <div class="panel-heading"><h2>Travail</h2><button data-close-panel aria-label="Fermer Travail">×</button></div>
       <p>Priorités manuelles : <b>1</b> haute · <b>4</b> basse · <b>0</b> désactivée. Le transport livre aussi les chantiers.</p>
-      <div class="work-table-wrap"><table><thead><tr><th>Colon</th><th>Patient</th><th>Médecin</th><th>Repos au lit</th><th>Tâches élémentaires</th><th>Geôlier</th><th>Chasse</th><th>Collecte</th><th>Construction</th><th>Transport</th><th>Culture</th><th>Cuisine</th><th>Artisanat</th><th>Minage</th><th>Recherche</th><th>Activité</th></tr></thead><tbody id="work-rows"></tbody></table></div>
+      <div class="work-table-wrap"><table><thead><tr><th>Colon</th><th>Incendie</th><th>Patient</th><th>Médecin</th><th>Repos au lit</th><th>Tâches élémentaires</th><th>Geôlier</th><th>Chasse</th><th>Collecte</th><th>Construction</th><th>Transport</th><th>Culture</th><th>Cuisine</th><th>Artisanat</th><th>Minage</th><th>Recherche</th><th>Activité</th></tr></thead><tbody id="work-rows"></tbody></table></div>
     </section>
     ${scheduleLayout()}
     ${foodPolicyLayout()}
@@ -120,7 +122,7 @@ export function gameLayout(): string {
       <div id="journal-items"></div>
     </section>
     <section id="menu-panel" class="management-panel menu-panel panel" aria-label="Menu du jeu" hidden>
-      <div class="panel-heading"><h2>Lisière</h2><button data-close-panel aria-label="Fermer Menu">×</button></div><p id="scenario-current" class="muted"></p>
+      <div class="panel-heading"><h2>Lisière</h2><button data-close-panel aria-label="Fermer Menu">×</button></div><p id="scenario-current" class="muted"></p><div id="climate-options"></div>
       <button id="save">Sauvegarder</button><button id="load">Recharger</button><button id="new-colony">Nouvelle colonie</button>
       <button id="return-home">Sauvegarder et accueil</button><button id="restore-previous" disabled>Colonie précédente</button><button id="show-diagnostics">Afficher les diagnostics</button>
       <p class="muted">Sauvegarde locale à ce navigateur.</p>
@@ -129,7 +131,7 @@ export function gameLayout(): string {
     <aside class="time-panel panel" aria-label="Temps de jeu">
       <div class="view-controls"><button id="wall-cutaway" aria-pressed="false" title="Coupe visuelle : les murs gardent leurs collisions">Murs : hauts</button><button id="roof-toggle" aria-pressed="false" title="Afficher la couverture ; masquer ne retire pas le toit">Toits : masqués</button><button id="foliage-toggle" aria-pressed="false" title="Masquer le feuillage pour voir les colons">Feuillage</button><button id="view-home" title="Recentrer sur la colonie">⌂</button></div>
       <div class="camera-controls"><button id="camera-mode" aria-pressed="false" title="Basculer en perspective ; glisser avec le bouton droit pour tourner">Vue : iso</button></div>
-      <div id="clock">00:00</div><div id="day">Jour 1</div><div id="outdoor-temperature" class="biome-label"></div><div class="biome-label" title="Site tempéré provisoire. Saisons et météo à venir.">Forêt tempérée</div>
+      <div id="clock">00:00</div><div id="day">Jour 1</div><div id="outdoor-temperature" class="biome-label"></div><div id="weather" class="biome-label"></div><div class="biome-label" title="Site tempéré de référence. Climat et saisons indiqués dans le menu.">Forêt tempérée</div>
       <div class="time-controls" aria-label="Vitesse de simulation">
         <button data-speed="0" aria-label="Pause" title="Pause · Espace">Ⅱ</button><button data-speed="1" aria-label="Vitesse normale" title="1× · touche 1">▷</button>
         <button data-speed="3" aria-label="Vitesse 3 fois" title="3× · touche 2">▷▷</button><button data-speed="6" aria-label="Vitesse 6 fois" title="6× · touche 3">▷▷▷</button>
@@ -149,6 +151,7 @@ export function gameLayout(): string {
     <button id="enable-heatwaves" class="panel" style="position:fixed;right:16px;top:212px;z-index:3">Activer les canicules du camp</button>
     <button id="enable-raids" class="panel" style="position:fixed;right:16px;top:172px;z-index:3">Activer les raids du camp</button>
     <button id="enable-arrivals" class="panel" style="position:fixed;right:16px;top:132px;z-index:3">Activer les demandes d’accueil</button>
+    <button id="inspect-fire" class="panel" style="position:fixed;right:16px;top:132px;z-index:3" hidden>Incendie · voir</button>
     <button id="inspect-threat" class="panel" style="position:fixed;right:16px;top:90px;z-index:3" hidden>Menace armée · voir</button>
     <dialog id="new-world-dialog" class="help-dialog"><form id="new-world-form"><button type="button" class="close" id="new-world-close" aria-label="Fermer la création">×</button><h2>Nouvelle colonie</h2>
       <label class="field">Graine<input id="world-seed" inputmode="numeric" type="number" min="0" max="4294967295" value="42" required></label>

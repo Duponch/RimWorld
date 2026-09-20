@@ -6,7 +6,7 @@ import type { World,Structure } from '../../src/sim/types.ts';
 
 export function powerFixture():World {
   const w=miningCamp();w.tick=2000;
-  w.pawns[0]!.priorities={warden:0,basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,build:1,haul:2,mine:0,gather:0,grow:0,cook:0,craft:0};
+  w.pawns[0]!.priorities={firefight:0,warden:0,basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,build:1,haul:2,mine:0,gather:0,grow:0,cook:0,craft:0};
   addGroundMaterial(w,'steel',75,{x:11,z:14},'steel');addGroundMaterial(w,'steel',45,{x:12,z:14},'steel');
   addGroundMaterial(w,'component',2,{x:13,z:14},'component');addGroundMaterial(w,'wood',75,{x:14,z:14},'wood');
   refreshStock(w);return w;

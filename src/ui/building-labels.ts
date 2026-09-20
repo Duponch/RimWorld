@@ -2,6 +2,7 @@ import type { StructureKind } from '../sim/types';
 
 export const buildingLabels: Readonly<Record<StructureKind, string>> = {
   'power-conduit': 'Câble électrique', 'power-switch': 'Interrupteur électrique',
+  heater:'Radiateur','wind-turbine':'Éolienne',
   battery: 'Batterie', 'solar-generator': 'Générateur solaire',
   'fueled-stove': 'Cuisinière à bois', 'electric-stove': 'Cuisinière électrique',
   'butcher-table': 'Table de boucherie', 'butcher-spot': 'Emplacement de boucherie',

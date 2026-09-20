@@ -1,3 +1,5 @@
+import { firePosition } from '../sim/fire-rules';
+import { attachedFireMesh } from './FireLayer';
 import { apparelProjection,apparelAppearance } from './character-apparel';
 import { coreTimeSeconds,localTimeSeconds } from '../bridge/clock-rate';
 import { growPawnBuffers } from './pawn-buffers';
@@ -40,6 +42,7 @@ export class PawnLayer {
   readonly visuals = new Map<number, VisualPawn>();
   private pawnMesh: THREE.Mesh | null = null;
   private cargoMesh: THREE.Mesh | null = null;
+  private fireMesh: THREE.Mesh | null = null;
   private readonly targetPoses = new Map<number,THREE.Vector4>();
   private travelSurfaces:ReadonlyMap<number,number>=new Map();
   private rescuePairs:readonly (readonly [number,number])[]=[];
@@ -145,6 +148,7 @@ export class PawnLayer {
     this.cargoMesh.castShadow = true;
     this.cargoMesh.receiveShadow = true;
     this.group.add(this.cargoMesh);
+    this.fireMesh=attachedFireMesh(geometry,this);this.group.add(this.fireMesh);
     this.selectionMesh=pawnSelectionMesh(geometry,this);this.group.add(this.selectionMesh);
   }
 
@@ -153,8 +157,13 @@ export class PawnLayer {
     const indices=new Map(world.pawns.map((p,i)=>[p.id,i]));
     this.rescuePairs=world.pawns.flatMap((p,i)=>p.rescue?.phase==='carry'&&indices.has(p.rescue.patientId)?[[i,indices.get(p.rescue.patientId)!] as const]:[]);
     if (!this.pawnMesh) this.createPawnMesh(Math.max(1,world.pawns.length));
-    else if(this.pawnMesh.geometry.getAttribute('aFrom').count<world.pawns.length)growPawnBuffers([this.pawnMesh,this.cargoMesh!,this.selectionMesh!],world.pawns.length);
+    else if(this.pawnMesh.geometry.getAttribute('aFrom').count<world.pawns.length)growPawnBuffers([this.pawnMesh,this.cargoMesh!,this.selectionMesh!,this.fireMesh!],world.pawns.length);
     const geometry = this.pawnMesh!.geometry as THREE.InstancedBufferGeometry;
+    const flames=geometry.getAttribute('aFire') as THREE.InstancedBufferAttribute;
+    const burning=new Map((world.fires?.items??[]).filter(f=>f.attachedPawnId!==undefined).map(f=>[f.attachedPawnId!,f.size]));
+    world.pawns.forEach((p,i)=>flames.setX(i,burning.has(p.id)?Math.max(.5,burning.get(p.id)!):0));
+    if(!world.pawns.length)flames.setX(0,0);flames.needsUpdate=true;
+    (this.fireMesh!.geometry as THREE.InstancedBufferGeometry).instanceCount=world.pawns.length;
     const fromAttribute = geometry.getAttribute('aFrom') as THREE.InstancedBufferAttribute;
     const toAttribute = geometry.getAttribute('aTo') as THREE.InstancedBufferAttribute;
     const motion = geometry.getAttribute('aMotion') as THREE.InstancedBufferAttribute;
@@ -197,7 +206,9 @@ export class PawnLayer {
       const job=pawn.state==='working'?world.jobs.find(j=>j.id===pawn.jobId):undefined;
       const garment=pawn.equipmentTask?.action==='wear'?world.piles.find(p=>p.id===pawn.equipmentTask!.itemId):undefined;
       const dressing=garment?.owner.type==='ground'?garment.owner:undefined;
-      const work = pawn.state==='working' ? (job?constructionWorkTarget(world,job):dressing) ?? (pawn.hunting?.phase==='finish' ? world.wildlife?.animals.find(a=>a.id===pawn.hunting!.animalId) : pawn.research ? world.structures.find(s=>s.id===pawn.research!.stationId) : pawn.cooking ? pawn.cooking.actionCell : pawn.haul?.serviceProgress ? world.structures.find(s=>pawn.haul?.destination.type==='fuel'&&s.id===pawn.haul.destination.structureId) : pawn.haul?.pickupCell) : undefined;
+      const fighting=pawn.firefighting?world.fires?.items.find(f=>f.id===pawn.firefighting!.fireId):undefined;
+      const fireTarget=fighting?firePosition(world,fighting):undefined;
+      const work = pawn.state==='working' ? fireTarget ?? (job?constructionWorkTarget(world,job):dressing) ?? (pawn.hunting?.phase==='finish' ? world.wildlife?.animals.find(a=>a.id===pawn.hunting!.animalId) : pawn.research ? world.structures.find(s=>s.id===pawn.research!.stationId) : pawn.cooking ? pawn.cooking.actionCell : pawn.haul?.serviceProgress ? world.structures.find(s=>pawn.haul?.destination.type==='fuel'&&s.id===pawn.haul.destination.structureId) : pawn.haul?.pickupCell) : undefined;
       if(work) {yaw=Math.atan2(work.x-pawn.x,work.z-pawn.z);from.w=yaw;}
       const game=pawn.state==='recreating'&&pawn.recreation.task?.activity==='horseshoes'?world.structures.find(s=>s.id===pawn.recreation.task!.buildingId):undefined;
       if(game){yaw=Math.atan2(game.x-pawn.x,game.z-pawn.z);from.w=yaw;}

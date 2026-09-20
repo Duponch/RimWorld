@@ -12,7 +12,8 @@ import { newApparelState } from './apparel-rules.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
 import { isTailoring, PRODUCTION_RECIPES, PRODUCTION_WORK_SCALE, productionWorkTotal, recipeProduct, taskRecipe, taskWork } from './production-recipes.ts';
 import { processProductionOutput, type ProductionContext } from './production-output.ts';
-import { copyRot, freshRot } from './food-preservation.ts';
+import { copyPileCondition } from './pile-condition.ts';
+import { freshRot } from './food-preservation.ts';
 import { groundPile } from './ground-placement.ts';
 import { transferPile, reservedSource } from './materials.ts';
 import type { MaterialPile, Pawn, World } from './types.ts';
@@ -23,7 +24,7 @@ function take(world:World,pawn:Pawn,pile:MaterialPile,quantity:number):MaterialP
   if(pile.quantity===quantity){pile.owner={type:'pawn',pawnId:pawn.id};return pile;}
   if(world.piles.length>=32768||!Number.isSafeInteger(world.nextId+1))return null;
   pile.quantity-=quantity;
-  const carried:MaterialPile={id:world.nextId++,item:pile.item,kind:pile.kind,quantity,owner:{type:'pawn',pawnId:pawn.id},...copyRot(pile)};
+  const carried:MaterialPile={id:world.nextId++,item:pile.item,kind:pile.kind,quantity,owner:{type:'pawn',pawnId:pawn.id},...copyPileCondition(pile)};
   world.piles.push(carried);return carried;
 }
 export function processCooking(world:World,pawn:Pawn,context:ProductionContext):void {

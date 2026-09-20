@@ -1,4 +1,5 @@
 import { isBarrier } from './barriers.ts';
+import { isRepairableStructure } from './thing-damage-rules.ts';
 import { constructionSpeed,learnSkill } from './skills.ts';
 import { physicalWorkFactor } from './health-rules.ts';
 import { releaseAssignments } from './work-release.ts';
@@ -10,7 +11,7 @@ export interface RepairTarget { structureId:number; warmed?:true }
 export function inHome(world:World,index:number):boolean {const a=world.home??[];let lo=0,hi=a.length;while(lo<hi){const mid=(lo+hi)>>>1;if(a[mid]!<index)lo=mid+1;else hi=mid;}return a[lo]===index;}
 export function repairWanted(world:World,j:Job):boolean {
   const s=world.structures.find(s=>s.id===j.repair?.structureId);
-  return !!s&&isBarrier(s)&&!!s.damage&&inHome(world,s.z*world.width+s.x)&&!world.jobs.some(other=>other.deconstruction?.structureId===s.id);
+  return !!s&&(world.schemaVersion>=87?isRepairableStructure(s):isBarrier(s))&&!!s.damage&&inHome(world,s.z*world.width+s.x)&&!world.jobs.some(other=>other.deconstruction?.structureId===s.id);
 }
 /** Sparse automatic intentions reuse construction priorities, reservations and
  * direct/queued orders. No scan per pawn, no terrain-sized work per tick. */
@@ -22,7 +23,7 @@ export function reconcileRepairs(world:World):void {
     world.jobs=world.jobs.filter(j=>!removed.has(j.id));
   }
   const busy=new Set(world.jobs.map(j=>j.z*world.width+j.x));
-  for(const s of world.structures)if(isBarrier(s)&&s.damage&&inHome(world,s.z*world.width+s.x)&&!busy.has(s.z*world.width+s.x)&&Number.isSafeInteger(world.nextId+1)) {
+  for(const s of world.structures)if((world.schemaVersion>=87?isRepairableStructure(s):isBarrier(s))&&s.damage&&inHome(world,s.z*world.width+s.x)&&!busy.has(s.z*world.width+s.x)&&Number.isSafeInteger(world.nextId+1)) {
     world.jobs.push({id:world.nextId++,kind:'repair',repair:{structureId:s.id},x:s.x,z:s.z,orientation:s.orientation,footprint:s.footprint,status:'pending',reservedBy:null,progress:0,escrow:{wood:0,food:0}});
   }
 }

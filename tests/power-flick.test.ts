@@ -159,7 +159,7 @@ test('solar research and Construction 6 gate physical completion without changin
 
 test('the real V84 colony migrates only schema and basic priority; future fields and corrupt switch work are rejected before migration',()=>{
   const old=JSON.parse(gunzipSync(readFileSync('tests/fixtures/colony-v84.json.gz')).toString());
-  const next=deserializeWorld(JSON.stringify(old)),expected=structuredClone(old);expected.schemaVersion=86;
+  const next=deserializeWorld(JSON.stringify(old)),expected=structuredClone(old);expected.schemaVersion=87;for(const p of expected.pawns)p.priorities.firefight=1;
   for(const p of expected.pawns){p.priorities.basic=3;p.priorities.warden=3;}
   expect(next).toEqual(expected);expect(validateWorld(next)).toEqual([]);
   const bad=structuredClone(old);bad.pawns[0].priorities.basic=3;expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();

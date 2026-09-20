@@ -68,3 +68,20 @@ test('a completed conduit cannot erase the physical slowdown of a building frame
   expect(cost.costs?.get(index)).toBe(FRAME_SEARCH_COST);expect(canStandAt(w,cell)).toBe(false);
   expect(furnitureDelay(w,{x:7,z:8},cell)).toBe(FRAME_TRAVEL_DELAY);
 });
+
+
+test('fractional conduit work finishes at the real threshold and can save every preceding tick',()=>{
+  const w=fixture(1),p=w.pawns[0]!;p.x=7;p.z=8;p.schedule.fill('work');p.skills.construction.level=0;
+  for(const key of Object.keys(p.priorities) as Array<keyof typeof p.priorities>)p.priorities[key]=0;
+  p.priorities.build=1;addGroundMaterial(w,'steel',1,{x:7,z:7},'steel');
+  expect(applyCommand(w,{type:'designate',kind:'power-conduit',material:'steel',x:8,z:8})).toMatchObject({ok:true});
+  let saved:World|undefined;
+  for(let i=0;i<250&&!w.structures.some(s=>s.kind==='power-conduit');i++){
+    stepWorld(w);expect(validateWorld(w)).toEqual([]);
+    const job=w.jobs.find(j=>j.kind==='power-conduit');
+    if(job?.progress===3&&!saved)saved=deserializeWorld(serializeWorld(w));
+  }
+  expect(saved).toBeDefined();expect(w.structures.filter(s=>s.kind==='power-conduit')).toHaveLength(1);
+  expect(w.piles.filter(p=>p.item==='steel').reduce((n,p)=>n+p.quantity,0)).toBe(0);
+  stepWorld(saved!,w.tick-saved!.tick);expect(serializeWorld(saved!)).toBe(serializeWorld(w));
+});

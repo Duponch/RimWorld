@@ -1,4 +1,6 @@
-import { copyRot, mergeRot, rotAge } from './food-preservation.ts';
+import { mergeThingDamage } from './thing-damage-rules.ts';
+import { copyPileCondition } from './pile-condition.ts';
+import { mergeRot, rotAge } from './food-preservation.ts';
 import { groundCapacity, groundPile, nearbyGround, storageCapacity } from './ground-placement.ts';
 import { refreshStock, transferPile } from './materials.ts';
 import { routeToJob, type Reachability } from './pathfinding.ts';
@@ -13,10 +15,10 @@ function deposit(world:World,pawn:Pawn,product:MaterialPile,cell:Cell,quantity:n
   if(quantity<1||groundCapacity(world,cell,product.item,pawn.id)<quantity)return false;
   if(quantity===product.quantity)return transferPile(world,product,{type:'ground',x:cell.x,z:cell.z});
   const target=groundPile(world,cell);
-  if(target){mergeRot(target,quantity,rotAge(product,world.tick),world.tick);target.quantity+=quantity;}
+  if(target){mergeThingDamage(target,quantity,product.damage);mergeRot(target,quantity,rotAge(product,world.tick),world.tick);target.quantity+=quantity;}
   else {
     if(world.piles.length>=32768||!Number.isSafeInteger(world.nextId+1))return false;
-    world.piles.push({...product,...copyRot(product),id:world.nextId++,quantity,owner:{type:'ground',x:cell.x,z:cell.z}});
+    world.piles.push({...product,...copyPileCondition(product),id:world.nextId++,quantity,owner:{type:'ground',x:cell.x,z:cell.z}});
   }
   product.quantity-=quantity;refreshStock(world);return true;
 }

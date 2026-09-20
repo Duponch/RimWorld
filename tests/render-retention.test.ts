@@ -23,6 +23,10 @@ test('thermal growth anchors do not invalidate forest geometry; ripening, deplet
   expect(buffers.map(b=>b.index!.version)).toEqual(versions);
   w.resources[1]!.growth=.65;expect(state.read(w)).toBeUndefined();w.resources[1]!.growth=.65001;
   layer.update(state.read(w)!,false);expect(meshes.map(m=>m.geometry)).toEqual(buffers);expect(buffers.some((b,i)=>b.index!.version>versions[i]!)).toBe(true);
+  const shrub=w.resources[1]!;shrub.plantLife={since:w.tick,age:0,darkTicks:0,leaflessAt:w.tick,nextCheck:w.tick+100};
+  layer.update(state.read(w)!,false);expect(meshes.map(m=>m.geometry)).toEqual(buffers);
+  shrub.plantLife.age++;expect(state.read(w)).toBeUndefined();
+  delete shrub.plantLife;layer.update(state.read(w)!,false);expect(meshes.map(m=>m.geometry)).toEqual(buffers);
   w.resources[1]!.growth=.3;expect(state.read(w)).toBeDefined();
   w.resources[1]!.growth=.64;w.resources[1]!.growthThermalFactor=1;w.resources[1]!.growthTick=w.tick;expect(state.read(w)).toBeUndefined();
   w.tick+=1000;expect(state.read(w)).toBeDefined(); // maturation without a resource-array change
@@ -42,7 +46,10 @@ test('population growth retains GPU meshes/materials and shared poses through ca
     meshes.forEach((m,i)=>{expect(m.material).toBe(materials[i]);expect((m.geometry as THREE.InstancedBufferGeometry).instanceCount).toBe(count);});
     for(const name of ['aFrom','aTo','aTravel'])for(const mesh of meshes.slice(1))expect(mesh.geometry.getAttribute(name)).toBe(meshes[0]!.geometry.getAttribute(name));
     expect(meshes[0]!.geometry.getAttribute('aFrom').count).toBeGreaterThanOrEqual(count);
-    if(count){expect(meshes[0]!.geometry.getAttribute('aTo').getX(0)).toBe(w.pawns[0]!.x);expect(meshes[2]!.geometry.getAttribute('aSelected').getX(0)).toBe(1);}
+    if(count){expect(meshes[0]!.geometry.getAttribute('aTo').getX(0)).toBe(w.pawns[0]!.x);expect(meshes.find(m=>m.geometry.hasAttribute('aSelected'))!.geometry.getAttribute('aSelected').getX(0)).toBe(1);}
+    const flame=meshes.find(m=>m.name.startsWith('Attached fire'))!;
+    expect(flame.geometry.getAttribute('aMotion')).toBe(meshes[0]!.geometry.getAttribute('aMotion'));
+    expect(flame.geometry.getAttribute('aFire')).toBe(meshes[0]!.geometry.getAttribute('aFire'));
     expect(layer.visuals.size).toBe(count);
   }
   clearGroup(layer.group);
@@ -65,7 +72,7 @@ test('objets graphiques résidents : retrait/restauration, frontière de chunk, 
     meshes.forEach((mesh,i)=>{
       expect(mesh.geometry.getAttribute('position')).toBe(buffers[i]);
       const data=mesh.userData.resourceRanges as {ranges:{id:number;start:number;count:number}[]};
-      const expected=data.ranges.filter(r=>alive.includes(Math.abs(r.id))).flatMap(r=>indices[i]!.slice(r.start,r.start+r.count));
+      const expected=data.ranges.filter(r=>alive.includes(r.id<0?Math.floor(-r.id/2):r.id)).flatMap(r=>indices[i]!.slice(r.start,r.start+r.count));
       const count=Number.isFinite(mesh.geometry.drawRange.count)?mesh.geometry.drawRange.count:mesh.geometry.index!.count;
       expect(Array.from(mesh.geometry.index!.array).slice(0,count)).toEqual(expected);
     });

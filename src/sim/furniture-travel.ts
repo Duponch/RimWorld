@@ -1,3 +1,4 @@
+import { fireNavigationCosts,addFireNavigationCosts } from './fire-navigation.ts';
 import { doorWait } from './door-rules.ts';
 import { footprintCells, footprintContains } from './definitions.ts';
 import { frameAt, frameCosts, FRAME_TRAVEL_DELAY } from './construction-costs.ts';
@@ -13,6 +14,8 @@ export function terrainTravelDelay(world:World,index:number):number {
 /** Current Core wiki path costs, converted by the local day/tick ratio (10).
  * Repeat suppression is shared by all qualifying furniture, not by instance. */
 export const FURNITURE_TRAVEL:Readonly<Record<StructureKind,Readonly<{delay:number;stand:boolean;repeat:boolean}>>>=Object.freeze({
+  heater:{delay:3,stand:false,repeat:true},
+  'wind-turbine':{delay:5,stand:false,repeat:true},
   'power-conduit':{delay:0,stand:true,repeat:false},
   'power-switch':{delay:0,stand:true,repeat:false},
   battery:{delay:5,stand:false,repeat:true},
@@ -89,5 +92,6 @@ export function navigationCosts(world:World):{costs:NavigationCostLookup|undefin
   // Door wait is added after the terrain/object/material maximum, not compared
   // with it. Preserve present zero entries for fully open doors on bare floors.
   for(const s of world.structures)if(s.kind==='door') {const i=s.z*world.width+s.x;repeaters.delete(i);costs.set(i,Math.max(costs.get(i)??0,terrain[i]??0)+Math.round(doorWait(s,world.tick)/3*1000));}
-  return {costs:costs.size||terrainMaximum?overlayNavigationCosts(terrain,terrainMaximum,costs):undefined,repeaters,stops,floors:overlayNavigationCosts(terrain,terrainMaximum,floors)};
+  const fire=fireNavigationCosts(world);
+  return {costs:addFireNavigationCosts(costs.size||terrainMaximum?overlayNavigationCosts(terrain,terrainMaximum,costs):undefined,fire),repeaters,stops,floors:addFireNavigationCosts(overlayNavigationCosts(terrain,terrainMaximum,floors),fire)!};
 }

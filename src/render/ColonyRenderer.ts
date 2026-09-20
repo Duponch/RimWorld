@@ -1,3 +1,4 @@
+import { WindLayer } from './WindLayer';
 import { pileParts,type PileBundle } from './pile-parts';
 import { corpseStage } from '../sim/corpses';
 import { WildlifeLayer } from './WildlifeLayer';
@@ -19,6 +20,7 @@ import { travelHeight } from './furniture-motion';
 import { pileSurfaces } from './pile-surfaces';
 import { CropLayer } from './CropLayer';
 import { PawnSelectionInput, type ScreenPawn, type SelectionGesture } from './PawnSelectionInput';
+import { FireLayer } from './FireLayer';
 import { GrowingZoneLayer } from './GrowingZoneLayer';
 import { buildTerrain } from './TerrainLayer';
 import { RockLayer } from './RockLayer';
@@ -60,6 +62,8 @@ export class ColonyRenderer {
   private readonly presentation = new PresentationQueue();
   private received:{world:World;speed:number;tracks?:PawnTrack[]}|undefined;
   private hasTracks = false;
+  private readonly fires = new FireLayer();
+  private readonly wind = new WindLayer(this.environmentLighting.configure);
   private readonly projectiles = new ProjectileLayer();
   private readonly wildlife = new WildlifeLayer(this.environmentLighting.configure);
   private readonly pawns = new PawnLayer(this.environmentLighting.configure);
@@ -168,7 +172,7 @@ export class ColonyRenderer {
     renderer.domElement.tabIndex = 0;
     host.appendChild(renderer.domElement);
     this.daylight = new DayNightLayer(this.scene);
-    this.scene.add(this.wildlife.mesh,this.projectiles.mesh,this.roofs.surface,this.roofs.areas,this.doors.group,this.crops.group, this.growing.group, this.overview.group, this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup, this.pawns.group);
+    this.scene.add(this.wind.group,this.wildlife.mesh,this.wildlife.flames,this.fires.mesh,this.projectiles.mesh,this.roofs.surface,this.roofs.areas,this.doors.group,this.crops.group, this.growing.group, this.overview.group, this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup, this.pawns.group);
     this.rig = new CameraRig(renderer.domElement);
     const hoverMat = new THREE.MeshBasicNodeMaterial({ color: 0xf9ebae, transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide, forceSinglePass:true });
     // A zero-thickness cursor has no front/back transparency ordering.
@@ -240,6 +244,7 @@ export class ColonyRenderer {
     // if terrain content and simulation tick match a previous session.
     const resetPoses = resetPresentation || newMap || world.tick < (previousWorld?.tick ?? 0);
     this.world = world;
+    this.fires.adopt(world,newMap);this.wind.adopt(world,newMap);
     this.environmentLighting.update(world);
     if(groundChanged) {
       buildTerrain(world,this.terrainGroup,this.staticMaterial,this.waterMaterial);
@@ -338,6 +343,7 @@ export class ColonyRenderer {
     const culling = new Map<THREE.Object3D, boolean>();
     const distant = this.overview.group.visible;
     const restoreWildlife=this.wildlife.prepare();
+    const restoreWind=this.wind.prepareForCompile();
     const restoreRoofs=this.roofs.prepare();
     const restoreDoors=this.doors.prepareForCompile();
     const restoreCrops = this.crops.prepareForCompile();
@@ -348,12 +354,12 @@ export class ColonyRenderer {
       this.overview.group.visible = this.terrainGroup.visible = this.resourceGroup.visible = true;
       this.rocks.setDistant(false); this.rocks.mesh.visible = true;
       this.scene.traverse(object => { culling.set(object, object.frustumCulled); object.frustumCulled = false; });
-      this.daylight.update(this.world ? calendarTick(this.world) : 0, this.controls.target);
+      this.daylight.update(this.world ? calendarTick(this.world) : 0, this.controls.target,this.world??undefined);
       await this.renderer.compileAsync(this.scene, this.rig.orthographic);
       await this.renderer.compileAsync(this.scene, this.rig.perspective);
       await prepareShadowPipelines(this.renderer,this.scene,this.rig.orthographic,this.boxes);
     } finally {
-      restoreWildlife();restoreRoofs();restoreDoors();restoreCrops();
+      restoreWind();restoreWildlife();restoreRoofs();restoreDoors();restoreCrops();
       for (const [object, value] of culling) object.frustumCulled = value;
       this.overview.group.visible = distant; this.terrainGroup.visible = this.resourceGroup.visible = !distant;
       this.rocks.setDistant(distant); this.preparing = false;
@@ -368,6 +374,9 @@ export class ColonyRenderer {
     return this.rig.mode;
   }
 
+  focusCell(cell:Cell):void {
+    const offset=this.camera.position.clone().sub(this.controls.target);this.controls.target.set(cell.x,0,cell.z);this.camera.position.copy(this.controls.target).add(offset);this.controls.update();
+  }
   focusPawn(id: number): void {
     const pawn = this.world?.pawns.find((item) => item.id === id)??this.world?.wildlife?.animals.find(a=>a.id===id);
     if (!pawn) return;
@@ -506,8 +515,8 @@ export class ColonyRenderer {
     // Share the confirmed presentation clock with pawn motion. Loading a save
     // restores the sky; pausing cannot continue an independent wall-clock sun.
     const skyTick = this.hasTracks ? this.timeline.tick : THREE.MathUtils.lerp(this.timeFrom, this.timeTo, this.pawns.blend.value) * TICKS_PER_SECOND;
-    this.doors.tick.value=skyTick;this.projectiles.present(skyTick);
-    this.daylight.update(this.world?calendarTick(this.world,skyTick):skyTick, this.controls.target);
+    this.doors.tick.value=skyTick;this.projectiles.present(skyTick);this.fires.present(skyTick);this.wind.present(skyTick);
+    this.daylight.update(this.world?calendarTick(this.world,skyTick):skyTick, this.controls.target,this.world??undefined);
     const cellPixels=this.rig.pixelsPerCell(this.host.clientHeight);
     const distant=this.overview.group.visible ? cellPixels<9 : cellPixels<7;
     this.overview.group.visible=distant;this.terrainGroup.visible=!distant;this.resourceGroup.visible=!distant;
@@ -649,16 +658,18 @@ export class ColonyRenderer {
     if (this.areaDrag) { this.updateAreaPreview(); return; }
     const cell = this.hoverCell;
     this.recreationHints.update(this.world, cell && (this.tool==='horseshoes'||this.tool==='select'&&this.world?.structures.some(s=>s.kind==='horseshoes'&&s.x===cell.x&&s.z===cell.z)) ? cell : undefined);
+    const turbine=this.tool==='wind-turbine'&&cell?{...cell,orientation:this.placementRotation}:this.tool==='select'?this.world?.structures.find(s=>s.kind==='wind-turbine'&&cell&&footprintCells(s).some(c=>c.x===cell.x&&c.z===cell.z)):undefined;
+    if(this.world&&turbine)this.recreationHints.wind(this.world,turbine);
     const cooler=this.tool==='select'?this.world?.structures.find(s=>s.kind==='cooler'&&s.x===cell?.x&&s.z===cell?.z):undefined;
     if(cell&&(this.tool==='cooler'||cooler))this.recreationHints.cooler(cell,cooler?.orientation??this.placementRotation);
     this.hover.visible = !!cell;
     if (!cell || !this.world) return;
-    const cells = footprintCells({ ...cell, kind: this.tool==='install'&&this.furniturePlacement?this.furniturePlacement.kind:this.tool === 'solar-generator' || this.tool === 'battery' || this.tool === 'wood-generator' || this.tool === 'research-bench' || this.tool === 'tailor-bench' || this.tool === 'fueled-stove' || this.tool === 'electric-stove' || this.tool === 'butcher-table' || this.tool === 'stonecutter' || this.tool === 'bed' || this.tool === 'table' || this.tool === 'stool' ? this.tool : 'wall', orientation: this.placementRotation });
+    const cells = footprintCells({ ...cell, kind: this.tool==='install'&&this.furniturePlacement?this.furniturePlacement.kind:this.tool === 'heater' || this.tool === 'wind-turbine' || this.tool === 'solar-generator' || this.tool === 'battery' || this.tool === 'wood-generator' || this.tool === 'research-bench' || this.tool === 'tailor-bench' || this.tool === 'fueled-stove' || this.tool === 'electric-stove' || this.tool === 'butcher-table' || this.tool === 'stonecutter' || this.tool === 'bed' || this.tool === 'table' || this.tool === 'stool' ? this.tool : 'wall', orientation: this.placementRotation });
     const minX=Math.min(...cells.map(c=>c.x)),maxX=Math.max(...cells.map(c=>c.x)),minZ=Math.min(...cells.map(c=>c.z)),maxZ=Math.max(...cells.map(c=>c.z));
     this.hover.scale.set(maxX-minX+1, maxZ-minZ+1, 1);
     this.hover.position.set((minX+maxX)/2, this.world.tiles[cell.z * this.world.width + cell.x]?.terrain === 'water' ? WORLD_SCALE.waterSurface + 0.04 : 0.055, (minZ+maxZ)/2);
-    const validity = this.tool==='install'&&this.furniturePlacement?installCommand(this.world,{type:'install',structureId:this.furniturePlacement.id,...cell,orientation:this.furniturePlacement.kind==='standing-lamp'?0:this.placementRotation},true):this.tool === 'solar-generator' || this.tool === 'battery' || this.tool === 'power-conduit' || this.tool === 'power-switch' || this.tool === 'cooler' || this.tool === 'research-bench' || this.tool === 'tailor-bench' || this.tool === 'fueled-stove' || this.tool === 'electric-stove' || this.tool === 'butcher-table' || this.tool === 'butcher-spot' || this.tool === 'crafting-spot'||this.tool === 'wood-generator'||this.tool === 'standing-lamp'||this.tool === 'passive-cooler'||this.tool === 'door' || this.tool === 'stonecutter'||this.tool === 'mine'||this.tool === 'uninstall'||this.tool === 'wall' || this.tool === 'bed' || this.tool === 'table' || this.tool === 'stool' || this.tool === 'campfire' || this.tool === 'horseshoes' || this.tool === 'chop' || this.tool === 'harvest' || this.tool === 'cut'
-      ? canDesignate(this.world, { type: 'designate', kind: this.tool, ...cell, ...(this.tool==='solar-generator'||this.tool==='battery'||this.tool==='power-conduit'||this.tool==='power-switch'||this.tool==='cooler'||this.tool==='fueled-stove'||this.tool==='electric-stove'||this.tool==='wood-generator'||this.tool==='standing-lamp'?{material:'steel' as const}:this.tool==='passive-cooler'||this.tool==='butcher-table'?{material:'wood' as const}:{}), orientation: this.tool==='solar-generator'||this.tool==='power-conduit'||this.tool==='power-switch'||this.tool==='wood-generator'||this.tool==='standing-lamp'||this.tool==='door'||this.tool==='passive-cooler'?0:this.placementRotation }) : undefined;
+    const validity = this.tool==='install'&&this.furniturePlacement?installCommand(this.world,{type:'install',structureId:this.furniturePlacement.id,...cell,orientation:this.furniturePlacement.kind==='standing-lamp'?0:this.placementRotation},true):this.tool === 'heater' || this.tool === 'wind-turbine' || this.tool === 'solar-generator' || this.tool === 'battery' || this.tool === 'power-conduit' || this.tool === 'power-switch' || this.tool === 'cooler' || this.tool === 'research-bench' || this.tool === 'tailor-bench' || this.tool === 'fueled-stove' || this.tool === 'electric-stove' || this.tool === 'butcher-table' || this.tool === 'butcher-spot' || this.tool === 'crafting-spot'||this.tool === 'wood-generator'||this.tool === 'standing-lamp'||this.tool === 'passive-cooler'||this.tool === 'door' || this.tool === 'stonecutter'||this.tool === 'mine'||this.tool === 'uninstall'||this.tool === 'wall' || this.tool === 'bed' || this.tool === 'table' || this.tool === 'stool' || this.tool === 'campfire' || this.tool === 'horseshoes' || this.tool === 'chop' || this.tool === 'harvest' || this.tool === 'cut'
+      ? canDesignate(this.world, { type: 'designate', kind: this.tool, ...cell, ...(this.tool==='heater'||this.tool==='wind-turbine'||this.tool==='solar-generator'||this.tool==='battery'||this.tool==='power-conduit'||this.tool==='power-switch'||this.tool==='cooler'||this.tool==='fueled-stove'||this.tool==='electric-stove'||this.tool==='wood-generator'||this.tool==='standing-lamp'?{material:'steel' as const}:this.tool==='passive-cooler'||this.tool==='butcher-table'?{material:'wood' as const}:{}), orientation: this.tool==='solar-generator'||this.tool==='power-conduit'||this.tool==='power-switch'||this.tool==='wood-generator'||this.tool==='standing-lamp'||this.tool==='door'||this.tool==='passive-cooler'?0:this.placementRotation }) : undefined;
     const color = validity?.ok === false ? 0xe46f58 : this.tool === 'cancel' || this.tool === 'remove-stockpile' ? 0xe6876a : this.tool === 'select' ? 0xf9ebae : 0x9dd9ca;
     (this.hover.material as THREE.MeshBasicNodeMaterial).color.setHex(color);
     this.renderer.domElement.title = validity?.reason ?? '';
@@ -713,7 +724,7 @@ export class ColonyRenderer {
     this.rocks.dispose();
     this.crops.dispose();
     this.resources.clear();
-    this.doors.dispose();this.projectiles.dispose();
+    this.doors.dispose();this.projectiles.dispose();this.fires.dispose();this.wind.dispose();this.wildlife.flames.geometry.dispose();(this.wildlife.flames.material as THREE.Material).dispose();
     this.wildlife.mesh.geometry.dispose();(this.wildlife.mesh.material as THREE.Material).dispose();
     for (const group of [this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup, this.pawns.group]) clearGroup(group);
     this.pileChunks.clear();

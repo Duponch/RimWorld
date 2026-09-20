@@ -14,7 +14,7 @@ import { SCHEMA_VERSION } from '../src/sim/types';
 
 function camp():World {
   const w=createWorld(42,16,16);w.resources=[];w.piles=[];w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.pawns=w.pawns.slice(0,1);
-  const p=w.pawns[0]!;Object.assign(p,{x:5,z:5,hunger:100,rest:100});p.priorities={warden:0,basic:3,hunt:0,research:0,patient:0,bedrest:0,doctor:0,gather:0,build:0,mine:0,grow:1,haul:2,cook:0,craft:0};refreshStock(w);return w;
+  const p=w.pawns[0]!;Object.assign(p,{x:5,z:5,hunger:100,rest:100});p.priorities={firefight:0,warden:0,basic:3,hunt:0,research:0,patient:0,bedrest:0,doctor:0,gather:0,build:0,mine:0,grow:1,haul:2,cook:0,craft:0};refreshStock(w);return w;
 }
 function command(w:World,c:Parameters<typeof applyCommand>[1]):void {expect(applyCommand(w,c)).toMatchObject({ok:true});}
 function until(w:World,done:()=>boolean,limit=1000):void {for(let i=0;i<limit&&!done();i++)stepWorld(w);expect(done(),`tick ${w.tick}`).toBe(true);expect(validateWorld(w)).toEqual([]);}

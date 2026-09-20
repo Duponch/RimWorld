@@ -1,0 +1,13 @@
+{
+  "version": 87,
+  "controlled": true,
+  "stage": "load",
+  "initialTick": 2000,
+  "preparation": "Existing room, cable, battery at 200 W·j, construction materials and deliberately ignited isolated wood pile. Later cold air and rain are a labelled boundary checkpoint; elapsed/civil clocks are preserved.",
+  "error": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('.front-menu')\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" locator('.front-menu') with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for locator('.front-menu')\u001b[22m\n",
+  "notice": null,
+  "checkpoint": null,
+  "errors": [
+    "Failed to load resource: the server responded with a status of 504 (Outdated Optimize Dep)"
+  ]
+}

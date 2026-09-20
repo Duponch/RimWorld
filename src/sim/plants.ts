@@ -1,7 +1,6 @@
 import { TICKS_PER_DAY, type Resource, type World } from './types.ts';
 import { isRoofed, roofIndex } from './roof-rules.ts';
-import { calendarTick } from './calendar.ts';
-import { growingLightIntegral } from './environment.ts';
+import { annualGrowingLightIntegral } from './environment.ts';
 import { soilFertility } from './soil.ts';
 import { isCropKind, type CropKind } from './crops.ts';
 
@@ -61,7 +60,7 @@ export function plantGrowth(world: World, plant: Resource): number {
   if (base >= 1) return 1;
   const def = PLANT_DEFINITIONS[plant.kind], fertility = plantFertility(world, plant);
   if (fertility < def.minFertility) return base;
-  const lightTime = growingLightIntegral(calendarTick(world)) - growingLightIntegral(calendarTick(world, plant.growthTick ?? world.tick));
+  const lightTime = annualGrowingLightIntegral(world) - annualGrowingLightIntegral(world, plant.growthTick ?? world.tick);
   const factor = (plant.growthThermalFactor ?? 1) * (1 - def.sensitivity + fertility * def.sensitivity);
   return clamp(base + lightTime * factor / (def.growDays * TICKS_PER_DAY));
 }

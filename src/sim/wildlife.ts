@@ -1,3 +1,4 @@
+import { processBurningAnimal } from './firefighting-animals.ts';
 import { malnutritionModifiers } from './malnutrition.ts';
 import { moveAnimalMelee } from './wildlife-melee.ts';
 import { captureWorldShotGrid } from './combat-world.ts';
@@ -59,6 +60,7 @@ export function advanceWildlife(world:World):void {
     a.rest=Math.max(0,Math.min(1,a.rest+(a.state==='sleeping'?.0003809524*.8:-.00015833333*(a.rest<.01?.6:a.rest<.14?.3:a.rest<.28?.7:1))));
     if(a.flee&&world.tick>=a.flee.until){delete a.flee;a.path=[];if(!a.motion||a.motion.end<=world.tick)a.state='idle';}
     if(a.state==='downed'||a.motion&&a.motion.end>world.tick)continue;
+    if(a.burning&&processBurningAnimal(world,a,{free:c=>getNav().free(c),route:goals=>{if(searches>=1)return null;searches++;return getNav().route(a,goals);},move:()=>{moveAnimal(world,a,getNav().step,body.capacities.moving);}}))continue;
     if(moveAnimalMelee(world,a,getNav,getPhysical,getShot))continue;
     if(a.stun)continue;
     if(a.flee){

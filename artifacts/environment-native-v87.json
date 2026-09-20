@@ -1,0 +1,60 @@
+{
+  "version": 87,
+  "controlled": true,
+  "stage": "rain-cold-boundary",
+  "initialTick": 2000,
+  "preparation": "Existing room, cable, battery at 200 W·j, construction materials and deliberately ignited isolated wood pile. Later cold air and rain are a labelled boundary checkpoint; elapsed/civil clocks are preserved.",
+  "extinction": {
+    "tick": 2008,
+    "ledger": {
+      "items": {},
+      "resources": {},
+      "structures": 0,
+      "extinguished": 1,
+      "ignitions": 1,
+      "batteryEnergyLost": 0,
+      "fuelTicksLost": 0,
+      "fuelTicksBurned": 0,
+      "woodPotentialLost": 0
+    }
+  },
+  "construction": {
+    "tick": 3339,
+    "heaterId": 236,
+    "turbineId": 229,
+    "clearedTreeId": 208,
+    "watts": 584
+  },
+  "boundary": {
+    "initialTick": 3342,
+    "finalTick": 3488,
+    "airBefore": 2,
+    "airAfter": 21,
+    "rain": 0.865,
+    "weather": {
+      "revision": 1,
+      "originTick": 2000,
+      "lastCoreTick": 34880,
+      "rng": 475496544,
+      "current": "rain",
+      "previous": "clear",
+      "ageCore": 3460,
+      "durationCore": 16000,
+      "fireWatchCore": 34506,
+      "largeFire": false,
+      "lightningCount": 0
+    },
+    "wind": {
+      "revision": 1,
+      "seed": 8410,
+      "originTick": 2000
+    },
+    "batteryWattDays": 213.64939583333333
+  },
+  "pipelines": {
+    "prepared": 32,
+    "final": 32
+  },
+  "errors": [],
+  "status": "passed"
+}

@@ -63,6 +63,7 @@ export async function editBill(page:Page,id:number,settings:BillSettings):Promis
 
 export async function perform(page: Page, decision: Decision, rotation: { value: number }): Promise<void> {
   const c=decision.command;
+  let heaterTarget:number|undefined;
   if(c.type==='answer-arrival'){await page.locator('#arrival-letter').click();await page.locator(c.accept?'#accept-arrival':'#reject-arrival').click();await expect(page.locator('#arrival-dialog')).not.toBeVisible();await expect(page.locator('#arrival-letter')).toHaveCount(0);return;}
   if(c.type==='enable-arrivals'){await page.locator('#enable-arrivals').click();await expect(page.locator('#enable-arrivals')).toBeHidden();return;}
   if(c.type==='draft'||c.type==='draft-move'||c.type==='draft-stop') {
@@ -126,6 +127,20 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     await page.keyboard.press('Escape');await revealCells(page,[s]);
     for(let i=0;i<=w.pawns.length;i++){await cell(page,s.x,s.z);if(await page.locator(`[data-power-id="${s.id}"]`).isVisible())break;}
     await page.locator(`[data-power-id="${s.id}"] [data-power-flick]`).click();
+  } else if(c.type==='heater-adjust'||c.type==='wind-auto-cut') {
+    const w=await world(page),s=w.structures.find(s=>s.id===c.structureId);if(!s)throw Error('Ouvrage électrique absent.');
+    await page.keyboard.press('Escape');await revealCells(page,[s]);
+    for(let i=0;i<=w.pawns.length;i++){await cell(page,s.x,s.z);if(await page.locator(`[data-power-id="${s.id}"]`).isVisible())break;}
+    const card=page.locator(`[data-power-id="${s.id}"]`);
+    if(c.type==='heater-adjust'){
+      heaterTarget=c.offset===null?21:Math.max(-273.15,Math.min(1000,s.heater!.target+c.offset));
+      await card.locator(`[data-heater-offset="${String(c.offset)}"]`).click();
+    } else await card.locator('[data-wind-auto-cut]').setChecked(c.enabled);
+  } else if(c.type==='order-extinguish') {
+    const w=await world(page),fire=w.fires?.items.find(f=>f.id===c.fireId);if(!fire)throw Error('Incendie absent.');
+    await page.keyboard.press('Escape');await page.locator(`[data-pawn="${c.pawnId}"]`).click();await revealCells(page,[fire]);
+    const point=await page.evaluate(f=>window.__lisiere.projectCell(f.x,f.z),fire),bounds=(await page.locator('#viewport canvas').boundingBox())!;
+    await page.mouse.click(bounds.x+point.x,bounds.y+point.y,{button:'right'});await page.locator(`[data-order-fire="${c.fireId}"]`).click();
   } else if(c.type==='priority') {
     await panel(page,'work');await page.locator(`select[data-owner="${c.pawnId}"][data-work="${c.work}"]`).selectOption(String(c.value));
   } else if(c.type==='stockpile') {
@@ -156,7 +171,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
   } else if(c.type==='designate' && c.kind !== 'flick' && c.kind !== 'sow' && c.kind !== 'install') {
     if(c.kind==='repair')throw Error('Repair uses the home area');await tool(page,c.kind);
     if(['door','wall','bed','table','stool','horseshoes','stonecutter','research-bench','tailor-bench'].includes(c.kind))await page.locator('#construction-material').selectOption(c.material??'wood');
-    if(c.kind==='battery'||c.kind==='fueled-stove'||c.kind==='electric-stove'||c.kind==='butcher-table'||c.kind==='cooler'||c.kind==='bed'||c.kind==='table'||c.kind==='campfire'||(c.kind==='butcher-spot'||c.kind==='crafting-spot')||c.kind==='stonecutter'||c.kind==='research-bench'||c.kind==='tailor-bench') {
+    if(c.kind==='wind-turbine'||c.kind==='battery'||c.kind==='fueled-stove'||c.kind==='electric-stove'||c.kind==='butcher-table'||c.kind==='cooler'||c.kind==='bed'||c.kind==='table'||c.kind==='campfire'||(c.kind==='butcher-spot'||c.kind==='crafting-spot')||c.kind==='stonecutter'||c.kind==='research-bench'||c.kind==='tailor-bench') {
       while(rotation.value!==(c.orientation??0)){await page.keyboard.press('e');rotation.value=(rotation.value+1)%4;}
     }
     await revealCells(page,[c]);
@@ -171,7 +186,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     if(c.type==='bill-add')await page.locator('#add-cooking-bill').click();
     else await editBill(page,c.billId,c.settings);
   } else throw new Error(`Player UI action not supported: ${c.type}`);
-  try { await page.waitForFunction(c=>{
+  try { await page.waitForFunction(({command:c,heaterTarget})=>{
     const w=window.__lisiere.world;
     if(c.type==='growing-policy'){const z=w.growingZones.find(z=>z.id===c.zoneId);return !!z&&(!c.plant||z.plant===c.plant)&&z.allowSow===c.allowSow&&z.allowCut===c.allowCut;}
     if(c.type==='hunt')return !!w.hunting?.targets.includes(c.animalId)===c.enabled;
@@ -200,6 +215,9 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     if(c.type==='schedule-paint')return c.hours.every(h=>w.pawns.find(p=>p.id===c.pawnId)?.schedule[h]===c.assignment);
     if(c.type==='research-project')return w.research?.project===c.project;
     if(c.type==='power-flick'){const s=w.structures.find(s=>s.id===c.structureId);return !!s&&(w.jobs.find(j=>j.flick?.structureId===s.id)?.flick?.on??(s.power?.switchOn!==false))===c.on;}
+    if(c.type==='heater-adjust')return w.structures.find(s=>s.id===c.structureId)?.heater?.target===heaterTarget;
+    if(c.type==='wind-auto-cut')return w.structures.find(s=>s.id===c.structureId)?.wind?.autoCut===c.enabled;
+    if(c.type==='order-extinguish')return w.pawns.find(p=>p.id===c.pawnId)?.firefighting?.fireId===c.fireId;
     if(c.type==='priority')return w.pawns.find(p=>p.id===c.pawnId)?.priorities[c.work]===c.value;
     if(c.type==='bill-add')return !!w.structures.find(s=>s.id===c.structureId)?.bills?.length;
     if(c.type==='bill-update') {const b=w.structures.find(s=>s.id===c.structureId)?.bills?.find(b=>b.id===c.billId);return !!b&&b.mode===c.settings.mode&&b.target===c.settings.target&&b.suspended===c.settings.suspended;}
@@ -220,7 +238,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     if(c.type==='stockpile')return w.stockpiles.some(s=>s.x===c.x&&s.z===c.z);
     if(c.type==='designate'&&(c.kind==='butcher-spot'||c.kind==='crafting-spot'))return w.structures.some(s=>s.kind===c.kind&&s.x===c.x&&s.z===c.z);
     return c.type==='designate' && w.jobs.some(j=>j.x===c.x&&j.z===c.z&&j.kind===c.kind&&(!c.material||j.material===c.material)&&(!c.targetId||(j.deconstruction??j.furniture)?.structureId===c.targetId));
-  },c,{polling:100,timeout:5000});
+  },{command:c,heaterTarget},{polling:100,timeout:5000});
   } catch(error) {
     const diagnostic=await page.evaluate(()=>({tick:window.__lisiere.tick,notice:document.querySelector('#notice')?.textContent,stockpiles:window.__lisiere.world.stockpiles,events:window.__lisiere.world.events.slice(-5),tool:document.querySelector('[data-tool].active')?.getAttribute('data-tool')}));
     await page.screenshot({path:'artifacts/player-action-failure.png'});

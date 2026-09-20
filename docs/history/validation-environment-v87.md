@@ -1,0 +1,69 @@
+# Validation environnement et survie — V87
+
+**V87 validée dans son périmètre.** Lot commun : climat annuel et lumière, survie des plantes, vent/météo, éolienne et radiateur, incendies/extinction et dégâts. Source initiale : main V86 `65fa08c9daf5859bb63410a7eae8aca6de8d9a20`. G0 en consolidation ; G1/G2/G3 partiels ; G4 engagé ; G5 absent. Les résultats ci-dessous distinguent campagne naturelle, frontières contrôlées, reprises et charges synthétiques.
+
+## Contrats regroupés
+
+Campagne centrale : 19 fichiers, 79 contrôles. 77 passent au premier passage ; deux gardes de rétention graphique avaient des hypothèses propres aux trois anciens meshes et à l’ancien codage des plages végétales. Les gardes conservent leurs assertions de partage des poses, comptes actifs, matériaux, buffers et restauration. Après adaptation à la flamme résidente et au feuillage séparable, les trois contrôles du fichier passent. Résultat cumulé : 79/79. Le premier démarrage sous bac à sable est refusé par `spawn EPERM` avant toute assertion ; l’exécution autorisée normale est conservée séparément.
+
+Familles : climat/plantes, météo/énergie, feu/dégâts, pièces, transmission worker, matériaux/chantiers, transport de mobilier, réseau/batteries/commutation/couches, navigation, cycle végétal, infections, sauvegardes prison/scénario/site, températures et garde GPU. Le scénario bridge fait évoluer le climat et les états végétaux réels, refuse une corruption atomiquement et conserve les images précédentes.
+
+Les premiers préflights ont conservé deux erreurs de préparation : réseau énergétique court avec une case de rupture, corrigé par un raccord physique ; dortoir de la colonie V86 encore ouvert après dégâts, dont la fermeture doit être obtenue par les travaux du joueur. Aucun résultat de chauffage ni conservation n’est supprimé pour les contourner.
+
+La première continuation longue s’arrête à J77,08. Le dernier checkpoint valide J77 est conservé ; un diagnostic court localise le premier état invalide au tick 462296 : conduit 13998, durée 3,5, travail 3 + 7600/10000. Le moteur attendait l’entier 4 tandis que la validation constatait déjà l’achèvement 3,76. La comparaison de finition utilise désormais le travail fractionnaire commun ; ses replis écrivent des unités entières, sans progression non entière dans un champ entier. Une régression construit réellement un conduit avec un débutant, valide chaque tick et reprend une sauvegarde juste avant finition. L’échec conserve aussi le monde brut lorsqu’une sérialisation valide n’est plus possible.
+
+La revue de présentation corrige l’adoption des flammes/pales sur le snapshot effectivement présenté, la hauteur d’un patient brûlant porté, l’orientation du pompier et le dégradé local des flammes. Le contrôleur d’extinction est exécuté immédiatement après son attribution, avant les loisirs. Groupe ciblé de ces corrections : 17/17, durée 4,49 s hors outil. Aucun gain de performance n’est déduit du seul typage ou de ces gardes.
+
+La revue des transactions ajoute le cas d’une plante détruite pendant le défrichage d’un chantier : l’étape caduque est libérée, le plan et les matières conservés, les autres ordres et l’arête engagée préservés. Les frontières feu/gel/âge, ordre direct/file/transit et compteurs de feu sont regroupées avec les contrats de chantier et de climat : **24/24**, 6,02 s.
+
+Une seconde revue reproduit une collision entre le dépôt d’une cargaison interrompue et les restes d’un bâtiment détruit : un livreur réel de bois au générateur déclenchait `Material pile limit exceeded` après le début de mutation. Le coup fatal prévoit désormais ensemble retrait de l’emprise, dépôts et restes, puis engage exactement ce plan avant les conséquences médicales et de toit. Le refus n’ajoute pas même un registre de feu absent. Les cas bâtiment installé/emballé, sol saturé, cargaison avec arête engagée et continuation sont conservés ; groupe feu, climatiseur, transferts, logistique et transport : **29/29**, 9,36 s. La campagne a été arrêtée sur son checkpoint quotidien valide J88 avant reprise avec cette correction ; aucun bâtiment n’avait été détruit dans J86→88. Typage et build passent ensuite (445 modules, build Vite 1,14 s) ; l’avertissement de chunks supérieurs à 500 ko subsiste.
+
+## Parcours commun
+
+Parcours réussi de la vraie colonie V86 : J76,283 (tick 457698) → J136,073 (816438), soit **59,79 jours** avec adoption prospective du climat, réserves, chauffage et éolienne jusqu’au printemps suivant. Il s’agit des continuations documentées ci-dessous, pas d’une passe monolithique rejouée depuis le départ. À J83, deux corps humains empêchaient les deux murs hérités et un conduit était inaccessible entre des lits. Le carnet conserve les corps et fait construire quatre murs autour, puis raccorde les consommateurs par des conduits ordinaires ; aucun monde modifié pour rendre le test possible. Le diagnostic J83→85 confirme la fermeture et conserve ses bilans et continuations. Le diagnostic J85→86 valide ensuite les raccords physiques : deux radiateurs alimentés, pièces fermées et couvertes de 11 et 9 cellules, air à 21 °C pour 15,83 °C dehors. La décharge nocturne de batterie est observée ; quatre personnes vivantes, bilans et continuation exacte conservés (35,03 s de test, 30,45 s de simulation). L’hiver est observé à partir du tick 724500. Un raid au tick 725000 perce un mur : la chambre s’ouvre et les défenseurs subissent du froid. Le carnet commande la reconstruction au tick 725860 ; à J125 les deux pièces sont de nouveau à 21 °C, sans retouche du monde. À J130, quatre personnes restent vivantes, 72 prises alimentaires hivernales sont observées et le minimum extérieur atteint −2,211 °C. Le printemps revient au tick 814500 ; la première récolte suivante fournit 6 riz au tick 816438. Le profil tempéré historique 16,2 °C/900 mm ne garantit pas un gel mortel naturel. Les incendies et froids rares préparés sont des frontières distinctes, pas des événements garantis par le pilote.
+
+Bilan final : quatre habitants initiaux vivants et actifs, faim 88,27–94,80 et repos 87,16–89,04 ; 120 prises alimentaires hivernales, 7 163 produits récoltés et 483 repas cuisinés depuis l’adoption. Stocks finaux : 12 repas, 1 593 riz et 172 maïs. Les deux pièces sont à 21 °C ; l’éolienne produit 1 255 W sans obstacle. Minimum extérieur −2,211 °C, maximum 34,607 °C. Le feu a détruit 15 arbres (153 bois potentiels comptabilisés), sans perte de pile, bâtiment ou énergie par feu ; aucune extinction par colon n’est observée dans ce parcours naturel. Les combats ont causé quatre destructions supplémentaires (20 bois perdus), dont la brèche réparée en hiver. Les branches d’extinction restent prouvées séparément.
+
+Les 1 505 observations et 2 905 commandes sont conservées dans le [rapport](../../artifacts/environment-colony-v87.json). Chaque checkpoint quotidien et la fin vérifient les bilans et la continuation exacte. Dernière reprise J88→fin : 1 630,684 s de runner, 1 635,37 s au total Vitest ; **1/1 test long**, préflight déjà validé filtré. Fixture Lisière [colony-v87.json.gz](../../tests/fixtures/colony-v87.json.gz) : 64 519 octets compressés, 2 040 430 octets bruts, SHA256 brut `cec15fc400b8cdf47a24bcacb7ff331b6bdaaec369bf81a184a822d3c819347c`. Aucun fichier personnel RimWorld n’est publié.
+
+Après le parcours, une garde bornée prévalide le compteur de vêtements perdus sous le feu avant saturation de l’entier sûr. Cette borne extrême n’est pas approchée dans la colonie ; le seul fichier de simulation changé est `fire-damage.ts`. Les frontières MAX/MAX−1, refus sans mutation et égalité des tirages ordinaires passent avec **12/12 contrôles incendie**, 4,14 s. Typage et compilation finale passent également (Vite 702 ms), avec le même avertissement de gros chunks.
+
+## Interface et charge
+
+Parcours natif contrôlé réussi : extinction physique, adoption prospective, construction orientée, coupe de l’obstacle, cinq boutons de consigne, veille à 17,5 W et reprise exacte. La frontière pluie/pièce froide préparée passe de 2 à 21 °C sur 146 ticks. Chromium/WebGPU, 1440×1000, 57,4 s de parcours (60,0 s au total), aucune erreur et 32 pipelines avant/après. Les 450 fichiers servis hachés sont inchangés ; captures inspectées. [Rapport](../../artifacts/environment-native-v87.json). Le premier lancement avait échoué avant tout monde sur un 504 Vite « Outdated Optimize Dep » ; rapport conservé séparément, serveur du projet identifié puis redémarré et parcours intégral rejoué. Une tentative antérieure de présentation était refusée par le bac à sable avant lancement du navigateur : ce n’est pas une preuve graphique.
+
+La vraie colonie finale est aussi rechargée à froid puis inspectée par clics : radiateur et ses cinq réglages, éolienne et coupe automatique, date et météo. Sauvegarde/reprise exacte avant et après 140 ticks supplémentaires, WebGPU sans erreur, captures 1440×1000 et 1100×760 inspectées ; 22,2 s de test (24,6 s total). Les 451 fichiers servis restent identiques. [Rapport natif de la colonie](../../artifacts/environment-colony-native-v87.json).
+
+Le premier audit CPU s’arrête à trente acteurs sur un résultat métier : le bureau en bois 12714 est détruit. Les neuf feux préparés sont éteints, mais neuf propagations demeurent hors Foyer ; la fixture ne protégeait que les cases initiales. Restes et pertes reconstituent exactement la recette du bureau, sans éclair impliqué. La préparation étend donc le Foyer à l’enveloppe des activités et une frange de trois cases ; toutes les exigences de survie des ateliers, chauffage et piles sont maintenues. [Diagnostic compact](../../artifacts/environment-load-diagnostic-v87.json), checkpoint intégral conservé localement avec son empreinte.
+
+Une seconde préparation refuse trois emplacements thermiques à cent acteurs, car cinq lièvres les occupent déjà. La fixture cherche désormais le rectangle libre le plus proche de l'ancre préférée, sans déplacer ni supprimer les acteurs ou activités. Les préparations 3/30/100 passent sans avancer de tick ; leurs emplacements sont enregistrés. Le banc CPU complet suivant réussit ses trois charges : tous les bâtiments initiaux et les piles de bois brûlées sont conservés, tous les feux sont éteints, les ateliers alimentaires progressent et les radiateurs chauffent leurs pièces à la consigne préparée de 30 °C.
+
+| Colons et lièvres initiaux | CPU tick p95 / max (ms) | Encodage snapshot p95 (ms) |
+|---:|---:|---:|
+| 3 + 3 | 8,93 / 57,56 | 10,98 |
+| 30 + 30 | 30,97 / 113,81 | 16,79 |
+| 100 + 100 | 114,79 / 291,89 | 18,27 |
+
+[Données CPU](../../artifacts/environment-cpu-v87.json). Une passe de 650 ticks par charge après 100 ticks de chauffe séparés ; Node 24.11.1, Ryzen 5 3600, Windows 10.0.26200. Il ne s'agit pas de percentiles du navigateur ni d'une comparaison contrôlée aux anciens lots.
+
+Les trois mesures worker/rendu réussissent également, avec les mêmes résultats métier, aucune erreur navigateur ou état invalide, aucun nouveau pipeline, buffers de personnages stables et caméra fixe. Chromium natif/WebGPU, AMD RDNA-1, 1440×1000, 90 images de chauffe puis 665/655/650 ticks effectivement présentés. Captures des ateliers et de la charge à cent inspectées hors mesure.
+
+| Colons + lièvres | Image p95 / max (ms) | Moyenne de tick des lots worker p95 (ms) | Adoption snapshot p95 (ms) | Débit observé / 6× demandé |
+|---:|---:|---:|---:|---:|
+| 3 + 3 | 37,50 / 150,00 | 13,00 | 5,80 | 5,77× |
+| 30 + 30 | 20,90 / 141,70 | 38,68 | 5,50 | 5,24× |
+| 100 + 100 | 45,80 / 137,50 | 117,50 | 20,80 | 2,05× |
+
+[Rapport natif mixte](../../artifacts/environment-render-v87.json). Le débit 6× reste non tenu ; ces nouvelles charges ne permettent aucune comparaison causale avec les anciens audits. Les percentiles worker portent sur des moyennes de lots, pas sur chaque tick isolé. [Comparaison isolée du coût des pièces et conditions complètes](../research/performance-v87.md).
+
+Présentation : deux parcours natifs de 45 secondes (minage, coupe), changements réels 1→6→1→3, assertions de mouvement et réponse à la vitesse réussies. Zéro saut de pose, zéro occupation solide et zéro image privée de trajectoire sur ces échantillons ; erreurs navigateur vides. Images p95 12,7/12,6 ms, maxima 41,9/41,7 ms. [Données de présentation](../../artifacts/harvest-sync-verification-v87.json). Les 451 sources servies restent identiques après les natives de la colonie finale, de charge et de présentation. Les fichiers de préparation du banc ont changé entre les mesures CPU échouées et la passe réussie, jamais pendant une native.
+
+La reprise longue de J88 au printemps prend environ 27 minutes pour environ 48 jours de jeu, déjà sans attente du temps réel. La séparation de coût moteur/oracles/observations n'est pas instrumentée ; aucun gain global de cadence recherche/implémentation/validation n'est annoncé. Cette durée répond au changement saisonnier du lot, pas à une obligation annuelle pour chaque livraison. Les sauvegardes RimWorld restent des observations parmi les références, jamais un parcours obligatoire à reproduire.
+
+## Limites
+
+Un seul climat tempéré de référence, pas de génération mondiale, de tous les biomes ni de calibration universelle du rythme. Le témoin historique et les lectures de Core sont distincts. Les grandes chaînes encore partielles/absentes sont détaillées dans l’inventaire courant et ROADMAP.
+
+Clôture : typage et compilation finale après les corrections de préparation réussis (445 modules, Vite 1,18 s ; avertissement de chunks >500 ko conservé). Contrôle documentaire : 318 documents, 3 441 liens locaux, 25 identifiants de domaine et cinq familles de validation ; les trois originaux du corpus restent byte-identiques. Diff sans erreur d’espacement.
+
+Une ligne vide terminale dans environment-step.ts a été retirée après les mesures lors du contrôle des nouveaux fichiers indexés ; aucun code exécutable n’a changé.

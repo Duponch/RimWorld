@@ -67,9 +67,9 @@ export function validatePrisoners(w:World,version:number,ids:Set<number>):string
   const errors=validateDepartures(w,version,ids);if(version<86)return errors;
   for(const p of w.pawns){
     if(p.prisoner){
-      if(isColonist(p)||p.state==='working'||p.recruitment||p.draft||p.flee||p.hostilityResponse||p.jobId!==null||p.orders.active!==null||p.orders.queue.length||p.priorityWork||p.haul||p.cooking||p.rescue||p.tend||p.feed||p.ward||p.equipmentTask||p.recreation.task||p.research||p.hunting
+      if(isColonist(p)||p.state==='working'&&!(version>=87&&p.burning)||p.recruitment||p.draft||p.flee||p.hostilityResponse||p.jobId!==null||p.orders.active!==null||p.orders.queue.length||p.priorityWork||p.haul||p.cooking||p.rescue||p.tend||p.feed||p.ward||p.equipmentTask||p.recreation.task||p.research||p.hunting
         ||p.shooting?.order||p.melee?.order||p.tactics)errors.push('Prisoner retains a colony or combat mandate.');
-      if(p.prisoner.escape&&(p.state==='dead'||p.need||p.path.length&&!same(p.path.at(-1)!,p.prisoner.escape)))errors.push('Invalid prisoner escape intent or route.');
+      if(p.prisoner.escape&&(p.state==='dead'||p.need||!(version>=87&&p.burning)&&p.path.length&&!same(p.path.at(-1)!,p.prisoner.escape)))errors.push('Invalid prisoner escape intent or route.');
       if(w.piles.some(i=>i.owner.type==='equipment'&&i.owner.pawnId===p.id))errors.push('Captured prisoner retains a weapon.');
     }
     if(p.recruitment&&(!isColonist(p)||p.prisoner||p.raid||p.recruitment.raidGroup!==undefined&&(!w.raids||p.recruitment.raidGroup>w.raids.serial)))errors.push('Invalid recruitment provenance.');

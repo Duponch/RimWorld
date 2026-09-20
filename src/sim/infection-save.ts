@@ -8,15 +8,15 @@ const keys=(v:Record<string,unknown>,allowed:readonly string[])=>Object.keys(v).
 
 /** Called after ordinary wounds/missing parts are shape-checked. Never upgrades
  * old wounds into new infection candidates while reading a save. */
-export function validInfections(record:MedicalRecord,model:BodyModel,allowed:boolean):boolean {
+export function validInfections(record:MedicalRecord,model:BodyModel,allowed:boolean,allowBurn=true):boolean {
   const now=record.tick*10;
   for(const wound of record.injuries){
     const risk:unknown=wound.infection;if(risk===undefined)continue;
-    if(!allowed||!object(risk)||!keys(risk,['dueCore','roomFactor'])||!['cut','crush','gunshot','bite'].includes(wound.kind)
+    if(!allowed||!object(risk)||!keys(risk,['dueCore','roomFactor'])||!['cut','crush','gunshot','bite',...(allowBurn?['burn']:[])].includes(wound.kind)
       ||injuryPartRules(model)[wound.part].solid||!integer(risk.dueCore,record.death?1:now+1,wound.bornAt*10+45000)
       ||!integer(risk.roomFactor,200,1000)||wound.tended===undefined&&risk.roomFactor!==1000)return false;
     // Crush refreshes bornAt when wounds merge, without renewing its exposure.
-    if(wound.kind!=='crush'&&risk.dueCore<wound.bornAt*10+15000)return false;
+    if(wound.kind!=='crush'&&wound.kind!=='burn'&&risk.dueCore<wound.bornAt*10+15000)return false;
   }
   const state:unknown=record.infections;if(state===undefined)return true;
   if(!allowed||!object(state)||!keys(state,['nextId','cases','immunity'])||!integer(state.nextId,2)

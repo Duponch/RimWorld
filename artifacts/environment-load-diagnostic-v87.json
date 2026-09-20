@@ -1,0 +1,373 @@
+{
+  "kind": "synthetic-load-fixture-diagnostic",
+  "version": "v87",
+  "actors": 30,
+  "tick": 2650,
+  "measuredTicks": 650,
+  "sources": {
+    "log": "tmp/environment-cpu-v87.log",
+    "checkpoint": "tmp/environment-cpu-failure-home-v87-30.json",
+    "checkpointSha256": "1f3872ac3b750507a3f40c12a41e2c1cfc80a83935c0ff9f8344c947f7015ec9",
+    "checkpointBytes": 2479473,
+    "publishedRawWorld": false,
+    "copyVerifiedBeforeRemovingArtifact": true
+  },
+  "missingBuilding": {
+    "id": 12714,
+    "kind": "research-bench",
+    "material": "wood",
+    "x": 117,
+    "z": 113,
+    "origin": "tests/scenarios/research-load.ts: one bench for every third original worker",
+    "originalRecipe": {
+      "wood": 75,
+      "steel": 25
+    },
+    "recipeSource": "src/sim/construction-materials.ts",
+    "groundRemains": [
+      {
+        "id": 13261,
+        "item": "wood",
+        "quantity": 19,
+        "owner": {
+          "type": "ground",
+          "x": 117,
+          "z": 113
+        },
+        "damage": 5
+      },
+      {
+        "id": 13262,
+        "item": "steel",
+        "quantity": 7,
+        "owner": {
+          "type": "ground",
+          "x": 118,
+          "z": 113
+        },
+        "damage": 0
+      }
+    ],
+    "finalDestroyedLedger": {
+      "count": 1,
+      "lost": {
+        "wood": 56,
+        "steel": 18
+      }
+    }
+  },
+  "baselineVerification": {
+    "method": "Static audit of creation and preparation, not an additional simulation run. The failing runner did not retain its initial World.",
+    "sources": [
+      "src/sim/engine.ts:createWorld",
+      "src/sim/generation.ts:emptyLandscape/generateWorld",
+      "tests/scenarios/mining.ts:miningLoad",
+      "tests/scenarios/tailoring-load.ts",
+      "tests/scenarios/research-load.ts",
+      "tests/scenarios/food-chain-load.ts",
+      "tests/scenarios/energy-load.ts",
+      "tests/scenarios/environment-load.ts"
+    ],
+    "destroyedStateAtCreation": "absent",
+    "effectiveInitialDestroyedLedger": {
+      "count": 0,
+      "lost": {}
+    },
+    "reason": "The fresh generator does not create World.destroyed; preparation issues designations and adds prepared objects without stepping the simulation or calling a damage producer.",
+    "comparison": {
+      "destroyedCountDelta": 1,
+      "lostWoodDelta": 56,
+      "lostSteelDelta": 18,
+      "recoveredWood": 19,
+      "recoveredSteel": 7,
+      "woodRecipeAccount": 75,
+      "steelRecipeAccount": 25
+    }
+  },
+  "fireEvidence": {
+    "preparedFireCount": 9,
+    "preparedFireIdsRemaining": 0,
+    "activeFires": [
+      {
+        "id": 13008,
+        "x": 116,
+        "z": 112,
+        "size": 1.75,
+        "inHome": false
+      },
+      {
+        "id": 13029,
+        "x": 113,
+        "z": 106,
+        "size": 1.75,
+        "inHome": false
+      },
+      {
+        "id": 13130,
+        "x": 117,
+        "z": 113,
+        "size": 1.75,
+        "inHome": false
+      },
+      {
+        "id": 13163,
+        "x": 112,
+        "z": 105,
+        "size": 1.75,
+        "inHome": false
+      },
+      {
+        "id": 13188,
+        "x": 117,
+        "z": 112,
+        "size": 1.75,
+        "inHome": false
+      },
+      {
+        "id": 13197,
+        "x": 117,
+        "z": 115,
+        "size": 1.6839999999999997,
+        "inHome": false
+      },
+      {
+        "id": 13215,
+        "x": 114,
+        "z": 105,
+        "size": 0.9580000000000004,
+        "inHome": false
+      },
+      {
+        "id": 13253,
+        "x": 111,
+        "z": 105,
+        "size": 0.43000000000000005,
+        "inHome": false
+      },
+      {
+        "id": 13259,
+        "x": 119,
+        "z": 112,
+        "size": 0.29800000000000004,
+        "inHome": false
+      }
+    ],
+    "activeOutsideHome": 9,
+    "ledger": {
+      "items": {},
+      "resources": {},
+      "structures": 1,
+      "extinguished": 25,
+      "ignitions": 39,
+      "batteryEnergyLost": 0,
+      "fuelTicksLost": 0,
+      "fuelTicksBurned": 0,
+      "woodPotentialLost": 0
+    },
+    "lightningCount": 0,
+    "weather": "clear"
+  },
+  "cause": "Home contained only the nine initial ignition cells. Spread onto nearby cloth and a wooden research bench was outside Home, so automatic firefighters legally returned to ordinary work after the initial targets disappeared. The building-conservation oracle correctly rejected the run. No missing-item or engine deletion is inferred.",
+  "correction": {
+    "file": "tests/scenarios/environment-load.ts",
+    "policy": "Home now covers the original workload envelope (building/job footprints, workers, ground stores and stockpiles), all prepared fire cells, and a three-cell fringe for access plus the verified maximum two-cell ember offset. Bounds are reported.",
+    "preserved": [
+      "all original buildings/jobs/stocks",
+      "initial fire count, size and locations",
+      "simulation and random rules",
+      "energy, original wood piles, heating and survival oracles"
+    ],
+    "validation": "Prepared and frozen for central CPU/native rerun; this diagnostic does not claim success."
+  },
+  "thermalPlacementPreparation": {
+    "failureLog": "tmp/environment-cpu-v87-retry.log",
+    "beforePreparationLog": "tmp/environment-patch-preflight-before-v87.log",
+    "afterPreparationLog": "tmp/environment-patch-preflight-after-v87.log",
+    "failedActors": 100,
+    "cause": "Fixed thermal plot anchors overlapped existing wildlife; the preparation guard correctly stopped without deleting or relocating those animals.",
+    "observedPreferredPlotOccupants": [
+      {
+        "g": 0,
+        "x": 24,
+        "z": 100,
+        "buildings": [],
+        "jobs": [],
+        "pawns": [],
+        "animals": [
+          {
+            "id": 13663,
+            "x": 42,
+            "z": 101
+          },
+          {
+            "id": 13689,
+            "x": 33,
+            "z": 103
+          }
+        ]
+      },
+      {
+        "g": 1,
+        "x": 54,
+        "z": 100,
+        "buildings": [],
+        "jobs": [],
+        "pawns": [],
+        "animals": [
+          {
+            "id": 13708,
+            "x": 58,
+            "z": 103
+          },
+          {
+            "id": 13712,
+            "x": 58,
+            "z": 119
+          }
+        ]
+      },
+      {
+        "g": 2,
+        "x": 24,
+        "z": 130,
+        "buildings": [],
+        "jobs": [],
+        "pawns": [],
+        "animals": [
+          {
+            "id": 13703,
+            "x": 37,
+            "z": 130
+          }
+        ]
+      },
+      {
+        "g": 3,
+        "x": 54,
+        "z": 130,
+        "buildings": [],
+        "jobs": [],
+        "pawns": [],
+        "animals": []
+      }
+    ],
+    "correction": "Use preferred anchor if its entire 23x23 rectangle is free, otherwise deterministic increasing Manhattan distance in one-cell increments, north-to-south and left-before-right tie order. Reserve each entire chosen rectangle before the next one. Existing structures, jobs, people, wildlife, piles, crop zones and previous rectangles remain obstacles.",
+    "actualGroupedPreparations": [
+      {
+        "count": 3,
+        "tick": 2000,
+        "thermalPatches": [
+          {
+            "preferred": {
+              "x": 24,
+              "z": 100
+            },
+            "origin": {
+              "x": 24,
+              "z": 100
+            },
+            "size": 23
+          }
+        ],
+        "home": {
+          "minX": 107,
+          "maxX": 167,
+          "minZ": 104,
+          "maxZ": 122
+        },
+        "energyBuildings": 30,
+        "preparedFires": 3,
+        "colonists": 3,
+        "animals": 3
+      },
+      {
+        "count": 30,
+        "tick": 2000,
+        "thermalPatches": [
+          {
+            "preferred": {
+              "x": 24,
+              "z": 100
+            },
+            "origin": {
+              "x": 24,
+              "z": 100
+            },
+            "size": 23
+          }
+        ],
+        "home": {
+          "minX": 107,
+          "maxX": 227,
+          "minZ": 104,
+          "maxZ": 137
+        },
+        "energyBuildings": 165,
+        "preparedFires": 9,
+        "colonists": 30,
+        "animals": 30
+      },
+      {
+        "count": 100,
+        "tick": 2000,
+        "thermalPatches": [
+          {
+            "preferred": {
+              "x": 24,
+              "z": 100
+            },
+            "origin": {
+              "x": 24,
+              "z": 104
+            },
+            "size": 23
+          },
+          {
+            "preferred": {
+              "x": 54,
+              "z": 100
+            },
+            "origin": {
+              "x": 59,
+              "z": 100
+            },
+            "size": 23
+          },
+          {
+            "preferred": {
+              "x": 24,
+              "z": 130
+            },
+            "origin": {
+              "x": 24,
+              "z": 131
+            },
+            "size": 23
+          },
+          {
+            "preferred": {
+              "x": 54,
+              "z": 130
+            },
+            "origin": {
+              "x": 54,
+              "z": 130
+            },
+            "size": 23
+          }
+        ],
+        "home": {
+          "minX": 107,
+          "maxX": 227,
+          "minZ": 104,
+          "maxZ": 182
+        },
+        "energyBuildings": 559,
+        "preparedFires": 9,
+        "colonists": 100,
+        "animals": 100
+      }
+    ],
+    "validation": "Creation and validateWorld only for 3/30/100; all stay at tick 2000. No simulation steps and no performance measurement in this diagnostic."
+  }
+}

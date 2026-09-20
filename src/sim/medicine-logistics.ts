@@ -1,7 +1,7 @@
 import { MEDICINES,isMedicine,medicineAllowed } from './medicine-rules.ts';
 import { treatmentTargets,medicineCount,type TendTask } from './care-rules.ts';
 import { reservedSource } from './materials.ts';
-import { copyRot } from './food-preservation.ts';
+import { copyPileCondition } from './pile-condition.ts';
 import { adjacent,routeToJob,type Reachability } from './pathfinding.ts';
 import { interruptWork } from './interrupted-cargo.ts';
 import type { NeedContext } from './needs.ts';
@@ -40,7 +40,7 @@ export function pickupMedicine(world:World,doctor:Pawn,context:NeedContext):void
   else {
     if(world.piles.length>=32768||!Number.isSafeInteger(world.nextId+1)){interruptWork(world,doctor);return;}
     pile.quantity-=m.quantity;m.carryPileId=world.nextId++;
-    world.piles.push({id:m.carryPileId,kind:'medicine',item:m.item,quantity:m.quantity,owner:{type:'pawn',pawnId:doctor.id},...copyRot(pile)});
+    world.piles.push({id:m.carryPileId,kind:'medicine',item:m.item,quantity:m.quantity,owner:{type:'pawn',pawnId:doctor.id},...copyPileCondition(pile)});
   }
   // A self-tending patient travels with the doctor. Treat at the pickup position,
   // never walk back to an obsolete personal position captured before collection.

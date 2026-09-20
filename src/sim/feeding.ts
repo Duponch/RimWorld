@@ -1,6 +1,6 @@
 import { bedsideAccess } from './care-access.ts';
 import { FEED_TICKS,feedingReason,feedingPlaceValid,feedingWork,type FeedTask } from './feeding-rules.ts';
-import { copyRot } from './food-preservation.ts';
+import { copyPileCondition } from './pile-condition.ts';
 import { selectFood } from './food-selection.ts';
 import { mealQuantity,nutritionOf,ITEM_DEFINITIONS,rawFoodThought } from './items.ts';
 import { reservedSource } from './materials.ts';
@@ -57,7 +57,7 @@ export function processFeeding(world:World,doctor:Pawn,context:NeedContext):void
     else {
       if(world.piles.length>=32768||!Number.isSafeInteger(world.nextId+1)){interruptWork(world,doctor);return;}
       food.quantity-=t.quantity;t.carryPileId=world.nextId++;
-      world.piles.push({id:t.carryPileId,kind:'food',item:food.item,quantity:t.quantity,owner:{type:'pawn',pawnId:doctor.id},...copyRot(food)});
+      world.piles.push({id:t.carryPileId,kind:'food',item:food.item,quantity:t.quantity,owner:{type:'pawn',pawnId:doctor.id},...copyPileCondition(food)});
     }
     t.phase='deliver';doctor.path=[];doctor.state='moving';return;
   }

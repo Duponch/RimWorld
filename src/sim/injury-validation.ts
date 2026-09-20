@@ -9,7 +9,7 @@ const integer=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>Number.
 const keys=(v:Record<string,unknown>,allowed:readonly string[])=>Object.keys(v).every(k=>allowed.includes(k));
 /** Strict isolated record validator. World ownership/migration is not implemented
  * by this function and must precede accepting a medical Pawn field. */
-export function validateMedicalRecord(value:unknown,allowGunshot=true,allowBite=true,allowHeat=true,allowCold=true,animal=false,allowExecution=false,allowInfection=true,allowMalnutrition=true):string|null {
+export function validateMedicalRecord(value:unknown,allowGunshot=true,allowBite=true,allowHeat=true,allowCold=true,animal=false,allowExecution=false,allowInfection=true,allowMalnutrition=true,allowBurn=true):string|null {
   const model=animal?HARE_MODEL:HUMAN_MODEL,BODY_PARTS=model.byId,PART_INJURY_RULES=injuryPartRules(model);
   const bodyPartExists=(id:unknown)=>modelHasPart(model,id);
   const fail='Invalid medical record';
@@ -21,7 +21,7 @@ export function validateMedicalRecord(value:unknown,allowGunshot=true,allowBite=
   const ids=new Set<number>();let total=0;
   for(const i of value.injuries) {
     if(!object(i)||!keys(i,['id','part','kind','severity','bornAt','scar','tended',...(allowInfection?['infection']:[])])||!integer(i.id,1,value.nextInjuryId-1)||ids.has(i.id)||
-      !bodyPartExists(i.part)||BODY_PARTS[i.part].conceptual||typeof i.kind!=='string'||!Object.hasOwn(INJURY_RULES,i.kind)||!allowGunshot&&i.kind==='gunshot'||!allowBite&&i.kind==='bite'||i.kind==='execution-cut'&&(!animal||!allowExecution||Number(i.severity)>1000||i.scar!==undefined)||!integer(i.severity,1)||!integer(i.bornAt,0,value.tick)||
+      !bodyPartExists(i.part)||BODY_PARTS[i.part].conceptual||typeof i.kind!=='string'||!Object.hasOwn(INJURY_RULES,i.kind)||!allowGunshot&&i.kind==='gunshot'||!allowBite&&i.kind==='bite'||!allowBurn&&i.kind==='burn'||i.kind==='execution-cut'&&(!animal||!allowExecution||Number(i.severity)>1000||i.scar!==undefined)||!integer(i.severity,1)||!integer(i.bornAt,0,value.tick)||
       i.tended!==undefined&&!integer(i.tended,0,1300))return fail;
     ids.add(i.id);total+=i.severity;if(!Number.isSafeInteger(total*100))return fail;
     if(i.scar!==undefined&&(!object(i.scar)||!keys(i.scar,['threshold','pain'])||i.kind==='bruise'||PART_INJURY_RULES[i.part].scarFactor===0||!integer(i.scar.threshold,1,i.severity)||
@@ -35,7 +35,7 @@ export function validateMedicalRecord(value:unknown,allowGunshot=true,allowBite=
   for(const [index,m] of record.missing.entries()) {
     if(record.missing.some((other,j)=>j!==index&&(isWithinPart(m.part,other.part,model)||isWithinPart(other.part,m.part,model)))||record.injuries.some(i=>isWithinPart(i.part,m.part,model)))return fail;
   }
-  if(!validInfections(record,model,allowInfection))return fail;
+  if(!validInfections(record,model,allowInfection,allowBurn))return fail;
   for(const i of record.injuries)if(i.part!=='torso'&&remainingPartHealth(record,i.part)===0)return fail;
   if(value.death!==undefined&&(!object(value.death)||!keys(value.death,['tick','cause'])||value.death.tick!==record.tick||!['blood-loss','vital-failure','trauma',...(animal?['downed',...(allowExecution?['execution']:[])]:[]),...(allowHeat?['heatstroke']:[]),...(allowCold?['hypothermia']:[]),...(allowInfection?['infection']:[]),...(allowMalnutrition?['malnutrition']:[])].includes(value.death.cause as string)))return fail;
   const living:MedicalRecord={...createMedicalRecord(record.tick),...(animal?{body:'hare' as const}:{}),injuries:record.injuries,missing:record.missing,bloodLoss:record.bloodLoss,...record.heatstroke?{heatstroke:record.heatstroke}:{},...record.hypothermia?{hypothermia:record.hypothermia}:{},...record.infections?{infections:record.infections}:{},...record.malnutrition?{malnutrition:record.malnutrition}:{}};

@@ -4,9 +4,11 @@
 
 Contrat V83, 20 septembre 2026. Le nouveau départ Atterrissage forcé utilise `generateSiteWorld` dans `src/sim/site-generation.ts`. Le point d'entrée applicatif `createScenarioWorld` dans `new-game.ts` sépare le paysage du scénario, du point d'arrivée et des possessions. `createWorld` et `generateWorld` conservent les profils historiques ; charger une colonie ne passe jamais par ces générateurs.
 
+**V87 validée** relie les nouveaux départs naturels au [climat annuel du site](site-climate.md), à la [météo et au vent](wind-heater.md), à la vie végétale et aux [incendies](fires.md). Ces états se superposent au paysage existant : ils ne régénèrent ni terrain, ni minerai, ni dotation. Les anciennes colonies les adoptent explicitement, sans rejouer une histoire climatique. La [campagne V87](../history/validation-environment-v87.md) reste distincte des mesures de génération ci-dessous.
+
 ## Site local V83
 
-Le site porte sa révision 1, le biome local `temperate-forest`, le relief choisi, l'absence de rivière et deux ou trois pierres distinctes parmi les cinq existantes. Le menu propose **Plat, Petites collines, Grandes collines** ; le profil proposé Petites collines est un choix de Lisière, pas le résultat du bouton de site aléatoire de Core. Ce contrat ne simule pas un globe, ses coordonnées, ses factions ou son climat régional. La graine reste une graine locale.
+Le site porte sa révision 1, le biome local `temperate-forest`, le relief choisi, l'absence de rivière et deux ou trois pierres distinctes parmi les cinq existantes. Le menu propose **Plat, Petites collines, Grandes collines** ; le profil proposé Petites collines est un choix de Lisière, pas le résultat du bouton de site aléatoire de Core. La graine reste une graine locale. Ce contrat ne génère pas un globe, ses coordonnées ou ses factions. Le climat V87 possède sa provenance séparée : profil tempéré observé de 16,2 °C et 900 mm, à 22,21° N et 18,23° O, fixé pour ce périmètre et documenté avec ses incertitudes. Il ne transforme pas le choix local en sélection mondiale ni en site moyen de RimWorld.
 
 Les passes sont indépendantes du PRNG de simulation :
 
@@ -26,7 +28,7 @@ Le banc `scripts/site-generation-bench.ts` prévoit trente graines × trois reli
 
 Les dimensions autorisées sont des entiers de 8 à **250 cellules par axe**, centralisées dans `src/sim/map-config.ts`. Le défaut jouable reste **250×250** ; les petites cartes sont des essais, et chaque scénario impose sa propre borne minimale. Agrandir la carte ajoute des cellules sans changer l'échelle des personnages, les empreintes ou la résolution du mouvement. Le culling graphique ne suspend pas la simulation hors écran.
 
-Même graine normalisée en entier non signé 32 bits, mêmes dimensions et même profil/version donnent les mêmes terrains, ressources et identifiants. Un hash spatial entier `Math.imul`, une interpolation cubique et trois longueurs d'onde produisent des canaux distincts de relief, humidité, densité végétale, rivière et ressources. Échantillonner un canal ne décale pas le PRNG de travail. Aucun `Math.random`, temps réel ou rendu ne participe à la génération.
+Même graine normalisée en entier non signé 32 bits, mêmes dimensions et même profil/version donnent les mêmes terrains, ressources et identifiants. Les profils historiques utilisent un hash spatial entier `Math.imul`, une interpolation cubique et trois longueurs d'onde pour leurs canaux de relief, humidité, végétation, rivière et ressources ; le site V83 emploie les passes de gradient détaillées plus haut. Échantillonner un canal ne décale pas le PRNG de travail. Aucun `Math.random`, temps réel ou rendu ne participe à la génération.
 
 Les champs temporaires disparaissent après la création. Les tuiles, plantes et objets réellement sauvegardés font autorité : **charger une partie ne régénère jamais son paysage ni sa dotation**. La migration V79→V80 ne choisit aucun scénario rétroactivement. Le scénario des nouvelles parties porte une révision explicite ; ce n'est pas une invitation à reconstruire ses données au chargement. Une graine seule ne constitue pas un format d'archive interversions.
 
@@ -86,7 +88,7 @@ La génération seule a pris 27–45 ms et la factory complète 39–70 ms sur c
 
 Le relief ne crée aucune altitude navigable, pente physique, étage ou coût d'ascension. Les champs guident le placement initial sans simulation d'eau. Les deux nouveaux sols V83 ne constituent pas une diversité complète de terrains ni une hydrologie régionale. Les arbres partagent encore une seule ressource de gameplay et n'ont pas de croissance biologique ; l'herbe de terrain n'est pas un pâturage fonctionnel. Les baies et le lièvre ne constituent pas des catalogues de biome complets.
 
-Les profils historiques imposent leur rivière ; le site V83 n'en génère aucune. Sélection mondiale de site, autres biomes, saisons régionales, gués, ponts, grottes, ruines, autres minerais et faune diversifiée restent absents. Le plafonnement de roche reste une particularité historique ; la végétation et le budget de lièvres demeurent partiels. La sélection d'une grande composante n'assure ni l'accès à toute la carte ni un camp parfaitement plat et dégagé.
+Les profils historiques imposent leur rivière ; le site V83 n'en génère aucune. Sélection mondiale de site, autres biomes, diversité des climats régionaux, gués, ponts, grottes, ruines, autres minerais et faune diversifiée restent absents. Le cycle annuel et les huit météos de surface V87 du profil adopté ne constituent ni une hydrologie ni une simulation d'épaisseur de neige. Le plafonnement de roche reste une particularité historique ; la végétation et le budget de lièvres demeurent partiels. La sélection d'une grande composante n'assure ni l'accès à toute la carte ni un camp parfaitement plat et dégagé.
 
 La génération s'exécute une fois dans le worker. Ses champs/parcours ont une mémoire proportionnelle à la surface ; le plafond rocheux et la sélection du site peuvent ajouter des tris. Aucun travail de génération par frame ni bénéfice GPU n'est revendiqué. La mesure de rendu et les parcours de survie sont des preuves distinctes.
 

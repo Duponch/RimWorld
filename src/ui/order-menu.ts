@@ -1,3 +1,4 @@
+import { firePosition } from '../sim/fire-rules';
 import type { SimulationClient } from '../bridge/SimulationClient';
 import type { Cell, World } from '../sim/types';
 import { isColonist } from '../sim/affiliation';
@@ -66,8 +67,10 @@ export class OrderMenu {
         };
         content.append(button);
       }
-      if(!options.length)content.textContent='Aucun travail ni pile à transporter ici. Utilisez les ordres d’Architecte.';
-      const hint=document.createElement('p');hint.className='muted';hint.textContent=options.some(option=>option.capturePatientId!==undefined)?'La capture est un ordre direct. Préparez un lit de prison dans une pièce fermée.':'Maj : ajouter à la file. Construction et cuisine peuvent se poursuivre sur cette case.';content.append(hint);
+      const fire=world.fires?.items.find(f=>{const at=firePosition(world,f);return at?.x===cell.x&&at?.z===cell.z;});
+      if(fire){const button=document.createElement('button');button.setAttribute('role','menuitem');button.dataset.orderFire=String(fire.id);button.textContent='Prioriser : éteindre le feu';button.onclick=()=>{this.close();void this.client.command({type:'order-extinguish',pawnId:pawn.id,fireId:fire.id}).then(()=>this.report('Extinction prioritaire demandée.')).catch(error=>this.report(String(error instanceof Error?error.message:error),true));};content.append(button);}
+      if(!options.length&&!fire)content.textContent='Aucun travail ni pile à transporter ici. Utilisez les ordres d’Architecte.';
+      const hint=document.createElement('p');hint.className='muted';hint.textContent=fire?'L’extinction est un ordre direct, sans mise en file.':options.some(option=>option.capturePatientId!==undefined)?'La capture est un ordre direct. Préparez un lit de prison dans une pièce fermée.':'Maj : ajouter à la file. Construction et cuisine peuvent se poursuivre sur cette case.';content.append(hint);
       this.position(x,y);content.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus();
     } catch(error) {if(revision===this.revision){content.textContent=String(error instanceof Error?error.message:error);this.position(x,y);}}
   }

@@ -1,3 +1,4 @@
+import { plantLeafless } from '../sim/plant-life';
 import * as THREE from 'three/webgpu';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { plantGrowth } from '../sim/plants';
@@ -80,9 +81,9 @@ class CropBatch {
       const growth = plantGrowth(world, crop), scale = .14 + .86 * Math.sqrt(growth);
       this.transform.position.set(crop.x, .025, crop.z);
       this.transform.rotation.y = (crop.id % 7) * .9;
-      this.transform.scale.set(scale, scale, scale); this.transform.updateMatrix();
+      this.transform.scale.set(scale, plantLeafless(world,crop)?scale*.4:scale, scale); this.transform.updateMatrix();
       this.mesh.setMatrixAt(slot, this.transform.matrix);
-      this.color.copy(this.green).lerp(this.ripe, Math.max(0, (growth - .65) / .35)); this.mesh.setColorAt(slot, this.color);
+      this.color.copy(this.green).lerp(this.ripe, Math.max(0, (growth - .65) / .35)); if(plantLeafless(world,crop))this.color.setHex(0x8f7b58);this.mesh.setColorAt(slot, this.color);
     }
     this.mesh.count = visibleCount;
     if (visibleCount) {

@@ -1,12 +1,14 @@
 # Première pression climatique — V74
 
-**Référence du 20 septembre :** le [Core 1.6.4871 inspecté](../research/colony-pacing-reference.md) sélectionne les canicules parmi les incidents admissibles, sans rendez-vous garanti à la première semaine. Le calendrier prototype ci-dessous reste livré ; sa future intégration au narrateur ne doit pas être confondue avec les effets thermiques déjà présents.
+**Référence du 20 septembre :** le [Core 1.6.4871 inspecté](../research/colony-pacing-reference.md) sélectionne les canicules parmi les incidents admissibles, sans rendez-vous garanti à la première semaine. Le calendrier prototype ci-dessous reste livré pour les camps historiques. Le profil Cassandra d'Atterrissage forcé ne l'active pas et ne propose pas son bouton d'activation ; l'intégration de cet incident au narrateur reste distincte des effets thermiques déjà présents.
+
+**V87 validée** prolonge l'air extérieur par le [climat annuel du site](site-climate.md), la [météo et le chauffage](wind-heater.md), et la chaleur des [incendies](fires.md). Ces systèmes utilisent le même air local sans ajouter une canicule obligatoire au narrateur. Leur [campagne commune](../history/validation-environment-v87.md) ne remplace pas les preuves V74.
 
 [Recherche et écarts](../research/heatwave-reference.md), [température](temperature.md), [habillement](armor.md), [santé](health.md), [preuves](../history/validation-heatwave-v74.md).
 
 ## Boucle livrée
 
-Un nouveau camp reçoit une canicule après 6–7 jours. Lettre et température expliquent l’événement ; préparer un local fermé/couvert, un refroidisseur passif ravitaillé, un lit médical et des tenues tribales permet d’y répondre avec la production existante. Les anciennes parties ne reçoivent pas d’incident au chargement : bouton explicite d’activation. La condition dure 1,5–3,5 jours et atteint +17 °C en 1 200 ticks locaux, puis redescend ; la prochaine est espacée de 30–40 jours après sa fin. Cadence de scénario, pas narrateur Core complet.
+Un nouveau camp pédagogique historique reçoit une canicule après 6–7 jours. Lettre et température expliquent l’événement ; préparer un local fermé/couvert, un refroidisseur passif ravitaillé, un lit médical et des tenues tribales permet d’y répondre avec la production existante. Les anciennes parties sans profil de narrateur ni calendrier ne reçoivent pas d’incident au chargement : bouton explicite d’activation. La condition dure 1,5–3,5 jours et atteint +17 °C en 1 200 ticks locaux, puis redescend ; la prochaine est espacée de 30–40 jours après sa fin. Cadence de camp conservée, pas rythme du nouveau profil Cassandra ni narrateur Core complet.
 
 Le même air alimente croissance, semis, production, conservation et exposition humaine. Au-delà de 42 °C, la croissance actuelle ralentit. La pourriture est déjà au taux maximal au-dessus de 10 °C : une canicule ne lui ajoute pas un coefficient fictif. Le refroidisseur vise 17 °C et ne livre toujours pas la réfrigération.
 
@@ -24,8 +26,8 @@ L’isolation portée modifie la plage confortable ; qualité oui, PV non. Tenue
 
 **Migration : V73 strictement validée avant V74**, sans exposition, refuge ni calendrier inventés. Une ancienne version portant ces champs est refusée. Toute reprise conserve sévérité, phase d’identité, trajet capturé, ressources et calendrier. La vérification d’incapacité inclut maintenant explicitement la session de recherche, omission rétroactive corrigée.
 
-## Limites et arrêt du lot
+## Limites courantes et validation historique V74
 
-L’étape proche 5 est **engagée**, pas terminée. La canicule donne une pression réelle avec une réponse obtenable ; elle ne livre pas saisons, maladies générales, mortalité des cultures, autres météos ou choix de site. V75 ajoute séparément hypothermie et chaîne du froid ; gelures localisées restent absentes. La progression suivante doit changer les décisions du joueur, pas ajouter par inertie tous les raffinements du coup de chaleur. Revoir l’ordre dans ROADMAP après cette première tranche.
+La canicule donne une pression réelle avec une réponse obtenable. La tranche V74 ne livrait pas saisons, mortalité des cultures ou autres météos ; leur ajout relève de V87. V75 a ajouté hypothermie et chaîne du froid. Maladies générales, gelures localisées, sélection mondiale du site et catalogue complet d'incidents restent absents ou partiels. ROADMAP porte seule le calendrier ; le numéro de cette tranche historique ne vaut pas état courant d'un jalon.
 
 Contrôles : six scénarios regroupés (seuils/isolation, calendrier/migration, incapacité/récupération, refuge/accès/ordres/reprise, secours, expédition), UI depuis un vrai checkpoint et charge mixte 3/30/100. Le camp d’expédition utilise des provisions initiales déclarées, construit/ravitaille son abri par commandes et traverse huit jours sans injection ultérieure. Il complète les pilotes naturels ; il ne prouve pas une colonie autosuffisante face à tous les climats.

@@ -6,6 +6,7 @@ import { isCrop, isPlant, plantGrowth, PLANT_DEFINITIONS, sowingTemperatureAllow
 import { TemperatureView, outdoorTemperature } from './temperature.ts';
 import { releaseWork, type DropPlan } from './work-release.ts';
 import { isGrowingTerrain } from './soil.ts';
+import { createPlantLife } from './plant-life.ts';
 import type { GrowingZone, Job, JobKind, Resource, World } from './types.ts';
 
 export const FARM_SCAN_INTERVAL = 10;
@@ -133,5 +134,7 @@ export function scheduleGrowing(world: World): void {
 }
 export function finishSowing(world: World, job: Job): void {
   const kind=world.growingZones.find(z=>z.id===job.growingZoneId)!.plant;
-  world.resources = [...world.resources, { id: world.nextId++, kind, x: job.x, z: job.z, amount: PLANT_DEFINITIONS[kind].yield, growth: .0001, growthTick: world.tick }];
+  const plant:Resource={ id: world.nextId++, kind, x: job.x, z: job.z, amount: PLANT_DEFINITIONS[kind].yield, growth: .0001, growthTick: world.tick };
+  if(world.climate)plant.plantLife=createPlantLife(world,plant,true);
+  world.resources = [...world.resources,plant];
 }

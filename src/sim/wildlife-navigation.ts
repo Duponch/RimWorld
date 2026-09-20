@@ -1,4 +1,5 @@
 import { mergeSlowIntervals,travelEnd } from './travel-timing.ts';
+import { weatherMoveFactor } from './weather-exposure.ts';
 import { blockedCells,canStep,routeToCell,hasReachableCell } from './pathfinding.ts';
 import { captureStandability,navigationCosts,furnitureDelay } from './furniture-travel.ts';
 import { doorCorners,doorOpenness } from './door-rules.ts';
@@ -26,7 +27,7 @@ export function animalNavigation(world:World) {
 export function moveAnimal(world:World,a:WildAnimal,step:(a:Cell,b:Cell)=>boolean,moving=1):boolean {
   const next=a.path[0];if(!next)return false;
   if(!step(a,next)){a.path=[];delete a.meal;a.state='idle';a.nextDecision=world.tick+10;return false;}
-  const pace=(a.meal||a.flee||a.retaliation?HARE.moveTicks:HARE.walkTicks)/moving,delay=furnitureDelay(world,a,next),start=a.motion&&a.motion.end>=world.tick-1?a.motion.end:world.tick;
+  const pace=(a.meal||a.flee||a.retaliation||a.burning?HARE.moveTicks:HARE.walkTicks)/(moving*weatherMoveFactor(world,a)),delay=furnitureDelay(world,a,next),start=a.motion&&a.motion.end>=world.tick-1?a.motion.end:world.tick;
   a.motion={from:{x:a.x,z:a.z},to:{...next},start,end:start+Math.hypot(next.x-a.x,next.z-a.z)*pace+delay,speedFactor:3/pace,terrainDelay:delay};
   if(a.stagger&&a.stagger.untilCore/10>start){a.motion.stagger=mergeSlowIntervals([{start:Math.max(start,a.stagger.sinceCore/10),end:a.stagger.untilCore/10}]);a.motion.end=travelEnd(a.motion);}
   a.x=next.x;a.z=next.z;a.path.shift();a.state='moving';return true;

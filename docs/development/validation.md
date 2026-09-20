@@ -1,4 +1,6 @@
-# Validation courante — V86
+# Validation courante — V87
+
+**V87 validée dans son périmètre.** [Climat annuel et plantes](site-climate.md), [météo, éolienne et radiateur](wind-heater.md), [incendies et extinction](fires.md) avancent ensemble. La vraie colonie passe de J76,283 à J136,073 avec quatre habitants ; les reprises quotidiennes, contrôles de frontières, vrais clics, chargement final, présentation et mesures mixtes ont leurs preuves distinctes. Les [résultats V87](../history/validation-environment-v87.md) conservent les échecs diagnostiqués et les limites, dont le débit 6× non garanti à cent colons. G0 en consolidation, G1/G2/G3 partiels, G4 engagé, G5 absent.
 
 V86 : [captivité, recrutement et optimisation](../history/validation-prisoners-v86.md). Contrats et frontières regroupés, capture/soins/entretiens par vrais clics, puis continuation naturelle du camp V85 jusqu’à J76,28 avec quatre personnes entretenues. Chargement natif à froid du résultat réel et continuation exacte réussis ; typage, build et documentation vérifiés. Optimisations CPU comparées avec mondes identiques ; 6× reste non tenu à cent colons. Les preuves distinguent les reprises, erreurs de pilote, correction du validateur Cassandra et limites des mesures.
 

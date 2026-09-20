@@ -1,0 +1,87 @@
+{
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor",
+  "os": "win32 10.0.26200",
+  "note": "Same host as V86 records; background activity not controlled. Four short sequential runs, V86 frozen source with room topology only changed.",
+  "runs": {
+    "base-a": {
+      "date": "2026-09-20T17:04:38.325Z",
+      "node": "v24.11.1",
+      "source": "base",
+      "ticks": 200,
+      "static500Ms": 246.57240000000002,
+      "reads": {
+        "calls": 4674,
+        "ms": 3321.63819999998
+      },
+      "tickMs": {
+        "total": 14803.34289999999,
+        "p50": 66.33599999999933,
+        "p95": 135.9960000000001,
+        "max": 201.9369999999999
+      },
+      "initialHash": "070fb20f06511d61d761b02d66c23a6ae84d0ac7a69f159ba7373658ea209381",
+      "finalHash": "82807facc804ddfae4c9b5e0628cd528fa93d203f3d9972827921dd82e99a2dc",
+      "errors": []
+    },
+    "candidate-a": {
+      "date": "2026-09-20T17:05:43.373Z",
+      "node": "v24.11.1",
+      "source": "candidate",
+      "ticks": 200,
+      "static500Ms": 101.74630000000002,
+      "reads": {
+        "calls": 4674,
+        "ms": 2746.370300000021
+      },
+      "tickMs": {
+        "total": 13528.602400000002,
+        "p50": 66.01350000000002,
+        "p95": 101.67849999999999,
+        "max": 142.93669999999997
+      },
+      "initialHash": "070fb20f06511d61d761b02d66c23a6ae84d0ac7a69f159ba7373658ea209381",
+      "finalHash": "82807facc804ddfae4c9b5e0628cd528fa93d203f3d9972827921dd82e99a2dc",
+      "errors": []
+    },
+    "candidate-b": {
+      "date": "2026-09-20T17:06:30.039Z",
+      "node": "v24.11.1",
+      "source": "candidate",
+      "ticks": 200,
+      "static500Ms": 118.26729999999998,
+      "reads": {
+        "calls": 4674,
+        "ms": 3514.20149999994
+      },
+      "tickMs": {
+        "total": 17377.762099999985,
+        "p50": 82.21119999999974,
+        "p95": 141.22770000000128,
+        "max": 246.89280000000008
+      },
+      "initialHash": "070fb20f06511d61d761b02d66c23a6ae84d0ac7a69f159ba7373658ea209381",
+      "finalHash": "82807facc804ddfae4c9b5e0628cd528fa93d203f3d9972827921dd82e99a2dc",
+      "errors": []
+    },
+    "base-b": {
+      "date": "2026-09-20T17:06:49.561Z",
+      "node": "v24.11.1",
+      "source": "base",
+      "ticks": 200,
+      "static500Ms": 143.5438999999999,
+      "reads": {
+        "calls": 4674,
+        "ms": 3726.2060999999785
+      },
+      "tickMs": {
+        "total": 17231.624199999987,
+        "p50": 83.44959999999992,
+        "p95": 143.95490000000063,
+        "max": 218.48239999999987
+      },
+      "initialHash": "070fb20f06511d61d761b02d66c23a6ae84d0ac7a69f159ba7373658ea209381",
+      "finalHash": "82807facc804ddfae4c9b5e0628cd528fa93d203f3d9972827921dd82e99a2dc",
+      "errors": []
+    }
+  }
+}

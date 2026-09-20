@@ -1,3 +1,4 @@
+import { mergeThingDamage } from './thing-damage-rules.ts';
 import { newApparelState,isApparelItem,APPAREL } from './apparel-rules.ts';
 import { apparelCompatible } from './armor.ts';
 import { groundCapacity, planGroundPlacement } from './ground-placement.ts';
@@ -67,7 +68,7 @@ export function addMaterial(world: World, kind: MaterialKind, quantity: number, 
     if (!quantity) break;
     if (pile.item !== item || !sameOwner(pile.owner, owner)) continue;
     const moved = Math.min(limit - pile.quantity, quantity);
-    mergeRot(pile, moved, 0, world.tick);
+    mergeThingDamage(pile,moved);mergeRot(pile, moved, 0, world.tick);
     pile.quantity += moved; quantity -= moved;
   }
   while (quantity > 0) {
@@ -90,7 +91,7 @@ export function transferPile(world:World,pile:MaterialPile,owner:MaterialOwner):
   const carrier=pile.owner.type==='pawn'?pile.owner.pawnId:undefined;
   if(owner.type==='ground'&&groundCapacity(world,owner,pile.item,carrier)<pile.quantity)return false;
   const target=world.piles.find(p=>p!==pile&&p.item===pile.item&&sameOwner(p.owner,owner)&&p.quantity+pile.quantity<=ITEM_DEFINITIONS[pile.item].stackLimit);
-  if(target){mergeRot(target,pile.quantity,rotAge(pile,world.tick),world.tick);target.quantity+=pile.quantity;world.piles.splice(world.piles.indexOf(pile),1);}else pile.owner={...owner};
+  if(target){mergeThingDamage(target,pile.quantity,pile.damage);mergeRot(target,pile.quantity,rotAge(pile,world.tick),world.tick);target.quantity+=pile.quantity;world.piles.splice(world.piles.indexOf(pile),1);}else pile.owner={...owner};
   refreshStock(world);return true;
 }
 export function reservedSource(world: World, pileId: number, exceptPawn?: number): number {

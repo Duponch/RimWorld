@@ -2,12 +2,13 @@ import { PowerTopologyCache, connectedPowerGroups } from '../sim/power-topology'
 import { isElectrical, isPowerActive, powerWatts, powerDemand } from '../sim/power-rules';
 import { batteryWattDays } from '../sim/power-battery';
 import { solarUnroofedCells } from '../sim/solar-rules';
-import { naturalLight } from '../sim/environment';
-import { calendarTick } from '../sim/calendar';
+import { annualNaturalLight } from '../sim/environment';
+import { windIntensity, windObstructions } from '../sim/wind-rules';
+import { TemperatureView } from '../sim/temperature';
 import type { Structure, World } from '../sim/types';
 
 const cache = new PowerTopologyCache();
-const watts = (n: number) => `${Math.round(n).toLocaleString('fr-FR')} W`;
+const watts = (n: number) => `${n.toLocaleString('fr-FR', {maximumFractionDigits: 1})} W`;
 
 export function powerInspection(world: World, structure: Structure): string {
   if (!isElectrical(structure.kind) || !structure.power) return '';
@@ -21,10 +22,20 @@ export function powerInspection(world: World, structure: Structure): string {
   let detail: string;
   if (structure.kind === 'solar-generator') {
     const open = solarUnroofedCells(world, structure);
-    detail = `Production ${watts(Math.max(0, powerWatts(structure, world)))} / 1 700 W · ${open}/16 cases sans toit · lumière naturelle ${Math.round(naturalLight(calendarTick(world)) * 100)} %`;
+    const light = annualNaturalLight(world);
+    detail = `Production ${watts(Math.max(0, powerWatts(structure, world)))} / 1 700 W · ${open}/16 cases sans toit · lumière naturelle ${Math.round(light * 100)} %`;
     if (!open) detail += ' · Entièrement sous toit';
-    else if (naturalLight(calendarTick(world)) === 0) detail += ' · Nuit';
+    else if (light === 0) detail += ' · Nuit';
     else if (!isPowerActive(structure)) detail += ' · Démarrage en attente';
+  } else if (structure.kind === 'wind-turbine') {
+    const obstacles = windObstructions(world, structure).length;
+    detail = `Production ${watts(Math.max(0, powerWatts(structure, world)))} / 3 450 W · vent ${Math.round(windIntensity(world) * 100)} % · ${obstacles}/112 cases de dégagement obstruées`;
+    if (obstacles) detail += ` · production réduite de ${Math.min(100, obstacles * 20)} % par les obstacles`;
+    detail += ' · Les toits, rochers, arbres et bâtiments hauts gênent le vent. La coupe demande le travail réel d’un colon';
+  } else if (structure.kind === 'heater') {
+    const temperature = new TemperatureView(world).at(world, structure);
+    const state = structure.power.switchOn === false ? 'Arrêt manuel' : !isPowerActive(structure) ? 'Sans alimentation' : structure.heater?.high ? 'Chauffage' : 'Veille';
+    detail = `Cible ${(structure.heater?.target ?? 21).toFixed(1)} °C · air ${temperature.toFixed(1)} °C · ${state} · demande ${watts(powerDemand(structure))} · chauffe l’air de la pièce fermée, sans refroidissement`;
   } else if (structure.kind === 'battery') {
     detail = `Stockage ${batteryWattDays(structure.battery ?? {stored: 0}).toFixed(2)} / 600 W·j · rendement de charge 50 % · autodécharge 5 W`;
   } else if (structure.kind === 'power-switch') {

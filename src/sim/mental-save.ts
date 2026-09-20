@@ -13,12 +13,12 @@ export function validateMental(world:World,version:number):string[] {
     if(m.crisis!==undefined) {
       const c=m.crisis;
       if(!object(c)||Object.keys(c).some(k=>!['kind','age','target','waitUntil'].includes(k))||c.kind!=='sad-wander'||!integer(c.age,0,59999)||Number(c.age)%30!==0||typeof c.waitUntil!=='number'||!Number.isFinite(c.waitUntil)||c.waitUntil<0||c.waitUntil>world.tick+20.1||!(c.target===null||object(c.target)&&Object.keys(c.target).every(k=>k==='x'||k==='z')&&integer(c.target.x,0,world.width-1)&&integer(c.target.z,0,world.height-1)))errors.push('Invalid sad wander.');
-      else if(!p.need&&p.path.length) {
+      else if(!(version>=87&&p.burning)&&!p.need&&p.path.length) {
         const end=p.path.at(-1)!;
         if(!object(c.target)||end.x!==c.target.x||end.z!==c.target.z)errors.push('Mental route has no matching destination.');
       }
       if(p.state==='dead'||p.state==='downed'||p.draft||p.shooting||p.melee||p.flee||p.tactics||p.jobId!==null||p.haul||p.cooking||p.equipmentTask||p.ward||p.feed||p.tend||p.rescue||p.recreation.task||p.orders.active!==null||p.orders.queue.length||p.priorityWork)errors.push('Conflicting mental task.');
-      if(!p.need&&!['idle','moving','hungry'].includes(p.state))errors.push('Invalid mental posture.');
+      if(!p.need&&!['idle','moving','hungry',...(version>=87&&p.burning?['working']:[])].includes(p.state))errors.push('Invalid mental posture.');
     }
   }
   return errors;

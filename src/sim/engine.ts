@@ -1,5 +1,8 @@
 import { requestPowerFlick,reconcilePowerFlicks,advancePowerFlick } from './power-flick.ts';
 import { applyCapture } from './capture.ts';
+import { adoptEnvironment,advanceSurfaceWeather,advanceSurfaceTemperature } from './environment-step.ts';
+import { applyExtinguish,processFirefighting,processBurning } from './firefighting.ts';
+import { reconcileFires } from './fire.ts';
 import { applyPrisonerMode,applyPrisonBed,reconcilePrisoners,processPrisoner } from './prisoners.ts';
 import { processWarden,reconcileWarden } from './warden.ts';
 import { sharesConstructionLayer } from './power-grid.ts';
@@ -14,6 +17,8 @@ import { advanceWildlife,enableWildlife,reconcileWildlife } from './wildlife.ts'
 import { enableHeatwaves,advanceHeatwaves } from './heatwave.ts';
 import { advanceHeatExposure } from './heat-exposure.ts';
 import { processHeatRefuge } from './heat-refuge.ts';
+import { newHeaterState,adjustHeaterTarget } from './heater.ts';
+import { newWindTurbineState,setWindAutoCut,adoptWind } from './wind.ts';
 import { coolerFaces,coolerFaceBlocked,newCoolerState,setCoolerTarget,adjustCoolerTarget } from './cooler.ts';
 import { airConditioningUnlocked, selectResearch,processResearch,researchRate,clothingUnlocked } from './research.ts';
 import { tailoringTemperatureFactor } from './crafting-quality.ts';
@@ -81,7 +86,7 @@ export { queryJobStatus, queryPawnStatus } from './diagnostics.ts';
 import { processCooking } from './cooking.ts';
 import { WorkEnvironmentCache, type WorkEnvironment } from './work-environment.ts';
 import type { LightEnvironment } from './light-environment.ts';
-import { advanceWork } from './work-progress.ts';
+import { advanceWork,workProgress,setWorkUnits,WORK_FRACTIONS } from './work-progress.ts';
 import { TemperatureView, reconcileTemperature, advanceTemperature } from './temperature.ts';
 import { updatePlantTemperatures } from './thermal-plants.ts';
 import { updateFoodTemperatures } from './thermal-food.ts';
@@ -109,7 +114,7 @@ import type { AreaCommand, Cell, Command, CommandResult, DesignateCommand, Job, 
 export { JOB_DURATION, JOB_WOOD_COST } from './definitions.ts';
 
 const PATH_SEARCHES_PER_TICK = 8;
-const JOB_LABEL: Readonly<Record<JobKind, string>> = { flick:'commutation électrique','power-conduit':'construction de conduit','power-switch':'construction d’interrupteur',battery:'construction de batterie','solar-generator':'construction de panneau solaire', 'fueled-stove':'construction de cuisinière à bois','electric-stove':'construction de cuisinière électrique','butcher-table':'construction de table de boucherie', 'butcher-spot':'emplacement de boucherie', cooler:'construction de climatiseur', 'research-bench':'construction de bureau de recherche','tailor-bench':'construction d’établi de tailleur', 'crafting-spot':'emplacement d’artisanat', repair:'réparer', 'wood-generator':'construction de générateur à bois', 'standing-lamp':'construction de lampe sur pied', 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'pose de toit', 'remove-roof':'retrait de toit', door:'construction de porte', stonecutter:'construction de table de taille de pierre', mine:'minage', uninstall:'désinstallation', install:'réinstallation', deconstruct: 'déconstruction', chop: 'abattage', harvest: 'récolte', cut: 'coupe de plante', sow: 'semis', horseshoes: 'construction de piquet de fers à cheval', campfire: 'construction de feu de camp', wall: 'construction de mur', bed: 'construction de lit', table: 'construction de table', stool: 'construction de tabouret' };
+const JOB_LABEL: Readonly<Record<JobKind, string>> = { heater:'construction de radiateur','wind-turbine':'construction d’éolienne',flick:'commutation électrique','power-conduit':'construction de conduit','power-switch':'construction d’interrupteur',battery:'construction de batterie','solar-generator':'construction de panneau solaire', 'fueled-stove':'construction de cuisinière à bois','electric-stove':'construction de cuisinière électrique','butcher-table':'construction de table de boucherie', 'butcher-spot':'emplacement de boucherie', cooler:'construction de climatiseur', 'research-bench':'construction de bureau de recherche','tailor-bench':'construction d’établi de tailleur', 'crafting-spot':'emplacement d’artisanat', repair:'réparer', 'wood-generator':'construction de générateur à bois', 'standing-lamp':'construction de lampe sur pied', 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'pose de toit', 'remove-roof':'retrait de toit', door:'construction de porte', stonecutter:'construction de table de taille de pierre', mine:'minage', uninstall:'désinstallation', install:'réinstallation', deconstruct: 'déconstruction', chop: 'abattage', harvest: 'récolte', cut: 'coupe de plante', sow: 'semis', horseshoes: 'construction de piquet de fers à cheval', campfire: 'construction de feu de camp', wall: 'construction de mur', bed: 'construction de lit', table: 'construction de table', stool: 'construction de tabouret' };
 const sameCell = (a: Cell, b: Cell): boolean => a.x === b.x && a.z === b.z;
 const refusal = (code: RefusalCode, reason: string): CommandResult => ({ ok: false, code, reason });
 function event(world: World, type: 'job' | 'need' | 'command', message: string): void {
@@ -187,8 +192,8 @@ export function canDesignate(world: World, command: DesignateCommand): CommandRe
   if(command?.kind==='solar-generator'&&!solarPowerUnlocked(world))return refusal('invalid-command','Recherchez Panneaux solaires pour construire cet appareil.');
   if(command?.kind==='cooler'&&!airConditioningUnlocked(world))return refusal('invalid-command','Recherchez Climatisation pour construire cet appareil.');
   if(command?.kind==='tailor-bench'&&!clothingUnlocked(world))return refusal('invalid-command','Recherchez Vêtements complexes pour construire cet établi.');
-  if (!command || !['power-conduit','power-switch','battery','solar-generator','fueled-stove','electric-stove','butcher-table','butcher-spot','cooler','research-bench','tailor-bench','crafting-spot','wood-generator','standing-lamp','passive-cooler','door','stonecutter', 'mine', 'uninstall', 'deconstruct', 'chop', 'harvest', 'cut', 'wall', 'bed', 'table', 'stool', 'campfire', 'horseshoes'].includes(command.kind)) return refusal('invalid-command', 'Type de travail inconnu.');
-  if((command.kind==='door'||command.kind==='passive-cooler'||isElectrical(command.kind)&&command.kind!=='cooler'&&command.kind!=='electric-stove'&&command.kind!=='battery')&&command.orientation!==undefined&&command.orientation!==0)return refusal('invalid-command','Ce bâtiment ne se tourne pas manuellement.');
+  if (!command || !['heater','wind-turbine','power-conduit','power-switch','battery','solar-generator','fueled-stove','electric-stove','butcher-table','butcher-spot','cooler','research-bench','tailor-bench','crafting-spot','wood-generator','standing-lamp','passive-cooler','door','stonecutter', 'mine', 'uninstall', 'deconstruct', 'chop', 'harvest', 'cut', 'wall', 'bed', 'table', 'stool', 'campfire', 'horseshoes'].includes(command.kind)) return refusal('invalid-command', 'Type de travail inconnu.');
+  if((command.kind==='door'||command.kind==='passive-cooler'||isElectrical(command.kind)&&command.kind!=='cooler'&&command.kind!=='electric-stove'&&command.kind!=='battery'&&command.kind!=='wind-turbine')&&command.orientation!==undefined&&command.orientation!==0)return refusal('invalid-command','Ce bâtiment ne se tourne pas manuellement.');
   if (command.orientation !== undefined && (!Number.isInteger(command.orientation) || command.orientation < 0 || command.orientation > 3)) return refusal('invalid-command', 'Orientation invalide.');
   if(!validConstructionMaterial(command.kind,command.material))return refusal('invalid-command','Matériau incompatible avec cette construction.');
   if(command.kind==='cooler'){const faces=coolerFaces(command);if(coolerFaceBlocked(world,faces.cold,true)||coolerFaceBlocked(world,faces.hot,true))return refusal('occupied','Les faces froide et chaude doivent rester dégagées.');}
@@ -231,6 +236,10 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   if(command?.type==='designate'&&command.kind==='flick')return refusal('invalid-command','Utilisez le bouton marche/arrêt de l’appareil.');
   if(command?.type==='designate'&&command.kind==='repair')return refusal('invalid-command','Utilisez la zone de foyer pour activer les réparations.');
   if (!command || typeof command !== 'object') return refusal('invalid-command', 'Commande invalide.');
+  if(command.type==='heater-adjust')return adjustHeaterTarget(world,command.structureId,command.offset);
+  if(command.type==='wind-auto-cut')return setWindAutoCut(world,command.structureId,command.enabled);
+  if(command.type==='climate-adopt'){const adopted=adoptEnvironment(world);if(adopted)event(world,'command','Climat saisonnier et météo activés à partir de maintenant.');return {ok:true};}
+  if(command.type==='order-extinguish'){const reason=applyExtinguish(world,command);return reason?refusal('invalid-command',reason):{ok:true};}
   if(command.type==='power-flick')return requestPowerFlick(world,command.structureId,command.on);
   if(command.type==='cancel-unfinished')return cancelUnfinished(world,command.itemId);
   if(command.type==='enable-wildlife'){enableWildlife(world);return {ok:true};}
@@ -313,12 +322,13 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
     return { ok: true };
   }
   if (command.type === 'priority') {
-    if (!['warden','basic','hunt','research','patient','bedrest','doctor','mine', 'gather', 'build', 'haul', 'grow', 'cook', 'craft'].includes(command.work) || !Number.isInteger(command.value) || command.value < 0 || command.value > 4) return refusal('invalid-priority', 'La priorité doit être comprise entre 0 et 4.');
+    if (!['firefight','warden','basic','hunt','research','patient','bedrest','doctor','mine', 'gather', 'build', 'haul', 'grow', 'cook', 'craft'].includes(command.work) || !Number.isInteger(command.value) || command.value < 0 || command.value > 4) return refusal('invalid-priority', 'La priorité doit être comprise entre 0 et 4.');
     const pawn = world.pawns.find(candidate => candidate.id === command.pawnId);
     if (!pawn) return refusal('missing-target', 'Colon introuvable.');
     pawn.priorities[command.work] = command.value;if(command.work==='hunt'&&command.value===0&&pawn.hunting){cancelHunting(pawn);pawn.path=[];pawn.state='idle';}if(command.work==='research'&&command.value===0&&pawn.research)releaseAssignments(world,pawn);
     if(command.value===0&&pawn.feed&&command.work===feedingWork(world.pawns.find(p=>p.id===pawn.feed!.patientId))&&pawn.orders.active!=='feed')releaseWork(world,pawn,drops);
     if(command.work==='doctor'&&command.value===0&&pawn.tend&&pawn.orders.active!=='tend')releaseWork(world,pawn);
+    if(command.work==='firefight'&&command.value===0&&pawn.firefighting&&!pawn.firefighting.forced)releaseWork(world,pawn,drops);
     if(command.work==='warden'&&command.value===0&&pawn.ward)releaseWork(world,pawn,drops);
     if(command.value===0&&pawn.rescue&&command.work===(world.pawns.find(p=>p.id===pawn.rescue!.patientId)?.prisoner?'warden':'doctor')&&pawn.orders.active!=='rescue')releaseWork(world,pawn,drops);
     const job = world.jobs.find(candidate => candidate.id === pawn.jobId);
@@ -387,7 +397,7 @@ function completeJob(world: World, pawn: Pawn, job: Job): void {
     if (!resource) { releaseWork(world, pawn); return; }
     if (job.kind === 'harvest' && !harvestable(world, resource)) { releaseWork(world, pawn); return; }
     const quantity=gatherResource(world,resource,job.kind);
-    if(quantity===null){job.progress=jobDuration(world,job)-1;delete job.workRemainder;releaseWork(world,pawn);return;}
+    if(quantity===null){setWorkUnits(job,Math.max(0,Math.round((jobDuration(world,job)-1)*WORK_FRACTIONS)));releaseWork(world,pawn);return;}
     if(job.kind!=='chop'&&quantity>0)event(world,'job',`${pawn.name} a récolté ${quantity} ${harvestProductLabel(resource)}.`);
   } else if (isRoofJob(job)) {
     finishRoofJob(world,job);
@@ -400,9 +410,10 @@ function completeJob(world: World, pawn: Pawn, job: Job): void {
   } else if (job.kind === 'sow') {
     finishSowing(world, job);
   } else {
-    if(!constructionSupplied(world,job)||!constructionSiteFree(world,job,pawn.id)){job.progress=jobDuration(world,job)-1;delete job.workRemainder;releaseWork(world,pawn);return;}
+    if(!constructionSupplied(world,job)||!constructionSiteFree(world,job,pawn.id)){setWorkUnits(job,Math.max(0,Math.round((jobDuration(world,job)-1)*WORK_FRACTIONS)));releaseWork(world,pawn);return;}
     world.piles = world.piles.filter(pile => pile.owner.type !== 'job' || pile.owner.jobId !== job.id);
-    world.structures.push({ ...(job.kind==='battery'?{battery:{stored:0}}:{}),...(job.kind==='cooler'?{cooler:newCoolerState()}:{}),...(isElectrical(job.kind)?{power:newPowerState(job.kind)}:{}),...(job.kind==='door'?{door:builtDoorState(world,job)}:{}),...(job.material?{material:job.material}:{}),...(isFueledBuilding(job.kind)?{fuel:newBuildingFuel(job.kind as import('./types.ts').StructureKind)}:{}),...(job.kind==='tailor-bench'||job.kind==='campfire'||isFoodWorkstation(job.kind)||job.kind==='stonecutter'?{bills:[]}:{}), id: world.nextId++, kind: job.kind as import('./types.ts').StructureKind, x: job.x, z: job.z, orientation: job.orientation, footprint: job.footprint });
+    if(job.kind==='wind-turbine')adoptWind(world);
+    world.structures.push({ ...(job.kind==='heater'?{heater:newHeaterState()}:{}),...(job.kind==='wind-turbine'?{wind:newWindTurbineState()}:{}),...(job.kind==='battery'?{battery:{stored:0}}:{}),...(job.kind==='cooler'?{cooler:newCoolerState()}:{}),...(isElectrical(job.kind)?{power:newPowerState(job.kind)}:{}),...(job.kind==='door'?{door:builtDoorState(world,job)}:{}),...(job.material?{material:job.material}:{}),...(isFueledBuilding(job.kind)?{fuel:newBuildingFuel(job.kind as import('./types.ts').StructureKind)}:{}),...(job.kind==='tailor-bench'||job.kind==='campfire'||isFoodWorkstation(job.kind)||job.kind==='stonecutter'?{bills:[]}:{}), id: world.nextId++, kind: job.kind as import('./types.ts').StructureKind, x: job.x, z: job.z, orientation: job.orientation, footprint: job.footprint });
   }
   if(job.kind==='cooler'||job.kind==='wall'||job.kind==='door')autoRoofRooms(world,job);
   const jobIndex=world.jobs.indexOf(job);if(jobIndex>=0)world.jobs.splice(jobIndex,1); pawn.jobId = null; pawn.path = []; if(!medicallyStopped(pawn))pawn.state = 'idle'; pawn.planCooldown = 0;
@@ -416,10 +427,12 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
   for (let step = 0; step < ticks; step++) {
     world.tick++;
     advanceArrivals(world);advanceHeatwaves(world);
+    const beforeWeather=world.structures;
+    advanceSurfaceWeather(world,cell=>{const c={type:'designate' as const,kind:'chop' as const,...cell};if(canDesignate(world,c).ok)applyCommand(world,c);});
+    if(beforeWeather!==world.structures)thermal=reconcileTemperature(world);
     advancePower(world);
     expireFood(world);
-    advanceTemperature(world,thermal);
-    updatePlantTemperatures(world,thermal);
+    thermal=advanceSurfaceTemperature(world,thermal);
     burnFuel(world);
     advanceWildlife(world);
     updateDoors(world);
@@ -463,13 +476,14 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if(pawn.state==='downed'||carrierOf(world,pawn.id)||isStunned(pawn,world.tick*10))continue;
       if(hasAdversary&&!pawn.prisoner&&!pawn.mental?.crisis){considerAutomaticCombat(world,pawn,budget);considerFlee(world,pawn,getThreats());}
       if(pawn.need?.kind==='eat' && pawn.need.dining && !validDiningPlace(world,pawn.need.dining)) {pawn.need.phase='choose-spot';pawn.need.dining=null;pawn.need.progress=0;delete pawn.need.workRemainder;pawn.path=[];pawn.state='moving';}
-      if (pawn.moveCooldown > 0) { if(pawn.draft)pawn.draft.lastActiveTick=world.tick; pawn.state = pawn.hunting || pawn.mental?.crisis || pawn.raid || pawn.tactics || pawn.melee || pawn.flee || pawn.draft || pawn.heatRefuge || pawn.research || pawn.jobId !== null || pawn.equipmentTask || pawn.ward || pawn.feed || pawn.tend || pawn.rescue || pawn.haul || pawn.need || pawn.cooking || pawn.recreation.task ? 'moving' : 'idle'; continue; }
+      if (pawn.moveCooldown > 0) { if(pawn.draft)pawn.draft.lastActiveTick=world.tick; pawn.state = pawn.burning || pawn.firefighting || pawn.hunting || pawn.mental?.crisis || pawn.raid || pawn.tactics || pawn.melee || pawn.flee || pawn.draft || pawn.heatRefuge || pawn.research || pawn.jobId !== null || pawn.equipmentTask || pawn.ward || pawn.feed || pawn.tend || pawn.rescue || pawn.haul || pawn.need || pawn.cooking || pawn.recreation.task ? 'moving' : 'idle'; continue; }
       const needsContext = {
         search: (goals?: ReadonlySet<number>) => search(world, pawn, getBlocked(), occupied, budget, goals),
         move: (target: Cell, exact: boolean) => moveToward(world, pawn, target, true, getBlocked, budget, exact, getLight),
         release: () => releaseWork(world, pawn),
         event: (message: string) => event(world, 'need', message),
       };
+      if(processBurning(world,pawn,needsContext))continue;
       if(pawn.prisoner){processPrisoner(world,pawn,needsContext);continue;}
       if(pawn.mental?.crisis){processSadWander(world,pawn,needsContext,()=>searchCandidates(world,pawn,getBlocked(),occupied,budget));continue;}
       if(pawn.raid){if(!processDraftSleep(world,pawn,needsContext))processRaider(world,pawn,getBlocked,budget,getLight);continue;}
@@ -481,17 +495,21 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       // Finish post-shot recovery before choosing another civilian activity.
       if(pawn.hunting&&pawn.shooting?.stance?.phase==='cooldown')continue;
       if(pawn.shooting&&!pawn.hunting){if(pawn.draft)pawn.draft.lastActiveTick=world.tick;continue;}
+      if(pawn.draft&&processFirefighting(world,pawn,needsContext))continue;
       if(pawn.draft){if(!processDraftSleep(world,pawn,needsContext)){processDraft(world,pawn,getBlocked,budget,getLight);if(pawn.moveCooldown===0)retryInterruptedCargo(world,pawn);}continue;}
+      if(pawn.firefighting&&processFirefighting(world,pawn,needsContext))continue;
       if(pawn.interruptedCargo){processNeeds(world,pawn,needsContext);continue;}
       if (leaveTransitCell(world,pawn,getBlocked,budget,getLight)) continue;
       if(pawn.equipmentTask){processEquipment(world,pawn,needsContext);continue;}
       if (advanceOrders(world,pawn,getBlocked,budget)) continue;
       if (!pawn.ward&&!pawn.feed&&!pawn.tend&&!pawn.rescue&&advancePriorityWork(world,pawn,getBlocked,budget)) continue;
       if(processHeatRefuge(world,pawn,needsContext,thermal))continue;
+      if(processFirefighting(world,pawn,needsContext))continue;
       if (planUrgentCare(world,pawn,()=>searchCandidates(world,pawn,getBlocked(),occupied,budget))) continue;
       if (processNeeds(world, pawn, needsContext) || !pawn.ward&&!pawn.feed&&!pawn.tend&&!pawn.rescue&&pawn.orders.active===null&&processRecreation(world, pawn, needsContext)) continue;
       if(pawn.planCooldown===0&&recoverDroppedWeapon(world,pawn,()=>searchCandidates(world,pawn,getBlocked(),occupied,budget)))continue;
       if (pawn.jobId === null && pawn.haul === null && !pawn.rescue && !pawn.ward&&!pawn.feed&&!pawn.tend && !pawn.cooking && !pawn.hunting && !pawn.research && pawn.planCooldown === 0) planWork(world, pawn, getBlocked, occupied, budget);
+      if(pawn.firefighting&&processFirefighting(world,pawn,needsContext))continue;
       if(pawn.hunting){processHunting(world,pawn,{...needsContext,candidates:()=>searchCandidates(world,pawn,getBlocked(),occupied,budget),blocked:getBlocked});continue;}
       if(pawn.research){processResearch(world,pawn,needsContext.move,s=>researchRate(pawn,s,getEnvironment(),new TemperatureView(world,thermal).at(world,s)),message=>event(world,'job',message));continue;}
       if(pawn.ward){processWarden(world,pawn,needsContext);continue;}
@@ -553,7 +571,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       const cells = footprintCells(job);
       if (cells.some(cell => adjacent(pawn, cell)) && !cells.some(cell => sameCell(pawn, cell))) {
         pawn.path = []; pawn.state = 'working'; advanceWork(job,constructionWorkRate(pawn,job,getLight().speedAt(pawn),body));
-        if (job.progress >= jobDuration(world, job)) {completeJob(world, pawn, job);blocked=undefined;roofs=undefined;invalidateEnvironment();}
+        if (workProgress(job) >= jobDuration(world, job)) {completeJob(world, pawn, job);blocked=undefined;roofs=undefined;invalidateEnvironment();}
       } else moveToward(world, pawn, job, false, getBlocked, budget,false,getLight);
     }
     for(const pawn of [...world.pawns])if(pawn.prisoner?.escape)exitPrisoner(world,pawn);
@@ -561,7 +579,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     advanceRaids(world);
     advanceSocial(world);
     if(world.roofing)reconcileRoofJobs(world,roofs);
-    reconcilePowerFlicks(world);reconcilePower(world);reconcileOrders(world);reconcileWildlife(world);advanceCorpses(world,thermal);
+    reconcileFires(world);reconcilePowerFlicks(world);reconcilePower(world);reconcileOrders(world);reconcileWildlife(world);advanceCorpses(world,thermal);
     if(world.hunting)world.hunting.targets=world.hunting.targets.filter(id=>world.wildlife?.animals.some(a=>a.id===id&&a.state!=='dead')||world.pawns.some(p=>p.hunting?.animalId===id));
     refreshStock(world);
     if(thermalDirty)thermal=reconcileTemperature(world);

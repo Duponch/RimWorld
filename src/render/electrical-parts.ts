@@ -26,6 +26,19 @@ export function electricalParts(world:World,cutaway=false):Placement[] {
       out.push({x:s.x,z:s.z,y:.13,sx:.67,sy:.26,sz:.67,color:0x67766b},
         {x:s.x,z:s.z,y:.275,sx:.53,sy:.04,sz:.53,color:0x313e39},
         {x:s.x,z:s.z+(closed?.13:-.13),y:.36,sx:.16,sy:.16,sz:.3,color:closed?0x85b982:0xcf9a67});
+    } else if(s.kind==='heater') {
+      out.push({x:s.x,z:s.z,y:.1,sx:.87,sy:.2,sz:.72,color:0x526762},
+        {x:s.x,z:s.z,y:.56,sx:.84,sy:.76,sz:.54,color:0x9ba896},
+        {x:s.x+.31,z:s.z+.3,y:.66,sx:.12,sy:.22,sz:.07,color:on?0xc6925a:0x58665c});
+      for(const x of [-.3,-.2,-.1,0,.1,.2,.3])out.push({x:s.x+x,z:s.z-.28,y:.56,sx:.035,sy:.6,sz:.065,color:0x596f68});
+    } else if(s.kind==='wind-turbine') {
+      const ry=s.orientation*Math.PI/2,dx=Math.sin(ry),dz=Math.cos(ry),x=s.x+dx*.5,z=s.z+dz*.5;
+      out.push({x,z,y:.1,sx:6.7,sy:.2,sz:1.7,ry,color:0x57645f},
+        {x,z,y:.24,sx:1.2,sy:.28,sz:1.2,ry,color:0x82918a},
+        {x,z,y:2,sx:.25,sy:3.5,sz:.28,ry,color:0x99a99d},
+        {x,z,y:3.73,sx:.53,sy:.43,sz:1.17,ry,color:0x6b807a},
+        {x:x+dx*.64,z:z+dz*.64,y:3.73,sx:.45,sy:.45,sz:.24,ry,color:0xb6beac});
+      for(const across of [-2.7,2.7])out.push({x:x+dz*across,z:z-dx*across,y:.29,sx:.38,sy:.38,sz:1.4,ry,color:0x7a8980});
     } else if(s.kind==='battery') {
       const cells=footprintCells(s),last=cells[cells.length-1]!,x=(s.x+last.x)/2,z=(s.z+last.z)/2,ry=s.orientation*Math.PI/2;
       out.push({x,z,y:.13,sx:.86,sy:.26,sz:1.83,ry,color:0x4b5957},

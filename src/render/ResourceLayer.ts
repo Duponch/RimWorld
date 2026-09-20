@@ -1,3 +1,4 @@
+import { plantLeafless } from '../sim/plant-life';
 import { isCrop } from '../sim/plants';
 import { stoneColor } from './stone-palette';
 import { harvestable } from '../sim/plants';
@@ -24,6 +25,11 @@ function retainResources(group: THREE.Group, alive: Set<number>): void {
     index.needsUpdate = true; mesh.geometry.setDrawRange(0, count);
     // The original sphere remains a conservative bound after removal.
   }
+}
+
+function visibleResourceKeys(world:World,r:World['resources'][number]):number[]{
+  if(r.kind!=='berries')return [r.id];
+  return [r.id,...(plantLeafless(world,r)?[]:[-r.id*2]),...(harvestable(world,r)?[-r.id*2-1]:[])];
 }
 
 export class ResourceLayer {
@@ -53,11 +59,11 @@ export class ResourceLayer {
       retainResources(previous.group, new Set()); previous.signature = '';
     }
     for (const [key, chunk] of chunks) {
-      const signature = chunk.map(resource => `${resource.id}:${resource.kind}:${resource.x}:${resource.z}:${resource.stone ?? ""}:${resource.kind === 'berries' && harvestable(world, resource) ? 1 : 0}`).join('|');
+      const signature = chunk.map(resource => `${resource.id}:${resource.kind}:${resource.x}:${resource.z}:${resource.stone ?? ""}:${resource.kind === 'berries' && harvestable(world, resource) ? 1 : 0}:${plantLeafless(world,resource)}`).join('|');
       const previous = this.chunks.get(key);
       if (previous?.signature === signature) continue;
       if (previous && chunk.every(r => previous.identities.get(r.id) === `${r.kind}:${r.x}:${r.z}:${r.stone ?? ""}`)) {
-        retainResources(previous.group, new Set(chunk.flatMap(r => r.kind === 'berries' && harvestable(world,r) ? [r.id,-r.id] : [r.id]))); previous.signature = signature; continue;
+        retainResources(previous.group, new Set(chunk.flatMap(r => visibleResourceKeys(world,r)))); previous.signature = signature; continue;
       }
       const group = previous?.group ?? new THREE.Group();
       if (previous) clearGroup(group); else this.group.add(group);
@@ -80,13 +86,14 @@ export class ResourceLayer {
           rocks.push({ x: x - 0.1, y: 0.3, z, sx: 0.46 + n * 0.14, sy: 0.35 + n * 0.15, sz: 0.43, ry: turn, color: resource.stone ? stoneColor(resource.stone) : 0x92998d });
           rocks.push({ x: x + 0.3, y: 0.15, z: z + 0.2, sx: 0.25, sy: 0.24, sz: 0.25, ry: -turn, color: resource.stone ? stoneColor(resource.stone) : 0xa8ad9c });
         } else {
+          trunks.push({x,y:.13,z,sx:.6,sy:.28,sz:.6,ry:turn});
           bushes.push({ x, y: 0.3, z, sx: 0.44, sy: 0.39, sz: 0.4, ry: turn, color: 0x697b55 });
           for (let i = 0; i < 5; i++) {
             const angle = i * 2.4 + turn;
             berries.push({ x: x + Math.sin(angle) * 0.25, y: 0.42 + (i % 2) * 0.09, z: z + Math.cos(angle) * 0.25 });
           }
         }
-        parts.forEach((items, i) => { for (let j = lengths[i]!; j < items.length; j++) items[j]!.key = i === 5 ? -resource.id : resource.id; });
+        parts.forEach((items, i) => { for (let j = lengths[i]!; j < items.length; j++) items[j]!.key = i === 5 ? -resource.id*2-1 : i===4 ? -resource.id*2 : resource.id; });
       }
       for (const trunk of trunks) trunk.color = 0x70573e;
       for (const berry of berries) berry.color = 0xb96f63;
@@ -98,7 +105,7 @@ export class ResourceLayer {
       ], this.staticMaterial);
       const canopy = mergedInstances(group, [{ geometry: world.site?new THREE.IcosahedronGeometry(1,0):new THREE.ConeGeometry(1, 1, 6), items: [...crowns, ...upperCrowns] }], this.staticMaterial);
       if (canopy) { canopy.name = 'tree-canopy'; canopy.visible = this.foliageVisible; }
-      retainResources(group, new Set(chunk.flatMap(r => r.kind === 'berries' && harvestable(world,r) ? [r.id,-r.id] : [r.id])));
+      retainResources(group, new Set(chunk.flatMap(r => visibleResourceKeys(world,r))));
       this.chunks.set(key, { signature, group, identities: new Map(chunk.map(r => [r.id, `${r.kind}:${r.x}:${r.z}:${r.stone ?? ""}`])) });
     }
   }

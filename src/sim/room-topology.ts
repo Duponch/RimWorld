@@ -37,6 +37,8 @@ export class RoomTopologyCache {
   private previous = new Uint8Array(0);
   private scratch = new Uint8Array(0);
   private queue = new Int32Array(0);
+  private rocks = new Uint8Array(0);
+  private barriers: number[] = [];
   private topology: RoomTopology | undefined;
 
   read(world: Pick<World, 'width' | 'height' | 'tiles' | 'structures'>): RoomTopology {
@@ -46,15 +48,28 @@ export class RoomTopologyCache {
       this.previous = new Uint8Array(size);
       this.scratch = new Uint8Array(size);
       this.queue = new Int32Array(size);
+      this.rocks = new Uint8Array(size);
     }
-    const mask = this.scratch;
-    for (let i = 0; i < size; i++) mask[i] = world.tiles[i]!.terrain === 'rock' ? 1 : 0;
-    // Current walls and doors have a 1x1 logical footprint. Plans, frames,
-    // furniture, water, piles and people do not enclose air spaces.
+    // Detect in-place edits without rebuilding/writing the full combined mask
+    // at each read. Barrier order is captured because later objects win.
+    let inputChanged = resized, count = 0;
     for (const building of world.structures) {
-      if (building.kind === 'wall'||building.kind==='cooler') mask[building.z * width + building.x] = 1;
-      else if (building.kind === 'door') mask[building.z * width + building.x] = 2;
+      const value = building.kind === 'wall' || building.kind === 'cooler' ? 1 : building.kind === 'door' ? 2 : 0;
+      if (!value) continue;
+      const code = (building.z * width + building.x) * 3 + value;
+      if (this.barriers[count] !== code) { this.barriers[count] = code; inputChanged = true; }
+      count++;
     }
+    if (this.barriers.length !== count) { this.barriers.length = count; inputChanged = true; }
+    for (let i = 0; i < size; i++) {
+      const value = world.tiles[i]!.terrain === 'rock' ? 1 : 0;
+      if (this.rocks[i] !== value) { this.rocks[i] = value; inputChanged = true; }
+    }
+    if (!inputChanged) return this.topology!;
+    const mask = this.scratch;
+    mask.set(this.rocks);
+    for (const code of this.barriers) mask[Math.floor(code / 3)] = code % 3;
+    // Different inputs may still produce exactly the same enclosure.
     let changed = resized;
     for (let i = 0; !changed && i < size; i++) changed = mask[i] !== this.previous[i];
     if (!changed) return this.topology!;

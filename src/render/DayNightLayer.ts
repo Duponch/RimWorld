@@ -1,6 +1,7 @@
 import { Color, DirectionalLight, HemisphereLight, Vector3, type Scene } from 'three/webgpu';
 import { dot, mix, normalWorldGeometry, smoothstep, uniform } from 'three/tsl';
-import { sampleDaylight, type DaylightSample } from './daylight';
+import { sampleDaylight, sampleSeasonalDaylight, type DaylightSample } from './daylight';
+import type { World } from '../sim/types';
 
 const nightTop = new Color(0x111e3a), dayTop = new Color(0x7cb6d3);
 const nightHorizon = new Color(0x465674), dayHorizon = new Color(0xd4dfd2), duskHorizon = new Color(0xeaa377);
@@ -43,8 +44,8 @@ export class DayNightLayer {
     this.light.shadow.camera.updateProjectionMatrix();
   }
 
-  update(tick: number, target: Vector3): void {
-    const s = sampleDaylight(tick, this.sample);
+  update(tick: number, target: Vector3, world?:Pick<World,'climate'>): void {
+    const s = world?.climate?sampleSeasonalDaylight(tick,this.sample):sampleDaylight(tick, this.sample);
     this.sunDirection.value.set(s.x, s.y, s.z);
     this.zenith.value.copy(nightTop).lerp(dayTop, s.daylight);
     this.horizon.value.copy(nightHorizon).lerp(dayHorizon, s.daylight).lerp(duskHorizon, s.warmth * 0.7);

@@ -1,7 +1,7 @@
 import { PowerTopologyCache, bestPowerParent, validPowerParent, connectedPowerGroups } from './power-topology.ts';
 import { powerWatts,powerPotential,isPowerTrader } from './power-rules.ts';
 import { isPowerConnector } from './power-grid.ts';
-import { BATTERY_START_RESERVE,BATTERY_START_THRESHOLD,leakBattery,chargeBatteries,dischargeBatteries,type BatteryOwner } from './power-battery.ts';
+import { BATTERY_START_RESERVE,BATTERY_START_THRESHOLD,batteryQuanta,leakBattery,chargeBatteries,dischargeBatteries,type BatteryOwner } from './power-battery.ts';
 import type { World, Structure } from './types.ts';
 
 const owners=new WeakMap<World,PowerTopologyCache>();
@@ -43,7 +43,7 @@ export function advancePower(world:World):void {
     for(const battery of batteries)leakBattery(battery.battery);
     for(const {parts,storage} of groups) {
       let balance=parts.reduce((n,s)=>n+powerWatts(s,world),0);
-      const stored=storage.reduce((n,s)=>n+s.battery.stored,0);
+      const stored=storage.reduce((n,s)=>n+batteryQuanta(s.battery),0);
       if(stored+balance*2>=0) {
         const available=stored-(storage.length&&stored>=BATTERY_START_THRESHOLD?BATTERY_START_RESERVE:0);
         const waiting=available+balance*2>=0?parts.filter(s=>!s.power!.on&&wantsPower(s)):[];

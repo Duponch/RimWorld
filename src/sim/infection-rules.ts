@@ -30,7 +30,7 @@ export function infectionModifiers(record:MedicalRecord):InfectionModifiers {
 }
 export function injuryInfectionChance(record:MedicalRecord,injury:Pick<Injury,'kind'|'part'|'scar'>):number {
   if(injury.scar?.pain!==undefined||injuryPartRules(medicalModel(record))[injury.part].solid)return 0;
-  const chance=injury.kind==='bite'?.3:['cut','crush','gunshot'].includes(injury.kind)?.15:0;
+  const chance=(injury.kind==='bite'||injury.kind==='burn')?.3:['cut','crush','gunshot'].includes(injury.kind)?.15:0;
   return chance*(record.body==='hare'?.1:1);
 }
 export function infectionContractAllowed(record:MedicalRecord,part:BodyPartId):boolean {

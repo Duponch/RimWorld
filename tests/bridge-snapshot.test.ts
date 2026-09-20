@@ -183,3 +183,25 @@ test('buffered scene preserves arrival, work, excavation, tree removal and cargo
   expect(queue.take(continuous.tick,199)).toBeUndefined();expect(queue.take(continuous.tick,200)).toBe(continuous);
   const replacement=structuredClone(source);replacement.tick=2000;queue.push(replacement);queue.clear();expect(queue.take(Infinity)).toBeUndefined();
 });
+
+
+test('seasonal plant state and damage travel by delta without mutating earlier snapshots',()=>{
+  const source=createWorld(42,32,32),encoder=new SnapshotEncoder(),decoder=new SnapshotDecoder();
+  expect(applyCommand(source,{type:'climate-adopt'}).ok).toBe(true);
+  const transfer=()=>structuredClone(encoder.encode(source,.2,1));
+  let result=decoder.adopt(transfer());expect(result.status).toBe('applied');
+  if(result.status!=='applied')throw new Error('Initial snapshot refused');
+  const initial=result.world,initialValue=structuredClone(initial);
+  const plant=source.resources.find(r=>r.kind==='berries')!;plant.damage=3;
+  for(let i=0;i<12;i++){
+    stepWorld(source,20);const packet=transfer();
+    if(i===0&&packet.kind==='delta'){
+      const corrupt=structuredClone(packet);corrupt.resources!.upserted.find(r=>r.id===plant.id)!.plantLife!.age=-1;
+      expect(decoder.adopt(corrupt).status).toBe('resync');
+    }
+    result=decoder.adopt(packet);expect(result.status).toBe('applied');
+    if(result.status==='applied')expect(JSON.stringify(result.world)).toBe(JSON.stringify(source));
+    expect(initial).toEqual(initialValue);
+  }
+  expect(plant.plantLife!.age).toBeGreaterThan(0);
+});

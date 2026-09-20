@@ -1,7 +1,7 @@
 import { isColonist } from './affiliation.ts';
 import { bedsideAccess,patientClaimed } from './care-access.ts';
 import { needsAssistedFeeding,FEED_HUNGER } from './feeding-rules.ts';
-import { copyRot } from './food-preservation.ts';
+import { copyPileCondition } from './pile-condition.ts';
 import { selectFood } from './food-selection.ts';
 import { groundCapacity,groundPile,nearbyGround } from './ground-placement.ts';
 import { medicalWorkRefusal,pawnBody } from './health-rules.ts';
@@ -116,7 +116,7 @@ export function processWarden(world:World,actor:Pawn,context:NeedContext):void {
       if(pile.quantity===t.quantity){pile.owner={type:'pawn',pawnId:actor.id};t.carryPileId=pile.id;}
       else{
         if(world.piles.length>=32768||!Number.isSafeInteger(world.nextId+1)){interruptWork(world,actor);return;}
-        pile.quantity-=t.quantity;t.carryPileId=world.nextId++;world.piles.push({id:t.carryPileId,kind:'food',item:pile.item,quantity:t.quantity,owner:{type:'pawn',pawnId:actor.id},...copyRot(pile)});
+        pile.quantity-=t.quantity;t.carryPileId=world.nextId++;world.piles.push({id:t.carryPileId,kind:'food',item:pile.item,quantity:t.quantity,owner:{type:'pawn',pawnId:actor.id},...copyPileCondition(pile)});
       }
       t.phase='deliver';actor.path=[];actor.state='moving';return;
     }

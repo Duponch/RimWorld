@@ -2,6 +2,7 @@ import type { Cell,Resource,World } from './types.ts';
 import type { WildAnimal } from './wildlife-state.ts';
 import { HARE } from './wildlife-state.ts';
 import { isPlant,plantGrowth } from './plants.ts';
+import { plantLeafless } from './plant-life.ts';
 import { ITEM_DEFINITIONS,type ItemId } from './items.ts';
 import { reservedSource } from './materials.ts';
 
@@ -16,7 +17,7 @@ function unclaimedPlant(world:World,r:Resource,except:number):boolean {
 }
 export function animalFoods(world:World,a:WildAnimal):AnimalFood[] {
   const result:AnimalFood[]=[];
-  for(const r of world.resources)if(isPlant(r)&&plantGrowth(world,r)>=.1&&unclaimedPlant(world,r,a.id))result.push({id:r.id,kind:'plant',x:r.x,z:r.z,quantity:1});
+  for(const r of world.resources)if(isPlant(r)&&!plantLeafless(world,r)&&plantGrowth(world,r)>=.1&&unclaimedPlant(world,r,a.id))result.push({id:r.id,kind:'plant',x:r.x,z:r.z,quantity:1});
   for(const p of world.piles)if(p.kind==='food'&&hareFoods.has(p.item)&&p.owner.type==='ground') {
     const available=p.quantity-reservedSource(world,p.id,a.id),nutrition=ITEM_DEFINITIONS[p.item].nutrition/100;
     if(available>0&&nutrition>0)result.push({id:p.id,kind:'pile',x:p.owner.x,z:p.owner.z,quantity:Math.min(available,Math.max(1,Math.ceil((HARE.nutrition-a.food)/nutrition)))});
@@ -27,7 +28,7 @@ export function animalMealTarget(world:World,a:WildAnimal):Cell|undefined {
   const meal=a.meal;if(!meal)return;
   if(meal.kind==='plant') {
     const r=world.resources.find(r=>r.id===meal.id);
-    return r&&isPlant(r)&&plantGrowth(world,r)>=.1&&unclaimedPlant(world,r,a.id)?r:undefined;
+    return r&&isPlant(r)&&!plantLeafless(world,r)&&plantGrowth(world,r)>=.1&&unclaimedPlant(world,r,a.id)?r:undefined;
   }
   const p=world.piles.find(p=>p.id===meal.id);
   return p?.kind==='food'&&hareFoods.has(p.item)&&p.owner.type==='ground'&&p.quantity-reservedSource(world,p.id,a.id)>=meal.quantity?p.owner:undefined;

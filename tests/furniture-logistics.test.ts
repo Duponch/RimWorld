@@ -21,7 +21,7 @@ function zone(w:World,x:number,z:number,priority=2) {
 }
 
 test('whole parcels reserve exclusive sources and floor slots, queue through player commands and resume without copying their identities',()=>{
-  const w=deconstructionCamp(2),p=w.pawns[0]!,other=w.pawns[1]!;p.priorities={warden:0,basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,craft:2,mine:2,build:0,haul:1,gather:0,grow:0,cook:0};other.priorities.build=0;
+  const w=deconstructionCamp(2),p=w.pawns[0]!,other=w.pawns[1]!;p.priorities={firefight:0,warden:0,basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,craft:2,mine:2,build:0,haul:1,gather:0,grow:0,cook:0};other.priorities.build=0;
   const a=parcel(w,'bed',14,16),b=parcel(w,'stool',16,16),one=zone(w,24,16),two=zone(w,25,16),initial=woodAccount(w);p.bedId=a.building.id;
   expect(applyCommand(w,{type:'order-haul',pawnId:p.id,target:{type:'furniture',structureId:a.building.id},queue:false}).ok).toBe(true);
   expect(applyCommand(w,{type:'order-haul',pawnId:p.id,target:{type:'furniture',structureId:b.building.id},queue:true}).ok).toBe(true);

@@ -10,12 +10,12 @@ export interface ConstructionRecipe { ingredients:readonly ConstructionCost[]; w
 type ConstructionObject={kind:JobKind;material?:ConstructionMaterial};
 // Core base work before the stuff factor, in Core ticks. Absence of material
 // deliberately keeps the V1–V29 historical recipe on existing objects.
-const costs:Record<StructureKind,number>={'power-conduit':1,'power-switch':15,battery:70,'solar-generator':100,'fueled-stove':80,'electric-stove':80,'butcher-table':95,'butcher-spot':0,cooler:90,'research-bench':75,'tailor-bench':75,'crafting-spot':0,'wood-generator':100,'standing-lamp':20,'passive-cooler':50,door:25,stonecutter:75,wall:5,bed:45,table:28,stool:25,campfire:20,horseshoes:10};
-const work:Record<StructureKind,number>={'power-conduit':35,'power-switch':200,battery:800,'solar-generator':2500,'fueled-stove':2000,'electric-stove':2000,'butcher-table':2000,'butcher-spot':0,cooler:1600,'research-bench':2800,'tailor-bench':2000,'crafting-spot':0,'wood-generator':2500,'standing-lamp':300,'passive-cooler':200,door:850,stonecutter:2000,wall:135,bed:800,table:750,stool:450,campfire:200,horseshoes:100};
+const costs:Record<StructureKind,number>={heater:50,'wind-turbine':100,'power-conduit':1,'power-switch':15,battery:70,'solar-generator':100,'fueled-stove':80,'electric-stove':80,'butcher-table':95,'butcher-spot':0,cooler:90,'research-bench':75,'tailor-bench':75,'crafting-spot':0,'wood-generator':100,'standing-lamp':20,'passive-cooler':50,door:25,stonecutter:75,wall:5,bed:45,table:28,stool:25,campfire:20,horseshoes:10};
+const work:Record<StructureKind,number>={heater:1000,'wind-turbine':3300,'power-conduit':35,'power-switch':200,battery:800,'solar-generator':2500,'fueled-stove':2000,'electric-stove':2000,'butcher-table':2000,'butcher-spot':0,cooler:1600,'research-bench':2800,'tailor-bench':2000,'crafting-spot':0,'wood-generator':2500,'standing-lamp':300,'passive-cooler':200,door:850,stonecutter:2000,wall:135,bed:800,table:750,stool:450,campfire:200,horseshoes:100};
 const recipes=new Map<string,ConstructionRecipe>();
 for(const kind of Object.keys(JOB_DURATION) as JobKind[]) {
-  if(kind==='power-conduit'||kind==='power-switch'||kind==='battery'||kind==='solar-generator'){
-    const components=kind==='power-switch'?1:kind==='battery'?2:kind==='solar-generator'?3:0;
+  if(kind==='heater'||kind==='wind-turbine'||kind==='power-conduit'||kind==='power-switch'||kind==='battery'||kind==='solar-generator'){
+    const components=kind==='heater'?1:kind==='wind-turbine'?2:kind==='power-switch'?1:kind==='battery'?2:kind==='solar-generator'?3:0;
     const ingredients:ConstructionCost[]=[{item:'steel',quantity:costs[kind]},...(components?[{item:'component' as const,quantity:components}]:[])];
     recipes.set(`${kind}:steel`,Object.freeze({ingredients:Object.freeze(ingredients.map(c=>Object.freeze(c))),work:work[kind]/10,coreWork:work[kind]}));continue;
   }
@@ -43,7 +43,8 @@ for(const kind of Object.keys(JOB_DURATION) as JobKind[]) {
     recipes.set(`${kind}:${material}`,Object.freeze({ingredients,work:Math.ceil(coreWork/10),coreWork}));
   }
 }
-export function validConstructionMaterial(kind:unknown,material:unknown,version=85):boolean {
+export function validConstructionMaterial(kind:unknown,material:unknown,version=87):boolean {
+  if(kind==='heater'||kind==='wind-turbine')return version>=87&&material==='steel';
   if(kind==='power-conduit'||kind==='power-switch'||kind==='battery'||kind==='solar-generator')return version>=85&&material==='steel';
   if(kind==='fueled-stove'||kind==='electric-stove'||kind==='butcher-table')return version>=84&&material===(kind==='butcher-table'?'wood':'steel');
   if(kind==='cooler')return version>=75&&material==='steel';

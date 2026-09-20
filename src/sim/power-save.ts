@@ -10,10 +10,10 @@ export function validatePower(world:World,version:number):string[] {
     const p=s.power,packed=!world.structures.includes(s);
     const battery=s.battery;
     if(s.kind==='battery'){
-      if(version<85||!battery||typeof battery!=='object'||Array.isArray(battery)||Object.keys(battery).some(k=>k!=='stored')||!Number.isSafeInteger(battery.stored)||battery.stored<0||battery.stored>BATTERY_CAPACITY)errors.push('Invalid battery energy.');
+      if(version<85||!battery||typeof battery!=='object'||Array.isArray(battery)||Object.keys(battery).some(k=>k!=='stored'&&(k!=='half'||version<87))||!Number.isSafeInteger(battery.stored)||battery.stored<0||battery.stored>BATTERY_CAPACITY||battery.half!==undefined&&(battery.half!==true||battery.stored===BATTERY_CAPACITY))errors.push('Invalid battery energy.');
     }else if(battery!==undefined)errors.push('Unexpected battery energy.');
     if(!isElectrical(s.kind)){if(p!==undefined)errors.push('Unexpected power state.');continue;}
-    if(version<42||s.kind==='electric-stove'&&version<84||['battery','solar-generator','power-conduit','power-switch'].includes(s.kind)&&version<85||!p||typeof p!=='object'||Array.isArray(p)||typeof p.on!=='boolean'||s.kind!=='cooler'&&s.kind!=='electric-stove'&&s.kind!=='battery'&&s.orientation!==0
+    if(version<42||s.kind==='electric-stove'&&version<84||['battery','solar-generator','power-conduit','power-switch'].includes(s.kind)&&version<85||['heater','wind-turbine'].includes(s.kind)&&version<87||!p||typeof p!=='object'||Array.isArray(p)||typeof p.on!=='boolean'||s.kind!=='cooler'&&s.kind!=='electric-stove'&&s.kind!=='battery'&&s.kind!=='wind-turbine'&&s.orientation!==0
       ||s.footprint!=='standard'||s.material!=='steel'||Object.keys(p).some(k=>!['on','parentId',...(version>=85&&isFlickable(s.kind)?['switchOn']:[])].includes(k))
       ||p.switchOn!==undefined&&typeof p.switchOn!=='boolean'||p.switchOn===false&&p.on
       ||!(p.parentId===null||Number.isSafeInteger(p.parentId)&&p.parentId>0)) {errors.push('Invalid electrical state.');continue;}

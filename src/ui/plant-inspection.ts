@@ -1,5 +1,7 @@
+import { plantLeafless } from '../sim/plant-life';
+import { resourceMaxHp } from '../sim/thing-damage-rules';
 import { calendarTick } from '../sim/calendar';
-import { naturalLight } from '../sim/environment';
+import { annualNaturalLight } from '../sim/environment';
 import { harvestProductLabel, plantGrowth, harvestable, berryYield, plantResting, plantTemperatureFactor, sowingTemperatureAllowed, isPlant, plantFertility, PLANT_DEFINITIONS } from '../sim/plants';
 import { isRoofed, roofIndex } from '../sim/roof-rules';
 import { TemperatureView } from '../sim/temperature';
@@ -8,8 +10,10 @@ import type { Cell, Resource, World } from '../sim/types';
 export function plantInspection(world:World,plant:Resource):string {
   const temperature=new TemperatureView(world).at(world,plant),factor=plantTemperatureFactor(temperature);
   const constraints:string[]=[];let soil='';
+  if(plantLeafless(world,plant))constraints.push('Sans feuilles · broutage suspendu');
+  if(plant.damage)constraints.push(`État ${resourceMaxHp(plant)-plant.damage}/${resourceMaxHp(plant)}`);
   if(plantResting(calendarTick(world)))constraints.push('Repos nocturne');
-  if(isRoofed(world,roofIndex(world,plant))||naturalLight(calendarTick(world))<=.51)constraints.push('Lumière insuffisante');
+  if(isRoofed(world,roofIndex(world,plant))||annualNaturalLight(world)<=.51)constraints.push('Lumière insuffisante');
   if(factor<1)constraints.push(`Température ${temperature.toFixed(1)} °C · Croissance thermique ${Math.round(factor*100)} %`);
   if(isPlant(plant)) {
     const def=PLANT_DEFINITIONS[plant.kind],fertility=plantFertility(world,plant);

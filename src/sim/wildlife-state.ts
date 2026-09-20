@@ -9,6 +9,7 @@ export interface WildAnimal extends Cell {
   food:number; rest:number;
   state:'idle'|'moving'|'eating'|'sleeping'|'hungry'|'downed'|'dead';
   health?:MedicalRecord;
+  burning?:import('./fire-rules.ts').BurningReaction;
   corpseRot?:import('./food-preservation.ts').RotState;
   flee?:{danger:Cell;until:number};
   stagger?:StaggerState;

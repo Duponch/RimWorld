@@ -22,6 +22,18 @@ export function updatePowerControls(root: HTMLElement, world: World, cell: Cell,
     if (!card) {
       card = document.createElement('div'); card.dataset.powerId = String(structure.id);
       card.innerHTML = '<h3></h3><p data-power-state></p><p data-power-request role="status"></p><button type="button" data-power-flick class="secondary-action"></button><button type="button" data-power-remove class="secondary-action">Déconstruire ce câble</button>';
+      const thermostat = document.createElement('div'); thermostat.dataset.heaterControls = ''; thermostat.className = 'cooler-buttons';
+      thermostat.setAttribute('role', 'group'); thermostat.setAttribute('aria-label', 'Consigne du radiateur');
+      for (const [label, offset] of [['−10', -10], ['−1', -1], ['21 °C', null], ['+1', 1], ['+10', 10]] as const) {
+        const button = document.createElement('button'); button.type = 'button'; button.textContent = label; button.dataset.heaterOffset = String(offset);
+        button.setAttribute('aria-label', offset === null ? 'Réinitialiser la consigne à 21 °C' : `${offset < 0 ? 'Diminuer' : 'Augmenter'} la consigne de ${Math.abs(offset)} °C`);
+        button.onclick = () => send({type: 'heater-adjust', structureId: structure.id, offset}); thermostat.append(button);
+      }
+      const autoCut = document.createElement('label'); autoCut.className = 'storage-settings'; autoCut.dataset.windControls = '';
+      const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.dataset.windAutoCut = '';
+      checkbox.onchange = () => send({type: 'wind-auto-cut', structureId: structure.id, enabled: checkbox.checked});
+      autoCut.append(checkbox, ' Désigner les arbres gênants à couper');
+      card.append(thermostat, autoCut);
       section.append(card);
     }
     card.dataset.powerKind = structure.kind;
@@ -37,5 +49,11 @@ export function updatePowerControls(root: HTMLElement, world: World, cell: Cell,
     const remove = card.querySelector<HTMLButtonElement>('[data-power-remove]')!;
     remove.hidden = structure.kind !== 'power-conduit'; remove.disabled = removing;
     remove.onclick = () => send({type: 'designate', kind: 'deconstruct', targetId: structure.id, x: structure.x, z: structure.z});
+    const thermostat = card.querySelector<HTMLElement>('[data-heater-controls]')!;
+    thermostat.hidden = structure.kind !== 'heater'; thermostat.dataset.target = String(structure.heater?.target ?? '');
+    for (const button of thermostat.querySelectorAll('button')) button.disabled = removing;
+    card.querySelector<HTMLElement>('[data-wind-controls]')!.hidden = structure.kind !== 'wind-turbine';
+    const autoCut = card.querySelector<HTMLInputElement>('[data-wind-auto-cut]')!;
+    autoCut.checked = structure.wind?.autoCut === true; autoCut.disabled = removing;
   }
 }

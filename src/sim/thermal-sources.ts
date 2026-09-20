@@ -1,4 +1,5 @@
 import { isPowerActive } from './power-rules.ts';
+import { applyHeaterHeat } from './heater.ts';
 import type { Structure, World } from './types.ts';
 import type { ThermalLayout } from './thermal-topology.ts';
 
@@ -6,8 +7,10 @@ import type { ThermalLayout } from './thermal-topology.ts';
  * stays independent: an idle or outdoor passive cooler still uses its wood.
  * As with the fire, continuous clamping replaces Core's staggered impulses. */
 export function applyThermalSources(world:World,layout:ThermalLayout):void {
-  const regions=world.thermal?.regions;if(!regions)return;
+  const regions=world.thermal?.regions;
   for(const source of world.structures) {
+    if(source.kind==='heater'){applyHeaterHeat(world,source,layout);continue;}
+    if(!regions)continue;
     if(source.kind==='electric-stove'?!isPowerActive(source):!source.fuel?.ticks)continue;
     const id=layout.indices[source.z*world.width+source.x]!;if(id<0)continue;
     const room=regions[id]!;
