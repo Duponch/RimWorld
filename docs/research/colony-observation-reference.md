@@ -118,3 +118,20 @@ La [présentation officielle](https://rimworldgame.com/) décrit justement des s
 5. **Ne pas confondre test et équilibre** : les bilans et continuations détectent les pertes, blocages et incohérences ; ils ne démontrent pas seuls le plaisir, la difficulté ou la ressemblance du rythme. Ces derniers demandent aussi une observation jouée et visuelle réellement effectuée.
 
 Ces observations justifient une comparaison mieux contrôlée. Elles ne justifient ni un multiplicateur global de vitesse, ni une densité de ressources, ni un calendrier nouveau inventé pour faire ressembler une capture isolée.
+
+## Ce qu'une collecte de sauvegardes peut établir
+
+Question utilisateur du 20 septembre 2026 : des sauvegardes d'amis ou de joueurs publics permettraient-elles de reconstituer précisément et exhaustivement les parties ? **Elles fournissent des observations précieuses, mais pas un historique complet.** Vérification complémentaire en lecture seule du même assembly local **1.6.4871 rev590** que l'enquête initiale : `History`, `Archive`, `HistoryAutoRecorder`, `PlayLog`, `BattleLog`, `Pawn_RecordsTracker`, `StoryState`, `Storyteller`, `IncidentQueue` et définitions `HistoryAutoRecording`/`RecordDefs`. Ces limites ne sont pas présumées identiques dans toutes les versions ou avec des mods.
+
+| Données | Exploitation possible et limite vérifiée |
+|---|---|
+| État courant du monde, personnes, constructions, possessions, recherches et réglages | Décrit l'instant sauvegardé. Un bâtiment présent ne donne pas automatiquement sa date d'achèvement ; l'absence d'un aliment ne distingue pas ingestion, pourriture ou autre sortie. |
+| Courbes de richesse, population et humeur | Échantillons toutes les 30 000 ticks Core, soit une demi-journée. Tendances et ruptures observables, sans détail de chaque cause. |
+| Compteurs individuels de production, construction, cultures, soins et combats | Cumuls conservés, pas journal daté de toutes les actions. |
+| Archive de lettres et notifications | Événements datés ; limite de 200 éléments non épinglés pouvant être supprimés. Lettres actives et éléments épinglés ont un traitement distinct. Les premières lettres effectivement absentes de la sauvegarde finale locale illustrent cette perte. |
+| Journaux sociaux et militaires | `PlayLog` limité à 150 entrées ; batailles et références à des personnages peuvent aussi être élaguées. Pas une trace intégrale de chaque interaction. |
+| Mémoire et file du narrateur | Dernières dates par type, dernière grande menace, quelques incidents récents et incidents encore en attente. Ni toutes les occurrences passées ni tous les essais refusés ; certains relevés excluent les incidents forcés. |
+
+Une collecte utile conserve **plusieurs états successifs de chaque colonie**, dont un début si disponible, et identifie version, scénario/tutoriel, narrateur, difficulté et changements déclarés, mods/extensions, biome et relief. Les fichiers d'une même colonie sont regroupés ; retours en arrière et branches ne sont pas traités comme une chronologie continue. Une sauvegarde finale isolée reste exploitable pour son état et les traces conservées.
+
+Comparer deux états permet de borner certaines transitions entre deux dates, sans en donner nécessairement l'instant exact ou la cause. Ajouter notes, captures ou vidéos datées éclaire les décisions du joueur. Inclure des débuts, échecs et colonies abandonnées limite le biais de ne recueillir que des colonies avancées réussies. Les parties Core sans mods sous le profil retenu fournissent la comparaison prioritaire ; les autres contextes restent identifiés séparément. Même une grande collection opportuniste ne devient pas automatiquement un échantillon représentatif de joueurs moyens. Une trace exhaustive exigerait une journalisation dédiée pendant la partie, définie selon les phénomènes à mesurer ; aucune collecte de ce type n'est encore mise en place ici.
