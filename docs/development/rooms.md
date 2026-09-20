@@ -20,6 +20,8 @@ Le contrat V34 était limité à l’inspection. V36 ajoute un consommateur de s
 
 ## Inspection et limites fonctionnelles
 
+V81 ajoute un consommateur médical ponctuel : au soin d’une plaie exposée, la [capture de pièce](infections.md#capture-du-lieu-de-soin) moyenne la propreté des terrains existants. Ni toit ni lit ne rendent une pièce stérile ; objets, saletés, nettoyage et sols spécialisés restent absents de ce score. Ce calcul ne remplace pas les critères thermiques ou de production.
+
 Le panneau existant en bas à gauche indique paroi, seuil, extérieur ou « Pièce non couverte · N cases ». L’inspection d’un colon utilise sa cellule logique. Le texte se met à jour après construction, déconstruction, extraction et chargement, y compris si l’inspecteur est rouvert en pause. Aucun rendu supplémentaire ni nouvel appel GPU.
 
 La couverture construite V35 et les facteurs de production V36 sont jouables. Le [contrat des ateliers](work-environment.md) définit exactement les critères et rôles adoptés. Aucun bonus d’abri, de repos ou d’humeur n’est déduit de cette reconnaissance. Critères des autres loisirs, toits naturels, dégâts, beauté et propreté restent distincts ; V38 utilise son critère thermique propre et un parcours borné séparé de cette topologie globale.

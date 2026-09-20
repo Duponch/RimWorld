@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+**V81 :** première condition Infection de plaie, avec quatre stades physiologiques et immunité partagée entre parties corporelles. Aucun nouvel ItemId ni médicament : produits et lits existants servent aux traitements renouvelés. Maladies supplémentaires, chirurgie et équipements hospitaliers spécialisés restent absents. [Contrat](../development/infections.md).
+
 **V80 :** aucun nouvel objet. Le catalogue disponible compose le scénario Trois survivants : 300 bois, 450 acier, 30 composants, 50 repas emballés, 30 médicaments, 1 revolver, 1 gilet et 3 chemises portées. Vêtements complexes et Climatisation acquis au départ ; camp pédagogique séparé. Les objets manquants de Crashlanded ne sont ni substitués ni déclarés livrés. [Scénarios](../development/scenario-start.md).
 
 **V79 :** trois ItemId obtenables : `hare-corpse` (dépouille entière, pile1, anatomie et âge), `hare-meat` (viande crue, pile75, nutrition0,05/unité, deux jours thermiques), `light-leather` (cuir léger, pile75, stockage textile, aucune recette de cuir livrée). Bâtiment `butcher-spot` (1×1 gratuit/instantané), recette `butcher-creature` (450 Core avant facteurs, Cuisine, rendement poste70%). Repas simple accepte maintenant cette viande comme ingrédient filtrable. Rendements variables, pas attribution fixe de31/16. [Contrats](../development/hunting.md). Les notes de versions précédentes ci-dessous restent historiques.
@@ -41,7 +43,7 @@ V61 change le **mandat du combattant des nouvelles rencontres** : approche, post
 
 V60 ne crée aucun objet : elle rend les acteurs/revolver actuels utilisables par le tir automatique et la réaction civile Attaquer. Aucun inventaire personnel, vêtement, armure ou nouvelle arme implicitement livré. [Contrat](../development/automatic-combat.md).
 
-V59 active les outils humains naturels (poings, tête, dents) et les trois coups de mêlée du revolver existant. Nouvelle lésion Morsure, capacité d’étourdissement et compétence Mêlée ; aucun nouvel ItemId. Les qualités définies du revolver modifient ses dégâts de mêlée. Autres armes, armures, outils de terrain et infections restent absents. [Contrat](../development/melee.md).
+V59 active les outils humains naturels (poings, tête, dents) et les trois coups de mêlée du revolver existant. Nouvelle lésion Morsure, capacité d’étourdissement et compétence Mêlée ; aucun nouvel ItemId. Les qualités définies du revolver modifient ses dégâts de mêlée. Autres armes, armures et outils de terrain restent absents ; infection de plaie ajoutée en V81. [Contrat](../development/melee.md).
 
 V58 ajoute un **profil humain de scénario**, la sentinelle hors-la-loi (même corps adulte, revolver normal, santé commune), et les appartenances colony/outlaws à relations fixes. Aucun nouvel ItemId, armure ou catalogue de factions. Nouvelle colonie Rencontre armée : revolver initial équipé par Ada et un revolver supplémentaire sur la sentinelle ; aucun ajout lors de la migration. [Contrat](../development/encounters.md).
 

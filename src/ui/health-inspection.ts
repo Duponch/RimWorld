@@ -6,11 +6,15 @@ import { medicalBleed,medicalPain } from '../sim/injury-state';
 import { pawnBody } from '../sim/health-rules';
 import type { Pawn,Command,World } from '../sim/types';
 import { MEDICAL_CARE,medicalCare,type MedicalCare } from '../sim/medicine-rules';
+import { createInfectionInspection,updateInfectionInspection } from './infection-inspection';
 
 export function createHealthInspection(panel:HTMLElement,selected?:()=>Pawn|undefined,send?:(c:Command)=>void):void {
   const details=document.createElement('details');details.id='health-inspection';details.open=true;
   const summary=document.createElement('summary');summary.textContent='Santé';details.append(summary);
-  for(const name of ['status','capacities','thermal','stagger','injuries']) {const p=document.createElement('p');p.dataset.health=name;details.append(p);}
+  for(const name of ['status','capacities','thermal','stagger','injuries']) {
+    const p=document.createElement('p');p.dataset.health=name;details.append(p);
+    if(name==='capacities')createInfectionInspection(details);
+  }
   if(selected&&send){
     const label=document.createElement('label'),input=document.createElement('select');input.id='medical-policy';
     for(const [value,name] of Object.entries(MEDICAL_CARE)){const o=document.createElement('option');o.value=value;o.textContent=name;input.append(o);}
@@ -27,6 +31,7 @@ export function createHealthInspection(panel:HTMLElement,selected?:()=>Pawn|unde
 export function updateHealthInspection(panel:HTMLElement,pawn:Pawn,world?:World):void {
   const details=panel.querySelector('#health-inspection');if(!details)return;
   const health=pawn.health,c=pawnBody(pawn).capacities;
+  updateInfectionInspection(details,health);
   const range=world&&comfortableTemperature(world,pawn),stage=heatStage(health?.heatstroke);
   details.querySelector('[data-health="thermal"]')!.textContent=(range?`Air ${new TemperatureView(world!).at(world!,pawn).toFixed(1)} °C · Confort ${range.min.toFixed(1)} à ${range.max.toFixed(1)} °C. `:'')+(stage?`Coup de chaleur ${HEAT_LABELS[stage]} : ${(100*health!.heatstroke!/HEAT_UNIT).toFixed(1)} %. `:'')+(heatStage(health?.hypothermia)?`Hypothermie ${HEAT_LABELS[heatStage(health?.hypothermia)]} : ${(100*health!.hypothermia!/HEAT_UNIT).toFixed(1)} %. `:'')+(pawn.heatRefuge?'Cherche ou attend dans un refuge thermique.':'');
   details.querySelector('[data-health="stagger"]')!.textContent=pawn.stagger?'Ralenti temporairement par un impact de balle.':'';

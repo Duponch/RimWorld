@@ -1,0 +1,5915 @@
+{
+  "seed": 11,
+  "start": 3000,
+  "initial": {
+    "tick": 3000,
+    "medicine": 30,
+    "food": 30,
+    "pawns": [
+      {
+        "id": 182,
+        "name": "Ada",
+        "state": "idle",
+        "hunger": 100,
+        "rest": 100,
+        "position": {
+          "x": 6,
+          "z": 10
+        },
+        "bed": null,
+        "injuries": 0,
+        "bloodLoss": 0,
+        "infection": null,
+        "care": null,
+        "doctor": 0,
+        "medicalXp": 0
+      },
+      {
+        "id": 183,
+        "name": "Noé",
+        "state": "idle",
+        "hunger": 100,
+        "rest": 100,
+        "position": {
+          "x": 20,
+          "z": 25
+        },
+        "bed": null,
+        "injuries": 0,
+        "bloodLoss": 0,
+        "infection": null,
+        "care": null,
+        "doctor": 0,
+        "medicalXp": 0
+      },
+      {
+        "id": 184,
+        "name": "Mina",
+        "state": "idle",
+        "hunger": 100,
+        "rest": 100,
+        "position": {
+          "x": 5,
+          "z": 26
+        },
+        "bed": null,
+        "injuries": 0,
+        "bloodLoss": 0,
+        "infection": null,
+        "care": null,
+        "doctor": 0,
+        "medicalXp": 0
+      },
+      {
+        "id": 186,
+        "name": "Sentinelle",
+        "state": "idle",
+        "hunger": 90,
+        "rest": 90,
+        "position": {
+          "x": 16,
+          "z": 10
+        },
+        "bed": null,
+        "injuries": 0,
+        "bloodLoss": 0,
+        "infection": null,
+        "care": null,
+        "doctor": 1,
+        "medicalXp": 0
+      }
+    ]
+  },
+  "milestones": {
+    "wounded": 3017,
+    "downed": 3051,
+    "rescued": 3238,
+    "infection": 6197,
+    "firstInfectionCare": 6997,
+    "repeatedInfectionCare": 10098,
+    "immune": 15227,
+    "recovered": 17862
+  },
+  "care": [
+    {
+      "tick": 6997,
+      "id": 1,
+      "quality": 1000,
+      "expiresAtCore": 107470
+    },
+    {
+      "tick": 10098,
+      "id": 1,
+      "quality": 1000,
+      "expiresAtCore": 144970
+    },
+    {
+      "tick": 13877,
+      "id": 1,
+      "quality": 1000,
+      "expiresAtCore": 182470
+    }
+  ],
+  "ledger": {
+    "medicine": 10,
+    "food": 13,
+    "patientMeals": 4,
+    "patientBedRest": 13210,
+    "doctorSleep": 3440
+  },
+  "journal": [
+    {
+      "tick": 3060,
+      "reason": "Mobiliser la réserve armée pour protéger le blessé.",
+      "command": {
+        "type": "draft",
+        "pawnIds": [
+          183
+        ],
+        "enabled": true
+      }
+    },
+    {
+      "tick": 3110,
+      "reason": "Menace neutralisée : rendre leur autonomie aux survivants.",
+      "command": {
+        "type": "draft",
+        "pawnIds": [
+          183
+        ],
+        "enabled": false
+      }
+    },
+    {
+      "tick": 3120,
+      "reason": "Le médecin est lui-même indisponible : affecter un survivant aux secours.",
+      "command": {
+        "type": "priority",
+        "pawnId": 184,
+        "work": "doctor",
+        "value": 1
+      }
+    },
+    {
+      "tick": 3240,
+      "reason": "Prioriser le soin disponible au chevet du patient.",
+      "command": {
+        "type": "order-tend",
+        "pawnId": 184,
+        "patientId": 182,
+        "queue": false
+      }
+    },
+    {
+      "tick": 3500,
+      "reason": "Prioriser le soin disponible au chevet du patient.",
+      "command": {
+        "type": "order-tend",
+        "pawnId": 184,
+        "patientId": 182,
+        "queue": false
+      }
+    },
+    {
+      "tick": 6870,
+      "reason": "Prioriser le soin disponible au chevet du patient.",
+      "command": {
+        "type": "order-tend",
+        "pawnId": 184,
+        "patientId": 182,
+        "queue": false
+      }
+    },
+    {
+      "tick": 13750,
+      "reason": "Prioriser le soin disponible au chevet du patient.",
+      "command": {
+        "type": "order-tend",
+        "pawnId": 184,
+        "patientId": 182,
+        "queue": false
+      }
+    }
+  ],
+  "observations": [
+    {
+      "tick": 3250,
+      "medicine": 30,
+      "food": 30,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "downed",
+          "hunger": 93.33333333333229,
+          "rest": 96.04166666666671,
+          "position": {
+            "x": 8,
+            "z": 25
+          },
+          "bed": 196,
+          "injuries": 5,
+          "bloodLoss": 50340960,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "resting",
+          "hunger": 93.33333333333229,
+          "rest": 96.04166666666671,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 1,
+          "bloodLoss": 5999040,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "moving",
+          "hunger": 93.33333333333229,
+          "rest": 96.04166666666671,
+          "position": {
+            "x": 6,
+            "z": 24
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": {
+            "patientId": 182,
+            "spot": {
+              "x": 8,
+              "z": 24
+            },
+            "phase": "tend",
+            "progress": 8,
+            "useMedicine": true,
+            "medicine": {
+              "item": "medicine",
+              "sourcePileId": 191,
+              "carryPileId": 191,
+              "quantity": 4
+            },
+            "duration": 852
+          },
+          "doctor": 1,
+          "medicalXp": 0
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "downed",
+          "hunger": 83.33333333333229,
+          "rest": 86.04166666666671,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 28879200,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 3500,
+      "medicine": 28,
+      "food": 30,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 86.66666666666458,
+          "rest": 92.08333333333343,
+          "position": {
+            "x": 8,
+            "z": 25
+          },
+          "bed": 196,
+          "injuries": 5,
+          "bloodLoss": 100347840,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "resting",
+          "hunger": 86.66666666666458,
+          "rest": 92.08333333333343,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 1,
+          "bloodLoss": 14124320,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 86.66666666666458,
+          "rest": 92.08333333333343,
+          "position": {
+            "x": 6,
+            "z": 25
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 700000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "downed",
+          "hunger": 76.66666666666458,
+          "rest": 82.08333333333343,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 73872000,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 3750,
+      "medicine": 26,
+      "food": 30,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "downed",
+          "hunger": 79.99999999999687,
+          "rest": 88.12500000000014,
+          "position": {
+            "x": 8,
+            "z": 25
+          },
+          "bed": 196,
+          "injuries": 5,
+          "bloodLoss": 135936720,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "resting",
+          "hunger": 79.99999999999687,
+          "rest": 88.12500000000014,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 1,
+          "bloodLoss": 9924320,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "working",
+          "hunger": 79.99999999999687,
+          "rest": 88.12500000000014,
+          "position": {
+            "x": 7,
+            "z": 25
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": {
+            "patientId": 182,
+            "spot": {
+              "x": 7,
+              "z": 25
+            },
+            "phase": "tend",
+            "progress": 0,
+            "useMedicine": true,
+            "duration": 852
+          },
+          "doctor": 1,
+          "medicalXp": 1400000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "downed",
+          "hunger": 69.99999999999687,
+          "rest": 78.12500000000014,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 118614240,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 4000,
+      "medicine": 23,
+      "food": 30,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "downed",
+          "hunger": 73.33333333332916,
+          "rest": 84.16666666666686,
+          "position": {
+            "x": 8,
+            "z": 25
+          },
+          "bed": 196,
+          "injuries": 5,
+          "bloodLoss": 147143200,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "resting",
+          "hunger": 73.33333333332916,
+          "rest": 84.16666666666686,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 1,
+          "bloodLoss": 5724320,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 73.33333333332916,
+          "rest": 84.16666666666686,
+          "position": {
+            "x": 7,
+            "z": 25
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 2450000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "downed",
+          "hunger": 63.33333333332935,
+          "rest": 76.57476190476223,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 161924400,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 4250,
+      "medicine": 23,
+      "food": 30,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "downed",
+          "hunger": 66.66666666666146,
+          "rest": 80.20833333333357,
+          "position": {
+            "x": 8,
+            "z": 25
+          },
+          "bed": 196,
+          "injuries": 5,
+          "bloodLoss": 142943200,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "resting",
+          "hunger": 66.66666666666146,
+          "rest": 80.20833333333357,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 1,
+          "bloodLoss": 1624320,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 66.66666666666146,
+          "rest": 80.20833333333357,
+          "position": {
+            "x": 7,
+            "z": 25
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 2450000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "downed",
+          "hunger": 56.66666666666342,
+          "rest": 84.19380952381053,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 205914960,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 4500,
+      "medicine": 23,
+      "food": 30,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "moving",
+          "hunger": 59.99999999999482,
+          "rest": 76.25000000000028,
+          "position": {
+            "x": 7,
+            "z": 17
+          },
+          "bed": null,
+          "injuries": 5,
+          "bloodLoss": 138843200,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "resting",
+          "hunger": 59.99999999999482,
+          "rest": 76.25000000000028,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 1,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 59.99999999999482,
+          "rest": 76.25000000000028,
+          "position": {
+            "x": 7,
+            "z": 25
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 2450000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "downed",
+          "hunger": 49.999999999997485,
+          "rest": 91.81285714285883,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 249525360,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 4750,
+      "medicine": 23,
+      "food": 30,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "moving",
+          "hunger": 53.33333333332889,
+          "rest": 72.291666666667,
+          "position": {
+            "x": 6,
+            "z": 17
+          },
+          "bed": 196,
+          "injuries": 5,
+          "bloodLoss": 134643200,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "resting",
+          "hunger": 53.33333333332889,
+          "rest": 81.51345238095266,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 1,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 53.33333333332889,
+          "rest": 72.291666666667,
+          "position": {
+            "x": 7,
+            "z": 25
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 2450000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "downed",
+          "hunger": 43.33333333333155,
+          "rest": 99.43190476190713,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 291794400,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 5000,
+      "medicine": 23,
+      "food": 30,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 46.666666666662955,
+          "rest": 75.23619047619081,
+          "position": {
+            "x": 8,
+            "z": 25
+          },
+          "bed": 196,
+          "injuries": 5,
+          "bloodLoss": 130443200,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "resting",
+          "hunger": 46.666666666662955,
+          "rest": 91.03726190476215,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 1,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 46.666666666662955,
+          "rest": 68.33333333333371,
+          "position": {
+            "x": 7,
+            "z": 25
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 2450000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 5250,
+      "medicine": 23,
+      "food": 30,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 39.99999999999702,
+          "rest": 84.7600000000003,
+          "position": {
+            "x": 8,
+            "z": 25
+          },
+          "bed": 196,
+          "injuries": 5,
+          "bloodLoss": 126343200,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "resting",
+          "hunger": 39.99999999999702,
+          "rest": 99.77833333333334,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 1,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 39.99999999999702,
+          "rest": 64.37500000000043,
+          "position": {
+            "x": 7,
+            "z": 25
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 2450000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 5500,
+      "medicine": 23,
+      "food": 30,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 33.33333333333109,
+          "rest": 94.2838095238098,
+          "position": {
+            "x": 8,
+            "z": 25
+          },
+          "bed": 196,
+          "injuries": 5,
+          "bloodLoss": 122143200,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "resting",
+          "hunger": 33.33333333333109,
+          "rest": 95.82000000000005,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 1,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "moving",
+          "hunger": 33.33333333333109,
+          "rest": 60.41666666666714,
+          "position": {
+            "x": 8,
+            "z": 24
+          },
+          "bed": 197,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 2450000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 5750,
+      "medicine": 23,
+      "food": 30,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 26.666666666664444,
+          "rest": 98.43250000000002,
+          "position": {
+            "x": 8,
+            "z": 25
+          },
+          "bed": 196,
+          "injuries": 5,
+          "bloodLoss": 117943200,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "resting",
+          "hunger": 26.666666666664444,
+          "rest": 91.86166666666676,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 1,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "sleeping",
+          "hunger": 26.666666666664444,
+          "rest": 68.73821428571473,
+          "position": {
+            "x": 11,
+            "z": 25
+          },
+          "bed": 197,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 2450000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 6000,
+      "medicine": 23,
+      "food": 30,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 21.999999999997936,
+          "rest": 94.47416666666673,
+          "position": {
+            "x": 8,
+            "z": 25
+          },
+          "bed": 196,
+          "injuries": 5,
+          "bloodLoss": 113843200,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "resting",
+          "hunger": 21.999999999997936,
+          "rest": 87.90333333333348,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 1,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "sleeping",
+          "hunger": 21.999999999997936,
+          "rest": 78.26202380952422,
+          "position": {
+            "x": 11,
+            "z": 25
+          },
+          "bed": 197,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 2450000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 6250,
+      "medicine": 23,
+      "food": 29,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 18.66666666666497,
+          "rest": 90.51583333333345,
+          "position": {
+            "x": 8,
+            "z": 25
+          },
+          "bed": 196,
+          "injuries": 5,
+          "bloodLoss": 109643200,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "recreating",
+          "hunger": 95.5199999999993,
+          "rest": 83.94500000000019,
+          "position": {
+            "x": 6,
+            "z": 22
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "sleeping",
+          "hunger": 18.66666666666497,
+          "rest": 87.78583333333371,
+          "position": {
+            "x": 11,
+            "z": 25
+          },
+          "bed": 197,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 2450000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 6500,
+      "medicine": 23,
+      "food": 29,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 15.333333333331913,
+          "rest": 86.55750000000016,
+          "position": {
+            "x": 8,
+            "z": 25
+          },
+          "bed": 196,
+          "injuries": 5,
+          "bloodLoss": 105443200,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "idle",
+          "hunger": 88.85333333333159,
+          "rest": 79.9866666666669,
+          "position": {
+            "x": 6,
+            "z": 22
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "sleeping",
+          "hunger": 15.333333333331913,
+          "rest": 97.3096428571432,
+          "position": {
+            "x": 11,
+            "z": 25
+          },
+          "bed": 197,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 2450000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 6750,
+      "medicine": 23,
+      "food": 28,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "eating",
+          "hunger": 11.999999999998503,
+          "rest": 82.59916666666687,
+          "position": {
+            "x": 7,
+            "z": 25
+          },
+          "bed": null,
+          "injuries": 5,
+          "bloodLoss": 101343200,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "idle",
+          "hunger": 82.18666666666388,
+          "rest": 76.02833333333362,
+          "position": {
+            "x": 6,
+            "z": 22
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "moving",
+          "hunger": 97.17333333333289,
+          "rest": 97.16583333333337,
+          "position": {
+            "x": 7,
+            "z": 21
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 2450000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 7000,
+      "medicine": 22,
+      "food": 27,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 95.59999999999931,
+          "rest": 78.64083333333359,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 5,
+          "bloodLoss": 97143200,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "sleeping",
+          "hunger": 75.51999999999617,
+          "rest": 80.6677380952389,
+          "position": {
+            "x": 6,
+            "z": 20
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 90.50666666666518,
+          "rest": 93.20750000000008,
+          "position": {
+            "x": 6,
+            "z": 25
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 2800000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 7250,
+      "medicine": 22,
+      "food": 27,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 88.9333333333316,
+          "rest": 75.76107142857173,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 5,
+          "bloodLoss": 92943200,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "sleeping",
+          "hunger": 68.85333333332846,
+          "rest": 88.2867857142872,
+          "position": {
+            "x": 6,
+            "z": 20
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 83.83999999999747,
+          "rest": 89.2491666666668,
+          "position": {
+            "x": 6,
+            "z": 21
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 2800000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 7500,
+      "medicine": 22,
+      "food": 27,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 82.2666666666639,
+          "rest": 85.28488095238122,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 5,
+          "bloodLoss": 88843200,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "sleeping",
+          "hunger": 62.186666666661246,
+          "rest": 95.90583333333551,
+          "position": {
+            "x": 6,
+            "z": 20
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 77.17333333332977,
+          "rest": 85.29083333333351,
+          "position": {
+            "x": 6,
+            "z": 21
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 2800000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 7750,
+      "medicine": 22,
+      "food": 27,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 75.59999999999619,
+          "rest": 94.8086904761907,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 5,
+          "bloodLoss": 84643200,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "idle",
+          "hunger": 55.51999999999531,
+          "rest": 98.17916666666669,
+          "position": {
+            "x": 6,
+            "z": 20
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 70.50666666666206,
+          "rest": 81.33250000000022,
+          "position": {
+            "x": 6,
+            "z": 21
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 2800000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 8000,
+      "medicine": 22,
+      "food": 27,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 68.93333333332848,
+          "rest": 98.21083333333335,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 5,
+          "bloodLoss": 80443200,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "idle",
+          "hunger": 48.85333333332938,
+          "rest": 94.2208333333334,
+          "position": {
+            "x": 6,
+            "z": 20
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 63.8399999999944,
+          "rest": 77.37416666666694,
+          "position": {
+            "x": 6,
+            "z": 21
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 2800000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 8250,
+      "medicine": 22,
+      "food": 27,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 62.26666666666124,
+          "rest": 94.25250000000007,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 5,
+          "bloodLoss": 76343200,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "idle",
+          "hunger": 42.18666666666345,
+          "rest": 90.26250000000012,
+          "position": {
+            "x": 6,
+            "z": 20
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 57.173333333328465,
+          "rest": 73.41583333333365,
+          "position": {
+            "x": 6,
+            "z": 21
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 2800000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 8500,
+      "medicine": 22,
+      "food": 27,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 55.599999999995305,
+          "rest": 90.29416666666678,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 5,
+          "bloodLoss": 72143200,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "idle",
+          "hunger": 35.519999999997516,
+          "rest": 86.30416666666683,
+          "position": {
+            "x": 6,
+            "z": 20
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 50.50666666666253,
+          "rest": 69.45750000000037,
+          "position": {
+            "x": 6,
+            "z": 21
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 2800000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 8750,
+      "medicine": 22,
+      "food": 27,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 48.93333333332937,
+          "rest": 86.3358333333335,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 5,
+          "bloodLoss": 67943200,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "eating",
+          "hunger": 28.85333333333116,
+          "rest": 82.34583333333354,
+          "position": {
+            "x": 6,
+            "z": 24
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 43.8399999999966,
+          "rest": 65.49916666666708,
+          "position": {
+            "x": 6,
+            "z": 21
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 2800000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 9000,
+      "medicine": 22,
+      "food": 26,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 42.26666666666344,
+          "rest": 82.37750000000021,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 5,
+          "bloodLoss": 63843200,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "idle",
+          "hunger": 94.15999999999909,
+          "rest": 78.38750000000026,
+          "position": {
+            "x": 6,
+            "z": 24
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 37.17333333333067,
+          "rest": 61.540833333333794,
+          "position": {
+            "x": 6,
+            "z": 21
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 2800000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 9250,
+      "medicine": 22,
+      "food": 26,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 35.59999999999751,
+          "rest": 78.41916666666692,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 5,
+          "bloodLoss": 59643200,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "idle",
+          "hunger": 87.49333333333138,
+          "rest": 74.42916666666697,
+          "position": {
+            "x": 6,
+            "z": 24
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 30.506666666664533,
+          "rest": 57.58250000000051,
+          "position": {
+            "x": 6,
+            "z": 21
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 2800000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 9500,
+      "medicine": 22,
+      "food": 25,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 28.933333333331163,
+          "rest": 76.29440476190506,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 5,
+          "bloodLoss": 55443200,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "idle",
+          "hunger": 80.82666666666367,
+          "rest": 70.47083333333369,
+          "position": {
+            "x": 6,
+            "z": 24
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 95.73333333333267,
+          "rest": 53.62416666666722,
+          "position": {
+            "x": 6,
+            "z": 24
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 2800000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 9750,
+      "medicine": 22,
+      "food": 24,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 98.66666666666646,
+          "rest": 85.81821428571455,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 5,
+          "bloodLoss": 51343200,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "idle",
+          "hunger": 74.15999999999596,
+          "rest": 66.5125000000004,
+          "position": {
+            "x": 6,
+            "z": 24
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 89.06666666666496,
+          "rest": 49.665833333333936,
+          "position": {
+            "x": 5,
+            "z": 24
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 2800000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 10000,
+      "medicine": 22,
+      "food": 24,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 91.99999999999875,
+          "rest": 95.34202380952404,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 5,
+          "bloodLoss": 47143200,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "idle",
+          "hunger": 67.49333333332825,
+          "rest": 62.554166666667115,
+          "position": {
+            "x": 6,
+            "z": 24
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "moving",
+          "hunger": 82.39999999999725,
+          "rest": 45.70750000000065,
+          "position": {
+            "x": 4,
+            "z": 25
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": {
+            "patientId": 182,
+            "spot": {
+              "x": 5,
+              "z": 24
+            },
+            "phase": "tend",
+            "progress": 8,
+            "useMedicine": true,
+            "duration": 852
+          },
+          "doctor": 1,
+          "medicalXp": 2800000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 10250,
+      "medicine": 21,
+      "food": 24,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 85.33333333333104,
+          "rest": 97.98916666666669,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 5,
+          "bloodLoss": 42943200,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "idle",
+          "hunger": 60.826666666661396,
+          "rest": 58.59583333333383,
+          "position": {
+            "x": 6,
+            "z": 24
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 75.73333333332954,
+          "rest": 41.749166666667364,
+          "position": {
+            "x": 5,
+            "z": 24
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 3150000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 10500,
+      "medicine": 21,
+      "food": 24,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 78.66666666666333,
+          "rest": 94.0308333333334,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 5,
+          "bloodLoss": 38843200,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "idle",
+          "hunger": 54.15999999999546,
+          "rest": 54.63750000000054,
+          "position": {
+            "x": 6,
+            "z": 24
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 69.06666666666183,
+          "rest": 37.79083333333408,
+          "position": {
+            "x": 5,
+            "z": 24
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 3150000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 10750,
+      "medicine": 21,
+      "food": 24,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 71.99999999999562,
+          "rest": 90.07250000000012,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 5,
+          "bloodLoss": 34643200,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "idle",
+          "hunger": 47.49333333332953,
+          "rest": 50.67916666666726,
+          "position": {
+            "x": 6,
+            "z": 24
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 62.399999999994556,
+          "rest": 33.83250000000079,
+          "position": {
+            "x": 5,
+            "z": 24
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 3150000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 11000,
+      "medicine": 21,
+      "food": 24,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 65.33333333332791,
+          "rest": 86.11416666666683,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 5,
+          "bloodLoss": 30443200,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "idle",
+          "hunger": 40.8266666666636,
+          "rest": 46.72083333333397,
+          "position": {
+            "x": 6,
+            "z": 24
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "moving",
+          "hunger": 55.73333333332862,
+          "rest": 29.874166666667506,
+          "position": {
+            "x": 7,
+            "z": 24
+          },
+          "bed": 197,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 3150000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 11250,
+      "medicine": 21,
+      "food": 24,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 58.666666666661634,
+          "rest": 82.15583333333355,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 5,
+          "bloodLoss": 26343200,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "idle",
+          "hunger": 34.159999999997666,
+          "rest": 42.762500000000685,
+          "position": {
+            "x": 6,
+            "z": 24
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "sleeping",
+          "hunger": 49.06666666666269,
+          "rest": 38.24964285714367,
+          "position": {
+            "x": 11,
+            "z": 25
+          },
+          "bed": 197,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 3150000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 11500,
+      "medicine": 21,
+      "food": 23,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 51.9999999999957,
+          "rest": 78.19750000000026,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 5,
+          "bloodLoss": 22143200,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "sleeping",
+          "hunger": 98.85333333333315,
+          "rest": 38.83464285714359,
+          "position": {
+            "x": 6,
+            "z": 24
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "sleeping",
+          "hunger": 42.39999999999676,
+          "rest": 47.77345238095316,
+          "position": {
+            "x": 11,
+            "z": 25
+          },
+          "bed": 197,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 3150000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 11750,
+      "medicine": 21,
+      "food": 23,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 45.33333333332977,
+          "rest": 76.82773809523839,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 5,
+          "bloodLoss": 17943200,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "sleeping",
+          "hunger": 92.18666666666545,
+          "rest": 46.453690476191895,
+          "position": {
+            "x": 6,
+            "z": 24
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "sleeping",
+          "hunger": 35.733333333330826,
+          "rest": 57.29726190476265,
+          "position": {
+            "x": 11,
+            "z": 25
+          },
+          "bed": 197,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 3150000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 12000,
+      "medicine": 21,
+      "food": 23,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 38.666666666663836,
+          "rest": 86.35154761904788,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 5,
+          "bloodLoss": 13843200,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "sleeping",
+          "hunger": 85.51999999999774,
+          "rest": 54.0727380952402,
+          "position": {
+            "x": 6,
+            "z": 24
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "sleeping",
+          "hunger": 29.0666666666645,
+          "rest": 66.82107142857214,
+          "position": {
+            "x": 11,
+            "z": 25
+          },
+          "bed": 197,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 3150000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 12250,
+      "medicine": 21,
+      "food": 23,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 31.9999999999979,
+          "rest": 95.87535714285737,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 5,
+          "bloodLoss": 9643200,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "sleeping",
+          "hunger": 78.85333333333003,
+          "rest": 61.6917857142885,
+          "position": {
+            "x": 6,
+            "z": 24
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "sleeping",
+          "hunger": 23.199999999997804,
+          "rest": 76.34488095238163,
+          "position": {
+            "x": 11,
+            "z": 25
+          },
+          "bed": 197,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 3150000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 12500,
+      "medicine": 21,
+      "food": 23,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 25.33333333333108,
+          "rest": 97.76750000000003,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 5,
+          "bloodLoss": 5443200,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "sleeping",
+          "hunger": 72.18666666666232,
+          "rest": 69.3108333333368,
+          "position": {
+            "x": 6,
+            "z": 24
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "sleeping",
+          "hunger": 19.866666666664837,
+          "rest": 85.86869047619112,
+          "position": {
+            "x": 11,
+            "z": 25
+          },
+          "bed": 197,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 3150000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 12750,
+      "medicine": 21,
+      "food": 23,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 21.333333333331343,
+          "rest": 93.80916666666674,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 5,
+          "bloodLoss": 1343200,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "sleeping",
+          "hunger": 65.51999999999461,
+          "rest": 76.9298809523851,
+          "position": {
+            "x": 6,
+            "z": 24
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "sleeping",
+          "hunger": 16.53333333333187,
+          "rest": 95.39250000000061,
+          "position": {
+            "x": 11,
+            "z": 25
+          },
+          "bed": 197,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 3150000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 13000,
+      "medicine": 21,
+      "food": 22,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 17.999999999998376,
+          "rest": 89.85083333333345,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 5,
+          "bloodLoss": 0,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "sleeping",
+          "hunger": 58.85333333332828,
+          "rest": 84.54892857143341,
+          "position": {
+            "x": 6,
+            "z": 24
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "working",
+          "hunger": 98.50666666666643,
+          "rest": 97.95750000000002,
+          "position": {
+            "x": 6,
+            "z": 25
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 3150000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 13250,
+      "medicine": 21,
+      "food": 21,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 93.97333333333239,
+          "rest": 85.89250000000017,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 5,
+          "bloodLoss": 0,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "sleeping",
+          "hunger": 52.18666666666235,
+          "rest": 92.16797619048171,
+          "position": {
+            "x": 6,
+            "z": 24
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "recreating",
+          "hunger": 91.83999999999872,
+          "rest": 93.99916666666674,
+          "position": {
+            "x": 6,
+            "z": 21
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 3150000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 13500,
+      "medicine": 21,
+      "food": 21,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 87.30666666666468,
+          "rest": 81.93416666666688,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 5,
+          "bloodLoss": 0,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "sleeping",
+          "hunger": 45.519999999996415,
+          "rest": 99.78702380953001,
+          "position": {
+            "x": 6,
+            "z": 24
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 85.17333333333102,
+          "rest": 90.04083333333345,
+          "position": {
+            "x": 6,
+            "z": 21
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 3150000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 13750,
+      "medicine": 21,
+      "food": 21,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 80.63999999999697,
+          "rest": 77.9758333333336,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 5,
+          "bloodLoss": 0,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "idle",
+          "hunger": 38.85333333333048,
+          "rest": 96.15250000000005,
+          "position": {
+            "x": 6,
+            "z": 24
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 78.5066666666633,
+          "rest": 86.08250000000017,
+          "position": {
+            "x": 6,
+            "z": 21
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 3150000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 14000,
+      "medicine": 20,
+      "food": 21,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 73.97333333332926,
+          "rest": 77.36107142857172,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 5,
+          "bloodLoss": 0,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "idle",
+          "hunger": 32.18666666666455,
+          "rest": 92.19416666666676,
+          "position": {
+            "x": 6,
+            "z": 24
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 71.8399999999956,
+          "rest": 82.12416666666688,
+          "position": {
+            "x": 6,
+            "z": 25
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 3500000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 14250,
+      "medicine": 20,
+      "food": 20,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 67.30666666666156,
+          "rest": 86.88488095238121,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 5,
+          "bloodLoss": 0,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "idle",
+          "hunger": 96.87999999999951,
+          "rest": 88.23583333333347,
+          "position": {
+            "x": 6,
+            "z": 24
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 65.17333333332789,
+          "rest": 78.1658333333336,
+          "position": {
+            "x": 6,
+            "z": 25
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 3500000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 14500,
+      "medicine": 20,
+      "food": 20,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 60.63999999999475,
+          "rest": 96.4086904761907,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 5,
+          "bloodLoss": 0,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "idle",
+          "hunger": 90.2133333333318,
+          "rest": 84.27750000000019,
+          "position": {
+            "x": 6,
+            "z": 24
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 58.50666666666165,
+          "rest": 74.20750000000031,
+          "position": {
+            "x": 6,
+            "z": 25
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 3500000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 14750,
+      "medicine": 20,
+      "food": 20,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 53.97333333332882,
+          "rest": 97.54583333333336,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 5,
+          "bloodLoss": 0,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "idle",
+          "hunger": 83.5466666666641,
+          "rest": 80.3191666666669,
+          "position": {
+            "x": 6,
+            "z": 24
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 51.83999999999572,
+          "rest": 70.24916666666702,
+          "position": {
+            "x": 6,
+            "z": 25
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 3500000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 15000,
+      "medicine": 20,
+      "food": 20,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 47.306666666662885,
+          "rest": 93.58750000000008,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 5,
+          "bloodLoss": 0,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "idle",
+          "hunger": 76.87999999999639,
+          "rest": 76.36083333333362,
+          "position": {
+            "x": 6,
+            "z": 24
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 45.173333333329786,
+          "rest": 66.29083333333374,
+          "position": {
+            "x": 6,
+            "z": 25
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 3500000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 15250,
+      "medicine": 20,
+      "food": 20,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 40.63999999999695,
+          "rest": 89.62916666666679,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 4,
+          "bloodLoss": 0,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "idle",
+          "hunger": 70.21333333332868,
+          "rest": 72.40250000000033,
+          "position": {
+            "x": 6,
+            "z": 24
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 38.506666666663854,
+          "rest": 62.33250000000045,
+          "position": {
+            "x": 6,
+            "z": 25
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 3500000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 15500,
+      "medicine": 20,
+      "food": 20,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 33.97333333333102,
+          "rest": 85.6708333333335,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 2,
+          "bloodLoss": 0,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "idle",
+          "hunger": 63.546666666661096,
+          "rest": 68.44416666666704,
+          "position": {
+            "x": 6,
+            "z": 24
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 31.839999999997897,
+          "rest": 58.374166666667165,
+          "position": {
+            "x": 6,
+            "z": 25
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 3500000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 15750,
+      "medicine": 20,
+      "food": 19,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 27.30666666666446,
+          "rest": 81.71250000000022,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 2,
+          "bloodLoss": 0,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "idle",
+          "hunger": 56.879999999995164,
+          "rest": 64.48583333333376,
+          "position": {
+            "x": 6,
+            "z": 24
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 96.53333333333279,
+          "rest": 54.41583333333388,
+          "position": {
+            "x": 6,
+            "z": 25
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 3500000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 16000,
+      "medicine": 20,
+      "food": 18,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 96.69333333333282,
+          "rest": 77.75416666666693,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 2,
+          "bloodLoss": 0,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "recreating",
+          "hunger": 50.21333333332923,
+          "rest": 60.52750000000047,
+          "position": {
+            "x": 8,
+            "z": 22
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 89.86666666666508,
+          "rest": 50.45750000000059,
+          "position": {
+            "x": 6,
+            "z": 25
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 3500000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 16250,
+      "medicine": 20,
+      "food": 18,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 90.02666666666511,
+          "rest": 77.89440476190505,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 2,
+          "bloodLoss": 0,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "recreating",
+          "hunger": 43.5466666666633,
+          "rest": 56.569166666667186,
+          "position": {
+            "x": 8,
+            "z": 22
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 83.19999999999737,
+          "rest": 46.49916666666731,
+          "position": {
+            "x": 6,
+            "z": 25
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 3500000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 16500,
+      "medicine": 20,
+      "food": 18,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "resting",
+          "hunger": 83.3599999999974,
+          "rest": 87.41821428571454,
+          "position": {
+            "x": 5,
+            "z": 25
+          },
+          "bed": 195,
+          "injuries": 2,
+          "bloodLoss": 0,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "idle",
+          "hunger": 36.879999999997366,
+          "rest": 52.6108333333339,
+          "position": {
+            "x": 8,
+            "z": 22
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 76.53333333332967,
+          "rest": 42.54083333333402,
+          "position": {
+            "x": 6,
+            "z": 25
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 3500000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 16750,
+      "medicine": 20,
+      "food": 18,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "recreating",
+          "hunger": 76.69333333332969,
+          "rest": 86.80345238095266,
+          "position": {
+            "x": 7,
+            "z": 22
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "idle",
+          "hunger": 30.213333333331192,
+          "rest": 48.652500000000614,
+          "position": {
+            "x": 8,
+            "z": 22
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 69.86666666666196,
+          "rest": 38.582500000000735,
+          "position": {
+            "x": 6,
+            "z": 25
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 3500000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 17000,
+      "medicine": 20,
+      "food": 17,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "recreating",
+          "hunger": 70.02666666666198,
+          "rest": 82.84511904761938,
+          "position": {
+            "x": 7,
+            "z": 22
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "idle",
+          "hunger": 95.38666666666595,
+          "rest": 44.69416666666733,
+          "position": {
+            "x": 7,
+            "z": 25
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 63.19999999999447,
+          "rest": 34.62416666666745,
+          "position": {
+            "x": 6,
+            "z": 25
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 3500000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 17250,
+      "medicine": 20,
+      "food": 17,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "idle",
+          "hunger": 63.35999999999445,
+          "rest": 78.88678571428609,
+          "position": {
+            "x": 7,
+            "z": 22
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "idle",
+          "hunger": 88.71999999999824,
+          "rest": 40.73583333333404,
+          "position": {
+            "x": 7,
+            "z": 25
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "idle",
+          "hunger": 56.533333333328535,
+          "rest": 30.665833333334163,
+          "position": {
+            "x": 6,
+            "z": 25
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 3500000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 17500,
+      "medicine": 20,
+      "food": 17,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "moving",
+          "hunger": 56.69333333332852,
+          "rest": 74.9284523809528,
+          "position": {
+            "x": 7,
+            "z": 22
+          },
+          "bed": 196,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "sleeping",
+          "hunger": 82.05333333333053,
+          "rest": 36.80797619047695,
+          "position": {
+            "x": 7,
+            "z": 25
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "sleeping",
+          "hunger": 49.8666666666626,
+          "rest": 36.452738095238914,
+          "position": {
+            "x": 11,
+            "z": 25
+          },
+          "bed": 197,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 3500000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 17750,
+      "medicine": 20,
+      "food": 17,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "sleeping",
+          "hunger": 50.026666666662585,
+          "rest": 83.30392857142897,
+          "position": {
+            "x": 8,
+            "z": 25
+          },
+          "bed": 196,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "sleeping",
+          "hunger": 75.38666666666282,
+          "rest": 44.42702380952525,
+          "position": {
+            "x": 7,
+            "z": 25
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "sleeping",
+          "hunger": 43.19999999999667,
+          "rest": 45.976547619048404,
+          "position": {
+            "x": 11,
+            "z": 25
+          },
+          "bed": 197,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 3500000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    },
+    {
+      "tick": 17862,
+      "medicine": 20,
+      "food": 17,
+      "pawns": [
+        {
+          "id": 182,
+          "name": "Ada",
+          "state": "sleeping",
+          "hunger": 47.03999999999625,
+          "rest": 87.57059523809562,
+          "position": {
+            "x": 8,
+            "z": 25
+          },
+          "bed": 196,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": {
+            "nextId": 2,
+            "cases": [],
+            "immunity": 999933333
+          },
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 183,
+          "name": "Noé",
+          "state": "sleeping",
+          "hunger": 72.39999999999569,
+          "rest": 47.84035714285889,
+          "position": {
+            "x": 7,
+            "z": 25
+          },
+          "bed": null,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 0,
+          "medicalXp": 0
+        },
+        {
+          "id": 184,
+          "name": "Mina",
+          "state": "sleeping",
+          "hunger": 40.21333333333033,
+          "rest": 50.243214285715055,
+          "position": {
+            "x": 11,
+            "z": 25
+          },
+          "bed": 197,
+          "injuries": 0,
+          "bloodLoss": 0,
+          "infection": null,
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 3500000
+        },
+        {
+          "id": 186,
+          "name": "Sentinelle",
+          "state": "dead",
+          "hunger": 42.18666666666501,
+          "rest": 99.62,
+          "position": {
+            "x": 16,
+            "z": 10
+          },
+          "bed": null,
+          "injuries": 6,
+          "bloodLoss": 300000000,
+          "infection": {
+            "nextId": 2,
+            "cases": [
+              {
+                "id": 1,
+                "part": "torso",
+                "bornAt": 4680,
+                "severity": 17800000,
+                "luck": 823190
+              }
+            ],
+            "immunity": 7051926
+          },
+          "care": null,
+          "doctor": 1,
+          "medicalXp": 0
+        }
+      ]
+    }
+  ],
+  "checkpointPaths": {
+    "declaration": "tmp/infection-declaration-v81.json",
+    "renewal": "tmp/infection-renewal-v81.json",
+    "immune": "tmp/infection-immune-v81.json",
+    "near-recovery": "tmp/infection-near-recovery-v81.json",
+    "recovered": "tmp/infection-recovered-v81.json"
+  },
+  "final": {
+    "tick": 17862,
+    "medicine": 20,
+    "food": 17,
+    "pawns": [
+      {
+        "id": 182,
+        "name": "Ada",
+        "state": "sleeping",
+        "hunger": 47.03999999999625,
+        "rest": 87.57059523809562,
+        "position": {
+          "x": 8,
+          "z": 25
+        },
+        "bed": 196,
+        "injuries": 0,
+        "bloodLoss": 0,
+        "infection": {
+          "nextId": 2,
+          "cases": [],
+          "immunity": 999933333
+        },
+        "care": null,
+        "doctor": 0,
+        "medicalXp": 0
+      },
+      {
+        "id": 183,
+        "name": "Noé",
+        "state": "sleeping",
+        "hunger": 72.39999999999569,
+        "rest": 47.84035714285889,
+        "position": {
+          "x": 7,
+          "z": 25
+        },
+        "bed": null,
+        "injuries": 0,
+        "bloodLoss": 0,
+        "infection": null,
+        "care": null,
+        "doctor": 0,
+        "medicalXp": 0
+      },
+      {
+        "id": 184,
+        "name": "Mina",
+        "state": "sleeping",
+        "hunger": 40.21333333333033,
+        "rest": 50.243214285715055,
+        "position": {
+          "x": 11,
+          "z": 25
+        },
+        "bed": 197,
+        "injuries": 0,
+        "bloodLoss": 0,
+        "infection": null,
+        "care": null,
+        "doctor": 1,
+        "medicalXp": 3500000
+      },
+      {
+        "id": 186,
+        "name": "Sentinelle",
+        "state": "dead",
+        "hunger": 42.18666666666501,
+        "rest": 99.62,
+        "position": {
+          "x": 16,
+          "z": 10
+        },
+        "bed": null,
+        "injuries": 6,
+        "bloodLoss": 300000000,
+        "infection": {
+          "nextId": 2,
+          "cases": [
+            {
+              "id": 1,
+              "part": "torso",
+              "bornAt": 4680,
+              "severity": 17800000,
+              "luck": 823190
+            }
+          ],
+          "immunity": 7051926
+        },
+        "care": null,
+        "doctor": 1,
+        "medicalXp": 0
+      }
+    ]
+  },
+  "provenance": "Prepared clinic, initially healthy combatants, actual hostile shots and unchanged natural infection rolls."
+}

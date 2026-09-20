@@ -6,6 +6,7 @@ import { resolveUnarmoredBullet,validateUnarmoredBullet,type UnarmoredBullet } f
 import { healthRandom } from './health.ts';
 import { mergeSlowIntervals,travelEnd } from './travel-timing.ts';
 import type { WildAnimal } from './wildlife-state.ts';
+import { HARE } from './wildlife-state.ts';
 import type { Cell,World } from './types.ts';
 
 const HEALTHY_HARE=assessBody(HEALTHY_BODY_INPUT,HARE_MODEL);
@@ -24,7 +25,9 @@ export function advanceAnimalHealth(w:World,a:WildAnimal):void {
   if(a.stagger&&a.stagger.untilCore<=w.tick*10)delete a.stagger;
   if(a.sleepUntilCore!==undefined&&a.sleepUntilCore<=w.tick*10)delete a.sleepUntilCore;
   if(!a.health||a.health.death)return;
-  advanceMedical(a.health,w.tick-a.health.tick,{phase:a.id%60,posture:(!a.motion||a.motion.end<=w.tick)&&['sleeping','downed'].includes(a.state)?'ground':'standing',starving:a.food<=0},()=>healthRandom(w));
+  const lying=(!a.motion||a.motion.end<=w.tick)&&['sleeping','downed'].includes(a.state);
+  advanceMedical(a.health,w.tick-a.health.tick,{phase:a.id%60,posture:lying?'ground':'standing',starving:a.food<=0,
+    hunger:a.food/HARE.nutrition*100,rest:a.rest*100,restingBonus:lying&&a.state==='sleeping',infectionSeed:(w.seed^Math.imul(a.id,0x9e3779b1))>>>0},()=>healthRandom(w));
   reconcileAnimalHealth(w,a);
 }
 export function scareAnimal(w:World,a:WildAnimal,danger:Cell,core:number):void {

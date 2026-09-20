@@ -1,10 +1,10 @@
 # Documentation de Lisière
 
-État courant : **V80, 20 septembre 2026**. [Trois survivants](development/scenario-start.md) propose un départ explicite avec dotation physique, technologies connues et implantation naturelle ; sa calibration reste partielle. [Preuves V80](history/validation-scenario-v80.md), [estimations par système](ROADMAP.md#estimation-davancement). La [filière animale V79](development/hunting.md) relie chasse, dépouille, boucherie et repas ; ses [preuves](history/validation-hunting-v79.md) restent distinctes.
+État courant : **V81, 20 septembre 2026**. [Infections et soins prolongés](development/infections.md) relient risque après blessure, immunité, traitements physiques répétés et récupération ; [preuves V81](history/validation-infections-v81.md). [Trois survivants](development/scenario-start.md) propose un départ explicite avec dotation physique, technologies connues et implantation naturelle ; sa calibration reste partielle. [Preuves V80](history/validation-scenario-v80.md), [estimations par système](ROADMAP.md#estimation-davancement). La [filière animale V79](development/hunting.md) relie chasse, dépouille, boucherie et repas ; ses [preuves](history/validation-hunting-v79.md) restent distinctes.
 
 Dernières boucles de colonie : [conservation froide V75](development/cold-store.md), [canicule V74](development/heatwave.md), [recherche et tailleur V73](development/research.md). Les étapes proches 4 et 5 sont livrées dans leurs périmètres annoncés ; arbre de recherche, saisons et environnement complet restent ouverts. [Inventaire consolidé](gameplay/implementation-status.md).
 
-La [revue de progression](research/progression-review-2026-09-19.md) explique la réorientation vers des situations de colonie complètes. [ROADMAP](ROADMAP.md) conserve seule l’ordre des prochains travaux et les estimations. Mode nuit renouvelé le 20 septembre ; sous-étapes indépendantes déléguées et intégration centrale.
+La [revue de progression](research/progression-review-2026-09-19.md) explique la réorientation vers des situations de colonie complètes. [ROADMAP](ROADMAP.md) conserve seule l’ordre des prochains travaux et les estimations. Mode jour demandé le 20 septembre ; sous-étapes indépendantes déléguées et intégration centrale.
 
 Les bilans de versions sont dans les contrats et [l’index de validation](development/validation.md) ; ils ne remplacent pas l’état fonctionnel actuel.
 
@@ -43,6 +43,7 @@ Les bilans de versions sont dans les contrats et [l’index de validation](devel
 | Confection et progression | [Tenue tribale V72](development/tailoring.md) | [Sources et écarts](research/tailoring-reference.md) |
 | Habillement | [Vêtements et protection V63](development/armor.md) | [Règles revérifiées](research/apparel-reference.md) |
 | Combat | [Tir](development/shooting.md), [mêlée](development/melee.md), [acquisition](development/automatic-combat.md), [approche](development/pursuit.md), [réveils](development/disturbance.md) | [Préparation et limites](research/combat-preparation.md), [rencontre](development/encounters.md) |
+| Infection de plaie | [Contrat V81](development/infections.md) | [Sources, divergences et adaptations](research/infection-reference.md) |
 | Santé et équipement | [Santé](development/health.md), [secours](development/rescue.md), [traitements](development/tending.md), [alimentation assistée](development/feeding.md), [médicaments](development/medicines.md), [équipement](development/equipment.md) | [Compétences](development/skills.md), [recherche santé](research/health-reference.md) |
 | Électricité | [Génération et lampes V42](development/power.md) | [Sources et limites](research/power-reference.md) |
 | Canicule et santé thermique | [Incident, isolation, refuge V74](development/heatwave.md) | [Sources et divergences](research/heatwave-reference.md) |

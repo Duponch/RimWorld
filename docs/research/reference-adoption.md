@@ -1,5 +1,7 @@
 # Adoption du référentiel utilisateur
 
+V81 — infection : chapitres 8/9, 15, 23 et 32 ; SYS/TEST-089 à094 et096. Adopter risque différé, infection localisée indépendante de la plaie, immunité commune, soins physiques renouvelables et issue médicale ; adapter horloge, PRNG et propreté limitée au terrain de la pièce. Chirurgie (095), corps humains (097), autres maladies et soins vétérinaires différés. [Recherche, versions et contradictions](infection-reference.md), [contrat](../development/infections.md).
+
 V80 — départ cohérent : chapitres 6/7, 11/12, 13 et 24 ; SYS016–019, SYS084/085, SYS121–125, SYS132–135 relus via la [recherche de scénario](scenario-start-reference.md). Adopter possessions disponibles et connaissances New Arrivals ; adapter le catalogue manquant sous un nom propre et séparer le camp pédagogique. Calibrer végétation/faune selon les contenus présents, sans convertir une densité écologique Core en pourcentage d’arbres. Planète, narrateur, nouveaux biomes et départ Crashlanded complet différés. [Contrat](../development/scenario-start.md).
 
 V79 — chapitres10–12,13/15,20/21 ; SYS/TEST-062..064,077/078,121..125 : chaîne chasse/corps/produits adoptée, horloge/accès/conservation/3D adaptés, autres espèces/élevage différés. [Recherche multi-source](hunting-reference.md). Génération/départ : chapitres6/7,11/12,13,24 ; SYS-016..019,084/085,121..125,132..135 : [préparation du scénario](scenario-start-reference.md), sans changement du départ livré.

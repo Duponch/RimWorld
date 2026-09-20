@@ -1,5 +1,7 @@
 # Matrice des systèmes et critères de réalisation
 
+V81 étend la santé S13 avec infection après plaie, immunité partagée et soins physiques renouvelables. Douleur/capacités et besoins restent communs aux boucles existantes ; une maladie ne clôt pas le domaine santé. Autres maladies, chirurgie, hôpital spécialisé et soins vétérinaires restent ouverts. [Contrat](../development/infections.md), [état détaillé](implementation-status.md).
+
 V80 ajoute un départ identifiable avec stocks/technologies et paysage calibré ; aucun jalon G0–G5 n'est clos par ce scénario. Les critères mondiaux, catalogue et difficulté restent distincts. [Contrat](../development/scenario-start.md).
 
 [Estimations courantes par système](../ROADMAP.md#estimation-davancement), distinctes des critères d'acceptation et des anciennes notes datées ci-dessous.

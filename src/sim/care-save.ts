@@ -1,5 +1,5 @@
 import { tendingReason,tendingPlaceValid } from './tending.ts';
-import { treatmentTarget,healingInjury } from './care-rules.ts';
+import { treatmentTarget,medicalRestNeeded } from './care-rules.ts';
 import { isMedicine } from './medicine-rules.ts';
 import { medicineTaskValid } from './medicine-logistics.ts';
 import type { ItemId } from './items.ts';
@@ -26,7 +26,7 @@ export function validateCare(world:World):string[] {
   for(const d of world.pawns){
     if(d.state==='resting'&&!(d.need?.kind==='sleep'&&d.need.medical&&d.need.phase==='sleep'))errors.push('Medical rest without a physical bed service.');
     if(d.need?.kind==='sleep'&&d.need.medical&&(d.need.bedId===null||d.priorities[d.need.medical]===0))errors.push('Invalid medical bed intent.');
-    if(d.need?.kind==='sleep'&&d.need.medical&&!treatmentTarget(d)&&!(d.need.medical==='bedrest'&&healingInjury(d)))errors.push('Medical rest without an eligible condition.');
+    if(d.need?.kind==='sleep'&&d.need.medical&&!treatmentTarget(d)&&!(d.need.medical==='bedrest'&&medicalRestNeeded(d)))errors.push('Medical rest without an eligible condition.');
     if(!d.tend)continue;
     const t=d.tend,p=world.pawns.find(p=>p.id===t.patientId);
     if(tendingReason(world,d,p,true)||d.priorities.doctor===0&&d.orders.active!=='tend'||patients.has(t.patientId))errors.push('Invalid or duplicate tending reservation.');

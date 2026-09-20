@@ -13,6 +13,7 @@ export interface BodyAssessmentInput {
   readonly consciousnessMax?:number;
   readonly movingOffset?:number;
   readonly manipulationOffset?:number;
+  readonly breathingOffset?:number;
 }
 export interface BodyCapacities {
   readonly consciousness:number; readonly moving:number; readonly manipulation:number;
@@ -64,7 +65,7 @@ function calculate(input:BodyAssessmentInput,model=HUMAN_MODEL):BodyAssessment {
   const round=capacityRounded;
   const bloodPumping=round(part('heart'));
   const bloodFiltration=round(pair('left-kidney','right-kidney')*part('liver'));
-  const breathing=round(pair('left-lung','right-lung')*part('neck')*(human?pair('ribcage','sternum'):1));
+  const breathing=round(pair('left-lung','right-lung')*part('neck')*(human?pair('ribcage','sternum'):1)+(input.breathingOffset??0));
   const digestion=round(pair('stomach','liver'));
   const painOffset=Math.min(.4,Math.max(0,(input.pain-.1)*(.4/.9)));
   const naturalConsciousness=(part('brain')-(painOffset>=.01?painOffset:0))*(.8+.2*bloodPumping)*(.8+.2*breathing)*(.9+.1*bloodFiltration);
@@ -95,5 +96,5 @@ export const HEALTHY_BODY:BodyAssessment=calculate(HEALTHY_BODY_INPUT);
 /** Caller supplies a current health projection. No cache keyed solely by pawn ID
  * or tick: in-place injury changes must be visible within the same tick. */
 export function assessBody(input:BodyAssessmentInput=HEALTHY_BODY_INPUT,model:BodyModel=HUMAN_MODEL):BodyAssessment {
-  return model.kind==='human'&&input.damage.length===0&&input.missing.length===0&&input.pain===0&&!input.manipulationOffset&&!input.movingOffset&&!input.consciousnessOffset&&(input.consciousnessMax??1)>=1?HEALTHY_BODY:calculate(input,model);
+  return model.kind==='human'&&input.damage.length===0&&input.missing.length===0&&input.pain===0&&!input.manipulationOffset&&!input.movingOffset&&!input.breathingOffset&&!input.consciousnessOffset&&(input.consciousnessMax??1)>=1?HEALTHY_BODY:calculate(input,model);
 }

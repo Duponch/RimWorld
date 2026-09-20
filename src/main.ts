@@ -1,4 +1,5 @@
 import { DEFAULT_SCENARIO, SCENARIOS, type ScenarioId } from './sim/scenario-definitions';
+import { INFECTION_UNIT,infectionStage } from './sim/infection-rules';
 import { corpseStage } from './sim/corpses';
 import { updateWildlifePanel } from './ui/wildlife-panel';
 import { createHeatwaveUI } from './ui/heatwave';
@@ -448,6 +449,10 @@ function renderState() {
   const threatButton=el<HTMLButtonElement>('inspect-threat');threatButton.hidden=!enemy;if(enemy){threatButton.textContent='Menace armée · voir';threatButton.onclick=()=>selectPawn(enemy.id);}
   const downed=living.filter(p=>p.state==='downed').length,bleeding=living.filter(p=>p.health&&medicalBleed(p.health)>=.1).length,deaths=world.pawns.filter(isColonist).length-living.length;
   const chilled=living.filter(p=>(p.health?.hypothermia??0)>=40000000).length;if(chilled)alerts.push(`${chilled} colon(s) en hypothermie`);
+  const infected=living.filter(p=>p.health?.infections?.cases.length);
+  const critical=infected.filter(p=>p.health!.infections!.immunity<INFECTION_UNIT&&p.health!.infections!.cases.some(c=>['extreme','critical'].includes(infectionStage(c.severity)))).length;
+  if(critical)alerts.push(`Urgence médicale : ${critical} colon(s) avec une infection grave`);
+  if(infected.length)alerts.push(`${infected.length} colon(s) avec une infection · consulter Santé`);
   if(downed)alerts.push(`${downed} colon(s) à terre`);
   if(bleeding)alerts.push(`${bleeding} colon(s) saignent`);
   if(deaths)alerts.push(`${deaths} colon(s) décédé(s)`);

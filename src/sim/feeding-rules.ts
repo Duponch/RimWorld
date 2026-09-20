@@ -11,7 +11,7 @@ export interface FeedTask { patientId:number;spot:Cell;sourcePileId:number;carry
 // Base ingest time 50 local ticks × 1.5, independent of Medicine and EatingSpeed.
 export const FEED_HUNGER=26,FEED_TICKS=75;
 export function needsAssistedFeeding(p:Pawn):boolean {
-  return lyingPatient(p)&&(p.state==='downed'||!!p.health&&(p.health.injuries.some(i=>i.scar?.pain===undefined)||p.health.missing.some(m=>freshMissing(p.health!,m))));
+  return lyingPatient(p)&&(p.state==='downed'||!!p.health&&(!!p.health.infections?.cases.length||p.health.injuries.some(i=>i.scar?.pain===undefined)||p.health.missing.some(m=>freshMissing(p.health!,m))));
 }
 export function feedingReason(world:World,doctor:Pawn,patient:Pawn|undefined,accepted=false):string|undefined {
   return medicalWorkRefusal(doctor)??(!accepted&&doctor.priorities.doctor===0?'Médecin est désactivé.'

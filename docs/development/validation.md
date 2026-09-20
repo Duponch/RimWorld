@@ -1,4 +1,6 @@
-# Validation courante — V80
+# Validation courante — V81
+
+V81 : [infection, soins répétés, migration et issue médicale](../history/validation-infections-v81.md). Les scénarios cliniques contrôlés, acquisition naturelle du pilote et continuations UI sont distingués ; aucune validation d’un catalogue médical complet.
 
 V80 : [départ Trois survivants, migrations, première installation et calibration](../history/validation-scenario-v80.md). Les campagnes initiales et leurs corrections restent distinguées des passes finales.
 

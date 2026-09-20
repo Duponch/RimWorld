@@ -9,6 +9,8 @@ import { ITEM_DEFINITIONS } from './items.ts';
 import { medicalWorkRefusal } from './health-rules.ts';
 import { healthRandom,updatePawnHealth,reconcilePawnHealth } from './health.ts';
 import { tendInjury,tendMissingPart } from './injury-state.ts';
+import { tendInfection,captureInfectionTendRoom } from './infection-state.ts';
+import { infectionRoomFactor } from './infection-room.ts';
 import { learnSkill } from './skills.ts';
 import { blockedCells,reachableCells,routeToCell,workNeighbours,type Reachability } from './pathfinding.ts';
 import { reservedServiceCells } from './service-reservations.ts';
@@ -32,7 +34,7 @@ export function tendingReason(world:World,doctor:Pawn,patient:Pawn|undefined,acc
     :!patient||!isColonist(patient)?'Patient de la colonie introuvable.'
     :patient===doctor&&(world.schemaVersion<49||!doctor.selfTend)?'Les auto-soins sont désactivés dans Santé.'
     :patient!==doctor&&!lyingPatient(patient)||carrierOf(world,patient.id)?'Le patient doit être installé dans un lit.'
-    :!treatmentTarget(patient)?'Aucune plaie autorisée ne nécessite un traitement.'
+    :!treatmentTarget(patient)?'Aucune blessure ou maladie autorisée ne nécessite actuellement un traitement.'
     :patientClaimed(world,patient.id,doctor)?'Ce patient est déjà réservé par un médecin.':undefined);
 }
 export function tendingProposal(world:World,doctor:Pawn,patient:Pawn,reach:Reachability):{task:TendTask;path:Cell[]}|undefined {
@@ -92,11 +94,20 @@ export function processTending(world:World,doctor:Pawn,context:NeedContext,light
   // XP is awarded at a completed treatment before its quality stat is queried.
   learnSkill(doctor.skills.medicine,tendXp(item),doctor);
   const quality=medicalTendQuality(doctor);
-  for(const target of batch)if(target.injuryId!==undefined)tendInjury(patient.health!,target.injuryId,tendQuality(quality,healthRandom(world),doctor===patient,item));
-  else tendMissingPart(patient.health!,target.part);
+  let roomFactor:number|undefined;
+  for(const target of batch) {
+    if(target.injuryId!==undefined) {
+      tendInjury(patient.health!,target.injuryId,tendQuality(quality,healthRandom(world),doctor===patient,item));
+      if(patient.health!.injuries.some(i=>i.id===target.injuryId&&i.infection)) {
+        roomFactor??=infectionRoomFactor(world,patient);
+        captureInfectionTendRoom(patient.health!,target.injuryId,roomFactor);
+      }
+    } else if(target.infectionId!==undefined)tendInfection(patient.health!,target.infectionId,tendQuality(quality,healthRandom(world),doctor===patient,item));
+    else tendMissingPart(patient.health!,target.part);
+  }
   consumeMedicine(world,task);
   reconcilePawnHealth(world,patient);
-  context.event(`${doctor.name} a traité ${batch.length} plaie(s) ${doctor===patient?'sur soi':`de ${patient.name}`} ${item?`avec ${ITEM_DEFINITIONS[item].label}`:'sans médicament'}.`);
+  context.event(`${doctor.name} a traité ${batch[0]!.infectionId!==undefined?'une infection':`${batch.length} plaie(s)`} ${doctor===patient?'sur soi':`de ${patient.name}`} ${item?`avec ${ITEM_DEFINITIONS[item].label}`:'sans médicament'}.`);
   task.progress-=task.duration;
   if(!treatmentTarget(patient)||task.urgent&&doctor===patient){releaseTending(world,doctor);if(task.urgent){doctor.planCooldown=0;doctor.needCooldown=0;}}
   else if(task.useMedicine&&!task.medicine){task.phase='find-medicine';doctor.state='moving';}

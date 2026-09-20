@@ -2,6 +2,7 @@ import { medicalModel } from './body-model.ts';
 import { BLOOD_UNIT,HEAL_INTERVAL,MEDICAL_INTERVAL,bloodStage } from './injury-rules.ts';
 import { medicalBleedUnits,reconcileMedicalDeath,rollScarPain } from './injury-state.ts';
 import type { Injury,MedicalContext,MedicalRandom,MedicalRecord } from './injury-types.ts';
+import { advanceInfections,advanceInfectionImmunity } from './infection-evolution.ts';
 
 function heal(record:MedicalRecord,injury:Injury,amount:number,random:MedicalRandom):void {
   injury.severity-=amount;
@@ -17,9 +18,15 @@ function chosen(list:Injury[],random:MedicalRandom):Injury {return list[Math.flo
 export function advanceMedical(record:MedicalRecord,ticks:number,context:MedicalContext,random:MedicalRandom):void {
   if(!Number.isSafeInteger(ticks)||ticks<0||ticks>100000||!Number.isSafeInteger(record.tick+ticks)||
     !Number.isInteger(context.phase)||context.phase<0||context.phase>=HEAL_INTERVAL||
-    !['standing','ground','bed'].includes(context.posture)||typeof context.starving!=='boolean')throw new Error('Invalid medical interval');
+    !['standing','ground','bed'].includes(context.posture)||typeof context.starving!=='boolean'||
+    [context.hunger,context.rest].some(value=>value!==undefined&&(!Number.isFinite(value)||value<0||value>100))||
+    context.restingBonus!==undefined&&typeof context.restingBonus!=='boolean'||
+    context.infectionSeed!==undefined&&(!Number.isInteger(context.infectionSeed)||context.infectionSeed<0||context.infectionSeed>0xffffffff))throw new Error('Invalid medical interval');
   if(record.death)return;
-  if(!record.injuries.length&&!record.missing.length&&!record.bloodLoss){record.tick+=ticks;return;}
+  const pending=record.injuries.filter(i=>i.infection&&i.infection.dueCore<=(record.tick+ticks)*10).length;
+  if(pending&&!Number.isSafeInteger((record.infections?.nextId??1)+pending))throw new Error('Infection identities exhausted');
+  if((record.infections?.cases.length||pending)&&!Number.isSafeInteger((record.tick+ticks)*10))throw new Error('Infection clock exhausted');
+  if(!record.injuries.length&&!record.missing.length&&!record.bloodLoss&&!record.infections?.cases.length&&!record.infections?.immunity){record.tick+=ticks;return;}
   const end=record.tick+ticks;
   while(record.tick<end) {
     record.tick++;
@@ -33,13 +40,17 @@ export function advanceMedical(record:MedicalRecord,ticks:number,context:Medical
       if(bloodStage(record.bloodLoss)!==previousStage)reconcileMedicalDeath(record);
       if(record.death)return;
     }
-    if(record.tick%HEAL_INTERVAL!==context.phase||context.starving)continue;
-    let eligible=record.injuries.filter(i=>i.scar?.pain===undefined);
-    if(eligible.length)heal(record,chosen(eligible,random),Math.round((context.posture==='standing'?80:context.posture==='ground'?120:160)*medicalModel(record).healthScale),random);
-    eligible=record.injuries.filter(i=>i.tended!==undefined&&i.scar?.pain===undefined);
-    if(eligible.length) {
-      const injury=chosen(eligible,random);
-      heal(record,injury,Math.round((40+Math.min(1000,injury.tended!)*.08)*medicalModel(record).healthScale),random);
+    advanceInfections(record,context,random);
+    if(record.death)return;
+    if(record.tick%HEAL_INTERVAL===context.phase&&!context.starving) {
+      let eligible=record.injuries.filter(i=>i.scar?.pain===undefined);
+      if(eligible.length)heal(record,chosen(eligible,random),Math.round((context.posture==='standing'?80:context.posture==='ground'?120:160)*medicalModel(record).healthScale),random);
+      eligible=record.injuries.filter(i=>i.tended!==undefined&&i.scar?.pain===undefined);
+      if(eligible.length) {
+        const injury=chosen(eligible,random);
+        heal(record,injury,Math.round((40+Math.min(1000,injury.tended!)*.08)*medicalModel(record).healthScale),random);
+      }
     }
+    advanceInfectionImmunity(record,context);
   }
 }

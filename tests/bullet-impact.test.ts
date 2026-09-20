@@ -33,7 +33,7 @@ test('anatomical selection follows exposed coverage, filters and remaining parts
   for(let i=0;i<100;i++){const part=selectBulletPart(r,()=>(i+.5)/100,'top','outside')!;expect(BODY_PARTS[part].depth).toBe('outside');expect(BODY_PARTS[part].height).not.toBe('top');}
   const untouched=createMedicalRecord();let reads=0;
   const explicit=resolveUnarmoredBullet(untouched,{part:'torso',damage:2},()=>{reads++;return .999999;});
-  expect(explicit.selected).toBe('torso');expect(reads).toBe(0); // no selection or zero-chance scar draw
+  expect(explicit.selected).toBe('torso');expect(reads).toBe(1); // infection eligibility only; no selection or zero-chance scar draw
 });
 
 test('outside overkill preserves one HP using current health and Bullet range; core and organs are not protected',()=>{

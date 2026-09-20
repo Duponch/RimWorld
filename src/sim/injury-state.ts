@@ -6,6 +6,8 @@ import type { BodyPartId } from './body-definition.ts';
 import { medicalModel,modelHasPart } from './body-model.ts';
 import { BLOOD_UNIT,HP_UNIT,PAIN_UNIT,FRESH_MISSING_TICKS,INJURY_RULES,injuryPartRules,bloodConsciousness,coagulationAge,isWithinPart,scarChance,type InjuryKind,type ScarPain } from './injury-rules.ts';
 import type { Injury,MedicalRandom,MedicalRecord } from './injury-types.ts';
+import { INFECTION_DELAY_MAX_CORE,INFECTION_UNIT,infectionModifiers,injuryInfectionChance } from './infection-rules.ts';
+import { initializeInfectionRisk,removeInfectionsWithin } from './infection-state.ts';
 
 export function createMedicalRecord(tick=0):MedicalRecord {
   if(!Number.isSafeInteger(tick)||tick<0)throw new Error('Invalid medical tick');
@@ -33,7 +35,7 @@ export function medicalPain(record:MedicalRecord):number {
   let pain=(heatModifiers(record.heatstroke).pain+coldModifiers(record.hypothermia).pain)*PAIN_UNIT;
   for(const i of record.injuries)pain+=i.severity*(i.scar?.pain!==undefined?5*i.scar.pain:INJURY_RULES[i.kind].painUnits);
   for(const m of record.missing)if(freshMissing(record,m))pain+=medicalModel(record).byId[m.part].hp*10000;
-  return Math.min(1,pain/PAIN_UNIT/medicalModel(record).healthScale);
+  return Math.min(1,pain/PAIN_UNIT/medicalModel(record).healthScale+infectionModifiers(record).pain);
 }
 export function medicalBleed(record:MedicalRecord):number {
   return medicalBleedUnits(record)*1000/BLOOD_UNIT;
@@ -46,15 +48,15 @@ export function medicalBleedUnits(record:MedicalRecord):number {
   return Math.round(rate/medicalModel(record).healthScale);
 }
 export function assessMedical(record:MedicalRecord):BodyAssessment {
-  const heat=heatModifiers(record.heatstroke),cold=coldModifiers(record.hypothermia),blood=bloodConsciousness(record.bloodLoss);
-  return projectedMedicalBody(record,{damage:record.injuries.map(i=>({part:i.part,loss:i.severity/HP_UNIT})),missing:record.missing.map(m=>m.part),pain:medicalPain(record),consciousnessOffset:(blood.consciousnessOffset??0)+heat.consciousnessOffset+cold.consciousnessOffset,consciousnessMax:Math.min(blood.consciousnessMax??Infinity,heat.consciousnessMax,cold.consciousnessMax),movingOffset:heat.movingOffset+cold.movingOffset,manipulationOffset:cold.manipulationOffset},medicalModel(record));
+  const heat=heatModifiers(record.heatstroke),cold=coldModifiers(record.hypothermia),blood=bloodConsciousness(record.bloodLoss),infection=infectionModifiers(record);
+  return projectedMedicalBody(record,{damage:record.injuries.map(i=>({part:i.part,loss:i.severity/HP_UNIT})),missing:record.missing.map(m=>m.part),pain:medicalPain(record),consciousnessOffset:(blood.consciousnessOffset??0)+heat.consciousnessOffset+cold.consciousnessOffset+infection.consciousnessOffset,consciousnessMax:Math.min(blood.consciousnessMax??Infinity,heat.consciousnessMax,cold.consciousnessMax,infection.consciousnessMax),movingOffset:heat.movingOffset+cold.movingOffset,manipulationOffset:cold.manipulationOffset,breathingOffset:infection.breathingOffset},medicalModel(record));
 }
 export function medicalStatus(record:MedicalRecord,body=assessMedical(record)):'mobile'|'downed'|'dead' {
   return record.death?'dead':body.painShock||!body.canBeAwake||!body.movingCapable?'downed':'mobile';
 }
 export function reconcileMedicalDeath(record:MedicalRecord):void {
   if(record.death)return;
-  const cause=(record.heatstroke??0)>=HEAT_UNIT?'heatstroke':(record.hypothermia??0)>=HEAT_UNIT?'hypothermia':record.bloodLoss>=BLOOD_UNIT?'blood-loss':assessMedical(record).vitalFailure?'vital-failure':record.injuries.reduce((n,i)=>n+i.severity,0)>=150*HP_UNIT*medicalModel(record).healthScale?'trauma':null;
+  const cause=(record.heatstroke??0)>=HEAT_UNIT?'heatstroke':(record.hypothermia??0)>=HEAT_UNIT?'hypothermia':record.bloodLoss>=BLOOD_UNIT?'blood-loss':record.infections?.cases.some(c=>c.severity>=INFECTION_UNIT)?'infection':assessMedical(record).vitalFailure?'vital-failure':record.injuries.reduce((n,i)=>n+i.severity,0)>=150*HP_UNIT*medicalModel(record).healthScale?'trauma':null;
   if(cause)record.death={tick:record.tick,cause};
 }
 export function rollScarPain(random:MedicalRandom):ScarPain {const n=random();return n<.5?0:n<.7?1:n<.9?3:6;}
@@ -85,6 +87,7 @@ export function addResolvedInjuryBatch(record:MedicalRecord,hits:readonly Resolv
 }
 function validateResolvedInjury(record:MedicalRecord,part:BodyPartId,kind:InjuryKind,severity:number):void {
   if(!modelHasPart(medicalModel(record),part)||medicalModel(record).byId[part].conceptual||!Object.hasOwn(INJURY_RULES,kind)||!Number.isSafeInteger(severity)||severity<0)throw new Error('Invalid localized injury');
+  if(!record.death&&severity>0&&injuryInfectionChance(record,{part,kind})>0&&!Number.isSafeInteger(record.tick*10+INFECTION_DELAY_MAX_CORE))throw new Error('Infection exposure clock exhausted');
 }
 function applyResolvedInjury(record:MedicalRecord,part:BodyPartId,kind:InjuryKind,severity:number,random:MedicalRandom):Injury|null {
   const injury:Injury={id:record.nextInjuryId++,part,kind,severity,bornAt:record.tick};
@@ -101,8 +104,10 @@ function applyResolvedInjury(record:MedicalRecord,part:BodyPartId,kind:InjuryKin
     record.injuries=record.injuries.filter(i=>!isWithinPart(i.part,part,medicalModel(record)));
     record.missing=record.missing.filter(m=>!isWithinPart(m.part,part,medicalModel(record)));
     record.missing.push({part,bornAt:record.tick});
+    removeInfectionsWithin(record,part);
     return null;
   }
+  if(!existing)initializeInfectionRisk(record,injury,random);
   return existing??injury;
 }
 

@@ -1,5 +1,10 @@
 # Travail sur Lisière
 
+## Infection V81
+- Lire `docs/development/infections.md` et sa recherche. Risque réservé aux nouvelles plaies, double tirage daté, maladie séparée de la lésion, immunité commune aux parties. Soins renouvelables avec dose physique distincte ; repos/alimentation persistent après cicatrisation si nécessaires. Capture de pièce au soin de la plaie, terrain seul sans hôpital propre inventé. Noyau humain/lièvre commun, soins vétérinaires absents.
+- V80 strictement validée avant migration neutre, aucune exposition rétroactive. `infection-player` part de combattants sains et suit une infection réellement acquise ; checkpoints natifs distincts d’une partie complète. Audit `INFECTIONS=1 VALIDATION_VERSION=v81` sur activités mixtes, mesures successives. Mode jour : terminer la livraison puis attendre la prochaine instruction.
+
+
 ## Nouvelle partie V80
 - Lire `docs/development/scenario-start.md` et sa recherche. `createScenarioWorld` est l'usine applicative ; `createWorld` garde le camp historique des fixtures. Défaut Trois survivants, stocks physiques et connaissances initiales sans XP ; ne pas confondre ce départ avec Crashlanded complet. Génération naturelle distincte, arrivée sur composante reliée au bord, aucune ressource effacée pour les stocks.
 - Provenance facultative et migration V79 strictement neutre : aucun monde ancien régénéré/réapprovisionné. Les fixtures UI historiques demandent explicitement `scenario=camp`, jamais un comportement caché lié à `e2e`. Le compagnon `survivor-player` développe ce départ depuis sa vraie dotation ; aucune urgence alimentaire inventée en retirant ses rations. Le profil ne certifie pas une difficulté Core.
@@ -8,7 +13,7 @@
 - Lire `docs/development/hunting.md`, `corpses.md`, `butchery.md` et la recherche chasse. Chasse civile au revolver, réserve exclusive, récupération avant transport, `forHunting` autorise le rangement même sans Transport. Le corps conserve identité/anatomie/âge, attend sa chute et une place physique ; aucune téléportation si sol encombré. Boucherie transactionnelle viande/cuir, Cuisine et XP de finition ; rendement .70 du poste, pas vitesse .70. V78 strictement validée avant migration neutre et priorité Chasse 0.
 - Validation groupée, pilote commun adapté aux nouveaux clics ; audit mixte `HUNTING=1 WILDLIFE=1`, mesures CPU/natives successives. Ajouter les preuves à l'historique V79 sans réécrire celles des versions antérieures.
 - Objectif utilisateur persistant : une nouvelle partie cohérente avec scénario, possessions/technologies, spawn et distributions de biome, végétation, minerais, animaux et difficulté conçus ensemble. `docs/research/scenario-start-reference.md` prépare ce chantier ; ROADMAP seule le programme. 250² est déjà une taille standard, ne pas agrandir arbitrairement. Le camp actuel sans technologie n'est pas le Crashlanded original.
-- L'utilisateur autorise et demande désormais les sous-agents pour plusieurs sous-étapes indépendantes d'une boucle, avec fichiers attribués et intégration centrale. Mode nuit renouvelé explicitement le 20 septembre 2026 après V79 : enchaîner les lots validés et publiés sans relance, jusqu’à arrêt ou retour au mode jour demandé par l’utilisateur.
+- L'utilisateur autorise et demande désormais les sous-agents pour plusieurs sous-étapes indépendantes d'une boucle, avec fichiers attribués et intégration centrale. Mode jour demandé le 20 septembre 2026 après interruption de V81 : terminer le lot médical, valider et publier, puis attendre la prochaine instruction. Automatisation nocturne suspendue.
 
 ## Mêlée animale V78
 - Lire `docs/development/animal-melee.md` et sa recherche. Coup partagé entre espèces, menace récente 400 Core / distance² ≤9 et riposte d'un coup avec échéance 200 Core, récupération indépendante 120 Core. Manhunter et hostilité civile généralisée distincts ; chasse civile ajoutée V79. Tronc du lièvre 16 PV pour l'étourdissement, pas la constante humaine 40.
@@ -125,7 +130,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 80 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 81 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)

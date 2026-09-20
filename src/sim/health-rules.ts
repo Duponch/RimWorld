@@ -3,7 +3,7 @@ import { assessMedical } from './injury-state.ts';
 import type { Pawn } from './types.ts';
 
 /** Read only at simulation actions/inspection, never from GPU pose updates. */
-export const pawnBody=(pawn:Pawn):BodyAssessment=>pawn.health&&(pawn.health.injuries.length||pawn.health.missing.length||pawn.health.bloodLoss||pawn.health.heatstroke||pawn.health.hypothermia)?assessMedical(pawn.health):HEALTHY_BODY;
+export const pawnBody=(pawn:Pawn):BodyAssessment=>pawn.health&&(pawn.health.injuries.length||pawn.health.missing.length||pawn.health.bloodLoss||pawn.health.heatstroke||pawn.health.hypothermia||pawn.health.infections?.cases.length)?assessMedical(pawn.health):HEALTHY_BODY;
 export const medicallyStopped=(pawn:Pawn):boolean=>pawn.state==='downed'||pawn.state==='dead';
 export function medicalWorkRefusal(pawn:Pawn):string|undefined {
   if(pawn.state==='dead')return 'Ce colon est décédé.';

@@ -5,7 +5,7 @@ import { createScenarioWorld } from '../src/sim/new-game';
 test('V79 is validated before a neutral migration; unknown origins are never inferred',()=>{
   const old:any=createWorld(42,32,32);old.schemaVersion=79;
   const restored=deserializeWorld(JSON.stringify(old));
-  expect(restored).toEqual({...old,schemaVersion:80});expect(restored.scenario).toBeUndefined();
+  expect(restored).toEqual({...old,schemaVersion:81});expect(restored.scenario).toBeUndefined();
   for(const mutate of [(w:any)=>w.scenario={id:'survivors',revision:1,landing:{x:16,z:16}},(w:any)=>w.pawns[0].priorities.hunt=-1,(w:any)=>w.piles[0].quantity=0]){
     const broken=structuredClone(old);mutate(broken);expect(()=>deserializeWorld(JSON.stringify(broken))).toThrow(/version 79/);
   }

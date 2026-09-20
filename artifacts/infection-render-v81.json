@@ -1,0 +1,197 @@
+{
+  "date": "2026-09-20T07:25:23.671Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "protocol": "Controlled infection in one miner per six, in a physical medical bed, one researcher per six also enabled as doctor, five industrial doses per patient; other workshops preserved. Native Chromium WebGPU; natural 250², physical apparel on 3/30/100 actors. One third research at physical benches; others gather/craft tribalwear or mine/chop. Real worker at requested 6× for 650 ticks, 90 warmup frames, one run each; no full World export during timing. Worker samples are published batch step averages, not an independent per-tick percentile.",
+  "wildlife": false,
+  "coldStore": false,
+  "heatwave": false,
+  "rows": [
+    {
+      "actors": 3,
+      "infected": 1,
+      "treatedInfections": 1,
+      "animals": 0,
+      "animalNutrition": 0,
+      "hunted": 0,
+      "corpses": 0,
+      "animalDead": 0,
+      "colonistInjured": 0,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "description": ""
+      },
+      "elapsedMs": 11230.8366,
+      "simulatedTicks": 664,
+      "completed": 1,
+      "research": 2192925,
+      "exposed": 0,
+      "coolers": 0,
+      "frameMs": {
+        "n": 2662,
+        "p50": 4.199999999998909,
+        "p95": 4.299999999999272,
+        "p99": 8.299999999999272,
+        "max": 16.599999999998545
+      },
+      "frameCpuMs": {
+        "n": 2663,
+        "p50": 3.199999999953434,
+        "p95": 4.5,
+        "p99": 5.400000000139698,
+        "max": 20
+      },
+      "workerBatchStepMs": {
+        "n": 568,
+        "p50": 0.8000000000465661,
+        "p95": 1.6999999999534339,
+        "p99": 3.300000000046566,
+        "max": 23
+      },
+      "snapshotAdoptionMs": {
+        "n": 568,
+        "p50": 0,
+        "p95": 0.10000000009313226,
+        "p99": 0.9000000001396984,
+        "max": 3.699999999953434
+      },
+      "drawCalls": {
+        "n": 2663,
+        "p50": 130,
+        "p95": 152,
+        "p99": 154,
+        "max": 155
+      },
+      "pipelines": [],
+      "stable": true,
+      "errors": [],
+      "invalid": []
+    },
+    {
+      "actors": 30,
+      "infected": 5,
+      "treatedInfections": 5,
+      "animals": 0,
+      "animalNutrition": 0,
+      "hunted": 0,
+      "corpses": 0,
+      "animalDead": 0,
+      "colonistInjured": 0,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "description": ""
+      },
+      "elapsedMs": 11325.016399999997,
+      "simulatedTicks": 667,
+      "completed": 10,
+      "research": 24322671,
+      "exposed": 0,
+      "coolers": 0,
+      "frameMs": {
+        "n": 2513,
+        "p50": 4.199999999998909,
+        "p95": 8.299999999999272,
+        "p99": 10.300000000001091,
+        "max": 24.899999999999636
+      },
+      "frameCpuMs": {
+        "n": 2514,
+        "p50": 3.300000000046566,
+        "p95": 5.399999999906868,
+        "p99": 8.800000000046566,
+        "max": 21.5
+      },
+      "workerBatchStepMs": {
+        "n": 599,
+        "p50": 1.4000000001396984,
+        "p95": 7,
+        "p99": 15.600000000093132,
+        "max": 40.89999999990687
+      },
+      "snapshotAdoptionMs": {
+        "n": 599,
+        "p50": 0,
+        "p95": 0.10000000009313226,
+        "p99": 2.9000000001396984,
+        "max": 6.900000000139698
+      },
+      "drawCalls": {
+        "n": 2514,
+        "p50": 149,
+        "p95": 170,
+        "p99": 172,
+        "max": 172
+      },
+      "pipelines": [],
+      "stable": true,
+      "errors": [],
+      "invalid": []
+    },
+    {
+      "actors": 100,
+      "infected": 17,
+      "treatedInfections": 17,
+      "animals": 0,
+      "animalNutrition": 0,
+      "hunted": 0,
+      "corpses": 0,
+      "animalDead": 0,
+      "colonistInjured": 0,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "description": ""
+      },
+      "elapsedMs": 11620.424199999994,
+      "simulatedTicks": 659,
+      "completed": 33,
+      "research": 83393805,
+      "exposed": 0,
+      "coolers": 0,
+      "frameMs": {
+        "n": 1764,
+        "p50": 4.200000000000728,
+        "p95": 16.600000000000364,
+        "p99": 20.900000000001455,
+        "max": 29.299999999999272
+      },
+      "frameCpuMs": {
+        "n": 1765,
+        "p50": 4.100000000093132,
+        "p95": 9.600000000093132,
+        "p99": 15.399999999906868,
+        "max": 24.5999999998603
+      },
+      "workerBatchStepMs": {
+        "n": 627,
+        "p50": 5.099999999976717,
+        "p95": 18.666666666666668,
+        "p99": 26.199999999953434,
+        "max": 51.300000000046566
+      },
+      "snapshotAdoptionMs": {
+        "n": 627,
+        "p50": 0,
+        "p95": 2.6000000000931323,
+        "p99": 10.199999999953434,
+        "max": 14.399999999906868
+      },
+      "drawCalls": {
+        "n": 1765,
+        "p50": 171,
+        "p95": 187,
+        "p99": 190,
+        "max": 190
+      },
+      "pipelines": [],
+      "stable": true,
+      "errors": [],
+      "invalid": []
+    }
+  ]
+}
