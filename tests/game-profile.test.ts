@@ -9,6 +9,7 @@ import { healthRandom,injurePawn,updatePawnHealth } from '../src/sim/health';
 import { createMedicalRecord } from '../src/sim/injury-state';
 import { SCHEMA_VERSION,type World } from '../src/sim/types';
 import { advanceRaids } from '../src/sim/raids';
+import { validateRaids } from '../src/sim/raid-save';
 import { CASSANDRA_ACTIVE_TICKS,CASSANDRA_CYCLE_START,CASSANDRA_CYCLE_TICKS,CASSANDRA_MIN_SPACING,INTRO_RAID_TICK,consumeCassandraOpportunity,enableCassandraRaids,validCassandraAgenda } from '../src/sim/cassandra-raids';
 import { atMapEdge } from '../src/sim/raid-space';
 import { deconstructionCamp } from './scenarios/deconstruction';
@@ -104,8 +105,36 @@ test('Cassandra opportunities use fixed windows, survive saves and skip impossib
       expect(times[0]).toBeGreaterThanOrEqual(start);expect(times.at(-1)).toBeLessThanOrEqual(start+CASSANDRA_ACTIVE_TICKS);
       if(times.length===2)expect(times[1]!-times[0]!).toBeGreaterThanOrEqual(CASSANDRA_MIN_SPACING);
       for(const tick of times){schedule.tick=tick;expect(consumeCassandraOpportunity(schedule,schedule.raids!)).toBe(true);}
+      expect(validateRaids(schedule,schedule.schemaVersion,new Set()),`seed ${seed}, cycle ${cycle}`).toEqual([]);
     }
   }
+});
+
+test('Cassandra next opportunity follows its exact anchored window, including gaps longer than one cycle',()=>{
+  const world=raidFixture();world.tick=392899;
+  // Calendar-only witness extracted from the natural V86 colony at J65.
+  // No population, combat outcome or physiological fast-forward is claimed.
+  world.raids!.cassandra={rng:1390367705,cycle:5,pending:[392900]};world.raids!.nextCheck=392900;
+  expect(validateRaids(world,world.schemaVersion,new Set())).toEqual([]);
+  const copy=structuredClone(world);
+  for(const w of [world,copy]){w.tick++;expect(consumeCassandraOpportunity(w,w.raids!)).toBe(true);}
+  expect(world.raids!.cassandra).toEqual({rng:1879587103,cycle:6,pending:[458800,470200]});
+  expect(world.raids!.nextCheck).toBe(458800);
+  expect(world.raids!.nextCheck!-world.tick).toBeGreaterThan(CASSANDRA_CYCLE_TICKS);
+  expect(validateRaids(world,world.schemaVersion,new Set())).toEqual([]);expect(copy.raids).toEqual(world.raids);
+  const start=CASSANDRA_CYCLE_START+6*CASSANDRA_CYCLE_TICKS,end=start+CASSANDRA_ACTIVE_TICKS;
+  for(const mutate of [
+    (w:World)=>w.raids!.nextCheck!+=100,
+    (w:World)=>{w.raids!.cassandra!.pending=[start-100];w.raids!.nextCheck=start-100;},
+    (w:World)=>{w.raids!.cassandra!.pending=[end+100];w.raids!.nextCheck=end+100;},
+    (w:World)=>{w.raids!.cassandra!.pending=[458801];w.raids!.nextCheck=458801;},
+    (w:World)=>{w.raids!.cassandra!.pending=[458800,458900];},
+    (w:World)=>w.raids!.completed++,
+  ]){const bad=structuredClone(world);mutate(bad);expect(validateRaids(bad,bad.schemaVersion,new Set()).length).toBeGreaterThan(0);}
+  // The historical camp retains its own bounded delay, with no Cassandra rule.
+  const legacy=structuredClone(world);delete legacy.raids!.cassandra;legacy.raids!.profile='camp-raids-v1';
+  legacy.raids!.nextCheck=legacy.tick+8*6000;expect(validateRaids(legacy,legacy.schemaVersion,new Set())).toEqual([]);
+  legacy.raids!.nextCheck++;expect(validateRaids(legacy,legacy.schemaVersion,new Set())).toContain('Invalid raid schedule or count.');
 });
 
 test('V81 migration is strictly neutral and rejects future profile/calendar injection; malformed current choices cannot enter a session',()=>{

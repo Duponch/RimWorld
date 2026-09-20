@@ -1,5 +1,17 @@
 # Travail sur Lisière
 
+## Cadence élargie (20 septembre 2026, mode jour)
+- L’utilisateur demande plusieurs gros chantiers compatibles développés en parallèle, puis une campagne de colonie commune sur plusieurs jours, pour amortir les parcours longs sur davantage de systèmes. Attribuer des fichiers distincts ; intégrer les contrats de persistance, commandes et besoins au centre.
+- Regrouper les vérifications courtes du lot avant la campagne longue. Un défaut se diagnostique au checkpoint réel concerné, puis la continuation reprend ; ne pas rejouer sans motif les semaines déjà validées. Les cas rares ou dangereux gardent des frontières contrôlées distinctes, sans exiger leur occurrence à une date arbitraire.
+- Préparer les références des domaines suivants pendant une validation longue stable, sans modifier les sources servies pendant une UI native. CPU, natif et pilotes lourds restent successifs ; éviter de saturer les ressources de mesure. ROADMAP reste le seul calendrier et distingue préparation, implémentation et livraison.
+
+## Captivité et performance V86
+- Lire `docs/development/prisoners.md`, `docs/research/prisoners-reference.md` et `docs/research/performance-v86.md`. Capturer un assaillant à terre conserve sa personne ; admission seulement au lit de prison, récupération pendant portage admise et sortie interdite tant qu'il est porté. Pièce fermée indépendante de la toiture, rôle propagé aux lits ; prison médicale distincte de propriété personnelle.
+- Geôlier nourrit et converse, Médecin traite les plaies. Le régime filtre les fournitures du personnel ; un captif choisit librement les aliments de sa pièce. Les stocks d'une prison ne nourrissent pas automatiquement les colons libres ou une autre prison. Un repas engagé continue si sa restitution au sol échoue pendant une tentative d'évasion.
+- Résistance et rapports dirigés persistés, cinq effets puis entretien final ; deux conversations par jour et intervalle strict. Atteindre zéro ne recrute pas pendant le même entretien ; une visite ultérieure conserve identité, compétences et blessures lors de l'adhésion. Une porte bloquée un instant par un colon debout autorisé en passage ou approche ne devient pas libre pour l'évasion (`WillCloseSoon`) ; maintien explicite, corps incapable et objet restent distincts. Indéfectibles, arrestation debout, libération diplomatique et évasion organisée restent absents.
+- Valider V85 avant migration additive Geôlier 3, sans prison/personne/résistance inventées. `prison-player` continue le vrai camp V85, ses stocks et événements ; le rayon de coupe doit suivre l'épuisement des arbres. Les checkpoints natifs cliniques ne prouvent pas une progression naturelle. Mesures `ENERGY=1` comparables à V85, puis `PRISONERS=1` avec 1/3/10 captifs ajoutés : CPU, UI et longs pilotes successifs, sources gelées pendant chaque native.
+- Optimisation géométrique pure : enveloppe de rejet préalable, profils consultés après emprise, aucune nouvelle capture entre décisions. Les deux comparatifs CPU byte-identiques ne garantissent pas le débit 6× en navigateur. Mode jour : livrer le lot validé et publié, puis attendre.
+
 ## Habitat et énergie V85
 - Lire `docs/development/power.md` et les recherches réseau/batterie/solaire. Conduits construits, superposition distincte des édifices, interrupteur cardinal, charge entière en 1/120000 Wd ; aucune batterie gratuite ni énergie à la migration. Déconstruction du conduit : aucune restitution. Refuser deux transmetteurs superposés dans les deux sens ; retrait explicite avant remplacement.
 - La commande marche/arrêt réserve un travail physique de Tâches élémentaires, sans XP. Intention, interrupteur réel, alimentation et ravitaillement restent distincts ; interrompre le geste réinitialise sa courte attente, conserve les cargaisons et invalide la lumière après achèvement. Le conduit ne masque ni mur ni délai de cadre selon l'ordre des tableaux.
@@ -159,7 +171,7 @@
 ## Catalogue et apparence (2026-09-13)
 - Mettre à jour docs/gameplay/content-catalogue.md à chaque ajout de contenu ; les 95 familles CAT du corpus ne sont pas un catalogue individuel exhaustif. Une définition présente ne signifie pas que toutes ses recettes, variantes ou règles sont livrées.
 - Inventaire personnel, équipement, vêtements et cargaison temporaire sont distincts. Le contrat cible de rendu commun carte/portraits figure dans docs/development/character-presentation.md ; ne pas annoncer ces systèmes déjà implémentés.
-- Schéma courant 85 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
+- Schéma courant 86 (types alimentaires introduits en V5) : conserver item et quantité lors des transferts. Les nouveaux producteurs alimentaires précisent leur ItemId ; le défaut legacy-portion des helpers sert à la compatibilité et aux anciennes fixtures, jamais aux nouveaux aliments. foodRules distingue explicitement parties historiques et nouveau profil adulte.
 
 
 ## Sol et déplacements (V6)

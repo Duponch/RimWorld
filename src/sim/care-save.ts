@@ -25,7 +25,7 @@ export function validateCare(world:World):string[] {
   const errors:string[]=[],patients=new Set<number>();
   for(const d of world.pawns){
     if(d.state==='resting'&&!(d.need?.kind==='sleep'&&d.need.medical&&d.need.phase==='sleep'))errors.push('Medical rest without a physical bed service.');
-    if(d.need?.kind==='sleep'&&d.need.medical&&(d.need.bedId===null||d.priorities[d.need.medical]===0))errors.push('Invalid medical bed intent.');
+    if(d.need?.kind==='sleep'&&d.need.medical&&(d.need.bedId===null||!d.prisoner&&d.priorities[d.need.medical]===0))errors.push('Invalid medical bed intent.');
     if(d.need?.kind==='sleep'&&d.need.medical&&!treatmentTarget(d)&&!(d.need.medical==='bedrest'&&medicalRestNeeded(d)))errors.push('Medical rest without an eligible condition.');
     if(!d.tend)continue;
     const t=d.tend,p=world.pawns.find(p=>p.id===t.patientId);
@@ -34,7 +34,7 @@ export function validateCare(world:World):string[] {
     if(!p||!tendingPlaceValid(world,d,p,t))errors.push('Tending place is not accessible at the bedside or self-treatment cell.');
     if(p&&!medicineTaskValid(world,d,p,t))errors.push('Invalid medicine permission, reservation or ownership.');
     if(t.phase==='tend'?(d.state!=='working'||d.moveCooldown>0||d.x!==t.spot.x||d.z!==t.spot.z||d.path.length):d.state!=='moving')errors.push('Invalid tending phase/position.');
-    if(d.recreation.task||d.feed||d.rescue||d.need||d.haul||d.cooking||d.jobId!==null)errors.push('Tending conflicts with another activity.');
+    if(d.recreation.task||d.ward||d.feed||d.rescue||d.need||d.haul||d.cooking||d.jobId!==null)errors.push('Tending conflicts with another activity.');
   }
   return errors;
 }

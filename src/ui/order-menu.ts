@@ -1,5 +1,6 @@
 import type { SimulationClient } from '../bridge/SimulationClient';
 import type { Cell, World } from '../sim/types';
+import { isColonist } from '../sim/affiliation';
 
 export class OrderMenu {
   private readonly menu=document.createElement('div');
@@ -29,6 +30,7 @@ export class OrderMenu {
     content.textContent=pawn?'Vérification des accès…':'Sélectionnez un seul colon pour lui donner un travail.';
     this.menu.append(header,content);this.position(x,y);this.menu.focus();
     if(!pawn)return;
+    if(!isColonist(pawn)){content.textContent=pawn.prisoner?'Les prisonniers se gèrent dans leur inspection. Ils ne reçoivent pas d’ordres de colon.':'Cette personne ne fait pas partie de la colonie.';this.position(x,y);return;}
     try {
       const options=await this.client.orderOptions(pawn.id,cell.x,cell.z,queue);
       if(revision!==this.revision)return;
@@ -43,8 +45,11 @@ export class OrderMenu {
         if(option.feedPatientId!==undefined)button.dataset.orderFeed=String(option.feedPatientId);
         if(option.tendPatientId!==undefined)button.dataset.orderTend=String(option.tendPatientId);
         if(option.rescuePatientId!==undefined)button.dataset.orderRescue=String(option.rescuePatientId);
+        if(option.capturePatientId!==undefined)button.dataset.orderCapture=String(option.capturePatientId);
         button.onclick=event=>{
-          this.close();void this.client.command(option.equipmentItemId!==undefined
+          this.close();void this.client.command(option.capturePatientId!==undefined
+            ? {type:'order-capture',pawnId:pawn.id,patientId:option.capturePatientId,queue:queue||event.shiftKey}
+            : option.equipmentItemId!==undefined
             ? {type:'order-equipment',pawnId:pawn.id,itemId:option.equipmentItemId,action:option.equipmentAction!,queue:queue||event.shiftKey}
             : option.feedPatientId!==undefined
             ? {type:'order-feed',pawnId:pawn.id,patientId:option.feedPatientId,queue:queue||event.shiftKey}
@@ -62,7 +67,7 @@ export class OrderMenu {
         content.append(button);
       }
       if(!options.length)content.textContent='Aucun travail ni pile à transporter ici. Utilisez les ordres d’Architecte.';
-      const hint=document.createElement('p');hint.className='muted';hint.textContent='Maj : ajouter à la file. Construction et cuisine peuvent se poursuivre sur cette case.';content.append(hint);
+      const hint=document.createElement('p');hint.className='muted';hint.textContent=options.some(option=>option.capturePatientId!==undefined)?'La capture est un ordre direct. Préparez un lit de prison dans une pièce fermée.':'Maj : ajouter à la file. Construction et cuisine peuvent se poursuivre sur cette case.';content.append(hint);
       this.position(x,y);content.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus();
     } catch(error) {if(revision===this.revision){content.textContent=String(error instanceof Error?error.message:error);this.position(x,y);}}
   }

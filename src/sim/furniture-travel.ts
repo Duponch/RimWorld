@@ -36,7 +36,7 @@ export const FURNITURE_TRAVEL:Readonly<Record<StructureKind,Readonly<{delay:numb
 });
 export function canStandAt(world:World,cell:Cell):boolean {
   if(!Number.isInteger(cell.x)||!Number.isInteger(cell.z)||cell.x<0||cell.z<0||cell.x>=world.width||cell.z>=world.height||['rock','water'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain))return false;
-  for(const s of world.structures)if((world.schemaVersion<22?s.kind==='wall'||s.kind==='table':!FURNITURE_TRAVEL[s.kind].stand)&&footprintContains(s,cell))return false;
+  for(const s of world.structures)if(footprintContains(s,cell)&&(world.schemaVersion<22?s.kind==='wall'||s.kind==='table':!FURNITURE_TRAVEL[s.kind].stand))return false;
   if(world.schemaVersion>=28&&world.piles.some(p=>p.kind==='chunk'&&p.owner.type==='ground'&&p.owner.x===cell.x&&p.owner.z===cell.z))return false;
   return !world.jobs.some(j=>(world.schemaVersion<16&&(j.kind==='wall'||j.kind==='table')||world.schemaVersion>=22&&j.construction==='frame'&&j.kind!=='power-conduit')&&footprintContains(j,cell));
 }
@@ -55,7 +55,7 @@ export function furnitureDelay(world:World,from:Cell,to:Cell):number {
   let target:StructureKind|undefined,previousRepeats=false;
   for(const s of world.structures) {
     if(s.kind!=='power-conduit'&&footprintContains(s,to))target=s.kind;
-    if(FURNITURE_TRAVEL[s.kind].repeat&&footprintContains(s,from))previousRepeats=true;
+    if(footprintContains(s,from)&&FURNITURE_TRAVEL[s.kind].repeat)previousRepeats=true;
   }
   let objectDelay=target?FURNITURE_TRAVEL[target].delay:frameAt(world,to)?FRAME_TRAVEL_DELAY:0;
   let repeats=target?FURNITURE_TRAVEL[target].repeat:false;

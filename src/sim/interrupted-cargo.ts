@@ -35,7 +35,7 @@ export function validateInterruptedCargo(world:World):string[] {
     const tactical=world.schemaVersion>=65&&!!pawn.mental?.crisis||world.schemaVersion>=53&&!!pawn.draft||world.schemaVersion>=58&&!!pawn.flee;
     const owners=world.piles.filter(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id).length
       +world.packed.filter(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id).length;
-    if(owners!==1||pawn.jobId!==null||pawn.feed||pawn.tend||pawn.rescue||pawn.haul||pawn.cooking||pawn.recreation.task||pawn.orders.active!==null||pawn.orders.queue.length||pawn.priorityWork
+    if(owners!==1||pawn.jobId!==null||pawn.ward||pawn.feed||pawn.tend||pawn.rescue||pawn.haul||pawn.cooking||pawn.recreation.task||pawn.orders.active!==null||pawn.orders.queue.length||pawn.priorityWork
       ||pawn.path.length&&!tactical||pawn.moveCooldown>0&&world.schemaVersion<53&&!tactical&&!(world.schemaVersion>=45&&(pawn.state==='downed'||pawn.state==='dead'||pawnBody(pawn).capacities.manipulation===0))||pawn.transitExit&&!tactical||pawn.need&&(pawn.need.kind!=='sleep'||pawn.need.phase!=='sleep')||!['sleeping','idle','hungry',...(tactical?['moving']:[]),...(world.schemaVersion>=45?['downed','dead']:[])].includes(pawn.state))errors.push('Invalid interrupted cargo ownership or task.');
   }
   return errors;

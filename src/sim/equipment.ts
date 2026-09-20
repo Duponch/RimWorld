@@ -103,7 +103,7 @@ export function processEquipment(world:World,pawn:Pawn,context:NeedContext):void
 /** Recover only the remembered primary weapon, not an unsolicited better gun.
  * Invoked at an idle decision after personal needs and accepted orders. */
 export function recoverDroppedWeapon(world:World,pawn:Pawn,search:()=>Reachability|null):boolean {
-  if(pawn.droppedWeaponId===undefined||equippedWeapon(world,pawn)||pawn.equipmentTask||pawn.orders.active!==null||pawn.jobId!==null||pawn.haul||pawn.cooking||pawn.tend||pawn.feed||pawn.rescue||pawn.need||pawn.recreation.task)return false;
+  if(pawn.droppedWeaponId===undefined||equippedWeapon(world,pawn)||pawn.equipmentTask||pawn.orders.active!==null||pawn.jobId!==null||pawn.haul||pawn.cooking||pawn.tend||pawn.ward||pawn.feed||pawn.rescue||pawn.need||pawn.recreation.task)return false;
   const pile=world.piles.find(p=>p.id===pawn.droppedWeaponId);
   if(equipmentReason(world,pawn,pile,'equip'))return false;
   const reach=search();if(!reach)return true;

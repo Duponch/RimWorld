@@ -1,0 +1,98 @@
+{
+  "protocol": "V86 synthetic workload diagnostics; raw Lisiere worlds retained locally, not personal RimWorld saves",
+  "failures": [
+    {
+      "colonists": 3,
+      "measuredTicks": 650,
+      "reason": "Conversation not finished in the original short window",
+      "localCheckpoint": "artifacts\\prison-cpu-failure-v86-3.json",
+      "sha256": "b3a3e13c9e2b14cf1bb300d9a5c4f48edc32a3a29baae84da7ec102ab763611d",
+      "tick": 2650,
+      "captives": [
+        {
+          "id": 12515,
+          "state": "idle",
+          "hunger": 86.71999999999792,
+          "prisoner": {
+            "capturedAt": 2000,
+            "initialResistance": 10,
+            "resistance": 10,
+            "mode": "reduce",
+            "chatDay": 0,
+            "chatCount": 0,
+            "rng": 135077809
+          }
+        }
+      ],
+      "departures": []
+    },
+    {
+      "colonists": 30,
+      "measuredTicks": 1200,
+      "reason": "Captives escaped through ordinary warden door passage before WillCloseSoon correction",
+      "localCheckpoint": "artifacts\\prison-cpu-failure-v86-30.json",
+      "sha256": "0441deeac9cd0224e7fab4b4817b6e4444c3c7b9cd80d9b8ea2a6f495c079bd9",
+      "tick": 3200,
+      "captives": [
+        {
+          "id": 12982,
+          "state": "idle",
+          "hunger": 72.13333333332898,
+          "prisoner": {
+            "capturedAt": 2000,
+            "initialResistance": 12,
+            "resistance": 10.8555,
+            "mode": "reduce",
+            "chatDay": 0,
+            "chatCount": 1,
+            "rng": 3470979713,
+            "lastChatTick": 2349,
+            "escape": {
+              "x": 107,
+              "z": 0
+            }
+          }
+        },
+        {
+          "id": 13002,
+          "state": "moving",
+          "hunger": 71.6533333333289,
+          "prisoner": {
+            "capturedAt": 2000,
+            "initialResistance": 10,
+            "resistance": 10,
+            "mode": "reduce",
+            "chatDay": 0,
+            "chatCount": 0,
+            "rng": 3548955287,
+            "escape": {
+              "x": 115,
+              "z": 0
+            }
+          }
+        }
+      ],
+      "departures": [
+        {
+          "pawnId": 13022,
+          "name": "Captif charge 3",
+          "capturedAt": 2000,
+          "tick": 3032,
+          "cell": {
+            "x": 130,
+            "z": 0
+          },
+          "items": []
+        }
+      ]
+    }
+  ],
+  "watchdog": {
+    "measuredTicks": 1200,
+    "limitSeconds": 111,
+    "stage": "after door correction, before local topology captures",
+    "diagnosis": "32730 topology reads in 200 ticks; profiled and corrected without removing outcome assertions"
+  },
+  "correctedCpuReport": "prison-cpu-v86.json",
+  "correctedNativeReport": "prison-render-v86.json"
+}

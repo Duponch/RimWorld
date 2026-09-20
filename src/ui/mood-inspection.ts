@@ -8,7 +8,7 @@ export function createMoodInspection(panel:HTMLElement):void {
   const target=document.createElement('p');target.id='mood-target';
   const risks=document.createElement('p');risks.id='mood-break-thresholds';
   const list=document.createElement('ul');list.id='mood-thoughts';
-  details.append(heading,target,risks,list);panel.querySelector('#manage-work')!.before(details);
+  details.append(heading,target,risks,list);const anchor=panel.querySelector('#manage-work');if(anchor)anchor.before(details);else panel.append(details);
 }
 export function updateMoodInspection(panel:HTMLElement,world:World,pawn:Pawn):void {
   const text=panel.querySelector<HTMLElement>('#mood-target'),list=panel.querySelector<HTMLElement>('#mood-thoughts');if(!text||!list)return;

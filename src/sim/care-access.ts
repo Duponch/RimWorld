@@ -4,7 +4,7 @@ import { reservedServiceCells } from './service-reservations.ts';
 import type { Cell,Pawn,World } from './types.ts';
 
 export const lyingPatient=(p:Pawn):boolean=>p.state!=='dead'&&p.moveCooldown===0&&p.need?.kind==='sleep'&&p.need.phase==='sleep'&&p.need.bedId!==null;
-export const patientClaimed=(world:World,patientId:number,except:Pawn):boolean=>world.pawns.some(p=>p!==except&&(p.tend?.patientId===patientId||p.feed?.patientId===patientId));
+export const patientClaimed=(world:World,patientId:number,except:Pawn):boolean=>world.pawns.some(p=>p!==except&&(p.tend?.patientId===patientId||p.feed?.patientId===patientId||p.ward?.patientId===patientId));
 /** One decision owns this search and reservation view; never retained across ticks. */
 export function bedsideAccess(world:World,doctor:Pawn,patient:Pawn,reach:Reachability):{spot:Cell;path:Cell[];cost:number}|undefined {
   const reserved=reservedServiceCells(world,doctor.id);let best:{spot:Cell;path:Cell[];cost:number}|undefined;

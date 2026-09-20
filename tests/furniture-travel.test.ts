@@ -8,7 +8,51 @@ import { blockedCells, reachableCells, routeToJob } from '../src/sim/pathfinding
 import { candidateAccess } from '../src/sim/candidate-access';
 import { furnitureSurfaces, travelHeight } from '../src/render/furniture-motion';
 import { furnitureTrafficFixture } from './scenarios/furniture-traffic';
-import type { Orientation } from '../src/sim/types';
+import { footprintCells,footprintContains,STRUCTURE_DEFINITIONS } from '../src/sim/definitions';
+import { groundOccupancyAllows,storageOccupancyAllows } from '../src/sim/occupancy';
+import type { Orientation,StructureKind } from '../src/sim/types';
+
+test('point queries keep complete rotated and historical footprints, job targets and conduit coexistence',()=>{
+  // Explicit occupied offsets are independent of both production footprint
+  // functions. Distant points exercise the broad rejection; near points retain
+  // the complete shape rather than merely its enclosing rectangle.
+  const line=[[[0,0],[1,0],[-1,0]],[[0,0],[0,1],[0,-1]],[[0,0],[1,0],[-1,0]],[[0,0],[0,1],[0,-1]]];
+  const pair=[[[0,0],[0,1]],[[0,0],[1,0]],[[0,0],[0,-1]],[[0,0],[-1,0]]];
+  const bench=[[[0,0],[-1,0],[1,0],[0,1],[-1,1],[1,1]],[[0,0],[0,-1],[0,1],[1,0],[1,-1],[1,1]],[[0,0],[-1,0],[1,0],[0,-1],[-1,-1],[1,-1]],[[0,0],[0,-1],[0,1],[-1,0],[-1,-1],[-1,1]]];
+  const stands=new Set<StructureKind>(['power-conduit','power-switch','butcher-spot','crafting-spot','door','stool','horseshoes']);
+  const rejectsItems=new Set<StructureKind>(['battery','solar-generator','cooler','wood-generator','passive-cooler','wall','bed','campfire']);
+  const stores=new Set<StructureKind>(['power-conduit','standing-lamp','door','stool','horseshoes']);
+  const flickable=new Set<StructureKind>(['power-switch','wood-generator','standing-lamp','cooler','electric-stove']);
+  const w=createWorld(42,16,16);w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.resources=[];w.piles=[];w.jobs=[];
+  const points=Array.from({length:121},(_,i)=>({x:4+i%11,z:4+Math.floor(i/11)}));points.push({x:-20,z:8},{x:8,z:-20},{x:100,z:8},{x:8,z:100});
+  for(const kind of Object.keys(STRUCTURE_DEFINITIONS) as StructureKind[])for(const orientation of [0,1,2,3] as const)for(const footprint of ['standard','legacy-single'] as const){
+    const offsets=kind==='solar-generator'?Array.from({length:16},(_,i)=>[i%4,Math.floor(i/4)]):kind==='wood-generator'?[[0,0],[1,0],[0,1],[1,1]]:kind==='research-bench'?bench[orientation]!:['stonecutter','tailor-bench','fueled-stove','electric-stove','butcher-table'].includes(kind)?line[orientation]!:footprint!=='legacy-single'&&['bed','table','battery'].includes(kind)?pair[orientation]!:[[0,0]];
+    const cells=offsets.map(([x,z])=>({x:8+x!,z:8+z!})),keys=new Set(cells.map(c=>`${c.x},${c.z}`)),expected=points.map(c=>keys.has(`${c.x},${c.z}`));
+    const shape={x:8,z:8,orientation,footprint},structure={...shape,id:1,kind};
+    const targets:Parameters<typeof footprintContains>[0][]=[structure,{...shape,kind:'install',furniture:{kind}},{...shape,kind:'deconstruct',deconstruction:{kind}}];
+    if(flickable.has(kind))targets.push({...shape,kind:'flick',flick:{kind}});
+    for(const target of targets){
+      expect(footprintCells(target).map(c=>`${c.x},${c.z}`).sort(),`${kind}/${orientation}/${footprint}/${target.kind}`).toEqual([...keys].sort());
+      expect(points.map(c=>footprintContains(target,c))).toEqual(expected);
+    }
+    const wire={id:2,kind:'power-conduit' as const,x:8,z:8,orientation:0 as const,footprint:'standard' as const};
+    for(const structures of [[structure,wire],[wire,structure]]){
+      w.structures=structures;
+      expect(cells.map(c=>canStandAt(w,c)),`stand ${kind}`).toEqual(cells.map(()=>stands.has(kind)));
+      expect(cells.map(c=>groundOccupancyAllows(w,c)),`ground ${kind}`).toEqual(cells.map(()=>!rejectsItems.has(kind)));
+      expect(cells.map(c=>storageOccupancyAllows(w,c)),`storage ${kind}`).toEqual(cells.map(()=>stores.has(kind)));
+      expect(canStandAt(w,{x:3,z:3})).toBe(true);expect(groundOccupancyAllows(w,{x:3,z:3})).toBe(true);expect(storageOccupancyAllows(w,{x:3,z:3})).toBe(true);
+    }
+  }
+  w.structures=[{id:1,kind:'power-conduit',x:8,z:8,orientation:0,footprint:'standard'}];
+  w.jobs=[{id:2,kind:'wall',x:8,z:8,orientation:0,footprint:'standard',construction:'frame',status:'pending',reservedBy:null,progress:0,escrow:{wood:0,food:0}}];
+  expect(canStandAt(w,{x:8,z:8})).toBe(false);expect(storageOccupancyAllows(w,{x:8,z:8})).toBe(false);
+  w.jobs[0]!.kind='power-conduit';expect(canStandAt(w,{x:8,z:8})).toBe(true);expect(storageOccupancyAllows(w,{x:8,z:8})).toBe(true);
+  w.jobs=[];w.structures=[{id:1,kind:'bed',x:8,z:8,orientation:0,footprint:'standard'}];
+  w.schemaVersion=21 as typeof w.schemaVersion;expect(canStandAt(w,{x:8,z:9})).toBe(true);expect(groundOccupancyAllows(w,{x:8,z:9})).toBe(false);
+  w.schemaVersion=20 as typeof w.schemaVersion;expect(groundOccupancyAllows(w,{x:8,z:9})).toBe(true);
+  expect(canStandAt(w,{x:8.5,z:8})).toBe(false);expect(groundOccupancyAllows(w,{x:8,z:8.5})).toBe(false);
+});
 
 test('furniture routes agree with an independent directed-cost oracle, repeat across different furniture, and retain exact timed edges',()=>{
   for(let orientation=0;orientation<4;orientation++) {

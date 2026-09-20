@@ -3,7 +3,7 @@ import { updatePawnHealth } from './health.ts';
 
 /** One authoritative carrier owns this relationship; the patient is never cloned
  * into an item. During carry its saved position/edge mirror that carrier. */
-export interface RescueTask { patientId:number; bedId:number; phase:'approach'|'carry' }
+export interface RescueTask { patientId:number; bedId:number; phase:'approach'|'carry';capture?:true }
 export const carrierOf=(world:World,patientId:number):Pawn|undefined=>world.pawns.find(p=>p.rescue?.phase==='carry'&&p.rescue.patientId===patientId);
 export const rescueClaim=(world:World,patientId:number,except?:number):Pawn|undefined=>world.pawns.find(p=>p.id!==except&&p.rescue?.patientId===patientId);
 export function syncPatient(world:World,carrier:Pawn):void {

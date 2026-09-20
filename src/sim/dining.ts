@@ -1,4 +1,5 @@
 import { deconstructionReserved } from './deconstruction-rules.ts';
+import { capturePrisonTopology,prisonerAllowedCell } from './prison-space.ts';
 import { canStandAt } from './furniture-travel.ts';
 import { reservedServiceCells } from './service-reservations.ts';
 import { footprintCells, MATERIAL_DEFINITIONS } from './definitions.ts';
@@ -44,7 +45,9 @@ export function chooseDiningPlace(world: World, pawn: Pawn, context: NeedContext
   }
   for (const item of world.jobs) if (item.kind === 'wall' || item.kind === 'table') for (const cell of footprintCells(item)) fixed.add(key(cell));
   const candidates: DiningPlace[] = [];
+  const topology=pawn.prisoner?capturePrisonTopology(world):undefined;
   for (const seat of world.structures) {
+    if(!prisonerAllowedCell(world,pawn,seat,topology))continue;
     if (seat.kind !== 'stool' || deconstructionReserved(world,seat.id,pawn.id) || world.schemaVersion>=22&&!canStandAt(world,seat) || reserved.has(key(seat)) || distance(pawn, seat) > MATERIAL_DEFINITIONS.food.chairSearchRadius ** 2) continue;
     const surface = neighbors(seat).find(cell => inBounds(world, cell.x, cell.z) && surfaces.has(key(cell)));
     if (surface) candidates.push({ target: { x: seat.x, z: seat.z }, seatId: seat.id, tableId: surfaces.get(key(surface))! });
@@ -62,6 +65,7 @@ export function chooseDiningPlace(world: World, pawn: Pawn, context: NeedContext
   const standing: Cell[] = [];
   for (let dz = -4; dz <= 4; dz++) for (let dx = -4; dx <= 4; dx++) {
     const cell = { x: pawn.x + dx, z: pawn.z + dz };
+    if(!prisonerAllowedCell(world,pawn,cell,topology))continue;
     if (world.schemaVersion>=22&&!canStandAt(world,cell) || dx * dx + dz * dz > 16 || !inBounds(world, cell.x, cell.z) || reserved.has(key(cell)) || fixed.has(key(cell)) || ['water', 'rock'].includes(world.tiles[key(cell)]!.terrain)) continue;
     standing.push(cell);
   }

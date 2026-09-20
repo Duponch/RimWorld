@@ -38,7 +38,7 @@ export function validateEquipment(world:World):string[] {
     if(!t)continue;
     const pile=world.piles.find(i=>i.id===t.itemId);
     if(equipmentReason(world,p,pile,t.action,true)||(t.action==='equip'||t.action==='wear')&&reservedSource(world,t.itemId)>1)errors.push('Invalid equipment target or reservation.');
-    if(p.need||p.haul||p.cooking||p.rescue||p.tend||p.feed||p.recreation.task||p.jobId!==null)errors.push('Equipment conflicts with another activity.');
+    if(p.need||p.haul||p.cooking||p.rescue||p.tend||p.ward||p.feed||p.recreation.task||p.jobId!==null)errors.push('Equipment conflicts with another activity.');
     if(t.automatic?p.orders.active!==null:p.orders.active!=='equipment')errors.push('Equipment order intent mismatch.');
     if(t.action==='equip'?p.state!=='moving':t.progress>0?(p.state!=='working'||p.moveCooldown>0||p.path.length):p.state!=='moving')errors.push('Invalid equipment phase.');
   }

@@ -44,6 +44,9 @@ const FOOTPRINT_DIRECTIONS = [[0, 1], [1, 0], [0, -1], [-1, 0]] as const;
 export function footprintContains(entity: FootprintEntity, cell: Cell): boolean {
   const dx=cell.x-entity.x,dz=cell.z-entity.z;
   if(dx===0&&dz===0)return true;
+  // All current footprints fit this anchor-relative envelope, including the
+  // 4×4 solar panel. Reject distant points before reading optional job payloads.
+  if(dx < -1||dx > 3||dz < -1||dz > 3)return false;
   if(entity.kind==='solar-generator'||entity.furniture?.kind==='solar-generator'||entity.deconstruction?.kind==='solar-generator')return dx>=0&&dx<4&&dz>=0&&dz<4;
   // All branches below occupy the anchor or its immediate neighbours.
   // Reject distant queries before reading optional payloads in large colonies.

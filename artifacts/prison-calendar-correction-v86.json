@@ -1,0 +1,457 @@
+{
+  "protocol": "v86-cassandra-save-window-correction",
+  "before": {
+    "protocol": "real-J65-calendar-boundary",
+    "initialTick": 390000,
+    "firstInvalidTick": 393394,
+    "lastValidTick": 393393,
+    "errors": [
+      "Invalid raid schedule or count."
+    ],
+    "allValidation": [
+      "Invalid raid schedule or count."
+    ],
+    "runtimeMs": 28743.372799999997,
+    "raids": {
+      "profile": "cassandra-raids-v1",
+      "rng": 2044142159,
+      "nextCheck": 458800,
+      "serial": 9,
+      "completed": 9,
+      "departed": [
+        {
+          "group": 4,
+          "pawnId": 7634,
+          "name": "Assaillant 4.1",
+          "cell": {
+            "x": 120,
+            "z": 0
+          },
+          "tick": 146310,
+          "items": [
+            {
+              "id": 7635,
+              "kind": "apparel",
+              "item": "cloth-shirt",
+              "quantity": 1,
+              "owner": {
+                "type": "apparel",
+                "pawnId": 7634
+              },
+              "apparel": {
+                "quality": "normal",
+                "hitPoints": 100
+              }
+            },
+            {
+              "id": 7636,
+              "kind": "weapon",
+              "item": "revolver",
+              "quantity": 1,
+              "owner": {
+                "type": "equipment",
+                "pawnId": 7634
+              },
+              "weapon": {
+                "quality": "normal",
+                "hitPoints": 100
+              }
+            }
+          ]
+        },
+        {
+          "group": 6,
+          "pawnId": 10372,
+          "name": "Assaillant 6.1",
+          "cell": {
+            "x": 134,
+            "z": 249
+          },
+          "tick": 262356,
+          "items": [
+            {
+              "id": 10373,
+              "kind": "apparel",
+              "item": "cloth-shirt",
+              "quantity": 1,
+              "owner": {
+                "type": "apparel",
+                "pawnId": 10372
+              },
+              "apparel": {
+                "quality": "normal",
+                "hitPoints": 94
+              }
+            },
+            {
+              "id": 10374,
+              "kind": "weapon",
+              "item": "revolver",
+              "quantity": 1,
+              "owner": {
+                "type": "equipment",
+                "pawnId": 10372
+              },
+              "weapon": {
+                "quality": "normal",
+                "hitPoints": 100
+              }
+            }
+          ]
+        }
+      ],
+      "cassandra": {
+        "rng": 1879587103,
+        "cycle": 6,
+        "pending": [
+          458800,
+          470200
+        ]
+      },
+      "last": {
+        "id": 9,
+        "tick": 393394,
+        "reason": "defended",
+        "killed": 0,
+        "downed": 2,
+        "escaped": 0
+      }
+    },
+    "rawSha256": "d010137c43d1eef3d24f66cd9c3b0ef821216a8e95ee6b881fea5d0ee4b1c019",
+    "commands": [
+      {
+        "tick": 392900,
+        "reason": "Mobiliser les personnes valides dès la lettre du raid pour les rassembler et protéger les civils.",
+        "command": {
+          "type": "draft",
+          "pawnIds": [
+            4570,
+            4572,
+            4574
+          ],
+          "enabled": true
+        }
+      },
+      {
+        "tick": 392920,
+        "reason": "Rassembler les défenseurs dans la cour du camp pour un soutien mutuel, sans poursuivre les assaillants seuls.",
+        "command": {
+          "type": "draft-move",
+          "pawnIds": [
+            4570,
+            4572,
+            4574
+          ],
+          "target": {
+            "x": 130,
+            "z": 124
+          },
+          "queue": false
+        }
+      }
+    ]
+  },
+  "after": {
+    "protocol": "real-calendar-boundary-after-validator-correction",
+    "inputTick": 393394,
+    "inputSha256": "d010137c43d1eef3d24f66cd9c3b0ef821216a8e95ee6b881fea5d0ee4b1c019",
+    "roundTripByteIdentical": true,
+    "continuedTick": 393514,
+    "continuationTicks": 120,
+    "continuationByteIdentical": true,
+    "actualSha256": "2f2e7368f9b55bbe97f9c6a0f51f2096c168fd81467b63d487af2d7d788386bc",
+    "restoredSha256": "2f2e7368f9b55bbe97f9c6a0f51f2096c168fd81467b63d487af2d7d788386bc",
+    "validation": [],
+    "calendar": {
+      "profile": "cassandra-raids-v1",
+      "rng": 2044142159,
+      "nextCheck": 458800,
+      "serial": 9,
+      "completed": 9,
+      "departed": [
+        {
+          "group": 4,
+          "pawnId": 7634,
+          "name": "Assaillant 4.1",
+          "cell": {
+            "x": 120,
+            "z": 0
+          },
+          "tick": 146310,
+          "items": [
+            {
+              "id": 7635,
+              "kind": "apparel",
+              "item": "cloth-shirt",
+              "quantity": 1,
+              "owner": {
+                "type": "apparel",
+                "pawnId": 7634
+              },
+              "apparel": {
+                "quality": "normal",
+                "hitPoints": 100
+              }
+            },
+            {
+              "id": 7636,
+              "kind": "weapon",
+              "item": "revolver",
+              "quantity": 1,
+              "owner": {
+                "type": "equipment",
+                "pawnId": 7634
+              },
+              "weapon": {
+                "quality": "normal",
+                "hitPoints": 100
+              }
+            }
+          ]
+        },
+        {
+          "group": 6,
+          "pawnId": 10372,
+          "name": "Assaillant 6.1",
+          "cell": {
+            "x": 134,
+            "z": 249
+          },
+          "tick": 262356,
+          "items": [
+            {
+              "id": 10373,
+              "kind": "apparel",
+              "item": "cloth-shirt",
+              "quantity": 1,
+              "owner": {
+                "type": "apparel",
+                "pawnId": 10372
+              },
+              "apparel": {
+                "quality": "normal",
+                "hitPoints": 94
+              }
+            },
+            {
+              "id": 10374,
+              "kind": "weapon",
+              "item": "revolver",
+              "quantity": 1,
+              "owner": {
+                "type": "equipment",
+                "pawnId": 10372
+              },
+              "weapon": {
+                "quality": "normal",
+                "hitPoints": 100
+              }
+            }
+          ]
+        }
+      ],
+      "cassandra": {
+        "rng": 1879587103,
+        "cycle": 6,
+        "pending": [
+          458800,
+          470200
+        ]
+      },
+      "last": {
+        "id": 9,
+        "tick": 393394,
+        "reason": "defended",
+        "killed": 0,
+        "downed": 2,
+        "escaped": 0
+      }
+    },
+    "runtimeMs": 3460.5545999999995
+  },
+  "regressionBefore": {
+    "numTotalTestSuites": 1,
+    "numPassedTestSuites": 0,
+    "numFailedTestSuites": 1,
+    "numPendingTestSuites": 0,
+    "numTotalTests": 5,
+    "numPassedTests": 0,
+    "numFailedTests": 1,
+    "numPendingTests": 4,
+    "numTodoTests": 0,
+    "snapshot": {
+      "added": 0,
+      "failure": false,
+      "filesAdded": 0,
+      "filesRemoved": 0,
+      "filesRemovedList": [],
+      "filesUnmatched": 0,
+      "filesUpdated": 0,
+      "matched": 0,
+      "total": 0,
+      "unchecked": 0,
+      "uncheckedKeysByFile": [],
+      "unmatched": 0,
+      "updated": 0,
+      "didUpdate": false
+    },
+    "startTime": 1789919778411,
+    "success": false,
+    "testResults": [
+      {
+        "assertionResults": [
+          {
+            "ancestorTitles": [],
+            "fullName": "explicit Crashlanded adaptation has physical supplies, mature wild food and separate applied choices; old starts remain unchanged",
+            "status": "skipped",
+            "title": "explicit Crashlanded adaptation has physical supplies, mature wild food and separate applied choices; old starts remain unchanged",
+            "failureMessages": [],
+            "meta": {},
+            "tags": [],
+            "benchmarks": []
+          },
+          {
+            "ancestorTitles": [],
+            "fullName": "adventure difficulty changes colonist mood target and delayed infection acquisition, not exposure rolls, enemies or physiology",
+            "status": "skipped",
+            "title": "adventure difficulty changes colonist mood target and delayed infection acquisition, not exposure rolls, enemies or physiology",
+            "failureMessages": [],
+            "meta": {},
+            "tags": [],
+            "benchmarks": []
+          },
+          {
+            "ancestorTitles": [],
+            "fullName": "Cassandra opportunities use fixed windows, survive saves and skip impossible raids without postponement or resource creation",
+            "status": "skipped",
+            "title": "Cassandra opportunities use fixed windows, survive saves and skip impossible raids without postponement or resource creation",
+            "failureMessages": [],
+            "meta": {},
+            "tags": [],
+            "benchmarks": []
+          },
+          {
+            "ancestorTitles": [],
+            "fullName": "Cassandra next opportunity follows its exact anchored window, including gaps longer than one cycle",
+            "status": "failed",
+            "title": "Cassandra next opportunity follows its exact anchored window, including gaps longer than one cycle",
+            "duration": 45.99749999999949,
+            "failureMessages": [
+              "AssertionError: expected [ 'Invalid raid schedule or count.' ] to deeply equal []\n    at E:/Code/RimWorld/tests/game-profile.test.ts:124:62\n    at file:///E:/Code/RimWorld/node_modules/vitest/dist/chunks/run.CQOUYP-x.js:1628:35\n    at file:///E:/Code/RimWorld/node_modules/vitest/dist/chunks/run.CQOUYP-x.js:2783:26\n    at file:///E:/Code/RimWorld/node_modules/vitest/dist/chunks/run.CQOUYP-x.js:3319:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///E:/Code/RimWorld/node_modules/vitest/dist/chunks/run.CQOUYP-x.js:3314:10)\n    at file:///E:/Code/RimWorld/node_modules/vitest/dist/chunks/run.CQOUYP-x.js:3299:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///E:/Code/RimWorld/node_modules/vitest/dist/chunks/run.CQOUYP-x.js:3257:10)\n    at file:///E:/Code/RimWorld/node_modules/vitest/dist/chunks/run.CQOUYP-x.js:3876:64"
+            ],
+            "meta": {},
+            "tags": [],
+            "benchmarks": []
+          },
+          {
+            "ancestorTitles": [],
+            "fullName": "V81 migration is strictly neutral and rejects future profile/calendar injection; malformed current choices cannot enter a session",
+            "status": "skipped",
+            "title": "V81 migration is strictly neutral and rejects future profile/calendar injection; malformed current choices cannot enter a session",
+            "failureMessages": [],
+            "meta": {},
+            "tags": [],
+            "benchmarks": []
+          }
+        ],
+        "startTime": 1789919782833,
+        "endTime": 1789919782878.9976,
+        "status": "failed",
+        "message": "",
+        "name": "E:/Code/RimWorld/tests/game-profile.test.ts"
+      }
+    ]
+  },
+  "regressionAfter": {
+    "numTotalTestSuites": 1,
+    "numPassedTestSuites": 1,
+    "numFailedTestSuites": 0,
+    "numPendingTestSuites": 0,
+    "numTotalTests": 5,
+    "numPassedTests": 2,
+    "numFailedTests": 0,
+    "numPendingTests": 3,
+    "numTodoTests": 0,
+    "snapshot": {
+      "added": 0,
+      "failure": false,
+      "filesAdded": 0,
+      "filesRemoved": 0,
+      "filesRemovedList": [],
+      "filesUnmatched": 0,
+      "filesUpdated": 0,
+      "matched": 0,
+      "total": 0,
+      "unchecked": 0,
+      "uncheckedKeysByFile": [],
+      "unmatched": 0,
+      "updated": 0,
+      "didUpdate": false
+    },
+    "startTime": 1789919816825,
+    "success": true,
+    "testResults": [
+      {
+        "assertionResults": [
+          {
+            "ancestorTitles": [],
+            "fullName": "explicit Crashlanded adaptation has physical supplies, mature wild food and separate applied choices; old starts remain unchanged",
+            "status": "skipped",
+            "title": "explicit Crashlanded adaptation has physical supplies, mature wild food and separate applied choices; old starts remain unchanged",
+            "failureMessages": [],
+            "meta": {},
+            "tags": [],
+            "benchmarks": []
+          },
+          {
+            "ancestorTitles": [],
+            "fullName": "adventure difficulty changes colonist mood target and delayed infection acquisition, not exposure rolls, enemies or physiology",
+            "status": "skipped",
+            "title": "adventure difficulty changes colonist mood target and delayed infection acquisition, not exposure rolls, enemies or physiology",
+            "failureMessages": [],
+            "meta": {},
+            "tags": [],
+            "benchmarks": []
+          },
+          {
+            "ancestorTitles": [],
+            "fullName": "Cassandra opportunities use fixed windows, survive saves and skip impossible raids without postponement or resource creation",
+            "status": "passed",
+            "title": "Cassandra opportunities use fixed windows, survive saves and skip impossible raids without postponement or resource creation",
+            "duration": 281.3029999999999,
+            "failureMessages": [],
+            "meta": {},
+            "tags": [],
+            "benchmarks": []
+          },
+          {
+            "ancestorTitles": [],
+            "fullName": "Cassandra next opportunity follows its exact anchored window, including gaps longer than one cycle",
+            "status": "passed",
+            "title": "Cassandra next opportunity follows its exact anchored window, including gaps longer than one cycle",
+            "duration": 16.474699999999757,
+            "failureMessages": [],
+            "meta": {},
+            "tags": [],
+            "benchmarks": []
+          },
+          {
+            "ancestorTitles": [],
+            "fullName": "V81 migration is strictly neutral and rejects future profile/calendar injection; malformed current choices cannot enter a session",
+            "status": "skipped",
+            "title": "V81 migration is strictly neutral and rejects future profile/calendar injection; malformed current choices cannot enter a session",
+            "failureMessages": [],
+            "meta": {},
+            "tags": [],
+            "benchmarks": []
+          }
+        ],
+        "startTime": 1789919821277,
+        "endTime": 1789919821575.4746,
+        "status": "passed",
+        "message": "",
+        "name": "E:/Code/RimWorld/tests/game-profile.test.ts"
+      }
+    ]
+  }
+}

@@ -36,6 +36,8 @@ export function updateSkillsInspection(panel:HTMLElement,pawn:Pawn):void {
 }
 export function updateWorkSkills(row:HTMLElement,pawn:Pawn):void {
   row.title=traitSummary(pawn);
+  const warden=row.querySelector<HTMLSelectElement>('[data-work="warden"]');
+  if(warden){let label=warden.parentElement!.querySelector<HTMLElement>('.work-social');if(!label){label=document.createElement('small');label.className='work-social';warden.parentElement!.append(label);}const s=pawn.skills.social??{level:0,xp:0,dailyXp:0,passion:0};label.textContent=`${s.level} ${['','🔥','🔥🔥'][s.passion]}`;warden.title=`Social ${s.level}/20 · ${passions[s.passion]} · nourrit les prisonniers et mène les conversations selon le mode choisi`;}
   const doctor=row.querySelector<HTMLSelectElement>('[data-work="doctor"]');
   if(doctor){let label=doctor.parentElement!.querySelector<HTMLElement>('.work-medicine');if(!label){label=document.createElement('small');label.className='work-medicine';doctor.parentElement!.append(label);}const m=pawn.skills.medicine;label.textContent=`${m.level} ${['','🔥','🔥🔥'][m.passion]}`;doctor.title=`Médecine ${m.level}/20 · ${passions[m.passion]} · apprentissage ${Math.round(learningFactor(m,pawn)*100)} %`;}
   const cook=row.querySelector<HTMLSelectElement>('[data-work="cook"]');

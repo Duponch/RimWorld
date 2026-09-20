@@ -1,6 +1,12 @@
 import type { Cell, Pawn, World } from './types.ts';
 import { blockedCells, canStep, cellIndex } from './pathfinding.ts';
 
+/** Captured speeds outlive their cause (release, recruitment or migration).
+ * V86's slowest actor is a prisoner, never also a carrier. Once neutral travel
+ * exceeds 45 ticks the stagger floor no longer lengthens it; stun adds ≤4.5. */
+export const MIN_PAWN_SPEED_V86=.128*((4.6-.12)/4.6)/2*.35;
+export const MAX_PAWN_DELAY_V86=Math.ceil(3*Math.SQRT2/MIN_PAWN_SPEED_V86+5+4.5);
+
 /** A diagonal passes over the common corner of four cells. Construction cannot
  * materialize a solid corner through an actor already traversing that edge. */
 export function blocksBuildingDuringTravel(pawn:Pawn,cell:Cell,tick:number):boolean {

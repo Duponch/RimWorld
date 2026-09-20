@@ -36,12 +36,12 @@ export const occupies=footprintContains;
 /** Quantitative capacity and reservations are checked by ground-placement. */
 export function groundOccupancyAllows(world:World,cell:Cell):boolean {
   if(!Number.isInteger(cell.x)||!Number.isInteger(cell.z)||cell.x<0||cell.z<0||cell.x>=world.width||cell.z>=world.height||['water','rock'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain))return false;
-  for(const s of world.structures)if((world.schemaVersion<21?s.kind==='wall':!OCCUPANCY[s.kind].items)&&occupies(s,cell))return false;
+  for(const s of world.structures)if(occupies(s,cell)&&(world.schemaVersion<21?s.kind==='wall':!OCCUPANCY[s.kind].items))return false;
   if(world.schemaVersion<16)for(const j of world.jobs)if(j.kind==='wall'&&occupies(j,cell))return false;
   return true;
 }
 export function storageOccupancyAllows(world:World,cell:Cell):boolean {
-  for(const s of world.structures)if(!OCCUPANCY[s.kind].store&&occupies(s,cell))return false;
-  for(const j of world.jobs)if(occupancyOf(j.furniture?.kind??j.kind)?.store===false&&occupies(j,cell))return false;
+  for(const s of world.structures)if(occupies(s,cell)&&!OCCUPANCY[s.kind].store)return false;
+  for(const j of world.jobs)if(occupies(j,cell)&&occupancyOf(j.furniture?.kind??j.kind)?.store===false)return false;
   return true;
 }

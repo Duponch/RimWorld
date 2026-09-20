@@ -1,14 +1,14 @@
 import { TICKS_PER_DAY,type Pawn } from './types.ts';
 import { pawnBody } from './health-rules.ts';
 
-export type SocialKind='chitchat'|'deep-talk';
+export type SocialKind='chitchat'|'deep-talk'|'rapport';
 export interface SocialMemory { otherId:number;kind:SocialKind;at:number;offset:number }
 export interface SocialState {
   rng:number; wants?:true;
   last?:{otherId:number;kind:SocialKind;tick:number;initiated:boolean};
   memories:SocialMemory[];
 }
-export const SOCIAL_LABELS:Readonly<Record<SocialKind,string>>=Object.freeze({'chitchat':'Bavardage','deep-talk':'Discussion approfondie'});
+export const SOCIAL_LABELS:Readonly<Record<SocialKind,string>>=Object.freeze({'chitchat':'Bavardage','deep-talk':'Discussion approfondie',rapport:'Rapprochement'});
 export const DEEP_TALK_DURATION=20*TICKS_PER_DAY;
 
 /** Independent stream: social rolls never perturb mining, medicine or raids. */
@@ -41,7 +41,7 @@ export function memoryOffset(memory:SocialMemory,tick:number):number {
 function roundOpinion(n:number):number {const lo=Math.floor(n);return n<=0?0:Math.max(1,n-lo===.5?lo+lo%2:Math.round(n));}
 export function opinionCauses(pawn:Pawn,otherId:number,tick:number):{kind:SocialKind;count:number;value:number;nextChange:number}[] {
   const memories=pawn.social?.memories.filter(m=>m.otherId===otherId&&memoryOffset(m,tick)>0)??[];
-  return (['chitchat','deep-talk'] as const).flatMap(kind=>{
+  return (['chitchat','deep-talk','rapport'] as const).flatMap(kind=>{
     const group=memories.filter(m=>m.kind===kind).sort((a,b)=>b.at-a.at);if(!group.length)return [];
     const value=roundOpinion(group.reduce((s,m,i)=>s+memoryOffset(m,tick)*(kind==='deep-talk'?.9**i:1),0));
     const nextChange=kind==='chitchat'?group[0]!.at+(Math.floor((tick-group[0]!.at)/TICKS_PER_DAY)+1)*TICKS_PER_DAY:Math.min(...group.map(m=>m.at+DEEP_TALK_DURATION));
@@ -61,8 +61,8 @@ export function expireSocialMemories(pawn:Pawn,tick:number):void {
 export function addSocialMemory(state:SocialState,otherId:number,kind:SocialKind,tick:number,impact:number):void {
   const same=state.memories.filter(m=>m.kind===kind&&m.otherId===otherId);
   if(kind==='chitchat'&&same.length){same[0]!.offset+=.66*impact;return;}
-  if(kind==='deep-talk'&&same.length>=10)state.memories.splice(state.memories.indexOf(same.reduce((a,b)=>a.at<=b.at?a:b)),1);
+  if(kind!=='chitchat'&&same.length>=(kind==='rapport'?50:10))state.memories.splice(state.memories.indexOf(same.reduce((a,b)=>a.at<=b.at?a:b)),1);
   const all=state.memories.filter(m=>m.kind===kind);
   if(all.length>=300)state.memories.splice(state.memories.indexOf(all.reduce((a,b)=>a.at<=b.at?a:b)),1);
-  state.memories.push({otherId,kind,at:tick,offset:(kind==='chitchat'?.66:15)*impact});
+  state.memories.push({otherId,kind,at:tick,offset:(kind==='chitchat'?.66:kind==='rapport'?2:15)*impact});
 }

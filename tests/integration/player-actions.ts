@@ -29,6 +29,26 @@ export async function revealCells(page:Page,cells:{x:number;z:number}[]):Promise
   await expect.poll(visible,{message:`Le joueur doit voir les cases visées : ${JSON.stringify(cells)}`}).toBe(true);
 }
 
+/** Inspect a visitor/captive using the same overlap cycling as the player. */
+export async function inspectPerson(page:Page,id:number):Promise<void> {
+  await page.keyboard.press('Escape');
+  const w=await world(page),pawn=w.pawns.find(p=>p.id===id);if(!pawn)throw new Error('Personne à inspecter absente.');
+  const portrait=page.locator(`[data-pawn="${id}"]`);
+  if(await portrait.count()){await portrait.click();return;}
+  await revealCells(page,[pawn]);
+  for(let i=0;i<=w.pawns.length;i++) {
+    // A person standing on a bed is above the floor click. Read the same
+    // rendered body proxy used by pointer selection, then make a real click.
+    const point=await page.evaluate(id=>window.__lisiere.projectPawn(id),id);
+    if(!point)throw new Error(`La projection de ${pawn.name} est hors champ.`);
+    expect(await page.evaluate(p=>document.elementFromPoint(p.x,p.y)?.tagName,point),'Person click must reach the visible canvas.').toBe('CANVAS');
+    await page.mouse.click(point.x,point.y);
+    if(pawn.prisoner){if(await page.locator(`[data-prisoner-id="${id}"]`).isVisible())return;}
+    else {const name=page.locator('#selected-name');if(await name.count()&&await name.textContent()===pawn.name)return;}
+  }
+  throw new Error(`La sélection corporelle de ${pawn.name} n’a pas atteint son inspection.`);
+}
+
 export async function editBill(page:Page,id:number,settings:BillSettings):Promise<void> {
   const form=page.locator(`[data-bill="${id}"]`);
   await form.locator('[data-field="mode"]').selectOption(settings.mode);
@@ -61,18 +81,18 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     await page.keyboard.press('Escape');
     for(const [i,id] of c.pawnIds.entries())await page.locator(`[data-pawn="${id}"]`).click({modifiers:i?['Shift']:[]});
     await panel(page,'wildlife');await page.locator(`[data-animal-${c.type==='shoot'?'shoot':'melee'}="${c.targetId}"]`).click();
-  } else if(c.type==='order-equipment'||c.type==='order-feed'||c.type==='order-tend'||c.type==='order-rescue'||c.type==='order-job'||c.type==='order-haul'||c.type==='order-cook') {
+  } else if(c.type==='order-capture'||c.type==='order-equipment'||c.type==='order-feed'||c.type==='order-tend'||c.type==='order-rescue'||c.type==='order-job'||c.type==='order-haul'||c.type==='order-cook') {
     await page.keyboard.press('Escape');await page.locator(`[data-pawn="${c.pawnId}"]`).click();
     if(c.type==='order-equipment'&&c.action==='remove'){if(await page.locator('#equipment-details').getAttribute('open')===null)await page.locator('#equipment-details summary').click();await page.locator(`[data-remove-apparel="${c.itemId}"]`).click();return;}
     const current=await world(page);
-    const job=c.type==='order-equipment'?((c.action==='equip'||c.action==='wear')?current.piles.find(p=>p.id===c.itemId)?.owner:current.pawns.find(p=>p.id===c.pawnId)):c.type==='order-feed'||c.type==='order-tend'||c.type==='order-rescue'?current.pawns.find(p=>p.id===c.patientId):c.type==='order-cook'?current.structures.find(s=>s.id===c.structureId):c.type==='order-job'?current.jobs.find(j=>j.id===c.jobId):c.target.type==='furniture'?current.packed.find(p=>c.target.type==='furniture'&&p.building.id===c.target.structureId)?.owner:c.target.type==='fuel'?current.structures.find(s=>c.target.type==='fuel'&&s.id===c.target.structureId):c.target.type==='pile'?current.piles.find(p=>c.target.type==='pile'&&p.id===c.target.pileId)?.owner:current.jobs.find(j=>(c.target.type==='job'||c.target.type==='clear'||c.target.type==='clear-sow')&&j.id===c.target.jobId);
+    const job=c.type==='order-equipment'?((c.action==='equip'||c.action==='wear')?current.piles.find(p=>p.id===c.itemId)?.owner:current.pawns.find(p=>p.id===c.pawnId)):c.type==='order-capture'||c.type==='order-feed'||c.type==='order-tend'||c.type==='order-rescue'?current.pawns.find(p=>p.id===c.patientId):c.type==='order-cook'?current.structures.find(s=>s.id===c.structureId):c.type==='order-job'?current.jobs.find(j=>j.id===c.jobId):c.target.type==='furniture'?current.packed.find(p=>c.target.type==='furniture'&&p.building.id===c.target.structureId)?.owner:c.target.type==='fuel'?current.structures.find(s=>c.target.type==='fuel'&&s.id===c.target.structureId):c.target.type==='pile'?current.piles.find(p=>c.target.type==='pile'&&p.id===c.target.pileId)?.owner:current.jobs.find(j=>(c.target.type==='job'||c.target.type==='clear'||c.target.type==='clear-sow')&&j.id===c.target.jobId);
     if(!job||!('x' in job))throw new Error('Cible directe absente.');
     await revealCells(page,[job]);
     const point=await page.evaluate(({x,z})=>window.__lisiere.projectCell(x,z),job);
     const bounds=(await page.locator('#viewport canvas').boundingBox())!;
     if(c.queue)await page.keyboard.down('Shift');
     await page.mouse.click(bounds.x+point.x,bounds.y+point.y,{button:'right'});
-    await page.locator(c.type==='order-equipment'?`[data-order-equipment="${c.itemId}"]`:c.type==='order-feed'?`[data-order-feed="${c.patientId}"]`:c.type==='order-tend'?`[data-order-tend="${c.patientId}"]`:c.type==='order-rescue'?`[data-order-rescue="${c.patientId}"]`:c.type==='order-cook'?`[data-order-cook="${c.structureId}"]`:c.type==='order-job'?`[data-order-job="${c.jobId}"]:not([data-order-haul])`:`[data-order-haul="${c.target.type}"]`).click();
+    await page.locator(c.type==='order-capture'?`[data-order-capture="${c.patientId}"]`:c.type==='order-equipment'?`[data-order-equipment="${c.itemId}"]`:c.type==='order-feed'?`[data-order-feed="${c.patientId}"]`:c.type==='order-tend'?`[data-order-tend="${c.patientId}"]`:c.type==='order-rescue'?`[data-order-rescue="${c.patientId}"]`:c.type==='order-cook'?`[data-order-cook="${c.structureId}"]`:c.type==='order-job'?`[data-order-job="${c.jobId}"]:not([data-order-haul])`:`[data-order-haul="${c.target.type}"]`).click();
     if(c.queue)await page.keyboard.up('Shift');
   } else if(c.type==='growing-policy') {
     const w=await world(page),zone=w.growingZones.find(z=>z.id===c.zoneId);
@@ -83,8 +103,16 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     if(c.plant)await page.locator('#growing-plant').selectOption(c.plant);
     await page.locator('#growing-allowSow').setChecked(c.allowSow);await page.locator('#growing-allowCut').setChecked(c.allowCut);
     await page.getByRole('button',{name:'Appliquer les réglages de culture'}).click();
+  } else if(c.type==='prison-bed'||c.type==='medical-bed') {
+    const w=await world(page),bed=w.structures.find(s=>s.id===c.bedId);if(!bed)throw new Error('Lit à configurer absent.');
+    await page.keyboard.press('Escape');await revealCells(page,[bed]);
+    for(let i=0;i<=w.pawns.length;i++){await cell(page,bed.x,bed.z);if(await page.locator('#cell-bed').isVisible())break;}
+    await page.locator(c.type==='prison-bed'?'#bed-prisoner':'#bed-medical').setChecked(c.enabled);
+  } else if(c.type==='prisoner-mode') {
+    await inspectPerson(page,c.patientId);await page.locator('#prisoner-mode').selectOption(c.mode);
   } else if(c.type==='food-policy-assign') {
-    await panel(page,'assign'); await page.locator(`[data-food-policy-pawn="${c.pawnId}"]`).selectOption(String(c.policyId));
+    if((await world(page)).pawns.find(p=>p.id===c.pawnId)?.prisoner){await inspectPerson(page,c.pawnId);await page.locator('#prisoner-food-policy').selectOption(String(c.policyId));}
+    else {await panel(page,'assign'); await page.locator(`[data-food-policy-pawn="${c.pawnId}"]`).selectOption(String(c.policyId));}
   } else if(c.type==='schedule-paint') {
     await panel(page,'schedule'); await page.locator(`[data-schedule-brush="${c.assignment}"]`).click();
     for(const hour of c.hours) await page.locator(`[data-schedule-pawn="${c.pawnId}"][data-schedule-hour="${hour}"]`).click();
@@ -156,6 +184,10 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     if(c.type==='order-feed')return w.pawns.some(p=>p.id===c.pawnId&&p.feed?.patientId===c.patientId);
     if(c.type==='order-tend')return w.pawns.some(p=>p.id===c.pawnId&&p.tend?.patientId===c.patientId);
     if(c.type==='order-rescue')return w.pawns.find(p=>p.id===c.pawnId)?.rescue?.patientId===c.patientId;
+    if(c.type==='order-capture')return w.pawns.find(p=>p.id===c.pawnId)?.rescue?.patientId===c.patientId;
+    if(c.type==='prison-bed')return !!w.structures.find(s=>s.id===c.bedId)?.prisoner===c.enabled;
+    if(c.type==='medical-bed')return !!w.structures.find(s=>s.id===c.bedId)?.medical===c.enabled;
+    if(c.type==='prisoner-mode')return w.pawns.find(p=>p.id===c.patientId)?.prisoner?.mode===c.mode;
     if(c.type==='install')return w.jobs.some(j=>j.kind==='install'&&j.furniture?.structureId===c.structureId&&j.x===c.x&&j.z===c.z);
     if(c.type==='order-job'){const pawn=w.pawns.find(p=>p.id===c.pawnId);return pawn?.orders.active===c.jobId||pawn?.orders.queue.includes(c.jobId);}
     if(c.type==='order-cook') {const pawn=w.pawns.find(p=>p.id===c.pawnId);return pawn?.orders.active==='cook'&&pawn.cooking?.stationId===c.structureId||pawn?.orders.active==='haul'&&pawn.haul?.destination.type==='fuel'&&pawn.haul.destination.structureId===c.structureId||pawn?.orders.queue.some(o=>typeof o!=='number'&&('cooking' in o?o.cooking.stationId===c.structureId:o.destination.type==='fuel'&&o.destination.structureId===c.structureId));}

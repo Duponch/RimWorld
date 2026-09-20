@@ -2,6 +2,9 @@ import { interactionGoals, routeCost, routeToJob, type Reachability } from './pa
 import { ITEM_DEFINITIONS, type ItemId } from './items.ts';
 import { ticksUntilRot } from './food-preservation.ts';
 import { allowedFood, type FoodItemId } from './food-policy.ts';
+import { selfAllowedFood,selfFoodAccessible,assistedFoodAccessible } from './prison-food.ts';
+import { capturePrisonTopology } from './prison-space.ts';
+import type { RoomTopology } from './room-topology.ts';
 import { TICKS_PER_DAY } from './types.ts';
 import type { Cell, MaterialPile, Pawn, World } from './types.ts';
 
@@ -17,8 +20,9 @@ export function foodScore(item: ItemId, distance: number): number {
 export function pileFoodScore(world: World, pile: MaterialPile, distance: number): number {
   return foodScore(pile.item, distance) + (ticksUntilRot(pile, world.tick) < TICKS_PER_DAY / 2 ? 12 : 0);
 }
-export function foodSearchGoals(world: World, pawn: Pawn, sources: readonly MaterialPile[]): Set<number> {
-  const allowed = allowedFood(world, pawn); sources = sources.filter(p => allowed.includes(p.item as FoodItemId));
+export function foodSearchGoals(world: World, pawn: Pawn, sources: readonly MaterialPile[], topology?:RoomTopology): Set<number> {
+  if(!topology&&(pawn.prisoner||world.structures.some(s=>s.prisoner)))topology=capturePrisonTopology(world);
+  const allowed = selfAllowedFood(world, pawn); sources = sources.filter(p => allowed.includes(p.item as FoodItemId)&&selfFoodAccessible(world,pawn,p,topology));
   if (world.foodRules === 'legacy') return interactionGoals(world, sources.flatMap(p => p.owner.type === 'ground' ? [p.owner] : []));
   let best: MaterialPile | undefined, score = -Infinity;
   for (const pile of sources) {
@@ -30,11 +34,13 @@ export function foodSearchGoals(world: World, pawn: Pawn, sources: readonly Mate
   // selectFood can then find the best accessible fallback without another search.
   return interactionGoals(world, best?.owner.type === 'ground' ? [best.owner] : []);
 }
-export function selectFood(world: World, pawn: Pawn, sources: readonly MaterialPile[], reachable: Reachability, eater: Pawn = pawn): { id: number; path: Cell[]; score: number } | undefined {
-  const allowed = allowedFood(world, eater);
+export function selectFood(world: World, pawn: Pawn, sources: readonly MaterialPile[], reachable: Reachability, eater: Pawn = pawn, topology?:RoomTopology): { id: number; path: Cell[]; score: number } | undefined {
+  const allowed = eater===pawn?selfAllowedFood(world,pawn):allowedFood(world,eater);
+  if(!topology&&(pawn.prisoner||eater.prisoner||world.structures.some(s=>s.prisoner)))topology=capturePrisonTopology(world);
   let best: { id: number; path: Cell[]; score: number } | undefined;
   for (const pile of sources) {
     if (pile.owner.type !== 'ground' || !ITEM_DEFINITIONS[pile.item].nutrition || !allowed.includes(pile.item as FoodItemId)) continue;
+    if(!(eater===pawn?selfFoodAccessible(world,pawn,pile,topology):assistedFoodAccessible(world,pawn,eater,pile,topology)))continue;
     // Reference map search uses Manhattan distance for ranking, independently
     // of the Euclidean travel duration and actual reachability of the item.
     const distance = Math.abs(pawn.x - pile.owner.x) + Math.abs(pawn.z - pile.owner.z);

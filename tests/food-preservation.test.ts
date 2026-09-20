@@ -11,7 +11,7 @@ import { foodAccount } from './scenarios/colony-player';
 
 function field(size=16):World {
   const w=createWorld(42,size,size);w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.resources=[];w.piles=[];
-  w.pawns=w.pawns.slice(0,1);Object.assign(w.pawns[0]!,{x:2,z:2,hunger:100,rest:100,priorities: {basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,craft:2,mine:2,gather:0,build:0,haul:0,grow:0,cook:0}});
+  w.pawns=w.pawns.slice(0,1);Object.assign(w.pawns[0]!,{x:2,z:2,hunger:100,rest:100,priorities: {warden:0,basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,craft:2,mine:2,gather:0,build:0,haul:0,grow:0,cook:0}});
   refreshStock(w);return w;
 }
 function expiresIn(w:World,p:MaterialPile,ticks:number):void {

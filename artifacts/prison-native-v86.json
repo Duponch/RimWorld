@@ -1,0 +1,39 @@
+{
+  "version": 86,
+  "controlledCheckpoints": [
+    "temporary blood loss and bruise; enclosed room and physical supplies",
+    "healthy captive with resistance .01; no natural persuasion duration claimed"
+  ],
+  "capture": {
+    "started": 3000,
+    "carrying": 3012,
+    "captured": 3125,
+    "cared": 3428,
+    "patientId": 3,
+    "bedId": 201,
+    "resistance": 8,
+    "medicineBefore": 6,
+    "medicineAfter": 5,
+    "hungerAfter": 96.47999999999945
+  },
+  "recruitment": {
+    "prepared": 3000,
+    "conversation": 3009,
+    "reduced": 3202,
+    "recruited": 4406,
+    "identity": 3,
+    "provenance": {
+      "capturedAt": 3000,
+      "recruitedAt": 4369,
+      "fromFaction": "outlaws"
+    }
+  },
+  "historical": {
+    "source": "artifacts/cold-store-checkpoint-v85.json",
+    "sha256": "0cef3989e3655f40a26a7ca27e1d858e2a1241b2a917ba3d725cddf9396ca974",
+    "from": 85,
+    "to": 86,
+    "tick": 22729
+  },
+  "errors": []
+}

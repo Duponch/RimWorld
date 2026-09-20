@@ -1,4 +1,6 @@
-# Validation courante — V85
+# Validation courante — V86
+
+V86 : [captivité, recrutement et optimisation](../history/validation-prisoners-v86.md). Contrats et frontières regroupés, capture/soins/entretiens par vrais clics, puis continuation naturelle du camp V85 jusqu’à J76,28 avec quatre personnes entretenues. Chargement natif à froid du résultat réel et continuation exacte réussis ; typage, build et documentation vérifiés. Optimisations CPU comparées avec mondes identiques ; 6× reste non tenu à cent colons. Les preuves distinguent les reprises, erreurs de pilote, correction du validateur Cassandra et limites des mesures.
 
 V85 : [réseau construit, batteries, solaire et commutation physique](../history/validation-energy-v85.md), validée dans son périmètre. Contrats et migrations regroupés réussis ; UI native ciblée **1/1 en 52,1 s** avec vraie construction, toiture, commutation et retrait d'un câble sous mur. Le pilote naturel est une **reprise depuis 144 250 jusqu'à 253 280 ticks, J42,21, en 550,14 s**, avec 104 repas dont 11 électriques, gel, nuit sur batterie, coupures et continuations exactes ; ce n'est pas une nouvelle passe monolithique. Charge native `ENERGY=1` à 3/30/100 : image p95 **12,4 / 29,2 / 16,7 ms**, aucune erreur ni compilation tardive pendant les mesures. À cent colons, débit d'environ **3,76× pour 6× demandé**. Charges différentes des lots précédents : aucun gain comparatif déduit. Typage et build passent ; le bilan canonique conserve protocole, corrections et limites.
 

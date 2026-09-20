@@ -1,6 +1,8 @@
 # Lisière
 
-Jeu de colonie en 3D low poly pour navigateur, avec RimWorld de base comme référence fonctionnelle. **V85 validée : réseau électrique construit, batteries, panneaux solaires et commutation physique.** La colonie V84 a été poursuivie par une reprise documentée jusqu'à J42,21 : recherche et construction réelles, cuisine électrique, aliments gelés, nuit sur batterie et coupures physiques. Contrats, parcours natif, charge, typage et build validés ; [preuves et limites V85](docs/history/validation-energy-v85.md). À cent colons, la charge mixte atteint environ 3,76× pour 6× demandé : cette livraison ne garantit pas ce débit.
+Jeu de colonie en 3D low poly pour navigateur, avec RimWorld de base comme référence fonctionnelle. **V86 validée : capture, captivité et recrutement, avec optimisation CPU.** La continuation du camp V85 atteint J76,28 avec quatre colons : un assaillant a été réellement capturé, nourri, soigné puis recruté, et dispose d’un lit, de repas et de travail. [Preuves et limites V86](docs/history/validation-prisoners-v86.md). Les gains CPU contrôlés de 6–8 % et la réduction des lectures répétées de pièces ne garantissent pas 6× à cent colons ; [mesures](docs/research/performance-v86.md).
+
+**V85 déjà livrée : réseau électrique construit, batteries, panneaux solaires et commutation physique.** La colonie V84 a été poursuivie par une reprise documentée jusqu'à J42,21 : recherche et construction réelles, cuisine électrique, aliments gelés, nuit sur batterie et coupures physiques. Contrats, parcours natif, charge, typage et build validés ; [preuves et limites V85](docs/history/validation-energy-v85.md). À cent colons, la charge mixte atteint environ 3,76× pour 6× demandé : cette livraison ne garantit pas ce débit.
 
 **Filière alimentaire V84 déjà livrée**, filière alimentaire durable : pommes de terre et maïs, cuisinières à bois/électrique, table de boucherie et malnutrition avec récupération par alimentation physique. Un vrai départ a été joué pendant 24 jours, avec deux récoltes sur les mêmes 80 cases de riz, diversification, soins après combat et sept jours sans consommer les rations initiales. [Preuves et limites V84](docs/history/validation-food-v84.md).
 
@@ -21,7 +23,7 @@ npm run dev
 
 Ouvrir [le jeu local](http://127.0.0.1:5173). Three.js utilise WebGPU si disponible, sinon WebGL 2 ; le backend apparaît dans Menu → Diagnostics. Le compteur FPS reste visible. L’accueil propose Nouvelle partie et Charger. La configuration locale active est 250×250, avec graine aléatoire éditable ; les autres choix sont grisés. Paramètres de diagnostic historique explicites : `/?scenario=camp&seed=123&size=250`.
 
-Le [guide joueur](docs/gameplay/player-guide.md) décrit les contrôles et règles. Les sauvegardes utilisent le schéma **85** : les anciennes versions sont validées puis migrées sans agrandir la carte ni inventer d’objets ou d’historique. Les anciens camps restent sans nouveaux calendriers ni faune jusqu’à leur activation explicite. Les contrats spécialisés et l’[inventaire courant](docs/gameplay/implementation-status.md) distinguent les boucles livrées des catalogues et systèmes encore absents.
+Le [guide joueur](docs/gameplay/player-guide.md) décrit les contrôles et règles. Les sauvegardes utilisent le schéma **86** : les anciennes versions sont validées puis migrées sans agrandir la carte ni inventer d’objets ou d’historique. Les anciens camps restent sans nouveaux calendriers ni faune jusqu’à leur activation explicite. Les contrats spécialisés et l’[inventaire courant](docs/gameplay/implementation-status.md) distinguent les boucles livrées des catalogues et systèmes encore absents.
 
 ## Développer et vérifier
 

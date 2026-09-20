@@ -9,7 +9,7 @@ import type { Pawn,Command,World } from '../sim/types';
 import { MEDICAL_CARE,medicalCare,type MedicalCare } from '../sim/medicine-rules';
 import { createInfectionInspection,updateInfectionInspection } from './infection-inspection';
 
-export function createHealthInspection(panel:HTMLElement,selected?:()=>Pawn|undefined,send?:(c:Command)=>void):void {
+export function createHealthInspection(panel:HTMLElement,selected?:()=>Pawn|undefined,send?:(c:Command)=>void,allowSelfTend=true):void {
   const details=document.createElement('details');details.id='health-inspection';details.open=true;
   const summary=document.createElement('summary');summary.textContent='Santé';details.append(summary);
   for(const name of ['status','capacities','malnutrition','thermal','stagger','injuries']) {
@@ -21,10 +21,10 @@ export function createHealthInspection(panel:HTMLElement,selected?:()=>Pawn|unde
     for(const [value,name] of Object.entries(MEDICAL_CARE)){const o=document.createElement('option');o.value=value;o.textContent=name;input.append(o);}
     input.onchange=()=>{const p=selected();if(p)send({type:'medical-care',pawnId:p.id,care:input.value as MedicalCare});};
     label.append('Soins autorisés ',input);details.append(label);
-    const selfLabel=document.createElement('label'),selfInput=document.createElement('input');selfInput.type='checkbox';selfInput.id='self-tend-policy';
+    if(allowSelfTend){const selfLabel=document.createElement('label'),selfInput=document.createElement('input');selfInput.type='checkbox';selfInput.id='self-tend-policy';
     selfInput.onchange=()=>{const p=selected();if(p)send({type:'self-tend-policy',pawnId:p.id,enabled:selfInput.checked});};
     selfLabel.append(selfInput,' Autoriser les auto-soins');selfLabel.title='Médecin doit être activé. Qualité de base ×70 %, avant variation ; pas de pénalité de vitesse propre aux auto-soins.';details.append(selfLabel);
-    const hint=document.createElement('small');hint.dataset.health='self-tend-hint';details.append(hint);
+    const hint=document.createElement('small');hint.dataset.health='self-tend-hint';details.append(hint);}
   }
   panel.append(details);
 }

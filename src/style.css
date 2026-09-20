@@ -54,3 +54,6 @@
 .power-controls{border-top:1px solid var(--line);margin-top:12px}.power-controls h3{font:15px Georgia,serif;margin:12px 0 7px}
 .power-controls [data-power-request]:empty{display:none}.power-controls [data-power-request]{color:#ead8ac}
 @media(max-width:760px){.research-cards{grid-template-columns:1fr}}
+
+#prisoner-inspection{padding:8px 0;border-bottom:1px solid var(--line)}#prisoner-inspection label{display:flex;flex-direction:column;gap:5px;margin:10px 0;font-size:12px}#prisoner-inspection select{max-width:100%;background:#233332;border:1px solid var(--line);color:inherit;padding:6px}#prisoner-resistance-progress{width:100%;height:7px;accent-color:#d0ac74}.work-social{display:block;font-size:.7rem;white-space:nowrap;color:var(--text-muted,#c4c4ac)}
+#cell-bed > label { display: block; margin-top: 0.4rem; }

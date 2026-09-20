@@ -1,0 +1,2510 @@
+{
+  "baseCommit": "7f58f12038ef13f8d491f6daac73d3b88e507fd2",
+  "changedFiles": [
+    "src/sim/definitions.ts",
+    "src/sim/furniture-travel.ts",
+    "src/sim/occupancy.ts"
+  ],
+  "rows": [
+    {
+      "pass": "baseline-unprofiled",
+      "report": {
+        "date": "2026-09-20T13:46:59.541Z",
+        "base": "7f58f12",
+        "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+        "os": "win32 10.0.26200",
+        "node": "v24.11.1",
+        "protocol": "Synthetic V85 load on a natural 250\u00c2\u00b2 map, retaining the V84 groups of six (two researchers, cook, grower, butcher, miner) and equally many wild hares. Every supplied stove is electric. Each work patch gains a prebuilt 4\u00c3\u20144 solar panel, a battery starting at 120Wd, a fueled wood generator, a physical switch initially open with an ordinary close job, and cardinal conduits to a closed 3\u00c3\u20143 cold store containing supplied rice. Growers also perform Basic work. Crops, corpses, material stocks, completed prerequisite research and battery charge are prepared inputs, not earned colony progress. Daylight charging and physical switching are measured; the separate natural colony journey proves nighttime drain, mining, research and construction. No wind, fire or weather fidelity is implied.",
+        "actors": 100,
+        "animals": 100,
+        "windows": [
+          {
+            "phase": "warmup",
+            "start": 19590031226,
+            "end": 19590558101
+          },
+          {
+            "phase": "setup",
+            "start": 19590558106,
+            "end": 19591291159
+          },
+          {
+            "phase": "measurement",
+            "start": 19591297448,
+            "end": 19611479274
+          }
+        ],
+        "tickMs": {
+          "n": 650,
+          "p50": 26.919700000000375,
+          "p95": 59.981799999999566,
+          "p99": 78.22059999999874,
+          "max": 117.9358000000002,
+          "total": 19631.42979999999
+        },
+        "steadyTickMs": {
+          "n": 630,
+          "p50": 26.471199999999953,
+          "p95": 56.44080000000031,
+          "p99": 78.22059999999874,
+          "max": 117.9358000000002,
+          "total": 18682.02569999999
+        },
+        "snapshotMs": {
+          "n": 130,
+          "p50": 3.614000000001397,
+          "p95": 6.712499999999636,
+          "p99": 11.04070000000047,
+          "max": 11.918800000000374,
+          "total": 547.2248999999997
+        },
+        "initialHash": "16aced8ebf51335194a03273f3ef573721a0550e3d1c2143efcce5fce1106b96",
+        "finalHash": "e6de4f4251d71a47e65df3a5181c0765391044df5e992a1e70f2218ff2036684",
+        "outcomes": {
+          "food": {
+            "stoves": [
+              {
+                "kind": "electric-stove",
+                "id": 13410,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13424,
+                "completed": 2,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13439,
+                "completed": 2,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13453,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13468,
+                "completed": 2,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13482,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13497,
+                "completed": 2,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13511,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13526,
+                "completed": 2,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13540,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13555,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13569,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13584,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13598,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13613,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13627,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13642,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              }
+            ],
+            "butcherTables": 16,
+            "butchered": 32,
+            "meatProduced": 993,
+            "food": {
+              "potato": 374,
+              "corn": 848,
+              "meals": 42,
+              "meat": 993
+            },
+            "crops": [
+              {
+                "kind": "potato",
+                "originalRemaining": 0,
+                "resown": 34
+              },
+              {
+                "kind": "corn",
+                "originalRemaining": 0,
+                "resown": 29
+              }
+            ],
+            "growers": [
+              {
+                "id": 12427,
+                "malnutrition": 141691212,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12433,
+                "malnutrition": 142652399,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12439,
+                "malnutrition": 136859955,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12445,
+                "malnutrition": 142351608,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12451,
+                "malnutrition": 135157757,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12457,
+                "malnutrition": 146364320,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12463,
+                "malnutrition": 134739023,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12469,
+                "malnutrition": 141768104,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12475,
+                "malnutrition": 135976844,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12481,
+                "malnutrition": 141060668,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12487,
+                "malnutrition": 150061376,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12493,
+                "malnutrition": 135063759,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12499,
+                "malnutrition": 135651870,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12505,
+                "malnutrition": 141276424,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12511,
+                "malnutrition": 134730165,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12517,
+                "malnutrition": 147391764,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12523,
+                "malnutrition": 132285787,
+                "food": 73.99999999999594
+              }
+            ],
+            "butcherFood": [
+              91.17333333333195,
+              90.07999999999845,
+              89.46666666666502,
+              92.37333333333214,
+              90.2133333333318,
+              88.90666666666493,
+              90.42666666666517,
+              93.89333333333238,
+              87.81333333333143,
+              89.62666666666505,
+              91.17333333333195,
+              93.30666666666562,
+              94.66666666666583,
+              93.33333333333229,
+              87.89333333333144,
+              89.81333333333174
+            ]
+          },
+          "batteries": [
+            {
+              "id": 13753,
+              "storedWd": 236.57366666666667
+            },
+            {
+              "id": 13781,
+              "storedWd": 236.24033333333333
+            },
+            {
+              "id": 13810,
+              "storedWd": 236.24033333333333
+            },
+            {
+              "id": 13838,
+              "storedWd": 236.407
+            },
+            {
+              "id": 13867,
+              "storedWd": 236.32366666666667
+            },
+            {
+              "id": 13895,
+              "storedWd": 235.99033333333333
+            },
+            {
+              "id": 13924,
+              "storedWd": 236.24033333333333
+            },
+            {
+              "id": 13952,
+              "storedWd": 236.157
+            },
+            {
+              "id": 13981,
+              "storedWd": 236.07366666666667
+            },
+            {
+              "id": 14009,
+              "storedWd": 235.99033333333333
+            },
+            {
+              "id": 14038,
+              "storedWd": 235.74033333333333
+            },
+            {
+              "id": 14066,
+              "storedWd": 235.657
+            },
+            {
+              "id": 14095,
+              "storedWd": 235.15991666666667
+            },
+            {
+              "id": 14123,
+              "storedWd": 235.10575
+            },
+            {
+              "id": 14152,
+              "storedWd": 235.10575
+            },
+            {
+              "id": 14180,
+              "storedWd": 235.05158333333333
+            },
+            {
+              "id": 14209,
+              "storedWd": 234.99741666666668
+            }
+          ],
+          "solar": [
+            {
+              "id": 13752,
+              "watts": 1700
+            },
+            {
+              "id": 13780,
+              "watts": 1700
+            },
+            {
+              "id": 13809,
+              "watts": 1700
+            },
+            {
+              "id": 13837,
+              "watts": 1700
+            },
+            {
+              "id": 13866,
+              "watts": 1700
+            },
+            {
+              "id": 13894,
+              "watts": 1700
+            },
+            {
+              "id": 13923,
+              "watts": 1700
+            },
+            {
+              "id": 13951,
+              "watts": 1700
+            },
+            {
+              "id": 13980,
+              "watts": 1700
+            },
+            {
+              "id": 14008,
+              "watts": 1700
+            },
+            {
+              "id": 14037,
+              "watts": 1700
+            },
+            {
+              "id": 14065,
+              "watts": 1700
+            },
+            {
+              "id": 14094,
+              "watts": 1700
+            },
+            {
+              "id": 14122,
+              "watts": 1700
+            },
+            {
+              "id": 14151,
+              "watts": 1700
+            },
+            {
+              "id": 14179,
+              "watts": 1700
+            },
+            {
+              "id": 14208,
+              "watts": 1700
+            }
+          ],
+          "switches": [
+            {
+              "id": 13754,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 13782,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 13811,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 13839,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 13868,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 13896,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 13925,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 13953,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 13982,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 14010,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 14039,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 14067,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 14096,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 14124,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 14153,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 14181,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 14210,
+              "on": true,
+              "pending": false
+            }
+          ],
+          "conduits": 119,
+          "coolers": [
+            {
+              "id": 13764,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 13792,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 13821,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 13849,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 13878,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 13906,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 13935,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 13963,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 13992,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 14020,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 14049,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 14077,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 14106,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 14134,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 14163,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 14191,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 14220,
+              "powered": true,
+              "temperature": -5
+            }
+          ]
+        },
+        "errors": []
+      },
+      "initialSha256": "16aced8ebf51335194a03273f3ef573721a0550e3d1c2143efcce5fce1106b96",
+      "finalSha256": "e6de4f4251d71a47e65df3a5181c0765391044df5e992a1e70f2218ff2036684"
+    },
+    {
+      "pass": "candidate-unprofiled",
+      "report": {
+        "date": "2026-09-20T13:47:21.226Z",
+        "base": "7f58f12",
+        "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+        "os": "win32 10.0.26200",
+        "node": "v24.11.1",
+        "protocol": "Synthetic V85 load on a natural 250\u00c2\u00b2 map, retaining the V84 groups of six (two researchers, cook, grower, butcher, miner) and equally many wild hares. Every supplied stove is electric. Each work patch gains a prebuilt 4\u00c3\u20144 solar panel, a battery starting at 120Wd, a fueled wood generator, a physical switch initially open with an ordinary close job, and cardinal conduits to a closed 3\u00c3\u20143 cold store containing supplied rice. Growers also perform Basic work. Crops, corpses, material stocks, completed prerequisite research and battery charge are prepared inputs, not earned colony progress. Daylight charging and physical switching are measured; the separate natural colony journey proves nighttime drain, mining, research and construction. No wind, fire or weather fidelity is implied.",
+        "actors": 100,
+        "animals": 100,
+        "windows": [
+          {
+            "phase": "warmup",
+            "start": 19612892459,
+            "end": 19613557334
+          },
+          {
+            "phase": "setup",
+            "start": 19613557343,
+            "end": 19614589674
+          },
+          {
+            "phase": "measurement",
+            "start": 19614596132,
+            "end": 19633167654
+          }
+        ],
+        "tickMs": {
+          "n": 650,
+          "p50": 24.888199999999415,
+          "p95": 55.82269999999971,
+          "p99": 82.23400000000038,
+          "max": 106.75950000000012,
+          "total": 18013.912199999995
+        },
+        "steadyTickMs": {
+          "n": 630,
+          "p50": 24.541299999999865,
+          "p95": 49.20229999999901,
+          "p99": 76.94610000000011,
+          "max": 106.75950000000012,
+          "total": 16959.821299999996
+        },
+        "snapshotMs": {
+          "n": 130,
+          "p50": 3.8034000000006927,
+          "p95": 6.931399999997666,
+          "p99": 9.647899999999936,
+          "max": 13.426300000000083,
+          "total": 553.8812000000162
+        },
+        "initialHash": "16aced8ebf51335194a03273f3ef573721a0550e3d1c2143efcce5fce1106b96",
+        "finalHash": "e6de4f4251d71a47e65df3a5181c0765391044df5e992a1e70f2218ff2036684",
+        "outcomes": {
+          "food": {
+            "stoves": [
+              {
+                "kind": "electric-stove",
+                "id": 13410,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13424,
+                "completed": 2,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13439,
+                "completed": 2,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13453,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13468,
+                "completed": 2,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13482,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13497,
+                "completed": 2,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13511,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13526,
+                "completed": 2,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13540,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13555,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13569,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13584,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13598,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13613,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13627,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13642,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              }
+            ],
+            "butcherTables": 16,
+            "butchered": 32,
+            "meatProduced": 993,
+            "food": {
+              "potato": 374,
+              "corn": 848,
+              "meals": 42,
+              "meat": 993
+            },
+            "crops": [
+              {
+                "kind": "potato",
+                "originalRemaining": 0,
+                "resown": 34
+              },
+              {
+                "kind": "corn",
+                "originalRemaining": 0,
+                "resown": 29
+              }
+            ],
+            "growers": [
+              {
+                "id": 12427,
+                "malnutrition": 141691212,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12433,
+                "malnutrition": 142652399,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12439,
+                "malnutrition": 136859955,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12445,
+                "malnutrition": 142351608,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12451,
+                "malnutrition": 135157757,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12457,
+                "malnutrition": 146364320,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12463,
+                "malnutrition": 134739023,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12469,
+                "malnutrition": 141768104,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12475,
+                "malnutrition": 135976844,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12481,
+                "malnutrition": 141060668,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12487,
+                "malnutrition": 150061376,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12493,
+                "malnutrition": 135063759,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12499,
+                "malnutrition": 135651870,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12505,
+                "malnutrition": 141276424,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12511,
+                "malnutrition": 134730165,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12517,
+                "malnutrition": 147391764,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12523,
+                "malnutrition": 132285787,
+                "food": 73.99999999999594
+              }
+            ],
+            "butcherFood": [
+              91.17333333333195,
+              90.07999999999845,
+              89.46666666666502,
+              92.37333333333214,
+              90.2133333333318,
+              88.90666666666493,
+              90.42666666666517,
+              93.89333333333238,
+              87.81333333333143,
+              89.62666666666505,
+              91.17333333333195,
+              93.30666666666562,
+              94.66666666666583,
+              93.33333333333229,
+              87.89333333333144,
+              89.81333333333174
+            ]
+          },
+          "batteries": [
+            {
+              "id": 13753,
+              "storedWd": 236.57366666666667
+            },
+            {
+              "id": 13781,
+              "storedWd": 236.24033333333333
+            },
+            {
+              "id": 13810,
+              "storedWd": 236.24033333333333
+            },
+            {
+              "id": 13838,
+              "storedWd": 236.407
+            },
+            {
+              "id": 13867,
+              "storedWd": 236.32366666666667
+            },
+            {
+              "id": 13895,
+              "storedWd": 235.99033333333333
+            },
+            {
+              "id": 13924,
+              "storedWd": 236.24033333333333
+            },
+            {
+              "id": 13952,
+              "storedWd": 236.157
+            },
+            {
+              "id": 13981,
+              "storedWd": 236.07366666666667
+            },
+            {
+              "id": 14009,
+              "storedWd": 235.99033333333333
+            },
+            {
+              "id": 14038,
+              "storedWd": 235.74033333333333
+            },
+            {
+              "id": 14066,
+              "storedWd": 235.657
+            },
+            {
+              "id": 14095,
+              "storedWd": 235.15991666666667
+            },
+            {
+              "id": 14123,
+              "storedWd": 235.10575
+            },
+            {
+              "id": 14152,
+              "storedWd": 235.10575
+            },
+            {
+              "id": 14180,
+              "storedWd": 235.05158333333333
+            },
+            {
+              "id": 14209,
+              "storedWd": 234.99741666666668
+            }
+          ],
+          "solar": [
+            {
+              "id": 13752,
+              "watts": 1700
+            },
+            {
+              "id": 13780,
+              "watts": 1700
+            },
+            {
+              "id": 13809,
+              "watts": 1700
+            },
+            {
+              "id": 13837,
+              "watts": 1700
+            },
+            {
+              "id": 13866,
+              "watts": 1700
+            },
+            {
+              "id": 13894,
+              "watts": 1700
+            },
+            {
+              "id": 13923,
+              "watts": 1700
+            },
+            {
+              "id": 13951,
+              "watts": 1700
+            },
+            {
+              "id": 13980,
+              "watts": 1700
+            },
+            {
+              "id": 14008,
+              "watts": 1700
+            },
+            {
+              "id": 14037,
+              "watts": 1700
+            },
+            {
+              "id": 14065,
+              "watts": 1700
+            },
+            {
+              "id": 14094,
+              "watts": 1700
+            },
+            {
+              "id": 14122,
+              "watts": 1700
+            },
+            {
+              "id": 14151,
+              "watts": 1700
+            },
+            {
+              "id": 14179,
+              "watts": 1700
+            },
+            {
+              "id": 14208,
+              "watts": 1700
+            }
+          ],
+          "switches": [
+            {
+              "id": 13754,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 13782,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 13811,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 13839,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 13868,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 13896,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 13925,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 13953,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 13982,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 14010,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 14039,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 14067,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 14096,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 14124,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 14153,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 14181,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 14210,
+              "on": true,
+              "pending": false
+            }
+          ],
+          "conduits": 119,
+          "coolers": [
+            {
+              "id": 13764,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 13792,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 13821,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 13849,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 13878,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 13906,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 13935,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 13963,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 13992,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 14020,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 14049,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 14077,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 14106,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 14134,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 14163,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 14191,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 14220,
+              "powered": true,
+              "temperature": -5
+            }
+          ]
+        },
+        "errors": []
+      },
+      "initialSha256": "16aced8ebf51335194a03273f3ef573721a0550e3d1c2143efcce5fce1106b96",
+      "finalSha256": "e6de4f4251d71a47e65df3a5181c0765391044df5e992a1e70f2218ff2036684"
+    },
+    {
+      "pass": "candidate-unprofiled-second",
+      "report": {
+        "date": "2026-09-20T13:48:25.474Z",
+        "base": "7f58f12",
+        "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+        "os": "win32 10.0.26200",
+        "node": "v24.11.1",
+        "protocol": "Synthetic V85 load on a natural 250\u00c2\u00b2 map, retaining the V84 groups of six (two researchers, cook, grower, butcher, miner) and equally many wild hares. Every supplied stove is electric. Each work patch gains a prebuilt 4\u00c3\u20144 solar panel, a battery starting at 120Wd, a fueled wood generator, a physical switch initially open with an ordinary close job, and cardinal conduits to a closed 3\u00c3\u20143 cold store containing supplied rice. Growers also perform Basic work. Crops, corpses, material stocks, completed prerequisite research and battery charge are prepared inputs, not earned colony progress. Daylight charging and physical switching are measured; the separate natural colony journey proves nighttime drain, mining, research and construction. No wind, fire or weather fidelity is implied.",
+        "actors": 100,
+        "animals": 100,
+        "windows": [
+          {
+            "phase": "warmup",
+            "start": 19677645222,
+            "end": 19678181707
+          },
+          {
+            "phase": "setup",
+            "start": 19678181712,
+            "end": 19679047758
+          },
+          {
+            "phase": "measurement",
+            "start": 19679055523,
+            "end": 19697356178
+          }
+        ],
+        "tickMs": {
+          "n": 650,
+          "p50": 24.730499999999665,
+          "p95": 48.05949999999939,
+          "p99": 71.29539999999997,
+          "max": 89.53729999999996,
+          "total": 17748.242000000002
+        },
+        "steadyTickMs": {
+          "n": 630,
+          "p50": 24.55870000000141,
+          "p95": 46.58840000000055,
+          "p99": 69.34450000000015,
+          "max": 89.53729999999996,
+          "total": 16776.53
+        },
+        "snapshotMs": {
+          "n": 130,
+          "p50": 3.9814000000005763,
+          "p95": 6.747400000000198,
+          "p99": 7.828599999999824,
+          "max": 10.834899999999834,
+          "total": 548.7994000000026
+        },
+        "initialHash": "16aced8ebf51335194a03273f3ef573721a0550e3d1c2143efcce5fce1106b96",
+        "finalHash": "e6de4f4251d71a47e65df3a5181c0765391044df5e992a1e70f2218ff2036684",
+        "outcomes": {
+          "food": {
+            "stoves": [
+              {
+                "kind": "electric-stove",
+                "id": 13410,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13424,
+                "completed": 2,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13439,
+                "completed": 2,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13453,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13468,
+                "completed": 2,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13482,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13497,
+                "completed": 2,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13511,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13526,
+                "completed": 2,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13540,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13555,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13569,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13584,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13598,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13613,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13627,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13642,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              }
+            ],
+            "butcherTables": 16,
+            "butchered": 32,
+            "meatProduced": 993,
+            "food": {
+              "potato": 374,
+              "corn": 848,
+              "meals": 42,
+              "meat": 993
+            },
+            "crops": [
+              {
+                "kind": "potato",
+                "originalRemaining": 0,
+                "resown": 34
+              },
+              {
+                "kind": "corn",
+                "originalRemaining": 0,
+                "resown": 29
+              }
+            ],
+            "growers": [
+              {
+                "id": 12427,
+                "malnutrition": 141691212,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12433,
+                "malnutrition": 142652399,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12439,
+                "malnutrition": 136859955,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12445,
+                "malnutrition": 142351608,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12451,
+                "malnutrition": 135157757,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12457,
+                "malnutrition": 146364320,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12463,
+                "malnutrition": 134739023,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12469,
+                "malnutrition": 141768104,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12475,
+                "malnutrition": 135976844,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12481,
+                "malnutrition": 141060668,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12487,
+                "malnutrition": 150061376,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12493,
+                "malnutrition": 135063759,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12499,
+                "malnutrition": 135651870,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12505,
+                "malnutrition": 141276424,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12511,
+                "malnutrition": 134730165,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12517,
+                "malnutrition": 147391764,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12523,
+                "malnutrition": 132285787,
+                "food": 73.99999999999594
+              }
+            ],
+            "butcherFood": [
+              91.17333333333195,
+              90.07999999999845,
+              89.46666666666502,
+              92.37333333333214,
+              90.2133333333318,
+              88.90666666666493,
+              90.42666666666517,
+              93.89333333333238,
+              87.81333333333143,
+              89.62666666666505,
+              91.17333333333195,
+              93.30666666666562,
+              94.66666666666583,
+              93.33333333333229,
+              87.89333333333144,
+              89.81333333333174
+            ]
+          },
+          "batteries": [
+            {
+              "id": 13753,
+              "storedWd": 236.57366666666667
+            },
+            {
+              "id": 13781,
+              "storedWd": 236.24033333333333
+            },
+            {
+              "id": 13810,
+              "storedWd": 236.24033333333333
+            },
+            {
+              "id": 13838,
+              "storedWd": 236.407
+            },
+            {
+              "id": 13867,
+              "storedWd": 236.32366666666667
+            },
+            {
+              "id": 13895,
+              "storedWd": 235.99033333333333
+            },
+            {
+              "id": 13924,
+              "storedWd": 236.24033333333333
+            },
+            {
+              "id": 13952,
+              "storedWd": 236.157
+            },
+            {
+              "id": 13981,
+              "storedWd": 236.07366666666667
+            },
+            {
+              "id": 14009,
+              "storedWd": 235.99033333333333
+            },
+            {
+              "id": 14038,
+              "storedWd": 235.74033333333333
+            },
+            {
+              "id": 14066,
+              "storedWd": 235.657
+            },
+            {
+              "id": 14095,
+              "storedWd": 235.15991666666667
+            },
+            {
+              "id": 14123,
+              "storedWd": 235.10575
+            },
+            {
+              "id": 14152,
+              "storedWd": 235.10575
+            },
+            {
+              "id": 14180,
+              "storedWd": 235.05158333333333
+            },
+            {
+              "id": 14209,
+              "storedWd": 234.99741666666668
+            }
+          ],
+          "solar": [
+            {
+              "id": 13752,
+              "watts": 1700
+            },
+            {
+              "id": 13780,
+              "watts": 1700
+            },
+            {
+              "id": 13809,
+              "watts": 1700
+            },
+            {
+              "id": 13837,
+              "watts": 1700
+            },
+            {
+              "id": 13866,
+              "watts": 1700
+            },
+            {
+              "id": 13894,
+              "watts": 1700
+            },
+            {
+              "id": 13923,
+              "watts": 1700
+            },
+            {
+              "id": 13951,
+              "watts": 1700
+            },
+            {
+              "id": 13980,
+              "watts": 1700
+            },
+            {
+              "id": 14008,
+              "watts": 1700
+            },
+            {
+              "id": 14037,
+              "watts": 1700
+            },
+            {
+              "id": 14065,
+              "watts": 1700
+            },
+            {
+              "id": 14094,
+              "watts": 1700
+            },
+            {
+              "id": 14122,
+              "watts": 1700
+            },
+            {
+              "id": 14151,
+              "watts": 1700
+            },
+            {
+              "id": 14179,
+              "watts": 1700
+            },
+            {
+              "id": 14208,
+              "watts": 1700
+            }
+          ],
+          "switches": [
+            {
+              "id": 13754,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 13782,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 13811,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 13839,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 13868,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 13896,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 13925,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 13953,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 13982,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 14010,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 14039,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 14067,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 14096,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 14124,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 14153,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 14181,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 14210,
+              "on": true,
+              "pending": false
+            }
+          ],
+          "conduits": 119,
+          "coolers": [
+            {
+              "id": 13764,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 13792,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 13821,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 13849,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 13878,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 13906,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 13935,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 13963,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 13992,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 14020,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 14049,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 14077,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 14106,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 14134,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 14163,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 14191,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 14220,
+              "powered": true,
+              "temperature": -5
+            }
+          ]
+        },
+        "errors": []
+      },
+      "initialSha256": "16aced8ebf51335194a03273f3ef573721a0550e3d1c2143efcce5fce1106b96",
+      "finalSha256": "e6de4f4251d71a47e65df3a5181c0765391044df5e992a1e70f2218ff2036684"
+    },
+    {
+      "pass": "baseline-unprofiled-second",
+      "report": {
+        "date": "2026-09-20T13:48:47.571Z",
+        "base": "7f58f12",
+        "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+        "os": "win32 10.0.26200",
+        "node": "v24.11.1",
+        "protocol": "Synthetic V85 load on a natural 250\u00c2\u00b2 map, retaining the V84 groups of six (two researchers, cook, grower, butcher, miner) and equally many wild hares. Every supplied stove is electric. Each work patch gains a prebuilt 4\u00c3\u20144 solar panel, a battery starting at 120Wd, a fueled wood generator, a physical switch initially open with an ordinary close job, and cardinal conduits to a closed 3\u00c3\u20143 cold store containing supplied rice. Growers also perform Basic work. Crops, corpses, material stocks, completed prerequisite research and battery charge are prepared inputs, not earned colony progress. Daylight charging and physical switching are measured; the separate natural colony journey proves nighttime drain, mining, research and construction. No wind, fire or weather fidelity is implied.",
+        "actors": 100,
+        "animals": 100,
+        "windows": [
+          {
+            "phase": "warmup",
+            "start": 19698730763,
+            "end": 19699260526
+          },
+          {
+            "phase": "setup",
+            "start": 19699260533,
+            "end": 19700052566
+          },
+          {
+            "phase": "measurement",
+            "start": 19700061842,
+            "end": 19719503404
+          }
+        ],
+        "tickMs": {
+          "n": 650,
+          "p50": 26.869699999999284,
+          "p95": 54.37830000000031,
+          "p99": 69.70299999999997,
+          "max": 107.51029999999992,
+          "total": 18908.57030000001
+        },
+        "steadyTickMs": {
+          "n": 630,
+          "p50": 26.63600000000224,
+          "p95": 51.42710000000079,
+          "p99": 66.87820000000102,
+          "max": 107.51029999999992,
+          "total": 17901.177100000008
+        },
+        "snapshotMs": {
+          "n": 130,
+          "p50": 3.5345999999990454,
+          "p95": 6.813699999999699,
+          "p99": 10.379800000000614,
+          "max": 12.235899999999674,
+          "total": 529.7729000000145
+        },
+        "initialHash": "16aced8ebf51335194a03273f3ef573721a0550e3d1c2143efcce5fce1106b96",
+        "finalHash": "e6de4f4251d71a47e65df3a5181c0765391044df5e992a1e70f2218ff2036684",
+        "outcomes": {
+          "food": {
+            "stoves": [
+              {
+                "kind": "electric-stove",
+                "id": 13410,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13424,
+                "completed": 2,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13439,
+                "completed": 2,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13453,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13468,
+                "completed": 2,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13482,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13497,
+                "completed": 2,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13511,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13526,
+                "completed": 2,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13540,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13555,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13569,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13584,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13598,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13613,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13627,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              },
+              {
+                "kind": "electric-stove",
+                "id": 13642,
+                "completed": 4,
+                "powered": true,
+                "fuelBurned": 0
+              }
+            ],
+            "butcherTables": 16,
+            "butchered": 32,
+            "meatProduced": 993,
+            "food": {
+              "potato": 374,
+              "corn": 848,
+              "meals": 42,
+              "meat": 993
+            },
+            "crops": [
+              {
+                "kind": "potato",
+                "originalRemaining": 0,
+                "resown": 34
+              },
+              {
+                "kind": "corn",
+                "originalRemaining": 0,
+                "resown": 29
+              }
+            ],
+            "growers": [
+              {
+                "id": 12427,
+                "malnutrition": 141691212,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12433,
+                "malnutrition": 142652399,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12439,
+                "malnutrition": 136859955,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12445,
+                "malnutrition": 142351608,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12451,
+                "malnutrition": 135157757,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12457,
+                "malnutrition": 146364320,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12463,
+                "malnutrition": 134739023,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12469,
+                "malnutrition": 141768104,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12475,
+                "malnutrition": 135976844,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12481,
+                "malnutrition": 141060668,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12487,
+                "malnutrition": 150061376,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12493,
+                "malnutrition": 135063759,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12499,
+                "malnutrition": 135651870,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12505,
+                "malnutrition": 141276424,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12511,
+                "malnutrition": 134730165,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12517,
+                "malnutrition": 147391764,
+                "food": 73.99999999999594
+              },
+              {
+                "id": 12523,
+                "malnutrition": 132285787,
+                "food": 73.99999999999594
+              }
+            ],
+            "butcherFood": [
+              91.17333333333195,
+              90.07999999999845,
+              89.46666666666502,
+              92.37333333333214,
+              90.2133333333318,
+              88.90666666666493,
+              90.42666666666517,
+              93.89333333333238,
+              87.81333333333143,
+              89.62666666666505,
+              91.17333333333195,
+              93.30666666666562,
+              94.66666666666583,
+              93.33333333333229,
+              87.89333333333144,
+              89.81333333333174
+            ]
+          },
+          "batteries": [
+            {
+              "id": 13753,
+              "storedWd": 236.57366666666667
+            },
+            {
+              "id": 13781,
+              "storedWd": 236.24033333333333
+            },
+            {
+              "id": 13810,
+              "storedWd": 236.24033333333333
+            },
+            {
+              "id": 13838,
+              "storedWd": 236.407
+            },
+            {
+              "id": 13867,
+              "storedWd": 236.32366666666667
+            },
+            {
+              "id": 13895,
+              "storedWd": 235.99033333333333
+            },
+            {
+              "id": 13924,
+              "storedWd": 236.24033333333333
+            },
+            {
+              "id": 13952,
+              "storedWd": 236.157
+            },
+            {
+              "id": 13981,
+              "storedWd": 236.07366666666667
+            },
+            {
+              "id": 14009,
+              "storedWd": 235.99033333333333
+            },
+            {
+              "id": 14038,
+              "storedWd": 235.74033333333333
+            },
+            {
+              "id": 14066,
+              "storedWd": 235.657
+            },
+            {
+              "id": 14095,
+              "storedWd": 235.15991666666667
+            },
+            {
+              "id": 14123,
+              "storedWd": 235.10575
+            },
+            {
+              "id": 14152,
+              "storedWd": 235.10575
+            },
+            {
+              "id": 14180,
+              "storedWd": 235.05158333333333
+            },
+            {
+              "id": 14209,
+              "storedWd": 234.99741666666668
+            }
+          ],
+          "solar": [
+            {
+              "id": 13752,
+              "watts": 1700
+            },
+            {
+              "id": 13780,
+              "watts": 1700
+            },
+            {
+              "id": 13809,
+              "watts": 1700
+            },
+            {
+              "id": 13837,
+              "watts": 1700
+            },
+            {
+              "id": 13866,
+              "watts": 1700
+            },
+            {
+              "id": 13894,
+              "watts": 1700
+            },
+            {
+              "id": 13923,
+              "watts": 1700
+            },
+            {
+              "id": 13951,
+              "watts": 1700
+            },
+            {
+              "id": 13980,
+              "watts": 1700
+            },
+            {
+              "id": 14008,
+              "watts": 1700
+            },
+            {
+              "id": 14037,
+              "watts": 1700
+            },
+            {
+              "id": 14065,
+              "watts": 1700
+            },
+            {
+              "id": 14094,
+              "watts": 1700
+            },
+            {
+              "id": 14122,
+              "watts": 1700
+            },
+            {
+              "id": 14151,
+              "watts": 1700
+            },
+            {
+              "id": 14179,
+              "watts": 1700
+            },
+            {
+              "id": 14208,
+              "watts": 1700
+            }
+          ],
+          "switches": [
+            {
+              "id": 13754,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 13782,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 13811,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 13839,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 13868,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 13896,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 13925,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 13953,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 13982,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 14010,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 14039,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 14067,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 14096,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 14124,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 14153,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 14181,
+              "on": true,
+              "pending": false
+            },
+            {
+              "id": 14210,
+              "on": true,
+              "pending": false
+            }
+          ],
+          "conduits": 119,
+          "coolers": [
+            {
+              "id": 13764,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 13792,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 13821,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 13849,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 13878,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 13906,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 13935,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 13963,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 13992,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 14020,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 14049,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 14077,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 14106,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 14134,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 14163,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 14191,
+              "powered": true,
+              "temperature": -5
+            },
+            {
+              "id": 14220,
+              "powered": true,
+              "temperature": -5
+            }
+          ]
+        },
+        "errors": []
+      },
+      "initialSha256": "16aced8ebf51335194a03273f3ef573721a0550e3d1c2143efcce5fce1106b96",
+      "finalSha256": "e6de4f4251d71a47e65df3a5181c0765391044df5e992a1e70f2218ff2036684"
+    }
+  ]
+}

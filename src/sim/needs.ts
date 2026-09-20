@@ -12,7 +12,9 @@ import { updateWellbeing } from './wellbeing.ts';
 import { processSleeping } from './sleeping.ts';
 import { updateRecreation } from './recreation-rules.ts';
 import { updateRest } from './rest.ts';
-import { allowedFood, type FoodItemId } from './food-policy.ts';
+import { type FoodItemId } from './food-policy.ts';
+import { selfAllowedFood,selfFoodAccessible } from './prison-food.ts';
+import { capturePrisonTopology } from './prison-space.ts';
 import type { Cell, Pawn, World } from './types.ts';
 
 // Baseline adult: 1.6 nutrition/day; 100 meter points = one nutrition.
@@ -62,14 +64,15 @@ export function processNeeds(world: World, pawn: Pawn, context: NeedContext): bo
   let reach: Reachability | null | undefined;
   if (pawn.need?.kind !== 'eat' && wantsFood && canPlan && (world.restRules === 'adult' || pawn.rest > (pawn.need?.kind === 'sleep' ? 5 : 0))) {
     // Its old haul will be released atomically if this replacement is selected.
-    const allowed = allowedFood(world, pawn);
-    const sources = world.piles.filter(pile => pile.kind === 'food' && allowed.includes(pile.item as FoodItemId) && pile.owner.type === 'ground' && pile.quantity > reservedSource(world, pile.id, pawn.id));
+    const allowed = selfAllowedFood(world, pawn);
+    const topology=pawn.prisoner||world.structures.some(s=>s.prisoner)?capturePrisonTopology(world):undefined;
+    const sources = world.piles.filter(pile => pile.kind === 'food' && allowed.includes(pile.item as FoodItemId) && selfFoodAccessible(world,pawn,pile,topology) && pile.quantity > reservedSource(world, pile.id, pawn.id));
     // A hungry hauler already holding food may reserve a meal quantity for ingestion.
     const held = world.piles.find(pile => pile.owner.type === 'pawn' && pile.owner.pawnId === pawn.id && pile.kind === 'food' && allowed.includes(pile.item as FoodItemId));
     if (sources.length || held) {
-      reach = context.search( foodSearchGoals(world, pawn, sources));
+      reach = context.search( foodSearchGoals(world, pawn, sources,topology));
       if (!reach) return true; // Budget exhaustion must not be mistaken for inaccessibility.
-      const best = selectFood(world, pawn, sources, reach);
+      const best = selectFood(world, pawn, sources, reach,pawn,topology);
       if (held || best) {
         const useHeld = !!held && (!best || world.foodRules === 'legacy' || pileFoodScore(world, held, 0) >= best.score);
         const selected = useHeld ? held! : sources.find(pile => pile.id === best!.id)!;
@@ -95,7 +98,7 @@ export function processNeeds(world: World, pawn: Pawn, context: NeedContext): bo
     // Cooking may still provide food for others even under a restrictive diet.
     // Its processor can wait for a navigation budget while keeping its product;
     // do not overwrite the active task's state during that wait.
-    if (pawn.jobId === null && pawn.haul === null && !pawn.hunting && !pawn.research && !pawn.cooking && !pawn.feed&&!pawn.tend && !pawn.rescue) pawn.state = 'hungry';
+    if (pawn.jobId === null && pawn.haul === null && !pawn.hunting && !pawn.research && !pawn.cooking && !pawn.ward&&!pawn.feed&&!pawn.tend && !pawn.rescue) pawn.state = 'hungry';
   } else if (pawn.state === 'hungry') pawn.state = 'idle';
   return false;
 }
@@ -103,7 +106,7 @@ export function processNeeds(world: World, pawn: Pawn, context: NeedContext): bo
 export function updateNeeds(world: World, pawn: Pawn,body?:import('./body-capacities.ts').BodyAssessment): void {
   pawn.hunger = Math.max(0, pawn.hunger - (world.foodRules === 'legacy' ? 0.015 : HUNGER_PER_TICK * adultHungerFactor(pawn.hunger)) * malnutritionModifiers(pawn.health?.malnutrition).hungerFactor);
   updateRest(world, pawn);
-  updateRecreation(pawn,body);
+  if(!pawn.prisoner)updateRecreation(pawn,body);
   if (pawn.needCooldown > 0) pawn.needCooldown--;
   updateWellbeing(world, pawn,body);
 }

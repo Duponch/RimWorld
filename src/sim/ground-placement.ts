@@ -36,6 +36,10 @@ function cellCapacity(world: World, cell: Cell, item: ItemId, limit: number, exc
   if(capacity<=0||world.schemaVersion>=21&&(!groundOccupancyAllows(world,cell)||zone&&!storageOccupancyAllows(world,cell)))return 0;
   // Hot capacity queries must not allocate an array/generator of every transport.
   for (const pawn of world.pawns) {
+    if(pawn.id!==exceptPawn&&pawn.ward?.kind==='food'&&pawn.ward.spot.x===cell.x&&pawn.ward.spot.z===cell.z){
+      const t=pawn.ward,food=world.piles.find(p=>p.id===(t.phase==='pickup'?t.sourcePileId:t.carryPileId));
+      if(!food||food.item!==item)return 0;capacity-=t.quantity;
+    }
     if(pawn.id!==exceptPawn&&pawn.haul)capacity-=reservedAt(world,pawn.haul,cell,item,zone);
     const queue=pawn.orders?.queue;
     if(queue?.length)for(const task of queue)if(typeof task!=='number') {

@@ -1,4 +1,7 @@
 import { requestPowerFlick,reconcilePowerFlicks,advancePowerFlick } from './power-flick.ts';
+import { applyCapture } from './capture.ts';
+import { applyPrisonerMode,applyPrisonBed,reconcilePrisoners,processPrisoner } from './prisoners.ts';
+import { processWarden,reconcileWarden } from './warden.ts';
 import { sharesConstructionLayer } from './power-grid.ts';
 import { batteriesUnlocked,solarPowerUnlocked } from './research.ts';
 import { powerConstructionSkill } from './power-construction.ts';
@@ -47,6 +50,8 @@ import { planUrgentCare } from './urgent-care.ts';
 import { applyRescue,processRescue,reconcileRescues } from './rescue.ts';
 import { applyMedicalBed } from './medical-beds.ts';
 import { carrierOf } from './rescue-state.ts';
+import { exitPrisoner } from './prisoner-exit.ts';
+import { feedingWork } from './feeding-rules.ts';
 import { tickSkills, constructionWorkRate } from './skills.ts';
 import { advancePower, reconcilePower } from './power.ts';
 import { isElectrical, newPowerState } from './power-rules.ts';
@@ -219,7 +224,7 @@ export function applyCommand(world: World, command: Command): CommandResult {
     reconcileWildlife(world);
     detachMissingBills(world);reconcileRepairs(world);reconcilePowerFlicks(world);
     if(command.type.startsWith('order-')&&'pawnId' in command){const actor=world.pawns.find(p=>p.id===command.pawnId);if(actor)delete actor.flee;}
-    reconcileRescues(world);reconcilePatientRest(world);reconcileTending(world);reconcileFeeding(world);reconcileEquipmentTasks(world);for(const pawn of world.pawns)reconcileWeaponMemory(world,pawn);reconcileOrders(world);const thermal=reconcileTemperature(world);updateFoodTemperatures(world,thermal);updatePlantTemperatures(world,thermal);}
+    reconcilePrisoners(world);reconcileRescues(world);reconcileWarden(world);reconcilePatientRest(world);reconcileTending(world);reconcileFeeding(world);reconcileEquipmentTasks(world);for(const pawn of world.pawns)reconcileWeaponMemory(world,pawn);reconcileOrders(world);const thermal=reconcileTemperature(world);updateFoodTemperatures(world,thermal);updatePlantTemperatures(world,thermal);}
   return result;
 }
 function applyCommandInternal(world: World, command: Command): CommandResult {
@@ -232,8 +237,10 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   if(command.type==='enable-heatwaves'){if(world.gameProfile)return {ok:false,code:'invalid-command',reason:'Le calendrier de canicule historique n’est pas disponible avec ce narrateur.'};enableHeatwaves(world);return {ok:true};}
   if(command.type==='enable-raids'){enableRaids(world);return {ok:true};}
   if(command.type==='enable-arrivals'||command.type==='answer-arrival')return applyArrival(world,command);
+  if(command.type==='prison-bed')return applyPrisonBed(world,command);
+  if(command.type==='prisoner-mode')return applyPrisonerMode(world,command);
   const actors='pawnIds' in command&&Array.isArray(command.pawnIds)?command.pawnIds:'pawnId' in command&&command.pawnId!==null?[command.pawnId]:[];
-  if(actors.some(id=>{const p=world.pawns.find(p=>p.id===id);return p&&!isColonist(p);}))return refusal('invalid-command','Cette personne ne fait pas partie de la colonie.');
+  if(actors.some(id=>{const p=world.pawns.find(p=>p.id===id);return p&&!isColonist(p)&&!(p.prisoner&&['medical-care','medical-policy','food-policy-assign'].includes(command.type));}))return refusal('invalid-command','Cette personne ne fait pas partie de la colonie.');
   if((typeof command.type==='string'&&command.type.startsWith('order-')||['draft','draft-move','draft-stop','fire-at-will','clear-orders','shoot','melee'].includes(command.type))&&actors.some(id=>world.pawns.find(p=>p.id===id)?.mental?.crisis))return refusal('invalid-command','Ce colon est en errance triste et ne peut pas obéir.');
   if(command.type==='hostility-response'){const p=world.pawns.find(p=>p.id===command.pawnId);if(!p||!['flee','ignore','attack'].includes(command.response))return refusal('invalid-command','Réaction invalide.');if(command.response==='flee')delete p.hostilityResponse;else p.hostilityResponse=command.response;cancelAutomaticCombat(p);if(p.flee&&command.response!=='flee'){delete p.flee;p.path=[];p.state='idle';}return {ok:true};}
   if(typeof command.type==='string'&&command.type.startsWith('order-')&&'pawnId' in command&&world.pawns.find(p=>p.id===command.pawnId)?.melee?.strike)return refusal('invalid-command','Le colon récupère après sa frappe.');
@@ -264,6 +271,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
     p.planCooldown=0;return {ok:true};
   }
   if(command.type==='order-rescue')return applyRescue(world,command);
+  if(command.type==='order-capture')return applyCapture(world,command);
   if(command.type==='medical-bed')return applyMedicalBed(world,command);
   if(command.type==='order-job'||command.type==='order-cook'||command.type==='order-haul'||command.type==='clear-orders')return applyOrderCommand(world,command);
   if (command.type === 'schedule-paint' || command.type === 'schedule-replace') return applyScheduleCommand(world, command);
@@ -296,7 +304,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   if (command.type === 'assign-bed') {
     const bed = world.structures.find(item => item.id === command.bedId && item.kind === 'bed');
     const owner = world.pawns.find(item => item.id === command.pawnId);
-    if (!bed || bed.medical || (command.pawnId !== null && (!owner||owner.state==='dead'))) return refusal('missing-target', 'Lit ou colon introuvable.');
+    if (!bed || bed.medical || bed.prisoner || (command.pawnId !== null && (!owner||owner.state==='dead'))) return refusal('missing-target', 'Lit ou colon introuvable.');
     for (const pawn of world.pawns) if (pawn.bedId === bed.id || pawn === owner) {
       if (pawn.need?.kind === 'sleep') releaseWork(world, pawn,drops);
       pawn.bedId = null; pawn.needCooldown = 0;
@@ -305,13 +313,14 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
     return { ok: true };
   }
   if (command.type === 'priority') {
-    if (!['basic','hunt','research','patient','bedrest','doctor','mine', 'gather', 'build', 'haul', 'grow', 'cook', 'craft'].includes(command.work) || !Number.isInteger(command.value) || command.value < 0 || command.value > 4) return refusal('invalid-priority', 'La priorité doit être comprise entre 0 et 4.');
+    if (!['warden','basic','hunt','research','patient','bedrest','doctor','mine', 'gather', 'build', 'haul', 'grow', 'cook', 'craft'].includes(command.work) || !Number.isInteger(command.value) || command.value < 0 || command.value > 4) return refusal('invalid-priority', 'La priorité doit être comprise entre 0 et 4.');
     const pawn = world.pawns.find(candidate => candidate.id === command.pawnId);
     if (!pawn) return refusal('missing-target', 'Colon introuvable.');
     pawn.priorities[command.work] = command.value;if(command.work==='hunt'&&command.value===0&&pawn.hunting){cancelHunting(pawn);pawn.path=[];pawn.state='idle';}if(command.work==='research'&&command.value===0&&pawn.research)releaseAssignments(world,pawn);
-    if(command.work==='doctor'&&command.value===0&&pawn.feed&&pawn.orders.active!=='feed')releaseWork(world,pawn,drops);
+    if(command.value===0&&pawn.feed&&command.work===feedingWork(world.pawns.find(p=>p.id===pawn.feed!.patientId))&&pawn.orders.active!=='feed')releaseWork(world,pawn,drops);
     if(command.work==='doctor'&&command.value===0&&pawn.tend&&pawn.orders.active!=='tend')releaseWork(world,pawn);
-    if(command.work==='doctor'&&command.value===0&&pawn.rescue&&pawn.orders.active!=='rescue')releaseWork(world,pawn,drops);
+    if(command.work==='warden'&&command.value===0&&pawn.ward)releaseWork(world,pawn,drops);
+    if(command.value===0&&pawn.rescue&&command.work===(world.pawns.find(p=>p.id===pawn.rescue!.patientId)?.prisoner?'warden':'doctor')&&pawn.orders.active!=='rescue')releaseWork(world,pawn,drops);
     const job = world.jobs.find(candidate => candidate.id === pawn.jobId);
     if (command.value === 0 && ((job && workType(job) === command.work && pawn.orders.active===null) || (pawn.haul && pawn.orders.active!=='haul' && command.work === haulingWork(pawn.haul.destination)) || (pawn.cooking && pawn.orders.active!=='cook' && command.work === taskWork(pawn.cooking)))) releaseWork(world, pawn,drops);
     pawn.planCooldown = 0; refreshStock(world); return { ok: true };
@@ -419,7 +428,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     detachMissingBills(world);reconcileRepairs(world);reconcilePowerFlicks(world);
     expireStaggers(world);
     scheduleGrowing(world);
-    scheduleRoofs(world);reconcileRescues(world);reconcilePatientRest(world);reconcileTending(world);reconcileFeeding(world);reconcileEquipmentTasks(world);for(const pawn of world.pawns)reconcileWeaponMemory(world,pawn);
+    scheduleRoofs(world);reconcilePrisoners(world);reconcileRescues(world);reconcileWarden(world);reconcilePatientRest(world);reconcileTending(world);reconcileFeeding(world);reconcileEquipmentTasks(world);for(const pawn of world.pawns)reconcileWeaponMemory(world,pawn);
     // Build only if this tick actually plans or moves. No cross-tick cache can hide
     // a command, edited terrain, restored save, or a wall that changed between calls.
     let blocked: Uint8Array | undefined;
@@ -433,7 +442,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     const getLight=()=>light??=getEnvironmentCache().readLight(world);
     const getEnvironment=()=>environment??=getEnvironmentCache().read(world,getLight());
     const getThreats=()=>threatQueries(world);
-    const hasAdversary=world.pawns.some(p=>!isColonist(p));
+    const hasAdversary=world.pawns.some(p=>!isColonist(p)&&!p.prisoner);
     let thermalDirty=structuresBeforeCombat!==world.structures;
     const invalidateEnvironment=()=>{environment=undefined;light=undefined;thermalDirty=true;};
     const getRoofs = () => roofs ??= new RoofContext(world);
@@ -452,15 +461,16 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       updateMentalBreak(world,pawn);
       if(pawn.stun&&pawn.stun.untilCore<=world.tick*10)delete pawn.stun;
       if(pawn.state==='downed'||carrierOf(world,pawn.id)||isStunned(pawn,world.tick*10))continue;
-      if(hasAdversary&&!pawn.mental?.crisis){considerAutomaticCombat(world,pawn,budget);considerFlee(world,pawn,getThreats());}
+      if(hasAdversary&&!pawn.prisoner&&!pawn.mental?.crisis){considerAutomaticCombat(world,pawn,budget);considerFlee(world,pawn,getThreats());}
       if(pawn.need?.kind==='eat' && pawn.need.dining && !validDiningPlace(world,pawn.need.dining)) {pawn.need.phase='choose-spot';pawn.need.dining=null;pawn.need.progress=0;delete pawn.need.workRemainder;pawn.path=[];pawn.state='moving';}
-      if (pawn.moveCooldown > 0) { if(pawn.draft)pawn.draft.lastActiveTick=world.tick; pawn.state = pawn.hunting || pawn.mental?.crisis || pawn.raid || pawn.tactics || pawn.melee || pawn.flee || pawn.draft || pawn.heatRefuge || pawn.research || pawn.jobId !== null || pawn.equipmentTask || pawn.feed || pawn.tend || pawn.rescue || pawn.haul || pawn.need || pawn.cooking || pawn.recreation.task ? 'moving' : 'idle'; continue; }
+      if (pawn.moveCooldown > 0) { if(pawn.draft)pawn.draft.lastActiveTick=world.tick; pawn.state = pawn.hunting || pawn.mental?.crisis || pawn.raid || pawn.tactics || pawn.melee || pawn.flee || pawn.draft || pawn.heatRefuge || pawn.research || pawn.jobId !== null || pawn.equipmentTask || pawn.ward || pawn.feed || pawn.tend || pawn.rescue || pawn.haul || pawn.need || pawn.cooking || pawn.recreation.task ? 'moving' : 'idle'; continue; }
       const needsContext = {
         search: (goals?: ReadonlySet<number>) => search(world, pawn, getBlocked(), occupied, budget, goals),
         move: (target: Cell, exact: boolean) => moveToward(world, pawn, target, true, getBlocked, budget, exact, getLight),
         release: () => releaseWork(world, pawn),
         event: (message: string) => event(world, 'need', message),
       };
+      if(pawn.prisoner){processPrisoner(world,pawn,needsContext);continue;}
       if(pawn.mental?.crisis){processSadWander(world,pawn,needsContext,()=>searchCandidates(world,pawn,getBlocked(),occupied,budget));continue;}
       if(pawn.raid){if(!processDraftSleep(world,pawn,needsContext))processRaider(world,pawn,getBlocked,budget,getLight);continue;}
       if(pawn.tactics){if(!processDraftSleep(world,pawn,needsContext))processTactics(world,pawn,getBlocked,budget,getLight);continue;}
@@ -476,14 +486,15 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if (leaveTransitCell(world,pawn,getBlocked,budget,getLight)) continue;
       if(pawn.equipmentTask){processEquipment(world,pawn,needsContext);continue;}
       if (advanceOrders(world,pawn,getBlocked,budget)) continue;
-      if (!pawn.feed&&!pawn.tend&&!pawn.rescue&&advancePriorityWork(world,pawn,getBlocked,budget)) continue;
+      if (!pawn.ward&&!pawn.feed&&!pawn.tend&&!pawn.rescue&&advancePriorityWork(world,pawn,getBlocked,budget)) continue;
       if(processHeatRefuge(world,pawn,needsContext,thermal))continue;
       if (planUrgentCare(world,pawn,()=>searchCandidates(world,pawn,getBlocked(),occupied,budget))) continue;
-      if (processNeeds(world, pawn, needsContext) || !pawn.feed&&!pawn.tend&&!pawn.rescue&&pawn.orders.active===null&&processRecreation(world, pawn, needsContext)) continue;
+      if (processNeeds(world, pawn, needsContext) || !pawn.ward&&!pawn.feed&&!pawn.tend&&!pawn.rescue&&pawn.orders.active===null&&processRecreation(world, pawn, needsContext)) continue;
       if(pawn.planCooldown===0&&recoverDroppedWeapon(world,pawn,()=>searchCandidates(world,pawn,getBlocked(),occupied,budget)))continue;
-      if (pawn.jobId === null && pawn.haul === null && !pawn.rescue && !pawn.feed&&!pawn.tend && !pawn.cooking && !pawn.hunting && !pawn.research && pawn.planCooldown === 0) planWork(world, pawn, getBlocked, occupied, budget);
+      if (pawn.jobId === null && pawn.haul === null && !pawn.rescue && !pawn.ward&&!pawn.feed&&!pawn.tend && !pawn.cooking && !pawn.hunting && !pawn.research && pawn.planCooldown === 0) planWork(world, pawn, getBlocked, occupied, budget);
       if(pawn.hunting){processHunting(world,pawn,{...needsContext,candidates:()=>searchCandidates(world,pawn,getBlocked(),occupied,budget),blocked:getBlocked});continue;}
       if(pawn.research){processResearch(world,pawn,needsContext.move,s=>researchRate(pawn,s,getEnvironment(),new TemperatureView(world,thermal).at(world,s)),message=>event(world,'job',message));continue;}
+      if(pawn.ward){processWarden(world,pawn,needsContext);continue;}
       if(pawn.feed){processFeeding(world,pawn,needsContext);continue;}
       if(pawn.tend){processTending(world,pawn,needsContext,()=>getLight().speedAt(pawn),()=>searchCandidates(world,pawn,getBlocked(),occupied,budget));continue;}
       if(pawn.rescue){processRescue(world,pawn,needsContext);continue;}
@@ -545,7 +556,8 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
         if (job.progress >= jobDuration(world, job)) {completeJob(world, pawn, job);blocked=undefined;roofs=undefined;invalidateEnvironment();}
       } else moveToward(world, pawn, job, false, getBlocked, budget,false,getLight);
     }
-    if(world.raids)for(const pawn of [...world.pawns])if(pawn.raid?.exiting)exitRaider(world,pawn);
+    for(const pawn of [...world.pawns])if(pawn.prisoner?.escape)exitPrisoner(world,pawn);
+    if(world.raids)for(const pawn of [...world.pawns])if(pawn.raid?.exiting&&!pawn.prisoner)exitRaider(world,pawn);
     advanceRaids(world);
     advanceSocial(world);
     if(world.roofing)reconcileRoofJobs(world,roofs);
@@ -554,7 +566,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     refreshStock(world);
     if(thermalDirty)thermal=reconcileTemperature(world);
     updateFoodTemperatures(world,thermal);
-    updatePlantTemperatures(world,thermal);reconcileRescues(world);reconcilePatientRest(world);reconcileTending(world);reconcileFeeding(world);reconcileEquipmentTasks(world);for(const pawn of world.pawns)reconcileWeaponMemory(world,pawn);
+    updatePlantTemperatures(world,thermal);reconcilePrisoners(world);reconcileRescues(world);reconcileWarden(world);reconcilePatientRest(world);reconcileTending(world);reconcileFeeding(world);reconcileEquipmentTasks(world);for(const pawn of world.pawns)reconcileWeaponMemory(world,pawn);
   }
 }
 import { updatePawnHealth,reconcilePawnHealth } from './health.ts';

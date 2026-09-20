@@ -1,4 +1,5 @@
 import { isColonist } from './affiliation.ts';
+import { prisonDoorPassable } from './prison-space.ts';
 import { DOOR_CLOSE_DELAY, doorAt, doorOpenness, doorOpenTicks } from './door-rules.ts';
 import type { Cell, CommandResult, Pawn, Structure, World } from './types.ts';
 export type DoorCommand={type:'door-policy';structureId:number;setting:'holdOpen'|'forbidden';value:boolean};
@@ -11,7 +12,7 @@ function openDoor(world:World,s:Structure):void {
 /** Called before committing an edge. Waiting consumes no path or travel distance. */
 export function readyDoorEntry(world:World,pawn:Pawn,next:Cell):boolean {
   const s=doorAt(world,next);if(!s)return true;
-  const d=s.door!;if(!isColonist(pawn))return d.open&&doorOpenness(s,world.tick)>=1-1e-9;
+  const d=s.door!;if(pawn.prisoner)return prisonDoorPassable(world,s);if(!isColonist(pawn))return d.open&&doorOpenness(s,world.tick)>=1-1e-9;
   if(d.forbidden)return false;
   d.lastTouch=world.tick;
   if(!d.open)openDoor(world,s);

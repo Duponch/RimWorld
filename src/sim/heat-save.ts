@@ -10,7 +10,7 @@ export function validateHeat(world:World,version:number):string[] {
   }
   for(const p of world.pawns){const t=p.heatRefuge;if(t===undefined)continue;
     if(version<74||!object(t)||!keys(t,['target','until'])||!object(t.target)||!keys(t.target,['x','z'])||!integer(t.target.x,0,world.width-1)||!integer(t.target.z,0,world.height-1)||!integer(t.until,0,world.tick+500)){errors.push('Invalid heat refuge.');continue;}
-    if(p.jobId!==null||p.need||p.haul||p.cooking||p.research||p.recreation.task||p.equipmentTask||p.rescue||p.tend||p.feed||p.draft||p.shooting||p.melee||p.flee||p.tactics||p.raid||p.mental?.crisis||p.orders.active!==null||!['moving','idle'].includes(p.state))errors.push('Incompatible heat refuge activity.');
+    if(p.jobId!==null||p.need||p.haul||p.cooking||p.research||p.recreation.task||p.equipmentTask||p.rescue||p.tend||p.ward||p.feed||p.draft||p.shooting||p.melee||p.flee||p.tactics||p.raid||p.mental?.crisis||p.orders.active!==null||!['moving','idle'].includes(p.state))errors.push('Incompatible heat refuge activity.');
   }
   return errors;
 }

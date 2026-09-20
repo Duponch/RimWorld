@@ -23,6 +23,7 @@ export function expireFood(world: World): void {
       || h && expired.has(h.phase === 'pickup' ? h.sourcePileId : h.carryPileId!)
       || pawn.tend?.medicine && expired.has(pawn.tend.phase==='pickup'?pawn.tend.medicine.sourcePileId:pawn.tend.medicine.carryPileId!)
       || pawn.feed && expired.has(pawn.feed.phase==='pickup'?pawn.feed.sourcePileId:pawn.feed.carryPileId!)
+      || pawn.ward?.kind==='food' && expired.has(pawn.ward.phase==='pickup'?pawn.ward.sourcePileId:pawn.ward.carryPileId!)
       || n?.kind === 'eat' && expired.has(n.phase === 'pickup' ? n.sourcePileId : n.carryPileId!);
     if (!affected || releaseWork(world, pawn)) continue;
     // Another ingredient may still be carried when a remote reservation rots.

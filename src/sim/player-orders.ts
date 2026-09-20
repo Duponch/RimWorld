@@ -1,4 +1,5 @@
 import { isColonist } from './affiliation.ts';
+import { captureReason,captureProposal } from './capture.ts';
 import { feedingReason } from './feeding-rules.ts';
 import { feedingProposal } from './feeding.ts';
 import { tendingReason,tendingProposal,lyingPatient } from './tending.ts';
@@ -30,11 +31,11 @@ import { equippedWeapon,weaponLabel,type EquipmentAction } from './equipment-rul
 
 export interface PlayerOrders { active: number | 'equipment' | 'haul' | 'cook' | 'feed' | 'tend' | 'rescue' | null; queue: import('./order-types.ts').QueuedOrder[] }
 export type OrderCommand = { type:'order-cook';pawnId:number;structureId:number;queue:boolean } | { type: 'order-job'; pawnId: number; jobId: number; queue: boolean } | { type:'order-haul';pawnId:number;target:HaulOrderTarget;queue:boolean } | { type: 'clear-orders'; pawnId: number };
-export interface OrderOption { jobId: number; equipmentItemId?:number; equipmentAction?:EquipmentAction; cookStationId?:number; rescuePatientId?:number; tendPatientId?:number; feedPatientId?:number; haulTarget?:HaulOrderTarget; label: string; enabled: boolean; reason?: string }
+export interface OrderOption { jobId: number; capturePatientId?:number; equipmentItemId?:number; equipmentAction?:EquipmentAction; cookStationId?:number; rescuePatientId?:number; tendPatientId?:number; feedPatientId?:number; haulTarget?:HaulOrderTarget; label: string; enabled: boolean; reason?: string }
 export const MAX_QUEUED_ORDERS = 32;
 const labels: Record<Job['kind'], string> = { flick:'Actionner l’interrupteur','power-conduit':'Construire le conduit','power-switch':'Construire l’interrupteur',battery:'Construire la batterie','solar-generator':'Construire le panneau solaire', 'fueled-stove':'Construire la cuisinière à bois', 'electric-stove':'Construire la cuisinière électrique', 'butcher-table':'Construire la table de boucherie', 'butcher-spot':'boucherie', cooler:'Construire le climatiseur', 'research-bench':'Bureau de recherche','tailor-bench':'Établi de tailleur', 'crafting-spot':'Placer l’artisanat', repair:'réparer', 'wood-generator':'construire le générateur à bois', 'standing-lamp':'construire la lampe', 'passive-cooler':'Construire le refroidisseur passif', 'build-roof':'Poser le toit', 'remove-roof':'Retirer le toit', door:'Construire la porte', stonecutter:'Construire la table de taille', mine:'Miner', uninstall:'Désinstaller',install:'Réinstaller', deconstruct:'Déconstruire', chop:'Abattre',harvest:'Récolter',cut:'Couper',sow:'Semer',wall:'Construire le mur',bed:'Construire le lit',table:'Construire la table',stool:'Construire le tabouret',campfire:'Construire le feu',horseshoes:'Construire le piquet' };
 const fail = (reason: string): CommandResult => ({ok:false,code:'invalid-command',reason});
-const busy = (pawn: Pawn) => pawn.jobId !== null || !!(pawn.hunting || pawn.heatRefuge || pawn.research || pawn.equipmentTask || pawn.feed || pawn.tend || pawn.rescue || pawn.haul || pawn.cooking || pawn.need || pawn.recreation.task);
+const busy = (pawn: Pawn) => pawn.jobId !== null || !!(pawn.hunting || pawn.heatRefuge || pawn.research || pawn.equipmentTask || pawn.ward || pawn.feed || pawn.tend || pawn.rescue || pawn.haul || pawn.cooking || pawn.need || pawn.recreation.task);
 const clearingPlant=(world:World,job:Job)=>!isConstruction(job)?undefined:job.clearance?world.resources.find(r=>r.id===job.clearance!.resourceId):constructionObstruction(world,job).plant;
 const orderLabel=(world:World,job:Job)=>clearingPlant(world,job)?'Couper la plante qui gêne le chantier':labels[job.kind];
 
@@ -120,6 +121,11 @@ export function queryOrderOptions(world:World,pawnId:number,cell:Cell,queue=fals
   if(fire&&stationRecipe(fire)) {
     const view=orderView(world,pawn,queue),proposal=planCookingOrder(view,view.pawns.find(p=>p.id===pawn.id)!,fire.id),reason=exhausted(world,pawn)??proposal.reason;
     options.push({jobId:0,cookStationId:fire.id,label:proposal.label,enabled:!reason,...(reason?{reason}:{})});
+  }
+  for(const patient of world.pawns)if(patient!==pawn&&patient.x===cell.x&&patient.z===cell.z&&!isColonist(patient)&&!patient.prisoner&&patient.state!=='dead'){
+    const reason=queue?'La capture ne peut pas encore être ajoutée à une file.':exhausted(world,pawn)??captureReason(world,pawn,patient)
+      ??(!captureProposal(world,pawn,patient,reachableCells(world,pawn,blockedCells(world),new Set()))?'Aucun lit de prison accessible et disponible.':undefined);
+    options.push({jobId:0,capturePatientId:patient.id,label:`Capturer ${patient.name}`,enabled:!reason,...reason?{reason}:{}});
   }
   for(const patient of world.pawns)if(patient.id!==pawn.id&&patient.x===cell.x&&patient.z===cell.z&&wantsRescue(patient)){
     const reason=queue?'Le secours direct ne peut pas encore être ajouté à une file.':exhausted(world,pawn)??rescueReason(world,pawn,patient)

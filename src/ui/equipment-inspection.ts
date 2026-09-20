@@ -30,7 +30,7 @@ export function updateEquipmentInspection(parent:HTMLElement,world:World,pawn:Pa
       button.textContent='Retirer';button.dataset.removeApparel=String(piece.id);button.disabled=pawn.state==='dead'||pawn.state==='downed';button.hidden=!isColonist(pawn);row.append(button);clothing.append(row);
     }
   }
-  parent.querySelector('#equipment-cargo')!.textContent=cargo?`Cargaison de travail : ${cargo.quantity} ${ITEM_DEFINITIONS[cargo.item].label}`:pawn.rescue?.phase==='carry'?'Transport : personne secourue':world.packed.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id)?'Cargaison : meuble entier':'Aucune cargaison';
+  parent.querySelector('#equipment-cargo')!.textContent=cargo?`Cargaison de travail : ${cargo.quantity} ${ITEM_DEFINITIONS[cargo.item].label}`:pawn.rescue?.phase==='carry'?(pawn.rescue.capture?'Transport : personne capturée':'Transport : personne secourue'):world.packed.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id)?'Cargaison : meuble entier':'Aucune cargaison';
   parent.querySelector('#equipment-memory')!.textContent=pawn.droppedWeaponId!==undefined?'Récupérera son arme perdue lorsque ses besoins et engagements le permettront.':'';
   parent.querySelector<HTMLButtonElement>('#forget-equipment')!.hidden=!isColonist(pawn)||pawn.droppedWeaponId===undefined;
 }

@@ -14,7 +14,7 @@ export function startingPawn(id:number,name:string,x:number,z:number,index:numbe
     hunger:90-index*5,rest:90-index*3,mood:80,comfort:50,memories:[],
     orders:{active:null,queue:[]},jobId:null,haul:null,cooking:null,need:null,bedId:null,
     needCooldown:0,state:'idle',
-    priorities:{basic:3,hunt:2,research:3,patient:1,bedrest:3,doctor:1,mine:2,gather:2,build:2,haul:3,grow:2,cook:2,craft:2},
+    priorities:{warden:3,basic:3,hunt:2,research:3,patient:1,bedrest:3,doctor:1,mine:2,gather:2,build:2,haul:3,grow:2,cook:2,craft:2},
     path:[],moveCooldown:0,planCooldown:0,
   };
 }

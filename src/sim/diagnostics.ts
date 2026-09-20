@@ -40,6 +40,7 @@ export function queryPawnStatus(world: World, pawn: Pawn): { code: string; reaso
   if(pawn.equipmentTask)return {code:'equipment',reason:({equip:'Rejoint son arme avant de l’équiper.',drop:'Dépose son arme au sol.',wear:pawn.state==='working'?'Enfile son vêtement.':'Rejoint le vêtement au sol.',remove:'Retire son vêtement avant de le déposer.'})[pawn.equipmentTask.action]};
   const carrier=carrierOf(world,pawn.id);
   if(carrier)return {code:'carried-patient',reason:`Transporté par ${carrier.name} vers un lit.`};
+  if(pawn.ward){const t=pawn.ward,name=world.pawns.find(p=>p.id===t.patientId)?.name??'le prisonnier';return {code:'warden',reason:t.kind==='food'?`${t.phase==='pickup'?'Prélève':'Apporte'} un repas pour ${name}.`:`${t.phase==='approach'?'Rejoint':'Discute avec'} ${name}.`};}
   if(pawn.feed)return {code:'feed',reason:`${pawn.feed.phase==='pickup'?'Prélève une portion pour':pawn.feed.phase==='deliver'?'Apporte une portion à':'Nourrit'} ${world.pawns.find(p=>p.id===pawn.feed!.patientId)?.name??'un patient'}.`};
     if(pawn.tend){
       const t=pawn.tend,target=t.patientId===pawn.id?'ses propres blessures':world.pawns.find(p=>p.id===t.patientId)?.name??'un patient';
@@ -47,9 +48,10 @@ export function queryPawnStatus(world: World, pawn: Pawn): { code: string; reaso
       return {code:'tend',reason:t.phase==='pickup'?`Prélève ${ITEM_DEFINITIONS[t.medicine!.item].label.toLowerCase()} pour ${target}.`:t.phase==='find-medicine'?`Recherche une nouvelle dose pour ${target}.`:`${t.phase==='tend'?'Soigne':'Rejoint'} ${target} ${supply}.`};
     }
   if(pawn.state==='resting')return {code:'patient',reason:pawn.medicalSleep?'Dort pendant sa récupération médicale.':'Attend des soins ou récupère au lit, éveillé.'};
-  if(pawn.rescue)return {code:'rescue',reason:`${pawn.rescue.phase==='carry'?'Porte':'Rejoint'} ${world.pawns.find(p=>p.id===pawn.rescue!.patientId)?.name??'un patient'} pour le secourir.`};
+  if(pawn.rescue)return {code:pawn.rescue.capture?'capture':'rescue',reason:`${pawn.rescue.phase==='carry'?'Porte':'Rejoint'} ${world.pawns.find(p=>p.id===pawn.rescue!.patientId)?.name??'un patient'} pour ${pawn.rescue.capture?'le capturer':'le secourir'}.`};
   if(pawn.state==='dead')return {code:'dead',reason:'Décédé ; dépouille conservée sur place. Le transport et les sépultures ne sont pas encore disponibles.'};
   if(pawn.state==='downed')return {code:'downed',reason:'Incapacité médicale : ne peut pas agir. Consultez ses blessures et ses capacités dans Santé.'};
+  if(pawn.prisoner&&!pawn.need)return {code:'prisoner',reason:pawn.prisoner.escape?'Cherche à quitter la carte par une ouverture.':'Prisonnier : attend nourriture, repos ou visite du geôlier.'};
   if(pawn.interruptedCargo)return {code:'interrupted-cargo',reason:'Travail interrompu ; cargaison conservée. Libérez une case de sol proche pour permettre son dépôt.'};
   if(pawn.recreation.task) {
     const task=pawn.recreation.task, activity=task.activity==='horseshoes'?'jouer aux fers à cheval':'observer le ciel';

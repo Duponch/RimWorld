@@ -10,7 +10,7 @@ export function createSocialInspection(panel:HTMLElement,onOpen:()=>void):void {
   const skill=document.createElement('p');skill.id='social-skill';
   const last=document.createElement('p');last.id='social-last';
   const list=document.createElement('ul');list.id='social-opinions';
-  details.append(title,skill,last,list);panel.querySelector('#manage-work')!.before(details);
+  details.append(title,skill,last,list);const anchor=panel.querySelector('#manage-work');if(anchor)anchor.before(details);else panel.append(details);
 }
 export function updateSocialInspection(panel:HTMLElement,world:World,pawn:Pawn):void {
   if(!panel.querySelector<HTMLDetailsElement>('#social-inspection')?.open)return;

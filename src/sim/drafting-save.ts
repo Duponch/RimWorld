@@ -12,7 +12,7 @@ export function validateDrafting(world:World):string[] {
   const errors:string[]=[],claims=new Set<number>();
   for(const p of world.pawns)if(p.draft) {
     const d=p.draft,sleep=p.need?.kind==='sleep'&&p.need.phase==='sleep'&&p.need.bedId===null;
-    if(p.state==='dead'||p.state==='downed'||p.jobId!==null||p.haul||p.cooking||p.equipmentTask||p.feed||p.tend||p.rescue||p.recreation.task||p.orders.active!==null||p.orders.queue.length||p.priorityWork||p.need&&!sleep||sleep&&(d.target||d.queue.length)||p.state==='sleeping'&&!sleep||p.path.length&&p.state!=='moving'||!['idle','moving','sleeping'].includes(p.state))errors.push('Invalid drafted activity.');
+    if(p.state==='dead'||p.state==='downed'||p.jobId!==null||p.haul||p.cooking||p.equipmentTask||p.ward||p.feed||p.tend||p.rescue||p.recreation.task||p.orders.active!==null||p.orders.queue.length||p.priorityWork||p.need&&!sleep||sleep&&(d.target||d.queue.length)||p.state==='sleeping'&&!sleep||p.path.length&&p.state!=='moving'||!['idle','moving','sleeping'].includes(p.state))errors.push('Invalid drafted activity.');
     if(d.target){const key=d.target.z*world.width+d.target.x;if(claims.has(key))errors.push('Conflicting tactical destination.');claims.add(key);}
     if(p.path.length&&!p.melee?.order&&!p.transitExit&&(!d.target||!sameCell(p.path.at(-1)!,d.target)))errors.push('Tactical path does not reach its destination.');
     if(!d.target&&!p.melee?.order&&p.state==='moving'&&!p.transitExit&&p.moveCooldown===0)errors.push('Tactical movement lacks a destination.');

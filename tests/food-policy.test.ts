@@ -12,7 +12,7 @@ import type { Command, World } from '../src/sim/types';
 
 function camp():World {
   const w=createWorld(42,16,16);w.pawns=[w.pawns[0]!];w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.resources=[];w.piles=[];w.structures=[];w.stockpiles=[];
-  Object.assign(w.pawns[0]!,{x:2,z:2,hunger:20,rest:100,priorities: {basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,craft:2,mine:2,gather:0,build:0,haul:0,grow:0,cook:0}});refreshStock(w);return w;
+  Object.assign(w.pawns[0]!,{x:2,z:2,hunger:20,rest:100,priorities: {warden:0,basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,craft:2,mine:2,gather:0,build:0,haul:0,grow:0,cook:0}});refreshStock(w);return w;
 }
 function command(w:World,c:Command){expect(applyCommand(w,c),JSON.stringify(c)).toEqual({ok:true});}
 function checked(w:World,ticks=1){for(let i=0;i<ticks;i++){stepWorld(w);expect(validateWorld(w),`tick ${w.tick}`).toEqual([]);}}

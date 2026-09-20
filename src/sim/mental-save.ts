@@ -17,7 +17,7 @@ export function validateMental(world:World,version:number):string[] {
         const end=p.path.at(-1)!;
         if(!object(c.target)||end.x!==c.target.x||end.z!==c.target.z)errors.push('Mental route has no matching destination.');
       }
-      if(p.state==='dead'||p.state==='downed'||p.draft||p.shooting||p.melee||p.flee||p.tactics||p.jobId!==null||p.haul||p.cooking||p.equipmentTask||p.feed||p.tend||p.rescue||p.recreation.task||p.orders.active!==null||p.orders.queue.length||p.priorityWork)errors.push('Conflicting mental task.');
+      if(p.state==='dead'||p.state==='downed'||p.draft||p.shooting||p.melee||p.flee||p.tactics||p.jobId!==null||p.haul||p.cooking||p.equipmentTask||p.ward||p.feed||p.tend||p.rescue||p.recreation.task||p.orders.active!==null||p.orders.queue.length||p.priorityWork)errors.push('Conflicting mental task.');
       if(!p.need&&!['idle','moving','hungry'].includes(p.state))errors.push('Invalid mental posture.');
     }
   }

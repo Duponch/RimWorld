@@ -10,7 +10,7 @@ export function foodPolicyLayout(): string {
     <p>Choisissez les aliments autorisés pour chaque colon. Les régimes sont partagés : modifier un régime affecte toutes les personnes qui l’utilisent.</p>
     <div class="work-table-wrap"><table><thead><tr><th>Colon</th><th>Régime alimentaire</th><th>Réaction hostile</th><th>État</th></tr></thead><tbody id="food-policy-rows"></tbody></table></div>
     <button id="manage-food-policies">Gérer les régimes alimentaires</button><p id="assign-feedback" role="status"></p>
-    <p class="muted">Un régime ne change pas le transport ni les ingrédients de cuisine. Un repas déjà engagé peut se terminer. Vêtements, drogues, et réaction Attaquer restent à développer. Fuir est le défaut ; les ordres directs gardent la priorité. Les soins se règlent dans Santé.</p>
+    <p class="muted">Un régime ne change pas le transport ni les ingrédients de cuisine. Un repas déjà engagé peut se terminer. Vêtements, drogues, et réaction Attaquer restent à développer. Fuir est le défaut ; les ordres directs gardent la priorité. Les soins se règlent dans Santé ; le régime d’un prisonnier se choisit dans son inspection.</p>
   </section>
   <dialog id="food-policy-dialog" class="food-policy-dialog">
     <div class="panel-heading"><h2>Régimes alimentaires</h2><button id="close-food-policies" aria-label="Fermer les régimes alimentaires">×</button></div>
@@ -21,7 +21,7 @@ export function foodPolicyLayout(): string {
       <div class="policy-actions"><button type="button" id="allow-all-food">Tout autoriser</button><button type="button" id="deny-all-food">Tout interdire</button><button id="apply-food-policy" type="submit">Appliquer le régime</button></div>
     </form>
     <p id="food-policy-users" class="muted"></p><p id="food-policy-feedback" role="status"></p>
-    <p>Un colon respecte ce régime même s’il a faim. Interdire tous les aliments disponibles peut l’empêcher de manger.</p>
+    <p>Les colons et le personnel qui apporte des repas respectent ce régime, même en cas de faim. Un prisonnier mobile peut manger les aliments déjà présents dans sa pièce sans suivre cette restriction. Interdire les aliments disponibles peut empêcher le ravitaillement.</p>
     <p class="muted">Filtres limités aux aliments présents dans cette version. Aucun inventaire personnel ni filtre sur la provenance des ingrédients n’est encore simulé.</p>
   </dialog>`;
 }
@@ -45,8 +45,8 @@ export function createFoodPolicyControls(root: HTMLElement, send: (command: Food
       formSignature=signature;name.value=p.name;
       for(const check of checks)check.checked=p.allowed.includes(check.dataset.allowedFood as FoodItemId);
     }
-    const users=world.pawns.filter(p=>isColonist(p)&&p.foodPolicyId===selectedId).map(p=>p.name);
-    el('food-policy-users').textContent=users.length?`Utilisé par : ${users.join(', ')}`:'Aucun colon affecté à ce régime.';
+    const users=world.pawns.filter(p=>(isColonist(p)||p.prisoner)&&p.foodPolicyId===selectedId).map(p=>`${p.name}${p.prisoner?' (prisonnier)':''}`);
+    el('food-policy-users').textContent=users.length?`Utilisé par : ${users.join(', ')}`:'Aucune personne affectée à ce régime.';
   }
   async function commit(command:FoodPolicyCommand|Extract<Command,{type:'hostility-response'}>,selectCreated=false) {
     if(pending)return;pending=true;

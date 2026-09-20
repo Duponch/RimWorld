@@ -1,0 +1,82 @@
+{
+  "date": "2026-09-20T15:10:29.738Z",
+  "load": {
+    "freeColonists": 100,
+    "prisoners": 10,
+    "wildHares": 100,
+    "map": "250x250",
+    "measuredTicks": 200,
+    "synthetic": true
+  },
+  "instrumentation": {
+    "runtime": "Node 24.11.1",
+    "cpu": "AMD Ryzen 5 3600",
+    "v8CpuProfileIntervalUs": 1000,
+    "roomReadCallsTimed": true,
+    "nativeMeasurement": false,
+    "os": "Windows 10.0.26200",
+    "snapshotEncodingDuringMeasurement": false,
+    "separateWarmup": false,
+    "preparationOutsideMeasurement": true
+  },
+  "note": "Paired frozen-source 200-tick runs with V8 and identical read-call instrumentation, not a native or uninstrumented performance claim. Candidate replaces only the ten named modules.",
+  "parity": {
+    "initial": true,
+    "final": true
+  },
+  "before": {
+    "reads": {
+      "calls": 32730,
+      "ms": 27796.14949999991
+    },
+    "tickMs": {
+      "n": 200,
+      "total": 45239.268499999984,
+      "p50": 177.5140999999985,
+      "p95": 524.5380000000005,
+      "max": 1357.8372000000018
+    }
+  },
+  "candidate": {
+    "reads": {
+      "calls": 4674,
+      "ms": 5301.592799999873
+    },
+    "tickMs": {
+      "n": 200,
+      "total": 23297.336099999953,
+      "p50": 110.82850000000053,
+      "p95": 176.67799999999988,
+      "max": 235.14320000000043
+    }
+  },
+  "initialHash": "070fb20f06511d61d761b02d66c23a6ae84d0ac7a69f159ba7373658ea209381",
+  "finalHash": "82807facc804ddfae4c9b5e0628cd528fa93d203f3d9972827921dd82e99a2dc",
+  "readCallReductionPercent": 85.71952337305224,
+  "timeReductionPercent": 48.50196107834953,
+  "candidateModules": [
+    "prison-space.ts",
+    "prisoners.ts",
+    "warden.ts",
+    "prison-food.ts",
+    "food-selection.ts",
+    "needs.ts",
+    "dining.ts",
+    "sleeping.ts",
+    "work-planner.ts",
+    "idle-logistics.ts"
+  ],
+  "validation": {
+    "worldErrorsBefore": [],
+    "worldErrorsAfter": [],
+    "spaceContractsPassed": 5,
+    "typecheck": true
+  },
+  "references": {
+    "analysis": "../docs/research/performance-v86.md#coût-ajouté-par-les-pièces-de-prison",
+    "contract": "../docs/development/prisoners.md",
+    "topologyQueries": "../src/sim/prison-space.ts",
+    "mutationContract": "../src/sim/room-topology.ts",
+    "tests": "../tests/prison-space.test.ts"
+  }
+}

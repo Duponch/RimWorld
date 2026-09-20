@@ -1,0 +1,87 @@
+{
+  "version": 86,
+  "controlled": false,
+  "source": "tmp/prison-final-v86.json",
+  "sourceSha256": "8425c61539267e77315d43c91d5c036de5ea8a9b675d5ec48db8685c3818dbe5",
+  "initialTick": 457698,
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "population": [
+    {
+      "id": 4570,
+      "name": "Ada"
+    },
+    {
+      "id": 4572,
+      "name": "Noé"
+    },
+    {
+      "id": 4574,
+      "name": "Mina"
+    },
+    {
+      "id": 12906,
+      "name": "Assaillant 9.2"
+    }
+  ],
+  "status": "passed",
+  "stage": "complete",
+  "backend": "WebGPU",
+  "recruit": {
+    "id": 12906,
+    "name": "Assaillant 9.2",
+    "provenance": {
+      "capturedAt": 393674,
+      "recruitedAt": 445698,
+      "fromFaction": "outlaws",
+      "raidGroup": 9
+    },
+    "bedId": 11063,
+    "health": {
+      "tick": 457698,
+      "nextInjuryId": 7,
+      "injuries": [],
+      "missing": [],
+      "bloodLoss": 0
+    },
+    "hunger": 65.81333333332799,
+    "rest": 70.20166666666702,
+    "action": "Disponible · Aucun travail actuellement admissible : priorités, matériaux ou accès à vérifier."
+  },
+  "bed": {
+    "id": 11063,
+    "x": 123,
+    "z": 129,
+    "orientation": 2,
+    "ownerId": 12906
+  },
+  "priorities": {
+    "warden": 3,
+    "basic": 1,
+    "hunt": 2,
+    "research": 0,
+    "patient": 1,
+    "bedrest": 3,
+    "doctor": 1,
+    "mine": 3,
+    "gather": 2,
+    "build": 3,
+    "haul": 2,
+    "grow": 2,
+    "cook": 3,
+    "craft": 2
+  },
+  "continuation": {
+    "requestedTicks": 120,
+    "actualTicks": 126,
+    "speed": 6,
+    "finalTick": 457824,
+    "exactSaveReload": true,
+    "recruitState": "idle",
+    "hunger": 62.45333333332788,
+    "rest": 68.20666666666705
+  },
+  "errors": []
+}

@@ -27,4 +27,7 @@ artifacts/harvest-sync-verification.json
 artifacts/skills-cpu-latest.json
 
 artifacts/body-cpu-latest.json
+
+# V86 synthetic failure worlds stay local; compact diagnostics and hashes are tracked.
+artifacts/prison-cpu-failure-v86-*.json
 artifacts/interruption-cpu-latest.json

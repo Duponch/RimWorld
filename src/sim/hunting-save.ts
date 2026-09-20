@@ -17,7 +17,7 @@ export function validateHunting(w:World,version:number):string[] {
   for(const p of w.pawns){
     if(version>=79?!int(p.priorities.hunt,0,4):(p.priorities as any).hunt!==undefined)errors.push('Invalid hunting priority for schema.');
     const t=p.hunting;if(!validHuntingTask(t,version,w.tick)){errors.push('Invalid hunting task.');continue;}if(!t)continue;
-    if(!isColonist(p)||p.priorities.hunt===0||p.draft||p.mental?.crisis||p.need||p.haul||p.cooking||p.research||p.feed||p.tend||p.rescue||p.equipmentTask||p.jobId!==null||p.melee||p.flee||p.recreation.task||p.orders.active!==null||['dead','downed','sleeping','eating','resting','recreating'].includes(p.state)||!equippedWeapon(w,p))errors.push('Hunting conflicts with another activity.');
+    if(!isColonist(p)||p.priorities.hunt===0||p.draft||p.mental?.crisis||p.need||p.haul||p.cooking||p.research||p.ward||p.feed||p.tend||p.rescue||p.equipmentTask||p.jobId!==null||p.melee||p.flee||p.recreation.task||p.orders.active!==null||['dead','downed','sleeping','eating','resting','recreating'].includes(p.state)||!equippedWeapon(w,p))errors.push('Hunting conflicts with another activity.');
     const a=w.wildlife?.animals.find(a=>a.id===t.animalId),corpse=w.piles.find(i=>i.id===t.animalId&&i.kind==='corpse');
     if(claimed.has(t.animalId)||!a&&!corpse||t.phase!=='collect'&&!h?.targets.includes(t.animalId)||t.phase==='collect'&&a?.state!=='dead'&&!corpse)errors.push('Invalid hunted owner or target.');
     if(t.phase==='finish'&&(a?.state!=='downed'&&a?.state!=='dead'||p.path.length||p.moveCooldown>0||(a?.motion?.end??0)>w.tick))errors.push('Invalid hunting finish.');
