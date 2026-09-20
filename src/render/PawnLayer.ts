@@ -6,6 +6,7 @@ import { growPawnBuffers } from './pawn-buffers';
 import { isColonist } from '../sim/affiliation';
 import { pawnGeometry,cargoGeometry } from './pawn-geometry';
 import { equipmentProjection } from './character-equipment';
+import { WEAPON_VISUALS,weaponVisual } from './weapon-shape';
 import { doorAt } from '../sim/door-rules';
 import { blockCargoKind } from './block-presentation';
 import { furnitureSurfaces } from './furniture-motion';
@@ -105,8 +106,11 @@ export class PawnLayer {
         const x=animated.x.toVar(),y=animated.y.toVar(),z=animated.z.toVar();
         animated.assign(vec3(float(.65).sub(y),z.add(.19+.95/PAWN_MODEL_SCALE),x.add(.3)));
       });
-      If(motion.z.equal(7).and(attribute('dye','float').equal(-1)),()=>{animated.assign(vec3(positionLocal.x.sub(.205).add(.23),positionLocal.z.add(1.01),positionLocal.y.sub(.68).add(.4)));});
-      If(attribute('dye','float').equal(-1).and(attribute('aEquipment','vec3').x.lessThan(.5)),()=>{animated.assign(vec3(0));});
+      for(const weapon of WEAPON_VISUALS) {
+        const isWeapon=attribute('dye','float').equal(weapon.dye);
+        If(motion.z.equal(7).and(isWeapon),()=>{animated.assign(vec3(positionLocal.x.sub(.205).add(.23),positionLocal.z.add(1.01),positionLocal.y.sub(.68).add(.4)));});
+        If(isWeapon.and(attribute('aEquipment','vec3').x.notEqual(weapon.equipment)),()=>{animated.assign(vec3(0));});
+      }
       If(attribute('dye','float').equal(-3).and(attribute('aEquipment','vec3').y.lessThan(1.5)),()=>{animated.assign(vec3(0));});
       If(attribute('dye','float').equal(-2).and(attribute('aEquipment','vec3').z.lessThan(.5)),()=>{animated.assign(vec3(0));});
       const cy = cos(pose.w), sy = sin(pose.w);
@@ -224,13 +228,13 @@ export class PawnLayer {
       toAttribute.setXYZW(index, to.x, to.y, to.z, to.w);
       motion.setXYZW(index, pawn.state === 'moving'&&!pawn.stun ? 1 : 0, pawn.state === 'working'&&!pawn.stun ? 1 : 0, pawn.stun&&!medicallyStopped(pawn) ? 9 : pawn.melee?.strike ? 8 : pawn.shooting?.stance ? 7 : pawn.state === 'recreating' ? pawn.recreation.task?.activity==='horseshoes'?4:5 : pawn.state === 'sleeping'||pawn.state==='resting'||medicallyStopped(pawn) ? 1 : pawn.state === 'eating' ? dining?.seatId !== null && dining ? 3 : 2 : 0, pawn.melee?.strike ? coreTimeSeconds(pawn.melee.strike.atCore,Math.floor(world.tick/1024)*1024) : pawn.id * 1.7);
       const look=apparelAppearance(apparel.get(pawn.id));
-      scratchColor.setHex(look.color??(isColonist(pawn)?PAWN_COLORS[index % PAWN_COLORS.length]:0xb74736));
+      scratchColor.setHex(look.color??(isColonist(pawn)?PAWN_COLORS[index % PAWN_COLORS.length]:pawn.visitor&&!world.visitors?.groups.find(g=>g.id===pawn.visitor!.group)?.hostile?0x77958f:0xb74736));
       if(pawn.state==='dead')scratchColor.setHex(0x73756c);
       tint.setXYZ(index, scratchColor.r, scratchColor.g, scratchColor.b);
-      equipment.setXYZ(index,gears.has(pawn.id)?1:0,look.tribal?2:look.shirt?1:0,look.vest?1:0);
+      equipment.setXYZ(index,weaponVisual(gears.get(pawn.id)?.item)?.equipment??0,look.tribal?2:look.shirt?1:0,look.vest?1:0);
       const load = carried.get(pawn.id);
       const packed=world.packed?.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
-      cargo.setXY(index, pawn.rescue?.phase==='carry'?-1:packed?4:load ? load.kind==='corpse'?27:load.item==='light-leather'?28:load.item==='hare-meat'?29:load.kind==='unfinished'?25:load.kind==='textile'?24:load.kind==='apparel'?(load.item==='cloth-tribalwear'?26:load.item==='cloth-shirt'?22:23):load.kind==='weapon'?21:load.kind==='medicine' ? (load.item==='herbal-medicine'?18:load.item==='medicine'?19:20) : load.kind === 'component' ? 17 : load.kind === 'blocks' ? blockCargoKind(load.item) : load.kind === 'steel' ? 11 : load.kind === 'chunk' ? chunkCargoKind(load.item) : load.kind === 'wood' ? 1 : load.item === 'survival-meal' ? 3 : 2 : 0, packed||load?.kind==='corpse'||load?.kind==='unfinished'||load?.kind==='weapon'||load?.kind==='apparel'?1:load ? Math.min(1, load.quantity / CARRY_CAPACITY) : 0);
+      cargo.setXY(index, pawn.rescue?.phase==='carry'?-1:packed?4:load ? load.kind==='silver'?30:load.kind==='corpse'?27:load.item==='light-leather'?28:load.item==='hare-meat'?29:load.kind==='unfinished'?25:load.kind==='textile'?24:load.kind==='apparel'?(load.item==='cloth-tribalwear'?26:load.item==='cloth-shirt'?22:23):load.kind==='weapon'?(weaponVisual(load.item)?.cargo??0):load.kind==='medicine' ? (load.item==='herbal-medicine'?18:load.item==='medicine'?19:20) : load.kind === 'component' ? 17 : load.kind === 'blocks' ? blockCargoKind(load.item) : load.kind === 'steel' ? 11 : load.kind === 'chunk' ? chunkCargoKind(load.item) : load.kind === 'wood' ? 1 : load.item === 'survival-meal' ? 3 : 2 : 0, packed||load?.kind==='corpse'||load?.kind==='unfinished'||load?.kind==='weapon'||load?.kind==='apparel'?1:load ? Math.min(1, load.quantity / CARRY_CAPACITY) : 0);
     });
     for (const id of this.visuals.keys()) if (!present.has(id)){this.visuals.delete(id);this.targetPoses.delete(id);}
     for (const attr of [fromAttribute, toAttribute, motion, tint, cargo, equipment]) attr.needsUpdate = true;

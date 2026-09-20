@@ -2,7 +2,8 @@ import { isRoofArea, isRoofJob } from './roof-rules.ts';
 import { occupancyOf } from './occupancy.ts';
 import { isPlant, harvestable } from './plants.ts';
 import { isCookingOrder } from './order-types.ts';
-import { MAX_STACK, footprintCells } from './definitions.ts';
+import { footprintCells } from './definitions.ts';
+import { ITEM_DEFINITIONS } from './items.ts';
 import { inBounds } from './pathfinding.ts';
 import type { AreaAction, AreaCommand, Cell, CommandResult, StorageSettings, World } from './types.ts';
 
@@ -14,9 +15,9 @@ export type AreaQuery = { ok: false; reason: string; code: CommandResult['code']
   | { ok: true; bounds: AreaBounds; cells: number[]; selected: number; skipped: number };
 
 export function validStorageSettings(settings: StorageSettings): boolean {
-  return (settings.filters === undefined || (!!settings.filters && typeof settings.filters.wood === 'boolean' && typeof settings.filters.food === 'boolean' && (settings.filters.unfinished===undefined||typeof settings.filters.unfinished==='boolean') && (settings.filters.textile===undefined||typeof settings.filters.textile==='boolean') && (settings.filters.apparel===undefined||typeof settings.filters.apparel==='boolean') && (settings.filters.weapon===undefined||typeof settings.filters.weapon==='boolean') && (settings.filters.medicine===undefined||typeof settings.filters.medicine==='boolean') && (settings.filters.component===undefined||typeof settings.filters.component==='boolean') && (settings.filters.blocks===undefined||typeof settings.filters.blocks==='boolean') && (settings.filters.steel===undefined||typeof settings.filters.steel==='boolean') && (settings.filters.chunk===undefined||typeof settings.filters.chunk==='boolean') && (settings.filters.furniture===undefined||typeof settings.filters.furniture==='boolean')))
+  return (settings.filters === undefined || (!!settings.filters && typeof settings.filters.wood === 'boolean' && typeof settings.filters.food === 'boolean' && (settings.filters.silver===undefined||typeof settings.filters.silver==='boolean') && (settings.filters.unfinished===undefined||typeof settings.filters.unfinished==='boolean') && (settings.filters.textile===undefined||typeof settings.filters.textile==='boolean') && (settings.filters.apparel===undefined||typeof settings.filters.apparel==='boolean') && (settings.filters.weapon===undefined||typeof settings.filters.weapon==='boolean') && (settings.filters.medicine===undefined||typeof settings.filters.medicine==='boolean') && (settings.filters.component===undefined||typeof settings.filters.component==='boolean') && (settings.filters.blocks===undefined||typeof settings.filters.blocks==='boolean') && (settings.filters.steel===undefined||typeof settings.filters.steel==='boolean') && (settings.filters.chunk===undefined||typeof settings.filters.chunk==='boolean') && (settings.filters.furniture===undefined||typeof settings.filters.furniture==='boolean')))
     && (settings.priority === undefined || (Number.isInteger(settings.priority) && settings.priority >= 1 && settings.priority <= 4))
-    && (settings.capacity === undefined || (Number.isInteger(settings.capacity) && settings.capacity >= 1 && settings.capacity <= MAX_STACK));
+    && (settings.capacity === undefined || (Number.isInteger(settings.capacity) && settings.capacity >= 1 && settings.capacity <= ITEM_DEFINITIONS.silver.stackLimit));
 }
 
 /** Rebuilt on demand from one snapshot. No persistent cache or gameplay authority. */
@@ -51,7 +52,7 @@ export function queryArea(world: World, command: AreaCommand, index?: AreaIndex)
   if (!command.from || !command.to || !inBounds(world, command.from.x, command.from.z) || !inBounds(world, command.to.x, command.to.z)) {
     return { ok: false, code: 'out-of-bounds', reason: 'Rectangle hors de la carte.' };
   }
-  if (command.action === 'stockpile' && !validStorageSettings(command)) return { ok: false, code: 'invalid-storage', reason: 'Filtres, priorité (1–4) ou capacité (1–75) invalides.' };
+  if (command.action === 'stockpile' && !validStorageSettings(command)) return { ok: false, code: 'invalid-storage', reason: `Filtres, priorité (1–4) ou capacité (1–${ITEM_DEFINITIONS.silver.stackLimit}) invalides.` };
   const bounds = { minX: Math.min(command.from.x, command.to.x), maxX: Math.max(command.from.x, command.to.x), minZ: Math.min(command.from.z, command.to.z), maxZ: Math.max(command.from.z, command.to.z) };
   const selected = (bounds.maxX - bounds.minX + 1) * (bounds.maxZ - bounds.minZ + 1);
   const flags = (index ?? buildAreaIndex(world)).flags;

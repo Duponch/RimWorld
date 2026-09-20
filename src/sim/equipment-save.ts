@@ -1,4 +1,4 @@
-import { WEAPON_QUALITIES,equippedWeapon } from './equipment-rules.ts';
+import { WEAPON_QUALITIES,equippedWeapon,isWeaponItem,weaponMaxHitPoints } from './equipment-rules.ts';
 import { equipmentReason } from './equipment.ts';
 import { pawnBody } from './health-rules.ts';
 import { reservedSource } from './materials.ts';
@@ -18,9 +18,9 @@ export function validEquipmentShape(p:Record<string,unknown>,version:number):boo
 export function validWeaponShape(p:Record<string,unknown>,version:number):boolean {
   if(p.kind!=='weapon')return p.weapon===undefined;
   const w=p.weapon;
-  return version>=52&&record(p.owner)&&p.owner.type!=='job'&&record(w)&&Object.keys(w).every(k=>['quality','hitPoints','forbidden'].includes(k))
+  return version>=52&&isWeaponItem(p.item)&&(version>=88||p.item==='revolver')&&record(p.owner)&&p.owner.type!=='job'&&record(w)&&Object.keys(w).every(k=>['quality','hitPoints','forbidden'].includes(k))
     &&typeof w.quality==='string'&&(WEAPON_QUALITIES as readonly string[]).includes(w.quality)
-    &&typeof w.hitPoints==='number'&&Number.isInteger(w.hitPoints)&&w.hitPoints>0&&w.hitPoints<=100
+    &&typeof w.hitPoints==='number'&&Number.isInteger(w.hitPoints)&&w.hitPoints>0&&w.hitPoints<=weaponMaxHitPoints(p.item)
     &&(w.forbidden===undefined||w.forbidden===true)&&p.quantity===1;
 }
 export function validateEquipment(world:World):string[] {

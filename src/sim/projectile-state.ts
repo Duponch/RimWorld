@@ -5,6 +5,8 @@ import type { WeaponQuality } from './equipment-rules.ts';
  * relations. IDs may outlive their actors; they are not ownership references. */
 export interface ProjectileRelations { friendlyPawnIds:number[]; friendlyFireFactor:number }
 export interface WorldProjectile {
+  /** Absent is the historical revolver. Independent of the current equipment. */
+  weaponItem?:'bolt-action-rifle';
   id:number;
   quality:WeaponQuality;
   emittedAtCore:number;

@@ -460,7 +460,7 @@ export class ColonyRenderer {
     const jobById = new Map(world.jobs.map(job => [job.id, job]));
     const cells = new Map<string, PileBundle>();
     for (const pile of world.piles) {
-      if (pile.owner.type === 'pawn'||pile.owner.type==='equipment'||pile.owner.type==='apparel') continue;
+      if (pile.owner.type === 'pawn'||pile.owner.type==='equipment'||pile.owner.type==='apparel'||pile.owner.type==='inventory') continue;
       const job = pile.owner.type === 'job' ? jobById.get(pile.owner.jobId) : undefined;
       if (pile.owner.type === 'job' && !job) continue;
       const position = pile.owner.type === 'ground' ? pile.owner : job!;

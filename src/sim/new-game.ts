@@ -1,3 +1,4 @@
+import { enableVisitors } from './visitors.ts';
 import { enableArrivals } from './arrivals.ts';
 import { enableCassandraRaids } from './cassandra-raids.ts';
 import { crashlandedProfile } from './game-profile.ts';
@@ -49,26 +50,28 @@ function largestComponent(world:World):number[] {
 
 /** Find room in the largest border-connected component for real people and
  * every stock stack, without clearing terrain. Failure never publishes a world. */
-function landingSite(world:World):{landing:Cell;cells:Cell[]} {
+function landingSite(world:World,stacks=GROUND_STACKS):{landing:Cell;cells:Cell[]} {
   const resources=new Set([...world.resources.map(r=>r.z*world.width+r.x),...world.piles.filter(p=>p.owner.type==='ground').map(p=>p.owner.type==='ground'?p.owner.z*world.width+p.owner.x:-1)]),cx=(world.width-1)/2,cz=(world.height-1)/2;
   const distance=(i:number)=>(i%world.width-cx)**2+(Math.floor(i/world.width)-cz)**2;
   const candidates=largestComponent(world).filter(i=>!resources.has(i)).sort((a,b)=>distance(a)-distance(b)||a-b);
   for(const index of candidates) {
     const landing=point(world,index),cells=nearbyGround(world,landing).filter(c=>!resources.has(c.z*world.width+c.x));
-    if(cells.length>=3+GROUND_STACKS)return {landing,cells};
+    if(cells.length>=3+stacks)return {landing,cells};
   }
   throw new Error('Aucun point d’arrivée accessible ne peut accueillir les survivants et leurs réserves.');
 }
 
-function survivalStart(world:World):Cell {
-  const {landing,cells}=landingSite(world);
+function survivalStart(world:World,commerce=false):Cell {
+  const supplies:readonly (readonly [ItemId,number])[]=commerce?[...SUPPLIES,['silver',800],['bolt-action-rifle',1],['plasteel-knife',1]]:SUPPLIES;
+  const stacks=supplies.reduce((n,[item,q])=>n+Math.ceil(q/ITEM_DEFINITIONS[item].stackLimit),0);
+  const {landing,cells}=landingSite(world,stacks);
   for(const [index,name] of ['Ada','Noé','Mina'].entries()) {
     const cell=cells[index]!,pawn=startingPawn(world.nextId++,name,cell.x,cell.z,index,55);
     world.pawns.push(pawn);
     addMaterial(world,'apparel',1,{type:'apparel',pawnId:pawn.id},'cloth-shirt');
   }
   let cursor=3;
-  for(const [item,quantity] of SUPPLIES) {
+  for(const [item,quantity] of supplies) {
     const definition=ITEM_DEFINITIONS[item];
     for(let remaining=quantity;remaining>0;) {
       const moved=Math.min(remaining,definition.stackLimit);
@@ -91,7 +94,7 @@ export function createScenarioWorld(seed:number,size:number,id:ScenarioId=DEFAUL
   const site=id==='crashlanded'?resolveSite(seed,siteOptions):undefined;
   const world=site?generateSiteWorld(seed,size,size,site):natural?generateWorld(seed,size,size,'temperate-survivors-v1'):generateWorld(seed,size,size);
   if(site)world.site=site;
-  const landing=natural?survivalStart(world):{x:Math.floor(size/2),z:Math.floor(size/2)};
+  const landing=natural?survivalStart(world,id==='crashlanded'):{x:Math.floor(size/2),z:Math.floor(size/2)};
   if(id==='sentry')setupEncounter(world);
   else {
     initializeCampTraits(world);
@@ -99,7 +102,8 @@ export function createScenarioWorld(seed:number,size:number,id:ScenarioId=DEFAUL
     else {enableArrivals(world);enableRaids(world);enableHeatwaves(world);}
     if(natural)enableWildlife(world,undefined,'natural');else enableWildlife(world);
   }
-  world.scenario={id,revision:site?2:SCENARIO_REVISION,landing};
+  world.scenario={id,revision:site?3:SCENARIO_REVISION,landing};
   if(natural)adoptEnvironment(world);
+  if(id==='crashlanded')enableVisitors(world,true);
   return world;
 }

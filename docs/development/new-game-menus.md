@@ -1,6 +1,6 @@
-# Accueil et création de partie — V83 et parcours cible
+# Accueil et création de partie — V88 validée dans son périmètre et parcours cible
 
-**V83, validée le 20 septembre 2026.** La configuration locale ajoute le choix du relief et la fiche du site effectivement transmis à la génération. Les [preuves V82](../history/validation-new-game-v82.md) établissent l'accueil et les chargements de la tranche précédente ; elles ne valident pas cette nouvelle génération. Le scénario et Cassandra sont explicitement partiels. Le parcours mondial complet ci-dessous reste une cible. [ROADMAP](../ROADMAP.md) conserve seule le calendrier ; le [contrat du départ](scenario-start.md) et l'[inventaire fonctionnel](../gameplay/implementation-status.md) distinguent contenu présent et absent.
+**V88 validée dans son périmètre.** La fiche de scénario décrit maintenant la dotation Crashlanded révision 3, avec argent, fusil à verrou et couteau en plastacier ; les anciennes sauvegardes gardent leur provenance et leurs possessions. Les [preuves V88](../history/validation-trade-v88.md) restent distinctes des [preuves V83](../history/validation-site-v83.md) pour le relief et des [preuves V82](../history/validation-new-game-v82.md) pour l'accueil et les chargements. Le scénario et Cassandra restent explicitement partiels. Le parcours mondial complet ci-dessous reste une cible. [ROADMAP](../ROADMAP.md) conserve seule le calendrier ; le [contrat du départ](scenario-start.md) et l'[inventaire fonctionnel](../gameplay/implementation-status.md) distinguent contenu présent et absent.
 
 ## Périmètre actuel
 
@@ -11,9 +11,9 @@
 | Histoire | Cassandra présélectionnée et décrite comme partielle ; difficulté et mode restent vides jusqu'au choix explicite de Récit d'aventure et Rechargeable. Autres possibilités grisées. |
 | Préparer le départ | Graine numérique aléatoire et modifiable, bouton Aléatoire, carte 250². Site local en forêt tempérée, sans rivière ; choix effectif Plat / Petites collines / Grandes collines et deux ou trois roches dérivées de la graine. Trois personnes aux profils fixes. Les pages planète/huit candidats ne sont pas simulées par des contrôles décoratifs. |
 | Création/chargement | Opération exclusive, publication après acceptation worker, colonie ouverte en pause ; sauvegarde manuelle et colonie précédente restent deux emplacements distincts. Une erreur de format ne remplace pas la colonie active. |
-| Profil appliqué | Nouveau `crashlanded` révision 2 avec `site` révision 1 et `gameProfile` révision 1 ; les parties antérieures conservent cartes et provenances. Cible d'humeur +5, infection différée ×0,75 coloniale, tir ami 0,40 ; autres domaines de difficulté encore absents. |
+| Profil appliqué | Nouveau `crashlanded` révision 3 avec `site` révision 1 et `gameProfile` révision 1 ; les parties antérieures conservent cartes, possessions et provenances. Cible d'humeur +5, infection différée ×0,75 coloniale, tir ami 0,40 ; autres domaines de difficulté encore absents. |
 | Alertes de calendrier | Les boutons d’activation accueil/raids/canicules historiques restent cachés avec `gameProfile`, comme les refus du moteur. Ils restent proposés sur une ancienne partie non profilée dépourvue du calendrier concerné. |
-| Temps/événements | Débit nominal 6 ticks/s, jour de 16 min 40 s ; nouveau départ à 06 h civiles pour un temps écoulé nul. Raid introductif à J5,4 et fenêtres majeures ; accueil fixe/canicule garantie désactivés. Après J20, raids seuls et budget local partiel. |
+| Temps/événements | Débit nominal 6 ticks/s, jour de 16 min 40 s ; nouveau départ à 06 h civiles pour un temps écoulé nul, climat annuel du témoin documenté. Raid introductif à J5,4 et fenêtres majeures ; accueil fixe/canicule garantie désactivés. Grandes menaces limitées aux raids et budget local partiel ; V88 ajoute séparément visites et passants conditionnels. |
 
 Les sections suivantes conservent les contrats de navigation, erreurs, accessibilité et extension du parcours. Contrôles du cycle complet, chargements historiques, clavier, présentation et mesures sont regroupés dans les preuves du lot. Les étapes monde/site/personnes complètes demeurent explicitement hors de cette tranche.
 
@@ -62,6 +62,8 @@ Liste à gauche, description et contenu à droite ; Retour vers l'accueil et Sui
 
 La fiche décrit **ce que le lancement produit réellement** : personnes, matériel, connaissances, lieu et limites. La cible Core complète est conservée dans la recherche ; elle ne doit pas être affichée comme une liste de fournitures promises si certains objets n'existent pas.
 
+En V88, la fiche et la création révision 3 concordent : trois personnes, 300 bois, 450 acier, 30 composants, 800 argent, 50 repas emballés, 30 médicaments, fusil à verrou, revolver, couteau en plastacier, gilet pare-balles et trois chemises portées. Le [contrat de départ](scenario-start.md) fixe quantités et propriétés. Casque, pantalon pare-balles, familier, capsules et marchandises dispersées restent absents ; ce complément ne transforme pas la fiche en promesse de scénario Core complet. Le chargement d'une révision précédente n'applique jamais cette liste.
+
 **Transition depuis V80 :** le libellé demandé n'autorise pas à transformer silencieusement `survivors` en Crashlanded complet. Si le nouveau menu précède l'achèvement de sa dotation, la fiche porte clairement « adaptation partielle » et indique les différences utiles au choix du joueur. La provenance des anciennes parties reste Trois survivants, avec sa révision et ses stocks inchangés. Un changement réel du profil initial exige un contrat de scénario et une révision explicite, pas seulement un nouveau texte.
 
 ### 2. Narrateur, difficulté et sauvegarde
@@ -74,7 +76,7 @@ La page conserve trois choix séparés : qui produit les incidents, quels param�
 - Difficulté et mode commencent sans sélection, comme la création normale observée ; le joueur confirme les deux choix. Suivant explique précisément le choix manquant au lieu d'ignorer le clic.
 - Infobulles lisibles au survol **et au clavier**. Elles expliquent le sens du réglage ; elles ne certifient pas des systèmes encore absents.
 
-L'étiquette Récit d'aventure ne recouvre pas les calendriers provisoires de V81 : le nouveau profil applique les coefficients des mécaniques présentes et son agenda propre. Les pans de difficulté encore absents sont annoncés une fois clairement dans la fiche. Cassandra reçoit l'introduction à J5,4 et les fenêtres majeures à partir de J11 ; le budget/composition et la sélection complète restent partiels. Après J20 les occasions ne produisent encore que des raids, sans équivalence de pondération Core. Les groupes historiques demeurent disponibles uniquement dans leurs anciennes parties/scénarios de diagnostic.
+L'étiquette Récit d'aventure ne recouvre pas les calendriers provisoires de V81 : le nouveau profil applique les coefficients des mécaniques présentes et son agenda propre. Les pans de difficulté encore absents sont annoncés une fois clairement dans la fiche. Cassandra reçoit l'introduction hostile à J5,4 et les fenêtres majeures à partir de J11 ; ces grandes menaces restent des raids, sans équivalence de budget, composition ou sélection complète Core. V88 ajoute séparément les [agendas de visites et de passants](visitors.md), dont l'occasion introductive à J2,5 sur une nouvelle partie. Accès et tirages restent nécessaires ; cette occasion ne promet pas un marchand garanti. Les groupes historiques demeurent disponibles uniquement dans leurs anciennes parties/scénarios de diagnostic.
 
 Retour conserve les choix de cette création. Il ne remet pas secrètement les personnes ou l'aléatoire à zéro.
 

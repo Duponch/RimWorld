@@ -1,6 +1,8 @@
-# Tir commandé — V56
+# Tir commandé — socle V56, armes V88
 
-18 septembre 2026. [Sources et décisions](../research/shooting-reference.md), [guide joueur](../gameplay/player-guide.md), [preuves](validation.md). Premier ordre de tir utilisable avec le revolver équipé. Ce lot n'ajoute ni ennemi ni raid ; tous les personnages actuels appartiennent à la colonie.
+**V88 validée dans son périmètre :** fusil à verrou avec portée 36,9, préparation 102 Core, récupération 90 Core et projectile 0,7 case/Core, en plus du revolver. La chasse et les contrôleurs de combat consultent le profil de la principale ; le couteau n’est pas une arme à distance. Les postures et projectiles du fusil portent un identifiant intrinsèque, validé à partir de V88 ; les anciennes formes désignent toujours le revolver. [Coefficients et limites](../research/weapons-v88.md), [preuves V88](../history/validation-trade-v88.md).
+
+Historique du socle,18 septembre 2026. [Sources et décisions](../research/shooting-reference.md), [guide joueur](../gameplay/player-guide.md), [preuves](validation.md). Premier ordre de tir utilisable avec le revolver équipé. Ce lot n'ajoute ni ennemi ni raid ; tous les personnages actuels appartiennent à la colonie.
 
 ## Intention, cadence et conséquence
 
@@ -8,11 +10,11 @@
 
 Une case réservée au transit (table, lit, cadre, fragment…) ne devient pas un poste de tir. Si le pas engagé aboutit sur cette case, l'ordre est refusé sans modifier le trajet ; le joueur peut viser après dégagement. C'est une adaptation explicite au contrat d'arrêt V22, pas une affirmation que RimWorld applique notre interprétation 3D. La capture des cases d'arrêt est partagée pendant la seule décision synchrone et renouvelée après un impact.
 
-`shooting-state` sépare ordre et posture. Préparation : **18 ticks Core**. Émission réelle, puis récupération : **96 ticks Core**. Dix sous-pas Core par tick local ; aucune conversion systématique en deux/dix ticks locaux. La série sans interruption émet aux dates 18, 132, 246… à partir de son origine. À chaque sous-pas, les tireurs sont traités par identifiant, puis les vols/impacts ; cette convention déterministe est une adaptation du moteur. Un décès dans un sous-pas empêche les tirs suivants, pas ceux déjà partis.
+`shooting-state` sépare ordre et posture. Pour le revolver, préparation : **18 ticks Core**. Émission réelle, puis récupération : **96 ticks Core**. Dix sous-pas Core par tick local ; aucune conversion systématique en deux/dix ticks locaux. La série sans interruption émet aux dates 18, 132, 246… à partir de son origine. À chaque sous-pas, les tireurs sont traités par identifiant, puis les vols/impacts ; cette convention déterministe est une adaptation du moteur. Un décès dans un sous-pas empêche les tirs suivants, pas ceux déjà partis.
 
 Déplacement, arrêt, changement de cible ou démobilisation annulent la préparation et l'intention ; **ils ne suppriment pas une récupération engagée**. Un déplacement attend donc sa fin. Les ordres civils sont refusés pendant cette récupération. Incapacité ou perte complète de manipulation termine la posture, sans retirer un projectile émis. Les besoins et la santé évoluent ; l'effondrement involontaire de fatigue interrompt immédiatement aussi la récupération, puis le colon dort réellement au sol. Ce n'est pas une annulation douce par le joueur. La reprise de la marche reste ordonnancée au tick local après libération, soit moins d'un tick de quantification supplémentaire.
 
-L'émission emploie les règles déjà séparées de ligne/couvert/précision et le projectile V55 ; elle engage son PRNG avec l'identifiant et la balle. L'impact médical provient du vol, jamais du bouton ou du mesh. Tout le monde étant actuellement non hostile, les permissions emploient le profil allié et le facteur de tir ami 0,4. Pas de consommation de munition ordinaire.
+L'émission emploie les règles déjà séparées de ligne/couvert/précision et le projectile V55 ; elle engage son PRNG avec l'identifiant et la balle. L'impact médical provient du vol, jamais du bouton ou du mesh. Les permissions distinguent les affiliations ; le facteur de tir ami du profil de partie vaut0,4. Pas de consommation de munition ordinaire.
 
 ## Tir et expérience
 
@@ -30,6 +32,6 @@ Les traces confirmées sont retenues brièvement afin de montrer aussi une balle
 
 ## Périmètre encore incomplet
 
-V58 ajoute deux affiliations fixes, une sentinelle qui tire, la fuite civile et les collisions hostiles. Mêlée V59, tir automatique et Attaquer civil V60, approche/postes de tir des nouvelles rencontres V61, réveils V62 et chemise/gilet protecteurs V63 sont livrés. V67 ajoute les [murs/portes endommagés](barriers.md), avec invalidation des captures entre impacts. Les anciennes sentinelles conservent leur mandat fixe. Restent autres objets destructibles, dépouille transportable, raids et tactique de groupe, autres armes/armures, inventaire personnel, jauge graphique de visée/récupération, sons et effets d’impact. Portraits encore schématiques mais habillement commun à la carte. Le [pouvoir d’arrêt](stagger.md) reste actif.
+V58 ajoute deux affiliations fixes, une sentinelle qui tire, la fuite civile et les collisions hostiles. Mêlée V59, tir automatique et Attaquer civil V60, approche/postes de tir des nouvelles rencontres V61, réveils V62 et chemise/gilet protecteurs V63 sont livrés. V67 ajoute les [murs/portes endommagés](barriers.md), avec invalidation des captures entre impacts. Les anciennes sentinelles conservent leur mandat fixe. Les raids et dégâts d’objets ont été ajoutés depuis le socle V56. Restent transport des corps humains, tactique de groupe complète, catalogue d’armes/armures et inventaire colonial général, jauge graphique de visée/récupération, sons et effets d’impact. Portraits encore schématiques mais habillement commun à la carte. Le [pouvoir d’arrêt](stagger.md) reste actif.
 
 Le pilote civil conserve ses bilans et vérifie l'absence de tirs spontanés entre colons ; le parcours compagnon de tir utilise une scène contrôlée explicitement alliée. Il ne représente pas le comportement moyen consistant à attaquer ses propres colons. V58 ajoute un pilote compagnon de rencontre : blessure ennemie réelle, défense (automatique depuis V60), secours, médicaments et suivi du rétablissement.

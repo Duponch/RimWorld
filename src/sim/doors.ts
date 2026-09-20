@@ -12,7 +12,7 @@ function openDoor(world:World,s:Structure):void {
 /** Called before committing an edge. Waiting consumes no path or travel distance. */
 export function readyDoorEntry(world:World,pawn:Pawn,next:Cell):boolean {
   const s=doorAt(world,next);if(!s)return true;
-  const d=s.door!;if(pawn.prisoner)return prisonDoorPassable(world,s);if(!isColonist(pawn))return d.open&&doorOpenness(s,world.tick)>=1-1e-9;
+  const d=s.door!;if(pawn.prisoner)return prisonDoorPassable(world,s);if(!isColonist(pawn)&&!pawn.visitor)return d.open&&doorOpenness(s,world.tick)>=1-1e-9;
   if(d.forbidden)return false;
   d.lastTouch=world.tick;
   if(!d.open)openDoor(world,s);
@@ -25,7 +25,7 @@ export function updateDoors(world:World):void {
   const doors=world.structures.filter(s=>s.kind==='door');if(!doors.length)return;
   const bodies=new Set<number>(),friendly=new Set<number>(),objects=new Set<number>();
   const add=(c:Cell)=>bodies.add(c.z*world.width+c.x);
-  for(const p of world.pawns){add(p);if(p.motion&&p.motion.end>world.tick)add(p.motion.from);if(isColonist(p)){friendly.add(p.z*world.width+p.x);if(p.motion&&p.motion.end>world.tick)friendly.add(p.motion.from.z*world.width+p.motion.from.x);}}
+  for(const p of world.pawns){add(p);if(p.motion&&p.motion.end>world.tick)add(p.motion.from);if(isColonist(p)||p.visitor){friendly.add(p.z*world.width+p.x);if(p.motion&&p.motion.end>world.tick)friendly.add(p.motion.from.z*world.width+p.motion.from.x);}}
   for(const a of world.wildlife?.animals??[]){add(a);if(a.motion&&a.motion.end>world.tick)add(a.motion.from);}
   for(const p of world.piles)if(p.owner.type==='ground')objects.add(p.owner.z*world.width+p.owner.x);
   for(const p of world.packed)if(p.owner.type==='ground')objects.add(p.owner.z*world.width+p.owner.x);

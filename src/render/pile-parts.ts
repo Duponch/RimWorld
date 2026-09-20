@@ -2,7 +2,7 @@ import { blockParts } from './block-presentation';
 import { chunkParts } from './chunk-presentation';
 import { foldedApparel } from './character-apparel';
 import type { ApparelItem } from '../sim/apparel-rules';
-import { REVOLVER_PARTS } from './weapon-shape';
+import { weaponVisual } from './weapon-shape';
 import type { PileSurface } from './pile-surfaces';
 import { ITEM_DEFINITIONS,type ItemId } from '../sim/items';
 import type { MaterialKind } from '../sim/types';
@@ -43,7 +43,10 @@ export function pileParts(bundles:readonly PileBundle[]):Placement[] {
     } else if(bundle.kind==='apparel'){
       for(const p of foldedApparel(bundle.item as ApparelItem))food.push({x:x+p.center[0]!,y:.07+p.center[1]!,z:z+p.center[2]!,sx:p.size[0]!,sy:p.size[1]!,sz:p.size[2]!,color:p.color});
     } else if(bundle.kind==='weapon'){
-      for(const p of REVOLVER_PARTS)food.push({x:x+p.center[0],y:.07+p.center[2],z:z+p.center[1],sx:p.size[0],sy:p.size[2],sz:p.size[1],color:p.color});
+      for(const p of weaponVisual(bundle.item)?.parts??[])food.push({x:x+p.center[0],y:.07+p.center[2],z:z+p.center[1],sx:p.size[0],sy:p.size[2],sz:p.size[1],color:p.color});
+    } else if(bundle.kind==='silver'){
+      const rows=Math.max(1,Math.min(3,Math.ceil(bundle.quantity/170)));
+      for(let row=0;row<rows;row++)for(const dx of [-.11,.11])food.push({x:bundle.x+dx,z,y:.045+row*.08,sx:.18,sy:.075,sz:.30,color:row%2?0xa5adb5:ITEM_DEFINITIONS.silver.color});
     } else if(bundle.kind==='medicine') {
       food.push({x:bundle.x,z,y:.14,sx:.42,sy:.26,sz:.36,color:ITEM_DEFINITIONS[bundle.item].color});
       food.push({x:bundle.x,z,y:.285,sx:.23,sy:.03,sz:.07,color:0xf0eee0},{x:bundle.x,z,y:.285,sx:.07,sy:.03,sz:.23,color:0xf0eee0});

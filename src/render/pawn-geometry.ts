@@ -6,7 +6,7 @@ import { CHUNK_ITEMS } from './chunk-presentation';
 import { BLOCK_ITEMS } from './block-presentation';
 import { foldedApparel } from './character-apparel';
 import { APPAREL } from '../sim/apparel-rules';
-import { REVOLVER_PARTS } from './weapon-shape';
+import { WEAPON_VISUALS } from './weapon-shape';
 
 /** Eight rigid bones, authored entirely in code. Each vertex has one bone influence.
  * The bind position/pivot and animation state are evaluated in the vertex shader.
@@ -44,8 +44,8 @@ export function pawnGeometry(): THREE.InstancedBufferGeometry {
   }
   addPart([.37,.34,.26],[0,.85,0],0,[0,.61,0],APPAREL['flak-vest'].color,-2);
   addPart([.12,.18,.025],[0,.86,.145],0,[0,.61,0],0x404c44,-2);
-  for(const part of REVOLVER_PARTS)addPart(part.size.map(n=>n/PAWN_MODEL_SCALE),
-    [.205+part.center[2]/PAWN_MODEL_SCALE,.68+part.center[0]/PAWN_MODEL_SCALE,part.center[1]/PAWN_MODEL_SCALE],0,[0,.61,0],part.color,-1);
+  for(const variant of WEAPON_VISUALS)for(const part of variant.parts)addPart(part.size.map(n=>n/PAWN_MODEL_SCALE),
+    [.205+part.center[2]/PAWN_MODEL_SCALE,.68+part.center[0]/PAWN_MODEL_SCALE,part.center[1]/PAWN_MODEL_SCALE],0,[0,.61,0],part.color,variant.dye);
   const geometry = new THREE.InstancedBufferGeometry();
   // WebGPU guarantees only eight vertex-buffer slots. Keeping authored attributes
   // interleaved leaves room for the seven independent per-instance attributes.
@@ -103,7 +103,8 @@ export function cargoGeometry(): THREE.InstancedBufferGeometry {
   part([.48,.26,.4],[0,0,0],17,ITEM_DEFINITIONS.component.color);
   part([.2,.07,.26],[0,.16,0],17,0x637d77);
   (['herbal-medicine','medicine','glitterworld-medicine'] as const).forEach((item,i)=>{part([.38,.25,.3],[0,0,0],18+i,ITEM_DEFINITIONS[item].color);part([.2,.03,.065],[0,.14,0],18+i,0xf0eee0);part([.065,.03,.2],[0,.14,0],18+i,0xf0eee0);});
-  for(const p of REVOLVER_PARTS)part([...p.size],[...p.center],21,p.color);
+  for(const variant of WEAPON_VISUALS)for(const p of variant.parts)part([...p.size],[...p.center],variant.cargo,p.color);
+  for(const x of [-.11,.11])part([.18,.075,.30],[x,0,0],30,ITEM_DEFINITIONS.silver.color);
   (['cloth-shirt','flak-vest'] as const).forEach((item,i)=>{for(const p of foldedApparel(item))part(p.size,p.center,22+i,p.color);});
   for(const p of foldedApparel('cloth-tribalwear'))part(p.size,p.center,26,p.color);
   part([.48,.10,.50],[0,0,0],25,0xd8c8a2);part([.12,.08,.12],[.15,.09,-.13],25,0x5d716e);

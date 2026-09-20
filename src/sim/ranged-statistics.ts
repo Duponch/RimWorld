@@ -1,5 +1,5 @@
 import type { AccuracyCurve } from './combat-report.ts';
-import { WEAPON_QUALITIES,type WeaponQuality } from './equipment-rules.ts';
+import { WEAPON_QUALITIES,isRangedWeaponItem,type WeaponQuality } from './equipment-rules.ts';
 import { TICKS_PER_DAY } from './types.ts';
 
 /** Data/units shared by the persistent shooting skill and attack producer. See the explicit
@@ -41,6 +41,16 @@ const profiles=Object.freeze(Object.fromEntries(WEAPON_QUALITIES.map((quality,i)
 })])) as Record<WeaponQuality,RevolverProfile>);
 export function revolverProfile(quality:WeaponQuality):RevolverProfile {
   if(!Object.hasOwn(profiles,quality))throw new RangeError('Invalid weapon quality');return profiles[quality];
+}
+const rifleProfiles=Object.freeze(Object.fromEntries(WEAPON_QUALITIES.map((quality,i)=>[quality,Object.freeze({
+  quality,damage:rangedRound(18*damageFactors[i]),armorPenetration:.27*damageFactors[i],
+  accuracy:Object.freeze([.65,.8,.9,.8].map(a=>Math.min(1,a*accuracyFactors[i]))) as AccuracyCurve,
+  range:36.9,warmupCoreTicks:102,cooldownCoreTicks:90,projectileTilesPerCoreTick:70/100,stoppingPower:1.5,
+})])) as Record<WeaponQuality,RevolverProfile>);
+export function rangedWeaponProfile(item:unknown,quality:WeaponQuality):RevolverProfile|undefined {
+  if(!isRangedWeaponItem(item))return undefined;
+  if(!WEAPON_QUALITIES.includes(quality))throw new RangeError('Invalid weapon quality');
+  return item==='revolver'?profiles[quality]:rifleProfiles[quality];
 }
 
 /** Preserve the existing game-day conversion. A displayed Core second is not a

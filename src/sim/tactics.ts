@@ -11,7 +11,7 @@ import { processMelee,startSentryMelee } from './melee.ts';
 import { cancelMelee } from './melee-state.ts';
 import { startTravel } from './movement.ts';
 import { canStep } from './pathfinding.ts';
-import { revolverProfile } from './ranged-statistics.ts';
+import { rangedWeaponProfile } from './ranged-statistics.ts';
 import { cancelShooting } from './shooting-state.ts';
 import { shootingQueries,startAutonomousShot } from './shooting.ts';
 import { firingPosition,tacticalClaims } from './tactical-positions.ts';
@@ -56,7 +56,7 @@ export function processTactics(world:World,p:Pawn,getBlocked:NavigationGrid,budg
   // Re-evaluation may cancel intention, never a recovery or committed edge.
   if(p.shooting?.stance?.phase==='cooldown'||p.melee?.strike){p.state='idle';return;}
   const weapon=equippedWeapon(world,p),queries=shootingQueries(world);
-  const range=weapon?.weapon&&!p.equipmentDropPending&&queries.body(p).capacities.manipulation>0?revolverProfile(weapon.weapon.quality).range:0;
+  const range=weapon?.weapon&&!p.equipmentDropPending&&queries.body(p).capacities.manipulation>0?rangedWeaponProfile(weapon.item,weapon.weapon.quality)?.range??0:0;
   const expired=world.tick*10>=t.reviewAtCore;
   if(expired){clearEngagement(p);target=undefined;}
   if(!t.targetId) {

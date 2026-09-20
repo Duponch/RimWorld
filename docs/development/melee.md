@@ -1,4 +1,6 @@
-# Combat rapproché — V59
+# Combat rapproché — socle V59, extension V88
+
+**V88 validée dans son périmètre :** le couteau en plastacier ajoute manche contondant, lame coupante et pointe perforante, avec récupérations respectives 96/72/96 ticks Core ; le fusil emploie les gestes de mêlée des armes à feu existantes. La [référence V88](../research/weapons-v88.md) distingue les coefficients vérifiés et le classement des gestes hérité, encore adapté. Les [preuves V88](../history/validation-trade-v88.md) ne certifient pas un DPS moyen identique à Core.
 
 V78 étend les ordres aux animaux sauvages via Faune et partage le coup dans `living-melee.ts` ; [contact et riposte interespèces](animal-melee.md). Les règles humaines ci-dessous restent actives.
 
@@ -14,11 +16,11 @@ V63 applique la protection à la partie exacte avant les effets du worker : Poke
 
 `melee-space` définit le contact et les places ; `melee-statistics` les outils, le toucher et l'esquive ; `melee-impact` les lésions résolues ; `melee` orchestre approche, sous-pas, expérience et fin d'engagement. Le contrôleur de combat partage l'horloge Core des projectiles et renouvelle ses captures après un impact de mêlée. Aucun DOM, Three, horloge réelle ou tirage caché.
 
-Poings/tête/dents et trois gestes du revolver utilisent les parties présentes et la principale physique. Niveau Mêlée, vue/manipulation/mouvement ont des consommateurs réels. Raté/esquive ne causent pas de blessure ; toute tentative récupère 120 ticks Core, acquiert l'XP admissible et ralentit la cible 95 ticks Core. La cible nouvellement à terre termine l'ordre ; un ordre explicitement commencé sur une cible déjà à terre peut continuer. Aucune exécution spéciale n'est implicite.
+Poings/tête/dents et gestes de la principale physique utilisent les parties présentes et la principale physique. Niveau Mêlée, vue/manipulation/mouvement ont des consommateurs réels. Raté/esquive ne causent pas de blessure ; toute tentative récupère selon son outil (120 ticks Core pour les outils historiques,72/96 pour le couteau), acquiert l'XP admissible et ralentit la cible 95 ticks Core. La cible nouvellement à terre termine l'ordre ; un ordre explicitement commencé sur une cible déjà à terre peut continuer. Aucune exécution spéciale n'est implicite.
 
 Une arête de l'attaquant finit avant toute frappe. Un ordre de déplacement, un arrêt ou la démobilisation conserve la récupération ; chute médicale et effondrement de fatigue sont des interruptions dures. Les ressources portées passent par l'interruption conservatrice existante. La sentinelle riposte à un ennemi adjacent et retrouve son observation à distance quand le contact cesse.
 
-Les contusions/fissures/écrasements et morsures réutilisent santé, capacités, soins, mort et équipement abandonné. Le résolveur travaille sur une copie avec PRNG explicite. Préservation extérieure, propagation contondante et couches de Poke sont distinctes. Pas de bouclier ou d'armure implicite.
+Les contusions/fissures/écrasements, morsures, coupures et perforations réutilisent santé, capacités, soins, mort et équipement abandonné. Le résolveur travaille sur une copie avec PRNG explicite. Préservation extérieure, propagation contondante et couches de Poke sont distinctes. Pas de bouclier ou d'armure implicite.
 
 ## Étourdissement et présentation
 
@@ -28,10 +30,13 @@ Durée provisoire de l'étourdissement : 45 ticks Core, incertitude documentée.
 
 ## Persistance et frontières
 
+V88 valide V87 avant migration additive. Les trois outils du couteau et leurs récupérations fractionnaires, ainsi que la lésion `stab`, sont refusés dans les formats antérieurs. Le contenu des récupérations historiques ne change pas.
+
+
 Schéma **59**, validation stricte de V58 avant ajout de Mêlée niveau 8, aucune passion ni expérience passée inventée. Préserver carte, acteurs, arêtes, ressources et PRNG. Nouvelles formes sparse `Pawn.melee`, `Pawn.stun`, `motion.stuns` et nouvelle lésion `bite` interdites aux versions antérieures. Les fixtures historiques retirent le nouveau profil ; le chargeur ne répare pas une sauvegarde invalide.
 
 Une place de combat est distincte des réservations civiles ; les combattants debout se bloquent, les civils conservent le partage du transit. Les captures spatiales ne survivent pas à leur décision synchrone. Les scènes en charge emploient des frappes et blessures réelles, sans restauration périodique de santé.
 
 ## Limites
 
-V60 livre tir automatique et réaction Attaquer ; V61 poursuite visible et postes de tir ; V63 chemise/gilet protecteurs. Restent terrains offensifs, autres armures/vêtements et armes, attaque d’objets autres que murs/portes, infections, prisonniers et raids. La mêlée est utilisable avec le contenu actuel ; cela ne termine ni Combat ni G3.
+V60 livre tir automatique et réaction Attaquer ; V61 poursuite visible et postes de tir ; V63 chemise/gilet protecteurs. Restent terrains offensifs, catalogue complet des armures/vêtements/armes, diversité des attaques et tactique de groupe. Raids, infections et captivité ont depuis été ajoutés dans leurs contrats respectifs. La mêlée est utilisable avec le contenu actuel ; cela ne termine ni Combat ni G3.

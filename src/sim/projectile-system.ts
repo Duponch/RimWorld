@@ -5,22 +5,22 @@ import { disturbanceEvents,isLying } from './disturbance.ts';
 import { advanceBulletFlight,type BulletFlight } from './bullet-flight.ts';
 import { captureProjectileBatch } from './projectile-batch.ts';
 import { validWorldProjectile } from './projectile-save.ts';
-import { CORE_TICKS_PER_LOCAL,revolverProfile } from './ranged-statistics.ts';
+import { CORE_TICKS_PER_LOCAL,rangedWeaponProfile } from './ranged-statistics.ts';
 import { damageUnarmoredPawnWithBullet } from './bullet-damage.ts';
 import { healthRandom } from './health.ts';
 import type { ProjectileScene } from './projectile-rules.ts';
 import type { ProjectileRelations,WorldProjectile } from './projectile-state.ts';
-import type { WeaponQuality } from './equipment-rules.ts';
+import type { WeaponQuality,RangedWeaponItem } from './equipment-rules.ts';
 import type { World } from './types.ts';
 import { applyBulletStagger } from './stagger.ts';
 
 /** Commit a producer's validated emission and its private PRNG together.
  * Internal boundary, not a player command or a replacement for aiming/cadence. */
-export function registerWorldProjectile(world:World,flight:BulletFlight,quality:WeaponQuality,relations:ProjectileRelations,rng=world.rng,at=world.tick*CORE_TICKS_PER_LOCAL):WorldProjectile {
+export function registerWorldProjectile(world:World,flight:BulletFlight,quality:WeaponQuality,relations:ProjectileRelations,rng=world.rng,at=world.tick*CORE_TICKS_PER_LOCAL,weaponItem:RangedWeaponItem='revolver'):WorldProjectile {
   if(world.schemaVersion<55||!Number.isSafeInteger(world.nextId+1)||!Number.isSafeInteger(rng)||rng<1||rng>0xffffffff||world.projectiles&&world.projectiles.length>=world.width*world.height)throw new RangeError('Cannot register projectile');
   if(!Number.isSafeInteger(at)||at<Math.max(0,(world.tick-1)*CORE_TICKS_PER_LOCAL)||at>world.tick*CORE_TICKS_PER_LOCAL)throw new RangeError('Invalid emission time');
-  const projectile:WorldProjectile={id:world.nextId,quality,emittedAtCore:at,advancedAtCore:at,flight:{...flight,origin:{...flight.origin},destination:{...flight.destination}},relations:{friendlyPawnIds:[...new Set(relations.friendlyPawnIds)].sort((a,b)=>a-b),friendlyFireFactor:relations.friendlyFireFactor},arrival:null};
-  if(projectile.flight.completed||!validWorldProjectile(projectile,{...world,tick:at/CORE_TICKS_PER_LOCAL}))throw new RangeError('Invalid projectile emission');
+  const projectile:WorldProjectile={id:world.nextId,quality,...weaponItem==='bolt-action-rifle'?{weaponItem}:{},emittedAtCore:at,advancedAtCore:at,flight:{...flight,origin:{...flight.origin},destination:{...flight.destination}},relations:{friendlyPawnIds:[...new Set(relations.friendlyPawnIds)].sort((a,b)=>a-b),friendlyFireFactor:relations.friendlyFireFactor},arrival:null};
+  if(projectile.flight.completed||!validWorldProjectile(projectile,{...world,tick:at/CORE_TICKS_PER_LOCAL},world.schemaVersion))throw new RangeError('Invalid projectile emission');
   world.nextId++;world.rng=rng;(world.projectiles??=[]).push(projectile);return projectile;
 }
 
@@ -44,6 +44,7 @@ export function advanceWorldProjectiles(world:World,beforeCore?:(core:number)=>b
     const randomState={rng:world.rng},next=advanceBulletFlight(p.flight,scene(p),()=>healthRandom(randomState),1);
     p.flight=next.flight;p.advancedAtCore=core;world.rng=randomState.rng;
     const a=next.arrival;if(!a)continue;
+    const profile=rangedWeaponProfile(p.weaponItem??'revolver',p.quality)!;
     const pawn=a.targetKey?.startsWith('pawn:')?world.pawns.find(pawn=>`pawn:${pawn.id}`===a.targetKey):undefined;
     const animal=a.targetKey?.startsWith('animal:')?world.wildlife?.animals.find(a=>`animal:${a.id}`===next.arrival?.targetKey):undefined;
     const barrier=a.targetKey?.startsWith('structure:')?world.structures.find(s=>`structure:${s.id}`===a.targetKey&&isBarrier(s)):undefined;
@@ -53,16 +54,16 @@ export function advanceWorldProjectiles(world:World,beforeCore?:(core:number)=>b
     if(a.kind!=='exit'&&animalImpactNoise(world,{x:Math.floor(a.point.x),z:Math.floor(a.point.z)},p.flight.launcherKey,core)){targets=undefined;scenes.clear();afterImpact?.();}
     if(animal){
       const launcher=world.pawns.find(pawn=>`pawn:${pawn.id}`===p.flight.launcherKey);
-      damageAnimalWithBullet(world,animal,{damage:revolverProfile(p.quality).damage},core,launcher);
+      damageAnimalWithBullet(world,animal,{damage:profile.damage},core,launcher);
       targets=undefined;scenes.clear();afterImpact?.();
     }
     if(barrier){
-      const structures=world.structures;damageBarrier(world,barrier,revolverProfile(p.quality).damage);
+      const structures=world.structures;damageBarrier(world,barrier,profile.damage);
       if(world.structures!==structures)batch=undefined;targets=undefined;scenes.clear();afterImpact?.();
     }
     if(pawn) {
-      const impact=damageUnarmoredPawnWithBullet(world,pawn,{damage:revolverProfile(p.quality).damage},revolverProfile(p.quality).armorPenetration);
-      applyBulletStagger(world,pawn,core,revolverProfile(p.quality).stoppingPower);
+      const impact=damageUnarmoredPawnWithBullet(world,pawn,{damage:profile.damage},profile.armorPenetration);
+      applyBulletStagger(world,pawn,core,profile.stoppingPower);
       if(impact?.layers.some(l=>l.severity>0))disturbance.damage(pawn,core,wasLying);
       // A fall can change posture, release a carried patient and drop objects.
       // Do not reuse a capture across the medical reconciliation.

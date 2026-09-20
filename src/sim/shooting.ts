@@ -9,7 +9,7 @@ import { assaultTarget,hostileTo,isColonist,distanceSquared } from './affiliatio
 import type { CommandResult,Pawn,World } from './types.ts';
 import type { ShootingCommand } from './shooting-state.ts';
 import { cancelShooting } from './shooting-state.ts';
-import { equippedWeapon } from './equipment-rules.ts';
+import { equippedWeapon,isRangedWeaponItem } from './equipment-rules.ts';
 import { pawnBody,medicallyStopped } from './health-rules.ts';
 import { captureWorldShotGrid } from './combat-world.ts';
 import { captureWorldProjectileTargets } from './projectile-world.ts';
@@ -17,7 +17,7 @@ import { findShotLine } from './combat-space.ts';
 import { shotAim,shotCover } from './combat-report.ts';
 import { emitRevolverBullet } from './bullet-emission.ts';
 import { registerWorldProjectile } from './projectile-system.ts';
-import { CORE_TICKS_PER_LOCAL,revolverProfile,shootingAccuracy,rangedTimings } from './ranged-statistics.ts';
+import { CORE_TICKS_PER_LOCAL,rangedWeaponProfile,shootingAccuracy,rangedTimings } from './ranged-statistics.ts';
 import { learnSkill,XP_SCALE } from './skills.ts';
 import { healthRandom } from './health.ts';
 import { captureStandability } from './furniture-travel.ts';
@@ -35,11 +35,11 @@ export function shotPlan(world:World,pawn:Pawn,targetId:number,queries:Queries,a
   if(!pawn.draft&&isColonist(pawn)&&automatic!=='response'&&!huntingPermission(world,pawn,targetId)||automatic&&!automaticPermission(pawn,automatic)||medicallyStopped(pawn)||pawn.state==='sleeping'||pawn.need&&automatic!=='response'||pawn.collapsePending||queries.carried(pawn.id))return {reason:'Le tireur doit être mobilisé, éveillé et capable de tirer.'} as const;
   if(!queries.stands()(pawn))return {reason:'Le colon doit terminer le franchissement avant de viser.'} as const;
   const weapon=equippedWeapon(world,pawn);
-  if(!weapon?.weapon||weapon.item!=='revolver'||pawn.equipmentDropPending||queries.body(pawn).capacities.manipulation<=0)return {reason:'Aucun revolver utilisable en main.'} as const;
+  if(!weapon?.weapon||!isRangedWeaponItem(weapon.item)||pawn.equipmentDropPending||queries.body(pawn).capacities.manipulation<=0)return {reason:'Aucune arme à distance utilisable en main.'} as const;
   const target=combatTarget(world,targetId);
   if(!target||target.id===pawn.id||target.state==='dead'||queries.carried(targetId))return {reason:'Cible absente ou invalide.'} as const;
   if(hostileTarget(pawn,target)&&target.state!=='downed'&&distanceSquared(pawn,target)<1.421**2)return {reason:'Un adversaire adjacent empêche le tir : utilisez la mêlée.'} as const;
-  const profile=revolverProfile(weapon.weapon.quality),line=findShotLine(queries.grid(),pawn,{cell:target,leans:!isAnimalTarget(target)&&!['downed','resting','sleeping'].includes(target.state)},profile.range);
+  const profile=rangedWeaponProfile(weapon.item,weapon.weapon.quality)!,line=findShotLine(queries.grid(),pawn,{cell:target,leans:!isAnimalTarget(target)&&!['downed','resting','sleeping'].includes(target.state)},profile.range);
   if(!line.ok)return {reason:line.reason==='range'?'La cible est hors de portée.':'La ligne de tir est bloquée.'} as const;
   return {weapon,target,profile,line} as const;
 }
@@ -48,7 +48,7 @@ function startAim(world:World,pawn:Pawn,core:number,queries:Queries):void {
   if(isStunned(pawn,core)||pawn.melee?.strike||(pawn.motion?.end??0)*CORE_TICKS_PER_LOCAL>core)return;
   const plan=shotPlan(world,pawn,order.targetId,queries);
   if('reason' in plan||plan.weapon.id!==order.weaponId){cancelShooting(pawn);return;}
-  pawn.shooting!.stance={phase:'aim',startedAtCore:core,endsAtCore:core+plan.profile.warmupCoreTicks,targetStartedDowned:plan.target.state==='downed'};
+  pawn.shooting!.stance={phase:'aim',startedAtCore:core,endsAtCore:core+plan.profile.warmupCoreTicks,targetStartedDowned:plan.target.state==='downed',...plan.weapon.item==='bolt-action-rifle'?{weaponItem:'bolt-action-rifle' as const}:{}};
   pawn.state='idle';
 }
 export function applyShootingCommand(world:World,command:ShootingCommand):CommandResult {
@@ -96,13 +96,13 @@ export function advanceShooter(world:World,pawn:Pawn,core:number,queries:Queries
   const aim=shotAim({distance:line.distance,pawnAccuracy:shootingAccuracy(pawn.skills.shooting.level,body.sight,body.manipulation).perCell,weaponAccuracy:profile.accuracy,targetSize:combatTargetSize(target),standing,weather:weatherShotFactor(world,pawn,target),blindSmoke:false},cover.passChance);
   const random={rng:world.rng};
   const emission=emitRevolverBullet({grid:queries.grid(),line,origin:{x:pawn.x+.5,z:pawn.z+.5},launcherKey:`pawn:${pawn.id}`,equipmentKey:`pile:${weapon.id}`,target:{key:combatTargetKey(target),cell:target,full:false,canBenefitFromCover:true},aim,cover,profile,canHitOtherPawns:true,preventFriendlyFire:false,coverAnchor:key=>queries.targets().anchor(key)},()=>healthRandom(random));
-  registerWorldProjectile(world,emission.flight,profile.quality,{friendlyPawnIds:world.pawns.filter(p=>!hostileTo(pawn,p)).map(p=>p.id),friendlyFireFactor:friendlyFireFactor(world)},random.rng,core);
+  registerWorldProjectile(world,emission.flight,profile.quality,{friendlyPawnIds:world.pawns.filter(p=>!hostileTo(pawn,p)).map(p=>p.id),friendlyFireFactor:friendlyFireFactor(world)},random.rng,core,weapon.item as 'revolver'|'bolt-action-rifle');
   // Same projectile rules; only the documented hostile learning rate differs.
   if(target.state!=='downed')learnSkill(pawn.skills.shooting,(hostileTarget(pawn,target)?170:20)*rangedTimings(profile).learningCycleSeconds*XP_SCALE,pawn);
   pawn.lastAttack={targetId:target.id,atCore:core};
   if(shot.order.auto?.kind==='response')shot.order.auto.remaining--;
   if(shot.order.auto?.kind==='draft')shot.order=null;
-  shot.stance={phase:'cooldown',startedAtCore:core,endsAtCore:core+profile.cooldownCoreTicks};
+  shot.stance={phase:'cooldown',startedAtCore:core,endsAtCore:core+profile.cooldownCoreTicks,...weapon.item==='bolt-action-rifle'?{weaponItem:'bolt-action-rifle' as const}:{}};
 }
 
 export function startAutonomousShot(world:World,pawn:Pawn,target:Pawn,queries:Queries):boolean {

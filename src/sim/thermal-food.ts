@@ -9,7 +9,7 @@ export function updateFoodTemperatures(world:World,layout?:ThermalLayout):void {
   if(!world.piles.some(p=>p.rot)&&!world.wildlife?.animals.some(a=>a.corpseRot))return;
   const view=new TemperatureView(world,layout),pawns=new Map(world.pawns.map(p=>[p.id,p])),jobs=new Map(world.jobs.map(j=>[j.id,j]));
   for(const pile of world.piles)if(pile.rot) {
-    const o=pile.owner,cell=o.type==='ground'?o:o.type==='pawn'||o.type==='equipment'||o.type==='apparel'?pawns.get(o.pawnId):jobs.get(o.jobId);
+    const o=pile.owner,cell=o.type==='ground'?o:o.type==='pawn'||o.type==='equipment'||o.type==='apparel'||o.type==='inventory'?pawns.get(o.pawnId):jobs.get(o.jobId);
     if(!cell)continue;
     const rate=rotRateAtTemperature(view.at(world,cell));
     if(rate===(pile.rot.rate??1))continue;

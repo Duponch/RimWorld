@@ -223,9 +223,10 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
         <p>Trois survivants arrivent dans un territoire inconnu. Vos provisions vous laissent le temps de choisir un abri, de vous installer et de préparer les prochaines récoltes.</p>
         <h3>Vos provisions</h3><dl class="front-supplies">
           <div><dt>Bois</dt><dd>300</dd></div><div><dt>Acier</dt><dd>450</dd></div><div><dt>Composants</dt><dd>30</dd></div>
-          <div><dt>Rations de survie</dt><dd>50</dd></div><div><dt>Médicaments</dt><dd>30</dd></div><div><dt>Revolver et gilet</dt><dd>1 de chaque</dd></div>
+          <div><dt>Rations de survie</dt><dd>50</dd></div><div><dt>Médicaments</dt><dd>30</dd></div><div><dt>Argent</dt><dd>800</dd></div>
+          <div><dt>Fusil à verrou</dt><dd>1</dd></div><div><dt>Revolver</dt><dd>1</dd></div><div><dt>Couteau en plastacier</dt><dd>1</dd></div><div><dt>Gilet pare-balles</dt><dd>1</dd></div>
         </dl><p class="front-small">Chaque personne porte une chemise en tissu. Vêtements complexes et Climatisation sont déjà connus.</p>
-        <div class="front-limitation"><strong>Une adaptation encore partielle</strong><p>Le départ ne comprend pas encore l’argent, le fusil, le couteau, le casque, le pantalon de protection, l’animal domestique ou les provisions dispersées du scénario de référence. L’arrivée en capsules reste à venir.</p></div>
+        <div class="front-limitation"><strong>Une adaptation encore partielle</strong><p>Le casque, le pantalon de protection, l’animal domestique et les provisions dispersées du scénario de référence restent absents. L’arrivée en capsules reste à venir.</p></div>
       </article></div>`;
     const list = find<HTMLDivElement>('.front-choice-list');
     list.append(unavailable('Tribu perdue'), unavailable('Le riche explorateur'), unavailable('Brutalité nue'), unavailable('Personnalisé'));

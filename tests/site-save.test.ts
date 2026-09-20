@@ -35,7 +35,11 @@ test('real V82 snapshot migrates without inventing a site, terrain, clock or new
 
 test('new site provenance, physical landing and both new soils survive continuation and snapshot patches',()=>{
   const world=createScenarioWorld(42,64,'crashlanded',{hilliness:'large-hills'});
-  expect(world.site).toEqual(resolveSite(42,{hilliness:'large-hills'}));expect(world.scenario!.revision).toBe(2);
+  expect(world.site).toEqual(resolveSite(42,{hilliness:'large-hills'}));expect(world.scenario!.revision).toBe(3);
+  expect(world.piles.filter(p=>p.item==='silver').reduce((n,p)=>n+p.quantity,0)).toBe(800);
+  expect(world.piles.filter(p=>p.item==='bolt-action-rifle')).toHaveLength(1);
+  expect(world.piles.filter(p=>p.item==='plasteel-knife')).toMatchObject([{quantity:1,weapon:{quality:'normal',hitPoints:280}}]);
+  expect(world.visitors?.introAt).toBe(15000);
   const ground=world.piles.filter(p=>p.owner.type==='ground');
   expect(new Set(ground.map(p=>p.owner.type==='ground'?`${p.owner.x},${p.owner.z}`:'')).size).toBe(ground.length);
   for(const p of world.pawns)expect(ground.some(q=>q.owner.type==='ground'&&q.owner.x===p.x&&q.owner.z===p.z)).toBe(false);

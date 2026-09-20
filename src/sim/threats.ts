@@ -1,6 +1,6 @@
 import { startSentryMelee } from './melee.ts';
 import { equippedWeapon } from './equipment-rules.ts';
-import { revolverProfile } from './ranged-statistics.ts';
+import { rangedWeaponProfile } from './ranged-statistics.ts';
 import { RoomTopologyCache } from './room-topology.ts';
 import { reservedServiceCells } from './service-reservations.ts';
 import { activeThreat,distanceSquared,hostileTo,isColonist } from './affiliation.ts';
@@ -39,8 +39,8 @@ export function considerFlee(world:World,pawn:Pawn,context:Context):void {
 export function processSentry(world:World,pawn:Pawn,context:Context):void {
   if(startSentryMelee(world,pawn)||pawn.shooting)return;
   pawn.state='idle';
-  const weapon=equippedWeapon(world,pawn);if(!weapon?.weapon)return;
-  const range=revolverProfile(weapon.weapon.quality).range;
+  const weapon=equippedWeapon(world,pawn),profile=weapon?.weapon?rangedWeaponProfile(weapon.item,weapon.weapon.quality):undefined;if(!profile)return;
+  const range=profile.range;
   const targets=context.hostiles(pawn).filter(t=>distanceSquared(pawn,t)<=range**2).sort((a,b)=>distanceSquared(pawn,a)-distanceSquared(pawn,b)||a.id-b.id);
   for(const target of targets)if(startAutonomousShot(world,pawn,target,context.queries))break;
 }

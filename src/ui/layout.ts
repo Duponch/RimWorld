@@ -3,6 +3,7 @@ import type { JobKind } from '../sim/types';
 import { scheduleLayout } from './schedule-controls';
 import { foodPolicyLayout } from './food-policy-controls';
 import { DEFAULT_MAP_SIZE, MAP_SIZE_PRESETS } from '../sim/map-config';
+import { ITEM_DEFINITIONS } from '../sim/items';
 
 const mapSizeLabels: Record<number, string> = { 32: 'terrain d’essai', 64: 'compacte', 128: 'compacte', 200: 'petite', 250: 'moyenne' };
 
@@ -57,9 +58,9 @@ export const toolDefinitions: { id: Tool; icon: string; title: string; hint: str
 
 export function storageSettings(prefix: string): string {
   return `<div class="storage-settings" id="${prefix}-settings">
-    <div class="storage-filters"><label><input id="${prefix}-unfinished" type="checkbox" checked> Ouvrages inachevés</label><label><input id="${prefix}-textile" type="checkbox" checked> Textiles</label><label><input id="${prefix}-apparel" type="checkbox" checked> Vêtements</label><label><input id="${prefix}-weapon" type="checkbox" checked> Armes</label><label><input id="${prefix}-medicine" type="checkbox" checked> Médicaments</label><label><input id="${prefix}-wood" type="checkbox" checked> Bois</label><label><input id="${prefix}-food" type="checkbox" checked> Nourriture</label><label><input id="${prefix}-component" type="checkbox" checked> Composants</label><label><input id="${prefix}-steel" type="checkbox" checked> Acier</label><label><input id="${prefix}-blocks" type="checkbox" checked> Blocs de pierre</label><label><input id="${prefix}-chunk" type="checkbox"> Fragments de roche</label><label><input id="${prefix}-corpse" type="checkbox"> Dépouilles animales</label><label><input id="${prefix}-furniture" type="checkbox" checked> Meubles emballés</label></div>
+    <div class="storage-filters"><label><input id="${prefix}-silver" type="checkbox" checked> Argent</label><label><input id="${prefix}-unfinished" type="checkbox" checked> Ouvrages inachevés</label><label><input id="${prefix}-textile" type="checkbox" checked> Textiles</label><label><input id="${prefix}-apparel" type="checkbox" checked> Vêtements</label><label><input id="${prefix}-weapon" type="checkbox" checked> Armes</label><label><input id="${prefix}-medicine" type="checkbox" checked> Médicaments</label><label><input id="${prefix}-wood" type="checkbox" checked> Bois</label><label><input id="${prefix}-food" type="checkbox" checked> Nourriture</label><label><input id="${prefix}-component" type="checkbox" checked> Composants</label><label><input id="${prefix}-steel" type="checkbox" checked> Acier</label><label><input id="${prefix}-blocks" type="checkbox" checked> Blocs de pierre</label><label><input id="${prefix}-chunk" type="checkbox"> Fragments de roche</label><label><input id="${prefix}-corpse" type="checkbox"> Dépouilles animales</label><label><input id="${prefix}-furniture" type="checkbox" checked> Meubles emballés</label></div>
     <label>Priorité de réserve<select id="${prefix}-priority"><option value="1">1 · basse</option><option value="2" selected>2 · normale</option><option value="3">3 · importante</option><option value="4">4 · critique</option></select></label>
-    <label>Capacité (unités)<input id="${prefix}-capacity" type="number" min="1" max="75" step="1" value="75"></label>
+    <label>Capacité (unités)<input id="${prefix}-capacity" type="number" min="1" max="${ITEM_DEFINITIONS.silver.stackLimit}" step="1" value="${ITEM_DEFINITIONS.silver.stackLimit}"></label>
   </div>`;
 }
 
@@ -77,7 +78,7 @@ export function gameLayout(): string {
       <div class="resource"><span class="resource-symbol wood">▤</span><span>Bois</span><strong id="wood">—</strong></div>
       <div class="resource"><span class="resource-symbol">▱</span><span>Acier</span><strong id="steel">—</strong></div>
       <div class="resource" id="cloth-stock" hidden><span class="resource-symbol">▤</span><span>Tissu</span><strong id="cloth">—</strong></div>
-      <div class="resource"><span class="resource-symbol">⚙</span><span>Composants</span><strong id="component">—</strong></div>
+      <div class="resource"><span class="resource-symbol">⚙</span><span>Composants</span><strong id="component">—</strong></div><div class="resource"><span class="resource-symbol">¤</span><span>Argent</span><strong id="silver">—</strong></div>
       <div class="resource"><span class="resource-symbol">✚</span><span>Médicaments</span><strong id="medicine">—</strong></div>
       <div class="resource"><span class="resource-symbol">▦</span><span>Blocs</span><strong id="blocks">—</strong></div>
       <div class="resource"><span class="resource-symbol food">⁙</span><span>Nutrition</span><strong id="food">—</strong></div>

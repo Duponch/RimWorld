@@ -13,6 +13,9 @@ export const ITEM_DEFINITIONS = Object.freeze({
   cloth: Object.freeze({label:'Tissu',kind:'textile',stackLimit:75,nutrition:0,maxIngest:0,color:0xe4ddc8}),
   'cloth-shirt':Object.freeze({label:'Chemise en tissu',kind:'apparel',stackLimit:1,nutrition:0,maxIngest:0,color:0xd8c8a2}),
   'flak-vest':Object.freeze({label:'Gilet pare-balles',kind:'apparel',stackLimit:1,nutrition:0,maxIngest:0,color:0x626d65}),
+  silver:Object.freeze({label:'Argent',kind:'silver',stackLimit:500,nutrition:0,maxIngest:0,color:0xc7c9cc}),
+  'bolt-action-rifle':Object.freeze({label:'Fusil à verrou',kind:'weapon',stackLimit:1,nutrition:0,maxIngest:0,color:0x695342}),
+  'plasteel-knife':Object.freeze({label:'Couteau en plastacier',kind:'weapon',stackLimit:1,nutrition:0,maxIngest:0,color:0xa0b2b5}),
   revolver:Object.freeze({label:'Revolver',kind:'weapon',stackLimit:1,nutrition:0,maxIngest:0,color:0x606b72}),
   'herbal-medicine':Object.freeze({label:'Plantes médicinales',kind:'medicine',stackLimit:25,nutrition:0,maxIngest:0,color:0x7d985c}),
   medicine:Object.freeze({label:'Médicaments',kind:'medicine',stackLimit:25,nutrition:0,maxIngest:0,color:0x91c6cc}),
@@ -42,10 +45,10 @@ export const ITEM_DEFINITIONS = Object.freeze({
 export type ItemId = keyof typeof ITEM_DEFINITIONS;
 /** These raw foods cause the shared raw-meal thought, independently of policy. */
 export const rawFoodThought = (item: ItemId): boolean => item === 'rice' || item === 'potato' || item === 'corn' || item === 'hare-meat';
-export const legacyItem = (kind: MaterialKind): ItemId => kind==='corpse'?missingEquipmentType():kind==='unfinished'?missingEquipmentType():kind==='textile'?'cloth':kind==='apparel'||kind==='weapon'?missingEquipmentType():kind==='medicine'?missingMedicineType():kind==='component'?'component':kind==='blocks'?missingBlockType(): kind === 'steel' ? 'steel' : kind === 'wood' ? 'wood' : kind === 'chunk' ? 'legacy-chunk' : 'legacy-portion';
+export const legacyItem = (kind: MaterialKind): ItemId => kind==='silver'?'silver':kind==='corpse'?missingEquipmentType():kind==='unfinished'?missingEquipmentType():kind==='textile'?'cloth':kind==='apparel'||kind==='weapon'?missingEquipmentType():kind==='medicine'?missingMedicineType():kind==='component'?'component':kind==='blocks'?missingBlockType(): kind === 'steel' ? 'steel' : kind === 'wood' ? 'wood' : kind === 'chunk' ? 'legacy-chunk' : 'legacy-portion';
 export const nutritionOf = (pile: MaterialPile): number => ITEM_DEFINITIONS[pile.item].nutrition * pile.quantity;
 export function availableNutrition(world: World): number {
-  return world.piles.reduce((sum, pile) => sum + (pile.owner.type === 'job' ? 0 : nutritionOf(pile)), 0) / 100;
+  return world.piles.reduce((sum, pile) => sum + (pile.owner.type === 'job'||pile.owner.type==='inventory'||pile.owner.type==='pawn'&&!world.pawns.some(p=>p.id===('pawnId' in pile.owner?pile.owner.pawnId:-1)&&(p.faction??'colony')==='colony') ? 0 : nutritionOf(pile)), 0) / 100;
 }
 /** Unity's midpoint-to-even rounding, used by the reference stack calculation. */
 function roundEven(value: number): number {

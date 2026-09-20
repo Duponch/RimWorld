@@ -20,7 +20,7 @@ test('V85 validates before neutral migration and refuses every future prisoner r
   // Real V84 colony promoted only by the documented V84->85 basic priority.
   const old=JSON.parse(gunzipSync(readFileSync(new URL('./fixtures/colony-v84.json.gz',import.meta.url))).toString('utf8')) as World;
   old.schemaVersion=85 as typeof old.schemaVersion;for(const p of old.pawns)p.priorities.basic=3;
-  const upgraded=deserializeWorld(JSON.stringify(old)),expected=structuredClone(old);expected.schemaVersion=87;for(const p of expected.pawns)p.priorities.firefight=1;for(const p of expected.pawns)p.priorities.warden=3;
+  const upgraded=deserializeWorld(JSON.stringify(old)),expected=structuredClone(old);expected.schemaVersion=88;for(const p of expected.pawns)p.priorities.firefight=1;for(const p of expected.pawns)p.priorities.warden=3;
   expect(upgraded).toEqual(expected);expect(upgraded.prisonDepartures).toBeUndefined();expect(upgraded.pawns.every(p=>!p.prisoner&&!p.recruitment&&!p.ward)).toBe(true);
   const base=prisonerUiFixture().world;base.schemaVersion=85 as typeof base.schemaVersion;for(const p of base.pawns)delete (p.priorities as Partial<typeof p.priorities>).warden;for(const p of base.pawns)delete (p.priorities as Partial<typeof p.priorities>).firefight;
   expect(()=>deserializeWorld(JSON.stringify(base))).not.toThrow();

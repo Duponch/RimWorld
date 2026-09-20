@@ -1,4 +1,4 @@
-import { weaponLabel } from '../sim/equipment-rules';
+import { weaponLabel,weaponMaxHitPoints } from '../sim/equipment-rules';
 import type { Pawn,World,MaterialPile } from '../sim/types';
 
 /** Snapshot projection shared by GPU attachment and portrait/inspection labels.
@@ -9,5 +9,5 @@ export function equipmentProjection(world:World):ReadonlyMap<number,MaterialPile
   return result;
 }
 export function equipmentDescription(pile:MaterialPile|undefined,pawn?:Pawn):string {
-  return pile?`${weaponLabel(pile)} · ${pile.weapon!.hitPoints}/100 PV${pawn?.equipmentDropPending?' · dépôt en attente':''}`:'Aucune arme équipée';
+  return pile?`${weaponLabel(pile)} · ${pile.weapon!.hitPoints}/${weaponMaxHitPoints(pile.item)} PV${pawn?.equipmentDropPending?' · dépôt en attente':''}`:'Aucune arme équipée';
 }

@@ -3,7 +3,7 @@ import type { World } from './types.ts';
 
 export function validAffiliationShape(p:Record<string,unknown>,version:number,world:World):boolean {
   if(version<58)return p.faction===undefined&&p.hostilityResponse===undefined&&p.flee===undefined;
-  if(p.faction!==undefined&&p.faction!=='colony'&&p.faction!=='outlaws'||p.hostilityResponse!==undefined&&p.hostilityResponse!=='ignore'&&!(version>=60&&p.hostilityResponse==='attack'))return false;
+  if(p.faction!==undefined&&p.faction!=='colony'&&p.faction!=='outlaws'&&!(version>=88&&p.faction==='outlanders')||p.hostilityResponse!==undefined&&p.hostilityResponse!=='ignore'&&!(version>=60&&p.hostilityResponse==='attack'))return false;
   if(p.flee===undefined)return true;
   const f=p.flee as Record<string,unknown>,t=f?.target as Record<string,unknown>;
   const end=(p.motion as {end?:number}|undefined)?.end,latest=Math.ceil(Math.max(world.tick,typeof end==='number'&&Number.isFinite(end)?end:world.tick))+120;
@@ -13,7 +13,7 @@ export function validateAffiliations(world:World):string[] {
   const errors:string[]=[];
   for(const p of world.pawns) {
     if(p.lastAttack&&(p.lastAttack.targetId===p.id||p.lastAttack.targetId>=world.nextId))errors.push('Invalid historical attack target.');
-    if(!isColonist(p)&&(p.draft||p.flee||p.hostilityResponse||p.jobId!==null||p.orders.active!==null||p.orders.queue.length||p.haul||p.cooking||p.rescue||p.tend||p.ward||p.feed||p.equipmentTask||p.recreation.task||!p.prisoner&&(p.bedId!==null||p.need&&!(p.need.kind==='sleep'&&p.need.bedId===null))))errors.push('Non-colonist owns a colony activity.');
+    if(!isColonist(p)&&(p.draft||p.flee||p.hostilityResponse||p.jobId!==null||p.orders.active!==null||p.orders.queue.length||p.haul||p.cooking||p.rescue||p.tend||p.ward||p.feed||p.equipmentTask||p.recreation.task||!p.prisoner&&(p.bedId!==null||p.need&&!(p.need.kind==='sleep'&&p.need.bedId===null||wantsVisitorMeal(p)))))errors.push('Non-colonist owns a colony activity.');
     const recovering=world.schemaVersion>=79&&p.shooting?.order===null&&p.shooting.stance?.phase==='cooldown';
     if(p.flee&&(!isColonist(p)||p.draft||!['idle','moving','hungry'].includes(p.state)||p.shooting&&!recovering||p.need||p.jobId!==null||p.orders.active!==null||p.orders.queue.length||p.haul||p.cooking||p.rescue||p.tend||p.ward||p.feed||p.equipmentTask||p.recreation.task))errors.push('Flee conflicts with another activity.');
     if(p.flee&&p.path.length&&(p.path.at(-1)!.x!==p.flee.target.x||p.path.at(-1)!.z!==p.flee.target.z))errors.push('Flee path misses its target.');
@@ -24,3 +24,5 @@ export function validateAffiliations(world:World):string[] {
   }
   return errors;
 }
+
+function wantsVisitorMeal(p:World['pawns'][number]):boolean{return !!p.visitor&&p.need?.kind==='eat'&&p.need.phase!=='pickup';}

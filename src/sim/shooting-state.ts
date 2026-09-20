@@ -1,7 +1,7 @@
 /** The order can be cancelled/replaced without erasing post-shot recovery. */
 export interface ShootingState {
   order:{targetId:number;weaponId:number;startedDowned:boolean;hunt?:true;auto?:import('./automatic-combat-state.ts').AutomaticAttack}|null;
-  stance:({phase:'aim';startedAtCore:number;endsAtCore:number;targetStartedDowned:boolean}|{phase:'cooldown';startedAtCore:number;endsAtCore:number})|null;
+  stance:(({phase:'aim';startedAtCore:number;endsAtCore:number;targetStartedDowned:boolean}|{phase:'cooldown';startedAtCore:number;endsAtCore:number})&{weaponItem?:'bolt-action-rifle'})|null;
 }
 export type ShootingCommand={type:'shoot';pawnIds:number[];targetId:number};
 

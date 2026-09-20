@@ -23,7 +23,7 @@ const same=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
  * Store the selected cells so a later greedy search cannot invalidate the plan. */
 export function planCommandDrops(world:World,command:Command):DropPlan|null {
   const jobs=new Set<number>(),zones=new Set<number>(),pawns=new Set<number>();
-  if(command.type==='order-extinguish'||command.type==='order-capture'||command.type==='order-equipment'||command.type==='order-feed'||command.type==='order-tend'||command.type==='order-rescue'||command.type==='order-job'||command.type==='order-cook'||command.type==='order-haul'||command.type==='clear-orders') {
+  if(command.type==='order-trade'||command.type==='order-extinguish'||command.type==='order-capture'||command.type==='order-equipment'||command.type==='order-feed'||command.type==='order-tend'||command.type==='order-rescue'||command.type==='order-job'||command.type==='order-cook'||command.type==='order-haul'||command.type==='clear-orders') {
     pawns.add(command.pawnId);
   } else if(command.type==='designate') {
     const affected=zonesUnderPlan(world,command);for(const id of affected.deliveries)zones.add(id);
@@ -96,7 +96,7 @@ export function releaseWork(world:World,pawn:Pawn,plan?:DropPlan):boolean {
 export function releaseAssignments(world:World,pawn:Pawn):void {
   cancelAutomaticCombat(pawn);cancelHunting(pawn);
   if(pawn.need?.kind==='sleep'&&pawn.need.medical&&pawn.health&&!pawn.health.death&&pawn.health.tick<world.tick)updatePawnHealth(world,pawn);
-  delete pawn.firefighting;delete pawn.ward;delete pawn.heatRefuge;delete pawn.research;releaseRescue(world,pawn);delete pawn.tend;delete pawn.feed;delete pawn.medicalSleep;delete pawn.equipmentTask;
+  delete pawn.trade;delete pawn.firefighting;delete pawn.ward;delete pawn.heatRefuge;delete pawn.research;releaseRescue(world,pawn);delete pawn.tend;delete pawn.feed;delete pawn.medicalSleep;delete pawn.equipmentTask;
   const job=world.jobs.find(j=>j.id===pawn.jobId);
   if(job?.reservedBy===pawn.id){delete job.installationWork;delete job.clearance;delete job.pickTicks;job.reservedBy=null;job.status='pending';if(job.repair)delete job.repair.warmed;if(job.kind==='flick'||job.kind==='repair'||job.furniture||job.kind==='mine'||job.kind==='sow'||job.kind==='deconstruct'||isRoofJob(job))resetWork(job);}
   delete pawn.transitExit;

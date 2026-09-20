@@ -1,5 +1,6 @@
 import { automaticOwnership,automaticPost } from './automatic-combat-save.ts';
 import { hostileTo,isColonist } from './affiliation.ts';
+import { meleeRecoveryCore,type MeleeToolId } from './melee-statistics.ts';
 import type { World } from './types.ts';
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const integer=(v:unknown,min:number,max=Number.MAX_SAFE_INTEGER):v is number=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;
@@ -10,7 +11,7 @@ export function validMeleeShape(value:unknown,version:number,tick:number):boolea
   const o=value.order,s=value.strike;
   if(o!==null&&(!object(o)||!keys(o,['targetId','startedDowned',...(version>=60?['auto']:[]),...(version>=67?['structure']:[])])||!integer(o.targetId,1)||o.structure!==undefined&&(o.structure!==true||o.startedDowned||o.auto!==undefined)||typeof o.startedDowned!=='boolean'||o.auto!==undefined&&(typeof o.auto!=='string'||!['draft','response'].includes(o.auto))))return false;
   if(s===null)return o!==null;
-  return object(s)&&keys(s,['targetId','atCore','untilCore','tool','outcome',...(version>=67?['structure']:[])])&&(s.structure===undefined||object(s.structure)&&keys(s.structure,['x','z'])&&integer(s.structure.x,0)&&integer(s.structure.z,0)&&s.outcome==='hit')&&integer(s.targetId,1)&&integer(s.atCore,0,tick*10)&&integer(s.untilCore,tick*10+1)&&s.untilCore-s.atCore===120&&['left-fist','right-fist','head','teeth','grip','barrel','barrel-poke'].includes(String(s.tool))&&['hit','miss','dodge'].includes(String(s.outcome));
+  return object(s)&&keys(s,['targetId','atCore','untilCore','tool','outcome',...(version>=67?['structure']:[])])&&(s.structure===undefined||object(s.structure)&&keys(s.structure,['x','z'])&&integer(s.structure.x,0)&&integer(s.structure.z,0)&&s.outcome==='hit')&&integer(s.targetId,1)&&integer(s.atCore,0,tick*10)&&integer(s.untilCore,tick*10+1)&&s.untilCore-s.atCore===meleeRecoveryCore(s.tool as MeleeToolId)&&['left-fist','right-fist','head','teeth','grip','barrel','barrel-poke',...(version>=88?['knife-handle','knife-blade','knife-point']:[])].includes(String(s.tool))&&['hit','miss','dodge'].includes(String(s.outcome));
 }
 export function validStunShape(value:unknown,version:number,tick:number):boolean {
   if(value===undefined)return true;

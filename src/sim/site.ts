@@ -22,7 +22,7 @@ export function resolveSite(seed:number,options:SiteOptions={hilliness:'small-hi
 }
 /** Provenance survives later excavation and landscaping; do not regenerate to validate. */
 export function validSite(value:unknown,version:number,scenario:World['scenario']):boolean {
-  const requiresSite=scenario?.id==='crashlanded'&&scenario.revision===2;
+  const requiresSite=scenario?.id==='crashlanded'&&scenario.revision>=2;
   if(value===undefined)return !requiresSite;
   if(version<83||!requiresSite||!record(value)||Object.keys(value).length!==5||!Object.keys(value).every(k=>['revision','biome','hilliness','river','stones'].includes(k)))return false;
   return value.revision===1&&value.biome==='temperate-forest'&&value.river==='none'&&(HILLINESS as readonly unknown[]).includes(value.hilliness)&&

@@ -1,0 +1,970 @@
+{
+  "baseCommit": "d38906a",
+  "candidateModules": {
+    "wildlife-navigation.ts": {
+      "base": "9e4b635ef6541f5b08b75e77b3211669aa4894d855c705a87ca8acda627f2b66",
+      "candidate": "db4139a6230f0d774c0c990f6877bf0a746f1164484680198c88e278fd74d384"
+    },
+    "farming.ts": {
+      "base": "fd6490c5cae1e19d066e19d368803b605892a263f7001c036c140650c6b77ff6",
+      "candidate": "81d6b97bc168e578694dac5aceba55684a2685087d21c51c6ca998f5a9af7a2b"
+    }
+  },
+  "cpu": "AMD Ryzen 5 3600",
+  "os": "Windows 10.0.26200",
+  "node": "24.11.1",
+  "instrumentation": "V8 only for initial hotspot profiles; four separate processes per load for comparison without CPU profiler. Identical per-operation wall timers and oracles in all passes.",
+  "executionOrder": [
+    "environment-base-1",
+    "colony-base-1",
+    "environment-candidate-1",
+    "colony-candidate-1",
+    "environment-candidate-2",
+    "colony-candidate-2",
+    "environment-base-2",
+    "colony-base-2"
+  ],
+  "conditions": "No concurrent Lisiere native/CPU campaign. External application load not controlled. No FPS or worker postMessage measured. All world and player fields retained in equality comparisons.",
+  "environmentProtocol": "Frozen V87 ENVIRONMENT(100): 100 colonists/100 hares, 250x250, 650 ticks, 130 snapshot encodes; distinct 3-colonist/100-tick warmup. Full prepared V87 food/energy/heating/fire fixture and oracles unchanged.",
+  "colonyProtocol": "Published V87 fixture: 4 colonists/11 animals, ticks 816438..817438. Decisions every 250 ticks or 20 during active raid; per-tick observation/bookkeeping; five strict conservation/validation checks. Separate exact 120-tick continuation on two clones. No separate JIT warmup, no daily checkpoint I/O in this window.",
+  "limitations": [
+    "Two pairs are not robust statistical percentiles or a confidence interval.",
+    "Two pure modules are changed together; gains are not attributed individually.",
+    "Final state equality is established on these workloads and targeted boundaries, not a universal proof.",
+    "No historical native comparison, ideal 6x guarantee, or annual runtime extrapolation."
+  ],
+  "profiles": {
+    "environment": {
+      "sampledMs": 29712.96,
+      "topSelf": [
+        {
+          "frame": [
+            "canStandAt",
+            "tmp/performance-v88/base/src/sim/furniture-travel.ts",
+            40
+          ],
+          "ms": 2446.89,
+          "percent": 8.24
+        },
+        {
+          "frame": [
+            "navigationCosts",
+            "tmp/performance-v88/base/src/sim/furniture-travel.ts",
+            73
+          ],
+          "ms": 1624.98,
+          "percent": 5.47
+        },
+        {
+          "frame": [
+            "footprintCells",
+            "tmp/performance-v88/base/src/sim/definitions.ts",
+            68
+          ],
+          "ms": 1030.02,
+          "percent": 3.47
+        },
+        {
+          "frame": [
+            "candidateAccess",
+            "tmp/performance-v88/base/src/sim/candidate-access.ts",
+            11
+          ],
+          "ms": 1008.26,
+          "percent": 3.39
+        },
+        {
+          "frame": [
+            "stepWorld",
+            "tmp/performance-v88/base/src/sim/engine.ts",
+            423
+          ],
+          "ms": 984.52,
+          "percent": 3.31
+        },
+        {
+          "frame": [
+            "footprintContains",
+            "tmp/performance-v88/base/src/sim/definitions.ts",
+            46
+          ],
+          "ms": 966.55,
+          "percent": 3.25
+        },
+        {
+          "frame": [
+            "blockedCells",
+            "tmp/performance-v88/base/src/sim/pathfinding.ts",
+            18
+          ],
+          "ms": 874.62,
+          "percent": 2.94
+        },
+        {
+          "frame": [
+            "getBlocked",
+            "tmp/performance-v88/base/src/sim/engine.ts",
+            462
+          ],
+          "ms": 793.22,
+          "percent": 2.67
+        },
+        {
+          "frame": [
+            "animalNavigation",
+            "tmp/performance-v88/base/src/sim/wildlife-navigation.ts",
+            12
+          ],
+          "ms": 751.97,
+          "percent": 2.53
+        },
+        {
+          "frame": [
+            "groundOccupancyAllows",
+            "tmp/performance-v88/base/src/sim/occupancy.ts",
+            39
+          ],
+          "ms": 707.25,
+          "percent": 2.38
+        },
+        {
+          "frame": [
+            "<anonymous>",
+            "tmp/performance-v88/environment-profile.ts",
+            1
+          ],
+          "ms": 704.89,
+          "percent": 2.37
+        },
+        {
+          "frame": [
+            "context",
+            "tmp/performance-v88/base/src/sim/farming.ts",
+            49
+          ],
+          "ms": 636.22,
+          "percent": 2.14
+        }
+      ],
+      "topInclusive": [
+        {
+          "frame": [
+            "(root)",
+            "",
+            0
+          ],
+          "ms": 29712.96,
+          "percent": 100.0
+        },
+        {
+          "frame": [
+            "<anonymous>",
+            "tmp/performance-v88/environment-profile.ts",
+            1
+          ],
+          "ms": 29240.25,
+          "percent": 98.41
+        },
+        {
+          "frame": [
+            "stepWorld",
+            "tmp/performance-v88/base/src/sim/engine.ts",
+            423
+          ],
+          "ms": 28009.09,
+          "percent": 94.27
+        },
+        {
+          "frame": [
+            "planWork",
+            "tmp/performance-v88/base/src/sim/work-planner.ts",
+            90
+          ],
+          "ms": 5440.62,
+          "percent": 18.31
+        },
+        {
+          "frame": [
+            "processCooking",
+            "tmp/performance-v88/base/src/sim/cooking.ts",
+            30
+          ],
+          "ms": 3968.97,
+          "percent": 13.36
+        },
+        {
+          "frame": [
+            "advanceWildlife",
+            "tmp/performance-v88/base/src/sim/wildlife.ts",
+            45
+          ],
+          "ms": 3437.83,
+          "percent": 11.57
+        },
+        {
+          "frame": [
+            "canStandAt",
+            "tmp/performance-v88/base/src/sim/furniture-travel.ts",
+            40
+          ],
+          "ms": 3104.45,
+          "percent": 10.45
+        },
+        {
+          "frame": [
+            "moveToward",
+            "tmp/performance-v88/base/src/sim/travel.ts",
+            14
+          ],
+          "ms": 2655.84,
+          "percent": 8.94
+        },
+        {
+          "frame": [
+            "leaveTransitCell",
+            "tmp/performance-v88/base/src/sim/transit-exit.ts",
+            17
+          ],
+          "ms": 2437.88,
+          "percent": 8.2
+        },
+        {
+          "frame": [
+            "searchCandidates",
+            "tmp/performance-v88/base/src/sim/work-planner.ts",
+            50
+          ],
+          "ms": 2298.8,
+          "percent": 7.74
+        },
+        {
+          "frame": [
+            "candidateAccess",
+            "tmp/performance-v88/base/src/sim/candidate-access.ts",
+            11
+          ],
+          "ms": 2291.06,
+          "percent": 7.71
+        },
+        {
+          "frame": [
+            "processResearch",
+            "tmp/performance-v88/base/src/sim/research.ts",
+            56
+          ],
+          "ms": 2198.29,
+          "percent": 7.4
+        }
+      ],
+      "tickMs": {
+        "n": 650,
+        "p50": 40.320199999998295,
+        "p95": 82.23600000000079,
+        "p99": 120.80690000000004,
+        "max": 136.31560000000036,
+        "total": 28661.63169999998
+      },
+      "snapshotMs": {
+        "n": 130,
+        "p50": 7.1362000000008265,
+        "p95": 12.80029999999897,
+        "p99": 15.928499999999985,
+        "max": 21.219300000000658,
+        "total": 1045.4021000000257
+      },
+      "oracles": {
+        "validateMs": 115.85749999999825,
+        "outcomesMs": 14.056299999996554,
+        "serializeMs": 118.00430000000051
+      }
+    },
+    "colony": {
+      "sampledMs": 5591.13,
+      "topSelf": [
+        {
+          "frame": [
+            "stepWorld",
+            "tmp/performance-v88/base/src/sim/engine.ts",
+            423
+          ],
+          "ms": 693.88,
+          "percent": 12.41
+        },
+        {
+          "frame": [
+            "blockedCells",
+            "tmp/performance-v88/base/src/sim/pathfinding.ts",
+            18
+          ],
+          "ms": 390.42,
+          "percent": 6.98
+        },
+        {
+          "frame": [
+            "animalNavigation",
+            "tmp/performance-v88/base/src/sim/wildlife-navigation.ts",
+            12
+          ],
+          "ms": 383.34,
+          "percent": 6.86
+        },
+        {
+          "frame": [
+            "navigationCosts",
+            "tmp/performance-v88/base/src/sim/furniture-travel.ts",
+            73
+          ],
+          "ms": 202.3,
+          "percent": 3.62
+        },
+        {
+          "frame": [
+            "read",
+            "tmp/performance-v88/base/src/sim/light-environment.ts",
+            30
+          ],
+          "ms": 182.42,
+          "percent": 3.26
+        },
+        {
+          "frame": [
+            "read",
+            "tmp/performance-v88/base/src/sim/room-topology.ts",
+            44
+          ],
+          "ms": 171.67,
+          "percent": 3.07
+        },
+        {
+          "frame": [
+            "getBlocked",
+            "tmp/performance-v88/base/src/sim/engine.ts",
+            462
+          ],
+          "ms": 134.88,
+          "percent": 2.41
+        },
+        {
+          "frame": [
+            "planWork",
+            "tmp/performance-v88/base/src/sim/work-planner.ts",
+            90
+          ],
+          "ms": 125.96,
+          "percent": 2.25
+        },
+        {
+          "frame": [
+            "groundPile",
+            "tmp/performance-v88/base/src/sim/ground-placement.ts",
+            22
+          ],
+          "ms": 116.23,
+          "percent": 2.08
+        },
+        {
+          "frame": [
+            "updateDoors",
+            "tmp/performance-v88/base/src/sim/doors.ts",
+            24
+          ],
+          "ms": 114.0,
+          "percent": 2.04
+        },
+        {
+          "frame": [
+            "canStandAt",
+            "tmp/performance-v88/base/src/sim/furniture-travel.ts",
+            40
+          ],
+          "ms": 107.72,
+          "percent": 1.93
+        },
+        {
+          "frame": [
+            "scheduleRoofs",
+            "tmp/performance-v88/base/src/sim/roofing.ts",
+            38
+          ],
+          "ms": 106.8,
+          "percent": 1.91
+        }
+      ],
+      "topInclusive": [
+        {
+          "frame": [
+            "(root)",
+            "",
+            0
+          ],
+          "ms": 5591.13,
+          "percent": 100.0
+        },
+        {
+          "frame": [
+            "<anonymous>",
+            "tmp/performance-v88/colony-profile.ts",
+            1
+          ],
+          "ms": 5544.89,
+          "percent": 99.17
+        },
+        {
+          "frame": [
+            "stepWorld",
+            "tmp/performance-v88/base/src/sim/engine.ts",
+            423
+          ],
+          "ms": 4858.76,
+          "percent": 86.9
+        },
+        {
+          "frame": [
+            "advanceWildlife",
+            "tmp/performance-v88/base/src/sim/wildlife.ts",
+            45
+          ],
+          "ms": 897.66,
+          "percent": 16.06
+        },
+        {
+          "frame": [
+            "animalNavigation",
+            "tmp/performance-v88/base/src/sim/wildlife-navigation.ts",
+            12
+          ],
+          "ms": 762.06,
+          "percent": 13.63
+        },
+        {
+          "frame": [
+            "getNav",
+            "tmp/performance-v88/base/src/sim/wildlife.ts",
+            49
+          ],
+          "ms": 760.98,
+          "percent": 13.61
+        },
+        {
+          "frame": [
+            "planWork",
+            "tmp/performance-v88/base/src/sim/work-planner.ts",
+            90
+          ],
+          "ms": 679.52,
+          "percent": 12.15
+        },
+        {
+          "frame": [
+            "blockedCells",
+            "tmp/performance-v88/base/src/sim/pathfinding.ts",
+            18
+          ],
+          "ms": 401.5,
+          "percent": 7.18
+        },
+        {
+          "frame": [
+            "moveToward",
+            "tmp/performance-v88/base/src/sim/travel.ts",
+            14
+          ],
+          "ms": 395.35,
+          "percent": 7.07
+        },
+        {
+          "frame": [
+            "getLight",
+            "tmp/performance-v88/base/src/sim/engine.ts",
+            455
+          ],
+          "ms": 371.58,
+          "percent": 6.65
+        },
+        {
+          "frame": [
+            "readLight",
+            "tmp/performance-v88/base/src/sim/work-environment.ts",
+            40
+          ],
+          "ms": 370.13,
+          "percent": 6.62
+        },
+        {
+          "frame": [
+            "read",
+            "tmp/performance-v88/base/src/sim/light-environment.ts",
+            30
+          ],
+          "ms": 367.4,
+          "percent": 6.57
+        }
+      ],
+      "timings": {
+        "step": {
+          "n": 1000,
+          "p50": 3.856899999999996,
+          "p95": 12.241799999999785,
+          "p99": 23.92989999999986,
+          "max": 90.45810000000006,
+          "total": 4983.805399999996
+        },
+        "decisions": {
+          "n": 4,
+          "p50": 32.22229999999945,
+          "p95": 64.77520000000004,
+          "p99": 64.77520000000004,
+          "max": 64.77520000000004,
+          "total": 159.20199999999932
+        },
+        "instrumentation": {
+          "n": 2000,
+          "p50": 0.0052999999998064595,
+          "p95": 0.018000000000029104,
+          "p99": 0.05279999999993379,
+          "max": 0.4017999999998665,
+          "total": 15.266300000018646
+        },
+        "observe": {
+          "n": 1000,
+          "p50": 0.05929999999989377,
+          "p95": 0.15380000000004657,
+          "p99": 0.2719999999999345,
+          "max": 1.0735999999999422,
+          "total": 74.17539999998075
+        },
+        "oracles": {
+          "n": 5,
+          "p50": 85.39129999999977,
+          "p95": 96.59260000000086,
+          "p99": 96.59260000000086,
+          "max": 96.59260000000086,
+          "total": 436.458900000001
+        },
+        "continuation": {
+          "n": 1,
+          "p50": 1660.5206999999991,
+          "p95": 1660.5206999999991,
+          "p99": 1660.5206999999991,
+          "max": 1660.5206999999991,
+          "total": 1660.5206999999991
+        }
+      }
+    }
+  },
+  "comparison": {
+    "environment": {
+      "passes": [
+        {
+          "date": "2026-09-20T19:58:53.634Z",
+          "source": "base",
+          "initialHash": "810ecdb3e6fc0cab933076e9d8ffa8711c6e9ff4619feea04511ba6a21d5901a",
+          "finalHash": "2b1620d3415be4890ae552087191df935a4f31412569f08a55b1b338fa099495",
+          "errors": [],
+          "pass": "base-1",
+          "initialBytesEqual": true,
+          "finalBytesEqual": true,
+          "tickMs": {
+            "n": 650,
+            "p50": 42.46150000000125,
+            "p95": 86.10510000000068,
+            "p99": 126.7510000000002,
+            "max": 144.03510000000006,
+            "total": 30393.589999999946
+          },
+          "snapshotMs": {
+            "n": 130,
+            "p50": 7.954099999999016,
+            "p95": 14.344699999999648,
+            "p99": 23.617700000000696,
+            "max": 40.938899999999194,
+            "total": 1164.0531999999935
+          },
+          "oracles": {
+            "validateMs": 112.37920000000304,
+            "outcomesMs": 14.482599999995728,
+            "serializeMs": 134.39979999999923
+          }
+        },
+        {
+          "date": "2026-09-20T20:00:13.761Z",
+          "source": "candidate",
+          "initialHash": "810ecdb3e6fc0cab933076e9d8ffa8711c6e9ff4619feea04511ba6a21d5901a",
+          "finalHash": "2b1620d3415be4890ae552087191df935a4f31412569f08a55b1b338fa099495",
+          "errors": [],
+          "pass": "candidate-1",
+          "initialBytesEqual": true,
+          "finalBytesEqual": true,
+          "tickMs": {
+            "n": 650,
+            "p50": 38.64389999999912,
+            "p95": 86.4246000000021,
+            "p99": 128.4933000000001,
+            "max": 160.8848999999991,
+            "total": 28073.097799999938
+          },
+          "snapshotMs": {
+            "n": 130,
+            "p50": 7.742500000000291,
+            "p95": 17.20139999999992,
+            "p99": 21.533800000001065,
+            "max": 23.084500000000844,
+            "total": 1138.500399999994
+          },
+          "oracles": {
+            "validateMs": 100.10789999999906,
+            "outcomesMs": 12.113399999998364,
+            "serializeMs": 118.4423999999999
+          }
+        },
+        {
+          "date": "2026-09-20T20:00:55.380Z",
+          "source": "candidate",
+          "initialHash": "810ecdb3e6fc0cab933076e9d8ffa8711c6e9ff4619feea04511ba6a21d5901a",
+          "finalHash": "2b1620d3415be4890ae552087191df935a4f31412569f08a55b1b338fa099495",
+          "errors": [],
+          "pass": "candidate-2",
+          "initialBytesEqual": true,
+          "finalBytesEqual": true,
+          "tickMs": {
+            "n": 650,
+            "p50": 38.72529999999824,
+            "p95": 79.5043999999998,
+            "p99": 119.76549999999952,
+            "max": 142.40459999999985,
+            "total": 27518.290700000045
+          },
+          "snapshotMs": {
+            "n": 130,
+            "p50": 7.496000000002823,
+            "p95": 14.40860000000066,
+            "p99": 19.43029999999999,
+            "max": 21.15480000000025,
+            "total": 1104.5603000000324
+          },
+          "oracles": {
+            "validateMs": 105.09560000000056,
+            "outcomesMs": 14.994900000001508,
+            "serializeMs": 109.73400000000038
+          }
+        },
+        {
+          "date": "2026-09-20T20:02:06.669Z",
+          "source": "base",
+          "initialHash": "810ecdb3e6fc0cab933076e9d8ffa8711c6e9ff4619feea04511ba6a21d5901a",
+          "finalHash": "2b1620d3415be4890ae552087191df935a4f31412569f08a55b1b338fa099495",
+          "errors": [],
+          "pass": "base-2",
+          "initialBytesEqual": true,
+          "finalBytesEqual": true,
+          "tickMs": {
+            "n": 650,
+            "p50": 44.64020000000164,
+            "p95": 97.66319999999996,
+            "p99": 158.81099999999788,
+            "max": 192.22159999999985,
+            "total": 32385.74440000004
+          },
+          "snapshotMs": {
+            "n": 130,
+            "p50": 8.04240000000209,
+            "p95": 18.321599999999307,
+            "p99": 21.443299999999,
+            "max": 29.977100000000064,
+            "total": 1222.967300000007
+          },
+          "oracles": {
+            "validateMs": 103.4056999999957,
+            "outcomesMs": 10.831400000002759,
+            "serializeMs": 114.6987999999983
+          }
+        }
+      ],
+      "pairTickTotalReductionPercent": [
+        7.634807865737519,
+        15.029618093323766
+      ]
+    },
+    "colony": {
+      "passes": [
+        {
+          "date": "2026-09-20T19:59:03.744Z",
+          "source": "base",
+          "initialHash": "cec15fc400b8cdf47a24bcacb7ff331b6bdaaec369bf81a184a822d3c819347c",
+          "finalHash": "e469945bb533604d38b5dbf340467270403337fb2f624b527f137b72d7beb0ae",
+          "errors": [],
+          "pass": "base-1",
+          "initialBytesEqual": true,
+          "finalBytesEqual": true,
+          "timings": {
+            "step": {
+              "n": 1000,
+              "p50": 4.188300000000709,
+              "p95": 13.318699999999808,
+              "p99": 25.82849999999962,
+              "max": 132.22990000000004,
+              "total": 5451.68709999999
+            },
+            "decisions": {
+              "n": 4,
+              "p50": 34.17099999999937,
+              "p95": 67.63740000000007,
+              "p99": 67.63740000000007,
+              "max": 67.63740000000007,
+              "total": 177.4711999999995
+            },
+            "instrumentation": {
+              "n": 2000,
+              "p50": 0.005400000000008731,
+              "p95": 0.016100000000733417,
+              "p99": 0.04029999999966094,
+              "max": 0.23450000000002547,
+              "total": 14.312599999966096
+            },
+            "observe": {
+              "n": 1000,
+              "p50": 0.0684000000001106,
+              "p95": 0.14809999999943102,
+              "p99": 0.23680000000013024,
+              "max": 1.5439000000001215,
+              "total": 81.02059999998528
+            },
+            "oracles": {
+              "n": 5,
+              "p50": 91.55429999999978,
+              "p95": 111.15970000000016,
+              "p99": 111.15970000000016,
+              "max": 111.15970000000016,
+              "total": 485.9699999999989
+            },
+            "continuation": {
+              "n": 1,
+              "p50": 1903.6762999999992,
+              "p95": 1903.6762999999992,
+              "p99": 1903.6762999999992,
+              "max": 1903.6762999999992,
+              "total": 1903.6762999999992
+            }
+          },
+          "finalPlayerHash": "3a90818403ed481817134a583b6ef180eaa5656f897474d27b0da537306deae1",
+          "ledger": {
+            "consumed": 0,
+            "harvested": 36,
+            "cooked": 0,
+            "steelMined": 0,
+            "componentsMined": 0
+          }
+        },
+        {
+          "date": "2026-09-20T20:00:22.735Z",
+          "source": "candidate",
+          "initialHash": "cec15fc400b8cdf47a24bcacb7ff331b6bdaaec369bf81a184a822d3c819347c",
+          "finalHash": "e469945bb533604d38b5dbf340467270403337fb2f624b527f137b72d7beb0ae",
+          "errors": [],
+          "pass": "candidate-1",
+          "initialBytesEqual": true,
+          "finalBytesEqual": true,
+          "timings": {
+            "step": {
+              "n": 1000,
+              "p50": 3.561399999999594,
+              "p95": 12.433799999999792,
+              "p99": 24.603799999999865,
+              "max": 107.57560000000012,
+              "total": 4887.095799999992
+            },
+            "decisions": {
+              "n": 4,
+              "p50": 41.44980000000032,
+              "p95": 57.35179999999991,
+              "p99": 57.35179999999991,
+              "max": 57.35179999999991,
+              "total": 177.59600000000046
+            },
+            "instrumentation": {
+              "n": 2000,
+              "p50": 0.005699999999706051,
+              "p95": 0.018200000000433647,
+              "p99": 0.046000000000276486,
+              "max": 0.7691999999999553,
+              "total": 16.482199999987415
+            },
+            "observe": {
+              "n": 1000,
+              "p50": 0.07320000000072469,
+              "p95": 0.17550000000028376,
+              "p99": 0.31449999999949796,
+              "max": 1.3303000000000793,
+              "total": 89.01570000000652
+            },
+            "oracles": {
+              "n": 5,
+              "p50": 96.20479999999998,
+              "p95": 115.36070000000018,
+              "p99": 115.36070000000018,
+              "max": 115.36070000000018,
+              "total": 496.9060000000004
+            },
+            "continuation": {
+              "n": 1,
+              "p50": 1466.8414000000012,
+              "p95": 1466.8414000000012,
+              "p99": 1466.8414000000012,
+              "max": 1466.8414000000012,
+              "total": 1466.8414000000012
+            }
+          },
+          "finalPlayerHash": "3a90818403ed481817134a583b6ef180eaa5656f897474d27b0da537306deae1",
+          "ledger": {
+            "consumed": 0,
+            "harvested": 36,
+            "cooked": 0,
+            "steelMined": 0,
+            "componentsMined": 0
+          }
+        },
+        {
+          "date": "2026-09-20T20:01:05.479Z",
+          "source": "candidate",
+          "initialHash": "cec15fc400b8cdf47a24bcacb7ff331b6bdaaec369bf81a184a822d3c819347c",
+          "finalHash": "e469945bb533604d38b5dbf340467270403337fb2f624b527f137b72d7beb0ae",
+          "errors": [],
+          "pass": "candidate-2",
+          "initialBytesEqual": true,
+          "finalBytesEqual": true,
+          "timings": {
+            "step": {
+              "n": 1000,
+              "p50": 4.156799999999748,
+              "p95": 14.181100000000242,
+              "p99": 28.621500000000196,
+              "max": 135.63810000000012,
+              "total": 5767.649699999994
+            },
+            "decisions": {
+              "n": 4,
+              "p50": 36.99369999999999,
+              "p95": 73.88549999999987,
+              "p99": 73.88549999999987,
+              "max": 73.88549999999987,
+              "total": 188.54439999999977
+            },
+            "instrumentation": {
+              "n": 2000,
+              "p50": 0.00650000000041473,
+              "p95": 0.02380000000084692,
+              "p99": 0.08320000000003347,
+              "max": 2.126600000000508,
+              "total": 22.022700000004306
+            },
+            "observe": {
+              "n": 1000,
+              "p50": 0.08199999999987995,
+              "p95": 0.2462999999997919,
+              "p99": 0.47890000000006694,
+              "max": 1.915299999999661,
+              "total": 107.31490000000395
+            },
+            "oracles": {
+              "n": 5,
+              "p50": 97.84590000000026,
+              "p95": 138.23389999999927,
+              "p99": 138.23389999999927,
+              "max": 138.23389999999927,
+              "total": 522.9558000000006
+            },
+            "continuation": {
+              "n": 1,
+              "p50": 1646.491899999999,
+              "p95": 1646.491899999999,
+              "p99": 1646.491899999999,
+              "max": 1646.491899999999,
+              "total": 1646.491899999999
+            }
+          },
+          "finalPlayerHash": "3a90818403ed481817134a583b6ef180eaa5656f897474d27b0da537306deae1",
+          "ledger": {
+            "consumed": 0,
+            "harvested": 36,
+            "cooked": 0,
+            "steelMined": 0,
+            "componentsMined": 0
+          }
+        },
+        {
+          "date": "2026-09-20T20:02:17.698Z",
+          "source": "base",
+          "initialHash": "cec15fc400b8cdf47a24bcacb7ff331b6bdaaec369bf81a184a822d3c819347c",
+          "finalHash": "e469945bb533604d38b5dbf340467270403337fb2f624b527f137b72d7beb0ae",
+          "errors": [],
+          "pass": "base-2",
+          "initialBytesEqual": true,
+          "finalBytesEqual": true,
+          "timings": {
+            "step": {
+              "n": 1000,
+              "p50": 4.73909999999978,
+              "p95": 16.219500000000153,
+              "p99": 28.459299999999985,
+              "max": 107.43639999999982,
+              "total": 6348.8826999999965
+            },
+            "decisions": {
+              "n": 4,
+              "p50": 43.09969999999976,
+              "p95": 59.83069999999998,
+              "p99": 59.83069999999998,
+              "max": 59.83069999999998,
+              "total": 180.21069999999918
+            },
+            "instrumentation": {
+              "n": 2000,
+              "p50": 0.006600000000162254,
+              "p95": 0.022399999999834108,
+              "p99": 0.05490000000008877,
+              "max": 0.3661000000001877,
+              "total": 18.659100000002354
+            },
+            "observe": {
+              "n": 1000,
+              "p50": 0.07600000000002183,
+              "p95": 0.22319999999990614,
+              "p99": 0.44139999999970314,
+              "max": 2.9265000000004875,
+              "total": 99.84699999999339
+            },
+            "oracles": {
+              "n": 5,
+              "p50": 100.2532000000001,
+              "p95": 152.03669999999966,
+              "p99": 152.03669999999966,
+              "max": 152.03669999999966,
+              "total": 578.146600000001
+            },
+            "continuation": {
+              "n": 1,
+              "p50": 1799.8309000000008,
+              "p95": 1799.8309000000008,
+              "p99": 1799.8309000000008,
+              "max": 1799.8309000000008,
+              "total": 1799.8309000000008
+            }
+          },
+          "finalPlayerHash": "3a90818403ed481817134a583b6ef180eaa5656f897474d27b0da537306deae1",
+          "ledger": {
+            "consumed": 0,
+            "harvested": 36,
+            "cooked": 0,
+            "steelMined": 0,
+            "componentsMined": 0
+          }
+        }
+      ],
+      "pairTickTotalReductionPercent": [
+        10.356267512124811,
+        9.15488641804649
+      ]
+    }
+  },
+  "rawDiagnosticsDirectory": "tmp/performance-v88"
+}

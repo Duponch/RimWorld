@@ -1,3 +1,6 @@
+import { applyTrade } from './trade.ts';
+import { processTrade } from './trade-contact.ts';
+import { advanceVisitors,processVisitor,exitVisitor,visitorGroupDanger } from './visitors.ts';
 import { requestPowerFlick,reconcilePowerFlicks,advancePowerFlick } from './power-flick.ts';
 import { applyCapture } from './capture.ts';
 import { adoptEnvironment,advanceSurfaceWeather,advanceSurfaceTemperature } from './environment-step.ts';
@@ -104,7 +107,8 @@ import { haulingWork } from './haul-aside.ts';
 import { groundPile } from './ground-placement.ts';
 import { generateWorld } from './generation.ts';
 import { adjacent, blockedCells, cellIndex, inBounds } from './pathfinding.ts';
-import { CARRY_CAPACITY, footprintCells, MAX_STACK } from './definitions.ts';
+import { CARRY_CAPACITY, footprintCells } from './definitions.ts';
+import { ITEM_DEFINITIONS } from './items.ts';
 import { constructionSupplied, validConstructionMaterial } from './construction-materials.ts';
 import { refreshStock } from './materials.ts';
 import { queryArea, validStorageSettings } from './designation.ts';
@@ -155,7 +159,7 @@ function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandR
     world.growingZones = world.growingZones.map(zone => ({...zone, cells: zone.cells.filter(c => !selected.has(c))})).filter(z => z.cells.length);
     world.growingCursor = 0;
   } else if (command.action === 'stockpile') {
-    for (const index of selection.cells) world.stockpiles.push({ id: world.nextId++, x: index % world.width, z: Math.floor(index / world.width), filters: { ...(command.filters ?? { wood: true, food: true }) }, priority: command.priority ?? 2, capacity: command.capacity ?? MAX_STACK });
+    for (const index of selection.cells) world.stockpiles.push({ id: world.nextId++, x: index % world.width, z: Math.floor(index / world.width), filters: { ...(command.filters ?? { wood: true, food: true }) }, priority: command.priority ?? 2, capacity: command.capacity ?? ITEM_DEFINITIONS.silver.stackLimit });
   } else {
     const cells = new Set(selection.cells);
     if (command.action === 'remove-stockpile') {
@@ -244,6 +248,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   if(command.type==='cancel-unfinished')return cancelUnfinished(world,command.itemId);
   if(command.type==='enable-wildlife'){enableWildlife(world);return {ok:true};}
   if(command.type==='enable-heatwaves'){if(world.gameProfile)return {ok:false,code:'invalid-command',reason:'Le calendrier de canicule historique n’est pas disponible avec ce narrateur.'};enableHeatwaves(world);return {ok:true};}
+  if(command.type==='enable-visitors'||command.type==='order-trade'||command.type==='cancel-trade'||command.type==='trade-execute')return applyTrade(world,command);
   if(command.type==='enable-raids'){enableRaids(world);return {ok:true};}
   if(command.type==='enable-arrivals'||command.type==='answer-arrival')return applyArrival(world,command);
   if(command.type==='prison-bed')return applyPrisonBed(world,command);
@@ -253,8 +258,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   if((typeof command.type==='string'&&command.type.startsWith('order-')||['draft','draft-move','draft-stop','fire-at-will','clear-orders','shoot','melee'].includes(command.type))&&actors.some(id=>world.pawns.find(p=>p.id===id)?.mental?.crisis))return refusal('invalid-command','Ce colon est en errance triste et ne peut pas obéir.');
   if(command.type==='hostility-response'){const p=world.pawns.find(p=>p.id===command.pawnId);if(!p||!['flee','ignore','attack'].includes(command.response))return refusal('invalid-command','Réaction invalide.');if(command.response==='flee')delete p.hostilityResponse;else p.hostilityResponse=command.response;cancelAutomaticCombat(p);if(p.flee&&command.response!=='flee'){delete p.flee;p.path=[];p.state='idle';}return {ok:true};}
   if(typeof command.type==='string'&&command.type.startsWith('order-')&&'pawnId' in command&&world.pawns.find(p=>p.id===command.pawnId)?.melee?.strike)return refusal('invalid-command','Le colon récupère après sa frappe.');
-  if(command.type==='melee')return applyMeleeCommand(world,command);
-  if(command.type==='shoot')return applyShootingCommand(world,command);
+  if(command.type==='melee'||command.type==='shoot'){const result=command.type==='melee'?applyMeleeCommand(world,command):applyShootingCommand(world,command);if(result.ok){const target=world.pawns.find(p=>p.id===command.targetId);if(target?.visitor)visitorGroupDanger(world,target,'hostile');}return result;}
   if(typeof command.type==='string'&&'pawnId' in command&&command.type.startsWith('order-')&&world.pawns.find(p=>p.id===command.pawnId)?.shooting?.stance?.phase==='cooldown')return {ok:false,code:'invalid-command',reason:'Le colon récupère après son tir.'};
   if(command.type==='draft'||command.type==='draft-move'||command.type==='draft-stop'||command.type==='fire-at-will')return applyDraftCommand(world,command);
   if(typeof command.type==='string'&&command.type.startsWith('order-')&&'pawnId' in command&&world.pawns.find(p=>p.id===command.pawnId)?.draft)return refusal('invalid-command','Démobilisez ce colon avant un ordre civil.');
@@ -340,7 +344,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   if (command.type === 'stockpile') {
     if(cookingCellReserved(world,command))return refusal('occupied','Case réservée par un cuisinier.');
     if (world.pawns.some(p => p.haul?.destination.type === 'aside' && !p.haul.whole && sameCell(p.haul.destination, command))) return refusal('occupied', 'Case réservée pour le dégagement des cultures.');
-    if (typeof command.enabled !== 'boolean' || !validStorageSettings(command)) return refusal('invalid-storage', 'Filtres, priorité (1–4) ou capacité (1–75) invalides.');
+    if (typeof command.enabled !== 'boolean' || !validStorageSettings(command)) return refusal('invalid-storage', `Filtres, priorité (1–4) ou capacité (1–${ITEM_DEFINITIONS.silver.stackLimit}) invalides.`);
     const existing = world.stockpiles.find(zone => sameCell(zone, command));
     if (!command.enabled) {
       if (!existing) return refusal('missing-target', 'Aucune cellule de stockage ici.');
@@ -353,7 +357,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
         existing.filters = command.filters ? { ...command.filters } : existing.filters;
         existing.priority = command.priority ?? existing.priority;
         existing.capacity = command.capacity ?? existing.capacity;
-      } else world.stockpiles.push({ id: world.nextId++, x: command.x, z: command.z, filters: { ...(command.filters ?? { wood: true, food: true }) }, priority: command.priority ?? 2, capacity: command.capacity ?? MAX_STACK });
+      } else world.stockpiles.push({ id: world.nextId++, x: command.x, z: command.z, filters: { ...(command.filters ?? { wood: true, food: true }) }, priority: command.priority ?? 2, capacity: command.capacity ?? ITEM_DEFINITIONS.silver.stackLimit });
     }
     for(const pawn of world.pawns)if(pawn.cooking?.storageId===existing?.id&&pawn.cooking){pawn.cooking.storageId=null;delete pawn.cooking.storageQuantity;pawn.path=[];pawn.planCooldown=0;}
     // Re-evaluate pending capacity reservations atomically after the policy change.
@@ -426,7 +430,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
   let thermal=reconcileTemperature(world);updateFoodTemperatures(world,thermal);updatePlantTemperatures(world,thermal);
   for (let step = 0; step < ticks; step++) {
     world.tick++;
-    advanceArrivals(world);advanceHeatwaves(world);
+    advanceArrivals(world);advanceHeatwaves(world);advanceVisitors(world);
     const beforeWeather=world.structures;
     advanceSurfaceWeather(world,cell=>{const c={type:'designate' as const,kind:'chop' as const,...cell};if(canDesignate(world,c).ok)applyCommand(world,c);});
     if(beforeWeather!==world.structures)thermal=reconcileTemperature(world);
@@ -455,7 +459,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     const getLight=()=>light??=getEnvironmentCache().readLight(world);
     const getEnvironment=()=>environment??=getEnvironmentCache().read(world,getLight());
     const getThreats=()=>threatQueries(world);
-    const hasAdversary=world.pawns.some(p=>!isColonist(p)&&!p.prisoner);
+    const hasAdversary=world.pawns.some(p=>p.faction==='outlaws'&&!p.prisoner);
     let thermalDirty=structuresBeforeCombat!==world.structures;
     const invalidateEnvironment=()=>{environment=undefined;light=undefined;thermalDirty=true;};
     const getRoofs = () => roofs ??= new RoofContext(world);
@@ -476,7 +480,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if(pawn.state==='downed'||carrierOf(world,pawn.id)||isStunned(pawn,world.tick*10))continue;
       if(hasAdversary&&!pawn.prisoner&&!pawn.mental?.crisis){considerAutomaticCombat(world,pawn,budget);considerFlee(world,pawn,getThreats());}
       if(pawn.need?.kind==='eat' && pawn.need.dining && !validDiningPlace(world,pawn.need.dining)) {pawn.need.phase='choose-spot';pawn.need.dining=null;pawn.need.progress=0;delete pawn.need.workRemainder;pawn.path=[];pawn.state='moving';}
-      if (pawn.moveCooldown > 0) { if(pawn.draft)pawn.draft.lastActiveTick=world.tick; pawn.state = pawn.burning || pawn.firefighting || pawn.hunting || pawn.mental?.crisis || pawn.raid || pawn.tactics || pawn.melee || pawn.flee || pawn.draft || pawn.heatRefuge || pawn.research || pawn.jobId !== null || pawn.equipmentTask || pawn.ward || pawn.feed || pawn.tend || pawn.rescue || pawn.haul || pawn.need || pawn.cooking || pawn.recreation.task ? 'moving' : 'idle'; continue; }
+      if (pawn.moveCooldown > 0) { if(pawn.draft)pawn.draft.lastActiveTick=world.tick; pawn.state = pawn.visitor || pawn.trade || pawn.burning || pawn.firefighting || pawn.hunting || pawn.mental?.crisis || pawn.raid || pawn.tactics || pawn.melee || pawn.flee || pawn.draft || pawn.heatRefuge || pawn.research || pawn.jobId !== null || pawn.equipmentTask || pawn.ward || pawn.feed || pawn.tend || pawn.rescue || pawn.haul || pawn.need || pawn.cooking || pawn.recreation.task ? 'moving' : 'idle'; continue; }
       const needsContext = {
         search: (goals?: ReadonlySet<number>) => search(world, pawn, getBlocked(), occupied, budget, goals),
         move: (target: Cell, exact: boolean) => moveToward(world, pawn, target, true, getBlocked, budget, exact, getLight),
@@ -486,6 +490,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if(processBurning(world,pawn,needsContext))continue;
       if(pawn.prisoner){processPrisoner(world,pawn,needsContext);continue;}
       if(pawn.mental?.crisis){processSadWander(world,pawn,needsContext,()=>searchCandidates(world,pawn,getBlocked(),occupied,budget));continue;}
+      if(pawn.visitor){processVisitor(world,pawn,needsContext);continue;}
       if(pawn.raid){if(!processDraftSleep(world,pawn,needsContext))processRaider(world,pawn,getBlocked,budget,getLight);continue;}
       if(pawn.tactics){if(!processDraftSleep(world,pawn,needsContext))processTactics(world,pawn,getBlocked,budget,getLight);continue;}
       if(pawn.melee){if(!processDraftSleep(world,pawn,needsContext)&&pawn.melee)processMelee(world,pawn,getBlocked,budget,getLight);continue;}
@@ -500,6 +505,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if(pawn.firefighting&&processFirefighting(world,pawn,needsContext))continue;
       if(pawn.interruptedCargo){processNeeds(world,pawn,needsContext);continue;}
       if (leaveTransitCell(world,pawn,getBlocked,budget,getLight)) continue;
+      if(pawn.trade&&processTrade(world,pawn,needsContext))continue;
       if(pawn.equipmentTask){processEquipment(world,pawn,needsContext);continue;}
       if (advanceOrders(world,pawn,getBlocked,budget)) continue;
       if (!pawn.ward&&!pawn.feed&&!pawn.tend&&!pawn.rescue&&advancePriorityWork(world,pawn,getBlocked,budget)) continue;
@@ -574,6 +580,8 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
         if (workProgress(job) >= jobDuration(world, job)) {completeJob(world, pawn, job);blocked=undefined;roofs=undefined;invalidateEnvironment();}
       } else moveToward(world, pawn, job, false, getBlocked, budget,false,getLight);
     }
+    for(const pawn of [...world.pawns])if(pawn.visitor)exitVisitor(world,pawn);
+    for(const pawn of world.pawns)if(pawn.trade&&!world.pawns.some(t=>t.id===pawn.trade!.traderId&&t.visitor)){delete pawn.trade;pawn.path=[];pawn.state='idle';}
     for(const pawn of [...world.pawns])if(pawn.prisoner?.escape)exitPrisoner(world,pawn);
     if(world.raids)for(const pawn of [...world.pawns])if(pawn.raid?.exiting&&!pawn.prisoner)exitRaider(world,pawn);
     advanceRaids(world);

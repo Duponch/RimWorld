@@ -8,7 +8,7 @@ import { meleeContact,meleePlaces,meleeRoute } from './melee-space.ts';
 import { meleeTools } from './melee-statistics.ts';
 import { cancelShooting } from './shooting-state.ts';
 import { blockedCells } from './pathfinding.ts';
-import { revolverProfile } from './ranged-statistics.ts';
+import { rangedWeaponProfile } from './ranged-statistics.ts';
 import { carrierOf } from './rescue-state.ts';
 import { clearShotSegment } from './combat-space.ts';
 import { captureWorldShotGrid } from './combat-world.ts';
@@ -27,8 +27,8 @@ export function considerAutomaticCombat(world:World,p:Pawn,budget:SearchBudget):
   if(kind==='draft') {
     if(p.moveCooldown||p.path.length||p.draft!.queue.length||p.draft!.target&&distanceSquared(p,p.draft!.target)>0)return;
   } else if(p.hostilityResponse!=='attack'||p.flee||p.orders.active!==null||p.orders.queue.length||p.priorityWork||p.equipmentTask)return;
-  const weapon=equippedWeapon(world,p),range=weapon?.weapon?revolverProfile(weapon.weapon.quality).range:8;
-  const radius=kind==='draft'?range:weapon?Math.min(20,Math.max(2,range*.66)):8;
+  const weapon=equippedWeapon(world,p),profile=weapon?.weapon?rangedWeaponProfile(weapon.item,weapon.weapon.quality):undefined,range=profile?.range??8;
+  const radius=kind==='draft'?range:profile?Math.min(20,Math.max(2,range*.66)):8;
   const candidates=world.pawns.filter(t=>hostileTo(p,t)&&activeThreat(t)&&distanceSquared(p,t)<=radius*radius&&!carrierOf(world,t.id)).sort((a,b)=>distanceSquared(p,a)-distanceSquared(p,b)||a.id-b.id);
   if(!candidates.length)return;
   // Target range plus three cells covers lean origins, cover neighbours and
@@ -37,7 +37,7 @@ export function considerAutomaticCombat(world:World,p:Pawn,budget:SearchBudget):
   const readGrid=()=>captureWorldShotGrid(world,bounds),queries=shootingQueries(world,readGrid);
   let physical:Uint8Array|undefined;const contact=(t:Pawn)=>Math.abs(p.x-t.x)<=1&&Math.abs(p.z-t.z)<=1&&meleeContact(world,p,t,physical??=blockedCells(world,true));
   const adjacent=candidates.find(contact);
-  if(adjacent||!weapon) {
+  if(adjacent||!profile) {
     if(kind==='draft'&&!adjacent||!meleeTools(world,p).length)return;
     for(const t of adjacent?[adjacent]:candidates) {
       if(!clearShotSegment(queries.grid(),p,t))continue;

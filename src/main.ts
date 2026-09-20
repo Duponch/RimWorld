@@ -1,3 +1,5 @@
+import { createTradeUI } from './ui/trade-panel';
+import { colonyPile } from './sim/materials';
 import { climateDateLabel,climateControls } from './ui/climate-inspection';
 import { WEATHER } from './sim/weather-definitions';
 import { perceivedWeather } from './sim/weather';
@@ -68,7 +70,7 @@ import { ColonyRenderer } from './render/ColonyRenderer';
 import type { JobKind, Pawn, World, WorkType, Orientation, AreaAction, Cell, Command } from './sim/types';
 import { TICKS_PER_DAY } from './sim/types';
 import { DEFAULT_MAP_SIZE, MAP_SIZE_PRESETS } from './sim/map-config';
-import { footprintCells, queryJobStatus, queryPawnStatus, MAX_STACK } from './sim/index';
+import { footprintCells, queryJobStatus, queryPawnStatus } from './sim/index';
 import { gameLayout, storageSettings, toolDefinitions } from './ui/layout';
 import type { ArchitectCategory, Panel, Tool } from './ui/layout';
 
@@ -272,9 +274,9 @@ function clearSelection() {
 }
 function readStorageSettings(prefix: string) {
   const capacity = Number(el<HTMLInputElement>(`${prefix}-capacity`).value);
-  if (!Number.isInteger(capacity) || capacity < 1 || capacity > MAX_STACK) throw new Error(`La capacité doit être un entier entre 1 et ${MAX_STACK}.`);
+  if (!Number.isInteger(capacity) || capacity < 1 || capacity > ITEM_DEFINITIONS.silver.stackLimit) throw new Error(`La capacité doit être un entier entre 1 et ${ITEM_DEFINITIONS.silver.stackLimit}.`);
   return {
-    filters: { corpse:el<HTMLInputElement>(`${prefix}-corpse`).checked, unfinished:el<HTMLInputElement>(`${prefix}-unfinished`).checked, textile:el<HTMLInputElement>(`${prefix}-textile`).checked, apparel:el<HTMLInputElement>(`${prefix}-apparel`).checked, weapon:el<HTMLInputElement>(`${prefix}-weapon`).checked, medicine:el<HTMLInputElement>(`${prefix}-medicine`).checked, component: el<HTMLInputElement>(`${prefix}-component`).checked, blocks: el<HTMLInputElement>(`${prefix}-blocks`).checked, steel: el<HTMLInputElement>(`${prefix}-steel`).checked, chunk: el<HTMLInputElement>(`${prefix}-chunk`).checked, wood: el<HTMLInputElement>(`${prefix}-wood`).checked, food: el<HTMLInputElement>(`${prefix}-food`).checked, furniture: el<HTMLInputElement>(`${prefix}-furniture`).checked },
+    filters: { silver:el<HTMLInputElement>(`${prefix}-silver`).checked, corpse:el<HTMLInputElement>(`${prefix}-corpse`).checked, unfinished:el<HTMLInputElement>(`${prefix}-unfinished`).checked, textile:el<HTMLInputElement>(`${prefix}-textile`).checked, apparel:el<HTMLInputElement>(`${prefix}-apparel`).checked, weapon:el<HTMLInputElement>(`${prefix}-weapon`).checked, medicine:el<HTMLInputElement>(`${prefix}-medicine`).checked, component: el<HTMLInputElement>(`${prefix}-component`).checked, blocks: el<HTMLInputElement>(`${prefix}-blocks`).checked, steel: el<HTMLInputElement>(`${prefix}-steel`).checked, chunk: el<HTMLInputElement>(`${prefix}-chunk`).checked, wood: el<HTMLInputElement>(`${prefix}-wood`).checked, food: el<HTMLInputElement>(`${prefix}-food`).checked, furniture: el<HTMLInputElement>(`${prefix}-furniture`).checked },
     priority: Number(el<HTMLSelectElement>(`${prefix}-priority`).value), capacity,
   };
 }
@@ -295,9 +297,9 @@ function rebuildInspector() {
     panel.innerHTML='<div class="panel-heading"><h2 id="selected-name"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><p id="selected-action"></p>';
     createPrisonerInspection(panel,()=>{const pawn=snapshot?.pawns.find(p=>p.id===selectedPawn);return snapshot&&pawn?{world:snapshot,pawn}:undefined;},c=>void attempt(()=>client.command(c)),renderState);
   } else if(selectedPawn!==undefined&&snapshot?.pawns.some(p=>p.id===selectedPawn&&!isColonist(p))) {
-    panel.innerHTML='<div class="panel-heading"><h2 id="selected-name"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><p id="selected-action"></p><p>Hors-la-loi · hostile à la colonie. Tir et mêlée.</p><p id="enemy-mandate"></p>';
+    panel.innerHTML='<div class="panel-heading"><h2 id="selected-name"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><p id="selected-action"></p><p>Personne extérieure à la colonie.</p><p id="enemy-mandate"></p>';
     createEquipmentInspection(panel,()=>{const pawn=snapshot?.pawns.find(p=>p.id===selectedPawn);return snapshot&&pawn?{world:snapshot,pawn}:undefined;},()=>{});
-    el('enemy-mandate').textContent=snapshot.pawns.find(p=>p.id===selectedPawn)?.tactics?'Mandat : approche autonome des cibles visibles.':'Mandat historique : sentinelle fixe.';
+    el('enemy-mandate').textContent=snapshot.pawns.find(p=>p.id===selectedPawn)?.visitor?'Visiteur neutre · consultez Visiteurs / Commerce à droite.':snapshot.pawns.find(p=>p.id===selectedPawn)?.tactics?'Mandat : approche autonome des cibles visibles.':'Mandat historique : sentinelle fixe.';
     createHealthInspection(panel);
   } else if (selectedPawn !== undefined) {
     panel.innerHTML = `<div class="panel-heading"><h2 id="selected-name"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><p id="selected-action"></p><div class="needs">${(['hunger', 'rest', 'comfort', 'mood'] as const).map((need, index) => `<label>${['Nourriture', 'Repos', 'Confort', 'Humeur'][index]} <span id="selected-${need}"></span></label><meter id="${need}-meter" min="0" max="100" low="25" optimum="100"></meter>`).join('')}</div>${recreationInspection()}<button class="secondary-action" id="manage-work">Gérer le travail</button>`;
@@ -313,6 +315,7 @@ function rebuildInspector() {
     panel.innerHTML = `<div class="panel-heading"><h2 id="cell-title"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><p id="cell-description"></p><p id="cell-materials"></p><button id="weapon-permission" class="secondary-action" hidden></button><p id="cell-job"></p><button id="cell-deconstruct" class="secondary-action" hidden>Déconstruire</button><button id="cell-cancel" class="secondary-action" hidden>Annuler cet ordre</button><div id="cell-storage" hidden><p id="cell-storage-quantity"></p>${storageSettings('selected-stockpile')}<button id="update-stockpile" class="secondary-action">Appliquer les réglages</button><button id="delete-stockpile" class="secondary-action">Retirer cette réserve</button></div>`;
     const storage = snapshot?.stockpiles.find(item => item.x === selectedCell!.x && item.z === selectedCell!.z);
     if (storage) {
+      el<HTMLInputElement>('selected-stockpile-silver').checked=storage.filters.silver??false;
       el<HTMLInputElement>('selected-stockpile-corpse').checked=storage.filters.corpse??false;
       el<HTMLInputElement>('selected-stockpile-unfinished').checked=storage.filters.unfinished??false;
       el<HTMLInputElement>('selected-stockpile-textile').checked = storage.filters.textile??false;
@@ -356,8 +359,8 @@ function actionLabel(pawn: Pawn) {
   if(pawn.flee)return pawn.path.length||pawn.moveCooldown>0?'Fuit une menace':'Reste à couvert après la fuite';
   if(pawn.stun)return 'Étourdi';
   if(pawn.melee)return pawn.melee.strike?'Mêlée · récupération':pawn.path.length?'Mêlée · approche':'Mêlée · au contact';
-  if(pawn.tactics&&activeThreat(pawn)&&pawn.state==='moving')return 'Hors-la-loi · rejoint sa position de combat';
-  if(!isColonist(pawn)&&activeThreat(pawn))return pawn.shooting?.stance?.phase==='aim'?'Hors-la-loi · vise':pawn.shooting?'Hors-la-loi · récupération après tir':'Hors-la-loi · surveille les alentours';
+  if(pawn.faction==='outlaws'&&pawn.tactics&&activeThreat(pawn)&&pawn.state==='moving')return 'Hors-la-loi · rejoint sa position de combat';
+  if(pawn.faction==='outlaws'&&activeThreat(pawn))return pawn.shooting?.stance?.phase==='aim'?'Hors-la-loi · vise':pawn.shooting?'Hors-la-loi · récupération après tir':'Hors-la-loi · surveille les alentours';
   if(pawn.draft)return draftLabel(pawn);
   if(pawn.shooting)return pawn.shooting.stance?.phase==='cooldown'?'Récupération après tir':pawn.shooting.stance?.phase==='aim'?'Riposte · vise':'Riposte · rejoint sa position';
   if(pawn.equipmentTask)return ({equip:'Va équiper son arme',drop:'Dépose son arme',wear:pawn.state==='working'?'Enfile un vêtement':'Va chercher un vêtement',remove:'Retire un vêtement'})[pawn.equipmentTask.action];
@@ -366,6 +369,7 @@ function actionLabel(pawn: Pawn) {
   if(pawn.interruptedCargo)return pawn.state==='sleeping'?'Se repose · cargaison à déposer':'Cargaison à déposer · sol proche encombré';
   if(pawn.cooking)return queryPawnStatus(snapshot!,pawn).reason;
   if (pawn.need) return queryPawnStatus(snapshot!, pawn).reason;
+  if(pawn.visitor)return pawn.visitor.phase==='leaving'?'Visiteur · quitte la carte':pawn.visitor.phase==='arriving'?'Visiteur · rejoint la colonie':pawn.visitor.role==='trader'?'Marchand · séjourne dans la colonie':'Visiteur · séjourne dans la colonie';
   if(pawn.haul?.destination.type==='fuel')return queryPawnStatus(snapshot!,pawn).reason;
   if (pawn.haul) {
     const destination = pawn.haul.destination.type === 'job' ? 'chantier' : pawn.haul.destination.type === 'aside' ? 'bord du champ' : 'réserve';
@@ -405,13 +409,14 @@ function renderState() {
   updateResearchPanel(el('research-content'),world,c=>void attempt(()=>client.command(c)));
   scheduleUI.update(world);
   foodPolicyUI.update(world);
-  el('blocks').textContent=String(world.piles.reduce((n,p)=>n+(p.kind==='blocks'&&p.owner.type!=='job'?p.quantity:0),0));
-  el('medicine').textContent=String(world.piles.reduce((n,p)=>n+(p.kind==='medicine'&&p.owner.type!=='job'?p.quantity:0),0));
-  el('component').textContent = String(world.piles.reduce((n,p)=>n+(p.item==='component'&&p.owner.type!=='job'?p.quantity:0),0));
-  const cloth=world.piles.reduce((n,p)=>n+(p.item==='cloth'&&p.owner.type!=='job'?p.quantity:0),0);el('cloth').textContent=String(cloth);el('cloth-stock').hidden=cloth===0;
-  el('steel').textContent = String(world.piles.reduce((n,p)=>n+(p.item==='steel'&&p.owner.type!=='job'?p.quantity:0),0));
+  el('blocks').textContent=String(world.piles.reduce((n,p)=>n+(p.kind==='blocks'&&colonyPile(world,p)?p.quantity:0),0));
+  el('medicine').textContent=String(world.piles.reduce((n,p)=>n+(p.kind==='medicine'&&colonyPile(world,p)?p.quantity:0),0));
+  el('silver').textContent=String(world.piles.reduce((n,p)=>n+(p.item==='silver'&&colonyPile(world,p)?p.quantity:0),0));
+  el('component').textContent = String(world.piles.reduce((n,p)=>n+(p.item==='component'&&colonyPile(world,p)?p.quantity:0),0));
+  const cloth=world.piles.reduce((n,p)=>n+(p.item==='cloth'&&colonyPile(world,p)?p.quantity:0),0);el('cloth').textContent=String(cloth);el('cloth-stock').hidden=cloth===0;
+  el('steel').textContent = String(world.piles.reduce((n,p)=>n+(p.item==='steel'&&colonyPile(world,p)?p.quantity:0),0));
   el('wood').textContent = String(world.stock.wood); el('food').textContent = availableNutrition(world).toFixed(1); updateFoodStocks(el('food-items'), world);
-  const carried = world.piles.filter(pile => pile.owner.type === 'pawn').reduce((sum, pile) => sum + pile.quantity, 0);
+  const carried = world.piles.filter(pile => pile.owner.type === 'pawn'&&colonyPile(world,pile)).reduce((sum, pile) => sum + pile.quantity, 0);
   const delivered = world.piles.filter(pile => pile.owner.type === 'job').reduce((sum, pile) => sum + pile.quantity, 0);
   el('material-status').textContent = `${carried} portées · ${delivered} au chantier`;
   el('scenario-current').textContent=(world.scenario?SCENARIOS[world.scenario.id].label:'Partie historique · départ non renseigné')+(world.site?` · Forêt tempérée · ${HILLINESS_LABELS[world.site.hilliness]}`:'');
@@ -529,7 +534,7 @@ function renderState() {
   const living=world.pawns.filter(p=>isColonist(p)&&p.state!=='dead');
   const alerts: string[] = [];
   const crises=living.filter(p=>p.mental?.crisis).length;if(crises)alerts.push(`${crises} colon(s) en errance triste`);
-  const enemy=world.pawns.find(p=>!isColonist(p)&&!p.prisoner&&activeThreat(p));
+  const enemy=world.pawns.find(p=>p.faction==='outlaws'&&!p.prisoner&&activeThreat(p));
   const fires=world.fires?.items??[],fireAlert=el<HTMLButtonElement>('inspect-fire');fireAlert.hidden=!fires.length;fireAlert.textContent=`Incendie · ${fires.length} foyer${fires.length>1?'s':''} · voir`;fireAlert.onclick=()=>{const cell=firePosition(world,fires[0]!);if(cell){applyTool('select');pickCell(cell.x,cell.z);renderer?.focusCell(cell);}};
   const threatButton=el<HTMLButtonElement>('inspect-threat');threatButton.hidden=!enemy;if(enemy){threatButton.textContent='Menace armée · voir';threatButton.onclick=()=>selectPawn(enemy.id);}
   const downed=living.filter(p=>p.state==='downed').length,bleeding=living.filter(p=>p.health&&medicalBleed(p.health)>=.1).length,deaths=world.pawns.filter(isColonist).length-living.length;
@@ -557,10 +562,11 @@ function renderState() {
   if (beds < living.length) { const item = document.createElement('p'); item.dataset.alert = 'beds'; item.textContent = `${living.length - beds} couchage(s) manquant(s)`; el('status-alerts').append(item); }
   const prisoners=world.pawns.filter(p=>p.prisoner&&p.state!=='dead');
   if(prisoners.length){const item=document.createElement('p');item.dataset.alert='prisoners';item.textContent=`${prisoners.length} prisonnier(s) · ${living.some(p=>p.priorities.warden>0)?'Geôlier activé':'Geôlier désactivé'}`;el('status-alerts').append(item);}
-  arrivalUI.update(world);raidUI.update(world);heatwaveUI.update(world);
+  arrivalUI.update(world);raidUI.update(world);heatwaveUI.update(world);tradeUI.update(world);
 }
 const heatwaveUI=createHeatwaveUI(command=>client.command(command));
 const raidUI=createRaidUI(command=>client.command(command),id=>renderer?.focusPawn(id));
+const tradeUI=createTradeUI(command=>client.command(command),()=>client.setSpeed(0),id=>renderer?.focusPawn(id),async()=>{if(currentSpeed===0)await client.setSpeed(1);});
 const arrivalUI=createArrivalUI(command=>client.command(command));
 function syncStorageButtons() {
   shell.inert = replacingWorld || frontMenu.isOpen() || !snapshot;

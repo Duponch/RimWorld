@@ -1,0 +1,25 @@
+{
+  "date": "2026-09-20T21:10:14.633Z",
+  "backend": "native WebGPU",
+  "fixture": "controlled visitor intro with explicit silver and rifle stock",
+  "traderId": 183,
+  "pawnId": 182,
+  "rifleId": 190,
+  "receipt": {
+    "tick": 15114,
+    "negotiatorId": 182,
+    "traderId": 183,
+    "silver": 357,
+    "forgone": 0,
+    "lines": [
+      {
+        "item": "bolt-action-rifle",
+        "quantity": 1,
+        "unitPrice": 357
+      }
+    ]
+  },
+  "finalTick": 15120,
+  "restored": true,
+  "errors": []
+}

@@ -26,7 +26,7 @@ export function validateRaids(w:World,version:number,ids:Set<number>):string[] {
     ids.add(d.pawnId);
     let valid=true;
     for(const i of d.items){
-      if(!object(i)||!keys(i,['id','kind','item','quantity','owner','apparel','weapon'])||!integer(i.id,1,w.nextId-1)||ids.has(i.id)||!object(i.owner)||!keys(i.owner,['type','pawnId'])||!('pawnId' in i.owner)||i.owner.pawnId!==d.pawnId||!(i.kind==='weapon'&&i.item==='revolver'&&i.owner.type==='equipment'||i.kind==='apparel'&&i.owner.type==='apparel')||!validWeaponShape(i,version>=86?version:68)||!validApparelShape(i,version>=86?version:68)){valid=false;continue;}
+      if(!object(i)||!keys(i,['id','kind','item','quantity','owner','apparel','weapon'])||!integer(i.id,1,w.nextId-1)||ids.has(i.id)||!object(i.owner)||!keys(i.owner,['type','pawnId'])||!('pawnId' in i.owner)||i.owner.pawnId!==d.pawnId||!(i.kind==='weapon'&&['revolver',...(version>=88?['bolt-action-rifle','plasteel-knife']:[])].includes(String(i.item))&&i.owner.type==='equipment'||i.kind==='apparel'&&i.owner.type==='apparel')||!validWeaponShape(i,version>=86?version:68)||!validApparelShape(i,version>=86?version:68)){valid=false;continue;}
       ids.add(i.id);
     }
     if(!valid){errors.push('Invalid exported raid equipment.');continue;}

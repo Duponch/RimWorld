@@ -1,9 +1,9 @@
-import { equippedWeapon } from './equipment-rules.ts';
+import { equippedWeapon,isRangedWeaponItem } from './equipment-rules.ts';
 import { findShotLine } from './combat-space.ts';
 import { captureWorldShotGrid } from './combat-world.ts';
 import { captureStandability } from './furniture-travel.ts';
 import { routeToCell,routeToJob,type Reachability } from './pathfinding.ts';
-import { revolverProfile } from './ranged-statistics.ts';
+import { rangedWeaponProfile } from './ranged-statistics.ts';
 import { meleeContact } from './melee-space.ts';
 import { reconcileAnimalHealth } from './wildlife-health.ts';
 import { addResolvedInjury,remainingPartHealth } from './injury-state.ts';
@@ -32,7 +32,7 @@ export function designateHunt(w:World,c:HuntingCommand):CommandResult {
 }
 export function huntingWanted(w:World,p:Pawn):boolean {
   return isColonist(p)&&p.priorities.hunt>0&&!p.draft&&!medicallyStopped(p)&&pawnBody(p).capacities.manipulation>0
-    &&!!equippedWeapon(w,p)&&!!w.hunting?.targets.some(id=>!w.pawns.some(o=>o!==p&&o.hunting?.animalId===id));
+    &&isRangedWeaponItem(equippedWeapon(w,p)?.item)&&!!w.hunting?.targets.some(id=>!w.pawns.some(o=>o!==p&&o.hunting?.animalId===id));
 }
 /** Hunting seeks an unobstructed shot within 95% of weapon range, without
  * tactical cover scoring. All candidates share one bounded decision capture. */
@@ -40,8 +40,8 @@ function huntingPosition(w:World,p:Pawn,a:WildAnimal,reach:Reachability):{cell:C
   if(a.state==='downed'){
     const path=routeToJob(w,a,reach,false);return path?{cell:path.at(-1)??{x:p.x,z:p.z},path}:undefined;
   }
-  const weapon=equippedWeapon(w,p);if(!weapon?.weapon)return;
-  const range=Math.max(1.42,revolverProfile(weapon.weapon.quality).range*.95),stands=captureStandability(w),margin=Math.ceil(range)+3;
+  const weapon=equippedWeapon(w,p),profile=weapon?.weapon?rangedWeaponProfile(weapon.item,weapon.weapon.quality):undefined;if(!profile)return;
+  const range=Math.max(1.42,profile.range*.95),stands=captureStandability(w),margin=Math.ceil(range)+3;
   // Same three-cell lean margin as tactical posts. Preserve every candidate and
   // the current shooter; only unrelated terrain is omitted from this decision.
   const grid=captureWorldShotGrid(w,{minX:Math.min(p.x-3,a.x-margin),minZ:Math.min(p.z-3,a.z-margin),maxX:Math.max(p.x+3,a.x+margin),maxZ:Math.max(p.z+3,a.z+margin)});

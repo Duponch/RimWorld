@@ -1,5 +1,5 @@
 import { bulletPosition,validateBulletFlight } from './bullet-flight.ts';
-import { CORE_TICKS_PER_LOCAL,revolverProfile } from './ranged-statistics.ts';
+import { CORE_TICKS_PER_LOCAL,rangedWeaponProfile } from './ranged-statistics.ts';
 import type { WorldProjectile } from './projectile-state.ts';
 import type { World } from './types.ts';
 
@@ -10,8 +10,8 @@ const identity=(v:unknown,version=67)=>v===null||typeof v==='string'&&(version>=
 const samePoint=(a:{x:number;z:number},b:unknown)=>record(b)&&keys(b,['x','z'])&&b.x===a.x&&b.z===a.z;
 
 /** Unknown JSON is rejected before touching references or calling the resolver. */
-export function validWorldProjectile(value:unknown,world:Pick<World,'width'|'height'|'tick'>,version=77):value is WorldProjectile {
-  if(!record(value)||!keys(value,['id','quality','emittedAtCore','advancedAtCore','flight','relations','arrival']))return false;
+export function validWorldProjectile(value:unknown,world:Pick<World,'width'|'height'|'tick'>,version=88):value is WorldProjectile {
+  if(!record(value)||!keys(value,['id','quality','emittedAtCore','advancedAtCore','flight','relations','arrival',...(version>=88?['weaponItem']:[])])||value.weaponItem!==undefined&&value.weaponItem!=='bolt-action-rifle')return false;
   const end=world.tick*CORE_TICKS_PER_LOCAL;
   if(!Number.isSafeInteger(end)||!integer(value.id,1)||!integer(value.emittedAtCore,0,end)||!integer(value.advancedAtCore,value.emittedAtCore,end))return false;
   const f=value.flight,r=value.relations;
@@ -19,7 +19,7 @@ export function validWorldProjectile(value:unknown,world:Pick<World,'width'|'hei
   if(typeof f.launcherKey!=='string'||!/^pawn:[1-9]\d*$/.test(f.launcherKey)||!identity(f.launcherKey,version)||!identity(f.intendedKey,version)||!identity(f.usedKey,version)||f.equipmentKey!==null&&(typeof f.equipmentKey!=='string'||!/^pile:[1-9]\d*$/.test(f.equipmentKey)||!identity(f.equipmentKey,version)))return false;
   if(!record(r)||!keys(r,['friendlyPawnIds','friendlyFireFactor'])||!Array.isArray(r.friendlyPawnIds)||r.friendlyPawnIds.length>world.width*world.height||r.friendlyPawnIds.some((id,i,a)=>!integer(id,1)||i>0&&Number(a[i-1])>=id)||typeof r.friendlyFireFactor!=='number'||!Number.isFinite(r.friendlyFireFactor)||r.friendlyFireFactor<0||r.friendlyFireFactor>1)return false;
   try {
-    const p=value as unknown as WorldProjectile,profile=revolverProfile(p.quality);validateBulletFlight(p.flight);
+    const p=value as unknown as WorldProjectile,profile=rangedWeaponProfile(p.weaponItem??'revolver',p.quality)!;validateBulletFlight(p.flight);
     if(f.speedPerCoreTick!==profile.projectileTilesPerCoreTick||p.flight.origin.x<0||p.flight.origin.z<0||p.flight.origin.x>=world.width||p.flight.origin.z>=world.height)return false;
     // Ordinary revolver + wild-miss radius, not an arbitrary long-lived missile.
     const distance=Math.hypot(p.flight.destination.x-p.flight.origin.x,p.flight.destination.z-p.flight.origin.z);

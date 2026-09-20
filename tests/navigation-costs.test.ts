@@ -1,10 +1,10 @@
 import { expect,test } from 'vitest';
 import { createWorld } from '../src/sim/engine';
 import { footprintCells } from '../src/sim/definitions';
-import { navigationCosts } from '../src/sim/furniture-travel';
+import { canStandAt,navigationCosts } from '../src/sim/furniture-travel';
 import { candidateAccess } from '../src/sim/candidate-access';
-import { blockedCells,routeToCell } from '../src/sim/pathfinding';
-import { doorCorners,newDoorState } from '../src/sim/door-rules';
+import { blockedCells,canStep,routeToCell } from '../src/sim/pathfinding';
+import { doorCorners,doorOpenness,newDoorState } from '../src/sim/door-rules';
 import { scaleNavigationCosts } from '../src/sim/navigation-costs';
 import { WeightedSearch } from '../src/sim/weighted-search';
 import { animalNavigation } from '../src/sim/wildlife-navigation';
@@ -124,5 +124,29 @@ test('full and resumed routes preserve directed costs, tie parents, corners and 
     const animals=animalNavigation(world),animalBlocked=blocked.slice();animalBlocked[6*16+7]=1;animalBlocked[6*16+9]=1;
     const animalExpected=routeOracle(world,start,animalBlocked,old,3);
     for(const target of [{x:14,z:14},{x:11,z:6},{x:3,z:9}])expect(animals.route({x:2,z:2},[target])).toEqual(routeToCell(world,target,animalExpected));
+  }
+});
+
+test('local animal checks match the dense physical oracle before routes and after a fresh capture',()=>{
+  const offsets=[[-1,-1],[0,-1],[1,-1],[-1,0],[0,0],[1,0],[-1,1],[0,1],[1,1]] as const;
+  for(const version of [15,21,22,28,87]) {
+    const world=fixture(false);(world as {schemaVersion:number}).schemaVersion=version;
+    const check=()=>{
+      const nav=animalNavigation(world),blocked=blockedCells(world,true);
+      for(const s of world.structures)if(s.kind==='door'&&(!s.door?.open||doorOpenness(s,world.tick)<1-1e-9))blocked[s.z*world.width+s.x]=1;
+      const empty=new Set<number>();
+      for(let z=0;z<world.height;z++)for(let x=0;x<world.width;x++) {
+        const a={x,z};expect(nav.free(a)).toBe(canStandAt(world,a)&&!blocked[z*world.width+x]);
+        for(const [dx,dz] of offsets){const b={x:x+dx,z:z+dz};expect(nav.step(a,b)).toBe(canStep(world,a,b,blocked,empty));}
+      }
+      // Route materialization after local checks keeps the same door corners.
+      expect(nav.step({x:10,z:6},{x:11,z:7})).toBe(false);
+    };
+    check();
+    // Same tick, different decision: an in-place terrain edit and a closing
+    // door must be visible, as must a frame/ground-item removal.
+    world.tiles[3*world.width+3]!.terrain='rock';world.piles=[];world.jobs=[];
+    const door=world.structures.find(s=>s.kind==='door'&&s.x===11)!;door.door!.open=false;door.door!.from=1;door.door!.changedAt=world.tick;
+    check();
   }
 });

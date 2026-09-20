@@ -16,6 +16,7 @@ import { startingSkills } from '../src/sim/skills';
 import { stepWorld } from '../src/sim/engine';
 import { initializeCampTraits } from '../src/sim/traits';
 import { enableWildlife } from '../src/sim/wildlife';
+import { adoptEnvironment } from '../src/sim/environment-step';
 import type { World } from '../src/sim/types';
 
 function inventory(w:World):Record<string,number> {
@@ -38,6 +39,9 @@ test('historical camp and armed encounter preserve their original setup without 
 test('survivors arrive with exact physical stocks and known technology on unmodified terrain across compact and standard maps',()=>{
   for(const [seed,size] of [[0,32],[1,32],[42,32],[93,32],[2048,32],[0,64],[1,64],[42,64],[93,64],[2048,64],[42,250]]) {
     const w=createScenarioWorld(seed!,size!),terrain=generateWorld(seed!,size!,size!,'temperate-survivors-v1');
+    // V87 initializes biological age on the same generated plants; this must
+    // not change their locations, identities, yield or initial growth.
+    adoptEnvironment(terrain);
     expect(w.scenario?.id,`${seed}/${size}`).toBe(DEFAULT_SCENARIO);
     expect(w.tiles).toEqual(terrain.tiles);expect(w.resources).toEqual(terrain.resources);
     expect(w.pawns).toHaveLength(3);expect(w.jobs).toEqual([]);expect(w.structures).toEqual([]);

@@ -1,6 +1,8 @@
-# Équipement physique — principale V52 et vêtements V63
+# Équipement physique — principales et vêtements
 
-[Recherche fraîche et adaptations](../research/equipment-reference.md), corpus chapitres 2/8/13/20/29, UI-014 et SYS/TEST-055. Première arme : revolver. Le tir dirigé est ajouté en [V56](shooting.md) ; vêtements et inventaire personnel restent absents.
+**V88 validée dans son périmètre :** revolver et fusil à verrou 100 PV, couteau en plastacier 280 PV. Les trois principales utilisent la même propriété physique, qualité, manipulation, dépôt et conservation ; seule une arme à feu autorise le tir et la chasse. L’inventaire du visiteur est un propriétaire distinct de la cargaison et des objets équipés ; il ne livre pas un inventaire colonial général. [Référence armes](../research/weapons-v88.md), [commerce](trade.md), [preuves V88](../history/validation-trade-v88.md).
+
+[Recherche fraîche et adaptations](../research/equipment-reference.md), corpus chapitres 2/8/13/20/29, UI-014 et SYS/TEST-055. Première arme historique : revolver. Le tir dirigé est ajouté en [V56](shooting.md), les vêtements en V63.
 
 ## Propriété et actions
 
@@ -10,11 +12,14 @@
 
 `equipment-state.ts` traite l'incapacité : à terre hors lit, décès ou manipulation nulle provoquent un dépôt ; à terre dans un lit déjà occupé conserve l'arme sauf perte de manipulation. Un lit supprimé ou un service perdu recontrôle cette exception avant qu'une sauvegarde soit exposée. Sol saturé : `equipmentDropPending`, arme inactive conservée, un seul réessai depuis la boucle des acteurs tous les vingt ticks décalés par ID, même si plusieurs réconciliations ont lieu. Après chute, mémoriser l'arme encore au sol ; récupération physique aux décisions libres après besoins et ordres. Transport par un autre acteur ou disparition fait oublier cette cible. Le bouton Oublier permet de renoncer. La priorité de récupération et son ignorance de l'interdiction sont des adaptations déclarées, pas une reproduction validée de la ThinkTree Core.
 
-Une nouvelle carte contient un revolver normal à 100 PV. Un ancien site n'en reçoit pas automatiquement. Le filtre Armes accepte une arme par case ; une arme interdite n'est pas rangée automatiquement. Inventaire personnel, masse cumulée, usure de l’arme et fabrication/commerce restent absents ; tir dirigé livré V56 et mêlée V59. V63 ajoute le propriétaire distinct de vêtements, les actions wear/remove et leur durée capturée via la même enveloppe de tâche : [contrat](armor.md).
+La dotation dépend du scénario : Crashlanded révision 3 reçoit un revolver et un fusil normaux à 100 PV, ainsi qu'un couteau en plastacier à 280 PV ; les départs historiques gardent leurs armes antérieures. Aucun ancien site n'est réapprovisionné. Le filtre Armes accepte une arme par case ; une arme interdite n'est pas rangée automatiquement. Inventaire colonial général, masse cumulée, usure quotidienne de l’arme et fabrication restent absents ; tir dirigé livré V56 et mêlée V59. V63 ajoute le propriétaire distinct de vêtements, les actions wear/remove et leur durée capturée via la même enveloppe de tâche : [contrat](armor.md).
 
 ## Persistance et présentation
 
-V51 validée strictement avant V52, aucune arme, tâche ou mémoire inventée. `equipment-save.ts` sépare forme et références : propriétaire existant/unique, sept qualités, PV entiers 1–100, quantité un, exclusivité des activités et réservations, progression 0–2 du dépôt, cohérence de l'intention et du marqueur de conservation. Aucun objet équipé ne devient une cargaison implicite.
+V88 valide strictement V87 avant migration neutre : ni argent ni arme ne sont créés dans une ancienne colonie. Fusil et couteau sont interdits aux schémas précédents ; les objets complets conservent qualité et points de vie au commerce comme au transport.
+
+
+V51 validée strictement avant V52, aucune arme, tâche ou mémoire inventée. `equipment-save.ts` sépare forme et références : propriétaire existant/unique, sept qualités, PV entiers dans la borne du modèle, quantité un, exclusivité des activités et réservations, progression 0–2 du dépôt, cohérence de l'intention et du marqueur de conservation. Aucun objet équipé ne devient une cargaison implicite.
 
 `pawn-geometry.ts` isole la géométrie du rig et des cargaisons. Trois petits volumes du revolver partagent le lot corporel et sa pose GPU ; un attribut d'instance pilote leur visibilité, dans la limite de huit buffers de sommets WebGPU. Pas de nouveau lot par arme, squelette CPU ou travail de géométrie à chaque image. Même forme procédurale pour le sol et la cargaison. Le coût supplémentaire de sommets existe : aucune promesse de coût nul.
 

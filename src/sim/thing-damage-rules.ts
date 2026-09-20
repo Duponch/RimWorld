@@ -1,4 +1,5 @@
 import { APPAREL } from './apparel-rules.ts';
+import { weaponMaxHitPoints } from './equipment-rules.ts';
 import type { ItemId } from './items.ts';
 import type { MaterialPile,Resource,Structure } from './types.ts';
 
@@ -19,14 +20,14 @@ export const resourceMaxHp=(r:Pick<Resource,'kind'>)=>r.kind==='tree'?200:r.kind
 export const resourceFlammability=(r:Pick<Resource,'kind'>)=>r.kind==='rock'?0:r.kind==='tree'?.8:1;
 export function pileMaxHp(p:Pick<MaterialPile,'kind'|'item'>):number {
   if(p.kind==='apparel')return APPAREL[p.item as keyof typeof APPAREL]?.hitPoints??0;
-  if(p.kind==='weapon')return 100;if(p.kind==='corpse')return 100;
+  if(p.kind==='weapon')return weaponMaxHitPoints(p.item);if(p.kind==='corpse')return 100;
   if(p.kind==='food')return ['simple-meal','survival-meal','legacy-portion'].includes(p.item)?50:60;
   if(p.kind==='medicine')return 60;if(p.kind==='unfinished')return 50;
   return p.item==='wood'?150:p.item==='cloth'?80:p.item==='light-leather'?60:p.item==='component'?70:0;
 }
 export function pileFlammability(p:Pick<MaterialPile,'kind'|'item'>):number {
   if(p.kind==='apparel')return p.item==='flak-vest'?.6:1.2;
-  if(p.kind==='weapon')return .5;if(p.kind==='corpse')return .7;if(p.kind==='food')return 1;
+  if(p.kind==='weapon')return p.item==='plasteel-knife'?0:.5;if(p.kind==='corpse')return .7;if(p.kind==='food')return 1;
   if(p.kind==='medicine')return p.item==='herbal-medicine'?1.3:.7;
   // Unfinished apparel inherits the default zero stat; its embedded cloth is not a second ground pile.
   return p.item==='wood'?1:p.item==='cloth'?1.2:p.item==='light-leather'?1:p.item==='component'?.6:0;

@@ -1,7 +1,7 @@
 import { furnitureDuration } from './furniture-rules.ts';
 import { constructionRecipe } from './construction-materials.ts';
 import { deconstructionDuration } from './deconstruction-rules.ts';
-import { footprintCells, JOB_DURATION, STRUCTURE_DEFINITIONS } from './definitions.ts';
+import { footprintCells, footprintContains, JOB_DURATION, STRUCTURE_DEFINITIONS } from './definitions.ts';
 import { isCrop, isPlant, plantGrowth, PLANT_DEFINITIONS, sowingTemperatureAllowed } from './plants.ts';
 import { TemperatureView, outdoorTemperature } from './temperature.ts';
 import { releaseWork, type DropPlan } from './work-release.ts';
@@ -46,11 +46,16 @@ export function jobDuration(world: World, job: Job): number {
   return (job.kind === 'harvest' || job.kind === 'cut') && isCrop(resourceCells(world).get(index(world, job))??{kind:'rock'}) ? 20 : JOB_DURATION[job.kind];
 }
 interface Context { resources: Map<number, Resource>; fixed: Set<number>; temperatures:TemperatureView }
-function context(world: World): Context {
+function context(world: World, queriedCells?:readonly number[]): Context {
+  const objects=[...world.structures.filter(s=>s.kind!=='power-conduit'), ...world.jobs.filter(j => j.kind==='install'||j.kind!=='power-conduit'&&j.kind in STRUCTURE_DEFINITIONS)];
+  // Validation asks about at most five cells. Avoid expanding every building
+  // footprint for that point query; discovery still captures the full field.
+  const fixed=queriedCells?new Set(queriedCells.filter(i=>objects.some(s=>footprintContains(s,{x:i%world.width,z:Math.floor(i/world.width)}))))
+    :new Set(objects.flatMap(s=>footprintCells(s).map(c=>index(world,c))));
+  let temperatures:TemperatureView|undefined;
   return {
     resources: resourceCells(world),
-    temperatures: new TemperatureView(world),
-    fixed: new Set([...world.structures.filter(s=>s.kind!=='power-conduit'), ...world.jobs.filter(j => j.kind==='install'||j.kind!=='power-conduit'&&j.kind in STRUCTURE_DEFINITIONS)].flatMap(s => footprintCells(s).map(c => index(world, c)))),
+    get temperatures(){return temperatures??=new TemperatureView(world);},fixed,
   };
 }
 function intention(world: World, zone: GrowingZone, cell: number, ctx: Context, committed=false): { kind: JobKind; cell: number } | null {
@@ -89,9 +94,10 @@ export function growingJobValid(world: World, job: Job, shared?:Context): boolea
   if (job.growingZoneId === undefined) return job.kind !== 'sow';
   const zone = world.growingZones.find(z => z.id === job.growingZoneId);
   if (!zone) return false;
-  const target = index(world, job), ctx = shared??context(world);
+  const target = index(world, job);
   // Tree clearing can originate in a neighbouring cell outside the zone.
   const origins = job.kind === 'chop' ? [target, target - world.width, target + 1, target + world.width, target - 1] : [target];
+  const ctx=shared??context(world,origins);
   return origins.some(cell => growingZoneAt(world, cell)?.id === zone.id && (() => {
     const desired = intention(world, zone, cell, ctx,job.reservedBy!==null);
     return desired?.kind === job.kind && desired.cell === target;

@@ -1,8 +1,9 @@
+import { isColonist } from './affiliation.ts';
 import { mergeThingDamage } from './thing-damage-rules.ts';
 import { newApparelState,isApparelItem,APPAREL } from './apparel-rules.ts';
 import { apparelCompatible } from './armor.ts';
 import { groundCapacity, planGroundPlacement } from './ground-placement.ts';
-import { newWeaponState } from './equipment-rules.ts';
+import { isWeaponItem, newWeaponState } from './equipment-rules.ts';
 import { freshRot, mergeRot, rotAge } from './food-preservation.ts';
 import { ITEM_DEFINITIONS, legacyItem } from './items.ts';
 import type { ItemId } from './items.ts';
@@ -14,7 +15,7 @@ import type { Cell, HaulDestination, MaterialKind, MaterialOwner, MaterialPile, 
 export function pileCell(world: World, pile: MaterialPile): Cell | null {
   const owner = pile.owner;
   if (owner.type === 'ground') return { x: owner.x, z: owner.z };
-  if (owner.type === 'pawn'||owner.type==='equipment'||owner.type==='apparel') return world.pawns.find(pawn => pawn.id === owner.pawnId) ?? null;
+  if (owner.type === 'pawn'||owner.type==='equipment'||owner.type==='apparel'||owner.type==='inventory') return world.pawns.find(pawn => pawn.id === owner.pawnId) ?? null;
   return world.jobs.find(job => job.id === owner.jobId) ?? null;
 }
 export function deliveredStock(world: World, jobId: number): Stock {
@@ -30,14 +31,14 @@ export function refreshStock(world: World): void {
     if (pile.owner.type === 'job') {
       const value = delivered.get(pile.owner.jobId);
       if (value) value[pile.kind] += pile.quantity;
-    } else stock[pile.kind] += pile.quantity;
+    } else if(colonyPile(world,pile)) stock[pile.kind] += pile.quantity;
   }
   world.stock = stock;
   for (const job of world.jobs) job.escrow = delivered.get(job.id)!;
 }
 const sameOwner = (a: MaterialOwner, b: MaterialOwner): boolean => a.type === b.type
   && (a.type === 'ground' && b.type === 'ground' ? a.x === b.x && a.z === b.z
-    : (a.type==='pawn'||a.type==='equipment'||a.type==='apparel')&&(b.type==='pawn'||b.type==='equipment'||b.type==='apparel') ? a.pawnId === b.pawnId
+    : (a.type==='pawn'||a.type==='equipment'||a.type==='apparel'||a.type==='inventory')&&(b.type==='pawn'||b.type==='equipment'||b.type==='apparel'||b.type==='inventory') ? a.pawnId === b.pawnId
       : a.type === 'job' && b.type === 'job' && a.jobId === b.jobId);
 
 export function materialCanFit(world: World, kind: MaterialKind, quantity: number, owner: MaterialOwner, item: ItemId = legacyItem(kind)): boolean {
@@ -61,7 +62,7 @@ export function addMaterial(world: World, kind: MaterialKind, quantity: number, 
   if (owner.type === 'ground' && (['water', 'rock'].includes(world.tiles[owner.z * world.width + owner.x]!.terrain)
     || world.structures.some(item => (item.kind === 'wall'||item.kind==='cooler') && item.x === owner.x && item.z === owner.z)
     || world.schemaVersion<16&&world.jobs.some(item => (item.kind === 'wall'||item.kind==='cooler') && item.x === owner.x && item.z === owner.z))) throw new Error('Material destination is impassable.');
-  if ((owner.type === 'pawn'||owner.type==='equipment'||owner.type==='apparel') && !world.pawns.some(pawn => pawn.id === owner.pawnId)) throw new Error('Material carrier does not exist.');
+  if ((owner.type === 'pawn'||owner.type==='equipment'||owner.type==='apparel'||owner.type==='inventory') && !world.pawns.some(pawn => pawn.id === owner.pawnId)) throw new Error('Material carrier does not exist.');
   if (owner.type === 'job' && !world.jobs.some(job => job.id === owner.jobId)) throw new Error('Material construction does not exist.');
   if (!materialCanFit(world, kind, quantity, owner, item)) throw new Error('Material pile limit exceeded.');
   for (const pile of world.piles) {
@@ -73,7 +74,7 @@ export function addMaterial(world: World, kind: MaterialKind, quantity: number, 
   }
   while (quantity > 0) {
     const moved = Math.min(limit, quantity);
-    world.piles.push({ id: world.nextId++, kind, item, quantity: moved, owner: { ...owner }, ...freshRot(item, world.tick),...kind==='weapon'?{weapon:newWeaponState()}:kind==='apparel'&&isApparelItem(item)?{apparel:newApparelState(item)}:{}});
+    world.piles.push({ id: world.nextId++, kind, item, quantity: moved, owner: { ...owner }, ...freshRot(item, world.tick),...kind==='weapon'&&isWeaponItem(item)?{weapon:newWeaponState(item)}:kind==='apparel'&&isApparelItem(item)?{apparel:newApparelState(item)}:{}});
     quantity -= moved;
   }
   refreshStock(world);
@@ -133,3 +134,6 @@ export function groundQuantity(world: World, cell: Cell): number {
   for (const pile of world.piles) if (pile.owner.type === 'ground' && pile.owner.x === cell.x && pile.owner.z === cell.z) quantity += pile.quantity;
   return quantity;
 }
+
+/** Colony HUD excludes possessions of neutral or hostile people. */
+export function colonyPile(world:World,pile:MaterialPile):boolean {const o=pile.owner;return o.type==='ground'||o.type!=='job'&&world.pawns.some(p=>p.id===o.pawnId&&isColonist(p));}
