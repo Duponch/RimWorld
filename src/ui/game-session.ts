@@ -1,7 +1,7 @@
 import { SCENARIOS, isScenarioId, type ScenarioId } from '../sim/scenario-definitions';
-import { calendarTick } from '../sim/calendar';
 import { TICKS_PER_DAY } from '../sim/types';
-import { HILLINESS_LABELS,type SiteOptions } from '../sim/site';
+import { type SiteOptions } from '../sim/site';
+import { decodeStoredSave,encodeStoredSave,storedSaveMetadata } from './save-storage-codec';
 
 export const SAVE_KEY = 'lisiere.save.v1';
 export const PREVIOUS_KEY = 'lisiere.previous.v1';
@@ -29,16 +29,12 @@ export class GameSession {
       const data = storage.getItem(key!);
       if (data === null) continue;
       let detail = 'Données illisibles — le chargement vérifiera ce fichier.';
-      try {
-        const value = JSON.parse(data);
-        if (value && Number.isSafeInteger(value.tick) && value.tick >= 0 && Number.isInteger(value.width) && Number.isInteger(value.height)) {
-          const id: unknown = value.scenario?.id;
-          const scenario = isScenarioId(id) ? SCENARIOS[id].label : 'Partie historique';
-          const relief=value.site?.hilliness;
-          const site=typeof relief==='string'&&Object.hasOwn(HILLINESS_LABELS,relief)?` · ${HILLINESS_LABELS[relief as SiteOptions['hilliness']]}`:'';
-          detail = `${scenario}${site} · jour ${1 + Math.floor(calendarTick(value) / TICKS_PER_DAY)} · ${value.width} × ${value.height} · format ${Number.isInteger(value.schemaVersion) ? value.schemaVersion : "ancien"}`;
-        }
-      } catch { /* Keep the slot visible; only the simulation validates it. */ }
+      const value = storedSaveMetadata(data);
+      if (value) {
+        const scenario = isScenarioId(value.scenario) ? SCENARIOS[value.scenario].label : 'Partie historique';
+        const civilTick = value.tick + (value.profile ? TICKS_PER_DAY / 4 : 0);
+        detail = `${scenario} · jour ${1 + Math.floor(civilTick / TICKS_PER_DAY)} · ${value.width} × ${value.height} · format ${value.schemaVersion ?? "ancien"}`;
+      }
       result.push({ key: key!, label: label!, detail });
     }
     return result;
@@ -55,7 +51,8 @@ export class GameSession {
       if (!this.hasWorld) throw new Error('Aucune colonie à sauvegarder.');
       const data = await this.client.save();
       if (!data) throw new Error('La simulation a retourné une sauvegarde vide.');
-      this.storage().setItem(SAVE_KEY, data);
+      const stored = await encodeStoredSave(data);
+      this.storage().setItem(SAVE_KEY, stored);
     });
   }
 
@@ -66,7 +63,8 @@ export class GameSession {
     if (this.hasWorld) {
       const previous = await this.client.save();
       if (!previous) throw new Error('Impossible de préserver la colonie actuelle.');
-      storage.setItem(PREVIOUS_KEY, previous);
+      const stored = await encodeStoredSave(previous);
+      storage.setItem(PREVIOUS_KEY, stored);
       preserved = true;
     }
     try { await replaceWorld(); }
@@ -96,7 +94,8 @@ export class GameSession {
       // itself replace that slot, but must restore the originally selected data.
       const data = this.storage().getItem(key);
       if (data === null) throw new Error('Cette sauvegarde n’est plus disponible.');
-      await this.replace(() => this.client.load(data));
+      const decoded = await decodeStoredSave(data);
+      await this.replace(() => this.client.load(decoded));
     });
   }
 }

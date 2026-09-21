@@ -9,12 +9,14 @@ import { survivorDecisions } from '../scenarios/survivor-player';
 import { deserializeWorld, serializeWorld, validateWorld } from '../../src/sim/serialization';
 import { world, pause, panel, cell, settledCells, expectWorld, observeErrors } from './helpers';
 import { perform, revealCells } from './player-actions';
+import { decodeStoredSave } from '../../src/ui/save-storage-codec';
 
 const manualKey = 'lisiere.save.v1';
 const previousKey = 'lisiere.previous.v1';
 const viewport = { width: 1440, height: 1000 };
 const front = (page: Page) => page.locator('.front-menu');
 const menuButton = (page: Page, name: string) => front(page).getByRole('button', { name, exact: true });
+const storedWorldJson = async (page: Page, key: string) => decodeStoredSave(await page.evaluate(key => localStorage.getItem(key), key) ?? 'null');
 
 async function coldHome(page: Page): Promise<void> {
   // e2e only exposes the observation bridge; it must not create a diagnostic camp.
@@ -24,7 +26,7 @@ async function coldHome(page: Page): Promise<void> {
   expect(await page.evaluate(() => window.__lisiere.world)).toBeUndefined();
   await expect(page.locator('#viewport canvas')).toHaveCount(0);
   await expect(page.locator('.game-shell')).toBeHidden();
-  await expect(page.locator('#fps-counter')).toBeVisible();
+  await expect(page.locator('#fps-counter')).toBeHidden();
 }
 
 async function chooseSave(page: Page, key: string): Promise<void> {
@@ -263,7 +265,7 @@ test('native V90: chosen site, fertile land, first physical decisions and unchan
     writeFileSync('tmp/scenario-established-v83.json', serializeWorld(established));
     await panel(page, 'menu');
     await page.locator('#save').click();
-    await expect.poll(async () => JSON.parse(await page.evaluate(key => localStorage.getItem(key), manualKey) ?? 'null')).toEqual(established);
+    await expect.poll(async () => JSON.parse(await storedWorldJson(page, manualKey))).toEqual(established);
     await page.locator('#load').click();
     await expectWorld(page, established);
     await page.keyboard.press('Escape');
@@ -374,8 +376,8 @@ test('native V90: chosen site, fertile land, first physical decisions and unchan
     await settledCells(page, [flatLanding]);
     const afterRecreation = await landingView();
     expect(afterRecreation.visible, 'A different relief must recenter the existing renderer on its actual landing.').toBe(true);
-    expect(await page.evaluate(key => localStorage.getItem(key), manualKey)).toBe(serializeWorld(finalWorld));
-    expect(JSON.parse(await page.evaluate(key => localStorage.getItem(key), previousKey) ?? 'null')).toEqual(finalWorld);
+    expect(await storedWorldJson(page, manualKey)).toBe(serializeWorld(finalWorld));
+    expect(JSON.parse(await storedWorldJson(page, previousKey))).toEqual(finalWorld);
     checkpoints.sameSeedNewSite = { seed: recreated.seed, site: recreated.site, landing: flatLanding, tick: recreated.tick, beforeRecreation, afterRecreation };
     await page.screenshot({ path: 'artifacts/scenario-recreated-site-v83.png' });
     allErrors.push(...errors);
@@ -397,7 +399,7 @@ test('native V90: chosen site, fertile land, first physical decisions and unchan
     expect(previousLandscape.tick).toBe(previousLandscapeInput.tick);
     for (const id of ['enable-arrivals', 'enable-raids', 'enable-heatwaves']) await expect(page.locator(`#${id}`)).toBeHidden();
     expect(await page.evaluate(key => localStorage.getItem(key), previousKey)).toBe(previousLandscapeData);
-    expect(await page.evaluate(key => localStorage.getItem(key), manualKey)).toBe(serializeWorld(finalWorld));
+    expect(await storedWorldJson(page, manualKey)).toBe(serializeWorld(finalWorld));
     checkpoints.coldPreviousLandscape = { source: 'tests/fixtures/scenario-v82.json.gz', sourceVersion: 82, sourceSha256: previousLandscapeSha256, loadedVersion: previousLandscape.schemaVersion, tick: previousLandscape.tick, site: null };
     await page.screenshot({ path: 'artifacts/scenario-historical-v82-landscape-v83.png' });
     allErrors.push(...errors);
@@ -422,7 +424,7 @@ test('native V90: chosen site, fertile land, first physical decisions and unchan
     await expect(page.locator('#enable-raids')).toBeVisible();
     await expect(page.locator('#enable-heatwaves')).toBeHidden();
     expect(await page.evaluate(key => localStorage.getItem(key), previousKey)).toBe(historicalData);
-    expect(await page.evaluate(key => localStorage.getItem(key), manualKey)).toBe(serializeWorld(finalWorld));
+    expect(await storedWorldJson(page, manualKey)).toBe(serializeWorld(finalWorld));
     await page.screenshot({ path: 'artifacts/scenario-historical-v83.png' });
     checkpoints.coldHistorical = { source: 'artifacts/heatwave-checkpoint-v81.json', sourceVersion: 81, loadedVersion: oldWorld.schemaVersion, tick: oldWorld.tick, width: oldWorld.width };
     allErrors.push(...errors);

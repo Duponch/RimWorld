@@ -35,9 +35,10 @@ describe('colonist inspector structure', () => {
   test('reuses every existing command surface inside the composed inspector', () => {
     const layout = colonistInspectorLayoutContract();
     expect(layout.actions).toEqual(expect.arrayContaining([
-      '#draft-controls', '#manage-work', '#clear-orders', '#hygiene-controls', '#burial-controls',
+      '#draft-controls', '#manage-work', '#clear-orders',
     ]));
     expect(layout.panels.health).toContain('#health-inspection');
+    expect(layout.panels.health).toEqual(expect.arrayContaining(['#hygiene-controls', '#burial-controls']));
     expect(layout.panels.gear).toContain('#equipment-details');
     expect(layout.panels.social).toContain('#social-inspection');
     expect(layout.panels.prisoner).toContain('#prisoner-inspection');

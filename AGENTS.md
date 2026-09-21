@@ -1,5 +1,10 @@
 # Travail sur Lisière
 
+## Refonte visuelle V93
+- La demande utilisateur remplace le thème V92 : cadres géométriques stables, papier ivoire et encre forêt, Literata/Source Sans 3 embarquées sous OFL. Ne pas réintroduire le cadre raster étiré ou des couches de fonds sombres dans les panneaux papier. Illustrations historiques conservées. Contrat : `docs/development/visual-identity.md`.
+- Architecte : 60 outils dotés de PNG dans deux atlas, options dans un espace fixe, neuf curseurs réellement liés à `applyTool`. Préserver boutons, commandes et accessibilité ; les glyphes ne servent plus de pictogrammes de remplacement. Dossiers : une zone de lecture, sous-détails repliables, propreté dans Santé, actions physiques fixes.
+- Les matériaux d’un fauteuil doivent être autorisés pour ce meuble ; ne jamais substituer du bois à une matière de rembourrage. Grandes sauvegardes compressées au stockage seulement, schéma métier 91 intact, anciennes chaînes brutes et récupération préservées. Contrôles courts et parcours natifs regroupés, sources gelées pendant les mesures ; pas de pilote annuel de présentation. Preuves V93 distinctes des historiques.
+
 ## Interface, paysage GPU et publication V92
 - Lire `docs/development/visual-identity.md`, `gpu-landscape.md` et `deployment-netlify.md`. L'identité bois/parchemin/feuilles est la référence commune ; atlas partagé pour pictogrammes, curseurs et désignations. Les dossiers Bio/Besoins/Santé/Équipement/Social et Prisonnier conditionnel déplacent les vrais contrôles, sans inventer de données ni modifier les commandes. V92 conserve le schéma 91 et le catalogue V91.
 - Brins d'herbe résidents inspirés d'AntSystem : racines/forme/vent calculés dans le shader, masque de terrain/plantes/sols/ouvrages actualisé aux changements pertinents. Billboards mine/coupe/récolte/plantes dans un seul lot ; hauteur liée à la canopée pour les arbres. Ne pas qualifier toute la simulation de « 100 % GPU ».

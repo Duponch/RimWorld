@@ -5,8 +5,10 @@ import { footprintCells } from '../sim/definitions';
 import type { Job, JobKind, Structure, World } from '../sim/types';
 
 const stuffable = new Set<string>(['research-bench','tailor-bench','electric-tailor-bench','door','wall','bed','table','table-square','table-long','stool','dining-chair','armchair','end-table','dresser','flower-pot','horseshoes','stonecutter']);
+export const defaultPlacementMaterial = (tool:string):ConstructionMaterial =>
+  validConstructionMaterial(tool,'wood')?'wood':constructionMaterials(tool)[0]!;
 export const placementMaterial = (tool:string, material:ConstructionMaterial):ConstructionMaterial|undefined =>
-  tool==='heater'||tool==='wind-turbine'||tool==='power-conduit'||tool==='power-switch'||tool==='battery'||tool==='solar-generator'||tool==='fueled-stove'||tool==='electric-stove'||tool==='cooler'||tool==='wood-generator'||tool==='standing-lamp'?'steel':stuffable.has(tool) ? validConstructionMaterial(tool,material)?material:'wood' : tool === 'butcher-table' || tool === 'campfire' || tool === 'passive-cooler' ? 'wood' : undefined;
+  tool==='heater'||tool==='wind-turbine'||tool==='power-conduit'||tool==='power-switch'||tool==='battery'||tool==='solar-generator'||tool==='fueled-stove'||tool==='electric-stove'||tool==='cooler'||tool==='wood-generator'||tool==='standing-lamp'?'steel':stuffable.has(tool) ? validConstructionMaterial(tool,material)?material:defaultPlacementMaterial(tool) : tool === 'butcher-table' || tool === 'campfire' || tool === 'passive-cooler' ? 'wood' : undefined;
 
 export function constructionControls(onChange:()=>void) {
   const control = document.getElementById('construction-material-controls')!;
@@ -22,7 +24,7 @@ export function constructionControls(onChange:()=>void) {
         select.replaceChildren(...constructionMaterials(tool).map(material=>{
           const option=document.createElement('option');option.value=material;option.textContent=ITEM_DEFINITIONS[material].label;return option;
         }));
-        select.value=validConstructionMaterial(tool,preferred)?preferred:'wood';previousTool=tool;
+        select.value=validConstructionMaterial(tool,preferred)?preferred:defaultPlacementMaterial(tool);previousTool=tool;
       }
       const material = placementMaterial(tool, select.value as ConstructionMaterial);
       if (!material) return hint;

@@ -1,6 +1,8 @@
+import { installToolCursors, UI_ICONS, type UiIcon } from './tool-cursors';
+import { ARCHITECT_ICON_ATLASES, ARCHITECT_ICON_MAPPING } from './architect-icons';
+export { UI_ICONS, type UiIcon } from './tool-cursors';
+
 /** One generated atlas shared by the HUD, tool cursors and world designations. */
-export const UI_ICONS = ['mine', 'chop', 'harvest', 'cut', 'wood', 'steel', 'component', 'silver', 'medicine', 'blocks', 'food', 'meal', 'home', 'clock', 'people', 'research', 'leaf', 'eye', 'layers', 'pointer'] as const;
-export type UiIcon = typeof UI_ICONS[number];
 export function iconPosition(icon: UiIcon): [number, number] {
   const index = UI_ICONS.indexOf(icon);
   return [(index % 4) * 100 / 3, Math.floor(index / 4) * 25];
@@ -12,6 +14,8 @@ function decorate(element: HTMLElement, icon: UiIcon): void {
   element.textContent = ''; element.setAttribute('aria-hidden', 'true');
 }
 export function installVisualIdentity(root: HTMLElement): void {
+  installToolCursors(root);
+  root.querySelector<HTMLElement>('#viewport')?.setAttribute('data-cursor', 'select');
   const timePanel = root.querySelector<HTMLElement>('.time-panel');
   if (timePanel) new ResizeObserver(() => {
     root.style.setProperty('--time-panel-height', `${timePanel.getBoundingClientRect().height}px`);
@@ -24,21 +28,22 @@ export function installVisualIdentity(root: HTMLElement): void {
   for (const button of root.querySelectorAll<HTMLElement>('.main-tabs [data-panel]')) {
     const icon = document.createElement('span'); decorate(icon, tabs[button.dataset.panel!] ?? 'layers'); button.prepend(icon);
   }
+  for (const row of root.querySelectorAll<HTMLElement>('#resources > .resource')) {
+    const name = row.querySelector<HTMLElement>('span:not(.resource-symbol)');
+    if (name) { name.classList.add('resource-name'); row.title = name.textContent ?? ''; }
+  }
+  const cloth = root.querySelector<HTMLElement>('#cloth-stock .resource-symbol');
+  if (cloth) {
+    const cell = ARCHITECT_ICON_MAPPING['tailor-bench'];
+    cloth.classList.add('ui-icon'); cloth.textContent = ''; cloth.setAttribute('aria-hidden', 'true');
+    cloth.style.backgroundImage = `url('${ARCHITECT_ICON_ATLASES[cell.atlas]}')`;
+    cloth.style.backgroundSize = '600% 500%';
+    cloth.style.backgroundPosition = `${cell.column * 20}% ${cell.row * 25}%`;
+  }
+  const recenter = root.querySelector<HTMLElement>('#view-home');
+  if (recenter) { const icon = document.createElement('span'); decorate(icon, 'home'); recenter.replaceChildren(icon); recenter.setAttribute('aria-label', 'Recentrer sur la colonie'); }
   const tools: Record<string, UiIcon> = { mine:'mine', chop:'chop', harvest:'harvest', cut:'cut', select:'pointer', deconstruct:'mine', growing:'leaf', stockpile:'blocks', 'haul-chunks':'blocks' };
   for (const [id, icon] of Object.entries(tools)) {
     const node = root.querySelector<HTMLElement>(`[data-tool="${id}"] .tool-icon`); if (node) decorate(node, icon);
   }
-  // Rasterize five small cursor surfaces once at atlas load, never during a frame.
-  // The original generated artwork remains unchanged and also supplies the GPU atlas.
-  const image = new Image(); image.src = '/assets/ui/lisiere/icons.png';
-  image.onload = () => {
-    const canvas = document.createElement('canvas'); canvas.width = canvas.height = 32;
-    const context = canvas.getContext('2d'); if (!context) return;
-    for (const icon of ['pointer', 'mine', 'chop', 'harvest', 'cut'] as const) {
-      const index = UI_ICONS.indexOf(icon), width = image.width / 4, height = image.height / 5;
-      context.clearRect(0, 0, 32, 32);
-      context.drawImage(image, index % 4 * width, Math.floor(index / 4) * height, width, height, 0, 0, 32, 32);
-      root.style.setProperty(`--cursor-${icon}`, `url("${canvas.toDataURL()}") 7 5, ${icon === 'pointer' ? 'default' : 'crosshair'}`);
-    }
-  };
 }

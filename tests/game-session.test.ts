@@ -1,5 +1,6 @@
 import { expect,test,vi } from 'vitest';
 import { GameSession,SAVE_KEY,PREVIOUS_KEY } from '../src/ui/game-session';
+import { decodeStoredSave,SAVE_COMPRESSION_THRESHOLD } from '../src/ui/save-storage-codec';
 
 function fixture(active=false) {
   const data=new Map<string,string>([[SAVE_KEY,'manual'],[PREVIOUS_KEY,'older']]);
@@ -39,4 +40,21 @@ test('metadata uses civil date and corrupt slots remain visible without trusting
   const f=fixture();f.data.set(SAVE_KEY,JSON.stringify({tick:4500,width:250,height:250,schemaVersion:82,gameProfile:{revision:1},scenario:{id:'crashlanded'}}));
   const saves=f.session.saves();expect(saves[0]!.detail).toContain('jour 2');expect(saves[0]!.detail).toContain('format 82');expect(saves[1]!.detail).toContain('illisibles');
   expect(f.client.load).not.toHaveBeenCalled();
+});
+test('large manual and recovery saves are compressed transparently while replacement rollback keeps exact slots',async()=>{
+  const f=fixture(true),raw=JSON.stringify({schemaVersion:91,tick:291,width:250,height:250,scenario:{id:'crashlanded'},gameProfile:{revision:1},tiles:'x'.repeat(SAVE_COMPRESSION_THRESHOLD+1)});
+  f.client.save.mockResolvedValue(raw);
+  await f.session.save();
+  const manual=f.data.get(SAVE_KEY)!;expect(manual).not.toBe(raw);expect(await decodeStoredSave(manual)).toBe(raw);
+  f.client.init.mockRejectedValueOnce(new Error('invalid world'));
+  await expect(f.session.create(42,250,'crashlanded')).rejects.toThrow('invalid world');
+  expect(f.data.get(PREVIOUS_KEY)).toBe('older');expect(await decodeStoredSave(f.data.get(SAVE_KEY)!)).toBe(raw);
+  await f.session.load(SAVE_KEY);expect(f.client.load).toHaveBeenLastCalledWith(raw);
+  expect(await decodeStoredSave(f.data.get(PREVIOUS_KEY)!)).toBe(raw);
+});
+test('an invalid compressed slot is refused before the active recovery is touched',async()=>{
+  const f=fixture(true);f.data.set(SAVE_KEY,JSON.stringify({format:'lisiere-save',version:1}));
+  await expect(f.session.load(SAVE_KEY)).rejects.toThrow('invalide');
+  expect(f.client.save).not.toHaveBeenCalled();expect(f.client.load).not.toHaveBeenCalled();
+  expect(f.data.get(PREVIOUS_KEY)).toBe('older');expect(f.session.hasWorld).toBe(true);
 });

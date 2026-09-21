@@ -1,5 +1,7 @@
 # Plan de développement
 
+**V93 : refonte de présentation et pictogrammes.** Le thème utilise une géométrie stable, des surfaces ivoire et vert forêt, deux fontes embarquées, des dossiers plus lisibles et un Architecte à dimensions fixes. Les 60 outils utilisent de vrais PNG et neuf curseurs suivent l’outil actif. La sauvegarde des grandes cartes est compressée sans perte ; le monde conserve le schéma 91. [Preuves et limites](history/validation-interface-v93.md). Aucun nouveau contenu physique ni jalon G0–G5 clos ; les estimations fonctionnelles restent inchangées.
+
 **V92 validée dans son périmètre : interface, paysage GPU et accès public.** Le jeu est disponible sur [Netlify](https://lisiere-duponch.netlify.app), avec identité illustrée, dossiers de personne et désignations uniformes. Les contrôles natifs et le parcours réellement déployé passent ; les pics et limites de débit restent consignés dans les [preuves](history/validation-interface-v92.md). Schéma 91 et capacités de gameplay inchangés. La [revue de chaque domaine](#estimation-davancement) distingue ces améliorations de la couverture fonctionnelle.
 
 **Ensemble V91 validé dans son périmètre : milieux vivants et ressources utiles.** Trois biomes locaux sélectionnables, douze plantes physiques, cinq herbivores obtenables, fruit d’agave, nouvelles viandes et trois cuirs reliés à quinze nouvelles combinaisons vestimentaires. Croissance, récolte, broutage, chasse, boucherie, cuisine et confection partagent conservation et sauvegarde. Les anciennes cartes restent intactes ; pas d’élevage ni de monde complet. [Preuves V91](history/validation-biomes-v91.md), [mesures et limites](research/performance-v91.md). Aucun jalon global clos ; performance générale à cent colons encore insuffisante.
@@ -16,7 +18,7 @@
 
 La filière alimentaire V84 reste livrée : [cultures](development/food-crops.md), [postes](development/food-workstations.md) et [malnutrition](development/malnutrition.md), 24 jours depuis la dotation réelle et deux récoltes sur les mêmes 80 cases de riz. [Preuves V84](history/validation-food-v84.md).
 
-État : **21 septembre 2026, V91 validée dans son périmètre**. ROADMAP est l’unique calendrier G0–G5. G0 en consolidation, G1/G2/G3 partiels, G4 engagé par l’accueil, la captivité et le commerce, G5 absent ; aucun jalon complet. Les numéros de schéma ne mesurent pas l’avancement du jeu. [Inventaire réel](gameplay/implementation-status.md), [preuves](development/validation.md), [index](README.md).
+État : **22 septembre 2026, V93 validée dans son périmètre**. ROADMAP est l’unique calendrier G0–G5. G0 en consolidation, G1/G2/G3 partiels, G4 engagé par l’accueil, la captivité et le commerce, G5 absent ; aucun jalon complet. Les numéros de schéma ne mesurent pas l’avancement du jeu. [Inventaire réel](gameplay/implementation-status.md), [preuves](development/validation.md), [index](README.md).
 
 Boucle précédente : [site local et première récolte V83](development/world-generation.md), trois reliefs, sols fertiles et ressources physiques reliés au départ. Douze jours joués avec abri, défense, riz récolté puis cuisiné ; anciennes cartes préservées. V84 prolonge ce départ par plusieurs récoltes et l’alimentation renouvelée sur le parcours documenté. [Preuves V83](history/validation-site-v83.md).
 
@@ -219,7 +221,7 @@ La revue remplace les anciens chiffres figés du 18 septembre : ils sous-décriv
 | Carte du monde et caravanes | 0 % (0–5) | Carte locale seulement | Planète, voyage, ravitaillement, plusieurs cartes, rencontres et retours |
 | Quêtes, objectifs longs et fin de partie | 0 % (0–5) | Aucune boucle correspondante | Quêtes/récompenses, objectifs, conditions de victoire et progression longue |
 | Catalogue complet du jeu de base | 20 % (10–25), révisé V91 | Contenus du [catalogue local](gameplay/content-catalogue.md), mobilier, vingt-cinq vêtements, plantes et produits animaux utilisables | Centaines de contenus et leurs interactions ; aucun dénominateur exhaustif vérifié |
-| Rendu 3D, interface et finition visuelle | 45 % (35–55), révisé V92 | Brins/billboards GPU, identité illustrée, dossiers de personne, HUD adaptatif, équipement/portraits, accès Netlify | Catalogue visuel complet, effets/animations, écrans des systèmes absents, finition mobile et performance générale à cent acteurs |
+| Rendu 3D, interface et finition visuelle | 45 % (35–55), maintenu V93 | Brins/billboards GPU, identité illustrée, dossiers de personne, HUD adaptatif, équipement/portraits, accès Netlify | Catalogue visuel complet, effets/animations, écrans des systèmes absents, finition mobile et performance générale à cent acteurs |
 | Audio et ambiance sonore | 0 % (0–5) | Le calcul logique des bruits réveille des acteurs, sans système audio livré | Sons, musique, mixage et retours sonores |
 
 Les tests profonds, migrations et audits mesurés constituent une pratique déjà active ; ils ne donnent pas un pourcentage de fiabilité. Les pics d'image et limites à cent acteurs restent consignés dans les preuves. Un moteur bien éprouvé sur le contenu présent n'est pas une validation de tous les contenus futurs.
@@ -228,7 +230,7 @@ Les tests profonds, migrations et audits mesurés constituent une pratique déj�
 
 Ces sous-domaines recoupent les lignes précédentes ; ils ne s'y additionnent pas. Ils évitent de confondre un moteur de construction assez développé avec une maison complète, ou une génération de terrain avec une diversité de biomes. Estimations fonctionnelles arrondies, incertitude généralement d'au moins dix points ; les faibles valeurs distinguent absence et première préparation. Il n'existe pas encore de dénominateur exhaustif vérifié du catalogue Core.
 
-| Aspect concret, revue V92 (contenu V91) | Estimation (fourchette) | Ce que le joueur peut réellement obtenir / manque principal |
+| Aspect concret, revue V93 (contenu V91) | Estimation (fourchette) | Ce que le joueur peut réellement obtenir / manque principal |
 |---|---:|---|
 | Matériaux pour murs et portes | 55 % (40–65) | Bois, acier et cinq pierres ; autres matériaux, toutes les propriétés et éléments de maison manquants |
 | Sols construits et revêtements | 35 % (25–45) | Bois, cinq pierres et acier obtenables avec travaux/recherche/retrait ; autres revêtements et propriétés complètes absents |

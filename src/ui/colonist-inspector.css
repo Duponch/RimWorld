@@ -1,79 +1,19 @@
-.colonist-inspector-host {
-  overflow: visible;
-}
-
-.colonist-inspector-scroll {
-  max-block-size: inherit;
-  overflow: auto;
-  scrollbar-width: thin;
-}
-
-.colonist-inspector-tabs {
-  position: absolute;
-  inset-inline-start: 0;
-  inset-block-end: 100%;
-  z-index: 1;
-  display: flex;
-  inline-size: 100%;
-  max-inline-size: 100%;
-  align-items: end;
-  gap: 2px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: thin;
-}
-
-.colonist-inspector-tabs > button {
-  flex: 0 0 auto;
-  min-block-size: 32px;
-  padding-inline: 10px;
-  white-space: nowrap;
-}
-
-.colonist-inspector-tabs > button[aria-selected='true'] {
-  position: relative;
-  z-index: 2;
-}
-
-.colonist-inspector-summary,
-.colonist-inspector-pages,
-.colonist-inspector-actions {
-  min-inline-size: 0;
-}
-
-.colonist-inspector-summary:empty,
-.colonist-inspector-actions:empty,
-.colonist-inspector-pages > [hidden] {
-  display: none;
-}
-
-.colonist-inspector-pages > [role='tabpanel'] {
-  min-inline-size: 0;
-  max-block-size: min(58vh, 560px);
-  overflow: auto;
-}
-
-.colonist-inspector-pages > [role='tabpanel'] > details {
-  display: block;
-}
-
-.colonist-inspector-pages > [role='tabpanel'] > details > summary {
-  display: none;
-}
-
-.colonist-inspector-actions {
-  display: grid;
-  gap: 6px;
-}
-
-.colonist-inspector-actions > #draft-controls {
-  display: grid;
-  gap: 6px;
-}
-
-@media (max-width: 700px) {
-  .colonist-inspector-tabs > button {
-    min-block-size: 30px;
-    padding-inline: 8px;
-  }
-}
+/* One scrollable dossier between a fixed summary and physical actions. */
+#inspector.colonist-inspector-host{display:flex;flex-direction:column;height:min(710px,calc(100dvh - 205px));max-height:none;padding:0;overflow:hidden}
+#inspector.colonist-inspector-host[hidden]{display:none}
+.colonist-inspector-tabs{position:static;display:flex;flex:none;gap:2px;min-height:46px;padding:7px 9px 0;border-bottom:1px solid var(--line);background:#e8eadb;border-radius:7px 7px 0 0}
+.colonist-inspector-tabs button{flex:1;min-width:0;border:0;border-radius:4px 4px 0 0;min-height:37px;padding:7px 4px;background:transparent;color:#69745b;font-size:14px;white-space:nowrap}
+.colonist-inspector-tabs button[aria-selected=true]{background:var(--paper);color:#2d4a32;box-shadow:inset 0 3px #5c7b48}
+.colonist-inspector-scroll{display:flex;flex-direction:column;flex:1;min-height:0;max-height:none;overflow:hidden;padding:0 18px}
+.colonist-inspector-summary{flex:none;padding:16px 0 10px;border-bottom:1px solid var(--line)}
+.colonist-inspector-summary .panel-heading{border:0;padding:0;margin:0 0 7px}.colonist-inspector-summary #selected-action{margin:0;color:#4e6347;font-size:14px}.colonist-inspector-summary #room-description{margin:5px 0 0;font-size:12px;line-height:1.4;color:var(--muted-ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.colonist-inspector-pages{flex:1;min-height:0;overflow-y:auto;padding:13px 4px 13px 0;scrollbar-gutter:stable}
+.colonist-inspector-pages>[role=tabpanel]{max-height:none;overflow:visible;min-height:0}
+.colonist-inspector-pages details,.colonist-inspector-pages .skills-inspection,.colonist-inspector-pages #social-inspection{max-height:none;overflow:visible;background:none;border:0;margin:0;padding:0}
+.colonist-inspector-pages>[role=tabpanel]>details>summary{display:none}.colonist-inspector-pages h3{font-size:15px;line-height:1.3;margin:12px 0 8px}.colonist-inspector-pages ul{padding-left:18px}.colonist-inspector-pages li{font-size:14px;line-height:1.45;margin:6px 0}
+.colonist-inspector-pages .skill-entry{padding:8px 0;border-bottom:1px solid #d2d5c1}.colonist-inspector-pages .skill-entry>summary{position:static;display:block;padding:0;background:none;color:#344c37;font-size:14px;list-style:none}.colonist-inspector-pages .skill-entry>summary::before,.colonist-inspector-pages .trait-entry>summary::before,.colonist-inspector-pages .trait-stat-entry>summary::before{content:'›';display:inline-block;width:14px;color:#758263}.colonist-inspector-pages details[open]>summary::before{transform:rotate(90deg)}.colonist-inspector-pages .skill-entry summary progress{display:block;width:calc(100% - 14px);margin:5px 0 0 14px;height:4px}.colonist-inspector-pages .skill-entry summary p{margin:0;display:inline}.colonist-inspector-pages .trait-entry>summary,.colonist-inspector-pages .trait-stat-entry>summary{position:static;padding:3px 0;background:none;list-style:none;font-size:14px;color:#4b6340}.colonist-inspector-pages [data-traits]{padding:0;list-style:none;margin:4px 0}.colonist-inspector-pages [data-traits] li{margin:3px 0}.colonist-inspector-pages .trait-entry p,.colonist-inspector-pages .trait-stat-entry p{margin:6px 0 10px 14px}.colonist-inspector-pages .trait-stat-entry{margin-bottom:10px}
+.colonist-inspector-pages p{font-size:14px;line-height:1.5;margin:8px 0}.colonist-inspector-pages #health-inspection>label{display:flex;gap:10px;align-items:center;font-size:14px;margin-bottom:12px}.colonist-inspector-pages #health-inspection>label select{flex:1;min-width:0}
+.colonist-inspector-pages .skills-list{gap:7px}.colonist-inspector-pages .skill-row{font-size:14px;min-height:23px}.colonist-inspector-pages .skill-label{font-size:14px}.colonist-inspector-pages .skill-value{font-size:14px}.colonist-inspector-pages small{font-size:12px}.colonist-inspector-pages .skills-summary{font-size:14px}
+.colonist-inspector-pages .needs{gap:10px;margin:3px 0 16px}.colonist-inspector-pages .need{font-size:14px}.colonist-inspector-pages .need-bar{height:7px;background:#d7dec8;border-radius:4px}.colonist-inspector-pages .need-bar i{background:#6b8955}
+.colonist-inspector-actions{flex:none;padding:10px 0 12px;border-top:1px solid var(--line);max-height:181px;overflow:auto;display:grid;grid-template-columns:1fr 1fr;gap:7px}.colonist-inspector-actions:empty{display:none}.colonist-inspector-actions button{font-size:14px;min-height:33px;margin:0}.colonist-inspector-actions #draft-controls{display:contents}.colonist-inspector-actions #draft-controls>button{grid-column:1;grid-row:1}.colonist-inspector-actions #draft-controls label{display:flex;align-items:center;justify-content:space-between;gap:8px;grid-column:1/-1;grid-row:2;font-size:13px;margin:0}.colonist-inspector-actions #draft-controls select{max-width:210px;font-size:13px;padding-block:4px;min-height:29px}.colonist-inspector-actions #selected-orders{font-size:12px;line-height:1.4;margin:0;grid-column:1/-1}.colonist-inspector-actions #manage-work{width:100%;grid-column:2;grid-row:1}.colonist-inspector-actions #clear-orders{grid-column:1/-1}.colonist-inspector-actions #clear-orders:disabled{display:none}.colonist-inspector-actions #hygiene-controls,.colonist-inspector-actions #burial-controls{grid-column:1/-1}
+@media(max-width:1050px){.colonist-inspector-scroll{padding-inline:14px}.colonist-inspector-tabs{padding-inline:5px}.colonist-inspector-tabs button{font-size:13px;padding-inline:3px}.colonist-inspector-summary{padding-top:12px}.colonist-inspector-summary #room-description{font-size:12px}}

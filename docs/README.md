@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V93 : reprise complète du thème et des pictogrammes.** Cadres stables, polices embarquées, contrastes et défilement unifiés, Architecte à géométrie fixe, 60 pictogrammes PNG et neuf curseurs. [Contrat visuel](development/visual-identity.md), [preuves V93](history/validation-interface-v93.md). Le lot corrige aussi le choix de matière du fauteuil et le stockage des grandes sauvegardes ; les règles de simulation et le schéma 91 restent conservés.
+
 **V92 : interface illustrée et accès public.** [Jouer sur Netlify](https://lisiere-duponch.netlify.app), [identité visuelle](development/visual-identity.md), [inspection Core](research/colonist-interface-reference-v92.md), [paysage GPU](development/gpu-landscape.md), [publication](development/deployment-netlify.md), [preuves](history/validation-interface-v92.md). Les estimations de chaque domaine sont révisées dans [ROADMAP](ROADMAP.md#estimation-davancement). Gameplay et sauvegardes V91 conservés.
 
 **V91 validée dans son périmètre :** trois milieux locaux, flore et faune fonctionnelles, nouveaux produits alimentaires et trois cuirs confectionnés. [Preuves V91](history/validation-biomes-v91.md), [performance et limites](research/performance-v91.md), [référence des matières](research/biome-products-reference-v91.md), [guide de prise en main](gameplay/player-guide.md). Les contrôles sont regroupés ; les campagnes naturelles longues deviennent périodiques selon la [cadence révisée](development/testing.md).

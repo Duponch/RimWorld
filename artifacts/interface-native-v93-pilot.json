@@ -1,0 +1,245 @@
+{
+  "layouts": [
+    {
+      "width": 1280,
+      "height": 720,
+      "inspector": {
+        "x": 16,
+        "y": 121,
+        "right": 456,
+        "bottom": 636,
+        "height": 515,
+        "width": 440
+      },
+      "resources": {
+        "x": 16,
+        "y": 16,
+        "right": 456,
+        "bottom": 104,
+        "height": 88,
+        "width": 440
+      },
+      "pages": {
+        "x": 35,
+        "y": 293.125,
+        "right": 437,
+        "bottom": 497.703125,
+        "height": 204.578125,
+        "width": 402
+      },
+      "time": {
+        "x": 1046,
+        "y": 322.625,
+        "right": 1264,
+        "bottom": 636,
+        "height": 313.375,
+        "width": 218
+      },
+      "alerts": {
+        "x": 1046,
+        "y": 137.59375,
+        "right": 1264,
+        "bottom": 312.625,
+        "height": 175.03125,
+        "width": 218
+      },
+      "nav": {
+        "x": 10,
+        "y": 652,
+        "right": 1270,
+        "bottom": 710,
+        "height": 58,
+        "width": 1260
+      },
+      "pageWidth": 1280
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "inspector": {
+        "x": 16,
+        "y": 286,
+        "right": 456,
+        "bottom": 996,
+        "height": 710,
+        "width": 440
+      },
+      "resources": {
+        "x": 16,
+        "y": 16,
+        "right": 456,
+        "bottom": 104,
+        "height": 88,
+        "width": 440
+      },
+      "pages": {
+        "x": 35,
+        "y": 458.125,
+        "right": 437,
+        "bottom": 857.703125,
+        "height": 399.578125,
+        "width": 402
+      },
+      "time": {
+        "x": 1686,
+        "y": 682.625,
+        "right": 1904,
+        "bottom": 996,
+        "height": 313.375,
+        "width": 218
+      },
+      "alerts": {
+        "x": 1686,
+        "y": 497.59375,
+        "right": 1904,
+        "bottom": 672.625,
+        "height": 175.03125,
+        "width": 218
+      },
+      "nav": {
+        "x": 10,
+        "y": 1012,
+        "right": 1910,
+        "bottom": 1070,
+        "height": 58,
+        "width": 1900
+      },
+      "pageWidth": 1920
+    },
+    {
+      "width": 1440,
+      "height": 1000,
+      "inspector": {
+        "x": 16,
+        "y": 206,
+        "right": 456,
+        "bottom": 916,
+        "height": 710,
+        "width": 440
+      },
+      "resources": {
+        "x": 16,
+        "y": 16,
+        "right": 456,
+        "bottom": 104,
+        "height": 88,
+        "width": 440
+      },
+      "pages": {
+        "x": 35,
+        "y": 378.125,
+        "right": 437,
+        "bottom": 777.703125,
+        "height": 399.578125,
+        "width": 402
+      },
+      "time": {
+        "x": 1206,
+        "y": 602.625,
+        "right": 1424,
+        "bottom": 916,
+        "height": 313.375,
+        "width": 218
+      },
+      "alerts": {
+        "x": 1206,
+        "y": 417.59375,
+        "right": 1424,
+        "bottom": 592.625,
+        "height": 175.03125,
+        "width": 218
+      },
+      "nav": {
+        "x": 10,
+        "y": 932,
+        "right": 1430,
+        "bottom": 990,
+        "height": 58,
+        "width": 1420
+      },
+      "pageWidth": 1440
+    }
+  ],
+  "categories": [
+    "orders",
+    "zones",
+    "temperature",
+    "structure",
+    "floors",
+    "furniture",
+    "recreation",
+    "production",
+    "power"
+  ],
+  "selectedTools": [
+    "select",
+    "mine",
+    "haul-chunks",
+    "chop",
+    "harvest",
+    "cut",
+    "uninstall",
+    "deconstruct",
+    "cancel",
+    "growing",
+    "build-roof",
+    "remove-roof",
+    "ignore-roof",
+    "remove-growing",
+    "stockpile",
+    "home",
+    "remove-home",
+    "remove-stockpile",
+    "heater",
+    "cooler",
+    "passive-cooler",
+    "campfire",
+    "door",
+    "wall",
+    "wood-planks",
+    "granite-tile",
+    "limestone-tile",
+    "marble-tile",
+    "sandstone-tile",
+    "slate-tile",
+    "steel-tile",
+    "remove-floor",
+    "grave",
+    "bed",
+    "table",
+    "table-square",
+    "table-long",
+    "dining-chair",
+    "armchair",
+    "end-table",
+    "dresser",
+    "flower-pot",
+    "standing-lamp",
+    "stool",
+    "horseshoes",
+    "research-bench",
+    "tailor-bench",
+    "electric-tailor-bench",
+    "crafting-spot",
+    "fueled-stove",
+    "electric-stove",
+    "butcher-table",
+    "butcher-spot",
+    "stonecutter",
+    "wind-turbine",
+    "wood-generator",
+    "power-conduit",
+    "power-switch",
+    "battery",
+    "solar-generator"
+  ],
+  "pngTools": 60,
+  "cursors": 9,
+  "performance": {
+    "frames": 915,
+    "p95": 20.900000000001455,
+    "max": 50.099999999998545,
+    "speed": 5.577995768417003
+  },
+  "errors": []
+}

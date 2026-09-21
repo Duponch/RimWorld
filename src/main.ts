@@ -70,6 +70,8 @@ import './style.css';
 import './ui/colonist-inspector.css';
 import './ui/visual-identity.css';
 import { installVisualIdentity, portraitIndex } from './ui/visual-identity';
+import { installArchitectIcons } from './ui/architect-icons';
+import { syncToolCursor } from './ui/tool-cursors';
 import { mountColonistInspector, updateColonistInspector, colonistInspectorState, type ColonistInspectorState } from './ui/colonist-inspector';
 import { ITEM_DEFINITIONS, availableNutrition } from './sim/items';
 import { foodFreshnessLabel } from './ui/food-freshness';
@@ -116,6 +118,7 @@ let menuResumeSpeed: number | undefined;
 let menuTransition: Promise<unknown> = Promise.resolve();
 const shell = document.querySelector<HTMLElement>('.game-shell')!;
 installVisualIdentity(document.querySelector<HTMLElement>('#app')!);
+installArchitectIcons(document.querySelector<HTMLElement>('#app')!);
 // Suppress browser chrome without cancelling the game's own order-menu handler.
 document.querySelector('#app')!.addEventListener('contextmenu', event => event.preventDefault());
 const session = new GameSession(client, () => localStorage, prepareWorld);
@@ -222,6 +225,7 @@ function applyTool(tool: Tool) {
   shootingControls.cancel();
   if(tool!=='install'){installationId=undefined;renderer?.setFurniturePlacement(undefined);}
   currentTool = tool;
+  syncToolCursor(el('viewport'), tool);
   renderer?.setFloorSelection(isBuildableFloor(tool)?tool:undefined);renderer?.setTool(isBuildableFloor(tool)?'lay-floor':tool);
   renderer?.setRoofAreasVisible(isRoofArea(tool));
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-tool]')) {

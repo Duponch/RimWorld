@@ -19,14 +19,14 @@ interface InspectorTabDefinition {
 const TAB_DEFINITIONS: readonly InspectorTabDefinition[] = Object.freeze([
   { id: 'bio', label: 'Bio', selectors: ['.skills-inspection'] },
   { id: 'needs', label: 'Besoins', selectors: ['.needs', '#recreation-tolerance', '#mood-inspection'] },
-  { id: 'health', label: 'Santé', selectors: ['#health-inspection'] },
+  { id: 'health', label: 'Santé', selectors: ['#health-inspection', '#hygiene-controls', '#burial-controls'] },
   { id: 'gear', label: 'Équipement', selectors: ['#equipment-details'] },
   { id: 'social', label: 'Social', selectors: ['#social-inspection'] },
   { id: 'prisoner', label: 'Prisonnier', selectors: ['#prisoner-inspection'] },
 ]);
 
 const SUMMARY_SELECTORS = ['.panel-heading', '#selected-action', '#room-description'] as const;
-const ACTION_SELECTORS = ['#draft-controls', '#manage-work', '#selected-orders', '#clear-orders', '#hygiene-controls', '#burial-controls'] as const;
+const ACTION_SELECTORS = ['#draft-controls', '#manage-work', '#selected-orders', '#clear-orders'] as const;
 
 export function colonistInspectorLayoutContract(): {
   summary: readonly string[];
@@ -84,6 +84,8 @@ function moveMatches(root: HTMLElement, selectors: readonly string[], destinatio
  * every command listener, data attribute and live update target installed by
  * the domain-specific inspection helpers. */
 export function refreshColonistInspectorLayout(root: HTMLElement): void {
+  const context = root.querySelector<HTMLElement>('#room-description');
+  if (context) context.title = context.textContent ?? '';
   const summary = root.querySelector<HTMLElement>('.colonist-inspector-summary');
   const actions = root.querySelector<HTMLElement>('.colonist-inspector-actions');
   if (!summary || !actions) return;
@@ -106,7 +108,7 @@ export function setColonistInspectorTab(root: HTMLElement, requested: ColonistIn
   for (const panel of root.querySelectorAll<HTMLElement>('[data-colonist-panel]')) {
     const selected = panel.dataset.colonistPanel === active;
     panel.hidden = !selected;
-    for (const details of panel.querySelectorAll<HTMLDetailsElement>('details')) details.open = selected;
+    for (const details of panel.querySelectorAll<HTMLDetailsElement>(':scope > details')) details.open = selected;
   }
   root.dataset.colonistInspectorTab = active;
   return active;

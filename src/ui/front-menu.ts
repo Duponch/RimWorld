@@ -67,6 +67,16 @@ function element<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', 
   return node;
 }
 
+function atlasMark(className: string, column: number, row: number): HTMLSpanElement {
+  const mark = element('span', className);
+  mark.setAttribute('aria-hidden', 'true');
+  mark.style.backgroundImage = "url('/assets/ui/lisiere/icons.png')";
+  mark.style.backgroundSize = '400% 500%';
+  mark.style.backgroundPosition = `${column * 100 / 3}% ${row * 25}%`;
+  mark.style.backgroundRepeat = 'no-repeat';
+  return mark;
+}
+
 function action(label: string, handler: () => void, className = ''): HTMLButtonElement {
   const button = element('button', className, label);
   button.type = 'button';
@@ -251,7 +261,8 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
   function renderStory(): void {
     const split = element('div', 'front-story-layout');
     const narrator = element('article', 'front-card front-narrator');
-    narrator.innerHTML = `<div class="front-narrator-mark" aria-hidden="true">C</div><p class="front-kicker">NARRATEUR</p><h2>Cassandra Classique</h2><span class="front-tag">Introduction partielle</span><p>Une installation, des rencontres et des menaces : Cassandra donne un rythme au début de la colonie.</p><p class="front-small">La suite du narrateur et la variété de ses événements restent incomplètes.</p>`;
+    narrator.append(atlasMark('front-narrator-mark',3,3));
+    narrator.insertAdjacentHTML('beforeend', `<p class="front-kicker">NARRATEUR</p><h2>Cassandra Classique</h2><span class="front-tag">Introduction partielle</span><p>Une installation, des rencontres et des menaces : Cassandra donne un rythme au début de la colonie.</p><p class="front-small">La suite du narrateur et la variété de ses événements restent incomplètes.</p>`);
     narrator.append(unavailable('Phoebe Amicale'), unavailable('Randy Aléatoire'));
     const choices = element('div', 'front-story-choices');
     const difficulty = element('fieldset', 'front-fieldset');
@@ -342,7 +353,7 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
     }
     if (saves.length === 0) {
       const empty = element('div', 'front-empty');
-      empty.append(element('span', 'front-empty-mark', '⌂'), element('h2', '', 'Aucune colonie enregistrée'), element('p', '', 'Vos sauvegardes apparaîtront ici après avoir commencé et enregistré une partie.'));
+      empty.append(atlasMark('front-empty-mark',0,3), element('h2', '', 'Aucune colonie enregistrée'), element('p', '', 'Vos sauvegardes apparaîtront ici après avoir commencé et enregistré une partie.'));
       content.append(empty);
     } else content.append(list);
     addNavigation(() => navigate('home'));

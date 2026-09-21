@@ -1,5 +1,7 @@
 # Guide joueur
 
+**V93 : interface remaniée.** Architecte garde ses catégories à gauche, ses pictogrammes au centre et les options à droite sans déplacer son cadre. Le curseur indique l’action active. Les dossiers des colons sont plus hauts ; Bio présente des lignes repliables pour consulter compétences, passions et détails du profil. Les contrôles de propreté se trouvent dans Santé. Quand un panneau est ouvert, le registre de ressources devient compact : survolez un chiffre pour lire son nom. Les grandes sauvegardes sont compressées sans perte dans ce navigateur, et les anciennes restent chargeables.
+
 **V92 : nouvelle présentation, mêmes colonies.** [Ouvrir le jeu](https://lisiere-duponch.netlify.app). Sélectionnez un portrait, puis Bio, Besoins, Santé, Équipement ou Social ; Prisonnier apparaît pour les captifs. Les commandes de mobilisation et de travail restent dans l’inspection. Clic droit sur la carte : menu du jeu, sans menu du navigateur. Architecte → Ordres affiche désormais une hache, une pioche, une faucille ou des cisailles au-dessus des cibles. Les sauvegardes locales restent propres au navigateur et au site utilisé.
 
 **V91 : choisir son milieu et exploiter ses ressources.** Une nouvelle partie propose forêt tempérée, forêt boréale ou broussailles arides. La végétation pousse et peut se renouveler ; les animaux sauvages mangent, se déplacent et peuvent être chassés. Les anciennes cartes gardent leur paysage.
