@@ -2,7 +2,7 @@ import { expect,test } from '@playwright/test';
 import { writeFileSync } from 'node:fs';
 import { huntingCamp } from '../scenarios/hunting';
 import { serializeWorld,validateWorld } from '../../src/sim/serialization';
-import { observeErrors,panel,saveKey,world,expectWorld,pause } from './helpers';
+import { observeErrors,panel,pawnTab,saveKey,world,expectWorld,pause } from './helpers';
 import { perform } from './player-actions';
 import type { Command } from '../../src/sim/types';
 
@@ -92,7 +92,7 @@ test('native hunting chain: live prey, physical corpse and save, butchery, usefu
       writeFileSync(`artifacts/hunting-ui-stage-${speed}x-v79.json`,JSON.stringify({speed,start:ready.tick,corpseCarried:carried.tick,finished:final.tick,frames:frames.length,intervals,maxJump,cursorMaterials,pipelineEvents,world:final},null,2));
       await page.screenshot({path:`artifacts/hunting-ui-${speed}x-v79.png`});
       expect(intervals).toBeGreaterThan(20);expect(pipelineEvents).toHaveLength(0);
-      await page.locator(`[data-pawn="${cook.id}"]`).click();if(await page.locator('.skills-inspection').getAttribute('open')===null)await page.locator('.skills-inspection summary').first().click();await expect(page.locator('[data-skill="cooking"]')).toContainText('Cuisine 8');await expect(page.locator('#fps-counter')).toBeVisible();
+      await page.locator(`[data-pawn="${cook.id}"]`).click();await pawnTab(page,'bio');await expect(page.locator('[data-skill="cooking"]')).toContainText('Cuisine 8');await expect(page.locator('#fps-counter')).toBeVisible();
       await page.screenshot({path:`artifacts/hunting-ui-${speed}x-v79.png`});
       await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,final);
       reports.push({speed,start:ready.tick,corpseCarried:carried.tick,finished:final.tick,meat:final.butchery!.meat,leather:final.butchery!.leather,mealsIngested:1,frames:frames.length,intervals,maxJump});

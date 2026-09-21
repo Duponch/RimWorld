@@ -3,7 +3,7 @@ import { writeFileSync } from 'node:fs';
 import { visitorTradeFixture } from '../scenarios/visitors';
 import { addGroundMaterial,addMaterial } from '../../src/sim/materials';
 import { serializeWorld,validateWorld } from '../../src/sim/serialization';
-import { observeErrors,panel,pause,saveKey,world,expectWorld } from './helpers';
+import { observeErrors,panel,pawnTab,pause,saveKey,world,expectWorld } from './helpers';
 import { perform } from './player-actions';
 
 test('native trade: real contact, basket, silver, deposited rifle, equipment and restored ownership',async({playwright})=>{
@@ -36,7 +36,7 @@ test('native trade: real contact, basket, silver, deposited rifle, equipment and
     await perform(page,{reason:'Équiper le fusil acheté',command:{type:'order-equipment',pawnId,itemId:rifle.id,action:'equip',queue:false}},{value:0});
     await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).piles.find(p=>p.id===rifle.id)?.owner.type,{timeout:20000}).toBe('equipment');await pause(page);
     const equipped=await world(page);expect(validateWorld(equipped)).toEqual([]);
-    await page.locator(`[data-pawn="${pawnId}"]`).click();await page.locator('#equipment-details summary').click();await expect(page.locator('#equipment-primary')).toContainText('Fusil à verrou');await expect(page.locator(`[data-pawn="${pawnId}"]`)).toHaveAttribute('data-equipment','bolt-action-rifle');
+    await page.locator(`[data-pawn="${pawnId}"]`).click();await pawnTab(page,'gear');await expect(page.locator('#equipment-primary')).toContainText('Fusil à verrou');await expect(page.locator(`[data-pawn="${pawnId}"]`)).toHaveAttribute('data-equipment','bolt-action-rifle');
     await page.screenshot({path:'artifacts/trade-equipment-v88.png'});
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,equipped);
     expect(errors).toEqual([]);writeFileSync('artifacts/trade-ui-v88.json',JSON.stringify({date:new Date().toISOString(),backend:'native WebGPU',fixture:'controlled visitor intro with explicit silver and rifle stock',traderId,pawnId,rifleId:rifle.id,receipt:equipped.trade?.recent.at(-1),finalTick:equipped.tick,restored:true,errors},null,2)+'\n');

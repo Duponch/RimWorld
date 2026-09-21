@@ -1,7 +1,7 @@
 import { expect,test } from '@playwright/test';
 import { readFileSync,writeFileSync } from 'node:fs';
 import { deserializeWorld,serializeWorld,validateWorld } from '../../src/sim/index';
-import { observeErrors,panel,cell,world,expectWorld,saveKey } from './helpers';
+import { observeErrors,panel,pawnTab,cell,world,expectWorld,saveKey } from './helpers';
 import { perform } from './player-actions';
 
 const probe=`
@@ -43,7 +43,7 @@ test('natural-cotton checkpoint: real architect, bill, interruption, saved unfin
     await perform(page,{reason:'Porter notre premier vêtement fabriqué.',command:{type:'order-equipment',pawnId:p.id,itemId:garment.id,action:'wear',queue:false}},{value:0});
     await page.locator('[data-speed="1"]').click();await expect.poll(async()=>(await world(page)).piles.find(i=>i.id===garment.id)?.owner.type,{timeout:20000}).toBe('apparel');await page.locator('[data-speed="0"]').click();
     const final=await world(page);expect(validateWorld(final)).toEqual([]);await expect(page.locator(`[data-pawn="${p.id}"]`)).toHaveAttribute('data-apparel','cloth-tribalwear');
-    await page.locator(`[data-pawn="${p.id}"]`).click();await page.locator('#equipment-details summary').click();await expect(page.locator('#equipment-apparel')).toContainText('Tenue tribale');await expect(page.locator('#fps-counter')).toBeVisible();
+    await page.locator(`[data-pawn="${p.id}"]`).click();await pawnTab(page,'gear');await expect(page.locator('#equipment-apparel')).toContainText('Tenue tribale');await expect(page.locator('#fps-counter')).toBeVisible();
     await page.screenshot({path:'artifacts/tailoring-worn-v72.png'});
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,final);
     const frames=await page.evaluate(()=>(window as any).__tailoringFrames as any[]);

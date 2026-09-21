@@ -7,6 +7,7 @@ import type { World } from '../sim/types';
 import { footprintCells } from '../sim/definitions';
 import { jobDuration } from '../sim/farming';
 import { WORLD_SCALE } from '../world/scale';
+import { isIconDesignationKind } from './DesignationIconLayer';
 
 /** Existing instanced batches carry plans, frames and removal markers. */
 export function buildJobMarkers(world: World, group: THREE.Group, cutaway: boolean, batches: BoxBatches): void {
@@ -14,15 +15,14 @@ export function buildJobMarkers(world: World, group: THREE.Group, cutaway: boole
     const orders: Placement[] = [], blueprints: Placement[] = [], frames: Placement[] = [], progress: Placement[] = [];
     for (const job of world.jobs.filter(j=>!isRoofJob(j))) {
       const cells = footprintCells(job);
-      for (const cell of cells) orders.push({ x: cell.x, y: 0.032, z: cell.z, color: job.status === 'active' ? 0xe7c17a : 0x99cfc3 });
+      if(!isIconDesignationKind(job.kind))for (const cell of cells) orders.push({ x: cell.x, y: 0.032, z: cell.z, color: job.status === 'active' ? 0xe7c17a : 0x99cfc3 });
       if(job.kind==='repair'||job.kind==='flick')continue;
       if(job.kind==='lay-floor'||job.kind==='remove-floor'||job.kind==='grave'){
         for(const cell of cells){blueprints.push({x:cell.x,z:cell.z,y:.09,sx:.94,sy:.08,sz:.94});
           if(job.kind==='remove-floor')for(const ry of [-Math.PI/4,Math.PI/4])frames.push({x:cell.x,z:cell.z,y:.13,sx:.8,sy:.025,sz:.05,ry,color:0xd77855});}
         continue;
       }
-      if(job.kind==='mine') {for(const ry of [-Math.PI/4,Math.PI/4])frames.push({x:job.x,z:job.z,y:3.65,sx:.6,sy:.035,sz:.08,ry,color:0xeac27d});continue;}
-      if (job.kind === 'chop' || job.kind === 'harvest' || job.kind === 'cut' || job.kind === 'sow') continue;
+      if(isIconDesignationKind(job.kind)||job.kind === 'sow')continue;
       if(job.kind==='deconstruct'||job.kind==='uninstall') {
         const targetKind=(job.deconstruction??job.furniture)!.kind;
         const y=((isFoodWorkstation(targetKind)||targetKind==='research-bench'||targetKind==='tailor-bench'||targetKind==='stonecutter')?WORLD_SCALE.stonecutterHeight:(targetKind==='wall'||targetKind==='cooler')?wallHeight:targetKind==='table'?WORLD_SCALE.tableHeight:targetKind==='horseshoes'?WORLD_SCALE.horseshoeHeight:targetKind==='stool'?WORLD_SCALE.stoolHeight:WORLD_SCALE.bedSurfaceHeight)+.06;

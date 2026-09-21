@@ -1,0 +1,37 @@
+{
+  "url": "https://lisiere-duponch.netlify.app",
+  "checkedAt": "2026-09-21T22:34:57.257Z",
+  "status": 200,
+  "debugExport": "undefined",
+  "people": 3,
+  "save": {
+    "schema": 91,
+    "tick": 0,
+    "pawns": 3
+  },
+  "savedSlots": 1,
+  "assets": [
+    {
+      "name": "planet",
+      "status": 200,
+      "cache": "public,max-age=0,must-revalidate"
+    },
+    {
+      "name": "panel-frame",
+      "status": 200,
+      "cache": "public,max-age=0,must-revalidate"
+    },
+    {
+      "name": "icons",
+      "status": 200,
+      "cache": "public,max-age=0,must-revalidate"
+    },
+    {
+      "name": "portraits",
+      "status": 200,
+      "cache": "public,max-age=0,must-revalidate"
+    }
+  ],
+  "errors": [],
+  "passed": true
+}

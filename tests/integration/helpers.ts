@@ -59,6 +59,17 @@ export async function panel(page: Page, name: 'wildlife' | 'research' | 'archite
   await expect(page.locator(`#${name}-panel`)).toBeVisible();
 }
 
+export type PawnInspectorTab = 'bio' | 'needs' | 'health' | 'gear' | 'social' | 'prisoner';
+
+/** Open one real pawn-inspector tab and wait for its associated panel. */
+export async function pawnTab(page: Page, tab: PawnInspectorTab): Promise<void> {
+  const button = page.locator(`[data-colonist-tab="${tab}"]`);
+  await expect(button).toBeVisible();
+  if (await button.getAttribute('aria-selected') !== 'true') await button.click();
+  await expect(button).toHaveAttribute('aria-selected', 'true');
+  await expect(page.locator(`[data-colonist-panel="${tab}"]`)).toBeVisible();
+}
+
 export async function tool(page: Page, name: BuildableFloorKind|'remove-floor'|'grave'|'heater'|'wind-turbine'|'solar-generator'|'battery'|'power-conduit'|'power-switch'|'fueled-stove'|'electric-stove'|'butcher-table'|'butcher-spot'|'cooler'|'research-bench'|'tailor-bench'|'crafting-spot'|'home'|'remove-home'|'wood-generator'|'standing-lamp'|'passive-cooler'|'build-roof'|'remove-roof'|'ignore-roof'|'door' | 'stonecutter' | 'mine' | 'haul-chunks' | 'uninstall' | 'deconstruct' | 'select' | 'chop' | 'harvest' | 'cut' | 'cancel' | 'wall' | 'bed' | 'table' | 'horseshoes' | 'stool' | 'campfire' | 'stockpile' | 'remove-stockpile' | 'growing' | 'remove-growing') {
   await panel(page, 'architect');
   const category = isBuildableFloor(name)||name==='remove-floor'?'floors':name==='grave'?'furniture':name === 'wind-turbine' || name === 'solar-generator' || name === 'battery' || name === 'power-conduit' || name === 'power-switch' || name === 'wood-generator' ? 'power' : name === 'standing-lamp' ? 'furniture' : name === 'fueled-stove' || name === 'electric-stove' || name === 'butcher-table' || name === 'butcher-spot' || name === 'research-bench' || name === 'tailor-bench' || name === 'stonecutter' || name === 'crafting-spot' ? 'production' : name === 'horseshoes' ? 'recreation' : name === 'heater' || name === 'cooler' || name === 'campfire' || name === 'passive-cooler' ? 'temperature' : name === 'door' || name === 'wall' ? 'structure' : name === 'bed' || name === 'table' || name === 'stool' ? 'furniture' : name==='home'||name==='remove-home'||name === 'build-roof' || name === 'remove-roof' || name === 'ignore-roof' || name === 'stockpile' || name === 'remove-stockpile' || name === 'growing' || name === 'remove-growing' ? 'zones' : 'orders';

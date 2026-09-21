@@ -112,7 +112,7 @@ export function gameLayout(): string {
       <div class="architect-body"><nav class="architect-categories" aria-label="Catégories de construction">
         <button data-category="orders" class="active">Ordres</button><button data-category="zones">Zones</button>
         <button data-category="temperature">Température</button><button data-category="structure">Structure</button><button data-category="floors">Sols</button><button data-category="furniture">Meubles</button>
-        <button data-category="recreation">Loisirs</button><button data-category="production">Production</button><button data-category="power">Énergie</button><button disabled>Sécurité</button><button disabled>Température</button>
+        <button data-category="recreation">Loisirs</button><button data-category="production">Production</button><button data-category="power">Énergie</button><button disabled>Sécurité</button>
       </nav><div class="architect-content">
         <div class="tools">${toolDefinitions.map(tool => `<button data-tool="${tool.id}" data-tool-category="${tool.category}" title="${tool.hint}" aria-label="${tool.title}" aria-pressed="false" class="tool"><span class="tool-icon">${tool.icon}</span><span>${tool.title}</span><kbd>${tool.key}</kbd></button>`).join('')}</div>
         <p id="tool-instruction">Choisissez un ordre, puis cliquez sur la carte.</p>

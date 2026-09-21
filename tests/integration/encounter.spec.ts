@@ -7,7 +7,7 @@ import { writeFileSync } from 'node:fs';
 import { rescueEncounter } from '../scenarios/encounter';
 import { fixtureBuilding } from '../scenarios/deconstruction';
 import { serializeWorld,validateWorld } from '../../src/sim/serialization';
-import { world,panel,expectWorld,observeErrors,saveKey } from './helpers';
+import { world,panel,pawnTab,expectWorld,observeErrors,saveKey } from './helpers';
 import { revealCells } from './player-actions';
 
 const probe=`window.__encounter={screen:[],flights:0,poses:0,frames:0,fleeFrames:0,cargoFleeFrames:0,jumps:[],lastFlee:null};
@@ -55,7 +55,7 @@ test('native encounter UI: opt-in creation, ownership, reaction policy, hostile 
       await expect.poll(async()=>(await world(page)).pawns[2].rescue?.phase,{timeout:15000,intervals:[50,100]}).toBe('carry');await page.locator('[data-speed="0"]').click();const carried=await world(page);
       await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,carried);await page.keyboard.press('Escape');await page.locator('[data-speed="6"]').click();
       await expect.poll(async()=>(await world(page)).pawns[0].health!.injuries.some(i=>i.tended!==undefined),{timeout:25000}).toBe(true);await page.locator('[data-speed="0"]').click();
-      const treated=await world(page);expect(validateWorld(treated)).toEqual([]);await page.locator(`[data-pawn="${initial.pawns[0].id}"]`).click();await expect(page.locator('#health-inspection')).toContainText('qualité');await page.screenshot({path:'artifacts/encounter-care-v58.png'});
+      const treated=await world(page);expect(validateWorld(treated)).toEqual([]);await page.locator(`[data-pawn="${initial.pawns[0].id}"]`).click();await pawnTab(page,'health');await expect(page.locator('#health-inspection')).toContainText('qualité');await page.screenshot({path:'artifacts/encounter-care-v58.png'});
       reports.push({speed,patient:treated.pawns[0].state,enemy:treated.pawns[3].state,medicineXp:treated.pawns[2].skills.medicine.xp,carrySavedAt:carried.tick});
     }
     const fleeing=medicalCarrier(),civil=fleeing.pawns[0],hostile=startingPawn(fleeing.nextId++,'Menace',civil.x+6,civil.z,0,100);hostile.faction='outlaws';fleeing.pawns.push(hostile);

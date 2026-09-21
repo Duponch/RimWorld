@@ -1,5 +1,7 @@
 # Guide joueur
 
+**V92 : nouvelle présentation, mêmes colonies.** [Ouvrir le jeu](https://lisiere-duponch.netlify.app). Sélectionnez un portrait, puis Bio, Besoins, Santé, Équipement ou Social ; Prisonnier apparaît pour les captifs. Les commandes de mobilisation et de travail restent dans l’inspection. Clic droit sur la carte : menu du jeu, sans menu du navigateur. Architecte → Ordres affiche désormais une hache, une pioche, une faucille ou des cisailles au-dessus des cibles. Les sauvegardes locales restent propres au navigateur et au site utilisé.
+
 **V91 : choisir son milieu et exploiter ses ressources.** Une nouvelle partie propose forêt tempérée, forêt boréale ou broussailles arides. La végétation pousse et peut se renouveler ; les animaux sauvages mangent, se déplacent et peuvent être chassés. Les anciennes cartes gardent leur paysage.
 
 Pour essayer les nouveautés :

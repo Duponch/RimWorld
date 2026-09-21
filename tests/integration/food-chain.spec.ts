@@ -8,7 +8,7 @@ import { reconcilePawnHealth } from '../../src/sim/health';
 import { addGroundMaterial,refreshStock } from '../../src/sim/materials';
 import { serializeWorld,validateWorld } from '../../src/sim/serialization';
 import { newCookingBill } from '../../src/sim/cooking-bills';
-import { observeErrors,panel,pause,saveKey,world,expectWorld } from './helpers';
+import { observeErrors,panel,pawnTab,pause,saveKey,world,expectWorld } from './helpers';
 import { perform } from './player-actions';
 import type { Command,World } from '../../src/sim/types';
 
@@ -56,13 +56,13 @@ test('native food chain: construct stations, choose crops, cook with physical fu
     await page.screenshot({path:'artifacts/food-stations-v84.png'});report.stations={tick:cooked.tick,structures:cooked.structures.map(s=>({kind:s.kind,orientation:s.orientation,fuel:s.fuel,power:s.power})),plants:cooked.resources.filter(r=>r.kind==='potato'||r.kind==='corn').map(r=>({kind:r.kind,growth:r.growth})),producedMeals:2};
     for(const speed of [1,6]) {
       const clinic=feedingFixture(),d=clinic.pawns[0]!,p=clinic.pawns[1]!;expect(validateWorld(clinic)).toEqual([]);await load(page,clinic);
-      await page.locator(`[data-pawn="${p.id}"]`).click();await expect(page.locator('[data-health="malnutrition"]')).toContainText('extrême');
+      await page.locator(`[data-pawn="${p.id}"]`).click();await pawnTab(page,'health');await expect(page.locator('[data-health="malnutrition"]')).toContainText('extrême');
       await act({type:'priority',pawnId:d.id,work:'doctor',value:1},'Autoriser le médecin à apporter un repas au patient.');
       await act({type:'order-feed',pawnId:d.id,patientId:p.id,queue:false},'Nourrir physiquement le colon inconscient.');
       await page.keyboard.press('Escape');await page.locator(`[data-speed="${speed}"]`).click();
       await expect.poll(async()=>(await world(page)).pawns.find(q=>q.id===p.id)!.hunger,{timeout:40000}).toBeGreaterThan(50);await pause(page);
       const fed=await world(page),patient=fed.pawns.find(q=>q.id===p.id)!;expect(patient.health!.malnutrition).toBeGreaterThan(0);expect(validateWorld(fed)).toEqual([]);
-      await page.locator(`[data-pawn="${p.id}"]`).click();await expect(page.locator('[data-health="malnutrition"]')).toContainText('Récupère progressivement');
+      await page.locator(`[data-pawn="${p.id}"]`).click();await pawnTab(page,'health');await expect(page.locator('[data-health="malnutrition"]')).toContainText('Récupère progressivement');
       await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,fed);await page.keyboard.press('Escape');
       report.care.push({speed,tick:fed.tick,hunger:patient.hunger,severity:patient.health!.malnutrition,food:fed.piles.filter(p=>p.kind==='food').reduce((n,p)=>n+p.quantity,0)});
       await page.screenshot({path:`artifacts/food-care-${speed}x-v84.png`});

@@ -50,13 +50,13 @@ test('native captivity: physical capture, care, policies, conversations and recr
     const captured=await world(page),captive=captured.pawns.find(p=>p.id===patientId)!;
     expect(captive.bedId).toBeNull();expect(captive.need?.kind).toBe('sleep');if(captive.need?.kind==='sleep')expect(captive.need.bedId).toBe(bedId);expect(captive.prisoner!.mode).toBe('maintain');expect(captive.prisoner!.initialResistance).toBeGreaterThanOrEqual(7);
     expect(captured.pawns.filter(isColonist)).toHaveLength(2);expect(captured.pawns).toHaveLength(initial.world.pawns.length);
-    await inspectPerson(page,patientId);await expect(page.locator('#prisoner-resistance')).toContainText(captive.prisoner!.resistance.toFixed(1));
+    await inspectPerson(page,patientId,'prisoner');await expect(page.locator('#prisoner-resistance')).toContainText(captive.prisoner!.resistance.toFixed(1));
     await expect(page.locator('#toggle-draft')).toHaveCount(0);await expect(page.locator('#self-tend-policy')).toHaveCount(0);await expect(page.locator('#selected-action')).not.toContainText('Hors-la-loi');
     const beforeR=await world(page);await page.keyboard.press('r');await expectWorld(page,beforeR);
     await act({type:'food-policy-assign',pawnId:patientId,policyId:2},'Affecter un régime partagé au captif.');
     await panel(page,'assign');await page.locator('#manage-food-policies').click();await page.locator('#food-policy-choice').selectOption('2');
     await expect(page.locator('#food-policy-users')).toContainText(`${captive.name} (prisonnier)`);await page.locator('#delete-food-policy').click();await expect(page.locator('#food-policy-feedback')).toContainText('utilisé');expect((await world(page)).foodPolicies.some(policy=>policy.id===2)).toBe(true);await page.locator('#close-food-policies').click();
-    await inspectPerson(page,patientId);await page.locator('#medical-policy').selectOption('dry');
+    await inspectPerson(page,patientId,'health');await page.locator('#medical-policy').selectOption('dry');
     await expect.poll(async()=>medicalCare((await world(page)).pawns.find(p=>p.id===patientId)!)).toBe('dry');
     await page.locator('#medical-policy').selectOption('industrial');await expect.poll(async()=>medicalCare((await world(page)).pawns.find(p=>p.id===patientId)!)).toBe('industrial');
     await act({type:'priority',pawnId:actorId,work:'warden',value:1},'Activer Geôlier dans le tableau Travail.');

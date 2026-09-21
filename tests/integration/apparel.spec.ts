@@ -2,7 +2,7 @@ import { expect,test } from '@playwright/test';
 import { writeFileSync } from 'node:fs';
 import { apparelCamp } from '../scenarios/apparel';
 import { serializeWorld,validateWorld } from '../../src/sim/serialization';
-import { observeErrors,panel,saveKey,world,expectWorld } from './helpers';
+import { observeErrors,panel,pawnTab,saveKey,world,expectWorld } from './helpers';
 import { perform } from './player-actions';
 
 const probe=`
@@ -31,7 +31,7 @@ test('physical clothing UI at 1x and 6x: floor, dressing, layered GPU attachment
     }
     const dressed=await world(page);expect(validateWorld(dressed)).toEqual([]);
     await expect(page.locator(`[data-pawn="${p.id}"]`)).toHaveAttribute('data-apparel','cloth-shirt flak-vest');
-    await page.locator(`[data-pawn="${p.id}"]`).click();await page.locator('#equipment-details summary').click();await expect(page.locator('#equipment-apparel')).toContainText('Gilet pare-balles');
+    await page.locator(`[data-pawn="${p.id}"]`).click();await pawnTab(page,'gear');await expect(page.locator('#equipment-apparel')).toContainText('Gilet pare-balles');
     await page.screenshot({path:`artifacts/apparel-v63-${speed}x.png`});
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,dressed);await page.keyboard.press('Escape');
     await perform(page,{reason:'Retirer le gilet.',command:{type:'order-equipment',pawnId:p.id,itemId:vest.id,action:'remove',queue:false}},{value:0});

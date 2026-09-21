@@ -75,6 +75,7 @@ test('worn, portrait and carried presentation distinguish all textile families a
   expect(apparelAppearance([piece('light-leather-tribalwear')])).toMatchObject({tribal:true,silhouette:2,color:0xad8a61});
   expect(apparelAppearance([piece('cloth-shirt'),piece('light-leather-duster'),piece('flak-vest')])).toMatchObject({silhouette:3,color:0xad8a61,vest:false});
   expect(apparelAppearance([piece('cloth-parka')])).toMatchObject({silhouette:4,color:0xd8c8a2});
-  expect(new Set(Object.values(APPAREL_CARGO)).size).toBe(11);
+  expect(Object.keys(APPAREL_CARGO)).toHaveLength(26); // V91 added fifteen obtainable leather variants.
+  expect(new Set(Object.values(APPAREL_CARGO)).size).toBe(Object.keys(APPAREL_CARGO).length);
   expect(foldedApparel('light-leather-parka')[0]?.color).toBe(0xad8a61);
 });

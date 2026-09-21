@@ -13,7 +13,7 @@ export function buildTerrain(world: World, group: THREE.Group, surface: THREE.Ma
     const chunkSize = WORLD_SCALE.chunkSize;
     for (let cz = 0; cz < world.height; cz += chunkSize) for (let cx = 0; cx < world.width; cx += chunkSize) {
       const tileGroups: Record<Terrain, Placement[]> = { grass: [], soil: [], water: [], rock: [], 'rough-stone':[],'rich-soil':[],gravel:[] };
-      const grass: Placement[] = [], banks: Placement[] = [];
+      const banks: Placement[] = [];
       for (let z = cz; z < Math.min(cz + chunkSize, world.height); z++) for (let x = cx; x < Math.min(cx + chunkSize, world.width); x++) {
         const type = world.tiles[z * world.width + x].terrain;
         // The typed rough floor is already rendered beneath a massif; excavation changes no ground buffers.
@@ -30,13 +30,10 @@ export function buildTerrain(world: World, group: THREE.Group, surface: THREE.Ma
             : world.tiles[nz * world.width + nx].terrain === 'water' ? WORLD_SCALE.waterSurface : 0;
           if (neighbor < level) banks.push({ x: x + dx * 0.5, z: z + dz * 0.5, y: (level + neighbor) / 2, sy: level - neighbor, ry: rotation, color });
         }
-        // New sites already render their physical ground plants.
-        if (!world.flora && terrain === 'grass' && n > 0.83) grass.push({ x: x - 0.26, y: 0.09, z: z + 0.22, sy: 0.7 + n, color: n > 0.96 ? 0xd4c58a : 0x96a575, ry: n * 6.28 });
       }
       mergedInstances(group, [
         { geometry: new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), items: [...tileGroups.grass, ...tileGroups.soil, ...tileGroups.rock,...tileGroups['rough-stone'],...tileGroups['rich-soil'],...tileGroups.gravel] },
         { geometry: new THREE.PlaneGeometry(1, 1), items: banks },
-        { geometry: new THREE.ConeGeometry(0.08, 0.15, 3), items: grass },
       ], surface, false);
       mergedInstances(group, [{ geometry: new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), items: tileGroups.water }], water, false);
     }

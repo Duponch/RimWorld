@@ -2,7 +2,7 @@ import { expect,test } from '@playwright/test';
 import { writeFileSync } from 'node:fs';
 import { firingCamp } from '../scenarios/shooting';
 import { serializeWorld,validateWorld } from '../../src/sim/serialization';
-import { observeErrors,panel,saveKey,world,expectWorld } from './helpers';
+import { observeErrors,panel,pawnTab,saveKey,world,expectWorld } from './helpers';
 import { revealCells,perform } from './player-actions';
 
 const probe=`window.__stagger={frames:[],edges:{},impacts:0,epoch:0};
@@ -28,7 +28,7 @@ test('real UI shot slows an already moving target without jumps, including save/
       await page.locator(`[data-speed="${speed}"]`).click();await expect.poll(()=>page.evaluate(()=>(window as any).__stagger.impacts),{timeout:10000}).toBeGreaterThan(0);
       await page.locator('[data-speed="0"]').click();await page.locator('#stop-draft').click();
       const hit=await world(page);expect(validateWorld(hit)).toEqual([]);expect(hit.pawns[1].health).toBeDefined();
-      if(speed===1){expect(hit.pawns[1].stagger).toBeDefined();await page.locator(`[data-pawn="${target.id}"]`).click();await expect(page.locator('#health-inspection summary')).toHaveText('Santé');await expect(page.locator('#health-inspection')).toContainText('Ralenti');await page.locator('[data-health="stagger"]').scrollIntoViewIfNeeded();await page.screenshot({path:'artifacts/stagger-v57.png'});await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,hit);await page.keyboard.press('Escape');}
+      if(speed===1){expect(hit.pawns[1].stagger).toBeDefined();await page.locator(`[data-pawn="${target.id}"]`).click();await pawnTab(page,'health');await expect(page.locator('#health-inspection summary')).toHaveText('Santé');await expect(page.locator('#health-inspection')).toContainText('Ralenti');await page.locator('[data-health="stagger"]').scrollIntoViewIfNeeded();await page.screenshot({path:'artifacts/stagger-v57.png'});await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,hit);await page.keyboard.press('Escape');}
       await page.locator('[data-speed="6"]').click();await expect.poll(async()=>{const p=(await world(page)).pawns[1];return p.z===20&&p.moveCooldown===0;},{timeout:12000}).toBe(true);await page.locator('[data-speed="0"]').click();
       const observed=await page.evaluate(()=>(window as any).__stagger),samples=observed.frames.filter((f:any)=>f.id===target.id);let checked=0,slow=0,maxError=0;
       for(const f of samples){const m=observed.edges[`${f.epoch}:${f.id}:${f.edge}`];if(!m||f.clock<m.start||f.clock>=m.end)continue;

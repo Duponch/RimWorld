@@ -1,7 +1,7 @@
 import { expect,test } from '@playwright/test';
 import { readFileSync,writeFileSync } from 'node:fs';
 import { deserializeWorld,serializeWorld,validateWorld } from '../../src/sim/index';
-import { observeErrors,panel,world,expectWorld,saveKey } from './helpers';
+import { observeErrors,panel,pawnTab,world,expectWorld,saveKey } from './helpers';
 import { perform } from './player-actions';
 
 test('real heatwave camp: warning, insulation/health inspection, physical shelter 1x/6x and recovery after reload',async({playwright})=>{
@@ -15,7 +15,7 @@ test('real heatwave camp: warning, insulation/health inspection, physical shelte
     await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
     await expect(page.locator('#heatwave-letter')).toContainText('Canicule');await expect(page.locator('#enable-heatwaves')).toBeHidden();
     await page.locator('#heatwave-letter').click();await expect(page.locator('#heatwave-dialog')).toContainText('refroidisseur passif');await page.getByRole('button',{name:'Fermer',exact:true}).click();
-    await page.locator(`[data-pawn="${p.id}"]`).click();await expect(page.locator('[data-health="thermal"]')).toContainText('Coup de chaleur');
+    await page.locator(`[data-pawn="${p.id}"]`).click();await pawnTab(page,'health');await expect(page.locator('[data-health="thermal"]')).toContainText('Coup de chaleur');
     await perform(page,{reason:'Conduire le colon exposé dans le refuge du camp.',command:{type:'draft',pawnIds:[p.id],enabled:true}},{value:0});
     await perform(page,{reason:'Rejoindre physiquement la pièce refroidie.',command:{type:'draft-move',pawnIds:[p.id],target:{x:4,z:3},queue:false}},{value:0});
     await page.locator('[data-speed="1"]').click();await expect.poll(async()=>(await world(page)).pawns.find(q=>q.id===p.id)?.state).toBe('moving');

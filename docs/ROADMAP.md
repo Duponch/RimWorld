@@ -1,5 +1,7 @@
 # Plan de développement
 
+**V92 validée dans son périmètre : interface, paysage GPU et accès public.** Le jeu est disponible sur [Netlify](https://lisiere-duponch.netlify.app), avec identité illustrée, dossiers de personne et désignations uniformes. Les contrôles natifs et le parcours réellement déployé passent ; les pics et limites de débit restent consignés dans les [preuves](history/validation-interface-v92.md). Schéma 91 et capacités de gameplay inchangés. La [revue de chaque domaine](#estimation-davancement) distingue ces améliorations de la couverture fonctionnelle.
+
 **Ensemble V91 validé dans son périmètre : milieux vivants et ressources utiles.** Trois biomes locaux sélectionnables, douze plantes physiques, cinq herbivores obtenables, fruit d’agave, nouvelles viandes et trois cuirs reliés à quinze nouvelles combinaisons vestimentaires. Croissance, récolte, broutage, chasse, boucherie, cuisine et confection partagent conservation et sauvegarde. Les anciennes cartes restent intactes ; pas d’élevage ni de monde complet. [Preuves V91](history/validation-biomes-v91.md), [mesures et limites](research/performance-v91.md). Aucun jalon global clos ; performance générale à cent colons encore insuffisante.
 
 **Ensemble V90 validé dans son périmètre : habiter, fabriquer et renouveler.** Sept constructions d'habitat, qualité des meubles, confort des lits/sièges, besoin de beauté et hémérocalle sont reliés aux matériaux et travaux présents. Cinq familles vestimentaires en tissu ou cuir léger, tailleur électrique, usure quotidienne et remplacement physique selon deux politiques complètent la filière textile. Le nouveau Crashlanded révision 5 connaît Mobilier complexe ; les migrations n'accordent ni recherche ni contenu. [Contrat habitat](development/habitat-comfort.md), [contrat habillement](development/apparel-renewal.md). Les [preuves V90](history/validation-habitat-apparel-v90.md) consignent la campagne commune, les reprises et les mesures ; aucun jalon global clos et 6× non tenu à cent colons.
@@ -25,6 +27,8 @@ Départ précédent : [départ Trois survivants V80](development/scenario-start.
 Précédente boucle environnementale : [conservation froide V75](development/cold-store.md), recherche et construction d’un climatiseur, stockage physique au gel, coupure et reprise du vieillissement ; exposition corporelle froide réelle. [Preuves](history/validation-cold-store-v75.md). La canicule V74 et ses protections restent livrées. La recherche et le tailleur V73 donnent toujours un projet collectif puis une chemise confectionnée et portée dans le camp. L’étape proche 4 est satisfaite par cette boucle, sans terminer l’arbre technologique ni le catalogue. [Preuves](history/validation-research-v73.md). Accueil, menace et première différenciation des personnes restent livrés dans leurs périmètres annoncés.
 
 ## Priorité actuelle
+
+**V92 : publication et refonte demandées par l’utilisateur.** Site Netlify, inspection en dossiers, identité bois/parchemin illustrée, herbe et désignations GPU. [Contrat visuel](development/visual-identity.md), [déploiement](development/deployment-netlify.md), [preuves](history/validation-interface-v92.md). Les règles et contenus jouables restent ceux de V91 ; aucune campagne annuelle requise pour ce lot de présentation. Après livraison, retour en mode jour.
 
 **Prochain ensemble : production, rangement et équipement.** Relier davantage de ressources à des ateliers et recettes obtenables, améliorer leur stockage et leur emploi, puis avancer vie de colonie/lieux collectifs et menaces/incidents/économie. Le périmètre précis se ferme après recherches, avec plusieurs capacités utiles par livraison, catalogue et coûts généraux de navigation/rendu traités en parallèle. V91 a livré les trois milieux et leurs filières ; élevage, prédateurs et monde restent des fronts distincts. Contrôles regroupés, UI réelle et mesures comparables ; campagnes naturelles longues périodiques selon les risques. Cet ordre est une priorité, pas une estimation de durée.
 
@@ -175,6 +179,8 @@ Objectif d'une partie, tonalité fictionnelle, contraintes de verticalité, tail
 
 ## Estimation d'avancement
 
+**Revue du 22 septembre 2026, périmètre Core sans extensions/mods.** Les domaines et sous-domaines ci-dessous sont réexaminés à partir des contrats et de l’inventaire V91. V92 améliore la présentation et l’accès au jeu ; elle ne livre aucune nouvelle boucle métier, donc les estimations de gameplay et de catalogue restent inchangées. La ligne graphique passe à 45 % (35–55), avec une identité commune et une inspection plus structurée, toujours loin de la finition et de l’ensemble des écrans Core. Aucun pourcentage n’est un délai ni une garantie de fiabilité.
+
 Revue demandée après V88 (`f06dd61`), actualisée pour V89 validée et V90 validée dans son périmètre le 21 septembre. Les domaines de mécanique et le contenu sont explicitement distingués ci-dessous. Ces jugements restent incertains et portent sur des fonctions, jamais sur un pourcentage de temps restant. Les lignes V90 reflètent le contenu validé dans son périmètre mais conservent l’incertitude de couverture ; l'estimation globale reste inchangée.
 
 **Environ 25 %, avec une fourchette de 20–30 %, vers une reproduction substantielle de RimWorld de base en 3D.** Estimation du co-lead, pas un comptage de fichiers, commits, tests réussis ou objets définis. Elle inclut contenu, intégration, équilibrage et finition ; les extensions sont exclues. La survie du petit camp est sensiblement plus avancée que la couverture de l'ensemble du jeu. G0–G4 restent partiels, G5 absent : aucun jalon global clos.
@@ -213,7 +219,7 @@ La revue remplace les anciens chiffres figés du 18 septembre : ils sous-décriv
 | Carte du monde et caravanes | 0 % (0–5) | Carte locale seulement | Planète, voyage, ravitaillement, plusieurs cartes, rencontres et retours |
 | Quêtes, objectifs longs et fin de partie | 0 % (0–5) | Aucune boucle correspondante | Quêtes/récompenses, objectifs, conditions de victoire et progression longue |
 | Catalogue complet du jeu de base | 20 % (10–25), révisé V91 | Contenus du [catalogue local](gameplay/content-catalogue.md), mobilier, vingt-cinq vêtements, plantes et produits animaux utilisables | Centaines de contenus et leurs interactions ; aucun dénominateur exhaustif vérifié |
-| Rendu 3D, interface et finition visuelle | 40 % (30–50) | Instancing/rig GPU, scène procédurale, UI structurée, équipement/portraits partagés, FPS | Assets définitifs, diversité/effets, ergonomie/polish, lisibilité et UI des systèmes absents |
+| Rendu 3D, interface et finition visuelle | 45 % (35–55), révisé V92 | Brins/billboards GPU, identité illustrée, dossiers de personne, HUD adaptatif, équipement/portraits, accès Netlify | Catalogue visuel complet, effets/animations, écrans des systèmes absents, finition mobile et performance générale à cent acteurs |
 | Audio et ambiance sonore | 0 % (0–5) | Le calcul logique des bruits réveille des acteurs, sans système audio livré | Sons, musique, mixage et retours sonores |
 
 Les tests profonds, migrations et audits mesurés constituent une pratique déjà active ; ils ne donnent pas un pourcentage de fiabilité. Les pics d'image et limites à cent acteurs restent consignés dans les preuves. Un moteur bien éprouvé sur le contenu présent n'est pas une validation de tous les contenus futurs.
@@ -222,7 +228,7 @@ Les tests profonds, migrations et audits mesurés constituent une pratique déj�
 
 Ces sous-domaines recoupent les lignes précédentes ; ils ne s'y additionnent pas. Ils évitent de confondre un moteur de construction assez développé avec une maison complète, ou une génération de terrain avec une diversité de biomes. Estimations fonctionnelles arrondies, incertitude généralement d'au moins dix points ; les faibles valeurs distinguent absence et première préparation. Il n'existe pas encore de dénominateur exhaustif vérifié du catalogue Core.
 
-| Aspect concret, état V91 | Estimation (fourchette) | Ce que le joueur peut réellement obtenir / manque principal |
+| Aspect concret, revue V92 (contenu V91) | Estimation (fourchette) | Ce que le joueur peut réellement obtenir / manque principal |
 |---|---:|---|
 | Matériaux pour murs et portes | 55 % (40–65) | Bois, acier et cinq pierres ; autres matériaux, toutes les propriétés et éléments de maison manquants |
 | Sols construits et revêtements | 35 % (25–45) | Bois, cinq pierres et acier obtenables avec travaux/recherche/retrait ; autres revêtements et propriétés complètes absents |

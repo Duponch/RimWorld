@@ -4,7 +4,7 @@ import { writeFileSync } from 'node:fs';
 import { firingCamp } from '../scenarios/shooting';
 import { fixtureBuilding } from '../scenarios/deconstruction';
 import { serializeWorld,validateWorld } from '../../src/sim/serialization';
-import { observeErrors,panel,saveKey,world,expectWorld } from './helpers';
+import { observeErrors,panel,pawnTab,saveKey,world,expectWorld } from './helpers';
 import { revealCells,perform } from './player-actions';
 
 const probe=`window.__shootFrames=[];window.__shootTargets=[];
@@ -57,7 +57,7 @@ test('native UI: explicit target, cancel, saved aim, visible GPU flight/pose and
         await page.keyboard.press('Escape');await page.locator('[data-speed="6"]').click();
         await expect.poll(async()=>(await world(page)).pawns[1].health!.injuries.some(i=>i.tended!==undefined),{timeout:25000}).toBe(true);
         await page.locator('[data-speed="0"]').click();const cared=await world(page);expect(validateWorld(cared)).toEqual([]);expect(cared.pawns[2].skills.medicine.xp).toBeGreaterThan(0);
-        await page.locator(`[data-pawn="${initial.pawns[1].id}"]`).click();await expect(page.locator('#health-inspection')).toContainText('qualité');
+        await page.locator(`[data-pawn="${initial.pawns[1].id}"]`).click();await pawnTab(page,'health');await expect(page.locator('#health-inspection')).toContainText('qualité');
         await page.screenshot({path:`artifacts/shooting-care-${proofVersion}.png`});
         await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,cared);
       }

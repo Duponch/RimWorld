@@ -2,7 +2,7 @@ import { expect,test } from '@playwright/test';
 import { writeFileSync } from 'node:fs';
 import { equipmentCamp } from '../scenarios/equipment';
 import { serializeWorld,validateWorld } from '../../src/sim/serialization';
-import { observeErrors,panel,saveKey,world,expectWorld } from './helpers';
+import { observeErrors,panel,pawnTab,saveKey,world,expectWorld } from './helpers';
 import { perform } from './player-actions';
 
 const probe=`
@@ -27,11 +27,11 @@ test('real equipment UI: contact before ownership, GPU hip attachment, saved app
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,walking);await page.keyboard.press('Escape');
     await page.locator('[data-speed="1"]').click();await expect.poll(async()=>(await world(page)).piles[0]!.owner.type).toBe('equipment');await page.locator('[data-speed="0"]').click();
     const equipped=await world(page);expect(validateWorld(equipped)).toEqual([]);expect(equipped.piles[0]!.id).toBe(gun.id);
-    await page.locator(`[data-pawn="${p.id}"]`).click();await page.locator('#equipment-details summary').click();await expect(page.locator('#equipment-primary')).toContainText('Revolver');
+    await page.locator(`[data-pawn="${p.id}"]`).click();await pawnTab(page,'gear');await expect(page.locator('#equipment-primary')).toContainText('Revolver');
     await expect(page.locator(`[data-pawn="${p.id}"]`)).toHaveAttribute('data-equipment','revolver');await expect(page.locator('#equipment-cargo')).toHaveText('Aucune cargaison');
     await page.screenshot({path:'artifacts/equipment-v52.png'});
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,equipped);await page.keyboard.press('Escape');
-    await page.locator(`[data-pawn="${p.id}"]`).click();await page.locator('#equipment-details summary').click();await page.locator('#drop-equipment').click();
+    await page.locator(`[data-pawn="${p.id}"]`).click();await pawnTab(page,'gear');await page.locator('#drop-equipment').click();
     expect((await world(page)).piles[0]!.owner.type).toBe('equipment');await page.locator('[data-speed="1"]').click();await expect.poll(async()=>(await world(page)).piles[0]!.owner.type).toBe('ground');await page.locator('[data-speed="0"]').click();
     const final=await world(page);expect(final.piles[0]!.weapon!.forbidden).toBe(true);expect(validateWorld(final)).toEqual([]);await expect(page.locator(`[data-pawn="${p.id}"]`)).toHaveAttribute('data-equipment','');
     const frames=await page.evaluate(()=>(window as any).__equipmentFrames as any[]),approach=frames.filter(f=>f.phase==='equip'),held=frames.filter(f=>f.owner==='equipment'),dropping=frames.filter(f=>f.phase==='drop');

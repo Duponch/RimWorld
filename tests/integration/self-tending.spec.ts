@@ -3,7 +3,7 @@ import { writeFileSync } from 'node:fs';
 import { selfTendingCamp } from '../scenarios/self-tending';
 import { fixtureBuilding } from '../scenarios/deconstruction';
 import { serializeWorld,validateWorld } from '../../src/sim/serialization';
-import { expectWorld,observeErrors,panel,saveKey,world } from './helpers';
+import { expectWorld,observeErrors,panel,pawnTab,saveKey,world } from './helpers';
 import { perform } from './player-actions';
 
 const probe=`
@@ -21,7 +21,7 @@ test('player opts into self-treatment, leaves the bed, keeps facing, cancels and
     const initial=selfTendingCamp(),p=initial.pawns[0]!,bed=fixtureBuilding(initial,'bed',p.x,p.z);p.bedId=bed.id;p.need={kind:'sleep',phase:'sleep',bedId:bed.id,target:{x:p.x,z:p.z}};p.state='sleeping';p.priorities.doctor=0;
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
     await page.goto('/?scenario=camp&size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
-    await page.locator(`[data-pawn="${p.id}"]`).click();await expect(page.locator('#self-tend-policy')).not.toBeChecked();await page.locator('#self-tend-policy').check();
+    await page.locator(`[data-pawn="${p.id}"]`).click();await pawnTab(page,'health');await expect(page.locator('#self-tend-policy')).not.toBeChecked();await page.locator('#self-tend-policy').check();
     await expect.poll(async()=>(await world(page)).pawns[0]!.selfTend).toBe(true);await expect(page.locator('[data-health="self-tend-hint"]')).toContainText('désactivé');
     await perform(page,{reason:'Activer Médecin pour les auto-soins.',command:{type:'priority',pawnId:p.id,work:'doctor',value:1}},{value:0});
     await perform(page,{reason:'Soigner ses propres blessures.',command:{type:'order-tend',pawnId:p.id,patientId:p.id,queue:false}},{value:0});

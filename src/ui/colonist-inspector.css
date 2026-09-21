@@ -1,0 +1,79 @@
+.colonist-inspector-host {
+  overflow: visible;
+}
+
+.colonist-inspector-scroll {
+  max-block-size: inherit;
+  overflow: auto;
+  scrollbar-width: thin;
+}
+
+.colonist-inspector-tabs {
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block-end: 100%;
+  z-index: 1;
+  display: flex;
+  inline-size: 100%;
+  max-inline-size: 100%;
+  align-items: end;
+  gap: 2px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+}
+
+.colonist-inspector-tabs > button {
+  flex: 0 0 auto;
+  min-block-size: 32px;
+  padding-inline: 10px;
+  white-space: nowrap;
+}
+
+.colonist-inspector-tabs > button[aria-selected='true'] {
+  position: relative;
+  z-index: 2;
+}
+
+.colonist-inspector-summary,
+.colonist-inspector-pages,
+.colonist-inspector-actions {
+  min-inline-size: 0;
+}
+
+.colonist-inspector-summary:empty,
+.colonist-inspector-actions:empty,
+.colonist-inspector-pages > [hidden] {
+  display: none;
+}
+
+.colonist-inspector-pages > [role='tabpanel'] {
+  min-inline-size: 0;
+  max-block-size: min(58vh, 560px);
+  overflow: auto;
+}
+
+.colonist-inspector-pages > [role='tabpanel'] > details {
+  display: block;
+}
+
+.colonist-inspector-pages > [role='tabpanel'] > details > summary {
+  display: none;
+}
+
+.colonist-inspector-actions {
+  display: grid;
+  gap: 6px;
+}
+
+.colonist-inspector-actions > #draft-controls {
+  display: grid;
+  gap: 6px;
+}
+
+@media (max-width: 700px) {
+  .colonist-inspector-tabs > button {
+    min-block-size: 30px;
+    padding-inline: 8px;
+  }
+}

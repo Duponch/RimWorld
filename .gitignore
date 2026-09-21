@@ -34,3 +34,7 @@ artifacts/interruption-cpu-latest.json
 
 # Local Python reference-analysis bytecode.
 __pycache__/
+
+# Local deployment identity and rolling deployment result; never credentials.
+.netlify/
+artifacts/netlify-latest.json

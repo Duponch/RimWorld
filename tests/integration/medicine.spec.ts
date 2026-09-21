@@ -2,7 +2,7 @@ import { expect,test } from '@playwright/test';
 import { writeFileSync } from 'node:fs';
 import { medicineCamp } from '../scenarios/medicine';
 import { serializeWorld,validateWorld } from '../../src/sim/serialization';
-import { expectWorld,observeErrors,panel,saveKey,world } from './helpers';
+import { expectWorld,observeErrors,panel,pawnTab,saveKey,world } from './helpers';
 import { perform } from './player-actions';
 
 const probe=`
@@ -21,7 +21,7 @@ test('patient chooses medicine ceiling; doctor collects, carries, cancels withou
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
     await page.goto('/?scenario=camp&size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
     await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).pawns[1]!.state).toBe('resting');await page.locator('[data-speed="0"]').click();
-    await page.locator(`[data-pawn="${patient.id}"]`).click();await expect(page.locator('#medical-policy option')).toHaveCount(5);await page.locator('#medical-policy').selectOption('industrial');
+    await page.locator(`[data-pawn="${patient.id}"]`).click();await pawnTab(page,'health');await expect(page.locator('#medical-policy option')).toHaveCount(5);await page.locator('#medical-policy').selectOption('industrial');
     await perform(page,{reason:'Activer les soins.',command:{type:'priority',pawnId:doctor.id,work:'doctor',value:1}},{value:0});
     await perform(page,{reason:'Prendre le médicament puis soigner.',command:{type:'order-tend',pawnId:doctor.id,patientId:patient.id,queue:false}},{value:0});
     const pickup=await world(page);expect(pickup.pawns[0]!.tend?.phase).toBe('pickup');expect(pickup.pawns[0]!.skills.medicine.xp).toBe(0);
@@ -29,7 +29,7 @@ test('patient chooses medicine ceiling; doctor collects, carries, cancels withou
     await page.locator('[data-speed="1"]').click();await expect.poll(async()=>(await world(page)).pawns[0]!.tend?.phase).toBe('approach');await page.locator('[data-speed="0"]').click();
     const carried=await world(page);expect(carried.pawns[0]!.tend?.medicine?.carryPileId).toBeTruthy();expect(carried.piles.reduce((n,p)=>n+p.quantity,0)).toBe(4);expect(carried.pawns[1]!.health!.injuries.every(i=>i.tended===undefined)).toBe(true);expect(validateWorld(carried)).toEqual([]);
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,carried);await page.keyboard.press('Escape');
-    await page.locator(`[data-pawn="${patient.id}"]`).click();await page.locator('#medical-policy').selectOption('none');
+    await page.locator(`[data-pawn="${patient.id}"]`).click();await pawnTab(page,'health');await page.locator('#medical-policy').selectOption('none');
     const cancelled=await world(page);expect(cancelled.pawns[0]!.tend).toBeUndefined();expect(cancelled.piles.reduce((n,p)=>n+p.quantity,0)).toBe(4);expect(cancelled.pawns[0]!.skills.medicine.xp).toBe(0);
     await page.locator('#medical-policy').selectOption('industrial');await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).pawns[0]!.tend?.phase).toBe('tend');await page.locator('[data-speed="0"]').click();
     const work=await world(page);expect(work.pawns[0]!.skills.medicine.xp).toBe(0);await page.screenshot({path:'artifacts/medicine-v51.png'});

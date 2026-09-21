@@ -4,7 +4,7 @@ import { deserializeWorld,serializeWorld,validateWorld } from '../../src/sim/ser
 import { INFECTION_UNIT } from '../../src/sim/infection-rules';
 import { infectionNextTendCore } from '../../src/sim/infection-state';
 import { infectionSummary } from '../scenarios/infection-player';
-import { expectWorld,observeErrors,panel,pause,saveKey,world } from './helpers';
+import { expectWorld,observeErrors,panel,pawnTab,pause,saveKey,world } from './helpers';
 import { perform } from './player-actions';
 import type { World } from '../../src/sim/types';
 
@@ -28,7 +28,7 @@ async function load(page:Page,w:World) {
 }
 async function inspect(page:Page,id:number) {
   await page.locator(`[data-pawn="${id}"]`).click();
-  if(await page.locator('#health-inspection').getAttribute('open')===null)await page.locator('#health-inspection summary').click();
+  await pawnTab(page,'health');
 }
 
 test('native infection care: physical dose/save, actual renewal and convalescence at 1×/6×',async({playwright})=>{

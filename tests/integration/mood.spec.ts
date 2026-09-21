@@ -4,7 +4,7 @@ import { medicalCamp } from '../scenarios/health';
 import { addMaterial } from '../../src/sim/materials';
 import { serializeWorld,validateWorld } from '../../src/sim/serialization';
 import { moodTarget,moodThoughts } from '../../src/sim/mood';
-import { observeErrors,panel,saveKey,world,expectWorld } from './helpers';
+import { observeErrors,panel,pawnTab,saveKey,world,expectWorld } from './helpers';
 import { perform } from './player-actions';
 
 test('mood causes at 1x/6x: real ingestion, remembered meal, physical clothing removal and saved gradual level',async({playwright})=>{
@@ -16,7 +16,7 @@ test('mood causes at 1x/6x: real ingestion, remembered meal, physical clothing r
     const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
     await page.goto('/?scenario=camp&e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
-    await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');await page.locator(`[data-pawn="${p.id}"]`).click();if(await page.locator('#mood-inspection').getAttribute('open')===null)await page.locator('#mood-inspection summary').click();
+    await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');await page.locator(`[data-pawn="${p.id}"]`).click();await pawnTab(page,'needs');
     const initialInspection=await world(page),initialPawn=initialInspection.pawns.find(pawn=>pawn.id===p.id)!;
     const initialTarget=moodTarget(moodThoughts(initialInspection,initialPawn));
     await expect(page.locator('#mood-target')).toContainText(`cible ${initialTarget} %`);await expect(page.locator('[data-thought="tattered-apparel"]')).toBeVisible();
@@ -25,12 +25,12 @@ test('mood causes at 1x/6x: real ingestion, remembered meal, physical clothing r
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,eating);await page.keyboard.press('Escape');
     await page.locator(`[data-speed="${speed}"]`).click();await expect.poll(async()=>(await world(page)).pawns[0]!.memories.length).toBe(2);await page.locator('[data-speed="0"]').click();
     const fed=await world(page);expect(validateWorld(fed)).toEqual([]);expect(fed.pawns[0]!.hunger).toBeGreaterThan(80);expect(fed.pawns[0]!.mood).toBeGreaterThan(moodTarget(moodThoughts(fed,fed.pawns[0]!)));
-    await page.locator(`[data-pawn="${p.id}"]`).click();if(await page.locator('#mood-inspection').getAttribute('open')===null)await page.locator('#mood-inspection summary').click();await expect(page.locator('[data-thought="ravenous"]')).toHaveCount(0);await expect(page.locator('[data-thought="ate-raw-food"]')).toContainText('-7');await expect(page.locator('[data-thought="ate-without-table"]')).toContainText('encore 24 h');
+    await page.locator(`[data-pawn="${p.id}"]`).click();await pawnTab(page,'needs');await expect(page.locator('[data-thought="ravenous"]')).toHaveCount(0);await expect(page.locator('[data-thought="ate-raw-food"]')).toContainText('-7');await expect(page.locator('[data-thought="ate-without-table"]')).toContainText('encore 24 h');
     await perform(page,{reason:'Remplacer le vêtement usé : le retirer physiquement.',command:{type:'order-equipment',pawnId:p.id,itemId:vest.id,action:'remove',queue:false}},{value:0});
     await page.locator(`[data-speed="${speed}"]`).click();await expect.poll(async()=>(await world(page)).piles.find(i=>i.id===vest.id)!.owner.type).toBe('ground');await page.locator('[data-speed="0"]').click();
     const removed=await world(page),removedPawn=removed.pawns.find(pawn=>pawn.id===p.id)!;
     const removedTarget=moodTarget(moodThoughts(removed,removedPawn)),removedDistance=Math.abs(removedPawn.mood-removedTarget);
-    await page.locator(`[data-pawn="${p.id}"]`).click();if(await page.locator('#mood-inspection').getAttribute('open')===null)await page.locator('#mood-inspection summary').click();await expect(page.locator('[data-thought="tattered-apparel"]')).toHaveCount(0);await expect(page.locator('#mood-target')).toContainText(`cible ${removedTarget} %`);
+    await page.locator(`[data-pawn="${p.id}"]`).click();await pawnTab(page,'needs');await expect(page.locator('[data-thought="tattered-apparel"]')).toHaveCount(0);await expect(page.locator('#mood-target')).toContainText(`cible ${removedTarget} %`);
     await page.screenshot({path:`artifacts/mood-v64-${speed}x.png`});
     await page.locator(`[data-speed="${speed}"]`).click();await expect.poll(async()=>Math.abs((await world(page)).pawns.find(pawn=>pawn.id===p.id)!.mood-removedTarget)).toBeLessThan(removedDistance);await page.locator('[data-speed="0"]').click();
     const final=await world(page),finalPawn=final.pawns.find(pawn=>pawn.id===p.id)!;expect(moodTarget(moodThoughts(final,finalPawn))).toBe(removedTarget);expect(Math.abs(finalPawn.mood-removedTarget)).toBeLessThan(removedDistance);await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,final);expect(errors).toEqual([]);

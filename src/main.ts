@@ -67,6 +67,10 @@ import { TERRAIN_LABELS as terrainLabels,terrainInspection } from './ui/terrain-
 import { BIOME_LABELS,HILLINESS_LABELS } from './sim/site';
 import { isPlant } from './sim/plants';
 import './style.css';
+import './ui/colonist-inspector.css';
+import './ui/visual-identity.css';
+import { installVisualIdentity, portraitIndex } from './ui/visual-identity';
+import { mountColonistInspector, updateColonistInspector, colonistInspectorState, type ColonistInspectorState } from './ui/colonist-inspector';
 import { ITEM_DEFINITIONS, availableNutrition } from './sim/items';
 import { foodFreshnessLabel } from './ui/food-freshness';
 import { updateFoodStocks } from './ui/food-stocks';
@@ -91,6 +95,7 @@ const el = <T extends HTMLElement = HTMLElement>(id: string) => document.getElem
 const client = new SimulationClient();
 let snapshot: World | undefined;
 let selectedPawn: number | undefined;
+let colonistInspector: ColonistInspectorState | undefined;
 let selectedCell: { x: number; z: number } | undefined;
 let installationId:number|undefined;
 let currentTool: Tool = 'select';
@@ -110,6 +115,9 @@ let latestMotion: PawnTrack[] | undefined;
 let menuResumeSpeed: number | undefined;
 let menuTransition: Promise<unknown> = Promise.resolve();
 const shell = document.querySelector<HTMLElement>('.game-shell')!;
+installVisualIdentity(document.querySelector<HTMLElement>('#app')!);
+// Suppress browser chrome without cancelling the game's own order-menu handler.
+document.querySelector('#app')!.addEventListener('contextmenu', event => event.preventDefault());
 const session = new GameSession(client, () => localStorage, prepareWorld);
 const frontHost = document.createElement('div'); document.querySelector('#app')!.append(frontHost);
 // The measured counter remains visible over both the colony and the menu.
@@ -301,6 +309,9 @@ function rotatePlacement(direction = 1) {
 function rebuildInspector() {
   const panel = el('inspector');
   panel.hidden = currentPanel !== null || (!selection.ids.size && !selectedCell);
+  panel.classList.remove('colonist-inspector-host');
+  delete panel.dataset.colonistInspectorPawn;
+  delete panel.dataset.colonistInspectorTab;
   if(selection.ids.size>1) {
     panel.innerHTML='<div class="panel-heading"><h2 id="group-title"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><div id="group-members"></div><p class="muted">Sélectionnez un colon pour lui donner un ordre de travail.</p>';
     for(const id of selection.ids) {
@@ -361,6 +372,13 @@ function rebuildInspector() {
     if (zone) panel.append(growingControls(zone, command => void attempt(async () => { await client.command(command); rebuildInspector(); renderState(); })));
   } else panel.replaceChildren();
   if(selection.ids.size&&snapshot?.pawns.some(p=>selection.ids.has(p.id)&&isColonist(p))){createDraftControls(panel,()=>snapshot?.pawns.filter(p=>selection.ids.has(p.id))??[],c=>void attempt(async()=>{await client.command(c);renderState();}));shootingControls.create(panel,()=>snapshot?.pawns.filter(p=>selection.ids.has(p.id))??[],()=>renderState());}
+  const inspected = snapshot?.pawns.find(p => p.id === selectedPawn);
+  if (inspected && selection.ids.size <= 1 && (isColonist(inspected) || inspected.prisoner)) {
+    colonistInspector = colonistInspectorState(colonistInspector, inspected.id, !!inspected.prisoner);
+    mountColonistInspector(panel, { ...colonistInspector, prisoner: !!inspected.prisoner, onTabChange: tab => {
+      colonistInspector = { pawnId: inspected.id, activeTab: tab }; renderState();
+    } });
+  }
   const close = document.getElementById('inspect-close');
   if (close) close.onclick = clearSelection;
 }
@@ -400,7 +418,7 @@ function rebuildPawns(world: World) {
   el('colonists').replaceChildren(...world.pawns.filter(isColonist).map((pawn, index) => {
     const button = document.createElement('button');
     button.className = 'colonist'; button.dataset.pawn = String(pawn.id);
-    button.innerHTML = `<span class="portrait portrait-${index % 3}"><span class="portrait-head"></span><span class="portrait-body"></span><span class="portrait-vest"></span><span class="pawn-symbol"></span></span><strong></strong><span class="pawn-mood"><i></i></span>`;
+    button.innerHTML = `<span class="portrait portrait-${portraitIndex(pawn.id, pawn.name)}"><span class="portrait-head"></span><span class="portrait-body"></span><span class="portrait-vest"></span><span class="pawn-symbol"></span></span><strong></strong><span class="pawn-mood"><i></i></span>`;
     button.onclick = event => selectPawns({ids:[pawn.id],additive:event.shiftKey,toggle:event.shiftKey},!event.shiftKey);
     return button;
   }));
@@ -543,6 +561,10 @@ function renderState() {
   if(currentPanel===null){const target=selectedPawn===undefined?selectedCell:world.pawns.find(p=>p.id===selectedPawn);
     updateBurialControls(el('inspector'),world,target,c=>void attempt(()=>client.command(c)));
     updateHygieneControls(el('inspector'),world,target,c=>void attempt(()=>client.command(c)));}
+  if (colonistInspector && selectedPawn !== undefined && el('inspector').classList.contains('colonist-inspector-host')) {
+    const pawn = world.pawns.find(p => p.id === selectedPawn);
+    if (pawn) { colonistInspector = colonistInspectorState(colonistInspector, pawn.id, !!pawn.prisoner); updateColonistInspector(el('inspector'), colonistInspector, !!pawn.prisoner); }
+  }
   const pending = world.jobs.filter(job => job.status === 'pending').length;
   el('job-count').textContent = world.jobs.length ? `${world.jobs.length} ordre(s) · ${pending} en attente` : 'Aucun ordre en cours';
   const entries = world.events.slice(-30).reverse();

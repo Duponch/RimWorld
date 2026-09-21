@@ -1,0 +1,165 @@
+{
+  "version": 92,
+  "schemaVersion": 91,
+  "nativeChecks": {
+    "equipment-ui-v52.json": {
+      "date": "2026-09-21T22:36:10.122Z",
+      "backend": "native WebGPU",
+      "frames": 2043,
+      "approach": 1283,
+      "held": 603,
+      "dropping": 283,
+      "firstEquipped": {
+        "tick": 3025,
+        "play": 3025.00020000009,
+        "dt": 3.7999999970197678,
+        "equipped": 1,
+        "cargo": 0,
+        "phase": "idle",
+        "progress": null,
+        "owner": "equipment",
+        "x": 11,
+        "z": 5
+      },
+      "savedTicks": [
+        3000,
+        3030
+      ],
+      "finalTick": 3036,
+      "errors": []
+    },
+    "prison-native-v86.json": {
+      "version": 86,
+      "controlledCheckpoints": [
+        "temporary blood loss and bruise; enclosed room and physical supplies",
+        "healthy captive with resistance .01; no natural persuasion duration claimed"
+      ],
+      "capture": {
+        "started": 3000,
+        "carrying": 3012,
+        "captured": 3121,
+        "cared": 3415,
+        "patientId": 3,
+        "bedId": 201,
+        "resistance": 8,
+        "medicineBefore": 6,
+        "medicineAfter": 5,
+        "hungerAfter": 99.89333333333332
+      },
+      "recruitment": {
+        "prepared": 3000,
+        "conversation": 3004,
+        "reduced": 3189,
+        "recruited": 4381,
+        "identity": 3,
+        "provenance": {
+          "capturedAt": 3000,
+          "recruitedAt": 4369,
+          "fromFaction": "outlaws"
+        }
+      },
+      "historical": {
+        "source": "artifacts/cold-store-checkpoint-v85.json",
+        "sha256": "0cef3989e3655f40a26a7ca27e1d858e2a1241b2a917ba3d725cddf9396ca974",
+        "from": 85,
+        "to": 91,
+        "tick": 22729
+      },
+      "errors": []
+    },
+    "skills-ui-v43.json": {
+      "date": "2026-09-21T22:39:09.770Z",
+      "backend": "native WebGPU",
+      "viewport": "1440x1000",
+      "checkpoint": {
+        "cooking": {
+          "level": 4,
+          "xp": 0,
+          "dailyXp": 0,
+          "passion": 0
+        },
+        "melee": {
+          "level": 8,
+          "xp": 0,
+          "dailyXp": 0,
+          "passion": 0
+        },
+        "shooting": {
+          "level": 5,
+          "xp": 0,
+          "dailyXp": 0,
+          "passion": 0
+        },
+        "construction": {
+          "level": 10,
+          "xp": 7500,
+          "dailyXp": 7500,
+          "passion": 2
+        },
+        "medicine": {
+          "level": 3,
+          "xp": 0,
+          "dailyXp": 0,
+          "passion": 0
+        },
+        "lastResetTick": -1,
+        "intellectual": {
+          "level": 3,
+          "xp": 0,
+          "dailyXp": 0,
+          "passion": 0
+        }
+      },
+      "final": {
+        "cooking": {
+          "level": 4,
+          "xp": 0,
+          "dailyXp": 0,
+          "passion": 0
+        },
+        "melee": {
+          "level": 8,
+          "xp": 0,
+          "dailyXp": 0,
+          "passion": 0
+        },
+        "shooting": {
+          "level": 5,
+          "xp": 0,
+          "dailyXp": 0,
+          "passion": 0
+        },
+        "construction": {
+          "level": 10,
+          "xp": 179600,
+          "dailyXp": 179600,
+          "passion": 2
+        },
+        "medicine": {
+          "level": 3,
+          "xp": 0,
+          "dailyXp": 0,
+          "passion": 0
+        },
+        "lastResetTick": -1,
+        "intellectual": {
+          "level": 3,
+          "xp": 0,
+          "dailyXp": 0,
+          "passion": 0
+        }
+      },
+      "bed": {
+        "quality": "poor",
+        "material": "wood",
+        "id": 225,
+        "kind": "bed",
+        "x": 11,
+        "z": 10,
+        "orientation": 0,
+        "footprint": "standard"
+      },
+      "errors": []
+    }
+  }
+}

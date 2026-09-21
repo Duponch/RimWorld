@@ -1,7 +1,7 @@
 import { expect,test } from '@playwright/test';
 import { readFileSync,writeFileSync } from 'node:fs';
 import { deserializeWorld,serializeWorld,validateWorld } from '../../src/sim/index';
-import { observeErrors,panel,world,expectWorld,saveKey } from './helpers';
+import { observeErrors,panel,pawnTab,world,expectWorld,saveKey } from './helpers';
 import { perform } from './player-actions';
 
 test('natural camp: pause/reload research, 1x/6x unlock, construct tailor, craft and wear shirt through UI',async({playwright})=>{
@@ -34,7 +34,7 @@ test('natural camp: pause/reload research, 1x/6x unlock, construct tailor, craft
     await perform(page,{reason:'Porter notre chemise fabriquée.',command:{type:'order-equipment',pawnId:p.id,itemId:shirt.id,action:'wear',queue:false}},{value:0});
     await page.locator('[data-speed="1"]').click();await expect.poll(async()=>(await world(page)).piles.find(i=>i.id===shirt.id)?.owner.type,{timeout:20000}).toBe('apparel');await page.locator('[data-speed="0"]').click();
     await expect(page.locator(`[data-pawn="${p.id}"]`)).toHaveAttribute('data-apparel','cloth-shirt');await page.locator(`[data-pawn="${p.id}"]`).click();
-    await page.locator('#equipment-details summary').click();await expect(page.locator('#equipment-apparel')).toContainText('Chemise');await expect(page.locator('#fps-counter')).toBeVisible();
+    await pawnTab(page,'gear');await expect(page.locator('#equipment-apparel')).toContainText('Chemise');await expect(page.locator('#fps-counter')).toBeVisible();
     await page.screenshot({path:'artifacts/research-shirt-v73.png'});const final=await world(page);expect(validateWorld(final)).toEqual([]);
     expect(final.piles.filter(i=>i.item==='cloth').reduce((n,i)=>n+i.quantity,0)).toBe(15);
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,final);expect(errors).toEqual([]);

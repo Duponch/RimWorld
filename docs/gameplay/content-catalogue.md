@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+**V92 — présentation :** cadres, vingt pictogrammes, six portraits illustratifs, curseurs, fond de menu et nouveaux rendus d'herbe/désignations. Ce sont des ressources graphiques ; aucun objet, recette, espèce, matériau ni capacité de production supplémentaire n'est compté dans le catalogue jouable. Le schéma de sauvegarde reste 91. [Identité commune](../development/visual-identity.md).
+
 **V91 — contenu validé dans son périmètre :** cinq herbivores obtenables dans les trois biomes jouables (`hare`, `deer`, `muffalo`, `gazelle`, `dromedary`), avec corps, viandes et cuirs distincts. `snow-hare` et ses produits sont implémentés pour la toundra de référence, qui n’est pas sélectionnable dans ce lot; ils restent préparatoires. Cuir ordinaire, fourrure bleue et cuir de chameau rejoignent les cinq familles vestimentaires réellement fabricables. [Contrat](../development/fauna-diversity.md), [référence](../research/fauna-diversity-reference-v91.md).
 
 **V90 — contenu validé dans son périmètre :** mobilier d'habitation, confort, besoin de beauté, pot à fleurs et hémérocalle ; établis de tailleur manuel/électrique, cinq familles vestimentaires en tissu ou cuir, usure quotidienne, politiques et remplacement physique. Les objets ne sont comptés ici que s'ils disposent de leur matière, acquisition, usage, stockage et sauvegarde. L'éditeur de politiques reste absent ; les trois biomes locaux sont ajoutés en V91. [Habitat](../development/habitat-comfort.md), [vêtements](../development/apparel-renewal.md).

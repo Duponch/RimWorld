@@ -37,7 +37,7 @@ test('native hygiene: physical flooring, cleaning, funeral and illness through t
     await page.goto('/?scenario=camp&e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await pause(page);
     await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,f.world);await page.keyboard.press('Escape');
     const rotation={value:0},act=(command:Command,reason:string)=>perform(page,{command,reason},rotation);
-    await inspectPerson(page,f.patientId);await expect(page.locator('[data-health="food-poisoning"]')).toContainText('phase majeure');await expect(page.locator('[data-health="food-poisoning"]')).toContainText('Vomit');
+    await inspectPerson(page,f.patientId,'health');await expect(page.locator('[data-health="food-poisoning"]')).toContainText('phase majeure');await expect(page.locator('[data-health="food-poisoning"]')).toContainText('Vomit');
     await page.screenshot({path:'artifacts/hygiene-health-v89.png'});
     await act({type:'research-project',project:'smithing'},'Choisir Forge dans le panneau de recherche.');
     await expect(page.locator('[data-smithing-status]')).toContainText('En cours');await act({type:'research-project',project:null},'Suspendre sans inventer de progression.');

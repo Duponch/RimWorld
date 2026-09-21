@@ -7,7 +7,7 @@ import { addMaterial,refreshStock } from '../../src/sim/materials';
 import { initialSkills } from '../../src/sim/skills';
 import { enableArrivals } from '../../src/sim/arrivals';
 import { TRAITS } from '../../src/sim/traits';
-import { observeErrors,panel,saveKey,world,expectWorld } from './helpers';
+import { observeErrors,panel,pawnTab,saveKey,world,expectWorld } from './helpers';
 import { perform } from './player-actions';
 
 test('personality in real UI: new camp, comparable physical work, thoughts, schedule choice, arrival preview and continuation at 1x/6x',async({playwright})=>{
@@ -23,9 +23,9 @@ test('personality in real UI: new camp, comparable physical work, thoughts, sche
     const generated=await world(page);expect(generated.pawns.map(p=>p.traits)).toEqual([['optimist','fast-learner'],['steadfast','slow-learner'],['pessimist','nervous']]);
     await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
     const [fast,slow]=initial.pawns;
-    await page.locator(`[data-pawn="${fast!.id}"]`).click();await page.locator('.skills-inspection summary').click();
+    await page.locator(`[data-pawn="${fast!.id}"]`).click();await pawnTab(page,'bio');
     await expect(page.locator('[data-trait="fast-learner"]')).toContainText('175 %');await expect(page.locator('[data-skill-description]')).toContainText('Apprentissage 175 %');
-    await page.locator('#mood-inspection summary').click();await expect(page.locator('[data-thought="trait-optimist"]')).toContainText('+6');
+    await pawnTab(page,'needs');await expect(page.locator('[data-thought="trait-optimist"]')).toContainText('+6');
     await page.locator(`[data-pawn="${slow!.id}"]`).click();await expect(page.locator('#mood-break-thresholds')).toContainText('43 / 24.57 / 6.14');
     await perform(page,{reason:'Prévoir des loisirs pour le colon plus sensible aux crises.',command:{type:'schedule-paint',pawnId:slow!.id,hours:[20],assignment:'recreation'}},{value:0});
     for(let i=0;i<2;i++)await perform(page,{reason:'Comparer deux bâtisseurs de même compétence au travail.',command:{type:'order-job',pawnId:initial.pawns[i]!.id,jobId:jobs[i]!,queue:false}},{value:0});
@@ -40,7 +40,7 @@ test('personality in real UI: new camp, comparable physical work, thoughts, sche
     await page.locator(`[data-speed="${speed}"]`).click();await expect(page.locator('#arrival-letter')).toBeVisible();await page.locator('[data-speed="0"]').click();const pending=await world(page),offer=pending.arrivals!.pending!;
     await page.locator('#arrival-letter').click();for(const id of offer.traits!)await expect(page.locator('dialog[open]')).toContainText(TRAITS[id].label);await page.locator('#accept-arrival').click();await expect.poll(async()=>(await world(page)).pawns.length).toBe(3);
     const final=await world(page);expect(final.pawns.at(-1)!.traits).toEqual(offer.traits);expect(validateWorld(final)).toEqual([]);
-    await page.locator(`[data-pawn="${fast!.id}"]`).click();if(await page.locator('.skills-inspection').getAttribute('open')===null)await page.locator('.skills-inspection summary').click();await page.locator('[data-traits]').scrollIntoViewIfNeeded();await page.screenshot({path:`artifacts/traits-v69-${speed}x.png`});
+    await page.locator(`[data-pawn="${fast!.id}"]`).click();await pawnTab(page,'bio');await page.locator('[data-traits]').scrollIntoViewIfNeeded();await page.screenshot({path:`artifacts/traits-v69-${speed}x.png`});
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,final);expect(errors).toEqual([]);
     proof.push({speed,generated:generated.pawns.map(p=>({name:p.name,traits:p.traits})),workingTick:working.tick,builtTick:built.tick,finalTick:final.tick,skillXp:built.pawns.map(p=>p.skills.construction.xp),schedule:final.pawns[1]!.schedule,offer,joined:final.pawns.at(-1)!.traits,errors});await page.close();
   }}finally{await browser.close();}

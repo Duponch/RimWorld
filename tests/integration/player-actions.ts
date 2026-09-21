@@ -3,7 +3,7 @@ import { expect, type Page } from '@playwright/test';
 import type { Decision } from '../scenarios/colony-player';
 import type { BillSettings } from '../../src/sim/cooking-types';
 import { stationRecipes } from '../../src/sim/production-recipes';
-import { world, panel, tool, cell, dragRectangle, settledCells } from './helpers';
+import { world, panel, pawnTab, tool, cell, dragRectangle, settledCells, type PawnInspectorTab } from './helpers';
 
 export async function revealCells(page:Page,cells:{x:number;z:number}[]):Promise<void> {
   const visible=()=>page.evaluate(cells=>{
@@ -32,11 +32,12 @@ export async function revealCells(page:Page,cells:{x:number;z:number}[]):Promise
 }
 
 /** Inspect a visitor/captive using the same overlap cycling as the player. */
-export async function inspectPerson(page:Page,id:number):Promise<void> {
+export async function inspectPerson(page:Page,id:number,tab?:PawnInspectorTab):Promise<void> {
   await page.keyboard.press('Escape');
   const w=await world(page),pawn=w.pawns.find(p=>p.id===id);if(!pawn)throw new Error('Personne à inspecter absente.');
   const portrait=page.locator(`[data-pawn="${id}"]`);
-  if(await portrait.count()){await portrait.click();return;}
+  const selected=()=>page.locator('#inspector').getAttribute('data-colonist-inspector-pawn').then(value=>value===String(id));
+  if(await portrait.count()){await portrait.click();await expect.poll(selected).toBe(true);if(tab)await pawnTab(page,tab);return;}
   await revealCells(page,[pawn]);
   for(let i=0;i<=w.pawns.length;i++) {
     // A person standing on a bed is above the floor click. Read the same
@@ -45,8 +46,7 @@ export async function inspectPerson(page:Page,id:number):Promise<void> {
     if(!point)throw new Error(`La projection de ${pawn.name} est hors champ.`);
     expect(await page.evaluate(p=>document.elementFromPoint(p.x,p.y)?.tagName,point),'Person click must reach the visible canvas.').toBe('CANVAS');
     await page.mouse.click(point.x,point.y);
-    if(pawn.prisoner){if(await page.locator(`[data-prisoner-id="${id}"]`).isVisible())return;}
-    else {const name=page.locator('#selected-name');if(await name.count()&&await name.textContent()===pawn.name)return;}
+    if(await selected()){if(tab)await pawnTab(page,tab);return;}
   }
   throw new Error(`La sélection corporelle de ${pawn.name} n’a pas atteint son inspection.`);
 }
@@ -86,7 +86,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     await panel(page,'wildlife');await page.locator(`[data-animal-${c.type==='shoot'?'shoot':'melee'}="${c.targetId}"]`).click();
   } else if(c.type==='order-capture'||c.type==='order-equipment'||c.type==='order-feed'||c.type==='order-tend'||c.type==='order-rescue'||c.type==='order-job'||c.type==='order-haul'||c.type==='order-cook') {
     await page.keyboard.press('Escape');await page.locator(`[data-pawn="${c.pawnId}"]`).click();
-    if(c.type==='order-equipment'&&c.action==='remove'){if(await page.locator('#equipment-details').getAttribute('open')===null)await page.locator('#equipment-details summary').click();await page.locator(`[data-remove-apparel="${c.itemId}"]`).click();return;}
+    if(c.type==='order-equipment'&&c.action==='remove'){await pawnTab(page,'gear');await page.locator(`[data-remove-apparel="${c.itemId}"]`).click();return;}
     const current=await world(page);
     const job=c.type==='order-equipment'?((c.action==='equip'||c.action==='wear')?current.piles.find(p=>p.id===c.itemId)?.owner:current.pawns.find(p=>p.id===c.pawnId)):c.type==='order-capture'||c.type==='order-feed'||c.type==='order-tend'||c.type==='order-rescue'?current.pawns.find(p=>p.id===c.patientId):c.type==='order-cook'?current.structures.find(s=>s.id===c.structureId):c.type==='order-job'?current.jobs.find(j=>j.id===c.jobId):c.target.type==='furniture'?current.packed.find(p=>c.target.type==='furniture'&&p.building.id===c.target.structureId)?.owner:c.target.type==='fuel'?current.structures.find(s=>c.target.type==='fuel'&&s.id===c.target.structureId):c.target.type==='pile'?current.piles.find(p=>c.target.type==='pile'&&p.id===c.target.pileId)?.owner:current.jobs.find(j=>(c.target.type==='job'||c.target.type==='clear'||c.target.type==='clear-sow')&&j.id===c.target.jobId);
     if(!job||!('x' in job))throw new Error('Cible directe absente.');
@@ -112,9 +112,9 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     for(let i=0;i<=w.pawns.length;i++){await cell(page,bed.x,bed.z);if(await page.locator('#cell-bed').isVisible())break;}
     await page.locator(c.type==='prison-bed'?'#bed-prisoner':'#bed-medical').setChecked(c.enabled);
   } else if(c.type==='prisoner-mode') {
-    await inspectPerson(page,c.patientId);await page.locator('#prisoner-mode').selectOption(c.mode);
+    await inspectPerson(page,c.patientId,'prisoner');await page.locator('#prisoner-mode').selectOption(c.mode);
   } else if(c.type==='food-policy-assign') {
-    if((await world(page)).pawns.find(p=>p.id===c.pawnId)?.prisoner){await inspectPerson(page,c.pawnId);await page.locator('#prisoner-food-policy').selectOption(String(c.policyId));}
+    if((await world(page)).pawns.find(p=>p.id===c.pawnId)?.prisoner){await inspectPerson(page,c.pawnId,'prisoner');await page.locator('#prisoner-food-policy').selectOption(String(c.policyId));}
     else {await panel(page,'assign'); await page.locator(`[data-food-policy-pawn="${c.pawnId}"]`).selectOption(String(c.policyId));}
   } else if(c.type==='schedule-paint') {
     await panel(page,'schedule'); await page.locator(`[data-schedule-brush="${c.assignment}"]`).click();

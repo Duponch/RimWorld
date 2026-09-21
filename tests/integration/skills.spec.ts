@@ -2,7 +2,8 @@ import { expect,test } from '@playwright/test';
 import { writeFileSync } from 'node:fs';
 import { createWorld,serializeWorld,validateWorld } from '../../src/sim/index';
 import { addGroundMaterial,refreshStock } from '../../src/sim/materials';
-import { cell,expectWorld,observeErrors,panel,saveKey,tool,world } from './helpers';
+import { cell,expectWorld,observeErrors,panel,pawnTab,saveKey,tool,world } from './helpers';
+import { revealCells } from './player-actions';
 
 test('skills: player chooses a builder, sees physical learning, pauses and reloads the exact profile',async({playwright})=>{
   test.setTimeout(70000);
@@ -16,10 +17,10 @@ test('skills: player chooses a builder, sees physical learning, pauses and reloa
     await page.goto('/?scenario=camp&size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);
     await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);
     await panel(page,'work');const control=page.locator(`[data-owner="${p.id}"][data-work="build"]`);await expect(control).toHaveAttribute('title',/Construction 10\/20/);
-    await control.selectOption('1');await tool(page,'bed');await cell(page,11,10);
+    await control.selectOption('1');await tool(page,'bed');await revealCells(page,[{x:11,z:10}]);await cell(page,11,10);
     await page.locator('[data-speed="1"]').click();await expect.poll(async()=>(await world(page)).pawns[0]!.skills.construction.xp).toBeGreaterThan(0);
     await page.locator('[data-speed="0"]').click();const working=await world(page);expect(working.jobs.some(j=>j.construction==='frame')).toBe(true);expect(validateWorld(working)).toEqual([]);
-    await tool(page,'select');await page.locator(`[data-pawn="${p.id}"]`).click();await page.locator('.skills-inspection summary').click();
+    await tool(page,'select');await page.locator(`[data-pawn="${p.id}"]`).click();await pawnTab(page,'bio');
     await expect(page.locator('[data-skill="construction"]')).toContainText('Construction 10/20');await expect(page.locator('[data-skill-description]')).toContainText('Apprentissage 150 %');
     await expect(page.locator('#fps-counter')).toBeVisible();await page.screenshot({path:'artifacts/skills-construction.png'});
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,working);

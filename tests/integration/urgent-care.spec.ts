@@ -3,7 +3,7 @@ import { writeFileSync } from 'node:fs';
 import { urgentBedCamp } from '../scenarios/urgent-care';
 import { addMaterial,refreshStock } from '../../src/sim/materials';
 import { serializeWorld,validateWorld } from '../../src/sim/serialization';
-import { expectWorld,observeErrors,panel,saveKey,world } from './helpers';
+import { expectWorld,observeErrors,panel,pawnTab,saveKey,world } from './helpers';
 import { perform } from './player-actions';
 
 const probe=`
@@ -22,7 +22,7 @@ test('player priorities decide urgent self-care at bed review; one real treatmen
     addMaterial(initial,'food',10,{type:'ground',x:p.x+2,z:p.z},'survival-meal');refreshStock(initial);
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
     await page.goto('/?scenario=camp&size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
-    await page.locator(`[data-pawn="${p.id}"]`).click();await page.locator('#self-tend-policy').check();
+    await page.locator(`[data-pawn="${p.id}"]`).click();await pawnTab(page,'health');await page.locator('#self-tend-policy').check();
     await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).tick).toBeGreaterThan(initial.tick+30);await page.locator('[data-speed="0"]').click();
     const waiting=await world(page);expect(waiting.pawns[0]!.tend).toBeUndefined();expect(waiting.pawns[0]!.skills.medicine.xp).toBe(0);expect(waiting.pawns[0]!.state).toBe('resting');
     await perform(page,{reason:'Donner priorité à Médecin pour une auto-intervention urgente.',command:{type:'priority',pawnId:p.id,work:'doctor',value:1}},{value:0});
