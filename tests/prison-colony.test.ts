@@ -25,6 +25,17 @@ interface Checkpoint {
   journal:{tick:number;reason:string;command:Command}[];observations:ReturnType<typeof prisonSummary>[];
 }
 const medicines=(w:World)=>w.piles.filter(p=>p.kind==='medicine').reduce((n,p)=>n+p.quantity,0);
+// `foodAccount` deliberately ignores food owned by non-colonists so hostile
+// inventories and visitor provisions do not enter the colony ledger. A captive
+// can nevertheless pick up a meal from their prison room and hold its split
+// pile during the physical travel/ingest phases. Until ingestion publishes its
+// event, that exact colony unit is still conserved and must bridge the ledger.
+const captiveMealInTransit=(w:World)=>w.pawns.reduce((total,pawn)=>{
+  const need=pawn.prisoner&&pawn.need?.kind==='eat'?pawn.need:undefined;
+  if(!need||need.carryPileId===null)return total;
+  const pile=w.piles.find(candidate=>candidate.id===need.carryPileId&&candidate.kind==='food'&&candidate.owner.type==='pawn'&&candidate.owner.pawnId===pawn.id);
+  return total+(pile?.quantity??0);
+},0);
 
 test('Prison : préflight du réapprovisionnement au-delà de la clairière épuisée, sans injection',()=>{
   const w=loadFixture(),player=newPrisonPlayer(w,energyReport.player),before=serializeWorld(w),wood=woodAccount(w),resources=structuredClone(w.resources);
@@ -82,7 +93,7 @@ function runPrisonJourney(stopTick?:number):void {
     expect(validateWorld(w),c).toEqual([]);expect(survivorPlan(w,true).anchor,c).toEqual(player.campAnchor);
     expect(woodAccount(w),c).toBeCloseTo(initial.wood,7);
     expect(metalAccount(w,'steel'),c).toBe(initial.steel+ledger.steelMined);expect(metalAccount(w,'component'),c).toBe(initial.component+ledger.componentsMined);
-    expect(foodAccount(w)+ledger.consumed+9*ledger.cooked+(w.wildlife?.eatenItems??0)-initial.animalEaten,c).toBe(initial.food+ledger.harvested);
+    expect(foodAccount(w)+captiveMealInTransit(w)+ledger.consumed+9*ledger.cooked+(w.wildlife?.eatenItems??0)-initial.animalEaten,c).toBe(initial.food+ledger.harvested);
     expect(player.initialColonists.every(id=>w.pawns.some(p=>p.id===id&&isColonist(p)&&p.state!=='dead')),c).toBe(true);
   };
   const continuation=()=>{

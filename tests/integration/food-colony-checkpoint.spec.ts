@@ -1,13 +1,16 @@
 import { expect, test, type Page } from '@playwright/test';
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { gunzipSync } from 'node:zlib';
 import { deserializeWorld, validateWorld } from '../../src/sim/serialization';
 import { plantGrowth } from '../../src/sim/plants';
-import type { Cell, World } from '../../src/sim/types';
+import { SCHEMA_VERSION, type Cell, type World } from '../../src/sim/types';
 import { cell, expectWorld, observeErrors, panel, pause, saveKey, tool, world } from './helpers';
 import { revealCells } from './player-actions';
 
-const checkpointPath = 'tmp/crashlanded-final-v84-42.json';
+// Use the immutable clean checkpoint. The tmp pilot output is a mutable,
+// already-migrated V90 save and must not be the native oracle for V84.
+const checkpointPath = new URL('../fixtures/colony-v84.json.gz', import.meta.url);
 const reportPath = 'artifacts/food-colony-native-v84.json';
 const viewport = { width: 1440, height: 1000 };
 
@@ -35,14 +38,14 @@ async function inspect(page: Page, target: Cell, ready: () => Promise<boolean>, 
 test('native real V84 colony: load, inspect crops and stations, save and continue', async ({ playwright }) => {
   test.skip(!existsSync(checkpointPath), 'Complete the real 24-day V84 colony pilot first.');
   test.setTimeout(180000);
-  const data = readFileSync(checkpointPath, 'utf8');
+  const data = gunzipSync(readFileSync(checkpointPath)).toString('utf8');
   const source = JSON.parse(data) as World;
   expect(source.schemaVersion).toBe(84);
   expect(source.seed).toBe(42);
   expect(source.scenario?.id).toBe('crashlanded');
   expect(source.tick).toBeGreaterThanOrEqual(24 * 6000);
   const initial = deserializeWorld(data);
-  expect(initial).toEqual(source);
+  expect(initial).toMatchObject({ ...source, schemaVersion: SCHEMA_VERSION });
   expect(validateWorld(initial)).toEqual([]);
 
   const browser = await playwright.chromium.launch({ channel: 'chromium', args: [] });
@@ -50,7 +53,7 @@ test('native real V84 colony: load, inspect crops and stations, save and continu
   const errors = observeErrors(page);
   page.setDefaultTimeout(15000);
   const report: Record<string, unknown> = {
-    version: 84, controlled: false, source: checkpointPath,
+    version: 90, sourceVersion: 84, controlled: false, source: checkpointPath.pathname,
     sourceSha256: createHash('sha256').update(data).digest('hex'),
     initialTick: initial.tick, viewport, status: 'running', stage: 'load',
   };

@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 90,
+  "controlled": true,
+  "source": "tests/fixtures/colony-v89.json.gz",
+  "interventions": [
+    "60 cloth supplied",
+    "complex-furniture research prefilled except last 2 points",
+    "raids deferred beyond observation",
+    "maintained apparel threshold 90%"
+  ],
+  "startTick": 969414,
+  "endTick": 981414,
+  "days": 2,
+  "minimumLiving": 4,
+  "chair": {
+    "quality": "good",
+    "material": "wood",
+    "id": 29478,
+    "kind": "dining-chair",
+    "x": 120,
+    "z": 108,
+    "orientation": 0,
+    "footprint": "standard"
+  },
+  "benchId": 29576,
+  "tailored": 1,
+  "replacementId": 29613,
+  "oldShirtId": 4575,
+  "cleaned": 17,
+  "unfinishedContinuationExact": true,
+  "valid": true
+}

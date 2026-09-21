@@ -11,28 +11,29 @@ import type { WorkEnvironment } from './work-environment.ts';
 import type { Cell,CommandResult,Pawn,Structure,World } from './types.ts';
 
 export const RESEARCH_SCALE=1_000_000;
-export const STONECUTTING_RESEARCH_COST=300*RESEARCH_SCALE,SMITHING_RESEARCH_COST=700*RESEARCH_SCALE;
+export const STONECUTTING_RESEARCH_COST=300*RESEARCH_SCALE,SMITHING_RESEARCH_COST=700*RESEARCH_SCALE,COMPLEX_FURNITURE_RESEARCH_COST=300*RESEARCH_SCALE;
 export const stonecuttingUnlocked=(w:World):boolean=>w.research?.stonecutting?.completedAt!==undefined;
 export const smithingUnlocked=(w:World):boolean=>w.research?.smithing?.completedAt!==undefined;
+export const complexFurnitureUnlocked=(w:World):boolean=>w.research?.complexFurniture?.completedAt!==undefined;
 export const CLOTHING_RESEARCH_COST=600*RESEARCH_SCALE;
-export type ResearchProject='complex-clothing'|'air-conditioning'|'batteries'|'solar-power'|'stonecutting'|'smithing';
+export type ResearchProject='complex-clothing'|'complex-furniture'|'air-conditioning'|'batteries'|'solar-power'|'stonecutting'|'smithing';
 export interface ResearchProgress {points:number;completedAt?:number}
-export interface ResearchState extends ResearchProgress {project:ResearchProject|null;airConditioning?:ResearchProgress;batteries?:ResearchProgress;solarPower?:ResearchProgress;stonecutting?:ResearchProgress;smithing?:ResearchProgress}
+export interface ResearchState extends ResearchProgress {project:ResearchProject|null;complexFurniture?:ResearchProgress;airConditioning?:ResearchProgress;batteries?:ResearchProgress;solarPower?:ResearchProgress;stonecutting?:ResearchProgress;smithing?:ResearchProgress}
 export const AIR_CONDITIONING_COST=500*RESEARCH_SCALE;
 export const BATTERIES_RESEARCH_COST=400*RESEARCH_SCALE;
 export const SOLAR_POWER_RESEARCH_COST=600*RESEARCH_SCALE;
 export const airConditioningUnlocked=(w:World):boolean=>w.research?.airConditioning?.completedAt!==undefined;
 export const batteriesUnlocked=(w:World):boolean=>w.research?.batteries?.completedAt!==undefined;
 export const solarPowerUnlocked=(w:World):boolean=>w.research?.solarPower?.completedAt!==undefined;
-export const projectProgress=(s:ResearchState,project:ResearchProject):ResearchProgress=>project==='stonecutting'?(s.stonecutting??={points:0}):project==='smithing'?(s.smithing??={points:0}):project==='complex-clothing'?s:project==='air-conditioning'?(s.airConditioning??={points:0}):project==='batteries'?(s.batteries??={points:0}):(s.solarPower??={points:0});
-export const researchCost=(project:ResearchProject):number=>project==='stonecutting'?STONECUTTING_RESEARCH_COST:project==='smithing'?SMITHING_RESEARCH_COST:project==='complex-clothing'?CLOTHING_RESEARCH_COST:project==='air-conditioning'?AIR_CONDITIONING_COST:project==='batteries'?BATTERIES_RESEARCH_COST:SOLAR_POWER_RESEARCH_COST;
-export const researchUnlocked=(w:World,project:ResearchProject):boolean=>project==='stonecutting'?stonecuttingUnlocked(w):project==='smithing'?smithingUnlocked(w):project==='complex-clothing'?clothingUnlocked(w):project==='air-conditioning'?airConditioningUnlocked(w):project==='batteries'?batteriesUnlocked(w):solarPowerUnlocked(w);
+export const projectProgress=(s:ResearchState,project:ResearchProject):ResearchProgress=>project==='stonecutting'?(s.stonecutting??={points:0}):project==='smithing'?(s.smithing??={points:0}):project==='complex-furniture'?(s.complexFurniture??={points:0}):project==='complex-clothing'?s:project==='air-conditioning'?(s.airConditioning??={points:0}):project==='batteries'?(s.batteries??={points:0}):(s.solarPower??={points:0});
+export const researchCost=(project:ResearchProject):number=>project==='stonecutting'?STONECUTTING_RESEARCH_COST:project==='smithing'?SMITHING_RESEARCH_COST:project==='complex-furniture'?COMPLEX_FURNITURE_RESEARCH_COST:project==='complex-clothing'?CLOTHING_RESEARCH_COST:project==='air-conditioning'?AIR_CONDITIONING_COST:project==='batteries'?BATTERIES_RESEARCH_COST:SOLAR_POWER_RESEARCH_COST;
+export const researchUnlocked=(w:World,project:ResearchProject):boolean=>project==='stonecutting'?stonecuttingUnlocked(w):project==='smithing'?smithingUnlocked(w):project==='complex-furniture'?complexFurnitureUnlocked(w):project==='complex-clothing'?clothingUnlocked(w):project==='air-conditioning'?airConditioningUnlocked(w):project==='batteries'?batteriesUnlocked(w):solarPowerUnlocked(w);
 export interface ResearchTask {stationId:number;spot:Cell;worked:number}
 export const clothingUnlocked=(world:World):boolean=>world.research?.completedAt!==undefined;
 export const intellectualSkill=(pawn:Pawn):SkillRecord=>pawn.skills.intellectual??{level:0,xp:0,dailyXp:0,passion:0};
 export const researchWanted=(world:World,pawn:Pawn):boolean=>!!world.research?.project&&pawn.priorities.research>0;
 export function selectResearch(world:World,project:unknown):CommandResult {
-  if(project!==null&&project!=='complex-clothing'&&project!=='air-conditioning'&&project!=='batteries'&&project!=='solar-power'&&project!=='stonecutting'&&project!=='smithing')return {ok:false,code:'invalid-command',reason:'Projet inconnu.'};
+  if(project!==null&&project!=='complex-clothing'&&project!=='complex-furniture'&&project!=='air-conditioning'&&project!=='batteries'&&project!=='solar-power'&&project!=='stonecutting'&&project!=='smithing')return {ok:false,code:'invalid-command',reason:'Projet inconnu.'};
   if(project&&researchUnlocked(world,project))return {ok:false,code:'invalid-command',reason:'Cette recherche est déjà terminée.'};
   world.research??={project:null,points:0};world.research.project=project;if(project)projectProgress(world.research,project);
   for(const pawn of world.pawns){if(pawn.research)releaseAssignments(world,pawn);pawn.planCooldown=0;}
@@ -65,6 +66,6 @@ export function processResearch(world:World,pawn:Pawn,move:(target:Cell,exact:bo
   pawn.skills.intellectual??={...intellectualSkill(pawn)};learnSkill(pawn.skills.intellectual,1000,pawn);task.worked++;
   if(progress.points===cost){state.project=null;progress.completedAt=world.tick;
     for(const p of world.pawns)if(p.research)releaseAssignments(world,p);
-    event(project==='stonecutting'?'Recherche achevée : Taille de pierre. Dalles de pierre débloquées.':project==='smithing'?'Recherche achevée : Forge. Dalles en acier débloquées.':project==='complex-clothing'?'Recherche achevée : Vêtements complexes. Établi de tailleur et chemise débloqués.':project==='air-conditioning'?'Recherche achevée : Climatisation. Climatiseur électrique débloqué.':project==='batteries'?'Recherche achevée : Batteries. Stockage électrique débloqué.':'Recherche achevée : Panneaux solaires. Production solaire débloquée.');
+    event(project==='stonecutting'?'Recherche achevée : Taille de pierre. Dalles de pierre débloquées.':project==='smithing'?'Recherche achevée : Forge. Dalles en acier débloquées.':project==='complex-furniture'?'Recherche achevée : Mobilier complexe. Chaises, fauteuils et mobilier de chambre débloqués.':project==='complex-clothing'?'Recherche achevée : Vêtements complexes. Établis de tailleur et vêtements avancés débloqués.':project==='air-conditioning'?'Recherche achevée : Climatisation. Climatiseur électrique débloqué.':project==='batteries'?'Recherche achevée : Batteries. Stockage électrique débloqué.':'Recherche achevée : Panneaux solaires. Production solaire débloquée.');
   }else if(task.worked>=400)releaseAssignments(world,pawn);
 }

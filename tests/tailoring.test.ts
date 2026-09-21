@@ -41,7 +41,7 @@ test('physical sixty-cloth gather, interruptions, author-bound work, exact save 
   command(w,{type:'priority',pawnId:author.id,work:'craft',value:0});command(w,{type:'priority',pawnId:other.id,work:'craft',value:1});
   stepWorld(w,100);expect(unfinished(w)!.id).toBe(id);expect(unfinished(w)!.unfinished!.progress).toBe(progress);expect(other.cooking).toBeNull();
   // Bound resume ignores changed ingredient filters and radius, as in the reference.
-  command(w,{type:'bill-update',structureId:s.id,billId:b.id,settings:{...b,filters:{cloth:false},radius:0}});
+  command(w,{type:'bill-update',structureId:s.id,billId:b.id,settings:{...b,filters:{cloth:false,'light-leather':false},radius:0}});
   command(w,{type:'priority',pawnId:author.id,work:'craft',value:1});
   until(w,()=>{if(author.cooking)snapshots.set(author.cooking.phase,snapshots.get(author.cooking.phase)??serializeWorld(w));return w.piles.some(p=>p.item==='cloth-tribalwear'&&p.owner.type==='ground');});
   expect([...snapshots.keys()].sort()).toEqual(['gather','output','work']);expect(balance(w)).toBe(120);expect(unfinished(w)).toBeUndefined();expect(b.target).toBe(0);

@@ -14,7 +14,7 @@ test('infection inspection never labels rounded immunity as actually won',()=>{
 });
 
 test('real encounter, delayed infection, repeated physical care, immunity and convalescence',()=>{
-  const version=process.env.VALIDATION_VERSION??'v81',seed=11;
+  const version=process.env.VALIDATION_VERSION??'v81',seed=20;
   let w=infectionCamp(seed);const start=w.tick,patientId=w.pawns[0]!.id,enemyId=w.pawns[3]!.id;
   const initial=infectionSummary(w),milestones:Record<string,number>={},journal:{tick:number;reason:string;command:unknown}[]=[],
     observations:ReturnType<typeof infectionSummary>[]=[],care:{tick:number;id:number;quality:number;expiresAtCore:number}[]=[],

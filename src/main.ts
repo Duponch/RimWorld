@@ -57,6 +57,7 @@ import { OrderMenu } from './ui/order-menu';
 import type { SelectionGesture } from './render/PawnSelectionInput';
 import { createScheduleControls } from './ui/schedule-controls';
 import { createFoodPolicyControls } from './ui/food-policy-controls';
+import { createApparelPolicyControls } from './ui/apparel-policy-controls';
 import { billControls, updateBillControls } from './ui/bill-controls';
 import { growingControls } from './ui/growing-controls';
 import { growingZoneAt } from './sim/farming';
@@ -78,8 +79,9 @@ import { gameLayout, storageSettings, toolDefinitions } from './ui/layout';
 import type { ArchitectCategory, Panel, Tool } from './ui/layout';
 
 import { recreationInspection, updateRecreationInspection } from './ui/recreation-inspection';
-const jobLabels: Record<JobKind, string> = { grave:'Creuser une tombe','lay-floor':'Pose de sol','remove-floor':'Retrait de sol', heater:'Radiateur','wind-turbine':'Éolienne',flick:'Actionner un interrupteur', 'power-conduit':'Construction du câble', 'power-switch':'Construction de l’interrupteur', battery:'Construction de la batterie', 'solar-generator':'Construction du générateur solaire', 'fueled-stove':'Cuisinière à bois','electric-stove':'Cuisinière électrique','butcher-table':'Table de boucherie', 'butcher-spot':'Emplacement de boucherie', cooler:'Climatiseur', 'research-bench':'Bureau de recherche','tailor-bench':'Établi de tailleur', 'crafting-spot':'Emplacement d’artisanat', repair:'Réparation', 'wood-generator':'Construction du générateur à bois', 'standing-lamp':'Construction de la lampe', 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'Pose de toit', 'remove-roof':'Retrait de toit', door:'Construction de la porte', stonecutter:'Construction de la table de taille', mine:'Minage', uninstall:'Désinstallation',install:'Réinstallation', deconstruct: 'Déconstruction', chop: 'Abattage', harvest: 'Récolte', cut: 'Coupe de plante', sow: 'Semis', wall: 'Construction du mur', bed: 'Construction du lit', table: 'Construction de la table', stool: 'Construction du tabouret', horseshoes: 'Construction du piquet de fers à cheval', campfire: 'Construction du feu de camp' };
+const jobLabels: Record<JobKind, string> = { grave:'Creuser une tombe','lay-floor':'Pose de sol','remove-floor':'Retrait de sol', heater:'Radiateur','wind-turbine':'Éolienne',flick:'Actionner un interrupteur', 'power-conduit':'Construction du câble', 'power-switch':'Construction de l’interrupteur', battery:'Construction de la batterie', 'solar-generator':'Construction du générateur solaire', 'fueled-stove':'Cuisinière à bois','electric-stove':'Cuisinière électrique','butcher-table':'Table de boucherie', 'butcher-spot':'Emplacement de boucherie', cooler:'Climatiseur', 'research-bench':'Bureau de recherche','tailor-bench':'Établi de tailleur','electric-tailor-bench':'Établi de tailleur électrique', 'crafting-spot':'Emplacement d’artisanat', repair:'Réparation', 'wood-generator':'Construction du générateur à bois', 'standing-lamp':'Construction de la lampe', 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'Pose de toit', 'remove-roof':'Retrait de toit', door:'Construction de la porte', stonecutter:'Construction de la table de taille', mine:'Minage', uninstall:'Désinstallation',install:'Réinstallation', deconstruct: 'Déconstruction', chop: 'Abattage', harvest: 'Récolte', cut: 'Coupe de plante', sow: 'Semis', wall: 'Construction du mur', bed: 'Construction du lit', table: 'Construction de la table','table-square':'Construction de la table carrée','table-long':'Construction de la table longue', stool: 'Construction du tabouret','dining-chair':'Construction de la chaise',armchair:'Construction du fauteuil','end-table':'Construction de la table de chevet',dresser:'Construction de la commode','flower-pot':'Construction du pot de fleurs', horseshoes: 'Construction du piquet de fers à cheval', campfire: 'Construction du feu de camp' };
 const stateLabels: Record<Pawn['state'], string> = { resting:'Au lit pour soins', downed:'À terre', dead:'Décédé', idle: 'Disponible', moving: 'En chemin', working: 'Au travail', sleeping: 'Se repose', hungry: 'Cherche à manger', eating: 'Mange', recreating: 'Se divertit' };
+const rotatableTools=new Set<Tool>(['grave','wind-turbine','battery','fueled-stove','electric-stove','butcher-table','install','bed','table','table-square','table-long','dining-chair','armchair','end-table','dresser','campfire','stonecutter','butcher-spot','crafting-spot','research-bench','tailor-bench','electric-tailor-bench','cooler']);
 const resourceLabels = { potato:'Plant de pommes de terre',corn:'Plant de maïs', tree: 'Arbre', berries: 'Buisson de baies', rock: 'Pierre au sol', rice: 'Plant de riz', cotton: 'Cotonnier' };
 const params = new URLSearchParams(location.search);
 const diagnosticStart = params.has('scenario');
@@ -169,6 +171,10 @@ const foodPolicyUI = createFoodPolicyControls(el('assign-panel'), async command 
   try { await client.command(command); renderState(); return null; }
   catch(error) {return error instanceof Error ? error.message : String(error);}
 });
+const apparelPolicyUI = createApparelPolicyControls(el('assign-panel'), async command => {
+  try { await client.command(command); renderState(); return null; }
+  catch(error) {return error instanceof Error ? error.message : String(error);}
+});
 const constructionUI = constructionControls(() => applyTool(currentTool));
 function setCategory(category: ArchitectCategory) {
   currentCategory = category;
@@ -190,7 +196,7 @@ function setPanel(panel: Panel) {
   for (const name of ['architect', 'work', 'schedule', 'assign', 'history', 'menu', 'research', 'wildlife'] as const) el(`${name}-panel`).hidden = panel !== name;
   if(panel==='wildlife'&&snapshot)renderWildlife(snapshot);
   if (panel === 'schedule' && snapshot) scheduleUI.update(snapshot);
-  if (panel === 'assign' && snapshot) foodPolicyUI.update(snapshot);
+  if (panel === 'assign' && snapshot) {foodPolicyUI.update(snapshot);apparelPolicyUI.update(snapshot);}
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-panel]:not(:disabled)')) {
     const active = button.dataset.panel === panel;
     button.classList.toggle('active', active);
@@ -215,7 +221,8 @@ function applyTool(tool: Tool) {
     button.setAttribute('aria-pressed', String(active));
   }
   el('tool-instruction').textContent = constructionUI.update(tool, toolDefinitions.find(item => item.id === tool)?.hint??'Choisissez le nouvel emplacement du meuble. Q/E : rotation. Échap : annuler.');
-  el('placement-controls').hidden = tool !== 'grave' && tool !== 'wind-turbine' && tool !== 'battery' && tool !== 'fueled-stove' && tool !== 'electric-stove' && tool !== 'butcher-table' && tool !== 'install' && tool !== 'bed' && tool !== 'table' && tool !== 'campfire' && tool !== 'stonecutter' && tool !== 'butcher-spot' && tool !== 'crafting-spot' && tool !== 'research-bench' && tool !== 'tailor-bench' && tool !== 'cooler';
+  renderer?.setConstructionMaterial(constructionUI.material(tool));
+  el('placement-controls').hidden = !rotatableTools.has(tool);
   el('storage-options').hidden = tool !== 'stockpile';
 }
 function setTool(tool: Tool) {
@@ -417,6 +424,7 @@ function renderState() {
   updateResearchPanel(el('research-content'),world,c=>void attempt(()=>client.command(c)));
   scheduleUI.update(world);
   foodPolicyUI.update(world);
+  apparelPolicyUI.update(world);
   el('blocks').textContent=String(world.piles.reduce((n,p)=>n+(p.kind==='blocks'&&colonyPile(world,p)?p.quantity:0),0));
   el('medicine').textContent=String(world.piles.reduce((n,p)=>n+(p.kind==='medicine'&&colonyPile(world,p)?p.quantity:0),0));
   el('silver').textContent=String(world.piles.reduce((n,p)=>n+(p.item==='silver'&&colonyPile(world,p)?p.quantity:0),0));
@@ -657,7 +665,7 @@ document.addEventListener('keydown', event => {
   if(event.key.toLowerCase()==='r'&&selection.ids.size){event.preventDefault();if(!event.repeat)toggleDraft(snapshot?.pawns.filter(p=>selection.ids.has(p.id)&&isColonist(p)&&!p.prisoner)??[],c=>void attempt(async()=>{await client.command(c);renderState();}));return;}
   const shortcuts: Record<string, Tool> = { m:'mine', c: 'chop', r: 'harvest', b: 'wall', l: 'bed', x: 'cancel' };
   const key = event.key.toLowerCase(); if (key in shortcuts) setTool(shortcuts[key]);
-  else if ((currentTool === 'grave' || currentTool === 'battery' || currentTool === 'fueled-stove' || currentTool === 'electric-stove' || currentTool === 'butcher-table' || currentTool === 'install' || currentTool === 'bed' || currentTool === 'table' || currentTool === 'campfire' || currentTool === 'stonecutter' || currentTool === 'butcher-spot' || currentTool === 'crafting-spot' || currentTool === 'research-bench' || currentTool === 'tailor-bench' || currentTool === 'cooler' || currentTool === 'wind-turbine') && (key === 'q' || key === 'e')) { event.preventDefault(); rotatePlacement(key === 'q' ? -1 : 1); }
+  else if (rotatableTools.has(currentTool) && (key === 'q' || key === 'e')) { event.preventDefault(); rotatePlacement(key === 'q' ? -1 : 1); }
   else if (key === 's') { event.preventDefault(); setTool('stockpile'); }
 });
 client.onError = message => notify(message, true);

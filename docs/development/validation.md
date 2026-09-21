@@ -1,4 +1,9 @@
-# Validation courante — V89
+# Validation courante — V90
+
+V90 : [habitat, confort et habillement](../history/validation-habitat-apparel-v90.md),
+validation du périmètre acquise : 49 contrôles ciblés finaux, 21 parcours UI repris, présentation native, campagne avec reprises de J161,569 à J182,577 et mesures CPU/worker/rendu. Les preuves distinguent contrats regroupés,
+continuations contrôlée/naturelle, UI et mesures CPU/natives ; aucun jalon global
+n'est clos par l'enrichissement du catalogue.
 
 **V89 validée dans son périmètre : entretien, salubrité et habitat.** Corps humains transportés puis inhumés, sept sols construits, six salissures et métier Nettoyage, contamination et intoxication relient plusieurs boucles. La campagne centrale compte 179 contrôles distincts dans 42 fichiers ; les vrais clics natifs et la charge mixte passent. La colonie V88 atteint J161,569 par reprises documentées : quatre habitants, trois tombes occupées, neuf sols, douze traces nettoyées et douze repas. Aucune intoxication naturelle n'est inventée pour compléter ce résultat. [Preuves V89](../history/validation-hygiene-v89.md), [performances](../research/performance-v89.md) : image p95 18 ms, pic 84 ms, débit 4,734×/6× ; le débit cible n'est pas garanti.
 

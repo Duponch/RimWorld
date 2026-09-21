@@ -9,7 +9,7 @@ import type { Structure, World } from './types.ts';
 
 /** Installed barriers: walls, manual doors and the solid cooler. */
 export const isBarrier=(s:Pick<Structure,'kind'>):boolean=>s.kind==='wall'||s.kind==='door'||s.kind==='cooler';
-const FACTORS:Record<ConstructionMaterial,number>={wood:.65,steel:1,'granite-blocks':1.7,'limestone-blocks':1.55,'marble-blocks':1.2,'sandstone-blocks':1.4,'slate-blocks':1.3};
+const FACTORS:Record<ConstructionMaterial,number>={wood:.65,steel:1,'granite-blocks':1.7,'limestone-blocks':1.55,'marble-blocks':1.2,'sandstone-blocks':1.4,'slate-blocks':1.3,cloth:1,'light-leather':1};
 export const barrierMaxHp=(s:Pick<Structure,'kind'|'material'>):number=>s.kind==='cooler'?100:Math.round((s.kind==='door'?160:300)*FACTORS[s.material??'wood']);
 export const barrierHp=(s:Structure):number=>barrierMaxHp(s)-(s.damage??0);
 export interface DestructionLedger { count:number; lost:Partial<Record<ConstructionMaterial|'component',number>> }

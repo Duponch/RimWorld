@@ -1,0 +1,16 @@
+{
+  "schema": 90,
+  "date": "2026-09-21",
+  "baseCommit": "4e14400",
+  "status": "validated-in-scope",
+  "priorGlobalCheckpoint": { "files": 151, "passed": 636, "skipped": 2, "seconds": 1319.02, "note": "Before final corrections; not claimed as a new full run of the final source tree." },
+  "finalContracts": { "files": 10, "passed": 49, "seconds": 10.67, "paths": ["tests/habitat-comfort.test.ts", "tests/habitat-render.test.ts", "tests/beauty-need.test.ts", "tests/v90-gameplay.test.ts", "tests/v90-persistence.test.ts", "tests/apparel-renewal.test.ts", "tests/apparel-policy-ui.test.ts", "tests/dining.test.ts", "tests/apparel.test.ts", "tests/fire.test.ts"] },
+  "targetedNativeUi": { "passed": 21, "note": "Twenty historical cases across sequential reruns, then V90 real placement, rotation, recipe filtering, apparel policy and exact reload. Not a new complete UI suite.", "v90Seconds": 14.4 },
+  "presentation": { "command": "npm run test:presentation", "passed": true, "actions": ["mine", "chop"], "speedSwitches": [1, 6, 1, 3], "jumps": 0, "solidOccupancy": 0 },
+  "naturalColony": { "report": "habitat-apparel-natural-v90.json", "startTick": 969414, "endTick": 1095464, "resumedAtTicks": [1005414, 1041414, 1077414, 1095414], "finalCheckSeconds": 7.46, "livingColonists": 4, "note": "Failed branches and player/oracle repairs retained separately. No free resources, research points or deferred raids." },
+  "controlledColony": { "report": "habitat-apparel-colony-v90.json", "days": 2, "note": "Prepared cloth, advanced research and deferred raid; distinct from natural progression." },
+  "performance": { "cpu": "habitat-apparel-cpu-v90.json", "native": "habitat-apparel-render-v90.json", "nativeEffectiveSpeed": 2.324, "requestedSpeed": 6, "comparableBeforeAfterOptimization": false },
+  "build": { "passed": true, "typecheck": true, "warning": "Vite chunk larger than 500 kB retained." },
+  "documentation": { "passed": true, "documents": 340, "localLinks": 3715, "domainIds": 25, "validationFamilies": 5, "originalSourcesByteIdentical": 3 },
+  "gates": { "G0": "consolidating", "G1": "partial", "G2": "partial", "G3": "partial", "G4": "started", "G5": "absent" }
+}

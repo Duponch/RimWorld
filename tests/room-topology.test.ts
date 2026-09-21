@@ -41,7 +41,8 @@ test('enclosures agree with an independent oracle across rectangles, in-place ed
       const index = rand() % w.tiles.length;
       if (w.structures.some(s => s.z * width + s.x === index)) continue;
       w.tiles[index]!.terrain = 'grass';
-      w.structures.push({ id: i + 1, kind: (['wall', 'door', 'bed', 'table'] as const)[rand() % 4]!, x: index % width, z: Math.floor(index / width), orientation: 0, footprint: 'standard' });
+      const kind=(['wall', 'door', 'bed', 'table'] as const)[rand() % 4]!;
+      w.structures.push({ id: i + 1, kind, x: index % width, z: Math.floor(index / width), orientation: 0, footprint: 'standard', ...(kind==='bed'||kind==='table'?{quality:'normal' as const}:{}) });
     }
     const before = structuredClone(w), topology = cache.read(w), expected = oracle(w);
     expect(w).toEqual(before);
@@ -75,7 +76,7 @@ test('real removal, frame, construction, mining and save/reload merge and split 
   door.door!.forbidden = false;
   w.tiles[15 * 32 + 13]!.terrain = 'water';
   expect(cache.read(w)).toBe(closed); // Impassable water still exchanges air.
-  w.structures.push({ id: w.nextId++, kind: 'table', x: 12, z: 17, orientation: 1, footprint: 'standard' });
+  w.structures.push({ id: w.nextId++, kind: 'table', x: 12, z: 17, orientation: 1, footprint: 'standard', quality: 'normal' });
   expect(cache.read(w)).toBe(closed);
   const until = (predicate: () => boolean, max = 3500) => {
     for (let i = 0; i < max && !predicate(); i++) { stepWorld(w); if (i % 50 === 0) expect(validateWorld(w)).toEqual([]); }

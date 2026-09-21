@@ -38,7 +38,7 @@ export const PLAN_INTERVAL=20;
 export interface SearchStats { searches:{pawnId:number;mode:'all'|'nearest'|'full';visited:number;unreachedGroups:number;connectivityVisited?:number}[] }
 export interface SearchBudget { remaining:number; pairs:number; stats?:SearchStats }
 export type NavigationGrid=()=>Uint8Array;
-export const workType=(job:Pick<Job,'kind'|'growingZoneId'|'installationWork'>):WorkType=>job.kind==='flick'?'basic':job.kind==='mine'?'mine':job.installationWork??(job.growingZoneId !== undefined || job.kind === 'sow' ? 'grow' : ['chop','harvest','cut'].includes(job.kind) ? 'gather' : 'build');
+export const workType=(job:Pick<Job,'kind'|'growingZoneId'|'flowerPotId'|'installationWork'>):WorkType=>job.kind==='flick'?'basic':job.kind==='mine'?'mine':job.installationWork??(job.growingZoneId !== undefined || job.flowerPotId !== undefined || job.kind === 'sow' ? 'grow' : ['chop','harvest','cut'].includes(job.kind) ? 'gather' : 'build');
 const sameCell=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
 
 export function search(world: World, pawn: Pawn, blocked: Uint8Array, occupied: ReadonlySet<number>, budget: SearchBudget, goals?: ReadonlySet<number>, allGroups?:readonly ReadonlySet<number>[]): Reachability | null {

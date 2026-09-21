@@ -2,16 +2,23 @@ import type { Cell,Resource,World } from './types.ts';
 import { ingestFoodRisk } from './food-hygiene.ts';
 import type { WildAnimal } from './wildlife-state.ts';
 import { HARE } from './wildlife-state.ts';
-import { isPlant,plantGrowth } from './plants.ts';
+import { harvestable,isPlant,plantGrowth } from './plants.ts';
 import { plantLeafless } from './plant-life.ts';
 import { ITEM_DEFINITIONS,type ItemId } from './items.ts';
 import { reservedSource } from './materials.ts';
+import { releaseAssignments } from './work-release.ts';
 
 export interface AnimalFood extends Cell { id:number;kind:'plant'|'pile';quantity:number }
 const plantNutrition={berries:.35,rice:.18,potato:.25,corn:.4,cotton:.2} as const;
 // Herbivory is an explicit content profile. New nutritious items do not silently
 // become animal food; prepared meals remain admissible under the existing rule.
 const hareFoods:ReadonlySet<ItemId>=new Set(['berries','rice','potato','corn','simple-meal','survival-meal','legacy-portion']);
+function invalidatePlantWork(world:World,r:Resource,removed=false):void {
+  const ids=new Set(world.jobs.filter(j=>j.x===r.x&&j.z===r.z&&(j.kind==='cut'||j.kind==='harvest'&&(removed||!harvestable(world,r)))).map(j=>j.id));
+  if(!ids.size)return;
+  for(const pawn of world.pawns){if(pawn.jobId!==null&&ids.has(pawn.jobId))releaseAssignments(world,pawn);pawn.orders.queue=pawn.orders.queue.filter(order=>typeof order!=='number'||!ids.has(order));}
+  world.jobs=world.jobs.filter(j=>!ids.has(j.id));
+}
 function unclaimedPlant(world:World,r:Resource,except:number):boolean {
   return !world.wildlife?.animals.some(a=>a.id!==except&&a.meal?.kind==='plant'&&a.meal.id===r.id)
     &&!world.jobs.some(j=>j.reservedBy!==null&&j.x===r.x&&j.z===r.z&&['harvest','cut','sow'].includes(j.kind));
@@ -42,9 +49,8 @@ export function finishAnimalMeal(world:World,a:WildAnimal):void {
     const growth=plantGrowth(world,r),perPlant=plantNutrition[r.kind];nutrition=Math.min(HARE.nutrition-a.food,growth*perPlant);
     if(nutrition>=growth*perPlant){
       world.resources=world.resources.filter(p=>p!==r);s.eatenPlants++;
-      // Only unclaimed designations can coexist with a grazing reservation.
-      world.jobs=world.jobs.filter(j=>j.x!==r.x||j.z!==r.z||!['harvest','cut'].includes(j.kind));
-    } else {r.growth=growth-nutrition/perPlant;r.growthTick=world.tick;}
+      invalidatePlantWork(world,r,true);
+    } else {r.growth=growth-nutrition/perPlant;r.growthTick=world.tick;invalidatePlantWork(world,r);}
   } else {
     const p=world.piles.find(p=>p.id===m.id)!;nutrition=ITEM_DEFINITIONS[p.item].nutrition*m.quantity/100;
     p.quantity-=m.quantity;s.eatenItems+=m.quantity;if(!p.quantity)world.piles.splice(world.piles.indexOf(p),1);

@@ -1,0 +1,148 @@
+{
+  "tick": 30429,
+  "frozenAt": 22714,
+  "outageAt": 28972,
+  "frozenAge": 453394.594815567,
+  "spoiled": {
+    "berries": 0,
+    "rice": 0,
+    "simple-meal": 20
+  },
+  "structures": [
+    "bed",
+    "bed",
+    "wall",
+    "wall",
+    "wall",
+    "wall",
+    "door",
+    "wall",
+    "wall",
+    "wall",
+    "wall",
+    "wall",
+    "wall",
+    "research-bench",
+    "horseshoes",
+    "wall",
+    "wall",
+    "wall",
+    "wall",
+    "wood-generator",
+    "cooler"
+  ],
+  "research": {
+    "project": null,
+    "points": 0,
+    "airConditioning": {
+      "points": 500000000,
+      "completedAt": 21445
+    }
+  },
+  "actions": [
+    {
+      "tick": 0,
+      "reason": "Rechercher une conservation obtenable pour les réserves."
+    },
+    {
+      "tick": 0,
+      "reason": "Garder les repas frais en réserve et vivre des rations de l’expédition."
+    },
+    {
+      "tick": 0,
+      "reason": "Construire le camp et le garde-manger avec les fournitures disponibles."
+    },
+    {
+      "tick": 0,
+      "reason": "Construire le camp et le garde-manger avec les fournitures disponibles."
+    },
+    {
+      "tick": 0,
+      "reason": "Construire le camp et le garde-manger avec les fournitures disponibles."
+    },
+    {
+      "tick": 0,
+      "reason": "Construire le camp et le garde-manger avec les fournitures disponibles."
+    },
+    {
+      "tick": 0,
+      "reason": "Construire le camp et le garde-manger avec les fournitures disponibles."
+    },
+    {
+      "tick": 0,
+      "reason": "Construire le camp et le garde-manger avec les fournitures disponibles."
+    },
+    {
+      "tick": 0,
+      "reason": "Construire le camp et le garde-manger avec les fournitures disponibles."
+    },
+    {
+      "tick": 0,
+      "reason": "Construire le camp et le garde-manger avec les fournitures disponibles."
+    },
+    {
+      "tick": 0,
+      "reason": "Construire le camp et le garde-manger avec les fournitures disponibles."
+    },
+    {
+      "tick": 0,
+      "reason": "Construire le camp et le garde-manger avec les fournitures disponibles."
+    },
+    {
+      "tick": 0,
+      "reason": "Construire le camp et le garde-manger avec les fournitures disponibles."
+    },
+    {
+      "tick": 0,
+      "reason": "Construire le camp et le garde-manger avec les fournitures disponibles."
+    },
+    {
+      "tick": 0,
+      "reason": "Construire le camp et le garde-manger avec les fournitures disponibles."
+    },
+    {
+      "tick": 0,
+      "reason": "Construire le camp et le garde-manger avec les fournitures disponibles."
+    },
+    {
+      "tick": 0,
+      "reason": "Construire le camp et le garde-manger avec les fournitures disponibles."
+    },
+    {
+      "tick": 0,
+      "reason": "Construire le camp et le garde-manger avec les fournitures disponibles."
+    },
+    {
+      "tick": 0,
+      "reason": "Construire le camp et le garde-manger avec les fournitures disponibles."
+    },
+    {
+      "tick": 0,
+      "reason": "Construire le camp et le garde-manger avec les fournitures disponibles."
+    },
+    {
+      "tick": 0,
+      "reason": "Construire le camp et le garde-manger avec les fournitures disponibles."
+    },
+    {
+      "tick": 0,
+      "reason": "Construire le camp et le garde-manger avec les fournitures disponibles."
+    },
+    {
+      "tick": 0,
+      "reason": "Couvrir la réserve pour retenir le froid."
+    },
+    {
+      "tick": 21450,
+      "reason": "Construire le camp et le garde-manger avec les fournitures disponibles."
+    },
+    {
+      "tick": 22300,
+      "reason": "Régler le congélateur avec une marge sous zéro."
+    },
+    {
+      "tick": 22300,
+      "reason": "Ranger physiquement les provisions dans la réserve froide."
+    }
+  ]
+}

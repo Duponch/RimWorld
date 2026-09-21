@@ -4,7 +4,7 @@ import { ITEM_DEFINITIONS } from '../sim/items';
 import { footprintCells } from '../sim/definitions';
 import type { Job, JobKind, Structure, World } from '../sim/types';
 
-const stuffable = new Set<string>(['research-bench','tailor-bench','door','wall', 'bed', 'table', 'stool', 'horseshoes', 'stonecutter']);
+const stuffable = new Set<string>(['research-bench','tailor-bench','electric-tailor-bench','door','wall','bed','table','table-square','table-long','stool','dining-chair','armchair','end-table','dresser','flower-pot','horseshoes','stonecutter']);
 export const placementMaterial = (tool:string, material:ConstructionMaterial):ConstructionMaterial|undefined =>
   tool==='heater'||tool==='wind-turbine'||tool==='power-conduit'||tool==='power-switch'||tool==='battery'||tool==='solar-generator'||tool==='fueled-stove'||tool==='electric-stove'||tool==='cooler'||tool==='wood-generator'||tool==='standing-lamp'?'steel':stuffable.has(tool) ? validConstructionMaterial(tool,material)?material:'wood' : tool === 'butcher-table' || tool === 'campfire' || tool === 'passive-cooler' ? 'wood' : undefined;
 

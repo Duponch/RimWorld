@@ -110,7 +110,7 @@ test('meal, medicine and whole furniture keep distinct identity and content duri
     const w=exhaustedCarrier(),p=w.pawns[0]!;p.rest=90;p.restZeroTicks=0;p.collapsePending=false;
     w.piles=w.piles.filter(i=>i.owner.type!=='pawn');
     if(kind==='furniture'){
-      const b={id:w.nextId++,kind:'bed' as const,material:'granite-blocks' as const,x:6,z:6,orientation:0 as const,footprint:'standard' as const};w.packed.push({building:b,owner:{type:'pawn',pawnId:p.id}});p.bedId=b.id;
+      const b={id:w.nextId++,kind:'bed' as const,material:'granite-blocks' as const,x:6,z:6,orientation:0 as const,footprint:'standard' as const,quality:'normal' as const};w.packed.push({building:b,owner:{type:'pawn',pawnId:p.id}});p.bedId=b.id;
       Object.assign(w.stockpiles[0]!,{x:15,z:15,filters:{wood:false,food:false,furniture:true}});w.piles=w.piles.filter(i=>i.owner.type!=='ground'||i.owner.x!==15||i.owner.z!==15);
       p.haul={sourcePileId:b.id,carryPileId:b.id,quantity:1,whole:true,phase:'deliver',pickupCell:{x:2,z:2},destination:{type:'stockpile',stockpileId:w.stockpiles[0]!.id}};
     }else{

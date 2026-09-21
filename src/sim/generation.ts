@@ -1,4 +1,6 @@
 import { startingPawn } from './starting-pawns.ts';
+import { createDefaultApparelPolicyRegistry } from './apparel-policy.ts';
+import { createApparelWearCalendar } from './apparel-renewal.ts';
 import { SCHEMA_VERSION } from './types.ts';
 import { generateSteel, generateMachinery } from './ore.ts';
 import { geologicalField } from './geology.ts';
@@ -147,7 +149,8 @@ export function emptyLandscape(seed: number, width: number, height: number): Wor
   if (![width, height].every(validMapDimension)) {
     throw new Error(`World dimensions must be integers between ${MIN_MAP_SIZE} and ${MAX_MAP_SIZE}.`);
   }
-  return { schemaVersion: SCHEMA_VERSION, packed:[],deconstructed: { count: 0, lostWood: 0, fuelTicks: 0 }, foodPolicies: initialFoodPolicies(), nextFoodPolicyId: 5, restRules: 'adult', spoiled: emptySpoilage(), foodRules: 'adult', seed: seed >>> 0, rng: (seed >>> 0) || 0x9e3779b9,
+  const registry=createDefaultApparelPolicyRegistry(),normalizedSeed=seed>>>0;
+  return { schemaVersion: SCHEMA_VERSION, apparelWear:createApparelWearCalendar(0,(normalizedSeed^0x0a77e1)>>>0),apparelPolicies:registry.apparelPolicies,nextApparelPolicyId:registry.nextApparelPolicyId,packed:[],deconstructed: { count: 0, lostWood: 0, fuelTicks: 0 }, foodPolicies: initialFoodPolicies(), nextFoodPolicyId: 5, restRules: 'adult', spoiled: emptySpoilage(), foodRules: 'adult', seed: normalizedSeed, rng: normalizedSeed || 0x9e3779b9,
     tick: 0, width, height, tiles: [], pawns: [], resources: [], structures: [], jobs: [],
     piles: [], stockpiles: [], growingZones: [], growingCursor: 0, environment: 'temperate-equinox-v1', stock: { wood: 0, food: 0 }, events: [], nextId: 1, logisticsCursor: 0 };
 }

@@ -19,11 +19,14 @@ function until(w:World,f:()=>boolean,n=1000){for(let i=0;i<n&&!f();i++){advance(
 
 test('physical grazing, fractional growth, discrete ingestion and exact continuation with motion tracks',()=>{
   const w=fixture(),s=w.wildlife!,a=s.animals[0]!,plant=w.resources[0]!,initialRng=w.rng,recorder=new MotionRecorder();
+  const harvestId=w.nextId++;w.jobs.push({id:harvestId,kind:'harvest',x:plant.x,z:plant.z,orientation:0,footprint:'standard',status:'pending',reservedBy:null,progress:0,escrow:{wood:0,food:0}});
+  expect(validateWorld(w)).toEqual([]);
   advance(w);expect(a.meal?.id).toBe(plant.id);expect(s.eatenNutrition).toBe(0);
   until(w,()=>a.state==='eating');recorder.capture(w);expect(recorder.snapshot().find(t=>t.id===a.id)?.segments.length).toBeGreaterThan(0);
   expect(Math.abs(a.x-plant.x)+Math.abs(a.z-plant.z)).toBeLessThanOrEqual(1);expect(a.motion?.end).toBeLessThanOrEqual(w.tick);
   advance(w,HARE.ingestTicks-1);expect(s.eatenNutrition).toBe(0);const copy=deserializeWorld(serializeWorld(w));
   advance(w);advance(copy);expect(copy).toEqual(w);expect(s.eatenNutrition).toBeGreaterThan(.17);expect(a.food).toBe(HARE.nutrition);
+  expect(plantGrowth(w,plant)).toBeLessThanOrEqual(.65);expect(w.jobs.some(j=>j.id===harvestId)).toBe(false);
   expect(plantGrowth(w,plant)).toBeCloseTo(1-s.eatenNutrition/.35,8);expect(s.eatenPlants).toBe(0);expect(w.rng).toBe(initialRng);
   for(let i=0;i<700;i++){advance(w);advance(copy);}expect(copy).toEqual(w);expect(validateWorld(w)).toEqual([]);
   // A small edible plant is wholly consumed, without inventing harvested items.

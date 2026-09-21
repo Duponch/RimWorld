@@ -18,6 +18,7 @@ const hunger=[situation('hungry','Faim',-6,'Nutrition sous 24 %.'),situation('ra
 const starvation=['Malnutrition débutante','Malnutrition légère','Malnutrition modérée','Famine sévère','Famine extrême'].map((label,index)=>situation(`starvation-${index}`,label,-20-index*6,'Nutrition épuisée et malnutrition progressive.'));
 const fatigue=[situation('drowsy','Somnolent',-6,'Repos sous 28 %.'),situation('tired','Très fatigué',-12,'Repos sous 14 %.'),situation('exhausted','Épuisé',-18,'Repos sous 1 %.')];
 const comforts=[situation('uncomfortable','Inconfortable',-3,'Confort sous 10 %.'),situation('comfortable','Confortable',4,'Confort d’au moins 60 %.'),situation('quite-comfortable','Très confortable',6,'Confort d’au moins 70 %.'),situation('extremely-comfortable','Extrêmement confortable',8,'Confort d’au moins 80 %.'),situation('luxurious','Confort luxueux',10,'Confort d’au moins 90 %.')];
+const beauty=[situation('hideous-environment','Environnement affreux',-15,'Beauté perçue sous 1 %.'),situation('very-ugly-environment','Environnement très laid',-10,'Beauté perçue sous 15 %.'),situation('ugly-environment','Environnement laid',-5,'Beauté perçue sous 35 %.'),situation('pretty-environment','Joli environnement',5,'Beauté perçue d’au moins 65 %.'),situation('beautiful-environment','Bel environnement',10,'Beauté perçue d’au moins 85 %.'),situation('gorgeous-environment','Environnement splendide',15,'Beauté perçue d’au moins 99 %.')];
 const leisure=[situation('recreation-starved','Privé de loisirs',-20,'Loisirs sous 1 %.'),situation('recreation-deprived','Manque important de loisirs',-10,'Loisirs sous 15 %.'),situation('recreation-low','Manque de loisirs',-5,'Loisirs sous 30 %.'),situation('recreation-high','Loisirs satisfaisants',5,'Loisirs d’au moins 70 %.'),situation('recreation-full','Loisirs pleinement satisfaits',10,'Loisirs d’au moins 85 %.')];
 const pains=[situation('minor-pain','Douleur légère',-5,'Douleur présente, sous 15 %.'),situation('serious-pain','Douleur importante',-10,'Douleur d’au moins 15 %.'),situation('intense-pain','Douleur intense',-15,'Douleur d’au moins 40 %.'),situation('extreme-pain','Douleur extrême',-20,'Douleur d’au moins 80 %.')];
 const apparel=[situation('ratty-apparel','Vêtements abîmés',-3,'Au moins une pièce portée a moins de 50 % de ses PV.'),situation('tattered-apparel','Vêtements en lambeaux',-5,'Au moins une pièce portée a moins de 20 % de ses PV.')];
@@ -28,6 +29,7 @@ const memoryOffsets={'ate-without-table':-3,'ate-raw-food':-7} as const;
 const hungerStage=(value:number)=>value<=0?2:value<12?1:value<24?0:-1;
 const restStage=(value:number)=>value<1?2:value<14?1:value<28?0:-1;
 const comfortStage=(value:number)=>value<10?0:value<60?-1:value<70?1:value<80?2:value<90?3:4;
+const beautyStage=(value:number)=>value<=1?0:value<15?1:value<35?2:value<65?-1:value<85?3:value<99?4:5;
 const joyStage=(value:number)=>value<1?0:value<15?1:value<30?2:value<70?-1:value<85?3:4;
 const painStage=(value:number)=>value<.0001?-1:value<.15?0:value<.4?1:value<.8?2:3;
 export const comfortMood=(value:number):number=>comforts[comfortStage(value)]?.offset??0;
@@ -41,7 +43,7 @@ export function moodThoughts(world:World,pawn:Pawn):readonly MoodThought[] {
   const difficultyMood=colonistMoodOffset(world,pawn);
   if(difficultyMood)thoughts.push(situation('difficulty-mood','Récit d’aventure',difficultyMood,'Bonus d’humeur du niveau d’aventure choisi.'));
   for(const id of pawn.traits??[]){const trait=TRAITS[id];if(trait.mood)thoughts.push({id:`trait-${id}`,label:trait.label,offset:trait.mood,kind:'situation',description:trait.description});}
-  for(const t of [pawn.hunger<=0?starvation[Math.max(0,malnutritionStage(pawn.health?.malnutrition)-1)]:hunger[hungerStage(pawn.hunger)],fatigue[restStage(pawn.rest)],comforts[comfortStage(pawn.comfort)],pawn.prisoner?undefined:leisure[joyStage(pawn.recreation.level)],pains[painStage(pawn.health?medicalPain(pawn.health):0)]])if(t)thoughts.push(t);
+  for(const t of [pawn.hunger<=0?starvation[Math.max(0,malnutritionStage(pawn.health?.malnutrition)-1)]:hunger[hungerStage(pawn.hunger)],fatigue[restStage(pawn.rest)],comforts[comfortStage(pawn.comfort)],beauty[beautyStage(pawn.beauty)],pawn.prisoner?undefined:leisure[joyStage(pawn.recreation.level)],pains[painStage(pawn.health?medicalPain(pawn.health):0)]])if(t)thoughts.push(t);
   let condition=1;
   for(const pile of world.piles)if(pile.owner.type==='apparel'&&pile.owner.pawnId===pawn.id)condition=Math.min(condition,pile.apparel!.hitPoints/APPAREL[pile.item as keyof typeof APPAREL].hitPoints);
   if(condition<.5)thoughts.push(apparel[condition<.2?1:0]!);

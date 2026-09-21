@@ -2,6 +2,7 @@ import { isBuildableFloor } from '../../src/sim/flooring';
 import { expect, type Page } from '@playwright/test';
 import type { Decision } from '../scenarios/colony-player';
 import type { BillSettings } from '../../src/sim/cooking-types';
+import { stationRecipes } from '../../src/sim/production-recipes';
 import { world, panel, tool, cell, dragRectangle, settledCells } from './helpers';
 
 export async function revealCells(page:Page,cells:{x:number;z:number}[]):Promise<void> {
@@ -185,9 +186,9 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
   } else if(c.type==='designate' && c.kind !== 'flick' && c.kind !== 'sow' && c.kind !== 'install') {
     if(c.kind==='repair')throw Error('Repair uses the home area');
     if(c.kind==='lay-floor'&&!isBuildableFloor(c.floor))throw new Error('Floor tool requires an explicit floor.');
-    await tool(page,c.kind==='lay-floor'?c.floor as import('../../src/sim/flooring').BuildableFloorKind:c.kind);
-    if(['door','wall','bed','table','stool','horseshoes','stonecutter','research-bench','tailor-bench'].includes(c.kind))await page.locator('#construction-material').selectOption(c.material??'wood');
-    if(c.kind==='grave'||c.kind==='wind-turbine'||c.kind==='battery'||c.kind==='fueled-stove'||c.kind==='electric-stove'||c.kind==='butcher-table'||c.kind==='cooler'||c.kind==='bed'||c.kind==='table'||c.kind==='campfire'||(c.kind==='butcher-spot'||c.kind==='crafting-spot')||c.kind==='stonecutter'||c.kind==='research-bench'||c.kind==='tailor-bench') {
+    await tool(page,(c.kind==='lay-floor'?c.floor:c.kind) as Parameters<typeof tool>[1]);
+    if(['door','wall','bed','table','table-square','table-long','stool','dining-chair','armchair','end-table','dresser','flower-pot','horseshoes','stonecutter','research-bench','tailor-bench','electric-tailor-bench'].includes(c.kind))await page.locator('#construction-material').selectOption(c.material??'wood');
+    if(c.kind==='grave'||c.kind==='wind-turbine'||c.kind==='battery'||c.kind==='fueled-stove'||c.kind==='electric-stove'||c.kind==='butcher-table'||c.kind==='cooler'||c.kind==='bed'||c.kind==='table'||c.kind==='table-square'||c.kind==='table-long'||c.kind==='campfire'||(c.kind==='butcher-spot'||c.kind==='crafting-spot')||c.kind==='stonecutter'||c.kind==='research-bench'||c.kind==='tailor-bench'||c.kind==='electric-tailor-bench') {
       while(rotation.value!==(c.orientation??0)){await page.keyboard.press('e');rotation.value=(rotation.value+1)%4;}
     }
     await revealCells(page,[c]);
@@ -199,7 +200,10 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     // Cycle the real pointer selection until the station is inspected.
     for(let i=0;i<=w.pawns.length;i++){await cell(page,station.x,station.z);if(await page.locator('#add-cooking-bill').isVisible())break;}
     await expect(page.locator('#add-cooking-bill')).toBeVisible();
-    if(c.type==='bill-add')await page.locator('#add-cooking-bill').click();
+    if(c.type==='bill-add'){
+      const first=stationRecipes(station)[0];
+      await page.locator(!c.recipe||c.recipe===first?'#add-cooking-bill':`#add-bill-${c.recipe}`).click();
+    }
     else await editBill(page,c.billId,c.settings);
   } else throw new Error(`Player UI action not supported: ${c.type}`);
   try { await page.waitForFunction(({command:c,heaterTarget})=>{
@@ -239,7 +243,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     if(c.type==='assign-grave')return (w.structures.find(s=>s.id===c.graveId)?.grave?.assignedPawnId??null)===c.pawnId;
     if(c.type==='grave-policy'){const g=w.structures.find(s=>s.id===c.graveId)?.grave;return g?.colonists===c.colonists&&g.strangers===c.strangers;}
     if(c.type==='priority')return w.pawns.find(p=>p.id===c.pawnId)?.priorities[c.work]===c.value;
-    if(c.type==='bill-add')return !!w.structures.find(s=>s.id===c.structureId)?.bills?.length;
+    if(c.type==='bill-add')return !!w.structures.find(s=>s.id===c.structureId)?.bills?.some(b=>!c.recipe||b.recipe===c.recipe);
     if(c.type==='bill-update') {const b=w.structures.find(s=>s.id===c.structureId)?.bills?.find(b=>b.id===c.billId);return !!b&&b.mode===c.settings.mode&&b.target===c.settings.target&&b.suspended===c.settings.suspended;}
     if(c.type==='area') {
       if(c.action==='home'||c.action==='remove-home'){for(let z=Math.min(c.from.z,c.to.z);z<=Math.max(c.from.z,c.to.z);z++)for(let x=Math.min(c.from.x,c.to.x);x<=Math.max(c.from.x,c.to.x);x++)if(!!w.home?.includes(z*w.width+x)!==(c.action==='home'))return false;return true;}
@@ -269,6 +273,6 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
 }
 
 async function storageSettings(page:Page,c:import('../../src/sim/types').StorageSettings):Promise<void>{
-    await page.locator('#stockpile-corpse').setChecked(c.filters!.corpse??false);await page.locator('#stockpile-textile').setChecked(c.filters!.textile??false);await page.locator('#stockpile-unfinished').setChecked(c.filters!.unfinished??false);await page.locator('#stockpile-apparel').setChecked(c.filters!.apparel??false);await page.locator('#stockpile-weapon').setChecked(c.filters!.weapon??false);await page.locator('#stockpile-medicine').setChecked(c.filters!.medicine??false);await page.locator('#stockpile-component').setChecked(c.filters!.component??false);await page.locator('#stockpile-blocks').setChecked(c.filters!.blocks??false);await page.locator('#stockpile-steel').setChecked(c.filters!.steel??false);await page.locator('#stockpile-chunk').setChecked(c.filters!.chunk??false);await page.locator('#stockpile-wood').setChecked(c.filters!.wood);await page.locator('#stockpile-food').setChecked(c.filters!.food);await page.locator('#stockpile-furniture').setChecked(c.filters!.furniture??false);
+    await page.locator('#stockpile-silver').setChecked(c.filters!.silver??false);await page.locator('#stockpile-corpse').setChecked(c.filters!.corpse??false);await page.locator('#stockpile-textile').setChecked(c.filters!.textile??false);await page.locator('#stockpile-unfinished').setChecked(c.filters!.unfinished??false);await page.locator('#stockpile-apparel').setChecked(c.filters!.apparel??false);await page.locator('#stockpile-weapon').setChecked(c.filters!.weapon??false);await page.locator('#stockpile-medicine').setChecked(c.filters!.medicine??false);await page.locator('#stockpile-component').setChecked(c.filters!.component??false);await page.locator('#stockpile-blocks').setChecked(c.filters!.blocks??false);await page.locator('#stockpile-steel').setChecked(c.filters!.steel??false);await page.locator('#stockpile-chunk').setChecked(c.filters!.chunk??false);await page.locator('#stockpile-wood').setChecked(c.filters!.wood);await page.locator('#stockpile-food').setChecked(c.filters!.food);await page.locator('#stockpile-furniture').setChecked(c.filters!.furniture??false);
     await page.locator('#stockpile-priority').selectOption(String(c.priority??2));await page.locator('#stockpile-capacity').fill(String(c.capacity??75));
 }

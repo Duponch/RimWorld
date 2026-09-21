@@ -1,6 +1,7 @@
+import type { ApparelItem } from '../sim/apparel-rules';
 import { firePosition } from '../sim/fire-rules';
 import { attachedFireMesh } from './FireLayer';
-import { apparelProjection,apparelAppearance } from './character-apparel';
+import { apparelProjection,apparelAppearance,APPAREL_CARGO } from './character-apparel';
 import { coreTimeSeconds,localTimeSeconds } from '../bridge/clock-rate';
 import { growPawnBuffers } from './pawn-buffers';
 import { isColonist } from '../sim/affiliation';
@@ -59,7 +60,7 @@ export class PawnLayer {
     geometry.setAttribute('aTo', new THREE.InstancedBufferAttribute(new Float32Array(count * 4), 4));
     geometry.setAttribute('aMotion', new THREE.InstancedBufferAttribute(new Float32Array(count * 4), 4));
     geometry.setAttribute('aTint', new THREE.InstancedBufferAttribute(new Float32Array(count * 3), 3));
-    geometry.setAttribute('aEquipment',new THREE.InstancedBufferAttribute(new Float32Array(count*3),3));
+    geometry.setAttribute('aEquipment',new THREE.InstancedBufferAttribute(new Float32Array(count*4),4));
     geometry.setAttribute('aCargo', new THREE.InstancedBufferAttribute(new Float32Array(count * 2), 2));
     for (const name of ['aFrom', 'aTo', 'aMotion', 'aTint', 'aCargo', 'aTravel', 'aEquipment']) (geometry.getAttribute(name) as THREE.InstancedBufferAttribute).setUsage(THREE.DynamicDrawUsage);
     const mat = material(0xffffff);
@@ -113,16 +114,21 @@ export class PawnLayer {
       for(const weapon of WEAPON_VISUALS) {
         const isWeapon=attribute('dye','float').equal(weapon.dye);
         If(motion.z.equal(7).and(isWeapon),()=>{animated.assign(vec3(positionLocal.x.sub(.205).add(.23),positionLocal.z.add(1.01),positionLocal.y.sub(.68).add(.4)));});
-        If(isWeapon.and(attribute('aEquipment','vec3').x.notEqual(weapon.equipment)),()=>{animated.assign(vec3(0));});
+        If(isWeapon.and(attribute('aEquipment','vec4').x.notEqual(weapon.equipment)),()=>{animated.assign(vec3(0));});
       }
-      If(attribute('dye','float').equal(-3).and(attribute('aEquipment','vec3').y.lessThan(1.5)),()=>{animated.assign(vec3(0));});
-      If(attribute('dye','float').equal(-2).and(attribute('aEquipment','vec3').z.lessThan(.5)),()=>{animated.assign(vec3(0));});
+      If(attribute('dye','float').equal(-3).and(attribute('aEquipment','vec4').y.notEqual(2).and(attribute('aEquipment','vec4').y.notEqual(3))),()=>{animated.assign(vec3(0));});
+      If(attribute('dye','float').equal(-2).and(attribute('aEquipment','vec4').z.lessThan(.5)),()=>{animated.assign(vec3(0));});
+      If(attribute('dye','float').equal(-4).and(attribute('aEquipment','vec4').y.notEqual(4)),()=>{animated.assign(vec3(0));});
       const cy = cos(pose.w), sy = sin(pose.w);
       return vec3(animated.x.mul(cy).add(animated.z.mul(sy)), animated.y, animated.z.mul(cy).sub(animated.x.mul(sy))).mul(PAWN_MODEL_SCALE).add(pose.xyz);
     })();
     mat.colorNode = Fn(()=>{const tint=mix(attribute('color','vec3'),attribute('aTint','vec3'),attribute('dye','float').max(0)).toVar();
-      If(attribute('dye','float').equal(-3),()=>tint.assign(attribute('aTint','vec3')));
-      If(attribute('aEquipment','vec3').y.greaterThan(1.5).and(attribute('boneId','float').greaterThanEqual(2)).and(attribute('boneId','float').lessThanEqual(3)),()=>tint.assign(vec3(.761,.479,.319)));return tint;})();
+      If(attribute('dye','float').equal(-3).or(attribute('dye','float').equal(-4)),()=>tint.assign(attribute('aTint','vec3')));
+      If(attribute('aEquipment','vec4').y.equal(2).and(attribute('boneId','float').greaterThanEqual(2)).and(attribute('boneId','float').lessThanEqual(3)),()=>tint.assign(vec3(.761,.479,.319)));
+      const legs=attribute('boneId','float').greaterThanEqual(4).and(attribute('dye','float').equal(0));
+      const cloth=new THREE.Color(0xd8c8a2),leather=new THREE.Color(0xad8a61);
+      If(legs.and(attribute('aEquipment','vec4').w.equal(1)),()=>tint.assign(vec3(cloth.r,cloth.g,cloth.b)));
+      If(legs.and(attribute('aEquipment','vec4').w.equal(2)),()=>tint.assign(vec3(leather.r,leather.g,leather.b)));return tint;})();
     const mesh = new THREE.Mesh(geometry, mat);
     // CPU bounds cannot follow the shader positions. Individual culling/LOD is a later measured optimization.
     mesh.frustumCulled = false;
@@ -241,10 +247,10 @@ export class PawnLayer {
       scratchColor.setHex(look.color??(isColonist(pawn)?PAWN_COLORS[index % PAWN_COLORS.length]:pawn.visitor&&!world.visitors?.groups.find(g=>g.id===pawn.visitor!.group)?.hostile?0x77958f:0xb74736));
       if(pawn.state==='dead')scratchColor.setHex(0x73756c);
       tint.setXYZ(index, scratchColor.r, scratchColor.g, scratchColor.b);
-      equipment.setXYZ(index,weaponVisual(gears.get(pawn.id)?.item)?.equipment??0,look.tribal?2:look.shirt?1:0,look.vest?1:0);
+      equipment.setXYZW(index,weaponVisual(gears.get(pawn.id)?.item)?.equipment??0,look.silhouette,look.vest?1:0,look.pants);
       const load = carried.get(pawn.id);
       const packed=world.packed?.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
-      cargo.setXY(index, pawn.rescue?.phase==='carry'||load?.humanCorpse?-1:packed?4:load ? load.kind==='silver'?30:load.kind==='corpse'?27:load.item==='light-leather'?28:load.item==='hare-meat'?29:load.kind==='unfinished'?25:load.kind==='textile'?24:load.kind==='apparel'?(load.item==='cloth-tribalwear'?26:load.item==='cloth-shirt'?22:23):load.kind==='weapon'?(weaponVisual(load.item)?.cargo??0):load.kind==='medicine' ? (load.item==='herbal-medicine'?18:load.item==='medicine'?19:20) : load.kind === 'component' ? 17 : load.kind === 'blocks' ? blockCargoKind(load.item) : load.kind === 'steel' ? 11 : load.kind === 'chunk' ? chunkCargoKind(load.item) : load.kind === 'wood' ? 1 : load.item === 'survival-meal' ? 3 : 2 : 0, packed||load?.kind==='corpse'||load?.kind==='unfinished'||load?.kind==='weapon'||load?.kind==='apparel'?1:load ? Math.min(1, load.quantity / CARRY_CAPACITY) : 0);
+      cargo.setXY(index, pawn.rescue?.phase==='carry'||load?.humanCorpse?-1:packed?4:load ? load.kind==='silver'?30:load.kind==='corpse'?27:load.item==='light-leather'?28:load.item==='hare-meat'?29:load.kind==='unfinished'?25:load.kind==='textile'?24:load.kind==='apparel'?APPAREL_CARGO[load.item as ApparelItem]:load.kind==='weapon'?(weaponVisual(load.item)?.cargo??0):load.kind==='medicine' ? (load.item==='herbal-medicine'?18:load.item==='medicine'?19:20) : load.kind === 'component' ? 17 : load.kind === 'blocks' ? blockCargoKind(load.item) : load.kind === 'steel' ? 11 : load.kind === 'chunk' ? chunkCargoKind(load.item) : load.kind === 'wood' ? 1 : load.item === 'survival-meal' ? 3 : 2 : 0, packed||load?.kind==='corpse'||load?.kind==='unfinished'||load?.kind==='weapon'||load?.kind==='apparel'?1:load ? Math.min(1, load.quantity / CARRY_CAPACITY) : 0);
     });
     for (const id of this.visuals.keys()) if (!present.has(id)){this.visuals.delete(id);this.targetPoses.delete(id);}
     for (const attr of [fromAttribute, toAttribute, motion, tint, cargo, equipment]) attr.needsUpdate = true;

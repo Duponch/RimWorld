@@ -94,7 +94,7 @@ test('a hunter lifts a retained body at physical contact after its fall, includi
   for(const obstacle of ['bed','campfire','pile'] as const){
     const w=huntingCamp(),p=w.pawns[0]!,a=w.wildlife!.animals[0]!;w.pawns=[p];w.resources=[];w.piles=w.piles.filter(i=>i.kind==='weapon');
     if(obstacle==='pile')addMaterial(w,'wood',7,{type:'ground',x:11,z:10});
-    else w.structures.push({id:w.nextId++,kind:obstacle,x:11,z:10,orientation:0,footprint:'standard',...obstacle==='campfire'?{fuel:{ticks:0,burned:0,autoRefuel:false},bills:[]}: {}});
+    else w.structures.push({id:w.nextId++,kind:obstacle,x:11,z:10,orientation:0,footprint:'standard',...obstacle==='campfire'?{fuel:{ticks:0,burned:0,autoRefuel:false},bills:[]}:{quality:'normal'}});
     const fixture=structuredClone({structures:w.structures,piles:w.piles});
     a.path=[{x:11,z:10}];expect(moveAnimal(w,a,animalNavigation(w).step)).toBe(true);kill(w);
     p.hunting={animalId:a.id,phase:'collect',progress:0,startedAt:w.tick};w.hunting={targets:[],completed:1};advanceCorpses(w);refreshStock(w);

@@ -1,4 +1,6 @@
 import { initialSkills } from '../../src/sim/skills.ts';
+import { createDefaultApparelPolicyRegistry } from '../../src/sim/apparel-policy.ts';
+import { createApparelWearCalendar } from '../../src/sim/apparel-renewal.ts';
 /** Historical fixtures must not smuggle V43's new actor profile into old schemas. */
 export function withoutPawnSkills<T>(world:T):T {
   for(const p of (world as {pawns:Array<{skills?:unknown}>}).pawns)delete p.skills;
@@ -15,7 +17,7 @@ export function withMigratedSkills<T extends {tick:number;pawns:unknown[]}>(worl
   withoutMedicineItems(expected);
   withoutSocial(expected);
   for(const p of expected.pawns as {priorities:{clean?:number;firefight?:number;warden?:number;basic?:number;research?:number;hunt?:number}}[]){p.priorities.clean=3;p.priorities.firefight=1;p.priorities.warden=3;p.priorities.basic=3;p.priorities.research=3;p.priorities.hunt=0;}
-  return expected;
+  return withMigratedV90(expected);
 }
 
 /** V45 and earlier had neither medical work nor rescue state. Keep invalid
@@ -70,7 +72,7 @@ export function withoutResearch<T>(world:T):T {
 export function withMigratedResearch<T>(world:T):T {
   const copy=withoutResearch(structuredClone(world));
   for(const p of (copy as {pawns:{priorities:{clean?:number;firefight?:number;warden?:number;basic?:number;research?:number;hunt?:number}}[]}).pawns){p.priorities.clean=3;p.priorities.firefight=1;p.priorities.warden=3;p.priorities.basic=3;p.priorities.research=3;p.priorities.hunt=0;}
-  return copy;
+  return withMigratedV90(copy);
 }
 
 /** Construct an authentic pre-V79 fixture, never repair a production save. */
@@ -97,12 +99,39 @@ export function withMigratedHunting<T>(world:T):T {
 export function withMigratedBasic<T>(world:T):T {
   const copy=structuredClone(world);
   for(const p of (copy as {pawns:{priorities:{clean?:number;firefight?:number;warden?:number;basic?:number}}[]}).pawns){p.priorities.clean=3;p.priorities.firefight=1;p.priorities.warden=3;p.priorities.basic=3;}
-  return copy;
+  return withMigratedV90(copy);
+}
+
+/** Independent expectation of V89->V90's neutral adoption. */
+export function withMigratedV90<T>(world:T):T {
+  const w=world as any,registry=createDefaultApparelPolicyRegistry();
+  for(const structure of [...w.structures??[],...(w.packed??[]).map((p:any)=>p.building)])if(['bed','table','stool'].includes(structure.kind))structure.quality='normal';
+  for(const pile of w.piles??[]){if(pile.apparel&&['cloth-shirt','cloth-tribalwear'].includes(pile.item))pile.apparel.material='cloth';if(pile.unfinished){pile.unfinished.material='cloth';pile.unfinished.units=pile.unfinished.cloth;}}
+  for(const departure of w.raids?.departed??[])for(const pile of departure.items??[])if(pile.apparel&&['cloth-shirt','cloth-tribalwear'].includes(pile.item))pile.apparel.material='cloth';
+  if(w.tailoring)w.tailoring.lostLeather=0;
+  w.apparelWear=createApparelWearCalendar(w.tick,(w.seed^w.tick^0x0a77e1)>>>0);w.apparelPolicies=registry.apparelPolicies;w.nextApparelPolicyId=registry.nextApparelPolicyId;
+  for(const pawn of w.pawns??[]){pawn.beauty=40;if((pawn.faction??'colony')==='colony'&&!pawn.visitor&&!pawn.prisoner&&pawn.state!=='dead'){pawn.apparelPolicyId=1;pawn.apparelAutomation=false;pawn.nextApparelCheckAt=w.tick+600+pawn.id%301;}}
+  return world;
+}
+
+/** Remove only V90 fields when a test deliberately reconstructs a V89-or-
+ * earlier payload. This is fixture construction, never production repair. */
+export function withoutV90<T>(world:T):T {
+  const w=world as any;
+  delete w.apparelWear;delete w.apparelPolicies;delete w.nextApparelPolicyId;
+  for(const pawn of w.pawns??[]){delete pawn.beauty;delete pawn.apparelPolicyId;delete pawn.apparelAutomation;delete pawn.nextApparelCheckAt;}
+  for(const departure of w.visitors?.departed??[]){delete departure.pawn.beauty;delete departure.pawn.apparelPolicyId;delete departure.pawn.apparelAutomation;delete departure.pawn.nextApparelCheckAt;}
+  for(const structure of [...w.structures??[],...(w.packed??[]).map((p:any)=>p.building)]){delete structure.quality;delete structure.flower;}
+  for(const pile of [...w.piles??[],...(w.raids?.departed??[]).flatMap((d:any)=>d.items??[]),...(w.visitors?.departed??[]).flatMap((d:any)=>d.items??[])]){if(pile.apparel){delete pile.apparel.material;delete pile.apparel.forced;}if(pile.unfinished){delete pile.unfinished.material;delete pile.unfinished.units;}}
+  for(const job of w.jobs??[])delete job.flowerPotId;
+  if(w.tailoring)delete w.tailoring.lostLeather;
+  return world;
 }
 
 /** Pre-V84 fixture shape only. Production migration never broadens food filters. */
 export function withoutFoodCrops<T>(world:T):T {
   const w=world as any;
+  withoutV90(world);
   delete w.filth;
   // Pre-V84 storage did not have V88 silver filters or its 500-unit ceiling.
   for(const s of w.stockpiles??[]){delete s.filters.silver;s.capacity=Math.min(s.capacity,75);}

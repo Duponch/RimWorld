@@ -58,9 +58,11 @@ export function extinguishFire(w:World,id:number,amount=32):boolean {
 function removeFire(w:World,fire:FireRecord,extinguished=false):void {
   const state=w.fires!;state.items=state.items.filter(f=>f!==fire);
   if(extinguished)state.ledger.extinguished++;
-  if(fire.attachedPawnId!==undefined){const p=w.pawns.find(p=>p.id===fire.attachedPawnId);if(p){delete p.burning;p.path=[];p.planCooldown=0;if(p.state!=='dead'&&p.state!=='downed')p.state=p.moveCooldown>0?'moving':'idle';}}
+  if(fire.attachedPawnId!==undefined){const p=w.pawns.find(p=>p.id===fire.attachedPawnId);if(p){delete p.burning;p.path=[];p.planCooldown=0;if(p.state!=='dead'&&p.state!=='downed')p.state='idle';}}
   if(fire.attachedAnimalId!==undefined){const a=w.wildlife?.animals.find(a=>a.id===fire.attachedAnimalId);if(a){delete a.burning;a.path=[];if(a.state!=='dead'&&a.state!=='downed')a.state=a.motion&&a.motion.end>w.tick?'moving':'idle';}}
-  for(const p of w.pawns)if(p.firefighting?.fireId===fire.id){delete p.firefighting;p.path=[];p.planCooldown=0;if(p.state!=='dead'&&p.state!=='downed')p.state=p.moveCooldown>0?'moving':'idle';}
+  // The captured edge still finishes via motion/moveCooldown. It no longer
+  // owns an active walking task after another actor has extinguished the fire.
+  for(const p of w.pawns)if(p.firefighting?.fireId===fire.id){delete p.firefighting;p.path=[];p.planCooldown=0;if(p.state!=='dead'&&p.state!=='downed')p.state='idle';}
 }
 export function reconcileFires(w:World):void {
   if(!w.fires)return;

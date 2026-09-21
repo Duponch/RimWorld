@@ -19,14 +19,15 @@ test('point queries keep complete rotated and historical footprints, job targets
   const line=[[[0,0],[1,0],[-1,0]],[[0,0],[0,1],[0,-1]],[[0,0],[1,0],[-1,0]],[[0,0],[0,1],[0,-1]]];
   const pair=[[[0,0],[0,1]],[[0,0],[1,0]],[[0,0],[0,-1]],[[0,0],[-1,0]]];
   const bench=[[[0,0],[-1,0],[1,0],[0,1],[-1,1],[1,1]],[[0,0],[0,-1],[0,1],[1,0],[1,-1],[1,1]],[[0,0],[-1,0],[1,0],[0,-1],[-1,-1],[1,-1]],[[0,0],[0,-1],[0,1],[-1,0],[-1,-1],[-1,1]]];
-  const stands=new Set<StructureKind>(['power-conduit','power-switch','butcher-spot','crafting-spot','door','stool','horseshoes']);
-  const rejectsItems=new Set<StructureKind>(['battery','solar-generator','cooler','wood-generator','passive-cooler','wall','bed','campfire']);
-  const stores=new Set<StructureKind>(['power-conduit','standing-lamp','door','stool','horseshoes']);
+  const stands=new Set<StructureKind>(['grave','power-conduit','power-switch','butcher-spot','crafting-spot','door','stool','dining-chair','armchair','horseshoes']);
+  const rejectsItems=new Set<StructureKind>(['grave','heater','wind-turbine','battery','solar-generator','cooler','wood-generator','passive-cooler','wall','bed','dresser','flower-pot','campfire']);
+  const stores=new Set<StructureKind>(['power-conduit','standing-lamp','door','stool','dining-chair','armchair','horseshoes']);
   const flickable=new Set<StructureKind>(['power-switch','wood-generator','standing-lamp','cooler','electric-stove']);
   const w=createWorld(42,16,16);w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.resources=[];w.piles=[];w.jobs=[];
   const points=Array.from({length:121},(_,i)=>({x:4+i%11,z:4+Math.floor(i/11)}));points.push({x:-20,z:8},{x:8,z:-20},{x:100,z:8},{x:8,z:100});
   for(const kind of Object.keys(STRUCTURE_DEFINITIONS) as StructureKind[])for(const orientation of [0,1,2,3] as const)for(const footprint of ['standard','legacy-single'] as const){
-    const offsets=kind==='solar-generator'?Array.from({length:16},(_,i)=>[i%4,Math.floor(i/4)]):kind==='wood-generator'?[[0,0],[1,0],[0,1],[1,1]]:kind==='research-bench'?bench[orientation]!:['stonecutter','tailor-bench','fueled-stove','electric-stove','butcher-table'].includes(kind)?line[orientation]!:footprint!=='legacy-single'&&['bed','table','battery'].includes(kind)?pair[orientation]!:[[0,0]];
+    const direction=[[0,1],[1,0],[0,-1],[-1,0]][orientation]!,side=[[1,0],[0,-1],[-1,0],[0,1]][orientation]!;
+    const offsets=kind==='wind-turbine'?[0,1].flatMap(a=>[-3,-2,-1,0,1,2,3].map(b=>[direction[0]!*a+side[0]!*b,direction[1]!*a+side[1]!*b])):kind==='solar-generator'?Array.from({length:16},(_,i)=>[i%4,Math.floor(i/4)]):kind==='wood-generator'?[[0,0],[1,0],[0,1],[1,1]]:kind==='research-bench'?bench[orientation]!:['stonecutter','tailor-bench','electric-tailor-bench','fueled-stove','electric-stove','butcher-table'].includes(kind)?line[orientation]!:kind==='table-square'?[0,1].flatMap(a=>[0,1].map(b=>[direction[0]!*a+side[0]!*b,direction[1]!*a+side[1]!*b])):kind==='table-long'?[0,1,2,3].flatMap(a=>[0,1].map(b=>[direction[0]!*a+side[0]!*b,direction[1]!*a+side[1]!*b])):kind==='dresser'?pair[orientation]!:footprint!=='legacy-single'&&['bed','table','battery','grave'].includes(kind)?pair[orientation]!:[[0,0]];
     const cells=offsets.map(([x,z])=>({x:8+x!,z:8+z!})),keys=new Set(cells.map(c=>`${c.x},${c.z}`)),expected=points.map(c=>keys.has(`${c.x},${c.z}`));
     const shape={x:8,z:8,orientation,footprint},structure={...shape,id:1,kind};
     const targets:Parameters<typeof footprintContains>[0][]=[structure,{...shape,kind:'install',furniture:{kind}},{...shape,kind:'deconstruct',deconstruction:{kind}}];
@@ -48,7 +49,7 @@ test('point queries keep complete rotated and historical footprints, job targets
   w.jobs=[{id:2,kind:'wall',x:8,z:8,orientation:0,footprint:'standard',construction:'frame',status:'pending',reservedBy:null,progress:0,escrow:{wood:0,food:0}}];
   expect(canStandAt(w,{x:8,z:8})).toBe(false);expect(storageOccupancyAllows(w,{x:8,z:8})).toBe(false);
   w.jobs[0]!.kind='power-conduit';expect(canStandAt(w,{x:8,z:8})).toBe(true);expect(storageOccupancyAllows(w,{x:8,z:8})).toBe(true);
-  w.jobs=[];w.structures=[{id:1,kind:'bed',x:8,z:8,orientation:0,footprint:'standard'}];
+  w.jobs=[];w.structures=[{id:1,kind:'bed',x:8,z:8,orientation:0,footprint:'standard',quality:'normal'}];
   w.schemaVersion=21 as typeof w.schemaVersion;expect(canStandAt(w,{x:8,z:9})).toBe(true);expect(groundOccupancyAllows(w,{x:8,z:9})).toBe(false);
   w.schemaVersion=20 as typeof w.schemaVersion;expect(groundOccupancyAllows(w,{x:8,z:9})).toBe(true);
   expect(canStandAt(w,{x:8.5,z:8})).toBe(false);expect(groundOccupancyAllows(w,{x:8,z:8.5})).toBe(false);
@@ -60,7 +61,7 @@ test('furniture routes agree with an independent directed-cost oracle, repeat ac
     const added=new Map<number,number>(),repeat=new Set<number>();
     const cells=[{kind:'stonecutter' as const,x:3,z:10,cost:1667},{kind:'table' as const,x:6,z:6,cost:1400},{kind:'bed' as const,x:10,z:10,cost:1400},{kind:'stool' as const,x:4,z:6,cost:1000},{kind:'campfire' as const,x:7,z:5,cost:1400},{kind:'horseshoes' as const,x:12,z:8,cost:467}];
     for(const s of cells) {
-      w.structures.push({id:w.nextId++,kind:s.kind,x:s.x,z:s.z,orientation:orientation as Orientation,footprint:'standard',...(s.kind==='stonecutter'?{material:'wood' as const}:{})});
+      w.structures.push({id:w.nextId++,kind:s.kind,x:s.x,z:s.z,orientation:orientation as Orientation,footprint:'standard',...(['table','bed','stool'] as const).includes(s.kind as 'table'|'bed'|'stool')?{quality:'normal' as const}:{},...(s.kind==='stonecutter'?{material:'wood' as const}:{})});
       const occupied=[s.z*16+s.x];
       if(s.kind==='stonecutter'){const delta=[1,-16,-1,16][orientation]!;occupied.push(occupied[0]!+delta,occupied[0]!-delta);}
       if(s.kind==='table'||s.kind==='bed')occupied.push(occupied[0]!+[16,1,-16,-1][orientation]!);
@@ -87,7 +88,7 @@ test('furniture routes agree with an independent directed-cost oracle, repeat ac
     const captured=structuredClone(p.motion);w.structures=w.structures.filter(s=>s.kind!=='table');expect(p.motion).toEqual(captured);
   }
   const w=furnitureTrafficFixture();expect(furnitureDelay(w,{x:6,z:8},{x:7,z:8})).toBe(4.2);expect(furnitureDelay(w,{x:7,z:8},{x:8,z:8})).toBe(0);
-  w.structures.push({id:w.nextId++,kind:'stool',x:6,z:8,orientation:0,footprint:'standard'});expect(furnitureDelay(w,{x:6,z:8},{x:7,z:8})).toBe(0);
+  w.structures.push({id:w.nextId++,kind:'stool',x:6,z:8,orientation:0,footprint:'standard',quality:'normal'});expect(furnitureDelay(w,{x:6,z:8},{x:7,z:8})).toBe(0);
   expect(furnitureDelay(w,{x:5,z:7},{x:6,z:8})).toBe(3);
   const heights=furnitureSurfaces(w);expect(heights.get(135)).toBe(.76);expect(travelHeight(0,.76,1/3)).toBe(.76);expect(travelHeight(.76,0,2/3)).toBe(.76);
 });
@@ -119,7 +120,7 @@ test('opposite loaded trips cross furniture, cancel in transit without teleport 
   for(const service of ['meal','ground-sleep','edge'] as const) {
     const old=createWorld(42,16,16);old.tiles=old.tiles.map(()=>({terrain:'grass'}));old.resources=[];old.jobs=[];old.structures=[];old.pawns=old.pawns.slice(0,1);
     const actor=old.pawns[0]!;Object.assign(actor,{x:8,z:8,hunger:100,rest:60,schedule:Array(24).fill('anything')});
-    old.structures.push({id:old.nextId++,kind:'bed',x:8,z:8,orientation:0,footprint:'standard'});
+    old.structures.push({id:old.nextId++,kind:'bed',x:8,z:8,orientation:0,footprint:'standard',quality:'normal'});
     if(service==='meal') {
       const portion=old.piles.find(p=>p.kind==='food')!;portion.owner={type:'pawn',pawnId:actor.id};portion.quantity=1;
       actor.need={kind:'eat',phase:'ingest',sourcePileId:portion.id,carryPileId:portion.id,quantity:1,progress:12,dining:{target:{x:8,z:8},seatId:null,tableId:null}};actor.state='eating';

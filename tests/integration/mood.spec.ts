@@ -17,7 +17,9 @@ test('mood causes at 1x/6x: real ingestion, remembered meal, physical clothing r
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
     await page.goto('/?scenario=camp&e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
     await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');await page.locator(`[data-pawn="${p.id}"]`).click();if(await page.locator('#mood-inspection').getAttribute('open')===null)await page.locator('#mood-inspection summary').click();
-    await expect(page.locator('#mood-target')).toContainText('cible 45 %');await expect(page.locator('[data-thought="tattered-apparel"]')).toBeVisible();
+    const initialInspection=await world(page),initialPawn=initialInspection.pawns.find(pawn=>pawn.id===p.id)!;
+    const initialTarget=moodTarget(moodThoughts(initialInspection,initialPawn));
+    await expect(page.locator('#mood-target')).toContainText(`cible ${initialTarget} %`);await expect(page.locator('[data-thought="tattered-apparel"]')).toBeVisible();
     await page.locator(`[data-speed="${speed}"]`).click();await expect.poll(async()=>{const s=(await world(page)).pawns[0]!;return s.need?.kind==='eat'&&s.need.phase==='ingest';},{intervals:[100]}).toBe(true);await page.locator('[data-speed="0"]').click();
     const eating=await world(page);expect(eating.pawns[0]!.memories).toEqual([]);expect(eating.pawns[0]!.mood).toBeLessThan(50);expect(eating.pawns[0]!.mood).toBeGreaterThan(45);
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,eating);await page.keyboard.press('Escape');
@@ -26,10 +28,12 @@ test('mood causes at 1x/6x: real ingestion, remembered meal, physical clothing r
     await page.locator(`[data-pawn="${p.id}"]`).click();if(await page.locator('#mood-inspection').getAttribute('open')===null)await page.locator('#mood-inspection summary').click();await expect(page.locator('[data-thought="ravenous"]')).toHaveCount(0);await expect(page.locator('[data-thought="ate-raw-food"]')).toContainText('-7');await expect(page.locator('[data-thought="ate-without-table"]')).toContainText('encore 24 h');
     await perform(page,{reason:'Remplacer le vêtement usé : le retirer physiquement.',command:{type:'order-equipment',pawnId:p.id,itemId:vest.id,action:'remove',queue:false}},{value:0});
     await page.locator(`[data-speed="${speed}"]`).click();await expect.poll(async()=>(await world(page)).piles.find(i=>i.id===vest.id)!.owner.type).toBe('ground');await page.locator('[data-speed="0"]').click();
-    const removed=await world(page);await page.locator(`[data-pawn="${p.id}"]`).click();if(await page.locator('#mood-inspection').getAttribute('open')===null)await page.locator('#mood-inspection summary').click();await expect(page.locator('[data-thought="tattered-apparel"]')).toHaveCount(0);await expect(page.locator('#mood-target')).toContainText('cible 52 %');
+    const removed=await world(page),removedPawn=removed.pawns.find(pawn=>pawn.id===p.id)!;
+    const removedTarget=moodTarget(moodThoughts(removed,removedPawn)),removedDistance=Math.abs(removedPawn.mood-removedTarget);
+    await page.locator(`[data-pawn="${p.id}"]`).click();if(await page.locator('#mood-inspection').getAttribute('open')===null)await page.locator('#mood-inspection summary').click();await expect(page.locator('[data-thought="tattered-apparel"]')).toHaveCount(0);await expect(page.locator('#mood-target')).toContainText(`cible ${removedTarget} %`);
     await page.screenshot({path:`artifacts/mood-v64-${speed}x.png`});
-    await page.locator(`[data-speed="${speed}"]`).click();await expect.poll(async()=>(await world(page)).pawns[0]!.mood).toBeGreaterThan(removed.pawns[0]!.mood+.1);await page.locator('[data-speed="0"]').click();
-    const final=await world(page);await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,final);expect(errors).toEqual([]);
+    await page.locator(`[data-speed="${speed}"]`).click();await expect.poll(async()=>Math.abs((await world(page)).pawns.find(pawn=>pawn.id===p.id)!.mood-removedTarget)).toBeLessThan(removedDistance);await page.locator('[data-speed="0"]').click();
+    const final=await world(page),finalPawn=final.pawns.find(pawn=>pawn.id===p.id)!;expect(moodTarget(moodThoughts(final,finalPawn))).toBe(removedTarget);expect(Math.abs(finalPawn.mood-removedTarget)).toBeLessThan(removedDistance);await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,final);expect(errors).toEqual([]);
     proof.push({speed,initialTick:initial.tick,finalTick:final.tick,initialMood:p.mood,eatingMood:eating.pawns[0]!.mood,fedMood:fed.pawns[0]!.mood,finalMood:final.pawns[0]!.mood,thoughts:moodThoughts(final,final.pawns[0]!),errors});await page.close();
   }}finally{await browser.close();}
   writeFileSync('artifacts/mood-ui-v64.json',JSON.stringify({date:new Date().toISOString(),proof},null,2)+'\n');

@@ -62,7 +62,7 @@ test('natural fauna avoids people, supplies and packages, never invents free hab
   const plant={id:w.nextId++,kind:'berries' as const,x:3,z:3,amount:10,growth:.6,growthTick:0};w.resources.push(plant);
   w.pawns.push(startingPawn(w.nextId++,'Ada',3,3,0,50));
   addGroundMaterial(w,'wood',10,{x:2,z:3});
-  w.packed.push({building:{id:w.nextId++,kind:'stool',material:'wood',x:4,z:3,orientation:0,footprint:'standard'},owner:{type:'ground',x:4,z:3}});
+  w.packed.push({building:{id:w.nextId++,kind:'stool',material:'wood',x:4,z:3,orientation:0,footprint:'standard',quality:'normal'},owner:{type:'ground',x:4,z:3}});
   w.structures.push({id:w.nextId++,kind:'wall',material:'wood',x:3,z:2,orientation:0,footprint:'standard'});
   const id=w.nextId,rng=w.rng;enableWildlife(w,12,'natural');
   expect(w.wildlife!.animals).toHaveLength(1);

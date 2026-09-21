@@ -27,7 +27,7 @@ test('earned research, physical freezer construction, storage, thermostat and ex
     for(let i=0;i<4;i++)await page.locator('[data-cooler-offset="1"]').click();
     await expect(page.locator('#cooler-controls')).toContainText('Cible -5.0');
     await tool(page,'stockpile');await page.locator('#stockpile-wood').setChecked(false);await page.locator('#stockpile-food').setChecked(true);
-    await perform(page,{reason:'Réserver cette pièce aux aliments.',command:{type:'area',action:'stockpile',filters:{wood:false,food:true},from:{x:3,z:3},to:{x:5,z:5}}},{value:0});
+    await perform(page,{reason:'Réserver cette pièce aux aliments.',command:{type:'area',action:'stockpile',filters:{silver:true,corpse:false,unfinished:false,textile:false,apparel:false,weapon:false,medicine:false,component:false,blocks:false,steel:false,chunk:false,wood:false,food:true,furniture:false},from:{x:3,z:3},to:{x:5,z:5}}},{value:0});
     await page.keyboard.press('Escape');await page.locator('[data-speed="6"]').click();
     await expect.poll(async()=>{const w=await world(page),food=w.piles.filter(p=>p.item==='simple-meal');return food.reduce((n,p)=>n+p.quantity,0)===20&&food.every(p=>p.owner.type==='ground'&&p.rot?.rate===0);},{timeout:45000}).toBe(true);await page.locator('[data-speed="0"]').click();
     const frozen=await world(page);await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,frozen);await page.keyboard.press('Escape');

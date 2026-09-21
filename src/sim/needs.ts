@@ -8,7 +8,7 @@ import { mealQuantity, adultHungerFactor } from './items.ts';
 import { TICKS_PER_DAY } from './types.ts';
 import { processEating } from './eating.ts';
 import { pileFoodScore, foodSearchGoals, selectFood } from './food-selection.ts';
-import { updateWellbeing } from './wellbeing.ts';
+import { updateWellbeing,type FurnitureSight } from './wellbeing.ts';
 import { processSleeping } from './sleeping.ts';
 import { updateRecreation } from './recreation-rules.ts';
 import { updateRest } from './rest.ts';
@@ -103,12 +103,12 @@ export function processNeeds(world: World, pawn: Pawn, context: NeedContext): bo
   return false;
 }
 
-export function updateNeeds(world: World, pawn: Pawn,body?:import('./body-capacities.ts').BodyAssessment): void {
+export function updateNeeds(world: World, pawn: Pawn,body?:import('./body-capacities.ts').BodyAssessment,readFurnitureSight?:FurnitureSight): void {
   pawn.hunger = Math.max(0, pawn.hunger - (world.foodRules === 'legacy' ? 0.015 : HUNGER_PER_TICK * adultHungerFactor(pawn.hunger)) * malnutritionModifiers(pawn.health?.malnutrition).hungerFactor);
   updateRest(world, pawn);
   if(!pawn.prisoner)updateRecreation(pawn,body);
   if (pawn.needCooldown > 0) pawn.needCooldown--;
-  updateWellbeing(world, pawn,body);
+  updateWellbeing(world, pawn,body,readFurnitureSight);
 }
 
 export function collapseFromExhaustion(world:World,pawn:Pawn,context:NeedContext):void {

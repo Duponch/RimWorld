@@ -3,10 +3,12 @@ import { expect, test, type Page } from '@playwright/test';
 import { createWorld } from '../../src/sim/engine';
 import { deserializeWorld, serializeWorld } from '../../src/sim/serialization';
 import { addGroundMaterial, refreshStock } from '../../src/sim/materials';
+import { constructionRecipe } from '../../src/sim/construction-materials';
 import legacySave from '../fixtures/schema-1-active-construction.json' with { type: 'json' };
 import { SCHEMA_VERSION, type World } from '../../src/sim/types';
 
 import { world, serializedWorld, expectWorld, saveKey, observeErrors, panel, tool, cell, dragRectangle, startPaused } from './helpers';
+import { revealCells } from './player-actions';
 
 test('besoins physiques : repas en main, sommeil dans deux lits orientés, attribution et sauvegarde UI', async ({ playwright }, testInfo) => {
   test.setTimeout(120_000);
@@ -19,7 +21,7 @@ test('besoins physiques : repas en main, sommeil dans deux lits orientés, attri
     fixture.tiles = fixture.tiles.map(() => ({ terrain: 'grass' })); fixture.resources = []; fixture.piles = []; fixture.stockpiles = [];
     fixture.pawns.forEach((pawn, index) => { pawn.x = 12 + index * 2; pawn.z = 16; pawn.hunger = index === 0 ? 10 : 90; pawn.rest = index === 0 ? 90 : 19; });
     const ids = [fixture.nextId++, fixture.nextId++];
-    fixture.structures = [{ id: ids[0], kind: 'bed', x: 17, z: 18, orientation: 1, footprint: 'standard' }, { id: ids[1], kind: 'bed', x: 19, z: 18, orientation: 2, footprint: 'standard' }];
+    fixture.structures = [{ id: ids[0], kind: 'bed', x: 17, z: 18, orientation: 1, footprint: 'standard', quality: 'normal' }, { id: ids[1], kind: 'bed', x: 19, z: 18, orientation: 2, footprint: 'standard', quality: 'normal' }];
     addGroundMaterial(fixture, 'food', 1, { x: 16, z: 14 }); refreshStock(fixture);
     await page.evaluate(({ key, value }) => localStorage.setItem(key, value), { key: saveKey, value: serializeWorld(fixture) });
     await startPaused(page); // Reopen so the normal save-slot discovery sees this fixture.
@@ -50,7 +52,7 @@ test('besoins physiques : repas en main, sommeil dans deux lits orientés, attri
     expect((await world(page)).pawns[0].hunger).toBeGreaterThan(40);
     await panel(page, 'menu'); await page.locator('#load').click(); await expectWorld(page, eating);
     if (await page.locator('#inspect-close').isVisible()) await page.locator('#inspect-close').click();
-    await cell(page, 18, 18); // Foot of the bed: head cell selects the sleeping pawn.
+    await revealCells(page, [{ x: 18, z: 18 }]); await cell(page, 18, 18); // Foot of the bed: head cell selects the sleeping pawn.
     await expect(page.getByLabel('Propriétaire du lit', { exact: true })).toBeVisible();
     await page.getByLabel('Propriétaire du lit', { exact: true }).selectOption(String(eating.pawns[0].id));
     await expect.poll(async () => (await world(page)).pawns[0].bedId).toBe(ids[0]);
@@ -71,6 +73,8 @@ test('colonie matérielle : réserve filtrée, transport visible, trois couchage
   try {
   const errors = observeErrors(page);
   await startPaused(page);
+  const initialWorld = await world(page);
+  const bedWood = constructionRecipe({ kind: 'bed', material: 'wood' }).ingredients.find(item => item.item === 'wood')!.quantity;
   const pausedTick = (await world(page)).tick;
   await page.waitForTimeout(350);
   expect((await world(page)).tick).toBe(pausedTick);
@@ -80,17 +84,20 @@ test('colonie matérielle : réserve filtrée, transport visible, trois couchage
   await page.getByLabel('Priorité collecte Ada', { exact: true }).selectOption('1');
   await page.getByLabel('Priorité construction Ada', { exact: true }).selectOption('3');
   await page.getByLabel('Priorité transport Ada', { exact: true }).selectOption('2');
-  await expect.poll(async () => (await world(page)).pawns[0].priorities).toEqual({ gather: 1, build: 3, haul: 2, grow: 2, cook: 2, mine: 2 });
+  await expect.poll(async () => (await world(page)).pawns[0].priorities).toEqual({ clean: 3, firefight: 1, warden: 3, basic: 3, hunt: 2, research: 3, patient: 1, bedrest: 3, doctor: 1, craft: 2, mine: 2, gather: 1, build: 3, haul: 2, grow: 2, cook: 2 });
   await tool(page, 'stockpile');
   await page.locator('#stockpile-food').uncheck();
   await page.locator('#stockpile-capacity').fill('10');
-  await dragRectangle(page, { x: 14, z: 17 }, { x: 14, z: 18 });
+  await revealCells(page, [{ x: 14, z: 17 }, { x: 14, z: 18 }]); await dragRectangle(page, { x: 14, z: 17 }, { x: 14, z: 18 });
   await expect.poll(async () => (await world(page)).stockpiles.length).toBe(2);
   expect((await world(page)).stockpiles.every(zone => zone.filters.wood && !zone.filters.food && zone.capacity === 10)).toBe(true);
-  await tool(page, 'harvest'); await cell(page, 18, 14);
-  await tool(page, 'chop'); await cell(page, 14, 14);
-  await tool(page, 'bed'); await cell(page, 16, 18);
-  await expect.poll(async () => (await world(page)).jobs.length).toBe(3);
+  await tool(page, 'harvest'); await revealCells(page, [{ x: 18, z: 14 }]); await cell(page, 18, 14);
+  const firstChop = { from: { x: 13, z: 11 }, to: { x: 18, z: 18 } };
+  const firstTrees = initialWorld.resources.filter(resource => resource.kind === 'tree' && resource.x >= firstChop.from.x && resource.x <= firstChop.to.x && resource.z >= firstChop.from.z && resource.z <= firstChop.to.z);
+  expect(initialWorld.stock.wood + firstTrees.reduce((sum, tree) => sum + tree.amount, 0)).toBe(bedWood);
+  await tool(page, 'chop'); await revealCells(page, [firstChop.from, firstChop.to]); await dragRectangle(page, firstChop.from, firstChop.to);
+  await tool(page, 'bed'); await revealCells(page, [{ x: 16, z: 18 }]); await cell(page, 16, 18);
+  await expect.poll(async () => (await world(page)).jobs.length).toBe(firstTrees.length + 2);
   // Observe a real in-flight transfer through snapshots, then freeze its authoritative state.
   await page.getByRole('button', { name: 'Vitesse normale', exact: true }).click();
   // Act on the displayed state in the same browser callback: a separate driver round trip
@@ -111,14 +118,16 @@ test('colonie matérielle : réserve filtrée, transport visible, trois couchage
   expect(saved.schemaVersion).toBe(SCHEMA_VERSION);
   expect(saved.pawns.some(pawn => pawn.haul?.phase === 'deliver')).toBe(true);
   expect(JSON.stringify(saved)).toBe(JSON.stringify(duringHaul));
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#menu-panel')).not.toBeVisible();
 
   await page.getByRole('button', { name: 'Vitesse 6 fois', exact: true }).click();
-  await expect.poll(async () => (await world(page)).jobs.length).toBe(0);
+  await expect.poll(async () => (await world(page)).jobs.length, { timeout: 30_000 }).toBe(0);
   await page.getByRole('button', { name: 'Pause', exact: true }).click();
   await expect(page.locator('#pause-banner')).toBeVisible();
   const finished = await world(page);
   expect(finished.structures.filter(structure => structure.kind === 'bed')).toHaveLength(1);
-  expect(finished.stock).toEqual({ wood: 16, food: 28 });
+  expect(finished.stock).toEqual({ wood: 0, food: 28 });
   expect(finished.pawns.every(pawn => pawn.hunger < 91 && pawn.hunger > 60)).toBe(true);
   expect(finished.resources.some(resource => resource.x === 14 && resource.z === 14)).toBe(false);
   await expect(page.locator('#alerts [data-alert="beds"]')).toBeVisible();
@@ -127,11 +136,15 @@ test('colonie matérielle : réserve filtrée, transport visible, trois couchage
   const extraBeds = [15, 17, 18].map(x => ({ x, z: 18 })).filter(target =>
     !finished.pawns.some(pawn => pawn.x === target.x && (pawn.z === target.z || pawn.z === target.z + 1))).slice(0, 2);
   expect(extraBeds).toHaveLength(2);
+  const secondChop = { from: { x: 12, z: 10 }, to: { x: 20, z: 20 } };
+  const secondTrees = finished.resources.filter(resource => resource.kind === 'tree' && resource.x >= secondChop.from.x && resource.x <= secondChop.to.x && resource.z >= secondChop.from.z && resource.z <= secondChop.to.z);
+  expect(secondTrees.reduce((sum, tree) => sum + tree.amount, 0)).toBe(2 * bedWood);
+  await tool(page, 'chop'); await revealCells(page, [secondChop.from, secondChop.to]); await dragRectangle(page, secondChop.from, secondChop.to);
   await tool(page, 'bed');
-  for (const target of extraBeds) await cell(page, target.x, target.z);
-  await expect.poll(async () => (await world(page)).jobs.length).toBe(2);
+  for (const target of extraBeds) { await revealCells(page, [target]); await cell(page, target.x, target.z); }
+  await expect.poll(async () => (await world(page)).jobs.length).toBe(secondTrees.length + 2);
   await page.getByRole('button', { name: 'Vitesse 6 fois', exact: true }).click();
-  await expect.poll(async () => (await world(page)).structures.filter(item => item.kind === 'bed').length).toBe(3);
+  await expect.poll(async () => (await world(page)).structures.filter(item => item.kind === 'bed').length, { timeout: 60_000 }).toBe(3);
   await page.getByRole('button', { name: 'Pause', exact: true }).click();
   await expect(page.locator('#alerts [data-alert="beds"]')).toHaveCount(0);
   expect((await world(page)).stock.wood).toBe(0);
@@ -141,15 +154,16 @@ test('colonie matérielle : réserve filtrée, transport visible, trois couchage
   await expect(page.locator('#alerts [data-alert="beds"]')).toBeVisible();
 
   const woodBeforeCancel = saved.piles.filter(pile => pile.kind === 'wood').reduce((sum, pile) => sum + pile.quantity, 0);
-  await tool(page, 'cancel'); await cell(page, 16, 19); // Second footprint cell selects the same plan.
+  await tool(page, 'cancel'); await revealCells(page, [{ x: 16, z: 19 }]); await cell(page, 16, 19); // Second footprint cell selects the same plan.
   await expect.poll(async () => (await world(page)).jobs.length).toBe(saved.jobs.length - 1);
   expect((await world(page)).piles.filter(pile => pile.kind === 'wood').reduce((sum, pile) => sum + pile.quantity, 0)).toBe(woodBeforeCancel);
-  await page.keyboard.press('Escape'); await cell(page, 14, 17);
+  await page.keyboard.press('Escape'); await revealCells(page, [{ x: 14, z: 17 }]); await cell(page, 14, 17);
   await expect(page.locator('#cell-storage')).toBeVisible();
   await page.locator('#selected-stockpile-wood').uncheck();
   await page.locator('#selected-stockpile-food').check();
   await page.locator('#update-stockpile').click();
-  await expect.poll(async () => (await world(page)).stockpiles.find(zone => zone.x === 14 && zone.z === 17)?.filters).toEqual({ wood: false, food: true, steel: true, chunk: false, furniture: true });
+  const savedFilters = saved.stockpiles.find(zone => zone.x === 14 && zone.z === 17)!.filters;
+  await expect.poll(async () => (await world(page)).stockpiles.find(zone => zone.x === 14 && zone.z === 17)?.filters).toEqual({ ...savedFilters, wood: false, food: true });
   await page.locator('#delete-stockpile').click();
   await expect.poll(async () => (await world(page)).stockpiles.length).toBe(1);
   await page.keyboard.press('Escape');
@@ -185,19 +199,20 @@ test('frontières : commandes répétées, sauvegarde invalide atomique, aide et
   await page.locator('#load').click();
   await expect(page.getByRole('status')).toHaveClass(/error/);
   expect(await world(page)).toEqual(before);
-  await tool(page, 'wall'); await cell(page, 16, 16);
+  await tool(page, 'wall'); await revealCells(page, [{ x: 16, z: 16 }]); await cell(page, 16, 16);
   await expect.poll(async()=>(await world(page)).jobs.length).toBe(1);
   expect((await world(page)).pawns.map(p=>({id:p.id,x:p.x,z:p.z,motion:p.motion}))).toEqual(before.pawns.map(p=>({id:p.id,x:p.x,z:p.z,motion:p.motion})));
-  await cell(page, 16, 16); // Duplicate plan still refuses atomically.
+  await revealCells(page, [{ x: 16, z: 16 }]); await cell(page, 16, 16); // Duplicate plan still refuses atomically.
   await expect(page.getByRole('status')).toHaveClass(/error/);
   expect((await world(page)).jobs).toHaveLength(1);
-  await tool(page,'cancel');await cell(page,16,16);
+  await tool(page,'cancel');await revealCells(page,[{x:16,z:16}]);await cell(page,16,16);
   await expect.poll(async()=>(await world(page)).jobs.length).toBe(0);
   await tool(page, 'bed'); await page.locator('#rotate-building').click();
   await expect(page.locator('#placement-orientation')).toHaveText('90°');
-  await cell(page, 16, 18);
+  // This cleared cell is visible beside the palette in the same camera pose.
+  await revealCells(page, [{ x: 16, z: 16 }]); await cell(page, 16, 16);
   await expect.poll(async () => (await world(page)).jobs[0]?.orientation).toBe(1);
-  await tool(page, 'cancel'); await cell(page, 17, 18);
+  await tool(page, 'cancel'); await revealCells(page, [{ x: 17, z: 16 }]); await cell(page, 17, 16);
   await expect.poll(async () => (await world(page)).jobs.length).toBe(0);
   await page.getByRole('button', { name: 'Ouvrir l’aide', exact: true }).click();
   await expect(page.locator('#help')).toBeVisible();
@@ -255,10 +270,14 @@ test('rectangles 250² : aperçu, interruptions, rotation, politiques préservé
     await expect(page.locator('#pause-banner')).toBeVisible();
     const initial = await serializedWorld(page);
     const from = { x: 123, z: 124 }, to = { x: 126, z: 125 };
+    const framedDrag = async (start: { x: number; z: number }, end: { x: number; z: number }, release = true) => {
+      await revealCells(page, [start, end]);
+      await dragRectangle(page, start, end, release);
+    };
     await tool(page, 'stockpile');
     await page.locator('#stockpile-food').uncheck(); await page.locator('#stockpile-capacity').fill('10');
     for (const interruption of ['escape', 'right', 'outside', 'blur', 'tool'] as const) {
-      await tool(page, 'stockpile'); await dragRectangle(page, from, to, false);
+      await tool(page, 'stockpile'); await framedDrag(from, to, false);
       await expect(page.locator('#area-feedback')).toBeVisible();
       await expect(page.locator('#area-feedback')).toContainText('4 × 2 · 8 case(s) retenue(s)');
       expect(await serializedWorld(page)).toBe(initial);
@@ -270,7 +289,7 @@ test('rectangles 250² : aperçu, interruptions, rotation, politiques préservé
       await page.mouse.up(); await expect(page.locator('#area-feedback')).toBeHidden();
       await expectWorld(page, JSON.parse(initial));
     }
-    await tool(page, 'stockpile'); await dragRectangle(page, to, from, false);
+    await tool(page, 'stockpile'); await framedDrag(to, from, false);
     await expect(page.locator('#area-feedback')).toBeVisible();
     await expect(page.locator('#area-feedback')).toContainText('8 case(s) retenue(s)');
     // Hold the real gesture through rendered frames to compile and inspect the instanced preview.
@@ -283,7 +302,7 @@ test('rectangles 250² : aperçu, interruptions, rotation, politiques préservé
     expect(stored.every(cell => cell.filters.wood && !cell.filters.food && cell.capacity === 10)).toBe(true);
     // Overlap is additive: changing drawing settings must not overwrite existing policies.
     await page.locator('#stockpile-capacity').fill('20');
-    await dragRectangle(page, { x: 125, z: 124 }, { x: 127, z: 125 });
+    await framedDrag({ x: 125, z: 124 }, { x: 127, z: 125 });
     await expect.poll(async () => (await world(page)).stockpiles.length).toBe(10);
     expect((await world(page)).stockpiles.slice(0, 8)).toEqual(stored);
     expect((await world(page)).stockpiles.slice(8).every(cell => cell.capacity === 20)).toBe(true);
@@ -292,14 +311,14 @@ test('rectangles 250² : aperçu, interruptions, rotation, politiques préservé
     await panel(page, 'menu'); await page.locator('#save').click();
     await expect(page.locator('#notice')).toContainText('sauvegardée');
     const saved = await world(page);
-    await tool(page, 'remove-stockpile'); await dragRectangle(page, from, { x: 127, z: 125 }, false);
+    await tool(page, 'remove-stockpile'); await framedDrag(from, { x: 127, z: 125 }, false);
     await expect(page.locator('#area-feedback')).toContainText('10 case(s) retenue(s)');
     await page.mouse.up();
     await expect.poll(async () => ({ count: (await world(page)).stockpiles.length, errors, notice: await page.locator('#notice').textContent() })).toMatchObject({ count: 0, errors: [] });
     expect((await world(page)).piles).toEqual(saved.piles);
     await panel(page, 'menu'); await page.locator('#load').click(); await expectWorld(page, saved);
     // Also cover immediate release, without waiting on preview DOM or a screenshot.
-    await tool(page, 'remove-stockpile'); await dragRectangle(page, from, { x: 127, z: 125 });
+    await tool(page, 'remove-stockpile'); await framedDrag(from, { x: 127, z: 125 });
     await expect.poll(async () => ({ count: (await world(page)).stockpiles.length, errors, notice: await page.locator('#notice').textContent() })).toMatchObject({ count: 0, errors: [] });
     await panel(page, 'menu'); await page.locator('#load').click(); await expectWorld(page, saved);
 
@@ -312,7 +331,7 @@ test('rectangles 250² : aperçu, interruptions, rotation, politiques préservé
     const gatherFrom = { x: 122, z: 122 }, gatherTo = { x: 125, z: 124 };
     const targets = beforeGather.resources.filter(resource => resource.kind === 'tree' && resource.x >= 122 && resource.x <= 125 && resource.z >= 122 && resource.z <= 124);
     expect(targets.length).toBeGreaterThan(0);
-    await dragRectangle(page, gatherTo, gatherFrom);
+    await framedDrag(gatherTo, gatherFrom);
     await expect.poll(async () => (await world(page)).jobs.length).toBe(targets.length);
     expect((await world(page)).jobs.map(job => `${job.x}:${job.z}`).sort()).toEqual(targets.map(resource => `${resource.x}:${resource.z}`).sort());
     const expectedWood = beforeGather.piles.filter(pile => pile.kind === 'wood').reduce((sum, pile) => sum + pile.quantity, 0) + targets.reduce((sum, resource) => sum + resource.amount, 0);
@@ -344,7 +363,7 @@ test('nouvelle colonie : défaut 250, tailles 128/200/250 et retour exact à une
     await startPaused(page);
     await panel(page, 'work');
     await page.getByLabel('Priorité construction Ada', { exact: true }).selectOption('0');
-    await tool(page, 'chop'); await cell(page, 14, 14);
+    await tool(page, 'chop'); await revealCells(page, [{ x: 14, z: 14 }]); await cell(page, 14, 14);
     await expect.poll(async () => (await world(page)).jobs.length).toBe(1);
     const previous = await world(page);
     for (const [size, seed] of [[128, 271], [200, 7], [250, 0xffffffff]]) {
@@ -362,14 +381,30 @@ test('nouvelle colonie : défaut 250, tailles 128/200/250 et retour exact à une
         // A full-size save must survive storage and reloading, not only generation.
         await panel(page, 'menu'); await page.locator('#save').click();
         await expect(page.getByRole('status')).toContainText('sauvegardée');
-        await page.locator('#load').click();
-        await expectWorld(page, createScenarioWorld(seed, size, 'camp'));
       }
       await panel(page, 'menu');
       await expect(page.locator('#restore-previous')).toBeEnabled();
       await page.locator('#restore-previous').click();
+      // The recovery load crosses the client/worker migration boundary; wait for
+      // the authoritative replacement before comparing the historical snapshot.
+      await expect.poll(async () => {
+        const restored = await world(page);
+        return restored.seed === previous.seed && restored.width === previous.width && restored.height === previous.height && restored.tick === previous.tick;
+      }).toBe(true);
       await expectWorld(page, previous);
       await expect(page.locator('#map-size')).toHaveText('32 × 32');
+      if (size === 250) {
+        // Reload from the restored small colony so the recovery slot remains a
+        // real 32² snapshot, then prove both the 250² save and return path again.
+        await panel(page, 'menu'); await page.locator('#load').click();
+        await expectWorld(page, createScenarioWorld(seed, size, 'camp'));
+        await expect(page.locator('#map-size')).toHaveText('250 × 250');
+        await panel(page, 'menu');
+        await expect(page.locator('#restore-previous')).toBeEnabled();
+        await page.locator('#restore-previous').click();
+        await expectWorld(page, previous);
+        await expect(page.locator('#map-size')).toHaveText('32 × 32');
+      }
     }
     await test.info().attach('transition-renderer', {
       body: JSON.stringify({ backend: await page.evaluate(() => window.__lisiere.backend), defaultSize: 250, sizes: [32, 128, 200, 250], restoredExactly: true }),

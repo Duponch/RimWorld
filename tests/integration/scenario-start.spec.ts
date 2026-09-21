@@ -74,7 +74,7 @@ async function metricWindow(page: Page, speed: number) {
   return { speed, targetTicksPerSecond, actualTicksPerSecond, ...sample };
 }
 
-test('native V83: chosen site, fertile land, first physical decisions and unchanged historical landscapes', async ({ playwright }) => {
+test('native V90: chosen site, fertile land, first physical decisions and unchanged historical landscapes', async ({ playwright }) => {
   test.setTimeout(360000);
   // Native launch deliberately omits the generic software WebGPU arguments.
   // All served sources must stay frozen for this entire grouped run.
@@ -211,7 +211,11 @@ test('native V83: chosen site, fertile land, first physical decisions and unchan
     expect(initial.scenario?.id).toBe('crashlanded');
     expect(initial.gameProfile?.difficulty).toBe('adventure-story');
     expect(initial.site).toEqual(resolveSite(42, chosenSite));
-    expect(initial.scenario?.revision).toBe(2);
+    // Crashlanded revision 5 is the current V90 public profile. Older
+    // landscape saves below retain their original revision and are checked as
+    // migration inputs, while this newly created world must use the current
+    // revision.
+    expect(initial.scenario?.revision).toBe(5);
     expect(initial.tiles.some(tile => tile.terrain === 'water')).toBe(false);
     for (const id of ['enable-arrivals', 'enable-raids', 'enable-heatwaves']) await expect(page.locator(`#${id}`)).toBeHidden();
     await expect(page.locator('#clock')).toHaveText('06:00');

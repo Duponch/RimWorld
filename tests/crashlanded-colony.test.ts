@@ -20,6 +20,7 @@ interface Checkpoint {
   protocol:'food-chain-v84';instrumentation:2;seed:number;world:string;initial:{wood:number;food:number;steel:number;component:number};ledger:Ledger;
   milestones:Record<string,number>;journal:{tick:number;reason:string;command:Command}[];observations:Summary[];
 }
+const woodConserved=(w:World)=>woodAccount(w)+(w.fires?.ledger.items.wood??0)+(w.fires?.ledger.woodPotentialLost??0)+((w.fires?.ledger.fuelTicksLost??0)+(w.fires?.ledger.fuelTicksBurned??0))/600;
 const checkpointFile=process.env.CRASHLANDED_CHECKPOINT;
 const resumed:Checkpoint|undefined=checkpointFile?JSON.parse(readFileSync(checkpointFile,'utf8')):undefined;
 if(resumed&&resumed.protocol!=='food-chain-v84')throw Error('Use a V84 food-chain checkpoint; a V83 20-cell camp has a different player protocol.');
@@ -66,10 +67,15 @@ test.each(resumed?[resumed.seed]:[42])('Atterrissage : 24 jours, deux récoltes 
     const s=crashlandedSummary(w);observations.push(s);
     const context=`seed ${seed}, tick ${w.tick}; checkpoint ${failureFile}`;
     expect(validateWorld(w),context).toEqual([]);
-    expect(woodAccount(w),context).toBeCloseTo(initial.wood,7);
+    expect(woodConserved(w),context).toBeCloseTo(initial.wood,7);
     expect(s.materials,context).toEqual({steel:initial.steel,component:initial.component});
     expect(foodAccount(w)+ledger.consumed+9*ledger.cooked+(w.wildlife?.eatenItems??0),context).toBe(initial.food+ledger.harvested);
-    expect(w.pawns.filter(isColonist).every(p=>p.state!=='dead'&&p.state!=='downed'&&p.hunger>0&&p.rest>0),context).toBe(true);
+    // Food poisoning can drive hunger to zero between the physical pickup and
+    // ingestion. A colonist actively eating is already resolving that state;
+    // death, exhaustion or starvation without an engaged meal remain hard
+    // failures. A temporary combat downing is observed and must be resolved by
+    // the final recovery assertion rather than making every raid harmless.
+    expect(w.pawns.filter(isColonist).every(p=>p.state!=='dead'&&p.rest>0&&(p.hunger>0||p.state==='eating'||p.state==='downed')),context).toBe(true);
     record('threeBeds',s.beds===3);record('shelter',s.shelteredBeds===3&&s.walls===15&&s.doors===1);
     record('stockMoved',s.stored.steel>0&&s.stored.component>0);
     record('medicineStored',s.stored.medicine===30);record('riceGrowing',s.crops.length>=40&&s.crops.some(c=>c.growth>0));
@@ -107,9 +113,11 @@ test.each(resumed?[resumed.seed]:[42])('Atterrissage : 24 jours, deux récoltes 
     for(const e of currentEvents) {
       const eaten=e.message.match(/a mangé une portion \((\d+) ×/);
       if(eaten){
-        const quantity=Number(eaten[1]);ledger.consumed+=quantity;
+        const quantity=Number(eaten[1]);
         const pawn=w.pawns.find(p=>e.message.startsWith(`${p.name} a mangé`)),item=pawn?eating.get(pawn.name):undefined;
         expect(item,`Consumed physical item missing at tick ${w.tick}: ${e.message}`).toBeDefined();
+        if(!pawn||!isColonist(pawn))continue;
+        ledger.consumed+=quantity;
         ledger.consumedByItem[item!]=(ledger.consumedByItem[item!]??0)+quantity;
         if(item==='survival-meal')ledger.lastSurvivalMealTick=w.tick;
         if(pawn){ledger.meals[pawn.id]=(ledger.meals[pawn.id]??0)+1;if(w.tick>17*6000&&item!=='survival-meal')ledger.nonRationIngestionsLastWeek[pawn.id]=(ledger.nonRationIngestionsLastWeek[pawn.id]??0)+1;}
@@ -147,7 +155,9 @@ test.each(resumed?[resumed.seed]:[42])('Atterrissage : 24 jours, deux récoltes 
   const final=observe(),runtimeMs=performance.now()-started,report={protocol:'food-chain-v84',instrumentation:2,seed,resumed:!!resumed,runtimeMs,initial,ledger,milestones,journal,observations,final};
   writeFileSync(`tmp/crashlanded-final-${version}-${seed}.json`,serializeWorld(w));writeFileSync(`artifacts/crashlanded-colony-${version}-${seed}.json`,JSON.stringify(report));
   const context=JSON.stringify({seed,milestones,ledger,final});
-  expect(w.pawns.filter(isColonist),context).toHaveLength(3);expect(final.beds,context).toBe(3);expect(final.shelteredBeds,context).toBe(3);
+  const survivors=w.pawns.filter(isColonist);expect(survivors,context).toHaveLength(3);
+  expect(survivors.every(p=>p.state!=='dead'&&p.state!=='downed'&&p.hunger>0&&p.rest>0),context).toBe(true);
+  expect(final.beds,context).toBe(3);expect(final.shelteredBeds,context).toBe(3);
   expect(final.walls,context).toBe(15);expect(final.doors,context).toBe(1);
   expect(final.foodChain.zones,context).toEqual(expect.arrayContaining([expect.objectContaining({plant:'rice',cells:80}),expect.objectContaining({plant:'potato',cells:24}),expect.objectContaining({plant:'corn',cells:24})]));
   expect(final.foodChain.coveredStockCells,context).toBeGreaterThanOrEqual(24);

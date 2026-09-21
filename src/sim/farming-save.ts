@@ -39,7 +39,7 @@ export function validateFarming(input: Record<string, unknown>, size: number, id
   }
   for (const value of input.jobs as Record<string, unknown>[]) {
     if (value.growingZoneId !== undefined && (!int(value.growingZoneId, 1) || !zoneIds.has(value.growingZoneId) || !['chop', 'cut', 'harvest', 'sow'].includes(value.kind as string))) errors.push('Invalid growing job association.');
-    if (value.kind === 'sow' && value.growingZoneId === undefined) errors.push('Sowing requires a growing zone.');
+    if (value.kind === 'sow' && value.growingZoneId === undefined && value.flowerPotId === undefined) errors.push('Sowing requires a growing zone or flower pot.');
     if (value.growingZoneId !== undefined && zoneIds.has(value.growingZoneId as number)) {
       const zone = (input.growingZones as {id:number;cells:number[]}[]).find(z=>z.id===value.growingZoneId)!;
       const cell = (value.z as number) * (input.width as number) + (value.x as number);

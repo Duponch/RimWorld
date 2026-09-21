@@ -1,12 +1,12 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 89 as const;
+export const SCHEMA_VERSION = 90 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
 export type Terrain = 'grass' | 'soil' | 'water' | 'rock' | 'rough-stone' | 'rich-soil' | 'gravel';
 export type ResourceKind = 'potato' | 'corn' | 'tree' | 'berries' | 'rock' | 'rice' | 'cotton';
 export type MaterialKind = 'silver' | 'corpse' | 'wood' | 'food' | 'chunk' | 'steel' | 'blocks' | 'component' | 'medicine' | 'weapon' | 'apparel' | 'textile' | 'unfinished';
-export type StructureKind = 'grave' | 'heater' | 'wind-turbine' | 'power-conduit' | 'power-switch' | 'battery' | 'solar-generator' | 'fueled-stove' | 'electric-stove' | 'butcher-table' | 'butcher-spot' | 'cooler' | 'research-bench' | 'tailor-bench' | 'crafting-spot' | 'wood-generator' | 'standing-lamp' | 'passive-cooler' | 'door' | 'wall' | 'bed' | 'table' | 'stool' | 'campfire' | 'horseshoes' | 'stonecutter';
+export type StructureKind = 'grave' | 'heater' | 'wind-turbine' | 'power-conduit' | 'power-switch' | 'battery' | 'solar-generator' | 'fueled-stove' | 'electric-stove' | 'butcher-table' | 'butcher-spot' | 'cooler' | 'research-bench' | 'tailor-bench' | 'electric-tailor-bench' | 'crafting-spot' | 'wood-generator' | 'standing-lamp' | 'passive-cooler' | 'door' | 'wall' | 'bed' | 'table' | 'table-square' | 'table-long' | 'stool' | 'dining-chair' | 'armchair' | 'end-table' | 'dresser' | 'flower-pot' | 'campfire' | 'horseshoes' | 'stonecutter';
 export type JobKind = 'lay-floor' | 'remove-floor' | 'flick' | 'repair' | 'build-roof' | 'remove-roof' | 'mine' | 'chop' | 'harvest' | 'cut' | 'sow' | 'deconstruct' | 'uninstall' | 'install' | StructureKind;
 export type WorkType = 'clean' | 'firefight' | 'warden' | 'basic' | 'hunt' | 'research' | 'patient' | 'bedrest' | 'doctor' | 'mine' | 'gather' | 'build' | 'haul' | 'grow' | 'cook' | 'craft';
 export type Orientation = 0 | 1 | 2 | 3;
@@ -15,7 +15,7 @@ export type PawnState = 'idle' | 'moving' | 'working' | 'sleeping' | 'hungry' | 
 export interface Cell { x: number; z: number }
 export interface Tile { floor?:import('./flooring.ts').FloorKind; ore?: 'steel' | 'machinery'; miningDamage?: number; terrain: Terrain; stone?: import('./geology.ts').StoneKind }
 export interface Resource extends Cell { plantLife?:import('./plant-life.ts').PlantLife; damage?:number; id: number; kind: ResourceKind; amount: number; growth?: number; growthTick?: number; growthThermalFactor?:number; stone?: import('./geology.ts').StoneKind }
-export interface Structure extends Cell { grave?:import('./burial.ts').GraveState; heater?:import('./heater.ts').HeaterState; wind?:import('./wind.ts').WindTurbineState; prisoner?:true; battery?:import('./power-battery.ts').BatteryState; cooler?:import('./cooler.ts').CoolerState; damage?:number; medical?:true; power?:import('./power-rules.ts').PowerState; door?:import('./door-rules.ts').DoorState; material?:import('./construction-materials.ts').ConstructionMaterial; bills?: import('./cooking-types.ts').CookingBill[]; fuel?: import('./fuel.ts').FuelState; id: number; kind: StructureKind; orientation: Orientation; footprint: Footprint }
+export interface Structure extends Cell { flower?:import('./flower-pot.ts').FlowerPotState; quality?:import('./equipment-rules.ts').WeaponQuality; grave?:import('./burial.ts').GraveState; heater?:import('./heater.ts').HeaterState; wind?:import('./wind.ts').WindTurbineState; prisoner?:true; battery?:import('./power-battery.ts').BatteryState; cooler?:import('./cooler.ts').CoolerState; damage?:number; medical?:true; power?:import('./power-rules.ts').PowerState; door?:import('./door-rules.ts').DoorState; material?:import('./construction-materials.ts').ConstructionMaterial; bills?: import('./cooking-types.ts').CookingBill[]; fuel?: import('./fuel.ts').FuelState; id: number; kind: StructureKind; orientation: Orientation; footprint: Footprint }
 export interface Stock { wood: number; food: number }
 export type MaterialOwner = {type:'grave';graveId:number} | ({ type: 'ground' } & Cell) | { type: 'pawn'; pawnId: number } | {type:'inventory';pawnId:number} | {type:'equipment';pawnId:number} | {type:'apparel';pawnId:number} | { type: 'job'; jobId: number };
 export interface MaterialPile { humanCorpse?:import('./human-corpses.ts').HumanCorpseState; foodPoison?:import('./food-poisoning.ts').FoodContamination; damage?:number; corpse?:import('./corpses.ts').CorpseState; unfinished?:import('./unfinished.ts').UnfinishedState; apparel?:import('./apparel-rules.ts').ApparelState; weapon?:import('./equipment-rules.ts').WeaponState; haulRequested?: true; id: number; kind: MaterialKind; item: ItemId; quantity: number; owner: MaterialOwner; rot?: import('./food-preservation.ts').RotState }
@@ -56,6 +56,7 @@ export interface Job extends Cell {
   clearance?: {resourceId:number; progress:number; workRemainder?:number};
   /** Generated intention, rechecked against this zone while pending/active. */
   growingZoneId?: number;
+  flowerPotId?:number;
   id: number;
   kind: JobKind;
   orientation: Orientation;
@@ -125,6 +126,10 @@ export interface Pawn extends Cell {
   rest: number;
   mood: number;
   comfort: number;
+  beauty: number;
+  apparelPolicyId?:number;
+  apparelAutomation?:boolean;
+  nextApparelCheckAt?:number;
   memories: Memory[];
   deniedJoining?:number[];
   jobId: number | null;
@@ -145,6 +150,9 @@ export interface Pawn extends Cell {
 }
 export interface WorldEvent { tick: number; type: 'job' | 'need' | 'command'; message: string }
 export interface World {
+  apparelWear?:import('./apparel-renewal.ts').ApparelWearState;
+  apparelPolicies?:import('./apparel-policy.ts').ApparelPolicy[];
+  nextApparelPolicyId?:number;
   filth?:import('./filth.ts').FilthState;
   visitors?:import('./visitor-state.ts').VisitorCalendar;
   trade?:import('./trade-state.ts').TradeLedger;
@@ -233,6 +241,7 @@ export type Command = import('./burial.ts').BurialCommand | import('./cleaning.t
   | ({type:'install';structureId:number;orientation:Orientation} & Cell)
   | import('./player-orders.ts').OrderCommand
   | import('./food-policy.ts').FoodPolicyCommand
+  | import('./apparel-system.ts').ApparelPolicyAssignmentCommand
   | import('./schedule.ts').ScheduleCommand
   | { type: 'bill-add';recipe?:import('./production-recipes.ts').ProductionRecipe; structureId: number }
   | { type: 'bill-update'; structureId: number; billId: number; settings: import('./cooking-types.ts').BillSettings }

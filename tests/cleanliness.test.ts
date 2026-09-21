@@ -1,4 +1,5 @@
 import { expect,test } from 'vitest';
+import { withoutV90 } from './scenarios/legacy-skills';
 import { cleanlinessCamp,enclosedRoom } from './scenarios/cleanliness';
 import { addFilth,advanceFilth,recordFilthMovement,roomCleanliness,removeFilth } from '../src/sim/filth';
 import { cleaningWanted,applyCleanRoom } from '../src/sim/cleaning';
@@ -60,7 +61,7 @@ test('automatic cleaning waits for age, honors home and enabled work, and does n
 });
 
 test('strict V88 migration creates no filth history, and current corrupt ages, duplicate targets and concurrent work are rejected',()=>{
-  const w=cleanlinessCamp(),raw=JSON.parse(serializeWorld(w));raw.schemaVersion=88;for(const p of raw.pawns)delete p.priorities.clean;
+  const w=cleanlinessCamp(),raw=withoutV90(JSON.parse(serializeWorld(w)));raw.schemaVersion=88;for(const p of raw.pawns)delete p.priorities.clean;
   const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated.filth).toBeUndefined();expect(migrated.pawns.every(p=>p.priorities.clean===3&&!p.filthFeet)).toBe(true);
   raw.filth={rng:1,items:[],cleaned:0};expect(()=>deserializeWorld(JSON.stringify(raw))).toThrow();
   addFilth(w,{x:14,z:15},'blood');addFilth(w,{x:15,z:15},'vomit');const f=w.filth!.items[0]!;const future=structuredClone(w);future.filth!.items[0]!.grownCore=1;expect(validateFilth(future,89).length).toBeGreaterThan(0);

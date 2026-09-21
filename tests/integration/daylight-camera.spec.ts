@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { createWorld, serializeWorld } from '../../src/sim/index';
 import { observeErrors, panel, saveKey, tool, cell, expectWorld, world, dragRectangle } from './helpers';
+import { revealCells } from './player-actions';
 
 test('vue iso/perspective : sélection, rectangle, pause, reprise et ciel restauré depuis la sauvegarde', async ({ playwright }, testInfo) => {
   test.setTimeout(120000);
@@ -29,18 +30,18 @@ test('vue iso/perspective : sélection, rectangle, pause, reprise et ciel restau
     }
     await expectWorld(page, fixture);
     const toggled = await probe(); expect(toggled.span).toBeCloseTo(initial.span, 8); expect(toggled.target).toEqual(initial.target);
-    await page.locator('#camera-mode').click(); await tool(page, 'select'); await cell(page, 18, 14);
+    await page.locator('#camera-mode').click(); await tool(page, 'select'); await revealCells(page, [{ x: 18, z: 14 }]); await cell(page, 18, 14);
     await expect(page.locator('#cell-description')).toContainText('18, 14');
-    await tool(page, 'stockpile'); await dragRectangle(page, { x: 17, z: 12 }, { x: 19, z: 13 });
+    await tool(page, 'stockpile'); await revealCells(page, [{ x: 17, z: 12 }, { x: 19, z: 13 }]); await dragRectangle(page, { x: 17, z: 12 }, { x: 19, z: 13 });
     await expect.poll(async () => (await world(page)).stockpiles.length).toBe(6);
-    await tool(page, 'chop'); await cell(page, 18, 14);
+    await tool(page, 'chop'); await revealCells(page, [{ x: 18, z: 14 }]); await cell(page, 18, 14);
     await expect.poll(async () => (await world(page)).jobs.length).toBe(1);
     const beforeGesture = await world(page);
-    await tool(page, 'stockpile'); await dragRectangle(page, { x: 17, z: 10 }, { x: 19, z: 11 }, false);
+    await tool(page, 'stockpile'); await revealCells(page, [{ x: 17, z: 10 }, { x: 19, z: 11 }]); await dragRectangle(page, { x: 17, z: 10 }, { x: 19, z: 11 }, false);
     await page.locator('#camera-mode').focus(); await page.locator('#camera-mode').press('Enter'); await page.mouse.up();
     await expectWorld(page, beforeGesture);
     await page.locator('#camera-mode').click();
-    await page.setViewportSize({ width: 1100, height: 780 }); await tool(page, 'select'); await cell(page, 18, 14);
+    await page.setViewportSize({ width: 1100, height: 780 }); await tool(page, 'select'); await revealCells(page, [{ x: 18, z: 14 }]); await cell(page, 18, 14);
     await expect(page.locator('#cell-description')).toContainText('18, 14');
     const paused = (await probe()).sample;
     await page.waitForTimeout(350); expect((await probe()).sample).toEqual(paused);
@@ -51,8 +52,9 @@ test('vue iso/perspective : sélection, rectangle, pause, reprise et ciel restau
     expect((await probe()).sample.x).not.toBe(paused.x);
     await panel(page, 'menu'); await page.locator('#save').click();
     const saved = await world(page), savedSky = (await probe()).sample;
+    await page.keyboard.press('Escape');
     await page.locator('[data-speed="6"]').click(); await page.waitForFunction(t => window.__lisiere.world.tick > t + 30, saved.tick);
-    await page.locator('[data-speed="0"]').click(); await page.locator('#load').click(); await expectWorld(page, saved);
+    await page.locator('[data-speed="0"]').click(); await panel(page, 'menu'); await page.locator('#load').click(); await expectWorld(page, saved);
     await expect.poll(async () => (await probe()).sample).toEqual(savedSky);
     expect((await probe()).mode).toBe('perspective');
     // A previous save at midnight restores lighting immediately, without

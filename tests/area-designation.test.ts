@@ -27,7 +27,7 @@ test('rectangles : sélection exacte, frontières, reprise, concurrence et conse
   for (const [x, z, kind] of [[5, 5, 'tree'], [6, 5, 'tree'], [9, 7, 'tree'], [7, 5, 'berries'], [8, 5, 'rock']] as const) world.resources.push({ id: world.nextId++, x, z, kind, amount: 12 });
   world.resources.push({id:world.nextId++,kind:'berries',x:9,z:5,amount:10,growth:.3,growthTick:0});
   world.tiles[6 * 16 + 6]!.terrain = 'water'; world.tiles[6 * 16 + 7]!.terrain = 'rock';
-  world.structures.push({ id: world.nextId++, x: 8, z: 6, kind: 'bed', orientation: 0, footprint: 'standard' });
+  world.structures.push({ id: world.nextId++, x: 8, z: 6, kind: 'bed', orientation: 0, footprint: 'standard', quality: 'normal' });
   expect(applyCommand(world, { type: 'designate', kind: 'bed', x: 10, z: 6 }).ok).toBe(true);
   expect(applyCommand(world, { type: 'stockpile', x: 4, z: 4, enabled: true, filters: { wood: false, food: true }, priority: 4, capacity: 9 }).ok).toBe(true);
   const original = serializeWorld(world);

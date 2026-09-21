@@ -13,11 +13,13 @@ const neighbors = (cell: Cell): Cell[] => [
   { x: cell.x, z: cell.z - 1 }, { x: cell.x + 1, z: cell.z },
   { x: cell.x, z: cell.z + 1 }, { x: cell.x - 1, z: cell.z },
 ];
+export const isDiningTable=(kind:unknown):boolean=>kind==='table'||kind==='table-square'||kind==='table-long';
+export const isDiningSeat=(kind:unknown):boolean=>kind==='stool'||kind==='dining-chair'||kind==='armchair';
 
 /** Any cardinal eating surface works; a stool's orientation is not a rule. */
 export function adjacentTable(world: World, cell: Cell): { id: number; cell: Cell } | null {
   for (const neighbor of neighbors(cell)) {
-    const table = world.structures.find(item => item.kind === 'table' && footprintCells(item).some(part => same(part, neighbor)));
+    const table = world.structures.find(item => isDiningTable(item.kind) && footprintCells(item).some(part => same(part, neighbor)));
     if (table) return { id: table.id, cell: neighbor };
   }
   return null;
@@ -25,8 +27,8 @@ export function adjacentTable(world: World, cell: Cell): { id: number; cell: Cel
 
 export function validDiningPlace(world: World, place: DiningPlace): boolean {
   if(world.schemaVersion>=22&&!canStandAt(world,place.target))return false;
-  if (place.seatId !== null && !world.structures.some(item => item.kind === 'stool' && item.id === place.seatId && same(item, place.target))) return false;
-  return place.tableId === null || world.structures.some(item => item.id === place.tableId && item.kind === 'table' && footprintCells(item).some(cell => adjacent(cell, place.target)));
+  if (place.seatId !== null && !world.structures.some(item => isDiningSeat(item.kind) && item.id === place.seatId && same(item, place.target))) return false;
+  return place.tableId === null || world.structures.some(item => item.id === place.tableId && isDiningTable(item.kind) && footprintCells(item).some(cell => adjacent(cell, place.target)));
 }
 
 /** Runs only after pickup, not at the original hunger decision. Candidate radius
@@ -40,15 +42,15 @@ export function chooseDiningPlace(world: World, pawn: Pawn, context: NeedContext
   const surfaces = new Map<number, number>();
   const fixed = new Set<number>();
   for (const item of world.structures) for (const cell of footprintCells(item)) {
-    if (item.kind === 'table') surfaces.set(key(cell), item.id);
-    if (item.kind !== 'stool') fixed.add(key(cell));
+    if (isDiningTable(item.kind)) surfaces.set(key(cell), item.id);
+    if (!isDiningSeat(item.kind)) fixed.add(key(cell));
   }
-  for (const item of world.jobs) if (item.kind === 'wall' || item.kind === 'table') for (const cell of footprintCells(item)) fixed.add(key(cell));
+  for (const item of world.jobs) if (item.kind === 'wall' || isDiningTable(item.kind)) for (const cell of footprintCells(item)) fixed.add(key(cell));
   const candidates: DiningPlace[] = [];
   const topology=pawn.prisoner?capturePrisonTopology(world):undefined;
   for (const seat of world.structures) {
     if(!prisonerAllowedCell(world,pawn,seat,topology))continue;
-    if (seat.kind !== 'stool' || deconstructionReserved(world,seat.id,pawn.id) || world.schemaVersion>=22&&!canStandAt(world,seat) || reserved.has(key(seat)) || distance(pawn, seat) > MATERIAL_DEFINITIONS.food.chairSearchRadius ** 2) continue;
+    if (!isDiningSeat(seat.kind) || deconstructionReserved(world,seat.id,pawn.id) || world.schemaVersion>=22&&!canStandAt(world,seat) || reserved.has(key(seat)) || distance(pawn, seat) > MATERIAL_DEFINITIONS.food.chairSearchRadius ** 2) continue;
     const surface = neighbors(seat).find(cell => inBounds(world, cell.x, cell.z) && surfaces.has(key(cell)));
     if (surface) candidates.push({ target: { x: seat.x, z: seat.z }, seatId: seat.id, tableId: surfaces.get(key(surface))! });
   }

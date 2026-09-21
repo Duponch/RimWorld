@@ -11,7 +11,7 @@ export function civilCrossingFixture(): World {
   for(let x=1;x<=14;x++)w.tiles[8*w.width+x]={terrain:'grass'};
   for(const x of [1,8,14]) {
     w.tiles[9*w.width+x]={terrain:'grass'};
-    w.structures.push({id:w.nextId++,kind:'bed',x,z:8,orientation:0,footprint:'standard'});
+    w.structures.push({id:w.nextId++,kind:'bed',x,z:8,orientation:0,footprint:'standard',quality:'normal'});
   }
   w.pawns.forEach((p,i)=>{
     Object.assign(p,{x:[2,13,8][i]!,z:8,hunger:100,rest:10,priorities: {clean:0,firefight:0,warden:0,basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,craft:2,mine:2,gather:0,build:0,haul:0,grow:0,cook:0}});

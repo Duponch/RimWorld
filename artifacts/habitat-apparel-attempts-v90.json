@@ -1,0 +1,826 @@
+[
+  {
+    "checkpoint": "artifacts/habitat-apparel-unprotected-v90.json.gz",
+    "startTick": 969414,
+    "endTick": 983400,
+    "reason": "The initial pilot did not defend the colony against raids.",
+    "pawns": [
+      {
+        "id": 4570,
+        "name": "Ada",
+        "state": "dead",
+        "faction": null
+      },
+      {
+        "id": 4572,
+        "name": "Noé",
+        "state": "dead",
+        "faction": null
+      },
+      {
+        "id": 4574,
+        "name": "Mina",
+        "state": "dead",
+        "faction": null
+      },
+      {
+        "id": 5326,
+        "name": "Assaillant 1.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 6099,
+        "name": "Assaillant 2.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 6102,
+        "name": "Assaillant 2.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 7399,
+        "name": "Assaillant 3.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 7402,
+        "name": "Assaillant 3.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 7637,
+        "name": "Assaillant 4.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 8828,
+        "name": "Assaillant 5.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 8831,
+        "name": "Assaillant 5.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 10375,
+        "name": "Assaillant 6.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 10580,
+        "name": "Assaillant 7.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 10583,
+        "name": "Assaillant 7.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 11822,
+        "name": "Assaillant 8.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 11825,
+        "name": "Assaillant 8.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 12903,
+        "name": "Assaillant 9.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 12906,
+        "name": "Assaillant 9.2",
+        "state": "dead",
+        "faction": "colony"
+      },
+      {
+        "id": 14194,
+        "name": "Assaillant 10.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 14197,
+        "name": "Assaillant 10.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 14527,
+        "name": "Assaillant 11.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 14530,
+        "name": "Assaillant 11.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 15960,
+        "name": "Assaillant 12.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 15963,
+        "name": "Assaillant 12.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 16312,
+        "name": "Assaillant 13.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 17863,
+        "name": "Assaillant 14.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 17866,
+        "name": "Assaillant 14.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 18314,
+        "name": "Assaillant 15.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 18317,
+        "name": "Assaillant 15.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 20016,
+        "name": "Assaillant 16.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 20019,
+        "name": "Assaillant 16.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 20359,
+        "name": "Assaillant 17.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 22142,
+        "name": "Assaillant 18.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 23324,
+        "name": "Assaillant 19.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 23327,
+        "name": "Assaillant 19.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 25302,
+        "name": "Assaillant 20.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 26853,
+        "name": "Assaillant 21.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 26856,
+        "name": "Assaillant 21.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 27574,
+        "name": "Assaillant 22.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 27577,
+        "name": "Assaillant 22.2",
+        "state": "dead",
+        "faction": "outlaws"
+      }
+    ],
+    "butchery": {
+      "completed": 1,
+      "meat": 22,
+      "leather": 14
+    },
+    "milestones": {
+      "cooked": 969600,
+      "treated": 980400
+    }
+  },
+  {
+    "checkpoint": "artifacts/habitat-apparel-storage-v90.json.gz",
+    "startTick": 969414,
+    "endTick": 1005414,
+    "reason": "One corpse storage cell was occupied by a human body; leather production did not progress.",
+    "pawns": [
+      {
+        "id": 4570,
+        "name": "Ada",
+        "state": "moving",
+        "faction": null
+      },
+      {
+        "id": 4572,
+        "name": "Noé",
+        "state": "recreating",
+        "faction": null
+      },
+      {
+        "id": 4574,
+        "name": "Mina",
+        "state": "moving",
+        "faction": null
+      },
+      {
+        "id": 5326,
+        "name": "Assaillant 1.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 6099,
+        "name": "Assaillant 2.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 6102,
+        "name": "Assaillant 2.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 7399,
+        "name": "Assaillant 3.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 7402,
+        "name": "Assaillant 3.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 7637,
+        "name": "Assaillant 4.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 8828,
+        "name": "Assaillant 5.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 8831,
+        "name": "Assaillant 5.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 10375,
+        "name": "Assaillant 6.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 10580,
+        "name": "Assaillant 7.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 10583,
+        "name": "Assaillant 7.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 11822,
+        "name": "Assaillant 8.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 11825,
+        "name": "Assaillant 8.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 12903,
+        "name": "Assaillant 9.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 12906,
+        "name": "Assaillant 9.2",
+        "state": "idle",
+        "faction": "colony"
+      },
+      {
+        "id": 14194,
+        "name": "Assaillant 10.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 14197,
+        "name": "Assaillant 10.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 14527,
+        "name": "Assaillant 11.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 14530,
+        "name": "Assaillant 11.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 15960,
+        "name": "Assaillant 12.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 15963,
+        "name": "Assaillant 12.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 16312,
+        "name": "Assaillant 13.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 17863,
+        "name": "Assaillant 14.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 17866,
+        "name": "Assaillant 14.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 18314,
+        "name": "Assaillant 15.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 18317,
+        "name": "Assaillant 15.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 20016,
+        "name": "Assaillant 16.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 20019,
+        "name": "Assaillant 16.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 20359,
+        "name": "Assaillant 17.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 22142,
+        "name": "Assaillant 18.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 23324,
+        "name": "Assaillant 19.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 23327,
+        "name": "Assaillant 19.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 25302,
+        "name": "Assaillant 20.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 26853,
+        "name": "Assaillant 21.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 26856,
+        "name": "Assaillant 21.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 27574,
+        "name": "Assaillant 22.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 27577,
+        "name": "Assaillant 22.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 29772,
+        "name": "Assaillant 23.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 29775,
+        "name": "Assaillant 23.2",
+        "state": "dead",
+        "faction": "outlaws"
+      }
+    ],
+    "butchery": {
+      "completed": 1,
+      "meat": 22,
+      "leather": 14
+    },
+    "milestones": {
+      "cooked": 969600,
+      "treated": 979200
+    }
+  },
+  {
+    "checkpoint": "artifacts/habitat-apparel-spoiled-v90.json.gz",
+    "startTick": 969414,
+    "endTick": 1041414,
+    "reason": "Extra corpse storage filled with human bodies; hunted hares spoiled before butchering.",
+    "pawns": [
+      {
+        "id": 4570,
+        "name": "Ada",
+        "state": "moving",
+        "faction": null
+      },
+      {
+        "id": 4572,
+        "name": "Noé",
+        "state": "recreating",
+        "faction": null
+      },
+      {
+        "id": 4574,
+        "name": "Mina",
+        "state": "working",
+        "faction": null
+      },
+      {
+        "id": 5326,
+        "name": "Assaillant 1.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 6099,
+        "name": "Assaillant 2.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 6102,
+        "name": "Assaillant 2.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 7399,
+        "name": "Assaillant 3.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 7402,
+        "name": "Assaillant 3.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 7637,
+        "name": "Assaillant 4.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 8828,
+        "name": "Assaillant 5.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 8831,
+        "name": "Assaillant 5.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 10375,
+        "name": "Assaillant 6.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 10580,
+        "name": "Assaillant 7.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 10583,
+        "name": "Assaillant 7.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 11822,
+        "name": "Assaillant 8.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 11825,
+        "name": "Assaillant 8.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 12903,
+        "name": "Assaillant 9.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 12906,
+        "name": "Assaillant 9.2",
+        "state": "moving",
+        "faction": "colony"
+      },
+      {
+        "id": 14194,
+        "name": "Assaillant 10.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 14197,
+        "name": "Assaillant 10.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 14527,
+        "name": "Assaillant 11.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 14530,
+        "name": "Assaillant 11.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 15960,
+        "name": "Assaillant 12.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 15963,
+        "name": "Assaillant 12.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 16312,
+        "name": "Assaillant 13.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 17863,
+        "name": "Assaillant 14.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 17866,
+        "name": "Assaillant 14.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 18314,
+        "name": "Assaillant 15.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 18317,
+        "name": "Assaillant 15.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 20016,
+        "name": "Assaillant 16.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 20019,
+        "name": "Assaillant 16.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 20359,
+        "name": "Assaillant 17.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 22142,
+        "name": "Assaillant 18.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 23324,
+        "name": "Assaillant 19.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 23327,
+        "name": "Assaillant 19.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 25302,
+        "name": "Assaillant 20.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 26853,
+        "name": "Assaillant 21.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 26856,
+        "name": "Assaillant 21.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 27574,
+        "name": "Assaillant 22.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 27577,
+        "name": "Assaillant 22.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 29772,
+        "name": "Assaillant 23.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 29775,
+        "name": "Assaillant 23.2",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 32066,
+        "name": "Assaillant 24.1",
+        "state": "dead",
+        "faction": "outlaws"
+      },
+      {
+        "id": 32069,
+        "name": "Assaillant 24.2",
+        "state": "dead",
+        "faction": "outlaws"
+      }
+    ],
+    "butchery": {
+      "completed": 1,
+      "meat": 22,
+      "leather": 14
+    },
+    "milestones": {
+      "cooked": 969600,
+      "treated": 979200,
+      "sowed": 1005600
+    }
+  },
+  {
+    "checkpoint": "artifacts/habitat-apparel-late-order-v90.json.gz",
+    "startTick": 969414,
+    "endTick": 1041414,
+    "reason": "The pilot waited for an idle cook and issued the third order after its corpse could survive the trip; 44 leather remained and research never started.",
+    "butchery": {
+      "completed": 3,
+      "meat": 71,
+      "leather": 44
+    },
+    "milestones": {
+      "cooked": 969600,
+      "treated": 979200,
+      "sowed": 1005600
+    }
+  }
+]

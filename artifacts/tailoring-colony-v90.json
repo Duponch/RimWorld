@@ -1,0 +1,179 @@
+{
+  "firstHarvest": 111448,
+  "endTick": 112521,
+  "days": [
+    {
+      "day": 1,
+      "food": 49,
+      "cloth": 0,
+      "hunger": 17.826666666665062,
+      "rest": 89.00488095238158,
+      "plants": 6
+    },
+    {
+      "day": 2,
+      "food": 47,
+      "cloth": 0,
+      "hunger": 22.919999999997835,
+      "rest": 77.99535714285781,
+      "plants": 6
+    },
+    {
+      "day": 3,
+      "food": 45,
+      "cloth": 0,
+      "hunger": 29.519999999997843,
+      "rest": 66.82404761904833,
+      "plants": 6
+    },
+    {
+      "day": 4,
+      "food": 43,
+      "cloth": 0,
+      "hunger": 37.19999999999733,
+      "rest": 55.608214285715036,
+      "plants": 6
+    },
+    {
+      "day": 5,
+      "food": 41,
+      "cloth": 0,
+      "hunger": 44.90666666666315,
+      "rest": 49.115833333334095,
+      "plants": 6
+    },
+    {
+      "day": 6,
+      "food": 39,
+      "cloth": 0,
+      "hunger": 49.62666666666263,
+      "rest": 51.80750000000073,
+      "plants": 6
+    },
+    {
+      "day": 7,
+      "food": 37,
+      "cloth": 0,
+      "hunger": 47.57333333332952,
+      "rest": 50.69916666666741,
+      "plants": 6
+    },
+    {
+      "day": 8,
+      "food": 35,
+      "cloth": 0,
+      "hunger": 48.34666666666277,
+      "rest": 51.15833333333407,
+      "plants": 6
+    },
+    {
+      "day": 9,
+      "food": 33,
+      "cloth": 0,
+      "hunger": 48.026666666662805,
+      "rest": 50.96833333333407,
+      "plants": 6
+    },
+    {
+      "day": 10,
+      "food": 31,
+      "cloth": 0,
+      "hunger": 48.159999999996124,
+      "rest": 51.04750000000074,
+      "plants": 6
+    },
+    {
+      "day": 11,
+      "food": 29,
+      "cloth": 0,
+      "hunger": 48.1066666666628,
+      "rest": 51.01583333333407,
+      "plants": 6
+    },
+    {
+      "day": 12,
+      "food": 27,
+      "cloth": 0,
+      "hunger": 48.1066666666628,
+      "rest": 51.01583333333407,
+      "plants": 6
+    },
+    {
+      "day": 13,
+      "food": 25,
+      "cloth": 0,
+      "hunger": 48.47999999999609,
+      "rest": 51.01583333333407,
+      "plants": 6
+    },
+    {
+      "day": 14,
+      "food": 23,
+      "cloth": 0,
+      "hunger": 48.3999999999961,
+      "rest": 51.01583333333407,
+      "plants": 6
+    },
+    {
+      "day": 15,
+      "food": 21,
+      "cloth": 0,
+      "hunger": 48.159999999996124,
+      "rest": 51.01583333333407,
+      "plants": 6
+    },
+    {
+      "day": 16,
+      "food": 19,
+      "cloth": 0,
+      "hunger": 48.3999999999961,
+      "rest": 51.01583333333407,
+      "plants": 6
+    },
+    {
+      "day": 17,
+      "food": 17,
+      "cloth": 0,
+      "hunger": 48.47999999999609,
+      "rest": 51.01583333333407,
+      "plants": 6
+    },
+    {
+      "day": 18,
+      "food": 15,
+      "cloth": 0,
+      "hunger": 48.159999999996124,
+      "rest": 51.01583333333407,
+      "plants": 6
+    }
+  ],
+  "slept": true,
+  "ate": true,
+  "garment": {
+    "id": 186,
+    "item": "cloth-tribalwear",
+    "kind": "apparel",
+    "quantity": 1,
+    "owner": {
+      "type": "apparel",
+      "pawnId": 49
+    },
+    "apparel": {
+      "quality": "awful",
+      "hitPoints": 100,
+      "material": "cloth",
+      "forced": true
+    }
+  },
+  "tailoring": {
+    "completed": 1,
+    "cancelled": 0,
+    "lostCloth": 0
+  },
+  "crafting": {
+    "level": 0,
+    "xp": 157500,
+    "dailyXp": 157500,
+    "passion": 0
+  }
+}

@@ -67,6 +67,7 @@ function arrive(w:World,kind:VisitorKind,intro=false):boolean {
   for(let i=0;i<profiles.length;i++){
     const p=startingPawn(nextId++,`${profiles[i]} ${id}.${i+1}`,arrival.sites[i]!.x,arrival.sites[i]!.z,0,55);
     p.faction='outlanders';p.foodPolicyId=w.foodPolicies[0]!.id;
+    delete p.apparelPolicyId;delete p.apparelAutomation;delete p.nextApparelCheckAt;
     for(const value of Object.values(p.skills))if(typeof value==='object'){value.level=0;value.passion=0;}
     for(const key of Object.keys(p.priorities) as (keyof Pawn['priorities'])[])p.priorities[key]=0;
     p.visitor={group:id,role:kind==='traveler'?'traveler':i===merchant?'trader':'visitor',phase:'arriving',goal:{...arrival.parking[i]!},personalFoodIds:[]};

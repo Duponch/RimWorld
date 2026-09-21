@@ -19,7 +19,7 @@ function assigned(kind:JobKind) {
   const w=camp(),p=w.pawns[0]!,at={x:11,z:10};
   if(['chop','cut','harvest'].includes(kind))w.resources.push({id:w.nextId++,kind:kind==='chop'?'tree':'berries',...at,amount:12,...kind==='chop'?{}:{growth:1,growthTick:0}});
   if(kind==='mine')w.tiles[at.z*32+at.x]={terrain:'rock',stone:'granite'};
-  if(kind==='deconstruct'||kind==='uninstall')w.structures.push({id:w.nextId++,kind:'stool',...at,orientation:0,footprint:'standard'});
+  if(kind==='deconstruct'||kind==='uninstall')w.structures.push({id:w.nextId++,kind:'stool',...at,orientation:0,footprint:'standard',quality:'normal'});
   if(kind==='build-roof'||kind==='remove-roof') {
     w.structures.push({id:w.nextId++,kind:'wall',x:12,z:10,orientation:0,footprint:'standard'});
     w.roofing={constructed:kind==='remove-roof'?[331]:[],build:kind==='build-roof'?[331]:[],remove:kind==='remove-roof'?[331]:[],cursor:0};
@@ -106,6 +106,6 @@ test('coups et arêtes : durée capturée, diagonales exactes, délais additifs,
   walk.roofing.constructed=[];const resumed=deserializeWorld(serializeWorld(walk));tick(walk,2);tick(resumed,2);expect(resumed).toEqual(walk);expect(actor.motion).toEqual(edge);
   walk.tick=Math.ceil(edge.end);startTravel(walk,actor,{x:12,z:12});expect(actor.motion!.start).toBeCloseTo(edge.end,9);expect(actor.motion!.end-actor.motion!.start).toBeCloseTo(3*Math.SQRT2,9);
   const malformed=JSON.parse(serializeWorld(walk));malformed.pawns[0].motion.speedFactor=.8;expect(()=>deserializeWorld(JSON.stringify(malformed))).toThrow(/travel duration/);
-  const furniture=camp(),carrier=furniture.pawns[0]!;furniture.structures.push({id:furniture.nextId++,kind:'table',x:11,z:10,orientation:0,footprint:'standard'});
+  const furniture=camp(),carrier=furniture.pawns[0]!;furniture.structures.push({id:furniture.nextId++,kind:'table',x:11,z:10,orientation:0,footprint:'standard',quality:'normal'});
   startTravel(furniture,carrier,{x:11,z:10});expect(carrier.motion!.end-carrier.motion!.start).toBeCloseTo(3/.8+4.2,9);expect(validateWorld(furniture)).toEqual([]);
 });

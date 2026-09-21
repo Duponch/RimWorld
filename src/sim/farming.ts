@@ -7,6 +7,7 @@ import { TemperatureView, outdoorTemperature } from './temperature.ts';
 import { releaseWork, type DropPlan } from './work-release.ts';
 import { isGrowingTerrain } from './soil.ts';
 import { createPlantLife } from './plant-life.ts';
+import { sowDaylily } from './flower-pot.ts';
 import type { GrowingZone, Job, JobKind, Resource, World } from './types.ts';
 
 export const FARM_SCAN_INTERVAL = 10;
@@ -38,6 +39,7 @@ function zoneCells(world: World) {
 }
 export const growingZoneAt = (world: World, cell: number): GrowingZone | undefined => zoneCells(world).byCell.get(cell);
 export function jobDuration(world: World, job: Job): number {
+  if(job.flowerPotId!==undefined&&job.kind==='sow')return 54;
   if(job.kind==='lay-floor'||job.kind==='remove-floor'||job.kind==='grave')return constructionRecipe(job).work;
   if(job.kind==='mine'&&job.pickTicks!==undefined)return job.pickTicks/10;
   if(job.furniture)return furnitureDuration(world,job);
@@ -92,6 +94,7 @@ export function cancelGrowingJobs(world: World, zoneIds: ReadonlySet<number>,dro
   world.jobs = world.jobs.filter(j => !ids.has(j.id));
 }
 export function growingJobValid(world: World, job: Job, shared?:Context): boolean {
+  if(job.flowerPotId!==undefined){const pot=world.structures.find(s=>s.id===job.flowerPotId&&s.kind==='flower-pot'&&s.x===job.x&&s.z===job.z);return !!pot&&(job.kind==='sow'?!!pot.flower?.allowSow&&!pot.flower.plant:job.kind==='cut'&&!!pot.flower?.plant);}
   if (job.growingZoneId === undefined) return job.kind !== 'sow';
   const zone = world.growingZones.find(z => z.id === job.growingZoneId);
   if (!zone) return false;
@@ -140,6 +143,7 @@ export function scheduleGrowing(world: World): void {
   }
 }
 export function finishSowing(world: World, job: Job): void {
+  if(job.flowerPotId!==undefined){const pot=world.structures.find(s=>s.id===job.flowerPotId&&s.kind==='flower-pot');if(pot?.flower&&!pot.flower.plant)pot.flower={...pot.flower,plant:sowDaylily(world.tick)};return;}
   const kind=world.growingZones.find(z=>z.id===job.growingZoneId)!.plant;
   const plant:Resource={ id: world.nextId++, kind, x: job.x, z: job.z, amount: PLANT_DEFINITIONS[kind].yield, growth: .0001, growthTick: world.tick };
   if(world.climate)plant.plantLife=createPlantLife(world,plant,true);

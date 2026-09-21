@@ -1,6 +1,7 @@
 import { expect,test } from '@playwright/test';
 import { createHash } from 'node:crypto';
 import { existsSync,readFileSync,writeFileSync } from 'node:fs';
+import { gunzipSync } from 'node:zlib';
 import { deserializeWorld,validateWorld } from '../../src/sim/serialization';
 import { isColonist } from '../../src/sim/affiliation';
 import { climateDateLabel } from '../../src/ui/climate-inspection';
@@ -9,18 +10,21 @@ import { perceivedWeather } from '../../src/sim/weather';
 import { cell,expectWorld,observeErrors,panel,pause,saveKey,world } from './helpers';
 import { revealCells } from './player-actions';
 
-const sourcePath='tmp/environment-final-v87.json';
+// The clean V87 checkpoint is kept under tests/fixtures. The old tmp path is
+// a mutable pilot output and is routinely rewritten by later schema migrations.
+const sourcePath=new URL('../fixtures/colony-v87.json.gz',import.meta.url);
 test('native real seasonal colony: cold load, equipment, dates and exact continuation',async({playwright})=>{
   test.skip(!existsSync(sourcePath),'Requires the completed natural V87 colony; a skip is not validation.');
   test.setTimeout(150000);
-  const data=readFileSync(sourcePath,'utf8'),initial=deserializeWorld(data);
-  expect(initial.schemaVersion).toBe(87);expect(initial.climate).toBeDefined();expect(validateWorld(initial)).toEqual([]);
+  const data=gunzipSync(readFileSync(sourcePath)).toString('utf8'),raw=JSON.parse(data);
+  const initial=deserializeWorld(data);
+  expect(raw.schemaVersion).toBe(87);expect(initial.schemaVersion).toBe(90);expect(initial.climate).toBeDefined();expect(validateWorld(initial)).toEqual([]);
   const colonists=initial.pawns.filter(p=>isColonist(p)&&p.state!=='dead');expect(colonists.length).toBeGreaterThanOrEqual(4);
   const turbine=initial.structures.find(s=>s.kind==='wind-turbine')!,heater=initial.structures.find(s=>s.kind==='heater')!;
   expect(turbine).toBeDefined();expect(heater).toBeDefined();
   const browser=await playwright.chromium.launch({channel:'chromium',args:[]}),viewport={width:1440,height:1000};
   const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport}),errors=observeErrors(page);
-  const report:Record<string,unknown>={version:87,controlled:false,source:sourcePath,sha256:createHash('sha256').update(data).digest('hex'),initialTick:initial.tick,viewport,status:'running',stage:'cold-load'};
+  const report:Record<string,unknown>={version:90,sourceVersion:87,controlled:false,source:sourcePath.pathname,sha256:createHash('sha256').update(data).digest('hex'),initialTick:initial.tick,viewport,status:'running',stage:'cold-load'};
   try{
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data});await page.goto('/?e2e');
     const front=page.locator('.front-menu');await expect(front).toBeVisible();

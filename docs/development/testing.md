@@ -1,5 +1,18 @@
 # Stratégie de validation
 
+V90 regroupe habitat, confort/beauté, confection, usure et politiques. La campagne
+globale antérieure (151 fichiers, 636 tests réussis, deux ignorés) est conservée ;
+les corrections finales font l'objet d'un lot ciblé de 49 contrôles et des
+reprises UI concernées. Le pilote contrôlé de deux jours annonce ses fournitures,
+recherche préavancée et report de raid ; la continuation naturelle est distincte.
+La campagne V90 validée atteint J182,577 avec quatre habitants, par reprises
+documentées. Les 21 UI ciblées et la présentation native passent ; les mesures
+CPU et navigateur restent successives. Les plafonds atteints sans objectif
+déclenchent un diagnostic au checkpoint, sans recommencer la colonie.
+Les anciennes restaurations UI utilisent les fixtures canoniques compressées,
+pas les sorties temporaires que les tests courants peuvent réécrire. Les erreurs
+de pilotage et reprises restent dans les [preuves V90](../history/validation-habitat-apparel-v90.md).
+
 V89 regroupe corps/tombes, sols/nettoyage, cuisine/intoxication et migrations dans une campagne de contrats, puis poursuit la colonie V88 pendant 2,076 jours par reprises réelles. L'erreur de plan qui enfermait un colon dans le froid est diagnostiquée au checkpoint ; la correction utilise déconstruction et secours, sans éditer son état. La clinique rare reste préparée séparément. `HYGIENE=1` enrichit le banc mixte sans retirer ses anciens métiers/oracles. [Preuves V89](../history/validation-hygiene-v89.md), [mesures](../research/performance-v89.md).
 
 V88 rassemble visiteurs, économie, deux armes, continuité et optimisations dans une campagne de contrats, puis un parcours commun depuis la colonie V87. Le calendrier observé place sa première visite marchande environ 23 jours après l'adoption : horizon porté explicitement à 30 jours sans déplacer l'événement, arrêt après transaction, rangement et départ. L'UI native vérifie contact depuis la pause, panier, acquisition et équipement par clics ; sa présence marchande préparée reste distincte du parcours naturel. `TRADE=1` ajoute deux visiteurs aux 100 colons/100 lièvres du banc environnemental. CPU, parcours long et natif restent successifs. [Preuves V88](../history/validation-trade-v88.md).

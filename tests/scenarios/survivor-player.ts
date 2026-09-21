@@ -106,7 +106,11 @@ export function survivorDecisions(w:World,sustainable=false):Decision[] {
 
 export function survivorSummary(w:World) {
   const p=survivorPlan(w,w.scenario?.id==='crashlanded'),storage=new Set(w.stockpiles.map(s=>s.z*w.width+s.x)),roof=new Set(w.roofing?.constructed);
-  const amount=(item:ItemId,stored=false)=>w.piles.reduce((n,q)=>n+(q.item===item&&(!stored||q.owner.type==='ground'&&storage.has(q.owner.z*w.width+q.owner.x))?q.quantity:0),0);
+  const colonyOwned=(q:World['piles'][number])=>{
+    const owner=q.owner;
+    return !('pawnId' in owner)||!!w.pawns.find(pawn=>pawn.id===owner.pawnId&&isColonist(pawn));
+  };
+  const amount=(item:ItemId,stored=false)=>w.piles.reduce((n,q)=>n+(q.item===item&&colonyOwned(q)&&(!stored||q.owner.type==='ground'&&storage.has(q.owner.z*w.width+q.owner.x))?q.quantity:0),0);
   const metal=(item:'steel'|'component')=>amount(item)+w.structures.reduce((n,s)=>n+requiredMaterial(s,item),0)+w.packed.reduce((n,s)=>n+requiredMaterial(s.building,item),0)+(w.destroyed?.lost[item]??0)+(item==='steel'?w.deconstructed.lostSteel??0:w.deconstructed.lostComponents??0);
   return {tick:w.tick,scenario:w.scenario,anchor:p.anchor,beds:w.structures.filter(s=>s.kind==='bed').length,shelteredBeds:w.structures.filter(s=>s.kind==='bed'&&footprintCells(s).every(c=>roof.has(c.z*w.width+c.x))).length,walls:w.structures.filter(s=>s.kind==='wall'&&inRect(s,p.room)).length,doors:w.structures.filter(s=>s.kind==='door'&&inRect(s,p.room)).length,roofs:roof.size,
     stockCells:w.stockpiles.length,stored:{wood:amount('wood',true),steel:amount('steel',true),component:amount('component',true),medicine:amount('medicine',true),'survival-meal':amount('survival-meal',true),'simple-meal':amount('simple-meal',true)},materials:{steel:metal('steel'),component:metal('component')},

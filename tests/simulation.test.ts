@@ -233,7 +233,7 @@ describe('deterministic colony simulation', () => {
     expect(world.piles.filter(pile => pile.owner.type === 'job').reduce((sum, pile) => sum + pile.quantity, 0)).toBe(5);
     checkedTicks(world, 3200); expect(world.structures).toHaveLength(1); expect(world.stock.wood).toBe(7);
     const ground = fixture(1); ground.pawns[0]!.rest = 19; const bed = deserializeWorld(serializeWorld(ground));
-    bed.structures.push({ id: bed.nextId++, kind: 'bed', x: 2, z: 3, orientation: 0, footprint: 'standard' });
+    bed.structures.push({ id: bed.nextId++, kind: 'bed', x: 2, z: 3, orientation: 0, footprint: 'standard', quality: 'normal' });
     stepWorld(ground); stepWorld(bed);
     expect(bed.pawns[0]!.rest).toBeLessThan(19); // Adjacent is not sleeping in it.
     expect(bed.pawns[0]).toMatchObject({ x: 2, z: 3, state: 'moving', need: { kind: 'sleep', phase: 'travel' } });
@@ -249,7 +249,7 @@ describe('deterministic colony simulation', () => {
     const sleeping = deserializeWorld(serializeWorld(bed)); stepWorld(bed, 120); stepWorld(sleeping, 120); expect(hashWorld(bed)).toBe(hashWorld(sleeping));
 
     const shared = fixture(2); shared.pawns.forEach(pawn => { pawn.rest = 19; });
-    const bedId = shared.nextId++; shared.structures.push({ id: bedId, kind: 'bed', x: 11, z: 10, orientation: 1, footprint: 'standard' });
+    const bedId = shared.nextId++; shared.structures.push({ id: bedId, kind: 'bed', x: 11, z: 10, orientation: 1, footprint: 'standard', quality: 'normal' });
     stepWorld(shared);
     const owner = shared.pawns.find(pawn => pawn.bedId === bedId)!;
     expect(shared.pawns.filter(pawn => pawn.need?.kind === 'sleep' && pawn.need.bedId === bedId)).toHaveLength(1);
@@ -264,7 +264,7 @@ describe('deterministic colony simulation', () => {
     expect(() => deserializeWorld(JSON.stringify(broken))).toThrow(/ownership/);
 
     const enclosed = fixture(1); enclosed.pawns[0]!.rest = 19;
-    enclosed.structures.push({ id: enclosed.nextId++, kind: 'bed', x: 10, z: 10, orientation: 0, footprint: 'standard' });
+    enclosed.structures.push({ id: enclosed.nextId++, kind: 'bed', x: 10, z: 10, orientation: 0, footprint: 'standard', quality: 'normal' });
     for (let z = 0; z < 16; z++) enclosed.tiles[z * 16 + 8] = { terrain: 'rock' };
     stepWorld(enclosed); expect(enclosed.pawns[0]!.need).toMatchObject({ kind: 'sleep', phase: 'sleep', bedId: null });
     expect(enclosed.pawns[0]).toMatchObject({ x: 2, z: 2 }); audit(enclosed, woodMass(enclosed));

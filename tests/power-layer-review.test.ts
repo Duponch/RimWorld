@@ -15,7 +15,7 @@ import type { Structure,StructureKind,World } from '../src/sim/types';
 
 function fixture(count=0):World {const w=miningCamp(count);w.structures=[];w.jobs=[];w.stockpiles=[];w.growingZones=[];delete w.arrivals;delete w.raids;delete w.heatwaves;return w;}
 function part(w:World,kind:StructureKind,x:number,z:number):Structure {
-  const s:Structure={id:w.nextId++,kind,x,z,orientation:0,footprint:'standard',material:kind==='power-conduit'?'steel':'wood',...kind==='power-conduit'?{power:newPowerState(kind)}:{},...kind==='door'?{door:newDoorState(w.tick)}:{}};w.structures.push(s);return s;
+  const s:Structure={id:w.nextId++,kind,x,z,orientation:0,footprint:'standard',material:kind==='power-conduit'?'steel':'wood',...(kind==='table'?{quality:'normal' as const}:{}),...kind==='power-conduit'?{power:newPowerState(kind)}:{},...kind==='door'?{door:newDoorState(w.tick)}:{}};w.structures.push(s);return s;
 }
 
 test('conduits never hide solid walls, corners, rejected floor placement or shot blockers regardless of insertion order',()=>{

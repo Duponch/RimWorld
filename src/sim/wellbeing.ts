@@ -2,17 +2,25 @@ import { updateMood,expireMealMemories } from './mood.ts';
 export { comfortMood } from './mood.ts';
 import type { BodyAssessment } from './body-capacities.ts';
 import { TICKS_PER_DAY } from './types.ts';
-import type { Pawn, World } from './types.ts';
+import type { Pawn,Structure, World } from './types.ts';
+import { comfortForStructure,type FurnitureWorldLike } from './furniture-stats.ts';
+import { isDiningSeat } from './dining.ts';
+import { footprintCells,footprintContains } from './definitions.ts';
+import { STRUCTURE_SHOT_FILL } from './combat-content.ts';
+import { clearShotSegment,type ShotGrid } from './combat-space.ts';
 
-/** Comfort is a level approaching the furniture's ceiling, not an instant bonus.
- * Normal furniture only until quality/traits are implemented; see dining.md.
- */
-export function updateWellbeing(world: World, pawn: Pawn,body?:BodyAssessment): void {
+export type FurnitureSight=()=>ShotGrid;
+
+/** Comfort is a level approaching the furniture's ceiling, not an instant bonus. */
+export function updateWellbeing(world: World, pawn: Pawn,body?:BodyAssessment,readSight?:FurnitureSight): void {
   const need = pawn.need;
   let ceiling = 0;
-  if (pawn.state === 'sleeping' && need?.kind === 'sleep' && need.bedId !== null && world.structures.some(item => item.id === need.bedId && item.kind === 'bed' && item.x === pawn.x && item.z === pawn.z)) ceiling = 75;
-  if (pawn.state === 'eating' && need?.kind === 'eat' && need.dining?.seatId !== null && need.dining && world.structures.some(item => item.id === need.dining!.seatId && item.kind === 'stool' && item.x === pawn.x && item.z === pawn.z)) ceiling = 50;
-  if(pawn.research && pawn.state==='working' && pawn.x===pawn.research.spot.x && pawn.z===pawn.research.spot.z && world.structures.some(s=>s.kind==='stool'&&s.x===pawn.x&&s.z===pawn.z))ceiling=50;
+  let fallback:ShotGrid|undefined;
+  const sight=()=>readSight?.()??(fallback??={width:world.width,height:world.height,coverAt:()=>undefined,blocksSight:(x,z)=>world.tiles[z*world.width+x]?.terrain==='rock'||world.structures.some(s=>STRUCTURE_SHOT_FILL[s.kind]>.99&&!(s.kind==='door'&&s.door?.open)&&footprintContains(s,{x,z}))});
+  const furnitureWorld:FurnitureWorldLike={structures:world.structures,cellsOf:structure=>footprintCells(structure as unknown as Structure),lineOfSight:(from,to)=>clearShotSegment(sight(),from,to)};
+  if (pawn.state === 'sleeping' && need?.kind === 'sleep' && need.bedId !== null) {const bed=world.structures.find(item => item.id === need.bedId && item.kind === 'bed' && item.x === pawn.x && item.z === pawn.z);if(bed)ceiling=comfortForStructure(furnitureWorld,bed)*100;}
+  if (pawn.state === 'eating' && need?.kind === 'eat' && need.dining?.seatId !== null && need.dining) {const seat=world.structures.find(item => item.id === need.dining!.seatId && isDiningSeat(item.kind) && item.x === pawn.x && item.z === pawn.z);if(seat)ceiling=comfortForStructure(furnitureWorld,seat)*100;}
+  if(pawn.research && pawn.state==='working' && pawn.x===pawn.research.spot.x && pawn.z===pawn.research.spot.z){const seat=world.structures.find(s=>isDiningSeat(s.kind)&&s.x===pawn.x&&s.z===pawn.z);if(seat)ceiling=comfortForStructure(furnitureWorld,seat)*100;}
   const perHour = pawn.comfort < ceiling ? 60 : -4;
   pawn.comfort = pawn.comfort < ceiling ? Math.min(ceiling, pawn.comfort + perHour * 24 / TICKS_PER_DAY)
     : Math.max(ceiling, pawn.comfort + perHour * 24 / TICKS_PER_DAY);

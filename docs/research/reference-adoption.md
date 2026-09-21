@@ -1,5 +1,17 @@
 # Adoption du référentiel utilisateur
 
+V90 — **habitat et habillement validés dans leur périmètre** : prolongement des chapitres
+10/11/14, SYS/TEST-056/058/059, 062–064 et 076–080 déjà adoptés pour construction,
+factures, besoins et confort. **Adopter** matières physiques, qualité conservée,
+confection homogène, travaux de semis, couches et changement de vêtements réel.
+**Adapter** horloge, rendu 3D, introduction prospective et interface limitée à deux
+politiques. **Différer** impression/richesse, art, catalogue complet, éditeur de
+politiques et biomes. Les [recherches habitat](habitat-comfort-reference-v90.md)
+et [habillement](apparel-renewal-reference-v90.md) croisent Core local daté et
+sources publiques ; la [diversité biologique](biome-diversity-reference-v90.md)
+reste préparatoire. Les identifiants du corpus désignent les domaines concernés,
+pas des fonctionnalités entièrement couvertes ni des tests locaux réussis.
+
 V89 — **hygiène, sols, intoxication et sépultures validés dans le périmètre V89** : chapitres 8–12, 14 et 15 ; **SYS/TEST-027, 048/051/052/054, 056/058, 062–064/067, 077/078, 088, 092–094 et 096/097**, **CAT-041/059/086/087**. **Adopter** chantier et restitution physiques, foyer distinct du stockage, nettoyage au contact, contamination conservée avec l'aliment, ingestion avant effet médical, identité/anatomie du défunt et transport réel jusqu'à la tombe. **Adapter** unités, PRNG, représentation 3D et introduction prospective des nouveaux états dans les anciennes colonies. **Différer** catalogue complet des sols/maladies, soins hospitaliers complets, cérémonies et deuil : la conservation d'une référence au défunt ne livre pas tous ses effets sociaux. Les [sols et la propreté](cleanliness-floors-reference-v89.md), [intoxications](food-poisoning-reference-v89.md) et [dépouilles humaines](human-burial-reference-v89.md) séparent corpus, sources publiques et lecture locale Core **1.6.4871 rev590** ; aucune entrée du classeur ne constitue une preuve locale.
 
 La lecture de `ClassicStart` précise les connaissances de [Crashlanded révision 4](../development/scenario-start.md) : Taille de pierre acquise à la création, Forge à rechercher, aucune technologie ajoutée aux anciennes provenances. Le facteur Récit d'aventure **×0,75** s'applique au risque à l'ingestion et non aux essais de contamination de la cuisson. Ces décisions sont intégrées dans les contrats de [recherche](../development/research.md) et d'[intoxication](../development/food-poisoning.md) ; elles ne ferment aucun SYS global ; les [preuves finales V89](../history/validation-hygiene-v89.md) bornent leur validation. Les décisions de différer dans les blocs historiques ci-dessous décrivent leur version respective ; elles ne remplacent pas l'état courant.

@@ -1,13 +1,16 @@
 import { expect,test,type Page } from '@playwright/test';
 import { createHash } from 'node:crypto';
 import { existsSync,readFileSync,writeFileSync } from 'node:fs';
+import { gunzipSync } from 'node:zlib';
 import { isColonist } from '../../src/sim/affiliation';
 import { deserializeWorld,validateWorld } from '../../src/sim/serialization';
-import type { Structure,World } from '../../src/sim/types';
+import { SCHEMA_VERSION,type Structure,type World } from '../../src/sim/types';
 import { cell,expectWorld,observeErrors,panel,pause,saveKey,world } from './helpers';
 import { inspectPerson,revealCells } from './player-actions';
 
-const sourcePath='tmp/prison-final-v86.json';
+// The pilot path is rewritten by current migrations. Keep the V86 input
+// canonical and immutable, then exercise its V90 in-memory continuation.
+const sourcePath=new URL('../fixtures/colony-v86.json.gz',import.meta.url);
 const reportPath='artifacts/prison-colony-native-v86.json';
 const viewport={width:1440,height:1000};
 
@@ -35,11 +38,11 @@ async function inspectBed(page:Page,bed:Structure,ownerId:number,maxClicks:numbe
 test('native real V86 colony: recruited fourth person, assigned bed, work and exact continuation',async({playwright})=>{
   test.skip(!existsSync(sourcePath),'Complete the natural V86 prison colony pilot first.');
   test.setTimeout(180000);
-  const data=readFileSync(sourcePath,'utf8'),source=JSON.parse(data) as World;
+  const data=gunzipSync(readFileSync(sourcePath)).toString('utf8'),source=JSON.parse(data) as World;
   expect(source.schemaVersion).toBe(86);
   expect(source.scenario?.id).toBe('crashlanded');
   const initial=deserializeWorld(data);
-  expect(initial).toEqual(source);expect(validateWorld(initial)).toEqual([]);
+  expect(initial).toMatchObject({...source,schemaVersion:SCHEMA_VERSION});expect(validateWorld(initial)).toEqual([]);
   const colonists=initial.pawns.filter(p=>isColonist(p)&&p.state!=='dead');
   expect(colonists).toHaveLength(4);
   const recruits=colonists.filter(p=>p.recruitment);
@@ -55,7 +58,7 @@ test('native real V86 colony: recruited fourth person, assigned bed, work and ex
   const browser=await playwright.chromium.launch({channel:'chromium',args:[]});
   const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport}),errors=observeErrors(page);
   page.setDefaultTimeout(15000);
-  const report:Record<string,unknown>={version:86,controlled:false,source:sourcePath,
+  const report:Record<string,unknown>={version:90,sourceVersion:86,controlled:false,source:sourcePath.pathname,
     sourceSha256:createHash('sha256').update(data).digest('hex'),initialTick:initial.tick,viewport,
     population:colonists.map(p=>({id:p.id,name:p.name})),status:'running',stage:'cold-load'};
   try {

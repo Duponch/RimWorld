@@ -4,8 +4,8 @@ import { PAWN_MODEL_SCALE } from '../world/scale';
 import { ITEM_DEFINITIONS } from '../sim/items';
 import { CHUNK_ITEMS } from './chunk-presentation';
 import { BLOCK_ITEMS } from './block-presentation';
-import { foldedApparel } from './character-apparel';
-import { APPAREL } from '../sim/apparel-rules';
+import { foldedApparel,APPAREL_CARGO } from './character-apparel';
+import { APPAREL,type ApparelItem } from '../sim/apparel-rules';
 import { WEAPON_VISUALS } from './weapon-shape';
 
 /** Eight rigid bones, authored entirely in code. Each vertex has one bone influence.
@@ -44,6 +44,8 @@ export function pawnGeometry(): THREE.InstancedBufferGeometry {
   }
   addPart([.37,.34,.26],[0,.85,0],0,[0,.61,0],APPAREL['flak-vest'].color,-2);
   addPart([.12,.18,.025],[0,.86,.145],0,[0,.61,0],0x404c44,-2);
+  // Resident parka hood; its visibility follows the outfit attribute.
+  addPart([.34,.34,.14],[0,1.17,-.12],1,[0,1.04,0],0xffffff,-4);
   for(const variant of WEAPON_VISUALS)for(const part of variant.parts)addPart(part.size.map(n=>n/PAWN_MODEL_SCALE),
     [.205+part.center[2]/PAWN_MODEL_SCALE,.68+part.center[0]/PAWN_MODEL_SCALE,part.center[1]/PAWN_MODEL_SCALE],0,[0,.61,0],part.color,variant.dye);
   const geometry = new THREE.InstancedBufferGeometry();
@@ -105,8 +107,7 @@ export function cargoGeometry(): THREE.InstancedBufferGeometry {
   (['herbal-medicine','medicine','glitterworld-medicine'] as const).forEach((item,i)=>{part([.38,.25,.3],[0,0,0],18+i,ITEM_DEFINITIONS[item].color);part([.2,.03,.065],[0,.14,0],18+i,0xf0eee0);part([.065,.03,.2],[0,.14,0],18+i,0xf0eee0);});
   for(const variant of WEAPON_VISUALS)for(const p of variant.parts)part([...p.size],[...p.center],variant.cargo,p.color);
   for(const x of [-.11,.11])part([.18,.075,.30],[x,0,0],30,ITEM_DEFINITIONS.silver.color);
-  (['cloth-shirt','flak-vest'] as const).forEach((item,i)=>{for(const p of foldedApparel(item))part(p.size,p.center,22+i,p.color);});
-  for(const p of foldedApparel('cloth-tribalwear'))part(p.size,p.center,26,p.color);
+  for(const [item,kind] of Object.entries(APPAREL_CARGO))for(const p of foldedApparel(item as ApparelItem))part(p.size,p.center,kind,p.color);
   part([.48,.10,.50],[0,0,0],25,0xd8c8a2);part([.12,.08,.12],[.15,.09,-.13],25,0x5d716e);
   BLOCK_ITEMS.forEach((item,i)=>{part([.27,.17,.36],[-.145,0,0],12+i,ITEM_DEFINITIONS[item].color);part([.27,.17,.36],[.145,0,0],12+i,ITEM_DEFINITIONS[item].color);});
   CHUNK_ITEMS.forEach((item,i)=>{part([.52,.34,.42],[0,0,0],5+i,ITEM_DEFINITIONS[item].color);part([.22,.2,.27],[.18,-.05,-.12],5+i,ITEM_DEFINITIONS[item].color);});

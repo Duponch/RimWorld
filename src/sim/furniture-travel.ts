@@ -29,6 +29,7 @@ export const FURNITURE_TRAVEL:Readonly<Record<StructureKind,Readonly<{delay:numb
   cooler:{delay:0,stand:false,repeat:false},
   'research-bench':{delay:5,stand:false,repeat:true},
   'tailor-bench':{delay:5,stand:false,repeat:true},
+  'electric-tailor-bench':{delay:5,stand:false,repeat:true},
   'butcher-spot':{delay:0,stand:true,repeat:false},
   'crafting-spot':{delay:0,stand:true,repeat:false},
   'wood-generator':{delay:5,stand:false,repeat:true},
@@ -36,9 +37,9 @@ export const FURNITURE_TRAVEL:Readonly<Record<StructureKind,Readonly<{delay:numb
   'passive-cooler':{delay:3,stand:false,repeat:true},
   door:{delay:0,stand:true,repeat:false},
   stonecutter:{delay:5,stand:false,repeat:true},
-  wall:{delay:0,stand:false,repeat:false},table:{delay:4.2,stand:false,repeat:true},
+  wall:{delay:0,stand:false,repeat:false},table:{delay:4.2,stand:false,repeat:true},'table-square':{delay:4.2,stand:false,repeat:true},'table-long':{delay:4.2,stand:false,repeat:true},
   bed:{delay:4.2,stand:false,repeat:true},campfire:{delay:4.2,stand:false,repeat:true},
-  stool:{delay:3,stand:true,repeat:true},horseshoes:{delay:1.4,stand:true,repeat:false},
+  stool:{delay:3,stand:true,repeat:true},'dining-chair':{delay:3,stand:true,repeat:true},armchair:{delay:3,stand:true,repeat:true},'end-table':{delay:3,stand:false,repeat:true},dresser:{delay:5,stand:false,repeat:true},'flower-pot':{delay:3,stand:false,repeat:true},horseshoes:{delay:1.4,stand:true,repeat:false},
 });
 export function canStandAt(world:World,cell:Cell):boolean {
   if(!Number.isInteger(cell.x)||!Number.isInteger(cell.z)||cell.x<0||cell.z<0||cell.x>=world.width||cell.z>=world.height||['rock','water'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain))return false;

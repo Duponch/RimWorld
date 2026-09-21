@@ -66,7 +66,7 @@ test('choix physique : exclure avant préférence et pourriture, accès de repli
 
 test('repas engagé : changement pendant prélèvement, transport ou ingestion, réservations et reprise exacte',()=>{
   const original=camp();addGroundMaterial(original,'food',4,{x:12,z:12},'survival-meal');
-  original.structures=[{id:original.nextId++,kind:'table',x:6,z:6,orientation:0,footprint:'standard'},{id:original.nextId++,kind:'stool',x:7,z:6,orientation:0,footprint:'standard'}];
+  original.structures=[{id:original.nextId++,kind:'table',x:6,z:6,orientation:0,footprint:'standard',quality:'normal'},{id:original.nextId++,kind:'stool',x:7,z:6,orientation:0,footprint:'standard',quality:'normal'}];
   const states=new Map<string,string>();
   for(let i=0;i<500&&original.pawns[0]!.hunger<90;i++){
     checked(original);const task=original.pawns[0]!.need;

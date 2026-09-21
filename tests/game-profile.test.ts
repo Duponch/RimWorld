@@ -12,7 +12,7 @@ import { advanceRaids } from '../src/sim/raids';
 import { validateRaids } from '../src/sim/raid-save';
 import { CASSANDRA_ACTIVE_TICKS,CASSANDRA_CYCLE_START,CASSANDRA_CYCLE_TICKS,CASSANDRA_MIN_SPACING,INTRO_RAID_TICK,consumeCassandraOpportunity,enableCassandraRaids,validCassandraAgenda } from '../src/sim/cassandra-raids';
 import { atMapEdge } from '../src/sim/raid-space';
-import { STONECUTTING_RESEARCH_COST } from '../src/sim/research';
+import { COMPLEX_FURNITURE_RESEARCH_COST,STONECUTTING_RESEARCH_COST } from '../src/sim/research';
 import { deconstructionCamp } from './scenarios/deconstruction';
 
 function stock(world:World) {const totals:Record<string,number>={};for(const p of world.piles)if(p.kind!=='chunk')totals[p.item]=(totals[p.item]??0)+p.quantity;return totals;}
@@ -27,7 +27,7 @@ test('explicit Crashlanded adaptation has physical supplies, mature wild food an
     const world=createScenarioWorld(seed,250,'crashlanded'),legacy=createScenarioWorld(seed,250,'survivors');
     expect(world.tick).toBe(0);expect(world.scenario!.id).toBe('crashlanded');expect(world.gameProfile).toEqual(crashlandedProfile());
     expect(stock(world)).toEqual({...stock(legacy),silver:800,'bolt-action-rifle':1,'plasteel-knife':1});
-    expect(world.research).toEqual({...legacy.research,stonecutting:{points:STONECUTTING_RESEARCH_COST,completedAt:0}});
+    expect(world.research).toEqual({...legacy.research,stonecutting:{points:STONECUTTING_RESEARCH_COST,completedAt:0},complexFurniture:{points:COMPLEX_FURNITURE_RESEARCH_COST,completedAt:0}});
     expect(world.site?.hilliness).toBe('small-hills');expect(legacy.site).toBeUndefined();
     expect(world.pawns).toHaveLength(3);expect(world.arrivals).toBeUndefined();expect(world.heatwaves).toBeUndefined();
     expect(world.raids!.nextCheck).toBe(INTRO_RAID_TICK);expect(legacy.arrivals).toBeDefined();expect(legacy.heatwaves).toBeDefined();

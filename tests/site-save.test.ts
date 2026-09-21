@@ -35,7 +35,7 @@ test('real V82 snapshot migrates without inventing a site, terrain, clock or new
 
 test('new site provenance, physical landing and both new soils survive continuation and snapshot patches',()=>{
   const world=createScenarioWorld(42,64,'crashlanded',{hilliness:'large-hills'});
-  expect(world.site).toEqual(resolveSite(42,{hilliness:'large-hills'}));expect(world.scenario!.revision).toBe(4);
+  expect(world.site).toEqual(resolveSite(42,{hilliness:'large-hills'}));expect(world.scenario!.revision).toBe(5);
   expect(world.research?.stonecutting).toMatchObject({completedAt:0});
   expect(world.research?.smithing).toBeUndefined();
   expect(world.piles.filter(p=>p.item==='silver').reduce((n,p)=>n+p.quantity,0)).toBe(800);

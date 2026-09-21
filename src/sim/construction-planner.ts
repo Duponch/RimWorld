@@ -1,7 +1,6 @@
-import { powerConstructionSkill } from './power-construction.ts';
 import { FLOOR_DEFINITIONS } from './flooring.ts';
 import { planFurnitureTransport } from './furniture-haul-planner.ts';
-import { constructionSupplied } from './construction-materials.ts';
+import { constructionSkillRequired,constructionSupplied } from './construction-materials.ts';
 import { furnitureReady, furnitureWorkTarget } from './furniture-rules.ts';
 import { CARRY_CAPACITY } from './definitions.ts';
 import { constructionSiteFree, constructionHaulPriority, asBuilder, isConstruction, type ConstructionObstruction } from './construction-rules.ts';
@@ -36,7 +35,7 @@ export function constructionCandidates(world:World,pawn:Pawn,blocked:Uint8Array,
       const candidate=planFurnitureTransport(world,pawn,obstacle.pack,blocked,reach,budget,job);if(candidate)result.push(candidate);
     } else if(job.kind==='install'&&Number.isFinite(constructionHaulPriority(pawn))&&furnitureReady(world,job,pawn)&&canReach(world,job,reach,false)&&canReach(world,furnitureWorkTarget(world,job),reach,false)) {
       result.push({...base,priority:constructionHaulPriority(pawn),target:furnitureWorkTarget(world,job),job});
-    } else if(job.construction==='frame'&&pawn.skills.construction.level>=(job.kind==='lay-floor'&&job.floor?FLOOR_DEFINITIONS[job.floor].skill:powerConstructionSkill(job.kind))&&(job.kind!=='cooler'||pawn.skills.construction.level>=5)&&(job.kind!=='electric-stove'||pawn.skills.construction.level>=4)&&pawn.priorities.build>0&&constructionSupplied(world,job)&&constructionSiteFree(world,job,pawn.id,obstacle)&&canReach(world,job,reach,false)) {
+    } else if(job.construction==='frame'&&pawn.skills.construction.level>=(job.kind==='lay-floor'&&job.floor?FLOOR_DEFINITIONS[job.floor].skill:constructionSkillRequired(job.kind))&&pawn.priorities.build>0&&constructionSupplied(world,job)&&constructionSiteFree(world,job,pawn.id,obstacle)&&canReach(world,job,reach,false)) {
       result.push({...base,priority:pawn.priorities.build,target:job,job});
     }
   }

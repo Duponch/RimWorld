@@ -7,7 +7,7 @@ import { queryArea } from '../src/sim/designation';
 import { combatShotBatch } from '../src/sim/combat-shot-batch';
 import { deconstructionCamp,fixtureBuilding } from './scenarios/deconstruction';
 import type { Structure,World } from '../src/sim/types';
-import { CONSTRUCTION_MATERIALS } from '../src/sim/building-materials';
+import { constructionMaterials } from '../src/sim/construction-materials';
 import { advanceRepair } from '../src/sim/repairs';
 import { pawnBody } from '../src/sim/health-rules';
 import { createBulletFlight } from '../src/sim/bullet-flight';
@@ -19,7 +19,7 @@ function until(w:World,predicate:()=>boolean,limit=2000){for(let i=0;i<limit&&!p
 function replay(w:World,ticks=35){const restored=deserializeWorld(serializeWorld(w));for(let i=0;i<ticks;i++){stepWorld(w);stepWorld(restored);expect(validateWorld(w)).toEqual([]);expect(serializeWorld(restored)).toBe(serializeWorld(w));}}
 
 test('material HP, physical attack, recovery/save and construction repair preserve real materials and skill domains',()=>{
-  for(const kind of ['wall','door'] as const){const hp=CONSTRUCTION_MATERIALS.map(material=>barrierMaxHp({kind,material}));expect(hp).toEqual(kind==='wall'?[195,300,510,465,360,420,390]:[104,160,272,248,192,224,208]);}
+  for(const kind of ['wall','door'] as const){const hp=constructionMaterials(kind).map(material=>barrierMaxHp({kind,material}));expect(hp).toEqual(kind==='wall'?[195,300,510,465,360,420,390]:[104,160,272,248,192,224,208]);}
   const w=deconstructionCamp(),p=w.pawns[0]!,s:Structure=fixtureBuilding(w,'wall',p.x+4,p.z);s.material='granite-blocks';
   expect(attack(w,s).ok).toBe(true);const xp=p.skills.melee.dailyXp;
   stepWorld(w);expect(s.damage).toBeUndefined();until(w,()=>!!p.melee?.strike);

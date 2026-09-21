@@ -1,5 +1,6 @@
 import { createWorld, refreshStock } from '../../src/sim/index.ts';
 import { newCampfireFuel } from '../../src/sim/fuel.ts';
+import { isHabitatFurnitureKind } from '../../src/sim/furniture-stats.ts';
 import type { StructureKind, World } from '../../src/sim/types.ts';
 
 export function deconstructionCamp(count=1,size=32):World {
@@ -11,6 +12,6 @@ export function deconstructionCamp(count=1,size=32):World {
   for(const p of w.pawns){delete p.medicalCare;p.schedule.fill('anything');}refreshStock(w);return w;
 }
 export function fixtureBuilding(w:World,kind:StructureKind,x:number,z:number,orientation:0|1|2|3=0) {
-  const building={id:w.nextId++,kind,x,z,orientation,footprint:'standard' as const,...(kind==='campfire'?{fuel:newCampfireFuel(),bills:[]}: {})};
+  const building={id:w.nextId++,kind,x,z,orientation,footprint:'standard' as const,...(isHabitatFurnitureKind(kind)?{quality:'normal' as const}:{}),...(kind==='campfire'?{fuel:newCampfireFuel(),bills:[]}: {})};
   w.structures.push(building);return building;
 }

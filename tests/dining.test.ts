@@ -14,7 +14,7 @@ function fixture(count = 1, size = 64): World {
   refreshStock(w); return w;
 }
 function furniture(w: World, kind: StructureKind, x: number, z: number, orientation: 0 | 1 | 2 | 3 = 0): number {
-  const id = w.nextId++; w.structures.push({ id, kind, x, z, orientation, footprint: 'standard' }); return id;
+  const id = w.nextId++; w.structures.push({ id, kind, x, z, orientation, footprint: 'standard', quality: 'normal' }); return id;
 }
 function checked(w: World, count = 1): void {
   for (let i = 0; i < count; i++) { stepWorld(w); expect(validateWorld(w), `tick ${w.tick}`).toEqual([]); }

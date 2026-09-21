@@ -10,7 +10,8 @@ export function validEquipmentShape(p:Record<string,unknown>,version:number):boo
   if(version<52)return p.equipmentTask===undefined&&p.equipmentDropPending===undefined&&p.droppedWeaponId===undefined;
   if(p.equipmentDropPending!==undefined&&p.equipmentDropPending!==true||p.droppedWeaponId!==undefined&&!id(p.droppedWeaponId))return false;
   const t=p.equipmentTask;if(t===undefined)return true;
-  if(record(t)&&(t.action==='wear'||t.action==='remove'))return version>=63&&Object.keys(t).every(k=>['itemId','action','progress','duration'].includes(k))&&id(t.itemId)&&id(t.duration)&&Number(t.duration)<=60&&typeof t.progress==='number'&&Number.isInteger(t.progress)&&t.progress>=0&&t.progress<Number(t.duration);
+  if(record(t)&&(t.action==='wear'||t.action==='remove'))return version>=63&&Object.keys(t).every(k=>['itemId','action','progress','duration',...(version>=90?['automatic']:[])].includes(k))&&id(t.itemId)&&id(t.duration)&&Number(t.duration)<=60&&typeof t.progress==='number'&&Number.isInteger(t.progress)&&t.progress>=0&&t.progress<Number(t.duration)
+    &&(t.automatic===undefined||version>=90&&t.automatic===true);
   return record(t)&&Object.keys(t).every(k=>['itemId','action','progress','automatic'].includes(k))&&id(t.itemId)
     &&(t.action==='equip'?t.progress===0:t.action==='drop'&&typeof t.progress==='number'&&Number.isInteger(t.progress)&&t.progress>=0&&t.progress<3)
     &&(t.automatic===undefined||t.action==='equip'&&t.automatic===true);

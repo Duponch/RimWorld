@@ -16,6 +16,7 @@ import { burnPawn } from '../src/sim/fire-damage';
 import { injuryBleed,medicalPain } from '../src/sim/injury-state';
 import { newPowerState } from '../src/sim/power-rules';
 import { newBuildingFuel } from '../src/sim/fuel';
+import { withoutV90 } from './scenarios/legacy-skills';
 import { footprintCells } from '../src/sim/definitions';
 import { BATTERIES_RESEARCH_COST } from '../src/sim/research';
 import { validateMedicalRecord } from '../src/sim/injury-validation';
@@ -39,6 +40,17 @@ test('firefighting is real ranked work, acts on home fires and forced orders rea
   const night=fireCamp(),n=night.pawns[0]!;night.tick=1000;n.schedule.fill('sleep');n.recreation.level=10;n.needCooldown=0;n.planCooldown=0;n.priorities.firefight=1;
   const close={x:n.x+1,z:n.z},near=woodFire(night,close,.6);night.home=[close.z*night.width+close.x];
   stepWorld(night);expect(n.firefighting?.phase).toBe('beat');expect(n.recreation.task).toBeNull();expect(night.fires!.items.find(f=>f.id===near)!.size).toBeCloseTo(.28);expect(validateWorld(night)).toEqual([]);
+});
+
+test('extinguishing a shared target releases approaching firefighters without losing their captured edge',()=>{
+  const w=fireCamp(),p=w.pawns[0]!,target={x:p.x+5,z:p.z};
+  const id=woodFire(w,target,.6);w.home=[target.z*w.width+target.x];p.priorities.firefight=1;
+  until(w,()=>!!p.firefighting&&p.moveCooldown>0);
+  const motion=structuredClone(p.motion),cooldown=p.moveCooldown;
+  extinguishFire(w,id,1000);
+  expect(p.firefighting).toBeUndefined();expect(p.path).toEqual([]);expect(p.state).toBe('idle');
+  expect(p.motion).toEqual(motion);expect(p.moveCooldown).toBe(cooldown);
+  expect(validateWorld(w)).toEqual([]);replay(w,10);
 });
 
 test('fire spread, rain, burning material and derived path penalties preserve saved fire clocks',()=>{
@@ -174,7 +186,7 @@ test('strict fire/HP migration rejects old burns and malformed phases or duplica
   expect(validateFires(w,86)).not.toEqual([]);
   const record={tick:0,nextInjuryId:2,injuries:[{id:1,part:'torso',kind:'burn',severity:1000,bornAt:0}],missing:[],bloodLoss:0};
   expect(validateMedicalRecord(record,true,true,true,true,false,false,true,true,false)).not.toBeNull();expect(validateMedicalRecord(record,true,true,true,true,false,false,true,true,true)).toBeNull();
-  const old=fireCamp() as unknown as Record<string,unknown>;old.schemaVersion=86;for(const p of (old as unknown as World).pawns)delete (p.priorities as Partial<typeof p.priorities>).clean;for(const p of (old as unknown as World).pawns)delete (p.priorities as Partial<typeof p.priorities>).firefight;
+  const old=withoutV90(fireCamp()) as unknown as Record<string,unknown>;old.schemaVersion=86;for(const p of (old as unknown as World).pawns)delete (p.priorities as Partial<typeof p.priorities>).clean;for(const p of (old as unknown as World).pawns)delete (p.priorities as Partial<typeof p.priorities>).firefight;
   const loaded=deserializeWorld(JSON.stringify(old));expect(loaded.fires).toBeUndefined();expect(loaded.pawns[0]!.priorities.firefight).toBe(1);
   const capped=fireCamp(),id=woodFire(capped,{x:10,z:10});addGroundMaterial(capped,'wood',10,{x:12,z:10},'wood');
   capped.fires!.ledger.ignitions=Number.MAX_SAFE_INTEGER;capped.fires!.ledger.extinguished=Number.MAX_SAFE_INTEGER-1;

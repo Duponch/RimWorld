@@ -34,7 +34,7 @@ test('le joueur désigne un rectangle, annule un meuble, priorise la déconstruc
     expect(woodAccount(result)).toBe(initialWood);expect(validateWorld(result)).toEqual([]);
     const replay=deserializeWorld(serializeWorld(accepted));stepWorld(replay,result.tick-replay.tick);expect(replay).toEqual(result);
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,result);
-    await page.keyboard.press('Escape');await cell(page,18,14);await expect(page.locator('#cell-title')).toContainText('Prairie');
+    await page.keyboard.press('Escape');await revealCells(page,[{x:18,z:14}]);await cell(page,18,14);await expect(page.locator('#cell-title')).toContainText('Terre ordinaire');
     await page.screenshot({path:'artifacts/deconstruction-result.png'});
     await testInfo.attach('deconstruction-result',{contentType:'application/json',body:JSON.stringify({backend:await page.evaluate(()=>window.__lisiere.backend),tick:result.tick,stock:result.stock,ledger:result.deconstructed,errors})});
     expect(errors).toEqual([]);

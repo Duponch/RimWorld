@@ -1,4 +1,5 @@
 import { expect,test } from 'vitest';
+import { withoutV90 } from './scenarios/legacy-skills';
 import { applyCommand,stepWorld,serializeWorld,deserializeWorld,validateWorld } from '../src/sim/index';
 import { addMaterial,reservedSource } from '../src/sim/materials';
 import { groundPile,storageCapacity } from '../src/sim/ground-placement';
@@ -60,7 +61,7 @@ test('physical deliveries fill one silver reserve to 500 while wood still stops 
 
 test('V87 retains its 75-unit policies on migration and refuses an out-of-version capacity before migration',()=>{
   const w=camp();command(w,{type:'stockpile',enabled:true,x:15,z:16,capacity:75});
-  const raw=JSON.parse(serializeWorld(w));raw.schemaVersion=87;
+  const raw=withoutV90(JSON.parse(serializeWorld(w)));raw.schemaVersion=87;for(const p of raw.pawns)delete p.priorities.clean;
   const savedZone=structuredClone(raw.stockpiles[0]),migrated=deserializeWorld(JSON.stringify(raw));
   expect(migrated.stockpiles[0]).toEqual(savedZone);
   command(migrated,{type:'stockpile',enabled:true,x:15,z:16,priority:3});

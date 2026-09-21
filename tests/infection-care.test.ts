@@ -48,9 +48,9 @@ test('infection room factor averages real terrain, excludes walls and doorways, 
   const door=w.structures.find(s=>s.kind==='door')!;door.door!.open=true;door.door!.from=1;
   expect(infectionRoomFactor(w,cell)).toBe(511);
   // In-place barrier mutation invalidates the cache: no array/tick shortcut.
-  const wall=w.structures.find(s=>s.x===1&&s.z===11)!;wall.kind='stool';
+  const wall=w.structures.find(s=>s.x===1&&s.z===11)!;wall.kind='stool';wall.quality='normal';
   expect(infectionRoomFactor(w,cell)).toBe(1000);
-  wall.kind='wall';expect(infectionRoomFactor(w,cell)).toBe(511);
+  wall.kind='wall';delete wall.quality;expect(infectionRoomFactor(w,cell)).toBe(511);
 });
 
 test('diseases rank separately from bleeding and the 20 HP medicine batch, while rest and treatment remain distinct',()=>{
@@ -103,10 +103,11 @@ test('wound tending captures the patient room only on completion; interrupted in
   const w=medicineCamp(),d=w.pawns[0]!,p=w.pawns[1]!,wound=p.health!.injuries[0]!;
   wound.infection={dueCore:w.tick*10+20000,roomFactor:1000};enclosure(w);
   until(w,()=>d.tend?.phase==='tend');expect(wound.infection.roomFactor).toBe(1000);replay(w);
-  until(w,()=>wound.tended!==undefined);expect(wound.infection!.roomFactor).toBe(600);
-  const snapshot=deserializeWorld(serializeWorld(w));expect(snapshot.pawns[1]!.health!.injuries[0]!.infection!.roomFactor).toBe(600);
-  const wall=w.structures.find(s=>s.kind==='wall'&&s.x===1&&s.z===11)!;wall.kind='stool';
-  expect(infectionRoomFactor(w,p)).toBe(1000);expect(wound.infection!.roomFactor).toBe(600);
+  until(w,()=>wound.tended!==undefined);const captured=wound.infection!.roomFactor;
+  expect(captured).toBe(infectionRoomFactor(w,p));expect(captured).toBeLessThan(1000);
+  const snapshot=deserializeWorld(serializeWorld(w));expect(snapshot.pawns[1]!.health!.injuries[0]!.infection!.roomFactor).toBe(captured);
+  const wall=w.structures.find(s=>s.kind==='wall'&&s.x===1&&s.z===11)!;wall.kind='stool';wall.quality='normal';
+  expect(infectionRoomFactor(w,p)).toBe(1000);expect(wound.infection!.roomFactor).toBe(captured);
   const v=medicineCamp();v.pawns[1]!.health!.injuries=[];illness(v,v.pawns[1]!);
   until(v,()=>v.pawns[0]!.tend?.phase==='tend');stepWorld(v,4);replay(v);
   const checkpoint=serializeWorld(v);

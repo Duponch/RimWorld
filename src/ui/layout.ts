@@ -2,6 +2,7 @@ import { SCENARIOS, DEFAULT_SCENARIO } from '../sim/scenario-definitions';
 import type { JobKind } from '../sim/types';
 import { scheduleLayout } from './schedule-controls';
 import { foodPolicyLayout } from './food-policy-controls';
+import { apparelAssignmentLayout } from './apparel-policy-controls';
 import { DEFAULT_MAP_SIZE, MAP_SIZE_PRESETS } from '../sim/map-config';
 import { ITEM_DEFINITIONS } from '../sim/items';
 import { FLOOR_KINDS,FLOOR_DEFINITIONS,type BuildableFloorKind } from '../sim/flooring';
@@ -28,6 +29,13 @@ export const toolDefinitions: { id: Tool; icon: string; title: string; hint: str
   { id: 'wall', icon: '▥', title: 'Mur', hint: 'une case libre · mur de 2,80 m', key: 'B', category: 'structure' },
   { id: 'bed', icon: '▰', title: 'Lit', hint: 'empreinte 1 × 2 · Q / E pour tourner', key: 'L', category: 'furniture' },
   { id: 'table', icon: '▤', title: 'Table', hint: '1 × 2 · placer des tabourets contre le bord · Q / E pour tourner', key: '', category: 'furniture' },
+  { id:'table-square',icon:'▦',title:'Table carrée',hint:'2 × 2 · 50 matériaux · Q / E pour tourner',key:'',category:'furniture'},
+  { id:'table-long',icon:'▤',title:'Table longue',hint:'2 × 4 · 95 matériaux · Q / E pour tourner',key:'',category:'furniture'},
+  { id:'dining-chair',icon:'⊓',title:'Chaise de salle à manger',hint:'1 × 1 · 45 bois ou acier · Construction 4 · Mobilier complexe',key:'',category:'furniture'},
+  { id:'armchair',icon:'▣',title:'Fauteuil',hint:'1 × 1 · 110 tissu ou cuir léger · Construction 5 · Mobilier complexe',key:'',category:'furniture'},
+  { id:'end-table',icon:'▥',title:'Table de chevet',hint:'1 × 1 · améliore le confort du lit adjacent · Mobilier complexe',key:'',category:'furniture'},
+  { id:'dresser',icon:'▤',title:'Commode',hint:'2 × 1 · améliore les lits dans un rayon de 6 cases · Mobilier complexe',key:'',category:'furniture'},
+  { id:'flower-pot',icon:'⚘',title:'Pot de fleurs',hint:'1 × 1 · 20 matériaux · l’hémérocalle doit être semée et entretenue',key:'',category:'furniture'},
   { id: 'horseshoes', icon: '∩', title: 'Fers à cheval', hint: '3 joueurs maximum · places de lancer à 5 cases avec vue dégagée', key: '', category: 'recreation' },
   {id:'heater',icon:'♨',title:'Radiateur',hint:'50 acier, 1 composant · Construction 5 · 175 W · thermostat',key:'',category:'temperature'},
   {id:'wind-turbine',icon:'✣',title:'Éolienne',hint:'7 × 2 · 100 acier, 2 composants · Construction 4 · couloir de vent dégagé · Q / E pour tourner',key:'',category:'power'},
@@ -42,6 +50,7 @@ export const toolDefinitions: { id: Tool; icon: string; title: string; hint: str
   { id: 'campfire', icon: '♨', title: 'Feu de camp', hint: 'combustible initial inclus · brûle 10 bois par jour', key: '', category: 'temperature' },
   {id:'research-bench',icon:'⌕',title:'Bureau de recherche simple',hint:'3 × 2 · 75 matériaux + 25 acier · Q / E pour tourner',key:'',category:'production'},
   {id:'tailor-bench',icon:'✂',title:'Établi de tailleur',hint:'3 × 1 · 75 matériaux · nécessite Vêtements complexes',key:'',category:'production'},
+  {id:'electric-tailor-bench',icon:'⚡',title:'Établi de tailleur électrique',hint:'3 × 1 · 75 matériaux + 50 acier + 2 composants · 120 W · Construction 4',key:'',category:'production'},
   {id:'crafting-spot',icon:'✂',title:'Emplacement d’artisanat',hint:'Gratuit et immédiat · 60 tissus → tenue tribale · Q / E pour tourner',key:'',category:'production'},
   {id:'fueled-stove',icon:'♨',title:'Cuisinière à bois',hint:'3 × 1 · 80 acier · consomme du bois pendant la cuisson · Q / E pour tourner',key:'',category:'production'},
   {id:'electric-stove',icon:'♨',title:'Cuisinière électrique',hint:'3 × 1 · 80 acier, 2 composants · Construction 4 · 350 W · Q / E pour tourner',key:'',category:'production'},
@@ -119,7 +128,7 @@ export function gameLayout(): string {
       <div class="work-table-wrap"><table><thead><tr><th>Colon</th><th>Incendie</th><th>Patient</th><th>Médecin</th><th>Repos au lit</th><th>Tâches élémentaires</th><th>Geôlier</th><th>Chasse</th><th>Collecte</th><th>Construction</th><th>Transport</th><th>Culture</th><th>Cuisine</th><th>Artisanat</th><th>Minage</th><th>Recherche</th><th>Nettoyage</th><th>Activité</th></tr></thead><tbody id="work-rows"></tbody></table></div>
     </section>
     ${scheduleLayout()}
-    ${foodPolicyLayout()}
+    ${apparelAssignmentLayout(foodPolicyLayout())}
     <section id="wildlife-panel" class="management-panel panel" aria-label="Faune" hidden><div class="panel-heading"><h2>Faune</h2><button data-close-panel aria-label="Fermer Faune">×</button></div><div id="wildlife-content"></div></section>
     <section id="research-panel" class="management-panel panel" aria-label="Recherche" hidden><div class="panel-heading"><h2>Recherche</h2><button data-close-panel aria-label="Fermer Recherche">×</button></div><div id="research-content"></div></section>
     <section id="history-panel" class="management-panel history-panel panel" aria-label="Historique" hidden>

@@ -8,11 +8,12 @@ const BUILDINGS:Readonly<Record<string,readonly [number,number,boolean]>>={
   wall:[300,1,false],door:[160,1,false],bed:[140,1,true],table:[75,1,true],stool:[75,1,true],horseshoes:[75,1,true],
   campfire:[80,0,false],'passive-cooler':[80,1,false],stonecutter:[180,1,true],'butcher-table':[180,1,true],
   'fueled-stove':[180,1,true],'electric-stove':[180,1,true],'tailor-bench':[180,1,true],'research-bench':[250,1,true],
+  'electric-tailor-bench':[180,1,true],'table-square':[100,1,true],'table-long':[125,1,true],'dining-chair':[75,1,true],armchair:[120,1,true],'end-table':[60,1,true],dresser:[100,1,true],'flower-pot':[40,1,true],
   'wood-generator':[300,1,true],'standing-lamp':[50,1,false],cooler:[100,.7,true],battery:[100,1,true],
   'power-conduit':[80,.7,false],'power-switch':[120,.5,false],'solar-generator':[300,.7,true],heater:[100,.5,true],'wind-turbine':[150,.5,true],
 };
 const STUFF_HP:Readonly<Record<string,number>>={wood:.65,steel:1,'granite-blocks':1.7,'limestone-blocks':1.55,'marble-blocks':1.2,'sandstone-blocks':1.4,'slate-blocks':1.3};
-const STUFF_BUILDINGS=new Set(['wall','door','bed','table','stool','horseshoes','stonecutter','butcher-table','fueled-stove','electric-stove','tailor-bench','research-bench']);
+const STUFF_BUILDINGS=new Set(['wall','door','bed','table','table-square','table-long','stool','dining-chair','end-table','dresser','flower-pot','horseshoes','stonecutter','butcher-table','fueled-stove','electric-stove','tailor-bench','electric-tailor-bench','research-bench']);
 export const structureMaxHp=(s:Pick<Structure,'kind'|'material'>)=>Math.round((BUILDINGS[s.kind]?.[0]??0)*(STUFF_BUILDINGS.has(s.kind)?STUFF_HP[s.material??'wood']??1:1));
 export const structureFlammability=(s:Pick<Structure,'kind'|'material'>)=>(BUILDINGS[s.kind]?.[1]??0)*(STUFF_BUILDINGS.has(s.kind)?s.material?.endsWith('-blocks')?0:s.material==='steel'?.4:1:1);
 export const structureLeavesResources=(s:Pick<Structure,'kind'>)=>BUILDINGS[s.kind]?.[2]??false;

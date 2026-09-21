@@ -237,7 +237,11 @@ export function foodAccount(world: World): number {
   // not the edible stock used by the player's decisions. Subtract the separate
   // animal-to-food producer so existing balances compare initial food + harvest;
   // this does not remove losses, consumption or the 10-to-1 recipe transform.
-  return world.piles.filter(p=>p.kind==='food').reduce((n,p)=>n+p.quantity,0) + spoiledUnits(world) - (world.butchery?.meat??0);
+  return world.piles.filter(p=>{
+    if(p.kind!=='food') return false;
+    const owner=p.owner;
+    return !('pawnId' in owner)||!!world.pawns.find(q=>q.id===owner.pawnId&&isColonist(q));
+  }).reduce((n,p)=>n+p.quantity,0) + spoiledUnits(world) - (world.butchery?.meat??0);
 }
 
 /** A first look around the landing site, then return before building the camp. */

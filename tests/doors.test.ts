@@ -4,8 +4,7 @@ import { expect, test } from 'vitest';
 import { applyCommand, stepWorld } from '../src/sim/engine';
 import { addGroundMaterial, addMaterial, refreshStock } from '../src/sim/materials';
 import { serializeWorld, deserializeWorld, validateWorld } from '../src/sim/serialization';
-import { constructionRecipe } from '../src/sim/construction-materials';
-import { CONSTRUCTION_MATERIALS } from '../src/sim/building-materials';
+import { constructionMaterials,constructionRecipe } from '../src/sim/construction-materials';
 import { newDoorState, doorOpenness, doorOpenTicks, doorOrientation } from '../src/sim/door-rules';
 import { updateDoors } from '../src/sim/doors';
 import { startTravel } from '../src/sim/movement';
@@ -25,7 +24,7 @@ function until(w:World,predicate:()=>boolean,limit=5000):void {
 function tickTravel(w:World):void {w.tick++;for(const p of w.pawns)p.moveCooldown=Math.max(0,(p.motion?.end??0)-w.tick);updateDoors(w);}
 
 test('seven material doors build from delivered items, retain policy/save state and deconstruct without becoming furniture',()=>{
-  for(const material of CONSTRUCTION_MATERIALS) {
+  for(const material of constructionMaterials('door')) {
     const w=deconstructionCamp(),item=material==='wood'?'wood':material==='steel'?'steel':'blocks';
     addGroundMaterial(w,item,24,{x:12,z:16},material);
     expect(applyCommand(w,{type:'designate',kind:'door',material,x:17,z:16}).ok).toBe(true);

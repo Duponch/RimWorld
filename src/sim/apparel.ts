@@ -29,15 +29,15 @@ export function processApparel(world:World,pawn:Pawn,pile:MaterialPile,context:N
     // incompatible piece per update; it does not wait until the final swap.
     if(old&&task.progress>=apparelDefinition(old).equipTicks) {
       if(!dropRetainingIdentity(world,old,pawn)){report(world,`${pawn.name} ne peut pas déposer ${apparelLabel(old)}.`);releaseWork(world,pawn);return;}
-      delete old.apparel!.forbidden;
+      delete old.apparel!.forbidden;delete old.apparel!.forced;
     }
   }
   if(task.progress<task.duration!)return;
   if(task.action==='remove') {
-    if(dropRetainingIdentity(world,pile,pawn)){pile.apparel!.forbidden=true;report(world,`${pawn.name} retire ${apparelLabel(pile)}.`);}
+    if(dropRetainingIdentity(world,pile,pawn)){delete pile.apparel!.forced;pile.apparel!.forbidden=true;report(world,`${pawn.name} retire ${apparelLabel(pile)}.`);}
     else report(world,`${pawn.name} conserve ${apparelLabel(pile)} : aucun dépôt disponible.`);
   } else if(!wornApparel(world,pawn).some(p=>conflictsWith(p,pile))) {
-    pile.owner={type:'apparel',pawnId:pawn.id};delete pile.apparel!.forbidden;report(world,`${pawn.name} porte ${apparelLabel(pile)}.`);
+    pile.owner={type:'apparel',pawnId:pawn.id};delete pile.apparel!.forbidden;if(task.automatic)delete pile.apparel!.forced;else pile.apparel!.forced=true;report(world,`${pawn.name} porte ${apparelLabel(pile)}.`);
   }
   releaseWork(world,pawn);
 }

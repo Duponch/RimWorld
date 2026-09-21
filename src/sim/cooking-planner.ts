@@ -2,7 +2,7 @@ import { foodStationUsable, usesCookingFuel } from './food-workstations.ts';
 import { corpseFresh } from './corpses.ts';
 import { planUnfinished } from './tailoring-plan.ts';
 import { CARRY_CAPACITY, footprintCells } from './definitions.ts';
-import { PRODUCTION_RECIPES, admittedIngredient, stationRecipe, stationWork, type ProductionIngredient } from './production-recipes.ts';
+import { PRODUCTION_RECIPES, admittedIngredient, isTailoring, productionStationUsable, stationRecipe, stationWork, type ProductionIngredient } from './production-recipes.ts';
 import { reservedServiceCells } from './service-reservations.ts';
 import { billWanted, cookingPlaceFree, cookingSpot, ingredientPlaceFree } from './cooking-bills.ts';
 import { groundCapacity } from './ground-placement.ts';
@@ -19,7 +19,7 @@ export function hasCookingWork(world:World,pawn:Pawn):boolean {
   return productionPriority(world,pawn)<5;
 }
 export function availableCookingStations(world:World,pawn:Pawn):Structure[] {
-  return world.structures.filter(s=>stationRecipe(s)&&(s.kind!=='electric-stove'||foodStationUsable(s))&&pawn.priorities[stationWork(s)]>0&&s.bills?.some(b=>billWanted(world,b))
+  return world.structures.filter(s=>stationRecipe(s)&&(s.kind!=='electric-stove'||foodStationUsable(s))&&productionStationUsable(s)&&pawn.priorities[stationWork(s)]>0&&s.bills?.some(b=>billWanted(world,b))
     &&!fuelStationReserved(world,s.id,pawn.id));
 }
 /** Select without mutation. The ordinary planner compares this proposal with
@@ -59,10 +59,12 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
       if(!sources.length)continue;
       const cells=[station,spot,{x:spot.x-1,z:spot.z},{x:spot.x+1,z:spot.z},{x:spot.x,z:spot.z-1},{x:spot.x,z:spot.z+1},...footprintCells(station)]
         .filter((c,i,a)=>a.findIndex(t=>same(t,c))===i&&ingredientPlaceFree(world,c,spot,bill.recipe,station));
+      let tailoringMaterial:ProductionIngredient|undefined;
       for(const pile of sources) {
+        if(isTailoring(bill.recipe)&&tailoringMaterial!==undefined&&pile.item!==tailoringMaterial)continue;
         if(budget.pairs--<=0){budget.pairs=0;return null;}
         const quantity=Math.min(missing,pile.quantity-reservedSource(world,pile.id));
-        if(quantity<=0)continue;
+        if(quantity<=0)continue;if(isTailoring(bill.recipe))tailoringMaterial??=pile.item as ProductionIngredient;
         if(!routeToJob(world,pile.owner as Cell,reachable,true))continue;
         const already=cells.find(c=>same(c,pile.owner as Cell));
         const cell=already??cells.find(c=>{

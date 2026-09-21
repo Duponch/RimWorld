@@ -14,6 +14,7 @@ import { researchTailorParts } from './research-tailor-parts';
 import { craftingSpotParts } from './crafting-spot-parts';
 import { stonecutterParts } from './stonecutter-parts';
 import { footprintCells } from '../sim/definitions';
+import { habitatParts } from './habitat-parts';
 import { WORLD_SCALE } from '../world/scale';
 import type { Placement } from './primitives';
 
@@ -62,7 +63,7 @@ export function buildFurniture(world: World, group: THREE.Group, cutaway: boolea
     const fires=campfireParts(world);
     batches.set(group,'campfire-flames',fires.flames,'border',false);
     batches.set(group, 'furniture', [
-      ...graveParts(world), ...foodWorkstationParts(world), ...electricalParts(world,cutaway), ...passiveCoolerParts(world), ...doorParts(world,cutaway), ...fires.base, ...recreationParts(world), ...stonecutterParts(world), ...craftingSpotParts(world), ...researchTailorParts(world),
+      ...graveParts(world), ...foodWorkstationParts(world), ...electricalParts(world,cutaway), ...passiveCoolerParts(world), ...doorParts(world,cutaway), ...fires.base, ...recreationParts(world), ...stonecutterParts(world), ...craftingSpotParts(world), ...researchTailorParts(world), ...habitatParts(world),
       ...parcels,
       ...woodParts.map(p => ({ ...p, color: p.color ?? 0xa38559 })),
       ...walls.map(p => ({ ...p, sx: 0.96, sy: wallHeight - 0.09, sz: 0.96, color: p.color ?? 0xa6916e })),

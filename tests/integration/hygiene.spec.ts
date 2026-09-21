@@ -86,11 +86,11 @@ test('native hygiene: physical flooring, cleaning, funeral and illness through t
 test('native completed V89 colony: cold load, thirty ticks and exact save/reload',async({playwright})=>{
   const source='tests/fixtures/colony-v89.json.gz';
   test.skip(!existsSync(source),'Requires the real completed V89 colony; a skip is not validation.');test.setTimeout(120000);
-  const data=gunzipSync(readFileSync(source)).toString('utf8'),initial=deserializeWorld(data);
-  expect(initial.schemaVersion).toBe(89);expect(validateWorld(initial)).toEqual([]);
+  const data=gunzipSync(readFileSync(source)).toString('utf8'),raw=JSON.parse(data),initial=deserializeWorld(data);
+  expect(raw.schemaVersion).toBe(89);expect(initial.schemaVersion).toBe(90);expect(validateWorld(initial)).toEqual([]);
   const colonists=initial.pawns.filter(p=>isColonist(p)&&p.state!=='dead');expect(colonists.length).toBeGreaterThanOrEqual(4);
   const browser=await playwright.chromium.launch({channel:'chromium',args:[]}),page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);
-  const report:any={version:89,controlled:false,source,sha256:createHash('sha256').update(data).digest('hex'),initialTick:initial.tick,status:'running'};
+  const report:any={version:90,sourceVersion:89,controlled:false,source,sha256:createHash('sha256').update(data).digest('hex'),initialTick:initial.tick,status:'running'};
   try {
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data});await page.goto('/?e2e');
     const front=page.locator('.front-menu');await expect(front).toBeVisible();await front.getByRole('button',{name:'Charger une partie',exact:true}).click();

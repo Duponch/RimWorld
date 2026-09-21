@@ -60,7 +60,7 @@ test('V32 migration preserves in-flight wood work and blocks; stone buildings an
   const raw=JSON.parse(serializeWorld(w));((raw.schemaVersion=32,withoutResearch(raw)),withoutPawnSkills(raw));const loaded=deserializeWorld(JSON.stringify(raw));expect(loaded).toEqual(withMigratedSkills(w));
   for(const mutation of ['job','ledger'] as const){const bad=structuredClone(raw);if(mutation==='job')bad.jobs[0].material='slate-blocks';else bad.deconstructed.lostBlocks={};expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(/version 32/);}
   const before=serializeWorld(w);for(const kind of ['stonecutter','campfire'] as const)expect(applyCommand(w,{type:'designate',kind,material:'slate-blocks',x:22,z:22}).ok).toBe(false);expect(serializeWorld(w)).toBe(before);
-  const placed=deconstructionCamp();placed.structures.push({id:placed.nextId++,kind:'stool',material:'slate-blocks',x:20,z:20,orientation:0,footprint:'standard'});
+  const placed=deconstructionCamp();placed.structures.push({id:placed.nextId++,kind:'stool',material:'slate-blocks',x:20,z:20,orientation:0,footprint:'standard',quality:'normal'});
   for(const packed of [false,true]){const old=JSON.parse(serializeWorld(placed));((old.schemaVersion=32,withoutResearch(old)),withoutPawnSkills(old));if(packed){old.packed=[{building:old.structures[0],owner:{type:'ground',x:20,z:20}}];old.structures=[];}expect(()=>deserializeWorld(JSON.stringify(old))).toThrow(/version 32/);}
   for(const losses of [{wood:3},{'slate-blocks':-1},{'slate-blocks':1.5},[]]){const bad=JSON.parse(before);bad.deconstructed.lostBlocks=losses;expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();}
 });

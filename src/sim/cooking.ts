@@ -6,13 +6,13 @@ import { finishButchery } from './butchery.ts';
 import { foodPoisonFromRecipe } from './food-poisoning.ts';
 import { roomCleanliness } from './filth.ts';
 import { cookingSpeed,butcherySpeed,completedCookingSkill } from './cooking-statistics.ts';
-import { beginUnfinished } from './unfinished.ts';
+import { beginUnfinished, unfinishedMaterial } from './unfinished.ts';
 import { craftingQuality,craftingSkill } from './crafting-quality.ts';
 import { learnSkill } from './skills.ts';
 import { healthRandom } from './health.ts';
-import { newApparelState } from './apparel-rules.ts';
+import { newApparelState, type ApparelItem } from './apparel-rules.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
-import { isTailoring, PRODUCTION_RECIPES, PRODUCTION_WORK_SCALE, productionWorkTotal, recipeProduct, taskRecipe, taskWork } from './production-recipes.ts';
+import { isTailoring, PRODUCTION_RECIPES, PRODUCTION_WORK_SCALE, productionStationUsable, productionWorkTotal, recipeProduct, taskRecipe, taskWork } from './production-recipes.ts';
 import { processProductionOutput, type ProductionContext } from './production-output.ts';
 import { copyPileCondition } from './pile-condition.ts';
 import { freshRot } from './food-preservation.ts';
@@ -33,7 +33,7 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   const task=pawn.cooking!;
   if(task.phase==='interrupted'){context.release();return;}
   const station=world.structures.find(s=>s.id===task.stationId),bill=station?.bills?.find(b=>b.id===task.billId);
-  if(!station||!bill||bill.suspended||pawn.priorities[taskWork(task)]===0&&pawn.orders.active!=='cook'||(task.phase!=='output'&&!foodStationUsable(station))) {context.release();return;}
+  if(!station||!bill||bill.suspended||pawn.priorities[taskWork(task)]===0&&pawn.orders.active!=='cook'||(task.phase!=='output'&&(!foodStationUsable(station)||!productionStationUsable(station)))) {context.release();return;}
   if(task.phase==='output'){processProductionOutput(world,pawn,context,bill.destination);return;}
   const recipe=PRODUCTION_RECIPES[taskRecipe(task)];
   for(const entry of task.ingredients) {
@@ -62,7 +62,7 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   const total=productionWorkTotal(taskRecipe(task));
   task.phase='work';pawn.state='working';pawn.path=[];
   const unfinished=isTailoring(task.recipe)?beginUnfinished(world,pawn):null;
-  if(isTailoring(task.recipe)&&!unfinished)return;
+  if(isTailoring(task.recipe)&&!unfinished){context.release();return;}
   if(unfinished){pawn.skills.crafting??={...craftingSkill(pawn)};if(unfinished.unfinished!.progress<total)learnSkill(pawn.skills.crafting,1000,pawn);task.progress=unfinished.unfinished!.progress;}
   const culinary=taskWork(task)==='cook';
   if(task.progress<total){
@@ -78,10 +78,11 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   const freed=[...used].filter(([id,n])=>world.piles.find(p=>p.id===id)?.quantity===n).length;
   if(world.piles.length-freed+1>32768||!Number.isSafeInteger(world.nextId+1))return;
   const meat=task.ingredients.filter(i=>i.item==='hare-meat').reduce((n,i)=>n+i.quantity,0);
-  const rice=task.ingredients.filter(i=>i.item==='rice').reduce((n,i)=>n+i.quantity,0),item=recipeProduct(taskRecipe(task),task.ingredients);
+  const material=unfinished?unfinishedMaterial(unfinished.unfinished!):undefined;
+  const rice=task.ingredients.filter(i=>i.item==='rice').reduce((n,i)=>n+i.quantity,0),item=recipeProduct(taskRecipe(task),task.ingredients,material);
   const potato=task.ingredients.filter(i=>i.item==='potato').reduce((n,i)=>n+i.quantity,0),corn=task.ingredients.filter(i=>i.item==='corn').reduce((n,i)=>n+i.quantity,0);
   if(isTailoring(task.recipe)&&!Number.isSafeInteger((world.tailoring?.completed??0)+1))return;
-  const random={rng:world.rng},apparel=isTailoring(task.recipe)?{...newApparelState(task.recipe==='shirt'?'cloth-shirt':'cloth-tribalwear'),quality:craftingQuality(craftingSkill(pawn).level,()=>healthRandom(random))}:undefined;
+  const random={rng:world.rng},apparel=isTailoring(task.recipe)?{...newApparelState(item as ApparelItem,material),quality:craftingQuality(craftingSkill(pawn).level,()=>healthRandom(random))}:undefined;
   const foodPoison=world.schemaVersion>=89&&culinary?foodPoisonFromRecipe(roomCleanliness(world,pawn),(pawn.skills.cooking?.level??0),()=>healthRandom(random)):undefined;
   // All preconditions succeeded. Consume once, create once, then store physically.
   for(const [id,quantity] of used)world.piles.find(p=>p.id===id)!.quantity-=quantity;

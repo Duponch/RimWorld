@@ -38,7 +38,7 @@ export function energySummary(w:World,s:EnergyPlayerState) {
   return {tick:w.tick,stage:s.stage,origin:s.origin,research:w.research,batteryWd:battery?.battery?batteryWattDays(battery.battery):0,solarWatts:solar?solarPowerOutput(w,solar):0,
     batteryId:battery?.id,solarId:solar?.id,generatorId:generator?.id,generatorOn:generator?.power?.switchOn!==false,switchId:sw?.id,switchOn:sw?.power?.switchOn!==false,stoveId:stove?.id,stovePowered:!!stove&&isPowerActive(stove),coolerId:cooler?.id,coolerPowered:!!cooler&&isPowerActive(cooler),coldTemperature:new TemperatureView(w).at(w,p.coldCell),
     coldFood:w.piles.filter(q=>q.kind==='food'&&q.owner.type==='ground'&&coldCells.has(q.owner.z*w.width+q.owner.x)).map(q=>({id:q.id,item:q.item,quantity:q.quantity,rot:q.rot})),
-    cablePresent:!!find('power-conduit',p.cut),conduits:w.structures.filter(q=>q.kind==='power-conduit').length,metals:{steel:metalAccount(w,'steel'),component:metalAccount(w,'component')},pawns:w.pawns.filter(isColonist).map(p=>({id:p.id,name:p.name,state:p.state,hunger:p.hunger,rest:p.rest,priorities:p.priorities,research:p.research})),jobs:w.jobs.map(j=>({id:j.id,kind:j.kind,x:j.x,z:j.z,progress:j.progress,reservedBy:j.reservedBy}))};
+    cablePresent:!!find('power-conduit',p.cut),conduits:w.structures.filter(q=>q.kind==='power-conduit').length,metals:{steel:metalAccount(w,'steel'),component:metalAccount(w,'component')},pawns:w.pawns.filter(isColonist).map(p=>({id:p.id,name:p.name,x:p.x,z:p.z,state:p.state,hunger:p.hunger,rest:p.rest,priorities:p.priorities,research:p.research})),wallOverlaps:w.pawns.flatMap(pawn=>[...w.structures,...w.jobs].filter(q=>q.kind==='wall'&&q.x===pawn.x&&q.z===pawn.z).map(q=>({pawnId:pawn.id,pawn:pawn.name,x:pawn.x,z:pawn.z,targetId:q.id,target:'construction' in q?q.construction:'structure'}))),jobs:w.jobs.map(j=>({id:j.id,kind:j.kind,x:j.x,z:j.z,progress:j.progress,reservedBy:j.reservedBy}))};
 }
 /** Observe every tick: short transitions, cold stock and night drain are not
  * inferred from a broad day checkpoint. No state in the game is changed. */
@@ -60,11 +60,25 @@ export function observeEnergy(w:World,s:EnergyPlayerState):void {
 }
 export function energyDecisions(w:World,s:EnergyPlayerState):Decision[] {
   const base=crashlandedDecisions(w);
-  if(w.raids?.active||w.pawns.some(p=>p.draft)||base.some(d=>d.command.type.startsWith('order-tend')||d.command.type==='order-feed'||d.command.type==='order-rescue'))return base;
+  if(w.raids?.active){
+    const people=w.pawns.filter(p=>isColonist(p)&&p.state!=='dead'&&p.state!=='downed'&&!p.mental?.crisis);
+    if(people.some(p=>!p.draft)){
+      const a=survivorPlan(w,true).anchor,civilians=people.filter(p=>!w.piles.some(i=>i.owner.type==='equipment'&&i.owner.pawnId===p.id)),posts=[{x:a.x+1,z:a.z+3},{x:a.x+3,z:a.z+3}];
+      return [{reason:'La lettre annonce une attaque : mobiliser toutes les personnes présentes afin qu’aucune ne poursuive son travail dans la ligne de tir.',command:{type:'draft',pawnIds:people.map(p=>p.id),enabled:true}},
+        ...civilians.map((p,i)=>({reason:'Rassembler les habitants non armés dans la chambre construite, sans déplacer la personne qui couvre leur retraite.',command:{type:'draft-move' as const,pawnIds:[p.id],target:posts[i]!,queue:false}}))];
+    }
+    return base;
+  }
+  if(w.pawns.some(p=>p.draft)||base.some(d=>d.command.type.startsWith('order-tend')||d.command.type==='order-feed'||d.command.type==='order-rescue'))return base;
   const out=base.filter(d=>d.command.type!=='priority'),p=energyPlan(s),colonists=w.pawns.filter(isColonist),builder=colonists.reduce((a,b)=>a.skills.construction.level>=b.skills.construction.level?a:b),cook=colonists.reduce((a,b)=>(a.skills.cooking?.level??0)>=(b.skills.cooking?.level??0)?a:b),grower=colonists.find(q=>q!==builder&&q!==cook)!;
   const priority=(id:number,work:WorkType,value:number)=>{if(w.pawns.find(p=>p.id===id)!.priorities[work]!==value)out.push({reason:'Conserver cuisine, potager et soins ; faire la recherche entre les repas et extraire les matériaux nécessaires.',command:{type:'priority',pawnId:id,work,value}});};
   for(const pawn of colonists)for(const [work,value] of Object.entries({build:pawn===builder?1:3,cook:pawn===cook?1:3,grow:pawn===grower?1:3,haul:2,gather:2,mine:pawn===builder?1:3,basic:1,research:pawn===cook?1:0}) as [WorkType,number][])priority(pawn.id,work,value);
-  const designate=(kind:DesignateCommand['kind'],cell:Cell,material:'steel'|'wood'='steel')=>{const command:DesignateCommand={type:'designate',kind,...cell,material,orientation:0};if(canDesignate(w,command).ok)out.push({reason:'Construire l’extension énergétique avec ses vrais matériaux et accès.',command});};
+  const designate=(kind:DesignateCommand['kind'],cell:Cell,material:'steel'|'wood'='steel')=>{const command:DesignateCommand={type:'designate',kind,...cell,material,orientation:0};
+    // A blueprint may be admissible while a passing pawn still occupies one
+    // of its cells. Wait for the next decision pulse instead of creating a
+    // transient wall/pawn overlap that cannot be saved.
+    if(footprintCells(command).some(c=>w.pawns.some(pawn=>pawn.x===c.x&&pawn.z===c.z)))return;
+    if(canDesignate(w,command).ok)out.push({reason:'Construire l’extension énergétique avec ses vrais matériaux et accès.',command});};
   const find=(kind:StructureKind,c:Cell)=>w.structures.find(q=>q.kind===kind&&q.x===c.x&&q.z===c.z);
   designate('research-bench',p.bench,'wood');
   for(const project of ['batteries','solar-power'] as const)if(!researchUnlocked(w,project)){if(w.research?.project!==project)out.push({reason:'Rechercher les prérequis énergétiques au bureau ordinaire.',command:{type:'research-project',project}});break;}

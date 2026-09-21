@@ -31,6 +31,22 @@ test('recreation rates, cap, boredom hysteresis, sleep freeze and schedule gates
   p.schedule.fill('sleep');expect(processRecreation(w,p,context)).toBe(false);expect(processRecreation(w,p,context,true)).toBe(true);expect(searches).toBe(1);
 });
 
+test('recreation does not preempt an owned cleaning or burial reservation',()=>{
+  const w=fixture();w.tick=2000;
+  const cleaner=w.pawns[0]!,burier=w.pawns[1]!;
+  cleaner.schedule.fill('recreation');cleaner.recreation=initialRecreation(0);
+  cleaner.cleaning={targets:[101,102,103],forced:false,phase:'clean',progress:7};cleaner.state='working';
+  burier.schedule.fill('recreation');burier.recreation=initialRecreation(0);
+  burier.burial={bodyPawnId:w.pawns[2]!.id,graveId:104,phase:'carry',progress:9};burier.state='moving';
+  const cleaning=structuredClone(cleaner.cleaning),burial=structuredClone(burier.burial);
+  let searches=0;const context={search:()=>{searches++;return null;},move:()=>{},release:()=>true,event:()=>{}};
+  expect(processRecreation(w,cleaner,context)).toBe(false);
+  expect(processRecreation(w,burier,context)).toBe(false);
+  expect(cleaner.recreation.task).toBeNull();expect(cleaner.cleaning).toEqual(cleaning);
+  expect(burier.recreation.task).toBeNull();expect(burier.burial).toEqual(burial);
+  expect(searches).toBe(0);
+});
+
 test('physical horseshoes: delivered construction, three reserved players, transit, interruption, occlusion and exact saves',()=>{
   const w=fixture(),builder=w.pawns[0]!;builder.priorities.build=1;builder.priorities.haul=1;
   addGroundMaterial(w,'wood',10,{x:8,z:13},'wood');expect(applyCommand(w,{type:'designate',kind:'horseshoes',x:10,z:10}).ok).toBe(true);

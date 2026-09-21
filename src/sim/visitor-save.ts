@@ -12,6 +12,7 @@ import { validSkills } from './skills-save.ts';
 import { pileMaxHp } from './thing-damage-rules.ts';
 import { INTRO_VISITOR_TICK,VISITOR_FLOWS,VISITOR_INTERVAL,VISITOR_YEAR,type VisitorKind } from './visitor-state.ts';
 import { TICKS_PER_DAY,type Cell,type MaterialPile,type World } from './types.ts';
+import { APPAREL_POLICY_INTERVAL } from './apparel-renewal.ts';
 
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const integer=(v:unknown,min:number,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=min&&v<=max;
@@ -36,10 +37,11 @@ function validAgenda(value:unknown,kind:VisitorKind,w:World):boolean {
 }
 function validArchivedPawn(value:unknown,w:World,tick:number):boolean {
   if(object(value)&&value.filthFeet!==undefined){if(w.schemaVersion<89||!validFilthFeet(value.filthFeet))return false;const copy={...value};delete copy.filthFeet;value=copy;}
-  if(!object(value)||!keys(value,['id','name','x','z','visitor','faction','medicalCare','skills','recreation','foodPolicyId','schedule','restZeroTicks','collapsePending','hunger','rest','mood','comfort','memories','orders','jobId','haul','cooking','need','bedId','needCooldown','state','priorities','path','moveCooldown','planCooldown','health','lastAttack','disturbance']))return false;
+  if(!object(value)||!keys(value,['id','name','x','z','visitor','faction','medicalCare','skills','recreation','foodPolicyId','schedule','restZeroTicks','collapsePending','hunger','rest','mood','comfort',...(w.schemaVersion>=90?['beauty','apparelPolicyId','apparelAutomation','nextApparelCheckAt']:[]),'memories','orders','jobId','haul','cooking','need','bedId','needCooldown','state','priorities','path','moveCooldown','planCooldown','health','lastAttack','disturbance']))return false;
   if(!integer(value.id,1,w.nextId-1)||typeof value.name!=='string'||!value.name.trim()||value.name.length>48||!integer(value.x,0,w.width-1)||!integer(value.z,0,w.height-1)||!edge(value as unknown as Cell,w)
     ||value.faction!=='outlanders'||value.medicalCare!=='industrial'||value.state!=='idle'||!validVisitorShape(value,88,w)||!object(value.visitor)||value.visitor.phase!=='leaving'||value.visitor.goal!==null
-    ||!['hunger','rest','mood','comfort'].every(k=>range(value[k],0,100))||value.collapsePending!==false||!integer(value.restZeroTicks,0)||!validSkills(value.skills,tick,88)||!integer(value.foodPolicyId,1)
+    ||!['hunger','rest','mood','comfort',...(w.schemaVersion>=90?['beauty']:[])].every(k=>range(value[k],0,100))||value.collapsePending!==false||!integer(value.restZeroTicks,0)||!validSkills(value.skills,tick,88)||!integer(value.foodPolicyId,1)
+    ||w.schemaVersion>=90&&value.apparelPolicyId!==undefined&&(!integer(value.apparelPolicyId,1)||!w.apparelPolicies?.some(policy=>policy.id===value.apparelPolicyId)||typeof value.apparelAutomation!=='boolean'||!integer(value.nextApparelCheckAt,0,w.tick+APPAREL_POLICY_INTERVAL.max))
     ||!Array.isArray(value.schedule)||value.schedule.length!==24||!value.schedule.every(v=>['anything','work','sleep','recreation'].includes(String(v)))
     ||!object(value.orders)||Object.keys(value.orders).length!==2||value.orders.active!==null||!Array.isArray(value.orders.queue)||value.orders.queue.length!==0
     ||!['jobId','haul','cooking','need','bedId'].every(k=>value[k]===null)||!Array.isArray(value.path)||value.path.length!==0||value.moveCooldown!==0||!integer(value.needCooldown,0)||!integer(value.planCooldown,0)
@@ -57,7 +59,7 @@ function validArchivedPawn(value:unknown,w:World,tick:number):boolean {
 function validExportedPile(value:unknown,pawnId:number,tick:number,w:World):value is MaterialPile {
   if(!object(value)||!keys(value,['id','kind','item','quantity','owner','rot','apparel','weapon','damage',...(w.schemaVersion>=89?['foodPoison']:[])])||!integer(value.id,1,w.nextId-1)||typeof value.item!=='string'||!Object.hasOwn(ITEM_DEFINITIONS,value.item)||!validFoodContamination(value.foodPoison,value.item as keyof typeof ITEM_DEFINITIONS,w.schemaVersion>=89)||!object(value.owner)||Object.keys(value.owner).length!==2||!['inventory','apparel','equipment'].includes(String(value.owner.type))||value.owner.pawnId!==pawnId)return false;
   const def=ITEM_DEFINITIONS[value.item as keyof typeof ITEM_DEFINITIONS];
-  if(value.kind!==def.kind||!integer(value.quantity,1,def.stackLimit)||!validApparelShape(value,88)||!validWeaponShape(value,88)||value.owner.type==='apparel'&&value.kind!=='apparel'||value.owner.type==='equipment'&&value.kind!=='weapon')return false;
+  if(value.kind!==def.kind||!integer(value.quantity,1,def.stackLimit)||!validApparelShape(value,w.schemaVersion)||!validWeaponShape(value,w.schemaVersion)||value.owner.type==='apparel'&&value.kind!=='apparel'||value.owner.type==='equipment'&&value.kind!=='weapon')return false;
   if(value.damage!==undefined&&(value.apparel!==undefined||value.weapon!==undefined||!integer(value.damage,1,pileMaxHp(value as unknown as MaterialPile)-1)))return false;
   const r=value.rot;
   if(isPerishable(value.item as keyof typeof ITEM_DEFINITIONS)){

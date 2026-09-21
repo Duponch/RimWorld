@@ -63,6 +63,15 @@ export function applyEquipment(world:World,command:EquipmentCommand):CommandResu
   const duration=command.action==='wear'||command.action==='remove'?apparelDuration(world,pawn,pile!,command.action):undefined;
   begin(pawn,pile!.id,command.action,path,false,duration);return {ok:true};
 }
+/** Starts one low-priority apparel action without creating a parallel task
+ * system. The ordinary equipment state machine owns travel, conflicts and the
+ * final physical transfer. */
+export function beginAutomaticEquipment(world:World,pawn:Pawn,itemId:number,action:'wear'|'remove',reachable?:Reachability):boolean {
+  const pile=world.piles.find(p=>p.id===itemId),reason=equipmentReason(world,pawn,pile,action,true);if(reason)return false;
+  const path=action==='wear'&&pile!.owner.type==='ground'?routeToJob(world,pile!.owner,reachable??reachableCells(world,pawn,blockedCells(world),new Set()),true):[];
+  if(!path)return false;
+  begin(pawn,itemId,action,path,true,apparelDuration(world,pawn,pile!,action));return true;
+}
 export function reconcileEquipmentTasks(world:World):void {
   // A bed/service can disappear during another action or command, after this
   // pawn's health update. Reconcile before exposing a save, not one tick later.

@@ -14,7 +14,8 @@ import { canStandAt,captureStandability,navigationCosts,furnitureDelay } from '.
 import { constructionObstruction } from '../src/sim/construction-rules';
 import { initialSkills } from '../src/sim/skills';
 import { BATTERIES_RESEARCH_COST,SOLAR_POWER_RESEARCH_COST } from '../src/sim/research';
-import type { World } from '../src/sim/types';
+import { SCHEMA_VERSION,type World } from '../src/sim/types';
+import { withoutV90,withMigratedBasic } from './scenarios/legacy-skills';
 
 function until(w:World,done:()=>boolean,limit=1400):void {
   for(let i=0;i<limit&&!done();i++){stepWorld(w);if(i%30===0)expect(validateWorld(w),`tick ${w.tick}`).toEqual([]);}
@@ -158,9 +159,8 @@ test('solar research and Construction 6 gate physical completion without changin
 });
 
 test('the real V84 colony migrates only schema and basic priority; future fields and corrupt switch work are rejected before migration',()=>{
-  const old=JSON.parse(gunzipSync(readFileSync('tests/fixtures/colony-v84.json.gz')).toString());
-  const next=deserializeWorld(JSON.stringify(old)),expected=structuredClone(old);expected.schemaVersion=87;for(const p of expected.pawns)p.priorities.firefight=1;
-  for(const p of expected.pawns){p.priorities.basic=3;p.priorities.warden=3;}
+  const old=withoutV90(JSON.parse(gunzipSync(readFileSync('tests/fixtures/colony-v84.json.gz')).toString()));
+  const next=deserializeWorld(JSON.stringify(old)),expected=withMigratedBasic({...structuredClone(old),schemaVersion:SCHEMA_VERSION});
   expect(next).toEqual(expected);expect(validateWorld(next)).toEqual([]);
   const bad=structuredClone(old);bad.pawns[0].priorities.basic=3;expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();
   const w=fixture(),g=fixturePower(w,'wood-generator',16,16);applyCommand(w,{type:'power-flick',structureId:g.id,on:false});

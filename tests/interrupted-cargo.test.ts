@@ -61,7 +61,7 @@ test('a meal is not eaten by an exhausted actor; its age and expiry survive pass
 test('whole furniture retains its material, identity and bed owner while the delivery reservation is freed',()=>{
   const w=exhaustedCarrier(),p=w.pawns[0]!;w.piles=w.piles.filter(q=>q.owner.type!=='pawn'&&!(q.owner.type==='ground'&&q.owner.x===15&&q.owner.z===15));
   const zone=w.stockpiles[0]!;Object.assign(zone,{x:15,z:15,filters:{wood:false,food:false,furniture:true}});
-  const b={id:w.nextId++,kind:'bed' as const,x:6,z:6,orientation:0 as const,footprint:'standard' as const,material:'granite-blocks' as const};
+  const b={id:w.nextId++,kind:'bed' as const,x:6,z:6,orientation:0 as const,footprint:'standard' as const,material:'granite-blocks' as const,quality:'normal' as const};
   w.packed.push({building:b,owner:{type:'pawn',pawnId:p.id}});p.bedId=b.id;
   p.haul={sourcePileId:b.id,carryPileId:b.id,quantity:1,whole:true,phase:'deliver',pickupCell:{x:2,z:2},destination:{type:'stockpile',stockpileId:zone.id}};refreshStock(w);
   expect(validateWorld(w)).toEqual([]);checked(w);expect(p.interruptedCargo).toBe(true);expect(p.haul).toBeNull();expect(p.bedId).toBe(b.id);expect(w.packed[0]!.building).toEqual(b);

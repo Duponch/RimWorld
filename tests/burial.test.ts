@@ -44,7 +44,8 @@ test('real grave construction, exclusive bodily transport, fixed deposition, con
   expect(door.door.open).toBe(false); // Retained identity at the old cell is not a second body.
   const remaining=50-actor.burial!.progress;for(let i=1;i<remaining;i++)stepWorld(w);expect(tomb.grave!.corpseId).toBeUndefined();stepWorld(w);
   expect(tomb.grave!.corpseId).toBe(pileId);expect(w.piles.find(p=>p.id===pileId)!.owner).toEqual({type:'grave',graveId:tomb.id});
-  expect(pawnBodyLocation(w,body)).toBeNull();expect(body.health).toEqual(health);expect(body.id).toBe(personId);expect(shirt.owner).toEqual({type:'apparel',pawnId:personId});replay(w);
+  expect(pawnBodyLocation(w,body)).toBeNull();expect(body.health).toEqual(health);expect(body.id).toBe(personId);expect(shirt.owner).toEqual({type:'apparel',pawnId:personId});
+  w.structures=w.structures.filter(s=>s!==door);fixtureBuilding(w,'wall',body.x,body.z);expect(validateWorld(w)).toEqual([]);replay(w);
   command(w,{type:'designate',kind:'deconstruct',targetId:tomb.id,x:tomb.x,z:tomb.z});until(w,()=>!w.structures.includes(tomb));
   expect(w.piles.find(p=>p.id===pileId)!.owner.type).toBe('ground');expect(w.pawns.filter(p=>p.id===personId)).toHaveLength(1);expect(w.piles.filter(p=>p.humanCorpse?.pawnId===personId)).toHaveLength(1);replay(w);
 });

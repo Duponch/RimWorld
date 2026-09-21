@@ -29,7 +29,7 @@ test('physical wardrobe: reserved approach, timed dressing, independent layers, 
   vest.apparel!.quality='excellent';vest.apparel!.hitPoints=71;
   expect(order(w,vest).ok).toBe(true);expect(reservedSource(w,vest.id)).toBe(1);expect(order(w,vest,'wear',w.pawns[1]!).ok).toBe(false);replay(w,4);
   until(w,()=>p.equipmentTask?.progress===1);expect(vest.owner.type).toBe('ground');expect(p.equipmentTask!.duration).toBe(30);replay(w,15);expect(vest.owner.type).toBe('ground');
-  until(w,()=>vest.owner.type==='apparel');expect(vest.apparel).toEqual({quality:'excellent',hitPoints:71});expect(w.rng).toBe(rng);expect(w.nextId).toBe(next);
+  until(w,()=>vest.owner.type==='apparel');expect(vest.apparel).toEqual({quality:'excellent',hitPoints:71,forced:true});expect(w.rng).toBe(rng);expect(w.nextId).toBe(next);
   expect(apparelMoveFactor(w,p)).toBeCloseTo(4.48/4.6);wear(w,shirt);expect(wornApparel(w,p)).toHaveLength(2);
   const look=apparelAppearance(apparelProjection(w).get(p.id));expect(look).toMatchObject({shirt:true,vest:true,signature:'cloth-shirt flak-vest'});
   const encoder=new SnapshotEncoder(),decoder=new SnapshotDecoder();expect(decoder.adopt(encoder.encode(w,0,1))).toMatchObject({status:'applied',world:w});replay(w,3);

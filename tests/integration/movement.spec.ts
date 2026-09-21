@@ -1,4 +1,4 @@
-import { withoutPawnSkills } from '../scenarios/legacy-skills';
+import { withMigratedSkills, withoutPawnSkills } from '../scenarios/legacy-skills';
 import { furnitureTrafficFixture } from '../scenarios/furniture-traffic';
 import { expect, test } from '@playwright/test';
 import { writeFileSync } from 'node:fs';
@@ -11,7 +11,12 @@ test('civil crossing in the real worker: shared cell, save/reload, three exclusi
   const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);
   try {
     const fixture=civilCrossingFixture(),old=JSON.parse(serializeWorld(fixture));(old.schemaVersion=13,withoutPawnSkills(old));for(const a of old.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete old.deconstructed;delete old.packed;for(const pawn of old.pawns){delete pawn.orders;delete pawn.recreation;}
-    const migrated=deserializeWorld(JSON.stringify(old));expect(migrated).toEqual(fixture);
+    const migrated=deserializeWorld(JSON.stringify(old));
+    // Compare with the independent V13→V90 oracle. It lists each deliberately
+    // reconstructed field (skills, medical work, old research/hunting defaults,
+    // and V90 apparel/beauty state) instead of dropping the whole world.
+    expect(migrated).toEqual(withMigratedSkills(fixture));
+    expect(validateWorld(migrated)).toEqual([]);
     await page.addInitScript(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:JSON.stringify(old)});
     await page.goto('/?scenario=camp&size=16&e2e');await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();
     await expectWorld(page,migrated);expect(await page.evaluate(()=>window.__lisiere.backend)).toBe('WebGPU');

@@ -1,15 +1,9 @@
-import { WEAPON_QUALITIES } from './equipment-rules.ts';
-import type { MaterialPile,Pawn,World } from './types.ts';
+import { apparelInsulation } from './apparel-rules.ts';
+export { apparelInsulation } from './apparel-rules.ts';
+import type { Pawn,World } from './types.ts';
 
 export const HEAT_UNIT=1_000_000_000;
 export const HEAT_SERIOUS=.35*HEAT_UNIT;
-const quality=[.8,.9,1,1.1,1.2,1.5,1.8];
-/** Insulation is independent of damage armor and does not decay with HP. */
-export function apparelInsulation(pile:MaterialPile):{cold:number;heat:number} {
-  const base=pile.item==='cloth-tribalwear'?[9.9,9.9]:pile.item==='cloth-shirt'?[4.68,1.8]:pile.item==='flak-vest'?[1,0]:[0,0];
-  const factor=pile.apparel?quality[WEAPON_QUALITIES.indexOf(pile.apparel.quality)]!:1;
-  return {cold:base[0]!*factor,heat:base[1]!*factor};
-}
 export function comfortableTemperature(world:World,pawn:Pawn):{min:number;max:number} {
   let min=16,max=26;
   for(const p of world.piles)if(p.owner.type==='apparel'&&p.owner.pawnId===pawn.id){const n=apparelInsulation(p);min-=n.cold;max+=n.heat;}
