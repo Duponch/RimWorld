@@ -5,8 +5,8 @@ type PairedPart = 'eye' | 'ear' | 'lung' | 'kidney' | 'shoulder' | 'clavicle' | 
   | 'pinky' | 'ring-finger' | 'middle-finger' | 'index-finger' | 'thumb'
   | 'leg' | 'femur' | 'tibia' | 'foot' | 'little-toe' | 'fourth-toe' | 'middle-toe' | 'second-toe' | 'big-toe';
 export type BodyPartId = 'torso' | 'ribcage' | 'sternum' | 'pelvis' | 'spine' | 'stomach' | 'heart' | 'liver'
-  | 'neck' | 'head' | 'skull' | 'brain' | 'nose' | 'jaw' | 'tongue' | 'waist' | `${Side}-${PairedPart}`
-  | 'tail' | `${Side}-${'front'|'rear'}-${'leg'|'paw'}`;
+  | 'neck' | 'head' | 'skull' | 'brain' | 'nose' | 'jaw' | 'tongue' | 'waist' | 'hump' | `${Side}-${PairedPart}`
+  | 'tail' | `${Side}-${'front'|'rear'}-${'leg'|'paw'|'hoof'}`;
 export type BodyGroup = 'torso' | 'neck' | 'upper-head' | 'full-head' | 'eyes' | 'mouth' | 'teeth'
   | 'shoulders' | 'arms' | 'hands' | 'left-hand' | 'right-hand' | 'waist' | 'legs' | 'feet';
 export interface BodyPart {

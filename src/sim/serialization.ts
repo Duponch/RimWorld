@@ -1,3 +1,5 @@
+import { validateWildFlora } from './wild-flora.ts';
+import { V91_ITEM_IDS } from './biome-items.ts';
 import { validHumanBodyShape,validHumanCorpseShape,validGraveShape,validBurialTaskShape,validateBurials } from './burial-save.ts';
 import { validateFlooring } from './flooring-save.ts';
 import { validateFilth } from './filth-save.ts';
@@ -111,7 +113,7 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validateWorld(input: unknown): string[] {
   return validateSchema(input, SCHEMA_VERSION);
 }
-function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90): string[] {
+function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(input)) return ['World must be an object.'];
@@ -236,10 +238,11 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
       } else if (key === 'resources') {
         if (!validPlantThermalFactor(item,version)) errors.push('Invalid plant thermal factor.');
         if (!validStoneIdentity(item.stone, item.kind, version)) errors.push('Invalid resource stone identity.');
-        if (!oneOf(item.kind, ['tree', 'berries', 'rock', ...(version >= 8 ? ['rice'] : []), ...(version>=71?['cotton']:[]),...(version>=84?['potato','corn']:[])]) || !integer(item.amount, 1, 1000000)) errors.push('Invalid resource.');
+        if (!oneOf(item.kind, ['tree', 'berries', 'rock', ...(version >= 8 ? ['rice'] : []), ...(version>=71?['cotton']:[]),...(version>=84?['potato','corn']:[]),...(version>=91?['wild-plant']:[])]) || !integer(item.amount, version>=91&&item.kind==='wild-plant'?0:1, 1000000)) errors.push('Invalid resource.');
         if (item.growth !== undefined || item.growthTick !== undefined) {
-          if (version < 7 || !(item.kind === 'berries' || (version >= 8 && item.kind === 'rice') || (version>=71&&item.kind==='cotton') || (version>=84&&(item.kind==='potato'||item.kind==='corn'))) || typeof item.growth !== 'number' || !Number.isFinite(item.growth) || item.growth < 0 || item.growth > 1 || !integer(item.growthTick, 0, input.tick as number)) errors.push('Invalid plant growth checkpoint.');
+          if (version < 7 || !(item.kind === 'berries' || (version >= 8 && item.kind === 'rice') || (version>=71&&item.kind==='cotton') || (version>=84&&(item.kind==='potato'||item.kind==='corn')) || (version>=91&&item.species!==undefined&&(item.kind==='tree'||item.kind==='wild-plant'))) || typeof item.growth !== 'number' || !Number.isFinite(item.growth) || item.growth < 0 || item.growth > 1 || !integer(item.growthTick, 0, input.tick as number)) errors.push('Invalid plant growth checkpoint.');
         }
+        if(version<91&&item.species!==undefined)errors.push('Future flora species in older save.');
       } else if (key === 'structures' || key === 'jobs') {
         const flowerPotId=item.flowerPotId;
         if(flowerPotId!==undefined){
@@ -265,6 +268,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
         if(!validFoodContamination(item.foodPoison,item.item as keyof typeof ITEM_DEFINITIONS,version>=89))errors.push('Invalid food contamination.');
         if(item.item==='human-corpse'?!validHumanCorpseShape(item.humanCorpse,version,input.tick as number):item.humanCorpse!==undefined)errors.push('Invalid human corpse metadata.');
         if(item.item!=='human-corpse'&&!validCorpseShape(item,version))errors.push('Invalid corpse metadata for schema.');
+        if(version<91&&V91_ITEM_IDS.includes(String(item.item)))errors.push('Future biome product in older save.');
         if(version<79&&['hare-corpse','hare-meat','light-leather'].includes(String(item.item)))errors.push('Future animal product in older save.');
         if(!validUnfinishedShape(item,version))errors.push('Invalid unfinished item.');
         if(!validApparelShape(item,version))errors.push('Invalid apparel state for schema.');
@@ -311,6 +315,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
   if(!errors.length)errors.push(...validateConstruction(input as unknown as World,version));
   if(!errors.length)errors.push(...validateRoofing(input as unknown as World,version));
   if(!errors.length)errors.push(...validatePlayerOrders(input as unknown as World,version));
+  if(!errors.length&&!validateWildFlora(input as unknown as World,version))errors.push('Invalid wild flora.');
   if(!errors.length)errors.push(...validateV90Persistence(input as unknown as World,version));
   if (errors.length) return errors;
   const world = input as unknown as World;
@@ -736,6 +741,7 @@ export function deserializeWorld(serialized: string): World {
     }
     input.schemaVersion=90;
   }
+  if(record(input)&&input.schemaVersion===90){const errors=validateSchema(input,90);if(errors.length)throw new Error('Invalid version 90 save: '+errors.join(' '));input.schemaVersion=91;}
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`); return input as World;
 }
 /** Deterministic diagnostic fingerprint, not a cryptographic digest. */

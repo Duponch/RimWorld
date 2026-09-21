@@ -1,9 +1,11 @@
 import type { MaterialKind, MaterialPile, Pawn, World } from './types.ts';
+import { BIOME_ITEM_DEFINITIONS,isAnimalMeat } from './biome-items.ts';
 
 /** Runtime content, not an exhaustive reference catalogue. Values and unresolved
  * rules are tracked in docs/development/food-items.md. Nutrition uses integer
  * hundredths here; the actor's 0..100 meter represents one nutrition unit. */
 export const ITEM_DEFINITIONS = Object.freeze({
+  ...BIOME_ITEM_DEFINITIONS,
   'human-corpse':Object.freeze({label:'Dépouille humaine',kind:'corpse',stackLimit:1,nutrition:0,maxIngest:0,color:0x8f8775}),
   'hare-corpse':Object.freeze({label:'Dépouille de lièvre',kind:'corpse',stackLimit:1,nutrition:0,maxIngest:0,color:0x9b9981}),
   'hare-meat':Object.freeze({label:'Viande de lièvre',kind:'food',stackLimit:75,nutrition:5,maxIngest:75,color:0xba6259}),
@@ -56,7 +58,7 @@ export const ITEM_DEFINITIONS = Object.freeze({
 } as const);
 export type ItemId = keyof typeof ITEM_DEFINITIONS;
 /** These raw foods cause the shared raw-meal thought, independently of policy. */
-export const rawFoodThought = (item: ItemId): boolean => item === 'rice' || item === 'potato' || item === 'corn' || item === 'hare-meat';
+export const rawFoodThought = (item: ItemId): boolean => item === 'rice' || item === 'potato' || item === 'corn' || item === 'agave-fruit' || isAnimalMeat(item);
 export const legacyItem = (kind: MaterialKind): ItemId => kind==='silver'?'silver':kind==='corpse'?missingEquipmentType():kind==='unfinished'?missingEquipmentType():kind==='textile'?'cloth':kind==='apparel'||kind==='weapon'?missingEquipmentType():kind==='medicine'?missingMedicineType():kind==='component'?'component':kind==='blocks'?missingBlockType(): kind === 'steel' ? 'steel' : kind === 'wood' ? 'wood' : kind === 'chunk' ? 'legacy-chunk' : 'legacy-portion';
 export const nutritionOf = (pile: MaterialPile): number => ITEM_DEFINITIONS[pile.item].nutrition * pile.quantity;
 export function availableNutrition(world: World): number {

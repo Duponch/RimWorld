@@ -47,7 +47,7 @@ test('human, cargo, selection and animal poses retain their edge through the sha
       expect(mesh.geometry.getAttribute('aTravel')).toBe(meshes[0]!.geometry.getAttribute('aTravel'));
       expect(position(mesh.geometry,people.travelTime.value)).toBeCloseTo(10+(tick-1020)/6,5);
     }
-    expect(position(wildlife.mesh.geometry,wildlife.travelTime.value)).toBeCloseTo(10+(tick-1020)/6,5);
+    expect(position((wildlife.mesh.children[0] as THREE.Mesh).geometry,wildlife.travelTime.value)).toBeCloseTo(10+(tick-1020)/6,5);
   }
   // Same Core instant on both rigs, on either side of a 1024-local-tick rebase.
   const strike={targetId:world.pawns[1]!.id,atCore:10239,untilCore:10359,tool:'head' as const,outcome:'miss' as const};
@@ -55,7 +55,7 @@ test('human, cargo, selection and animal poses retain their edge through the sha
   timeline.tracks.clear();people.update(world,1,false);
   for(const tick of [1023.9,1024,1024.25]) {
     timeline.tick=tick;people.updateTravel(world,timeline);wildlife.update(world,timeline);
-    const humanAt=meshes[0]!.geometry.getAttribute('aMotion').getW(0),animalAt=wildlife.mesh.geometry.getAttribute('aAnimal').getW(0);
+    const humanAt=meshes[0]!.geometry.getAttribute('aMotion').getW(0),animalAt=(wildlife.mesh.children[0] as THREE.Mesh).geometry.getAttribute('aAnimal').getW(0);
     // Both uniforms/attributes reach the GPU as float32. Within the 1024-tick
     // window (~171 s), one ULP is at most 2^-16 seconds, not an arbitrary 5 µs.
     const age=(tick*10-10239)/60;
@@ -63,5 +63,5 @@ test('human, cargo, selection and animal poses retain their edge through the sha
     expect(Math.abs(Math.fround(people.travelTime.value)-humanAt-age)).toBeLessThanOrEqual(2**-16);
     expect(Math.abs(Math.fround(wildlife.travelTime.value)-animalAt-age)).toBeLessThanOrEqual(2**-16);
   }
-  clearGroup(people.group);wildlife.mesh.geometry.dispose();(wildlife.mesh.material as THREE.Material).dispose();
+  clearGroup(people.group);wildlife.dispose();
 });

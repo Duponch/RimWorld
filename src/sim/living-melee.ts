@@ -38,7 +38,7 @@ export function strikeLivingTarget(w:World,attacker:LivingTarget,target:LivingTa
     if(animal)advanceAnimalHealth(w,target);else if(!target.health||target.health.tick<w.tick)updatePawnHealth(w,target);
     randomState.rng=w.rng;
     const protection=animal?undefined:apparelProtection(w,target,['bite','cut','stab'].includes(tool.kind)?'sharp':'blunt',tool.penetration,random);
-    const record=target.health??{...createMedicalRecord(w.tick),...(animal?{body:'hare' as const}:{})};
+    const record=target.health??{...createMedicalRecord(w.tick),...(animal?{body:target.species}:{})};
     const impact=resolveUnarmoredMelee(record,{damage,kind:tool.kind},random,protection?.protect);
     protection?.commit();injured=impact.layers.length>0;stun=impact.stun;
     if(animal)commitAnimalImpact(w,target,impact.record,randomState);else target.health=impact.record;

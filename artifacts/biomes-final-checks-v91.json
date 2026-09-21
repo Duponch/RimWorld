@@ -1,0 +1,43 @@
+{
+  "grouped": {
+    "tests": 138,
+    "files": 32,
+    "report": "biomes-tests-v91.json"
+  },
+  "postOptimization": {
+    "bridgeSiteFlora": 18,
+    "renderRetention": 4,
+    "note": "Targeted reruns overlap grouped tests; do not sum as independent contracts."
+  },
+  "nativeBiomes": "biomes-native-v91.json",
+  "mixedCPU": "habitat-apparel-cpu-v91.json",
+  "mixedNative": "habitat-apparel-render-v91.json",
+  "build": "passed; tsc --noEmit and vite build; main chunk size warning retained",
+  "documentation": "passed; original corpus byte-identical",
+  "presentation": [
+    {
+      "action": "mine",
+      "frames": {
+        "count": 8201,
+        "p50": 4.200000000000728,
+        "p95": 8.400000000001455,
+        "p99": 12.5,
+        "max": 41.70000000000073
+      },
+      "jumpCount": 0,
+      "solidOccupancyCount": 0
+    },
+    {
+      "action": "chop",
+      "frames": {
+        "count": 7003,
+        "p50": 8.19999999999709,
+        "p95": 8.5,
+        "p99": 12.599999999998545,
+        "max": 37.400000000001455
+      },
+      "jumpCount": 0,
+      "solidOccupancyCount": 0
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 # Génération des cartes — sites et profils tempérés
 
+V91 ajoute une révision 2 du site pour les trois milieux biologiques. Les arbres portent une espèce et un âge observé, les plantes sauvages des propriétés fonctionnelles ; les anciennes cartes révision 1 ne sont pas régénérées. La taille, le relief, les roches locales et le budget de minerais restent indépendants du choix de milieu. La génération géographique complète demeure partielle.
+
 **Calibration relue le 20 septembre :** la [comparaison Core 1.6.4871](../research/map-calibration-reference.md) confirme 250², mais identifie les écarts de contexte de site, eau, sols, maturité sauvage et budget de minerais. Les règles ci-dessous décrivent le générateur livré, pas une génération Core déjà équivalente. Les anciennes cartes restent conservées.
 
 Contrat V83, 20 septembre 2026. Le nouveau départ Atterrissage forcé utilise `generateSiteWorld` dans `src/sim/site-generation.ts`. Le point d'entrée applicatif `createScenarioWorld` dans `new-game.ts` sépare le paysage du scénario, du point d'arrivée et des possessions. `createWorld` et `generateWorld` conservent les profils historiques ; charger une colonie ne passe jamais par ces générateurs.

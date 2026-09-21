@@ -1,14 +1,15 @@
+import { floraDefinition } from '../sim/biome-flora';
 import { plantLeafless } from '../sim/plant-life';
 import { resourceMaxHp } from '../sim/thing-damage-rules';
 import { calendarTick } from '../sim/calendar';
 import { annualNaturalLight } from '../sim/environment';
-import { harvestProductLabel, plantGrowth, harvestable, berryYield, plantResting, plantTemperatureFactor, sowingTemperatureAllowed, isPlant, plantFertility, PLANT_DEFINITIONS } from '../sim/plants';
+import { harvestProductLabel, plantGrowth, harvestable, berryYield, plantResting, plantTemperatureFactorFor,choppable, sowingTemperatureAllowed, isPlant, plantFertility, PLANT_DEFINITIONS } from '../sim/plants';
 import { isRoofed, roofIndex } from '../sim/roof-rules';
 import { TemperatureView } from '../sim/temperature';
 import type { Cell, Resource, World } from '../sim/types';
 
 export function plantInspection(world:World,plant:Resource):string {
-  const temperature=new TemperatureView(world).at(world,plant),factor=plantTemperatureFactor(temperature);
+  const temperature=new TemperatureView(world).at(world,plant),factor=plantTemperatureFactorFor(plant,temperature);
   const constraints:string[]=[];let soil='';
   if(plantLeafless(world,plant))constraints.push('Sans feuilles · broutage suspendu');
   if(plant.damage)constraints.push(`État ${resourceMaxHp(plant)-plant.damage}/${resourceMaxHp(plant)}`);
@@ -16,11 +17,11 @@ export function plantInspection(world:World,plant:Resource):string {
   if(isRoofed(world,roofIndex(world,plant))||annualNaturalLight(world)<=.51)constraints.push('Lumière insuffisante');
   if(factor<1)constraints.push(`Température ${temperature.toFixed(1)} °C · Croissance thermique ${Math.round(factor*100)} %`);
   if(isPlant(plant)) {
-    const def=PLANT_DEFINITIONS[plant.kind],fertility=plantFertility(world,plant);
+    const def=floraDefinition(plant)??PLANT_DEFINITIONS[plant.kind as keyof typeof PLANT_DEFINITIONS],fertility=plantFertility(world,plant);
     const growthFactor=fertility<def.minFertility?0:1-def.sensitivity+fertility*def.sensitivity;
     soil=` · Fertilité ${Math.round(fertility*100)} % · Effet sur cette plante ${Math.round(growthFactor*100)} %`;
   }
-  return ` · Croissance ${Math.floor(plantGrowth(world,plant)*100)} % · ${harvestable(world,plant)?`Récolte : environ ${Math.round(berryYield(world,plant))} ${harvestProductLabel(plant)}`:'Pas encore récoltable'} · ${constraints.length?constraints.join(' · '):'Croissance diurne'}${soil}`;
+  return ` · Croissance ${Math.floor(plantGrowth(world,plant)*100)} % · ${harvestable(world,plant)?`Récolte : environ ${Math.round(berryYield(world,plant))} ${harvestProductLabel(plant)}`:plant.kind==='tree'?(choppable(world,plant)?'Bois disponible par coupe':'Arbre trop jeune pour la coupe'):plant.species&&!floraDefinition(plant)?.product?'Végétation de pâturage':'Pas encore récoltable'} · ${constraints.length?constraints.join(' · '):'Croissance diurne'}${soil}`;
 }
 
 export function growingTemperatureInspection(world:World,cell:Cell):string {

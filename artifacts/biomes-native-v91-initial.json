@@ -1,0 +1,64 @@
+[
+  {
+    "biome": "temperate-forest",
+    "label": "Foret temperee",
+    "plants": 17146,
+    "animals": [
+      "hare",
+      "muffalo",
+      "muffalo",
+      "muffalo",
+      "muffalo"
+    ],
+    "ticks": 374,
+    "elapsedMs": 11139,
+    "actualSpeed": 5.595954155070772,
+    "frames": 393,
+    "p95": 108.29999999999927,
+    "max": 250,
+    "errors": []
+  },
+  {
+    "biome": "boreal-forest",
+    "label": "Foret boreale",
+    "plants": 9782,
+    "animals": [
+      "hare",
+      "deer",
+      "deer",
+      "deer",
+      "deer",
+      "deer",
+      "deer",
+      "deer"
+    ],
+    "ticks": 372,
+    "elapsedMs": 11007,
+    "actualSpeed": 5.632779140546925,
+    "frames": 924,
+    "p95": 33.29999999999927,
+    "max": 212.40000000000146,
+    "errors": []
+  },
+  {
+    "biome": "arid-shrubland",
+    "label": "Broussailles arides",
+    "plants": 5318,
+    "animals": [
+      "hare",
+      "gazelle",
+      "gazelle",
+      "gazelle",
+      "gazelle",
+      "gazelle",
+      "gazelle"
+    ],
+    "ticks": 368,
+    "elapsedMs": 10750,
+    "actualSpeed": 5.705426356589147,
+    "frames": 1067,
+    "p95": 29.099999999998545,
+    "max": 166.59999999999854,
+    "errors": []
+  }
+]

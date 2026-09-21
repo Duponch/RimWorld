@@ -1,4 +1,6 @@
-# Validation courante — V90
+# Validation courante — V91
+
+V91 : [milieux vivants et ressources utiles](../history/validation-biomes-v91.md), 138 contrôles regroupés puis reprises ciblées des optimisations, migration neutre de la colonie V90, trois parcours de biome en navigateur natif et mesures CPU/worker/rendu successives. Les scénarios contrôlés ne constituent pas une campagne annuelle. [Performances et limites](../research/performance-v91.md).
 
 V90 : [habitat, confort et habillement](../history/validation-habitat-apparel-v90.md),
 validation du périmètre acquise : 49 contrôles ciblés finaux, 21 parcours UI repris, présentation native, campagne avec reprises de J161,569 à J182,577 et mesures CPU/worker/rendu. Les preuves distinguent contrats regroupés,

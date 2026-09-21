@@ -1,0 +1,137 @@
+{
+  "protocol": "Node CPU sampling, 100 colonists + 100 hares, unchanged mixed habitat fixture, 350 ticks. Includes startup, reports self samples, not percentages of gameplay or wall-time.",
+  "top": [
+    {
+      "function": "navigationCosts",
+      "module": "furniture-travel.ts",
+      "line": 77,
+      "selfSamples": 1783
+    },
+    {
+      "function": "candidateAccess",
+      "module": "candidate-access.ts",
+      "line": 11,
+      "selfSamples": 884
+    },
+    {
+      "function": "footprintContains",
+      "module": "definitions.ts",
+      "line": 55,
+      "selfSamples": 612
+    },
+    {
+      "function": "canStandAt",
+      "module": "furniture-travel.ts",
+      "line": 44,
+      "selfSamples": 523
+    },
+    {
+      "function": "stepWorld",
+      "module": "engine.ts",
+      "line": 461,
+      "selfSamples": 504
+    },
+    {
+      "function": "footprintCells",
+      "module": "definitions.ts",
+      "line": 80,
+      "selfSamples": 421
+    },
+    {
+      "function": "planWork",
+      "module": "work-planner.ts",
+      "line": 93,
+      "selfSamples": 410
+    },
+    {
+      "function": "advance",
+      "module": "weighted-search.ts",
+      "line": 31,
+      "selfSamples": 367
+    },
+    {
+      "function": "animalFoods",
+      "module": "wildlife-food.ts",
+      "line": 26,
+      "selfSamples": 341
+    },
+    {
+      "function": "(garbage collector)",
+      "module": "",
+      "line": 0,
+      "selfSamples": 278
+    },
+    {
+      "function": "getBlocked",
+      "module": "engine.ts",
+      "line": 504,
+      "selfSamples": 277
+    },
+    {
+      "function": "terrainTravelDelay",
+      "module": "furniture-travel.ts",
+      "line": 10,
+      "selfSamples": 263
+    },
+    {
+      "function": "animalMealTarget",
+      "module": "wildlife-food.ts",
+      "line": 36,
+      "selfSamples": 224
+    },
+    {
+      "function": "groundOccupancyAllows",
+      "module": "occupancy.ts",
+      "line": 50,
+      "selfSamples": 220
+    },
+    {
+      "function": "blockedCells",
+      "module": "pathfinding.ts",
+      "line": 18,
+      "selfSamples": 217
+    },
+    {
+      "function": "reservedSource",
+      "module": "materials.ts",
+      "line": 101,
+      "selfSamples": 186
+    },
+    {
+      "function": "read",
+      "module": "room-topology.ts",
+      "line": 44,
+      "selfSamples": 183
+    },
+    {
+      "function": "(program)",
+      "module": "",
+      "line": 0,
+      "selfSamples": 179
+    },
+    {
+      "function": "read",
+      "module": "light-environment.ts",
+      "line": 30,
+      "selfSamples": 179
+    },
+    {
+      "function": "cellCapacity",
+      "module": "ground-placement.ts",
+      "line": 31,
+      "selfSamples": 171
+    },
+    {
+      "function": "solid",
+      "module": "cooler.ts",
+      "line": 16,
+      "selfSamples": 171
+    },
+    {
+      "function": "reachableCells",
+      "module": "pathfinding.ts",
+      "line": 68,
+      "selfSamples": 156
+    }
+  ]
+}

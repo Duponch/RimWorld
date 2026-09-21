@@ -1,6 +1,7 @@
 import { initialSkills } from '../../src/sim/skills.ts';
 import { createDefaultApparelPolicyRegistry } from '../../src/sim/apparel-policy.ts';
 import { createApparelWearCalendar } from '../../src/sim/apparel-renewal.ts';
+import { V91_ITEM_IDS } from '../../src/sim/biome-items.ts';
 /** Historical fixtures must not smuggle V43's new actor profile into old schemas. */
 export function withoutPawnSkills<T>(world:T):T {
   for(const p of (world as {pawns:Array<{skills?:unknown}>}).pawns)delete p.skills;
@@ -79,10 +80,10 @@ export function withMigratedResearch<T>(world:T):T {
 export function withoutHunting<T>(world:T):T {
   withoutFoodCrops(world);
   const w=world as any;delete w.hunting;delete w.butchery;
-  if(w.spoiled)delete w.spoiled['hare-meat'];
-  for(const policy of w.foodPolicies??[])policy.allowed=policy.allowed.filter((id:string)=>id!=='hare-meat');
+  if(w.spoiled){delete w.spoiled['hare-meat'];for(const id of V91_ITEM_IDS)delete w.spoiled[id];}
+  for(const policy of w.foodPolicies??[])policy.allowed=policy.allowed.filter((id:string)=>id!=='hare-meat'&&!V91_ITEM_IDS.includes(id));
   const task=(c:any)=>{if(c)delete c.workTicks;};
-  const bills=(s:any)=>{for(const b of s.bills??[]){delete b.filters['hare-meat'];delete b.filters['hare-corpse'];}};
+  const bills=(s:any)=>{for(const b of s.bills??[]){delete b.filters['hare-meat'];delete b.filters['hare-corpse'];for(const id of V91_ITEM_IDS)delete b.filters[id];}};
   for(const s of w.structures??[])bills(s);for(const p of w.packed??[])bills(p.building);
   for(const a of w.wildlife?.animals??[])delete a.corpseRot;
   for(const p of w.pawns){delete p.hunting;delete p.priorities.hunt;if(p.skills)delete p.skills.cooking;task(p.cooking);for(const o of p.orders?.queue??[])if(typeof o==='object')task(o.cooking);}
@@ -125,6 +126,12 @@ export function withoutV90<T>(world:T):T {
   for(const pile of [...w.piles??[],...(w.raids?.departed??[]).flatMap((d:any)=>d.items??[]),...(w.visitors?.departed??[]).flatMap((d:any)=>d.items??[])]){if(pile.apparel){delete pile.apparel.material;delete pile.apparel.forced;}if(pile.unfinished){delete pile.unfinished.material;delete pile.unfinished.units;}}
   for(const job of w.jobs??[])delete job.flowerPotId;
   if(w.tailoring)delete w.tailoring.lostLeather;
+  // Current fixtures include V91 catalogue defaults. A deliberate pre-V91
+  // payload must remove those references; production validation still rejects
+  // any new item smuggled under an old schema.
+  for(const policy of w.foodPolicies??[])policy.allowed=policy.allowed.filter((id:string)=>!V91_ITEM_IDS.includes(id));
+  for(const structure of [...w.structures??[],...(w.packed??[]).map((p:any)=>p.building)])for(const bill of structure.bills??[])for(const id of V91_ITEM_IDS)delete bill.filters[id];
+  if(w.spoiled)for(const id of V91_ITEM_IDS)delete w.spoiled[id];
   return world;
 }
 

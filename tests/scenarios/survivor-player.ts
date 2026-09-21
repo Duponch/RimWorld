@@ -4,7 +4,7 @@ import { requiredMaterial } from '../../src/sim/construction-materials.ts';
 import { footprintCells } from '../../src/sim/definitions.ts';
 import { availableNutrition, type ItemId } from '../../src/sim/items.ts';
 import { blockedCells } from '../../src/sim/pathfinding.ts';
-import { harvestable, plantGrowth } from '../../src/sim/plants.ts';
+import { harvestable, isPlant, plantGrowth } from '../../src/sim/plants.ts';
 import { isGrowingTerrain } from '../../src/sim/soil.ts';
 import type { Cell, DesignateCommand, World, WorkType } from '../../src/sim/types.ts';
 import type { Decision } from './colony-player.ts';
@@ -16,6 +16,13 @@ const cells=(r:Rectangle):Cell[]=>Array.from({length:(r.to.x-r.from.x+1)*(r.to.z
 const at=(a:Cell,x:number,z:number):Cell=>({x:a.x+x,z:a.z+z});
 function plan(a:Cell, sustainable=false) {
   return {anchor:a,room:rect(a.x,a.z,5,5),storage:rect(a.x+7,a.z,6,4),field:sustainable?rect(a.x+7,a.z+8,10,8):rect(a.x+7,a.z+6,5,4),beds:[1,2,3].map(x=>at(a,x,sustainable?2:1)),door:at(a,2,4),fire:sustainable?at(a,8,5):at(a,5,4),table:at(a,6,1),seats:[at(a,5,1),at(a,5,2)],pin:at(a,5,6)};
+}
+const v91LowPlant=(resource:World['resources'][number])=>resource.species!==undefined&&isPlant(resource)&&resource.kind!=='tree';
+function plannedClearance(p:ReturnType<typeof plan>,sustainable:boolean):Cell[] {
+  const roomEdge=cells(p.room).filter(c=>c.x===p.room.from.x||c.x===p.room.to.x||c.z===p.room.from.z||c.z===p.room.to.z);
+  return [...cells(p.storage),...cells(p.field),...roomEdge,
+    ...p.beds.flatMap(c=>[c,at(c,0,sustainable?-1:1)]),p.fire,at(p.fire,0,-1),p.table,at(p.table,0,1),...p.seats,p.pin,
+    ...sustainable?[at(p.anchor,7,5),at(p.anchor,9,5),at(p.anchor,10,5),at(p.anchor,11,5),at(p.anchor,12,5),at(p.anchor,11,4)]:[]];
 }
 
 /** The leftmost bed on the first row is a visible plan anchor after save/load.
@@ -41,7 +48,10 @@ export function survivorPlan(w:World,sustainable=false):ReturnType<typeof plan> 
     const n=queue[i]!,x=n%w.width,z=Math.floor(n/w.width);
     for(const j of [x>0?n-1:-1,x+1<w.width?n+1:-1,z>0?n-w.width:-1,z+1<w.height?n+w.width:-1])if(j>=0&&!blocked[j]&&!seen[j]){seen[j]=1;queue.push(j);}
   }
-  const occupied=new Set(w.resources.map(r=>r.z*w.width+r.x));
+  // V91 carpets ordinary sites with low wild plants. They are admissible only
+  // because the player policy will order and wait for their physical removal.
+  // Legacy generic plants keep the old empty-footprint requirement.
+  const occupied=new Set(w.resources.filter(r=>!v91LowPlant(r)).map(r=>r.z*w.width+r.x));
   const rocks=new Set(w.resources.filter(r=>r.kind==='rock').map(r=>r.z*w.width+r.x));
   const ground=new Set(w.piles.flatMap(p=>p.owner.type==='ground'?[p.owner.z*w.width+p.owner.x]:[]));
   const candidates=queue.map(i=>({x:i%w.width,z:Math.floor(i/w.width)})).filter(c=>Math.abs(c.x-start.x)<=32&&Math.abs(c.z-start.z)<=32&&c.x>0&&c.z>(sustainable?1:0)&&c.x+(sustainable?18:13)<w.width&&c.z+(sustainable?16:10)<w.height)
@@ -51,7 +61,7 @@ export function survivorPlan(w:World,sustainable=false):ReturnType<typeof plan> 
     if(land.some(c=>!seen[c.z*w.width+c.x]||rocks.has(c.z*w.width+c.x)))continue;
     if(cells(p.storage).some(c=>occupied.has(c.z*w.width+c.x)||ground.has(c.z*w.width+c.x)))continue;
     if(cells(p.field).some(c=>!isGrowingTerrain(w.tiles[c.z*w.width+c.x]!.terrain)))continue;
-    if([...p.beds.flatMap(c=>[c,at(c,0,sustainable?-1:1)]),p.fire,at(p.fire,0,-1),p.table,at(p.table,0,1),...p.seats,p.pin,...sustainable?[at(a,7,5),at(a,9,5),at(a,10,5),at(a,11,5),at(a,12,5),at(a,11,4)]:[]].some(c=>occupied.has(c.z*w.width+c.x)))continue;
+    if(plannedClearance(p,sustainable).some(c=>occupied.has(c.z*w.width+c.x)))continue;
     return p;
   }
   throw Error(`No ordinary camp layout found near landing ${JSON.stringify(start)} on seed ${w.seed}`);
@@ -65,6 +75,12 @@ export function survivorDecisions(w:World,sustainable=false):Decision[] {
     const command:DesignateCommand={type:'designate',kind,x:cell.x,z:cell.z,...['bed','wall','door','campfire','table','stool','horseshoes'].includes(kind)?{material:'wood' as const,orientation:sustainable&&kind==='bed'?2 as const:0 as const}:kind==='fueled-stove'?{material:'steel' as const,orientation:0 as const}:{}};
     if(canDesignate(w,command).ok)out.push({reason,command});
   };
+  const clearance=new Set(plannedClearance(p,sustainable).map(c=>c.z*w.width+c.x));
+  const plants=w.resources.filter(r=>v91LowPlant(r)&&clearance.has(r.z*w.width+r.x));
+  if(plants.length){
+    for(const resource of plants)designate('cut',resource,'Dégager physiquement la végétation basse avant de tracer la réserve et le camp.');
+    return out;
+  }
   if(!w.stockpiles.length)out.push({reason:'Tracer une réserve assez grande pour les provisions réelles, sur un sol libre.',command:{type:'area',action:'stockpile',...p.storage,filters:{wood:true,food:true,steel:true,component:true,medicine:true,weapon:true,apparel:true},priority:2,capacity:75}});
   if(!sustainable||!w.jobs.some(j=>j.furniture?.kind==='bed')&&!w.packed.some(p=>p.building.kind==='bed'))
     for(const c of p.beds)designate('bed',c,sustainable?'Installer trois couchages avec un chevet accessible depuis l’allée.':'Installer trois couchages près de l’arrivée naturelle.');
@@ -119,5 +135,6 @@ export function survivorSummary(w:World) {
 
 /** A preparation contract for both runners, not a substitute for their play. */
 export function survivorInitialAreas(w:World):boolean {
-  return survivorDecisions(w).every(d=>{if(d.command.type!=='area')return true;const q=queryArea(w,d.command);return q.ok&&q.skipped===0;});
+  const decisions=survivorDecisions(w);
+  return decisions.length===5&&decisions.every(d=>{if(d.command.type!=='area')return true;const q=queryArea(w,d.command);return q.ok&&q.skipped===0;});
 }

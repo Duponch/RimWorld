@@ -1,3 +1,4 @@
+import { ANIMAL_MEAT_ITEMS } from './biome-items.ts';
 import { emptySpoilage, isPerishable, ticksUntilRot } from './food-preservation.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
 import { releaseWork } from './work-release.ts';
@@ -8,7 +9,7 @@ import type { World } from './types.ts';
 export function expireFood(world: World): void {
   let expired: Set<number> | undefined;
   let losses: ReturnType<typeof emptySpoilage> | undefined;
-  for (const pile of world.piles) if (pile.item!=='hare-corpse' && isPerishable(pile.item) && ticksUntilRot(pile, world.tick) <= 0) {
+  for (const pile of world.piles) if (pile.kind!=='corpse' && isPerishable(pile.item) && ticksUntilRot(pile, world.tick) <= 0) {
     (expired ??= new Set()).add(pile.id);
     losses??=emptySpoilage();losses[pile.item]=(losses[pile.item]??0)+pile.quantity;
   }
@@ -35,7 +36,7 @@ export function expireFood(world: World): void {
       pawn.path = []; pawn.state = pawn.moveCooldown > 0 ? 'moving' : 'working';
     }
   }
-  for (const item of ['berries', 'rice', 'potato', 'corn', 'simple-meal','herbal-medicine','hare-meat'] as const) if (losses![item]) {
+  for (const item of ['berries', 'rice', 'potato', 'corn', 'simple-meal','herbal-medicine','agave-fruit',...ANIMAL_MEAT_ITEMS] as const) if (losses![item]) {
     world.spoiled[item]=(world.spoiled[item]??0)+losses![item]!;
     world.events.push({ tick: world.tick, type: 'need', message: `${losses![item]} ${ITEM_DEFINITIONS[item].label} ont pourri.` });
   }

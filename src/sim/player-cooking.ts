@@ -1,3 +1,4 @@
+import { isAnimalCorpseItem } from './biome-items.ts';
 import { foodStationUsable, usesCookingFuel, isButcherStation } from './food-workstations.ts';
 import { corpseFresh } from './corpses.ts';
 import { stationRecipe, stationWork, taskRecipe, type ProductionIngredient } from './production-recipes.ts';
@@ -45,7 +46,7 @@ export function queuedCookingReason(world:World,order:CookingOrder):string|undef
     const pile=view.piles.find(p=>p.id===i.pileId);
     const bound=pile?.unfinished?.billId===bill.id;
     const required=(sources.get(i.pileId)??0)+i.quantity;sources.set(i.pileId,required);
-    if(pile?.item==='hare-corpse'&&!corpseFresh(pile,world.tick))return 'Dépouille pourrie, impropre à la boucherie.';
+    if(pile&&isAnimalCorpseItem(pile.item)&&!corpseFresh(pile,world.tick))return 'Dépouille pourrie, impropre à la boucherie.';
     if(pile?.unfinished&&(pile.unfinished.authorId!==author?.id||pile.unfinished.billId!==undefined&&!bound))return 'Ouvrage réservé à un autre auteur ou une autre facture.';
     if(!(bound||bill.filters[pile?.unfinished?'cloth':i.item])||!pile||pile.item!==i.item||pile.owner.type!=='ground'||pile.quantity-reservedSource(view,pile.id)<required)return 'Ingrédient réservé disparu ou devenu insuffisant.';
     if(!bound&&(pile.owner.x-station.x)**2+(pile.owner.z-station.z)**2>bill.radius**2)return 'Ingrédient sorti du rayon de la facture.';

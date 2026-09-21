@@ -12,8 +12,22 @@ import { HILLINESS,resolveSite } from '../src/sim/site';
 import { SCHEMA_VERSION } from '../src/sim/types';
 import { withMigratedBasic } from './scenarios/legacy-skills';
 
+function clearPlannedLowPlants(world:ReturnType<typeof createScenarioWorld>):void {
+  const started=world.tick;
+  for(let round=0;round<4;round++){
+    const clearing=survivorDecisions(world).filter(d=>d.command.type==='designate'&&d.command.kind==='cut');
+    if(!clearing.length)break;
+    for(const decision of clearing)expect(applyCommand(world,decision.command),decision.reason).toMatchObject({ok:true});
+    for(let tick=0;tick<2000&&world.jobs.some(job=>job.kind==='cut');tick++)stepWorld(world);
+    expect(world.jobs.some(job=>job.kind==='cut')).toBe(false);
+  }
+  expect(survivorDecisions(world).some(d=>d.command.type==='designate'&&d.command.kind==='cut')).toBe(false);
+  expect(world.tick-started).toBeLessThan(6000);
+}
+
 test.each(HILLINESS)('shared player can place its first physical camp on the chosen %s site',hilliness=>{
   const world=createScenarioWorld(42,250,'crashlanded',{hilliness});
+  clearPlannedLowPlants(world);
   expect(survivorInitialAreas(world)).toBe(true);
   expect(world.tiles.some(t=>t.terrain==='rich-soil')).toBe(true);
   const decisions=survivorDecisions(world);expect(decisions).toHaveLength(5);
@@ -35,7 +49,8 @@ test('real V82 snapshot migrates without inventing a site, terrain, clock or new
 
 test('new site provenance, physical landing and both new soils survive continuation and snapshot patches',()=>{
   const world=createScenarioWorld(42,64,'crashlanded',{hilliness:'large-hills'});
-  expect(world.site).toEqual(resolveSite(42,{hilliness:'large-hills'}));expect(world.scenario!.revision).toBe(5);
+  expect(world.site).toEqual(resolveSite(42,{hilliness:'large-hills',biome:'temperate-forest'}));expect(world.scenario!.revision).toBe(6);
+  expect(resolveSite(42,{hilliness:'large-hills'})).toMatchObject({revision:1,biome:'temperate-forest'});
   expect(world.research?.stonecutting).toMatchObject({completedAt:0});
   expect(world.research?.smithing).toBeUndefined();
   expect(world.piles.filter(p=>p.item==='silver').reduce((n,p)=>n+p.quantity,0)).toBe(800);

@@ -2,9 +2,10 @@ import type { Cell } from './types.ts';
 import type { TravelSegment } from './travel-timing.ts';
 import type { MedicalRecord } from './injury-types.ts';
 import type { StaggerState } from './stagger.ts';
+import { ANIMAL_SPECIES,type AnimalSpeciesId,type FaunaBiomeId } from './animal-species.ts';
 
 export interface WildAnimal extends Cell {
-  id:number; species:'hare'; sex:'female'|'male';
+  id:number; species:AnimalSpeciesId; sex:'female'|'male';
   /** Nutrition units, distinct from a human's percentage gauge. */
   food:number; rest:number;
   state:'idle'|'moving'|'eating'|'sleeping'|'hungry'|'downed'|'dead';
@@ -22,10 +23,12 @@ export interface WildAnimal extends Cell {
   meal?:{kind:'plant'|'pile';id:number;quantity:number;progress:number};
 }
 export interface WildlifeState {
-  profile:'temperate-hares-v1'; rng:number; animals:WildAnimal[];
+  profile:'temperate-hares-v1'|'biome-herbivores-v1'; rng:number; animals:WildAnimal[];
   eatenPlants:number; eatenNutrition:number; eatenItems:number;
+  population?:{biome:FaunaBiomeId;fullTargetWeight:number;targetWeight:number;nextCheck:number;checks:number;arrivals:number};
 }
-export const HARE=Object.freeze({nutrition:.2,foodPerDay:.18,moveTicks:1,walkTicks:5,ingestTicks:50});
+/** Compatibility alias: existing V76 callers and snapshots keep exact values. */
+export const HARE=ANIMAL_SPECIES.hare;
 export const MAX_WILDLIFE=256;
 export function wildlifeRandom(s:WildlifeState):number {
   let n=s.rng;n^=n<<13;n^=n>>>17;n^=n<<5;s.rng=n>>>0;return s.rng/0x100000000;

@@ -15,7 +15,7 @@ import { storageCapacity } from './ground-placement.ts';
 import { reservedSource } from './materials.ts';
 import { pawnBody,medicallyStopped } from './health-rules.ts';
 import { isColonist } from './affiliation.ts';
-import { pickUpRetainedCorpse } from './corpses.ts';
+import { animalCorpseItem,pickUpRetainedCorpse } from './corpses.ts';
 import type { NeedContext } from './needs.ts';
 import type { WildAnimal } from './wildlife-state.ts';
 import type { Cell,Pawn,World,CommandResult } from './types.ts';
@@ -70,12 +70,13 @@ function collect(w:World,p:Pawn,ctx:HuntContext):void {
   if(!body&&!retained||body&&body.owner.type!=='ground'||reservedSource(w,task.animalId,p.id)>0){stop(p);return;}
   if(retained&&(retained.motion?.end??0)>w.tick)return;
   const sourceCell=body?.owner.type==='ground'?body.owner:retained!;
+  const corpseItem=body?.item??animalCorpseItem(retained!.species);
   if(p.planCooldown>0){
     if(retained&&p.path.length){ctx.move(sourceCell,true);if(!p.path.length)p.planCooldown=0;}
     return;
   }
   const current=w.stockpiles.find(z=>z.x===sourceCell.x&&z.z===sourceCell.z&&z.filters.corpse);
-  const zones=w.stockpiles.filter(z=>(!current||z.priority>current.priority)&&(z.x!==sourceCell.x||z.z!==sourceCell.z)&&z.filters.corpse&&storageCapacity(w,z,'hare-corpse',p.id)>=1)
+  const zones=w.stockpiles.filter(z=>(!current||z.priority>current.priority)&&(z.x!==sourceCell.x||z.z!==sourceCell.z)&&z.filters.corpse&&storageCapacity(w,z,corpseItem,p.id)>=1)
     .sort((a,b)=>b.priority-a.priority||(a.x-p.x)**2+(a.z-p.z)**2-((b.x-p.x)**2+(b.z-p.z)**2)||a.id-b.id);
   if(!zones.length){stop(p);return;}
   const reach=ctx.candidates();if(!reach)return;

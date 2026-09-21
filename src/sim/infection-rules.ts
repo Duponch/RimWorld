@@ -31,7 +31,7 @@ export function infectionModifiers(record:MedicalRecord):InfectionModifiers {
 export function injuryInfectionChance(record:MedicalRecord,injury:Pick<Injury,'kind'|'part'|'scar'>):number {
   if(injury.scar?.pain!==undefined||injuryPartRules(medicalModel(record))[injury.part].solid)return 0;
   const chance=(injury.kind==='bite'||injury.kind==='burn')?.3:['stab','cut','crush','gunshot'].includes(injury.kind)?.15:0;
-  return chance*(record.body==='hare'?.1:1);
+  return chance*(record.body?.1:1);
 }
 export function infectionContractAllowed(record:MedicalRecord,part:BodyPartId):boolean {
   // Core checks Lerp(1,0,immunity/.6) <= .001, not a continuous multiplier.
@@ -50,7 +50,7 @@ export function infectionSeverityPerDay(record:MedicalRecord,condition:Infection
  * Missing needs are neutral for existing physiological callers and fixtures. */
 export function immunityGainSpeed(record:MedicalRecord,context:MedicalContext,filtration=1):number {
   const hunger=context.hunger??(context.starving?0:100),rest=context.rest??100;
-  const urgentHunger=record.body==='hare'?18:12; // FoodLevelPercentageWantEat × .4.
+  const urgentHunger=record.body?18:12; // FoodLevelPercentageWantEat × .4.
   return (.5+.5*filtration)*(hunger<=0?.7:hunger<urgentHunger?.9:1)*(rest<1?.8:rest<14?.92:rest<28?.96:1)*
     (context.posture==='bed'?1.07:1)*(context.restingBonus?1.1:1);
 }

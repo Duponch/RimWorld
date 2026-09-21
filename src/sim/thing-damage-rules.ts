@@ -2,6 +2,7 @@ import { APPAREL } from './apparel-rules.ts';
 import { weaponMaxHitPoints } from './equipment-rules.ts';
 import type { ItemId } from './items.ts';
 import type { MaterialPile,Resource,Structure } from './types.ts';
+import { floraDefinition } from './biome-flora.ts';
 
 /** Only shipped definitions. Missing/non-HP things are deliberately not fuels. */
 const BUILDINGS:Readonly<Record<string,readonly [number,number,boolean]>>={
@@ -17,8 +18,8 @@ const STUFF_BUILDINGS=new Set(['wall','door','bed','table','table-square','table
 export const structureMaxHp=(s:Pick<Structure,'kind'|'material'>)=>Math.round((BUILDINGS[s.kind]?.[0]??0)*(STUFF_BUILDINGS.has(s.kind)?STUFF_HP[s.material??'wood']??1:1));
 export const structureFlammability=(s:Pick<Structure,'kind'|'material'>)=>(BUILDINGS[s.kind]?.[1]??0)*(STUFF_BUILDINGS.has(s.kind)?s.material?.endsWith('-blocks')?0:s.material==='steel'?.4:1:1);
 export const structureLeavesResources=(s:Pick<Structure,'kind'>)=>BUILDINGS[s.kind]?.[2]??false;
-export const resourceMaxHp=(r:Pick<Resource,'kind'>)=>r.kind==='tree'?200:r.kind==='berries'?120:r.kind==='corn'?150:r.kind==='rock'?0:85;
-export const resourceFlammability=(r:Pick<Resource,'kind'>)=>r.kind==='rock'?0:r.kind==='tree'?.8:1;
+export const resourceMaxHp=(r:Pick<Resource,'kind'|'species'>)=>floraDefinition(r)?.hitPoints??(r.kind==='tree'?200:r.kind==='berries'?120:r.kind==='corn'?150:r.kind==='rock'?0:85);
+export const resourceFlammability=(r:Pick<Resource,'kind'|'species'>)=>floraDefinition(r)?.flammability??(r.kind==='rock'?0:r.kind==='tree'?.8:1);
 export function pileMaxHp(p:Pick<MaterialPile,'kind'|'item'>):number {
   if(p.kind==='apparel')return APPAREL[p.item as keyof typeof APPAREL]?.hitPoints??0;
   if(p.kind==='weapon')return weaponMaxHitPoints(p.item);if(p.kind==='corpse')return 100;

@@ -19,7 +19,7 @@ export function buildTerrain(world: World, group: THREE.Group, surface: THREE.Ma
         // The typed rough floor is already rendered beneath a massif; excavation changes no ground buffers.
         const terrain = type==='rock'?'rough-stone':type;
         const n = noise(x, z, world.seed);
-        scratchColor.setHex(terrain==='rough-stone'?stoneColor(world.tiles[z*world.width+x].stone):TERRAIN_COLORS[terrain]).multiplyScalar(0.94 + n * 0.12);
+        scratchColor.setHex(terrain==='rough-stone'?stoneColor(world.tiles[z*world.width+x].stone):terrain==='grass'&&world.site?.biome==='arid-shrubland'?0xa69772:TERRAIN_COLORS[terrain]).multiplyScalar(0.94 + n * 0.12);
         const color = scratchColor.getHex(), level = terrain === 'water' ? WORLD_SCALE.waterSurface : 0;
         tileGroups[terrain].push({ x, z, y: level, color });
         // Top quads replace six-sided ground cubes; exposed bank and perimeter
@@ -30,7 +30,8 @@ export function buildTerrain(world: World, group: THREE.Group, surface: THREE.Ma
             : world.tiles[nz * world.width + nx].terrain === 'water' ? WORLD_SCALE.waterSurface : 0;
           if (neighbor < level) banks.push({ x: x + dx * 0.5, z: z + dz * 0.5, y: (level + neighbor) / 2, sy: level - neighbor, ry: rotation, color });
         }
-        if (terrain === 'grass' && n > 0.83) grass.push({ x: x - 0.26, y: 0.09, z: z + 0.22, sy: 0.7 + n, color: n > 0.96 ? 0xd4c58a : 0x96a575, ry: n * 6.28 });
+        // New sites already render their physical ground plants.
+        if (!world.flora && terrain === 'grass' && n > 0.83) grass.push({ x: x - 0.26, y: 0.09, z: z + 0.22, sy: 0.7 + n, color: n > 0.96 ? 0xd4c58a : 0x96a575, ry: n * 6.28 });
       }
       mergedInstances(group, [
         { geometry: new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), items: [...tileGroups.grass, ...tileGroups.soil, ...tileGroups.rock,...tileGroups['rough-stone'],...tileGroups['rich-soil'],...tileGroups.gravel] },

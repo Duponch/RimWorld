@@ -1,3 +1,4 @@
+import { floraDefinition } from './sim/biome-flora';
 import { updateBurialControls } from './ui/burial-controls';
 import { updateHygieneControls } from './ui/hygiene-controls';
 import { isBuildableFloor,FLOOR_DEFINITIONS } from './sim/flooring';
@@ -63,7 +64,7 @@ import { growingControls } from './ui/growing-controls';
 import { growingZoneAt } from './sim/farming';
 import { plantInspection, growingTemperatureInspection } from './ui/plant-inspection';
 import { TERRAIN_LABELS as terrainLabels,terrainInspection } from './ui/terrain-inspection';
-import { HILLINESS_LABELS } from './sim/site';
+import { BIOME_LABELS,HILLINESS_LABELS } from './sim/site';
 import { isPlant } from './sim/plants';
 import './style.css';
 import { ITEM_DEFINITIONS, availableNutrition } from './sim/items';
@@ -82,7 +83,7 @@ import { recreationInspection, updateRecreationInspection } from './ui/recreatio
 const jobLabels: Record<JobKind, string> = { grave:'Creuser une tombe','lay-floor':'Pose de sol','remove-floor':'Retrait de sol', heater:'Radiateur','wind-turbine':'Éolienne',flick:'Actionner un interrupteur', 'power-conduit':'Construction du câble', 'power-switch':'Construction de l’interrupteur', battery:'Construction de la batterie', 'solar-generator':'Construction du générateur solaire', 'fueled-stove':'Cuisinière à bois','electric-stove':'Cuisinière électrique','butcher-table':'Table de boucherie', 'butcher-spot':'Emplacement de boucherie', cooler:'Climatiseur', 'research-bench':'Bureau de recherche','tailor-bench':'Établi de tailleur','electric-tailor-bench':'Établi de tailleur électrique', 'crafting-spot':'Emplacement d’artisanat', repair:'Réparation', 'wood-generator':'Construction du générateur à bois', 'standing-lamp':'Construction de la lampe', 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'Pose de toit', 'remove-roof':'Retrait de toit', door:'Construction de la porte', stonecutter:'Construction de la table de taille', mine:'Minage', uninstall:'Désinstallation',install:'Réinstallation', deconstruct: 'Déconstruction', chop: 'Abattage', harvest: 'Récolte', cut: 'Coupe de plante', sow: 'Semis', wall: 'Construction du mur', bed: 'Construction du lit', table: 'Construction de la table','table-square':'Construction de la table carrée','table-long':'Construction de la table longue', stool: 'Construction du tabouret','dining-chair':'Construction de la chaise',armchair:'Construction du fauteuil','end-table':'Construction de la table de chevet',dresser:'Construction de la commode','flower-pot':'Construction du pot de fleurs', horseshoes: 'Construction du piquet de fers à cheval', campfire: 'Construction du feu de camp' };
 const stateLabels: Record<Pawn['state'], string> = { resting:'Au lit pour soins', downed:'À terre', dead:'Décédé', idle: 'Disponible', moving: 'En chemin', working: 'Au travail', sleeping: 'Se repose', hungry: 'Cherche à manger', eating: 'Mange', recreating: 'Se divertit' };
 const rotatableTools=new Set<Tool>(['grave','wind-turbine','battery','fueled-stove','electric-stove','butcher-table','install','bed','table','table-square','table-long','dining-chair','armchair','end-table','dresser','campfire','stonecutter','butcher-spot','crafting-spot','research-bench','tailor-bench','electric-tailor-bench','cooler']);
-const resourceLabels = { potato:'Plant de pommes de terre',corn:'Plant de maïs', tree: 'Arbre', berries: 'Buisson de baies', rock: 'Pierre au sol', rice: 'Plant de riz', cotton: 'Cotonnier' };
+const resourceLabels = { 'wild-plant':'Plante sauvage', potato:'Plant de pommes de terre',corn:'Plant de maïs', tree: 'Arbre', berries: 'Buisson de baies', rock: 'Pierre au sol', rice: 'Plant de riz', cotton: 'Cotonnier' };
 const params = new URLSearchParams(location.search);
 const diagnosticStart = params.has('scenario');
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = gameLayout();
@@ -435,7 +436,8 @@ function renderState() {
   const carried = world.piles.filter(pile => pile.owner.type === 'pawn'&&colonyPile(world,pile)).reduce((sum, pile) => sum + pile.quantity, 0);
   const delivered = world.piles.filter(pile => pile.owner.type === 'job').reduce((sum, pile) => sum + pile.quantity, 0);
   el('material-status').textContent = `${carried} portées · ${delivered} au chantier`;
-  el('scenario-current').textContent=(world.scenario?SCENARIOS[world.scenario.id].label:'Partie historique · départ non renseigné')+(world.site?` · Forêt tempérée · ${HILLINESS_LABELS[world.site.hilliness]}`:'');
+  el('scenario-current').textContent=(world.scenario?SCENARIOS[world.scenario.id].label:'Partie historique · départ non renseigné')+(world.site?` · ${BIOME_LABELS[world.site.biome]} · ${HILLINESS_LABELS[world.site.hilliness]}`:'');
+  el('biome-current').textContent=world.site?BIOME_LABELS[world.site.biome]:'Site historique';
   el('population').textContent = String(world.pawns.filter(p=>isColonist(p)&&p.state!=='dead').length); el('map-size').textContent = `${world.width} × ${world.height}`;
   el('outdoor-temperature').textContent = `Extérieur : ${outdoorTemperature(world).toFixed(1)} °C`;
   el('day').textContent = climateDateLabel(world);
@@ -505,7 +507,7 @@ function renderState() {
       updateDoorControls(el('inspector'),world,selectedCell);
       roomInspection.update(el('inspector'), world, selectedCell);
       const packed=packedAt(world,selectedCell);
-      el('cell-title').textContent = packed ? `Meuble emballé · ${buildingLabels[packed.building.kind]}` : structure ? buildingLabels[structure.kind] : resource ? resourceLabels[resource.kind] : world.tiles[z*world.width+x].floor?FLOOR_DEFINITIONS[world.tiles[z*world.width+x].floor!].label:terrainLabels[world.tiles[z * world.width + x].terrain];
+      el('cell-title').textContent = packed ? `Meuble emballé · ${buildingLabels[packed.building.kind]}` : structure ? buildingLabels[structure.kind] : resource ? (floraDefinition(resource)?.label??resourceLabels[resource.kind]) : world.tiles[z*world.width+x].floor?FLOOR_DEFINITIONS[world.tiles[z*world.width+x].floor!].label:terrainLabels[world.tiles[z * world.width + x].terrain];
       el('cell-description').textContent = `Case ${x}, ${z}${resource ? isPlant(resource) ? plantInspection(world,resource) : ` · ${resource.amount} unités à récolter` : ''}${structure ? ` · ${structureFootprintLabel(structure)} cases` : ''}`;
       if(growingZoneAt(world,z*world.width+x))el('cell-description').textContent+=growingTemperatureInspection(world,selectedCell);
       if(structure&&isBarrier(structure))el('cell-description').textContent+=` · Résistance : ${barrierHp(structure)}/${barrierMaxHp(structure)} PV · ${world.home?.includes(z*world.width+x)?'Zone de foyer':'Hors zone de foyer (réparation désactivée)'}`;

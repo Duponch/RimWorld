@@ -6,7 +6,8 @@ import { reconcileAnimalHealth } from './wildlife-health.ts';
 import { interruptWork } from './interrupted-cargo.ts';
 import { addFilth } from './filth.ts';
 import { canStandAt } from './furniture-travel.ts';
-import { HARE,type WildAnimal } from './wildlife-state.ts';
+import type { WildAnimal } from './wildlife-state.ts';
+import { animalSpecies } from './animal-species.ts';
 import type { MaterialPile,Pawn,World } from './types.ts';
 
 /** Selected difficulty applies at ingestion, including animals. The historical
@@ -15,10 +16,10 @@ export function ingestFoodRisk(w:World,p:Pawn|WildAnimal,food:Pick<MaterialPile,
   if(w.schemaVersion<89)return;
   const cause=ingestionFoodPoison(food,human,w.gameProfile?.difficulty==='adventure-story'?.75:1,()=>healthRandom(w));
   if(!cause)return;
-  p.health??={...createMedicalRecord(w.tick),...(!human?{body:'hare' as const}:{})};
+  p.health??={...createMedicalRecord(w.tick),...(!human?{body:(p as WildAnimal).species}:{})};
   p.health.foodPoisoning=exposeFoodPoisoning(p.health.foodPoisoning,cause,food.item,w.tick);
   if(human)reconcilePawnHealth(w,p as Pawn);else reconcileAnimalHealth(w,p as WildAnimal);
-  w.events.push({tick:w.tick,type:'need',message:`${human?(p as Pawn).name:'Lièvre '+p.id} souffre d’une intoxication alimentaire.`});
+  w.events.push({tick:w.tick,type:'need',message:`${human?(p as Pawn).name:animalSpecies((p as WildAnimal).species).label+' '+p.id} souffre d’une intoxication alimentaire.`});
   if(w.events.length>80)w.events.splice(0,w.events.length-80);
 }
 /** Captured movement finishes before a vomiting episode interrupts the job.
@@ -37,7 +38,7 @@ export function processPawnVomiting(w:World,p:Pawn):boolean {
 export function processAnimalVomiting(w:World,a:WildAnimal):boolean {
   const state=a.health?.foodPoisoning;if(!state||a.state==='dead')return false;
   const result=processFoodPoisoningVomit(state,w.tick,a.id%60,{
-    awake:!['sleeping','downed'].includes(a.state)&&!a.stun,position:a,foodLevel:a.food,foodMax:HARE.nutrition,
+    awake:!['sleeping','downed'].includes(a.state)&&!a.stun,position:a,foodLevel:a.food,foodMax:animalSpecies(a.species).nutrition,
     random:()=>healthRandom(w),canStand:c=>canStandAt(w,c),deposit:c=>addFilth(w,c,'vomit'),
     start:()=>{if(a.motion&&a.motion.end>w.tick)return false;a.path=[];delete a.meal;delete a.strike;delete a.retaliation;a.state='idle';return true;},
   });

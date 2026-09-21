@@ -1,6 +1,7 @@
 import type { Resource,World } from './types.ts';
 import type { ThermalLayout } from './thermal-topology.ts';
 import { isPlant,PLANT_DEFINITIONS } from './plants.ts';
+import { FLORA_DEFINITIONS } from './biome-flora.ts';
 import { annualNaturalLight } from './environment.ts';
 import { isRoofed } from './roof-rules.ts';
 import { outdoorTemperature } from './temperature.ts';
@@ -36,7 +37,8 @@ export const plantLeafless=(world:Pick<World,'tick'>,plant:Resource):boolean=>
 export function applyPlantFrost(world:World,plant:Resource,usesOutside:boolean,temperature:number):boolean {
   const life=plant.plantLife;if(!life||!isPlant(plant))return false;
   if(usesOutside&&temperature<plantFrostThreshold(plant.id)) {
-    if(plant.kind!=='berries')return damageResource(world,plant,100000,'frost');
+    if(!plant.species&&plant.kind!=='berries')return damageResource(world,plant,100000,'frost');
+    if(plant.species&&!FLORA_DEFINITIONS[plant.species].coldLeafless)return false;
     life.leaflessAt=world.tick;
   } else if(life.leaflessAt!==undefined&&world.tick-life.leaflessAt>=6000)delete life.leaflessAt;
   return false;
@@ -67,7 +69,8 @@ export function advancePlantLife(world:World,layout:ThermalLayout):void {
     if(applyPlantFrost(world,plant,outdoors,outside))continue;
     const canSeeSun=!isRoofed(world,cell)&&Math.max(0,(light-.51)/.49)>.001;
     life.darkTicks=canSeeSun?0:life.darkTicks+elapsed;
-    const aged=life.age>PLANT_DEFINITIONS[plant.kind].growDays*8*6000;
+    const definition=plant.species?FLORA_DEFINITIONS[plant.species]:PLANT_DEFINITIONS[plant.kind as keyof typeof PLANT_DEFINITIONS];
+    const aged=life.age>definition.growDays*(plant.species?FLORA_DEFINITIONS[plant.species].lifespanMultiplier:8)*6000;
     if(aged||life.darkTicks>45000)damageResource(world,plant,10,aged?'age':'darkness');
   }
 }

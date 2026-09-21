@@ -112,7 +112,7 @@ import { cookingCellReserved } from './cooking-bills.ts';
 import { burnFuel, refuelable, newBuildingFuel, isFueledBuilding } from './fuel.ts';
 import { processHaul } from './hauling.ts';
 import { scheduleGrowing, cancelGrowingJobs, growingJobValid, finishSowing, jobDuration, growingZoneAt } from './farming.ts';
-import { isPlant, harvestable } from './plants.ts';
+import { isPlant, harvestable,choppable } from './plants.ts';
 import { search, searchCandidates, destinationValid, planWork, workType, type SearchBudget, type NavigationGrid } from './work-planner.ts';
 import { releaseAssignments, planCommandDrops, commitDrop, releaseWork, type DropPlan } from './work-release.ts';
 import { validDiningPlace } from './dining.ts';
@@ -234,7 +234,7 @@ export function canDesignate(world: World, command: DesignateCommand): CommandRe
   if((command.kind==='crafting-spot'||command.kind==='butcher-spot')&&world.resources.some(r=>sameCell(r,command)))return refusal('occupied','Dégager la plante avant de placer cet emplacement.');
   const resource = world.resources.find(candidate => sameCell(candidate, command));
   if (command.kind === 'chop' || command.kind === 'harvest' || command.kind === 'cut') {
-    return resource && (command.kind === 'chop' ? resource.kind === 'tree' : isPlant(resource)) && (command.kind !== 'harvest' || harvestable(world, resource)) ? { ok: true } : refusal('incompatible-resource', 'Ressource incompatible.');
+    return resource && (command.kind === 'chop' ? choppable(world,resource) : isPlant(resource)) && (command.kind !== 'harvest' || harvestable(world, resource)) ? { ok: true } : refusal('incompatible-resource', 'Ressource incompatible.');
   }
   for (const cell of cells) {
     if (['water', 'rock'].includes(world.tiles[cellIndex(world, cell.x, cell.z)]!.terrain)

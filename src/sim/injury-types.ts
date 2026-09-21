@@ -18,7 +18,7 @@ export interface MissingPart {part:BodyPartId;bornAt:number;tended?:true}
 export interface MedicalRecord {
   foodPoisoning?:import('./food-poisoning.ts').FoodPoisoningState;
   /** Absent is the historical human profile. Animal ownership is validated. */
-  body?:'hare';
+  body?:import('./animal-species.ts').AnimalSpeciesId;
   tick:number; nextInjuryId:number;
   injuries:Injury[]; missing:MissingPart[];
   /** BLOOD_UNIT = all blood lost; integral, not a percent. */

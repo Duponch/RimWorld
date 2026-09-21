@@ -9,13 +9,10 @@ export function validatePreservation(world: World, version: number): string[] {
     if (world.spoiled !== undefined || world.piles.some(p => p.rot !== undefined)) errors.push('Legacy save contains food preservation fields.');
     return errors;
   }
-  if (!record(world.spoiled) || Object.keys(world.spoiled).length !== (3+(world.spoiled['herbal-medicine']===undefined?0:1)+(world.spoiled['hare-meat']===undefined?0:1)+(world.spoiled.potato===undefined?0:1)+(world.spoiled.corn===undefined?0:1))
-    || world.spoiled['herbal-medicine']!==undefined&&(version<51||!Number.isSafeInteger(world.spoiled['herbal-medicine'])||world.spoiled['herbal-medicine']<0)
-    || world.spoiled['hare-meat']!==undefined&&(version<79||!Number.isSafeInteger(world.spoiled['hare-meat'])||world.spoiled['hare-meat']<0)
-    || (['potato','corn'] as const).some(key=>world.spoiled[key]!==undefined&&(version<84||!Number.isSafeInteger(world.spoiled[key])||world.spoiled[key]!<0))
-    || (['berries','rice','simple-meal'] as const).some(key => !Number.isSafeInteger(world.spoiled[key]) || world.spoiled[key] < 0)) errors.push('Invalid cumulative food spoilage.');
+  const permitted=['berries','rice','simple-meal',...(version>=51?['herbal-medicine']:[]),...(version>=79?['hare-meat']:[]),...(version>=84?['potato','corn']:[]),...(version>=91?['agave-fruit','snow-hare-meat','deer-meat','muffalo-meat','gazelle-meat','dromedary-meat']:[])];
+  if(!record(world.spoiled)||!['berries','rice','simple-meal'].every(k=>Object.hasOwn(world.spoiled,k))||Object.entries(world.spoiled).some(([k,n])=>!permitted.includes(k)||!Number.isSafeInteger(n)||n!<0))errors.push('Invalid cumulative food spoilage.');
   for (const pile of world.piles) {
-    if(pile.item==='hare-corpse'||pile.item==='human-corpse')continue; // Full persistent-corpse contract validates its age separately.
+    if(pile.kind==='corpse')continue; // Full persistent-corpse contract validates its age separately.
     if (!isPerishable(pile.item)) { if (pile.rot !== undefined) errors.push('Unexpected food age.'); continue; }
     const rot = pile.rot;
     if (!record(rot) || Object.keys(rot).length !== (rot.rate===undefined?2:3) || rot.rate!==undefined&&(version<38||typeof rot.rate!=='number'||!Number.isFinite(rot.rate)||rot.rate<0||rot.rate>=1) || !Number.isSafeInteger(rot.atTick) || rot.atTick < 0 || rot.atTick > world.tick

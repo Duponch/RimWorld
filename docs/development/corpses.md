@@ -1,5 +1,7 @@
 # Dépouilles animales — V79
 
+**Extension V91 :** les dépouilles de cerf, mufalo, gazelle et dromadaire sont obtenables et conservent leur corps, viande et cuir propres; celle du lièvre des neiges est préparée pour la toundra non sélectionnable. Les sections centrées sur le lièvre gardent le contrat historique V79. Voir [faune diversifiée](fauna-diversity.md).
+
 Le lièvre mort devient un objet entier de type `corpse`, `hare-corpse`, quantité un. La pile reprend son identifiant ; `corpse` garde espèce, sexe et dossier anatomique, dont l'instant et la cause du décès. Il n'existe jamais simultanément comme acteur et comme pile. Une dépouille ne constitue pas de la viande ingérable : la boucherie produit les aliments séparément.
 
 ## Chute et logistique

@@ -1,5 +1,7 @@
 # Faune autonome — contrat V76
 
+**Extension V91 :** cinq herbivores deviennent obtenables selon trois biomes, avec populations, besoins, corps et produits propres. Le lièvre des neiges reste préparatoire car son habitat local, la toundra, n’est pas sélectionnable. Voir le [contrat courant de diversité](fauna-diversity.md). Les limites « une seule espèce » ci-dessous décrivent le périmètre historique V76–V79.
+
 **Extension V79 :** [chasse civile](hunting.md), [corps transportables](corpses.md), [boucherie/viande/cuir](butchery.md) complètent ce contrat. Les mentions de leur absence ci-dessous décrivent le périmètre historique V76–V78 ; élevage, autres espèces et corps humains restent absents.
 
 **V77 complète ce contrat :** anatomie, impacts de projectiles, saignement/guérison, fuite sonore et après blessure, incapacité/mort et inspection. Le périmètre V76 ci-dessous décrit le socle ; ses anciennes exclusions médicales sont remplacées par le [contrat courant](animal-combat.md). V78 ajoute la [mêlée interespèces](animal-melee.md). V79 relie la [chasse civile](hunting.md) à la filière des dépouilles et à la boucherie.

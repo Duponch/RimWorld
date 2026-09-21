@@ -1,3 +1,4 @@
+import { isAnimalCorpseItem } from './biome-items.ts';
 import { foodStationUsable, usesCookingFuel } from './food-workstations.ts';
 import { corpseFresh } from './corpses.ts';
 import { planUnfinished } from './tailoring-plan.ts';
@@ -51,7 +52,7 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
       const resumed=planUnfinished(world,pawn,station,bill,reachable,budget);if(resumed.plan)return resumed.plan;if(resumed.handled)continue;
       const ingredients:CookingIngredient[]=[],planned=new Map<string,{item:ProductionIngredient;quantity:number}>();
       let missing:number=PRODUCTION_RECIPES[bill.recipe].units;
-      const sources=world.piles.filter(p=>admittedIngredient(bill,p.item)&&(p.item!=='hare-corpse'||corpseFresh(p,world.tick))&&p.owner.type==='ground'&&distance(p.owner,station)<=bill.radius**2)
+      const sources=world.piles.filter(p=>admittedIngredient(bill,p.item)&&(!isAnimalCorpseItem(p.item)||corpseFresh(p,world.tick))&&p.owner.type==='ground'&&distance(p.owner,station)<=bill.radius**2)
         .sort((a,b)=>distance(a.owner as Cell,station)-distance(b.owner as Cell,station)||a.id-b.id);
       // No source means no pair was visited and no staging decision was made.
       // Avoid six full resource/footprint scans per empty bill, especially after

@@ -1,5 +1,6 @@
 import { validateMedicalRecord } from './injury-validation.ts';
 import type { World } from './types.ts';
+import { animalSpecies,isAnimalSpecies } from './animal-species.ts';
 
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const int=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;
@@ -13,10 +14,10 @@ export function validCorpseRot(v:unknown,tick:number,death:number):boolean {
 export function validCorpseShape(p:Record<string,unknown>,version:number):boolean {
   if(p.kind!=='corpse')return p.corpse===undefined;
   const c=p.corpse;
-  return version>=79&&p.item==='hare-corpse'&&p.quantity===1&&object(p.owner)&&['ground','pawn'].includes(String(p.owner.type))&&object(c)
-    &&Object.keys(c).every(k=>['animalId','species','sex','health','facing'].includes(k))&&c.animalId===p.id&&c.species==='hare'&&['female','male'].includes(String(c.sex))
+  return version>=79&&object(c)&&isAnimalSpecies(c.species)&&(version>=91||c.species==='hare')&&p.item===animalSpecies(c.species).corpseItem&&p.quantity===1&&object(p.owner)&&['ground','pawn'].includes(String(p.owner.type))
+    &&Object.keys(c).every(k=>['animalId','species','sex','health','facing'].includes(k))&&c.animalId===p.id&&['female','male'].includes(String(c.sex))
     &&(c.facing===undefined||typeof c.facing==='number'&&Number.isFinite(c.facing)&&Math.abs(c.facing)<=Math.PI)
-    &&validateMedicalRecord(c.health,true,true,false,false,true,version>=79,version>=81,version>=84,version>=87,version>=88,version>=89)===null&&object(c.health)&&object(c.health.death);
+    &&validateMedicalRecord(c.health,true,true,false,false,true,version>=79,version>=81,version>=84,version>=87,version>=88,version>=89,version)===null&&object(c.health)&&object(c.health.death)&&c.health.body===c.species;
 }
 export function validateCorpses(w:World,version:number):string[] {
   const errors:string[]=[];

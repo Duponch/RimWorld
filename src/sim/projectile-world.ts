@@ -1,4 +1,4 @@
-import { FRAME_SHOT_FILL,RESOURCE_SHOT_FILL,SHOT_LAYER,STRUCTURE_SHOT_FILL,itemShotFill,structureShotLayer } from './combat-content.ts';
+import { FRAME_SHOT_FILL,resourceShotFill,SHOT_LAYER,STRUCTURE_SHOT_FILL,itemShotFill,structureShotLayer } from './combat-content.ts';
 import { footprintCells } from './definitions.ts';
 import type { Cell,StructureKind,World } from './types.ts';
 import type { ProjectileScene,ProjectileTarget } from './projectile-rules.ts';
@@ -39,7 +39,7 @@ export function captureWorldProjectileTargets(world:World):WorldProjectileTarget
   for(const s of world.structures)append(1,s.id,s.x,s.z,STRUCTURE_SHOT_FILL[s.kind],structureShotLayer(s.kind),s.kind==='door'&&s.door?.open?1:0,footprintCells(s));
   for(const j of world.jobs)if(j.construction==='frame')append(2,j.id,j.x,j.z,FRAME_SHOT_FILL,structureShotLayer((j.furniture?.kind??j.kind) as StructureKind),0,footprintCells(j));
   // Decorative pebbles are not actual chunks or destructible Core objects yet.
-  for(const r of world.resources)if(r.kind!=='rock')append(3,r.id,r.x,r.z,RESOURCE_SHOT_FILL[r.kind],r.kind==='tree'?SHOT_LAYER.building:SHOT_LAYER.lowPlant);
+  for(const r of world.resources)if(r.kind!=='rock')append(3,r.id,r.x,r.z,resourceShotFill(r),r.kind==='tree'?SHOT_LAYER.building:SHOT_LAYER.lowPlant);
   for(const p of world.piles)if(p.owner.type==='ground')append(4,p.id,p.owner.x,p.owner.z,itemShotFill(p.item),SHOT_LAYER.item);
   // Preserve the current package's zero cover profile; do not give its inner
   // furniture footprint/fill to the map. Object damage is still unimplemented.

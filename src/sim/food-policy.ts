@@ -1,3 +1,4 @@
+import { V91_ITEM_IDS } from './biome-items.ts';
 import { isPlayerPatient } from './affiliation.ts';
 import { ITEM_DEFINITIONS, type ItemId } from './items.ts';
 import type { CommandResult, Pawn, World } from './types.ts';
@@ -12,8 +13,8 @@ export type FoodPolicyCommand =
   | {type: 'food-policy-delete'; policyId: number}
   | {type: 'food-policy-assign'; pawnId: number; policyId: number};
 
-export function initialFoodPolicies(includeMeat=true,includeFoodCrops=true): FoodPolicy[] {
-  const items=FOOD_ITEMS.filter(id=>(includeMeat||id!=='hare-meat')&&(includeFoodCrops||id!=='potato'&&id!=='corn'));
+export function initialFoodPolicies(includeMeat=true,includeFoodCrops=true,includeBiomes=true): FoodPolicy[] {
+  const items=FOOD_ITEMS.filter(id=>(includeBiomes||!V91_ITEM_IDS.includes(id))&&(includeMeat||id!=='hare-meat')&&(includeFoodCrops||id!=='potato'&&id!=='corn'));
   return [
     {id: 1, name: 'Sans restriction', allowed: [...items]},
     {id: 2, name: 'Repas uniquement', allowed: ['simple-meal', 'survival-meal', 'legacy-portion']},

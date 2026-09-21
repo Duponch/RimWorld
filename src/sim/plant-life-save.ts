@@ -13,5 +13,5 @@ export function validPlantLife(plant:Partial<Resource>,version:number,world:Pick
     !integer(life.nextCheck,world.tick+1,world.tick+PLANT_LIFE_INTERVAL)||life.nextCheck%PLANT_LIFE_INTERVAL!==(plant.id!+1)%PLANT_LIFE_INTERVAL)return false;
   if(life.age!==Math.max(0,life.nextCheck-PLANT_LIFE_INTERVAL-life.since))return false;
   if(life.bornAt!==undefined&&life.bornAt!==life.since)return false;
-  return life.leaflessAt===undefined||plant.kind==='berries'&&integer(life.leaflessAt,life.since,world.tick)&&life.leaflessAt%PLANT_LIFE_INTERVAL===(plant.id!+1)%PLANT_LIFE_INTERVAL;
+  return life.leaflessAt===undefined||(plant.kind==='berries'||plant.species!==undefined)&&integer(life.leaflessAt,life.since,world.tick)&&life.leaflessAt%PLANT_LIFE_INTERVAL===(plant.id!+1)%PLANT_LIFE_INTERVAL;
 }

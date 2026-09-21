@@ -1,5 +1,7 @@
 # Confection et renouvellement de l'habillement — contrat V90
 
+V91 étend les mêmes tâches de port, usure et remplacement à quinze vêtements en trois nouveaux cuirs. Les matières diffèrent en isolation et gardent les facteurs propres à la famille. [Propriétés vérifiées et différence historique de PV](../research/biome-products-reference-v91.md). Aucun vêtement ni nouvelle politique n’est offert par migration.
+
 Ce contrat étend la [confection](tailoring.md), l'[armure](armor.md), l'[équipement](equipment.md), la [recherche](research.md), les [textiles](textiles.md) et la boucherie avec une boucle physique de renouvellement. Les coefficients, sources et adaptations sont consignés dans la [recherche V90](../research/apparel-renewal-reference-v90.md).
 
 ## Catalogue et acquisition

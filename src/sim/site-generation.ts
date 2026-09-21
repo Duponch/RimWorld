@@ -1,10 +1,11 @@
 import { emptyLandscape } from './generation.ts';
 import { geologicalField } from './geology.ts';
-import type { LocalSite } from './site.ts';
+import { isBiomeSite,type LocalSite } from './site.ts';
 import { generateSiteFields } from './site-noise.ts';
 import { generateSiteOres } from './site-ores.ts';
-import { generateSiteChunks,generateSiteVegetation } from './site-vegetation.ts';
+import { generateBiomeSiteVegetation,generateSiteChunks,generateSiteVegetation } from './site-vegetation.ts';
 import type { World } from './types.ts';
+import { initializeWildFlora } from './wild-flora.ts';
 
 export const SITE_ELEVATION_FACTORS={flat:.8,'small-hills':.9,'large-hills':1} as const;
 
@@ -22,6 +23,7 @@ export function generateSiteWorld(seed:number,width:number,height:number,site:Lo
   });
   generateSiteOres(world,site,stoneAt);
   generateSiteChunks(world,site,fields.elevation);
-  generateSiteVegetation(world);
+  if(isBiomeSite(site)){generateBiomeSiteVegetation(world,site);initializeWildFlora(world,site);}
+  else generateSiteVegetation(world);
   return world;
 }

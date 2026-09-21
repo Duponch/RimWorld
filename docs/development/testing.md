@@ -1,5 +1,9 @@
 # Stratégie de validation
 
+**Révision acceptée le 21 septembre, après V90.** Plusieurs fronts compatibles forment une livraison. Les contrôles courts des contrats modifiés restent continus ; sauvegarde/continuation, interface et performance sont regroupées à l'intégration. Les campagnes naturelles longues sont périodiques ou motivées par un risque temporel précis : elles ne sont plus un prérequis systématique de chaque ajout de contenu. Des situations préparées explicites exercent les vrais travaux et transitions, sans accélérer les règles du produit. Les états préparés et les parties naturelles sont identifiés séparément. Une ancienne colonie encombrée ou épuisée ne doit pas imposer la construction d'un nouveau joueur automatique pour prouver une recette. Conserver les assertions de conservation et diagnostiquer les échecs ; mesurer séparément exécution des tests, correction du jeu et réparation des pilotes. Cette révision prévaut sur les obligations de campagnes longues systématiques des paragraphes historiques.
+
+V91 regroupe trois milieux, flore/faune, produits et confection. Les situations préparées suivent de vrais travaux, avec reprise neutre de la colonie V90, parcours des trois menus et mesures successives. Les contrôles finaux ciblent les contrats touchés par les optimisations, sans rejouer une campagne naturelle annuelle. [Preuves V91](../history/validation-biomes-v91.md).
+
 V90 regroupe habitat, confort/beauté, confection, usure et politiques. La campagne
 globale antérieure (151 fichiers, 636 tests réussis, deux ignorés) est conservée ;
 les corrections finales font l'objet d'un lot ciblé de 49 contrôles et des
@@ -52,6 +56,8 @@ V79 : la campagne regroupe `hunting.test`, `corpses.test` et `butchery.test` ave
 V78 : `animal-melee.test.ts` regroupe contact/riposte sur 24 graines, reprise, anatomie, portée/vue/délai, expiration pendant arête et mutations de projection médicale. Le pilote UI commun traite clic **Faune → Attaquer au contact** et son acquittement. `ANIMAL_MELEE=1 WILDLIFE=1 VALIDATION_VERSION=v78` étend les bancs mixtes existants : un mineur sur six combat, les autres conservent leurs ateliers. Mesures et longs pilotes successifs ; [preuves et limites](../history/validation-animal-melee-v78.md).
 
 ## Procédure courante de livraison
+
+
 
 Adoptée après V76 pour réduire les reprises et les relances, sans réduire les contrats de qualité. L'unité de livraison est une **boucle jouable**, composée de plusieurs sous-étapes internes. Les contrôles suivent les risques et les dépendances ; un lot plus gros ne signifie pas un unique test à la toute fin.
 

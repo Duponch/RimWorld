@@ -9,6 +9,26 @@ import { PresentationQueue } from '../src/render/PresentationQueue';
 import { PawnLayer } from '../src/render/PawnLayer';
 import { miningCamp } from './scenarios/mining';
 
+test('packed growth deltas preserve exact doubles, absent fields, order and atomic rejection',()=>{
+  const w=createWorld(911,16,16);w.tick=2000;w.resources=[
+    {id:w.nextId++,kind:'berries',x:2,z:2,amount:10,growth:.3,growthTick:1900,growthThermalFactor:.9},
+    {id:w.nextId++,kind:'berries',x:3,z:2,amount:10,growth:.4,growthTick:1900},
+  ];
+  const encoder=new SnapshotEncoder(),decoder=new SnapshotDecoder(),initial=decoder.adopt(structuredClone(encoder.encode(w,0,6)));
+  expect(initial.status).toBe('applied');if(initial.status!=='applied')throw Error('checkpoint');const old=structuredClone(initial.world);
+  w.resources[0]!.growth=.3123456789012345;w.resources[0]!.growthTick=1999;delete w.resources[0]!.growthThermalFactor;
+  w.resources[1]!.growthThermalFactor=.7123456789012345;w.resources.reverse();
+  const delta=structuredClone(encoder.encode(w,0,6));expect(delta.kind).toBe('delta');if(delta.kind!=='delta')throw Error('delta');
+  expect(delta.resources!.upserted).toEqual([]);expect(delta.resources!.growth).toBeInstanceOf(Float64Array);expect(delta.resources!.growth).toHaveLength(8);
+  for(const [index,value] of [[0,-1],[1,Infinity],[2,2001],[3,-.1],[4,delta.resources!.growth![0]!]] as const){
+    const invalid=structuredClone(delta);invalid.resources!.growth![index]=value;expect(decoder.adopt(invalid).status).toBe('resync');
+  }
+  const malformed=structuredClone(delta);malformed.resources!.growth=new Float64Array(3);expect(decoder.adopt(malformed).status).toBe('resync');
+  const result=decoder.adopt(delta);expect(result.status).toBe('applied');if(result.status==='applied')expect(result.world).toEqual(w);
+  expect(initial.world).toEqual(old);
+  const unchanged=encoder.encode(w,0,6);if(unchanged.kind==='delta')expect(unchanged.resources).toBeUndefined();
+});
+
 test('floor placement, burning and removal cross worker deltas without mutating older frames',()=>{
   const source=createWorld(42,32,32),encoder=new SnapshotEncoder(),decoder=new SnapshotDecoder(),index=100;
   source.tiles[index]={terrain:'soil'};

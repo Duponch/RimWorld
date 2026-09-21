@@ -1,13 +1,15 @@
+import { V91_ITEM_IDS, isAnimalMeat } from './biome-items.ts';
+import { ITEM_DEFINITIONS } from './items.ts';
 import { isFoodWorkstation } from './food-workstations.ts';
 import { groundOccupancyAllows } from './occupancy.ts';
-import { PRODUCTION_RECIPES, blockFor, type ProductionRecipe, type StoneIngredient } from './production-recipes.ts';
+import { PRODUCTION_RECIPES, isRecipeProduct, type ProductionRecipe } from './production-recipes.ts';
 import { canStandAt } from './furniture-travel.ts';
 import { footprintCells, footprintContains } from './definitions.ts';
 import { isCookingOrder } from './order-types.ts';
 import type { CookingBill, BillSettings } from './cooking-types.ts';
 import type { Cell, Structure, World } from './types.ts';
 
-export const COOK_TICKS=60; // 300 reference work / 10 local ticks × campfire factor 2.
+export const COOK_TICKS=60; // 300 reference work / 10 local ticks Ã— campfire factor 2.
 export const INGREDIENT_UNITS=10; // 0.5 nutrition for the supported raw ingredients.
 export function newCookingBill(id:number,recipe:ProductionRecipe='simple-meal'):CookingBill {
   return {id,recipe,mode:'times',target:1,suspended:false,filters:Object.fromEntries(PRODUCTION_RECIPES[recipe].inputs.map(i=>[i,true])),radius:999,destination:'stockpile'};
@@ -16,14 +18,18 @@ export function validBillSettings(value:unknown,recipe:ProductionRecipe='simple-
   if(!value||typeof value!=='object')return false;
   const v=value as BillSettings;
   return ['times','until','forever'].includes(v.mode)&&Number.isSafeInteger(v.target)&&v.target>=0&&v.target<=9999
-    &&typeof v.suspended==='boolean'&&!!v.filters&&PRODUCTION_RECIPES[recipe].inputs.every(i=>typeof v.filters[i]==='boolean'||['hare-meat','potato','corn'].includes(i)&&v.filters[i]===undefined)
+    &&typeof v.suspended==='boolean'&&!!v.filters&&PRODUCTION_RECIPES[recipe].inputs.every(i=>typeof v.filters[i]==='boolean'||['hare-meat','potato','corn',...V91_ITEM_IDS].includes(i)&&v.filters[i]===undefined)
     &&Number.isFinite(v.radius)&&v.radius>=0&&v.radius<=999&&['stockpile','drop'].includes(v.destination);
 }
 /** Reference resource counter includes stored items and current task cargo.
  * Loose meals outside storage do not satisfy a target-count bill. */
 export function countedMeals(world:World):number {return countedProducts(world);}
+// Lazy initialization also keeps recipe/unfinished-work imports cycle-safe.
+const COUNTED_PRODUCTS=new Map<ProductionRecipe,ReadonlySet<string>>();
 export function countedProducts(world:World,bill?:CookingBill):number {
-  const products=new Set(bill?.recipe==='butcher-creature'?['hare-meat']:bill?.recipe==='shirt'?['cloth-shirt']:bill?.recipe==='tribalwear'?['cloth-tribalwear']:bill?.recipe==='stone-blocks'?PRODUCTION_RECIPES['stone-blocks'].inputs.map(i=>blockFor(i as StoneIngredient)):['simple-meal']);
+  const recipe=bill?.recipe??'simple-meal';
+  let products=COUNTED_PRODUCTS.get(recipe);
+  if(!products){products=new Set(Object.keys(ITEM_DEFINITIONS).filter(item=>recipe==='butcher-creature'?isAnimalMeat(item):isRecipeProduct(recipe,item as keyof typeof ITEM_DEFINITIONS)));COUNTED_PRODUCTS.set(recipe,products);}
   const stored=new Set(world.stockpiles.map(z=>z.z*world.width+z.x));
   return world.piles.reduce((n,p)=>n+(products.has(p.item)&&(p.owner.type==='pawn'&&bill?.recipe!=='butcher-creature'||p.owner.type==='ground'&&stored.has(p.owner.z*world.width+p.owner.x))?p.quantity:0),0);
 }

@@ -1,3 +1,5 @@
+import { BIOME_CARGO } from './biome-cargo';
+import { isAnimalMeat } from '../sim/biome-items';
 import type { ApparelItem } from '../sim/apparel-rules';
 import { firePosition } from '../sim/fire-rules';
 import { attachedFireMesh } from './FireLayer';
@@ -128,7 +130,10 @@ export class PawnLayer {
       const legs=attribute('boneId','float').greaterThanEqual(4).and(attribute('dye','float').equal(0));
       const cloth=new THREE.Color(0xd8c8a2),leather=new THREE.Color(0xad8a61);
       If(legs.and(attribute('aEquipment','vec4').w.equal(1)),()=>tint.assign(vec3(cloth.r,cloth.g,cloth.b)));
-      If(legs.and(attribute('aEquipment','vec4').w.equal(2)),()=>tint.assign(vec3(leather.r,leather.g,leather.b)));return tint;})();
+      If(legs.and(attribute('aEquipment','vec4').w.equal(2)),()=>tint.assign(vec3(leather.r,leather.g,leather.b)));
+      {const color=new THREE.Color(0xa88b63);If(legs.and(attribute('aEquipment','vec4').w.equal(3)),()=>tint.assign(vec3(color.r,color.g,color.b)));}
+      {const color=new THREE.Color(0x839ac5);If(legs.and(attribute('aEquipment','vec4').w.equal(4)),()=>tint.assign(vec3(color.r,color.g,color.b)));}
+      {const color=new THREE.Color(0xc3a375);If(legs.and(attribute('aEquipment','vec4').w.equal(5)),()=>tint.assign(vec3(color.r,color.g,color.b)));}return tint;})();
     const mesh = new THREE.Mesh(geometry, mat);
     // CPU bounds cannot follow the shader positions. Individual culling/LOD is a later measured optimization.
     mesh.frustumCulled = false;
@@ -250,7 +255,7 @@ export class PawnLayer {
       equipment.setXYZW(index,weaponVisual(gears.get(pawn.id)?.item)?.equipment??0,look.silhouette,look.vest?1:0,look.pants);
       const load = carried.get(pawn.id);
       const packed=world.packed?.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
-      cargo.setXY(index, pawn.rescue?.phase==='carry'||load?.humanCorpse?-1:packed?4:load ? load.kind==='silver'?30:load.kind==='corpse'?27:load.item==='light-leather'?28:load.item==='hare-meat'?29:load.kind==='unfinished'?25:load.kind==='textile'?24:load.kind==='apparel'?APPAREL_CARGO[load.item as ApparelItem]:load.kind==='weapon'?(weaponVisual(load.item)?.cargo??0):load.kind==='medicine' ? (load.item==='herbal-medicine'?18:load.item==='medicine'?19:20) : load.kind === 'component' ? 17 : load.kind === 'blocks' ? blockCargoKind(load.item) : load.kind === 'steel' ? 11 : load.kind === 'chunk' ? chunkCargoKind(load.item) : load.kind === 'wood' ? 1 : load.item === 'survival-meal' ? 3 : 2 : 0, packed||load?.kind==='corpse'||load?.kind==='unfinished'||load?.kind==='weapon'||load?.kind==='apparel'?1:load ? Math.min(1, load.quantity / CARRY_CAPACITY) : 0);
+      cargo.setXY(index, pawn.rescue?.phase==='carry'||load?.humanCorpse?-1:packed?4:load ? BIOME_CARGO[load.item]??(load.kind==='silver'?30:load.kind==='corpse'?27:load.item==='light-leather'?28:isAnimalMeat(load.item)?29:load.kind==='unfinished'?25:load.kind==='textile'?24:load.kind==='apparel'?APPAREL_CARGO[load.item as ApparelItem]:load.kind==='weapon'?(weaponVisual(load.item)?.cargo??0):load.kind==='medicine' ? (load.item==='herbal-medicine'?18:load.item==='medicine'?19:20) : load.kind === 'component' ? 17 : load.kind === 'blocks' ? blockCargoKind(load.item) : load.kind === 'steel' ? 11 : load.kind === 'chunk' ? chunkCargoKind(load.item) : load.kind === 'wood' ? 1 : load.item === 'survival-meal' ? 3 : 2) : 0, packed||load?.kind==='corpse'||load?.kind==='unfinished'||load?.kind==='weapon'||load?.kind==='apparel'?1:load ? Math.min(1, load.quantity / CARRY_CAPACITY) : 0);
     });
     for (const id of this.visuals.keys()) if (!present.has(id)){this.visuals.delete(id);this.targetPoses.delete(id);}
     for (const attr of [fromAttribute, toAttribute, motion, tint, cargo, equipment]) attr.needsUpdate = true;

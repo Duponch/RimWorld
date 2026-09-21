@@ -1,4 +1,4 @@
-import { adoptSiteClimate,TEMPERATE_CLIMATE } from './site-climate.ts';
+import { adoptSiteClimate,siteClimateDefinition } from './site-climate.ts';
 import { adoptWeather,advanceWeather,weatherRainRate } from './weather.ts';
 import { adoptWind,advanceWind } from './wind.ts';
 import { advanceTemperature,outdoorTemperature,reconcileTemperature } from './temperature.ts';
@@ -8,6 +8,7 @@ import { advanceFires,fireDanger,igniteLightning } from './fire.ts';
 import { ensureFireState } from './fire-rules.ts';
 import type { ThermalLayout } from './thermal-topology.ts';
 import type { Cell,World } from './types.ts';
+import { advanceWildFlora } from './wild-flora.ts';
 
 /** One explicit adoption, without replaying weather or exposure in old saves. */
 export function adoptEnvironment(world:World):boolean {
@@ -19,7 +20,7 @@ export function adoptEnvironment(world:World):boolean {
 /** Weather events mutate the physical world before actors make decisions.
  * Keep the layout current after a fire removes an enclosing structure. */
 export function advanceSurfaceWeather(world:World,chop:(cell:Cell)=>void):void {
-  if(world.weather)advanceWeather(world,{outsideTemperature:outdoorTemperature(world),rainfall:TEMPERATE_CLIMATE.rainfall,
+  if(world.weather)advanceWeather(world,{outsideTemperature:outdoorTemperature(world),rainfall:siteClimateDefinition(world).rainfall,
     fireDanger:()=>fireDanger(world),lightning:(cell,coreTick)=>{igniteLightning(world,cell,coreTick);}});
   if(world.wind)advanceWind(world,chop);
 }
@@ -30,5 +31,6 @@ export function advanceSurfaceTemperature(world:World,layout:ThermalLayout):Ther
   if(before!==world.structures)layout=reconcileTemperature(world);
   updatePlantTemperatures(world,layout);
   if(world.climate)advancePlantLife(world,layout);
+  advanceWildFlora(world);
   return layout;
 }

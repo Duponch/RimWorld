@@ -43,7 +43,7 @@ export function burnPawn(world:World,pawn:Pawn,amount:number):boolean {
 export function burnAnimal(world:World,animal:WildAnimal,amount:number):void {
   if(animal.state==='dead'||!Number.isSafeInteger(amount)||amount<1)return;
   advanceAnimalHealth(world,animal);if(animal.health?.death)return;
-  const state=ensureFireState(world),random=()=>fireRandom(state),record=structuredClone(animal.health??{...createMedicalRecord(world.tick),body:'hare' as const});
+  const state=ensureFireState(world),random=()=>fireRandom(state),record=structuredClone(animal.health??{...createMedicalRecord(world.tick),body:animal.species});
   localizedBurn(record,amount,random);
   if(animal.state!=='downed'&&medicalStatus(record)==='downed'&&random()<.5)record.death={tick:world.tick,cause:'downed'};
   animal.health=record;reconcileAnimalHealth(world,animal);

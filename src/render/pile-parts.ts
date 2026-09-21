@@ -1,3 +1,4 @@
+import { isAnimalMeat } from '../sim/biome-items';
 import { blockParts } from './block-presentation';
 import { chunkParts } from './chunk-presentation';
 import { foldedApparel } from './character-apparel';
@@ -28,13 +29,13 @@ export function pileParts(bundles:readonly PileBundle[]):Placement[] {
         ends.push({ x: x + WORLD_SCALE.pileWidth / 2 + 0.003, z: lz, y, sx: 0.012, sy: 0.095, sz: 0.095 });
       }
     } else if(bundle.kind==='corpse'){
-      food.push(...corpseParts(bundle.x,z,bundle.corpseStage??'fresh',bundle.facing??0));
+      food.push(...corpseParts(bundle.x,z,bundle.corpseStage??'fresh',bundle.facing??0,bundle.item.replace('-corpse','')));
     } else if(bundle.kind==='unfinished'){
       food.push({x,z,y:.08,sx:.48,sy:.12,sz:.50,color:0xd8c8a2},{x:x+.15,z:z-.13,y:.17,sx:.12,sy:.08,sz:.12,color:0x5d716e});
     } else if(bundle.kind==='textile'){
       food.push({x:bundle.x,z,y:height/2,sx:.55,sy:height,sz:.4,color:ITEM_DEFINITIONS[bundle.item].color});
       food.push({x:bundle.x,z,y:height+.012,sx:.08,sy:.025,sz:.42,color:0x8a846a});
-    } else if(bundle.item==='hare-meat'){
+    } else if(isAnimalMeat(bundle.item)){
       const slabs=Math.max(1,Math.min(3,Math.ceil(bundle.quantity/25)));
       for(let row=0;row<slabs;row++){
         food.push({x:bundle.x,z,y:.055+row*.075,sx:.48,sy:.075,sz:.36,color:ITEM_DEFINITIONS[bundle.item].color},

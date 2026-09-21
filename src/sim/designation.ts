@@ -1,6 +1,6 @@
 import { isRoofArea, isRoofJob } from './roof-rules.ts';
 import { occupancyOf } from './occupancy.ts';
-import { isPlant, harvestable } from './plants.ts';
+import { isPlant, harvestable,choppable } from './plants.ts';
 import { isCookingOrder } from './order-types.ts';
 import { footprintCells } from './definitions.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
@@ -28,7 +28,7 @@ export function buildAreaIndex(world: World): AreaIndex {
   for (let i = 0; i < flags.length; i++) if (world.tiles[i]!.terrain === 'water' || world.tiles[i]!.terrain === 'rock') flags[i] = BLOCKED | (world.tiles[i]!.terrain==='rock'?ROCK:0);
   for(let i=0;i<flags.length;i++)if(world.tiles[i]!.terrain==='rough-stone'||world.tiles[i]!.floor)flags[i]!|=GROW_BLOCKED;
   for(const pile of world.piles)if(pile.kind==='chunk'&&pile.owner.type==='ground'&&!pile.haulRequested)flags[index(pile.owner)]!|=CHUNK;
-  for (const resource of world.resources) flags[index(resource)]! |= ZONE_BLOCKED | FIXED | (resource.kind === 'tree' ? TREE : isPlant(resource) ? BERRIES | (harvestable(world, resource) ? RIPE : 0) : 0);
+  for (const resource of world.resources) flags[index(resource)]! |= ZONE_BLOCKED | FIXED | (choppable(world,resource)?TREE:0) | (isPlant(resource) ? BERRIES | (harvestable(world, resource) ? RIPE : 0) : 0);
   for (const structure of world.structures) for (const cell of footprintCells(structure)) flags[index(cell)]! |= DECONSTRUCTIBLE | FIXED | (occupancyOf(structure.kind)?.zones?0:ZONE_BLOCKED | GROW_BLOCKED);
   for(const job of world.jobs)if(job.furniture){const source=world.structures.find(s=>s.id===job.furniture!.structureId);if(source)for(const c of footprintCells(source))flags[index(c)]!|=JOB;}
   // Repair is automatic maintenance, not a cancellable designation. Its existing

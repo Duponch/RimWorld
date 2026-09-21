@@ -19,7 +19,7 @@ import { startingPawn } from './starting-pawns.ts';
 import { initializeCampTraits } from './traits.ts';
 import { adoptEnvironment } from './environment-step.ts';
 import type { Cell,World } from './types.ts';
-import { enableWildlife } from './wildlife.ts';
+import { enableBiomeWildlife,enableWildlife } from './wildlife.ts';
 
 /** Available contents only. Missing Crashlanded items are not replaced by
  * additional revolvers, steel, food or a wild animal claimed as a pet. */
@@ -91,7 +91,7 @@ export function createScenarioWorld(seed:number,size:number,id:ScenarioId=DEFAUL
   if(!validMapDimension(size)||size<SCENARIOS[id].minSize)throw new Error('Taille de carte incompatible avec ce scénario.');
   if(siteOptions!==undefined&&id!=='crashlanded')throw new Error('Ce scénario ne permet pas de choisir un site.');
   const natural=id==='survivors'||id==='crashlanded';
-  const site=id==='crashlanded'?resolveSite(seed,siteOptions):undefined;
+  const site=id==='crashlanded'?resolveSite(seed,{hilliness:'small-hills',...siteOptions,biome:siteOptions?.biome??'temperate-forest'}):undefined;
   const world=site?generateSiteWorld(seed,size,size,site):natural?generateWorld(seed,size,size,'temperate-survivors-v1'):generateWorld(seed,size,size);
   if(site)world.site=site;
   const landing=natural?survivalStart(world,id==='crashlanded'):{x:Math.floor(size/2),z:Math.floor(size/2)};
@@ -100,7 +100,7 @@ export function createScenarioWorld(seed:number,size:number,id:ScenarioId=DEFAUL
     initializeCampTraits(world);
     if(id==='crashlanded'){world.gameProfile=crashlandedProfile();world.research!.stonecutting={points:STONECUTTING_RESEARCH_COST,completedAt:0};world.research!.complexFurniture={points:COMPLEX_FURNITURE_RESEARCH_COST,completedAt:0};enableCassandraRaids(world);}
     else {enableArrivals(world);enableRaids(world);enableHeatwaves(world);}
-    if(natural)enableWildlife(world,undefined,'natural');else enableWildlife(world);
+    if(site?.revision===2)enableBiomeWildlife(world,site.biome);else if(natural)enableWildlife(world,undefined,'natural');else enableWildlife(world);
   }
   world.scenario={id,revision:id==='crashlanded'?SCENARIOS.crashlanded.revision:SCENARIO_REVISION,landing};
   if(natural)adoptEnvironment(world);

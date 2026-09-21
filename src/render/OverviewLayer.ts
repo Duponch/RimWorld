@@ -1,3 +1,4 @@
+import { floraSize,floraColor,floraIdentity } from './flora-presentation';
 import { isCrop } from '../sim/plants';
 import { stoneColor } from './stone-palette';
 import * as THREE from 'three/webgpu';
@@ -37,7 +38,7 @@ export class OverviewLayer {
   update(world:World,reset:boolean):void {
     if(reset) {
       clearGroup(this.vegetation);this.slots.clear();this.batches.clear();
-      for(const kind of ['tree','berries','rock'] as const) {
+      for(const kind of ['tree','berries','wild-plant','rock'] as const) {
         const count=world.resources.filter(r=>r.kind===kind).length;
         const paint=(g:THREE.BufferGeometry,color:number)=>{const c=new THREE.Color(color),data=new Float32Array(g.getAttribute('position').count*3);for(let i=0;i<data.length;i+=3)data.set([c.r,c.g,c.b],i);g.setAttribute('color',new THREE.BufferAttribute(data,3));return g;};
         const trunk=kind==='tree'?paint(new THREE.CylinderGeometry(.1,.16,.5,4).translate(0,-.25,0),0x70573e):null;
@@ -57,18 +58,18 @@ export class OverviewLayer {
     // Unknown additions need resized resident batches. Ordinary deletion changes one matrix.
     if(!reset && world.resources.some(r=>!isCrop(r) && (!this.slots.has(r.id)||this.slots.get(r.id)!.kind!==r.kind))) {this.update(world,true);return;}
     let boundsChanged=reset; const dirty=new Set<ResourceKind>();
-    const counts={tree:0,berries:0,rock:0,rice:0,potato:0,corn:0,cotton:0},alive=new Set<number>();
+    const counts={'wild-plant':0,tree:0,berries:0,rock:0,rice:0,potato:0,corn:0,cotton:0},alive=new Set<number>();
     for(const r of world.resources) {
       if(isCrop(r))continue;
-      alive.add(r.id);const signature=`${r.kind}:${r.x}:${r.z}:${r.stone ?? ""}`,previous=this.slots.get(r.id);
+      alive.add(r.id);const signature=floraIdentity(world,r),previous=this.slots.get(r.id);
       const slot=reset?counts[r.kind]++:previous!.slot;
       if(!reset&&previous?.signature===signature)continue;
       boundsChanged=true;dirty.add(r.kind);
       const mesh=this.batches.get(r.kind)!,n=noise(r.x,r.z,77);
       const height=r.kind==='tree'?WORLD_SCALE.treeMinHeight+n*(WORLD_SCALE.treeMaxHeight-WORLD_SCALE.treeMinHeight):r.kind==='rock'?0.7:0.75;
-      const width=r.kind==='tree'?0.8+n*0.32:0.45;
-      this.transform.position.set(r.x,height/2,r.z);this.transform.rotation.set(0,n*Math.PI*2,0);this.transform.scale.set(width,height,width);this.transform.updateMatrix();
-      mesh.setMatrixAt(slot,this.transform.matrix);this.tint.setHex(r.kind==='tree'?0xffffff:r.kind==='rock'?(r.stone?stoneColor(r.stone):0x92998d):0x697b55);mesh.setColorAt(slot,this.tint);
+      const width=r.kind==='tree'?0.8+n*0.32:0.45,size=floraSize(world,r);
+      this.transform.position.set(r.x,height*size/2,r.z);this.transform.rotation.set(0,n*Math.PI*2,0);this.transform.scale.set(width*size,height*size,width*size);this.transform.updateMatrix();
+      mesh.setMatrixAt(slot,this.transform.matrix);this.tint.setHex(r.species&&r.kind!=='tree'?floraColor(r):r.kind==='tree'?0xffffff:r.kind==='rock'?(r.stone?stoneColor(r.stone):0x92998d):0x697b55);mesh.setColorAt(slot,this.tint);
       this.slots.set(r.id,{kind:r.kind,slot,signature});
     }
     this.transform.scale.set(0,0,0);this.transform.updateMatrix();

@@ -1,4 +1,5 @@
-import { apparelItemFor, type ApparelItem, type ApparelMaterial } from './apparel-rules.ts';
+import { ANIMAL_MEAT_ITEMS, ANIMAL_CORPSE_ITEMS, ANIMAL_LEATHER_ITEMS, isAnimalMeat } from './biome-items.ts';
+import { APPAREL_MATERIALS,isApparelMaterial,apparelItemFor, type ApparelItem, type ApparelMaterial } from './apparel-rules.ts';
 import { isStove, isButcherStation } from './food-workstations.ts';
 import { ITEM_DEFINITIONS, type ItemId } from './items.ts';
 import type { CookingBill, CookingTask } from './cooking-types.ts';
@@ -10,18 +11,18 @@ export const TAILORING_RECIPES = ['tribalwear','shirt','pants','duster','parka']
 export type TailoringRecipe = typeof TAILORING_RECIPES[number];
 export type TailoringMaterial = ApparelMaterial;
 export type UnfinishedApparelItem = 'unfinished-tribalwear'|'unfinished-shirt'|'unfinished-pants'|'unfinished-duster'|'unfinished-parka';
-export type ProductionIngredient = 'rice'|'berries'|'hare-meat'|'potato'|'corn'|'hare-corpse'|TailoringMaterial|UnfinishedApparelItem|StoneIngredient;
+export type ProductionIngredient = 'rice'|'berries'|'agave-fruit'|'potato'|'corn'|typeof ANIMAL_MEAT_ITEMS[number]|typeof ANIMAL_CORPSE_ITEMS[number]|TailoringMaterial|UnfinishedApparelItem|StoneIngredient;
 export type ProductionRecipe = 'simple-meal'|'stone-blocks'|TailoringRecipe|'butcher-creature';
 
 export const PRODUCTION_RECIPES = Object.freeze({
-  'butcher-creature':Object.freeze({label:'Dépecer une créature',station:'butcher-spot',work:'cook',inputs:['hare-corpse'] as readonly ProductionIngredient[],units:1,workTicks:45,outputUnits:50}),
-  shirt:Object.freeze({label:'Chemise',station:'tailor-bench',work:'craft',inputs:['cloth','light-leather'] as readonly ProductionIngredient[],units:45,workTicks:270,outputUnits:1}),
-  tribalwear:Object.freeze({label:'Tenue tribale',station:'crafting-spot',work:'craft',inputs:['cloth','light-leather'] as readonly ProductionIngredient[],units:60,workTicks:180,outputUnits:1}),
-  pants:Object.freeze({label:'Pantalon',station:'tailor-bench',work:'craft',inputs:['cloth','light-leather'] as readonly ProductionIngredient[],units:40,workTicks:160,outputUnits:1}),
-  duster:Object.freeze({label:'Cache-poussière',station:'tailor-bench',work:'craft',inputs:['cloth','light-leather'] as readonly ProductionIngredient[],units:80,workTicks:1000,outputUnits:1}),
-  parka:Object.freeze({label:'Parka',station:'tailor-bench',work:'craft',inputs:['cloth','light-leather'] as readonly ProductionIngredient[],units:80,workTicks:800,outputUnits:1}),
+  'butcher-creature':Object.freeze({label:'Dépecer une créature',station:'butcher-spot',work:'cook',inputs:ANIMAL_CORPSE_ITEMS as readonly ProductionIngredient[],units:1,workTicks:45,outputUnits:50}),
+  shirt:Object.freeze({label:'Chemise',station:'tailor-bench',work:'craft',inputs:APPAREL_MATERIALS as readonly ProductionIngredient[],units:45,workTicks:270,outputUnits:1}),
+  tribalwear:Object.freeze({label:'Tenue tribale',station:'crafting-spot',work:'craft',inputs:APPAREL_MATERIALS as readonly ProductionIngredient[],units:60,workTicks:180,outputUnits:1}),
+  pants:Object.freeze({label:'Pantalon',station:'tailor-bench',work:'craft',inputs:APPAREL_MATERIALS as readonly ProductionIngredient[],units:40,workTicks:160,outputUnits:1}),
+  duster:Object.freeze({label:'Cache-poussière',station:'tailor-bench',work:'craft',inputs:APPAREL_MATERIALS as readonly ProductionIngredient[],units:80,workTicks:1000,outputUnits:1}),
+  parka:Object.freeze({label:'Parka',station:'tailor-bench',work:'craft',inputs:APPAREL_MATERIALS as readonly ProductionIngredient[],units:80,workTicks:800,outputUnits:1}),
   // Neutral recipe work, before station/room/light factors; Core ticks / 10.
-  'simple-meal': Object.freeze({label:'Repas simple',station:'campfire',work:'cook',inputs:['rice','berries','hare-meat','potato','corn'] as readonly ProductionIngredient[],units:10,workTicks:30,outputUnits:1}),
+  'simple-meal': Object.freeze({label:'Repas simple',station:'campfire',work:'cook',inputs:['rice','berries',...ANIMAL_MEAT_ITEMS,'potato','corn','agave-fruit'] as readonly ProductionIngredient[],units:10,workTicks:30,outputUnits:1}),
   'stone-blocks': Object.freeze({label:'Blocs de pierre',station:'stonecutter',work:'craft',inputs:STONE_INPUTS as readonly ProductionIngredient[],units:1,workTicks:160,outputUnits:20}),
 } as const);
 /** Persist integer work units; rounding error is at most 0.00005 neutral ticks
@@ -44,16 +45,16 @@ export function admittedIngredient(bill:CookingBill,item:ItemId):item is Product
 }
 export const blockFor=(chunk:StoneIngredient):ItemId=>chunk.replace('-chunk','-blocks') as ItemId;
 export function tailoringMaterialFromIngredients(ingredients:readonly {item:ProductionIngredient}[]):TailoringMaterial|undefined {
-  const found=new Set(ingredients.map(i=>i.item).filter((item):item is TailoringMaterial=>item==='cloth'||item==='light-leather'));
+  const found=new Set(ingredients.map(i=>i.item).filter((item):item is TailoringMaterial=>isApparelMaterial(item)));
   return found.size===1?[...found][0]:undefined;
 }
 export function recipeProduct(recipe:ProductionRecipe,ingredients:readonly {item:ProductionIngredient}[],material?:TailoringMaterial):ItemId {
   if(isTailoring(recipe)){const resolved=material??tailoringMaterialFromIngredients(ingredients);if(!resolved)throw new RangeError('Tailoring product requires one material');return apparelItemFor(recipe,resolved);}
-  return recipe==='butcher-creature'?'hare-meat':recipe==='simple-meal'?'simple-meal':blockFor(ingredients[0]!.item as StoneIngredient);
+  return recipe==='butcher-creature'?((ingredients[0]?.item??'hare-corpse').replace('-corpse','-meat') as ItemId):recipe==='simple-meal'?'simple-meal':blockFor(ingredients[0]!.item as StoneIngredient);
 }
 export function isRecipeProduct(recipe:ProductionRecipe,item:ItemId):boolean {
-  if(isTailoring(recipe))return item===apparelItemFor(recipe,'cloth')||item===apparelItemFor(recipe,'light-leather');
-  return recipe==='butcher-creature'?(item==='hare-meat'||item==='light-leather'):recipe==='simple-meal'?item==='simple-meal':ITEM_DEFINITIONS[item].kind==='blocks';
+  if(isTailoring(recipe))return APPAREL_MATERIALS.some(material=>item===apparelItemFor(recipe,material));
+  return recipe==='butcher-creature'?(isAnimalMeat(item)||(ANIMAL_LEATHER_ITEMS as readonly string[]).includes(item)):recipe==='simple-meal'?item==='simple-meal':ITEM_DEFINITIONS[item].kind==='blocks';
 }
 export function tailoringProduct(recipe:TailoringRecipe,material:TailoringMaterial):ApparelItem { return apparelItemFor(recipe,material); }
 

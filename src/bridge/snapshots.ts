@@ -2,21 +2,22 @@ import { isFloorKind } from '../sim/flooring.ts';
 import { validPlantLife } from '../sim/plant-life-save.ts';
 import { resourceMaxHp } from '../sim/thing-damage-rules.ts';
 import { validPlantThermalFactor } from '../sim/thermal-plants.ts';
+import { isPlant } from '../sim/plants.ts';
 import { validOre } from '../sim/ore.ts';
 import { validMiningDamage } from '../sim/mining-rules.ts';
 import { validStoneIdentity } from '../sim/geology.ts';
 import type { Resource, Terrain, Tile, World } from '../sim/types.ts';
 
 type DynamicWorld = Omit<World, 'tiles' | 'resources'>;
-interface ResourceChanges { removed: number[]; upserted: Resource[]; order?: number[] }
+interface ResourceChanges { removed: number[]; upserted: Resource[]; order?: number[]; growth?:Float64Array }
 interface SnapshotHeader { motion?:import('./motion-tracks.ts').PawnTrack[]; type: 'snapshot'; epoch: number; revision: number; stepMs: number; speed: number }
 export type SnapshotMessage = SnapshotHeader & (
   | { kind: 'checkpoint'; world: World }
   | { kind: 'delta'; baseRevision: number; world: DynamicWorld; tiles?: Array<[number, Terrain, Tile['stone']?, Tile['miningDamage']?, Tile['ore']?, Tile['floor']?]>; resources?: ResourceChanges }
 );
 
-const equalResource = (a: Resource, b: Resource): boolean => a.id === b.id && a.kind === b.kind
-  && a.x === b.x && a.z === b.z && a.amount === b.amount && a.growth === b.growth && a.growthTick === b.growthTick && a.growthThermalFactor === b.growthThermalFactor && a.stone === b.stone && a.damage === b.damage
+const equalResourceBase = (a: Resource, b: Resource): boolean => a.id === b.id && a.kind === b.kind && a.species === b.species
+  && a.x === b.x && a.z === b.z && a.amount === b.amount && a.stone === b.stone && a.damage === b.damage
   && a.plantLife?.since === b.plantLife?.since && a.plantLife?.bornAt === b.plantLife?.bornAt
   && a.plantLife?.age === b.plantLife?.age && a.plantLife?.darkTicks === b.plantLife?.darkTicks
   && a.plantLife?.leaflessAt === b.plantLife?.leaflessAt && a.plantLife?.nextCheck === b.plantLife?.nextCheck;
@@ -61,6 +62,7 @@ export class SnapshotEncoder {
       }
     }
     const upserted: Resource[] = [];
+    const growthValues:number[]=[],growthUpdates:Resource[]=[];
     let nextOrder: Resource[] | undefined = world.resources.length !== this.orderedResources.length ? [] : undefined;
     for (let index = 0; index < world.resources.length; index++) {
       const resource = world.resources[index]!;
@@ -71,17 +73,24 @@ export class SnapshotEncoder {
       // but still compare values: simulation edits objects in place.
       const previous = sameSlot ? ordered : this.resources.get(resource.id);
       let cached = previous;
-      if (!previous || !equalResource(previous, resource)) {
-        const copy = copyResource(resource); upserted.push(copy);
+      const sameBase=previous!==undefined&&equalResourceBase(previous,resource);
+      if (!sameBase || previous!.growth!==resource.growth || previous!.growthTick!==resource.growthTick || previous!.growthThermalFactor!==resource.growthThermalFactor) {
+        const copy = copyResource(resource);
+        // Exact doubles, not rounded presentation values. A whole forest can
+        // change its thermal growth factor without cloning its full identities.
+        if(sameBase&&resource.growth!==undefined&&resource.growthTick!==undefined){
+          growthValues.push(resource.id,resource.growth,resource.growthTick,resource.growthThermalFactor??NaN);growthUpdates.push(copy);
+        }else upserted.push(copy);
         if (sameSlot) this.orderedResources[index] = copy;
         cached = copy;
       }
       nextOrder?.push(cached!);
     }
     let changes: ResourceChanges | undefined;
-    if (upserted.length || nextOrder) {
+    if (upserted.length || growthUpdates.length || nextOrder) {
       const removed: number[] = [];
       changes = { removed, upserted };
+      if(growthValues.length)changes.growth=new Float64Array(growthValues);
       // Metadata/quantities alone cannot alter membership or ordering. Only
       // structural edits need the ID set and an optional explicit order.
       if (nextOrder) {
@@ -96,6 +105,7 @@ export class SnapshotEncoder {
       }
       for (const id of removed) this.resources.delete(id);
       for (const resource of upserted) this.resources.set(resource.id, resource);
+      for (const resource of growthUpdates) this.resources.set(resource.id, resource);
       if (nextOrder) this.orderedResources = nextOrder;
     }
     const { tiles: _tiles, resources: _resources, ...dynamic } = world;
@@ -140,7 +150,7 @@ export class SnapshotDecoder {
       }
       let resources = previous.resources;
       if (message.resources) {
-        const { removed, upserted, order } = message.resources;
+        const { removed, upserted, order, growth } = message.resources;
         const byId = new Map(resources.map(resource => [resource.id, resource]));
         const touched = new Set<number>();
         for (const id of removed) {
@@ -153,6 +163,17 @@ export class SnapshotDecoder {
           if (!validStoneIdentity(resource.stone, resource.kind, message.world.schemaVersion)) return resync('Identité géologique invalide.');
           if (touched.has(resource.id)) return resync('Ressource modifiée plusieurs fois.');
           touched.add(resource.id); byId.set(resource.id, resource);
+        }
+        if(growth!==undefined){
+          if(!(growth instanceof Float64Array)||growth.length%4||growth.length>previous.width*previous.height*4)return resync('Delta de croissance invalide.');
+          for(let i=0;i<growth.length;i+=4){
+            const id=growth[i]!,value=growth[i+1]!,tick=growth[i+2]!,factor=growth[i+3]!,old=byId.get(id);
+            if(!old||!isPlant(old)||touched.has(id)||!Number.isSafeInteger(id)||!Number.isFinite(value)||value<0||value>1||!Number.isSafeInteger(tick)||tick<0||tick>message.world.tick||!Number.isNaN(factor)&&(!Number.isFinite(factor)||factor<0||factor>1))return resync('Delta de croissance invalide.');
+            const updated={...old,growth:value,growthTick:tick};
+            if(Number.isNaN(factor))delete updated.growthThermalFactor;else updated.growthThermalFactor=factor;
+            if(!validPlantLife(updated,message.world.schemaVersion,message.world)||!validPlantThermalFactor(updated,message.world.schemaVersion))return resync('Delta de croissance invalide.');
+            touched.add(id);byId.set(id,updated);
+          }
         }
         if (order) {
           if (order.length !== byId.size || new Set(order).size !== order.length

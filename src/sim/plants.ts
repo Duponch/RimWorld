@@ -3,6 +3,7 @@ import { isRoofed, roofIndex } from './roof-rules.ts';
 import { annualGrowingLightIntegral } from './environment.ts';
 import { soilFertility } from './soil.ts';
 import { isCropKind, type CropKind } from './crops.ts';
+import { FLORA_DEFINITIONS } from './biome-flora.ts';
 
 export const PLANT_DEFINITIONS = Object.freeze({
   cotton: { label: 'Coton', growDays: 8, minFertility: .7, sensitivity: 1, afterHarvest: 0, yield: 10 },
@@ -11,9 +12,10 @@ export const PLANT_DEFINITIONS = Object.freeze({
   potato: { label: 'Pommes de terre', growDays: 5.8, minFertility: .7, sensitivity: .4, afterHarvest: 0, yield: 11 },
   corn: { label: 'Maïs', growDays: 11.3, minFertility: .7, sensitivity: 1, afterHarvest: 0, yield: 22 },
 });
-export const isPlant = (plant: Resource): plant is Resource & { kind: keyof typeof PLANT_DEFINITIONS } => plant.kind === 'berries' || isCropKind(plant.kind);
+export const isPlant = (plant: Resource): boolean => plant.species!==undefined || plant.kind === 'berries' || isCropKind(plant.kind);
 export const isCrop = (plant: Pick<Resource,'kind'>): plant is Pick<Resource,'kind'>&{kind:CropKind} => isCropKind(plant.kind);
-export const harvestProductLabel = (plant:Resource):string => plant.kind==='cotton'?'tissu':plant.kind==='rice'?'riz':plant.kind==='potato'?'pommes de terre':plant.kind==='corn'?'maïs':'baies';
+export const harvestProductLabel = (plant:Resource):string => plant.species?FLORA_DEFINITIONS[plant.species].product==='wood'?'bois':FLORA_DEFINITIONS[plant.species].product==='agave-fruit'?'agave':FLORA_DEFINITIONS[plant.species].product==='berries'?'baies':FLORA_DEFINITIONS[plant.species].label:
+  plant.kind==='cotton'?'tissu':plant.kind==='rice'?'riz':plant.kind==='potato'?'pommes de terre':plant.kind==='corn'?'maïs':'baies';
 
 export const BERRY_GROW_DAYS = 6;
 export const HARVEST_MIN_GROWTH = .65;
@@ -21,6 +23,10 @@ export const AFTER_HARVEST_GROWTH = .3;
 const clamp = (n: number): number => Math.max(0, Math.min(1, n));
 
 export const plantTemperatureFactor = (temperature:number):number => temperature < 6 ? clamp(temperature / 6) : temperature > 42 ? clamp((58 - temperature) / 16) : 1;
+export const plantTemperatureFactorFor = (plant:Pick<Resource,'species'>,temperature:number):number => {
+  const max=plant.species?FLORA_DEFINITIONS[plant.species].maxGrowthTemperature:58;
+  return temperature<6?clamp(temperature/6):temperature>42?clamp((max-temperature)/(max-42)):1;
+};
 export const sowingTemperatureAllowed = (temperature:number):boolean => temperature > 0 && temperature < 58;
 
 /** Historical berry calculation; current species use their own sensitivity below. */
@@ -58,16 +64,19 @@ export function plantGrowth(world: World, plant: Resource): number {
   const base = plant.growth ?? 1;
   if(isRoofed(world,roofIndex(world,plant)))return base;
   if (base >= 1) return 1;
-  const def = PLANT_DEFINITIONS[plant.kind], fertility = plantFertility(world, plant);
+  const def = plant.species?FLORA_DEFINITIONS[plant.species]:PLANT_DEFINITIONS[plant.kind as keyof typeof PLANT_DEFINITIONS], fertility = plantFertility(world, plant);
   if (fertility < def.minFertility) return base;
   const lightTime = annualGrowingLightIntegral(world) - annualGrowingLightIntegral(world, plant.growthTick ?? world.tick);
   const factor = (plant.growthThermalFactor ?? 1) * (1 - def.sensitivity + fertility * def.sensitivity);
   return clamp(base + lightTime * factor / (def.growDays * TICKS_PER_DAY));
 }
-export const harvestable = (world: World, plant: Resource): boolean => isPlant(plant) && plantGrowth(world, plant) > HARVEST_MIN_GROWTH;
+export const choppable=(world:World,plant:Resource):boolean=>plant.kind==='tree'&&(!plant.species||plantGrowth(world,plant)>=FLORA_DEFINITIONS[plant.species].harvestMinGrowth);
+export const harvestable = (world: World, plant: Resource): boolean => isPlant(plant)&&plant.kind!=='tree'&&
+  (!plant.species||FLORA_DEFINITIONS[plant.species].product!==null)&&plantGrowth(world, plant) > (plant.species?FLORA_DEFINITIONS[plant.species].harvestMinGrowth:HARVEST_MIN_GROWTH);
 export function berryYield(world: World, plant: Resource): number {
   const growth = plantGrowth(world, plant);
-  return growth > HARVEST_MIN_GROWTH ? plant.amount * (.5 + .5 * (growth - HARVEST_MIN_GROWTH) / (1 - HARVEST_MIN_GROWTH)) : 0;
+  const minimum=plant.species?FLORA_DEFINITIONS[plant.species].harvestMinGrowth:HARVEST_MIN_GROWTH;
+  return growth > minimum ? plant.amount * (.5 + .5 * (growth - minimum) / (1 - minimum)) : 0;
 }
 /** Preview stochastic rounding without consuming RNG until placement succeeds. */
 export function harvestRoll(world: World, plant: Resource): { quantity: number; rng: number } {

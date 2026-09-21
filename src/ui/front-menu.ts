@@ -116,7 +116,7 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
   let previousFocus: HTMLElement | null = null;
   let enabledBeforeBusy: Control[] = [];
   let seed = '';
-  let site: SiteOptions = { hilliness: 'small-hills' };
+  let site: SiteOptions = { hilliness: 'small-hills', biome:'temperate-forest' };
   let difficultyChosen = false;
   let reloadChosen = false;
   let selectedSave: string | undefined;
@@ -365,7 +365,7 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
     difficultyChosen = false;
     reloadChosen = false;
     seed = '';
-    site = { hilliness: 'small-hills' };
+    site = { hilliness: 'small-hills', biome:'temperate-forest' };
     try { seed = randomSiteSeed(); } catch { /* Manual entry remains available. */ }
     navigate('scenario');
   }

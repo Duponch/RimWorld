@@ -1,8 +1,10 @@
 import { addMaterial } from './materials.ts';
-import type { LocalSite } from './site.ts';
+import { BIOME_FLORA,FLORA_DEFINITIONS,weightedSpecies } from './biome-flora.ts';
+import { createPlantLife } from './plant-life.ts';
+import type { BiomeSite,LocalSite } from './site.ts';
 import { soilFertility } from './soil.ts';
 import { siteNoise,siteSample } from './site-noise.ts';
-import type { World } from './types.ts';
+import type { Resource,World } from './types.ts';
 
 /** Physical fragments already supported by hauling/stonecutting. Starts have
  * reference probability .006; that is not the final fraction of occupied cells.
@@ -43,5 +45,27 @@ export function generateSiteVegetation(world:World):void {
     const kind=roll<treeChance?'tree':roll<treeChance+berryChance?'berries':null;
     if(kind)world.resources.push({id:world.nextId++,x,z,kind,amount:kind==='berries'?10:7+Math.floor(siteSample(seed,x,z,1261)*7),
       ...kind==='berries'?{growth:Math.min(1,.15+siteSample(seed,x,z,1262)*1.35),growthTick:0}:{}});
+  }
+}
+
+/** V91 keeps every omitted Core weight absent instead of redistributing it.
+ * Fertility squared and the existing grove field are the documented local
+ * projection; species selection then uses only the delivered relative weights. */
+export function generateBiomeSiteVegetation(world:World,site:BiomeSite):void {
+  const {seed,width,height}=world,profile=BIOME_FLORA[site.biome];
+  const implementedWeight=Object.values(profile.weights).reduce((sum,weight)=>sum+(weight??0),0),implementedShare=implementedWeight/profile.totalCoreWeight;
+  const occupied=new Set(world.piles.flatMap(pile=>pile.owner.type==='ground'?[pile.owner.z*width+pile.owner.x]:[]));
+  for(let z=0;z<height;z++)for(let x=0;x<width;x++) {
+    const index=z*width+x,fertility=soilFertility(world.tiles[index]!.terrain);
+    if(fertility<=0||occupied.has(index))continue;
+    const groves=Math.max(0,Math.min(2,1+siteNoise(seed,x+47,z+193,.028,3,1250)));
+    const chance=Math.min(1,profile.plantDensity*fertility*fertility)*groves*implementedShare;
+    if(siteSample(seed,x,z,1260)>=chance)continue;
+    const species=weightedSpecies(site.biome,siteSample(seed,x,z,1261)),definition=FLORA_DEFINITIONS[species];
+    if(fertility<definition.minFertility)continue;
+    const resource:Resource={id:world.nextId++,x,z,kind:definition.kind,amount:definition.yield,species,
+      growth:Math.min(1,.15+siteSample(seed,x,z,1262)*1.35),growthTick:0};
+    resource.plantLife=createPlantLife(world,resource);
+    world.resources.push(resource);
   }
 }

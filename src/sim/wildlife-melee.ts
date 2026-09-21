@@ -12,11 +12,12 @@ import { furnitureDelay } from './furniture-travel.ts';
 import type { disturbanceEvents } from './disturbance.ts';
 import type { WildAnimal } from './wildlife-state.ts';
 import type { Cell,World } from './types.ts';
+import { animalSpecies } from './animal-species.ts';
 
 export function animalMeleeTools(a:WildAnimal):MeleeTool[]{
   const tools:MeleeTool[]=[];
-  for(const [part,id,damage,penetration,kind,factor] of [['jaw','teeth',3.4,.051,'bite',1],['head','head',1.5,.0225,'blunt',.2]] as const)
-    if(!a.health||!partMissing(a.health,part))tools.push({id,damage,penetration,kind,cooldownCore:120,weight:damage*(1+penetration)/2*factor});
+  for(const tool of animalSpecies(a.species).melee)
+    if(!a.health||!partMissing(a.health,tool.sourcePart))tools.push({id:tool.id,damage:tool.damage,penetration:tool.penetration,kind:tool.kind,cooldownCore:tool.cooldownCore,weight:tool.damage*(1+tool.penetration)/(tool.cooldownCore/60)*tool.chanceFactor});
   return rankMeleeTools(tools);
 }
 /** Threat memory is not a manhunter state. Exact distance/expiry boundaries,

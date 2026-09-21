@@ -1,0 +1,83 @@
+{
+  "protocol": "Three 250² new sites, three original colonists, 12 gathering commands, 360 consecutive ticks. Short workload, not a multi-day autonomy proof.",
+  "rows": [
+    {
+      "biome": "temperate-forest",
+      "generationMs": 557.8847999999999,
+      "resources": 17137,
+      "animals": 5,
+      "stepMs": {
+        "n": 360,
+        "p50": 1.5496000000002823,
+        "p95": 10.565800000000309,
+        "max": 67.47989999999982
+      },
+      "snapshotMs": {
+        "n": 72,
+        "p50": 6.435599999999795,
+        "p95": 16.438700000000154,
+        "max": 26.478699999999662
+      },
+      "counterUncached": {
+        "ms": 420.7055999999998,
+        "checksum": 0
+      },
+      "counterCached": {
+        "ms": 349.4004,
+        "checksum": 0
+      }
+    },
+    {
+      "biome": "boreal-forest",
+      "generationMs": 409.15140000000065,
+      "resources": 9773,
+      "animals": 8,
+      "stepMs": {
+        "n": 360,
+        "p50": 1.2731999999996333,
+        "p95": 4.0460000000002765,
+        "max": 41.231800000000476
+      },
+      "snapshotMs": {
+        "n": 72,
+        "p50": 2.0671999999995023,
+        "p95": 4.881900000000314,
+        "max": 7.228799999999865
+      },
+      "counterUncached": {
+        "ms": 484.0832999999993,
+        "checksum": 0
+      },
+      "counterCached": {
+        "ms": 244.46729999999934,
+        "checksum": 0
+      }
+    },
+    {
+      "biome": "arid-shrubland",
+      "generationMs": 330.0087999999996,
+      "resources": 5312,
+      "animals": 7,
+      "stepMs": {
+        "n": 360,
+        "p50": 0.7046000000000276,
+        "p95": 2.8797999999997046,
+        "max": 15.90179999999964
+      },
+      "snapshotMs": {
+        "n": 72,
+        "p50": 1.1966000000002168,
+        "p95": 2.0153000000000247,
+        "max": 2.136199999999917
+      },
+      "counterUncached": {
+        "ms": 545.3144999999995,
+        "checksum": 0
+      },
+      "counterCached": {
+        "ms": 350.66709999999966,
+        "checksum": 0
+      }
+    }
+  ]
+}

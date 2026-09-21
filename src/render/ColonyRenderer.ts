@@ -244,7 +244,7 @@ export class ColonyRenderer {
     // Worker deltas keep immutable terrain/resources references stable. A changed
     // collection is inspected once; ordinary pawn snapshots do not scan the map.
     const newMap = !previousWorld||previousWorld.seed!==world.seed||previousWorld.width!==world.width||previousWorld.height!==world.height||previousWorld.scenario?.id!==world.scenario?.id||previousWorld.scenario?.revision!==world.scenario?.revision||
-      previousWorld.site?.hilliness!==world.site?.hilliness||previousWorld.site?.revision!==world.site?.revision;
+      previousWorld.site?.hilliness!==world.site?.hilliness||previousWorld.site?.revision!==world.site?.revision||previousWorld.site?.biome!==world.site?.biome;
     const groundChanged = !sameTerrainSurface(previousWorld,world);
     if (newMap) this.cancelDesignation();
     // The worker epoch distinguishes a checkpoint from an ordinary delta even
@@ -745,8 +745,8 @@ export class ColonyRenderer {
     this.rocks.dispose();
     this.crops.dispose();
     this.resources.clear();
-    this.doors.dispose();this.projectiles.dispose();this.fires.dispose();this.wind.dispose();this.wildlife.flames.geometry.dispose();(this.wildlife.flames.material as THREE.Material).dispose();
-    this.wildlife.mesh.geometry.dispose();(this.wildlife.mesh.material as THREE.Material).dispose();
+    this.doors.dispose();this.projectiles.dispose();this.fires.dispose();this.wind.dispose();this.wildlife.dispose();
+
     for (const group of [this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup, this.pawns.group]) clearGroup(group);
     this.pileChunks.clear();
     this.staticMaterial.dispose();

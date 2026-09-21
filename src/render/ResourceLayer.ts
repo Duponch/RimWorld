@@ -1,3 +1,4 @@
+import { appendFlora,floraSize } from './flora-presentation';
 import { plantLeafless } from '../sim/plant-life';
 import { isCrop } from '../sim/plants';
 import { stoneColor } from './stone-palette';
@@ -7,7 +8,11 @@ import type { World } from '../sim/types';
 import { WORLD_SCALE } from '../world/scale';
 import { clearGroup } from './primitives';
 import type { Placement } from './primitives';
-import { mergedInstances, noise } from './StaticGeometry';
+import { mergedInstances,noise,type ResourceRangeData } from './StaticGeometry';
+
+const resourceIdentity=(resource:World['resources'][number]):string=>
+  `${resource.kind}:${resource.x}:${resource.z}:${resource.stone??''}:${resource.species??''}`;
+const rangeResourceId=(id:number):number=>id<0?Math.floor(-id/2):id;
 
 /** Removal compacts only the existing index buffer; vertices, mesh and material
  * stay resident. Original ranges also permit checkpoint restoration of an ID.
@@ -16,7 +21,7 @@ import { mergedInstances, noise } from './StaticGeometry';
 function retainResources(group: THREE.Group, alive: Set<number>): void {
   for (const object of group.children) {
     const mesh = object as THREE.Mesh;
-    const data = mesh.userData.resourceRanges as { ranges: { id: number; start: number; count: number }[]; original: Uint16Array | Uint32Array } | undefined;
+    const data=mesh.userData.resourceRanges as ResourceRangeData|undefined;
     if (!data) continue;
     const index = mesh.geometry.index!; let count = 0;
     for (const range of data.ranges) if (alive.has(range.id)) {
@@ -27,13 +32,40 @@ function retainResources(group: THREE.Group, alive: Set<number>): void {
   }
 }
 
+/** Reapply a resource's visible size from the immutable merged positions.
+ * This avoids cumulative float drift and keeps index-mask ranges stable. */
+function resizeResources(group:THREE.Group,resources:Map<number,World['resources'][number]>,originalSizes:Map<number,number>,currentSizes:Map<number,number>,nextSizes:Map<number,number>):void {
+  const changed=new Set<number>();
+  for(const [id,size] of nextSizes)if(currentSizes.get(id)!==size&&originalSizes.has(id))changed.add(id);
+  if(!changed.size)return;
+  for(const object of group.children) {
+    const mesh=object as THREE.Mesh,data=mesh.userData.resourceRanges as ResourceRangeData|undefined;
+    if(!data)continue;
+    const position=mesh.geometry.getAttribute('position') as THREE.BufferAttribute;let touched=false;
+    for(const range of data.ranges) {
+      const id=rangeResourceId(range.id);if(!changed.has(id))continue;
+      const resource=resources.get(id),initial=originalSizes.get(id),target=nextSizes.get(id);if(!resource||initial===undefined||target===undefined)continue;
+      const ratio=target/initial;
+      for(let vertex=range.vertexStart;vertex<range.vertexStart+range.vertexCount;vertex++){
+        const offset=vertex*3;
+        position.array[offset]=resource.x+(data.originalPositions[offset]!-resource.x)*ratio;
+        position.array[offset+1]=data.originalPositions[offset+1]!*ratio;
+        position.array[offset+2]=resource.z+(data.originalPositions[offset+2]!-resource.z)*ratio;
+      }
+      touched=true;
+    }
+    if(touched){position.needsUpdate=true;mesh.geometry.computeBoundingSphere();}
+  }
+  for(const id of changed)currentSizes.set(id,nextSizes.get(id)!);
+}
+
 function visibleResourceKeys(world:World,r:World['resources'][number]):number[]{
-  if(r.kind!=='berries')return [r.id];
+  if(r.kind!=='berries'&&!r.species)return [r.id];
   return [r.id,...(plantLeafless(world,r)?[]:[-r.id*2]),...(harvestable(world,r)?[-r.id*2-1]:[])];
 }
 
 export class ResourceLayer {
-  private readonly chunks = new Map<string, { signature: string; group: THREE.Group; identities: Map<number, string> }>();
+  private readonly chunks=new Map<string,{signature:string;group:THREE.Group;identities:Map<number,string>;originalSizes:Map<number,number>;currentSizes:Map<number,number>}>();
   private foliageVisible = true;
   private growing: World['resources'] = [];
   updateGrowth(world: World): void {
@@ -59,10 +91,13 @@ export class ResourceLayer {
       retainResources(previous.group, new Set()); previous.signature = '';
     }
     for (const [key, chunk] of chunks) {
-      const signature = chunk.map(resource => `${resource.id}:${resource.kind}:${resource.x}:${resource.z}:${resource.stone ?? ""}:${resource.kind === 'berries' && harvestable(world, resource) ? 1 : 0}:${plantLeafless(world,resource)}`).join('|');
+      const signature=chunk.map(resource=>`${resource.id}:${resourceIdentity(resource)}:${resource.kind==='berries'&&harvestable(world,resource)?1:0}:${plantLeafless(world,resource)}`).join('|');
+      const sizes=new Map(chunk.map(resource=>[resource.id,floraSize(world,resource)]));
       const previous = this.chunks.get(key);
-      if (previous?.signature === signature) continue;
-      if (previous && chunk.every(r => previous.identities.get(r.id) === `${r.kind}:${r.x}:${r.z}:${r.stone ?? ""}`)) {
+      const sizeChanged=previous&&chunk.some(resource=>previous.currentSizes.get(resource.id)!==sizes.get(resource.id));
+      if (previous?.signature === signature&&!sizeChanged) continue;
+      if (previous && chunk.every(r => previous.identities.get(r.id) === resourceIdentity(r))) {
+        resizeResources(previous.group,new Map(chunk.map(resource=>[resource.id,resource])),previous.originalSizes,previous.currentSizes,sizes);
         retainResources(previous.group, new Set(chunk.flatMap(r => visibleResourceKeys(world,r)))); previous.signature = signature; continue;
       }
       const group = previous?.group ?? new THREE.Group();
@@ -70,11 +105,13 @@ export class ResourceLayer {
       group.name = `Resources ${key}`;
       const trunks: Placement[] = [], crowns: Placement[] = [], upperCrowns: Placement[] = [];
       const rocks: Placement[] = [], bushes: Placement[] = [], berries: Placement[] = [];
+      const cones:Placement[]=[],blades:Placement[]=[],cacti:Placement[]=[];
       for (const resource of chunk) {
         const { x, z } = resource;
         const parts = [trunks, crowns, upperCrowns, rocks, bushes, berries];
         const lengths = parts.map(items => items.length);
         const n = noise(x, z, 77), turn = n * Math.PI * 2;
+        if(resource.species){appendFlora({trunks,crowns,cones,blades,cacti,bushes,fruit:berries},world,resource,turn);continue;}
         if (resource.kind === 'tree') {
           const height = WORLD_SCALE.treeMinHeight + n * (WORLD_SCALE.treeMaxHeight - WORLD_SCALE.treeMinHeight);
           const radius = 0.8 + n * 0.32;
@@ -95,18 +132,20 @@ export class ResourceLayer {
         }
         parts.forEach((items, i) => { for (let j = lengths[i]!; j < items.length; j++) items[j]!.key = i === 5 ? -resource.id*2-1 : i===4 ? -resource.id*2 : resource.id; });
       }
-      for (const trunk of trunks) trunk.color = 0x70573e;
+      for (const trunk of trunks) trunk.color ??= 0x70573e;
       for (const berry of berries) berry.color = 0xb96f63;
       mergedInstances(group, [
         { geometry: new THREE.CylinderGeometry(0.1, 0.16, 1, 5), items: trunks },
         { geometry: new THREE.DodecahedronGeometry(1, 0), items: rocks },
+        { geometry: new THREE.BoxGeometry(1,1,1), items: blades },
+        { geometry: new THREE.CylinderGeometry(.5,.5,1,5), items: cacti },
         { geometry: new THREE.IcosahedronGeometry(1, 0), items: bushes },
         { geometry: new THREE.IcosahedronGeometry(0.055, 0), items: berries },
       ], this.staticMaterial);
-      const canopy = mergedInstances(group, [{ geometry: world.site?new THREE.IcosahedronGeometry(1,0):new THREE.ConeGeometry(1, 1, 6), items: [...crowns, ...upperCrowns] }], this.staticMaterial);
+      const canopy = mergedInstances(group, [{ geometry: world.site?new THREE.IcosahedronGeometry(1,0):new THREE.ConeGeometry(1, 1, 6), items: [...crowns, ...upperCrowns] },{geometry:new THREE.ConeGeometry(1,1,6),items:cones}], this.staticMaterial);
       if (canopy) { canopy.name = 'tree-canopy'; canopy.visible = this.foliageVisible; }
       retainResources(group, new Set(chunk.flatMap(r => visibleResourceKeys(world,r))));
-      this.chunks.set(key, { signature, group, identities: new Map(chunk.map(r => [r.id, `${r.kind}:${r.x}:${r.z}:${r.stone ?? ""}`])) });
+      this.chunks.set(key,{signature,group,identities:new Map(chunk.map(r=>[r.id,resourceIdentity(r)])),originalSizes:new Map(sizes),currentSizes:new Map(sizes)});
     }
   }
 

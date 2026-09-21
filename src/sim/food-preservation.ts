@@ -1,10 +1,11 @@
+import { ITEM_DEFINITIONS } from './items.ts';
 import type { ItemId } from './items.ts';
 import { TICKS_PER_DAY, type MaterialPile, type World } from './types.ts';
 
-export const ROT_DAYS = Object.freeze({ berries: 14, rice: 40, potato: 30, corn: 60, 'simple-meal': 4, 'herbal-medicine':150, 'hare-meat':2, 'hare-corpse':2.5 } as const);
+export const ROT_DAYS = Object.freeze({ berries: 14, rice: 40, potato: 30, corn: 60, 'simple-meal': 4, 'herbal-medicine':150, 'hare-meat':2, 'hare-corpse':2.5, 'agave-fruit':25, 'snow-hare-meat':2, 'deer-meat':2, 'muffalo-meat':2, 'gazelle-meat':2, 'dromedary-meat':2, 'snow-hare-corpse':2.5, 'deer-corpse':2.5, 'muffalo-corpse':2.5, 'gazelle-corpse':2.5, 'dromedary-corpse':2.5 } as const);
 export type PerishableItem = keyof typeof ROT_DAYS;
 export interface RotState { progress: number; atTick: number; rate?:number }
-export type SpoiledFood = Record<Exclude<PerishableItem,'herbal-medicine'|'hare-meat'|'hare-corpse'|'potato'|'corn'>, number>&{'herbal-medicine'?:number;'hare-meat'?:number;potato?:number;corn?:number};
+export type SpoiledFood = Record<'berries'|'rice'|'simple-meal',number>&Partial<Record<PerishableItem,number>>;
 export const emptySpoilage = (): SpoiledFood => ({ berries: 0, rice: 0, 'simple-meal': 0 });
 export const isPerishable = (item: ItemId): item is PerishableItem => Object.hasOwn(ROT_DAYS, item);
 export const rotRateAtTemperature = (temperature: number): number => Math.max(0, Math.min(1, temperature / 10));
@@ -30,5 +31,5 @@ export function mergeRot(target: MaterialPile, quantity: number, incomingAge: nu
   target.rot = { progress: (rotAge(target, tick) * target.quantity + incomingAge * quantity) / (target.quantity + quantity), atTick: tick,...target.rot?.rate!==undefined?{rate:target.rot.rate}:{} };
 }
 export function spoiledUnits(world: World): number {
-  return world.spoiled.berries + world.spoiled.rice + world.spoiled['simple-meal']+(world.spoiled['hare-meat']??0)+(world.spoiled.potato??0)+(world.spoiled.corn??0);
+  return Object.entries(world.spoiled).reduce((sum,[item,n])=>sum+(ITEM_DEFINITIONS[item as ItemId].nutrition>0?(n??0):0),0);
 }

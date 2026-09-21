@@ -1,4 +1,5 @@
-import { climateDate,TEMPERATE_CLIMATE } from '../sim/site-climate';
+import { BIOME_LABELS } from '../sim/site';
+import { climateDate,siteClimateDefinition } from '../sim/site-climate';
 import { TICKS_PER_DAY,type Command,type World } from '../sim/types';
 import { calendarTick } from '../sim/calendar';
 
@@ -16,7 +17,7 @@ export function climateControls(world:World,send:(command:Command)=>void):HTMLEl
   const title=document.createElement('strong');title.textContent='Climat du site';section.append(title);
   const description=document.createElement('p');
   if(world.climate) {
-    description.textContent=`${climateDateLabel(world)}. Forêt tempérée : ${TEMPERATE_CLIMATE.meanTemperature.toLocaleString('fr-FR')} °C de moyenne annuelle. Les journées et les températures suivent les saisons ; protégez les cultures du gel et préparez les réserves d’hiver.`;
+    description.textContent=`${climateDateLabel(world)}. ${BIOME_LABELS[world.site?.biome??'temperate-forest']} : ${siteClimateDefinition(world).meanTemperature.toLocaleString('fr-FR')} °C de moyenne annuelle. Les journées et les températures suivent les saisons ; protégez les cultures du gel et préparez les réserves d’hiver.`;
   } else {
     description.textContent='Cette partie conserve son climat historique. Activer les saisons commence une période douce à l’heure actuelle ; les cultures gardent leur croissance et leur vieillissement sera suivi à partir de cette activation.';
     const button=document.createElement('button');button.id='climate-adopt';button.textContent='Activer les saisons';

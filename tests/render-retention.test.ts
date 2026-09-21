@@ -11,6 +11,7 @@ import { DoorLayer } from '../src/render/DoorLayer';
 import { newDoorState } from '../src/sim/door-rules';
 import { clearGroup } from '../src/render/primitives';
 import { createWorld, addGroundMaterial, applyCommand, stepWorld, serializeWorld, deserializeWorld } from '../src/sim/index';
+import { floraSize } from '../src/render/flora-presentation';
 
 test('thermal growth anchors do not invalidate forest geometry; ripening, depletion and stone identity still do',()=>{
   const w=createWorld(42,32,32);w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.tick=2000;w.resources=[
@@ -33,6 +34,45 @@ test('thermal growth anchors do not invalidate forest geometry; ripening, deplet
   const saved=[...w.resources];w.resources=w.resources.slice(1);expect(state.read(w)).toBeDefined();w.resources=saved;expect(state.read(w)).toBeDefined();
   w.resources[2]!.stone='marble';expect(state.read(w)).toBeDefined();w.resources[0]!.x++;expect(state.read(w)).toBeDefined();expect(state.read(w)).toBeUndefined();expect(state.read(w,true)).toBeDefined();
   layer.clear();mat.dispose();
+});
+
+test('wild flora growth rescales resident ranges from their original vertices and restores exact bounds',()=>{
+  const world=createWorld(42,32,32);world.tiles=world.tiles.map(()=>({terrain:'grass'}));world.resources=[
+    {id:world.nextId++,kind:'tree',species:'oak',x:7,z:8,amount:46,growth:.01,growthTick:0},
+  ];
+  const group=new THREE.Group(),material=new THREE.MeshStandardNodeMaterial(),layer=new ResourceLayer(group,material);
+  layer.update(world,true);
+  const chunks=[...group.children],meshes:THREE.Mesh[]=[];group.traverse(object=>{if(object instanceof THREE.Mesh)meshes.push(object);});
+  const geometries=meshes.map(mesh=>mesh.geometry),positions=meshes.map(mesh=>mesh.geometry.getAttribute('position'));
+  const young=positions.map(attribute=>Array.from(attribute.array)),youngSize=floraSize(world,world.resources[0]!);
+  for(let day=1;day<=180&&floraSize(world,world.resources[0]!)===youngSize;day++)world.tick=day*6000;
+  const grownSize=floraSize(world,world.resources[0]!),grownTick=world.tick;expect(grownSize).toBeGreaterThan(youngSize);
+  layer.update(world,false);
+  expect(group.children).toEqual(chunks);expect(meshes.map(mesh=>mesh.geometry)).toEqual(geometries);
+  meshes.forEach((mesh,index)=>expect(mesh.geometry.getAttribute('position')).toBe(positions[index]));
+
+  const referenceGroup=new THREE.Group(),referenceMaterial=new THREE.MeshStandardNodeMaterial(),referenceLayer=new ResourceLayer(referenceGroup,referenceMaterial);
+  referenceLayer.update({...world,resources:world.resources.map(resource=>({...resource}))},true);
+  const referenceMeshes:THREE.Mesh[]=[];referenceGroup.traverse(object=>{if(object instanceof THREE.Mesh)referenceMeshes.push(object);});
+  for(const [index,mesh] of meshes.entries()){
+    const actual=mesh.geometry.getAttribute('position').array,expected=referenceMeshes[index]!.geometry.getAttribute('position').array;
+    expect(actual.length).toBe(expected.length);for(let i=0;i<actual.length;i++)expect(actual[i]).toBeCloseTo(expected[i]!,5);
+    expect(mesh.geometry.boundingSphere!.center.distanceTo(referenceMeshes[index]!.geometry.boundingSphere!.center)).toBeLessThan(1e-5);
+    expect(mesh.geometry.boundingSphere!.radius).toBeCloseTo(referenceMeshes[index]!.geometry.boundingSphere!.radius,5);
+  }
+
+  world.tick=0;layer.update(world,false);
+  for(const [index,attribute] of positions.entries())for(let i=0;i<attribute.array.length;i++)expect(attribute.array[i]).toBeCloseTo(young[index]![i]!,6);
+  const resource=world.resources[0]!;world.resources=[];layer.update(world,false);
+  expect(group.children).toEqual(chunks);expect(meshes.every(mesh=>mesh.geometry.drawRange.count===0)).toBe(true);
+  world.tick=grownTick;world.resources=[resource];layer.update(world,false);
+  expect(group.children).toEqual(chunks);expect(meshes.map(mesh=>mesh.geometry)).toEqual(geometries);
+  expect(meshes.every(mesh=>mesh.geometry.drawRange.count>0)).toBe(true);
+  for(const [index,mesh] of meshes.entries()){
+    const actual=mesh.geometry.getAttribute('position').array,expected=referenceMeshes[index]!.geometry.getAttribute('position').array;
+    for(let i=0;i<actual.length;i++)expect(actual[i]).toBeCloseTo(expected[i]!,5);
+  }
+  layer.clear();referenceLayer.clear();material.dispose();referenceMaterial.dispose();
 });
 
 test('population growth retains GPU meshes/materials and shared poses through capacity changes and removal',()=>{

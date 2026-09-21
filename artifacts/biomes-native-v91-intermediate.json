@@ -1,0 +1,106 @@
+[
+  {
+    "biome": "temperate-forest",
+    "label": "Foret temperee",
+    "plants": 17146,
+    "animals": [
+      "hare",
+      "muffalo",
+      "muffalo",
+      "muffalo",
+      "muffalo"
+    ],
+    "ticks": 374,
+    "elapsedMs": 11182,
+    "actualSpeed": 5.574435104036248,
+    "frames": 567,
+    "p95": 79.10000000000036,
+    "max": 241.8000000000029,
+    "methods": {
+      "ColonyRenderer.applyWorld": {
+        "n": 0
+      },
+      "NaturalResourcePresentation.read": {
+        "n": 0
+      },
+      "ResourceLayer.update": {
+        "n": 0
+      },
+      "OverviewLayer.update": {
+        "n": 0
+      }
+    },
+    "errors": []
+  },
+  {
+    "biome": "boreal-forest",
+    "label": "Foret boreale",
+    "plants": 9782,
+    "animals": [
+      "hare",
+      "deer",
+      "deer",
+      "deer",
+      "deer",
+      "deer",
+      "deer",
+      "deer"
+    ],
+    "ticks": 371,
+    "elapsedMs": 10825,
+    "actualSpeed": 5.712086220169361,
+    "frames": 1029,
+    "p95": 20.80000000000109,
+    "max": 162.60000000000036,
+    "methods": {
+      "ColonyRenderer.applyWorld": {
+        "n": 0
+      },
+      "NaturalResourcePresentation.read": {
+        "n": 0
+      },
+      "ResourceLayer.update": {
+        "n": 0
+      },
+      "OverviewLayer.update": {
+        "n": 0
+      }
+    },
+    "errors": []
+  },
+  {
+    "biome": "arid-shrubland",
+    "label": "Broussailles arides",
+    "plants": 5318,
+    "animals": [
+      "hare",
+      "gazelle",
+      "gazelle",
+      "gazelle",
+      "gazelle",
+      "gazelle",
+      "gazelle"
+    ],
+    "ticks": 367,
+    "elapsedMs": 10663,
+    "actualSpeed": 5.7363468692363,
+    "frames": 1096,
+    "p95": 20.899999999999636,
+    "max": 154.20000000000073,
+    "methods": {
+      "ColonyRenderer.applyWorld": {
+        "n": 0
+      },
+      "NaturalResourcePresentation.read": {
+        "n": 0
+      },
+      "ResourceLayer.update": {
+        "n": 0
+      },
+      "OverviewLayer.update": {
+        "n": 0
+      }
+    },
+    "errors": []
+  }
+]

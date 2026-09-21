@@ -10,12 +10,73 @@ import { advanceAnimalHealth,animalBody } from './wildlife-health.ts';
 import { animalEscape } from './wildlife-flight.ts';
 import { animalFoods,animalMealTarget,finishAnimalMeal } from './wildlife-food.ts';
 import { animalNavigation,moveAnimal } from './wildlife-navigation.ts';
-import { HARE,MAX_WILDLIFE,wildlifeRandom,type WildAnimal } from './wildlife-state.ts';
+import { HARE,MAX_WILDLIFE,wildlifeRandom,type WildAnimal,type WildlifeState } from './wildlife-state.ts';
 import { isPlant } from './plants.ts';
 import { calendarTick } from './calendar.ts';
 import type { Cell,World } from './types.ts';
+import { animalSpecies,faunaBiome,selectBiomeSpecies,type AnimalSpeciesId,type FaunaBiomeId } from './animal-species.ts';
 const contact=(a:Cell,b:Cell)=>Math.abs(a.x-b.x)+Math.abs(a.z-b.z)<=1;
 const neighbours=(c:Cell):Cell[]=>[{x:c.x,z:c.z},{x:c.x-1,z:c.z},{x:c.x+1,z:c.z},{x:c.x,z:c.z-1},{x:c.x,z:c.z+1}];
+export const ANIMAL_POPULATION_CHECK_TICKS=122; // 1,220 Core ticks; Core checks every 1,213.
+
+function occupiedWildlifeCells(world:World,s:WildlifeState):Set<number>{
+  return new Set([
+    ...world.pawns.map(p=>p.z*world.width+p.x),...s.animals.map(a=>a.z*world.width+a.x),
+    ...world.piles.flatMap(p=>p.owner.type==='ground'?[p.owner.z*world.width+p.owner.x]:[]),
+    ...world.packed.flatMap(p=>p.owner.type==='ground'?[p.owner.z*world.width+p.owner.x]:[]),
+  ]);
+}
+function addAnimal(world:World,s:WildlifeState,speciesId:AnimalSpeciesId,place:Cell,nextDecision:number):boolean {
+  if(!Number.isSafeInteger(world.nextId+1))return false;
+  const species=animalSpecies(speciesId);
+  s.animals.push({id:world.nextId++,species:speciesId,sex:wildlifeRandom(s)<.5?'female':'male',x:place.x,z:place.z,
+    food:species.nutrition*(.5+.4*wildlifeRandom(s)),rest:.9+.1*wildlifeRandom(s),state:'idle',path:[],nextDecision});
+  return true;
+}
+function placeSpeciesGroup(world:World,s:WildlifeState,speciesId:AnimalSpeciesId,count:number):number {
+  count=Math.min(count,MAX_WILDLIFE-s.animals.length);
+  if(count<=0||!Number.isSafeInteger(world.nextId+count))return 0;
+  const nav=animalNavigation(world),plants=world.resources.filter(isPlant),occupied=occupiedWildlifeCells(world,s);
+  const anchors=plants.length?plants.flatMap(neighbours):[{x:Math.floor(world.width/2),z:Math.floor(world.height/2)}].flatMap(neighbours);
+  if(!anchors.length)return 0;
+  const offset=Math.floor(wildlifeRandom(s)*anchors.length),ordered=anchors.slice(offset).concat(anchors.slice(0,offset));let added=0;
+  for(const place of ordered){const key=place.z*world.width+place.x;if(!nav.free(place)||occupied.has(key))continue;
+    if(!addAnimal(world,s,speciesId,place,world.tick+1+(s.animals.length+added)%60))break;occupied.add(key);added++;if(added>=count||s.animals.length>=MAX_WILDLIFE)break;
+  }
+  return added;
+}
+const currentPopulationWeight=(s:WildlifeState)=>s.animals.reduce((sum,a)=>sum+animalSpecies(a.species).ecoSystemWeight,0);
+
+/** V91 biome initialization spends ecological weight, never density as a head
+ * count. The target is reduced by the exact commonality share implemented in
+ * this bounded catalogue, leaving unavailable Core species unredistributed. */
+export function enableBiomeWildlife(world:World,biomeId:FaunaBiomeId):void {
+  if(world.wildlife)return;
+  const biome=faunaBiome(biomeId),implemented=biome.entries.reduce((n,e)=>n+e.commonality,0);
+  const fullTargetWeight=world.width*world.height*biome.animalDensity/10000,targetWeight=fullTargetWeight*implemented/biome.totalCommonality;
+  const s=world.wildlife={profile:'biome-herbivores-v1',rng:(world.seed^0x784caf31)>>>0||1,animals:[],eatenPlants:0,eatenNutrition:0,eatenItems:0,
+    population:{biome:biomeId,fullTargetWeight,targetWeight,nextCheck:world.tick+ANIMAL_POPULATION_CHECK_TICKS,checks:0,arrivals:0}};
+  for(let attempts=0;attempts<256&&currentPopulationWeight(s)<targetWeight&&s.animals.length<MAX_WILDLIFE;attempts++){
+    let roll=wildlifeRandom(s)*implemented,speciesId:AnimalSpeciesId|undefined;
+    for(const entry of biome.entries){roll-=entry.commonality;if(roll<0){speciesId=entry.species;break;}}
+    if(!speciesId)break;const species=animalSpecies(speciesId),[min,max]=species.wildGroupSize;
+    const count=min+Math.floor(wildlifeRandom(s)*(max-min+1));if(!placeSpeciesGroup(world,s,speciesId,count))break;
+  }
+}
+
+function advancePopulation(world:World,s:WildlifeState):void {
+  const population=s.population;if(s.profile!=='biome-herbivores-v1'||!population||world.tick<population.nextCheck)return;
+  if(!Number.isSafeInteger(population.checks+1))return;
+  population.nextCheck=world.tick+ANIMAL_POPULATION_CHECK_TICKS;population.checks++;
+  if(currentPopulationWeight(s)>=population.targetWeight||s.animals.length>=MAX_WILDLIFE)return;
+  const biome=faunaBiome(population.biome);
+  const maximumGroup=biome.entries.reduce((maximum,entry)=>Math.max(maximum,animalSpecies(entry.species).wildGroupSize[1]),0);
+  if(!Number.isSafeInteger(population.arrivals+1)||!Number.isSafeInteger(world.nextId+Math.min(maximumGroup,MAX_WILDLIFE-s.animals.length)))return;
+  if(wildlifeRandom(s)>=.026955556*biome.animalDensity)return;
+  const speciesId=selectBiomeSpecies(biome,wildlifeRandom(s));if(!speciesId)return;
+  const species=animalSpecies(speciesId),[min,max]=species.wildGroupSize,count=min+Math.floor(wildlifeRandom(s)*(max-min+1));
+  const added=placeSpeciesGroup(world,s,speciesId,count);if(added)population.arrivals++;
+}
 
 /** Only new camps or explicit opt-in. No wildlife is invented during migration. */
 export function enableWildlife(world:World,count=Math.min(12,Math.max(3,Math.floor(world.width*world.height/5000))),distribution?:'natural'):void {
@@ -46,7 +107,7 @@ export function reconcileWildlife(world:World):void {
   for(const a of world.wildlife?.animals??[])if(a.meal&&!animalMealTarget(world,a)){delete a.meal;a.path=[];a.state=a.motion&&a.motion.end>world.tick?'moving':'idle';a.nextDecision=world.tick;}
 }
 export function advanceWildlife(world:World):void {
-  const s=world.wildlife;if(!s?.animals.length)return;
+  const s=world.wildlife;if(!s)return;advancePopulation(world,s);if(!s.animals.length)return;
   reconcileWildlife(world);
   let nav:ReturnType<typeof animalNavigation>|undefined,searches=0;
   const getNav=()=>nav??=animalNavigation(world);
@@ -56,11 +117,12 @@ export function advanceWildlife(world:World):void {
   // Rotate priority; at most one potentially map-wide search per tick.
   for(let i=0;i<s.animals.length;i++) {
     const a=s.animals[(world.tick+i)%s.animals.length]!;
+    const species=animalSpecies(a.species);
     advanceAnimalHealth(world,a);
     if(a.state==='dead')continue;
     if(a.health)bleedFilth(world,a,medicalBleed(a.health),a.state==='downed'||a.state==='sleeping',.4);
     const body=animalBody(a);
-    a.food=Math.max(0,a.food-HARE.foodPerDay/6000*malnutritionModifiers(a.health?.malnutrition).hungerFactor*(a.food<HARE.nutrition*.18?.25:a.food<HARE.nutrition*.36?.5:1));
+    a.food=Math.max(0,a.food-species.foodPerDay/6000*malnutritionModifiers(a.health?.malnutrition).hungerFactor*(a.food<species.nutrition*.18?.25:a.food<species.nutrition*.36?.5:1));
     a.rest=Math.max(0,Math.min(1,a.rest+(a.state==='sleeping'?.0003809524*.8:-.00015833333*(a.rest<.01?.6:a.rest<.14?.3:a.rest<.28?.7:1))));
     if(a.flee&&world.tick>=a.flee.until){delete a.flee;a.path=[];if(!a.motion||a.motion.end<=world.tick)a.state='idle';}
     if(processAnimalVomiting(world,a))continue;
@@ -87,7 +149,7 @@ export function advanceWildlife(world:World):void {
       if(contact(a,target)&&getNav().free(a)) {
         a.path=[];
         if(a.state!=='eating'){a.state='eating';a.meal.progress=0;}
-        else if((a.meal.progress+=Math.max(.15,(.05+.95*body.capacities.eating)*(.7+.3*body.capacities.manipulation)))>=HARE.ingestTicks){finishAnimalMeal(world,a);nav=undefined;}
+        else if((a.meal.progress+=Math.max(.15,(.05+.95*body.capacities.eating)*(.7+.3*body.capacities.manipulation)))>=species.ingestTicks){finishAnimalMeal(world,a);nav=undefined;}
         continue;
       }
       if(!a.path.length){delete a.meal;a.state='idle';a.nextDecision=world.tick;}
@@ -95,7 +157,7 @@ export function advanceWildlife(world:World):void {
     if(a.path.length){moveAnimal(world,a,getNav().step,body.capacities.moving);continue;}
     if(a.nextDecision>world.tick)continue;
     const n=getNav();
-    if(a.food<HARE.nutrition*.45&&searches<1) {
+    if(a.food<species.nutrition*.45&&searches<1) {
       searches++;
       const food=animalFoods(world,a),goals=food.flatMap(neighbours),path=n.route(a,goals);
       if(path) {
@@ -103,7 +165,7 @@ export function advanceWildlife(world:World):void {
         a.meal={kind:target.kind,id:target.id,quantity:target.quantity,progress:0};a.path=path;a.state='moving';a.nextDecision=world.tick;continue;
       }
       a.nextDecision=world.tick+100;a.state='hungry';
-    } else if(a.food<HARE.nutrition*.45)continue;
+    } else if(a.food<species.nutrition*.45)continue;
     if((a.rest<.3||night&&a.rest<.75)&&!a.sleepUntilCore&&n.free(a)) {a.state='sleeping';continue;}
     // Bounded neighbouring moves avoid full-map wandering floods. No random
     // walk through walls/closed doors; diagonal length stays Euclidean.

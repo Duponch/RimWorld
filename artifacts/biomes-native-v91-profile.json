@@ -1,0 +1,143 @@
+[
+  {
+    "biome": "temperate-forest",
+    "label": "Foret temperee",
+    "plants": 17146,
+    "animals": [
+      "hare",
+      "muffalo",
+      "muffalo",
+      "muffalo",
+      "muffalo"
+    ],
+    "ticks": 379,
+    "elapsedMs": 11344,
+    "actualSpeed": 5.568288669487541,
+    "frames": 413,
+    "p95": 104.19999999999709,
+    "max": 249.89999999999964,
+    "profile": [
+      [
+        "SimulationClient.worker.onmessage (SimulationClient.ts?t=1790022741488)",
+        1545
+      ],
+      [
+        "adopt (snapshots.ts?t=1790022741488)",
+        328
+      ],
+      [
+        "updateMatrixWorld (three.webgpu-BqO7meKP.js?v=d8da01ca)",
+        325
+      ],
+      [
+        "(program) ()",
+        290
+      ],
+      [
+        "(garbage collector) ()",
+        254
+      ],
+      [
+        "_projectObject (three.webgpu-BqO7meKP.js?v=d8da01ca)",
+        246
+      ],
+      [
+        "mergedInstances (StaticGeometry.ts)",
+        239
+      ],
+      [
+        "update (ResourceLayer.ts?t=1790022741488)",
+        183
+      ],
+      [
+        "update (OverviewLayer.ts?t=1790022741488)",
+        177
+      ],
+      [
+        " ()",
+        177
+      ],
+      [
+        "writeBuffer ()",
+        167
+      ],
+      [
+        "updateResources (ColonyRenderer.ts?t=1790023802390)",
+        165
+      ],
+      [
+        "copy (three.webgpu-BqO7meKP.js?v=d8da01ca)",
+        116
+      ],
+      [
+        " (snapshots.ts?t=1790022741488)",
+        114
+      ],
+      [
+        "multiplyMatrices (three.webgpu-BqO7meKP.js?v=d8da01ca)",
+        109
+      ],
+      [
+        "get world (main.ts?t=1790023803642)",
+        108
+      ],
+      [
+        "plantFertility (plants.ts?t=1790022741488)",
+        104
+      ],
+      [
+        "_renderObjectDirect (three.webgpu-BqO7meKP.js?v=d8da01ca)",
+        98
+      ],
+      [
+        "annualGrowingLightIntegral (environment.ts?t=1790022741488)",
+        88
+      ],
+      [
+        "floraIdentity (flora-presentation.ts)",
+        87
+      ],
+      [
+        "update (three.webgpu-BqO7meKP.js?v=d8da01ca)",
+        85
+      ],
+      [
+        "updateForRender (three.webgpu-BqO7meKP.js?v=d8da01ca)",
+        83
+      ],
+      [
+        "soilFertility (soil.ts)",
+        81
+      ],
+      [
+        "applyMatrix4 (three.webgpu-BqO7meKP.js?v=d8da01ca)",
+        80
+      ],
+      [
+        "isCropKind (crops.ts)",
+        76
+      ],
+      [
+        "get (three.webgpu-BqO7meKP.js?v=d8da01ca)",
+        74
+      ],
+      [
+        "plantGrowth (plants.ts?t=1790022741488)",
+        70
+      ],
+      [
+        "floraSize (flora-presentation.ts)",
+        55
+      ],
+      [
+        "fromBufferAttribute (three.webgpu-BqO7meKP.js?v=d8da01ca)",
+        55
+      ],
+      [
+        "capture (presentation-changes.ts)",
+        54
+      ]
+    ],
+    "errors": []
+  }
+]

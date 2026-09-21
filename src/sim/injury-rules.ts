@@ -1,5 +1,5 @@
 import type { BodyPartId } from './body-definition.ts';
-import { HUMAN_MODEL,HARE_MODEL,type BodyModel } from './body-model.ts';
+import { HUMAN_MODEL,type BodyModel } from './body-model.ts';
 
 /** Adult natural body only. These are injury properties, not weapon/armor rules.
  * Provenance and unresolved version differences: docs/research/injuries-reference.md. */
@@ -32,8 +32,11 @@ function partRules(model:BodyModel){return Object.freeze(Object.fromEntries(mode
     delicate:eye||part.id==='brain',scarFactor:part.id==='brain'?9999999:eye?15:part.id==='spine'?6:solid?0:1})];
 })) as Record<BodyPartId,Readonly<{solid:boolean;skin:boolean;bleed:number;delicate:boolean;scarFactor:number}>>);}
 export const PART_INJURY_RULES=partRules(HUMAN_MODEL);
-const HARE_INJURY_RULES=partRules(HARE_MODEL);
-export const injuryPartRules=(model:BodyModel)=>model.kind==='hare'?HARE_INJURY_RULES:PART_INJURY_RULES;
+const ANIMAL_INJURY_RULES=new Map<BodyModel,ReturnType<typeof partRules>>();
+export const injuryPartRules=(model:BodyModel)=>{
+  if(model.kind==='human')return PART_INJURY_RULES;
+  let rules=ANIMAL_INJURY_RULES.get(model);if(!rules){rules=partRules(model);ANIMAL_INJURY_RULES.set(model,rules);}return rules;
+};
 
 export function isWithinPart(candidate:BodyPartId,ancestor:BodyPartId,model=HUMAN_MODEL):boolean {
   for(let id:BodyPartId|null=candidate;id!==null;id=model.byId[id].parent)if(id===ancestor)return true;

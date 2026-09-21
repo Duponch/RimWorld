@@ -1,3 +1,4 @@
+import { isAnimalCorpseItem, isAnimalMeat } from './biome-items.ts';
 import { foodStationUsable } from './food-workstations.ts';
 import { consumeCookingFuel } from './fuel.ts';
 import { applyCookingHeat } from './thermal-sources.ts';
@@ -38,7 +39,7 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   const recipe=PRODUCTION_RECIPES[taskRecipe(task)];
   for(const entry of task.ingredients) {
     const pile=world.piles.find(p=>p.id===entry.pileId);
-    if(!pile||pile.item==='hare-corpse'&&!corpseFresh(pile,world.tick)||pile.item!==entry.item||pile.quantity<entry.quantity||entry.stage!=='held'&&reservedSource(world,pile.id)>pile.quantity){context.release();return;}
+    if(!pile||isAnimalCorpseItem(pile.item)&&!corpseFresh(pile,world.tick)||pile.item!==entry.item||pile.quantity<entry.quantity||entry.stage!=='held'&&reservedSource(world,pile.id)>pile.quantity){context.release();return;}
   }
   const held=task.ingredients.find(i=>i.stage==='held');
   if(held) {
@@ -77,7 +78,8 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   const used=new Map<number,number>();for(const i of task.ingredients)used.set(i.pileId,(used.get(i.pileId)??0)+i.quantity);
   const freed=[...used].filter(([id,n])=>world.piles.find(p=>p.id===id)?.quantity===n).length;
   if(world.piles.length-freed+1>32768||!Number.isSafeInteger(world.nextId+1))return;
-  const meat=task.ingredients.filter(i=>i.item==='hare-meat').reduce((n,i)=>n+i.quantity,0);
+  const agave=task.ingredients.filter(i=>i.item==='agave-fruit').reduce((n,i)=>n+i.quantity,0);
+  const meat=task.ingredients.filter(i=>isAnimalMeat(i.item)).reduce((n,i)=>n+i.quantity,0);
   const material=unfinished?unfinishedMaterial(unfinished.unfinished!):undefined;
   const rice=task.ingredients.filter(i=>i.item==='rice').reduce((n,i)=>n+i.quantity,0),item=recipeProduct(taskRecipe(task),task.ingredients,material);
   const potato=task.ingredients.filter(i=>i.item==='potato').reduce((n,i)=>n+i.quantity,0),corn=task.ingredients.filter(i=>i.item==='corn').reduce((n,i)=>n+i.quantity,0);
@@ -92,5 +94,5 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   if(apparel){(world.tailoring??={completed:0,cancelled:0,lostCloth:0}).completed++;}
   task.ingredients=[];task.productId=id;task.phase='output';task.progress=0;if(culinary)pawn.skills.cooking=completedCookingSkill(pawn,task.workTicks??0);delete task.workTicks;pawn.planCooldown=0;
   if(bill.mode==='times')bill.target=Math.max(0,bill.target-1);
-  context.event(isTailoring(task.recipe)?`${pawn.name} a fabriqué : ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:task.recipe==='stone-blocks'?`${pawn.name} a taillé 20 ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:`${pawn.name} a cuisiné 1 repas simple (${10-rice-meat-potato-corn} baies, ${rice} riz${meat?`, ${meat} viande`:''}${potato?`, ${potato} pommes de terre`:''}${corn?`, ${corn} maïs`:''}).`);
+  context.event(isTailoring(task.recipe)?`${pawn.name} a fabriqué : ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:task.recipe==='stone-blocks'?`${pawn.name} a taillé 20 ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:`${pawn.name} a cuisiné 1 repas simple (${10-rice-meat-potato-corn-agave} baies, ${rice} riz${meat?`, ${meat} viande`:''}${potato?`, ${potato} pommes de terre`:''}${corn?`, ${corn} maïs`:''}${agave?`, ${agave} fruits d’agave`:''}).`);
 }

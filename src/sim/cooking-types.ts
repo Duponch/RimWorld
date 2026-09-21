@@ -1,7 +1,8 @@
+import { ANIMAL_MEAT_ITEMS } from './biome-items.ts';
 import type { ProductionIngredient, ProductionRecipe } from './production-recipes.ts';
 import type { Cell } from './types.ts';
 
-export type RawIngredient = 'rice' | 'berries' | 'hare-meat' | 'potato' | 'corn';
+export type RawIngredient = 'rice' | 'berries' | 'agave-fruit' | typeof ANIMAL_MEAT_ITEMS[number] | 'potato' | 'corn';
 export interface CookingBill {
   id:number;
   recipe:ProductionRecipe;

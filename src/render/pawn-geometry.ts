@@ -1,3 +1,4 @@
+import { BIOME_CARGO } from './biome-cargo';
 import { corpseParts } from './corpse-presentation';
 import * as THREE from 'three/webgpu';
 import { PAWN_MODEL_SCALE } from '../world/scale';
@@ -114,6 +115,10 @@ export function cargoGeometry(): THREE.InstancedBufferGeometry {
   for(const p of corpseParts(0,0))part([p.sx!,p.sy!,p.sz!],[p.x,p.y-.16,p.z],27,p.color!);
   part([.52,.07,.35],[0,0,0],28,ITEM_DEFINITIONS['light-leather'].color);
   part([.38,.18,.32],[0,0,0],29,ITEM_DEFINITIONS['hare-meat'].color);
+  for(const [item,kind] of Object.entries(BIOME_CARGO)){
+    if(item.endsWith('-corpse'))for(const p of corpseParts(0,0,'fresh',0,item.replace('-corpse','')))part([p.sx!,p.sy!,p.sz!],[p.x,p.y-.16,p.z],kind,p.color!);
+    else part([.5,.12,.36],[0,0,0],kind,ITEM_DEFINITIONS[item as keyof typeof ITEM_DEFINITIONS].color);
+  }
   const vertices = new THREE.InterleavedBuffer(new Float32Array(data), 10);
   const geometry = new THREE.InstancedBufferGeometry();
   geometry.setAttribute('position', new THREE.InterleavedBufferAttribute(vertices, 3, 0));

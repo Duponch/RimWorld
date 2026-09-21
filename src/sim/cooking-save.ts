@@ -1,3 +1,4 @@
+import { V91_ITEM_IDS } from './biome-items.ts';
 import { isTailoring, unfinishedItem, stationAccepts, PRODUCTION_RECIPES, productionWorkTotal, legacyProductionTicks, stationRecipe, taskRecipe, taskWork, isRecipeProduct, blockFor, type ProductionIngredient, type StoneIngredient } from './production-recipes.ts';
 import { fuelStationReserved } from './fuel.ts';
 import { cookingSpot, ingredientPlaceFree, ingredientWithinReach, validBillSettings } from './cooking-bills.ts';
@@ -16,7 +17,7 @@ export function validateCooking(input:unknown,version:number,ids:Set<number>):st
     if(!recipe||version<32&&recipe==='stone-blocks'||version<72&&recipe==='tribalwear'||version<79&&recipe==='butcher-creature') {if(s.bills!==undefined)errors.push('Bills attached to a non-workstation.');continue;}
     if(!Array.isArray(s.bills)||s.bills.length>64){errors.push('Invalid workstation bills.');continue;}
     for(const b of s.bills) {
-      if(!record(b)||!int(b.id,1,w.nextId-1)||!stationAccepts(s,b.recipe)||!validBillSettings(b,b.recipe)||version<79&&b.filters&&Object.hasOwn(b.filters,'hare-meat')||version<84&&b.filters&&['potato','corn'].some(i=>Object.hasOwn(b.filters,i)))errors.push('Invalid cooking bill.');
+      if(!record(b)||!int(b.id,1,w.nextId-1)||!stationAccepts(s,b.recipe)||!validBillSettings(b,b.recipe)||version<91&&Object.keys(b.filters??{}).some(i=>V91_ITEM_IDS.includes(i))||version<79&&b.filters&&Object.hasOwn(b.filters,'hare-meat')||version<84&&b.filters&&['potato','corn'].some(i=>Object.hasOwn(b.filters,i)))errors.push('Invalid cooking bill.');
       else {if(ids.has(b.id))errors.push('Duplicate bill identity.');ids.add(b.id);}
     }
   }
@@ -33,7 +34,7 @@ export function validateCooking(input:unknown,version:number,ids:Set<number>):st
     if(!record(c)||!int(c.stationId,1)||!int(c.billId,1)||!cell(c.spot)||!cell(c.actionCell)||!['gather','work','output',...(version>=11?['interrupted']:[])].includes(c.phase as string)
       ||!int(c.progress,0,version>=36?productionWorkTotal(taskRecipe(c)):legacyProductionTicks(taskRecipe(c)))||!(c.productId===null||int(c.productId,1,w.nextId-1))||!(c.storageId===null||int(c.storageId,1,w.nextId-1))
       ||!Array.isArray(c.ingredients)||c.ingredients.length>recipe.units) {errors.push('Invalid cooking task.');continue;}
-    for(const i of c.ingredients)if(!record(i)||!int(i.pileId,1,w.nextId-1)||!int(i.quantity,1,recipe.units)||!(recipe.inputs.includes(i.item as ProductionIngredient)&&(version>=79||i.item!=='hare-meat'&&i.item!=='hare-corpse')&&(version>=84||i.item!=='potato'&&i.item!=='corn')||isTailoring(c.recipe)&&i.item===unfinishedItem(c.recipe)&&i.quantity===1)||!['source','held','placed'].includes(i.stage as string)||!cell(i.cell))errors.push('Invalid recipe ingredient reservation.');
+    for(const i of c.ingredients)if(!record(i)||!int(i.pileId,1,w.nextId-1)||!int(i.quantity,1,recipe.units)||!(recipe.inputs.includes(i.item as ProductionIngredient)&&(version>=91||!V91_ITEM_IDS.includes(String(i.item)))&&(version>=79||i.item!=='hare-meat'&&i.item!=='hare-corpse')&&(version>=84||i.item!=='potato'&&i.item!=='corn')||isTailoring(c.recipe)&&i.item===unfinishedItem(c.recipe)&&i.quantity===1)||!['source','held','placed'].includes(i.stage as string)||!cell(i.cell))errors.push('Invalid recipe ingredient reservation.');
   }
   if(errors.length||version<10)return errors;
   const stations=new Set<number>(),spots=new Set<number>();
@@ -48,7 +49,7 @@ export function validateCooking(input:unknown,version:number,ids:Set<number>):st
     const unfinished=isTailoring(c.recipe)&&c.ingredients.length===1&&c.ingredients[0]!.item===unfinishedItem(c.recipe);
     const owned=w.piles.filter(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id);
     if(c.phase==='output') {
-      if(c.ingredients.length||c.progress!==0||owned.length!==1||owned[0]?.id!==c.productId||!isRecipeProduct(taskRecipe(c),owned[0]!.item)||!int(owned[0]?.quantity,1,recipe.outputUnits)||c.recipe==='stone-blocks'&&!recipe.inputs.some(i=>bill.filters[i]&&blockFor(i as StoneIngredient)===owned[0]!.item))errors.push('Invalid cooked product ownership.');
+      if(c.ingredients.length||c.progress!==0||owned.length!==1||owned[0]?.id!==c.productId||!isRecipeProduct(taskRecipe(c),owned[0]!.item)||!int(owned[0]?.quantity,1,version>=91&&c.recipe==='butcher-creature'?75:recipe.outputUnits)||c.recipe==='stone-blocks'&&!recipe.inputs.some(i=>bill.filters[i]&&blockFor(i as StoneIngredient)===owned[0]!.item))errors.push('Invalid cooked product ownership.');
       if(c.storageId!==null){const storage=w.stockpiles.find(s=>s.id===c.storageId),product=owned[0],quantity=c.storageQuantity??1;if(!product||(c.recipe==='stone-blocks'||c.recipe==='butcher-creature')&&c.storageQuantity===undefined||quantity>(product?.quantity??0)||!storage||storageCapacity(w,storage,product.item,p.id)<quantity)errors.push('Invalid cooking output reservation.');}
     } else {
       if(c.productId!==null||c.storageId!==null||(c.phase==='gather'||c.phase==='interrupted')&&c.progress!==0

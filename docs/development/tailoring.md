@@ -1,5 +1,7 @@
 # Confection physique — V72/V73
 
+V91 ajoute cuir ordinaire, fourrure bleue et cuir de dromadaire aux cinq familles existantes. Chaque ouvrage conserve une matière unique, son auteur, ses ingrédients et sa progression. Les quinze vêtements nouveaux sont fabriqués et portés ; propriétés et limites dans la [référence des produits biologiques](../research/biome-products-reference-v91.md). Les vêtements historiques gardent leurs statistiques et identités.
+
 V73 : les contrats d’auteur, d’interruption, de remboursement et de qualité s’appliquent aussi à `shirt`/`unfinished-shirt`, avec **45 tissus** et **270 ticks locaux neutres**. Le tailleur manuel a une vitesse ×0,5 et les facteurs Atelier/extérieurs communs. L’emplacement gratuit ne fabrique toujours que la tenue tribale. Les recettes et inachevés sont strictement distincts ; `stationRecipes` expose le catalogue admissible sans dupliquer le moteur de production. [Recherche et migration V73](research.md).
 
 La filière obtenable est désormais **coton → tissu → tenue tribale → habillage**. Le joueur choisit une facture et un artisan, puis utilise le vêtement produit. [Sources revérifiées](../research/tailoring-reference.md), [preuves](../history/validation-tailoring-v72.md). V73 prolonge cette filière avec [recherche, tailleur manuel et chemise](research.md).

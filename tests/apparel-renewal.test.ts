@@ -14,7 +14,7 @@ const candidate=(id:number,item:keyof typeof APPAREL,quality:'normal'|'excellent
 
 test('five garment families have cloth and light-leather identities, stats and bounded recipes',()=>{
   const ids=new Set<string>();
-  for(const family of APPAREL_FAMILIES)for(const material of APPAREL_MATERIALS){
+  for(const family of APPAREL_FAMILIES)for(const material of ['cloth','light-leather'] as const){
     const item=apparelItemFor(family,material);ids.add(item);
     expect(APPAREL[item]).toMatchObject({family,material});
     expect(newApparelState(item)).toMatchObject({material,hitPoints:APPAREL[item].hitPoints});

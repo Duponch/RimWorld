@@ -89,7 +89,10 @@ function calculate(input:BodyAssessmentInput,model=HUMAN_MODEL):BodyAssessment {
   }
   if(!human) {
     arms=part('jaw')*2;
-    for(const side of ['left','right'] as const)for(const end of ['front','rear'] as const){const leg=part(`${side}-${end}-leg`)*part(`${side}-${end}-paw`);legs+=leg;if(leg>0)functionalLegs++;}
+    for(const side of ['left','right'] as const)for(const end of ['front','rear'] as const){
+      const foot=(Object.hasOwn(model.byId,`${side}-${end}-hoof`)?`${side}-${end}-hoof`:`${side}-${end}-paw`) as BodyPartId;
+      const leg=part(`${side}-${end}-leg`)*part(foot);legs+=leg;if(leg>0)functionalLegs++;
+    }
   }
   const moving=canBeAwake&&functionalLegs>=(human?1:2)?round((legs/(human?2:4)*(human?part('pelvis'):1)*part('spine')*(.8+.2*breathing)*(.8+.2*bloodPumping)*Math.min(1,consciousness)+(input.movingOffset??0))*(input.movingFactor??1)):0;
   const capacities=Object.freeze({consciousness,moving,manipulation:canBeAwake?round((arms/2*consciousness+(input.manipulationOffset??0))*(input.manipulationFactor??1)):0,

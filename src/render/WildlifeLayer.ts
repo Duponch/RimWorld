@@ -12,13 +12,14 @@ import { furnitureSurfaces } from './furniture-motion';
 
 /** Resident capacity and node graph. CPU supplies edges/phases at snapshots
  * and segment boundaries; continuous translation and the rig run on the GPU. */
-export class WildlifeLayer {
+class SpeciesRig {
   readonly mesh:THREE.Mesh;
   readonly flames:THREE.Mesh;
-  readonly travelTime=uniform(0);readonly blend=uniform(1);private time=uniform(0);
+  readonly blend=uniform(1);private time=uniform(0);
   private keys=new Map<number,string>();private source:World|undefined;
+  private animals:NonNullable<World['wildlife']>['animals']=[];
   private surfaces:ReadonlyMap<number,number>=new Map();
-  constructor(configure?:(m:THREE.MeshStandardNodeMaterial)=>void) {
+  constructor(readonly travelTime:WildlifeLayer['travelTime'],private readonly species:string,configure?:(m:THREE.MeshStandardNodeMaterial)=>void) {
     const mat=material(0xffffff);configure?.(mat);mat.colorNode=mix(attribute('color','vec3'),vec3(.42,.4,.37),attribute('aAnimal','vec4').z.sub(1).max(0));
     mat.positionNode=Fn(()=>{
       const pose=pawnPresentationPose(this),state=attribute('aAnimal','vec4'),bone=attribute('boneId','float'),pivot=attribute('bindPivot','vec3');
@@ -35,23 +36,23 @@ export class WildlifeLayer {
       const cy=cos(pose.w),sy=sin(pose.w);
       return vec3(q.x.mul(cy).add(q.z.mul(sy)),q.y,q.z.mul(cy).sub(q.x.mul(sy))).add(pose.xyz);
     })();
-    this.mesh=new THREE.Mesh(hareGeometry(MAX_WILDLIFE),mat);this.mesh.name='Wild hares — GPU rig';this.mesh.frustumCulled=false;this.mesh.castShadow=true;this.mesh.receiveShadow=true;this.flames=attachedFireMesh(this.mesh.geometry,this,.6);
+    this.mesh=new THREE.Mesh(hareGeometry(MAX_WILDLIFE,this.species),mat);this.mesh.name=`Wild ${this.species} — GPU rig`;this.mesh.frustumCulled=false;this.mesh.castShadow=true;this.mesh.receiveShadow=true;this.flames=attachedFireMesh(this.mesh.geometry,this,.6);
   }
   prepare():()=>void {const g=this.mesh.geometry as THREE.InstancedBufferGeometry,n=g.instanceCount;g.instanceCount=Math.max(1,n);return ()=>{g.instanceCount=n;};}
-  update(world:World,timeline:MotionTimeline|undefined):void {
+  update(world:World,timeline:MotionTimeline|undefined,surfaces:ReadonlyMap<number,number>):void {
     const changed=this.source!==world;
-    if(changed){this.source=world;this.keys.clear();this.surfaces=furnitureSurfaces(world);}
+    if(changed){this.source=world;this.keys.clear();this.animals=(world.wildlife?.animals??[]).filter(a=>a.species===this.species);this.surfaces=surfaces;}
     const tick=timeline?.tick??world.tick,origin=Math.floor(tick/1024)*1024;
     this.travelTime.value=localTimeSeconds(tick,origin);this.time.value=localTimeSeconds(tick)%(2*Math.PI);
     const g=this.mesh.geometry as THREE.InstancedBufferGeometry,from=g.getAttribute('aFrom') as THREE.InstancedBufferAttribute,to=g.getAttribute('aTo') as THREE.InstancedBufferAttribute,times=g.getAttribute('aTravel') as THREE.InstancedBufferAttribute,state=g.getAttribute('aAnimal') as THREE.InstancedBufferAttribute;
     if(changed){
     const fireSize=this.mesh.geometry.getAttribute('aFire') as THREE.InstancedBufferAttribute;
     const burning=new Map((world.fires?.items??[]).filter(f=>f.attachedAnimalId!==undefined).map(f=>[f.attachedAnimalId!,f.size]));
-    const animals=world.wildlife?.animals??[];
+    const animals=this.animals;
     animals.forEach((a,i)=>fireSize.setX(i,burning.has(a.id)?Math.max(.5,burning.get(a.id)!):0));if(!animals.length)fireSize.setX(0,0);fireSize.needsUpdate=true;
     (this.flames.geometry as THREE.InstancedBufferGeometry).instanceCount=Math.max(1,animals.length);
     }
-    const animals=world.wildlife?.animals??[];g.instanceCount=animals.length;let dirty=false;
+    const animals=this.animals;g.instanceCount=animals.length;let dirty=false;
     animals.forEach((a,i)=>{
       const edge=timeline?.segment(a.id)??a.motion,active=!!edge&&tick>=edge.start&&tick<edge.end;
       const key=`${i}:${origin}:${edge?.start}:${edge?.end}:${active}:${a.state}:${a.meal?.id}:${a.strike?.atCore}:${a.stun?.untilCore}:${a.threat?.targetId}`;if(this.keys.get(a.id)===key)return;this.keys.set(a.id,key);dirty=true;
@@ -68,4 +69,17 @@ export class WildlifeLayer {
     });
     if(dirty)for(const a of [from,to,times,state])a.needsUpdate=true;
   }
+}
+
+/** Six small resident actor batches; geometry never depends on population or frame. */
+export class WildlifeLayer {
+  readonly mesh=new THREE.Group();readonly flames=new THREE.Group();readonly travelTime=uniform(0);
+  private rigs:SpeciesRig[];private source?:World;private surfaces:ReadonlyMap<number,number>=new Map();
+  constructor(configure?:(m:THREE.MeshStandardNodeMaterial)=>void){
+    this.rigs=['hare','snow-hare','deer','muffalo','gazelle','dromedary'].map(species=>new SpeciesRig(this.travelTime,species,configure));
+    for(const rig of this.rigs){this.mesh.add(rig.mesh);this.flames.add(rig.flames);}
+  }
+  update(world:World,timeline:MotionTimeline|undefined):void{if(this.source!==world){this.source=world;this.surfaces=furnitureSurfaces(world);}for(const rig of this.rigs)rig.update(world,timeline,this.surfaces);}
+  prepare():()=>void{const restores=this.rigs.map(r=>r.prepare());return()=>{for(const restore of restores)restore();};}
+  dispose():void{for(const r of this.rigs)for(const m of [r.mesh,r.flames]){m.geometry.dispose();(m.material as THREE.Material).dispose();}}
 }

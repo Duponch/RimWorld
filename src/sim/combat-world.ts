@@ -1,4 +1,4 @@
-import { FRAME_SHOT_FILL,RESOURCE_SHOT_FILL,STRUCTURE_SHOT_FILL,itemShotFill } from './combat-content.ts';
+import { FRAME_SHOT_FILL,resourceShotFill,STRUCTURE_SHOT_FILL,itemShotFill } from './combat-content.ts';
 import type { ShotCover,ShotGrid } from './combat-space.ts';
 import { footprintCells } from './definitions.ts';
 import type { Cell,World } from './types.ts';
@@ -39,7 +39,7 @@ export function captureWorldShotGrid(world:World,bounds?:ShotCaptureBounds):Worl
   };
   for(const s of world.structures)footprint(s.id,STRUCTURE_SHOT_FILL[s.kind],s.kind==='door'&&s.door?.open?5:1,footprintCells(s));
   for(const j of world.jobs)if(j.construction==='frame')footprint(j.id,FRAME_SHOT_FILL,2,footprintCells(j));
-  for(const r of world.resources)if(valid(r.x,r.z)&&RESOURCE_SHOT_FILL[r.kind]>0)put(r.x,r.z,append(r.id,RESOURCE_SHOT_FILL[r.kind],3));
+  for(const r of world.resources)if(valid(r.x,r.z)&&resourceShotFill(r)>0)put(r.x,r.z,append(r.id,resourceShotFill(r),3));
   for(const p of world.piles)if(p.owner.type==='ground'&&valid(p.owner.x,p.owner.z)&&itemShotFill(p.item)>0)put(p.owner.x,p.owner.z,append(p.id,itemShotFill(p.item),4));
   return Object.freeze({width,height,capturedAt:world.tick,
     blocksSight(x:number,z:number):boolean {

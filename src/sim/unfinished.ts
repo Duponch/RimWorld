@@ -1,3 +1,4 @@
+import { isApparelMaterial,APPAREL_MATERIAL_DEFINITIONS } from './apparel-rules.ts';
 import { healthRandom } from './health.ts';
 import { releaseAssignments } from './work-release.ts';
 import { isCookingOrder } from './order-types.ts';
@@ -53,7 +54,7 @@ export function cancelUnfinished(world:World,itemId:number):CommandResult {
   const material=unfinishedMaterial(pile.unfinished),units=unfinishedUnits(pile.unfinished),random={rng:world.rng};let refund=0;
   for(const n of pile.unfinished.parts){const raw=n*.75,whole=Math.floor(raw);refund+=whole+(raw>whole&&healthRandom(random)<raw-whole?1:0);}
   const shadow={...world,piles:world.piles.filter(p=>p!==pile)},placements=planGroundPlacement(shadow,refund,pile.owner,material);
-  const materialLabel=material==='cloth'?'tissu':'cuir léger';
+  const materialLabel=APPAREL_MATERIAL_DEFINITIONS[material].label;
   if(!placements||shadow.piles.length+placements.length>32768||!Number.isSafeInteger(world.nextId+placements.length))return {ok:false,code:'occupied',reason:`Aucune place pour conserver le ${materialLabel} récupéré.`};
   const ledger=world.tailoring,loss=units-refund,lossBefore=material==='cloth'?(ledger?.lostCloth??0):(ledger?.lostLeather??0);
   if(!Number.isSafeInteger((ledger?.cancelled??0)+1)||!Number.isSafeInteger(lossBefore+loss))return {ok:false,code:'invalid-command',reason:'Limite du bilan textile atteinte.'};
@@ -81,7 +82,7 @@ export function validUnfinishedShape(p:Record<string,unknown>,version:number):bo
     &&int(u.progress,0,productionWorkTotal(recipe))&&(u.billId===undefined||int(u.billId,1));
   const material=u.material,storedUnits=u.units;
   return p.item===unfinishedItem(recipe)&&Object.keys(u).every(k=>['recipe','authorId','progress','material','units','cloth','parts','billId'].includes(k))
-    &&(material==='cloth'||material==='light-leather')&&storedUnits===units&&(u.cloth===undefined||material==='cloth'&&(recipe==='tribalwear'||recipe==='shirt')&&u.cloth===units)
+    &&(isApparelMaterial(material)&&(version>=91||material==='cloth'||material==='light-leather'))&&storedUnits===units&&(u.cloth===undefined||material==='cloth'&&(recipe==='tribalwear'||recipe==='shirt')&&u.cloth===units)
     &&int(u.authorId,1)&&Array.isArray(u.parts)&&u.parts.length>0&&u.parts.length<=80&&u.parts.every(n=>int(n,1,75))&&u.parts.reduce((a:number,b:number)=>a+b,0)===storedUnits
     &&int(u.progress,0,productionWorkTotal(recipe))&&(u.billId===undefined||int(u.billId,1));
 }

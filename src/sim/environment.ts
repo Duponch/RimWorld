@@ -1,5 +1,5 @@
 import { TICKS_PER_DAY } from './types.ts';
-import { climateTick,TEMPERATE_CLIMATE,TICKS_PER_YEAR,type ClimateWorld } from './site-climate.ts';
+import { climateTick,siteClimateDefinition,TICKS_PER_YEAR,type ClimateWorld } from './site-climate.ts';
 
 /** Fixed site: 45°N at equinox. Outdoor temperature/weather are still a preset.
  * Celestial glow follows the reference's horizon correction, independently of
@@ -41,26 +41,26 @@ export function seasonalNaturalLight(latitude:number,civilTick:number):number {
 
 export function annualNaturalLight(world:ClimateWorld,tick=world.tick):number {
   const civil=climateTick(world,tick);
-  return world.climate?seasonalNaturalLight(TEMPERATE_CLIMATE.latitude,civil):naturalLight(civil);
+  return world.climate?seasonalNaturalLight(siteClimateDefinition(world).latitude,civil):naturalLight(civil);
 }
 
 // Shared immutable annual table: one profile, ~2.9MB, O(1) interval queries.
 // No plant/map scan on lookup and no accumulated authoritative growth cache.
-let yearlyPrefix:Float64Array|undefined;
-function annualPrefix():Float64Array {
-  if(yearlyPrefix)return yearlyPrefix;
+const yearlyPrefixes=new Map<number,Float64Array>();
+function annualPrefix(latitude:number):Float64Array {
+  const cached=yearlyPrefixes.get(latitude);if(cached)return cached;
   const values=new Float64Array(TICKS_PER_YEAR+1);
   for(let tick=1;tick<=TICKS_PER_YEAR;tick++) {
     const phase=tick%TICKS_PER_DAY/TICKS_PER_DAY;
-    const light=phase>=.25&&phase<=.8?Math.max(0,(seasonalNaturalLight(TEMPERATE_CLIMATE.latitude,tick)-.51)/.49):0;
+    const light=phase>=.25&&phase<=.8?Math.max(0,(seasonalNaturalLight(latitude,tick)-.51)/.49):0;
     values[tick]=values[tick-1]!+light;
   }
-  return yearlyPrefix=values;
+  yearlyPrefixes.set(latitude,values);return values;
 }
 
 export function annualGrowingLightIntegral(world:ClimateWorld,tick=world.tick):number {
   const civil=climateTick(world,tick);
   if(!world.climate)return growingLightIntegral(civil);
-  const values=annualPrefix(),years=Math.floor(civil/TICKS_PER_YEAR),remainder=civil-years*TICKS_PER_YEAR;
+  const values=annualPrefix(siteClimateDefinition(world).latitude),years=Math.floor(civil/TICKS_PER_YEAR),remainder=civil-years*TICKS_PER_YEAR;
   return years*values[TICKS_PER_YEAR]!+values[remainder]!;
 }

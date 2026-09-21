@@ -31,3 +31,6 @@ artifacts/body-cpu-latest.json
 # V86 synthetic failure worlds stay local; compact diagnostics and hashes are tracked.
 artifacts/prison-cpu-failure-v86-*.json
 artifacts/interruption-cpu-latest.json
+
+# Local Python reference-analysis bytecode.
+__pycache__/

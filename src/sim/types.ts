@@ -1,10 +1,10 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 90 as const;
+export const SCHEMA_VERSION = 91 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
 export type Terrain = 'grass' | 'soil' | 'water' | 'rock' | 'rough-stone' | 'rich-soil' | 'gravel';
-export type ResourceKind = 'potato' | 'corn' | 'tree' | 'berries' | 'rock' | 'rice' | 'cotton';
+export type ResourceKind = 'wild-plant' | 'potato' | 'corn' | 'tree' | 'berries' | 'rock' | 'rice' | 'cotton';
 export type MaterialKind = 'silver' | 'corpse' | 'wood' | 'food' | 'chunk' | 'steel' | 'blocks' | 'component' | 'medicine' | 'weapon' | 'apparel' | 'textile' | 'unfinished';
 export type StructureKind = 'grave' | 'heater' | 'wind-turbine' | 'power-conduit' | 'power-switch' | 'battery' | 'solar-generator' | 'fueled-stove' | 'electric-stove' | 'butcher-table' | 'butcher-spot' | 'cooler' | 'research-bench' | 'tailor-bench' | 'electric-tailor-bench' | 'crafting-spot' | 'wood-generator' | 'standing-lamp' | 'passive-cooler' | 'door' | 'wall' | 'bed' | 'table' | 'table-square' | 'table-long' | 'stool' | 'dining-chair' | 'armchair' | 'end-table' | 'dresser' | 'flower-pot' | 'campfire' | 'horseshoes' | 'stonecutter';
 export type JobKind = 'lay-floor' | 'remove-floor' | 'flick' | 'repair' | 'build-roof' | 'remove-roof' | 'mine' | 'chop' | 'harvest' | 'cut' | 'sow' | 'deconstruct' | 'uninstall' | 'install' | StructureKind;
@@ -14,7 +14,7 @@ export type Footprint = 'standard' | 'legacy-single';
 export type PawnState = 'idle' | 'moving' | 'working' | 'sleeping' | 'hungry' | 'eating' | 'recreating' | 'resting' | 'downed' | 'dead';
 export interface Cell { x: number; z: number }
 export interface Tile { floor?:import('./flooring.ts').FloorKind; ore?: 'steel' | 'machinery'; miningDamage?: number; terrain: Terrain; stone?: import('./geology.ts').StoneKind }
-export interface Resource extends Cell { plantLife?:import('./plant-life.ts').PlantLife; damage?:number; id: number; kind: ResourceKind; amount: number; growth?: number; growthTick?: number; growthThermalFactor?:number; stone?: import('./geology.ts').StoneKind }
+export interface Resource extends Cell { species?:import('./biome-flora.ts').PlantSpecies; plantLife?:import('./plant-life.ts').PlantLife; damage?:number; id: number; kind: ResourceKind; amount: number; growth?: number; growthTick?: number; growthThermalFactor?:number; stone?: import('./geology.ts').StoneKind }
 export interface Structure extends Cell { flower?:import('./flower-pot.ts').FlowerPotState; quality?:import('./equipment-rules.ts').WeaponQuality; grave?:import('./burial.ts').GraveState; heater?:import('./heater.ts').HeaterState; wind?:import('./wind.ts').WindTurbineState; prisoner?:true; battery?:import('./power-battery.ts').BatteryState; cooler?:import('./cooler.ts').CoolerState; damage?:number; medical?:true; power?:import('./power-rules.ts').PowerState; door?:import('./door-rules.ts').DoorState; material?:import('./construction-materials.ts').ConstructionMaterial; bills?: import('./cooking-types.ts').CookingBill[]; fuel?: import('./fuel.ts').FuelState; id: number; kind: StructureKind; orientation: Orientation; footprint: Footprint }
 export interface Stock { wood: number; food: number }
 export type MaterialOwner = {type:'grave';graveId:number} | ({ type: 'ground' } & Cell) | { type: 'pawn'; pawnId: number } | {type:'inventory';pawnId:number} | {type:'equipment';pawnId:number} | {type:'apparel';pawnId:number} | { type: 'job'; jobId: number };
@@ -166,6 +166,7 @@ export interface World {
   scenario?:import('./scenario-definitions.ts').ScenarioStamp;
   hunting?:{targets:number[];completed:number};
   butchery?:{completed:number;meat:number;leather:number};
+  flora?:import('./wild-flora.ts').WildFloraState;
   wildlife?:import('./wildlife-state.ts').WildlifeState;
   heatwaves?:import('./heatwave.ts').HeatwaveCalendar;
   research?:import('./research.ts').ResearchState;
