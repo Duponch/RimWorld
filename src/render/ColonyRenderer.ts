@@ -51,7 +51,8 @@ import { WORLD_SCALE } from '../world/scale';
 import { CameraRig, type CameraMode } from './CameraRig';
 import { DayNightLayer } from './DayNightLayer';
 import { RecreationHints } from './RecreationHints';
-import { GpuGrassLayer,isGpuGrassResource } from './GpuGrassLayer';
+import { PlantClusterLayer } from './PlantClusterLayer';
+import { isClusterPlantSpecies } from './flora-presentation';
 import { DesignationIconLayer } from './DesignationIconLayer';
 
 type VisualChunk = { signature: string; group: THREE.Group };
@@ -118,7 +119,7 @@ export class ColonyRenderer {
   private readonly crops = new CropLayer(this.staticMaterial);
   private readonly growing = new GrowingZoneLayer(this.boxes);
   private readonly rocks = new RockLayer(this.staticMaterial);
-  private readonly grass = new GpuGrassLayer(this.environmentLighting.configure);
+  private readonly plants = new PlantClusterLayer(this.staticMaterial);
   private readonly designations = new DesignationIconLayer();
   private readonly daylight: DayNightLayer;
   private world: World | null = null;
@@ -183,7 +184,7 @@ export class ColonyRenderer {
     renderer.domElement.tabIndex = 0;
     host.appendChild(renderer.domElement);
     this.daylight = new DayNightLayer(this.scene);
-    this.scene.add(this.hygiene.group,this.wind.group,this.wildlife.mesh,this.wildlife.flames,this.fires.mesh,this.projectiles.mesh,this.roofs.surface,this.roofs.areas,this.doors.group,this.crops.group, this.growing.group, this.overview.group, this.terrainGroup, this.grass.mesh, this.resourceGroup, this.structureGroup, this.jobGroup, this.designations.mesh, this.storageGroup, this.pileGroup, this.pawns.group);
+    this.scene.add(this.hygiene.group,this.wind.group,this.wildlife.mesh,this.wildlife.flames,this.fires.mesh,this.projectiles.mesh,this.roofs.surface,this.roofs.areas,this.doors.group,this.crops.group,this.plants.group, this.growing.group, this.overview.group, this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.designations.mesh, this.storageGroup, this.pileGroup, this.pawns.group);
     this.rig = new CameraRig(renderer.domElement);
     const hoverMat = new THREE.MeshBasicNodeMaterial({ color: 0xf9ebae, transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide, forceSinglePass:true });
     // A zero-thickness cursor has no front/back transparency ordering.
@@ -257,7 +258,6 @@ export class ColonyRenderer {
     this.world = world;
     this.fires.adopt(world,newMap);this.wind.adopt(world,newMap);
     this.environmentLighting.update(world);
-    this.grass.update(world);
     if(groundChanged) {
       buildTerrain(world,this.terrainGroup,this.staticMaterial,this.waterMaterial);
       this.overview.rebuildTerrain(this.terrainGroup);
@@ -365,12 +365,13 @@ export class ColonyRenderer {
     const restoreRoofs=this.roofs.prepare();
     const restoreDoors=this.doors.prepareForCompile();
     const restoreCrops = this.crops.prepareForCompile();
+    const restorePlants = this.plants.prepareForCompile();
     const restoreDesignations=this.designations.prepareForCompile();
     try {
       // The double-sided cursor otherwise compiles both face variants on the
       // first map interaction. Include it behind the loading overlay.
       this.hover.visible = true;
-      this.overview.group.visible = this.terrainGroup.visible = this.resourceGroup.visible = true;
+      this.overview.group.visible = this.terrainGroup.visible = this.resourceGroup.visible = this.plants.group.visible = true;
       this.rocks.setDistant(false); this.rocks.mesh.visible = true;
       this.scene.traverse(object => { culling.set(object, object.frustumCulled); object.frustumCulled = false; });
       this.daylight.update(this.world ? calendarTick(this.world) : 0, this.controls.target,this.world??undefined);
@@ -378,9 +379,9 @@ export class ColonyRenderer {
       await this.renderer.compileAsync(this.scene, this.rig.perspective);
       await prepareShadowPipelines(this.renderer,this.scene,this.rig.orthographic,this.boxes);
     } finally {
-      restoreWind();restoreWildlife();restoreRoofs();restoreDoors();restoreCrops();restoreDesignations();
+      restoreWind();restoreWildlife();restoreRoofs();restoreDoors();restoreCrops();restorePlants();restoreDesignations();
       for (const [object, value] of culling) object.frustumCulled = value;
-      this.overview.group.visible = distant; this.terrainGroup.visible = this.resourceGroup.visible = !distant;
+      this.overview.group.visible = distant; this.terrainGroup.visible = this.resourceGroup.visible = this.plants.group.visible = !distant;
       this.rocks.setDistant(distant); this.preparing = false;
       this.updateHover();
       this.frames.reset(); this.lastFrame = 0;
@@ -446,7 +447,8 @@ export class ColonyRenderer {
 
   private updateResources(world: World, newMap: boolean): void {
     const view=this.naturalPresentation.read(world,newMap);if(!view)return;
-    const visible={...view,resources:view.resources.filter(resource=>!isGpuGrassResource(resource))};
+    this.plants.update(view,newMap);
+    const visible={...view,resources:view.resources.filter(resource=>!isClusterPlantSpecies(resource.species))};
     this.resources.update(visible, newMap); this.overview.update(visible,newMap);
   }
 
@@ -545,9 +547,8 @@ export class ColonyRenderer {
     this.daylight.update(this.world?calendarTick(this.world,skyTick):skyTick, this.controls.target,this.world??undefined);
     const cellPixels=this.rig.pixelsPerCell(this.host.clientHeight);
     const distant=this.overview.group.visible ? cellPixels<9 : cellPixels<7;
-    this.overview.group.visible=distant;this.terrainGroup.visible=!distant;this.resourceGroup.visible=!distant;
+    this.overview.group.visible=distant;this.terrainGroup.visible=!distant;this.resourceGroup.visible=!distant;this.plants.group.visible=!distant;
     this.rocks.setDistant(distant);
-    this.grass.present(this.camera,skyTick,distant);
     this.renderer.info.reset();
     this.renderer.render(this.scene, this.camera);
     this.stats.drawCalls = this.renderer.info.render.drawCalls;
@@ -752,8 +753,9 @@ export class ColonyRenderer {
     this.overview.dispose();
     this.rocks.dispose();
     this.crops.dispose();
+    this.plants.dispose();
     this.resources.clear();
-    this.doors.dispose();this.projectiles.dispose();this.fires.dispose();this.wind.dispose();this.wildlife.dispose();this.grass.dispose();this.designations.dispose();
+    this.doors.dispose();this.projectiles.dispose();this.fires.dispose();this.wind.dispose();this.wildlife.dispose();this.designations.dispose();
 
     for (const group of [this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup, this.pawns.group]) clearGroup(group);
     this.pileChunks.clear();

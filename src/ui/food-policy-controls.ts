@@ -8,8 +8,8 @@ export function foodPolicyLayout(): string {
   return `<section id="assign-panel" class="management-panel assign-panel panel" aria-label="Affectations" hidden>
     <div class="panel-heading"><h2>Affectations</h2><button data-close-panel aria-label="Fermer Affectations">×</button></div>
     <p>Choisissez les aliments autorisés pour chaque colon. Les régimes sont partagés : modifier un régime affecte toutes les personnes qui l’utilisent.</p>
-    <div class="work-table-wrap"><table><thead><tr><th>Colon</th><th>Régime alimentaire</th><th>Réaction hostile</th><th>État</th></tr></thead><tbody id="food-policy-rows"></tbody></table></div>
-    <button id="manage-food-policies">Gérer les régimes alimentaires</button><p id="assign-feedback" role="status"></p>
+    <div class="work-table-wrap assignment-table-wrap"><table class="assignment-table"><thead><tr><th>Colon</th><th>Régime alimentaire</th><th>Réaction hostile</th><th>État</th></tr></thead><tbody id="food-policy-rows"></tbody></table></div>
+    <div class="assignment-actions"><button id="manage-food-policies">Gérer les régimes alimentaires</button><p id="assign-feedback" role="status"></p></div>
     <p class="muted">Un régime ne change pas le transport ni les ingrédients de cuisine. Un repas déjà engagé peut se terminer. Vêtements, drogues, et réaction Attaquer restent à développer. Fuir est le défaut ; les ordres directs gardent la priorité. Les soins se règlent dans Santé ; le régime d’un prisonnier se choisit dans son inspection.</p>
   </section>
   <dialog id="food-policy-dialog" class="food-policy-dialog">
@@ -74,10 +74,10 @@ export function createFoodPolicyControls(root: HTMLElement, send: (command: Food
     if(identity!==nextIdentity) {
       identity=nextIdentity;rows.clear();policiesSignature='';
       el('food-policy-rows').replaceChildren(...next.pawns.filter(isColonist).map(p=>{
-        const row=document.createElement('tr'),th=document.createElement('th');th.scope='row';th.textContent=p.name;row.append(th);
-        const td=document.createElement('td'),select=document.createElement('select');select.dataset.foodPolicyPawn=String(p.id);select.setAttribute('aria-label',`Régime alimentaire de ${p.name}`);
+        const row=document.createElement('tr'),th=document.createElement('th');row.dataset.assignmentPawn=String(p.id);th.scope='row';th.textContent=p.name;row.append(th);
+        const td=document.createElement('td'),select=document.createElement('select');td.className='assignment-food';select.dataset.foodPolicyPawn=String(p.id);select.setAttribute('aria-label',`Régime alimentaire de ${p.name}`);
         select.onchange=()=>{void commit({type:'food-policy-assign',pawnId:p.id,policyId:Number(select.value)});};td.append(select);row.append(td);
-        const reactionCell=document.createElement('td'),response=document.createElement('select');response.setAttribute('aria-label',`Réaction hostile de ${p.name}`);response.innerHTML='<option value="flee">Fuir</option><option value="attack">Attaquer</option><option value="ignore">Ignorer</option>';response.onchange=()=>void commit({type:'hostility-response',pawnId:p.id,response:response.value as 'flee'|'ignore'|'attack'});reactionCell.append(response);row.append(reactionCell);
+        const reactionCell=document.createElement('td'),response=document.createElement('select');reactionCell.className='assignment-response';response.setAttribute('aria-label',`Réaction hostile de ${p.name}`);response.innerHTML='<option value="flee">Fuir</option><option value="attack">Attaquer</option><option value="ignore">Ignorer</option>';response.onchange=()=>void commit({type:'hostility-response',pawnId:p.id,response:response.value as 'flee'|'ignore'|'attack'});reactionCell.append(response);row.append(reactionCell);
         const status=document.createElement('td');status.className='policy-status';row.append(status);rows.set(p.id,{select,response,status});return row;
       }));
     }

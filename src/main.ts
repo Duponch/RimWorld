@@ -152,9 +152,9 @@ async function openFront(page: 'home' | 'create' | 'load'): Promise<void> {
   else frontMenu.showHome(session.hasWorld);
   setPanel(null); syncStorageButtons();
 }
-async function switchPanel(panel: Panel): Promise<void> {
+async function switchPanel(panel: Panel, preserveTool = false): Promise<void> {
   if (panel === 'menu') await pauseForMenu();
-  setPanel(panel);
+  setPanel(panel, preserveTool);
 }
 async function replaceColony(action: () => Promise<void>): Promise<void> {
   replacingWorld = true; syncStorageButtons();
@@ -194,7 +194,7 @@ function setCategory(category: ArchitectCategory) {
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-tool-category]')) button.hidden = button.dataset.toolCategory !== category;
 }
 function renderWildlife(world:World){updateWildlifePanel(el('wildlife-content'),world,id=>renderer?.focusPawn(id),()=>void attempt(async()=>{await client.command({type:'enable-wildlife'});renderState();}),[...selection.ids],id=>void attempt(async()=>{await client.command({type:'shoot',pawnIds:[...selection.ids],targetId:id});renderState();}),id=>void attempt(async()=>{await client.command({type:'melee',pawnIds:[...selection.ids],targetId:id});renderState();}),(id,enabled)=>void attempt(async()=>{await client.command({type:'hunt',animalId:id,enabled});renderState();}));}
-function setPanel(panel: Panel) {
+function setPanel(panel: Panel, preserveTool = false) {
   // Every exit path (tabs, map, portraits and shortcuts) releases this pause.
   if (currentPanel === 'menu' && panel !== 'menu' && menuResumeSpeed !== undefined && !replacingWorld && !frontMenu.isOpen()) {
     const speed = menuResumeSpeed; menuResumeSpeed = undefined;
@@ -215,7 +215,7 @@ function setPanel(panel: Panel) {
     button.setAttribute('aria-pressed', String(active));
   }
   el('inspector').hidden = panel !== null || (!selection.ids.size && !selectedCell);
-  if (panel !== 'architect') applyTool('select');
+  if (panel !== 'architect' && !preserveTool) applyTool('select');
   if (panel === null && snapshot) {
     const cell = selectedCell ?? snapshot.pawns.find(p => p.id === selectedPawn);
     if (cell) roomInspection.update(el('inspector'), snapshot, cell);
@@ -652,7 +652,10 @@ async function changeSpeed(speed: number) { if (currentPanel==='menu') return; i
 for (const button of document.querySelectorAll<HTMLButtonElement>('[data-tool]')) button.onclick = () => setTool(button.dataset.tool as Tool);
 for (const button of document.querySelectorAll<HTMLButtonElement>('[data-category]')) button.onclick = () => { setCategory(button.dataset.category as ArchitectCategory); applyTool('select'); };
 for (const button of document.querySelectorAll<HTMLButtonElement>('[data-panel]:not(:disabled)')) button.onclick = () => { const panel = button.dataset.panel as Panel; void attempt(() => switchPanel(currentPanel === panel ? null : panel)); };
-for (const button of document.querySelectorAll<HTMLButtonElement>('[data-close-panel]')) button.onclick = () => { void attempt(() => switchPanel(null)); };
+for (const button of document.querySelectorAll<HTMLButtonElement>('[data-close-panel]')) button.onclick = () => {
+  const preserveTool = currentPanel === 'architect' && currentTool !== 'select';
+  void attempt(() => switchPanel(null, preserveTool));
+};
 for (const button of document.querySelectorAll<HTMLButtonElement>('[data-speed]')) button.onclick = () => { void attempt(() => changeSpeed(Number(button.dataset.speed))); };
 el('save').onclick = () => { void attempt(save); }; el('load').onclick = () => { void attempt(() => load()); };
 el('restore-previous').onclick = () => { void attempt(() => load(PREVIOUS_KEY)); };

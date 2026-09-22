@@ -1,4 +1,8 @@
-# Validation courante — V91
+# Validation courante — V94
+
+V94 : [plantes 3D et interface stable](../history/validation-interface-v94.md), 17 contrôles courts, build, parcours natif principal, commerce, A/B paysage, minage complet et contrôle public Netlify réussis. Les touffes sont regroupées dans un lot instancié ; les panneaux et neuf curseurs sont vérifiés aux dimensions réelles. Le défaut ancien d'ordre prioritaire après dégagement d'un arbre reste explicitement ouvert dans ROADMAP.
+
+V93 : [refonte du thème, pictogrammes et stockage](../history/validation-interface-v93.md). Ces preuves restent historiques ; V94 remplace le champ de brins et l'atlas de curseurs sans changer le schéma 91.
 
 V91 : [milieux vivants et ressources utiles](../history/validation-biomes-v91.md), 138 contrôles regroupés puis reprises ciblées des optimisations, migration neutre de la colonie V90, trois parcours de biome en navigateur natif et mesures CPU/worker/rendu successives. Les scénarios contrôlés ne constituent pas une campagne annuelle. [Performances et limites](../research/performance-v91.md).
 

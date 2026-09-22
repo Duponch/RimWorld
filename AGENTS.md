@@ -1,5 +1,11 @@
 # Travail sur Lisière
 
+## Plantes 3D et stabilité d'interface V94
+- Lire `docs/development/visual-identity.md`, `gpu-landscape.md` et `docs/history/validation-interface-v94.md`. La demande V94 remplace les brins V92 : `GpuGrassLayer` est supprimé ; `grass` et `tall-grass` sont des touffes 3D verticales à sept tiges fines dans un seul lot instancié, avec variations déterministes qui ne consomment pas le PRNG métier. Ne pas réintroduire un tapis d'herbe procédural sans nouvelle demande.
+- Ressources garde 216 px et tous ses libellés même si un panneau le chevauche. Travail, Horaires et Affectations ne défilent pas horizontalement aux résolutions contrôlées ; Faune garde six colonnes stables. Les portraits sélectionnés gardent leur nom et tous les portraits ont un survol.
+- Les neuf curseurs viennent de `cursors-v94.png`, avec la pointe opaque comme point actif. Fermer Architecte conserve l'outil actif pour libérer la carte ; Échap ou un autre panneau rend la sélection. Les pilotes utilisent ce vrai bouton avant un clic de carte masqué.
+- V94 reste une livraison de présentation, schéma 91 et catalogue V91 inchangés. Le défaut d'ordre direct libéré après dégagement d'un arbre est consigné dans ROADMAP ; ne pas le masquer par une attente plus longue ou une priorité métier réactivée implicitement. Déploiement Netlify V94 `6ab2c1b9f16a9132fb8ec39b`, contrôle public réussi.
+
 ## Refonte visuelle V93
 - La demande utilisateur remplace le thème V92 : cadres géométriques stables, papier ivoire et encre forêt, Literata/Source Sans 3 embarquées sous OFL. Ne pas réintroduire le cadre raster étiré ou des couches de fonds sombres dans les panneaux papier. Illustrations historiques conservées. Contrat : `docs/development/visual-identity.md`.
 - Architecte : 60 outils dotés de PNG dans deux atlas, options dans un espace fixe, neuf curseurs réellement liés à `applyTool`. Préserver boutons, commandes et accessibilité ; les glyphes ne servent plus de pictogrammes de remplacement. Dossiers : une zone de lecture, sous-détails repliables, propreté dans Santé, actions physiques fixes.

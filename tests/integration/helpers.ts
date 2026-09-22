@@ -96,6 +96,8 @@ export async function settledCells(page:Page,cells:{x:number;z:number}[]) {
   return sample.points;
 }
 export async function cell(page: Page, x: number, z: number) {
+  const architect=page.locator('#architect-panel');
+  if(await architect.isVisible())await architect.locator('[data-close-panel]').click();
   const [point] = await settledCells(page,[{x,z}]);
   const bounds = await page.locator('#viewport canvas').boundingBox();
   if (!bounds) throw new Error('Canvas absent');
@@ -103,6 +105,8 @@ export async function cell(page: Page, x: number, z: number) {
   await page.mouse.click(bounds.x + point!.x, bounds.y + point!.y);
 }
 export async function dragRectangle(page: Page, from: { x: number; z: number }, to: { x: number; z: number }, release = true) {
+  const architect=page.locator('#architect-panel');
+  if(await architect.isVisible())await architect.locator('[data-close-panel]').click();
   const points = await settledCells(page,[from,to]);
   const bounds = await page.locator('#viewport canvas').boundingBox();
   if (!bounds) throw new Error('Canvas absent');

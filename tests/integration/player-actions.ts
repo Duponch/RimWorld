@@ -6,27 +6,45 @@ import { stationRecipes } from '../../src/sim/production-recipes';
 import { world, panel, pawnTab, tool, cell, dragRectangle, settledCells, type PawnInspectorTab } from './helpers';
 
 export async function revealCells(page:Page,cells:{x:number;z:number}[]):Promise<void> {
+  const architect=page.locator('#architect-panel');
+  if(await architect.isVisible())await architect.locator('[data-close-panel]').click();
   const visible=()=>page.evaluate(cells=>{
     const bounds=document.querySelector('#viewport canvas')!.getBoundingClientRect();
     return cells.every(c=>{const p=window.__lisiere.projectCell(c.x,c.z);return document.elementFromPoint(bounds.x+p.x,bounds.y+p.y)?.tagName==='CANVAS';});
   },cells);
-  for(let attempt=0;attempt<6&&!await visible();attempt++) {
-    await page.mouse.move(900,350);await page.mouse.wheel(0,300);
+  const safeAnchor=()=>page.evaluate(()=>{
+    const canvas=document.querySelector<HTMLCanvasElement>('#viewport canvas')!,b=canvas.getBoundingClientRect();
+    // Fixed HUD can cover the center and borders; prefer an upper-right map
+    // surface, then verify that the selected anchor is really the canvas.
+    const preferred={x:b.left+b.width*.7,y:b.top+b.height*.11};let best:{x:number;y:number;score:number}|undefined;
+    for(let y=b.top+18;y<b.bottom-18;y+=24)for(let x=b.left+18;x<b.right-18;x+=24){
+      const clear=[[0,0],[-10,0],[10,0],[0,-10],[0,10]].every(([dx,dy])=>document.elementFromPoint(x+dx,y+dy)===canvas);
+      if(!clear)continue;const score=Math.hypot(x-preferred.x,y-preferred.y);if(!best||score<best.score)best={x,y,score};
+    }
+    if(!best)throw new Error('Aucune surface de carte libre pour déplacer la caméra.');
+    return {x:best.x,y:best.y};
+  });
+  for(let attempt=0;attempt<8&&!await visible();attempt++) {
+    const anchor=await safeAnchor();await page.mouse.move(anchor.x,anchor.y);await page.mouse.wheel(0,300);
     // Let the camera's damped wheel movement settle before projecting again.
     await page.waitForTimeout(200);
   }
   // A player pans when the next outcrop lies outside the maximum zoom span.
   // Use the actual middle-button gesture and screen feedback, not a camera API.
-  for(let attempt=0;attempt<6&&!await visible();attempt++) {
-    const center=await page.evaluate(cells=>{
+  for(let attempt=0;attempt<18&&!await visible();attempt++) {
+    const [anchor,center]=await Promise.all([safeAnchor(),page.evaluate(cells=>{
       const b=document.querySelector('#viewport canvas')!.getBoundingClientRect();
       const points=cells.map(c=>window.__lisiere.projectCell(c.x,c.z));
       return {x:b.x+points.reduce((n,p)=>n+p.x,0)/points.length,y:b.y+points.reduce((n,p)=>n+p.y,0)/points.length};
-    },cells);
-    const dx=Math.max(-300,Math.min(300,900-center.x)),dy=Math.max(-200,Math.min(200,350-center.y));
-    await page.mouse.move(900,350);await page.mouse.down({button:'middle'});
-    await page.mouse.move(900+dx,350+dy,{steps:8});await page.mouse.up({button:'middle'});await page.waitForTimeout(200);
+    },cells)]);
+    const dx=Math.max(-300,Math.min(300,anchor.x-center.x)),dy=Math.max(-200,Math.min(200,anchor.y-center.y));
+    await page.mouse.move(anchor.x,anchor.y);await page.mouse.down({button:'middle'});
+    await page.mouse.move(anchor.x+dx,anchor.y+dy,{steps:8});await page.mouse.up({button:'middle'});await page.waitForTimeout(200);
   }
+  if(process.env.CAMERA_TRACE==='1'&&!await visible())console.info(JSON.stringify(await page.evaluate(cells=>{
+    const canvas=document.querySelector<HTMLCanvasElement>('#viewport canvas')!,b=canvas.getBoundingClientRect();
+    return {bounds:{x:b.x,y:b.y,width:b.width,height:b.height},points:cells.map(c=>{const p=window.__lisiere.projectCell(c.x,c.z),x=b.x+p.x,y=b.y+p.y,node=document.elementFromPoint(x,y);return {...c,x,y,node:node?.tagName,id:(node as HTMLElement|undefined)?.id,className:(node as HTMLElement|undefined)?.className};})};
+  },cells)));
   await settledCells(page,cells);
   await expect.poll(visible,{message:`Le joueur doit voir les cases visées : ${JSON.stringify(cells)}`}).toBe(true);
 }

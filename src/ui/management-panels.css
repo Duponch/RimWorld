@@ -1,0 +1,350 @@
+/* Stable game-facing management matrices. These rules deliberately keep
+   changing status copy out of the geometry used by the controls. */
+#work-panel,
+#schedule-panel,
+#assign-panel,
+#wildlife-panel {
+  width: min(1480px, calc(100vw - 282px));
+  max-width: calc(100vw - 282px);
+  overflow-x: hidden;
+}
+
+#work-panel .work-table-wrap,
+#assign-panel .work-table-wrap {
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+#work-panel table {
+  width: 100%;
+  table-layout: fixed;
+  font-variant-numeric: tabular-nums;
+}
+
+#work-panel th,
+#work-panel td {
+  box-sizing: border-box;
+  height: 54px;
+  padding: 5px 2px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+#work-panel thead th {
+  height: 58px;
+  font-size: 11px;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+
+#work-panel th:first-child {
+  width: 78px;
+  padding-left: 9px;
+  text-align: left;
+}
+
+#work-panel th:last-child {
+  width: 170px;
+  padding-inline: 10px;
+  text-align: left;
+}
+
+#work-panel td:not(.work-activity) {
+  position: relative;
+}
+
+#work-panel td select {
+  display: block;
+  width: calc(100% - 4px);
+  min-width: 0;
+  max-width: 42px;
+  height: 32px;
+  margin: 0 auto;
+  padding: 3px 15px 3px 7px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+#work-panel td small {
+  display: flex;
+  min-height: 13px;
+  margin-top: 2px;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: var(--muted-ink);
+  font-size: 10px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+#work-panel .skill-passion {
+  width: 11px;
+  height: 11px;
+}
+
+#work-panel .work-activity {
+  width: 170px;
+  padding-inline: 10px;
+  overflow: hidden;
+  color: var(--ink);
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#schedule-panel .schedule-table-wrap {
+  width: 100%;
+  max-height: none;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+#schedule-panel .schedule-table {
+  min-width: 0;
+  table-layout: fixed;
+  font-variant-numeric: tabular-nums;
+}
+
+#schedule-panel .schedule-table th:first-child {
+  width: 76px;
+  padding-left: 9px;
+}
+
+#schedule-panel .schedule-table th:last-child {
+  width: 72px;
+}
+
+#schedule-panel .schedule-table th,
+#schedule-panel .schedule-table td {
+  height: 48px;
+  padding: 4px 2px;
+  vertical-align: middle;
+}
+
+#schedule-panel .schedule-table thead th {
+  height: 34px;
+}
+
+#schedule-panel .schedule-table [data-schedule-hour] {
+  width: calc(100% - 2px);
+  min-width: 0;
+  max-width: 30px;
+  height: 30px;
+  margin: 0 auto;
+  border-radius: 4px;
+}
+
+#schedule-panel .schedule-copy {
+  display: grid;
+  width: 72px;
+  gap: 4px;
+  align-content: center;
+  justify-items: stretch;
+}
+
+#schedule-panel .schedule-copy button {
+  width: 64px;
+  min-height: 25px;
+  margin: 0 auto;
+  padding: 2px 6px;
+  font-size: 11px;
+}
+
+#schedule-panel .schedule-copy button:disabled {
+  opacity: .48;
+}
+
+#assign-panel .assignment-table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+#assign-panel .assignment-table th,
+#assign-panel .assignment-table td {
+  box-sizing: border-box;
+  height: 54px;
+  padding: 7px 10px;
+  vertical-align: middle;
+}
+
+#assign-panel .assignment-table th:nth-child(1) { width: 100px; }
+#assign-panel .assignment-table th:nth-child(2) { width: 180px; }
+#assign-panel .assignment-table th:nth-child(3) { width: 180px; }
+#assign-panel .assignment-table th:nth-child(4) { width: 70px; text-align: center; }
+#assign-panel .assignment-table th:nth-child(5) { width: 150px; }
+
+#assign-panel .assignment-table select {
+  width: 100%;
+  min-width: 0;
+  height: 36px;
+}
+
+#assign-panel [data-apparel-automation-cell] {
+  text-align: center;
+}
+
+#assign-panel [data-apparel-automation-cell] input {
+  margin: 0 auto;
+}
+
+#assign-panel .policy-status {
+  width: auto;
+  max-width: none;
+  color: var(--muted-ink);
+  line-height: 1.3;
+}
+
+#assign-panel .assignment-actions {
+  display: flex;
+  min-height: 46px;
+  margin-top: 12px;
+  align-items: center;
+  gap: 14px;
+}
+
+#assign-panel #manage-food-policies {
+  min-width: 235px;
+}
+
+#assign-panel #assign-feedback {
+  margin: 0;
+}
+
+#wildlife-panel {
+  width: min(1260px, calc(100vw - 282px));
+}
+
+#wildlife-panel .fauna-intro {
+  display: grid;
+  grid-template-columns: minmax(240px, .8fr) minmax(420px, 1.7fr);
+  gap: 24px;
+  margin-bottom: 12px;
+}
+
+#wildlife-panel .fauna-intro p {
+  margin: 0;
+}
+
+#wildlife-panel .fauna-enable {
+  margin-bottom: 12px;
+}
+
+#wildlife-panel .fauna-list {
+  display: grid;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+#wildlife-panel .fauna-list-head,
+#wildlife-panel .fauna-row {
+  display: grid;
+  grid-template-columns: 90px minmax(150px, 1.1fr) 74px minmax(125px, .9fr) 74px 250px;
+  gap: 10px;
+  align-items: center;
+}
+
+#wildlife-panel .fauna-list-head {
+  min-height: 36px;
+  padding: 0 12px;
+  background: #e7e7d7;
+  color: #516149;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+#wildlife-panel .fauna-row {
+  min-height: 84px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--line);
+}
+
+#wildlife-panel .fauna-row:nth-child(odd) {
+  background: #e6e8d54d;
+}
+
+#wildlife-panel .fauna-hunt {
+  display: flex;
+  min-width: 0;
+  margin: 0;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+#wildlife-panel .fauna-focus {
+  width: 100%;
+  min-width: 0;
+  min-height: 36px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#wildlife-panel .fauna-sex,
+#wildlife-panel .fauna-activity,
+#wildlife-panel .fauna-position {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#wildlife-panel .fauna-position {
+  font-variant-numeric: tabular-nums;
+}
+
+#wildlife-panel .fauna-actions {
+  display: grid;
+  grid-template-columns: 74px 166px;
+  gap: 8px;
+}
+
+#wildlife-panel .fauna-actions button {
+  width: 100%;
+  min-width: 0;
+  min-height: 34px;
+  padding-inline: 7px;
+}
+
+#wildlife-panel .fauna-health {
+  grid-column: 2 / -1;
+  display: block;
+  min-height: 18px;
+  overflow: hidden;
+  color: var(--muted-ink);
+  font-size: 12px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 1180px) {
+  #work-panel,
+  #schedule-panel,
+  #assign-panel,
+  #wildlife-panel {
+    width: calc(100vw - 286px);
+    max-width: calc(100vw - 286px);
+  }
+
+  #work-panel th:first-child { width: 68px; }
+  #work-panel th:last-child,
+  #work-panel .work-activity { width: 130px; }
+  #work-panel thead th { font-size: 10px; }
+  #work-panel td select { max-width: 38px; padding-inline: 5px 12px; }
+
+  #wildlife-panel .fauna-list-head,
+  #wildlife-panel .fauna-row {
+    grid-template-columns: 78px minmax(128px, 1fr) 62px minmax(105px, .8fr) 64px 212px;
+    gap: 7px;
+  }
+
+  #wildlife-panel .fauna-actions { grid-template-columns: 62px 143px; gap: 7px; }
+}

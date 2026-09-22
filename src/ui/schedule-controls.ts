@@ -2,6 +2,7 @@ import { calendarTick } from '../sim/calendar';
 import { isColonist } from '../sim/affiliation';
 import { hourOfDay, type ScheduleAssignment, type ScheduleCommand } from '../sim/schedule';
 import type { World } from '../sim/types';
+import './management-panels.css';
 
 const labels: Record<ScheduleAssignment, string> = {anything: 'Libre', work: 'Travail', sleep: 'Sommeil', recreation: 'Loisirs'};
 const symbols: Record<ScheduleAssignment, string> = {anything: '·', work: 'T', sleep: 'Z', recreation: 'L'};
@@ -88,9 +89,10 @@ export function createScheduleControls(root: HTMLElement, send: (command: Schedu
           button.dataset.schedulePawn = String(pawn.id); button.dataset.scheduleHour = String(h);
           td.append(button); element.append(td); return button;
         });
-        const td = document.createElement('td'); td.className = 'schedule-copy';
+        const td = document.createElement('td'); td.className = 'schedule-copy'; td.setAttribute('aria-label', `Copie des horaires de ${pawn.name}`);
         for (const action of ['copy', 'paste'] as const) {
           const b = document.createElement('button'); b.dataset[action === 'copy' ? 'scheduleCopy' : 'schedulePaste'] = String(pawn.id);
+          b.className = `schedule-${action}`;
           b.textContent = action === 'copy' ? 'Copier' : 'Coller'; b.setAttribute('aria-label', `${b.textContent} les horaires de ${pawn.name}`);
           b.disabled = action === 'paste' && !clipboard; td.append(b);
         }

@@ -1,36 +1,27 @@
-# Paysage GPU et désignations — V92
+# Plantes 3D instanciées et désignations — V94
 
-## Périmètre
+## Choix de présentation
 
-V92 remplace les petits cônes d'herbe du terrain et les boîtes des espèces `grass` / `tall-grass` par un unique champ de brins instanciés. L'agave conserve son modèle propre. Les désignations **Miner**, **Abattre**, **Récolter** et **Couper** partagent un second lot instancié de billboards et les quatre cellules de la première rangée de `/assets/ui/lisiere/icons.png` (atlas 4×5). Une rangée procédurale blanche sert de secours pendant le chargement ou si l'asset manque.
+À la demande de l'utilisateur, V94 retire entièrement le champ de brins `GpuGrassLayer` de V92. `grass` et `tall-grass` redeviennent des plantes physiques 3D correspondant aux ressources sauvegardées. Le terrain n'ajoute plus de tapis ambiant procédural. Agave, cultures, arbres et autres espèces conservent leurs couches propres.
 
-Ce lot est une présentation. Les ressources, travaux, réservations, durées, produits, sauvegardes et migrations ne changent pas.
+Ce changement est graphique : espèces, quantités, croissance, travail, produits, sauvegardes, migrations et PRNG de simulation restent inchangés.
 
-## Brins résidents
+## Touffes verticales
 
-L'approche reprend `E:/Code/Antsystem/src/graphics/grass.js`, consulté en lecture seule le 21 septembre 2026. Un quad effilé fournit quatre sommets. `instanceIndex` détermine une racine stable, l'orientation, la hauteur et la teinte. Le vertex shader choisit la réplique la plus proche du centre caméra sur un pavage toroïdal de période `2R`; un fondu masque le bord du disque. Le centre est la projection du regard sur le sol, y compris depuis une caméra isométrique haute. L'animation utilise l'horloge de présentation confirmée et un vent partagé dérivé de l'état V87, donc une pause ne laisse pas avancer une horloge murale indépendante.
+`PlantClusterLayer` utilise un seul `THREE.InstancedMesh` résident et une géométrie partagée de sept tiges effilées à quatre côtés. Les tiges partent du sol et montent sur l'axe Y ; elles ne sont donc plus couchées. Leur faible diamètre, leurs hauteurs et inclinaisons distinctes donnent une touffe légère plutôt qu'une tige épaisse.
 
-Le CPU ne crée, déplace ni oriente de brin à chaque image. Il met à jour les uniformes caméra/tick et le nombre dessiné selon la hauteur. Géométrie, orientation et animation sont GPU. Cette formulation ne prétend pas que la simulation biologique ou les changements du masque sont « 100 % GPU ».
+La position, la rotation, les échelles X/Y/Z et la nuance sont calculées de façon déterministe depuis l'identité, les coordonnées et l'espèce. Une herbe courte et une herbe haute ne partagent pas exactement la même silhouette. Cette diversité n'avance aucun générateur aléatoire métier et reste identique après sauvegarde/rechargement.
 
-## Masque du monde
+La couche ne recrée son lot que lorsque la vue des ressources naturelles change. Elle n'effectue aucun travail CPU par plante à chaque image. Sur le nouveau départ de graine 42, **13 350** plantes physiques sont présentées dans ce lot unique. Le GPU dessine les instances, mais cela ne signifie pas que toute la simulation ou toute la végétation est « 100 % GPU ».
 
-Une `DataTexture` RGBA de la taille de la carte capture quatre états : sol herbeux ordinaire, présence physique d'herbe courte, présence physique d'herbe haute et cellule utilisable. Elle est reconstruite et téléversée lorsque le terrain, les ressources ou les bâtiments changent, jamais par image.
+## Désignations
 
-- l'eau, le massif rocheux et les autres terrains sans herbe restent à zéro ;
-- toute plante ou roche physique retire le tapis ordinaire à sa cellule ; `grass` et `tall-grass` sélectionnent plutôt leur hauteur dédiée ;
-- les sols construits et toutes les cellules de l’emprise réelle d’un bâtiment restent à zéro ;
-- les limites sont testées dans le shader avant l'échantillonnage et le fondu du disque.
+Miner, Abattre, Récolter et Couper conservent le lot résident de billboards introduit en V92. Une icône est orientée vers la caméra et placée au-dessus de la roche ou de la canopée ; aucun carré blanc au sol ni croix spéciale au minage n'est réintroduit. Les buffers ne sont actualisés que lorsque les désignations persistantes changent.
 
-Les anciennes géométries de `grass` et `tall-grass` sont exclues des vues proche et lointaine. Les autres espèces restent dans leurs lots historiques.
+La fermeture d'Architecte conserve désormais l'outil choisi. Le joueur peut donc choisir un ordre, fermer le panneau pour découvrir la carte, puis cliquer réellement sa cible. Échap annule l'outil comme auparavant.
 
-## Icônes d'ordre
+## Mesure et limites
 
-Un `InstancedBufferGeometry` résident contient seulement position et indice d'icône. `SpriteNodeMaterial` effectue l'orientation vers la caméra dans le vertex shader et échantillonne la première rangée de l'atlas avec une marge alpha. Les quatre familles ont la même taille et la même hauteur logique. Le billboard conserve les couleurs de l'atlas, ignore la profondeur et s'affiche au-dessus des feuillages afin qu'un ordre confirmé sous un arbre reste lisible, sans l'ancien carré clair au sol. Le rectangle de prévisualisation garde l'ordre de rendu supérieur.
+Le contrôle natif alterne quatre fenêtres avec le lot visible ou masqué sur le même monde en pause. Le p95 reste **8,4 ms** dans les quatre fenêtres ; les médianes varient de **4,2 à 8,3 ms** selon l'ordre, ce qui interdit d'affirmer un coût nul. La courte fenêtre à vitesse demandée 6× atteint **5,64×**, image p95 **41,7 ms** et pic **216,6 ms**. Ces chiffres ne garantissent ni fluidité parfaite ni parité avec une charge à cent colons.
 
-Les buffers d'instances grandissent par puissances de deux et ne sont téléversés que si l'ensemble persistant de désignations change. Les anciens carrés au sol et la croix spéciale de minage ne sont plus générés pour ces quatre familles. Plans, cadres, semis et autres travaux gardent leur présentation antérieure.
-
-## Version et vérification
-
-Implémentation vérifiée contre Three.js / TSL `0.186.0`, notamment `instanceIndex`, `texture(...).sample`, les attributs instanciés et `SpriteNodeMaterial.positionNode`. `tests/gpu-landscape.test.ts` contrôle le masque terrain/bâtiments/plantes, le retrait ciblé des anciens modèles avec conservation de l'agave, la correspondance des quatre icônes et la réduction du nombre de brins à distance. Le typecheck complète ces contrôles ciblés. Aucun pilote natif, benchmark lourd ou campagne longue n'est requis pour ce changement borné de présentation.
-
-Les haches sont placées au-dessus de la couronne calculée de l’arbre ; les pioches au-dessus du relief rocheux. Les attributs ne sont téléversés que si les placements changent. Les résultats natifs sont dans [les preuves V92](../history/validation-interface-v92.md).
+`tests/gpu-landscape.test.ts` vérifie la géométrie verticale multi-tiges, les variations déterministes, le lot unique, la conservation de l'agave et les correspondances de désignation. Le parcours natif vérifie en plus les instances réelles, la sauvegarde exacte et les clics de coupe/minage. Voir les [preuves V94](../history/validation-interface-v94.md).

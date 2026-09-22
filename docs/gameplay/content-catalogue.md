@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+**V94 — présentation, sans nouveau contenu :** herbe courte et herbe haute déjà présentes retrouvent un volume 3D vertical à sept tiges fines, avec variations déterministes. Le nouvel atlas contient neuf curseurs illustrés. Ces remplacements graphiques ne comptent ni comme nouvelles plantes, ni comme objets ou recettes supplémentaires.
+
 **V93 — ressources graphiques :** 60 pictogrammes PNG d’Architecte dans deux atlas, neuf curseurs d’action dérivés du dessin existant, deux polices locales sous OFL. Les anciens portraits et illustrations sont conservés. Le menu propose correctement une matière rembourrée pour le fauteuil déjà implémenté ; aucun nouvel objet, recette ou système de production n’est compté dans cette refonte.
 
 **V92 — présentation :** cadres, vingt pictogrammes, six portraits illustratifs, curseurs, fond de menu et nouveaux rendus d'herbe/désignations. Ce sont des ressources graphiques ; aucun objet, recette, espèce, matériau ni capacité de production supplémentaire n'est compté dans le catalogue jouable. Le schéma de sauvegarde reste 91. [Identité commune](../development/visual-identity.md).

@@ -4,14 +4,18 @@ import { observeErrors, pause, panel, world, expectWorld } from './helpers';
 import { visitorTradeFixture } from '../scenarios/visitors';
 import { serializeWorld } from '../../src/sim/serialization';
 
-async function screenshot(page:Page,name:string){await page.screenshot({path:`artifacts/interface-v93-${name}.png`});}
-test('V93 native: readable dossiers, stable Architect, PNG tools, cursors and shared surfaces',async({playwright})=>{
+async function screenshot(page:Page,name:string){await page.screenshot({path:`artifacts/interface-v94-${name}.png`});}
+test('V94 native: stable management panels, upright plants, complete HUD and illustrated cursors',async({playwright})=>{
   test.setTimeout(240_000);
   const browser=await playwright.chromium.launch({channel:'chromium',args:[]});
   const page=await browser.newPage({viewport:{width:1440,height:1000}});
   page.setDefaultTimeout(15_000);
   const errors=observeErrors(page),report:Record<string,unknown>={};
   page.on('pageerror',error=>{report.errorStack=error.stack;});
+  await page.route('**/src/main.ts*',async route=>{
+    const response=await route.fetch();
+    await route.fulfill({response,body:`const v94Frame=ColonyRenderer.prototype.frame;ColonyRenderer.prototype.frame=function(...args){window.__v94View=this;return v94Frame.apply(this,args);};\n`+await response.text()});
+  });
   try{
     await page.goto('http://127.0.0.1:5173/?e2e');
     const front=page.locator('.front-menu');await expect(front).toBeVisible();
@@ -36,7 +40,7 @@ test('V93 native: readable dossiers, stable Architect, PNG tools, cursors and sh
         const rect=(s:string)=>{const r=document.querySelector(s)!.getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,height:r.height,width:r.width};};
         return {inspector:rect('#inspector'),resources:rect('.resource-list'),pages:rect('.colonist-inspector-pages'),time:rect('.time-panel'),alerts:rect('.alerts'),nav:rect('.main-tabs'),pageWidth:document.documentElement.scrollWidth};
       });
-      expect.soft(layout.resources.bottom).toBeLessThan(layout.inspector.y);
+      expect.soft(layout.resources.width).toBe(216);
       expect.soft(layout.inspector.bottom).toBeLessThan(layout.nav.y);
       expect.soft(layout.pages.height).toBeGreaterThan(190);
       expect.soft(layout.inspector.right).toBeLessThan(layout.time.x);
@@ -66,22 +70,58 @@ test('V93 native: readable dossiers, stable Architect, PNG tools, cursors and sh
       await page.locator(`[data-category="${category}"]`).click();await page.locator(`[data-tool="${id}"]`).click();
       await expect(page.locator('#viewport')).toHaveAttribute('data-cursor',kind);
       const cursor=await page.locator('#viewport canvas').evaluate(n=>getComputedStyle(n).cursor);
-      expect(cursor).toContain('data:image/png;base64,');expect(cursor).toContain('4 4');cursorImages.add(cursor);
+      expect(cursor).toContain('data:image/png;base64,');
+      const hotspot=cursor.match(/\) (\d+) (\d+),/);expect(hotspot).toBeTruthy();
+      expect(Number(hotspot![1])).toBeLessThanOrEqual(6);expect(Number(hotspot![2])).toBeLessThanOrEqual(3);cursorImages.add(cursor);
     }
     expect(cursorImages.size).toBe(9);report.cursors=cursorImages.size;
+    await page.locator('[data-category="orders"]').click();await page.locator('[data-tool="chop"]').click();
+    await page.locator('#architect-panel [data-close-panel]').click();
+    await expect(page.locator('#architect-panel')).toBeHidden();await expect(page.locator('#viewport')).toHaveAttribute('data-cursor','chop');
+    const chopTarget=await page.evaluate(()=>{
+      const canvas=document.querySelector<HTMLCanvasElement>('#viewport canvas')!,bounds=canvas.getBoundingClientRect();
+      for(const resource of window.__lisiere.world.resources)if(resource.kind==='tree'){
+        const point=window.__lisiere.projectCell(resource.x,resource.z),x=bounds.x+point.x,y=bounds.y+point.y;
+        if(document.elementFromPoint(x,y)===canvas)return {x:resource.x,z:resource.z,screenX:x,screenY:y};
+      }
+      return null;
+    });
+    expect(chopTarget).not.toBeNull();await page.mouse.click(chopTarget!.screenX,chopTarget!.screenY);
+    await expect.poll(async()=>{const w=await world(page);return w.jobs.some(job=>job.kind==='chop'&&job.x===chopTarget!.x&&job.z===chopTarget!.z);}).toBe(true);
+    report.realChop={x:chopTarget!.x,z:chopTarget!.z};
     await page.keyboard.press('Escape');await expect(page.locator('#viewport')).toHaveAttribute('data-cursor','select');
     await page.setViewportSize({width:1280,height:720});await panel(page,'architect');
     const compactFrame=await page.locator('#architect-panel').boundingBox();
-    const compactResources=await page.locator('.resource-list').boundingBox();expect(compactFrame!.y).toBeGreaterThan(compactResources!.y+compactResources!.height);
+    const completeResources=await page.locator('.resource-list').boundingBox();expect(completeResources!.width).toBe(216);
+    await expect(page.locator('.resource-name').first()).toBeVisible();
     for(const category of categories){await page.locator(`[data-category="${category}"]`).click();expect(await page.locator('#architect-panel').boundingBox()).toEqual(compactFrame);}
     await page.locator('[data-category="furniture"]').click();await page.locator('[data-tool="armchair"]').click();
     await expect(page.locator('#construction-material')).toHaveValue('cloth');await screenshot(page,'architect-1280');
     await page.locator('#construction-material').click();await screenshot(page,'material-picker');await page.keyboard.press('Escape');
     await page.setViewportSize({width:1440,height:1000});await page.keyboard.press('Escape');
+    const management:Record<string,unknown>={};
     for(const name of ['work','schedule','assign','research','wildlife','history','menu']){
       await page.locator(`[data-panel="${name}"]`).click();await screenshot(page,name);
+      const resourceWidth=await page.locator('.resource-list').evaluate(node=>node.getBoundingClientRect().width);expect(resourceWidth).toBe(216);
+      if(['work','schedule','assign'].includes(name)){
+        const wrap=page.locator(`#${name}-panel .${name==='schedule'?'schedule-table-wrap':'work-table-wrap'}`).first();
+        const dimensions=await wrap.evaluate(node=>({client:node.clientWidth,scroll:node.scrollWidth}));expect(dimensions.scroll).toBe(dimensions.client);management[name]=dimensions;
+      }
+      if(name==='schedule'){
+        const copy=await page.locator('.schedule-copy').first().evaluate(node=>({gap:getComputedStyle(node).gap,buttons:[...node.querySelectorAll('button')].map(button=>button.getBoundingClientRect().width)}));
+        expect(copy.gap).not.toBe('0px');expect(new Set(copy.buttons).size).toBe(1);management.scheduleCopy=copy;
+      }
+      if(name==='wildlife'){
+        const row=page.locator('.fauna-row').first();if(await row.count()){
+          const columns=await row.evaluate(node=>[...node.children].slice(0,6).map(child=>({x:child.getBoundingClientRect().x,width:child.getBoundingClientRect().width})));
+          await page.locator('[data-speed="1"]').click();await page.waitForTimeout(700);await pause(page);
+          const after=await row.evaluate(node=>[...node.children].slice(0,6).map(child=>({x:child.getBoundingClientRect().x,width:child.getBoundingClientRect().width})));
+          expect(after).toEqual(columns);management.wildlifeColumns=columns;
+        }
+      }
       if(name==='assign'){await page.locator('#manage-food-policies').click();await screenshot(page,'food-policy');await page.keyboard.press('Escape');}
     }
+    report.management=management;
     await page.locator('#help-open').click();await screenshot(page,'help');await page.keyboard.press('Escape');
     await panel(page,'work');
     const priority=page.locator('[data-work="build"]').first();const old=await priority.inputValue();await priority.selectOption(old==='1'?'2':'1');
@@ -96,7 +136,9 @@ test('V93 native: readable dossiers, stable Architect, PNG tools, cursors and sh
     const frames=page.evaluate(()=>new Promise<number[]>(resolve=>{const samples:number[]=[];let last=performance.now();const end=last+8000;const frame=(t:number)=>{samples.push(t-last);last=t;if(t>end)resolve(samples);else requestAnimationFrame(frame);};requestAnimationFrame(frame);}));
     await page.locator('[data-speed="6"]').click();const timings=(await frames).sort((a,b)=>a-b);await pause(page);
     const saved=await world(page),elapsed=Date.now()-start;
-    writeFileSync('tmp/interface-v93-checkpoint.json',JSON.stringify(saved));
+    const plantPresentation=await page.evaluate(()=>{const view=(window as any).__v94View;return {instances:view.plants.instanceCount(),group:view.plants.group.name,oldGrass:'grass' in view};});
+    expect(plantPresentation.instances).toBeGreaterThan(0);expect(plantPresentation.group).toBe('plant-cluster-layer');expect(plantPresentation.oldGrass).toBe(false);report.plants=plantPresentation;
+    writeFileSync('tmp/interface-v94-checkpoint.json',JSON.stringify(saved));
     report.performance={frames:timings.length,p95:timings[Math.floor(timings.length*.95)],max:timings.at(-1),speed:(saved.tick-before)/elapsed*1000/6};
     await panel(page,'menu');await page.locator('#save').click();
     try{await expect(page.locator('#load')).toBeEnabled();}catch(error){report.saveDiagnostics=await page.evaluate(()=>({notice:document.querySelector('#notice')?.textContent,slots:localStorage.length,load:document.querySelector('#load')?.outerHTML,save:document.querySelector('#save')?.outerHTML}));throw error;}
@@ -106,10 +148,10 @@ test('V93 native: readable dossiers, stable Architect, PNG tools, cursors and sh
     report.fonts=await page.evaluate(()=>({sans:document.fonts.check('14px "Lisiere Sans"'),serif:document.fonts.check('23px "Lisiere Serif"')}));
     expect(errors).toEqual([]);
     report.passed=true;
-  }finally{report.errors=errors;writeFileSync('artifacts/interface-native-v93.json',JSON.stringify(report,null,2));await browser.close();}
+  }finally{report.errors=errors;writeFileSync('artifacts/interface-native-v94.json',JSON.stringify(report,null,2));await browser.close();}
 });
 
-test('V93 native: trade modal preserves readable controls and real contact',async({playwright})=>{
+test('V94 native: trade modal preserves readable controls and real contact',async({playwright})=>{
   test.setTimeout(90_000);const browser=await playwright.chromium.launch({channel:'chromium',args:[]});
   const page=await browser.newPage({viewport:{width:1280,height:720}}),errors=observeErrors(page);
   page.setDefaultTimeout(15_000);
@@ -121,6 +163,6 @@ test('V93 native: trade modal preserves readable controls and real contact',asyn
     await expect(page.locator('#trade-goods')).toBeVisible({timeout:30_000});await screenshot(page,'trade');
     const rect=await page.locator('#trade-dialog').boundingBox();expect(rect!.x).toBeGreaterThanOrEqual(0);expect(rect!.y).toBeGreaterThanOrEqual(0);expect(rect!.y+rect!.height).toBeLessThanOrEqual(720);
     await page.locator('#trade-close').click();expect(errors).toEqual([]);
-    writeFileSync('artifacts/interface-trade-v93.json',JSON.stringify({passed:true,viewport:{width:1280,height:720},rect,errors}));
+    writeFileSync('artifacts/interface-trade-v94.json',JSON.stringify({passed:true,viewport:{width:1280,height:720},rect,errors}));
   }finally{await browser.close();}
 });

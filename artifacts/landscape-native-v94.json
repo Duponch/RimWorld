@@ -1,0 +1,190 @@
+{
+  "portraits": [
+    {
+      "parent": "portrait portrait-0",
+      "image": "url(\"http://127.0.0.1:5173/assets/ui/lisiere/portraits.png\")",
+      "position": "0px 0px"
+    },
+    {
+      "parent": "portrait portrait-1",
+      "image": "url(\"http://127.0.0.1:5173/assets/ui/lisiere/portraits.png\")",
+      "position": "50% 0px"
+    },
+    {
+      "parent": "portrait portrait-2",
+      "image": "url(\"http://127.0.0.1:5173/assets/ui/lisiere/portraits.png\")",
+      "position": "100% 0px"
+    }
+  ],
+  "layout": [
+    {
+      "width": 1280,
+      "height": 720,
+      "inspector": {
+        "x": 16,
+        "y": 121,
+        "right": 456,
+        "bottom": 636
+      },
+      "resources": {
+        "x": 16,
+        "y": 16,
+        "right": 232,
+        "bottom": 374.0625
+      },
+      "tabs": {
+        "x": 17,
+        "y": 122,
+        "right": 455,
+        "bottom": 168
+      },
+      "time": {
+        "x": 1046,
+        "y": 322.625,
+        "right": 1264,
+        "bottom": 636
+      },
+      "alerts": {
+        "x": 1046,
+        "y": 137.59375,
+        "right": 1264,
+        "bottom": 312.625
+      },
+      "nav": {
+        "x": 10,
+        "y": 652,
+        "right": 1270,
+        "bottom": 710
+      },
+      "pageWidth": 1280
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "inspector": {
+        "x": 16,
+        "y": 286,
+        "right": 456,
+        "bottom": 996
+      },
+      "resources": {
+        "x": 16,
+        "y": 16,
+        "right": 232,
+        "bottom": 374.0625
+      },
+      "tabs": {
+        "x": 17,
+        "y": 287,
+        "right": 455,
+        "bottom": 333
+      },
+      "time": {
+        "x": 1686,
+        "y": 682.625,
+        "right": 1904,
+        "bottom": 996
+      },
+      "alerts": {
+        "x": 1686,
+        "y": 497.59375,
+        "right": 1904,
+        "bottom": 672.625
+      },
+      "nav": {
+        "x": 10,
+        "y": 1012,
+        "right": 1910,
+        "bottom": 1070
+      },
+      "pageWidth": 1920
+    },
+    {
+      "width": 1440,
+      "height": 1000,
+      "inspector": {
+        "x": 16,
+        "y": 206,
+        "right": 456,
+        "bottom": 916
+      },
+      "resources": {
+        "x": 16,
+        "y": 16,
+        "right": 232,
+        "bottom": 374.0625
+      },
+      "tabs": {
+        "x": 17,
+        "y": 207,
+        "right": 455,
+        "bottom": 253
+      },
+      "time": {
+        "x": 1206,
+        "y": 602.625,
+        "right": 1424,
+        "bottom": 916
+      },
+      "alerts": {
+        "x": 1206,
+        "y": 417.59375,
+        "right": 1424,
+        "bottom": 592.625
+      },
+      "nav": {
+        "x": 10,
+        "y": 932,
+        "right": 1430,
+        "bottom": 990
+      },
+      "pageWidth": 1440
+    }
+  ],
+  "gpu": {
+    "plants": 13350,
+    "plantGroup": "plant-cluster-layer",
+    "drawCalls": 200
+  },
+  "plantsAB": [
+    {
+      "enabled": false,
+      "n": 408,
+      "p50": 4.299999999999272,
+      "p95": 8.400000000001455,
+      "max": 12.5
+    },
+    {
+      "enabled": true,
+      "n": 453,
+      "p50": 4.200000000000728,
+      "p95": 8.400000000001455,
+      "max": 12.399999999999636
+    },
+    {
+      "enabled": false,
+      "n": 460,
+      "p50": 4.200000000000728,
+      "p95": 8.400000000001455,
+      "max": 8.5
+    },
+    {
+      "enabled": true,
+      "n": 386,
+      "p50": 8.299999999999272,
+      "p95": 8.400000000001455,
+      "max": 12.599999999998545
+    }
+  ],
+  "performance": {
+    "frames": 941,
+    "p95": 41.69999999999709,
+    "max": 216.59999999999854
+  },
+  "simulation": {
+    "ticks": 371,
+    "elapsedMs": 10964,
+    "speed": 5.639669220479145
+  },
+  "errors": []
+}

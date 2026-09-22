@@ -1,36 +1,33 @@
-# Identité visuelle et inspection — V93
+# Identité visuelle et inspection — V94
 
-La référence fournie par l’utilisateur reste le HUD Lisière bois, papier et végétation : ressources en haut à gauche, portraits en haut, inspection en bas à gauche, alertes et temps à droite, gestion en bas. V93 en retient la hiérarchie et la chaleur sans étirer un décor raster autour de panneaux de tailles incompatibles. Le fond planétaire reste réservé à l’accueil et à la création de partie.
+V94 conserve la structure de jeu introduite en V93 — ressources, portraits, dossiers, alertes, temps et barre de gestion — puis corrige les éléments qui se comportaient encore comme une page web. Les surfaces restent en papier ivoire et encre forêt, avec Source Sans 3 et Literata embarquées. Aucun cadre raster n'est étiré et les panneaux papier ne reçoivent pas de second fond sombre.
 
-## Thème stable
+## HUD stable
 
-- Les surfaces sont simples : papier ivoire `#f2eddf`, encre forêt `#28382f`, vert profond `#243c32`, traits gris végétal et ombres légères. Les panneaux, dialogues et menus emploient une bordure CSS stable. `panel-frame.png` est conservé comme création historique, mais n’est plus posé en `border-image` étirée.
-- Source Sans 3 sert au texte courant et Literata aux titres. Les deux fontes WOFF2 sont embarquées sous `public/assets/fonts/`, avec leurs licences OFL (`SourceSans3-OFL.txt` et `Literata-OFL.txt`) ; le rendu ne dépend donc pas d’un service de fontes distant.
-- Les tailles, états actifs, contrôles, listes déroulantes, tableaux et dialogues partagent le même contraste. Le panneau Architecte conserve trois responsabilités distinctes : catégories, grille d’outils et options. Ses zones se replient à largeur réduite sans changer les commandes.
-- Le dossier d’un personnage garde ses onglets et son résumé fixes. `.colonist-inspector-pages` est la seule zone de contenu du dossier qui défile ; les actions physiques restent dans leur bloc inférieur borné. Les nœuds métier sont déplacés entre les pages, jamais clonés : identifiants, écouteurs et références de commandes sont conservés. Bio, Besoins, Santé, Équipement, Social et le dossier conditionnel Prisonnier restent ceux décrits dans la [référence d’interface](../research/colonist-interface-reference-v92.md).
-- La hauteur réelle du panneau de temps continue de placer les alertes via `ResizeObserver`, sans lecture de disposition à chaque image. Le clic droit du canevas continue d’atteindre les commandes du jeu tout en masquant le menu contextuel du navigateur.
+- Le registre Ressources mesure toujours **216 px** de large. Il ne se compacte, ne masque ses libellés et ne disparaît plus lorsqu'un dossier ou un panneau de gestion est ouvert. Un chevauchement est admis sur une petite fenêtre, conformément au choix utilisateur.
+- Les portraits gardent leurs noms visibles dans l'état sélectionné. Le survol s'applique à chaque portrait, sélectionné ou non, sans déplacer les autres cartes.
+- Travail, Horaires et Affectations partagent une largeur de bureau stable et des colonnes fixes. Les tableaux n'ont pas de barre horizontale dans les trois résolutions vérifiées ; Copier/Coller ont la même largeur et un espacement constant.
+- Faune utilise six colonnes fixes : chasse, animal, sexe, activité, position et actions. La santé reste une seconde ligne de la cellule Animal ; changement d'activité ou de position ne décale donc plus les commandes.
+- Architecte conserve ses trois zones et ses 60 outils PNG. La fermeture par son bouton garde maintenant l'outil actif : le panneau libère la carte avant la désignation, puis Échap ou un autre panneau rend le curseur de sélection.
+- Les dossiers Bio, Besoins, Santé, Équipement, Social et Prisonnier conditionnel déplacent toujours les vrais contrôles, sans dupliquer leurs identifiants ni leurs gestionnaires.
 
-## Illustrations et pictogrammes
+## Illustrations, atlas et curseurs
 
-Les créations restent dans `public/assets/ui/lisiere/`. Elles ont été produites pour Lisière et ne proviennent pas des fichiers de RimWorld.
+Les créations restent dans `public/assets/ui/lisiere/` et ne proviennent pas des fichiers de RimWorld.
 
-| Fichier | Format réel | Usage V93 |
+| Fichier | Format réel | Usage courant |
 |---|---|---|
-| `planet.png` | RGB 1672×941 | accueil, planète à gauche et espace sombre à droite |
-| `panel-frame.png` | RGBA 1254×1254 | asset historique préservé, sans étirement dans les panneaux courants |
-| `icons.png` | RGBA 1122×1402 | atlas 4×5 du HUD, des désignations et des curseurs |
-| `portraits.png` | RGB 1536×1024 | six portraits 3×2, Ada, Noé et Mina en première rangée |
-| `architect-1.png` | RGBA 1374×1145 | 30 pictogrammes Architecte, grille 6×5 |
-| `architect-2.png` | RGBA 1374×1145 | 30 pictogrammes Architecte, grille 6×5 |
+| `planet.png` | RGB 1672×941 | accueil et création |
+| `panel-frame.png` | RGBA 1254×1254 | création historique conservée, non étirée |
+| `icons.png` | RGBA 1122×1402 | pictogrammes HUD et désignations |
+| `portraits.png` | RGB 1536×1024 | six portraits 3×2 |
+| `architect-1.png`, `architect-2.png` | RGBA 1374×1145 chacun | 60 outils Architecte |
+| `cursors-v94.png` | RGBA 1312×1199 | neuf curseurs illustrés en grille 3×3 |
 
-Le fond demandé en haute résolution reste réellement livré en 1672×941, pas en 4K. Les six visages sont des illustrations de présentation ; les vêtements et le gilet restent projetés depuis l’équipement réel, et ces portraits ne prétendent pas simuler six biographies ou une diversité démographique complète.
+`cursors-v94.png` a été généré pour Lisière à partir d'un prompt demandant une planche 3×3 transparente de flèches normales, lisibles et cohérentes avec le papier/forêt : sélection, pioche, hache ; récolte, coupe, construction ; déconstruction, zones et annulation. La flèche seule porte le point actif ; aucun point ou réticule séparé n'est dessiné.
 
-Les deux nouveaux atlas donnent un pictogramme PNG à chacun des 60 outils déclarés par Architecte : sols et retraits, ordres, structure, meubles, température, loisirs, production, énergie et zones. `ARCHITECT_ICON_MAPPING` expose l’ordre exact des cellules. `installArchitectIcons` s’exécute après `installVisualIdentity`, remplace les anciens caractères par l’image correspondante et rend l’illustration muette pour l’accessibilité ; le bouton conserve son libellé accessible et sa commande. Les atlas HUD et portraits existants restent inchangés.
+`tool-cursors.ts` découpe l'atlas une seule fois dans des canevas locaux, recadre l'alpha et calcule le point actif depuis la pointe opaque la plus haute. Chaque outil reçoit un vrai curseur distinct et un repli CSS utilisable. Le point actif observé reste dans les six premiers pixels horizontaux et les trois premiers verticaux du fragment recadré.
 
-Les outils utilisent désormais neuf curseurs cohérents : sélection, minage, abattage, récolte, coupe, construction, déconstruction, zones et annulation. Ils sont rasterisés une seule fois depuis `icons.png` sur des surfaces 40×40, avec un point actif commun en `(4, 4)`. Déconstruction et annulation ajoutent leur badge au chargement ; les replis CSS restent utilisables si l’atlas échoue. Cette organisation remplace l’ancienne description de quatre curseurs, devenue inexacte.
+## Frontières
 
-## Architecture et périmètre
-
-Le thème demeure une couche de présentation : `visual-identity.css` normalise les surfaces et les contrôles, `colonist-inspector.css` organise le dossier, `tool-cursors.ts` traduit l’outil actif en curseur, et `architect-icons.ts` installe les pictogrammes. Le HTML métier, les gestionnaires de commandes et les sélecteurs existants restent l’autorité. Les nouveaux assets n’ajoutent aucun outil et ne rendent disponible aucun contenu grisé.
-
-V93 ne modifie ni règles de simulation, ni commandes, ni migrations du monde. Le schéma reste 91. Le stockage navigateur compresse désormais les grands instantanés sans perte, tout en lisant les anciens JSON : voir le [contrat de stockage](save-storage.md). L’herbe et les désignations dans le monde suivent séparément le [contrat GPU](gpu-landscape.md). Les [preuves V93](../history/validation-interface-v93.md) distinguent les corrections observées, les contrôles et leurs limites.
+Cette couche ne crée ni objet, ni recette, ni règle de simulation. Le schéma du monde reste **91**. Les grandes sauvegardes restent compressées au stockage seulement et les anciens JSON bruts restent lisibles. Les plantes suivent le [contrat de paysage V94](gpu-landscape.md) et les mesures, échecs et limites sont consignés dans les [preuves V94](../history/validation-interface-v94.md).

@@ -1,5 +1,7 @@
 # Matrice des systèmes et critères de réalisation
 
+**Revue V94 :** les brins V92 sont remplacés par des plantes 3D instanciées et les principaux panneaux de gestion gardent leurs colonnes. Ressources, portraits et curseurs sont stabilisés. La couverture métier et le catalogue restent ceux de V91 ; aucun jalon G0–G5 n'est clos par cette présentation. [Preuves](../history/validation-interface-v94.md), [estimations](../ROADMAP.md#estimation-davancement).
+
 **Revue V93 :** refonte de présentation, commandes existantes conservées et grandes sauvegardes compressées sans perte. La couverture métier de V91 reste inchangée ; aucun jalon G0–G5 n’est clos par une amélioration du thème. [Preuves](../history/validation-interface-v93.md), [estimations](../ROADMAP.md#estimation-davancement).
 
 **Revue V92 :** la présentation est réorganisée en dossiers de personne et habillée d’une identité commune. Netlify, brins GPU et billboards ne complètent aucun système métier absent. Catalogue/biomes/production restent au périmètre V91 ; monde, caravanes, quêtes, fin de partie et audio restent absents. [Estimations par aspect](../ROADMAP.md#estimation-davancement), [contrat visuel](../development/visual-identity.md).

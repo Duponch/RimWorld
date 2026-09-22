@@ -20,7 +20,7 @@ Cette configuration publie à la demande. Elle ne prétend pas avoir connecté u
 
 Le premier contrôle public a révélé un iframe `nl-badge-frame` injecté par Netlify au-dessus du bouton Menu. Le réglage de ce seul projet `built_with_badge_enabled` est désactivé par l'API ; aucune modification de forfait ni contournement CSS. Ce réglage est prévu par la [documentation officielle du badge](https://docs.netlify.com/manage/projects/powered-by-netlify-badge/), consultée le 22 septembre 2026, et prend effet à la requête suivante sans redéploiement.
 
-`node scripts/smoke-netlify.mjs` contrôle la version publique dans Chromium natif : accueil, vraie création de partie, cinq dossiers, sauvegarde/rechargement, choix et chargement du créneau après rechargement de la page, 60 pictogrammes, deux fontes, six illustrations HTTP 200 et absence d'erreurs JS/GPU. Le suffixe `VALIDATION_VERSION` conserve les preuves historiques (défaut `v93`). Rapport courant : `artifacts/netlify-smoke-v93.json` ; les vérifications ne forcent pas les clics à travers un élément masquant.
+`node scripts/smoke-netlify.mjs` contrôle la version publique dans Chromium natif : accueil, vraie création de partie, cinq dossiers, registre Ressources à 216 px, portrait sélectionné lisible, sauvegarde/rechargement, trois panneaux sans débordement, six colonnes Faune, 60 pictogrammes, neuf curseurs, deux fontes, sept illustrations HTTP 200 et absence d'erreurs JS/GPU. Le suffixe `VALIDATION_VERSION` conserve les preuves historiques (défaut `v94`). Rapport courant : `artifacts/netlify-smoke-v94.json` ; les vérifications ne forcent pas les clics à travers un élément masquant.
 
 ## Sauvegardes et compatibilité
 

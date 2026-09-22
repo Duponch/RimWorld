@@ -6,14 +6,15 @@ import type { Placement } from './primitives';
 export const floraSize=(world:World,r:Resource):number=>r.species? .3+.7*Math.ceil(plantGrowth(world,r)*4)/4:1;
 const FLORA_COLORS={pine:0x47684c,birch:0x8fa467,oak:0x57754d,poplar:0x849752,drago:0x728966,saguaro:0x698661,agave:0x839c89,moss:0x718356,grass:0x929357,'tall-grass':0x7d8a4f,brambles:0x556648,'berry-bush':0x677b55};
 export const floraColor=(r:Resource):number=>FLORA_COLORS[r.species??'berry-bush'];
-export const isGpuGrassSpecies=(species:Resource['species']):boolean=>species==='grass'||species==='tall-grass';
+export const isClusterPlantSpecies=(species:Resource['species']):boolean=>species==='grass'||species==='tall-grass';
 export const floraTreeHeight=(r:Resource):number=>r.species==='saguaro'?2.2:r.species==='drago'?2.7:r.species==='pine'?4.6:r.species==='poplar'?4.3:3.8;
 export const floraIdentity=(world:World,r:Resource):string=>`${r.kind}:${r.x}:${r.z}:${r.stone??''}:${r.species??''}:${floraSize(world,r)}`;
 
 export interface FloraParts {trunks:Placement[];crowns:Placement[];cones:Placement[];bushes:Placement[];blades:Placement[];cacti:Placement[];fruit:Placement[]}
-/** Original compact meshes; species share material/geometry batches per chunk. */
+/** Compact 3D meshes for trees, shrubs and agave. Grass species use their one
+ * resident cluster batch rather than duplicating geometry in every chunk. */
 export function appendFlora(parts:FloraParts,world:World,r:Resource,turn:number):void {
-  if(isGpuGrassSpecies(r.species))return;
+  if(isClusterPlantSpecies(r.species))return;
   const {x,z}=r,s=floraSize(world,r),color=floraColor(r),leaves=-r.id*2,fruit=-r.id*2-1;
   const add=(items:Placement[],p:Omit<Placement,'x'|'z'> & {dx?:number;dz?:number})=>{
     const {dx=0,dz=0,...shape}=p;
