@@ -1,5 +1,7 @@
 # Plan de développement
 
+**V98 : bibliothèque de six colonies de test.** Quatre habitants après 182,577 jours, trois situations de douze colons et deux charges de cent colons ; accès direct, téléchargement, import et récupération. [Contrat](development/test-colonies.md), [preuves](history/validation-test-colonies-v98.md). La pause gameplay/performance reste en vigueur ; aucun nouveau contenu ni hausse des estimations fonctionnelles. Les charges préparées facilitent les prochains diagnostics sans exiger une nouvelle campagne depuis le départ.
+
 **V97 : gain de rendu confirmé surtout en vue rapprochée.** Sur la comparaison répétée du départ, environ 102→201 FPS à ×6 de près ; 200→204 sur toute la carte. À 104 personnes, 41→110 FPS de près, mais débit de simulation seulement 2,75–3,18× pour 6× demandé. [Mesures, pics et limites](history/validation-performance-v97.md). Aucun progrès fonctionnel ni jalon clos.
 
 **V96 : régression du suivi caméra corrigée.** La passe d’ombres imbriquée perdait la liste des objets à actualiser dans les commandes conservées. [48 images de mouvement exactes et mesures](history/validation-camera-v96.md). Le résultat rapproché V95 omettait des mises à jour ; la performance correcte est moindre (107 FPS en panoramique proche ×6 sur le contrôle court), et reste un chantier ouvert. Aucun progrès fonctionnel ajouté aux estimations ; gameplay toujours suspendu.

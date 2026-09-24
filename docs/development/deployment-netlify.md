@@ -28,6 +28,8 @@ HTTPS permet WebGPU dans un navigateur compatible avec le GPU de la machine. Ce 
 
 Depuis V93, les grandes sauvegardes sont compressées sans perte pour réduire leur consommation de quota. Les JSON historiques restent lisibles ; le schéma du monde reste 91. [Format, bornes et récupération](save-storage.md).
 
+V98 publie aussi six [colonies de test](test-colonies.md), téléchargées à la demande, avec manifeste et fichiers revalidés par HTTP. Elles sont transportables par téléchargement/import ; aucune synchronisation cloud n'est ajoutée. Déploiement `6ab593dc07b647ac555993f8`, 30 fichiers prêts ; [parcours public des six configurations](../../artifacts/test-colonies-native-v98-public.json).
+
 ## Reprise V95 après limitation API
 
 Le premier envoi V95 a reçu HTTP 429 (« API Request rate limit surpassed for application »), après création du déploiement. Le script sait reprendre cet identifiant avec `NETLIFY_RESUME_DEPLOY`, contrôle son site et son mode de publication, puis envoie les empreintes encore demandées. Un GET peut renvoyer `required: []` alors que l’état est encore `uploading` : la reprise passe donc par le PUT officiel `updateSiteDeploy` du même manifeste au même identifiant. Ne pas relancer une création pour réparer un envoi incomplet.

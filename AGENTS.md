@@ -1,5 +1,10 @@
 # Travail sur Lisière
 
+## Colonies de test V98
+- Lire `docs/development/test-colonies.md` : six fichiers publics versionnés dans `public/test-saves/v98`, catalogue chargé à la demande depuis Charger, import/export et récupération via GameSession. Les charges préparées ne représentent pas une progression naturelle ni une colonie autonome ; deux contiennent réellement 100 colons libres, visiteurs/captifs/morts comptés séparément.
+- Préserver les fichiers de référence et leurs empreintes, le schéma 91 et les fixtures historiques. Toute nouvelle génération est explicite. Aucun constructeur de test dans le bundle. Chargement en pause, validation stricte worker, sauvegarde manuelle intacte et refus atomiques restent exigés.
+- Preuves dans `docs/history/validation-test-colonies-v98.md`. Courtes reprises et UI groupées ne prouvent pas l'équilibre de toutes les boucles ; aucune performance déduite des seuls comptes de population. Mode jour : publier puis rendre la main.
+
 ## Paysage visible V97
 - Le paysage proche utilise le rejet hors champ propre à chaque caméra, dont celle des ombres ; la vue globale garde ses commandes WebGPU. Ne pas masquer des objets globalement d'après la seule caméra joueur. `ReentrantRenderer` V96 reste requis, Three reste épinglé. Les seuils de détail, géométries et règles sont inchangés.
 - Les deltas de ressources concernent les anciens/nouveaux chunks ; ceux de la vue globale excluent les touffes même si le flux de changements est non filtré. Les limites des touffes doivent contenir tous les sommets après croissance, déplacement, retrait/retour. Oracles complets conservés.

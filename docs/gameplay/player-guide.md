@@ -1,5 +1,9 @@
 # Guide joueur
 
+**Essayer une colonie préparée :** ouvrez **Charger une partie → Colonies de test** depuis l'accueil, ou **Menu → Charger une partie** en jeu. Six fiches proposent une colonie avancée, énergie/alimentation, prison, environnement et deux configurations de **100 colons**. Chaque fiche indique quoi essayer et où. Le chargement commence en pause ; chaque nouvel essai repart de l'original. Les situations préparées peuvent comporter des besoins urgents et ne sont pas des colonies équilibrées.
+
+**Télécharger le fichier** permet de conserver une copie ; **Importer un fichier** la recharge dans un autre navigateur. Votre sauvegarde manuelle n'est pas écrasée en chargeant un test. La partie ouverte passe dans **Colonie précédente**, un emplacement unique : sauvegardez votre progression avant d'enchaîner les essais. [Détail des six configurations](../development/test-colonies.md).
+
 V97 réduit le coût du paysage en vue rapprochée et des mises à jour végétales. Déplacez, tournez et zoomez normalement ; aucun réglage supplémentaire n'est nécessaire. Le débit maximal reste dépendant de la colonie et du matériel. [Mesures et limites](../history/validation-performance-v97.md).
 
 V96 corrige le décalage du paysage pendant les déplacements, rotations et zooms de caméra. Les éléments restent alignés dès l’image suivante ; commandes et sauvegardes sont conservées. [Preuves et limites de performance](../history/validation-camera-v96.md).

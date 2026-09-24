@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+V98 rend accessibles [six colonies de test](../development/test-colonies.md), dont deux charges avec cent colons, via Charger, téléchargement et import. Sauvegarde manuelle protégée et récupération de la partie précédente. Cette bibliothèque n'ajoute aucun système, matériau, biome ou recette et ne change pas les estimations fonctionnelles. [Preuves](../history/validation-test-colonies-v98.md).
+
 V97 améliore le rendu rapproché et le coût des mises à jour végétales ; aucun ajout de gameplay, de contenu ou de migration. Les limites de simulation à forte population persistent. [Preuves V97](../history/validation-performance-v97.md).
 
 V96 corrige le suivi de caméra du paysage et des ombres ; aucune estimation fonctionnelle ni entrée de catalogue supplémentaire. Les limites de cadence restent explicites dans les [preuves V96](../history/validation-camera-v96.md).

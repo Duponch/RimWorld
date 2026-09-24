@@ -138,7 +138,7 @@ export function gameLayout(): string {
     </section>
     <section id="menu-panel" class="management-panel menu-panel panel" aria-label="Menu du jeu" hidden>
       <div class="panel-heading"><h2>Lisière</h2><button data-close-panel aria-label="Fermer Menu">×</button></div><p id="scenario-current" class="muted"></p><div id="climate-options"></div>
-      <button id="save">Sauvegarder</button><button id="load">Recharger</button><button id="new-colony">Nouvelle colonie</button>
+      <button id="save">Sauvegarder</button><button id="load">Recharger</button><button id="browse-saves">Charger une partie</button><button id="new-colony">Nouvelle colonie</button>
       <button id="return-home">Sauvegarder et accueil</button><button id="restore-previous" disabled>Colonie précédente</button><button id="show-diagnostics">Afficher les diagnostics</button>
       <p class="muted">Sauvegarde locale à ce navigateur.</p>
     </section>

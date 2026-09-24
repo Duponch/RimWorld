@@ -87,6 +87,15 @@ export class GameSession {
     return this.exclusive(() => this.replace(() => this.client.init(seed, size, scenario, true,site)));
   }
 
+  /** External copies never occupy the manual slot. Read/decode/check the file
+   * before preserving the active world; the worker performs strict validation. */
+  loadExternal(read: () => Promise<string>): Promise<void> {
+    return this.exclusive(async () => {
+      const data = await read();
+      await this.replace(() => this.client.load(data));
+    });
+  }
+
   load(key: string): Promise<void> {
     return this.exclusive(async () => {
       if (key !== SAVE_KEY && key !== PREVIOUS_KEY) throw new Error('Emplacement de sauvegarde inconnu.');

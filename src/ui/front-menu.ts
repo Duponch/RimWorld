@@ -1,6 +1,7 @@
 import { DEFAULT_MAP_SIZE } from '../sim/map-config';
 import type { SiteOptions } from '../sim/site';
 import { createSiteConfiguration, parseSiteSeed, randomSiteSeed } from './front-site';
+import { testColonyUrl, type TestColony } from './test-colonies';
 import './front-menu.css';
 
 export interface FrontMenuDraft {
@@ -21,6 +22,9 @@ export interface FrontMenuOptions {
   onLoad: (key: string) => Promise<void>;
   onResume: () => Promise<void>;
   getSaves: () => FrontMenuSave[];
+  getTestColonies: () => Promise<TestColony[]>;
+  onLoadTest: (save: TestColony) => Promise<void>;
+  onImport: (file: File) => Promise<void>;
 }
 
 export interface FrontMenu {
@@ -34,7 +38,7 @@ export interface FrontMenu {
   showError(message: string): void;
 }
 
-type Page = 'home' | 'scenario' | 'story' | 'configuration' | 'load';
+type Page = 'home' | 'scenario' | 'story' | 'configuration' | 'load' | 'tests';
 type Control = HTMLButtonElement | HTMLInputElement | HTMLSelectElement;
 
 const scenery = `<svg class="front-landscape" viewBox="0 0 1440 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
@@ -185,9 +189,9 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
     footer.replaceChildren();
     steps.replaceChildren();
     root.dataset.page = page;
-    eyebrow.textContent = page === 'home' ? 'UNE HISTOIRE À CONSTRUIRE' : page === 'load' ? 'VOS COLONIES' : 'NOUVELLE PARTIE';
-    title.textContent = { home: 'Lisière', scenario: 'Choisir un scénario', story: 'Choisir votre histoire', configuration: 'Préparer le départ', load: 'Charger une partie' }[page];
-    if (page !== 'home' && page !== 'load') {
+    eyebrow.textContent = page === 'home' ? 'UNE HISTOIRE À CONSTRUIRE' : page === 'tests' ? 'EXPLORER ET ESSAYER' : page === 'load' ? 'VOS COLONIES' : 'NOUVELLE PARTIE';
+    title.textContent = { home: 'Lisière', scenario: 'Choisir un scénario', story: 'Choisir votre histoire', configuration: 'Préparer le départ', load: 'Charger une partie', tests: 'Colonies de test' }[page];
+    if (['scenario','story','configuration'].includes(page)) {
       const active = ['scenario', 'story', 'configuration'].indexOf(page);
       ['Scénario', 'Histoire', 'Départ'].forEach((label, index) => {
         const item = element('li', index === active ? 'is-current' : '', `${index + 1}  ${label}`);
@@ -199,6 +203,7 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
     else if (page === 'scenario') renderScenario();
     else if (page === 'story') renderStory();
     else if (page === 'configuration') renderConfiguration();
+    else if (page === 'tests') renderTests();
     else renderLoad();
     reveal();
     title.focus({ preventScroll: true });
@@ -220,7 +225,7 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
 
   function addNavigation(back: () => void, nextLabel?: string, next?: () => void): void {
     footer.append(action('Retour', back, 'front-back'));
-    if (page !== 'load') footer.append(action('Annuler la création', () => navigate('home'), 'front-quiet'));
+    if (page !== 'load' && page !== 'tests') footer.append(action('Annuler la création', () => navigate('home'), 'front-quiet'));
     if (nextLabel && next) footer.append(action(nextLabel, next, 'front-primary front-next'));
   }
 
@@ -328,6 +333,11 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
       showError(cause instanceof Error ? cause.message : 'Les sauvegardes de ce navigateur ne sont pas accessibles.');
     }
     content.append(element('p', 'front-load-intro', 'Choisissez une sauvegarde, puis confirmez le chargement. La colonie sera ouverte en pause.'));
+    const extra = element('div','front-load-actions');
+    const file = element('input'); file.type='file'; file.accept='.json,application/json'; file.hidden=true;
+    file.addEventListener('change',()=>{const chosen=file.files?.[0];file.value='';if(chosen)void run(()=>options.onImport(chosen),'Vérification du fichier et préparation de la colonie…');});
+    extra.append(action('Colonies de test',()=>navigate('tests')),action('Importer un fichier',()=>file.click()),file);
+    content.append(extra);
     const list = element('fieldset', 'front-save-list');
     list.append(element('legend', 'front-visually-hidden', 'Sauvegardes disponibles'));
     const loadButton = action('Charger', () => {
@@ -358,6 +368,41 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
     } else content.append(list);
     addNavigation(() => navigate('home'));
     footer.append(loadButton);
+  }
+
+  function renderTests(): void {
+    const intro = element('p','front-load-intro','Des colonies prêtes à jouer pour explorer les systèmes et comparer les performances. Chaque chargement ouvre une nouvelle copie en pause.');
+    content.append(intro);
+    addNavigation(()=>navigate('load'));
+    void run(async()=>{
+      const saves=await options.getTestColonies();
+      const split=element('div','front-test-layout');
+      const list=element('fieldset','front-test-list');
+      list.append(element('legend','front-visually-hidden','Configurations de test'));
+      const detail=element('article','front-card front-test-detail');
+      let selected=saves[0]!;
+      const describe=(save:TestColony)=>{
+        selected=save;
+        detail.replaceChildren(element('span','front-tag',save.prepared?'Situation préparée':'Colonie jouée'),element('h2','',save.label),element('p','',save.description));
+        const metadata=element('p','front-test-metadata',`${save.colonists} colons · carte ${save.width} × ${save.height}`);
+        const focus=element('p','front-test-focus',save.focus.join(' · '));
+        const instructions=element('ol','front-test-instructions');
+        for(const step of save.steps)instructions.append(element('li','',step));
+        detail.append(metadata,focus,element('h3','','À essayer'),instructions,element('p','front-small',save.provenance));
+      };
+      for(const [index,save] of saves.entries()) {
+        const row=element('label','front-save front-test-save'),radio=element('input');
+        radio.type='radio';radio.name='test-colony';radio.value=save.id;radio.checked=index===0;
+        radio.addEventListener('change',()=>{describe(save);clearError();});
+        const text=element('span');text.append(element('strong','',save.label),element('span','',`${save.colonists} colons · ${save.width} × ${save.height}`));
+        row.append(radio,text);list.append(row);
+      }
+      describe(selected);split.append(list,detail);content.append(split);
+      content.append(element('p','front-small front-test-preservation','La sauvegarde manuelle reste intacte. Si une colonie est ouverte, elle est conservée dans « Colonie précédente ». Sauvegardez votre progression avant de multiplier les essais.'));
+      footer.append(action('Télécharger le fichier',()=>{
+        const link=element('a');link.href=testColonyUrl(selected);link.download=selected.filename;link.click();
+      },'front-quiet'),action('Charger cette colonie',()=>{void run(()=>options.onLoadTest(selected),'Chargement de la colonie de test…');},'front-primary front-next'));
+    },'Chargement du catalogue de test…');
   }
 
   function showHome(nextHasGame = hasGame): void {
@@ -398,6 +443,7 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
       if (busy || operationPending) return;
       if (page === 'configuration') navigate('story');
       else if (page === 'story') navigate('scenario');
+      else if (page === 'tests') navigate('load');
       else if (page !== 'home') navigate('home');
       else if (hasGame) void run(options.onResume, 'Reprise de la colonie…');
     } else if (event.key === 'Tab') {

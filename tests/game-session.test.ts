@@ -58,3 +58,25 @@ test('an invalid compressed slot is refused before the active recovery is touche
   expect(f.client.save).not.toHaveBeenCalled();expect(f.client.load).not.toHaveBeenCalled();
   expect(f.data.get(PREVIOUS_KEY)).toBe('older');expect(f.session.hasWorld).toBe(true);
 });
+
+test('external test copies preserve manual saves, reject failed fetches and retain recovery on worker refusal',async()=>{
+  const f=fixture(true);
+  await expect(f.session.loadExternal(async()=>{throw Error('network');})).rejects.toThrow('network');
+  expect(f.client.save).not.toHaveBeenCalled();expect(f.client.load).not.toHaveBeenCalled();
+  expect(f.data.get(PREVIOUS_KEY)).toBe('older');
+  f.client.load.mockRejectedValueOnce(Error('invalid colony'));
+  await expect(f.session.loadExternal(async()=> 'bad')).rejects.toThrow('invalid colony');
+  expect(f.data.get(PREVIOUS_KEY)).toBe('older');expect(f.data.get(SAVE_KEY)).toBe('manual');
+  await f.session.loadExternal(async()=> 'test colony');
+  expect(f.client.load).toHaveBeenLastCalledWith('test colony');expect(f.client.init).not.toHaveBeenCalled();
+  expect(f.data.get(PREVIOUS_KEY)).toBe('active');expect(f.data.get(SAVE_KEY)).toBe('manual');
+  expect(f.session.busy).toBe(false);expect(f.prepare).toHaveBeenCalledOnce();
+});
+
+test('external downloads reserve the session before network completion',async()=>{
+  const f=fixture();let resolve!: (data:string)=>void;
+  const load=f.session.loadExternal(()=>new Promise<string>(done=>{resolve=done;}));
+  await expect(f.session.load(SAVE_KEY)).rejects.toThrow('en cours');
+  expect(f.client.load).not.toHaveBeenCalled();resolve('external');await load;
+  expect(f.client.load).toHaveBeenCalledWith('external');expect(f.session.busy).toBe(false);
+});

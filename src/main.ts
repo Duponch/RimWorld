@@ -10,6 +10,7 @@ import { perceivedWeather } from './sim/weather';
 import { firePosition } from './sim/fire-rules';
 import { calendarTick } from './sim/calendar';
 import { GameSession, SAVE_KEY, PREVIOUS_KEY } from './ui/game-session';
+import { fetchTestColonies, readSaveFile, readTestColony } from './ui/test-colonies';
 import { createFrontMenu } from './ui/front-menu';
 import type { PawnTrack } from './bridge/motion-tracks';
 import { SCENARIOS, type ScenarioId } from './sim/scenario-definitions';
@@ -130,6 +131,9 @@ const frontMenu = createFrontMenu(frontHost, {
   getSaves: () => session.saves(),
   onStart: async draft => replaceColony(() => session.create(draft.seed, draft.size, 'crashlanded',draft.site)),
   onLoad: async key => replaceColony(() => session.load(key)),
+  getTestColonies: fetchTestColonies,
+  onLoadTest: async save => replaceColony(() => session.loadExternal(() => readTestColony(save))),
+  onImport: async file => replaceColony(() => session.loadExternal(() => readSaveFile(file))),
   onResume: async () => {
     await prepareWorld(); frontMenu.hide(); syncStorageButtons();
     const speed = menuResumeSpeed ?? 0; menuResumeSpeed = undefined;
@@ -667,6 +671,7 @@ for (const button of document.querySelectorAll<HTMLButtonElement>('[data-close-p
 for (const button of document.querySelectorAll<HTMLButtonElement>('[data-speed]')) button.onclick = () => { void attempt(() => changeSpeed(Number(button.dataset.speed))); };
 el('save').onclick = () => { void attempt(save); }; el('load').onclick = () => { void attempt(() => load()); };
 el('restore-previous').onclick = () => { void attempt(() => load(PREVIOUS_KEY)); };
+el('browse-saves').onclick = () => { void attempt(() => openFront('load')); };
 el('help-open').onclick = () => { renderer?.cancelDesignation(); el<HTMLDialogElement>('help').showModal(); };
 el('new-colony').onclick = () => { if (diagnosticStart) el<HTMLDialogElement>('new-world-dialog').showModal(); else void attempt(() => openFront('create')); };
 el('return-home').onclick = () => { void attempt(async () => { await save(); await openFront('home'); }); };

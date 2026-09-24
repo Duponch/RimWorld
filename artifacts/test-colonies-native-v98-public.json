@@ -1,0 +1,74 @@
+{
+  "url": "https://lisiere-duponch.netlify.app",
+  "checkedAt": "2026-09-24T21:19:45.534Z",
+  "profiles": [
+    {
+      "id": "colony-v90",
+      "colonists": 4,
+      "loadedPaused": true,
+      "startTick": 1095464,
+      "endTick": null,
+      "elapsedMs": 7373
+    },
+    {
+      "id": "energy-food-12",
+      "colonists": 12,
+      "loadedPaused": true,
+      "startTick": 2000,
+      "endTick": null,
+      "elapsedMs": 5031
+    },
+    {
+      "id": "prison-12",
+      "colonists": 12,
+      "loadedPaused": true,
+      "startTick": 2000,
+      "endTick": null,
+      "elapsedMs": 3747
+    },
+    {
+      "id": "weather-fire-12",
+      "colonists": 12,
+      "loadedPaused": true,
+      "startTick": 2000,
+      "endTick": null,
+      "elapsedMs": 3968
+    },
+    {
+      "id": "trade-100",
+      "colonists": 100,
+      "loadedPaused": true,
+      "startTick": 2000,
+      "endTick": null,
+      "elapsedMs": 5349
+    },
+    {
+      "id": "mixed-100",
+      "colonists": 100,
+      "loadedPaused": true,
+      "startTick": 2000,
+      "endTick": null,
+      "elapsedMs": 4833
+    }
+  ],
+  "layouts": [
+    {
+      "width": 1440,
+      "height": 1000,
+      "scrollWidth": 1440,
+      "footerBottom": 917.515625
+    },
+    {
+      "width": 1356,
+      "height": 768,
+      "scrollWidth": 1356,
+      "footerBottom": 706
+    }
+  ],
+  "errors": [],
+  "download": true,
+  "corruptImportPreserved": true,
+  "importAndRecovery": true,
+  "recoveryRestored": true,
+  "passed": true
+}

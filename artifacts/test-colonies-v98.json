@@ -1,0 +1,103 @@
+{
+  "version": 1,
+  "release": "v98",
+  "source": "generated from immutable V90 fixture and declared scenario builders",
+  "assets": [
+    {
+      "id": "colony-v90",
+      "sha256": "7025d79c235224b789ae4361974a2a7c81952cfd920b927a748b442939d93a03",
+      "storedBytes": 106116,
+      "rawBytes": 2153035,
+      "schemaVersion": 91,
+      "livingColonists": 4,
+      "prisoners": 0,
+      "visitors": 0,
+      "dead": 44,
+      "structures": 149,
+      "jobs": 0,
+      "piles": 1731,
+      "wildlife": 0
+    },
+    {
+      "id": "energy-food-12",
+      "sha256": "920dc9dce795bda116780980758bf26625d930d408da11c41b179efff1b9074b",
+      "storedBytes": 127713,
+      "rawBytes": 2104880,
+      "schemaVersion": 91,
+      "livingColonists": 12,
+      "prisoners": 0,
+      "visitors": 0,
+      "dead": 0,
+      "structures": 66,
+      "jobs": 30,
+      "piles": 28,
+      "wildlife": 12
+    },
+    {
+      "id": "prison-12",
+      "sha256": "b89295fea9dc49a9efb8e023a4f87f3d726a23dc25e1fc6ac3921e1a7eb3c5e6",
+      "storedBytes": 128205,
+      "rawBytes": 2110336,
+      "schemaVersion": 91,
+      "livingColonists": 12,
+      "prisoners": 2,
+      "visitors": 0,
+      "dead": 0,
+      "structures": 100,
+      "jobs": 30,
+      "piles": 32,
+      "wildlife": 12
+    },
+    {
+      "id": "weather-fire-12",
+      "sha256": "cf54aad165f1ddd846cdaa67eb9b9217a346a9a42dddc5345b3182684f8b118a",
+      "storedBytes": 150554,
+      "rawBytes": 2419328,
+      "schemaVersion": 91,
+      "livingColonists": 12,
+      "prisoners": 0,
+      "visitors": 0,
+      "dead": 0,
+      "structures": 90,
+      "jobs": 30,
+      "piles": 34,
+      "wildlife": 12
+    },
+    {
+      "id": "trade-100",
+      "sha256": "7dcba99faf47584ff404658b75999831245d8262a1156558375ef35c6ef78b31",
+      "storedBytes": 183110,
+      "rawBytes": 2695026,
+      "schemaVersion": 91,
+      "livingColonists": 100,
+      "prisoners": 0,
+      "visitors": 2,
+      "dead": 0,
+      "structures": 655,
+      "jobs": 249,
+      "piles": 256,
+      "wildlife": 100
+    },
+    {
+      "id": "mixed-100",
+      "sha256": "a041752036fff16166c61561d2d9b1465e8181eceea7fdc949507f137cd3b750",
+      "storedBytes": 186642,
+      "rawBytes": 2710207,
+      "schemaVersion": 91,
+      "livingColonists": 100,
+      "prisoners": 0,
+      "visitors": 2,
+      "dead": 2,
+      "structures": 670,
+      "jobs": 249,
+      "piles": 266,
+      "wildlife": 100
+    }
+  ],
+  "checked": [
+    "strict world validation",
+    "serialize/deserialize exact roundtrip",
+    "compressed storage decode exact roundtrip",
+    "storage metadata"
+  ]
+}

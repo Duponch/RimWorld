@@ -1,4 +1,6 @@
-# Validation courante — V97
+# Validation courante — V98
+
+V98 : [bibliothèque de colonies, import et récupération](../history/validation-test-colonies-v98.md), 23 contrôles regroupés et parcours natif des six configurations, sans nouvelle règle ou migration.
 
 V97 : [paysage visible, deltas de flore et comparaison répétée](../history/validation-performance-v97.md). 13 contrôles ciblés, 64 images de mouvement/transition et 18 comparaisons de rejet exactes ; CPU de rendu, worker et timestamps GPU distingués. Aucune nouvelle règle ou migration.
 

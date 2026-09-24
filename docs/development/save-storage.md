@@ -1,5 +1,7 @@
 # Stockage local des parties
 
+V98 ajoute le [chargement de copies externes](test-colonies.md) depuis les colonies de test ou un fichier importé. Lecture/décompression et empreinte éventuelle précèdent le remplacement ; validation worker, exclusion et récupération sont communes aux sauvegardes locales. Aucun chargement externe n'écrit la sauvegarde manuelle. Les fichiers publics sont des références immuables : leur import dans une session ne les modifie pas.
+
 V93 conserve les deux clés `lisiere.save.v1` et `lisiere.previous.v1`, le schéma de monde 91 et la validation complète du worker avant remplacement. Le stockage reste local au navigateur et à l’origine ; aucun serveur de sauvegarde n’est ajouté.
 
 `save-storage-codec.ts` laisse les petites chaînes inchangées et compresse les JSON de plus de 1 Mio avec `CompressionStream('gzip')`, puis Base64. L’enveloppe JSON identifiée `lisiere-save`, version 1, contient le codec, les tailles, la charge et les métadonnées nécessaires à la liste des parties. Cette version d’enveloppe est distincte de celle du monde. Les anciens JSON se chargent directement ; les données décompressées sont exactement celles produites par la simulation, sans arrondi, réécriture ni migration implicite.
