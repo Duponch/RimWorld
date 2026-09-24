@@ -1,0 +1,22 @@
+{
+  "date": "2026-09-24T21:59:13.954Z",
+  "checks": [
+    "Animal click, actual health and reversible hunt designation",
+    "Double click selects visible same-species animals only",
+    "Draft button, R and non-overlapping tactical actions",
+    "Right-click ground uses real movement and confirmed blue path",
+    "Right-click wild animal explicitly issues a valid ranged order",
+    "Animal selection also follows perspective camera"
+  ],
+  "errors": [],
+  "route": {
+    "activeBars": 0,
+    "pathSegments": 3,
+    "barUploads": 0,
+    "pathRebuilds": 1,
+    "travelCopies": 1,
+    "visible": true,
+    "shared": true
+  },
+  "failure": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n2 !== 1\n\n    at file:///E:/Code/RimWorld/scripts/interaction-native-v99.mjs:78:9"
+}

@@ -38,7 +38,9 @@ function zoneCells(world: World) {
   return cached;
 }
 export const growingZoneAt = (world: World, cell: number): GrowingZone | undefined => zoneCells(world).byCell.get(cell);
-export function jobDuration(world: World, job: Job): number {
+/** Presentation may supply the already captured target; omission keeps the
+ * simulation's existing spatial cache. null means the target is absent. */
+export function jobDuration(world: World, job: Job, capturedResource?:Resource|null): number {
   if(job.flowerPotId!==undefined&&job.kind==='sow')return 54;
   if(job.kind==='lay-floor'||job.kind==='remove-floor'||job.kind==='grave')return constructionRecipe(job).work;
   if(job.kind==='mine'&&job.pickTicks!==undefined)return job.pickTicks/10;
@@ -46,7 +48,7 @@ export function jobDuration(world: World, job: Job): number {
   if(job.kind==='repair')return job.repair?.warmed?20:80;
   if(job.kind==='deconstruct')return deconstructionDuration(job);
   if(job.material!==undefined)return constructionRecipe(job).work;
-  return (job.kind === 'harvest' || job.kind === 'cut') && isCrop(resourceCells(world).get(index(world, job))??{kind:'rock'}) ? 20 : JOB_DURATION[job.kind];
+  return (job.kind === 'harvest' || job.kind === 'cut') && isCrop((capturedResource===undefined?resourceCells(world).get(index(world, job)):capturedResource)??{kind:'rock'}) ? 20 : JOB_DURATION[job.kind];
 }
 interface Context { resources: Map<number, Resource>; fixed: Set<number>; temperatures:TemperatureView }
 function context(world: World, queriedCells?:readonly number[]): Context {

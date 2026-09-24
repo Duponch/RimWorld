@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+**V99 — sélection et retours d'action :** les animaux sauvages ouvrent Informations/Santé et la chasse ; double clic et rectangle sélectionnent des groupes équivalents visibles selon la priorité colons, autres personnes, faune. Les boutons de mobilisation restent séparés, **R** agit sur le colon sélectionné, et le clic droit mobilisé propose explicitement le geste d'attaque admissible sur hostile ou animal sauvage. Le chemin bleu suit le trajet réellement calculé d'un colon sélectionné ; une barre dorée indique un travail mesuré de près. [Contrat et limites](../development/interaction-feedback.md), [recherche Core](../research/interaction-reference-v99.md). Social/Journal des animaux, sélection multiple générale d'objets, tracé des destinations/files futures et file d'attaques restent absents ou partiels ; bleu et ancrage des barres sur l'acteur sont des adaptations visuelles.
+
 V98 rend accessibles [six colonies de test](../development/test-colonies.md), dont deux charges avec cent colons, via Charger, téléchargement et import. Sauvegarde manuelle protégée et récupération de la partie précédente. Cette bibliothèque n'ajoute aucun système, matériau, biome ou recette et ne change pas les estimations fonctionnelles. [Preuves](../history/validation-test-colonies-v98.md).
 
 V97 améliore le rendu rapproché et le coût des mises à jour végétales ; aucun ajout de gameplay, de contenu ou de migration. Les limites de simulation à forte population persistent. [Preuves V97](../history/validation-performance-v97.md).

@@ -1,0 +1,6 @@
+{
+  "date": "2026-09-24T21:58:27.660Z",
+  "checks": [],
+  "errors": [],
+  "failure": "page.waitForFunction: TypeError: Cannot read properties of undefined (reading 'targets')\n    at eval (eval at predicate (eval at evaluate (:311:30)), <anonymous>:1:36)\n    at predicate (eval at evaluate (:311:30), <anonymous>:7:27)\n    at next (eval at evaluate (:311:30), <anonymous>:29:33)\n    at eval (eval at evaluate (:311:30), <anonymous>:42:13)\n    at UtilityScript.evaluate (<anonymous>:313:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n    at E:\\Code\\RimWorld\\scripts\\interaction-native-v99.mjs:34:62"
+}

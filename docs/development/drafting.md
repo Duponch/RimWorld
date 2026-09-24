@@ -1,5 +1,7 @@
 # Mobilisation et déplacements — V53
 
+V99 : [contrat d’interaction courant](interaction-feedback.md). Mobiliser/Démobiliser se trouve dans les actions du dossier ; R et boutons excluent explicitement les membres indisponibles. Clic droit au sol : déplacement ; sur animal ou hostile : choix tactiques vérifiés, allié exclu du menu contextuel. File d’attaques absente. La référence locale 1.6.4871 affine les constats de la recherche historique ci-dessous.
+
 18 septembre 2026. [Recherche confrontée aux sources](../research/drafting-reference.md), [état global](../ROADMAP.md), [preuves](validation.md). Corpus : chapitres 8/20/21, SYS/TEST-035 et 113..117, UI-007/008/011. Tir, couverture et ennemis ne sont pas livrés par ce contrat.
 
 ## Mode et commandes

@@ -1,5 +1,16 @@
-export interface ScreenPawn { id:number; x:number; y:number; radius:number; depth:number }
+export interface ScreenPawn { id:number; x:number; y:number; radius:number; depth:number; group?:string; category?:number }
 export type SelectionGesture = { ids:number[]; additive:boolean; toggle:boolean };
+/** Player colonists, other people, animals, then bodies; never mix the lower
+ * priority actor categories into a colonist rectangle. Evaluated on gestures. */
+export function rectangleActors(pawns:readonly ScreenPawn[],x1:number,y1:number,x2:number,y2:number):number[] {
+  const inside=pawns.filter(p=>p.x>=Math.min(x1,x2)&&p.x<=Math.max(x1,x2)&&p.y>=Math.min(y1,y2)&&p.y<=Math.max(y1,y2));
+  const priority=inside.reduce((best,p)=>Math.min(best,p.category??0),Infinity);
+  return inside.filter(p=>(p.category??0)===priority).map(p=>p.id);
+}
+export function hitActors(pawns:readonly ScreenPawn[],x:number,y:number):ScreenPawn[] {
+  return pawns.filter(p=>Math.hypot(x-p.x,y-p.y)<=p.radius).sort((a,b)=>(a.category??0)-(b.category??0)||a.depth-b.depth||a.id-b.id);
+}
+export function equivalentActors(pawns:readonly ScreenPawn[],hit:ScreenPawn):number[]{return pawns.filter(p=>p.group===hit.group).map(p=>p.id);}
 interface Callbacks {
   enabled():boolean;
   pawns():ScreenPawn[];
@@ -38,7 +49,7 @@ export class PawnSelectionInput {
     const inside=document.elementFromPoint(event.clientX,event.clientY)===this.canvas;
     this.cancel();if(!inside)return true;
     if(Math.hypot(event.clientX-drag.x,event.clientY-drag.y)>6) {
-      const ids=this.callbacks.pawns().filter(p=>p.x>=Math.min(drag.x,event.clientX)&&p.x<=Math.max(drag.x,event.clientX)&&p.y>=Math.min(drag.y,event.clientY)&&p.y<=Math.max(drag.y,event.clientY)).map(p=>p.id);
+      const ids=rectangleActors(this.callbacks.pawns(),drag.x,drag.y,event.clientX,event.clientY);
       this.callbacks.select({ids,additive:drag.shift,toggle:false});
     } else {
       const hits=this.hits(event.clientX,event.clientY),selected=this.callbacks.selected();
@@ -53,11 +64,13 @@ export class PawnSelectionInput {
     return true;
   }
   private hits(x:number,y:number):ScreenPawn[] {
-    return this.callbacks.pawns().filter(p=>Math.hypot(x-p.x,y-p.y)<=p.radius).sort((a,b)=>a.depth-b.depth||a.id-b.id);
+    return hitActors(this.callbacks.pawns(),x,y);
   }
   private doubleClick=(event:MouseEvent):void=>{
-    if(!this.callbacks.enabled()||event.button!==0||!this.hits(event.clientX,event.clientY).length)return;
-    this.callbacks.select({ids:this.callbacks.pawns().map(p=>p.id),additive:event.shiftKey,toggle:false});
+    if(!this.callbacks.enabled()||event.button!==0)return;
+    const pawns=this.callbacks.pawns(),hit=hitActors(pawns,event.clientX,event.clientY)[0];
+    if(!hit)return;
+    this.callbacks.select({ids:equivalentActors(pawns,hit),additive:event.shiftKey,toggle:false});
     event.preventDefault();
   };
   cancel():boolean {

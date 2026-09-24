@@ -24,7 +24,7 @@ import { jobDuration } from '../sim/farming';
 import { travelHeight } from './furniture-motion';
 import { pileSurfaces } from './pile-surfaces';
 import { CropLayer } from './CropLayer';
-import { PawnSelectionInput, type ScreenPawn, type SelectionGesture } from './PawnSelectionInput';
+import { PawnSelectionInput, hitActors, type ScreenPawn, type SelectionGesture } from './PawnSelectionInput';
 import { FireLayer } from './FireLayer';
 import { GrowingZoneLayer } from './GrowingZoneLayer';
 import { buildTerrain } from './TerrainLayer';
@@ -56,6 +56,7 @@ import { PlantClusterLayer } from './PlantClusterLayer';
 import { isClusterPlantSpecies } from './flora-presentation';
 import { DesignationIconLayer } from './DesignationIconLayer';
 import { LandscapeBatch } from './LandscapeBatch';
+import { ActionFeedbackLayer } from './ActionFeedbackLayer';
 
 type VisualChunk = { signature: string; group: THREE.Group };
 
@@ -79,6 +80,7 @@ export class ColonyRenderer {
   private readonly projectiles = new ProjectileLayer();
   private readonly wildlife = new WildlifeLayer(this.environmentLighting.configure);
   private readonly pawns = new PawnLayer(this.environmentLighting.configure);
+  private readonly actionFeedback = new ActionFeedbackLayer(this.pawns);
   readonly backend: string;
   private readonly renderer: THREE.WebGPURenderer;
   private readonly scene = new THREE.Scene();
@@ -98,7 +100,7 @@ export class ColonyRenderer {
   private readonly selectionInput: PawnSelectionInput;
   private selectedPawns:ReadonlySet<number>=new Set();
   onSelection: (gesture:SelectionGesture)=>void=()=>{};
-  onContext: (cell:Cell,x:number,y:number,queue:boolean)=>void=()=>{};
+  onContext: (cell:Cell,x:number,y:number,queue:boolean,targetId?:number)=>void=()=>{};
   onInteractionCancel: ()=>void=()=>{};
   private areaMesh: THREE.InstancedMesh | null = null;
   private areaIndex: AreaIndex | undefined;
@@ -198,7 +200,7 @@ export class ColonyRenderer {
     this.hover.position.y = 0.08;
     this.hover.visible = false;
     this.hover.renderOrder = 5;
-    this.scene.add(this.hover, this.recreationHints.group);
+    this.scene.add(this.hover, this.recreationHints.group,this.actionFeedback.group);
     this.selectionInput=new PawnSelectionInput(renderer.domElement,{
       enabled:()=>this.tool==='select'&&!document.querySelector('dialog[open]'),
       pawns:()=>this.screenPawns(),select:gesture=>this.onSelection(gesture),
@@ -300,6 +302,7 @@ export class ColonyRenderer {
     this.timeTo = world.tick / TICKS_PER_SECOND;
     this.pawns.blend.value = resetPoses ? 1 : 0;
     this.pawns.update(world, resetPoses ? 1 : oldBlend, resetPoses);
+    this.actionFeedback.update(world,this.selectedPawns,this.pawns.feedbackSource!);
     this.wildlife.update(world,this.hasTracks?this.timeline:undefined);
     this.landscape.refresh(this.backend==='WebGPU'&&this.overview.group.visible);
     this.updateHover();
@@ -368,6 +371,7 @@ export class ColonyRenderer {
     const culling = new Map<THREE.Object3D, boolean>();
     const distant = this.overview.group.visible;
     const restoreWildlife=this.wildlife.prepare();
+    const restoreFeedback=this.actionFeedback.prepareForCompile();
     const restoreWind=this.wind.prepareForCompile();
     const restoreRoofs=this.roofs.prepare();
     const restoreDoors=this.doors.prepareForCompile();
@@ -387,7 +391,7 @@ export class ColonyRenderer {
       this.landscape.needsUpdate=true;
       await prepareShadowPipelines(this.renderer,this.scene,this.rig.orthographic,this.boxes);
     } finally {
-      restoreWind();restoreWildlife();restoreRoofs();restoreDoors();restoreCrops();restorePlants();restoreDesignations();
+      restoreWind();restoreWildlife();restoreFeedback();restoreRoofs();restoreDoors();restoreCrops();restorePlants();restoreDesignations();
       for (const [object, value] of culling) object.frustumCulled = value;
       this.overview.group.visible = distant; this.terrainGroup.visible = this.resourceGroup.visible = this.plants.group.visible = !distant;
       this.rocks.setDistant(distant); this.landscape.refresh(this.backend==='WebGPU'&&distant); this.preparing = false;
@@ -415,7 +419,7 @@ export class ColonyRenderer {
     this.controls.update();
   }
 
-  setSelectedPawns(ids:ReadonlySet<number>):void {this.selectedPawns=new Set(ids);this.pawns.setSelected(ids);}
+  setSelectedPawns(ids:ReadonlySet<number>):void {this.selectedPawns=new Set(ids);this.pawns.setSelected(ids);this.wildlife.setSelected(ids);if(this.world&&this.pawns.feedbackSource)this.actionFeedback.update(this.world,this.selectedPawns,this.pawns.feedbackSource);}
 
   /** Project lightweight actor proxies only for pointer gestures, using the
    * same confirmed edge as the GPU. Canopies don't prevent selecting a colon. */
@@ -424,6 +428,7 @@ export class ColonyRenderer {
     // The carried body uses the carrier's GPU pose and edge times. Its own
     // final walking segment is historical and must not drive its hit proxy.
     const bodyCarriers=new Map((this.world?.piles??[]).flatMap(p=>p.humanCorpse&&p.owner.type==='pawn'?[[p.humanCorpse.pawnId,p.owner.pawnId] as const]:[]));
+    const actors=new Map(this.world?.pawns.map(p=>[p.id,p]));
     for(const [id,visual] of this.pawns.visuals) {
       if(visual.to.y< -100)continue;
       const segment=this.hasTracks?this.timeline.segment(bodyCarriers.get(id)??id):undefined;
@@ -435,8 +440,15 @@ export class ColonyRenderer {
       if(center.z < -1||center.z>1||Math.abs(center.x)>1||Math.abs(center.y)>1)continue;
       const head=position.clone().add(new THREE.Vector3(0,1.75,0)).project(this.camera);
       result.push({id,x:rect.left+(center.x+1)*rect.width/2,y:rect.top+(1-center.y)*rect.height/2,
-        radius:Math.max(5,Math.min(38,Math.abs(head.y-center.y)*rect.height/2)),depth:center.z});
+        radius:Math.max(5,Math.abs(head.y-center.y)*rect.height/2),depth:center.z,group:actors.get(id)?.state==='dead'?'corpse:human':`human:${actors.get(id)?.faction??'colony'}:${!!actors.get(id)?.prisoner}`,category:actors.get(id)?.state==='dead'?3:(actors.get(id)?.faction??'colony')==='colony'?0:1});
     }
+    const center=new THREE.Vector3(),edge=new THREE.Vector3(),side=new THREE.Vector3().setFromMatrixColumn(this.camera.matrixWorld,0);
+    this.wildlife.forEachPose((id,species,x,y,z,height,radius)=>{
+      center.set(x,y+height*.5,z).project(this.camera);
+      if(center.z< -1||center.z>1||Math.abs(center.x)>1||Math.abs(center.y)>1)return;
+      edge.set(x,y+height*.5,z).addScaledVector(side,Math.max(height*.5,radius)).project(this.camera);
+      result.push({id,x:rect.left+(center.x+1)*rect.width/2,y:rect.top+(1-center.y)*rect.height/2,radius:Math.max(6,Math.abs(edge.x-center.x)*rect.width/2),depth:center.z,group:`animal:${species}`,category:2});
+    });
     return result;
   }
 
@@ -539,6 +551,7 @@ export class ColonyRenderer {
     this.pawns.blend.value = this.snapshotDuration > 0 ? Math.min(1, Math.max(0, (performance.now() - this.snapshotAt) / this.snapshotDuration)) : 1;
     this.pawns.time.value = THREE.MathUtils.lerp(this.timeFrom, this.timeTo, this.pawns.blend.value);
     if(this.hasTracks && this.world) {this.pawns.time.value=(this.timeline.tick/TICKS_PER_SECOND)%(2*Math.PI);this.pawns.updateTravel(this.world,this.timeline);}
+    if(this.pawns.feedbackSource)this.actionFeedback.syncTravel(this.pawns.feedbackSource);
     if(this.world)this.wildlife.update(this.world,this.hasTracks?this.timeline:undefined);
     if (!this.areaDrag && !this.selectionInput.active) { this.moveCamera(dt); this.controls.update(); }
     if (this.world) {
@@ -554,6 +567,7 @@ export class ColonyRenderer {
     this.doors.tick.value=skyTick;this.projectiles.present(skyTick);this.fires.present(skyTick);this.wind.present(skyTick);
     this.daylight.update(this.world?calendarTick(this.world,skyTick):skyTick, this.controls.target,this.world??undefined);
     const cellPixels=this.rig.pixelsPerCell(this.host.clientHeight);
+    this.actionFeedback.setBarsDetailVisible(cellPixels>=18);
     const distant=this.overview.group.visible ? cellPixels<9 : cellPixels<7;
     if(distant!==this.overview.group.visible)this.landscape.needsUpdate=true;
     this.overview.group.visible=distant;this.terrainGroup.visible=!distant;this.resourceGroup.visible=!distant;this.plants.group.visible=!distant;
@@ -628,7 +642,7 @@ export class ColonyRenderer {
     }
     const down = this.pointerDown; this.pointerDown = null;
     if(down&&down.button===2&&event.button===2&&down.pointerId===event.pointerId&&this.tool==='select'&&Math.hypot(down.x-event.clientX,down.y-event.clientY)<=6) {
-      const cell=this.pick(event);if(cell)this.onContext(cell,event.clientX,event.clientY,event.shiftKey);return;
+      const cell=this.pick(event);if(cell)this.onContext(cell,event.clientX,event.clientY,event.shiftKey,hitActors(this.screenPawns(),event.clientX,event.clientY)[0]?.id);return;
     }
     if (!down || down.pointerId !== event.pointerId || down.button !== 0 || event.button !== 0 || Math.hypot(down.x - event.clientX, down.y - event.clientY) > 6) return;
     const cell = this.pick(event);
@@ -760,6 +774,7 @@ export class ColonyRenderer {
     window.removeEventListener('blur', this.onBlur);
     document.removeEventListener('visibilitychange', this.onVisibility);
     this.boxes.dispose();
+    this.actionFeedback.dispose();
     this.overview.dispose();
     this.rocks.dispose();
     this.crops.dispose();

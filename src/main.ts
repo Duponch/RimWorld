@@ -55,6 +55,9 @@ import { furnitureControls, updateFurnitureControls } from './ui/furniture-contr
 import { furnitureObject, furnitureIntentAt, packedAt } from './sim/furniture-rules';
 import { fireControls, updateFireControls } from './ui/fire-controls';
 import { PawnSelection } from './ui/pawn-selection';
+import { createAnimalInspector, updateAnimalInspector } from './ui/animal-inspector';
+import './ui/animal-inspector.css';
+import { animalSpecies } from './sim/animal-species';
 import { OrderMenu } from './ui/order-menu';
 import type { SelectionGesture } from './render/PawnSelectionInput';
 import { createScheduleControls } from './ui/schedule-controls';
@@ -198,7 +201,8 @@ function setCategory(category: ArchitectCategory) {
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-category]')) button.classList.toggle('active', button.dataset.category === category);
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-tool-category]')) button.hidden = button.dataset.toolCategory !== category;
 }
-function renderWildlife(world:World){updateWildlifePanel(el('wildlife-content'),world,id=>renderer?.focusPawn(id),()=>void attempt(async()=>{await client.command({type:'enable-wildlife'});renderState();}),[...selection.ids],id=>void attempt(async()=>{await client.command({type:'shoot',pawnIds:[...selection.ids],targetId:id});renderState();}),id=>void attempt(async()=>{await client.command({type:'melee',pawnIds:[...selection.ids],targetId:id});renderState();}),(id,enabled)=>void attempt(async()=>{await client.command({type:'hunt',animalId:id,enabled});renderState();}));}
+function selectedColonyIds():number[]{return snapshot?.pawns.filter(p=>selection.ids.has(p.id)&&isColonist(p)&&!p.prisoner).map(p=>p.id)??[];}
+function renderWildlife(world:World){updateWildlifePanel(el('wildlife-content'),world,id=>selectPawn(id),()=>void attempt(async()=>{await client.command({type:'enable-wildlife'});renderState();}),[...selection.ids],id=>void attempt(async()=>{await client.command({type:'shoot',pawnIds:selectedColonyIds(),targetId:id});renderState();}),id=>void attempt(async()=>{await client.command({type:'melee',pawnIds:selectedColonyIds(),targetId:id});renderState();}),(id,enabled)=>void attempt(async()=>{await client.command({type:'hunt',animalId:id,enabled});renderState();}));}
 function setPanel(panel: Panel, preserveTool = false) {
   // Every exit path (tabs, map, portraits and shortcuts) releases this pause.
   if (currentPanel === 'menu' && panel !== 'menu' && menuResumeSpeed !== undefined && !replacingWorld && !frontMenu.isOpen()) {
@@ -256,8 +260,7 @@ function selectPawn(id: number) {
 function selectPawns(gesture:SelectionGesture,focus=false) {
   if(!snapshot||replacingWorld||frontMenu.isOpen())return;
   shootingControls.cancel();
-  const singleEnemy=gesture.ids.length===1&&!gesture.additive&&snapshot.pawns.some(p=>p.id===gesture.ids[0]&&!isColonist(p));
-  selection.apply(gesture,new Set(snapshot.pawns.filter(p=>singleEnemy||isColonist(p)).map(p=>p.id)));
+  selection.apply(gesture,new Set([...snapshot.pawns.map(p=>p.id),...(snapshot.wildlife?.animals??[]).map(a=>a.id)]));
   selectedPawn=selection.single;selectedCell=undefined;
   renderer?.setSelectedPawns(selection.ids);
   setPanel(null);
@@ -268,7 +271,7 @@ function pickCell(x: number, z: number) {
   if (!snapshot || replacingWorld || frontMenu.isOpen()) return;
   if(shootingControls.active){
     const target=shootingControls.mode==='melee'?snapshot.structures.find(s=>(s.kind==='wall'||s.kind==='door')&&s.x===x&&s.z===z):undefined;
-    shootingControls.cancel();if(target)void attempt(async()=>{await client.command({type:'melee',pawnIds:[...selection.ids],targetId:target.id,structure:true});renderState();});else renderState();return;
+    shootingControls.cancel();if(target)void attempt(async()=>{await client.command({type:'melee',pawnIds:selectedColonyIds(),targetId:target.id,structure:true});renderState();});else renderState();return;
   }
   if (currentTool !== 'select') {
     const tool = currentTool;
@@ -319,14 +322,16 @@ function rotatePlacement(direction = 1) {
 function rebuildInspector() {
   const panel = el('inspector');
   panel.hidden = currentPanel !== null || (!selection.ids.size && !selectedCell);
-  panel.classList.remove('colonist-inspector-host');
+  panel.classList.remove('colonist-inspector-host','animal-inspector-host');
   delete panel.dataset.colonistInspectorPawn;
   delete panel.dataset.colonistInspectorTab;
   if(selection.ids.size>1) {
-    panel.innerHTML='<div class="panel-heading"><h2 id="group-title"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><div id="group-members"></div><p class="muted">Sélectionnez un colon pour lui donner un ordre de travail.</p>';
+    panel.innerHTML='<div class="panel-heading"><h2 id="group-title"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><div id="group-members"></div><p class="muted">Choisissez une personne ou un animal pour consulter son dossier.</p>';
     for(const id of selection.ids) {
       const button=document.createElement('button');button.dataset.groupPawn=String(id);button.onclick=()=>selectPawn(id);el('group-members').append(button);
     }
+  } else if(selectedPawn!==undefined&&snapshot?.wildlife?.animals.some(a=>a.id===selectedPawn)) {
+    createAnimalInspector(panel,{onHunt:(animalId,enabled)=>void attempt(async()=>{await client.command({type:'hunt',animalId,enabled});renderState();}),onClose:clearSelection});
   } else if(selectedPawn!==undefined&&snapshot?.pawns.some(p=>p.id===selectedPawn&&p.prisoner)) {
     panel.innerHTML='<div class="panel-heading"><h2 id="selected-name"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><p id="selected-action"></p>';
     createPrisonerInspection(panel,()=>{const pawn=snapshot?.pawns.find(p=>p.id===selectedPawn);return snapshot&&pawn?{world:snapshot,pawn}:undefined;},c=>void attempt(()=>client.command(c)),renderState);
@@ -381,7 +386,7 @@ function rebuildInspector() {
     const zone = snapshot && growingZoneAt(snapshot, selectedCell.z * snapshot.width + selectedCell.x);
     if (zone) panel.append(growingControls(zone, command => void attempt(async () => { await client.command(command); rebuildInspector(); renderState(); })));
   } else panel.replaceChildren();
-  if(selection.ids.size&&snapshot?.pawns.some(p=>selection.ids.has(p.id)&&isColonist(p))){createDraftControls(panel,()=>snapshot?.pawns.filter(p=>selection.ids.has(p.id))??[],c=>void attempt(async()=>{await client.command(c);renderState();}));shootingControls.create(panel,()=>snapshot?.pawns.filter(p=>selection.ids.has(p.id))??[],()=>renderState());}
+  if(selection.ids.size&&snapshot?.pawns.some(p=>selection.ids.has(p.id)&&isColonist(p))){createDraftControls(panel,()=>snapshot?.pawns.filter(p=>selection.ids.has(p.id)&&isColonist(p)&&!p.prisoner)??[],c=>void attempt(async()=>{await client.command(c);renderState();}));shootingControls.create(panel,()=>snapshot?.pawns.filter(p=>selection.ids.has(p.id)&&isColonist(p)&&!p.prisoner)??[],()=>renderState());}
   const inspected = snapshot?.pawns.find(p => p.id === selectedPawn);
   if (inspected && selection.ids.size <= 1 && (isColonist(inspected) || inspected.prisoner)) {
     colonistInspector = colonistInspectorState(colonistInspector, inspected.id, !!inspected.prisoner);
@@ -503,17 +508,18 @@ function renderState() {
     (button.querySelector('i') as HTMLElement).style.width = `${pawn.state==='dead'?0:pawn.mood}%`;
   }
   if (currentPanel === 'work') updateWorkPanel(world);
-  updateDraftControls(el('inspector'),world.pawns.filter(p=>selection.ids.has(p.id)));
-  shootingControls.update(el('inspector'),world.pawns.filter(p=>selection.ids.has(p.id)));
+  updateDraftControls(el('inspector'),world.pawns.filter(p=>selection.ids.has(p.id)&&isColonist(p)&&!p.prisoner));
+  shootingControls.update(el('inspector'),world.pawns.filter(p=>selection.ids.has(p.id)&&isColonist(p)&&!p.prisoner));
   if(selection.ids.size>1) {
-    el('group-title').textContent=`${selection.ids.size} colons sélectionnés`;
+    el('group-title').textContent=`${selection.ids.size} individus sélectionnés`;
     for(const button of el('group-members').querySelectorAll<HTMLButtonElement>('button')) {
       const pawn=world.pawns.find(p=>p.id===Number(button.dataset.groupPawn));
-      button.textContent=pawn?`${pawn.name} · ${actionLabel(pawn)}`:'Colon absent';
+      const animal=world.wildlife?.animals.find(a=>a.id===Number(button.dataset.groupPawn));
+      button.textContent=pawn?`${pawn.name} · ${actionLabel(pawn)}`:animal?`${animalSpecies(animal.species).label} ${animal.id}`:'Individu absent';
     }
   } else if (selectedPawn !== undefined) {
     const pawn = world.pawns.find(item => item.id === selectedPawn);
-    if (!pawn) clearSelection();
+    if (!pawn) {if(!updateAnimalInspector(el('inspector'),world,selectedPawn))clearSelection();}
     else if(pawn.prisoner){el('selected-name').textContent=pawn.name;el('selected-action').textContent=actionLabel(pawn);updatePrisonerInspection(el('inspector'),world,pawn);}
     else if(!isColonist(pawn)){el('selected-name').textContent=pawn.name;el('selected-action').textContent=actionLabel(pawn);updateEquipmentInspection(el('inspector'),world,pawn);updateHealthInspection(el('inspector'),pawn,world);}
     else {
@@ -718,7 +724,7 @@ client.onSnapshot = (world, cost, speed, replaced, motion) => {
   const role=(p:Pawn|undefined)=>p?p.prisoner?'prisoner':isColonist(p)?'colonist':'other':'absent';
   const roleChanged=selectedPawn!==undefined&&role(snapshot?.pawns.find(p=>p.id===selectedPawn))!==role(world.pawns.find(p=>p.id===selectedPawn));
   snapshot=world;stepMs=cost;currentSpeed=speed;latestMotion=motion;session.hasWorld=true;frontMenu.setHasGame(true);
-  const changed=replaced||[...selection.ids].some(id=>!world.pawns.some(p=>p.id===id));
+  const changed=replaced||[...selection.ids].some(id=>!world.pawns.some(p=>p.id===id)&&!world.wildlife?.animals.some(a=>a.id===id));
   if(changed){selection.clear();selectedPawn=undefined;selectedCell=undefined;orderMenu.close();rebuildInspector();}
   else if(roleChanged){orderMenu.close();rebuildInspector();}
   renderer?.setWorld(world,replaced,speed,motion);
@@ -731,9 +737,9 @@ async function prepareWorld(): Promise<void> {
   await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
   if (!renderer) {
     renderer = await ColonyRenderer.create(el('viewport'), pickCell);
-    renderer.onSelection=gesture=>{if(shootingControls.active){const targetId=gesture.ids[0];if(targetId!==undefined){const type=shootingControls.mode!;shootingControls.cancel();void attempt(async()=>{await client.command({type,pawnIds:[...selection.ids],targetId});renderState();});}return;}selectPawns(gesture);};
+    renderer.onSelection=gesture=>{if(shootingControls.active){const targetId=gesture.ids[0];if(targetId!==undefined){const type=shootingControls.mode!;shootingControls.cancel();void attempt(async()=>{await client.command({type,pawnIds:selectedColonyIds(),targetId});renderState();});}return;}selectPawns(gesture);};
     renderer.onInteractionCancel=()=>orderMenu.close();
-    renderer.onContext=(cell,x,y,queue)=>{if(shootingControls.active){shootingControls.cancel();renderState();return;}if(!snapshot||replacingWorld||frontMenu.isOpen())return;const selected=snapshot.pawns.filter(p=>selection.ids.has(p.id));if(selected.some(p=>p.draft)){orderMenu.close();void attempt(()=>client.command({type:'draft-move',pawnIds:selected.map(p=>p.id),target:cell,queue}));}else void orderMenu.open(snapshot,selection.ids,cell,x,y,queue);};
+    renderer.onContext=(cell,x,y,queue,targetId)=>{if(shootingControls.active){shootingControls.cancel();renderState();return;}if(!snapshot||replacingWorld||frontMenu.isOpen())return;const selected=snapshot.pawns.filter(p=>selection.ids.has(p.id)&&isColonist(p)&&!p.prisoner);if(selected.some(p=>p.draft))void orderMenu.openTactical(snapshot,new Set(selected.map(p=>p.id)),cell,x,y,queue,targetId);else void orderMenu.open(snapshot,selection.ids,cell,x,y,queue);};
     renderer.onArea = designateArea;
     renderer.onAreaPreview = info => {
       el('area-feedback').hidden = !info;

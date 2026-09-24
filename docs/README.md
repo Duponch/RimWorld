@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V99 : sélection et retours d’action.** Animaux cliquables avec Info/Santé et chasse ; groupes cohérents, mobilisation lisible, attaques contextuelles, chemins réels bleus et barres de travail dorées. [Contrat](development/interaction-feedback.md), [référence Core 1.6.4871](research/interaction-reference-v99.md), [preuves et coûts](history/validation-interaction-v99.md). Schéma 91 et catalogue inchangés.
+
 **V98 : six colonies de test prêtes à charger.** Campagne avancée, énergie/alimentation, prison, environnement et deux configurations de cent colons accessibles depuis Charger ; téléchargement et import intégrés. [Contenu et conservation](development/test-colonies.md), [preuves](history/validation-test-colonies-v98.md). Aucun nouveau système de gameplay.
 
 **V97 : rendu rapproché et végétation moins coûteux.** Le paysage utilise la visibilité propre à chaque caméra et des mises à jour de ressources ciblées. Gain surtout de près ; les limites de la vue globale et du worker restent ouvertes. [Mesures et preuves](history/validation-performance-v97.md), [diagnostic](research/performance-v97.md). Gameplay inchangé.

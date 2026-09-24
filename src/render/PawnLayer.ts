@@ -45,6 +45,7 @@ export class PawnLayer {
   readonly blend = uniform(1);
   readonly visuals = new Map<number, VisualPawn>();
   private pawnMesh: THREE.Mesh | null = null;
+  get feedbackSource():THREE.InstancedBufferGeometry|undefined {return this.pawnMesh?.geometry as THREE.InstancedBufferGeometry|undefined;}
   private cargoMesh: THREE.Mesh | null = null;
   private fireMesh: THREE.Mesh | null = null;
   private readonly targetPoses = new Map<number,THREE.Vector4>();

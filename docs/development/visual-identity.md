@@ -1,5 +1,7 @@
 # Identité visuelle et inspection — V95
 
+V99 : [inspection animale et actions](interaction-feedback.md). Dossier Info/Santé cohérent avec les dossiers existants ; commandes de mobilisation en cases distinctes, sans superposition. Barre dorée proche et chemin bleu réel, adaptés au rendu 3D, sans DOM par acteur.
+
 V94 conserve la structure de jeu introduite en V93 — ressources, portraits, dossiers, alertes, temps et barre de gestion — puis corrige les éléments qui se comportaient encore comme une page web. Les surfaces restent en papier ivoire et encre forêt, avec Source Sans 3 et Literata embarquées. Aucun cadre raster n'est étiré et les panneaux papier ne reçoivent pas de second fond sombre.
 
 ## HUD stable

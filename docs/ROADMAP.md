@@ -1,5 +1,7 @@
 # Plan de développement
 
+**V99 : corrections d’interaction demandées, sans nouvelle chaîne de gameplay.** Inspection animale, sélection des acteurs, mobilisation et repères de travail/déplacement rendent les systèmes déjà jouables accessibles et lisibles. [Contrat](development/interaction-feedback.md), [preuves](history/validation-interaction-v99.md). Aucun pourcentage fonctionnel augmenté ni jalon clos ; Social/Journal des animaux, groupes d’objets et file d’attaques restent partiels ou absents. La performance générale demeure ouverte ; un affichage mesuré n’est pas une garantie de coût nul.
+
 **V98 : bibliothèque de six colonies de test.** Quatre habitants après 182,577 jours, trois situations de douze colons et deux charges de cent colons ; accès direct, téléchargement, import et récupération. [Contrat](development/test-colonies.md), [preuves](history/validation-test-colonies-v98.md). La pause gameplay/performance reste en vigueur ; aucun nouveau contenu ni hausse des estimations fonctionnelles. Les charges préparées facilitent les prochains diagnostics sans exiger une nouvelle campagne depuis le départ.
 
 **V97 : gain de rendu confirmé surtout en vue rapprochée.** Sur la comparaison répétée du départ, environ 102→201 FPS à ×6 de près ; 200→204 sur toute la carte. À 104 personnes, 41→110 FPS de près, mais débit de simulation seulement 2,75–3,18× pour 6× demandé. [Mesures, pics et limites](history/validation-performance-v97.md). Aucun progrès fonctionnel ni jalon clos.
@@ -28,7 +30,7 @@
 
 La filière alimentaire V84 reste livrée : [cultures](development/food-crops.md), [postes](development/food-workstations.md) et [malnutrition](development/malnutrition.md), 24 jours depuis la dotation réelle et deux récoltes sur les mêmes 80 cases de riz. [Preuves V84](history/validation-food-v84.md).
 
-État : **24 septembre 2026, V97 validée et publiée dans son périmètre de rendu**. ROADMAP est l’unique calendrier G0–G5. G0 en consolidation, G1/G2/G3 partiels, G4 engagé par l’accueil, la captivité et le commerce, G5 absent ; aucun jalon complet. Les numéros de schéma ne mesurent pas l’avancement du jeu. [Inventaire réel](gameplay/implementation-status.md), [preuves](development/validation.md), [index](README.md).
+État : **25 septembre 2026, V99 : interactions validées dans leur périmètre**. ROADMAP est l’unique calendrier G0–G5. G0 en consolidation, G1/G2/G3 partiels, G4 engagé par l’accueil, la captivité et le commerce, G5 absent ; aucun jalon complet. Les numéros de schéma ne mesurent pas l’avancement du jeu. [Inventaire réel](gameplay/implementation-status.md), [preuves](development/validation.md), [index](README.md).
 
 Boucle précédente : [site local et première récolte V83](development/world-generation.md), trois reliefs, sols fertiles et ressources physiques reliés au départ. Douze jours joués avec abri, défense, riz récolté puis cuisiné ; anciennes cartes préservées. V84 prolonge ce départ par plusieurs récoltes et l’alimentation renouvelée sur le parcours documenté. [Preuves V83](history/validation-site-v83.md).
 

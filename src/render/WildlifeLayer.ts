@@ -9,12 +9,16 @@ import type { World } from '../sim/types';
 import { MAX_WILDLIFE } from '../sim/wildlife-state';
 import type { MotionTimeline } from './MotionTimeline';
 import { furnitureSurfaces } from './furniture-motion';
+import { travelHeight } from './furniture-motion';
+import { pawnSelectionMesh } from './PawnSelectionLayer';
 
 /** Resident capacity and node graph. CPU supplies edges/phases at snapshots
  * and segment boundaries; continuous translation and the rig run on the GPU. */
 class SpeciesRig {
   readonly mesh:THREE.Mesh;
   readonly flames:THREE.Mesh;
+  readonly selection:THREE.Mesh;
+  private selected:ReadonlySet<number>=new Set();
   readonly blend=uniform(1);private time=uniform(0);
   private keys=new Map<number,string>();private source:World|undefined;
   private animals:NonNullable<World['wildlife']>['animals']=[];
@@ -37,11 +41,30 @@ class SpeciesRig {
       return vec3(q.x.mul(cy).add(q.z.mul(sy)),q.y,q.z.mul(cy).sub(q.x.mul(sy))).add(pose.xyz);
     })();
     this.mesh=new THREE.Mesh(hareGeometry(MAX_WILDLIFE,this.species),mat);this.mesh.name=`Wild ${this.species} — GPU rig`;this.mesh.frustumCulled=false;this.mesh.castShadow=true;this.mesh.receiveShadow=true;this.flames=attachedFireMesh(this.mesh.geometry,this,.6);
+    this.mesh.geometry.computeBoundingBox();
+    this.selection=pawnSelectionMesh(this.mesh.geometry as THREE.InstancedBufferGeometry,this);this.selection.visible=false;
+  }
+  setSelected(ids:ReadonlySet<number>):void {
+    this.selected=ids;const geometry=this.selection.geometry as THREE.InstancedBufferGeometry,flags=geometry.getAttribute('aSelected') as THREE.InstancedBufferAttribute;
+    geometry.instanceCount=this.animals.length;
+    if(!ids.size&&!this.selection.visible)return;
+    let any=false,changed=false;this.animals.forEach((a,i)=>{const enabled=ids.has(a.id),value=enabled?1:0;if(flags.getX(i)!==value){flags.setX(i,value);changed=true;}any||=enabled;});
+    if(changed)flags.needsUpdate=true;this.selection.visible=any;
+  }
+  /** Read the same resident edges as the GPU, only on pointer gestures. */
+  forEachPose(visit:(id:number,species:string,x:number,y:number,z:number,height:number,radius:number)=>void):void {
+    const g=this.mesh.geometry,from=g.getAttribute('aFrom'),to=g.getAttribute('aTo'),times=g.getAttribute('aTravel'),state=g.getAttribute('aAnimal'),box=g.boundingBox!;
+    const radius=Math.max(box.max.x-box.min.x,box.max.z-box.min.z)/2+.1;
+    this.animals.forEach((a,i)=>{
+      const start=times.getX(i),end=times.getY(i),alpha=end>start?THREE.MathUtils.clamp((this.travelTime.value-start)/(end-start),0,1):1;
+      const height=box.max.y*(1-Math.min(1,state.getZ(i))*.5);
+      visit(a.id,this.species,THREE.MathUtils.lerp(from.getX(i),to.getX(i),alpha),travelHeight(from.getY(i),to.getY(i),THREE.MathUtils.lerp(times.getZ(i),times.getW(i),alpha)),THREE.MathUtils.lerp(from.getZ(i),to.getZ(i),alpha),height,radius);
+    });
   }
   prepare():()=>void {const g=this.mesh.geometry as THREE.InstancedBufferGeometry,n=g.instanceCount;g.instanceCount=Math.max(1,n);return ()=>{g.instanceCount=n;};}
   update(world:World,timeline:MotionTimeline|undefined,surfaces:ReadonlyMap<number,number>):void {
     const changed=this.source!==world;
-    if(changed){this.source=world;this.keys.clear();this.animals=(world.wildlife?.animals??[]).filter(a=>a.species===this.species);this.surfaces=surfaces;}
+    if(changed){this.source=world;this.keys.clear();this.animals=(world.wildlife?.animals??[]).filter(a=>a.species===this.species);this.surfaces=surfaces;this.setSelected(this.selected);}
     const tick=timeline?.tick??world.tick,origin=Math.floor(tick/1024)*1024;
     this.travelTime.value=localTimeSeconds(tick,origin);this.time.value=localTimeSeconds(tick)%(2*Math.PI);
     const g=this.mesh.geometry as THREE.InstancedBufferGeometry,from=g.getAttribute('aFrom') as THREE.InstancedBufferAttribute,to=g.getAttribute('aTo') as THREE.InstancedBufferAttribute,times=g.getAttribute('aTravel') as THREE.InstancedBufferAttribute,state=g.getAttribute('aAnimal') as THREE.InstancedBufferAttribute;
@@ -77,9 +100,11 @@ export class WildlifeLayer {
   private rigs:SpeciesRig[];private source?:World;private surfaces:ReadonlyMap<number,number>=new Map();
   constructor(configure?:(m:THREE.MeshStandardNodeMaterial)=>void){
     this.rigs=['hare','snow-hare','deer','muffalo','gazelle','dromedary'].map(species=>new SpeciesRig(this.travelTime,species,configure));
-    for(const rig of this.rigs){this.mesh.add(rig.mesh);this.flames.add(rig.flames);}
+    for(const rig of this.rigs){this.mesh.add(rig.mesh,rig.selection);this.flames.add(rig.flames);}
   }
+  setSelected(ids:ReadonlySet<number>):void {for(const rig of this.rigs)rig.setSelected(ids);}
+  forEachPose(visit:(id:number,species:string,x:number,y:number,z:number,height:number,radius:number)=>void):void {for(const rig of this.rigs)rig.forEachPose(visit);}
   update(world:World,timeline:MotionTimeline|undefined):void{if(this.source!==world){this.source=world;this.surfaces=furnitureSurfaces(world);}for(const rig of this.rigs)rig.update(world,timeline,this.surfaces);}
   prepare():()=>void{const restores=this.rigs.map(r=>r.prepare());return()=>{for(const restore of restores)restore();};}
-  dispose():void{for(const r of this.rigs)for(const m of [r.mesh,r.flames]){m.geometry.dispose();(m.material as THREE.Material).dispose();}}
+  dispose():void{for(const r of this.rigs)for(const m of [r.mesh,r.flames,r.selection]){m.geometry.dispose();(m.material as THREE.Material).dispose();}}
 }

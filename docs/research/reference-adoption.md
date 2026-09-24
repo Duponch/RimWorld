@@ -1,5 +1,7 @@
 # Adoption du référentiel utilisateur
 
+V99 — chapitres 8/13/20/21, UI-001..011/017/018 et SYS/TEST-035/113..117 : [sélection, animaux, barres et mobilisation](interaction-reference-v99.md), vérifiés dans Core local 1.6.4871 et recoupés en ligne. Adopter priorité des colons, groupes équivalents et trajet confirmé ; adapter ancre des barres et couleur bleue ; différer groupes d’objets, Social/Journal animaux et file d’attaques. Les identifiants ne signifient pas une parité complète.
+
 V90 — **habitat et habillement validés dans leur périmètre** : prolongement des chapitres
 10/11/14, SYS/TEST-056/058/059, 062–064 et 076–080 déjà adoptés pour construction,
 factures, besoins et confort. **Adopter** matières physiques, qualité conservée,

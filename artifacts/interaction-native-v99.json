@@ -1,0 +1,31 @@
+{
+  "date": "2026-09-24T22:11:37.870Z",
+  "checks": [
+    "Animal click, actual health and reversible hunt designation",
+    "Double click selects visible same-species animals only",
+    "Rectangle prioritizes colonists; Shift adds and removes an animal",
+    "Draft button, R and non-overlapping tactical actions",
+    "Right-click ground uses real movement and confirmed blue path",
+    "Right-click wild animal explicitly issues a valid ranged order",
+    "Animal selection also follows perspective camera",
+    "A moving animal is selected at its rendered interpolated position",
+    "Real work bar, pause stability and distant zoom hides bars"
+  ],
+  "errors": [],
+  "route": {
+    "activeBars": 0,
+    "pathSegments": 3,
+    "barUploads": 0,
+    "pathRebuilds": 1,
+    "travelCopies": 1,
+    "visible": true,
+    "shared": true
+  },
+  "bar": {
+    "visible": true,
+    "fraction": 0.05000000074505806,
+    "uploads": 5,
+    "tick": 3005
+  },
+  "passed": true
+}

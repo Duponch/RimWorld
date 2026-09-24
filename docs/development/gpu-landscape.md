@@ -1,5 +1,7 @@
 # Plantes 3D instanciées et paysage — V97
 
+V99 : [repères des acteurs](interaction-feedback.md). Les zones cliquables des animaux sont projetées depuis leurs attributs GPU uniquement lors des gestes de sélection. Anneaux par espèce, barres et chemins utilisent des lots instanciés, les mêmes trajectoires/horloges et des buffers stables ; les lots vides sont cachés. Le paysage, ses ombres et les règles de simulation ne sont pas simplifiés.
+
 ## Rendu selon la distance V97
 
 La vue proche retrouve le rejet hors champ ordinaire propre à chaque caméra, y compris celle des ombres. La vue globale conserve ses quelques commandes GPU. `LandscapeBatch.setRetained` restaure la visibilité initiale des objets en quittant ce chemin ; aucun seuil de détail ni objet visible n'est supprimé. L'adaptateur V96 reste actif.

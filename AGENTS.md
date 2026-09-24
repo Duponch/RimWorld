@@ -1,5 +1,10 @@
 # Travail sur Lisière
 
+## Sélection et repères V99
+- Lire `docs/development/interaction-feedback.md` et sa recherche Core 1.6.4871. Animaux cliquables depuis leur pose GPU, Info/Santé et chasse ; double clic par groupe équivalent, rectangle privilégiant les colons. Social/Journal animaux et groupes d’objets restent absents ou partiels.
+- Mobilisation R et commandes visibles sans chevauchement ; clic droit au sol déplace, sur animal/hostile propose tir/mêlée, sans attaque alliée implicite. File d’attaques absente. Les membres indisponibles sont explicitement filtrés avant validation atomique du worker.
+- Chemin réel bleu et barre dorée sur l’acteur sont des adaptations demandées ; pas de barre fictive pour voyage, sommeil ou recherche. Buffers de pose partagés, lots vides masqués, aucune recherche de cible à chaque image. Schéma 91 inchangé ; preuves et coûts dans `docs/history/validation-interaction-v99.md`.
+
 ## Colonies de test V98
 - Lire `docs/development/test-colonies.md` : six fichiers publics versionnés dans `public/test-saves/v98`, catalogue chargé à la demande depuis Charger, import/export et récupération via GameSession. Les charges préparées ne représentent pas une progression naturelle ni une colonie autonome ; deux contiennent réellement 100 colons libres, visiteurs/captifs/morts comptés séparément.
 - Préserver les fichiers de référence et leurs empreintes, le schéma 91 et les fixtures historiques. Toute nouvelle génération est explicite. Aucun constructeur de test dans le bundle. Chargement en pause, validation stricte worker, sauvegarde manuelle intacte et refus atomiques restent exigés.

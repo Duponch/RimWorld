@@ -1,0 +1,6 @@
+{
+  "date": "2026-09-24T21:57:09.138Z",
+  "checks": [],
+  "errors": [],
+  "failure": "page.evaluate: Error: Cannot save invalid world: Invalid wild animal. Invalid wild animal. Invalid wild animal.\n    at serializeWorld (http://127.0.0.1:5173/src/sim/serialization.ts:811:27)\n    at eval (eval at evaluate (:311:30), <anonymous>:7:15)\n    at async <anonymous>:337:30\n    at E:\\Code\\RimWorld\\scripts\\interaction-native-v99.mjs:22:23"
+}

@@ -1,7 +1,72 @@
 import { firePosition } from '../sim/fire-rules';
 import type { SimulationClient } from '../bridge/SimulationClient';
-import type { Cell, World } from '../sim/types';
-import { isColonist } from '../sim/affiliation';
+import type { Cell, Pawn, World } from '../sim/types';
+import { hostileTo, isColonist } from '../sim/affiliation';
+import { combatTarget, isAnimalTarget } from '../sim/combat-target';
+import { animalSpecies } from '../sim/animal-species';
+import { shotPlan, shootingQueries } from '../sim/shooting';
+import { meleeTools } from '../sim/melee-statistics';
+import { meleePlaces, meleeRoute } from '../sim/melee-space';
+import { blockedCells } from '../sim/pathfinding';
+import { draftablePawns } from './drafting-controls';
+
+export interface TacticalAttackOption {
+  kind: 'shoot' | 'melee';
+  label: string;
+  pawnIds: number[];
+  enabled: boolean;
+  reason?: string;
+}
+export interface TacticalAttackPolicy {
+  target: string;
+  selected: number;
+  drafted: number;
+  reason?: string;
+  options: TacticalAttackOption[];
+}
+
+/** Uses the same eligibility and route/line kernels as the committed commands.
+ * The worker still rechecks every order against its current world. */
+export function tacticalPawns(world: World, ids: ReadonlySet<number>): Pawn[] {
+  const carried = new Set(world.pawns.filter(pawn => pawn.rescue?.phase === 'carry').map(pawn => pawn.rescue!.patientId));
+  return draftablePawns(world.pawns.filter(pawn => ids.has(pawn.id))).filter(pawn => !!pawn.draft && pawn.state !== 'sleeping' && !pawn.need && !pawn.collapsePending && !carried.has(pawn.id)).sort((a, b) => a.id - b.id);
+}
+
+export function tacticalAttackPolicy(world: World, ids: ReadonlySet<number>, targetId: number, queue: boolean): TacticalAttackPolicy {
+  const pawns = tacticalPawns(world, ids), target = combatTarget(world, targetId);
+  const base = { selected: ids.size, drafted: pawns.length, target: target ? isAnimalTarget(target) ? `${animalSpecies(target.species).label} ${target.id}` : target.name : `cible ${targetId}` };
+  if (!pawns.length) return { ...base, reason: 'Mobilisez un colon libre et capable de combattre.', options: [] };
+  if (!target || target.state === 'dead') return { ...base, reason: 'Cible vivante indisponible.', options: [] };
+  // The ordinary context action must not turn a selected friend or neutral human
+  // into a target. Explicit attack targeting elsewhere has its own controls.
+  if (!isAnimalTarget(target) && !pawns.some(pawn => hostileTo(pawn, target))) return { ...base, reason: 'Aucune attaque contextuelle sur un allié ou une personne neutre.', options: [] };
+  if (queue) return { ...base, options: (['shoot', 'melee'] as const).map(kind => ({
+    kind, label: `${kind === 'shoot' ? 'Tirer sur' : 'Attaquer au contact'} ${base.target}`,
+    pawnIds: [], enabled: false, reason: 'La file d’attaques n’est pas disponible ; relâchez Maj.',
+  })) };
+  const shotQueries = shootingQueries(world), shootIds: number[] = [], meleeIds: number[] = [];
+  let shootReason = '', meleeReason = '';
+  const blocked = blockedCells(world), claimed = new Set<number>();
+  for (const pawn of pawns) {
+    const shot = shotPlan(world, pawn, targetId, shotQueries);
+    if ('reason' in shot) shootReason ||= shot.reason ?? 'Tir indisponible.';
+    else shootIds.push(pawn.id);
+    if (!meleeTools(world, pawn).length) { meleeReason ||= 'Aucune attaque de mêlée disponible.'; continue; }
+    const path = meleeRoute(world, pawn, meleePlaces(world, pawn, target, claimed), blocked);
+    if (!path) { meleeReason ||= 'Aucune place de mêlée accessible et libre.'; continue; }
+    const end = path.at(-1) ?? pawn;
+    claimed.add(end.z * world.width + end.x);
+    meleeIds.push(pawn.id);
+  }
+  const option = (kind: TacticalAttackOption['kind'], pawnIds: number[], reason: string): TacticalAttackOption => ({
+    kind,
+    label: `${kind === 'shoot' ? 'Tirer sur' : 'Attaquer au contact'} ${base.target}${pawns.length > 1 ? ` · ${pawnIds.length}/${pawns.length} colon(s)` : ''}`,
+    pawnIds,
+    enabled: pawnIds.length > 0,
+    ...!pawnIds.length ? { reason } : {},
+  });
+  return { ...base, options: [option('shoot', shootIds, shootReason), option('melee', meleeIds, meleeReason)] };
+}
 
 export class OrderMenu {
   private readonly menu=document.createElement('div');
@@ -23,6 +88,50 @@ export class OrderMenu {
     });
   }
   close():boolean {this.revision++;const open=!this.menu.hidden;this.menu.hidden=true;return open;}
+  /** A ground click can move immediately. A pawn or animal click always opens
+   * explicit attack choices and never becomes a movement order. */
+  async openTactical(world:World,ids:ReadonlySet<number>,cell:Cell,x:number,y:number,queue:boolean,targetId?:number):Promise<void> {
+    this.close();
+    if(targetId===undefined) {
+      const pawns=tacticalPawns(world,ids);
+      if(!pawns.length) {this.tacticalMessage('Ordre tactique', 'Mobilisez un colon libre et capable de se déplacer.', x, y);return;}
+      try {
+        await this.client.command({type:'draft-move',pawnIds:pawns.map(p=>p.id),target:cell,queue});
+        this.report(`${queue?'Déplacement en file':'Déplacement'} demandé vers ${cell.x}, ${cell.z}.`);
+      } catch(error) {this.report(String(error instanceof Error?error.message:error),true);}
+      return;
+    }
+    const policy=tacticalAttackPolicy(world,ids,targetId,queue);
+    this.menu.replaceChildren();this.menu.hidden=false;
+    const header=document.createElement('strong');header.textContent=`${policy.target} · case ${cell.x}, ${cell.z}`;
+    const content=document.createElement('div');
+    if(policy.reason)content.textContent=policy.reason;
+    else {
+      if(policy.drafted<policy.selected){const note=document.createElement('p');note.className='muted';note.textContent=`${policy.selected-policy.drafted} membre(s) non mobilisé(s) ou indisponible(s) exclus.`;content.append(note);}
+      for(const option of policy.options) {
+        const button=document.createElement('button');button.type='button';button.setAttribute('role','menuitem');button.dataset.tacticalAttack=option.kind;
+        button.textContent=option.enabled?option.label:`${option.label} — ${option.reason ?? 'Indisponible'}`;
+        button.disabled=!option.enabled;
+        button.onclick=()=>{
+          this.close();
+          const command=option.kind==='shoot'
+            ? {type:'shoot' as const,pawnIds:option.pawnIds,targetId}
+            : {type:'melee' as const,pawnIds:option.pawnIds,targetId};
+          void this.client.command(command).then(()=>this.report(`${option.kind==='shoot'?'Tir':'Mêlée'} demandé sur ${policy.target}.`)).catch(error=>this.report(String(error instanceof Error?error.message:error),true));
+        };
+        content.append(button);
+      }
+      if(queue){const hint=document.createElement('p');hint.className='muted';hint.textContent='Seuls les déplacements ont une file d’ordres tactiques.';content.append(hint);}
+    }
+    this.menu.append(header,content);this.position(x,y);this.menu.focus();
+    content.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus();
+  }
+  private tacticalMessage(title:string,message:string,x:number,y:number):void {
+    this.menu.replaceChildren();this.menu.hidden=false;
+    const header=document.createElement('strong');header.textContent=title;
+    const body=document.createElement('div');body.textContent=message;
+    this.menu.append(header,body);this.position(x,y);this.menu.focus();
+  }
   async open(world:World,ids:ReadonlySet<number>,cell:Cell,x:number,y:number,queue:boolean):Promise<void> {
     this.close();const revision=this.revision;this.menu.replaceChildren();this.menu.hidden=false;
     const header=document.createElement('strong'),content=document.createElement('div');
