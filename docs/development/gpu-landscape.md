@@ -1,4 +1,10 @@
-# Plantes 3D instanciées et désignations — V95
+# Plantes 3D instanciées et paysage — V97
+
+## Rendu selon la distance V97
+
+La vue proche retrouve le rejet hors champ ordinaire propre à chaque caméra, y compris celle des ombres. La vue globale conserve ses quelques commandes GPU. `LandscapeBatch.setRetained` restaure la visibilité initiale des objets en quittant ce chemin ; aucun seuil de détail ni objet visible n'est supprimé. L'adaptateur V96 reste actif.
+
+Les touffes maintiennent une enveloppe conservatrice par transformations modifiées. Ressources et vue globale consomment les deltas de présentation ; suppressions, retours et changements d'espèce/chunk gardent leur oracle complet. La vue globale filtre aussi l'herbe du flux non filtré. [Architecture](../research/performance-v97.md), [images exactes et mesures](../history/validation-performance-v97.md).
 
 ## Contexte de rendu et caméra V96
 

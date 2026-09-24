@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+V97 améliore le rendu rapproché et le coût des mises à jour végétales ; aucun ajout de gameplay, de contenu ou de migration. Les limites de simulation à forte population persistent. [Preuves V97](../history/validation-performance-v97.md).
+
 V96 corrige le suivi de caméra du paysage et des ombres ; aucune estimation fonctionnelle ni entrée de catalogue supplémentaire. Les limites de cadence restent explicites dans les [preuves V96](../history/validation-camera-v96.md).
 
 **V95 — moteur et curseurs :** travail de performance CPU, messages du worker, buffers et commandes de rendu WebGPU, avec une seule image par type de curseur. Aucun contenu ni boucle de gameplay ajouté ; schéma 91 conservé. La cible 240 FPS reste dépendante de la scène et du matériel. [Preuves et limites](../history/validation-performance-v95.md).

@@ -1,10 +1,10 @@
 import { BundleGroup, type Object3D } from 'three/webgpu';
 
-/** Record landscape draw commands on WebGPU. The same geometry, lighting and
- * shadows still run every frame; only CPU command encoding is retained.
- * Children use conservative submission (GPU clipping remains authoritative),
- * so moving either the camera or sun never reuses an obsolete culling list. */
+/** Close views use per-camera frustum culling (including the shadow camera).
+ * Distant views retain the few overview draws with conservative submission.
+ * Keeping all map chunks in a close-view bundle costs more CPU than culling. */
 export class LandscapeBatch extends BundleGroup {
+  override isBundleGroup = true;
   private readonly originalCulling = new WeakMap<Object3D,boolean>();
   constructor() {
     super();
@@ -12,7 +12,12 @@ export class LandscapeBatch extends BundleGroup {
     this.matrixAutoUpdate = false;
   }
 
-  refresh(retainCommands=true): void {
+  setRetained(retainCommands: boolean): void {
+    if (retainCommands !== this.isBundleGroup) this.refresh(retainCommands);
+  }
+
+  refresh(retainCommands=this.isBundleGroup): void {
+    this.isBundleGroup = retainCommands;
     this.traverse((object: Object3D) => {
       // These layers bake positions into geometry/instance attributes. Capture
       // any new local transform once, rather than force it through the entire

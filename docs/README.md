@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V97 : rendu rapproché et végétation moins coûteux.** Le paysage utilise la visibilité propre à chaque caméra et des mises à jour de ressources ciblées. Gain surtout de près ; les limites de la vue globale et du worker restent ouvertes. [Mesures et preuves](history/validation-performance-v97.md), [diagnostic](research/performance-v97.md). Gameplay inchangé.
+
 **V96 : correction du paysage qui suivait la caméra avec retard.** La passe d’ombres garde désormais son propre contexte ; panoramique, rotation et zoom sont vérifiés dès la première image. [Preuves, cause et coût mesuré](history/validation-camera-v96.md). Gameplay et catalogue inchangés.
 
 **V95 : performance CPU/rendu et curseurs usuels.** [Preuves et mesures](history/validation-performance-v95.md), [diagnostic et architecture](research/performance-v95.md), [identité des curseurs](development/visual-identity.md). Gameplay suspendu ; règles, catalogue V91 et sauvegardes de schéma 91 conservés. La cible de 240 FPS reste partiellement atteinte seulement.

@@ -1,5 +1,10 @@
 # Travail sur Lisière
 
+## Paysage visible V97
+- Le paysage proche utilise le rejet hors champ propre à chaque caméra, dont celle des ombres ; la vue globale garde ses commandes WebGPU. Ne pas masquer des objets globalement d'après la seule caméra joueur. `ReentrantRenderer` V96 reste requis, Three reste épinglé. Les seuils de détail, géométries et règles sont inchangés.
+- Les deltas de ressources concernent les anciens/nouveaux chunks ; ceux de la vue globale excluent les touffes même si le flux de changements est non filtré. Les limites des touffes doivent contenir tous les sommets après croissance, déplacement, retrait/retour. Oracles complets conservés.
+- Lire `docs/history/validation-performance-v97.md` : 13 contrôles, 64 images de mouvement/transition et 18 comparaisons de rejet exactes. Gain surtout rapproché ; carte entière du petit départ toujours autour de 200 FPS à ×6, simulation mixte autour de 3× pour 6× demandé. Aucune garantie 240 FPS, aucun gain worker revendiqué. Gameplay et catalogue inchangés.
+
 ## Suivi caméra V96
 - `ReentrantRenderer` contourne le contexte de bundle perdu lors des ombres imbriquées dans Three 0.186.0. Garder l’isolement à l’entrée de `render()` et la restauration en `finally`, ainsi que la version épinglée. Ne pas remplacer par `static=false`, un délai ou une suppression des ombres. Relire `docs/history/validation-camera-v96.md` avant modification.
 - Toute refonte de commandes conservées doit tester la première image et les suivantes après de vrais mouvements, sans `refresh()` préalable. `scripts/camera-retention.mjs` compare 48 images à un bundle fraîchement enregistré à pose identique et vérifie les listes/caméras ; le témoin V95 échoue. La performance V95 rapprochée omettait des mises à jour : elle ne prouve pas un gain à qualité égale. Schéma 91 et gameplay conservés.

@@ -1,5 +1,7 @@
 # Guide joueur
 
+V97 réduit le coût du paysage en vue rapprochée et des mises à jour végétales. Déplacez, tournez et zoomez normalement ; aucun réglage supplémentaire n'est nécessaire. Le débit maximal reste dépendant de la colonie et du matériel. [Mesures et limites](../history/validation-performance-v97.md).
+
 V96 corrige le décalage du paysage pendant les déplacements, rotations et zooms de caméra. Les éléments restent alignés dès l’image suivante ; commandes et sauvegardes sont conservées. [Preuves et limites de performance](../history/validation-camera-v96.md).
 
 **V95 : curseurs et moteur.** La carte garde une seule flèche, quel que soit l'outil ; les icônes de désignation restent au-dessus des cibles. Les boutons affichent un doigt, la saisie un curseur texte, la préparation un sablier et les commandes indisponibles le signe interdit. La molette affiche une loupe ; le déplacement utilise les mains ouverte/fermée. Les règles et vos sauvegardes restent inchangées. [Détails et limites de performance](../history/validation-performance-v95.md).

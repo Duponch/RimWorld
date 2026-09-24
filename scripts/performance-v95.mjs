@@ -6,8 +6,11 @@ const {chromium}=await import('@playwright/test');
 const label=process.argv[2]??'current';
 if(!/^[a-z0-9-]+$/.test(label))throw Error('Invalid label');
 const duration=Number(process.env.PERF_SECONDS??6)*1000;
+const warmup=Number(process.env.PERF_WARMUP??1.3)*1000;
 const gpu=process.env.PERF_GPU==='1';
 const baseline=process.env.PERF_BASELINE==='1';
+const reference=process.env.PERF_REFERENCE;
+if(reference&&reference!=='v96')throw Error('Unknown reference; archive c9010ec src into tmp/perf-v96');
 const bundleBaseline=process.env.PERF_BUNDLE_BASELINE==='1';
 const motion=process.env.PERF_MOTION==='1';
 const stats=a=>{if(!a.length)return null;const s=[...a].sort((a,b)=>a-b);return {n:s.length,mean:a.reduce((x,y)=>x+y,0)/a.length,p50:s[Math.floor(s.length*.5)],p95:s[Math.min(s.length-1,Math.ceil(s.length*.95)-1)],p99:s[Math.min(s.length-1,Math.ceil(s.length*.99)-1)],max:s.at(-1)};};
@@ -24,20 +27,20 @@ perf.client=client;const perfSnapshot=client.onSnapshot;client.onSnapshot=(...ar
 measureMethod(client,'onSnapshot','snapshot');measureMethod(client.snapshots,'adopt','decode');
 const perfHud=renderState;renderState=function(...args){if(!perf.active)return perfHud(...args);const t=performance.now();try{return perfHud(...args);}finally{(perf.costs.hud??=[]).push(performance.now()-t);}};
 `;
-const report={label,date:new Date().toISOString(),cpu:os.cpus()[0].model,viewport:{width:1920,height:1080},protocol:`Same saved world (identified below) restored for every phase. Native hardware Chromium, no SwiftShader flags. RAF interval and CPU submission measured separately, no world export in windows. ${duration/1000} seconds after 1.3s warmup per phase. CPU profiling only in separate diagnostic window. No GPU timestamp implied by frame CPU.`,phases:[],errors:[]};
+const report={label,date:new Date().toISOString(),cpu:os.cpus()[0].model,viewport:{width:1920,height:1080},protocol:`Same saved world (identified below) restored for every phase. Native hardware Chromium, no SwiftShader flags. RAF interval and CPU submission measured separately, no world export in windows. ${duration/1000} seconds after ${warmup/1000}s warmup per phase. CPU profiling only in separate diagnostic window. No GPU timestamp implied by frame CPU.`,phases:[],errors:[]};
 const browser=await chromium.launch({channel:'chromium',headless:false});
 try{
  const page=await browser.newPage({viewport:report.viewport});
  if(bundleBaseline)await page.route('**/src/render/ColonyRenderer.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:(await response.text()).replace('new ReentrantRenderer(', 'new THREE.WebGPURenderer(')});});
  if(gpu)await page.route('**/src/render/ColonyRenderer.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:(await response.text()).replace(/powerPreference: ["']high-performance["']/,'powerPreference: "high-performance", trackTimestamp: true')});});
  page.on('pageerror',e=>report.errors.push(e.message));page.on('console',m=>{if(m.type()==='error')report.errors.push(m.text());});
- await page.route('**/src/main.ts*',async route=>{const response=await route.fetch(baseline?{url:'http://127.0.0.1:5173/tmp/perf-v94/src/main.ts'}:{});await route.fulfill({response,body:prefix+await response.text()+suffix});});
+ await page.route('**/src/main.ts*',async route=>{const response=await route.fetch(reference?{url:`http://127.0.0.1:5173/tmp/perf-${reference}/src/main.ts`}:baseline?{url:'http://127.0.0.1:5173/tmp/perf-v94/src/main.ts'}:{});await route.fulfill({response,body:prefix+await response.text()+suffix});});
  await page.goto('http://127.0.0.1:5173/?scenario=crashlanded&e2e&size=250&seed=42');
  await page.waitForFunction(()=>window.__perf.view?.world&&!document.querySelector('.game-shell')?.inert,{},{timeout:60000});
  await page.evaluate(()=>window.__perf.client.setSpeed(0));
  const saved=process.env.PERF_WORLD?await readFile(process.env.PERF_WORLD,'utf8'):await page.evaluate(()=>window.__perf.client.save());
  report.world=process.env.PERF_WORLD??'Crashlanded seed 42, 250²';
- report.baseline=baseline?'f993e3a':bundleBaseline?'5bd1af3 (render adapter bypassed)':null;
+ report.baseline=reference?'c9010ec':baseline?'f993e3a':bundleBaseline?'5bd1af3 (render adapter bypassed)':null;
  report.motion=motion?'Continuous sinusoidal pan, same path from starting target; no render quality changes.':'stationary';
  report.counterNote='Three renderer.info counts encoded draws; retained bundle replay is not included. Do not interpret fewer encoded triangles as fewer rendered triangles.';
  report.adapter=await page.evaluate(()=>{const a=window.__perf.view.renderer.getContext().getConfiguration().device.adapterInfo;return {vendor:a.vendor,architecture:a.architecture,description:a.description};});
@@ -47,7 +50,7 @@ try{
  for(const [zoom,speed] of phases){
   await page.evaluate(data=>window.__perf.client.load(data),saved);
   await page.evaluate(zoom=>{const v=window.__perf.view,c=v.controls;c.enableDamping=false;c.update();v.camera.zoom=zoom==='near'?2:zoom==='middle'?.5:c.minZoom;v.camera.updateProjectionMatrix();c.update();},zoom);
-  await page.evaluate(()=>new Promise(r=>setTimeout(r,1300)));
+  await page.evaluate(ms=>new Promise(r=>setTimeout(r,ms)),warmup);
   const start=await page.evaluate(async ({speed,motion})=>{const b=window.__perf;await b.client.setSpeed(speed);Object.assign(b,{active:true,frames:[],costs:{},workers:[],gpu:[],previous:0,motion:motion?{x:b.view.controls.target.x,z:b.view.controls.target.z,time:performance.now()}:null});return {tick:b.view.received.world.tick,time:performance.now(),zoom:b.view.camera.zoom,span:b.view.rig.span};},{speed,motion});
   await page.evaluate(ms=>new Promise(r=>setTimeout(r,ms)),duration);
   const data=await page.evaluate(async()=>{const b=window.__perf;b.active=false;const end={tick:b.view.received.world.tick,time:performance.now()};await b.client.setSpeed(0);return {end,frames:b.frames,costs:b.costs,workers:b.workers,gpu:b.gpu,overview:b.view.overview.group.visible};});

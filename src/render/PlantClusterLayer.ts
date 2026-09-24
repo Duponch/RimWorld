@@ -72,6 +72,11 @@ export class PlantClusterLayer {
   private readonly free: number[] = [];
   private readonly transform = new THREE.Object3D();
   private readonly color = new THREE.Color();
+  // A growing envelope is conservative after removals and moves. Updating it
+  // for a changed tuft costs O(1), unlike InstancedMesh.computeBoundingSphere()
+  // which scans every resident slot, including the thousands left unchanged.
+  private readonly bounds = new THREE.Box3();
+  private readonly transformedBounds = new THREE.Box3();
   private used = 0;
 
   constructor(private readonly material: THREE.Material) {
@@ -100,6 +105,7 @@ export class PlantClusterLayer {
     next.instanceMatrix.array.set(previous.instanceMatrix.array);
     next.instanceColor!.array.set(previous.instanceColor!.array);
     next.count = previous.count;
+    next.boundingSphere = previous.boundingSphere?.clone() ?? null;
     this.group.remove(previous);
     previous.dispose();
     this.mesh = next;
@@ -114,6 +120,7 @@ export class PlantClusterLayer {
 
   update(world: World, reset: boolean, changes?: ReadonlyMap<number, NaturalPresentationChange>): void {
     if (reset) {
+      this.bounds.makeEmpty();
       this.slots.clear();
       this.free.length = 0;
       this.used = 0;
@@ -134,6 +141,7 @@ export class PlantClusterLayer {
       this.transform.scale.setScalar(0);
       this.transform.updateMatrix();
       this.mesh.setMatrixAt(slot.index, this.transform.matrix);
+      this.includeTransformBounds();
       firstMatrix = Math.min(firstMatrix, slot.index);
       lastMatrix = Math.max(lastMatrix, slot.index);
       this.slots.delete(id);
@@ -161,6 +169,7 @@ export class PlantClusterLayer {
       this.transform.scale.set(presentation.scaleX, presentation.scaleY, presentation.scaleZ);
       this.transform.updateMatrix();
       this.mesh.setMatrixAt(slot.index, this.transform.matrix);
+      this.includeTransformBounds();
       this.mesh.setColorAt(slot.index, this.color.setHex(presentation.color));
       firstMatrix = Math.min(firstMatrix, slot.index);
       lastMatrix = Math.max(lastMatrix, slot.index);
@@ -173,13 +182,18 @@ export class PlantClusterLayer {
       this.mesh.instanceMatrix.clearUpdateRanges();
       this.mesh.instanceMatrix.addUpdateRange(firstMatrix * 16, (lastMatrix - firstMatrix + 1) * 16);
       this.mesh.instanceMatrix.needsUpdate = true;
-      this.mesh.computeBoundingSphere();
     }
+    if (lastMatrix >= 0 || reset) this.bounds.getBoundingSphere(this.mesh.boundingSphere ??= new THREE.Sphere());
     if (lastColor >= 0 && visibleCount) {
       this.mesh.instanceColor!.clearUpdateRanges();
       this.mesh.instanceColor!.addUpdateRange(firstColor * 3, (lastColor - firstColor + 1) * 3);
       this.mesh.instanceColor!.needsUpdate = true;
     }
+  }
+
+  private includeTransformBounds(): void {
+    this.transformedBounds.copy(this.geometry.boundingBox!).applyMatrix4(this.transform.matrix);
+    this.bounds.union(this.transformedBounds);
   }
 
   instanceCount(): number { return this.mesh.count; }

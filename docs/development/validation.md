@@ -1,4 +1,6 @@
-# Validation courante — V95
+# Validation courante — V97
+
+V97 : [paysage visible, deltas de flore et comparaison répétée](../history/validation-performance-v97.md). 13 contrôles ciblés, 64 images de mouvement/transition et 18 comparaisons de rejet exactes ; CPU de rendu, worker et timestamps GPU distingués. Aucune nouvelle règle ou migration.
 
 V96 : [caméra, rendu imbriqué et mesures en mouvement](../history/validation-camera-v96.md). Correctif graphique sans nouveau contenu, simulation ou migration.
 

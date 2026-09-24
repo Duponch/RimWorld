@@ -39,3 +39,5 @@ La réponse de limite observée utilise parfois un epoch et parfois une date UTC
 V95 : déploiement `6ab57508f64713831acd4aec`, 23 fichiers, état API `ready`. [Résultat](../../artifacts/netlify-v95.json), [contrôle public](../../artifacts/netlify-smoke-v95.json).
 
 V96 : correctif du contexte de caméra/ombres, déploiement `6ab5816e3f833a295c8b395e` prêt, [contrôle public réussi](../../artifacts/netlify-smoke-v96.json) et [bundle identique au build validé](../../artifacts/netlify-v96-bundle.json).
+
+V97 : paysage visible et deltas de flore, déploiement `6ab58e97dabdfb48f402dd22` prêt ; [parcours public dans Chromium visible](../../artifacts/netlify-smoke-v97.json), [empreinte du bundle validé](../../artifacts/netlify-v97-bundle.json).

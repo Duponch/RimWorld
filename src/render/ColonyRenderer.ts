@@ -301,7 +301,7 @@ export class ColonyRenderer {
     this.pawns.blend.value = resetPoses ? 1 : 0;
     this.pawns.update(world, resetPoses ? 1 : oldBlend, resetPoses);
     this.wildlife.update(world,this.hasTracks?this.timeline:undefined);
-    this.landscape.refresh(this.backend==='WebGPU');
+    this.landscape.refresh(this.backend==='WebGPU'&&this.overview.group.visible);
     this.updateHover();
   }
 
@@ -390,7 +390,7 @@ export class ColonyRenderer {
       restoreWind();restoreWildlife();restoreRoofs();restoreDoors();restoreCrops();restorePlants();restoreDesignations();
       for (const [object, value] of culling) object.frustumCulled = value;
       this.overview.group.visible = distant; this.terrainGroup.visible = this.resourceGroup.visible = this.plants.group.visible = !distant;
-      this.rocks.setDistant(distant); this.landscape.refresh(this.backend==='WebGPU'); this.preparing = false;
+      this.rocks.setDistant(distant); this.landscape.refresh(this.backend==='WebGPU'&&distant); this.preparing = false;
       this.updateHover();
       this.frames.reset(); this.lastFrame = 0;
     }
@@ -457,7 +457,7 @@ export class ColonyRenderer {
     const view=this.naturalPresentation.read(world,newMap);if(!view)return;
     this.plants.update(view,newMap,this.naturalPresentation.changes);
     const visible={...view,resources:view.resources.filter(resource=>!isClusterPlantSpecies(resource.species))};
-    this.resources.update(visible, newMap); this.overview.update(visible,newMap);
+    this.resources.update(visible, newMap,this.naturalPresentation.changes); this.overview.update(visible,newMap,this.naturalPresentation.changes);
   }
 
   private buildStructures(world: World): void { this.doors.update(world,this.wallCutaway);buildFurniture(world, this.structureGroup, this.wallCutaway, this.boxes); }
@@ -558,6 +558,7 @@ export class ColonyRenderer {
     if(distant!==this.overview.group.visible)this.landscape.needsUpdate=true;
     this.overview.group.visible=distant;this.terrainGroup.visible=!distant;this.resourceGroup.visible=!distant;this.plants.group.visible=!distant;
     this.rocks.setDistant(distant);
+    this.landscape.setRetained(this.backend==='WebGPU'&&distant);
     this.renderer.info.reset();
     this.renderer.render(this.scene, this.camera);
     this.stats.drawCalls = this.renderer.info.render.drawCalls;

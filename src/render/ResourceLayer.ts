@@ -9,6 +9,7 @@ import { WORLD_SCALE } from '../world/scale';
 import { clearGroup } from './primitives';
 import type { Placement } from './primitives';
 import { mergedInstances,noise,type ResourceRangeData } from './StaticGeometry';
+import type { NaturalPresentationChange } from './NaturalResourcePresentation';
 
 const resourceIdentity=(resource:World['resources'][number]):string=>
   `${resource.kind}:${resource.x}:${resource.z}:${resource.stone??''}:${resource.species??''}`;
@@ -66,28 +67,57 @@ function visibleResourceKeys(world:World,r:World['resources'][number]):number[]{
 
 export class ResourceLayer {
   private readonly chunks=new Map<string,{signature:string;group:THREE.Group;identities:Map<number,string>;originalSizes:Map<number,number>;currentSizes:Map<number,number>}>();
+  private readonly resourceChunks=new Map<number,string>();
   private foliageVisible = true;
-  private growing: World['resources'] = [];
+  private readonly growing = new Map<number,World['resources'][number]>();
   updateGrowth(world: World): void {
-    if (this.growing.some(plant => harvestable(world, plant))) this.update(world, false);
+    for(const plant of this.growing.values())if(harvestable(world,plant)){this.update(world,false);break;}
   }
   constructor(readonly group: THREE.Group, private readonly staticMaterial: THREE.Material) {}
   setFoliageVisible(visible: boolean): void {
     this.foliageVisible = visible;
     this.group.traverse(object => { if (object.name === 'tree-canopy') object.visible = visible; });
   }
-  clear(): void { clearGroup(this.group); this.chunks.clear(); this.growing = []; }
-  update(world: World, newMap: boolean): void {
-    if (newMap) { clearGroup(this.group); this.chunks.clear(); this.growing = []; }
-    this.growing = world.resources.filter(plant => plant.kind === 'berries' && !harvestable(world, plant));
+  clear(): void { clearGroup(this.group); this.chunks.clear(); this.resourceChunks.clear(); this.growing.clear(); }
+  update(world: World, newMap: boolean, changes?: ReadonlyMap<number,NaturalPresentationChange>): void {
+    if (newMap) { clearGroup(this.group); this.chunks.clear(); this.resourceChunks.clear(); this.growing.clear(); }
     const chunks = new Map<string, World['resources']>();
-    for (const resource of world.resources) {
-      if (isCrop(resource)||isClusterPlantSpecies(resource.species)) continue;
-      const key = `${Math.floor(resource.x / WORLD_SCALE.chunkSize)}:${Math.floor(resource.z / WORLD_SCALE.chunkSize)}`;
-      const chunk = chunks.get(key);
-      if (chunk) chunk.push(resource); else chunks.set(key, [resource]);
+    const partial=!!changes&&!newMap;
+    const affected=new Set<string>(),nextKeys=new Map<number,string|undefined>();
+    if (partial) {
+      for (const [id,change] of changes) {
+        const oldKey=this.resourceChunks.get(id);
+        if(oldKey)affected.add(oldKey);
+        const resource=change.resource;
+        const key=resource&&!isCrop(resource)&&!isClusterPlantSpecies(resource.species)
+          ?`${Math.floor(resource.x/WORLD_SCALE.chunkSize)}:${Math.floor(resource.z/WORLD_SCALE.chunkSize)}`:undefined;
+        nextKeys.set(id,key);
+        if(key)affected.add(key);
+        this.growing.delete(id);
+        if(resource?.kind==='berries'&&!harvestable(world,resource))this.growing.set(id,resource);
+      }
+      if(!affected.size)return;
+    } else {
+      this.growing.clear();
+      this.resourceChunks.clear();
     }
-    for (const [key, previous] of this.chunks) if (!chunks.has(key) && previous.signature !== '') {
+    // Visit the world in its original order so ranges inside a changed chunk
+    // remain identical to a complete update, even after deletion or movement.
+    for (const resource of world.resources) {
+      if(!partial&&(isCrop(resource)||isClusterPlantSpecies(resource.species)))continue;
+      const key=partial
+        ?nextKeys.has(resource.id)?nextKeys.get(resource.id):this.resourceChunks.get(resource.id)
+        :`${Math.floor(resource.x/WORLD_SCALE.chunkSize)}:${Math.floor(resource.z/WORLD_SCALE.chunkSize)}`;
+      if(!key||partial&&!affected.has(key))continue;
+      if(!partial)this.resourceChunks.set(resource.id,key);
+      const chunk=chunks.get(key);
+      if(chunk)chunk.push(resource);else chunks.set(key,[resource]);
+      if(!partial&&resource.kind==='berries'&&!harvestable(world,resource))this.growing.set(resource.id,resource);
+    }
+    if(partial)for(const [id,key] of nextKeys) {
+      if(key)this.resourceChunks.set(id,key);else this.resourceChunks.delete(id);
+    }
+    for (const [key, previous] of this.chunks) if ((!partial||affected.has(key))&&!chunks.has(key) && previous.signature !== '') {
       retainResources(previous.group, new Set()); previous.signature = '';
     }
     for (const [key, chunk] of chunks) {

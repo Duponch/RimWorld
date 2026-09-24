@@ -45,6 +45,18 @@ test('landscape refresh captures new transforms and invalidates retained draws w
   expect(second.visible).toBe(false);
   expect(positions.version).toBe(1);
 
+  // Close views restore each object's original culling contract. The same
+  // objects become conservative retained draws again when zooming out.
+  batch.setRetained(false);
+  expect(batch.isBundleGroup).toBe(false);
+  expect(first.frustumCulled).toBe(true);
+  const culledVersion=batch.version;
+  batch.setRetained(false);
+  expect(batch.version).toBe(culledVersion);
+  batch.setRetained(true);
+  expect(first.frustumCulled).toBe(false);
+  expect(first.geometry).toBe(geometry);
+
   second.geometry.dispose();
   geometry.dispose();
   material.dispose();

@@ -1,4 +1,4 @@
-import { floraSize,floraColor,floraIdentity } from './flora-presentation';
+import { floraSize,floraColor,floraIdentity,isClusterPlantSpecies } from './flora-presentation';
 import { isCrop } from '../sim/plants';
 import { stoneColor } from './stone-palette';
 import * as THREE from 'three/webgpu';
@@ -7,6 +7,7 @@ import type { World, ResourceKind } from '../sim/types';
 import { WORLD_SCALE } from '../world/scale';
 import { noise } from './StaticGeometry';
 import { clearGroup } from './primitives';
+import type { NaturalPresentationChange } from './NaturalResourcePresentation';
 
 /** Resident distant representation. Switching zoom never rebuilds geometry.
  * Terrain keeps its exact heights/colors. Tiny fruit/branches yield to silhouettes. */
@@ -35,7 +36,7 @@ export class OverviewLayer {
     }
   }
   setFoliageVisible(visible:boolean):void {this.foliage=visible;const trees=this.batches.get('tree');if(trees)trees.geometry.setDrawRange(0,visible?Infinity:trees.geometry.userData.trunkIndices);}
-  update(world:World,reset:boolean):void {
+  update(world:World,reset:boolean,changes?:ReadonlyMap<number,NaturalPresentationChange>):void {
     if(reset) {
       clearGroup(this.vegetation);this.slots.clear();this.batches.clear();
       for(const kind of ['tree','berries','wild-plant','rock'] as const) {
@@ -55,13 +56,19 @@ export class OverviewLayer {
         this.batches.set(kind,mesh);this.vegetation.add(mesh);
       }
     }
-    // Unknown additions need resized resident batches. Ordinary deletion changes one matrix.
-    if(!reset && world.resources.some(r=>!isCrop(r) && (!this.slots.has(r.id)||this.slots.get(r.id)!.kind!==r.kind))) {this.update(world,true);return;}
+    // Unknown additions or kind changes need resized resident batches. A
+    // presentation delta lets ordinary growth/removal skip the full resource
+    // scan while retaining the same stable slots and buffers.
+    const delta = !reset ? changes : undefined;
+    const changedResources = delta
+      ? [...delta.values()].flatMap(({resource})=>resource&&!isCrop(resource)&&!isClusterPlantSpecies(resource.species)?[resource]:[])
+      : world.resources.filter(r=>!isCrop(r));
+    if(!reset && changedResources.some(r=>!this.slots.has(r.id)||this.slots.get(r.id)!.kind!==r.kind)) {this.update(world,true);return;}
     let boundsChanged=reset; const dirty=new Set<ResourceKind>();
-    const counts={'wild-plant':0,tree:0,berries:0,rock:0,rice:0,potato:0,corn:0,cotton:0},alive=new Set<number>();
-    for(const r of world.resources) {
-      if(isCrop(r))continue;
-      alive.add(r.id);const signature=floraIdentity(world,r),previous=this.slots.get(r.id);
+    const counts={'wild-plant':0,tree:0,berries:0,rock:0,rice:0,potato:0,corn:0,cotton:0};
+    const alive=delta?undefined:new Set<number>();
+    for(const r of changedResources) {
+      alive?.add(r.id);const signature=floraIdentity(world,r),previous=this.slots.get(r.id);
       const slot=reset?counts[r.kind]++:previous!.slot;
       if(!reset&&previous?.signature===signature)continue;
       boundsChanged=true;dirty.add(r.kind);
@@ -73,7 +80,10 @@ export class OverviewLayer {
       this.slots.set(r.id,{kind:r.kind,slot,signature});
     }
     this.transform.scale.set(0,0,0);this.transform.updateMatrix();
-    for(const [id,slot] of this.slots) if(!alive.has(id)&&slot.signature!=='removed') {this.batches.get(slot.kind)!.setMatrixAt(slot.slot,this.transform.matrix);slot.signature='removed';dirty.add(slot.kind);}
+    const removed=delta
+      ? [...delta].filter(([, {resource}])=>!resource||isCrop(resource)||isClusterPlantSpecies(resource.species)).map(([id])=>[id,this.slots.get(id)] as const)
+      : [...this.slots].filter(([id])=>!alive!.has(id));
+    for(const [,slot] of removed) if(slot&&slot.signature!=='removed') {this.batches.get(slot.kind)!.setMatrixAt(slot.slot,this.transform.matrix);slot.signature='removed';dirty.add(slot.kind);}
     for(const kind of dirty) {const mesh=this.batches.get(kind)!;mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;if(boundsChanged)mesh.computeBoundingSphere();}
     this.setFoliageVisible(this.foliage);
   }

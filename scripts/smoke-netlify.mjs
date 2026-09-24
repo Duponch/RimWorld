@@ -5,7 +5,7 @@ process.env.PLAYWRIGHT_BROWSERS_PATH??=resolve('.playwright');
 const {chromium}=await import('@playwright/test');
 const url='https://lisiere-duponch.netlify.app';
 const version=process.env.VALIDATION_VERSION??'v95';
-const browser=await chromium.launch({channel:'chromium'});
+const browser=await chromium.launch({channel:'chromium',headless:false});
 const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];
 async function requireCursor(selector,kind){
   await page.waitForFunction(name=>getComputedStyle(document.querySelector('#app')).getPropertyValue(`--cursor-${name}`).includes('data:image/png;base64,'),kind);
