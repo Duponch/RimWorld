@@ -8,13 +8,15 @@ if(!/^[a-z0-9-]+$/.test(label))throw Error('Invalid label');
 const duration=Number(process.env.PERF_SECONDS??6)*1000;
 const gpu=process.env.PERF_GPU==='1';
 const baseline=process.env.PERF_BASELINE==='1';
+const bundleBaseline=process.env.PERF_BUNDLE_BASELINE==='1';
+const motion=process.env.PERF_MOTION==='1';
 const stats=a=>{if(!a.length)return null;const s=[...a].sort((a,b)=>a-b);return {n:s.length,mean:a.reduce((x,y)=>x+y,0)/a.length,p50:s[Math.floor(s.length*.5)],p95:s[Math.min(s.length-1,Math.ceil(s.length*.95)-1)],p99:s[Math.min(s.length-1,Math.ceil(s.length*.99)-1)],max:s.at(-1)};};
 const prefix=`
 window.__perf={active:false,view:null,frames:[],costs:{},workers:[],previous:0};
 const perf=window.__perf;
 function measureMethod(object,key,label=key){const original=object[key];if(typeof original!=='function')return;object[key]=function(...args){if(!perf.active)return original.apply(this,args);const t=performance.now();try{return original.apply(this,args);}finally{(perf.costs[label]??=[]).push(performance.now()-t);}};}
 const perfFrame=ColonyRenderer.prototype.frame;
-ColonyRenderer.prototype.frame=function(now){perf.view=this;const t=performance.now();const result=perfFrame.call(this,now);if(perf.active){perf.frames.push({interval:perf.previous?now-perf.previous:null,cpu:performance.now()-t,calls:this.stats.drawCalls,triangles:this.stats.triangles});perf.previous=now;}return result;};
+ColonyRenderer.prototype.frame=function(now){perf.view=this;const t=performance.now();if(perf.active&&perf.motion){const x=perf.motion.x+6*Math.sin((now-perf.motion.time)/1200),z=perf.motion.z+4*Math.sin((now-perf.motion.time)/900);this.camera.position.x+=x-this.controls.target.x;this.camera.position.z+=z-this.controls.target.z;this.controls.target.x=x;this.controls.target.z=z;}const result=perfFrame.call(this,now);if(perf.active){perf.frames.push({interval:perf.previous?now-perf.previous:null,cpu:performance.now()-t,calls:this.stats.drawCalls,triangles:this.stats.triangles});perf.previous=now;}return result;};
 for(const key of ['applyWorld','updateResources','updatePiles','updateHover','buildStructures','buildJobs'])measureMethod(ColonyRenderer.prototype,key);
 `;
 const suffix=`
@@ -26,6 +28,7 @@ const report={label,date:new Date().toISOString(),cpu:os.cpus()[0].model,viewpor
 const browser=await chromium.launch({channel:'chromium',headless:false});
 try{
  const page=await browser.newPage({viewport:report.viewport});
+ if(bundleBaseline)await page.route('**/src/render/ColonyRenderer.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:(await response.text()).replace('new ReentrantRenderer(', 'new THREE.WebGPURenderer(')});});
  if(gpu)await page.route('**/src/render/ColonyRenderer.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:(await response.text()).replace(/powerPreference: ["']high-performance["']/,'powerPreference: "high-performance", trackTimestamp: true')});});
  page.on('pageerror',e=>report.errors.push(e.message));page.on('console',m=>{if(m.type()==='error')report.errors.push(m.text());});
  await page.route('**/src/main.ts*',async route=>{const response=await route.fetch(baseline?{url:'http://127.0.0.1:5173/tmp/perf-v94/src/main.ts'}:{});await route.fulfill({response,body:prefix+await response.text()+suffix});});
@@ -34,7 +37,8 @@ try{
  await page.evaluate(()=>window.__perf.client.setSpeed(0));
  const saved=process.env.PERF_WORLD?await readFile(process.env.PERF_WORLD,'utf8'):await page.evaluate(()=>window.__perf.client.save());
  report.world=process.env.PERF_WORLD??'Crashlanded seed 42, 250²';
- report.baseline=baseline?'f993e3a':null;
+ report.baseline=baseline?'f993e3a':bundleBaseline?'5bd1af3 (render adapter bypassed)':null;
+ report.motion=motion?'Continuous sinusoidal pan, same path from starting target; no render quality changes.':'stationary';
  report.counterNote='Three renderer.info counts encoded draws; retained bundle replay is not included. Do not interpret fewer encoded triangles as fewer rendered triangles.';
  report.adapter=await page.evaluate(()=>{const a=window.__perf.view.renderer.getContext().getConfiguration().device.adapterInfo;return {vendor:a.vendor,architecture:a.architecture,description:a.description};});
  await page.evaluate(()=>{const b=window.__perf,v=b.view;for(const [object,keys] of [[v.renderer,['render']],[v.pawns,['update','updateTravel']],[v.wildlife,['update']],[v.daylight,['update']],[v.environmentLighting,['update']],[v.plants,['update']],[v.overview,['update']]])for(const key of keys){const orig=object[key],label=object.constructor.name+'.'+key;object[key]=function(...args){if(!b.active)return orig.apply(this,args);const t=performance.now();try{return orig.apply(this,args);}finally{(b.costs[label]??=[]).push(performance.now()-t);}};}});
@@ -44,7 +48,7 @@ try{
   await page.evaluate(data=>window.__perf.client.load(data),saved);
   await page.evaluate(zoom=>{const v=window.__perf.view,c=v.controls;c.enableDamping=false;c.update();v.camera.zoom=zoom==='near'?2:zoom==='middle'?.5:c.minZoom;v.camera.updateProjectionMatrix();c.update();},zoom);
   await page.evaluate(()=>new Promise(r=>setTimeout(r,1300)));
-  const start=await page.evaluate(async speed=>{const b=window.__perf;await b.client.setSpeed(speed);Object.assign(b,{active:true,frames:[],costs:{},workers:[],gpu:[],previous:0});return {tick:b.view.received.world.tick,time:performance.now(),zoom:b.view.camera.zoom,span:b.view.rig.span};},speed);
+  const start=await page.evaluate(async ({speed,motion})=>{const b=window.__perf;await b.client.setSpeed(speed);Object.assign(b,{active:true,frames:[],costs:{},workers:[],gpu:[],previous:0,motion:motion?{x:b.view.controls.target.x,z:b.view.controls.target.z,time:performance.now()}:null});return {tick:b.view.received.world.tick,time:performance.now(),zoom:b.view.camera.zoom,span:b.view.rig.span};},{speed,motion});
   await page.evaluate(ms=>new Promise(r=>setTimeout(r,ms)),duration);
   const data=await page.evaluate(async()=>{const b=window.__perf;b.active=false;const end={tick:b.view.received.world.tick,time:performance.now()};await b.client.setSpeed(0);return {end,frames:b.frames,costs:b.costs,workers:b.workers,gpu:b.gpu,overview:b.view.overview.group.visible};});
   const row={zoom,speed,camera:start,overview:data.overview,elapsed:data.end.time-start.time,ticks:data.end.tick-start.tick,achievedSpeed:(data.end.tick-start.tick)/6/((data.end.time-start.time)/1000),frameMs:stats(data.frames.flatMap(f=>f.interval===null?[]:[f.interval])),cpuMs:stats(data.frames.map(f=>f.cpu)),calls:stats(data.frames.map(f=>f.calls)),triangles:stats(data.frames.map(f=>f.triangles)),workerMs:stats(data.workers),costs:Object.fromEntries(Object.entries(data.costs).map(([k,v])=>[k,{...stats(v),total:v.reduce((x,y)=>x+y,0)}]))};

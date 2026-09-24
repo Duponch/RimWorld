@@ -1,5 +1,9 @@
 # Travail sur Lisière
 
+## Suivi caméra V96
+- `ReentrantRenderer` contourne le contexte de bundle perdu lors des ombres imbriquées dans Three 0.186.0. Garder l’isolement à l’entrée de `render()` et la restauration en `finally`, ainsi que la version épinglée. Ne pas remplacer par `static=false`, un délai ou une suppression des ombres. Relire `docs/history/validation-camera-v96.md` avant modification.
+- Toute refonte de commandes conservées doit tester la première image et les suivantes après de vrais mouvements, sans `refresh()` préalable. `scripts/camera-retention.mjs` compare 48 images à un bundle fraîchement enregistré à pose identique et vérifie les listes/caméras ; le témoin V95 échoue. La performance V95 rapprochée omettait des mises à jour : elle ne prouve pas un gain à qualité égale. Schéma 91 et gameplay conservés.
+
 ## Performance et curseurs V95
 - Gameplay suspendu à la demande du joueur. Lire `docs/research/performance-v95.md` et `docs/history/validation-performance-v95.md`. Schéma 91, catalogue V91, règles, calendrier et PRNG conservés. La cible de 240 FPS/6× reste non garantie, notamment à cent colons.
 - Une seule flèche pour tous les outils ; `cursors-v95.png` contient les formes sémantiques doigt, attente, loupe, texte, mains et interdit. Le redimensionnement reste préparé sans inventer une poignée. Ne pas revenir aux neuf flèches d’outils V94.

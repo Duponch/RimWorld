@@ -37,3 +37,5 @@ Les requêtes GET/PUT attendent l’échéance `X-RateLimit-Reset`/`Retry-After`
 La réponse de limite observée utilise parfois un epoch et parfois une date UTC ; les deux formes sont reconnues. Le contrôle public ne recopie pas le résultat d’une version précédente quand `EXPECTED_DEPLOY_ID` diffère, afin de ne pas fabriquer une fausse preuve de publication.
 
 V95 : déploiement `6ab57508f64713831acd4aec`, 23 fichiers, état API `ready`. [Résultat](../../artifacts/netlify-v95.json), [contrôle public](../../artifacts/netlify-smoke-v95.json).
+
+V96 : correctif du contexte de caméra/ombres, déploiement `6ab5816e3f833a295c8b395e` prêt, [contrôle public réussi](../../artifacts/netlify-smoke-v96.json) et [bundle identique au build validé](../../artifacts/netlify-v96-bundle.json).

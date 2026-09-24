@@ -1,5 +1,7 @@
 # Guide joueur
 
+V96 corrige le décalage du paysage pendant les déplacements, rotations et zooms de caméra. Les éléments restent alignés dès l’image suivante ; commandes et sauvegardes sont conservées. [Preuves et limites de performance](../history/validation-camera-v96.md).
+
 **V95 : curseurs et moteur.** La carte garde une seule flèche, quel que soit l'outil ; les icônes de désignation restent au-dessus des cibles. Les boutons affichent un doigt, la saisie un curseur texte, la préparation un sablier et les commandes indisponibles le signe interdit. La molette affiche une loupe ; le déplacement utilise les mains ouverte/fermée. Les règles et vos sauvegardes restent inchangées. [Détails et limites de performance](../history/validation-performance-v95.md).
 
 **V94 : interface remaniée.** Architecte garde ses catégories à gauche, ses pictogrammes au centre et les options à droite sans déplacer son cadre. Choisissez un outil puis fermez Architecte : l'outil et son curseur restent actifs pendant que la carte redevient visible ; Échap annule. Le registre Ressources reste toujours complet. Travail, Horaires, Affectations et Faune utilisent des colonnes stables. Les dossiers des colons restent plus hauts, leurs noms sont visibles dans les portraits sélectionnés et Bio conserve ses détails repliables. Les grandes sauvegardes sont compressées sans perte dans ce navigateur, et les anciennes restent chargeables.

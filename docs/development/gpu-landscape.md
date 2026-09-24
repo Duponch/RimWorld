@@ -1,5 +1,9 @@
 # Plantes 3D instanciées et désignations — V95
 
+## Contexte de rendu et caméra V96
+
+`ReentrantRenderer` isole le contexte des commandes conservées pendant les rendus imbriqués d’ombres. Three 0.186.0 perdait autrement l’enregistrement des objets suivants : leurs matrices n’étaient réactualisées qu’à l’adoption suivante du monde. Les commandes GPU restent conservées, les uniforms de tous les objets sont mis à jour dès chaque mouvement. L’adaptateur dépend d’un champ interne identifié et doit être réaudité lors d’une mise à jour de Three. [Cause, test natif de mouvement et mesures](../history/validation-camera-v96.md).
+
 ## Choix de présentation
 
 À la demande de l'utilisateur, V94 retire entièrement le champ de brins `GpuGrassLayer` de V92. `grass` et `tall-grass` redeviennent des plantes physiques 3D correspondant aux ressources sauvegardées. Le terrain n'ajoute plus de tapis ambiant procédural. Agave, cultures, arbres et autres espèces conservent leurs couches propres.

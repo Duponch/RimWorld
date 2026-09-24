@@ -1,4 +1,5 @@
 import { HygieneLayer } from './HygieneLayer';
+import { ReentrantRenderer } from './ReentrantRenderer';
 import { pawnBodyLocation } from '../sim/human-corpses';
 import type { BuildableFloorKind } from '../sim/flooring';
 import type { ConstructionMaterial } from '../sim/construction-materials';
@@ -144,7 +145,7 @@ export class ColonyRenderer {
   private pointerDown: { x: number; y: number; button: number; pointerId: number } | null = null;
 
   static async create(host: HTMLElement, onPick: (x: number, z: number) => void): Promise<ColonyRenderer> {
-    const renderer = new THREE.WebGPURenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
+    const renderer = new ReentrantRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
     await renderer.init();
     const view = new ColonyRenderer(host, onPick, renderer);
     renderer.setAnimationLoop((time) => view.frame(time));

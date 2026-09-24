@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+V96 corrige le suivi de caméra du paysage et des ombres ; aucune estimation fonctionnelle ni entrée de catalogue supplémentaire. Les limites de cadence restent explicites dans les [preuves V96](../history/validation-camera-v96.md).
+
 **V95 — moteur et curseurs :** travail de performance CPU, messages du worker, buffers et commandes de rendu WebGPU, avec une seule image par type de curseur. Aucun contenu ni boucle de gameplay ajouté ; schéma 91 conservé. La cible 240 FPS reste dépendante de la scène et du matériel. [Preuves et limites](../history/validation-performance-v95.md).
 
 **V94 — présentation jouable :** `grass` et `tall-grass` sont de nouveau des plantes physiques 3D, verticales, multi-tiges et dessinées en un lot instancié ; le champ de brins V92 est supprimé. Ressources ne s'écrase plus, les portraits gardent leur nom, Travail/Horaires/Affectations tiennent sans barre horizontale, Faune garde six colonnes stables et les neuf curseurs sont des flèches illustrées distinctes. Aucun contenu, biome ou mécanisme n'est ajouté par ce lot. [Contrats](../development/visual-identity.md), [preuves](../history/validation-interface-v94.md).

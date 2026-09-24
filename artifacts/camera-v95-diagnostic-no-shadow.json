@@ -1,0 +1,139 @@
+{
+  "label": "v95-diagnostic-no-shadow",
+  "protocol": "Native WebGPU, frozen simulation, real mouse pan/orbit/wheel. Compare the very first frame after input, and damping frames, against freshly submitted draws at the SAME pose. No landscape refresh between input and tested frame. At most 2 differing pixels and 32/255 per channel, as in V95; exact differences retained.",
+  "cases": [
+    {
+      "mode": "orthographic",
+      "zoom": 2,
+      "gesture": "pan",
+      "frame": 0,
+      "position": [
+        256.60383809715887,
+        312.5285649112496,
+        264.67549091292403
+      ],
+      "quaternion": [
+        -0.4522370057660577,
+        0.3227467518102845,
+        0.179799771749026,
+        0.8117809229654633
+      ],
+      "lightPosition": [
+        64.94435746842264,
+        4.447941902830454,
+        113.14372320538142
+      ],
+      "lightTarget": [
+        123.77919800987785,
+        0,
+        124.03763670286172
+      ],
+      "version": 6,
+      "changedPixels": 0,
+      "maxChannelDifference": 0,
+      "startVersion": 6,
+      "moved": true,
+      "passed": true
+    },
+    {
+      "mode": "orthographic",
+      "zoom": 2,
+      "gesture": "pan",
+      "frame": 1,
+      "position": [
+        256.54233133202604,
+        312.5285649112496,
+        264.6859750206171
+      ],
+      "quaternion": [
+        -0.4522370057660577,
+        0.3227467518102845,
+        0.179799771749026,
+        0.8117809229654633
+      ],
+      "lightPosition": [
+        64.88285070328982,
+        4.447941902830454,
+        113.15420731307451
+      ],
+      "lightTarget": [
+        123.71769124474503,
+        0,
+        124.0481208105548
+      ],
+      "version": 6,
+      "changedPixels": 1,
+      "maxChannelDifference": 15,
+      "startVersion": 6,
+      "moved": true,
+      "passed": true
+    },
+    {
+      "mode": "orthographic",
+      "zoom": 2,
+      "gesture": "pan",
+      "frame": 2,
+      "position": [
+        256.4863601757552,
+        312.5285649112496,
+        264.69551555861784
+      ],
+      "quaternion": [
+        -0.4522370057660577,
+        0.3227467518102845,
+        0.179799771749026,
+        0.8117809229654633
+      ],
+      "lightPosition": [
+        64.82687954701895,
+        4.447941902830454,
+        113.16374785107523
+      ],
+      "lightTarget": [
+        123.66172008847415,
+        0,
+        124.05766134855553
+      ],
+      "version": 6,
+      "changedPixels": 0,
+      "maxChannelDifference": 0,
+      "startVersion": 6,
+      "moved": true,
+      "passed": true
+    },
+    {
+      "mode": "orthographic",
+      "zoom": 2,
+      "gesture": "pan",
+      "frame": 3,
+      "position": [
+        256.4354264235487,
+        312.5285649112496,
+        264.7041974481985
+      ],
+      "quaternion": [
+        -0.4522370057660577,
+        0.3227467518102845,
+        0.179799771749026,
+        0.8117809229654633
+      ],
+      "lightPosition": [
+        64.77594579481247,
+        4.447941902830454,
+        113.17242974065589
+      ],
+      "lightTarget": [
+        123.61078633626768,
+        0,
+        124.06634323813618
+      ],
+      "version": 6,
+      "changedPixels": 1,
+      "maxChannelDifference": 18,
+      "startVersion": 6,
+      "moved": true,
+      "passed": true
+    }
+  ],
+  "errors": []
+}

@@ -1,5 +1,7 @@
 # CPU, transmission et commandes GPU — V95
 
+**Correction de portée V96 :** les comparaisons V95 à caméra immobile ne détectaient pas une liste incomplète d’objets à actualiser après une passe d’ombres imbriquée. Le suivi de caméra est corrigé et mesuré dans les [preuves V96](../history/validation-camera-v96.md). Les anciens FPS rapprochés, obtenus avec des actualisations omises, ne constituent pas une référence de qualité égale. Les artefacts V95 restent conservés.
+
 Audit du 24 septembre 2026, à la demande de l'utilisateur. Le gameplay est suspendu pour ce chantier. Cible : se rapprocher de 240 images/s en gardant les règles, les états et la qualité visuelle. Une cible n'est pas une garantie, notamment à cent acteurs et cent animaux.
 
 ## Sources et diagnostic
