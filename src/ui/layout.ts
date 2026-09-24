@@ -102,7 +102,7 @@ export function gameLayout(): string {
     </aside>
     <span id="fps-counter" aria-live="off" title="Cadence du rendu, indépendante de la vitesse de simulation">— FPS</span>
     <div class="corner-tools"><span class="game-title">LISIÈRE</span><button id="help-open" aria-label="Ouvrir l’aide" title="Aide">?</button></div>
-    <aside id="alerts" class="alerts" aria-label="Alertes de la colonie"><div id="status-alerts"></div></aside>
+    <aside id="alerts" class="alerts" aria-label="Alertes de la colonie"><div id="status-alerts"></div><div class="legacy-event-controls"><button id="enable-arrivals">Activer les demandes d’accueil</button><button id="enable-raids">Activer les raids du camp</button><button id="enable-heatwaves">Activer les canicules du camp</button></div></aside>
     <div id="pause-banner" hidden>EN PAUSE</div>
     <div id="notice" role="status" aria-live="polite" hidden></div>
     <div id="area-feedback" role="status" aria-live="polite" hidden></div>
@@ -163,9 +163,6 @@ export function gameLayout(): string {
       <p>Molette : zoom · glisser le bouton droit : tourner · bouton central ou flèches : déplacer la caméra. La coupe des murs sert à voir les intérieurs ; leurs obstacles restent en place.</p>
       <p class="muted">Inspectez un chantier pour comprendre son attente, ou une réserve pour modifier ses filtres. Horaires permet de régler les plages de travail et de sommeil. Un piquet de fers à cheval offre une autre famille de loisirs que l’observation du ciel. Les blessures, les soins, les pièces et les températures sont déjà actifs ; les maladies et les saisons restent à développer. Les onglets grisés indiquent les domaines actuellement indisponibles.</p>
     </dialog>
-    <button id="enable-heatwaves" class="panel" style="position:fixed;right:16px;top:212px;z-index:3">Activer les canicules du camp</button>
-    <button id="enable-raids" class="panel" style="position:fixed;right:16px;top:172px;z-index:3">Activer les raids du camp</button>
-    <button id="enable-arrivals" class="panel" style="position:fixed;right:16px;top:132px;z-index:3">Activer les demandes d’accueil</button>
     <button id="inspect-fire" class="panel" style="position:fixed;right:16px;top:132px;z-index:3" hidden>Incendie · voir</button>
     <button id="inspect-threat" class="panel" style="position:fixed;right:16px;top:90px;z-index:3" hidden>Menace armée · voir</button>
     <dialog id="new-world-dialog" class="help-dialog"><form id="new-world-form"><button type="button" class="close" id="new-world-close" aria-label="Fermer la création">×</button><h2>Nouvelle colonie</h2>

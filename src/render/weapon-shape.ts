@@ -24,7 +24,8 @@ const KNIFE_PARTS = [
  * as ground piles. Dye tags -2/-3 are already used by clothing. */
 export const WEAPON_VISUALS = [
   {item:'revolver',equipment:1,cargo:21,dye:-1,parts:REVOLVER_PARTS},
-  {item:'bolt-action-rifle',equipment:2,cargo:31,dye:-4,parts:RIFLE_PARTS},
-  {item:'plasteel-knife',equipment:3,cargo:32,dye:-5,parts:KNIFE_PARTS},
+  // 31–53 belong to folded apparel. Cargo IDs are render-only, never saved.
+  {item:'bolt-action-rifle',equipment:2,cargo:70,dye:-4,parts:RIFLE_PARTS},
+  {item:'plasteel-knife',equipment:3,cargo:71,dye:-5,parts:KNIFE_PARTS},
 ] as const;
 export const weaponVisual=(item:string|undefined)=>WEAPON_VISUALS.find(v=>v.item===item);

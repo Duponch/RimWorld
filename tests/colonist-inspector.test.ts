@@ -38,6 +38,8 @@ describe('colonist inspector structure', () => {
       '#draft-controls', '#manage-work', '#clear-orders',
     ]));
     expect(layout.panels.health).toContain('#health-inspection');
+    expect(layout.summary).not.toContain('#room-description');
+    expect(layout.panels.needs).toContain('#room-description');
     expect(layout.panels.health).toEqual(expect.arrayContaining(['#hygiene-controls', '#burial-controls']));
     expect(layout.panels.gear).toContain('#equipment-details');
     expect(layout.panels.social).toContain('#social-inspection');

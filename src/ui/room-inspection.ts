@@ -16,7 +16,11 @@ export class RoomInspection {
     if (!line) {
       line = document.createElement('p'); line.id = 'room-description'; line.className = 'muted';
       // Keep habitat information near the selected object's description.
-      (panel.querySelector('#cell-description, #selected-action') ?? panel.lastElementChild)?.after(line);
+      if(panel.classList.contains('cell-inspector-host')){
+        const details=document.createElement('details');details.className='cell-environment';
+        const summary=document.createElement('summary');summary.textContent='Environnement';details.append(summary,line);
+        panel.querySelector('#cell-description')?.after(details);
+      }else (panel.querySelector('#selected-action') ?? panel.lastElementChild)?.after(line);
     }
     const environment=this.environment.read(world),room = environment.topology.at(cell.x, cell.z);
     const properties=environment.room(cell),covered=properties?.covered??0;
@@ -44,7 +48,16 @@ export class RoomInspection {
       if(f.lighting<1)text+=` · obscurité ×${Math.round(f.lighting*100)} %`;
       text+='.';
     }
-    if (line.textContent !== text) line.textContent = text;
+    if (line.dataset.copy !== text) {
+      line.dataset.copy=text;
+      line.replaceChildren(...text.split(/ (?=Température :|Propreté :|Lumière :|Vitesse de travail|Production :|Toit construit|Zone :)/).map(part=>{
+        const item=document.createElement('span');item.className='room-fact';
+        const separator=part.indexOf(' : ');
+        if(separator>0){const label=document.createElement('span');label.textContent=part.slice(0,separator+3);const value=document.createElement('strong');value.textContent=part.slice(separator+3);item.append(label,value);}
+        else item.textContent=part;
+        return item;
+      }));
+    }
     line.hidden = !text;
   }
 }

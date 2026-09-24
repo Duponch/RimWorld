@@ -9,6 +9,9 @@ import { foldedApparel,APPAREL_CARGO } from './character-apparel';
 import { APPAREL,type ApparelItem } from '../sim/apparel-rules';
 import { WEAPON_VISUALS } from './weapon-shape';
 
+// Disjoint from weapon tags; -4 is the bolt-action rifle, not the parka hood.
+export const PARKA_HOOD_DYE = -6;
+
 /** Eight rigid bones, authored entirely in code. Each vertex has one bone influence.
  * The bind position/pivot and animation state are evaluated in the vertex shader.
  * There is no per-pawn AnimationMixer, bone Object3D tree or CPU bone update.
@@ -46,7 +49,7 @@ export function pawnGeometry(): THREE.InstancedBufferGeometry {
   addPart([.37,.34,.26],[0,.85,0],0,[0,.61,0],APPAREL['flak-vest'].color,-2);
   addPart([.12,.18,.025],[0,.86,.145],0,[0,.61,0],0x404c44,-2);
   // Resident parka hood; its visibility follows the outfit attribute.
-  addPart([.34,.34,.14],[0,1.17,-.12],1,[0,1.04,0],0xffffff,-4);
+  addPart([.34,.34,.14],[0,1.17,-.12],1,[0,1.04,0],0xffffff,PARKA_HOOD_DYE);
   for(const variant of WEAPON_VISUALS)for(const part of variant.parts)addPart(part.size.map(n=>n/PAWN_MODEL_SCALE),
     [.205+part.center[2]/PAWN_MODEL_SCALE,.68+part.center[0]/PAWN_MODEL_SCALE,part.center[1]/PAWN_MODEL_SCALE],0,[0,.61,0],part.color,variant.dye);
   const geometry = new THREE.InstancedBufferGeometry();

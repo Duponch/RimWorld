@@ -73,6 +73,8 @@ import { isPlant } from './sim/plants';
 import './style.css';
 import './ui/colonist-inspector.css';
 import './ui/visual-identity.css';
+import './ui/cell-inspector.css';
+import { presentCellDescription } from './ui/cell-inspector';
 import './ui/cursors.css';
 import { installVisualIdentity, portraitIndex } from './ui/visual-identity';
 import { installArchitectIcons } from './ui/architect-icons';
@@ -322,7 +324,7 @@ function rotatePlacement(direction = 1) {
 function rebuildInspector() {
   const panel = el('inspector');
   panel.hidden = currentPanel !== null || (!selection.ids.size && !selectedCell);
-  panel.classList.remove('colonist-inspector-host','animal-inspector-host');
+  panel.classList.remove('colonist-inspector-host','animal-inspector-host','cell-inspector-host');
   delete panel.dataset.colonistInspectorPawn;
   delete panel.dataset.colonistInspectorTab;
   if(selection.ids.size>1) {
@@ -351,7 +353,8 @@ function rebuildInspector() {
     createSkillsInspection(panel);createHealthInspection(panel,()=>snapshot?.pawns.find(p=>p.id===selectedPawn),c=>void attempt(()=>client.command(c)));
     cancel.onclick=()=>{if(selectedPawn!==undefined)void attempt(()=>client.command({type:'clear-orders',pawnId:selectedPawn!}));};panel.append(cancel);
   } else if (selectedCell) {
-    panel.innerHTML = `<div class="panel-heading"><h2 id="cell-title"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><p id="cell-description"></p><p id="cell-materials"></p><button id="weapon-permission" class="secondary-action" hidden></button><p id="cell-job"></p><button id="cell-deconstruct" class="secondary-action" hidden>Déconstruire</button><button id="cell-cancel" class="secondary-action" hidden>Annuler cet ordre</button><div id="cell-storage" hidden><p id="cell-storage-quantity"></p>${storageSettings('selected-stockpile')}<button id="update-stockpile" class="secondary-action">Appliquer les réglages</button><button id="delete-stockpile" class="secondary-action">Retirer cette réserve</button></div>`;
+    panel.classList.add('cell-inspector-host');
+    panel.innerHTML = `<div class="panel-heading cell-heading"><span class="cell-illustration ui-icon" aria-hidden="true"></span><h2 id="cell-title"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><div id="cell-description"></div><p id="cell-materials"></p><p id="cell-job"></p><div class="cell-actions"><button id="weapon-permission" class="secondary-action" hidden></button><button id="cell-deconstruct" class="secondary-action" hidden>Déconstruire</button><button id="cell-cancel" class="secondary-action" hidden>Annuler cet ordre</button></div><div id="cell-storage" hidden><p id="cell-storage-quantity"></p>${storageSettings('selected-stockpile')}<button id="update-stockpile" class="secondary-action">Appliquer les réglages</button><button id="delete-stockpile" class="secondary-action">Retirer cette réserve</button></div>`;
     const storage = snapshot?.stockpiles.find(item => item.x === selectedCell!.x && item.z === selectedCell!.z);
     if (storage) {
       el<HTMLInputElement>('selected-stockpile-silver').checked=storage.filters.silver??false;
@@ -548,28 +551,29 @@ function renderState() {
       roomInspection.update(el('inspector'), world, selectedCell);
       const packed=packedAt(world,selectedCell);
       el('cell-title').textContent = packed ? `Meuble emballé · ${buildingLabels[packed.building.kind]}` : structure ? buildingLabels[structure.kind] : resource ? (floraDefinition(resource)?.label??resourceLabels[resource.kind]) : world.tiles[z*world.width+x].floor?FLOOR_DEFINITIONS[world.tiles[z*world.width+x].floor!].label:terrainLabels[world.tiles[z * world.width + x].terrain];
-      el('cell-description').textContent = `Case ${x}, ${z}${resource ? isPlant(resource) ? plantInspection(world,resource) : ` · ${resource.amount} unités à récolter` : ''}${structure ? ` · ${structureFootprintLabel(structure)} cases` : ''}`;
-      if(growingZoneAt(world,z*world.width+x))el('cell-description').textContent+=growingTemperatureInspection(world,selectedCell);
-      if(structure&&isBarrier(structure))el('cell-description').textContent+=` · Résistance : ${barrierHp(structure)}/${barrierMaxHp(structure)} PV · ${world.home?.includes(z*world.width+x)?'Zone de foyer':'Hors zone de foyer (réparation désactivée)'}`;
+      let cellDescription = `Case ${x}, ${z}${resource ? isPlant(resource) ? plantInspection(world,resource) : ` · ${resource.amount} unités à récolter` : ''}${structure ? ` · ${structureFootprintLabel(structure)} cases` : ''}`;
+      if(growingZoneAt(world,z*world.width+x))cellDescription+=growingTemperatureInspection(world,selectedCell);
+      if(structure&&isBarrier(structure))cellDescription+=` · Résistance : ${barrierHp(structure)}/${barrierMaxHp(structure)} PV · ${world.home?.includes(z*world.width+x)?'Zone de foyer':'Hors zone de foyer (réparation désactivée)'}`;
       const building = packed?.building ?? structure;
       if (building && building.kind !== 'grave' && building.kind !== 'butcher-spot' && building.kind !== 'crafting-spot' && building.kind !== 'campfire' && building.kind !== 'passive-cooler') el('cell-title').textContent += ` · ${ITEM_DEFINITIONS[building.material ?? 'wood'].label}${building.material === undefined ? ' (ancien)' : ''}`;
       const rock = rockInspection(world.tiles[z * world.width + x]!, resource);
-      if (!packed && !structure && rock) { el('cell-title').textContent = rock.title; el('cell-description').textContent = `Case ${x}, ${z} · ${rock.description}`; }
-      el('cell-description').textContent+=` · ${terrainInspection(world.tiles[z*world.width+x]!)}`;
+      if (!packed && !structure && rock) { el('cell-title').textContent = rock.title; cellDescription = `Case ${x}, ${z} · ${rock.description}`; }
+      cellDescription+=` · ${terrainInspection(world.tiles[z*world.width+x]!)}`;
       const weapon=piles.find(p=>p.kind==='weapon'||p.kind==='apparel'),permission=el<HTMLButtonElement>('weapon-permission');permission.hidden=!weapon;
       if(weapon){const forbidden=!!(weapon.weapon??weapon.apparel)?.forbidden;permission.textContent=forbidden?'Autoriser cet objet':'Interdire cet objet';permission.onclick=()=>void attempt(()=>client.command({type:weapon.kind==='apparel'?'apparel-permission':'weapon-permission',itemId:weapon.id,allowed:forbidden}));}
       el('cell-materials').textContent = piles.length ? `Au sol : ${piles.map(pile => `${pile.quantity} ${ITEM_DEFINITIONS[pile.item].label}${pile.kind==='food'?` · ${foodFreshnessLabel(pile,world.tick)}`:pile.kind==='corpse'?` · ${{fresh:'Fraîche',rotting:'Pourrie (impropre à la boucherie)',desiccated:'Desséchée'}[corpseStage(pile,world.tick)]}`:''}`).join(' · ')}` : '';
       updateUnfinishedInspection(el('inspector'),world,piles.find(p=>p.unfinished),c=>void attempt(()=>client.command(c)));
       el('cell-job').textContent = job ? `${job.construction==='blueprint'?'Plan · ':job.construction==='frame'?'Cadre · ':''}${jobLabels[job.kind]} · ${queryJobStatus(world, job).reason ?? 'En cours'}${constructionDeliveryLabel(world,job) ? ` · Livré : ${constructionDeliveryLabel(world,job)}` : ''}` : 'Aucun ordre sur cette case.';
-      if(structure?.kind==='bed')el('cell-description').textContent += ` · Efficacité du repos : ${structure.material?.endsWith('-blocks')?90:100} %`;
+      if(structure?.kind==='bed')cellDescription += ` · Efficacité du repos : ${structure.material?.endsWith('-blocks')?90:100} %`;
       updateCoolerControls(el('inspector'),world,structure,c=>void attempt(()=>client.command(c)));
-      if(structure?.power)el('cell-description').textContent+=powerInspection(world,structure);
+      if(structure?.power)cellDescription+=powerInspection(world,structure);
       updatePowerControls(el('inspector'), world, selectedCell, c=>void attempt(()=>client.command(c)));
-      if(structure?.kind==='butcher-table')el('cell-description').textContent+=' · Boucherie : rendement du poste 100 %, compétence Cuisine';
-      if(structure?.kind==='butcher-spot')el('cell-description').textContent+=' · Boucherie : rendement du poste 70 %, compétence Cuisine';
-      if(structure?.kind==='crafting-spot')el('cell-description').textContent+=' · Gratuit · 60 tissus → tenue tribale · vitesse de poste 50 % · Artisanat.';
-      if(structure?.kind==='stonecutter')el('cell-description').textContent += ' · 1 fragment → 20 blocs · Artisanat.';
-      if(structure?.kind==='horseshoes')el('cell-description').textContent += ` · Dextérité · ${world.pawns.filter(p=>p.recreation.task?.buildingId===structure.id).length}/3 joueurs · places à 5 cases, ligne de vue dégagée.`;
+      if(structure?.kind==='butcher-table')cellDescription+=' · Boucherie : rendement du poste 100 %, compétence Cuisine';
+      if(structure?.kind==='butcher-spot')cellDescription+=' · Boucherie : rendement du poste 70 %, compétence Cuisine';
+      if(structure?.kind==='crafting-spot')cellDescription+=' · Gratuit · 60 tissus → tenue tribale · vitesse de poste 50 % · Artisanat.';
+      if(structure?.kind==='stonecutter')cellDescription += ' · 1 fragment → 20 blocs · Artisanat.';
+      if(structure?.kind==='horseshoes')cellDescription += ` · Dextérité · ${world.pawns.filter(p=>p.recreation.task?.buildingId===structure.id).length}/3 joueurs · places à 5 cases, ligne de vue dégagée.`;
+      presentCellDescription(el('inspector'), cellDescription, structure||packed?'home':resource?.kind==='tree'?'leaf':resource&&isPlant(resource)?'leaf':rock?'blocks':'leaf');
       if(structure?.fuel)updateFireControls(el('inspector'),structure);
       if(structure&&stationRecipe(structure))updateBillControls(el('inspector'),structure,world);
       el('cell-deconstruct').hidden=!structure||!!job&&job.kind!=='repair'&&job.kind!=='flick';

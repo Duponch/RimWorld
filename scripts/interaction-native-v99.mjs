@@ -3,6 +3,7 @@ import {writeFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
 process.env.PLAYWRIGHT_BROWSERS_PATH??=resolve('.playwright');
 const {chromium}=await import('@playwright/test');
+const version=process.env.VALIDATION_VERSION??'v99';
 const report={date:new Date().toISOString(),checks:[],errors:[]};
 const browser=await chromium.launch({channel:'chromium',headless:false});
 const page=await browser.newPage({viewport:{width:1440,height:1000}});
@@ -33,7 +34,7 @@ try{
  await page.getByRole('tab',{name:'Santé',exact:true}).click();assert.match(await page.locator('#animal-panel-health').innerText(),/Mobilité/);
  await page.locator('[data-animal-hunt]').check();await page.waitForFunction(id=>window.__lisiere.world.hunting?.targets.includes(id),ids.animals[0]);
  await page.locator('[data-animal-hunt]').uncheck();
- await page.screenshot({path:'artifacts/interaction-v99-animal.png'});
+ await page.screenshot({path:`artifacts/interaction-${version}-animal.png`});
  report.checks.push('Animal click, actual health and reversible hunt designation');
  const a=await point(ids.animals[0]);await page.mouse.dblclick(a.x,a.y);
  assert.deepEqual((await selected()).sort((a,b)=>a-b),ids.animals.slice(0,2).sort((a,b)=>a-b));
@@ -57,7 +58,7 @@ try{
  await page.locator('[data-speed="0"]').click();await page.waitForFunction(()=>document.querySelector('[data-speed="0"]').getAttribute('aria-pressed')==='true'&&window.__interaction.view.world.tick===window.__lisiere.tick);
  const route=await page.evaluate(()=>{const v=window.__interaction.view,f=v.actionFeedback;return {...f.stats,visible:f.path.visible,shared:['aFrom','aTo','aTravel'].every(k=>v.pawns.feedbackSource.getAttribute(k)===f.bars.geometry.getAttribute(k))};});
  assert.ok(route.visible&&route.shared&&route.pathSegments>0);report.route=route;
- await page.screenshot({path:'artifacts/interaction-v99-route.png'});
+ await page.screenshot({path:`artifacts/interaction-${version}-route.png`});
  report.checks.push('Right-click ground uses real movement and confirmed blue path');
  await focus(ids.animals[0]);await clickActor(ids.animals[0],{button:'right'});
  await page.locator('[data-tactical-attack="shoot"]:enabled').waitFor();
@@ -94,10 +95,10 @@ try{
  const bar=await page.evaluate(()=>{const v=window.__interaction.view;return {visible:v.actionFeedback.bars.visible,fraction:v.actionFeedback.bars.geometry.getAttribute('aAction').getX(0),uploads:v.actionFeedback.stats.barUploads,tick:window.__lisiere.tick};});
  assert.ok(bar.visible&&bar.fraction>=0&&bar.fraction<1);await page.waitForTimeout(250);
  assert.equal(await page.evaluate(()=>window.__interaction.view.actionFeedback.stats.barUploads),bar.uploads);
- await page.screenshot({path:'artifacts/interaction-v99-work.png'});
+ await page.screenshot({path:`artifacts/interaction-${version}-work.png`});
  await page.evaluate(()=>{const v=window.__interaction.view;v.camera.zoom=.15;v.camera.updateProjectionMatrix();});
  await page.waitForFunction(()=>!window.__interaction.view.actionFeedback.bars.visible);
  report.bar=bar;report.checks.push('Real work bar, pause stability and distant zoom hides bars');
  assert.deepEqual(report.errors,[]);report.passed=true;
-}catch(e){report.failure=e.stack;await page.screenshot({path:'artifacts/interaction-v99-failure.png'}).catch(()=>{});throw e;}
-finally{await writeFile('artifacts/interaction-native-v99.json',JSON.stringify(report,null,2));await browser.close();console.log(JSON.stringify(report));}
+}catch(e){report.failure=e.stack;await page.screenshot({path:`artifacts/interaction-${version}-failure.png`}).catch(()=>{});throw e;}
+finally{await writeFile(`artifacts/interaction-native-${version}.json`,JSON.stringify(report,null,2));await browser.close();console.log(JSON.stringify(report));}

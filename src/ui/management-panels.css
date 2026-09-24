@@ -54,24 +54,33 @@
 
 #work-panel td:not(.work-activity) {
   position: relative;
+  padding: 3px 2px 17px;
 }
 
 #work-panel td select {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   width: calc(100% - 4px);
   min-width: 0;
   max-width: 42px;
   height: 32px;
   margin: 0 auto;
-  padding: 3px 15px 3px 7px;
-  text-align: center;
+  padding: 3px 4px 3px 10px;
+  text-align: left;
   font-variant-numeric: tabular-nums;
 }
 
+#work-panel td select::picker-icon { flex: none; margin-left: auto; }
+
 #work-panel td small {
   display: flex;
-  min-height: 13px;
-  margin-top: 2px;
+  position: absolute;
+  right: 0;
+  bottom: 2px;
+  left: 0;
+  height: 12px;
+  margin: 0;
   align-items: center;
   justify-content: center;
   gap: 2px;
@@ -116,7 +125,7 @@
 }
 
 #schedule-panel .schedule-table th:last-child {
-  width: 72px;
+  width: 118px;
 }
 
 #schedule-panel .schedule-table th,
@@ -141,18 +150,20 @@
 
 #schedule-panel .schedule-copy {
   display: grid;
-  width: 72px;
-  gap: 4px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 118px;
+  gap: 3px;
   align-content: center;
   justify-items: stretch;
 }
 
 #schedule-panel .schedule-copy button {
-  width: 64px;
-  min-height: 25px;
+  width: 100%;
+  min-width: 0;
+  min-height: 29px;
   margin: 0 auto;
-  padding: 2px 6px;
-  font-size: 11px;
+  padding: 2px 3px;
+  font-size: 10px;
 }
 
 #schedule-panel .schedule-copy button:disabled {
@@ -338,7 +349,7 @@
   #work-panel th:last-child,
   #work-panel .work-activity { width: 130px; }
   #work-panel thead th { font-size: 10px; }
-  #work-panel td select { max-width: 38px; padding-inline: 5px 12px; }
+  #work-panel td select { max-width: 38px; padding-inline: 8px 3px; }
 
   #wildlife-panel .fauna-list-head,
   #wildlife-panel .fauna-row {
@@ -348,3 +359,246 @@
 
   #wildlife-panel .fauna-actions { grid-template-columns: 62px 143px; gap: 7px; }
 }
+
+/* Domain surfaces use the same warm paper as the surrounding journal. */
+#work-panel,
+#schedule-panel,
+#assign-panel,
+#wildlife-panel,
+#research-panel {
+  color: var(--ink);
+  background: var(--paper);
+  border-color: var(--line);
+  border-radius: var(--radius, 12px);
+}
+
+#work-panel .panel-heading h2,
+#schedule-panel .panel-heading h2,
+#assign-panel .panel-heading h2,
+#wildlife-panel .panel-heading h2,
+#research-panel .panel-heading h2,
+#food-policy-dialog .panel-heading h2 {
+  font: 600 clamp(22px, 1.8vw, 26px)/1.22 'Lisiere Serif', Georgia, serif;
+  letter-spacing: -.025em;
+  color: var(--ink);
+}
+
+#work-panel > p,
+#schedule-panel > p,
+#assign-panel > p,
+#wildlife-panel .fauna-intro,
+#research-panel > p {
+  max-width: 85ch;
+  line-height: 1.5;
+}
+
+#work-panel .work-table-wrap,
+#schedule-panel .schedule-table-wrap,
+#assign-panel .work-table-wrap,
+#wildlife-panel .fauna-list {
+  background: #fff9ec;
+  border-color: var(--line);
+  border-radius: calc(var(--radius, 12px) - 3px);
+}
+
+#work-panel thead th,
+#schedule-panel .schedule-table thead th,
+#assign-panel .assignment-table thead th,
+#wildlife-panel .fauna-list-head {
+  background: var(--paper-deep);
+  color: var(--ink);
+  font-weight: 700;
+  letter-spacing: .015em;
+  border-color: var(--line);
+}
+
+#work-panel tbody tr:nth-child(even),
+#schedule-panel .schedule-table tbody tr:nth-child(even),
+#assign-panel .assignment-table tbody tr:nth-child(even),
+#wildlife-panel .fauna-row:nth-child(odd) {
+  background: #f7edda;
+}
+
+#work-panel tbody tr:hover,
+#schedule-panel .schedule-table tbody tr:hover,
+#assign-panel .assignment-table tbody tr:hover,
+#wildlife-panel .fauna-row:hover {
+  background: #f2e5cf;
+}
+
+#work-panel td,
+#schedule-panel .schedule-table td,
+#assign-panel .assignment-table td,
+#wildlife-panel .fauna-row {
+  border-color: var(--line);
+}
+
+#work-panel td select,
+#assign-panel .assignment-table select,
+#schedule-panel .schedule-copy button,
+#schedule-panel .schedule-brushes button,
+#wildlife-panel button,
+#assign-panel .assignment-actions button,
+#research-panel button,
+#food-policy-dialog button {
+  border-color: #bd9b60;
+  border-radius: 8px;
+  background: #f1dfbf;
+  color: var(--ink);
+  box-shadow: inset 0 1px #fff9e9, 0 2px 0 #b99a65;
+}
+
+#work-panel td select:hover:not(:disabled),
+#assign-panel .assignment-table select:hover:not(:disabled),
+#schedule-panel .schedule-copy button:hover:not(:disabled),
+#schedule-panel .schedule-brushes button:hover:not(:disabled),
+#wildlife-panel button:hover:not(:disabled),
+#assign-panel .assignment-actions button:hover:not(:disabled),
+#research-panel button:hover:not(:disabled),
+#food-policy-dialog button:hover:not(:disabled) {
+  background: #f8e8cb;
+  border-color: var(--accent);
+}
+
+#work-panel td select,
+#assign-panel .assignment-table select {
+  background-color: #fff9ed;
+  box-shadow: inset 0 1px #fff, 0 1px 2px #70552f24;
+}
+
+#schedule-panel .schedule-brushes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin: 0 0 14px;
+}
+
+#schedule-panel .schedule-brushes button {
+  min-width: 92px;
+  min-height: 36px;
+  padding-inline: 12px;
+}
+
+#schedule-panel .schedule-brushes button[aria-pressed=true] {
+  background: var(--forest);
+  border-color: var(--forest);
+  color: #fff8e9;
+  box-shadow: inset 0 1px #809481, 0 2px 0 #263d2e;
+}
+
+#schedule-panel .schedule-table [data-schedule-hour] {
+  border: 1px solid #d1ba8f;
+  background: #f2e4cb;
+  color: var(--ink);
+}
+
+#schedule-panel .schedule-table [data-schedule-hour]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* The four timetable choices remain readable as distinct activities. */
+#schedule-panel .schedule-table [data-assignment="anything"],
+#schedule-panel .schedule-brushes [data-schedule-brush="anything"] {
+  background: #f2e3c5;
+  border-color: #c8ae7f;
+  color: #3f4035;
+}
+#schedule-panel .schedule-table [data-assignment="work"],
+#schedule-panel .schedule-brushes [data-schedule-brush="work"] {
+  background: #ecd4c7;
+  border-color: #c6977d;
+  color: #563e36;
+}
+#schedule-panel .schedule-table [data-assignment="sleep"],
+#schedule-panel .schedule-brushes [data-schedule-brush="sleep"] {
+  background: #d9e3e9;
+  border-color: #9bb0bd;
+  color: #354c59;
+}
+#schedule-panel .schedule-table [data-assignment="recreation"],
+#schedule-panel .schedule-brushes [data-schedule-brush="recreation"] {
+  background: #deead9;
+  border-color: #a8bc9d;
+  color: #3e553c;
+}
+#schedule-panel .schedule-brushes [data-schedule-brush="anything"][aria-pressed=true] { background: #e9d2a9; }
+#schedule-panel .schedule-brushes [data-schedule-brush="work"][aria-pressed=true] { background: #dfb7a4; }
+#schedule-panel .schedule-brushes [data-schedule-brush="sleep"][aria-pressed=true] { background: #c2d5e0; }
+#schedule-panel .schedule-brushes [data-schedule-brush="recreation"][aria-pressed=true] { background: #c9dfc1; }
+#schedule-panel .schedule-brushes [aria-pressed=true] {
+  color: var(--ink);
+  box-shadow: inset 0 0 0 2px #fff9ed, 0 0 0 2px var(--accent);
+}
+#schedule-panel .schedule-table .current-hour { box-shadow: inset 0 0 0 2px var(--accent); }
+#schedule-panel .schedule-table .paint-preview { outline: 2px solid var(--forest); outline-offset: -3px; filter: brightness(1.04); }
+
+#assign-panel .policy-status,
+#assign-panel #assign-feedback,
+#wildlife-panel .fauna-health,
+#research-panel [data-research-help] {
+  color: var(--muted-ink);
+}
+
+#assign-panel .assignment-actions { flex-wrap: wrap; gap: 10px 16px; }
+#assign-panel #manage-food-policies { min-height: 38px; }
+#wildlife-panel .fauna-intro { gap: 18px; }
+#wildlife-panel .fauna-list-head { min-height: 40px; }
+#wildlife-panel .fauna-row { min-height: 86px; }
+#wildlife-panel .fauna-actions button { min-height: 36px; }
+#wildlife-panel .fauna-focus { font-weight: 600; text-align: left; }
+#wildlife-panel .fauna-hunt { font-weight: 600; color: var(--ink); }
+
+#research-panel { width: min(1040px, calc(100vw - 282px)); }
+#research-panel .research-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 13px;
+  margin: 15px 0 18px;
+}
+#research-panel .research-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: calc(var(--radius, 12px) - 2px);
+  background: #fff8ea;
+  box-shadow: 0 2px 6px #5c47221a;
+}
+#research-panel .research-card h3 {
+  margin: 0 0 7px;
+  color: var(--ink);
+  font: 600 19px/1.3 'Lisiere Serif', Georgia, serif;
+}
+#research-panel .research-card p { margin: 0 0 10px; line-height: 1.45; }
+#research-panel .research-card p:has(+ button) { color: var(--ink); font-weight: 600; }
+#research-panel .research-card progress { width: 100%; margin: auto 0 9px; }
+#research-panel .research-card button { align-self: flex-start; min-height: 36px; margin-top: auto; }
+#research-panel [data-research-pause] { min-height: 38px; margin-bottom: 10px; }
+#research-panel [data-research-workers] { color: var(--ink); font-weight: 600; }
+
+#food-policy-dialog {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius, 12px);
+  color: var(--ink);
+}
+#food-policy-dialog fieldset { border-color: var(--line); border-radius: 8px; }
+#food-policy-dialog legend, #food-policy-dialog > label { color: var(--ink); font-weight: 600; }
+#food-policy-dialog .policy-actions { gap: 9px; flex-wrap: wrap; }
+
+@media (max-width: 900px) {
+  #research-panel .research-cards { grid-template-columns: 1fr; }
+  #wildlife-panel .fauna-intro { grid-template-columns: 1fr; }
+}
+
+/* Editing a colony-wide matrix may cover the HUD; give each control room. */
+#work-panel,#schedule-panel,#assign-panel{width:min(1480px,calc(100vw - 32px));max-width:calc(100vw - 32px);z-index:12}
+#work-panel thead th{font-size:12px;line-height:1.25}
+#work-panel th:first-child{width:104px}
+#work-panel th:last-child,#work-panel .work-activity{width:142px}
+#work-panel td small{font-size:11px}
+
+#schedule-panel .schedule-brushes button[aria-pressed=true]{color:var(--ink);font-weight:700}

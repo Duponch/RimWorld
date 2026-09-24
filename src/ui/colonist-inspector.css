@@ -1,19 +1,80 @@
-/* One scrollable dossier between a fixed summary and physical actions. */
-#inspector.colonist-inspector-host{display:flex;flex-direction:column;height:min(710px,calc(100dvh - 205px));max-height:none;padding:0;overflow:hidden}
+/* A fixed summary and command shelf frame one scrollable dossier. */
+#inspector.colonist-inspector-host{display:flex;flex-direction:column;height:calc(100dvh - 205px);max-height:none;min-height:0;padding:0;overflow:hidden;border-radius:var(--radius,12px);background:var(--paper);color:var(--ink);font:15px/1.5 'Lisiere Sans',sans-serif}
 #inspector.colonist-inspector-host[hidden]{display:none}
-.colonist-inspector-tabs{position:static;display:flex;flex:none;gap:2px;min-height:46px;padding:7px 9px 0;border-bottom:1px solid var(--line);background:#e8eadb;border-radius:7px 7px 0 0}
-.colonist-inspector-tabs button{flex:1;min-width:0;border:0;border-radius:4px 4px 0 0;min-height:37px;padding:7px 4px;background:transparent;color:#69745b;font-size:14px;white-space:nowrap}
-.colonist-inspector-tabs button[aria-selected=true]{background:var(--paper);color:#2d4a32;box-shadow:inset 0 3px #5c7b48}
-.colonist-inspector-scroll{display:flex;flex-direction:column;flex:1;min-height:0;max-height:none;overflow:hidden;padding:0 18px}
-.colonist-inspector-summary{flex:none;padding:16px 0 10px;border-bottom:1px solid var(--line)}
-.colonist-inspector-summary .panel-heading{border:0;padding:0;margin:0 0 7px}.colonist-inspector-summary #selected-action{margin:0;color:#4e6347;font-size:14px}.colonist-inspector-summary #room-description{margin:5px 0 0;font-size:12px;line-height:1.4;color:var(--muted-ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.colonist-inspector-pages{flex:1;min-height:0;overflow-y:auto;padding:13px 4px 13px 0;scrollbar-gutter:stable}
-.colonist-inspector-pages>[role=tabpanel]{max-height:none;overflow:visible;min-height:0}
-.colonist-inspector-pages details,.colonist-inspector-pages .skills-inspection,.colonist-inspector-pages #social-inspection{max-height:none;overflow:visible;background:none;border:0;margin:0;padding:0}
-.colonist-inspector-pages>[role=tabpanel]>details>summary{display:none}.colonist-inspector-pages h3{font-size:15px;line-height:1.3;margin:12px 0 8px}.colonist-inspector-pages ul{padding-left:18px}.colonist-inspector-pages li{font-size:14px;line-height:1.45;margin:6px 0}
-.colonist-inspector-pages .skill-entry{padding:8px 0;border-bottom:1px solid #d2d5c1}.colonist-inspector-pages .skill-entry>summary{position:static;display:block;padding:0;background:none;color:#344c37;font-size:14px;list-style:none}.colonist-inspector-pages .skill-entry>summary::before,.colonist-inspector-pages .trait-entry>summary::before,.colonist-inspector-pages .trait-stat-entry>summary::before{content:'›';display:inline-block;width:14px;color:#758263}.colonist-inspector-pages details[open]>summary::before{transform:rotate(90deg)}.colonist-inspector-pages .skill-entry summary progress{display:block;width:calc(100% - 14px);margin:5px 0 0 14px;height:4px}.colonist-inspector-pages .skill-entry summary p{margin:0;display:inline}.colonist-inspector-pages .trait-entry>summary,.colonist-inspector-pages .trait-stat-entry>summary{position:static;padding:3px 0;background:none;list-style:none;font-size:14px;color:#4b6340}.colonist-inspector-pages [data-traits]{padding:0;list-style:none;margin:4px 0}.colonist-inspector-pages [data-traits] li{margin:3px 0}.colonist-inspector-pages .trait-entry p,.colonist-inspector-pages .trait-stat-entry p{margin:6px 0 10px 14px}.colonist-inspector-pages .trait-stat-entry{margin-bottom:10px}
-.colonist-inspector-pages p{font-size:14px;line-height:1.5;margin:8px 0}.colonist-inspector-pages #health-inspection>label{display:flex;gap:10px;align-items:center;font-size:14px;margin-bottom:12px}.colonist-inspector-pages #health-inspection>label select{flex:1;min-width:0}
-.colonist-inspector-pages .skills-list{gap:7px}.colonist-inspector-pages .skill-row{font-size:14px;min-height:23px}.colonist-inspector-pages .skill-label{font-size:14px}.colonist-inspector-pages .skill-value{font-size:14px}.colonist-inspector-pages small{font-size:12px}.colonist-inspector-pages .skills-summary{font-size:14px}
-.colonist-inspector-pages .needs{gap:10px;margin:3px 0 16px}.colonist-inspector-pages .need{font-size:14px}.colonist-inspector-pages .need-bar{height:7px;background:#d7dec8;border-radius:4px}.colonist-inspector-pages .need-bar i{background:#6b8955}
-.colonist-inspector-actions{flex:none;padding:10px 0 12px;border-top:1px solid var(--line);max-height:min(270px,38dvh);overflow:auto;display:grid;grid-template-columns:1fr 1fr;gap:7px}.colonist-inspector-actions:empty{display:none}.colonist-inspector-actions button{font-size:14px;min-height:33px;margin:0}.colonist-inspector-actions #draft-controls{display:grid;grid-template-columns:1fr 1fr;gap:7px;grid-column:1/-1}.colonist-inspector-actions #draft-controls>button{grid-column:auto;grid-row:auto;min-height:38px}.colonist-inspector-actions #draft-controls>p{grid-column:1/-1;margin:0;font-size:12px;line-height:1.4}.colonist-inspector-actions #toggle-draft[aria-pressed=true]{background:var(--forest);color:var(--paper)}.colonist-inspector-actions #draft-controls label{display:flex;align-items:center;justify-content:space-between;gap:8px;grid-column:1/-1;grid-row:auto;font-size:13px;margin:0}.colonist-inspector-actions #draft-controls select{max-width:210px;font-size:13px;padding-block:4px;min-height:29px}.colonist-inspector-actions #selected-orders{font-size:12px;line-height:1.4;margin:0;grid-column:1/-1}.colonist-inspector-actions #manage-work{width:100%;grid-column:auto;grid-row:auto}.colonist-inspector-actions #clear-orders{grid-column:1/-1}.colonist-inspector-actions #clear-orders:disabled{display:none}.colonist-inspector-actions #hygiene-controls,.colonist-inspector-actions #burial-controls{grid-column:1/-1}
-@media(max-width:1050px){.colonist-inspector-scroll{padding-inline:14px}.colonist-inspector-tabs{padding-inline:5px}.colonist-inspector-tabs button{font-size:13px;padding-inline:3px}.colonist-inspector-summary{padding-top:12px}.colonist-inspector-summary #room-description{font-size:12px}}
+.colonist-inspector-scroll{display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden}
+.colonist-inspector-summary{flex:none;padding:17px 20px 14px;border-bottom:1px solid var(--line)}
+.colonist-inspector-summary .panel-heading{padding:0;margin:0 0 9px;border:0}
+.colonist-inspector-summary .panel-heading h2{min-width:0;overflow-wrap:anywhere;color:var(--ink);font:600 24px/1.25 'Lisiere Serif',Georgia,serif}
+.colonist-inspector-summary .panel-heading button{color:var(--ink)}
+.colonist-inspector-summary #selected-action{margin:0;color:var(--ink);font-size:15px;font-weight:600;line-height:1.45}
+.colonist-inspector-pages #room-description{margin:0 0 12px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:color-mix(in srgb,var(--paper) 75%,white);color:var(--muted-ink);font-size:14px;line-height:1.45;overflow-wrap:anywhere}
+.colonist-inspector-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;flex:none;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--paper)}
+.colonist-inspector-tabs button{min-width:0;min-height:38px;padding:7px 5px;border:1px solid var(--line);border-radius:8px;background:var(--paper-deep);color:var(--ink);box-shadow:0 2px 0 color-mix(in srgb,var(--accent) 24%,transparent);font-size:14px;font-weight:600;line-height:1.2;white-space:normal;overflow-wrap:anywhere}
+.colonist-inspector-tabs button:hover:not(:disabled){background:var(--paper);border-color:var(--accent);color:var(--ink)}
+.colonist-inspector-tabs button[aria-selected=true],.colonist-inspector-tabs button[aria-selected=true]:hover:not(:disabled){background:var(--forest);border-color:var(--forest);color:var(--paper);box-shadow:0 2px 0 var(--accent)}
+.colonist-inspector-pages{flex:1;min-height:0;overflow-y:auto;padding:18px 20px 22px;scrollbar-gutter:stable}
+.colonist-inspector-pages>[role=tabpanel]{min-width:0;overflow-wrap:anywhere}
+.colonist-inspector-pages .inspector-page-title{margin:0 0 14px;color:var(--ink);font:600 20px/1.3 'Lisiere Serif',Georgia,serif}
+.colonist-inspector-pages>[role=tabpanel]>details,.colonist-inspector-pages>[role=tabpanel]>.needs,.colonist-inspector-pages>[role=tabpanel]>#recreation-tolerance,.colonist-inspector-pages>[role=tabpanel]>section,.colonist-inspector-pages>[role=tabpanel]>div:not(.needs){display:block;max-height:none;margin:0 0 12px;padding:14px;overflow:visible;border:1px solid var(--line);border-radius:10px;background:color-mix(in srgb,var(--paper) 75%,white)}
+.colonist-inspector-pages>[role=tabpanel]>[hidden]{display:none}
+.colonist-inspector-pages>[role=tabpanel]>details>summary{display:none}
+.colonist-inspector-pages h3:not(.inspector-page-title){margin:16px 0 8px;color:var(--ink);font:600 17px/1.3 'Lisiere Serif',Georgia,serif}
+.colonist-inspector-pages p,.colonist-inspector-pages li,.colonist-inspector-pages label,.colonist-inspector-pages small{color:var(--ink);font-size:14px;line-height:1.5}
+.colonist-inspector-pages p{margin:8px 0}
+.colonist-inspector-pages .muted,.colonist-inspector-pages small{color:var(--muted-ink)}
+.colonist-inspector-pages ul{padding-left:18px}
+.colonist-inspector-pages li{margin:7px 0}
+.colonist-inspector-pages details details{max-height:none;overflow:visible}
+.colonist-inspector-pages details details>summary{color:var(--ink);font-size:14px;font-weight:600;line-height:1.4}
+.colonist-inspector-pages .skill-entry{padding:9px 0;border-bottom:1px solid var(--line)}
+.colonist-inspector-pages .skill-entry:last-of-type{border-bottom:0}
+.colonist-inspector-pages .skill-entry>summary,.colonist-inspector-pages .trait-entry>summary,.colonist-inspector-pages .trait-stat-entry>summary{position:static;padding:0;background:transparent;list-style:none}
+.colonist-inspector-pages .skill-entry>summary::before,.colonist-inspector-pages .trait-entry>summary::before,.colonist-inspector-pages .trait-stat-entry>summary::before{content:'›';display:inline-block;width:16px;color:var(--accent)}
+.colonist-inspector-pages details[open]>summary::before{transform:rotate(90deg)}
+.colonist-inspector-pages .skill-entry summary progress{display:block;width:calc(100% - 16px);margin:7px 0 0 16px;height:6px;accent-color:var(--forest)}
+.colonist-inspector-pages .skill-entry summary p{display:inline;margin:0}
+.colonist-inspector-pages .trait-entry,.colonist-inspector-pages .trait-stat-entry{padding:5px 0}
+.colonist-inspector-pages [data-traits]{padding-left:0;list-style:none}
+.colonist-inspector-pages .trait-entry p,.colonist-inspector-pages .trait-stat-entry p{margin:7px 0 9px 16px;color:var(--muted-ink)}
+.colonist-inspector-pages .skills-list{gap:8px}
+.colonist-inspector-pages .skill-row,.colonist-inspector-pages .skill-label,.colonist-inspector-pages .skill-value,.colonist-inspector-pages .skills-summary{font-size:14px}
+.colonist-inspector-pages .needs{gap:11px}
+.colonist-inspector-pages .needs label{gap:8px;flex-wrap:wrap;font-weight:600}
+.colonist-inspector-pages .needs meter{min-height:9px;accent-color:var(--forest)}
+.colonist-inspector-pages #health-inspection>label{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin:12px 0}
+.colonist-inspector-pages #health-inspection>label select{flex:1;min-width:155px}
+.colonist-inspector-pages #equipment-apparel p,.colonist-inspector-pages #social-opinions li{padding:10px 0;border-bottom:1px solid var(--line)}
+.colonist-inspector-pages #equipment-apparel button{display:block;margin-top:8px}
+.colonist-inspector-pages #social-opinions{padding-left:0;list-style:none}
+.colonist-inspector-pages #social-opinions p{color:var(--muted-ink)}
+.colonist-inspector-pages button{max-width:100%;min-height:36px;border-color:var(--accent);border-radius:8px;background:var(--paper-deep);color:var(--ink);box-shadow:0 2px 0 color-mix(in srgb,var(--accent) 24%,transparent)}
+.colonist-inspector-pages button:hover:not(:disabled){background:var(--paper);border-color:var(--accent);color:var(--ink)}
+.colonist-inspector-actions{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:7px 10px;flex:none;padding:11px 20px 12px;overflow:visible;border-top:1px solid var(--line);background:var(--paper)}
+.colonist-inspector-actions:empty{display:none}
+.colonist-inspector-actions button{width:100%;min-width:0;min-height:36px;margin:0;padding:6px 9px;border:1px solid var(--accent);border-radius:8px;background:var(--paper-deep);color:var(--ink);box-shadow:0 2px 0 color-mix(in srgb,var(--accent) 24%,transparent);font-size:14px;font-weight:600;line-height:1.2;white-space:normal;overflow-wrap:anywhere}
+.colonist-inspector-actions button:hover:not(:disabled){background:var(--paper);border-color:var(--accent);color:var(--ink)}
+.colonist-inspector-actions #draft-controls{display:contents}
+.colonist-inspector-actions #toggle-draft{grid-column:1;grid-row:1}
+.colonist-inspector-actions #inspector-hostility-label{display:flex;align-items:center;justify-content:space-between;gap:8px;grid-column:2;grid-row:1;min-width:0;font-size:14px;font-weight:600;white-space:nowrap}
+.colonist-inspector-actions #inspector-hostility{flex:none;width:95px;min-height:36px;padding:5px 22px 5px 7px;font-size:14px}
+.colonist-inspector-actions #manage-work{grid-column:1;grid-row:2}
+.colonist-inspector-actions #selected-orders{grid-column:2;grid-row:2;align-self:center;margin:0;color:var(--muted-ink);font-size:14px;line-height:1.3;overflow-wrap:anywhere}
+.colonist-inspector-actions #draft-help{grid-column:1/-1;grid-row:3;margin:0;color:var(--muted-ink);font-size:14px;line-height:1.35;overflow-wrap:anywhere}
+.colonist-inspector-actions #clear-orders{grid-column:2;grid-row:3}
+.colonist-inspector-actions:has(#clear-orders:not(:disabled)) #draft-help{grid-column:1}
+.colonist-inspector-actions #shoot-help{grid-column:1/-1;margin:0;color:var(--muted-ink);font-size:14px;line-height:1.35;overflow-wrap:anywhere}
+.colonist-inspector-actions #shoot-help:empty{display:none}
+.colonist-inspector-actions:has(#stop-draft:not([hidden])){grid-template-columns:repeat(3,minmax(0,1fr))}
+.colonist-inspector-actions:has(#stop-draft:not([hidden])) #stop-draft{grid-column:2;grid-row:1}
+.colonist-inspector-actions:has(#stop-draft:not([hidden])) #fire-at-will{grid-column:3;grid-row:1}
+.colonist-inspector-actions:has(#stop-draft:not([hidden])) #target-shot{grid-column:1;grid-row:2}
+.colonist-inspector-actions:has(#stop-draft:not([hidden])) #target-melee{grid-column:2;grid-row:2}
+.colonist-inspector-actions:has(#stop-draft:not([hidden])) #manage-work{grid-column:3;grid-row:2}
+.colonist-inspector-actions:has(#stop-draft:not([hidden])) #clear-orders{grid-column:1;grid-row:3}
+.colonist-inspector-actions:has(#stop-draft:not([hidden])) #selected-orders{grid-column:2/-1;grid-row:3}
+.colonist-inspector-actions:has(#stop-draft:not([hidden])) #draft-help{grid-column:1/-1;grid-row:4}
+.colonist-inspector-actions:has(#stop-draft:not([hidden])) #shoot-help{grid-column:1/-1;grid-row:5}
+.colonist-inspector-actions #clear-orders:disabled{display:none}
+.colonist-inspector-actions #toggle-draft[aria-pressed=true]{background:var(--forest);border-color:var(--forest);color:var(--paper)}
+.colonist-inspector-actions [hidden]{display:none!important}
+@media(max-width:1050px){.colonist-inspector-summary,.colonist-inspector-tabs,.colonist-inspector-pages,.colonist-inspector-actions{padding-inline:15px}}

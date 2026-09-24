@@ -1,5 +1,7 @@
 # Publication Netlify
 
+V100 : déploiement de production `6ab5a9a7e4d26356179e4f23`, 25 septembre 2026 (date locale). [Refonte visuelle et contrôle du bundle public](../history/validation-interface-v100.md).
+
 V99 : déploiement de production `6ab5a08e252bef16783b20b9`, 25 septembre 2026 (date locale). [Validation des interactions et contrôle public](../history/validation-interaction-v99.md).
 
 Le site du jeu est **https://lisiere-duponch.netlify.app**, projet Netlify `lisiere-duponch`, identifiant `9c1b98b5-68a5-4242-b1ec-3bc193b93445`, compte `duponch`. Aucun autre site du compte n'est modifiÃ©.

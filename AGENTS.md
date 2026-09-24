@@ -1,5 +1,13 @@
 # Travail sur Lisière
 
+## Interface crème V100
+- La nouvelle capture utilisateur remplace l’habillage V93/V94 : papier crème, encre forêt, contours miel, boutons beige délimités ; conserver les illustrations/atlas et les curseurs sémantiques V95. Lire `docs/development/visual-identity.md` et `docs/history/validation-interface-v100.md`.
+- Ressources : **aucun support/fond/bordure**, 216 px, icône/nom/quantité. Travail/Horaires/Affectations utilisent la largeur nécessaire même au-dessus du HUD. Architecte garde ses dimensions entre catégories. Activations historiques dans le flux des alertes.
+- Le contexte de pièce appartient à Besoins pour un colon ; `RoomInspection` peut créer tardivement son nœud près du résumé, puis `refreshColonistInspectorLayout` le déplace explicitement. Une seule zone de lecture défilante. Fiche de case : faits hiérarchisés, Environnement repliable, commandes réelles.
+- Contrôle natif groupé 1366×768/1440×1000/1920×1080 et reprise des neuf interactions V99 ; aucun pilote long pour une présentation. Les captures attendent fontes et atlas : un rectangle vide avant chargement d’image ne prouve pas un pictogramme absent.
+- Identifiants GPU disjoints : capuche `PARKA_HOOD_DYE=-6`, fusil/couteau transportés 70/71. Les anciens -4 et 31/32 partageaient ceux du fusil/vêtements ; ne pas réintroduire ces collisions. Aucun numéro métier/sauvegarde changé.
+
+
 ## Sélection et repères V99
 - Lire `docs/development/interaction-feedback.md` et sa recherche Core 1.6.4871. Animaux cliquables depuis leur pose GPU, Info/Santé et chasse ; double clic par groupe équivalent, rectangle privilégiant les colons. Social/Journal animaux et groupes d’objets restent absents ou partiels.
 - Mobilisation R et commandes visibles sans chevauchement ; clic droit au sol déplace, sur animal/hostile propose tir/mêlée, sans attaque alliée implicite. File d’attaques absente. Les membres indisponibles sont explicitement filtrés avant validation atomique du worker.

@@ -26,7 +26,8 @@ export function installVisualIdentity(root: HTMLElement): void {
   }
   const tabs: Record<string, UiIcon> = { architect:'home', work:'chop', schedule:'clock', assign:'people', animals:'leaf', wildlife:'leaf', research:'research', quests:'layers', world:'leaf', history:'layers', factions:'people', menu:'layers' };
   for (const button of root.querySelectorAll<HTMLElement>('.main-tabs [data-panel]')) {
-    const icon = document.createElement('span'); decorate(icon, tabs[button.dataset.panel!] ?? 'layers'); button.prepend(icon);
+    const label = document.createElement('span'); label.className = 'tab-label'; label.textContent = button.textContent;
+    const icon = document.createElement('span'); decorate(icon, tabs[button.dataset.panel!] ?? 'layers'); button.replaceChildren(icon, label);
   }
   for (const row of root.querySelectorAll<HTMLElement>('#resources > .resource')) {
     const name = row.querySelector<HTMLElement>('span:not(.resource-symbol)');

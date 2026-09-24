@@ -1,4 +1,18 @@
-# Identité visuelle et inspection — V95
+# Identité visuelle et inspection — V100
+
+## Référence actuelle V100
+
+La capture fournie le 25 septembre remplace l’habillage précédent : papier crème `#f8edd8`, papier ombré `#e9d7b8`, encre forêt `#293d39`, texte secondaire `#6e7161`, filet miel `#d8c7a6` et accent `#ab813d`. Titres Literata affirmés, texte Source Sans 3, cadres géométriques arrondis et boutons beige légèrement en relief. Les illustrations, atlas et curseurs existants sont réutilisés sans nouveau cadre raster étiré.
+
+- **Ressources sans fond, bordure ou ombre de panneau**, largeur 216 px conservée. Icône, libellé et quantité ; un halo fin du texte garantit la lecture sur le paysage. Les anciens titre/pied et indications de chantier ne sont plus affichés dans ce registre.
+- Barre inférieure crème, boutons individuels visibles, pictogrammes et libellés séparés. Les commandes futures restent grisées. Focus clavier intérieur discret, noms accessibles conservés.
+- Inspecteur de case : illustration de catégorie, titre, position, faits avec valeurs fortes, état des ordres et actions. Environnement repliable ; aucune valeur ni action fictive reprise du contenu d’exemple.
+- Dossiers humains/animaux : résumé, onglets, sections de lecture, commandes distinctes. Une seule lecture défilante pour le colon ; contexte de pièce rangé dans Besoins. Les nœuds et gestionnaires sont déplacés, sans copie.
+- Travail/Horaires/Affectations peuvent couvrir le HUD pour disposer de toute la largeur. Colonnes stables, priorités alignées, sélection native personnalisée, Copier/Coller côte à côte, quatre couleurs sémantiques d’horaire. Architecte garde un cadre stable entre catégories.
+- Accueil, création, chargement, recherche, commerce et dialogues utilisent la même palette. Les activations des événements historiques suivent le flux des alertes au lieu de positions fixes qui les recouvraient.
+
+`visual-identity.css` définit les composants communs ; les feuilles des domaines gardent leur géométrie. `cell-inspector` ne reconstruit ses faits que quand le texte change. Aucun traitement DOM ajouté à la boucle de rendu par image, aucun flou d’arrière-plan requis par le nouveau thème. [Validation et limites](../history/validation-interface-v100.md).
+
 
 V99 : [inspection animale et actions](interaction-feedback.md). Dossier Info/Santé cohérent avec les dossiers existants ; commandes de mobilisation en cases distinctes, sans superposition. Barre dorée proche et chemin bleu réel, adaptés au rendu 3D, sans DOM par acteur.
 

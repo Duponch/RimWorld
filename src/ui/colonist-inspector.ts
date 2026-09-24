@@ -18,14 +18,14 @@ interface InspectorTabDefinition {
 
 const TAB_DEFINITIONS: readonly InspectorTabDefinition[] = Object.freeze([
   { id: 'bio', label: 'Bio', selectors: ['.skills-inspection'] },
-  { id: 'needs', label: 'Besoins', selectors: ['.needs', '#recreation-tolerance', '#mood-inspection'] },
+  { id: 'needs', label: 'Besoins', selectors: ['.needs', '#recreation-tolerance', '#mood-inspection', '#room-description'] },
   { id: 'health', label: 'Santé', selectors: ['#health-inspection', '#hygiene-controls', '#burial-controls'] },
   { id: 'gear', label: 'Équipement', selectors: ['#equipment-details'] },
   { id: 'social', label: 'Social', selectors: ['#social-inspection'] },
   { id: 'prisoner', label: 'Prisonnier', selectors: ['#prisoner-inspection'] },
 ]);
 
-const SUMMARY_SELECTORS = ['.panel-heading', '#selected-action', '#room-description'] as const;
+const SUMMARY_SELECTORS = ['.panel-heading', '#selected-action'] as const;
 const ACTION_SELECTORS = ['#draft-controls', '#manage-work', '#selected-orders', '#clear-orders'] as const;
 
 export function colonistInspectorLayoutContract(): {
@@ -65,7 +65,7 @@ export function colonistInspectorState(
  * without requiring a second browser DOM in the unit-test process. */
 export function colonistInspectorScaffold(prisoner: boolean): string {
   const tabs = colonistInspectorTabs(prisoner);
-  return `<div class="colonist-inspector-tabs" role="tablist" aria-label="Dossiers du personnage">${tabs.map(tab => `<button type="button" role="tab" id="colonist-tab-${tab.id}" aria-controls="colonist-panel-${tab.id}" aria-selected="false" tabindex="-1" data-colonist-tab="${tab.id}">${tab.label}</button>`).join('')}</div><div class="colonist-inspector-scroll"><section class="colonist-inspector-summary" aria-label="Résumé du personnage sélectionné"></section><div class="colonist-inspector-pages">${tabs.map(tab => `<section role="tabpanel" id="colonist-panel-${tab.id}" aria-labelledby="colonist-tab-${tab.id}" tabindex="0" data-colonist-panel="${tab.id}" hidden></section>`).join('')}</div><section class="colonist-inspector-actions" aria-label="Actions du personnage"></section></div>`;
+  return `<div class="colonist-inspector-scroll"><section class="colonist-inspector-summary" aria-label="Résumé du personnage sélectionné"></section><div class="colonist-inspector-tabs" role="tablist" aria-label="Dossiers du personnage">${tabs.map(tab => `<button type="button" role="tab" id="colonist-tab-${tab.id}" aria-controls="colonist-panel-${tab.id}" aria-selected="false" tabindex="-1" data-colonist-tab="${tab.id}">${tab.label}</button>`).join('')}</div><div class="colonist-inspector-pages">${tabs.map(tab => `<section role="tabpanel" id="colonist-panel-${tab.id}" aria-labelledby="colonist-tab-${tab.id}" tabindex="0" data-colonist-panel="${tab.id}" hidden><h3 class="inspector-page-title">${tab.label}</h3></section>`).join('')}</div><section class="colonist-inspector-actions" aria-label="Actions du personnage"></section></div>`;
 }
 
 function directMatches(root: HTMLElement, selector: string): HTMLElement[] {
@@ -85,10 +85,13 @@ function moveMatches(root: HTMLElement, selectors: readonly string[], destinatio
  * the domain-specific inspection helpers. */
 export function refreshColonistInspectorLayout(root: HTMLElement): void {
   const context = root.querySelector<HTMLElement>('#room-description');
-  if (context) context.title = context.textContent ?? '';
   const summary = root.querySelector<HTMLElement>('.colonist-inspector-summary');
   const actions = root.querySelector<HTMLElement>('.colonist-inspector-actions');
   if (!summary || !actions) return;
+  // RoomInspection inserts next to the action even after the summary is mounted.
+  // Rehome this late-created node explicitly; normal collection skips summary nodes.
+  const needs = root.querySelector<HTMLElement>('[data-colonist-panel="needs"]');
+  if (context && needs && context.parentElement !== needs) needs.append(context);
   moveMatches(root, SUMMARY_SELECTORS, summary);
   moveMatches(root, ACTION_SELECTORS, actions);
   for (const definition of TAB_DEFINITIONS) {

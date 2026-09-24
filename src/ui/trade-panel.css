@@ -1,1 +1,108 @@
-.trade-dialog{width:min(940px,94vw);max-height:90vh;padding:24px;background:#172128;color:#ece9dd;border:1px solid #8f987d;overflow:auto}.trade-dialog::backdrop{background:#0009}.trade-dialog select,.trade-dialog button{margin:6px;padding:9px}.trade-dialog table{width:100%;border-collapse:collapse;margin:16px 0}.trade-dialog th,.trade-dialog td{text-align:left;padding:7px;border-bottom:1px solid #465049}.trade-dialog input[type=number]{width:70px}.trade-dialog #trade-error{color:#ffb39e}.trade-dialog #trade-total{font-weight:bold}.trade-dialog #trade-confirm{background:#536d3c}
+.trade-dialog {
+  box-sizing: border-box;
+  width: min(940px, calc(100vw - 48px));
+  max-height: min(90dvh, 880px);
+  padding: 25px 28px;
+  overflow: auto;
+  border: 1px solid #c7ac7d;
+  border-radius: var(--radius, 12px);
+  background: var(--paper);
+  box-shadow: 0 22px 70px #0c201a78, inset 0 1px #fff9ee;
+  color: var(--ink);
+  font: 15px/1.45 'Lisiere Sans', sans-serif;
+}
+.trade-dialog::backdrop { background: #0b1d19a8; }
+.trade-dialog h2 {
+  margin: 0 0 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  font: 600 clamp(22px, 2vw, 26px)/1.25 'Lisiere Serif', Georgia, serif;
+}
+.trade-dialog select {
+  min-width: min(210px, 100%);
+  max-width: calc(50% - 10px);
+  min-height: 39px;
+  margin: 0 9px 12px 0;
+  padding: 7px 30px 7px 11px;
+  border: 1px solid #c6ae83;
+  border-radius: 8px;
+  background-color: #fff9ee;
+  color: var(--ink);
+}
+.trade-dialog button {
+  min-height: 39px;
+  margin: 0 9px 10px 0;
+  padding: 8px 15px;
+  border: 1px solid #b99559;
+  border-radius: 8px;
+  background: #f1dfbf;
+  box-shadow: inset 0 1px #fff9eb, 0 2px 0 #b99a65;
+  color: var(--ink);
+  font-weight: 600;
+}
+.trade-dialog button:hover:not(:disabled) { background: #f8e8ca; border-color: var(--accent); }
+.trade-dialog button:disabled { opacity: .55; box-shadow: none; }
+.trade-dialog button:focus-visible,
+.trade-dialog select:focus-visible,
+.trade-dialog input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.trade-dialog #trade-contact { margin-left: 0; }
+.trade-dialog p { margin: 7px 0 12px; color: var(--ink); }
+.trade-dialog p.muted { color: var(--muted-ink); }
+.trade-dialog #trade-total {
+  margin: 17px 0 12px;
+  padding: 11px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff8e9;
+  color: var(--ink);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.trade-dialog #trade-shortfall { display: block; margin: 9px 0 14px; color: var(--ink); font-weight: 600; }
+.trade-dialog #trade-shortfall[hidden],
+.trade-dialog #trade-confirm[hidden] { display: none; }
+.trade-dialog #trade-error { color: #8f3d2f; font-weight: 600; }
+.trade-dialog #trade-confirm { background: #e7c891; border-color: #a97a32; font-weight: 700; }
+.trade-dialog #trade-confirm:hover:not(:disabled) { background: #f0d4a1; border-color: #926525; }
+.trade-dialog #trade-confirm::after { content: '›'; margin-left: 10px; font-size: 19px; line-height: 0; }
+.trade-dialog #trade-close { background: #f7ead2; }
+.trade-dialog table {
+  width: 100%;
+  margin: 17px 0;
+  border: 1px solid var(--line);
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 9px;
+  overflow: hidden;
+  background: #fff9ec;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.trade-dialog table[hidden] { display: none; }
+.trade-dialog th,
+.trade-dialog td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: middle; }
+.trade-dialog th { background: var(--paper-deep); color: var(--ink); font-size: 13px; font-weight: 700; }
+.trade-dialog tr:nth-child(odd):not(:first-child) { background: #f8edda; }
+.trade-dialog tr:last-child td { border-bottom: 0; }
+.trade-dialog td:first-child { min-width: 160px; font-weight: 600; }
+.trade-dialog td:nth-child(2) { color: var(--muted-ink); }
+.trade-dialog td:nth-child(n+3) { white-space: nowrap; }
+.trade-dialog input[type=number] {
+  box-sizing: border-box;
+  width: 76px;
+  min-height: 34px;
+  padding: 5px 7px;
+  border: 1px solid #c6ae83;
+  border-radius: 7px;
+  background: #fffaf0;
+  color: var(--ink);
+  text-align: right;
+}
+@media (max-width: 760px) {
+  .trade-dialog { width: calc(100vw - 24px); padding: 18px; }
+  .trade-dialog select { min-width: 0; width: calc(50% - 12px); }
+  .trade-dialog table { font-size: 13px; }
+  .trade-dialog th, .trade-dialog td { padding: 7px 5px; }
+  .trade-dialog td:first-child { min-width: 95px; overflow-wrap: anywhere; }
+}

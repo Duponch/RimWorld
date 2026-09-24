@@ -3,7 +3,9 @@ import * as THREE from 'three/webgpu';
 import { createWorld } from '../src/sim/engine';
 import type { World,MaterialPile } from '../src/sim/types';
 import { WEAPON_VISUALS } from '../src/render/weapon-shape';
-import { pawnGeometry,cargoGeometry } from '../src/render/pawn-geometry';
+import { APPAREL_CARGO } from '../src/render/character-apparel';
+import { BIOME_CARGO } from '../src/render/biome-cargo';
+import { pawnGeometry,cargoGeometry,PARKA_HOOD_DYE } from '../src/render/pawn-geometry';
 import { pileParts } from '../src/render/pile-parts';
 import { equipmentDescription,equipmentProjection } from '../src/render/character-equipment';
 import { PawnLayer } from '../src/render/PawnLayer';
@@ -18,7 +20,10 @@ test('the three weapons share distinct authored ground/cargo/equipment shapes in
   const body=pawnGeometry(),cargo=cargoGeometry(),dye=body.getAttribute('dye'),kind=cargo.getAttribute('cargoKind');
   const count=(attribute:THREE.BufferAttribute|THREE.InterleavedBufferAttribute,value:number)=>Array.from({length:attribute.count},(_,i)=>attribute.getX(i)).filter(v=>v===value).length;
   const spans:number[]=[];
+  expect(WEAPON_VISUALS.some(weapon=>Number(weapon.dye)===PARKA_HOOD_DYE)).toBe(false);
+  expect(count(dye,PARKA_HOOD_DYE)).toBe(36);
   for(const weapon of WEAPON_VISUALS) {
+    expect([...Object.values(APPAREL_CARGO),...Object.values(BIOME_CARGO)]).not.toContain(weapon.cargo);
     expect(count(dye,weapon.dye)).toBe(weapon.parts.length*36);expect(count(kind,weapon.cargo)).toBe(weapon.parts.length*36);
     const ground=pileParts([{x:5,z:5,item:weapon.item,kind:'weapon',quantity:1,supplied:false}]);
     expect(ground).toHaveLength(weapon.parts.length);

@@ -7,7 +7,7 @@ import { apparelProjection,apparelAppearance,APPAREL_CARGO } from './character-a
 import { coreTimeSeconds,localTimeSeconds } from '../bridge/clock-rate';
 import { growPawnBuffers } from './pawn-buffers';
 import { isColonist } from '../sim/affiliation';
-import { pawnGeometry,cargoGeometry } from './pawn-geometry';
+import { pawnGeometry,cargoGeometry,PARKA_HOOD_DYE } from './pawn-geometry';
 import { equipmentProjection } from './character-equipment';
 import { WEAPON_VISUALS,weaponVisual } from './weapon-shape';
 import { doorAt } from '../sim/door-rules';
@@ -121,12 +121,12 @@ export class PawnLayer {
       }
       If(attribute('dye','float').equal(-3).and(attribute('aEquipment','vec4').y.notEqual(2).and(attribute('aEquipment','vec4').y.notEqual(3))),()=>{animated.assign(vec3(0));});
       If(attribute('dye','float').equal(-2).and(attribute('aEquipment','vec4').z.lessThan(.5)),()=>{animated.assign(vec3(0));});
-      If(attribute('dye','float').equal(-4).and(attribute('aEquipment','vec4').y.notEqual(4)),()=>{animated.assign(vec3(0));});
+      If(attribute('dye','float').equal(PARKA_HOOD_DYE).and(attribute('aEquipment','vec4').y.notEqual(4)),()=>{animated.assign(vec3(0));});
       const cy = cos(pose.w), sy = sin(pose.w);
       return vec3(animated.x.mul(cy).add(animated.z.mul(sy)), animated.y, animated.z.mul(cy).sub(animated.x.mul(sy))).mul(PAWN_MODEL_SCALE).add(pose.xyz);
     })();
     mat.colorNode = Fn(()=>{const tint=mix(attribute('color','vec3'),attribute('aTint','vec3'),attribute('dye','float').max(0)).toVar();
-      If(attribute('dye','float').equal(-3).or(attribute('dye','float').equal(-4)),()=>tint.assign(attribute('aTint','vec3')));
+      If(attribute('dye','float').equal(-3).or(attribute('dye','float').equal(PARKA_HOOD_DYE)),()=>tint.assign(attribute('aTint','vec3')));
       If(attribute('aEquipment','vec4').y.equal(2).and(attribute('boneId','float').greaterThanEqual(2)).and(attribute('boneId','float').lessThanEqual(3)),()=>tint.assign(vec3(.761,.479,.319)));
       const legs=attribute('boneId','float').greaterThanEqual(4).and(attribute('dye','float').equal(0));
       const cloth=new THREE.Color(0xd8c8a2),leather=new THREE.Color(0xad8a61);

@@ -79,7 +79,7 @@ export function animalInspectorScaffold(): string {
   const tabs: readonly { id: AnimalInspectorTab; label: string }[] = [
     { id: 'info', label: 'Info' }, { id: 'health', label: 'Santé' },
   ];
-  return `<div class="animal-inspector-tabs" role="tablist" aria-label="Dossiers de l’animal">${tabs.map(tab => `<button type="button" role="tab" id="animal-tab-${tab.id}" aria-controls="animal-panel-${tab.id}" aria-selected="false" tabindex="-1" data-animal-tab="${tab.id}">${tab.label}</button>`).join('')}</div><div class="animal-inspector-scroll"><header class="animal-inspector-summary"><div class="panel-heading"><h2 data-animal-title></h2><button type="button" data-animal-close aria-label="Fermer l’inspection">×</button></div><p data-animal-identity></p><p data-animal-activity></p><p data-animal-position></p></header><div class="animal-inspector-pages">${tabs.map(tab => `<section role="tabpanel" id="animal-panel-${tab.id}" aria-labelledby="animal-tab-${tab.id}" tabindex="0" data-animal-panel="${tab.id}" hidden><div data-animal-content="${tab.id}"></div></section>`).join('')}</div><div class="animal-inspector-actions"><label><input type="checkbox" data-animal-hunt> Chasser</label></div></div>`;
+  return `<div class="animal-inspector-scroll"><header class="animal-inspector-summary"><div class="panel-heading"><h2 data-animal-title></h2><button type="button" data-animal-close aria-label="Fermer l’inspection">×</button></div><p data-animal-identity></p><p data-animal-activity></p><p data-animal-position></p></header><div class="animal-inspector-tabs" role="tablist" aria-label="Dossiers de l’animal">${tabs.map(tab => `<button type="button" role="tab" id="animal-tab-${tab.id}" aria-controls="animal-panel-${tab.id}" aria-selected="false" tabindex="-1" data-animal-tab="${tab.id}">${tab.label}</button>`).join('')}</div><div class="animal-inspector-pages">${tabs.map(tab => `<section role="tabpanel" id="animal-panel-${tab.id}" aria-labelledby="animal-tab-${tab.id}" tabindex="0" data-animal-panel="${tab.id}" hidden><div data-animal-content="${tab.id}"></div></section>`).join('')}</div><div class="animal-inspector-actions"><label><input type="checkbox" data-animal-hunt><span>Chasser</span></label></div></div>`;
 }
 
 function selectTab(root: HTMLElement, tab: AnimalInspectorTab): void {
@@ -117,15 +117,32 @@ export function createAnimalInspector(root: HTMLElement, options: AnimalInspecto
   selectTab(root, 'info');
 }
 
-function renderLines(root: HTMLElement, key: AnimalInspectorTab, lines: readonly string[]): void {
+function renderSections(root: HTMLElement, key: AnimalInspectorTab, groups: readonly { title: string; lines: readonly string[] }[]): void {
   const container = root.querySelector<HTMLElement>(`[data-animal-content="${key}"]`)!;
-  const signature = lines.join('\n');
+  const signature = JSON.stringify(groups);
   if (container.dataset.lines === signature) return;
   container.dataset.lines = signature;
-  container.replaceChildren(...lines.map(line => {
-    const paragraph = document.createElement('p');
-    paragraph.textContent = line;
-    return paragraph;
+  container.replaceChildren(...groups.map(group => {
+    const section = document.createElement('section');
+    section.className = 'animal-inspector-section';
+    const heading = document.createElement('h3');
+    heading.textContent = group.title;
+    const facts = document.createElement('div');
+    facts.className = 'animal-inspector-facts';
+    for (const line of group.lines) {
+      const paragraph = document.createElement('p');
+      paragraph.className = 'animal-inspector-fact';
+      const separator = line.indexOf(' : ');
+      if (separator < 0) paragraph.textContent = line;
+      else {
+        const label = document.createElement('strong');
+        label.textContent = line.slice(0, separator);
+        paragraph.append(label, document.createTextNode(` : ${line.slice(separator + 3)}`));
+      }
+      facts.append(paragraph);
+    }
+    section.append(heading, facts);
+    return section;
   }));
 }
 
@@ -141,7 +158,10 @@ export function updateAnimalInspector(root: HTMLElement, world: World, animalId:
   const hunt = root.querySelector<HTMLInputElement>('[data-animal-hunt]')!;
   hunt.checked = view.hunted;
   hunt.disabled = !view.canHunt;
-  renderLines(root, 'info', [...view.species, ...view.needs]);
-  renderLines(root, 'health', view.health);
+  renderSections(root, 'info', [
+    { title: 'Espèce', lines: view.species },
+    { title: 'Besoins', lines: view.needs },
+  ]);
+  renderSections(root, 'health', [{ title: 'État de santé', lines: view.health }]);
   return true;
 }
