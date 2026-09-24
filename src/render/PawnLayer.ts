@@ -64,7 +64,7 @@ export class PawnLayer {
     geometry.setAttribute('aTint', new THREE.InstancedBufferAttribute(new Float32Array(count * 3), 3));
     geometry.setAttribute('aEquipment',new THREE.InstancedBufferAttribute(new Float32Array(count*4),4));
     geometry.setAttribute('aCargo', new THREE.InstancedBufferAttribute(new Float32Array(count * 2), 2));
-    for (const name of ['aFrom', 'aTo', 'aMotion', 'aTint', 'aCargo', 'aTravel', 'aEquipment']) (geometry.getAttribute(name) as THREE.InstancedBufferAttribute).setUsage(THREE.DynamicDrawUsage);
+    for (const name of ['aFrom', 'aTo', 'aMotion', 'aTint', 'aCargo', 'aTravel', 'aEquipment']) (geometry.getAttribute(name) as THREE.InstancedBufferAttribute).setUsage(THREE.StaticDrawUsage);
     const mat = material(0xffffff);
     this.configure?.(mat);
     mat.positionNode = Fn(() => {

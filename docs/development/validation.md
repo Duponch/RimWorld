@@ -1,4 +1,6 @@
-# Validation courante — V94
+# Validation courante — V95
+
+V95 : [curseurs sémantiques et performance](../history/validation-performance-v95.md), sans nouvelle mécanique ni migration. Conservation, refus atomiques, images comparées et mesures natives sont distingués.
 
 V94 : [plantes 3D et interface stable](../history/validation-interface-v94.md), 17 contrôles courts, build, parcours natif principal, commerce, A/B paysage, minage complet et contrôle public Netlify réussis. Les touffes sont regroupées dans un lot instancié ; les panneaux et neuf curseurs sont vérifiés aux dimensions réelles. Le défaut ancien d'ordre prioritaire après dégagement d'un arbre reste explicitement ouvert dans ROADMAP.
 

@@ -69,6 +69,7 @@ import { isPlant } from './sim/plants';
 import './style.css';
 import './ui/colonist-inspector.css';
 import './ui/visual-identity.css';
+import './ui/cursors.css';
 import { installVisualIdentity, portraitIndex } from './ui/visual-identity';
 import { installArchitectIcons } from './ui/architect-icons';
 import { syncToolCursor } from './ui/tool-cursors';
@@ -220,6 +221,7 @@ function setPanel(panel: Panel, preserveTool = false) {
     const cell = selectedCell ?? snapshot.pawns.find(p => p.id === selectedPawn);
     if (cell) roomInspection.update(el('inspector'), snapshot, cell);
   }
+  if (panel === 'work' && snapshot) updateWorkPanel(snapshot);
 }
 function applyTool(tool: Tool) {
   shootingControls.cancel();
@@ -440,6 +442,15 @@ function rebuildPawns(world: World) {
     const activity = document.createElement('td'); activity.className = 'work-activity'; row.append(activity); return row;
   }));
 }
+function updateWorkPanel(world: World): void {
+  for (const pawn of world.pawns.filter(isColonist)) {
+    const row = document.querySelector<HTMLElement>(`[data-worker="${pawn.id}"]`);
+    if (!row) continue;
+    updateWorkSkills(row,pawn);
+    row.querySelector('.work-activity')!.textContent = actionLabel(pawn);
+    for (const select of row.querySelectorAll<HTMLSelectElement>('select')) select.value = String(pawn.priorities[select.dataset.work as WorkType]);
+  }
+}
 function renderState() {
   if (!snapshot) return;
   const world = snapshot;
@@ -486,11 +497,8 @@ function renderState() {
     (button.querySelector('.portrait-vest') as HTMLElement).hidden=!look.vest;
     button.querySelector('.pawn-symbol')!.textContent = pawn.state==='dead'?'†':pawn.state==='downed'?'!':pawn.mental?.crisis?'↝':pawn.state === 'sleeping' ? 'Z' : pawn.state === 'hungry' ? '!' : '';
     (button.querySelector('i') as HTMLElement).style.width = `${pawn.state==='dead'?0:pawn.mood}%`;
-    const row = document.querySelector<HTMLElement>(`[data-worker="${pawn.id}"]`)!;
-    updateWorkSkills(row,pawn);
-    row.querySelector('.work-activity')!.textContent = actionLabel(pawn);
-    for (const select of row.querySelectorAll<HTMLSelectElement>('select')) select.value = String(pawn.priorities[select.dataset.work as WorkType]);
   }
+  if (currentPanel === 'work') updateWorkPanel(world);
   updateDraftControls(el('inspector'),world.pawns.filter(p=>selection.ids.has(p.id)));
   shootingControls.update(el('inspector'),world.pawns.filter(p=>selection.ids.has(p.id)));
   if(selection.ids.size>1) {

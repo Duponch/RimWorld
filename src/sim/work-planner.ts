@@ -50,9 +50,9 @@ export function search(world: World, pawn: Pawn, blocked: Uint8Array, occupied: 
 }
 /** A decision-wide connectivity check replaces speculative paths to every
  * candidate. Precise routes share one resumable weighted search. */
-export function searchCandidates(world:World,pawn:Pawn,blocked:Uint8Array,occupied:ReadonlySet<number>,budget:SearchBudget):Reachability|null {
+export function searchCandidates(world:World,pawn:Pawn,blocked:Uint8Array,occupied:ReadonlySet<number>,budget:SearchBudget,deferNavigation=false):Reachability|null {
   if(!budget.remaining)return null;budget.remaining--;
-  const result=candidateAccess(world,pawn,blocked,occupied);
+  const result=candidateAccess(world,pawn,blocked,occupied,deferNavigation);
   budget.stats?.searches.push({pawnId:pawn.id,mode:'all',get visited(){return result.visited;},unreachedGroups:0,get connectivityVisited(){return result.connectivityVisited;}});
   return result;
 }
@@ -137,7 +137,9 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
       }
     }
   }
-  reachable ??= searchCandidates(world, pawn, blocked, occupied, budget); if (!reachable) return;
+  // No terrain, door, pile or structure mutation occurs during this planner's
+  // candidate scan before the reachability object is first consulted.
+  reachable ??= searchCandidates(world, pawn, blocked, occupied, budget, true); if (!reachable) return;
   pawn.planCooldown = PLAN_INTERVAL;
   const delivered = new Map<string, number>(); const ground = new Map<number, number>();
   const sourceReserved = new Map<number, number>(); const jobReserved = new Map<string, number>(); const zoneReserved = new Map<number, number>();

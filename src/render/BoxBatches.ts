@@ -31,7 +31,7 @@ export class BoxBatches {
     let mesh = this.batches.get(key);
     if (!mesh) {
       mesh = new BoxMesh(this.geometry, this.materials[style], Math.max(256, 2 ** Math.ceil(Math.log2(items.length || 1))));
-      mesh.name = key; mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      mesh.name = key;
       mesh.castShadow = style === 'solid' && shadows; mesh.receiveShadow = true;
       group.add(mesh); this.batches.set(key, mesh);
     } else if (items.length > mesh.instanceMatrix.count) {

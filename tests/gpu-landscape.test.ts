@@ -5,6 +5,8 @@ import { appendFlora, isClusterPlantSpecies, type FloraParts } from '../src/rend
 import { createPlantClusterGeometry, PlantClusterLayer, plantClusterPresentation } from '../src/render/PlantClusterLayer';
 import { designationIconInstances, isIconDesignationKind } from '../src/render/DesignationIconLayer';
 import { material } from '../src/render/primitives';
+import { NaturalResourcePresentation } from '../src/render/NaturalResourcePresentation';
+import * as THREE from 'three/webgpu';
 
 const resource = (world: ReturnType<typeof createWorld>, id: number, x: number, z: number, species: Resource['species']): Resource => ({
   id, x, z, species, kind: species === 'berry-bush' ? 'berries' : species === 'oak' ? 'tree' : 'wild-plant',
@@ -53,6 +55,46 @@ describe('V94 resident 3D plant presentation contracts', () => {
     layer.update(world, false);
     expect(layer.instanceCount()).toBe(2); // stable high-water draw range, removed slot is zero-scaled
     layer.dispose(); shared.dispose();
+  });
+
+  test('unrelated flora edits keep tuft buffers untouched, while growth and reuse match a fresh batch', () => {
+    const world = createWorld(92, 8, 8);
+    world.resources = [resource(world, 101, 1, 1, 'grass'), resource(world, 102, 2, 1, 'tall-grass'), resource(world, 103, 3, 1, 'oak')];
+    const shared = material(0xffffff, { vertexColors: true });
+    shared.userData.rendererOwned = true;
+    const layer = new PlantClusterLayer(shared);
+    const state = new NaturalResourcePresentation();
+    layer.update(state.read(world, true)!, true, state.changes);
+    const mesh = layer.group.children[0] as THREE.InstancedMesh;
+    const matrices = Array.from(mesh.instanceMatrix.array), colors = Array.from(mesh.instanceColor!.array);
+    const matrixVersion = mesh.instanceMatrix.version, colorVersion = mesh.instanceColor!.version;
+    world.resources[2]!.x = 4;
+    layer.update(state.read(world)!, false, state.changes);
+    expect(Array.from(mesh.instanceMatrix.array)).toEqual(matrices);
+    expect(Array.from(mesh.instanceColor!.array)).toEqual(colors);
+    expect(mesh.instanceMatrix.version).toBe(matrixVersion);
+    expect(mesh.instanceColor!.version).toBe(colorVersion);
+
+    world.resources[0]!.growth = .2;
+    layer.update(state.read(world)!, false, state.changes);
+    expect(mesh.instanceMatrix.version).toBe(matrixVersion + 1);
+    expect(mesh.instanceColor!.version).toBe(colorVersion + 1);
+    expect(mesh.instanceMatrix.updateRanges).toEqual([{ start: 0, count: 16 }]);
+    expect(mesh.instanceColor!.updateRanges).toEqual([{ start: 0, count: 3 }]);
+    const reference = new PlantClusterLayer(shared);
+    reference.update(world, true);
+    const expected = reference.group.children[0] as THREE.InstancedMesh;
+    expect(Array.from(mesh.instanceMatrix.array).slice(0, 32)).toEqual(Array.from(expected.instanceMatrix.array).slice(0, 32));
+    expect(Array.from(mesh.instanceColor!.array).slice(0, 6)).toEqual(Array.from(expected.instanceColor!.array).slice(0, 6));
+
+    const removed = world.resources[0]!;
+    world.resources = world.resources.filter(item => item.id !== removed.id);
+    layer.update(state.read(world)!, false, state.changes);
+    world.resources = [removed, ...world.resources];
+    layer.update(state.read(world)!, false, state.changes);
+    expect(Array.from(mesh.instanceMatrix.array).slice(0, 32)).toEqual(Array.from(expected.instanceMatrix.array).slice(0, 32));
+    expect(Array.from(mesh.instanceColor!.array).slice(0, 6)).toEqual(Array.from(expected.instanceColor!.array).slice(0, 6));
+    reference.dispose(); layer.dispose(); shared.dispose();
   });
 
   test('cluster species leave chunk geometry while agave keeps its own physical model', () => {

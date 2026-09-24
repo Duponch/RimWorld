@@ -1,0 +1,35 @@
+{
+  "protocol": "Archive f993e3a src in tmp/perf-v94. 10 warmups, 80 measured packets per variant, initial checkpoint excluded. In-place apparel flag every 10 packets, otherwise fixed collections. Encode + structuredClone + decode. Synthetic transport only, not colony throughput.",
+  "results": [
+    {
+      "name": "small",
+      "pileCount": 10,
+      "baseline": {
+        "meanMs": 0.16638874999999304,
+        "p95Ms": 0.25240000000007967,
+        "pilesSent": 800
+      },
+      "current": {
+        "meanMs": 0.18063750000000312,
+        "p95Ms": 0.3444999999999254,
+        "pilesSent": 8
+      },
+      "ratio": 0.9211196456992051
+    },
+    {
+      "name": "large",
+      "pileCount": 1731,
+      "baseline": {
+        "meanMs": 12.100106250000007,
+        "p95Ms": 14.550000000000182,
+        "pilesSent": 138480
+      },
+      "current": {
+        "meanMs": 8.153331250000026,
+        "p95Ms": 10.835700000000088,
+        "pilesSent": 8
+      },
+      "ratio": 1.4840690116693063
+    }
+  ]
+}

@@ -1,0 +1,616 @@
+{
+  "label": "v95-diagnostic",
+  "date": "2026-09-24T18:21:21.265Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "protocol": "Same saved Crashlanded seed42 250² restored for every phase. Native hardware Chromium, no SwiftShader flags. RAF interval and CPU submission measured separately, no world export in windows. Six seconds after warmup per phase. CPU profiling only in separate diagnostic window. No GPU timestamp implied by frame CPU.",
+  "phases": [
+    {
+      "zoom": "near",
+      "speed": 0,
+      "camera": {
+        "tick": 0,
+        "time": 6829.600000000093,
+        "zoom": 2,
+        "span": 16.96
+      },
+      "overview": false,
+      "elapsed": 6014.199999999721,
+      "ticks": 0,
+      "achievedSpeed": 0,
+      "frameMs": {
+        "n": 1439,
+        "mean": 4.181097984711606,
+        "p50": 4.199999999998909,
+        "p95": 4.299999999999272,
+        "p99": 4.300000000001091,
+        "max": 12.599999999998545
+      },
+      "cpuMs": {
+        "n": 1440,
+        "mean": 2.855416666658453,
+        "p50": 2.7999999998137355,
+        "p95": 3.400000000372529,
+        "p99": 4.100000000093132,
+        "max": 11.600000000093132
+      },
+      "calls": {
+        "n": 1440,
+        "mean": 161,
+        "p50": 161,
+        "p95": 161,
+        "p99": 161,
+        "max": 161
+      },
+      "triangles": {
+        "n": 1440,
+        "mean": 354361,
+        "p50": 354361,
+        "p95": 354361,
+        "p99": 354361,
+        "max": 354361
+      },
+      "workerMs": null,
+      "costs": {
+        "PawnLayer.updateTravel": {
+          "n": 1440,
+          "mean": 0.006944444442827565,
+          "p50": 0,
+          "p95": 0.10000000009313226,
+          "p99": 0.10000000009313226,
+          "max": 0.10000000009313226,
+          "total": 9.999999997671694
+        },
+        "WildlifeLayer.update": {
+          "n": 1440,
+          "mean": 0.005902777774544019,
+          "p50": 0,
+          "p95": 0.09999999962747097,
+          "p99": 0.10000000009313226,
+          "max": 0.10000000009313226,
+          "total": 8.499999995343387
+        },
+        "DayNightLayer.update": {
+          "n": 1440,
+          "mean": 0.007291666665696539,
+          "p50": 0,
+          "p95": 0.10000000009313226,
+          "p99": 0.10000000009313226,
+          "max": 0.19999999972060323,
+          "total": 10.499999998603016
+        },
+        "WebGPURenderer.render": {
+          "n": 2880,
+          "mean": 2.018958333340642,
+          "p50": 2.2000000001862645,
+          "p95": 3.1999999997206032,
+          "p99": 3.7000000001862645,
+          "max": 11.399999999906868,
+          "total": 5814.600000021048
+        }
+      },
+      "gpuMs": {
+        "n": 711,
+        "mean": 1.3803116736990153,
+        "p50": 1.3762560000000001,
+        "p95": 1.441792,
+        "p99": 1.5073280000000002,
+        "max": 1.5073280000000002
+      }
+    },
+    {
+      "zoom": "far",
+      "speed": 0,
+      "camera": {
+        "tick": 0,
+        "time": 14716.200000000186,
+        "zoom": 0.09032004729451514,
+        "span": 375.5533905932738
+      },
+      "overview": true,
+      "elapsed": 6019.899999999907,
+      "ticks": 0,
+      "achievedSpeed": 0,
+      "frameMs": {
+        "n": 1216,
+        "mean": 4.947861842105262,
+        "p50": 4.200000000000728,
+        "p95": 8.400000000001455,
+        "p99": 8.400000000001455,
+        "max": 12.600000000000364
+      },
+      "cpuMs": {
+        "n": 1217,
+        "mean": 4.58414133113825,
+        "p50": 4.399999999906868,
+        "p95": 6.2000000001862645,
+        "p99": 7.2999999998137355,
+        "max": 11.5
+      },
+      "calls": {
+        "n": 1217,
+        "mean": 195,
+        "p50": 195,
+        "p95": 195,
+        "p99": 195,
+        "max": 195
+      },
+      "triangles": {
+        "n": 1217,
+        "mean": 307417,
+        "p50": 307417,
+        "p95": 307417,
+        "p99": 307417,
+        "max": 307417
+      },
+      "workerMs": null,
+      "costs": {
+        "PawnLayer.updateTravel": {
+          "n": 1217,
+          "mean": 0.008216926868585602,
+          "p50": 0,
+          "p95": 0.10000000009313226,
+          "p99": 0.10000000009313226,
+          "max": 0.10000000009313226,
+          "total": 9.999999999068677
+        },
+        "WildlifeLayer.update": {
+          "n": 1217,
+          "mean": 0.008299096138120897,
+          "p50": 0,
+          "p95": 0.10000000009313226,
+          "p99": 0.10000000009313226,
+          "max": 0.10000000009313226,
+          "total": 10.100000000093132
+        },
+        "DayNightLayer.update": {
+          "n": 1217,
+          "mean": 0.009120788825438614,
+          "p50": 0,
+          "p95": 0.10000000009313226,
+          "p99": 0.10000000009313226,
+          "max": 0.10000000009313226,
+          "total": 11.100000000558794
+        },
+        "WebGPURenderer.render": {
+          "n": 2434,
+          "mean": 2.6601068200499522,
+          "p50": 3.099999999627471,
+          "p95": 5.699999999720603,
+          "p99": 6.899999999906868,
+          "max": 11.5,
+          "total": 6474.700000001583
+        }
+      },
+      "gpuMs": {
+        "n": 404,
+        "mean": 0.911339722772279,
+        "p50": 0.917504,
+        "p95": 0.98304,
+        "p99": 1.245184,
+        "max": 1.31072
+      }
+    },
+    {
+      "zoom": "far",
+      "speed": 6,
+      "camera": {
+        "tick": 0,
+        "time": 22670.299999999814,
+        "zoom": 0.09032004729451514,
+        "span": 375.5533905932738
+      },
+      "overview": true,
+      "elapsed": 6055.100000000093,
+      "ticks": 217,
+      "achievedSpeed": 5.972926403637613,
+      "frameMs": {
+        "n": 789,
+        "mean": 7.646768060836501,
+        "p50": 4.299999999999272,
+        "p95": 16.799999999999272,
+        "p99": 37.5,
+        "max": 50.10000000000218
+      },
+      "cpuMs": {
+        "n": 790,
+        "mean": 6.020379746839687,
+        "p50": 5.100000000093132,
+        "p95": 7.7999999998137355,
+        "p99": 33.3000000002794,
+        "max": 47
+      },
+      "calls": {
+        "n": 790,
+        "mean": 194.7126582278481,
+        "p50": 195,
+        "p95": 195,
+        "p99": 195,
+        "max": 195
+      },
+      "triangles": {
+        "n": 790,
+        "mean": 307372.0075949367,
+        "p50": 307417,
+        "p95": 307441,
+        "p99": 307441,
+        "max": 307441
+      },
+      "workerMs": {
+        "n": 216,
+        "mean": 2.241049382712564,
+        "p50": 1.1999999997206032,
+        "p95": 5.2999999998137355,
+        "p99": 8.099999999627471,
+        "max": 91.39999999990687
+      },
+      "costs": {
+        "PawnLayer.updateTravel": {
+          "n": 790,
+          "mean": 0.01493670886229205,
+          "p50": 0,
+          "p95": 0.10000000009313226,
+          "p99": 0.10000000009313226,
+          "max": 0.19999999972060323,
+          "total": 11.80000000121072
+        },
+        "WildlifeLayer.update": {
+          "n": 823,
+          "mean": 0.020170109356127744,
+          "p50": 0,
+          "p95": 0.10000000009313226,
+          "p99": 0.10000000009313226,
+          "max": 0.20000000018626451,
+          "total": 16.600000000093132
+        },
+        "DayNightLayer.update": {
+          "n": 790,
+          "mean": 0.014936708859934271,
+          "p50": 0,
+          "p95": 0.10000000009313226,
+          "p99": 0.10000000009313226,
+          "max": 0.10000000009313226,
+          "total": 11.799999999348074
+        },
+        "WebGPURenderer.render": {
+          "n": 1580,
+          "mean": 2.890063291143838,
+          "p50": 3.5,
+          "p95": 6,
+          "p99": 7.2999999998137355,
+          "max": 9,
+          "total": 4566.300000007264
+        },
+        "decode": {
+          "n": 216,
+          "mean": 1.3847222222183417,
+          "p50": 0.10000000009313226,
+          "p95": 7.400000000372529,
+          "p99": 14.100000000093132,
+          "max": 24.399999999906868,
+          "total": 299.0999999991618
+        },
+        "snapshot": {
+          "n": 216,
+          "mean": 1.057407407396197,
+          "p50": 0.09999999962747097,
+          "p95": 1.7000000001862645,
+          "p99": 28.299999999813735,
+          "max": 30,
+          "total": 228.39999999757856
+        },
+        "hud": {
+          "n": 29,
+          "mean": 1.037931034534142,
+          "p50": 1,
+          "p95": 1.7000000001862645,
+          "p99": 2.7999999998137355,
+          "max": 2.7999999998137355,
+          "total": 30.100000001490116
+        },
+        "EnvironmentLighting.update": {
+          "n": 33,
+          "mean": 0.5757575757857977,
+          "p50": 0.5,
+          "p95": 0.900000000372529,
+          "p99": 1.2000000001862645,
+          "max": 1.2000000001862645,
+          "total": 19.000000000931323
+        },
+        "updateResources": {
+          "n": 33,
+          "mean": 22.487878787825167,
+          "p50": 22,
+          "p95": 29.399999999906868,
+          "p99": 38.39999999990687,
+          "max": 38.39999999990687,
+          "total": 742.0999999982305
+        },
+        "updatePiles": {
+          "n": 33,
+          "mean": 1.4000000000338664,
+          "p50": 1.2000000001862645,
+          "p95": 2.6000000000931323,
+          "p99": 5,
+          "max": 5,
+          "total": 46.20000000111759
+        },
+        "PawnLayer.update": {
+          "n": 33,
+          "mean": 0.12727272722192787,
+          "p50": 0.10000000009313226,
+          "p95": 0.2999999998137355,
+          "p99": 0.2999999998137355,
+          "max": 0.2999999998137355,
+          "total": 4.199999998323619
+        },
+        "updateHover": {
+          "n": 33,
+          "mean": 0.00606060606625044,
+          "p50": 0,
+          "p95": 0.10000000009313226,
+          "p99": 0.10000000009313226,
+          "max": 0.10000000009313226,
+          "total": 0.20000000018626451
+        },
+        "applyWorld": {
+          "n": 33,
+          "mean": 25.615151515103538,
+          "p50": 24.800000000279397,
+          "p95": 34.60000000009313,
+          "p99": 41.6999999997206,
+          "max": 41.6999999997206,
+          "total": 845.2999999984168
+        },
+        "PlantClusterLayer.update": {
+          "n": 31,
+          "mean": 9.996774193500318,
+          "p50": 8.600000000093132,
+          "p95": 15.399999999906868,
+          "p99": 18.899999999906868,
+          "max": 18.899999999906868,
+          "total": 309.8999999985099
+        },
+        "OverviewLayer.update": {
+          "n": 31,
+          "mean": 3.1129032257613876,
+          "p50": 2.7999999998137355,
+          "p95": 5,
+          "p99": 5.2000000001862645,
+          "max": 5.2000000001862645,
+          "total": 96.49999999860302
+        }
+      },
+      "gpuMs": {
+        "n": 265,
+        "mean": 0.9160201660377362,
+        "p50": 0.917504,
+        "p95": 1.114112,
+        "p99": 1.245184,
+        "max": 1.31072
+      }
+    }
+  ],
+  "errors": [],
+  "adapter": {
+    "vendor": "amd",
+    "architecture": "rdna-1",
+    "description": ""
+  },
+  "gpuTimestamp": true,
+  "profile": [
+    {
+      "function": "SimulationClient.worker.onmessage",
+      "url": "http://127.0.0.1:5173/src/bridge/SimulationClient.ts?t=1790273591029",
+      "line": 11,
+      "hits": 341
+    },
+    {
+      "function": "_renderObjectDirect",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=91562d2d",
+      "line": 86877,
+      "hits": 251
+    },
+    {
+      "function": "(program)",
+      "url": "",
+      "line": -1,
+      "hits": 212
+    },
+    {
+      "function": "get",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=91562d2d",
+      "line": 63181,
+      "hits": 126
+    },
+    {
+      "function": "updateMatrixWorld",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=91562d2d",
+      "line": 10027,
+      "hits": 124
+    },
+    {
+      "function": "updateForRender",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=91562d2d",
+      "line": 64602,
+      "hits": 118
+    },
+    {
+      "function": "_update",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=91562d2d",
+      "line": 64704,
+      "hits": 102
+    },
+    {
+      "function": "updateForRender",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=91562d2d",
+      "line": 82320,
+      "hits": 86
+    },
+    {
+      "function": "multiplyMatrices",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=91562d2d",
+      "line": 8233,
+      "hits": 85
+    },
+    {
+      "function": "_draw",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=91562d2d",
+      "line": 101946,
+      "hits": 82
+    },
+    {
+      "function": "(garbage collector)",
+      "url": "",
+      "line": -1,
+      "hits": 82
+    },
+    {
+      "function": "setVertexBuffer",
+      "url": "",
+      "line": -1,
+      "hits": 81
+    },
+    {
+      "function": "updateMatrixWorld",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=91562d2d",
+      "line": 10027,
+      "hits": 79
+    },
+    {
+      "function": "update",
+      "url": "http://127.0.0.1:5173/src/render/PlantClusterLayer.ts?t=1790273591346",
+      "line": 142,
+      "hits": 74
+    },
+    {
+      "function": "frame",
+      "url": "http://127.0.0.1:5173/src/render/ColonyRenderer.ts?t=1790273850158",
+      "line": 676,
+      "hits": 73
+    },
+    {
+      "function": "update",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=91562d2d",
+      "line": 87406,
+      "hits": 73
+    },
+    {
+      "function": "adopt",
+      "url": "http://127.0.0.1:5173/src/bridge/snapshots.ts?t=1790273591029",
+      "line": 163,
+      "hits": 70
+    },
+    {
+      "function": "update",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=91562d2d",
+      "line": 63374,
+      "hits": 63
+    },
+    {
+      "function": "draw",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=91562d2d",
+      "line": 102035,
+      "hits": 62
+    },
+    {
+      "function": "updateMatrixWorld",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=91562d2d",
+      "line": 10027,
+      "hits": 59
+    },
+    {
+      "function": "updateAttributes",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=91562d2d",
+      "line": 63564,
+      "hits": 56
+    },
+    {
+      "function": "update",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=91562d2d",
+      "line": 52775,
+      "hits": 54
+    },
+    {
+      "function": "needsRenderUpdate",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=91562d2d",
+      "line": 102119,
+      "hits": 53
+    },
+    {
+      "function": "updateMatrixWorld",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=91562d2d",
+      "line": 10027,
+      "hits": 50
+    },
+    {
+      "function": "getForRender",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=91562d2d",
+      "line": 64294,
+      "hits": 49
+    },
+    {
+      "function": "updateAttribute",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=91562d2d",
+      "line": 63579,
+      "hits": 46
+    },
+    {
+      "function": "capture",
+      "url": "http://127.0.0.1:5173/src/bridge/presentation-changes.ts",
+      "line": 5,
+      "hits": 46
+    },
+    {
+      "function": "setIndexBuffer",
+      "url": "",
+      "line": -1,
+      "hits": 45
+    },
+    {
+      "function": "_projectObject",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=91562d2d",
+      "line": 86587,
+      "hits": 44
+    },
+    {
+      "function": "setBindGroup",
+      "url": "",
+      "line": -1,
+      "hits": 41
+    },
+    {
+      "function": "update",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=91562d2d",
+      "line": 45396,
+      "hits": 40
+    },
+    {
+      "function": "updateNumber",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=91562d2d",
+      "line": 87441,
+      "hits": 38
+    },
+    {
+      "function": "update",
+      "url": "http://127.0.0.1:5173/src/render/PlantClusterLayer.ts?t=1790273591346",
+      "line": 142,
+      "hits": 37
+    },
+    {
+      "function": "writeBuffer",
+      "url": "",
+      "line": -1,
+      "hits": 35
+    },
+    {
+      "function": "_projectObject",
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.webgpu-BqO7meKP.js?v=91562d2d",
+      "line": 86587,
+      "hits": 35
+    }
+  ]
+}

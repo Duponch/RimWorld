@@ -27,3 +27,13 @@ Le premier contrôle public a révélé un iframe `nl-badge-frame` injecté par 
 HTTPS permet WebGPU dans un navigateur compatible avec le GPU de la machine. Ce déploiement est statique : aucune sauvegarde sur serveur, compte joueur ou synchronisation cloud n'est ajouté. Les sauvegardes restent dans le stockage du navigateur, propre à cette origine ; une sauvegarde de localhost n'apparaît donc pas automatiquement sur Netlify. Changer de navigateur/profil crée également un autre stockage.
 
 Depuis V93, les grandes sauvegardes sont compressées sans perte pour réduire leur consommation de quota. Les JSON historiques restent lisibles ; le schéma du monde reste 91. [Format, bornes et récupération](save-storage.md).
+
+## Reprise V95 après limitation API
+
+Le premier envoi V95 a reçu HTTP 429 (« API Request rate limit surpassed for application »), après création du déploiement. Le script sait reprendre cet identifiant avec `NETLIFY_RESUME_DEPLOY`, contrôle son site et son mode de publication, puis envoie les empreintes encore demandées. Un GET peut renvoyer `required: []` alors que l’état est encore `uploading` : la reprise passe donc par le PUT officiel `updateSiteDeploy` du même manifeste au même identifiant. Ne pas relancer une création pour réparer un envoi incomplet.
+
+Les requêtes GET/PUT attendent l’échéance `X-RateLimit-Reset`/`Retry-After`, avec au plus trois reprises ; un POST de création n’est jamais répété automatiquement. Ces limites sont décrites dans la [documentation Netlify](https://docs.netlify.com/api-and-cli-guides/api-guides/get-started-with-api/#rate-limiting), consultée le 24 septembre 2026. Aucune clé n’est copiée dans le dépôt ou la sortie.
+
+La réponse de limite observée utilise parfois un epoch et parfois une date UTC ; les deux formes sont reconnues. Le contrôle public ne recopie pas le résultat d’une version précédente quand `EXPECTED_DEPLOY_ID` diffère, afin de ne pas fabriquer une fausse preuve de publication.
+
+V95 : déploiement `6ab57508f64713831acd4aec`, 23 fichiers, état API `ready`. [Résultat](../../artifacts/netlify-v95.json), [contrôle public](../../artifacts/netlify-smoke-v95.json).

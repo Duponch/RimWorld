@@ -10,7 +10,7 @@ export function pawnSelectionMesh(source:THREE.InstancedBufferGeometry,clock:Pic
   const geometry=new THREE.InstancedBufferGeometry();
   geometry.index=ring.index;geometry.setAttribute('position',ring.getAttribute('position'));
   for(const name of ['aFrom','aTo','aTravel'])geometry.setAttribute(name,source.getAttribute(name));
-  geometry.setAttribute('aSelected',new THREE.InstancedBufferAttribute(new Float32Array(source.getAttribute('aFrom').count),1).setUsage(THREE.DynamicDrawUsage));
+  geometry.setAttribute('aSelected',new THREE.InstancedBufferAttribute(new Float32Array(source.getAttribute('aFrom').count),1).setUsage(THREE.StaticDrawUsage));
   const material=new THREE.MeshBasicNodeMaterial({color:0xffe5a0,side:THREE.DoubleSide,depthWrite:false});
   material.positionNode=Fn(()=>{
     const pose=pawnPresentationPose(clock);

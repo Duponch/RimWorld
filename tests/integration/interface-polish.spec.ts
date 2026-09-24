@@ -4,8 +4,15 @@ import { observeErrors, pause, panel, world, expectWorld } from './helpers';
 import { visitorTradeFixture } from '../scenarios/visitors';
 import { serializeWorld } from '../../src/sim/serialization';
 
-async function screenshot(page:Page,name:string){await page.screenshot({path:`artifacts/interface-v94-${name}.png`});}
-test('V94 native: stable management panels, upright plants, complete HUD and illustrated cursors',async({playwright})=>{
+async function screenshot(page:Page,name:string){await page.screenshot({path:`artifacts/interface-v95-${name}.png`});}
+async function cursorOf(page:Page,selector:string){return page.locator(selector).first().evaluate(node=>getComputedStyle(node).cursor);}
+async function expectCursorKind(page:Page,selector:string,kind:string){
+  await expect.poll(()=>page.locator('#app').evaluate((node,name)=>getComputedStyle(node).getPropertyValue(`--cursor-${name}`).trim(),kind)).toContain('data:image/png;base64,');
+  const expected=await page.locator('#app').evaluate((node,name)=>getComputedStyle(node).getPropertyValue(`--cursor-${name}`).trim(),kind);
+  await expect.poll(()=>cursorOf(page,selector)).toBe(expected);
+  return expected;
+}
+test('V95 native: stable management panels, upright plants, complete HUD and semantic cursors',async({playwright})=>{
   test.setTimeout(240_000);
   const browser=await playwright.chromium.launch({channel:'chromium',args:[]});
   const page=await browser.newPage({viewport:{width:1440,height:1000}});
@@ -14,18 +21,35 @@ test('V94 native: stable management panels, upright plants, complete HUD and ill
   page.on('pageerror',error=>{report.errorStack=error.stack;});
   await page.route('**/src/main.ts*',async route=>{
     const response=await route.fetch();
-    await route.fulfill({response,body:`const v94Frame=ColonyRenderer.prototype.frame;ColonyRenderer.prototype.frame=function(...args){window.__v94View=this;return v94Frame.apply(this,args);};\n`+await response.text()});
+    await route.fulfill({response,body:`const v95Frame=ColonyRenderer.prototype.frame;ColonyRenderer.prototype.frame=function(...args){window.__v95View=this;return v95Frame.apply(this,args);};\n`+await response.text()});
   });
   try{
     await page.goto('http://127.0.0.1:5173/?e2e');
     const front=page.locator('.front-menu');await expect(front).toBeVisible();
     await page.evaluate(()=>document.fonts.ready);await screenshot(page,'home');
+    const buttonCursor=await expectCursorKind(page,'.front-home-actions button:not(:disabled)','link');
+    const forbiddenCursor=await expectCursorKind(page,'.front-later button:disabled','forbidden');
+    report.semanticCursors={button:buttonCursor,forbidden:forbiddenCursor};
     await front.getByRole('button',{name:'Nouvelle partie',exact:true}).click();await screenshot(page,'scenario');
     await front.getByRole('button',{name:'Suivant',exact:true}).click();
     await front.getByRole('radio',{name:'Récit d’aventure',exact:true}).check();
     await front.getByRole('radio',{name:'Rechargeable à tout moment',exact:true}).check();await screenshot(page,'story');
     await front.getByRole('button',{name:'Suivant',exact:true}).click();await page.locator('#front-seed').fill('42');await screenshot(page,'site');
+    (report.semanticCursors as Record<string,string>).text=await expectCursorKind(page,'#front-seed','text');
+    await page.evaluate(()=>{
+      const front=document.querySelector('.front-menu')!;
+      (window as any).__v95BusyCursor='';
+      const observer=new MutationObserver(()=>{
+        if(front.getAttribute('aria-busy')==='true'){
+          (window as any).__v95BusyCursor=getComputedStyle(front).cursor;observer.disconnect();
+        }
+      });
+      observer.observe(front,{attributes:true,attributeFilter:['aria-busy']});
+    });
     await front.getByRole('button',{name:'Démarrer',exact:true}).click();await expect(front).toBeHidden({timeout:60_000});await pause(page);
+    const observedWait=await page.evaluate(()=>(window as any).__v95BusyCursor as string);
+    const waitCursor=await page.locator('#app').evaluate(node=>getComputedStyle(node).getPropertyValue('--cursor-wait').trim());
+    expect(observedWait).toBe(waitCursor);(report.semanticCursors as Record<string,string>).wait=observedWait;
     expect(await page.evaluate(()=>window.__lisiere.backend)).toBe('WebGPU');
     await screenshot(page,'hud');await page.locator('.colonist').first().click();
     for(const name of ['Bio','Besoins','Santé','Équipement','Social']){
@@ -66,18 +90,18 @@ test('V94 native: stable management panels, upright plants, complete HUD and ill
     const images=await page.locator('.tool-icon').evaluateAll(nodes=>nodes.map(n=>({text:n.textContent,image:getComputedStyle(n).backgroundImage})));
     expect(images).toHaveLength(60);expect(images.every(n=>n.text===''&&n.image.includes('architect-'))).toBe(true);report.pngTools=images.length;
     const cursorImages=new Set<string>();
-    for(const [id,category,kind] of [['select','orders','select'],['mine','orders','mine'],['chop','orders','chop'],['harvest','orders','harvest'],['cut','orders','cut'],['wall','structure','build'],['deconstruct','orders','deconstruct'],['stockpile','zones','zones'],['cancel','orders','cancel']]){
+    for(const [id,category] of [['select','orders'],['mine','orders'],['chop','orders'],['harvest','orders'],['cut','orders'],['wall','structure'],['deconstruct','orders'],['stockpile','zones'],['cancel','orders']]){
       await page.locator(`[data-category="${category}"]`).click();await page.locator(`[data-tool="${id}"]`).click();
-      await expect(page.locator('#viewport')).toHaveAttribute('data-cursor',kind);
-      const cursor=await page.locator('#viewport canvas').evaluate(n=>getComputedStyle(n).cursor);
+      await expect(page.locator('#viewport')).toHaveAttribute('data-cursor','pointer');
+      const cursor=await expectCursorKind(page,'#viewport canvas','pointer');
       expect(cursor).toContain('data:image/png;base64,');
       const hotspot=cursor.match(/\) (\d+) (\d+),/);expect(hotspot).toBeTruthy();
       expect(Number(hotspot![1])).toBeLessThanOrEqual(6);expect(Number(hotspot![2])).toBeLessThanOrEqual(3);cursorImages.add(cursor);
     }
-    expect(cursorImages.size).toBe(9);report.cursors=cursorImages.size;
+    expect(cursorImages.size).toBe(1);report.cursors=cursorImages.size;
     await page.locator('[data-category="orders"]').click();await page.locator('[data-tool="chop"]').click();
     await page.locator('#architect-panel [data-close-panel]').click();
-    await expect(page.locator('#architect-panel')).toBeHidden();await expect(page.locator('#viewport')).toHaveAttribute('data-cursor','chop');
+    await expect(page.locator('#architect-panel')).toBeHidden();await expect(page.locator('#viewport')).toHaveAttribute('data-cursor','pointer');
     const chopTarget=await page.evaluate(()=>{
       const canvas=document.querySelector<HTMLCanvasElement>('#viewport canvas')!,bounds=canvas.getBoundingClientRect();
       for(const resource of window.__lisiere.world.resources)if(resource.kind==='tree'){
@@ -89,7 +113,27 @@ test('V94 native: stable management panels, upright plants, complete HUD and ill
     expect(chopTarget).not.toBeNull();await page.mouse.click(chopTarget!.screenX,chopTarget!.screenY);
     await expect.poll(async()=>{const w=await world(page);return w.jobs.some(job=>job.kind==='chop'&&job.x===chopTarget!.x&&job.z===chopTarget!.z);}).toBe(true);
     report.realChop={x:chopTarget!.x,z:chopTarget!.z};
-    await page.keyboard.press('Escape');await expect(page.locator('#viewport')).toHaveAttribute('data-cursor','select');
+    await page.keyboard.press('Escape');await expect(page.locator('#viewport')).toHaveAttribute('data-cursor','pointer');
+    await page.mouse.move(chopTarget!.screenX,chopTarget!.screenY);
+    const cameraBefore=await page.evaluate(()=>{const view=(window as any).__v95View;return view.camera.position.toArray() as number[];});
+    const releasedCursor=page.evaluate(()=>new Promise<string>(resolve=>document.querySelector('#viewport canvas')!.addEventListener('pointerup',event=>resolve(getComputedStyle(event.currentTarget as Element).cursor),{once:true})));
+    await page.mouse.down({button:'middle'});
+    (report.semanticCursors as Record<string,string>).grabbing=await expectCursorKind(page,'#viewport canvas','grabbing');
+    await page.mouse.move(chopTarget!.screenX+24,chopTarget!.screenY+12);
+    await page.mouse.up({button:'middle'});
+    expect(await releasedCursor).toBe(await page.locator('#app').evaluate(node=>getComputedStyle(node).getPropertyValue('--cursor-grab').trim()));
+    (report.semanticCursors as Record<string,string>).grab=await page.locator('#app').evaluate(node=>getComputedStyle(node).getPropertyValue('--cursor-grab').trim());
+    const cameraAfter=await page.evaluate(()=>{const view=(window as any).__v95View;return view.camera.position.toArray() as number[];});
+    expect(cameraAfter).not.toEqual(cameraBefore);
+    await page.mouse.move(chopTarget!.screenX,chopTarget!.screenY);
+    const zoomCursorSeen=page.evaluate(()=>new Promise<string>(resolve=>document.querySelector('#viewport canvas')!.addEventListener('wheel',()=>requestAnimationFrame(()=>resolve(getComputedStyle(document.querySelector('#viewport canvas')!).cursor)),{once:true})));
+    await page.mouse.wheel(0,-150);
+    expect(await zoomCursorSeen).toBe(await page.locator('#app').evaluate(node=>getComputedStyle(node).getPropertyValue('--cursor-zoom').trim()));
+    (report.semanticCursors as Record<string,string>).zoom=await page.locator('#app').evaluate(node=>getComputedStyle(node).getPropertyValue('--cursor-zoom').trim());
+    const semanticCursors=report.semanticCursors as Record<string,string>;
+    semanticCursors.pointer=cursorImages.values().next().value!;
+    expect(new Set(Object.values(semanticCursors)).size).toBe(8);
+    report.semanticCursors=Object.fromEntries(Object.entries(semanticCursors).map(([kind,cursor])=>[kind,cursor.match(/\) (\d+) (\d+),/)?.slice(1).map(Number)]));
     await page.setViewportSize({width:1280,height:720});await panel(page,'architect');
     const compactFrame=await page.locator('#architect-panel').boundingBox();
     const completeResources=await page.locator('.resource-list').boundingBox();expect(completeResources!.width).toBe(216);
@@ -136,9 +180,9 @@ test('V94 native: stable management panels, upright plants, complete HUD and ill
     const frames=page.evaluate(()=>new Promise<number[]>(resolve=>{const samples:number[]=[];let last=performance.now();const end=last+8000;const frame=(t:number)=>{samples.push(t-last);last=t;if(t>end)resolve(samples);else requestAnimationFrame(frame);};requestAnimationFrame(frame);}));
     await page.locator('[data-speed="6"]').click();const timings=(await frames).sort((a,b)=>a-b);await pause(page);
     const saved=await world(page),elapsed=Date.now()-start;
-    const plantPresentation=await page.evaluate(()=>{const view=(window as any).__v94View;return {instances:view.plants.instanceCount(),group:view.plants.group.name,oldGrass:'grass' in view};});
+    const plantPresentation=await page.evaluate(()=>{const view=(window as any).__v95View;return {instances:view.plants.instanceCount(),group:view.plants.group.name,oldGrass:'grass' in view};});
     expect(plantPresentation.instances).toBeGreaterThan(0);expect(plantPresentation.group).toBe('plant-cluster-layer');expect(plantPresentation.oldGrass).toBe(false);report.plants=plantPresentation;
-    writeFileSync('tmp/interface-v94-checkpoint.json',JSON.stringify(saved));
+    writeFileSync('tmp/interface-v95-checkpoint.json',JSON.stringify(saved));
     report.performance={frames:timings.length,p95:timings[Math.floor(timings.length*.95)],max:timings.at(-1),speed:(saved.tick-before)/elapsed*1000/6};
     await panel(page,'menu');await page.locator('#save').click();
     try{await expect(page.locator('#load')).toBeEnabled();}catch(error){report.saveDiagnostics=await page.evaluate(()=>({notice:document.querySelector('#notice')?.textContent,slots:localStorage.length,load:document.querySelector('#load')?.outerHTML,save:document.querySelector('#save')?.outerHTML}));throw error;}
@@ -148,10 +192,10 @@ test('V94 native: stable management panels, upright plants, complete HUD and ill
     report.fonts=await page.evaluate(()=>({sans:document.fonts.check('14px "Lisiere Sans"'),serif:document.fonts.check('23px "Lisiere Serif"')}));
     expect(errors).toEqual([]);
     report.passed=true;
-  }finally{report.errors=errors;writeFileSync('artifacts/interface-native-v94.json',JSON.stringify(report,null,2));await browser.close();}
+  }finally{report.errors=errors;writeFileSync('artifacts/interface-native-v95.json',JSON.stringify(report,null,2));await browser.close();}
 });
 
-test('V94 native: trade modal preserves readable controls and real contact',async({playwright})=>{
+test('V95 native: trade modal preserves readable controls and real contact',async({playwright})=>{
   test.setTimeout(90_000);const browser=await playwright.chromium.launch({channel:'chromium',args:[]});
   const page=await browser.newPage({viewport:{width:1280,height:720}}),errors=observeErrors(page);
   page.setDefaultTimeout(15_000);
@@ -163,6 +207,6 @@ test('V94 native: trade modal preserves readable controls and real contact',asyn
     await expect(page.locator('#trade-goods')).toBeVisible({timeout:30_000});await screenshot(page,'trade');
     const rect=await page.locator('#trade-dialog').boundingBox();expect(rect!.x).toBeGreaterThanOrEqual(0);expect(rect!.y).toBeGreaterThanOrEqual(0);expect(rect!.y+rect!.height).toBeLessThanOrEqual(720);
     await page.locator('#trade-close').click();expect(errors).toEqual([]);
-    writeFileSync('artifacts/interface-trade-v94.json',JSON.stringify({passed:true,viewport:{width:1280,height:720},rect,errors}));
+    writeFileSync('artifacts/interface-trade-v95.json',JSON.stringify({passed:true,viewport:{width:1280,height:720},rect,errors}));
   }finally{await browser.close();}
 });

@@ -91,11 +91,10 @@ export class ResourceLayer {
       retainResources(previous.group, new Set()); previous.signature = '';
     }
     for (const [key, chunk] of chunks) {
-      const signature=chunk.map(resource=>`${resource.id}:${resourceIdentity(resource)}:${resource.kind==='berries'&&harvestable(world,resource)?1:0}:${plantLeafless(world,resource)}`).join('|');
-      const sizes=new Map(chunk.map(resource=>[resource.id,floraSize(world,resource)]));
+      const signature=chunk.map(resource=>`${resource.id}:${resourceIdentity(resource)}:${floraSize(world,resource)}:${resource.kind==='berries'&&harvestable(world,resource)?1:0}:${plantLeafless(world,resource)}`).join('|');
       const previous = this.chunks.get(key);
-      const sizeChanged=previous&&chunk.some(resource=>previous.currentSizes.get(resource.id)!==sizes.get(resource.id));
-      if (previous?.signature === signature&&!sizeChanged) continue;
+      if (previous?.signature === signature) continue;
+      const sizes=new Map(chunk.map(resource=>[resource.id,floraSize(world,resource)]));
       if (previous && chunk.every(r => previous.identities.get(r.id) === resourceIdentity(r))) {
         resizeResources(previous.group,new Map(chunk.map(resource=>[resource.id,resource])),previous.originalSizes,previous.currentSizes,sizes);
         retainResources(previous.group, new Set(chunk.flatMap(r => visibleResourceKeys(world,r)))); previous.signature = signature; continue;

@@ -1,0 +1,4510 @@
+{
+  "date": "2026-09-24T18:44:59.811Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "os": "win32 10.0.26200",
+  "node": "v24.11.1",
+  "protocol": "Synthetic V85 load on a natural 250² map, retaining the V84 groups of six (two researchers, cook, grower, butcher, miner) and equally many wild hares. Every supplied stove is electric. Each work patch gains a prebuilt 4×4 solar panel, a battery starting at 120Wd, a fueled wood generator, a physical switch initially open with an ordinary close job, and cardinal conduits to a closed 3×3 cold store containing supplied rice. Growers also perform Basic work. Crops, corpses, material stocks, completed prerequisite research and battery charge are prepared inputs, not earned colony progress. Daylight charging and physical switching are measured; the separate natural colony journey proves nighttime drain, mining, research and construction.  V87 environment extension: explicit observed-site climate, initial clear weather with its natural subsequent transitions, and shared seeded wind are adopted at tick 2000. 1/1/4 separate prepared wind/heater patches for 3/30/100 colonists contain an unobstructed turbine, 120 Wd battery and enclosed 3x3 room with a 30 C heater. Each 23x23 thermal plot uses its preferred anchor if free, otherwise a deterministic nearest free rectangle; buildings, jobs, colonists, wildlife, stores, crops and prior plots are preserved, and actual origins are reported. No preheated air or seasonal time acceleration. Every initial ENERGY building must survive. Each supplied heater must remain powered and its room must finish at least 0.1 C above both its initial temperature and the current outdoor temperature; this is a benchmark evidence threshold, not a simulation rule. One researcher in six can fight fires at priority 1; all food-production roles and mining remain. Up to three such firefighters have three prepared 20-wood piles set alight at size 1.2 within five cells. Home covers the bounded original work envelope (building/job footprints, workers, floor stores and stockpiles) plus these fires, with a three-cell fringe for access and the verified maximum two-cell ember offset. It therefore protects adjacent workshops and spread, not only initial flame cells; the bounds are reported. Extinction evidence requires all initial fire IDs to disappear, at least that many recorded physical extinctions, and every original wood pile to retain its identity, cell and 20 units. Partial hit-point damage is allowed and reported; the global extinction count is not attributed to individual fires. Existing structures, jobs and stocks are never removed for these patches. All supplied objects and controlled fires are benchmark inputs. The 650-tick interval includes the initial fire response and subsequent ordinary work; no sustained fire rate, natural fire incidence or seasonal survival is inferred. ENERGY and PRISONERS without ENVIRONMENT keep their existing protocols. V88 trade extension only at 100 original colonists and 100 wild hares: two prepared adult outlander visitors already at a halt, one finite merchant inventory produced by generateVisitorStock with fixed seed 88, separate personal meals and worn shirts. This prepared presence is not a sampled incident frequency or a played arrival. The second researcher of the first six-person group negotiates; his synthetic initial position and the two visitors use the nearest free cardinal meeting within 24 cells of his original position, with all three cells more than six cells from initial fire. No obstacle is cleared. Original and prepared positions are reported. The first researcher/firefighter and every production role remain. The three delivered weapon variants equip three otherwise unchanged miners. Additional 100 silver is an explicit colony input. One medicine purchase and its real contact controller run before timing, without advancing simulation; a new real contact order then remains active through the 650 timed ticks. No trade command, quote calculation, per-tick fixture observer or stock injection runs during timing. Item totals before/after the preparatory exchange must match exactly; timed currency, medicine, visitor sale stock and weapon identities remain conserved. ENVIRONMENT outcomes are evaluated on the original colonial roster, never misclassifying appended visitors as cooks/growers. Initial visitors, physical positions, stock and receipt are reported. Other load profiles are unchanged. V89 HYGIENE extends only the 100-worker load. All 100 original colonists, 100 hares, two visitors, initial workshops, jobs and stocks remain. The four existing 3x3 heated rooms receive 36 prepared floor tiles covering all seven built floor variants, and six single-layer traces per room (dirt, trash, blood, ash, vomit and corpse bile). Four otherwise surplus researchers are prepared inside those rooms with Clean priority 1 and ordinary direct room-cleaning orders; the initial negotiator, first researcher/firefighters and every production role are unchanged. Two further surplus researchers are placed near two prepared empty graves outside the heater rooms and receive ordinary direct burial orders for two additional dead strangers; each corpse is physically materialized by the real death/corpse functions. These two retained dead records are not lost workers. Four other researchers (4% of the original roster) start with an explicit food-poisoning case; one starts a 450-Core-tick vomiting episode. Initial positions, supplied floors/traces, dead identities and clinical state are reported. No body, illness, floor or filth is claimed to arise naturally in preparation. The timed 650 ticks use the ordinary engine only; no observer, injection, accelerated cleaning or clinical timer runs during timing. Outcomes retain every TRADE/ENVIRONMENT oracle and require preserved floors, removal of all initial trace IDs with at least 24 fully cleaned traces recorded, both exact corpse IDs in their graves, and naturally decreased severity in the four original patients. New traces may remain; this does not claim that the whole map becomes clean or that a disease heals within this short interval. Historical profiles without HYGIENE are unchanged. V90 HABITAT_APPAREL extends the prepared 100-colonist hygiene/trade/environment load. A separate free grass island contains real wood/steel tables, seats, bedside furniture, two planted daylily pots and manual/electric tailor benches with physical bills; nothing replaces an earlier structure, job, stock, floor, visitor or corpse oracle. All 100 original colonists retain their existing cloth tribalwear identities; six active garments are worn but policy-eligible, two additional garments are deliberately below the maintained-policy threshold, and six stored shirt/pants/parka candidates alternate cloth and light-leather. The two persisted apparel policies remain assigned to original colonists, with six bounded automatic policy checks announced inside the 650-tick window; candidates and textile ingredients sit in explicit physical stockpiles. The wear calendar is moved to one announced pulse inside the 650-tick measurement window; this is fixture preparation, not elapsed natural history. No furniture, flower, apparel, policy, bill or wear observer runs during timing. Outcomes retain every HYGIENE/TRADE/ENVIRONMENT oracle and require every prepared furniture identity, both living flowers, both workshops and bills, both apparel policies, conserved apparel identities through physical replacement and at least one ordinary wear change. V89 profiles without HABITAT_APPAREL are unchanged. 650 ticks, 100 separate warmup ticks, encoding every five ticks. Single pass, CPU only; no 6× guarantee.",
+  "measuredTicks": 650,
+  "hygiene": true,
+  "trade": true,
+  "environment": true,
+  "prisoners": false,
+  "energy": true,
+  "foodChain": true,
+  "wildlife": true,
+  "coldStore": false,
+  "heatwave": false,
+  "rows": [
+    {
+      "actors": 100,
+      "habitatApparel": {
+        "hygiene": {
+          "initial": {
+            "trade": {
+              "colonistIds": [
+                12425,
+                12426,
+                12427,
+                12428,
+                12429,
+                12430,
+                12431,
+                12432,
+                12433,
+                12434,
+                12435,
+                12436,
+                12437,
+                12438,
+                12439,
+                12440,
+                12441,
+                12442,
+                12443,
+                12444,
+                12445,
+                12446,
+                12447,
+                12448,
+                12449,
+                12450,
+                12451,
+                12452,
+                12453,
+                12454,
+                12455,
+                12456,
+                12457,
+                12458,
+                12459,
+                12460,
+                12461,
+                12462,
+                12463,
+                12464,
+                12465,
+                12466,
+                12467,
+                12468,
+                12469,
+                12470,
+                12471,
+                12472,
+                12473,
+                12474,
+                12475,
+                12476,
+                12477,
+                12478,
+                12479,
+                12480,
+                12481,
+                12482,
+                12483,
+                12484,
+                12485,
+                12486,
+                12487,
+                12488,
+                12489,
+                12490,
+                12491,
+                12492,
+                12493,
+                12494,
+                12495,
+                12496,
+                12497,
+                12498,
+                12499,
+                12500,
+                12501,
+                12502,
+                12503,
+                12504,
+                12505,
+                12506,
+                12507,
+                12508,
+                12509,
+                12510,
+                12511,
+                12512,
+                12513,
+                12514,
+                12515,
+                12516,
+                12517,
+                12518,
+                12519,
+                12520,
+                12521,
+                12522,
+                12523,
+                12524
+              ],
+              "visitorIds": [
+                14350,
+                14357
+              ],
+              "traderId": 14350,
+              "negotiatorId": 12428,
+              "cells": [
+                {
+                  "x": 122,
+                  "z": 105
+                },
+                {
+                  "x": 122,
+                  "z": 106
+                }
+              ],
+              "negotiatorCells": {
+                "original": {
+                  "x": 120,
+                  "z": 109
+                },
+                "prepared": {
+                  "x": 121,
+                  "z": 105
+                }
+              },
+              "weaponIds": [
+                14360,
+                14361,
+                14362
+              ],
+              "currency": 151,
+              "medicine": 4,
+              "receipt": {
+                "tick": 2000,
+                "negotiatorId": 12428,
+                "traderId": 14350,
+                "silver": 25,
+                "forgone": 0,
+                "lines": [
+                  {
+                    "item": "medicine",
+                    "quantity": 1,
+                    "unitPrice": 25.2
+                  }
+                ]
+              },
+              "merchantStock": [
+                {
+                  "id": 14352,
+                  "item": "silver",
+                  "quantity": 51
+                },
+                {
+                  "id": 14353,
+                  "item": "component",
+                  "quantity": 1
+                },
+                {
+                  "id": 14354,
+                  "item": "survival-meal",
+                  "quantity": 4
+                },
+                {
+                  "id": 14355,
+                  "item": "medicine",
+                  "quantity": 3
+                },
+                {
+                  "id": 14365,
+                  "item": "silver",
+                  "quantity": 25
+                }
+              ]
+            },
+            "environment": {
+              "energyStructureIds": [
+                13132,
+                13137,
+                13147,
+                13152,
+                13162,
+                13167,
+                13177,
+                13182,
+                13192,
+                13197,
+                13207,
+                13212,
+                13222,
+                13227,
+                13237,
+                13242,
+                13252,
+                13257,
+                13267,
+                13272,
+                13282,
+                13287,
+                13297,
+                13302,
+                13312,
+                13317,
+                13327,
+                13332,
+                13342,
+                13347,
+                13357,
+                13362,
+                13372,
+                13375,
+                13376,
+                13377,
+                13378,
+                13379,
+                13380,
+                13381,
+                13382,
+                13383,
+                13384,
+                13385,
+                13386,
+                13387,
+                13388,
+                13389,
+                13390,
+                13391,
+                13392,
+                13393,
+                13394,
+                13395,
+                13396,
+                13397,
+                13398,
+                13399,
+                13400,
+                13401,
+                13402,
+                13403,
+                13404,
+                13405,
+                13406,
+                13407,
+                13408,
+                13410,
+                13420,
+                13425,
+                13424,
+                13435,
+                13439,
+                13449,
+                13454,
+                13453,
+                13464,
+                13468,
+                13478,
+                13483,
+                13482,
+                13493,
+                13497,
+                13507,
+                13512,
+                13511,
+                13522,
+                13526,
+                13536,
+                13541,
+                13540,
+                13551,
+                13555,
+                13565,
+                13570,
+                13569,
+                13580,
+                13584,
+                13594,
+                13599,
+                13598,
+                13609,
+                13613,
+                13623,
+                13628,
+                13627,
+                13638,
+                13642,
+                13751,
+                13752,
+                13753,
+                13754,
+                13755,
+                13756,
+                13757,
+                13758,
+                13759,
+                13760,
+                13761,
+                13762,
+                13763,
+                13764,
+                13765,
+                13766,
+                13767,
+                13768,
+                13769,
+                13770,
+                13771,
+                13772,
+                13773,
+                13774,
+                13775,
+                13776,
+                13777,
+                13780,
+                13781,
+                13782,
+                13783,
+                13784,
+                13785,
+                13786,
+                13787,
+                13788,
+                13789,
+                13790,
+                13791,
+                13792,
+                13793,
+                13794,
+                13795,
+                13796,
+                13797,
+                13798,
+                13799,
+                13800,
+                13801,
+                13802,
+                13803,
+                13804,
+                13805,
+                13808,
+                13809,
+                13810,
+                13811,
+                13812,
+                13813,
+                13814,
+                13815,
+                13816,
+                13817,
+                13818,
+                13819,
+                13820,
+                13821,
+                13822,
+                13823,
+                13824,
+                13825,
+                13826,
+                13827,
+                13828,
+                13829,
+                13830,
+                13831,
+                13832,
+                13833,
+                13834,
+                13837,
+                13838,
+                13839,
+                13840,
+                13841,
+                13842,
+                13843,
+                13844,
+                13845,
+                13846,
+                13847,
+                13848,
+                13849,
+                13850,
+                13851,
+                13852,
+                13853,
+                13854,
+                13855,
+                13856,
+                13857,
+                13858,
+                13859,
+                13860,
+                13861,
+                13862,
+                13865,
+                13866,
+                13867,
+                13868,
+                13869,
+                13870,
+                13871,
+                13872,
+                13873,
+                13874,
+                13875,
+                13876,
+                13877,
+                13878,
+                13879,
+                13880,
+                13881,
+                13882,
+                13883,
+                13884,
+                13885,
+                13886,
+                13887,
+                13888,
+                13889,
+                13890,
+                13891,
+                13894,
+                13895,
+                13896,
+                13897,
+                13898,
+                13899,
+                13900,
+                13901,
+                13902,
+                13903,
+                13904,
+                13905,
+                13906,
+                13907,
+                13908,
+                13909,
+                13910,
+                13911,
+                13912,
+                13913,
+                13914,
+                13915,
+                13916,
+                13917,
+                13918,
+                13919,
+                13922,
+                13923,
+                13924,
+                13925,
+                13926,
+                13927,
+                13928,
+                13929,
+                13930,
+                13931,
+                13932,
+                13933,
+                13934,
+                13935,
+                13936,
+                13937,
+                13938,
+                13939,
+                13940,
+                13941,
+                13942,
+                13943,
+                13944,
+                13945,
+                13946,
+                13947,
+                13948,
+                13951,
+                13952,
+                13953,
+                13954,
+                13955,
+                13956,
+                13957,
+                13958,
+                13959,
+                13960,
+                13961,
+                13962,
+                13963,
+                13964,
+                13965,
+                13966,
+                13967,
+                13968,
+                13969,
+                13970,
+                13971,
+                13972,
+                13973,
+                13974,
+                13975,
+                13976,
+                13979,
+                13980,
+                13981,
+                13982,
+                13983,
+                13984,
+                13985,
+                13986,
+                13987,
+                13988,
+                13989,
+                13990,
+                13991,
+                13992,
+                13993,
+                13994,
+                13995,
+                13996,
+                13997,
+                13998,
+                13999,
+                14000,
+                14001,
+                14002,
+                14003,
+                14004,
+                14005,
+                14008,
+                14009,
+                14010,
+                14011,
+                14012,
+                14013,
+                14014,
+                14015,
+                14016,
+                14017,
+                14018,
+                14019,
+                14020,
+                14021,
+                14022,
+                14023,
+                14024,
+                14025,
+                14026,
+                14027,
+                14028,
+                14029,
+                14030,
+                14031,
+                14032,
+                14033,
+                14036,
+                14037,
+                14038,
+                14039,
+                14040,
+                14041,
+                14042,
+                14043,
+                14044,
+                14045,
+                14046,
+                14047,
+                14048,
+                14049,
+                14050,
+                14051,
+                14052,
+                14053,
+                14054,
+                14055,
+                14056,
+                14057,
+                14058,
+                14059,
+                14060,
+                14061,
+                14062,
+                14065,
+                14066,
+                14067,
+                14068,
+                14069,
+                14070,
+                14071,
+                14072,
+                14073,
+                14074,
+                14075,
+                14076,
+                14077,
+                14078,
+                14079,
+                14080,
+                14081,
+                14082,
+                14083,
+                14084,
+                14085,
+                14086,
+                14087,
+                14088,
+                14089,
+                14090,
+                14093,
+                14094,
+                14095,
+                14096,
+                14097,
+                14098,
+                14099,
+                14100,
+                14101,
+                14102,
+                14103,
+                14104,
+                14105,
+                14106,
+                14107,
+                14108,
+                14109,
+                14110,
+                14111,
+                14112,
+                14113,
+                14114,
+                14115,
+                14116,
+                14117,
+                14118,
+                14119,
+                14122,
+                14123,
+                14124,
+                14125,
+                14126,
+                14127,
+                14128,
+                14129,
+                14130,
+                14131,
+                14132,
+                14133,
+                14134,
+                14135,
+                14136,
+                14137,
+                14138,
+                14139,
+                14140,
+                14141,
+                14142,
+                14143,
+                14144,
+                14145,
+                14146,
+                14147,
+                14150,
+                14151,
+                14152,
+                14153,
+                14154,
+                14155,
+                14156,
+                14157,
+                14158,
+                14159,
+                14160,
+                14161,
+                14162,
+                14163,
+                14164,
+                14165,
+                14166,
+                14167,
+                14168,
+                14169,
+                14170,
+                14171,
+                14172,
+                14173,
+                14174,
+                14175,
+                14176,
+                14179,
+                14180,
+                14181,
+                14182,
+                14183,
+                14184,
+                14185,
+                14186,
+                14187,
+                14188,
+                14189,
+                14190,
+                14191,
+                14192,
+                14193,
+                14194,
+                14195,
+                14196,
+                14197,
+                14198,
+                14199,
+                14200,
+                14201,
+                14202,
+                14203,
+                14204,
+                14207,
+                14208,
+                14209,
+                14210,
+                14211,
+                14212,
+                14213,
+                14214,
+                14215,
+                14216,
+                14217,
+                14218,
+                14219,
+                14220,
+                14221,
+                14222,
+                14223,
+                14224,
+                14225,
+                14226,
+                14227,
+                14228,
+                14229,
+                14230,
+                14231,
+                14232,
+                14233
+              ],
+              "heaterIds": [
+                14259,
+                14283,
+                14307,
+                14331
+              ],
+              "windIds": [
+                14236,
+                14260,
+                14284,
+                14308
+              ],
+              "thermalPatches": [
+                {
+                  "preferred": {
+                    "x": 24,
+                    "z": 100
+                  },
+                  "origin": {
+                    "x": 24,
+                    "z": 104
+                  },
+                  "size": 23
+                },
+                {
+                  "preferred": {
+                    "x": 54,
+                    "z": 100
+                  },
+                  "origin": {
+                    "x": 59,
+                    "z": 100
+                  },
+                  "size": 23
+                },
+                {
+                  "preferred": {
+                    "x": 24,
+                    "z": 130
+                  },
+                  "origin": {
+                    "x": 24,
+                    "z": 131
+                  },
+                  "size": 23
+                },
+                {
+                  "preferred": {
+                    "x": 54,
+                    "z": 130
+                  },
+                  "origin": {
+                    "x": 54,
+                    "z": 130
+                  },
+                  "size": 23
+                }
+              ],
+              "firefighterIds": [
+                12425,
+                12431,
+                12437,
+                12443,
+                12449,
+                12455,
+                12461,
+                12467,
+                12473,
+                12479,
+                12485,
+                12491,
+                12497,
+                12503,
+                12509,
+                12515,
+                12521
+              ],
+              "fireIds": [
+                14333,
+                14335,
+                14337,
+                14339,
+                14341,
+                14343,
+                14345,
+                14347,
+                14349
+              ],
+              "firePiles": [
+                {
+                  "id": 14332,
+                  "fireId": 14333,
+                  "quantity": 20,
+                  "cell": {
+                    "x": 111,
+                    "z": 107
+                  }
+                },
+                {
+                  "id": 14334,
+                  "fireId": 14335,
+                  "quantity": 20,
+                  "cell": {
+                    "x": 110,
+                    "z": 108
+                  }
+                },
+                {
+                  "id": 14336,
+                  "fireId": 14337,
+                  "quantity": 20,
+                  "cell": {
+                    "x": 112,
+                    "z": 108
+                  }
+                },
+                {
+                  "id": 14338,
+                  "fireId": 14339,
+                  "quantity": 20,
+                  "cell": {
+                    "x": 129,
+                    "z": 107
+                  }
+                },
+                {
+                  "id": 14340,
+                  "fireId": 14341,
+                  "quantity": 20,
+                  "cell": {
+                    "x": 128,
+                    "z": 108
+                  }
+                },
+                {
+                  "id": 14342,
+                  "fireId": 14343,
+                  "quantity": 20,
+                  "cell": {
+                    "x": 130,
+                    "z": 108
+                  }
+                },
+                {
+                  "id": 14344,
+                  "fireId": 14345,
+                  "quantity": 20,
+                  "cell": {
+                    "x": 117,
+                    "z": 110
+                  }
+                },
+                {
+                  "id": 14346,
+                  "fireId": 14347,
+                  "quantity": 20,
+                  "cell": {
+                    "x": 116,
+                    "z": 111
+                  }
+                },
+                {
+                  "id": 14348,
+                  "fireId": 14349,
+                  "quantity": 20,
+                  "cell": {
+                    "x": 118,
+                    "z": 111
+                  }
+                }
+              ],
+              "fireHomeBounds": {
+                "minX": 107,
+                "maxX": 227,
+                "minZ": 104,
+                "maxZ": 182
+              },
+              "heaters": [
+                {
+                  "id": 14259,
+                  "temperature": 6.846739844341072
+                },
+                {
+                  "id": 14283,
+                  "temperature": 6.846739844341072
+                },
+                {
+                  "id": 14307,
+                  "temperature": 6.846739844341072
+                },
+                {
+                  "id": 14331,
+                  "temperature": 6.846739844341072
+                }
+              ],
+              "suppliedBurnWood": 180
+            },
+            "floors": [
+              {
+                "index": 28289,
+                "floor": "wood-planks"
+              },
+              {
+                "index": 28290,
+                "floor": "granite-tile"
+              },
+              {
+                "index": 28291,
+                "floor": "limestone-tile"
+              },
+              {
+                "index": 28539,
+                "floor": "marble-tile"
+              },
+              {
+                "index": 28540,
+                "floor": "sandstone-tile"
+              },
+              {
+                "index": 28541,
+                "floor": "slate-tile"
+              },
+              {
+                "index": 28789,
+                "floor": "steel-tile"
+              },
+              {
+                "index": 28790,
+                "floor": "wood-planks"
+              },
+              {
+                "index": 28791,
+                "floor": "granite-tile"
+              },
+              {
+                "index": 27324,
+                "floor": "limestone-tile"
+              },
+              {
+                "index": 27325,
+                "floor": "marble-tile"
+              },
+              {
+                "index": 27326,
+                "floor": "sandstone-tile"
+              },
+              {
+                "index": 27574,
+                "floor": "slate-tile"
+              },
+              {
+                "index": 27575,
+                "floor": "steel-tile"
+              },
+              {
+                "index": 27576,
+                "floor": "wood-planks"
+              },
+              {
+                "index": 27824,
+                "floor": "granite-tile"
+              },
+              {
+                "index": 27825,
+                "floor": "limestone-tile"
+              },
+              {
+                "index": 27826,
+                "floor": "marble-tile"
+              },
+              {
+                "index": 35039,
+                "floor": "sandstone-tile"
+              },
+              {
+                "index": 35040,
+                "floor": "slate-tile"
+              },
+              {
+                "index": 35041,
+                "floor": "steel-tile"
+              },
+              {
+                "index": 35289,
+                "floor": "wood-planks"
+              },
+              {
+                "index": 35290,
+                "floor": "granite-tile"
+              },
+              {
+                "index": 35291,
+                "floor": "limestone-tile"
+              },
+              {
+                "index": 35539,
+                "floor": "marble-tile"
+              },
+              {
+                "index": 35540,
+                "floor": "sandstone-tile"
+              },
+              {
+                "index": 35541,
+                "floor": "slate-tile"
+              },
+              {
+                "index": 34819,
+                "floor": "steel-tile"
+              },
+              {
+                "index": 34820,
+                "floor": "wood-planks"
+              },
+              {
+                "index": 34821,
+                "floor": "granite-tile"
+              },
+              {
+                "index": 35069,
+                "floor": "limestone-tile"
+              },
+              {
+                "index": 35070,
+                "floor": "marble-tile"
+              },
+              {
+                "index": 35071,
+                "floor": "sandstone-tile"
+              },
+              {
+                "index": 35319,
+                "floor": "slate-tile"
+              },
+              {
+                "index": 35320,
+                "floor": "steel-tile"
+              },
+              {
+                "index": 35321,
+                "floor": "wood-planks"
+              }
+            ],
+            "filthIds": [
+              14366,
+              14367,
+              14368,
+              14369,
+              14370,
+              14371,
+              14375,
+              14376,
+              14377,
+              14378,
+              14379,
+              14380,
+              14384,
+              14385,
+              14386,
+              14387,
+              14388,
+              14389,
+              14390,
+              14391,
+              14392,
+              14393,
+              14394,
+              14395
+            ],
+            "cleaned": 0,
+            "cleaners": [
+              {
+                "id": 12434,
+                "original": {
+                  "x": 138,
+                  "z": 109
+                },
+                "prepared": {
+                  "x": 39,
+                  "z": 113
+                }
+              },
+              {
+                "id": 12440,
+                "original": {
+                  "x": 126,
+                  "z": 112
+                },
+                "prepared": {
+                  "x": 74,
+                  "z": 109
+                }
+              },
+              {
+                "id": 12446,
+                "original": {
+                  "x": 114,
+                  "z": 115
+                },
+                "prepared": {
+                  "x": 39,
+                  "z": 140
+                }
+              },
+              {
+                "id": 12452,
+                "original": {
+                  "x": 132,
+                  "z": 115
+                },
+                "prepared": {
+                  "x": 69,
+                  "z": 139
+                }
+              }
+            ],
+            "burials": [
+              {
+                "actorId": 12482,
+                "original": {
+                  "x": 132,
+                  "z": 124
+                },
+                "prepared": {
+                  "x": 44,
+                  "z": 117
+                },
+                "bodyPawnId": 14373,
+                "corpseId": 14374,
+                "graveId": 14372,
+                "health": "{\"tick\":2000,\"nextInjuryId\":1,\"injuries\":[],\"missing\":[],\"bloodLoss\":300000000,\"death\":{\"tick\":2000,\"cause\":\"blood-loss\"}}"
+              },
+              {
+                "actorId": 12488,
+                "original": {
+                  "x": 120,
+                  "z": 127
+                },
+                "prepared": {
+                  "x": 79,
+                  "z": 113
+                },
+                "bodyPawnId": 14382,
+                "corpseId": 14383,
+                "graveId": 14381,
+                "health": "{\"tick\":2000,\"nextInjuryId\":1,\"injuries\":[],\"missing\":[],\"bloodLoss\":300000000,\"death\":{\"tick\":2000,\"cause\":\"blood-loss\"}}"
+              }
+            ],
+            "patients": [
+              {
+                "id": 12458,
+                "severity": 300000,
+                "preparedVomit": true
+              },
+              {
+                "id": 12464,
+                "severity": 300000,
+                "preparedVomit": false
+              },
+              {
+                "id": 12470,
+                "severity": 300000,
+                "preparedVomit": false
+              },
+              {
+                "id": 12476,
+                "severity": 300000,
+                "preparedVomit": false
+              }
+            ],
+            "rooms": [
+              {
+                "cell": {
+                  "x": 39,
+                  "z": 113
+                },
+                "cleanliness": -7.7555555555555555
+              },
+              {
+                "cell": {
+                  "x": 74,
+                  "z": 109
+                },
+                "cleanliness": -7.7555555555555555
+              },
+              {
+                "cell": {
+                  "x": 39,
+                  "z": 140
+                },
+                "cleanliness": -7.7555555555555555
+              },
+              {
+                "cell": {
+                  "x": 69,
+                  "z": 139
+                },
+                "cleanliness": -7.7333333333333325
+              }
+            ]
+          },
+          "cleanedTraces": 26,
+          "remainingInitialTraceIds": [],
+          "activeTraces": 1,
+          "changedFloors": [],
+          "rooms": [
+            {
+              "cell": {
+                "x": 39,
+                "z": 113
+              },
+              "cleanliness": 0.022222222222222223,
+              "initialCleanliness": -7.7555555555555555
+            },
+            {
+              "cell": {
+                "x": 74,
+                "z": 109
+              },
+              "cleanliness": 0.022222222222222223,
+              "initialCleanliness": -7.7555555555555555
+            },
+            {
+              "cell": {
+                "x": 39,
+                "z": 140
+              },
+              "cleanliness": 0.022222222222222223,
+              "initialCleanliness": -7.7555555555555555
+            },
+            {
+              "cell": {
+                "x": 69,
+                "z": 139
+              },
+              "cleanliness": 0.044444444444444446,
+              "initialCleanliness": -7.7333333333333325
+            }
+          ],
+          "burials": [
+            {
+              "bodyPawnId": 14373,
+              "corpseId": 14374,
+              "graveId": 14372,
+              "bodyPresent": true,
+              "healthUnchanged": true,
+              "pileCount": 1,
+              "buried": true
+            },
+            {
+              "bodyPawnId": 14382,
+              "corpseId": 14383,
+              "graveId": 14381,
+              "bodyPresent": true,
+              "healthUnchanged": true,
+              "pileCount": 1,
+              "buried": true
+            }
+          ],
+          "patients": [
+            {
+              "id": 12458,
+              "severity": 268000,
+              "preparedVomit": true,
+              "initialSeverity": 300000,
+              "present": true,
+              "state": "idle",
+              "vomiting": true
+            },
+            {
+              "id": 12464,
+              "severity": 267000,
+              "preparedVomit": false,
+              "initialSeverity": 300000,
+              "present": true,
+              "state": "idle",
+              "vomiting": false
+            },
+            {
+              "id": 12470,
+              "severity": 267000,
+              "preparedVomit": false,
+              "initialSeverity": 300000,
+              "present": true,
+              "state": "idle",
+              "vomiting": false
+            },
+            {
+              "id": 12476,
+              "severity": 268000,
+              "preparedVomit": false,
+              "initialSeverity": 300000,
+              "present": true,
+              "state": "idle",
+              "vomiting": false
+            }
+          ]
+        },
+        "furniture": [
+          {
+            "id": 14396,
+            "kind": "table-long",
+            "material": "wood",
+            "quality": "normal",
+            "present": true,
+            "qualityNow": "normal",
+            "materialNow": "wood"
+          },
+          {
+            "id": 14397,
+            "kind": "dining-chair",
+            "material": "steel",
+            "quality": "good",
+            "present": true,
+            "qualityNow": "good",
+            "materialNow": "steel"
+          },
+          {
+            "id": 14398,
+            "kind": "dining-chair",
+            "material": "wood",
+            "quality": "poor",
+            "present": true,
+            "qualityNow": "poor",
+            "materialNow": "wood"
+          },
+          {
+            "id": 14399,
+            "kind": "table-square",
+            "material": "steel",
+            "quality": "excellent",
+            "present": true,
+            "qualityNow": "excellent",
+            "materialNow": "steel"
+          },
+          {
+            "id": 14400,
+            "kind": "stool",
+            "material": "wood",
+            "quality": "normal",
+            "present": true,
+            "qualityNow": "normal",
+            "materialNow": "wood"
+          },
+          {
+            "id": 14401,
+            "kind": "armchair",
+            "material": "cloth",
+            "quality": "good",
+            "present": true,
+            "qualityNow": "good",
+            "materialNow": "cloth"
+          },
+          {
+            "id": 14402,
+            "kind": "armchair",
+            "material": "light-leather",
+            "quality": "normal",
+            "present": true,
+            "qualityNow": "normal",
+            "materialNow": "light-leather"
+          },
+          {
+            "id": 14403,
+            "kind": "end-table",
+            "material": "steel",
+            "quality": "normal",
+            "present": true,
+            "qualityNow": "normal",
+            "materialNow": "steel"
+          },
+          {
+            "id": 14404,
+            "kind": "dresser",
+            "material": "wood",
+            "quality": "normal",
+            "present": true,
+            "qualityNow": "normal",
+            "materialNow": "wood"
+          },
+          {
+            "id": 14405,
+            "kind": "flower-pot",
+            "material": "wood",
+            "quality": "normal",
+            "present": true,
+            "qualityNow": "normal",
+            "materialNow": "wood"
+          },
+          {
+            "id": 14406,
+            "kind": "flower-pot",
+            "material": "wood",
+            "quality": "normal",
+            "present": true,
+            "qualityNow": "normal",
+            "materialNow": "wood"
+          }
+        ],
+        "flowers": [
+          {
+            "id": 14405,
+            "growth": 0.07232222222222245,
+            "lastTick": 2650,
+            "present": true,
+            "plantPresent": true,
+            "initialLastTick": 2000
+          },
+          {
+            "id": 14406,
+            "growth": 0.07232222222222245,
+            "lastTick": 2650,
+            "present": true,
+            "plantPresent": true,
+            "initialLastTick": 2000
+          }
+        ],
+        "workshops": [
+          {
+            "id": 14409,
+            "kind": "tailor-bench",
+            "billId": 14407,
+            "present": true,
+            "billPresent": true,
+            "bills": 1
+          },
+          {
+            "id": 14410,
+            "kind": "electric-tailor-bench",
+            "billId": 14408,
+            "present": true,
+            "billPresent": true,
+            "bills": 1
+          }
+        ],
+        "apparel": [
+          {
+            "id": 13125,
+            "pawnId": 12425,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 60,
+            "automatic": true,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 60,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13129,
+            "pawnId": 12426,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 60,
+            "automatic": true,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 60,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13130,
+            "pawnId": 12427,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 60,
+            "automatic": true,
+            "present": true,
+            "retained": true,
+            "worn": false,
+            "owner": "ground",
+            "hitPointsNow": 59,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13134,
+            "pawnId": 12428,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 60,
+            "automatic": true,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 60,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13135,
+            "pawnId": 12429,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 60,
+            "automatic": true,
+            "present": true,
+            "retained": true,
+            "worn": false,
+            "owner": "ground",
+            "hitPointsNow": 60,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13139,
+            "pawnId": 12430,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 60,
+            "automatic": true,
+            "present": true,
+            "retained": true,
+            "worn": false,
+            "owner": "ground",
+            "hitPointsNow": 60,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13140,
+            "pawnId": 12431,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 40,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 40,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13144,
+            "pawnId": 12432,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 40,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 40,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13145,
+            "pawnId": 12433,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13149,
+            "pawnId": 12434,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13150,
+            "pawnId": 12435,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13154,
+            "pawnId": 12436,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13155,
+            "pawnId": 12437,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13159,
+            "pawnId": 12438,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13160,
+            "pawnId": 12439,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13164,
+            "pawnId": 12440,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13165,
+            "pawnId": 12441,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13169,
+            "pawnId": 12442,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13170,
+            "pawnId": 12443,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13174,
+            "pawnId": 12444,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13175,
+            "pawnId": 12445,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13179,
+            "pawnId": 12446,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13180,
+            "pawnId": 12447,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13184,
+            "pawnId": 12448,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13185,
+            "pawnId": 12449,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13189,
+            "pawnId": 12450,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13190,
+            "pawnId": 12451,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13194,
+            "pawnId": 12452,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13195,
+            "pawnId": 12453,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13199,
+            "pawnId": 12454,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13200,
+            "pawnId": 12455,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13204,
+            "pawnId": 12456,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13205,
+            "pawnId": 12457,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13209,
+            "pawnId": 12458,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13210,
+            "pawnId": 12459,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13214,
+            "pawnId": 12460,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13215,
+            "pawnId": 12461,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13219,
+            "pawnId": 12462,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13220,
+            "pawnId": 12463,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13224,
+            "pawnId": 12464,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13225,
+            "pawnId": 12465,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13229,
+            "pawnId": 12466,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13230,
+            "pawnId": 12467,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13234,
+            "pawnId": 12468,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13235,
+            "pawnId": 12469,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13239,
+            "pawnId": 12470,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13240,
+            "pawnId": 12471,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13244,
+            "pawnId": 12472,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13245,
+            "pawnId": 12473,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13249,
+            "pawnId": 12474,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13250,
+            "pawnId": 12475,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13254,
+            "pawnId": 12476,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13255,
+            "pawnId": 12477,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13259,
+            "pawnId": 12478,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13260,
+            "pawnId": 12479,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13264,
+            "pawnId": 12480,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13265,
+            "pawnId": 12481,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13269,
+            "pawnId": 12482,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13270,
+            "pawnId": 12483,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13274,
+            "pawnId": 12484,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13275,
+            "pawnId": 12485,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13279,
+            "pawnId": 12486,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13280,
+            "pawnId": 12487,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13284,
+            "pawnId": 12488,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13285,
+            "pawnId": 12489,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13289,
+            "pawnId": 12490,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13290,
+            "pawnId": 12491,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13294,
+            "pawnId": 12492,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13295,
+            "pawnId": 12493,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13299,
+            "pawnId": 12494,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13300,
+            "pawnId": 12495,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13304,
+            "pawnId": 12496,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13305,
+            "pawnId": 12497,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13309,
+            "pawnId": 12498,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13310,
+            "pawnId": 12499,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13314,
+            "pawnId": 12500,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13315,
+            "pawnId": 12501,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13319,
+            "pawnId": 12502,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13320,
+            "pawnId": 12503,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13324,
+            "pawnId": 12504,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13325,
+            "pawnId": 12505,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13329,
+            "pawnId": 12506,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13330,
+            "pawnId": 12507,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13334,
+            "pawnId": 12508,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13335,
+            "pawnId": 12509,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13339,
+            "pawnId": 12510,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13340,
+            "pawnId": 12511,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13344,
+            "pawnId": 12512,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13345,
+            "pawnId": 12513,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13349,
+            "pawnId": 12514,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13350,
+            "pawnId": 12515,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13354,
+            "pawnId": 12516,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13355,
+            "pawnId": 12517,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13359,
+            "pawnId": 12518,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13360,
+            "pawnId": 12519,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 100,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13364,
+            "pawnId": 12520,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13365,
+            "pawnId": 12521,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13369,
+            "pawnId": 12522,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13370,
+            "pawnId": 12523,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          },
+          {
+            "id": 13374,
+            "pawnId": 12524,
+            "item": "cloth-tribalwear",
+            "material": "cloth",
+            "hitPoints": 100,
+            "automatic": false,
+            "present": true,
+            "retained": true,
+            "worn": true,
+            "owner": "apparel",
+            "hitPointsNow": 99,
+            "materialNow": "cloth"
+          }
+        ],
+        "policies": [
+          {
+            "id": 1,
+            "label": "Tout vêtement",
+            "minHitPointsPercent": 0
+          },
+          {
+            "id": 2,
+            "label": "Tenue entretenue",
+            "minHitPointsPercent": 0.51
+          }
+        ],
+        "policyAssignments": [
+          {
+            "pawnId": 12425,
+            "policyId": 2,
+            "automatic": true,
+            "policyIdNow": 2,
+            "automaticNow": true
+          },
+          {
+            "pawnId": 12426,
+            "policyId": 2,
+            "automatic": true,
+            "policyIdNow": 2,
+            "automaticNow": true
+          },
+          {
+            "pawnId": 12427,
+            "policyId": 2,
+            "automatic": true,
+            "policyIdNow": 2,
+            "automaticNow": true
+          },
+          {
+            "pawnId": 12428,
+            "policyId": 2,
+            "automatic": true,
+            "policyIdNow": 2,
+            "automaticNow": true
+          },
+          {
+            "pawnId": 12429,
+            "policyId": 2,
+            "automatic": true,
+            "policyIdNow": 2,
+            "automaticNow": true
+          },
+          {
+            "pawnId": 12430,
+            "policyId": 2,
+            "automatic": true,
+            "policyIdNow": 2,
+            "automaticNow": true
+          },
+          {
+            "pawnId": 12431,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12432,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12433,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12434,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12435,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12436,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12437,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12438,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12439,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12440,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12441,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12442,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12443,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12444,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12445,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12446,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12447,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12448,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12449,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12450,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12451,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12452,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12453,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12454,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12455,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12456,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12457,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12458,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12459,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12460,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12461,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12462,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12463,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12464,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12465,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12466,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12467,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12468,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12469,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12470,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12471,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12472,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12473,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12474,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12475,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12476,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12477,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12478,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12479,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12480,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12481,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12482,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12483,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12484,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12485,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12486,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12487,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12488,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12489,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12490,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12491,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12492,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12493,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12494,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12495,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12496,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12497,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12498,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12499,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12500,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12501,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12502,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12503,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12504,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12505,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12506,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12507,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12508,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12509,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12510,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12511,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12512,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12513,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12514,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12515,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12516,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12517,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12518,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12519,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12520,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12521,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12522,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12523,
+            "policyId": 2,
+            "automatic": false,
+            "policyIdNow": 2,
+            "automaticNow": false
+          },
+          {
+            "pawnId": 12524,
+            "policyId": 1,
+            "automatic": false,
+            "policyIdNow": 1,
+            "automaticNow": false
+          }
+        ],
+        "wear": {
+          "initial": {
+            "nextWearAt": 2300,
+            "rng": 686027
+          },
+          "next": {
+            "nextWearAt": 8300,
+            "rng": 1405252433
+          },
+          "damaged": 46
+        },
+        "replacements": 3,
+        "candidateWorn": 5,
+        "candidatesPresent": [
+          14420,
+          14421,
+          14422,
+          14423,
+          14424,
+          14425
+        ],
+        "textileIdsPresent": [
+          14418,
+          14419
+        ],
+        "tailoringCompleted": 0
+      },
+      "foodChain": {
+        "stoves": [
+          {
+            "kind": "electric-stove",
+            "id": 13410,
+            "completed": 1,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13424,
+            "completed": 2,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13439,
+            "completed": 3,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13453,
+            "completed": 2,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13468,
+            "completed": 2,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13482,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13497,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13511,
+            "completed": 3,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13526,
+            "completed": 3,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13540,
+            "completed": 3,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13555,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13569,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13584,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13598,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13613,
+            "completed": 3,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13627,
+            "completed": 3,
+            "powered": true,
+            "fuelBurned": 0
+          },
+          {
+            "kind": "electric-stove",
+            "id": 13642,
+            "completed": 4,
+            "powered": true,
+            "fuelBurned": 0
+          }
+        ],
+        "butcherTables": 16,
+        "butchered": 32,
+        "meatProduced": 996,
+        "food": {
+          "potato": 384,
+          "corn": 844,
+          "meals": 43,
+          "meat": 996
+        },
+        "crops": [
+          {
+            "kind": "potato",
+            "originalRemaining": 0,
+            "resown": 32
+          },
+          {
+            "kind": "corn",
+            "originalRemaining": 2,
+            "resown": 24
+          }
+        ],
+        "growers": [
+          {
+            "id": 12427,
+            "malnutrition": 141691212,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12433,
+            "malnutrition": 142652399,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12439,
+            "malnutrition": 136859955,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12445,
+            "malnutrition": 142351608,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12451,
+            "malnutrition": 135157757,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12457,
+            "malnutrition": 146364320,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12463,
+            "malnutrition": 134739023,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12469,
+            "malnutrition": 141768104,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12475,
+            "malnutrition": 135976844,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12481,
+            "malnutrition": 141060668,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12487,
+            "malnutrition": 150061376,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12493,
+            "malnutrition": 135063759,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12499,
+            "malnutrition": 135651870,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12505,
+            "malnutrition": 141276424,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12511,
+            "malnutrition": 134730165,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12517,
+            "malnutrition": 147391764,
+            "food": 73.99999999999594
+          },
+          {
+            "id": 12523,
+            "malnutrition": 132285787,
+            "food": 73.99999999999594
+          }
+        ],
+        "butcherFood": [
+          89.78666666666507,
+          91.59999999999869,
+          95.43999999999929,
+          91.62666666666536,
+          90.95999999999859,
+          90.98666666666526,
+          91.51999999999867,
+          92.98666666666557,
+          93.4133333333323,
+          94.53333333333248,
+          95.01333333333255,
+          91.51999999999867,
+          89.41333333333168,
+          93.65333333333234,
+          96.53333333333279,
+          94.45333333333247,
+          72.66666666666396
+        ]
+      },
+      "energy": {
+        "food": {
+          "stoves": [
+            {
+              "kind": "electric-stove",
+              "id": 13410,
+              "completed": 1,
+              "powered": true,
+              "fuelBurned": 0
+            },
+            {
+              "kind": "electric-stove",
+              "id": 13424,
+              "completed": 2,
+              "powered": true,
+              "fuelBurned": 0
+            },
+            {
+              "kind": "electric-stove",
+              "id": 13439,
+              "completed": 3,
+              "powered": true,
+              "fuelBurned": 0
+            },
+            {
+              "kind": "electric-stove",
+              "id": 13453,
+              "completed": 2,
+              "powered": true,
+              "fuelBurned": 0
+            },
+            {
+              "kind": "electric-stove",
+              "id": 13468,
+              "completed": 2,
+              "powered": true,
+              "fuelBurned": 0
+            },
+            {
+              "kind": "electric-stove",
+              "id": 13482,
+              "completed": 4,
+              "powered": true,
+              "fuelBurned": 0
+            },
+            {
+              "kind": "electric-stove",
+              "id": 13497,
+              "completed": 4,
+              "powered": true,
+              "fuelBurned": 0
+            },
+            {
+              "kind": "electric-stove",
+              "id": 13511,
+              "completed": 3,
+              "powered": true,
+              "fuelBurned": 0
+            },
+            {
+              "kind": "electric-stove",
+              "id": 13526,
+              "completed": 3,
+              "powered": true,
+              "fuelBurned": 0
+            },
+            {
+              "kind": "electric-stove",
+              "id": 13540,
+              "completed": 3,
+              "powered": true,
+              "fuelBurned": 0
+            },
+            {
+              "kind": "electric-stove",
+              "id": 13555,
+              "completed": 4,
+              "powered": true,
+              "fuelBurned": 0
+            },
+            {
+              "kind": "electric-stove",
+              "id": 13569,
+              "completed": 4,
+              "powered": true,
+              "fuelBurned": 0
+            },
+            {
+              "kind": "electric-stove",
+              "id": 13584,
+              "completed": 4,
+              "powered": true,
+              "fuelBurned": 0
+            },
+            {
+              "kind": "electric-stove",
+              "id": 13598,
+              "completed": 4,
+              "powered": true,
+              "fuelBurned": 0
+            },
+            {
+              "kind": "electric-stove",
+              "id": 13613,
+              "completed": 3,
+              "powered": true,
+              "fuelBurned": 0
+            },
+            {
+              "kind": "electric-stove",
+              "id": 13627,
+              "completed": 3,
+              "powered": true,
+              "fuelBurned": 0
+            },
+            {
+              "kind": "electric-stove",
+              "id": 13642,
+              "completed": 4,
+              "powered": true,
+              "fuelBurned": 0
+            }
+          ],
+          "butcherTables": 16,
+          "butchered": 32,
+          "meatProduced": 996,
+          "food": {
+            "potato": 384,
+            "corn": 844,
+            "meals": 43,
+            "meat": 996
+          },
+          "crops": [
+            {
+              "kind": "potato",
+              "originalRemaining": 0,
+              "resown": 32
+            },
+            {
+              "kind": "corn",
+              "originalRemaining": 2,
+              "resown": 24
+            }
+          ],
+          "growers": [
+            {
+              "id": 12427,
+              "malnutrition": 141691212,
+              "food": 73.99999999999594
+            },
+            {
+              "id": 12433,
+              "malnutrition": 142652399,
+              "food": 73.99999999999594
+            },
+            {
+              "id": 12439,
+              "malnutrition": 136859955,
+              "food": 73.99999999999594
+            },
+            {
+              "id": 12445,
+              "malnutrition": 142351608,
+              "food": 73.99999999999594
+            },
+            {
+              "id": 12451,
+              "malnutrition": 135157757,
+              "food": 73.99999999999594
+            },
+            {
+              "id": 12457,
+              "malnutrition": 146364320,
+              "food": 73.99999999999594
+            },
+            {
+              "id": 12463,
+              "malnutrition": 134739023,
+              "food": 73.99999999999594
+            },
+            {
+              "id": 12469,
+              "malnutrition": 141768104,
+              "food": 73.99999999999594
+            },
+            {
+              "id": 12475,
+              "malnutrition": 135976844,
+              "food": 73.99999999999594
+            },
+            {
+              "id": 12481,
+              "malnutrition": 141060668,
+              "food": 73.99999999999594
+            },
+            {
+              "id": 12487,
+              "malnutrition": 150061376,
+              "food": 73.99999999999594
+            },
+            {
+              "id": 12493,
+              "malnutrition": 135063759,
+              "food": 73.99999999999594
+            },
+            {
+              "id": 12499,
+              "malnutrition": 135651870,
+              "food": 73.99999999999594
+            },
+            {
+              "id": 12505,
+              "malnutrition": 141276424,
+              "food": 73.99999999999594
+            },
+            {
+              "id": 12511,
+              "malnutrition": 134730165,
+              "food": 73.99999999999594
+            },
+            {
+              "id": 12517,
+              "malnutrition": 147391764,
+              "food": 73.99999999999594
+            },
+            {
+              "id": 12523,
+              "malnutrition": 132285787,
+              "food": 73.99999999999594
+            }
+          ],
+          "butcherFood": [
+            89.78666666666507,
+            91.59999999999869,
+            95.43999999999929,
+            91.62666666666536,
+            90.95999999999859,
+            90.98666666666526,
+            91.51999999999867,
+            92.98666666666557,
+            93.4133333333323,
+            94.53333333333248,
+            95.01333333333255,
+            91.51999999999867,
+            89.41333333333168,
+            93.65333333333234,
+            96.53333333333279,
+            94.45333333333247,
+            72.66666666666396
+          ]
+        },
+        "batteries": [
+          {
+            "id": 13753,
+            "storedWd": 231.69983333333334
+          },
+          {
+            "id": 13781,
+            "storedWd": 235.05816666666666
+          },
+          {
+            "id": 13810,
+            "storedWd": 235.004
+          },
+          {
+            "id": 13838,
+            "storedWd": 234.94983333333334
+          },
+          {
+            "id": 13867,
+            "storedWd": 236.33025
+          },
+          {
+            "id": 13895,
+            "storedWd": 236.33025
+          },
+          {
+            "id": 13924,
+            "storedWd": 236.49691666666666
+          },
+          {
+            "id": 13952,
+            "storedWd": 236.41358333333332
+          },
+          {
+            "id": 13981,
+            "storedWd": 236.33025
+          },
+          {
+            "id": 14009,
+            "storedWd": 236.33025
+          },
+          {
+            "id": 14038,
+            "storedWd": 236.24691666666666
+          },
+          {
+            "id": 14066,
+            "storedWd": 236.16358333333332
+          },
+          {
+            "id": 14095,
+            "storedWd": 236.08025
+          },
+          {
+            "id": 14123,
+            "storedWd": 235.83025
+          },
+          {
+            "id": 14152,
+            "storedWd": 235.99691666666666
+          },
+          {
+            "id": 14180,
+            "storedWd": 235.91358333333332
+          },
+          {
+            "id": 14209,
+            "storedWd": 235.11233333333334
+          },
+          {
+            "id": 14237,
+            "storedWd": 134.85820833333332
+          },
+          {
+            "id": 14261,
+            "storedWd": 134.85820833333332
+          },
+          {
+            "id": 14285,
+            "storedWd": 134.85820833333332
+          },
+          {
+            "id": 14309,
+            "storedWd": 134.85820833333332
+          }
+        ],
+        "solar": [
+          {
+            "id": 13752,
+            "watts": 1700
+          },
+          {
+            "id": 13780,
+            "watts": 1700
+          },
+          {
+            "id": 13809,
+            "watts": 1700
+          },
+          {
+            "id": 13837,
+            "watts": 1700
+          },
+          {
+            "id": 13866,
+            "watts": 1700
+          },
+          {
+            "id": 13894,
+            "watts": 1700
+          },
+          {
+            "id": 13923,
+            "watts": 1700
+          },
+          {
+            "id": 13951,
+            "watts": 1700
+          },
+          {
+            "id": 13980,
+            "watts": 1700
+          },
+          {
+            "id": 14008,
+            "watts": 1700
+          },
+          {
+            "id": 14037,
+            "watts": 1700
+          },
+          {
+            "id": 14065,
+            "watts": 1700
+          },
+          {
+            "id": 14094,
+            "watts": 1700
+          },
+          {
+            "id": 14122,
+            "watts": 1700
+          },
+          {
+            "id": 14151,
+            "watts": 1700
+          },
+          {
+            "id": 14179,
+            "watts": 1700
+          },
+          {
+            "id": 14208,
+            "watts": 1700
+          }
+        ],
+        "switches": [
+          {
+            "id": 13754,
+            "on": true,
+            "pending": false
+          },
+          {
+            "id": 13782,
+            "on": true,
+            "pending": false
+          },
+          {
+            "id": 13811,
+            "on": true,
+            "pending": false
+          },
+          {
+            "id": 13839,
+            "on": true,
+            "pending": false
+          },
+          {
+            "id": 13868,
+            "on": true,
+            "pending": false
+          },
+          {
+            "id": 13896,
+            "on": true,
+            "pending": false
+          },
+          {
+            "id": 13925,
+            "on": true,
+            "pending": false
+          },
+          {
+            "id": 13953,
+            "on": true,
+            "pending": false
+          },
+          {
+            "id": 13982,
+            "on": true,
+            "pending": false
+          },
+          {
+            "id": 14010,
+            "on": true,
+            "pending": false
+          },
+          {
+            "id": 14039,
+            "on": true,
+            "pending": false
+          },
+          {
+            "id": 14067,
+            "on": true,
+            "pending": false
+          },
+          {
+            "id": 14096,
+            "on": true,
+            "pending": false
+          },
+          {
+            "id": 14124,
+            "on": true,
+            "pending": false
+          },
+          {
+            "id": 14153,
+            "on": true,
+            "pending": false
+          },
+          {
+            "id": 14181,
+            "on": true,
+            "pending": false
+          },
+          {
+            "id": 14210,
+            "on": true,
+            "pending": false
+          }
+        ],
+        "conduits": 139,
+        "coolers": [
+          {
+            "id": 13764,
+            "powered": true,
+            "temperature": -5
+          },
+          {
+            "id": 13792,
+            "powered": true,
+            "temperature": -5
+          },
+          {
+            "id": 13821,
+            "powered": true,
+            "temperature": -5
+          },
+          {
+            "id": 13849,
+            "powered": true,
+            "temperature": -5
+          },
+          {
+            "id": 13878,
+            "powered": true,
+            "temperature": -5
+          },
+          {
+            "id": 13906,
+            "powered": true,
+            "temperature": -5
+          },
+          {
+            "id": 13935,
+            "powered": true,
+            "temperature": -5
+          },
+          {
+            "id": 13963,
+            "powered": true,
+            "temperature": -5
+          },
+          {
+            "id": 13992,
+            "powered": true,
+            "temperature": -5
+          },
+          {
+            "id": 14020,
+            "powered": true,
+            "temperature": -5
+          },
+          {
+            "id": 14049,
+            "powered": true,
+            "temperature": -5
+          },
+          {
+            "id": 14077,
+            "powered": true,
+            "temperature": -5
+          },
+          {
+            "id": 14106,
+            "powered": true,
+            "temperature": -5
+          },
+          {
+            "id": 14134,
+            "powered": true,
+            "temperature": -5
+          },
+          {
+            "id": 14163,
+            "powered": true,
+            "temperature": -5
+          },
+          {
+            "id": 14191,
+            "powered": true,
+            "temperature": -5
+          },
+          {
+            "id": 14220,
+            "powered": true,
+            "temperature": -5
+          }
+        ]
+      },
+      "infected": 0,
+      "treatedInfections": 0,
+      "animals": 100,
+      "animalNutrition": 9.029415,
+      "hunted": 0,
+      "corpses": 2,
+      "animalDead": 0,
+      "colonistInjured": 0,
+      "tickMs": {
+        "n": 650,
+        "p50": 24.27100000000064,
+        "p95": 54.758600000001024,
+        "p99": 88.08019999999851,
+        "max": 123.76549999999952
+      },
+      "steadyTickMs": {
+        "n": 630,
+        "p50": 23.70720000000074,
+        "p95": 50.14849999999933,
+        "p99": 69.14990000000034,
+        "max": 85.86000000000058
+      },
+      "snapshotMs": {
+        "n": 130,
+        "p50": 7.36160000000018,
+        "p95": 14.618199999998978,
+        "p99": 18.429700000000594,
+        "max": 19.088300000001254
+      },
+      "completed": 0,
+      "research": 600000000,
+      "exposed": 0,
+      "coolers": 17,
+      "mined": 129
+    }
+  ]
+}

@@ -142,14 +142,18 @@ test('objets graphiques résidents : retrait/restauration, frontière de chunk, 
   const items=Array.from({length:700},(_,i)=>({x:i,y:1,z:i%3,sx:1,sy:2,sz:.5,color:0xff0000}));
   boxes.set(boxGroup,'test',items.slice(0,4));
   const mesh=boxGroup.children[0] as BoxMesh, original=mesh.instanceMatrix;
+  expect(mesh.instanceMatrix.usage).toBe(THREE.StaticDrawUsage);
+  expect(mesh.colorBuffer.usage).toBe(THREE.StaticDrawUsage);
   const neighborGroup=new THREE.Group();boxes.set(neighborGroup,'neighbor',[{x:4,y:2,z:3,ry:Math.PI/2,sx:2,sy:3,sz:.5,color:0x00ff00}]);
   const neighbor=neighborGroup.children[0] as BoxMesh,neighborGeometry=neighbor.geometry;
   let neighborDisposals=0;neighborGeometry.addEventListener('dispose',()=>neighborDisposals++);
   expect(neighbor.material).toBe(mesh.material);
   expect(neighbor.geometry.getAttribute('position')).not.toBe(mesh.geometry.getAttribute('position'));
   expect(neighbor.geometry.index).not.toBe(mesh.geometry.index);
-  for(const n of [1,0,200,4]){boxes.set(boxGroup,'test',items.slice(0,n));expect(mesh.instanceMatrix).toBe(original);expect(mesh.activeCount).toBe(n);}
+  for(const n of [1,0,200,4]){boxes.set(boxGroup,'test',items.slice(0,n));expect(mesh.instanceMatrix).toBe(original);expect(mesh.activeCount).toBe(n);expect(mesh.visible).toBe(n>0);}
   boxes.set(boxGroup,'test',items); expect(boxGroup.children[0]).toBe(mesh);expect(mesh.instanceMatrix.count).toBe(1024);
+  expect(mesh.instanceMatrix.usage).toBe(THREE.StaticDrawUsage);
+  expect(mesh.colorBuffer.usage).toBe(THREE.StaticDrawUsage);
   expect(neighborDisposals).toBe(0);expect(neighbor.geometry).toBe(neighborGeometry);expect(neighbor.activeCount).toBe(1);
   const matrix=new THREE.Matrix4();mesh.getMatrixAt(699,matrix);expect(new THREE.Vector3().setFromMatrixPosition(matrix).x).toBe(699);
   expect(mesh.boundingSphere!.containsPoint(new THREE.Vector3(699,1,0))).toBe(true);
@@ -157,7 +161,7 @@ test('objets graphiques résidents : retrait/restauration, frontière de chunk, 
   const resident=mesh.instanceMatrix,bounds=mesh.boundingSphere,values=Array.from(resident.array);
   const restoreShadows=boxes.prepareEmptyShadows();expect(mesh.activeCount).toBe(1);expect(mesh.instanceMatrix).toBe(resident);
   mesh.getMatrixAt(0,matrix);expect(matrix.determinant()).toBe(0);
-  restoreShadows();expect(mesh.activeCount).toBe(0);expect(mesh.boundingSphere).toBe(bounds);expect(Array.from(resident.array)).toEqual(values);
+  restoreShadows();expect(mesh.activeCount).toBe(0);expect(mesh.visible).toBe(false);expect(mesh.boundingSphere).toBe(bounds);expect(Array.from(resident.array)).toEqual(values);
   boxes.set(boxGroup,'test',items.slice(0,4));const restoreLive=boxes.prepareEmptyShadows();restoreLive();expect(mesh.activeCount).toBe(4);expect(mesh.instanceMatrix).toBe(resident);
   boxes.set(boxGroup,'test',[]);const restoreBeforeSnapshot=boxes.prepareEmptyShadows();
   boxes.set(boxGroup,'test',items.slice(17,18));const updated=Array.from(mesh.instanceMatrix.array);
@@ -173,6 +177,8 @@ test('objets graphiques résidents : retrait/restauration, frontière de chunk, 
   const doorMaterial=doors.mesh.material,beforeDoors=JSON.stringify(dw);doors.update(dw,false);
   expect(JSON.stringify(dw)).toBe(beforeDoors);expect(doors.mesh.activeCount).toBe(600);expect(doors.mesh.material).toBe(doorMaterial);
   const doorGeometry=doors.mesh.geometry,doorMatrices=doors.mesh.instanceMatrix,version=doorMatrices.version;
+  expect(doorMatrices.usage).toBe(THREE.StaticDrawUsage);
+  expect((doorGeometry.getAttribute('doorCurrent') as THREE.InstancedBufferAttribute).usage).toBe(THREE.StaticDrawUsage);
   dw.structures[0]!.door!.holdOpen=true;dw.tick++;doors.update(dw,false);expect(doorMatrices.version).toBe(version);
   dw.structures[0]!.door!.open=true;dw.structures[0]!.door!.changedAt=dw.tick;doors.update(dw,false);
   expect(doors.mesh.geometry).toBe(doorGeometry);expect(doors.mesh.instanceMatrix).toBe(doorMatrices);

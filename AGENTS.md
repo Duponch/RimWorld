@@ -1,5 +1,12 @@
 # Travail sur Lisière
 
+## Performance et curseurs V95
+- Gameplay suspendu à la demande du joueur. Lire `docs/research/performance-v95.md` et `docs/history/validation-performance-v95.md`. Schéma 91, catalogue V91, règles, calendrier et PRNG conservés. La cible de 240 FPS/6× reste non garantie, notamment à cent colons.
+- Une seule flèche pour tous les outils ; `cursors-v95.png` contient les formes sémantiques doigt, attente, loupe, texte, mains et interdit. Le redimensionnement reste préparé sans inventer une poignée. Ne pas revenir aux neuf flèches d’outils V94.
+- Attributs résidents à version explicite ; `LandscapeBatch` conserve les commandes du paysage seulement sur WebGPU. Invalidation à l’adoption, changement de distance/feuillage et préparation des ombres ; acteurs, portes, lumières et piles indépendants. Lots de boîtes vides invisibles mais allocations conservées, réactivation pendant préparation des ombres. Les compteurs Three des dessins encodés ne comptent pas les bundles rejoués : ne pas annoncer de réduction de triangles réelle.
+- Deltas de piles et index des ressources : ordre exact, états imbriqués, anciens instantanés et refus atomiques. Navigation différée seulement pendant l’examen synchrone du planificateur sans mutation ; API générale capture toujours immédiatement. Pas de cache global des valeurs modifiables des sols.
+- Comparaisons CPU sur copies isolées de V94, replays exacts et mesures natives successives avec sources gelées. La comparaison raster conserve les hashes stricts et sa différence résiduelle d’un pixel nocturne ; ne pas déclarer une identité pixel parfaite universelle. Pas de campagne annuelle pour ces changements sans règle nouvelle. Netlify V95 `6ab57508f64713831acd4aec` prêt et parcours public réussi ; retour en mode jour.
+
 ## Plantes 3D et stabilité d'interface V94
 - Lire `docs/development/visual-identity.md`, `gpu-landscape.md` et `docs/history/validation-interface-v94.md`. La demande V94 remplace les brins V92 : `GpuGrassLayer` est supprimé ; `grass` et `tall-grass` sont des touffes 3D verticales à sept tiges fines dans un seul lot instancié, avec variations déterministes qui ne consomment pas le PRNG métier. Ne pas réintroduire un tapis d'herbe procédural sans nouvelle demande.
 - Ressources garde 216 px et tous ses libellés même si un panneau le chevauche. Travail, Horaires et Affectations ne défilent pas horizontalement aux résolutions contrôlées ; Faune garde six colonnes stables. Les portraits sélectionnés gardent leur nom et tous les portraits ont un survol.

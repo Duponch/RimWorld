@@ -1,4 +1,4 @@
-# Identité visuelle et inspection — V94
+# Identité visuelle et inspection — V95
 
 V94 conserve la structure de jeu introduite en V93 — ressources, portraits, dossiers, alertes, temps et barre de gestion — puis corrige les éléments qui se comportaient encore comme une page web. Les surfaces restent en papier ivoire et encre forêt, avec Source Sans 3 et Literata embarquées. Aucun cadre raster n'est étiré et les panneaux papier ne reçoivent pas de second fond sombre.
 
@@ -22,12 +22,12 @@ Les créations restent dans `public/assets/ui/lisiere/` et ne proviennent pas de
 | `icons.png` | RGBA 1122×1402 | pictogrammes HUD et désignations |
 | `portraits.png` | RGB 1536×1024 | six portraits 3×2 |
 | `architect-1.png`, `architect-2.png` | RGBA 1374×1145 chacun | 60 outils Architecte |
-| `cursors-v94.png` | RGBA 1312×1199 | neuf curseurs illustrés en grille 3×3 |
+| `cursors-v95.png` | RGBA 1254×1254 | neuf formes sémantiques, une image par type |
 
-`cursors-v94.png` a été généré pour Lisière à partir d'un prompt demandant une planche 3×3 transparente de flèches normales, lisibles et cohérentes avec le papier/forêt : sélection, pioche, hache ; récolte, coupe, construction ; déconstruction, zones et annulation. La flèche seule porte le point actif ; aucun point ou réticule séparé n'est dessiné.
+V95 corrige l'interprétation de V94 : les outils Architecte partagent une **seule flèche normale**. Les autres images désignent une interaction : doigt pour un bouton/lien, sablier pendant la préparation, loupe pendant la molette, I pour le texte, main ouverte/fermée pour le déplacement, interdit pour un contrôle désactivé. Le redimensionnement diagonal est préparé pour une poignée qui en aurait besoin ; aucun panneau redimensionnable n'est ajouté.
 
-`tool-cursors.ts` découpe l'atlas une seule fois dans des canevas locaux, recadre l'alpha et calcule le point actif depuis la pointe opaque la plus haute. Chaque outil reçoit un vrai curseur distinct et un repli CSS utilisable. Le point actif observé reste dans les six premiers pixels horizontaux et les trois premiers verticaux du fragment recadré.
+L'atlas a été créé avec l'outil de génération d'images : neuf formes distinctes, fond transparent, ivoire/or/vert forêt, sans flèches supplémentaires ni point détaché. `tool-cursors.ts` découpe et recadre l'alpha une seule fois. La pointe opaque de la flèche et le bout du doigt servent de point actif ; les autres utilisent le centre ou le verre de la loupe. À 40 px, le point actif de la flèche est (2,1). `cursors.css` couvre les états réels de l'interface, avec repli CSS natif.
 
 ## Frontières
 
-Cette couche ne crée ni objet, ni recette, ni règle de simulation. Le schéma du monde reste **91**. Les grandes sauvegardes restent compressées au stockage seulement et les anciens JSON bruts restent lisibles. Les plantes suivent le [contrat de paysage V94](gpu-landscape.md) et les mesures, échecs et limites sont consignés dans les [preuves V94](../history/validation-interface-v94.md).
+Cette couche ne crée ni objet, ni recette, ni règle de simulation. Le schéma du monde reste **91**. Les grandes sauvegardes restent compressées au stockage seulement et les anciens JSON bruts restent lisibles. Les plantes suivent le [contrat de paysage V95](gpu-landscape.md) et les mesures, échecs et limites sont consignés dans les [preuves V95](../history/validation-performance-v95.md).

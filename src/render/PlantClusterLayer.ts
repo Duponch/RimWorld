@@ -3,6 +3,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { Resource, World } from '../sim/types';
 import { floraColor, floraSize, isClusterPlantSpecies } from './flora-presentation';
 import { noise } from './StaticGeometry';
+import type { NaturalPresentationChange } from './NaturalResourcePresentation';
 
 const BASE_STEMS = [
   { x: 0, z: 0, height: 1, leanX: .04, leanZ: -.025 },
@@ -46,11 +47,10 @@ export interface PlantClusterPresentation {
 
 /** Position/species alone determine the silhouette, so a reload cannot reshuffle
  * the field and presentation never consumes the simulation PRNG. */
-export function plantClusterPresentation(world: World, resource: Resource): PlantClusterPresentation {
+export function plantClusterPresentation(world: World, resource: Resource, size = floraSize(world, resource)): PlantClusterPresentation {
   const turn = noise(resource.x, resource.z, resource.id + 311);
   const width = .78 + noise(resource.x, resource.z, resource.id + 503) * .34;
   const height = resource.species === 'tall-grass' ? .78 : .46;
-  const size = floraSize(world, resource);
   const base = new THREE.Color(floraColor(resource));
   base.offsetHSL((turn - .5) * .025, (noise(resource.x, resource.z, resource.id + 701) - .5) * .12, (turn - .5) * .10);
   return {
@@ -68,7 +68,7 @@ export class PlantClusterLayer {
   readonly group = new THREE.Group();
   private readonly geometry = createPlantClusterGeometry();
   private mesh: THREE.InstancedMesh;
-  private readonly slots = new Map<number, number>();
+  private readonly slots = new Map<number, { index: number; signature: string }>();
   private readonly free: number[] = [];
   private readonly transform = new THREE.Object3D();
   private readonly color = new THREE.Color();
@@ -112,48 +112,73 @@ export class PlantClusterLayer {
     return () => { this.mesh.count = count; };
   }
 
-  update(world: World, reset: boolean): void {
+  update(world: World, reset: boolean, changes?: ReadonlyMap<number, NaturalPresentationChange>): void {
     if (reset) {
       this.slots.clear();
       this.free.length = 0;
       this.used = 0;
       this.mesh.count = 0;
     }
-    const plants = world.resources.filter(resource => isClusterPlantSpecies(resource.species));
-    const alive = new Set(plants.map(resource => resource.id));
-    for (const [id, slot] of this.slots) if (!alive.has(id)) {
+    const plants = !reset&&changes
+      ? [...changes.values()].flatMap(({resource})=>resource&&isClusterPlantSpecies(resource.species)?[resource]:[])
+      : world.resources.filter(resource => isClusterPlantSpecies(resource.species));
+    const alive = !reset&&changes ? undefined : new Set(plants.map(resource => resource.id));
+    if(changes&&!reset&&!plants.length&&![...changes.keys()].some(id=>this.slots.has(id)))return;
+    let firstMatrix = Infinity, lastMatrix = -1;
+    let firstColor = Infinity, lastColor = -1;
+    const removed = alive
+      ? [...this.slots].filter(([id])=>!alive.has(id))
+      : [...changes!].filter(([id,{resource}])=>this.slots.has(id)&&(!resource||!isClusterPlantSpecies(resource.species)))
+        .map(([id])=>[id,this.slots.get(id)!] as const);
+    for (const [id, slot] of removed) {
       this.transform.scale.setScalar(0);
       this.transform.updateMatrix();
-      this.mesh.setMatrixAt(slot, this.transform.matrix);
+      this.mesh.setMatrixAt(slot.index, this.transform.matrix);
+      firstMatrix = Math.min(firstMatrix, slot.index);
+      lastMatrix = Math.max(lastMatrix, slot.index);
       this.slots.delete(id);
-      this.free.push(slot);
+      this.free.push(slot.index);
     }
-    this.ensureCapacity(Math.max(1, plants.length - this.free.length + this.used));
-    let visibleCount = 0;
+    const additions=plants.reduce((count,plant)=>count+(this.slots.has(plant.id)?0:1),0);
+    this.ensureCapacity(Math.max(1,this.used+Math.max(0,additions-this.free.length)));
+    let visibleCount = removed.length ? 0 : this.mesh.count;
     for (const plant of plants) {
       let slot = this.slots.get(plant.id);
       if (slot === undefined) {
-        slot = this.free.pop() ?? this.used++;
+        slot = { index: this.free.pop() ?? this.used++, signature: '' };
         this.slots.set(plant.id, slot);
       }
-      visibleCount = Math.max(visibleCount, slot + 1);
-      const presentation = plantClusterPresentation(world, plant);
+      visibleCount = Math.max(visibleCount, slot.index + 1);
+      // Only the four visible growth stages, species and position affect this
+      // deterministic tuft. Other resource edits must not rewrite its buffers.
+      const size=changes?.get(plant.id)?.size??floraSize(world,plant);
+      const signature = `${plant.species}:${plant.x}:${plant.z}:${size}`;
+      if (slot.signature === signature) continue;
+      slot.signature = signature;
+      const presentation = plantClusterPresentation(world, plant, size);
       this.transform.position.set(plant.x, .018, plant.z);
       this.transform.rotation.set(0, presentation.rotation, 0);
       this.transform.scale.set(presentation.scaleX, presentation.scaleY, presentation.scaleZ);
       this.transform.updateMatrix();
-      this.mesh.setMatrixAt(slot, this.transform.matrix);
-      this.mesh.setColorAt(slot, this.color.setHex(presentation.color));
+      this.mesh.setMatrixAt(slot.index, this.transform.matrix);
+      this.mesh.setColorAt(slot.index, this.color.setHex(presentation.color));
+      firstMatrix = Math.min(firstMatrix, slot.index);
+      lastMatrix = Math.max(lastMatrix, slot.index);
+      firstColor = Math.min(firstColor, slot.index);
+      lastColor = Math.max(lastColor, slot.index);
     }
+    if(removed.length)for(const slot of this.slots.values())visibleCount=Math.max(visibleCount,slot.index+1);
     this.mesh.count = visibleCount;
-    if (visibleCount) {
+    if (lastMatrix >= 0 && visibleCount) {
       this.mesh.instanceMatrix.clearUpdateRanges();
-      this.mesh.instanceMatrix.addUpdateRange(0, visibleCount * 16);
-      this.mesh.instanceColor!.clearUpdateRanges();
-      this.mesh.instanceColor!.addUpdateRange(0, visibleCount * 3);
+      this.mesh.instanceMatrix.addUpdateRange(firstMatrix * 16, (lastMatrix - firstMatrix + 1) * 16);
       this.mesh.instanceMatrix.needsUpdate = true;
-      this.mesh.instanceColor!.needsUpdate = true;
       this.mesh.computeBoundingSphere();
+    }
+    if (lastColor >= 0 && visibleCount) {
+      this.mesh.instanceColor!.clearUpdateRanges();
+      this.mesh.instanceColor!.addUpdateRange(firstColor * 3, (lastColor - firstColor + 1) * 3);
+      this.mesh.instanceColor!.needsUpdate = true;
     }
   }
 

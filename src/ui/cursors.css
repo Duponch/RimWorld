@@ -1,0 +1,31 @@
+/* V95: one standard map pointer; other sprites indicate interaction states. */
+#app { cursor: var(--cursor-pointer, default); }
+#viewport[data-cursor] canvas { cursor: var(--cursor-pointer, default) !important; }
+#viewport[data-cursor-gesture="grab"] canvas { cursor: var(--cursor-grab, grab) !important; }
+#viewport[data-cursor-gesture="grabbing"] canvas { cursor: var(--cursor-grabbing, grabbing) !important; }
+#viewport[data-cursor-gesture="zoom"] canvas { cursor: var(--cursor-zoom, zoom-in) !important; }
+
+#app button:not(:disabled),
+#app select:not(:disabled),
+#app input[type="checkbox"]:not(:disabled),
+#app input[type="radio"]:not(:disabled),
+#app label:has(> input[type="checkbox"]:not(:disabled)),
+#app label:has(> input[type="radio"]:not(:disabled)),
+#app a[href],
+#app [role="button"]:not([aria-disabled="true"]),
+#app summary { cursor: var(--cursor-link, pointer) !important; }
+
+#app input:not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]),
+#app textarea,
+#app [contenteditable="true"] { cursor: var(--cursor-text, text) !important; }
+
+#app button:disabled,
+#app input:disabled,
+#app select:disabled,
+#app [aria-disabled="true"],
+#app .front-radio-disabled,
+#app .front-save-disabled { cursor: var(--cursor-forbidden, not-allowed) !important; }
+
+#app [data-resize-handle] { cursor: var(--cursor-resize, nwse-resize) !important; }
+#app [aria-busy="true"],
+#app [aria-busy="true"] * { cursor: var(--cursor-wait, wait) !important; }

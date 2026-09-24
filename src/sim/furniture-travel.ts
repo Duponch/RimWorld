@@ -90,7 +90,15 @@ export function navigationCosts(world:World):{costs:NavigationCostLookup|undefin
   const terrain=new Uint8Array(world.tiles.length);let terrainMaximum=0;
   if(world.schemaVersion>=28) {
     for(const p of world.piles)if(p.kind==='chunk'&&p.owner.type==='ground'){const i=p.owner.z*world.width+p.owner.x;costs.set(i,Math.max(costs.get(i)??0,1400));repeaters.add(i);stops.add(i);}
-    for(let i=0;i<world.tiles.length;i++){const cost=Math.round(terrainTravelDelay(world,i)/3*1000);if(cost){terrain[i]=cost;terrainMaximum=Math.max(terrainMaximum,cost);}}
+    // Capture terrain on every decision: flooring can mutate between actors
+    // within a tick. Read floor definitions when a floor is present, like the
+    // scalar travel rule, without scanning the whole map through that helper.
+    const tiles=world.tiles,hasSite=!!world.site;
+    for(let i=0;i<tiles.length;i++){
+      const tile=tiles[i]!,kind=tile.terrain;
+      const cost=tile.floor?Math.round(FLOOR_DEFINITIONS[tile.floor].pathCost/10/3*1000):kind==='rough-stone'||kind==='rich-soil'||kind==='gravel'||hasSite&&kind==='grass'?67:0;
+      if(cost){terrain[i]=cost;if(cost>terrainMaximum)terrainMaximum=cost;}
+    }
   }
   if(world.schemaVersion>=29)for(const p of world.piles)if((p.kind==='steel'||world.schemaVersion>=32&&p.kind==='blocks'||world.schemaVersion>=41&&p.kind==='component')&&p.owner.type==='ground'){const i=p.owner.z*world.width+p.owner.x;floors.set(i,Math.max(floors.get(i)??0,467));costs.set(i,Math.max(costs.get(i)??0,467));}
   // Door wait is added after the terrain/object/material maximum, not compared

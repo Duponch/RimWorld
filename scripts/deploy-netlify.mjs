@@ -8,9 +8,24 @@ const cfg=process.env.NETLIFY_AUTH_TOKEN?{}:JSON.parse(await readFile(join(proce
 const token=process.env.NETLIFY_AUTH_TOKEN??cfg.users?.[cfg.userId]?.auth?.token;
 if(!token)throw Error('Connexion Netlify requise : utiliser netlify login.');
 async function api(path,method='GET',body,type='application/json'){
-  const response=await fetch('https://api.netlify.com/api/v1'+path,{method,headers:{Authorization:`Bearer ${token}`,'Content-Type':type},body:body===undefined?undefined:type==='application/json'?JSON.stringify(body):body,signal:AbortSignal.timeout(60000)});
-  if(!response.ok)throw Error(`Netlify ${method} ${path}: HTTP ${response.status}`);
-  const data=await response.text();return data?JSON.parse(data):undefined;
+  for(let attempt=0;attempt<4;attempt++){
+    const response=await fetch('https://api.netlify.com/api/v1'+path,{method,headers:{Authorization:`Bearer ${token}`,'Content-Type':type},body:body===undefined?undefined:type==='application/json'?JSON.stringify(body):body,signal:AbortSignal.timeout(60000)});
+    if(response.status===429&&method!=='POST'&&attempt<3){
+      // Netlify may return an epoch timestamp in both of these headers.
+      const resetHeader=response.headers.get('x-ratelimit-reset');
+      const reset=Number.isFinite(Number(resetHeader))?Number(resetHeader)*1000:Date.parse(resetHeader??'');
+      const retry=response.headers.get('retry-after'),numeric=Number(retry);
+      const requested=retry?(Number.isFinite(numeric)?numeric>1e9?numeric*1000-Date.now():numeric*1000:Date.parse(retry)-Date.now()):0;
+      const delay=Math.max(1000,(Number.isFinite(requested)?requested:0),Number.isFinite(reset)?reset-Date.now():0)+1000;
+      await response.body?.cancel();
+      if(delay>180000)throw Error(`Netlify rate limit: retry after ${new Date(Date.now()+delay).toISOString()}`);
+      console.log(JSON.stringify({rateLimited:true,method,path,attempt,retryInSeconds:Math.ceil(delay/1000)}));
+      for(let remaining=delay;remaining>0;remaining-=60000)await new Promise(resolve=>setTimeout(resolve,Math.min(remaining,60000)));
+      continue;
+    }
+    if(!response.ok){await response.body?.cancel();throw Error(`Netlify ${method} ${path}: HTTP ${response.status}`);}
+    const data=await response.text();return data?JSON.parse(data):undefined;
+  }
 }
 let state;
 try{state=JSON.parse(await readFile(join(root,'.netlify/state.json'),'utf8'));}catch(error){if(error.code!=='ENOENT')throw error;}
@@ -39,7 +54,14 @@ async function scan(directory,prefix=''){
 }
 await scan(dist);
 if(!files['/index.html'])throw Error('Construire le jeu avant déploiement.');
-let deploy=await api(`/sites/${site.id}/deploys`,'POST',{files,draft:!production,title:process.env.DEPLOY_TITLE??'Lisière — version validée'});
+const resume=process.env.NETLIFY_RESUME_DEPLOY;
+if(resume&&!/^[a-f0-9]{24}$/.test(resume))throw Error('Identifiant de reprise invalide.');
+let deploy=resume?await api(`/deploys/${resume}`):await api(`/sites/${site.id}/deploys`,'POST',{files,draft:!production,title:process.env.DEPLOY_TITLE??'Lisière — version validée'});
+if(deploy.site_id!==site.id)throw Error('Le déploiement appartient à un autre site.');
+if(resume&&Boolean(deploy.draft)===production)throw Error('Le mode de publication diffère de celui du déploiement repris.');
+// GET can report required:[] while still uploading. Resubmit this same build's
+// manifest to the existing deployment to obtain the authoritative missing set.
+if(resume&&deploy.state==='uploading')deploy=await api(`/sites/${site.id}/deploys/${resume}`,'PUT',{files,draft:!production});
 console.log(JSON.stringify({site:site.name,deploy:deploy.id,files:Object.keys(files).length,production}));
 for(const hash of deploy.required??[]){
   const item=contents.get(hash);if(!item)throw Error('Empreinte inconnue demandée par Netlify.');

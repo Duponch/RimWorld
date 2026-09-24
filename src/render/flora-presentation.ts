@@ -3,7 +3,7 @@ import type { Resource,World } from '../sim/types';
 import type { Placement } from './primitives';
 
 /** Four visible growth steps keep the forest resident between shape changes. */
-export const floraSize=(world:World,r:Resource):number=>r.species? .3+.7*Math.ceil(plantGrowth(world,r)*4)/4:1;
+export const floraSize=(world:World,r:Resource):number=>!r.species?1:(r.growth??1)===1?1:.3+.7*Math.ceil(plantGrowth(world,r)*4)/4;
 const FLORA_COLORS={pine:0x47684c,birch:0x8fa467,oak:0x57754d,poplar:0x849752,drago:0x728966,saguaro:0x698661,agave:0x839c89,moss:0x718356,grass:0x929357,'tall-grass':0x7d8a4f,brambles:0x556648,'berry-bush':0x677b55};
 export const floraColor=(r:Resource):number=>FLORA_COLORS[r.species??'berry-bush'];
 export const isClusterPlantSpecies=(species:Resource['species']):boolean=>species==='grass'||species==='tall-grass';

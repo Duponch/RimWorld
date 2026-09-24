@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+**V95 — moteur et curseurs :** travail de performance CPU, messages du worker, buffers et commandes de rendu WebGPU, avec une seule image par type de curseur. Aucun contenu ni boucle de gameplay ajouté ; schéma 91 conservé. La cible 240 FPS reste dépendante de la scène et du matériel. [Preuves et limites](../history/validation-performance-v95.md).
+
 **V94 — présentation jouable :** `grass` et `tall-grass` sont de nouveau des plantes physiques 3D, verticales, multi-tiges et dessinées en un lot instancié ; le champ de brins V92 est supprimé. Ressources ne s'écrase plus, les portraits gardent leur nom, Travail/Horaires/Affectations tiennent sans barre horizontale, Faune garde six colonnes stables et les neuf curseurs sont des flèches illustrées distinctes. Aucun contenu, biome ou mécanisme n'est ajouté par ce lot. [Contrats](../development/visual-identity.md), [preuves](../history/validation-interface-v94.md).
 
 **V93 — présentation et accès au contenu existant :** thème remplacé, dossiers plus lisibles, 60 pictogrammes Architecte et neuf curseurs. Correction du choix de matière du fauteuil et compression du stockage des grandes sauvegardes, avec lecture des anciens formats bruts. Ces corrections n’ajoutent ni boucle de gameplay, ni biome, ni catalogue Core complet. [Contrat](../development/visual-identity.md), [preuves](../history/validation-interface-v93.md).

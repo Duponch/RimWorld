@@ -1,4 +1,4 @@
-# Plantes 3D instanciées et désignations — V94
+# Plantes 3D instanciées et désignations — V95
 
 ## Choix de présentation
 
@@ -8,11 +8,11 @@ Ce changement est graphique : espèces, quantités, croissance, travail, produit
 
 ## Touffes verticales
 
-`PlantClusterLayer` utilise un seul `THREE.InstancedMesh` résident et une géométrie partagée de sept tiges effilées à quatre côtés. Les tiges partent du sol et montent sur l'axe Y ; elles ne sont donc plus couchées. Leur faible diamètre, leurs hauteurs et inclinaisons distinctes donnent une touffe légère plutôt qu'une tige épaisse.
+`PlantClusterLayer` utilise un seul `THREE.InstancedMesh` résident et une géométrie partagée de sept tiges effilées à trois côtés. Les tiges partent du sol et montent sur l'axe Y ; elles ne sont donc plus couchées. Leur faible diamètre, leurs hauteurs et inclinaisons distinctes donnent une touffe légère plutôt qu'une tige épaisse.
 
 La position, la rotation, les échelles X/Y/Z et la nuance sont calculées de façon déterministe depuis l'identité, les coordonnées et l'espèce. Une herbe courte et une herbe haute ne partagent pas exactement la même silhouette. Cette diversité n'avance aucun générateur aléatoire métier et reste identique après sauvegarde/rechargement.
 
-La couche ne recrée son lot que lorsque la vue des ressources naturelles change. Elle n'effectue aucun travail CPU par plante à chaque image. Sur le nouveau départ de graine 42, **13 350** plantes physiques sont présentées dans ce lot unique. Le GPU dessine les instances, mais cela ne signifie pas que toute la simulation ou toute la végétation est « 100 % GPU ».
+La couche conserve ses allocations ; V95 reçoit seulement les identifiants visuellement changés et réécrit leurs emplacements. Elle n'effectue aucun travail CPU par plante à chaque image. Sur le nouveau départ de graine 42, **13 350** plantes physiques sont présentées dans ce lot unique. Le GPU dessine les instances, mais cela ne signifie pas que toute la simulation ou toute la végétation est « 100 % GPU ».
 
 ## Désignations
 
@@ -22,6 +22,8 @@ La fermeture d'Architecte conserve désormais l'outil choisi. Le joueur peut don
 
 ## Mesure et limites
 
-Le contrôle natif alterne quatre fenêtres avec le lot visible ou masqué sur le même monde en pause. Le p95 reste **8,4 ms** dans les quatre fenêtres ; les médianes varient de **4,2 à 8,3 ms** selon l'ordre, ce qui interdit d'affirmer un coût nul. La courte fenêtre à vitesse demandée 6× atteint **5,64×**, image p95 **41,7 ms** et pic **216,6 ms**. Ces chiffres ne garantissent ni fluidité parfaite ni parité avec une charge à cent colons.
+V95 conserve les commandes WebGPU du paysage, ainsi que les attributs GPU inchangés. Les silhouettes, éclairages et ombres sont conservés ; les acteurs et la simulation ne sont pas figés. [Architecture, sources et limites](../research/performance-v95.md), [validation et mesures](../history/validation-performance-v95.md).
 
-`tests/gpu-landscape.test.ts` vérifie la géométrie verticale multi-tiges, les variations déterministes, le lot unique, la conservation de l'agave et les correspondances de désignation. Le parcours natif vérifie en plus les instances réelles, la sauvegarde exacte et les clics de coupe/minage. Voir les [preuves V94](../history/validation-interface-v94.md).
+Correction de preuve : l'ancien contrôle A/B V94 rétablissait la visibilité des touffes à chaque image et ne permet donc pas d'isoler leur coût. Ses chiffres restent dans l'historique, sans servir de preuve comparative courante.
+
+`tests/gpu-landscape.test.ts` vérifie la géométrie verticale multi-tiges, les variations déterministes, le lot unique, la conservation de l'agave et les correspondances de désignation. Le parcours natif vérifie en plus les instances réelles, la sauvegarde exacte et les clics de coupe/minage. Voir les [preuves V95](../history/validation-performance-v95.md), avec les limites de comparaison des pixels.

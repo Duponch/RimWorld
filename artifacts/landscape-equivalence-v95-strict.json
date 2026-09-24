@@ -1,0 +1,167 @@
+{
+  "cases": [
+    {
+      "state": "initial",
+      "zoom": "near",
+      "plain": "a8cca4e838aaa75b7ff514be9ec04a52e498dd7fbf77b22cb1933cf87ad4332b",
+      "retained": "a8cca4e838aaa75b7ff514be9ec04a52e498dd7fbf77b22cb1933cf87ad4332b",
+      "exact": true,
+      "originalCulling": "a8cca4e838aaa75b7ff514be9ec04a52e498dd7fbf77b22cb1933cf87ad4332b",
+      "originalCullingExact": true
+    },
+    {
+      "state": "initial",
+      "zoom": "middle",
+      "plain": "fd658cb4c7d3ab9c953103a5439965a04bb77dc997f1d74beb1452c65b02b81e",
+      "retained": "fd658cb4c7d3ab9c953103a5439965a04bb77dc997f1d74beb1452c65b02b81e",
+      "exact": true,
+      "originalCulling": "fd658cb4c7d3ab9c953103a5439965a04bb77dc997f1d74beb1452c65b02b81e",
+      "originalCullingExact": true
+    },
+    {
+      "state": "initial",
+      "zoom": "far",
+      "plain": "0b5077b74ce8339b8c88ed5c1fd104fdbe22fff5fb94cf3327eadcde30c05c3f",
+      "retained": "0b5077b74ce8339b8c88ed5c1fd104fdbe22fff5fb94cf3327eadcde30c05c3f",
+      "exact": true,
+      "originalCulling": "0b5077b74ce8339b8c88ed5c1fd104fdbe22fff5fb94cf3327eadcde30c05c3f",
+      "originalCullingExact": true
+    },
+    {
+      "state": "foliage-hidden",
+      "zoom": "near",
+      "plain": "72667cc60624fefa1bd894f26daa56b7bdf194eaae500d91a34eed1585d96ca9",
+      "retained": "72667cc60624fefa1bd894f26daa56b7bdf194eaae500d91a34eed1585d96ca9",
+      "exact": true,
+      "originalCulling": "72667cc60624fefa1bd894f26daa56b7bdf194eaae500d91a34eed1585d96ca9",
+      "originalCullingExact": true
+    },
+    {
+      "state": "foliage-hidden",
+      "zoom": "middle",
+      "plain": "e49ead6687c3f5f3a5e803c0ca2af77d3490d52caa5667cb0fd0f27983c76bf1",
+      "retained": "e49ead6687c3f5f3a5e803c0ca2af77d3490d52caa5667cb0fd0f27983c76bf1",
+      "exact": true,
+      "originalCulling": "e49ead6687c3f5f3a5e803c0ca2af77d3490d52caa5667cb0fd0f27983c76bf1",
+      "originalCullingExact": true
+    },
+    {
+      "state": "foliage-hidden",
+      "zoom": "far",
+      "plain": "5a425cbea6777c7d0ee968433148763fb0769d08067e595d18fb895761b7543e",
+      "retained": "5a425cbea6777c7d0ee968433148763fb0769d08067e595d18fb895761b7543e",
+      "exact": true,
+      "originalCulling": "5a425cbea6777c7d0ee968433148763fb0769d08067e595d18fb895761b7543e",
+      "originalCullingExact": true
+    },
+    {
+      "state": "removed",
+      "zoom": "near",
+      "plain": "bdfde6d1b83e02a4c72bf4dadb506bd108862e7175ceca21d7da5b504333185b",
+      "retained": "bdfde6d1b83e02a4c72bf4dadb506bd108862e7175ceca21d7da5b504333185b",
+      "exact": true,
+      "originalCulling": "bdfde6d1b83e02a4c72bf4dadb506bd108862e7175ceca21d7da5b504333185b",
+      "originalCullingExact": true
+    },
+    {
+      "state": "removed",
+      "zoom": "middle",
+      "plain": "ec5d0f81976b9589c0c34e1d8f8c90ea2b14896ae2dc9ce194d3e8d9555cfd55",
+      "retained": "ec5d0f81976b9589c0c34e1d8f8c90ea2b14896ae2dc9ce194d3e8d9555cfd55",
+      "exact": true,
+      "originalCulling": "ec5d0f81976b9589c0c34e1d8f8c90ea2b14896ae2dc9ce194d3e8d9555cfd55",
+      "originalCullingExact": true
+    },
+    {
+      "state": "removed",
+      "zoom": "far",
+      "plain": "6e8c2a14b91b6389837a6f6ef47db66ccc363f7bc1515727f2e21c9b23b77c3e",
+      "retained": "6e8c2a14b91b6389837a6f6ef47db66ccc363f7bc1515727f2e21c9b23b77c3e",
+      "exact": true,
+      "originalCulling": "6e8c2a14b91b6389837a6f6ef47db66ccc363f7bc1515727f2e21c9b23b77c3e",
+      "originalCullingExact": true
+    },
+    {
+      "state": "piles",
+      "zoom": "near",
+      "plain": "b52bca4a8453e9b14e8f2568feb1b55db621ca84b2927ef052813ac1f90d417f",
+      "retained": "b52bca4a8453e9b14e8f2568feb1b55db621ca84b2927ef052813ac1f90d417f",
+      "exact": true,
+      "originalCulling": "b52bca4a8453e9b14e8f2568feb1b55db621ca84b2927ef052813ac1f90d417f",
+      "originalCullingExact": true
+    },
+    {
+      "state": "piles",
+      "zoom": "middle",
+      "plain": "e80056f6aa22b3484c3b49c973a93207f966d33e635a91a2f1bab27932c2d156",
+      "retained": "e80056f6aa22b3484c3b49c973a93207f966d33e635a91a2f1bab27932c2d156",
+      "exact": true,
+      "originalCulling": "e80056f6aa22b3484c3b49c973a93207f966d33e635a91a2f1bab27932c2d156",
+      "originalCullingExact": true
+    },
+    {
+      "state": "piles",
+      "zoom": "far",
+      "plain": "5379ee291635aa55087af2088472747589b321c1f9abc10f54e0508da337a3b6",
+      "retained": "5379ee291635aa55087af2088472747589b321c1f9abc10f54e0508da337a3b6",
+      "exact": true,
+      "originalCulling": "5379ee291635aa55087af2088472747589b321c1f9abc10f54e0508da337a3b6",
+      "originalCullingExact": true
+    },
+    {
+      "state": "night",
+      "zoom": "near",
+      "plain": "658faf7bec99eb0ee80fc4dfceb576fad73192722e6082e1b67418213376d69c",
+      "retained": "8b73e7e7104b816b07110440aa58cd4d6474c82a559f222635fc6bf4bcbc4569",
+      "exact": false,
+      "originalCulling": "658faf7bec99eb0ee80fc4dfceb576fad73192722e6082e1b67418213376d69c",
+      "originalCullingExact": true
+    },
+    {
+      "state": "night",
+      "zoom": "middle",
+      "plain": "2ec7b848d23b52601e9ee0cb6dd03bda9d9259fc6b30997533b8a9db33082aaa",
+      "retained": "2ec7b848d23b52601e9ee0cb6dd03bda9d9259fc6b30997533b8a9db33082aaa",
+      "exact": true,
+      "originalCulling": "2ec7b848d23b52601e9ee0cb6dd03bda9d9259fc6b30997533b8a9db33082aaa",
+      "originalCullingExact": true
+    },
+    {
+      "state": "night",
+      "zoom": "far",
+      "plain": "299b3e0cc47f94520057a5d8d908ad878e4992301c758f7e6e2857414ecfd36f",
+      "retained": "299b3e0cc47f94520057a5d8d908ad878e4992301c758f7e6e2857414ecfd36f",
+      "exact": true,
+      "originalCulling": "299b3e0cc47f94520057a5d8d908ad878e4992301c758f7e6e2857414ecfd36f",
+      "originalCullingExact": true
+    },
+    {
+      "state": "restored",
+      "zoom": "near",
+      "plain": "a8cca4e838aaa75b7ff514be9ec04a52e498dd7fbf77b22cb1933cf87ad4332b",
+      "retained": "a8cca4e838aaa75b7ff514be9ec04a52e498dd7fbf77b22cb1933cf87ad4332b",
+      "exact": true,
+      "originalCulling": "a8cca4e838aaa75b7ff514be9ec04a52e498dd7fbf77b22cb1933cf87ad4332b",
+      "originalCullingExact": true
+    },
+    {
+      "state": "restored",
+      "zoom": "middle",
+      "plain": "fd658cb4c7d3ab9c953103a5439965a04bb77dc997f1d74beb1452c65b02b81e",
+      "retained": "fd658cb4c7d3ab9c953103a5439965a04bb77dc997f1d74beb1452c65b02b81e",
+      "exact": true,
+      "originalCulling": "fd658cb4c7d3ab9c953103a5439965a04bb77dc997f1d74beb1452c65b02b81e",
+      "originalCullingExact": true
+    },
+    {
+      "state": "restored",
+      "zoom": "far",
+      "plain": "0b5077b74ce8339b8c88ed5c1fd104fdbe22fff5fb94cf3327eadcde30c05c3f",
+      "retained": "0b5077b74ce8339b8c88ed5c1fd104fdbe22fff5fb94cf3327eadcde30c05c3f",
+      "exact": true,
+      "originalCulling": "0b5077b74ce8339b8c88ed5c1fd104fdbe22fff5fb94cf3327eadcde30c05c3f",
+      "originalCullingExact": true
+    }
+  ],
+  "errors": []
+}

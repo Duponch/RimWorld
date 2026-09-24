@@ -54,6 +54,7 @@ import { RecreationHints } from './RecreationHints';
 import { PlantClusterLayer } from './PlantClusterLayer';
 import { isClusterPlantSpecies } from './flora-presentation';
 import { DesignationIconLayer } from './DesignationIconLayer';
+import { LandscapeBatch } from './LandscapeBatch';
 
 type VisualChunk = { signature: string; group: THREE.Group };
 
@@ -80,6 +81,7 @@ export class ColonyRenderer {
   readonly backend: string;
   private readonly renderer: THREE.WebGPURenderer;
   private readonly scene = new THREE.Scene();
+  private readonly landscape = new LandscapeBatch();
   private readonly rig: CameraRig;
   private get camera(): THREE.OrthographicCamera | THREE.PerspectiveCamera { return this.rig.camera; }
   private get controls(): OrbitControls { return this.rig.controls; }
@@ -151,6 +153,7 @@ export class ColonyRenderer {
 
   private constructor(private readonly host: HTMLElement, private readonly onPick: (x: number, z: number) => void, renderer: THREE.WebGPURenderer) {
     this.renderer = renderer;
+    this.scene.matrixAutoUpdate = false;
     this.environmentLighting.configure(this.staticMaterial);
     this.environmentLighting.configure(this.waterMaterial);
     // Renderer-owned shared material survives deletion of an individual chunk.
@@ -184,7 +187,8 @@ export class ColonyRenderer {
     renderer.domElement.tabIndex = 0;
     host.appendChild(renderer.domElement);
     this.daylight = new DayNightLayer(this.scene);
-    this.scene.add(this.hygiene.group,this.wind.group,this.wildlife.mesh,this.wildlife.flames,this.fires.mesh,this.projectiles.mesh,this.roofs.surface,this.roofs.areas,this.doors.group,this.crops.group,this.plants.group, this.growing.group, this.overview.group, this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.designations.mesh, this.storageGroup, this.pileGroup, this.pawns.group);
+    this.landscape.add(this.plants.group,this.overview.group,this.terrainGroup,this.resourceGroup,this.rocks.group);
+    this.scene.add(this.landscape,this.pileGroup,this.hygiene.group,this.wind.group,this.wildlife.mesh,this.wildlife.flames,this.fires.mesh,this.projectiles.mesh,this.roofs.surface,this.roofs.areas,this.doors.group,this.crops.group, this.growing.group, this.structureGroup, this.jobGroup, this.designations.mesh, this.storageGroup, this.pawns.group);
     this.rig = new CameraRig(renderer.domElement);
     const hoverMat = new THREE.MeshBasicNodeMaterial({ color: 0xf9ebae, transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide, forceSinglePass:true });
     // A zero-thickness cursor has no front/back transparency ordering.
@@ -296,6 +300,7 @@ export class ColonyRenderer {
     this.pawns.blend.value = resetPoses ? 1 : 0;
     this.pawns.update(world, resetPoses ? 1 : oldBlend, resetPoses);
     this.wildlife.update(world,this.hasTracks?this.timeline:undefined);
+    this.landscape.refresh(this.backend==='WebGPU');
     this.updateHover();
   }
 
@@ -350,6 +355,7 @@ export class ColonyRenderer {
   setFoliageVisible(visible: boolean): void {
     this.resources.setFoliageVisible(visible);
     this.overview.setFoliageVisible(visible);
+    this.landscape.needsUpdate = true;
   }
 
   get cameraMode(): CameraMode { return this.rig.mode; }
@@ -377,12 +383,13 @@ export class ColonyRenderer {
       this.daylight.update(this.world ? calendarTick(this.world) : 0, this.controls.target,this.world??undefined);
       await this.renderer.compileAsync(this.scene, this.rig.orthographic);
       await this.renderer.compileAsync(this.scene, this.rig.perspective);
+      this.landscape.needsUpdate=true;
       await prepareShadowPipelines(this.renderer,this.scene,this.rig.orthographic,this.boxes);
     } finally {
       restoreWind();restoreWildlife();restoreRoofs();restoreDoors();restoreCrops();restorePlants();restoreDesignations();
       for (const [object, value] of culling) object.frustumCulled = value;
       this.overview.group.visible = distant; this.terrainGroup.visible = this.resourceGroup.visible = this.plants.group.visible = !distant;
-      this.rocks.setDistant(distant); this.preparing = false;
+      this.rocks.setDistant(distant); this.landscape.refresh(this.backend==='WebGPU'); this.preparing = false;
       this.updateHover();
       this.frames.reset(); this.lastFrame = 0;
     }
@@ -447,7 +454,7 @@ export class ColonyRenderer {
 
   private updateResources(world: World, newMap: boolean): void {
     const view=this.naturalPresentation.read(world,newMap);if(!view)return;
-    this.plants.update(view,newMap);
+    this.plants.update(view,newMap,this.naturalPresentation.changes);
     const visible={...view,resources:view.resources.filter(resource=>!isClusterPlantSpecies(resource.species))};
     this.resources.update(visible, newMap); this.overview.update(visible,newMap);
   }
@@ -547,6 +554,7 @@ export class ColonyRenderer {
     this.daylight.update(this.world?calendarTick(this.world,skyTick):skyTick, this.controls.target,this.world??undefined);
     const cellPixels=this.rig.pixelsPerCell(this.host.clientHeight);
     const distant=this.overview.group.visible ? cellPixels<9 : cellPixels<7;
+    if(distant!==this.overview.group.visible)this.landscape.needsUpdate=true;
     this.overview.group.visible=distant;this.terrainGroup.visible=!distant;this.resourceGroup.visible=!distant;this.plants.group.visible=!distant;
     this.rocks.setDistant(distant);
     this.renderer.info.reset();
@@ -661,7 +669,7 @@ export class ColonyRenderer {
       const capacity = Math.min(world.width * world.height, 2 ** Math.ceil(Math.log2(Math.max(16, cells.length))));
       const mat = new THREE.MeshBasicNodeMaterial({ color, transparent: true, opacity: 0.48, depthWrite: false, side: THREE.DoubleSide, forceSinglePass:true });
       this.areaMesh = new THREE.InstancedMesh(new THREE.PlaneGeometry(0.86, 0.86).rotateX(-Math.PI / 2), mat, capacity);
-      this.areaMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      this.areaMesh.instanceMatrix.setUsage(THREE.StaticDrawUsage);
       this.areaMesh.renderOrder = 6;
       this.scene.add(this.areaMesh);
     }

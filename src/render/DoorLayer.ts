@@ -34,7 +34,7 @@ export class DoorLayer {
     this.mesh.name='door-leaves';this.mesh.castShadow=true;this.mesh.receiveShadow=true;this.group.add(this.mesh);
   }
   private allocateAttributes(capacity:number):void {
-    for(const [name,size] of [['doorCurrent',4],['doorPrevious',4],['doorShift',3]] as const)this.mesh.geometry.setAttribute(name,new THREE.InstancedBufferAttribute(new Float32Array(capacity*size),size).setUsage(THREE.DynamicDrawUsage));
+    for(const [name,size] of [['doorCurrent',4],['doorPrevious',4],['doorShift',3]] as const)this.mesh.geometry.setAttribute(name,new THREE.InstancedBufferAttribute(new Float32Array(capacity*size),size).setUsage(THREE.StaticDrawUsage));
   }
   update(world:World,cutaway:boolean,reset=false):void {
     if(reset){this.history.clear();this.key='';}

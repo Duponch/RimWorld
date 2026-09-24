@@ -33,16 +33,16 @@ export class BoxMesh extends THREE.Mesh<THREE.InstancedBufferGeometry> {
     geometry.setAttribute('position', base.getAttribute('position').clone());
     geometry.setAttribute('normal', base.getAttribute('normal').clone());
     geometry.setIndex(base.index!.clone());
-    this.instanceMatrix = new THREE.InstancedInterleavedBuffer(new Float32Array(capacity * 16), 16).setUsage(THREE.DynamicDrawUsage);
+    this.instanceMatrix = new THREE.InstancedInterleavedBuffer(new Float32Array(capacity * 16), 16).setUsage(THREE.StaticDrawUsage);
     for(let column=0;column<4;column++)geometry.setAttribute(`boxMatrix${column}`, new THREE.InterleavedBufferAttribute(this.instanceMatrix,4,column*4));
-    this.colorBuffer = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 3), 3).setUsage(THREE.DynamicDrawUsage);
+    this.colorBuffer = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 3), 3).setUsage(THREE.StaticDrawUsage);
     geometry.setAttribute('boxColor', this.colorBuffer);
     geometry.instanceCount=0;geometry.boundingSphere=new THREE.Sphere();
     this.geometry=geometry;
   }
 
   get activeCount():number { return this.geometry.instanceCount; }
-  set activeCount(value:number) { this.geometry.instanceCount=value; }
+  set activeCount(value:number) { this.geometry.instanceCount=value; this.visible=value>0; }
   get boundingSphere():THREE.Sphere { return this.geometry.boundingSphere!; }
   setMatrixAt(index:number,value:THREE.Matrix4):void { value.toArray(this.instanceMatrix.array,index*16); }
   getMatrixAt(index:number,target:THREE.Matrix4):void { target.fromArray(this.instanceMatrix.array,index*16); }

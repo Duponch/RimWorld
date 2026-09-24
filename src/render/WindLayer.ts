@@ -32,7 +32,7 @@ export class WindLayer {
     this.mesh.name='wind-turbine-blades';this.mesh.castShadow=true;this.mesh.receiveShadow=true;this.group.add(this.mesh);
   }
   private allocateAttributes(capacity:number):void {
-    for(const name of ['windCurrent','windPrevious','windShape'])this.mesh.geometry.setAttribute(name,new THREE.InstancedBufferAttribute(new Float32Array(capacity*4),4).setUsage(THREE.DynamicDrawUsage));
+    for(const name of ['windCurrent','windPrevious','windShape'])this.mesh.geometry.setAttribute(name,new THREE.InstancedBufferAttribute(new Float32Array(capacity*4),4).setUsage(THREE.StaticDrawUsage));
   }
   adopt(world:World,reset=false):void {
     if(reset){this.key=null;this.history.clear();}

@@ -64,7 +64,9 @@ export class WeightedSearch {
   /** Public one-shot results retain the historical -2/Infinity convention. */
   finish(goals?:ReadonlySet<number>,allGroups?:readonly ReadonlySet<number>[]):DistanceField {
     const field=this.advance(goals,allGroups);
-    for(let i=0;i<field.parents.length;i++)if(!this.settled[i]){field.parents[i]=-2;field.costs[i]=Infinity;}
+    // An exhausted frontier has settled every discovered cell. The untouched
+    // cells still contain their constructor's -2/Infinity sentinels.
+    if(this.pending!==undefined)for(let i=0;i<field.parents.length;i++)if(!this.settled[i]){field.parents[i]=-2;field.costs[i]=Infinity;}
     delete field.settled;this.finished=true;return field;
   }
 }
