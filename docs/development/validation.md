@@ -1,4 +1,6 @@
-# Validation courante — V101
+# Validation courante — V102
+
+V102 : [qualité des pièces lisible](../history/validation-room-quality-v102.md). Contrôle ciblé de la capture partagée, TypeScript et parcours natif Pièces ; schéma 101 et règles temporelles conservés.
 
 V101 : [atelier, équipement et rangement](../history/validation-machining-v101.md). Contrats de production, anciennes sauvegardes, filtres, lumière et vrais clics regroupés ; comparaison CPU avant/après et mesure native distinctes. La démonstration est préparée explicitement, sans modifier les durées des règles.
 

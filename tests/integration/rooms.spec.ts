@@ -17,7 +17,8 @@ test('pièces : inspection, porte ouverte, brèche exécutée et rechargement da
     await page.locator('[data-speed="0"]').click(); await panel(page, 'menu');
     await page.locator('#load').click(); await expectWorld(page, w); await expect(page.locator('.game-shell')).not.toHaveJSProperty('inert', true);
     await page.keyboard.press('Escape'); await revealCells(page, [{ x: 13, z: 13 }, { x: 15, z: 15 }]);
-    await cell(page, 13, 13); await expect(page.locator('#room-description')).toHaveText('Pièce non couverte · 36 cases.');
+    await cell(page, 13, 13); await expect(page.locator('#room-description')).toContainText('Pièce non couverte · 36 cases.');
+    await expect(page.locator('#room-description')).toContainText('Beauté :');
     await page.screenshot({ path: 'artifacts/rooms-ui-enclosed.png' });
     await cell(page, 15, 15); await expect(page.locator('#room-description')).toContainText('Seuil');
     await page.locator('#door-holdOpen').check();

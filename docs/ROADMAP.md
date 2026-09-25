@@ -1,5 +1,7 @@
 # Plan de développement
 
+**V102 : qualité des pièces rendue lisible.** L'inspection Environnement affiche la valeur et la bande de beauté depuis les mêmes objets physiques que le besoin personnel, sans recalcul par image ni changement de schéma. Cette tranche prépare décoration/art et impression sans inventer richesse, espace ou souvenirs avant leur filière complète. [Contrat](development/room-quality.md), [recherche](research/room-quality-reference-v102.md), [preuves](history/validation-room-quality-v102.md).
+
 **V101 : atelier, équipement et rangement.** Deux recherches et deux recettes d’armes, atelier construit/alimenté, ouvrage et équipement conservés, filtres par objet. [Preuves](history/validation-machining-v101.md) ; calendrier des prochains fronts ci-dessous.
 
 **V100 : présentation harmonisée autour de la référence crème de l’utilisateur.** Dossiers structurés, ressources sans fond, barre de gestion à boutons visibles, tables larges et commandes mieux alignées. [Preuves et limites](history/validation-interface-v100.md). Aucun contenu ni système métier ajouté, aucune estimation fonctionnelle augmentée et aucun jalon global clos. Les grandes lacunes et les objectifs de performance ci-dessous restent ouverts.
@@ -34,7 +36,7 @@
 
 La filière alimentaire V84 reste livrée : [cultures](development/food-crops.md), [postes](development/food-workstations.md) et [malnutrition](development/malnutrition.md), 24 jours depuis la dotation réelle et deux récoltes sur les mêmes 80 cases de riz. [Preuves V84](history/validation-food-v84.md).
 
-État : **25 septembre 2026, V101 : atelier, équipement et rangement**. ROADMAP est l’unique calendrier G0–G5. G0 en consolidation, G1/G2/G3 partiels, G4 engagé par l’accueil, la captivité et le commerce, G5 absent ; aucun jalon complet. Les numéros de schéma ne mesurent pas l’avancement du jeu. [Inventaire réel](gameplay/implementation-status.md), [preuves](development/validation.md), [index](README.md).
+État : **25 septembre 2026, V102 : qualité des pièces rendue lisible**. ROADMAP est l’unique calendrier G0–G5. G0 en consolidation, G1/G2/G3 partiels, G4 engagé par l’accueil, la captivité et le commerce, G5 absent ; aucun jalon complet. Les numéros de schéma ne mesurent pas l’avancement du jeu. [Inventaire réel](gameplay/implementation-status.md), [preuves](development/validation.md), [index](README.md).
 
 Boucle précédente : [site local et première récolte V83](development/world-generation.md), trois reliefs, sols fertiles et ressources physiques reliés au départ. Douze jours joués avec abri, défense, riz récolté puis cuisiné ; anciennes cartes préservées. V84 prolonge ce départ par plusieurs récoltes et l’alimentation renouvelée sur le parcours documenté. [Preuves V83](history/validation-site-v83.md).
 
