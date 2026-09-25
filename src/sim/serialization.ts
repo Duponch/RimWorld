@@ -1,4 +1,5 @@
 import { validateWildFlora } from './wild-flora.ts';
+import { validRoomExperience } from './room-experience.ts';
 import { V91_ITEM_IDS } from './biome-items.ts';
 import { validHumanBodyShape,validHumanCorpseShape,validGraveShape,validBurialTaskShape,validateBurials } from './burial-save.ts';
 import { validateFlooring } from './flooring-save.ts';
@@ -115,7 +116,7 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validateWorld(input: unknown): string[] {
   return validateSchema(input, SCHEMA_VERSION);
 }
-function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101): string[] {
+function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(input)) return ['World must be an object.'];
@@ -147,6 +148,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
       if (integer(input.nextId, 1) && item.id >= input.nextId) errors.push('nextId must exceed all entity IDs.');
       if(key==='resources'&&!validPlantLife(item as unknown as World['resources'][number],version,input as unknown as World))errors.push('Invalid plant life for schema.');
       if (key === 'pawns') {
+        if(!validRoomExperience(item,version,input.tick as number))errors.push('Invalid or future room experience.');
         if(version>=90?(typeof item.beauty!=='number'||!Number.isFinite(item.beauty)||item.beauty<0||item.beauty>100):item.beauty!==undefined)errors.push('Invalid or future beauty need.');
         for(const field of ['apparelPolicyId','apparelAutomation','nextApparelCheckAt'])if(version<90&&item[field]!==undefined)errors.push('Legacy pawn contains apparel policy state.');
         if(!validPrisonerPawnShape(item,version,input as unknown as World))errors.push('Invalid prisoner, warden or recruitment shape for schema.');
@@ -746,6 +748,7 @@ export function deserializeWorld(serialized: string): World {
   }
   if(record(input)&&input.schemaVersion===90){const errors=validateSchema(input,90);if(errors.length)throw new Error('Invalid version 90 save: '+errors.join(' '));input.schemaVersion=91;}
   if(record(input)&&input.schemaVersion===91){const errors=validateSchema(input,91);if(errors.length)throw new Error('Invalid version 91 save: '+errors.join(' '));input.schemaVersion=101;}
+  if(record(input)&&input.schemaVersion===101){const errors=validateSchema(input,101);if(errors.length)throw new Error('Invalid version 101 save: '+errors.join(' '));input.schemaVersion=103;}
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`); return input as World;
 }
 /** Deterministic diagnostic fingerprint, not a cryptographic digest. */

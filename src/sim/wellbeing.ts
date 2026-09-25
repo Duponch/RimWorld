@@ -1,4 +1,5 @@
 import { updateMood,expireMealMemories } from './mood.ts';
+import { rememberRoomUse } from './room-experience.ts';
 export { comfortMood } from './mood.ts';
 import type { BodyAssessment } from './body-capacities.ts';
 import { TICKS_PER_DAY } from './types.ts';
@@ -29,6 +30,7 @@ export function updateWellbeing(world: World, pawn: Pawn,body?:BodyAssessment,re
 }
 
 export function rememberMeal(world: World, pawn: Pawn, atTable: boolean, raw = false): void {
+  rememberRoomUse(world,pawn,'dining');
   // A good meal does not erase earlier memories; repeated meals refresh one entry.
   const kinds = [...(!atTable ? ['ate-without-table' as const] : []), ...(raw ? ['ate-raw-food' as const] : [])];
   pawn.memories = [...pawn.memories.filter(memory => !kinds.includes(memory.kind)), ...kinds.map(kind => ({kind, expiresAt: world.tick + TICKS_PER_DAY}))];

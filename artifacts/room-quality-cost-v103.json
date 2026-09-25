@@ -1,0 +1,21 @@
+{
+  "date": "2026-09-25T21:11:30.594Z",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "node": "v24.11.1",
+  "protocol": "250×250, prepared 36-cell enclosure, 20 warmups + 160 reads per implementation; alternating order, retained topology; old full-map beauty field vs current local room quality. CPU microbenchmark, no frame-rate/worker guarantee.",
+  "beauty": -2.8421052631578947,
+  "old": {
+    "n": 160,
+    "mean": 0.977169374999999,
+    "p50": 0.7161000000000968,
+    "p95": 2.674199999999928,
+    "max": 7.755499999999984
+  },
+  "current": {
+    "n": 160,
+    "mean": 0.07619312499999964,
+    "p50": 0.06370000000003984,
+    "p95": 0.16210000000000946,
+    "max": 0.3046000000000504
+  }
+}

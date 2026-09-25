@@ -1,5 +1,11 @@
 # Travail sur Lisière
 
+## Pièces vécues V103
+- Lire `docs/development/room-quality.md` et les recherches impression/valeur V103. Richesse des bâtiments/plantes et sols intérieurs, espace Core et impression dérivés ; le stockage libre ne crée pas de richesse de pièce. Beauté/propreté conservent leurs contributeurs historiques. Le calcul local ne remplace pas les règles de navigation.
+- Repas après ingestion, loisir après usage réel des fers, sommeil dans son lit civil après observation différée persistée. Un souvenir par famille, chambre/dortoir exclusifs, expiration après un jour ; observation au réveil seulement après la première. Pas de souvenir de salle pour regarder le ciel. Aucun effet rétrospectif sur les anciennes parties.
+- Schéma 103 : valider strictement V101 avant migration neutre ; aucun objet, recherche ou souvenir ajouté. Art/sculpture documenté seulement. Démonstration préparée `public/test-saves/v103/salles.json`, distincte d'une colonie autonome. Contrôles regroupés, sources gelées en natif, pas de campagne annuelle pour ces frontières bornées. Preuves `docs/history/validation-rooms-v103.md`. Mode jour : publier puis rendre la main.
+
+
 ## Inspection des pièces V102 — revue Cloud
 - PR #1 : affichage de beauté et bande, pas de richesse/impression/art. Lire `docs/development/room-quality.md` et ses preuves. Schéma 101 conservé.
 - Le cache de beauté UI se base sur les contributions réelles, les tuiles immuables du décodeur et la topologie ; ne pas reconstruire la carte en extérieur ni à chaque actualisation inchangée. Il ne convient pas au monde mutable de simulation.

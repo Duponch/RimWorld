@@ -1,4 +1,5 @@
 import { patientWork,patientProposal,startPatientRest,processPatientRest } from './patient-rest.ts';
+import { advanceRoomRest,finishRoomRest } from './room-experience.ts';
 import { capturePrisonTopology,prisonBedValid,prisonerAllowedCell } from './prison-space.ts';
 import { deconstructionReserved } from './deconstruction-rules.ts';
 import { BUILDING_MATERIALS } from './building-materials.ts';
@@ -64,7 +65,7 @@ export function processSleeping(world: World, pawn: Pawn, context: NeedContext, 
     if (scheduleWakes(world, pawn) || (world.restRules === 'adult' && task.phase === 'travel' && pawn.hunger <= 0)) {
       // Passive emergency cargo is independent of sleep. A full floor must not
       // prevent waking or reset the bounded drop retry on every awake tick.
-      if(pawn.interruptedCargo){pawn.need=null;pawn.state='idle';pawn.needCooldown=0;}
+      if(pawn.interruptedCargo){finishRoomRest(world,pawn);pawn.need=null;pawn.state='idle';pawn.needCooldown=0;}
       else {if(!context.release())return true;pawn.needCooldown=0;pawn.planCooldown=0;}
       return false;
     }
@@ -73,8 +74,9 @@ export function processSleeping(world: World, pawn: Pawn, context: NeedContext, 
     if (!same(pawn, task.target)) { context.move(task.target, true); return true; }
     if (task.phase === 'travel') context.event(`${pawn.name} s’allonge ${bed ? 'dans son lit' : 'au sol'}.`);
     task.phase = 'sleep'; pawn.path = []; pawn.state = 'sleeping'; pawn.collapsePending = false; pawn.restZeroTicks = 0;
+    advanceRoomRest(world,pawn);
     pawn.rest = Math.min(100, pawn.rest + (bed ? BED_REST_PER_TICK * BUILDING_MATERIALS[bed.material??'wood'].restFactor : GROUND_REST_PER_TICK));
-    if (pawn.rest >= 100) { pawn.need = null; pawn.state = 'idle'; pawn.planCooldown = 0; pawn.needCooldown = 0; }
+    if (pawn.rest >= 100) { finishRoomRest(world,pawn);pawn.need = null; pawn.state = 'idle'; pawn.planCooldown = 0; pawn.needCooldown = 0; }
     return true;
   }
   return false;

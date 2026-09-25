@@ -1,4 +1,7 @@
-# Validation courante — V102
+# Validation courante — V103
+
+V103 : [pièces vécues et souvenirs](../history/validation-rooms-v103.md). Contrats numériques, usages réels, migration historique, continuation, parcours UI/worker et performances distinctes. Situations préparées explicites, aucune année simulée requise pour les frontières d'un souvenir journalier.
+
 
 V102 : [qualité des pièces lisible](../history/validation-room-quality-v102.md). Contrôle ciblé de la capture partagée, TypeScript et parcours natif Pièces ; schéma 101 et règles temporelles conservés.
 

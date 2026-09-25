@@ -1,5 +1,7 @@
 # Publication Netlify
 
+V103 : production `6ab6e70384f6d62f0f619a5d`, 25 septembre 2026, 32 fichiers. [Pièces vécues, migration et contrôles](../history/validation-rooms-v103.md). Le [parcours général](../../artifacts/netlify-smoke-v103.json) et la [démonstration publique](../../artifacts/room-public-v103.json) passent ; bundle identique au build validé, import exact, repas réel et souvenir sauvegardé. Schéma 103, anciennes fixtures conservées. [Télécharger la salle préparée](https://lisiere-duponch.netlify.app/test-saves/v103/salles.json).
+
 V101 : déploiement de production `6ab5b90aeb6ac4082e8bde84`, 25 septembre 2026 (date locale), 31 fichiers. [Atelier, équipement, rangement et contrôles publics](../history/validation-machining-v101.md). Schéma métier 101 par migration neutre, enveloppe de stockage inchangée. La [démonstration atelier](../../public/test-saves/v101/atelier.json) s'importe depuis Charger une partie ; les six anciennes colonies de test restent immuables. Le contrôle courant compte 61 outils illustrés et conserve les vérifications de curseurs, gestion et sauvegarde.
 
 V100 : déploiement de production `6ab5a9a7e4d26356179e4f23`, 25 septembre 2026 (date locale). [Refonte visuelle et contrôle du bundle public](../history/validation-interface-v100.md).

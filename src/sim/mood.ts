@@ -1,4 +1,5 @@
 import { malnutritionStage } from './malnutrition.ts';
+import { expireRoomMemories,roomMoodThoughts } from './room-experience.ts';
 import { TRAITS } from './traits.ts';
 import { colonistMoodOffset } from './game-profile.ts';
 import { APPAREL } from './apparel-rules.ts';
@@ -39,7 +40,7 @@ export const comfortMood=(value:number):number=>comforts[comfortStage(value)]?.o
  * content permits one stage per family and one memory per meal kind. */
 export function moodThoughts(world:World,pawn:Pawn):readonly MoodThought[] {
   if(pawn.state==='dead')return [];
-  const thoughts:MoodThought[]=[camp];
+  const thoughts:MoodThought[]=[camp,...roomMoodThoughts(world,pawn)];
   const difficultyMood=colonistMoodOffset(world,pawn);
   if(difficultyMood)thoughts.push(situation('difficulty-mood','Récit d’aventure',difficultyMood,'Bonus d’humeur du niveau d’aventure choisi.'));
   for(const id of pawn.traits??[]){const trait=TRAITS[id];if(trait.mood)thoughts.push({id:`trait-${id}`,label:trait.label,offset:trait.mood,kind:'situation',description:trait.description});}
@@ -69,6 +70,7 @@ export function updateMood(world:World,pawn:Pawn,body?:BodyAssessment):void {
   pawn.mood=target>pawn.mood?Math.min(target,pawn.mood+amount):Math.max(target,pawn.mood-amount);
 }
 export function expireMealMemories(world:World,pawn:Pawn):void {
+  expireRoomMemories(world,pawn);
   if(pawn.deniedJoining?.some(t=>t<=world.tick)){pawn.deniedJoining=pawn.deniedJoining.filter(t=>t>world.tick);if(!pawn.deniedJoining.length)delete pawn.deniedJoining;}
   if(pawn.memories.some(m=>m.expiresAt<=world.tick))pawn.memories=pawn.memories.filter(m=>m.expiresAt>world.tick);
 }

@@ -1,4 +1,5 @@
 import { lyingBlocked } from './disturbance-state.ts';
+import { advanceRoomRest } from './room-experience.ts';
 import { treatmentTarget,medicalRestNeeded,urgentTreatment } from './care-rules.ts';
 import { medicalWorkRefusal } from './health-rules.ts';
 import { rescueBedAvailable } from './medical-beds.ts';
@@ -47,7 +48,7 @@ export function processPatientRest(world:World,pawn:Pawn,context:NeedContext):bo
     if(pawn.health&&pawn.health.tick<world.tick)updatePawnHealth(world,pawn);
     task.phase='sleep';context.event(`${pawn.name} s'allonge pour ${task.medical==='patient'?'recevoir des soins':'récupérer de son état de santé'}.`);
   }
-  pawn.path=[];pawn.state='resting';return true;
+  pawn.path=[];pawn.state='resting';advanceRoomRest(world,pawn);return true;
 }
 export function reconcilePatientRest(world:World):void {
   for(const p of world.pawns)if(p.need?.kind==='sleep'&&p.need.medical){

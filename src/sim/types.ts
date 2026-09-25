@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 101 as const;
+export const SCHEMA_VERSION = 103 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
@@ -39,7 +39,7 @@ export interface DiningPlace { target: Cell; seatId: number | null; tableId: num
 export interface Memory { kind: 'ate-without-table' | 'ate-raw-food'; expiresAt: number }
 export type NeedTask =
   | { kind: 'eat'; phase: 'pickup' | 'choose-spot' | 'travel' | 'ingest'; sourcePileId: number; carryPileId: number | null; quantity: number; progress: number; workRemainder?:number; dining: DiningPlace | null }
-  | { kind: 'sleep'; medical?:'patient'|'bedrest'; phase: 'travel' | 'sleep'; bedId: number | null; target: Cell };
+  | { kind: 'sleep'; roomRest?:import('./room-experience.ts').RoomRest; medical?:'patient'|'bedrest'; phase: 'travel' | 'sleep'; bedId: number | null; target: Cell };
 export interface Job extends Cell {
   floor?:import('./flooring.ts').FloorKind;
   flick?:{structureId:number;kind:StructureKind;on:boolean};
@@ -67,6 +67,7 @@ export interface Job extends Cell {
   escrow: Stock;
 }
 export interface Pawn extends Cell {
+  roomMemories?:import('./room-experience.ts').RoomMemory[];
   body?:import('./human-corpses.ts').HumanBodyState;
   burial?:import('./burial.ts').BurialTask;
   cleaning?:import('./cleaning.ts').CleaningTask;

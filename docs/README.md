@@ -1,5 +1,8 @@
 # Documentation de Lisière
 
+**V103 : pièces vécues et humeur.** Richesse, espace et impression complètent l'inspection ; repas, fers et sommeil produisent des souvenirs depuis leurs usages réels. Migration neutre, calcul local de pièce et [démonstration préparée](../public/test-saves/v103/salles.json). [Contrat](development/room-quality.md), [références](research/room-impressiveness-reference-v103.md), [preuves et limites](history/validation-rooms-v103.md). Art/sculpture reste préparatoire, sans nouvel objet de catalogue.
+
+
 **V102 : inspection de la beauté des pièces, relue et corrigée localement.** Ajout Cloud limité à l'observation ; cache sans reconstruction systématique et contribution des fleurs corrigée. Aucun nouveau catalogue d'art ou système d'impression. [Contrat](development/room-quality.md), [revue et validation](history/validation-room-quality-v102.md).
 
 **V101 : atelier, équipement et rangement.** Usinage puis Armurerie, atelier électrique construit, revolver et fusil fabriqués avec acier/composants, ouvrage conservé et qualité ; filtres précis par objet pour les réserves. [Contrat](development/machining.md), [stockage](development/storage-item-filters.md), [preuves](history/validation-machining-v101.md). Migration neutre depuis V91. [Démonstration préparée à importer](../public/test-saves/v101/atelier.json).

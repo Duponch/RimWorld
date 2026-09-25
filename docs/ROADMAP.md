@@ -1,5 +1,8 @@
 # Plan de développement
 
+**V103 : qualité des lieux reliée à la vie des habitants.** Richesse des aménagements, espace utilisable et impression sont inspectables ; repas, fers et sommeil peuvent laisser un souvenir temporaire d'humeur. Schéma 103, migration V101 neutre, inspection calculée sur la pièce consultée. [Contrat](development/room-quality.md), [preuves](history/validation-rooms-v103.md). Les meubles et sols existants gagnent un usage, sans nouvelle définition de contenu obtenable ; art/sculpture est documenté pour le prochain enrichissement.
+
+
 **V102 : qualité des pièces rendue lisible.** L'inspection Environnement affiche la valeur et la bande de beauté depuis les mêmes objets physiques que le besoin personnel, sans recalcul par image ni changement de schéma. Cette tranche prépare décoration/art et impression sans inventer richesse, espace ou souvenirs avant leur filière complète. [Contrat](development/room-quality.md), [recherche](research/room-quality-reference-v102.md), [preuves](history/validation-room-quality-v102.md).
 
 **V101 : atelier, équipement et rangement.** Deux recherches et deux recettes d’armes, atelier construit/alimenté, ouvrage et équipement conservés, filtres par objet. [Preuves](history/validation-machining-v101.md) ; calendrier des prochains fronts ci-dessous.
@@ -36,7 +39,7 @@
 
 La filière alimentaire V84 reste livrée : [cultures](development/food-crops.md), [postes](development/food-workstations.md) et [malnutrition](development/malnutrition.md), 24 jours depuis la dotation réelle et deux récoltes sur les mêmes 80 cases de riz. [Preuves V84](history/validation-food-v84.md).
 
-État : **25 septembre 2026, V102 : qualité des pièces rendue lisible**. ROADMAP est l’unique calendrier G0–G5. G0 en consolidation, G1/G2/G3 partiels, G4 engagé par l’accueil, la captivité et le commerce, G5 absent ; aucun jalon complet. Les numéros de schéma ne mesurent pas l’avancement du jeu. [Inventaire réel](gameplay/implementation-status.md), [preuves](development/validation.md), [index](README.md).
+État : **25 septembre 2026, V103 : pièces vécues et souvenirs**. ROADMAP est l’unique calendrier G0–G5. G0 en consolidation, G1/G2/G3 partiels, G4 engagé par l’accueil, la captivité et le commerce, G5 absent ; aucun jalon complet. Les numéros de schéma ne mesurent pas l’avancement du jeu. [Inventaire réel](gameplay/implementation-status.md), [preuves](development/validation.md), [index](README.md).
 
 Boucle précédente : [site local et première récolte V83](development/world-generation.md), trois reliefs, sols fertiles et ressources physiques reliés au départ. Douze jours joués avec abri, défense, riz récolté puis cuisiné ; anciennes cartes préservées. V84 prolonge ce départ par plusieurs récoltes et l’alimentation renouvelée sur le parcours documenté. [Preuves V83](history/validation-site-v83.md).
 
@@ -52,7 +55,7 @@ Précédente boucle environnementale : [conservation froide V75](development/col
 
 **V101 : reprise du gameplay autorisée, atelier, équipement et rangement.** Forge → Usinage → Armurerie, atelier construit et alimenté, deux recettes d’armes avec ouvrage/qualité/reprise, puis équipement et rangement par objet. [Contrats](development/machining.md), [preuves](history/validation-machining-v101.md). Migration neutre, aucune technologie ni dotation gratuite aux parties existantes. Le diagnostic de construction forcée V94 est clos : sa fixture ne fournissait que 12 bois pour un lit de 45 ; avec 33 bois supplémentaires le véritable ordre termine le lit, même Construction désactivée. L’oracle UI conserve aussi son stock résiduel de quatre bois.
 
-**Priorités suivantes : vie collective et économie de la colonie.** Avancer salles/qualité des lieux et décoration/art avec des usages vécus, puis menaces/incidents liés à la richesse et aux capacités réelles. Élevage, soins animaux et monde restent des ensembles distincts. Continuer le catalogue à chaque boucle ; composants, armures et autres armes ne sont pas livrés par les deux recettes V101. Chaque prochain périmètre doit être refermé par recherches Core avant code.
+**Priorités suivantes : contenu artistique puis économie et incidents.** V103 relie les salles aux usages vécus. Prochain ensemble : sculpture obtenable (atelier, compétence/priorité, facture, ouvrage, qualité, transport et installation), pour enrichir concrètement la décoration et le commerce. La [référence préparatoire](research/art-reference-v103.md) ferme les coefficients mais ne livre pas cette chaîne. Ensuite : menaces/incidents liés à la richesse globale et aux capacités réelles ; la richesse d’une pièce ne remplace pas ce budget. Élevage, soins animaux et monde restent des ensembles distincts. Continuer le catalogue à chaque boucle ; composants, armures et autres armes ne sont pas livrés par les deux recettes V101. Chaque prochain périmètre doit être refermé par recherches Core avant code.
 
 **Performance continue.** Conserver les comparaisons CPU/worker/rendu et cibler les coûts observés, notamment les fortes populations et les pics d’adoption. Le lot V101 préserve le chemin scalaire rapide de lumière des mondes sans source bleue ; seule la présence d’un atelier alimenté exige les canaux RGB. Pas de garantie 240 FPS/6× et pas de choix WASM sans noyau mesuré. Contrôles regroupés ; campagnes naturelles longues selon les risques, pas systématiques. Mode jour : livraison puis retour à l’utilisateur.
 
@@ -171,6 +174,8 @@ La scène D du corpus guide les transferts : une personne ou pile garde son iden
 
 ## Chantiers transversaux
 
+V103 réduit la lecture dérivée à la pièce demandée et mesure séparément ce coût, le moteur mixte et le navigateur. Aucun gain global de FPS ou garantie de débit 6× ne découle du microbanc ; voir les [preuves V103](history/validation-rooms-v103.md).
+
 V90 doit mesurer séparément : pulsations de beauté et invalidations de pièce ; échéances d'usure/politiques et recherches de candidats ; production avec ateliers manuel/électrique ; adoption worker et rendu des nouveaux meubles/couches. Les audits CPU, natifs et pilote commun restent successifs. Comparer des états identiques, relever personnes/vêtements/meubles/fleurs réellement actifs et conserver les résultats même si 6× n'est pas tenu. Les caches ne doivent pas reconstruire toute la carte ou tous les lots par image ; aucun objectif chiffré ne sera annoncé avant mesure.
 
 Audit V87 : 100 colons et 100 lièvres, activités alimentaires/recherche, réseau, chauffage et extinction. CPU tick p95 114,79 ms ; image p95 45,8 ms, maximum 137,5 ms ; débit 2,05× pour 6× demandé. La comparaison isolée montre une baisse du coût de lecture des pièces, mais pas un gain global garanti. La nouvelle charge ne se compare pas causalement aux anciennes. Prochaine optimisation : profiler séparément moteur, navigation, adoption des snapshots et surcoût des oracles/observations du pilote, puis conserver seulement les changements à résultats équivalents. [Mesures](research/performance-v87.md).
@@ -203,7 +208,7 @@ Objectif d'une partie, tonalité fictionnelle, contraintes de verticalité, tail
 
 ## Estimation d'avancement
 
-**Revue du 22 septembre 2026, périmètre Core sans extensions/mods.** Les domaines et sous-domaines ci-dessous sont réexaminés à partir des contrats et de l’inventaire V91. V92 améliore la présentation et l’accès au jeu ; elle ne livre aucune nouvelle boucle métier, donc les estimations de gameplay et de catalogue restent inchangées. La ligne graphique passe à 45 % (35–55), avec une identité commune et une inspection plus structurée, toujours loin de la finition et de l’ensemble des écrans Core. Aucun pourcentage n’est un délai ni une garantie de fiabilité.
+**Revue générale du 22 septembre 2026, actualisation habitat/pièces le 25 septembre (V103), périmètre Core sans extensions/mods.** Les domaines et sous-domaines ci-dessous sont réexaminés à partir des contrats et de l’inventaire V91. V92 améliore la présentation et l’accès au jeu ; elle ne livre aucune nouvelle boucle métier, donc les estimations de gameplay et de catalogue restent inchangées. La ligne graphique passe à 45 % (35–55), avec une identité commune et une inspection plus structurée, toujours loin de la finition et de l’ensemble des écrans Core. Aucun pourcentage n’est un délai ni une garantie de fiabilité.
 
 Revue demandée après V88 (`f06dd61`), actualisée pour V89 validée et V90 validée dans son périmètre le 21 septembre. Les domaines de mécanique et le contenu sont explicitement distingués ci-dessous. Ces jugements restent incertains et portent sur des fonctions, jamais sur un pourcentage de temps restant. Les lignes V90 reflètent le contenu validé dans son périmètre mais conservent l’incertitude de couverture ; l'estimation globale reste inchangée.
 
@@ -220,7 +225,7 @@ La revue remplace les anciens chiffres figés du 18 septembre : ils sous-décriv
 | Transport et stockage | 60 % (50–70), révisé V101 | Piles physiques, catégories et filtres précis par objet, portage, paquets, inachevés et dépouilles humaines identifiées | Étagères, zones nommées/politiques riches, masse, inventaire personnel colonial |
 | Construction et entretien | 55 % (45–65), révisé V90 | Matériaux, plan/cadre, dégagement, déconstruction, réinstallation ; dégâts/réparation et qualité des meubles présents | Catalogue supplémentaire, échecs de construction, toutes les causes de panne/dégât |
 | Minage, pierre et matériaux | 45 % (35–55) | Cinq roches, acier/composants, fragments/blocs, ouvertures locales | Autres minerais, compétence de minage, lissage, toits naturels |
-| Habitat, pièces et mobilier | 55 % (45–65), révisé V90 | Pièces, portes, toits, tables/sièges/chambre, qualité, confort occupé, fleur et beauté personnelle/de pièce | Richesse/impression, souvenirs, lits spécialisés, art/rangement et catalogue Core |
+| Habitat, pièces et mobilier | 60 % (45–70), révisé V103 | Pièces, portes, toits, mobilier/qualité, confort, fleur, beauté ; richesse/espace/impression et souvenirs de repas, fers et lit civil | Autres rôles/pensées, lits spécialisés, art/rangement et catalogue Core |
 | Faim, repos, horaires de vie et loisirs | 65 % (55–75) | Manger et dormir physiquement, régimes, horaires, deux loisirs avec lassitude | Variété, attentes contextuelles, davantage de lieux/activités et situations sociales |
 | Agriculture et végétation utile | 50 % (40–60), révisé V91 | Quatre cultures, baies et agave ; douze plantes sauvages, arbres à croissance et récolte propres, pâturage et renouvellement | Autres espèces, maladies végétales, cycles Core complets et horticulture avancée |
 | Cuisine et alimentation | 60 % (50–70), révisé V89 | Ingrédients physiques, chasse/boucherie/viande, deux cuisinières, factures, combustible/courant, repas renouvelables, contamination/propreté et intoxication | Autres aliments/recettes, pâte nutritive, usages et filières complètes |
@@ -252,12 +257,12 @@ Les tests profonds, migrations et audits mesurés constituent une pratique déj�
 
 Ces sous-domaines recoupent les lignes précédentes ; ils ne s'y additionnent pas. Ils évitent de confondre un moteur de construction assez développé avec une maison complète, ou une génération de terrain avec une diversité de biomes. Estimations fonctionnelles arrondies, incertitude généralement d'au moins dix points ; les faibles valeurs distinguent absence et première préparation. Il n'existe pas encore de dénominateur exhaustif vérifié du catalogue Core.
 
-| Aspect concret, revue V93 (contenu V91) | Estimation (fourchette) | Ce que le joueur peut réellement obtenir / manque principal |
+| Aspect concret, revue V103 (catalogue V101) | Estimation (fourchette) | Ce que le joueur peut réellement obtenir / manque principal |
 |---|---:|---|
 | Matériaux pour murs et portes | 55 % (40–65) | Bois, acier et cinq pierres ; autres matériaux, toutes les propriétés et éléments de maison manquants |
 | Sols construits et revêtements | 35 % (25–45) | Bois, cinq pierres et acier obtenables avec travaux/recherche/retrait ; autres revêtements et propriétés complètes absents |
 | Mobilier d'habitation | 45 % (35–55), révisé V90 | Lit, trois tables, trois sièges, table de chevet, commode, pot et éclairage ; confort/qualité actifs | Lits variés, rangements, meubles spécialisés et catalogue Core absents |
-| Décoration, art, beauté et qualité des pièces | 20 % (10–30), révisé V90 | Hémérocalle, beauté des contenus audités, besoin personnel et calcul dérivé de beauté de pièce non affiché | Art/sculptures, richesse, espace/impression, souvenirs et catalogue décoratif absents |
+| Décoration, art, beauté et qualité des pièces | 35 % (20–45), révisé V103 | Hémérocalle, beauté personnelle/de pièce inspectable, richesse/espace/impression, souvenirs bornés d’usage | Sculpture préparée seulement ; objets d’art, autres décorations/rôles/pensées et leurs effets complets absents |
 | Variété des ressources et matières | 30 % (20–40), révisé V91 | Bois, acier, composants, cinq pierres, tissu, quatre cuirs et argent ; nombreux métaux et productions absents |
 | Variété des ateliers et recettes | 25 % (15–35), révisé V91 | Taille, cuisine/boucherie, tailleurs manuel/électrique et vingt-cinq combinaisons vestimentaires ; grandes filières artisanales, armurerie et industrie absentes |
 | Variété des aliments et cultures | 30 % (20–40), révisé V91 | Riz, pomme de terre, maïs, coton, baies, agave, cinq viandes obtenables et repas simple ; autres cultures et niveaux de repas manquants |

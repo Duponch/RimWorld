@@ -1,0 +1,54 @@
+{
+  "url": "https://lisiere-duponch.netlify.app",
+  "checkedAt": "2026-09-25T21:27:39.250Z",
+  "errors": [],
+  "bundle": [
+    {
+      "file": "index.html",
+      "sha256": "608eac4e1e819eb049e085f8dfff2bdf471aaecb687cd89a40ecb0af1d45a5d0",
+      "bytes": 1025
+    },
+    {
+      "file": "assets/game-aNUfMuBE.js",
+      "sha256": "986236ac28c17b39fe231b4884e80e78f7a555c8db0f893b4fd686899c9f967e",
+      "bytes": 1312439
+    },
+    {
+      "file": "assets/game-BeUXPSbv.css",
+      "sha256": "d91626645e4fd1362995f6c24b9319f0a032b11dbef0b7b9a2dced74a6fa438a",
+      "bytes": 96910
+    },
+    {
+      "file": "assets/navigation-Be_IfcT4.css",
+      "sha256": "6685dcc48820269c7a80179963a71e6dbcde46f61705628847b90b27f57667b6",
+      "bytes": 1618
+    },
+    {
+      "file": "assets/navigation-DFiyi8c8.js",
+      "sha256": "8a54ab53cb7fd9580ccf2cd6b078d473b8bbbe739ed76846603428550499c850",
+      "bytes": 18297
+    },
+    {
+      "file": "assets/sim-Du6O86GW.js",
+      "sha256": "9db8ffdd310314790fe77c41dd09c91c61ff701beb4f81ec65b51ce3ac859884",
+      "bytes": 226337
+    },
+    {
+      "file": "assets/simulation.worker-fA8CWUrE.js",
+      "sha256": "0f99c619d44761daef090c7180037ea637a6b935a280ee04ced7793916ee80c0",
+      "bytes": 822860
+    }
+  ],
+  "demoHash": "e698c0fd4e1fa7e01da81dab6f3eb2c7fdd0bb6f873fde804879e783ec7cb9cf",
+  "schema": 103,
+  "tick": 2068,
+  "exactImportAndSave": true,
+  "memories": [
+    {
+      "kind": "dining",
+      "stage": 7,
+      "expiresAt": 8052
+    }
+  ],
+  "passed": true
+}

@@ -1,6 +1,12 @@
 # Guide joueur
 
-**Beauté des pièces (V102).** Sélectionner une case intérieure puis ouvrir **Environnement** affiche sa valeur de beauté et son appréciation. Les sols, meubles, piles et salissures contribuent au score ; une hémérocalle vivante ajoute sa beauté à celle du pot. Extérieur, mur et seuil n'ont pas de score de pièce. Cette valeur ne constitue pas encore une note d'impression globale ni un souvenir de chambre/réfectoire.
+## Aménager les pièces pour leurs habitants — V103
+
+Sélectionner une case intérieure puis **Environnement** montre beauté, propreté, richesse des aménagements, espace utilisable et impression. Les objets stockés affectent la beauté, mais ne rendent pas une pièce riche. Matière, qualité et état des meubles comptent ; nettoyer, dégager, aménager et fleurir restent des travaux physiques.
+
+Dans le dossier **Besoins**, les pensées indiquent le bonus ou malus et sa durée restante. Un repas achevé peut laisser un souvenir de la salle ; les fers donnent celui du lieu de loisir après usage. Un lit civil personnel donne celui de chambre ou de dortoir après une première observation différée de 1 à 4 heures. Une visite brève ne suffit pas ; le réveil peut rafraîchir un souvenir déjà acquis. Les souvenirs durent un jour, se remplacent dans leur famille et ne se cumulent pas à chaque repas. Regarder le ciel ne donne pas de souvenir de salle.
+
+**Essai direct :** télécharger [la salle préparée V103](../../public/test-saves/v103/salles.json), puis **Charger → Importer**. C'est une petite scène de démonstration, pas une colonie autonome : un colon affamé, trois repas, table/siège, lit personnel, fers, sol et fleurs déjà installés. Inspecter la salle, reprendre la simulation et ouvrir **Besoins** après le repas. Les anciennes parties ne reçoivent aucun souvenir gratuit ; leurs prochains usages alimentent cette mécanique. Art/sculptures et effets des rôles spécialisés restent à développer.
 
 ## Fabriquer ses armes et trier les réserves — V101
 

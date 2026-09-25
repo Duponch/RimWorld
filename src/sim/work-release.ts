@@ -1,4 +1,5 @@
 import { cancelHunting } from './hunting-state.ts';
+import { finishRoomRest,rememberRoomUse } from './room-experience.ts';
 import { feedingWork } from './feeding-rules.ts';
 import { cancelAutomaticCombat } from './automatic-combat-state.ts';
 import { releaseRescue } from './rescue-state.ts';
@@ -95,6 +96,8 @@ export function releaseWork(world:World,pawn:Pawn,plan?:DropPlan):boolean {
 /** Release task/service claims independently of ownership. Only involuntary or tactical
  * interruption may use this while an object is still carried. */
 export function releaseAssignments(world:World,pawn:Pawn):void {
+  finishRoomRest(world,pawn);
+  if(pawn.recreation.task?.activity==='horseshoes'&&pawn.recreation.task.phase==='active'&&pawn.recreation.task.elapsed>0)rememberRoomUse(world,pawn,'recreation');
   cancelAutomaticCombat(pawn);cancelHunting(pawn);
   if(pawn.need?.kind==='sleep'&&pawn.need.medical&&pawn.health&&!pawn.health.death&&pawn.health.tick<world.tick)updatePawnHealth(world,pawn);
   delete pawn.burial;delete pawn.cleaning;delete pawn.trade;delete pawn.firefighting;delete pawn.ward;delete pawn.heatRefuge;delete pawn.research;releaseRescue(world,pawn);delete pawn.tend;delete pawn.feed;delete pawn.medicalSleep;delete pawn.equipmentTask;
