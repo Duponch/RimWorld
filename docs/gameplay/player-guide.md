@@ -1,5 +1,7 @@
 # Guide joueur
 
+**Beauté des pièces (V102).** Sélectionner une case intérieure puis ouvrir **Environnement** affiche sa valeur de beauté et son appréciation. Les sols, meubles, piles et salissures contribuent au score ; une hémérocalle vivante ajoute sa beauté à celle du pot. Extérieur, mur et seuil n'ont pas de score de pièce. Cette valeur ne constitue pas encore une note d'impression globale ni un souvenir de chambre/réfectoire.
+
 ## Fabriquer ses armes et trier les réserves — V101
 
 1. Dans **Recherche**, terminer **Forge**, **Usinage**, puis **Armurerie** avec un bureau et un chercheur.

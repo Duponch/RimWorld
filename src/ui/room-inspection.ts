@@ -5,10 +5,13 @@ import { isRoofed, roofIndex } from '../sim/roof-rules';
 import type { Cell, World } from '../sim/types';
 import { TemperatureView } from '../sim/temperature';
 import { roomCleanliness } from '../sim/filth';
+import { BEAUTY_BAND_LABEL } from '../sim/room-beauty';
+import { RoomBeautyInspection } from './room-beauty-inspection';
 
 /** One cache per inspector owner, refreshed on snapshots/selection, never RAF. */
 export class RoomInspection {
   private readonly environment = new WorkEnvironmentCache();
+  private readonly beauty = new RoomBeautyInspection();
 
   update(panel: HTMLElement, world: World, cell: Cell): void {
     if (panel.hidden) return;
@@ -37,6 +40,8 @@ export class RoomInspection {
     if(properties&&properties.role!=='none')text+=` ${ROOM_ROLE_LABEL[properties.role]}.`;
     const cleanliness=roomCleanliness(world,cell);
     text+=cleanliness===null?' Propreté : pas de score de pièce.':` Propreté : ${cleanliness.toFixed(2)}.`;
+    const beauty=this.beauty.read(world,environment.topology,cell);
+    text+=beauty===null?' Beauté : pas de score de pièce.':` Beauté : ${beauty.beauty.toFixed(2)} · ${BEAUTY_BAND_LABEL[beauty.band]}.`;
     text+=` Lumière : ${Math.round(environment.lightAt(cell)*100)} %.`;
     text+=` Vitesse de travail et de marche : ${Math.round(environment.speedAt(cell)*100)} % (effet de la lumière sur cette case).`;
     const station=world.structures.find(s=>(s.kind==='machining-table'||s.kind==='stonecutter'||s.kind==='campfire'||s.kind==='fueled-stove'||s.kind==='electric-stove'||s.kind==='butcher-table')&&footprintCells(s).some(c=>c.x===cell.x&&c.z===cell.z));
@@ -50,7 +55,7 @@ export class RoomInspection {
     }
     if (line.dataset.copy !== text) {
       line.dataset.copy=text;
-      line.replaceChildren(...text.split(/ (?=Température :|Propreté :|Lumière :|Vitesse de travail|Production :|Toit construit|Zone :)/).map(part=>{
+      line.replaceChildren(...text.split(/ (?=Température :|Propreté :|Beauté :|Lumière :|Vitesse de travail|Production :|Toit construit|Zone :)/).map(part=>{
         const item=document.createElement('span');item.className='room-fact';
         const separator=part.indexOf(' : ');
         if(separator>0){const label=document.createElement('span');label.textContent=part.slice(0,separator+3);const value=document.createElement('strong');value.textContent=part.slice(separator+3);item.append(label,value);}

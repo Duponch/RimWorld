@@ -19,6 +19,10 @@ export const FLOOR_BEAUTY=Object.freeze({
 } as const);
 export const FILTH_BEAUTY=Object.freeze({dirt:-15,trash:-15,blood:-30,ash:-10,vomit:-40,'corpse-bile':-50} as const);
 export type BeautyBand='hideous'|'ugly'|'neutral'|'pretty'|'beautiful'|'very-beautiful'|'extremely-beautiful'|'unbelievably-beautiful';
+export const BEAUTY_BAND_LABEL:Readonly<Record<BeautyBand,string>>=Object.freeze({
+  hideous:'hideuse',ugly:'laide',neutral:'neutre',pretty:'jolie',beautiful:'belle',
+  'very-beautiful':'très belle','extremely-beautiful':'extrêmement belle','unbelievably-beautiful':'incroyablement belle',
+});
 
 export function floorBeauty(tile:BeautyTile,outdoors=false):number {
   if(tile.floor&&Object.hasOwn(FLOOR_BEAUTY,tile.floor))return FLOOR_BEAUTY[tile.floor as keyof typeof FLOOR_BEAUTY];

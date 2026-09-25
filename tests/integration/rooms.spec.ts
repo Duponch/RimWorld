@@ -13,18 +13,21 @@ test('pièces : inspection, porte ouverte, brèche exécutée et rechargement da
     const w = roomCamp(), p = w.pawns[0]!; p.priorities.gather = 1;
     w.resources.push({ id: w.nextId++, kind: 'tree', x: 12, z: 15, amount: 12 });
     await page.addInitScript(({ key, data }) => localStorage.setItem(key, data), { key: saveKey, data: serializeWorld(w) });
-    await page.goto('/?scenario=camp&size=32&e2e'); await expect(page.locator('#loading')).toHaveCount(0);
+    await page.goto('/?scenario=camp&size=32&e2e'); await expect(page.locator('[data-speed="0"]')).toBeVisible(); await expect(page.locator('#loading')).toHaveCount(0);
     await page.locator('[data-speed="0"]').click(); await panel(page, 'menu');
     await page.locator('#load').click(); await expectWorld(page, w); await expect(page.locator('.game-shell')).not.toHaveJSProperty('inert', true);
     await page.keyboard.press('Escape'); await revealCells(page, [{ x: 13, z: 13 }, { x: 15, z: 15 }]);
-    await cell(page, 13, 13); await expect(page.locator('#room-description')).toHaveText('Pièce non couverte · 36 cases.');
+    await cell(page, 13, 13); await expect(page.locator('#room-description')).toContainText('Pièce non couverte · 36 cases.');
+    await page.locator('.cell-environment summary').click();
+    await expect(page.locator('#room-description')).toBeVisible();
+    await expect(page.locator('#room-description')).toContainText('Beauté : -2.84 · laide.');
     await page.screenshot({ path: 'artifacts/rooms-ui-enclosed.png' });
     await cell(page, 15, 15); await expect(page.locator('#room-description')).toContainText('Seuil');
     await page.locator('#door-holdOpen').check();
     // Use a real collection order to cross the doorway, not an injected open state.
     await page.locator('[data-panel="architect"]').click();
     await page.locator('[data-category="orders"]').click(); await page.locator('[data-tool="chop"]').click();
-    await cell(page, 12, 15); await page.keyboard.press('Escape'); await page.locator('[data-speed="6"]').click();
+    await revealCells(page,[{x:12,z:15}]);await cell(page, 12, 15); await page.keyboard.press('Escape'); await page.locator('[data-speed="6"]').click();
     await expect.poll(async () => (await world(page)).resources.length, { timeout: 12000 }).toBe(0);
     await page.locator('[data-speed="0"]').click(); await cell(page, 15, 15);
     await expect(page.locator('#door-state')).toContainText('Ouverte'); await expect(page.locator('#room-description')).toContainText('Seuil');
@@ -33,10 +36,11 @@ test('pièces : inspection, porte ouverte, brèche exécutée et rechargement da
     await cell(page, 11, 10); await page.locator('#cell-deconstruct').click();
     await cell(page, 13, 13); await expect(page.locator('#room-description')).toContainText('36 cases');
     await panel(page, 'work'); // Reopen while paused: no later snapshot can repair stale text.
-    await page.locator('[data-speed="6"]').click();
+    await page.keyboard.press('3'); // The wide Work panel covers speed buttons; use the real shortcut.
     await expect.poll(async () => (await world(page)).structures.some(s => s.x === 11 && s.z === 10), { timeout: 12000 }).toBe(false);
-    await page.locator('[data-speed="0"]').click(); const breached = await world(page);
+    await page.keyboard.press('Space'); const breached = await world(page);
     await page.locator('[data-panel="work"]').click(); await expect(page.locator('#room-description')).toContainText('Extérieur');
+    await expect(page.locator('#room-description')).toContainText('Beauté : pas de score de pièce.');
     expect(validateWorld(breached)).toEqual([]);
     await panel(page, 'menu'); await page.locator('#save').click(); await page.locator('#load').click(); await expectWorld(page, breached);
     await expect(page.locator('.game-shell')).not.toHaveJSProperty('inert', true); await page.keyboard.press('Escape');

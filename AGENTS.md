@@ -1,5 +1,11 @@
 # Travail sur Lisière
 
+## Inspection des pièces V102 — revue Cloud
+- PR #1 : affichage de beauté et bande, pas de richesse/impression/art. Lire `docs/development/room-quality.md` et ses preuves. Schéma 101 conservé.
+- Le cache de beauté UI se base sur les contributions réelles, les tuiles immuables du décodeur et la topologie ; ne pas reconstruire la carte en extérieur ni à chaque actualisation inchangée. Il ne convient pas au monde mutable de simulation.
+- Pot et fleur vivante ont des contributions distinctes ; +18 de fleur rétablis après une omission V90, sans retirer le matériau/qualité du pot. Effet prospectif, pas de sauvegarde réécrite.
+- Parcours Pièces : ouvrir Environnement, utiliser 3/Espace quand Travail masque la vitesse ; conserver les assertions de brèche et reprise. Validation locale bornée : 19 contrôles, un parcours natif, build/typage/docs ; pas de garantie de parité ou de performance générale.
+
 ## Atelier, équipement et rangement V101
 - Reprise du gameplay autorisée après V100. Lire `docs/development/machining.md`, `storage-item-filters.md` et leurs recherches Core 1.6.4871. Forge → Usinage → Armurerie ; atelier 3×1 alimenté, revolver/fusil fabriqués avec matières distinctes, ouvrage lié à son auteur, qualité et équipement physiques. Autres armes, composants fabriqués et armures restent hors lot.
 - Schéma 101 : valider strictement V91 avant migration neutre. Aucune recherche, ressource ni permission ajoutée aux anciennes parties. Les anciennes fixtures publiques V98 restent immuables. Filtres par objet facultatifs : absence conserve la catégorie, liste explicite n'admet que ses entrées vraies, toujours sous la catégorie.
