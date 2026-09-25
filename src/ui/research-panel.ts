@@ -1,8 +1,10 @@
-import { intellectualSkill, RESEARCH_SCALE, researchUnlocked, type ResearchProject, type ResearchProgress } from '../sim/research';
+import { researchPrerequisite,intellectualSkill, RESEARCH_SCALE, researchUnlocked, type ResearchProject, type ResearchProgress } from '../sim/research';
 import type { Command, World } from '../sim/types';
 
 type ProjectCard = { id: ResearchProject; prefix: string; title: string; cost: number; detail: string; progress: (w: World) => ResearchProgress | undefined };
 const projects: readonly ProjectCard[] = [
+  {id:'machining',prefix:'machining',title:'Usinage',cost:1000,detail:'Après Forge : atelier d’usinage électrique, 150 acier + 5 composants. Construction 4.',progress:w=>w.research?.machining},
+  {id:'gunsmithing',prefix:'gunsmithing',title:'Armurerie',cost:500,detail:'Après Usinage : revolver (Artisanat 3) et fusil à verrou (Artisanat 5).',progress:w=>w.research?.gunsmithing},
   {id:'complex-furniture',prefix:'furniture',title:'Mobilier complexe',cost:300,detail:'Débloque chaise, fauteuil, table de chevet et commode.',progress:w=>w.research?.complexFurniture},
   {id:'stonecutting',prefix:'stonecutting',title:'Taille de pierre',cost:300,detail:'Débloque les dallages en pierre. Quatre blocs par case ; Construction 3.',progress:w=>w.research?.stonecutting},
   {id:'smithing',prefix:'smithing',title:'Forge',cost:700,detail:'Débloque le dallage en acier. Sept aciers par case ; Construction 3.',progress:w=>w.research?.smithing},
@@ -31,11 +33,12 @@ export function updateResearchPanel(root: HTMLElement, world: World, send: (comm
     root.querySelector<HTMLProgressElement>(`[data-${project.prefix}-progress]`)!.value=points;
     const initial=done && progress?.completedAt===0 && (world.scenario?.id==='survivors'||world.scenario?.id==='crashlanded');
     root.querySelector(`[data-${project.prefix}-status]`)!.textContent=`${done?initial?'Acquise au départ':'Terminée':active?'En cours':'En attente'} · ${points.toFixed(1)} / ${project.cost} points`;
-    root.querySelector<HTMLButtonElement>(`[data-${project.prefix}-start]`)!.disabled=done||active;
+    root.querySelector<HTMLButtonElement>(`[data-${project.prefix}-start]`)!.disabled=done||active||!!researchPrerequisite(world,project.id);
+    root.querySelector<HTMLButtonElement>(`[data-${project.prefix}-start]`)!.title=researchPrerequisite(world,project.id)?`Nécessite ${researchPrerequisite(world,project.id)}`:'';
   }
   root.querySelector<HTMLButtonElement>('[data-research-pause]')!.disabled=!world.research?.project;
   root.querySelector('[data-research-help]')!.textContent=projects.every(p=>researchUnlocked(world,p.id))
-    ? 'Les sept projets disponibles sont acquis. Les autres technologies restent à développer.'
+    ? 'Les neuf projets disponibles sont acquis. Les autres technologies restent à développer.'
     : 'Construisez un bureau de recherche simple dans Architecte → Production, puis affectez un colon dans Travail. Plusieurs bureaux contribuent au même projet. Batteries et panneaux solaires sont deux recherches indépendantes ; les bases de l’électricité sont disponibles dans ce scénario.';
   const workers=world.pawns.filter(p=>p.research).map(p=>`${p.name} · Intellect ${intellectualSkill(p).level} · ${p.state==='working'?'au bureau':'en chemin'}`);
   root.querySelector('[data-research-workers]')!.textContent=workers.join(' ; ')||`${world.structures.filter(s=>s.kind==='research-bench').length} bureau(x) construit(s) · aucun chercheur au travail.`;

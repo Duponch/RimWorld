@@ -8,7 +8,7 @@ const stuffable = new Set<string>(['research-bench','tailor-bench','electric-tai
 export const defaultPlacementMaterial = (tool:string):ConstructionMaterial =>
   validConstructionMaterial(tool,'wood')?'wood':constructionMaterials(tool)[0]!;
 export const placementMaterial = (tool:string, material:ConstructionMaterial):ConstructionMaterial|undefined =>
-  tool==='heater'||tool==='wind-turbine'||tool==='power-conduit'||tool==='power-switch'||tool==='battery'||tool==='solar-generator'||tool==='fueled-stove'||tool==='electric-stove'||tool==='cooler'||tool==='wood-generator'||tool==='standing-lamp'?'steel':stuffable.has(tool) ? validConstructionMaterial(tool,material)?material:defaultPlacementMaterial(tool) : tool === 'butcher-table' || tool === 'campfire' || tool === 'passive-cooler' ? 'wood' : undefined;
+  tool==='machining-table'||tool==='heater'||tool==='wind-turbine'||tool==='power-conduit'||tool==='power-switch'||tool==='battery'||tool==='solar-generator'||tool==='fueled-stove'||tool==='electric-stove'||tool==='cooler'||tool==='wood-generator'||tool==='standing-lamp'?'steel':stuffable.has(tool) ? validConstructionMaterial(tool,material)?material:defaultPlacementMaterial(tool) : tool === 'butcher-table' || tool === 'campfire' || tool === 'passive-cooler' ? 'wood' : undefined;
 
 export function constructionControls(onChange:()=>void) {
   const control = document.getElementById('construction-material-controls')!;

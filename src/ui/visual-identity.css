@@ -57,7 +57,7 @@ input[type=radio]{border-radius:50%}input:checked{background:var(--forest);borde
 .management-panel{left:16px;bottom:92px;width:920px;max-width:calc(100vw - 272px);max-height:calc(100dvh - 214px);padding:24px;font-size:15px;line-height:1.5;overflow:auto}
 .management-panel p,.management-panel label{font-size:15px}.management-panel table{font-size:14px;border-collapse:collapse}.management-panel th,.management-panel td{border-color:var(--line)}
 #history-panel{width:680px}#menu-panel{width:450px}#menu-panel>button{min-height:42px}#journal-items{font-size:15px;line-height:1.55}.event-time{color:var(--muted-ink);font-size:13px}.policy-status{font-size:14px;color:var(--muted-ink)}
-.bill,.storage-settings{background:transparent;border-color:var(--line);border-radius:8px}.bill p{font-size:14px}.storage-settings{font-size:14px;padding:12px 0}.storage-filters{gap:8px}.storage-filters label{font-size:14px}
+.bill,.storage-settings{background:transparent;border-color:var(--line);border-radius:8px}.bill p{font-size:14px}.storage-settings{font-size:14px;padding:12px 0}.storage-settings select{background:#fff9ed;color:var(--ink)}.storage-filters{gap:8px}.storage-filters label{font-size:14px}
 .architect-panel{width:1020px;height:min(640px,calc(100dvh - 214px));max-height:none;overflow:hidden;display:flex;flex-direction:column;padding:22px}
 .architect-panel[hidden]{display:none}.architect-panel .panel-heading{flex:none;margin-bottom:18px}
 .architect-body{display:grid;grid-template-columns:140px minmax(0,1fr);gap:18px;flex:1;min-height:0;align-items:stretch}

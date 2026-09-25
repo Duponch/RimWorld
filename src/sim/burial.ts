@@ -4,6 +4,7 @@ import { medicalWorkRefusal } from './health-rules.ts';
 import { humanCorpse,pawnBodyLocation,pickUpRetainedHumanCorpse,updateHumanCorpseTemperatures } from './human-corpses.ts';
 import { groundCapacity,nearbyGround } from './ground-placement.ts';
 import { reservedSource } from './materials.ts';
+import { storageAccepts } from './storage-filters.ts';
 import { adjacent,blockedCells,reachableCells,routeToJob,type Reachability } from './pathfinding.ts';
 import { clearQueuedOrders } from './player-orders.ts';
 import { planCommandDrops,releaseWork } from './work-release.ts';
@@ -64,7 +65,7 @@ export function assignBurial(w:World,actor:Pawn,search:()=>Reachability|null):bo
   const bodies=w.pawns.filter(p=>!burialReason(w,actor,p)).filter(p=>{
     const pile=bodyPile(w,p);if(pile?.owner.type!=='ground')return true;
     // Important grave priority (3) must not silently pull from equal/better storage.
-    const o=pile.owner;return !w.stockpiles.some(z=>same(z,o)&&z.filters.corpse&&(z.priority??1)>=3);
+    const o=pile.owner;return !w.stockpiles.some(z=>same(z,o)&&storageAccepts(z,pile.item)&&(z.priority??1)>=3);
   }).sort((a,b)=>(a.x-actor.x)**2+(a.z-actor.z)**2-(b.x-actor.x)**2-(b.z-actor.z)**2||a.id-b.id);
   if(!bodies.length)return false;const reach=search();if(!reach)return false;
   for(const body of bodies){const proposal=burialProposal(w,actor,body,reach);if(proposal){begin(actor,proposal,false);return true;}}

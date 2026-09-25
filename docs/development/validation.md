@@ -1,4 +1,6 @@
-# Validation courante — V98
+# Validation courante — V101
+
+V101 : [atelier, équipement et rangement](../history/validation-machining-v101.md). Contrats de production, anciennes sauvegardes, filtres, lumière et vrais clics regroupés ; comparaison CPU avant/après et mesure native distinctes. La démonstration est préparée explicitement, sans modifier les durées des règles.
 
 V99 : [sélection, inspection animale et retours d’action](../history/validation-interaction-v99.md). Contrôles regroupés, neuf cas natifs préparés, comparaison V98/V99 sur la même charge de cent colons. Aucun cycle long requis : les règles et le schéma 91 sont conservés.
 

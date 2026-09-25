@@ -72,7 +72,7 @@ try{
   result.coldRestore=true;
   await page.locator('[data-panel=architect]').click();
   result.pngTools=await page.locator('.tool-icon').evaluateAll(nodes=>nodes.filter(n=>!n.textContent&&getComputedStyle(n).backgroundImage.includes('architect-')).length);
-  if(result.pngTools!==60)throw Error('Architect PNGs missing');
+  if(result.pngTools!==61)throw Error('Architect PNGs missing');
   const cursors=new Set();
   for(const [id,category] of [['select','orders'],['mine','orders'],['chop','orders'],['harvest','orders'],['cut','orders'],['wall','structure'],['deconstruct','orders'],['stockpile','zones'],['cancel','orders']]){
     await page.locator(`[data-category="${category}"]`).click();await page.locator(`[data-tool="${id}"]`).click();

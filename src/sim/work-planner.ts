@@ -28,6 +28,7 @@ import { mayImproveStorage } from './idle-logistics.ts';
 import { asideCapacity, findAsideDestination } from './haul-aside.ts';
 import { storageCapacity } from './ground-placement.ts';
 import { legacyItem, type ItemId } from './items.ts';
+import { storageAccepts } from './storage-filters.ts';
 import { constructionCapacity, constructionRecipe } from './construction-materials.ts';
 import { CARRY_CAPACITY, footprintCells, JOB_WOOD_COST } from './definitions.ts';
 import { deliveredStock, groundQuantity, reservedDestination, reservedSource } from './materials.ts';
@@ -247,14 +248,19 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
       const pile = sources[Math.floor(index / destinations.length)]!;
       if (pile.owner.type !== 'ground') continue;
       const destination = destinations[index % destinations.length]!;
+      if(destination.destination.type==='stockpile') {
+        const zone=zonesByCell.get(cellIndex(world,destination.target.x,destination.target.z))!;
+        if(!storageAccepts(zone,pile.item))continue;
+      }
       let capacity=destination.items?.get(pile.item)??destination[pile.kind]??0;
       if (sameCell(pile.owner, destination.target)) continue;
       const sourceZone = zonesByCell.get(cellIndex(world, pile.owner.x, pile.owner.z));
       const excess = sourceZone ? Math.max(0, (ground.get(cellIndex(world, pile.owner.x, pile.owner.z)) ?? 0) - sourceZone.capacity) : 0;
-      const currentPriority = sourceZone?.filters[pile.kind] && !excess ? sourceZone.priority : 0;
+      const sourceAdmits=sourceZone&&storageAccepts(sourceZone,pile.item);
+      const currentPriority = sourceAdmits && !excess ? sourceZone!.priority : 0;
       if (destination.priority <= currentPriority) continue;
       let available = pile.quantity - (sourceReserved.get(pile.id) ?? 0);
-      if (sourceZone?.filters[pile.kind] && excess > 0 && destination.destination.type === 'stockpile') available = Math.min(available, Math.max(0, excess - (outbound.get(cellIndex(world, pile.owner.x, pile.owner.z)) ?? 0)));
+      if (sourceAdmits && excess > 0 && destination.destination.type === 'stockpile') available = Math.min(available, Math.max(0, excess - (outbound.get(cellIndex(world, pile.owner.x, pile.owner.z)) ?? 0)));
       if (available <= 0) continue;
       // Ranking is independent of capacity/access. A candidate that cannot beat
       // the winner cannot affect this decision; retain pair order/cursor/budget.

@@ -8,6 +8,7 @@ import { CARRY_CAPACITY } from './definitions.ts';
 import { storageCapacity } from './ground-placement.ts';
 import { withoutQueuedOrder } from './haul-reservations.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
+import { storageAccepts } from './storage-filters.ts';
 import { constructionCapacity, constructionRecipe, requiredMaterial } from './construction-materials.ts';
 import { deliveredStock, reservedDestination, reservedSource } from './materials.ts';
 import { blockedCells, routeToJob } from './pathfinding.ts';
@@ -45,8 +46,9 @@ export function planHaulOrder(world:World,pawn:Pawn,target:HaulOrderTarget,acces
     if(!canReach(world,pile.owner,reach,true))continue;
     const sourceZone=world.stockpiles.find(z=>same(z,pile.owner as Cell));
     const excess=sourceZone?Math.max(0,pile.quantity-sourceZone.capacity):0;
-    const currentPriority=sourceZone?.filters[pile.kind]&&!excess?sourceZone.priority:0;
-    if(!job&&sourceZone?.filters[pile.kind]&&excess)available=Math.min(available,Math.max(0,excess-reservedSource(world,pile.id)));
+    const sourceAdmits=sourceZone&&storageAccepts(sourceZone,pile.item);
+    const currentPriority=sourceAdmits&&!excess?sourceZone!.priority:0;
+    if(!job&&sourceAdmits&&excess)available=Math.min(available,Math.max(0,excess-reservedSource(world,pile.id)));
     const destinations=job?[{destination:{type:'job' as const,jobId:job.id,forConstruction:asBuilder(pawn)},cell:job,rank:0,
       capacity:constructionCapacity(world,job,pile.item)}]
       :world.stockpiles.filter(z=>z.priority>currentPriority&&!same(z,pile.owner as Cell))

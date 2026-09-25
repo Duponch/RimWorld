@@ -1,5 +1,7 @@
 # Adoption du référentiel utilisateur
 
+V101 — chapitres 10/11/13 et SYS/TEST-062..066/068, UI-025 : [usinage et armurerie](production-reference-v101.md), [filtres de stockage](storage-filters-reference-v101.md). **Adopter** recherches préalables, quantités par matière, ouvrage lié à l'auteur, qualité, courant requis et filtrage par objet. **Adapter** horloge locale et rendu 3D ; **différer** reste des armes/armures, composants fabriqués, filtres d'état/qualité et tous les ateliers. Recherches confrontées au Core local 1.6.4871 et aux sources publiques avant code. Aucun identifiant global clos ; [preuves du périmètre](../history/validation-machining-v101.md).
+
 V99 — chapitres 8/13/20/21, UI-001..011/017/018 et SYS/TEST-035/113..117 : [sélection, animaux, barres et mobilisation](interaction-reference-v99.md), vérifiés dans Core local 1.6.4871 et recoupés en ligne. Adopter priorité des colons, groupes équivalents et trajet confirmé ; adapter ancre des barres et couleur bleue ; différer groupes d’objets, Social/Journal animaux et file d’attaques. Les identifiants ne signifient pas une parité complète.
 
 V90 — **habitat et habillement validés dans leur périmètre** : prolongement des chapitres

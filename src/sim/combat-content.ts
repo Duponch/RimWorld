@@ -8,7 +8,7 @@ export const STRUCTURE_SHOT_FILL:Readonly<Record<StructureKind,number>>=Object.f
   'power-conduit':0,'power-switch':0,battery:.4,'solar-generator':.5,
   'fueled-stove':.5,'electric-stove':.5,'butcher-table':.5,
   'butcher-spot':0,
-  cooler:1,'research-bench':.5,'tailor-bench':.5,'electric-tailor-bench':.5,wall:1,door:1,  'crafting-spot':0,'wood-generator':1,stonecutter:.5,bed:.4,table:.4,'table-square':.4,'table-long':.4,
+  'machining-table':.5,cooler:1,'research-bench':.5,'tailor-bench':.5,'electric-tailor-bench':.5,wall:1,door:1,  'crafting-spot':0,'wood-generator':1,stonecutter:.5,bed:.4,table:.4,'table-square':.4,'table-long':.4,
   'passive-cooler':.4,stool:.2,'dining-chair':.2,armchair:.3,'end-table':.2,dresser:.4,'flower-pot':.2,campfire:.2,'standing-lamp':.2,horseshoes:0,
 });
 export const RESOURCE_SHOT_FILL:Readonly<Record<ResourceKind,number>>=Object.freeze({

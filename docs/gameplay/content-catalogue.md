@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+**V101 — contenu obtenable :** atelier d’usinage `machining-table` (150 acier + 5 composants, Construction 4, 3×1, 350 W), recherches **Usinage** (1 000, après Forge) et **Armurerie** (500, après Usinage), deux recettes : revolver (30 acier + 2 composants, Artisanat 3) et fusil à verrou (60 acier + 3 composants, Artisanat 5). L’`unfinished-gun` conserve matières, auteur et progression ; les armes produites gardent identité/qualité/PV et s’équipent normalement. Ce sont deux nouvelles recettes d’objets existants, pas deux nouvelles armes. Réserves affinables par objet, transport physique et sauvegarde V101. [Contrat et limites](../development/machining.md). Le pictogramme de l’atelier partage celui d’une machine électrique déjà illustrée ; aucun nouvel atlas revendiqué.
+
 **V94 — présentation, sans nouveau contenu :** herbe courte et herbe haute déjà présentes retrouvent un volume 3D vertical à sept tiges fines, avec variations déterministes. Le nouvel atlas contient neuf curseurs illustrés. Ces remplacements graphiques ne comptent ni comme nouvelles plantes, ni comme objets ou recettes supplémentaires.
 
 **V93 — ressources graphiques :** 60 pictogrammes PNG d’Architecte dans deux atlas, neuf curseurs d’action dérivés du dessin existant, deux polices locales sous OFL. Les anciens portraits et illustrations sont conservés. Le menu propose correctement une matière rembourrée pour le fauteuil déjà implémenté ; aucun nouvel objet, recette ou système de production n’est compté dans cette refonte.

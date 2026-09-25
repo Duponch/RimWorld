@@ -29,6 +29,7 @@ export const FURNITURE_TRAVEL:Readonly<Record<StructureKind,Readonly<{delay:numb
   cooler:{delay:0,stand:false,repeat:false},
   'research-bench':{delay:5,stand:false,repeat:true},
   'tailor-bench':{delay:5,stand:false,repeat:true},
+  'machining-table':{delay:5,stand:false,repeat:true},
   'electric-tailor-bench':{delay:5,stand:false,repeat:true},
   'butcher-spot':{delay:0,stand:true,repeat:false},
   'crafting-spot':{delay:0,stand:true,repeat:false},

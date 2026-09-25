@@ -1,3 +1,5 @@
+import { productionResearchUnlocked } from '../sim/machining';
+import { isGunRecipe,GUN_REQUIREMENTS,type ProductionRecipe } from '../sim/production-recipes';
 import { ITEM_DEFINITIONS } from '../sim/items';
 import { PRODUCTION_RECIPES, stationRecipes } from '../sim/production-recipes';
 import { countedProducts } from '../sim/cooking-bills';
@@ -8,11 +10,12 @@ import type { Command, Structure, World } from '../sim/types';
 export function billControls(station:Structure,send:(command:Command)=>void):HTMLElement {
   const root=document.createElement('section');root.className='bill-controls';
   const title=document.createElement('h3');title.textContent='Factures';root.append(title);
-  for(const [index,recipe] of stationRecipes(station).entries()){const add=document.createElement('button');add.id=index===0?'add-cooking-bill':`add-bill-${recipe}`;add.textContent=`Ajouter : ${PRODUCTION_RECIPES[recipe].label.toLowerCase()}`;add.onclick=()=>send({type:'bill-add',structureId:station.id,recipe});root.append(add);}
+  for(const [index,recipe] of stationRecipes(station).entries()){const add=document.createElement('button');add.dataset.addRecipe=recipe;add.id=index===0?'add-cooking-bill':`add-bill-${recipe}`;add.textContent=`Ajouter : ${PRODUCTION_RECIPES[recipe].label.toLowerCase()}`;add.onclick=()=>send({type:'bill-add',structureId:station.id,recipe});root.append(add);}
   for(const bill of station.bills??[]) {
     const form=document.createElement('div');form.className='bill';form.dataset.bill=String(bill.id);
     const status=document.createElement('p');status.dataset.billStatus=String(bill.id);form.append(status);
     const reason=document.createElement('p');reason.dataset.billReason=String(bill.id);reason.className='muted';form.append(reason);
+    if(isGunRecipe(bill.recipe)){const cost=document.createElement('p'),r=GUN_REQUIREMENTS[bill.recipe];cost.className='bill-cost';cost.textContent=`${r.steel} acier · ${r.component} composants · Artisanat ${r.skill}`;form.append(cost);}
     const fields=new Map<string,HTMLInputElement|HTMLSelectElement>();
     const input=(key:string,label:string,type:string,value:string|boolean)=>{
       const row=document.createElement('label'),field=document.createElement('input');field.type=type;field.dataset.field=key;
@@ -42,6 +45,7 @@ export function billControls(station:Structure,send:(command:Command)=>void):HTM
   return root;
 }
 export function updateBillControls(root:ParentNode,station:Structure,world:World):void {
+  for(const button of root.querySelectorAll<HTMLButtonElement>('[data-add-recipe]')){const recipe=button.dataset.addRecipe as ProductionRecipe;button.disabled=!productionResearchUnlocked(world,recipe);button.title=isGunRecipe(recipe)?`${GUN_REQUIREMENTS[recipe].steel} acier + ${GUN_REQUIREMENTS[recipe].component} composants · Artisanat ${GUN_REQUIREMENTS[recipe].skill} · Armurerie requise`:'';}
   for(const bill of station.bills??[]) {
     const form=root.querySelector<HTMLElement>(`[data-bill="${bill.id}"]`);if(!form)continue;
     form.querySelector('[data-bill-status]')!.textContent=`${PRODUCTION_RECIPES[bill.recipe].label} · ${bill.suspended?'suspendue':bill.mode==='times'?`${bill.target} restant(s)`:bill.mode==='until'?`${countedProducts(world,bill)} / ${bill.target} ${bill.recipe==='butcher-creature'?'viande(s) stockée(s)':'stocké(s)/porté(s)'}`:'sans limite'}`;

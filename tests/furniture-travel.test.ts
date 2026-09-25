@@ -7,10 +7,27 @@ import { startTravel } from '../src/sim/movement';
 import { blockedCells, reachableCells, routeToJob } from '../src/sim/pathfinding';
 import { candidateAccess } from '../src/sim/candidate-access';
 import { furnitureSurfaces, travelHeight } from '../src/render/furniture-motion';
+import { pileSurfaces } from '../src/render/pile-surfaces';
+import { WORLD_SCALE } from '../src/world/scale';
 import { furnitureTrafficFixture } from './scenarios/furniture-traffic';
 import { footprintCells,footprintContains,STRUCTURE_DEFINITIONS } from '../src/sim/definitions';
 import { groundOccupancyAllows,storageOccupancyAllows } from '../src/sim/occupancy';
 import type { Orientation,StructureKind } from '../src/sim/types';
+
+test('machining table presentation surfaces cover each rotated 3 × 1 footprint',()=>{
+  const w=createWorld(42,16,16);w.structures=[];
+  for(const orientation of [0,1,2,3] as const){
+    const station={id:1,kind:'machining-table' as const,x:8,z:8,orientation,footprint:'standard' as const};
+    w.structures=[station];
+    const cells=footprintCells(station),movement=furnitureSurfaces(w),piles=pileSurfaces(w);
+    expect(cells).toHaveLength(3);expect(movement.size).toBe(3);expect(piles.size).toBe(3);
+    for(const cell of cells){
+      const key=cell.z*w.width+cell.x;
+      expect(movement.get(key)).toBe(WORLD_SCALE.stonecutterHeight);
+      expect(piles.get(key)).toEqual({x:0,y:WORLD_SCALE.stonecutterHeight,z:0,scale:.65});
+    }
+  }
+});
 
 test('point queries keep complete rotated and historical footprints, job targets and conduit coexistence',()=>{
   // Explicit occupied offsets are independent of both production footprint
@@ -22,12 +39,12 @@ test('point queries keep complete rotated and historical footprints, job targets
   const stands=new Set<StructureKind>(['grave','power-conduit','power-switch','butcher-spot','crafting-spot','door','stool','dining-chair','armchair','horseshoes']);
   const rejectsItems=new Set<StructureKind>(['grave','heater','wind-turbine','battery','solar-generator','cooler','wood-generator','passive-cooler','wall','bed','dresser','flower-pot','campfire']);
   const stores=new Set<StructureKind>(['power-conduit','standing-lamp','door','stool','dining-chair','armchair','horseshoes']);
-  const flickable=new Set<StructureKind>(['power-switch','wood-generator','standing-lamp','cooler','electric-stove']);
+  const flickable=new Set<StructureKind>(['machining-table','power-switch','wood-generator','standing-lamp','cooler','electric-stove']);
   const w=createWorld(42,16,16);w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.resources=[];w.piles=[];w.jobs=[];
   const points=Array.from({length:121},(_,i)=>({x:4+i%11,z:4+Math.floor(i/11)}));points.push({x:-20,z:8},{x:8,z:-20},{x:100,z:8},{x:8,z:100});
   for(const kind of Object.keys(STRUCTURE_DEFINITIONS) as StructureKind[])for(const orientation of [0,1,2,3] as const)for(const footprint of ['standard','legacy-single'] as const){
     const direction=[[0,1],[1,0],[0,-1],[-1,0]][orientation]!,side=[[1,0],[0,-1],[-1,0],[0,1]][orientation]!;
-    const offsets=kind==='wind-turbine'?[0,1].flatMap(a=>[-3,-2,-1,0,1,2,3].map(b=>[direction[0]!*a+side[0]!*b,direction[1]!*a+side[1]!*b])):kind==='solar-generator'?Array.from({length:16},(_,i)=>[i%4,Math.floor(i/4)]):kind==='wood-generator'?[[0,0],[1,0],[0,1],[1,1]]:kind==='research-bench'?bench[orientation]!:['stonecutter','tailor-bench','electric-tailor-bench','fueled-stove','electric-stove','butcher-table'].includes(kind)?line[orientation]!:kind==='table-square'?[0,1].flatMap(a=>[0,1].map(b=>[direction[0]!*a+side[0]!*b,direction[1]!*a+side[1]!*b])):kind==='table-long'?[0,1,2,3].flatMap(a=>[0,1].map(b=>[direction[0]!*a+side[0]!*b,direction[1]!*a+side[1]!*b])):kind==='dresser'?pair[orientation]!:footprint!=='legacy-single'&&['bed','table','battery','grave'].includes(kind)?pair[orientation]!:[[0,0]];
+    const offsets=kind==='wind-turbine'?[0,1].flatMap(a=>[-3,-2,-1,0,1,2,3].map(b=>[direction[0]!*a+side[0]!*b,direction[1]!*a+side[1]!*b])):kind==='solar-generator'?Array.from({length:16},(_,i)=>[i%4,Math.floor(i/4)]):kind==='wood-generator'?[[0,0],[1,0],[0,1],[1,1]]:kind==='research-bench'?bench[orientation]!:['machining-table','stonecutter','tailor-bench','electric-tailor-bench','fueled-stove','electric-stove','butcher-table'].includes(kind)?line[orientation]!:kind==='table-square'?[0,1].flatMap(a=>[0,1].map(b=>[direction[0]!*a+side[0]!*b,direction[1]!*a+side[1]!*b])):kind==='table-long'?[0,1,2,3].flatMap(a=>[0,1].map(b=>[direction[0]!*a+side[0]!*b,direction[1]!*a+side[1]!*b])):kind==='dresser'?pair[orientation]!:footprint!=='legacy-single'&&['bed','table','battery','grave'].includes(kind)?pair[orientation]!:[[0,0]];
     const cells=offsets.map(([x,z])=>({x:8+x!,z:8+z!})),keys=new Set(cells.map(c=>`${c.x},${c.z}`)),expected=points.map(c=>keys.has(`${c.x},${c.z}`));
     const shape={x:8,z:8,orientation,footprint},structure={...shape,id:1,kind};
     const targets:Parameters<typeof footprintContains>[0][]=[structure,{...shape,kind:'install',furniture:{kind}},{...shape,kind:'deconstruct',deconstruction:{kind}}];

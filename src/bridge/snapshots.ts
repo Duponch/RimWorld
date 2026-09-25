@@ -10,6 +10,7 @@ import { ITEM_DEFINITIONS } from '../sim/items.ts';
 import { validFoodContamination } from '../sim/food-poisoning-save.ts';
 import { validHumanCorpseShape } from '../sim/burial-save.ts';
 import { validCorpseShape } from '../sim/corpse-save.ts';
+import { validGunWorkShape } from '../sim/gun-work.ts';
 import { validUnfinishedShape } from '../sim/unfinished.ts';
 import { validApparelShape } from '../sim/apparel-save.ts';
 import { validWeaponShape } from '../sim/equipment-save.ts';
@@ -62,7 +63,7 @@ function validPile(pile:MaterialPile,world:DynamicWorld):boolean {
     if(world.schemaVersion<89||!Number.isSafeInteger(owner.graveId)||owner.graveId<1||!world.structures.some(s=>s.id===owner.graveId&&s.kind==='grave')
       ||Object.keys(owner).some(key=>!['type','graveId'].includes(key)))return false;
   }else return false;
-  if(Object.keys(pile).some(key=>!['id','kind','item','quantity','owner','rot','foodPoison','corpse','humanCorpse','damage','unfinished','apparel','weapon','haulRequested'].includes(key)))return false;
+  if(Object.keys(pile).some(key=>!['id','kind','item','quantity','owner','rot','foodPoison','corpse','humanCorpse','damage','unfinished','gunWork','apparel','weapon','haulRequested'].includes(key)))return false;
   if(pile.haulRequested!==undefined&&(world.schemaVersion<28||pile.kind!=='chunk'||pile.haulRequested!==true))return false;
   if(pile.damage!==undefined&&(world.schemaVersion<87||!Number.isSafeInteger(pile.damage)||pile.damage<1||pile.damage>=pileMaxHp(pile)))return false;
   const rot=pile.rot;
@@ -73,7 +74,7 @@ function validPile(pile:MaterialPile,world:DynamicWorld):boolean {
   return validFoodContamination(pile.foodPoison,pile.item,world.schemaVersion>=89)
     &&(pile.item==='human-corpse'?validHumanCorpseShape(pile.humanCorpse,world.schemaVersion,world.tick):pile.humanCorpse===undefined)
     &&(pile.item==='human-corpse'||validCorpseShape(record,world.schemaVersion))
-    &&validUnfinishedShape(record,world.schemaVersion)
+    &&validUnfinishedShape(record,world.schemaVersion)&&validGunWorkShape(record,world.schemaVersion)
     &&validApparelShape(record,world.schemaVersion)
     &&validWeaponShape(record,world.schemaVersion);
 }

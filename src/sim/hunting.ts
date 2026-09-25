@@ -12,6 +12,7 @@ import { shootingQueries,advanceShooter } from './shooting.ts';
 import { cancelShooting } from './shooting-state.ts';
 import { cancelHunting,type HuntingCommand,type HuntingTask } from './hunting-state.ts';
 import { storageCapacity } from './ground-placement.ts';
+import { storageAccepts } from './storage-filters.ts';
 import { reservedSource } from './materials.ts';
 import { pawnBody,medicallyStopped } from './health-rules.ts';
 import { isColonist } from './affiliation.ts';
@@ -75,8 +76,8 @@ function collect(w:World,p:Pawn,ctx:HuntContext):void {
     if(retained&&p.path.length){ctx.move(sourceCell,true);if(!p.path.length)p.planCooldown=0;}
     return;
   }
-  const current=w.stockpiles.find(z=>z.x===sourceCell.x&&z.z===sourceCell.z&&z.filters.corpse);
-  const zones=w.stockpiles.filter(z=>(!current||z.priority>current.priority)&&(z.x!==sourceCell.x||z.z!==sourceCell.z)&&z.filters.corpse&&storageCapacity(w,z,corpseItem,p.id)>=1)
+  const current=w.stockpiles.find(z=>z.x===sourceCell.x&&z.z===sourceCell.z&&storageAccepts(z,corpseItem));
+  const zones=w.stockpiles.filter(z=>(!current||z.priority>current.priority)&&(z.x!==sourceCell.x||z.z!==sourceCell.z)&&storageAccepts(z,corpseItem)&&storageCapacity(w,z,corpseItem,p.id)>=1)
     .sort((a,b)=>b.priority-a.priority||(a.x-p.x)**2+(a.z-p.z)**2-((b.x-p.x)**2+(b.z-p.z)**2)||a.id-b.id);
   if(!zones.length){stop(p);return;}
   const reach=ctx.candidates();if(!reach)return;

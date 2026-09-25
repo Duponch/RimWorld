@@ -1,0 +1,85 @@
+{
+  "start": 111824,
+  "end": 231293,
+  "research": {
+    "project": null,
+    "points": 600000000,
+    "completedAt": 230087
+  },
+  "skills": {
+    "melee": {
+      "level": 8,
+      "xp": 0,
+      "dailyXp": 0,
+      "passion": 0
+    },
+    "shooting": {
+      "level": 8,
+      "xp": 0,
+      "dailyXp": 0,
+      "passion": 1
+    },
+    "construction": {
+      "level": 8,
+      "xp": 1355000,
+      "dailyXp": 350000,
+      "passion": 1
+    },
+    "medicine": {
+      "level": 6,
+      "xp": 0,
+      "dailyXp": 0,
+      "passion": 1
+    },
+    "lastResetTick": 228011,
+    "intellectual": {
+      "level": 4,
+      "xp": 3587700,
+      "dailyXp": 266000,
+      "passion": 0
+    },
+    "cooking": {
+      "level": 1,
+      "xp": 1800700,
+      "dailyXp": 0,
+      "passion": 0
+    },
+    "crafting": {
+      "level": 0,
+      "xp": 236250,
+      "dailyXp": 236250,
+      "passion": 0
+    }
+  },
+  "shirt": {
+    "id": 981,
+    "item": "cloth-shirt",
+    "kind": "apparel",
+    "quantity": 1,
+    "owner": {
+      "type": "apparel",
+      "pawnId": 49
+    },
+    "apparel": {
+      "quality": "poor",
+      "hitPoints": 100,
+      "material": "cloth",
+      "forced": true
+    }
+  },
+  "slept": true,
+  "ate": true,
+  "buildings": [
+    "bed",
+    "table",
+    "horseshoes",
+    "stool",
+    "campfire",
+    "research-bench",
+    "tailor-bench"
+  ],
+  "stock": {
+    "wood": 172,
+    "food": 23
+  }
+}

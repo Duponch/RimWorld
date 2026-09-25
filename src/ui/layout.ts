@@ -50,6 +50,7 @@ export const toolDefinitions: { id: Tool; title: string; hint: string; key: stri
   { id: 'campfire', title: 'Feu de camp', hint: 'combustible initial inclus · brûle 10 bois par jour', key: '', category: 'temperature' },
   {id:'research-bench',title:'Bureau de recherche simple',hint:'3 × 2 · 75 matériaux + 25 acier · Q / E pour tourner',key:'',category:'production'},
   {id:'tailor-bench',title:'Établi de tailleur',hint:'3 × 1 · 75 matériaux · nécessite Vêtements complexes',key:'',category:'production'},
+  {id:'machining-table',title:'Atelier d’usinage',hint:'3 × 1 · 150 acier + 5 composants · 350 W · Construction 4 · Usinage',key:'',category:'production'},
   {id:'electric-tailor-bench',title:'Établi de tailleur électrique',hint:'3 × 1 · 75 matériaux + 50 acier + 2 composants · 120 W · Construction 4',key:'',category:'production'},
   {id:'crafting-spot',title:'Emplacement d’artisanat',hint:'Gratuit et immédiat · 60 tissus → tenue tribale · Q / E pour tourner',key:'',category:'production'},
   {id:'fueled-stove',title:'Cuisinière à bois',hint:'3 × 1 · 80 acier · consomme du bois pendant la cuisson · Q / E pour tourner',key:'',category:'production'},
@@ -74,6 +75,7 @@ export function storageSettings(prefix: string): string {
     <div class="storage-filters"><label><input id="${prefix}-silver" type="checkbox" checked> Argent</label><label><input id="${prefix}-unfinished" type="checkbox" checked> Ouvrages inachevés</label><label><input id="${prefix}-textile" type="checkbox" checked> Textiles</label><label><input id="${prefix}-apparel" type="checkbox" checked> Vêtements</label><label><input id="${prefix}-weapon" type="checkbox" checked> Armes</label><label><input id="${prefix}-medicine" type="checkbox" checked> Médicaments</label><label><input id="${prefix}-wood" type="checkbox" checked> Bois</label><label><input id="${prefix}-food" type="checkbox" checked> Nourriture</label><label><input id="${prefix}-component" type="checkbox" checked> Composants</label><label><input id="${prefix}-steel" type="checkbox" checked> Acier</label><label><input id="${prefix}-blocks" type="checkbox" checked> Blocs de pierre</label><label><input id="${prefix}-chunk" type="checkbox"> Fragments de roche</label><label><input id="${prefix}-corpse" type="checkbox"> Dépouilles animales</label><label><input id="${prefix}-furniture" type="checkbox" checked> Meubles emballés</label></div>
     <label>Priorité de réserve<select id="${prefix}-priority"><option value="1">1 · basse</option><option value="2" selected>2 · normale</option><option value="3">3 · importante</option><option value="4">4 · critique</option></select></label>
     <label>Capacité (unités)<input id="${prefix}-capacity" type="number" min="1" max="${ITEM_DEFINITIONS.silver.stackLimit}" step="1" value="${ITEM_DEFINITIONS.silver.stackLimit}"></label>
+    <div id="${prefix}-items"></div>
   </div>`;
 }
 

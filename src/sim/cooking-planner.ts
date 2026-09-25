@@ -1,3 +1,6 @@
+import { productionResearchUnlocked,productionWorkerQualified } from './machining.ts';
+import { planGunWork } from './gun-work-plan.ts';
+import { isGunRecipe,GUN_REQUIREMENTS } from './production-recipes.ts';
 import { isAnimalCorpseItem } from './biome-items.ts';
 import { foodStationUsable, usesCookingFuel } from './food-workstations.ts';
 import { corpseFresh } from './corpses.ts';
@@ -35,7 +38,7 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
     const toSpot=routeToCell(world,spot,reachable);
     if(!toSpot)continue;
     for(const bill of station.bills!) {
-      if(!billWanted(world,bill))continue;
+      if(!billWanted(world,bill)||!productionResearchUnlocked(world,bill.recipe)||!productionWorkerQualified(pawn,bill.recipe))continue;
       // The reference bill worker refuels an empty usable station before cooking.
       if(usesCookingFuel(station.kind)&&!station.fuel?.ticks) {
         const capacity=fuelCapacity(world,station.id,undefined,options?.forced);if(!capacity)break;
@@ -49,6 +52,7 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
         }
         break;
       }
+      const gunResumed=planGunWork(world,pawn,station,bill,reachable,budget);if(gunResumed.plan)return gunResumed.plan;if(gunResumed.handled)continue;
       const resumed=planUnfinished(world,pawn,station,bill,reachable,budget);if(resumed.plan)return resumed.plan;if(resumed.handled)continue;
       const ingredients:CookingIngredient[]=[],planned=new Map<string,{item:ProductionIngredient;quantity:number}>();
       let missing:number=PRODUCTION_RECIPES[bill.recipe].units;
@@ -64,7 +68,8 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
       for(const pile of sources) {
         if(isTailoring(bill.recipe)&&tailoringMaterial!==undefined&&pile.item!==tailoringMaterial)continue;
         if(budget.pairs--<=0){budget.pairs=0;return null;}
-        const quantity=Math.min(missing,pile.quantity-reservedSource(world,pile.id));
+        const typeMissing=isGunRecipe(bill.recipe)?(pile.item==='steel'||pile.item==='component'?GUN_REQUIREMENTS[bill.recipe][pile.item]-ingredients.reduce((n,i)=>n+(i.item===pile.item?i.quantity:0),0):0):missing;
+        const quantity=Math.min(typeMissing,pile.quantity-reservedSource(world,pile.id));
         if(quantity<=0)continue;if(isTailoring(bill.recipe))tailoringMaterial??=pile.item as ProductionIngredient;
         if(!routeToJob(world,pile.owner as Cell,reachable,true))continue;
         const already=cells.find(c=>same(c,pile.owner as Cell));

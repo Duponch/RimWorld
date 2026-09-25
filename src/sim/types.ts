@@ -1,12 +1,12 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 91 as const;
+export const SCHEMA_VERSION = 101 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
 export type Terrain = 'grass' | 'soil' | 'water' | 'rock' | 'rough-stone' | 'rich-soil' | 'gravel';
 export type ResourceKind = 'wild-plant' | 'potato' | 'corn' | 'tree' | 'berries' | 'rock' | 'rice' | 'cotton';
 export type MaterialKind = 'silver' | 'corpse' | 'wood' | 'food' | 'chunk' | 'steel' | 'blocks' | 'component' | 'medicine' | 'weapon' | 'apparel' | 'textile' | 'unfinished';
-export type StructureKind = 'grave' | 'heater' | 'wind-turbine' | 'power-conduit' | 'power-switch' | 'battery' | 'solar-generator' | 'fueled-stove' | 'electric-stove' | 'butcher-table' | 'butcher-spot' | 'cooler' | 'research-bench' | 'tailor-bench' | 'electric-tailor-bench' | 'crafting-spot' | 'wood-generator' | 'standing-lamp' | 'passive-cooler' | 'door' | 'wall' | 'bed' | 'table' | 'table-square' | 'table-long' | 'stool' | 'dining-chair' | 'armchair' | 'end-table' | 'dresser' | 'flower-pot' | 'campfire' | 'horseshoes' | 'stonecutter';
+export type StructureKind = 'machining-table' | 'grave' | 'heater' | 'wind-turbine' | 'power-conduit' | 'power-switch' | 'battery' | 'solar-generator' | 'fueled-stove' | 'electric-stove' | 'butcher-table' | 'butcher-spot' | 'cooler' | 'research-bench' | 'tailor-bench' | 'electric-tailor-bench' | 'crafting-spot' | 'wood-generator' | 'standing-lamp' | 'passive-cooler' | 'door' | 'wall' | 'bed' | 'table' | 'table-square' | 'table-long' | 'stool' | 'dining-chair' | 'armchair' | 'end-table' | 'dresser' | 'flower-pot' | 'campfire' | 'horseshoes' | 'stonecutter';
 export type JobKind = 'lay-floor' | 'remove-floor' | 'flick' | 'repair' | 'build-roof' | 'remove-roof' | 'mine' | 'chop' | 'harvest' | 'cut' | 'sow' | 'deconstruct' | 'uninstall' | 'install' | StructureKind;
 export type WorkType = 'clean' | 'firefight' | 'warden' | 'basic' | 'hunt' | 'research' | 'patient' | 'bedrest' | 'doctor' | 'mine' | 'gather' | 'build' | 'haul' | 'grow' | 'cook' | 'craft';
 export type Orientation = 0 | 1 | 2 | 3;
@@ -18,9 +18,9 @@ export interface Resource extends Cell { species?:import('./biome-flora.ts').Pla
 export interface Structure extends Cell { flower?:import('./flower-pot.ts').FlowerPotState; quality?:import('./equipment-rules.ts').WeaponQuality; grave?:import('./burial.ts').GraveState; heater?:import('./heater.ts').HeaterState; wind?:import('./wind.ts').WindTurbineState; prisoner?:true; battery?:import('./power-battery.ts').BatteryState; cooler?:import('./cooler.ts').CoolerState; damage?:number; medical?:true; power?:import('./power-rules.ts').PowerState; door?:import('./door-rules.ts').DoorState; material?:import('./construction-materials.ts').ConstructionMaterial; bills?: import('./cooking-types.ts').CookingBill[]; fuel?: import('./fuel.ts').FuelState; id: number; kind: StructureKind; orientation: Orientation; footprint: Footprint }
 export interface Stock { wood: number; food: number }
 export type MaterialOwner = {type:'grave';graveId:number} | ({ type: 'ground' } & Cell) | { type: 'pawn'; pawnId: number } | {type:'inventory';pawnId:number} | {type:'equipment';pawnId:number} | {type:'apparel';pawnId:number} | { type: 'job'; jobId: number };
-export interface MaterialPile { humanCorpse?:import('./human-corpses.ts').HumanCorpseState; foodPoison?:import('./food-poisoning.ts').FoodContamination; damage?:number; corpse?:import('./corpses.ts').CorpseState; unfinished?:import('./unfinished.ts').UnfinishedState; apparel?:import('./apparel-rules.ts').ApparelState; weapon?:import('./equipment-rules.ts').WeaponState; haulRequested?: true; id: number; kind: MaterialKind; item: ItemId; quantity: number; owner: MaterialOwner; rot?: import('./food-preservation.ts').RotState }
+export interface MaterialPile { gunWork?:import('./gun-work.ts').GunWork; humanCorpse?:import('./human-corpses.ts').HumanCorpseState; foodPoison?:import('./food-poisoning.ts').FoodContamination; damage?:number; corpse?:import('./corpses.ts').CorpseState; unfinished?:import('./unfinished.ts').UnfinishedState; apparel?:import('./apparel-rules.ts').ApparelState; weapon?:import('./equipment-rules.ts').WeaponState; haulRequested?: true; id: number; kind: MaterialKind; item: ItemId; quantity: number; owner: MaterialOwner; rot?: import('./food-preservation.ts').RotState }
 export type StorageFilters = { silver?:boolean; corpse?:boolean; wood:boolean; food:boolean; unfinished?:boolean; textile?:boolean; chunk?:boolean; steel?:boolean; component?:boolean; medicine?:boolean; weapon?:boolean; apparel?:boolean; blocks?:boolean; furniture?:boolean };
-export interface StockpileCell extends Cell { id: number; filters: StorageFilters; priority: number; capacity: number }
+export interface StockpileCell extends Cell { items?:Partial<Record<ItemId,boolean>>; id: number; filters: StorageFilters; priority: number; capacity: number }
 export interface GrowingZone { id: number; cells: number[]; plant: 'rice' | 'cotton' | 'potato' | 'corn'; allowSow: boolean; allowCut: boolean }
 export type HaulDestination = { type: 'fuel'; structureId: number; forced?: boolean; forCooking?: boolean } | { type: 'stockpile'; stockpileId: number; forHunting?: true } | { type: 'job'; jobId: number; forConstruction?: boolean } | ({ type: 'aside'; growingZoneId?: number; sowCell?: Cell; constructionId?: number; forConstruction?: boolean } & Cell);
 export interface HaulTask {
@@ -211,7 +211,7 @@ export interface World {
 }
 export type DesignateCommand = { type: 'designate'; kind: JobKind; targetId?:number; orientation?: Orientation; material?:import('./construction-materials.ts').ConstructionMaterial; floor?:import('./flooring.ts').FloorKind } & Cell;
 export type AreaAction = 'lay-floor' | 'remove-floor' | 'home' | 'remove-home' | 'build-roof' | 'remove-roof' | 'ignore-roof' | 'mine' | 'haul-chunks' | 'deconstruct' | 'chop' | 'harvest' | 'cut' | 'cancel' | 'stockpile' | 'remove-stockpile' | 'growing' | 'remove-growing';
-export interface StorageSettings { filters?: StorageFilters; priority?: number; capacity?: number }
+export interface StorageSettings { items?:Partial<Record<ItemId,boolean>>; filters?: StorageFilters; priority?: number; capacity?: number }
 export interface AreaCommand extends StorageSettings { type: 'area'; action: AreaAction; from: Cell; to: Cell; floor?: import('./flooring.ts').FloorKind }
 export type Command = import('./burial.ts').BurialCommand | import('./cleaning.ts').CommandCleaning | import('./trade-state.ts').TradeCommand | import('./hunting-state.ts').HuntingCommand
   | {type:'climate-adopt'}
@@ -254,7 +254,7 @@ export type Command = import('./burial.ts').BurialCommand | import('./cleaning.t
   | { type: 'growing-policy'; zoneId: number; plant?: GrowingZone['plant']; allowSow: boolean; allowCut: boolean }
   | { type: 'assign-bed'; bedId: number; pawnId: number | null }
   | ({ type: 'cancel' } & Cell)
-  | ({ type: 'stockpile'; enabled: boolean; filters?: StorageFilters; priority?: number; capacity?: number } & Cell)
+  | ({ type: 'stockpile'; enabled: boolean; items?:Partial<Record<ItemId,boolean>>; filters?: StorageFilters; priority?: number; capacity?: number } & Cell)
   | {type:'enable-heatwaves'}
   | {type:'cooler-target';structureId:number;target:number}
   | {type:'cooler-adjust';structureId:number;offset:-10|-1|1|10|null}

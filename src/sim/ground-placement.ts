@@ -2,6 +2,7 @@ import { groundOccupancyAllows, storageOccupancyAllows } from './occupancy.ts';
 import { isCookingOrder } from './order-types.ts';
 import { blockedCells, cellIndex, inBounds } from './pathfinding.ts';
 import { ITEM_DEFINITIONS, type ItemId } from './items.ts';
+import { storageAccepts } from './storage-filters.ts';
 import type { Cell, HaulTask, MaterialPile, StockpileCell, World } from './types.ts';
 
 /** Connected nearby cells, deterministic breadth first order. Never spill across a wall. */
@@ -66,7 +67,7 @@ export function groundCapacity(world: World, cell: Cell, item: ItemId, exceptPaw
   return cellCapacity(world,cell,item,ITEM_DEFINITIONS[item].stackLimit,exceptPawn);
 }
 export function storageCapacity(world: World, zone: StockpileCell, item: ItemId, exceptPawn?: number): number {
-  return zone.filters[ITEM_DEFINITIONS[item].kind] ? cellCapacity(world,zone,item,zone.capacity,exceptPawn,zone) : 0;
+  return storageAccepts(zone,item) ? cellCapacity(world,zone,item,zone.capacity,exceptPawn,zone) : 0;
 }
 export function planGroundPlacement(world: World, quantity: number, origin: Cell, item: ItemId): {cell:Cell; quantity:number}[] | null {
   const result: {cell:Cell;quantity:number}[]=[];

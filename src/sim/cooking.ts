@@ -1,3 +1,7 @@
+import { beginGunWork } from './gun-work.ts';
+import { productionResearchUnlocked,productionWorkerQualified } from './machining.ts';
+import { isGunRecipe } from './production-recipes.ts';
+import { newWeaponState,type RangedWeaponItem } from './equipment-rules.ts';
 import { isAnimalCorpseItem, isAnimalMeat } from './biome-items.ts';
 import { foodStationUsable } from './food-workstations.ts';
 import { consumeCookingFuel } from './fuel.ts';
@@ -34,7 +38,7 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   const task=pawn.cooking!;
   if(task.phase==='interrupted'){context.release();return;}
   const station=world.structures.find(s=>s.id===task.stationId),bill=station?.bills?.find(b=>b.id===task.billId);
-  if(!station||!bill||bill.suspended||pawn.priorities[taskWork(task)]===0&&pawn.orders.active!=='cook'||(task.phase!=='output'&&(!foodStationUsable(station)||!productionStationUsable(station)))) {context.release();return;}
+  if(!station||!bill||bill.suspended||!productionResearchUnlocked(world,taskRecipe(task))||task.phase!=='output'&&!productionWorkerQualified(pawn,taskRecipe(task))||pawn.priorities[taskWork(task)]===0&&pawn.orders.active!=='cook'||(task.phase!=='output'&&(!foodStationUsable(station)||!productionStationUsable(station)))) {context.release();return;}
   if(task.phase==='output'){processProductionOutput(world,pawn,context,bill.destination);return;}
   const recipe=PRODUCTION_RECIPES[taskRecipe(task)];
   for(const entry of task.ingredients) {
@@ -64,6 +68,9 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   task.phase='work';pawn.state='working';pawn.path=[];
   const unfinished=isTailoring(task.recipe)?beginUnfinished(world,pawn):null;
   if(isTailoring(task.recipe)&&!unfinished){context.release();return;}
+  const gun=isGunRecipe(task.recipe)?beginGunWork(world,pawn):null;
+  if(isGunRecipe(task.recipe)&&!gun){context.release();return;}
+  if(gun){pawn.skills.crafting??={...craftingSkill(pawn)};if(gun.gunWork!.progress<total)learnSkill(pawn.skills.crafting,1000,pawn);task.progress=gun.gunWork!.progress;}
   if(unfinished){pawn.skills.crafting??={...craftingSkill(pawn)};if(unfinished.unfinished!.progress<total)learnSkill(pawn.skills.crafting,1000,pawn);task.progress=unfinished.unfinished!.progress;}
   const culinary=taskWork(task)==='cook';
   if(task.progress<total){
@@ -73,6 +80,7 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
     task.progress=Math.min(total,task.progress+Math.round(context.workRate(station,pawn)*speed*PRODUCTION_WORK_SCALE*fraction));
   }
   if(unfinished)unfinished.unfinished!.progress=task.progress;
+  if(gun)gun.gunWork!.progress=task.progress;
   if(task.progress<total)return;
   if(task.recipe==='butcher-creature'){finishButchery(world,pawn,bill,context);return;}
   const used=new Map<number,number>();for(const i of task.ingredients)used.set(i.pileId,(used.get(i.pileId)??0)+i.quantity);
@@ -85,14 +93,15 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   const potato=task.ingredients.filter(i=>i.item==='potato').reduce((n,i)=>n+i.quantity,0),corn=task.ingredients.filter(i=>i.item==='corn').reduce((n,i)=>n+i.quantity,0);
   if(isTailoring(task.recipe)&&!Number.isSafeInteger((world.tailoring?.completed??0)+1))return;
   const random={rng:world.rng},apparel=isTailoring(task.recipe)?{...newApparelState(item as ApparelItem,material),quality:craftingQuality(craftingSkill(pawn).level,()=>healthRandom(random))}:undefined;
+  const weapon=isGunRecipe(task.recipe)?{...newWeaponState(item as RangedWeaponItem),quality:craftingQuality(craftingSkill(pawn).level,()=>healthRandom(random))}:undefined;
   const foodPoison=world.schemaVersion>=89&&culinary?foodPoisonFromRecipe(roomCleanliness(world,pawn),(pawn.skills.cooking?.level??0),()=>healthRandom(random)):undefined;
   // All preconditions succeeded. Consume once, create once, then store physically.
   for(const [id,quantity] of used)world.piles.find(p=>p.id===id)!.quantity-=quantity;
   world.piles=world.piles.filter(p=>p.quantity>0);
-  const id=world.nextId++;world.piles.push({id,item,kind:ITEM_DEFINITIONS[item].kind,quantity:recipe.outputUnits,owner:{type:'pawn',pawnId:pawn.id},...freshRot(item,world.tick),...(foodPoison?{foodPoison}:{}),...apparel?{apparel}:{}});
+  const id=world.nextId++;world.piles.push({id,item,kind:ITEM_DEFINITIONS[item].kind,quantity:recipe.outputUnits,owner:{type:'pawn',pawnId:pawn.id},...freshRot(item,world.tick),...(foodPoison?{foodPoison}:{}),...apparel?{apparel}:{},...(weapon?{weapon}:{})});
   world.rng=random.rng;
   if(apparel){(world.tailoring??={completed:0,cancelled:0,lostCloth:0}).completed++;}
   task.ingredients=[];task.productId=id;task.phase='output';task.progress=0;if(culinary)pawn.skills.cooking=completedCookingSkill(pawn,task.workTicks??0);delete task.workTicks;pawn.planCooldown=0;
   if(bill.mode==='times')bill.target=Math.max(0,bill.target-1);
-  context.event(isTailoring(task.recipe)?`${pawn.name} a fabriqué : ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:task.recipe==='stone-blocks'?`${pawn.name} a taillé 20 ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:`${pawn.name} a cuisiné 1 repas simple (${10-rice-meat-potato-corn-agave} baies, ${rice} riz${meat?`, ${meat} viande`:''}${potato?`, ${potato} pommes de terre`:''}${corn?`, ${corn} maïs`:''}${agave?`, ${agave} fruits d’agave`:''}).`);
+  context.event(isGunRecipe(task.recipe)||isTailoring(task.recipe)?`${pawn.name} a fabriqué : ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:task.recipe==='stone-blocks'?`${pawn.name} a taillé 20 ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:`${pawn.name} a cuisiné 1 repas simple (${10-rice-meat-potato-corn-agave} baies, ${rice} riz${meat?`, ${meat} viande`:''}${potato?`, ${potato} pommes de terre`:''}${corn?`, ${corn} maïs`:''}${agave?`, ${agave} fruits d’agave`:''}).`);
 }

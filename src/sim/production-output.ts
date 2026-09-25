@@ -2,6 +2,7 @@ import { mergeThingDamage } from './thing-damage-rules.ts';
 import { copyPileCondition,mergePileContamination } from './pile-condition.ts';
 import { mergeRot, rotAge } from './food-preservation.ts';
 import { groundCapacity, groundPile, nearbyGround, storageCapacity } from './ground-placement.ts';
+import { storageAccepts } from './storage-filters.ts';
 import { refreshStock, transferPile } from './materials.ts';
 import { routeToJob, type Reachability } from './pathfinding.ts';
 import type { NeedContext } from './needs.ts';
@@ -40,7 +41,7 @@ export function processProductionOutput(world:World,pawn:Pawn,context:Production
     }
     task.storageId=null;delete task.storageQuantity;
     if(pawn.planCooldown>0)return;
-    const targets=world.stockpiles.filter(s=>s.filters[product.kind])
+    const targets=world.stockpiles.filter(s=>storageAccepts(s,product.item))
       .sort((a,b)=>b.priority-a.priority||(pawn.x-a.x)**2+(pawn.z-a.z)**2-((pawn.x-b.x)**2+(pawn.z-b.z)**2)||a.id-b.id);
     if(targets.length) {
       const reach=context.candidates?context.candidates():context.search();if(!reach)return;

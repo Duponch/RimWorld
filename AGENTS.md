@@ -1,5 +1,13 @@
 # Travail sur Lisière
 
+## Atelier, équipement et rangement V101
+- Reprise du gameplay autorisée après V100. Lire `docs/development/machining.md`, `storage-item-filters.md` et leurs recherches Core 1.6.4871. Forge → Usinage → Armurerie ; atelier 3×1 alimenté, revolver/fusil fabriqués avec matières distinctes, ouvrage lié à son auteur, qualité et équipement physiques. Autres armes, composants fabriqués et armures restent hors lot.
+- Schéma 101 : valider strictement V91 avant migration neutre. Aucune recherche, ressource ni permission ajoutée aux anciennes parties. Les anciennes fixtures publiques V98 restent immuables. Filtres par objet facultatifs : absence conserve la catégorie, liste explicite n'admet que ses entrées vraies, toujours sous la catégorie.
+- Ouvrage d'arme : composition exacte par matière/pile, progression et auteur persistés ; prévalider toutes les restitutions avant annulation et tirage. Aucun acier ne remplace un composant. Sans courant, ne pas appliquer le mode manuel propre au tailleur électrique.
+- La lumière bleue du poste exige une accumulation RGB correcte ; conserver le chemin scalaire historique quand aucune source bleue n'est active. Les plans, surfaces, déplacement et piles du poste suivent son emprise dans les quatre orientations.
+- Le défaut V94 d'ordre de construction était une fixture à 12 bois pour un lit de 45. Les contrôles moteur et natifs réussissent avec les matières réelles (+37 au pilote UI pour garder son oracle de quatre bois restants), sans réactivation implicite de Construction.
+- Contrôles regroupés, sources gelées en natif, démonstration préparée `public/test-saves/v101/atelier.json` distincte d'une progression naturelle. Preuves dans `docs/history/validation-machining-v101.md`. Mode jour : publier puis rendre la main.
+
 ## Interface crème V100
 - La nouvelle capture utilisateur remplace l’habillage V93/V94 : papier crème, encre forêt, contours miel, boutons beige délimités ; conserver les illustrations/atlas et les curseurs sémantiques V95. Lire `docs/development/visual-identity.md` et `docs/history/validation-interface-v100.md`.
 - Ressources : **aucun support/fond/bordure**, 216 px, icône/nom/quantité. Travail/Horaires/Affectations utilisent la largeur nécessaire même au-dessus du HUD. Architecte garde ses dimensions entre catégories. Activations historiques dans le flux des alertes.

@@ -11,6 +11,9 @@ test('la priorité de chantier traverse coupe, dégagement, livraison et finitio
     const fixture=createWorld(42,32,32);fixture.tick=2000;fixture.tiles=fixture.tiles.map(()=>({terrain:'grass'}));fixture.resources=[];fixture.piles=[];fixture.jobs=[];fixture.structures=[];fixture.stockpiles=[];fixture.pawns=fixture.pawns.slice(0,1);
     const pawn=fixture.pawns[0]!;Object.assign(pawn,{x:12,z:16,hunger:100,rest:100});pawn.schedule.fill('anything');pawn.priorities={clean:0,firefight:0,warden:0,basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,craft:2,mine:2,haul:0,build:1,gather:0,grow:0,cook:0};
     fixture.resources.push({id:fixture.nextId++,kind:'tree',amount:12,x:18,z:14});
+    // The current bed recipe costs 45 wood; 12 from the tree plus 37 nearby
+    // leaves the original assertion of four wood after construction intact.
+    addGroundMaterial(fixture,'wood',37,{x:13,z:16},'wood');
     for(const x of [18,22])expect(applyCommand(fixture,{type:'designate',kind:'bed',x,z:14}).ok).toBe(true);
     await page.addInitScript(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:serializeWorld(fixture)});
     await page.goto('/?scenario=camp&size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,fixture);

@@ -20,6 +20,7 @@ export const OCCUPANCY = Object.freeze({
   cooler:Object.freeze({clearItems:true,items:false,zones:false,store:false}),
   'research-bench':Object.freeze({clearItems:false,items:true,zones:false,store:false}),
   'tailor-bench':Object.freeze({clearItems:false,items:true,zones:false,store:false}),
+  'machining-table':Object.freeze({clearItems:false,items:true,zones:false,store:false}),
   'electric-tailor-bench':Object.freeze({clearItems:false,items:true,zones:false,store:false}),
   'crafting-spot':Object.freeze({clearItems:false,items:true,zones:false,store:false}),
   'build-roof': Object.freeze({clearItems:false,items:true,zones:true,store:true}),

@@ -39,7 +39,7 @@ export class RoomInspection {
     text+=cleanliness===null?' Propreté : pas de score de pièce.':` Propreté : ${cleanliness.toFixed(2)}.`;
     text+=` Lumière : ${Math.round(environment.lightAt(cell)*100)} %.`;
     text+=` Vitesse de travail et de marche : ${Math.round(environment.speedAt(cell)*100)} % (effet de la lumière sur cette case).`;
-    const station=world.structures.find(s=>(s.kind==='stonecutter'||s.kind==='campfire'||s.kind==='fueled-stove'||s.kind==='electric-stove'||s.kind==='butcher-table')&&footprintCells(s).some(c=>c.x===cell.x&&c.z===cell.z));
+    const station=world.structures.find(s=>(s.kind==='machining-table'||s.kind==='stonecutter'||s.kind==='campfire'||s.kind==='fueled-stove'||s.kind==='electric-stove'||s.kind==='butcher-table')&&footprintCells(s).some(c=>c.x===cell.x&&c.z===cell.z));
     if(station){const f=environment.production(station,cookingSpot(station));
       text+=` Production : ${Math.round(f.total*100)} % · lumière à la place ${Math.round(f.light*100)} %`;
       if(f.outdoors<1)text+=' · extérieur ×80 %';

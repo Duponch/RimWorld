@@ -11,6 +11,7 @@ export function validateConstructionMaterials(world:World,version:number):string
     if(entity.kind==='passive-cooler'&&(version<40||entity.material!=='wood'||entity.orientation!==0))errors.push('Passive cooler requires V40, wood and fixed orientation.');
     if(entity.kind==='door'&&(version<34||entity.material===undefined))errors.push('Door requires V34 and an explicit material.');
     if((entity.kind==='research-bench'||entity.kind==='tailor-bench')&&(version<73||entity.material===undefined))errors.push('Research and tailoring benches require V73 and explicit materials.');
+    if(entity.kind==='machining-table'&&(version<101||entity.material!=='steel'))errors.push('Machining table requires V101 and steel.');
     if(entity.kind==='electric-tailor-bench'&&(version<90||entity.material===undefined))errors.push('Electric tailoring bench requires V90 and explicit materials.');
     if(entity.kind==='stonecutter'&&(version<31||entity.material===undefined))errors.push('Stonecutter requires V31 and an explicit material.');
     if(entity.material!==undefined&&(version<30||!validConstructionMaterial(entity.kind,entity.material,version)||entity.footprint==='legacy-single'))errors.push('Invalid or future construction material.');

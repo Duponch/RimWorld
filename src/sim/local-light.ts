@@ -32,9 +32,9 @@ function pop(heap:number[]):number {
   heap[i]=last;return result;
 }
 
-/** Current warm emitters have red as their strongest channel, including
- * after combination. New coloured/overlit emitters need RGB storage.
- * No light is additive with the sky; ordinary emitters never exceed 50%. */
+/** Warm-only worlds retain the original scalar fast path. A blue source can
+ * make green or blue win after overlap, so those worlds sum quantized RGB
+ * channels separately before taking their maximum. */
 export class LocalLightCache {
   private topology?:RoomTopology;
   private emitters='';
@@ -43,18 +43,35 @@ export class LocalLightCache {
 
   read(world:World,topology:RoomTopology):Float32Array {
     const sources=lightSources(world);
-    const key=sources.map(s=>`${s.cell}:${s.radius}:${s.red}`).join(',');
+    const mixed=sources.some(s=>s.green>s.red||s.blue>s.red);
+    const key=sources.map(s=>mixed?`${s.cell}:${s.radius}:${s.red}:${s.green}:${s.blue}`:`${s.cell}:${s.radius}:${s.red}`).join(',');
     if(this.topology===topology&&this.emitters===key)return this.light;
     if(this.topology&&this.emitters===key&&sameLightObstacles(sources,this.topology,topology)) {
       this.topology=topology;return this.light;
     }
-    const sum=new Uint16Array(world.width*world.height),distance=new Uint16Array(AREA);
+    const sum=new Uint16Array(world.width*world.height),green=mixed?new Uint16Array(world.width*world.height):undefined,
+      blue=mixed?new Uint16Array(world.width*world.height):undefined,distance=new Uint16Array(AREA);
     const blocked=(x:number,z:number)=>topology.at(x,z)?.kind!=='space';
-    for(const {cell:source,radius,red} of sources) {
+    for(const {cell:source,radius,red,green:sourceGreen,blue:sourceBlue} of sources) {
       distance.fill(65535);
       const sx=source%world.width,sz=Math.floor(source/world.width),root=RADIUS*SIDE+RADIUS;
       const heap:number[]=[];distance[root]=100;push(heap,100*AREA+root);
-      while(heap.length) {
+      if(green&&blue)while(heap.length) {
+        const entry=pop(heap),cost=Math.floor(entry/AREA),local=entry%AREA;
+        if(distance[local]!==cost)continue;
+        const x=sx+local%SIDE-RADIUS,z=sz+Math.floor(local/SIDE)-RADIUS,index=z*world.width+x;
+        const d=cost/100,attenuation=.6*(1-d/radius)+.4/(d*d);
+        sum[index]=Math.min(255,sum[index]!+Math.floor(red*attenuation));
+        green[index]=Math.min(255,green[index]!+Math.floor(sourceGreen*attenuation));
+        blue[index]=Math.min(255,blue[index]!+Math.floor(sourceBlue*attenuation));
+        for(const [dx,dz] of directions) {
+          const next=local+dx+dz*SIDE,nextCost=cost+(dx&&dz?141:100);
+          if(nextCost>radius*100||blocked(x+dx,z+dz)||nextCost>=distance[next]!)continue;
+          // Light can round a single corner. Two opaque sides close a diagonal.
+          if(dx&&dz&&blocked(x+dx,z)&&blocked(x,z+dz))continue;
+          distance[next]=nextCost;push(heap,nextCost*AREA+next);
+        }
+      } else while(heap.length) {
         const entry=pop(heap),cost=Math.floor(entry/AREA),local=entry%AREA;
         if(distance[local]!==cost)continue;
         const x=sx+local%SIDE-RADIUS,z=sz+Math.floor(local/SIDE)-RADIUS,index=z*world.width+x;
@@ -63,14 +80,14 @@ export class LocalLightCache {
         for(const [dx,dz] of directions) {
           const next=local+dx+dz*SIDE,nextCost=cost+(dx&&dz?141:100);
           if(nextCost>radius*100||blocked(x+dx,z+dz)||nextCost>=distance[next]!)continue;
-          // Light can round a single corner. Two opaque sides close a diagonal.
           if(dx&&dz&&blocked(x+dx,z)&&blocked(x,z+dz))continue;
           distance[next]=nextCost;push(heap,nextCost*AREA+next);
         }
       }
     }
     const light=new Float32Array(sum.length);
-    for(let i=0;i<sum.length;i++)light[i]=Math.min(.5,sum[i]!/255*3.6);
+    if(green&&blue)for(let i=0;i<sum.length;i++)light[i]=Math.min(.5,Math.max(sum[i]!,green[i]!,blue[i]!)/255*3.6);
+    else for(let i=0;i<sum.length;i++)light[i]=Math.min(.5,sum[i]!/255*3.6);
     this.topology=topology;this.emitters=key;this.light=light;this.rebuilds++;
     return light;
   }

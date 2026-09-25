@@ -1,5 +1,16 @@
 # Guide joueur
 
+## Fabriquer ses armes et trier les réserves — V101
+
+1. Dans **Recherche**, terminer **Forge**, **Usinage**, puis **Armurerie** avec un bureau et un chercheur.
+2. Dans **Architecte → Production**, construire l’**Atelier d’usinage** : 150 acier, 5 composants, Construction 4. Raccorder ses 350 W et laisser libre la case de travail devant lui ; l’abriter améliore le travail.
+3. Sélectionner l’atelier et ajouter une facture de revolver (30 acier, 2 composants, Artisanat 3) ou de fusil (60 acier, 3 composants, Artisanat 5). Activer Artisanat dans Travail. Quantité, rayon, suspension et destination fonctionnent comme pour la confection.
+4. Une interruption conserve l’ouvrage pour son auteur. La coupure électrique arrête le travail ; les matériaux ne sont pas consommés une seconde fois à la reprise. Sélectionner l’ouvrage au sol permet de l’annuler avec restitution partielle.
+5. Sélectionner une réserve, cocher **Affiner les catégories par objet**, ouvrir **Armes**, et ne garder que les objets souhaités. **Appliquer les réglages** déclenche le rangement par les transporteurs ; la catégorie doit aussi être autorisée. Désactiver l’affinage retrouve le filtre par catégories.
+6. Équiper l’arme produite avec un colon par les commandes habituelles.
+
+Pour essayer immédiatement, importer [la démonstration Atelier](../../public/test-saves/v101/atelier.json) dans **Charger → Importer**. Ce petit site préparé possède un artisan, les recherches terminées, un atelier construit et exactement les matériaux des deux armes. Ce n’est pas une colonie autonome ni une partie naturelle ; conserver sa partie personnelle dans un autre emplacement.
+
 **V100 : interface crème et informations hiérarchisées.** Les ressources apparaissent directement sur la carte, avec leurs icônes, noms et quantités. La barre du bas présente des boutons distincts. Travail, Horaires et Affectations occupent davantage de largeur ; Copier et Coller sont côte à côte. Dans un dossier de colon, le contexte de pièce figure dans **Besoins** et les commandes restent au bas de la fiche. Pour une case, les valeurs essentielles sont visibles et **Environnement** déplie le détail. Les données, sauvegardes et commandes sont conservées.
 
 **Sélection et commandes V99 :** cliquez un animal sauvage pour ouvrir **Informations** et **Santé**, ou le désigner pour la chasse. Double cliquez pour ajouter les animaux équivalents visibles ; un rectangle prend d'abord les colons, puis les autres personnes, puis la faune. Cliquez plusieurs fois au même endroit pour parcourir les êtres et objets superposés. Avec un colon sélectionné, **R** bascule Mobiliser ; le clic droit mobilisé sur un hostile ou un animal sauvage propose les attaques admissibles. Le trait bleu d'un colon sélectionné suit son trajet réel ; la barre dorée proche indique un travail mesuré. Les attaques ne se mettent pas encore en file avec Maj. [Contrat et limites](../development/interaction-feedback.md).

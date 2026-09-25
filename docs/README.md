@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V101 : atelier, équipement et rangement.** Usinage puis Armurerie, atelier électrique construit, revolver et fusil fabriqués avec acier/composants, ouvrage conservé et qualité ; filtres précis par objet pour les réserves. [Contrat](development/machining.md), [stockage](development/storage-item-filters.md), [preuves](history/validation-machining-v101.md). Migration neutre depuis V91. [Démonstration préparée à importer](../public/test-saves/v101/atelier.json).
+
 **V100 : refonte visuelle unifiée.** Papier crème, encre forêt, boutons miel, hiérarchie des dossiers et fiches de case ; ressources sans support, barre de gestion visible et tableaux élargis. [Identité](development/visual-identity.md), [validation](history/validation-interface-v100.md). Les règles, le catalogue et le schéma 91 restent inchangés.
 
 **V99 : sélection et retours d’action.** Animaux cliquables avec Info/Santé et chasse ; groupes cohérents, mobilisation lisible, attaques contextuelles, chemins réels bleus et barres de travail dorées. [Contrat](development/interaction-feedback.md), [référence Core 1.6.4871](research/interaction-reference-v99.md), [preuves et coûts](history/validation-interaction-v99.md). Schéma 91 et catalogue inchangés.

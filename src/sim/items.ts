@@ -10,6 +10,7 @@ export const ITEM_DEFINITIONS = Object.freeze({
   'hare-corpse':Object.freeze({label:'Dépouille de lièvre',kind:'corpse',stackLimit:1,nutrition:0,maxIngest:0,color:0x9b9981}),
   'hare-meat':Object.freeze({label:'Viande de lièvre',kind:'food',stackLimit:75,nutrition:5,maxIngest:75,color:0xba6259}),
   'light-leather':Object.freeze({label:'Cuir léger',kind:'textile',stackLimit:75,nutrition:0,maxIngest:0,color:0xad8a61}),
+  'unfinished-gun':Object.freeze({label:'Arme à feu inachevée',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0x798c90}),
   'unfinished-shirt':Object.freeze({label:'Chemise inachevée',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0xd8c8a2}),
   'unfinished-tribalwear':Object.freeze({label:'Tenue tribale inachevée',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0xd8c8a2}),
   'unfinished-pants':Object.freeze({label:'Pantalon inachevé',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0xd8c8a2}),

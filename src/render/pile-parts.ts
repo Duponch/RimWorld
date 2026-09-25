@@ -30,6 +30,8 @@ export function pileParts(bundles:readonly PileBundle[]):Placement[] {
       }
     } else if(bundle.kind==='corpse'){
       food.push(...corpseParts(bundle.x,z,bundle.corpseStage??'fresh',bundle.facing??0,bundle.item.replace('-corpse','')));
+    } else if(bundle.item==='unfinished-gun'){
+      food.push({x,z,y:.07,sx:.62,sy:.10,sz:.24,color:0x63777d},{x:x-.20,z,y:.16,sx:.08,sy:.09,sz:.29,color:0x9f8160},{x:x+.12,z,y:.13,sx:.33,sy:.06,sz:.08,color:0xa9b5b8});
     } else if(bundle.kind==='unfinished'){
       food.push({x,z,y:.08,sx:.48,sy:.12,sz:.50,color:0xd8c8a2},{x:x+.15,z:z-.13,y:.17,sx:.12,sy:.08,sz:.12,color:0x5d716e});
     } else if(bundle.kind==='textile'){

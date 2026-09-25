@@ -1,0 +1,30 @@
+import assert from 'node:assert/strict';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { deserializeWorld, serializeWorld, validateWorld } from '../src/sim/index.ts';
+import { advanceUntil, createMachiningFixture, prepareCompletedResearch, requireCommand } from '../tests/scenarios/machining-v101.ts';
+
+/** Prepared discovery save. Research is known by fixture; construction is real. */
+const {world}=createMachiningFixture();
+prepareCompletedResearch(world);
+requireCommand(world,{type:'designate',kind:'machining-table',material:'steel',x:15,z:8,orientation:0});
+const ticks=advanceUntil(world,()=>world.structures.some(s=>s.kind==='machining-table'),2500);
+const table=world.structures.find(s=>s.kind==='machining-table');
+assert.ok(table,'Machining table was not constructed');
+assert.deepEqual(table.bills,[],'The discovery save must not start a bill');
+assert.equal(world.jobs.some(j=>j.kind==='machining-table'),false,'Construction must have completed');
+const quantity=(item:string)=>world.piles.filter(p=>p.item===item).reduce((n,p)=>n+p.quantity,0);
+assert.equal(quantity('steel'),90,'Construction must consume exactly 150 steel');
+assert.equal(quantity('component'),5,'Construction must consume exactly five components');
+assert.deepEqual(validateWorld(world),[]);
+const serialized=serializeWorld(world),loaded=deserializeWorld(serialized);
+assert.deepEqual(loaded,world,'Reload must preserve the entire prepared world');
+assert.equal(serializeWorld(loaded),serialized,'Reload serialization must match byte for byte');
+const output=fileURLToPath(new URL('../public/test-saves/v101/atelier.json',import.meta.url));
+mkdirSync(dirname(output),{recursive:true});
+writeFileSync(output,serialized);
+const fromDisk=readFileSync(output,'utf8');
+assert.equal(fromDisk,serialized,'Written save must match the validated snapshot');
+assert.deepEqual(deserializeWorld(fromDisk),world,'Disk reload must preserve the prepared world');
+process.stdout.write(JSON.stringify({output,ticks,tick:world.tick,steel:quantity('steel'),components:quantity('component'),tableId:table.id,bytes:Buffer.byteLength(serialized)})+'\n');

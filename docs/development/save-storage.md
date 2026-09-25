@@ -1,5 +1,7 @@
 # Stockage local des parties
 
+V101 introduit le schéma métier 101 pour l'atelier, les ouvrages d'armes et les filtres par objet. Une partie V91 est strictement validée avant migration neutre ; les versions historiques et les six fixtures publiques V98 sont conservées. L'enveloppe de compression et les clés de stockage restent inchangées. [Contrat](machining.md), [preuves](../history/validation-machining-v101.md).
+
 V98 ajoute le [chargement de copies externes](test-colonies.md) depuis les colonies de test ou un fichier importé. Lecture/décompression et empreinte éventuelle précèdent le remplacement ; validation worker, exclusion et récupération sont communes aux sauvegardes locales. Aucun chargement externe n'écrit la sauvegarde manuelle. Les fichiers publics sont des références immuables : leur import dans une session ne les modifie pas.
 
 V93 conserve les deux clés `lisiere.save.v1` et `lisiere.previous.v1`, le schéma de monde 91 et la validation complète du worker avant remplacement. Le stockage reste local au navigateur et à l’origine ; aucun serveur de sauvegarde n’est ajouté.

@@ -1,5 +1,7 @@
 # Stratégie de validation
 
+V101 vérifie dans une campagne courte recherche, construction, deux recettes, interruption électrique, conservation/reprise, stockage précis et équipement. Les états préparés exercent les seuils sans prétendre parcourir naturellement tout l’arbre. Le scénario historique V90 reste immuable, migration V91→101 strictement neutre. Aucune règle saisonnière ou temporelle de colonie ne nécessite une nouvelle année simulée. [Preuves](../history/validation-machining-v101.md).
+
 V97 ajoute les transitions proche/loin dès leur première image et compare le rejet hors champ à un parcours ordinaire sans rejet, sous la même caméra d'ombres. Les deltas de flore sont comparés aux buffers du parcours complet ; les enveloppes doivent contenir chaque sommet transformé. Les comparaisons de performance sont répétées en ordre inverse si l'échauffement présente une forte variabilité. [Preuves et limites](../history/validation-performance-v97.md).
 
 V96 ajoute une obligation aux changements de rendu conservé : tester la **première image après mouvement réel**, puis plusieurs images consécutives d’amortissement, sans rafraîchir le lot entre les deux. Vérifier les projections, distances, listes d’objets et caméra de chaque passe. Un rendu immobile reconstruit avant la capture ne couvre pas ce contrat. `scripts/camera-retention.mjs` utilise le même ordre de dessin via un bundle neuf à pose identique ; aucun écart pixel admis. [Preuves et contre-test V95](../history/validation-camera-v96.md).

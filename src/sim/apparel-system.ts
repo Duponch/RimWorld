@@ -4,6 +4,8 @@ import { advanceApparelWear,APPAREL_POLICY_INTERVAL } from './apparel-renewal.ts
 import { wornApparel } from './apparel-rules.ts';
 import { beginAutomaticEquipment } from './equipment.ts';
 import { reservedSource } from './materials.ts';
+import { storageAccepts } from './storage-filters.ts';
+import type { ItemId } from './items.ts';
 import type { Reachability } from './pathfinding.ts';
 import { routeToJob } from './pathfinding.ts';
 import { releaseAssignments } from './work-release.ts';
@@ -42,7 +44,7 @@ const nextInterval=(world:World,pawn:Pawn):number=>{
   let value=(world.seed^pawn.id^world.tick)>>>0;value=Math.imul(value^value>>>16,0x45d9f3b)>>>0;
   return APPAREL_POLICY_INTERVAL.min+value%(APPAREL_POLICY_INTERVAL.max-APPAREL_POLICY_INTERVAL.min+1);
 };
-const stored=(world:World,x:number,z:number):boolean=>world.stockpiles.some(s=>s.x===x&&s.z===z&&!!s.filters.apparel);
+const stored=(world:World,x:number,z:number,item:ItemId):boolean=>world.stockpiles.some(s=>s.x===x&&s.z===z&&storageAccepts(s,item));
 const busy=(pawn:Pawn):boolean=>pawn.state!=='idle'||pawn.orders.active!==null||pawn.orders.queue.length>0||pawn.jobId!==null||!!(pawn.haul||pawn.cooking||pawn.need||pawn.recreation.task||pawn.research||pawn.hunting||pawn.burial||pawn.cleaning||pawn.trade||pawn.firefighting||pawn.ward||pawn.feed||pawn.tend||pawn.rescue||pawn.equipmentTask||pawn.draft||pawn.flee||pawn.mental?.crisis);
 
 /** Attempts one physical policy action after urgent needs and remembered weapon
@@ -52,8 +54,8 @@ export function considerApparelPolicy(world:World,pawn:Pawn,search:()=>Reachabil
   const policy=world.apparelPolicies?.find(p=>p.id===pawn.apparelPolicyId);if(!policy){pawn.nextApparelCheckAt=world.tick+nextInterval(world,pawn);return false;}
   const reach=search();if(!reach)return true;
   const worn:ApparelPolicyGarment[]=wornApparel(world,pawn).map(p=>({id:p.id,item:p.item as ApparelPolicyGarment['item'],apparel:p.apparel!}));
-  const candidates:ApparelPolicyCandidate[]=world.piles.filter(p=>p.kind==='apparel'&&p.apparel&&!p.apparel.forbidden&&p.owner.type==='ground'&&stored(world,p.owner.x,p.owner.z)).map(p=>({
-    id:p.id,item:p.item as ApparelPolicyCandidate['item'],apparel:p.apparel!,stored:stored(world,p.owner.type==='ground'?p.owner.x:0,p.owner.type==='ground'?p.owner.z:0),
+  const candidates:ApparelPolicyCandidate[]=world.piles.filter(p=>p.kind==='apparel'&&p.apparel&&!p.apparel.forbidden&&p.owner.type==='ground'&&stored(world,p.owner.x,p.owner.z,p.item)).map(p=>({
+    id:p.id,item:p.item as ApparelPolicyCandidate['item'],apparel:p.apparel!,stored:stored(world,p.owner.type==='ground'?p.owner.x:0,p.owner.type==='ground'?p.owner.z:0,p.item),
     reachable:p.owner.type==='ground'&&routeToJob(world,p.owner,reach,true)!==null,reserved:reservedSource(world,p.id,pawn.id)>0,
     burning:world.fires?.items.some(f=>groundFire(f)&&p.owner.type==='ground'&&f.x===p.owner.x&&f.z===p.owner.z),
   }));

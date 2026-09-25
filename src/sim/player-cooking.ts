@@ -1,3 +1,5 @@
+import { productionStationUsable } from './production-recipes.ts';
+import { productionResearchUnlocked,productionWorkerQualified } from './machining.ts';
 import { isAnimalCorpseItem } from './biome-items.ts';
 import { foodStationUsable, usesCookingFuel, isButcherStation } from './food-workstations.ts';
 import { corpseFresh } from './corpses.ts';
@@ -24,31 +26,34 @@ export function planCookingOrder(world:World,pawn:Pawn,stationId:number,access?:
   if(!station.bills?.some(b=>billWanted(world,b)))return no('Aucune facture active à produire : vérifiez suspension et quantité demandée.');
   if(fuelStationReserved(world,station.id))return no('Poste réservé pour une cuisine ou un ravitaillement.');
   if(station.kind==='electric-stove'&&!foodStationUsable(station))return no('La cuisinière n’est pas alimentée :350 W nécessaires.');
+  if(!productionStationUsable(station))return no('Atelier d’usinage sans courant : 350 W nécessaires.');
   const spot=cookingSpot(station);
   if(!cookingPlaceFree(world,spot)||reservedServiceCells(world).has(cellIndex(world,spot.x,spot.z)))return no('Place de cuisine obstruée ou réservée.');
   const reach=access??candidateAccess(world,pawn,blockedCells(world),new Set());
   if(!routeToCell(world,spot,reach))return no('Aucun accès à la place de cuisine.');
   const plan=planCooking(world,pawn,reach,budget,{stationId,forced});
   if(!plan)return no(!usesCookingFuel(station.kind)||station.fuel?.ticks?'Aucune recette réalisable : ingrédients autorisés dans le rayon, accès ou dépôt insuffisants.':'Aucun bois disponible et accessible pour rallumer le feu.');
-  return {label:plan.refuel?'Ravitailler avant de cuisiner':isButcherStation(station.kind)?'Dépecer une créature':station.kind==='tailor-bench'?'Confectionner un vêtement':station.kind==='crafting-spot'?'Confectionner une tenue tribale':station.kind==='stonecutter'?'Tailler des blocs de pierre':'Cuisiner un repas simple',order:plan.refuel??{cooking:plan.task!},path:plan.path};
+  return {label:plan.refuel?'Ravitailler avant de cuisiner':isButcherStation(station.kind)?'Dépecer une créature':station.kind==='tailor-bench'?'Confectionner un vêtement':station.kind==='crafting-spot'?'Confectionner une tenue tribale':station.kind==='machining-table'?'Fabriquer une arme':station.kind==='stonecutter'?'Tailler des blocs de pierre':'Cuisiner un repas simple',order:plan.refuel??{cooking:plan.task!},path:plan.path};
 }
 
 /** Waiting recipes reserve real ingredients, the work spot and typed staging. */
 export function queuedCookingReason(world:World,order:CookingOrder):string|undefined {
   const view=withoutQueuedOrder(world,order),c=order.cooking,station=view.structures.find(s=>s.id===c.stationId&&stationRecipe(s)!==null),bill=station?.bills?.find(b=>b.id===c.billId);
   if(!station||!bill||bill.recipe!==taskRecipe(c)||!billWanted(view,bill))return 'Facture supprimée, suspendue ou quantité atteinte.';
+  if(!productionStationUsable(station)||!productionResearchUnlocked(world,bill.recipe))return 'Atelier sans courant ou recherche manquante.';
   if(!foodStationUsable(station))return station.kind==='electric-stove'?'La cuisinière n’est pas alimentée.':'Le poste est sans combustible.';
   const spot=cookingSpot(station);
   if(spot.x!==c.spot.x||spot.z!==c.spot.z||!cookingPlaceFree(view,spot)||fuelStationReserved(view,station.id)||reservedServiceCells(view).has(cellIndex(view,spot.x,spot.z)))return 'Poste ou place de cuisine indisponible.';
   const incoming=new Map<number,{item:ProductionIngredient;quantity:number}>(),sources=new Map<number,number>();
   const author=world.pawns.find(p=>p.orders.queue.includes(order));
+  if(author&&!productionWorkerQualified(author,bill.recipe))return 'Compétence Artisanat insuffisante.';
   for(const i of c.ingredients) {
     const pile=view.piles.find(p=>p.id===i.pileId);
-    const bound=pile?.unfinished?.billId===bill.id;
+    const work=pile?.gunWork??pile?.unfinished,bound=work?.billId===bill.id;
     const required=(sources.get(i.pileId)??0)+i.quantity;sources.set(i.pileId,required);
     if(pile&&isAnimalCorpseItem(pile.item)&&!corpseFresh(pile,world.tick))return 'Dépouille pourrie, impropre à la boucherie.';
-    if(pile?.unfinished&&(pile.unfinished.authorId!==author?.id||pile.unfinished.billId!==undefined&&!bound))return 'Ouvrage réservé à un autre auteur ou une autre facture.';
-    if(!(bound||bill.filters[pile?.unfinished?'cloth':i.item])||!pile||pile.item!==i.item||pile.owner.type!=='ground'||pile.quantity-reservedSource(view,pile.id)<required)return 'Ingrédient réservé disparu ou devenu insuffisant.';
+    if(work&&(work.authorId!==author?.id||work.billId!==undefined&&!bound))return 'Ouvrage réservé à un autre auteur ou une autre facture.';
+    if(!(bound||(pile?.gunWork?pile.gunWork.parts.every(part=>bill.filters[part.item]):bill.filters[pile?.unfinished?'cloth':i.item]))||!pile||pile.item!==i.item||pile.owner.type!=='ground'||pile.quantity-reservedSource(view,pile.id)<required)return 'Ingrédient réservé disparu ou devenu insuffisant.';
     if(!bound&&(pile.owner.x-station.x)**2+(pile.owner.z-station.z)**2>bill.radius**2)return 'Ingrédient sorti du rayon de la facture.';
     if(!ingredientWithinReach(i.cell,spot,station)||!ingredientPlaceFree(view,i.cell,spot,taskRecipe(c),station))return 'Dépôt des ingrédients inaccessible.';
     if(i.stage==='placed') {if(pile.owner.x!==i.cell.x||pile.owner.z!==i.cell.z)return 'Ingrédient déjà posé déplacé.';}

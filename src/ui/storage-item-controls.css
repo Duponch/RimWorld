@@ -1,0 +1,9 @@
+.storage-item-controls{border:1px solid var(--line,#c9bea4);border-radius:8px;padding:10px 12px;margin:12px 0 0;min-width:0}
+.storage-item-controls legend{padding:0 6px;font-weight:650}
+.storage-item-controls label{display:flex;align-items:center;gap:7px;line-height:1.35;min-height:28px}
+.storage-item-controls input[type=checkbox]{flex:0 0 auto;margin:0}
+.storage-item-actions{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap}
+.storage-item-list details{border-top:1px solid var(--line,#c9bea4);padding:5px 0}
+.storage-item-list summary{font-weight:600;cursor:var(--cursor-pointer,pointer)}
+.storage-item-list details label{padding-left:8px}
+.bill-cost{font-weight:600;margin:4px 0 8px}

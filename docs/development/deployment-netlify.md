@@ -1,5 +1,7 @@
 # Publication Netlify
 
+V101 : déploiement de production `6ab5b90aeb6ac4082e8bde84`, 25 septembre 2026 (date locale), 31 fichiers. [Atelier, équipement, rangement et contrôles publics](../history/validation-machining-v101.md). Schéma métier 101 par migration neutre, enveloppe de stockage inchangée. La [démonstration atelier](../../public/test-saves/v101/atelier.json) s'importe depuis Charger une partie ; les six anciennes colonies de test restent immuables. Le contrôle courant compte 61 outils illustrés et conserve les vérifications de curseurs, gestion et sauvegarde.
+
 V100 : déploiement de production `6ab5a9a7e4d26356179e4f23`, 25 septembre 2026 (date locale). [Refonte visuelle et contrôle du bundle public](../history/validation-interface-v100.md).
 
 V99 : déploiement de production `6ab5a08e252bef16783b20b9`, 25 septembre 2026 (date locale). [Validation des interactions et contrôle public](../history/validation-interaction-v99.md).

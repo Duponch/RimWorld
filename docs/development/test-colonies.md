@@ -1,5 +1,7 @@
 # Bibliothèque de colonies de test — V98
 
+V101 ajoute une [démonstration industrielle à importer](../../public/test-saves/v101/atelier.json), distincte des six colonies V98 inchangées. Recherches et matériel initial sont préparés ; l’atelier est ensuite construit par le vrai moteur. `node --experimental-strip-types scripts/machining-demo-v101.ts` régénère et recharge exactement ce fichier. Aucun travail d’armurerie n’est lancé à l’avance.
+
 Six sauvegardes Lisière sont accessibles dans **Charger une partie → Colonies de test**, depuis l'accueil ou Menu. Elles permettent d'essayer les systèmes et performances sans recommencer une colonie. [Preuves](../history/validation-test-colonies-v98.md).
 
 | Colonie | Habitants vivants | Situation disponible |
