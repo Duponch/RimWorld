@@ -1,4 +1,4 @@
-import { furnitureBeauty,isFurnitureMaterial,isHabitatFurnitureKind,FURNITURE_MATERIALS,type FurnitureLike } from './furniture-stats.ts';
+import { furnitureBeauty,isFurnitureMaterial,isHabitatFurnitureKind,isSculptureKind,sculptureBeauty,FURNITURE_MATERIALS,type FurnitureLike } from './furniture-stats.ts';
 import type { RoomTopology } from './room-topology.ts';
 
 export interface BeautyCell {x:number;z:number}
@@ -38,6 +38,7 @@ export function filthBeauty(filth:Pick<BeautyFilth,'kind'>,outdoors=false):numbe
 export function groundObjectBeauty(object:BeautyObject):number {return object.visible===false?0:object.beauty??-4;}
 export function structureBeauty(structure:BeautyStructure):number {
   if(isHabitatFurnitureKind(structure.kind))return furnitureBeauty(structure);
+  if(isSculptureKind(structure.kind))return sculptureBeauty(structure);
   const material=isFurnitureMaterial(structure.material)?FURNITURE_MATERIALS[structure.material]:undefined;
   const base=structure.baseBeauty??0;
   return (base>0?base*(material?.beautyFactor??1):base)+(material?.beautyOffset??0);

@@ -1,5 +1,5 @@
 import { carrierOf } from './rescue-state.ts';
-import { PRODUCTION_RECIPES, productionWorkTotal, taskRecipe } from './production-recipes.ts';
+import { PRODUCTION_RECIPES, productionTaskTotal, taskRecipe } from './production-recipes.ts';
 import { deconstructionAvailable } from './deconstruction-rules.ts';
 import { constructionObstruction, constructionSiteFree, isConstruction } from './construction-rules.ts';
 import { constructionRecipe, deliveredMaterial } from './construction-materials.ts';
@@ -62,7 +62,7 @@ export function queryPawnStatus(world: World, pawn: Pawn): { code: string; reaso
   if(pawn.cooking) {
     const task=pawn.cooking,recipe=PRODUCTION_RECIPES[taskRecipe(task)];
     if(task.phase==='interrupted')return {code:'cooking-interrupted',reason:'Ingrédient perdu ; attend une case libre pour déposer la cargaison restante.'};
-    if(task.phase==='work')return {code:'cooking',reason:`${task.recipe==='butcher-creature'?'Dépèce une créature':task.recipe==='shirt'?'Confectionne une chemise':task.recipe==='tribalwear'?'Confectionne une tenue tribale':task.recipe==='stone-blocks'?'Taille des blocs de pierre':'Prépare un repas simple'} (${Math.floor(task.progress/productionWorkTotal(taskRecipe(task))*100)} %).`};
+    if(task.phase==='work')return {code:'cooking',reason:`${task.recipe==='small-sculpture'||task.recipe==='large-sculpture'?'Sculpte une œuvre':task.recipe==='butcher-creature'?'Dépèce une créature':task.recipe==='shirt'?'Confectionne une chemise':task.recipe==='tribalwear'?'Confectionne une tenue tribale':task.recipe==='stone-blocks'?'Taille des blocs de pierre':'Prépare un repas simple'} (${Math.floor(task.progress/productionTaskTotal(world,task)*100)} %).`};
     if(task.phase==='output')return {code:'cooking-output',reason:task.storageId===null?'Porte le produit fabriqué vers un dépôt au sol.':'Porte le produit fabriqué vers sa réserve.'};
     if(task.ingredients.some(i=>i.item==='unfinished-tribalwear'||i.item==='unfinished-shirt'))return {code:'gathering-ingredients',reason:'Reprend son ouvrage inachevé au poste.'};
     const placed=task.ingredients.filter(i=>i.stage==='placed').reduce((n,i)=>n+i.quantity,0);

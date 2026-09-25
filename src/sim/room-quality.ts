@@ -50,7 +50,7 @@ export class RoomQualityCapture {
       if(contains(index(s)))totalBeauty+=structureBeauty(s)+(s.kind==='flower-pot'?daylilyBeauty(s.flower?.plant):0);
       if(inside&&s.kind==='bed')beds++;
       if(!structureRoomStandable(s.kind))for(const c of footprint)cannotStand.add(index(c));
-      const dirt=s.kind==='machining-table'?-2:s.kind==='butcher-table'?-15:s.kind==='stonecutter'?-5:0;
+      const dirt=s.kind==='machining-table'?-2:s.kind==='butcher-table'?-15:s.kind==='stonecutter'||s.kind==='art-bench'?-5:0;
       if(dirt&&footprint.some(c=>containsClean(index(c))))totalClean+=dirt;
     }
     // Trees are pass-through, not standable, even though their market value

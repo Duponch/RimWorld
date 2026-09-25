@@ -12,10 +12,13 @@ export function validateConstructionMaterials(world:World,version:number):string
     if(entity.kind==='door'&&(version<34||entity.material===undefined))errors.push('Door requires V34 and an explicit material.');
     if((entity.kind==='research-bench'||entity.kind==='tailor-bench')&&(version<73||entity.material===undefined))errors.push('Research and tailoring benches require V73 and explicit materials.');
     if(entity.kind==='machining-table'&&(version<101||entity.material!=='steel'))errors.push('Machining table requires V101 and steel.');
+    if(entity.kind==='art-bench'&&(version<104||entity.material!=='wood'&&entity.material!=='steel'))errors.push('Art bench requires V104 and wood or steel.');
+    if((entity.kind==='small-sculpture'||entity.kind==='large-sculpture')&&(version<104||!validConstructionMaterial(entity.kind,entity.material,version)||entity.orientation!==0||entity.footprint!=='standard'))errors.push('Sculpture requires V104, its material and fixed orientation.');
     if(entity.kind==='electric-tailor-bench'&&(version<90||entity.material===undefined))errors.push('Electric tailoring bench requires V90 and explicit materials.');
     if(entity.kind==='stonecutter'&&(version<31||entity.material===undefined))errors.push('Stonecutter requires V31 and an explicit material.');
     if(entity.material!==undefined&&(version<30||!validConstructionMaterial(entity.kind,entity.material,version)||entity.footprint==='legacy-single'))errors.push('Invalid or future construction material.');
   }
+  if(world.jobs.some(job=>job.kind==='small-sculpture'||job.kind==='large-sculpture'))errors.push('Sculptures cannot be construction jobs.');
   // V2–V4 do not have ItemId; their kind/escrow checks remain in validateSchema.
   if(errors.length||version<5)return errors;
   const delivered=new Map<number,Map<string,number>>();

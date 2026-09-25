@@ -11,7 +11,7 @@ function fixture(count: number, withWork: boolean): World {
   world.pawns = Array.from({ length: count }, (_, index) => ({
     id: world.nextId++, name: `Bench ${index + 1}`, x: 1 + (index % 30) * 2, z: 1 + Math.floor(index / 30) * 2,
     hunger: 100, rest: 100, mood: 100, comfort: 50, memories: [], jobId: null, haul: null, cooking: null, need: null, bedId: null, needCooldown: 0, state: 'idle' as const,
-    priorities: {research:0, patient:0,bedrest:0,doctor:0,craft:2,mine:0, gather: 2, build: 2, haul: 3, grow: 0 , cook: 0 }, path: [], moveCooldown: 0, planCooldown: 0,
+    priorities: {research:0, patient:0,bedrest:0,doctor:0,art:0,craft:2,mine:0, gather: 2, build: 2, haul: 3, grow: 0 , cook: 0 }, path: [], moveCooldown: 0, planCooldown: 0,
   }));
   addGroundMaterial(world, 'food', count * 10, { x: 61, z: 61 });
   if (withWork) {

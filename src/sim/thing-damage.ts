@@ -1,3 +1,4 @@
+import {detachMissingArtBills} from './art-work.ts';
 import { constructionRecipe } from './construction-materials.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
 import { addMaterial,refreshStock } from './materials.ts';
@@ -119,5 +120,5 @@ export function damageStructure(world:World,s:Structure,amount:number):boolean {
   }
   world.destroyed={count:destruction.count+1,lost};state.ledger.structures++;state.ledger.batteryEnergyLost+=energy;state.ledger.fuelTicksLost+=fuelLost;state.ledger.fuelTicksBurned+=fuelBurned;
   state.batteryWicks=state.batteryWicks.filter(w=>w.structureId!==s.id);
-  detachMissingBills(world);reconcilePower(world);if(installed)reconcileRoofSupport(world,false,s);refreshStock(world);return true;
+  detachMissingBills(world);detachMissingArtBills(world);reconcilePower(world);if(installed)reconcileRoofSupport(world,false,s);refreshStock(world);return true;
 }

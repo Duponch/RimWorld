@@ -72,7 +72,7 @@ export function cancelUnfinished(world:World,itemId:number):CommandResult {
 const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const int=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):boolean=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;
 export function validUnfinishedShape(p:Record<string,unknown>,version:number):boolean {
-  if(p.item==='unfinished-gun')return p.unfinished===undefined;
+  if(p.item==='unfinished-gun'||p.item==='unfinished-sculpture')return p.unfinished===undefined;
   if(p.kind!=='unfinished')return p.unfinished===undefined;
   const u=p.unfinished;
   if(version<72||!record(p.owner)||!['ground','pawn'].includes(String(p.owner.type))||p.quantity!==1||!record(u)||!isTailoring(u.recipe))return false;

@@ -32,7 +32,8 @@ if(process.env.WRITE_TEST_SAVES==='1'){
         const raw=await decodeStoredSave(stored);
         expect(createHash('sha256').update(raw).digest('hex')).toBe(entry.sha256);
         const w=deserializeWorld(raw),copy=deserializeWorld(raw);
-        expect(w).toEqual({...JSON.parse(raw),schemaVersion:101});
+        const original=JSON.parse(raw);
+        expect(w).toEqual({...original,schemaVersion:104,pawns:original.pawns.map((p:Record<string,unknown>)=>({...p,priorities:{...(p.priorities as object),art:0}}))});
         expect(deserializeWorld(serializeWorld(w))).toEqual(w);
         expect(w.pawns.length).toBe(entry.pawns);
         expect(w.pawns.filter(p=>(p.faction??'colony')==='colony'&&p.state!=='dead').length).toBe(entry.colonists);

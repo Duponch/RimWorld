@@ -50,6 +50,7 @@ export const toolDefinitions: { id: Tool; title: string; hint: string; key: stri
   { id: 'campfire', title: 'Feu de camp', hint: 'combustible initial inclus · brûle 10 bois par jour', key: '', category: 'temperature' },
   {id:'research-bench',title:'Bureau de recherche simple',hint:'3 × 2 · 75 matériaux + 25 acier · Q / E pour tourner',key:'',category:'production'},
   {id:'tailor-bench',title:'Établi de tailleur',hint:'3 × 1 · 75 matériaux · nécessite Vêtements complexes',key:'',category:'production'},
+  {id:'art-bench',title:'Atelier de sculpture',hint:'3 × 1 · 75 bois ou acier + 50 acier · manuel · petites et grandes sculptures · Q / E pour tourner',key:'',category:'production'},
   {id:'machining-table',title:'Atelier d’usinage',hint:'3 × 1 · 150 acier + 5 composants · 350 W · Construction 4 · Usinage',key:'',category:'production'},
   {id:'electric-tailor-bench',title:'Établi de tailleur électrique',hint:'3 × 1 · 75 matériaux + 50 acier + 2 composants · 120 W · Construction 4',key:'',category:'production'},
   {id:'crafting-spot',title:'Emplacement d’artisanat',hint:'Gratuit et immédiat · 60 tissus → tenue tribale · Q / E pour tourner',key:'',category:'production'},
@@ -128,7 +129,7 @@ export function gameLayout(): string {
     <section id="work-panel" class="management-panel work-panel panel" aria-label="Travail" hidden>
       <div class="panel-heading"><h2>Travail</h2><button data-close-panel aria-label="Fermer Travail">×</button></div>
       <p>Priorités manuelles : <b>1</b> haute · <b>4</b> basse · <b>0</b> désactivée. Le transport livre aussi les chantiers.</p>
-      <div class="work-table-wrap"><table><thead><tr><th>Colon</th><th>Incendie</th><th>Patient</th><th>Médecin</th><th>Repos au lit</th><th>Tâches élémentaires</th><th>Geôlier</th><th>Chasse</th><th>Collecte</th><th>Construction</th><th>Transport</th><th>Culture</th><th>Cuisine</th><th>Artisanat</th><th>Minage</th><th>Recherche</th><th>Nettoyage</th><th>Activité</th></tr></thead><tbody id="work-rows"></tbody></table></div>
+      <div class="work-table-wrap"><table><thead><tr><th>Colon</th><th>Incendie</th><th>Patient</th><th>Médecin</th><th>Repos au lit</th><th>Tâches élémentaires</th><th>Geôlier</th><th>Chasse</th><th>Collecte</th><th>Construction</th><th>Transport</th><th>Culture</th><th>Cuisine</th><th>Artisanat</th><th>Art</th><th>Minage</th><th>Recherche</th><th>Nettoyage</th><th>Activité</th></tr></thead><tbody id="work-rows"></tbody></table></div>
     </section>
     ${scheduleLayout()}
     ${apparelAssignmentLayout(foodPolicyLayout())}

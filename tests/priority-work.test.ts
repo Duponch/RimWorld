@@ -12,7 +12,7 @@ import type { Command, World } from '../src/sim/types';
 
 function camp():World {
   const w=createWorld(42,32,32);w.tick=2000;w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.resources=[];w.jobs=[];w.structures=[];w.piles=[];w.stockpiles=[];w.pawns=w.pawns.slice(0,1);
-  const p=w.pawns[0]!;Object.assign(p,{x:8,z:10,hunger:100,rest:100});p.schedule.fill('anything');p.priorities={clean:0,firefight:0,warden:0,basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,craft:2,mine:2,build:1,haul:0,grow:0,gather:0,cook:1};refreshStock(w);return w;
+  const p=w.pawns[0]!;Object.assign(p,{x:8,z:10,hunger:100,rest:100});p.schedule.fill('anything');p.priorities={clean:0,firefight:0,warden:0,basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,art:0,craft:2,mine:2,build:1,haul:0,grow:0,gather:0,cook:1};refreshStock(w);return w;
 }
 function command(w:World,c:Command){expect(applyCommand(w,c)).toMatchObject({ok:true});expect(validateWorld(w)).toEqual([]);}
 function tick(w:World){stepWorld(w);expect(validateWorld(w),`tick ${w.tick}`).toEqual([]);}

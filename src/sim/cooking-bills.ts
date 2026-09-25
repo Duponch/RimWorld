@@ -1,3 +1,4 @@
+import {isArtRecipe} from './art-rules.ts';
 import { V91_ITEM_IDS, isAnimalMeat } from './biome-items.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
 import { isFoodWorkstation } from './food-workstations.ts';
@@ -28,6 +29,7 @@ export function countedMeals(world:World):number {return countedProducts(world);
 const COUNTED_PRODUCTS=new Map<ProductionRecipe,ReadonlySet<string>>();
 export function countedProducts(world:World,bill?:CookingBill):number {
   const recipe=bill?.recipe??'simple-meal';
+  if(isArtRecipe(recipe))return world.structures.filter(s=>s.kind===recipe).length+world.packed.filter(p=>p.building.kind===recipe).length;
   let products=COUNTED_PRODUCTS.get(recipe);
   if(!products){products=new Set(Object.keys(ITEM_DEFINITIONS).filter(item=>recipe==='butcher-creature'?isAnimalMeat(item):isRecipeProduct(recipe,item as keyof typeof ITEM_DEFINITIONS)));COUNTED_PRODUCTS.set(recipe,products);}
   const stored=new Set(world.stockpiles.map(z=>z.z*world.width+z.x));

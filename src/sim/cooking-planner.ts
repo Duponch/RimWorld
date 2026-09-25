@@ -1,3 +1,5 @@
+import {planArtWork} from './art-work-plan.ts';
+import {isArtRecipe} from './art-rules.ts';
 import { productionResearchUnlocked,productionWorkerQualified } from './machining.ts';
 import { planGunWork } from './gun-work-plan.ts';
 import { isGunRecipe,GUN_REQUIREMENTS } from './production-recipes.ts';
@@ -52,20 +54,24 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
         }
         break;
       }
+      const artResumed=planArtWork(world,pawn,station,bill,reachable,budget);if(artResumed.plan)return artResumed.plan;if(artResumed.handled)continue;
       const gunResumed=planGunWork(world,pawn,station,bill,reachable,budget);if(gunResumed.plan)return gunResumed.plan;if(gunResumed.handled)continue;
       const resumed=planUnfinished(world,pawn,station,bill,reachable,budget);if(resumed.plan)return resumed.plan;if(resumed.handled)continue;
-      const ingredients:CookingIngredient[]=[],planned=new Map<string,{item:ProductionIngredient;quantity:number}>();
-      let missing:number=PRODUCTION_RECIPES[bill.recipe].units;
       const sources=world.piles.filter(p=>admittedIngredient(bill,p.item)&&(!isAnimalCorpseItem(p.item)||corpseFresh(p,world.tick))&&p.owner.type==='ground'&&distance(p.owner,station)<=bill.radius**2)
         .sort((a,b)=>distance(a.owner as Cell,station)-distance(b.owner as Cell,station)||a.id-b.id);
       // No source means no pair was visited and no staging decision was made.
       // Avoid six full resource/footprint scans per empty bill, especially after
       // simultaneous spoilage. Keep earlier route/blocker diagnostics unchanged.
       if(!sources.length)continue;
+      const groups=isArtRecipe(bill.recipe)?[...new Set(sources.map(p=>p.item))].map(material=>sources.filter(p=>p.item===material)):[sources];
+      for(const group of groups) {
+      const ingredients:CookingIngredient[]=[],planned=new Map<string,{item:ProductionIngredient;quantity:number}>();
+      let missing:number=PRODUCTION_RECIPES[bill.recipe].units;
+      if(isArtRecipe(bill.recipe)&&group.reduce((n,p)=>n+Math.max(0,p.quantity-reservedSource(world,p.id)),0)<missing)continue;
       const cells=[station,spot,{x:spot.x-1,z:spot.z},{x:spot.x+1,z:spot.z},{x:spot.x,z:spot.z-1},{x:spot.x,z:spot.z+1},...footprintCells(station)]
         .filter((c,i,a)=>a.findIndex(t=>same(t,c))===i&&ingredientPlaceFree(world,c,spot,bill.recipe,station));
       let tailoringMaterial:ProductionIngredient|undefined;
-      for(const pile of sources) {
+      for(const pile of group) {
         if(isTailoring(bill.recipe)&&tailoringMaterial!==undefined&&pile.item!==tailoringMaterial)continue;
         if(budget.pairs--<=0){budget.pairs=0;return null;}
         const typeMissing=isGunRecipe(bill.recipe)?(pile.item==='steel'||pile.item==='component'?GUN_REQUIREMENTS[bill.recipe][pile.item]-ingredients.reduce((n,i)=>n+(i.item===pile.item?i.quantity:0),0):0):missing;
@@ -85,6 +91,7 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
       if(missing)continue; // Try the next bill if its filters admit other ingredients.
       const source=ingredients.find(i=>i.stage==='source'),target=source?world.piles.find(p=>p.id===source.pileId)!.owner as Cell:spot;
       return {station,priority:pawn.priorities[stationWork(station)],target,path:source?routeToJob(world,target,reachable,true)!:toSpot,task:{...(bill.recipe!=='simple-meal'?{recipe:bill.recipe}:{}),stationId:station.id,billId:bill.id,spot,actionCell:{x:target.x,z:target.z},phase:'gather',ingredients,progress:0,productId:null,storageId:null}};
+      }
     }
   }
   return null;

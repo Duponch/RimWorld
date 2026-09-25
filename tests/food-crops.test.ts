@@ -16,7 +16,7 @@ import { withoutV90 } from './scenarios/legacy-skills';
 function field():World {
   const w=createWorld(42,16,16);w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.resources=[];w.piles=[];w.structures=[];w.jobs=[];
   w.pawns=w.pawns.slice(0,1);const p=w.pawns[0]!;Object.assign(p,{x:5,z:5,hunger:100,rest:100,foodPolicyId:4});
-  p.priorities={clean:0,firefight:0,warden:0,basic:3,hunt:0,research:0,patient:0,bedrest:0,doctor:0,gather:0,build:0,mine:0,grow:1,haul:2,cook:0,craft:0};refreshStock(w);return w;
+  p.priorities={clean:0,firefight:0,warden:0,basic:3,hunt:0,research:0,patient:0,bedrest:0,doctor:0,gather:0,build:0,mine:0,grow:1,haul:2,cook:0,art:0,craft:0};refreshStock(w);return w;
 }
 const command=(w:World,c:Command)=>expect(applyCommand(w,c)).toMatchObject({ok:true});
 function until(w:World,done:()=>boolean,limit=1800):void {

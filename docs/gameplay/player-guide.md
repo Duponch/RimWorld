@@ -1,12 +1,18 @@
 # Guide joueur
 
+## Fabriquer une sculpture
+
+Dans **Architecte → Production**, construisez un **Atelier de sculpture** (75 bois + 50 acier, ou 125 acier). Activez **Art** dans Travail, sélectionnez le poste et ajoutez une facture de petite (50) ou grande sculpture (100). Gardez une seule matière disponible dans les filtres. Le colon apporte les matériaux et poursuit son ouvrage ; sa compétence Artistique détermine la qualité.
+
+Après fabrication, sélectionnez le paquet et **Installer** dans la pièce à décorer. Une réserve acceptant **Meubles** reçoit les productions ; sinon le paquet reste près de l’artiste. La fiche de l’œuvre indique son auteur et sa qualité ; Environnement montre les effets sur la pièce. Pour essayer directement : **Charger une partie → Colonies de test → Atelier de sculpture · 1 colon**. Les salles V103 et l’atelier V101 sont aussi dans ce menu. Dans une ancienne partie, activez Art explicitement : la migration le laisse à 0.
+
 ## Aménager les pièces pour leurs habitants — V103
 
 Sélectionner une case intérieure puis **Environnement** montre beauté, propreté, richesse des aménagements, espace utilisable et impression. Les objets stockés affectent la beauté, mais ne rendent pas une pièce riche. Matière, qualité et état des meubles comptent ; nettoyer, dégager, aménager et fleurir restent des travaux physiques.
 
 Dans le dossier **Besoins**, les pensées indiquent le bonus ou malus et sa durée restante. Un repas achevé peut laisser un souvenir de la salle ; les fers donnent celui du lieu de loisir après usage. Un lit civil personnel donne celui de chambre ou de dortoir après une première observation différée de 1 à 4 heures. Une visite brève ne suffit pas ; le réveil peut rafraîchir un souvenir déjà acquis. Les souvenirs durent un jour, se remplacent dans leur famille et ne se cumulent pas à chaque repas. Regarder le ciel ne donne pas de souvenir de salle.
 
-**Essai direct :** télécharger [la salle préparée V103](../../public/test-saves/v103/salles.json), puis **Charger → Importer**. C'est une petite scène de démonstration, pas une colonie autonome : un colon affamé, trois repas, table/siège, lit personnel, fers, sol et fleurs déjà installés. Inspecter la salle, reprendre la simulation et ouvrir **Besoins** après le repas. Les anciennes parties ne reçoivent aucun souvenir gratuit ; leurs prochains usages alimentent cette mécanique. Art/sculptures et effets des rôles spécialisés restent à développer.
+**Essai direct :** ouvrir **Charger une partie → Colonies de test → Pièces vécues · 1 colon**, puis **Charger cette colonie**. C'est une petite scène de démonstration, pas une colonie autonome : un colon affamé, trois repas, table/siège, lit personnel, fers, sol et fleurs déjà installés. Inspecter la salle, reprendre la simulation et ouvrir **Besoins** après le repas. Les anciennes parties ne reçoivent aucun souvenir gratuit ; leurs prochains usages alimentent cette mécanique. Les sculptures V104 complètent désormais cette décoration ; les effets des rôles spécialisés restent à développer.
 
 ## Fabriquer ses armes et trier les réserves — V101
 

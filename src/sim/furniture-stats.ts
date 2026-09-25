@@ -74,6 +74,44 @@ export const QUALITY_BEAUTY:Readonly<Record<FurnitureQuality,number>>=Object.fre
 export const QUALITY_COMFORT:Readonly<Record<FurnitureQuality,number>>=Object.freeze({awful:.76,poor:.88,normal:1,good:1.12,excellent:1.24,masterwork:1.45,legendary:1.7});
 export const QUALITY_REST:Readonly<Record<FurnitureQuality,number>>=Object.freeze({awful:.86,poor:.92,normal:1,good:1.08,excellent:1.14,masterwork:1.25,legendary:1.6});
 
+/** Core 1.6.4871 sculpture recipes. WorkToMake is distinct from the work
+ * needed to build a structure on the map. */
+export const SCULPTURE_DEFINITIONS=Object.freeze({
+  'small-sculpture':Object.freeze({stuff:50,coreWorkToMake:18000,maxHitPoints:90,beauty:50}),
+  'large-sculpture':Object.freeze({stuff:100,coreWorkToMake:30000,maxHitPoints:150,beauty:100}),
+});
+export type SculptureKind=keyof typeof SCULPTURE_DEFINITIONS;
+export type SculptureMaterial=Extract<FurnitureMaterial,'wood'|'steel'|'granite-blocks'|'limestone-blocks'|'marble-blocks'|'sandstone-blocks'|'slate-blocks'>;
+/** WorkToMake and Beauty are not the WorkToBuild/Beauty factors of ordinary
+ * furniture. Core stones have no WorkToMake offset. */
+export const SCULPTURE_MATERIALS:Readonly<Record<SculptureMaterial,Readonly<{makeFactor:number;beautyFactor:number;beautyOffset:number}>>>=Object.freeze({
+  wood:Object.freeze({makeFactor:.7,beautyFactor:1,beautyOffset:0}),
+  steel:Object.freeze({makeFactor:1,beautyFactor:1,beautyOffset:0}),
+  'sandstone-blocks':Object.freeze({makeFactor:1.1,beautyFactor:1.1,beautyOffset:0}),
+  'marble-blocks':Object.freeze({makeFactor:1.15,beautyFactor:1.35,beautyOffset:1}),
+  'granite-blocks':Object.freeze({makeFactor:1.3,beautyFactor:1,beautyOffset:0}),
+  'limestone-blocks':Object.freeze({makeFactor:1.3,beautyFactor:1,beautyOffset:0}),
+  'slate-blocks':Object.freeze({makeFactor:1.3,beautyFactor:1.1,beautyOffset:0}),
+});
+export const isSculptureKind=(value:unknown):value is SculptureKind=>typeof value==='string'&&Object.hasOwn(SCULPTURE_DEFINITIONS,value);
+export const isSculptureMaterial=(value:unknown):value is SculptureMaterial=>isFurnitureMaterial(value)&&['woody','metallic','stony'].includes(FURNITURE_MATERIALS[value].category);
+export function sculptureWorkToMakeCore(kind:SculptureKind,materialName:SculptureMaterial):number {
+  return SCULPTURE_DEFINITIONS[kind].coreWorkToMake*SCULPTURE_MATERIALS[materialName].makeFactor;
+}
+export function sculptureMaxHitPoints(kind:SculptureKind,materialName:SculptureMaterial):number {
+  return Math.round(SCULPTURE_DEFINITIONS[kind].maxHitPoints*FURNITURE_MATERIALS[materialName].hitPointsFactor);
+}
+/** StatWorker applies stuff offset before quality. Above 100 Beauty it rounds
+ * to the nearest multiple of five using Core's midpoint-to-even rule. */
+export function sculptureBeauty(value:FurnitureLike):number {
+  if(!isSculptureKind(value.kind))return 0;
+  const material=isSculptureMaterial(value.material)?SCULPTURE_MATERIALS[value.material]:undefined;
+  const raw=(SCULPTURE_DEFINITIONS[value.kind].beauty*(material?.beautyFactor??1)+(material?.beautyOffset??0))*QUALITY_BEAUTY[furnitureQuality(value.quality)];
+  if(raw<=100)return raw;
+  const units=raw/5,lower=Math.floor(units),fraction=units-lower;
+  return 5*(fraction===.5?lower+(lower%2):Math.round(units));
+}
+
 export interface FurnitureLike {kind:string;material?:string;quality?:string}
 export interface FurnitureCell {x:number;z:number}
 export interface FurnitureStructureLike extends FurnitureLike,FurnitureCell {id?:number;orientation?:0|1|2|3;footprint?:string;cells?:readonly FurnitureCell[]}

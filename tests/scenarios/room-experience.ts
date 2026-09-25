@@ -10,7 +10,7 @@ export function roomExperienceCamp():World {
   w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.resources=[];w.piles=[];w.jobs=[];w.structures=[];w.stockpiles=[];
   w.pawns=w.pawns.slice(0,1);const p=w.pawns[0]!;
   Object.assign(p,{x:17,z:15,hunger:100,rest:100});
-  p.schedule.fill('anything');p.priorities={clean:0,firefight:0,warden:0,basic:0,hunt:0,research:0,patient:0,bedrest:0,doctor:0,craft:0,mine:0,gather:0,build:0,haul:0,grow:0,cook:0};
+  p.schedule.fill('anything');p.priorities={clean:0,firefight:0,warden:0,basic:0,hunt:0,research:0,patient:0,bedrest:0,doctor:0,art:0,craft:0,mine:0,gather:0,build:0,haul:0,grow:0,cook:0};
   const building=(kind:'wall'|'flower-pot',x:number,z:number)=>{
     const s={id:w.nextId++,kind,x,z,orientation:0 as const,footprint:'standard' as const,...(kind==='flower-pot'?{material:'wood' as const,quality:'normal' as const,flower:{allowSow:true,plant:sowDaylily(w.tick)}}:{})};
     w.structures.push(s);

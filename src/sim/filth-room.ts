@@ -35,7 +35,7 @@ export class CleanlinessCapture {
     // adjacent room. The only nonzero adjacent surface in this slice is a door.
     const contains=(i:number)=>cells.has(i)||adjacent.has(i)&&this.topology.at(i%w.width,Math.floor(i/w.width))?.kind==='doorway';
     for(const f of w.filth?.items??[])if(contains(f.z*w.width+f.x))total+=FILTH_DEFINITIONS[f.kind].cleanliness;
-    for(const s of w.structures){const value=s.kind==='machining-table'?-2:s.kind==='butcher-table'?-15:s.kind==='stonecutter'?-5:0;if(value&&footprintCells(s).some(c=>contains(c.z*w.width+c.x)))total+=value;}
+    for(const s of w.structures){const value=s.kind==='machining-table'?-2:s.kind==='butcher-table'?-15:s.kind==='stonecutter'||s.kind==='art-bench'?-5:0;if(value&&footprintCells(s).some(c=>contains(c.z*w.width+c.x)))total+=value;}
     const result={id,cells,adjacent,covered,cleanliness:total/cells.size,doorway};this.rooms.set(id,result);return result;
   }
 }

@@ -1,4 +1,6 @@
-# Validation courante — V103
+# Validation courante — V104
+
+V104 : [sculpture, installation et bibliothèque intégrée](../history/validation-art-v104.md). Contrôles regroupés de production/conservation/migration, vraie UI et mesures séparées ; aucun jalon G0–G5 globalement clos.
 
 V103 : [pièces vécues et souvenirs](../history/validation-rooms-v103.md). Contrats numériques, usages réels, migration historique, continuation, parcours UI/worker et performances distinctes. Situations préparées explicites, aucune année simulée requise pour les frontières d'un souvenir journalier.
 

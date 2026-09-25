@@ -1,3 +1,6 @@
+import { beginArtWork } from './art-work.ts';
+import { isArtRecipe,artWorkTotal,artisticSkill } from './art-rules.ts';
+import { completeArtProduction } from './art-production.ts';
 import { beginGunWork } from './gun-work.ts';
 import { productionResearchUnlocked,productionWorkerQualified } from './machining.ts';
 import { isGunRecipe } from './production-recipes.ts';
@@ -64,7 +67,7 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   }
   if(pawn.x!==task.spot.x||pawn.z!==task.spot.z){context.move(task.spot,true);return;}
   task.actionCell={x:station.x,z:station.z};
-  const total=productionWorkTotal(taskRecipe(task));
+  let total=productionWorkTotal(taskRecipe(task));
   task.phase='work';pawn.state='working';pawn.path=[];
   const unfinished=isTailoring(task.recipe)?beginUnfinished(world,pawn):null;
   if(isTailoring(task.recipe)&&!unfinished){context.release();return;}
@@ -72,6 +75,9 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   if(isGunRecipe(task.recipe)&&!gun){context.release();return;}
   if(gun){pawn.skills.crafting??={...craftingSkill(pawn)};if(gun.gunWork!.progress<total)learnSkill(pawn.skills.crafting,1000,pawn);task.progress=gun.gunWork!.progress;}
   if(unfinished){pawn.skills.crafting??={...craftingSkill(pawn)};if(unfinished.unfinished!.progress<total)learnSkill(pawn.skills.crafting,1000,pawn);task.progress=unfinished.unfinished!.progress;}
+  const art=isArtRecipe(task.recipe)?beginArtWork(world,pawn):null;
+  if(isArtRecipe(task.recipe)&&!art){context.release();return;}
+  if(art){total=artWorkTotal(art.artWork!.recipe,art.artWork!.material);task.progress=art.artWork!.progress;pawn.skills.artistic??={...artisticSkill(pawn)};if(task.progress<total)learnSkill(pawn.skills.artistic,1000,pawn);}
   const culinary=taskWork(task)==='cook';
   if(task.progress<total){
     if(culinary){if(!Number.isSafeInteger((task.workTicks??0)+1)||((task.workTicks??0)+1)>Math.floor(Number.MAX_SAFE_INTEGER/1000))return;task.workTicks=(task.workTicks??0)+1;}
@@ -81,7 +87,9 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   }
   if(unfinished)unfinished.unfinished!.progress=task.progress;
   if(gun)gun.gunWork!.progress=task.progress;
+  if(art)art.artWork!.progress=task.progress;
   if(task.progress<total)return;
+  if(art){completeArtProduction(world,pawn,task,context);return;}
   if(task.recipe==='butcher-creature'){finishButchery(world,pawn,bill,context);return;}
   const used=new Map<number,number>();for(const i of task.ingredients)used.set(i.pileId,(used.get(i.pileId)??0)+i.quantity);
   const freed=[...used].filter(([id,n])=>world.piles.find(p=>p.id===id)?.quantity===n).length;

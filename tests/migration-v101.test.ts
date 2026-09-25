@@ -6,11 +6,12 @@ import { SnapshotEncoder,SnapshotDecoder } from '../src/bridge/snapshots';
 import { createMachiningFixture,prepareCompletedResearch } from './scenarios/machining-v101';
 import { newCookingBill } from '../src/sim/cooking-bills';
 import { newPowerState } from '../src/sim/power-rules';
+import { withoutArt } from './scenarios/legacy-skills';
 
-test('immutable V90 colony migrates neutrally through V91 to V101',()=>{
+test('immutable V90 colony migrates neutrally through V91, V101 and V103 to V104',()=>{
   const text=gunzipSync(readFileSync('tests/fixtures/colony-v90.json.gz')).toString('utf8');
   const old=JSON.parse(text),world=deserializeWorld(text);
-  expect(world).toEqual({...old,schemaVersion:101});
+  expect(world).toEqual({...old,schemaVersion:104,pawns:old.pawns.map((p:Record<string,unknown>)=>({...p,priorities:{...(p.priorities as object),art:0}}))});
   expect(validateWorld(world)).toEqual([]);
   expect(deserializeWorld(serializeWorld(world))).toEqual(world);
 });
@@ -41,8 +42,8 @@ test('V91 rejects future research and V101 rejects broken prerequisites',()=>{
     broken.research={points:0,project:'machining',machining:{points:1}};
     expect(()=>deserializeWorld(JSON.stringify(broken))).toThrow();
   }
-  const legacy={...base,schemaVersion:91};
-  expect(deserializeWorld(JSON.stringify(legacy))).toEqual(base);
+  const legacy=withoutArt({...structuredClone(base),schemaVersion:91});
+  expect(deserializeWorld(JSON.stringify(legacy))).toEqual({...base,pawns:base.pawns.map((p:Record<string,unknown>)=>({...p,priorities:{...(p.priorities as object),art:0}}))});
 });
 
 test('V101 refuses fabricated gun bills without Armurerie while an empty unlocked table remains valid',()=>{

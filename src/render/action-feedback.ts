@@ -4,7 +4,7 @@ import { FEED_TICKS } from '../sim/feeding-rules';
 import { FILTH_DEFINITIONS } from '../sim/filth-rules';
 import { jobDuration } from '../sim/farming';
 import { clearingDuration } from '../sim/gathering';
-import { productionWorkTotal, taskRecipe } from '../sim/production-recipes';
+import { productionTaskTotal } from '../sim/production-recipes';
 import { workProgress } from '../sim/work-progress';
 import { PRISON_RAPPORT_TICKS } from '../sim/prisoner-state';
 import type { Cell, Job, Pawn, Resource, World } from '../sim/types';
@@ -36,7 +36,7 @@ export function actionProgress(world:World,pawn:Pawn,lookup?:ActionLookup):Actio
   if(pawn.state==='eating'&&pawn.need?.kind==='eat'&&pawn.need.phase==='ingest')
     return measured('ingestion',workProgress(pawn.need),INGEST_TICKS);
   if(pawn.state!=='working')return undefined;
-  if(pawn.cooking?.phase==='work')return measured('production',pawn.cooking.progress,productionWorkTotal(taskRecipe(pawn.cooking)));
+  if(pawn.cooking?.phase==='work')return measured('production',pawn.cooking.progress,productionTaskTotal(world,pawn.cooking));
   if(pawn.feed?.phase==='feed')return measured('feeding',pawn.feed.progress,FEED_TICKS);
   if(pawn.cleaning?.phase==='clean'){
     const filth=world.filth?.items.find(item=>item.id===pawn.cleaning!.targets[0]);

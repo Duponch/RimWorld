@@ -1,4 +1,4 @@
-import { FURNITURE_MATERIALS } from './furniture-stats.ts';
+import { FURNITURE_MATERIALS,isSculptureKind,isSculptureMaterial,sculptureWorkToMakeCore } from './furniture-stats.ts';
 import { structureMaxHp } from './thing-damage-rules.ts';
 import { roundTradeSilver, tradeHealthFactor } from './trade-prices.ts';
 import type { ConstructionMaterial } from './building-materials.ts';
@@ -23,7 +23,7 @@ interface BuildingValueDef {
   readonly wood: number;
   readonly steel: number;
   readonly component: number;
-  /** Neutral Core WorkToBuild, before the chosen stuff's factor and offset. */
+  /** Neutral Core WorkToBuild, or WorkToMake for a sculpture, before stuff. */
   readonly work: number;
   readonly quality: boolean;
   readonly passability: Passability;
@@ -39,6 +39,9 @@ const def = (stuff: number, work: number, passability: Passability,
  * inheriting a fictitious value. Historical untyped furniture keeps Core's
  * abstract-stuff estimate rather than receiving a fabricated material. */
 const BUILDINGS: Readonly<Record<StructureKind, BuildingValueDef>> = Object.freeze({
+  'art-bench': def(75, 2500, 'pass-through', {steel:50}),
+  'small-sculpture': def(50, 18000, 'pass-through', {}, true),
+  'large-sculpture': def(100, 30000, 'pass-through', {}, true),
   'machining-table': def(0, 3000, 'pass-through', {steel:150,component:5}),
   grave: def(0, 800, 'standable'),
   heater: def(0, 1000, 'pass-through', {steel:50,component:1}),
@@ -102,7 +105,9 @@ export function structureRoomMarketValue(structure: Structure): number {
   if (material && !factors) throw new RangeError(`Unmapped building material: ${material}`);
   const stuffValue = d.stuff * (material ? MATERIAL_VALUE[material] : UNKNOWN_STUFF_VALUE);
   const fixedValue = d.wood * MATERIAL_VALUE.wood + d.steel * MATERIAL_VALUE.steel + d.component * 32;
-  const work = d.work * (factors?.workFactor ?? 1) + (factors?.workOffset ?? 0);
+  const work = isSculptureKind(structure.kind)&&isSculptureMaterial(material)
+    ? sculptureWorkToMakeCore(structure.kind,material)
+    : d.work * (factors?.workFactor ?? 1) + (factors?.workOffset ?? 0);
   let value = stuffValue + fixedValue + (work > 2 ? work * VALUE_PER_WORK : 0);
 
   if (d.quality) {

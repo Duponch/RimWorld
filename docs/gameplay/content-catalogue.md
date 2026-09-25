@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+**V104 — objets réellement obtenables :** `art-bench` (atelier manuel 3×1, bois/acier), `unfinished-sculpture` (ouvrage individuel), `small-sculpture` et `large-sculpture` (50/100 unités d’une matière, qualité et auteur conservés). Sept matières donnent quatorze combinaisons de recettes, pas quatorze modèles ni quatorze nouveaux systèmes. Matières : bois, acier, cinq blocs existants ; acquisition par collecte, extraction et taille déjà jouables. Usage : fabrication → transport → installation → beauté/richesse de pièce. Pas de vente de ces paquets dans le panier actuel. [Contrat](../development/art.md), [référence](../research/art-reference-v104.md).
+
 **V103 — usages et effets des aménagements existants :** sols, meubles, matériaux, qualité, état et fleurs alimentent richesse/espace/impression ; repas, fers et lit civil peuvent laisser un souvenir d'humeur. Aucun nouvel objet, recette, matière ou technologie. [Art/sculpture](../research/art-reference-v103.md) est une préparation documentée, pas un contenu obtenable. La sauvegarde de démonstration contient uniquement des objets déjà jouables.
 
 

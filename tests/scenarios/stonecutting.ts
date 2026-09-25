@@ -7,7 +7,7 @@ import type { World } from '../../src/sim/types.ts';
 export function stonecuttingCamp(count=1,size=24):World {
   const w=createWorld(42,size,size),base=structuredClone(w.pawns[0]!);
   w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.resources=[];w.piles=[];w.jobs=[];w.structures=[];w.stockpiles=[];
-  w.pawns=Array.from({length:count},(_,i)=>({...structuredClone(base),id:i===0?base.id:w.nextId++,name:`Artisan ${i+1}`,x:3+(i%10)*6,z:3+Math.floor(i/10)*6,hunger:100,rest:100,recreation:initialRecreation(),priorities: {clean:0,firefight:0,warden:0,basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,mine:0,gather:0,build:0,haul:0,grow:0,cook:0,craft:1}}));
+  w.pawns=Array.from({length:count},(_,i)=>({...structuredClone(base),id:i===0?base.id:w.nextId++,name:`Artisan ${i+1}`,x:3+(i%10)*6,z:3+Math.floor(i/10)*6,hunger:100,rest:100,recreation:initialRecreation(),priorities: {clean:0,firefight:0,warden:0,basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,mine:0,gather:0,build:0,haul:0,grow:0,cook:0,art:0,craft:1}}));
   for(const p of w.pawns){p.schedule.fill('anything');w.structures.push({id:w.nextId++,kind:'stonecutter',material:'wood',x:p.x,z:p.z+1,orientation:0,footprint:'standard',bills:[]});}
   refreshStock(w);return w;
 }

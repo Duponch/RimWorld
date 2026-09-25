@@ -1,8 +1,8 @@
-# Bibliothèque de colonies de test — V98
+# Bibliothèque de colonies de test — V98, V101, V103 et V104
 
-V101 ajoute une [démonstration industrielle à importer](../../public/test-saves/v101/atelier.json), distincte des six colonies V98 inchangées. Recherches et matériel initial sont préparés ; l’atelier est ensuite construit par le vrai moteur. `node --experimental-strip-types scripts/machining-demo-v101.ts` régénère et recharge exactement ce fichier. Aucun travail d’armurerie n’est lancé à l’avance.
+**Charger une partie → Colonies de test** propose directement neuf situations, depuis l'accueil ou Menu : les six références V98 inchangées et trois démonstrations préparées. Il suffit de choisir **Charger cette colonie** ; téléchargement et import manuel ne sont plus nécessaires. Chaque copie s'ouvre en pause et le jeu continue normalement après reprise.
 
-Six sauvegardes Lisière sont accessibles dans **Charger une partie → Colonies de test**, depuis l'accueil ou Menu. Elles permettent d'essayer les systèmes et performances sans recommencer une colonie. [Preuves](../history/validation-test-colonies-v98.md).
+V101 ajoute [l'atelier](../../public/test-saves/v101/atelier.json) : recherches et matières initiales préparées, atelier construit par le vrai moteur, aucune arme fabriquée d'avance. `node --experimental-strip-types scripts/machining-demo-v101.ts` régénère et recharge exactement ce fichier. V103 ajoute [les salles](../../public/test-saves/v103/salles.json) : pièces meublées, fleurs et repas préparés, sans souvenir prérempli ; l'ingestion et les pensées suivent la simulation. Ces deux démonstrations ne sont pas des colonies autonomes. [Preuves V98](../history/validation-test-colonies-v98.md), [V101](../history/validation-machining-v101.md) et [V103](../history/validation-rooms-v103.md).
 
 | Colonie | Habitants vivants | Situation disponible |
 |---|---:|---|
@@ -12,14 +12,17 @@ Six sauvegardes Lisière sont accessibles dans **Charger une partie → Colonies
 | Vent, chaleur et incendie | 12 | Éoliennes, chauffage, climat et six foyers préparés, extinction ordinaire. |
 | Commerce et circulation | 100 + 2 visiteurs | Marchand, argent et stocks finis, ateliers, cultures, énergie et 100 lièvres. |
 | Habitat, vêtements et salubrité | 100 + 2 visiteurs | Tailleurs, vêtements, mobilier, patients, salissures, tombes, deux morts préparés et 100 lièvres. |
+| Atelier et armurerie | 1 | Atelier V101 alimenté, acier et composants ; fabriquer puis équiper une arme par les travaux ordinaires. |
+| Pièces vécues | 1 | Salles V103 et trois repas ; inspecter impression, puis reprendre le temps et observer le souvenir dans Besoins. |
+| Atelier de sculpture | 1 | Grande œuvre en marbre réellement produite et posée ; fabriquer puis installer une petite sculpture en bois. |
 
-Toutes les cartes font 250 × 250. Les cinq situations préparées proviennent de scénarios de charge : elles ne représentent pas des colonies autonomes équilibrées. Certains besoins sont déjà urgents ; elles servent à exercer des systèmes existants, sans démontrer une progression naturelle ou la parité Core. La première est une partie de **Lisière**, jamais une sauvegarde personnelle RimWorld. Ses 48 dossiers comprennent quatre habitants vivants et 44 morts historiques. Visiteurs, captifs et morts ne comptent pas comme cent colons libres.
+Les six cartes V98 font 250 × 250 ; les trois démonstrations font 32 × 32. Les cinq situations V98 préparées proviennent de scénarios de charge : elles ne représentent pas des colonies autonomes équilibrées. Certains besoins sont déjà urgents ; elles servent à exercer des systèmes existants, sans démontrer une progression naturelle ou la parité Core. La première est une partie de **Lisière**, jamais une sauvegarde personnelle RimWorld. Ses 48 dossiers comprennent quatre habitants vivants et 44 morts historiques. Visiteurs, captifs et morts ne comptent pas comme cent colons libres.
 
 ## Chargement et conservation
 
-Le catalogue et le fichier choisi sont téléchargés à la demande depuis `/test-saves/v98/`. Aucun constructeur de scénario n'entre dans le bundle applicatif. Les fiches indiquent provenance, systèmes et coordonnées utiles. Chaque chargement repart du même état en pause ; règles et délais ordinaires reprennent ensuite.
+Le catalogue commun `/test-saves/manifest.json` et le fichier choisi sont téléchargés à la demande depuis leur dossier de version (`v98`, `v101`, `v103` ou `v104`). Le manifeste V98 historique et ses six fichiers restent inchangés. Le lecteur accepte aussi ce manifeste historique de version 1 ; le catalogue commun de version 2 indique le dossier de chaque entrée. Aucun constructeur de scénario n'entre dans le bundle applicatif. Les fiches indiquent provenance, systèmes et coordonnées utiles. Chaque chargement repart du même état en pause ; règles et délais ordinaires reprennent ensuite.
 
-Le manifeste contient les comptes et le SHA-256 du JSON métier décompressé. Lecture réseau bornée, nom de fichier contrôlé, décompression bornée et empreinte précèdent la validation stricte du worker. **Télécharger le fichier** conserve l'enveloppe compressée ; **Importer un fichier** accepte aussi les sauvegardes JSON brutes, dans la limite de 32 Mio. Ce n'est pas un importeur RimWorld.
+Le manifeste contient les comptes et le SHA-256 du JSON métier décompressé. Lecture réseau bornée, dossier de version et nom de fichier contrôlés, décompression bornée et empreinte précèdent la validation stricte du worker. **Télécharger le fichier** conserve les octets publiés, y compris l'enveloppe compressée des fichiers V98 ; **Importer un fichier** accepte aussi les sauvegardes JSON brutes, dans la limite de 32 Mio. Ce n'est pas un importeur RimWorld.
 
 `GameSession.loadExternal` partage l'exclusion des créations/chargements. Une lecture refusée ne touche aucun emplacement ; un refus worker conserve le monde actif et restaure l'ancienne récupération. Avant remplacement accepté, le monde courant est conservé dans **Colonie précédente**. La **Sauvegarde manuelle** reste intacte. La récupération n'a qu'un emplacement : enregistrer volontairement sa progression avant plusieurs essais. **Menu → Charger une partie** évite le bouton d'accueil qui sauvegarde automatiquement.
 
@@ -27,4 +30,6 @@ Le manifeste contient les comptes et le SHA-256 du JSON métier décompressé. L
 
 [Générateur](../../scripts/test-colonies-v98.ts) : fixture immuable `colony-v90.json.gz`, scénarios `energy-load`, `environment-load`, `trade-load` et `habitat-apparel-load`. La prison est préparée explicitement sur `energy-load` : le constructeur historique V86 ne renseigne pas la qualité des lits requise au schéma 91. Aucun oracle historique modifié.
 
-Entretien : variable `WRITE_TEST_SAVES=1`, puis `npx vitest run tests/test-colonies-v98.test.ts`. Les fichiers versionnés et leurs empreintes sont ensuite testés sans régénération. Une future évolution de schéma doit valider la migration de ces références identifiées. Schéma 91, catalogue V91 et PRNG conservés. Les courtes reprises ne remplacent pas les campagnes temporelles lorsque leurs contrats changent.
+Entretien : variable `WRITE_TEST_SAVES=1`, puis `npx vitest run tests/test-colonies-v98.test.ts`. Les fichiers versionnés et leurs empreintes sont ensuite testés sans régénération. Une future évolution de schéma doit valider la migration de ces références identifiées. Ces fichiers historiques restent au schéma 91 ; leur migration vers le schéma courant conserve le PRNG et les données hors ajouts neutres documentés. Les courtes reprises ne remplacent pas les campagnes temporelles lorsque leurs contrats changent.
+
+La scène **Atelier de sculpture · 1 colon** ajoute le poste manuel et une œuvre de marbre produite puis installée, avec 50 bois pour essayer une petite sculpture. Préparation et transitions reproductibles : `scripts/generate-art-demo.ts` ; le personnage dort et récupère naturellement avant l’installation. Aucun parcours naturel n’est revendiqué.

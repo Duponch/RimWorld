@@ -1,3 +1,4 @@
+import {artWorkTotal,isArtRecipe} from './art-rules.ts';
 import { isAnimalCorpseItem } from './biome-items.ts';
 import { productionResearchUnlocked,productionWorkerQualified } from './machining.ts';
 import { isGunRecipe,GUN_REQUIREMENTS } from './production-recipes.ts';
@@ -36,11 +37,12 @@ export function queryCookingBillStatus(world:World,station:Structure,bill:Cookin
     const wood=world.piles.some(p=>p.item==='wood'&&p.owner.type==='ground'&&p.quantity>reservedSource(world,p.id));
     return {code:wood?'waiting-fuel':'missing-fuel',reason:wood?'Poste sans combustible ; attend un ravitaillement et un accès au bois.':'Poste sans combustible ; aucun bois au sol non réservé.'};
   }
-  const u=world.piles.find(p=>p.unfinished?.billId===bill.id||p.gunWork?.billId===bill.id),work=u?.gunWork??u?.unfinished;if(work)return {code:'unfinished',reason:`Ouvrage commencé : attend ${world.pawns.find(p=>p.id===work.authorId)?.name??'son auteur'} ; ${Math.floor(work.progress/productionWorkTotal(work.recipe)*100)} % conservés.`};
-  let available=0;const metals={steel:0,component:0};
+  const u=world.piles.find(p=>p.artWork?.billId===bill.id||p.unfinished?.billId===bill.id||p.gunWork?.billId===bill.id),work=u?.artWork??u?.gunWork??u?.unfinished;if(work)return {code:'unfinished',reason:`Ouvrage commencé : attend ${world.pawns.find(p=>p.id===work.authorId)?.name??'son auteur'} ; ${Math.floor(work.progress/(u?.artWork?artWorkTotal(u.artWork.recipe,u.artWork.material):productionWorkTotal(work.recipe))*100)} % conservés.`};
+  let available=0;const byMaterial=new Map<string,number>();const metals={steel:0,component:0};
   for(const pile of world.piles)if(admittedIngredient(bill,pile.item)&&(!isAnimalCorpseItem(pile.item)||corpseFresh(pile,world.tick))&&pile.owner.type==='ground'
-    &&(pile.owner.x-station.x)**2+(pile.owner.z-station.z)**2<=bill.radius**2){const units=Math.max(0,pile.quantity-reservedSource(world,pile.id));available+=units;if(pile.item==='steel'||pile.item==='component')metals[pile.item]+=units;}
+    &&(pile.owner.x-station.x)**2+(pile.owner.z-station.z)**2<=bill.radius**2){const units=Math.max(0,pile.quantity-reservedSource(world,pile.id));available+=units;byMaterial.set(pile.item,(byMaterial.get(pile.item)??0)+units);if(pile.item==='steel'||pile.item==='component')metals[pile.item]+=units;}
   if(isGunRecipe(bill.recipe)){const r=GUN_REQUIREMENTS[bill.recipe];if(metals.steel<r.steel||metals.component<r.component)return {code:'missing-ingredients',reason:`Dans le rayon et les filtres : ${metals.steel}/${r.steel} acier · ${metals.component}/${r.component} composants.`};}
+  if(isArtRecipe(bill.recipe))available=Math.max(0,...byMaterial.values());
   if(available<PRODUCTION_RECIPES[bill.recipe].units)return {code:'missing-ingredients',reason:`Ingrédients insuffisants : ${available}/${PRODUCTION_RECIPES[bill.recipe].units} non réservés dans le rayon et les filtres.`};
   if(reservedServiceCells(world).has(spot.z*world.width+spot.x))return {code:'workplace-occupied',reason:'La place devant le poste est réservée par une autre activité.'};
   return {code:'waiting',reason:'Attend un artisan disponible ; accès, priorités et place de dépôt à vérifier.'};

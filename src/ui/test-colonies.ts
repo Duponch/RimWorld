@@ -2,6 +2,7 @@ import { decodeStoredSave, MAX_DECOMPRESSED_SAVE_BYTES } from './save-storage-co
 
 export interface TestColony {
   id: string;
+  release: string;
   label: string;
   description: string;
   filename: string;
@@ -17,25 +18,32 @@ export interface TestColony {
   sha256: string;
 }
 
-const DIRECTORY = '/test-saves/v98/';
+const DIRECTORY = '/test-saves/';
+const RELEASE = /^v[1-9][0-9]{1,2}$/;
+const FILENAME = /^[a-z0-9-]+\.json$/;
 const object = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value);
 const text = (value: unknown): value is string => typeof value === 'string' && value.length > 0 && value.length < 8000;
 const strings = (value: unknown): value is string[] => Array.isArray(value) && value.length <= 32 && value.every(text);
 
 export function parseTestColonies(value: unknown): TestColony[] {
-  if (!object(value) || value.version !== 1 || value.release !== 'v98' || !Array.isArray(value.saves) || !value.saves.length || value.saves.length > 32) throw Error('Catalogue de colonies de test invalide.');
-  const ids = new Set<string>();
-  for (const save of value.saves) {
+  if (!object(value) || (value.version !== 1 && value.version !== 2)
+    || (value.version === 1 && value.release !== 'v98')
+    || !Array.isArray(value.saves) || !value.saves.length || value.saves.length > 32) throw Error('Catalogue de colonies de test invalide.');
+  const ids = new Set<string>(), paths = new Set<string>();
+  const saves = value.saves.map(save => value.version === 1 && object(save) ? {...save,release:'v98'} : save);
+  for (const save of saves) {
     if (!object(save) || !text(save.id) || !/^[a-z0-9-]+$/.test(save.id) || ids.has(save.id)
-      || !text(save.filename) || !/^[a-z0-9-]+\.json$/.test(save.filename)
+      || !text(save.release) || !RELEASE.test(save.release)
+      || !text(save.filename) || !FILENAME.test(save.filename) || paths.has(`${save.release}/${save.filename}`)
       || !text(save.label) || !text(save.description) || !text(save.provenance)
       || !strings(save.focus) || !strings(save.steps) || !save.steps.length || typeof save.prepared !== 'boolean'
       || !text(save.sha256) || !/^[a-f0-9]{64}$/.test(save.sha256)
       || !['pawns','colonists','width','height','tick'].every(key => Number.isSafeInteger(save[key]) && Number(save[key]) >= 0)
       || !save.width || !save.height || !save.colonists || Number(save.colonists) > Number(save.pawns)) throw Error('Fiche de colonie de test invalide.');
     ids.add(save.id);
+    paths.add(`${save.release}/${save.filename}`);
   }
-  return value.saves as TestColony[];
+  return saves as TestColony[];
 }
 
 /** Stream limits apply before allocation/JSON decoding, including chunked HTTP. */
@@ -64,8 +72,8 @@ export async function fetchTestColonies(): Promise<TestColony[]> {
 }
 
 export function testColonyUrl(save: TestColony): string {
-  if (!/^[a-z0-9-]+\.json$/.test(save.filename)) throw Error('Fichier de colonie inconnu.');
-  return DIRECTORY+save.filename;
+  if (!RELEASE.test(save.release) || !FILENAME.test(save.filename)) throw Error('Fichier de colonie inconnu.');
+  return DIRECTORY+save.release+'/'+save.filename;
 }
 
 export async function readTestColony(save: TestColony): Promise<string> {

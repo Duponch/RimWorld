@@ -1,5 +1,7 @@
 # Stratégie de validation
 
+V104 groupe fabrication artistique, matières, auteur/reprise, qualité, sortie minifiée, transport/installation, conservation et migration stricte. Une démonstration préparée et un parcours UI commun vérifient aussi le catalogue de chargement. Pas de campagne annuelle pour ces transitions ; charges CPU et native successives, sources servies gelées. [Preuves](../history/validation-art-v104.md).
+
 V101 vérifie dans une campagne courte recherche, construction, deux recettes, interruption électrique, conservation/reprise, stockage précis et équipement. Les états préparés exercent les seuils sans prétendre parcourir naturellement tout l’arbre. Le scénario historique V90 reste immuable, migration V91→101 strictement neutre. Aucune règle saisonnière ou temporelle de colonie ne nécessite une nouvelle année simulée. [Preuves](../history/validation-machining-v101.md).
 
 V97 ajoute les transitions proche/loin dès leur première image et compare le rejet hors champ à un parcours ordinaire sans rejet, sous la même caméra d'ombres. Les deltas de flore sont comparés aux buffers du parcours complet ; les enveloppes doivent contenir chaque sommet transformé. Les comparaisons de performance sont répétées en ordre inverse si l'échauffement présente une forte variabilité. [Preuves et limites](../history/validation-performance-v97.md).

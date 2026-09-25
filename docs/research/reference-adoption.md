@@ -1,5 +1,7 @@
 # Adoption du référentiel utilisateur
 
+V104 — chapitres 9–11/14, SYS/TEST-062..066/068 et 076..080, UI-025 : [référence artistique actualisée](art-reference-v104.md). **Adopter** poste/coûts, matière homogène, WorkToMake, Art/Artistique, auteur, ouvrage, qualité, sortie minifiée et décoration installée ; **adapter** horloge/réservations et attribution factuelle ; **différer** récits, majestueuse, commerce des paquets. Le préparatoire V103 est corrigé sur les coefficients de pierre et la beauté du marbre. Aucun identifiant global clos.
+
 V103 — S10, chapitres 14/22 et SYS/TEST-023..025, 076..080 : [impression et souvenirs](room-impressiveness-reference-v103.md), [valeurs physiques](room-market-value-reference-v103.md), recoupés dans Core local 1.6.4871 et les sources publiques datées. **Adopter** contributions, formule, paliers, usages effectifs, délai de sommeil et expiration ; **adapter** horloge, capture spatiale locale et interface 3D ; **différer** art, rôles spécialisés, autres familles de pensée et attentes/menaces selon richesse globale. La [référence artistique](art-reference-v103.md) prépare une chaîne séparée. Aucun SYS global clos ; les approximations héritées de beauté et de géométrie restent explicites dans le [contrat](../development/room-quality.md).
 
 

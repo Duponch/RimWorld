@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+**V104 — nouveau gameplay livré dans son périmètre :** atelier manuel, métier Art/compétence Artistique, deux sculptures en sept matières, ouvrage/auteur/reprise, qualité, paquet, rangement et installation physique. Leur décoration utilise les pièces et souvenirs déjà jouables V103. Démonstrations intégrées au chargement. Restent notamment récits artistiques, majestueuse et commerce des sculptures, richesse globale/narrateur complet, élevage/soins animaux, monde et fin de partie. [Contrat](../development/art.md), [preuves](../history/validation-art-v104.md).
+
 **V103 — pièces vécues :** richesse des aménagements, espace et impression inspectables ; souvenirs de repas, fers et lit personnel après leurs transitions physiques, expiration et reprise exactes. Migration neutre depuis V101. Pas de sculpture, de richesse globale de colonie ou d'attentes/raids recalibrés ; captifs, visiteurs, lits médicaux et rôles spécialisés restent hors de cette tranche. [Contrat et limites](../development/room-quality.md).
 
 

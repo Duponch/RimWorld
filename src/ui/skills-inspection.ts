@@ -1,6 +1,7 @@
 import { createTraitsInspection,updateTraitsInspection,traitSummary } from './traits-inspection';
 import { intellectualSkill } from '../sim/research';
 import { craftingSkill } from '../sim/crafting-quality';
+import { artisticSkill } from '../sim/art-rules';
 import { cookingSkill,cookingSpeed,butcherySpeed,butcheryEfficiency } from '../sim/cooking-statistics';
 import { constructionSpeed, learningFactor, XP_SCALE, xpRequired } from '../sim/skills.ts';
 import { medicalTendSpeed,medicalTendQuality } from '../sim/care-rules.ts';
@@ -8,7 +9,7 @@ import type { Pawn } from '../sim/types.ts';
 import { SKILL_PASSION_LABELS,setCompactSkillPassion,setSkillPassion } from './skill-passion';
 
 type SkillEntry = {
-  skill: 'construction'|'medicine'|'intellectual'|'crafting'|'cooking'|'shooting'|'melee';
+  skill: 'construction'|'medicine'|'intellectual'|'crafting'|'artistic'|'cooking'|'shooting'|'melee';
   progress?: string;
   description?: string;
 };
@@ -17,6 +18,7 @@ const SKILL_ENTRIES: readonly SkillEntry[] = [
   {skill:'medicine',progress:'data-medicine-xp',description:'data-medicine-description'},
   {skill:'intellectual'},
   {skill:'crafting',progress:'data-crafting-xp'},
+  {skill:'artistic',progress:'data-artistic-xp'},
   {skill:'cooking',progress:'data-cooking-xp',description:'data-cooking-description'},
   {skill:'shooting',progress:'data-shooting-xp'},
   {skill:'melee',progress:'data-melee-xp'},
@@ -47,6 +49,10 @@ export function updateSkillsInspection(panel:HTMLElement,pawn:Pawn):void {
   const intellect=intellectualSkill(pawn);setSkillPassion(panel.querySelector<HTMLElement>('[data-skill="intellectual"]')!,`Intellect ${intellect.level}/20`,intellect.passion);panel.querySelector<HTMLElement>('[data-skill-detail="intellectual"]')!.textContent=`${(intellect.xp/XP_SCALE).toFixed(1)} XP · vitesse de recherche.`;
   const craft=craftingSkill(pawn);setSkillPassion(panel.querySelector<HTMLElement>('[data-skill="crafting"]')!,`Artisanat ${craft.level}/20`,craft.passion);panel.querySelector<HTMLElement>('[data-skill-detail="crafting"]')!.textContent=`${(craft.xp/XP_SCALE).toFixed(1)} XP · influe sur la qualité de confection, sans accélérer la taille de pierre.`;
   const craftProgress=panel.querySelector<HTMLProgressElement>('[data-crafting-xp]')!;craftProgress.value=Math.max(0,craft.xp/xpRequired(craft.level));craftProgress.setAttribute('aria-label','Expérience d’artisanat');
+  const art=artisticSkill(pawn);
+  setSkillPassion(panel.querySelector<HTMLElement>('[data-skill="artistic"]')!,`Artistique ${art.level}/20`,art.passion);
+  panel.querySelector<HTMLElement>('[data-skill-detail="artistic"]')!.textContent=`${(art.xp/XP_SCALE).toFixed(1)} / ${xpRequired(art.level)/XP_SCALE} XP · détermine la qualité des sculptures, sans accélérer le travail. Apprentissage ${Math.round(learningFactor(art,pawn)*100)} %.`;
+  const artProgress=panel.querySelector<HTMLProgressElement>('[data-artistic-xp]')!;artProgress.value=Math.max(0,art.xp/xpRequired(art.level));artProgress.setAttribute('aria-label','Expérience artistique');
   const cook=cookingSkill(pawn);setSkillPassion(panel.querySelector<HTMLElement>('[data-skill="cooking"]')!,`Cuisine ${cook.level}/20`,cook.passion);
   const cp=panel.querySelector<HTMLProgressElement>('[data-cooking-xp]')!;cp.value=Math.max(0,cook.xp/xpRequired(cook.level));cp.setAttribute('aria-label','Expérience de cuisine');
   panel.querySelector('[data-cooking-description]')!.textContent=`${(cook.xp/XP_SCALE).toFixed(1)} / ${xpRequired(cook.level)/XP_SCALE} XP · Cuisson ${Math.round(cookingSpeed(pawn)*100)} % · Boucherie ${Math.round(butcherySpeed(pawn)*100)} % · Rendement ${Math.round(butcheryEfficiency(pawn)*100)} % avant poste · Apprentissage ${Math.round(learningFactor(cook,pawn)*100)} %. La lumière et la température s’appliquent séparément.`;
@@ -67,6 +73,8 @@ export function updateWorkSkills(row:HTMLElement,pawn:Pawn):void {
   if(doctor){let label=doctor.parentElement!.querySelector<HTMLElement>('.work-medicine');if(!label){label=document.createElement('small');label.className='work-medicine';doctor.parentElement!.append(label);}const m=pawn.skills.medicine;setCompactSkillPassion(label,m.level,m.passion,'Médecine');doctor.title=`Médecine ${m.level}/20 · ${SKILL_PASSION_LABELS[m.passion]} · apprentissage ${Math.round(learningFactor(m,pawn)*100)} %`;}
   const cook=row.querySelector<HTMLSelectElement>('[data-work="cook"]');
   if(cook){let label=cook.parentElement!.querySelector<HTMLElement>('.work-cooking');if(!label){label=document.createElement('small');label.className='work-cooking';cook.parentElement!.append(label);}const c=cookingSkill(pawn);setCompactSkillPassion(label,c.level,c.passion,'Cuisine');cook.title=`Cuisine ${c.level}/20 · ${SKILL_PASSION_LABELS[c.passion]} · cuisson ${Math.round(cookingSpeed(pawn)*100)} % · rendement de boucherie ${Math.round(butcheryEfficiency(pawn)*100)} % avant poste`;}
+  const artWork=row.querySelector<HTMLSelectElement>('[data-work="art"]');
+  if(artWork){let label=artWork.parentElement!.querySelector<HTMLElement>('.work-artistic');if(!label){label=document.createElement('small');label.className='work-artistic';artWork.parentElement!.append(label);}const art=artisticSkill(pawn);setCompactSkillPassion(label,art.level,art.passion,'Artistique');artWork.title=`Artistique ${art.level}/20 · ${SKILL_PASSION_LABELS[art.passion]} · qualité des sculptures, sans effet direct sur la vitesse`;}
   const select=row.querySelector<HTMLSelectElement>('[data-work="build"]');if(!select)return;
   let label=row.querySelector<HTMLElement>('.work-skill');
   if(!label){label=document.createElement('small');label.className='work-skill';select.parentElement!.append(label);}

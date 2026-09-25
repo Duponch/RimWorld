@@ -1,5 +1,12 @@
 # Travail sur Lisière
 
+## Sculpture et décoration V104
+- Lire `docs/development/art.md` et `docs/research/art-reference-v104.md` : atelier manuel 3×1, travail Art/compétence Artistique, deux tailles et sept matières homogènes. Ouvrage, auteur, progression et parts incorporées persistés ; annulation à 75 % par part, tirages et dépôts prévalidés ensemble. Le talent règle la qualité, pas directement la vitesse.
+- Les œuvres achevées sont des meubles minifiés physiques. Transport, stockage, installation/désinstallation conservent identité, qualité et provenance ; aucune construction directe de sculpture. « Jusqu’à X » compte œuvres installées et minifiées, portées ou au sol. Beauté et valeur décorative s’appliquent à l’œuvre installée ; titres narratifs et vente des meubles minifiés restent absents.
+- Schéma 104 : valider V103 avant migration ; seule priorité Art 0 ajoutée, compétence absente vaut 0, aucune recherche ni matière offerte. Fixtures V98/V101/V103 immuables. Catalogue commun `public/test-saves/manifest.json` : neuf colonies dont salles V103 et sculpture V104 directement depuis Charger.
+- Démonstration V104 préparée puis grande œuvre réellement fabriquée/posée par le moteur ; ne pas la présenter comme une progression autonome. Contrôles regroupés, parcours natifs et charge mixte successifs dans `docs/history/validation-art-v104.md`. Mode jour : publier puis rendre la main.
+
+
 ## Pièces vécues V103
 - Lire `docs/development/room-quality.md` et les recherches impression/valeur V103. Richesse des bâtiments/plantes et sols intérieurs, espace Core et impression dérivés ; le stockage libre ne crée pas de richesse de pièce. Beauté/propreté conservent leurs contributeurs historiques. Le calcul local ne remplace pas les règles de navigation.
 - Repas après ingestion, loisir après usage réel des fers, sommeil dans son lit civil après observation différée persistée. Un souvenir par famille, chambre/dortoir exclusifs, expiration après un jour ; observation au réveil seulement après la première. Pas de souvenir de salle pour regarder le ciel. Aucun effet rétrospectif sur les anciennes parties.

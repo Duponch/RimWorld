@@ -19,11 +19,11 @@ export function installCommand(world:World,command:Extract<Command,{type:'instal
   const pack=world.packed.find(p=>p.building.id===source.id);
   if(pack?.owner.type==='pawn')return fail('Ce meuble est porté par un colon.');
   if(!Number.isInteger(command.orientation)||command.orientation<0||command.orientation>3)return fail('Orientation invalide.');
-  if(source.kind==='standing-lamp'&&command.orientation!==0)return fail('Cette lampe ne pivote pas.');
+  if(['standing-lamp','small-sculpture','large-sculpture'].includes(source.kind)&&command.orientation!==0)return fail('Cette lampe ne pivote pas.');
   if(!Number.isSafeInteger(world.nextId+1))return fail('Limite des identités atteinte.');
   const placement={type:'designate' as const,kind:source.kind,x:command.x,z:command.z,orientation:command.orientation,footprint:source.footprint,material:source.material};
   const view={...world,structures:world.structures.filter(s=>s.id!==source.id),packed:world.packed.filter(p=>p!==pack)};
-  const allowed=canDesignate(view,placement);if(!allowed.ok)return allowed;
+  const allowed=canDesignate(view,placement,true);if(!allowed.ok)return allowed;
   const drops=planCommandDrops(world,placement);if(!drops)return fail('Pas de place pour les cargaisons libérées.');
   if(preview)return {ok:true};
   for(const p of world.pawns)if(p.haul?.whole&&p.haul.sourcePileId===source.id)releaseWork(world,p,drops);

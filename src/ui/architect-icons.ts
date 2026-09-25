@@ -22,7 +22,7 @@ const SECOND_ATLAS = [
   'ignore-roof', 'remove-growing', 'stockpile', 'home', 'remove-home', 'remove-stockpile',
 ] as const;
 
-export const ARCHITECT_ICON_ORDER = Object.freeze([...FIRST_ATLAS, ...SECOND_ATLAS.flatMap(id=>id==='tailor-bench'?[id,'machining-table']:[id])]);
+export const ARCHITECT_ICON_ORDER = Object.freeze([...FIRST_ATLAS, ...SECOND_ATLAS.flatMap(id=>id==='tailor-bench'?[id,'machining-table']:id==='stonecutter'?[id,'art-bench']:[id])]);
 
 export interface ArchitectIconCell {
   readonly atlas: 0 | 1;
@@ -43,9 +43,8 @@ const originalCells:Readonly<Record<string,ArchitectIconCell>>=Object.fromEntrie
   ...atlasCells(FIRST_ATLAS, 0),
   ...atlasCells(SECOND_ATLAS, 1),
 ]);
-// The new powered workbench shares the existing machine pictogram; atlas cells
-// never shift when a tool is added to the menu.
-export const ARCHITECT_ICON_MAPPING:Readonly<Record<string,ArchitectIconCell>>=Object.freeze(Object.fromEntries(ARCHITECT_ICON_ORDER.map(id=>[id,id==='machining-table'?originalCells['electric-tailor-bench']!:originalCells[id]!])));
+// New workbenches reuse existing pictured cells; adding tools never shifts the atlas.
+export const ARCHITECT_ICON_MAPPING:Readonly<Record<string,ArchitectIconCell>>=Object.freeze(Object.fromEntries(ARCHITECT_ICON_ORDER.map(id=>[id,id==='machining-table'?originalCells['electric-tailor-bench']!:id==='art-bench'?originalCells.stonecutter!:originalCells[id]!])));
 
 export interface ArchitectIconInstallReport {
   readonly installed: readonly string[];

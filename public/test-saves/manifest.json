@@ -1,0 +1,232 @@
+{
+  "version": 2,
+  "saves": [
+    {
+      "release": "v98",
+      "id": "colony-v90",
+      "label": "Colonie avancée · 4 colons",
+      "description": "Campagne Lisière avancée avec 4 habitants après 182,577 jours écoulés. Ressources, constructions et travaux proviennent de cette partie réellement poursuivie.",
+      "filename": "colony-v90.json",
+      "pawns": 48,
+      "colonists": 4,
+      "width": 250,
+      "height": 250,
+      "tick": 1095464,
+      "focus": [
+        "campagne poursuivie",
+        "habitat",
+        "agriculture",
+        "vêtements"
+      ],
+      "steps": [
+        "Retrouver Ada à (118, 103) et examiner les quatre habitants et leurs besoins.",
+        "Ouvrir Architecte près du camp existant puis poursuivre les cultures, la coupe ou l’habitat avec les stocks présents."
+      ],
+      "prepared": false,
+      "provenance": "Campagne Lisière réellement poursuivie pendant 182,577 jours de jeu, sans préparation ajoutée pour ce catalogue.",
+      "sha256": "7025d79c235224b789ae4361974a2a7c81952cfd920b927a748b442939d93a03"
+    },
+    {
+      "release": "v98",
+      "id": "energy-food-12",
+      "label": "Nourriture et énergie · 12 colons",
+      "description": "Deux groupes de travail, 12 colons et 12 lièvres ; deux cuisines électriques, panneaux solaires, batteries, interrupteurs et chambres froides préparés. Les récoltes et gestes suivent ensuite le moteur ordinaire.",
+      "filename": "energy-food-12.json",
+      "pawns": 12,
+      "colonists": 12,
+      "width": 250,
+      "height": 250,
+      "tick": 2000,
+      "focus": [
+        "cuisine",
+        "cultures",
+        "réseau électrique",
+        "chambre froide"
+      ],
+      "steps": [
+        "Rejoindre la première cuisine à (151, 111) et observer Cultivateur 0, la boucherie, la récolte et le ravitaillement.",
+        "Cliquer l’interrupteur à (155, 114) : un colon doit effectuer le travail de fermeture ; observer la batterie et la chambre froide à (162, 115)."
+      ],
+      "prepared": true,
+      "provenance": "Situation préparée dans Lisière : bâtiments, ingrédients, cultures et batteries sont fournis au départ.",
+      "sha256": "920dc9dce795bda116780980758bf26625d930d408da11c41b179efff1b9074b"
+    },
+    {
+      "release": "v98",
+      "id": "prison-12",
+      "label": "Prison et intendance · 12 colons",
+      "description": "12 colons et 2 captifs dans des chambres distinctes avec lits, portes et rations physiques ; geôliers et conversations continuent par la simulation.",
+      "filename": "prison-12.json",
+      "pawns": 14,
+      "colonists": 12,
+      "width": 250,
+      "height": 250,
+      "tick": 2000,
+      "focus": [
+        "prisonniers",
+        "geôlier",
+        "nourriture",
+        "énergie"
+      ],
+      "steps": [
+        "Sélectionner Captif charge 1 près du lit de prison à (109, 99) et ouvrir son dossier Prisonnier.",
+        "Observer la livraison de rations et une visite du geôlier ; suivre aussi les interrupteurs et cuisines du camp."
+      ],
+      "prepared": true,
+      "provenance": "Situation préparée dans Lisière : deux captifs, leurs chambres et leurs rations sont présents au départ.",
+      "sha256": "b89295fea9dc49a9efb8e023a4f87f3d726a23dc25e1fc6ac3921e1a7eb3c5e6"
+    },
+    {
+      "release": "v98",
+      "id": "weather-fire-12",
+      "label": "Vent, chaleur et incendie · 12 colons",
+      "description": "12 colons avec climat et vent adoptés, éolienne, radiateur et 6 foyers préparés. Les pompiers, la propagation et l’extinction obéissent aux règles normales.",
+      "filename": "weather-fire-12.json",
+      "pawns": 12,
+      "colonists": 12,
+      "width": 250,
+      "height": 250,
+      "tick": 2000,
+      "focus": [
+        "météo",
+        "éolienne",
+        "radiateur",
+        "incendie"
+      ],
+      "steps": [
+        "Observer la première éolienne à (30, 109) et le radiateur à (40, 110) avec les conditions météo.",
+        "Suivre le premier foyer à (111, 107) et l’intervention physique des colons."
+      ],
+      "prepared": true,
+      "provenance": "Situation préparée dans Lisière : installations de chauffage et d’énergie, météo et foyers sont présents au départ.",
+      "sha256": "cf54aad165f1ddd846cdaa67eb9b9217a346a9a42dddc5345b3182684f8b118a"
+    },
+    {
+      "release": "v98",
+      "id": "trade-100",
+      "label": "Commerce et circulation · 100 colons",
+      "description": "100 colons, 2 visiteurs, 100 lièvres, ateliers, cultures, feu et énergie ; le marchand a un stock fini et un premier échange vérifié.",
+      "filename": "trade-100.json",
+      "pawns": 102,
+      "colonists": 100,
+      "width": 250,
+      "height": 250,
+      "tick": 2000,
+      "focus": [
+        "100 colons",
+        "visiteurs",
+        "commerce",
+        "charge mixte"
+      ],
+      "steps": [
+        "Ouvrir Commerce près de Marchand du banc à (122, 105) ; vérifier argent et médicaments physiques.",
+        "Déplacer la caméra entre les ateliers et passer la vitesse à ×6 pour examiner la charge de 100 colons."
+      ],
+      "prepared": true,
+      "provenance": "Situation préparée dans Lisière : les visiteurs sont déjà sur place et un premier échange a été effectué.",
+      "sha256": "7dcba99faf47584ff404658b75999831245d8262a1156558375ef35c6ef78b31"
+    },
+    {
+      "release": "v98",
+      "id": "mixed-100",
+      "label": "Habitat, vêtements et salubrité · 100 colons",
+      "description": "100 colons, 2 visiteurs, 2 morts préparés, 100 lièvres ; mobilier, tailleurs, vêtements, tombes, salissures et patients composent une charge mixte.",
+      "filename": "mixed-100.json",
+      "pawns": 104,
+      "colonists": 100,
+      "width": 250,
+      "height": 250,
+      "tick": 2000,
+      "focus": [
+        "100 colons",
+        "habitat",
+        "tailleur",
+        "hygiène",
+        "commerce"
+      ],
+      "steps": [
+        "Inspecter les vêtements et politiques de Mineur 0, puis l’établi de tailleur à (70, 121).",
+        "Suivre le nettoyage près de (40, 113), les inhumations et les soins ; comparer le paysage proche et la vue globale pendant les déplacements de caméra."
+      ],
+      "prepared": true,
+      "provenance": "Situation préparée dans Lisière : mobilier, vêtements, ateliers, salissures et soins composent le camp dès le chargement.",
+      "sha256": "a041752036fff16166c61561d2d9b1465e8181eceea7fdc949507f137cd3b750"
+    },
+    {
+      "id": "atelier-v101",
+      "release": "v101",
+      "label": "Atelier et armurerie · 1 colon",
+      "description": "Atelier alimenté et construit, recherches acquises, acier et composants disponibles pour fabriquer un revolver ou un fusil par les travaux ordinaires.",
+      "filename": "atelier.json",
+      "pawns": 1,
+      "colonists": 1,
+      "width": 32,
+      "height": 32,
+      "tick": 3244,
+      "focus": [
+        "usinage",
+        "armurerie",
+        "ouvrage d’arme",
+        "équipement"
+      ],
+      "steps": [
+        "Examiner l’atelier construit à (15, 8), ses factures et les matières disponibles.",
+        "Lancer un revolver ou un fusil, suivre la fabrication réelle, puis équiper l’arme terminée."
+      ],
+      "prepared": true,
+      "provenance": "Démonstration V101 préparée : recherches et matières fournies ; l’atelier a été construit par le moteur, aucune arme n’a été fabriquée à l’avance.",
+      "sha256": "8eab5a144a9bcd0affa91c7dd91a94309b727251afb405733ab3ff20b3c2aa2d"
+    },
+    {
+      "id": "salles-v103",
+      "release": "v103",
+      "label": "Pièces vécues · 1 colon",
+      "description": "Salles meublées, fleurs et trois repas préparés pour inspecter beauté, richesse, espace, impression et souvenir de repas.",
+      "filename": "salles.json",
+      "pawns": 1,
+      "colonists": 1,
+      "width": 32,
+      "height": 32,
+      "tick": 2000,
+      "focus": [
+        "pièces",
+        "impression",
+        "repas",
+        "souvenir d’humeur"
+      ],
+      "steps": [
+        "Inspecter une salle dans Environnement pour lire beauté, richesse, espace et impression.",
+        "Relancer le temps, laisser le colon manger un repas, puis ouvrir Besoins pour observer son souvenir."
+      ],
+      "prepared": true,
+      "provenance": "Démonstration V103 préparée : colon, pièces et repas fournis ; aucun souvenir n’est prérempli et les usages reprennent par simulation.",
+      "sha256": "e698c0fd4e1fa7e01da81dab6f3eb2c7fdd0bb6f873fde804879e783ec7cb9cf"
+    },
+    {
+      "id": "art-v104",
+      "release": "v104",
+      "label": "Atelier de sculpture · 1 colon",
+      "description": "Ada, artiste niveau 12, dispose d'un atelier manuel, de bois et d'une grande sculpture en marbre déjà fabriquée et installée par le moteur.",
+      "filename": "sculpture.json",
+      "pawns": 1,
+      "colonists": 1,
+      "width": 32,
+      "height": 32,
+      "tick": 8516,
+      "focus": [
+        "artistique",
+        "sculpture",
+        "qualité",
+        "auteur",
+        "impression de pièce"
+      ],
+      "steps": [
+        "Inspecter la grande sculpture en marbre installée à (16, 17), sa qualité et son auteur.",
+        "Ajouter à l'atelier une facture de petite sculpture en bois, laisser Ada la fabriquer, puis installer le paquet obtenu et inspecter la pièce dans Environnement et Besoins."
+      ],
+      "prepared": true,
+      "provenance": "Démonstration V104 préparée à partir des salles V103 : atelier, niveau Artistique et matières fournis ; la grande sculpture a été fabriquée et installée par les vrais travaux du moteur.",
+      "sha256": "0c55c4d8172f33de1885d31a096ac680ab6ce45efd1ac81a67b29c597bb0b7f3"
+    }
+  ]
+}

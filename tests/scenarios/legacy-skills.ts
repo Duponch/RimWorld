@@ -5,6 +5,7 @@ import { V91_ITEM_IDS } from '../../src/sim/biome-items.ts';
 /** Historical fixtures must not smuggle V43's new actor profile into old schemas. */
 export function withoutPawnSkills<T>(world:T):T {
   for(const p of (world as {pawns:Array<{skills?:unknown}>}).pawns)delete p.skills;
+  withoutArt(world);
   withoutMedicalWork(world);
   return world;
 }
@@ -66,6 +67,7 @@ function withoutSocial(world:unknown):void {
 /** Authentic pre-V73 fixture, not a production sanitizer. */
 export function withoutResearch<T>(world:T):T {
   withoutHunting(world);
+  withoutArt(world);
   const w=world as {research?:unknown;pawns:{research?:unknown;priorities:{research?:number};skills?:{intellectual?:unknown}}[]};
   delete w.research;for(const p of w.pawns){delete p.research;delete p.priorities.research;if(p.skills)delete p.skills.intellectual;}return world;
 }
@@ -111,7 +113,14 @@ export function withMigratedV90<T>(world:T):T {
   for(const departure of w.raids?.departed??[])for(const pile of departure.items??[])if(pile.apparel&&['cloth-shirt','cloth-tribalwear'].includes(pile.item))pile.apparel.material='cloth';
   if(w.tailoring)w.tailoring.lostLeather=0;
   w.apparelWear=createApparelWearCalendar(w.tick,(w.seed^w.tick^0x0a77e1)>>>0);w.apparelPolicies=registry.apparelPolicies;w.nextApparelPolicyId=registry.nextApparelPolicyId;
-  for(const pawn of w.pawns??[]){pawn.beauty=40;if((pawn.faction??'colony')==='colony'&&!pawn.visitor&&!pawn.prisoner&&pawn.state!=='dead'){pawn.apparelPolicyId=1;pawn.apparelAutomation=false;pawn.nextApparelCheckAt=w.tick+600+pawn.id%301;}}
+  for(const pawn of w.pawns??[]){pawn.beauty=40;pawn.priorities.art=0;if((pawn.faction??'colony')==='colony'&&!pawn.visitor&&!pawn.prisoner&&pawn.state!=='dead'){pawn.apparelPolicyId=1;pawn.apparelAutomation=false;pawn.nextApparelCheckAt=w.tick+600+pawn.id%301;}}
+  return world;
+}
+
+/** Authentic pre-V104 test payloads have no Art work priority or practice. */
+export function withoutArt<T>(world:T):T {
+  const w=world as any;
+  for(const pawn of w.pawns??[]){delete pawn.priorities.art;if(pawn.skills)delete pawn.skills.artistic;}
   return world;
 }
 
@@ -119,6 +128,7 @@ export function withMigratedV90<T>(world:T):T {
  * earlier payload. This is fixture construction, never production repair. */
 export function withoutV90<T>(world:T):T {
   const w=world as any;
+  withoutArt(world);
   delete w.apparelWear;delete w.apparelPolicies;delete w.nextApparelPolicyId;
   for(const pawn of w.pawns??[]){delete pawn.beauty;delete pawn.apparelPolicyId;delete pawn.apparelAutomation;delete pawn.nextApparelCheckAt;}
   for(const departure of w.visitors?.departed??[]){delete departure.pawn.beauty;delete departure.pawn.apparelPolicyId;delete departure.pawn.apparelAutomation;delete departure.pawn.nextApparelCheckAt;}

@@ -22,15 +22,15 @@ export function advancePriorityWork(world:World,pawn:Pawn,getBlocked:NavigationG
   if(pawn.collapsePending||world.restRules==='legacy'&&pawn.rest===0)return false;
   const job=world.jobs.find(j=>(isConstruction(j)||intent.work==='build'&&j.kind==='deconstruct')&&containsCell(j,intent.cell));
   const station=world.structures.find(s=>(stationRecipe(s)!==null||s.kind==='passive-cooler')&&footprintCells(s).some(c=>c.x===intent.cell.x&&c.z===intent.cell.z));
-  if((intent.work==='cook'||intent.work==='craft')?!station:!job&&!(intent.work==='haul'&&station&&wantsFuel(world,station))) {
+  if((intent.work==='cook'||intent.work==='craft'||intent.work==='art')?!station:!job&&!(intent.work==='haul'&&station&&wantsFuel(world,station))) {
     delete pawn.priorityWork;return false;
   }
   if(!budget.remaining||!budget.pairs)return true;
   const blocked=getBlocked(),reach=searchCandidates(world,pawn,blocked,new Set(),budget)!;
   // Assignment zero is not an incapacity: a previously accepted priority keeps
   // its provider family, even after the ordinary work table changes.
-  const actor={...pawn,priorities:{...pawn.priorities,build:0,haul:0,cook:0,craft:0,[intent.work]:1}};
-  if((intent.work==='cook'||intent.work==='craft')&&station) {
+  const actor={...pawn,priorities:{...pawn.priorities,build:0,haul:0,cook:0,craft:0,art:0,[intent.work]:1}};
+  if((intent.work==='cook'||intent.work==='craft'||intent.work==='art')&&station) {
     const p=planCookingOrder(world,actor,station.id,reach,budget,false);
     if(p.order&&p.path) {
       if(isCookingOrder(p.order))startCookingOrder(pawn,p.order,p.path);
