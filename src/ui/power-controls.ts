@@ -41,7 +41,7 @@ export function updatePowerControls(root: HTMLElement, world: World, cell: Cell,
     card.querySelector('[data-power-state]')!.textContent = powerInspection(world, structure).replace(/^ · /, '');
     const pending = world.jobs.find(j => j.flick?.structureId === structure.id);
     const removing = world.jobs.some(j => j.deconstruction?.structureId === structure.id);
-    card.querySelector('[data-power-request]')!.textContent = pending ? `${pending.flick!.on ? 'Mise en marche' : 'Arrêt'} demandé · attend l’intervention d’un colon (Tâches élémentaires).` : '';
+    card.querySelector('[data-power-request]')!.textContent = pending ? `${pending.flick!.on ? 'Mise en marche' : 'Arrêt'} demandé · attend l’intervention d’un colon (Manutention).` : '';
     const flick = card.querySelector<HTMLButtonElement>('[data-power-flick]')!;
     flick.hidden = !canFlickPower(structure); flick.disabled = removing;
     flick.textContent = pending ? 'Annuler la demande' : actualPowerSwitch(structure) ? 'Demander l’arrêt' : 'Demander la mise en marche';

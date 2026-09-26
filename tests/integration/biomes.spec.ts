@@ -4,6 +4,7 @@ import { world,panel,pause,expectWorld,observeErrors } from './helpers';
 import { validateWorld } from '../../src/sim/serialization';
 import { BIOME_LABELS } from '../../src/sim/site';
 import { animalSpecies } from '../../src/sim/animal-species';
+import { SCHEMA_VERSION } from '../../src/sim/types';
 
 test('native V91: three playable biome choices, fauna, actual hunt designation, save/reload and resident presentation',async({playwright})=>{
   test.setTimeout(240000);
@@ -30,7 +31,7 @@ test('native V91: three playable biome choices, fauna, actual hunt designation, 
       await expect(front).toBeHidden({timeout:60000});await pause(page);
       const initial=await world(page);expect(validateWorld(initial)).toEqual([]);
       await expect(page.locator('#biome-current')).toHaveText(BIOME_LABELS[biome]);
-      expect(initial).toMatchObject({schemaVersion:91,site:{revision:2,biome},flora:{biome},scenario:{revision:6}});
+      expect(initial).toMatchObject({schemaVersion:SCHEMA_VERSION,site:{revision:2,biome},flora:{biome},scenario:{revision:8}});
       expect(initial.resources.some(r=>r.species)).toBe(true);
       expect(initial.wildlife!.animals.length).toBeGreaterThan(0);
       await panel(page,'wildlife');
@@ -40,7 +41,8 @@ test('native V91: three playable biome choices, fauna, actual hunt designation, 
       await expect.poll(async()=>(await world(page)).hunting?.targets.includes(animal.id)).toBe(true);
       await page.locator(`[data-animal-hunt="${animal.id}"]`).uncheck();
       await page.getByRole('button',{name:`Repérer ${animalSpecies(animal.species).label} ${animal.id}`,exact:true}).click();
-      await page.getByRole('button',{name:'Fermer Faune',exact:true}).click();await page.waitForTimeout(350);
+      if(await page.locator('#wildlife-panel').isVisible()) await page.getByRole('button',{name:'Fermer Faune',exact:true}).click();
+      await page.waitForTimeout(350);
       await page.screenshot({path:`artifacts/biome-fauna-v91-${biome}.png`});
       // Observe a short real frame window, not an accelerated biological rule.
       const profiler=process.env.V91_PROFILE?await context.newCDPSession(page):undefined;

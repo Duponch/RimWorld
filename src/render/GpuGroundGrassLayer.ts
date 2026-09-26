@@ -1,6 +1,6 @@
 import * as THREE from 'three/webgpu';
 import {
-  Fn, float, hash, instanceIndex, positionLocal, sin,
+  Fn, float, hash, instanceIndex, positionLocal, sin, smoothstep,
   texture, time, transformNormalToView, uint, uniform, uv, varyingProperty,
   vec2, vec3,
 } from 'three/tsl';
@@ -95,6 +95,16 @@ function worldCellBudget(corners: Float64Array, orthographic: boolean): number {
   return Math.ceil((diameter + 4) ** 2);
 }
 
+/** Conservative, yaw-invariant AABB budget for the lower perspective frustum.
+ * It is a ground trapezoid rather than the full near-horizon footprint. */
+function nearCellBudget(corners: Float64Array): number {
+  const length = (a: number, b: number) => Math.hypot(corners[a]! - corners[b]!, corners[a + 1]! - corners[b + 1]!);
+  const width = Math.max(length(0, 4), length(2, 6));
+  const depth = Math.max(length(0, 2), length(4, 6));
+  const sum = width + depth;
+  return Math.ceil(.5 * sum * sum + 4 * Math.SQRT2 * sum + 16);
+}
+
 /** One resident draw. The GPU creates/recycles roots, shapes, wind and colour;
  * the CPU uploads only a 4-byte/cell surface map when soil or cover changes. */
 export class GpuGroundGrassLayer {
@@ -103,6 +113,16 @@ export class GpuGroundGrassLayer {
   private readonly gridOrigin = uniform(new THREE.Vector2());
   private readonly gridWidth = uniform(1);
   private readonly slotsPerCell = uniform(1);
+  private readonly baseInstances = uniform(0);
+  private readonly nearGridOrigin = uniform(new THREE.Vector2());
+  private readonly nearGridWidth = uniform(1);
+  private readonly nearSlotsPerCell = uniform(1);
+  private readonly nearInstances = uniform(0);
+  private readonly foregroundGridOrigin = uniform(new THREE.Vector2());
+  private readonly foregroundGridWidth = uniform(1);
+  private readonly foregroundSlotsPerCell = uniform(1);
+  private readonly bandView = uniform(new THREE.Vector4());
+  private readonly bandLimits = uniform(new THREE.Vector4());
   private readonly zoomVisibility = uniform(1);
   private readonly dimensions = uniform(new THREE.Vector2(1, 1));
   private previousTiles: World['tiles'] | undefined;
@@ -119,6 +139,8 @@ export class GpuGroundGrassLayer {
   private readonly ray = new THREE.Vector3();
   private readonly forward = new THREE.Vector3();
   private readonly footprint = new Float64Array(8);
+  private readonly nearFootprint = new Float64Array(8);
+  private readonly foregroundFootprint = new Float64Array(8);
 
   constructor(configure?: (material: THREE.MeshStandardNodeMaterial) => void) {
     this.map.colorSpace = THREE.SRGBColorSpace;
@@ -133,11 +155,26 @@ export class GpuGroundGrassLayer {
       // instanceIndex maps to an integer world cell and a stable local slot.
       // Camera movement changes only the integer window origin; resizing that
       // window or its density never changes roots of the slots it retains.
+      // The latter two ranges add stable slots to the nearer ground in a low
+      // perspective view. All ranges decode to absolute cells, so moving the
+      // camera cannot move the roots of slots they retain.
       const index = float(instanceIndex);
-      const cellIndex = index.div(this.slotsPerCell).floor();
-      const slot = index.mod(this.slotsPerCell);
-      const cellX = this.gridOrigin.x.add(cellIndex.mod(this.gridWidth));
-      const cellZ = this.gridOrigin.y.add(cellIndex.div(this.gridWidth).floor());
+      const near = index.greaterThanEqual(this.baseInstances);
+      const foregroundStart = this.baseInstances.add(this.nearInstances);
+      const foreground = index.greaterThanEqual(foregroundStart);
+      const localIndex = foreground.select(index.sub(foregroundStart),
+        near.select(index.sub(this.baseInstances), index));
+      const slotsInRange = foreground.select(this.foregroundSlotsPerCell,
+        near.select(this.nearSlotsPerCell, this.slotsPerCell));
+      const cellIndex = localIndex.div(slotsInRange).floor();
+      const slot = localIndex.mod(slotsInRange).add(foreground.select(
+        this.slotsPerCell.add(this.nearSlotsPerCell), near.select(this.slotsPerCell, float(0))));
+      const gridOrigin = foreground.select(this.foregroundGridOrigin,
+        near.select(this.nearGridOrigin, this.gridOrigin));
+      const gridWidth = foreground.select(this.foregroundGridWidth,
+        near.select(this.nearGridWidth, this.gridWidth));
+      const cellX = gridOrigin.x.add(cellIndex.mod(gridWidth));
+      const cellZ = gridOrigin.y.add(cellIndex.div(gridWidth).floor());
       const key = uint(cellX).mul(uint(73856093))
         .bitXor(uint(cellZ).mul(uint(19349663)))
         .bitXor(uint(slot).mul(uint(83492791)));
@@ -146,7 +183,13 @@ export class GpuGroundGrassLayer {
       const root = vec2(bx, bz);
       const sampled = texture(this.map, root.add(.5).div(this.dimensions)).level(float(0));
       groundColour.assign(sampled.rgb);
-      const coverage = sampled.a.mul(this.zoomVisibility);
+      // Extra density tapers toward each band's far edge; otherwise the
+      // boundary between one and many blades would cut across the landscape.
+      const depth = root.sub(this.bandView.xy).dot(this.bandView.zw);
+      const nearFade = float(1).sub(smoothstep(this.bandLimits.x.sub(this.bandLimits.y), this.bandLimits.x, depth));
+      const foregroundFade = float(1).sub(smoothstep(this.bandLimits.z.sub(this.bandLimits.w), this.bandLimits.z, depth));
+      const bandFade = foreground.select(foregroundFade, near.select(nearFade, float(1)));
+      const coverage = sampled.a.mul(this.zoomVisibility).mul(bandFade);
       const yaw = hash(key.add(uint(29))).mul(Math.PI * 2);
       const c = yaw.cos(), s = yaw.sin();
       const height = hash(key.add(uint(43))).mul(.17).add(.21).mul(coverage);
@@ -301,15 +344,122 @@ export class GpuGroundGrassLayer {
     // of its ground parallelogram. Reserve against its yaw-invariant maximum
     // AABB so slots per cell do not pulse as the player rotates the camera.
     budgetCells = Math.min(this.map.image.width * this.map.image.height, Math.max(cells, budgetCells));
-    const slots = Math.min(desiredSlots, Math.floor(GROUND_GRASS_MAX_BLADES / budgetCells));
+    const uniformSlots = Math.min(desiredSlots, Math.floor(GROUND_GRASS_MAX_BLADES / budgetCells));
+    let slots = uniformSlots;
+    let nearColumns = 0, nearRows = 0, nearFirstX = 0, nearFirstZ = 0, nearSlots = 0;
+    let foregroundColumns = 0, foregroundRows = 0, foregroundFirstX = 0, foregroundFirstZ = 0;
+    let foregroundSlots = 0;
+    let nearLimit = 0, foregroundLimit = 0;
+    // At a grazing perspective angle the upper rays meet the horizon. The
+    // conservative fallback can then cover all 250² cells; uniform budgeting
+    // would leave only one blade in every cell, including the foreground.
+    // Keep one sparse, stable base field and spend the remaining instances on
+    // the lower half of the screen, where individual blades are resolvable.
+    if (camera instanceof THREE.PerspectiveCamera && uniformSlots < desiredSlots * .65) {
+      let nearValid = true;
+      let nearMinX = Infinity, nearMaxX = -Infinity, nearMinZ = Infinity, nearMaxZ = -Infinity;
+      let nearIndex = 0;
+      for (const sx of [-1, 1]) for (const sy of [-1, 0]) {
+        this.corner.set(sx, sy, .5).unproject(camera);
+        this.ray.copy(this.corner).sub(camera.position).normalize();
+        if (this.ray.y >= -.025) { nearValid = false; break; }
+        const distance = -camera.position.y / this.ray.y;
+        if (distance < 0) { nearValid = false; break; }
+        const x = camera.position.x + distance * this.ray.x;
+        const z = camera.position.z + distance * this.ray.z;
+        this.nearFootprint[nearIndex++] = x;
+        this.nearFootprint[nearIndex++] = z;
+        nearMinX = Math.min(nearMinX, x); nearMaxX = Math.max(nearMaxX, x);
+        nearMinZ = Math.min(nearMinZ, z); nearMaxZ = Math.max(nearMaxZ, z);
+      }
+      if (nearValid) {
+        const horizontalLength = Math.hypot(this.forward.x, this.forward.z) || 1;
+        const horizontalX = this.forward.x / horizontalLength, horizontalZ = this.forward.z / horizontalLength;
+        nearLimit = (this.nearFootprint[2]! - camera.position.x) * horizontalX +
+          (this.nearFootprint[3]! - camera.position.z) * horizontalZ;
+        nearFirstX = Math.max(firstX, Math.floor(nearMinX + .5) - 1);
+        nearFirstZ = Math.max(firstZ, Math.floor(nearMinZ + .5) - 1);
+        const nearLastX = Math.min(lastX, Math.floor(nearMaxX + .5) + 1);
+        const nearLastZ = Math.min(lastZ, Math.floor(nearMaxZ + .5) + 1);
+        nearColumns = Math.max(0, nearLastX - nearFirstX + 1);
+        nearRows = Math.max(0, nearLastZ - nearFirstZ + 1);
+        if (nearColumns && nearRows) {
+          // The base always covers the full field; the near range starts at
+          // the next slot ID to avoid duplicate roots within overlapping cells.
+          slots = Math.min(desiredSlots, Math.max(1, Math.floor(GROUND_GRASS_MAX_BLADES * .35 / budgetCells)));
+          if (cells * slots > GROUND_GRASS_MAX_BLADES) slots = Math.floor(GROUND_GRASS_MAX_BLADES / cells);
+          const nearCells = nearColumns * nearRows;
+          const reserve = Math.min(this.map.image.width * this.map.image.height,
+            Math.max(nearCells, nearCellBudget(this.nearFootprint)));
+          const reservedBase = budgetCells * slots;
+          const remaining = Math.max(0, GROUND_GRASS_MAX_BLADES - reservedBase);
+          nearSlots = Math.min(desiredSlots - slots,
+            Math.floor(remaining * .5 / reserve));
+          if (nearSlots < 1) { slots = uniformSlots; nearColumns = nearRows = 0; }
+          else {
+            // The bottom quarter contains the closest and largest blades. A
+            // third range uses the budget that the conservative mid-distance
+            // reserve did not actually submit, still in this one draw call.
+            let foregroundValid = true;
+            let foreMinX = Infinity, foreMaxX = -Infinity, foreMinZ = Infinity, foreMaxZ = -Infinity;
+            let foreIndex = 0;
+            for (const sx of [-1, 1]) for (const sy of [-1, -.55]) {
+              this.corner.set(sx, sy, .5).unproject(camera);
+              this.ray.copy(this.corner).sub(camera.position).normalize();
+              if (this.ray.y >= -.025) { foregroundValid = false; break; }
+              const distance = -camera.position.y / this.ray.y;
+              if (distance < 0) { foregroundValid = false; break; }
+              const x = camera.position.x + distance * this.ray.x;
+              const z = camera.position.z + distance * this.ray.z;
+              this.foregroundFootprint[foreIndex++] = x;
+              this.foregroundFootprint[foreIndex++] = z;
+              foreMinX = Math.min(foreMinX, x); foreMaxX = Math.max(foreMaxX, x);
+              foreMinZ = Math.min(foreMinZ, z); foreMaxZ = Math.max(foreMaxZ, z);
+            }
+            if (foregroundValid) {
+              foregroundLimit = (this.foregroundFootprint[2]! - camera.position.x) * horizontalX +
+                (this.foregroundFootprint[3]! - camera.position.z) * horizontalZ;
+              foregroundFirstX = Math.max(nearFirstX, Math.floor(foreMinX + .5) - 1);
+              foregroundFirstZ = Math.max(nearFirstZ, Math.floor(foreMinZ + .5) - 1);
+              const foreLastX = Math.min(nearFirstX + nearColumns - 1, Math.floor(foreMaxX + .5) + 1);
+              const foreLastZ = Math.min(nearFirstZ + nearRows - 1, Math.floor(foreMaxZ + .5) + 1);
+              foregroundColumns = Math.max(0, foreLastX - foregroundFirstX + 1);
+              foregroundRows = Math.max(0, foreLastZ - foregroundFirstZ + 1);
+              if (foregroundColumns && foregroundRows) {
+                const foregroundCells = foregroundColumns * foregroundRows;
+                const reserveForeground = Math.min(this.map.image.width * this.map.image.height,
+                  Math.max(foregroundCells, nearCellBudget(this.foregroundFootprint)));
+                foregroundSlots = Math.min(desiredSlots - slots - nearSlots,
+                  Math.floor((remaining - reserve * nearSlots) / reserveForeground));
+              }
+            }
+            if (!foregroundSlots) nearSlots = Math.min(desiredSlots - slots, Math.floor(remaining / reserve));
+          }
+        }
+      }
+    }
     if (slots < 1) {
       this.mesh.geometry.instanceCount = 0; this.mesh.visible = false; return;
     }
     this.gridOrigin.value.set(firstX, firstZ);
     this.gridWidth.value = columns;
     this.slotsPerCell.value = slots;
+    this.baseInstances.value = cells * slots;
+    this.nearGridOrigin.value.set(nearFirstX, nearFirstZ);
+    this.nearGridWidth.value = Math.max(1, nearColumns);
+    this.nearSlotsPerCell.value = Math.max(1, nearSlots);
+    this.nearInstances.value = nearColumns * nearRows * nearSlots;
+    this.foregroundGridOrigin.value.set(foregroundFirstX, foregroundFirstZ);
+    this.foregroundGridWidth.value = Math.max(1, foregroundColumns);
+    this.foregroundSlotsPerCell.value = Math.max(1, foregroundSlots);
+    const horizontalLength = Math.hypot(this.forward.x, this.forward.z) || 1;
+    this.bandView.value.set(camera.position.x, camera.position.z,
+      this.forward.x / horizontalLength, this.forward.z / horizontalLength);
+    this.bandLimits.value.set(nearLimit, Math.max(1.2, nearLimit * .18),
+      foregroundLimit, Math.max(.8, foregroundLimit * .18));
     this.zoomVisibility.value = zoomVisibility;
-    this.mesh.geometry.instanceCount = cells * slots;
+    this.mesh.geometry.instanceCount = cells * slots + this.nearInstances.value +
+      foregroundColumns * foregroundRows * foregroundSlots;
     this.mesh.visible = true;
   }
 

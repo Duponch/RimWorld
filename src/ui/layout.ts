@@ -1,5 +1,5 @@
 import { SCENARIOS, DEFAULT_SCENARIO } from '../sim/scenario-definitions';
-import type { JobKind } from '../sim/types';
+import type { JobKind, WorkType } from '../sim/types';
 import { scheduleLayout } from './schedule-controls';
 import { foodPolicyLayout } from './food-policy-controls';
 import { apparelAssignmentLayout } from './apparel-policy-controls';
@@ -12,6 +12,21 @@ const mapSizeLabels: Record<number, string> = { 32: 'terrain d’essai', 64: 'co
 export type Tool = BuildableFloorKind | 'home' | 'remove-home' | 'ignore-roof' | 'haul-chunks' | 'select' | Exclude<JobKind, 'sow'|'repair'|'flick'|'lay-floor'> | 'cancel' | 'stockpile' | 'remove-stockpile' | 'growing' | 'remove-growing';
 export type Panel = 'animals' | 'wildlife' | 'research' | 'architect' | 'work' | 'schedule' | 'assign' | 'history' | 'menu' | null;
 export type ArchitectCategory = 'orders' | 'zones' | 'structure' | 'floors' | 'furniture' | 'temperature' | 'recreation' | 'production' | 'power';
+/** Visible Core work order (naturalPriority), omitting Smithing and Tailoring
+ * because Lisière has no distinct priorities for them. The same sequence owns
+ * both headings and controls so a display-only reorder cannot shift a pawn's
+ * actual work setting into another column. */
+export const workColumns: readonly {id: WorkType; label: string}[] = [
+  {id:'firefight',label:'Incendie'}, {id:'patient',label:'Patient'},
+  {id:'doctor',label:'Médecin'}, {id:'bedrest',label:'Repos au lit'},
+  {id:'basic',label:'Manutention'}, {id:'warden',label:'Geôlier'},
+  {id:'handle',label:'Dressage'}, {id:'cook',label:'Cuisine'},
+  {id:'hunt',label:'Chasse'}, {id:'build',label:'Construction'},
+  {id:'grow',label:'Culture'}, {id:'mine',label:'Minage'},
+  {id:'gather',label:'Foresterie'}, {id:'art',label:'Art'},
+  {id:'craft',label:'Artisanat'}, {id:'haul',label:'Transport'},
+  {id:'clean',label:'Nettoyage'}, {id:'research',label:'Recherche'},
+];
 export const toolDefinitions: { id: Tool; title: string; hint: string; key: string; category: ArchitectCategory }[] = [
   ...FLOOR_KINDS.map(id=>({id,title:FLOOR_DEFINITIONS[id].label,hint:`${FLOOR_DEFINITIONS[id].quantity} ${ITEM_DEFINITIONS[FLOOR_DEFINITIONS[id].item!].label} par case · Construction ${FLOOR_DEFINITIONS[id].skill}${FLOOR_DEFINITIONS[id].research==='stonecutting'?' · recherche Taille de pierre':FLOOR_DEFINITIONS[id].research==='smithing'?' · recherche Forge':''} · cliquer ou tracer un rectangle`,key:'',category:'floors' as const})),
   {id:'remove-floor',title:'Retirer le sol',hint:'Travail de Construction · récupère environ la moitié du matériau · conserve le terrain naturel',key:'',category:'floors'},
@@ -42,7 +57,7 @@ export const toolDefinitions: { id: Tool; title: string; hint: string; key: stri
   {id:'cooler',title:'Climatiseur',hint:'Faces bleue froide / rouge chaude · Construction 5 · Climatisation requise · Q/E : tourner',key:'',category:'temperature'},
   {id:'wood-generator',title:'Générateur à bois',hint:'2 × 2 · 1 000 W · réservoir vide à remplir · 22 bois/jour',key:'',category:'power'},
   {id:'power-conduit',title:'Câble électrique',hint:'1 acier par case · raccorde les bâtiments · peut passer sous un mur · aucun remboursement à la déconstruction',key:'',category:'power'},
-  {id:'power-switch',title:'Interrupteur électrique',hint:'1 × 1 · coupe le réseau après intervention d’un colon · Travail : Tâches élémentaires',key:'',category:'power'},
+  {id:'power-switch',title:'Interrupteur électrique',hint:'1 × 1 · coupe le réseau après intervention d’un colon · Travail : Manutention',key:'',category:'power'},
   {id:'battery',title:'Batterie',hint:'1 × 2 · 600 Wj · rendement de charge 50 % · recherche Batteries · Q / E pour tourner',key:'',category:'power'},
   {id:'solar-generator',title:'Générateur solaire',hint:'4 × 4 · jusqu’à 1 700 W au soleil · sans toit · Construction 6 · recherche Panneaux solaires',key:'',category:'power'},
   {id:'standing-lamp',title:'Lampe sur pied',hint:'30 W · raccordement à un réseau proche · n’éclaire que si alimentée',key:'',category:'furniture'},
@@ -82,7 +97,7 @@ export function storageSettings(prefix: string): string {
 
 export function gameLayout(): string {
   const tabs = [
-    ['architect', 'Architecte'], ['work', 'Travail'], ['schedule', 'Horaires'], ['assign', 'Affectations'],
+    ['architect', 'Architecte'], ['work', 'Travail'], ['schedule', 'Planning'], ['assign', 'Assignations'],
     ['animals', 'Animaux'], ['wildlife', 'Faune'], ['research', 'Recherche'], ['quests', 'Quêtes'],
     ['world', 'Monde'], ['history', 'Historique'], ['factions', 'Factions'], ['menu', 'Menu'],
   ];
@@ -129,7 +144,7 @@ export function gameLayout(): string {
     <section id="work-panel" class="management-panel work-panel panel" aria-label="Travail" hidden>
       <div class="panel-heading"><h2>Travail</h2><button data-close-panel aria-label="Fermer Travail">×</button></div>
       <p>Priorités manuelles : <b>1</b> haute · <b>4</b> basse · <b>0</b> désactivée. Le transport livre aussi les chantiers.</p>
-      <div class="work-table-wrap"><table><thead><tr><th>Colon</th><th>Incendie</th><th>Patient</th><th>Médecin</th><th>Repos au lit</th><th>Tâches élémentaires</th><th>Geôlier</th><th>Animaux</th><th>Chasse</th><th>Collecte</th><th>Construction</th><th>Transport</th><th>Culture</th><th>Cuisine</th><th>Artisanat</th><th>Art</th><th>Minage</th><th>Recherche</th><th>Nettoyage</th><th>Activité</th></tr></thead><tbody id="work-rows"></tbody></table></div>
+      <div class="work-table-wrap"><table><thead><tr><th>Colon</th>${workColumns.map(column=>`<th data-work-heading="${column.id}">${column.label}</th>`).join('')}<th>Activité</th></tr></thead><tbody id="work-rows"></tbody></table></div>
     </section>
     ${scheduleLayout()}
     ${apparelAssignmentLayout(foodPolicyLayout())}
@@ -168,9 +183,9 @@ export function gameLayout(): string {
       <p>Vous donnez les ordres. Les colons choisissent leurs tâches et se déplacent de façon autonome.</p>
       <ol><li><b>Architecte → Ordres</b> : récolter les baies et abattre les arbres ; les matériaux apparaissent au sol.</li><li><b>Architecte → Zones</b> : désigner des cases de réserve et choisir leurs filtres. Les transporteurs y regroupent les objets.</li><li><b>Architecte → Structure / Meubles</b> : poser des murs et des lits. Les matériaux doivent être livrés avant de construire. <b>Q / E</b> tourne le lit.</li><li><b>Travail</b> : régler collecte, construction et transport ; 1 est la plus forte priorité, 0 désactive.</li><li><b>Menu</b> : sauvegarder, recharger ou choisir la taille d'une nouvelle colonie.</li></ol>
       <p>Abattage, récolte, réserves et annulation : cliquer ou maintenir le bouton gauche pour tracer un rectangle. Les cases retenues sont surlignées. Relâcher applique ; Échap ou clic droit annule le tracé.</p>
-      <p><b>Espace</b> : pause · <b>1 / 2 / 3</b> : vitesse · <b>Tab</b> : Architecte · <b>F1</b> : Travail · <b>F2</b> : Horaires · <b>Échap</b> : annuler le tracé, puis fermer · <b>Ctrl+S</b> : sauvegarder.</p>
+      <p><b>Espace</b> : pause · <b>1 / 2 / 3</b> : vitesse · <b>Tab</b> : Architecte · <b>F1</b> : Travail · <b>F2</b> : Planning · <b>Échap</b> : annuler le tracé, puis fermer · <b>Ctrl+S</b> : sauvegarder.</p>
       <p>Molette : zoom · glisser le bouton droit : tourner · bouton central ou flèches : déplacer la caméra. La coupe des murs sert à voir les intérieurs ; leurs obstacles restent en place.</p>
-      <p class="muted">Inspectez un chantier pour comprendre son attente, ou une réserve pour modifier ses filtres. Horaires permet de régler les plages de travail et de sommeil. Un piquet de fers à cheval offre une autre famille de loisirs que l’observation du ciel. Les blessures, les soins, les pièces et les températures sont déjà actifs ; les maladies et les saisons restent à développer. Les onglets grisés indiquent les domaines actuellement indisponibles.</p>
+      <p class="muted">Inspectez un chantier pour comprendre son attente, ou une réserve pour modifier ses filtres. Planning permet de régler les plages de travail et de repos. Un piquet de fers à cheval offre une autre famille de loisirs que l’observation du ciel. Les onglets grisés indiquent les domaines actuellement indisponibles.</p>
     </dialog>
     <button id="inspect-fire" class="panel" style="position:fixed;right:16px;top:132px;z-index:3" hidden>Incendie · voir</button>
     <button id="inspect-threat" class="panel" style="position:fixed;right:16px;top:90px;z-index:3" hidden>Menace armée · voir</button>

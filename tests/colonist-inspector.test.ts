@@ -9,8 +9,8 @@ import {
 
 describe('colonist inspector structure', () => {
   test('offers the five human records and only exposes Prisonnier for a captive', () => {
-    expect(colonistInspectorTabs(false).map(tab => tab.label)).toEqual(['Bio', 'Besoins', 'Santé', 'Équipement', 'Social']);
-    expect(colonistInspectorTabs(true).map(tab => tab.label)).toEqual(['Bio', 'Besoins', 'Santé', 'Équipement', 'Social', 'Prisonnier']);
+    expect(colonistInspectorTabs(false).map(tab => tab.label)).toEqual(['Bio', 'Besoins', 'Santé', 'Matériel', 'Social']);
+    expect(colonistInspectorTabs(true).map(tab => tab.label)).toEqual(['Bio', 'Besoins', 'Santé', 'Matériel', 'Social', 'Prisonnier']);
   });
 
   test('keeps the chosen record across identity selection and rejects an inapplicable prisoner record', () => {

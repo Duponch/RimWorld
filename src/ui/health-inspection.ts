@@ -25,7 +25,7 @@ export function createHealthInspection(panel:HTMLElement,selected?:()=>Pawn|unde
     label.append('Soins autorisés ',input);details.append(label);
     if(allowSelfTend){const selfLabel=document.createElement('label'),selfInput=document.createElement('input');selfInput.type='checkbox';selfInput.id='self-tend-policy';
     selfInput.onchange=()=>{const p=selected();if(p)send({type:'self-tend-policy',pawnId:p.id,enabled:selfInput.checked});};
-    selfLabel.append(selfInput,' Autoriser les auto-soins');selfLabel.title='Médecin doit être activé. Qualité de base ×70 %, avant variation ; pas de pénalité de vitesse propre aux auto-soins.';details.append(selfLabel);
+    selfLabel.append(selfInput,' Auto-soin');selfLabel.title='Médecin doit être activé. Qualité de base ×70 %, avant variation ; pas de pénalité de vitesse propre aux auto-soins.';details.append(selfLabel);
     const hint=document.createElement('small');hint.dataset.health='self-tend-hint';details.append(hint);}
   }
   panel.append(details);

@@ -183,4 +183,57 @@ describe('decorative GPU soil grass', () => {
     expect(layer.mesh.geometry.instanceCount).toBeLessThanOrEqual(GROUND_GRASS_MAX_BLADES);
     layer.dispose();
   });
+
+  test('low perspective spends the fixed blade budget on nearby ground instead of thinning the whole map', () => {
+    const world = createWorld(120, 250, 250);
+    const layer = new GpuGroundGrassLayer();
+    layer.update(world);
+    const camera = new THREE.PerspectiveCamera(45, 1.5, .1, 2000);
+    camera.position.set(125, 5, 130); camera.lookAt(125, 0, 105);
+    layer.present(camera, new THREE.Vector3(125, 0, 105), 30, 160);
+    const baseSlots = layer['slotsPerCell'].value;
+    const nearSlots = layer['nearSlotsPerCell'].value;
+    const foregroundSlots = layer['foregroundSlotsPerCell'].value;
+    const firstCount = layer.mesh.geometry.instanceCount;
+    const before = { origin: layer['nearGridOrigin'].value.clone(),
+      columns: layer['nearGridWidth'].value, slots: nearSlots,
+      rows: layer['nearInstances'].value / (layer['nearGridWidth'].value * nearSlots),
+      first: layer['baseInstances'].value };
+    expect(baseSlots).toBe(1); // formerly the whole visible field had only this one slot
+    expect(nearSlots).toBeGreaterThan(15);
+    expect(foregroundSlots).toBeGreaterThan(80);
+    expect(layer['bandLimits'].value.x).toBeGreaterThan(layer['bandLimits'].value.z);
+    expect(layer['bandLimits'].value.y).toBeGreaterThan(1);
+    expect(firstCount).toBeLessThanOrEqual(GROUND_GRASS_MAX_BLADES);
+    expect(layer['baseInstances'].value).toBeGreaterThan(0);
+    const atlasVersion = layer.map.version;
+    const diagonal = 25 / Math.SQRT2;
+    camera.position.set(125 + diagonal, 5, 105 + diagonal);
+    camera.lookAt(125, 0, 105);
+    layer.present(camera, new THREE.Vector3(125, 0, 105), 30, 160);
+    expect(layer['nearSlotsPerCell'].value).toBe(nearSlots);
+    expect(layer['foregroundSlotsPerCell'].value).toBe(foregroundSlots);
+    expect(layer['bandLimits'].value.x).toBeCloseTo(25, 1);
+    expect(layer.mesh.geometry.instanceCount).toBeLessThanOrEqual(GROUND_GRASS_MAX_BLADES);
+    expect(layer.map.version).toBe(atlasVersion);
+    const after = { origin: layer['nearGridOrigin'].value.clone(),
+      columns: layer['nearGridWidth'].value, slots: layer['nearSlotsPerCell'].value,
+      rows: layer['nearInstances'].value / (layer['nearGridWidth'].value * layer['nearSlotsPerCell'].value),
+      first: layer['baseInstances'].value };
+    const x = Math.max(before.origin.x, after.origin.x);
+    const z = Math.max(before.origin.y, after.origin.y);
+    expect(x).toBeLessThan(Math.min(before.origin.x + before.columns, after.origin.x + after.columns));
+    expect(z).toBeLessThan(Math.min(before.origin.y + before.rows, after.origin.y + after.rows));
+    const decode = (range: typeof before, index: number) => {
+      const local = index - range.first;
+      const cellIndex = Math.floor(local / range.slots);
+      return { x: range.origin.x + cellIndex % range.columns,
+        z: range.origin.y + Math.floor(cellIndex / range.columns), slot: local % range.slots + baseSlots };
+    };
+    const indexFor = (range: typeof before) => range.first +
+      ((z - range.origin.y) * range.columns + x - range.origin.x) * range.slots + 3;
+    expect(decode(before, indexFor(before))).toEqual({ x, z, slot: baseSlots + 3 });
+    expect(decode(after, indexFor(after))).toEqual({ x, z, slot: baseSlots + 3 });
+    layer.dispose();
+  });
 });

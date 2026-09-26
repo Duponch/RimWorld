@@ -51,7 +51,7 @@ try{
   await page.locator('.colonist').first().click();
   result.selectedPortrait=await page.locator('.colonist').first().evaluate(node=>{const label=node.querySelector('strong'),style=getComputedStyle(label);return {text:label.textContent,display:style.display,visibility:style.visibility,opacity:style.opacity};});
   if(!result.selectedPortrait.text||result.selectedPortrait.display==='none'||result.selectedPortrait.visibility==='hidden'||result.selectedPortrait.opacity==='0')throw Error('Selected portrait label missing');
-  for(const name of ['Bio','Besoins','Santé','Équipement','Social']){
+  for(const name of ['Bio','Besoins','Santé','Matériel','Social']){
     await page.getByRole('tab',{name,exact:true}).click();
     if(await page.locator('[role=tabpanel]:visible').count()!==1)throw Error('Inspector panel missing');
   }

@@ -28,7 +28,7 @@ test('V94 native: upright plant batch, responsive HUD and exact save', async ({p
     await expect(front).toBeHidden({timeout:60_000});await pause(page);
     expect(await page.evaluate(()=>window.__lisiere.backend)).toBe('WebGPU');
     await page.locator('.colonist').first().click();
-    for (const [name, selector] of [['Bio','.skills-inspection'],['Besoins','.needs'],['Santé','#health-inspection'],['Équipement','#equipment-details'],['Social','#social-inspection']]) {
+    for (const [name, selector] of [['Bio','.skills-inspection'],['Besoins','.needs'],['Santé','#health-inspection'],['Matériel','#equipment-details'],['Social','#social-inspection']]) {
       await page.getByRole('tab',{name,exact:true}).click();
       await expect(page.locator(selector).first()).toBeVisible();
       await expect(page.locator('[role=tabpanel]:visible')).toHaveCount(1);

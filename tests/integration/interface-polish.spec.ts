@@ -52,7 +52,7 @@ test('V95 native: stable management panels, upright plants, complete HUD and sem
     expect(observedWait).toBe(waitCursor);(report.semanticCursors as Record<string,string>).wait=observedWait;
     expect(await page.evaluate(()=>window.__lisiere.backend)).toBe('WebGPU');
     await screenshot(page,'hud');await page.locator('.colonist').first().click();
-    for(const name of ['Bio','Besoins','Santé','Équipement','Social']){
+    for(const name of ['Bio','Besoins','Santé','Matériel','Social']){
       await page.getByRole('tab',{name,exact:true}).click();await expect(page.locator('[role=tabpanel]:visible')).toHaveCount(1);await screenshot(page,name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase());
     }
     await page.locator('.colonist').nth(1).click();await expect(page.getByRole('tab',{name:'Social',exact:true})).toHaveAttribute('aria-selected','true');
@@ -88,7 +88,7 @@ test('V95 native: stable management panels, upright plants, complete HUD and sem
     }
     report.categories=categories;report.selectedTools=seen;
     const images=await page.locator('.tool-icon').evaluateAll(nodes=>nodes.map(n=>({text:n.textContent,image:getComputedStyle(n).backgroundImage})));
-    expect(images).toHaveLength(60);expect(images.every(n=>n.text===''&&n.image.includes('architect-'))).toBe(true);report.pngTools=images.length;
+    expect(images).toHaveLength(62);expect(images.every(n=>n.text===''&&n.image.includes('architect-'))).toBe(true);report.pngTools=images.length;
     const cursorImages=new Set<string>();
     for(const [id,category] of [['select','orders'],['mine','orders'],['chop','orders'],['harvest','orders'],['cut','orders'],['wall','structure'],['deconstruct','orders'],['stockpile','zones'],['cancel','orders']]){
       await page.locator(`[data-category="${category}"]`).click();await page.locator(`[data-tool="${id}"]`).click();
@@ -180,8 +180,8 @@ test('V95 native: stable management panels, upright plants, complete HUD and sem
     const frames=page.evaluate(()=>new Promise<number[]>(resolve=>{const samples:number[]=[];let last=performance.now();const end=last+8000;const frame=(t:number)=>{samples.push(t-last);last=t;if(t>end)resolve(samples);else requestAnimationFrame(frame);};requestAnimationFrame(frame);}));
     await page.locator('[data-speed="6"]').click();const timings=(await frames).sort((a,b)=>a-b);await pause(page);
     const saved=await world(page),elapsed=Date.now()-start;
-    const plantPresentation=await page.evaluate(()=>{const view=(window as any).__v95View;return {instances:view.plants.instanceCount(),group:view.plants.group.name,oldGrass:'grass' in view};});
-    expect(plantPresentation.instances).toBeGreaterThan(0);expect(plantPresentation.group).toBe('plant-cluster-layer');expect(plantPresentation.oldGrass).toBe(false);report.plants=plantPresentation;
+    const plantPresentation=await page.evaluate(()=>{const view=(window as any).__v95View;return {instances:view.plants.instanceCount(),group:view.plants.group.name,groundGrass:'grass' in view};});
+    expect(plantPresentation.instances).toBeGreaterThan(0);expect(plantPresentation.group).toBe('plant-cluster-layer');expect(plantPresentation.groundGrass).toBe(true);report.plants=plantPresentation;
     writeFileSync('tmp/interface-v95-checkpoint.json',JSON.stringify(saved));
     report.performance={frames:timings.length,p95:timings[Math.floor(timings.length*.95)],max:timings.at(-1),speed:(saved.tick-before)/elapsed*1000/6};
     await panel(page,'menu');await page.locator('#save').click();

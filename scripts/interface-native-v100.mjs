@@ -30,7 +30,7 @@ try{
   await boxCheck('.main-tabs',`bar-${size}`);
   const resource=await page.locator('.resource-list').evaluate(el=>({width:el.getBoundingClientRect().width,background:getComputedStyle(el).backgroundColor,shadow:getComputedStyle(el).boxShadow}));assert.equal(resource.width,216);assert.equal(resource.background,'rgba(0, 0, 0, 0)');assert.equal(resource.shadow,'none');
   await page.locator('.colonist').first().click();await boxCheck('#inspector',`colonist-${size}`);assert.equal(await page.locator('.colonist-inspector-summary #room-description').count(),0);assert.equal(await page.locator('#colonist-panel-needs #room-description').count(),1);await snap(`colonist-${size}`);
-  for(const name of ['Besoins','Santé','Équipement','Social','Bio']){await page.getByRole('tab',{name,exact:true}).click();assert.ok(await page.locator('[role="tabpanel"]:visible').count());if(size===1440)await snap(`colonist-${name}`);}
+  for(const name of ['Besoins','Santé','Matériel','Social','Bio']){await page.getByRole('tab',{name,exact:true}).click();assert.ok(await page.locator('[role="tabpanel"]:visible').count());if(size===1440)await snap(`colonist-${name}`);}
   for(const name of ['work','schedule','assign','wildlife','research','architect','history','menu']){
    await page.locator(`[data-panel="${name}"]`).click();await boxCheck(`#${name}-panel`,`${name}-${size}`);if(size===1440||size===1366)await snap(`${name}-${size}`);
    if(name==='work'){

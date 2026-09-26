@@ -40,8 +40,10 @@ test('real tasks select separate mine, chop, build and fabrication gestures',()=
 
 test('work reach stays inside the neighbouring target clearance and rejects distant or absent targets',()=>{
   const actor={x:10,z:10};
-  expect(workApproach(actor,{x:10,z:11})).toEqual({x:0,z:.42});
-  expect(workApproach(actor,{x:10,z:11},.72).z).toBeCloseTo(.28);
+  expect(workApproach(actor,{x:10,z:11}).z).toBeCloseTo(.18);
+  expect(workApproach(actor,{x:10,z:11},.9).z).toBeCloseTo(.1);
+  expect(workApproach(actor,{x:10,z:11},.88).z).toBeCloseTo(.12);
+  expect(Math.hypot(...Object.values(workApproach(actor,{x:11,z:11})))).toBeCloseTo(.3);
   expect(workApproach(actor,{x:10,z:10})).toEqual({x:0,z:0});
   expect(workApproach(actor,{x:10,z:12})).toEqual({x:0,z:0});
   expect(workApproach(actor,undefined)).toEqual({x:0,z:0});
@@ -60,7 +62,7 @@ test('confirmed tree work approaches and releases smoothly without moving the lo
   layer.update(world,1,false);timeline.tick=51;layer.updateTravel(world,timeline);
   expect(pawn.z).toBe(10);
   expect(from.getZ(0)).toBeCloseTo(10);
-  expect(to.getZ(0)).toBeCloseTo(10.42);
+  expect(to.getZ(0)).toBeCloseTo(10.18);
   expect((geometry.getAttribute('aMotion') as THREE.InstancedBufferAttribute).getZ(0)).toBe(WORK_POSE.chop);
   const version=from.version;timeline.tick=51.5;layer.updateTravel(world,timeline);
   expect(from.version).toBe(version);
@@ -69,7 +71,7 @@ test('confirmed tree work approaches and releases smoothly without moving the lo
   job.kind='sow';world.tick=52;
   layer.update(world,1,false);timeline.tick=52;layer.updateTravel(world,timeline);
   expect(from.getZ(0)).toBeGreaterThan(10);
-  expect(from.getZ(0)).toBeLessThan(10.42);
+  expect(from.getZ(0)).toBeLessThan(10.18);
   expect(to.getZ(0)).toBeCloseTo(10);
   const travel=geometry.getAttribute('aTravel') as THREE.InstancedBufferAttribute;
   expect(travel.getW(0)).toBe(2);
@@ -101,8 +103,8 @@ test('a finished approach remains at its contact pose across worker snapshots',(
   layer.update(world,1,true);timeline.tick=30;layer.updateTravel(world,timeline);
   world.tick=33;layer.update(world,0,false);timeline.tick=33;layer.updateTravel(world,timeline);
   const g=layer.feedbackSource!,from=g.getAttribute('aFrom') as THREE.InstancedBufferAttribute,to=g.getAttribute('aTo') as THREE.InstancedBufferAttribute;
-  expect(from.getZ(0)).toBeCloseTo(10.42);
-  expect(to.getZ(0)).toBeCloseTo(10.42);
+  expect(from.getZ(0)).toBeCloseTo(10.18);
+  expect(to.getZ(0)).toBeCloseTo(10.18);
   expect((g.getAttribute('aTravel') as THREE.InstancedBufferAttribute).getY(0)).toBe(0);
   clearGroup(layer.group);
 });
@@ -115,7 +117,7 @@ test('bench contact stays outside its surface; ground work and travel stay on th
   const layer=new PawnLayer(),timeline=new MotionTimeline();
   layer.update(world,1,true);timeline.tick=20;layer.updateTravel(world,timeline);
   const geometry=layer.feedbackSource!,to=geometry.getAttribute('aTo') as THREE.InstancedBufferAttribute;
-  expect(to.getZ(0)).toBeCloseTo(10.28);
+  expect(to.getZ(0)).toBeCloseTo(10.12);
   expect(geometry.getAttribute('aFrom')).toBe((layer.group.children[1] as THREE.Mesh).geometry.getAttribute('aFrom'));
   expect(geometry.getAttribute('aFrom')).toBe((layer.group.children[3] as THREE.Mesh).geometry.getAttribute('aFrom'));
   pawn.research=undefined;
@@ -139,17 +141,47 @@ test('departure from a reached work pose joins the confirmed edge and converges 
   layer.update(world,1,true);timeline.tick=30;layer.updateTravel(world,timeline);
   const geometry=layer.feedbackSource!,from=geometry.getAttribute('aFrom') as THREE.InstancedBufferAttribute;
   const to=geometry.getAttribute('aTo') as THREE.InstancedBufferAttribute;
-  expect(to.getZ(0)).toBeCloseTo(10.42);
+  expect(to.getZ(0)).toBeCloseTo(10.18);
   pawn.state='moving';pawn.jobId=null;world.tick=31;
   const edge={from:{x:10,z:10},to:{x:10,z:9},start:31,end:34};
   timeline.tracks.set(pawn.id,[edge]);layer.update(world,1,false);timeline.tick=31;layer.updateTravel(world,timeline);
-  expect(from.getZ(0)).toBeCloseTo(10.42);
+  expect(from.getZ(0)).toBeCloseTo(10.18);
   expect(to.getZ(0)).toBeCloseTo(9);
   const first={...edge,edgeStart:31,fromFraction:0,toFraction:.5,end:32.5};
   const second={...edge,edgeStart:31,fromFraction:.5,toFraction:1,start:32.5};
   timeline.tracks.set(pawn.id,[first,second]);timeline.tick=32.5;layer.updateTravel(world,timeline);
-  expect(from.getZ(0)).toBeCloseTo(9.5+.42*.5);
+  expect(from.getZ(0)).toBeCloseTo(9.5+.18*.5);
   expect(to.getZ(0)).toBeCloseTo(9);
+  clearGroup(layer.group);
+});
+
+test('a reserved final edge reaches contact in one walking motion without a centre-cell slide',()=>{
+  const world=createWorld(),pawn=world.pawns[0]!;
+  pawn.x=9;pawn.z=10;pawn.state='idle';delete pawn.motion;world.tick=50;
+  const layer=new PawnLayer(),timeline=new MotionTimeline();
+  layer.update(world,1,true);timeline.tick=50;layer.updateTravel(world,timeline);
+  const job:Job={id:904,kind:'chop',x:11,z:10,orientation:0,footprint:'standard',status:'active',reservedBy:pawn.id,progress:0,escrow:{wood:0,food:0}};
+  world.jobs.push(job);pawn.jobId=job.id;pawn.x=10;pawn.path=[];pawn.state='moving';pawn.moveCooldown=3;world.tick=51;
+  const edge={from:{x:9,z:10},to:{x:10,z:10},start:51,end:54};pawn.motion=edge;
+  timeline.tracks.set(pawn.id,[edge]);timeline.tick=51;layer.update(world,1,false);layer.updateTravel(world,timeline);
+  const geometry=layer.feedbackSource!,from=geometry.getAttribute('aFrom') as THREE.InstancedBufferAttribute;
+  const to=geometry.getAttribute('aTo') as THREE.InstancedBufferAttribute;
+  const motion=geometry.getAttribute('aMotion') as THREE.InstancedBufferAttribute;
+  expect(from.getX(0)).toBeCloseTo(9);
+  expect(to.getX(0)).toBeCloseTo(10.18);
+  expect(motion.getX(0)).toBe(1);
+  // The latest worker snapshot may already say "working" while the shared
+  // playout is still halfway through its confirmed edge.
+  timeline.tick=52.5;layer.updateTravel(world,timeline);
+  pawn.state='working';pawn.moveCooldown=0;world.tick=54;
+  layer.update(world,0,false);layer.updateTravel(world,timeline);
+  expect(from.getX(0)).toBeCloseTo(9);
+  expect(to.getX(0)).toBeCloseTo(10.18);
+  timeline.tick=54;layer.updateTravel(world,timeline);
+  expect(from.getX(0)).toBeCloseTo(10.18);
+  expect(to.getX(0)).toBeCloseTo(10.18);
+  expect(motion.getX(0)).toBe(0);
+  expect(pawn.x).toBe(10);
   clearGroup(layer.group);
 });
 

@@ -5,11 +5,12 @@ import { artisticSkill } from '../sim/art-rules';
 import { cookingSkill,cookingSpeed,butcherySpeed,butcheryEfficiency } from '../sim/cooking-statistics';
 import { constructionSpeed, learningFactor, XP_SCALE, xpRequired } from '../sim/skills.ts';
 import { medicalTendSpeed,medicalTendQuality } from '../sim/care-rules.ts';
+import { socialImpact } from '../sim/social-state';
 import type { Pawn } from '../sim/types.ts';
 import { SKILL_PASSION_LABELS,setCompactSkillPassion,setSkillPassion } from './skill-passion';
 
 type SkillEntry = {
-  skill: 'animals'|'construction'|'medicine'|'intellectual'|'crafting'|'artistic'|'cooking'|'shooting'|'melee';
+  skill: 'animals'|'construction'|'medicine'|'intellectual'|'crafting'|'artistic'|'cooking'|'shooting'|'melee'|'social';
   progress?: string;
   description?: string;
 };
@@ -23,6 +24,7 @@ const SKILL_ENTRIES: readonly SkillEntry[] = [
   {skill:'cooking',progress:'data-cooking-xp',description:'data-cooking-description'},
   {skill:'shooting',progress:'data-shooting-xp'},
   {skill:'melee',progress:'data-melee-xp'},
+  {skill:'social',progress:'data-social-xp'},
 ];
 
 function createSkillEntry(entry:SkillEntry):HTMLDetailsElement {
@@ -37,7 +39,6 @@ function createSkillEntry(entry:SkillEntry):HTMLDetailsElement {
 export function createSkillsInspection(panel:HTMLElement):void {
   const details=document.createElement('details');details.className='skills-inspection';
   const summary=document.createElement('summary');summary.textContent='Biographie · compétences';details.append(summary,...SKILL_ENTRIES.map(createSkillEntry));
-  const note=document.createElement('p');note.className='muted';note.textContent='Social et opinions : voir l’inspection Social. Autres compétences et histoire personnelle à développer.';details.append(note);
   createTraitsInspection(details);panel.append(details);
 }
 export function updateSkillsInspection(panel:HTMLElement,pawn:Pawn):void {
@@ -47,7 +48,7 @@ export function updateSkillsInspection(panel:HTMLElement,pawn:Pawn):void {
   const progress=panel.querySelector<HTMLProgressElement>('[data-skill-xp]')!;
   progress.value=Math.max(0,s.xp/xpRequired(s.level));progress.setAttribute('aria-label','Expérience de construction');
   panel.querySelector('[data-skill-description]')!.textContent=`${(s.xp/XP_SCALE).toFixed(1)} / ${xpRequired(s.level)/XP_SCALE} XP · Vitesse ${Math.round(constructionSpeed(pawn)*100)} % · Apprentissage ${Math.round(learningFactor(s,pawn)*100)} %${s.dailyXp>4000*XP_SCALE?' (saturation quotidienne)':''}. La lumière s’applique séparément.`;
-  const intellect=intellectualSkill(pawn);setSkillPassion(panel.querySelector<HTMLElement>('[data-skill="intellectual"]')!,`Intellect ${intellect.level}/20`,intellect.passion);panel.querySelector<HTMLElement>('[data-skill-detail="intellectual"]')!.textContent=`${(intellect.xp/XP_SCALE).toFixed(1)} XP · vitesse de recherche.`;
+  const intellect=intellectualSkill(pawn);setSkillPassion(panel.querySelector<HTMLElement>('[data-skill="intellectual"]')!,`Intellectuel ${intellect.level}/20`,intellect.passion);panel.querySelector<HTMLElement>('[data-skill-detail="intellectual"]')!.textContent=`${(intellect.xp/XP_SCALE).toFixed(1)} XP · vitesse de recherche.`;
   const craft=craftingSkill(pawn);setSkillPassion(panel.querySelector<HTMLElement>('[data-skill="crafting"]')!,`Artisanat ${craft.level}/20`,craft.passion);panel.querySelector<HTMLElement>('[data-skill-detail="crafting"]')!.textContent=`${(craft.xp/XP_SCALE).toFixed(1)} XP · influe sur la qualité de confection, sans accélérer la taille de pierre.`;
   const craftProgress=panel.querySelector<HTMLProgressElement>('[data-crafting-xp]')!;craftProgress.value=Math.max(0,craft.xp/xpRequired(craft.level));craftProgress.setAttribute('aria-label','Expérience d’artisanat');
   const animals=pawn.skills.animals??{level:0,xp:0,dailyXp:0,passion:0 as const};
@@ -65,6 +66,10 @@ export function updateSkillsInspection(panel:HTMLElement,pawn:Pawn):void {
   const sp=panel.querySelector<HTMLProgressElement>('[data-shooting-xp]')!;sp.value=Math.max(0,shot.xp/xpRequired(shot.level));sp.setAttribute('aria-label','Expérience de tir');
   const melee=pawn.skills.melee;setSkillPassion(panel.querySelector<HTMLElement>('[data-skill="melee"]')!,`Mêlée ${melee.level}/20`,melee.passion);panel.querySelector<HTMLElement>('[data-skill-detail="melee"]')!.textContent=`${(melee.xp/XP_SCALE).toFixed(1)} XP · Apprentissage ${Math.round(learningFactor(melee,pawn)*100)} %`;
   const meleeProgress=panel.querySelector<HTMLProgressElement>('[data-melee-xp]')!;meleeProgress.value=Math.max(0,melee.xp/xpRequired(melee.level));meleeProgress.setAttribute('aria-label','Expérience de mêlée');
+  const social=pawn.skills.social??{level:0,xp:0,dailyXp:0,passion:0 as const};
+  setSkillPassion(panel.querySelector<HTMLElement>('[data-skill="social"]')!,`Social ${social.level}/20`,social.passion);
+  const socialProgress=panel.querySelector<HTMLProgressElement>('[data-social-xp]')!;socialProgress.value=Math.max(0,social.xp/xpRequired(social.level));socialProgress.setAttribute('aria-label','Expérience sociale');
+  panel.querySelector<HTMLElement>('[data-skill-detail="social"]')!.textContent=`${(social.xp/XP_SCALE).toFixed(1)} XP · Impact ${Math.round(socialImpact(pawn)*100)} % · Apprentissage ${Math.round(learningFactor(social,pawn)*100)} %`;
   const m=pawn.skills.medicine;
   setSkillPassion(panel.querySelector<HTMLElement>('[data-skill="medicine"]')!,`Médecine ${m.level}/20`,m.passion);
   const mp=panel.querySelector<HTMLProgressElement>('[data-medicine-xp]')!;mp.value=Math.max(0,m.xp/xpRequired(m.level));mp.setAttribute('aria-label','Expérience de médecine');

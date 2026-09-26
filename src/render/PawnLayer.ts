@@ -70,7 +70,7 @@ export class PawnLayer {
   private readonly workPoses = new Map<number,number>();
   private readonly workOffsets = new Map<number,{x:number;z:number}>();
   private readonly approachTransitions = new Map<number,ApproachTransition>();
-  private readonly departureOffsets = new Map<number,{start:number;x:number;z:number}>();
+  private readonly departureOffsets = new Map<number,{start:number;x:number;z:number;arrivalX:number;arrivalZ:number}>();
   private travelSurfaces:ReadonlyMap<number,number>=new Map();
   private rescuePairs:readonly (readonly [number,number])[]=[];
   constructor(private readonly configure?: (material: THREE.MeshStandardNodeMaterial) => void) {}
@@ -301,6 +301,7 @@ export class PawnLayer {
     const equipment=geometry.getAttribute('aEquipment') as THREE.InterleavedBufferAttribute,gears=equipmentProjection(world),apparel=apparelProjection(world);
     const carried = new Map<number, World['piles'][number]>();
     for (const pile of world.piles) if (pile.owner.type === 'pawn') carried.set(pile.owner.pawnId, pile);
+    let jobsById:Map<number,World['jobs'][number]>|undefined;
     const present = new Set<number>();
     world.pawns.forEach((pawn, index) => {
       present.add(pawn.id);
@@ -340,18 +341,25 @@ export class PawnLayer {
         const target = Math.atan2(surface.cell.x - pawn.x, surface.cell.z - pawn.z);
         yaw = from.w + Math.atan2(Math.sin(target - from.w), Math.cos(target - from.w));
       }
-      const job=pawn.state==='working'?world.jobs.find(j=>j.id===pawn.jobId):undefined;
+      // A task already owns the final travel edge before the worker changes to
+      // `working`. Resolve that target early so the edge ends at its visual
+      // contact pose instead of arriving at the cell centre and sliding later.
+      const arriving=pawn.state==='moving'&&pawn.moveCooldown>0&&pawn.path.length===0&&!!pawn.motion&&pawn.motion.to.x===pawn.x&&pawn.motion.to.z===pawn.z;
+      const job=pawn.jobId===null?undefined:(jobsById??=new Map(world.jobs.map(j=>[j.id,j]))).get(pawn.jobId);
       const garment=pawn.equipmentTask?.action==='wear'?world.piles.find(p=>p.id===pawn.equipmentTask!.itemId):undefined;
       const dressing=garment?.owner.type==='ground'?garment.owner:undefined;
       const fighting=pawn.firefighting?world.fires?.items.find(f=>f.id===pawn.firefighting!.fireId):undefined;
       const fireTarget=fighting?firePosition(world,fighting):undefined;
       const workPose=pawnWorkPose(pawn,job);
       const fuelDestination=pawn.haul?.destination.type==='fuel'?pawn.haul.destination:undefined;
-      const station=pawn.state==='working' ? pawn.research ? world.structures.find(s=>s.id===pawn.research!.stationId) : pawn.cooking?.phase==='work' ? world.structures.find(s=>s.id===pawn.cooking!.stationId) : pawn.haul?.serviceProgress&&fuelDestination ? world.structures.find(s=>s.id===fuelDestination.structureId) : undefined : undefined;
+      const station=pawn.state==='working'||arriving ? pawn.research ? world.structures.find(s=>s.id===pawn.research!.stationId) : pawn.cooking?.phase==='work' ? world.structures.find(s=>s.id===pawn.cooking!.stationId) : pawn.haul?.serviceProgress&&fuelDestination ? world.structures.find(s=>s.id===fuelDestination.structureId) : undefined : undefined;
       const stationCell=station ? footprintCells(station).reduce((best,cell)=>Math.hypot(cell.x-pawn.x,cell.z-pawn.z)<Math.hypot(best.x-pawn.x,best.z-pawn.z)?cell:best) : undefined;
-      const work = pawn.state==='working' ? fireTarget ?? (job?constructionWorkTarget(world,job):dressing) ?? (pawn.hunting?.phase==='finish' ? world.wildlife?.animals.find(a=>a.id===pawn.hunting!.animalId) : stationCell ?? pawn.cooking?.actionCell ?? pawn.haul?.pickupCell) : undefined;
-      if(work) yaw=Math.atan2(work.x-pawn.x,work.z-pawn.z);
-      const reach=workPose!==WORK_POSE.ground&&workPose!==0&&!station?.kind.includes('spot') ? workApproach(pawn,work,station?.kind==='research-bench'||station?.kind==='butcher-table'||station?.kind==='machining-table'||station?.kind==='stonecutter'||station?.kind==='art-bench'||station?.kind==='tailor-bench'||station?.kind==='electric-tailor-bench'||station?.kind==='electric-stove'||station?.kind==='fueled-stove' ? .72 : .55) : {x:0,z:0};
+      const work = pawn.state==='working'||arriving ? fireTarget ?? (job?constructionWorkTarget(world,job):dressing) ?? (pawn.hunting?.phase==='finish' ? world.wildlife?.animals.find(a=>a.id===pawn.hunting!.animalId) : stationCell ?? pawn.cooking?.actionCell ?? pawn.haul?.pickupCell) : undefined;
+      if(work&&pawn.state==='working') yaw=Math.atan2(work.x-pawn.x,work.z-pawn.z);
+      const contactPose=arriving?pawnWorkPose({...pawn,state:'working'},job):workPose;
+      const atBench=station?.kind==='research-bench'||station?.kind==='butcher-table'||station?.kind==='machining-table'||station?.kind==='stonecutter'||station?.kind==='art-bench'||station?.kind==='tailor-bench'||station?.kind==='electric-tailor-bench'||station?.kind==='electric-stove'||station?.kind==='fueled-stove';
+      const clearance=job?.kind==='mine' ? .9 : atBench ? .88 : .82;
+      const reach=contactPose!==WORK_POSE.ground&&contactPose!==0&&!station?.kind.includes('spot') ? workApproach(pawn,work,clearance) : {x:0,z:0};
       this.workOffsets.set(pawn.id,reach);
       if(newMap)this.approachTransitions.set(pawn.id,{fromX:reach.x,fromZ:reach.z,toX:reach.x,toZ:reach.z,start:world.tick,baseX:pawn.x,baseZ:pawn.z});
       px+=reach.x;pz+=reach.z;
@@ -424,12 +432,17 @@ export class PawnLayer {
         if(!departure||departure.start!==edgeStart){
           const previous=this.approachTransitions.get(pawn.id);
           const offset=previous&&previous.baseX===segment.from.x&&previous.baseZ===segment.from.z?approachAt(previous,edgeStart):{x:0,z:0};
-          departure={start:edgeStart,x:offset.x,z:offset.z};this.departureOffsets.set(pawn.id,departure);
+          const planned=this.workOffsets.get(pawn.id);
+          const finalCell=segment.to.x===pawn.x&&segment.to.z===pawn.z&&pawn.path.length===0;
+          departure={start:edgeStart,x:offset.x,z:offset.z,arrivalX:finalCell?planned?.x??0:0,arrivalZ:finalCell?planned?.z??0:0};
+          this.departureOffsets.set(pawn.id,departure);
         }
         // The first part of a confirmed edge departs from the reached work
         // pose, then converges on the same authoritative destination.
         visual.from.x+=departure.x*(1-a);visual.from.z+=departure.z*(1-a);
         visual.to.x+=departure.x*(1-b);visual.to.z+=departure.z*(1-b);
+        visual.from.x+=departure.arrivalX*a;visual.from.z+=departure.arrivalZ*a;
+        visual.to.x+=departure.arrivalX*b;visual.to.z+=departure.arrivalZ*b;
         this.approachTransitions.delete(pawn.id);
         times.setXYZW(i,localTimeSeconds(segment.start,origin),localTimeSeconds(segment.end,origin),a,b);
         motion.setX(i,!medicallyStopped(pawn)&&active && a!==b && timeline.tick>=segment.start?1:0);motion.setY(i,0);motion.setZ(i,medicallyStopped(pawn)?1:0);
@@ -442,7 +455,9 @@ export class PawnLayer {
           // An edge or a changed work cell can leave no approach record even
           // though the last rendered pose is still off centre. Begin from that
           // shared pose rather than teleporting back to the logical cell.
-          const visualX=visual.from.x-baseX,visualZ=visual.from.z-baseZ;
+          const edgeStart=segment?.edgeStart??segment?.start;
+          const edgeArrival=segment&&timeline.tick>=segment.end&&(segment.toFraction??1)>=1&&segment.to.x===baseX&&segment.to.z===baseZ&&this.departureOffsets.get(pawn.id)?.start===edgeStart?this.departureOffsets.get(pawn.id):undefined;
+          const visualX=edgeArrival?.arrivalX??visual.from.x-baseX,visualZ=edgeArrival?.arrivalZ??visual.from.z-baseZ;
           const visibleOffset=Math.hypot(visualX,visualZ)<=1.5?{x:visualX,z:visualZ}:{x:0,z:0};
           const current=approach&&approach.baseX===baseX&&approach.baseZ===baseZ?approachAt(approach,timeline.tick):visibleOffset;
           approach={fromX:current.x,fromZ:current.z,toX:desired.x,toZ:desired.z,start:timeline.tick,baseX,baseZ};
@@ -465,7 +480,9 @@ export class PawnLayer {
         if(!shifting){visual.from.x=visual.to.x;visual.from.z=visual.to.z;}
         const approachStart=localTimeSeconds(approach.start,origin);
         times.setXYZW(i,shifting?approachStart:0,shifting?approachStart+APPROACH_TICKS/TICKS_PER_SECOND:0,localTimeSeconds(heading.startTick,origin),2);
-        motion.setX(i,0);motion.setY(i,pawn.state==='working'&&!pawn.stun?1:0);
+        // Unexpected target changes still get a short, visibly stepping
+        // adjustment. Normal task arrivals already reach contact on the edge.
+        motion.setX(i,shifting?1:0);motion.setY(i,pawn.state==='working'&&!pawn.stun?1:0);
         const dining=pawn.need?.kind==='eat'?pawn.need.dining:null;
         const smallMelee=!!pawn.melee?.strike&&world.wildlife?.animals.some(animal=>animal.id===pawn.melee!.strike!.targetId&&animal.species==='hare');
         motion.setZ(i,pawn.health?.foodPoisoning?.vomit&&pawn.state!=='dead'?10:pawn.stun&&!medicallyStopped(pawn)?9:pawn.melee?.strike?smallMelee?WORK_POSE.groundMelee:8:pawn.shooting?.stance?.phase==='cooldown'?15:pawn.shooting?.stance?7:pawn.state==='recreating'?pawn.recreation.task?.activity==='horseshoes'?4:5:pawn.state==='sleeping'||pawn.state==='resting'||medicallyStopped(pawn)?1:pawn.state==='eating'?dining&&dining.seatId!==null?3:2:this.workPoses.get(pawn.id)??0);

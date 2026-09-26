@@ -3,8 +3,10 @@ import { describe, expect, test } from 'vitest';
 import { foodPolicyLayout } from '../src/ui/food-policy-controls';
 import { scheduleLayout } from '../src/ui/schedule-controls';
 import { wildlifePanelScaffold } from '../src/ui/wildlife-panel';
+import { researchLinks,researchProjects } from '../src/ui/research-panel';
 
 const styles=readFileSync(new URL('../src/ui/management-panels.css',import.meta.url),'utf8');
+const worldStyles=readFileSync(new URL('../src/ui/world-panels.css',import.meta.url),'utf8');
 
 describe('stable management panel layouts',()=>{
   test('keeps schedule copying and assignment actions in dedicated groups',()=>{
@@ -15,14 +17,28 @@ describe('stable management panel layouts',()=>{
     expect(assignment).toContain('class="assignment-actions"');
   });
 
-  test('separates changing wildlife values from its fixed action columns',()=>{
+  test('keeps wildlife designations in a stable table and drafted combat commands outside it',()=>{
     const scaffold=wildlifePanelScaffold();
-    expect(scaffold).toContain('class="fauna-list" data-fauna-list');
-    expect(scaffold).toContain('class="fauna-intro"');
-    expect(styles).toContain('grid-template-columns: 90px minmax(150px, 1.1fr) 74px minmax(125px, .9fr) 74px 250px');
-    expect(styles).toContain('#wildlife-panel .fauna-position');
-    expect(styles).toContain('#wildlife-panel .fauna-actions');
-    expect(styles).toContain('font-variant-numeric: tabular-nums');
+    expect(scaffold).toContain('class="fauna-list fauna-table-wrap" data-fauna-list');
+    expect(scaffold).toContain('class="fauna-combat"');
+    expect(scaffold).not.toContain('class="fauna-intro"');
+    expect(worldStyles).toContain('#wildlife-panel .fauna-table');
+    expect(worldStyles).toContain('table-layout:fixed');
+    expect(worldStyles).toContain('#wildlife-panel .fauna-table .fauna-position');
+  });
+
+  test('research graph contains only playable projects and physical prerequisite links',()=>{
+    const ids=researchProjects.map(project=>project.id);
+    expect(ids).toHaveLength(11);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(researchLinks).toEqual([
+      ['smithing','machining'],['machining','gunsmithing'],
+      ['smithing','plate-armor'],['complex-clothing','plate-armor'],
+      ['machining','flak-armor'],['plate-armor','flak-armor'],
+    ]);
+    for(const [from,to] of researchLinks){expect(ids).toContain(from);expect(ids).toContain(to);}
+    expect(worldStyles).toContain('#research-panel .research-graph');
+    expect(worldStyles).toContain('#research-panel .research-detail');
   });
 
   test('fits work priorities into the widened panel instead of scrolling horizontally',()=>{

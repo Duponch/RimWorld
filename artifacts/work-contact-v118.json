@@ -1,0 +1,21 @@
+{
+  "protocol": "Native Chromium WebGPU, two reserved cardinal final edges prepared by the real simulation. 1x motion, side view, saved-world validation; no GPU timer.",
+  "results": [
+    {
+      "kind": "mine",
+      "edgeFrames": 218,
+      "edgeEndX": 10.100000381469727,
+      "contactX": 10.100000381469727,
+      "minFrameStep": 0,
+      "errors": []
+    },
+    {
+      "kind": "chop",
+      "edgeFrames": 215,
+      "edgeEndX": 10.180000305175781,
+      "contactX": 10.180000305175781,
+      "minFrameStep": 0,
+      "errors": []
+    }
+  ]
+}

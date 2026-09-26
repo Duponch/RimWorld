@@ -99,7 +99,7 @@ import type { JobKind, Pawn, World, WorkType, Orientation, AreaAction, Cell, Com
 import { TICKS_PER_DAY } from './sim/types';
 import { DEFAULT_MAP_SIZE, MAP_SIZE_PRESETS } from './sim/map-config';
 import { footprintCells, queryJobStatus, queryPawnStatus } from './sim/index';
-import { gameLayout, storageSettings, toolDefinitions } from './ui/layout';
+import { gameLayout, storageSettings, toolDefinitions, workColumns } from './ui/layout';
 import type { ArchitectCategory, Panel, Tool } from './ui/layout';
 
 import { recreationInspection, updateRecreationInspection } from './ui/recreation-inspection';
@@ -489,10 +489,10 @@ function rebuildPawns(world: World) {
   el('work-rows').replaceChildren(...world.pawns.filter(isColonist).map(pawn => {
     const row = document.createElement('tr'); row.dataset.worker = String(pawn.id);
     const name = document.createElement('th'); name.scope = 'row'; name.textContent = pawn.name; row.append(name);
-    for (const work of ['firefight','patient','doctor','bedrest','basic','warden','handle','hunt', 'gather', 'build', 'haul', 'grow', 'cook', 'craft', 'art', 'mine', 'research', 'clean'] as WorkType[]) {
+    for (const {id: work, label} of workColumns) {
       const cell = document.createElement('td'), select = document.createElement('select');
       select.dataset.work = work; select.dataset.owner = String(pawn.id);
-      select.setAttribute('aria-label', `Priorité ${{ handle:'Animaux',art:'Art',clean:'Nettoyage',firefight:'Incendie',warden:'Geôlier',basic:'Tâches élémentaires',hunt:'Chasse',research:'recherche',patient:'patient',bedrest:'repos au lit',doctor:'médecin', mine:'minage', gather: 'collecte', build: 'construction', haul: 'transport', grow: 'culture', cook: 'cuisine', craft:'artisanat' }[work]} ${pawn.name}`);
+      select.setAttribute('aria-label', `Priorité ${label} ${pawn.name}`);
       for (let value = 0; value <= 4; value++) { const option = document.createElement('option'); option.value = String(value); option.textContent = String(value); select.append(option); }
       select.onchange = () => { void attempt(async () => { try { await client.command({ type: 'priority', pawnId: pawn.id, work, value: Number(select.value) }); } finally { renderState(); } }); };
       cell.append(select); row.append(cell);

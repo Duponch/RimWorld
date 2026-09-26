@@ -4,7 +4,7 @@ import { addGroundMaterial, createWorld, deserializeWorld, serializeWorld, valid
 import { withoutFoodPolicies } from '../scenarios/legacy-save';
 import { world, panel, saveKey, expectWorld, observeErrors } from './helpers';
 
-test('Affectations : régime partagé, copie, refus de suppression, faim, migration et commandes acquittées',async({playwright},testInfo)=>{
+test('Assignations : régime partagé, copie, refus de suppression, faim, migration et commandes acquittées',async({playwright},testInfo)=>{
   test.setTimeout(90000);
   const browser=await playwright.chromium.launch({channel:'chromium',args:[]});
   const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);page.setDefaultTimeout(10000);
@@ -32,11 +32,14 @@ test('Affectations : régime partagé, copie, refus de suppression, faim, migrat
     await page.locator('#manage-food-policies').click();await page.locator('#food-policy-choice').selectOption('5');await page.locator('#delete-food-policy').click();
     await expect(page.locator('#food-policy-feedback')).toContainText('utilisé');
     await page.screenshot({path:'artifacts/food-policies-ui.png'});await page.keyboard.press('Escape');
+    await page.getByRole('button',{name:'Fermer Assignations'}).click();await expect(page.locator('#assign-panel')).toBeHidden();
     await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).pawns.every(p=>p.state==='hungry')).toBe(true);await page.locator('[data-speed="0"]').click();
     const hungry=await world(page);expect(hungry.stock.food).toBe(8);expect(hungry.pawns.every(p=>p.need===null)).toBe(true);
+    await panel(page,'assign');
     await expect(page.locator('.policy-status').first()).toContainText('régime exclut');
     await page.locator('#manage-food-policies').click();await page.locator('[data-allowed-food="survival-meal"]').check();await page.locator('#apply-food-policy').click();
     await expect.poll(async()=>(await world(page)).foodPolicies.find(p=>p.id===5)?.allowed).toEqual(['survival-meal']);await page.keyboard.press('Escape');
+    await page.getByRole('button',{name:'Fermer Assignations'}).click();await expect(page.locator('#assign-panel')).toBeHidden();
     await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).pawns.every(p=>p.hunger>90),{timeout:15000}).toBe(true);await page.locator('[data-speed="0"]').click();
     const fed=await world(page);expect(fed.stock.food).toBe(5);expect(validateWorld(fed)).toEqual([]);
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,fed);

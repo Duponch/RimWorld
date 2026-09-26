@@ -4,9 +4,12 @@ import { deserializeWorld,serializeWorld,validateWorld } from '../../src/sim/ind
 import { observeErrors,panel,pawnTab,world,expectWorld,saveKey } from './helpers';
 import { perform } from './player-actions';
 
-test('natural camp: pause/reload research, 1x/6x unlock, construct tailor, craft and wear shirt through UI',async({playwright})=>{
+test('prepared camp: pause/reload research, 1x/6x unlock, construct tailor, craft and wear shirt through UI',async({playwright})=>{
   test.setTimeout(240000);
   const initial=deserializeWorld(readFileSync('artifacts/research-checkpoint-v73.json','utf8')),p=initial.pawns[0]!;
+  // Keep the historical save immutable. This UI pilot prepares an alert worker
+  // so the bill crosses its real crafting transition without an overnight wait.
+  p.rest=100;p.schedule.fill('anything');
   const browser=await playwright.chromium.launch({channel:'chromium',args:[]});
   try{
     const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);

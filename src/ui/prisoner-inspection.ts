@@ -22,7 +22,7 @@ export function createPrisonerInspection(panel:HTMLElement,current:()=>{world:Wo
   const foodLabel=document.createElement('label'),food=document.createElement('select');food.id='prisoner-food-policy';food.setAttribute('aria-label','Régime alimentaire du prisonnier');
   food.onchange=()=>{const s=current();if(s?.pawn.prisoner)send({type:'food-policy-assign',pawnId:s.pawn.id,policyId:Number(food.value)});};
   foodLabel.append('Régime alimentaire ',food);
-  const care=document.createElement('p');care.className='muted';care.textContent='Geôlier apporte la nourriture et mène les conversations. Médecin assure les soins. Les régimes partagés se modifient dans Affectations.';
+  const care=document.createElement('p');care.className='muted';care.textContent='Geôlier apporte la nourriture et mène les conversations. Médecin assure les soins. Les régimes partagés se modifient dans Assignations.';
   box.append(status,resistance,progress,modeLabel,hint,needs,foodLabel,care);panel.append(box);
   createHealthInspection(panel,()=>current()?.pawn,send,false);
   createEquipmentInspection(panel,current,()=>{});

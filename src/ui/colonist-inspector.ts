@@ -20,7 +20,7 @@ const TAB_DEFINITIONS: readonly InspectorTabDefinition[] = Object.freeze([
   { id: 'bio', label: 'Bio', selectors: ['.appearance-inspection','.skills-inspection'] },
   { id: 'needs', label: 'Besoins', selectors: ['.needs', '#recreation-tolerance', '#mood-inspection', '#room-description'] },
   { id: 'health', label: 'Santé', selectors: ['#health-inspection', '#hygiene-controls', '#burial-controls'] },
-  { id: 'gear', label: 'Équipement', selectors: ['#equipment-details'] },
+  { id: 'gear', label: 'Matériel', selectors: ['#equipment-details'] },
   { id: 'social', label: 'Social', selectors: ['#social-inspection'] },
   { id: 'prisoner', label: 'Prisonnier', selectors: ['#prisoner-inspection'] },
 ]);

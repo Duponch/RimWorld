@@ -7,7 +7,7 @@ import type { Pawn,World,Command } from '../sim/types';
 
 export function createEquipmentInspection(parent:HTMLElement,current:()=>{world:World;pawn:Pawn}|undefined,send:(c:Command)=>void):void {
   const details=document.createElement('details');details.id='equipment-details';
-  details.innerHTML='<summary>Équipement</summary><p id="equipment-primary"></p><button id="drop-equipment" class="secondary-action">Déposer l’arme</button><p id="equipment-cargo"></p><p id="equipment-memory"></p><button id="forget-equipment" class="secondary-action">Ne pas récupérer l’arme perdue</button><div id="equipment-apparel"></div><p class="muted">Inventaire personnel et tenues automatiques : à venir. Le transport de travail reste séparé.</p>';
+  details.innerHTML='<summary>Matériel</summary><p id="equipment-primary"></p><button id="drop-equipment" class="secondary-action">Déposer l’arme</button><p id="equipment-cargo"></p><p id="equipment-memory"></p><button id="forget-equipment" class="secondary-action">Ne pas récupérer l’arme perdue</button><div id="equipment-apparel"></div>';
   details.querySelector<HTMLButtonElement>('#drop-equipment')!.onclick=()=>{const state=current();if(!state)return;const pile=equipmentProjection(state.world).get(state.pawn.id);if(pile)send({type:'order-equipment',pawnId:state.pawn.id,itemId:pile.id,action:'drop',queue:false});};
   details.querySelector<HTMLButtonElement>('#forget-equipment')!.onclick=()=>{const state=current();if(state)send({type:'forget-weapon',pawnId:state.pawn.id});};
   details.querySelector('#equipment-apparel')!.addEventListener('click',event=>{

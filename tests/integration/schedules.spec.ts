@@ -4,7 +4,7 @@ import { createWorld, serializeWorld, deserializeWorld, validateWorld } from '..
 import { withoutPostV11Fields } from '../scenarios/legacy-save';
 import { world, panel, saveKey, expectWorld, observeErrors } from './helpers';
 
-test('Horaires : peindre, annuler, clavier, copier, reprendre et réveiller physiquement par le worker', async ({playwright}, testInfo) => {
+test('Planning : peindre, annuler, clavier, copier, reprendre et réveiller physiquement par le worker', async ({playwright}, testInfo) => {
   test.setTimeout(75000);
   const browser=await playwright.chromium.launch({channel:'chromium',args:[]});
   const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);page.setDefaultTimeout(10000);
@@ -34,8 +34,8 @@ test('Horaires : peindre, annuler, clavier, copier, reprendre et réveiller phys
     const configured=await world(page);await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,configured);
     await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).pawns[0]!.state).toBe('sleeping');await page.locator('[data-speed="0"]').click();
     const asleep=await world(page);expect(asleep.pawns[0]!.need).toMatchObject({kind:'sleep',target:{x:13,z:13}});expect(asleep.pawns[1]!.state).not.toBe('sleeping');
-    await panel(page,'schedule');await page.locator('[data-schedule-brush="work"]').click();await slot(ada!.id,0).click();await page.locator('[data-speed="6"]').click();
-    await expect.poll(async()=>(await world(page)).pawns[0]!.state).not.toBe('sleeping');await page.locator('[data-speed="0"]').click();
+    await panel(page,'schedule');await page.locator('[data-schedule-brush="work"]').click();await slot(ada!.id,0).click();await page.keyboard.press('3');
+    await expect.poll(async()=>(await world(page)).pawns[0]!.state).not.toBe('sleeping');await page.keyboard.press('Space');
     const awake=await world(page);expect([awake.pawns[0]!.x,awake.pawns[0]!.z]).toEqual([13,13]);expect(validateWorld(awake)).toEqual([]);
     const old=withoutPostV11Fields(JSON.parse(serializeWorld(awake)));(old.schemaVersion=11,withoutPawnSkills(old));for(const a of old.pawns){delete a.priorities.mine;delete a.priorities.craft;delete a.motion;a.moveCooldown=0;}delete old.deconstructed;delete old.packed;
     await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:JSON.stringify(old)});

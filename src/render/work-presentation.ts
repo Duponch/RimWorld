@@ -5,11 +5,11 @@ export const WORK_POSE = { mine:11, chop:12, build:13, craft:14, ground:16, grou
 
 /** A body may lean into a neighbouring target, but its feet must stay outside
  * the target's physical silhouette. The simulation cell is never changed. */
-export function workApproach(pawn:Cell,target:Cell|undefined,clearance=.55):Cell {
+export function workApproach(pawn:Cell,target:Cell|undefined,clearance=.82):Cell {
   if(!target)return {x:0,z:0};
   const dx=target.x-pawn.x,dz=target.z-pawn.z,distance=Math.hypot(dx,dz);
   if(distance<.001||distance>1.5)return {x:0,z:0};
-  const reach=Math.min(.42,Math.max(0,distance-clearance));
+  const reach=Math.min(.30,Math.max(0,distance-clearance));
   return {x:dx/distance*reach,z:dz/distance*reach};
 }
 
