@@ -318,6 +318,7 @@ export class ColonyRenderer {
     this.timeTo = world.tick / TICKS_PER_SECOND;
     this.pawns.blend.value = resetPoses ? 1 : 0;
     this.pawns.update(world, resetPoses ? 1 : oldBlend, resetPoses);
+    this.resources.adoptChopWork(previousWorld??undefined,world,resetPoses);
     this.actionFeedback.update(world,this.selectedPawns,this.pawns.feedbackSource!);
     this.wildlife.update(world,this.hasTracks?this.timeline:undefined,resetPoses);
     this.landscape.refresh(this.backend==='WebGPU'&&this.overview.group.visible);
@@ -617,6 +618,7 @@ export class ColonyRenderer {
     // Share the confirmed presentation clock with pawn motion. Loading a save
     // restores the sky; pausing cannot continue an independent wall-clock sun.
     const skyTick = this.hasTracks ? this.timeline.tick : THREE.MathUtils.lerp(this.timeFrom, this.timeTo, this.pawns.blend.value) * TICKS_PER_SECOND;
+    this.resources.presentChop(skyTick/TICKS_PER_SECOND);
     this.doors.tick.value=skyTick;this.projectiles.present(skyTick);this.fires.present(skyTick);this.wind.present(skyTick);
     this.daylight.update(this.world?calendarTick(this.world,skyTick):skyTick, this.controls.target,this.world??undefined);
     const cellPixels=this.rig.pixelsPerCell(this.host.clientHeight);

@@ -1,5 +1,7 @@
 # Plan de développement
 
+**V117 — contact des gestes et roche peinte :** approche visuelle bornée vers les arbres et postes, gestes bas pour la terre et les petites proies, mains animées aux ateliers, léger mouvement de tête en marche, arbre qui recule aux coups de coupe confirmés et pigment rocheux irrégulier. [Contrat](development/action-presentation.md), [preuves](history/validation-action-contact-v117.md). Simulation, schéma 109, catalogue et PRNG métier inchangés. Ces retouches ne ferment aucun jalon G0–G5 ni ne prouvent un coût nul.
+
 **V116 — paysage 3D demandé :** sapins aux deux cônes mieux emboîtés, pigment pastel visible sur falaises, rochers et matériaux de pierre, tapis d'herbe décoratif instancié sur la terre seule. Ce dernier partage la couleur du sol, retire ses brins sous les constructions et objets au sol, garde ses racines ancrées aux cases du monde durant la rotation, densifie la vue proche sous un plafond fixe de 120 000 brins et disparaît en dézoom. Une option persistante peut le supprimer complètement du rendu et de la préparation de carte. [Architecture](development/gpu-landscape.md), [contrôles et coût](history/validation-landscape-v116.md). Il n'ajoute aucune ressource, aucune règle métier ni progression aux jalons G0–G5 ; la cadence est à mesurer, sans promesse de 240 FPS.
 
 **V115 — variations des surfaces peintes :** les objets répétés puisent des phases de texture stables sans nouvelle texture ni nouveau dessin par exemplaire. [Contrôles et limites](history/validation-texture-variation-v115.md). Schéma et gameplay inchangés.
@@ -69,7 +71,7 @@
 
 La filière alimentaire V84 reste livrée : [cultures](development/food-crops.md), [postes](development/food-workstations.md) et [malnutrition](development/malnutrition.md), 24 jours depuis la dotation réelle et deux récoltes sur les mêmes 80 cases de riz. [Preuves V84](history/validation-food-v84.md).
 
-État : **26 septembre 2026, V114 visuel validé localement**. ROADMAP est l’unique calendrier G0–G5. G0 en consolidation, G1/G2/G3 partiels, G4 engagé par l’accueil, la captivité et le commerce, G5 absent ; aucun jalon complet. V107–V114 améliorent surtout présentation, réactivité et coûts observés ; leurs numéros ne mesurent pas l’avancement fonctionnel du jeu. [Inventaire réel](gameplay/implementation-status.md), [preuves](development/validation.md), [index](README.md).
+État : **26 septembre 2026, V117 validé localement**. ROADMAP est l’unique calendrier G0–G5. G0 en consolidation, G1/G2/G3 partiels, G4 engagé par l’accueil, la captivité et le commerce, G5 absent ; aucun jalon complet. V107–V117 améliorent surtout présentation, réactivité et coûts observés ; leurs numéros ne mesurent pas l’avancement fonctionnel du jeu. [Inventaire réel](gameplay/implementation-status.md), [preuves](development/validation.md), [index](README.md).
 
 Boucle précédente : [site local et première récolte V83](development/world-generation.md), trois reliefs, sols fertiles et ressources physiques reliés au départ. Douze jours joués avec abri, défense, riz récolté puis cuisiné ; anciennes cartes préservées. V84 prolonge ce départ par plusieurs récoltes et l’alimentation renouvelée sur le parcours documenté. [Preuves V83](history/validation-site-v83.md).
 

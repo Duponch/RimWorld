@@ -1,0 +1,58 @@
+{
+  "date": "2026-09-26T19:54:27.554Z",
+  "errors": [],
+  "views": [
+    {
+      "name": "top",
+      "file": "artifacts/rock-chaos-top.png",
+      "drawCalls": 23,
+      "triangles": 117493,
+      "bufferBytes": 885888,
+      "geometryAttributes": [
+        "color",
+        "normal",
+        "position"
+      ],
+      "paintSize": [
+        256,
+        256
+      ],
+      "material": "painted"
+    },
+    {
+      "name": "iso",
+      "file": "artifacts/rock-chaos-iso.png",
+      "drawCalls": 23,
+      "triangles": 117493,
+      "bufferBytes": 885888,
+      "geometryAttributes": [
+        "color",
+        "normal",
+        "position"
+      ],
+      "paintSize": [
+        256,
+        256
+      ],
+      "material": "painted"
+    },
+    {
+      "name": "plain",
+      "file": "artifacts/rock-chaos-plain.png",
+      "drawCalls": 23,
+      "triangles": 117493,
+      "bufferBytes": 885888,
+      "geometryAttributes": [
+        "color",
+        "normal",
+        "position"
+      ],
+      "paintSize": [
+        256,
+        256
+      ],
+      "material": "plain"
+    }
+  ],
+  "backend": "WebGPU"
+}

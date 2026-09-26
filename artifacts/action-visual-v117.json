@@ -1,0 +1,115 @@
+{
+  "date": "2026-09-26T20:36:22.328Z",
+  "protocol": "Native Chromium WebGPU; four 32² prepared jobs performed by the real worker at 1× to capture brief presentation phases. Close orthographic screenshots cover each job, the low poses and tree/build side views. Poses, tree recoil and pause sampled after rendered frames; save and resident geometry checked. No long simulation or GPU timer.",
+  "reports": [
+    {
+      "kind": "mine",
+      "tick": 2003,
+      "expectedPhase": 11,
+      "observedPhases": [
+        11
+      ],
+      "activeFrames": 28,
+      "lowFrames": 0,
+      "treeRecoilFrames": 0,
+      "peakTreeAngle": 0,
+      "capturedTreeAngle": null,
+      "liveRecoil": null,
+      "maxHeadingStep": 0.03298672378072265,
+      "geometry": {
+        "instances": 1,
+        "attributes": 16,
+        "buffers": 7
+      },
+      "paused": {
+        "tick": 2003,
+        "time": 0.8245120528152441,
+        "treeAngle": 0
+      },
+      "errors": []
+    },
+    {
+      "kind": "chop",
+      "tick": 2010,
+      "expectedPhase": 12,
+      "observedPhases": [
+        12
+      ],
+      "activeFrames": 331,
+      "lowFrames": 0,
+      "treeRecoilFrames": 160,
+      "peakTreeAngle": 0.09054616330298756,
+      "capturedTreeAngle": 0.09000804422200578,
+      "liveRecoil": {
+        "before": 0.08848090293100516,
+        "after": -0.010222999873244662
+      },
+      "maxHeadingStep": 0.03259402468797146,
+      "geometry": {
+        "instances": 1,
+        "attributes": 16,
+        "buffers": 7
+      },
+      "paused": {
+        "tick": 2010,
+        "time": 1.9911787194819297,
+        "treeAngle": 0
+      },
+      "errors": []
+    },
+    {
+      "kind": "build",
+      "tick": 6,
+      "expectedPhase": 13,
+      "observedPhases": [
+        16,
+        13
+      ],
+      "activeFrames": 154,
+      "lowFrames": 32,
+      "treeRecoilFrames": 0,
+      "peakTreeAngle": 0,
+      "capturedTreeAngle": null,
+      "liveRecoil": null,
+      "maxHeadingStep": 0.11270463958383603,
+      "geometry": {
+        "instances": 1,
+        "attributes": 16,
+        "buffers": 7
+      },
+      "paused": {
+        "tick": 6,
+        "time": 1,
+        "treeAngle": 0
+      },
+      "errors": []
+    },
+    {
+      "kind": "craft",
+      "tick": 14,
+      "expectedPhase": 14,
+      "observedPhases": [
+        16,
+        14
+      ],
+      "activeFrames": 26,
+      "lowFrames": 78,
+      "treeRecoilFrames": 0,
+      "peakTreeAngle": 0,
+      "capturedTreeAngle": null,
+      "liveRecoil": null,
+      "maxHeadingStep": 0.10016249482829531,
+      "geometry": {
+        "instances": 1,
+        "attributes": 16,
+        "buffers": 7
+      },
+      "paused": {
+        "tick": 14,
+        "time": 2.3333333333333335,
+        "treeAngle": 0
+      },
+      "errors": []
+    }
+  ]
+}

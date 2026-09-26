@@ -29,7 +29,7 @@ const f=g.getAttribute('aFrom'),t=g.getAttribute('aTo'),travel=g.getAttribute('a
 this.world.pawns.forEach((p,i)=>{const duration=travel.getY(i)-travel.getX(i),a=duration>0?Math.min(1,Math.max(0,(this.pawns.travelTime.value-travel.getX(i))/duration)):this.pawns.blend.value;
 const x=f.getX(i)+(t.getX(i)-f.getX(i))*a,z=f.getZ(i)+(t.getZ(i)-f.getZ(i))*a,prev=b.poses.get(p.id),distance=prev?Math.hypot(x-prev.x,z-prev.z):0;
 if(this.world.tiles[Math.round(z)*this.world.width+Math.round(x)]?.terrain==='rock'&&Math.hypot(x-Math.round(x),z-Math.round(z))<.35)b.solidOccupancy.push({tick:this.world.tick,play:this.timeline.tick,pawn:p.id,x,z});
-if(prev&&dt>0&&dt<100&&distance>dt*.013+.02)b.jumps.push({at:now,tick:this.world.tick,play:this.timeline.tick,distance,dt,pawn:p.id,state:p.state,from:[prev.x,prev.z],to:[x,z]});
+if(prev&&dt>0&&dt<100&&distance>dt*.013+.02)b.jumps.push({at:now,tick:this.world.tick,play:this.timeline.tick,distance,dt,pawn:p.id,state:p.state,from:[prev.x,prev.z],to:[x,z],segment:this.timeline.segment(p.id),gpuFrom:[f.getX(i),f.getZ(i)],gpuTo:[t.getX(i),t.getZ(i)],gpuTravel:[travel.getX(i),travel.getY(i),travel.getZ(i),travel.getW(i)],workOffset:this.pawns.workOffsets.get(p.id),approach:this.pawns.approachTransitions.get(p.id)});
 const track=this.timeline.tracks.get(p.id);if(track?.length&&track[0].start>this.timeline.tick)b.gaps.push({tick:this.world.tick,play:this.timeline.tick,first:track[0].start});
 b.poses.set(p.id,{x,z});});return result;};}
 `;

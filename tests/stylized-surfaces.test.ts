@@ -57,18 +57,32 @@ test('vegetation pigment has large readable tonal planes across narrow tree face
   }
 });
 
-test('stone paint has broad pastel washes and repeatable edges', () => {
+test('stone paint has irregular broad pastel washes and seamless distant repeats', () => {
   const stone=createStylizedSurfaceTexture('stone'),repeated=createStylizedSurfaceTexture('stone');
   try {
     const pixels=stone.image.data as Uint8Array;
+    const size=stone.image.width;
+    expect([stone.image.width,stone.image.height]).toEqual([256,256]);
     expect(stone.wrapS).toBe(THREE.RepeatWrapping);
     expect(stone.wrapT).toBe(THREE.RepeatWrapping);
     expect(pixels).toEqual(repeated.image.data);
-    const levels=Array.from({length:64*64},(_,i)=>pixels[i*4]!);
+    const levels=Array.from({length:size*size},(_,i)=>pixels[i*4]!);
     expect(Math.max(...levels)-Math.min(...levels)).toBeGreaterThan(75);
     expect(pixels.some((channel,i)=>i%4===0&&channel!==pixels[i+2])).toBe(true);
-    for(let y=0;y<64;y++)for(let channel=0;channel<3;channel++)
-      expect(Math.abs(pixels[(y*64)*4+channel]!-pixels[(y*64+63)*4+channel]!)).toBeLessThan(8);
+    for(let y=0;y<size;y++)for(let channel=0;channel<3;channel++) {
+      expect(Math.abs(pixels[(y*size)*4+channel]!-pixels[(y*size+size-1)*4+channel]!)).toBeLessThan(8);
+      expect(Math.abs(pixels[y*4+channel]!-pixels[((size-1)*size+y)*4+channel]!)).toBeLessThan(8);
+    }
+    const patches=new Set<string>();
+    for(let by=0;by<8;by++)for(let bx=0;bx<8;bx++) {
+      let red=0,blue=0;
+      for(let y=0;y<32;y++)for(let x=0;x<32;x++) {
+        const offset=((by*32+y)*size+bx*32+x)*4;
+        red+=pixels[offset]!;blue+=pixels[offset+2]!;
+      }
+      patches.add(`${Math.round(red/1024/8)}:${Math.round(blue/1024/8)}`);
+    }
+    expect(patches.size).toBeGreaterThan(35);
   } finally {stone.dispose();repeated.dispose();}
 });
 

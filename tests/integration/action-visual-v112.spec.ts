@@ -97,6 +97,7 @@ test('V112: four real jobs select four resident GPU gestures without changing th
   const reports: unknown[] = [], phases = new Map<Gesture, number>();
   try {
     for (const kind of ['mine', 'chop', 'build', 'craft'] as const) {
+      const expectedPhase={mine:11,chop:12,build:13,craft:14}[kind];
       const page = await browser.newPage({ baseURL: 'http://127.0.0.1:5173', viewport: { width: 1440, height: 1000 } });
       const errors = observeErrors(page), initial = preparedGesture(kind);
       try {
@@ -107,21 +108,22 @@ test('V112: four real jobs select four resident GPU gestures without changing th
         await load(page, initial);
         expect(await page.evaluate(() => window.__lisiere.backend)).toBe('WebGPU');
         await page.locator('[data-speed="6"]').click();
-        await page.waitForFunction(() => {
+        await page.waitForFunction(({expectedPhase}) => {
           const frames = (window as any).__actionVisual.frames as any[];
-          const active = frames.filter(f => f.state === 'working' && f.work === 1 && f.phase > 10 &&
+          const active = frames.filter(f => f.state === 'working' && f.work === 1 && f.phase === expectedPhase &&
             ((f.jobProgress ?? 0) > 0 || (f.cookingProgress ?? 0) > 0));
           if (active.length < 3) return false;
           (document.querySelector('[data-speed="0"]') as HTMLButtonElement).click();
           return true;
-        }, undefined, { timeout: 40_000, polling: 'raf' });
+        }, {expectedPhase}, { timeout: 40_000, polling: 'raf' });
         await pause(page);
         const frames = await page.evaluate(() => (window as any).__actionVisual.frames as any[]);
         const active = frames.filter(f => f.state === 'working' && f.work === 1 && f.phase > 10);
         expect(active.length).toBeGreaterThanOrEqual(3);
         const modes = [...new Set(active.map(f => f.phase))];
-        expect(modes).toHaveLength(1);
-        phases.set(kind, modes[0]!);
+        expect(modes).toContain(expectedPhase);
+        expect(modes.every(phase=>phase===expectedPhase||phase===16&&(kind==='build'||kind==='craft'))).toBe(true);
+        phases.set(kind, expectedPhase);
         expect(new Set(active.map(f => f.rigTime)).size).toBeGreaterThan(1);
         const geometry = await page.evaluate(() => {
           const g = (window as any).__actionVisual.view.pawns.pawnMesh.geometry;
@@ -145,7 +147,7 @@ test('V112: four real jobs select four resident GPU gestures without changing th
           await page.waitForTimeout(200);
           await page.screenshot({ path: 'artifacts/action-visual-v112-chop-side.png' });
         }
-        reports.push({ kind, tick: saved.tick, phase: modes[0], workFrames: active.length,
+        reports.push({ kind, tick: saved.tick, phase: expectedPhase, observedPhases:modes, workFrames: active.length,
           jobKinds: [...new Set(active.map(f => f.jobKind).filter(Boolean))],
           cookingPhases: [...new Set(active.map(f => f.cookingPhase).filter(Boolean))],
           geometry, errors });

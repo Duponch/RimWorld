@@ -36,7 +36,9 @@ export class RockLayer {
     // Coordinates come from the existing world-space position attribute, so
     // even a vast continuous cliff adds no UV buffer, vertices or draw calls.
     // The varying moves coordinate arithmetic out of the fragment stage.
-    const paintedUv=varying(positionLocal.xz.mul(.28).add(positionLocal.y.mul(vec2(.075,.065))));
+    // A full repeat spans roughly 38 world cells. Top faces use x/z directly;
+    // height gently offsets side faces without introducing a visible cell grid.
+    const paintedUv=varying(positionLocal.xz.mul(.026).add(positionLocal.y.mul(vec2(.009,.007))));
     // NodeMaterial applies vertexColors after colorNode; multiplying the
     // color attribute here too would darken the stone twice.
     this.texturedMaterial.colorNode=texture(this.stonePaint,paintedUv).rgb;
