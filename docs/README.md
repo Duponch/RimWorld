@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V107 — salissures naturelles :** traces irrégulières aux bords fondus, terre translucide et couches superposées suivant l'épaisseur réelle. [Contrat](development/cleanliness.md#aspect-des-traces-v107), [référence Core](research/filth-visual-reference-v107.md), [preuves](history/validation-filth-v107.md). Présentation seulement, schéma 106 et catalogue conservés.
+
 **V106 — lièvre domestique libre et soins :** [contrat](development/domestic-animals.md), [référence Core](research/domestic-animals-reference-v106.md), [guide](gameplay/player-guide.md). Travail Animaux qualifié, nourriture et médicaments physiques, familiarité à entretenir ; aucun enclos, aire assignable, autre espèce apprivoisable, reproduction ni produit animal. Le nouveau départ ne donne pas d'animal, la migration n'en crée pas.
 
 **V105 — patrimoine, attentes, menaces et commerce artistique** : [contrat](development/colony-economy.md), [preuves](history/validation-economy-v105.md). Richesse explicitement partielle, adoption prospective, œuvres vendables et démonstration directement dans Charger.

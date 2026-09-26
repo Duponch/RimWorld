@@ -1,0 +1,41 @@
+{
+  "prepared": true,
+  "initial": {
+    "count": 65,
+    "visible": true,
+    "poseVersion": 1,
+    "fps": 0,
+    "p95": 0,
+    "backend": "WebGPU",
+    "tick": 3000
+  },
+  "rotated": {
+    "count": 65,
+    "visible": true,
+    "poseVersion": 1,
+    "fps": 214.63804826023187,
+    "p95": 4.299999999999272,
+    "backend": "WebGPU",
+    "tick": 3000
+  },
+  "final": {
+    "count": 60,
+    "visible": true,
+    "poseVersion": 1,
+    "fps": 0,
+    "p95": 0,
+    "backend": "WebGPU",
+    "tick": 3037
+  },
+  "cleaned": 1,
+  "observedThickness": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "exactColdReload": true,
+  "errors": []
+}

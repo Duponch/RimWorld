@@ -1,5 +1,7 @@
 # Publication Netlify
 
+V107 : production 6ab78cd1cbfca039739970d1, 26 septembre 2026, 36 fichiers. Salissures transparentes avec schéma 106 et catalogue conservés. [Preuves et contrôle public](../history/validation-filth-v107.md).
+
 V106 : production `6ab719c6cae56ea3797e9ca3`, 26 septembre 2026, 36 fichiers. [Lièvre domestique, soins et vérifications publiques](../history/validation-domestic-v106.md). Onze colonies accessibles depuis Charger ; migration stricte en schéma 106.
 
 V104 : production `6ab6f10d39e44ca841f1266f`, 26 septembre 2026 (date locale), 34 fichiers. [Sculptures et bibliothèque intégrée](../history/validation-art-v104.md). Neuf colonies directement dans Charger → Colonies de test, dont Pièces vécues et Atelier de sculpture. [Contrôle général](../../artifacts/netlify-smoke-v104.json) et [chargement public exact](../../artifacts/art-public-v104.json) réussis ; schéma 104 par migration neutre, anciennes fixtures préservées.

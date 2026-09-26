@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+**V107 — aspect seulement :** les six espèces de salissures déjà jouables gagnent 24 motifs transparents originaux et un empilement visuel. Ces variantes ne sont pas de nouveaux objets, matières ou recettes. Le catalogue métier V106 reste inchangé ; gilet fabriqué et chaîne de composants restent à développer.
+
 **Usage ajouté V106 :** le lièvre (`hare`) déjà présent peut être apprivoisé, entretenu et soigné sans changer d'espèce ou créer un nouvel objet. Deux unités physiques de baies, riz, pommes de terre, maïs ou fruit d'agave alimentent chaque interaction ; les soins utilisent les médicaments existants selon la politique de l'animal. Aucun nouveau produit, recette, matériau, espèce, enclos ou animal de départ n'est compté. Cerf, gazelle, mufalo et dromadaire restent sauvages dans le catalogue jouable. [Contrat](../development/domestic-animals.md).
 
 **Usage ajouté V105 :** les deux familles de sculptures existantes deviennent vendables puis rachetables auprès du petit marchand. Aucun nouveau modèle d’objet ni variante comptée comme création de contenu. Identité, matière, qualité et auteur conservés ; autres meubles minifiés exclus. [Contrat](../development/colony-economy.md).

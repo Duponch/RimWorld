@@ -1,5 +1,7 @@
 # Plantes 3D instanciées et paysage — V97
 
+V107 : [salissures transparentes](cleanliness.md#aspect-des-traces-v107), un atlas original et un lot instancié indépendant du paysage conservé. Une couche physique produit deux triangles, contre trois boîtes par trace auparavant ; cette réduction géométrique ne mesure pas à elle seule le coût des fragments alpha. Les mesures natives restent nécessaires. Attributs stables entre changements métier, même après mouvement de caméra ; aucune simulation dans le shader.
+
 V99 : [repères des acteurs](interaction-feedback.md). Les zones cliquables des animaux sont projetées depuis leurs attributs GPU uniquement lors des gestes de sélection. Anneaux par espèce, barres et chemins utilisent des lots instanciés, les mêmes trajectoires/horloges et des buffers stables ; les lots vides sont cachés. Le paysage, ses ombres et les règles de simulation ne sont pas simplifiés.
 
 ## Rendu selon la distance V97

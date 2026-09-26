@@ -1,5 +1,9 @@
 # Guide joueur
 
+## Lire les salissures — V107
+
+La terre est une poussière légère ; sang, vomi et bile forment des traces irrégulières, et les cendres s'étalent davantage. Chaque épaisseur ajoute un motif transparent : les endroits qui se recouvrent deviennent plus denses. Au nettoyage, ces couches disparaissent une à une, sans déplacer les traces restantes. L'éclairage et la couleur du sol changent leur visibilité : consultez toujours **Environnement → Propreté** pour le score de la pièce. Le nombre de traces nettoyées augmente quand la dernière couche d'une trace est retirée.
+
 ## Apprivoiser et soigner un lièvre — V106
 
 Ouvrez **Faune** ou la fiche d'un lièvre sauvage vivant et cochez **Apprivoiser**. Dans **Travail**, activez **Animaux** pour un colon de compétence **Animaux 8** au moins. Gardez deux unités accessibles de baies, riz, pommes de terre, maïs ou fruit d'agave : le colon les prend, rejoint le lièvre et le nourrit deux fois avant sa tentative. Un échec laisse le lièvre sauvage ; il peut réessayer après le délai. L'ordre attend si aucun dresseur qualifié ou aliment admissible n'est disponible.

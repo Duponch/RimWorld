@@ -1,5 +1,10 @@
 # Travail sur Lisière
 
+## Salissures transparentes V107
+- Lire la référence Core `docs/research/filth-visual-reference-v107.md` et le contrat propreté. Un plan alpha par épaisseur (1–5), motifs originaux, terre moins opaque, cendres base trois cases ; pas de textures RimWorld reprises ni de traînée BloodSmear inventée.
+- `FilthLayer` : un lot instancié, atlas calculé une fois, offsets stables par cellule/espèce/couche, aucun RNG métier. Préserver lumière locale, précompilation vide versionnée, libération GPU et absence d'upload lors d'un simple mouvement de caméra. Ne pas réintroduire les trois boîtes opaques.
+- Schéma 106 et règles inchangés. Propreté ne multiplie pas par épaisseur ; `cleaned` compte les traces terminées. Sources gelées pendant natif, charge comparée successivement ; préparation industrielle distincte du gameplay livré. Preuves `docs/history/validation-filth-v107.md`.
+
 ## Lièvre domestique et soins V106
 - Lire `docs/development/domestic-animals.md` et la référence Core V106. Lièvre seul, Animaux 8, travail handle, deux aliments physiques, trois conversations puis tentative finale. Séquence parole/parole/repas/parole/repas/tentative ; délai à l’entrée finale. Familiarité cinq niveaux, dégradation périodique non repoussée par entretien réussi.
 - Animaux possédés restent les mêmes acteurs ; faune sauvage et patrimoine inconnu les distinguent. Aucun enclos, aire assignable, reproduction, lait/laine, maître ou animal offert au départ. Les quatre errants restent sauvages. Repos médical au seuil alimentaire local 45 % = adaptation annoncée.

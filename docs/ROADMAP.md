@@ -1,5 +1,9 @@
 # Plan de développement
 
+**V107 — salissures aux contours naturels :** remplacement des boîtes opaques par des traces transparentes, une couche par épaisseur, terre plus discrète et retrait progressif au nettoyage. [Référence Core](research/filth-visual-reference-v107.md), [contrat](development/cleanliness.md#aspect-des-traces-v107), [preuves](history/validation-filth-v107.md). Schéma 106, catalogue et estimations fonctionnelles inchangés : il s'agit d'une amélioration visible de systèmes déjà jouables, pas d'une nouvelle boucle.
+
+**Cadrage industriel suivant :** rendre le gilet pare-balles réellement fabricable, avec recherche Armure de plaques puis Armure pare-balles, atelier d'usinage existant, tissu/acier/composant distincts, ouvrage, qualité et équipement conservés. [Références préparées](research/industry-reference-v108.md), pas de gameplay livré à ce stade. La fabrication des composants exige dans Core l'établi de fabrication, des composants avancés, une table de recherche avancée et un multi-analyseur encore absents : ne pas remplacer cette chaîne silencieusement par l'atelier d'usinage. Les enclos et produits animaux restent le front suivant ; cette préparation ne modifie pas les estimations.
+
 **V106 — lièvre domestique et soins vétérinaires** : désignation, travail Animaux, nourriture portée et ingérée, succès/échec, familiarité entretenue, politique médicale et médicaments physiques. Bibliothèque de onze colonies avec démonstration préparée. [Contrat](development/domestic-animals.md), [preuves](history/validation-domestic-v106.md). Aucun jalon global clos ; enclos, reproduction et productions animales restent absents.
 
 **V105 : économie et menaces reliées.** [Contrat](development/colony-economy.md), [preuves](history/validation-economy-v105.md). Richesse connue explicitement partielle, attentes et adaptation prospectives, groupes variables et vente/rachat artistique. Aucun jalon G0–G5 global clos.

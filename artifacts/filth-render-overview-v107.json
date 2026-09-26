@@ -1,0 +1,83 @@
+{
+  "date": "2026-09-26T09:11:37.518Z",
+  "protocol": "Successive native WebGPU runs, 1440×1000, immutable mixed-100 fixture plus prepared dense filth. Baseline uses V106 HygieneLayer restored in HTTP response with compile/dispose compatibility shim. Maximum distant view, V107 only. Pause then 6×, 1s settling + 6s each. Different intended visuals: not a quality-identical GPU microbenchmark. RAF includes scheduling; frame CPU excludes GPU execution. No simulation rules changed.",
+  "results": [
+    {
+      "variant": "V107-alpha",
+      "speed": 0,
+      "fixture": {
+        "traces": 2869,
+        "layers": 13899,
+        "actors": 104,
+        "tick": 2000,
+        "serializedBytes": 3087060
+      },
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "device": "",
+        "description": ""
+      },
+      "span": 375.5533905932738,
+      "frameCpu": {
+        "count": 1442,
+        "p50": 2.2,
+        "p95": 2.7,
+        "max": 5.5
+      },
+      "image": {
+        "count": 1441,
+        "p50": 4.2,
+        "p95": 4.3,
+        "max": 4.3
+      },
+      "adoptionCpu": {
+        "count": 0,
+        "p50": null,
+        "p95": null,
+        "max": null
+      },
+      "ticks": 0,
+      "actualSpeed": 0
+    },
+    {
+      "variant": "V107-alpha",
+      "speed": 6,
+      "fixture": {
+        "traces": 2869,
+        "layers": 13899,
+        "actors": 104,
+        "tick": 2000,
+        "serializedBytes": 3087060
+      },
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "device": "",
+        "description": ""
+      },
+      "span": 375.5533905932738,
+      "frameCpu": {
+        "count": 832,
+        "p50": 3,
+        "p95": 18.6,
+        "max": 83.2
+      },
+      "image": {
+        "count": 831,
+        "p50": 4.2,
+        "p95": 20.8,
+        "max": 83.3
+      },
+      "adoptionCpu": {
+        "count": 96,
+        "p50": 14,
+        "p95": 28.5,
+        "max": 78.3
+      },
+      "ticks": 96,
+      "actualSpeed": 2.6513770589601613
+    }
+  ],
+  "errors": []
+}

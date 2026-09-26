@@ -1,0 +1,159 @@
+{
+  "date": "2026-09-26T09:08:42.449Z",
+  "protocol": "Successive native WebGPU runs, 1440Ã—1000, immutable mixed-100 fixture plus prepared dense filth. Same source except V106 HygieneLayer restored in baseline HTTP response with compile/dispose compatibility shim. Wide view (span 184.32 cells), not the whole map, pause then 6Ã—, 1s settling + 6s each. Different intended visuals: not a quality-identical GPU microbenchmark. RAF includes scheduling; frame CPU excludes GPU execution. No simulation rules changed.",
+  "results": [
+    {
+      "variant": "V106-boxes",
+      "speed": 0,
+      "fixture": {
+        "traces": 2869,
+        "layers": 13899,
+        "actors": 104,
+        "tick": 2000,
+        "serializedBytes": 3087060
+      },
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "device": "",
+        "description": ""
+      },
+      "span": 184.32187052670042,
+      "frameCpu": {
+        "count": 1441,
+        "p50": 2.4,
+        "p95": 3,
+        "max": 6.2
+      },
+      "image": {
+        "count": 1440,
+        "p50": 4.2,
+        "p95": 4.3,
+        "max": 4.4
+      },
+      "adoptionCpu": {
+        "count": 0,
+        "p50": null,
+        "p95": null,
+        "max": null
+      },
+      "ticks": 0,
+      "actualSpeed": 0
+    },
+    {
+      "variant": "V106-boxes",
+      "speed": 6,
+      "fixture": {
+        "traces": 2869,
+        "layers": 13899,
+        "actors": 104,
+        "tick": 2000,
+        "serializedBytes": 3087060
+      },
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "device": "",
+        "description": ""
+      },
+      "span": 184.32187052670042,
+      "frameCpu": {
+        "count": 692,
+        "p50": 3.5,
+        "p95": 27.3,
+        "max": 81.8
+      },
+      "image": {
+        "count": 691,
+        "p50": 4.2,
+        "p95": 29.1,
+        "max": 83.4
+      },
+      "adoptionCpu": {
+        "count": 84,
+        "p50": 19.7,
+        "p95": 34.3,
+        "max": 76.2
+      },
+      "ticks": 84,
+      "actualSpeed": 2.322764753704052
+    },
+    {
+      "variant": "V107-alpha",
+      "speed": 0,
+      "fixture": {
+        "traces": 2869,
+        "layers": 13899,
+        "actors": 104,
+        "tick": 2000,
+        "serializedBytes": 3087060
+      },
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "device": "",
+        "description": ""
+      },
+      "span": 184.32187052670042,
+      "frameCpu": {
+        "count": 1443,
+        "p50": 2.4,
+        "p95": 3.1,
+        "max": 6.2
+      },
+      "image": {
+        "count": 1442,
+        "p50": 4.2,
+        "p95": 4.3,
+        "max": 8.3
+      },
+      "adoptionCpu": {
+        "count": 0,
+        "p50": null,
+        "p95": null,
+        "max": null
+      },
+      "ticks": 0,
+      "actualSpeed": 0
+    },
+    {
+      "variant": "V107-alpha",
+      "speed": 6,
+      "fixture": {
+        "traces": 2869,
+        "layers": 13899,
+        "actors": 104,
+        "tick": 2000,
+        "serializedBytes": 3087060
+      },
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "device": "",
+        "description": ""
+      },
+      "span": 184.32187052670042,
+      "frameCpu": {
+        "count": 819,
+        "p50": 3,
+        "p95": 21.1,
+        "max": 93.9
+      },
+      "image": {
+        "count": 818,
+        "p50": 4.2,
+        "p95": 20.9,
+        "max": 95.8
+      },
+      "adoptionCpu": {
+        "count": 81,
+        "p50": 16.8,
+        "p95": 30.2,
+        "max": 88
+      },
+      "ticks": 81,
+      "actualSpeed": 2.247490302495477
+    }
+  ],
+  "errors": []
+}

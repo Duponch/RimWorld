@@ -1,5 +1,13 @@
 # Propreté, nettoyage et revêtements
 
+## Aspect des traces V107
+
+Les six espèces utilisent maintenant des surfaces transparentes au sol, aux contours irréguliers et fondus : une surface par épaisseur physique, de 1 à 5. Terre et cendres sont poudreuses ; le sang et les fluides forment des projections avec petites gouttes satellites. La terre a une teinte alpha de 97/255, le sang et le vomi de 180/255 ; l'alpha final dépend aussi du motif. Les cendres s'étalent sur une base de trois cases. Ce principe vient du [Core local 1.6.4871](../research/filth-visual-reference-v107.md), les dessins restent originaux. L'opacité augmente là où les couches se recouvrent, pas uniformément sur toute la case.
+
+Les offsets, rotations et variantes sont déterministes par cellule, espèce et couche, sans RNG métier. Ajouter ou nettoyer une couche ne déplace pas les autres. Un atlas RGBA de 24 motifs (1024×384), calculé une fois à la création du renderer, alimente un seul lot de plans instanciés avec lumière locale et ombres reçues. Les attributs restent résidents et ne sont réécrits que si des traces changent ; la caméra ne régénère rien. Précompilation sur carte vide et libération des ressources explicites. Les anciens petits volumes opaques sont supprimés.
+
+Présentation seulement : schéma **106**, règles d'apparition, propreté par trace (indépendante de l'épaisseur), nettoyage, péremption et sauvegardes inchangés. `cleaned` compte les traces entièrement retirées, pas chaque couche. La traînée Core `BloodSmear`, distincte des éclaboussures, reste absente. [Validation et limites](../history/validation-filth-v107.md).
+
 V89 **validée dans son périmètre**. [Recherche et valeurs Core](../research/cleanliness-floors-reference-v89.md), [preuves communes](../history/validation-hygiene-v89.md). Les contrôles physiques, la continuation, les clics et les mesures de charge sont distincts du pilote de colonie avec reprises : neuf sols et douze traces réellement nettoyées à son terme, sans prétendre assainir toute la carte.
 
 ## Frontières

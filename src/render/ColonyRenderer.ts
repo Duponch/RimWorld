@@ -72,7 +72,7 @@ export class ColonyRenderer {
   private readonly presentation = new PresentationQueue();
   private received:{world:World;speed:number;tracks?:PawnTrack[]}|undefined;
   private hasTracks = false;
-  private readonly hygiene = new HygieneLayer();
+  private readonly hygiene = new HygieneLayer(this.environmentLighting.configure);
   private selectedFloor:BuildableFloorKind|undefined;
   private constructionMaterial:ConstructionMaterial|undefined;
   private readonly fires = new FireLayer();
@@ -378,6 +378,7 @@ export class ColonyRenderer {
     const restoreCrops = this.crops.prepareForCompile();
     const restorePlants = this.plants.prepareForCompile();
     const restoreDesignations=this.designations.prepareForCompile();
+    const restoreFilth=this.hygiene.filth.prepareForCompile();
     try {
       // The double-sided cursor otherwise compiles both face variants on the
       // first map interaction. Include it behind the loading overlay.
@@ -391,7 +392,7 @@ export class ColonyRenderer {
       this.landscape.needsUpdate=true;
       await prepareShadowPipelines(this.renderer,this.scene,this.rig.orthographic,this.boxes);
     } finally {
-      restoreWind();restoreWildlife();restoreFeedback();restoreRoofs();restoreDoors();restoreCrops();restorePlants();restoreDesignations();
+      restoreWind();restoreWildlife();restoreFeedback();restoreRoofs();restoreDoors();restoreCrops();restorePlants();restoreDesignations();restoreFilth();
       for (const [object, value] of culling) object.frustumCulled = value;
       this.overview.group.visible = distant; this.terrainGroup.visible = this.resourceGroup.visible = this.plants.group.visible = !distant;
       this.rocks.setDistant(distant); this.landscape.refresh(this.backend==='WebGPU'&&distant); this.preparing = false;
@@ -774,6 +775,7 @@ export class ColonyRenderer {
     window.removeEventListener('blur', this.onBlur);
     document.removeEventListener('visibilitychange', this.onVisibility);
     this.boxes.dispose();
+    this.hygiene.dispose();
     this.actionFeedback.dispose();
     this.overview.dispose();
     this.rocks.dispose();

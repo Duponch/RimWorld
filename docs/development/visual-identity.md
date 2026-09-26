@@ -1,5 +1,7 @@
 # Identité visuelle et inspection — V100
 
+V107 : les salissures utilisent des motifs originaux irréguliers, des bords fondus et une superposition translucide liée à leur épaisseur. Terre discrète, sang en projections, cendres étalées ; aucune texture propriétaire importée. Ce rendu au sol conserve les éclairages du paysage. [Contrat](cleanliness.md#aspect-des-traces-v107).
+
 ## Référence actuelle V100
 
 La capture fournie le 25 septembre remplace l’habillage précédent : papier crème `#f8edd8`, papier ombré `#e9d7b8`, encre forêt `#293d39`, texte secondaire `#6e7161`, filet miel `#d8c7a6` et accent `#ab813d`. Titres Literata affirmés, texte Source Sans 3, cadres géométriques arrondis et boutons beige légèrement en relief. Les illustrations, atlas et curseurs existants sont réutilisés sans nouveau cadre raster étiré.
